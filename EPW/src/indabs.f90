@@ -20,7 +20,7 @@
   CONTAINS
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE indabs_main(iq)
+    SUBROUTINE indabs_main(iq, totq, first_cycle)
     !-----------------------------------------------------------------------
     !!
     !! Main routine for phonon assisted absorption
@@ -32,7 +32,7 @@
     USE epwcom,        ONLY : nstemp, fsthick, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
                               vme, omegamin, omegamax, omegastep, indabs_fca, &
-                              nomega, neta
+                              nomega, neta, restart, restart_step
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
@@ -47,6 +47,10 @@
     !
     INTEGER, INTENT(in) :: iq
     !! Q-point index
+    LOGICAL, INTENT(inout) :: first_cycle
+    !! Use to determine weather this is the first cycle after restart
+    INTEGER, INTENT(in) :: totq
+    !! Total number of q-points from the selecq.fmt grid.
     !
     ! Local variables
     CHARACTER(LEN = 256) :: nameF
@@ -114,7 +118,7 @@
     !! Occupation prefactors
     REAL(KIND = DP) :: cfac
     !! Absorption prefactor
-    REAL(KIND = DP) :: eta(neta) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /) / ryd2eV
+    REAL(KIND = DP) :: eta(9) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /) / ryd2eV
     !! Imaginary broadening of matrix element denominators
     REAL(KIND = DP) :: etemp_fca
     !! Temperature for fermi level calculation
@@ -188,7 +192,7 @@
     nksqtotf = nktotf ! odd-even for k,k+q
     !
     DO itemp = 1, nstemp
-      IF (first_cycle .and. itemp = nstemp) THEN
+      IF (first_cycle .and. itemp == nstemp) THEN
         first_cycle = .false.
       ELSE
         !        
@@ -327,7 +331,7 @@
             CALL mp_sum(epsilon2_abs, inter_pool_comm)
             CALL mp_sum(epsilon2_abs_lorenz, inter_pool_comm)
             CALL mp_barrier(inter_pool_comm)
-            CALL indabs_write(iq, totq, nktotf, nomega, epsilon2_abs, epsilon2_abs_lorenz)
+            CALL indabs_write(iq, totq, epsilon2_abs, epsilon2_abs_lorenz)
           ENDIF
         ENDIF
       ENDIF ! Skip first step in restart

@@ -19,13 +19,12 @@
   CONTAINS
     !
     !----------------------------------------------------------------------
-    SUBROUTINE indabs_write(iq, totq, nktotf, epsilon2_abs, epsilon2_abs_lorenz)
+    SUBROUTINE indabs_write(iq, totq, epsilon2_abs, epsilon2_abs_lorenz)
     !----------------------------------------------------------------------
     !!
     !! Write indirect optical spectra
     !!
     USE kinds,     ONLY : DP
-    USE elph2,     ONLY : epsilon2_abs, epsilon2_abs_lorenz
     USE io_var,    ONLY : iuindabs
     USE io_files,  ONLY : diropn
     USE constants_epw, ONLY : zero
@@ -41,8 +40,6 @@
     !! Current q-point
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points
-    INTEGER, INTENT(in) :: nktotf
-    !! Total number of k-points
 !    INTEGER, INTENT(in) :: nomega
     !! Number of energt points
     INTEGER :: leps_all
@@ -70,7 +67,7 @@
     REAL(KIND = DP) :: aux(2 * 3 * nomega * neta * nstemp + 2)
     !! vector to store the array
     !
-    IF (mpime = ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
       leps_all = 2 * 3 * nomega * neta * nstemp + 2
       aux(1) = REAL(iq - 1, KIND = DP) ! we need to start at the next q
@@ -108,14 +105,13 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
-    SUBROUTINE indabs_read(iq, totq, nktotf, epsilon2_abs, epsilon2_abs_lorenz)
+    SUBROUTINE indabs_read(iq, totq, epsilon2_abs, epsilon2_abs_lorenz)
     !----------------------------------------------------------------------
     !!
     !! Read indirect optical spectra
     !!
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, ionode_id
-    USE elph2,     ONLY : epsilon2_abs, epsilon2_abs_lorenz
     USE io_var,    ONLY : iuindabs
     USE constants_epw, ONLY : zero
     USE mp,        ONLY : mp_barrier, mp_bcast
@@ -127,21 +123,19 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: iq
+    INTEGER, INTENT(inout) :: iq
     !! Current q-point
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points
-    INTEGER, INTENT(in) :: nktotf
-    !! Total number of k-points
 !    INTEGER, INTENT(in) :: nomega
     !! Number of energt points
     INTEGER :: leps_all
     !! Length of the vector
 !    INTEGER :: neta = 9
     !! Number of broadenings
-    REAL(KIND = DP), INTENT(inout) :: epsilon2_abs(3, nomega, neta, nstemp)
+    REAL(KIND = DP), INTENT(out) :: epsilon2_abs(3, nomega, neta, nstemp)
     !! Imaginary part of the dielectric function
-    REAL(KIND = DP), INTENT(inout) :: epsilon2_abs_lorenz(3, nomega, neta, nstemp)
+    REAL(KIND = DP), INTENT(out) :: epsilon2_abs_lorenz(3, nomega, neta, nstemp)
     !! Imaginary part of the dielectric function, Lorenzian broadening
     !
     ! Local variables
@@ -179,7 +173,7 @@
         !
         leps_all = 2 * 3 * nomega * neta * nstemp + 2
         CALL diropn(iuindabs, 'indabs_restart', leps_all, exst)
-        CALL davcio(aux, leps_all, iuindabs_all, 1, -1)
+        CALL davcio(aux, leps_all, iuindabs, 1, -1)
         !
         !
         ! First element is the iteration number
@@ -217,11 +211,11 @@
     CALL mp_bcast(exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast(iqq, ionode_id, world_comm)
+      CALL mp_bcast(iq, ionode_id, world_comm)
       CALL mp_bcast(epsilon2_abs, ionode_id, world_comm)
       CALL mp_bcast(epsilon2_abs_lorenz, ionode_id, world_comm)
       !
-      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iqq,'/', totq
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iq,'/', totq
     ENDIF
     !----------------------------------------------------------------------
     END SUBROUTINE indabs_read

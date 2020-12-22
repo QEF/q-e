@@ -60,7 +60,7 @@
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  gtemp, xkq, lower_bnd, upper_bnd, dos,&
-                            nbndep, ef0_fca
+                            nbndep, ef0_fca, epsilon2_abs, epsilon2_abs_lorenz
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem
@@ -950,13 +950,13 @@
         sigmai_mode(:, :, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
-    IF (indabs) THEN
+    IF (lindabs) THEN
       ! Calculate the number of frequency points
       nomega = INT((omegamax - omegamin) / omegastep) + 1
       ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating epsilon2_abs', 1)
       ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating epsilon2_abs_lorenz', 1)
     ENDIF ! indabs
     !
     ! Restart in SERTA case or self-energy (electron or plasmon) case
@@ -978,8 +978,8 @@
       ENDIF
       !
       ! Potential restart in indirect optics
-      IF (indabs) THEN
-        CALL indabs_read(iq_restart, totq, nktotf, epsilon2_abs, epsilon2_abs_lorenz)
+      IF (lindabs) THEN
+        CALL indabs_read(iq_restart, totq, epsilon2_abs, epsilon2_abs_lorenz)
       ENDIF
       !
       ! If you restart from reading a file. This prevent
@@ -1366,7 +1366,7 @@
               CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
             ENDDO
           ENDIF
-          CALL indabs_main(iq)
+          CALL indabs_main(iq, totq, first_cycle)
         ENDIF
         !
         ! Conductivity ---------------------------------------------------------

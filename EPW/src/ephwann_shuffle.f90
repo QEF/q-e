@@ -56,7 +56,8 @@
                                inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
                                esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                                a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                               nktotf, gtemp, xkq, dos, nbndskip, nbndep, ef0_fca
+                               nktotf, gtemp, xkq, dos, nbndskip, nbndep, ef0_fca, &
+                               epsilon2_abs, epsilon2_abs_lorenz
   USE wan2bloch,        ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                                ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                                dynifc2blochf, vmewan2blochp
@@ -1006,13 +1007,13 @@
         sigmai_mode(:, :, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
-    IF (indabs) THEN
+    IF (lindabs) THEN
       ! Calculate the number of frequency points
       nomega = INT((omegamax - omegamin) / omegastep) + 1
       ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epsilon2_abs', 1)
       ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
+      IF (ierr /= 0) CALL errore('ephwann_shiffle', 'Error allocating epsilon2_abs_lorenz', 1)
     ENDIF ! indabs
     !
     ! --------------------------------------------------------------------------------------
@@ -1067,8 +1068,8 @@
       ENDIF
       !
       ! Restart in indirect optics
-      IF (indabs) THEN
-        CALL indabs_read(iq_restart, totq, nktotf, epsilon2_abs, epsilon2_abs_lorenz)
+      IF (lindabs) THEN
+        CALL indabs_read(iq_restart, totq, epsilon2_abs, epsilon2_abs_lorenz)
       ENDIF
       ! If you restart from reading a file. This prevent
       ! the case were you restart but the file does not exist
@@ -1467,7 +1468,7 @@
               CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
             ENDDO
           ENDIF
-          CALL indabs_main(iq)
+          CALL indabs_main(iq, totq, first_cycle)
         ENDIF
         !
         ! Conductivity ---------------------------------------------------------
