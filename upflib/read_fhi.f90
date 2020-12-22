@@ -205,10 +205,20 @@ SUBROUTINE convert_fhi (upf)
      READ (5,'(a)') upf%psd
   ENDIF
   upf%typ = 'SL'
-  upf%tvanp = .false.
-  upf%tpawp = .false.
-  upf%tcoulombp=.false.
   upf%nlcc = nlcc_
+  !
+  ! for compatibility with USPP and other formats
+  !
+  upf%nqf = 0
+  upf%nqlc= 0
+  upf%tvanp =.false.
+  upf%tpawp =.false.
+  upf%has_so=.false.
+  upf%has_wfc=.false.
+  upf%has_gipaw=.false.
+  upf%tcoulombp=.false.
+  upf%is_gth=.false.
+  upf%is_multiproj=.false.
   !
   IF (pspxc == 7) THEN
      upf%dft = 'SLA-PW'

@@ -97,7 +97,6 @@ cp_autopilot.o : ../../Modules/kind.o
 cp_autopilot.o : ../../Modules/mp_world.o
 cp_autopilot.o : ../../Modules/parser.o
 cp_autopilot.o : ../../Modules/timestep.o
-cp_autopilot.o : ../../Modules/wave_base.o
 cp_autopilot.o : ../../Modules/wavefunctions.o
 cp_autopilot.o : ../../UtilXlib/mp.o
 cp_autopilot.o : ../../upflib/uspp.o
@@ -107,6 +106,7 @@ cp_autopilot.o : ensemble_dft.o
 cp_autopilot.o : ions_nose.o
 cp_autopilot.o : ions_positions.o
 cp_autopilot.o : mainvar.o
+cp_autopilot.o : wave_base.o
 cp_emass.o : ../../Modules/control_flags.o
 cp_emass.o : ../../Modules/kind.o
 cp_interfaces.o : ../../Modules/fft_base.o
@@ -223,7 +223,6 @@ cpr.o : ../../Modules/mp_global.o
 cpr.o : ../../Modules/recvec.o
 cpr.o : ../../Modules/timestep.o
 cpr.o : ../../Modules/tsvdw.o
-cpr.o : ../../Modules/wave_base.o
 cpr.o : ../../Modules/wavefunctions.o
 cpr.o : ../../UtilXlib/mp.o
 cpr.o : ../../upflib/uspp.o
@@ -247,6 +246,7 @@ cpr.o : ortho_base.o
 cpr.o : pres_ai_mod.o
 cpr.o : smallbox_gvec.o
 cpr.o : wannier.o
+cpr.o : wave_base.o
 cpr_loop.o : ../../Modules/ions_base.o
 cpr_loop.o : ../../Modules/kind.o
 cpr_mod.o : ../../Modules/kind.o
@@ -462,7 +462,6 @@ fromscra.o : ../../Modules/kind.o
 fromscra.o : ../../Modules/mp_global.o
 fromscra.o : ../../Modules/recvec.o
 fromscra.o : ../../Modules/timestep.o
-fromscra.o : ../../Modules/wave_base.o
 fromscra.o : ../../Modules/wavefunctions.o
 fromscra.o : ../../UtilXlib/mp.o
 fromscra.o : ../../upflib/uspp.o
@@ -481,6 +480,7 @@ fromscra.o : mainvar.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
 fromscra.o : printout_base.o
+fromscra.o : wave_base.o
 gram.o : ../../Modules/electrons_base.o
 gram.o : ../../Modules/gvecw.o
 gram.o : ../../Modules/ions_base.o
@@ -607,7 +607,6 @@ input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/run_info.o
 input.o : ../../Modules/timestep.o
 input.o : ../../Modules/tsvdw.o
-input.o : ../../Modules/wave_base.o
 input.o : cell_nose.o
 input.o : cg.o
 input.o : cp_emass.o
@@ -624,6 +623,7 @@ input.o : pres_ai_mod.o
 input.o : printout_base.o
 input.o : sic.o
 input.o : wannier_base.o
+input.o : wave_base.o
 ions_nose.o : ../../Modules/constants.o
 ions_nose.o : ../../Modules/control_flags.o
 ions_nose.o : ../../Modules/io_global.o
@@ -1007,7 +1007,6 @@ restart_sub.o : ../../Modules/ions_base.o
 restart_sub.o : ../../Modules/kind.o
 restart_sub.o : ../../Modules/recvec.o
 restart_sub.o : ../../Modules/timestep.o
-restart_sub.o : ../../Modules/wave_base.o
 restart_sub.o : ../../Modules/wavefunctions.o
 restart_sub.o : ../../upflib/uspp.o
 restart_sub.o : cp_interfaces.o
@@ -1018,6 +1017,7 @@ restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : printout_base.o
+restart_sub.o : wave_base.o
 runcp.o : ../../FFTXlib/fft_helper_subroutines.o
 runcp.o : ../../Modules/control_flags.o
 runcp.o : ../../Modules/electrons_base.o
@@ -1026,7 +1026,6 @@ runcp.o : ../../Modules/gvecw.o
 runcp.o : ../../Modules/kind.o
 runcp.o : ../../Modules/mp_global.o
 runcp.o : ../../Modules/recvec.o
-runcp.o : ../../Modules/wave_base.o
 runcp.o : ../../UtilXlib/mp.o
 runcp.o : ../../UtilXlib/parallel_include.o
 runcp.o : ../../upflib/uspp.o
@@ -1034,6 +1033,7 @@ runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : ldaU_cp.o
 runcp.o : wannier.o
+runcp.o : wave_base.o
 sic.o : ../../Modules/io_global.o
 sic.o : ../../Modules/kind.o
 smallbox.o : ../../Modules/constants.o
@@ -1145,12 +1145,12 @@ wannier.o : ../../Modules/io_global.o
 wannier.o : ../../Modules/ions_base.o
 wannier.o : ../../Modules/kind.o
 wannier.o : ../../Modules/recvec.o
-wannier.o : ../../Modules/wave_base.o
 wannier.o : ../../upflib/uspp.o
 wannier.o : cp_interfaces.o
 wannier.o : modules.o
 wannier.o : printout_base.o
 wannier.o : wannier_base.o
+wannier.o : wave_base.o
 wannier_base.o : ../../Modules/kind.o
 wave.o : ../../Modules/electrons_base.o
 wave.o : ../../Modules/gvecw.o
@@ -1161,9 +1161,12 @@ wave.o : ../../Modules/mp_wave.o
 wave.o : ../../Modules/mp_world.o
 wave.o : ../../Modules/random_numbers.o
 wave.o : ../../Modules/recvec.o
-wave.o : ../../Modules/wave_base.o
 wave.o : ../../UtilXlib/mp.o
 wave.o : electrons.o
+wave.o : wave_base.o
+wave_base.o : ../../Modules/kind.o
+wave_base.o : ../../Modules/random_numbers.o
+wave_base.o : ../../UtilXlib/mp.o
 wave_types.o : ../../Modules/kind.o
 wf.o : ../../FFTXlib/fft_interfaces.o
 wf.o : ../../Modules/cell_base.o

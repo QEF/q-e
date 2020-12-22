@@ -88,7 +88,6 @@ mbdlib.o\
 version.o \
 wannier_gw.o\
 wannier_new.o \
-wave_base.o \
 wavefunctions.o \
 wrappers.o\
 ws_base.o \

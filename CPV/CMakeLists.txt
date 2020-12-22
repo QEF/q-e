@@ -99,6 +99,7 @@ set(sources
     src/wannier_base.f90
     src/wannier.f90
     src/wave.f90
+    src/wave_base.f90
     src/wave_types.f90
     src/wf.f90
     src/makov_payne.f90

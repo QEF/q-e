@@ -401,9 +401,6 @@ wannier_gw.o : io_global.o
 wannier_gw.o : kind.o
 wannier_gw.o : recvec.o
 wannier_new.o : kind.o
-wave_base.o : ../UtilXlib/mp.o
-wave_base.o : kind.o
-wave_base.o : random_numbers.o
 wavefunctions.o : kind.o
 wgauss.o : constants.o
 wgauss.o : kind.o
