@@ -1,7 +1,7 @@
 MODULE esm_force_mod
 
   USE kinds,    ONLY : DP
-  USE esm_common_mod, ONLY : esm_efield, esm_w, esm_a, esm_bc, esm_offset, esm_phfact, &
+  USE esm_common_mod, ONLY : esm_efield, esm_w, esm_a, esm_bc, &
                              mill_2d, imill_2d, ngm_2d, &
                              vl11j0, vl11j1, vl12j0, vl12j1, vl21j1, vl22j1, vl11, vl22, dvl11, dvl22, &
                              dvl11j0, dvl12j0, dvl21j0, dvl22j0, &
@@ -1078,7 +1078,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc1
           arg001 = gp*(z - zp)
           arg002 = -gp*(z - zp)
@@ -1095,9 +1095,6 @@ CONTAINS
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
         CALL cft_1z(vg_f_r(:, 2), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 2))
         CALL cft_1z(vg_f_r(:, 3), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 3))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
-        vg_f(:, 2) = vg_f(:, 2) * esm_phfact
-        vg_f(:, 3) = vg_f(:, 3) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))
@@ -1125,7 +1122,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc1
           cc1 = 0.5d0*qe_erf(tmp*(z - zp))
           cc2 = (0.d0, 0.d0)
@@ -1133,7 +1130,6 @@ CONTAINS
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
         ENDDO
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))
@@ -1246,7 +1242,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc2
           arg001 = gp*(z - zp)
           arg002 = -gp*(z - zp)
@@ -1273,9 +1269,6 @@ CONTAINS
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
         CALL cft_1z(vg_f_r(:, 2), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 2))
         CALL cft_1z(vg_f_r(:, 3), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 3))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
-        vg_f(:, 2) = vg_f(:, 2) * esm_phfact
-        vg_f(:, 3) = vg_f(:, 3) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))
@@ -1303,14 +1296,13 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc2
           cc1 = 0.5d0*qe_erf(tmp*(z - zp))
           cc2 = -0.5d0*(z/z1)
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
         ENDDO
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))
@@ -1421,7 +1413,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc3
           arg001 = gp*(z - zp)
           arg002 = -gp*(z - zp)
@@ -1442,9 +1434,6 @@ CONTAINS
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
         CALL cft_1z(vg_f_r(:, 2), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 2))
         CALL cft_1z(vg_f_r(:, 3), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 3))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
-        vg_f(:, 2) = vg_f(:, 2) * esm_phfact
-        vg_f(:, 3) = vg_f(:, 3) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))
@@ -1472,14 +1461,13 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc3
           cc1 = 0.5d0*qe_erf(tmp*(z - zp))
           cc2 = -0.5d0
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
         ENDDO
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))
@@ -1596,7 +1584,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc4
           alpha = aaa + gp + sqrt(aaa**2 + gp**2)
           beta = aaa + gp - sqrt(aaa**2 + gp**2)
@@ -1656,9 +1644,6 @@ CONTAINS
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
         CALL cft_1z(vg_f_r(:, 2), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 2))
         CALL cft_1z(vg_f_r(:, 3), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 3))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
-        vg_f(:, 2) = vg_f(:, 2) * esm_phfact
-        vg_f(:, 3) = vg_f(:, 3) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))
@@ -1686,7 +1671,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc4
           arg006 = aaa**2/tmp**2 + 2.d0*aaa*(z1 - zp)
           arg101 = tmp*(z - zp)
@@ -1703,7 +1688,6 @@ CONTAINS
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
         ENDDO
         CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
-        vg_f(:, 1) = vg_f(:, 1) * esm_phfact
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))

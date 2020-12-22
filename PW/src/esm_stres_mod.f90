@@ -1,7 +1,7 @@
 MODULE esm_stres_mod
 
   USE kinds,    ONLY : DP
-  USE esm_common_mod, ONLY : esm_w, esm_bc, esm_offset, esm_phfact, &
+  USE esm_common_mod, ONLY : esm_w, esm_bc, &
                              mill_2d, imill_2d, ngm_2d, exp_erfc
   IMPLICIT NONE
 
@@ -228,7 +228,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         dVr_deps(iz, :, :) = &
           -(dgp_deps(:, :)*tpi/gp**2*(gp*(z - z0) - 1.0d0) &
@@ -245,7 +245,6 @@ CONTAINS
       DO la = 1, 2
         DO mu = 1, 2
           CALL cft_1z(dVr_deps(:, la, mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:, la, mu))
-          dVg_deps(:, la, mu) = dVg_deps(:, la, mu) * esm_phfact
         END DO
       END DO
 
@@ -297,7 +296,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         rg3 = rhog3(1, imill_2d(0, 0))
         Vr(iz) = &
@@ -336,13 +335,12 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
         Vr(iz) = Vr(iz) - (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       ! convert V(z) to V(gz) without polynomial
       CALL cft_1z(Vr, 1, dfftp%nr3, dfftp%nr3, -1, Vg)
-      Vg = Vg * esm_phfact
 
       ! add polynomial to V(gz)
       DO igz = -(dfftp%nr3 - 1)/2, (dfftp%nr3 - 1)/2
@@ -531,7 +529,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         !! BC1 terms
         dVr_deps(iz, :, :) = &
@@ -567,7 +565,6 @@ CONTAINS
       DO la = 1, 2
         DO mu = 1, 2
           CALL cft_1z(dVr_deps(:, la, mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:, la, mu))
-          dVg_deps(:, la, mu) = dVg_deps(:, la, mu) * esm_phfact
         END DO
       END DO
 
@@ -619,7 +616,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         rg3 = rhog3(1, imill_2d(0, 0))
 
@@ -676,13 +673,12 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
         Vr(iz) = Vr(iz) - (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       ! convert V(z) to V(gz) without polynomial
       CALL cft_1z(Vr, 1, dfftp%nr3, dfftp%nr3, -1, Vg)
-      Vg = Vg * esm_phfact
 
       ! add polynomial to V(gz)
       DO igz = -(dfftp%nr3 - 1)/2, (dfftp%nr3 - 1)/2
@@ -864,7 +860,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         !! BC1 terms
         dVr_deps(iz, :, :) = &
@@ -892,7 +888,6 @@ CONTAINS
       DO la = 1, 2
         DO mu = 1, 2
           CALL cft_1z(dVr_deps(:, la, mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:, la, mu))
-          dVg_deps(:, la, mu) = dVg_deps(:, la, mu) * esm_phfact
         END DO
       END DO
 
@@ -944,7 +939,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         rg3 = rhog3(1, imill_2d(0, 0))
         !! BC1 terms
@@ -999,13 +994,12 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
         Vr(iz) = Vr(iz) - (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       ! convert V(z) to V(gz) without polynomial
       CALL cft_1z(Vr, 1, dfftp%nr3, dfftp%nr3, -1, Vg)
-      Vg = Vg * esm_phfact
 
       ! add polynomial to V(gz)
       DO igz = -(dfftp%nr3 - 1)/2, (dfftp%nr3 - 1)/2
@@ -1794,7 +1788,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         ! summations over all atoms
         dVr_deps(iz, :, :) = (0.0d0, 0.0d0)
@@ -1848,7 +1842,6 @@ CONTAINS
       DO la = 1, 2
         DO mu = 1, 2
           CALL cft_1z(dVr_deps(:, la, mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:, la, mu))
-          dVg_deps(:, la, mu) = dVg_deps(:, la, mu) * esm_phfact
         END DO
       END DO
 
@@ -1886,7 +1879,7 @@ CONTAINS
           IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             jz = jz - dfftp%nr3
           END IF
-          z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
           Vr(iz) = Vr(iz) - tpi*Qa/S &
                    *((z - za)*qe_erf(salp*(z - za)) &
@@ -1919,13 +1912,12 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
         Vr(iz) = Vr(iz) - (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       ! convert V(z) to V(gz) without polynomial
       CALL cft_1z(Vr, 1, dfftp%nr3, dfftp%nr3, -1, Vg)
-      Vg = Vg * esm_phfact
 
       ! add polynomial to V(gz)
       DO igz = -(dfftp%nr3 - 1)/2, (dfftp%nr3 - 1)/2
@@ -2073,7 +2065,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         ! summations over all atoms
         dVr_deps(iz, :, :) = (0.0d0, 0.0d0)
@@ -2141,7 +2133,6 @@ CONTAINS
       DO la = 1, 2
         DO mu = 1, 2
           CALL cft_1z(dVr_deps(:, la, mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:, la, mu))
-          dVg_deps(:, la, mu) = dVg_deps(:, la, mu) * esm_phfact
         END DO
       END DO
 
@@ -2181,7 +2172,7 @@ CONTAINS
           IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             jz = jz - dfftp%nr3
           END IF
-          z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
           !! BC1 terms
           Vr(iz) = Vr(iz) - tpi*Qa/S &
@@ -2226,13 +2217,12 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
         Vr(iz) = Vr(iz) - (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       ! convert V(z) to V(gz) without polynomial
       CALL cft_1z(Vr, 1, dfftp%nr3, dfftp%nr3, -1, Vg)
-      Vg = Vg * esm_phfact
 
       ! add polynomial to V(gz)
       DO igz = -(dfftp%nr3 - 1)/2, (dfftp%nr3 - 1)/2
@@ -2384,7 +2374,7 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
         ! summations over all atoms
         dVr_deps(iz, :, :) = (0.0d0, 0.0d0)
@@ -2448,7 +2438,6 @@ CONTAINS
       DO la = 1, 2
         DO mu = 1, 2
           CALL cft_1z(dVr_deps(:, la, mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:, la, mu))
-          dVg_deps(:, la, mu) = dVg_deps(:, la, mu) * esm_phfact
         END DO
       END DO
 
@@ -2486,7 +2475,7 @@ CONTAINS
           IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             jz = jz - dfftp%nr3
           END IF
-          z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+          z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
           !! BC1 terms
           Vr(iz) = Vr(iz) - tpi*Qa/S &
@@ -2530,13 +2519,12 @@ CONTAINS
         IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           jz = jz - dfftp%nr3
         END IF
-        z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+        z = DBLE(jz) / DBLE(dfftp%nr3) * L
         Vr(iz) = Vr(iz) - (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       ! convert V(z) to V(gz) without polynomial
       CALL cft_1z(Vr, 1, dfftp%nr3, dfftp%nr3, -1, Vg)
-      Vg = Vg * esm_phfact
 
       ! add polynomial to V(gz)
       DO igz = -(dfftp%nr3 - 1)/2, (dfftp%nr3 - 1)/2

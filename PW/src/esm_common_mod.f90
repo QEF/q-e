@@ -6,8 +6,6 @@ MODULE esm_common_mod
   INTEGER                  :: esm_nfit
   REAL(DP)                 :: esm_efield, esm_w, esm_a
   CHARACTER(LEN=3)         :: esm_bc
-  REAL(DP)                 :: esm_offset
-  COMPLEX(DP), ALLOCATABLE :: esm_phfact(:)
   INTEGER, ALLOCATABLE     :: mill_2d(:, :), imill_2d(:, :)
   INTEGER                  :: ngm_2d = 0
   REAL(DP), EXTERNAL       :: qe_erf, qe_erfc
@@ -32,31 +30,6 @@ CONTAINS
     END IF
     !
     CALL esm_ggen_2d()
-    !
-#if defined (__ESM_NOT_SYMMETRIC)
-    !
-    esm_offset = 0.0_DP
-    esm_phfact = CMPLX(1.0_DP, 0.0_DP, KIND=DP)
-    !
-#else
-    !
-    ! ... if nr3 is even number, shift a half mesh.
-    !
-    esm_offset = 0.5_DP * (1.0_DP - DBLE(MOD(dfftp%nr3, 2)))
-    !
-    IF (ALLOCATED(esm_phfact)) DEALLOCATE(esm_phfact)
-    ALLOCATE(esm_phfact(dfftp%nr3))
-    !
-    esm_phfact = CMPLX(0.0_DP, 0.0_DP, KIND=DP)
-    !
-    DO igz = -(dfftp%nr3 - 1)/2, (dfftp%nr3 - 1)/2
-      iz = igz + 1
-      IF (iz < 1) iz = iz + dfftp%nr3
-      phi = tpi * DBLE(igz) * esm_offset / DBLE(dfftp%nr3)
-      esm_phfact(iz) = CMPLX(COS(phi), -SIN(phi), KIND=DP)
-    END DO
-    !
-#endif
     !
   END SUBROUTINE esm_init
 
@@ -234,7 +207,7 @@ CONTAINS
     COMPLEX(DP) :: rg3, vg3, sum1c, sum2c
     COMPLEX(DP) :: expimgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
 
-    COMPLEX(DP), ALLOCATABLE :: rho0r(:), rho0g(:), rho0g_tmp(:)
+    COMPLEX(DP), ALLOCATABLE :: rho0r(:), rho0g(:)
     COMPLEX(DP), ALLOCATABLE :: Vhar0r(:), Vhar0g(:)
     COMPLEX(DP), ALLOCATABLE :: Vloc0r(:), Vloc0g(:)
     CHARACTER(len=256)     :: esm1_file = 'os.esm1'
@@ -251,7 +224,7 @@ CONTAINS
     alpha = 1.0d0
     salp = sqrt(alpha)
 
-    ALLOCATE (rho0r(dfftp%nr3), rho0g(dfftp%nr3), rho0g_tmp(dfftp%nr3))
+    ALLOCATE (rho0r(dfftp%nr3), rho0g(dfftp%nr3))
     ALLOCATE (Vhar0r(dfftp%nr3), Vhar0g(dfftp%nr3))
     ALLOCATE (Vloc0r(dfftp%nr3), Vloc0g(dfftp%nr3))
 
@@ -281,9 +254,7 @@ CONTAINS
       END IF
     END DO ! ig
 
-    rho0g_tmp = rho0g * CONJG(esm_phfact)
-
-    CALL cft_1z(rho0g_tmp, 1, dfftp%nr3, dfftp%nr3, +1, rho0r)
+    CALL cft_1z(rho0g, 1, dfftp%nr3, dfftp%nr3, +1, rho0r)
 
     !!---- calculate hartree potential
     Vhar0g(:) = 0.0d0
@@ -296,8 +267,6 @@ CONTAINS
       rg3 = rho0g(iz)
       Vhar0g(iz) = fpi*rg3/gz**2
     END DO ! igz
-
-    Vhar0g = Vhar0g * CONJG(esm_phfact)
 
     CALL cft_1z(Vhar0g, 1, dfftp%nr3, dfftp%nr3, +1, Vhar0r)
 
@@ -321,7 +290,7 @@ CONTAINS
       IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
         jz = jz - dfftp%nr3
       END IF
-      z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+      z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
       !! BC1 terms
       Vhar0r(iz) = Vhar0r(iz) &
@@ -371,8 +340,6 @@ CONTAINS
       END IF
     END DO
 
-    Vloc0g = Vloc0g * CONJG(esm_phfact)
-
     CALL cft_1z(Vloc0g, 1, dfftp%nr3, dfftp%nr3, +1, Vloc0r)
 
     ! long range
@@ -381,7 +348,7 @@ CONTAINS
       IF (jz >= (dfftp%nr3 - dfftp%nr3/2)) THEN
         jz = jz - dfftp%nr3
       END IF
-      z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
+      z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
       IF (esm_bc == 'bc2') THEN
         Vloc0r(iz) = Vloc0r(iz) + (z1 - z)*esm_efield/e2
@@ -420,7 +387,7 @@ CONTAINS
     write (UNIT=4, FMT=9050)
 
     DO iz = (dfftp%nr3 - dfftp%nr3/2 + 1), dfftp%nr3
-      z = (DBLE(iz - 1 - dfftp%nr3) + esm_offset) / DBLE(dfftp%nr3) * L
+      z = DBLE(iz - 1 - dfftp%nr3) / DBLE(dfftp%nr3) * L
 
       write (UNIT=4, FMT=9051) &
         z*BOHR_RADIUS_ANGS, &
@@ -431,7 +398,7 @@ CONTAINS
     END DO
 
     DO iz = 1, (dfftp%nr3 - dfftp%nr3/2)
-      z = (DBLE(iz - 1) + esm_offset) / DBLE(dfftp%nr3) * L
+      z = DBLE(iz - 1) / DBLE(dfftp%nr3) * L
 
       write (UNIT=4, FMT=9051) &
         z*BOHR_RADIUS_ANGS, &
@@ -442,7 +409,7 @@ CONTAINS
     END DO
     close (UNIT=4)
 
-    DEALLOCATE (rho0r, rho0g, rho0g_tmp)
+    DEALLOCATE (rho0r, rho0g)
     DEALLOCATE (Vhar0r, Vhar0g)
     DEALLOCATE (Vloc0r, Vloc0g)
 
