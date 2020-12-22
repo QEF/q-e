@@ -4,11 +4,11 @@ New in development version:
   * Many-Body Dispersion (MBD) correction: Szabolcs Goger (U. Luxembourg),
     Hsin-Yu Ko (Cornell), et al.
   * Grand-Canonical SCF (J. Chem. Phys. 146, 114101 (2017)) for constant-mu
-    method is implemented by S. Nishihara and S. Hagiwara.
+    method is implemented by S. Nishihara and S. Hagiwara. [arXiv:2012.10090]
+
 
 Fixed in development version:
-  * Fictitious charge particle (FCP) works again.
-  * For ESM calcualtion: Shift a half mesh along z-direction when nr3 is even.
+  * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
 
 Incompatible changes in dev version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of
