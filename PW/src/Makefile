@@ -69,6 +69,12 @@ efermit.o \
 electrons.o \
 eqvect.o \
 esm.o \
+esm_common_mod.o \
+esm_ewald_mod.o \
+esm_force_mod.o \
+esm_hartree_mod.o \
+esm_local_mod.o \
+esm_stres_mod.o \
 ewald.o \
 ewald_dipole.o \
 extfield.o \

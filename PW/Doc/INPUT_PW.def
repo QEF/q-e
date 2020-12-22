@@ -1595,15 +1595,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     choose boundary conditions). If between two
                     electrodes, an optional electric field
                     ('esm_efield') may be applied. Method described in
-                    M. Otani and O. Sugino, "First-principles calculations 
-                    of charged surfaces and interfaces: A plane-wave 
+                    M. Otani and O. Sugino, "First-principles calculations
+                    of charged surfaces and interfaces: A plane-wave
                     nonrepeated slab approach", PRB 73, 115407 (2006).
 
                     NB:
                        - Two dimensional (xy plane) average charge density
                          and electrostatic potentials are printed out to
-                         'prefix.esm1'.                  
-                    
+                         'prefix.esm1'.
+
                        - Requires cell with a_3 lattice vector along z,
                          normal to the xy plane, with the slab centered
                          around z=0. Also requires symmetry checking to be
@@ -1620,7 +1620,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                        - In case of calculation='vc-relax', use
                          cell_dofree='2Dxy' or other parameters so that
                          c-vector along z-axis should not be moved.
-                       
+
                     See @ref esm_bc, @ref esm_efield, @ref esm_w, @ref esm_nfit.
                 }
                 opt -val '2D' {
