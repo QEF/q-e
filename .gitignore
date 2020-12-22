@@ -24,6 +24,7 @@ FoX
 include/fft_defs.h
 include/configure.h
 include/c_defs.h
+include/qe_cdefs.h
 install/config.log
 install/config.status
 install/configure.msg
@@ -36,6 +37,8 @@ test-suite/*/test.out.*
 S3DE
 D3Q
 W90
+LIBBEEF
+archive/v3.1.0
 archive/wannier90-*tgz
 wannier90-*
 tempdir

@@ -58,6 +58,9 @@ QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_s
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
          ../../dft-d3/libdftd3qe.a
 
+WAN2ODD_OBJS = read_wannier.o fft_supercell.o scell_wfc.o plot_wan2odd.o \
+               cp_files.o wannier2odd.o
+
 MODULES = $(PWOBJS) $(QEMODS)
 
 TLDEPS= pwlibs
@@ -143,9 +146,9 @@ projwfc.x : projwfc.o libpp.a $(MODULES) $(LIBOBJS)
 		projwfc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS)
+pw2wannier90.x : pw2wannier90.o libpp.a $(WAN2ODD_OBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		pw2wannier90.o libpp.a $(WAN2ODD_OBJS) $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 pw2critic.x : pw2critic.o libpp.a $(MODULES) $(LIBOBJS)
