@@ -641,7 +641,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE set_dft_from_indices( iexch_, icorr_, igcx_, igcc_, imeta_, inlc_ )
      !--------------------------------------------------------------------
-     !! Set dft functional from the IDs of each term.
+     !! Set dft functional from the IDs of each term - OBSOLESCENT:
+     !! for compatibility with old PPs only, metaGGA not accounted for
      !
      IMPLICIT NONE
      !
@@ -650,13 +651,13 @@ CONTAINS
      CHARACTER(LEN=4) :: lda_exch, lda_corr, gga_exch, gga_corr
      LOGICAL :: dft_defined
      !
+     IF ( discard_input_dft ) RETURN
+     !
      iexch  = xclib_get_id( 'LDA', 'EXCH' )
      icorr  = xclib_get_id( 'LDA', 'CORR' )
      igcx   = xclib_get_id( 'GGA', 'EXCH' )
      igcc   = xclib_get_id( 'GGA', 'CORR' )
      imeta  = xclib_get_id( 'MGGA','EXCH' )
-     !
-     IF ( discard_input_dft ) RETURN
      !
      IF (iexch == notset) iexch = iexch_
      IF (iexch /= iexch_) THEN
@@ -683,6 +684,8 @@ CONTAINS
         write (stdout,*) imeta, imeta_
         CALL errore( 'set_dft', ' conflicting values for imeta', 1 )
      ENDIF     
+     IF (imeta /= 0 ) CALL errore( 'set_dft', ' META-GGA not allowed', 1 )
+     !
      IF (inlc  == notset) inlc = inlc_
      IF (inlc /= inlc_) THEN
         write (stdout,*) inlc, inlc_

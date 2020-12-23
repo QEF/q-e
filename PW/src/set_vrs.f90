@@ -13,7 +13,6 @@ SUBROUTINE set_vrs( vrs, vltot, vr, kedtau, kedtaur, nrxx, nspin, doublegrid )
   !! the sum of all the local pseudopotential contributions.
   !
   USE kinds
-  !USE funct,    ONLY : dft_is_meta
   USE fft_base, ONLY : dffts 
   !
   IMPLICIT NONE

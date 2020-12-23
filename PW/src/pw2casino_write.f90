@@ -30,7 +30,6 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE io_global, ONLY: stdout, ionode, ionode_id
    USE io_files, ONLY: nwordwfc, iunwfc, prefix, tmp_dir, seqopn
    USE wavefunctions, ONLY : evc
-   !USE funct, ONLY : dft_is_meta
    USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
    USE mp_bands, ONLY: intra_bgrp_comm
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get

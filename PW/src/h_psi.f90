@@ -94,7 +94,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE uspp,                    ONLY: vkb, nkb
   USE ldaU,                    ONLY: lda_plus_u, U_projection
   USE gvect,                   ONLY: gstart
-  !USE funct,                   ONLY: dft_is_meta
   USE control_flags,           ONLY: gamma_only
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &

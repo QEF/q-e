@@ -420,7 +420,6 @@ SUBROUTINE print_ps_info
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
-  !USE funct,           ONLY : dft_is_gradient
   IMPLICIT NONE
   !
   INTEGER :: nt, ib, i
