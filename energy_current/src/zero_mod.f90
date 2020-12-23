@@ -224,12 +224,12 @@ contains
       allocate (dvkb(npwx, nkb, 3))
       allocate (xdvkb(npwx, nkb, 3, 3))
 
-!inizializzazione di vkb (per essere sicuri che lo sia) e xvkb
+!  initialization of vkb (just to be sure) and xvkb
       CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call init_us_3(npw, xvkb, tabr, ec_test_)
 !!
-!inizializzazione di dvkb e xdvkb (nb il ciclo su ipw va dentro per essere
-!ottimizzato)
+! initialization of dvkb and xdvkb (nb the  cycle over ipw is the inner cycle  
+! for optimization)
       dvkb = 0.d0
       do ipol = 1, 3
          do ikb = 1, nkb
@@ -310,7 +310,7 @@ contains
          end do
       end do
 !
-!il fattore due è fatto per la degenrazione di spin
+! the factor 2 is for spin degeneracy
       current(:) = current(:) + 2.d0*J_nl(:)
 !
 !free memory
@@ -379,11 +379,11 @@ contains
       !logical  ::l_plot
 
 !
-!Inizializzo H_g
+!Initialization H_g
 !
       H_g = 0.d0
       do it = 1, nsp
-!inizializzazione parti radiali
+!initialization  radial part
          do igl = 1, ngl
             xg = sqrt(gl(igl))*tpiba
             if (spline_ps) then
@@ -398,7 +398,7 @@ contains
                i2 = i0 + 2
                i3 = i0 + 3
 !tablocal_hg e' probabilmente fatto su una griglia 1D ed e' inizializzato in init_us_1a.f90, e' indipendente dalla cell
-!H_g_rad serve per fare un integrale radiale, interpolando tablocal_hg
+!H_g_rad is needed to be radial integral, interpolating tablocal_hg
                H_g_rad(igl, 0) = tablocal_hg(i0, it, 1)*ux*vx*wx/6.d0 + &
                            &tablocal_hg(i1, it, 1)*px*vx*wx/2.d0 - &
                            &tablocal_hg(i2, it, 1)*px*ux*wx/2.d0 + &
@@ -490,21 +490,21 @@ contains
       !    Initialization of the variables
       !
 
-!!!!!!!aggiunta di codice per la zero_current
-!tabr(nqxq,nbetam,nsp,1:3) e tablocal(nqxq,nsp,0:2)
-!contiene f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r)
-!dove la è il momento angolare della beta function (ce ne possono
-!essere più di una con il medesimo l) e
-!lb è il momento angolare della funzione di bessel
-!si può avere solo lb=la+1 lb=la-1 o lb=la
-!e questi tre casi sono rappresentati dall'ultimo indice
+!!!!!!! additional code for the computation of zero_current
+!tabr(nqxq,nbetam,nsp,1:3) and tablocal(nqxq,nsp,0:2)
+! contain f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r)
+! where la is the angolar momentum of the beta function (more than one function 
+! with the same l are allowed ) 
+!lb is the angular moment of bessel function 
+!only lb=la+1, lb=la-1 or lb=la are allowed
+! thede 3 cases are represented by the last index
 !3.71
       ndm = MAXVAL(upf(:)%kkbeta)
       allocate (aux(ndm))
       allocate (besr(ndm))
 
 !
-!inizializzazione di tabr
+!initializzation of tabr
 ! questo può essere estratto. Il resto della routine è init_us_1.f90 di PW
 !
       pref = fpi/sqrt(omega)
@@ -515,8 +515,8 @@ contains
             l = upf(nt)%lll(nb)
             do iq = startq, lastq
                qi = (iq - 1)*dq
-!inizializzazione tabella con l_bessel=l
-               !                  kkbeta dice dove bessel va a zero
+!initializzation of table eith l_bessel=l
+               !                  kkbeta tells where bessel goes to zero
                call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
                do ir = 1, upf(nt)%kkbeta
                   aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir) ! nel file upf c'è x per il proiettorie
@@ -531,7 +531,7 @@ contains
                enddo
                call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
                tabr(iq, nb, nt, 3) = vqint*pref
-!l_bessel=l-1, solo se l>0
+!l_bessel=l-1, only if l>0
                if (l > 0) then
                   call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l - 1, besr)
                   do ir = 1, upf(nt)%kkbeta
@@ -551,9 +551,8 @@ contains
          CALL errore('init_us_1a', 'splines for tabr not implemented', 1)
       endif
 !!!!!!!!!!!!!!
-!inizializzazione di tablocal_hg 3.17 3.20
-      !attenzione alla nuova griglia che deve essere compatibile con quella
-!dello pseudo locale
+!initialization of tablocal_hg 3.17 3.20
+       ! warning the new grid must be compatible with the one of the local pseudo
       rm = MAXVAL(rgrid(:)%mesh)
       deallocate (besr)
       allocate (besr(rm))
@@ -566,7 +565,7 @@ contains
       do nt = 1, nsp
          do iq = startq, lastq
             qi = (iq - 1)*dq
-!inizializzazione con l=0
+!initialization of l=0
             call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 0, besr)
             do ir = 1, rgrid(nt)%mesh
                aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &
@@ -574,7 +573,7 @@ contains
             end do
             call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
             tablocal_hg(iq, nt, 1) = vqint*pref
-!inizializzazione con l=1
+!initialization of l=1
             call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 1, besr)
             do ir = 1, rgrid(nt)%mesh
                aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &

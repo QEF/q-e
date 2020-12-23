@@ -99,7 +99,7 @@ contains
       !    NB it uses dvpsi as workspace
       !
  !     l_test = .true.
-      !ortogonalizzazione manuale
+      ! manual orthogonalization
  !     if (l_test) then
       emme = 0.d0
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc, 2*npwx, dpsi, 2*npwx, 0.d0, emme, nbnd)
@@ -139,7 +139,7 @@ contains
          enddo
       enddo
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!calcolo di alpha_pv
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! computation of alpha_pv
 
       emin = et(1, 1)
       do ibnd = 1, nbnd
@@ -163,7 +163,7 @@ contains
 !
       ! avoid zero value for alpha_pv
       alpha_pv = max(alpha_pv, 1.0d-2)
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!fine conto di alpha_pv
+!!!!!!!!!!!!!!!!!!!!!!!!!!!! end computation of alpha_pv
 
       if (save_dvpsi) then
          dvpsi = dvpsi_save(:, :, ipol)
