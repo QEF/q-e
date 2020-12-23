@@ -2,8 +2,6 @@
 
 include ../make.inc
 
-#MODFLAGS = $(MOD_FLAG)../UtilXlib
-
 XCL = \
 xclib_para_m.o \
 xclib_error.o \
@@ -34,12 +32,6 @@ BEEF = \
 pbecor.o \
 beefun.o
 
-# PGI requires -c11 to understand __thread
-# See https://www.pgroup.com/userforum/viewtopic.php?t=5504
-ifneq (,$(findstring pg,$(CC)))
-	CFLAGS := -c11 $(CFLAGS)
-endif
-
 all: xc_lib.a xclib_test.x
 
 xc_lib.a: $(XCL) $(BEEF)
@@ -48,7 +40,7 @@ xc_lib.a: $(XCL) $(BEEF)
 
 xclib_test.x : xclib_test.o xc_lib.a 
 	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		xclib_test.o xc_lib.a $(QELIBS)
+		xclib_test.o xc_lib.a $(BLAS_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 clean :
