@@ -132,7 +132,7 @@ contains
       allocate (charge_g(ngm))
       call compute_charge(psic, evc, npw, nbnd, ngm, dffts, charge, charge_g)
 !
-!initialization of  u_g
+!initialization of  u_g, Eq. 27
       allocate (u_g(ngm, 3))
       u_g = 0.d0
       do a = 1, 3
@@ -146,7 +146,7 @@ contains
          end do
       end do
 !
-!computation of the current
+!computation of the current, , Eq. 26
       j_zero = 0.d0
       do a = 1, 3
          do igm = gstart, ngm
@@ -161,6 +161,7 @@ contains
 
       call mp_sum(j_zero, intra_pool_comm)
       if (l_non_loc) then
+         ! Add non local part, Eq. 34      
          call add_nc_curr(j_zero, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                           g, tpiba, nat, ityp, nsp, xk, igk_k, ec_test_)
       end if
@@ -412,7 +413,7 @@ contains
          do a = 1, 3
             do b = 1, 3
                if (a >= b) then
-!
+! Eq. 31. Add h1 to H_g
                   do igm = gstart, ngm
                      H_g(igm, a, b, it) = g(a, igm)*g(b, igm)/gg(igm)* &
                                         (sqrt(gg(igm))*tpiba*H_g_rad(igtongl(igm), 1) - 2.d0*zv(it)*fpi/omega*2.d0/(gg(igm)*tpiba2))
@@ -420,14 +421,15 @@ contains
                   end do
 !
                end if
+! Add Eq. 32. Add h2 to H_g
                if (a == b) then
-!
                   do igm = gstart, ngm
 !
                      H_g(igm, a, b, it) = H_g(igm, a, b, it) - &
                                           (H_g_rad(igtongl(igm), 0) - fpi/omega*2.d0*zv(it)/(tpiba2*gg(igm)))
 !
                   end do
+! G=0 components from Eq. 32
                   if (gstart == 2) then
                      H_g(1, a, b, it) = -H_g_rad(1, 0)
                   end if
