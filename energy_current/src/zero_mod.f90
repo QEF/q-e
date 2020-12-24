@@ -492,22 +492,22 @@ contains
       !    Initialization of the variables
       !
 
-!!!!!!! additional code for the computation of zero_current
-!tabr(nqxq,nbetam,nsp,1:3) and tablocal(nqxq,nsp,0:2)
-! contain f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r)
-! where la is the angolar momentum of the beta function (more than one function 
+!!!!!!! init_us_1a initializes tabr & tabocal
+! 1. tabr(nqxq,nbetam,nsp,1:3) 
+! Contains the integrals f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r) needed in Eq. 41 
+! - la is the angolar momentum of the beta function (more than one function 
 ! with the same l are allowed ) 
-!lb is the angular moment of bessel function 
-!only lb=la+1, lb=la-1 or lb=la are allowed
-! thede 3 cases are represented by the last index
-!3.71
+! - lb is the angular moment of bessel function 
+! - only lb=la+1, lb=la-1 or lb=la are allowed
+!   these 3 cases are represented by the last index
+!
+! 2. tablocal(nqxq,nsp,0:2)
+! The radial integrals needed in Eq. 31 , 32. They depend on the modulus of G (nqxq), on the atom (nsp)
+! Third index refers to the bessel function with l=0 (0) or l=1 (1)
+
       ndm = MAXVAL(upf(:)%kkbeta)
       allocate (aux(ndm))
       allocate (besr(ndm))
-
-!
-!initializzation of tabr
-! questo può essere estratto. Il resto della routine è init_us_1.f90 di PW
 !
       pref = fpi/sqrt(omega)
       call divide(intra_bgrp_comm, nqxq, startq, lastq)
@@ -517,12 +517,13 @@ contains
             l = upf(nt)%lll(nb)
             do iq = startq, lastq
                qi = (iq - 1)*dq
-!initializzation of table eith l_bessel=l
-               !                  kkbeta tells where bessel goes to zero
+!initializzation of table with l_bessel=l
+!kkbeta tells where bessel function goes to zero
                call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
                do ir = 1, upf(nt)%kkbeta
-                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir) ! nel file upf c'è x per il proiettorie
-                  !quindi qui c'è solo r^2)
+                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir) 
+                  ! upf files contains x times the projector
+                  ! that is why  we have only two rgrids r^2)
                enddo
                call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
                tabr(iq, nb, nt, 2) = vqint*pref
@@ -553,8 +554,8 @@ contains
          CALL errore('init_us_1a', 'splines for tabr not implemented', 1)
       endif
 !!!!!!!!!!!!!!
-!initialization of tablocal_hg 3.17 3.20
-       ! warning the new grid must be compatible with the one of the local pseudo
+!Initialization of tablocal_hg
+!Warning the new grid must be compatible with the one of the local pseudo
       rm = MAXVAL(rgrid(:)%mesh)
       deallocate (besr)
       allocate (besr(rm))
