@@ -206,7 +206,7 @@ contains
       complex(DP), allocatable :: xdvkb(:, :, :, :)
 
       allocate (vkb1(npwx, nkb))
-      !do nothing if there is no non local potential
+!do nothing if there is no non local potential
       if (nkb <= 0) return
       do nt = 1, nsp
          if ((upf(nt)%typ .eq. "US") .or. (upf(nt)%typ .eq. "PAW")) then
@@ -224,13 +224,18 @@ contains
       allocate (xvkb(npwx, nkb, 3))
       allocate (dvkb(npwx, nkb, 3))
       allocate (xdvkb(npwx, nkb, 3, 3))
-
+!      
 !  initialization of vkb (just to be sure) and xvkb
+!  - vkb is the Fourier transform of the beta functions, 
+!  - xvkb is the Fourier tranform of xbeta. 
+!  Both are needed in Eq. 36
       CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call init_us_3(npw, xvkb, tabr, ec_test_)
-!!
-! initialization of dvkb and xdvkb (nb the  cycle over ipw is the inner cycle  
-! for optimization)
+!
+! initialization of dvkb and xdvkb
+! - dvkb is ( - partial_a beta ) (note the minus sign in Eq. 36, 37)
+! - xdvkb is ( - partial_a x_b beta ) (note the minus sign in Eq. 36, 37)
+! , via identities in Eq. 37, 38
       dvkb = 0.d0
       do ipol = 1, 3
          do ikb = 1, nkb
@@ -253,9 +258,7 @@ contains
             end do
          end do
       end do
-!
-!
-!prodotti scalari (si possono evitare di fare tutti?), qui si esegue comunicazione MPI.
+! Scalar products. Note that here we have MPI communication between the nodes.
       call calbec(npw, vkb, evc, becp)
       do ipol = 1, 3
          CALL calbec(npw, xvkb(1:npwx, 1:nkb, ipol), evc, becpr(ipol))
@@ -269,10 +272,14 @@ contains
             call calbec(npw, xdvkb(1:npwx, 1:nkb, ipol, jpol), evc, becprd(ipol, jpol))
          end do
       end do
-
-!
-!a questo punto possiamo usare le quantità calcolate per calcolare la corrente (OpenMP do?)
+! Here we loaded :
+! becp -> <phi|beta>
+! becpr -> <phi|xbeta>
+! becpd -> <phi|-partial_a beta>
+! becprd -> <phi|- partial_a x_b beta>
+! Now we use these scalar products to evaluate the current, Eq. 35,36
       J_nl = 0.d0
+      ! J_1 & J_2 for debugging purposes
       J_1 = 0.d0
       J_2 = 0.d0
       ijkb = 0
@@ -311,7 +318,7 @@ contains
          end do
       end do
 !
-! the factor 2 is for spin degeneracy
+! the factor 2 is there for spin degeneracy
       current(:) = current(:) + 2.d0*J_nl(:)
 !
 !free memory
@@ -398,8 +405,11 @@ contains
                i1 = i0 + 1
                i2 = i0 + 2
                i3 = i0 + 3
-!tablocal_hg e' probabilmente fatto su una griglia 1D ed e' inizializzato in init_us_1a.f90, e' indipendente dalla cell
-!H_g_rad is needed to be radial integral, interpolating tablocal_hg
+! tablocal_hg is computed on a 1D in reciprocal space 
+! and is initialized in  init_us_1a.f90. It is independent of the cell and depends only on the local pseudo.
+! H_g_rad is the the radial counterpart of H_g and is computed at the desired G values defined by the reciprocal 
+! lattice interpolating tablocal_hg
+!
                H_g_rad(igl, 0) = tablocal_hg(i0, it, 1)*ux*vx*wx/6.d0 + &
                            &tablocal_hg(i1, it, 1)*px*vx*wx/2.d0 - &
                            &tablocal_hg(i2, it, 1)*px*ux*wx/2.d0 + &
@@ -410,6 +420,7 @@ contains
                            &tablocal_hg(i3, it, 2)*px*ux*vx/6.d0
             end if
          end do
+! Now we use H_g_rad to evaluate H_g, adding some "structure factors"
          do a = 1, 3
             do b = 1, 3
                if (a >= b) then
