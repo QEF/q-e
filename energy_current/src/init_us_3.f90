@@ -63,7 +63,6 @@ contains
       complex(DP), allocatable :: sk(:)
       real(DP), allocatable :: aux(:)
       integer :: ii
-
 !
       if (lmaxkb .lt. 0) return
       call start_clock('init_us_3')
@@ -82,33 +81,40 @@ contains
       do it = 1, ntyp
          xvkb1(1:npw_, 1:nhm, 1:3) = (0.d0, 0.d0)
          do ih = 1, nh(it)
-!gli indici (ih,it) identificano il proiettore che andiamo ad inizializzare.
 !
-!l è il "momento angolare+1" dello pseudo considerato
+!indexes (ih,it) identify the projector taken into consideration.
+!
+!l il the  "angular momentum + 1" of the projector considered.
             l = nhtol(ih, it) + 1
-!lp è l'indice combinato del'armonica sferica riferito allo pseudo che stiamo caricando
+!lp is the combined index of the spherical harmonics of the considered projector,
             lp = nhtolm(ih, it)
-!nb è la beta function che dà la dipendenza radiale a questo pseudo
+!nb is the beta function input of the UPF providing the radial dependence to the projector
             nb = indv(ih, it)
-!in-1,...,nhtol+1=l sono i momenti angolari che contribuiscono a xvkb(:,ikb), ovvero
-!quelli che differiscono di 1 dal momento angolare del proiettore.
-!in,...,nhtol+2=l+1 sono i "momenti angolari+1" che contribuiscono a xvkb(:,ikb).
+! in-1,...,nhtol+1=l are the angular momenta that contribute to xvkb(:,ikb).
+! These corresponds to the range of L in Eq. 41 where the Clebsch-Gordan coefficients are different from zero. 
+! and differ by at max 1 from the angular momentum of the projector.
+! in,...,nhtol+2=l+1 are the "angular momenta + 1" contributing to xvkb(:,ikb).
             if (l .eq. 1) then
                in = 1
             else
                in = l - 1
             end if
-!ll indicizza i momenti angolari +1 che contribuiscono a xvkb
+!ll indexes the angular moment contributing to xvkb (see previous comments)
             do ll = in, l + 1
-!igl indicizza le shell. Qui calcoliamo il contributo:
-!f_(nb,ll)(q)=\int _0 ^\infty dr r^3 beta_nb(r) j_ll(q.r), con q che varia sulle shell q=1,...,nlg
-!Questo dipende solo da nb, ovvero della beta function, e da ll. Inseriamo questo in
-!betagl(1:ngl), che si in questa versione si ricalcola e sovrascrive per ogni coppia (ih,ll)
-!no e' una scelta ottimanel in quanto diversi ih possiedono la medesima beta function ed
-!il medesimo integrale si calcola al momento piu' volte
+!igl indexes the shells of G vectors. Here we evaluate :
+!
+! f_(nb,ll)(q)=\int _0 ^\infty dr r^3 beta_nb(r) j_ll(q.r), with q varying over the shells q=1,...,nlg [1]
+!
+! This integral depends only on nb, i.e. on the beta function, and on ll (L in Eq. 41)
+! We save its value in betagl(1:ngl), that is here recomputed and overwrite for each pair (ih,ll)
+! This is not an optimal choice because various ih correspond to the same beta function and
+! the same integral is at the moment recomputed many times. Optimization TBD.
+!
+! Note that the integrals [1] have already been saved in tabr on a grid of q values. Here we just interpolate.
+!
                do igl = 1, ngl
                   xg = sqrt(gl(igl))*tpiba
-!xg è il modullo della igl-esima shell
+!xg is the modulus of the igl-shell
                   if (spline_ps) then
                      CALL errore('init_us_3', 'splines not implemented', 1)
 !                   if (ll==l) then
@@ -141,11 +147,13 @@ contains
 
                   end if
                end do
-!Ora dobbiamo eseguire il ciclo su tutte le armoniche sferiche con momento angolare+1= ll
+!
+! Now we have to cycle over all spherical harmonics with angular momentum + 1 = ll
                do lm = (ll - 1)**2 + 1, ll**2
                   do ig = gstart, npw_
-!nelle seguente espressioni compare (-i)^(ll-1) invece del solito (-i)^(ll) perchè
-!il momento angolare che stiamo considerando non è ll ma ll-1. ll è solo un indice.
+! It the following expressions we have (-i)^(ll-1) instead of (-i)^(ll) because
+! The angular momentum considered is not ll but ll-1. ll is just an index corresponding to (angular momentum + 1).
+! See also previous comments.
                      add = ylm(ig, lm)
                      xvkb1(ig, ih, 1) = xvkb1(ig, ih, 1) - &!ap(lm,lp,3)*ylm(ig,lm)
                                         (cmplx(cost*ap(lm, 3, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
@@ -173,13 +181,12 @@ contains
                end if
             end if
          end do
-!fin qui abbiamo inizializzato xvkb1(npwx,nhm,3) per il tipo di atomo che stiamo considerando.
-!Andiamo ora ad inizializzare xvkb(3,npwx,nkb) per tutti gli atomi di questo
-!tipo aggiungendo il fattore di struttura.
+         ! Up to here we initialized xvkb1(npwx,nhm,3) for the type of atom considered.
+         ! We now initialize xvkb(3,npwx,nkb) for all atoms of this type adding the structur factors. 
          do na = 1, nat
-!finalmente inizializza xvkb. Prima carica tutti i proiettori
-!di tipo 1, poi quelli di tipo 2,... quindi alla fine vkb sarà caricato così:
-! atomi con tipo 1 - atomi con tipo 2 - atomi con tipo 3 - .....
+         !We first load all projectors for atoms of type 1, than type 2,...
+         !At the end xvkb will be loaded like this:
+         !atoms of type 1 - atoms of type 2 - atoms of type 3 - .....
             if (ityp(na) .eq. it) then
                do ig = 1, npw_
                   sk(ig) = eigts1(mill(1, ig), na)* &
@@ -196,7 +203,7 @@ contains
          end do
       end do
 
-!!test per xvkb
+      !!test for xvkb (if needed, only for development)
 
       if (ec_test) then
          call init_us_3_test(npw_, xvkb_)
@@ -214,6 +221,7 @@ contains
 
    subroutine init_us_3_test(npw_, xvkb_)!, rgrid, ntyp, ityp, tau, tpiba, )
 
+      ! Subroutine for tests. Only for development.
       !----------------------------------------------------------------------
       !
       !   Calculates xbeta functions  with
