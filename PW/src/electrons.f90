@@ -368,7 +368,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE gvecw,                ONLY : ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
-                                   elondon, edftd3, ef_up, ef_dw, exdm, ef
+                                   elondon, edftd3, ef_up, ef_dw, exdm, ef, &
+                                   egrand
   USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
                                    create_scf_type, destroy_scf_type, &
                                    open_mix_file, close_mix_file, &
@@ -412,7 +413,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
-  USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
+  USE fcp_module,           ONLY : lfcp, fcp_mu
+  USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
   USE wrappers,             ONLY : memstat
   USE iso_c_binding,        ONLY : c_int
   !
@@ -554,7 +556,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( iter > 1 ) THEN
         !
-        IF ( iter == 2 ) ethr = 1.D-2
+        IF ( iter == 2 ) THEN
+           !
+           IF ( lgcscf ) THEN
+              ethr = 1.D-5
+           ELSE
+              ethr = 1.D-2
+           ENDIF
+           !
+        ENDIF
+        !
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
         ! ... do not allow convergence threshold to become too small:
         ! ... iterative diagonalization may become unstable
@@ -786,6 +797,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) nsgnew = nsg
            !
+           IF ( lgcscf ) THEN
+              CALL gcscf_set_nelec( charge )
+           END IF
+           !
         ELSE 
            !
            ! ... convergence reached:
@@ -949,15 +964,20 @@ SUBROUTINE electrons_scf ( printout, exxen )
         hwf_energy = hwf_energy + etotefield
      ENDIF
      ! TB gate energy
-     IF ( gate) THEN
+     IF ( gate ) THEN
         etot = etot + etotgatefield
         hwf_energy = hwf_energy + etotgatefield
      ENDIF
      !
-     IF ( lfcpopt .or. lfcpdyn ) THEN
-        etot = etot + ef * tot_charge
-        hwf_energy = hwf_energy + ef * tot_charge
-     ENDIF
+     IF ( lfcp ) THEN
+        etot = etot + fcp_mu * tot_charge
+        hwf_energy = hwf_energy + fcp_mu * tot_charge
+     END IF
+     !
+     IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) THEN
+        etot = etot + egrand
+        hwf_energy = hwf_energy + egrand
+     END IF
      !
      ! ... adds possible external contribution from plugins to the energy
      !
@@ -1376,7 +1396,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      SUBROUTINE print_energies ( printout )
        !-----------------------------------------------------------------------
        !
-       USE constants, ONLY : eps8
+       USE constants, ONLY : eps8, RYTOEV
        INTEGER, INTENT (IN) :: printout
        !
    
@@ -1391,6 +1411,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ELSE
              WRITE( stdout, 9084 ) dr2
           END IF
+          !
+          IF ( lgcscf )  WRITE( stdout, 9181 ) tot_charge
+          !
           IF ( lgauss ) then
              WRITE( stdout, 9070 ) demet
              WRITE( stdout, 9170 ) etot-demet
@@ -1430,11 +1453,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ! ... free energy F = E - TS , demet is the -TS contribution
           !
           !
-          ! ... With Fictitious charge particle (FCP), etot is the grand
-          ! ... potential energy Omega = E - muN, -muN is the potentiostat
-          ! ... contribution.
+          ! ... With Fictitious charge particle (FCP) or Grand-Canonical-SCF,
+          ! ... etot is the grand potential energy Omega = E - muN,
+          ! ... -muN is the potentiostat contribution.
           !
-          IF ( lfcpopt .OR. lfcpdyn ) WRITE( stdout, 9072 ) ef*tot_charge
+          IF ( lfcp ) WRITE( stdout, 9072 ) fcp_mu*tot_charge
+          IF ( lgcscf .AND. ( .NOT. gcscf_ignore_mun ) ) &
+                         WRITE( stdout, 9072 ) egrand
           !
        ELSE IF ( conv_elec ) THEN
           !
@@ -1450,6 +1475,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
              WRITE( stdout, 9170 ) etot-demet
           ENDIF
           !
+          IF( lgcscf ) WRITE( stdout, 9181 ) tot_charge
+          !
        ELSE
           !
           WRITE( stdout, 9080 ) etot
@@ -1459,6 +1486,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ELSE
              WRITE( stdout, 9084 ) dr2
           END IF
+          !
+          IF( lgcscf ) WRITE( stdout, 9182 ) tot_charge, ef*RYTOEV, &
+                                             ABS( ef - gcscf_mu ) * RYTOEV
+          !
        ENDIF
        !
        CALL plugin_print_energies()
@@ -1514,6 +1545,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9084 FORMAT( '     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
 9170 FORMAT( '     internal energy E=F+TS    =',0PF17.8,' Ry' )
+9181 FORMAT(                                                  &
+            /'!    total charge of GC-SCF    =',0PF17.8,' e' )
+9182 FORMAT(                                                  &
+            /'     total charge of GC-SCF    =',0PF17.8,' e'  &
+            /'     the Fermi energy          =',0PF17.8,' eV' &
+            /'                        (error :',0PF17.8,' eV)')
+
   END SUBROUTINE print_energies
   !
 END SUBROUTINE electrons_scf

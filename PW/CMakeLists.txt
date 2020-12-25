@@ -58,13 +58,26 @@ set(sources
    src/electrons.f90 
    src/eqvect.f90 
    src/esm.f90 
+   src/esm_common_mod.f90 
+   src/esm_ewald_mod.f90 
+   src/esm_force_mod.f90 
+   src/esm_hartree_mod.f90 
+   src/esm_local_mod.f90 
+   src/esm_stres_mod.f90 
    src/ewald.f90 
    src/ewald_dipole.f90 
    src/extfield.f90 
    src/exx_base.f90 
    src/exx_band.f90 
    src/exx.f90 
-   src/fcp.f90 
+   src/fcp_capacitance.f90 
+   src/fcp_dyn_calcavg.f90 
+   src/fcp_dyn_printavg.f90 
+   src/fcp_dynamics.f90 
+   src/fcp_hessian.f90 
+   src/fcp_input.f90 
+   src/fcp_module.f90 
+   src/fcp_relaxation.f90 
    src/find_group.f90 
    src/forces_bp_efield.f90 
    src/force_cc.f90 
@@ -74,6 +87,8 @@ set(sources
    src/force_lc.f90 
    src/force_us.f90 
    src/forces.f90 
+   src/gcscf_input.f90 
+   src/gcscf_module.f90 
    src/g_psi.f90 
    src/g_psi_mod.f90 
    src/gen_at_dj.f90 

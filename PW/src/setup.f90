@@ -91,7 +91,9 @@ SUBROUTINE setup()
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
-  USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
+  USE esm,                ONLY : esm_z_inv
+  USE fcp_module,         ONLY : lfcp
+  USE gcscf_module,       ONLY : lgcscf
   USE extfield,           ONLY : gate
   USE additional_kpoints, ONLY : add_additional_kpoints
   !
@@ -175,7 +177,7 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-  IF ( .NOT. lscf .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
+  IF ( .NOT. lscf .OR. ( (lfcp .OR. lgcscf) .AND. restart ) ) THEN
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
      !
@@ -196,10 +198,11 @@ SUBROUTINE setup()
      CALL mp_bcast(ef_dw, ionode_id, intra_image_comm)
      CALL qes_reset  ( output_obj )
      !
-  END IF 
-  IF ( (lfcpopt .OR. lfcpdyn) .AND. restart ) THEN  
+  END IF
+  !
+  IF ( (lfcp .OR. lgcscf) .AND. restart ) THEN
      tot_charge = ionic_charge - nelec
-  END IF 
+  END IF
   !
   ! ... magnetism-related quantities
   !
@@ -379,14 +382,30 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           ethr = 1.D-5
+           IF ( lgcscf ) THEN
+              !
+              ethr = 1.D-8
+              !
+           ELSE
+              !
+              ethr = 1.D-5
+              !
+           END IF
            !
         ELSE
            !
            ! ... starting atomic potential is probably far from scf
            ! ... do not waste iterations in the first diagonalizations
            !
-           ethr = 1.0D-2
+           IF ( lgcscf ) THEN
+              !
+              ethr = 1.0D-5
+              !
+           ELSE
+              !
+              ethr = 1.0D-2
+              !
+           END IF
            !
         END IF
         !
@@ -527,7 +546,8 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
+     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate .OR. &
+                     (.NOT. esm_z_inv()) )
      !
      ! ... do not force FFT grid to be commensurate with fractional translations
      !

@@ -42,6 +42,7 @@ SUBROUTINE sum_band()
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
+  USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
   !
   IMPLICIT NONE
   !
@@ -238,6 +239,10 @@ SUBROUTINE sum_band()
   ! ... (up+dw,up-dw) format.
   !
   IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+  !
+  ! ... sum number of electrons, for GC-SCF
+  !
+  IF ( lgcscf ) CALL gcscf_calc_nelec()
   !
   CALL stop_clock( 'sum_band' )
   !

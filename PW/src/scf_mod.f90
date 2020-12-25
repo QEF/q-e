@@ -635,7 +635,7 @@ CONTAINS
  !
  !
  !-----------------------------------------------------------------------------------
-FUNCTION rho_ddot( rho1, rho2, gf )
+FUNCTION rho_ddot( rho1, rho2, gf, g0, mu )
   !----------------------------------------------------------------------------------
   !! Calculates \(4\pi/G^2\ \rho_1(-G)\ \rho_2(G) = V1_\text{Hartree}(-G)\ \rho_2(G)\)
   !! used as an estimate of the self-consistency error on the energy.
@@ -657,25 +657,66 @@ FUNCTION rho_ddot( rho1, rho2, gf )
   !! second density matrix
   INTEGER, INTENT(IN) :: gf
   !! points delimiter
+  REAL(DP), OPTIONAL, INTENT(IN) :: g0
+  !! factrized G-vector norm of G=0 used in GC-SCF
+  REAL(DP), OPTIONAL, INTENT(IN) :: mu
+  !! Fermi energy used in GC-SCF calculation
   REAL(DP) :: rho_ddot
   !! output: see function comments
   !
   ! ... local variables
   !
   REAL(DP) :: fac
+  REAL(DP) :: gg0
+  REAL(DP) :: rho0
   INTEGER  :: ig
   !
   fac = e2 * fpi / tpiba2
   !
   rho_ddot = 0.D0
   !
-  DO ig = gstart, gf
-     rho_ddot = rho_ddot + REAL(CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP) / gg(ig)
-  ENDDO
+  IF ( PRESENT(g0) ) THEN
+     !
+     gg0 = g0 * g0 / tpiba2
+     !
+  ELSE
+     !
+     gg0 = -1.0_DP
+     !
+  END IF
+  !
+  IF ( gg0 > 0.0_DP ) THEN
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / ( gg(ig) + gg0 )
+        !
+     END DO
+     !
+     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+     !
+     IF ( gstart == 2 ) THEN
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(1,1) )*rho2%of_g(1,1), DP ) / ( gg(1) + gg0 )
+        !
+     END IF
+     !
+  ELSE
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
+        !
+     END DO
+     !
+     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+     !
+  END IF
   !
   rho_ddot = fac*rho_ddot
-  !
-  IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
   !
   IF ( nspin >= 2 )  THEN
      fac = e2*fpi / tpi**2  ! lambda=1 a.u.
@@ -908,7 +949,7 @@ FUNCTION nsg_ddot( nsg1, nsg2, nspin )
 END FUNCTION nsg_ddot
 !
 !----------------------------------------------------------------------------
-FUNCTION local_tf_ddot( rho1, rho2, ngm0 )
+FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
   !----------------------------------------------------------------------------
   !! Calculates \(4\pi/G^2\ \rho_1(-G)\ \rho_2(G) = V1_\text{Hartree}(-G)\ \rho_2(G)\)
   !! used as an estimate of the self-consistency error on the energy - version 
@@ -930,27 +971,58 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0 )
   !! see main comment
   COMPLEX(DP), INTENT(IN) :: rho2(ngm0)
   !! see main comment
+  REAL(DP), OPTIONAL, INTENT(IN) :: g0
+  !! factrized G-vector norm of G=0 used in GC-SCF
   REAL(DP) :: local_tf_ddot
   !! see main comment
   !
   ! ... local variables
   !
   REAL(DP) :: fac
+  REAL(DP) :: gg0
   INTEGER  :: ig
   !
   local_tf_ddot = 0.D0
   !
   fac = e2 * fpi / tpiba2
   !
-  !$omp parallel do reduction(+:local_tf_ddot)
-  DO ig = gstart, ngm0
-     local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
-  END DO
-  !$omp end parallel do
+  IF ( PRESENT(g0) ) THEN
+     !
+     gg0 = g0 * g0 / tpiba2
+     !
+  ELSE
+     !
+     gg0 = -1.0_DP
+     !
+  END IF
+  !
+  IF ( gg0 > 0.0_DP ) THEN
+     !
+     !$omp parallel do reduction(+:local_tf_ddot)
+     DO ig = gstart, ngm0
+        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
+     END DO
+     !$omp end parallel do
+     !
+     IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
+     !
+     IF ( gstart == 2 ) THEN
+        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
+     END IF
+     !
+  ELSE
+     !
+     !$omp parallel do reduction(+:local_tf_ddot)
+     DO ig = gstart, ngm0
+        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
+     END DO
+     !$omp end parallel do
+     !
+     IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
+     !
+  END IF
   !
   local_tf_ddot = fac * local_tf_ddot * omega * 0.5D0
-  !
-  IF (gamma_only) local_tf_ddot = 2.D0 * local_tf_ddot
   !
   CALL mp_sum( local_tf_ddot, intra_bgrp_comm )
   !

@@ -4,7 +4,10 @@ set(sources
     src/engine_to_path_alat.f90
     src/engine_to_path_nat.f90
     src/engine_to_path_fix_atom_pos.f90
+    src/engine_to_path_tot_charge.f90
     src/fcp_opt_routines.f90
+    src/fcp_variables.f90
+    src/gcscf_variables.f90
     src/input.f90
     src/path_base.f90
     src/path_formats.f90

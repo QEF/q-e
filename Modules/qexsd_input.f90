@@ -331,7 +331,7 @@ MODULE qexsd_input
                                      refold_pos,pot_extrapolation,wfc_extrapolation,&
                                       ion_temperature,tempw,tolp,delta_t,nraise,dt,&
                                       bfgs_ndim,trust_radius_min,trust_radius_max,&
-                                      trust_radius_init,w_1,w_2)
+                                      trust_radius_init,w_1,w_2,ignore_wolfe)
    !--------------------------------------------------------------------------------------------------
    !
    IMPLICIT NONE
@@ -341,6 +341,7 @@ MODULE qexsd_input
                                               ion_temperature
    REAL(DP),OPTIONAL,INTENT(IN)            :: upscale, tempw,tolp,delta_t,trust_radius_min,trust_radius_max,&
                                               trust_radius_init,w_1,w_2
+   LOGICAL,INTENT(IN)                      :: ignore_wolfe
    INTEGER,INTENT(IN)                      :: nraise,bfgs_ndim
    REAL(DP),INTENT(IN)                     :: dt
    LOGICAL,OPTIONAL,INTENT(IN)             :: remove_rigid_rot,refold_pos
@@ -356,7 +357,7 @@ MODULE qexsd_input
       ALLOCATE (bfgs_obj) 
       CALL qes_init (bfgs_obj,"bfgs",ndim=bfgs_ndim,trust_radius_min=trust_radius_min,&
                          trust_radius_max=trust_radius_max,trust_radius_init=trust_radius_init,&
-                         w1=w_1,w2=w_2)
+                         w1=w_1,w2=w_2,ignore_wolfe=ignore_wolfe)
    ELSE IF(TRIM(ion_dynamics)=="verlet" .OR. TRIM(ion_dynamics)=="langevin" .OR. &
            TRIM(ion_dynamics) == "langevin-smc" ) THEN
       ALLOCATE(md_obj) 
@@ -443,7 +444,7 @@ MODULE qexsd_input
    !
    ! 
    !--------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_boundary_conditions(obj,assume_isolated,esm_bc, fcp_opt, fcp_mu, esm_nfit,esm_w, esm_efield)
+   SUBROUTINE qexsd_init_boundary_conditions(obj, assume_isolated, esm_bc, esm_nfit, esm_w, esm_efield, fcp, fcp_mu)
    !--------------------------------------------------------------------------------------------
    ! 
    IMPLICIT NONE
@@ -451,7 +452,7 @@ MODULE qexsd_input
    TYPE (boundary_conditions_type)              :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
    CHARACTER(LEN=*),OPTIONAL,INTENT(IN)         :: esm_bc
-   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp_opt
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp
    REAL(DP),OPTIONAL,INTENT(IN)                 :: fcp_mu
    INTEGER,OPTIONAL,INTENT(IN)                  :: esm_nfit
    REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
@@ -460,16 +461,29 @@ MODULE qexsd_input
    LOGICAL                                      :: esm_ispresent = .FALSE.
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
+   esm_ispresent = .FALSE.
+   !
    IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
       esm_ispresent = .TRUE. 
-      ALLOCATE(esm_obj) 
-      CALL qes_init (esm_obj,"esm",bc=TRIM(esm_bc),nfit=esm_nfit,w=esm_w,efield=esm_efield)
+      ALLOCATE(esm_obj)
+      CALL qes_init (esm_obj, "esm", BC=TRIM(esm_bc), NFIT=esm_nfit, W=esm_w, EFIELD=esm_efield)
    END IF 
-   CALL qes_init (obj,TAGNAME,ASSUME_ISOLATED =assume_isolated, FCP_OPT= fcp_opt, FCP_MU = fcp_mu, ESM = esm_obj)
-   IF ( esm_ispresent ) THEN
+   !
+   IF (esm_ispresent) THEN
+      IF (PRESENT(fcp)) THEN
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP=fcp, FCP_MU=fcp_mu)
+      ELSE
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj)
+      END IF
+   ELSE
+      CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated)
+   END IF
+   !
+   IF (esm_ispresent) THEN
       CALL qes_reset (esm_obj)
-      DEALLOCATE(esm_obj) 
-   END IF 
+      DEALLOCATE(esm_obj)
+   END IF
+   !
    END SUBROUTINE qexsd_init_boundary_conditions
    ! 
    !

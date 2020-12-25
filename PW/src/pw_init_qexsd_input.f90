@@ -43,12 +43,12 @@
                                 nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
                                 wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise, ip_dt => dt,        &
-                                bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2,            &
+                                bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2, ignore_wolfe, &
                                 cell_dynamics, wmass, cell_dofree, cell_factor,                                       &
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
                                 ip_use_all_frac=>use_all_frac, assume_isolated, esm_bc, esm_w, esm_nfit, esm_efield,  & 
-                                ip_lfcpopt => lfcpopt, ip_fcp_mu => fcp_mu,                                           &
+                                ip_lfcp => lfcp, ip_fcp_mu => fcp_mu,                                           &
                                 ecfixed, qcutz, q2sigma,                                                              &    
                                 tforces, rd_for,                                                                      &
                                 rd_if_pos,                                                                               &
@@ -440,7 +440,7 @@
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr/e2,         &
                                    mixing_ndim, electron_maxstep, tqr, real_space, tq_smoothing, tbeta_smoothing, diago_thr_init, &
-                                   diago_full_acc, diago_cg_maxiter,  diago_ppcg_maxiter, diago_david_ndim )
+                                   diago_full_acc, diago_cg_maxiter,  diago_ppcg_maxiter, diago_david_ndim)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
   !------------------------------------------------------------------------------------------------------------------------------ 
@@ -460,7 +460,7 @@
   !--------------------------------------------------------------------------------------------------------------------------------
   CALL qexsd_init_ion_control(obj%ion_control, ion_dynamics, upscale, remove_rigid_rot, refold_pos,                   &
                               pot_extrapolation, wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise,    &
-                              ip_dt, bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2)
+                              ip_dt, bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2, ignore_wolfe)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                        CELL CONTROL ELEMENT
   !-------------------------------------------------------------------------------------------------------------------------------
@@ -480,13 +480,17 @@
      obj%boundary_conditions_ispresent = .TRUE.
      IF ( TRIM ( assume_isolated) .EQ. "esm") THEN 
         SELECT CASE (TRIM(esm_bc)) 
-          CASE ('pbc', 'bc1' ) 
+          CASE ('pbc' )
              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
                                                  ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
-          CASE ('bc2', 'bc3' ) 
-            CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
-                                                 FCP_OPT = ip_lfcpopt, FCP_MU = ip_fcp_mu, &
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
+          CASE ('bc1' )
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
+                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
+                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
+          CASE ('bc2', 'bc3', 'bc4' )
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
+                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
+                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
         END SELECT 
      ELSE 
         CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated) 

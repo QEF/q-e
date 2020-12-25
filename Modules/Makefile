@@ -35,7 +35,6 @@ electrons_base.o \
 environment.o \
 exchange_lda_lsda.o \
 exchange_gga.o \
-fcp_variables.o \
 fd_gradient.o \
 fft_base.o \
 fft_rho.o \

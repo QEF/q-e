@@ -101,7 +101,6 @@ exchange_gga.o : kind.o
 exchange_lda_lsda.o : constants.o
 exchange_lda_lsda.o : kind.o
 expint.o : kind.o
-fcp_variables.o : kind.o
 fd_gradient.o : ../FFTXlib/fft_types.o
 fd_gradient.o : ../FFTXlib/scatter_mod.o
 fd_gradient.o : ../UtilXlib/mp.o

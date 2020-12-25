@@ -56,17 +56,6 @@ SUBROUTINE iosys()
                               nraise_     => nraise, &
                               refold_pos_ => refold_pos
   !
-  USE fcp_variables, ONLY : lfcpopt_ => lfcpopt, &
-                            lfcpdyn_ => lfcpdyn, &
-                            fcp_mu_ => fcp_mu, &
-                            fcp_mass_ => fcp_mass, &
-                            fcp_temperature, &
-                            fcp_relax_ => fcp_relax, &
-                            fcp_relax_step_ => fcp_relax_step, &
-                            fcp_relax_crit_ => fcp_relax_crit, &
-                            fcp_mdiis_size_ => fcp_mdiis_size, &
-                            fcp_mdiis_step_ => fcp_mdiis_step
-  !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
                             edir_     => edir, &
@@ -206,7 +195,8 @@ SUBROUTINE iosys()
                             trust_radius_min_ => trust_radius_min, &
                             trust_radius_ini_ => trust_radius_ini, &
                             w_1_              => w_1, &
-                            w_2_              => w_2
+                            w_2_              => w_2, &
+                            ignore_wolfe_     => ignore_wolfe
   USE wannier_new, ONLY :   use_wannier_      => use_wannier, &
                             use_energy_int_   => use_energy_int, &
                             nwan_             => nwan, &
@@ -220,6 +210,10 @@ SUBROUTINE iosys()
 
   USE qmmm,                  ONLY : qmmm_config
 
+  USE fcp_module,            ONLY : fcp_iosys
+
+  USE gcscf_module,          ONLY : gcscf_iosys
+
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
@@ -230,8 +224,8 @@ SUBROUTINE iosys()
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, efield_cart, lecrpa,                 &
-                               vdw_table_name, memory, max_seconds, tqmmm,     &
-                               efield_phase, gate, max_xml_steps
+                               lfcp, vdw_table_name, memory, max_seconds,      &
+                               tqmmm, efield_phase, gate, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -267,9 +261,7 @@ SUBROUTINE iosys()
                                xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
-                               lfcpopt, lfcpdyn, fcp_mu, fcp_mass, fcp_tempw, & 
-                               fcp_relax, fcp_relax_step, fcp_relax_crit,     &
-                               fcp_mdiis_size, fcp_mdiis_step,                &
+                               lgcscf,                                        &
                                zgate, relaxz, block, block_1, block_2,        &
                                block_height
   !
@@ -292,7 +284,7 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim
+                               trust_radius_ini, bfgs_ndim, ignore_wolfe
   !
   ! ... CELL namelist
   !
@@ -1154,6 +1146,18 @@ SUBROUTINE iosys()
      CALL errore( 'iosys', 'unknown mixing ' // trim( mixing_mode ), 1 )
   END SELECT
   !
+  IF ( mixing_beta < 0.0_DP ) THEN
+     !
+     IF ( lgcscf ) THEN
+        ! GC-SCF with ESM-BC2 or ESM-BC3
+        mixing_beta = 0.2_DP
+     ELSE
+        ! default
+        mixing_beta = 0.7_DP
+     END IF
+     !
+  END IF
+  !
   starting_scf_threshold = tr2
   nmix                   = mixing_ndim
   mixing_beta_           = mixing_beta
@@ -1319,6 +1323,14 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
+  IF ( lfcp ) THEN
+     ignore_wolfe_ = .TRUE.
+  ELSE
+     ignore_wolfe_ = ignore_wolfe
+  END IF
+  !
+  IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
+  !
   !  VdW CORRECTIONS (SEMI-EMPIRICAL)
   !
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, mbd_vdw_, lxdm)
@@ -1428,30 +1440,6 @@ SUBROUTINE iosys()
     ENDIF
   ENDIF
   !
-  ! ... FCP
-  !
-  lfcpopt_        = lfcpopt
-  lfcpdyn_        = lfcpdyn
-  fcp_mu_         = fcp_mu
-  fcp_mass_       = fcp_mass
-  fcp_temperature = fcp_tempw
-  !
-  IF ( lfcpopt .or. lfcpdyn ) THEN
-     IF ( .not. do_comp_esm ) THEN
-        CALL errore ('iosys','FCP optimise/dynamics currently not available without ESM',1)
-     ENDIF
-     IF ( trim( calculation ).NE.'relax'.AND.trim( calculation ).NE.'md')THEN
-        CALL errore ('iosys',"FCP optimise/dynamics only available with calculation = 'relax' and 'md'",1)
-     ENDIF
-  ENDIF
-  !
-  IF ( fcp_temperature == 0.0_DP ) &
-     fcp_temperature = temperature
-  fcp_relax_      = fcp_relax
-  fcp_relax_step_ = fcp_relax_step
-  fcp_relax_crit_ = fcp_relax_crit
-  fcp_mdiis_size_ = fcp_mdiis_size
-  fcp_mdiis_step_ = fcp_mdiis_step
   !
   ! ATOMIC POSITIONS
   !
@@ -1680,6 +1668,14 @@ SUBROUTINE iosys()
               'constraints only with fixed-cell dynamics', 1 )
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
+  !
+  ! ... set variables for FCP
+  !
+  CALL fcp_iosys(lfcp)
+  !
+  ! ... set variables for GC-SCF (this must be after FCP, to check condition)
+  !
+  CALL gcscf_iosys(lgcscf)
   !
   ! ... End of reading input parameters
   !
