@@ -1,8 +1,7 @@
 ! ========================================================
 !
 !
-!Aris: routine per calcolare le derivate del potenziale per la corrente di scambio
-!
+! Routine to evaluate the derivative of the exchange potential for exchange current
 !
 subroutine pbex_current(rho, grho, iflag, sx)
    USE kinds, ONLY: DP
@@ -54,8 +53,9 @@ end subroutine pbex_current
 !
 !=============================================================================
 !
+! Only for testing, the previous routine using a finite difference approach.
 !
-subroutine pbex_current_numerical_due(rho, grho, iflag, sx)
+subroutine pbex_current_numerical(rho, grho, iflag, sx)
    USE kinds, ONLY: DP
    USE constants, ONLY: pi
    use exch_gga, only: pbex
@@ -102,10 +102,10 @@ subroutine pbex_current_numerical_due(rho, grho, iflag, sx)
 
    sx(3) = der/rho
 
-end subroutine pbex_current_numerical_due
+end subroutine pbex_current_numerical
 !
 !
-!=============== Aris, routine per corrente di correlazione ================================================
+!=============== Routine for correlation part of the current  ================================================
 !
 subroutine pbec_current(rho, grho, iflag, sc)
    !---------------------------------------------------------------
@@ -152,8 +152,9 @@ subroutine pbec_current(rho, grho, iflag, sc)
 end subroutine pbec_current
 
 !====================================================================================
+! Only for testing, previous routine with a finite different approach
 
-subroutine pbec_current_numerical_due(rho, grho, iflag, sc)
+subroutine pbec_current_numerical(rho, grho, iflag, sc)
    !---------------------------------------------------------------
    !
    ! PBE correlation (without LDA part)
@@ -206,6 +207,6 @@ subroutine pbec_current_numerical_due(rho, grho, iflag, sc)
 
    sc(3) = der/rho
 
-end subroutine pbec_current_numerical_due
+end subroutine pbec_current_numerical
 
 !================================================================================
