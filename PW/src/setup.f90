@@ -177,7 +177,7 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-  IF ( lbands .OR. ( (lfcp .OR. lgcscf) .AND. restart )) THEN
+  IF ( .NOT. lscf .OR. ( (lfcp .OR. lgcscf) .AND. restart ) ) THEN
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
      !
