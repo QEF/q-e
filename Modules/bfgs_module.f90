@@ -385,7 +385,7 @@ CONTAINS
             CALL reset_bfgs( n, lfcp, fcp_cap )
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+1 + j+3*(i-1) ) = step( n-NADD+1 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             ! normalize step but remember its length
             nr_step_length = scnorm(step)
             step(:) = step(:) / nr_step_length
@@ -440,7 +440,7 @@ CONTAINS
             ! ... standard Newton-Raphson step
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+1 + j+3*(i-1) ) = step( n-NADD+1 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
@@ -450,7 +450,7 @@ CONTAINS
             !
             CALL reset_bfgs( n, lfcp, fcp_cap )
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+1 + j+3*(i-1) ) = step( n-NADD+1 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          !
@@ -606,7 +606,7 @@ CONTAINS
             ! ... last gradient and reset gdiis history
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+1 + j+3*(i-1) ) = step( n-NADD+1 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             !
             gdiis_iter = 0
             !
