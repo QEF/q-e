@@ -41,7 +41,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !! Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
   !
   USE kinds,        ONLY: DP
-  USE mp,           ONLY: mp_bcast, mp_sum
+  USE mp,           ONLY: mp_bcast
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode, ionode_id
   USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
@@ -99,10 +99,12 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      ios = 1
      IF ( pseudo_dir_cur /= ' ' ) THEN
-        file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
-        INQUIRE(file = file_pseudo, EXIST = exst) 
-        IF (exst) ios = 0
-        CALL mp_sum (ios,intra_image_comm)
+        IF ( ionode ) THEN
+           file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
+           INQUIRE(file = file_pseudo, EXIST = exst) 
+           IF (exst) ios = 0
+        END IF
+        CALL mp_bcast (ios,ionode_id,intra_image_comm)
         IF ( ios /= 0 ) CALL infomsg &
                      ('readpp', 'file '//TRIM(file_pseudo)//' not found')
      END IF
@@ -111,10 +113,12 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! as set in input (it should already contain a slash at the end)
      !
      IF ( ios /= 0 ) THEN
-        file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
-        INQUIRE ( file = file_pseudo, EXIST = exst) 
-        IF (exst) ios = 0
-        CALL mp_sum (ios,intra_image_comm)
+        IF ( ionode ) THEN
+           file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
+           INQUIRE ( file = file_pseudo, EXIST = exst) 
+           IF (exst) ios = 0
+        END IF
+        CALL mp_bcast (ios,ionode_id,intra_image_comm)
         CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not found',ABS(ios))
      END IF
      !

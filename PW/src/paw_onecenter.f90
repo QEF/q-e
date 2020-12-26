@@ -426,7 +426,6 @@ MODULE paw_onecenter
     !
     USE noncollin_module,       ONLY : nspin_mag
     USE constants,              ONLY : e2, eps12
-    USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE funct,                  ONLY : dft_is_gradient
@@ -2129,7 +2128,6 @@ MODULE paw_onecenter
     USE constants,         ONLY : eps12
     USE lsda_mod,          ONLY : nspin
     USE noncollin_module,  ONLY : ux, nspin_gga, nspin_mag
-    USE uspp_param,        ONLY : upf
     USE atom,              ONLY : g => rgrid
     USE io_global,         ONLY : stdout
     !
