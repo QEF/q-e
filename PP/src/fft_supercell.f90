@@ -78,7 +78,7 @@ CONTAINS
     USE fft_base,            ONLY : smap, dffts
     USE fft_types,           ONLY : fft_type_init
     USE mp_bands,            ONLY : nproc_bgrp, intra_bgrp_comm, nyfft, &
-                                    ntask_groups, nyfft
+                                    ntask_groups
     USE mp_pools,            ONLY : inter_pool_comm
     USE mp,                  ONLY : mp_max
     USE gvect,               ONLY : gcutm
