@@ -65,9 +65,9 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   REAL(DP), parameter :: rcut = 10.d0 
   ! 2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff 
   ! being smaller than pseudo rcut. original value=10.0
-  CHARACTER(len=512) :: file_pseudo ! file name complete with path
-  CHARACTER(len=512) :: file_fixed, msg
-  LOGICAL :: printout_ = .FALSE., exst, is_xml
+  CHARACTER(len=512) :: file_pseudo
+  ! file name complete with path
+  LOGICAL :: printout_ = .FALSE., exst
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
   !
@@ -99,8 +99,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      ios = 1
      IF ( pseudo_dir_cur /= ' ' ) THEN
+        file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
         IF ( ionode ) THEN
-           file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
            INQUIRE(file = file_pseudo, EXIST = exst) 
            IF (exst) ios = 0
         END IF
@@ -113,8 +113,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! as set in input (it should already contain a slash at the end)
      !
      IF ( ios /= 0 ) THEN
+        file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
         IF ( ionode ) THEN
-           file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
            INQUIRE ( file = file_pseudo, EXIST = exst) 
            IF (exst) ios = 0
         END IF
@@ -160,6 +160,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         END IF
         !
      ELSE
+        !
+        ! FIXME: also for old PP, reading should be done by a single process
         !
         OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' )
         !
