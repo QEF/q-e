@@ -1171,8 +1171,6 @@ MODULE input_parameters
         REAL(DP)  :: w_1 = 0.5E-1_DP
         REAL(DP)  :: w_2 = 0.5_DP
 
-        LOGICAL :: ignore_wolfe = .false.
-
         LOGICAL :: l_mplathe=.false. !if true apply Muller Plathe strategy
         INTEGER :: n_muller=0!number of intermediate sub-cells
         INTEGER :: np_muller=1!period for velocity exchange
@@ -1187,7 +1185,7 @@ MODULE input_parameters
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
                           wfc_extrapolation, nraise, remove_rigid_rot,         &
                           trust_radius_max, trust_radius_min,                  &
-                          trust_radius_ini, w_1, w_2, bfgs_ndim, ignore_wolfe, &
+                          trust_radius_ini, w_1, w_2, bfgs_ndim,               &
                           l_mplathe, n_muller,np_muller,l_exit_muller
 
 

@@ -1453,11 +1453,6 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'w2')
         CALL xml_addCharacters(xp, obj%w2, fmt='s16')
      CALL xml_EndElement(xp, 'w2')
-     IF (obj%ignore_wolfe_ispresent) THEN
-        CALL xml_NewElement(xp, "ignore_wolfe")
-           CALL xml_addCharacters(xp, obj%ignore_wolfe)
-        CALL xml_EndElement(xp, "ignore_wolfe")
-     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_bfgs
 

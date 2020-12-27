@@ -43,7 +43,7 @@
                                 nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
                                 wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise, ip_dt => dt,        &
-                                bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2, ignore_wolfe, &
+                                bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2,            &
                                 cell_dynamics, wmass, cell_dofree, cell_factor,                                       &
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
@@ -460,7 +460,7 @@
   !--------------------------------------------------------------------------------------------------------------------------------
   CALL qexsd_init_ion_control(obj%ion_control, ion_dynamics, upscale, remove_rigid_rot, refold_pos,                   &
                               pot_extrapolation, wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise,    &
-                              ip_dt, bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2, ignore_wolfe)
+                              ip_dt, bfgs_ndim, trust_radius_min, trust_radius_max, trust_radius_ini, w_1, w_2)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                        CELL CONTROL ELEMENT
   !-------------------------------------------------------------------------------------------------------------------------------

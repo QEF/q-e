@@ -1379,10 +1379,6 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%w1, ionode_id, comm)
     CALL mp_bcast(obj%w2, ionode_id, comm)
     !
-    CALL mp_bcast(obj%ignore_wolfe_ispresent, ionode_id, comm)
-    IF (obj%ignore_wolfe_ispresent) &
-      CALL mp_bcast(obj%ignore_wolfe, ionode_id, comm)
-    !
   END SUBROUTINE qes_bcast_bfgs
   !
   !
