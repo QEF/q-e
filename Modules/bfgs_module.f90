@@ -100,7 +100,8 @@ MODULE bfgs_module
    ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
    ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
-   !
+   INTEGER :: &
+      stdout              ! standard output for writing
    INTEGER :: &
       bfgs_ndim           ! dimension of the subspace for GDIIS
                           ! fixed to 1 for standard BFGS algorithm
@@ -117,13 +118,14 @@ MODULE bfgs_module
 CONTAINS
    !
    !------------------------------------------------------------------------
-   SUBROUTINE init_bfgs( bfgs_ndim_, trust_radius_max_, trust_radius_min_,&
-        trust_radius_ini_, w_1_, W_2_)
+   SUBROUTINE init_bfgs( stdout_, bfgs_ndim_, trust_radius_max_, &
+                   trust_radius_min_, trust_radius_ini_, w_1_, w_2_)
      !------------------------------------------------------------------------
      !
      ! ... set values for several parameters of the algorithm
      !
      INTEGER, INTENT(IN) :: &
+          stdout_, &
           bfgs_ndim_
      REAL(DP), INTENT(IN)  :: &
         trust_radius_ini_, &
@@ -132,6 +134,7 @@ CONTAINS
         w_1_,              &
         w_2_
      !
+     stdout            = stdout_
      bfgs_ndim         = bfgs_ndim_
      trust_radius_max  = trust_radius_max_
      trust_radius_min  = trust_radius_min_
@@ -142,7 +145,7 @@ CONTAINS
    END SUBROUTINE init_bfgs
    !------------------------------------------------------------------------
    !
-   SUBROUTINE bfgs( pos_in, h, nelec, energy, grad_in, fcell, felec, scratch, stdout,&
+   SUBROUTINE bfgs( pos_in, h, nelec, energy, grad_in, fcell, felec, scratch, &
                  energy_thr, grad_thr, cell_thr, fcp_thr, energy_error, grad_error,     &
                  cell_error, fcp_error, lmovecell, lfcp, fcp_cap, &
                  step_accepted, stop_bfgs, istep )
@@ -154,7 +157,6 @@ CONTAINS
       !  energy         : energy of the system ( V(x) )
       !  grad           : vector containing 3N components of grad( V(x) )
       !  scratch        : scratch directory
-      !  stdout         : unit for standard output
       !  energy_thr     : treshold on energy difference for BFGS convergence
       !  grad_thr       : treshold on grad difference for BFGS convergence
       !                    the largest component of grad( V(x) ) is considered
@@ -177,7 +179,6 @@ CONTAINS
       REAL(DP),         INTENT(INOUT) :: fcell(3,3)
       REAL(DP),         INTENT(INOUT) :: felec ! force on FCP
       CHARACTER(LEN=*), INTENT(IN)    :: scratch
-      INTEGER,          INTENT(IN)    :: stdout
       REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr, cell_thr, fcp_thr
       LOGICAL,          INTENT(IN)    :: lmovecell
       LOGICAL,          INTENT(IN)    :: lfcp ! include FCP, or not ?
@@ -269,7 +270,7 @@ CONTAINS
       IF ( lmovecell ) fname="enthalpy"
       IF ( lfcp ) fname = "grand-" // TRIM(fname)
       !
-      CALL read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap, stdout )
+      CALL read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap )
       !
       scf_iter = scf_iter + 1
       istep    = scf_iter
@@ -440,7 +441,7 @@ CONTAINS
             !
             CALL check_wolfe_conditions( lwolfe, energy, grad )
             !
-            CALL update_inverse_hessian( pos, grad, n, lfcp, fcp_cap, stdout )
+            CALL update_inverse_hessian( pos, grad, n, lfcp, fcp_cap )
             !
          END IF
          ! compute new search direction and store NR step length
@@ -482,7 +483,7 @@ CONTAINS
             !
          ELSE
             !
-            CALL compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap, stdout )
+            CALL compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap )
             !
          END IF
          !
@@ -670,7 +671,7 @@ CONTAINS
    END SUBROUTINE reset_bfgs
    !
    !------------------------------------------------------------------------
-   SUBROUTINE read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap, stdout )
+   SUBROUTINE read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -681,7 +682,6 @@ CONTAINS
       INTEGER,          INTENT(IN)    :: n
       LOGICAL,          INTENT(IN)    :: lfcp
       REAL(DP),         INTENT(IN)    :: fcp_cap
-      INTEGER,          INTENT(IN)    :: stdout
       REAL(DP),         INTENT(INOUT) :: energy
       !
       CHARACTER(LEN=256) :: bfgs_file
@@ -798,7 +798,7 @@ CONTAINS
    END SUBROUTINE write_bfgs_file
    !
    !------------------------------------------------------------------------
-   SUBROUTINE update_inverse_hessian( pos, grad, n, lfcp, fcp_cap, stdout )
+   SUBROUTINE update_inverse_hessian( pos, grad, n, lfcp, fcp_cap )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -808,7 +808,6 @@ CONTAINS
       INTEGER,  INTENT(IN)  :: n
       LOGICAL,  INTENT(IN)  :: lfcp
       REAL(DP), INTENT(IN)  :: fcp_cap
-      INTEGER,  INTENT(IN)  :: stdout
       INTEGER               :: info
       !
       REAL(DP), ALLOCATABLE :: y(:), s(:)
@@ -927,7 +926,7 @@ CONTAINS
    END FUNCTION gradient_wolfe_condition
    !
    !------------------------------------------------------------------------
-   SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap, stdout )
+   SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap )
       !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -938,7 +937,6 @@ CONTAINS
       INTEGER,  INTENT(IN)  :: n
       LOGICAL,  INTENT(IN)  :: lfcp
       REAL(DP), INTENT(IN)  :: fcp_cap
-      INTEGER,  INTENT(IN)  :: stdout
       !
       REAL(DP) :: a
       LOGICAL  :: ltest
@@ -1037,7 +1035,7 @@ CONTAINS
    !
    !------------------------------------------------------------------------
    SUBROUTINE terminate_bfgs( energy, energy_thr, grad_thr, cell_thr, fcp_thr, &
-                              lmovecell, lfcp, stdout, scratch )
+                              lmovecell, lfcp, scratch )
       !------------------------------------------------------------------------
       !
       USE io_files, ONLY : delete_if_present
@@ -1045,7 +1043,6 @@ CONTAINS
       IMPLICIT NONE
       REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr, fcp_thr
       LOGICAL,          INTENT(IN) :: lmovecell, lfcp
-      INTEGER,          INTENT(IN) :: stdout
       CHARACTER(LEN=*), INTENT(IN) :: scratch
       !
       IF ( conv_bfgs ) THEN

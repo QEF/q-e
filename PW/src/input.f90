@@ -1310,7 +1310,7 @@ SUBROUTINE iosys()
   !
   ! ... BFGS specific
   !
-  CALL init_bfgs( bfgs_ndim, trust_radius_max, trust_radius_min, &
+  CALL init_bfgs( stdout, bfgs_ndim, trust_radius_max, trust_radius_min, &
         trust_radius_ini, w_1, w_2 )
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.

@@ -117,7 +117,7 @@ SUBROUTINE move_ions( idone, ions_status )
         !
         IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
            !
-           CALL bfgs( pos, h, relec, etot, grad, fcell, felec, tmp_dir, stdout, epse, &
+           CALL bfgs( pos, h, relec, etot, grad, fcell, felec, tmp_dir, epse, &
                       epsf, epsp1, fcp_eps, energy_error, gradient_error, cell_error, fcp_error, &
                       lmovecell, lfcp, capacitance, step_accepted, conv_ions, istep )
            !
@@ -197,7 +197,7 @@ SUBROUTINE move_ions( idone, ions_status )
               IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
                  !
                  CALL terminate_bfgs ( etot, epse, epsf, epsp, fcp_eps, &
-                                       lmovecell, lfcp, stdout, tmp_dir )
+                                       lmovecell, lfcp, tmp_dir )
                  !
               END IF
               !
@@ -206,7 +206,7 @@ SUBROUTINE move_ions( idone, ions_status )
         ELSEIF ( idone == nstep ) THEN
            !
            CALL terminate_bfgs( etot, epse, epsf, epsp, fcp_eps, &
-                                lmovecell, lfcp, stdout, tmp_dir )
+                                lmovecell, lfcp, tmp_dir )
            !
         ELSE
            !
