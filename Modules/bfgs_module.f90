@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2010 Quantum ESPRESSO group
+! Copyright (C) 2003-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,6 +29,7 @@ MODULE bfgs_module
    ! ... Modified for variable-cell-shape relaxation ( 2007-2008 ) by 
    ! ...   Javier Antonio Montoya, Lorenzo Paulatto and Stefano de Gironcoli
    ! ... Re-analyzed by Stefano de Gironcoli ( 2010 )
+   ! ... FCP case added by Minoru Otani and collaborators (2020)
    !
    ! ... references :
    !
@@ -56,13 +57,7 @@ MODULE bfgs_module
    !
    ! ... public methods
    !
-   PUBLIC :: bfgs, terminate_bfgs, bfgs_get_n_iter 
-   !
-   ! ... public variables
-   !
-   PUBLIC :: bfgs_ndim,        &
-             trust_radius_ini, trust_radius_min, trust_radius_max, &
-             w_1,              w_2
+   PUBLIC :: bfgs, init_bfgs, terminate_bfgs, bfgs_get_n_iter 
    !
    ! ... global module variables
    !
@@ -101,12 +96,10 @@ MODULE bfgs_module
    LOGICAL :: &
       conv_bfgs = .FALSE. ! .TRUE. when bfgs convergence has been achieved
    !
-   ! ... default values for the following variables are set in
-   ! ... Modules/read_namelist.f90 (SUBROUTINE ions_defaults)
+   ! ... default values for bfgs_ndim, trust_radius_max, trust_radius_min,
+   ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
+   ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
-   ! ... Note that trust_radius_max, trust_radius_min, trust_radius_ini,
-   ! ... w_1, w_2, bfgs_ndim have a default value, but can also be assigned
-   ! ... in the input.
    !
    INTEGER :: &
       bfgs_ndim           ! dimension of the subspace for GDIIS
@@ -124,6 +117,31 @@ MODULE bfgs_module
 CONTAINS
    !
    !------------------------------------------------------------------------
+   SUBROUTINE init_bfgs( bfgs_ndim_, trust_radius_max_, trust_radius_min_,&
+        trust_radius_ini_, w_1_, W_2_)
+     !------------------------------------------------------------------------
+     !
+     ! ... set values for several parameters of the algorithm
+     !
+     INTEGER, INTENT(IN) :: &
+          bfgs_ndim_
+     REAL(DP), INTENT(IN)  :: &
+        trust_radius_ini_, &
+        trust_radius_min_, &
+        trust_radius_max_, &
+        w_1_,              &
+        w_2_
+     !
+     bfgs_ndim         = bfgs_ndim_
+     trust_radius_max  = trust_radius_max_
+     trust_radius_min  = trust_radius_min_
+     trust_radius_ini  = trust_radius_ini_
+     w_1               = w_1_
+     w_2               = w_2_
+     !
+   END SUBROUTINE init_bfgs
+   !------------------------------------------------------------------------
+   !
    SUBROUTINE bfgs( pos_in, h, nelec, energy, grad_in, fcell, felec, scratch, stdout,&
                  energy_thr, grad_thr, cell_thr, fcp_thr, energy_error, grad_error,     &
                  cell_error, fcp_error, lmovecell, lfcp, fcp_cap, &
