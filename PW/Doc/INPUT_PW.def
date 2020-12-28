@@ -190,6 +190,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 performed in this run. If set to 0, the code performs a quick
                 "dry run", stopping just after initialization. This is useful
                 to check for input correctness and to have the summary printed.
+                NOTE: in MD calculations, the code will perform "nstep" steps
+                even if restarting from a previously interrupted calculation.
             }
             default {
                 1  if @ref calculation == 'scf', 'nscf', 'bands';
