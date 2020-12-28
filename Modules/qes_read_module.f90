@@ -6204,35 +6204,6 @@ MODULE qes_read_module
        END IF
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "ignore_wolfe")
-    tmp_node_list_size = getLength(tmp_node_list)
-    !
-    IF (tmp_node_list_size > 1) THEN
-        IF (PRESENT(ierr) ) THEN
-           CALL infomsg("qes_read:bfgsType","ignore_wolfe: too many occurrences")
-           ierr = ierr + 1
-        ELSE
-           CALL errore("qes_read:bfgsType","ignore_wolfe: too many occurrences",10)
-        END IF
-    END IF
-    !
-    IF (tmp_node_list_size>0) THEN
-      obj%ignore_wolfe_ispresent = .TRUE.
-      tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%ignore_wolfe, IOSTAT = iostat_)
-      IF ( iostat_ /= 0 ) THEN
-         IF ( PRESENT (ierr ) ) THEN
-            CALL infomsg("qes_read:bfgsType","error reading ignore_wolfe")
-            ierr = ierr + 1
-         ELSE
-            CALL errore ("qes_read:bfgsType","error reading ignore_wolfe",10)
-         END IF
-      END IF
-    ELSE
-       obj%ignore_wolfe_ispresent = .FALSE.
-    END IF
-    !
-    !
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_bfgs

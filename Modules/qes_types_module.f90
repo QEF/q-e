@@ -688,9 +688,6 @@ MODULE qes_types_module
     REAL(DP) :: w1
     REAL(DP) :: w2
     !
-    LOGICAL  :: ignore_wolfe_ispresent = .FALSE.
-    LOGICAL  :: ignore_wolfe
-    !
   END TYPE bfgs_type
   !
   TYPE :: md_type

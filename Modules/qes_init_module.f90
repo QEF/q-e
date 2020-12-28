@@ -1927,7 +1927,7 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_bfgs(obj, tagname, ndim, trust_radius_min, trust_radius_max, trust_radius_init,&
-                          w1, w2, ignore_wolfe)
+                          w1, w2)
     !
     IMPLICIT NONE
     !
@@ -1939,7 +1939,6 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: trust_radius_init
     REAL(DP),INTENT(IN) :: w1
     REAL(DP),INTENT(IN) :: w2
-    LOGICAL,OPTIONAL,INTENT(IN) :: ignore_wolfe
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -1951,13 +1950,6 @@ MODULE qes_init_module
     obj%trust_radius_init = trust_radius_init
     obj%w1 = w1
     obj%w2 = w2
-    !
-    IF ( PRESENT(ignore_wolfe)) THEN
-      obj%ignore_wolfe_ispresent = .TRUE.
-      obj%ignore_wolfe = ignore_wolfe
-    ELSE
-      obj%ignore_wolfe_ispresent = .FALSE.
-    END IF
     !
   END SUBROUTINE qes_init_bfgs 
   !

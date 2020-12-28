@@ -195,8 +195,7 @@ SUBROUTINE iosys()
                             trust_radius_min_ => trust_radius_min, &
                             trust_radius_ini_ => trust_radius_ini, &
                             w_1_              => w_1, &
-                            w_2_              => w_2, &
-                            ignore_wolfe_     => ignore_wolfe
+                            w_2_              => w_2
   USE wannier_new, ONLY :   use_wannier_      => use_wannier, &
                             use_energy_int_   => use_energy_int, &
                             nwan_             => nwan, &
@@ -284,7 +283,7 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim, ignore_wolfe
+                               trust_radius_ini, bfgs_ndim
   !
   ! ... CELL namelist
   !
@@ -1322,12 +1321,6 @@ SUBROUTINE iosys()
   trust_radius_ini_ = trust_radius_ini
   w_1_              = w_1
   w_2_              = w_2
-  !
-  IF ( lfcp ) THEN
-     ignore_wolfe_ = .TRUE.
-  ELSE
-     ignore_wolfe_ = ignore_wolfe
-  END IF
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !

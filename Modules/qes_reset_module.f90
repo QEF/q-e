@@ -1093,8 +1093,6 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
-    obj%ignore_wolfe_ispresent = .FALSE.
-    !
   END SUBROUTINE qes_reset_bfgs
   !
   !

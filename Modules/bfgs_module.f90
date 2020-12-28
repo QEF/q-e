@@ -62,8 +62,7 @@ MODULE bfgs_module
    !
    PUBLIC :: bfgs_ndim,        &
              trust_radius_ini, trust_radius_min, trust_radius_max, &
-             w_1,              w_2, &
-             ignore_wolfe
+             w_1,              w_2
    !
    ! ... global module variables
    !
@@ -121,13 +120,11 @@ MODULE bfgs_module
       w_1,               &! 1st Wolfe condition: sufficient energy decrease
       w_2                 ! 2nd Wolfe condition: sufficient gradient decrease
 
-   LOGICAL :: &
-      ignore_wolfe        ! if .TRUE., a new BFGS step will be always done
    !
 CONTAINS
    !
    !------------------------------------------------------------------------
-   SUBROUTINE bfgs( pos_in, h, nelec, energy, grad_in, fcell, felec, fixion, scratch, stdout,&
+   SUBROUTINE bfgs( pos_in, h, nelec, energy, grad_in, fcell, felec, scratch, stdout,&
                  energy_thr, grad_thr, cell_thr, fcp_thr, energy_error, grad_error,     &
                  cell_error, fcp_error, lmovecell, lfcp, fcp_cap, &
                  step_accepted, stop_bfgs, istep )
@@ -138,7 +135,6 @@ CONTAINS
       !  pos            : vector containing 3N coordinates of the system ( x )
       !  energy         : energy of the system ( V(x) )
       !  grad           : vector containing 3N components of grad( V(x) )
-      !  fixion         : vector used to freeze a deg. of freedom
       !  scratch        : scratch directory
       !  stdout         : unit for standard output
       !  energy_thr     : treshold on energy difference for BFGS convergence
@@ -162,7 +158,6 @@ CONTAINS
       REAL(DP),         INTENT(INOUT) :: grad_in(:)
       REAL(DP),         INTENT(INOUT) :: fcell(3,3)
       REAL(DP),         INTENT(INOUT) :: felec ! force on FCP
-      INTEGER,          INTENT(IN)    :: fixion(:)
       CHARACTER(LEN=*), INTENT(IN)    :: scratch
       INTEGER,          INTENT(IN)    :: stdout
       REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr, cell_thr, fcp_thr
@@ -256,7 +251,7 @@ CONTAINS
       IF ( lmovecell ) fname="enthalpy"
       IF ( lfcp ) fname = "grand-" // TRIM(fname)
       !
-      CALL read_bfgs_file( pos, grad, fixion, energy, scratch, n, lfcp, fcp_cap, stdout )
+      CALL read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap, stdout )
       !
       scf_iter = scf_iter + 1
       istep    = scf_iter
@@ -324,9 +319,11 @@ CONTAINS
       !
       ! ... the bfgs algorithm starts here
       !
-      IF ( .NOT. energy_wolfe_condition( energy ) .AND. (scf_iter > 1) .AND. (.NOT. ignore_wolfe) ) THEN
+      IF ( .NOT. energy_wolfe_condition( energy ) .AND. (scf_iter > 1) .AND. (.NOT. lfcp) ) THEN
          !
-         ! ... the previous step is rejected, line search goes on
+         ! ... Wolfe condition not met: the previous step is rejected,
+         ! ... line search goes on
+         ! ... Note that for the FCP case, the Wolfe condition is ignored
          !
          step_accepted = .FALSE.
          !
@@ -655,14 +652,13 @@ CONTAINS
    END SUBROUTINE reset_bfgs
    !
    !------------------------------------------------------------------------
-   SUBROUTINE read_bfgs_file( pos, grad, fixion, energy, scratch, n, lfcp, fcp_cap, stdout )
+   SUBROUTINE read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap, stdout )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
       REAL(DP),         INTENT(INOUT) :: pos(:)
       REAL(DP),         INTENT(INOUT) :: grad(:)
-      INTEGER,          INTENT(IN)    :: fixion(:)
       CHARACTER(LEN=*), INTENT(IN)    :: scratch
       INTEGER,          INTENT(IN)    :: n
       LOGICAL,          INTENT(IN)    :: lfcp

@@ -65,7 +65,6 @@ SUBROUTINE move_ions( idone, ions_status )
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   REAL(DP)              :: relec, felec, capacitance, tot_charge_
-  INTEGER,  ALLOCATABLE :: fixion(:)
   LOGICAL               :: conv_ions
   !
   ! ... only one node does the calculation in the parallel case
@@ -89,8 +88,8 @@ SUBROUTINE move_ions( idone, ions_status )
         !
         ! ... BFGS algorithm is used to minimize ionic configuration
         !
-        ALLOCATE( pos( 3*nat ), grad( 3*nat ), fixion( 3*nat ) )
-        pos = 0.d0; grad=0.d0; fixion = 0
+        ALLOCATE( pos( 3*nat ), grad( 3*nat ) )
+        pos = 0.d0; grad=0.d0
         !
         h = at * alat
         !
@@ -98,7 +97,6 @@ SUBROUTINE move_ions( idone, ions_status )
         CALL cryst_to_cart( nat, pos, bg, -1 )
         grad   = - RESHAPE( force,  (/ 3 * nat /) ) * alat
         CALL cryst_to_cart( nat, grad, at, -1 )
-        fixion =   RESHAPE( if_pos, (/ 3 * nat /) )
         !
         IF ( lmovecell ) THEN
            at_old = at
@@ -119,7 +117,7 @@ SUBROUTINE move_ions( idone, ions_status )
         !
         IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
            !
-           CALL bfgs( pos, h, relec, etot, grad, fcell, felec, fixion, tmp_dir, stdout, epse, &
+           CALL bfgs( pos, h, relec, etot, grad, fcell, felec, tmp_dir, stdout, epse, &
                       epsf, epsp1, fcp_eps, energy_error, gradient_error, cell_error, fcp_error, &
                       lmovecell, lfcp, capacitance, step_accepted, conv_ions, istep )
            !
@@ -150,7 +148,7 @@ SUBROUTINE move_ions( idone, ions_status )
         CALL cryst_to_cart( nat, pos,  at, 1 )
         tau    =  RESHAPE( pos,  (/ 3, nat /) )
         !
-        DEALLOCATE( pos, grad, fixion )
+        DEALLOCATE( pos, grad )
         !
         IF ( conv_ions ) THEN
            !
