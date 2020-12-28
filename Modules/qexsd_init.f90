@@ -780,7 +780,7 @@ CONTAINS
       LOGICAL,         INTENT(IN) :: lsda, noncolin, spinorbit
       REAL(DP),        INTENT(IN) :: total_mag, absolute_mag
       REAL(DP),        INTENT(IN) :: total_mag_nc(3)
-      LOGICAL,         INTENT(IN) :: do_magnetization
+      LOGICAL,OPTIONAL,INTENT(IN) :: do_magnetization
       !
       CALL qes_init(obj, "magnetization", lsda, noncolin, spinorbit, total_mag, absolute_mag, &
                                  do_magnetization)
