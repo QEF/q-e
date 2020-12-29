@@ -20,7 +20,6 @@ becmod.o : noncol.o
 becmod.o : recvec.o
 beef_interface.o : kind.o
 bfgs_module.o : basic_algebra_routines.o
-bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o
 bfgs_module.o : invmat.o
 bfgs_module.o : io_files.o

@@ -44,9 +44,7 @@ MODULE bfgs_module
    !
    !
    USE kinds,     ONLY : DP
-   USE io_files,  ONLY : iunbfgs, prefix
    USE constants, ONLY : eps4, eps8, eps16, RYTOEV
-   USE cell_base, ONLY : iforceh      ! FIXME: should be passed as argument
    !
    USE basic_algebra_routines
    USE matrix_inversion
@@ -63,7 +61,10 @@ MODULE bfgs_module
    !
    SAVE
    !
-   CHARACTER (len=18) :: fname="energy" ! name of the function to be minimized
+   CHARACTER (len=18) :: fname="energy"
+   !! name of the function to be minimized
+   CHARACTER (len=320):: bfgs_file=" "
+   !! name of file (with path) used to store and retrieve the status
    !
    REAL(DP), ALLOCATABLE :: &
       pos(:),            &! positions + cell
@@ -100,10 +101,13 @@ MODULE bfgs_module
    ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
    ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
-   !
+   LOGICAL :: &
+      bfgs_initialized = .FALSE.
+   INTEGER :: &
+      stdout              ! standard output for writing
    INTEGER :: &
       bfgs_ndim           ! dimension of the subspace for GDIIS
-                          ! fixed to 1 for standard BFGS algorithm
+                          ! for standard BFGS algorithm, bfgs_ndim=1
    REAL(DP)  :: &
       trust_radius_ini,  &! suggested initial displacement
       trust_radius_min,  &! minimum allowed displacement
@@ -112,18 +116,18 @@ MODULE bfgs_module
    REAL(DP)  ::          &! parameters for Wolfe conditions
       w_1,               &! 1st Wolfe condition: sufficient energy decrease
       w_2                 ! 2nd Wolfe condition: sufficient gradient decrease
-
    !
 CONTAINS
    !
    !------------------------------------------------------------------------
-   SUBROUTINE init_bfgs( bfgs_ndim_, trust_radius_max_, trust_radius_min_,&
-        trust_radius_ini_, w_1_, W_2_)
+   SUBROUTINE init_bfgs( stdout_, bfgs_ndim_, trust_radius_max_, &
+                   trust_radius_min_, trust_radius_ini_, w_1_, w_2_)
      !------------------------------------------------------------------------
      !
      ! ... set values for several parameters of the algorithm
      !
      INTEGER, INTENT(IN) :: &
+          stdout_, &
           bfgs_ndim_
      REAL(DP), INTENT(IN)  :: &
         trust_radius_ini_, &
@@ -132,32 +136,39 @@ CONTAINS
         w_1_,              &
         w_2_
      !
+     stdout            = stdout_
      bfgs_ndim         = bfgs_ndim_
      trust_radius_max  = trust_radius_max_
      trust_radius_min  = trust_radius_min_
      trust_radius_ini  = trust_radius_ini_
      w_1               = w_1_
      w_2               = w_2_
+     bfgs_initialized  = .true.
      !
    END SUBROUTINE init_bfgs
    !------------------------------------------------------------------------
    !
-   SUBROUTINE bfgs( pos_in, h, nelec, energy, grad_in, fcell, felec, scratch, stdout,&
-                 energy_thr, grad_thr, cell_thr, fcp_thr, energy_error, grad_error,     &
-                 cell_error, fcp_error, lmovecell, lfcp, fcp_cap, &
-                 step_accepted, stop_bfgs, istep )
+   SUBROUTINE bfgs( filebfgs, pos_in, h, nelec, energy, &
+                   grad_in, fcell, iforceh, felec, &
+                   energy_thr, grad_thr, cell_thr, fcp_thr, &
+                   energy_error, grad_error, cell_error, fcp_error, &
+                   lmovecell, lfcp, fcp_cap, step_accepted, stop_bfgs, istep )
       !------------------------------------------------------------------------
       !
       ! ... list of input/output arguments :
       !
-      !  pos            : vector containing 3N coordinates of the system ( x )
+      !  filebfgs       : file name for storing and retrieving data
+      !  pos_in         : vector containing 3N coordinates of the system ( x )
+      !  h              : 3x3 matrix of the primitive lattice vectors
+      !  nelec          : number of elecrons (for FCP)
       !  energy         : energy of the system ( V(x) )
       !  grad           : vector containing 3N components of grad( V(x) )
-      !  scratch        : scratch directory
-      !  stdout         : unit for standard output
-      !  energy_thr     : treshold on energy difference for BFGS convergence
-      !  grad_thr       : treshold on grad difference for BFGS convergence
-      !                    the largest component of grad( V(x) ) is considered
+      !  fcell          : 3x3 matrix containing the stress tensor
+      !  iforceh        : 3x3 matrix containing cell constraints
+      !  energy_thr     : threshold on energy difference for BFGS convergence
+      !  grad_thr       : threshold on grad difference for BFGS convergence
+      !                   the largest component of grad( V(x) ) is considered
+      !  cell_thr       : threshold on grad of cell for BFGS convergence
       !  fcp_thr        : treshold on grad of FCP for BFGS convergence
       !  energy_error   : energy difference | V(x_i) - V(x_i-1) |
       !  grad_error     : the largest component of
@@ -176,9 +187,9 @@ CONTAINS
       REAL(DP),         INTENT(INOUT) :: grad_in(:)
       REAL(DP),         INTENT(INOUT) :: fcell(3,3)
       REAL(DP),         INTENT(INOUT) :: felec ! force on FCP
-      CHARACTER(LEN=*), INTENT(IN)    :: scratch
-      INTEGER,          INTENT(IN)    :: stdout
+      CHARACTER(LEN=*), INTENT(IN)    :: filebfgs
       REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr, cell_thr, fcp_thr
+      INTEGER,          INTENT(IN)    :: iforceh(3,3)
       LOGICAL,          INTENT(IN)    :: lmovecell
       LOGICAL,          INTENT(IN)    :: lfcp ! include FCP, or not ?
       REAL(DP),         INTENT(IN)    :: fcp_cap ! capacitance for FCP
@@ -196,6 +207,9 @@ CONTAINS
       INTEGER, PARAMETER :: NADD = 9 + 1
       !
       !
+      IF ( .NOT.bfgs_initialized ) CALL errore('bfgs',' not initialized',1)
+      !
+      IF ( bfgs_file == " ") bfgs_file = TRIM(filebfgs)
       lwolfe=.false.
       n = SIZE( pos_in ) + NADD
       nat = size (pos_in) / 3
@@ -269,7 +283,7 @@ CONTAINS
       IF ( lmovecell ) fname="enthalpy"
       IF ( lfcp ) fname = "grand-" // TRIM(fname)
       !
-      CALL read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap, stdout )
+      CALL read_bfgs_file( pos, grad, energy, n, lfcp, fcp_cap )
       !
       scf_iter = scf_iter + 1
       istep    = scf_iter
@@ -440,7 +454,7 @@ CONTAINS
             !
             CALL check_wolfe_conditions( lwolfe, energy, grad )
             !
-            CALL update_inverse_hessian( pos, grad, n, lfcp, fcp_cap, stdout )
+            CALL update_inverse_hessian( pos, grad, n, lfcp, fcp_cap )
             !
          END IF
          ! compute new search direction and store NR step length
@@ -482,7 +496,7 @@ CONTAINS
             !
          ELSE
             !
-            CALL compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap, stdout )
+            CALL compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap )
             !
          END IF
          !
@@ -500,7 +514,7 @@ CONTAINS
       ! ... information required by next iteration is saved here ( this must
       ! ... be done before positions are updated )
       !
-      CALL write_bfgs_file( pos, energy, grad, scratch )
+      CALL write_bfgs_file( pos, energy, grad )
       !
       ! ... positions and cell are updated
       !
@@ -670,34 +684,30 @@ CONTAINS
    END SUBROUTINE reset_bfgs
    !
    !------------------------------------------------------------------------
-   SUBROUTINE read_bfgs_file( pos, grad, energy, scratch, n, lfcp, fcp_cap, stdout )
+   SUBROUTINE read_bfgs_file( pos, grad, energy, n, lfcp, fcp_cap )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
       REAL(DP),         INTENT(INOUT) :: pos(:)
       REAL(DP),         INTENT(INOUT) :: grad(:)
-      CHARACTER(LEN=*), INTENT(IN)    :: scratch
       INTEGER,          INTENT(IN)    :: n
       LOGICAL,          INTENT(IN)    :: lfcp
       REAL(DP),         INTENT(IN)    :: fcp_cap
-      INTEGER,          INTENT(IN)    :: stdout
       REAL(DP),         INTENT(INOUT) :: energy
       !
-      CHARACTER(LEN=256) :: bfgs_file
+      INTEGER            :: iunbfgs
       LOGICAL            :: file_exists
       REAL(DP)           :: helec
       !
       !
-      bfgs_file = TRIM( scratch ) // TRIM( prefix ) // '.bfgs'
-      !
-      INQUIRE( FILE = TRIM( bfgs_file ) , EXIST = file_exists )
+      INQUIRE( FILE = bfgs_file, EXIST = file_exists )
       !
       IF ( file_exists ) THEN
          !
          ! ... bfgs is restarted from file
          !
-         OPEN( UNIT = iunbfgs, FILE = TRIM( bfgs_file ), &
+         OPEN( NEWUNIT = iunbfgs, FILE = bfgs_file, &
                STATUS = 'UNKNOWN', ACTION = 'READ' )
          !
          READ( iunbfgs, * ) pos_p
@@ -767,7 +777,7 @@ CONTAINS
    END SUBROUTINE read_bfgs_file
    !
    !------------------------------------------------------------------------
-   SUBROUTINE write_bfgs_file( pos, energy, grad, scratch )
+   SUBROUTINE write_bfgs_file( pos, energy, grad )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -775,11 +785,10 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: pos(:)
       REAL(DP),         INTENT(IN) :: energy
       REAL(DP),         INTENT(IN) :: grad(:)
-      CHARACTER(LEN=*), INTENT(IN) :: scratch
       !
+      INTEGER :: iunbfgs
       !
-      OPEN( UNIT = iunbfgs, FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs', &
-            STATUS = 'UNKNOWN', ACTION = 'WRITE' )
+      OPEN( NEWUNIT = iunbfgs, FILE = bfgs_file, STATUS = 'UNKNOWN', ACTION = 'WRITE' )
       !
       WRITE( iunbfgs, * ) pos
       WRITE( iunbfgs, * ) grad
@@ -798,7 +807,7 @@ CONTAINS
    END SUBROUTINE write_bfgs_file
    !
    !------------------------------------------------------------------------
-   SUBROUTINE update_inverse_hessian( pos, grad, n, lfcp, fcp_cap, stdout )
+   SUBROUTINE update_inverse_hessian( pos, grad, n, lfcp, fcp_cap )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -808,7 +817,6 @@ CONTAINS
       INTEGER,  INTENT(IN)  :: n
       LOGICAL,  INTENT(IN)  :: lfcp
       REAL(DP), INTENT(IN)  :: fcp_cap
-      INTEGER,  INTENT(IN)  :: stdout
       INTEGER               :: info
       !
       REAL(DP), ALLOCATABLE :: y(:), s(:)
@@ -927,7 +935,7 @@ CONTAINS
    END FUNCTION gradient_wolfe_condition
    !
    !------------------------------------------------------------------------
-   SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap, stdout )
+   SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_cap )
       !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -938,7 +946,6 @@ CONTAINS
       INTEGER,  INTENT(IN)  :: n
       LOGICAL,  INTENT(IN)  :: lfcp
       REAL(DP), INTENT(IN)  :: fcp_cap
-      INTEGER,  INTENT(IN)  :: stdout
       !
       REAL(DP) :: a
       LOGICAL  :: ltest
@@ -1037,7 +1044,7 @@ CONTAINS
    !
    !------------------------------------------------------------------------
    SUBROUTINE terminate_bfgs( energy, energy_thr, grad_thr, cell_thr, fcp_thr, &
-                              lmovecell, lfcp, stdout, scratch )
+                              lmovecell, lfcp )
       !------------------------------------------------------------------------
       !
       USE io_files, ONLY : delete_if_present
@@ -1045,8 +1052,6 @@ CONTAINS
       IMPLICIT NONE
       REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr, fcp_thr
       LOGICAL,          INTENT(IN) :: lmovecell, lfcp
-      INTEGER,          INTENT(IN) :: stdout
-      CHARACTER(LEN=*), INTENT(IN) :: scratch
       !
       IF ( conv_bfgs ) THEN
          !
@@ -1073,7 +1078,8 @@ CONTAINS
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"Final ",A," = ",F18.10," Ry")' ) fname, energy
          !
-         CALL delete_if_present( TRIM( scratch ) // TRIM( prefix ) // '.bfgs' )
+         CALL delete_if_present( bfgs_file )
+         bfgs_file = " "
          !
       ELSE
          !

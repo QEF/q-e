@@ -48,7 +48,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE funct,        ONLY: enforce_input_dft, set_dft_from_name, &
        get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
-  USE wrappers,     ONLY: md5_from_file, f_remove
+  USE wrappers,     ONLY: md5_from_file
   USE read_upf_v1_module,   ONLY: read_upf_v1
   USE read_upf_new_module,  ONLY: read_upf_new
   USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
