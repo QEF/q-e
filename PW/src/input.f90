@@ -190,12 +190,8 @@ SUBROUTINE iosys()
   USE symm_base, ONLY : no_t_rev_ => no_t_rev, nofrac, allfrac, &
                         nosym_ => nosym, nosym_evc_=> nosym_evc
   !
-  USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
-                            trust_radius_max_ => trust_radius_max, &
-                            trust_radius_min_ => trust_radius_min, &
-                            trust_radius_ini_ => trust_radius_ini, &
-                            w_1_              => w_1, &
-                            w_2_              => w_2
+  USE bfgs_module,   ONLY : init_bfgs
+  !
   USE wannier_new, ONLY :   use_wannier_      => use_wannier, &
                             use_energy_int_   => use_energy_int, &
                             nwan_             => nwan, &
@@ -1312,15 +1308,10 @@ SUBROUTINE iosys()
   nwan_ = nwan
   print_wannier_coeff_ = print_wannier_coeff
   !
-  !
   ! ... BFGS specific
   !
-  bfgs_ndim_        = bfgs_ndim
-  trust_radius_max_ = trust_radius_max
-  trust_radius_min_ = trust_radius_min
-  trust_radius_ini_ = trust_radius_ini
-  w_1_              = w_1
-  w_2_              = w_2
+  CALL init_bfgs( bfgs_ndim, trust_radius_max, trust_radius_min, &
+        trust_radius_ini, w_1, w_2 )
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
