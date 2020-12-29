@@ -1494,6 +1494,7 @@ MODULE input_parameters
         LOGICAL   :: tksout = .false.
         LOGICAL   :: ttemplate = .false.
         LOGICAL   :: twannier = .false.
+        LOGICAL   :: ttotcharge = .false.
 
 !
 !    ATOMIC_POSITIONS
@@ -1622,6 +1623,7 @@ SUBROUTINE reset_input_checks()
   tksout = .false.
   tionvel = .false.
   tcell = .false.
+  ttotcharge = .false.
   !
   END SUBROUTINE reset_input_checks
   !
