@@ -63,7 +63,7 @@ MODULE bfgs_module
    !
    CHARACTER (len=18) :: fname="energy"
    !! name of the function to be minimized
-   CHARACTER (len=256):: bfgs_file=" "
+   CHARACTER (len=320):: bfgs_file=" "
    !! name of file (with path) used to store and retrieve the status
    !
    REAL(DP), ALLOCATABLE :: &
@@ -101,11 +101,13 @@ MODULE bfgs_module
    ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
    ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
+   LOGICAL :: &
+      bfgs_initialized = .FALSE.
    INTEGER :: &
       stdout              ! standard output for writing
    INTEGER :: &
       bfgs_ndim           ! dimension of the subspace for GDIIS
-                          ! fixed to 1 for standard BFGS algorithm
+                          ! for standard BFGS algorithm, bfgs_ndim=1
    REAL(DP)  :: &
       trust_radius_ini,  &! suggested initial displacement
       trust_radius_min,  &! minimum allowed displacement
@@ -114,7 +116,6 @@ MODULE bfgs_module
    REAL(DP)  ::          &! parameters for Wolfe conditions
       w_1,               &! 1st Wolfe condition: sufficient energy decrease
       w_2                 ! 2nd Wolfe condition: sufficient gradient decrease
-
    !
 CONTAINS
    !
@@ -142,6 +143,7 @@ CONTAINS
      trust_radius_ini  = trust_radius_ini_
      w_1               = w_1_
      w_2               = w_2_
+     bfgs_initialized  = .true.
      !
    END SUBROUTINE init_bfgs
    !------------------------------------------------------------------------
@@ -204,6 +206,8 @@ CONTAINS
       ! ... additional dimensions of cell and FCP
       INTEGER, PARAMETER :: NADD = 9 + 1
       !
+      !
+      IF ( .NOT.bfgs_initialized ) CALL errore('bfgs',' not initialized',1)
       !
       IF ( bfgs_file == " ") bfgs_file = TRIM(filebfgs)
       lwolfe=.false.
