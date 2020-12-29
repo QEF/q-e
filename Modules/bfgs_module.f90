@@ -45,7 +45,6 @@ MODULE bfgs_module
    !
    USE kinds,     ONLY : DP
    USE constants, ONLY : eps4, eps8, eps16, RYTOEV
-   USE cell_base, ONLY : iforceh      ! FIXME: should be passed as argument
    !
    USE basic_algebra_routines
    USE matrix_inversion
@@ -147,21 +146,27 @@ CONTAINS
    END SUBROUTINE init_bfgs
    !------------------------------------------------------------------------
    !
-   SUBROUTINE bfgs( filebfgs, pos_in, h, nelec, energy, grad_in, fcell, felec, &
-                 energy_thr, grad_thr, cell_thr, fcp_thr, energy_error, grad_error,     &
-                 cell_error, fcp_error, lmovecell, lfcp, fcp_cap, &
-                 step_accepted, stop_bfgs, istep )
+   SUBROUTINE bfgs( filebfgs, pos_in, h, nelec, energy, &
+                   grad_in, fcell, iforceh, felec, &
+                   energy_thr, grad_thr, cell_thr, fcp_thr, &
+                   energy_error, grad_error, cell_error, fcp_error, &
+                   lmovecell, lfcp, fcp_cap, step_accepted, stop_bfgs, istep )
       !------------------------------------------------------------------------
       !
       ! ... list of input/output arguments :
       !
       !  filebfgs       : file name for storing and retrieving data
-      !  pos            : vector containing 3N coordinates of the system ( x )
+      !  pos_in         : vector containing 3N coordinates of the system ( x )
+      !  h              : 3x3 matrix of the primitive lattice vectors
+      !  nelec          : number of elecrons (for FCP)
       !  energy         : energy of the system ( V(x) )
       !  grad           : vector containing 3N components of grad( V(x) )
-      !  energy_thr     : treshold on energy difference for BFGS convergence
-      !  grad_thr       : treshold on grad difference for BFGS convergence
-      !                    the largest component of grad( V(x) ) is considered
+      !  fcell          : 3x3 matrix containing the stress tensor
+      !  iforceh        : 3x3 matrix containing cell constraints
+      !  energy_thr     : threshold on energy difference for BFGS convergence
+      !  grad_thr       : threshold on grad difference for BFGS convergence
+      !                   the largest component of grad( V(x) ) is considered
+      !  cell_thr       : threshold on grad of cell for BFGS convergence
       !  fcp_thr        : treshold on grad of FCP for BFGS convergence
       !  energy_error   : energy difference | V(x_i) - V(x_i-1) |
       !  grad_error     : the largest component of
@@ -182,6 +187,7 @@ CONTAINS
       REAL(DP),         INTENT(INOUT) :: felec ! force on FCP
       CHARACTER(LEN=*), INTENT(IN)    :: filebfgs
       REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr, cell_thr, fcp_thr
+      INTEGER,          INTENT(IN)    :: iforceh(3,3)
       LOGICAL,          INTENT(IN)    :: lmovecell
       LOGICAL,          INTENT(IN)    :: lfcp ! include FCP, or not ?
       REAL(DP),         INTENT(IN)    :: fcp_cap ! capacitance for FCP

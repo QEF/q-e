@@ -30,7 +30,7 @@ SUBROUTINE move_ions( idone, ions_status )
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, &
                                      fix_volume, fix_area, ibrav, press, &
-                                     enforce_ibrav
+                                     iforceh, enforce_ibrav
   USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE symm_base,              ONLY : checkallsym
@@ -66,7 +66,7 @@ SUBROUTINE move_ions( idone, ions_status )
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   REAL(DP)              :: relec, felec, capacitance, tot_charge_
   LOGICAL               :: conv_ions
-  CHARACTER(LEN=256)    :: filebfgs
+  CHARACTER(LEN=320)    :: filebfgs
   !
   ! ... only one node does the calculation in the parallel case
   !
@@ -119,7 +119,7 @@ SUBROUTINE move_ions( idone, ions_status )
         IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
            !
            filebfgs = TRIM(tmp_dir) // TRIM(prefix) // '.bfgs'
-           CALL bfgs( filebfgs, pos, h, relec, etot, grad, fcell, felec, epse, &
+           CALL bfgs( filebfgs, pos, h, relec, etot, grad, fcell, iforceh, felec, epse, &
                       epsf, epsp1, fcp_eps, energy_error, gradient_error, cell_error, fcp_error, &
                       lmovecell, lfcp, capacitance, step_accepted, conv_ions, istep )
            !

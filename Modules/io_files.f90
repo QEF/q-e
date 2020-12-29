@@ -80,8 +80,6 @@ MODULE io_files
   INTEGER :: iunnewimage = 28 ! unit for parallelization among images
   INTEGER :: iunlock     = 29 ! as above (locking file)
   !
-  INTEGER :: iunbfgs     = 30 ! unit for the bfgs restart file
-  !
   INTEGER :: iuntmp      = 90 ! temporary unit, when used must be closed ASAP
   !
   INTEGER :: nwordwfc    =  2 ! length of record in wavefunction file
@@ -252,14 +250,14 @@ CONTAINS
   SUBROUTINE delete_if_present(filename, para)
   !--------------------------------------------------------------------------
   !!
-  !! Same as the delete_if_present subroutine but allows for other cores to 
-  !! enters (SP - Jan 2020). Ideally, both could be merged. 
+  !! As the name says - if para is present and para=.true., filename is
+  !! deleted by all cores; otherwise, on ionode only (SP - Jan 2020)
   !!  
   !
   IMPLICIT NONE
   !
   CHARACTER(len = *), INTENT(in) :: filename
-  !! Name of the file 
+  !! Name of the file to be deleted
   LOGICAL, OPTIONAL, INTENT(in) :: para
   !! Optionally, the remove can be done by all the cores. 
   ! 
@@ -267,9 +265,7 @@ CONTAINS
   LOGICAL :: exst
   !! Check if the file exist
   INTEGER :: iunit
-  !! UNit of the file 
-  INTEGER, EXTERNAL :: find_free_unit
-  !! Find a unallocated unit
+  !! Unit of the file 
   ! 
   IF (PRESENT(para)) THEN
     IF (.NOT. para) THEN
@@ -283,9 +279,7 @@ CONTAINS
   !
   IF (exst) THEN
     !
-    iunit = find_free_unit()
-    !
-    OPEN(UNIT = iunit, FILE = filename, STATUS = 'OLD')
+    OPEN(NEWUNIT = iunit, FILE = filename, STATUS = 'OLD')
     CLOSE(UNIT = iunit, STATUS = 'DELETE')
     !
     WRITE(UNIT = stdout, FMT = '(/,5X,"File ", A, " deleted, as requested")') TRIM(filename)
