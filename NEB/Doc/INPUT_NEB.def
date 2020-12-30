@@ -285,6 +285,9 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                         and last image by giving @ref TOTAL_CHARGE cards
                         so that the Fermi energy of these systems will be the target value,
                         otherwise @ref first_last_opt should be .TRUE.
+                        For the initial charge of intermediate images, the @ref TOTAL_CHARGE
+                        is linearly interpolated between the initial and the final ones 
+                        unless the @ref TOTAL_CHARGE is given in the input file.
                     }
                 }
 
