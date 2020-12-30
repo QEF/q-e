@@ -49,6 +49,7 @@ MODULE path_io_routines
        USE path_formats,     ONLY : summary_fmt
        USE path_io_units_module,         ONLY : iunpath
        USE fcp_variables,    ONLY : lfcp, fcp_mu, fcp_thr
+       USE gcscf_variables,  ONLY : lgcscf, gcscf_mu
        !
        IMPLICIT NONE
        !
@@ -147,6 +148,17 @@ MODULE path_io_routines
           !
           WRITE( UNIT = iunpath, &
                  FMT = '(5X,"fcp_thr",T35," = ",F9.4," V")' ) fcp_thr
+          !
+       END IF
+       !
+       IF ( lgcscf ) THEN
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(/,5X,">>>>>>>>>> GCSCF NEB is activated <<<<<<<<<<")')
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"target Fermi energy",T35," = ",F9.4," eV")') &
+                 gcscf_mu * autoev
           !
        END IF
        !
