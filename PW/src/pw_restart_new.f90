@@ -96,6 +96,7 @@ MODULE pw_restart_new
       USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
+      USE ktetra,               ONLY : tetra_type
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
                                        Hubbard_l_back, Hubbard_l1_back, Hubbard_V, &
@@ -129,8 +130,7 @@ MODULE pw_restart_new
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
       USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
                                        vdw_corr, london, k_points, assume_isolated, &  
-                                       input_parameters_occupations => occupations, dftd3_threebody, &
-                                       dftd3_version
+                                       dftd3_threebody, dftd3_version
       USE bp,                   ONLY : lelfield, lberry, el_pol, ion_pol
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
@@ -150,6 +150,8 @@ MODULE pw_restart_new
       CHARACTER(LEN=26)     :: dft_name
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
+      CHARACTER(LEN=20)     :: occupations
+      CHARACTER(LEN=20), EXTERNAL :: schema_occupations
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -526,15 +528,17 @@ MODULE pw_restart_new
                                 nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
          END IF
          qexsd_start_k_obj%tagname = 'starting_kpoints'
+         occupations = schema_occupations( lgauss, ltetra, tetra_type, &
+                    tfixed_occ )
          IF ( TRIM (qexsd_input_obj%tagname) == 'input') THEN 
             qexsd_occ_obj = qexsd_input_obj%bands%occupations
          ELSE 
-            CALL qexsd_init_occupations ( qexsd_occ_obj, input_parameters_occupations, nspin)
+            CALL qexsd_init_occupations ( qexsd_occ_obj, occupations, nspin)
          END IF 
          qexsd_occ_obj%tagname = 'occupations_kind' 
          IF ( two_fermi_energies ) THEN
             ALLOCATE ( ef_updw (2) )
-               IF (TRIM(input_parameters_occupations) == 'fixed') THEN  
+               IF (TRIM(occupations) == 'fixed') THEN  
                   ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
                   ef_updw(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
                ELSE 
