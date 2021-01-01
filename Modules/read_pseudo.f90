@@ -105,8 +105,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            IF (exst) ios = 0
         END IF
         CALL mp_bcast (ios,ionode_id,intra_image_comm)
-        IF ( ios /= 0 ) CALL infomsg &
-                     ('readpp', 'file '//TRIM(file_pseudo)//' not found')
      END IF
      !
      ! file not found? no panic (yet): try the original location pseudo_dir
