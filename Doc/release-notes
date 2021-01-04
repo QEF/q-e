@@ -14,6 +14,8 @@ Fixed in development version:
   * Bugfix in HP: the hp.x calculation was not stopping smoothly when
     "perturb_only_atom" was used (this bug is not present in earlier 
     versions, i.e. <6.7)
+  * Phonon restart was broken in some cases due to bad occupations
+    written to xml file
 
 Incompatible changes in dev version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
