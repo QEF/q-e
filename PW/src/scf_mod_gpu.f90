@@ -13,13 +13,19 @@
 !=----------------------------------------------------------------------------=!
    MODULE scf_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds,         ONLY : DP
-     USE control_flags, ONLY : iverbosity
-#if defined(__CUDA)
+if defined(__CUDA)
      USE cudafor
 #endif
      IMPLICIT NONE
      SAVE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
+     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
+     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+     INTEGER :: iverbosity = 0
+#if defined(__DEBUG)
+     iverbosity = 1
+#endif
      !
      REAL(DP), ALLOCATABLE :: vrs_d(:, :)
      !
@@ -43,7 +49,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -77,7 +83,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_vrs_d ", debug_info, vrs_d_ood
          !

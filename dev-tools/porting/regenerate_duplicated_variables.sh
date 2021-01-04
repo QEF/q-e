@@ -31,7 +31,7 @@ python gen_intrinsic.py uspp "indv:INTEGER:2" "nhtol:INTEGER:2" "nhtolm:INTEGER:
                              "nhtoj:REAL(DP):2" \
                              "qq_so:COMPLEX(DP):4" "dvan_so:COMPLEX(DP):4" \
                              "deeq_nc:COMPLEX(DP):4"
-mv uspp_gpu.f90 ../../Modules/uspp_gpu.f90
+mv uspp_gpu.f90 ../../upflib/uspp_gpu.f90
 
 python gen_derived.py becmod
 mv becmod_gpu.f90 ../../Modules/becmod_gpu.f90

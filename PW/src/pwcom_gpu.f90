@@ -13,13 +13,19 @@
 !=----------------------------------------------------------------------------=!
    MODULE wvfct_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds,         ONLY : DP
-     USE control_flags, ONLY : iverbosity
-#if defined(__CUDA)
+if defined(__CUDA)
      USE cudafor
 #endif
      IMPLICIT NONE
      SAVE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
+     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
+     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+     INTEGER :: iverbosity = 0
+#if defined(__DEBUG)
+     iverbosity = 1
+#endif
      !
      REAL(DP), ALLOCATABLE :: g2kin_d(:)
      REAL(DP), ALLOCATABLE :: et_d(:, :)
@@ -49,7 +55,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -83,7 +89,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_g2kin_d ", debug_info, g2kin_d_ood
          !
@@ -125,7 +131,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -159,7 +165,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_et_d ", debug_info, et_d_ood
          !
@@ -201,7 +207,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -235,7 +241,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_wg_d ", debug_info, wg_d_ood
          !
@@ -291,13 +297,19 @@
 !=----------------------------------------------------------------------------=!
    MODULE us_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds,         ONLY : DP
-     USE control_flags, ONLY : iverbosity
-#if defined(__CUDA)
+if defined(__CUDA)
      USE cudafor
 #endif
      IMPLICIT NONE
      SAVE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
+     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
+     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+     INTEGER :: iverbosity = 0
+#if defined(__DEBUG)
+     iverbosity = 1
+#endif
      !
      REAL(DP), ALLOCATABLE :: qrad_d(:, :, :, :)
      REAL(DP), ALLOCATABLE :: tab_d(:, :, :)
@@ -330,7 +342,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -364,7 +376,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_qrad_d ", debug_info, qrad_d_ood
          !
@@ -406,7 +418,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -440,7 +452,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_tab_d ", debug_info, tab_d_ood
          !
@@ -482,7 +494,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -516,7 +528,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_tab_at_d ", debug_info, tab_at_d_ood
          !
@@ -558,7 +570,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -592,7 +604,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_tab_d2y_d ", debug_info, tab_d2y_d_ood
          !
@@ -650,13 +662,19 @@
 !=----------------------------------------------------------------------------=!
    MODULE spin_orb_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds,         ONLY : DP
-     USE control_flags, ONLY : iverbosity
-#if defined(__CUDA)
+if defined(__CUDA)
      USE cudafor
 #endif
      IMPLICIT NONE
      SAVE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
+     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
+     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+     INTEGER :: iverbosity = 0
+#if defined(__DEBUG)
+     iverbosity = 1
+#endif
      !
      COMPLEX(DP), ALLOCATABLE :: fcoef_d(:, :, :, :, :)
      !
@@ -680,7 +698,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -714,7 +732,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_fcoef_d ", debug_info, fcoef_d_ood
          !
