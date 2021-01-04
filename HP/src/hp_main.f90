@@ -156,7 +156,7 @@ PROGRAM hp_main
         !
         WRITE( stdout, '(/6x,"Not all q points were considered. Stopping smoothly...",/)')   
         CALL hp_dealloc_1()
-        GO TO 103
+        GO TO 104
         !
      ENDIF
      !
@@ -185,7 +185,7 @@ PROGRAM hp_main
      ! If perturb_only_atom(na)=.true., then this is not a full calculation
      ! but a calculation for only one Hubbard atom na. Hence, stop smoothly.
      !
-     IF (perturb_only_atom(na)) GO TO 103
+     IF (perturb_only_atom(na)) GO TO 104
      !
      ! last_q must be recomputed for the next perturbation,
      ! therefore we need to reset it back to -1.
@@ -217,6 +217,8 @@ PROGRAM hp_main
 103 CONTINUE
   !
   IF (ionode) CALL hp_postproc()
+  !
+104 CONTINUE
   !
   ! Deallocate some arrays
   !
