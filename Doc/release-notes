@@ -11,6 +11,9 @@ New in development version:
 
 Fixed in development version:
   * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
+  * Bugfix in HP: the hp.x calculation was not stopping smoothly when
+    "perturb_only_atom" was used (this bug is not present in earlier 
+    versions, i.e. <6.7)
 
 Incompatible changes in dev version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
@@ -21,7 +24,7 @@ New in 6.7 version:
     Ye Luo, P. Delugas, S. Gsaenger)
   * In vc-relax with Hubbard corrections, the final SCF calculation is done by 
     reading atomic occupations from file produced during the vc-relax 
-    (rather then recomputing them from scratch).
+    (rather than recomputing them from scratch).
   * EPW: 
     (1) ZG package to generate special displacements for first-principles non-perturbative calculations 
     at finite temperatures [Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020)].
