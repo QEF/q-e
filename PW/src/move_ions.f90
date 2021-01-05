@@ -24,7 +24,7 @@ SUBROUTINE move_ions( idone, ions_status )
   !! Coefficients for potential and wavefunctions extrapolation are
   !! no longer computed here but in update_pot.
   !
-  USE constants,              ONLY : e2, eps6, ry_kbar
+  USE constants,              ONLY : e2, eps4, eps6, ry_kbar
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, prefix
   USE kinds,                  ONLY : DP
@@ -64,7 +64,7 @@ SUBROUTINE move_ions( idone, ions_status )
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
-  REAL(DP)              :: relec, felec, capacitance, tot_charge_
+  REAL(DP)              :: relec, felec, helec, capacitance, tot_charge_
   LOGICAL               :: conv_ions
   CHARACTER(LEN=320)    :: filebfgs
   !
@@ -114,6 +114,13 @@ SUBROUTINE move_ions( idone, ions_status )
            felec = (ef - fcp_mu)
            CALL fcp_capacitance( capacitance, -1.0_DP )
            tot_charge_ = tot_charge
+           !
+           ! Make hessian for FCP
+           CALL fcp_hessian( helec )
+           IF ( capacitance > eps4 ) THEN
+              helec = MIN( capacitance, helec )
+           END IF
+           !
         END IF
         !
         IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
@@ -121,7 +128,7 @@ SUBROUTINE move_ions( idone, ions_status )
            filebfgs = TRIM(tmp_dir) // TRIM(prefix) // '.bfgs'
            CALL bfgs( filebfgs, pos, h, relec, etot, grad, fcell, iforceh, felec, epse, &
                       epsf, epsp1, fcp_eps, energy_error, gradient_error, cell_error, fcp_error, &
-                      lmovecell, lfcp, capacitance, step_accepted, conv_ions, istep )
+                      lmovecell, lfcp, capacitance, helec, step_accepted, conv_ions, istep )
            !
         ELSE
            !

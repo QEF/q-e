@@ -10,7 +10,7 @@ BEGIN_PATH_INPUT
   ! FCP
   !
   lfcp          = .TRUE.
-  fcp_mu        = -5.0036   !eV
+  fcp_mu        = -5.00     !eV
   fcp_scheme    = 'coupled'
   fcp_thr       = 0.02      !eV
 /
@@ -18,8 +18,8 @@ END_PATH_INPUT
 BEGIN_ENGINE_INPUT
 &CONTROL
   prefix        = 'Al001+H_FCP_vm05'
-  outdir        = '/Users/otani/Program/q-e/tempdir/',
-  pseudo_dir    = '/Users/otani/Program/q-e/pseudo/',
+  outdir        = '/cluster-001-share/groups/otani-lab/Programs/q-e_g_esm/tempdir/',
+  pseudo_dir    = '/cluster-001-share/groups/otani-lab/Programs/q-e_g_esm/pseudo/',
 /
 &SYSTEM
   ibrav         = 0,
@@ -47,6 +47,8 @@ Al  5.41113843   0.00000000   0.00000000 0 0 0
 Al  0.00000000   5.41113843   0.00000000 0 0 0
 Al  5.41113843   5.41113843   0.00000000 0 0 0
 H   0.00000000   0.00000000   3.11055367 0 0 1
+TOTAL_CHARGE
+0.0215
 LAST_IMAGE
 ATOMIC_POSITIONS bohr
 Al  0.00000000   0.00000000   0.00000000 0 0 0
@@ -54,6 +56,8 @@ Al  5.41113843   0.00000000   0.00000000 0 0 0
 Al  0.00000000   5.41113843   0.00000000 0 0 0
 Al  5.41113843   5.41113843   0.00000000 0 0 0
 H   5.41113843   5.41113843   3.11055367 0 0 1
+TOTAL_CHARGE
+0.0215
 END_POSITIONS
 K_POINTS automatic
 6 6 1 1 1 0
