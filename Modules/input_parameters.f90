@@ -248,8 +248,6 @@ MODULE input_parameters
         LOGICAL :: tabps = .false. ! for ab-initio pressure and/or surface
                                    ! calculations
 
-        LOGICAL :: lkpoint_dir = .false. ! obsolete, for compatibility
-
         LOGICAL :: use_wannier = .false. ! use or not Wannier functions
 
         LOGICAL :: lecrpa = .FALSE.
@@ -281,7 +279,7 @@ MODULE input_parameters
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
-          tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
+          tefield2, saverho, tabps, use_wannier, lecrpa,                  &
           lfcp, tqmmm, vdw_table_name, lorbm, memory, point_label_type,   &
           input_xml_schema_file, gate
 !
@@ -631,7 +629,7 @@ MODULE input_parameters
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
-             scdmden, scdmgrd, nscdm, n_proj,                                        &
+             scdmden, scdmgrd, nscdm, n_proj,                                 &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
@@ -643,13 +641,14 @@ MODULE input_parameters
              dftd3_version, dftd3_threebody,                                  &
              ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
              xdm, xdm_a1, xdm_a2,                                             &
+             mbd_vdw,                                                         &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax, &
              esm_a, esm_zb,                                                   &
              lgcscf, gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr,              &
              gcscf_gk, gcscf_gh, gcscf_beta,                                  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zgate, relaxz, block, block_1, block_2, block_height, mbd_vdw
+             zgate, relaxz, block, block_1, block_2, block_height
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

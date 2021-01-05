@@ -164,23 +164,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         var wf_collect -type LOGICAL { 
-            default { .TRUE. }
-            info {
-                This flag controls the way wavefunctions are stored to disk :
-
-                .TRUE.  collect wavefunctions from all processors, store them
-                        into the output data directory "outdir"/"prefix".save
-                        The resulting format is portable to a different number
-                        of processors, or different kind of parallelization
-
-                .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
-                        do not collect wavefunctions, leave them in temporary
-                        local files (one per processor). The resulting format
-                        is readable only on the same number of processors and
-                        with the same kind of parallelization used to write it.
-
-                Note that this flag has no effect on reading, only on writing.
-            }
+            info { OBSOLETE - NO LONGER IMPLEMENTED }
         }
         
 
@@ -265,12 +249,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var lkpoint_dir -type LOGICAL { 
-            default { .true. }
             info {
-                If .false. a subdirectory for each k_point is not opened
-                in the "prefix".save directory; Kohn-Sham eigenvalues are
-                stored instead in a single file for all k-points. Currently
-                doesn't work together with @ref wf_collect
+ 		OBSOLETE - NO LONGER IMPLEMENTED
             }
         }
                 
@@ -463,7 +443,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 - @ref calculation must be 'relax' or 'md'.
                 - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
                   in @ref SYSTEM namelist.
-                - @ref ignore_wolfe is always .TRUE., for BFGS.
             }
         }
 
