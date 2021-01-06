@@ -5,19 +5,19 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!---------------------------------------------------------------------
+!------------------------------------------------------------------------
 SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
-  !---------------------------------------------------------------------
+  !----------------------------------------------------------------------
   !! Wrapper routine. Calls internal dmxc-driver routines or the external
   !! ones from Libxc, depending on the input choice.
   !
-  USE kind_l,            ONLY: DP
-  USE dft_par_mod
+  USE kind_l,          ONLY: DP
+  USE dft_par_mod,     ONLY: iexch, icorr, is_libxc, rho_threshold_lda
   USE qe_drivers_d_lda_lsda
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -34,8 +34,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_func_t) :: xc_func
-  TYPE(xc_f90_func_info_t) :: xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info2
   INTEGER :: pol_unpol, fkind_x
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: dmex_lxc(:), dmcr_lxc(:)
@@ -96,9 +96,9 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     ! ... DERIVATIVE FOR EXCHANGE
     dmex_lxc(:) = 0.0_DP
     IF (iexch /= 0) THEN    
-       CALL xc_f90_func_init( xc_func, iexch, pol_unpol )
-        CALL xc_f90_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmex_lxc(1) )
-       CALL xc_f90_func_end( xc_func )
+       CALL xc_f03_func_init( xc_func, iexch, pol_unpol )
+        CALL xc_f03_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmex_lxc(1) )
+       CALL xc_f03_func_end( xc_func )
     ENDIF  
   ENDIF
   !
@@ -107,11 +107,11 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     ! ... DERIVATIVE FOR CORRELATION
     dmcr_lxc(:) = 0.0_DP
     IF (icorr /= 0) THEN
-       CALL xc_f90_func_init( xc_func, icorr, pol_unpol )
-        xc_info2 = xc_f90_func_get_info( xc_func )
-        fkind_x  = xc_f90_func_info_get_kind( xc_info2 )
-        CALL xc_f90_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmcr_lxc(1) )
-       CALL xc_f90_func_end( xc_func )
+       CALL xc_f03_func_init( xc_func, icorr, pol_unpol )
+        xc_info2 = xc_f03_func_get_info( xc_func )
+        fkind_x  = xc_f03_func_info_get_kind( xc_info2 )
+        CALL xc_f03_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmcr_lxc(1) )
+       CALL xc_f03_func_end( xc_func )
     ENDIF
   ENDIF
   !

@@ -16,11 +16,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
 #endif
   !
   USE kind_l,        ONLY: DP
-  USE dft_par_mod
+  USE dft_par_mod,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
+                           grho_threshold_gga
   USE qe_drivers_gga
   !
   IMPLICIT NONE
@@ -51,8 +52,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_func_t) :: xc_func
-  TYPE(xc_f90_func_info_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:)
   REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_rho(:), vx_sigma(:)
@@ -150,12 +151,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc (still so? - check)
     !
-    CALL xc_f90_func_init( xc_func, igcc, pol_unpol )
-     xc_info2 = xc_f90_func_get_info( xc_func )
-     CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold_gga )
-     fkind_x  = xc_f90_func_info_get_kind( xc_info2 )
-     CALL xc_f90_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_init( xc_func, igcc, pol_unpol )
+     xc_info2 = xc_f03_func_get_info( xc_func )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_gga )
+     fkind_x  = xc_f03_func_info_get_kind( xc_info2 )
+     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -237,11 +238,11 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(3) ) THEN
     !
-    CALL xc_f90_func_init( xc_func, igcx, pol_unpol )
-     xc_info1 = xc_f90_func_get_info( xc_func )
-     CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold_gga )
-     CALL xc_f90_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_init( xc_func, igcx, pol_unpol )
+     xc_info1 = xc_f03_func_get_info( xc_func )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_gga )
+     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length

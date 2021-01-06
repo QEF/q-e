@@ -17,11 +17,12 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   USE constants_l,      ONLY: e2
   USE kind_l,           ONLY: DP
-  USE dft_par_mod
+  USE dft_par_mod,      ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
+                              grho_threshold_gga
   USE qe_drivers_d_gga
 #if defined(__LIBXC)
 #include "xc_version.h"
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -43,8 +44,8 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   REAL(DP), ALLOCATABLE :: vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:) 
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_func_t) :: xc_func
-  TYPE(xc_f90_func_info_t) :: xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info2
   INTEGER :: fkind
   REAL(DP), ALLOCATABLE :: rho_lbxc(:)
   REAL(DP), ALLOCATABLE :: v2rho2_x(:), v2rhosigma_x(:), v2sigma2_x(:) 
@@ -118,10 +119,10 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     ! ... DERIVATIVE FOR EXCHANGE
     v2rho2_x = 0._DP ;  v2rhosigma_x = 0._DP ;  v2sigma2_x = 0._DP
     IF (igcx /= 0) THEN 
-      CALL xc_f90_func_init( xc_func, igcx, sp )
-       CALL xc_f90_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_x(1), &
+      CALL xc_f03_func_init( xc_func, igcx, sp )
+       CALL xc_f03_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_x(1), &
                             v2rhosigma_x(1), v2sigma2_x(1) )
-      CALL xc_f90_func_end( xc_func )
+      CALL xc_f03_func_end( xc_func )
     ENDIF
   ENDIF
   !
@@ -131,12 +132,12 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     ! ... DERIVATIVE FOR CORRELATION
     v2rho2_c = 0._DP ;  v2rhosigma_c = 0._DP ;  v2sigma2_c = 0._DP
     IF (igcc /= 0) THEN 
-      CALL xc_f90_func_init( xc_func, igcc, sp )
-       xc_info2 = xc_f90_func_get_info( xc_func )
-       fkind = xc_f90_func_info_get_kind( xc_info2 )
-       CALL xc_f90_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_c(1), &
+      CALL xc_f03_func_init( xc_func, igcc, sp )
+       xc_info2 = xc_f03_func_get_info( xc_func )
+       fkind = xc_f03_func_info_get_kind( xc_info2 )
+       CALL xc_f03_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_c(1), &
                             v2rhosigma_c(1), v2sigma2_c(1) )
-      CALL xc_f90_func_end( xc_func )
+      CALL xc_f03_func_end( xc_func )
     ENDIF
   ENDIF
   !
@@ -340,6 +341,3 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   RETURN
   !
 END SUBROUTINE dgcxc
-!
-!
-

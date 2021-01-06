@@ -6,10 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-!
-! This module contains fortran wrapper to BEEF library functions.
-!
 MODULE beef_interface
+    !----------------------------------------------------------------------
+    !! This module contains fortran wrapper to BEEF library functions.
     !
     IMPLICIT NONE
     !

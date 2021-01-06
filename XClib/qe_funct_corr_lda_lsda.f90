@@ -5,11 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+!-------------------------------------------------------------------------
 MODULE corr_lda !<GPU:corr_lda=>corr_lda_gpu>
-
+!-------------------------------------------------------------------------
+!! LDA correlation functionals
+!
 CONTAINS
-
+!
 !-------------------------------------------------------------------------
 SUBROUTINE pz( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
@@ -1002,4 +1004,4 @@ SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<GPU
 END SUBROUTINE lsd_lyp
 !
 !
-END MODULE
+END MODULE corr_lda

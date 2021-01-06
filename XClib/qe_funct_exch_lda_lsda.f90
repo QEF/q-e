@@ -5,12 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+!----------------------------------------------------------------------
 MODULE exch_lda  !<GPU:exch_lda=>exch_lda_gpu>
-!
-!! Module containing LDA functionals.
+!----------------------------------------------------------------------
+!! LDA exchange functionals.
 !
 CONTAINS
+!
 !-----------------------------------------------------------------------
 SUBROUTINE slater( rs, ex, vx )                  !<GPU:DEVICE>
   !---------------------------------------------------------------------

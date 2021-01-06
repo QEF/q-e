@@ -1,4 +1,10 @@
 !
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !----------------------------------------------------------------------------------------
 SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !-------------------------------------------------------------------------------------
@@ -12,7 +18,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #endif 
   !
   USE kind_l,        ONLY: DP
-  USE dft_par_mod
+  USE dft_par_mod,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,        &
+                           grho2_threshold_mgga, tau_threshold_mgga, scan_exx, &
+                           exx_started, exx_fraction
   USE qe_drivers_mgga
   !
   IMPLICIT NONE

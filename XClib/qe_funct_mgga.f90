@@ -5,20 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-------------------------------------------------------------------------
-!
-!                        META-GGA FUNCTIONALS
-!
-!  Available functionals :
-!           - TPSS (Tao, Perdew, Staroverov & Scuseria)
-!           - M06L
-!  Other options are available through libxc library (must be specified
-!  in input).
-!
-!=========================================================================
-!
+!------------------------------------------------------------------------
 MODULE metagga                       !<GPU:metagga=>metagga_gpu>
+!-------------------------------------------------------------------------
+!! MetaGGA functionals. Available functionals:
+!
+!! * TPSS (Tao, Perdew, Staroverov & Scuseria)
+!! * M06L
 !
 USE exch_lda, ONLY: slater     !<GPU:slater=>slater_d,exch_lda=>exch_lda_gpu>
 USE corr_lda, ONLY: pw, pw_spin   !<GPU:pw=>pw_d,pw_spin=>pw_spin_d,corr_lda=>corr_lda_gpu>    
@@ -30,9 +23,8 @@ USE corr_gga, ONLY: pbec, pbec_spin        !<GPU:pbec=>pbec_d,pbec_spin=>pbec_sp
 !-------------------------------------------------------------------------
 SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
-  !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.
-  !
-  !! Definition:  E_x = \int E_x(rho,grho) dr
+  !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.  
+  !! Definition:  \(E_x = \int E_x(\text{rho},\text{grho}) dr\)
   !
   USE kind_l,            ONLY : DP
   !

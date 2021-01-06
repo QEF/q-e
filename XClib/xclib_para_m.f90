@@ -6,7 +6,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!-----------------------------------------------------
 MODULE xclib_parallel_include
+!-----------------------------------------------------
+!! MPI stuff
+!
 #if defined (__MPI)
         !
         !     Include file for MPI

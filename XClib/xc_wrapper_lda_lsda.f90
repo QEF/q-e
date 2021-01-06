@@ -11,16 +11,14 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !! Wrapper routine. Calls internal XC-driver routines or external ones
   !! from Libxc, depending on the input choice.
   !
-  !! NOTE: look at 'PP/src/benchmark_libxc.f90' to see the differences
-  !!       between q-e and libxc.
-  !
 #if defined(__LIBXC)
 #include "xc_version.h"
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
 #endif
   !
   USE kind_l,            ONLY: DP
-  USE dft_par_mod
+  USE dft_par_mod,       ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
+                               finite_size_cell_volume_set
   USE qe_drivers_lda_lsda
   !
   IMPLICIT NONE
@@ -45,8 +43,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_func_t) :: xc_func
-  TYPE(xc_f90_func_info_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   INTEGER :: fkind_x
   REAL(DP) :: amag
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
@@ -107,21 +105,21 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   ! ... EXCHANGE
   IF ( is_libxc(1) ) THEN
-     CALL xc_f90_func_init( xc_func, iexch, sv_d )
-       xc_info1 = xc_f90_func_get_info( xc_func )
-       CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold_lda )
-       CALL xc_f90_lda_exc_vxc( xc_func, lengthxc, rho_lxc(1), ex_out(1), vx_lxc(1) )
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_init( xc_func, iexch, sv_d )
+       xc_info1 = xc_f03_func_get_info( xc_func )
+       CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_lda )
+       CALL xc_f03_lda_exc_vxc( xc_func, lengthxc, rho_lxc(1), ex_out(1), vx_lxc(1) )
+     CALL xc_f03_func_end( xc_func )
   ENDIF
   !
   ! ... CORRELATION
   IF ( is_libxc(2) ) THEN
-     CALL xc_f90_func_init( xc_func, icorr, sv_d )
-      xc_info2 = xc_f90_func_get_info( xc_func )
-      CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold_lda )
-      fkind_x  = xc_f90_func_info_get_kind( xc_info2 )
-      CALL xc_f90_lda_exc_vxc( xc_func, lengthxc, rho_lxc(1), ec_out(1), vc_lxc(1) )
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_init( xc_func, icorr, sv_d )
+      xc_info2 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_lda )
+      fkind_x  = xc_f03_func_info_get_kind( xc_info2 )
+      CALL xc_f03_lda_exc_vxc( xc_func, lengthxc, rho_lxc(1), ec_out(1), vc_lxc(1) )
+     CALL xc_f03_func_end( xc_func )
   ENDIF
   !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
