@@ -181,7 +181,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
                                    my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
-  USE funct,                ONLY : exx_is_active
+  USE xc_lib,               ONLY : exx_is_active
   USE gcscf_module,         ONLY : lgcscf
   !
   IMPLICIT NONE

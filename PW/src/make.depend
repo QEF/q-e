@@ -238,6 +238,7 @@ c_bands.o : ../../Modules/recvec.o
 c_bands.o : ../../Modules/wavefunctions.o
 c_bands.o : ../../UtilXlib/mp.o
 c_bands.o : ../../upflib/uspp.o
+c_bands.o : ../../XClib/xc_lib.o
 c_bands.o : atomic_wfc_mod.o
 c_bands.o : bp_mod.o
 c_bands.o : buffers.o
@@ -470,12 +471,12 @@ esm_common_mod.o : ../../Modules/cell_base.o
 esm_common_mod.o : ../../Modules/constants.o
 esm_common_mod.o : ../../Modules/control_flags.o
 esm_common_mod.o : ../../Modules/fft_base.o
-esm_common_mod.o : ../../Modules/funct.o
 esm_common_mod.o : ../../Modules/io_files.o
 esm_common_mod.o : ../../Modules/io_global.o
 esm_common_mod.o : ../../Modules/ions_base.o
 esm_common_mod.o : ../../Modules/kind.o
 esm_common_mod.o : ../../Modules/recvec.o
+esm_common_mod.o : ../../XClib/xc_lib.o
 esm_common_mod.o : exx_base.o
 esm_common_mod.o : pwcom.o
 esm_ewald_mod.o : ../../Modules/cell_base.o
@@ -654,9 +655,9 @@ fcp_input.o : fcp_relaxation.o
 fcp_input.o : pwcom.o
 fcp_module.o : ../../Modules/constants.o
 fcp_module.o : ../../Modules/control_flags.o
-fcp_module.o : ../../Modules/funct.o
 fcp_module.o : ../../Modules/io_global.o
 fcp_module.o : ../../Modules/kind.o
+fcp_module.o : ../../XClib/xc_lib.o
 fcp_module.o : dynamics_module.o
 fcp_module.o : esm.o
 fcp_module.o : exx_base.o
@@ -810,12 +811,12 @@ gcscf_input.o : ../../Modules/kind.o
 gcscf_input.o : gcscf_module.o
 gcscf_module.o : ../../Modules/constants.o
 gcscf_module.o : ../../Modules/control_flags.o
-gcscf_module.o : ../../Modules/funct.o
 gcscf_module.o : ../../Modules/io_global.o
 gcscf_module.o : ../../Modules/ions_base.o
 gcscf_module.o : ../../Modules/kind.o
 gcscf_module.o : ../../Modules/mp_pools.o
 gcscf_module.o : ../../UtilXlib/mp.o
+gcscf_module.o : ../../XClib/xc_lib.o
 gcscf_module.o : esm.o
 gcscf_module.o : exx_base.o
 gcscf_module.o : fcp_module.o

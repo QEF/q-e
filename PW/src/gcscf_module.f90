@@ -31,7 +31,7 @@ MODULE gcscf_module
   USE exx_base,        ONLY : x_gamma_extrapolation
   USE fcp_module,      ONLY : lfcp
   USE fixed_occ,       ONLY : tfixed_occ
-  USE funct,           ONLY : exx_is_active
+  USE xc_lib,          ONLY : exx_is_active
   USE io_global,       ONLY : stdout
   USE ions_base,       ONLY : nat, ityp, zv
   USE kinds,           ONLY : DP
