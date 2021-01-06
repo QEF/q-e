@@ -1,8 +1,17 @@
 !
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!----------------------------------------------------------------------------
 MODULE dft_mod
+  !--------------------------------------------------------------------------
+  !! Routines to set and/or recover DFT names, parameters and flags.
   !
 #if defined(__LIBXC)
-    USE xc_f90_lib_m
+    USE xc_f03_lib_m
 #endif  
   !
   SAVE
@@ -26,17 +35,21 @@ MODULE dft_mod
   !
 CONTAINS
   !
-  !-------------------------------------------------------------------
+  !-------------------------------------------------------------------------
   SUBROUTINE xclib_set_dft_from_name( dft_ )
     !-----------------------------------------------------------------------
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
-    USE dft_par_mod
+    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                            discard_input_dft, is_libxc, dft, exc,   &
+                            corr, gradx, gradc, meta, nxc, ncc, ngcx,&
+                            ngcc, nmeta, scan_exx, notset
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
+    !! DFT full name
     !
     ! ... local variables
     !
@@ -48,8 +61,8 @@ CONTAINS
 #if defined(__LIBXC)
     INTEGER :: ii, id_vec(6), n_ext_params
     INTEGER :: flag_v(16), exp2, ftot, ftotx
-    TYPE(xc_f90_func_t) :: xc_func03
-    TYPE(xc_f90_func_info_t) :: xc_info03
+    TYPE(xc_f03_func_t) :: xc_func03
+    TYPE(xc_f03_func_info_t) :: xc_info03
 #endif
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
                save_metac
@@ -304,10 +317,10 @@ CONTAINS
     n_ext_params = 0
     DO ii = 1, 6
       IF (is_libxc(ii)) THEN
-        CALL xc_f90_func_init( xc_func03, id_vec(ii), 1 )
-        xc_info03 = xc_f90_func_get_info(xc_func03)
-        n_ext_params = xc_f90_func_info_get_n_ext_params(xc_info03)
-        ftot = xc_f90_func_info_get_flags(xc_info03)
+        CALL xc_f03_func_init( xc_func03, id_vec(ii), 1 )
+        xc_info03 = xc_f03_func_get_info(xc_func03)
+        n_ext_params = xc_f03_func_info_get_n_ext_params(xc_info03)
+        ftot = xc_f03_func_info_get_flags(xc_info03)
         flag_v(1:16) = 0
         exp2 = 16
         DO WHILE (ftot > 0)
@@ -339,7 +352,7 @@ CONTAINS
                      &/5X,"provide Vxc derivative: its correct operation in QE is",&
                      &/5X," not guaranteed when derivative is needed.")' ) id_vec(ii)
         ENDIF
-        CALL xc_f90_func_end( xc_func03 )
+        CALL xc_f03_func_end( xc_func03 )
       ENDIF
     ENDDO
     !
@@ -398,12 +411,13 @@ CONTAINS
     !
   END SUBROUTINE xclib_set_dft_from_name
   !
-  !
+  !----------------------------------------------------------------------------------
   LOGICAL FUNCTION xclib_set_dft_IDs( iexch_, icorr_, igcx_, igcc_, imeta_, imetac_ )
+    !--------------------------------------------------------------------------------
     !! Set XC functional IDs. It can be easily extended to include libxc functionals
     !! by adding the 'is_libxc_' array as argument. 
     !
-    USE dft_par_mod
+    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac
     !
     IMPLICIT NONE
     !
@@ -434,7 +448,7 @@ CONTAINS
     !! Looks for matches between the names of each single term of the 
     !! xc-functional and the input dft string.
     !
-    USE dft_par_mod
+    USE dft_par_mod,  ONLY: notset
     !
     IMPLICIT NONE
     !
@@ -477,7 +491,8 @@ CONTAINS
     !! string. Then stores the corresponding indices.  
     !! It also makes some compatibility checks.
     !
-    USE dft_par_mod
+    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc, &
+                            exx_fraction
     ! 
     IMPLICIT NONE
     !
@@ -486,8 +501,8 @@ CONTAINS
     CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
     INTEGER, PARAMETER :: ID_MAX_LIBXC=600
-    TYPE(xc_f90_func_t) :: xc_func
-    TYPE(xc_f90_func_info_t) :: xc_info
+    TYPE(xc_f03_func_t) :: xc_func
+    TYPE(xc_f03_func_info_t) :: xc_info
 #if (XC_MAJOR_VERSION > 5)
     !workaround to keep compatibility with libxc develop version
     INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
@@ -498,7 +513,7 @@ CONTAINS
     !
     DO i = 1, ID_MAX_LIBXC
        !
-       name = xc_f90_functional_get_name( i )
+       name = xc_f03_functional_get_name( i )
        !
        DO l = 1, LEN_TRIM(name)
           name(l:l) = capital( name(l:l) )
@@ -511,14 +526,14 @@ CONTAINS
           !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
           !
           fkind=-100 ; family=-100
-          CALL xc_f90_func_init( xc_func, i, 1 )
-          xc_info = xc_f90_func_get_info( xc_func )
-          fkind = xc_f90_func_info_get_kind( xc_info )
-          family = xc_f90_func_info_get_family( xc_info )
+          CALL xc_f03_func_init( xc_func, i, 1 )
+          xc_info = xc_f03_func_get_info( xc_func )
+          fkind = xc_f03_func_info_get_kind( xc_info )
+          family = xc_f03_func_info_get_family( xc_info )
           IF ( matches('HYB_', TRIM(name)) ) THEN
-            exx_fraction = xc_f90_hyb_exx_coef( xc_func )
+            exx_fraction = xc_f03_hyb_exx_coef( xc_func )
           ENDIF
-          CALL xc_f90_func_end( xc_func )
+          CALL xc_f03_func_end( xc_func )
           !   
           SELECT CASE( family )
           CASE( XC_FAMILY_LDA )
@@ -565,31 +580,35 @@ CONTAINS
     !
     ! ... overlaps check (between qe and libxc names)
     !
-    IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc( dft_ )
+    IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc(dft_)
     !
     ! ... Compatibility checks
     !
     ! LDA:
     IF (iexch/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
-                    &been found together with an exchange one (LDA)' )
+       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION &
+                           &functional has been found together with an exchange&
+                           & one (LDA)' )
     ! GGA:
     IF (igcx/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
-                    &been found together with an exchange one (GGA)' )
+       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION &
+                           &functional has been found together with an exchange&
+                           & one (GGA)' )
     !
     IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but &
-                    &libxc GGA functionals already include the LDA part' )
+       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an LDA functional has bee&
+                           &n found, but libxc GGA functionals already include t&
+                           &he LDA part' )
     ! mGGA:
     ! (imeta defines both exchange and correlation term for q-e mGGA functionals)
     IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0)   &
        CALL xclib_error( 'matching_libxc', 'Two conflicting metaGGA functionals &
-                    &have been found', 1 )
+                         &have been found', 1 )
     !
     IF (imeta/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &   
-                     &been found together with an exchange one (mGGA)' )
+       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION f&
+                           &unctional has been found together with an exchange o&
+                           &ne (mGGA)' )
     !   
   END SUBROUTINE matching_libxc
   !
@@ -599,11 +618,14 @@ CONTAINS
     !! It fixes eventual overlap issues between qe and libxc names when qe and
     !! libxc functionals are used together.
     !
-    USE dft_par_mod
+    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc, &
+                            exc, corr, gradx, gradc, meta, nxc, ncc, ngcx,     &
+                            ngcc, nmeta
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
+    !! DFT full name
     !
     CHARACTER(LEN=4) :: qe_name
     CHARACTER(LEN=256) :: lxc_name
@@ -649,7 +671,7 @@ CONTAINS
           nlxc = 0
           DO i = 1, 6
             IF (is_libxc(i)) THEN
-              lxc_name = xc_f90_functional_get_name( id_vec(i) )
+              lxc_name = xc_f03_functional_get_name( id_vec(i) )
               DO l = 1, LEN_TRIM(lxc_name)
                  lxc_name(l:l) = capital( lxc_name(l:l) )
               ENDDO
@@ -670,14 +692,18 @@ CONTAINS
 #endif
   !
   !
-  !-----------------------------------------------------------------------
+  !---------------------------------------------------------------------------
   SUBROUTINE xclib_set_auxiliary_flags( isnonlocc )
-    !-----------------------------------------------------------------------
+    !-------------------------------------------------------------------------
     !! Set logical flags describing the complexity of the xc functional
     !! define the fraction of exact exchange used by hybrid fuctionals.
     !
-    USE dft_par_mod
-    !
+    USE kind_l,       ONLY: DP
+    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                            islda, isgradient, ismeta, exx_fraction, &
+                            screening_parameter, gau_parameter,      & 
+                            ishybrid, has_finite_size_correction
+    !  
     IMPLICIT NONE
     !
     LOGICAL, INTENT(IN) :: isnonlocc
@@ -699,13 +725,11 @@ CONTAINS
     IF ( igcx ==12 ) THEN
        exx_fraction = 0.25_DP
        screening_parameter = 0.106_DP
-       !CALL get_gau_scr_par( screening_parameter )
     ENDIF
     ! gau-pbe
     IF ( igcx ==20 ) THEN
        exx_fraction = 0.24_DP
        gau_parameter = 0.150_DP
-       !CALL get_gau_scr_par( gau_parameter )
     ENDIF
     ! HF or OEP
     IF ( iexch==4 .OR. iexch==5 ) exx_fraction = 1.0_DP
@@ -722,7 +746,7 @@ CONTAINS
     !
   END SUBROUTINE xclib_set_auxiliary_flags
   !
-  !======================= EXX ==========================================
+  !======================= EXX-hybrid ======================================
   ! 
 !   !-----------------------------------------------------------------------
 !   SUBROUTINE enforce_dft_exxrpa( )
@@ -769,73 +793,43 @@ CONTAINS
 !     !
 !   END SUBROUTINE init_dft_exxrpa
   !
-  !
-  !==============================V= CAN BE REMOVED =V=====================
-  !
   SUBROUTINE start_exx
-    !
-    USE dft_par_mod
+    !! Activate exact exchange (exx_started=TRUE)
+    USE dft_par_mod, ONLY: ishybrid, exx_started
     IMPLICIT NONE
     IF (.NOT. ishybrid) &
        CALL xclib_error( 'start_exx', 'dft is not hybrid, wrong call', 1 )
     exx_started = .TRUE.
-    !
   END SUBROUTINE start_exx
-  !
   !-----------------------------------------------------------------------
-  !
   SUBROUTINE stop_exx
-    !
-    USE dft_par_mod
+    !! Deactivate exact exchange (exx_started=FALSE)
+    USE dft_par_mod, ONLY: ishybrid, exx_started
     IMPLICIT NONE
     IF (.NOT. ishybrid) &
        CALL xclib_error( 'stop_exx', 'dft is not hybrid, wrong call', 1 )
     exx_started = .FALSE.
-    !
   END SUBROUTINE stop_exx
-  !
-  !======================================================================
-  !
-  !
-  SUBROUTINE set_exx_started( exx_started_ )
-    !
-    USE dft_par_mod
-    !
-    IMPLICIT NONE
-    !
-    LOGICAL, INTENT(IN) :: exx_started_
-    !
-    IF (.NOT. ishybrid) &
-        CALL xclib_error( 'set_exx_started', 'dft is not hybrid, wrong call', 1 )
-    exx_started = exx_started_
-    !
-    RETURN
-    !
-  END SUBROUTINE
-  !
+  !-----------------------------------------------------------------------
   SUBROUTINE xclib_set_exx_fraction( exx_fraction_ )
-    !
-    USE kind_l,  ONLY: DP
-    USE dft_par_mod
-    !
+    !! Impose input parameter as exact exchange fraction value
+    USE kind_l,      ONLY: DP
+    USE dft_par_mod, ONLY: exx_fraction
     IMPLICIT NONE
-    !
     REAL(DP), INTENT(IN) :: exx_fraction_
-    !
+    !! Imposed value of exact exchange fraction
     exx_fraction = exx_fraction_
     WRITE( *,'(5x,a,f6.2)') 'EXX fraction changed: ', exx_fraction
-    !
     RETURN
-    !
   END SUBROUTINE xclib_set_exx_fraction
-  !
-  !
+  !-----------------------------------------------------------------------
   SUBROUTINE dft_force_hybrid( request )
-    !
-    USE dft_par_mod
+    !! Impose hybrid condition.
+    USE dft_par_mod, ONLY: ishybrid
     IMPLICIT NONE
-    !
-    LOGICAL,OPTIONAL,INTENT(INOUT) :: request
+    LOGICAL, OPTIONAL, INTENT(INOUT) :: request
+    !! Impose input request as hybrid condition and return output request
+    !! as previous hybrid condition.
     LOGICAL :: aux
     IF (PRESENT(request)) THEN
       aux = ishybrid
@@ -844,117 +838,93 @@ CONTAINS
     ELSE
       ishybrid= .TRUE.
     ENDIF
-    !
   END SUBROUTINE dft_force_hybrid
-  !
   !-----------------------------------------------------------------------
-  !
   FUNCTION exx_is_active()
-     USE dft_par_mod
+     !! TRUE if exact exchange is active.
+     USE dft_par_mod, ONLY: exx_started
      IMPLICIT NONE
-     LOGICAL exx_is_active
+     LOGICAL :: exx_is_active
      exx_is_active = exx_started
   END FUNCTION exx_is_active
   !-----------------------------------------------------------------------
-  !
-  !
   FUNCTION xclib_get_exx_fraction()
-     USE dft_par_mod
+     !! Recover exact exchange fraction.
+     USE kind_l,      ONLY: DP
+     USE dft_par_mod, ONLY: exx_fraction
      IMPLICIT NONE
      REAL(DP) :: xclib_get_exx_fraction
      xclib_get_exx_fraction = exx_fraction
      RETURN
   END FUNCTION xclib_get_exx_fraction
   !-----------------------------------------------------------------------
-
-  
-  
-!========================================================================
-  
-  !---------------------------------------------------------------------
+  !
+  !
+  !============ PBE gau-screening ========================================
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE set_screening_parameter( scrparm_ )
-     USE dft_par_mod
-     IMPLICIT NONE
-     REAL(DP):: scrparm_
-     screening_parameter = scrparm_
-     !CALL get_gau_scr_par_l( screening_parameter )
-     WRITE( *,'(5x,a,f12.7)') 'EXX Screening parameter changed: ', &
-          & screening_parameter
+    !! Impose input parameter as screening parameter (for pbexsr)
+    USE kind_l,      ONLY: DP
+    USE dft_par_mod, ONLY: screening_parameter
+    IMPLICIT NONE
+    REAL(DP):: scrparm_
+    !! Value to impose as screening parameter
+    screening_parameter = scrparm_
+    WRITE( *,'(5x,a,f12.7)') 'EXX Screening parameter changed: ', &
+         & screening_parameter
   END SUBROUTINE set_screening_parameter
-  !----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
   FUNCTION get_screening_parameter()
-     USE dft_par_mod
+     !! Recover screening parameter (for pbexsr)
+     USE kind_l,      ONLY: DP
+     USE dft_par_mod, ONLY: screening_parameter
      IMPLICIT NONE
      REAL(DP):: get_screening_parameter
      get_screening_parameter = screening_parameter
      RETURN
   END FUNCTION get_screening_parameter
-  !---------------------------------------------------------------------
+  !-----------------------------------------------------------------------
   SUBROUTINE set_gau_parameter( gauparm_ )
-     USE dft_par_mod
-     IMPLICIT NONE
-     REAL(DP):: gauparm_
-     gau_parameter = gauparm_
-     !CALL get_gau_scr_par_l( gau_parameter )
-     WRITE( *,'(5x,a,f12.7)') 'EXX Gau parameter changed: ', &
-          & gau_parameter
+    !! Impose input parameter as gau parameter (for gau-pbe)
+    USE kind_l,      ONLY: DP
+    USE dft_par_mod, ONLY: gau_parameter
+    IMPLICIT NONE
+    REAL(DP):: gauparm_
+    !! Value to impose as gau parameter
+    gau_parameter = gauparm_
+    WRITE( *,'(5x,a,f12.7)') 'EXX Gau parameter changed: ', &
+         & gau_parameter
   END SUBROUTINE set_gau_parameter
-  !
-  !
+  !-----------------------------------------------------------------------
   FUNCTION get_gau_parameter()
-     USE dft_par_mod
-     IMPLICIT NONE
-     REAL(DP):: get_gau_parameter
-     get_gau_parameter = gau_parameter
-     RETURN
+    !! Recover gau parameter (for gau-pbe)
+    USE kind_l,      ONLY: DP
+    USE dft_par_mod, ONLY: gau_parameter
+    IMPLICIT NONE
+    REAL(DP):: get_gau_parameter
+    get_gau_parameter = gau_parameter
+    RETURN
   END FUNCTION get_gau_parameter
   !-----------------------------------------------------------------------
-  
-!   SUBROUTINE set_gau_scr_par( gau_scr_par_ )
-!     !
-!     USE kind_l,  ONLY: DP
-!     USE dft_par_mod
-!     !
-!     IMPLICIT NONE
-!     !
-!     REAL(DP), INTENT(IN) :: gau_scr_par_
-!     !
-!     IF ( igcx == 12 ) &
-!        screening_parameter = gau_scr_par_
-!     IF ( igcx == 20 ) &
-!        gau_parameter = gau_scr_par_
-!     !
-!     RETURN
-!     !
-!   END SUBROUTINE
-
-
-!   SUBROUTINE set_gau_scr_par_l( gau_scr_par_ )
-!    !
-!    USE kind_l,  ONLY: DP
-!    USE dft_par_mod
-!    !
-!    IMPLICIT NONE
-!    !
-!    REAL(DP), INTENT(IN) :: gau_scr_par_
-!    !
-!    IF ( igcx == 12 ) &
-!       screening_parameter = gau_scr_par_
-!    IF ( igcx == 20 ) &
-!       gau_parameter = gau_scr_par_
-!    !
-!    RETURN
-!    !
-!    END SUBROUTINE
-  
-
+  !
+  !
+  !============ DFT NAME & ID SETTING AND RECOVERY =======================
+  !
+  !-----------------------------------------------------------------------
   FUNCTION xclib_get_id( family, kindf )
+     !--------------------------------------------------------------------
+     !! Get functionals index of \(\text{family}\) and \(\text{kind}\).
      !
-     USE dft_par_mod
+     USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac
+     !
      IMPLICIT NONE
      !
      INTEGER :: xclib_get_id
-     CHARACTER(len=*), INTENT(IN) :: family, kindf
+     CHARACTER(len=*), INTENT(IN) :: family
+     !! LDA, GGA or MGGA
+     CHARACTER(len=*), INTENT(IN) :: kindf
+     !! EXCH or CORR
      !
      CHARACTER(len=4) :: cfamily, ckindf
      INTEGER :: i, ln
@@ -981,21 +951,26 @@ CONTAINS
      CASE DEFAULT
        CALL xclib_error( 'xclib_get_id', 'input not recognized', 1 )
      END SELECT
+     !
      RETURN
      !
   END FUNCTION xclib_get_id
   !
-  !           
-  !-----------------------------------------------------------------            
+  !-------------------------------------------------------------------       
   SUBROUTINE xclib_get_name( family, kindf, name )
      !----------------------------------------------------------------
      !! Gets QE name for 'family'-'kind' term of the XC functional.
      !
-     USE dft_par_mod
+     USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                            exc, corr, gradx, gradc, meta
+     !
      IMPLICIT NONE
      !
      CHARACTER(len=4) :: name
-     CHARACTER(len=*), INTENT(IN) :: family, kindf
+     CHARACTER(len=*), INTENT(IN) :: family
+     !! LDA, GGA or MGGA
+     CHARACTER(len=*), INTENT(IN) :: kindf
+     !! EXCH or CORR
      !
      CHARACTER(len=4) :: cfamily, ckindf
      INTEGER :: i, ln
@@ -1021,21 +996,25 @@ CONTAINS
      CASE DEFAULT
        CALL xclib_error( 'get_name', 'input not recognized', 1 )
      END SELECT
+     !
      RETURN
      !
   END SUBROUTINE xclib_get_name
-  !
   !
   !--------------------------------------------------------------------
   FUNCTION xclib_dft_is_libxc( family, kindf )
      !-----------------------------------------------------------------
      !! Establish if the XC term family-kind is Libxc or not.
      !
-     USE dft_par_mod
+     USE dft_par_mod,  ONLY: is_libxc
+     !
      IMPLICIT NONE
      !
      LOGICAL :: xclib_dft_is_libxc
-     CHARACTER(len=*), INTENT(IN) :: family, kindf
+     CHARACTER(len=*), INTENT(IN) :: family
+     !! LDA, GGA or MGGA
+     CHARACTER(len=*), INTENT(IN) :: kindf
+     !! EXCH or CORR
      !
      CHARACTER(len=4) :: cfamily, ckindf
      INTEGER :: i, ln
@@ -1062,6 +1041,7 @@ CONTAINS
      CASE DEFAULT
        CALL xclib_error( 'xclib_dft_is_libxc', 'input not recognized', 1 )
      END SELECT
+     !
      RETURN
      !
   END FUNCTION
@@ -1107,7 +1087,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_reset_dft()
     !---------------------------------------------------------------------
-    USE dft_par_mod
+    !! Unset DFT indexes.
+    USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, notset
     IMPLICIT NONE
     iexch  = notset ; icorr  = notset
     igcx   = notset ; igcc   = notset
@@ -1117,7 +1098,8 @@ CONTAINS
   !------------------------------------------------------------------------
   FUNCTION get_dft_name()
      !---------------------------------------------------------------------
-     USE dft_par_mod
+     !! Get full DFT name
+     USE dft_par_mod, ONLY: dft
      IMPLICIT NONE
      CHARACTER(LEN=32) :: get_dft_name
      get_dft_name = dft
@@ -1127,10 +1109,15 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION xclib_dft_is( what )
      !---------------------------------------------------------------------
-     USE dft_par_mod
+     !! Find if DFT has gradient correction, meta or hybrid.
+     !
+     USE dft_par_mod,  ONLY: isgradient, ismeta, ishybrid
+     !
      IMPLICIT NONE
+     !
      LOGICAL :: xclib_dft_is
      CHARACTER(len=*) :: what
+     !! gradient, meta or hybrid
      !
      CHARACTER(len=15) :: cwhat
      INTEGER :: i, ln
@@ -1175,34 +1162,33 @@ CONTAINS
 !      dft_is_hybrid = ishybrid
 !      RETURN
 !   END FUNCTION dft_is_hybrid
-  !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
   FUNCTION igcc_is_lyp()
-     !-------------------------------------------------------------------
-     USE dft_par_mod
+     !! Find if correlation GGA is Lee-Yang-Parr.
+     USE dft_par_mod,  ONLY: igcc
      IMPLICIT NONE
      LOGICAL :: igcc_is_lyp
      igcc_is_lyp = (igcc==3 .OR. igcc==7 .OR. igcc==13)
      RETURN
   END FUNCTION igcc_is_lyp
-  !
   !-----------------------------------------------------------------------
   FUNCTION dft_has_finite_size_correction()
-     !--------------------------------------------------------------------
-     USE dft_par_mod
+     !! TRUE if finite size correction present
+     USE dft_par_mod, ONLY: has_finite_size_correction
      IMPLICIT NONE
      LOGICAL :: dft_has_finite_size_correction
      dft_has_finite_size_correction = has_finite_size_correction
      RETURN
   END FUNCTION dft_has_finite_size_correction
-  !
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_set_finite_size_volume( volume )
-     !-------------------------------------------------------------------
-     USE dft_par_mod
+     !! Set value for finite size cell volume.
+     USE dft_par_mod, ONLY: has_finite_size_correction, finite_size_cell_volume,&
+                            finite_size_cell_volume_set
      IMPLICIT NONE
      REAL, INTENT(IN) :: volume
+     !! finite size cell volume
      IF (.NOT. has_finite_size_correction) &
          CALL xclib_error( 'set_finite_size_volume', &
                       'dft w/o finite_size_correction, wrong call', 1 )
@@ -1212,32 +1198,32 @@ CONTAINS
      finite_size_cell_volume = volume
      finite_size_cell_volume_set = .TRUE.
   END SUBROUTINE xclib_set_finite_size_volume
-  !
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_get_finite_size_cell_volume( is_present, volume )
-     !---------------------------------------------------------------------
-     USE dft_par_mod
+     !! Recover value for finite size cell volume.
+     USE kind_l,      ONLY: DP
+     USE dft_par_mod, ONLY: finite_size_cell_volume, finite_size_cell_volume_set
      IMPLICIT NONE
      LOGICAL, INTENT(OUT) :: is_present
+     !! TRUE if finite size correction present
      REAL(DP), INTENT(OUT) :: volume
+     !! finite size cell volume
      is_present = finite_size_cell_volume_set
      volume = -1.d0
      IF (is_present) volume = finite_size_cell_volume
   END SUBROUTINE xclib_get_finite_size_cell_volume
-  !
   !
 #if defined(__LIBXC)
   !------------------------------------------------------------------------
   SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
      !--------------------------------------------------------------------
      !! Checks whether Exc is present or not in the output of a libxc 
-     !! functional (e.g. TB09)
-     !
+     !! functional (e.g. TB09 and a few others)
      IMPLICIT NONE
-     TYPE(xc_f90_func_info_t) :: xc_info
+     TYPE(xc_f03_func_info_t) :: xc_info
      INTEGER :: ii, flags_tot
      INTEGER, INTENT(OUT) :: eflag 
-     flags_tot = xc_f90_func_info_get_flags(xc_info)
+     flags_tot = xc_f03_func_info_get_flags(xc_info)
      eflag = 0
      DO ii = 15, 0, -1
        IF ( flags_tot-2**ii<0 ) CYCLE
@@ -1251,8 +1237,10 @@ CONTAINS
   !-------------------------------------------------------------------------
   FUNCTION xclib_get_dft_short()
     !---------------------------------------------------------------------
+    !! Get DFT name in short notation.
     !
-    USE dft_par_mod
+    USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, corr, &
+                           is_libxc, scan_exx, notset
     !
     IMPLICIT NONE
     !
@@ -1364,8 +1352,10 @@ CONTAINS
   !---------------------------------------------------------------------
   FUNCTION xclib_get_dft_long()
     !---------------------------------------------------------------------
+    !! Get DFT name in long notation.
     !
-    USE dft_par_mod
+    USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, exc, corr, gradx,&
+                           gradc, meta
     !
     IMPLICIT NONE
     !
@@ -1383,17 +1373,22 @@ CONTAINS
   !---------------------------------------------------------------------------
   SUBROUTINE xclib_set_threshold( family, rho_threshold_, grho_threshold_, tau_threshold_ )
    !--------------------------------------------------------------------------
-   !! Set input threshold for 'family'-term of XC functional.
+   !! Set input threshold for \(\text{family}\)-term of XC functional.
    !
-   USE kind_l, ONLY: DP
-   USE dft_par_mod
+   USE kind_l,      ONLY: DP
+   USE dft_par_mod, ONLY: rho_threshold_lda, rho_threshold_gga, grho2_threshold_mgga, &
+                          grho_threshold_gga, tau_threshold_mgga
    !
    IMPLICIT NONE
    !
    CHARACTER(len=*), INTENT(IN) :: family
+   !! LDA, GGA or MGGA
    REAL(DP), INTENT(IN) :: rho_threshold_
+   !! Density threshold
    REAL(DP), INTENT(IN), OPTIONAL :: grho_threshold_
+   !! Threshold for density gradient
    REAL(DP), INTENT(IN), OPTIONAL :: tau_threshold_
+   !! Threshold for density laplacian
    !
    CHARACTER(len=4) :: cfamily
    INTEGER :: i, ln
@@ -1422,20 +1417,19 @@ CONTAINS
   !
   !-----------------------------------------------------------------------
   FUNCTION matches( string1, string2 )  
-  !-----------------------------------------------------------------------
-  !! TRUE if string1 is contained in string2, .FALSE. otherwise
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(LEN=*), INTENT(IN) :: string1, string2
-  LOGICAL :: matches
-  INTEGER :: len1, len2, l  
-  !
-  !
-  len1 = LEN_TRIM( string1 )  
-  len2 = LEN_TRIM( string2 )  
-  !
-  DO l = 1, ( len2 - len1 + 1 )  
+   !-----------------------------------------------------------------------
+   !! TRUE if string1 is contained in string2, .FALSE. otherwise
+   !
+   IMPLICIT NONE
+   !
+   CHARACTER(LEN=*), INTENT(IN) :: string1, string2
+   LOGICAL :: matches
+   INTEGER :: len1, len2, l  
+   !
+   len1 = LEN_TRIM( string1 )  
+   len2 = LEN_TRIM( string2 )  
+   !
+   DO l = 1, ( len2 - len1 + 1 )  
      !   
      IF ( string1(1:len1) == string2(l:(l+len1-1)) ) THEN  
         !
@@ -1445,46 +1439,39 @@ CONTAINS
         !
      END IF
      !
-  END DO
-  !
-  matches = .FALSE.
-  ! 
-  RETURN
-  !
+   END DO
+   !
+   matches = .FALSE.
+   ! 
+   RETURN
+   !
   END FUNCTION matches
-  !   
-  !   
+  !
+  !-----------------------------------------------------------------------
+  FUNCTION capital( in_char )  
    !-----------------------------------------------------------------------
-    FUNCTION capital( in_char )  
-    !-----------------------------------------------------------------------
-    !! Converts character to capital if lowercase.  
-    !! Copies character to output in all other cases.
-    !
-    IMPLICIT NONE  
-    !
-    CHARACTER(LEN=1), INTENT(IN) :: in_char
-    CHARACTER(LEN=1)             :: capital
-    CHARACTER(LEN=26), PARAMETER :: lower = 'abcdefghijklmnopqrstuvwxyz', &
-                                    upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    INTEGER                      :: i
-    !
-    !
-    DO i=1, 26
-       !
-       IF ( in_char == lower(i:i) ) THEN
-          !
-          capital = upper(i:i)
-          !
-          RETURN
-          !
-       END IF
-       !
-    END DO
-    !
-    capital = in_char
-    !
-    RETURN 
-    !
+   !! Converts character to capital if lowercase.  
+   !! Copies character to output in all other cases.
+   !
+   IMPLICIT NONE  
+   !
+   CHARACTER(LEN=1), INTENT(IN) :: in_char
+   CHARACTER(LEN=1)             :: capital
+   CHARACTER(LEN=26), PARAMETER :: lower = 'abcdefghijklmnopqrstuvwxyz', &
+                                   upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+   INTEGER                      :: i
+   !
+   DO i=1, 26
+     IF ( in_char == lower(i:i) ) THEN
+       capital = upper(i:i)
+       RETURN
+     ENDIF
+   ENDDO
+   !
+   capital = in_char
+   !
+   RETURN 
+   !
   END FUNCTION capital
   !
   !

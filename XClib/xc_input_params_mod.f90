@@ -14,7 +14,7 @@ MODULE dft_par_mod
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=150) :: dft = 'not set'
+    CHARACTER(LEN=32) :: dft = 'not set'
     !! Full name of the XC functional
     INTEGER, PARAMETER :: notset = -1
     !! Value of indexes that have not been set yet
