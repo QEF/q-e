@@ -63,7 +63,7 @@ SUBROUTINE move_ions( idone, ions_status )
   REAL(DP)              :: energy_error, gradient_error, cell_error, fcp_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
-  REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
+  REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1, new_alat
   REAL(DP)              :: relec, felec, helec, capacitance, tot_charge_
   LOGICAL               :: conv_ions
   CHARACTER(LEN=320)    :: filebfgs
@@ -143,7 +143,7 @@ SUBROUTINE move_ions( idone, ions_status )
            IF (fix_volume) CALL impose_deviatoric_strain( alat*at, h )
            IF (fix_area)   CALL impose_deviatoric_strain_2d( alat*at, h )
            at = h / alat
-           IF(enforce_ibrav) CALL remake_cell( ibrav, alat, at(1,1),at(1,2),at(1,3) )
+           IF(enforce_ibrav) CALL remake_cell( ibrav, alat, at(1,1),at(1,2),at(1,3), new_alat )
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
            CALL volume( alat, at(1,1),at(1,2),at(1,3), omega )
            !
@@ -156,6 +156,8 @@ SUBROUTINE move_ions( idone, ions_status )
         !
         CALL cryst_to_cart( nat, pos,  at, 1 )
         tau    =  RESHAPE( pos,  (/ 3, nat /) )
+        !
+        IF(enforce_ibrav) CALL output_tau_rescaled(alat/new_alat)
         !
         DEALLOCATE( pos, grad )
         !
