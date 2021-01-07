@@ -1,15 +1,33 @@
-[ALL_CURRENTS]
+[h2o_mol_t]
 exe = XXXXXX/energy_current/tests/run-all_currents.x
 extract_program = XXXXXX/energy_current/tests/extract-all_currents.x
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.input tc.output tc.error
-tolerance = ( (1.0e2, 8.0e-4 ) )
+tolerance = ( (1.0e-1, 2.0e-6 ) )
+skip_program = grep
+skip_args = 'not present in this version'
+
+[h2o_mol]
+exe = XXXXXX/energy_current/tests/run-all_currents.x
+extract_program = XXXXXX/energy_current/tests/extract-all_currents.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.input tc.output tc.error
+tolerance = ( (1.0e-1, 1.0e-7 ) )
+skip_program = grep
+skip_args = 'not present in this version'
+
+[translation]
+exe = XXXXXX/energy_current/tests/run-all_currents.x
+extract_program = XXXXXX/energy_current/tests/extract-all_currents.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.input tc.output tc.error
+tolerance = ( (1.0e-2, 1.0e-4 ) )
 skip_program = grep
 skip_args = 'not present in this version'
 
 
 [user]
-benchmark = 3pt_2pt
+benchmark = new_velocities_h2o_traj
 date_fmt = %d%m%y
 diff = vimdiff
 

@@ -335,10 +335,12 @@ contains
       type(j_all), intent(in) :: j
       type(online_average), intent(inout) :: ave_cur
       type(timestep) :: ts
-      integer :: iun, step, itype
+      integer :: iun,icoord, step, itype
       integer, external :: find_free_unit
       real(dp) :: time, J_tot(3)
+      logical :: file_exists
 
+      INQUIRE(FILE=trim(file_output)//'.dat', EXIST=file_exists)
       if (traj%traj%nsteps > 0) then
          call cpv_trajectory_get_last_step(traj, ts)
          step = ts%nstep
@@ -350,10 +352,12 @@ contains
       if (ionode) then
          iun = find_free_unit()
          open (iun, file=trim(file_output), position='append')
-         write (iun, *) 'Passo: ', step
+         write (iun, *) 'step: ', step, ' dt: ', delta_t
          write (iun, '(A,10E20.12)') 'h&K-XC', j%J_xc(:)
          write (iun, '(A,10E20.12)') 'h&K-H', j%J_hartree(:)
-         write (iun, '(A,1F15.7,9E20.12)') 'h&K-K', delta_t, j%J_kohn(1:3), j%J_kohn_a(1:3), j%J_kohn_b(1:3)
+         write (iun, '(A,3E20.12)') 'h&K-K', j%J_kohn(1:3)
+         write (iun, '(A,3E20.12)') 'h&K-K_a', j%J_kohn_a(1:3)
+         write (iun, '(A,3E20.12)') 'h&K-K_b', j%J_kohn_b(1:3)
          write (iun, '(A,3E20.12)') 'h&K-ELE', j%J_electron(1:3)
          write (iun, '(A,3E20.12)') 'ionic:', j%i_current(:)
          write (iun, '(A,3E20.12)') 'ionic_a:', j%i_current_a(:)
@@ -370,6 +374,15 @@ contains
          !remember to modify the set_first_step_restart() subroutine,
          !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
+         if (.not. file_exists) then
+             write(iun,'(A)',advance='no') '# STEP TIME J[1] J[2] J[3] J_el[1] J_el[2] J_el[3] '
+             do itype = 1, nsp
+               do icoord = 1, 3
+                write (iun, '(A,I1,A,I1,A)', advance='no') 'J_type',itype,'[',icoord,'] '
+               end do
+             end do
+             write(iun,'(A)') ''
+         end if
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
             J_tot, j%J_electron(1:3)
          do itype = 1, nsp

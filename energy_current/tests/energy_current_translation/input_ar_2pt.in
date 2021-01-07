@@ -4,7 +4,6 @@ vel_input_units="CP",
     file_output= 'current_hz',
     eta=   0.100,
     n_max=     5,
-    ec_test= .true.,
     add_i_current_b= .true.,
     three_point_derivative = .false.
  /
@@ -34,7 +33,7 @@ vel_input_units="CP",
 ATOMIC_POSITIONS (bohr)
 Ar            0.0       0.0       0.0
 ATOMIC_VELOCITIES
- Ar     1.d-5        1.d-5     1.d-5
+ Ar     1.d-2        1.d-2     1.d-2
 
  K_POINTS {Gamma}
 
