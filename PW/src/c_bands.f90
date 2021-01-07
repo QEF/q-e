@@ -242,6 +242,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !------------------------------------------------------------------------
   ! CG diagonalization uses these external routines on a single band
   EXTERNAL hs_1psi, s_1psi, hs_psi
+  EXTERNAL hs_psi_gpu
   EXTERNAL hs_1psi_gpu, s_1psi_gpu
   ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
   ! subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
@@ -256,6 +257,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! subroutine g_1psi(npwx,npw,psi,eig)         computes G*psi -> psi
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
   external g_1psi
+  external g_1psi_gpu
 
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -398,13 +400,23 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              END IF 
           ELSE
              !
-             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
-             CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
-                        npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
-             !
-             avg_iter = avg_iter + nhpsi/float(nbnd) 
-             ! write (6,*) ntry, avg_iter, nhpsi
-             !
+             IF (.not. use_gpu ) THEN
+               CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
+               CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+               !
+               avg_iter = avg_iter + nhpsi/float(nbnd) 
+               ! write (6,*) ntry, avg_iter, nhpsi
+               !
+             ELSE
+               CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
+               CALL paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                          npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+               !
+               avg_iter = avg_iter + nhpsi/float(nbnd) 
+               ! write (6,*) ntry, avg_iter, nhpsi
+               !
+             ENDIF  
           ENDIF
           !
           !
@@ -625,13 +637,22 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              END IF
           ELSE 
              !
-             CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
-             CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+             IF ( .not. use_gpu ) THEN
+               CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+               CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
-             !
-             avg_iter = avg_iter + nhpsi/float(nbnd) 
-             ! write (6,*) ntry, avg_iter, nhpsi
-             !
+               !
+               avg_iter = avg_iter + nhpsi/float(nbnd) 
+               ! write (6,*) ntry, avg_iter, nhpsi
+             ELSE
+               CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
+               CALL paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                        npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+               !
+               avg_iter = avg_iter + nhpsi/float(nbnd) 
+               ! write (6,*) ntry, avg_iter, nhpsi
+               !
+             END IF
           ENDIF
           ntry = ntry + 1
           !
