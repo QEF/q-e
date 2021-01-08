@@ -50,7 +50,15 @@ set(src_tddfpt
     src/dveqpsi_us.f90
     src/dveqpsi_us_only.f90
     src/orthogonalize_omega.f90
-    src/mix_pot.f90)
+    src/mix_pot.f90
+    src/lr_apply_liouvillian_magnons.f90
+    src/lr_dvpsi_magnons.f90
+    src/lr_Opsi_magnons.f90
+    src/lr_calc_dens_magnons.f90
+    src/lr_dot_magnons.f90
+    src/lanczos_pseudohermitian_c.f90
+    src/lanczos_nonhermitian_c.f90)
+
 
 qe_add_library(qe_tddfpt ${src_tddfpt})
 target_link_libraries(qe_tddfpt
