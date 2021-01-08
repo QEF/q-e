@@ -323,7 +323,7 @@ contains
 
    subroutine write_results(traj, write_ave, j, ave_cur)
       use kinds, only: dp
-      use ions_base, ONLY: nsp
+      use ions_base, ONLY: nsp, na
       use cell_base, only: alat
       use io_global, ONLY: ionode
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_get_last_step
@@ -375,10 +375,18 @@ contains
          !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
          if (.not. file_exists) then
+             write(iun,'(A)') '#units:'
+             write(iun,'(A)') '# Ry = 2.1799e-18J = 13.606eV'
+             write(iun,'(A)') '# a0 = 5.2918e-11m,'
+             write(iun,'(A)') '# tau = 4.8378e-17s'
+             write(iun,'(A)') '# TIME: same as input trajectory'
+             write(iun,'(A)') '# J: Ry*a0/tau'
+             write(iun,'(A)') '# J_el: number * a0/tau'
+             write(iun,'(A)') '# J_cm: number * a0/tau'
              write(iun,'(A)',advance='no') '# STEP TIME J[1] J[2] J[3] J_el[1] J_el[2] J_el[3] '
              do itype = 1, nsp
                do icoord = 1, 3
-                write (iun, '(A,I1,A,I1,A)', advance='no') 'J_type',itype,'[',icoord,'] '
+                write (iun, '(A,I1,A,I1,A)', advance='no') 'J_cm',itype,'[',icoord,'] '
                end do
              end do
              write(iun,'(A)') ''
@@ -386,14 +394,25 @@ contains
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
             J_tot, j%J_electron(1:3)
          do itype = 1, nsp
-            write (iun, '(3E20.12)', advance='no') alat*j%v_cm(:, itype)
+            write (iun, '(3E20.12)', advance='no') na(itype)*alat*j%v_cm(:, itype)
             write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*j%v_cm(:, itype)
          end do
          write (iun, '(A)') ''
          close (iun)
          call online_average_do(ave_cur, J_tot)
          if (write_ave) then
+            INQUIRE(FILE=trim(file_output)//'.stat', EXIST=file_exists)
             open (iun, file=trim(file_output)//'.stat', position='append')
+            if (.not. file_exists) then
+                write(iun,'(A)') '#units:'
+                write(iun,'(A)') '# Ry = 2.1799e-18J = 13.606eV'
+                write(iun,'(A)') '# a0 = 5.2918e-11m,'
+                write(iun,'(A)') '# tau = 4.8378e-17s'
+                write(iun,'(A)') '# TIME: same as input trajectory'
+                write(iun,'(A)') '# J: Ry*a0/tau (average of the results)'
+                write(iun,'(A)') '# sigma_J: Ry*a0/tau (standard deviation of the results)'
+                write(iun,'(A)') '# STEP TIME J[1] J[2] J[3] sigma_J[1] sigma_J[2] sigma_J[3] '
+            end if
             write (iun, '(1I7,1E14.6)', advance='no') step, time
             call online_average_print(ave_cur, iun)
             write (iun, '(A)') ''
