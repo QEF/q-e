@@ -394,7 +394,7 @@ contains
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
             J_tot, j%J_electron(1:3)
          do itype = 1, nsp
-            write (iun, '(3E20.12)', advance='no') na(itype)*alat*j%v_cm(:, itype)
+            write (iun, '(3E20.12)', advance='no') real(na(itype), dp)*alat*j%v_cm(:, itype)
             write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*j%v_cm(:, itype)
          end do
          write (iun, '(A)') ''
@@ -627,7 +627,7 @@ contains
    subroutine cm_vel(v_cm, vel_cm)
       !calculates center of mass velocities for each atomic type and eventually subtract it from the velocity of each atom
       use kinds, only: dp
-      use ions_base, ONLY: nat, nsp, ityp
+      use ions_base, ONLY: nat, nsp, ityp, na
       use dynamics_module, only: vel
       implicit none
       real(dp), allocatable, intent(inout) :: v_cm(:, :)
@@ -647,6 +647,8 @@ contains
          delta = (vel(:, iatom) - v_cm(:, itype))/real(counter(itype), dp)
          v_cm(:, itype) = v_cm(:, itype) + delta
       end do
+      if (na(1) .eq. 0) &
+         na(1:nsp)=counter
       if (present(vel_cm)) then
          do iatom = 1, nat
             itype = ityp(iatom)
