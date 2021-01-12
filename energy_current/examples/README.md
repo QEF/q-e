@@ -1,5 +1,5 @@
 ###
-############ INSTALLATION OVERVIEW #############
+# INSTALLATION OVERVIEW
 ###
 #### Before running the examples, you need to be sure that QEHeat is installed.
 #### To do this, first perform a standard Quantum-Espresso installation. For a basic one, in the main directory execute the commands:
@@ -10,7 +10,8 @@
 #### make
 #### This should produce the executable all_currents.x in the src and bin folders.
 ###
-############ EXAMPLES #########################
+
+# EXAMPLES
 ### 
 #### See also ../../Doc/INPUT_ALL_CURRENTS.html for a description of the inputs.
 #### To run an example, enter in the respective trajectory and execute the script run_example.sh. Modify it if necessary.

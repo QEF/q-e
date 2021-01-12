@@ -12,7 +12,7 @@ The folders cointain:
 
 
 ###
-############ INSTALLATION OVERVIEW #############
+# INSTALLATION OVERVIEW
 ###
 #### Before running the examples, you need to be sure that QEHeat is installed.
 #### To do this, first perform a standard Quantum-Espresso installation. For a basic one, in the main directory execute the commands:
