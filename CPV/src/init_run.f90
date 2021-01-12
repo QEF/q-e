@@ -127,7 +127,7 @@ SUBROUTINE init_run()
   !
   ! ... initialize communicators for parallel linear algebra
   !
-  CALL set_para_diag ( nbsp, use_para_diag )
+  CALL set_para_diag ( nudx, use_para_diag )
   !
   ! ... mesure performances of parallel routines
   !
