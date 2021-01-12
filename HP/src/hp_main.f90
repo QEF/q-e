@@ -15,10 +15,8 @@ PROGRAM hp_main
   USE io_global,         ONLY : stdout, ionode
   USE check_stop,        ONLY : check_stop_init
   USE mp_global,         ONLY : mp_startup, mp_global_end
-  USE mp_world,          ONLY : world_comm
-  USE mp_pools,          ONLY : intra_pool_comm, kunit
-  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE command_line_options,  ONLY : input_file_, ndiag_
+  USE mp_pools,          ONLY : kunit
+  USE mp_bands,          ONLY : inter_bgrp_comm
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
@@ -29,18 +27,12 @@ PROGRAM hp_main
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
-  !
   INTEGER :: iq, na, ipol
   LOGICAL :: do_iq, setup_pw
   !
   ! Initialize MPI, clocks, print initial messages
   !
   CALL mp_startup()
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-       do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start(code)
   !

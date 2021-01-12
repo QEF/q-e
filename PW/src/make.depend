@@ -228,6 +228,7 @@ buffers.o : ../../Modules/kind.o
 c_bands.o : ../../Modules/becmod.o
 c_bands.o : ../../Modules/check_stop.o
 c_bands.o : ../../Modules/control_flags.o
+c_bands.o : ../../Modules/funct.o
 c_bands.o : ../../Modules/io_files.o
 c_bands.o : ../../Modules/io_global.o
 c_bands.o : ../../Modules/kind.o
@@ -1750,11 +1751,7 @@ pwcom.o : ../../Modules/parameters.o
 pwcom.o : ../../upflib/upf_params.o
 pwscf.o : ../../Modules/command_line_options.o
 pwscf.o : ../../Modules/environment.o
-pwscf.o : ../../Modules/mp_bands.o
-pwscf.o : ../../Modules/mp_exx.o
 pwscf.o : ../../Modules/mp_global.o
-pwscf.o : ../../Modules/mp_pools.o
-pwscf.o : ../../Modules/mp_world.o
 pwscf.o : ../../Modules/read_input.o
 qvan2.o : ../../Modules/kind.o
 qvan2.o : ../../upflib/uspp.o
@@ -2024,8 +2021,8 @@ setup.o : ../../UtilXlib/mp.o
 setup.o : ../../upflib/uspp.o
 setup.o : atomic_wfc_mod.o
 setup.o : bp_mod.o
-setup.o : extfield.o
 setup.o : esm.o
+setup.o : extfield.o
 setup.o : exx.o
 setup.o : exx_base.o
 setup.o : fcp_module.o

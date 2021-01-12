@@ -45,17 +45,11 @@ PROGRAM phonon
   USE ph_restart,      ONLY : ph_writefile
   USE environment,     ONLY : environment_start
   USE mp_global,       ONLY : mp_startup
-  USE mp_world,        ONLY : world_comm
-  USE mp_pools,        ONLY : intra_pool_comm
-  USE mp_bands,        ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE command_line_options,  ONLY : input_file_, ndiag_
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   INTEGER :: iq, ierr
   LOGICAL :: do_band, do_iq, setup_pw
@@ -65,10 +59,6 @@ PROGRAM phonon
   ! Initialize MPI, clocks, print initial messages
   !
   CALL mp_startup ( start_images=.true. )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-       do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   CALL environment_start ( code )
   !
   ! ... and begin with the initialization part
