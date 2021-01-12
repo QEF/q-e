@@ -1,26 +1,26 @@
 ###
 ############ INSTALLATION OVERVIEW #############
 ###
-### Before running the examples, you need to be sure that QEHeat is installed.
-### To do this, first perform a standard Quantum-Espresso installation. For a basic one, in the main directory execute the commands:
-### ./configure
-### make pw 
-### This should produce the standard pw.x executable. To compile Qeheat just you need to enter the correct folder :
-### cd /energy_current/src
-### make
-### This should produce the executable all_currents.x in the src and bin folders.
+#### Before running the examples, you need to be sure that QEHeat is installed.
+#### To do this, first perform a standard Quantum-Espresso installation. For a basic one, in the main directory execute the commands:
+#### ./configure
+#### make pw 
+#### This should produce the standard pw.x executable. To compile Qeheat just you need to enter the correct folder :
+#### cd /energy_current/src
+#### make
+#### This should produce the executable all_currents.x in the src and bin folders.
 ###
 ############ EXAMPLES #########################
 ### 
-### See also ../../Doc/INPUT_ALL_CURRENTS.html for a description of the inputs.
-### To run an example, enter in the respective trajectory and execute the script run_example.sh. Modify it if necessary.
-### In general, running a Qeheat calculation just needs the execution of the command: all_currents.x -in input_energycurrent , 
-### after the input file has been prepared.
-###
-### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
-###
-### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 96.
-### Example 3 can be easily run on a single core implementation.
+#### See also ../../Doc/INPUT_ALL_CURRENTS.html for a description of the inputs.
+#### To run an example, enter in the respective trajectory and execute the script run_example.sh. Modify it if necessary.
+#### In general, running a Qeheat calculation just needs the execution of the command: all_currents.x -in input_energycurrent , 
+#### after the input file has been prepared.
+####
+#### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
+####
+#### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 96.
+#### Example 3 can be easily run on a single core implementation.
 
 
 
@@ -33,6 +33,7 @@
 Here we compute the energy current and its indivial components for a single snapshot of Silica. 
 For this purpose, one needs the additional namelist in the input file :
 
+```
 &energy_current
     delta_t=   0.500,
     file_output= 'current_hz',
@@ -42,6 +43,7 @@ For this purpose, one needs the additional namelist in the input file :
 
 & IONS
     ion_velocities = 'from_input',
+```
 
 and the CARD ATOMIC_VELOCITIES in the input file must be filled as well with the istantenous atomic velocities.
 These are the ingredients needed for a basic single snapshot calculation.
