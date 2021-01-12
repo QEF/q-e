@@ -64,7 +64,6 @@ SUBROUTINE lr_readin
   ! Specify the amount of I/O activities
   CHARACTER(LEN=6) :: int_to_char
   INTEGER :: ios, iunout, ierr, ipol
-  LOGICAL, EXTERNAL  :: check_para_diag
   !
   CHARACTER(LEN=80)          :: card
   INTEGER :: i
@@ -455,7 +454,7 @@ SUBROUTINE lr_readin
   !
   ! Scalapack related stuff.
   !
-  use_para_diag = check_para_diag( nbnd )
+  CALL set_para_diag( nbnd, use_para_diag )
   !
   RETURN
   !

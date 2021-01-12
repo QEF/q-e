@@ -103,8 +103,6 @@ SUBROUTINE setup()
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
-  LOGICAL, EXTERNAL  :: check_para_diag
-  !
   TYPE(output_type)  :: output_obj 
   !  
 #if defined(__MPI)
@@ -424,8 +422,6 @@ SUBROUTINE setup()
   nbndx = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
-  use_para_diag = check_para_diag( nbnd )
-  !
   ! ... Set the units in real and reciprocal space
   !
   tpiba  = 2.D0 * pi / alat
@@ -663,78 +659,11 @@ SUBROUTINE setup()
   !
   IF (lda_plus_u .or. okpaw .or. (okvan.and.dft_is_hybrid()) ) CALL d_matrix( d1, d2, d3 )
   !
+  ! ... set linear-lagebra diagonalization
+  !
+  CALL set_para_diag( nbnd, use_para_diag )
+  !
+  !
   RETURN
   !
 END SUBROUTINE setup
-!
-!----------------------------------------------------------------------------
-LOGICAL FUNCTION check_para_diag( nbnd )
-  !-----------------------------------------------------------------------------
-  !! Some checks for parallel diagonalization.
-  !
-  USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_bands,         ONLY : intra_bgrp_comm
-  USE mp_pools,         ONLY : intra_pool_comm
-
-  IMPLICIT NONE
-
-  INCLUDE 'laxlib.fh'
-
-  INTEGER, INTENT(IN) :: nbnd
-  !! number of bands
-  !
-  LOGICAL, SAVE :: first = .TRUE.
-  LOGICAL, SAVE :: saved_value = .FALSE.
-  INTEGER :: np_ortho(2), ortho_parent_comm 
-
-#if defined(__MPI)
-  IF( .NOT. first ) THEN
-      check_para_diag = saved_value
-      RETURN
-  END IF
-  first = .FALSE.
-  !
-  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm )
-  !
-  IF( np_ortho(1) > nbnd ) &
-     CALL errore ('check_para_diag', 'Too few bands for required ndiag',nbnd)
-  !
-  check_para_diag = ( np_ortho( 1 ) > 1 .AND. np_ortho( 2 ) > 1 )
-  saved_value = check_para_diag
-  !
-  IF ( ionode ) THEN
-     !
-     WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
-                     &     "of the eigenvalue problem:")' ) 
-     IF ( check_para_diag ) THEN
-        IF (ortho_parent_comm .EQ. intra_pool_comm) THEN
-           WRITE( stdout, '(5X,"one sub-group per k-point group (pool) will be used")' )
-        ELSE IF (ortho_parent_comm .EQ. intra_bgrp_comm) THEN
-           WRITE( stdout, '(5X,"one sub-group per band group will be used")' )
-        ELSE
-           CALL errore( 'setup','Unexpected sub-group communicator ', 1 )
-        END IF
-#if defined(__ELPA)  || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019)
-        WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
-              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
-               np_ortho(1), np_ortho(2)
-#elif defined(__SCALAPACK)
-        WRITE( stdout, '(5X,"scalapack distributed-memory algorithm ", &
-              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
-               np_ortho(1), np_ortho(2)
-#else
-        WRITE( stdout, '(5X,"custom distributed-memory algorithm ", &
-              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
-               np_ortho(1), np_ortho(2)
-#endif
-     ELSE
-        WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )
-     END IF
-     !
-  END IF
-  !
-#else
-  check_para_diag = .FALSE.
-#endif
-  RETURN
-END FUNCTION check_para_diag
