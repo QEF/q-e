@@ -50,10 +50,10 @@ These are the ingredients needed for a basic single snapshot calculation.
  
 The files produced, apart from the standard output, are :
 
-- file_output.dat : this reports the total energy current, the eletronic current and the center of mass velocity for each species.
+- `file_output.dat` : this reports the total energy current, the eletronic current and the center of mass velocity for each species.
 Only file_output.dat needs to be used to evaluate the thermal conductivity coefficient.
 
-- file_output : this reports the total energy current divided in individual components, if a more specific analysis is needed.
+- `file_output` : this reports the total energy current divided in individual components, if a more specific analysis is needed.
 
 Each file has a header specifying the output units. See also the description ../../Doc/INPUT_ALL_CURRENTS.html 
 
@@ -63,11 +63,11 @@ Each file has a header specifying the output units. See also the description ../
 
 
 
-Here we compute the energy current from a previously computed Car-Parrinello trajectory which is provided together with the input file . The trajectory provided
-here comes from a 125 water molecule simulation.
+Here we evaluate the energy current from a previously computed Car-Parrinello (CP) trajectory, which is provided together with the input file. The trajectory provided 
+comes from a 125 water molecule simulation.
 
-To calculate the energy current, for every timestep of the trajectory located in  ${trajdir}.pos` and ${trajdir.vel}, (velocities are in cp units in this example) 
-we need to insert some additional keywords in the energy_current namelists :
+We calculate the energy current, for every timestep of the trajectory located in  `${trajdir}.pos` and `${trajdir}.vel`, (velocities are in CP units in this example). 
+For this purpose we need to insert some additional keywords in the energy_current namelists :
 
 ```
  &energy_current
@@ -81,9 +81,9 @@ we need to insert some additional keywords in the energy_current namelists :
  /
 ```
 
-note that the only differences are `trajdir` and `first_step` in the `energy_current` namelist. Stil the IONS namelist needs to be set 
-ion_velocities='from_input' and the ATOMIC_VELOCITIES card must be filled. Nevertheless, note that if first_step=1 the snapshot of the input file will be skipped.
-Check also the last_step keyword in the documentation.
+note that the only different keywords with respect to a single snapshot calculations are `trajdir` and `first_step` in the `energy_current` namelist. Stil in the IONS namelist 
+the keyword ion_velocities='from_input' must be set and the ATOMIC_VELOCITIES card must be filled. Nevertheless, note that if `first_step=1` the snapshot of the input file will be skipped.
+Check also the `last_step` keyword in the documentation.
 
 The output with the istantenous energy currents is written in the file specified by `file_output` and `file_output.dat`, as in example 1. 
 The same format of the single snapshot calculation is kept, with data from all the snapshots of the trajectory appended sequantially.
@@ -94,7 +94,7 @@ The same format of the single snapshot calculation is kept, with data from all t
 
 
 
-This example is very similar to the previous one, but the trajectory is computed on-the-fly via the cp.x program of the installed distribution. It produces the  
+This example is very similar to the previous one, but the trajectory is computed on-the-fly via the cp.x program of the just installed QE distribution. It produces the  
 trajectory of a single water molecule and therefore the calculation is suited for a serial environment.
 
 
