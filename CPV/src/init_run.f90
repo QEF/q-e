@@ -16,7 +16,7 @@ SUBROUTINE init_run()
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       force_pairing
+                                       force_pairing, use_para_diag
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -28,10 +28,10 @@ SUBROUTINE init_run()
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE wavefunctions,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, phi_bgrp
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
-  USE electrons_base,           ONLY : nudx, nbnd
+  USE electrons_base,           ONLY : nudx
   USE efield_module,            ONLY : tefield, tefield2
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
@@ -125,10 +125,13 @@ SUBROUTINE init_run()
   !
   CALL init_geometry()
   !
+  ! ... initialize communicators for parallel linear algebra
+  !
+  CALL set_para_diag ( nbsp, use_para_diag )
+  !
   ! ... mesure performances of parallel routines
   !
   CALL mesure_mmul_perf( nudx )
-  !
   CALL mesure_diag_perf( nudx )
   !
   IF ( lwf ) CALL clear_nbeg( nbeg )
