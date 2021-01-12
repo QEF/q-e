@@ -1,0 +1,26 @@
+This package implements calculates the ab-initio energy flux, when velocities are provided in additions to positions in a QuantumEspresso input file.
+
+The folders cointain:
+
+`Doc` : the html files documenting the Qeheat input, to be opened with a browser (e.g. firefox).
+
+`examples` : a folder with examples of QEheat computations. Start here to test your code/installation .
+
+`src` : the files used by QEheat.
+
+`tests` : the test utility used mainly for development purposes. It can be used also for testing purposes with the command make run-tests .
+
+
+###
+############ INSTALLATION OVERVIEW #############
+###
+#### Before running the examples, you need to be sure that QEHeat is installed.
+#### To do this, first perform a standard Quantum-Espresso installation. For a basic one, in the main directory execute the commands:
+#### ./configure
+#### make pw 
+#### This should produce the standard pw.x executable. To compile Qeheat just you need to enter the correct folder :
+#### cd /energy_current/src
+#### make
+#### This should produce the executable all_currents.x in the src and bin folders.
+###
+
