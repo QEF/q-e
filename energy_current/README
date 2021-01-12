@@ -1,8 +1,8 @@
-This package implements calculates the ab-initio energy flux, when velocities are provided in additions to positions in a QuantumEspresso input file.
+This package (QEheat) calculates the ab-initio energy flux, when velocities are provided in additions to positions in a QuantumEspresso input file.
 
 The folders cointain:
 
-`Doc` : the html files documenting the Qeheat input, to be opened with a browser (e.g. firefox).
+`Doc` : the html files documenting the QEheat input, to be opened with a browser (e.g. firefox).
 
 `examples` : a folder with examples of QEheat computations. Start here to test your code/installation .
 
@@ -23,4 +23,3 @@ The folders cointain:
 #### make
 #### This should produce the executable all_currents.x in the src and bin folders.
 ###
-
