@@ -23,7 +23,7 @@ The folders cointain:
 #### >  cd /energy_current/src
 #### >  make all
 ####
-#### This should produce in a single shot the executables pw.x, cp.x and also all_currents.x, the exxecutable for QEHeat, in the respective src and bin folders.
+#### This should produce in a single shot the executables pw.x, cp.x and also all_currents.x, the executable for QEHeat, in the respective src and bin folders.
 ####
 #### TROUBLESHOOT: 
 #### If problems occurs, we suggest to enter the main folder of the distribution and compile only pw.x independently:
