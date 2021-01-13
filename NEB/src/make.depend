@@ -68,7 +68,6 @@ neb.o : ../../Modules/environment.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp_bands.o
 neb.o : ../../Modules/mp_global.o
-neb.o : ../../Modules/mp_pools.o
 neb.o : ../../Modules/mp_world.o
 neb.o : ../../Modules/read_input.o
 neb.o : ../../UtilXlib/mp.o

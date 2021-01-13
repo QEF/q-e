@@ -68,6 +68,7 @@ set(sources
     recvec_subs.f90 
     run_info.f90 
     space_group.f90 
+    set_para_diag.f90 
     set_signal.f90 
     set_vdw_corr.f90 
     setqf.f90 
