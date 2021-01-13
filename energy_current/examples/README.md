@@ -25,9 +25,7 @@
 
 
 
-# 
 # 1. example_SiO2_single  
-# 
 
 
 
@@ -82,12 +80,12 @@ For this purpose we need to insert some additional keywords in the energy_curren
  /
 ```
 
-note that the only different keywords with respect to a single snapshot calculations are `trajdir` and `first_step` in the `energy_current` namelist. Stil in the IONS namelist 
+note that the only different keywords with respect to a single snapshot calculations are `trajdir` and `first_step` in the `energy_current` namelist. Still, in the IONS namelist 
 the keyword ion_velocities='from_input' must be set and the ATOMIC_VELOCITIES card must be filled. Nevertheless, note that if `first_step=1` the snapshot of the input file will be skipped.
 Check also the `last_step` keyword in the documentation.
 
-The output with the istantenous energy currents is written in the file specified by `file_output` and `file_output.dat`, as in example 1. 
-The same format of the single snapshot calculation is kept, with data from all the snapshots of the trajectory appended sequantially.
+The output with the istantenous energy currents is written in the files with names `${file_output}` and `${file_output}.dat`, as in example 1. 
+The same format of the single snapshot calculation is kept, data from all the snapshots of the trajectory being appended sequentially.
 
 
 
