@@ -11,15 +11,27 @@ The folders cointain:
 `tests` : the test utility used mainly for development purposes. It can be used also for testing purposes with the command make run-tests .
 
 
-###
 # INSTALLATION OVERVIEW
 ###
 #### Before running the examples, you need to be sure that QEHeat is installed.
-#### To do this, first perform a standard Quantum-Espresso installation. For a basic one, in the main directory execute the commands:
-#### ./configure
-#### make pw 
-#### This should produce the standard pw.x executable. To compile Qeheat just you need to enter the correct folder :
-#### cd /energy_current/src
-#### make
-#### This should produce the executable all_currents.x in the src and bin folders.
-###
+#### To compile, we suggest the following procedure. As usual in a QuantumEspresso installation, enter the distribution folder and run autoconf :
+####
+#### > ./configure
+#### 
+#### Enter than the QEHeat folder and compile:
+####
+#### >  cd /energy_current/src
+#### >  make all
+####
+#### This should produce in a single shot the executables pw.x, cp.x and also all_currents.x, the executable for QEHeat, in the respective src and bin folders.
+####
+#### TROUBLESHOOT: 
+#### If problems occurs, we suggest to enter the main folder of the distribution and compile only pw.x independently:
+####
+#### >  make clean
+#### >  make veryclean
+#### >  ./configure
+#### >  make pw
+####
+#### This way one can recognize if the problem comes from compiling QEHeat or the standard QuantumEspresso distribution. 
+####
