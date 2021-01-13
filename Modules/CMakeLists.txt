@@ -156,6 +156,7 @@ target_link_libraries(qe_modules
         QE::libbeef
         QE::MPI_Fortran
         QE::MBD
+    PUBLIC
         QE::FOX
         QE::UTILX)
 
