@@ -4,7 +4,7 @@ The folders cointain:
 
 `Doc` : the html files documenting the QEheat input, to be opened with a browser (e.g. firefox).
 
-`examples` : a folder with examples of QEheat computations. Start here to test your code/installation .
+`examples` : a folder with examples of QEheat computations. Start here to test your code/installation . `examples/README.md` contains a detailed description of typical QEheat calculations and inputs.
 
 `src` : the files used by QEheat.
 
