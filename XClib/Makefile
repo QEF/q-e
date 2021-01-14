@@ -25,8 +25,7 @@ xc_wrapper_d_lda_lsda.o \
 xc_wrapper_gga.o \
 xc_wrapper_lda_lsda.o \
 xc_wrapper_mgga.o \
-xc_lib.o \
-xclib_test.o
+xc_lib.o
 
 BEEF = \
 pbecor.o \
@@ -40,7 +39,7 @@ xc_lib.a: $(XCL) $(BEEF)
 
 xclib_test.x : xclib_test.o xc_lib.a 
 	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		xclib_test.o xc_lib.a $(BLAS_LIBS)
+		xclib_test.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 clean :

@@ -1012,6 +1012,7 @@ init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/wannier_new.o
 init_run.o : ../../upflib/uspp.o
+init_run.o : ../../XClib/xc_lib.o
 init_run.o : Coul_cut_2D.o
 init_run.o : bp_mod.o
 init_run.o : dynamics_module.o
@@ -1791,6 +1792,7 @@ read_file_new.o : ../../Modules/recvec.o
 read_file_new.o : ../../Modules/recvec_subs.o
 read_file_new.o : ../../Modules/wavefunctions.o
 read_file_new.o : ../../upflib/uspp.o
+read_file_new.o : ../../XClib/xc_lib.o
 read_file_new.o : Coul_cut_2D.o
 read_file_new.o : buffers.o
 read_file_new.o : esm.o

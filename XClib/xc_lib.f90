@@ -45,6 +45,8 @@ MODULE xc_lib
   !
   PUBLIC :: xclib_dft_is,                      &
             xclib_dft_is_libxc,                &
+            xclib_init_libxc,                  &
+            xclib_finalize_libxc,              &
             start_exx, stop_exx,               &
             dft_has_finite_size_correction,    &
             exx_is_active,                     &
