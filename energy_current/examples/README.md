@@ -79,13 +79,7 @@ Only file_output.dat needs to be used to evaluate the thermal conductivity coeff
 Here we evaluate the energy current from a previously computed Car-Parrinello (CP) trajectory, which is provided together with the input file. The trajectory provided 
 comes from a 125 water molecule simulation. 
 
-If computational time is an issue, for this example we suggest to insert the flag last_step=xxx in the energy_current namelist, 
-replacing xxx with the desired index step, and than execute the run script. 
-Note that the keywords  `last_step` and  `first_step` refer to the indexes reported in the files  `${trajdir}.pos` and `${trajdir}.vel` and are not sequential indexes. The snapshot 
-in the input file is assigned an index 0. As a concrete example, using `first_step=1`  and `last_step=953008` , will skip the snapshot of the input file and 
-evaluate only the first snapshot of the trajectory because 953008 is the first index that appears in the trajectory file.
-
-We calculate the energy current, for every timestep of the trajectory located in  `${trajdir}.pos` and `${trajdir}.vel`, (velocities are in CP units in this example). 
+We calculate the energy current for every timestep of the trajectory located in  `${trajdir}.pos` and `${trajdir}.vel` (velocities are in CP units in this example). 
 For this purpose we need to insert some additional keywords in the energy_current namelists :
 
 ```
@@ -101,11 +95,16 @@ For this purpose we need to insert some additional keywords in the energy_curren
 ```
 
 note that the only different keywords with respect to a single snapshot calculations are `trajdir` and `first_step` in the `energy_current` namelist. Still, in the IONS namelist 
-the keyword ion_velocities='from_input' must be set and the ATOMIC_VELOCITIES card must be filled. Nevertheless, note that if `first_step=1` the snapshot of the input file will be skipped.
-Check also the `last_step` keyword in the documentation.
+the keyword ion_velocities='from_input' must be set and the ATOMIC_VELOCITIES card must be filled.
 
 The output with the istantenous energy currents is written in the files with names `${file_output}` and `${file_output}.dat`, as in example 1. 
 The same format of the single snapshot calculation is kept, data from all the snapshots of the trajectory being appended sequentially.
+
+If computational time is an issue, for this example we suggest to insert the flag last_step=xxx in the energy_current namelist,
+replacing xxx with the desired index step, and than execute the run script.
+Note that the keywords  `last_step` and  `first_step` refer to the indexes reported in the files  `${trajdir}.pos` and `${trajdir}.vel` and are not sequential indexes. The snapshot
+in the input file is assigned an index 0. As a concrete example, the combination of `first_step=1`  and `last_step=953008` will skip the snapshot of the input file and
+evaluate only the first snapshot of the trajectory because 953008 is the first index that appears in the trajectory file.
 
 
 
