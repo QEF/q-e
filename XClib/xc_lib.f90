@@ -47,6 +47,8 @@ MODULE xc_lib
             xclib_dft_is_libxc,                &
             xclib_init_libxc,                  &
             xclib_finalize_libxc,              &
+            set_libxc_ext_param,               &
+            get_libxc_ext_param,               &
             start_exx, stop_exx,               &
             dft_has_finite_size_correction,    &
             exx_is_active,                     &

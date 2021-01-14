@@ -30,6 +30,7 @@ MODULE dft_mod
             start_exx, stop_exx, dft_has_finite_size_correction, &
             exx_is_active, igcc_is_lyp, xclib_reset_dft, dft_force_hybrid, &
             xclib_finalize_libxc
+  PUBLIC :: set_libxc_ext_param, get_libxc_ext_param
 #if defined(__LIBXC)
   PUBLIC :: get_libxc_flags_exc
 #endif
@@ -1284,7 +1285,61 @@ CONTAINS
 #endif
     RETURN
   END SUBROUTINE xclib_finalize_libxc
-  !  
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE set_libxc_ext_param( sid, i_param, param )
+    !------------------------------------------------------------------------
+    !! Routine to set external parameters of some Libxc functionals.  
+    !! In order to get a list and description of all the available parameters
+    !! for a given Libxc functional you can use the \(\texttt{xclib_test} 
+    !! program with input \(\text{test}=\text{'dft-info'}\).
+    USE kind_l,       ONLY: DP
+#if defined(__LIBXC)
+    USE dft_par_mod,  ONLY: xc_func, par_list
+#endif
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: sid
+    !! Index for family-kind.  
+    !! 1:lda-exch, 2:lda-corr, 3:gga-exch, ...
+    INTEGER, INTENT(IN) :: i_param
+    !! Index of the chosen Libxc parameter
+    REAL(DP), INTENT(IN) :: param
+    !! Input value of the parameter
+#if defined(__LIBXC)    
+    par_list(sid,i_param) = param
+    CALL xc_f03_func_set_ext_params( xc_func(sid), par_list(sid,:) )
+#else
+    CALL xclib_infomsg( 'set_libxc_ext_param', 'WARNING: an external parameter&
+                         &was enforced into Libxc, but Libxc is not active' )
+#endif
+    RETURN
+  END SUBROUTINE
+  !
+  !----------------------------------------------------------------------------
+  FUNCTION get_libxc_ext_param( sid, i_param )
+    !--------------------------------------------------------------------------
+    !! Get the value of the i-th external parameter of Libxc functional with
+    !! \(ID = \text{func_id}\)
+    USE kind_l,       ONLY: DP
+#if defined(__LIBXC)
+    USE dft_par_mod,  ONLY: par_list
+#endif
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: sid
+    !! ID of the libxc functional
+    INTEGER, INTENT(IN) :: i_param
+    !! Index of the chosen parameter
+    REAL(DP) :: get_libxc_ext_param
+    !! Value of the parameter
+#if defined(__LIBXC)
+    get_libxc_ext_param = par_list(sid,i_param)
+#else
+    CALL xclib_infomsg( 'get_libxc_ext_param', 'WARNING: an external parameter&
+                         &was sought in Libxc, but Libxc is not active' )
+#endif
+    RETURN
+  END FUNCTION
+  !
 #if defined(__LIBXC)
   !------------------------------------------------------------------------
   SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
