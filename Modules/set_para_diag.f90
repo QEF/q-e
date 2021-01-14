@@ -33,7 +33,6 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
   LOGICAL :: do_diag_in_band_group = .TRUE.
   INTEGER :: np_ortho(2), ortho_parent_comm
 
-#if defined(__MPI)
   IF( .NOT. first ) RETURN
   first = .FALSE.
   !
@@ -49,6 +48,7 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
   !
+#if defined(__MPI)
   CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm )
   !
   IF( np_ortho(1) > nbnd ) &
@@ -88,7 +88,10 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
   END IF
   !
 #else
+  !
   use_para_diag = .FALSE.
+  !
 #endif
+  !
   RETURN
 END SUBROUTINE set_para_diag
