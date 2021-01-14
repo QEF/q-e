@@ -40,6 +40,7 @@ PROGRAM phonon
   ! [9] External Electric field
   ! [10] nonperiodic boundary conditions.
 
+  USE control_flags,   ONLY : use_para_diag
   USE control_ph,      ONLY : bands_computed, qplot
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile
@@ -92,7 +93,7 @@ PROGRAM phonon
   ENDIF
   ! YAMBO <
   !
-  CALL laxlib_end()
+  IF ( use_para_diag ) CALL laxlib_end()
   CALL stop_smoothly_ph( .TRUE. )
   !
   STOP

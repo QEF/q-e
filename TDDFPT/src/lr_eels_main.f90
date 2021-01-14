@@ -40,6 +40,7 @@ PROGRAM lr_eels_main
   USE wrappers,              ONLY : memstat
   USE lr_sternheimer,        ONLY : one_sternheimer_step
   USE control_lr,            ONLY : flmixdpot
+  USE control_flags,         ONLY : use_para_diag
   USE qpoint,                ONLY : xq
   USE uspp_param,            ONLY : nhm
   USE noncollin_module,      ONLY : noncolin
@@ -296,7 +297,7 @@ PROGRAM lr_eels_main
   !
   CALL print_clock_lr()
   !
-  CALL laxlib_end()
+  IF ( use_para_diag ) CALL laxlib_end()
   CALL stop_lr( .TRUE. )
   !
   IF (lr_verbosity > 5) THEN
