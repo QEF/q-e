@@ -33,8 +33,8 @@
 ####
 #### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
 ####
-#### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 96.
-#### Example 3 can be easily run on a single core implementation.
+#### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 12. 
+#### Example 3 can be easily run on a single core (serial) installation.
 
 
 
@@ -65,9 +65,10 @@ The files produced, apart from the standard output, are :
 - `file_output.dat` : this reports the total energy current, the eletronic current and the center of mass velocity for each species.
 Only file_output.dat needs to be used to evaluate the thermal conductivity coefficient.
 
-- `file_output` : this reports the total energy current divided in individual components, if a more specific analysis is needed.
+- `file_output` : this reports the total energy current divided in individual components, if a more specific analysis is needed. This file is mainly thought for development purposes.
 
-Each file has a header specifying the output units. See also the description ../../Doc/INPUT_ALL_CURRENTS.html 
+`file_output.dat` comes with a header specifying the output units. The same units are used in the more detailed current decomposion given in `file_output`.
+ See also the description ../../Doc/INPUT_ALL_CURRENTS.html 
 
 
 
@@ -76,7 +77,13 @@ Each file has a header specifying the output units. See also the description ../
 
 
 Here we evaluate the energy current from a previously computed Car-Parrinello (CP) trajectory, which is provided together with the input file. The trajectory provided 
-comes from a 125 water molecule simulation.
+comes from a 125 water molecule simulation. 
+
+If computational time is an issue, for this example we suggest to insert the flag last_step=xxx in the energy_current namelist, 
+replacing xxx with the desired index step, and than execute the run script. 
+Note that the keywords  `last_step` and  `first_step` refer to the indexes reported in the files  `${trajdir}.pos` and `${trajdir}.vel` and are not sequential indexes. The snapshot 
+in the input file is assigned an index 0. As a concrete example, using `first_step=1`  and `last_step=953008` , will skip the snapshot of the input file and 
+evaluate only the first snapshot of the trajectory because 953008 is the first index that appears in the trajectory file.
 
 We calculate the energy current, for every timestep of the trajectory located in  `${trajdir}.pos` and `${trajdir}.vel`, (velocities are in CP units in this example). 
 For this purpose we need to insert some additional keywords in the energy_current namelists :
@@ -106,8 +113,12 @@ The same format of the single snapshot calculation is kept, data from all the sn
 
 
 
-This example is very similar to the previous one, but the trajectory is computed on-the-fly via the cp.x program of the just installed QE distribution. It produces the  
-trajectory of a single water molecule and therefore the calculation is suited for a serial environment.
+This example is very similar to the previous one, but a Car-Parrinello trajectory is computed on-the-fly via the cp.x program of the just installed QE distribution. It produces the  
+trajectory of a single water molecule and therefore the calculation is suited for a serial environment. 
+
+Note that the trajectory produced by cp.x will be probably different due to the stochasticity inherent in the Car-Parrinello molecular dynamics simulation. For exact comparison 
+with a novel installation one can substitute `trajdir='reference/traj/cp'` and comment in the run_example_water script the call to cp.x. This way the files produced by `file_output`
+should be comparable with the reference. 
 
 
 
