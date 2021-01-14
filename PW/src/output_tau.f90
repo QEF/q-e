@@ -128,10 +128,10 @@ SUBROUTINE output_tau_rescaled(rescale)
   REAL(DP),INTENT(in) :: rescale
   INTEGER :: na
  
-  WRITE( stdout, '(/"Atomic positions rescaled with new alat:")' )
-
   IF(rescale==1._dp) RETURN
   IF(tau_format/="alat") RETURN
+
+  WRITE( stdout, '(/"Atomic positions rescaled with new alat:")' )
 
   DO na = 1, nat
      !
