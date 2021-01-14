@@ -184,6 +184,9 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
             info {
                    The program will start with step  istep >= @ref first_step.
                    If greater than zero the input file's positions and velocities will be ignored. 
+                   Note that this is not a sequential index but refers to the indexes reported in
+                   the input trajectory file. The index of 0 is assigned to the snapshot described
+                   in the input namelist file.
                  }
         }
         var last_step -type INTEGER {
@@ -191,6 +194,8 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
             info {
                    The program will end with step  istep <= @ref last_step.
                    If 0, it will stop at the end of the trajectory file
+                   Note that this is not a sequential index but refers to the indexes reported in
+                   the input trajectory file.
                  }
         }
         var step_mul -type INTEGER {

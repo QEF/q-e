@@ -184,6 +184,9 @@ assume velocities are given in pw.x time units
          <info>
 The program will start with step  istep &gt;= <ref>first_step</ref>.
 If greater than zero the input file&apos;s positions and velocities will be ignored.
+Note that this is not a sequential index but refers to the indexes reported in
+the input trajectory file. The index of 0 is assigned to the snapshot described
+in the input namelist file.
          </info>
       </var>
       <var name="last_step" type="INTEGER" >
@@ -192,6 +195,8 @@ If greater than zero the input file&apos;s positions and velocities will be igno
          <info>
 The program will end with step  istep &lt;= <ref>last_step</ref>.
 If 0, it will stop at the end of the trajectory file
+Note that this is not a sequential index but refers to the indexes reported in
+the input trajectory file.
          </info>
       </var>
       <var name="step_mul" type="INTEGER" >
