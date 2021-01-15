@@ -6,22 +6,22 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_b0
+SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   !----------------------------------------------------------------------
   !! In this routine the beta_l(r) are smoothed.
   !
-  USE kinds,        ONLY : DP
-  USE gvecw,        ONLY : ecutwfc
-  USE io_global,    ONLY : stdout
-  USE constants,    ONLY : fpi
+  USE upf_kinds,    ONLY : DP
+  USE upf_io,       ONLY : stdout
+  USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
-  USE ions_base,    ONLY : ntyp => nsp
-  USE us,           ONLY : dq
-  USE uspp_param,   ONLY : upf, nbetam
-  USE mp_bands,     ONLY : intra_bgrp_comm
+  USE uspp_data,    ONLY : dq
+  USE uspp_param,   ONLY : ntyp => nsp, upf, nbetam
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: ecutwfc
+  INTEGER,  INTENT(IN) :: intra_bgrp_comm
   !
   ! FILTER PARAMETERS: see REAL(DP) FUNCTION filter( x, a, n ) below for full definition and meaning.
   INTEGER :: nf    ! Smoothing parameter, order of the polynomial in the inverse gaussian approximant.

@@ -16,6 +16,7 @@ MODULE uspp_param
   SAVE
   PRIVATE :: randy
   !
+  INTEGER :: nsp              ! actual number of species
   TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
 
   INTEGER :: &

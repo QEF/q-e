@@ -420,29 +420,7 @@ END MODULE cellmd
 !
 !
 MODULE us
-  !
-  !! These parameters are needed with the US pseudopotentials.
-  !
-  USE kinds,      ONLY : DP
-  !
-  SAVE
-  !
-  INTEGER :: nqxq
-  !! size of interpolation table
-  INTEGER :: nqx
-  !! number of interpolation points
-  REAL(DP), PARAMETER:: dq = 0.01D0
-  !! space between points in the pseudopotential tab.
-  REAL(DP), ALLOCATABLE :: qrad(:,:,:,:)
-  !! radial FT of Q functions
-  REAL(DP), ALLOCATABLE :: tab(:,:,:)
-  !! interpolation table for PPs
-  REAL(DP), ALLOCATABLE :: tab_at(:,:,:)
-  !! interpolation table for atomic wfc
-  LOGICAL :: spline_ps = .FALSE.
-  REAL(DP), ALLOCATABLE :: tab_d2y(:,:,:)
-  !! for cubic splines
-  !
+  use uspp_data
 END MODULE us
 !
 !

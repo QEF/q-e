@@ -11,6 +11,7 @@
 
       USE kinds,      ONLY : DP
       USE parameters, ONLY : ntypx
+      USE uspp_param, ONLY : nsp
       !
       IMPLICIT NONE
       SAVE
@@ -19,8 +20,6 @@
       !     na(is)    = number of atoms of species is
       !     nax       = max number of atoms of a given species
       !     nat       = total number of atoms of all species
-
-      INTEGER :: nsp     = 0
       INTEGER :: na(ntypx) = 0
       INTEGER :: nax     = 0
       INTEGER :: nat     = 0

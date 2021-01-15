@@ -141,9 +141,10 @@ SUBROUTINE post_xml_init (  )
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
   USE ions_base,            ONLY : nat, nsp, tau, ityp
   USE recvec_subs,          ONLY : ggen, ggens
-  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
+  USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
                                    eigts1, eigts2, eigts3, gstart, gshells
   USE gvecs,                ONLY : ngms, gcutms 
+  USE gvecw,                ONLY : ecutwfc
   USE fft_rho,              ONLY : rho_g2r
   USE fft_base,             ONLY : dfftp, dffts
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
@@ -158,6 +159,7 @@ SUBROUTINE post_xml_init (  )
   USE spin_orb,             ONLY : lspinorb
   USE cell_base,            ONLY : at, bg, set_h_ainv
   USE symm_base,            ONLY : d1, d2, d3
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
                                    init_realspace_vars,real_space
   !
@@ -224,8 +226,8 @@ SUBROUTINE post_xml_init (  )
   ! ... the core correction charge (if any) - from hinit0.f90
   !
   CALL init_vloc()
-  IF (tbeta_smoothing) CALL init_us_b0()
-  IF (tq_smoothing) CALL init_us_0()
+  IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
+  IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
   CALL init_us_1()
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()

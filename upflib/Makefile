@@ -3,6 +3,7 @@
 include ../make.inc
 
 QEMODS = libupf.a
+MODFLAGS= $(MOD_FLAG)../UtilXlib
 
 # list of modules
 
@@ -12,6 +13,8 @@ atomic_number.o \
 upf_erf.o \
 upf_utils.o \
 gth.o \
+init_us_0.o \
+init_us_b0.o \
 pseudo_types.o \
 radial_grids.o \
 read_cpmd.o \
@@ -34,6 +37,7 @@ upf_params.o \
 upf_parallel_include.o \
 upf_to_internal.o \
 uspp.o \
+uspp_data.o \
 write_upf_new.o \
 xmltools.o \
 ylmr2.o

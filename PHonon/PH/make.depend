@@ -1214,6 +1214,7 @@ phescf.o : phcom.o
 phescf.o : ramanm.o
 phescf.o : write_hub.o
 phonon.o : ../../Modules/check_stop.o
+phonon.o : ../../Modules/control_flags.o
 phonon.o : ../../Modules/environment.o
 phonon.o : ../../Modules/mp_global.o
 phonon.o : ph_restart.o

@@ -1,6 +1,8 @@
 set(sources
     atom.f90 
     atomic_number.f90 
+    init_us_0.f90
+    init_us_b0.f90
     upf_erf.f90 
     upf_utils.f90 
     gth.f90 
@@ -26,6 +28,7 @@ set(sources
     upf_parallel_include.f90 
     upf_to_internal.f90 
     uspp.f90 
+    uspp_data.f90 
     write_upf_new.f90 
     xmltools.f90
     ylmr2.f90)
