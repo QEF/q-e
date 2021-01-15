@@ -26,9 +26,11 @@ MODULE dft_mod
             xclib_get_dft_short, xclib_get_dft_long,  &
             xclib_get_exx_fraction, xclib_get_finite_size_cell_volume, &
             get_screening_parameter, get_gau_parameter
-  PUBLIC :: xclib_dft_is, xclib_dft_is_libxc,  &
+  PUBLIC :: xclib_dft_is, xclib_dft_is_libxc, xclib_init_libxc,  &
             start_exx, stop_exx, dft_has_finite_size_correction, &
-            exx_is_active, igcc_is_lyp, xclib_reset_dft, dft_force_hybrid
+            exx_is_active, igcc_is_lyp, xclib_reset_dft, dft_force_hybrid, &
+            xclib_finalize_libxc
+  PUBLIC :: set_libxc_ext_param, get_libxc_ext_param
 #if defined(__LIBXC)
   PUBLIC :: get_libxc_flags_exc
 #endif
@@ -1013,34 +1015,40 @@ CONTAINS
      LOGICAL :: xclib_dft_is_libxc
      CHARACTER(len=*), INTENT(IN) :: family
      !! LDA, GGA or MGGA
-     CHARACTER(len=*), INTENT(IN) :: kindf
+     CHARACTER(len=*), INTENT(IN), OPTIONAL :: kindf
      !! EXCH or CORR
      !
-     CHARACTER(len=4) :: cfamily, ckindf
+     CHARACTER(len=4) :: cfamily='', ckindf
      INTEGER :: i, ln
+     !
+     xclib_dft_is_libxc = .FALSE.
      !
      ln = LEN_TRIM(family)
      !
      DO i = 1, ln
        cfamily(i:i) = capital(family(i:i))
      ENDDO
-     DO i = 1, 4
-       ckindf(i:i) = capital(kindf(i:i))
-     ENDDO
-     !
-     SELECT CASE( cfamily(1:ln) )
-     CASE( 'LDA' )
-       IF (ckindf=='EXCH') xclib_dft_is_libxc = is_libxc(1)
-       IF (ckindf=='CORR') xclib_dft_is_libxc = is_libxc(2)
-     CASE( 'GGA' )
-       IF (ckindf=='EXCH') xclib_dft_is_libxc = is_libxc(3)
-       IF (ckindf=='CORR') xclib_dft_is_libxc = is_libxc(4)
-     CASE( 'MGGA' )
-       IF (ckindf=='EXCH') xclib_dft_is_libxc = is_libxc(5)
-       IF (ckindf=='CORR') xclib_dft_is_libxc = is_libxc(6)
-     CASE DEFAULT
-       CALL xclib_error( 'xclib_dft_is_libxc', 'input not recognized', 1 )
-     END SELECT
+     IF ( PRESENT(kindf) ) THEN
+       DO i = 1, 4
+         ckindf(i:i) = capital(kindf(i:i))
+       ENDDO
+       !
+       SELECT CASE( cfamily(1:ln) )
+       CASE( 'LDA' )
+         IF (ckindf=='EXCH') xclib_dft_is_libxc = is_libxc(1)
+         IF (ckindf=='CORR') xclib_dft_is_libxc = is_libxc(2)
+       CASE( 'GGA' )
+         IF (ckindf=='EXCH') xclib_dft_is_libxc = is_libxc(3)
+         IF (ckindf=='CORR') xclib_dft_is_libxc = is_libxc(4)
+       CASE( 'MGGA' )
+         IF (ckindf=='EXCH') xclib_dft_is_libxc = is_libxc(5)
+         IF (ckindf=='CORR') xclib_dft_is_libxc = is_libxc(6)
+       CASE DEFAULT
+         CALL xclib_error( 'xclib_dft_is_libxc', 'input not recognized', 1 )
+       END SELECT
+     ELSE
+       IF (TRIM(cfamily)=='ANY'.AND.ANY(is_libxc(:))) xclib_dft_is_libxc=.TRUE.
+     ENDIF
      !
      RETURN
      !
@@ -1212,6 +1220,125 @@ CONTAINS
      volume = -1.d0
      IF (is_present) volume = finite_size_cell_volume
   END SUBROUTINE xclib_get_finite_size_cell_volume
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE xclib_init_libxc( xclib_nspin )
+    !------------------------------------------------------------------------
+    !! Initialize Libxc functionals, if present.
+    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                            is_libxc, libxc_initialized
+#if defined(__LIBXC)
+    USE dft_par_mod,  ONLY: n_ext_params, xc_func, xc_info, par_list
+#endif
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: xclib_nspin
+    !! 1: unpolarized case; 2: polarized
+    INTEGER :: iid, ip
+    INTEGER :: id_vec(6)
+    !
+#if defined(__LIBXC)
+    id_vec(1)=iexch ; id_vec(2)=icorr
+    id_vec(3)=igcx  ; id_vec(4)=igcc
+    id_vec(5)=imeta ; id_vec(6)=imetac
+    !
+    DO iid = 1, 6
+      IF (libxc_initialized(iid)) THEN
+        CALL xc_f03_func_end( xc_func(iid) )
+        libxc_initialized(iid) = .FALSE.
+      ENDIF
+      IF (is_libxc(iid)) THEN
+        CALL xc_f03_func_init( xc_func(iid), id_vec(iid), xclib_nspin )
+        xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
+        n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
+        DO ip = 1, n_ext_params(iid)
+          par_list(iid,ip) = xc_f03_func_info_get_ext_params_default_value( &
+                                                           xc_info(iid), ip )
+        ENDDO
+        libxc_initialized(iid) = .TRUE.
+      ENDIF
+    ENDDO
+#endif
+    RETURN
+  END SUBROUTINE xclib_init_libxc
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE xclib_finalize_libxc()
+    !------------------------------------------------------------------------
+    !! Finalize Libxc functionals, if present.
+    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                            is_libxc
+#if defined(__LIBXC)
+    USE dft_par_mod,  ONLY: xc_func
+#endif
+    IMPLICIT NONE
+    INTEGER :: iid
+    INTEGER :: id_vec(6)
+    !
+#if defined(__LIBXC)
+    id_vec(1)=iexch ; id_vec(2)=icorr
+    id_vec(3)=igcx  ; id_vec(4)=igcc
+    id_vec(5)=imeta ; id_vec(6)=imetac
+    !
+    DO iid = 1, 6
+      IF (is_libxc(iid)) CALL xc_f03_func_end( xc_func(iid) )
+    ENDDO
+#endif
+    RETURN
+  END SUBROUTINE xclib_finalize_libxc
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE set_libxc_ext_param( sid, i_param, param )
+    !------------------------------------------------------------------------
+    !! Routine to set external parameters of some Libxc functionals.  
+    !! In order to get a list and description of all the available parameters
+    !! for a given Libxc functional you can use the \(\texttt{xclib_test} 
+    !! program with input \(\text{test}=\text{'dft-info'}\).
+    USE kind_l,       ONLY: DP
+#if defined(__LIBXC)
+    USE dft_par_mod,  ONLY: xc_func, par_list
+#endif
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: sid
+    !! Index for family-kind.  
+    !! 1:lda-exch, 2:lda-corr, 3:gga-exch, ...
+    INTEGER, INTENT(IN) :: i_param
+    !! Index of the chosen Libxc parameter
+    REAL(DP), INTENT(IN) :: param
+    !! Input value of the parameter
+#if defined(__LIBXC)    
+    par_list(sid,i_param) = param
+    CALL xc_f03_func_set_ext_params( xc_func(sid), par_list(sid,:) )
+#else
+    CALL xclib_infomsg( 'set_libxc_ext_param', 'WARNING: an external parameter&
+                         &was enforced into Libxc, but Libxc is not active' )
+#endif
+    RETURN
+  END SUBROUTINE
+  !
+  !----------------------------------------------------------------------------
+  FUNCTION get_libxc_ext_param( sid, i_param )
+    !--------------------------------------------------------------------------
+    !! Get the value of the i-th external parameter of Libxc functional with
+    !! \(ID = \text{func_id}\)
+    USE kind_l,       ONLY: DP
+#if defined(__LIBXC)
+    USE dft_par_mod,  ONLY: par_list
+#endif
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: sid
+    !! ID of the libxc functional
+    INTEGER, INTENT(IN) :: i_param
+    !! Index of the chosen parameter
+    REAL(DP) :: get_libxc_ext_param
+    !! Value of the parameter
+#if defined(__LIBXC)
+    get_libxc_ext_param = par_list(sid,i_param)
+#else
+    CALL xclib_infomsg( 'get_libxc_ext_param', 'WARNING: an external parameter&
+                         &was sought in Libxc, but Libxc is not active' )
+#endif
+    RETURN
+  END FUNCTION
   !
 #if defined(__LIBXC)
   !------------------------------------------------------------------------

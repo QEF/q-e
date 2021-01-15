@@ -15,6 +15,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #include "xc_version.h"
   USE xc_f03_lib_m
   USE dft_mod,       ONLY: get_libxc_flags_exc
+  USE dft_par_mod,   ONLY: xc_func, xc_info
 #endif 
   !
   USE kind_l,        ONLY: DP
@@ -60,9 +61,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   REAL(DP), ALLOCATABLE :: grho2(:,:)
   !
 #if defined(__LIBXC)
-  TYPE(xc_f03_func_t) :: xc_func
-  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
-  !
   REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:), tau_lxc(:)
   REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_rho(:), vx_sigma(:), vx_tau(:)
@@ -149,18 +147,15 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   ! META EXCHANGE
   !
   IF ( is_libxc(5) ) THEN
-     CALL xc_f03_func_init( xc_func, imeta, pol_unpol )
-     xc_info1 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_mgga )
-     CALL get_libxc_flags_exc( xc_info1, eflag )
-     IF (eflag==1) THEN
-       CALL xc_f03_mgga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
-                                 ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
-     ELSE
-       CALL xc_f03_mgga_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
-                             vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
-     ENDIF
-    CALL xc_f03_func_end( xc_func )
+    CALL xc_f03_func_set_dens_threshold( xc_func(5), rho_threshold_mgga )
+    CALL get_libxc_flags_exc( xc_info(5), eflag )
+    IF (eflag==1) THEN
+      CALL xc_f03_mgga_exc_vxc( xc_func(5), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+                                ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+    ELSE
+      CALL xc_f03_mgga_vxc( xc_func(5), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+                            vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+    ENDIF
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -197,12 +192,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   IF ( is_libxc(6) ) THEN
     !
-    CALL xc_f03_func_init( xc_func, imetac, pol_unpol )
-    xc_info1 = xc_f03_func_get_info( xc_func )
-    CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_mgga )
-    CALL xc_f03_mgga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
-                               ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
-    CALL xc_f03_func_end( xc_func )
+    CALL xc_f03_func_set_dens_threshold( xc_func(6), rho_threshold_mgga )
+    CALL xc_f03_mgga_exc_vxc( xc_func(6), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+                              ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
     !
     IF (.NOT. POLARIZED) THEN
        DO k = 1, length

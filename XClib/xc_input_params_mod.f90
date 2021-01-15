@@ -11,6 +11,9 @@ MODULE dft_par_mod
     !! Parameters that define the XC functionals.
     !
     USE kind_l, ONLY: DP
+#if defined(__LIBXC)
+    USE xc_f03_lib_m
+#endif
     !
     IMPLICIT NONE
     !
@@ -19,9 +22,23 @@ MODULE dft_par_mod
     INTEGER, PARAMETER :: notset = -1
     !! Value of indexes that have not been set yet
     !
-    LOGICAL  :: is_libxc(6) = .FALSE.
+    LOGICAL :: is_libxc(6) = .FALSE.
     !! \(\text{is_libxc(i)}=TRUE\) if the i-th term of the input 
     !! functional is from Libxc
+    !
+    LOGICAL :: libxc_initialized(6) = .FALSE.
+    !! TRUE if libxc functionals have been initialized
+    !
+#if defined(__LIBXC)
+    TYPE(xc_f03_func_t) :: xc_func(6)
+    !! pointers to libxc functional structs
+    TYPE(xc_f03_func_info_t) :: xc_info(6)
+    !! pointers to libxc info structs
+    INTEGER  :: n_ext_params(6) = 0._DP
+    !! number of external parameters for each functional
+    REAL(DP) :: par_list(6,10)
+    !! list of external parameters
+#endif
     !
     LOGICAL  :: exx_started = .FALSE.
     !! TRUE if Exact Exchange is active
@@ -69,7 +86,7 @@ MODULE dft_par_mod
     LOGICAL :: has_finite_size_correction = .FALSE.
     !! TRUE if finite size correction is present
     LOGICAL :: finite_size_cell_volume_set = .FALSE.
-    !! TRUE if the cell volume hase been set for finite size correction.
+    !! TRUE if the cell volume has been set for finite size correction.
     LOGICAL :: ismeta      = .FALSE.
     !! TRUE if the functional is MGGA
     LOGICAL :: ishybrid    = .FALSE.

@@ -32,6 +32,8 @@ SUBROUTINE init_run()
   USE esm,                ONLY : do_comp_esm, esm_init
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
+  USE lsda_mod,           ONLY : nspin
+  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   IMPLICIT NONE
   !
@@ -108,6 +110,8 @@ SUBROUTINE init_run()
   !
   CALL allocate_wfc_k()
   CALL openfil()
+  !
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin )
   !
   CALL hinit0()
   !
