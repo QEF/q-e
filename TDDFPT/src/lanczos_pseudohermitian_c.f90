@@ -38,6 +38,8 @@ subroutine lanczos_pseudohermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, 
    !! upper coefficient of the tridiagonal matrix
    COMPLEX(kind=dp), INTENT(OUT)     :: zeta(n_ipol)
    !! (u,q_j) products
+   ! dummy variable
+   COMPLEX(kind=dp)   :: Aqj_l(npwx_npol,nbnd_occ,nksq, 2)
    !   
    COMPLEX(kind=dp),EXTERNAL :: lr_dot_magnons
    !
@@ -60,13 +62,19 @@ subroutine lanczos_pseudohermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, 
    !
    CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),qj_r(1,1,1,1),1)
    CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),Aqj_r(1,1,1,1),1)
-!   qj_r(:,:,:,:)  = qj_r(:,:,:,:)  / cmplx(beta,0.0d0,kind=dp)
-!   Aqj_r(:,:,:,:) = Aqj_r(:,:,:,:) / cmplx(beta,0.0d0,kind=dp)
    !
    !
    ! computes alpha 
    !
    alpha = (0.0d0, 0.0d0)
+   Aqj_l = Aqj_r
+   Aqj_l(:,:,:,2) = -Aqj_l(:,:,:,2)
+   !
+   alpha = lr_dot_magnons(Aqj_l, Aqj_r)
+   !
+   IF (force_zero_alpha) THEN
+      alpha = (0.0d0,0.0d0)
+   ENDIF
    !
    ! Calculation of zeta coefficients.
    ! See Eq.(35) in Malcioglu et al., Comput. Phys. Commun. 182, 1744 (2011).
@@ -85,7 +93,7 @@ subroutine lanczos_pseudohermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, 
    ! Renormalization will be done in the begining of the next iteration.
    ! In the non-Hermitian case, similar operation needs to be done also for p(i).
    !
-!   CALL zaxpy(size_evc,-alpha,qj_r(1,1,1,1),1,Aqj_r(1,1,1,1),1)
+   CALL zaxpy(size_evc,-alpha,qj_r(1,1,1,1),1,Aqj_r(1,1,1,1),1)
    CALL zaxpy(size_evc,-gamma,qjold_r(1,1,1,1),1,Aqj_r(1,1,1,1),1)
    !
    ! X. Ge: Throw away q(i-1), and make q(i+1) to be the current vector,

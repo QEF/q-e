@@ -66,13 +66,9 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    !
    CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),qj_r(1,1,1,1),1)
    CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),Aqj_r(1,1,1,1),1)
-!   qj_r(:,:,:,:)  = qj_r(:,:,:,:)  / cmplx(beta,0.0d0,kind=dp)
-!   Aqj_r(:,:,:,:) = Aqj_r(:,:,:,:) / cmplx(beta,0.0d0,kind=dp)
    !
    CALL zscal(size_evc,1.0d0/conjg(gamma),qj_l(1,1,1,1),1)
    CALL zscal(size_evc,1.0d0/conjg(gamma),Aqj_l(1,1,1,1),1)
-!   qj_l(:,:,:,:)  = qj_l(:,:,:,:)  / conjg(gamma)
-!   Aqj_l(:,:,:,:) = Aqj_l(:,:,:,:) / conjg(gamma)
    !
    ! computes alpha 
    !
