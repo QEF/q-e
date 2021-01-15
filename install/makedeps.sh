@@ -140,9 +140,11 @@ for dir in $dirs; do
         if test "$DIR" = "Modules"
         then
             sed '/@mbd@/d' make.depend > tmp; mv tmp make.depend
+        fi
 
         if test "$DIR" = "XClib"
         then
+            sed '/@xc_f90_lib_m@/d' make.depend > tmp; mv tmp make.depend
             sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
         fi
 

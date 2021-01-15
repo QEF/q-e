@@ -228,7 +228,6 @@ buffers.o : ../../Modules/kind.o
 c_bands.o : ../../Modules/becmod.o
 c_bands.o : ../../Modules/check_stop.o
 c_bands.o : ../../Modules/control_flags.o
-c_bands.o : ../../Modules/funct.o
 c_bands.o : ../../Modules/io_files.o
 c_bands.o : ../../Modules/io_global.o
 c_bands.o : ../../Modules/kind.o
@@ -238,8 +237,8 @@ c_bands.o : ../../Modules/noncol.o
 c_bands.o : ../../Modules/recvec.o
 c_bands.o : ../../Modules/wavefunctions.o
 c_bands.o : ../../UtilXlib/mp.o
-c_bands.o : ../../upflib/uspp.o
 c_bands.o : ../../XClib/xc_lib.o
+c_bands.o : ../../upflib/uspp.o
 c_bands.o : atomic_wfc_mod.o
 c_bands.o : bp_mod.o
 c_bands.o : buffers.o
