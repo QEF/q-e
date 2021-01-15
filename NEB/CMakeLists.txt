@@ -30,6 +30,7 @@ add_library(QE::NEB ALIAS qe_neb)
 target_link_libraries(qe_neb
     PRIVATE
         QE::PW
+        QE::XClib
         QE::Modules
         QE::UTILX
         QE::UPF)

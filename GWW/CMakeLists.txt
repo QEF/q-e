@@ -182,6 +182,7 @@ target_link_libraries(qe_gww_pw4gww
     PRIVATE
         QE::SCALAPACK
         QE::PW
+        QE::XClib
         QE::GWW
         QE::FFTX
         QE::UPF
@@ -202,6 +203,7 @@ target_link_libraries(qe_gww_head
     PRIVATE
         QE::PW
         QE::LR_Modules
+        QE::XClib
         QE::Modules
         QE::PHonon::PH
         QE::UTILX

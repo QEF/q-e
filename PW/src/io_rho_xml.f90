@@ -26,7 +26,7 @@ MODULE io_rho_xml
       !
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg
-      USE funct,            ONLY : dft_is_meta
+      USE xc_lib,           ONLY : xclib_dft_is
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       USE scf,              ONLY : scf_type
@@ -67,7 +67,7 @@ MODULE io_rho_xml
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
       !
       ! Write kinetic energy density density
-      IF ( dft_is_meta() ) THEN 
+      IF ( xclib_dft_is('meta') ) THEN 
          IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
               CALL write_rhog( TRIM(dirname) // "ekin-density", &
               root_bgrp, intra_bgrp_comm, &
@@ -135,7 +135,7 @@ MODULE io_rho_xml
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       USE gvect,            ONLY : ig_l2g
-      USE funct,            ONLY : dft_is_meta
+      USE xc_lib,           ONLY : xclib_dft_is
       USE io_files,         ONLY : restart_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
@@ -166,7 +166,7 @@ MODULE io_rho_xml
       IF ( nspin > nspin_) rho%of_g(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
       ! read kinetic energy density
-      IF ( dft_is_meta() ) THEN
+      IF ( xclib_dft_is('meta') ) THEN
          CALL read_rhog( TRIM(dirname) // "ekin-density", &
               root_bgrp, intra_bgrp_comm, &
               ig_l2g, nspin_, rho%kin_g, gamma_only, ierr )

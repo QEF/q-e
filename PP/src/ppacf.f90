@@ -52,13 +52,10 @@ PROGRAM do_ppacf
   USE scf,                  ONLY : scf_type, create_scf_type, destroy_scf_type
   USE scf,                  ONLY : scf_type_COPY
   USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
-  USE funct,                ONLY : dft_is_nonlocc, nlc
-  USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
-  USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
-                                   enforce_input_dft
-  USE exch_lda,             ONLY : slater, slater_spin
-  USE xc_gga,               ONLY : gcxc, gcx_spin, gcc_spin
-  USE xc_lda_lsda,          ONLY : xc
+  USE funct,                ONLY : dft_is_nonlocc, nlc, enforce_input_dft   
+  USE xc_lib,               ONLY : xclib_get_id, xclib_set_auxiliary_flags,    &
+                                   xclib_set_exx_fraction, xclib_dft_is_libxc, &
+                                   xclib_set_threshold, xc_gcx
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
   USE vdW_DF,               ONLY : Nqs, vdW_DF_potential, vdW_DF_energy, vdW_DF_analysis
@@ -78,6 +75,7 @@ PROGRAM do_ppacf
   ! 1 \(\rigtharrow\) Susceptibility-type vdW_DF kernel (postprocessing ONLY!)
   ! 2 \(\rigtharrow\) Pure-vdW (longitudinal) vdW_DF kernel (postprocessing ONLY!)
   ! Kernels defined/explained in IOP JCPM focused review.
+  LOGICAL :: is_libxc(2), isnonlocc
   LOGICAL :: lplot, ltks, lfock
   ! lplot: "2 track spatial variation or not 2 track spatial variation?"
   ! if (lplot) ltks: "2 track Kohn-sham kinetic energy?" (requires wavefunctions)
@@ -106,20 +104,22 @@ PROGRAM do_ppacf
   ! coupling constant
   ! local exchange energy, local correlation energy
   ! local exchange potential, local correlation potential
-  REAL(DP) :: rhox, rhoupdw(1,2), arhox(1,2), zeta(1)
+  REAL(DP) :: rhox, arhox, zeta, grho2
   ! the charge in each point
   ! the absolute value of the charge
-  REAL(DP) :: r_v(1,2), s2_v(1,2)
+  !
+  ! XC input/output arrays
+  REAL(DP), ALLOCATABLE :: v1x(:,:), v1c(:,:), v2x(:,:), v2c(:,:)
+  REAL(DP), ALLOCATABLE :: ex(:), ec(:), sx(:), sc(:)
+  REAL(DP), ALLOCATABLE :: expp(:), ecpp(:), exm(:), ecm(:)
+  REAL(DP), ALLOCATABLE :: sxd(:), scp(:), scm(:)
   !
   REAL(DP) :: etxc, vtxc
-  REAL(DP) :: ex(1), ec(1), expp(1), ecpp(1), exm(1), ecm(1)
-  REAL(DP) :: vx(1,2), vc(1,2)
-  REAL(DP) :: ec_l, ecgc_l, Ec_nl
+  REAL(DP) :: ec_l, ecgc_l, Ec_nl, ec_cc
   REAL(DP) :: etxccc, etxcccnl, etxcccnlp, etxcccnlm, vtxccc, vtxccc_buf, vtxcccnl 
   !
-  REAL(DP) :: grho2(2), sx(1), sc(1), scp, scm, &
-              etxcgc, vtxcgc, segno, rh, grh2(1)
-  REAL(DP) :: v1x(1), v2x(1), v1c(1), v2c(1), v1cs(1,2), v1xs(1,2), v2xs(1,2)
+  REAL(DP) :: etxcgc, vtxcgc, segno, rh
+  !
   REAL(DP) :: dq0_dq  ! The derivative of the saturated
   REAL(DP) :: grid_cell_volume
   !
@@ -131,7 +131,7 @@ PROGRAM do_ppacf
   REAL(DP), PARAMETER :: small = 1.E-10_DP,  third = 1.0_DP / 3.0_DP, &
                          pi34 = 0.6203504908994_DP  ! pi34=(3/4pi)^(1/3)
   REAL(DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
-  REAL(DP), ALLOCATABLE :: grho(:,:,:), rhoout(:,:)
+  REAL(DP), ALLOCATABLE :: grho(:,:,:), rhoout(:,:), rhoout_tz(:,:)
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
   REAL(DP), ALLOCATABLE :: tot_grad_rho(:,:), grad_rho(:,:,:)
   REAL(DP), ALLOCATABLE :: tot_rho(:)
@@ -189,6 +189,11 @@ PROGRAM do_ppacf
 #endif
   !--------------- READ IN PREFIX --------------------------------!
   CALL environment_start( 'ppacf' )
+  !
+  is_libxc(1) = xclib_dft_is_libxc('GGA','EXCH')
+  is_libxc(2) = xclib_dft_is_libxc('GGA','CORR')
+  !
+  IF ( ANY(.NOT.is_libxc(1:2)) ) CALL xclib_set_threshold( 'gga', 1.E-10_DP, 1.E-10_DP )
   !
   ! ... set default values for variables in namelist
   !
@@ -270,11 +275,12 @@ PROGRAM do_ppacf
      ENDIF
      !
      ! Check exchange correlation functional
-     iexch = get_iexch()
-     icorr = get_icorr()
-     igcx  = get_igcx()
-     igcc  = get_igcc()
-  
+     !
+     iexch = xclib_get_id('LDA','EXCH')
+     icorr = xclib_get_id('LDA','CORR')
+     igcx  = xclib_get_id('GGA','EXCH')
+     igcc  = xclib_get_id('GGA','CORR')
+     !
   ELSEIF (code_num == 2) THEN
      !
      tmp_dir = TRIM(outdir)
@@ -310,6 +316,7 @@ PROGRAM do_ppacf
   !
   ALLOCATE( grho(3,dfftp%nnr,nspin) )
   ALLOCATE( rhoout(dfftp%nnr,nspin) )
+  ALLOCATE( rhoout_tz(dfftp%nnr,nspin) ) 
   ALLOCATE( tot_rho(dfftp%nnr) )
   ALLOCATE( rhogsum(ngm,nspin) )
   !
@@ -364,8 +371,25 @@ PROGRAM do_ppacf
   etcnl = 0._DP
   etcnlncc = 0._DP
   !
+  !
+  ALLOCATE( v1x(dfftp%nnr,nspin), v1c(dfftp%nnr,nspin) )
+  ALLOCATE( v2x(dfftp%nnr,nspin), v2c(dfftp%nnr,nspin) )
+  ALLOCATE( ex(dfftp%nnr), ec(dfftp%nnr) )
+  ALLOCATE( sx(dfftp%nnr), sc(dfftp%nnr) )
+  ALLOCATE( expp(dfftp%nnr), ecpp(dfftp%nnr) )
+  ALLOCATE( exm(dfftp%nnr), ecm(dfftp%nnr) )
+  ALLOCATE( sxd(dfftp%nnr), scp(dfftp%nnr), scm(dfftp%nnr) )
+  !
+  rhoout_tz(:,1) = rho%of_r(:,1) + rho_core(:)
+  IF (nspin==2) rhoout_tz(:,2) = rho%of_r(:,2)
+  !
+  CALL xc( dfftp%nnr, nspin, nspin, rhoout_tz, ex, ec, v1x, v1c )
+  !
+  CALL xc_gcx( dfftp%nnr, nspin, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c )
+  !
+  !
   ! ... coupling constant > 0
-  ! 
+  !
   DO icc = 0, ncc
      cc = DBLE(icc)/DBLE(ncc)
      etxclambda = 0._DP
@@ -380,93 +404,98 @@ PROGRAM do_ppacf
      etclda = 0._DP
      etcgc  = 0._DP
      !
+     IF (cc > 0) THEN
+       !
+       ccp = cc+dcc
+       ccm = cc-dcc
+       ccp2 = ccp*ccp
+       ccp3 = ccp2*ccp
+       ccp4 = ccp3*ccp
+       ccp8 = ccp4*ccp4
+       ccm2 = ccm*ccm
+       ccm3 = ccm2*ccm
+       ccm4 = ccm3*ccm
+       ccm8 = ccm4*ccm4
+       !
+       IF (icorr /= 4) THEN
+         CALL xc( dfftp%nnr, nspin, nspin, rhoout_tz/ccp3, expp, ecpp, v1x, v1c )
+         CALL xc( dfftp%nnr, nspin, nspin, rhoout_tz/ccm3, exm,  ecm,  v1x, v1c )
+       ENDIF
+       !
+       IF (igcc /= 0) THEN
+         CALL xc_gcx( dfftp%nnr, nspin, rhoout/ccp3, grho/ccp4, sxd, scp, v1x,&
+                      v2x, v1c, v2c )
+         !
+         CALL xc_gcx( dfftp%nnr, nspin, rhoout/ccm3, grho/ccm4, sxd, scm, v1x,&
+                      v2x, v1c, v2c )
+       ENDIF
+       !   
+     ENDIF
+     !
+     !
      IF (nspin == 1 ) THEN
        !
        ! ... spin-unpolarized case
        !
        DO ir = 1, dfftp%nnr
           !
-          rhox = rho%of_r(ir,1) + rho_core(ir)
-          arhox(1,1) = ABS(rhox)
-          IF (arhox(1,1) > vanishing_charge) THEN
-             rs = pi34 /arhox(1,1)**third
-             IF (iexch == 1) THEN
-                CALL slater( rs, ex(1), vx(1,1) ) ! \epsilon_x,\lambda[n]=\epsilon_x[n]
-             ELSE
-                CALL xc( 1, nspin, nspin, arhox(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
-             ENDIF
-             etx = etx + e2*ex(1)*rhox
-             etxlda = etxlda + e2*ex(1)*rhox
-             grho2(1) = grho(1,ir,1)**2 + grho(2,ir,1)**2 + grho(3,ir,1)**2
+          rhox = rhoout_tz(ir,1)
+          arhox = ABS(rhox)
+          IF (arhox > vanishing_charge) THEN
+             !
+             etx = etx + e2*ex(ir)*rhox
+             etxlda = etxlda + e2*ex(ir)*rhox
+             grho2 = grho(1,ir,1)**2 + grho(2,ir,1)**2 + grho(3,ir,1)**2
              !
              IF (cc > 0._DP) THEN
-                ccp = cc+dcc
-                ccm = cc-dcc
-                ccp2 = ccp*ccp
-                ccp3 = ccp2*ccp
-                ccp4 = ccp3*ccp
-                ccp8 = ccp4*ccp4
-                ccm2 = ccm*ccm
-                ccm3 = ccm2*ccm
-                ccm4 = ccm3*ccm
-                ccm8 = ccm4*ccm4
                 !
                 IF (icorr == 4) THEN
-                   CALL pwcc( rs, cc, ec(1), vc(1,1), ec_l )
+                   rs = pi34 /arhox**third
+                   CALL pwcc( rs, cc, ec_cc, v1c(1,1), ec_l )
                 ELSE
-                   CALL xc( 1, nspin, nspin, arhox(:,1:1)/ccp3, expp, ecpp, vx(:,1:1), vc(:,1:1) )
-                   CALL xc( 1, nspin, nspin, arhox(:,1:1)/ccm3, exm,  ecm,  vx(:,1:1), vc(:,1:1) )
-                   ec_l = (ccp2*ecpp(1)-ccm2*ecm(1))/dcc*0.5_DP
+                   ec_l = (ccp2*ecpp(ir)-ccm2*ecm(ir))/dcc*0.5_DP
                 ENDIF
                 !
                 etcldalambda = etcldalambda + e2*ec_l*rhox
                 !
                 IF(icc == ncc) THEN
                    IF (icorr /= 4) THEN
-                     CALL xc( 1, nspin, nspin, arhox(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
+                     tclda%of_r(ir,1) = e2*(ec(ir)-ec_l)*rhox
+                     ttclda = ttclda + e2*(ec(ir)-ec_l)*rhox
+                   ELSE
+                     tclda%of_r(ir,1) = e2*(ec_cc-ec_l)*rhox
+                     ttclda = ttclda + e2*(ec_cc-ec_l)*rhox
                    ENDIF
-                   tclda%of_r(ir,1) = e2*(ec(1)-ec_l)*rhox
-                   ttclda = ttclda + e2*(ec(1)-ec_l)*rhox
                 ENDIF
                 !
-                IF (grho2(1)>epsg .AND. igcc/=0) THEN
+                IF (grho2>epsg .AND. igcc/=0) THEN
                    segno = SIGN( 1.D0, rhoout(ir,1) )
-                   !
-                   CALL gcxc( 1, arhox(:,1)/ccp3, grho2/ccp8, sx, sc, v1x, v2x, v1c, v2c )
-                   scp = sc(1)
-                   CALL gcxc( 1, arhox(:,1)/ccm3, grho2/ccm8, sx, sc, v1x, v2x, v1c, v2c )
-                   scm = sc(1)
-                   !
-                   ecgc_l = (ccp2*scp*ccp3-ccm2*scm*ccm3)/dcc*0.5_DP
+                   ecgc_l = (ccp2*scp(ir)*ccp3-ccm2*scm(ir)*ccm3)/dcc*0.5_DP
                    etcgclambda = etcgclambda + e2*ecgc_l*segno
                 ENDIF
              ENDIF
              !
-             CALL xc( 1, nspin, nspin, arhox(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
-             !
-             etclda = etclda + e2*ec(1)*rhox
-             etc = etc + e2*ec(1)*rhox
+             etclda = etclda + e2*ec(ir)*rhox
+             etc = etc + e2*ec(ir)*rhox
              !
              IF (icc == ncc) THEN
-                exlda%of_r(ir,1) = e2*ex(1)*rhox
-                eclda%of_r(ir,1) = e2*ec(1)*rhox
+                exlda%of_r(ir,1) = e2*ex(ir)*rhox
+                eclda%of_r(ir,1) = e2*ec(ir)*rhox
              ENDIF
              !
-             IF ( grho2(1) > epsg ) THEN
+             IF ( grho2 > epsg ) THEN
                 segno = SIGN( 1.D0, rhoout(ir,1) )
                 !
-                CALL gcxc( 1, arhox(:,1), grho2, sx, sc, v1x, v2x, v1c, v2c )
-                !
-                etx = etx + e2*sx(1)*segno
-                etxgc = etxgc + e2*sx(1)*segno
-                etc = etc + e2*sc(1)*segno
-                etcgc = etcgc + e2*sc(1)*segno
+                etx = etx + e2*sx(ir)*segno
+                etxgc = etxgc + e2*sx(ir)*segno
+                etc = etc + e2*sc(ir)*segno
+                etcgc = etcgc + e2*sc(ir)*segno
                 IF (icc == ncc) THEN
-                   exgc%of_r(ir,1) = e2*sx(1)*segno
+                   exgc%of_r(ir,1) = e2*sx(ir)*segno
                    IF (igcc /= 0) THEN
-                      ecgc%of_r(ir,1) = e2*sc(1)*segno
-                      tcgc%of_r(ir,1) = e2*(sc(1)-ecgc_l)*segno 
-                      ttcgc=ttcgc+e2*(sc(1)-ecgc_l)*segno
+                      ecgc%of_r(ir,1) = e2*sc(ir)*segno
+                      tcgc%of_r(ir,1) = e2*(sc(ir)-ecgc_l)*segno 
+                      ttcgc=ttcgc+e2*(sc(ir)-ecgc_l)*segno
                    ENDIF
                 ENDIF
              ENDIF
@@ -480,90 +509,59 @@ PROGRAM do_ppacf
        ! ... spin-polarized case
        !
        DO ir = 1, dfftp%nnr
-          rhox = rho%of_r(ir,1) + rho_core(ir)
-          arhox(1,1) = ABS( rhox )
-          IF (arhox(1,1) > vanishing_charge) THEN
-             rs = pi34 /arhox(1,1)**third
-             zeta = rho%of_r(ir,2)/arhox(1,1)
-             rhoupdw(1,1) = (rho%of_r(ir,1) + rho%of_r(ir,2) + rho_core(ir))*0.5_DP
-             rhoupdw(1,2) = (rho%of_r(ir,1) - rho%of_r(ir,2) + rho_core(ir))*0.5_DP
-             IF (ABS(zeta(1)) > 1.D0) zeta(1) = SIGN(1.D0, zeta(1))
-             IF (iexch == 1) THEN
-                CALL slater_spin( arhox(1,1), zeta(1), ex(1), vx(1,1), vx(1,2) )
-             ELSE
-                CALL xc( 1, nspin, nspin, rhoupdw, ex, ec, vx, vc )
-             ENDIF
-             etx = etx + e2*ex(1)*rhox
-             etxlda = etxlda+e2*ex(1)*rhox
-             grh2(1) = ( grho(1,ir,1) + grho(1,ir,2) )**2 + &
-                       ( grho(2,ir,1) + grho(2,ir,2) )**2 + &
-                       ( grho(3,ir,1) + grho(3,ir,2) )**2
+          rhox = rhoout_tz(ir,1)
+          arhox = ABS( rhox )
+          IF (arhox > vanishing_charge) THEN
+             rs = pi34 /arhox**third
+             zeta = rhoout_tz(ir,2)/arhox
+             IF (ABS(zeta) > 1.D0) zeta = SIGN(1.D0, zeta)
+             etx = etx + e2*ex(ir)*rhox
+             etxlda = etxlda+e2*ex(ir)*rhox
+             !
              IF (cc > 0._DP) THEN
-                ccp = cc+dcc
-                ccm = cc-dcc
-                ccp2 = ccp*ccp
-                ccp3 = ccp2*ccp
-                ccp4 = ccp3*ccp
-                ccp8 = ccp4*ccp4
-                ccm2 = ccm*ccm
-                ccm3 = ccm2*ccm
-                ccm4 = ccm3*ccm
-                ccm8 = ccm4*ccm4
                 !
                 IF (icorr == 4) THEN
-                   CALL pwcc_spin( rs, cc, zeta(1), ec(1), vc(1,1), vc(1,2), ec_l )
+                   CALL pwcc_spin( rs, cc, zeta, ec_cc, v1c(1,1), v1c(1,2), ec_l )
                 ELSE
-                   CALL xc( 1, nspin, nspin, rhoupdw/ccp3, expp, ecpp, vx, vc )
-                   CALL xc( 1, nspin, nspin, rhoupdw/ccm3, exm,  ecm,  vx, vc )
-                   ec_l = (ccp2*ecpp(1)-ccm2*ecm(1))/dcc*0.5_DP
+                   ec_l = (ccp2*ecpp(ir)-ccm2*ecm(ir))/dcc*0.5_DP
                 ENDIF
                 !
                 etcldalambda = etcldalambda+e2*ec_l*rhox
                 IF (icc == ncc) THEN
-                   tclda%of_r(ir,1) = e2*(ec(1)-ec_l)*rhox
-                   ttclda = ttclda+e2*(ec(1)-ec_l)*rhox
+                   IF (icorr /= 4) THEN
+                     tclda%of_r(ir,1) = e2*(ec(ir)-ec_l)*rhox
+                     ttclda = ttclda + e2*(ec(ir)-ec_l)*rhox
+                   ELSE
+                     tclda%of_r(ir,1) = e2*(ec_cc-ec_l)*rhox
+                     ttclda = ttclda + e2*(ec_cc-ec_l)*rhox
+                   ENDIF
                 ENDIF
                 !
                 IF (igcc /= 0) THEN
-                   arhox(1,1) = rhox
-                   CALL gcc_spin( 1, arhox(:,1)/ccp3, zeta, grh2/ccp8, sc, v1cs, v2c )
-                   scp = sc(1)
-                   CALL gcc_spin( 1, arhox(:,1)/ccm3, zeta, grh2/ccm8, sc, v1cs, v2c )
-                   scm = sc(1)
-                   ecgc_l = (ccp2*scp*ccp3-ccm2*scm*ccm3)/dcc*0.5_DP
+                   ecgc_l = (ccp2*scp(ir)*ccp3-ccm2*scm(ir)*ccm3)/dcc*0.5_DP
                    etcgclambda = etcgclambda+e2*ecgc_l
-                   arhox(1,1) = ABS(rhox)
                 ENDIF
              ENDIF
              !
-             CALL xc( 1, nspin, nspin, rhoupdw, ex, ec, vx, vc )
-             !
-             etclda = etclda + e2*ec(1)*rhox
-             etc = etc + e2*ec(1)*rhox
+             etclda = etclda + e2*ec(ir)*rhox
+             etc = etc + e2*ec(ir)*rhox
              !
              IF (icc == ncc) THEN
-                exlda%of_r(ir,1) = e2*ex(1)*rhox
-                eclda%of_r(ir,1) = e2*ec(1)*rhox
+                exlda%of_r(ir,1) = e2*ex(ir)*rhox
+                eclda%of_r(ir,1) = e2*ec(ir)*rhox
              ENDIF
              !
-             grho2(:) = grho(1,ir,:)**2 + grho(2,ir,:)**2 + grho(3,ir,:)**2
+             etx = etx + e2*sx(ir)
+             etxgc = etxgc + e2*sx(ir)
              !
-             r_v(1,:) = rhoout(ir,:)
-             s2_v(1,:) = grho2(:)
-             CALL gcx_spin( 1, r_v, s2_v, sx, v1xs, v2xs )
-             !
-             etx = etx + e2*sx(1)
-             etxgc = etxgc + e2*sx(1)
-             r_v(1,1) = rhox
-             CALL gcc_spin( 1, r_v(1,1), zeta, grh2, sc, v1cs, v2c )
-             etcgc = etcgc + e2*sc(1)
-             etc = etc + e2*sc(1)
+             etcgc = etcgc + e2*sc(ir)
+             etc = etc + e2*sc(ir)
              IF ( icc == ncc ) THEN
-                exgc%of_r(ir,1)=e2*sx(1)
+                exgc%of_r(ir,1)=e2*sx(ir)
                 IF(igcc.NE.0) THEN
-                   ecgc%of_r(ir,1)=e2*sc(1)
-                   tcgc%of_r(ir,1)=e2*(sc(1)-ecgc_l)
-                   ttcgc=ttcgc+e2*(sc(1)-ecgc_l)
+                   ecgc%of_r(ir,1)=e2*sc(ir)
+                   tcgc%of_r(ir,1)=e2*(sc(ir)-ecgc_l)
+                   ttcgc=ttcgc+e2*(sc(ir)-ecgc_l)
                 ENDIF
              ENDIF
           ENDIF
@@ -640,6 +638,11 @@ PROGRAM do_ppacf
      !
   ENDDO  ! icc
   !
+  DEALLOCATE( rhoout_tz ) 
+  DEALLOCATE( v1x, v1c, v2x, v2c )
+  DEALLOCATE( ex, ec, sx, sc )
+  DEALLOCATE( expp, ecpp, exm, ecm )
+  DEALLOCATE( sxd, scp, scm )
   !
   IF ( dft_is_nonlocc() ) THEN
     WRITE(stdout,'(5x,a)') 'Ec_nl(n_1/lambda): '
@@ -766,8 +769,8 @@ PROGRAM do_ppacf
      ttcnl_check = 0._DP
      !
      DO ir = 1, dfftp%nnr
-        arhox(1,1) = ABS(tot_rho(ir))
-        IF (arhox(1,1) > vanishing_charge) THEN
+        arhox = ABS(tot_rho(ir))
+        IF (arhox > vanishing_charge) THEN
            DO iq = 1, Nqs
               ecnl_c(ir) = ecnl_c(ir) + thetas(ir,iq)*u_vdW(ir,iq)
               tcnl_c(ir) = tcnl_c(ir) - thetas(ir,iq)*u_vdW(ir,iq) & 
@@ -820,9 +823,11 @@ PROGRAM do_ppacf
     nbndproj = 0
     exxdiv_treatment = "gygi-baldereschi"
     ecutfock = ecutwfc
-    CALL set_exx_fraction( 1._DP )
+    !
+    CALL xclib_set_exx_fraction( 1._DP )
     CALL enforce_input_dft( 'HF' )
-    CALL set_auxiliary_flags
+    isnonlocc = dft_is_nonlocc()
+    CALL xclib_set_auxiliary_flags( isnonlocc )
     !
     ALLOCATE( igk_buf(npwx), gk(npwx) )
     igk_k(:,:) = 0

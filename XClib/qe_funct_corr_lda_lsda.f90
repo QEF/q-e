@@ -5,11 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+!-------------------------------------------------------------------------
 MODULE corr_lda !<GPU:corr_lda=>corr_lda_gpu>
-
+!-------------------------------------------------------------------------
+!! LDA correlation functionals
+!
 CONTAINS
-
+!
 !-------------------------------------------------------------------------
 SUBROUTINE pz( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
@@ -18,7 +20,7 @@ SUBROUTINE pz( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !! * iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981);
   !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994).
   !
-  USE kinds,  ONLY: DP
+  USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -77,7 +79,7 @@ SUBROUTINE pzKZK( rs, ec, vc, vol )                    !<GPU:DEVICE>
   !! * iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -189,7 +191,7 @@ SUBROUTINE vwn( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -235,7 +237,7 @@ SUBROUTINE vwn1_rpa( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
-  USE kinds,       ONLY: DP
+  USE kind_l,       ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -281,7 +283,7 @@ SUBROUTINE lyp( rs, ec, vc )                    !<GPU:DEVICE>
   !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988).
   !! LDA part only.
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -318,7 +320,7 @@ SUBROUTINE pw( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -387,7 +389,7 @@ SUBROUTINE wignerc( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Wigner correlation.
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -420,7 +422,7 @@ SUBROUTINE hl( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971).
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -452,7 +454,7 @@ SUBROUTINE gl( rs, ec, vc )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976).
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -487,7 +489,7 @@ SUBROUTINE pz_polarized( rs, ec, vc )                    !<GPU:DEVICE>
   !! J.P. Perdew and A. Zunger, PRB 23, 5048 (1981).
   !! spin-polarized energy and potential.
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -541,7 +543,7 @@ SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE
   !-----------------------------------------------------------------------
   !! Perdew and Zunger, PRB 23, 5048 (1981). Spin polarized case.
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -584,7 +586,7 @@ SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVIC
    !------------------------------------------------------------------------------
    !! S.H. Vosko, L. Wilk, and M. Nusair.  Spin polarized case.
    !
-   USE kinds,     ONLY: DP
+   USE kind_l,     ONLY: DP
    !
    IMPLICIT NONE
    !
@@ -653,7 +655,7 @@ SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVIC
    vc_up = dec1 + (1.0_DP - zeta)*dec2              ! v_c[s] = e_c - (r_s/3)*(de_c/dr_s)
    vc_dw = dec1 - (1.0_DP + zeta)*dec2              !          + [sign(s)-zeta]*(de_c/dzeta)
    !
-END SUBROUTINE
+END SUBROUTINE vwn_spin
 !
 !
 !----
@@ -662,7 +664,7 @@ SUBROUTINE padefit_ParSet1( x, i, fit, dfit )                           !<GPU:DE
    !! It implements formula [4.4] in:
    !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
    !
-   USE kinds, ONLY: DP
+   USE kind_l, ONLY: DP
    !
    IMPLICIT NONE
    !
@@ -712,7 +714,7 @@ SUBROUTINE padefit_ParSet2( x, i, fit, dfit )                           !<GPU:DE
    !! It implements formula [4.4] in:
    !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
    !
-   USE kinds, ONLY: DP
+   USE kind_l, ONLY: DP
    !
    IMPLICIT NONE
    !
@@ -763,7 +765,7 @@ END SUBROUTINE
 SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
    !---------------------------------------------------------------------------------------
    !
-   USE kinds, ONLY: DP
+   USE kind_l, ONLY: DP
    !
    IMPLICIT NONE
    !
@@ -839,7 +841,7 @@ SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE
   !-----------------------------------------------------------------------
   !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -950,7 +952,7 @@ SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<GPU
   !==  THIS IS ONLY THE LDA PART                                   ==
   !==--------------------------------------------------------------==
   !
-  USE kinds,       ONLY: DP
+  USE kind_l,       ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -1000,5 +1002,6 @@ SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<GPU
   RETURN
   !
 END SUBROUTINE lsd_lyp
-
-END MODULE
+!
+!
+END MODULE corr_lda

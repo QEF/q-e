@@ -1,58 +1,27 @@
-MODULE xc_mgga
 !
-USE kinds,     ONLY: DP
-USE funct,     ONLY: get_meta, get_metac, is_libxc, &
-                     exx_is_active, scan_exx, get_exx_fraction
-!
-IMPLICIT NONE
-!
-PRIVATE
-SAVE
-!
-!  GGA exchange-correlation drivers
-PUBLIC :: xc_metagcx
-PUBLIC :: tau_xc, tau_xc_spin
-PUBLIC :: change_threshold_mgga
-!
-!
-!  input thresholds (default values)
-REAL(DP) :: rho_threshold   = 1.0E-12_DP
-REAL(DP) :: grho2_threshold = 1.0E-24_DP
-REAL(DP) :: tau_threshold   = 1.0E-12_DP
-!
-!
- CONTAINS
-!
-!
-!-------------------------------------------------------------------------------------
-SUBROUTINE change_threshold_mgga( rho_thr_in, grho2_thr_in, tau_thr_in )
-  !------------------------------------------------------------------------------------
-  !! Change rho, grho and tau thresholds.
-  ! 
-  REAL(DP), INTENT(IN) :: rho_thr_in
-  REAL(DP), INTENT(IN), OPTIONAL :: grho2_thr_in
-  REAL(DP), INTENT(IN), OPTIONAL :: tau_thr_in
-  !
-  rho_threshold = rho_thr_in
-  IF ( PRESENT(grho2_thr_in) ) grho2_threshold = grho2_thr_in
-  IF ( PRESENT(tau_thr_in)  ) tau_threshold  = tau_thr_in
-  !
-  RETURN
-  !
-END SUBROUTINE change_threshold_mgga
-!
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------------------
 SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !-------------------------------------------------------------------------------------
-  !! Wrapper routine. Calls metaGGA drivers from internal libraries
-  !! of q-e or from the external libxc, depending on the input choice.
+  !! Wrapper routine. Calls internal metaGGA drivers or the Libxc ones,
+  !! depending on the input choice.
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
-  USE funct,            ONLY : get_libxc_flags_exc
   USE xc_f03_lib_m
+  USE dft_mod,       ONLY: get_libxc_flags_exc
 #endif 
+  !
+  USE kind_l,        ONLY: DP
+  USE dft_par_mod,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,        &
+                           grho2_threshold_mgga, tau_threshold_mgga, scan_exx, &
+                           exx_started, exx_fraction
+  USE qe_drivers_mgga
   !
   IMPLICIT NONE
   !
@@ -87,7 +56,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   ! ... local variables
   !
-  INTEGER :: is, imeta, imetac
+  INTEGER :: is
   REAL(DP), ALLOCATABLE :: grho2(:,:)
   !
 #if defined(__LIBXC)
@@ -100,7 +69,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in TPSS
   !
-  REAL(DP) :: exx_fraction
   INTEGER :: k, ipol, pol_unpol, eflag
   LOGICAL :: POLARIZED
 #if (XC_MAJOR_VERSION > 4)
@@ -110,9 +78,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #endif
   !
   lengthxc = length
-  !
-  imeta  = get_meta()
-  imetac = get_metac()
   !
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
@@ -138,8 +103,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     DO k = 1, length
       rho_lxc(k) = ABS( rho(k,1) )
       sigma(k) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
-                      grho2_threshold )
-      tau_lxc(k) = MAX( tau(k,1), tau_threshold )
+                      grho2_threshold_mgga )
+      tau_lxc(k) = MAX( tau(k,1), tau_threshold_mgga )
     ENDDO
     !
   ELSE
@@ -149,14 +114,14 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
        rho_lxc(2*k)   = ABS( rho(k,2) )
        !
        sigma(3*k-2) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
-                           grho2_threshold )
+                           grho2_threshold_mgga )
        sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
                       grho(3,k,1) * grho(3,k,2)
        sigma(3*k)   = MAX( grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2, &
-                           grho2_threshold )
+                           grho2_threshold_mgga )
        !
-       tau_lxc(2*k-1) = MAX( tau(k,1), tau_threshold )
-       tau_lxc(2*k)   = MAX( tau(k,2), tau_threshold )
+       tau_lxc(2*k-1) = MAX( tau(k,1), tau_threshold_mgga )
+       tau_lxc(2*k)   = MAX( tau(k,2), tau_threshold_mgga )
     ENDDO
     !
   ENDIF
@@ -186,7 +151,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( is_libxc(5) ) THEN
      CALL xc_f03_func_init( xc_func, imeta, pol_unpol )
      xc_info1 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_mgga )
      CALL get_libxc_flags_exc( xc_info1, eflag )
      IF (eflag==1) THEN
        CALL xc_f03_mgga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
@@ -218,8 +183,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     ! ... only for HK/MCA: SCAN0 (used in CPV)
     IF ( scan_exx ) THEN
-       exx_fraction = get_exx_fraction()
-       IF (exx_is_active()) THEN
+       IF (exx_started) THEN
          ex  = (1.0_DP - exx_fraction) * ex
          v1x = (1.0_DP - exx_fraction) * v1x
          v2x = (1.0_DP - exx_fraction) * v2x
@@ -235,7 +199,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     CALL xc_f03_func_init( xc_func, imetac, pol_unpol )
     xc_info1 = xc_f03_func_get_info( xc_func )
-    CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+    CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_mgga )
     CALL xc_f03_mgga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
     CALL xc_f03_func_end( xc_func )
@@ -295,134 +259,3 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   RETURN
   !
 END SUBROUTINE xc_metagcx
-!
-!
-!---------------------------------------------------------------------------------
-SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-  !-------------------------------------------------------------------------------
-  !  gradient corrections for exchange and correlation - Hartree a.u.
-  !  See comments at the beginning of module for implemented cases
-  !
-  !  input:  rho, grho=|\nabla rho|^2
-  !
-  !  definition:  E_x = \int e_x(rho,grho) dr
-  !
-  !  output: sx = e_x(rho,grho) = grad corr
-  !          v1x= D(E_x)/D(rho)
-  !          v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !          v3x= D(E_x)/D(tau)
-  !
-  !          sc, v1c, v2c as above for correlation
-  !
-  USE metagga
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: length
-  !
-  INTEGER :: k, imeta
-  REAL(DP) :: arho
-  REAL(DP), DIMENSION(length) :: rho, grho2, tau, &
-                                 ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
-  !
-  imeta = get_meta()
-  !
-  v1x=0.d0 ; v2x=0.d0 ; v3x=0.d0 ; ex=0.d0
-  v1c=0.d0 ; v2c=0.d0 ; v3c=0.d0 ; ec=0.d0
-  !
-  DO k = 1, length
-    !
-    arho = ABS(rho(k))
-    !
-    IF ( (arho<=rho_threshold).OR.(grho2(k)<=grho2_threshold).OR.(ABS(tau(k))<=rho_threshold) ) CYCLE
-    !
-    SELECT CASE( imeta )
-    CASE( 1 )
-       CALL tpsscxc( arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
-    CASE( 2 )
-       CALL m06lxc(  arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
-    CASE DEFAULT
-       CALL errore( 'tau_xc', 'This case is not implemented', imeta )
-    END SELECT
-    !
-  ENDDO
-  !
-  RETURN
-  !
-END SUBROUTINE tau_xc
-!
-!
-!----------------------------------------------------------------------------------------
-SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-  !------------------------------------------------------------------------------------
-  !
-  USE metagga
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,  INTENT(IN) :: length
-  REAL(DP), INTENT(IN) :: rho(length,2), tau(length,2)
-  REAL(DP), INTENT(IN) :: grho(3,length,2)
-  !
-  REAL(DP), INTENT(OUT) :: ex(length), ec(length), v1x(length,2), v2x(length,2), &
-                           v3x(length,2), v1c(length,2), v3c(length,2)
-  REAL(DP), INTENT(OUT) :: v2c(3,length,2)
-  !
-  !  ... local variables
-  !
-  INTEGER :: k, ipol, imeta
-  REAL(DP) :: rh, zeta, atau, grho2(2), ggrho2
-  REAL(DP) :: v2cup, v2cdw
-  !
-  imeta = get_meta()
-  !
-  ex=0.0_DP ; v1x=0.0_DP ; v2x=0.0_DP ; v3x=0.0_DP
-  ec=0.0_DP ; v1c=0.0_DP ; v2c=0.0_DP ; v3c=0.0_DP
-  !
-  ! FIXME: for SCAN, this will be calculated later
-  !
-  DO k = 1, length
-     !
-     rh   = rho(k,1) + rho(k,2)
-     atau = tau(k,1) + tau(k,2)             ! KE-density in Hartree
-     grho2(1) = SUM( grho(:,k,1)**2 )
-     grho2(2) = SUM( grho(:,k,2)**2 )
-     ggrho2 = ( grho2(1) + grho2(2) ) * 4.0_DP
-     !
-     IF ((rh <= rho_threshold) .OR. (ggrho2 <= grho2_threshold) .OR. (ABS(atau) <= tau_threshold)) CYCLE
-     !
-     SELECT CASE( imeta )
-     CASE( 1 )
-        !
-        CALL tpsscx_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), &
-                          tau(k,2), ex(k), v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2) )
-        !
-        zeta = (rho(k,1) - rho(k,2)) / rh
-        zeta = MAX( MIN( 0.99999999_DP, zeta ), -0.99999999_DP )
-        !
-        CALL tpsscc_spin( rh, zeta, grho(:,k,1), grho(:,k,2), atau, ec(k), &
-                          v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2), v3c(k,1), v3c(k,2) )
-        !
-     CASE( 2 )
-        !
-        CALL m06lxc_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), tau(k,2), ex(k), ec(k), &
-                          v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2), &
-                          v1c(k,1), v1c(k,2), v2cup   , v2cdw   , v3c(k,1), v3c(k,2)  )
-        !
-        v2c(:,k,1) = v2cup*grho(:,k,1)
-        v2c(:,k,2) = v2cdw*grho(:,k,2)
-        !
-     CASE DEFAULT
-        !
-        CALL errore( 'tau_xc_spin', 'This case not implemented', imeta )
-        !
-     END SELECT
-     !
-  ENDDO
-  !
-  RETURN
-  !
-END SUBROUTINE tau_xc_spin
-!
-!
-END MODULE xc_mgga

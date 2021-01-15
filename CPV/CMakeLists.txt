@@ -112,6 +112,7 @@ target_link_libraries(qe_cpv
         QE::LAX
         QE::UTILX
         QE::Modules
+        QE::XClib
         QE::FOX
         QE::FFTX
         QE::UPF
@@ -127,6 +128,7 @@ set_target_properties(qe_cpv_exe PROPERTIES OUTPUT_NAME cp.x)
 target_link_libraries(qe_cpv_exe
     PRIVATE
         QE::Modules
+        QE::XClib
         QE::LAX
         QE::CPV
         QE::UTILX)
@@ -141,6 +143,7 @@ target_link_libraries(qe_cpv_manycp_exe
     PRIVATE
         QE::LAX
         QE::Modules
+        QE::XClib
         QE::UTILX
         QE::CPV)
 
@@ -153,6 +156,7 @@ set_target_properties(qe_cpv_cppp_exe PROPERTIES OUTPUT_NAME cppp.x)
 target_link_libraries(qe_cpv_cppp_exe
     PRIVATE
         QE::Modules
+        QE::XClib
         QE::CPV
         QE::CLIB
         QE::UTILX)
@@ -166,6 +170,7 @@ set_target_properties(qe_cpv_wfdd_exe PROPERTIES OUTPUT_NAME wfdd.x)
 target_link_libraries(qe_cpv_wfdd_exe
     PRIVATE
         QE::LAPACK
+        QE::XClib
         QE::Modules
         QE::CPV)
 

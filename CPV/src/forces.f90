@@ -30,7 +30,7 @@
       USE gvecw,                  ONLY: ngw, g2kin
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
-      USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
+      USE xc_lib,                 ONLY: xclib_dft_is, exx_is_active
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
       USE mp_global,              ONLY: me_bgrp
@@ -73,7 +73,7 @@
       !
 !=======================================================================
 !exx_wf related
-      IF(dft_is_hybrid().AND.exx_is_active()) THEN
+      IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
          allocate( exx_a( dffts%nnr ) ); exx_a=0.0_DP
          allocate( exx_b( dffts%nnr ) ); exx_b=0.0_DP
       END IF
@@ -112,7 +112,7 @@
          !
 !===============================================================================
 !exx_wf related
-         IF(dft_is_hybrid().AND.exx_is_active()) THEN
+         IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
             !$omp parallel do private(tmp1,tmp2) 
             DO ir = 1, dffts%nr1x*dffts%nr2x*tg_nr3
                tmp1 = v(ir,iss1) * DBLE( psi(ir) )+exx_potential(ir,i/nogrp_+1)
@@ -135,7 +135,7 @@
          IF( PRESENT( v1 ) ) THEN
 !===============================================================================
 !exx_wf related
-            IF(dft_is_hybrid().AND.exx_is_active()) THEN
+            IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
                !
                IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
                  !
@@ -177,7 +177,7 @@
          ELSE
 !===============================================================================
 !exx_wf related
-            IF(dft_is_hybrid().AND.exx_is_active()) THEN
+            IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
                IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
                  !$omp parallel do 
                  DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
@@ -263,7 +263,7 @@
       ENDDO
 
       !
-      IF(dft_is_meta()) THEN
+      IF(xclib_dft_is('meta')) THEN
          ! HK/MCA : warning on task groups
          if (nogrp_.gt.1) call errore('forces','metagga force not supporting taskgroup parallelization',1)
          ! HK/MCA : reset occupation numbers since omp private screws it up... need a better fix FIXME
@@ -336,7 +336,7 @@
          !
       ENDIF
 !
-      IF(dft_is_hybrid().AND.exx_is_active()) DEALLOCATE(exx_a, exx_b)
+      IF(xclib_dft_is('hybrid').AND.exx_is_active()) DEALLOCATE(exx_a, exx_b)
       DEALLOCATE( psi )
 !
       CALL stop_clock( 'dforce' ) 

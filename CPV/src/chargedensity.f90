@@ -53,8 +53,8 @@
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm, &
-           me_bgrp, nproc_bgrp, root_bgrp
-      USE funct,              ONLY: dft_is_meta
+                                    me_bgrp, nproc_bgrp, root_bgrp
+      USE xc_lib,             ONLY: xclib_dft_is
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
       USE fft_interfaces,     ONLY: fwfft, invfft
@@ -248,7 +248,7 @@
          !
          CALL rho_g2r( dfftp, rhog, rhor )
          !
-         IF ( dft_is_meta() ) THEN
+         IF ( xclib_dft_is('meta') ) THEN
             CALL kedtauofr_meta( c_bgrp ) ! METAGGA
          END IF
          !

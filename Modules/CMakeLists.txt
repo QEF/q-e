@@ -3,7 +3,6 @@ set(sources
     autopilot.f90 
     basic_algebra_routines.f90 
     becmod.f90 
-    beef_interface.f90 
     bfgs_module.f90 
     bspline.f90 
     bz_form.f90 
@@ -14,17 +13,10 @@ set(sources
     constants.f90 
     constraints_module.f90 
     control_flags.f90 
-    correlation_lda_lsda.f90 
-    correlation_gga.f90 
-    coulomb_vcut.f90 
-    dgcxc_drivers.f90 
+    coulomb_vcut.f90  
     dist.f90 
-    dmxc_drivers.f90 
-    dgcxc_drivers.f90 
     electrons_base.f90 
     environment.f90 
-    exchange_lda_lsda.f90 
-    exchange_gga.f90 
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 
@@ -83,9 +75,6 @@ set(sources
     ws_base.f90 
     xc_vdW_DF.f90 
     xc_rVV10.f90 
-    xc_lda_lsda_drivers.f90 
-    xc_gga_drivers.f90 
-    xc_mgga_drivers.f90 
     io_base.f90 
     qes_types_module.f90 
     qes_libs_module.f90  
@@ -109,10 +98,8 @@ set(sources
     # list of subroutines and functions (not modules) previously found in flib/
     atom_weight.f90 
     capital.f90 
-    correlation_gga.f90 
     cryst_to_car.f90 
     erf.f90 
-    exchange_gga.f90 
     expint.f90 
     generate_k_along_lines.f90 
     more_functionals.f90 
@@ -121,7 +108,6 @@ set(sources
     int_to_char.f90 
     latgen.f90 
     linpack.f90 
-    metagga.f90 
     matches.f90 
     plot_io.f90 
     radial_gradients.f90 
@@ -151,6 +137,7 @@ target_link_libraries(qe_modules
         QE::OpenMP_Fortran
         QE::FFTX
         QE::LAX
+        QE::XClib
         QE::UPF
         QE::CLIB # this is needed only by wrappers.f90
         QE::libbeef

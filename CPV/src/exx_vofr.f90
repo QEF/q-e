@@ -914,7 +914,7 @@ SUBROUTINE getvofr_cube(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state,
     USE exx_module,              ONLY  :  nord2
     USE exx_module,              ONLY  :  lmax, lm_mx
     USE exx_module,              ONLY  :  n_exx
-    USE funct,                   ONLY  :  get_screening_parameter
+    USE xc_lib,                  ONLY  :  get_screening_parameter
     USE mp_global,               ONLY  :  me_image
     USE parallel_include
     USE exx_module,              ONLY  :  pot_ps, rho_ps

@@ -498,7 +498,7 @@ CONTAINS
     USE cellmd,    ONLY : lmovecell
     USE constants, ONLY : eps14
     USE exx_base,  ONLY : x_gamma_extrapolation
-    USE funct,     ONLY : exx_is_active
+    USE xc_lib,    ONLY : exx_is_active
     USE ions_base, ONLY : nat, tau
     USE klist,     ONLY : nkstot, xk, tot_charge
     USE lsda_mod,  ONLY : lsda

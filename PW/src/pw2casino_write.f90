@@ -30,7 +30,6 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE io_global, ONLY: stdout, ionode, ionode_id
    USE io_files, ONLY: nwordwfc, iunwfc, prefix, tmp_dir, seqopn
    USE wavefunctions, ONLY : evc
-   USE funct, ONLY : dft_is_meta
    USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
    USE mp_bands, ONLY: intra_bgrp_comm
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
@@ -323,8 +322,8 @@ CONTAINS
    SUBROUTINE calc_energies
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
-      USE funct,  ONLY : dft_is_hybrid
-
+      USE xc_lib, ONLY : xclib_dft_is
+      
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
       REAL(dp), ALLOCATABLE :: g2kin(:)
@@ -453,7 +452,7 @@ CONTAINS
       !
       ! compute exact exchange contribution (if present)
       !
-      IF(dft_is_hybrid()) fock2 = 0.5_DP * exxenergy2()
+      IF(xclib_dft_is('hybrid')) fock2 = 0.5_DP * exxenergy2()
       !
       etot_=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
       !
@@ -477,7 +476,7 @@ CONTAINS
       WRITE (stdout,*) 'Ewald energy     ', ewld/e2, ' au  =  ', ewld, ' Ry'
       WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2, ' au  =  ', etxc-etxcc, ' Ry'
       WRITE (stdout,*) 'hartree energy   ', ehart/e2, ' au  =  ', ehart, ' Ry'
-      IF(dft_is_hybrid()) & 
+      IF(xclib_dft_is('hybrid')) & 
            WRITE (stdout,*) 'EXX energy       ', fock2/e2, ' au  =  ', fock2, ' Ry' 
       IF( degauss > 0.0_dp ) &
          WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'

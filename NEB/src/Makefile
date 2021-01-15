@@ -39,7 +39,8 @@ stop_run_path.o
 
 PWOBJS= ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a \
+         ../../XClib/xc_lib.a
 TLDEPS=pwlibs
 
 all : tldeps neb.x path_interpolation.x

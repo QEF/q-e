@@ -11,7 +11,7 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  USE funct,             ONLY : dft_is_meta
+  USE xc_lib,            ONLY : xclib_dft_is
   USE metagga_cp,        ONLY : kedtaur, kedtaus, kedtaug
   USE cell_base,         ONLY : boxdimensions
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init
@@ -149,7 +149,7 @@ MODULE cp_main_variables
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate irb ', ierr )
       !
-      IF ( dft_is_meta() ) THEN
+      IF ( xclib_dft_is('meta') ) THEN
          !
          ! ... METAGGA
          !

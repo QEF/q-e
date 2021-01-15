@@ -19,7 +19,8 @@ subroutine elsdps_paw( )
   use ld1inc, only : nlcc, grid, nspin, rhoc, lsd, &
        encl, ehrt, ecxc, evxt, ekin, ecc, epseu,  &
        nwfts, enlts, octs, paw_energy
-  use funct, only : dft_is_gradient
+  use xc_lib, only : xclib_dft_is
+  !
   implicit none
   real(DP) :: &
        excc, vxcc(2), &   ! exch-corr energy from core charge
@@ -55,7 +56,7 @@ subroutine elsdps_paw( )
         call vxc_t(lsd,rh0,rhc,excc,vxcc)
         exccc(i) = excc*rhoc(i) 
      enddo
-     if (dft_is_gradient()) then
+     if (xclib_dft_is('gradient')) then
         allocate(rho_aux(ndmx,2), stat=ierr)
         allocate(vgc(ndmx,2),stat=ierr)
         allocate(egc(ndmx),stat=ierr)

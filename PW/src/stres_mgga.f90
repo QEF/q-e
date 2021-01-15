@@ -19,7 +19,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE gvect,                  ONLY : g
   USE scf,                    ONLY : rho, v
   USE wavefunctions,          ONLY : evc
-  USE funct,                  ONLY : dft_is_meta
+  USE xc_lib,                 ONLY : xclib_dft_is
   USE klist,                  ONLY : nks, xk, ngk
   USE buffers,                ONLY : get_buffer
   USE io_files,               ONLY : iunwfc, nwordwfc
@@ -45,7 +45,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   COMPLEX(DP), ALLOCATABLE  :: gradwfc (:,:), crosstaus(:,:,:)
   REAL(DP)                  :: w1, w2, delta, sigma_mgga(3,3)
   !
-  if ( .not. dft_is_meta() ) return
+  if ( .not. xclib_dft_is('meta') ) return
   !
   current_spin=1
   !

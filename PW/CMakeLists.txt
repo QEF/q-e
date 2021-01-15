@@ -263,6 +263,7 @@ target_link_libraries(qe_pw
         QE::ELPA
         QE::SCALAPACK
         QE::LAX
+        QE::XClib
         QE::UTILX  # TODO direct or transitive via QE::LAX?
         QE::KS_Solvers::Davidson
         QE::KS_Solvers::CG

@@ -41,7 +41,7 @@ SUBROUTINE memory_report()
   USE cellmd,    ONLY : cell_factor
   USE uspp,      ONLY : nkb, okvan
   USE atom,      ONLY : rgrid
-  USE funct,     ONLY : dft_is_meta, dft_is_hybrid
+  USE xc_lib,    ONLY : xclib_dft_is
   USE ldaU,      ONLY : lda_plus_u, U_projection, nwfcU
   USE fixed_occ, ONLY : one_atom_occupations
   USE wannier_new,ONLY: use_wannier
@@ -123,7 +123,7 @@ SUBROUTINE memory_report()
   END IF
   !
   ! hybrid functionals
-  IF ( dft_is_hybrid () ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      ! ngxx_g = estimated global number of G-vectors used in V_x\psi products
      ! nexx_g = estimated global size of the FFT grid used in V_x\psi products
      ! nexx_l = estimated local size of the FFT grid used in V_x\psi products
@@ -179,7 +179,7 @@ SUBROUTINE memory_report()
   ! Charge density and potentials - see scf_type in scf_mod
   !=====================================================================
   scf_type_size =  (complex_size * ngm + real_size * dfftp%nnr ) * nspin ! scf_mod.f90:94-95
-  IF ( dft_is_meta() .or. lxdm ) scf_type_size =  2 * scf_type_size
+  IF ( xclib_dft_is('meta') .or. lxdm ) scf_type_size =  2 * scf_type_size
   ! rho, v, vnew (allocate_fft.f90:56) 
   add = 3 * scf_type_size
   IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rho,v,vnew', add/MB
@@ -188,7 +188,7 @@ SUBROUTINE memory_report()
   ! vltot, vrs, rho_core, rhog_core, psic, strf, kedtau if needed
   ram =  ram + complex_size * ( dfftp%nnr + ngm *( 1 + ntyp ) ) + &
        real_size * dfftp%nnr*(2+nspin)
-  IF ( dft_is_meta() ) ram = ram + real_size * dfftp%nnr*nspin
+  IF ( xclib_dft_is('meta') ) ram = ram + real_size * dfftp%nnr*nspin
   ! arrays for rho mixing
   IF ( lscf ) THEN
      ! rhoin (electrons.f90:439)
@@ -196,7 +196,7 @@ SUBROUTINE memory_report()
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rhoin', DBLE(scf_type_size)/MB
      ! see mix_type in scf_mod
      mix_type_size =  complex_size * ngm * nspin
-     IF ( dft_is_meta() .or. lxdm ) mix_type_size =  2 * mix_type_size
+     IF ( xclib_dft_is('meta') .or. lxdm ) mix_type_size =  2 * mix_type_size
      ! df, dv (if kept in memory)
      IF ( io_level < 2 ) THEN
         add = mix_type_size * 2 * nmix
