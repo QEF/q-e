@@ -140,6 +140,7 @@ SUBROUTINE post_xml_init (  )
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
   USE ions_base,            ONLY : nat, nsp, tau, ityp
+  USE cell_base,            ONLY : omega
   USE recvec_subs,          ONLY : ggen, ggens
   USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
                                    eigts1, eigts2, eigts3, gstart, gshells
@@ -228,7 +229,7 @@ SUBROUTINE post_xml_init (  )
   CALL init_vloc()
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
-  CALL init_us_1()
+  CALL init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
   !

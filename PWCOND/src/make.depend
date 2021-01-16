@@ -37,13 +37,13 @@ do_cond.o : ../../Modules/mp_global.o
 do_cond.o : ../../Modules/mp_images.o
 do_cond.o : ../../Modules/mp_pools.o
 do_cond.o : ../../Modules/noncol.o
-do_cond.o : ../../Modules/paw_variables.o
 do_cond.o : ../../Modules/recvec.o
 do_cond.o : ../../PW/src/ldaU.o
 do_cond.o : ../../PW/src/paw_onecenter.o
 do_cond.o : ../../PW/src/pwcom.o
 do_cond.o : ../../PW/src/symm_base.o
 do_cond.o : ../../UtilXlib/mp.o
+do_cond.o : ../../upflib/paw_variables.o
 do_cond.o : ../../upflib/uspp.o
 do_cond.o : cond_restart.o
 do_cond.o : condcom.o

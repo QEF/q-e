@@ -58,12 +58,12 @@ dvqpsi.o : ../../Modules/kind.o
 dvqpsi.o : ../../Modules/mp_global.o
 dvqpsi.o : ../../Modules/mp_images.o
 dvqpsi.o : ../../Modules/noncol.o
-dvqpsi.o : ../../Modules/paw_variables.o
 dvqpsi.o : ../../Modules/recvec.o
 dvqpsi.o : ../../PHonon/PH/phcom.o
 dvqpsi.o : ../../PW/src/pwcom.o
 dvqpsi.o : ../../PW/src/scf_mod.o
 dvqpsi.o : ../../UtilXlib/mp.o
+dvqpsi.o : ../../upflib/paw_variables.o
 dvqpsi.o : ../../upflib/uspp.o
 dvqpsi.o : constants_epw.o
 dvqpsi.o : elph2.o
@@ -129,11 +129,11 @@ elphon_shuffle.o : ../../Modules/ions_base.o
 elphon_shuffle.o : ../../Modules/kind.o
 elphon_shuffle.o : ../../Modules/mp_pools.o
 elphon_shuffle.o : ../../Modules/noncol.o
-elphon_shuffle.o : ../../Modules/paw_variables.o
 elphon_shuffle.o : ../../Modules/recvec.o
 elphon_shuffle.o : ../../PHonon/PH/phcom.o
 elphon_shuffle.o : ../../PW/src/pwcom.o
 elphon_shuffle.o : ../../UtilXlib/mp.o
+elphon_shuffle.o : ../../upflib/paw_variables.o
 elphon_shuffle.o : ../../upflib/uspp.o
 elphon_shuffle.o : constants_epw.o
 elphon_shuffle.o : dvqpsi.o
@@ -148,6 +148,7 @@ elphon_shuffle_wrap.o : ../../Modules/io_files.o
 elphon_shuffle_wrap.o : ../../Modules/io_global.o
 elphon_shuffle_wrap.o : ../../Modules/ions_base.o
 elphon_shuffle_wrap.o : ../../Modules/kind.o
+elphon_shuffle_wrap.o : ../../Modules/mp_bands.o
 elphon_shuffle_wrap.o : ../../Modules/mp_global.o
 elphon_shuffle_wrap.o : ../../Modules/mp_images.o
 elphon_shuffle_wrap.o : ../../Modules/mp_world.o
@@ -323,11 +324,11 @@ epw_readin.o : ../../Modules/mp_global.o
 epw_readin.o : ../../Modules/mp_world.o
 epw_readin.o : ../../Modules/noncol.o
 epw_readin.o : ../../Modules/open_close_input_file.o
-epw_readin.o : ../../Modules/paw_variables.o
 epw_readin.o : ../../PHonon/PH/phcom.o
 epw_readin.o : ../../PW/src/pwcom.o
 epw_readin.o : ../../PW/src/start_k.o
 epw_readin.o : ../../UtilXlib/mp.o
+epw_readin.o : ../../upflib/paw_variables.o
 epw_readin.o : constants_epw.o
 epw_readin.o : elph2.o
 epw_readin.o : epwcom.o

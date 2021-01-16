@@ -1,6 +1,6 @@
 MODULE paw_variables
     !
-    USE kinds,      ONLY : DP
+    USE upf_kinds,      ONLY : DP
     !
     IMPLICIT NONE
     PUBLIC

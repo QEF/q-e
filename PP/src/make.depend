@@ -376,11 +376,11 @@ paw_postproc.o : ../../Modules/constants.o
 paw_postproc.o : ../../Modules/fft_base.o
 paw_postproc.o : ../../Modules/ions_base.o
 paw_postproc.o : ../../Modules/kind.o
-paw_postproc.o : ../../Modules/paw_variables.o
 paw_postproc.o : ../../PW/src/paw_onecenter.o
 paw_postproc.o : ../../PW/src/pwcom.o
 paw_postproc.o : ../../PW/src/scf_mod.o
 paw_postproc.o : ../../upflib/atom.o
+paw_postproc.o : ../../upflib/paw_variables.o
 paw_postproc.o : ../../upflib/splinelib.o
 paw_postproc.o : ../../upflib/uspp.o
 pawplot.o : ../../Modules/cell_base.o
@@ -396,13 +396,13 @@ pawplot.o : ../../Modules/mp_global.o
 pawplot.o : ../../Modules/mp_pools.o
 pawplot.o : ../../Modules/mp_world.o
 pawplot.o : ../../Modules/noncol.o
-pawplot.o : ../../Modules/paw_variables.o
 pawplot.o : ../../Modules/recvec.o
 pawplot.o : ../../PW/src/paw_onecenter.o
 pawplot.o : ../../PW/src/pwcom.o
 pawplot.o : ../../PW/src/scf_mod.o
 pawplot.o : ../../UtilXlib/mp.o
 pawplot.o : ../../upflib/atom.o
+pawplot.o : ../../upflib/paw_variables.o
 pawplot.o : ../../upflib/splinelib.o
 pawplot.o : ../../upflib/uspp.o
 plan_avg.o : ../../Modules/becmod.o
@@ -459,10 +459,10 @@ postproc.o : ../../Modules/mp_global.o
 postproc.o : ../../Modules/mp_images.o
 postproc.o : ../../Modules/noncol.o
 postproc.o : ../../Modules/parameters.o
-postproc.o : ../../Modules/paw_variables.o
 postproc.o : ../../Modules/recvec.o
 postproc.o : ../../PW/src/pwcom.o
 postproc.o : ../../UtilXlib/mp.o
+postproc.o : ../../upflib/paw_variables.o
 postproc.o : chdens_module.o
 ppacf.o : ../../FFTXlib/fft_interfaces.o
 ppacf.o : ../../Modules/cell_base.o
@@ -509,7 +509,6 @@ projwfc.o : ../../Modules/mp_images.o
 projwfc.o : ../../Modules/mp_pools.o
 projwfc.o : ../../Modules/noncol.o
 projwfc.o : ../../Modules/parameters.o
-projwfc.o : ../../Modules/paw_variables.o
 projwfc.o : ../../Modules/recvec.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
@@ -520,6 +519,7 @@ projwfc.o : ../../PW/src/symm_base.o
 projwfc.o : ../../PW/src/tetra.o
 projwfc.o : ../../UtilXlib/mp.o
 projwfc.o : ../../upflib/atom.o
+projwfc.o : ../../upflib/paw_variables.o
 projwfc.o : ../../upflib/uspp.o
 projwfc.o : projections_mod.o
 projwfc_box.o : ../../FFTXlib/fft_interfaces.o
@@ -580,7 +580,6 @@ pw2bgw.o : ../../Modules/mp_pools.o
 pw2bgw.o : ../../Modules/mp_wave.o
 pw2bgw.o : ../../Modules/mp_world.o
 pw2bgw.o : ../../Modules/noncol.o
-pw2bgw.o : ../../Modules/paw_variables.o
 pw2bgw.o : ../../Modules/recvec.o
 pw2bgw.o : ../../Modules/wavefunctions.o
 pw2bgw.o : ../../PW/src/exx.o
@@ -591,6 +590,7 @@ pw2bgw.o : ../../PW/src/symm_base.o
 pw2bgw.o : ../../PW/src/symme.o
 pw2bgw.o : ../../UtilXlib/mp.o
 pw2bgw.o : ../../UtilXlib/parallel_include.o
+pw2bgw.o : ../../upflib/paw_variables.o
 pw2bgw.o : ../../upflib/uspp.o
 pw2critic.o : ../../Modules/cell_base.o
 pw2critic.o : ../../Modules/control_flags.o
@@ -693,7 +693,6 @@ sum_band_kin.o : ../../Modules/kind.o
 sum_band_kin.o : ../../Modules/mp_bands.o
 sum_band_kin.o : ../../Modules/mp_pools.o
 sum_band_kin.o : ../../Modules/noncol.o
-sum_band_kin.o : ../../Modules/paw_variables.o
 sum_band_kin.o : ../../Modules/recvec.o
 sum_band_kin.o : ../../Modules/wavefunctions.o
 sum_band_kin.o : ../../PW/src/buffers.o
@@ -703,6 +702,7 @@ sum_band_kin.o : ../../PW/src/pwcom.o
 sum_band_kin.o : ../../PW/src/scf_mod.o
 sum_band_kin.o : ../../PW/src/symme.o
 sum_band_kin.o : ../../UtilXlib/mp.o
+sum_band_kin.o : ../../upflib/paw_variables.o
 sum_band_kin.o : ../../upflib/uspp.o
 sym_band.o : ../../FFTXlib/fft_interfaces.o
 sym_band.o : ../../FFTXlib/scatter_mod.o
@@ -756,7 +756,6 @@ vasp_xml_module.o : ../../Modules/kind.o
 vasp_xml_module.o : ../../Modules/mp_bands.o
 vasp_xml_module.o : ../../Modules/mp_global.o
 vasp_xml_module.o : ../../Modules/noncol.o
-vasp_xml_module.o : ../../Modules/paw_variables.o
 vasp_xml_module.o : ../../Modules/recvec.o
 vasp_xml_module.o : ../../Modules/recvec_subs.o
 vasp_xml_module.o : ../../Modules/wavefunctions.o
@@ -766,6 +765,7 @@ vasp_xml_module.o : ../../PW/src/io_rho_xml.o
 vasp_xml_module.o : ../../PW/src/paw_init.o
 vasp_xml_module.o : ../../PW/src/pwcom.o
 vasp_xml_module.o : ../../PW/src/scf_mod.o
+vasp_xml_module.o : ../../upflib/paw_variables.o
 vasp_xml_module.o : ../../upflib/uspp.o
 vasp_xml_module.o : vasp_read_chgcar_mod.o
 wannier_enrg.o : ../../Modules/io_files.o

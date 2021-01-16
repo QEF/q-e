@@ -347,9 +347,9 @@ newdq.o : ../Modules/ions_base.o
 newdq.o : ../Modules/kind.o
 newdq.o : ../Modules/mp_bands.o
 newdq.o : ../Modules/noncol.o
-newdq.o : ../Modules/paw_variables.o
 newdq.o : ../Modules/recvec.o
 newdq.o : ../UtilXlib/mp.o
+newdq.o : ../upflib/paw_variables.o
 newdq.o : ../upflib/uspp.o
 newdq.o : lrcom.o
 orthogonalize.o : ../Modules/becmod.o
@@ -392,8 +392,8 @@ set_small_group_of_q.o : ../Modules/cell_base.o
 set_small_group_of_q.o : ../Modules/control_flags.o
 set_small_group_of_q.o : ../Modules/ions_base.o
 set_small_group_of_q.o : ../Modules/kind.o
-set_small_group_of_q.o : ../Modules/paw_variables.o
 set_small_group_of_q.o : ../PW/src/symm_base.o
+set_small_group_of_q.o : ../upflib/paw_variables.o
 set_small_group_of_q.o : lrcom.o
 setqmod.o : ../Modules/kind.o
 setup_alpha_pv.o : ../Modules/constants.o
@@ -442,7 +442,7 @@ setup_nscf.o : ../PW/src/pwcom.o
 setup_nscf.o : ../PW/src/start_k.o
 setup_nscf.o : ../PW/src/symm_base.o
 setup_nscf.o : ../PW/src/tetra.o
-setup_nscf.o : ../upflib/uspp.o
+setup_nscf.o : ../upflib/upf_ions.o
 setup_nscf.o : lrcom.o
 setup_offset_beta.o : ../Modules/ions_base.o
 setup_offset_beta.o : ../upflib/uspp.o

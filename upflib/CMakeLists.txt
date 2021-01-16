@@ -3,10 +3,10 @@ set(sources
     atomic_number.f90 
     init_us_0.f90
     init_us_b0.f90
-    upf_erf.f90 
-    upf_utils.f90 
     gth.f90 
+    paw_variables.f90
     pseudo_types.f90 
+    qvan2.f90
     radial_grids.f90 
     read_cpmd.f90 
     read_fhi.f90 
@@ -20,13 +20,17 @@ set(sources
     upf_auxtools.f90 
     upf_const.f90 
     upf_error.f90 
+    upf_erf.f90 
     upf_free_unit.f90 
     upf_invmat.f90 
     upf_io.f90 
+    upf_ions.f90 
     upf_kinds.f90 
+    upf_spinorb.f90
     upf_params.f90 
     upf_parallel_include.f90 
     upf_to_internal.f90 
+    upf_utils.f90 
     uspp.f90 
     uspp_data.f90 
     write_upf_new.f90 

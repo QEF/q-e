@@ -18,8 +18,8 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   !! \[ q(g,i,j) = \sum_\text{lm} (-i)^l \text{ap}(\text{lm},i,j) 
   !! \text{yr}_\text{lm}(g) \text{qrad}(g,l,i,j) \]
   !
-  USE kinds,       ONLY: DP
-  USE us,          ONLY: dq, qrad
+  USE upf_kinds,   ONLY: DP
+  USE uspp_data,   ONLY: dq, qrad
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtolm
   !

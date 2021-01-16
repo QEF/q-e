@@ -41,7 +41,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE uspp_param,         ONLY : n_atom_wfc
+  USE upf_ions,           ONLY : n_atom_wfc
   USE ktetra,             ONLY : tetra, tetra_type, opt_tetra_init
   USE lr_symm_base,       ONLY : nsymq, invsymq, minus_q
   USE control_lr,         ONLY : lgamma, ethr_nscf

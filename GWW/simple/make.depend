@@ -71,7 +71,7 @@ openfile_simple.o : ../../Modules/noncol.o
 openfile_simple.o : ../../PW/src/atomic_wfc_mod.o
 openfile_simple.o : ../../PW/src/ldaU.o
 openfile_simple.o : ../../PW/src/pwcom.o
-openfile_simple.o : ../../upflib/uspp.o
+openfile_simple.o : ../../upflib/upf_ions.o
 product_basis.o : ../../FFTXlib/fft_interfaces.o
 product_basis.o : ../../Modules/becmod.o
 product_basis.o : ../../Modules/fft_base.o
