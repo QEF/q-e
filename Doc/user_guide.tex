@@ -399,6 +399,9 @@ to all linear-response codes.
 To install \qe\ from source, you need first of all a minimal Unix
 environment, that is: a command shell (e.g., bash, sh) and utilities \make,
 \texttt{awk}, \texttt{sed}. For MS-Windows, see Sec.\ref{SubSec:Windows}.
+You will also need CMake if you prefer installation with CMake (supported 
+since v.6.7), otherwise you will need the \configure\ command from autoconf
+(see next subsection).
 
 Note that the scripts contained
 in the distribution assume that the local  language is set to the
@@ -425,8 +428,8 @@ and MPI libraries.
 Big computing centers typically provide a Fortran compiler complete
 with all needed libraries. Workstations or ``commodity'' machines 
 using PC hardware, may or may not have the needed software. If not,
-you need either to buy a commercial product (e.g Intel, NAG, PGI) or to
-use an open-source compiler like gfortran from the gcc distribution.
+you need either to buy a commercial product (e.g the Intel compiler) 
+or to use the open-source gfortran  compiler from the gcc distribution.
 Some commercial compilers may be available free of charge 
 under some conditions (e.g. academic or personal usage).
 
@@ -443,8 +446,6 @@ more kinds of machines but may requires some tweaking, especially for
 the hardware of large HPC centers. Detailed but sometimes outdated 
 installation instructions for specific HPC machines may be found in 
 files \texttt{install/README.}{\em sys}, where {\em sys} is the machine name.
-
-Note: support for CMake is being added.
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -621,20 +622,19 @@ The following options are available for the CUDA Fortran GPU version:\\
                                   & \texttt{value} must be consistent with the\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
-                                  & PGI compilers currently accept 7.5, 8.0 or 9.0 (default: 8.0)\\
 \texttt{--enable-cuda-env-check=[yes]}& if set, sanity checks on the CUDA environment\\
                                       & are performed (default: yes).
 \end{tabular}\\
 
 Please remember that in order to compile the CUDA code for GPU's you need ... 
 the CUDA code (it is aligned to but separated from the main distribution)! 
-you also need a recent version of the PGI Fortran compiler. 
+you also need a recent version of the NVidia Fortran compiler. 
 OpenMP must be enabled,
 and you may want to use a CUDA-aware MPI distribution to optimize the data
 transfer between the processes.
 
-If you want to modify \configure\ (advanced users only!),
-see the Wiki pages on GitLab.
+To modify or extend \configure, see the Wiki pages on GitLab:
+for advanced users only!
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
@@ -1093,7 +1093,8 @@ Beware: the default integer type for 64-bit machine is typically
 but it is not guaranteed to work and will not give
 any advantage anyway.
 
-Currently, \configure\ supports Intel (ifort), NAG (nagfor), PGI (pgf90)
+Currently, \configure\ supports Intel (ifort), NAG (nagfor), NVidia
+(nvfortran, formerly PGI pgf90)
 and gfortran compilers. Pathscale, Sun Studio, AMD Open64, are no
 longer supported after v.6.2: g95, since v.6.1.
 
