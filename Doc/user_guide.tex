@@ -365,10 +365,12 @@ common to all packages:
 \texttt{LAXlib/}  &  Linear Algebra (parallel) libraries\\
 \texttt{KS\_Solvers/}  &  Iterative diagonalization routines\\
 \texttt{UtilXlib/}&  Miscellaneous timing, error handling, MPI utilites\\
+\texttt{XClib/}   &  Exchange-correlation functionals (not van der Waals)\\ 
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
 \texttt{Doc/}     &  general documentation\\
 \texttt{archive/} &  external libraries in .tar.gz form\\
+\texttt{external/}&  external libraries downloaded by cMake\\
 \texttt{test-suite/} &  automated tests\\
 \end{tabular}
 \\
@@ -405,15 +407,12 @@ may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
 \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem
 when running scripts (including installation scripts).
 
-Second, you need C and Fortran compilers, compliant with C89 and
-F2003 standards\footnote{since v.6.4 a standard 2008 feature is
-used: if unallocated pointers are passed as optional arguments,
-they are interpreted as not present}. For parallel
-execution, you will also need MPI libraries and a parallel
+Second, you need a Fortran compiler compliant with F2008 standard.
+For parallel execution, you will also need MPI libraries and a parallel
 (i.e. MPI-aware) compiler. For massively parallel machines, or
 for simple multicore parallelization, an OpenMP-aware compiler
 and libraries are also required. For GPU's, you will need the
-CUDA Fortran version and to compile with the PGI compiler and
+CUDA Fortran version and to compile with the NVidia compiler and
 run with CUDA run-time environment.
 
 As a rule, \qe\ tries to keep compatibility with older compilers,
@@ -423,14 +422,12 @@ old (say older than $\sim 5$ years or so) it is quite likely that
 something will not work. The same applies to mathematical 
 and MPI libraries.
 
-Big machines with
-specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
-Fortran compiler with MPI and OpenMP libraries bundled with
-the software. Workstations or ``commodity'' machines, using PC
-hardware, may or may not have the needed software. If not, you need
-either to buy a commercial product (e.g Intel, NAG, PGI) or to
+Big computing centers typically provide a Fortran compiler complete
+with all needed libraries. Workstations or ``commodity'' machines 
+using PC hardware, may or may not have the needed software. If not,
+you need either to buy a commercial product (e.g Intel, NAG, PGI) or to
 use an open-source compiler like gfortran from the gcc distribution.
-Some commercial compilers (e.g. PGI) may be available free of charge 
+Some commercial compilers may be available free of charge 
 under some conditions (e.g. academic or personal usage).
 
 \subsection{\configure}
@@ -800,7 +797,7 @@ Once installed \libxc, the linking with \qe\ can be enabled directly through the
 \begin{verbatim}
 ./configure --with-libxc --with-libxc-prefix='/path/to/libxc/'
 \end{verbatim}
-By adding the first switch only an automatic search for the libxc folder will be attempted, but its success is not guaranteed. It is always preferable to specify the second switch too. Optionally, a third switch can be added, namely \texttt{--with-libxc-include='/path/to/libxc/include'}, which specifies the path to the Fortran headers (usually it is not necessary).
+By adding the first switch only an automatic search for the \libxc\ folder will be attempted, but its success is not guaranteed. It is always preferable to specify the second switch too. Optionally, a third switch can be added, namely \texttt{--with-libxc-include='/path/to/libxc/include'}, which specifies the path to the Fortran headers (usually it is not necessary).
 
 Alternatively, the link to \libxc\ can be activated after the configuration of  \qe\ by modifying the \texttt{make.inc} file in the main folder in this way:
 \begin{itemize}
@@ -846,7 +843,7 @@ Several functionals in \libxc\ depend on one or more external parameters. Some o
 	\item \texttt{get\_libxc\_ext\_param}: this function receives as input the ID of the \libxc\ functional and the index of the chosen parameter and returns its value. If the parameter has not been set before it returns the default value.
 	\item \texttt{set\_libxc\_ext\_param}: routine that receives as input the index of the functional family-type (from 1 to 6: lda-exch, lda-corr, gga-exch, etc.), the index of the chosen \libxc\ parameter and the value to set to.
 \end{itemize}
-In order to see the available parameters for a given \libxc functional and the corresponding indexes, the \texttt{dft\_info} test is available as an option of the \texttt{xclib\_test.x} program in \texttt{XClib} folder. For more details see Sec. \ref{SubSec:XCtest}.\\
+In order to see the available parameters for a given \libxc\ functional and the corresponding indexes, the \texttt{dft\_info} test is available as an option of the \texttt{xclib\_test.x} program in \texttt{XClib} folder. For more details see Sec. \ref{SubSec:XCtest}.\\
 Without setting the external parameters inside the code, their default value will be assumed. This could lead to results different from the expectations.\\
 In any case, when external parameters are needed by the chosen functionals, a warning message will appear in the output of \qe.
 %

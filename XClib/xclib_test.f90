@@ -176,7 +176,7 @@ PROGRAM xclib_test
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
 #else
   CALL MPI_Init(ierr)
-#endif  
+#endif
   CALL mpi_comm_rank(MPI_COMM_WORLD,mype,ierr)
   CALL mpi_comm_size(MPI_COMM_WORLD,npes,ierr)
   comm = MPI_COMM_WORLD
@@ -384,7 +384,7 @@ PROGRAM xclib_test
     !
     IF (xclib_dft_is_libxc('ANY')) CALL xclib_finalize_libxc()
     !
-#endif    
+#endif
     !
     121 FORMAT('Exch: ',I3,' is libxc: ',L1,';  Corr: ',I3,' is libxc: ',L1 )
     !
@@ -1684,10 +1684,12 @@ PROGRAM xclib_test
     xc_max(1,1) = MAXVAL( xc_1(1:nnr,1) )
     xc_min(1,1) = MINVAL( xc_1(1:nnr,1) )
     !
+#if defined(__MPI)
     aver_snd = xc_aver(1,1)
     CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM,0, &
                      comm, ierr2 )
     xc_aver(1:1,1) = aver_rec
+#endif
   ENDIF
   !
   IF ( .NOT. POLARIZED .OR. what(1:1)=='E' ) THEN
@@ -1717,20 +1719,24 @@ PROGRAM xclib_test
       xc_max(1,2) = MAXVAL( xc_1(1:nnr,2) )
       xc_min(1,2) = MINVAL( xc_1(1:nnr,2) )
       !
+#if defined(__MPI)
       aver_snd = xc_aver(1,2)
       CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                        0, comm, ierr2 )
       xc_aver(1:1,2) = aver_rec
+#endif
       !
       IF (TRIM(what)=='V2c' .AND. GGA ) THEN
         v2c_ud1_aver(1) = SUM(v2c_ud1(1:nnr))/npoints
         v2c_ud1_max(1) = MAXVAL( v2c_ud1(1:nnr) )
         v2c_ud1_min(1) = MINVAL( v2c_ud1(1:nnr) )
         ! 
+#if defined(__MPI)
         aver_sndu = v2c_ud1_aver(1)
         CALL MPI_REDUCE( aver_sndu, aver_recu, 1, MPI_DOUBLE_PRECISION, &
                          MPI_SUM, 0, comm, ierrm )
         v2c_ud1_aver(1) = aver_recu
+#endif
         !
         IF (mype==root) CALL print_stat( 'cross', v2c_ud1_aver, v2c_ud1_max, &
                                          v2c_ud1_min, v2c_aver_b(1,3) )
@@ -1793,10 +1799,12 @@ PROGRAM xclib_test
     dxc_max(1,1) = MAXVAL( dxc_qe(1:nnr,1,1) )
     dxc_min(1,1) = MINVAL( dxc_qe(1:nnr,1,1) )
     !
+#if defined(__MPI)
     aver_snd = dxc_aver(1,1)
     CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                      0, comm, ierr2 )
     dxc_aver(1:1,1) = aver_rec
+#endif
   ENDIF
   !
   IF ( .NOT. POLARIZED ) THEN
@@ -1829,19 +1837,22 @@ PROGRAM xclib_test
       dxc_max(1,2) = MAXVAL( dxc_qe(1:nnr,1,2) )
       dxc_min(1,2) = MINVAL( dxc_qe(1:nnr,1,2) )
       !
+#if defined(__MPI)
       aver_snd = dxc_aver(1,2)
       CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, &
                        MPI_SUM, 0, comm, ierr2 )
       dxc_aver(1:1,2) = aver_rec
-      
+#endif
       dxc_aver(1,3) = SUM(dxc_qe(1:nnr,2,2))/DBLE(npoints)
       dxc_max(1,3) = MAXVAL( dxc_qe(1:nnr,2,2) )
       dxc_min(1,3) = MINVAL( dxc_qe(1:nnr,2,2) )
       !
+#if defined(__MPI)
       aver_snd = dxc_aver(1,3)
       CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, &
                        MPI_SUM, 0, comm, ierr2 )
       dxc_aver(1:1,3) = aver_rec
+#endif
     ENDIF
     !
     IF (mype==root) THEN
