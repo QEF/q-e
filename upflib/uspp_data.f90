@@ -13,6 +13,8 @@ MODULE uspp_data
   USE upf_kinds,      ONLY : DP
   !
   SAVE
+  PRIVATE
+  PUBLIC :: nqxq, nqx, dq, qrad, tab, tab_at, tab_d2y, spline_ps
   !
   INTEGER :: nqxq
   !! size of interpolation table

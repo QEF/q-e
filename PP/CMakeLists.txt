@@ -69,6 +69,7 @@ target_link_libraries(qe_pp_exe
         QE::PW
         QE::Modules
         QE::PP
+        QE::UPF
         QE::UTILX)
 
 ###########################################################

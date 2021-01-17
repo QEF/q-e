@@ -111,9 +111,6 @@ set(sources
    src/init_ns.f90 
    src/init_q_aeps.f90 
    src/init_run.f90 
-   src/init_us_0.f90 
-   src/init_us_b0.f90 
-   src/init_us_1.f90 
    src/init_us_2.f90 
    src/init_at_1.f90 
    src/init_vloc.f90 
@@ -179,7 +176,6 @@ set(sources
    src/pw2blip.f90 
    src/pw2casino.f90 
    src/pw2casino_write.f90 
-   src/qvan2.f90 
    src/rdiagh.f90 
    src/read_conf_from_file.f90 
    src/read_file_new.f90 

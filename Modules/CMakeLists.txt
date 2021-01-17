@@ -52,7 +52,6 @@ set(sources
     open_close_input_file.f90 
     parameters.f90 
     parser.f90 
-    paw_variables.f90 
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 

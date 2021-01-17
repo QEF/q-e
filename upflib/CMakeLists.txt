@@ -3,6 +3,7 @@ set(sources
     atomic_number.f90 
     init_us_0.f90
     init_us_b0.f90
+    init_us_1.f90
     gth.f90 
     paw_variables.f90
     pseudo_types.f90 
@@ -43,8 +44,7 @@ target_link_libraries(qe_upflib
     PRIVATE
         QE::MPI_Fortran
         QE::LAPACK
-        QE::UTILX
-        QE::FOX)
+        QE::UTILX)
 
 ##############################################################
 # virtual_v2.x 
