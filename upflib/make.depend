@@ -9,6 +9,13 @@ gth.o : pseudo_types.o
 gth.o : upf_const.o
 gth.o : upf_kinds.o
 gth.o : upf_params.o
+init_at_1.o : ../UtilXlib/mp.o
+init_at_1.o : atom.o
+init_at_1.o : upf_const.o
+init_at_1.o : upf_ions.o
+init_at_1.o : upf_kinds.o
+init_at_1.o : uspp.o
+init_at_1.o : uspp_data.o
 init_us_0.o : ../UtilXlib/mp.o
 init_us_0.o : atom.o
 init_us_0.o : upf_const.o
@@ -98,6 +105,7 @@ upfconv.o : upf.o
 upfconv.o : upf_const.o
 upfconv.o : upf_utils.o
 upfconv.o : write_upf_new.o
+uspp.o : pseudo_types.o
 uspp.o : upf_const.o
 uspp.o : upf_invmat.o
 uspp.o : upf_kinds.o

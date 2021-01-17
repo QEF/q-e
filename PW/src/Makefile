@@ -123,7 +123,6 @@ init_ns.o \
 init_q_aeps.o \
 init_run.o \
 init_us_2.o \
-init_at_1.o \
 init_vloc.o \
 input.o \
 io_rho_xml.o \

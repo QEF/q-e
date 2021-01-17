@@ -976,15 +976,6 @@ hs_1psi.o : bp_mod.o
 hs_1psi.o : realus.o
 hs_psi.o : ../../Modules/kind.o
 hs_psi.o : ../../Modules/noncol.o
-init_at_1.o : ../../Modules/cell_base.o
-init_at_1.o : ../../Modules/constants.o
-init_at_1.o : ../../Modules/ions_base.o
-init_at_1.o : ../../Modules/kind.o
-init_at_1.o : ../../Modules/mp_bands.o
-init_at_1.o : ../../UtilXlib/mp.o
-init_at_1.o : ../../upflib/atom.o
-init_at_1.o : ../../upflib/uspp.o
-init_at_1.o : pwcom.o
 init_ns.o : ../../Modules/ions_base.o
 init_ns.o : ../../Modules/kind.o
 init_ns.o : ../../Modules/noncol.o

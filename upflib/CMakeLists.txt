@@ -4,6 +4,7 @@ set(sources
     init_us_0.f90
     init_us_b0.f90
     init_us_1.f90
+    init_at_1.f90
     gth.f90 
     paw_variables.f90
     pseudo_types.f90 
