@@ -14,6 +14,7 @@ commutator.o : ../../UtilXlib/mp.o
 commutator.o : ../../upflib/gth.o
 commutator.o : ../../upflib/splinelib.o
 commutator.o : ../../upflib/uspp.o
+commutator.o : ../../upflib/uspp_data.o
 epe.o : ../../FFTXlib/fft_interfaces.o
 epe.o : ../../Modules/becmod.o
 epe.o : ../../Modules/cell_base.o
@@ -38,10 +39,10 @@ init_us_2_max.o : ../../Modules/io_global.o
 init_us_2_max.o : ../../Modules/ions_base.o
 init_us_2_max.o : ../../Modules/kind.o
 init_us_2_max.o : ../../Modules/recvec.o
-init_us_2_max.o : ../../PW/src/pwcom.o
 init_us_2_max.o : ../../upflib/gth.o
 init_us_2_max.o : ../../upflib/splinelib.o
 init_us_2_max.o : ../../upflib/uspp.o
+init_us_2_max.o : ../../upflib/uspp_data.o
 input_simple.o : ../../Modules/becmod.o
 input_simple.o : ../../Modules/kind.o
 input_simple.o : ../../PW/src/pwcom.o

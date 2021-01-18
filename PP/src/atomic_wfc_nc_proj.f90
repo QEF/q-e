@@ -24,7 +24,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,      ONLY : xk, ngk, igk_k
   USE wvfct,      ONLY : npwx, nbnd
-  USE us,         ONLY : tab_at, dq
+  USE uspp_data,  ONLY : tab_at, dq
   USE uspp_param, ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx

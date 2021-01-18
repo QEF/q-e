@@ -20,7 +20,7 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   USE gvect,      ONLY: mill, eigts1, eigts2, eigts3, g
   USE wvfct,      ONLY: npwx
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
-  USE us,         ONLY: nqx, tab, tab_d2y, dq, spline_ps
+  USE uspp_data,  ONLY: nqx, tab, tab_d2y, dq, spline_ps
   USE m_gth,      ONLY: mk_dffnl_gth
   USE splinelib
   USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh

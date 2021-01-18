@@ -37,7 +37,7 @@ SUBROUTINE clean_pw( lflag )
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
   USE wavefunctions,        ONLY : evc, psic, psic_nc
-  USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
+  USE uspp_data,            ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : deallocate_gth

@@ -18,7 +18,7 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0,&
   !!                ( yr_lm(g^) dqrad(g,l,i,j) + dyr_lm(g^) qrad(g,l,i,j))
   !
   USE kinds,       ONLY: DP
-  USE us,          ONLY: dq, qrad
+  USE uspp_data,   ONLY: dq, qrad
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
   !

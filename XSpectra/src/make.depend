@@ -35,6 +35,7 @@ gipaw_module.o : ../../upflib/atom.o
 gipaw_module.o : ../../upflib/splinelib.o
 gipaw_module.o : ../../upflib/upf_params.o
 gipaw_module.o : ../../upflib/uspp.o
+gipaw_module.o : ../../upflib/uspp_data.o
 gipaw_module.o : paw_gipaw.o
 init_gipaw_1.o : ../../Modules/cell_base.o
 init_gipaw_1.o : ../../Modules/constants.o
@@ -43,12 +44,12 @@ init_gipaw_1.o : ../../Modules/io_global.o
 init_gipaw_1.o : ../../Modules/ions_base.o
 init_gipaw_1.o : ../../Modules/kind.o
 init_gipaw_1.o : ../../Modules/mp_pools.o
-init_gipaw_1.o : ../../PW/src/pwcom.o
 init_gipaw_1.o : ../../UtilXlib/mp.o
 init_gipaw_1.o : ../../upflib/atom.o
 init_gipaw_1.o : ../../upflib/splinelib.o
 init_gipaw_1.o : ../../upflib/upf_params.o
 init_gipaw_1.o : ../../upflib/uspp.o
+init_gipaw_1.o : ../../upflib/uspp_data.o
 init_gipaw_1.o : gipaw_module.o
 init_gipaw_1.o : paw_gipaw.o
 init_gipaw_2.o : ../../Modules/cell_base.o
@@ -58,6 +59,7 @@ init_gipaw_2.o : ../../Modules/kind.o
 init_gipaw_2.o : ../../Modules/recvec.o
 init_gipaw_2.o : ../../PW/src/pwcom.o
 init_gipaw_2.o : ../../upflib/splinelib.o
+init_gipaw_2.o : ../../upflib/uspp_data.o
 init_gipaw_2.o : paw_gipaw.o
 io_routines.o : ../../Modules/constants.o
 io_routines.o : ../../Modules/io_global.o

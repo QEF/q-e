@@ -20,7 +20,7 @@ SUBROUTINE scale_h
   USE constants,      ONLY : eps8
   USE gvect,          ONLY : g, gg, ngm
   USE klist,          ONLY : xk, wk, nkstot
-  USE us,             ONLY : nqxq, qrad, tab, tab_at, dq
+  USE uspp_data,      ONLY : nqxq, qrad, tab, tab_at, dq
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init

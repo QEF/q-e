@@ -161,6 +161,7 @@ elphon_shuffle_wrap.o : ../../PW/src/pwcom.o
 elphon_shuffle_wrap.o : ../../PW/src/symm_base.o
 elphon_shuffle_wrap.o : ../../UtilXlib/mp.o
 elphon_shuffle_wrap.o : ../../upflib/uspp.o
+elphon_shuffle_wrap.o : ../../upflib/uspp_data.o
 elphon_shuffle_wrap.o : constants_epw.o
 elphon_shuffle_wrap.o : division.o
 elphon_shuffle_wrap.o : elph2.o

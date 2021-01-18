@@ -418,13 +418,6 @@ MODULE cellmd
 END MODULE cellmd
 !
 !
-!
-MODULE us
-  use uspp_data
-END MODULE us
-!
-!
-!
 MODULE fixed_occ
   !
   !! The quantities needed in calculations with fixed occupations.

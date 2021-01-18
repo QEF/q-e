@@ -114,7 +114,7 @@ CONTAINS
   SUBROUTINE gipaw_readin()
     USE io_files,      ONLY : prefix, tmp_dir
     USE io_global,     ONLY : ionode
-    USE us,            ONLY : spline_ps
+    USE uspp_data,     ONLY : spline_ps
     IMPLICIT NONE
     INTEGER :: ios
     NAMELIST /inputgipaw/ job, prefix, tmp_dir, conv_threshold, &
@@ -171,7 +171,7 @@ CONTAINS
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : world_comm
     USE io_files,      ONLY : prefix, tmp_dir
-    USE us,            ONLY : spline_ps
+    USE uspp_data,     ONLY : spline_ps
     implicit none
     integer :: root = 0
     call mp_bcast(job, root, world_comm)

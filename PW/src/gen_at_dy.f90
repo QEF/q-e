@@ -22,7 +22,7 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    USE klist,      ONLY: xk, ngk, igk_k
    USE gvect,      ONLY: mill, eigts1, eigts2, eigts3, g
    USE wvfct,      ONLY: npwx
-   USE us,         ONLY: tab_at, dq
+   USE uspp_data,  ONLY: tab_at, dq
    USE uspp_param, ONLY: upf
    USE basis,      ONLY : natomwfc
    !

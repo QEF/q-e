@@ -26,7 +26,7 @@
   USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id
-  USE us,            ONLY : nqxq, dq, qrad
+  USE uspp_data,     ONLY : nqxq, dq, qrad
   USE gvect,         ONLY : gcutm, ngm, g, gg
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
