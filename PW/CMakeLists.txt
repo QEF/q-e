@@ -1,4 +1,4 @@
-set(sources
+set(src_pw
    src/a2fmod.f90 
    src/add_bfield.f90 
    src/add_efield.f90 
@@ -254,98 +254,119 @@ set(sources
    src/wannier_check.f90 
    src/wannier_clean.f90 
    src/wannier_occ.f90)
-
-qe_add_library(qe_pw ${sources})
-add_library(QE::PW ALIAS qe_pw)
+qe_enable_cuda_fortran("${src_pw}")
+    
+qe_add_library(qe_pw ${src_pw})
 target_link_libraries(qe_pw
     PRIVATE
-        QE::HDF5_Fortran
-        QE::ELPA
-        QE::SCALAPACK
-        QE::LAX
-        QE::XClib
-        QE::UTILX  # TODO direct or transitive via QE::LAX?
-        QE::KS_Solvers::Davidson
-        QE::KS_Solvers::CG
-        QE::KS_Solvers::PPCG
-        QE::KS_Solvers::ParO
-        QE::UPF # TODO turn to vendorized library from MaX gitrepo ? 
-        QE::Modules
-        QE::FFTX
-        QE::DFTD3
-        QE::OpenMP_Fortran
-        QE::MPI_Fortran)
+        qe_hdf5_fortran
+        qe_elpa
+        qe_scalapack
+        qe_lax
+        qe_kssolver_davidson
+        qe_kssolver_cg
+        qe_kssolver_ppcg
+        qe_kssolver_paro
+        qe_upflib # TODO turn to vendorized library from MaX gitrepo ? 
+        qe_modules
+        qe_fftx
+        qe_dftd3
+        qe_openmp_fortran
+        qe_mpi_fortran
+        qe_xclib)
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_pw
+        PRIVATE
+            qe_devxlib
+            CUDA::cublas)
+endif()
 
 ###########################################################
 # pw.x
 ###########################################################
-set(sources src/pwscf.f90)
-qe_add_executable(qe_pw_exe ${sources})
-set_target_properties(qe_pw_exe PROPERTIES OUTPUT_NAME pw.x)
+set(src_pw_x src/pwscf.f90)
+qe_enable_cuda_fortran("${src_pw_x}")
+qe_add_executable(qe_pw_exe ${src_pw_x})
+set_target_properties(qe_pw_exe 
+    PROPERTIES 
+        OUTPUT_NAME pw.x)
 target_link_libraries(qe_pw_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::LAX
-        QE::UTILX)
+        qe_pw
+        qe_modules
+        qe_lax
+        qe_lapack
+        qe_upflib)
 
 ###########################################################
 # ibrav2cell.x
 ###########################################################
-set(sources tools/ibrav2cell.f90)
-qe_add_executable(qe_pw_tools_ibrav2cell_exe ${sources})
-set_target_properties(qe_pw_tools_ibrav2cell_exe PROPERTIES OUTPUT_NAME ibrav2cell.x)
+set(src_ibrav2cell_X tools/ibrav2cell.f90)
+qe_add_executable(qe_pw_tools_ibrav2cell_exe ${src_ibrav2cell_X})
+set_target_properties(qe_pw_tools_ibrav2cell_exe 
+    PROPERTIES 
+        OUTPUT_NAME ibrav2cell.x)
 target_link_libraries(qe_pw_tools_ibrav2cell_exe
     PRIVATE
-        QE::PW
-        QE::Modules)
+        qe_pw
+        qe_modules
+        qe_lapack)
 
 ###########################################################
 # cell2ibrav.x
 ###########################################################
-set(sources tools/cell2ibrav.f90)
-qe_add_executable(qe_pw_tools_cell2ibrav_exe ${sources})
-set_target_properties(qe_pw_tools_cell2ibrav_exe PROPERTIES OUTPUT_NAME cell2ibrav.x)
+set(src_cell2ibrav_x tools/cell2ibrav.f90)
+qe_add_executable(qe_pw_tools_cell2ibrav_exe ${src_cell2ibrav_x})
+set_target_properties(qe_pw_tools_cell2ibrav_exe 
+    PROPERTIES 
+        OUTPUT_NAME cell2ibrav.x)
 target_link_libraries(qe_pw_tools_cell2ibrav_exe
     PRIVATE
-        QE::PW
-        QE::Modules)
+        qe_pw
+        qe_modules
+        qe_lapack)
 
 ###########################################################
 # ev.x
 ###########################################################
-set(sources tools/ev.f90)
-qe_add_executable(qe_pw_tools_ev_exe ${sources})
-set_target_properties(qe_pw_tools_ev_exe PROPERTIES OUTPUT_NAME ev.x)
+set(src_ev_x tools/ev.f90)
+qe_add_executable(qe_pw_tools_ev_exe ${src_ev_x})
+set_target_properties(qe_pw_tools_ev_exe 
+    PROPERTIES 
+        OUTPUT_NAME ev.x)
 target_link_libraries(qe_pw_tools_ev_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::UTILX)
+        qe_pw
+        qe_modules
+        qe_lapack)
 
 ###########################################################
 # kpoints.x
 ###########################################################
-set(sources tools/kpoints.f90)
-qe_add_executable(qe_pw_tools_kpoints_exe ${sources})
-set_target_properties(qe_pw_tools_kpoints_exe PROPERTIES OUTPUT_NAME kpoints.x)
+set(src_kpoints_x tools/kpoints.f90)
+qe_add_executable(qe_pw_tools_kpoints_exe ${src_kpoints_x})
+set_target_properties(qe_pw_tools_kpoints_exe 
+    PROPERTIES 
+        OUTPUT_NAME kpoints.x)
 target_link_libraries(qe_pw_tools_kpoints_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::UTILX)
+        qe_pw
+        qe_modules
+        qe_lapack)
 
 ###########################################################
 # pwi2xsf.x
 ###########################################################
-set(sources tools/pwi2xsf.f90)
-qe_add_executable(qe_pw_tools_pwi2xsf_exe ${sources})
-set_target_properties(qe_pw_tools_pwi2xsf_exe PROPERTIES OUTPUT_NAME pwi2xsf.x)
+set(src_pwi2xsf_x tools/pwi2xsf.f90)
+qe_add_executable(qe_pw_tools_pwi2xsf_exe ${src_pwi2xsf_x})
+set_target_properties(qe_pw_tools_pwi2xsf_exe 
+    PROPERTIES 
+        OUTPUT_NAME pwi2xsf.x)
 target_link_libraries(qe_pw_tools_pwi2xsf_exe
     PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::Modules)
+        qe_pw
+        qe_modules
+        qe_lapack)
 
 ###########################################################
 

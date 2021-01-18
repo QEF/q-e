@@ -1,4 +1,4 @@
-set(sources
+set(src_modules
     additional_kpoints.f90 
     autopilot.f90 
     basic_algebra_routines.f90 
@@ -128,24 +128,24 @@ set(sources
     w0gauss.f90
     w1gauss.f90
     deviatoric.f90)
+qe_enable_cuda_fortran("${src_modules}")
 
-qe_add_library(qe_modules ${sources})
-add_library(QE::Modules ALIAS qe_modules)
+qe_add_library(qe_modules ${src_modules})
 target_link_libraries(qe_modules
     PRIVATE
-        QE::HDF5_Fortran
-        QE::OpenMP_Fortran
-        QE::FFTX
-        QE::LAX
-        QE::XClib
-        QE::UPF
-        QE::CLIB # this is needed only by wrappers.f90
-        QE::libbeef
-        QE::MPI_Fortran
-        QE::MBD
+        qe_hdf5_fortran
+        qe_openmp_fortran
+        qe_fftx
+        qe_lax
+        qe_upflib
+        qe_clib # this is needed only by wrappers.f90
+        qe_libbeef
+        qe_mpi_fortran
+        qe_mbd
+        qe_xclib
     PUBLIC
-        QE::FOX
-        QE::UTILX)
+        qe_fox
+        qe_utilx)
 
 ###########################################################
 

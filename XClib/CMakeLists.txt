@@ -1,4 +1,4 @@
-set(sources
+set(sources_xclib
     beefun.c
     pbecor.c
     dft_mod.f90
@@ -25,12 +25,11 @@ set(sources
     xc_wrapper_lda_lsda.f90
     xc_wrapper_mgga.f90)
 
-qe_add_library(qe_xclib ${sources})
-add_library(QE::XClib ALIAS qe_xclib)
+qe_add_library(qe_xclib ${sources_xclib})
 target_link_libraries(qe_xclib
     PRIVATE
-        QE::OpenMP_Fortran
-        QE::MPI_Fortran)
+        qe_openmp_fortran
+        qe_mpi_fortran)
 
 qe_install_targets(qe_xclib)
 
@@ -39,11 +38,14 @@ qe_install_targets(qe_xclib)
 ###########################################################
 #if(QE_ENABLE_TEST)
 #    qe_add_executable(qe_xclib_test xclib_test.f90)
-#    set_target_properties(qe_xclib_test PROPERTIES OUTPUT_NAME qe_xclib_test.x RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+#    set_target_properties(qe_xclib_test 
+#        PROPERTIES 
+#            OUTPUT_NAME qe_xclib_test.x 
+#            RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
 #    target_link_libraries(qe_xclib_test
 #        PRIVATE
-#            QE::OpenMP_Fortran
-#            QE::MPI_Fortran
-#            QE::XClib)
+#            qe_openmp_fortran
+#            qe_mpi_fortran
+#            qe_xclib)
 #    add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
 #endif(QE_ENABLE_TEST)
