@@ -1,4 +1,4 @@
-set(sources
+set(src_neb
     src/compute_scf.f90
     src/engine_to_path_pos.f90
     src/engine_to_path_alat.f90
@@ -25,41 +25,44 @@ set(sources
     src/set_defaults.f90
     src/stop_run_path.f90)
 
-qe_add_library(qe_neb ${sources})
-add_library(QE::NEB ALIAS qe_neb)
+qe_add_library(qe_neb ${src_neb})
 target_link_libraries(qe_neb
     PRIVATE
-        QE::PW
-        QE::XClib
-        QE::Modules
-        QE::UTILX
-        QE::UPF)
+        qe_pw
+        qe_modules
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 # neb.x
 ###########################################################
-set(sources src/neb.f90)
-qe_add_executable(qe_neb_exe ${sources})
-set_target_properties(qe_neb_exe PROPERTIES OUTPUT_NAME neb.x)
+set(src_neb_x src/neb.f90)
+qe_enable_cuda_fortran("${src_neb_x}")
+qe_add_executable(qe_neb_exe ${src_neb_x})
+set_target_properties(qe_neb_exe 
+    PROPERTIES 
+        OUTPUT_NAME neb.x)
 target_link_libraries(qe_neb_exe
     PRIVATE
-        QE::PW
-        QE::LAX
-        QE::UTILX
-        QE::Modules
-        QE::NEB)
+        qe_pw
+        qe_lax
+        qe_modules
+        qe_neb)
 
 ###########################################################
 # path_interpolation.x
 ###########################################################
-set(sources src/path_interpolation.f90)
-qe_add_executable(qe_neb_pathinterpolation_exe ${sources})
-set_target_properties(qe_neb_pathinterpolation_exe PROPERTIES OUTPUT_NAME path_interpolation.x)
+set(src_path_interpolation_x src/path_interpolation.f90)
+qe_add_executable(qe_neb_pathinterpolation_exe ${src_path_interpolation_x})
+set_target_properties(qe_neb_pathinterpolation_exe 
+    PROPERTIES 
+        OUTPUT_NAME path_interpolation.x)
 target_link_libraries(qe_neb_pathinterpolation_exe
     PRIVATE
-        QE::Modules
-        QE::NEB
-        QE::UPF)
+        qe_modules
+        qe_neb
+        qe_upflib)
 
 ###########################################################
 
