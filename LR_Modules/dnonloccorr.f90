@@ -12,7 +12,7 @@ SUBROUTINE dnonloccorr( rho, drho, xq, dvaux )
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : nspin_mag
   USE fft_base,         ONLY : dfftp
-  USE funct,            ONLY : dft_is_gradient, dft_is_nonlocc, get_inlc
+  USE funct,            ONLY : get_inlc
   USE ph_vdW_DF,        ONLY : dv_drho_vdwdf
   USE ph_rVV10,         ONLY : dv_drho_rvv10
   !

@@ -245,8 +245,8 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_symmetries(obj, nsym, nrot, space_group, s, ft, sname, t_rev, nat, irt, &
-                                     class_names, verbosity, noncolin)
+    SUBROUTINE qexsd_init_symmetries(obj, space_group, nsym, nrot, s, ft, &
+         sname, t_rev, nat, irt, class_names, verbosity, noncolin)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -780,7 +780,7 @@ CONTAINS
       LOGICAL,         INTENT(IN) :: lsda, noncolin, spinorbit
       REAL(DP),        INTENT(IN) :: total_mag, absolute_mag
       REAL(DP),        INTENT(IN) :: total_mag_nc(3)
-      LOGICAL,         INTENT(IN) :: do_magnetization
+      LOGICAL,OPTIONAL,INTENT(IN) :: do_magnetization
       !
       CALL qes_init(obj, "magnetization", lsda, noncolin, spinorbit, total_mag, absolute_mag, &
                                  do_magnetization)

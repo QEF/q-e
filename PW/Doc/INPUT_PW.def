@@ -44,6 +44,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
           ...
          @b / ]
 
+        [ @b &FCP
+          ...
+         @b / ]
+
         @b ATOMIC_SPECIES
          X  Mass_X  PseudoPot_X
          Y  Mass_Y  PseudoPot_Y
@@ -160,23 +164,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         var wf_collect -type LOGICAL { 
-            default { .TRUE. }
-            info {
-                This flag controls the way wavefunctions are stored to disk :
-
-                .TRUE.  collect wavefunctions from all processors, store them
-                        into the output data directory "outdir"/"prefix".save
-                        The resulting format is portable to a different number
-                        of processors, or different kind of parallelization
-
-                .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
-                        do not collect wavefunctions, leave them in temporary
-                        local files (one per processor). The resulting format
-                        is readable only on the same number of processors and
-                        with the same kind of parallelization used to write it.
-
-                Note that this flag has no effect on reading, only on writing.
-            }
+            info { OBSOLETE - NO LONGER IMPLEMENTED }
         }
         
 
@@ -186,6 +174,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 performed in this run. If set to 0, the code performs a quick
                 "dry run", stopping just after initialization. This is useful
                 to check for input correctness and to have the summary printed.
+                NOTE: in MD calculations, the code will perform "nstep" steps
+                even if restarting from a previously interrupted calculation.
             }
             default {
                 1  if @ref calculation == 'scf', 'nscf', 'bands';
@@ -259,12 +249,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var lkpoint_dir -type LOGICAL { 
-            default { .true. }
             info {
-                If .false. a subdirectory for each k_point is not opened
-                in the "prefix".save directory; Kohn-Sham eigenvalues are
-                stored instead in a single file for all k-points. Currently
-                doesn't work together with @ref wf_collect
+ 		OBSOLETE - NO LONGER IMPLEMENTED
             }
         }
                 
@@ -443,18 +429,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
         
-        var lfcpopt -type LOGICAL {
+        var lfcp -type LOGICAL {
             see { fcp_mu }
             default { .FALSE. }
             info {
                 If .TRUE. perform a constant bias potential (constant-mu) calculation
-                for a static system with ESM method. See the header of PW/src/fcp.f90 
-                for documentation.
+                for a system with ESM method. See the header of PW/src/fcp_module.f90
+                for documentation. To perform the calculation, you must set a namelist FCP.
 
                 NB:
-                - The total energy displayed in 'prefix.out' includes the potentiostat
+                - The total energy displayed in output includes the potentiostat
                   contribution (-mu*N).
-                - @ref calculation must be 'relax'. 
+                - @ref calculation must be 'relax' or 'md'.
                 - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
                   in @ref SYSTEM namelist.
             }
@@ -1595,32 +1581,27 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     choose boundary conditions). If between two
                     electrodes, an optional electric field
                     ('esm_efield') may be applied. Method described in
-                    M. Otani and O. Sugino, "First-principles calculations 
-                    of charged surfaces and interfaces: A plane-wave 
+                    M. Otani and O. Sugino, "First-principles calculations
+                    of charged surfaces and interfaces: A plane-wave
                     nonrepeated slab approach", PRB 73, 115407 (2006).
 
                     NB:
                        - Two dimensional (xy plane) average charge density
                          and electrostatic potentials are printed out to
-                         'prefix.esm1'.                  
-                    
+                         'prefix.esm1'.
+
                        - Requires cell with a_3 lattice vector along z,
                          normal to the xy plane, with the slab centered
-                         around z=0. Also requires symmetry checking to be
-                         disabled along z, either by setting @ref nosym = .TRUE.
-                         or by very slight displacement (i.e., 5e-4 a.u.)
-                         of the slab along z.
+                         around z=0.
 
-                       - Components of the total stress; sigma_xy, sigma_yz,
-                         sigma_zz, sigma_zy, and sigma_zx are meaningless 
-                         because ESM stress routines calculate only
-                         components of stress; sigma_xx, sigma_xy, sigma_yx,
-                         and sigma_yy.
+                       - For bc2 with an electric field and bc3 boundary
+                         conditions, the inversion symmetry along z-direction
+                         is automatically eliminated.
 
                        - In case of calculation='vc-relax', use
                          cell_dofree='2Dxy' or other parameters so that
                          c-vector along z-axis should not be moved.
-                       
+
                     See @ref esm_bc, @ref esm_efield, @ref esm_w, @ref esm_nfit.
                 }
                 opt -val '2D' {
@@ -1704,12 +1685,48 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var fcp_mu -type REAL {
-            see { lfcpopt }
-            default { 0.d0 }
+        var lgcscf -type LOGICAL {
+            default { .FALSE. }
             info {
-                If @ref lfcpopt = .TRUE., gives the target Fermi energy [Ry]. One can start 
-                with appropriate total charge of the system by giving 'tot_charge'.
+                If .TRUE. perform a constant bias potential (constant-mu) calculation
+                with Grand-Canonical SCF. (JCP 146, 114104 (2017), R.Sundararaman, et al.)
+
+                NB:
+                - The total energy displayed in output includes the potentiostat
+                  contribution (-mu*N).
+                - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
+                  in @ref SYSTEM namelist.
+                - ESM-RISM is also supported (@ref assume_isolated = 'esm' and @ref esm_bc = 'bc1'
+                  and @ref trism = .TRUE.).
+                - @ref mixing_mode has to be 'TF' or 'local-TF', also its default is 'TF.'
+                - The default of @ref mixing_beta is 0.1 with ESM-RISM, 0.2 without ESM-RISM.
+                - The default of @ref diago_thr_init is 1.D-5.
+                - @ref diago_full_acc is always .TRUE. .
+                - @ref diago_rmm_conv is always .TRUE. .
+            }
+        }
+
+        var gcscf_mu -type REAL {
+            status { REQUIRED }
+            info {
+                The target Fermi energy (eV) of GC-SCF. One can start 
+                with appropriate total charge of the system by giving @ref tot_charge .
+            }
+        }
+
+        var gcscf_conv_thr -type REAL {
+            default { 1.D-2 }
+            info {
+                Convergence threshold of Fermi energy (eV) for GC-SCF.
+            }
+        }
+
+        var gcscf_beta -type REAL { 
+            default { 0.05D0 }
+            info {
+                Mixing factor for GC-SCF.
+                Larger values are recommended,
+                if systems with small DOS on Fermi surface as graphite.
             }
         }
 
@@ -2730,7 +2747,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Select which of the cell parameters should be moved:
                 }                
                 opt -val 'all'          { all axis and angles are moved }
-                opt -val 'ibrav'        { all axis and angles are moved, but the lattice remains consistent with the initial ibrav choice }
+                opt -val 'ibrav'        { all axis and angles are moved, but the lattice remains consistent
+with the initial ibrav choice. You can use this option in combination
+with any other one by specifying "ibrav+option". Please note that some
+combinations do not make sense for some crystals and will guarantee that
+the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
+hexagonal cells, but will never converge for cubic ones.  }
                 opt -val 'x'            { only the x component of axis 1 (v1_x) is moved }
                 opt -val 'y'            { only the y component of axis 2 (v2_y) is moved }
                 opt -val 'z'            { only the z component of axis 3 (v3_z) is moved }
@@ -2754,7 +2776,205 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
     }
 
+    #
+    # namelist FCP
+    #
 
+    namelist FCP {
+        label {
+            Input this namelist only if @ref lfcp = .TRUE.
+        }
+
+        var fcp_mu -type REAL {
+            status { REQUIRED }
+            info {
+                The target Fermi energy (eV). One can start
+                with appropriate total charge of the system by giving @ref tot_charge .
+            }
+        }
+
+        var fcp_dynamics -type CHARACTER {
+            options {
+                info {
+                    Specify the type of dynamics for the Fictitious Charge Particle (FCP).
+
+                    For different type of calculation different possibilities
+                    are allowed and different default values apply:
+
+                    @b CASE ( @ref calculation == 'relax' )
+                }
+                opt -val 'bfgs' {
+                    @b (default) BFGS quasi-newton algorithm, coupling with ions relaxation
+                    @ref ion_dynamics must be @b 'bfgs' too
+                }
+                opt -val 'newton' {
+                    Newton-Raphson algorithm with DIIS
+                    @ref ion_dynamics must be @b 'damp' too
+                }
+                opt -val 'damp' {
+                    damped (quick-min Verlet) dynamics for FCP relaxation
+                    @ref ion_dynamics must be @b 'damp' too
+                }
+                opt -val 'lm' {
+                    Line-Minimization algorithm for FCP relaxation
+                    @ref ion_dynamics must be @b 'damp' too
+                }
+                info {
+                    @b CASE ( @ref calculation == 'md' )
+                }
+                opt -val 'velocity-verlet' {
+                    @b (default) Velocity-Verlet algorithm to integrate Newton's equation.
+                    @ref ion_dynamics must be @b 'verlet' too
+                }
+                opt -val 'verlet' {
+                    @b Verlet algorithm to integrate Newton's equation.
+                    @ref ion_dynamics must be @b 'verlet' too
+                }
+            }
+        }
+
+        var fcp_conv_thr -type REAL {
+            default { 1.D-2 }
+            info {
+                Convergence threshold on force (eV) for FCP relaxation.
+            }
+        }
+
+        var fcp_ndiis -type INTEGER {
+            default { 4 }
+            info {
+                Size of DIIS for FCP relaxation,
+                used only if @ref fcp_dynamics = 'newton'.
+            }
+        }
+
+        group {
+            label {
+                Variables used for FCP dynamics.
+            }
+
+            var fcp_mass -type REAL {
+                default {
+                    5.D+6 / (xy area) for ESM only;
+                }
+                info {
+                    Mass of the FCP.
+                }
+            }
+
+            var fcp_velocity -type REAL {
+                default { determined by @ref fcp_temperature }
+                info {
+                    Initial velocity of the FCP.
+                }
+            }
+
+            var fcp_temperature -type CHARACTER {
+                default { @ref ion_temperature }
+                options {
+                    info { Available options are: }
+                    opt -val 'rescaling' {
+                        control FCP's temperature via velocity rescaling
+                        (first method) see parameters @ref fpc_tempw and @ref fcp_tolp.
+                    }
+                    opt -val 'rescale-v' {
+                        control FCP's temperature via velocity rescaling
+                        (second method) see parameters @ref fcp_tempw and @ref fcp_nraise
+                    }
+                    opt -val 'rescale-T' {
+                        control FCP's temperature via velocity rescaling
+                        (third method) see parameter @ref fcp_delta_t
+                    }
+                    opt -val 'reduce-T' {
+                        reduce FCP's temperature every @ref fcp_nraise steps
+                        by the (negative) value @ref fcp_delta_t
+                    }
+                    opt -val 'berendsen' {
+                        control FCP's temperature using "soft" velocity
+                        rescaling - see parameters @ref fcp_tempw and @ref fcp_nraise
+                    }
+                    opt -val 'andersen' {
+                        control FCP's temperature using Andersen thermostat
+                        see parameters @ref fcp_tempw and @ref fcp_nraise
+                    }
+                    opt -val 'initial' {
+                        initialize FCP's velocities to temperature @ref fcp_tempw
+                        and leave uncontrolled further on
+                    }
+                    opt -val 'not_controlled' {
+                        @b (default) FCP's temperature is not controlled
+                    }
+                }
+            }
+
+            var fcp_tempw -type REAL {
+                default { @ref tempw }
+                info {
+                    Starting temperature (Kelvin) in FCP dynamics runs
+                    target temperature for most thermostats.
+                }
+            }
+
+            var fcp_tolp -type REAL {
+                default { @ref tolp }
+                info {
+                    Tolerance for velocity rescaling. Velocities are rescaled if
+                    the run-averaged and target temperature differ more than tolp.
+                }
+            }
+
+            var fcp_delta_t -type REAL {
+                default { @ref delta_t }
+                info {
+                    if @ref fcp_temperature == 'rescale-T' :
+                           at each step the instantaneous temperature is multiplied
+                           by fcp_delta_t; this is done rescaling all the velocities.
+
+                    if @ref fcp_temperature == 'reduce-T' :
+                           every @ref fcp_nraise steps the instantaneous temperature is
+                           reduced by -@ref fcp_delta_t (i.e. @ref fcp_delta_t < 0 is added to T)
+
+                    The instantaneous temperature is calculated at the end of
+                    FCP's move and BEFORE rescaling. This is the temperature
+                    reported in the main output.
+
+                    For @ref fcp_delta_t < 0, the actual average rate of heating or cooling
+                    should be roughly C*fcp_delta_t/(fcp_nraise*dt) (C=1 for an
+                    ideal gas, C=0.5 for a harmonic solid, theorem of energy
+                    equipartition between all quadratic degrees of freedom).
+                }
+            }
+
+            var fcp_nraise -type INTEGER {
+                default { @ref nraise }
+                info {
+                    if @ref fcp_temperature == 'reduce-T' :
+                           every @ref fcp_nraise steps the instantaneous temperature is
+                           reduced by -@ref fcp_delta_t (i.e. @ref fcp_delta_t is added to the temperature)
+
+                    if @ref fcp_temperature == 'rescale-v' :
+                           every @ref fcp_nraise steps the average temperature, computed from
+                           the last @ref fcp_nraise steps, is rescaled to @ref fcp_tempw
+
+                    if @ref fcp_temperature == 'berendsen' :
+                           the "rise time" parameter is given in units of the time step:
+                           tau = fcp_nraise*dt, so dt/tau = 1/fcp_nraise
+
+                    if @ref fcp_temperature == 'andersen' :
+                           the "collision frequency" parameter is given as nu=1/tau
+                           defined above, so nu*dt = 1/fcp_nraise
+                }
+            }
+        }
+
+        var freeze_all_atoms -type LOGICAL {
+            default { .FALSE. }
+            info {
+                If .TRUE., freeze all atoms
+                to perform relaxation or dynamics only with FCP.
+            }
+        }
+    }
 
     #
     # card ATOMIC_SPECIES

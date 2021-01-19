@@ -49,6 +49,7 @@ target_link_libraries(qe_hp
     PRIVATE
         QE::PW
         QE::LR_Modules
+        QE::XClib
         QE::Modules
         QE::FFTX
         QE::UTILX
@@ -64,6 +65,7 @@ target_link_libraries(qe_hp_exe
     PRIVATE
         QE::PW
         QE::LAX
+        QE::XClib
         QE::Modules
         QE::HP
         QE::UTILX)

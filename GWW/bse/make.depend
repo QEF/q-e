@@ -34,6 +34,7 @@ bse_main.o : ../../PW/src/scf_mod.o
 bse_main.o : ../../UtilXlib/mp.o
 bse_main.o : bse_basic_structure.o
 bse_main.o : bse_wannier.o
+bse_main.o : direct_www.o
 bse_main.o : exciton.o
 bse_main.o : qpe_exc.o
 bse_wannier.o : ../../Modules/kind.o
@@ -124,6 +125,15 @@ direct_w_exc.o : ../../UtilXlib/mp.o
 direct_w_exc.o : bse_basic_structure.o
 direct_w_exc.o : bse_wannier.o
 direct_w_exc.o : exciton.o
+direct_www.o : ../../GWW/pw4gww/fft_custom.o
+direct_www.o : ../../Modules/kind.o
+direct_www.o : ../../Modules/mp_pools.o
+direct_www.o : ../../Modules/mp_world.o
+direct_www.o : ../../Modules/recvec.o
+direct_www.o : ../../Modules/wavefunctions.o
+direct_www.o : ../../PW/src/pwcom.o
+direct_www.o : bse_basic_structure.o
+direct_www.o : exciton.o
 dvpsi_bse.o : ../../Modules/becmod.o
 dvpsi_bse.o : ../../Modules/cell_base.o
 dvpsi_bse.o : ../../Modules/control_flags.o
@@ -148,6 +158,7 @@ exc_h_a.o : ../../UtilXlib/mp.o
 exc_h_a.o : bse_basic_structure.o
 exc_h_a.o : bse_wannier.o
 exc_h_a.o : contract_w_exc.o
+exc_h_a.o : direct_www.o
 exc_h_a.o : exciton.o
 exchange_exc.o : ../../GWW/pw4gww/fft_custom.o
 exchange_exc.o : ../../Modules/cell_base.o

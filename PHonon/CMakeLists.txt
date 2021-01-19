@@ -227,6 +227,7 @@ target_link_libraries(qe_phonon_ph
         QE::OpenMP_Fortran
         QE::PW
         QE::Modules
+        QE::XClib
         QE::LR_Modules
         QE::UTILX
         QE::UPF
@@ -245,6 +246,7 @@ target_link_libraries(qe_phonon_gamma
     PRIVATE
         QE::PW
         QE::Modules
+        QE::XClib
         QE::LR_Modules
         QE::UPF
         QE::FFTX

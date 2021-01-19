@@ -154,13 +154,20 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
      DO iproc2 = 1, nproc2
         kdest = ( iproc2 - 1 ) * sendsize
         kfrom = offset
-        !DO k = 1, ncp_(me2)
-        !  !DO i = 1, desc%nr2p( iproc2 )
-        !      !f_aux ( kdest + i ) =  f_in ( kfrom + i )
-        !  !ENDDO
         !
-        !  !kdest = kdest + nr2px
-        !  !kfrom = kfrom + desc%nr2x
+        ! The two loops below are performed by a single call to cudaMemcpy2DAsync
+        ! that also moves data from the GPU to the CPU.
+        ! Commented code shows how to implement it without CUDA specific APIs.
+        ! Note that data is not actually moved between the two memory spaces by
+        ! the loop.
+        !
+        !DO k = 1, ncp_(me2)
+        !  DO i = 1, desc%nr2p( iproc2 )
+        !      f_aux ( kdest + i ) =  f_in ( kfrom + i )
+        !  ENDDO
+        !
+        !  kdest = kdest + nr2px
+        !  kfrom = kfrom + desc%nr2x
         !ENDDO
 
         ierr = cudaMemcpy2DAsync( f_aux(kdest + 1), nr2px, f_in_d(kfrom + 1 ), desc%nr2x, desc%nr2p( iproc2 ), ncp_(me2), cudaMemcpyDeviceToHost, stream )

@@ -1,7 +1,6 @@
 set(sources
     atom.f90 
     atomic_number.f90 
-    emend_upf.f90 
     upf_erf.f90 
     upf_utils.f90 
     gth.f90 
@@ -11,9 +10,7 @@ set(sources
     read_fhi.f90 
     read_ncpp.f90 
     read_upf_new.f90 
-    read_upf_schema.f90 
     read_upf_v1.f90 
-    read_upf_v2.f90 
     read_uspp.f90 
     splinelib.f90 
     simpsn.f90 
@@ -29,10 +26,7 @@ set(sources
     upf_parallel_include.f90 
     upf_to_internal.f90 
     uspp.f90 
-    write_upf.f90 
     write_upf_new.f90 
-    write_upf_schema.f90 
-    write_upf_v2.f90 
     xmltools.f90
     ylmr2.f90)
 

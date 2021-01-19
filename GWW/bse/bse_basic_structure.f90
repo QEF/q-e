@@ -1,3 +1,5 @@
+! Modified by Joshua Elliott November 2020 as JDE
+
 MODULE bse_basic_structures
 !this module describes the basis structures 
 !which are obtained from the DFT and GW code
@@ -20,6 +22,19 @@ MODULE bse_basic_structures
                                                      !the set of jv for which   o_mat(iv,jv)>=s_bse
  
   END TYPE
+
+  ! JDE start
+  TYPE www_mat
+     integer :: numb_v! number of valence bands for the two spin channels 
+     integer :: np_max ! maximum number of overlapping wannier orbitals for a given v
+     integer :: ww_tot ! Total number of overlapping wannier products
+     integer, dimension (:,:), pointer :: ii_www_mat ! (np_max,numb_v) The overlapping wannier products, note that 
+                                                     ! will be zero if there is not an overlap
+     COMPLEX(KIND=dp), DIMENSION(:,:), POINTER :: www !the set of ii W_ww products www(npw,ww_tot) 
+     REAL(KIND=dp), DIMENSION(:,:), POINTER :: www_r !the set of ii W_ww products www(nrxxt,ww_tot) 
+
+  END TYPE
+  ! JDE end
 
   TYPE vww_prod
 !this type contains the v*wv*wv' products needed for the exchange part of the
@@ -128,6 +143,17 @@ MODULE bse_basic_structures
       return
       end subroutine
 
+      ! JDE start
+      subroutine initialize_www_mat(wm)
+      implicit none
+      type(www_mat) :: wm
+      nullify(wm%ii_www_mat)
+      nullify(wm%www)
+      nullify(wm%www_r)
+      return
+      end subroutine
+      ! JDE end
+
       subroutine initialize_vww_prod(vww)
       implicit none
       type(vww_prod) :: vww
@@ -193,6 +219,19 @@ MODULE bse_basic_structures
       nullify(iimat%iimat)
       return
       end subroutine
+
+      ! JDE start
+      subroutine free_www_mat(wm)
+      implicit none
+      type(www_mat) :: wm
+      if(associated(wm%ii_www_mat)) deallocate(wm%ii_www_mat)
+      if(associated(wm%www)) deallocate(wm%www)
+      if(associated(wm%www_r)) deallocate(wm%www_r)
+      nullify(wm%ii_www_mat)
+      nullify(wm%www)
+      nullify(wm%www_r)
+      end subroutine
+      ! JDE end
 
       subroutine free_vww_prod(vww)
       implicit none
@@ -761,6 +800,78 @@ MODULE bse_basic_structures
 
       return 
       end subroutine
+
+      ! JDE start
+      subroutine read_www_mat(iimat, wm)
+      ! Read from the files produced by pw4gww, the Www products
+      !
+
+      USE io_files,             ONLY : prefix, tmp_dir, diropn
+      USE io_global,            ONLY : ionode, ionode_id
+      USE mp,                   ONLY : mp_bcast
+      USE mp_world,             ONLY : world_comm
+      USE kinds,                ONLY : DP
+      USE wvfct,                ONLY : npw
+      implicit none
+
+      type(ii_mat), INTENT(IN) :: iimat ! the ii matrix
+      type(www_mat), INTENT(OUT) :: wm  ! the wannier products
+
+      INTEGER, EXTERNAL :: find_free_unit
+      INTEGER :: wannier_prod
+      LOGICAL :: exst
+
+      INTEGER :: ii, iv, tot
+
+      wm%numb_v=iimat%numb_v
+      wm%np_max=iimat%np_max
+      tot = 0
+
+      DO iv = 1, iimat%numb_v
+         DO ii = 1, iimat%np_max
+
+         IF (iimat%iimat(ii,iv) > 0) THEN
+            tot = tot+1
+         ELSE
+            EXIT
+         END IF
+
+         END DO
+      END DO
+      wm%ww_tot=tot
+
+      ALLOCATE(wm%ii_www_mat(wm%np_max, wm%numb_v))
+      ALLOCATE(wm%www(npw, wm%ww_tot))
+
+
+      wannier_prod = find_free_unit()
+
+! EXTEND THIS FOR SPIN - JOSH
+      CALL diropn(wannier_prod, 'Www_bse1.',npw*2, exst)
+
+      DO ii = 1, wm%ww_tot
+         CALL davcio(wm%www(1,ii),npw*2,wannier_prod,ii,-1)
+      END DO
+      CLOSE(wannier_prod)
+
+      tot=0
+      wm%ii_www_mat=-1
+       DO iv = 1, wm%numb_v
+         DO ii = 1,wm% np_max
+
+         IF (iimat%iimat(ii,iv) > 0) THEN
+            tot=tot+1
+            wm%ii_www_mat(ii,iv)=tot
+         ELSE
+            EXIT
+         END IF
+
+         END DO
+      END DO
+
+      RETURN
+      END SUBROUTINE
+      ! JDE end
 
       subroutine read_vww_prod(ispin,numb_v,npw,np_max,iimat,vww)
       !each processor reads the vww(G) written by pw4gww

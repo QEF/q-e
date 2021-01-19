@@ -232,12 +232,18 @@ CONTAINS
     CALL xmlr_opentag( capitalize_if_v2('pp_mesh') )
     CALL get_attr ( 'mesh', mesh )
     if ( mesh == 0 ) THEN
+#if defined (__debug)
        call upf_error('read_pp_mesh',&
          'mesh size missing, using the one in header',-1)
+#else
+       continue
+#endif
     else if ( mesh /= upf%mesh ) THEN
+#if defined (__debug)
        call upf_error('read_pp_mesh',&
          'mismatch in mesh size, discarding the one in header',-1)
        upf%mesh = mesh
+#endif
     end if
     CALL get_attr ( 'dx'  , upf%dx   )
     CALL get_attr ( 'xmin', upf%xmin )

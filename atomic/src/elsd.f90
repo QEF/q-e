@@ -18,7 +18,7 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   use kinds, only : DP
   use constants, only: fpi
   use radial_grids, only: ndmx, radial_grid_type
-  use funct, only: get_iexch, dft_is_meta
+  use xc_lib, only: xclib_get_id, xclib_dft_is
   use ld1inc, only: vx, noscf, tau, vtau
   implicit none
   integer, intent(in) :: nwf, nspin
@@ -34,10 +34,10 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   logical:: oep, meta, kli
 
   if (noscf) return
-  oep = get_iexch().eq.4
-  kli = get_iexch().eq.10
+  oep = xclib_get_id('LDA','EXCH').eq.4
+  kli = xclib_get_id('LDA','EXCH').eq.10
 
-  meta = dft_is_meta()
+  meta = xclib_dft_is('meta')
 
   allocate(f1(grid%mesh),stat=ierr)
   allocate(f2(grid%mesh),stat=ierr)

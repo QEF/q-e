@@ -1165,8 +1165,8 @@ MODULE qes_types_module
     CHARACTER(len=256) :: assume_isolated
     LOGICAL  :: esm_ispresent = .FALSE.
     TYPE(esm_type) :: esm
-    LOGICAL  :: fcp_opt_ispresent = .FALSE.
-    LOGICAL :: fcp_opt
+    LOGICAL  :: fcp_ispresent = .FALSE.
+    LOGICAL :: fcp
     LOGICAL  :: fcp_mu_ispresent = .FALSE.
     REAL(DP) :: fcp_mu
     !

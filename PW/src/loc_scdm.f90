@@ -65,7 +65,7 @@ SUBROUTINE localize_orbitals()
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE buffers,              ONLY : get_buffer
   USE control_flags,        ONLY : lmd
-  USE funct,                ONLY : dft_is_hybrid
+  USE xc_lib,               ONLY : xclib_dft_is
   !
   USE wavefunctions_gpum,   ONLY : using_evc
   !   
@@ -79,7 +79,7 @@ SUBROUTINE localize_orbitals()
   
   call start_clock('localization')
 
-  IF( lmd.and.(dft_is_hybrid()).and.(n_scdm.ne.1) ) &
+  IF( lmd.and.(xclib_dft_is('hybrid')).and.(n_scdm.ne.1) ) &
          Call errore('localize_orbitals','MD+exx+nscdm NYI',1)
 
   QRCP = iscdm.eq.0.or.(mod(iscdm,n_scdm).eq.0) ! if .false. localize with SVD

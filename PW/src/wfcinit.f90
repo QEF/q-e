@@ -220,7 +220,7 @@ SUBROUTINE init_wfc ( ik )
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
-  USE funct,                ONLY : dft_is_hybrid, stop_exx
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
@@ -344,7 +344,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( dft_is_hybrid()  ) CALL stop_exx() 
+  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx() 
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
   CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)

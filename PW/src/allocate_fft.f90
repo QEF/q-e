@@ -25,7 +25,7 @@ SUBROUTINE allocate_fft
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, report, noncolin, npol
   USE wavefunctions,    ONLY : psic, psic_nc
-  USE funct,            ONLY : dft_is_meta
+  USE xc_lib,           ONLY : xclib_dft_is
   !
   USE scf_gpum,  ONLY : using_vrs
   !
@@ -63,7 +63,7 @@ SUBROUTINE allocate_fft
   !
   ALLOCATE( vltot(dfftp%nnr) )
   ALLOCATE( rho_core(dfftp%nnr) )
-  IF ( dft_is_meta() ) THEN
+  IF ( xclib_dft_is('meta') ) THEN
      ALLOCATE( kedtau(dffts%nnr,nspin) )
   ELSE
      ALLOCATE( kedtau(1,nspin) )

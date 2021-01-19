@@ -1093,7 +1093,6 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
-    !
   END SUBROUTINE qes_reset_bfgs
   !
   !
@@ -1156,7 +1155,7 @@ MODULE qes_reset_module
     IF (obj%esm_ispresent) &
       CALL qes_reset_esm(obj%esm)
     obj%esm_ispresent = .FALSE.
-    obj%fcp_opt_ispresent = .FALSE.
+    obj%fcp_ispresent = .FALSE.
     obj%fcp_mu_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_boundary_conditions

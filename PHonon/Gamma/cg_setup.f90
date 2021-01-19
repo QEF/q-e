@@ -18,7 +18,6 @@ SUBROUTINE cg_setup
   USE uspp_param, ONLY: upf
   USE wavefunctions,  ONLY: evc
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
-  USE funct,      ONLY: dft_is_gradient
   USE dfunct,     ONLY: newd
   USE fft_base,   ONLY: dfftp
   USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
@@ -28,8 +27,9 @@ SUBROUTINE cg_setup
   USE vlocal,     ONLY: strf
   USE wvfct,      ONLY: nbnd, npwx
   USE gvecw,      ONLY: gcutw
-  USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
-  USE cgcom, ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
+  USE gc_lr,  ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE cgcom,  ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
+  USE xc_lib, ONLY: xclib_set_threshold, xclib_dft_is
   !
   IMPLICIT NONE
   !
@@ -38,7 +38,7 @@ SUBROUTINE cg_setup
   CHARACTER (len=256) :: filint
   INTEGER  :: ndr, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
-  REAL(DP), DIMENSION(dfftp%nnr) :: rhotot
+  REAL(DP), DIMENSION(dfftp%nnr,1) :: rhotot
   !
   CALL start_clock('cg_setup')
   !
@@ -48,7 +48,7 @@ SUBROUTINE cg_setup
   !
   !  allocate memory for various arrays
   !
-  ALLOCATE  (dmuxc( dfftp%nnr))
+  ALLOCATE  (dmuxc( dfftp%nnr,1,1))
   ALLOCATE  (dvpsi( npwx, nbnd))
   ALLOCATE  ( dpsi( npwx, nbnd))
   ALLOCATE  ( auxr( dfftp%nnr))
@@ -57,7 +57,7 @@ SUBROUTINE cg_setup
   !
   !  allocate memory for gradient corrections (if needed)
   !
-  IF ( dft_is_gradient() ) THEN
+  IF ( xclib_dft_is('gradient') ) THEN
      ALLOCATE  ( dvxc_rr(dfftp%nnr,nspin,nspin))
      ALLOCATE  ( dvxc_sr(dfftp%nnr,nspin,nspin))
      ALLOCATE  ( dvxc_ss(dfftp%nnr,nspin,nspin))
@@ -68,11 +68,12 @@ SUBROUTINE cg_setup
   !  compute drhocore/dtau for each atom type (if needed)
   !
   nlcc_any = any  ( upf(1:ntyp)%nlcc )
-  !!! if (nlcc_any) call set_drhoc(xq, drc)
+  ! ! ! if (nlcc_any) call set_drhoc(xq, drc)
   !
-  rhotot(:) = rho%of_r(:,1) + rho_core(:)
+  rhotot(:,1) = rho%of_r(:,1) + rho_core(:)
   !
-  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
+  CALL xclib_set_threshold( 'lda', 1.E-10_DP )
+  CALL dmxc( dfftp%nnr, 1, rhotot, dmuxc )
   !
   !  initialize data needed for gradient corrections
   !

@@ -1668,6 +1668,8 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ALLOCATE( wfatbeta(nwfcU,nh(nt))  )
    ALLOCATE( dbeta(npwx,nh(nt))      )
    !
+   CALL using_vkb(0)
+   !
 ! !omp parallel do default(shared) private(ih,ig)
    DO ih = 1, nh(nt)
       DO ig = 1, npw

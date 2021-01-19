@@ -28,11 +28,7 @@ SUBROUTINE export_upf(filename, unit_loc)
   !
   use pseudo_types, only : pseudo_upf, pseudo_config, &
        deallocate_pseudo_upf, deallocate_pseudo_config
-#if defined (__use_fox)
-  use write_upf_module, only: write_upf
-#else
   use write_upf_new, only: write_upf
-#endif
   !
   implicit none
   !

@@ -15,21 +15,17 @@ PROGRAM hp_main
   USE io_global,         ONLY : stdout, ionode
   USE check_stop,        ONLY : check_stop_init
   USE mp_global,         ONLY : mp_startup, mp_global_end
-  USE mp_world,          ONLY : world_comm
-  USE mp_pools,          ONLY : intra_pool_comm, kunit
-  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE command_line_options,  ONLY : input_file_, ndiag_
+  USE mp_pools,          ONLY : kunit
+  USE mp_bands,          ONLY : inter_bgrp_comm
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
-  USE control_flags,     ONLY : dfpt_hub
+  USE control_flags,     ONLY : dfpt_hub, use_para_diag
   USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
                                 compute_hp, sum_pertq, perturb_only_atom,   &
                                 determine_num_pert_only, tmp_dir_save
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   INTEGER :: iq, na, ipol
   LOGICAL :: do_iq, setup_pw
@@ -37,10 +33,6 @@ PROGRAM hp_main
   ! Initialize MPI, clocks, print initial messages
   !
   CALL mp_startup()
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-       do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start(code)
   !
@@ -156,7 +148,7 @@ PROGRAM hp_main
         !
         WRITE( stdout, '(/6x,"Not all q points were considered. Stopping smoothly...",/)')   
         CALL hp_dealloc_1()
-        GO TO 103
+        GO TO 104
         !
      ENDIF
      !
@@ -185,7 +177,7 @@ PROGRAM hp_main
      ! If perturb_only_atom(na)=.true., then this is not a full calculation
      ! but a calculation for only one Hubbard atom na. Hence, stop smoothly.
      !
-     IF (perturb_only_atom(na)) GO TO 103
+     IF (perturb_only_atom(na)) GO TO 104
      !
      ! last_q must be recomputed for the next perturbation,
      ! therefore we need to reset it back to -1.
@@ -218,6 +210,8 @@ PROGRAM hp_main
   !
   IF (ionode) CALL hp_postproc()
   !
+104 CONTINUE
+  !
   ! Deallocate some arrays
   !
   CALL hp_dealloc_2()
@@ -233,7 +227,7 @@ PROGRAM hp_main
   !
   CALL environment_end(code)
   !
-  CALL laxlib_end() 
+  IF ( use_para_diag ) CALL laxlib_end() 
   CALL mp_global_end()
   !
 3336 FORMAT('     ',69('='))

@@ -136,7 +136,6 @@ hp_load_q.o : ../../Modules/io_global.o
 hp_load_q.o : ../../PW/src/pwcom.o
 hp_load_q.o : hpcom.o
 hp_main.o : ../../Modules/check_stop.o
-hp_main.o : ../../Modules/command_line_options.o
 hp_main.o : ../../Modules/control_flags.o
 hp_main.o : ../../Modules/environment.o
 hp_main.o : ../../Modules/io_files.o
@@ -146,7 +145,6 @@ hp_main.o : ../../Modules/kind.o
 hp_main.o : ../../Modules/mp_bands.o
 hp_main.o : ../../Modules/mp_global.o
 hp_main.o : ../../Modules/mp_pools.o
-hp_main.o : ../../Modules/mp_world.o
 hp_main.o : hpcom.o
 hp_ns_trace.o : ../../Modules/ions_base.o
 hp_ns_trace.o : ../../Modules/kind.o
@@ -206,7 +204,6 @@ hp_read_dnsq.o : hpcom.o
 hp_readin.o : ../../LR_Modules/lrcom.o
 hp_readin.o : ../../Modules/check_stop.o
 hp_readin.o : ../../Modules/control_flags.o
-hp_readin.o : ../../Modules/funct.o
 hp_readin.o : ../../Modules/io_files.o
 hp_readin.o : ../../Modules/io_global.o
 hp_readin.o : ../../Modules/kind.o
@@ -216,6 +213,7 @@ hp_readin.o : ../../Modules/noncol.o
 hp_readin.o : ../../PW/src/ldaU.o
 hp_readin.o : ../../PW/src/pwcom.o
 hp_readin.o : ../../UtilXlib/mp.o
+hp_readin.o : ../../XClib/xc_lib.o
 hp_readin.o : hpcom.o
 hp_rotate_dnsq.o : ../../LR_Modules/lrcom.o
 hp_rotate_dnsq.o : ../../Modules/constants.o

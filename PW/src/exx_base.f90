@@ -494,7 +494,7 @@ MODULE exx_base
     !! EXX singularity treatment.
     !
     USE cell_base,  ONLY : at, alat
-    USE funct,      ONLY : get_screening_parameter
+    USE xc_lib,     ONLY : get_screening_parameter
     !
     IMPLICIT NONE
     !

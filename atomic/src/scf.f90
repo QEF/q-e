@@ -13,7 +13,7 @@ SUBROUTINE scf(ic)
   !   self-interaction-correction allowed
   !
   USE kinds, ONLY : dp
-  USE funct, ONLY : dft_is_meta
+  USE xc_lib, ONLY : xclib_dft_is
   USE radial_grids, ONLY : ndmx
   USE constants, ONLY: e2
   USE ld1inc, ONLY : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
@@ -31,7 +31,7 @@ SUBROUTINE scf(ic)
   real(DP), PARAMETER :: thresh=1.0e-10_dp
   !
   !
-  meta = dft_is_meta()
+  meta = xclib_dft_is('meta')
   ze2 = - zed * e2
   rhoc1=0.0_dp
   IF (.not.frozen_core.or.ic==1) psi=0.0_dp

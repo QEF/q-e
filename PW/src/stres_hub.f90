@@ -41,6 +41,10 @@ SUBROUTINE stres_hub ( sigmah )
    USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
                                 us_dy, us_dj
    !
+   USE wavefunctions_gpum, ONLY : using_evc
+   USE becmod_subs_gpum,   ONLY : using_becp_auto
+   USE uspp_gpum,          ONLY : using_vkb
+   !
    IMPLICIT NONE
    !
    REAL(DP), INTENT(OUT) :: sigmah(3,3) 
@@ -142,8 +146,10 @@ SUBROUTINE stres_hub ( sigmah )
       npw = ngk(ik)
       !
       IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      IF (nks > 1) CALL using_evc(2)
       !
       CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
+      CALL using_vkb(2)
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL calbec (npw, vkb, evc, becp)
@@ -956,7 +962,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, okvan
-   USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
@@ -1385,7 +1390,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
-   USE uspp_param,           ONLY : upf, nhm, nh
+   USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
    USE basis,                ONLY : natomwfc

@@ -12,7 +12,7 @@ SUBROUTINE stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE funct,            ONLY : get_igcc, get_inlc 
+  USE funct,            ONLY : get_inlc 
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE vdW_DF,           ONLY : vdW_DF_stress

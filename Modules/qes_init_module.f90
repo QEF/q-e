@@ -2075,7 +2075,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_symmetry_flags 
   !
   !
-  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, fcp_opt, fcp_mu)
+  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, fcp, fcp_mu)
     !
     IMPLICIT NONE
     !
@@ -2083,7 +2083,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: assume_isolated
     TYPE(esm_type),OPTIONAL,INTENT(IN) :: esm
-    LOGICAL,OPTIONAL,INTENT(IN) :: fcp_opt
+    LOGICAL,OPTIONAL,INTENT(IN) :: fcp
     REAL(DP),OPTIONAL,INTENT(IN) :: fcp_mu
     !
     obj%tagname = TRIM(tagname) 
@@ -2097,11 +2097,11 @@ MODULE qes_init_module
     ELSE 
       obj%esm_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fcp_opt)) THEN 
-      obj%fcp_opt_ispresent = .TRUE. 
-      obj%fcp_opt = fcp_opt
+    IF ( PRESENT(fcp)) THEN
+      obj%fcp_ispresent = .TRUE.
+      obj%fcp = fcp
     ELSE 
-      obj%fcp_opt_ispresent = .FALSE.
+      obj%fcp_ispresent = .FALSE.
     END IF
     IF ( PRESENT(fcp_mu)) THEN 
       obj%fcp_mu_ispresent = .TRUE. 

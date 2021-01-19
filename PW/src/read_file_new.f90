@@ -74,9 +74,10 @@ SUBROUTINE read_file_new ( needwf )
   USE gvect,          ONLY : ngm, g
   USE gvecw,          ONLY : gcutw
   USE klist,          ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,       ONLY : isk
+  USE lsda_mod,       ONLY : isk, nspin
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
+  USE xc_lib,         ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   USE wvfct_gpum,     ONLY : using_et, using_wg, using_wg_d
   !
@@ -92,6 +93,10 @@ SUBROUTINE read_file_new ( needwf )
   ! ... Read the contents of the xml data file
   !
   CALL read_xml_file ( wfc_is_collected )
+  !
+  ! ... initialize Libxc if needed
+  !
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin )
   !
   ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
   ! ... charge density / potential / ... , but not KS orbitals
@@ -175,7 +180,7 @@ SUBROUTINE post_xml_init (  )
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
-  CHARACTER(LEN=20) :: dft_name
+  CHARACTER(LEN=32) :: dft_name
   !
   ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !

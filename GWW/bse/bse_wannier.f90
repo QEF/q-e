@@ -1,4 +1,5 @@
 !this module contains bse code input variables  
+! Modified by Joshua Elliott November 2020 as JDE
 MODULE bse_wannier
 
   USE kinds, ONLY: DP
@@ -58,6 +59,8 @@ MODULE bse_wannier
   LOGICAL :: l_contraction!if true uses contraction for speeding-up
   LOGICAL :: l_gtrick!save arrays in G space for limiting memory usage
   LOGICAL :: l_dielectric!if true in case of l_lanczos=.false. calculates the dielectric function from excitonic amplitudes
+  LOGICAL :: l_read_www ! If true use screening calculated via cgsolve  JDE
+
 
 END MODULE bse_wannier
 

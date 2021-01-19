@@ -73,12 +73,14 @@ electrons.o : newd_gpu.o
 electrons.o : pwcom_gpu.o
 electrons.o : scf_mod_gpu.o
 exx.o : pwcom_gpu.o
+fcp_hessian.o : pwcom_gpu.o
 force_cc_gpu.o : pwcom.o
 force_cc_gpu.o : pwcom.o
 force_cc_gpu.o : scf_mod.o
 force_corr_gpu.o : scf_mod.o
 force_lc_gpu.o : Coul_cut_2D.o
 force_lc_gpu.o : esm.o
+force_hub_gpu.o : pwcom_gpu.o
 force_hub_gpu.o : force_hub.o
 force_us.o : pwcom_gpu.o
 force_us_gpu.o : buffers.o

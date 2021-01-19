@@ -110,8 +110,6 @@ SUBROUTINE one_sternheimer_step(iu, flag)
                    tg_dv(:,:), &
                    tg_psic(:,:), aux2(:,:), dvpsi1(:,:)
     !
-    COMPLEX(DP), EXTERNAL :: zdotc      ! the scalar product function
-    !
     LOGICAL :: conv_root, exst, all_done_asyn
     ! conv_root: true if linear system is converged
     INTEGER :: kter, iter0, ipol, ibnd, iter, lter, ik, ikk, ikq, &

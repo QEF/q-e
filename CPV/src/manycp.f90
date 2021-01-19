@@ -28,17 +28,12 @@ PROGRAM manycp
   USE environment,       ONLY : environment_start, environment_end
   USE io_global,         ONLY : ionode, ionode_id, stdout
   USE mp_global,         ONLY : mp_startup
-  USE mp_world,          ONLY : world_comm
   USE mp_images,         ONLY : intra_image_comm, my_image_id
-  USE mp_pools,          ONLY : intra_pool_comm
-  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE read_input,        ONLY : read_input_file
   USE check_stop,        ONLY : check_stop_init
-  USE command_line_options, ONLY: input_file_, ndiag_
+  USE command_line_options, ONLY: input_file_
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   INTEGER :: i
   LOGICAL :: opnd, diag_in_band_group = .true.
@@ -48,10 +43,7 @@ PROGRAM manycp
   !
   !
   CALL mp_startup ( start_images=.true. )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-       do_distr_diag_inside_bgrp_ = diag_in_band_group )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
+  !
   CALL environment_start ( 'MANYCP' )
   !
   ! ... Image-specific input files

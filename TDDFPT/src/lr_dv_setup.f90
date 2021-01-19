@@ -23,7 +23,7 @@ SUBROUTINE lr_dv_setup
   USE noncollin_module,      ONLY : noncolin
   USE eqv,                   ONLY : dmuxc
   USE lr_variables,          ONLY : lr_exx
-  USE funct,                 ONLY : dft_is_gradient, exx_is_active
+  USE xc_lib,                ONLY : exx_is_active, xclib_dft_is
   USE wavefunctions,  ONLY : psic
   !
   IMPLICIT NONE
@@ -52,7 +52,7 @@ SUBROUTINE lr_dv_setup
   !
   ! 3) Setup gradient correction
   !
-  IF (dft_is_gradient()) THEN
+  IF (xclib_dft_is('gradient')) THEN
      !
      IF (noncolin .AND. domag) THEN
         IF (.NOT.ALLOCATED(psic)) ALLOCATE(psic(dfftp%nnr))
