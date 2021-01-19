@@ -56,7 +56,8 @@
     USE qpoint,                ONLY : eigqts
     USE klist_epw,             ONLY : isk_loc
     USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
-    USE funct,                 ONLY : dft_is_gradient, dft_is_nonlocc
+    USE funct,                 ONLY : dft_is_nonlocc
+    USE xc_lib,                ONLY : xclib_dft_is
     USE elph2,                 ONLY : lower_band, upper_band, ibndstart
     USE constants_epw,         ONLY : czero, eps12
     !
@@ -207,7 +208,7 @@
         rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core
       ENDDO
       !
-      IF (dft_is_gradient()) THEN
+      IF (xclib_dft_is('gradient')) THEN
         CALL dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq0, drhoc, &
                        1, nspin_gga, g, aux)
       ENDIF

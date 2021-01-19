@@ -334,7 +334,6 @@ open_grid.o : ../../Modules/cell_base.o
 open_grid.o : ../../Modules/control_flags.o
 open_grid.o : ../../Modules/environment.o
 open_grid.o : ../../Modules/fft_base.o
-open_grid.o : ../../Modules/funct.o
 open_grid.o : ../../Modules/gvecw.o
 open_grid.o : ../../Modules/io_files.o
 open_grid.o : ../../Modules/io_global.o
@@ -357,6 +356,7 @@ open_grid.o : ../../PW/src/scf_mod.o
 open_grid.o : ../../PW/src/start_k.o
 open_grid.o : ../../PW/src/symm_base.o
 open_grid.o : ../../UtilXlib/mp.o
+open_grid.o : ../../XClib/xc_lib.o
 openfil_pp.o : ../../Modules/io_files.o
 openfil_pp.o : ../../Modules/kind.o
 openfil_pp.o : ../../Modules/noncol.o
@@ -468,7 +468,6 @@ ppacf.o : ../../FFTXlib/fft_interfaces.o
 ppacf.o : ../../Modules/cell_base.o
 ppacf.o : ../../Modules/constants.o
 ppacf.o : ../../Modules/environment.o
-ppacf.o : ../../Modules/exchange_lda_lsda.o
 ppacf.o : ../../Modules/fft_base.o
 ppacf.o : ../../Modules/funct.o
 ppacf.o : ../../Modules/gvecw.o
@@ -479,8 +478,6 @@ ppacf.o : ../../Modules/mp_bands.o
 ppacf.o : ../../Modules/mp_global.o
 ppacf.o : ../../Modules/mp_world.o
 ppacf.o : ../../Modules/recvec.o
-ppacf.o : ../../Modules/xc_gga_drivers.o
-ppacf.o : ../../Modules/xc_lda_lsda_drivers.o
 ppacf.o : ../../Modules/xc_vdW_DF.o
 ppacf.o : ../../PW/src/atomic_wfc_mod.o
 ppacf.o : ../../PW/src/exx.o
@@ -488,6 +485,7 @@ ppacf.o : ../../PW/src/exx_base.o
 ppacf.o : ../../PW/src/pwcom.o
 ppacf.o : ../../PW/src/scf_mod.o
 ppacf.o : ../../UtilXlib/mp.o
+ppacf.o : ../../XClib/xc_lib.o
 ppacf.o : vasp_xml_module.o
 ppacf.o : xc_vdW_scale_mod.o
 projections_mod.o : ../../Modules/ions_base.o
@@ -497,7 +495,6 @@ projections_mod.o : ../../PW/src/pwcom.o
 projections_mod.o : ../../upflib/uspp.o
 projwfc.o : ../../Modules/becmod.o
 projwfc.o : ../../Modules/cell_base.o
-projwfc.o : ../../Modules/command_line_options.o
 projwfc.o : ../../Modules/constants.o
 projwfc.o : ../../Modules/control_flags.o
 projwfc.o : ../../Modules/environment.o
@@ -505,11 +502,9 @@ projwfc.o : ../../Modules/io_files.o
 projwfc.o : ../../Modules/io_global.o
 projwfc.o : ../../Modules/ions_base.o
 projwfc.o : ../../Modules/kind.o
-projwfc.o : ../../Modules/mp_bands.o
 projwfc.o : ../../Modules/mp_global.o
 projwfc.o : ../../Modules/mp_images.o
 projwfc.o : ../../Modules/mp_pools.o
-projwfc.o : ../../Modules/mp_world.o
 projwfc.o : ../../Modules/noncol.o
 projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/paw_variables.o
@@ -570,7 +565,6 @@ pw2bgw.o : ../../Modules/constants.o
 pw2bgw.o : ../../Modules/control_flags.o
 pw2bgw.o : ../../Modules/environment.o
 pw2bgw.o : ../../Modules/fft_base.o
-pw2bgw.o : ../../Modules/funct.o
 pw2bgw.o : ../../Modules/gvecw.o
 pw2bgw.o : ../../Modules/invmat.o
 pw2bgw.o : ../../Modules/io_files.o
@@ -594,6 +588,7 @@ pw2bgw.o : ../../PW/src/symm_base.o
 pw2bgw.o : ../../PW/src/symme.o
 pw2bgw.o : ../../UtilXlib/mp.o
 pw2bgw.o : ../../UtilXlib/parallel_include.o
+pw2bgw.o : ../../XClib/xc_lib.o
 pw2bgw.o : ../../upflib/uspp.o
 pw2critic.o : ../../Modules/cell_base.o
 pw2critic.o : ../../Modules/control_flags.o
@@ -689,7 +684,6 @@ sum_band_kin.o : ../../Modules/becmod.o
 sum_band_kin.o : ../../Modules/cell_base.o
 sum_band_kin.o : ../../Modules/control_flags.o
 sum_band_kin.o : ../../Modules/fft_base.o
-sum_band_kin.o : ../../Modules/funct.o
 sum_band_kin.o : ../../Modules/io_files.o
 sum_band_kin.o : ../../Modules/ions_base.o
 sum_band_kin.o : ../../Modules/kind.o
@@ -706,6 +700,7 @@ sum_band_kin.o : ../../PW/src/pwcom.o
 sum_band_kin.o : ../../PW/src/scf_mod.o
 sum_band_kin.o : ../../PW/src/symme.o
 sum_band_kin.o : ../../UtilXlib/mp.o
+sum_band_kin.o : ../../XClib/xc_lib.o
 sum_band_kin.o : ../../upflib/uspp.o
 sym_band.o : ../../FFTXlib/fft_interfaces.o
 sym_band.o : ../../FFTXlib/scatter_mod.o
@@ -900,7 +895,6 @@ xc_vdW_scale_mod.o : ../../FFTXlib/fft_interfaces.o
 xc_vdW_scale_mod.o : ../../Modules/cell_base.o
 xc_vdW_scale_mod.o : ../../Modules/constants.o
 xc_vdW_scale_mod.o : ../../Modules/control_flags.o
-xc_vdW_scale_mod.o : ../../Modules/correlation_lda_lsda.o
 xc_vdW_scale_mod.o : ../../Modules/fft_base.o
 xc_vdW_scale_mod.o : ../../Modules/io_global.o
 xc_vdW_scale_mod.o : ../../Modules/kind.o
@@ -909,15 +903,10 @@ xc_vdW_scale_mod.o : ../../Modules/recvec.o
 xc_vdW_scale_mod.o : ../../Modules/xc_vdW_DF.o
 xc_vdW_scale_mod.o : ../../PW/src/scf_mod.o
 xc_vdW_scale_mod.o : ../../UtilXlib/mp.o
-xctest.o : ../../Modules/correlation_gga.o
-xctest.o : ../../Modules/exchange_gga.o
 xctest.o : ../../Modules/funct.o
 xctest.o : ../../Modules/io_global.o
 xctest.o : ../../Modules/kind.o
 xctest.o : ../../Modules/mp_global.o
-xctest_qe_libxc.o : ../../Modules/correlation_lda_lsda.o
-xctest_qe_libxc.o : ../../Modules/funct.o
-xctest_qe_libxc.o : ../../Modules/kind.o
-xctest_qe_libxc.o : ../../Modules/xc_gga_drivers.o
-xctest_qe_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
-xctest_qe_libxc.o : ../../Modules/xc_mgga_drivers.o
+xctest.o : ../../XClib/qe_funct_corr_gga.o
+xctest.o : ../../XClib/qe_funct_exch_gga.o
+xctest.o : ../../XClib/xc_lib.o

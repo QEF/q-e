@@ -40,11 +40,13 @@ SUBROUTINE sum_band_gpu()
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
   USE mp,                   ONLY : mp_sum
-  USE funct,                ONLY : dft_is_meta
+  USE xc_lib,               ONLY : xclib_dft_is
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
+  USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
+
   USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : becsum_d, ebecsum_d, vkb_d, using_vkb, &
@@ -69,14 +71,16 @@ SUBROUTINE sum_band_gpu()
   !
   CALL start_clock_gpu( 'sum_band' )
   !
-  CALL using_becsum_d(2)
-  !
-  becsum_d(:,:,:) = 0.D0
-  if (tqr) CALL using_ebecsum_d(2)
-  if (tqr) ebecsum_d(:,:,:) = 0.D0
+  if ( nhm > 0 ) then
+     CALL using_becsum_d(2)
+     !
+     becsum_d(:,:,:) = 0.D0
+     if (tqr) CALL using_ebecsum_d(2)
+     if (tqr) ebecsum_d(:,:,:) = 0.D0
+  end if
   rho%of_r(:,:)      = 0.D0
   rho%of_g(:,:)      = (0.D0, 0.D0)
-  if ( dft_is_meta() .OR. lxdm ) then
+  if ( xclib_dft_is('meta') .OR. lxdm ) then
      rho%kin_r(:,:)      = 0.D0
      rho%kin_g(:,:)      = (0.D0, 0.D0)
   end if
@@ -135,7 +139,7 @@ SUBROUTINE sum_band_gpu()
   !
   IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
   IF ( okvan ) CALL using_becp_auto(2)
-  IF (dft_is_meta() .OR. lxdm) ALLOCATE (kplusg(npwx))
+  IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE (kplusg(npwx))
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
@@ -157,7 +161,7 @@ SUBROUTINE sum_band_gpu()
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
   !
-  IF (dft_is_meta() .OR. lxdm) DEALLOCATE (kplusg)
+  IF (xclib_dft_is('meta') .OR. lxdm) DEALLOCATE (kplusg)
   IF ( okvan ) CALL deallocate_bec_type ( becp )
   IF ( okvan ) CALL using_becp_auto(2)
   !
@@ -226,7 +230,7 @@ SUBROUTINE sum_band_gpu()
   ! ... rho_kin(r): sum over bands, k-points, bring to G-space, symmetrize,
   ! ... synchronize with rho_kin(G)
   !
-  IF ( dft_is_meta() .OR. lxdm) THEN
+  IF ( xclib_dft_is('meta') .OR. lxdm) THEN
      !
      CALL mp_sum( rho%kin_r, inter_pool_comm )
      CALL mp_sum( rho%kin_r, inter_bgrp_comm )
@@ -255,7 +259,11 @@ SUBROUTINE sum_band_gpu()
   !
   IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
   !
-  CALL stop_clock_gpu( 'sum_band' )
+  ! ... sum number of electrons, for GC-SCF
+  !
+  IF ( lgcscf ) CALL gcscf_calc_nelec()
+  !
+  CALL stop_clock( 'sum_band' )
   !
   RETURN
   !
@@ -300,7 +308,7 @@ SUBROUTINE sum_band_gpu()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
        !
        incr = 2
 
@@ -468,7 +476,7 @@ SUBROUTINE sum_band_gpu()
                 !
              END IF
              !
-             IF (dft_is_meta() .OR. lxdm) THEN
+             IF (xclib_dft_is('meta') .OR. lxdm) THEN
                 CALL using_evc(0)
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
@@ -587,7 +595,7 @@ SUBROUTINE sum_band_gpu()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
        !
        incr = 1
        nnr  = dffts%nnr
@@ -610,7 +618,7 @@ SUBROUTINE sum_band_gpu()
           !
        ELSE
           ALLOCATE(rho_d, MOLD=rho%of_r) ! OPTIMIZE HERE, use buffers!
-          IF (noncolin .or. (dft_is_meta() .OR. lxdm)) THEN
+          IF (noncolin .or. (xclib_dft_is('meta') .OR. lxdm)) THEN
              ALLOCATE(psic_d(dffts%nnr))
              incr  = 1
           ELSE
@@ -811,7 +819,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    CALL get_rho_gpu(tg_rho_d, dffts%nr1x * dffts%nr2x * right_nr3, w1, tg_psi_d)
                    !
-                ELSE IF (many_fft > 1 .and. (.not. (dft_is_meta() .OR. lxdm))) THEN
+                ELSE IF (many_fft > 1 .and. (.not. (xclib_dft_is('meta') .OR. lxdm))) THEN
                    !
                    !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
                    group_size = MIN(many_fft, ibnd_end - (ibnd -1))
@@ -849,7 +857,7 @@ SUBROUTINE sum_band_gpu()
 
                 END IF
                 !
-                IF (dft_is_meta() .OR. lxdm) THEN
+                IF (xclib_dft_is('meta') .OR. lxdm) THEN
                    DO j=1,3
                       psic(:) = ( 0.D0, 0.D0 )
                       !
@@ -1068,7 +1076,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE uspp_gpum,                 ONLY : using_vkb_d, using_becsum_d, using_ebecsum_d, using_indv_ijkb0_d
   !
   ! Used to avoid unnecessary memcopy
-  USE funct,                     ONLY : dft_is_hybrid
+  USE xc_lib,                    ONLY : xclib_dft_is
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -1121,8 +1129,8 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !
   ! In the EXX case with ultrasoft or PAW, a copy of becp will be
   ! saved in a global variable to be rotated later
-  IF(dft_is_hybrid()) THEN       ! This if condition is not present in the CPU code!! Add it?
-     CALL using_becp_auto(0)
+  IF(xclib_dft_is('hybrid')) THEN       ! This if condition is not present in the CPU code!! Add it?
+     CALL using_becp_auto(0)            ! this is very important to save useless memory copies from GPU to CPU 
      CALL store_becxx0(ik, becp)
   ENDIF
   !

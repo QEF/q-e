@@ -3423,6 +3423,9 @@ ELSE
 ENDIF
 WRITE(stdout,'(5x, "the character table:")')
 IF (noncolin) THEN
+   IF ( nrap == 0 ) GO TO 10
+   ! prevent bad printout if classes names are not present
+   ! (may happen after a phonon restart)
    WRITE(stdout,'(/,7x,12(a5,1x))') (name_class_so(irot), &
                                      irot=1,MIN(12,nclass))
    WRITE(stdout,'(7x,12(a5,1x))') (name_class_so1(irot), &
@@ -3479,6 +3482,7 @@ IF (noncolin) THEN
          END DO
       ENDDO
    ENDIF
+   10 CONTINUE
 ELSE
    WRITE(stdout,'(/,7x,12(a5,1x))') (name_class(irot),irot=1,nclass)
    DO iclass=1,nclass

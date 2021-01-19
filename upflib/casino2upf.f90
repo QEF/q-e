@@ -14,7 +14,7 @@ PROGRAM casino2upf
   !     format to unified pseudopotential format
 
   USE casino_pp
-  USE write_upf_module, ONLY :  write_upf
+  USE write_upf_new, ONLY :  write_upf
   USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf, pseudo_upf
   ! 
   IMPLICIT NONE

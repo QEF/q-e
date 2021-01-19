@@ -138,12 +138,6 @@ SUBROUTINE do_elf (elf)
   ALLOCATE ( tbos(dfftp%nnr), aux2(dfftp%nnr) )
   tbos(:) = 0.d0
   !
-  ! put the total (up+down) charge density in rho%of_r(*,1)
-  !
-  DO is = 2, nspin
-     rho%of_r (:, 1) =  rho%of_r (:, 1) + rho%of_r (:, is)
-  ENDDO
-  !
   aux(:) = cmplx( rho%of_r(:, 1), 0.d0 ,kind=DP)
   CALL fwfft ('Rho', aux, dfftp)
   !

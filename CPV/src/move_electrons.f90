@@ -45,7 +45,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
   USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi, c0_d, cm_d
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
   USE device_memcpy_m,        ONLY : dev_memcpy
   !
   IMPLICIT NONE
@@ -90,7 +90,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
 !=================================================================
 !exx_wf related
-     IF ( dft_is_hybrid().AND.exx_is_active() ) THEN
+     IF ( xclib_dft_is('hybrid').AND.exx_is_active() ) THEN
         !
         IF ( lwfpbe0nscf ) THEN
            !

@@ -26,7 +26,7 @@ SUBROUTINE weights()
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : ionode, ionode_id
-
+  USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_beta
   USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
   !
   IMPLICIT NONE
@@ -125,8 +125,20 @@ SUBROUTINE weights()
            !
         ELSE
            !
-           CALL gweights( nks, wk, nbnd, nelec, degauss, &
-                          ngauss, et, ef, demet, wg, 0, isk)
+           IF ( lgcscf ) THEN
+              !
+              ef = gcscf_mu
+              !
+              CALL gweights_mix( nks, wk, nbnd, nelec, degauss, &
+                                 ngauss, et, ef, demet, wg, 0, isk, gcscf_beta )
+              !
+           ELSE
+              !
+              CALL gweights( nks, wk, nbnd, nelec, degauss, &
+                             ngauss, et, ef, demet, wg, 0, isk )
+              !
+           END IF
+           !
         ENDIF
         !
         CALL mp_sum( demet, inter_pool_comm )

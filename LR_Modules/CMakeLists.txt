@@ -62,6 +62,7 @@ add_library(QE::LR_Modules ALIAS qe_lr_modules)
 target_link_libraries(qe_lr_modules
     PRIVATE
         QE::Modules
+        QE::XClib
         QE::PW
         QE::UPF
         QE::UTILX

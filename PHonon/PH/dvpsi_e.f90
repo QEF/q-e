@@ -28,7 +28,7 @@ subroutine dvpsi_e (ik, ipol)
   USE becmod,          ONLY : bec_type, becp, calbec, &
                               allocate_bec_type, deallocate_bec_type
   USE mp_bands,        ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
-  USE funct,           ONLY : exx_is_active
+  USE xc_lib,          ONLY : exx_is_active
   USE uspp,            ONLY : okvan, nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
   USE ramanm,          ONLY : eth_rps

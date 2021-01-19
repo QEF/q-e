@@ -18,7 +18,7 @@ then
     dirs=" LAXlib FFTXlib UtilXlib clib \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
 	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  \
-           upflib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
+           upflib XClib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
@@ -57,10 +57,10 @@ for dir in $dirs; do
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
-    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib $LEVEL1/LAXlib $LEVEL1/UtilXlib \
+    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib $LEVEL1/XClib $LEVEL1/LAXlib $LEVEL1/UtilXlib \
 	     $LEVEL1/upflib"
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
-    DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/Modules"
+    DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
     case $DIR in 
         Modules )
              DEPENDS="$DEPEND1" ;;
@@ -140,6 +140,12 @@ for dir in $dirs; do
         if test "$DIR" = "Modules"
         then
             sed '/@mbd@/d' make.depend > tmp; mv tmp make.depend
+        fi
+
+        if test "$DIR" = "XClib"
+        then
+            sed '/@xc_f90_lib_m@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"

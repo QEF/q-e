@@ -1,13 +1,34 @@
 New in development version:
+  * Grand-Canonical SCF (J. Chem. Phys. 146, 114101 (2017)) for constant-mu
+    method is implemented by S. Nishihara and S. Hagiwara. [arXiv:2012.10090]
+  * Calculation of spin-current matrix elements (Phys. Rev. B 99, 235113) 
+    for spin Hall conductivity using Wannier interpolation, in pw2wannier.x
+    (Minsu Ghim, Seoul National U.)
+  * GWL iterative Www method from JCTC 15 (6) 3710, 2019: Joshua Elliot 
+    (U. Manchester), N. Colonna, M. Marsili, N. Marzari, P. Umari
   * Many-Body Dispersion (MBD) correction: Szabolcs Goger (U. Luxembourg),
     Hsin-Yu Ko (Cornell), et al.
+
+Fixed in development version:
+  * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
+  * Bugfix in HP: the hp.x calculation was not stopping smoothly when
+    "perturb_only_atom" was used (this bug is not present in earlier 
+    versions, i.e. <6.7)
+  * Phonon restart was broken in some cases due to bad occupations
+    written to xml file
+  * ELF with nspin=2 was not correct (noticed by Dong Yang, JSG)
+
+Incompatible changes in development version:
+  * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
+    Fermi energy works. Currently, molecular dynamics with FCP does not work.
+  * Exchange-correlation code moved to XClib/
 
 New in 6.7 version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from
     Ye Luo, P. Delugas, S. Gsaenger)
   * In vc-relax with Hubbard corrections, the final SCF calculation is done by 
     reading atomic occupations from file produced during the vc-relax 
-    (rather then recomputing them from scratch).
+    (rather than recomputing them from scratch).
   * EPW: 
     (1) ZG package to generate special displacements for first-principles non-perturbative calculations 
     at finite temperatures [Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020)].
@@ -17,6 +38,7 @@ New in 6.7 version:
 
 Fixed in 6.7 version:
   * Some linkers yield "missing references to ddot_" in libbeef
+  * Bogus errors in scale_sym_ops in some cases of almost-symmetric crystals
   * FFT test in FFTXlib was not always compiling 
   * angle1, angle2, starting_magnetization incorrectly written to xml file
   * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
@@ -82,7 +104,7 @@ Fixed in v.6.6:
     now works properly - courtesy Andrea Urru and Andrea Dal Corso.
   * Incorrect forces, and slightly inconsistent atomic positions, were
     written to xml file for structural optimization and molecular dynamics
-  * Some Bravais lattices with special axis orientations were not correctly
+    now works properly - courtesy Andrea Urru and Andrea Dal Corso.
     written to xml file, leading to errors in some codes (e.g., thermo_pw)
     using that piece of information (fixed by Alberto Otero de la Roza)
   * PPACF wasn't working with the "lfock" option: wavefunctions were no longer

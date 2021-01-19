@@ -384,6 +384,7 @@ END SUBROUTINE tg_cft3s_gpu
 SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   !----------------------------------------------------------------------------
   !
+  !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
   !                  NOT IMPLEMENTED WITH TASK GROUPS
   !! ... isgn = +-2 : parallel 3d fft for wavefunctions
@@ -408,9 +409,18 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   ! ...  Note that if isgn=+/-1 (fft on rho and pot.) all fft's are needed
   ! ...  and all planes(i) are set to 1
   !
+  ! ...  batchsize : number of 3D FFTs contained in f_d to be transformed.
+  ! ...              Must be 1 < batchsize <= dfft%batchsize.
+  !
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   ! Task Group added by Costas Bekas, Oct. 2005, adapted from the CPMD code
   ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
+  !
+  ! The GPU version is based on code written by Josh Romero, Everett Phillips
+  ! and Massimiliano Fatica and revised by Pietro Bonfà.
+  !
+  ! The current version performs batchsize FFTs and overlaps computation
+  ! with MPI communications and data transfers between host and device.
   !
   USE fft_scalar, ONLY : cft_1z_gpu, cft_2xy_gpu
   USE fft_scatter_2d_gpu,   ONLY : fft_scatter_many_columns_to_planes_send, &
@@ -467,8 +477,16 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   !
   IF (dfft%nproc <= 1) CALL fftx_error__( ' many_cft3s_gpu ', ' this subroutine should never be called with nproc= ', dfft%nproc )
   !
+  ! FFTs are done in sub-batches of dfft%subbatchsize (default is 4)
+  ! When a sub-batch has been transformed in a direction or a plane,
+  ! communication between device and host is started and the next subbatch is transformed.
+  ! Later, the subbatch is received on target MPI process and transformed
+  ! overlapping computation with MPI communication.
+  !
   IF ( isgn > 0 ) THEN
      DO j = 0, batchsize-1, dfft%subbatchsize
+       ! determine whether the FFTs that are left are less than the maximum
+       ! subbatchsize size.
        currsize = min(dfft%subbatchsize, batchsize - j)
        !
        IF ( isgn /= 2 ) THEN
@@ -481,10 +499,13 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
           !
        ENDIF
        !
+       ! perform the FFT along one direction and, at the same time,
+       ! read data spaced by dfft%nnr and store in in the output
+       ! with spacing ncpx*nx3, making it easy to bach communication.
        DO i = 0, currsize - 1
          CALL cft_1z_gpu( f_d((j+i)*dfft%nnr + 1:), sticks(me_p), n3, nx3, isgn, aux_d(j*dfft%nnr + i*ncpx*nx3 +1:), dfft%a2a_comp )
        ENDDO
-
+       !
        i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%a2a_comp)
        i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize + 1), 0)
 

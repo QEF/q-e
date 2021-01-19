@@ -25,7 +25,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
   USE mp_bands,             ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
-  USE funct,                ONLY : exx_is_active
+  USE xc_lib,               ONLY : exx_is_active
   USE mp,                   ONLY : mp_sum
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
   USE control_flags,        ONLY : gamma_only

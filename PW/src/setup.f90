@@ -89,9 +89,11 @@ SUBROUTINE setup()
   USE qes_types_module,   ONLY : output_type
   USE exx,                ONLY : ecutfock
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
-  USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
+  USE xc_lib,             ONLY : xclib_dft_is
   USE paw_variables,      ONLY : okpaw
-  USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
+  USE esm,                ONLY : esm_z_inv
+  USE fcp_module,         ONLY : lfcp
+  USE gcscf_module,       ONLY : lgcscf
   USE extfield,           ONLY : gate
   USE additional_kpoints, ONLY : add_additional_kpoints
   !
@@ -101,7 +103,7 @@ SUBROUTINE setup()
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
-  LOGICAL, EXTERNAL  :: check_para_diag, check_gpu_support
+  LOGICAL, EXTERNAL  :: check_gpu_support
   !
   TYPE(output_type)  :: output_obj 
   !  
@@ -120,7 +122,7 @@ SUBROUTINE setup()
   ! ... check for features not implemented with US-PP or PAW
   !
   IF ( okvan .OR. okpaw ) THEN
-     IF ( dft_is_meta() ) CALL errore( 'setup', &
+     IF ( xclib_dft_is('meta') ) CALL errore( 'setup', &
                                'Meta-GGA not implemented with USPP/PAW', 1 )
      IF ( noncolin .AND. lberry)  CALL errore( 'setup', &
        'Noncolinear Berry Phase/electric not implemented with USPP/PAW', 1 )
@@ -130,7 +132,7 @@ SUBROUTINE setup()
                   'Orbital Magnetization not implemented with USPP/PAW', 1 )
   END IF
 
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      IF ( lberry ) CALL errore( 'setup ', &
                          'hybrid XC not allowed in Berry-phase calculations',1 )
      IF ( lelfield ) CALL errore( 'setup ', &
@@ -155,7 +157,7 @@ SUBROUTINE setup()
      IF ( noncolin ) no_t_rev=.true.
   END IF
   !
-  IF ( dft_is_meta() .AND. noncolin )  CALL errore( 'setup', &
+  IF ( xclib_dft_is('meta') .AND. noncolin )  CALL errore( 'setup', &
                                'Non-collinear Meta-GGA not implemented', 1 )
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
@@ -175,7 +177,7 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-  IF ( .NOT. lscf .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
+  IF ( .NOT. lscf .OR. ( (lfcp .OR. lgcscf) .AND. restart ) ) THEN
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
      !
@@ -196,10 +198,11 @@ SUBROUTINE setup()
      CALL mp_bcast(ef_dw, ionode_id, intra_image_comm)
      CALL qes_reset  ( output_obj )
      !
-  END IF 
-  IF ( (lfcpopt .OR. lfcpdyn) .AND. restart ) THEN  
+  END IF
+  !
+  IF ( (lfcp .OR. lgcscf) .AND. restart ) THEN
      tot_charge = ionic_charge - nelec
-  END IF 
+  END IF
   !
   ! ... magnetism-related quantities
   !
@@ -241,7 +244,7 @@ SUBROUTINE setup()
      !  initialize the quantization direction for gga
      !
      ux=0.0_DP
-     if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
+     if (xclib_dft_is('gradient')) call compute_ux(m_loc,ux,nat)
      !
   ELSE
      !
@@ -379,14 +382,30 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           ethr = 1.D-5
+           IF ( lgcscf ) THEN
+              !
+              ethr = 1.D-8
+              !
+           ELSE
+              !
+              ethr = 1.D-5
+              !
+           END IF
            !
         ELSE
            !
            ! ... starting atomic potential is probably far from scf
            ! ... do not waste iterations in the first diagonalizations
            !
-           ethr = 1.0D-2
+           IF ( lgcscf ) THEN
+              !
+              ethr = 1.0D-5
+              !
+           ELSE
+              !
+              ethr = 1.0D-2
+              !
+           END IF
            !
         END IF
         !
@@ -405,7 +424,6 @@ SUBROUTINE setup()
   nbndx = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
-  use_para_diag = check_para_diag( nbnd )
   use_gpu       = check_gpu_support( )
   !
   ! ... Set the units in real and reciprocal space
@@ -528,7 +546,8 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
+     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate .OR. &
+                     (.NOT. esm_z_inv()) )
      !
      ! ... do not force FFT grid to be commensurate with fractional translations
      !
@@ -620,7 +639,7 @@ SUBROUTINE setup()
   kunit = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
      CALL exx_grid_init()
      CALL exx_mp_init()
@@ -642,83 +661,16 @@ SUBROUTINE setup()
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
-  IF (lda_plus_u .or. okpaw .or. (okvan.and.dft_is_hybrid()) ) CALL d_matrix( d1, d2, d3 )
+  IF (lda_plus_u .or. okpaw .or. (okvan.and.xclib_dft_is('hybrid')) ) CALL d_matrix( d1, d2, d3 )
+  !
+  ! ... set linear-lagebra diagonalization
+  !
+  CALL set_para_diag( nbnd, use_para_diag )
+  !
   !
   RETURN
   !
 END SUBROUTINE setup
-!
-!----------------------------------------------------------------------------
-LOGICAL FUNCTION check_para_diag( nbnd )
-  !-----------------------------------------------------------------------------
-  !! Some checks for parallel diagonalization.
-  !
-  USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_bands,         ONLY : intra_bgrp_comm
-  USE mp_pools,         ONLY : intra_pool_comm
-
-  IMPLICIT NONE
-
-  INCLUDE 'laxlib.fh'
-
-  INTEGER, INTENT(IN) :: nbnd
-  !! number of bands
-  !
-  LOGICAL, SAVE :: first = .TRUE.
-  LOGICAL, SAVE :: saved_value = .FALSE.
-  INTEGER :: np_ortho(2), ortho_parent_comm 
-
-#if defined(__MPI)
-  IF( .NOT. first ) THEN
-      check_para_diag = saved_value
-      RETURN
-  END IF
-  first = .FALSE.
-  !
-  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm )
-  !
-  IF( np_ortho(1) > nbnd ) &
-     CALL errore ('check_para_diag', 'Too few bands for required ndiag',nbnd)
-  !
-  check_para_diag = ( np_ortho( 1 ) > 1 .AND. np_ortho( 2 ) > 1 )
-  saved_value = check_para_diag
-  !
-  IF ( ionode ) THEN
-     !
-     WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
-                     &     "of the eigenvalue problem:")' ) 
-     IF ( check_para_diag ) THEN
-        IF (ortho_parent_comm .EQ. intra_pool_comm) THEN
-           WRITE( stdout, '(5X,"one sub-group per k-point group (pool) will be used")' )
-        ELSE IF (ortho_parent_comm .EQ. intra_bgrp_comm) THEN
-           WRITE( stdout, '(5X,"one sub-group per band group will be used")' )
-        ELSE
-           CALL errore( 'setup','Unexpected sub-group communicator ', 1 )
-        END IF
-#if defined(__ELPA)  || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019)
-        WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
-              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
-               np_ortho(1), np_ortho(2)
-#elif defined(__SCALAPACK)
-        WRITE( stdout, '(5X,"scalapack distributed-memory algorithm ", &
-              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
-               np_ortho(1), np_ortho(2)
-#else
-        WRITE( stdout, '(5X,"custom distributed-memory algorithm ", &
-              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
-               np_ortho(1), np_ortho(2)
-#endif
-     ELSE
-        WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )
-     END IF
-     !
-  END IF
-  !
-#else
-  check_para_diag = .FALSE.
-#endif
-  RETURN
-END FUNCTION check_para_diag
 !
 !----------------------------------------------------------------------------
 LOGICAL FUNCTION check_gpu_support( )

@@ -98,13 +98,44 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
   END SELECT
   !
 END SUBROUTINE set_occupations
+!
+!---------------------------------------------------------------------------
+FUNCTION schema_occupations( lgauss, ltetra, tetra_type, lfixed ) 
+  !------------------------------------------------------------------------
+  ! Reconstruct occupations to be written into the xml file
+  ! FIXME: occupations should be saved in a variable 
+  !
+  IMPLICIT NONE 
+  !
+  LOGICAL, INTENT(IN) :: lfixed, lgauss, ltetra
+  INTEGER, INTENT(IN) :: tetra_type
+  CHARACTER(LEN=20) :: schema_occupations
+  !
+  IF ( lgauss ) THEN
+     schema_occupations = 'smearing'
+  ELSE IF ( ltetra ) THEN
+     IF ( tetra_type == 0 ) THEN
+        schema_occupations = 'tetrahedra'
+     ELSE IF ( tetra_type == 1 ) THEN
+        schema_occupations = 'tetrahedra_lin'
+     ELSE IF ( tetra_type == 2 ) THEN
+        schema_occupations = 'tetrahedra_opt'
+     ELSE
+        schema_occupations = 'something wrong here'
+     END IF
+  ELSE IF ( lfixed ) THEN
+     schema_occupations = 'from_input'
+  ELSE
+     schema_occupations = 'fixed'
+  END IF
+  !
+END FUNCTION schema_occupations
+!
 !---------------------------------------------------------------------------
 FUNCTION schema_smearing( smearing )
   !------------------------------------------------------------------------
   ! Converts smearing to the standard value needed in xml file
   !
-  USE kinds, ONLY: dp
-  ! 
   IMPLICIT NONE 
   !
   CHARACTER(LEN=*), INTENT(IN) :: smearing

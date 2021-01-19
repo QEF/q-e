@@ -85,7 +85,7 @@ subroutine phq_setup
   USE ph_restart,    ONLY : ph_writefile, ph_readfile
   USE control_flags, ONLY : modenum, noinv
   USE grid_irr_iq,   ONLY : comp_irr_iq
-  USE funct,         ONLY : dft_is_gradient
+  USE xc_lib,        ONLY : xclib_dft_is
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
   USE mp_pools,      ONLY : inter_pool_comm, npool
@@ -123,7 +123,7 @@ subroutine phq_setup
   call start_clock ('phq_setup')
   ! 0) A few checks
   !
-  IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
+  IF (xclib_dft_is('gradient').and.(lraman.or.elop)) call errore('phq_setup', &
      'third order derivatives not implemented with GGA', 1)
 
   IF (nsymq==0) CALL errore('phq_setup', &
@@ -170,7 +170,7 @@ subroutine phq_setup
                       COS( angle1(ityp(na)) )
      END DO
      ux=0.0_DP
-     if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
+     if (xclib_dft_is('gradient')) call compute_ux(m_loc,ux,nat)
      IF (okvan) THEN
 !
 !  Change the sign of the magnetic field in the screened US coefficients
