@@ -1,5 +1,14 @@
 !
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!------------------------------------------------------------------------
 MODULE exch_gga !<GPU:exch_gga=>exch_gga_gpu>
+!------------------------------------------------------------------------
+!! GGA exchange functionals
 !
 CONTAINS
 !
@@ -9,7 +18,7 @@ SUBROUTINE becke88( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   !! only gradient-corrected part, no Slater term included
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -52,7 +61,7 @@ SUBROUTINE ggax( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
   !! Perdew-Wang GGA (PW91), exchange part:
   !! J.P. Perdew et al.,PRB 46, 6671 (1992)
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -108,7 +117,7 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !! iflag=8  RPBE: B. Hammer, et al., Phys. Rev. B 59, 7413 (1999)
   !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !
-  USE kinds,      ONLY : DP
+  USE kind_l,      ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -329,7 +338,7 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! * v1x : d(sx)/drho  (eq. dfdra = dfdrb in original)
   !! * v2x : 1/gr*d(sx)/d(gr) (eq. 0.5 * dfdza = 0.5 * dfdzb in original)
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -446,7 +455,7 @@ END SUBROUTINE hcth
     SUBROUTINE pwcorr( r, c, g, dg )                    !<GPU:DEVICE>
       !-----------------------------------------------------
       !
-      USE kinds,   ONLY: DP
+      USE kind_l,   ONLY: DP
       !
       IMPLICIT NONE
       !
@@ -483,7 +492,7 @@ SUBROUTINE optx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! v1x : d(sx)/drho
   !! v2x : 1/gr*d(sx)/d(gr)
   !
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -523,7 +532,7 @@ SUBROUTINE wcx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !!  Wu-Cohen exchange (without Slater exchange):
   !!  Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
   !
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -593,7 +602,7 @@ END SUBROUTINE wcx
 SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -648,7 +657,7 @@ SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009).
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -697,7 +706,7 @@ SUBROUTINE c09x( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! Ikutaro Hamada - ikutaro@wpi-aimr.tohoku.ac.jp
   !! WPI-Advanced Institute of Materials Research, Tohoku University
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -763,7 +772,7 @@ SUBROUTINE sogga( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------
   !! SOGGA exchange
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -821,7 +830,7 @@ END SUBROUTINE sogga
 SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !
-  USE kinds,  ONLY: DP
+  USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -956,7 +965,7 @@ END SUBROUTINE pbe_gauscheme
 !-------------------------------------------------
 FUNCTION TayExp(X)                         !<GPU:DEVICE>
   !-------------------------------------------
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   IMPLICIT NONE
   REAL(DP), INTENT(IN) :: X
   REAL(DP) :: TAYEXP                        !<GPU:TAYEXP=>TAYEXP_d>
@@ -985,7 +994,7 @@ SUBROUTINE PW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986)
   !
-  USE kinds,  ONLY: DP
+  USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -1030,7 +1039,7 @@ SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! Becke 1986 gradient correction to exchange
   !! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -1076,7 +1085,7 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !! Ikutaro Hamada - HAMADA.Ikutaro@nims.go.jp
   !! National Institute for Materials Science
   !
-  USE kinds,     ONLY : DP
+  USE kind_l,     ONLY : DP
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iflag                  !<GPU:VALUE>
@@ -1141,7 +1150,7 @@ SUBROUTINE cx13( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014),
   !! to test the plasmon nature of the vdW-DF1 inner functional.
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -1196,7 +1205,7 @@ SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up,
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
-  USE kinds,    ONLY: DP
+  USE kind_l,    ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -1259,7 +1268,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
       !
       !--------------------------------------------------------------------
       !
-      USE kinds,    ONLY: DP
+      USE kind_l,    ONLY: DP
       IMPLICIT NONE
       !
       REAL(DP) rho,s,omega,Fx_wpbe,d1sfx,d1rfx
@@ -1858,7 +1867,7 @@ function qe_erf(x)                      !<GPU:DEVICE>
   !
   !     for abs(x) le 0.47 erf is calculated directly
   !     for abs(x) gt 0.47 erf is calculated via erf(x)=1-erfc(x)
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   implicit none
   REAL(DP), intent(in) :: x
   REAL(DP) :: x2, p1 (4), q1 (4)
@@ -1892,7 +1901,7 @@ function qe_erfc(x)                      !<GPU:DEVICE>
   !
   !     erfc(x) = 1-erf(x)  - See comments in erf
   !
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   implicit none
   !
   REAL(DP),intent(in) :: x
@@ -1957,7 +1966,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
 ! big is a number near the largest representable floating-point number,
 ! Inspired from Numerical Recipes
 !
-      USE kinds,   ONLY: DP
+      USE kind_l,   ONLY: DP
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x
@@ -1971,7 +1980,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
       REAL(DP) :: a,b,c,d,del,fact,h,iarsum
 
       IF (.NOT. ((n >= 0).AND.(x >= 0.0).AND.((x > 0.0).OR.(n > 1)))) THEN
-         !CALL errore('expint','bad arguments', 1)
+         !CALL xclib_error('expint','bad arguments', 1)
          STOP
       END IF
 
@@ -1996,7 +2005,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
             h = h*del
             IF (ABS(del-1.0d0) <= EPS) EXIT
          END DO
-         IF (i > maxit) STOP !CALL errore('expint','continued fraction failed',1)
+         IF (i > maxit) STOP !CALL xclib_error('expint','continued fraction failed',1)
          expint = h*EXP(-x)                                             !<GPU:expint=>expint_d>
       ELSE
          IF (nm1 /= 0) THEN
@@ -2022,7 +2031,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
             expint = expint + del                                       !<GPU:expint=>expint_d>
             IF (ABS(del) < ABS(expint)*eps) EXIT                        !<GPU:expint=>expint_d>
          END DO
-         IF (i > maxit) STOP !CALL errore('expint','series failed',1)
+         IF (i > maxit) STOP !CALL xclib_error('expint','series failed',1)
       END IF
 END FUNCTION EXPINT
 !

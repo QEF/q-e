@@ -37,8 +37,8 @@ MODULE exx_module
   USE electrons_base,     ONLY: nupdwn             !number of states with up and down spin 
   USE fft_base,           ONLY: dffts              !FFT derived data type
   USE fft_base,           ONLY: dfftp              !FFT derived data type 
-  USE funct,              ONLY: get_exx_fraction   ! function to get exx_fraction value
-  USE funct,              ONLY: stop_exx, start_exx
+  USE xc_lib,             ONLY: xclib_get_exx_fraction, &
+                                stop_exx, start_exx
   USE input_parameters,   ONLY: ref_alat           !alat of reference cell ..
   USE input_parameters,   ONLY: ref_cell           !.true. if reference cell parameters are in use, .false. otherwise ... 
   USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
@@ -216,7 +216,7 @@ CONTAINS
       !
       ! the fraction of exact exchange is stored here
       !
-      exxalfa = get_exx_fraction()
+      exxalfa = xclib_get_exx_fraction()
       !
       IF(nbeg.LT.0) THEN
         !

@@ -25,7 +25,7 @@ SUBROUTINE scale_h
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init
   USE exx,            ONLY : exx_gvec_reinit
-  USE funct,          ONLY : dft_is_hybrid
+  USE xc_lib,         ONLY : xclib_dft_is
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
   !
@@ -88,7 +88,7 @@ SUBROUTINE scale_h
   !
   ! for hybrid functionals
   !
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      CALL exx_grid_init( reinit=.TRUE. )
      ! not sure next line is needed
      CALL exx_mp_init( )

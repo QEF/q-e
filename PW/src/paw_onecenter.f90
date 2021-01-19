@@ -428,8 +428,7 @@ MODULE paw_onecenter
     USE constants,              ONLY : e2, eps12
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient
-    USE xc_lda_lsda,            ONLY : xc
+    USE xc_lib,                 ONLY : xclib_dft_is
     USE constants,              ONLY : fpi ! REMOVE
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -568,7 +567,7 @@ MODULE paw_onecenter
              !
              arho(:,1) = rho_loc(:,1) + rho_core
              !
-             CALL xc( i%m, 1, 1, arho(:,1), ex, ec, vx(:,1), vc(:,1) )
+             CALL xc( i%m, 1, 1, arho(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
              !
              v_rad(:,ix,1) = e2*( vx(:,1) + vc(:,1) )
              IF (PRESENT(energy)) e_rad = e2*( ex(:) + ec(:) )
@@ -632,7 +631,7 @@ MODULE paw_onecenter
     ENDIF
     !
     ! Add gradient correction, if necessary
-    IF ( dft_is_gradient() ) &
+    IF ( xclib_dft_is('gradient') ) &
         CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
         !
     IF (TIMING) CALL stop_clock( 'PAW_xc_pot' )
@@ -657,8 +656,7 @@ MODULE paw_onecenter
     USE noncollin_module,       ONLY : noncolin, nspin_mag, nspin_gga
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2
-    USE funct,                  ONLY : igcc_is_lyp
-    USE xc_gga,                 ONLY : xc_gcx
+    USE xc_lib,                 ONLY : igcc_is_lyp, xc_gcx
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -1687,7 +1685,7 @@ MODULE paw_onecenter
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient
+    USE xc_lib,                 ONLY : xclib_dft_is
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1747,7 +1745,7 @@ MODULE paw_onecenter
           !
           rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
           !
-          CALL dmxc( i%m, 1, rho_rad(:,1), dmuxc )
+          CALL dmxc( i%m, 1, rho_rad(:,1:1), dmuxc )
           !
           v_rad(:,ix,1) = dmuxc(:,1,1)
           !
@@ -1779,7 +1777,7 @@ MODULE paw_onecenter
     !
     ! Add gradient correction, if necessary
     !
-    IF( dft_is_gradient() ) &
+    IF( xclib_dft_is('gradient') ) &
         CALL PAW_dgcxc_potential( i, rho_lm, rho_core, drho_lm, v_lm )
     !
     DEALLOCATE( rho_rad )
@@ -1803,8 +1801,7 @@ MODULE paw_onecenter
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
-    USE funct,                  ONLY : is_libxc
-    USE xc_gga,                 ONLY : xc_gcx, change_threshold_gga
+    USE xc_lib,                 ONLY : xclib_set_threshold, xc_gcx
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1904,7 +1901,7 @@ MODULE paw_onecenter
              gradsw(1:3,k,1) = grad(k,1:3,1)
           ENDDO
           !
-          CALL change_threshold_gga( 1.E-10_DP )
+          CALL xclib_set_threshold( 'gga', 1.E-10_DP )
           !
           CALL dgcxc( i%m, nspin_mag, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
           !
@@ -1914,7 +1911,7 @@ MODULE paw_onecenter
           !
           CALL xc_gcx( i%m, nspin_mag, r, gradsw, sx, sc, v1x, v2x, v1c, v2c )
           !
-          CALL change_threshold_gga( 1.D-6 )
+          CALL xclib_set_threshold( 'gga', 1.D-6 )
           !
           DO k = 1, i%m
              s1 = grad(k,1,1) * dgrad(k,1,1) + &

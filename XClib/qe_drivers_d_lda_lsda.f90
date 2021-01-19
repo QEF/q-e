@@ -5,194 +5,44 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!========================================================================
+!                      LDA POTENTIAL DERIVATIVE DRIVERS
+!========================================================================
 !
-!---------------------------------------------------------------------
-SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
-  !---------------------------------------------------------------------
-  !! Wrapper routine. Calls dmxc-driver routines from internal libraries
-  !! or from the external one 'libxc', depending on the input choice.
+!---------------------------------------------------------------------------
+MODULE qe_drivers_d_lda_lsda
+  !-------------------------------------------------------------------------
+  !! Contains the routines to compute the derivative of the LDA XC potential.
   !
-  ! Only two possibilities in the present version (LDA only):
-  ! 1) iexch libxc + icorr libxc
-  ! 2) iexch qe    + icorr qe
-  !
-  USE kinds,            ONLY: DP
-  USE funct,            ONLY: get_iexch, get_icorr, is_libxc
-  USE xc_lda_lsda,      ONLY: xc_lda, xc_lsda
-#if defined(__LIBXC)
-#include "xc_version.h"
-  USE xc_f03_lib_m
-#endif
+  USE kind_l,      ONLY: DP
+  USE dft_par_mod, ONLY: iexch, icorr, is_libxc
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN) :: length
-  !! length of the I/O arrays
-  INTEGER,  INTENT(IN) :: sr_d
-  !! number of spin components
-  REAL(DP), INTENT(IN) :: rho_in(length,sr_d)
-  !! charge density
-  REAL(DP), INTENT(OUT) :: dmuxc(length,sr_d,sr_d)
-  !! the derivative of the xc potential
+  SAVE
   !
-  ! ... local variables
+  PRIVATE
   !
-#if defined(__LIBXC)
-  TYPE(xc_f03_func_t) :: xc_func
-  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
-  INTEGER :: pol_unpol
-  REAL(DP), ALLOCATABLE :: rho_lxc(:)
-  REAL(DP), ALLOCATABLE :: dmxc_lxc(:), dmex_lxc(:), dmcr_lxc(:)
-  LOGICAL :: exch_lxc_avail, corr_lxc_avail
-#if (XC_MAJOR_VERSION > 4)
-  INTEGER(8) :: lengthxc
-#else
-  INTEGER :: lengthxc
-#endif
-#endif
-  !
-  INTEGER :: iexch, icorr
-  INTEGER :: ir, length_lxc, length_dlxc
-  REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
-  !
-  iexch = get_iexch()
-  icorr = get_icorr()
-  !
-#if defined(__LIBXC)
-  !
-  lengthxc = length
-  !
-  IF ( (is_libxc(1) .OR. iexch==0) .AND. (is_libxc(2) .OR. icorr==0)) THEN
-    !
-    length_lxc = length*sr_d
-    !
-    ! ... set libxc input
-    SELECT CASE( sr_d )
-    CASE( 1 )
-      !
-      ALLOCATE( rho_lxc(length_lxc) )
-      pol_unpol = 1
-      rho_lxc = rho_in(:,1) 
-      !
-    CASE( 2 )
-      !
-      ALLOCATE( rho_lxc(length_lxc) )
-      pol_unpol = 2
-      DO ir = 1, length
-        rho_lxc(2*ir-1) = rho_in(ir,1)
-        rho_lxc(2*ir)   = rho_in(ir,2)
-      ENDDO
-      !
-    CASE( 4 )
-      !
-      CALL errore( 'dmxc', 'The derivative of the xc potential with libxc &
-                           &is not available for noncollinear case', 1 )
-      !
-    CASE DEFAULT
-      !
-      CALL errore( 'dmxc', 'Wrong number of spin dimensions', 2 )
-      !
-    END SELECT
-    !
-    length_dlxc = length
-    IF (pol_unpol == 2) length_dlxc = length*3
-    !
-    !
-    ALLOCATE( dmex_lxc(length_dlxc), dmcr_lxc(length_dlxc), &
-              dmxc_lxc(length_dlxc) )
-    !
-    ! ... DERIVATIVE FOR EXCHANGE
-    dmex_lxc(:) = 0.0_DP
-    IF (iexch /= 0) THEN    
-       CALL xc_f03_func_init( xc_func, iexch, pol_unpol )
-        xc_info1 = xc_f03_func_get_info( xc_func )
-        CALL xc_f03_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmex_lxc(1) )
-       CALL xc_f03_func_end( xc_func )
-    ENDIF    
-    !
-    ! ... DERIVATIVE FOR CORRELATION
-    dmcr_lxc(:) = 0.0_DP
-    IF (icorr /= 0) THEN
-       CALL xc_f03_func_init( xc_func, icorr, pol_unpol )
-        xc_info2 = xc_f03_func_get_info( xc_func )
-        CALL xc_f03_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmcr_lxc(1) )
-       CALL xc_f03_func_end( xc_func )
-    ENDIF
-    !
-    dmxc_lxc = (dmex_lxc + dmcr_lxc)*2.0_DP
-    !
-    IF (sr_d == 1) THEN
-      dmuxc(:,1,1) = dmxc_lxc(:)
-    ELSEIF (sr_d == 2) THEN
-      DO ir = 1, length
-        dmuxc(ir,1,1) = dmxc_lxc(3*ir-2)
-        dmuxc(ir,1,2) = dmxc_lxc(3*ir-1)
-        dmuxc(ir,2,1) = dmxc_lxc(3*ir-1)
-        dmuxc(ir,2,2) = dmxc_lxc(3*ir)
-      ENDDO
-    ENDIF
-    !
-    DEALLOCATE( dmex_lxc, dmcr_lxc, dmxc_lxc )
-    DEALLOCATE( rho_lxc )
-    !
-  ELSEIF ((.NOT.is_libxc(1)) .AND. (.NOT.is_libxc(2)) ) THEN
-    !
-    IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
-    IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
-    !
-  ELSE
-    !
-    CALL errore( 'dmxc', 'Derivatives of exchange and correlation terms, &
-                        & at present, must be both qe or both libxc.', 3 )
-    !
-  ENDIF
-  !
-#else
-  !
-  SELECT CASE( sr_d )
-  CASE( 1 )
-     !
-     CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
-     !
-  CASE( 2 )
-     !
-     CALL dmxc_lsda( length, rho_in, dmuxc )
-     ! 
-  CASE( 4 )
-     !
-     CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'xc_LDA', 'Wrong ns input', 4 )
-     !
-  END SELECT
-  !
-#endif
+  PUBLIC :: dmxc_lda, dmxc_lsda, dmxc_nc
   !
   !
-  RETURN
-  !
-END SUBROUTINE
-!
+CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !---------------------------------------------------------------------
-  !! Computes the derivative of the xc potential with respect to the 
+  !! Computes the derivative of the XC potential with respect to the 
   !! local density.
   !
-  USE xc_lda_lsda,  ONLY: xc_lda
-  USE exch_lda,     ONLY: slater
-  USE funct,        ONLY: get_iexch, get_icorr
-  USE kinds,        ONLY: DP
+  USE exch_lda,            ONLY: slater
+  USE qe_drivers_lda_lsda, ONLY: xc_lda
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
   !! length of the input/output arrays
   REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
-  !! the charge density ( positive )
+  !! the charge density
   REAL(DP), INTENT(OUT), DIMENSION(length) :: dmuxc
   !! the derivative of the xc potential
   !
@@ -203,9 +53,9 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: ec, vc
   !
   REAL(DP) :: rho, rs, ex_s, vx_s
-  REAL(DP) :: dpz
-  INTEGER  :: iexch, icorr
+  !REAL(DP) :: dpz
   INTEGER  :: iflg, ir, i1, i2, f1, f2
+  INTEGER :: iexch_, icorr_
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,        &
                          pi34 = 0.75_DP/3.141592653589793_DP,   &
@@ -215,14 +65,15 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
-  !
   ntids = omp_get_num_threads()
-#endif  
-  !
-  iexch = get_iexch()
-  icorr = get_icorr()
+#endif
   !
   dmuxc = 0.0_DP
+  !
+  iexch_=iexch
+  icorr_=icorr
+  IF (is_libxc(1)) iexch=0
+  IF (is_libxc(2)) icorr=0
   !
   ! ... first case: analytical derivatives available
   !
@@ -276,6 +127,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      !
      WHERE ( arho < small ) dr = 1.0_DP ! ... to avoid NaN in the next operation
      !
+     !
      dmuxc(:) = (vx(i1:f1) + vc(i1:f1) - vx(i2:f2) - vc(i2:f2)) / &
                 (2.0_DP * dr(:))
      !
@@ -295,6 +147,9 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   dmuxc = e2 * dmuxc
   !
+  IF (is_libxc(1)) iexch=iexch_
+  IF (is_libxc(2)) icorr=icorr_
+  !
   RETURN
   !
 END SUBROUTINE dmxc_lda
@@ -302,15 +157,13 @@ END SUBROUTINE dmxc_lda
 !
 !-----------------------------------------------------------------------
 SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
-!-----------------------------------------------------------------------
+  !---------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
-  USE kinds,          ONLY: DP
-  USE funct,          ONLY: get_iexch, get_icorr
-  USE xc_lda_lsda,    ONLY: xc_lsda
-  USE exch_lda,       ONLY: slater
-  USE corr_lda,       ONLY: pz, pz_polarized
+  USE exch_lda,            ONLY: slater
+  USE corr_lda,            ONLY: pz, pz_polarized
+  USE qe_drivers_lda_lsda, ONLY: xc_lsda
   !
   IMPLICIT NONE
   !
@@ -334,20 +187,22 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   REAL(DP) :: fz, fz1, fz2, dmcu, dmcp, aa, bb, cc
   REAL(DP) :: rs, zeta_s
   !
-  REAL(DP) :: dpz, dpz_polarized
+  !REAL(DP) :: dpz, dpz_polarized
   !
-  INTEGER :: iexch, icorr
   INTEGER :: ir, is, iflg
   INTEGER :: i1, i2, i3, i4
   INTEGER :: f1, f2, f3, f4
+  INTEGER :: iexch_, icorr_
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,      &
                          pi34 = 0.75_DP/3.141592653589793_DP, &
                          third = 1.0_DP/3.0_DP, p43 = 4.0_DP/3.0_DP, &
                          p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP
   !
-  iexch = get_iexch()
-  icorr = get_icorr()
+  iexch_=iexch
+  icorr_=icorr
+  IF (is_libxc(1)) iexch=0
+  IF (is_libxc(2)) icorr=0
   !
   dmuxc = 0.0_DP
   ALLOCATE(rhotot(length)) 
@@ -480,6 +335,9 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   dmuxc = e2 * dmuxc
   !
+  IF (is_libxc(1)) iexch=iexch_
+  IF (is_libxc(2)) icorr=icorr_
+  !
   RETURN
   !
 END SUBROUTINE dmxc_lsda
@@ -487,23 +345,22 @@ END SUBROUTINE dmxc_lsda
 !
 !-----------------------------------------------------------------------
 SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density and magnetization in the non-collinear case.
   !
-  USE xc_lda_lsda,  ONLY: xc_lsda
-  USE kinds,        ONLY: DP
+  USE qe_drivers_lda_lsda,  ONLY: xc_lsda
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
-  !! length of the input/output arrays
+  !! Length of the input/output arrays
   REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
-  !! total charge density
+  !! Total charge density
   REAL(DP), INTENT(IN), DIMENSION(length,3) :: m
-  !! magnetization vector
+  !! Magnetization vector
   REAL(DP), INTENT(OUT), DIMENSION(length,4,4) :: dmuxc
-  !! derivative of XC functional
+  !! Derivative of XC functional
   !
   ! ... local variables
   !
@@ -669,15 +526,13 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
 END SUBROUTINE dmxc_nc
 !
-!
 !-----------------------------------------------------------------------
 FUNCTION dpz( rs, iflg )
   !-----------------------------------------------------------------------
   !!  Derivative of the correlation potential with respect to local density
   !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.
   !
-  USE kinds,     ONLY: DP
-  USE constants, ONLY: pi, fpi
+  USE constants_l, ONLY: pi, fpi
   !
   IMPLICIT NONE
   !
@@ -710,16 +565,14 @@ FUNCTION dpz( rs, iflg )
   !
 END FUNCTION dpz
 !
-!
 !-----------------------------------------------------------------------
 FUNCTION dpz_polarized( rs, iflg )
   !-----------------------------------------------------------------------
-  !!  Derivative of the correlation potential with respect to local density
-  !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
-  !!  Spin-polarized case.
+  !! Derivative of the correlation potential with respect to local density
+  !! Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
+  !! Spin-polarized case.
   !
-  USE kinds,     ONLY: DP
-  USE constants, ONLY: pi, fpi
+  USE constants_l, ONLY: pi, fpi
   !
   IMPLICIT NONE
   !
@@ -754,3 +607,5 @@ FUNCTION dpz_polarized( rs, iflg )
   RETURN
   !
 END FUNCTION dpz_polarized
+!
+END MODULE qe_drivers_d_lda_lsda

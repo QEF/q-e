@@ -1,4 +1,5 @@
-set(sources_x
+set(src_xspectra
+    src/xspectra.f90
     src/gaunt_mod.f90
     src/xspectra_mod.f90
     src/radin_mod.f90
@@ -22,71 +23,75 @@ set(sources_x
     src/io_routines.f90
     src/xanes_quadrupole.f90)
 
-set(sources_gipaw
+set(src_gipaw
     src/paw_gipaw.f90
     src/gipaw_module.f90
     src/init_gipaw_1.f90
     src/init_gipaw_2.f90)
 
-qe_add_library(qe_xspectra_gipaw ${sources_gipaw})
-add_library(QE::XSpectra::GIPAW ALIAS qe_xspectra_gipaw)
+qe_add_library(qe_xspectra_gipaw ${src_gipaw})
 target_link_libraries(qe_xspectra_gipaw
     PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::Modules
-        QE::UPF)
+        qe_pw
+        qe_modules
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
-qe_add_library(qe_xspectra ${sources_x})
-add_library(QE::XSpectra ALIAS qe_xspectra)
+qe_add_library(qe_xspectra ${src_xspectra})
 target_link_libraries(qe_xspectra
     PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::XSpectra::GIPAW
-        QE::Modules
-        QE::UPF)
+        qe_pw
+        qe_xspectra_gipaw
+        qe_modules
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 # xspectra.x
 ###########################################################
 set(sources src/xspectra.f90)
 qe_add_executable(qe_xspectra_exe ${sources})
-set_target_properties(qe_xspectra_exe PROPERTIES OUTPUT_NAME xspectra.x)
+set_target_properties(qe_xspectra_exe 
+    PROPERTIES 
+        OUTPUT_NAME xspectra.x)
 target_link_libraries(qe_xspectra_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::XSpectra
-        QE::XSpectra::GIPAW
-        QE::UPF
-        QE::UTILX)
+        qe_pw
+        qe_modules
+        qe_xspectra
+        qe_xspectra_gipaw
+        qe_upflib)
 
 ###########################################################
 # spectra_correction.x
 ###########################################################
-set(sources 
-    src/spectra_correction.f90
-    src/gaunt_mod.f90)
-qe_add_executable(qe_xspectra_spectracorrection_exe ${sources})
-set_target_properties(qe_xspectra_spectracorrection_exe PROPERTIES OUTPUT_NAME spectra_correction.x)
+set(src_spectra_correction_x src/spectra_correction.f90)
+qe_add_executable(qe_xspectra_spectracorrection_exe ${src_spectra_correction_x})
+set_target_properties(qe_xspectra_spectracorrection_exe 
+    PROPERTIES 
+        OUTPUT_NAME spectra_correction.x)
 target_link_libraries(qe_xspectra_spectracorrection_exe
     PRIVATE
-        QE::Modules
-        QE::XSpectra
-        QE::XSpectra::GIPAW
-        QE::UTILX)
+        qe_modules
+        qe_xspectra
+        qe_xspectra_gipaw
+        qe_pw
+        qe_upflib)
 
 ###########################################################
 # molecularnexafs.x
 ###########################################################
-set(sources src/molecularnexafs.f90)
-qe_add_executable(qe_xspectra_molecularnexafs_exe ${sources})
-set_target_properties(qe_xspectra_molecularnexafs_exe PROPERTIES OUTPUT_NAME molecularnexafs.x)
+set(src_molecularnexafs_x src/molecularnexafs.f90)
+qe_add_executable(qe_xspectra_molecularnexafs_exe ${src_molecularnexafs_x})
+set_target_properties(qe_xspectra_molecularnexafs_exe 
+    PROPERTIES 
+        OUTPUT_NAME molecularnexafs.x)
 target_link_libraries(qe_xspectra_molecularnexafs_exe
     PRIVATE
-        QE::XSpectra
-        QE::XSpectra::GIPAW)
+        qe_xspectra
+        qe_xspectra_gipaw)
 
 ###########################################################
 

@@ -6,10 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-!
-! This module contains fortran wrapper to BEEF library functions.
-!
 MODULE beef_interface
+    !----------------------------------------------------------------------
+    !! This module contains fortran wrapper to BEEF library functions.
     !
     IMPLICIT NONE
     !
@@ -69,9 +68,12 @@ MODULE beef_interface
     !
     END INTERFACE
     !
+#endif
+    !
     CONTAINS
     ! ====================================================================
     !
+#if !defined(__NOBEEF)
     FUNCTION beef_set_type(tbeef, ionode) RESULT(r)
         INTEGER, INTENT(IN) :: tbeef
         LOGICAL, INTENT(IN) :: ionode
@@ -93,22 +95,22 @@ MODULE beef_interface
     END FUNCTION beef_set_type
     !
 #else
-    CONTAINS
+    !
     ! empty routines to prevent compilation errors
     SUBROUTINE beefx( r, g, e, dr, dg, addlda )
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beefx
     !
     SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda)
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp), INTENT(INOUT) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorr
     !
     SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda)
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorrspin
@@ -125,14 +127,14 @@ MODULE beef_interface
     END SUBROUTINE beefrandinitdef
     !
     SUBROUTINE beefensemble(beefxc, ensemble)
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp) :: beefxc(:), ensemble(:)
     END SUBROUTINE beefensemble
     !
     LOGICAL FUNCTION beef_set_type(tbeef, ionode)
       INTEGER :: tbeef
       LOGICAL :: ionode
-      CALL errore('beef_set_type','no beef! support for BEEF not compiled',1)
+      CALL xclib_error('beef_set_type','no beef! support for BEEF not compiled',1)
     END FUNCTION beef_set_type
 #endif
     !

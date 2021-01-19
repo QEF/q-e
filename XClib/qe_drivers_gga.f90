@@ -1,411 +1,34 @@
 !
-! Copyright (C) 2019-2020 Quantum ESPRESSO Foundation
+! Copyright (C) 2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE xc_gga
+!========================================================================
+!                GRADIENT CORRECTION DRIVERS for E and V
+!========================================================================
 !
-USE kinds,     ONLY: DP
-USE funct,     ONLY: get_igcx, get_igcc, is_libxc,    &
-                     exx_is_active, get_exx_fraction, &
-                     get_screening_parameter, get_gau_parameter
-!
-IMPLICIT NONE
-!
-PRIVATE
-SAVE
-!
-!  GGA exchange-correlation drivers
-PUBLIC :: xc_gcx, gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
-          change_threshold_gga
-!
-!  input thresholds (default values)
-REAL(DP) :: rho_threshold = 1.D-6
-REAL(DP) :: grho_threshold = 1.D-10
-!
-!
- CONTAINS
-!
-!
-!-----------------------------------------------------------------------
-SUBROUTINE change_threshold_gga( rho_thr_in, grho_thr_in )
-  !--------------------------------------------------------------------
-  !! Change rho and grho thresholds.
+!------------------------------------------------------------------------
+MODULE qe_drivers_gga
+  !----------------------------------------------------------------------
+  !! Contains the GGA drivers that calculate the XC energy and potential.
+  !
+  USE kind_l,       ONLY: DP
+  USE dft_par_mod,  ONLY: igcx, igcc, rho_threshold_gga, grho_threshold_gga,&
+                          exx_started, exx_fraction, screening_parameter,   &
+                          gau_parameter
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho_thr_in
-  REAL(DP), INTENT(IN), OPTIONAL :: grho_thr_in
+  SAVE
   !
-  rho_threshold = rho_thr_in
-  IF (PRESENT(grho_thr_in)) grho_threshold = grho_thr_in
+  PRIVATE
   !
-  RETURN
-  !
-END SUBROUTINE
-!
-!
-!---------------------------------------------------------------------------
-SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
-  !-------------------------------------------------------------------------
-  !! Wrapper routine. Calls xc_gga-driver routines from internal libraries
-  !! of q-e or from the external libxc, depending on the input choice.
-  !
-  !! NOTE: differently from 'xc_lda_drivers', here the input rho is in (up,down)
-  !!       form (in the LSDA case).
-  !
-  !! NOTE: look at 'PP/src/benchmark_libxc.f90' to test and see the differences
-  !!       between q-e and libxc libraries.
-  !
-#if defined(__LIBXC)
-#include "xc_version.h"
-  USE xc_f03_lib_m
-#endif
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,  INTENT(IN) :: length
-  !! length of the I/O arrays
-  INTEGER,  INTENT(IN) :: ns
-  !! spin dimension for input
-  REAL(DP), INTENT(IN) :: rho(:,:)
-  !! Charge density
-  REAL(DP), INTENT(IN) :: grho(:,:,:)
-  !! gradient
-  REAL(DP), INTENT(OUT) :: ex(:)
-  !! exchange energy
-  REAL(DP), INTENT(OUT) :: ec(:)
-  !! correlation energy
-  REAL(DP), INTENT(OUT) :: v1x(:,:)
-  !! exchange potential (density part)
-  REAL(DP), INTENT(OUT) :: v2x(:,:)
-  !! exchange potential (gradient part)
-  REAL(DP), INTENT(OUT) :: v1c(:,:)
-  !! correlation potential (density part)
-  REAL(DP), INTENT(OUT) :: v2c(:,:)
-  !! correlation (gradient part)
-  REAL(DP), INTENT(OUT), OPTIONAL :: v2c_ud(:)
-  !! correlation
-  !
-  ! ... local variables
-  !
-#if defined(__LIBXC)
-  TYPE(xc_f03_func_t) :: xc_func
-  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
-  REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:)
-  REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
-  REAL(DP), ALLOCATABLE :: vx_rho(:), vx_sigma(:)
-  REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:)
-  !
-  INTEGER :: fkind_x, np
-  REAL(DP) :: rs, rtot, zet, vc_2(2)
-  REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
-  !
-  LOGICAL :: POLARIZED
-  INTEGER :: ildax, ildac, pol_unpol
-#if (XC_MAJOR_VERSION > 4)
-  INTEGER(8) :: lengthxc
-#else
-  INTEGER :: lengthxc
-#endif
-#endif
-  REAL(DP), ALLOCATABLE :: arho(:,:)
-  REAL(DP), ALLOCATABLE :: rh(:), zeta(:)
-  REAL(DP), ALLOCATABLE :: grho2(:,:), grho_ud(:)
-  !
-  INTEGER :: igcx, igcc
-  INTEGER :: k, is
-  REAL(DP) :: sgn(2)
-  REAL(DP), PARAMETER :: small = 1.E-10_DP
+  PUBLIC :: gcxc, gcx_spin, gcc_spin, gcc_spin_more
   !
   !
-  IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL errore( 'xc_gga', 'cross &
-                                             &term v2c_ud not found', 1 )
-  !
-  igcx = get_igcx()
-  igcc = get_igcc()
-  !
-  ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP
-  ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP
-  IF ( PRESENT(v2c_ud) ) v2c_ud = 0.0_DP
-  !
-#if defined(__LIBXC)
-  !
-  fkind_x = -1
-  lengthxc = length
-  !
-  POLARIZED = .FALSE.
-  IF (ns == 2) THEN
-     POLARIZED = .TRUE.
-  ENDIF
-  !
-  pol_unpol = 1
-  np = 1
-  IF ( ns == 2 ) THEN
-     pol_unpol = 2
-     np = 3
-  ENDIF
-  !
-  ALLOCATE( rho_lxc(length*ns) )
-  ALLOCATE( sigma(length*np) )
-  !
-  ALLOCATE( ex_lxc(length)    , ec_lxc(length)      )
-  ALLOCATE( vx_rho(length*ns) , vx_sigma(length*np) )
-  ALLOCATE( vc_rho(length*ns) , vc_sigma(length*np) )
-  !
-  !
-  IF ( ns == 1 ) THEN
-    !
-    DO k = 1, length
-      rho_lxc(k) = ABS( rho(k,1) )
-      IF ( rho_lxc(k) > rho_threshold ) &
-         sigma(k) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
-    ENDDO
-    !
-  ELSE
-    !
-    DO k = 1, length
-       rho_lxc(2*k-1) = rho(k,1)
-       rho_lxc(2*k)   = rho(k,2)
-       !
-       sigma(3*k-2) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
-       sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
-                      grho(3,k,1) * grho(3,k,2)
-       sigma(3*k)   = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
-    ENDDO
-    !
-  ENDIF
-  !
-  IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
-     !
-     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
-     !
-     DO k = 1, length
-        sgn(1) = SIGN(1._DP, rho(k,1))
-        ex(k) = ex(k) * sgn(1)
-        ec(k) = ec(k) * sgn(1)
-     ENDDO
-     !
-  ENDIF
-  !
-  ! --- GGA EXCHANGE
-  !
-  IF ( is_libxc(3) ) THEN
-    !
-    CALL xc_f03_func_init( xc_func, igcx, pol_unpol )
-     xc_info1 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
-     fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
-     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
-    CALL xc_f03_func_end( xc_func )
-    !
-    IF (.NOT. POLARIZED) THEN
-      DO k = 1, length
-        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
-        v1x(k,1) = vx_rho(k)
-        v2x(k,1) = vx_sigma(k)*2.d0
-      ENDDO
-    ELSE
-      DO k = 1, length
-        ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
-        v1x(k,1) = vx_rho(2*k-1)
-        v1x(k,2) = vx_rho(2*k)
-        v2x(k,1) = vx_sigma(3*k-2)*2.d0
-        v2x(k,2) = vx_sigma(3*k)*2.d0
-      ENDDO
-    ENDIF
-    !
-  ELSE
-    !
-    ALLOCATE( grho2(length,ns) )
-    !
-    IF ( ns /= 1 ) THEN
-       !
-       DO is = 1, 2
-          grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
-       ENDDO
-       !
-       CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
-       !
-    ENDIF
-    !
-    DEALLOCATE( grho2 )
-    !
-  ENDIF
-  !
-  ! ---- GGA CORRELATION
-  !
-  IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc
-    !
-    CALL xc_f03_func_init( xc_func, igcc, pol_unpol )
-     xc_info2 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
-     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
-    CALL xc_f03_func_end( xc_func )
-    !
-    IF (.NOT. POLARIZED) THEN
-      DO k = 1, length
-        ec(k) = ec_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
-        v1c(k,1) = vc_rho(k)
-        v2c(k,1) = vc_sigma(k)*2.d0
-      ENDDO
-    ELSE
-      DO k = 1, length
-        sgn(:) = 1.d0
-        IF (rho_lxc(2*k-1)<rho_threshold .OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold) sgn(1)=0.d0
-        IF (rho_lxc(2*k)  <rho_threshold .OR. SQRT(ABS(sigma(3*k)))  <grho_threshold) sgn(2)=0.d0
-        ec(k) = ec_lxc(k) * (rho_lxc(2*k-1)*sgn(1)+rho_lxc(2*k)*sgn(2))
-        v1c(k,1) = vc_rho(2*k-1) * sgn(1)
-        v1c(k,2) = vc_rho(2*k) * sgn(2)
-        v2c(k,1) = vc_sigma(3*k-2)*2.d0 * sgn(1)
-        v2c_ud(k)= vc_sigma(3*k-1) * sgn(1)*sgn(2)
-        v2c(k,2) = vc_sigma(3*k)*2.d0 * sgn(2)
-      ENDDO
-    ENDIF
-    !  
-  ELSEIF ( (.NOT.is_libxc(4)) .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
-    !
-    ALLOCATE( arho(length,ns), grho2(length,ns) )
-    !
-    IF ( ns /= 1 ) THEN
-       !
-       DO is = 1, 2
-          grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
-       ENDDO
-       !
-       IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
-          !
-          ALLOCATE( grho_ud(length) )
-          !
-          grho_ud = grho(1,:,1) * grho(1,:,2) + grho(2,:,1) * grho(2,:,2) + &
-                    grho(3,:,1) * grho(3,:,2)
-          !
-          arho = rho
-          !
-          WHERE ( rho(:,1)+rho(:,2) < rho_threshold )
-             arho(:,1) = 0.0_DP
-             arho(:,2) = 0.0_DP
-          ENDWHERE
-          !
-          CALL gcc_spin_more( length, arho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
-          !
-          DEALLOCATE( grho_ud )
-          !
-       ELSE
-          !
-          ALLOCATE( rh(length), zeta(length) )
-          !
-          rh = rho(:,1) + rho(:,2)
-          !
-          zeta = 2.0_DP ! trash value, gcc-routines get rid of it when present
-          WHERE ( rh > rho_threshold ) zeta = ( rho(:,1) - rho(:,2) ) / rh(:)
-          !
-          grho2(:,1) = ( grho(1,:,1) + grho(1,:,2) )**2 + &
-                       ( grho(2,:,1) + grho(2,:,2) )**2 + &
-                       ( grho(3,:,1) + grho(3,:,2) )**2
-          !
-          CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
-          !
-          v2c(:,2)  = v2c(:,1)
-          v2c_ud(:) = v2c(:,1)
-          !
-          DEALLOCATE( rh, zeta )
-          !
-       ENDIF
-       !   
-    ENDIF
-    !
-    DEALLOCATE( arho, grho2 )
-    !
-  ENDIF  
-  !
-  DEALLOCATE( rho_lxc, sigma )
-  DEALLOCATE( ex_lxc , ec_lxc   )
-  DEALLOCATE( vx_rho , vx_sigma )
-  DEALLOCATE( vc_rho , vc_sigma )
-  !
-#else
-  !
-  ALLOCATE( arho(length,ns), grho2(length,ns) )
-  arho  = 0.0_DP
-  grho2 = 0.0_DP
-  !
-  IF ( ns == 1 ) THEN
-     !
-     ! ... This is the spin-unpolarised case
-     DO k = 1, length
-        IF ( ABS(rho(k,1)) > rho_threshold ) &
-          grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
-     ENDDO
-     !
-     CALL gcxc( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
-     !
-     DO k = 1, length
-        sgn(1) = SIGN(1._DP, rho(k,1))
-        ex(k) = ex(k) * sgn(1)
-        ec(k) = ec(k) * sgn(1)
-     ENDDO
-     !
-  ELSE
-     !
-     DO is = 1, 2
-        grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
-     ENDDO
-     !
-     CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
-     !
-     IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
-        !
-        ALLOCATE( grho_ud(length) )
-        !
-        grho_ud = grho(1,:,1) * grho(1,:,2) + grho(2,:,1) * grho(2,:,2) + &
-                  grho(3,:,1) * grho(3,:,2)
-        !
-        arho = rho
-        !
-        CALL gcc_spin_more( length, arho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
-        !
-        DEALLOCATE( grho_ud )
-        !
-     ELSE
-        !
-        ALLOCATE( rh(length), zeta(length) )
-        !
-        rh = rho(:,1) + rho(:,2)
-        !
-        zeta = 2.0_DP ! trash value, gcc-routines get rid of it when present
-        WHERE ( rh > rho_threshold ) zeta = ( rho(:,1) - rho(:,2) ) / rh(:)
-        !
-        grho2(:,1) = ( grho(1,:,1) + grho(1,:,2) )**2 + &
-                     ( grho(2,:,1) + grho(2,:,2) )**2 + &
-                     ( grho(3,:,1) + grho(3,:,2) )**2
-        !
-        CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
-        !
-        v2c(:,2)  = v2c(:,1)
-        v2c_ud(:) = v2c(:,1)
-        !
-        DEALLOCATE( rh, zeta )
-        !
-     ENDIF
-     !   
-  ENDIF
-  !
-  DEALLOCATE( arho, grho2 )
-  !
-#endif
-  !
-  !
-  RETURN
-  !
-END SUBROUTINE xc_gcx
-!
-!
-!-----------------------------------------------------------------------
-!------- GRADIENT CORRECTION DRIVERS ----------------------------------
-!-----------------------------------------------------------------------
+CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
@@ -414,37 +37,41 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !! Gradient corrections for exchange and correlation - Hartree a.u. 
   !! See comments at the beginning of module for implemented cases
   !
-  ! Input:  rho, grho=|\nabla rho|^2
-  ! Definition:  E_x = \int E_x(rho,grho) dr
-  ! Output: sx = E_x(rho,grho)
-  !         v1x= D(E_x)/D(rho)
-  !         v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !         sc, v1c, v2c as above for correlation
-  !
   USE exch_gga
   USE corr_gga
-  !
   USE beef_interface, ONLY: beefx, beeflocalcorr
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
-  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in, grho_in
-  REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out, sc_out, v1x_out, &
-                                              v2x_out, v1c_out, v2c_out
+  !! Length of the input/output arrays
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
+  !! Charge density
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: grho_in
+  !! \(\text{grho}=|\nabla rho|^2\)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out
+  !! Exchange energy: \(s_x = \int e_x(\text{rho},\text{grho}) dr\)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: sc_out
+  !! Correlation energy: \(s_c = \int e_c(\text{rho},\text{grho}) dr\)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v1x_out
+  !! Exchange potential: \(D\ E_x\ /\ D\ \text{rho} \)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v2x_out
+  !! Exchange potential: \(D\ E_x\ /\ D(D\text{rho}/D r_\alpha)\ /
+  !! \ |\nabla\text{rho}| \)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v1c_out
+  !! Correlation potential (density term)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
+  !! Correlation potential (gradient term)
   !
   ! ... local variables
   !
-  INTEGER :: ir, igcx, igcc
+  INTEGER :: ir
   REAL(DP) :: rho, grho
   REAL(DP) :: sx, v1x, v2x
   REAL(DP) :: sx_, v1x_, v2x_
   REAL(DP) :: sxsr, v1xsr, v2xsr
   REAL(DP) :: sc, v1c, v2c
-  REAL(DP) :: screening_parameter, gau_parameter
-  REAL(DP) :: exx_fraction
-  LOGICAL  :: exx_started
-  
+  !
 #if defined(_OPENMP)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
@@ -452,12 +79,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ntids = omp_get_num_threads()
 #endif
   !
-  igcx = get_igcx()
-  igcc = get_igcc()
-  exx_started = exx_is_active()
-  exx_fraction = get_exx_fraction()
-  IF (igcx == 12) screening_parameter = get_screening_parameter()
-  IF (igcx == 20) gau_parameter = get_gau_parameter()
   !
 !$omp parallel if(ntids==1)
 !$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
@@ -466,7 +87,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      !
      grho = grho_in(ir)
      !
-     IF ( rho_in(ir) <= rho_threshold .OR. grho <= grho_threshold ) THEN
+     IF ( rho_in(ir) <= rho_threshold_gga .OR. grho <= grho_threshold_gga ) THEN
         sx_out(ir)  = 0.0_DP ;   sc_out(ir)  = 0.0_DP
         v1x_out(ir) = 0.0_DP ;   v1c_out(ir) = 0.0_DP
         v2x_out(ir) = 0.0_DP ;   v2c_out(ir) = 0.0_DP
@@ -664,6 +285,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1x = (1.0_DP - exx_fraction) * v1x
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
+        !
      CASE( 43 ) ! 'beefx'
         ! last parameter = 0 means do not add LDA (=Slater) exchange
         ! (espresso) will add it itself
@@ -739,6 +361,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1c = 0.871_DP * v1c
            v2c = 0.871_DP * v2c
         ENDIF
+        !
      CASE( 14 ) ! 'BEEF'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
@@ -793,15 +416,12 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER :: ir, is, iflag, igcx, igcc
+  INTEGER :: ir, is, iflag
   REAL(DP) :: rho(2), grho2(2)
   REAL(DP) :: v1x(2), v2x(2)
   REAL(DP) :: sx(2), rnull(2)
   REAL(DP) :: sxsr(2)
   REAL(DP) :: v1xsr(2), v2xsr(2)
-  REAL(DP) :: screening_parameter, gau_parameter
-  REAL(DP) :: exx_fraction
-  LOGICAL  :: exx_started
   !
   REAL(DP), PARAMETER :: small=1.D-10
   REAL(DP), PARAMETER :: rho_trash=0.5_DP, grho2_trash=0.2_DP
@@ -816,12 +436,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   sx_tot = 0.0_DP
   !
-  igcx = get_igcx()
-  igcc = get_igcc()
-  exx_started = exx_is_active()
-  exx_fraction = get_exx_fraction()
-  IF (igcx == 12 .AND. exx_started) screening_parameter = get_screening_parameter()
-  IF (igcx == 20 .AND. exx_started) gau_parameter = get_gau_parameter()
   !
 !$omp parallel if(ntids==1)
 !$omp do private( rho, grho2, rnull, sx, sxsr, v1x, v1xsr, &
@@ -858,7 +472,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 1 )
         !
-        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), &
+                           v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -909,19 +524,19 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            CALL pbexsr( rho(2), grho2(2), sxsr(2), v1xsr(2), &
                                           v2xsr(2), screening_parameter )
            !
-           sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr(1)*rnull(1) + &
-                                                               sxsr(2)*rnull(2) )
+           sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP*( sxsr(1)*rnull(1) + &
+                                                             sxsr(2)*rnull(2) )
            v1x = v1x - exx_fraction * v1xsr
            v2x = v2x - exx_fraction * v2xsr * 2.0_DP
            !
         ELSEIF ( igcx == 20 .AND. exx_started ) THEN
            ! gau-pbe
-           !CALL pbexgau_lsd( rho, grho2, sxsr, v1xsr, v2xsr, gau_parameter_l )
-           CALL pbexgau( rho(1), grho2(1), sxsr(1), v1xsr(1), v2xsr(1), gau_parameter )
-           CALL pbexgau( rho(2), grho2(2), sxsr(2), v1xsr(2), v2xsr(2), gau_parameter )
+           !CALL pbexgau_lsd( rho, grho2, sxsr, v1xsr, v2xsr, gau_parameter )
+           CALL pbexgau( rho(1),grho2(1), sxsr(1), v1xsr(1),v2xsr(1), gau_parameter )
+           CALL pbexgau( rho(2),grho2(2), sxsr(2), v1xsr(2),v2xsr(2), gau_parameter )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr(1)*rnull(1) + &
-                                                               sxsr(2)*rnull(2) )
+                                                             sxsr(2)*rnull(2) )
            v1x = v1x - exx_fraction * v1xsr
            v2x = v2x - exx_fraction * v2xsr * 2.0_DP
            !
@@ -929,7 +544,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 9 )                    ! B3LYP
         !
-        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), &
+                           v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -1020,7 +636,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 28 )                   ! X3LYP
         !
-        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), &
+                           v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
@@ -1028,8 +645,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         CALL pbex( rho(1), grho2(1), 1, sxsr(1), v1xsr(1), v2xsr(1) )
         CALL pbex( rho(2), grho2(2), 1, sxsr(2), v1xsr(2), v2xsr(2) )
         !
-        sx_tot(ir) = 0.5_DP * ( sxsr(1)*rnull(1) + sxsr(2)*rnull(2) ) * 0.235_DP + &
-                              (   sx(1)*rnull(1) +   sx(2)*rnull(2) ) * 0.765_DP
+        sx_tot(ir) = 0.5_DP*( sxsr(1)*rnull(1) + sxsr(2)*rnull(2) )*0.235_DP + &
+                            (   sx(1)*rnull(1) +   sx(2)*rnull(2) )*0.765_DP
         v1x = v1xsr * 0.235_DP + v1x * 0.765_DP
         v2x = v2xsr * 0.235_DP * 2.0_DP + v2x * 0.765_DP
         !
@@ -1143,15 +760,15 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 43 ) ! 'beefx'
         IF (rho(1) > small .AND. SQRT (ABS (grho2(1)) ) > small) THEN
-           call beefx(2.0_DP * rho(1), 4.0_DP * grho2(1), sx(1), v1x(1), v2x(1), 0)
+           call beefx(2.0_DP*rho(1), 4.0_DP*grho2(1), sx(1), v1x(1), v2x(1), 0)
         ELSE
            sx(1) = 0.0_DP
            v1x(1) = 0.0_DP
            v2x(1) = 0.0_DP
         ENDIF
         IF (rho(2) > small .AND. SQRT (ABS (grho2(2)) ) > small) THEN
-           CALL beefx(2.0_DP * rho(2), 4.0_DP * grho2(2), sx(2), v1x(2), v2x(2), 0)
-           CALL beefx(2.0_DP * rho(2), 4.0_DP * grho2(2), sx(2), v1x(2), v2x(2), 0)
+           CALL beefx(2.0_DP*rho(2), 4.0_DP*grho2(2), sx(2), v1x(2), v2x(2), 0)
+           CALL beefx(2.0_DP*rho(2), 4.0_DP*grho2(2), sx(2), v1x(2), v2x(2), 0)
         ELSE
            sx(2) = 0.0_DP
            v1x(2) = 0.0_DP
@@ -1193,8 +810,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !
   USE corr_gga
   !
-  USE beef_interface, ONLY: beeflocalcorrspin
-  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
@@ -1214,7 +829,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !
   ! ... local variables
   !
-  INTEGER :: ir, igcc
+  INTEGER :: ir
   REAL(DP) :: rho, zeta, grho
   REAL(DP) :: sc, v1c(2), v2c
   !REAL(DP), PARAMETER :: small=1.E-10_DP !, epsr=1.E-6_DP
@@ -1226,8 +841,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   ntids = omp_get_num_threads()
 #endif
   !
-  igcc = get_igcc()
-  !
 !$omp parallel if(ntids==1)
 !$omp do private( rho, zeta, grho, sc, v1c, v2c )
   DO ir = 1, length
@@ -1235,10 +848,11 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     rho  = rho_in(ir)
     grho = grho_in(ir)
     IF ( ABS(zeta_io(ir))<=1.0_DP ) zeta_io(ir) = SIGN( MIN(ABS(zeta_io(ir)), &
-                                    (1.0_DP-rho_threshold)), zeta_io(ir) )
+                                    (1.0_DP-rho_threshold_gga)), zeta_io(ir) )
     zeta = zeta_io(ir)
     !
-    IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold .OR. SQRT(ABS(grho))<=rho_threshold ) THEN
+    IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
+         SQRT(ABS(grho))<=rho_threshold_gga ) THEN
        sc_out(ir) = 0.0_DP
        v1c_out(ir,:) = 0.0_DP ; v2c_out(ir) = 0.0_DP
        CYCLE
@@ -1270,6 +884,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     CASE( 14 )
        !
        call beeflocalcorrspin(rho, zeta, grho, sc, v1c(1), v1c(2), v2c, 0)
+       !
     CASE DEFAULT
        !
        sc = 0.0_DP
@@ -1293,7 +908,7 @@ END SUBROUTINE gcc_spin
 !
 !---------------------------------------------------------------------------
 SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
-                                               sc, v1c, v2c, v2c_ud )
+                                            sc, v1c, v2c, v2c_ud )
   !-------------------------------------------------------------------------
   !! Gradient corrections for exchange and correlation.
   !
@@ -1328,21 +943,18 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   !
   ! ... local variables
   !
-  INTEGER :: ir, igcc
+  INTEGER :: ir
   REAL(DP) :: rho(2), grho(2)
   REAL(DP) :: grho_ud
-  LOGICAL  :: exx_started
 #if defined(_OPENMP)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
 #endif    
   !
-  igcc = get_igcc()
   sc  = 0.0_DP
   v1c = 0.0_DP
   v2c = 0.0_DP
   v2c_ud = 0.0_DP
-  exx_started = exx_is_active()
   !
 #if defined(_OPENMP)
   ntids = omp_get_num_threads()
@@ -1356,7 +968,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
     grho(:) = grho_in(ir,:)
     grho_ud = grho_ud_in(ir)
     !
-    IF ( rho(1)+rho(2) < rho_threshold ) THEN
+    IF ( rho(1)+rho(2) < rho_threshold_gga ) THEN
        sc(ir) = 0.0_DP
        v1c(ir,:) = 0.0_DP
        v2c(ir,:) = 0.0_DP ; v2c_ud(ir) = 0.0_DP
@@ -1392,7 +1004,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       CALL errore( " gcc_spin_more ", " gradient correction not implemented ", 1 )
+       CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)
        !
     END SELECT
     !
@@ -1405,4 +1017,4 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
 END SUBROUTINE gcc_spin_more
 !
 !
-END MODULE xc_gga
+END MODULE qe_drivers_gga

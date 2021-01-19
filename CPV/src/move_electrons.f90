@@ -44,7 +44,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
   USE wavefunctions, ONLY : cv0 ! Lingzhu Kong
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -85,7 +85,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      !
 !=================================================================
 !exx_wf related
-     IF ( dft_is_hybrid().AND.exx_is_active() ) THEN
+     IF ( xclib_dft_is('hybrid').AND.exx_is_active() ) THEN
         !
         IF ( lwfpbe0nscf ) THEN
            !

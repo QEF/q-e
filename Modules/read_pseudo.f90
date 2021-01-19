@@ -45,9 +45,9 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode, ionode_id
   USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
-  USE funct,        ONLY: enforce_input_dft, set_dft_from_name, &
-       get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
-  use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
+  USE funct,        ONLY: enforce_input_dft, set_dft_from_name, get_inlc
+  USE xc_lib,       ONLY: xclib_get_id
+  USE radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
   USE wrappers,     ONLY: md5_from_file
   USE read_upf_v1_module,   ONLY: read_upf_v1
   USE read_upf_new_module,  ONLY: read_upf_new
@@ -70,6 +70,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   LOGICAL :: printout_ = .FALSE., exst
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
+  INTEGER :: iexch1, icorr1, igcx1, igcc1, inlc1
   !
   ! ... initializations, allocations, etc
   !
@@ -279,16 +280,20 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      ! ... Check for DFT consistency - ignored if dft enforced from input
      !
+     iexch_ = xclib_get_id('LDA','EXCH')
+     icorr_ = xclib_get_id('LDA','CORR')
+     igcx_  = xclib_get_id('GGA','EXCH')
+     igcc_  = xclib_get_id('GGA','CORR')
+     inlc_  = get_inlc()
+     !
      IF (nt == 1) THEN
-        iexch_ = get_iexch()
-        icorr_ = get_icorr()
-        igcx_  = get_igcx()
-        igcc_  = get_igcc()
-        inlc_  = get_inlc()
+        iexch1 = iexch_  ; icorr1 = icorr_
+        igcx1  = igcx_   ; igcc1  = igcc_
+        inlc1  = inlc_
      ELSE
-        IF ( iexch_ /= get_iexch() .OR. icorr_ /= get_icorr() .OR. &
-             igcx_  /= get_igcx()  .OR. igcc_  /= get_igcc()  .OR.  &
-             inlc_  /= get_inlc() ) THEN
+        IF ( iexch1 /= iexch_ .OR. icorr1 /= icorr_ .OR. &
+             igcx1  /= igcx_  .OR. igcc1  /= igcc_  .OR. &
+             inlc1  /= inlc_ ) THEN
            CALL errore( 'readpp','inconsistent DFT read from PP files', nt)
         END IF
      END IF

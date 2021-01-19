@@ -10,7 +10,8 @@
         
         USE io_global,  ONLY : stdout
         USE kinds
-        USE funct,      ONLY : dft_is_hybrid, get_exx_fraction
+        USE xc_lib,     ONLY : xclib_dft_is, xclib_get_exx_fraction
+        
         IMPLICIT NONE
         SAVE
 
@@ -171,8 +172,8 @@
 
 !====================================================================================
 !exx_wf related
-             if(dft_is_hybrid()) then
-                WRITE( stdout,101) -exx*get_exx_fraction(), etot
+             if(xclib_dft_is('hybrid')) then
+                WRITE( stdout,101) -exx*xclib_get_exx_fraction(), etot
              end if
 !====================================================================================
 

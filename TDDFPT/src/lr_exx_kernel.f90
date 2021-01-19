@@ -65,8 +65,9 @@ CONTAINS
   SUBROUTINE lr_exx_restart( set_ace )
      !------------------------------------------------------------------------
      !This SUBROUTINE is called when restarting an exx calculation
-     USE funct,     ONLY : get_exx_fraction, start_exx, &
+     USE xc_lib,    ONLY : xclib_get_exx_fraction, start_exx, &
                            exx_is_active, get_screening_parameter
+     
      USE cell_base, ONLY : at
      USE exx_base,  ONLY : exxdiv, erfc_scrlen, exx_divergence, exx_grid_init,&
                            exx_div_check
@@ -85,7 +86,7 @@ CONTAINS
      erfc_scrlen = get_screening_parameter()
      
      exxdiv = exx_divergence()
-     exxalfa = get_exx_fraction()
+     exxalfa = xclib_get_exx_fraction()
      CALL start_exx()
      CALL weights()
      ! FIXME: is this useful ?
@@ -360,7 +361,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
   USE exx,                    ONLY : exxalfa
   USE symm_base,              ONLY : s
   USE cell_base,              ONLY : bg, at
-  USE funct,                  ONLY : exx_is_active
+  USE xc_lib,                 ONLY : exx_is_active
   USE io_global,              ONLY : stdout
   USE mp_global,              ONLY : inter_bgrp_comm, ibnd_start, ibnd_end,&
                                    & me_bgrp
@@ -622,7 +623,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
                                      index_xkq, index_xk, rir, nkqs
   USE symm_base,              ONLY : s
   USE cell_base,              ONLY : bg, at
-  USE funct,                  ONLY : exx_is_active
+  USE xc_lib,                 ONLY : exx_is_active
   USE mp_global,              ONLY : me_bgrp
   USE scatter_mod,            ONLY : gather_grid, scatter_grid
   USE lr_variables,           ONLY : ltammd

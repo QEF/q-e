@@ -1,4 +1,4 @@
-set(sources
+set(src_tddfpt
     src/lr_variables.f90
     src/lr_charg_resp.f90
     src/bcast_lr_input.f90
@@ -52,72 +52,83 @@ set(sources
     src/orthogonalize_omega.f90
     src/mix_pot.f90)
 
-qe_add_library(qe_tddfpt ${sources})
-add_library(QE::TDDFPT ALIAS qe_tddfpt)
+qe_add_library(qe_tddfpt ${src_tddfpt})
 target_link_libraries(qe_tddfpt
     PRIVATE
-        QE::LR_Modules
-        QE::PW
-        QE::Modules
-        QE::UTILX
-        QE::UPF
-        QE::FFTX)
+        qe_lr_modules
+        qe_pw
+        qe_modules
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 # turbo_lanczos.x
 ###########################################################
-set(sources src/lr_main.f90)
-qe_add_executable(qe_tddfpt_turbolanczos_exe ${sources})
-set_target_properties(qe_tddfpt_turbolanczos_exe PROPERTIES OUTPUT_NAME turbo_lanczos.x)
+set(src_turbo_lanczos_x src/lr_main.f90)
+qe_add_executable(qe_tddfpt_turbolanczos_exe ${src_turbo_lanczos_x})
+set_target_properties(qe_tddfpt_turbolanczos_exe 
+    PROPERTIES 
+        OUTPUT_NAME turbo_lanczos.x)
 target_link_libraries(qe_tddfpt_turbolanczos_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::TDDFPT
-        QE::UPF
-        QE::UTILX)
+        qe_pw
+        qe_modules
+        qe_tddfpt
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 # turbo_davidson.x
 ###########################################################
-set(sources src/lr_dav_main.f90)
-qe_add_executable(qe_tddfpt_turbodavidson_exe ${sources})
-set_target_properties(qe_tddfpt_turbodavidson_exe PROPERTIES OUTPUT_NAME turbo_davidson.x)
+set(src_turbo_davidson_x src/lr_dav_main.f90)
+qe_add_executable(qe_tddfpt_turbodavidson_exe ${src_turbo_davidson_x})
+set_target_properties(qe_tddfpt_turbodavidson_exe 
+    PROPERTIES 
+        OUTPUT_NAME turbo_davidson.x)
 target_link_libraries(qe_tddfpt_turbodavidson_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::TDDFPT
-        QE::UPF
-        QE::UTILX)
+        qe_pw
+        qe_modules
+        qe_tddfpt
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 # turbo_eels.x
 ###########################################################
-set(sources src/lr_eels_main.f90)
-qe_add_executable(qe_tddfpt_turboeels_exe ${sources})
-set_target_properties(qe_tddfpt_turboeels_exe PROPERTIES OUTPUT_NAME turbo_eels.x)
+set(src_turbo_eels_x src/lr_eels_main.f90)
+qe_enable_cuda_fortran("${src_turbo_eels_x}")
+qe_add_executable(qe_tddfpt_turboeels_exe ${src_turbo_eels_x})
+set_target_properties(qe_tddfpt_turboeels_exe 
+    PROPERTIES 
+        OUTPUT_NAME turbo_eels.x)
 target_link_libraries(qe_tddfpt_turboeels_exe
     PRIVATE
-        QE::PW
-        QE::LAX
-        QE::Modules
-        QE::TDDFPT
-        QE::LR_Modules
-        QE::UPF
-        QE::UTILX)
+        qe_pw
+        qe_lax
+        qe_modules
+        qe_tddfpt
+        qe_lr_modules
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 # tddfpt_calculate_spectrum.x
 ###########################################################
-set(sources tools/tddfpt_calculate_spectrum.f90)
-qe_add_executable(qe_tddfpt_calculatespectrum_exe ${sources})
-set_target_properties(qe_tddfpt_calculatespectrum_exe PROPERTIES OUTPUT_NAME tddfpt_calculate_spectrum.x)
+set(src_tddfpt_calculate_spectrum_x tools/tddfpt_calculate_spectrum.f90)
+qe_add_executable(qe_tddfpt_calculatespectrum_exe ${src_tddfpt_calculate_spectrum_x})
+set_target_properties(qe_tddfpt_calculatespectrum_exe 
+    PROPERTIES 
+        OUTPUT_NAME tddfpt_calculate_spectrum.x)
 target_link_libraries(qe_tddfpt_calculatespectrum_exe
     PRIVATE
-        QE::LAPACK
-        QE::UTILX
-        QE::Modules)
+        qe_lapack
+        qe_modules
+        qe_xclib)
 
 ###########################################################
 

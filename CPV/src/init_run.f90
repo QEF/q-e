@@ -49,7 +49,7 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
-  USE funct,                    ONLY : dft_is_meta, dft_is_hybrid
+  USE xc_lib,                   ONLY : xclib_dft_is
   USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
   USE efcalc,                   ONLY : clear_nbeg
@@ -163,7 +163,7 @@ SUBROUTINE init_run()
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
   !exx_wf related
-  IF ( dft_is_hybrid() .AND. lwf ) THEN
+  IF ( xclib_dft_is('hybrid') .AND. lwf ) THEN
     !
     CALL exx_initialize()
     !
@@ -204,13 +204,13 @@ SUBROUTINE init_run()
   !
   ALLOCATE( vkb( ngw, nkb ) )
   !
-  IF ( dft_is_meta() .AND. tens ) &
+  IF ( xclib_dft_is('meta') .AND. tens ) &
      CALL errore( ' init_run ', 'ensemble_dft not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. nbgrp > 1 ) &
+  IF ( xclib_dft_is('meta') .AND. nbgrp > 1 ) &
      CALL errore( ' init_run ', 'band parallelization not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. tpre ) THEN
+  IF ( xclib_dft_is('meta') .AND. tpre ) THEN
      !
      ALLOCATE( crosstaus( dffts%nnr, 6, nspin ) )
      ALLOCATE( dkedtaus(  dffts%nnr, 3, 3, nspin ) )

@@ -24,7 +24,9 @@ SUBROUTINE ld1_setup
                 nwfs,          lls,   jjs,   els,   isws,   ocs, &
                 nwfts,  nnts,  llts,  jjts,  elts,  iswts,  octs, nstoaets, &
                 nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, lpaw
-  USE funct, ONLY : get_iexch, dft_is_meta, start_exx, dft_is_nonlocc 
+  USE funct, ONLY : dft_is_nonlocc
+  USE xc_lib, ONLY : xclib_get_id, xclib_dft_is, start_exx
+  !
   IMPLICIT NONE
 
   INTEGER :: n, n1, nc
@@ -32,16 +34,16 @@ SUBROUTINE ld1_setup
   real(DP) :: ocs_loc
   !
   !
-  meta = dft_is_meta()
+  meta = xclib_dft_is('meta')
   IF ( meta .and. rel > 1 ) &
       CALL errore('ld1_setup','meta-GGA not implemented for fully-relativistic case', 1)
   IF ( meta .and. lsd == 1 ) &
       CALL errore('ld1_setup','meta-GGA not implemented for LSDA', 2)
   IF ( meta .and. iswitch > 1 ) &
       CALL errore('ld1_setup','meta-GGA implemented only for all-electron case', 3)
-  hf  = get_iexch()==5
+  hf  = xclib_get_id('LDA','EXCH')==5
   IF (hf)     CALL errore('ld1_setup','HF not implemented yet',1)
-  oep = get_iexch()==4
+  oep = xclib_get_id('LDA','EXCH')==4
   IF (oep.and.iswitch>1) &
      CALL errore('ld1_setup','OEP is implemented only for all-electron calc.',1)
   IF (oep.and.rel>0) &

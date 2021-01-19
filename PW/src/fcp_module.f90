@@ -36,7 +36,7 @@ MODULE fcp_module
   USE fcp_relaxation,  ONLY : fcprlx_final, fcprlx_update, &
                             & fcprlx_set_line_min, fcprlx_set_newton
   USE fixed_occ,       ONLY : tfixed_occ
-  USE funct,           ONLY : exx_is_active
+  USE xc_lib,          ONLY : exx_is_active
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
   USE klist,           ONLY : tot_charge, lgauss, degauss, ltetra, two_fermi_energies

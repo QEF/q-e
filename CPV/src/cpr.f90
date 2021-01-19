@@ -116,8 +116,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE fft_base,                 ONLY : dfftp, dffts
   USE london_module,            ONLY : energy_london, force_london, stres_london
   USE input_parameters,         ONLY : tcpbo
-  USE funct,                    ONLY : dft_is_hybrid, start_exx, exx_is_active
-  USE funct,                    ONLY : dft_is_meta
+  USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -177,7 +176,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !  tlast  = .FALSE.
   nacc   = 5
   !
-  if (dft_is_meta()) then
+  if ( xclib_dft_is('meta') ) then
     !HK/MCA : for SCAN0 calculation the initial SCAN has to converge better than the PBE -> PBE0 case
     exx_start_thr = 1.E+1_DP
   else
@@ -870,7 +869,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !The following criteria is used to turn on exact exchange calculation when
      !GGA energy is converged up to 100 times of the input etot convergence thereshold  
      !
-     IF( .NOT.exx_is_active().AND.dft_is_hybrid().AND.tconvthrs%active ) THEN
+     IF( .NOT.exx_is_active().AND.xclib_dft_is('hybrid').AND.tconvthrs%active ) THEN
        !
        IF(delta_etot.LT.tconvthrs%derho*exx_start_thr) THEN
          !
@@ -985,7 +984,7 @@ SUBROUTINE terminate_run()
   USE control_flags,     ONLY : lwf, lwfpbe0nscf
   USE tsvdw_module,      ONLY : tsvdw_finalize
   USE exx_module,        ONLY : exx_finalize
-  USE funct,             ONLY : dft_is_hybrid, exx_is_active
+  USE xc_lib,     ONLY : xclib_dft_is, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -1022,7 +1021,7 @@ SUBROUTINE terminate_run()
   END IF
   !==============================================================
   !exx_wf related
-  IF ( dft_is_hybrid().AND.exx_is_active() ) THEN
+  IF ( xclib_dft_is('hybrid').AND.exx_is_active() ) THEN
     !
     WRITE( stdout, '(/5x,"Called by EXACT_EXCHANGE:")' )
     CALL print_clock('exact_exchange')   ! total time for exx

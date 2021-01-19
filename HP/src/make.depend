@@ -204,7 +204,6 @@ hp_read_dnsq.o : hpcom.o
 hp_readin.o : ../../LR_Modules/lrcom.o
 hp_readin.o : ../../Modules/check_stop.o
 hp_readin.o : ../../Modules/control_flags.o
-hp_readin.o : ../../Modules/funct.o
 hp_readin.o : ../../Modules/io_files.o
 hp_readin.o : ../../Modules/io_global.o
 hp_readin.o : ../../Modules/kind.o
@@ -214,6 +213,7 @@ hp_readin.o : ../../Modules/noncol.o
 hp_readin.o : ../../PW/src/ldaU.o
 hp_readin.o : ../../PW/src/pwcom.o
 hp_readin.o : ../../UtilXlib/mp.o
+hp_readin.o : ../../XClib/xc_lib.o
 hp_readin.o : hpcom.o
 hp_rotate_dnsq.o : ../../LR_Modules/lrcom.o
 hp_rotate_dnsq.o : ../../Modules/constants.o

@@ -67,9 +67,9 @@ MODULE cp_restart_new
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ityp 
-      USE funct,                    ONLY : get_dft_name, &
-           dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
-           dft_is_nonlocc, get_nonlocc_name
+      USE funct,                    ONLY : get_dft_name, dft_is_nonlocc, get_nonlocc_name
+      USE xc_lib,                   ONLY : xclib_dft_is, xclib_get_exx_fraction, &
+                                           get_screening_parameter
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
                                            Hubbard_lmax, Hubbard_U
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
@@ -299,10 +299,10 @@ MODULE cp_restart_new
                                 U_PROJECTION_TYPE = 'atomic', U = Hubbard_U, STARTING_NS = starting_ns_eigenvalue) 
         END IF
         !
-        IF (dft_is_hybrid())  THEN 
+        IF (xclib_dft_is('hybrid'))  THEN 
            ALLOCATE (hybrid_) 
            CALL qexsd_init_hybrid(OBJ = hybrid_, DFT_IS_HYBRID = .TRUE. , ECUTFOCK = ecutwfc, &
-                                 EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = get_screening_parameter(),&
+                                 EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = get_screening_parameter(),&
                                  EXXDIV_TREATMENT = 'none',  X_GAMMA_EXTRAPOLATION = .FALSE.) 
         END IF 
         empirical_vdW = ( TRIM(vdw_corr) /= 'none' )  

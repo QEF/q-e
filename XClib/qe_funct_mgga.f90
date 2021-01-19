@@ -5,24 +5,17 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-------------------------------------------------------------------------
-!
-!                        META-GGA FUNCTIONALS
-!
-!  Available functionals :
-!           - TPSS (Tao, Perdew, Staroverov & Scuseria)
-!           - M06L
-!  Other options are available through libxc library (must be specified
-!  in input).
-!
-!=========================================================================
-!
+!------------------------------------------------------------------------
 MODULE metagga                       !<GPU:metagga=>metagga_gpu>
+!-------------------------------------------------------------------------
+!! MetaGGA functionals. Available functionals:
 !
-USE exch_lda,  ONLY : slater   !<GPU:slater=>slater_d,exch_lda=>exch_lda_gpu>
-USE corr_lda,  ONLY : pw, pw_spin   !<GPU:pw=>pw_d,pw_spin=>pw_spin_d,corr_lda=>corr_lda_gpu>
-USE corr_gga,  ONLY : pbec, pbec_spin   !<GPU:pbec=>pbec_d,pbec_spin=>pbec_spin_d,corr_gga=>corr_gga_gpu>
+!! * TPSS (Tao, Perdew, Staroverov & Scuseria)
+!! * M06L
+!
+USE exch_lda, ONLY: slater     !<GPU:slater=>slater_d,exch_lda=>exch_lda_gpu>
+USE corr_lda, ONLY: pw, pw_spin   !<GPU:pw=>pw_d,pw_spin=>pw_spin_d,corr_lda=>corr_lda_gpu>    
+USE corr_gga, ONLY: pbec, pbec_spin        !<GPU:pbec=>pbec_d,pbec_spin=>pbec_spin_d,corr_gga=>corr_gga_gpu>
 !
  CONTAINS
 !                             TPSS
@@ -30,11 +23,10 @@ USE corr_gga,  ONLY : pbec, pbec_spin   !<GPU:pbec=>pbec_d,pbec_spin=>pbec_spin_
 !-------------------------------------------------------------------------
 SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
-  !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.
+  !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.  
+  !! Definition:  \(E_x = \int E_x(\text{rho},\text{grho}) dr\)
   !
-  !! Definition:  E_x = \int E_x(rho,grho) dr
-  !
-  USE kinds,            ONLY : DP
+  USE kind_l,            ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -101,7 +93,7 @@ SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )                    !<GPU:
   !! the same applies to correlation terms ;
   !! input grho2 is |\nabla rho|^2 .
   !
-  USE kinds,       ONLY : DP
+  USE kind_l,       ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -160,7 +152,7 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )                    !<GPU:
   !--------------------------------------------------------------
   !! TPSS meta-GGA correlation energy and potentials.
   !
-  USE kinds,  ONLY : DP
+  USE kind_l,  ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -288,7 +280,7 @@ END SUBROUTINE metac
 SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------------------
   !
-  USE kinds,           ONLY : DP
+  USE kind_l,           ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -412,7 +404,7 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &     
   !-----------------------------------------------------------------------
   !! TPSS metaGGA for exchange - Hartree a.u.
   !
-  USE kinds,            ONLY : DP
+  USE kind_l,            ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -487,7 +479,7 @@ SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
   !--------------------------------------------------------------------------
   !! TPSS metaGGA for correlations - Hartree a.u.
   !
-  USE kinds,       ONLY : DP
+  USE kind_l,       ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -562,7 +554,7 @@ END SUBROUTINE tpsscc_spin
 SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
                        tau, sc, v1up, v1dw, v2up, v2dw, v3 )
   !---------------------------------------------------------------
-  USE kinds,    ONLY : DP
+  USE kind_l,    ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -890,7 +882,7 @@ END SUBROUTINE metac_spin
 SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )       !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !
-  USE kinds,        ONLY : DP
+  USE kind_l,        ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -953,7 +945,7 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &    
                         v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
   !-----------------------------------------------------------------------
   !
-  USE kinds,        ONLY : DP
+  USE kind_l,        ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -985,8 +977,8 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   !---------------------------------------------------------------------------
   !! M06L exchange.
   !
-  USE kinds,       ONLY : DP
-  USE constants,   ONLY : pi
+  USE kind_l,       ONLY : DP
+  USE constants_l,   ONLY : pi
   !
   IMPLICIT NONE
   !
@@ -1057,7 +1049,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   !
   alpha = 1.86726d-03
   !
-  IF (rho < small .AND. tau < small) THEN
+  IF (rho < small .OR. tau < small) THEN  !.AND.?
      ex = zero
      v1x = zero
      v2x = zero
@@ -1154,8 +1146,8 @@ SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )       !<GPU:DEVICE>
   !
   !! v2x = 1/|grho| * dsx / d|grho| = 2 *  dsx / dgrho2
   !
-  USE kinds
-  USE constants,   ONLY : pi
+  USE kind_l
+  USE constants_l,   ONLY : pi
   !
   IMPLICIT NONE
   !
@@ -1221,8 +1213,8 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !-------------------------------------------------------------------------------
   !! M06L correlation.
   !
-  USE kinds,        ONLY : DP
-  USE constants,    ONLY : pi
+  USE kind_l,        ONLY : DP
+  USE constants_l,    ONLY : pi
   !
   IMPLICIT NONE
   !
@@ -1333,7 +1325,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   ! ... Ecaa
   !
-  IF (rhoa < small .AND. taua < small) THEN
+  IF (rhoa < small .OR. taua < small) THEN  !.AND.?
     !
     Ecaa = zero
     v1_aa_up = zero
@@ -1507,7 +1499,7 @@ END SUBROUTINE m06lc
 SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )       !<GPU:DEVICE>
     !-----------------------------------------------------------------
     !
-    USE kinds,   ONLY : DP
+    USE kind_l,   ONLY : DP
     !
     IMPLICIT NONE
     !
@@ -1537,7 +1529,7 @@ SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )       !<GPU:DEVICE>
 SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )       !<GPU:DEVICE>
   !----------------------------------------------------------------------
   !
-  USE kinds,    ONLY : DP
+  USE kind_l,    ONLY : DP
   !
   IMPLICIT NONE
   !

@@ -5,20 +5,19 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-
-
+!----------------------------------------------------------------------
 MODULE exch_lda  !<GPU:exch_lda=>exch_lda_gpu>
-!
-!! Module containing LDA functionals.
+!----------------------------------------------------------------------
+!! LDA exchange functionals.
 !
 CONTAINS
+!
 !-----------------------------------------------------------------------
 SUBROUTINE slater( rs, ex, vx )                  !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3
   !
-  USE kinds,  ONLY: DP
+  USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
   !!
@@ -47,7 +46,7 @@ SUBROUTINE slater1( rs, ex, vx )                 !<GPU:DEVICE>
   !! Slater exchange with alpha=1, corresponding to -1.374/r_s Ry.
   !! Used to recover old results.
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -75,8 +74,8 @@ SUBROUTINE slater_rxc( rs, ex, vx )                 !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3 and Relativistic exchange.
   !
-  USE kinds,      ONLY: DP
-  USE constants,  ONLY: pi, c_au
+  USE kind_l,      ONLY: DP
+  USE constants_l,  ONLY: pi, c_au
   !
   IMPLICIT NONE
   !
@@ -129,7 +128,7 @@ SUBROUTINE slaterKZK( rs, ex, vx, vol )                 !<GPU:DEVICE>
   !! Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
   !! correction.
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -182,7 +181,7 @@ SUBROUTINE slater_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVI
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, spin-polarized case.
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -224,7 +223,7 @@ SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )                 !<GPU:DEV
   !! Slater exchange with alpha=2/3, relativistic exchange case.
   !! Spin-polarized case.
   !
-  USE kinds,       ONLY: DP
+  USE kind_l,       ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -287,9 +286,9 @@ END SUBROUTINE slater_rxc_spin
 !-----------------------------------------------------------------------
 SUBROUTINE slater1_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
   !-----------------------------------------------------------------------
-  !     Slater exchange with alpha=2/3, spin-polarized case
+  !! Slater exchange with alpha=2/3, spin-polarized case
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -324,5 +323,6 @@ SUBROUTINE slater1_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEV
   RETURN
   !
 END SUBROUTINE slater1_spin
-
-END MODULE
+!
+!
+END MODULE exch_lda

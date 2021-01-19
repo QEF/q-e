@@ -61,8 +61,6 @@ USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
-USE corr_lda,          ONLY : pw, pw_spin
-
 
 ! ----------------------------------------------------------------------
 ! No implicit variables
@@ -88,7 +86,7 @@ SAVE
 PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_stress,                   &
            vdW_DF_energy, vdW_DF_potential,                            &
            generate_kernel, interpolate_kernel,                        &
-           initialize_spline_interpolation, spline_interpolation
+           initialize_spline_interpolation, spline_interpolation, pw,pw_spin
 
 
 ! ----------------------------------------------------------------------
@@ -722,7 +720,7 @@ CONTAINS
   !     dq0_dgradrho = total_rho / |grad_rho| * d q0 / d |grad_rho|
 
   SUBROUTINE get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
-
+  
   IMPLICIT NONE
 
   REAL(DP), INTENT(IN)      :: total_rho(:), grad_rho(:,:)         ! Input variables needed.
@@ -850,11 +848,57 @@ CONTAINS
   END SUBROUTINE get_q0_on_grid
 
 
-
-
-
-
-
+  !-----------------------------------------------------------------------
+  SUBROUTINE pw( rs, iflag, ec, vc )
+    !-----------------------------------------------------------------------
+    ! --A provisional copy of the pw routine in XC lib to avoid external calls--
+    !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
+    !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
+    !
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: rs
+    INTEGER, INTENT(IN)  :: iflag
+    REAL(DP), INTENT(OUT) :: ec, vc
+    !
+    REAL(DP), PARAMETER :: a=0.031091d0, b1=7.5957d0, b2=3.5876d0, c0=a, &
+                           c1=0.046644d0, c2=0.00664d0, c3=0.01043d0, d0=0.4335d0, &
+                           d1=1.4408d0
+    REAL(DP) :: lnrs, rs12, rs32, rs2, om, dom, olog
+    REAL(DP) :: a1(2), b3(2), b4(2)
+    DATA a1 / 0.21370d0, 0.026481d0 /, b3 / 1.6382d0, -0.46647d0 /, &
+         b4 / 0.49294d0, 0.13354d0 /
+    ! high- and low-density formulae implemented but not used in PW case
+    ! (reason: inconsistencies in PBE/PW91 functionals).
+    IF ( rs < 1d0 .AND. iflag == 2 ) THEN
+       ! high density formula
+       lnrs = LOG(rs)
+       ec = c0 * lnrs - c1 + c2 * rs * lnrs - c3 * rs
+       vc = c0 * lnrs - (c1 + c0 / 3.d0) + 2.d0 / 3.d0 * c2 * rs * &
+                 lnrs - (2.d0 * c3 + c2) / 3.d0 * rs
+    ELSEIF ( rs > 100.d0 .AND. iflag == 2 ) THEN
+       ! low density formula
+       ec = - d0 / rs + d1 / rs**1.5d0
+       vc = - 4.d0 / 3.d0 * d0 / rs + 1.5d0 * d1 / rs**1.5d0
+    ELSE
+       ! interpolation formula
+       rs12 = SQRT(rs)
+       rs32 = rs * rs12
+       rs2  = rs**2
+       om   = 2.d0*a*( b1*rs12 + b2*rs + b3(iflag) * rs32 + b4(iflag)*rs2 )
+       dom  = 2.d0*a*( 0.5d0 * b1 * rs12 + b2 * rs + 1.5d0 * b3(iflag) * &
+              rs32 + 2.d0 * b4(iflag) * rs2 )
+       olog = LOG( 1.d0 + 1.0d0 / om )
+       !
+       ec = - 2.d0 * a * (1.d0 + a1(iflag) * rs) * olog
+       vc = - 2.d0 * a * (1.d0 + 2.d0 / 3.d0 * a1(iflag) * rs) &
+                * olog - 2.d0 / 3.d0 * a * (1.d0 + a1(iflag) * rs) * dom / &
+                (om * (om + 1.d0) )
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE pw
+  !---------------------
 
   ! ####################################################################
   !                       |                       |
@@ -1048,12 +1092,100 @@ CONTAINS
 
   END SUBROUTINE get_q0_on_grid_spin
 
+  
+  !-----------------------------------------------------------------------
+  SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )
+    !-----------------------------------------------------------------------
+    !--A provisional copy of the pw routine in XC lib to avoid external calls--
+    !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: rs
+    !! Wigner-Seitz radius
+    REAL(DP), INTENT(IN) :: zeta
+    !! zeta = (rho_up - rho_dw)/rho_tot
+    REAL(DP), INTENT(OUT) :: ec, vc_up, vc_dw
+    !
+    REAL(DP) :: rs12, rs32, rs2, zeta2, zeta3, zeta4, fz, dfz
+    REAL(DP) :: om, dom, olog, epwc, vpwc
+    REAL(DP) :: omp, domp, ologp, epwcp, vpwcp
+    REAL(DP) :: oma, doma, ologa, alpha, vpwca
+    !
+    ! xc parameters, unpolarised
+    REAL(DP), PARAMETER :: a = 0.031091d0, a1 = 0.21370d0, b1 = 7.5957d0, b2 = &
+             3.5876d0, b3 = 1.6382d0, b4 = 0.49294d0, c0 = a, c1 = 0.046644d0, &
+             c2 = 0.00664d0, c3 = 0.01043d0, d0 = 0.4335d0, d1 = 1.4408d0
+    ! xc parameters, polarised
+    REAL(DP), PARAMETER :: ap = 0.015545d0, a1p = 0.20548d0, b1p = 14.1189d0, b2p &
+                 = 6.1977d0, b3p = 3.3662d0, b4p = 0.62517d0, c0p = ap, c1p =     &
+                0.025599d0, c2p = 0.00319d0, c3p = 0.00384d0, d0p = 0.3287d0, d1p &
+                = 1.7697d0
+    ! xc PARAMETERs, antiferro
+    REAL(DP), PARAMETER :: aa = 0.016887d0, a1a = 0.11125d0, b1a = 10.357d0, b2a = &
+                 3.6231d0, b3a = 0.88026d0, b4a = 0.49671d0, c0a = aa, c1a =       &
+                 0.035475d0, c2a = 0.00188d0, c3a = 0.00521d0, d0a = 0.2240d0, d1a &
+                 = 0.3969d0
+    REAL(DP), PARAMETER :: fz0 = 1.709921d0
+    !
+    !     if (rs < 0.5d0) then
+    ! high density formula (not implemented)
+    !
+    !     elseif (rs > 100.d0) then
+    ! low density formula (not implemented)
+    !
+    !     else
+    ! interpolation formula
+    !
+    zeta2 = zeta * zeta
+    zeta3 = zeta2 * zeta
+    zeta4 = zeta3 * zeta
+    rs12 = SQRT(rs)
+    rs32 = rs * rs12
+    rs2 = rs**2
+    ! unpolarised
+    om = 2.d0 * a * (b1 * rs12 + b2 * rs + b3 * rs32 + b4 * rs2)
+    dom = 2.d0 * a * (0.5d0 * b1 * rs12 + b2 * rs + 1.5d0 * b3 * rs32 &
+         + 2.d0 * b4 * rs2)
+    olog = LOG(1.d0 + 1.0d0 / om)
+    epwc = - 2.d0 * a * (1.d0 + a1 * rs) * olog
+    vpwc = - 2.d0 * a * (1.d0 + 2.d0 / 3.d0 * a1 * rs) * olog - 2.d0 / &
+           3.d0 * a * (1.d0 + a1 * rs) * dom / (om * (om + 1.d0) )
+    ! polarized
+    omp  = 2.d0 * ap * (b1p * rs12 + b2p * rs + b3p * rs32 + b4p * rs2)
+    domp = 2.d0 * ap * (0.5d0 * b1p * rs12 + b2p * rs + 1.5d0 * b3p * &
+           rs32 + 2.d0 * b4p * rs2)
+    ologp = LOG(1.d0 + 1.0d0 / omp)
+    epwcp = - 2.d0 * ap * (1.d0 + a1p * rs) * ologp
+    vpwcp = - 2.d0 * ap * (1.d0 + 2.d0 / 3.d0 * a1p * rs) * ologp - &
+            2.d0 / 3.d0 * ap * (1.d0 + a1p * rs) * domp / (omp * (omp + 1.d0))
+    ! antiferro
+    oma = 2.d0 * aa * (b1a * rs12 + b2a * rs + b3a * rs32 + b4a * rs2)
+    doma = 2.d0 * aa * ( 0.5d0 * b1a * rs12 + b2a * rs + 1.5d0 * b3a * &
+           rs32 + 2.d0 * b4a * rs2 )
+    ologa = LOG( 1.d0 + 1.0d0/oma )
+    alpha = 2.d0 * aa * (1.d0 + a1a*rs) * ologa
+    vpwca = + 2.d0 * aa * (1.d0 + 2.d0/3.d0 * a1a * rs) * ologa + &
+            2.d0 / 3.d0 * aa * (1.d0 + a1a*rs) * doma / (oma * (oma + 1.d0))
+    !
+    fz = ( (1.d0 + zeta)**(4.d0 / 3.d0) + (1.d0 - zeta)**(4.d0 / &
+            3.d0) - 2.d0) / (2.d0** (4.d0 / 3.d0) - 2.d0)
+    dfz = ( (1.d0 + zeta)**(1.d0 / 3.d0) - (1.d0 - zeta)**(1.d0 / &
+            3.d0) ) * 4.d0 / (3.d0 * (2.d0** (4.d0 / 3.d0) - 2.d0) )
+    !
+    ec = epwc + alpha * fz * (1.d0 - zeta4) / fz0 + (epwcp - epwc) &
+                * fz * zeta4
+    vc_up = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+                   * fz * zeta4 + (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
+                   zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
+                   * (1.d0 - zeta)
+    vc_dw = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+                   * fz * zeta4 - (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
+                   zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
+                   * (1.d0 + zeta)
+    RETURN
+    !
+  END SUBROUTINE pw_spin
 
-
-
-
-
-
+  
 
   ! ####################################################################
   !                            |              |

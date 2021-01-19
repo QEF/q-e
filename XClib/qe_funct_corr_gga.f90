@@ -1,16 +1,18 @@
 !
 MODULE corr_gga                       !<GPU:corr_gga=>corr_gga_gpu>
   !
-  USE corr_lda,  ONLY : pw, pw_spin   !<GPU:pw_spin=>pw_spin_d,pw=>pw_d,corr_lda=>corr_lda_gpu>
+  USE corr_lda, ONLY: pw, pw_spin   !<GPU:pw_spin=>pw_spin_d,pw=>pw_d,corr_lda=>corr_lda_gpu>
   !
 CONTAINS
 !
+
+
 !-----------------------------------------------------------------------
 SUBROUTINE perdew86( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew gradient correction on correlation: PRB 33, 8822 (1986).
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -61,7 +63,7 @@ SUBROUTINE ggac( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91) correlation part
   !
-  USE kinds,    ONLY: DP
+  USE kind_l,    ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -139,7 +141,7 @@ SUBROUTINE glyp( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Lee Yang Parr: gradient correction part.
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -184,7 +186,7 @@ SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:DEVIC
   !! * iflag=2: J.P.Perdew et al., PRL 100, 136406 (2008).
   !! * iflag=3: L. Chiodo et al, PRL 108, 126402 (2012)  (PBEQ2D)
   !
-  USE kinds,    ONLY: DP
+  USE kind_l,    ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -239,8 +241,8 @@ SUBROUTINE pbec( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:DEVIC
   RETURN
   !
 END SUBROUTINE pbec
-!
-!
+
+
 ! ===========> SPIN <===========
 !
 !-----------------------------------------------------------------------
@@ -249,7 +251,7 @@ SUBROUTINE perdew86_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )            
   !! Perdew gradient correction on correlation: PRB 33, 8822 (1986)
   !! spin-polarized case.
   !
-  USE kinds,    ONLY: DP
+  USE kind_l,    ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -320,7 +322,7 @@ SUBROUTINE ggac_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )                
   !---------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91) correlation part - spin-polarized
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -428,7 +430,7 @@ SUBROUTINE pbec_spin( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )         
   !! * iflag = 1: J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996);
   !! * iflag = 2: J.P.Perdew et al., PRL 100, 136406 (2008).
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -522,7 +524,7 @@ SUBROUTINE lsd_glyp( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up
   !----------------------------------------------------------------------
   !! Lee, Yang, Parr: gradient correction part.
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -599,7 +601,7 @@ SUBROUTINE cpbe2d( rho, grho, sc, v1c, v2c )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !! 2D correction (last term of Eq. 5, PRL 108, 126402 (2012))
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !

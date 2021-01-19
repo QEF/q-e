@@ -67,7 +67,6 @@ energies_xc.o : ../../Modules/cell_base.o
 energies_xc.o : ../../Modules/constants.o
 energies_xc.o : ../../Modules/control_flags.o
 energies_xc.o : ../../Modules/fft_base.o
-energies_xc.o : ../../Modules/funct.o
 energies_xc.o : ../../Modules/io_files.o
 energies_xc.o : ../../Modules/io_global.o
 energies_xc.o : ../../Modules/kind.o
@@ -80,6 +79,7 @@ energies_xc.o : ../../PW/src/ldaU.o
 energies_xc.o : ../../PW/src/pwcom.o
 energies_xc.o : ../../PW/src/scf_mod.o
 energies_xc.o : ../../UtilXlib/mp.o
+energies_xc.o : ../../XClib/xc_lib.o
 energies_xc.o : ../../upflib/uspp.o
 exchange_custom.o : ../../Modules/cell_base.o
 exchange_custom.o : ../../Modules/constants.o
@@ -292,7 +292,6 @@ pola_partial.o : ../../UtilXlib/mp.o
 pola_partial.o : fft_custom.o
 produce_wannier_gamma.o : ../../Modules/constants.o
 produce_wannier_gamma.o : ../../Modules/fft_base.o
-produce_wannier_gamma.o : ../../Modules/funct.o
 produce_wannier_gamma.o : ../../Modules/gvecw.o
 produce_wannier_gamma.o : ../../Modules/io_files.o
 produce_wannier_gamma.o : ../../Modules/io_global.o
@@ -307,6 +306,7 @@ produce_wannier_gamma.o : ../../PW/src/ldaU.o
 produce_wannier_gamma.o : ../../PW/src/pwcom.o
 produce_wannier_gamma.o : ../../PW/src/scf_mod.o
 produce_wannier_gamma.o : ../../UtilXlib/mp.o
+produce_wannier_gamma.o : ../../XClib/xc_lib.o
 produce_wannier_gamma.o : exchange_custom.o
 produce_wannier_gamma.o : fake_conduction.o
 produce_wannier_gamma.o : fft_custom.o
