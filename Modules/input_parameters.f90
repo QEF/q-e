@@ -423,6 +423,10 @@ MODULE input_parameters
         LOGICAL :: hub_pot_fix = .FALSE.
         LOGICAL :: backall(nsx) = .FALSE.
 
+          ! For linking to DMFT calculations
+        LOGICAL :: dmft = .FALSE.
+        CHARACTER(len=256) :: dmft_prefix = 'dmft_prefix'
+
         LOGICAL :: la2F = .false.
           ! For electron-phonon calculations
           !
@@ -642,7 +646,7 @@ MODULE input_parameters
              Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_alpha,             &
              Hubbard_alpha_back, Hubbard_J0, Hubbard_beta,                    &
              hub_pot_fix, Hubbard_V, Hubbard_parameters,                      &
-             backall, lback, l1back, reserv, reserv_back,                     &
+             backall, lback, l1back, reserv, reserv_back, dmft, dmft_prefix,  &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &

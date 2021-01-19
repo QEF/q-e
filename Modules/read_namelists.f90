@@ -226,6 +226,8 @@ MODULE read_namelists_module
        A_pen=0.0_DP
        sigma_pen=0.01_DP
        alpha_pen=0.0_DP
+       dmft = .FALSE.
+       dmft_prefix = prefix
        !
        ! ... EXX
        !
@@ -893,6 +895,8 @@ MODULE read_namelists_module
        CALL mp_bcast( A_pen,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sigma_pen,              ionode_id, intra_image_comm )
        CALL mp_bcast( alpha_pen,              ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft,                   ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft_prefix,            ionode_id, intra_image_comm )
        CALL mp_bcast( edir,                   ionode_id, intra_image_comm )
        CALL mp_bcast( emaxpos,                ionode_id, intra_image_comm )
        CALL mp_bcast( eopreg,                 ionode_id, intra_image_comm )

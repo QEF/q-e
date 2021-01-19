@@ -31,6 +31,7 @@ SUBROUTINE c_bands( iter )
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   USE gcscf_module,         ONLY : lgcscf
+  USE add_dmft_occ,         ONLY : dmft, dmft_updated
 
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
@@ -131,8 +132,11 @@ SUBROUTINE c_bands( iter )
           CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
      !
      ! ... diagonalization of bands for k-point ik
+     ! ... (skip only in charge self-consistent DFT+DMFT calculations)
      !
-     call diag_bands ( iter, ik, avg_iter )
+     IF (.NOT. ( dmft .AND. .NOT. dmft_updated ) ) THEN
+        call diag_bands ( iter, ik, avg_iter )
+     END IF
      !
      ! ... save wave-functions to be used as input for the
      ! ... iterative diagonalization of the next scf iteration
