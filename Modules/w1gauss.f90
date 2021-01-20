@@ -23,7 +23,7 @@ function w1gauss (x, n)
   !
   !
   USE kinds, ONLY : DP
-  USE constants, ONLY : pi, sqrtpm1
+  USE constants, ONLY : pi
   implicit none
   real(DP) :: w1gauss, x
   ! output: the value of the function
@@ -65,44 +65,28 @@ function w1gauss (x, n)
   endif
   ! Cold smearing
   if (n.eq. - 1) then
-     ! xp = x - 1.0d0 / sqrt (2.0d0)
-     ! arg = min (200.d0, xp**2)
-     ! w1gauss = 1.0d0 / sqrt (2.0d0 * pi) * xp * exp ( - arg)
-     xp = -2.d0 * ( x - 1.0d0 / sqrt (2.0d0) ) * ( 2.0d0 - sqrt ( 2.0d0) * x ) - sqrt(2.d0)
-     arg = min (200.d0, (x - 1.0d0 / sqrt (2.0d0) ) **2)
-     w1gauss = sqrtpm1 * exp ( - arg) * xp
+     xp = x - 1.0d0 / sqrt (2.0d0)
+     arg = min (200.d0, xp**2)
+     w1gauss = 1.0d0 / sqrt (2.0d0 * pi) * xp * exp ( - arg)
      return
 
   endif
-  ! ! Methfessel-Paxton
-  ! arg = min (200.d0, x**2)
-  ! w1gauss = - 0.5d0 * exp ( - arg) / sqrt (pi)
-  ! if (n.eq.0) return
-  ! hd = 0.d0
-  ! hp = exp ( - arg)
-  ! ni = 0
-  ! a = 1.d0 / sqrt (pi)
-  ! do i = 1, n
-  !    hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
-  !    ni = ni + 1
-  !    hpm1 = hp
-  !    hp = 2.0d0 * x * hd-2.0d0 * DBLE (ni) * hp
-  !    ni = ni + 1
-  !    a = - a / (DBLE (i) * 4.0d0)
-  !    w1gauss = w1gauss - a * (0.5d0 * hp + DBLE (ni) * hpm1)
-  ! enddo
   ! Methfessel-Paxton
   arg = min (200.d0, x**2)
-  a = sqrtpm1 * exp ( - arg)
-  w1gauss = - a * 2.d0 * x 
+  w1gauss = - 0.5d0 * exp ( - arg) / sqrt (pi)
   if (n.eq.0) return
-  hd = 2.d0 * x 
-  hp = 2.d0 * x * hd - 2.d0
+  hd = 0.d0
+  hp = exp ( - arg)
+  ni = 0
+  a = 1.d0 / sqrt (pi)
   do i = 1, n
-     hd = 2.0d0 * x * hp - 2.0d0 * DBLE (2*i) * hd
+     hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
+     ni = ni + 1
+     hpm1 = hp
+     hp = 2.0d0 * x * hd-2.0d0 * DBLE (ni) * hp
+     ni = ni + 1
      a = - a / (DBLE (i) * 4.0d0)
-     w1gauss = w1gauss - a * hd
-     hp = 2.0d0 * x * hd - 2.0d0 * DBLE (2*i+1) * hp
+     w1gauss = w1gauss - a * (0.5d0 * hp + DBLE (ni) * hpm1)
   enddo
   return
 

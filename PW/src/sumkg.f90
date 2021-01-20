@@ -174,7 +174,7 @@ FUNCTION sumkg2( et, nbnd, nks, wk, degauss, ngauss, e, is, isk )
   !
   ! ... local variables
   !
-  REAL(DP), EXTERNAL :: w1gauss
+  REAL(DP), EXTERNAL :: w2gauss
   ! function which compute the smearing
   REAL(DP) :: sum1
   INTEGER :: ik, ibnd
