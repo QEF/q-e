@@ -139,7 +139,6 @@ target_link_libraries(qe_modules
         qe_lax
         qe_upflib
         qe_clib # this is needed only by wrappers.f90
-        qe_libbeef
         qe_mpi_fortran
         qe_mbd
         qe_xclib
