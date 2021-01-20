@@ -26,12 +26,6 @@ else()
 endif()
 
 ###########################################################
-# libbeef
-###########################################################
-add_subdirectory(libbeef)
-target_link_libraries(qe_libbeef PRIVATE qe_lapack)
-
-###########################################################
 # WANNIER90
 ###########################################################
 # TODO look for an externally-provided wannier90
