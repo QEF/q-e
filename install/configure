@@ -5092,6 +5092,7 @@ else
 		    # __kmpc_critical_with_hint, that is found in OMP LLVM
 		    # or in Intel compiler library libiomp5.so
 		    # add_mkl_omp="-liomp5"
+      		    # add_mkl_flag="-pgf90libs"
 		    ;;
 	       pgf* )
                     # For obsolete PGI versions (superseded by nvfortran)
