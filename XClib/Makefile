@@ -28,8 +28,8 @@ xc_wrapper_mgga.o \
 xc_lib.o
 
 BEEF = \
-pbecor.o \
-beefun.o
+libbeef/pbecor.o \
+libbeef/beefun.o
 
 all: xc_lib.a
 

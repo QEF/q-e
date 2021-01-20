@@ -1,6 +1,4 @@
 set(sources_xclib
-    beefun.c
-    pbecor.c
     dft_mod.f90
     qe_constants.f90
     qe_drivers_d_gga.f90
@@ -30,9 +28,11 @@ target_link_libraries(qe_xclib
     PRIVATE
         qe_openmp_fortran
         qe_mpi_fortran
-        qe_lapack)
+        qe_libbeef)
 
 qe_install_targets(qe_xclib)
+
+add_subdirectory(libbeef)
 
 ###########################################################
 # xclib_test.x
@@ -47,7 +47,6 @@ if(QE_ENABLE_TEST)
         PRIVATE
             qe_openmp_fortran
             qe_mpi_fortran
-            qe_lapack
             qe_xclib)
     add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
 endif(QE_ENABLE_TEST)
