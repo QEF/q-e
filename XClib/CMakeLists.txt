@@ -29,23 +29,25 @@ qe_add_library(qe_xclib ${sources_xclib})
 target_link_libraries(qe_xclib
     PRIVATE
         qe_openmp_fortran
-        qe_mpi_fortran)
+        qe_mpi_fortran
+        qe_lapack)
 
 qe_install_targets(qe_xclib)
 
 ###########################################################
 # xclib_test.x
 ###########################################################
-#if(QE_ENABLE_TEST)
-#    qe_add_executable(qe_xclib_test xclib_test.f90)
-#    set_target_properties(qe_xclib_test 
-#        PROPERTIES 
-#            OUTPUT_NAME qe_xclib_test.x 
-#            RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
-#    target_link_libraries(qe_xclib_test
-#        PRIVATE
-#            qe_openmp_fortran
-#            qe_mpi_fortran
-#            qe_xclib)
-#    add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
-#endif(QE_ENABLE_TEST)
+if(QE_ENABLE_TEST)
+    qe_add_executable(qe_xclib_test xclib_test.f90)
+    set_target_properties(qe_xclib_test 
+        PROPERTIES 
+            OUTPUT_NAME qe_xclib_test.x 
+            RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+    target_link_libraries(qe_xclib_test
+        PRIVATE
+            qe_openmp_fortran
+            qe_mpi_fortran
+            qe_lapack
+            qe_xclib)
+    add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
+endif(QE_ENABLE_TEST)

@@ -31,7 +31,7 @@ BEEF = \
 pbecor.o \
 beefun.o
 
-all: xc_lib.a xclib_test.x
+all: xc_lib.a
 
 xc_lib.a: $(XCL) $(BEEF)
 	$(AR) $(ARFLAGS) $@ $?
@@ -41,6 +41,8 @@ xclib_test.x : xclib_test.o xc_lib.a
 	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
 		xclib_test.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
+
+test : xclib_test.x
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
