@@ -766,7 +766,7 @@ CONTAINS
        !
        IF ( gstart == 2 ) THEN
           !
-          psir = DBLE ( psi(ig,ibnd) )
+          psir = DBLE ( psi(1,ibnd) )
           psi2 = psir * psir
           ekin(jbnd) = ekin(jbnd) + g2kin(1) * psi2
           !

@@ -233,7 +233,7 @@ SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, 
      !
      ! ... Line searching
      !
-     CALL line_search_gpu( )
+     CALL rr_line_search_gpu( )
      !
      ! ... Calculate eigenvalues and check convergence
      !
@@ -824,7 +824,7 @@ CONTAINS
   END SUBROUTINE diag_diis
   !
   !
-  SUBROUTINE line_search_gpu( )
+  SUBROUTINE rr_line_search_gpu( )
     !
     IMPLICIT NONE
     !
@@ -883,7 +883,7 @@ CONTAINS
           !
 !$cuf kernel do(1)
           DO ii = 1, 1
-            ekinj = ekinj + g2kin_d(1) * DBLE ( psi_d(ig,ibnd) ) * DBLE ( psi_d(ig,ibnd) ) 
+            ekinj = ekinj + g2kin_d(1) * DBLE ( psi_d(1,ibnd) ) * DBLE ( psi_d(1,ibnd) ) 
           END DO 
           !
        END IF
@@ -1241,7 +1241,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE line_search_gpu
+  END SUBROUTINE rr_line_search_gpu
   !
   !
   SUBROUTINE eigenvalues( )

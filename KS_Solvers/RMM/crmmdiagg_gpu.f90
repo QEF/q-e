@@ -224,7 +224,7 @@ SUBROUTINE crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, psi_d, hp
      !
      ! ... Line searching
      !
-     CALL line_search_gpu( )
+     CALL cr_line_search_gpu( )
      !
      ! ... Calculate eigenvalues and check convergence
      !
@@ -764,7 +764,7 @@ CONTAINS
   END SUBROUTINE diag_diis
   !
   !
-  SUBROUTINE line_search_gpu( )
+  SUBROUTINE cr_line_search_gpu( )
     !
     IMPLICIT NONE
     !
@@ -1072,7 +1072,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE line_search_gpu
+  END SUBROUTINE cr_line_search_gpu
   !
   !
   SUBROUTINE eigenvalues( )
