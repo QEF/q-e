@@ -69,13 +69,26 @@ efermit.o \
 electrons.o \
 eqvect.o \
 esm.o \
+esm_common_mod.o \
+esm_ewald_mod.o \
+esm_force_mod.o \
+esm_hartree_mod.o \
+esm_local_mod.o \
+esm_stres_mod.o \
 ewald.o \
 ewald_dipole.o \
 extfield.o \
 exx_base.o \
 exx_band.o \
 exx.o \
-fcp.o \
+fcp_capacitance.o \
+fcp_dyn_calcavg.o \
+fcp_dyn_printavg.o \
+fcp_dynamics.o \
+fcp_hessian.o \
+fcp_input.o \
+fcp_module.o \
+fcp_relaxation.o \
 find_group.o \
 forces_bp_efield.o \
 force_cc.o \
@@ -87,6 +100,8 @@ force_us.o \
 forces.o \
 g_psi.o \
 g_psi_mod.o \
+gcscf_input.o \
+gcscf_module.o \
 gen_at_dj.o \
 gen_at_dy.o \
 gen_us_dj.o \
@@ -251,7 +266,7 @@ wannier_check.o \
 wannier_clean.o \
 wannier_occ.o
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
+QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS= bindir libs mods libks_solvers dftd3

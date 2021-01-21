@@ -21,7 +21,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   !
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
-  USE funct,            ONLY : exx_is_active
+  USE xc_lib,           ONLY : exx_is_active
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
   USE mp,               ONLY : mp_allgather, mp_size, &
                                mp_type_create_column_section, mp_type_free

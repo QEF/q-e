@@ -153,21 +153,27 @@ MODULE fft_types
 
     INTEGER :: grid_id
 #if defined(__CUDA)
+    ! These CUDA streams are used in the 1D+1D+1D GPU implementation
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_many
-    INTEGER                                                   :: nstream_many = 16
-
+    ! These CUDA streams (and events) are used in the 1D+2D FPU implementation
     INTEGER(kind=cuda_stream_kind) :: a2a_comp
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: bstreams
     TYPE(cudaEvent), allocatable, dimension(:) :: bevents
-
+    !
+    ! These variables define the dimension of batches and subbatches in 
+    ! * the 1D+2D GPU implementation:
     INTEGER              :: batchsize = 16    ! how many ffts to batch together
     INTEGER              :: subbatchsize = 4  ! size of subbatch for pipelining
-
+    ! * the 1D+1D+1D implementation:
+    INTEGER              :: nstream_many = 16 ! this should be replace by batchsize
+                                              ! since it has the same meaning.
+    !
 #if defined(__IPC)
     INTEGER :: IPC_PEER(16)          ! This is used for IPC that is not imlpemented yet.
 #endif
-    INTEGER, ALLOCATABLE :: srh(:,:) ! Isend/recv handles by subbatch
+    INTEGER, ALLOCATABLE :: srh(:,:) ! These are non blocking send/recv handles that are used to
+                                     ! overlap computation and communication of FFTs subbatches.
 #endif
     COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: aux
 #if defined(__FFT_OPENMP_TASKS)

@@ -334,8 +334,9 @@ MODULE exx
                                      intra_egrp_comm, iexx_start, iexx_end, &
                                      all_start, all_end
     USE mp,                   ONLY : mp_sum, mp_bcast
-    USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active, &
-                                     get_screening_parameter, get_gau_parameter
+    USE xc_lib,               ONLY : xclib_get_exx_fraction, start_exx,          &
+                                     get_screening_parameter, get_gau_parameter, &
+                                     exx_is_active
     USE scatter_mod,          ONLY : gather_grid, scatter_grid
     USE fft_interfaces,       ONLY : invfft
     USE uspp,                 ONLY : nkb, vkb, okvan
@@ -426,7 +427,7 @@ MODULE exx
        erfc_scrlen = get_screening_parameter()
        gau_scrlen = get_gau_parameter()
        exxdiv  = exx_divergence()
-       exxalfa = get_exx_fraction()
+       exxalfa = xclib_get_exx_fraction()
        !
        CALL start_exx()
     ENDIF

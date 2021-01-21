@@ -19,10 +19,9 @@ USE cell_base,          ONLY: ainv               !h^-1 matrix for converting bet
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
-USE funct,              ONLY: get_iexch          !retrieves type of exchange utilized in functional
-USE funct,              ONLY: get_icorr          !retrieves type of correlation utilized in functional
-USE funct,              ONLY: get_igcx           !retrieves type of gradient correction to exchange utilized in functional
-USE funct,              ONLY: get_igcc           !retrieves type of gradient correction to correlation utilized in functional
+USE xc_lib,             ONLY: xclib_get_id
+
+!correction to correlation utilized in functional
 USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
 USE ions_base,          ONLY: nat                !number of total atoms (all atomic species)
 USE ions_base,          ONLY: nsp                !number of unique atomic species
@@ -83,10 +82,14 @@ INTEGER, DIMENSION(:,:,:), ALLOCATABLE, PRIVATE :: somegaAr  !reduced spherical 
 INTEGER, DIMENSION(:,:,:), ALLOCATABLE, PRIVATE :: gomegaAr  !reduced spherical atomic integration domain (intersection bit array)
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE:: predveffAdn   !atomic dispersion potential prefactor
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: vfree        !free atomic volumes for each atomic species
+!GSz
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: vfree_pub        !free atomic volumes for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: dpfree       !free atomic static dipole polarizability for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: R0free       !free atomic vdW radius for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: C6AAfree     !free atomic homonuclear C6 coefficient for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: veff         !effective atomic volumes for each atom in the simulation cell
+!GSz
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: veff_pub         !effective atomic volumes for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: dpeff        !effective atomic static dipole polarizability for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: R0eff        !effective atomic vdW radius for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: C6AAeff      !effective atomic homonuclear C6 coefficient for each atom in the simulation cell
@@ -144,6 +147,7 @@ PRIVATE :: GetVdWParam
   !
   LOGICAL :: uniform_grid=.FALSE.
   INTEGER :: ip,iq,ir,is,it,NrgpA,NrgpintA,icutrA,Ndim
+  INTEGER :: iexch, icorr, igcx, igcc
   REAL(DP) :: dxA,gfctrA,vref,eref,verr,d,dk1,dk2,dk3,num,den,drab,f1,f2,f3,L1,L2,L3
   REAL(DP), DIMENSION(:), ALLOCATABLE :: atgrdr,atgrdrab,atrhor,datrhor,d2atrhor,CSA,CSB,CSC,CSD
   !
@@ -185,11 +189,16 @@ PRIVATE :: GetVdWParam
   !
   ! Set sR damping function parameter (functional dependent and currently only available for PBE & PBE0)...
   !
-  IF (get_iexch().EQ.1.AND.get_icorr().EQ.4.AND.get_igcx().EQ.3.AND.get_igcc().EQ.4) THEN
+  iexch = xclib_get_id('LDA','EXCH')
+  icorr = xclib_get_id('LDA','CORR')
+  igcx  = xclib_get_id('GGA','EXCH')
+  igcc  = xclib_get_id('GGA','CORR')
+  !
+  IF( iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
     !
     sR=0.94_DP !PBE=sla+pw+pbx+pbc
     !
-  ELSE IF (get_iexch().EQ.6.AND.get_icorr().EQ.4.AND.get_igcx().EQ.8.AND.get_igcc().EQ.4) THEN
+  ELSEIF( iexch==6 .AND. icorr==4 .AND. igcx==8 .AND. igcc==4) THEN
     !
     sR=0.96_DP !PBE0=pb0x+pw+pb0x+pbc !RAD/BS: This line will not work in CP unless PBE0 code update funct.f90...
     !
@@ -204,6 +213,7 @@ PRIVATE :: GetVdWParam
   ! Allocate and initialize species-specific quantities...
   !
   ALLOCATE(vfree(nsp)); vfree=0.0_DP
+  IF(.NOT. ALLOCATED(vfree_pub)) ALLOCATE(vfree_pub(nsp)); vfree=0.0_DP
   ALLOCATE(dpfree(nsp)); dpfree=0.0_DP
   ALLOCATE(R0free(nsp)); R0free=0.0_DP
   ALLOCATE(C6AAfree(nsp)); C6AAfree=0.0_DP
@@ -583,6 +593,7 @@ PRIVATE :: GetVdWParam
     END DO
     !
   END DO
+  vfree_pub=vfree
   !
   RETURN
   !
@@ -1297,6 +1308,7 @@ PRIVATE :: GetVdWParam
   ! Initialization of effective volume...
   !
   ALLOCATE(veff(nat)); veff=0.0_DP
+  IF(.NOT. ALLOCATED(veff_pub)) ALLOCATE(veff_pub(nat)); veff=0.0_DP
   !
   ! Normalization factor for veff integral...
   !
@@ -1346,6 +1358,7 @@ PRIVATE :: GetVdWParam
   CALL mp_sum(veff,intra_image_comm)
   !
   VefftsvdW = veff
+  veff_pub=veff
   !
   CALL stop_clock('tsvdw_veff')
   !

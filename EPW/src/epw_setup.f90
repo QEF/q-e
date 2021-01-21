@@ -36,7 +36,7 @@
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
   USE qpoint,        ONLY : xq
   USE control_flags, ONLY : modenum, noinv
-  USE funct,         ONLY : dft_is_gradient
+  USE xc_lib,        ONLY : xclib_dft_is
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nkc1, nkc2, nkc3
@@ -104,7 +104,7 @@
       m_loc(3, na) = starting_magnetization(ityp(na)) * COS(angle1(ityp(na)))
     ENDDO
     ux = zero
-    IF (dft_is_gradient()) THEN
+    IF (xclib_dft_is('gradient')) THEN
       CALL compute_ux(m_loc,ux,nat)
     ENDIF
     DEALLOCATE(m_loc, STAT = ierr)

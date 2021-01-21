@@ -213,7 +213,7 @@ MODULE input
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
         memory, ref_cell, tcpbo, max_seconds
-     USE funct,              ONLY : dft_is_hybrid
+     USE xc_lib,             ONLY : xclib_dft_is
      !
      IMPLICIT NONE
      !
@@ -280,7 +280,7 @@ MODULE input
              TRIM( calculation ) == 'vc-cp-wf'   .OR. &
              TRIM( calculation ) == 'cp-wf-nscf')
      lwfnscf     = ( TRIM( calculation ) == 'cp-wf-nscf' )
-     lwfpbe0nscf = ( dft_is_hybrid() .AND. lwfnscf  )
+     lwfpbe0nscf = ( xclib_dft_is('hybrid') .AND. lwfnscf  )
 !====================================================================
 
      !

@@ -11,6 +11,22 @@ set card_ATOMIC_POSITIONS {
     }
 }
 
+set card_TOTAL_CHARGE {
+    card TOTAL_CHARGE {
+        label {
+            Optional card, needed only if @ref lfcp == .TRUE.
+        }
+        syntax {
+            list tot_charge_list -type REAL {
+                format { tot_charge }
+                info {
+                    tot_charge is the total charge of the system.
+                }
+            }
+        }
+    }
+}
+
 # standard *.def description follows
 
 input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
@@ -55,10 +71,13 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
             @b BEGIN_POSITIONS
               @b FIRST_IMAGE
               ...pw ATOMIC_POSITIONS card
+              ...pw TOTAL_CHARGE card (only for FCP)
               @b INTERMEDIATE_IMAGE
               ...pw ATOMIC_POSITIONS card
+              ...pw TOTAL_CHARGE card (only for FCP)
               @b LAST_IMAGE
               ...pw ATOMIC_POSITIONS card
+              ...pw TOTAL_CHARGE card (only for FCP)
             @b END_POSITIONS
             ... other pw specific cards
           @b END_ENGINE_INPUT
@@ -245,7 +264,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                     }
                 }
 
-                var lfcpopt -type LOGICAL {
+                var lfcp -type LOGICAL {
                     see { fcp_mu }
                     default { .FALSE. }
                     info {
@@ -253,39 +272,53 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                         calculation with ESM method (assume_isolated = 'esm' and
                         esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
                         @ref fcp_mu gives the target Fermi energy.
-                        See the header of PW/src/fcp.f90 for documentation
+                        See the header of PW/src/fcp_module.f90 for documentation
                     }
                 }
 
                 var fcp_mu -type REAL {
-                    see { lfcpopt }
+                    see { lfcp }
                     default { 0.d0 }
                     info {
-                        If @ref lfcpopt == .TRUE., gives the target Fermi energy [Ry].
+                        If @ref lfcp == .TRUE., gives the target Fermi energy [eV].
                         One can specify the total charge of the system for the first
-                        and last image by giving @ref fcp_tot_charge_first and @ref fcp_tot_charge_last
+                        and last image by giving @ref TOTAL_CHARGE cards
                         so that the Fermi energy of these systems will be the target value,
-                        otherwise @ref first_last_opt should be .TRUE. 
+                        otherwise @ref first_last_opt should be .TRUE.
+                        For the initial charge of intermediate images, the @ref TOTAL_CHARGE
+                        is linearly interpolated between the initial and the final ones 
+                        unless the @ref TOTAL_CHARGE is given in the input file.
                     }
                 }
 
-                var fcp_tot_charge_first -type REAL {
-                    see { lfcpopt }
-                    default { 0.d0 }
+                var fcp_thr -type REAL {
+                    see { lfcp }
+                    default { 0.01D0 V }
                     info {
-                        Total charge of the system ('tot_charge') for the first image.
-                        Initial 'tot_charge' for intermediate images will be given by
-                        linear interpolation of @ref fcp_tot_charge_first and @ref fcp_tot_charge_last
+                        The simulation stops when the error ( the maximum of the force
+                        acting on the FCP in V ) is less than fcp_thr.
                     }
                 }
 
-                var fcp_tot_charge_last -type REAL {
-                    see { lfcpopt }
-                    default { 0.d0 }
-                    info {
-                        Total charge of the system ('tot_charge') for the last image.
-                        Initial 'tot_charge' for intermediate images will be given by
-                        linear interpolation of @ref fcp_tot_charge_first and @ref fcp_tot_charge_last
+                var fcp_scheme -type CHARACTER {
+                    see { lfcp }
+                    default { 'lm' }
+                    options {
+                        info {
+                            Specify the type of optimization scheme for FCP:
+                        }
+                        opt -val 'lm' {
+                            Line-Minimization method.
+                        }
+                        opt -val 'newton' {
+                            Newton-Raphson method with diagonal hessian matrix.
+                            Also, coupling with DIIS.
+                        }
+                        opt -val 'coupled' {
+                            Coupled method with ionic positions.
+                            This is available only if @ref opt_scheme == 'broyden',
+                            or 'broyden2'.
+                        }
                     }
                 }
             }
@@ -339,12 +372,14 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                     Atomic positions for all the images are specified within the @ref BEGIN_POSITIONS / END_POSITIONS
                     supercard, where each instance of @ref ATOMIC_POSITIONS card is prefixed either by @ref FIRST_IMAGE, 
                     @ref INTERMEDIATE_IMAGE, or @ref LAST_IMAGE keywords.
+                    IF @ref lfcp == .TRUE., total charges for all images have to be specified with @ref TOTAL_CHARGE cards.
 
                     Note that intermediate images are optional, i.e., there can be none or any number of
                     @ref INTERMEDIATE_IMAGE images.
 		}
 		supercard FIRST_IMAGE {
 		    eval $card_ATOMIC_POSITIONS
+                    eval $card_TOTAL_CHARGE
 		}
 		
 		optional {
@@ -352,17 +387,19 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 			There can be any number (including zero) of INTERMEDIATE_IMAGE supercards.
 		    } {
 			eval $card_ATOMIC_POSITIONS
+                        eval $card_TOTAL_CHARGE
 		    }
 		}
             
 		supercard LAST_IMAGE {
 		    eval $card_ATOMIC_POSITIONS
+                    eval $card_TOTAL_CHARGE
 		}
 	    }
 
 	    message {
 		Here can follow other @b pw specific @b cards ...
 	    }
-        }       
+        }
     }
 }

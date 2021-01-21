@@ -1,7 +1,6 @@
-set(sources
+set(src_upflib
     atom.f90 
     atomic_number.f90 
-    emend_upf.f90 
     upf_erf.f90 
     upf_utils.f90 
     gth.f90 
@@ -11,9 +10,7 @@ set(sources
     read_fhi.f90 
     read_ncpp.f90 
     read_upf_new.f90 
-    read_upf_schema.f90 
     read_upf_v1.f90 
-    read_upf_v2.f90 
     read_uspp.f90 
     splinelib.f90 
     simpsn.f90 
@@ -29,45 +26,50 @@ set(sources
     upf_parallel_include.f90 
     upf_to_internal.f90 
     uspp.f90 
-    write_upf.f90 
     write_upf_new.f90 
-    write_upf_schema.f90 
-    write_upf_v2.f90 
     xmltools.f90
     ylmr2.f90)
 
-qe_add_library(qe_upflib ${sources})
-add_library(QE::UPF ALIAS qe_upflib)
+qe_add_library(qe_upflib ${src_upflib})
 target_link_libraries(qe_upflib
     PRIVATE
-        QE::MPI_Fortran
-        QE::LAPACK
-        QE::UTILX
-        QE::FOX)
+        qe_mpi_fortran
+        qe_lapack
+        qe_utilx
+        qe_fox)
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_upflib
+        PRIVATE
+            qe_devxlib)
+endif()
 
 ##############################################################
 # virtual_v2.x 
 ##############################################################
-set(sources virtual_v2.f90) 
-qe_add_executable(qe_upflib_virtual_v2_exe ${sources}) 
-set_target_properties(qe_upflib_virtual_v2_exe PROPERTIES OUTPUT_NAME virtual_v2.x) 
+set(src_virtual_v2_x virtual_v2.f90) 
+qe_add_executable(qe_upflib_virtual_v2_exe ${src_virtual_v2_x}) 
+set_target_properties(qe_upflib_virtual_v2_exe 
+    PROPERTIES 
+        OUTPUT_NAME virtual_v2.x)
 target_link_libraries(qe_upflib_virtual_v2_exe 
-      PRIVATE 
-        QE::UPF)
+    PRIVATE 
+        qe_upflib)
 
 ###########################################################
 # upfconv.x
 ###########################################################
-set(sources 
+set(src_upfconv_x 
     upfconv.f90 
     casino_pp.f90 )
-qe_add_executable(qe_upflib_upfconv_exe ${sources}) 
-set_target_properties(qe_upflib_upfconv_exe PROPERTIES OUTPUT_NAME upfconv.x)
+qe_add_executable(qe_upflib_upfconv_exe ${src_upfconv_x}) 
+set_target_properties(qe_upflib_upfconv_exe 
+    PROPERTIES 
+        OUTPUT_NAME upfconv.x)
 target_link_libraries(qe_upflib_upfconv_exe
-                      PRIVATE
-                      QE::UPF)
+    PRIVATE
+        qe_upflib)
 
 ############################################################################
 qe_install_targets(qe_upflib
-                   qe_upflib_virtual_v2_exe
-                   qe_upflib_upfconv_exe)
+    qe_upflib_virtual_v2_exe
+    qe_upflib_upfconv_exe)

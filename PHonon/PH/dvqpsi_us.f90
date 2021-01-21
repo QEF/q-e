@@ -20,7 +20,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !
   !
   USE kinds, only : DP
-  USE funct,     ONLY : dft_is_gradient, dft_is_nonlocc
+  USE funct,     ONLY : dft_is_nonlocc
+  USE xc_lib,    ONLY : xclib_dft_is
   USE ions_base, ONLY : nat, ityp
   USE cell_base, ONLY : tpiba
   USE fft_base,  ONLY : dfftp, dffts
@@ -178,7 +179,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
 
      rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
 
-     IF ( dft_is_gradient() ) CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
+     IF ( xclib_dft_is('gradient') ) CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
                     dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc, nspin, nspin_gga, g, aux)       
 
      IF (dft_is_nonlocc()) CALL dnonloccorr(rho%of_r, drhoc, xq, aux)

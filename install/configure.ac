@@ -88,9 +88,6 @@ X_AC_QE_SCALAPACK()
 # Setting ELPA...
 X_AC_QE_ELPA()
 
-# Setting BEEF...
-X_AC_QE_BEEF()
-
 # Setting HDF5...
 X_AC_QE_HDF5()
 

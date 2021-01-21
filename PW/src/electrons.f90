@@ -39,7 +39,7 @@ SUBROUTINE electrons()
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxbuff, &
                                    fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
@@ -48,7 +48,7 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : nat
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
   USE loc_scdm_k,           ONLY : localize_orbitals_k
-  !
+
   !
   IMPLICIT NONE
   !
@@ -80,7 +80,7 @@ SUBROUTINE electrons()
   iter = 0
   first = .true.
   tr2_final = tr2
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      !printout = 0  ! do not print etot and energy components at each scf step
      printout = 1  ! print etot, not energy components at each scf step
   ELSE IF ( lmd ) THEN
@@ -88,7 +88,7 @@ SUBROUTINE electrons()
   ELSE
      printout = 2  ! print etot and energy components at each scf step
   ENDIF
-  IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
+  IF (xclib_dft_is('hybrid') .AND. adapt_thr ) tr2= tr2_init
   fock0 = 0.D0
   fock1 = 0.D0
   fock3 = 0.D0
@@ -150,7 +150,7 @@ SUBROUTINE electrons()
      !
      CALL electrons_scf ( printout, exxen )
      !
-     IF ( .NOT. dft_is_hybrid() ) RETURN
+     IF ( .NOT. xclib_dft_is('hybrid') ) RETURN
      !
      ! ... From now on: hybrid DFT only
      !
@@ -368,7 +368,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE gvecw,                ONLY : ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
-                                   elondon, edftd3, ef_up, ef_dw, exdm, ef
+                                   elondon, edftd3, ef_up, ef_dw, exdm, ef, &
+                                   egrand
   USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
                                    create_scf_type, destroy_scf_type, &
                                    open_mix_file, close_mix_file, &
@@ -378,7 +379,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
-                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw
+                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
+                                   mbd_vdw
   USE control_flags,        ONLY : n_scf_steps, scf_error
 
   USE io_files,             ONLY : iunmix, output_drho
@@ -411,11 +413,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
-  USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
+  USE fcp_module,           ONLY : lfcp, fcp_mu
+  USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
   USE wrappers,             ONLY : memstat
   USE iso_c_binding,        ONLY : c_int
   !
   USE plugin_variables,     ONLY : plugin_etot
+  USE libmbd_interface,     ONLY : EmbdvdW
   !
   IMPLICIT NONE
   !
@@ -552,7 +556,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( iter > 1 ) THEN
         !
-        IF ( iter == 2 ) ethr = 1.D-2
+        IF ( iter == 2 ) THEN
+           !
+           IF ( lgcscf ) THEN
+              ethr = 1.D-5
+           ELSE
+              ethr = 1.D-2
+           ENDIF
+           !
+        ENDIF
+        !
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
         ! ... do not allow convergence threshold to become too small:
         ! ... iterative diagonalization may become unstable
@@ -784,6 +797,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) nsgnew = nsg
            !
+           IF ( lgcscf ) THEN
+              CALL gcscf_set_nelec( charge )
+           END IF
+           !
         ELSE 
            !
            ! ... convergence reached:
@@ -932,8 +949,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
         etot = etot + exdm
         hwf_energy = hwf_energy + exdm
      ENDIF
-     IF (ts_vdw) THEN
-        ! factor 2 converts from Ha to Ry units
+     IF (mbd_vdw) THEN
+        ! factor 2 converts from Hartree to Ry units
+        etot = etot + 2.0d0*EmbdvdW
+        hwf_energy = hwf_energy + 2.0d0*EmbdvdW
+     ELSE IF (ts_vdw) THEN
+        ! factor 2 converts from Hartree to Ry units
         etot = etot + 2.0d0*EtsvdW
         hwf_energy = hwf_energy + 2.0d0*EtsvdW
      ENDIF
@@ -943,15 +964,20 @@ SUBROUTINE electrons_scf ( printout, exxen )
         hwf_energy = hwf_energy + etotefield
      ENDIF
      ! TB gate energy
-     IF ( gate) THEN
+     IF ( gate ) THEN
         etot = etot + etotgatefield
         hwf_energy = hwf_energy + etotgatefield
      ENDIF
      !
-     IF ( lfcpopt .or. lfcpdyn ) THEN
-        etot = etot + ef * tot_charge
-        hwf_energy = hwf_energy + ef * tot_charge
-     ENDIF
+     IF ( lfcp ) THEN
+        etot = etot + fcp_mu * tot_charge
+        hwf_energy = hwf_energy + fcp_mu * tot_charge
+     END IF
+     !
+     IF ( lgcscf .AND. (.NOT. gcscf_ignore_mun) ) THEN
+        etot = etot + egrand
+        hwf_energy = hwf_energy + egrand
+     END IF
      !
      ! ... adds possible external contribution from plugins to the energy
      !
@@ -1109,7 +1135,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                - \sum rho%ns       v%ns       [for LDA+U]
        !                - \sum becsum       D1_Hxc     [for PAW]
        !
-       USE funct,  ONLY : dft_is_meta
+       USE xc_lib,  ONLY : xclib_dft_is
        !
        IMPLICIT NONE
        !
@@ -1130,7 +1156,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           delta_e = - SUM( rho%of_r(:,:)*v%of_r(:,:) )
        ENDIF
        !
-       IF ( dft_is_meta() ) &
+       IF ( xclib_dft_is('meta') ) &
           delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
        !
        delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
@@ -1194,7 +1220,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
        !                  - \sum \delta becsum       D1         [for PAW] 
        !
-       USE funct,  ONLY : dft_is_meta
+       USE xc_lib, ONLY : xclib_dft_is
+       !
        IMPLICIT NONE
        REAL(DP) :: delta_escf, delta_escf_hub, rho_dif(2)
        INTEGER  :: ir, na1, nt1, na2, nt2, m1, m2, equiv_na2, viz, is
@@ -1215,7 +1242,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
          delta_escf = -SUM( ( rhoin%of_r(:,:)-rho%of_r(:,:) )*v%of_r(:,:) )
        ENDIF
        !
-       IF ( dft_is_meta() ) &
+       IF ( xclib_dft_is('meta') ) &
           delta_escf = delta_escf - &
                        SUM( (rhoin%kin_r(:,:)-rho%kin_r(:,:) )*v%kin_r(:,:))
        !
@@ -1370,7 +1397,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      SUBROUTINE print_energies ( printout )
        !-----------------------------------------------------------------------
        !
-       USE constants, ONLY : eps8
+       USE constants, ONLY : eps8, RYTOEV
        INTEGER, INTENT (IN) :: printout
        !
    
@@ -1385,6 +1412,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ELSE
              WRITE( stdout, 9084 ) dr2
           END IF
+          !
+          IF ( lgcscf )  WRITE( stdout, 9181 ) tot_charge
+          !
           IF ( lgauss ) then
              WRITE( stdout, 9070 ) demet
              WRITE( stdout, 9170 ) etot-demet
@@ -1397,7 +1427,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
           IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
-          IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
+          IF ( mbd_vdw ) THEN
+             WRITE ( stdout , 9076 ) 2.0d0*Embdvdw
+          ELSEIF ( ts_vdw ) THEN
+             WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
+          ENDIF
           IF ( textfor)  WRITE ( stdout , 9077 ) eext
           IF ( tefield )            WRITE( stdout, 9064 ) etotefield
           IF ( gate )               WRITE( stdout, 9065 ) etotgatefield
@@ -1420,11 +1454,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ! ... free energy F = E - TS , demet is the -TS contribution
           !
           !
-          ! ... With Fictitious charge particle (FCP), etot is the grand
-          ! ... potential energy Omega = E - muN, -muN is the potentiostat
-          ! ... contribution.
+          ! ... With Fictitious charge particle (FCP) or Grand-Canonical-SCF,
+          ! ... etot is the grand potential energy Omega = E - muN,
+          ! ... -muN is the potentiostat contribution.
           !
-          IF ( lfcpopt .OR. lfcpdyn ) WRITE( stdout, 9072 ) ef*tot_charge
+          IF ( lfcp ) WRITE( stdout, 9072 ) fcp_mu*tot_charge
+          IF ( lgcscf .AND. ( .NOT. gcscf_ignore_mun ) ) &
+                         WRITE( stdout, 9072 ) egrand
           !
        ELSE IF ( conv_elec ) THEN
           !
@@ -1440,6 +1476,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
              WRITE( stdout, 9170 ) etot-demet
           ENDIF
           !
+          IF( lgcscf ) WRITE( stdout, 9181 ) tot_charge
+          !
        ELSE
           !
           WRITE( stdout, 9080 ) etot
@@ -1449,6 +1487,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ELSE
              WRITE( stdout, 9084 ) dr2
           END IF
+          !
+          IF( lgcscf ) WRITE( stdout, 9182 ) tot_charge, ef*RYTOEV, &
+                                             ABS( ef - gcscf_mu ) * RYTOEV
+          !
        ENDIF
        !
        CALL plugin_print_energies()
@@ -1494,7 +1536,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
 9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9075 FORMAT( '     Dispersion XDM Correction =',F17.8,' Ry' )
-9076 FORMAT( '     Dispersion T-S Correction =',F17.8,' Ry' )
+9076 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9077 FORMAT( '     External forces energy    =',F17.8,' Ry' )
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
 9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' )
@@ -1504,6 +1546,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9084 FORMAT( '     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
 9170 FORMAT( '     internal energy E=F+TS    =',0PF17.8,' Ry' )
+9181 FORMAT(                                                  &
+            /'!    total charge of GC-SCF    =',0PF17.8,' e' )
+9182 FORMAT(                                                  &
+            /'     total charge of GC-SCF    =',0PF17.8,' e'  &
+            /'     the Fermi energy          =',0PF17.8,' eV' &
+            /'                        (error :',0PF17.8,' eV)')
+
   END SUBROUTINE print_energies
   !
 END SUBROUTINE electrons_scf

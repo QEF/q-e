@@ -29,7 +29,7 @@ SUBROUTINE sum_band()
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan
-  USE uspp_param,           ONLY : upf, nh, nhm
+  USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
@@ -37,11 +37,12 @@ SUBROUTINE sum_band()
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
   USE mp,                   ONLY : mp_sum
-  USE funct,                ONLY : dft_is_meta
+  USE xc_lib,               ONLY : xclib_dft_is
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
+  USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
   !
   IMPLICIT NONE
   !
@@ -60,11 +61,13 @@ SUBROUTINE sum_band()
   !
   CALL start_clock( 'sum_band' )
   !
-  becsum(:,:,:) = 0.D0
-  if (tqr) ebecsum(:,:,:) = 0.D0
+  if ( nhm > 0 ) then
+     becsum(:,:,:) = 0.D0
+     if (tqr) ebecsum(:,:,:) = 0.D0
+  end if
   rho%of_r(:,:)      = 0.D0
   rho%of_g(:,:)      = (0.D0, 0.D0)
-  if ( dft_is_meta() .OR. lxdm ) then
+  if ( xclib_dft_is('meta') .OR. lxdm ) then
      rho%kin_r(:,:)      = 0.D0
      rho%kin_g(:,:)      = (0.D0, 0.D0)
   end if
@@ -122,7 +125,7 @@ SUBROUTINE sum_band()
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
-  IF (dft_is_meta() .OR. lxdm) ALLOCATE (kplusg(npwx))
+  IF (xclib_dft_is('meta') .OR. lxdm) ALLOCATE (kplusg(npwx))
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
@@ -144,7 +147,7 @@ SUBROUTINE sum_band()
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
   !
-  IF (dft_is_meta() .OR. lxdm) DEALLOCATE (kplusg)
+  IF (xclib_dft_is('meta') .OR. lxdm) DEALLOCATE (kplusg)
   IF ( okvan ) CALL deallocate_bec_type ( becp )
   !
   ! ... sum charge density over pools (distributed k-points) and bands
@@ -208,7 +211,7 @@ SUBROUTINE sum_band()
   ! ... rho_kin(r): sum over bands, k-points, bring to G-space, symmetrize,
   ! ... synchronize with rho_kin(G)
   !
-  IF ( dft_is_meta() .OR. lxdm) THEN
+  IF ( xclib_dft_is('meta') .OR. lxdm) THEN
      !
      CALL mp_sum( rho%kin_r, inter_pool_comm )
      CALL mp_sum( rho%kin_r, inter_bgrp_comm )
@@ -236,6 +239,10 @@ SUBROUTINE sum_band()
   ! ... (up+dw,up-dw) format.
   !
   IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+  !
+  ! ... sum number of electrons, for GC-SCF
+  !
+  IF ( lgcscf ) CALL gcscf_calc_nelec()
   !
   CALL stop_clock( 'sum_band' )
   !
@@ -272,7 +279,7 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
        !
        incr = 2
 
@@ -423,7 +430,7 @@ SUBROUTINE sum_band()
                 !
              END IF
              !
-             IF (dft_is_meta() .OR. lxdm) THEN
+             IF (xclib_dft_is('meta') .OR. lxdm) THEN
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
                    !
@@ -519,7 +526,7 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (xclib_dft_is('meta') .OR. lxdm) )
        !
        incr = 1
        !
@@ -736,7 +743,7 @@ SUBROUTINE sum_band()
 
                 END IF
                 !
-                IF (dft_is_meta() .OR. lxdm) THEN
+                IF (xclib_dft_is('meta') .OR. lxdm) THEN
                    DO j=1,3
                       psic(:) = ( 0.D0, 0.D0 )
                       !

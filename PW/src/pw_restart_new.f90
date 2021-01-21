@@ -68,6 +68,7 @@ MODULE pw_restart_new
                                        lscf, gamma_only, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        noinv, smallmem, &
+                                       mbd_vdw,          &
                                        llondon, lxdm, ts_vdw, scf_error, n_scf_steps
       USE constants,            ONLY : e2
       USE realus,               ONLY : real_space
@@ -92,8 +93,10 @@ MODULE pw_restart_new
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
                                        ehart, eband, demet, edftd3, elondon, exdm
       USE tsvdw_module,         ONLY : EtsvdW
+      USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
+      USE ktetra,               ONLY : tetra_type
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
                                        Hubbard_l_back, Hubbard_l1_back, Hubbard_V, &
@@ -108,6 +111,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
+      
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
@@ -116,9 +120,8 @@ MODULE pw_restart_new
                                        block_2, block_height, etotgatefield ! TB
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : intra_bgrp_comm
-      USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
-                                       get_gau_parameter, &
-                                       get_screening_parameter, exx_is_active
+      USE xc_lib,               ONLY : xclib_dft_is, get_gau_parameter, &
+                                       get_screening_parameter, xclib_get_exx_fraction, exx_is_active
       USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       USE exx,                  ONLY : ecutfock, local_thr 
@@ -127,14 +130,13 @@ MODULE pw_restart_new
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
       USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
                                        vdw_corr, london, k_points, assume_isolated, &  
-                                       input_parameters_occupations => occupations, dftd3_threebody, &
-                                       dftd3_version
+                                       dftd3_threebody, dftd3_version
       USE bp,                   ONLY : lelfield, lberry, el_pol, ion_pol
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
-      USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
+      USE fcp_module,           ONLY : lfcp, fcp_mu
       USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
@@ -145,9 +147,11 @@ MODULE pw_restart_new
       !
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
-      CHARACTER(LEN=26)     :: dft_name
+      CHARACTER(LEN=32)     :: dft_name
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
+      CHARACTER(LEN=20)     :: occupations
+      CHARACTER(LEN=20), EXTERNAL :: schema_occupations
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -332,9 +336,9 @@ MODULE pw_restart_new
                END DO symmetries_loop
             END IF
          END IF
-         CALL qexsd_init_symmetries(output_obj%symmetries, nsym, nrot, spacegroup,&
-              s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
-              noncolin)
+         CALL qexsd_init_symmetries(output_obj%symmetries, spacegroup, &
+              nsym, nrot, s, ft, sname, t_rev, nat, irt, &
+              symop_2_class(1:nrot), verbosity, noncolin)
          output_obj%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------
@@ -350,7 +354,7 @@ MODULE pw_restart_new
 ! ... DFT
 !-------------------------------------------------------------------------------
          !
-         IF (dft_is_hybrid() ) THEN 
+         IF (xclib_dft_is('hybrid') ) THEN 
             ALLOCATE ( hybrid_obj)
             IF (get_screening_parameter() > 0.0_DP) THEN
                scr_par_ = get_screening_parameter() 
@@ -365,12 +369,12 @@ MODULE pw_restart_new
                loc_thr_p => loc_thr_ 
             END IF 
             CALL qexsd_init_hybrid(hybrid_obj, DFT_IS_HYBRID = .TRUE., NQ1 = nq1 , NQ2 = nq2, NQ3 =nq3, ECUTFOCK = ecutfock/e2, &
-                                   EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
+                                   EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
                                    EXXDIV_TREATMENT = exxdiv_treatment, X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation,&
                                    ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
          END IF 
 
-         empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw )
+         empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw .OR. mbd_vdw )
          dft_is_vdw = dft_is_nonlocc() 
          IF ( dft_is_vdw .OR. empirical_vdw ) THEN 
             ALLOCATE (vdw_obj)
@@ -409,6 +413,8 @@ MODULE pw_restart_new
                     ts_vdw_isolated_pt => ts_vdw_isolated_
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
+                ELSE IF ( mbd_vdw ) THEN
+                  dispersion_energy_term = 2._DP * EmbdvdW/e2 - 2._DP * EtsvdW/e2 !avoiding double-counting
                 END IF
             ELSE
                 vdw_corr_ = 'none'
@@ -522,15 +528,17 @@ MODULE pw_restart_new
                                 nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
          END IF
          qexsd_start_k_obj%tagname = 'starting_kpoints'
+         occupations = schema_occupations( lgauss, ltetra, tetra_type, &
+                    tfixed_occ )
          IF ( TRIM (qexsd_input_obj%tagname) == 'input') THEN 
             qexsd_occ_obj = qexsd_input_obj%bands%occupations
          ELSE 
-            CALL qexsd_init_occupations ( qexsd_occ_obj, input_parameters_occupations, nspin)
+            CALL qexsd_init_occupations ( qexsd_occ_obj, occupations, nspin)
          END IF 
          qexsd_occ_obj%tagname = 'occupations_kind' 
          IF ( two_fermi_energies ) THEN
             ALLOCATE ( ef_updw (2) )
-               IF (TRIM(input_parameters_occupations) == 'fixed') THEN  
+               IF (TRIM(occupations) == 'fixed') THEN  
                   ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
                   ef_updw(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
                ELSE 
@@ -585,16 +593,15 @@ MODULE pw_restart_new
             temp(itemp) = etotefield/e2
             efield_corr => temp(itemp) 
          END IF
-         IF (lfcpopt .OR. lfcpdyn ) THEN 
-            itemp = itemp +1 
-            temp(itemp) = ef * tot_charge/e2
-            potstat_corr => temp(itemp) 
+         IF (lfcp ) THEN
+            itemp = itemp +1
+            temp(itemp) = fcp_mu * tot_charge / e2
+            potstat_corr => temp(itemp)
             output_obj%FCP_tot_charge_ispresent = .TRUE.
             output_obj%FCP_tot_charge = tot_charge
             output_obj%FCP_force_ispresent = .TRUE.
-            !FIXME ( decide what units to use here ) 
-            output_obj%FCP_force = fcp_mu - ef 
-         END IF 
+            output_obj%FCP_force = (fcp_mu - ef) / e2
+         END IF
          IF ( gate) THEN
             itemp = itemp + 1 
             temp(itemp) = etotgatefield/e2
@@ -977,22 +984,23 @@ MODULE pw_restart_new
            edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
            relaxz, block, block_1, block_2, block_height
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
-           sname, inverse_s, s_axis_to_cart, &
+           sname, inverse_s, s_axis_to_cart, spacegroup, &
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
                                   Hubbard_l, Hubbard_l_back, Hubbard_l1_back, backall, &
                                   Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
-      USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
-           set_gau_parameter, enforce_input_dft,  &
-           start_exx, dft_is_hybrid
+      USE funct,           ONLY : enforce_input_dft
+      USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
+                                  set_screening_parameter, set_gau_parameter, &
+                                  xclib_set_exx_fraction, stop_exx, start_exx  
       USE london_module,   ONLY : scal6, lon_rcut, in_C6
       USE tsvdw_module,    ONLY : vdw_isolated
       USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
            exxdiv_treatment, yukawa, ecutvcut
       USE exx,             ONLY : ecutfock, local_thr
       USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
-           lxdm, ts_vdw
+           lxdm, ts_vdw, mbd_vdw
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
            nspin_lsda, nspin_gga, nspin_mag
@@ -1012,7 +1020,7 @@ MODULE pw_restart_new
       !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
       LOGICAL  :: magnetic_sym, lvalid_input, lfixed
-      CHARACTER(LEN=26) :: dft_name
+      CHARACTER(LEN=32) :: dft_name
       CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
@@ -1089,12 +1097,12 @@ MODULE pw_restart_new
            Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
       !! More DFT initializations
-      CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+      CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       CALL enforce_input_dft ( dft_name, .TRUE. )
-      IF ( dft_is_hybrid() ) THEN
+      IF ( xclib_dft_is('hybrid') ) THEN
          ecutvcut=ecutvcut*e2
          ecutfock=ecutfock*e2
-         CALL set_exx_fraction( exx_fraction ) 
+         CALL xclib_set_exx_fraction( exx_fraction ) 
          CALL set_screening_parameter ( screening_parameter )
          CALL start_exx ()
       END IF
@@ -1138,7 +1146,7 @@ MODULE pw_restart_new
       ALLOCATE ( irt(48,nat) )
       IF ( lvalid_input ) THEN 
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
-              nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
+              spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
               noinv, nosym, no_t_rev, input_obj%symmetry_flags )
          
          CALL qexsd_copy_efield ( input_obj%electric_field, &
@@ -1147,7 +1155,7 @@ MODULE pw_restart_new
          
       ELSE 
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
-              nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
+              spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
               noinv, nosym, no_t_rev )
       ENDIF
       !! More initialization needed for symmetry

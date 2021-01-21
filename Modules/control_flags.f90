@@ -167,9 +167,10 @@ MODULE control_flags
     llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
     ldftd3 =.FALSE., & ! if .TRUE. compute Grimme D3 dispersion corrections
     ts_vdw  =.FALSE., & ! as above for Tkatchenko-Scheffler disp.corrections
+    mbd_vdw  =.FALSE., &!as above for MBD correction
     lxdm    =.FALSE., & ! if .TRUE. compute XDM dispersion corrections
     lensemb =.FALSE., &! if .TRUE. compute ensemble energies
-    restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
+    restart =.FALSE. ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency
   !

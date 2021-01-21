@@ -16,7 +16,7 @@ SUBROUTINE init_run()
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       force_pairing
+                                       force_pairing, use_para_diag
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -28,10 +28,10 @@ SUBROUTINE init_run()
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE wavefunctions,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, phi_bgrp
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
-  USE electrons_base,           ONLY : nudx, nbnd
+  USE electrons_base,           ONLY : nudx
   USE efield_module,            ONLY : tefield, tefield2
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
@@ -49,7 +49,7 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
-  USE funct,                    ONLY : dft_is_meta, dft_is_hybrid
+  USE xc_lib,                   ONLY : xclib_dft_is
   USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
   USE efcalc,                   ONLY : clear_nbeg
@@ -125,10 +125,13 @@ SUBROUTINE init_run()
   !
   CALL init_geometry()
   !
+  ! ... initialize communicators for parallel linear algebra
+  !
+  CALL set_para_diag ( nudx, use_para_diag )
+  !
   ! ... mesure performances of parallel routines
   !
   CALL mesure_mmul_perf( nudx )
-  !
   CALL mesure_diag_perf( nudx )
   !
   IF ( lwf ) CALL clear_nbeg( nbeg )
@@ -160,7 +163,7 @@ SUBROUTINE init_run()
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
   !exx_wf related
-  IF ( dft_is_hybrid() .AND. lwf ) THEN
+  IF ( xclib_dft_is('hybrid') .AND. lwf ) THEN
     !
     CALL exx_initialize()
     !
@@ -201,13 +204,13 @@ SUBROUTINE init_run()
   !
   ALLOCATE( vkb( ngw, nkb ) )
   !
-  IF ( dft_is_meta() .AND. tens ) &
+  IF ( xclib_dft_is('meta') .AND. tens ) &
      CALL errore( ' init_run ', 'ensemble_dft not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. nbgrp > 1 ) &
+  IF ( xclib_dft_is('meta') .AND. nbgrp > 1 ) &
      CALL errore( ' init_run ', 'band parallelization not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. tpre ) THEN
+  IF ( xclib_dft_is('meta') .AND. tpre ) THEN
      !
      ALLOCATE( crosstaus( dffts%nnr, 6, nspin ) )
      ALLOCATE( dkedtaus(  dffts%nnr, 3, 3, nspin ) )

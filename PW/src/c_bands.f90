@@ -30,6 +30,7 @@ SUBROUTINE c_bands( iter )
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
+  USE gcscf_module,         ONLY : lgcscf
   !
   IMPLICIT NONE
   !
@@ -180,6 +181,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
                                    my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
+  USE xc_lib,               ONLY : exx_is_active
+  USE gcscf_module,         ONLY : lgcscf
   !
   IMPLICIT NONE
   !
@@ -583,10 +586,19 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     LOGICAL :: test_exit_cond
     !
-    !
-    test_exit_cond = .NOT. ( ( ntry <= 5 ) .AND. &
-         ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-         (       lscf .AND. ( notconv > 5 ) ) ) )
+    IF ( lscf .AND. lgcscf ) THEN
+       !
+       ! ... tight condition for GC-SCF
+       !
+       test_exit_cond = .NOT. ( ( ntry <= 8 ) .AND. ( notconv > 0 ) )
+       !
+    ELSE
+       !
+       test_exit_cond = .NOT. ( ( ntry <= 5 ) .AND. &
+            ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
+            (       lscf .AND. ( notconv > 5 ) ) ) )
+       !
+    END IF
     !
   END FUNCTION test_exit_cond
   !

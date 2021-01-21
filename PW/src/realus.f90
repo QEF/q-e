@@ -110,7 +110,7 @@ MODULE realus
     SUBROUTINE generate_qpointlist
       !------------------------------------------------------------------------
       USE fft_base,     ONLY : dfftp  !, dffts
-      USE funct,        ONLY : dft_is_hybrid
+      !USE xc_lib,       ONLY : xclib_dft_is
       !USE gvecs,        ONLY : doublegrid
       !USE exx,  ONLY : exx_fft
       IMPLICIT NONE
@@ -123,7 +123,7 @@ MODULE realus
       !       now uses its own custom grid. In case this is re-introduced, please
       !       also modify exx_fft_create to recycle this grid when ecutfock = ecutwfc
 !       ! 2. initialize smooth grid (only for EXX at this moment)
-!       IF ( dft_is_hybrid() ) THEN
+!       IF ( xclib_dft_is('hybrid') ) THEN
 !         IF(doublegrid)THEN
 !           WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for SMOOTH grid"
 !           CALL qpointlist(dffts, tabs)

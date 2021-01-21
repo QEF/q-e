@@ -52,7 +52,6 @@ SUBROUTINE allocate_nlpot
   ALLOCATE( nhtolm(nhm,nsp) )
   ALLOCATE( nhtoj(nhm,nsp)  )
   ALLOCATE( ijtoh(nhm,nhm,nsp) )
-  ALLOCATE( indv_ijkb0(nat)    )
   ALLOCATE( deeq(nhm,nhm,nat,nspin) )
   IF ( noncolin ) THEN
      ALLOCATE( deeq_nc(nhm,nhm,nat,nspin) )
@@ -66,6 +65,9 @@ SUBROUTINE allocate_nlpot
   ELSE
     ALLOCATE( dvan(nhm,nhm,nsp) )
   ENDIF
+  ALLOCATE (becsum( nhm * (nhm + 1)/2, nat, nspin))
+  IF (tqr) ALLOCATE (ebecsum( nhm * (nhm + 1)/2, nat, nspin))
+  ALLOCATE( indv_ijkb0(nat)    )
   ! GIPAW needs a slighly larger q-space interpolation for quantities calculated
   ! at k+q_gipaw, and I'm using the spline_ps=.true. flag to signal that
   IF ( spline_ps .AND. cell_factor <= 1.1d0 ) cell_factor = 1.1d0
@@ -75,10 +77,7 @@ SUBROUTINE allocate_nlpot
   !
   nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
-  !
   IF (lmaxq > 0) ALLOCATE (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))
-  ALLOCATE (becsum( nhm * (nhm + 1)/2, nat, nspin))
-  if (tqr) ALLOCATE (ebecsum( nhm * (nhm + 1)/2, nat, nspin))
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)

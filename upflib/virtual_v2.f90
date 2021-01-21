@@ -29,11 +29,7 @@ PROGRAM virtual_test
   USE upf_kinds, ONLY: dp
   USE pseudo_types, ONLY : pseudo_upf, deallocate_pseudo_upf
   USE upf_module, ONLY : read_ps
-#if defined (__use_fox)
-  USE write_upf_module, ONLY : write_upf
-#else
   USE write_upf_new, ONLY : write_upf
-#endif
   USE upf_io, ONLY : stdin, stdout
   !
   IMPLICIT NONE
@@ -419,7 +415,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
           upf_qqq(i,j) = x * upf(1)%qqq(i,j)
 
 
-          IF( allocated(upf_qfuncl) ) THEN
+          IF( ALLOCATED(upf_qfuncl) ) THEN
              l1=upf(1)%lll(i)
              l2=upf(1)%lll(j)
              DO l=abs(l1-l2), l1+l2
@@ -442,7 +438,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
           ijv2 = (upf(1)%nbeta+j) * (upf(1)%nbeta+j-1) / 2 + (upf(1)%nbeta+i)
 
 
-          IF( allocated(upf_qfuncl) ) THEN
+          IF( ALLOCATED(upf_qfuncl) ) THEN
              l1=upf(2)%lll(i)
              l2=upf(2)%lll(j)
              DO l=abs(l1-l2), l1+l2
@@ -560,6 +556,14 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   ! pp_beta
   upf_vca%nbeta = upf_nbeta
 
+  IF (ALLOCATED (upf_vca%kbeta))    DEALLOCATE(upf_vca%kbeta)
+  IF (ALLOCATED (upf_vca%lll))      DEALLOCATE(upf_vca%lll)
+  IF (ALLOCATED (upf_vca%beta))     DEALLOCATE(upf_vca%beta)
+  IF (ALLOCATED (upf_vca%els_beta)) DEALLOCATE(upf_vca%els_beta)
+  IF (ALLOCATED (upf_vca%dion))     DEALLOCATE(upf_vca%dion)
+  IF (ALLOCATED (upf_vca%qqq))      DEALLOCATE(upf_vca%qqq)
+  IF (ALLOCATED (upf_vca%rcut))     DEALLOCATE(upf_vca%rcut)
+  IF (ALLOCATED (upf_vca%rcutus))   DEALLOCATE(upf_vca%rcutus)
   ALLOCATE( upf_vca%kbeta(upf_nbeta),          &
             upf_vca%lll(upf_nbeta),            &
             upf_vca%beta(upf_mesh, upf_nbeta), &
@@ -587,7 +591,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
        upf_vca%qfunc = upf_qfunc
     ENDIF
     ! pp_qfcoef
-    IF ( allocated(upf_qfcoef) ) THEN
+    IF ( ALLOCATED(upf_qfcoef) ) THEN
        ALLOCATE( upf_vca%qfcoef(upf_nqf, upf_nqlc, upf_nbeta, upf_nbeta) )
        upf_vca%qfcoef = upf_qfcoef
     ENDIF
@@ -605,6 +609,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   upf_vca%rcutus(upf(1)%nbeta+1:upf_nbeta) = upf(2)%rcutus
 
   IF (upf_vca%has_so) THEN
+          IF ( ALLOCATED( upf_vca%jjj) ) DEALLOCATE(upf_vca%jjj)
      ALLOCATE( upf_vca%jjj(upf_nbeta) )
      upf_vca%jjj = upf_jjj
   ENDIF

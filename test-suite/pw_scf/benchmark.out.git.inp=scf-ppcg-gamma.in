@@ -1,0 +1,355 @@
+
+     Program PWSCF v.6.7MaX starts on 10Dec2020 at 14:35: 8 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       4 processor cores
+     Number of MPI processes:                 4
+     Threads/MPI process:                     1
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Reading input from scf-ppcg-gamma.in
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     gamma-point specific algorithms are used
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         303     303     74                 8057     8057     989
+     Max         310     310     79                 8058     8058     990
+     Sum        1225    1225    301                32231    32231    3959
+ 
+
+
+     bravais-lattice index     =            1
+     lattice parameter (alat)  =       8.0000  a.u.
+     unit-cell volume          =     512.0000 (a.u.)^3
+     number of atoms/cell      =           10
+     number of atomic types    =            2
+     number of electrons       =        22.00
+     number of Kohn-Sham states=           11
+     kinetic-energy cutoff     =      60.0000  Ry
+     charge density cutoff     =     240.0000  Ry
+     scf convergence threshold =      1.0E-15
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+
+     celldm(1)=   8.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (   0.000000   1.000000   0.000000 )  
+               a(3) = (   0.000000   0.000000   1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  1.000000 )  
+
+
+     PseudoPot. # 1 for H  read from file:
+     /marconi/home/userexternal/icarnime/q-e/test-suite/..//pseudo/H.pbe-hgh.UPF
+     MD5 check sum: 50ae4f52d34cf16cdfed4bce9c5a191e
+     Pseudo is Norm-conserving, Zval =  1.0
+     Generated in analytical, separable form
+     Using radial grid of  929 points,  0 beta functions with: 
+
+     PseudoPot. # 2 for C  read from file:
+     /marconi/home/userexternal/icarnime/q-e/test-suite/..//pseudo/C.pbe-hgh.UPF
+     MD5 check sum: ca26ff84b356733038fc2f5c468d1892
+     Pseudo is Norm-conserving, Zval =  4.0
+     Generated in analytical, separable form
+     Using radial grid of 1073 points,  1 beta functions with: 
+                l(1) =   0
+
+     atomic species   valence    mass     pseudopotential
+        H              1.00     1.00783     H ( 1.00)
+        C              4.00    12.00000     C ( 1.00)
+
+     No symmetry found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           H   tau(   1) = (  -0.3396188  -0.3072775   0.2952175  )
+         2           H   tau(   2) = (  -0.3641150   0.3114112   0.1191170  )
+         3           H   tau(   3) = (   0.2545363  -0.3380175  -0.1311087  )
+         4           H   tau(   4) = (   0.3886387  -0.2037337   0.2366638  )
+         5           H   tau(   5) = (   0.3060188   0.3298075   0.0415838  )
+         6           H   tau(   6) = (   0.1176044   0.2002337  -0.3229712  )
+         7           C   tau(   7) = (  -0.1518812  -0.1636275   0.1645763  )
+         8           C   tau(   8) = (  -0.1701575   0.1457675   0.1031486  )
+         9           C   tau(   9) = (   0.1935900  -0.1791975   0.0638284  )
+        10           C   tau(  10) = (   0.1368550   0.1713513  -0.0621193  )
+
+     number of k points=     1
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+
+     Dense  grid:    16116 G-vectors     FFT dimensions: (  40,  40,  40)
+
+     Estimated max dynamical RAM per process >       3.38 MB
+
+     Estimated total dynamical RAM >      13.53 MB
+
+     Initial potential from superposition of free atoms
+
+     starting charge   21.99978, renormalised to   22.00000
+     Starting wfcs are   22 randomized atomic wfcs
+
+     total cpu time spent up to now is        0.1 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  1.00E-02,  avg # of iterations =  4.0
+
+     total cpu time spent up to now is        0.1 secs
+
+     total energy              =     -52.06430818 Ry
+     estimated scf accuracy    <       0.96267696 Ry
+
+     iteration #  2     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  4.38E-03,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.1 secs
+
+     total energy              =     -52.22289832 Ry
+     estimated scf accuracy    <       0.27863971 Ry
+
+     iteration #  3     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  1.27E-03,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.2 secs
+
+     total energy              =     -52.29343175 Ry
+     estimated scf accuracy    <       0.01732979 Ry
+
+     iteration #  4     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  7.88E-05,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.2 secs
+
+     total energy              =     -52.29670966 Ry
+     estimated scf accuracy    <       0.00046169 Ry
+
+     iteration #  5     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  2.10E-06,  avg # of iterations =  7.0
+
+     total cpu time spent up to now is        0.2 secs
+
+     total energy              =     -52.29678346 Ry
+     estimated scf accuracy    <       0.00020296 Ry
+
+     iteration #  6     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  9.23E-07,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.2 secs
+
+     total energy              =     -52.29682919 Ry
+     estimated scf accuracy    <       0.00001062 Ry
+
+     iteration #  7     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  4.83E-08,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -52.29683108 Ry
+     estimated scf accuracy    <       0.00000012 Ry
+
+     iteration #  8     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  5.28E-10,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -52.29683111 Ry
+     estimated scf accuracy    <       0.00000002 Ry
+
+     iteration #  9     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  9.70E-11,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          1.7E-09 Ry
+
+     iteration # 10     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  7.80E-12,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.4 secs
+
+     total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          1.2E-10 Ry
+
+     iteration # 11     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  5.35E-13,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.4 secs
+
+     total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          1.1E-11 Ry
+
+     iteration # 12     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  6.0
+
+     total cpu time spent up to now is        0.4 secs
+
+     total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          7.5E-13 Ry
+
+     iteration # 13     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  3.6
+
+     total cpu time spent up to now is        0.4 secs
+
+     total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          3.2E-14 Ry
+
+     iteration # 14     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  2.1
+
+     total cpu time spent up to now is        0.4 secs
+
+     total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          9.2E-15 Ry
+
+     iteration # 15     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is        0.5 secs
+
+     total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          2.9E-15 Ry
+
+     iteration # 16     ecut=    60.00 Ry     beta= 0.70
+     PPCG style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  2.1
+
+     total cpu time spent up to now is        0.5 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 (  1980 PWs)   bands (ev):
+
+   -15.4263  -9.4763  -9.0237  -7.8876  -4.6715  -4.0302  -3.6010  -2.6181
+    -1.4871  -1.2174   0.3363
+
+     highest occupied level (ev):     0.3363
+
+!    total energy              =     -52.29683112 Ry
+     estimated scf accuracy    <          3.1E-16 Ry
+
+     The total energy is the sum of the following terms:
+     one-electron contribution =     -33.70003690 Ry
+     hartree contribution      =      24.44937160 Ry
+     xc contribution           =     -18.39143626 Ry
+     ewald contribution        =     -24.65472956 Ry
+
+     convergence has been achieved in  16 iterations
+
+     Forces acting on atoms (cartesian axes, Ry/au):
+
+     atom    1 type  1   force =     0.09577770    0.01204150   -0.03559528
+     atom    2 type  1   force =     0.01946019   -0.01601558    0.00084669
+     atom    3 type  1   force =    -0.01997400    0.01984258   -0.00727383
+     atom    4 type  1   force =    -0.07095890    0.02264336   -0.00123554
+     atom    5 type  1   force =    -0.00815028   -0.00021289   -0.00656056
+     atom    6 type  1   force =    -0.00278869   -0.01514424   -0.00610597
+     atom    7 type  2   force =    -0.03318366   -0.07027613    0.11210092
+     atom    8 type  2   force =    -0.01313368    0.08420419    0.01155466
+     atom    9 type  2   force =     0.01971409   -0.01801074   -0.06272594
+     atom   10 type  2   force =     0.01323721   -0.01907205   -0.00500515
+
+     Total force =     0.221844     Total SCF correction =     0.000000
+
+     Writing output data file ./pwscf.save/
+ 
+     init_run     :      0.04s CPU      0.04s WALL (       1 calls)
+     electrons    :      0.39s CPU      0.41s WALL (       1 calls)
+     forces       :      0.01s CPU      0.01s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     potinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     hinit0       :      0.01s CPU      0.01s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      0.23s CPU      0.24s WALL (      16 calls)
+     sum_band     :      0.03s CPU      0.03s WALL (      16 calls)
+     v_of_rho     :      0.12s CPU      0.12s WALL (      17 calls)
+     mix_rho      :      0.02s CPU      0.02s WALL (      16 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.00s CPU      0.00s WALL (      33 calls)
+     ppcg_gamma   :      0.19s CPU      0.20s WALL (      16 calls)
+     wfcrot       :      0.04s CPU      0.04s WALL (      16 calls)
+
+     Called by ppcg_*:
+     h_psi        :      0.18s CPU      0.19s WALL (      84 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.00s CPU      0.00s WALL (      84 calls)
+     vloc_psi     :      0.18s CPU      0.18s WALL (      84 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (      84 calls)
+
+     General routines
+     calbec       :      0.00s CPU      0.00s WALL (      88 calls)
+     fft          :      0.04s CPU      0.05s WALL (     137 calls)
+     ffts         :      0.01s CPU      0.01s WALL (      16 calls)
+     fftw         :      0.18s CPU      0.18s WALL (    1090 calls)
+ 
+     Parallel routines
+     fft_scatt_xy :      0.03s CPU      0.03s WALL (    1243 calls)
+     fft_scatt_yz :      0.09s CPU      0.08s WALL (    1243 calls)
+ 
+     PWSCF        :      0.47s CPU      0.50s WALL
+
+ 
+   This run was terminated on:  14:35: 8  10Dec2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

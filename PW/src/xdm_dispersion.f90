@@ -999,7 +999,7 @@ CONTAINS
     !! Set the default \(\text{a1}\) and \(\text{a2}\) values using the XC flags.
     !
     USE io_global,  ONLY : stdout, ionode
-    USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
+    USE xc_lib,     ONLY : xclib_get_id
     !
     REAL*8, INTENT(INOUT) :: a1i, a2i
     !
@@ -1007,10 +1007,11 @@ CONTAINS
     !
     INTEGER :: idx, ispin, iexch, icorr, igcx, igcc
     
-    iexch = get_iexch()
-    icorr = get_icorr()
-    igcx = get_igcx()
-    igcc = get_igcc()
+    iexch = xclib_get_id('LDA','EXCH')
+    icorr = xclib_get_id('LDA','CORR')
+    igcx = xclib_get_id('GGA','EXCH')
+    igcc = xclib_get_id('GGA','CORR')
+    
     IF (iexch==1 .AND. icorr==4 .AND. igcx==22 .AND. igcc==4) THEN
        ! B86bPBE
        if (ispaw) then

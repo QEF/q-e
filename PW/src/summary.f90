@@ -37,7 +37,8 @@ SUBROUTINE summary()
                               tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
-  USE funct,           ONLY : write_dft_name, dft_is_hybrid
+  USE funct,           ONLY : write_dft_name
+  USE xc_lib,          ONLY : xclib_dft_is
   USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, &
                               l3dstring,efield_cart,efield_cry
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
@@ -50,8 +51,8 @@ SUBROUTINE summary()
   USE martyna_tuckerman,ONLY: do_comp_mt
   USE realus,          ONLY : real_space
   USE exx,             ONLY : ecutfock
-  USE fcp_variables,   ONLY : lfcpopt, lfcpdyn
-  USE fcp,             ONLY : fcp_summary
+  USE fcp_module,      ONLY : lfcp, fcp_summary
+  USE gcscf_module,    ONLY : lgcscf, gcscf_summary
   USE relax,           ONLY : epse, epsf, epsp
   !
   IMPLICIT NONE
@@ -93,7 +94,7 @@ SUBROUTINE summary()
      WRITE( stdout, 102) nelec
   END IF
   WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
-  IF ( dft_is_hybrid () ) WRITE( stdout, 104) ecutfock
+  IF ( xclib_dft_is('hybrid') ) WRITE( stdout, 104) ecutfock
   IF ( lscf) WRITE( stdout, 105) tr2, mixing_beta, nmix, mixing_style
   IF ( lmd .OR. lbfgs ) WRITE (stdout, 106) epse, epsf
   IF ( lmovecell ) WRITE (stdout, 107) epsp
@@ -161,7 +162,11 @@ SUBROUTINE summary()
   !
   ! ... FCP (Ficticious charge particle)
   !
-  IF ( lfcpopt .or. lfcpdyn )  CALL fcp_summary()
+  IF ( lfcp )  CALL fcp_summary()
+  !
+  ! ... GC-SCF (Grand-Canonical SCF)
+  !
+  IF ( lgcscf )  CALL gcscf_summary()
   !
   IF ( do_comp_mt )  WRITE( stdout, &
             '(5X, "Assuming isolated system, Martyna-Tuckerman method",/)')
@@ -415,7 +420,6 @@ SUBROUTINE print_ps_info
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
-  USE funct,           ONLY : dft_is_gradient
   IMPLICIT NONE
   !
   INTEGER :: nt, ib, i

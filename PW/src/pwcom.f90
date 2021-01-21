@@ -324,6 +324,8 @@ MODULE ener
   !! the Fermi energy up (if two_fermi_energies=.TRUE.)
   REAL(DP) :: ef_dw
   !! the Fermi energy down (if two_fermi_energies=.TRUE.)
+  REAL(DP) :: egrand
+  !! the Potentiostat contribution for GC-SCF
   !
 END MODULE ener
 !

@@ -96,7 +96,8 @@ The following auxiliary packages are included as well:
 %      phonon dispersion plotting utility (to be
 %      used in conjunction with \PHonon).
 \end{itemize}
-A copy of required external libraries is also included.
+A copy of required external libraries is either included or automatically
+downloaded from the net.
 Finally, several additional packages that exploit data produced by \qe\
 or patch some \qe\ routines can be automatically installed using
 \texttt{make}:
@@ -110,6 +111,8 @@ or patch some \qe\ routines can be automatically installed using
       GW and Bethe-Salpeter equation.
 %\item \texttt{PLUMED} (v.1.3 only):
 %      calculation of free-energy surface through metadynamics.
+\item \texttt{D3Q}:
+      anharmonic force constants.
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
       NMR chemical shifts and EPR g-tensor.
 %\item \texttt{WEST}: Many-body perturbation corrections for standard DFT.
@@ -169,6 +172,11 @@ The development of the GPU-enabled version is coordinated by Pietro Bonf\`a
 Contributors to \qe, beyond the authors of the papers
 mentioned in Sec.\ref{SubSec:Terms}, include:
 \begin{itemize}
+\item Alexandre Tkatchenko's group, in particular Szabolcs Goger
+  (U. Luxembourg), and Robert DiStasio's group, in particular
+  Hsin-Yu Ko (Cornell), for Many-Body Dispersion (MBD) correction.
+  \item Federico Ficarelli and Daniele Cesarini (CINECA), with help 
+  from Ye Luo (Argonne) and Sebastian Gs\"anger, for CMake support;
   \item Federico Ficarelli and Daniele Cesarini (CINECA), with help 
   from Ye Luo (Argonne) and Sebastian Gs\"anger, for CMake support;
   \item Ye Luo (Argonne) for improved FFT threading and miscellaneous
@@ -357,10 +365,12 @@ common to all packages:
 \texttt{LAXlib/}  &  Linear Algebra (parallel) libraries\\
 \texttt{KS\_Solvers/}  &  Iterative diagonalization routines\\
 \texttt{UtilXlib/}&  Miscellaneous timing, error handling, MPI utilites\\
+\texttt{XClib/}   &  Exchange-correlation functionals (not van der Waals)\\ 
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
 \texttt{Doc/}     &  general documentation\\
 \texttt{archive/} &  external libraries in .tar.gz form\\
+\texttt{external/}&  external libraries downloaded by cMake\\
 \texttt{test-suite/} &  automated tests\\
 \end{tabular}
 \\
@@ -389,6 +399,9 @@ to all linear-response codes.
 To install \qe\ from source, you need first of all a minimal Unix
 environment, that is: a command shell (e.g., bash, sh) and utilities \make,
 \texttt{awk}, \texttt{sed}. For MS-Windows, see Sec.\ref{SubSec:Windows}.
+You will also need CMake if you prefer installation with CMake (supported 
+since v.6.7), otherwise you will need the \configure\ command from autoconf
+(see next subsection).
 
 Note that the scripts contained
 in the distribution assume that the local  language is set to the
@@ -397,15 +410,12 @@ may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
 \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem
 when running scripts (including installation scripts).
 
-Second, you need C and Fortran compilers, compliant with C89 and
-F2003 standards\footnote{since v.6.4 a standard 2008 feature is
-used: if unallocated pointers are passed as optional arguments,
-they are interpreted as not present}. For parallel
-execution, you will also need MPI libraries and a parallel
+Second, you need a Fortran compiler compliant with F2008 standard.
+For parallel execution, you will also need MPI libraries and a parallel
 (i.e. MPI-aware) compiler. For massively parallel machines, or
 for simple multicore parallelization, an OpenMP-aware compiler
 and libraries are also required. For GPU's, you will need the
-CUDA Fortran version and to compile with the PGI compiler and
+CUDA Fortran version and to compile with the NVidia compiler and
 run with CUDA run-time environment.
 
 As a rule, \qe\ tries to keep compatibility with older compilers,
@@ -415,14 +425,12 @@ old (say older than $\sim 5$ years or so) it is quite likely that
 something will not work. The same applies to mathematical 
 and MPI libraries.
 
-Big machines with
-specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
-Fortran compiler with MPI and OpenMP libraries bundled with
-the software. Workstations or ``commodity'' machines, using PC
-hardware, may or may not have the needed software. If not, you need
-either to buy a commercial product (e.g Intel, NAG, PGI) or to
-use an open-source compiler like gfortran from the gcc distribution.
-Some commercial compilers (e.g. PGI) may be available free of charge 
+Big computing centers typically provide a Fortran compiler complete
+with all needed libraries. Workstations or ``commodity'' machines 
+using PC hardware, may or may not have the needed software. If not,
+you need either to buy a commercial product (e.g the Intel compiler) 
+or to use the open-source gfortran  compiler from the gcc distribution.
+Some commercial compilers may be available free of charge 
 under some conditions (e.g. academic or personal usage).
 
 \subsection{\configure}
@@ -438,8 +446,6 @@ more kinds of machines but may requires some tweaking, especially for
 the hardware of large HPC centers. Detailed but sometimes outdated 
 installation instructions for specific HPC machines may be found in 
 files \texttt{install/README.}{\em sys}, where {\em sys} is the machine name.
-
-Note: support for CMake is being added.
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -616,20 +622,19 @@ The following options are available for the CUDA Fortran GPU version:\\
                                   & \texttt{value} must be consistent with the\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
-                                  & PGI compilers currently accept 7.5, 8.0 or 9.0 (default: 8.0)\\
 \texttt{--enable-cuda-env-check=[yes]}& if set, sanity checks on the CUDA environment\\
                                       & are performed (default: yes).
 \end{tabular}\\
 
 Please remember that in order to compile the CUDA code for GPU's you need ... 
 the CUDA code (it is aligned to but separated from the main distribution)! 
-you also need a recent version of the PGI Fortran compiler. 
+you also need a recent version of the NVidia Fortran compiler. 
 OpenMP must be enabled,
 and you may want to use a CUDA-aware MPI distribution to optimize the data
 transfer between the processes.
 
-If you want to modify \configure\ (advanced users only!),
-see the Wiki pages on GitLab.
+To modify or extend \configure, see the Wiki pages on GitLab:
+for advanced users only!
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
@@ -792,7 +797,7 @@ Once installed \libxc, the linking with \qe\ can be enabled directly through the
 \begin{verbatim}
 ./configure --with-libxc --with-libxc-prefix='/path/to/libxc/'
 \end{verbatim}
-By adding the first switch only an automatic search for the libxc folder will be attempted, but its success is not guaranteed. It is always preferable to specify the second switch too. Optionally, a third switch can be added, namely \texttt{--with-libxc-include='/path/to/libxc/include'}, which specifies the path to the Fortran headers (usually it is not necessary).
+By adding the first switch only an automatic search for the \libxc\ folder will be attempted, but its success is not guaranteed. It is always preferable to specify the second switch too. Optionally, a third switch can be added, namely \texttt{--with-libxc-include='/path/to/libxc/include'}, which specifies the path to the Fortran headers (usually it is not necessary).
 
 Alternatively, the link to \libxc\ can be activated after the configuration of  \qe\ by modifying the \texttt{make.inc} file in the main folder in this way:
 \begin{itemize}
@@ -804,7 +809,7 @@ Then \qe\ can be compiled as usual. If the version of \libxc\ is older than 5.0.
 \begin{itemize}
 	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc}
 \end{itemize}
-\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be repalced with `\texttt{xc\_f90}' everywhere in the following files: \texttt{funct.f90}, \texttt{xc\_lda\_lsda\_drivers.f90}, \texttt{xc\_gga\_drivers.f90}, \texttt{xc\_mgga\_drivers.f90}, \texttt{dmxc\_drivers.f90} and \texttt{dgcxc\_drivers.f90} in \texttt{Modules} folder and \texttt{xctest\_qe\_libxc.f90} in \texttt{PP/src} folder.
+\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be repalced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
 
 \subsubsection{Usage}
 In order to use \libxc\ functionals, you must enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. For example, to use the \libxc\ version of the PBE functionals (both exchange and correlation):
@@ -821,22 +826,25 @@ Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but som
 \begin{verbatim}
 input_dft = `sla pbe gga_c_pbe'
 \end{verbatim}
-Note that when using GGA functionals of \qe\ you must always specify the LDA term too, while it is not the case for the \libxc\ ones. \\
-Outside \texttt{PW} (\texttt{PHonon}, \texttt{PP}, etc.), \libxc\ functionals are still usable, but in these cases it is highly recommended to avoid combinations of QE and \libxc\ functionals together, since, at present, they may lead to some issues in the dft detection.
+Note that when using GGA functionals of \qe\ you must always specify the LDA term too, while it is not the case for the \libxc\ ones.
 %
 \subsubsection{Differences between Libxc and internal functionals}
 There are some differences between \qe\ functionals and \libxc\ ones. In \qe\ the LDA and the GGA terms are separated and must be specified independently. In \libxc\ the GGA functionals already include the LDA part (Slater exchange and Perdew\&Wang correlation in most of the cases with the exception, for example, of Lee Yang Parr functionals).\\
 The \libxc\ metaGGA functionals may or may not need the LDA and GGA terms, depending on the cases, therefore a good check of the chosen functionals is recommended before doing expensive runs.\\
-Some functionals in \libxc\ incorporate the exchange part and the correlation one into one term only (e.g. the ones that include the `\texttt{\_xc}' label in their name). In these cases the whole functional is formally treated as `exchange only' by \qe. This does not imply any loss of information.
+Some functionals in \libxc\ incorporate the exchange part and the correlation one into one term only (e.g. the ones that include the `\texttt{\_xc}' kind label in their name). In these cases the whole functional is formally treated as `exchange only' by \qe. This does not imply any loss of information.
 %
 \subsubsection{Special cases}
 A number of \libxc\ functional routines need extra information on input and/or provide only partial information on output (e.g. the energy or the potential only). In these cases the use of such functionals may not be straightforward and, depending on the cases, may require some work on the \qe\ source code.
 %
 \paragraph{External parameters.}
-Several functionals in \libxc\ depend on one or more external parameters. Some of these can be recovered inside \qe, some others are not directly available. In all these cases a direct intervention on the \qe\ source code is necessary in order to be able to properly use such functionals.\\
-The \libxc\ routine \texttt{xc\_f03\_func\_set\_ext\_params} allows to set the value of the external parameters, which are contained in a single array. A trace for the usage of this routine is present, among the comments, in the XC-drivers of \qe\ (in \texttt{Modules} folder: \texttt{xc\_lda\_lsda\_drivers.f90}, \texttt{xc\_gga\_drivers.f90}, etc.).\\
-Without setting the external parameters inside the code, their default value will be assumed. This could lead to results different from the expectations.
-To get the default values, the \texttt{xc\_f03\-\_func\-\_info\_get\-\_ext\-\_params\-\_default\-\_value} routine is available in \libxc. For more details we refer to the official documentation of \libxc.\\
+Several functionals in \libxc\ depend on one or more external parameters. Some of these can be recovered inside \qe, some others are not directly available. In all these cases a direct intervention on the \qe\ source code might be necessary in order to be able to properly use such functionals. However two routines have been defined in the XC library of \qe\ that ease the task of setting and recovering the external parameters in \libxc:
+\begin{itemize}
+	\item \texttt{get\_libxc\_ext\_param}: this function receives as input the ID of the \libxc\ functional and the index of the chosen parameter and returns its value. If the parameter has not been set before it returns its default value.
+	\item \texttt{set\_libxc\_ext\_param}: this routine receives as input the index of the functional family-type (from 1 to 6: lda-exch, lda-corr, gga-exch, ...), the index of the chosen \libxc\ parameter and the value to set it to.
+\end{itemize}
+In order to see the available parameters for a given \libxc\ functional and their corresponding indexes, the \texttt{dft\_info} test is available as an option of the \texttt{xclib\_test.x} program in \texttt{XClib} folder. For more details see Sec. \ref{SubSec:XCtest}.\\
+The two routines can be called almost anywhere in \qe, however, as any other \texttt{XClib} setting routine, they must be declared through the \texttt{xc\_lib} module.\\
+Without setting the external parameters inside the code, their default value will be assumed. This could lead to results different from the expectations.\\
 In any case, when external parameters are needed by the chosen functionals, a warning message will appear in the output of \qe.
 %
 \paragraph{Hybrid functionals.} The hybrid functionals of \libxc\ are allowed, but, as in the previous case, their correct operation is not guaranteed by default. It is important to ensure that the \texttt{exx\_fraction} in \qe\ assumes the desired value when the XC routines are called. To do this you need to act on the external parameters of the functionals, as explained previously. Moreover it is important to ensure that the starting value of the variable \texttt{exx\_fraction} in \qe\ , which is set in the \texttt{matching\_libxc} routine in \texttt{Modules/funct.f90}, is the desired one (\texttt{exx\_fraction} may not always coincide with the \texttt{exx\_coef} of \libxc).
@@ -847,9 +855,14 @@ A few \libxc\ functional routines provides the energy and some others the potent
 \paragraph{Other functionals.} Besides exchange (\texttt{\_x}), correlation (\texttt{\_c}) and exchange plus correlation (\texttt{\_xc}), a fourth kind of functionals is available in \libxc, the kinetic functionals (\texttt{\_k}). At present, they are not usable in \qe.
 %
 \subsubsection{XC test}
-A simple testing program, \texttt{xctest\_qe\_libxc.f90}, for the XC part of \qe\ is available in the \texttt{PP/src} folder.\\
-The program tests the output (energies and potentials) of the XC-driver routines by comparing the results obtained with the \qe\ internal library of XC functionals with those obtained with the \libxc\ library.\\
-It also tests the XC-derivative part (mainly used in PHonon) by comparing the QE derivative of the XC potential (for LDA and GGA) with the \libxc\ one.
+\label{SubSec:XCtest}
+A testing program, \texttt{xclib\_test.x}, for the \texttt{XClib} library of \qe\ is available. Three options:
+\begin{itemize}
+	\item \texttt{dft-info}: infos on the input dft are provided. If the functionals are from \libxc\ the external parameters, when present, are listed with a brief description and their default value.
+	\item \texttt{exe-benchmark} (\texttt{gen-benchmark}): the program gets a data file generated previously as input (by running the same program with the \texttt{gen-benchmark} option) and compares the output data, namely energy and potential on a selected number of grid points. It also compares total energy and potential summed up on a large grid in order to better span the input domain. This option shoud be used to test modifications in the \texttt{XClib} library or to check the output matching among different parallelization schemes.
+	\item \texttt{dft-comparison}: comparison between two different dfts on a large grid of points. Max, min and average percentage difference between the two dft outputs (energy and potential) are provided and the points of the grid where the two output differ are shown. This option can be used, for example, to find differences between internal \qe\ functionals and the \libxc\ ones.
+\end{itemize}
+The testing program is available for LDA, GGA and MGGA functionals. It also tests the potential derivatives for LDA (\texttt{dmxc}) and GGA (\texttt{dgcxc}).
 
 \subsection{Compilation}
 \label{SubSec:Compilation}
@@ -1080,7 +1093,8 @@ Beware: the default integer type for 64-bit machine is typically
 but it is not guaranteed to work and will not give
 any advantage anyway.
 
-Currently, \configure\ supports Intel (ifort), NAG (nagfor), PGI (pgf90)
+Currently, \configure\ supports Intel (ifort), NAG (nagfor), NVidia
+(nvfortran, formerly PGI pgf90)
 and gfortran compilers. Pathscale, Sun Studio, AMD Open64, are no
 longer supported after v.6.2: g95, since v.6.1.
 

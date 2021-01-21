@@ -17,7 +17,7 @@ MODULE scf
                               ldmx_b, is_hubbard_back
   USE ions_base,       ONLY : nat
   USE buffers,         ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  USE funct,           ONLY : dft_is_meta
+  USE xc_lib,          ONLY : xclib_dft_is
   USE fft_base,        ONLY : dfftp
   USE fft_interfaces,  ONLY : invfft
   USE gvect,           ONLY : ngm
@@ -135,7 +135,7 @@ CONTAINS
    !
    ALLOCATE( rho%of_r(dfftp%nnr,nspin) )
    ALLOCATE( rho%of_g(ngm,nspin) )
-   IF (dft_is_meta() .OR. lxdm) THEN
+   IF (xclib_dft_is('meta') .OR. lxdm) THEN
       ALLOCATE( rho%kin_r(dfftp%nnr,nspin) )
       ALLOCATE( rho%kin_g(ngm,nspin) )
    ELSE
@@ -206,7 +206,7 @@ CONTAINS
    !
    rho%of_g = 0._dp
    !
-   IF (dft_is_meta() .OR. lxdm) THEN
+   IF (xclib_dft_is('meta') .OR. lxdm) THEN
       ALLOCATE( rho%kin_g(ngms,nspin) )
       rho%kin_g = 0._dp
    ENDIF
@@ -283,7 +283,7 @@ CONTAINS
    !
    rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
    !
-   IF (dft_is_meta() .OR. lxdm) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
+   IF (xclib_dft_is('meta') .OR. lxdm) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
    IF (lda_plus_u_nc)  rho_m%ns_nc  = rho_s%ns_nc
    IF (lda_plus_u_co)  rho_m%ns     = rho_s%ns
    IF (lda_plus_u_cob) rho_m%nsb    = rho_s%nsb
@@ -326,7 +326,7 @@ CONTAINS
       rho_s%of_r(:,is) = psic(:)
    ENDDO
    !
-   IF (dft_is_meta() .OR. lxdm) THEN
+   IF (xclib_dft_is('meta') .OR. lxdm) THEN
       rho_s%kin_g(1:ngms,:) = rho_m%kin_g(:,:)
       ! define rho_s%kin_r 
       DO is = 1, nspin
@@ -363,7 +363,7 @@ CONTAINS
   Y%of_r = X%of_r
   Y%of_g = X%of_g
   !
-  IF (dft_is_meta() .OR. lxdm) THEN
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
      Y%kin_r = X%kin_r
      Y%kin_g = X%kin_g
   ENDIF
@@ -394,7 +394,7 @@ CONTAINS
   !
   Y%of_g = Y%of_g  + A * X%of_g
   !
-  IF (dft_is_meta() .OR. lxdm) Y%kin_g     = Y%kin_g     + A * X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) Y%kin_g     = Y%kin_g     + A * X%kin_g
   IF (lda_plus_u_nc)           Y%ns_nc     = Y%ns_nc     + A * X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = Y%ns        + A * X%ns
   IF (lda_plus_u_cob)          Y%nsb       = Y%nsb       + A * X%nsb
@@ -420,7 +420,7 @@ CONTAINS
   !
   Y%of_g  = X%of_g
   !
-  IF (dft_is_meta() .OR. lxdm) Y%kin_g     = X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) Y%kin_g     = X%kin_g
   IF (lda_plus_u_nc)           Y%ns_nc     = X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = X%ns
   IF (lda_plus_u_cob)          Y%nsb       = X%nsb
@@ -447,7 +447,7 @@ CONTAINS
   !
   X%of_g(:,:) = A * X%of_g(:,:)
   !
-  IF (dft_is_meta() .OR. lxdm) X%kin_g     = A * X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) X%kin_g     = A * X%kin_g
   IF (lda_plus_u_nc)           X%ns_nc     = A * X%ns_nc
   IF (lda_plus_u_co)           X%ns        = A * X%ns
   IF (lda_plus_u_cob)          X%nsb       = A * X%nsb
@@ -489,7 +489,7 @@ CONTAINS
          rhoin%of_r(:,is) = psic(:)
       ENDDO
       !
-      IF (dft_is_meta() .OR. lxdm) THEN
+      IF (xclib_dft_is('meta') .OR. lxdm) THEN
          rhoin%kin_g = rhoin%kin_g + alphamix * ( input_rhout%kin_g-rhoin%kin_g)
          rhoin%kin_g(1:ngms,1:nspin) = (0.d0,0.d0)
          ! define rho_s%of_r 
@@ -506,7 +506,7 @@ CONTAINS
       !
       rhoin%of_g(:,:)= (0.d0,0.d0)
       rhoin%of_r(:,:)= 0.d0
-      IF (dft_is_meta() .OR. lxdm) THEN
+      IF (xclib_dft_is('meta') .OR. lxdm) THEN
          rhoin%kin_g(:,:)= (0.d0,0.d0)
          rhoin%kin_r(:,:)= 0.d0
       ENDIF
@@ -536,7 +536,7 @@ CONTAINS
    !
    ! define lengths (in real numbers) of different record chunks
    rlen_rho = 2 * ngms * nspin
-   IF (dft_is_meta() .OR. lxdm) rlen_kin  = 2 * ngms * nspin
+   IF (xclib_dft_is('meta') .OR. lxdm) rlen_kin  = 2 * ngms * nspin
    IF (lda_plus_u_co)           rlen_ldaU = (2*Hubbard_lmax+1)**2 *nspin*nat
    IF (lda_plus_u_cob)          rlen_ldaUb = (ldmx_b)**2 *nspin*nat
    IF (lda_plus_u_nc)           rlen_ldaU = 2 * (2*Hubbard_lmax+1)**2 *nspin*nat
@@ -605,7 +605,7 @@ CONTAINS
       !
       CALL DCOPY(rlen_rho,rho%of_g,1,io_buffer(start_rho),1)
       !
-      IF (dft_is_meta() .OR. lxdm) CALL DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin), 1)
+      IF (xclib_dft_is('meta') .OR. lxdm) CALL DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin), 1)
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,rho%ns_nc,1,io_buffer(start_ldaU),1)
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,rho%ns,   1,io_buffer(start_ldaU),1)
       IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,rho%nsb, 1,io_buffer(start_ldaUb),1)
@@ -621,7 +621,7 @@ CONTAINS
       !
       CALL DCOPY(rlen_rho,io_buffer(start_rho),1,rho%of_g,1)
       !
-      IF (dft_is_meta() .OR. lxdm) CALL DCOPY(rlen_kin, io_buffer(start_kin), 1,rho%kin_g,1)
+      IF (xclib_dft_is('meta') .OR. lxdm) CALL DCOPY(rlen_kin, io_buffer(start_kin), 1,rho%kin_g,1)
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,   1)
       IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,io_buffer(start_ldaUb),1,rho%nsb,1)
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns_nc,1)
@@ -635,7 +635,7 @@ CONTAINS
  !
  !
  !-----------------------------------------------------------------------------------
-FUNCTION rho_ddot( rho1, rho2, gf )
+FUNCTION rho_ddot( rho1, rho2, gf, g0, mu )
   !----------------------------------------------------------------------------------
   !! Calculates \(4\pi/G^2\ \rho_1(-G)\ \rho_2(G) = V1_\text{Hartree}(-G)\ \rho_2(G)\)
   !! used as an estimate of the self-consistency error on the energy.
@@ -657,25 +657,66 @@ FUNCTION rho_ddot( rho1, rho2, gf )
   !! second density matrix
   INTEGER, INTENT(IN) :: gf
   !! points delimiter
+  REAL(DP), OPTIONAL, INTENT(IN) :: g0
+  !! factrized G-vector norm of G=0 used in GC-SCF
+  REAL(DP), OPTIONAL, INTENT(IN) :: mu
+  !! Fermi energy used in GC-SCF calculation
   REAL(DP) :: rho_ddot
   !! output: see function comments
   !
   ! ... local variables
   !
   REAL(DP) :: fac
+  REAL(DP) :: gg0
+  REAL(DP) :: rho0
   INTEGER  :: ig
   !
   fac = e2 * fpi / tpiba2
   !
   rho_ddot = 0.D0
   !
-  DO ig = gstart, gf
-     rho_ddot = rho_ddot + REAL(CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP) / gg(ig)
-  ENDDO
+  IF ( PRESENT(g0) ) THEN
+     !
+     gg0 = g0 * g0 / tpiba2
+     !
+  ELSE
+     !
+     gg0 = -1.0_DP
+     !
+  END IF
+  !
+  IF ( gg0 > 0.0_DP ) THEN
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / ( gg(ig) + gg0 )
+        !
+     END DO
+     !
+     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+     !
+     IF ( gstart == 2 ) THEN
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(1,1) )*rho2%of_g(1,1), DP ) / ( gg(1) + gg0 )
+        !
+     END IF
+     !
+  ELSE
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
+        !
+     END DO
+     !
+     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+     !
+  END IF
   !
   rho_ddot = fac*rho_ddot
-  !
-  IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
   !
   IF ( nspin >= 2 )  THEN
      fac = e2*fpi / tpi**2  ! lambda=1 a.u.
@@ -696,7 +737,7 @@ FUNCTION rho_ddot( rho1, rho2, gf )
   !
   CALL mp_sum( rho_ddot, intra_bgrp_comm )
   !
-  IF (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
+  IF (xclib_dft_is('meta')) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
   IF (lda_plus_u )   rho_ddot = rho_ddot + ns_ddot( rho1, rho2 )
   ! 
   ! Beware: paw_ddot has a hidden parallelization on all processors
@@ -908,7 +949,7 @@ FUNCTION nsg_ddot( nsg1, nsg2, nspin )
 END FUNCTION nsg_ddot
 !
 !----------------------------------------------------------------------------
-FUNCTION local_tf_ddot( rho1, rho2, ngm0 )
+FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
   !----------------------------------------------------------------------------
   !! Calculates \(4\pi/G^2\ \rho_1(-G)\ \rho_2(G) = V1_\text{Hartree}(-G)\ \rho_2(G)\)
   !! used as an estimate of the self-consistency error on the energy - version 
@@ -930,27 +971,58 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0 )
   !! see main comment
   COMPLEX(DP), INTENT(IN) :: rho2(ngm0)
   !! see main comment
+  REAL(DP), OPTIONAL, INTENT(IN) :: g0
+  !! factrized G-vector norm of G=0 used in GC-SCF
   REAL(DP) :: local_tf_ddot
   !! see main comment
   !
   ! ... local variables
   !
   REAL(DP) :: fac
+  REAL(DP) :: gg0
   INTEGER  :: ig
   !
   local_tf_ddot = 0.D0
   !
   fac = e2 * fpi / tpiba2
   !
-  !$omp parallel do reduction(+:local_tf_ddot)
-  DO ig = gstart, ngm0
-     local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
-  END DO
-  !$omp end parallel do
+  IF ( PRESENT(g0) ) THEN
+     !
+     gg0 = g0 * g0 / tpiba2
+     !
+  ELSE
+     !
+     gg0 = -1.0_DP
+     !
+  END IF
+  !
+  IF ( gg0 > 0.0_DP ) THEN
+     !
+     !$omp parallel do reduction(+:local_tf_ddot)
+     DO ig = gstart, ngm0
+        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
+     END DO
+     !$omp end parallel do
+     !
+     IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
+     !
+     IF ( gstart == 2 ) THEN
+        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
+     END IF
+     !
+  ELSE
+     !
+     !$omp parallel do reduction(+:local_tf_ddot)
+     DO ig = gstart, ngm0
+        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
+     END DO
+     !$omp end parallel do
+     !
+     IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
+     !
+  END IF
   !
   local_tf_ddot = fac * local_tf_ddot * omega * 0.5D0
-  !
-  IF (gamma_only) local_tf_ddot = 2.D0 * local_tf_ddot
   !
   CALL mp_sum( local_tf_ddot, intra_bgrp_comm )
   !
@@ -974,7 +1046,7 @@ SUBROUTINE bcast_scf_type( rho, root, comm )
   !
   CALL mp_bcast( rho%of_g, root, comm )
   CALL mp_bcast( rho%of_r, root, comm )
-  IF ( dft_is_meta() .OR. lxdm) THEN
+  IF ( xclib_dft_is('meta') .OR. lxdm) THEN
      CALL mp_bcast( rho%kin_g, root, comm )
      CALL mp_bcast( rho%kin_r, root, comm )
   END IF

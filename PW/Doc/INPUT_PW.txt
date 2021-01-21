@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.7)
+Program: pw.x / PWscf / Quantum Espresso (version: 6.7MaX)
 ------------------------------------------------------------------------
 
 
@@ -45,6 +45,10 @@ Structure of the input data:
  / ]
 
 [ &CELL
+  ...
+ / ]
+
+[ &FCP
   ...
  / ]
 
@@ -448,21 +452,22 @@ NAMELIST: &CONTROL
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       lfcpopt
+   Variable:       lfcp
    
    Type:           LOGICAL
    See:            fcp_mu
    Default:        .FALSE.
    Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
-                   for a static system with ESM method. See the header of PW/src/fcp.f90
-                   for documentation.
+                   for a system with ESM method. See the header of PW/src/fcp_module.f90
+                   for documentation. To perform the calculation, you must set a namelist FCP.
                    
                    NB:
-                   - The total energy displayed in 'prefix.out' includes the potentiostat
+                   - The total energy displayed in output includes the potentiostat
                      contribution (-mu*N).
-                   - "calculation" must be 'relax'.
+                   - "calculation" must be 'relax' or 'md'.
                    - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
                      in "SYSTEM" namelist.
+                   - "ignore_wolfe" is always .TRUE., for BFGS.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1658,16 +1663,11 @@ NAMELIST: &SYSTEM
                         
                            - Requires cell with a_3 lattice vector along z,
                              normal to the xy plane, with the slab centered
-                             around z=0. Also requires symmetry checking to be
-                             disabled along z, either by setting "nosym" = .TRUE.
-                             or by very slight displacement (i.e., 5e-4 a.u.)
-                             of the slab along z.
+                             around z=0.
                         
-                           - Components of the total stress; sigma_xy, sigma_yz,
-                             sigma_zz, sigma_zy, and sigma_zx are meaningless
-                             because ESM stress routines calculate only
-                             components of stress; sigma_xx, sigma_xy, sigma_yx,
-                             and sigma_yy.
+                           - For bc2 with an electric field and bc3 boundary
+                             conditions, the inversion symmetry along z-direction
+                             is automatically eliminated.
                         
                            - In case of calculation='vc-relax', use
                              cell_dofree='2Dxy' or other parameters so that
@@ -1761,13 +1761,52 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       fcp_mu
+   Variable:       lgcscf
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. perform a constant bias potential (constant-mu) calculation
+                   with Grand-Canonical SCF. (JCP 146, 114104 (2017), R.Sundararaman, et al.)
+                   
+                   NB:
+                   - The total energy displayed in output includes the potentiostat
+                     contribution (-mu*N).
+                   - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
+                     in "SYSTEM" namelist.
+                   - ESM-RISM is also supported ("assume_isolated" = 'esm' and "esm_bc" = 'bc1'
+                     and "trism" = .TRUE.).
+                   - "mixing_mode" has to be 'TF' or 'local-TF', also its default is 'TF.'
+                   - The default of "mixing_beta" is 0.1 with ESM-RISM, 0.2 without ESM-RISM.
+                   - The default of "diago_thr_init" is 1.D-5.
+                   - "diago_full_acc" is always .TRUE. .
+                   - "diago_rmm_conv" is always .TRUE. .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       gcscf_mu
    
    Type:           REAL
-   See:            lfcpopt
-   Default:        0.d0
-   Description:    If "lfcpopt" = .TRUE., gives the target Fermi energy [Ry]. One can start
-                   with appropriate total charge of the system by giving 'tot_charge'.
+   Status:         REQUIRED
+   Description:    The target Fermi energy (eV) of GC-SCF. One can start
+                   with appropriate total charge of the system by giving "tot_charge" .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       gcscf_conv_thr
+   
+   Type:           REAL
+   Default:        1.D-2
+   Description:    Convergence threshold of Fermi energy (eV) for GC-SCF.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       gcscf_beta
+   
+   Type:           REAL
+   Default:        0.05D0
+   Description:    Mixing factor for GC-SCF.
+                   Larger values are recommended,
+                   if systems with small DOS on Fermi surface as graphite.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1776,7 +1815,8 @@ NAMELIST: &SYSTEM
    Type:           CHARACTER
    Default:        'none'
    See:            london_s6, london_rcut, london_c6, london_rvdw,
-                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
+                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
+                   mbd_vdw
    Description:   
                    Type of Van der Waals correction. Allowed values:
     
@@ -1789,13 +1829,19 @@ NAMELIST: &SYSTEM
                    'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3'  :
                         Semiempirical Grimme's DFT-D3. Optional variables:
                         "dftd3_version", "dftd3_threebody"
-                        S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1002/jcc.20495
+                        S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1063/1.3382344
     
                    'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' :
                         Tkatchenko-Scheffler dispersion corrections with first-principle derived
                         C6 coefficients.
                         Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                         See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
+    
+                   'mbd_vdw', 'many-body dispersion' :
+                        Many-body dipersion (MBD) correction to long-range interactions.
+                        Optional variables: "ts_vdw_isolated"
+                        A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
+                        18A508 (2014).
     
                    'XDM', 'xdm' :
                         Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
@@ -1902,8 +1948,8 @@ NAMELIST: &SYSTEM
    
    Type:           LOGICAL
    Default:        .FALSE.
-   Description:    Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy
-                   for an isolated (non-periodic) system.
+   Description:    Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy or the
+                   Many-Body dispersion (MBD) energy for an isolated (non-periodic) system.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2888,6 +2934,212 @@ NAMELIST: &CELL
 
 
 ========================================================================
+NAMELIST: &FCP
+
+   INPUT THIS NAMELIST ONLY IF "LFCP" = .TRUE.
+   
+   +--------------------------------------------------------------------
+   Variable:       fcp_mu
+   
+   Type:           REAL
+   Status:         REQUIRED
+   Description:    The target Fermi energy (eV). One can start
+                   with appropriate total charge of the system by giving "tot_charge" .
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fcp_dynamics
+   
+   Type:           CHARACTER
+   Description:   
+                   Specify the type of dynamics for the Fictitious Charge Particle (FCP).
+                   
+                   For different type of calculation different possibilities
+                   are allowed and different default values apply:
+                   
+                   CASE ( "calculation" == 'relax' )
+    
+                   'bfgs' :
+                        (default) BFGS quasi-newton algorithm, coupling with ions relaxation
+                        "ion_dynamics" must be 'bfgs' too
+    
+                   'newton' :
+                        Newton-Raphson algorithm with DIIS
+                        "ion_dynamics" must be 'damp' too
+    
+                   'damp' :
+                        damped (quick-min Verlet) dynamics for FCP relaxation
+                        "ion_dynamics" must be 'damp' too
+    
+                   'lm' :
+                        Line-Minimization algorithm for FCP relaxation
+                        "ion_dynamics" must be 'damp' too
+    
+                   CASE ( "calculation" == 'md' )
+    
+                   'velocity-verlet' :
+                        (default) Velocity-Verlet algorithm to integrate Newton's equation.
+                        "ion_dynamics" must be 'verlet' too
+    
+                   'verlet' :
+                        Verlet algorithm to integrate Newton's equation.
+                        "ion_dynamics" must be 'verlet' too
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fcp_conv_thr
+   
+   Type:           REAL
+   Default:        1.D-2
+   Description:    Convergence threshold on force (eV) for FCP relaxation.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fcp_ndiis
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    Size of DIIS for FCP relaxation,
+                   used only if "fcp_dynamics" = 'newton'.
+   +--------------------------------------------------------------------
+   
+   ///---
+      VARIABLES USED FOR FCP DYNAMICS.
+      
+      +--------------------------------------------------------------------
+      Variable:       fcp_mass
+      
+      Type:           REAL
+      Default:        5.D+6 / (xy area) for ESM only;
+      Description:    Mass of the FCP.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fcp_velocity
+      
+      Type:           REAL
+      Default:        determined by "fcp_temperature"
+      Description:    Initial velocity of the FCP.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fcp_temperature
+      
+      Type:           CHARACTER
+      Default:        "ion_temperature"
+      Description:   
+                      Available options are:
+       
+                      'rescaling' :
+                           control FCP's temperature via velocity rescaling
+                           (first method) see parameters "fpc_tempw" and "fcp_tolp".
+       
+                      'rescale-v' :
+                           control FCP's temperature via velocity rescaling
+                           (second method) see parameters "fcp_tempw" and "fcp_nraise"
+       
+                      'rescale-T' :
+                           control FCP's temperature via velocity rescaling
+                           (third method) see parameter "fcp_delta_t"
+       
+                      'reduce-T' :
+                           reduce FCP's temperature every "fcp_nraise" steps
+                           by the (negative) value "fcp_delta_t"
+       
+                      'berendsen' :
+                           control FCP's temperature using "soft" velocity
+                           rescaling - see parameters "fcp_tempw" and "fcp_nraise"
+       
+                      'andersen' :
+                           control FCP's temperature using Andersen thermostat
+                           see parameters "fcp_tempw" and "fcp_nraise"
+       
+                      'initial' :
+                           initialize FCP's velocities to temperature "fcp_tempw"
+                           and leave uncontrolled further on
+       
+                      'not_controlled' :
+                           (default) FCP's temperature is not controlled
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fcp_tempw
+      
+      Type:           REAL
+      Default:        "tempw"
+      Description:    Starting temperature (Kelvin) in FCP dynamics runs
+                      target temperature for most thermostats.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fcp_tolp
+      
+      Type:           REAL
+      Default:        "tolp"
+      Description:    Tolerance for velocity rescaling. Velocities are rescaled if
+                      the run-averaged and target temperature differ more than tolp.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fcp_delta_t
+      
+      Type:           REAL
+      Default:        "delta_t"
+      Description:    if "fcp_temperature" == 'rescale-T' :
+                             at each step the instantaneous temperature is multiplied
+                             by fcp_delta_t; this is done rescaling all the velocities.
+                      
+                      if "fcp_temperature" == 'reduce-T' :
+                             every "fcp_nraise" steps the instantaneous temperature is
+                             reduced by -"fcp_delta_t" (i.e. "fcp_delta_t" < 0 is added to T)
+                      
+                      The instantaneous temperature is calculated at the end of
+                      FCP's move and BEFORE rescaling. This is the temperature
+                      reported in the main output.
+                      
+                      For "fcp_delta_t" < 0, the actual average rate of heating or cooling
+                      should be roughly C*fcp_delta_t/(fcp_nraise*dt) (C=1 for an
+                      ideal gas, C=0.5 for a harmonic solid, theorem of energy
+                      equipartition between all quadratic degrees of freedom).
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fcp_nraise
+      
+      Type:           INTEGER
+      Default:        "nraise"
+      Description:    if "fcp_temperature" == 'reduce-T' :
+                             every "fcp_nraise" steps the instantaneous temperature is
+                             reduced by -"fcp_delta_t" (i.e. "fcp_delta_t" is added to the temperature)
+                      
+                      if "fcp_temperature" == 'rescale-v' :
+                             every "fcp_nraise" steps the average temperature, computed from
+                             the last "fcp_nraise" steps, is rescaled to "fcp_tempw"
+                      
+                      if "fcp_temperature" == 'berendsen' :
+                             the "rise time" parameter is given in units of the time step:
+                             tau = fcp_nraise*dt, so dt/tau = 1/fcp_nraise
+                      
+                      if "fcp_temperature" == 'andersen' :
+                             the "collision frequency" parameter is given as nu=1/tau
+                             defined above, so nu*dt = 1/fcp_nraise
+      +--------------------------------------------------------------------
+      
+   \\\---
+   
+   +--------------------------------------------------------------------
+   Variable:       freeze_all_atoms
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE., freeze all atoms
+                   to perform relaxation or dynamics only with FCP.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+========================================================================
 CARD: ATOMIC_SPECIES 
 
    /////////////////////////////////////////
@@ -3549,4 +3801,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Sun Nov 29 22:25:25 CET 2020
+This file has been created by helpdoc utility on Wed Dec 30 21:42:57 JST 2020

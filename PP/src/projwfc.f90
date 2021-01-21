@@ -26,11 +26,7 @@ PROGRAM do_projwfc
   USE environment,ONLY : environment_start, environment_end
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : mp_startup
-  USE mp_world,   ONLY : world_comm
   USE mp_images,  ONLY : intra_image_comm
-  USE mp_pools,   ONLY : intra_pool_comm
-  USE mp_bands,   ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE command_line_options, ONLY : ndiag_
   USE spin_orb,   ONLY : lforcet
   USE wvfct,      ONLY : et, nbnd
   USE paw_variables, ONLY : okpaw
@@ -42,8 +38,6 @@ PROGRAM do_projwfc
   USE lsda_mod,   ONLY : lsda
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
@@ -65,10 +59,6 @@ PROGRAM do_projwfc
   ! initialise environment
   !
   CALL mp_startup ( )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-          do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start ( 'PROJWFC' )
   !
@@ -234,7 +224,6 @@ PROGRAM do_projwfc
      ENDIF
   ENDIF
   !
-  CALL laxlib_end()
   CALL environment_end ( 'PROJWFC' )
   !
   CALL stop_pp
@@ -876,7 +865,7 @@ SUBROUTINE force_theorem ( ef_0, filproj )
   USE basis,      ONLY : natomwfc
   USE wvfct,      ONLY : wg, et, nbnd
   USE mp,         ONLY : mp_sum
-  USE mp_pools,   ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_pools,   ONLY : inter_pool_comm
   USE projections,ONLY : proj, nlmchi
   !
   !---- Force Theorem -- (AlexS)
@@ -1116,7 +1105,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   USE uspp,      ONLY : nkb, vkb
   USE becmod,    ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,  ONLY : prefix, restart_dir, tmp_dir
-  USE control_flags, ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only, use_para_diag
   USE pw_restart_new,ONLY : read_collected_wfc
   USE wavefunctions, ONLY : evc
   !
@@ -1158,8 +1147,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   ! matrix distribution descriptors
   INTEGER :: nx, nrl, nrlx
   ! maximum local block dimension
-  LOGICAL :: la_para
-  ! flag for parallel linear algebra
   LOGICAL :: la_proc
   ! flag to distinguish procs involved in linear algebra
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
@@ -1198,10 +1185,14 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
      OPEN( unit=iunaux, file=auxname, status='unknown', form='unformatted')
   END IF
   !
+  !   Initialize parallelism for linear algebra
+  !
+  CALL set_para_diag ( natomwfc, use_para_diag )
+  !
   CALL desc_init( natomwfc, nx, la_proc, idesc, rank_ip, idesc_ip )
   CALL laxlib_getval(nproc_ortho=nproc_ortho)
-  la_para = ( nproc_ortho > 1 )
-  IF ( la_para ) THEN
+  use_para_diag = ( nproc_ortho > 1 )
+  IF ( use_para_diag ) THEN
      WRITE( stdout, &
           '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
      IF ( lwrite_ovp ) THEN
@@ -1214,7 +1205,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
      WRITE( stdout, * )
      WRITE( stdout, * ) ' Problem Sizes '
      WRITE( stdout, * ) ' natomwfc = ', natomwfc
-     IF ( la_para ) WRITE( stdout, * ) ' nx       = ', nx
+     IF ( use_para_diag ) WRITE( stdout, * ) ' nx       = ', nx
      WRITE( stdout, * ) ' nbnd     = ', nbnd
      WRITE( stdout, * ) ' nkstot   = ', nkstot
      WRITE( stdout, * ) ' npwx     = ', npwx
@@ -1453,6 +1444,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   ENDIF
   !
   IF ( ionode_pool ) DEALLOCATE( proj_aux, ovps_aux )
+  CALL laxlib_end()
   !
   RETURN
   !

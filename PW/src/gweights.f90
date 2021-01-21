@@ -61,6 +61,48 @@ SUBROUTINE gweights( nks, wk, nbnd, nelec, degauss, ngauss, &
 END SUBROUTINE gweights
 !
 !--------------------------------------------------------------------
+subroutine gweights_mix (nks, wk, nbnd, nelec, degauss, ngauss, &
+     et, ef, demet, wg, is, isk, beta)
+  !--------------------------------------------------------------------
+  !     calculates Ef and weights with the gaussian spreading technique
+  ! ... Wrapper routine: computes first Ef, then the weights
+  ! ... Also IN and OUT Ef are mixed.
+  ! ... This routine is called in weight with GC-SCF calculation. 
+  !
+  USE kinds
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: nks, nbnd, ngauss, is, isk(nks)
+  REAL(DP), INTENT(IN) :: wk (nks), et (nbnd, nks), nelec, degauss
+  ! wg must be (inout) and not (out) because if is/=0 only terms for
+  ! spin=is are initialized; the remaining terms should be kept, not lost
+  REAL(DP), INTENT(INOUT) :: wg (nbnd, nks)
+  REAL(DP), INTENT(INOUT) :: ef
+  REAL(DP), INTENT(OUT) :: demet
+  REAL(DP), INTENT(IN) :: beta
+  !
+  REAL(DP) :: ef_by_n
+  REAL(DP), EXTERNAL :: efermig
+  !
+  ! Calculate the Fermi energy ef
+  !
+  ef_by_n = efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, is, isk)
+  !
+  ! Mixing the Fermi energy ef
+  !
+  ef = beta * ef + (1.0_DP - beta) * ef_by_n
+  !
+  ! Calculate weights
+  !
+  CALL gweights_only (nks, wk, is, isk, nbnd, nelec, degauss, &
+     ngauss, et, ef, demet, wg)
+  !
+  RETURN
+  !
+end subroutine gweights_mix
+!
+!--------------------------------------------------------------------
 SUBROUTINE gweights_only( nks, wk, is, isk, nbnd, nelec, degauss, &
                           ngauss, et, ef, demet, wg )
   !--------------------------------------------------------------------
