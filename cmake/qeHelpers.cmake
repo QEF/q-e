@@ -47,8 +47,8 @@ function(qe_preprocess_source IN OUT)
         VERBATIM)    
 endfunction(qe_preprocess_source)
 
-function(qe_fix_fortran_modules LIB)
-    set(targets ${LIB} ${ARGN})
+function(qe_fix_fortran_modules TGT)
+    set(targets ${TGT} ${ARGN})
     foreach(tgt IN LISTS targets)
         get_target_property(tgt_type ${tgt} TYPE)
         # All of the following target modifications make
@@ -59,16 +59,37 @@ function(qe_fix_fortran_modules LIB)
             get_target_property(tgt_binary_dir ${tgt} BINARY_DIR)
             set_target_properties(${tgt}
                 PROPERTIES
-                    Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod/${LIB})
-            # make module directory available for clients of LIB 
+                    Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod/${TGT})
+            # make module directory available for clients of TGT 
             target_include_directories(${tgt}
                 PUBLIC
-                    $<BUILD_INTERFACE:${tgt_binary_dir}/mod/${LIB}>
+                    $<BUILD_INTERFACE:${tgt_binary_dir}/mod/${TGT}>
                 INTERFACE
-                    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${LIB}>)
+                    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${TGT}>)
         endif()
     endforeach()
 endfunction(qe_fix_fortran_modules)
+
+function(qe_enable_cuda_fortran SRCS)
+    if(QE_ENABLE_CUDA)
+        foreach(src IN LISTS SRCS)
+            set_source_files_properties(${src} 
+                PROPERTIES
+                    COMPILE_OPTIONS ${QE_CUDA_COMPILE_OPTIONS})
+        endforeach()
+    endif()
+endfunction(qe_enable_cuda_fortran)
+
+function(_qe_add_cuda_link_flags TGT)
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+        get_target_property(target_type ${TGT} TYPE)
+        if(target_type STREQUAL "EXECUTABLE")
+            target_link_options(${TGT}
+                PRIVATE
+                    ${QE_CUDA_COMPILE_OPTIONS})
+        endif()
+    endif()
+endfunction(_qe_add_cuda_link_flags)
 
 function(qe_git_submodule_update PATH)
     find_package(Git)
@@ -98,6 +119,9 @@ function(_qe_add_target TGT)
     qe_fix_fortran_modules(${TGT})
     qe_get_fortran_cpp_flag(f_cpp_flag)
     target_compile_options(${TGT} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${f_cpp_flag}>)
+    if(QE_ENABLE_CUDA)
+        _qe_add_cuda_link_flags(${TGT})
+    endif()
 endfunction(_qe_add_target)
 
 function(qe_install_targets TGT)
