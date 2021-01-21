@@ -827,7 +827,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ntry = 0
        !
-       CALL using_h_diag(2);
        !
        RMM_loop : DO
           !
@@ -837,14 +836,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !          IF ( .NOT. lrot ) THEN
           IF (lrot .AND. .NOT. lscf ) THEN
               !
-              CALL using_h_diag(0); CALL using_g2kin(0);
+              CALL using_h_diag(2); CALL using_g2kin(0);
               h_diag = 1.D0
               FORALL( ig = 1 : npwx )
-                 h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+                 h_diag(ig,:) = g2kin(ig) + v_of_0
               END FORALL
+              CALL usnldiag(npw, h_diag, s_diag )
               !
               IF ( .not. use_gpu ) THEN
-                CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+                CALL using_evc(1); CALL using_et(1)
                 CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                 !
