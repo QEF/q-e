@@ -304,6 +304,9 @@ CONTAINS
     INTEGER                  :: ibnd_size
     INTEGER                  :: jbnd_size
     COMPLEX(DP), ALLOCATABLE :: sc_d(:,:)
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE)       :: sc_d
+#endif 
     !
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1
