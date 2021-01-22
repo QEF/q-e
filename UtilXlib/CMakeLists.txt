@@ -1,6 +1,5 @@
 set(src_util
     clocks_handler.f90
-    cuda_util.f90
     divide.f90
     data_buffer.f90
     error_handler.f90
