@@ -199,16 +199,14 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     write(unit=9901, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
 
     Ngauss_ = Ngauss
-    if( Ngauss_ > 0 ) then
+    if( Ngauss_ > 0 .or. Ngauss_ == -1 ) then
       write(unit=9902, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
       write(unit=9903, fmt="(2f30.16)") Ef, dev1_sq_num_electrons(Ef)
       write(unit=9904, fmt="(2f30.16)") Ef, dev2_sq_num_electrons(Ef)
     else 
       write(unit=9902, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
-      write(unit=9903, fmt="(2f30.16)") Ef, dev1_sq_num_electrons(Ef)
-      write(unit=9904, fmt="(2f30.16)") Ef, dev2_sq_num_electrons(Ef)
-      ! write(unit=9903, fmt="(2f30.16)") Ef, dev1_num_electrons(Ef)
-      ! write(unit=9904, fmt="(2f30.16)") Ef, dev2_num_electrons(Ef)
+      write(unit=9903, fmt="(2f30.16)") Ef, dev1_num_electrons(Ef)
+      write(unit=9904, fmt="(2f30.16)") Ef, dev2_num_electrons(Ef)
     end if   
   end do
   close(9901)
