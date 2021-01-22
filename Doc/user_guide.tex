@@ -809,7 +809,7 @@ Then \qe\ can be compiled as usual. If the version of \libxc\ is older than 5.0.
 \begin{itemize}
 	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc}
 \end{itemize}
-\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be repalced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
+\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be replaced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
 
 \subsubsection{Usage}
 In order to use \libxc\ functionals, you must enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. For example, to use the \libxc\ version of the PBE functionals (both exchange and correlation):
