@@ -36,6 +36,9 @@ SUBROUTINE wfcinit()
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE uspp_gpum,            ONLY : using_vkb
+  !
   IMPLICIT NONE
   !
   INTEGER :: ik, ierr, exst_sum 
@@ -43,8 +46,8 @@ SUBROUTINE wfcinit()
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
   !
-  !
   CALL start_clock( 'wfcinit' )
+  CALL using_evc(0) ! this may be removed
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
@@ -105,6 +108,7 @@ SUBROUTINE wfcinit()
         IF ( nks == 1 ) THEN
            INQUIRE (unit = iunwfc, opened = opnd_file)
            IF ( .NOT.opnd_file ) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+           CALL using_evc(2)
            CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
            IF ( .NOT.opnd_file ) CLOSE ( UNIT=iunwfc, STATUS='keep' )
         END IF
@@ -165,6 +169,7 @@ SUBROUTINE wfcinit()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
+     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for DFT+U
@@ -182,6 +187,7 @@ SUBROUTINE wfcinit()
      !
      ! ... write  starting wavefunctions to file
      !
+     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) CALL using_evc(0)
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
@@ -209,12 +215,16 @@ SUBROUTINE init_wfc ( ik )
   USE wvfct,                ONLY : nbnd, npwx, et
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE random_numbers,       ONLY : randy
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
+  !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -322,6 +332,7 @@ SUBROUTINE init_wfc ( ik )
   ! ... Allocate space for <beta|psi>
   !
   CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
+  CALL using_becp_auto (2)
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
@@ -336,6 +347,7 @@ SUBROUTINE init_wfc ( ik )
   IF ( xclib_dft_is('hybrid')  ) CALL stop_exx() 
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
+  CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
   CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
   lelfield = lelfield_save
@@ -343,9 +355,11 @@ SUBROUTINE init_wfc ( ik )
   ! ... copy the first nbnd eigenvalues
   ! ... eigenvectors are already copied inside routine rotate_wfc
   !
+  CALL using_et(1)
   et(1:nbnd,ik) = etatom(1:nbnd)
   !
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto (2)
   DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
   !

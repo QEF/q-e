@@ -616,6 +616,9 @@ CONTAINS
      WRITE( stdout,*) '  Number of x-y planes for each processors: '
      WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) ( ( desc%nr2p(j), &
              desc%nr3p(i), i = 1, desc%nproc3 ), j=1,desc%nproc2 )
+
+     IF ( .not. desc%use_pencil_decomposition ) WRITE( stdout,*) '  Using Slab Decomposition'
+     IF (       desc%use_pencil_decomposition ) WRITE( stdout,*) '  Using Pencil Decomposition'
 1000  FORMAT(3X, &
          'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
          '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &

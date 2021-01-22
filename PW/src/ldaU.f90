@@ -22,6 +22,10 @@ MODULE ldaU
   SAVE
   !
   COMPLEX(DP), ALLOCATABLE :: wfcU(:,:)
+#if defined(__CUDA)
+  ! while waiting for a better implementation
+  attributes(PINNED) :: wfcU
+#endif
   !! atomic wfcs with U term
   COMPLEX(DP), ALLOCATABLE :: d_spin_ldau(:,:,:)
   !! the rotations in spin space for all symmetries

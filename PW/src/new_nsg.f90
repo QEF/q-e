@@ -37,6 +37,8 @@ SUBROUTINE new_nsg()
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
   !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  !
   IMPLICIT NONE
   !
   TYPE (bec_type) :: proj     
@@ -51,6 +53,8 @@ SUBROUTINE new_nsg()
   INTEGER, EXTERNAL :: find_viz, type_interaction
   !
   CALL start_clock('new_nsg')
+  !
+  CALL using_evc(0)
   !
   ldim = 0
   DO nt = 1, ntyp
@@ -76,6 +80,7 @@ SUBROUTINE new_nsg()
      npw = ngk(ik)
      !
      IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+     IF (nks > 1) CALL using_evc(2)
      !
      ! make the projection
      !

@@ -395,4 +395,16 @@ SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
+#if defined (__CUDA)
+SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
+   IMPLICIT NONE
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: ldx, nx
+   REAL(DP), DEVICE    :: a(:,:)
+   REAL(DP), DEVICE    :: b(:,:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+END SUBROUTINE
+#endif
 END INTERFACE

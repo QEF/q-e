@@ -615,6 +615,7 @@
       USE atom,       ONLY: rgrid
       USE uspp,       ONLY: indv
       use uspp,       only: qq_nt, beta
+      use uspp_gpum,  ONLY: using_qq_nt, using_qq_nt_d, qq_nt_d
       USE betax,      only: refg, qradx, mmx, dqradx
       use smallbox_gvec,      only: ngb
       use control_flags, only: iprint, iverbosity
@@ -624,6 +625,9 @@
       use smallbox_gvec,      only: gb, gxb
       use small_box,  only: omegab, tpibab
       USE cp_interfaces, ONLY: fill_qrl
+#if defined (__CUDA)
+      USE cudafor
+#endif
       !
       IMPLICIT NONE
       !
@@ -796,6 +800,22 @@
          end do
 
       end do
+
+      CALL using_qq_nt(2)
+#if defined (__CUDA)
+      CALL using_qq_nt_d(0)
+!$cuf kernel do (3)
+      DO is = 1, SIZE(qq_nt_d,3)
+         DO jv=1,SIZE(qq_nt_d,2)
+            DO iv=1,SIZE(qq_nt_d,1)
+               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
+                  qq_nt_d(iv,jv,is) = 0.0d0
+               END IF
+            END DO
+         END DO
+      END DO
+#endif
+!
 !
       if (tpre) then
 !     ---------------------------------------------------------------
@@ -1039,6 +1059,7 @@
       use gvecw, only: ngw
       use cell_base, only: ainv
       use uspp, only: qq_nt, nhtolm, beta
+      use uspp_gpum,  ONLY: using_qq_nt, using_qq_nt_d, qq_nt_d
       use constants, only: pi, fpi
       use ions_base, only: nsp
       use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
@@ -1046,6 +1067,9 @@
       use smallbox_gvec, only: gb, gxb, ngb
       use small_box,  only: omegab, tpibab
       USE betax, ONLY: qradx, dqradx, refg, mmx
+#if defined (__CUDA)
+      USE cudafor
+#endif
 !
       implicit none
 
@@ -1131,6 +1155,21 @@
          end do
 
       end do
+
+      CALL using_qq_nt(2)
+#if defined (__CUDA)
+      CALL using_qq_nt_d(0)
+!$cuf kernel do (3)
+      DO is = 1, SIZE(qq_nt_d,3)
+         DO jv=1,SIZE(qq_nt_d,2)
+            DO iv=1,SIZE(qq_nt_d,1)
+               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
+                  qq_nt_d(iv,jv,is) = 0.0d0
+               END IF
+            END DO
+         END DO
+      END DO
+#endif
 !
       if (tpre) then
 !     ---------------------------------------------------------------

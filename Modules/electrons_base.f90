@@ -10,6 +10,9 @@
 !------------------------------------------------------------------------------!
 
       USE kinds, ONLY: DP
+#if defined (__CUDA)
+      USE cudafor
+#endif
 !
       IMPLICIT NONE
       SAVE
@@ -43,9 +46,13 @@
       REAL(DP) :: qbac = 0.0_DP       ! background neutralizing charge
       INTEGER, ALLOCATABLE :: ispin(:) ! spin of each state
 
-      REAL(DP), ALLOCATABLE :: f_bgrp(:)     ! occupation numbers ( at gamma )
+      REAL(DP), ALLOCATABLE :: f_bgrp(:)  ! occupation numbers ( at gamma )
+      REAL(DP), ALLOCATABLE :: f_d(:)     ! occupation numbers ( at gamma )
       INTEGER, ALLOCATABLE  :: ispin_bgrp(:) ! spin of each state
       INTEGER, ALLOCATABLE :: ibgrp_g2l(:)    ! local index of the i-th global band index
+#if defined (__CUDA)
+      ATTRIBUTES( DEVICE ) :: f_d
+#endif
 !
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -397,6 +404,7 @@
       IF( ALLOCATED( f ) ) DEALLOCATE( f )
       IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
       IF( ALLOCATED( f_bgrp ) ) DEALLOCATE( f_bgrp )
+      IF( ALLOCATED( f_d ) ) DEALLOCATE( f_d )
       IF( ALLOCATED( ispin_bgrp ) ) DEALLOCATE( ispin_bgrp )
       IF( ALLOCATED( ibgrp_g2l ) ) DEALLOCATE( ibgrp_g2l )
       telectrons_base_initval = .FALSE.
@@ -454,6 +462,10 @@
             ilocal = ilocal + 1
          END DO
       END DO
+
+#if defined (__CUDA)
+      ALLOCATE( f_d, SOURCE = f_bgrp )
+#endif
       
       RETURN
 

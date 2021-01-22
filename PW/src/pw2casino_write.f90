@@ -34,6 +34,9 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE mp_bands, ONLY: intra_bgrp_comm
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
    USE buffers,              ONLY : get_buffer
+   USE wavefunctions_gpum, ONLY : using_evc
+   USE wvfct_gpum,                ONLY : using_et
+   USE uspp_gpum,                 ONLY : using_vkb
 
    USE pw2blip
 
@@ -78,6 +81,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    INTEGER,PARAMETER :: Nran=1009,Nkeep=100 ! See comment on p. 188 of Knuth.
    INTEGER,SAVE :: ran_array_idx=-1
    REAL(DP),SAVE :: ran_array(Nran)
+
+   CALL using_evc(0)
 
    dowrite=ionode.or..not.(gather.or.blip)
 
@@ -208,11 +213,14 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    iorb = 0
    norb = nk*nspin*nbnd
 
+   CALL using_evc(0)
+
    DO ik = 1, nk
       DO ispin = 1, nspin
          ikk = ik + nk*(ispin-1)
          npw = ngk(ikk)
          IF( nks > 1 ) CALL get_buffer(evc,nwordwfc,iunwfc,ikk)
+         IF( nks > 1 ) CALL using_evc(2)
          DO ibnd = 1, nbnd
             evc_l(:) = (0.d0, 0d0)
             evc_l(gtoig(igk_k(1:npw,ikk))) = evc(1:npw,ibnd)
@@ -323,7 +331,11 @@ CONTAINS
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
       USE xc_lib, ONLY : xclib_dft_is
-      
+      !
+      USE becmod_subs_gpum, ONLY : using_becp_auto
+      !
+      IMPLICIT NONE
+
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
       REAL(dp), ALLOCATABLE :: g2kin(:)
@@ -331,6 +343,7 @@ CONTAINS
 
       ALLOCATE (aux(dfftp%nnr))
       CALL allocate_bec_type ( nkb, nbnd, becp )
+      CALL using_becp_auto(2)
 
       ek  = 0.d0
       eloc= 0.d0
@@ -357,10 +370,15 @@ CONTAINS
             ENDDO
          ENDDO
 
+         CALL using_evc(0); CALL using_et(0)
+
          DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
             npw = ngk(ikk)
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
+            IF( nks > 1 ) CALL using_evc(2)
+            !
+            CALL using_vkb(1)
             CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
             CALL calbec ( npw, vkb, evc, becp )
             !
@@ -465,6 +483,7 @@ CONTAINS
       END IF
       !
       CALL deallocate_bec_type (becp)
+      CALL using_becp_auto(2)
       DEALLOCATE (aux)
 
       WRITE (stdout,*)
@@ -707,6 +726,7 @@ CONTAINS
          kprod(6,:)=kvec(2,:)*kvec(3,:)
          ksq(:)=kprod(1,:)+kprod(2,:)+kprod(3,:)
 
+         CALL using_et(0)
          WRITE(iob)&
             kvec                                          ,&
             ksq                                           ,&
@@ -861,6 +881,8 @@ CONTAINS
 
       IF(binwrite)RETURN
 
+      CALL using_et(0)
+
       ikk = ik + nk*(ispin-1)
       IF(ispin==1.and.ibnd==1)THEN
          WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
@@ -886,6 +908,8 @@ CONTAINS
    SUBROUTINE write_bwfn_data(ik,ispin,ibnd)
       INTEGER,INTENT(in) :: ik,ispin,ibnd
       INTEGER lx,ly,lz,ikk,j,l1,l2,l3
+
+      CALL using_et(0)
 
       IF(binwrite)THEN
          DO l3=1,blipgrid(3)
@@ -931,6 +955,8 @@ CONTAINS
    SUBROUTINE write_bwfn_data_gamma(re_im,ik,ispin,ibnd)
       INTEGER,INTENT(in) :: ik,ispin,ibnd,re_im
       INTEGER lx,ly,lz,ikk,j,l1,l2,l3
+
+      CALL using_et(0)
 
       IF(binwrite)THEN
          IF(re_im==1)THEN

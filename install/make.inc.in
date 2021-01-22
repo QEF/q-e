@@ -90,7 +90,7 @@ GPU_ARCH=@gpu_arch@
 CUDA_RUNTIME=@gpu_runtime@
 
 # CUDA F90 Flags
-CUDA_F90FLAGS=@cuda_fflags@
+CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
@@ -165,8 +165,8 @@ MASS_LIBS      = @mass_libs@
 MBD_LIBS= $(TOPDIR)/MBD/libmbd.a
 
 # CUDA libraries
-CUDA_LIBS=@cuda_libs@
-CUDA_EXTLIBS = @cuda_extlibs@
+CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
+CUDA_EXTLIBS = devxlib @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
