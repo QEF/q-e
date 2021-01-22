@@ -6,12 +6,7 @@ MODULES += \
   cuda_subroutines.o \
   dylmr2_gpu.o \
   random_numbers_gpu.o \
-  sph_bes_gpu.o \
-  correlation_lda_lsda_gpu.o \
-  correlation_gga_gpu.o \
-  exchange_lda_lsda_gpu.o \
-  exchange_gga_gpu.o \
-  metagga_gpu.o
+  sph_bes_gpu.o
 
 mp_exx.o : control_flags.o
 becmod_gpu.o : becmod.o
