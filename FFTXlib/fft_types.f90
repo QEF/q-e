@@ -206,10 +206,7 @@ CONTAINS
     INTEGER :: nx, ny, ierr, nzfft, i, nsubbatches
     INTEGER :: mype, root, nproc, iproc, iproc2, iproc3 ! mype starting from 0
     INTEGER :: color, key
-     !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
-
-    IF ( ALLOCATED( desc%nsp ) ) &
-        CALL fftx_error__(' fft_type_allocate ', ' fft arrays already allocated ', 1 )
+    !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
 
     desc%comm = comm
 #if defined(__MPI)
@@ -217,6 +214,10 @@ CONTAINS
        CALL fftx_error__( ' fft_type_allocate ', ' fft communicator is null ', 1 )
     END IF
 #endif
+    !
+    IF ( ALLOCATED( desc%nsp ) ) &
+        CALL fftx_error_uniform__(' fft_type_allocate ', ' fft arrays already allocated ', 1, desc%comm )
+
     !
     root = 0 ; mype = 0 ; nproc = 1
 #if defined(__MPI)
@@ -1002,7 +1003,7 @@ CONTAINS
 
      IF ( PRESENT (use_pd) ) dfft%use_pencil_decomposition = use_pd
      IF ( ( .not. dfft%use_pencil_decomposition ) .and. ( nyfft > 1 ) ) &
-        CALL fftx_error__(' fft_type_init ', ' Slab decomposition and task groups not implemented. ', 1 )
+        CALL fftx_error_uniform__(' fft_type_init ', ' Slab decomposition and task groups not implemented. ', 1, dfft%comm )
 
      dfft%lpara = lpara  !  this descriptor can be either a descriptor for a
                          !  parallel FFT or a serial FFT even in parallel build
