@@ -52,6 +52,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE klist,                  ONLY : nelec, tot_charge
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
                                      fcp_verlet, fcp_terminate, output_fcp
+  USE rism_module,            ONLY : lrism, rism_new_conv_thr
   !
   IMPLICIT NONE
   !
@@ -353,6 +354,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               IF ( lfcp ) CALL fcp_terminate()
               !
               conv_ions = .true.
+              !
            ENDIF
            !
         ELSE
@@ -414,6 +416,15 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   IF ( lfcp ) THEN
      CALL mp_bcast(nelec,      ionode_id, intra_image_comm)
      CALL mp_bcast(tot_charge, ionode_id, intra_image_comm)
+  END IF
+  !
+  !
+  ! ... update convergence threshold of 3D-RISM
+  !
+  IF ( lrism ) THEN
+     IF ( tr2 < starting_scf_threshold ) THEN
+       CALL rism_new_conv_thr()
+     END IF
   END IF
   !
   RETURN

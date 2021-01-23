@@ -49,7 +49,8 @@ MODULE qexsd_init
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
-            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput
+            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_berryPhaseOutput, &
+            qexsd_init_rism3d, qexsd_init_rismlaue
   !
 CONTAINS
   !
@@ -1288,7 +1289,71 @@ SUBROUTINE qexsd_init_gate_info(obj, tagname, gatefield_en, zgate_, nelec_, alat
                         GATE_ZPOS = zgate_,  GATE_GATE_TERM = gate_gate_term, GATEFIELDENERGY = gatefield_en) 
    ! 
 END SUBROUTINE qexsd_init_gate_info 
-
-
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_rism3d(obj, nmol, molfile, dens1, dens2, ecutsolv)
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      !
+      TYPE(rism3d_type)            :: obj
+      INTEGER,          INTENT(IN) :: nmol
+      CHARACTER(LEN=*), INTENT(IN) :: molfile(:)
+      REAL(DP),         INTENT(IN) :: dens1(:)
+      REAL(DP),         INTENT(IN) :: dens2(:)
+      REAL(DP),         INTENT(IN) :: ecutsolv
+      !
+      TYPE(solvent_type), ALLOCATABLE :: solvents(:)
+      INTEGER :: i
+      !
+      ALLOCATE(solvents(nmol))
+      !
+      DO i = 1, nmol
+          CALL qes_init (solvents(i), "solvent", TRIM(molfile(i)), dens1(i), dens2(i))
+      ENDDO
+      !
+      CALL qes_init (obj, "rism3d", nmol, solvents, ecutsolv)
+      !
+      DO i = 1, nmol
+          CALL qes_reset (solvents(i))
+      ENDDO
+      !
+      DEALLOCATE(solvents)
+      !
+    END SUBROUTINE qexsd_init_rism3d
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_rismlaue(obj, both_hands, nfit, pot_ref, charge, &
+                                   right_start,  right_expand, &
+                                   right_buffer, right_buffer_u, right_buffer_v, &
+                                   left_start,   left_expand,  &
+                                   left_buffer,  left_buffer_u,  left_buffer_v)
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      !
+      TYPE(rismlaue_type)  :: obj
+      LOGICAL,  INTENT(IN) :: both_hands
+      INTEGER,  INTENT(IN) :: nfit
+      INTEGER,  INTENT(IN) :: pot_ref
+      REAL(DP), INTENT(IN) :: charge
+      REAL(DP), INTENT(IN) :: right_start
+      REAL(DP), INTENT(IN) :: right_expand
+      REAL(DP), INTENT(IN) :: right_buffer
+      REAL(DP), INTENT(IN) :: right_buffer_u
+      REAL(DP), INTENT(IN) :: right_buffer_v
+      REAL(DP), INTENT(IN) :: left_start
+      REAL(DP), INTENT(IN) :: left_expand
+      REAL(DP), INTENT(IN) :: left_buffer
+      REAL(DP), INTENT(IN) :: left_buffer_u
+      REAL(DP), INTENT(IN) :: left_buffer_v
+      !
+      CALL qes_init (obj, "rismlaue", both_hands, nfit, pot_ref, charge, &
+                     right_start,  right_expand, &
+                     right_buffer, right_buffer_u, right_buffer_v, &
+                     left_start,   left_expand,  &
+                     left_buffer,  left_buffer_u,  left_buffer_v)
+      !
+    END SUBROUTINE qexsd_init_rismlaue
 
  END MODULE qexsd_init

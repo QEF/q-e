@@ -100,6 +100,9 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_total_energy
     MODULE PROCEDURE qes_read_band_structure
     MODULE PROCEDURE qes_read_ks_energies
+    MODULE PROCEDURE qes_read_solvent
+    MODULE PROCEDURE qes_read_rism3d
+    MODULE PROCEDURE qes_read_rismlaue
     MODULE PROCEDURE qes_read_closed
     MODULE PROCEDURE qes_read_cpstatus
     MODULE PROCEDURE qes_read_cpnumstep
@@ -1502,6 +1505,46 @@ MODULE qes_read_module
       END IF
     ELSE
        obj%FCP_tot_charge_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "rism3d")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:outputType","rism3d: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:outputType","rism3d: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%rism3d_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_rism3d(tmp_node, obj%rism3d, ierr )
+    ELSE
+       obj%rism3d_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "rismlaue")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:outputType","rismlaue: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:outputType","rismlaue: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%rismlaue_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_rismlaue(tmp_node, obj%rismlaue, ierr )
+    ELSE
+       obj%rismlaue_ispresent = .FALSE.
     END IF
     !
     !
@@ -10489,6 +10532,610 @@ MODULE qes_read_module
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_ks_energies
+  !
+  !
+  SUBROUTINE qes_read_solvent(xml_node, obj, ierr)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER :: xml_node
+    TYPE(solvent_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL,  INTENT(OUT) :: ierr
+    !
+    TYPE(Node),     POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    !
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "molec_file")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:solventType","molec_file: wrong number of occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:solventType","molec_file: wrong number of occurrences",10)
+       END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node)) &
+       CALL extractDataContent(tmp_node, obj%molec_file, IOSTAT = iostat_)
+    IF (iostat_ /= 0) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:solventType","error reading molec_file")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:solventType","error reading molec_file",10)
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "density1")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:solventType","density1: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:solventType","density1: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%density1, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT(ierr)) THEN
+             CALL infomsg("qes_read:solventType","error reading density1")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:solventType","error reading density1",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "density2")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:solventType","density2: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:solventType","density2: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%density2, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT(ierr)) THEN
+             CALL infomsg("qes_read:solventType","error reading density2")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:solventType","error reading density2",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_solvent
+  !
+  !
+  SUBROUTINE qes_read_rism3d(xml_node, obj, ierr)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER :: xml_node
+    TYPE(rism3d_type), INTENT(OUT)  :: obj
+    INTEGER, OPTIONAL, INTENT(OUT)  :: ierr
+    !
+    TYPE(Node),     POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    !
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "nmol")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rism3dType","nmol: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rism3dType","nmol: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%nmol, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rism3dType","error reading nmol")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rism3dType","error reading nmol",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "molec_dir")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rism3dType","molec_dir: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rism3dType","molec_dir: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+       obj%molec_dir_ispresent = .TRUE.
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%molec_dir, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT(ierr)) THEN
+             CALL infomsg("qes_read:rism3dType","error reading molec_dir")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rism3dType","error reading molec_dir",10)
+          END IF
+       END IF
+    ELSE
+       obj%molec_dir_ispresent = .FALSE.
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "solvent")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size < 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rism3dType","solvent: not enough solvents")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rism3dType","solvent: not enough solvents",10)
+       END IF
+    END IF
+    !
+    obj%ndim_solvents = tmp_node_list_size
+    ALLOCATE(obj%solvents(tmp_node_list_size))
+    DO index = 1, tmp_node_list_size
+       tmp_node => item(tmp_node_list, index - 1)
+       CALL qes_read_solvent(tmp_node, obj%solvents(index), ierr)
+    END DO
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "ecutsolv")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+       IF (PRESENT(ierr) ) THEN
+          CALL infomsg("qes_read:rism3dType","ecutsolv: wrong number of occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rism3dType","ecutsolv: wrong number of occurrences",10)
+       END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node)) &
+       CALL extractDataContent(tmp_node, obj%ecutsolv, IOSTAT = iostat_)
+    IF (iostat_ /= 0) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rism3dType","error reading ecutsolv")
+          ierr = ierr + 1
+       ELSE
+          CALL errore ("qes_read:rismd3dType","error reading ecutsolv",10)
+       END IF
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_rism3d
+  !
+  !
+  SUBROUTINE qes_read_rismlaue(xml_node, obj, ierr)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER  :: xml_node
+    TYPE(rismlaue_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL,   INTENT(OUT) :: ierr
+    !
+    TYPE(Node),     POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    !
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "both_hands")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","both_hands: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","both_hands: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%both_hands, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading both_hands")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading both_hands",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "nfit")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","nfit: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","nfit: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%nfit, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading nfit")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading nfit",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "pot_ref")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","pot_ref: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","pot_ref: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%pot_ref, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading pot_ref")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading pot_ref",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "charge")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","charge: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","charge: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%charge, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading charge")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading charge",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "right_start")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","right_start: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","right_start: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%right_start, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading right_start")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading right_start",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "right_expand")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","right_expand: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","right_expand: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%right_expand, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading right_expand")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading right_expand",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "right_buffer")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","right_buffer: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","right_buffer: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%right_buffer, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading right_buffer")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading right_buffer",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "right_buffer_u")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","right_buffer_u: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","right_buffer_u: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%right_buffer_u, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading right_buffer_u")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading right_buffer_u",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "right_buffer_v")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","right_buffer_v: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","right_buffer_v: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%right_buffer_v, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading right_buffer_v")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading right_buffer_v",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "left_start")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","left_start: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","left_start: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%left_start, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading left_start")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading left_start",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "left_expand")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","left_expand: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","left_expand: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%left_expand, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading left_expand")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading left_expand",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "left_buffer")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","left_buffer: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","left_buffer: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%left_buffer, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading left_buffer")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading left_buffer",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "left_buffer_u")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","left_buffer_u: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","left_buffer_u: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%left_buffer_u, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading left_buffer_u")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading left_buffer_u",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "left_buffer_v")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+       IF (PRESENT(ierr)) THEN
+          CALL infomsg("qes_read:rismlaueType","left_buffer_v: too many occurrences")
+          ierr = ierr + 1
+       ELSE
+          CALL errore("qes_read:rismlaueType","left_buffer_v: too many occurrences",10)
+       END IF
+    END IF
+    !
+    IF (tmp_node_list_size > 0) THEN
+       tmp_node => item(tmp_node_list, 0)
+       CALL extractDataContent(tmp_node, obj%left_buffer_v, IOSTAT = iostat_)
+       IF (iostat_ /= 0) THEN
+          IF (PRESENT (ierr)) THEN
+             CALL infomsg("qes_read:rismlaueType","error reading left_buffer_v")
+             ierr = ierr + 1
+          ELSE
+             CALL errore ("qes_read:rismlaueType","error reading left_buffer_v",10)
+          END IF
+       END IF
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_rismlaue
   !
   !
   SUBROUTINE qes_read_closed(xml_node, obj, ierr )

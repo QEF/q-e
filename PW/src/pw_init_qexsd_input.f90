@@ -59,7 +59,8 @@
                                 nconstr_inp, nc_fields, constr_type_inp, constr_target_inp, constr_inp, tconstr,      &
                                 constr_tol_inp, constrained_magnetization, lambda, fixed_magnetization, input_dft,    &
                                 tf_inp, ip_ibrav => ibrav,                                                            &
-                                gate, zgate, relaxz, block, block_1, block_2, block_height, real_space
+                                gate, zgate, relaxz, block, block_1, block_2, block_height, real_space,               &
+                                trism
 !
   USE fixed_occ,         ONLY:  f_inp               
 !
@@ -492,9 +493,14 @@
              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
                                                  ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
           CASE ('bc1' )
-             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
-                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
+             IF (trism) THEN
+                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
+                                                    ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
+                                                    FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
+             ELSE
+                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
+                                                    ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
+             END IF
           CASE ('bc2', 'bc3', 'bc4' )
              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
                                                  ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &

@@ -25,6 +25,7 @@ SUBROUTINE iosys_fcp()
   USE kinds,                 ONLY : DP
   USE read_namelists_module, ONLY : fcp_not_set
   USE force_mod,             ONLY : force
+  USE rism_module,           ONLY : lrism
   !
   ! ... CONTROL namelist
   !
@@ -42,6 +43,7 @@ SUBROUTINE iosys_fcp()
   REAL(DP) :: area_xy
   !
   REAL(DP), PARAMETER :: MASS_DEF   = 5.0E+6_DP
+  REAL(DP), PARAMETER :: SCALE_RISM = 100.0_DP
   !
   ! ... modify fcp_mass
   !
@@ -50,6 +52,12 @@ SUBROUTINE iosys_fcp()
      area_xy = alat * alat * ABS(at(1, 1) * at(2, 2) - at(1, 2) * at(2, 1))
      !
      fcp_mass = MASS_DEF / area_xy
+     !
+     IF (lrism) THEN
+        !
+        fcp_mass = fcp_mass / SCALE_RISM
+        !
+     END IF
      !
   END IF
   !

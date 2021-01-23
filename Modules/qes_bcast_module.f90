@@ -100,6 +100,9 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_total_energy
     MODULE PROCEDURE qes_bcast_band_structure
     MODULE PROCEDURE qes_bcast_ks_energies
+    MODULE PROCEDURE qes_bcast_solvent
+    MODULE PROCEDURE qes_bcast_rism3d
+    MODULE PROCEDURE qes_bcast_rismlaue
     MODULE PROCEDURE qes_bcast_closed
     MODULE PROCEDURE qes_bcast_cpstatus
     MODULE PROCEDURE qes_bcast_cpnumstep
@@ -346,6 +349,13 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%FCP_tot_charge_ispresent, ionode_id, comm)
     IF (obj%FCP_tot_charge_ispresent) &
       CALL mp_bcast(obj%FCP_tot_charge, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%rism3d_ispresent, ionode_id, comm)
+    IF (obj%rism3d_ispresent) &
+      CALL qes_bcast_rism3d(obj%rism3d, ionode_id, comm)
+    CALL mp_bcast(obj%rismlaue_ispresent, ionode_id, comm)
+    IF (obj%rismlaue_ispresent) &
+      CALL qes_bcast_rismlaue(obj%rismlaue, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_output
   !
@@ -1512,6 +1522,10 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%w1, ionode_id, comm)
     CALL mp_bcast(obj%w2, ionode_id, comm)
     !
+    CALL mp_bcast(obj%ignore_wolfe_ispresent, ionode_id, comm)
+    IF (obj%ignore_wolfe_ispresent) &
+      CALL mp_bcast(obj%ignore_wolfe, ionode_id, comm)
+    !
   END SUBROUTINE qes_bcast_bfgs
   !
   !
@@ -2344,6 +2358,86 @@ MODULE qes_bcast_module
     CALL qes_bcast_vector(obj%occupations, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_ks_energies
+  !
+  !
+  SUBROUTINE qes_bcast_solvent(obj, ionode_id, comm)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(solvent_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%molec_file, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%density1, ionode_id, comm)
+    CALL mp_bcast(obj%density2, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_solvent
+  !
+  !
+  SUBROUTINE qes_bcast_rism3d(obj, ionode_id, comm)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(rism3d_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    INTEGER :: i
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%nmol, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%molec_dir_ispresent, ionode_id, comm)
+    IF (obj%molec_dir_ispresent) &
+      CALL mp_bcast(obj%molec_dir, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%ndim_solvents, ionode_id, comm)
+    IF (.NOT.ionode) ALLOCATE(obj%solvents(obj%ndim_solvents))
+    DO i = 1, obj%ndim_solvents
+      CALL qes_bcast_solvent(obj%solvents(i), ionode_id, comm)
+    END DO
+    !
+    CALL mp_bcast(obj%ecutsolv, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_rism3d
+  !
+  !
+  SUBROUTINE qes_bcast_rismlaue(obj, ionode_id, comm)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(rismlaue_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%both_hands, ionode_id, comm)
+    CALL mp_bcast(obj%nfit, ionode_id, comm)
+    CALL mp_bcast(obj%pot_ref, ionode_id, comm)
+    CALL mp_bcast(obj%charge, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%right_start, ionode_id, comm)
+    CALL mp_bcast(obj%right_expand, ionode_id, comm)
+    CALL mp_bcast(obj%right_buffer, ionode_id, comm)
+    CALL mp_bcast(obj%right_buffer_u, ionode_id, comm)
+    CALL mp_bcast(obj%right_buffer_v, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%left_start, ionode_id, comm)
+    CALL mp_bcast(obj%left_expand, ionode_id, comm)
+    CALL mp_bcast(obj%left_buffer, ionode_id, comm)
+    CALL mp_bcast(obj%left_buffer_u, ionode_id, comm)
+    CALL mp_bcast(obj%left_buffer_v, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_rismlaue
   !
   !
   SUBROUTINE qes_bcast_closed(obj, ionode_id, comm )

@@ -349,6 +349,12 @@ MODULE ener
   !! variational correction ("-TS") for metals
   REAL(DP) :: epaw
   !! sum of one-center paw contributions
+  REAL(DP) :: esol
+  !! the solvation energy, from 3D-RISM
+  REAL(DP) :: vsol
+  !! another solvation energy, from 3D-RISM
+  REAL(DP) :: egrand
+  !! potentiostat contribution (-mu*N), for GC-SCF
   REAL(DP) :: ef
   !! the Fermi energy
   REAL(DP) :: ef_up

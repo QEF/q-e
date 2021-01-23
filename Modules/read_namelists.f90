@@ -129,6 +129,7 @@ MODULE read_namelists_module
        lecrpa   = .FALSE.   
        lfcp = .FALSE.
        tqmmm = .FALSE.
+       trism = .FALSE.
        !
        saverho = .TRUE.
        memory = 'default'
@@ -387,7 +388,7 @@ MODULE read_namelists_module
        diis_chguess = .FALSE.
        mixing_mode = 'plain'
        mixing_fixed_ns = 0
-       mixing_beta = 0.7_DP
+       mixing_beta = -1.0_DP
        mixing_ndim = 8
        diagonalization = 'david'
        diago_thr_init = 0.0_DP
@@ -532,6 +533,7 @@ MODULE read_namelists_module
        trust_radius_ini = 0.5_DP   ! bohr
        w_1              = 0.01_DP
        w_2              = 0.50_DP
+       ignore_wolfe     = .FALSE.
        !
        ! FIRE minimization defaults 
        !
@@ -748,6 +750,95 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Variables initialization for Namelist RISM
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE rism_defaults( prog )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+       !
+       nsolv                  = 0
+       !
+       ! ... ( 'hnc' | 'kh' )
+       !
+       closure                = 'kh'
+       tempv                  = 300.0_DP
+       ecutsolv               = 0.0_DP
+       !
+       ! ... ( 'none' | 'uff' | 'clayff' | 'opls-aa' )
+       !
+       solute_lj              = 'uff'
+       solute_epsilon         = -1.0_DP
+       solute_sigma           = -1.0_DP
+       rmax_lj                = 5.0_DP
+       rmax1d                 = 1000.0_DP
+       !
+       ! ... ( 'zero' | 'file' | 'fix' )
+       !
+       starting1d             = 'zero'
+       !
+       ! ... ( 'zero' | 'file' )
+       !
+       starting3d             = 'zero'
+       smear1d                = 2.0_DP
+       smear3d                = 2.0_DP
+       rism1d_maxstep         = 50000
+       rism3d_maxstep         = 5000
+       rism1d_conv_thr        = 1.0E-8_DP
+       rism3d_conv_thr        = -1.0_DP  ! will initialize at iosys_3drism
+       mdiis1d_size           = 20
+       mdiis3d_size           = 10
+       mdiis1d_step           = -1.0_DP  ! will initialize at iosys_1drism
+       mdiis3d_step           = -1.0_DP  ! will initialize at iosys_3drism
+       rism1d_bond_width      = 0.0_DP
+       rism1d_dielectric      = -1.0_DP
+       rism1d_molesize        = 2.0_DP
+       rism1d_nproc           = 128
+       rism1d_nproc_switch    = 16
+       rism3d_conv_level      = -1.0_DP  ! will initialize at iosys_3drism
+       rism3d_planar_average  = .FALSE.
+       laue_nfit              = 4
+       laue_expand_right      = -1.0_DP
+       laue_expand_left       = -1.0_DP
+       laue_starting_right    = 0.0_DP
+       laue_starting_left     = 0.0_DP
+       laue_buffer_right      = -1.0_DP  ! will initialize at iosys_3drism
+       laue_buffer_right_solu = -1.0_DP  ! will initialize at iosys_3drism
+       laue_buffer_right_solv = -1.0_DP  ! will initialize at iosys_3drism
+       laue_buffer_left       = -1.0_DP  ! will initialize at iosys_3drism
+       laue_buffer_left_solu  = -1.0_DP  ! will initialize at iosys_3drism
+       laue_buffer_left_solv  = -1.0_DP  ! will initialize at iosys_3drism
+       laue_both_hands        = .FALSE.
+       !
+       ! ... ( 'none' | 'average' | 'right' | 'left' )
+       !
+       laue_reference         = 'none'   ! will initialize at iosys_3drism
+       !
+       ! ... ( 'none' | 'auto' | 'manual' )
+       !
+       laue_wall              = 'auto'
+       laue_wall_z            = 0.0_DP
+       laue_wall_rho          = 0.01_DP
+       laue_wall_epsilon      = 0.1_DP
+       laue_wall_sigma        = 4.0_DP
+       laue_wall_lj6          = .FALSE.
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist CONTROL
+     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE control_bcast()
@@ -796,8 +887,9 @@ MODULE read_namelists_module
        CALL mp_bcast( nberrycyc,     ionode_id, intra_image_comm )
        CALL mp_bcast( saverho,       ionode_id, intra_image_comm )
        CALL mp_bcast( lecrpa,        ionode_id, intra_image_comm )
-       CALL mp_bcast( tqmmm,         ionode_id, intra_image_comm )
        CALL mp_bcast( lfcp,          ionode_id, intra_image_comm )
+       CALL mp_bcast( tqmmm,         ionode_id, intra_image_comm )
+       CALL mp_bcast( trism,         ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
@@ -1157,6 +1249,7 @@ MODULE read_namelists_module
        CALL mp_bcast( trust_radius_ini, ionode_id, intra_image_comm )
        CALL mp_bcast( w_1,              ionode_id, intra_image_comm )
        CALL mp_bcast( w_2,              ionode_id, intra_image_comm )
+       CALL mp_bcast( ignore_wolfe,     ionode_id, intra_image_comm )
        !
        RETURN
        !
@@ -1309,6 +1402,74 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist RISM
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE rism_bcast()
+       !-----------------------------------------------------------------------
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp, ONLY: mp_bcast
+       USE mp_images, ONLY : intra_image_comm
+       !
+       IMPLICIT NONE
+       !
+       CALL mp_bcast( nsolv,                  ionode_id, intra_image_comm )
+       CALL mp_bcast( closure,                ionode_id, intra_image_comm )
+       CALL mp_bcast( tempv,                  ionode_id, intra_image_comm )
+       CALL mp_bcast( ecutsolv,               ionode_id, intra_image_comm )
+       CALL mp_bcast( solute_lj,              ionode_id, intra_image_comm )
+       CALL mp_bcast( solute_epsilon,         ionode_id, intra_image_comm )
+       CALL mp_bcast( solute_sigma,           ionode_id, intra_image_comm )
+       CALL mp_bcast( rmax_lj,                ionode_id, intra_image_comm )
+       CALL mp_bcast( rmax1d,                 ionode_id, intra_image_comm )
+       CALL mp_bcast( starting1d,             ionode_id, intra_image_comm )
+       CALL mp_bcast( starting3d,             ionode_id, intra_image_comm )
+       CALL mp_bcast( smear1d,                ionode_id, intra_image_comm )
+       CALL mp_bcast( smear3d,                ionode_id, intra_image_comm )
+       CALL mp_bcast( rism1d_maxstep,         ionode_id, intra_image_comm )
+       CALL mp_bcast( rism3d_maxstep,         ionode_id, intra_image_comm )
+       CALL mp_bcast( rism1d_conv_thr,        ionode_id, intra_image_comm )
+       CALL mp_bcast( rism3d_conv_thr,        ionode_id, intra_image_comm )
+       CALL mp_bcast( mdiis1d_size,           ionode_id, intra_image_comm )
+       CALL mp_bcast( mdiis3d_size,           ionode_id, intra_image_comm )
+       CALL mp_bcast( mdiis1d_step,           ionode_id, intra_image_comm )
+       CALL mp_bcast( mdiis3d_step,           ionode_id, intra_image_comm )
+       CALL mp_bcast( rism1d_bond_width,      ionode_id, intra_image_comm )
+       CALL mp_bcast( rism1d_dielectric,      ionode_id, intra_image_comm )
+       CALL mp_bcast( rism1d_molesize,        ionode_id, intra_image_comm )
+       CALL mp_bcast( rism1d_nproc,           ionode_id, intra_image_comm )
+       CALL mp_bcast( rism1d_nproc_switch,    ionode_id, intra_image_comm )
+       CALL mp_bcast( rism3d_conv_level,      ionode_id, intra_image_comm )
+       CALL mp_bcast( rism3d_planar_average,  ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_nfit,              ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_expand_right,      ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_expand_left,       ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_starting_right,    ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_starting_left,     ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_buffer_right,      ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_buffer_right_solu, ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_buffer_right_solv, ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_buffer_left,       ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_buffer_left_solu,  ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_buffer_left_solv,  ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_both_hands,        ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_reference,         ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_wall,              ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_wall_z,            ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_wall_rho,          ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_wall_epsilon,      ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_wall_sigma,        ionode_id, intra_image_comm )
+       CALL mp_bcast( laue_wall_lj6,          ionode_id, intra_image_comm )
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fcp_bcast()
@@ -1426,6 +1587,9 @@ MODULE read_namelists_module
           CALL errore(sub_name, ' gate cannot be used with tefield if dipole correction is not active', 1)
        IF ( gate .and. dipfield .and. (.not. tefield) ) &
           CALL errore(sub_name, ' dipole correction is not active if tefield = .false.', 1)
+       !
+       IF( ( prog == 'CP' ) .AND. ( trism ) ) &
+         CALL errore( sub_name, ' trism = .true. is not allowed with CP ', 1 )
 
        RETURN
        !
@@ -1783,6 +1947,187 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Check input values for Namelist RISM
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE rism_checkin( prog )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) :: sub_name = ' rism_checkin '
+       INTEGER           :: i, j
+       LOGICAL           :: allowed = .FALSE.
+       !
+       !
+       IF( nsolv < 1 ) &
+          CALL errore( sub_name,' nsolv out of range ', 1 )
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE(closure_allowed)
+          IF( TRIM(closure) == closure_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore( sub_name, ' closure '''//TRIM(closure)//''' not allowed ', 1 )
+       !
+       IF( tempv <= 0.0_DP ) &
+          CALL errore( sub_name,' tempv out of range ', 1 )
+       !
+       IF( ecutsolv < 0.0_DP ) &
+          CALL errore( sub_name,' ecutsolv out of range ', 1 )
+       !
+       DO j = 1, SIZE(solute_lj)
+         allowed = .FALSE.
+         DO i = 1, SIZE(solute_lj_allowed)
+            IF( TRIM(solute_lj(j)) == solute_lj_allowed(i) ) allowed = .TRUE.
+         END DO
+         IF( .NOT. allowed ) &
+            CALL errore( sub_name, ' solute_lj '''//TRIM(solute_lj(j))//''' not allowed ', j )
+       END DO
+       !
+       !IF( ANY(solute_epsilon <= 0.0_DP) ) &
+       !   CALL errore( sub_name,' solute_epsilon out of range ', 1 )
+       !
+       !IF( ANY(solute_sigma <= 0.0_DP) ) &
+       !   CALL errore( sub_name,' solute_sigma out of range ', 1 )
+       !
+       IF( rmax_lj <= 0.0_DP ) &
+          CALL errore( sub_name,' rmax_lj out of range ', 1 )
+       !
+       IF( rmax1d <= 0.0_DP ) &
+          CALL errore( sub_name,' rmax1d out of range ', 1 )
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE(starting1d_allowed)
+          IF( TRIM(starting1d) == starting1d_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore( sub_name, ' starting1d '''//TRIM(starting1d)//''' not allowed ', 1 )
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE(starting3d_allowed)
+          IF( TRIM(starting3d) == starting3d_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore( sub_name, ' starting3d '''//TRIM(starting3d)//''' not allowed ', 1 )
+       !
+       IF( smear1d <= 0.0_DP ) &
+          CALL errore( sub_name,' smear1d out of range ', 1 )
+       !
+       IF( smear3d <= 0.0_DP ) &
+          CALL errore( sub_name,' smear3d out of range ', 1 )
+       !
+       IF( rism1d_maxstep < 0 ) &
+          CALL errore( sub_name,' rism1d_maxstep out of range ', 1 )
+       !
+       IF( rism3d_maxstep < 0 ) &
+          CALL errore( sub_name,' rism3d_maxstep out of range ', 1 )
+       !
+       IF( rism1d_conv_thr < 0.0_DP ) &
+          CALL errore( sub_name,' rism1d_conv_thr out of range ', 1 )
+       !
+       !IF( rism3d_conv_thr < 0.0_DP ) &
+       !   CALL errore( sub_name,' rism3d_conv_thr out of range ', 1 )
+       !
+       IF( mdiis1d_size <= 0 ) &
+          CALL errore( sub_name,' mdiis1d_size out of range ', 1 )
+       !
+       IF( mdiis3d_size <= 0 ) &
+          CALL errore( sub_name,' mdiis3d_size out of range ', 1 )
+       !
+       !IF( mdiis1d_step < 0.0_DP .OR. 1.0_DP < mdiis1d_step ) &
+       IF( 1.0_DP < mdiis1d_step ) &
+          CALL errore( sub_name,' mdiis1d_step out of range ', 1 )
+       !
+       !IF( mdiis3d_step < 0.0_DP .OR. 1.0_DP < mdiis3d_step ) &
+       IF( 1.0_DP < mdiis3d_step ) &
+          CALL errore( sub_name,' mdiis3d_step out of range ', 1 )
+       !
+       IF( rism1d_bond_width < 0.0_DP ) &
+          CALL errore( sub_name,' rism1d_bond_width out of range ', 1 )
+       !
+       IF( rism1d_dielectric > 0.0_DP .AND. rism1d_molesize <= 0.0_DP ) &
+          CALL errore( sub_name,' rism1d_molesize out of range ', 1 )
+       !
+       IF( rism1d_nproc <= 0 ) &
+          CALL errore( sub_name,' rism1d_nproc out of range ', 1 )
+       !
+       ! ... for Laue-RISM
+       IF( TRIM(assume_isolated) == 'esm' ) THEN
+          !
+          IF( laue_nfit < 0 ) &
+             CALL errore( sub_name,' laue_nfit out of range ', 1 )
+          !
+          IF( laue_expand_right <= 0.0_DP .AND. laue_expand_left <= 0.0_DP ) &
+             CALL errore( sub_name,' laue_expand_right and/or laue_expand_left must be positive ', 1 )
+          !
+          allowed = .FALSE.
+          DO i = 1, SIZE(laue_reference_allowed)
+             IF( TRIM(laue_reference) == laue_reference_allowed(i) ) allowed = .TRUE.
+          END DO
+          IF( .NOT. allowed ) &
+             CALL errore( sub_name, ' laue_reference '''//TRIM(laue_reference)//''' not allowed ', 1 )
+          !
+          allowed = .FALSE.
+          DO i = 1, SIZE(laue_wall_allowed)
+             IF( TRIM(laue_wall) == laue_wall_allowed(i) ) allowed = .TRUE.
+          END DO
+          IF( .NOT. allowed ) &
+             CALL errore( sub_name, ' laue_wall '''//TRIM(laue_wall)//''' not allowed ', 1 )
+          !
+          IF ( TRIM(laue_wall) == 'manual' ) THEN
+             !
+             IF( laue_expand_right > 0.0_DP .AND. laue_expand_left > 0.0_DP ) THEN
+                CALL errore( sub_name,' cannot use laue_wall with Solvent/Slab/Solvent ', 1 )
+                !
+             ELSE IF( laue_expand_right > 0.0_DP ) THEN
+                IF( laue_wall_z < laue_starting_right ) &
+                   CALL errore( sub_name,' laue_wall_z < laue_starting_right ', 1 )
+                !
+             ELSE IF( laue_expand_left > 0.0_DP ) THEN
+                IF( laue_wall_z > laue_starting_left ) &
+                   CALL errore( sub_name,' laue_wall_z > laue_starting_left ', 1 )
+                !
+             END IF
+             !
+          END IF
+          !
+          IF ( TRIM(laue_wall) /= 'none' ) THEN
+             !
+             IF( TRIM(laue_wall) == 'auto' .AND. &
+                laue_expand_right > 0.0_DP .AND. laue_expand_left > 0.0_DP ) THEN
+                ! NOP
+                !
+             ELSE
+                !
+                IF( laue_wall_rho <= 0.0_DP ) &
+                   CALL errore( sub_name,' laue_wall_rho out of range ', 1 )
+                !
+                IF( laue_wall_epsilon <= 0.0_DP ) &
+                   CALL errore( sub_name,' laue_wall_epsilon out of range ', 1 )
+                !
+                IF( laue_wall_sigma <= 0.0_DP ) &
+                   CALL errore( sub_name,' laue_wall_sigma out of range ', 1 )
+                !
+             END IF
+             !
+          END IF
+          !
+       END IF
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Set values according to the "calculation" variable
+     !
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fixval( prog )
@@ -1887,16 +2232,28 @@ MODULE read_namelists_module
              !
              startingpot = 'file'
              startingwfc = 'atomic+random'
+             IF ( trism ) THEN
+                starting1d = 'fix'
+                starting3d = 'file'
+             END IF
              !
           ELSE IF ( restart_mode == "from_scratch" ) THEN
              !
              startingwfc = 'atomic+random'
              startingpot = 'atomic'
+             IF ( trism ) THEN
+                starting1d = 'zero'
+                starting3d = 'zero'
+             END IF
              !
           ELSE
              !
              startingwfc = 'file'
              startingpot = 'file'
+             IF ( trism ) THEN
+                starting1d = 'file'
+                starting3d = 'file'
+             END IF
              !
           END IF
           !
@@ -1967,6 +2324,7 @@ MODULE read_namelists_module
        CALL ions_defaults( prog )
        CALL cell_defaults( prog )
        CALL fcp_defaults( prog, .FALSE. )
+       CALL rism_defaults( prog )
        !
        ! ... Here start reading standard input file
        !
@@ -2107,6 +2465,19 @@ MODULE read_namelists_module
           !
           CALL fcp_bcast( )
           CALL fcp_checkin( prog )
+       END IF
+       !
+       ! ... RISM namelist
+       !
+       IF( trism ) THEN
+          ios = 0
+          IF( ionode ) THEN
+             READ( unit_loc, rism, iostat = ios )
+          END IF
+          CALL check_namelist_read(ios, unit_loc, "rism")
+          !
+          CALL rism_bcast( )
+          CALL rism_checkin( prog )
        END IF
        !
        RETURN

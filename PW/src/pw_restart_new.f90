@@ -34,13 +34,14 @@ MODULE pw_restart_new
                           qexsd_init_vdw, qexsd_init_forces, qexsd_init_stress,        &
                           qexsd_init_outputElectricField, qexsd_init_outputPBC,        &
                           qexsd_init_gate_info, qexsd_init_hybrid,  qexsd_init_dftU,   &
+                          qexsd_init_rism3d, qexsd_init_rismlaue,                      &
                           qexsd_occ_obj, qexsd_bp_obj, qexsd_start_k_obj
   USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
        qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
        qexsd_copy_band_structure, qexsd_copy_magnetization, &
-       qexsd_copy_kpoints
+       qexsd_copy_kpoints, qexsd_copy_rism3d, qexsd_copy_rismlaue
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlfile
   !
@@ -79,7 +80,7 @@ MODULE pw_restart_new
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : psfile, pseudo_dir
+      USE io_files,             ONLY : psfile, molfile, pseudo_dir
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, tot_charge, ltetra 
@@ -147,6 +148,11 @@ MODULE pw_restart_new
       USE wvfct_gpum,           ONLY : using_et, using_wg
       USE wavefunctions_gpum,   ONLY : using_evc
       USE qexsd_module,         ONLY : qexsd_add_all_clocks 
+      USE solvmol,              ONLY : nsolV, solVs
+      USE rism3d_facade,        ONLY : lrism3d, ecutsolv, qsol, laue_nfit, expand_r, expand_l, &
+                                       starting_r, starting_l, buffer_r, buffer_ru, buffer_rv, &
+                                       buffer_l, buffer_lu, buffer_lv, both_hands, &
+                                       ireference, rism3d_is_laue
       !
       IMPLICIT NONE
       !
@@ -177,6 +183,9 @@ MODULE pw_restart_new
       REAL(DP), POINTER                     :: lumo_energy, ef_point 
       REAL(DP), ALLOCATABLE                 :: ef_updw(:)
       !
+      INTEGER               :: isolV
+      REAL(DP), ALLOCATABLE :: solvrho1(:)
+      REAL(DP), ALLOCATABLE :: solvrho2(:)
       !
       !
       TYPE(output_type)   :: output_obj
@@ -688,6 +697,50 @@ MODULE pw_restart_new
             NULLIFY(dipol_ptr)
          ENDIF
          NULLIFY ( bp_obj_ptr) 
+         !
+!------------------------------------------------------------------------------------------------
+! ... 3D-RISM
+!------------------------------------------------------------------------------------------------
+         !
+         IF ( lrism3d ) THEN
+            !
+            IF ( nsolV > 0 ) THEN
+               ALLOCATE( solvrho1( nsolV ) )
+               ALLOCATE( solvrho2( nsolV ) )
+               DO isolV = 1, nsolV
+                  solvrho1(isolV) = solVs(isolV)%density
+                  solvrho2(isolV) = solVs(isolV)%subdensity
+               END DO
+            ELSE
+               ALLOCATE( solvrho1( 1 ) )
+               ALLOCATE( solvrho2( 1 ) )
+            END IF
+            !
+            output_obj%rism3d_ispresent = .TRUE.
+            CALL qexsd_init_rism3d(output_obj%rism3d, nsolV, molfile, solvrho1, solvrho2, ecutsolv/e2)
+            !
+            DEALLOCATE( solvrho1 )
+            DEALLOCATE( solvrho2 )
+            !
+            IF ( rism3d_is_laue() ) THEN
+               output_obj%rismlaue_ispresent = .TRUE.
+               CALL qexsd_init_rismlaue(output_obj%rismlaue, both_hands, laue_nfit, ireference, qsol, &
+                                        starting_r, expand_r, buffer_r, buffer_ru, buffer_rv, &
+                                        starting_l, expand_l, buffer_l, buffer_lu, buffer_lv)
+               !
+            ELSE
+               output_obj%rismlaue_ispresent = .FALSE.
+               output_obj%rismlaue%lwrite    = .FALSE.
+            END IF
+            !
+         ELSE
+            output_obj%rism3d_ispresent = .FALSE.
+            output_obj%rism3d%lwrite    = .FALSE.
+            !
+            output_obj%rismlaue_ispresent = .FALSE.
+            output_obj%rismlaue%lwrite    = .FALSE.
+         END IF
+         !
 !-------------------------------------------------------------------------------
 ! ... CLOCKS
          CALL qexsd_add_all_clocks()
@@ -988,7 +1041,7 @@ MODULE pw_restart_new
       USE fft_base,        ONLY : dfftp, dffts
       USE io_global,       ONLY : stdout
       USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur, &
-           restart_dir
+           restart_dir, molfile
       USE mp_global,       ONLY : nproc_file, nproc_pool_file, &
            nproc_image_file, ntask_groups_file, &
            nproc_bgrp_file, nproc_ortho_file
@@ -1034,6 +1087,12 @@ MODULE pw_restart_new
       USE basis,           ONLY : natomwfc
       USE uspp,            ONLY : okvan
       USE paw_variables,   ONLY : okpaw
+      !
+      USE solvmol,         ONLY : nsolV, solVs
+      USE rism3d_facade,   ONLY : lrism3d, ecutsolv, qsol, laue_nfit, expand_r, expand_l, &
+                                  starting_r, starting_l, buffer_r, buffer_ru, buffer_rv, &
+                                  buffer_l, buffer_lu, buffer_lv, both_hands, ireference, &
+                                  rism3d_set_laue
       !
       USE mp_images,       ONLY : intra_image_comm
       USE mp,              ONLY : mp_bcast
@@ -1196,6 +1255,32 @@ MODULE pw_restart_new
       END IF
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
+      !
+      !! 3D-RISM
+      IF ( output_obj%rism3d_ispresent ) THEN
+         lrism3d = .TRUE.
+         CALL qexsd_copy_rism3d ( output_obj%rism3d, pseudo_dir, nsolV, solVs, molfile, ecutsolv )
+         ecutsolv = ecutsolv * e2
+      ELSE
+         lrism3d  = .FALSE.
+         nsolV    = 0
+         ecutsolv = 0.0_DP
+      END IF
+      !
+      !! Laue-RISM
+      IF ( output_obj%rismlaue_ispresent ) THEN
+         CALL rism3d_set_laue()
+         CALL qexsd_copy_rismlaue ( output_obj%rismlaue, both_hands, laue_nfit, ireference, qsol, &
+                                    starting_r, expand_r, buffer_r, buffer_ru, buffer_rv, &
+                                    starting_l, expand_l, buffer_l, buffer_lu, buffer_lv )
+      ELSE
+         both_hands = .FALSE.
+         laue_nfit  = 0
+         expand_r   = -1.0_DP
+         expand_l   = -1.0_DP
+         starting_r = 0.0_DP
+         starting_l = 0.0_DP
+      END IF
       !
       ! ... xml data no longer needed, can be discarded
       !

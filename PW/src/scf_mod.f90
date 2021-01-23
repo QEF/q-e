@@ -638,7 +638,7 @@ CONTAINS
  !
  !
  !-----------------------------------------------------------------------------------
-FUNCTION rho_ddot( rho1, rho2, gf, g0 )
+FUNCTION rho_ddot( rho1, rho2, gf, g0, mu )
   !----------------------------------------------------------------------------------
   !! Calculates \(4\pi/G^2\ \rho_1(-G)\ \rho_2(G) = V1_\text{Hartree}(-G)\ \rho_2(G)\)
   !! used as an estimate of the self-consistency error on the energy.
@@ -662,6 +662,8 @@ FUNCTION rho_ddot( rho1, rho2, gf, g0 )
   !! points delimiter
   REAL(DP), OPTIONAL, INTENT(IN) :: g0
   !! factorized G-vector norm of G=0 used in GC-SCF
+  REAL(DP), OPTIONAL, INTENT(IN) :: mu
+  !! target bias for GC-SCF
   REAL(DP) :: rho_ddot
   !! output: see function comments
   !
@@ -974,6 +976,7 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
   !! see main comment
   REAL(DP), OPTIONAL, INTENT(IN) :: g0
   !! factrized G-vector norm of G=0 used in GC-SCF
+  !! G-shift for GC-SCF
   REAL(DP) :: local_tf_ddot
   !! see main comment
   !
@@ -1001,21 +1004,21 @@ FUNCTION local_tf_ddot( rho1, rho2, ngm0, g0 )
      !
      !$omp parallel do reduction(+:local_tf_ddot)
      DO ig = gstart, ngm0
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / ( gg(ig) + gg0 )
      END DO
      !$omp end parallel do
      !
      IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
      !
      IF ( gstart == 2 ) THEN
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(1))*rho2(1) ) / ( gg(1) + gg0 )
      END IF
      !
   ELSE
      !
      !$omp parallel do reduction(+:local_tf_ddot)
      DO ig = gstart, ngm0
-        local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
+        local_tf_ddot = local_tf_ddot + DBLE( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
      END DO
      !$omp end parallel do
      !

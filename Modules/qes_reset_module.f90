@@ -101,6 +101,9 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_total_energy
     MODULE PROCEDURE qes_reset_band_structure
     MODULE PROCEDURE qes_reset_ks_energies
+    MODULE PROCEDURE qes_reset_solvent
+    MODULE PROCEDURE qes_reset_rism3d
+    MODULE PROCEDURE qes_reset_rismlaue
     MODULE PROCEDURE qes_reset_closed
     MODULE PROCEDURE qes_reset_cpstatus
     MODULE PROCEDURE qes_reset_cpnumstep
@@ -314,6 +317,13 @@ MODULE qes_reset_module
     obj%electric_field_ispresent = .FALSE.
     obj%FCP_force_ispresent = .FALSE.
     obj%FCP_tot_charge_ispresent = .FALSE.
+    !
+    IF (obj%rism3d_ispresent) &
+      CALL qes_reset_rism3d(obj%rism3d)
+    obj%rism3d_ispresent = .FALSE.
+    IF (obj%rismlaue_ispresent) &
+      CALL qes_reset_rismlaue(obj%rismlaue)
+    obj%rismlaue_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_output
   !
@@ -1791,6 +1801,54 @@ MODULE qes_reset_module
     CALL qes_reset_vector(obj%occupations)
     !
   END SUBROUTINE qes_reset_ks_energies
+  !
+  !
+  SUBROUTINE qes_reset_solvent(obj)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(solvent_type) :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread   = .FALSE.
+    !
+  END SUBROUTINE qes_reset_solvent
+  !
+  !
+  SUBROUTINE qes_reset_rism3d(obj)
+    !
+    IMPLICIT NONE
+    TYPE(rism3d_type) :: obj
+    INTEGER :: i
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread   = .FALSE.
+    !
+    obj%molec_dir_ispresent = .FALSE.
+    !
+    IF (ALLOCATED(obj%solvents)) THEN
+      DO i = 1, SIZE(obj%solvents)
+         CALL qes_reset_solvent(obj%solvents(i))
+      END DO
+      DEALLOCATE(obj%solvents)
+    END IF
+    obj%ndim_solvents = 0
+    !
+  END SUBROUTINE qes_reset_rism3d
+  !
+  !
+  SUBROUTINE qes_reset_rismlaue(obj)
+    !
+    IMPLICIT NONE
+    TYPE(rismlaue_type) :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread   = .FALSE.
+    !
+  END SUBROUTINE qes_reset_rismlaue
   !
   !
   SUBROUTINE qes_reset_closed(obj)

@@ -29,6 +29,12 @@ ParO/paro_k.o \
 ParO/pcg_k.o \
 ParO/paro_gamma_new.o \
 ParO/paro_k_new.o \
+RMM/crmmdiagg.o \
+RMM/rrmmdiagg.o \
+RMM/rotate_xpsi_k.o \
+RMM/rotate_xpsi_gamma.o \
+RMM/gram_schmidt_k.o \
+RMM/gram_schmidt_gamma.o
 DENSE/rotate_HSpsi_gamma.o \
 DENSE/rotate_HSpsi_k.o \
 DENSE/rotate_wfc_gamma.o \
@@ -95,6 +101,10 @@ libparo :
 	if test -d ParO ; then \
         ( cd ParO ; $(MAKE) all || exit 1 ) ; fi
 
+librmm : 
+	if test -d RMM ; then \
+        ( cd RMM ; $(MAKE) all || exit 1 ) ; fi
+
 libdense : 
 	if test -d DENSE ; then \
         ( cd DENSE ; $(MAKE) all || exit 1 ) ; fi
@@ -113,6 +123,7 @@ clean :
 	if test -d CG           ; then ( cd CG ; $(MAKE) clean ) ; fi
 	if test -d PPCG         ; then ( cd PPCG ; $(MAKE) clean ) ; fi
 	if test -d ParO         ; then ( cd ParO ; $(MAKE) clean ) ; fi
+	if test -d RMM          ; then ( cd RMM ; $(MAKE) clean ) ; fi
 	if test -d DENSE        ; then ( cd DENSE ; $(MAKE) clean ) ; fi
 	if test -d RMM          ; then ( cd RMM ; $(MAKE) clean ) ; fi
 	if test -d NewSolver    ; then ( cd NewSolver ; $(MAKE) clean ) ; fi

@@ -43,6 +43,7 @@ SUBROUTINE init_run()
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
+  USE rism_module,        ONLY : lrism, rism_alloc3d
   !
   IMPLICIT NONE
   INTEGER :: ierr
@@ -87,7 +88,7 @@ SUBROUTINE init_run()
 #endif
   !$acc update device(mill, g)
   !
-  IF (do_comp_esm) CALL esm_init()
+  IF (do_comp_esm) CALL esm_init(.NOT. lrism)
   !
   ! ... setup the 2D cutoff factor
   !
@@ -109,6 +110,8 @@ SUBROUTINE init_run()
   CALL allocate_locpot()
   CALL allocate_bp_efield()
   CALL bp_global_map()
+  !
+  IF (lrism) CALL rism_alloc3d()
   !
   call plugin_initbase()
   !

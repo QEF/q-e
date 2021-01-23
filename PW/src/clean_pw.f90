@@ -71,6 +71,7 @@ SUBROUTINE clean_pw( lflag )
   USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
   USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
+  USE rism_module,          ONLY : deallocate_rism
   !
   IMPLICIT NONE
   !
@@ -209,6 +210,10 @@ SUBROUTINE clean_pw( lflag )
   !
   IF (ts_vdw .or. mbd_vdw) CALL tsvdw_finalize()
   IF (mbd_vdw) CALL clean_mbd()
+  !
+  ! ... arrays for RISM
+  !
+  CALL deallocate_rism( lflag )
   !
   CALL plugin_clean( 'PW', lflag )
   !

@@ -12,7 +12,7 @@ MODULE io_files
   !
   ! ... IMPORTANT: when directory names are set, they must always end with "/"
   !
-  USE parameters, ONLY: ntypx
+  USE parameters, ONLY: ntypx, nsolx
   USE kinds,      ONLY: dp
   USE io_global,  ONLY: ionode, ionode_id, stdout
   USE mp,         ONLY: mp_barrier, mp_bcast, mp_sum
@@ -50,6 +50,8 @@ MODULE io_files
   !! location of PP files after a restart from file
   CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
   !! default: UPF
+  CHARACTER(len=256) :: molfile( nsolx ) = 'MOL'
+  !
   CHARACTER(LEN=256) :: qexsd_fmt = ' ', qexsd_version = ' '
   LOGICAL            :: qexsd_init = .FALSE. 
   ! ... next two variables are no longer read from input but can be set

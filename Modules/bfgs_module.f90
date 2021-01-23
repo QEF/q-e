@@ -376,6 +376,8 @@ CONTAINS
       IF( lmovecell ) WRITE(stdout, &
           '(5X,"Cell gradient error",T30,"= ",1PE12.1," kbar")') &
           cell_error * ry_kbar
+      IF( lfcp ) WRITE(stdout, &
+         '(5X,"FCP gradient error",T30,"= ",1PE12.1,/)') fcp_error
       !
       IF ( conv_bfgs ) GOTO 1000
       !
@@ -562,7 +564,7 @@ CONTAINS
       pos(:) = pos(:) + trust_radius * step(:)
       !
 1000  stop_bfgs = conv_bfgs
-      ! ... input ions+cell variables
+      ! ... input ions+cell+FCP variables
       pos_in = pos(1:n-NADD)
       IF ( lmovecell ) FORALL( i=1:3, j=1:3) h(i,j) = pos( n-NADD + j+3*(i-1) )
       IF ( lfcp ) nelec = pos( n )
@@ -731,6 +733,7 @@ CONTAINS
       !
       INTEGER            :: iunbfgs
       LOGICAL            :: file_exists
+      REAL(DP)           :: helec
       !
       !
       INQUIRE( FILE = bfgs_file, EXIST = file_exists )

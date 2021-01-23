@@ -218,6 +218,8 @@ SUBROUTINE iosys()
 
   USE gcscf_module,          ONLY : gcscf_iosys
 
+  USE rism_module,           ONLY : rism_iosys
+
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
@@ -229,7 +231,7 @@ SUBROUTINE iosys()
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
-                               tqmmm, efield_phase, gate, max_xml_steps
+                               tqmmm, efield_phase, gate, max_xml_steps, trism
 
   !
   ! ... SYSTEM namelist
@@ -267,7 +269,7 @@ SUBROUTINE iosys()
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
                                lgcscf,                                        &
                                zgate, relaxz, block, block_1, block_2,        &
-                               block_height
+                               block_height, lgcscf
   !
   ! ... ELECTRONS namelist
   !
@@ -1185,8 +1187,14 @@ SUBROUTINE iosys()
   !
   IF ( mixing_beta < 0.0_DP ) THEN
      !
-     IF ( lgcscf ) THEN
+     IF ( lgcscf .AND. trism ) THEN
+        ! GC-SCF with ESM-RISM
+        mixing_beta = 0.1_DP
+     ELSE IF ( lgcscf ) THEN
         ! GC-SCF with ESM-BC2 or ESM-BC3
+        mixing_beta = 0.2_DP
+     ELSE IF ( trism ) THEN
+        ! 3D-RISM or ESM-RISM
         mixing_beta = 0.2_DP
      ELSE
         ! default
@@ -1371,6 +1379,12 @@ SUBROUTINE iosys()
         trust_radius_ini, w_1, w_2 )
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
+  !
+  IF ( lfcp .OR. trism ) THEN
+     ignore_wolfe_ = .TRUE.
+  ELSE
+     ignore_wolfe_ = ignore_wolfe
+  END IF
   !
   !  VdW CORRECTIONS (SEMI-EMPIRICAL)
   !
@@ -1715,11 +1729,15 @@ SUBROUTINE iosys()
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
   !
-  ! ... set variables for FCP
+  ! ... set variables for RISM
+  !
+  CALL rism_iosys(trism)
+  !
+  ! ... set variables for FCP (this must be after RISM, to check condition)
   !
   CALL fcp_iosys(lfcp)
   !
-  ! ... set variables for GC-SCF (this must be after FCP, to check condition)
+  ! ... set variables for GC-SCF (this must be after RISM and FCP, to check condition)
   !
   CALL gcscf_iosys(lgcscf)
   !

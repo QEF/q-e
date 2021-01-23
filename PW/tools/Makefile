@@ -10,7 +10,7 @@ PWOBJS = ../src/libpw.a ../../KS_Solvers/libks_solvers.a
 
 TLDEPS= pwlibs
 
-all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x scan_ibrav.x
+all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x scan_ibrav.x rism1d.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \
@@ -38,6 +38,11 @@ kpoints.x : kpoints.o $(PWOBJS) $(QEMODS)
 pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \
 		pwi2xsf.o $(PWOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
+
+rism1d.x : rism1d.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		rism1d.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 tldeps:

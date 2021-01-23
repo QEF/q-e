@@ -751,6 +751,35 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
 END SUBROUTINE v_h
 !
+!----------------------------------------------------------------------------
+SUBROUTINE v_h_without_esm( rhog, ehart, charge, v )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Hartree potential VH(r) from n(G), with do_comp_esm = .FALSE.
+  !
+  USE kinds,    ONLY : DP
+  USE fft_base, ONLY : dfftp
+  USE gvect,    ONLY : ngm
+  USE lsda_mod, ONLY : nspin
+  USE esm,      ONLY : do_comp_esm
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN)    :: rhog(ngm)
+  REAL(DP),    INTENT(INOUT) :: v(dfftp%nnr,nspin)
+  REAL(DP),    INTENT(OUT)   :: ehart, charge
+  !
+  LOGICAL :: do_comp_esm_org
+  !
+  do_comp_esm_org = do_comp_esm
+  do_comp_esm = .FALSE.
+  !
+  CALL v_h( rhog, ehart, charge, v )
+  !
+  do_comp_esm = do_comp_esm_org
+  !
+END SUBROUTINE v_h_without_esm
+!
 !-----------------------------------------------------------------------
 SUBROUTINE v_hubbard( ns, v_hub, eth )
   !---------------------------------------------------------------------

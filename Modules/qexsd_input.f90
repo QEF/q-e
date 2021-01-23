@@ -337,7 +337,7 @@ MODULE qexsd_input
                                      refold_pos,pot_extrapolation,wfc_extrapolation,&
                                       ion_temperature,tempw,tolp,delta_t,nraise,dt,&
                                       bfgs_ndim,trust_radius_min,trust_radius_max,&
-                                      trust_radius_init,w_1,w_2)
+                                      trust_radius_init,w_1,w_2,ignore_wolfe)
    !--------------------------------------------------------------------------------------------------
    !
    IMPLICIT NONE
@@ -347,6 +347,7 @@ MODULE qexsd_input
                                               ion_temperature
    REAL(DP),OPTIONAL,INTENT(IN)            :: upscale, tempw,tolp,delta_t,trust_radius_min,trust_radius_max,&
                                               trust_radius_init,w_1,w_2
+   LOGICAL,INTENT(IN)                      :: ignore_wolfe
    INTEGER,INTENT(IN)                      :: nraise,bfgs_ndim
    REAL(DP),INTENT(IN)                     :: dt
    LOGICAL,OPTIONAL,INTENT(IN)             :: remove_rigid_rot,refold_pos
@@ -362,7 +363,7 @@ MODULE qexsd_input
       ALLOCATE (bfgs_obj) 
       CALL qes_init (bfgs_obj,"bfgs",ndim=bfgs_ndim,trust_radius_min=trust_radius_min,&
                          trust_radius_max=trust_radius_max,trust_radius_init=trust_radius_init,&
-                         w1=w_1,w2=w_2)
+                         w1=w_1,w2=w_2,ignore_wolfe=ignore_wolfe)
    ELSE IF(TRIM(ion_dynamics)=="verlet" .OR. TRIM(ion_dynamics)=="langevin" .OR. &
            TRIM(ion_dynamics) == "langevin-smc" ) THEN
       ALLOCATE(md_obj) 
@@ -463,7 +464,7 @@ MODULE qexsd_input
    REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
    ! 
    TYPE (esm_type),POINTER                      :: esm_obj => NULL() 
-   LOGICAL                                      :: esm_ispresent = .FALSE.
+   LOGICAL                                      :: esm_ispresent
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
    esm_ispresent = .FALSE.
