@@ -809,7 +809,7 @@ Then \qe\ can be compiled as usual. If the version of \libxc\ is older than 5.0.
 \begin{itemize}
 	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc}
 \end{itemize}
-\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be repalced with `\texttt{xc\_f90}' everywhere in the following files: \texttt{funct.f90}, \texttt{xc\_lda\_lsda\_drivers.f90}, \texttt{xc\_gga\_drivers.f90}, \texttt{xc\_mgga\_drivers.f90}, \texttt{dmxc\_drivers.f90} and \texttt{dgcxc\_drivers.f90} in \texttt{Modules} folder and \texttt{xctest\_qe\_libxc.f90} in \texttt{PP/src} folder.
+\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be replaced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
 
 \subsubsection{Usage}
 In order to use \libxc\ functionals, you must enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. For example, to use the \libxc\ version of the PBE functionals (both exchange and correlation):
@@ -826,24 +826,24 @@ Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but som
 \begin{verbatim}
 input_dft = `sla pbe gga_c_pbe'
 \end{verbatim}
-Note that when using GGA functionals of \qe\ you must always specify the LDA term too, while it is not the case for the \libxc\ ones. \\
-Outside \texttt{PW} (\texttt{PHonon}, \texttt{PP}, etc.), \libxc\ functionals are still usable, but in these cases it is highly recommended to avoid combinations of QE and \libxc\ functionals together, since, at present, they may lead to some issues in the dft detection.
+Note that when using GGA functionals of \qe\ you must always specify the LDA term too, while it is not the case for the \libxc\ ones.
 %
 \subsubsection{Differences between Libxc and internal functionals}
 There are some differences between \qe\ functionals and \libxc\ ones. In \qe\ the LDA and the GGA terms are separated and must be specified independently. In \libxc\ the GGA functionals already include the LDA part (Slater exchange and Perdew\&Wang correlation in most of the cases with the exception, for example, of Lee Yang Parr functionals).\\
 The \libxc\ metaGGA functionals may or may not need the LDA and GGA terms, depending on the cases, therefore a good check of the chosen functionals is recommended before doing expensive runs.\\
-Some functionals in \libxc\ incorporate the exchange part and the correlation one into one term only (e.g. the ones that include the `\texttt{\_xc}' label in their name). In these cases the whole functional is formally treated as `exchange only' by \qe. This does not imply any loss of information.
+Some functionals in \libxc\ incorporate the exchange part and the correlation one into one term only (e.g. the ones that include the `\texttt{\_xc}' kind label in their name). In these cases the whole functional is formally treated as `exchange only' by \qe. This does not imply any loss of information.
 %
 \subsubsection{Special cases}
 A number of \libxc\ functional routines need extra information on input and/or provide only partial information on output (e.g. the energy or the potential only). In these cases the use of such functionals may not be straightforward and, depending on the cases, may require some work on the \qe\ source code.
 %
 \paragraph{External parameters.}
-Several functionals in \libxc\ depend on one or more external parameters. Some of these can be recovered inside \qe, some others are not directly available. In all these cases a direct intervention on the \qe\ source code could be necessary in order to be able to properly use such functionals. However two routines have been defined in the XC library of \qe\ that ease the task of setting and recovering the external parameters in \libxc.
+Several functionals in \libxc\ depend on one or more external parameters. Some of these can be recovered inside \qe, some others are not directly available. In all these cases a direct intervention on the \qe\ source code might be necessary in order to be able to properly use such functionals. However two routines have been defined in the XC library of \qe\ that ease the task of setting and recovering the external parameters in \libxc:
 \begin{itemize}
-	\item \texttt{get\_libxc\_ext\_param}: this function receives as input the ID of the \libxc\ functional and the index of the chosen parameter and returns its value. If the parameter has not been set before it returns the default value.
-	\item \texttt{set\_libxc\_ext\_param}: routine that receives as input the index of the functional family-type (from 1 to 6: lda-exch, lda-corr, gga-exch, etc.), the index of the chosen \libxc\ parameter and the value to set to.
+	\item \texttt{get\_libxc\_ext\_param}: this function receives as input the ID of the \libxc\ functional and the index of the chosen parameter and returns its value. If the parameter has not been set before it returns its default value.
+	\item \texttt{set\_libxc\_ext\_param}: this routine receives as input the index of the functional family-type (from 1 to 6: lda-exch, lda-corr, gga-exch, ...), the index of the chosen \libxc\ parameter and the value to set it to.
 \end{itemize}
-In order to see the available parameters for a given \libxc\ functional and the corresponding indexes, the \texttt{dft\_info} test is available as an option of the \texttt{xclib\_test.x} program in \texttt{XClib} folder. For more details see Sec. \ref{SubSec:XCtest}.\\
+In order to see the available parameters for a given \libxc\ functional and their corresponding indexes, the \texttt{dft\_info} test is available as an option of the \texttt{xclib\_test.x} program in \texttt{XClib} folder. For more details see Sec. \ref{SubSec:XCtest}.\\
+The two routines can be called almost anywhere in \qe, however, as any other \texttt{XClib} setting routine, they must be declared through the \texttt{xc\_lib} module.\\
 Without setting the external parameters inside the code, their default value will be assumed. This could lead to results different from the expectations.\\
 In any case, when external parameters are needed by the chosen functionals, a warning message will appear in the output of \qe.
 %
@@ -856,13 +856,13 @@ A few \libxc\ functional routines provides the energy and some others the potent
 %
 \subsubsection{XC test}
 \label{SubSec:XCtest}
-A testing program, \texttt{xclib\_test.x}, for the \texttt{XClib} library of \qe\ is available. Three options available:
+A testing program, \texttt{xclib\_test.x}, for the \texttt{XClib} library of \qe\ is available. Three options:
 \begin{itemize}
-	\item \texttt{dft-info}: infos on the input dft are provided. If the functionals are from \libxc\ the external parameters, when present, are listed with a brief description and their default value. 
-	\item \texttt{xc-benchmark}: the program gets a data file generated previously as input (by running the same program with the \texttt{gen-benchmark} option) and compares the output data, namely energy and potential on a selected number of grid points. It also compares total energy and potential summed up on a large grid in order to better span the input domain. This option shoud be used to test modifications in the \texttt{XClib} library or to check the output matching among different parallelization schemes.
-	\item \texttt{dft-comparison}: comparison between two different dfts on a large grid of points. Max, min and average percentage difference between the two dft outputs (energy and potential) are provided and the points of the grid where the two output differ are shown. This option can be used, for example, to find differences between internal \qe\ functional and the \libxc\ ones.
+	\item \texttt{dft-info}: infos on the input dft are provided. If the functionals are from \libxc\ the external parameters, when present, are listed with a brief description and their default value.
+	\item \texttt{exe-benchmark} (\texttt{gen-benchmark}): the program gets a data file generated previously as input (by running the same program with the \texttt{gen-benchmark} option) and compares the output data, namely energy and potential on a selected number of grid points. It also compares total energy and potential summed up on a large grid in order to better span the input domain. This option shoud be used to test modifications in the \texttt{XClib} library or to check the output matching among different parallelization schemes.
+	\item \texttt{dft-comparison}: comparison between two different dfts on a large grid of points. Max, min and average percentage difference between the two dft outputs (energy and potential) are provided and the points of the grid where the two output differ are shown. This option can be used, for example, to find differences between internal \qe\ functionals and the \libxc\ ones.
 \end{itemize}
-The testing program is available for LDA, GGA and MGGA functionals. It also tests the XC-derivative part (mainly used in \texttt{PHonon}).
+The testing program is available for LDA, GGA and MGGA functionals. It also tests the potential derivatives for LDA (\texttt{dmxc}) and GGA (\texttt{dgcxc}).
 
 \subsection{Compilation}
 \label{SubSec:Compilation}

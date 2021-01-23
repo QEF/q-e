@@ -29,6 +29,10 @@ SUBROUTINE scale_h
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
   !
+  USE gvect_gpum,     ONLY : using_g, using_g_d, using_gg, using_gg_d
+  USE us_gpum,        ONLY : using_tab, using_tab_at, using_qrad
+  !
+  !
   IMPLICIT NONE
   !
   INTEGER :: ig
@@ -64,11 +68,18 @@ SUBROUTINE scale_h
   CALL cryst_to_cart( ngm, g, at_old, - 1 )
   CALL cryst_to_cart( ngm, g, bg, + 1 )
   gg_max = 0.0_dp
+  !
   DO ig = 1, ngm
      gg (ig) = g(1,ig) * g(1,ig) + g(2,ig) * g(2,ig) + g(3,ig) * g(3,ig)
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
+
+  CALL using_g(1); CALL using_gg(1)       ! g and gg are used almost only after
+#if defined(__CUDA)
+  ! the preprocessor directive is needed to avoid touching duplicated data in CPU only sompilations
+  CALL using_g_d(0); CALL using_gg_d(0) ! This is a trick to avoid checking for sync everywhere.
   !
+#endif
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
   IF (nqxq < INT(SQRT(gg_max)*tpiba/dq)+4) THEN
@@ -77,6 +88,8 @@ SUBROUTINE scale_h
   ENDIF
   !
   ! scale the non-local pseudopotential tables
+  !
+  CALL using_tab(1); CALL using_tab_at(1); CALL using_qrad(1)
   !
   tab(:,:,:) = tab(:,:,:) * SQRT(omega_old/omega)
   qrad(:,:,:,:) = qrad(:,:,:,:) * omega_old/omega

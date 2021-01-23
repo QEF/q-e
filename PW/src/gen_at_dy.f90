@@ -26,6 +26,8 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    USE uspp_param, ONLY: upf
    USE basis,      ONLY : natomwfc
    !
+   USE us_gpum,    ONLY : using_tab_at
+   !
    IMPLICIT NONE
    !
    INTEGER,  INTENT(IN) :: ik
@@ -81,6 +83,7 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    !
    !    here we compute the radial fourier transform of the chi functions
    !
+   CALL using_tab_at(0)
    q(:) = SQRT(q(:))
    !
    DO nt = 1, ntyp

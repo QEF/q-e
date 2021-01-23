@@ -31,6 +31,7 @@
       USE gvect,                ONLY : mill_g, eigts1,eigts2,eigts3, g, gg, &
                                        ecutrho, gcutm, gvect_init, mill, &
                                        ig_l2g, gstart, ngm, ngm_g, gshells
+      USE gvect_gpum,           ONLY : using_g, using_g_d 
       use gvecs,                only : gcutms, gvecs_init, ngms
       use gvecw,                only : gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY : ggenb
@@ -194,6 +195,11 @@
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
+
+      CALL using_g(2)
+#if defined (__CUDA)
+      CALL using_g_d(0)
+#endif
 
       CALL gshells (.TRUE.)
       !
@@ -401,6 +407,7 @@
                                         cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
       USE gvect,                 ONLY : g, gg, ngm, mill
+      USE gvect_gpum,            ONLY : using_g, using_g_d
       USE fft_base,              ONLY : dfftp, dfftb
       USE small_box,             ONLY : small_box_set
       USE smallbox_subs,         ONLY : gcalb
@@ -425,10 +432,15 @@
       !
       !  re-calculate G-vectors and kinetic energy
       !
+      CALL using_g(2)
+      !
       do ig = 1, dfftp%ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
       enddo
+#if defined (__CUDA)
+      CALL using_g_d(0)
+#endif
       !
       call g2kin_init ( gg, tpiba2 )
       !

@@ -1,0 +1,13 @@
+PARO += \
+paro_gamma_new_gpu.o  \
+paro_k_new_gpu.o \
+bpcg_gamma_gpu.o \
+bpcg_k_gpu.o
+
+
+bpcg_gamma_gpu.o : ../../UtilXlib/mp.o
+bpcg_gamma_gpu.o : ../../UtilXlib/mp_bands_util.o
+bpcg_gamma_gpu.o : ../../UtilXlib/util_param.o
+paro_gamma_new_gpu.o : ../../UtilXlib/mp.o
+paro_gamma_new_gpu.o : ../../UtilXlib/mp_bands_util.o
+paro_gamma_new_gpu.o : ../../UtilXlib/util_param.o

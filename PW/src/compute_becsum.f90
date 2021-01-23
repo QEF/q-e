@@ -31,6 +31,10 @@ SUBROUTINE compute_becsum( iflag )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
   !
+  USE wavefunctions_gpum, ONLY : using_evc
+  USE uspp_gpum,                 ONLY : using_vkb, using_becsum
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iflag
@@ -40,6 +44,7 @@ SUBROUTINE compute_becsum( iflag )
   !
   !
   IF ( .NOT. okvan ) RETURN
+  CALL using_evc(0)
   !
   CALL start_clock( 'compute_becsum' )
   !
@@ -47,8 +52,10 @@ SUBROUTINE compute_becsum( iflag )
   !
   IF ( iflag == 1) CALL weights( )
   !
+  CALL using_becsum(2)
   becsum(:,:,:) = 0.D0
   CALL allocate_bec_type( nkb,nbnd, becp,intra_bgrp_comm )
+  CALL using_becp_auto(2)
   CALL divide( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
@@ -57,6 +64,9 @@ SUBROUTINE compute_becsum( iflag )
      IF ( lsda ) current_spin = isk(ik)
      IF ( nks > 1 ) &
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+     IF ( nks > 1 ) CALL using_evc(2)
+     !
+     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) &
           CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
@@ -84,6 +94,7 @@ SUBROUTINE compute_becsum( iflag )
   ENDIF
   !
   CALL deallocate_bec_type( becp )
+  CALL using_becp_auto(2)
   !
   CALL stop_clock( 'compute_becsum' )
   !

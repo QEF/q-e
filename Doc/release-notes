@@ -8,6 +8,7 @@ New in development version:
     (U. Manchester), N. Colonna, M. Marsili, N. Marzari, P. Umari
   * Many-Body Dispersion (MBD) correction: Szabolcs Goger (U. Luxembourg),
     Hsin-Yu Ko (Cornell), et al.
+  * Support for GPU via CUDA Fortran brought to the main repository
 
 Fixed in development version:
   * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
@@ -17,6 +18,8 @@ Fixed in development version:
   * Phonon restart was broken in some cases due to bad occupations
     written to xml file
   * ELF with nspin=2 was not correct (noticed by Dong Yang, JSG)
+  * "cube" file with data interpolated by B-splines was not correct 
+    (fixed by Satomichi Nisihara)
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the

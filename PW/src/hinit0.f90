@@ -28,6 +28,9 @@ SUBROUTINE hinit0()
   USE noncollin_module, ONLY : report
   USE mp_bands,         ONLY : intra_bgrp_comm
   !
+  USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
+                           using_eigts1_D, using_eigts2_d, using_eigts3_d
+  !
   IMPLICIT NONE
   REAL (dp) :: alat_old
   !
@@ -72,6 +75,11 @@ SUBROUTINE hinit0()
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                    dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                    strf, eigts1, eigts2, eigts3 )
+  ! sync duplicated version
+#if defined(__CUDA)
+  CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
+  CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+#endif
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters

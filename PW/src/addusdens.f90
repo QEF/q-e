@@ -53,6 +53,8 @@ SUBROUTINE addusdens_g( rho )
   USE mp_bands,             ONLY : inter_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
+  USE uspp_gpum,            ONLY : using_becsum
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(INOUT) :: rho(dfftp%ngm,nspin_mag)
@@ -92,6 +94,8 @@ SUBROUTINE addusdens_g( rho )
   !
   ALLOCATE( qmod(ngm_l), qgm(ngm_l)   )
   ALLOCATE( ylmk0(ngm_l, lmaxq*lmaxq) )
+  !
+  CALL using_becsum(0)
   !
   CALL ylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   DO ig = 1, ngm_l

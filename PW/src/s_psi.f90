@@ -97,6 +97,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   USE wavefunctions,    ONLY: psic
   USE fft_base,         ONLY: dffts
   !
+  USE uspp_gpum,        ONLY: using_vkb, using_indv_ijkb0, using_qq_at, using_qq_so
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda
@@ -187,6 +189,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !
        USE mp,            ONLY: mp_get_comm_null, mp_circular_shift_left
        !
+       USE becmod_gpum,   ONLY : using_becp_r
+       !
        IMPLICIT NONE  
        !
        ! ... local variables
@@ -199,6 +203,10 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        ! data distribution functions
        REAL(DP), ALLOCATABLE :: ps(:,:)
        ! the product vkb and psi
+       !
+       CALL using_indv_ijkb0(0)
+       CALL using_qq_at(0)
+       CALL using_becp_r(0)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -246,6 +254,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
           ENDIF
        ENDDO
        !
+       CALL using_vkb(0)
        IF( becp%comm == mp_get_comm_null() ) THEN
           IF ( m == 1 ) THEN
              CALL DGEMV( 'N', 2 * n, nkb, 1.D0, vkb, &
@@ -295,6 +304,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !-----------------------------------------------------------------------
        !! k-points version of \(\textrm{s_psi}\) routine.
        !
+       USE becmod_gpum, ONLY : using_becp_k
+       !
        IMPLICIT NONE
        !
        ! ... local variables
@@ -305,6 +316,10 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        ! ps = product vkb and psi ; qqc = complex version of qq
        !
        ALLOCATE( ps( nkb, m ), STAT=ierr )
+       !
+       CALL using_indv_ijkb0(0)
+       CALL using_qq_at(0)
+       CALL using_becp_k(0)
        !
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
@@ -339,6 +354,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
           !
        ENDDO
        !
+       CALL using_vkb(0)
        IF ( m == 1 ) THEN
           !
           CALL ZGEMV( 'N', n, nkb, ( 1.D0, 0.D0 ), vkb, &
@@ -364,6 +380,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !-----------------------------------------------------------------------
        !! k-points noncolinear/spinorbit version of \(\textrm{s_psi}\) routine.
        !
+       USE becmod_gpum,  ONLY : using_becp_nc
+       !
        IMPLICIT NONE
        !
        ! ... local variables
@@ -372,6 +390,11 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        ! counters
        COMPLEX (DP), ALLOCATABLE :: ps(:,:,:)
        ! the product vkb and psi
+       !
+       CALL using_indv_ijkb0(0)
+       IF ( .NOT. lspinorb ) CALL using_qq_at(0)
+       IF (lspinorb)         CALL using_qq_so(0)
+       CALL using_becp_nc(0)
        !
        ALLOCATE( ps(nkb,npol,m), STAT=ierr )
        IF( ierr /= 0 ) &
@@ -413,6 +436,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
           ENDIF
           !
        ENDDO
+       !
+       CALL using_vkb(0)
        !
        CALL ZGEMM ( 'N', 'N', n, m*npol, nkb, (1.d0,0.d0) , vkb, &
                     lda, ps, nkb, (1.d0,0.d0) , spsi(1,1), lda )

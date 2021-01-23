@@ -43,6 +43,14 @@ MODULE klist
   !! index of G corresponding to a given index of k+G
   INTEGER, ALLOCATABLE :: ngk(:)
   !! number of plane waves for each k point
+  INTEGER, ALLOCATABLE :: igk_k_d(:,:)
+  !! device copy of igk
+  INTEGER, ALLOCATABLE :: ngk_d(:)
+  !! device copy of ngk
+#if defined (__CUDA)
+  attributes(DEVICE) :: igk_k_d, ngk_d
+  attributes(PINNED) :: igk_k
+#endif
   !
   INTEGER :: nks
   !! number of k points in this pool
@@ -91,14 +99,22 @@ CONTAINS
     ENDDO
     !
     DEALLOCATE( gk )
+#if defined (__CUDA)
+    IF(ALLOCATED(igk_k_d)) DEALLOCATE(igk_k_d)
+    IF (nks > 0) ALLOCATE ( igk_k_d, source=igk_k)
+    IF(ALLOCATED(ngk_d)) DEALLOCATE(ngk_d)
+    IF (nks > 0) ALLOCATE ( ngk_d, source=ngk)
+#endif
     !
   END SUBROUTINE init_igk
-  !
   !
   SUBROUTINE deallocate_igk( ) 
     !
     IF (ALLOCATED(ngk))     DEALLOCATE( ngk )
     IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
+    !
+    IF (ALLOCATED(igk_k_d)) DEALLOCATE( igk_k_d )
+    IF (ALLOCATED(ngk_d))   DEALLOCATE( ngk_d )
     !
   END SUBROUTINE deallocate_igk
   !
@@ -277,6 +293,9 @@ MODULE wvfct
   INTEGER, ALLOCATABLE :: btype(:,:) 
   !! one if the corresponding state has to be
   !! converged to full accuracy, zero otherwise
+#if defined(__CUDA)
+  attributes(pinned) :: g2kin, et, wg
+#endif
   !
 END MODULE wvfct
 !

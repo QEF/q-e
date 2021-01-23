@@ -40,6 +40,8 @@ SUBROUTINE punch( what )
   USE wavefunctions,        ONLY : evc
   USE xdm_module,           ONLY : write_xdmdat
   !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
@@ -118,6 +120,7 @@ SUBROUTINE punch( what )
      ! ... however there is no buffer: wavefunctions must be saved to file here
      !
      IF (io_level < 1) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     CALL using_evc(0)
      CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
      IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      CALL infomsg('punch','wavefunctions written to file')

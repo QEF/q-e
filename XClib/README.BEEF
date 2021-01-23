@@ -1,6 +1,7 @@
 The Bayesian error estimate functional (BEEF) library was written by
-Johannes Voss <vossj@slac.stanford.edu>
+Johannes Voss <vossj@slac.stanford.edu>  and
 Chris P. O'Grady <cpo@slac.stanford.edu>
+Official repository: https://github.com/vossjo/libbeef
 
                    GNU LESSER GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007

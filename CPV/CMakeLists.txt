@@ -115,12 +115,8 @@ target_link_libraries(qe_cpv
         qe_upflib
         qe_openmp_fortran
         qe_mpi_fortran
-        qe_xclib)
-if(QE_ENABLE_CUDA)
-    target_link_libraries(qe_cpv
-        PRIVATE
-            qe_devxlib)
-endif()
+        qe_xclib
+        qe_devxlib)
 
 ###########################################################
 # cp.x

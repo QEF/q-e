@@ -174,6 +174,8 @@ CONTAINS
          &    "395502 (2009);", &
          &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 29 ",&
          &    "465901 (2017);", &
+         &/9X,"""P. Giannozzi et al., J. Chem. Phys. 152 ",&
+         &    "154105 (2020);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
          &/5x,"http://www.quantum-espresso.org/quote")' )

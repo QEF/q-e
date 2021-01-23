@@ -20,6 +20,8 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   USE uspp_param,   ONLY : upf
   USE mp,           ONLY : mp_sum
   !
+  USE us_gpum,      ONLY : using_tab_at
+  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: omega
@@ -31,6 +33,7 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   REAL(DP) :: vqint, pref, q
   !
   CALL start_clock( 'init_at_1' )
+  CALL using_tab_at(2)
   !
   ndm = MAXVAL(msh(1:ntyp))
   ALLOCATE( aux(ndm), vchi(ndm) )

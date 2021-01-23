@@ -21,7 +21,7 @@ SUBROUTINE hinit1()
   USE lsda_mod,            ONLY : nspin
   USE noncollin_module,    ONLY : report
   USE scf,                 ONLY : vrs, vltot, v, kedtau
-  USE control_flags,       ONLY : tqr
+  USE control_flags,       ONLY : tqr, use_gpu
   USE realus,              ONLY : generate_qpointlist, betapointlist, &
                                   init_realspace_vars, real_space
   USE wannier_new,         ONLY : use_wannier
@@ -31,6 +31,9 @@ SUBROUTINE hinit1()
   USE paw_onecenter,       ONLY : paw_potential
   USE paw_symmetry,        ONLY : paw_symmetrize_ddd
   USE dfunct,              ONLY : newd
+  !
+  USE scf_gpum,      ONLY : using_vrs
+  
   !
   IMPLICIT NONE
   !
@@ -63,6 +66,7 @@ SUBROUTINE hinit1()
   !
   ! ... define the total local potential (external+scf)
   !
+  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, &
                 doublegrid )
   !
@@ -79,8 +83,13 @@ SUBROUTINE hinit1()
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in LDA+U calculations
   !
-  IF ( lda_plus_u  ) CALL orthoUwfc() 
-  IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
+  IF (.NOT. use_gpu) THEN
+    IF ( lda_plus_u  ) CALL orthoUwfc() 
+    IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
+  ELSE
+    IF ( lda_plus_u  ) CALL orthoUwfc_gpu() 
+    IF ( use_wannier ) CALL orthoatwfc_gpu( .TRUE. )
+  ENDIF
   !
   !
   RETURN

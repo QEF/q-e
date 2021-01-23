@@ -9,13 +9,13 @@
 !============================================================================
 PROGRAM xclib_test
   !==========================================================================
-  !! Testing program for xc_lib library in QE. Different options:
+  !! Testing program for xc\_lib library in QE. Different options:
   !
   !! * dft-info: provides infos on the input DFT (both QE and Libxc);
   !! * xc-benchmark: difference with respect to a given set of benchmark data
   !!   (on file);
-  !! * gen-benchmark: generate set of benchmark data on file;
-  !! * dft-comparison: show difference between two DFTs (E and V differences).
+  !! * gen-benchmark: generates set of benchmark data on file;
+  !! * dft-comparison: shows difference between two DFTs (E and V differences).
   !
   !! Available cases:
   !
@@ -312,6 +312,10 @@ PROGRAM xclib_test
     WRITE(stdout,*) CHAR(10)//"MGGA IDs"
     WRITE(stdout,121) imeta1, is_libxc(5), imetac1, is_libxc(6)
     !
+    IF (ANY(.NOT.is_libxc(:))) THEN
+      WRITE(stdout,*) CHAR(10)//"References for QE functionals are temporarily&
+                                & listed in Modules/funct.f90"
+    ENDIF
     !
 #if defined(__LIBXC)
     !
@@ -356,7 +360,7 @@ PROGRAM xclib_test
           WRITE(lxc_family,'(a)') "unknown"
         END SELECT
         !
-        WRITE(*,'("The functional ''", a, "'' is an ", a, ", it belongs to &
+        WRITE(*,'("The functional ''", a, "'' is a ", a, ", it belongs to &
                &the ''", a, "'' family and is defined in the reference(s): &
                &")') TRIM(xc_f03_func_info_get_name(xc_info(i))), TRIM(lxc_kind)&
                ,TRIM(lxc_family)

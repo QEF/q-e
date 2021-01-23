@@ -22,7 +22,7 @@ SUBROUTINE stress( sigma )
   USE ldaU,             ONLY : lda_plus_u, U_projection
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
-  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw
+  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, use_gpu
   USE xc_lib,           ONLY : xclib_dft_is
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
@@ -35,6 +35,7 @@ SUBROUTINE stress( sigma )
   USE tsvdw_module,     ONLY : HtsvdW
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
+  USE gvect_gpum,       ONLY : g_d, gg_d
   !
   IMPLICIT NONE
   !
@@ -68,7 +69,9 @@ SUBROUTINE stress( sigma )
   !
   !   contribution from local potential
   !
-  CALL stres_loc( sigmaloc )
+  IF (.NOT. use_gpu) CALL stres_loc( sigmaloc )
+  IF (      use_gpu) CALL stres_loc_gpu( sigmaloc )
+  !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN
      ! In ESM, sigmaloc has only short-range term: add long-range term
      CALL esm_stres_loclong( sigmaloclong, rho%of_g(:,1) )
@@ -80,7 +83,8 @@ SUBROUTINE stress( sigma )
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) )  THEN ! for ESM stress
      CALL esm_stres_har( sigmahar, rho%of_g(:,1) )
   ELSE
-     CALL stres_har( sigmahar )
+     IF (.NOT. use_gpu) CALL stres_har( sigmahar )
+     IF (      use_gpu) CALL stres_har_gpu( sigmahar )
   END IF
   !
   !  xc contribution (diagonal)
@@ -97,19 +101,25 @@ SUBROUTINE stress( sigma )
   !
   !  meta-GGA contribution 
   !
-  CALL stres_mgga( sigmaxc )
+  IF (.NOT. use_gpu) CALL stres_mgga( sigmaxc )
+  IF (      use_gpu) CALL stres_mgga_gpu( sigmaxc )
   !
   ! core correction contribution
   !
-  CALL stres_cc( sigmaxcc )
+  IF (.NOT. use_gpu) CALL stres_cc( sigmaxcc )
+  IF (      use_gpu) CALL stres_cc_gpu( sigmaxcc )
   !
   !  ewald contribution
   !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      CALL esm_stres_ewa( sigmaewa )
   ELSE
-     CALL stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
-          gg, ngm, gstart, gamma_only, gcutm, sigmaewa )
+     IF (.NOT. use_gpu) CALL stres_ewa( alat, nat, ntyp, ityp, zv, at,      &
+                                        bg, tau, omega, g, gg, ngm, gstart, &
+                                        gamma_only, gcutm, sigmaewa )
+     IF (      use_gpu) CALL stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg,&
+                                            tau, omega, g_d,gg_d, ngm, gstart,&
+                                            gamma_only, gcutm, sigmaewa )
   END IF
   !
   ! semi-empirical dispersion contribution: Grimme-D2 and D3
@@ -132,7 +142,8 @@ SUBROUTINE stress( sigma )
   !
   !  kinetic + nonlocal contribuition
   !
-  CALL stres_knl( sigmanlc, sigmakin )
+  IF (.NOT. use_gpu) CALL stres_knl( sigmanlc, sigmakin )
+  IF (      use_gpu) CALL stres_knl_gpu( sigmanlc, sigmakin )
   !
   DO l = 1, 3
      DO m = 1, 3

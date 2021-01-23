@@ -67,6 +67,14 @@ SUBROUTINE clean_pw( lflag )
   USE tsvdw_module,         ONLY : tsvdw_finalize
   USE dftd3_qe,             ONLY : dftd3_clean
   !
+  USE wavefunctions_gpum, ONLY : deallocate_wavefunctions_gpu
+  USE wvfct_gpum,                ONLY : deallocate_wvfct_gpu !et
+  USE gvect_gpum,                ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
+  USE scf_gpum,                  ONLY : deallocate_scf_gpu
+  USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
+  USE us_gpum,                   ONLY : deallocate_us_gpu
+  USE spin_orb_gpum,             ONLY : deallocate_spin_orb_gpu
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
@@ -115,6 +123,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays in gvect module
   !
   CALL deallocate_gvect( lmovecell )
+  CALL deallocate_gvect_gpu()
   !
   CALL sym_rho_deallocate()
   !
@@ -131,6 +140,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
+  CALL deallocate_scf_gpu()
   IF (spline_ps) THEN
     IF ( ALLOCATED( tab_d2y) )   DEALLOCATE( tab_d2y )
   ENDIF
@@ -149,16 +159,21 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
   IF ( lspinorb ) THEN
      IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef  )
+     CALL deallocate_spin_orb_gpu()
   ENDIF
   !
   CALL deallocate_igk()
   CALL deallocate_uspp() 
+  CALL deallocate_uspp_gpu()
+  CALL deallocate_us_gpu()
+  !
   CALL deallocate_gth( lflag ) 
   CALL deallocate_noncol()
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
+  CALL deallocate_wvfct_gpu()
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
@@ -167,6 +182,8 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
+  !
+  CALL deallocate_wavefunctions_gpu()
   !
   ! ... fft structures allocated in data_structure.f90  
   !

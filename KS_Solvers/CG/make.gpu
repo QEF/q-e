@@ -1,0 +1,6 @@
+# Makefile for CG GPU
+
+CG += \
+rcgdiagg_gpu.o \
+ccgdiagg_gpu.o
+

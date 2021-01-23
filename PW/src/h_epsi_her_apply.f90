@@ -37,6 +37,8 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
+  USE uspp_gpum,            ONLY : using_qq_at, using_qq_so, using_vkb
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: pdir
@@ -75,6 +77,9 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   IF (ABS(e_field)<eps) RETURN
   CALL start_clock( 'h_epsi_apply' )
   !
+  CALL using_qq_at(0)
+  IF (lspinorb) CALL using_qq_so(0)
+  !
   ALLOCATE( evct(npwx*npol,nbnd) )
   CALL allocate_bec_type( nkb, nbnd, becp0 )
   npw = ngk(ik) 
@@ -92,6 +97,7 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
             ENDIF
          ENDDO
       ENDDO
+      CALL using_vkb(0)
       CALL calbec( npw, vkb, psi, becp0, nbande )
   ENDIF
   !
@@ -237,6 +243,7 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
      !
      CALL stop_clock( 'h_eps_van2' )
      !
+     CALL using_vkb(0)
      CALL ZGEMM( 'N', 'N', npw, nbnd*npol, nkb, (1.d0, 0.d0), vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0), evct, npwx )
      !

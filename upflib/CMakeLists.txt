@@ -37,7 +37,13 @@ set(src_upflib
     uspp_data.f90 
     write_upf_new.f90 
     xmltools.f90
-    ylmr2.f90)
+    ylmr2.f90
+    # GPU
+    uspp_gpu.f90
+    ylmr2_gpu.f90
+    simpsn_gpu.f90
+    splinelib_gpu.f90)
+qe_enable_cuda_fortran("${src_upflib}")
 
 qe_add_library(qe_upflib ${src_upflib})
 target_link_libraries(qe_upflib
