@@ -772,6 +772,7 @@ wannier_enrg.o : ../../Modules/kind.o
 wannier_enrg.o : ../../Modules/wannier_new.o
 wannier_enrg.o : ../../PW/src/buffers.o
 wannier_enrg.o : ../../PW/src/pwcom.o
+wannier_enrg.o : ../../PW/src/pwcom_gpu.o
 wannier_ham.o : ../../Modules/constants.o
 wannier_ham.o : ../../Modules/environment.o
 wannier_ham.o : ../../Modules/io_files.o
@@ -815,10 +816,12 @@ wannier_proj.o : ../../Modules/noncol.o
 wannier_proj.o : ../../Modules/recvec.o
 wannier_proj.o : ../../Modules/wannier_new.o
 wannier_proj.o : ../../Modules/wavefunctions.o
+wannier_proj.o : ../../Modules/wavefunctions_gpu.o
 wannier_proj.o : ../../PW/src/atomic_wfc_mod.o
 wannier_proj.o : ../../PW/src/buffers.o
 wannier_proj.o : ../../PW/src/pw_restart_new.o
 wannier_proj.o : ../../PW/src/pwcom.o
+wannier_proj.o : ../../PW/src/pwcom_gpu.o
 wannier_proj.o : ../../upflib/uspp.o
 wfck2r.o : ../../FFTXlib/fft_interfaces.o
 wfck2r.o : ../../FFTXlib/scatter_mod.o

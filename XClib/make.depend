@@ -57,5 +57,6 @@ xc_wrapper_mgga.o : xc_input_params_mod.o
 xclib_error.o : xclib_para_m.o
 xclib_test.o : qe_constants.o
 xclib_test.o : qe_kind.o
+xclib_test.o : xc_input_params_mod.o
 xclib_test.o : xc_lib.o
 xclib_test.o : xclib_para_m.o

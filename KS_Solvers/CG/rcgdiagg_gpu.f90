@@ -46,7 +46,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
   USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm, gstart
   USE mp,             ONLY : mp_sum
 #if defined(__VERBOSE)
-  USE cg_param,     ONLY : stdout
+  USE util_param,     ONLY : stdout
 #endif
   !
   IMPLICIT NONE

@@ -105,47 +105,47 @@ for dir in $dirs; do
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
         # handle special cases: modules for C-fortran binding,
-        #   	                hdf5, MPI, FoX, libxc
+        #   	                hdf5, MPI, FoX, libxc, cuda, OMP
         sed '/@iso_c_binding@/d' make.depend > tmp; mv tmp make.depend
         sed '/@hdf5@/d' make.depend > tmp; mv tmp make.depend
         sed '/@mpi@/d'  make.depend > tmp; mv tmp make.depend
         sed '/@fox_dom@/d;/@fox_wxml@/d;/@m_common_io@/d' make.depend > tmp; mv tmp make.depend
         sed '/@xc_version.h@/d;/@xc_f03_lib_m@/d' make.depend > tmp; mv tmp make.depend
+        sed '/@cublas@/d;/@cudafor@/d' make.depend > tmp ; mv tmp make.depend
+        sed '/@device_fbuff_m@/d;/@device_memcpy_m@/d;/@device_auxfunc_m/d' make.depend > tmp ; mv tmp make.depend
+        sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
 
         if test "$DIR" = "FFTXlib"
         then
             # more special cases: modules for FFTs, GPU, OpenMP
-            sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
             sed '/@mkl_dfti/d' make.depend > tmp; mv tmp make.depend
             sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend > tmp; mv tmp make.depend
-            sed '/@cudafor@/d;/@cufft@/d;/@flops_tracker@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@cufft@/d;/@flops_tracker@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "LAXlib"
         then
             # more special cases: modules for ELPA, GPUs
             sed '/@elpa1@/d;/@elpa@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@cusolverdn@/d;/@gbuffers@/d' make.depend > tmp; mv tmp make.depend
             sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend > tmp ; mv tmp make.depend
-            sed '/@device_fbuff_m@/d' make.depend > tmp ; mv tmp make.depend
+            sed '/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend > tmp ; mv tmp make.depend
         fi
 
         if test "$DIR" = "UtilXlib"
         then
             sed '/@ifcore@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@cudafor@/d' make.depend> tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "Modules"
         then
             sed '/@mbd@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@curand@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "XClib"
         then
             sed '/@xc_f90_lib_m@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
