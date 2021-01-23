@@ -70,6 +70,7 @@ chargedensity.o : ../../Modules/io_global.o
 chargedensity.o : ../../Modules/ions_base.o
 chargedensity.o : ../../Modules/kind.o
 chargedensity.o : ../../Modules/mp_global.o
+chargedensity.o : ../../Modules/mp_world.o
 chargedensity.o : ../../Modules/recvec.o
 chargedensity.o : ../../UtilXlib/mp.o
 chargedensity.o : ../../UtilXlib/parallel_include.o
@@ -170,6 +171,7 @@ cplib.o : ../../Modules/recvec.o
 cplib.o : ../../UtilXlib/mp.o
 cplib.o : ../../upflib/atom.o
 cplib.o : ../../upflib/uspp.o
+cplib.o : ../../upflib/uspp_gpu.o
 cplib.o : cp_interfaces.o
 cplib.o : cpr_mod.o
 cplib.o : ions_nose.o
@@ -227,6 +229,7 @@ cpr.o : ../../Modules/wavefunctions.o
 cpr.o : ../../UtilXlib/mp.o
 cpr.o : ../../XClib/xc_lib.o
 cpr.o : ../../upflib/uspp.o
+cpr.o : ../../upflib/uspp_gpu.o
 cpr.o : cell_nose.o
 cpr.o : cg.o
 cpr.o : cp_autopilot.o
@@ -266,8 +269,10 @@ dealloc.o : ../../Modules/fft_base.o
 dealloc.o : ../../Modules/gvecw.o
 dealloc.o : ../../Modules/ions_base.o
 dealloc.o : ../../Modules/recvec.o
+dealloc.o : ../../Modules/recvec_gpu.o
 dealloc.o : ../../Modules/wavefunctions.o
 dealloc.o : ../../upflib/uspp.o
+dealloc.o : ../../upflib/uspp_gpu.o
 dealloc.o : cg.o
 dealloc.o : cpr_mod.o
 dealloc.o : efield.o
@@ -456,11 +461,13 @@ fromscra.o : ../../Modules/io_global.o
 fromscra.o : ../../Modules/ions_base.o
 fromscra.o : ../../Modules/kind.o
 fromscra.o : ../../Modules/mp_global.o
+fromscra.o : ../../Modules/mp_world.o
 fromscra.o : ../../Modules/recvec.o
 fromscra.o : ../../Modules/timestep.o
 fromscra.o : ../../Modules/wavefunctions.o
 fromscra.o : ../../UtilXlib/mp.o
 fromscra.o : ../../upflib/uspp.o
+fromscra.o : ../../upflib/uspp_gpu.o
 fromscra.o : cell_nose.o
 fromscra.o : cg.o
 fromscra.o : cp_emass.o
@@ -482,6 +489,7 @@ gram.o : ../../Modules/gvecw.o
 gram.o : ../../Modules/ions_base.o
 gram.o : ../../Modules/kind.o
 gram.o : ../../Modules/mp_global.o
+gram.o : ../../Modules/mp_world.o
 gram.o : ../../Modules/recvec.o
 gram.o : ../../UtilXlib/mp.o
 gram.o : ../../upflib/uspp.o
@@ -512,6 +520,7 @@ init.o : ../../Modules/kind.o
 init.o : ../../Modules/mp_bands.o
 init.o : ../../Modules/mp_global.o
 init.o : ../../Modules/recvec.o
+init.o : ../../Modules/recvec_gpu.o
 init.o : ../../Modules/recvec_subs.o
 init.o : ../../upflib/uspp.o
 init.o : cp_interfaces.o
@@ -543,6 +552,7 @@ init_run.o : ../../Modules/wrappers.o
 init_run.o : ../../UtilXlib/mp.o
 init_run.o : ../../XClib/xc_lib.o
 init_run.o : ../../upflib/uspp.o
+init_run.o : ../../upflib/uspp_gpu.o
 init_run.o : cell_nose.o
 init_run.o : cg.o
 init_run.o : cp_emass.o
@@ -711,6 +721,7 @@ move_electrons.o : ../../Modules/recvec.o
 move_electrons.o : ../../Modules/wavefunctions.o
 move_electrons.o : ../../XClib/xc_lib.o
 move_electrons.o : ../../upflib/uspp.o
+move_electrons.o : ../../upflib/uspp_gpu.o
 move_electrons.o : cg.o
 move_electrons.o : cp_interfaces.o
 move_electrons.o : efield.o
@@ -732,6 +743,7 @@ newd.o : ../../Modules/kind.o
 newd.o : ../../Modules/mp_bands.o
 newd.o : ../../UtilXlib/mp.o
 newd.o : ../../upflib/uspp.o
+newd.o : mainvar.o
 newd.o : modules.o
 newd.o : smallbox.o
 newd.o : smallbox_gvec.o
@@ -745,6 +757,7 @@ nl_base.o : ../../Modules/ions_base.o
 nl_base.o : ../../Modules/kind.o
 nl_base.o : ../../Modules/mp_global.o
 nl_base.o : ../../Modules/recvec.o
+nl_base.o : ../../Modules/recvec_gpu.o
 nl_base.o : ../../UtilXlib/mp.o
 nl_base.o : ../../upflib/uspp.o
 nl_base.o : cp_interfaces.o
@@ -762,6 +775,7 @@ nlcc.o : ../../Modules/recvec.o
 nlcc.o : ../../UtilXlib/mp.o
 nlcc.o : ../../upflib/atom.o
 nlcc.o : ../../upflib/uspp.o
+nlcc.o : mainvar.o
 nlcc.o : modules.o
 nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o
@@ -776,8 +790,10 @@ ortho.o : ../../Modules/io_global.o
 ortho.o : ../../Modules/ions_base.o
 ortho.o : ../../Modules/kind.o
 ortho.o : ../../Modules/mp_global.o
+ortho.o : ../../Modules/mp_world.o
 ortho.o : ../../UtilXlib/mp.o
 ortho.o : ../../upflib/uspp.o
+ortho.o : ../../upflib/uspp_gpu.o
 ortho.o : cp_interfaces.o
 ortho.o : ortho_base.o
 ortho_base.o : ../../Modules/constants.o
@@ -945,6 +961,7 @@ pseudopot_sub.o : ../../UtilXlib/mp.o
 pseudopot_sub.o : ../../upflib/atom.o
 pseudopot_sub.o : ../../upflib/upf_params.o
 pseudopot_sub.o : ../../upflib/uspp.o
+pseudopot_sub.o : ../../upflib/uspp_gpu.o
 pseudopot_sub.o : cp_interfaces.o
 pseudopot_sub.o : cpr_mod.o
 pseudopot_sub.o : modules.o
@@ -1002,6 +1019,7 @@ restart_sub.o : ../../Modules/recvec.o
 restart_sub.o : ../../Modules/timestep.o
 restart_sub.o : ../../Modules/wavefunctions.o
 restart_sub.o : ../../upflib/uspp.o
+restart_sub.o : ../../upflib/uspp_gpu.o
 restart_sub.o : cp_interfaces.o
 restart_sub.o : efield.o
 restart_sub.o : electrons.o
@@ -1022,6 +1040,7 @@ runcp.o : ../../Modules/recvec.o
 runcp.o : ../../UtilXlib/mp.o
 runcp.o : ../../UtilXlib/parallel_include.o
 runcp.o : ../../upflib/uspp.o
+runcp.o : ../../upflib/uspp_gpu.o
 runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : ldaU_cp.o
@@ -1045,6 +1064,7 @@ smallbox_lib.o : ../../Modules/io_global.o
 smallbox_lib.o : ../../Modules/ions_base.o
 smallbox_lib.o : ../../Modules/kind.o
 smallbox_lib.o : ../../Modules/mp_global.o
+smallbox_lib.o : ../../upflib/uspp.o
 smallbox_lib.o : cp_interfaces.o
 smallbox_lib.o : smallbox.o
 smallbox_lib.o : smallbox_gvec.o
