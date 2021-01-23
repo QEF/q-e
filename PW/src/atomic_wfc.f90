@@ -20,15 +20,10 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
   USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,            ONLY : xk, igk_k, ngk
   USE wvfct,            ONLY : npwx
-  USE uspp_data,        ONLY : tab_at, dq
   USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,         ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                                starting_spin_angle
-  USE mp_bands,         ONLY : inter_bgrp_comm
-  USE mp,               ONLY : mp_sum
-  !
-  USE us_gpum,          ONLY : using_tab_at
   !
   implicit none
   INTEGER, INTENT(IN) :: ik
@@ -43,8 +38,7 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
   REAL(DP),    ALLOCATABLE :: qg(:), ylm (:,:), chiq (:,:,:), gk (:,:)
   COMPLEX(DP), ALLOCATABLE :: sk (:), aux(:)
   COMPLEX(DP) :: kphase, lphase
-  REAL(DP)    :: arg, px, ux, vx, wx
-  INTEGER     :: ig_start, ig_end
+  REAL(DP)    :: arg
 
   CALL start_clock( 'atomic_wfc' )
 
@@ -58,7 +52,7 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
   npw = ngk(ik)
   !
   ALLOCATE( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &
-             sk(npw), gk(3,npw), qg(npw) )
+       gk(3,npw), qg(npw) )
   !
   DO ig = 1, npw
      iig = igk_k (ig,ik)
@@ -71,48 +65,20 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
   !  ylm = spherical harmonics
   !
   CALL ylmr2( (lmax_wfc+1)**2, npw, gk, qg, ylm )
-
-  ! from now to the end of the routine the ig loops are distributed across bgrp
-  CALL divide( inter_bgrp_comm,npw,ig_start,ig_end )
   !
   ! set now q=|k+G| in atomic units
   !
-  DO ig = ig_start, ig_end
+  DO ig = 1, npw
      qg(ig) = SQRT( qg(ig) )*tpiba
   END DO
   !
-  n_starting_wfc = 0
+  CALL radial_wfc ( npw, qg, nwfcm, ntyp, chiq )
   !
-  ! chiq = radial fourier transform of atomic orbitals chi
-  !
-  call using_tab_at(0)
-  !
-  DO nt = 1, ntyp
-     DO nb = 1, upf(nt)%nwfc
-        IF ( upf(nt)%oc (nb) >= 0.d0 ) THEN
-           DO ig = ig_start, ig_end
-              px = qg (ig) / dq - INT(qg (ig) / dq)
-              ux = 1.d0 - px
-              vx = 2.d0 - px
-              wx = 3.d0 - px
-              i0 = INT( qg (ig) / dq ) + 1
-              i1 = i0 + 1
-              i2 = i0 + 2
-              i3 = i0 + 3
-              chiq (ig, nb, nt) = &
-                     tab_at (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                     tab_at (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                     tab_at (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                     tab_at (i3, nb, nt) * px * ux * vx / 6.d0
-           END DO
-        END IF
-     END DO
-  END DO
-
   DEALLOCATE( qg, gk )
-  ALLOCATE( aux(npw) )
+  ALLOCATE( aux(npw), sk(npw) )
   !
   wfcatom(:,:,:) = (0.0_dp, 0.0_dp)
+  n_starting_wfc = 0
   !
   DO na = 1, nat
      arg = (xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na)) * tpi
@@ -120,7 +86,7 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
      !
      !     sk is the structure factor
      !
-     DO ig = ig_start, ig_end
+     DO ig = 1, npw
         iig = igk_k (ig,ik)
         sk (ig) = kphase * eigts1 (mill (1,iig), na) * &
                            eigts2 (mill (2,iig), na) * &
@@ -169,10 +135,8 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
 
   DEALLOCATE( aux, sk, chiq, ylm )
 
-  ! collect results across bgrp
-  CALL mp_sum( wfcatom, inter_bgrp_comm )
-
   CALL stop_clock( 'atomic_wfc' )
+  
   RETURN
 
 CONTAINS
@@ -202,7 +166,7 @@ CONTAINS
                   if (abs(rot_ylm(ind,n1)) > 1.d-8) &
                       aux(:)=aux(:)+rot_ylm(ind,n1)*ylm(:,ind1)
                ENDDO
-               do ig = ig_start, ig_end
+               do ig = 1, npw
                   wfcatom(ig,is,n_starting_wfc) = lphase*fact(is)*&
                         sk(ig)*aux(ig)*chiq (ig, nb, nt)
                END DO
@@ -267,14 +231,14 @@ CONTAINS
       n_starting_wfc = n_starting_wfc + 1
       IF ( n_starting_wfc + 2*l+1 > natomwfc ) CALL errore &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          aux(ig) = sk(ig)*ylm(ig,lm)*chiaux(ig)
       END DO
       !
       ! now, rotate wfc as needed
       ! first : rotation with angle alpha around (OX)
       !
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          fup = cos(0.5d0*alpha)*aux(ig)
          fdown = (0.d0,1.d0)*sin(0.5d0*alpha)*aux(ig)
          !
@@ -322,14 +286,14 @@ CONTAINS
       n_starting_wfc = n_starting_wfc + 1
       IF ( n_starting_wfc + 2*l+1 > natomwfc) CALL errore &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          aux(ig) = sk(ig)*ylm(ig,lm)*chiq(ig,nb,nt)
       END DO
       !
       ! now, rotate wfc as needed
       ! first : rotation with angle alpha around (OX)
       !
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          fup = cos(0.5d0*alpha)*aux(ig)
          fdown = (0.d0,1.d0)*sin(0.5d0*alpha)*aux(ig)
          !
@@ -371,7 +335,7 @@ CONTAINS
       IF ( n_starting_wfc > natomwfc) CALL errore &
          ('atomic_wfc___', 'internal error: too many wfcs', 1)
       !
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          wfcatom (ig, 1, n_starting_wfc) = lphase * &
             sk (ig) * ylm (ig, lm) * chiq (ig, nb, nt)
       ENDDO
@@ -381,3 +345,49 @@ CONTAINS
    END SUBROUTINE atomic_wfc___
    !
 END SUBROUTINE atomic_wfc
+!-----------------------------------------------------------------------
+SUBROUTINE radial_wfc ( npw, qg, nwfcm, ntyp, chiq )
+  !-----------------------------------------------------------------------
+  !
+  ! computes chiq: radial fourier transform of atomic orbitals chi
+  !
+  USE upf_kinds,  ONLY : dp
+  USE uspp_param, ONLY : upf
+  USE uspp_data,  ONLY : tab_at, dq
+  USE us_gpum,    ONLY : using_tab_at
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN)  :: npw
+  INTEGER, INTENT(IN)  :: nwfcm
+  INTEGER, INTENT(IN)  :: ntyp
+  REAL(dp), INTENT(IN) :: qg(npw)
+  REAL(dp), INTENT(OUT):: chiq(npw,nwfcm,ntyp)
+  !
+  INTEGER :: nt, nb, ig
+  INTEGER :: i0, i1, i2, i3
+  REAL(dp):: px, ux, vx, wx
+  !
+  DO nt = 1, ntyp
+     DO nb = 1, upf(nt)%nwfc
+        IF ( upf(nt)%oc (nb) >= 0.d0) THEN
+           DO ig = 1, npw
+              px = qg (ig) / dq - int (qg (ig) / dq)
+              ux = 1.d0 - px
+              vx = 2.d0 - px
+              wx = 3.d0 - px
+              i0 = int( qg (ig) / dq ) + 1
+              i1 = i0 + 1
+              i2 = i0 + 2
+              i3 = i0 + 3
+              chiq (ig, nb, nt) = &
+                     tab_at (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                     tab_at (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                     tab_at (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                     tab_at (i3, nb, nt) * px * ux * vx / 6.d0
+           ENDDO
+        ENDIF
+     ENDDO
+  ENDDO
+
+END SUBROUTINE radial_wfc
