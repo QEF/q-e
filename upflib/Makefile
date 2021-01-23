@@ -42,6 +42,7 @@ upf_parallel_include.o \
 upf_spinorb.o \
 upf_to_internal.o \
 upf_utils.o \
+us_gpum.o \
 uspp.o \
 uspp_data.o \
 write_upf_new.o \

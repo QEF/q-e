@@ -14,6 +14,7 @@ init_at_1.o : atom.o
 init_at_1.o : upf_const.o
 init_at_1.o : upf_ions.o
 init_at_1.o : upf_kinds.o
+init_at_1.o : us_gpum.o
 init_at_1.o : uspp.o
 init_at_1.o : uspp_data.o
 init_us_0.o : ../UtilXlib/mp.o
@@ -31,8 +32,10 @@ init_us_1.o : upf_const.o
 init_us_1.o : upf_ions.o
 init_us_1.o : upf_kinds.o
 init_us_1.o : upf_spinorb.o
+init_us_1.o : us_gpum.o
 init_us_1.o : uspp.o
 init_us_1.o : uspp_data.o
+init_us_1.o : uspp_gpu.o
 init_us_b0.o : ../UtilXlib/mp.o
 init_us_b0.o : atom.o
 init_us_b0.o : upf_const.o
@@ -43,6 +46,7 @@ init_us_b0.o : uspp_data.o
 paw_variables.o : upf_kinds.o
 pseudo_types.o : upf_kinds.o
 qvan2.o : upf_kinds.o
+qvan2.o : us_gpum.o
 qvan2.o : uspp.o
 qvan2.o : uspp_data.o
 radial_grids.o : upf_const.o
@@ -73,6 +77,7 @@ read_uspp.o : upf_kinds.o
 read_uspp.o : upf_params.o
 simpsn.o : upf_kinds.o
 splinelib.o : upf_kinds.o
+splinelib_gpu.o : upf_kinds.o
 upf.o : gth.o
 upf.o : pseudo_types.o
 upf.o : read_cpmd.o
@@ -105,12 +110,15 @@ upfconv.o : upf.o
 upfconv.o : upf_const.o
 upfconv.o : upf_utils.o
 upfconv.o : write_upf_new.o
+us_gpum.o : upf_spinorb.o
+us_gpum.o : uspp_data.o
 uspp.o : pseudo_types.o
 uspp.o : upf_const.o
 uspp.o : upf_invmat.o
 uspp.o : upf_kinds.o
 uspp.o : upf_params.o
 uspp_data.o : upf_kinds.o
+uspp_gpu.o : uspp.o
 virtual_v2.o : pseudo_types.o
 virtual_v2.o : splinelib.o
 virtual_v2.o : upf.o
