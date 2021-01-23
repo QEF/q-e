@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#if defined(__CUDA)
 ! This is the CUDAFortran kernel based version of drhoc_gpu. 
 ! It is about 10 times faster than the CUF Kernel based solution
 ! available below because it can exploit local memory.
@@ -18,6 +17,7 @@
 ! solution when the __CUDA flag is not set.
 !
 MODULE compute_rhocg_gpu_m
+#if defined(__CUDA)
   USE cudafor
   IMPLICIT NONE 
   TYPE(dim3) :: rhocg_threads = dim3 (32,8,1) 
@@ -112,7 +112,10 @@ MODULE compute_rhocg_gpu_m
 
     END SUBROUTINE compute_rhocg_gpu  
 
+#endif
 END MODULE compute_rhocg_gpu_m 
+!
+#if defined(__CUDA)
 !-----------------------------------------------------------------------
 subroutine drhoc_gpu (ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_d)
   !-----------------------------------------------------------------------

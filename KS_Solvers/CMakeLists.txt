@@ -1,7 +1,10 @@
 set(src_davidson
     Davidson_RCI/david_rci.f90
     Davidson/cegterg.f90
-    Davidson/regterg.f90)
+    Davidson/regterg.f90
+    # GPU
+    Davidson/regterg_gpu.f90
+    Davidson/cegterg_gpu.f90)
 qe_enable_cuda_fortran("${src_davidson}")
 
 set(src_davidson_rci
@@ -9,18 +12,31 @@ set(src_davidson_rci
 
 set(src_cg
     CG/ccgdiagg.f90
-    CG/rcgdiagg.f90)
+    CG/rcgdiagg.f90
+    # GPU
+    CG/rcgdiagg_gpu.f90
+    CG/ccgdiagg_gpu.f90)
+qe_enable_cuda_fortran("${src_cg}")
 
 set(src_ppcg
     PPCG/ppcg_gamma.f90
-    PPCG/ppcg_k.f90)
+    PPCG/ppcg_k.f90
+    # GPU
+    PPCG/ppcg_gamma_gpu.f90
+    PPCG/ppcg_k_gpu.f90
+    PPCG/generic_cublas.f90)
 qe_enable_cuda_fortran("${src_ppcg}")
 
 set(src_dense
     DENSE/rotate_HSpsi_gamma.f90
     DENSE/rotate_HSpsi_k.f90
     DENSE/rotate_wfc_gamma.f90
-    DENSE/rotate_wfc_k.f90)
+    DENSE/rotate_wfc_k.f90
+    # GPU
+    DENSE/rotate_HSpsi_gamma_gpu.f90
+    DENSE/rotate_HSpsi_k_gpu.f90
+    DENSE/rotate_wfc_gamma_gpu.f90
+    DENSE/rotate_wfc_k_gpu.f90)
 qe_enable_cuda_fortran("${src_dense}")
 
 set(src_paro
@@ -31,7 +47,12 @@ set(src_paro
     ParO/paro_k.f90
     ParO/pcg_k.f90
     ParO/paro_gamma_new.f90
-    ParO/paro_k_new.f90)
+    ParO/paro_k_new.f90
+    # GPU
+    ParO/bpcg_gamma_gpu.f90
+    ParO/bpcg_k_gpu.f90
+    ParO/paro_gamma_new_gpu.f90
+    ParO/paro_k_new_gpu.f90)
 qe_enable_cuda_fortran("${src_paro}")
 
 qe_add_library(qe_kssolver_davidson ${src_davidson})
@@ -40,12 +61,8 @@ target_link_libraries(qe_kssolver_davidson
         qe_openmp_fortran
         qe_lax
         qe_utilx
-        qe_mpi_fortran)
-if(QE_ENABLE_CUDA)
-    target_link_libraries(qe_kssolver_davidson
-        PRIVATE
-            qe_devxlib)
-endif()
+        qe_mpi_fortran
+        qe_devxlib)
 
 qe_add_library(qe_kssolver_davidsonrci ${src_davidson_rci})
 target_link_libraries(qe_kssolver_davidsonrci
@@ -59,12 +76,8 @@ target_link_libraries(qe_kssolver_cg
     PRIVATE
         qe_lax
         qe_utilx
-        qe_mpi_fortran)
-if(QE_ENABLE_CUDA)
-    target_link_libraries(qe_kssolver_cg
-        PRIVATE
-            qe_devxlib)
-endif()
+        qe_mpi_fortran
+        qe_devxlib)
 
 qe_add_library(qe_kssolver_ppcg ${src_ppcg})
 target_link_libraries(qe_kssolver_ppcg
@@ -81,7 +94,8 @@ target_link_libraries(qe_kssolver_dense
     PRIVATE
         qe_lax
         qe_utilx
-        qe_mpi_fortran)
+        qe_mpi_fortran
+        qe_devxlib)
 
 qe_add_library(qe_kssolver_paro ${src_paro})
 target_link_libraries(qe_kssolver_paro

@@ -5,9 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__CUDA)
 !
 MODULE compute_drhocg_gpu_m
+#if defined(__CUDA)
   !
   USE cudafor
   !
@@ -73,9 +73,10 @@ MODULE compute_drhocg_gpu_m
       !
     END SUBROUTINE compute_drhocg_gpu
     !
+#endif
 END MODULE compute_drhocg_gpu_m 
 !
-!
+#if defined(__CUDA)
 !----------------------------------------------------------------------------
 SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, &
                             drhocg_d )
