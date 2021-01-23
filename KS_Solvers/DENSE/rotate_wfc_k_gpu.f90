@@ -13,7 +13,6 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
   !
-  USE LAXlib
 #if defined(__CUDA)
   USE cudafor
   USE cublas
@@ -25,7 +24,7 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   IMPLICIT NONE
   !
-  !INCLUDE 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
   !
   ! ... I/O variables
   !

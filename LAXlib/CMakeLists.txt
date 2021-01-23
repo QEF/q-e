@@ -21,7 +21,8 @@ target_link_libraries(qe_lax
         qe_openmp_fortran
         qe_mpi_fortran
         qe_lapack
-        qe_utilx)
+        qe_utilx
+        qe_devxlib)
 if(QE_ENABLE_CUDA)
     if(QE_ENABLE_LAXLIB_CUSOLVER)
         if(CUDAToolkit_VERSION VERSION_LESS 11)
@@ -29,7 +30,6 @@ if(QE_ENABLE_CUDA)
         endif()
         target_link_libraries(qe_lax
             PRIVATE
-                qe_devxlib
                 CUDA::cusolver)
         set_property(TARGET qe_lax APPEND
             PROPERTY
@@ -37,7 +37,6 @@ if(QE_ENABLE_CUDA)
     else()
         target_link_libraries(qe_lax
             PRIVATE
-                qe_devxlib
                 qe_eigensolver_gpu)
     endif()
 endif()

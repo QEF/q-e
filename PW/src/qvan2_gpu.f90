@@ -7,8 +7,8 @@
 !
 !
 !-----------------------------------------------------------------------
-#if defined(__CUDA)
 module qvan2_gpum
+#if defined(__CUDA)
 contains
 attributes(global) subroutine qvan2_kernel(ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d, lmaxq, nbetam, nlx, dq)
    !-----------------------------------------------------------------------
@@ -128,8 +128,8 @@ attributes(global) subroutine qvan2_kernel(ngy, ih, jh, np, qmod_d, qg_d, ylmk0_
    !
    return
 end subroutine qvan2_kernel
-end module qvan2_gpum
 #endif
+end module qvan2_gpum
 
 
 subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)

@@ -7,9 +7,9 @@
 
 #define __USE_CUDA_KERNELS
 
+module ylmr2_gpum
 #if defined(__CUDA)
 #if defined(__USE_CUDA_KERNELS)
-module ylmr2_gpum
 use cudafor
 contains
 attributes(global) subroutine ylmr2_gpu_kernel (lmax,lmax2, ng, g, gg, ylm)
@@ -108,9 +108,9 @@ attributes(global) subroutine ylmr2_gpu_kernel (lmax,lmax2, ng, g, gg, ylm)
   end if
   return
   end subroutine ylmr2_gpu_kernel
+#endif
+#endif
 end module ylmr2_gpum
-#endif
-#endif
 
 subroutine ylmr2_gpu(lmax2, ng, g_d, gg_d, ylm_d)
   !-----------------------------------------------------------------------

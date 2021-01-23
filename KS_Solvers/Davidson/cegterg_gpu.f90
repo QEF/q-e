@@ -25,7 +25,6 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   use cudafor
   use cublas
 #endif
-  USE LAXlib,        ONLY : diaghg
   USE util_param,    ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
                             nbgrp, my_bgrp_id, me_bgrp, root_bgrp
@@ -36,7 +35,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   IMPLICIT NONE
   !
-  !include 'laxlib.fh'
+  include 'laxlib.fh'
   !
   INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx, npol
     ! dimension of the matrix to be diagonalized

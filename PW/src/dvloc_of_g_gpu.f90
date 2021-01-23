@@ -6,8 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#if defined(__CUDA)
 MODULE compute_dvloc_gpum
+#if defined(__CUDA)
   USE cudafor
   IMPLICIT NONE
   TYPE(dim3) :: dvloc_threads = dim3(32,8,1)
@@ -95,8 +95,8 @@ MODULE compute_dvloc_gpum
   !
 END SUBROUTINE compute_dvloc_gpu
 !
-END MODULE compute_dvloc_gpum
 #endif
+END MODULE compute_dvloc_gpum
 
 
 !----------------------------------------------------------------------
