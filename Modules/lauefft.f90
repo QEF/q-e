@@ -37,10 +37,10 @@ MODULE lauefft
   !
   USE control_flags, ONLY : gamma_only
   USE fft_scalar,    ONLY : cft_1z, cft_2xy
+  USE fft_scatter,   ONLY : fft_scatter_xy, fft_scatter_yz
   USE fft_types,     ONLY : fft_type_descriptor
   USE kinds,         ONLY : DP
   USE mp,            ONLY : mp_sum, mp_rank, mp_size
-  USE scatter_mod,   ONLY : fft_scatter_xy, fft_scatter_yz
   USE parallel_include
   !
   IMPLICIT NONE
