@@ -21,7 +21,7 @@ SUBROUTINE data_structure_3drism(dfft, gvec, gamma_only, mp_task)
   USE kinds,                ONLY : DP
   USE mp_bands,             ONLY : nproc_bgrp, nyfft
   USE mp_rism,              ONLY : mp_rism_task
-  USE symm_base,            ONLY : fft_fact
+  !USE symm_base,            ONLY : fft_fact
   !
   IMPLICIT NONE
   !
@@ -40,8 +40,10 @@ SUBROUTINE data_structure_3drism(dfft, gvec, gamma_only, mp_task)
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
+  !CALL fft_type_init(dfft, smap, "rho", gamma_only, lpara, intra_comm, &
+  !     at, bg, gvec%gcutm, 1.0_DP, fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_)
   CALL fft_type_init(dfft, smap, "rho", gamma_only, lpara, intra_comm, &
-       at, bg, gvec%gcutm, 1.0_DP, fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_)
+       at, bg, gvec%gcutm, 1.0_DP, nyfft=nyfft, nmany=nmany_)  ! do not use symmetric mesh
   !
   dfft%rho_clock_label = 'fftr'  ! this is the label of FFT for 3D-RISM
   !
