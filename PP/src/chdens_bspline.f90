@@ -199,6 +199,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
   real(dp), intent(in) :: e1(3), e2(3), x0(3), m1, m2, alat, tau(3,nat), at(3,3)
   character(len=3), intent(in) :: atm(*)
   real(dp), intent(in) :: rhor(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
+  logical, intent(in) :: laue
   !---------------------------------------------------------------------
   real(dp), allocatable :: rg(:,:,:), carica(:,:)
   real(dp) :: deltax, deltay
