@@ -283,7 +283,12 @@ CONTAINS
     ! ... calculate planar average
     DO ir = 1, nr
       !
-      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (laue) THEN
+        CALL fft_index_to_3d(ir, lfft%dfft, i1, i2, i3, offrange)
+      ELSE
+        CALL fft_index_to_3d(ir, dfft, i1, i2, i3, offrange)
+      END IF
+      !
       IF (offrange) THEN
         CYCLE
       END IF

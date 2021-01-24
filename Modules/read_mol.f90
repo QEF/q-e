@@ -16,7 +16,7 @@ MODULE read_mol_module
   USE kinds,          ONLY : DP
   USE molecule_const, ONLY : RY_TO_KJMOLm1, RY_TO_KCALMOLm1, BOHRm3_TO_MOLCMm3, BOHRm3_TO_MOLLm1
   USE molecule_types, ONLY : molecule, deallocate_molecule
-  USE parser,         ONLY : version_compare
+  USE upf_utils,      ONLY : version_compare
   USE iotk_module
   !
   IMPLICIT NONE
