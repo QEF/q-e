@@ -130,7 +130,6 @@ CONTAINS
     bg0 = bg0 / DBLE(rismt%dfft%nr1 * rismt%dfft%nr2)
     !
     DO isite = 1, rismt%nsite
-      ag0(:, isite) = 0.0_DP
       DO iz = rismt%lfft%izcell_start, rismt%lfft%izcell_end
         iiz = iz - rismt%lfft%izcell_start + 1
         ag0(iz, isite) = bg0(iiz, isite)
