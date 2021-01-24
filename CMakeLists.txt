@@ -561,7 +561,6 @@ add_custom_target(pp
         qe_pp_fermisurface_exe
         qe_pp_fermiproj_exe
         qe_pp_ppacf_exe
-        qe_pp_benchmarklibxc_exe
     COMMENT
         "postprocessing programs")
 
