@@ -76,13 +76,13 @@ foreach(test_category IN LISTS qe_test_categories)
         math(EXPR TOT_PROCS "${TESTCODE_NPROCS} * ${TESTCODE_NTHREADS}")
         #message("${subfolder_name} on ${TOT_PROCS} processes_x_threads")
 
-        if(QE_EANBLE_MPI)
+        if(QE_ENABLE_MPI)
           add_test(NAME ${test_name}
-                   COMMAND ${test_binary} -inp ${test_input_relative}
+                   COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input_relative}
                    WORKING_DIRECTORY ${test_work_dir})
         else()
           add_test(NAME ${test_name}
-                   COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input_relative}
+                   COMMAND ${test_binary} -inp ${test_input_relative}
                    WORKING_DIRECTORY ${test_work_dir})
         endif()
         set_tests_properties(${test_name} PROPERTIES
