@@ -141,6 +141,8 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
+-include make.gpu
+
 TLDEPS= libfox libutil libla libfft librxc
 
 all : libqemod.a

@@ -22,12 +22,12 @@ build:cp:
 #    - make run-tests-cp-serial
 #    - rm -r /tmp/save
 
-build:ph:
-  tags: [docker]
-  image: espressofoundation/ubuntu:latest
-  script:
-    - ./configure
-    - make ph
+#build:ph:
+#  tags: [docker]
+#  image: espressofoundation/ubuntu:latest
+#  script:
+#    - ./configure
+#    - make ph
 #    - export OMP_NUM_THREADS=1
 #    - cd test-suite
 #    - mkdir /tmp/save

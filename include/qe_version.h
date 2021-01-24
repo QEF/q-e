@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2020 Quantum ESPRESSO group
+! Copyright (C) 2003-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,4 +7,4 @@
 !
 ! global version number
 !
-CHARACTER (LEN=6) :: version_number = '6.7+'
+CHARACTER (LEN=6) :: version_number = '6.7GPU'

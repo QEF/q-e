@@ -287,7 +287,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   !-----------------------------------------------------------------------
   !! For noncollinear case: builds up the superposition (for a k-point 
   !! \(\text{ik}\)) of pure spin-up or spin-down atomic wavefunctions.
-  ! 
+  !
   !! Based on 'atomic_wfc.f90'
   !
   USE kinds,             ONLY : DP
@@ -303,6 +303,8 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   USE noncollin_module,  ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,          ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                                 starting_spin_angle
+  !
+  USE us_gpum,           ONLY : using_tab_at
   !
   IMPLICIT NONE
   !
@@ -321,6 +323,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   REAL(DP) :: arg, px, ux, vx, wx
   !
   CALL start_clock( 'atomic_wfc' )
+  CALL using_tab_at(0)
   !
   ! ... calculate max angular momentum required in wavefunctions
   !

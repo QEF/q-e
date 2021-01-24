@@ -54,10 +54,7 @@ else
       		    mkl_lib="mkl_intel_lp64"
                     mkl_omp="mkl_intel_thread"
 		    # NB: with nvidia hpc sdk 2020, linking to threaded mkl
-		    # v.19.1 update 4 fails due to a missing symbol,
-		    # __kmpc_critical_with_hint, that is found in OMP LLVM
-		    # or in Intel compiler library libiomp5.so
-		    # add_mkl_omp="-liomp5"
+		    # v.19.1 update 4 fails due to a missing symbol
 		    ;;
 	       pgf* )
                     # For obsolete PGI versions (superseded by nvfortran)

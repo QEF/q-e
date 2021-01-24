@@ -6,9 +6,16 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#if defined(__CUDA)
+#define DEVICEATTR ,DEVICE
+#else
+#define DEVICEATTR
+#endif
+
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+      ( nfi, c_bgrp, c_d, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
+        enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
 !
 !  this routine computes:
@@ -48,7 +55,7 @@
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
       USE cell_base,          ONLY: omega
-      USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp
+      USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp, f_d
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
@@ -60,7 +67,7 @@
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
-      USE cp_main_variables,  ONLY: iprint_stdout, idesc
+      USE cp_main_variables,  ONLY: iprint_stdout, idesc, irb, eigrb
       USE wannier_base,       ONLY: iwf
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
@@ -68,6 +75,8 @@
       USE io_files,           ONLY: restart_dir
       USE fft_rho
       USE fft_helper_subroutines, ONLY: c2psi_gamma
+      USE mp,                 ONLY: mp_barrier
+      USE mp_world,           ONLY: mpime, world_comm
       !
       IMPLICIT NONE
       INTEGER nfi
@@ -79,11 +88,10 @@
       REAL(DP) rhos(:,:)
       REAL(DP) enl, ekin
       REAL(DP) denl(3,3), dekin(6)
-      COMPLEX(DP) eigrb( :, : )
       COMPLEX(DP) rhog( :, : )
       COMPLEX(DP) drhog( :, :, :, : )
       COMPLEX(DP) c_bgrp( :, : )
-      INTEGER irb( :, : )
+      COMPLEX(DP) DEVICEATTR :: c_d( :, : )
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
       INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
 
@@ -119,7 +127,11 @@
       !
       !  calculation of kinetic energy ekin
       !
+#if defined (__CUDA)
+      ekin = enkin( c_d, f_d, nbsp_bgrp )
+#else
       ekin = enkin( c_bgrp, f_bgrp, nbsp_bgrp )
+#endif
       !
       IF( nbgrp > 1 ) &
          CALL mp_sum( ekin, inter_bgrp_comm )
@@ -217,6 +229,9 @@
                CALL errore( ' rhoofr ', ' c second dimension too small ', SIZE( c_bgrp, 2 ) )
             !
             c_bgrp( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
+#if defined (__CUDA)
+            c_d( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
+#endif
             !
          ENDIF
          !
@@ -236,7 +251,11 @@
             !
          ELSE 
             !
+#if defined (__CUDA)
+            CALL loop_over_states_gpu()
+#else
             CALL loop_over_states()
+#endif
             !
          END IF
          !
@@ -260,7 +279,7 @@
             DEALLOCATE( drhovan )
          END IF
          !
-         CALL rhov( irb, eigrb, rhovan, rhog, rhor )
+         CALL rhov( rhovan, rhog, rhor )
 
       ENDIF COMPUTE_CHARGE
 !
@@ -359,6 +378,10 @@
 #endif
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
+         IF( fftx_ntgrp(dffts) > 1 ) THEN
+            CALL errore('rhoofr','Task group not supported',1)
+         END IF
+
          ALLOCATE( psis( dffts%nnr_tg ) ) 
          !
          CALL tg_get_group_nr3( dffts, tg_nr3 )
@@ -369,17 +392,9 @@
 
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
 
-#if defined(__MPI)
-            !
-            CALL c2psi_gamma_tg(dffts, psis, c_bgrp, i, nbsp_bgrp )
-
-            CALL invfft ('tgWave', psis, dffts )
-#else
             CALL c2psi_gamma( dffts, psis, c_bgrp(:,i), c_bgrp(:,i+1) )
 
             CALL invfft('Wave', psis, dffts )
-
-#endif
             !
             ! Now the first proc of the group holds the first two bands
             ! of the 2*nogrp bands that we are processing at the same time,
@@ -445,6 +460,103 @@
 
          RETURN
       END SUBROUTINE loop_over_states
+
+#if defined (__CUDA)
+
+      SUBROUTINE loop_over_states_gpu
+         !
+         USE parallel_include
+         USE fft_helper_subroutines
+         USE control_flags, ONLY : many_fft
+         USE cudafor
+         !
+         !        MAIN LOOP OVER THE EIGENSTATES
+         !           - This loop is also parallelized within the task-groups framework
+         !           - Each group works on a number of eigenstates in parallel
+         !
+         IMPLICIT NONE
+         !
+         INTEGER :: from, i, ig, eig_index, eig_offset, ii, tg_nr3, ioff
+         !
+         REAL(DP), DEVICE, ALLOCATABLE    :: rhos_d(:,:)
+         COMPLEX(DP), DEVICE, ALLOCATABLE :: psis(:)
+         COMPLEX(DP), DEVICE, ALLOCATABLE :: ptmp(:,:)
+         INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
+
+         ALLOCATE( psis( dffts%nnr * many_fft ) )  ! dffts%nnr * many_fft
+         ALLOCATE( rhos_d ( SIZE(rhos,1), SIZE(rhos,2) ) )
+         !
+         rhos_d = 0_DP
+         nl_d => dffts%nl_d
+         nlm_d => dffts%nlm_d
+
+         do i = 1, nbsp_bgrp, 2 * many_fft
+
+            psis = 0.0d0
+
+            ioff = 0
+            DO ii = i, i + 2 * many_fft - 1, 2
+              IF( ii < nbsp_bgrp ) THEN
+!$cuf kernel do(1)
+                 do ig = 1, dffts%ngw
+                    psis( nlm_d( ig ) + ioff) = CONJG( c_d( ig, ii ) ) + ci * conjg( c_d( ig, ii+1 ))
+                    psis( nl_d( ig )  + ioff) = c_d( ig, ii ) + ci * c_d( ig, ii+1 )
+                 end do
+              ELSE IF( ii == nbsp_bgrp ) THEN
+!$cuf kernel do(1)
+                 do ig = 1, dffts%ngw
+                    psis( nlm_d( ig ) + ioff) = CONJG( c_d( ig, ii ) )
+                    psis( nl_d( ig )  + ioff) = c_d( ig, ii )
+                 end do
+              END IF
+              ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii), c_bgrp(:,ii+1) )
+              ioff = ioff + dffts%nnr
+              
+            END DO
+
+            CALL invfft('Wave', psis, dffts, many_fft )
+
+            ioff = 0
+            DO ii = i, i + 2 * many_fft - 1, 2
+              IF( ii < nbsp_bgrp ) THEN
+                iss1=ispin_bgrp( ii )
+                sa1 =f_bgrp( ii )/omega
+                iss2=ispin_bgrp( ii + 1 )
+                sa2 =f_bgrp( ii + 1 )/omega
+!$cuf kernel do(1)
+                do ir = 1, dffts%nnr
+                   rhos_d(ir,iss1) = rhos_d(ir,iss1) + sa1*( real(psis(ir + ioff)))**2
+                   rhos_d(ir,iss2) = rhos_d(ir,iss2) + sa2*(aimag(psis(ir + ioff)))**2
+                end do
+              ELSE IF( ii == nbsp_bgrp ) THEN
+                iss1=ispin_bgrp( ii )
+                sa1 =f_bgrp( ii )/omega
+                iss2=iss1
+                sa2=0.0d0
+!$cuf kernel do(1)
+                do ir = 1, dffts%nnr
+                   rhos_d(ir,iss1) = rhos_d(ir,iss1) + sa1*( real(psis(ir + ioff)))**2
+                END DO
+              END IF
+              ioff = ioff + dffts%nnr
+            END DO
+            !
+         END DO
+
+         rhos = rhos_d
+
+         IF( nbgrp > 1 ) THEN
+            CALL mp_sum( rhos, inter_bgrp_comm )
+         END IF
+
+         DEALLOCATE( rhos_d )
+         DEALLOCATE( psis ) 
+         DEALLOCATE( ptmp ) 
+
+         RETURN
+      END SUBROUTINE loop_over_states_gpu
+#endif
+
 
 !-----------------------------------------------------------------------
    END SUBROUTINE rhoofr_cp
@@ -525,50 +637,32 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       REAL(DP),    INTENT(OUT) :: drhor(dfftp%nnr,nspin,3,3)
       COMPLEX(DP), INTENT(OUT) :: drhog(dfftp%ngm,nspin,3,3)
 ! local
-      INTEGER i, j, isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, ijs
+      INTEGER i, j, isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, ijs, itid
       REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci
-#if defined(__INTEL_COMPILER)
-#if __INTEL_COMPILER  >= 1300
-!dir$ attributes align: 4096 :: v, dqgbt,qv
-#endif
-#endif
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
       COMPLEX(DP), ALLOCATABLE :: fg1(:), fg2(:)
-!
-      INTEGER  :: itid, mytid, ntids
 #if defined(_OPENMP)
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 !
-!$omp parallel default(none), private(i,j,iss,ir,ig,mytid,ntids,itid), shared(nspin,dfftp,drhor,drhog,rhor,rhog,ainv) 
-#if defined(_OPENMP)
-      mytid = omp_get_thread_num()  ! take the thread ID
-      ntids = omp_get_num_threads() ! take the number of threads
-#else
-      mytid = 0
-      ntids = 1
-#endif
-      itid  = 0
+!$omp parallel do collapse(3) default(none), private(i,j,iss,ir,ig), shared(nspin,dfftp,drhor,drhog,rhor,rhog,ainv) 
       DO j=1,3
          DO i=1,3
             DO iss=1,nspin
-               IF( MOD( itid,  ntids ) == mytid ) THEN
-                  DO ir=1,dfftp%nnr
-                     drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
-                  END DO
-                  DO ig=1,dfftp%ngm
-                     drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
-                  END DO
-               END IF
-               itid = itid + 1 
+               DO ir=1,dfftp%nnr
+                  drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
+               END DO
+               DO ig=1,dfftp%ngm
+                  drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
+              END DO
             END DO
          END DO
       END DO
-!$omp end parallel
+!$omp end parallel do
 
       IF ( nkbus <= 0 ) THEN
          GO TO 1000
@@ -589,8 +683,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nat, ityp, ngb, nh, eigrb, dfftb, irb, v, &
-!$omp                 ci, i, j, dqgb, qgb, nhm, rhovan, drhovan, upf ) &
-!$omp          private(mytid, ntids, is, ia, iv, jv, ijv, ig, iss, &
+!$omp                 i, j, dqgb, qgb, nhm, rhovan, drhovan, upf ) &
+!$omp          private( is, ia, iv, jv, ijv, ig, iss, &
 !$omp                  qv, fg1, fg2, itid, dqgbt, dsumt, asumt )
 
                ALLOCATE( qv( dfftb%nnr ) )
@@ -598,12 +692,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                ALLOCATE( fg1( ngb ) )
                ALLOCATE( fg2( ngb ) )
 
-#if defined(_OPENMP)
-               mytid = omp_get_thread_num()  ! take the thread ID
-               ntids = omp_get_num_threads() ! take the number of threads
                itid  = 0
-#endif
-
                iss=1
 
                DO ia=1,nat
@@ -617,11 +706,11 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 #endif
 
 #if defined(_OPENMP)
-                     IF ( mytid /= itid ) THEN
-                        itid = MOD( itid + 1, ntids )
+                     IF ( omp_get_thread_num() /= itid ) THEN
+                        itid = MOD( itid + 1, omp_get_num_threads() )
                         CYCLE
                      ELSE
-                        itid = MOD( itid + 1, ntids )
+                        itid = MOD( itid + 1, omp_get_num_threads() )
                      END IF
 #endif
 
@@ -761,7 +850,7 @@ END SUBROUTINE drhov
 
 !
 !-----------------------------------------------------------------------
-SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
+SUBROUTINE rhov(rhovan,rhog,rhor)
 !-----------------------------------------------------------------------
 !     Add Vanderbilt contribution to rho(r) and rho(g)
 !
@@ -772,7 +861,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE kinds,                    ONLY: dp
       USE ions_base,                ONLY: nat, na, nsp, ityp
       USE io_global,                ONLY: stdout
-      USE mp_global,                ONLY: intra_bgrp_comm
+      USE mp_global,                ONLY: intra_bgrp_comm, inter_bgrp_comm
       USE mp,                       ONLY: mp_sum
       USE uspp_param,               ONLY: nh, nhm, upf
       USE uspp,                     ONLY: deeq, nkbus
@@ -786,19 +875,21 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp, dfftb
       USE fft_helper_subroutines,   ONLY: fftx_add_threed2oned_gamma
+      USE cp_main_variables,        ONLY: irb, eigrb, iabox, nabox
 !
       IMPLICIT NONE
       !
       REAL(DP),    INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      INTEGER,     INTENT(in) :: irb(3,nat)
-      COMPLEX(DP), INTENT(in):: eigrb(ngb,nat)
       ! 
       REAL(DP),     INTENT(inout):: rhor(dfftp%nnr,nspin)
       COMPLEX(DP),  INTENT(inout):: rhog(dfftp%ngm,nspin)
 !
-      INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
+      INTEGER, PARAMETER :: isup = 1
+      INTEGER, PARAMETER :: isdw = 2
+      INTEGER     :: iv, jv, ig, ijv, is, iss, ia, ir, i, j, iia
       REAL(DP)    :: sumrho
-      COMPLEX(DP) :: ci, fp, fm, ca
+      COMPLEX(DP) :: fp, fm, ca
+      COMPLEX(DP), PARAMETER :: ci=(0.d0,1.d0)
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
 !dir$ attributes align: 4096 :: qgbt, v, qv
@@ -809,8 +900,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
       COMPLEX(DP), ALLOCATABLE :: fg1(:), fg2(:)
 
+      INTEGER  :: mytid, ntids
 #if defined(_OPENMP)
-      INTEGER  :: itid, mytid, ntids
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -822,7 +913,6 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       END IF
 
       CALL start_clock( 'rhov' )
-      ci=(0.d0,1.d0)
 !
 !
       ALLOCATE( v( dfftp%nnr ) )
@@ -830,13 +920,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       ! private variable need to be initialized, otherwise
       ! outside the parallel region they have an undetermined value
       !
-#if defined(_OPENMP)
       mytid = 0
       ntids = 1
-      itid  = 0
-#endif
-      iss   = 1
-      isa   = 1
 !
       IF(nspin.EQ.1) THEN
          ! 
@@ -845,12 +930,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
 !$omp parallel default(none) &
 !$omp          shared(na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
-!$omp                 stdout, ci, rhor, dfftp, upf, nsp, ityp, nat ) &
-!$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
-!$omp                  qv, fg1, fg2, itid, ir )
-
-         iss=1
-         isa=1
+!$omp                 stdout, rhor, dfftp, upf, nsp, ityp, nat, nspin, iabox, nabox, inter_bgrp_comm ) &
+!$omp          private(mytid, ntids, is, ia, iia, iv, jv, ijv, sumrho, qgbt, ig, ca, qv, ir )
 
 !$omp workshare
          v (:) = (0.d0, 0.d0)
@@ -859,149 +940,96 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 #if defined(_OPENMP)
          mytid = omp_get_thread_num()  ! take the thread ID
          ntids = omp_get_num_threads() ! take the number of threads
-         itid  = 0
 #endif
 
-         ALLOCATE( qgbt( ngb, 2 ) )
+         ALLOCATE( qgbt( ngb, nspin ) )
          ALLOCATE( qv( dfftb%nnr ) )
-         ALLOCATE( fg1( ngb ) )
-         ALLOCATE( fg2( ngb ) )
 
-
-         DO ia = 1, nat
-
-            is = ityp(ia)
-
-            IF( upf(is)%tvanp ) THEN
-
-               nfft = 1
-
-#if defined(__MPI)
-               IF ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) ) THEN
-                  CYCLE
-               END IF
-#endif
-#if defined(_OPENMP)
-               IF ( mytid /= itid ) THEN
-                  itid = MOD( itid + 1, ntids )
-                  CYCLE
-               ELSE
-                  itid = MOD( itid + 1, ntids )
-               END IF
-#endif
-
-               DO ifft=1,nfft
-                  qgbt(:,ifft) = (0.d0, 0.d0)
-                  DO iv= 1,nh(is)
-                     DO jv=iv,nh(is)
-                        ijv = (jv-1)*jv/2 + iv
-                        sumrho=rhovan(ijv,ia+ifft-1,iss)
-                        IF(iv.NE.jv) sumrho=2.d0*sumrho
-                        DO ig=1,ngb
-                           qgbt(ig,ifft)=qgbt(ig,ifft) + sumrho*qgb(ig,ijv,is)
-                        END DO
+         DO iia = 1, nabox
+            IF( MOD( iia - 1, ntids ) == mytid ) THEN
+               ia = iabox(iia)
+               is = ityp(ia)
+               qgbt(:,1) = (0.d0, 0.d0)
+               DO iv= 1,nh(is)
+                  DO jv=iv,nh(is)
+                     ijv = (jv-1)*jv/2 + iv
+                     sumrho=rhovan(ijv,ia,1)
+                     IF(iv.NE.jv) sumrho=2.d0*sumrho
+                     DO ig=1,ngb
+                        qgbt(ig,1)=qgbt(ig,1) + sumrho*qgb(ig,ijv,is)
                      END DO
                   END DO
                END DO
                !
                ! add structure factor
                !
-               IF(nfft.EQ.2)THEN
-                  fg1 = eigrb(1:ngb,ia   )*qgbt(1:ngb,1)
-                  fg2 = eigrb(1:ngb,ia+1 )*qgbt(1:ngb,2)
-                  CALL fft_oned2box( qv, fg1, fg2 )
-               ELSE
-                  fg1 = eigrb(1:ngb,ia   )*qgbt(1:ngb,1)
-                  CALL fft_oned2box( qv, fg1 )
-               ENDIF
+               qgbt(1:ngb,1) = eigrb(1:ngb,ia)*qgbt(1:ngb,1)
+               CALL fft_oned2box( qv, qgbt(:,1) )
 
                CALL invfft( qv, dfftb, ia )
                !
                !  qv = US augmentation charge in real space on box grid
                !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
- 
-               IF( iverbosity > 1 ) THEN
-                  ca = SUM(qv)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
-     &                 omegab*DBLE(qgbt(1,1))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
-     &                 omegab*DBLE(qgbt(1,2))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-               ENDIF
                !
                !  add qv(r) to v(r), in real space on the dense grid
                !
                CALL  box2grid(irb(:,ia),1,qv,v)
-               IF (nfft.EQ.2) CALL  box2grid(irb(:,ia+1),2,qv,v)
-!
             END IF
          END DO
 
-         DEALLOCATE( fg1 )
-         DEALLOCATE( fg2 )
          DEALLOCATE(qv)
          DEALLOCATE(qgbt)
          !
          !  rhor(r) = total (smooth + US) charge density in real space
          !
+!$omp barrier
+!$omp master
+         !
+         CALL mp_sum( v, inter_bgrp_comm )
+         !
+!$omp end master
+!$omp barrier
+!$omp do 
+         DO ir=1,dfftp%nnr
+            rhor(ir,1)=rhor(ir,1)+DBLE(v(ir))        
+         END DO
+!$omp end do
 !$omp end parallel
 
-         iss = 1
-
-         DO ir=1,dfftp%nnr
-            rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
-         END DO
-
-!
-         IF( iverbosity > 1 ) THEN
-            ca = SUM(v)
-
-            CALL mp_sum( ca, intra_bgrp_comm )
-
-            WRITE( stdout,'(a,2f12.8)')                                  &
-     &           ' rhov: int  n_v(r)  dr = ',omega*ca/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-         ENDIF
-!
          CALL fwfft('Rho',v, dfftp )
-!
-         IF( iverbosity > 1 ) THEN
-            WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
-            WRITE( stdout,*) ' rhov: vander ',omega*v(1)
-            WRITE( stdout,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
-         ENDIF
          !
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
-         CALL fftx_add_threed2oned_gamma( dfftp, v, rhog(:,iss) )
+         CALL fftx_add_threed2oned_gamma( dfftp, v, rhog(:,1) )
 
-         IF( iverbosity > 1 ) WRITE( stdout,'(a,2f12.8)')                          &
-     &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
-!
       ELSE
          !
          !     nspin=2: two fft at a time, one for spin up and one for spin down
          !
-         isup=1
-         isdw=2
+!$omp parallel default(none) &
+!$omp          shared(na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
+!$omp                 stdout, rhor, dfftp, upf, nsp, ityp, nat, nspin, iabox, nabox, inter_bgrp_comm ) &
+!$omp          private(mytid, ntids, is, ia, iia, iv, jv, ijv, sumrho, qgbt, ig, ca, qv, fg1, fg2, ir )
 
+
+!$omp workshare
          v (:) = (0.d0, 0.d0)
+!$omp end workshare
+
+#if defined(_OPENMP)
+         mytid = omp_get_thread_num()  ! take the thread ID
+         ntids = omp_get_num_threads() ! take the number of threads
+#endif
 
          ALLOCATE( qgbt( ngb, 2 ) )
          ALLOCATE( qv( dfftb%nnr ) )
          ALLOCATE( fg1( ngb ) )
          ALLOCATE( fg2( ngb ) )
 
-         isa=1
-         DO ia=1,nat
-            is = ityp(ia)
-#if defined(__MPI)
-               IF ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) ) CYCLE
-#endif
-               IF( upf(is)%tvanp ) THEN
-
+         DO iia = 1, nabox
+            IF( MOD( iia - 1, ntids ) == mytid ) THEN
+               ia = iabox(iia)
+               is = ityp(ia)
                DO iss=1,2
                   qgbt(:,iss) = (0.d0, 0.d0)
                   DO iv=1,nh(is)
@@ -1015,42 +1043,40 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                      END DO
                   END DO
                END DO
-!     
-! add structure factor
-!
+               !     
+               ! add structure factor
+               !
                fg1 = eigrb(1:ngb,ia)*qgbt(1:ngb,1)
                fg2 = eigrb(1:ngb,ia)*qgbt(1:ngb,2)
                CALL fft_oned2box( qv, fg1, fg2 )
-!
+               !
                CALL invfft( qv,dfftb,ia)
-!
-!  qv is the now the US augmentation charge for atomic species is
-!  and atom ia: real(qv)=spin up, imag(qv)=spin down
-!
-               IF( iverbosity > 1 ) THEN
-                  ca = SUM(qv)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
-     &                 omegab*DBLE(qgbt(1,1))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
-     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
-     &                 omegab*DBLE(qgbt(1,2))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
-     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-               ENDIF
-!
-!  add qv(r) to v(r), in real space on the dense grid
-!
+               !
+               !  qv is the now the US augmentation charge for atomic species is
+               !  and atom ia: real(qv)=spin up, imag(qv)=spin down
+               !
+               !  add qv(r) to v(r), in real space on the dense grid
+               !
                CALL box2grid(irb(:,ia),qv,v)
 
-               END IF
-
+            END IF
          END DO
-!
+         DEALLOCATE(qgbt)
+         DEALLOCATE( qv )
+         DEALLOCATE( fg1 )
+         DEALLOCATE( fg2 )
+!$omp barrier
+!$omp master
+         CALL mp_sum( v, inter_bgrp_comm )
+!$omp end master
+!$omp barrier
+!$omp do 
          DO ir=1,dfftp%nnr
             rhor(ir,isup)=rhor(ir,isup)+DBLE(v(ir)) 
             rhor(ir,isdw)=rhor(ir,isdw)+AIMAG(v(ir)) 
          END DO
+!$omp end do 
+!$omp end parallel
 !
          IF( iverbosity > 1 ) THEN
             ca = SUM(v)
@@ -1078,10 +1104,6 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
      &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup)), &
      &        ' rhov: n_v(g=0) down = ',omega*DBLE(rhog(1,isdw))
          END IF
-         DEALLOCATE(qgbt)
-         DEALLOCATE( qv )
-         DEALLOCATE( fg1 )
-         DEALLOCATE( fg2 )
 !
       ENDIF
 
@@ -1092,4 +1114,62 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 1000  CONTINUE
 !
       RETURN
+
+CONTAINS
+
+      SUBROUTINE print_rhov()
+           IF( nspin == 1 ) THEN
+               IF( iverbosity > 1 ) THEN
+                  ca = SUM(qv)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
+     &                 omegab*DBLE(qgbt(1,1))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
+     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
+               ENDIF
+           ELSE
+               IF( iverbosity > 1 ) THEN
+                  ca = SUM(qv)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
+     &                 omegab*DBLE(qgbt(1,1))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
+     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
+     &                 omegab*DBLE(qgbt(1,2))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
+     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
+               ENDIF
+           ENDIF
+      END SUBROUTINE
 END SUBROUTINE rhov
+
+SUBROUTINE rhoofr_host &
+      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
+        enl, denl, ekin, dekin, tstress, ndwwf )
+         USE kinds,         ONLY: DP
+#if defined (__CUDA)
+         USE cudafor
+#endif
+         USE cp_interfaces
+         IMPLICIT NONE
+         INTEGER nfi
+         COMPLEX(DP) c_bgrp( :, : )
+         INTEGER irb( :, : )
+         COMPLEX(DP) eigrb( :, : )
+         REAL(DP) bec_bgrp(:,:)
+         REAL(DP) dbec(:,:,:,:)
+         REAL(DP) rhovan(:, :, : )
+         REAL(DP) rhor(:,:)
+         REAL(DP) drhor(:,:,:,:)
+         COMPLEX(DP) rhog( :, : )
+         COMPLEX(DP) drhog( :, :, :, : )
+         REAL(DP) rhos(:,:)
+         REAL(DP) enl, ekin
+         REAL(DP) denl(3,3), dekin(6)
+         LOGICAL, OPTIONAL, INTENT(IN) :: tstress
+         INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
+         COMPLEX(DP), ALLOCATABLE DEVICEATTR :: c(:,:) 
+         ALLOCATE( c, SOURCE=c_bgrp )
+         CALL rhoofr(nfi, c_bgrp, c, bec_bgrp, dbec, rhovan, rhor, &
+              drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+         DEALLOCATE( c ) 
+END SUBROUTINE rhoofr_host

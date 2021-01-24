@@ -9,6 +9,8 @@ DAVID = \
 cegterg.o \
 regterg.o
 
+-include make.gpu
+
 all : libdavid.a
 
 

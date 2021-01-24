@@ -127,7 +127,16 @@ set(src_modules
     wgauss.f90 
     w0gauss.f90
     w1gauss.f90
-    deviatoric.f90)
+    deviatoric.f90
+    # GPU
+    recvec_gpu.f90
+    wavefunctions_gpu.f90
+    becmod_gpu.f90
+    becmod_subs_gpu.f90
+    dylmr2_gpu.f90
+    sph_bes_gpu.f90
+    random_numbers_gpu.f90
+    cuda_subroutines.f90)
 qe_enable_cuda_fortran("${src_modules}")
 
 qe_add_library(qe_modules ${src_modules})
@@ -142,6 +151,7 @@ target_link_libraries(qe_modules
         qe_mpi_fortran
         qe_mbd
         qe_xclib
+        qe_devxlib
     PUBLIC
         qe_fox
         qe_utilx)

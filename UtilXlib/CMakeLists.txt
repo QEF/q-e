@@ -8,13 +8,15 @@ set(src_util
     mem_counter.f90
     mp.f90
     mp_base.f90
-    mp_base_gpu.f90
     mp_bands_util.f90
     parallel_include.f90
     util_param.f90
     thread_util.f90
     export_gstart_2_solvers.f90
-    set_mpi_comm_4_solvers.f90)
+    set_mpi_comm_4_solvers.f90
+    # GPU
+    mp_base_gpu.f90
+    device_helper.f90)
 qe_enable_cuda_fortran("${src_util}")
 
 qe_add_library(qe_utilx ${src_util})

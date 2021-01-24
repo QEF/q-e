@@ -1,0 +1,11 @@
+OBJS += \
+  uspp_gpu.o \
+  simpsn_gpu.o \
+  splinelib_gpu.o \
+  ylmr2_gpu.o
+
+uspp_gpu.o : uspp.o
+splinelib_gpu.o : upf_const.o
+splinelib_gpu.o : upf_kinds.o
+simpsn_gpu.o : upf_const.o
+simpsn_gpu.o : upf_kinds.o

@@ -94,6 +94,9 @@ MODULE scf
   REAL(DP), ALLOCATABLE :: vltot(:)
   !! the local potential in real space
   REAL(DP), ALLOCATABLE :: vrs(:,:)
+#if defined(__CUDA)
+  attributes(pinned) :: vrs
+#endif
   !! the total pot. in real space (smooth grid)
   REAL(DP), ALLOCATABLE :: rho_core(:)
   !! the core charge in real space

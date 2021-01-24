@@ -48,6 +48,10 @@ SUBROUTINE force_hub( forceh )
    USE noncollin_module,     ONLY : noncolin
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
    !
+   USE wavefunctions_gpum, ONLY : using_evc
+   USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
+   USE becmod_subs_gpum,          ONLY : using_becp_auto
+   !
    IMPLICIT NONE
    !
    REAL(DP) :: forceh(3,nat)
@@ -121,20 +125,26 @@ SUBROUTINE force_hub( forceh )
    !
    !    we start a loop on k points
    !
+   CALL using_evc(0)
    DO ik = 1, nks
       !
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
       !
+      IF (nks > 1)  CALL using_evc(2)
       IF (nks > 1) &
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+      !
+      CALL using_vkb(2)
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
+      CALL using_becp_auto(2)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi( npwx, npw, nbnd, evc, spsi )
       CALL deallocate_bec_type (becp) 
+      CALL using_becp_auto(2)
       !
       ! Set up various quantities, in particular wfcU which 
       ! contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
@@ -1016,6 +1026,9 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
    !
+   USE wavefunctions_gpum,   ONLY : using_evc
+   USE uspp_gpum,            ONLY : using_vkb, using_qq_at
+   !
    IMPLICIT NONE
    !
    ! I/O variables
@@ -1210,7 +1223,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       DEALLOCATE (dwfc)
       !
    ENDIF
-   ! 
+   !
    CALL stop_clock('dprojdtau')
    !
    RETURN
@@ -1376,6 +1389,9 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
    !
+   USE wavefunctions_gpum,   ONLY : using_evc
+   USE uspp_gpum,            ONLY : using_vkb, using_qq_at
+   !
    IMPLICIT NONE
    !
    ! Input/Output
@@ -1419,6 +1435,9 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    ALLOCATE ( aux(npwx,nh(nt)) )
    aux(:,:) = (0.0d0, 0.0d0)
    !
+   !
+   CALL using_vkb(0)
+   CALL using_qq_at(0)
 !!omp parallel do default(shared) private(ig,ih)
    ! Beta function
    DO ih = 1, nh(nt)
@@ -1522,6 +1541,9 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
+   !
+   USE wavefunctions_gpum,   ONLY : using_evc
+   USE uspp_gpum,            ONLY : using_vkb, using_qq_at
    !
    IMPLICIT NONE
    !
@@ -1646,6 +1668,8 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ALLOCATE( wfatbeta(nwfcU,nh(nt))  )
    ALLOCATE( dbeta(npwx,nh(nt))      )
    !
+   CALL using_vkb(0)
+   !
 ! !omp parallel do default(shared) private(ih,ig)
    DO ih = 1, nh(nt)
       DO ig = 1, npw
@@ -1655,6 +1679,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
 ! !omp end parallel do
    !
    CALL calbec( npw, wfcU, dbeta, wfatbeta ) 
+   CALL using_evc(0)
    CALL calbec( npw, dbeta, evc, betapsi0 )
    !
 ! !omp parallel do default(shared) private(ih,ig,gvec)
@@ -1666,6 +1691,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ENDDO
 ! !omp end parallel do
    !
+   CALL using_evc(0)
    CALL calbec( npw, dbeta, evc, dbetapsi ) 
    CALL calbec( npw, wfcU, dbeta, wfatdbeta ) 
    DEALLOCATE( dbeta )

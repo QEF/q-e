@@ -253,7 +253,53 @@ set(src_pw
    src/wannier_init.f90 
    src/wannier_check.f90 
    src/wannier_clean.f90 
-   src/wannier_occ.f90)
+   src/wannier_occ.f90
+   # GPU
+   src/pwcom_gpu.f90
+   src/scf_mod_gpu.f90
+   src/g_psi_mod_gpu.f90
+   src/newd_gpu.f90
+   src/sum_band_gpu.f90
+   src/force_us_gpu.f90
+   src/force_lc_gpu.f90
+   src/force_cc_gpu.f90
+   src/force_hub_gpu.f90
+   src/force_corr_gpu.f90
+   src/orthoatwfc_gpu.f90
+   src/wfcinit_gpu.f90
+   src/stres_loc_gpu.f90
+   src/qvan2_gpu.f90
+   src/add_paw_to_deeq_gpu.f90
+   src/addusdens_gpu.f90
+   src/init_us_2_gpu.f90
+   src/addusforce_gpu.f90
+   src/deriv_drhoc_gpu.f90
+   src/s_psi_gpu.f90
+   src/g2_kin_gpu.f90
+   src/rotate_wfc_gpu.f90
+   src/usnldiag_gpu.f90
+   src/add_vuspsi_gpu.f90
+   src/hs_1psi_gpu.f90
+   src/g_psi_gpu.f90
+   src/stres_mgga_gpu.f90
+   src/atomic_wfc_gpu.f90
+   src/gen_us_dj_gpu.f90
+   src/gen_us_dy_gpu.f90
+   src/dvloc_of_g_gpu.f90
+   src/stres_ewa_gpu.f90
+   src/stres_knl_gpu.f90
+   src/compute_deff_gpu.f90
+   src/add_vhub_to_deeq_gpu.f90
+   src/s_1psi_gpu.f90
+   src/h_psi_gpu.f90
+   src/stres_us_gpu.f90
+   src/stres_cc_gpu.f90
+   src/utils_gpu.f90
+   src/vhpsi_gpu.f90
+   src/drhoc_gpu.f90
+   src/stres_har_gpu.f90
+   src/vloc_psi_gpu.f90
+   src/hs_psi_gpu.f90)
 qe_enable_cuda_fortran("${src_pw}")
     
 qe_add_library(qe_pw ${src_pw})
@@ -273,11 +319,11 @@ target_link_libraries(qe_pw
         qe_dftd3
         qe_openmp_fortran
         qe_mpi_fortran
-        qe_xclib)
+        qe_xclib
+        qe_devxlib)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
         PRIVATE
-            qe_devxlib
             CUDA::cublas)
 endif()
 

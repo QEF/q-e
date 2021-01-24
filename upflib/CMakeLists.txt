@@ -28,7 +28,13 @@ set(src_upflib
     uspp.f90 
     write_upf_new.f90 
     xmltools.f90
-    ylmr2.f90)
+    ylmr2.f90
+    # GPU
+    uspp_gpu.f90
+    ylmr2_gpu.f90
+    simpsn_gpu.f90
+    splinelib_gpu.f90)
+qe_enable_cuda_fortran("${src_upflib}")
 
 qe_add_library(qe_upflib ${src_upflib})
 target_link_libraries(qe_upflib
@@ -36,12 +42,8 @@ target_link_libraries(qe_upflib
         qe_mpi_fortran
         qe_lapack
         qe_utilx
-        qe_fox)
-if(QE_ENABLE_CUDA)
-    target_link_libraries(qe_upflib
-        PRIVATE
-            qe_devxlib)
-endif()
+        qe_fox
+        qe_devxlib)
 
 ##############################################################
 # virtual_v2.x 

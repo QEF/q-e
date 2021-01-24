@@ -27,6 +27,11 @@ SUBROUTINE allocate_fft
   USE wavefunctions,    ONLY : psic, psic_nc
   USE xc_lib,           ONLY : xclib_dft_is
   !
+  USE scf_gpum,  ONLY : using_vrs
+  !
+  USE wavefunctions_gpum, ONLY : using_psic, using_psic_nc, &
+                                        using_psic_d, using_psic_nc_d
+  !
   IMPLICIT NONE
   !
   ! ... First a bunch of checks
@@ -66,8 +71,18 @@ SUBROUTINE allocate_fft
   ALLOCATE( rhog_core(ngm)  )
   ALLOCATE( psic(dfftp%nnr) )
   ALLOCATE( vrs(dfftp%nnr,nspin) )
+#if defined(__CUDA)
+  CALL using_vrs(2)
+  CALL using_psic(2); CALL using_psic_d(0)
+#endif
   !
   IF (noncolin) ALLOCATE( psic_nc(dfftp%nnr,npol) )
+#if defined(__CUDA)
+  IF (noncolin) THEN
+     CALL using_psic_nc(2)
+     CALL using_psic_nc_d(0)
+  END IF
+#endif
   !
   IF ( report /= 0 ) THEN
      !

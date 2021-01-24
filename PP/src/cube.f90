@@ -114,13 +114,13 @@ SUBROUTINE write_cubefile_new (alat, nat, tau, atm, ityp, x0, &
   bbmin(:) = 1d30
   bbmax(:) = -1d30
   call bbox(x0, bbmin, bbmax)
-  call bbox(x0+e1, bbmin, bbmax)
-  call bbox(x0+e2, bbmin, bbmax)
-  call bbox(x0+e3, bbmin, bbmax)
-  call bbox(x0+e1+e2, bbmin, bbmax)
-  call bbox(x0+e2+e3, bbmin, bbmax)
-  call bbox(x0+e3+e1, bbmin, bbmax)
-  call bbox(x0+e1+e2+e3, bbmin, bbmax)
+  call bbox(x0+m1*e1, bbmin, bbmax)
+  call bbox(x0+m2*e2, bbmin, bbmax)
+  call bbox(x0+m3*e3, bbmin, bbmax)
+  call bbox(x0+m1*e1+m2*e2, bbmin, bbmax)
+  call bbox(x0+m2*e2+m3*e3, bbmin, bbmax)
+  call bbox(x0+m3*e3+m1*e1, bbmin, bbmax)
+  call bbox(x0+m1*e1+m2*e2+m3*e3, bbmin, bbmax)
   write(stdout,'(5X,''Bounding box= ['',F12.4,'','',F12.4,'']'')') bbmin(1)*alat, bbmax(1)*alat
   write(stdout,'(5X,''              ['',F12.4,'','',F12.4,'']'')') bbmin(2)*alat, bbmax(2)*alat
   write(stdout,'(5X,''              ['',F12.4,'','',F12.4,'']'')') bbmin(3)*alat, bbmax(3)*alat

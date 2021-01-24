@@ -11,6 +11,8 @@ rotate_HSpsi_k.o \
 rotate_wfc_gamma.o \
 rotate_wfc_k.o 
 
+-include make.gpu
+
 all : libdense.a
 
 

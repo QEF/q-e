@@ -464,6 +464,13 @@
       !
       ! ... assign random values to wave functions
       !
+      ! 2.519 = 4^(2/3), equivalent to keep only (ngw_g/4) values
+      fac = 2.519d0
+      IF( ngw_g/4 < nbsp ) fac = 1.0d0
+      IF( ngw_g   < nbsp ) THEN
+        CALL errore(' wave_rand_init ', ' too few plane waves, linear dependent electronic states! ', 1)
+      END IF
+
       DO ib = 1, nbsp
 
         IF( local ) THEN
@@ -487,7 +494,7 @@
         IF( ibgrp > 0 ) THEN
           DO ig = 1, ngw
             IF( local ) THEN
-               IF( gg(ig) < ggx / 2.519d0 ) THEN  ! 2.519 = 4^(2/3), equivalent to keep only (ngw_g/4) values
+               IF( gg(ig) < ggx / fac ) THEN  
                   rranf1 = rnd( 1, mill(1,ig) ) * rnd( 2, mill(2,ig) ) * rnd( 3, mill(3,ig) )
                   rranf2 = 0.0d0
                   cm_bgrp( ig, ibgrp ) =  ampre * CMPLX( rranf1, rranf2 ,kind=DP) / ( 1.0d0 + gg(ig) )
@@ -599,3 +606,65 @@
       RETURN
     END SUBROUTINE c_bgrp_pack_x
 
+#if defined (__CUDA)
+    SUBROUTINE c_bgrp_expand_gpu_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      USE mp,                 ONLY: mp_sum
+      USE electrons_base,     ONLY: nspin, i2gupdwn_bgrp, nupdwn, iupdwn_bgrp, iupdwn, nupdwn_bgrp
+      USE mp_global,          ONLY: nbgrp, inter_bgrp_comm
+      USE cudafor
+      IMPLICIT NONE
+      COMPLEX(DP), DEVICE :: c_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2, i
+      IF( nbgrp < 2 ) &
+         RETURN
+      DO iss = nspin, 1, -1
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+!$cuf kernel do(1) <<<*,*>>>
+         DO i = m2, m1, -1
+            c_bgrp(:,i) = c_bgrp(:,i-m1+n1)
+         END DO
+      END DO
+      DO iss = 1, nspin
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+!$cuf kernel do(1) <<<*,*>>>
+         DO i = iupdwn(iss), m1-1
+            c_bgrp(:,i) = 0.0d0
+         END DO
+!$cuf kernel do(1) <<<*,*>>>
+         DO i = m2+1, iupdwn(iss) + nupdwn(iss) - 1
+            c_bgrp(:,i) = 0.0d0
+         END DO
+      END DO
+      CALL mp_sum( c_bgrp, inter_bgrp_comm )
+      RETURN
+    END SUBROUTINE c_bgrp_expand_gpu_x
+
+
+    SUBROUTINE c_bgrp_pack_gpu_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      USE electrons_base,     ONLY: nspin, i2gupdwn_bgrp, nupdwn, iupdwn_bgrp, iupdwn, nupdwn_bgrp
+      USE mp_global,          ONLY: nbgrp
+      USE cudafor
+      IMPLICIT NONE
+      COMPLEX(DP), DEVICE :: c_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2, i
+      IF( nbgrp < 2 ) &
+         RETURN
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+!$cuf kernel do(1) <<<*,*>>>
+         DO i = n1, n2
+            c_bgrp(:,i) = c_bgrp(:,i-n1+m1)
+         END DO
+      END DO
+      RETURN
+    END SUBROUTINE c_bgrp_pack_gpu_x
+#endif

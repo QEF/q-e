@@ -2,10 +2,13 @@
 
 include ../make.inc
 
+
 EXTLIBS=$(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(MPI_LIBS)
+
 
 LAX = la_types.o \
 la_error.o \
+la_module.o \
 la_helper.o \
 cdiaghg.o \
 rdiaghg.o \
