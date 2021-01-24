@@ -5,11 +5,6 @@ set(NETWORK_PSEUDO "http://www.quantum-espresso.org/wp-content/uploads/upf_files
 set(TESTCODE_NPROCS 4 CACHE STRING "Number of MPI processes for each test")
 set(TESTCODE_NTHREADS 1 CACHE STRING "Number of OpenMP threads for each test")
 
-#set(ENV{ESPRESSO_PSEUDO} ${ESPRESSO_PSEUDO})
-#set(ENV{NETWORK_PSEUDO} ${NETWORK_PSEUDO})
-
-#file(MAKE_DIRECTORY "${qe_BINARY_DIR}/test-suite")
-
 foreach(test_category IN LISTS qe_test_categories)
   message(STATUS "generating tests in ${test_category} category")
   #EXECUTE_PROCESS( COMMAND pwd ECHO_OUTPUT_VARIABLE)
@@ -22,7 +17,7 @@ foreach(test_category IN LISTS qe_test_categories)
   set_tests_properties(${check_pseudo_test_name} PROPERTIES
                        ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};NETWORK_PSEUDO=${NETWORK_PSEUDO}"
                        RESOURCE_LOCK shared_pseudo_folder_lock
-                       LABELS "integration;${test_category}")
+                       LABELS "system;${test_category}")
 
   file(GLOB category_subfolder_names
        LIST_DIRECTORIES TRUE
@@ -42,9 +37,10 @@ foreach(test_category IN LISTS qe_test_categories)
     foreach(test_input_file IN LISTS test_input_file_names)
       if (NOT test_input_file MATCHES "^benchmark")
         string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
-        set(test_name_prefix "integration--${subfolder_name}")
+        set(test_name_prefix "system--${subfolder_name}")
         set(test_work_dir_prefix "${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}")
 
+        # handle test series dependency.
         if(test_input_file_name_no_extension MATCHES "-1$")
           set(in_test_series TRUE)
           string(REGEX REPLACE "-1$" "" test_input_file_name_no_extension_no_series ${test_input_file_name_no_extension})
@@ -90,7 +86,7 @@ foreach(test_category IN LISTS qe_test_categories)
                              PROCESSORS ${TOT_PROCS} PROCESSOR_AFFINITY TRUE
                              REQUIRED_FILES ${test_input_relative}
                              DEPENDS ${check_pseudo_test_name})
-        set_property(TEST ${test_name} APPEND PROPERTY LABELS "integration;${subfolder_name}")
+        set_property(TEST ${test_name} APPEND PROPERTY LABELS "system;${subfolder_name}")
         if(in_test_series)
           set_property(TEST ${test_name} APPEND PROPERTY DEPENDS ${last_test_name})
         endif()
