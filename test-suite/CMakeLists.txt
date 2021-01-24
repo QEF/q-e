@@ -69,18 +69,28 @@ foreach(test_category IN LISTS qe_test_categories)
         #message("test name : ${test_name}")
         #message("last test name : ${last_test_name}")
         #message("test work dir : ${test_work_dir}")
-        math(EXPR TOT_PROCS "${TESTCODE_NPROCS} * ${TESTCODE_NTHREADS}")
-        #message("${subfolder_name} on ${TOT_PROCS} processes_x_threads")
 
         if(QE_ENABLE_MPI)
+          set(actual_test_num_procs ${TESTCODE_NPROCS})
           add_test(NAME ${test_name}
                    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input_relative}
                    WORKING_DIRECTORY ${test_work_dir})
         else()
+          set(actual_test_num_procs 1)
           add_test(NAME ${test_name}
                    COMMAND ${test_binary} -inp ${test_input_relative}
                    WORKING_DIRECTORY ${test_work_dir})
         endif()
+
+        if(QE_ENABLE_OPENMP)
+          set(actual_test_num_threads ${TESTCODE_NTHREADS})
+        else()
+          set(actual_test_num_threads 1)
+        endif()
+
+        math(EXPR TOT_PROCS "${actual_test_num_threads} * ${actual_test_num_threads}")
+        #message("${subfolder_name} on ${TOT_PROCS} processes_x_threads")
+
         set_tests_properties(${test_name} PROPERTIES
                              ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};OMP_NUM_THREADS=${TESTCODE_NTHREADS}"
                              PROCESSORS ${TOT_PROCS} PROCESSOR_AFFINITY TRUE
