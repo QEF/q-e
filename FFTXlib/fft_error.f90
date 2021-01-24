@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 
-! ... Several routines which writes an error message to output:
+! ... Several routines which write an error message to stderr:
 ! ... if ierr <= 0 it does nothing,
 ! ... if ierr  > 0 it stops.
 !
@@ -16,19 +16,19 @@
 ! ... In QE parallel execution unit 6 is written only by the first node;
 ! ... all other nodes have unit 6 redirected to nothing (/dev/null).
 ! ... As a consequence an error not occurring on the first node
-! ... will be invisible. In addtion, "first node" depends on the parallel
+! ... will be invisible. In addition, "first node" depends on the parallel
 ! ... scopes like image, pool, bandgroup. It is better to avoid.
 ! ...
 ! ... For this reason, all the fft errors are printed to stderr defined in
 ! ... module fft_param using iso_fortran_env from F2003.
 ! ... fftx_error_uniform__ must be called by all the the ranks in an MPI
 ! ... communicator. The uniform error will be printed only by rank 0 secured
-! ... by an MPI barrier. Without the barrier, the error message may not be
-! ... seen if a non rank 0 node calls abort first.
+! ... by an MPI barrier before abort. Without the barrier, the error message
+! ... may not be seen if a non rank 0 node calls abort first.
 ! ... In cases that errors don't occur uniformly, fftx_error__ prints the
 ! ... error message and aborts the code. If it is used for uniform errors,
 ! ... repeated error messages may be printed.
-! ... Use fftx_error_uniform__ wherever errors can be handled cleanbly.
+! ... Use fftx_error_uniform__ wherever errors can be handled cleanly.
 ! ... fftx_error__ is the last choice you may consider.
 
 SUBROUTINE fftx_error_uniform__( calling_routine, message, ierr, comm )
@@ -61,7 +61,7 @@ SUBROUTINE fftx_error_uniform__( calling_routine, message, ierr, comm )
   CALL mpi_comm_rank(comm, my_rank, info)
 #endif
   if (my_rank == 0) then
-    ! ... the error message is written un the "stderr" unit
+    ! ... the error message is written on the "stderr" unit
     !
     WRITE( cerr, FMT = '(I6)' ) ierr
     WRITE( stderr, FMT = '(/,1X,78("%"))' )
@@ -108,7 +108,7 @@ SUBROUTINE fftx_error__( calling_routine, message, ierr )
      RETURN
   END IF
   !
-  ! ... the error message is written un the "stderr" unit
+  ! ... the error message is written on the "stderr" unit
   !
   WRITE( cerr, FMT = '(I6)' ) ierr
   WRITE( stderr, FMT = '(/,1X,78("%"))' )
