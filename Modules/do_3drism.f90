@@ -25,6 +25,7 @@ SUBROUTINE do_3drism(rismt, maxiter, rmsconv, nbox, eta, title, ierr)
   USE control_flags,  ONLY : iverbosity, gamma_only
   USE err_rism,       ONLY : IERR_RISM_NULL, IERR_RISM_INCORRECT_DATA_TYPE, IERR_RISM_NOT_CONVERGED
   USE fft_interfaces, ONLY : fwfft, invfft
+  USE fft_types,      ONLY : fft_index_to_3d
   USE io_global,      ONLY : stdout
   USE kinds,          ONLY : DP
   USE mdiis,          ONLY : mdiis_type, allocate_mdiis, deallocate_mdiis, update_by_mdiis, reset_mdiis
@@ -412,53 +413,24 @@ CONTAINS
   SUBROUTINE clean_out_of_range()
     IMPLICIT NONE
     INTEGER :: ir
-    INTEGER :: idx
     INTEGER :: i1, i2, i3
-    INTEGER :: ii2, ii3
+    LOGICAL :: offrange
     !
     IF (rismt%nsite < 1) THEN
       RETURN
     END IF
     !
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
-!$omp parallel do default(shared) private(ir, idx, i1, i2, i3)
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+!$omp parallel do default(shared) private(ir, i1, i2, i3, offrange)
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      !
+      IF (offrange) THEN
         rismt%csr(ir, :) = 0.0_DP
         rismt%hr (ir, :) = 0.0_DP
         rismt%gr (ir, :) = 0.0_DP
         csr      (ir, :) = 0.0_DP
         dcsr     (ir, :) = 0.0_DP
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        rismt%csr(ir, :) = 0.0_DP
-        rismt%hr (ir, :) = 0.0_DP
-        rismt%gr (ir, :) = 0.0_DP
-        csr      (ir, :) = 0.0_DP
-        dcsr     (ir, :) = 0.0_DP
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
-        rismt%csr(ir, :) = 0.0_DP
-        rismt%hr (ir, :) = 0.0_DP
-        rismt%gr (ir, :) = 0.0_DP
-        csr      (ir, :) = 0.0_DP
-        dcsr     (ir, :) = 0.0_DP
-        CYCLE
       END IF
       !
     END DO

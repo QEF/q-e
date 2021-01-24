@@ -15,7 +15,7 @@ MODULE solvavg
   !
   USE constants, ONLY : BOHR_RADIUS_ANGS
   USE cell_base, ONLY : at, alat
-  USE fft_types, ONLY : fft_type_descriptor
+  USE fft_types, ONLY : fft_type_descriptor, fft_index_to_3d
   USE io_global, ONLY : ionode
   USE kinds,     ONLY : DP
   USE lauefft,   ONLY : lauefft_type
@@ -238,15 +238,13 @@ CONTAINS
     REAL(DP), INTENT(IN) :: zuv(:)  !dimension(nnr)
     !
     LOGICAL               :: laue
-    INTEGER               :: ir
-    INTEGER               :: idx
+    INTEGER               :: ir, nr
     INTEGER               :: i1, i2, i3
-    INTEGER               :: ii2, ii3
     INTEGER               :: n1, n2, n3
-    INTEGER               :: nx1, nx2, nx3
     INTEGER               :: nrz
     INTEGER               :: irz
     INTEGER               :: irz0
+    LOGICAL               :: offrange
     REAL(DP)              :: area_xy
     REAL(DP), ALLOCATABLE :: ztmp(:)
     !
@@ -265,18 +263,14 @@ CONTAINS
       n1   = lfft%dfft%nr1
       n2   = lfft%dfft%nr2
       n3   = lfft%dfft%nr3
-      nx1  = lfft%dfft%nr1x
-      nx2  = lfft%dfft%my_nr2p
-      nx3  = lfft%dfft%my_nr3p
+      nr   = lfft%dfft%nnr
       nrz  = lfft%nrz
       irz0 = lfft%izcell_start
     ELSE
       n1   = dfft%nr1
       n2   = dfft%nr2
       n3   = dfft%nr3
-      nx1  = dfft%nr1x
-      nx2  = dfft%my_nr2p
-      nx3  = dfft%my_nr3p
+      nr   = dfft%nnr
       nrz  = dfft%nr3
       irz0 = 1
     END IF
@@ -287,33 +281,10 @@ CONTAINS
     ztmp = 0.0_DP
     !
     ! ... calculate planar average
-    IF (laue) THEN
-      ii2 = lfft%dfft%my_i0r2p
-      ii3 = lfft%dfft%my_i0r3p
-    ELSE
-      ii2 = dfft%my_i0r2p
-      ii3 = dfft%my_i0r3p
-    END IF
-    !
-    DO ir = 1, nx1 * nx2 * nx3
+    DO ir = 1, nr
       !
-      idx = ir - 1
-      i3  = idx / (nx1 * nx2)
-      idx = idx - (nx1 * nx2) * i3
-      i3  = i3 + ii3
-      IF (i3 >= n3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / nx1
-      idx = idx - nx1 * i2
-      i2  = i2 + ii2
-      IF (i2 >= n2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= n1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !

@@ -21,6 +21,7 @@ SUBROUTINE corrdipole_laue(rismt, lextract, ierr)
   !
   USE cell_base, ONLY : alat
   USE constants, ONLY : K_BOLTZMANN_RY
+  USE fft_types, ONLY : fft_index_to_3d
   USE err_rism,  ONLY : IERR_RISM_NULL, IERR_RISM_INCORRECT_DATA_TYPE
   USE kinds,     ONLY : DP
   USE mp,        ONLY : mp_sum
@@ -182,40 +183,21 @@ CONTAINS
     LOGICAL, INTENT(IN) :: modify_csr
     !
     INTEGER :: ir
-    INTEGER :: idx
     INTEGER :: i1, i2, i3
-    INTEGER :: ii2, ii3
     INTEGER :: iz
     INTEGER :: isite
+    LOGICAL :: offrange
     !
     IF (rismt%nsite < 1) THEN
       RETURN
     END IF
     !
     ! ... update R-space
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
-!$omp parallel do default(shared) private(ir, idx, i1, i2, i3, iz, isite)
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+!$omp parallel do default(shared) private(ir, i1, i2, i3, iz, isite, offrange)
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !

@@ -27,6 +27,7 @@ SUBROUTINE do_lauerism(rismt, maxiter, rmsconv, nbox, eta, charge, lboth, iref, 
   !
   USE check_stop,    ONLY : check_stop_now, stopped_by_user
   USE control_flags, ONLY : iverbosity
+  USE fft_types,     ONLY : fft_index_to_3d
   USE err_rism,      ONLY : IERR_RISM_NULL, IERR_RISM_INCORRECT_DATA_TYPE, IERR_RISM_NOT_CONVERGED
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
@@ -511,54 +512,20 @@ CONTAINS
     INTEGER, INTENT(OUT) :: ngrid
     !
     INTEGER :: ir
-    INTEGER :: idx
     INTEGER :: i1, i2, i3
-    INTEGER :: ii2, ii3
     INTEGER :: iz
     INTEGER :: mgrid
+    LOGICAL :: offrange
     !
     ! ... for R-space
     mgrid = 0
     !
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
-!$omp parallel do default(shared) private(ir, idx, i1, i2, i3, iz) reduction(+:mgrid)
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+!$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange) reduction(+:mgrid)
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        IF (rismt%nsite > 0) THEN
-          rismt%csr (ir, :) = 0.0_DP
-          rismt%csdr(ir, :) = 0.0_DP
-          rismt%hr  (ir, :) = 0.0_DP
-          rismt%gr  (ir, :) = 0.0_DP
-          cst       (ir, :) = 0.0_DP
-          dcst      (ir, :) = 0.0_DP
-        END IF
-        CYCLE
-      END IF
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
       !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        IF (rismt%nsite > 0) THEN
-          rismt%csr (ir, :) = 0.0_DP
-          rismt%csdr(ir, :) = 0.0_DP
-          rismt%hr  (ir, :) = 0.0_DP
-          rismt%gr  (ir, :) = 0.0_DP
-          cst       (ir, :) = 0.0_DP
-          dcst      (ir, :) = 0.0_DP
-        END IF
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      IF (offrange) THEN
         IF (rismt%nsite > 0) THEN
           rismt%csr (ir, :) = 0.0_DP
           rismt%csdr(ir, :) = 0.0_DP
@@ -638,40 +605,22 @@ CONTAINS
   !
   SUBROUTINE barrier_gr()
     IMPLICIT NONE
-    INTEGER  :: ir
-    INTEGER  :: idx
-    INTEGER  :: i1, i2, i3
-    INTEGER  :: ii2, ii3
-    INTEGER  :: iz
+    INTEGER :: ir
+    INTEGER :: i1, i2, i3
+    INTEGER :: iz
+    LOGICAL :: offrange
     !
     IF (rismt%nsite < 1) THEN
       RETURN
     END IF
     !
     ! ... for R-space
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
     !
-!$omp parallel do default(shared) private(ir, idx, i1, i2, i3, iz)
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+!$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !
@@ -706,39 +655,20 @@ CONTAINS
   !
   SUBROUTINE correct_csr()
     IMPLICIT NONE
-    INTEGER  :: ir
-    INTEGER  :: idx
-    INTEGER  :: i1, i2, i3
-    INTEGER  :: ii2, ii3
-    INTEGER  :: iz
+    INTEGER :: ir
+    INTEGER :: i1, i2, i3
+    INTEGER :: iz
+    LOGICAL :: offrange
     !
     IF (rismt%nsite < 1) THEN
       RETURN
     END IF
     !
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
-!$omp parallel do default(shared) private(ir, idx, i1, i2, i3, iz)
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+!$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !
@@ -762,39 +692,20 @@ CONTAINS
   !
   SUBROUTINE correct_hr()
     IMPLICIT NONE
-    INTEGER  :: ir
-    INTEGER  :: idx
-    INTEGER  :: i1, i2, i3
-    INTEGER  :: ii2, ii3
-    INTEGER  :: iz
+    INTEGER :: ir
+    INTEGER :: i1, i2, i3
+    INTEGER :: iz
+    LOGICAL :: offrange
     !
     IF (rismt%nsite < 1) THEN
       RETURN
     END IF
     !
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
-!$omp parallel do default(shared) private(ir, idx, i1, i2, i3, iz)
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+!$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !
@@ -824,12 +735,11 @@ CONTAINS
     INTEGER  :: isolV
     INTEGER  :: natom
     INTEGER  :: ir
-    INTEGER  :: idx
     INTEGER  :: i1, i2, i3
-    INTEGER  :: ii2, ii3
     INTEGER  :: iz
     INTEGER  :: itsta, itend
     INTEGER  :: izsta, izend
+    LOGICAL  :: offrange
     REAL(DP) :: rhov1
     REAL(DP) :: rhov2
     REAL(DP) :: rhovt1
@@ -856,9 +766,6 @@ CONTAINS
       CALL errore('do_lauerism', 'rhovt2 is not positive', 1)
     END IF
     !
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
     DO iq = rismt%mp_site%isite_start, rismt%mp_site%isite_end
       iiq    = iq - rismt%mp_site%isite_start + 1
       iv     = iuniq_to_isite(1, iq)
@@ -872,26 +779,11 @@ CONTAINS
       cst( :, iiq) = 0.0_DP
       dcst(:, iiq) = 0.0_DP
       !
-!$omp parallel do default(shared) private(ir, idx, i1, i2, i3, iz)
-      DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+!$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
+      DO ir = 1, rismt%dfft%nnr
         !
-        idx = ir - 1
-        i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-        idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-        i3  = i3 + ii3
-        IF (i3 >= rismt%dfft%nr3) THEN
-          CYCLE
-        END IF
-        !
-        i2  = idx / rismt%dfft%nr1x
-        idx = idx - rismt%dfft%nr1x * i2
-        i2  = i2 + ii2
-        IF (i2 >= rismt%dfft%nr2) THEN
-          CYCLE
-        END IF
-        !
-        i1  = idx
-        IF (i1 >= rismt%dfft%nr1) THEN
+        CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+        IF (offrange) THEN
           CYCLE
         END IF
         !

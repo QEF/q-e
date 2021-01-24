@@ -15,6 +15,7 @@ SUBROUTINE guess_3drism(rismt, ierr)
   USE cell_base, ONLY : at, alat
   USE constants, ONLY : eps4, K_BOLTZMANN_RY
   USE err_rism,  ONLY : IERR_RISM_NULL, IERR_RISM_INCORRECT_DATA_TYPE
+  USE fft_types, ONLY : fft_index_to_3d
   USE kinds,     ONLY : DP
   USE mp,        ONLY : mp_max
   USE rism,      ONLY : rism_type, ITYPE_3DRISM, ITYPE_LAUERISM
@@ -33,9 +34,8 @@ SUBROUTINE guess_3drism(rismt, ierr)
   INTEGER  :: isolV
   INTEGER  :: iatom
   INTEGER  :: ir
-  INTEGER  :: idx
   INTEGER  :: i1, i2, i3
-  INTEGER  :: ii2, ii3
+  LOGICAL  :: offrange
   LOGICAL  :: laue
   REAL(DP) :: beta
   REAL(DP) :: qv
@@ -90,33 +90,15 @@ SUBROUTINE guess_3drism(rismt, ierr)
     iatom = isite_to_iatom(iv)
     qv    = solVs(isolV)%charge(iatom)
     !
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
     ! ... set csr to be zero
     csmax = 0.0_DP
     rismt%csr(:, iiq) = 0.0_DP
     !
     ! ... set csr initially
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !
@@ -136,25 +118,10 @@ SUBROUTINE guess_3drism(rismt, ierr)
     CALL mp_max(csmax, rismt%mp_site%intra_sitg_comm)
     !
     ! ... correct csr to be smooth
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !
@@ -213,28 +180,10 @@ CONTAINS
     !
     z0 = 0.5_DP * at(3, 3)
     !
-    ii2 = rismt%dfft%my_i0r2p
-    ii3 = rismt%dfft%my_i0r3p
-    !
-    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+    DO ir = 1, rismt%dfft%nnr
       !
-      idx = ir - 1
-      i3  = idx / (rismt%dfft%nr1x * rismt%dfft%my_nr2p)
-      idx = idx - (rismt%dfft%nr1x * rismt%dfft%my_nr2p) * i3
-      i3  = i3 + ii3
-      IF (i3 >= rismt%dfft%nr3) THEN
-        CYCLE
-      END IF
-      !
-      i2  = idx / rismt%dfft%nr1x
-      idx = idx - rismt%dfft%nr1x * i2
-      i2  = i2 + ii2
-      IF (i2 >= rismt%dfft%nr2) THEN
-        CYCLE
-      END IF
-      !
-      i1  = idx
-      IF (i1 >= rismt%dfft%nr1) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (offrange) THEN
         CYCLE
       END IF
       !
