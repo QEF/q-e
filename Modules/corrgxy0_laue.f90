@@ -66,8 +66,8 @@ CONTAINS
   !
   SUBROUTINE extract_gxy0(ar, ag0)
     IMPLICIT NONE
-    REAL(DP), INTENT(IN)  :: ar(rismt%nr, 1:*)
-    REAL(DP), INTENT(OUT) :: ag0(rismt%nrzl, 1:*)
+    REAL(DP), INTENT(IN)    :: ar(rismt%nr, 1:*)
+    REAL(DP), INTENT(INOUT) :: ag0(rismt%nrzl, 1:*)
     !
     INTEGER               :: ir
     INTEGER               :: i1, i2, i3
