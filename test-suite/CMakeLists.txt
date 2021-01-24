@@ -88,6 +88,7 @@ foreach(test_category IN LISTS qe_test_categories)
         set_tests_properties(${test_name} PROPERTIES
                              ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};OMP_NUM_THREADS=${TESTCODE_NTHREADS}"
                              PROCESSORS ${TOT_PROCS} PROCESSOR_AFFINITY TRUE
+                             REQUIRED_FILES ${test_input_relative}
                              DEPENDS ${check_pseudo_test_name})
         set_property(TEST ${test_name} APPEND PROPERTY LABELS "integration;${subfolder_name}")
         if(in_test_series)
