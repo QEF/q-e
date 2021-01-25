@@ -9,11 +9,11 @@ module nvtx
   use cudafor
 #endif
   implicit none
-#ifdef __PROFILE
+#ifdef __NV_PROFILE
   integer,private :: col(7) = [ Z'0000ff00', Z'000000ff', Z'00ffff00',Z'00ff00ff',Z'0000ffff', &
                                 Z'00ff0000', Z'00ffffff']
   character(len=256),private :: tempName
-!  logical, save :: __PROFILE=.false.
+!  logical, save :: __NV_PROFILE=.false.
   type, bind(C):: nvtxEventAttributes
      integer(C_INT16_T):: version=1
      integer(C_INT16_T):: size=48 !
@@ -53,7 +53,7 @@ contains
   subroutine nvtxStartRange(name,id)
     character(kind=c_char,len=*) :: name
     integer, optional:: id
-#ifdef __PROFILE
+#ifdef __NV_PROFILE
     type(nvtxEventAttributes):: event
 #ifdef __CUDA
     integer :: istat
@@ -75,7 +75,7 @@ contains
   subroutine nvtxStartRangeAsync(name,id)
     character(kind=c_char,len=*) :: name
     integer, optional:: id
-#ifdef __PROFILE
+#ifdef __NV_PROFILE
     type(nvtxEventAttributes):: event
 
     tempName=trim(name)//c_null_char
@@ -92,7 +92,7 @@ contains
 
 
   subroutine nvtxEndRange
-#ifdef __PROFILE
+#ifdef __NV_PROFILE
 #ifdef __CUDA
     integer :: istat
     istat = cudaDeviceSynchronize()
@@ -102,7 +102,7 @@ contains
   end subroutine nvtxEndRange
 
   subroutine nvtxEndRangeAsync
-#ifdef __PROFILE
+#ifdef __NV_PROFILE
     call nvtxRangePop
 #endif
   end subroutine nvtxEndRangeAsync

@@ -9,6 +9,7 @@ set(src_util
     mp.f90
     mp_base.f90
     mp_bands_util.f90
+    nvtx.f90
     parallel_include.f90
     util_param.f90
     thread_util.f90

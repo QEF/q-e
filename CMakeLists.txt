@@ -80,6 +80,8 @@ option(QE_ENABLE_TEST
     "enable unit tests" OFF)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
+option(QE_ENABLE_NV_PROFILE
+    "enable execution of NVidia profiler plugin") 
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
 option(QE_ENABLE_MPI_MODULE
@@ -119,6 +121,9 @@ endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
 endif()
+if(QE_ENABLE_NV_PROFILE)
+   qe_add_global_compile_definitions(__NV_PROFILE) 
+endif() 
 if(QE_ENABLE_MPI_INPLACE)
     qe_add_global_compile_definitions(__USE_INPLACE_MPI)
 endif()
