@@ -58,7 +58,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
   !! Function to compute the first derivative of the distribution function
   INTEGER :: i, kpoint, Ngauss_
   INTEGER :: info, maxiter_aux
-  REAL(DP) :: Ef_initial_guess
   !
   !  ... find (very safe) bounds for the Fermi energy:
   !  Elw = lowest, Eup = highest energy among all k-points.
@@ -104,22 +103,20 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
 
   ! If this initial guess already corresponds to the correct number of electron for the actual occupation function, the Fermi energy is found.
   Ngauss_ = Ngauss
-  maxiter_aux = maxiter
-
+  
   ! In case Ngauss = 0 or -99, the function returns here too.
   if( abs_num_electrons_minus_nelec(ef) < eps .or. Ngauss == 0 .or. Ngauss == -99) then 
     
     efermig = ef
-
+    
     goto 98765
   end if
-
+  
   ! If the initial prospected Ef did not provide the correct number of electrons, use Newton's methods to improve it.
   ! Use the prospected Ef as initial guess.
 
-  ! Save the initial guess
-  Ef_initial_guess = ef
-
+  maxiter_aux = maxiter
+  
   if( Ngauss_ > 0  .or.  Ngauss_ == -1 ) then ! If methfessel-paxton method or Cold smearing method
 
     call newton_minimization(sq_num_electrons_minus_nelec, dev1_sq_num_electrons, dev2_sq_num_electrons, &
@@ -157,7 +154,7 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     IF (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
     WRITE( stdout, '(5x,"Warning: Final Fermi energy from Bisection using the inputted smearing (M-P or cold)"/ &
       &      5x,"Ef (eV) = ",f15.6," Num. electrons = ",f10.6," electrons")' ) &
-      Ef * rytoev, num_electrons(efermig)
+      Ef * rytoev, num_electrons(Ef)
     WRITE( stdout, '(5x, a)' ) "Warning: I's possible that your 'degauss' is too large!"
   end if
 
@@ -251,7 +248,7 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
           x = x0 - factor*numerator/denominator
 
           ! Checking if a stationary point was achieved
-          if( abs(x0-x) < abstol .or.abs_num_electrons_minus_nelec(x) < abstol) then
+          if( abs(x0-x) < abstol .or. f(x) < abstol ) then
              info = 0
              Nmax = i
              return
