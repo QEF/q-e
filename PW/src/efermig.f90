@@ -242,7 +242,11 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
           x = x0 - factor*numerator/denominator
 
           ! Checking if a stationary point was achieved
+<<<<<<< HEAD
           if( abs(x0-x) < abstol .or. abs_num_electrons_minus_nelec(x) < abstol ) then
+=======
+          if( abs(x0-x) < abstol .or. f(x) < abstol ) then
+>>>>>>> bbaa7a843a6a0d70e79e3d313d63eff8064e1670
              info = 0
              Nmax = i
              return
