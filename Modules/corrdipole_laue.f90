@@ -194,7 +194,7 @@ CONTAINS
     !
     ! ... update R-space
 !$omp parallel do default(shared) private(ir, i1, i2, i3, iz, isite, offrange)
-    DO ir = 1, rismt%dfft%nnr
+    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
       !
       CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
       IF (offrange) THEN

@@ -263,14 +263,14 @@ CONTAINS
       n1   = lfft%dfft%nr1
       n2   = lfft%dfft%nr2
       n3   = lfft%dfft%nr3
-      nr   = lfft%dfft%nnr
+      nr   = lfft%dfft%nr1x * lfft%dfft%my_nr2p * lfft%dfft%my_nr3p
       nrz  = lfft%nrz
       irz0 = lfft%izcell_start
     ELSE
       n1   = dfft%nr1
       n2   = dfft%nr2
       n3   = dfft%nr3
-      nr   = dfft%nnr
+      nr   = dfft%nr1x * dfft%my_nr2p * dfft%my_nr3p
       nrz  = dfft%nr3
       irz0 = 1
     END IF

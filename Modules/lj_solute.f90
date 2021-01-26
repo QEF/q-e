@@ -252,7 +252,7 @@ SUBROUTINE lj_setup_solU_vlj_x(iq, rismt, rsmax, laue)
   INTEGER  :: iv
   INTEGER  :: isolV
   INTEGER  :: iatom
-  INTEGER  :: ir, nr
+  INTEGER  :: ir, nr, mr
   INTEGER  :: i1, i2, i3
   INTEGER  :: n1, n2, n3
   INTEGER  :: ia, iia
@@ -273,7 +273,8 @@ SUBROUTINE lj_setup_solU_vlj_x(iq, rismt, rsmax, laue)
   n1 = rismt%dfft%nr1
   n2 = rismt%dfft%nr2
   n3 = rismt%dfft%nr3
-  nr = rismt%dfft%nnr
+  nr = rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+  mr = rismt%dfft%nnr
   !
   ! ... solvent properties
   iiq   = iq - rismt%mp_site%isite_start + 1
@@ -299,10 +300,15 @@ SUBROUTINE lj_setup_solU_vlj_x(iq, rismt, rsmax, laue)
   ! ... calculate potential on each FFT grid
 !$omp parallel do default(shared) private(ir, i1, i2, i3, offrange, r1, r2, r3, tau_r, vlj, &
 !$omp             ia, iia, su, suv, rmax, rmin, xuv, yuv, zuv, ruv2, eu, euv, sr2, sr6, sr12)
-  DO ir = 1, nr
+  DO ir = 1, mr
     !
     ! ... create coordinate of a FFT grid
-    CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+    IF (ir <= nr) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+    ELSE
+      offrange = .TRUE.
+    END IF
+    !
     IF (offrange) THEN
       rismt%uljr(ir, iiq) = 0.0_DP
       CYCLE
@@ -443,7 +449,7 @@ SUBROUTINE lj_setup_wall_x(iq, rismt, rsmax)
   INTEGER  :: iv
   INTEGER  :: isolV
   INTEGER  :: iatom
-  INTEGER  :: ir, nr
+  INTEGER  :: ir, nr, mr
   INTEGER  :: i1, i2, i3
   INTEGER  :: n1, n2, n3
   LOGICAL  :: offrange
@@ -479,7 +485,8 @@ SUBROUTINE lj_setup_wall_x(iq, rismt, rsmax)
   n1  = rismt%dfft%nr1
   n2  = rismt%dfft%nr2
   n3  = rismt%dfft%nr3
-  nr  = rismt%dfft%nnr
+  nr = rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
+  mr = rismt%dfft%nnr
   !
   ! ... solvent properties
   iiq   = iq - rismt%mp_site%isite_start + 1
@@ -514,10 +521,15 @@ SUBROUTINE lj_setup_wall_x(iq, rismt, rsmax)
   ! ... calculate potential on each FFT grid
 !$omp parallel do default(shared) private(ir, i1, i2, i3, offrange, r3, tau_z, &
 !$omp             vw, zuv, sr, sr2, sr3, sr6, sr9)
-  DO ir = 1, nr
+  DO ir = 1, mr
     !
     ! ... create coordinate of a FFT grid
-    CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+    IF (ir <= nr) THEN
+      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+    ELSE
+      offrange = .TRUE.
+    END IF
+    !
     IF (offrange) THEN
       rismt%uwr(ir, iiq) = 0.0_DP
       CYCLE
@@ -779,10 +791,10 @@ SUBROUTINE lj_get_force_x(iq, rismt, force, rsmax, laue)
 #endif
   !
   ! ... FFT box
-  n1  = rismt%dfft%nr1
-  n2  = rismt%dfft%nr2
-  n3  = rismt%dfft%nr3
-  nr  = rismt%dfft%nnr
+  n1 = rismt%dfft%nr1
+  n2 = rismt%dfft%nr2
+  n3 = rismt%dfft%nr3
+  nr = rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
   !
   weight = omega / DBLE(n1 * n2 * n3)
   !
@@ -1030,10 +1042,10 @@ SUBROUTINE lj_get_stress_x(iq, rismt, sigma, rsmax, laue)
 #endif
   !
   ! ... FFT box
-  n1  = rismt%dfft%nr1
-  n2  = rismt%dfft%nr2
-  n3  = rismt%dfft%nr3
-  nr  = rismt%dfft%nnr
+  n1 = rismt%dfft%nr1
+  n2 = rismt%dfft%nr2
+  n3 = rismt%dfft%nr3
+  nr = rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
   !
   weight = omega / DBLE(n1 * n2 * n3)
   !

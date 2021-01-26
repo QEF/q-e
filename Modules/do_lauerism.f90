@@ -523,7 +523,11 @@ CONTAINS
 !$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange) reduction(+:mgrid)
     DO ir = 1, rismt%dfft%nnr
       !
-      CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      IF (ir <= rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p) THEN
+        CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
+      ELSE
+        offrange = .TRUE.
+      END IF
       !
       IF (offrange) THEN
         IF (rismt%nsite > 0) THEN
@@ -617,7 +621,7 @@ CONTAINS
     ! ... for R-space
     !
 !$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
-    DO ir = 1, rismt%dfft%nnr
+    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
       !
       CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
       IF (offrange) THEN
@@ -665,7 +669,7 @@ CONTAINS
     END IF
     !
 !$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
-    DO ir = 1, rismt%dfft%nnr
+    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
       !
       CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
       IF (offrange) THEN
@@ -702,7 +706,7 @@ CONTAINS
     END IF
     !
 !$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
-    DO ir = 1, rismt%dfft%nnr
+    DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
       !
       CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
       IF (offrange) THEN
@@ -780,7 +784,7 @@ CONTAINS
       dcst(:, iiq) = 0.0_DP
       !
 !$omp parallel do default(shared) private(ir, i1, i2, i3, iz, offrange)
-      DO ir = 1, rismt%dfft%nnr
+      DO ir = 1, rismt%dfft%nr1x * rismt%dfft%my_nr2p * rismt%dfft%my_nr3p
         !
         CALL fft_index_to_3d(ir, rismt%dfft, i1, i2, i3, offrange)
         IF (offrange) THEN
