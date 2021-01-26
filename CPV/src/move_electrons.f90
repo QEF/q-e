@@ -162,7 +162,9 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      CALL newd( vpot, becsum, fion, tprint )
      !
      CALL prefor( eigr, vkb )
+#if defined(__CUDA)
      CALL dev_memcpy( vkb_d, vkb )
+#endif
      !
      IF( force_pairing ) THEN
         !

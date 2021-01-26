@@ -533,7 +533,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
+#if defined(__CUDA)
         CALL dev_memcpy( vkb_d, vkb )
+#endif
         !
      END IF
      !

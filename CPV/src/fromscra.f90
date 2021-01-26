@@ -137,7 +137,9 @@ SUBROUTINE from_scratch( )
     ! ... prefor calculates vkb (used by gram)
     !
     CALL prefor( eigr, vkb )
+#if defined(__CUDA)
     CALL dev_memcpy( vkb_d, vkb )
+#endif
     !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1

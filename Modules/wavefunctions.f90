@@ -84,14 +84,14 @@
            CALL errore( ' allocate_cp_wavefunctions ', ' allocating on CPU ', ABS( ierr ) )
          cv0 = (0_DP,0_DP)
        END IF
-#if defined (__CUDA)
+!if defined (__CUDA)
        ALLOCATE( c0_d( ngw, nbspx ), STAT=ierr )
        IF( ierr /= 0 ) &
          CALL errore( ' allocate_cp_wavefunctions ', ' allocating on GPU ', ABS( ierr ) )
        ALLOCATE( cm_d( ngw, nbspx ), STAT=ierr )
        IF( ierr /= 0 ) &
          CALL errore( ' allocate_cp_wavefunctions ', ' allocating on GPU ', ABS( ierr ) )
-#endif
+!endif
      END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
