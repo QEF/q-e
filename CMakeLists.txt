@@ -433,6 +433,13 @@ if(QE_ENABLE_DOC)
 endif()
 
 ###########################################################
+# Tests
+###########################################################
+if(QE_ENABLE_TEST)
+  add_subdirectory(test-suite)
+endif()
+
+###########################################################
 # Pkg-config
 ###########################################################
 configure_file(
@@ -554,7 +561,6 @@ add_custom_target(pp
         qe_pp_fermisurface_exe
         qe_pp_fermiproj_exe
         qe_pp_ppacf_exe
-        qe_pp_benchmarklibxc_exe
     COMMENT
         "postprocessing programs")
 
