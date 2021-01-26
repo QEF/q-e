@@ -60,8 +60,7 @@ The following libraries have been isolated and partially encapsulated in view of
 - upflib: pseudopotential-related code
 
 ## GPU-enabled version
-Quantum ESPRESSO for GPU's (currently only NVidia) can be found in the
-[q-e-gpu repository](gitlab.com/QEF/q-e-gpu).
+Since Feb.2021 this repository also works for GPU's (currently only NVidia). See file [README_GPU.md](README_GPU.md).
 
 ## Contributing
 Quantum ESPRESSO is an open project: contributions are welcome.
