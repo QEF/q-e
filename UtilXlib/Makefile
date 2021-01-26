@@ -22,7 +22,7 @@ parallel_include.o \
 set_mpi_comm_4_solvers.o \
 util_param.o \
 thread_util.o \
-nvtx.o 
+nvtx_wrapper.o 
 
 all : libutil.a
 

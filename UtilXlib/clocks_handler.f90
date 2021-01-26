@@ -243,6 +243,7 @@ SUBROUTINE start_clock_gpu( label )
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, f_wall, f_tcpu, &
                         gputime, gpu_starts, gpu_stops
+  USE nvtx,      ONLY : nvtxStartRange
 #if defined(__CUDA)
   USE cudafor
 #endif
@@ -283,6 +284,7 @@ SUBROUTINE start_clock_gpu( label )
 #endif
            t0cpu(n) = f_tcpu()
            t0wall(n)= f_wall()
+           call nvtxStartRange(label_, n)
         ENDIF
         !
         RETURN
@@ -392,6 +394,7 @@ SUBROUTINE stop_clock_gpu( label )
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu, &
                         gpu_called, gputime, gpu_starts, gpu_stops
+  USE nvtx,      ONLY:  nvtxEndRange
 #if defined(__CUDA)
   USE cudafor
 #endif
@@ -447,6 +450,7 @@ SUBROUTINE stop_clock_gpu( label )
            t0cpu(n)     = notrunning
            t0wall(n)    = notrunning
            called(n)    = called(n) + 1
+           call nvtxEndRange()
            !
         ENDIF
         !

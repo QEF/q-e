@@ -80,8 +80,8 @@ option(QE_ENABLE_TEST
     "enable unit tests" OFF)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
-option(QE_ENABLE_NV_PROFILE
-    "enable execution of NVidia profiler plugin") 
+option(QE_ENABLE_PROFILE_NVTX
+    "enable execution of NVidia profiler plugin" OFF) 
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
 option(QE_ENABLE_MPI_MODULE
@@ -121,8 +121,8 @@ endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
 endif()
-if(QE_ENABLE_NV_PROFILE)
-   qe_add_global_compile_definitions(__NV_PROFILE) 
+if(QE_ENABLE_PROFILE_NVTX)
+   qe_add_global_compile_definitions(__PROFILE_NVTX) 
 endif() 
 if(QE_ENABLE_MPI_INPLACE)
     qe_add_global_compile_definitions(__USE_INPLACE_MPI)
@@ -356,6 +356,19 @@ add_library(qe_hdf5_fortran INTERFACE)
 add_library(qe_hdf5_c INTERFACE)
 qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
 ###########################################################
+# PROFILERS LIBRARIES
+# the target for profiler libray will be defined if
+# some profiler is enabled
+add_library(qe_ext_prof_tool INTERFACE)
+qe_install_targets(qe_ext_prof_tool) 
+###########################################################
+# this should work with nvfortran 
+if(QE_ENABLE_PROFILE_NVTX)
+   target_link_libraries(qe_ext_prof_tool
+	INTERFACE
+        libnvToolsExt.so)
+endif(QE_ENABLE_PROFILE_NVTX)
+########################################################### 
 if(QE_ENABLE_HDF5)
     if(QE_ENABLE_MPI)
         option(HDF5_PREFER_PARALLEL "Prefer parallel HDF5" ON)
