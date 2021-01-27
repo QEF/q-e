@@ -21,7 +21,8 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 band=`sed -n "/bands (ev)/{n;n;p}" $fname | awk '{print $1; print $2; print $3; print $4; print $5 }' | head -$num_band`
 
 # NSCF
-ef1=`grep Fermi $fname | head -$max_iter | awk '{print $5}'`
+#ef1=`grep Fermi $fname | head -$max_iter | awk '{print $5}'`
+ef1=$(awk 'BEGIN{ii=0} /^ *the Fermi energy is/{if(++ii>'$max_iter') exit; print $5}' $fname)
 eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
 ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print $7; print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
