@@ -298,7 +298,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
       lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
      !
+#if defined(__CUDA)
      CALL dev_memcpy( c0_d, c0_bgrp )
+#endif
      !
      ! Autopilot (Dynamic Rules) Implimentation    
      !

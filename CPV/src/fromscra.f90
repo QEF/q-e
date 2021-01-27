@@ -150,7 +150,9 @@ SUBROUTINE from_scratch( )
     !
     if( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp )
     !
+#if defined(__CUDA)
     CALL dev_memcpy( cm_d, cm_bgrp )
+#endif
     !
     ! ... initialize bands
     !
@@ -253,7 +255,9 @@ SUBROUTINE from_scratch( )
          !
       ENDIF
       !
+#if defined(__CUDA)
       CALL dev_memcpy( c0_d, c0_bgrp )  ! c0 contains the updated wave functions
+#endif
       !
       !     nlfq needs deeq bec
       !

@@ -177,7 +177,9 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
         !
      ENDIF
      !
+#if defined(__CUDA)
      CALL dev_memcpy( cm_d, cm_bgrp )  ! cm contains the updated wavefunctions
+#endif
      !
      !----------------------------------------------------------------------
      !                 contribution to fion due to lambda
