@@ -17,7 +17,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   USE kinds,              ONLY: DP
   USE noncollin_module,   ONLY: npol
-  USE funct,              ONLY: exx_is_active
+  USE xc_lib,             ONLY: exx_is_active
   USE mp_bands,           ONLY: use_bgrp_in_hpsi, inter_bgrp_comm
   USE mp,                 ONLY: mp_allgather, mp_size, &
                                 mp_type_create_column_section, mp_type_free
@@ -94,7 +94,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE uspp,                    ONLY: vkb, nkb
   USE ldaU,                    ONLY: lda_plus_u, U_projection
   USE gvect,                   ONLY: gstart
-  USE funct,                   ONLY: dft_is_meta
   USE control_flags,           ONLY: gamma_only
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
@@ -103,8 +102,13 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
                                      v_loc_psir_inplace
   USE fft_base,                ONLY: dffts
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
-  USE funct,                   ONLY: exx_is_active
+  USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
+  !
+  USE uspp_gpum,  ONLY : using_vkb
+  USE wvfct_gpum, ONLY : using_g2kin
+  USE scf_gpum,   ONLY : using_vrs
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -126,6 +130,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
+
+  CALL using_g2kin(0)
+  CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
+
+
   !
   ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !
@@ -147,6 +156,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   IF ( gamma_only ) THEN
      ! 
      IF ( real_space .AND. nkb > 0  ) THEN
+        CALL using_becp_auto(1)
         !
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
@@ -186,6 +196,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
+        CALL using_becp_auto(1)  ! WHY IS THIS HERE?
+
         IF ( dffts%has_task_groups ) &
              CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
         !
@@ -218,6 +230,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
+     CALL using_becp_auto(1)
+     CALL using_vkb(0)
+     !
      CALL start_clock( 'h_psi:calbec' )
      CALL calbec( n, vkb, psi, becp, m )
      CALL stop_clock( 'h_psi:calbec' )
@@ -227,7 +242,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   CALL stop_clock( 'h_psi:pot' ); !write (*,*) 'stop h_psi:pot';FLUSH(6)
   !  
-  IF (dft_is_meta()) CALL h_psi_meta( lda, n, m, psi, hpsi )
+  IF (xclib_dft_is('meta')) CALL h_psi_meta( lda, n, m, psi, hpsi )
   !
   ! ... Here we add the Hubbard potential times psi
   !
@@ -251,6 +266,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL vexxace_k( lda, m, psi, ee, hpsi )
         ENDIF
      ELSE
+        CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi, hpsi, becp )
      ENDIF
   ENDIF

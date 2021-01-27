@@ -48,15 +48,13 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      CALL calbec ( npw, evc, pu, lagrange )
   ELSE
      CALL calbec ( npw, evc,  u, lagrange )
-   ENDIF
-  ! JDE putting back the old version because this looks wrong.
+  ENDIF
+  !
   IF (.not. orthonormal) THEN
-       CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-       IF (info/=0) CALL errore('cgsolve','error in potrs',info)
+     CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
+     IF (info/=0) CALL errore('cgsolve','error in potrs',info)
   END IF
-  ! JDE putting back the old version because this looks wrong.
-       !
-  
+  !
   CALL dgemm ('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, &
        2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
   !
@@ -110,11 +108,11 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      ELSE
         CALL calbec ( npw, evc,  u, lagrange )
      ENDIF
-     ! JDE putting back the old version because this looks wrong.
+     !
      IF (.not. orthonormal) THEN
-          CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-          IF (info/=0) CALL errore('cgsolve','error in potrs',info)
-     ! JDE putting back the old version because this looks wrong.
+        CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
+        IF (info/=0) CALL errore('cgsolve','error in potrs',info)
+     !
      END IF
      CALL dgemm ('N', 'N', 2*npw, nbnd, nbnd,-1.d0, evc, &
           2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)

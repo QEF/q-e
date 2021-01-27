@@ -59,6 +59,7 @@ MOD_FLAG      = @imod@
 # Each Makefile can add directories to MODFLAGS and libraries to QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
+               $(MOD_FLAG)$(TOPDIR)/XClib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
@@ -89,7 +90,7 @@ GPU_ARCH=@gpu_arch@
 CUDA_RUNTIME=@gpu_runtime@
 
 # CUDA F90 Flags
-CUDA_F90FLAGS=@cuda_fflags@
+CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
@@ -159,18 +160,13 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
-# library for bayesian error estimate functionals
-
-BEEF_LIBS      = @beef_libs@
-BEEF_LIBS_SWITCH = @beef_libs_switch@
-
 # library for many-body dispersion
 
 MBD_LIBS= $(TOPDIR)/MBD/libmbd.a
 
 # CUDA libraries
-CUDA_LIBS=@cuda_libs@
-CUDA_EXTLIBS = @cuda_extlibs@
+CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
+CUDA_EXTLIBS = devxlib @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -188,7 +184,7 @@ FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(MBD_LIBS) $(BEEF_LIBS) $(LIBXC_LIBS) \
+QELIBS         = $(MBD_LIBS) $(LIBXC_LIBS) \
                  $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
 		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 

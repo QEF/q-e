@@ -25,7 +25,12 @@ SUBROUTINE allocate_fft
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, report, noncolin, npol
   USE wavefunctions,    ONLY : psic, psic_nc
-  USE funct,            ONLY : dft_is_meta
+  USE xc_lib,           ONLY : xclib_dft_is
+  !
+  USE scf_gpum,  ONLY : using_vrs
+  !
+  USE wavefunctions_gpum, ONLY : using_psic, using_psic_nc, &
+                                        using_psic_d, using_psic_nc_d
   !
   IMPLICIT NONE
   !
@@ -58,7 +63,7 @@ SUBROUTINE allocate_fft
   !
   ALLOCATE( vltot(dfftp%nnr) )
   ALLOCATE( rho_core(dfftp%nnr) )
-  IF ( dft_is_meta() ) THEN
+  IF ( xclib_dft_is('meta') ) THEN
      ALLOCATE( kedtau(dffts%nnr,nspin) )
   ELSE
      ALLOCATE( kedtau(1,nspin) )
@@ -66,8 +71,18 @@ SUBROUTINE allocate_fft
   ALLOCATE( rhog_core(ngm)  )
   ALLOCATE( psic(dfftp%nnr) )
   ALLOCATE( vrs(dfftp%nnr,nspin) )
+#if defined(__CUDA)
+  CALL using_vrs(2)
+  CALL using_psic(2); CALL using_psic_d(0)
+#endif
   !
   IF (noncolin) ALLOCATE( psic_nc(dfftp%nnr,npol) )
+#if defined(__CUDA)
+  IF (noncolin) THEN
+     CALL using_psic_nc(2)
+     CALL using_psic_nc_d(0)
+  END IF
+#endif
   !
   IF ( report /= 0 ) THEN
      !

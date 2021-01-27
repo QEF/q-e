@@ -73,6 +73,8 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE mytime,               ONLY :
    USE parallel_include
    !
+   USE uspp_gpum,            ONLY : using_vkb
+   !
    IMPLICIT NONE
    !
    REAL(DP), INTENT(inout) :: forces_bp(3,nat)
@@ -419,6 +421,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                CALL get_buffer( psi, nwordwfc, iunwfc, nx_el(kpoint-1,pdir) )
                !
                IF (okvan) THEN
+                  CALL using_vkb(1)
                   CALL init_us_2( npw0, igk0, xk(1,nx_el(kpoint-1,pdir)), vkb )
                   CALL calbec( npw0, vkb, psi, becp0 )
                   DO ipol = 1, 3
@@ -446,6 +449,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                   CALL get_buffer( psi1, nwordwfc, iunwfc, nx_el(kpoint,pdir) )
                   !
                   IF (okvan) THEN
+                     CALL using_vkb(1)
                      CALL init_us_2 (npw1,igk1,xk(1,nx_el(kpoint,pdir)),vkb)
                      CALL calbec( npw1, vkb, psi1, becp_bp)
                      DO ipol = 1, 3
@@ -473,6 +477,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                   CALL get_buffer( psi1, nwordwfc, iunwfc, nx_el(kstart,pdir) )
                   !
                   IF (okvan) THEN
+                     CALL using_vkb(1)
                      CALL init_us_2( npw1, igk1, xk(1,nx_el(kstart,pdir)), vkb )
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                      DO ipol = 1, 3

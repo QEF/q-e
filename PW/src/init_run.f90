@@ -26,15 +26,23 @@ SUBROUTINE init_run()
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
   USE fft_base,           ONLY : dfftp, dffts
-  USE funct,              ONLY : dft_is_hybrid
   USE recvec_subs,        ONLY : ggen, ggens
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,             ONLY : newd
   USE esm,                ONLY : do_comp_esm, esm_init
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
+  USE lsda_mod,           ONLY : nspin
+  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  !
+  USE control_flags,      ONLY : use_gpu
+  USE dfunct_gpum,        ONLY : newd_gpu
+  USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
+  USE gvect_gpum,         ONLY : using_g, using_gg, using_g_d, using_gg_d, &
+                                 using_mill, using_mill_d
   !
   IMPLICIT NONE
+  INTEGER :: ierr
   !
   CALL start_clock( 'init_run' )
   !
@@ -69,6 +77,14 @@ SUBROUTINE init_run()
      ! ... Solvers need to know gstart
      call export_gstart_2_solvers(gstart)
   END IF
+
+#if defined(__CUDA)
+  ! All these variables are actually set by ggen which has intent out
+  CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+  CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
+  CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
+                                            ! This is a trick to avoid checking for sync everywhere.
+#endif
   !
   IF (do_comp_esm) CALL esm_init()
   !
@@ -98,7 +114,14 @@ SUBROUTINE init_run()
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !
   et(:,:) = 0.D0
+  CALL using_et(2)
+  !
   wg(:,:) = 0.D0
+  CALL using_wg(2)
+#if defined(__CUDA)
+  ! Sync here. Shouldn't be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
   !
   btype(:,:) = 1
   !
@@ -110,13 +133,25 @@ SUBROUTINE init_run()
   CALL allocate_wfc_k()
   CALL openfil()
   !
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin )
+  !
   CALL hinit0()
   !
   CALL potinit()
   !
-  CALL newd()
-  !
-  CALL wfcinit()
+  IF ( use_gpu ) THEN
+    !
+    CALL newd_gpu()
+    !
+    CALL wfcinit_gpu()
+    !
+  ELSE
+    !
+    CALL newd()
+    !
+    CALL wfcinit()
+    !
+  END IF
   !
   IF(use_wannier) CALL wannier_init()
   !

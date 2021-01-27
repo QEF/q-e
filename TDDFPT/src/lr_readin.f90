@@ -34,7 +34,7 @@ SUBROUTINE lr_readin
   USE check_stop,          ONLY : max_seconds
   USE realus,              ONLY : real_space, init_realspace_vars, generate_qpointlist, &
                                   betapointlist
-  USE funct,               ONLY : dft_is_meta
+  USE xc_lib,              ONLY : xclib_dft_is
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,                  ONLY : mp_bcast
   USE mp_global,           ONLY : my_pool_id, intra_image_comm, &
@@ -64,7 +64,6 @@ SUBROUTINE lr_readin
   ! Specify the amount of I/O activities
   CHARACTER(LEN=6) :: int_to_char
   INTEGER :: ios, iunout, ierr, ipol
-  LOGICAL, EXTERNAL  :: check_para_diag
   !
   CHARACTER(LEN=80)          :: card
   INTEGER :: i
@@ -455,7 +454,7 @@ SUBROUTINE lr_readin
   !
   ! Scalapack related stuff.
   !
-  use_para_diag = check_para_diag( nbnd )
+  CALL set_para_diag( nbnd, use_para_diag )
   !
   RETURN
   !
@@ -471,7 +470,7 @@ CONTAINS
     !
     USE paw_variables,    ONLY : okpaw
     USE uspp,             ONLY : okvan
-    USE funct,            ONLY : dft_is_hybrid
+    USE xc_lib,           ONLY : xclib_dft_is
     USE ldaU,             ONLY : lda_plus_u
 
     IMPLICIT NONE
@@ -497,7 +496,7 @@ CONTAINS
     !
     !  Meta-DFT currently not supported by TDDFPT
     !
-    IF (dft_is_meta()) CALL errore( 'lr_readin', 'Meta DFT is not implemented yet', 1 )
+    IF (xclib_dft_is('meta')) CALL errore( 'lr_readin', 'Meta DFT is not implemented yet', 1 )
     !
     ! Hubbard U is not supported
     !
@@ -530,7 +529,7 @@ CONTAINS
     !
     ! No taskgroups and EXX.
     !
-    IF (dffts%has_task_groups .AND. dft_is_hybrid()) &
+    IF (dffts%has_task_groups .AND. xclib_dft_is('hybrid')) &
          & CALL errore( 'lr_readin', ' Linear response calculation ' // &
          & 'not implemented for EXX+Task groups', 1 )
     !
@@ -550,7 +549,7 @@ CONTAINS
     !
     ! No USPP+EXX support.
     !
-    IF (okvan .AND. dft_is_hybrid()) &
+    IF (okvan .AND. xclib_dft_is('hybrid')) &
          & CALL errore( 'lr_readin', ' Linear response calculation ' // &
          & 'not implemented for EXX+Ultrasoft', 1 )
     !
@@ -581,7 +580,7 @@ CONTAINS
        IF (project)     CALL errore( 'lr_readin', 'project is not allowed', 1 )
        IF (tqr)         CALL errore( 'lr_readin', 'tqr is not supported', 1 )
        IF (charge_response /= 0) CALL errore( 'lr_readin', 'charge_response /= 0 is not allowed', 1 )
-       IF (dft_is_hybrid())    CALL errore( 'lr_readin', 'EXX is not supported', 1 )
+       IF (xclib_dft_is('hybrid'))    CALL errore( 'lr_readin', 'EXX is not supported', 1 )
        IF (do_comp_mt)  CALL errore( 'lr_readin', 'Martyna-Tuckerman PBC is not supported.', 1 )
        IF (d0psi_rs)    CALL errore( 'lr_readin', 'd0psi_rs is not allowed', 1 )
        !

@@ -22,6 +22,8 @@ SUBROUTINE init_at_1()
   USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
+  USE us_gpum,      ONLY : using_tab_at
+  !
   IMPLICIT NONE
   !
   INTEGER :: nt, nb, iq, ir, l, startq, lastq, ndm
@@ -30,6 +32,7 @@ SUBROUTINE init_at_1()
   REAL(DP) :: vqint, pref, q
   !
   CALL start_clock( 'init_at_1' )
+  CALL using_tab_at(2)
   !
   ndm = MAXVAL(msh(1:ntyp))
   ALLOCATE( aux(ndm), vchi(ndm) )

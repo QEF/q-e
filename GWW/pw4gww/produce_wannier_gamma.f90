@@ -22,7 +22,7 @@
        USE wavefunctions, ONLY : evc
        USE exx,      ONLY : ecutfock,vexx, exxinit
        USE exx_base, ONLY : exx_div_check, exx_grid_init, exx_grid_check
-       USE funct,    ONLY : exx_is_active, dft_is_hybrid,start_exx,stop_exx
+       USE xc_lib,   ONLY : exx_is_active, xclib_dft_is, start_exx, stop_exx
        USE wvfct,    ONLY : current_k, et
        USE gvecw,    ONLY : ecutwfc
        USE scf,                  ONLY : scf_type, scf_type_COPY, &
@@ -171,7 +171,7 @@
          endif
 
 
-         if( dft_is_hybrid()) then
+         if( xclib_dft_is('hybrid')) then
 !NOT_TO_BE_INCLUDED_START                                                                                                                                   
             ecutfock=exchange_fast_dual*ecutwfc
             
@@ -438,7 +438,7 @@
                 endif
 
 !if EXX is one calculates stuff for Fock operator
-                if(dft_is_hybrid()) then
+                if(xclib_dft_is('hybrid')) then
 !NOT_TO_BE_INCLUDED_START
                    call  exxinit(.false.)
                    current_k= 1

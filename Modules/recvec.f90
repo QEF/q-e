@@ -43,6 +43,12 @@
      !
      REAL(DP), POINTER, PROTECTED            :: gl(:)
      INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl(:)
+     ! Duplicate of the above variables (new style duplication).
+     REAL(DP), ALLOCATABLE                   :: gl_d(:)
+     INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:)
+#if defined(__CUDA)
+     attributes(DEVICE) :: gl_d, igtongl_d
+#endif
      !
      !     G-vectors cartesian components ( in units tpiba =(2pi/a)  )
      !
@@ -75,6 +81,7 @@
        ! Set local and global dimensions, allocate arrays
        !
        USE mp, ONLY: mp_max, mp_sum
+       USE control_flags, ONLY : use_gpu
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngm_
        INTEGER, INTENT(IN) :: comm  ! communicator of the group on which g-vecs are distributed
@@ -98,12 +105,15 @@
        ALLOCATE( mill(3, ngm) )
        ALLOCATE( ig_l2g(ngm) )
        ALLOCATE( igtongl(ngm) )
+       IF (use_gpu) ALLOCATE( igtongl_d(ngm) )
+       IF (use_gpu) ALLOCATE( gl_d(ngm) )
        !
        RETURN 
        !
      END SUBROUTINE gvect_init
 
      SUBROUTINE deallocate_gvect(vc)
+       USE control_flags, ONLY : use_gpu
        IMPLICIT NONE
        !
        LOGICAL, OPTIONAL, INTENT(IN) :: vc
@@ -124,6 +134,10 @@
        IF( ALLOCATED( eigts1 ) ) DEALLOCATE( eigts1 )
        IF( ALLOCATED( eigts2 ) ) DEALLOCATE( eigts2 )
        IF( ALLOCATED( eigts3 ) ) DEALLOCATE( eigts3 )
+       IF (use_gpu) THEN
+          IF (ALLOCATED( igtongl_d ) ) DEALLOCATE( igtongl_d )
+          IF (ALLOCATED( gl_d ) ) DEALLOCATE( gl_d )
+       END IF
      END SUBROUTINE deallocate_gvect
 
      SUBROUTINE deallocate_gvect_exx()
@@ -143,6 +157,7 @@
         !
         USE kinds,              ONLY : DP
         USE constants,          ONLY : eps8
+        USE control_flags,      ONLY : use_gpu
         !
         IMPLICIT NONE
         !
@@ -185,6 +200,8 @@
            IF (igl /= ngl) CALL errore ('gshells', 'igl <> ngl', ngl)
 
         ENDIF
+        IF (use_gpu)      gl_d = gl
+        IF (use_gpu) igtongl_d = igtongl
      END SUBROUTINE gshells
 !=----------------------------------------------------------------------------=!
    END MODULE gvect

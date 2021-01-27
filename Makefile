@@ -31,9 +31,9 @@ default :
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
-	@echo '  epw          Electron-Phonon Coupling with wannier functions'
+	@echo '  epw          Electron-Phonon Coupling with Wannier functions'
 	@echo '  gui          Graphical User Interface'
-	@echo '  all          same as "make pwall cp ld1 tddfpt hp"'
+	@echo '  all          same as "make pwall cp ld1 tddfpt xspectra hp"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
 	@echo '  gipaw        NMR and EPR spectra'
@@ -175,7 +175,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libla libfft libupf libbeef libmbd
+mods : libfox libutil libla libfft libupf libmbd librxc
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -186,6 +186,9 @@ libla : liblapack libutil libcuda
 
 libfft : 
 	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+librxc : 
+	( cd XClib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -216,9 +219,6 @@ libfox:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libcuda: 
-	cd install ; $(MAKE) -f extlibs_makefile $@
-
-libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libmbd:
@@ -277,7 +277,7 @@ install :
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib UtilXlib upflib Modules PP PW EPW KS_Solvers \
+		CPV LAXlib FFTXlib XClib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \

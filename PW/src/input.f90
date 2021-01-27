@@ -14,9 +14,11 @@ SUBROUTINE iosys()
   !! those in input_parameters, are locally renamed by adding an underscore "_".
   !
   USE kinds,         ONLY : DP
-  USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
-                            set_finite_size_volume, get_dft_short
-  USE funct,         ONLY : set_exx_fraction, set_screening_parameter
+  USE funct,         ONLY : get_dft_short
+  USE xc_lib,        ONLY : xclib_set_exx_fraction, set_screening_parameter, &
+                            xclib_dft_is, xclib_set_finite_size_volume, &
+                            dft_has_finite_size_correction
+  
   USE control_flags, ONLY : adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
@@ -1591,23 +1593,23 @@ SUBROUTINE iosys()
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
      ecutfock_ = ecutfock
   END IF
-  IF ( lstres .AND. dft_is_hybrid() .AND. npool > 1 )  CALL errore('iosys', &
+  IF ( lstres .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
          'stress for hybrid functionals not available with pools', 1)
-  IF ( lmovecell.AND. dft_is_hybrid() ) CALL infomsg('iosys',&
+  IF ( lmovecell.AND. xclib_dft_is('hybrid') ) CALL infomsg('iosys',&
          'Variable cell and hybrid XC little tested')
   !
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten
   !
-  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+  IF (exx_fraction >= 0.0_DP) CALL xclib_set_exx_fraction (exx_fraction)
   !
   IF (screening_parameter >= 0.0_DP) &
-        & CALL set_screening_parameter (screening_parameter)
+        & CALL set_screening_parameter(screening_parameter)
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !
   IF (dft_has_finite_size_correction()) &
-      CALL set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
+      CALL xclib_set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
   !
   ! VARIABLE-CELL DYNAMICS
   !

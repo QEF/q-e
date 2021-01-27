@@ -44,13 +44,13 @@ qe_add_executable(qe_pwcond_exe ${sources})
 set_target_properties(qe_pwcond_exe PROPERTIES OUTPUT_NAME pwcond.x)
 target_link_libraries(qe_pwcond_exe
     PRIVATE
-        QE::LAPACK
-        QE::PW
-        QE::Modules
-        QE::UPF
-        QE::UTILX
-        QE::FFTX
-        QE::MPI_Fortran)
+        qe_lapack
+        qe_pw
+        qe_modules
+        qe_upflib
+        qe_fftx
+        qe_mpi_fortran
+        qe_xclib)
 
 ###########################################################
 

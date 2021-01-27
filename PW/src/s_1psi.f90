@@ -22,6 +22,10 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
                                 fwfft_orbital_k, calbec_rs_k, s_psir_k
   USE wvfct,              ONLY: nbnd
   !
+  USE uspp_gpum,          ONLY: using_vkb
+  USE becmod_gpum,        ONLY: using_becp_r
+  USE becmod_subs_gpum,   ONLY: using_becp_auto
+  !
   IMPLICIT NONE
   !
   INTEGER :: npwx
@@ -48,6 +52,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
            ! transform the orbital to real space
            CALL invfft_orbital_gamma( psi, ibnd, nbnd ) 
            ! global becp%r is updated
+           CALL using_becp_r(2)
            CALL calbec_rs_gamma( ibnd, nbnd, becp%r )
         ENDDO
         !
@@ -70,6 +75,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
      !
   ELSE
      !
+     CALL using_vkb(0); CALL using_becp_auto(1)
      CALL calbec( n, vkb, psi, becp )
      CALL s_psi( npwx, n, 1, psi, spsi )
      !

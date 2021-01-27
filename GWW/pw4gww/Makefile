@@ -50,7 +50,7 @@ operator_1_vp.o \
 operator_debug.o 
 
 QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a \
-         ../../KS_Solvers/libks_solvers.a \
+         ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a \
          ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 # dft-d3 required by xlf for obscure reasons

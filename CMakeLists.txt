@@ -10,12 +10,12 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 6.6.0
+    VERSION 6.7.1
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
 if(${qe_BINARY_DIR} STREQUAL ${qe_SOURCE_DIR})
-  message(FATAL_ERROR "QE source folder cannot be safely used as a build folder!")
+    message(FATAL_ERROR "QE source folder cannot be safely used as a build folder!")
 endif()
 
 # CMake < v3.18 cannot discover the ARM Performance Library
@@ -25,13 +25,16 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
     endif()
 endif()
 
-######################################################################
+##########################################################
 # Define the paths for static libraries and executables
-######################################################################
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/lib CACHE PATH "Single output directory for building all libraries.")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
+##########################################################
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/lib 
+    CACHE 
+    PATH "Single output directory for building all libraries.")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/bin 
+    CACHE 
+    PATH "Single output directory for building all executables.")
 set(QE_TESTS_DIR ${qe_BINARY_DIR}/tests/bin)
-
 
 ###########################################################
 # Build helpers
@@ -59,12 +62,22 @@ include(GNUInstallDirs)
 ###########################################################
 # Build Options
 ###########################################################
-option(QE_ENABLE_TEST
-    "enable unit tests" ON)
+option(QE_ENABLE_CUDA
+    "enable CUDA acceleration on NVIDIA GPUs" OFF)
+if(QE_ENABLE_CUDA)
+    option(QE_ENABLE_LAXLIB_CUSOLVER
+        "enable CUDA solver acceleration for LAXLib on NVIDIA GPUs" ON)
+    # OpenMP enable by default if CUDA is enable
+    option(QE_ENABLE_OPENMP
+        "enable distributed execution support via OpenMP" ON)
+else()
+    option(QE_ENABLE_OPENMP
+        "enable distributed execution support via OpenMP" OFF)
+endif()
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
-option(QE_ENABLE_OPENMP
-    "enable distributed execution support via OpenMP" OFF)
+option(QE_ENABLE_TEST
+    "enable unit tests" OFF)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_MPI_INPLACE
@@ -81,8 +94,6 @@ option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
-option(QE_ENABLE_CUDA
-    "enable CUDA acceleration on NVIDIA GPUs" OFF)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
 set(QE_FFTW_VENDOR "AUTO" CACHE 
@@ -99,6 +110,12 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
 # by configure (see <qe>/include/)
 qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
+if(QE_ENABLE_CUDA)
+    include(CheckLanguage)
+    check_language(CUDA)
+    enable_language(CUDA)
+    qe_add_global_compile_definitions(__CUDA)
+endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
 endif()
@@ -135,6 +152,12 @@ endif()
 if(QE_ENABLE_SCALAPACK AND NOT QE_ENABLE_MPI)
     message(FATAL_ERROR "SCALAPACK requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable SCALAPACK with '-DQE_ENABLE_SCALAPACK=OFF'")
 endif()
+if(QE_ENABLE_CUDA AND NOT CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+    message(FATAL_ERROR "PGI compiler is mandatory when CUDA is enable due QE is based on CUDA Fortran language")
+endif()
+if(QE_ENABLE_LAXLIB_CUSOLVER AND (NOT QE_ENABLE_CUDA))
+    message(FATAL_ERROR "CUDA Solver for LAXLib requires CUDA support, enable it with '-DQE_ENABLE_CUDA=ON' or disable CUDA Solver for LAXLib with '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF'")
+endif()
 # if(QE_ENABLE_HDF5 AND NOT QE_ENABLE_MPI)
 #    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
 # endif()
@@ -145,9 +168,9 @@ endif()
 ###########################################################
 # TODO need to require all compilers using the same one
 if(CMAKE_C_COMPILER_ID MATCHES "PGI")
-  set(CMAKE_C_STANDARD 11)
-  set(CMAKE_C_STANDARD_REQUIRED ON)
-  set(CMAKE_C_EXTENSIONS OFF)
+    set(CMAKE_C_STANDARD 11)
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+    set(CMAKE_C_EXTENSIONS OFF)
 endif()
 
 ############################################################
@@ -162,12 +185,17 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
 endif()
 
 ###########################################################
+# CUDA
+###########################################################
+if(QE_ENABLE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+endif(QE_ENABLE_CUDA)
+
+###########################################################
 # OpenMP
 # The following targets will be defined:
 add_library(qe_openmp_fortran INTERFACE)
-add_library(QE::OpenMP_Fortran ALIAS qe_openmp_fortran)
 add_library(qe_openmp_c INTERFACE)
-add_library(QE::OpenMP_C ALIAS qe_openmp_c)
 qe_install_targets(qe_openmp_fortran qe_openmp_c)
 ###########################################################
 if(QE_ENABLE_OPENMP)
@@ -182,7 +210,6 @@ endif(QE_ENABLE_OPENMP)
 # MPI
 # The following targets will be defined:
 add_library(qe_mpi_fortran INTERFACE)
-add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
 qe_install_targets(qe_mpi_fortran)
 ###########################################################
 if(QE_ENABLE_MPI)
@@ -195,9 +222,8 @@ endif(QE_ENABLE_MPI)
 # Lapack
 # The following targets will be defined:
 add_library(qe_lapack INTERFACE)
-add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
-#######################################################################
+###########################################################
 if(NOT QE_LAPACK_INTERNAL)
     if(NOT BLA_VENDOR)
         if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64.*")
@@ -251,7 +277,7 @@ else()
                             "due to the conflict in flags for free vs fixed format. "
                             "Please use an optimized LAPACK or build internal reference LAPACK separately.")
     endif()
-    message(STATUS "Installing QE::LAPACK via submodule")
+    message(STATUS "Installing LAPACK via submodule")
     qe_git_submodule_update(external/lapack)
     add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
     target_link_libraries(qe_lapack INTERFACE lapack)
@@ -263,7 +289,6 @@ endif()
 # SCALAPACK
 # The following targets will be defined:
 add_library(qe_scalapack INTERFACE)
-add_library(QE::SCALAPACK ALIAS qe_scalapack)
 qe_install_targets(qe_scalapack)
 ###########################################################
 if(QE_ENABLE_SCALAPACK)
@@ -279,7 +304,6 @@ endif(QE_ENABLE_SCALAPACK)
 # ELPA
 # The following targets will be defined:
 add_library(qe_elpa INTERFACE)
-add_library(QE::ELPA ALIAS qe_elpa)
 qe_install_targets(qe_elpa)
 ###########################################################
 if(QE_ENABLE_ELPA)
@@ -324,9 +348,7 @@ endif(QE_ENABLE_ELPA)
 # HDF5
 # The following targets will be defined:
 add_library(qe_hdf5_fortran INTERFACE)
-add_library(QE::HDF5_Fortran ALIAS qe_hdf5_fortran)
 add_library(qe_hdf5_c INTERFACE)
-add_library(QE::HDF5_C ALIAS qe_hdf5_c)
 qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
 ###########################################################
 if(QE_ENABLE_HDF5)
@@ -369,14 +391,6 @@ if(QE_ENABLE_HDF5)
 endif(QE_ENABLE_HDF5)
 
 ###########################################################
-# CUDA
-# FIXME just a place holder for the moment
-###########################################################
-if(QE_ENABLE_CUDA)
-    qe_add_global_compile_definitions(__CUDA)
-endif(QE_ENABLE_CUDA)
-
-###########################################################
 # Tests
 # Any executable target marked as test runner via
 # 'add_test()' will be run by the 'test' make target
@@ -394,6 +408,7 @@ add_subdirectory(FFTXlib)
 add_subdirectory(UtilXlib)
 add_subdirectory(Modules)
 add_subdirectory(LAXlib)
+add_subdirectory(XClib)
 add_subdirectory(KS_Solvers)
 add_subdirectory(dft-d3)
 add_subdirectory(PW)
@@ -418,6 +433,13 @@ if(QE_ENABLE_DOC)
 endif()
 
 ###########################################################
+# Tests
+###########################################################
+if(QE_ENABLE_TEST)
+  add_subdirectory(test-suite)
+endif()
+
+###########################################################
 # Pkg-config
 ###########################################################
 configure_file(
@@ -432,7 +454,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/quantum_espresso.pc
 ###########################################################
 install(EXPORT qeTargets
         FILE qeTargets.cmake
-        NAMESPACE qe::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
 
 include(CMakePackageConfigHelpers)
@@ -540,7 +561,6 @@ add_custom_target(pp
         qe_pp_fermisurface_exe
         qe_pp_fermiproj_exe
         qe_pp_ppacf_exe
-        qe_pp_benchmarklibxc_exe
     COMMENT
         "postprocessing programs")
 

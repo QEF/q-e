@@ -1,4 +1,4 @@
-set(sources_gww
+set(src_gww
     gww/basic_structures.f90
     gww/compact_product.f90
     gww/contour.f90
@@ -33,7 +33,7 @@ set(sources_gww
     gww/times_gw.f90
     gww/vcprim.f90)
 
-set(sources_pw4gww
+set(src_pw4gww
     pw4gww/allocate_wannier.f90
     pw4gww/produce_wannier_gamma.f90
     pw4gww/start_pw4gww.f90
@@ -70,9 +70,11 @@ set(sources_pw4gww
     pw4gww/wannier_bse.f90
     pw4gww/hpsi_pw4gww.f90
     pw4gww/cgsolve_all_gamma.f90
-    pw4gww/realus.f90)
+    pw4gww/realus.f90
+    pw4gww/operator_1_vp.f90)
+qe_enable_cuda_fortran("${src_pw4gww}")
 
-set(sources_bse
+set(src_bse
     bse/openfil_bse.f90
     bse/start_bse.f90
     bse/bse_wannier.f90
@@ -108,7 +110,7 @@ set(sources_bse
     bse/qpe_exc.f90
     bse/qpcorrections.f90)
 
-set(sources_head
+set(src_head
     head/bcast_ph_input.f90
     head/close_phq.f90
     head/lanczos_k.f90
@@ -116,7 +118,7 @@ set(sources_head
     head/phq_readin.f90
     head/solve_head.f90)
 
-set(sources_minpack
+set(src_minpack
     minpack/dpmpar.f90
     minpack/fdjac2.f90
     minpack/lmder1.f90
@@ -131,7 +133,7 @@ set(sources_minpack
     minpack/mlegzo.f90
     minpack/qrsolv.f90)
 
-set(sources_simple
+set(src_simple
     simple/stop_pp.f90
     simple/read_export.f90
     simple/openfile_simple.f90
@@ -145,7 +147,7 @@ set(sources_simple
     simple/init_us_2_max.f90
     simple/commutator.f90)
 
-set(sources_simple_bse
+set(src_simple_bse
     simple_bse/simple_object.f90
     simple_bse/start_end.f90
     simple_bse/input_simple_exc.f90
@@ -158,7 +160,7 @@ set(sources_simple_bse
     simple_bse/lanczos.f90
     simple_bse/build_eemat.f90)
 
-set(sources_simple_ip
+set(src_simple_ip
     simple_ip/simple_ip_objects.f90
     simple_ip/start_end.f90
     simple_ip/input_simple_ip.f90
@@ -167,168 +169,200 @@ set(sources_simple_ip
     simple_ip/diagonalization.f90
     simple_ip/dielectric.f90)
 
-qe_add_library(qe_gww ${sources_gww})
-add_library(QE::GWW ALIAS qe_gww)
+qe_add_library(qe_gww ${src_gww})
 target_link_libraries(qe_gww
     PRIVATE
-        QE::FFTX
-    PUBLIC
-        QE::UTILX
-	QE::Modules)
+        qe_fftx
+        qe_modules)
 
-qe_add_library(qe_gww_pw4gww ${sources_pw4gww})
-add_library(QE::GWW::pw4gww ALIAS qe_gww_pw4gww)
+qe_add_library(qe_gww_pw4gww ${src_pw4gww})
 target_link_libraries(qe_gww_pw4gww
     PRIVATE
-        QE::SCALAPACK
-        QE::PW
-        QE::GWW
-        QE::FFTX
-        QE::UPF
-        QE::LAX)
+        qe_scalapack
+        qe_pw
+        qe_modules
+        qe_gww
+        qe_utilx
+        qe_fftx
+        qe_upflib
+        qe_lax
+        qe_gww_minpack
+        qe_xclib)
 
-qe_add_library(qe_gww_bse ${sources_bse})
-add_library(QE::GWW::bse ALIAS qe_gww_bse)
+qe_add_library(qe_gww_bse ${src_bse})
 target_link_libraries(qe_gww_bse
-    PUBLIC
-        QE::GWW
-        QE::PW
-        QE::GWW::pw4gww
-        QE::UPF)
+    PRIVATE
+        qe_pw
+        qe_modules
+        qe_gww
+        qe_gww_pw4gww
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
-qe_add_library(qe_gww_head ${sources_head})
-add_library(QE::GWW::head ALIAS qe_gww_head)
+qe_add_library(qe_gww_head ${src_head})
 target_link_libraries(qe_gww_head
     PRIVATE
-        QE::PW
-        QE::LR_Modules
-        QE::Modules
-        QE::PHonon::PH
-        QE::UTILX
-        QE::UPF
-        QE::FFTX)
+        qe_pw
+        qe_lr_modules
+        qe_modules
+        qe_phonon_ph
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
-qe_add_library(qe_gww_minpack ${sources_minpack})
-add_library(QE::GWW::minpack ALIAS qe_gww_minpack)
+qe_add_library(qe_gww_minpack ${src_minpack})
 target_link_libraries(qe_gww_minpack
     PRIVATE
-        QE::Modules)
+        qe_modules)
 
-qe_add_library(qe_gww_simple ${sources_simple})
-add_library(QE::GWW::simple ALIAS qe_gww_simple)
+qe_add_library(qe_gww_simple ${src_simple})
 target_link_libraries(qe_gww_simple
     PRIVATE
-        QE::PW
-        QE::GWW
-        QE::UPF
-        QE::FFTX)
+        qe_pw
+        qe_gww
+        qe_modules
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
-qe_add_library(qe_gww_simplebse ${sources_simple_bse})
-add_library(QE::GWW::simple_bse ALIAS qe_gww_simplebse)
+qe_add_library(qe_gww_simplebse ${src_simple_bse})
 target_link_libraries(qe_gww_simplebse
     PRIVATE
-        QE::UTILX
-        QE::Modules)
+        qe_modules)
 
-qe_add_library(qe_gww_simpleip ${sources_simple_ip})
-add_library(QE::GWW::simple_ip ALIAS qe_gww_simpleip)
+qe_add_library(qe_gww_simpleip ${src_simple_ip})
 target_link_libraries(qe_gww_simpleip
     PRIVATE
-        QE::UTILX
-        QE::Modules
-        QE::PW
-)
+        qe_modules
+        qe_pw)
 
 ###########################################################
 # graph.x
 ###########################################################
-set(sources util/graph.f90)
-qe_add_executable(qe_gww_util_grap_exe ${sources})
-set_target_properties(qe_gww_util_grap_exe PROPERTIES OUTPUT_NAME graph.x)
+set(src_graph_x util/graph.f90)
+qe_add_executable(qe_gww_util_grap_exe ${src_graph_x})
+set_target_properties(qe_gww_util_grap_exe 
+    PROPERTIES 
+        OUTPUT_NAME graph.x)
+set_target_properties(qe_gww_util_grap_exe 
+    PROPERTIES 
+        OUTPUT_NAME graph.x)
 
 ###########################################################
 # abcoeff_to_eps.x
 ###########################################################
-set(sources util/abcoeff_to_eps.f90)
-qe_add_executable(qe_gww_util_abcoefftoeps_exe ${sources})
-set_target_properties(qe_gww_util_abcoefftoeps_exe PROPERTIES OUTPUT_NAME abcoeff_to_eps.x)
+set(src_abcoeff_to_eps_x util/abcoeff_to_eps.f90)
+qe_add_executable(qe_gww_util_abcoefftoeps_exe ${src_abcoeff_to_eps_x})
+set_target_properties(qe_gww_util_abcoefftoeps_exe 
+    PROPERTIES 
+        OUTPUT_NAME abcoeff_to_eps.x)
+set_target_properties(qe_gww_util_abcoefftoeps_exe 
+    PROPERTIES 
+        OUTPUT_NAME abcoeff_to_eps.x)
 
 ###########################################################
 # memory_pw4gww.x
 ###########################################################
-set(sources util/memory_pw4gww.f90)
-qe_add_executable(qe_gww_util_memorypw4gww_exe ${sources})
-set_target_properties(qe_gww_util_memorypw4gww_exe PROPERTIES OUTPUT_NAME memory_pw4gww.x)
+set(src_memory_pw4gww_x util/memory_pw4gww.f90)
+qe_add_executable(qe_gww_util_memorypw4gww_exe ${src_memory_pw4gww_x})
+set_target_properties(qe_gww_util_memorypw4gww_exe 
+    PROPERTIES 
+        OUTPUT_NAME memory_pw4gww.x)
+set_target_properties(qe_gww_util_memorypw4gww_exe 
+    PROPERTIES 
+        OUTPUT_NAME memory_pw4gww.x)
 
 #############################################################
-#bse_main.x
+# bse_main.x
 ############################################################
-set(sources bse/bse_main.f90)
-qe_add_executable(qe_gww_bse_bse_main_exe ${sources})
-set_target_properties(qe_gww_bse_bse_main_exe PROPERTIES OUTPUT_NAME bse_main.x)
+set(src_bse_main_x bse/bse_main.f90)
+qe_add_executable(qe_gww_bse_bse_main_exe ${src_bse_main_x})
+set_target_properties(qe_gww_bse_bse_main_exe 
+    PROPERTIES 
+        OUTPUT_NAME bse_main.x)
 target_link_libraries(qe_gww_bse_bse_main_exe
     PRIVATE
-       QE::GWW::bse )
+       qe_gww_bse
+       qe_gww_pw4gww
+       qe_gww_minpack
+       qe_modules
+       qe_pw
+       qe_upflib
+       qe_fftx
+       qe_xclib)
+
 ################################################################
-#gww.x
+# gww.x
 ################################################################
-set (sources gww/gww.f90)
-qe_add_executable(qe_gww_gww_exe ${sources})
-set_target_properties(qe_gww_gww_exe PROPERTIES OUTPUT_NAME gww.x)
+set(src_gww_x gww/gww.f90)
+qe_add_executable(qe_gww_gww_exe ${src_gww_x})
+set_target_properties(qe_gww_gww_exe 
+    PROPERTIES 
+        OUTPUT_NAME gww.x)
 target_link_libraries(qe_gww_gww_exe
-       PRIVATE
-       QE::GWW
-       QE::GWW::minpack
-       QE::PW
-       )
+    PRIVATE
+       qe_gww
+       qe_gww_minpack
+       qe_pw
+       qe_modules)
 
 ################################################################
-#gww_fit.x 
+# gww_fit.x 
 ################################################################
-set (sources gww/gww_fit.f90)
-qe_add_executable(qe_gww_gww_fit_exe  ${sources})
-set_target_properties(qe_gww_gww_fit_exe PROPERTIES OUTPUT_NAME gww.x)
+set(src_gww_fit_x gww/gww_fit.f90)
+qe_add_executable(qe_gww_gww_fit_exe  ${src_gww_fit_x})
+set_target_properties(qe_gww_gww_fit_exe 
+    PROPERTIES 
+        OUTPUT_NAME gww.x)
 target_link_libraries(qe_gww_gww_fit_exe
-       PRIVATE 
-       QE::GWW
-       QE::GWW::minpack
-       )
+    PRIVATE 
+       qe_gww
+       qe_gww_minpack
+       qe_modules)
 
 ################################################################
-#head.x 
+# head.x 
 ################################################################
-set (sources head/head.f90)
-qe_add_executable(qe_gww_head_exe ${sources})
-set_target_properties(qe_gww_head_exe PROPERTIES OUTPUT_NAME head.x)
+set(src_head_x head/head.f90)
+qe_add_executable(qe_gww_head_exe ${src_head_x})
+set_target_properties(qe_gww_head_exe 
+    PROPERTIES 
+        OUTPUT_NAME head.x)
 target_link_libraries(qe_gww_head_exe
-       PRIVATE 
-       QE::GWW::head
-       QE::GWW::minpack
-       QE::PHonon::PH
-       QE::Modules
-       )
+    PRIVATE 
+       qe_gww_head
+       qe_gww_minpack
+       qe_phonon_ph
+       qe_modules
+       qe_pw)
 
 ###########################################################
-#simple_bse.x
+# simple_bse.x
 ###########################################################
-set (sources simple_bse/simple_bse.f90)
-qe_add_executable(qe_gww_simple_bse_exe ${sources})
-set_target_properties(qe_gww_simple_bse_exe PROPERTIES OUTPUT_NAME simple_bse.x)
+set(src_simple_bse_x simple_bse/simple_bse.f90)
+qe_add_executable(qe_gww_simple_bse_exe ${src_simple_bse_x})
+set_target_properties(qe_gww_simple_bse_exe 
+    PROPERTIES 
+        OUTPUT_NAME simple_bse.x)
 target_link_libraries(qe_gww_simple_bse_exe
     PRIVATE
-        QE::GWW::simple_bse
-)
+        qe_gww_simplebse
+        qe_upflib
+        qe_modules)
 
 ###############################################################
-#simple_ip.x
+# simple_ip.x
 ################################################################
-set (sources simple_ip/simple_ip.f90)
-qe_add_executable(qe_gww_simple_ip_exe ${sources}) 
-set_target_properties(qe_gww_simple_ip_exe PROPERTIES OUTPUT_NAME simple_ip.x)
+set(src_simple_ip_x simple_ip/simple_ip.f90)
+qe_add_executable(qe_gww_simple_ip_exe ${src_simple_ip_x}) 
+set_target_properties(qe_gww_simple_ip_exe 
+    PROPERTIES 
+        OUTPUT_NAME simple_ip.x)
 target_link_libraries(qe_gww_simple_ip_exe
     PRIVATE
-        QE::GWW::simple_ip
-)
+        qe_gww_simpleip
+        qe_modules)
 
 ###########################################################
 
@@ -345,4 +379,10 @@ qe_install_targets(
     # Executables
     qe_gww_util_grap_exe
     qe_gww_util_abcoefftoeps_exe
-    qe_gww_util_memorypw4gww_exe)
+    qe_gww_util_memorypw4gww_exe
+    qe_gww_bse_bse_main_exe
+    qe_gww_gww_exe
+    qe_gww_gww_fit_exe
+    qe_gww_head_exe
+    qe_gww_simple_bse_exe
+    qe_gww_simple_ip_exe)

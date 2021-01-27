@@ -16,7 +16,7 @@ SUBROUTINE init_run()
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       force_pairing
+                                       force_pairing, use_para_diag
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -27,11 +27,12 @@ SUBROUTINE init_run()
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
+  USE uspp_gpum,                ONLY : vkb_d
   USE core,                     ONLY : rhoc
-  USE wavefunctions,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
-  USE electrons_base,           ONLY : nudx, nbnd
+  USE electrons_base,           ONLY : nudx
   USE efield_module,            ONLY : tefield, tefield2
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
@@ -49,7 +50,7 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
-  USE funct,                    ONLY : dft_is_meta, dft_is_hybrid
+  USE xc_lib,                   ONLY : xclib_dft_is
   USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
   USE efcalc,                   ONLY : clear_nbeg
@@ -80,6 +81,9 @@ SUBROUTINE init_run()
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
   USE exx_module,               ONLY : exx_initialize
+#if defined (__CUDA)
+  USE cudafor
+#endif
   !
   IMPLICIT NONE
   !
@@ -125,10 +129,13 @@ SUBROUTINE init_run()
   !
   CALL init_geometry()
   !
+  ! ... initialize communicators for parallel linear algebra
+  !
+  CALL set_para_diag ( nudx, use_para_diag )
+  !
   ! ... mesure performances of parallel routines
   !
   CALL mesure_mmul_perf( nudx )
-  !
   CALL mesure_diag_perf( nudx )
   !
   IF ( lwf ) CALL clear_nbeg( nbeg )
@@ -160,7 +167,7 @@ SUBROUTINE init_run()
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
   !exx_wf related
-  IF ( dft_is_hybrid() .AND. lwf ) THEN
+  IF ( xclib_dft_is('hybrid') .AND. lwf ) THEN
     !
     CALL exx_initialize()
     !
@@ -168,10 +175,7 @@ SUBROUTINE init_run()
   !
   !  initialize wave functions descriptors and allocate wf
   !
-  IF(lwfpbe0nscf) ALLOCATE(cv0( ngw, vnbsp ) )   ! Lingzhu Kong
-  ALLOCATE( c0_bgrp( ngw, nbspx ) )
-  ALLOCATE( cm_bgrp( ngw, nbspx ) )
-  ALLOCATE( phi_bgrp( ngw, nbspx ) )
+  CALL allocate_cp_wavefunctions( ngw, nbspx, vnbsp, lwfpbe0nscf )
   !
   IF ( iverbosity > 1 ) THEN
      !
@@ -200,14 +204,17 @@ SUBROUTINE init_run()
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   !
   ALLOCATE( vkb( ngw, nkb ) )
+#if defined(_CUDA)
+  ALLOCATE( vkb_d( ngw, nkb ) )
+#endif
   !
-  IF ( dft_is_meta() .AND. tens ) &
+  IF ( xclib_dft_is('meta') .AND. tens ) &
      CALL errore( ' init_run ', 'ensemble_dft not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. nbgrp > 1 ) &
+  IF ( xclib_dft_is('meta') .AND. nbgrp > 1 ) &
      CALL errore( ' init_run ', 'band parallelization not implemented for metaGGA', 1 )
   !
-  IF ( dft_is_meta() .AND. tpre ) THEN
+  IF ( xclib_dft_is('meta') .AND. tpre ) THEN
      !
      ALLOCATE( crosstaus( dffts%nnr, 6, nspin ) )
      ALLOCATE( dkedtaus(  dffts%nnr, 3, 3, nspin ) )
@@ -260,11 +267,6 @@ SUBROUTINE init_run()
   velsp = 0.D0
   !
   hnew = h
-  !
-  IF(lwfpbe0nscf) cv0=( 0.D0, 0.D0 )    ! Lingzhu Kong
-  cm_bgrp  = ( 0.D0, 0.D0 )
-  c0_bgrp  = ( 0.D0, 0.D0 )
-  phi_bgrp = ( 0.D0, 0.D0 )
   !
   IF ( tens ) then
      CALL id_matrix_init( idesc, nspin )

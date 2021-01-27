@@ -39,7 +39,7 @@ SUBROUTINE electrons()
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxbuff, &
                                    fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
@@ -48,6 +48,9 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : nat
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
   USE loc_scdm_k,           ONLY : localize_orbitals_k
+  !
+  USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
+  USE scf_gpum,             ONLY : using_vrs
 
   !
   IMPLICIT NONE
@@ -80,7 +83,7 @@ SUBROUTINE electrons()
   iter = 0
   first = .true.
   tr2_final = tr2
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      !printout = 0  ! do not print etot and energy components at each scf step
      printout = 1  ! print etot, not energy components at each scf step
   ELSE IF ( lmd ) THEN
@@ -88,7 +91,7 @@ SUBROUTINE electrons()
   ELSE
      printout = 2  ! print etot and energy components at each scf step
   ENDIF
-  IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
+  IF (xclib_dft_is('hybrid') .AND. adapt_thr ) tr2= tr2_init
   fock0 = 0.D0
   fock1 = 0.D0
   fock3 = 0.D0
@@ -113,6 +116,10 @@ SUBROUTINE electrons()
            READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
            READ (iunres, *) (et(1:nbnd,ik),ik=1,nks)
            CLOSE ( unit=iunres, status='delete')
+           CALL using_et(2); CALL using_wg(2)
+#if defined(__CUDA)
+           CALL using_wg_d(0)
+#endif
            ! ... if restarting here, exx was already active
            ! ... initialize stuff for exx
            first = .false.
@@ -131,6 +138,7 @@ SUBROUTINE electrons()
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+           CALL using_vrs(1)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
@@ -150,13 +158,14 @@ SUBROUTINE electrons()
      !
      CALL electrons_scf ( printout, exxen )
      !
-     IF ( .NOT. dft_is_hybrid() ) RETURN
+     IF ( .NOT. xclib_dft_is('hybrid') ) RETURN
      !
      ! ... From now on: hybrid DFT only
      !
      IF ( stopped_by_user .OR. .NOT. conv_elec ) THEN
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
+           CALL using_et(0)
            WRITE(stdout,'(5x,"Calculation (EXX) stopped during iteration #", &
                         & i6)') iter
            CALL seqopn (iunres, 'restart_e', 'formatted', exst)
@@ -206,6 +215,7 @@ SUBROUTINE electrons()
         etot = etot + etxc + exxen
         !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+        CALL using_vrs(1)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
@@ -304,6 +314,7 @@ SUBROUTINE electrons()
      WRITE( stdout,'(/5x,"EXX: now go back to refine exchange calculation")')
      !
      IF ( check_stop_now() ) THEN
+        CALL using_et(0)
         WRITE(stdout,'(5x,"Calculation (EXX) stopped after iteration #", &
                         & i6)') iter
         conv_elec=.FALSE.
@@ -380,7 +391,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
-                                   mbd_vdw
+                                   mbd_vdw, use_gpu
   USE control_flags,        ONLY : n_scf_steps, scf_error
 
   USE io_files,             ONLY : iunmix, output_drho
@@ -412,6 +423,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE dfunct,               ONLY : newd
+  USE dfunct_gpum,          ONLY : newd_gpu
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_module,           ONLY : lfcp, fcp_mu
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
@@ -420,6 +432,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE plugin_variables,     ONLY : plugin_etot
   USE libmbd_interface,     ONLY : EmbdvdW
+  !
+  USE wvfct_gpum,           ONLY : using_et
+  USE scf_gpum,             ONLY : using_vrs
+  USE device_fbuff_m,             ONLY : dev_buf, pin_buf
   !
   IMPLICIT NONE
   !
@@ -486,6 +502,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   iter = 0
   dr2  = 0.0_dp
   IF ( restart ) CALL restart_in_electrons( iter, dr2, ethr, et )
+  IF ( restart ) CALL using_et(2)
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
@@ -542,10 +559,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
+        CALL using_et(0)
         CALL save_in_electrons (iter, dr2, ethr, et )
         GO TO 10
      ENDIF
      iter = iter + 1
+     !
+     IF (use_gpu .and. (iverbosity >= 1) ) CALL dev_buf%print_report(stdout)
+     IF (use_gpu .and. (iverbosity >= 1) ) CALL pin_buf%print_report(stdout)
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
      !
@@ -604,6 +625,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( stopped_by_user ) THEN
            conv_elec=.FALSE.
+           CALL using_et( 0 )
            CALL save_in_electrons( iter-1, dr2, ethr, et )
            GO TO 10
         ENDIF
@@ -616,13 +638,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... explicitly collected to the first node
         ! ... this is done here for et, in sum_band for wg
         !
+        CALL using_et(1)
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
         ! ... the new density is computed here. For PAW:
         ! ... sum_band computes new becsum (stored in uspp modules)
         ! ... and a subtly different copy in rho%bec (scf module)
         !
-        CALL sum_band()
+        IF (.not. use_gpu) CALL sum_band()
+        IF (      use_gpu) CALL sum_band_gpu()
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
@@ -839,17 +863,20 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      ! ... define the total local potential (external + scf)
      !
+     CALL using_vrs(1)
      CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
      !
      ! ... interpolate the total local potential
      !
+     CALL using_vrs(1) ! redundant
      CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential
      ! ... PAW: newd contains PAW updates of NL coefficients
      !
-     CALL newd()
+     IF (.not. use_gpu) CALL newd()
+     IF (      use_gpu) CALL newd_gpu()
      !
      IF ( lelfield ) en_el =  calc_pol ( )
      !
@@ -1135,7 +1162,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                - \sum rho%ns       v%ns       [for LDA+U]
        !                - \sum becsum       D1_Hxc     [for PAW]
        !
-       USE funct,  ONLY : dft_is_meta
+       USE xc_lib,  ONLY : xclib_dft_is
        !
        IMPLICIT NONE
        !
@@ -1156,7 +1183,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           delta_e = - SUM( rho%of_r(:,:)*v%of_r(:,:) )
        ENDIF
        !
-       IF ( dft_is_meta() ) &
+       IF ( xclib_dft_is('meta') ) &
           delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
        !
        delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
@@ -1220,7 +1247,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
        !                  - \sum \delta becsum       D1         [for PAW] 
        !
-       USE funct,  ONLY : dft_is_meta
+       USE xc_lib, ONLY : xclib_dft_is
+       !
        IMPLICIT NONE
        REAL(DP) :: delta_escf, delta_escf_hub, rho_dif(2)
        INTEGER  :: ir, na1, nt1, na2, nt2, m1, m2, equiv_na2, viz, is
@@ -1241,7 +1269,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
          delta_escf = -SUM( ( rhoin%of_r(:,:)-rho%of_r(:,:) )*v%of_r(:,:) )
        ENDIF
        !
-       IF ( dft_is_meta() ) &
+       IF ( xclib_dft_is('meta') ) &
           delta_escf = delta_escf - &
                        SUM( (rhoin%kin_r(:,:)-rho%kin_r(:,:) )*v%kin_r(:,:))
        !
@@ -1574,6 +1602,8 @@ FUNCTION exxenergyace( )
   USE control_flags,   ONLY : gamma_only
   USE wavefunctions,   ONLY : evc
   !
+  USE wavefunctions_gpum, ONLY : using_evc
+  !
   IMPLICIT NONE
   !
   REAL(DP) :: exxenergyace
@@ -1587,11 +1617,14 @@ FUNCTION exxenergyace( )
   domat = .TRUE.
   exxenergyace=0.0_dp
   !
+  CALL using_evc(0)
+  !
   DO ik = 1, nks
      npw = ngk (ik)
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+     IF (nks > 1) CALL using_evc(2)
      IF (gamma_only) THEN
         CALL vexxace_gamma( npw, nbnd, evc, ex )
      ELSE

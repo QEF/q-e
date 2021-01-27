@@ -81,7 +81,7 @@ SUBROUTINE dynmatcc(dyncc)
         ENDDO
         DO i=1,3
            CALL dvb_cc  (nlcc, nt, ngm, dfftp%nnr, &
-                dfftp%nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
+                dfftp%nl,igtongl,rhocg,dmuxc(:,1,1),gc(1,i),aux3,gc(1,i))
         ENDDO
         DO nb=1,nat
            ntb=ityp(nb)

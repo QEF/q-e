@@ -13,7 +13,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat
-  use funct, only : dft_is_gradient, dft_is_nonlocc
+  USE funct,  only : dft_is_nonlocc
+  USE xc_lib, only : xclib_dft_is
   USE cell_base, ONLY : omega
   use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm
@@ -93,7 +94,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-     if ( dft_is_gradient() ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
+     if ( xclib_dft_is('gradient') ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
                           dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1, 1, ipert), &
                           nspin_mag, nspin_gga, g, dvaux)
      !

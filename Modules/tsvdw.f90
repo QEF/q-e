@@ -19,10 +19,9 @@ USE cell_base,          ONLY: ainv               !h^-1 matrix for converting bet
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
-USE funct,              ONLY: get_iexch          !retrieves type of exchange utilized in functional
-USE funct,              ONLY: get_icorr          !retrieves type of correlation utilized in functional
-USE funct,              ONLY: get_igcx           !retrieves type of gradient correction to exchange utilized in functional
-USE funct,              ONLY: get_igcc           !retrieves type of gradient correction to correlation utilized in functional
+USE xc_lib,             ONLY: xclib_get_id
+
+!correction to correlation utilized in functional
 USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
 USE ions_base,          ONLY: nat                !number of total atoms (all atomic species)
 USE ions_base,          ONLY: nsp                !number of unique atomic species
@@ -148,6 +147,7 @@ PRIVATE :: GetVdWParam
   !
   LOGICAL :: uniform_grid=.FALSE.
   INTEGER :: ip,iq,ir,is,it,NrgpA,NrgpintA,icutrA,Ndim
+  INTEGER :: iexch, icorr, igcx, igcc
   REAL(DP) :: dxA,gfctrA,vref,eref,verr,d,dk1,dk2,dk3,num,den,drab,f1,f2,f3,L1,L2,L3
   REAL(DP), DIMENSION(:), ALLOCATABLE :: atgrdr,atgrdrab,atrhor,datrhor,d2atrhor,CSA,CSB,CSC,CSD
   !
@@ -189,11 +189,16 @@ PRIVATE :: GetVdWParam
   !
   ! Set sR damping function parameter (functional dependent and currently only available for PBE & PBE0)...
   !
-  IF (get_iexch().EQ.1.AND.get_icorr().EQ.4.AND.get_igcx().EQ.3.AND.get_igcc().EQ.4) THEN
+  iexch = xclib_get_id('LDA','EXCH')
+  icorr = xclib_get_id('LDA','CORR')
+  igcx  = xclib_get_id('GGA','EXCH')
+  igcc  = xclib_get_id('GGA','CORR')
+  !
+  IF( iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
     !
     sR=0.94_DP !PBE=sla+pw+pbx+pbc
     !
-  ELSE IF (get_iexch().EQ.6.AND.get_icorr().EQ.4.AND.get_igcx().EQ.8.AND.get_igcc().EQ.4) THEN
+  ELSEIF( iexch==6 .AND. icorr==4 .AND. igcx==8 .AND. igcc==4) THEN
     !
     sR=0.96_DP !PBE0=pb0x+pw+pb0x+pbc !RAD/BS: This line will not work in CP unless PBE0 code update funct.f90...
     !

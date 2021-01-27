@@ -26,6 +26,8 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    USE uspp_param,  ONLY: upf
    USE basis,       ONLY: natomwfc
    !
+   USE us_gpum,    ONLY : using_tab_at
+   !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: ik
@@ -67,6 +69,7 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    !
    q(:) = DSQRT(q(:))
    !
+   CALL using_tab_at(0)
    DO nt=1,ntyp
       DO nb=1,upf(nt)%nwfc
          IF (upf(nt)%oc(nb) >= 0.d0) THEN

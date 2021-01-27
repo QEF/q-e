@@ -1,14 +1,14 @@
+
 ###########################################################
-# QE::FOX
+# FoX
 ###########################################################
 if(FOX_ROOT)
     add_library(qe_fox INTERFACE)
-    add_library(QE::FOX ALIAS qe_fox)
     qe_install_targets(qe_fox) 
     target_link_libraries(qe_fox INTERFACE "-L${FOX_ROOT}/lib;-lFoX_dom;-lFoX_sax;-lFoX_wxml;-lFoX_common;-lFoX_utils;-lFoX_fsys")
-    target_include_directories(qe_fox INTERFACE ${FOX_ROOT}/finclude)
+    target_include_directories(qe_fox INTERFACE ${FOX_ROOT}/include)
 else()
-    message(STATUS "Installing QE::FOX via submodule")
+    message(STATUS "Installing FoX via submodule")
     set(fox_targets
         FoX_fsys
         FoX_utils
@@ -20,20 +20,13 @@ else()
     qe_git_submodule_update(external/fox)
     add_subdirectory(fox EXCLUDE_FROM_ALL)
     add_library(qe_fox INTERFACE)
-    add_library(QE::FOX ALIAS qe_fox)
     target_link_libraries(qe_fox INTERFACE ${fox_targets})
     qe_fix_fortran_modules(${fox_targets})
     qe_install_targets(qe_fox ${fox_targets})
 endif()
 
 ###########################################################
-# QE::libbeef
-###########################################################
-add_subdirectory(libbeef)
-target_link_libraries(qe_libbeef PRIVATE QE::LAPACK)
-
-###########################################################
-# QE::WANNIER90
+# WANNIER90
 ###########################################################
 # TODO look for an externally-provided wannier90
 qe_git_submodule_update(external/wannier90)
@@ -67,10 +60,9 @@ set(sources
     wannier90/src/ws_distance.F90)
 
 qe_add_library(qe_wannier90 ${sources})
-add_library(QE::WANNIER90 ALIAS qe_wannier90)
 target_link_libraries(qe_wannier90
     PRIVATE
-        QE::LAPACK)
+        qe_lapack)
 
 ###########################################################
 # wannier_prog.x
@@ -80,7 +72,7 @@ qe_add_executable(qe_wannierprog_exe ${sources})
 set_target_properties(qe_wannierprog_exe PROPERTIES OUTPUT_NAME wannier_prog.x)
 target_link_libraries(qe_wannierprog_exe
     PRIVATE
-        QE::WANNIER90)
+        qe_wannier90)
 
 ###########################################################
 # w90chk2chk.x
@@ -90,7 +82,7 @@ qe_add_executable(qe_w90chk2chk_exe ${sources})
 set_target_properties(qe_w90chk2chk_exe PROPERTIES OUTPUT_NAME w90chk2chk.x)
 target_link_libraries(qe_w90chk2chk_exe
     PRIVATE
-        QE::WANNIER90)
+        qe_wannier90)
 
 ###########################################################
 # postw90.x
@@ -100,7 +92,7 @@ qe_add_executable(qe_wannier90_postw90_exe ${sources})
 set_target_properties(qe_wannier90_postw90_exe PROPERTIES OUTPUT_NAME postw90.x)
 target_link_libraries(qe_wannier90_postw90_exe
     PRIVATE
-        QE::WANNIER90)
+        qe_wannier90)
 
 ###########################################################
 
@@ -113,28 +105,127 @@ qe_install_targets(
     qe_wannier90_postw90_exe)
 
 ###########################################################
-# QE::MBD
+# MBD
 ###########################################################
 if(MBD_ROOT)
     add_library(qe_mbd INTERFACE)
-    add_library(QE::MBD ALIAS qe_mbd)
     qe_install_targets(qe_mbd) 
     target_link_libraries(qe_mbd INTERFACE "-L${MBD_ROOT}/lib;-lmbd")
-    target_include_directories(qe_mbd INTERFACE ${MBD_ROOT}/finclude)
+    target_include_directories(qe_mbd INTERFACE ${MBD_ROOT}/include)
 else()
-    message(STATUS "Installing QE::MBD via submodule")
+    message(STATUS "Installing MBD via submodule")
     qe_git_submodule_update(external/mbd)
     if(NOT BUILD_SHARED_LIBS)
         set(BUILD_SHARED_LIBS OFF)
         set(FORCE_BUILD_STATIC_LIBS ON)
     endif()
+    set(BUILD_TESTING OFF)
     add_subdirectory(mbd EXCLUDE_FROM_ALL)
+    unset(BUILD_TESTING)
     if(FORCE_BUILD_STATIC_LIBS)
         unset(BUILD_SHARED_LIBS)
     endif()
     add_library(qe_mbd INTERFACE)
-    add_library(QE::MBD ALIAS qe_mbd)
     target_link_libraries(qe_mbd INTERFACE Mbd)
     qe_fix_fortran_modules(Mbd)
     qe_install_targets(qe_mbd Mbd)
 endif()
+
+###########################################################
+# Eigensolver_GPU
+###########################################################
+if(QE_ENABLE_CUDA)
+    qe_git_submodule_update(external/eigensolver_gpu)
+
+    set(src_eigensolver_gpu
+        eigensolver_gpu/lib_eigsolve/dsyevd_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsygst_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsygvdx_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsymv_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsytd2_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsytrd_gpu.F90
+        eigensolver_gpu/lib_eigsolve/eigsolve_vars.F90
+        eigensolver_gpu/lib_eigsolve/toolbox.F90
+        eigensolver_gpu/lib_eigsolve/zheevd_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhegst_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhegvdx_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhemv_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhetd2_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhetrd_gpu.F90)
+
+    # See: https://github.com/NVIDIA/Eigensolver_gpu/blob/master/lib_eigsolve/Makefile
+    # Comment: the flags "-O3 -mp -Mlarge_arrays" are inherited
+    #          from the global flags of PGI compiler
+    set(FLAGS -pgf90libs -Mcuda)
+    set(FLAGS2 -pgf90libs -Mcuda,maxregcount:64)
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(FLAGS3 -pgf90libs -Mcuda=cc35,cc60,nordc,maxregcount:255)
+    elseif(CMAKE_CUDA_ARCHITECTURES GREATER 60)
+        set(FLAGS3 -pgf90libs -Mcuda=cc60,nordc,maxregcount:255)
+    else()
+        set(FLAGS3 -pgf90libs -Mcuda=nordc,maxregcount:255)
+    endif()
+    set_source_files_properties(
+        eigensolver_gpu/lib_eigsolve/dsyevd_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsygst_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsygvdx_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsytd2_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsytrd_gpu.F90
+        eigensolver_gpu/lib_eigsolve/eigsolve_vars.F90
+        eigensolver_gpu/lib_eigsolve/toolbox.F90
+        eigensolver_gpu/lib_eigsolve/zheevd_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhegst_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhegvdx_gpu.F90
+        eigensolver_gpu/lib_eigsolve/zhetrd_gpu.F90
+        PROPERTIES 
+            COMPILE_OPTIONS "${FLAGS}")
+    set_source_files_properties(
+        eigensolver_gpu/lib_eigsolve/zhetd2_gpu.F90
+        eigensolver_gpu/lib_eigsolve/dsymv_gpu.F90
+        PROPERTIES 
+            COMPILE_OPTIONS "${FLAGS2}")
+    set_source_files_properties(
+        eigensolver_gpu/lib_eigsolve/zhemv_gpu.F90
+        PROPERTIES 
+            COMPILE_OPTIONS "${FLAGS3}")
+
+    add_library(qe_eigensolver_gpu ${src_eigensolver_gpu})
+    qe_fix_fortran_modules(qe_eigensolver_gpu)
+
+    target_link_libraries(qe_eigensolver_gpu
+        PRIVATE
+            qe_openmp_fortran)
+    if(QE_ENABLE_CUDA)
+        target_link_libraries(qe_eigensolver_gpu
+        PRIVATE 
+            CUDA::cusolver)
+    endif()
+
+    qe_install_targets(qe_eigensolver_gpu)
+endif()
+
+###########################################################
+# DeviceXlib
+###########################################################
+qe_git_submodule_update(external/devxlib)
+
+set(src_devxlib
+    devxlib/src/deviceXlib_mod.f90
+    devxlib/src/device_memcpy.f90
+    devxlib/src/device_memcpy_mod.f90
+    devxlib/src/device_auxfunc.f90
+    devxlib/src/device_auxfunc_mod.f90
+    devxlib/src/device_fbuff.f90
+    devxlib/src/device_fbuff_mod.f90
+    devxlib/src/timer_mod.f90
+    devxlib/src/timer.c)
+qe_enable_cuda_fortran("${src_devxlib}")
+
+qe_add_library(qe_devxlib ${src_devxlib})
+
+target_include_directories(qe_devxlib 
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/src")
+target_include_directories(qe_devxlib 
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/include")
+
+qe_install_targets(qe_devxlib)

@@ -159,6 +159,14 @@ MODULE uspp
   REAL(DP), ALLOCATABLE :: &
        dbeta(:,:,:,:,:)      ! derivative of beta functions w.r.t. cell for CP (without struct.factor)
   !
+#if defined (__CUDA)
+  PUBLIC :: lpx_d, lpl_d, ap_d
+  INTEGER, ALLOCATABLE, DEVICE ::             &! for each pair of combined momenta lm(1),lm(2): 
+       lpx_d(:,:),     &! maximum combined angular momentum LM
+       lpl_d(:,:,:)    ! list of combined angular momenta  LM
+  REAL(DP), ALLOCATABLE, DEVICE :: &
+       ap_d(:,:,:)
+#endif
 CONTAINS
   !
   !-----------------------------------------------------------------------
@@ -244,7 +252,16 @@ CONTAINS
     deallocate(ylm)
     deallocate(rr)
     deallocate(r)
-    
+#if defined (__CUDA)
+    IF (ALLOCATED(ap_d)) DEALLOCATE(ap_d)
+    ALLOCATE(ap_d, SOURCE=ap)
+    !
+    IF (ALLOCATED(lpx_d)) DEALLOCATE(lpx_d)
+    ALLOCATE(lpx_d, SOURCE=lpx)
+    !
+    IF (ALLOCATED(lpl_d)) DEALLOCATE(lpl_d)
+    ALLOCATE(lpl_d, SOURCE=lpl)
+#endif
     return
   end subroutine aainit
   !
@@ -366,6 +383,7 @@ CONTAINS
   SUBROUTINE deallocate_uspp()
     !-----------------------------------------------------------------------
     !
+    !
     IF( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
     IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
     IF( ALLOCATED( nhtolm ) )     DEALLOCATE( nhtolm )
@@ -384,6 +402,12 @@ CONTAINS
     IF( ALLOCATED( deeq_nc ) )    DEALLOCATE( deeq_nc )
     IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
+    !
+#if defined (__CUDA)
+    IF( ALLOCATED( ap_d ) )       DEALLOCATE(ap_d)
+    IF( ALLOCATED( lpx_d ) )      DEALLOCATE(lpx_d)
+    IF( ALLOCATED( lpl_d ) )      DEALLOCATE(lpl_d)
+#endif
     !
   END SUBROUTINE deallocate_uspp
   !

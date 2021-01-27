@@ -111,6 +111,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
+      
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
@@ -119,9 +120,8 @@ MODULE pw_restart_new
                                        block_2, block_height, etotgatefield ! TB
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : intra_bgrp_comm
-      USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
-                                       get_gau_parameter, &
-                                       get_screening_parameter, exx_is_active
+      USE xc_lib,               ONLY : xclib_dft_is, get_gau_parameter, &
+                                       get_screening_parameter, xclib_get_exx_fraction, exx_is_active
       USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       USE exx,                  ONLY : ecutfock, local_thr 
@@ -143,11 +143,14 @@ MODULE pw_restart_new
       USE martyna_tuckerman,    ONLY : do_comp_mt 
       USE run_info,             ONLY : title
       !
+      USE wvfct_gpum,           ONLY : using_et, using_wg
+      USE wavefunctions_gpum,   ONLY : using_evc
+      !
       IMPLICIT NONE
       !
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
-      CHARACTER(LEN=26)     :: dft_name
+      CHARACTER(LEN=32)     :: dft_name
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       CHARACTER(LEN=20)     :: occupations
@@ -210,6 +213,10 @@ MODULE pw_restart_new
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
       ! If local PW dimensions are not available, set to 0
+      !
+      CALL using_et(0)
+      CALL using_wg(0)
+      CALL using_evc(0)
       !
       ALLOCATE( ngk_g( nkstot ) )
       ngk_g(:) = 0
@@ -354,7 +361,7 @@ MODULE pw_restart_new
 ! ... DFT
 !-------------------------------------------------------------------------------
          !
-         IF (dft_is_hybrid() ) THEN 
+         IF (xclib_dft_is('hybrid') ) THEN 
             ALLOCATE ( hybrid_obj)
             IF (get_screening_parameter() > 0.0_DP) THEN
                scr_par_ = get_screening_parameter() 
@@ -369,7 +376,7 @@ MODULE pw_restart_new
                loc_thr_p => loc_thr_ 
             END IF 
             CALL qexsd_init_hybrid(hybrid_obj, DFT_IS_HYBRID = .TRUE., NQ1 = nq1 , NQ2 = nq2, NQ3 =nq3, ECUTFOCK = ecutfock/e2, &
-                                   EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
+                                   EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
                                    EXXDIV_TREATMENT = exxdiv_treatment, X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation,&
                                    ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
          END IF 
@@ -749,6 +756,9 @@ MODULE pw_restart_new
                                        root_bgrp_id, my_bgrp_id
       USE wrappers,             ONLY : f_mkdir_safe
       !
+      USE wavefunctions_gpum,   ONLY : using_evc
+      USE wvfct_gpum,           ONLY : using_et
+      !
       IMPLICIT NONE
       !
       INTEGER               :: ios, ig, ngg, ipol, ispin
@@ -760,6 +770,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       !
+      CALL using_evc(0); CALL using_et(0) !? Is this needed? et never used!
       dirname = restart_dir ()
       !
       ! ... check that restart_dir exists on all processors that write
@@ -825,6 +836,7 @@ MODULE pw_restart_new
          !
          ! ... read wavefunctions - do not read if already in memory (nsk==1)
          !
+         IF ( nks > 1 ) CALL using_evc(2)
          IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
          !
          IF ( nspin == 2 ) THEN
@@ -846,6 +858,7 @@ MODULE pw_restart_new
          ! ... Only the first band group of each pool writes
          ! ... No warranty it works for more than one band group
          !
+         IF ( my_bgrp_id == root_bgrp_id ) CALL using_evc(0)
          IF ( my_bgrp_id == root_bgrp_id ) CALL write_wfc( iunpun, &
               filename, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
               ispin, nspin, evc, npw_g, gamma_only, nbnd, &
@@ -990,9 +1003,10 @@ MODULE pw_restart_new
                                   Hubbard_l, Hubbard_l_back, Hubbard_l1_back, backall, &
                                   Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
-      USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
-           set_gau_parameter, enforce_input_dft,  &
-           start_exx, dft_is_hybrid
+      USE funct,           ONLY : enforce_input_dft
+      USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
+                                  set_screening_parameter, set_gau_parameter, &
+                                  xclib_set_exx_fraction, stop_exx, start_exx  
       USE london_module,   ONLY : scal6, lon_rcut, in_C6
       USE tsvdw_module,    ONLY : vdw_isolated
       USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -1019,7 +1033,7 @@ MODULE pw_restart_new
       !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
       LOGICAL  :: magnetic_sym, lvalid_input, lfixed
-      CHARACTER(LEN=26) :: dft_name
+      CHARACTER(LEN=32) :: dft_name
       CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
@@ -1098,10 +1112,10 @@ MODULE pw_restart_new
       !! More DFT initializations
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       CALL enforce_input_dft ( dft_name, .TRUE. )
-      IF ( dft_is_hybrid() ) THEN
+      IF ( xclib_dft_is('hybrid') ) THEN
          ecutvcut=ecutvcut*e2
          ecutfock=ecutfock*e2
-         CALL set_exx_fraction( exx_fraction ) 
+         CALL xclib_set_exx_fraction( exx_fraction ) 
          CALL set_screening_parameter ( screening_parameter )
          CALL start_exx ()
       END IF

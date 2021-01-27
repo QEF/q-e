@@ -1,0 +1,62 @@
+xclib_test.x is a testing program for the XClib library.
+
+To compile the test program, once you have properly configured QE,
+inside the directory XClib type:
+
+	make test
+
+Then you can run tests using commands like:
+
+	./xclib_test.x < input_file > output_file
+
+Four options available:
+
+* dft-info: infos on the input dft are provided. If the functionals
+            functionals are from libxc the external parameters, when
+            present, are listed with a brief description and their
+            default value.
+            Example of input_file content:
+
+            &INPUT_NAMELIST
+                test='dft-info'
+                dft1='mgga_x_scan mgga_c_scan'
+            /
+            
+* gen-benchmark: the program generates a set of data to compare the
+                 XC output to.
+                 Example of input file content:
+                 
+                 &INPUT_NAMELIST
+                    test='gen-benchmark'
+                    family='GGA'
+                    dft1='PBE'
+                    nspin=2
+                    DF_OK=.FALSE.
+                 /
+
+* exe-benchmark: the program takes as input the data file generated
+                 previously with the 'gen-benchmark' option and
+                 compares the output of the XC routines.
+
+* dft-comparison: the program compares two different DFTs on a large 
+                  grid of points. Max, min and average percentage 
+                  difference between the two dft outputs (energy and
+                  potential) are provided and the points of the grid
+                  where the two output differ are shown. This option
+                  can be used, for example, to find differences between
+                  internal QE functionals and the libxc ones.
+                  Example of input file content:
+
+                  &INPUT_NAMELIST
+                     test='dft-comparison',
+                     nspin=2,
+                     family='LDA',
+                     DF_OK=.FALSE.,
+                     dft1='sla pz',
+                     dft2='lda_x lda_c_pz'
+                  /
+
+The testing program is available for LDA, GGA and MGGA functionals. It 
+also tests the potential derivatives for LDA (dmxc) and GGA (dgcxc) when
+the DF_OK variable is set to TRUE.
+

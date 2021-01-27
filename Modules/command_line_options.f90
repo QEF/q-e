@@ -38,6 +38,7 @@ MODULE command_line_options
   INTEGER :: nargs = 0
   ! ... QE arguments read from command line
   INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1, nyfft_ = 1, nmany_ = 1
+  LOGICAL :: pencil_decomposition_ = .false.
   ! ... Indicate if using library init
   LOGICAL :: library_init = .FALSE.
   ! ... input file name read from command line
@@ -125,6 +126,14 @@ CONTAINS
               READ ( arg, *, ERR = 15, END = 15) ntg_         ! read the argument as ntg_
               nyfft_ = ntg_  ! set nyfft_ equal to ntg_
               narg = narg + 1
+           CASE ( '-pd', 'use_pd', '-pencil_decomposition', '-use_pencil_decomposition' )
+              IF (read_string) THEN
+                 CALL my_getarg ( input_command_line, narg, arg )
+              ELSE
+                 CALL get_command_argument ( narg, arg )
+              ENDIF
+              READ ( arg, *, ERR = 15, END = 15) pencil_decomposition_
+              narg = narg + 1
            CASE ( '-nb', '-nband', '-nbgrp', '-nband_group') 
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
@@ -170,6 +179,7 @@ CONTAINS
      CALL mp_bcast( nyfft_ , root, world_comm ) 
      CALL mp_bcast( nband_ , root, world_comm ) 
      CALL mp_bcast( ndiag_ , root, world_comm ) 
+     CALL mp_bcast( pencil_decomposition_ , root, world_comm )
      
   END SUBROUTINE get_command_line
   !
@@ -216,17 +226,18 @@ CONTAINS
 
   END SUBROUTINE my_getarg 
 
-  SUBROUTINE set_command_line ( nimage, npool, ntg, nmany, nyfft, nband, ndiag)
+  SUBROUTINE set_command_line ( nimage, npool, ntg, nmany, nyfft, nband, ndiag, pencil_decomposition)
      ! directly set command line options without going through the command line
      IMPLICIT NONE
 
-     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nmany, nyfft, nband, ndiag
+     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nmany, nyfft, nband, ndiag, pencil_decomposition
      !
      IF ( PRESENT(nimage) ) nimage_ = nimage
      IF ( PRESENT(npool)  ) npool_  = npool
      IF ( PRESENT(nyfft)  ) nyfft_  = nyfft
      IF ( PRESENT(nband)  ) nband_  = nband
      IF ( PRESENT(ndiag)  ) ndiag_  = ndiag
+     IF ( PRESENT(pencil_decomposition)  ) pencil_decomposition_  = pencil_decomposition
      IF ( PRESENT(ntg) .and. PRESENT(nmany) ) THEN
         ! ERROR!!!!
      ELSEIF ( PRESENT(ntg) ) THEN

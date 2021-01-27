@@ -1,20 +1,45 @@
-set(sources_davidson
+set(src_davidson
     Davidson_RCI/david_rci.f90
     Davidson/cegterg.f90
-    Davidson/regterg.f90)
+    Davidson/regterg.f90
+    # GPU
+    Davidson/regterg_gpu.f90
+    Davidson/cegterg_gpu.f90)
+qe_enable_cuda_fortran("${src_davidson}")
 
-set(sources_davidson_rci
+set(src_davidson_rci
     Davidson_RCI/david_rci.f90)
 
-set(sources_cg
+set(src_cg
     CG/ccgdiagg.f90
-    CG/rcgdiagg.f90)
+    CG/rcgdiagg.f90
+    # GPU
+    CG/rcgdiagg_gpu.f90
+    CG/ccgdiagg_gpu.f90)
+qe_enable_cuda_fortran("${src_cg}")
 
-set(sources_ppcg
+set(src_ppcg
     PPCG/ppcg_gamma.f90
-    PPCG/ppcg_k.f90)
+    PPCG/ppcg_k.f90
+    # GPU
+    PPCG/ppcg_gamma_gpu.f90
+    PPCG/ppcg_k_gpu.f90
+    PPCG/generic_cublas.f90)
+qe_enable_cuda_fortran("${src_ppcg}")
 
-set(sources_paro
+set(src_dense
+    DENSE/rotate_HSpsi_gamma.f90
+    DENSE/rotate_HSpsi_k.f90
+    DENSE/rotate_wfc_gamma.f90
+    DENSE/rotate_wfc_k.f90
+    # GPU
+    DENSE/rotate_HSpsi_gamma_gpu.f90
+    DENSE/rotate_HSpsi_k_gpu.f90
+    DENSE/rotate_wfc_gamma_gpu.f90
+    DENSE/rotate_wfc_k_gpu.f90)
+qe_enable_cuda_fortran("${src_dense}")
+
+set(src_paro
     ParO/bpcg_gamma.f90
     ParO/bpcg_k.f90
     ParO/paro_gamma.f90
@@ -22,65 +47,63 @@ set(sources_paro
     ParO/paro_k.f90
     ParO/pcg_k.f90
     ParO/paro_gamma_new.f90
-    ParO/paro_k_new.f90)
+    ParO/paro_k_new.f90
+    # GPU
+    ParO/bpcg_gamma_gpu.f90
+    ParO/bpcg_k_gpu.f90
+    ParO/paro_gamma_new_gpu.f90
+    ParO/paro_k_new_gpu.f90)
+qe_enable_cuda_fortran("${src_paro}")
 
-set(sources_dense
-    DENSE/rotate_HSpsi_gamma.f90
-    DENSE/rotate_HSpsi_k.f90
-    DENSE/rotate_wfc_gamma.f90
-    DENSE/rotate_wfc_k.f90)
-
-qe_add_library(qe_kssolver_davidson ${sources_davidson})
-add_library(QE::KS_Solvers::Davidson ALIAS qe_kssolver_davidson)
+qe_add_library(qe_kssolver_davidson ${src_davidson})
 target_link_libraries(qe_kssolver_davidson
     PRIVATE
-        QE::OpenMP_Fortran
-        QE::LAX
-        QE::UTILX
-        QE::MPI_Fortran)
+        qe_openmp_fortran
+        qe_lax
+        qe_utilx
+        qe_mpi_fortran
+        qe_devxlib)
 
-qe_add_library(qe_kssolver_davidsonrci ${sources_davidson_rci})
-add_library(QE::KS_Solvers::Davidson_RCI ALIAS qe_kssolver_davidsonrci)
+qe_add_library(qe_kssolver_davidsonrci ${src_davidson_rci})
 target_link_libraries(qe_kssolver_davidsonrci
     PRIVATE
-        QE::LAX
-        QE::UTILX
-        QE::MPI_Fortran)
+        qe_lax
+        qe_utilx
+        qe_mpi_fortran)
 
-qe_add_library(qe_kssolver_cg ${sources_cg})
-add_library(QE::KS_Solvers::CG ALIAS qe_kssolver_cg)
+qe_add_library(qe_kssolver_cg ${src_cg})
 target_link_libraries(qe_kssolver_cg
     PRIVATE
-        QE::LAX
-        QE::UTILX
-        QE::MPI_Fortran)
+        qe_lax
+        qe_utilx
+        qe_mpi_fortran
+        qe_devxlib)
 
-qe_add_library(qe_kssolver_ppcg ${sources_ppcg})
-add_library(QE::KS_Solvers::PPCG ALIAS qe_kssolver_ppcg)
+qe_add_library(qe_kssolver_ppcg ${src_ppcg})
 target_link_libraries(qe_kssolver_ppcg
     PRIVATE
-        QE::SCALAPACK
-        QE::OpenMP_Fortran
-        QE::LAX
-        QE::UTILX
-        QE::MPI_Fortran)
+        qe_scalapack
+        qe_openmp_fortran
+        qe_lax
+        qe_lapack
+        qe_utilx
+        qe_mpi_fortran)
 
-qe_add_library(qe_kssolver_dense ${sources_dense})
-add_library(QE::KS_Solvers::DENSE ALIAS qe_kssolver_dense)
+qe_add_library(qe_kssolver_dense ${src_dense})
 target_link_libraries(qe_kssolver_dense
     PRIVATE
-        QE::LAX
-        QE::UTILX
-        QE::MPI_Fortran)
+        qe_lax
+        qe_utilx
+        qe_mpi_fortran
+        qe_devxlib)
 
-qe_add_library(qe_kssolver_paro ${sources_paro})
-add_library(QE::KS_Solvers::ParO ALIAS qe_kssolver_paro)
+qe_add_library(qe_kssolver_paro ${src_paro})
 target_link_libraries(qe_kssolver_paro
     PRIVATE
-        QE::KS_Solvers::DENSE
-        QE::LAX
-        QE::UTILX
-        QE::MPI_Fortran)
+        qe_kssolver_dense
+        qe_lax
+        qe_utilx
+        qe_mpi_fortran)
 
 ###########################################################
 

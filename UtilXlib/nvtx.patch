@@ -1,0 +1,69 @@
+diff --git a/UtilXlib/Makefile b/UtilXlib/Makefile
+index 09fb815c7..8a855badb 100644
+--- a/UtilXlib/Makefile
++++ b/UtilXlib/Makefile
+@@ -19,7 +19,8 @@ mp_base_gpu.o \
+ mp_bands_util.o \
+ parallel_include.o \
+ util_param.o \
+-thread_util.o
++thread_util.o \
++nvtx.o
+ 
+ all : libutil.a
+ 
+diff --git a/UtilXlib/clocks_handler.f90 b/UtilXlib/clocks_handler.f90
+index 4716e0c..33552aa 100644
+--- a/UtilXlib/clocks_handler.f90
++++ b/UtilXlib/clocks_handler.f90
+@@ -145,6 +145,7 @@ SUBROUTINE start_clock( label )
+ #endif
+   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
+                         t0cpu, t0wall, f_wall, f_tcpu
++  USE nvtx
+   !
+   IMPLICIT NONE
+   !
+@@ -179,6 +180,8 @@ SUBROUTINE start_clock( label )
+         ELSE
+            t0cpu(n) = f_tcpu()
+            t0wall(n)= f_wall()
++
++           call nvtxStartRange(label_, n)
+         ENDIF
+         !
+         RETURN
+@@ -199,6 +202,7 @@ SUBROUTINE start_clock( label )
+      clock_label(nclock) = label_
+      t0cpu(nclock)       = f_tcpu()
+      t0wall(nclock)      = f_wall()
++     call nvtxStartRange(label_, n)
+      !
+   ENDIF
+   !
+@@ -216,6 +220,7 @@ SUBROUTINE stop_clock( label )
+ #endif
+   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
+                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
++  USE nvtx
+   !
+   IMPLICIT NONE
+   !
+@@ -255,6 +260,8 @@ SUBROUTINE stop_clock( label )
+            t0cpu(n)     = notrunning
+            t0wall(n)    = notrunning
+            called(n)    = called(n) + 1
++
++           call nvtxEndRange
+            !
+         ENDIF
+         !
+diff --git a/UtilXlib/make.depend b/UtilXlib/make.depend
+index 05ccf4f49..a8b74366b 100644
+--- a/UtilXlib/make.depend
++++ b/UtilXlib/make.depend
+@@ -1,3 +1,4 @@
++clocks_handler.o : nvtx.o
+ clocks_handler.o : parallel_include.o
+ clocks_handler.o : util_param.o
+ cuda_util.o : util_param.o

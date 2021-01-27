@@ -32,6 +32,12 @@ SUBROUTINE force_us( forcenl )
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
+
+  USE wavefunctions_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
+  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, using_qq_at, &
+                                        using_deeq
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -50,6 +56,7 @@ SUBROUTINE force_us( forcenl )
   forcenl(:,:) = 0.D0
   !
   CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )   
+  CALL using_becp_auto(2)
   CALL allocate_bec_type( nkb, nbnd, dbecp, intra_bgrp_comm )   
   !
   ALLOCATE( vkb1( npwx, nkb ) )   
@@ -62,6 +69,8 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... the forces are a sum over the K points and over the bands
   !   
+  CALL using_evc(0)
+  !
   DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
@@ -69,9 +78,12 @@ SUBROUTINE force_us( forcenl )
 
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+        CALL using_evc(1)
+        IF ( nkb > 0 ) CALL using_vkb(1)
         IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      ENDIF
      !
+     CALL using_vkb(0); CALL using_becp_auto(2)
      CALL calbec( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3
@@ -99,6 +111,7 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... if sums over bands are parallelized over the band group
   !
+  CALL using_becp_auto(1)
   IF ( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
   !
   IF (noncolin) THEN
@@ -111,6 +124,7 @@ SUBROUTINE force_us( forcenl )
   !
   CALL deallocate_bec_type( dbecp )
   CALL deallocate_bec_type( becp )
+  CALL using_becp_auto(2)
   !
   ! ... collect contributions across pools from all k-points
   !
@@ -153,6 +167,11 @@ SUBROUTINE force_us( forcenl )
        ! ... 3) the band group is subsequently used to parallelize over bands
        !
        !
+       CALL using_et(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq(0)
+       CALL using_qq_at(0)
+
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
           ALLOCATE( aux(nh(nt),becp%nbnd_loc) )
@@ -209,6 +228,8 @@ SUBROUTINE force_us( forcenl )
        REAL(DP) :: fac
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
+       CALL using_et(0)
+       CALL using_indv_ijkb0(0)
        DO ibnd = 1, nbnd
           !
           IF (noncolin) THEN

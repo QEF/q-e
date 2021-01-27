@@ -97,7 +97,6 @@ libcuda_devxlib :
     tar xzf devxlib.tar.gz --strip-components=1 -C . ; \
     rm devxlib.tar.gz ; \
     fi; \
-    if test ! -f make.inc; then \
     touch make.inc; \
     $(MAKE) clean; \
     export F90FLAGS="$(FOX_FLAGS)"; \
@@ -107,7 +106,6 @@ libcuda_devxlib :
                 --with-cuda-runtime=$(CUDA_RUNTIME) \
                 --disable-parallel \
                 --enable-cuda-env-check=no; \
-    fi; \
     make all
 	touch ../install/libcuda_devxlib # do not download and configure again
 
@@ -119,30 +117,6 @@ libcuda_devxlib_veryclean:
 	if test -d ../external/devxlib; then \
 	   (cd ../external/devxlib; if test -f make.inc; then \
 	      ($(MAKE) distclean && rm make.inc); fi); fi
-
-###################################
-# BEEF
-###################################
-# NOTA BENE: BEEF is not strictly speaking a mathematical libraries
-# It should be compiled like, and together with, the other XC functionals
-
-libbeef : libbeef_$(BEEF_LIBS_SWITCH)
-
-libbeef_external : fake_libbeef_external
-
-fake_libbeef_external :
-	touch fake_libbeef.a
-	-rm fake_libbeef.a
-
-libbeef_internal:
-	if test ! -d ../LIBBEEF; then mkdir ../LIBBEEF; \
-	( gzip -dc ../archive/libbeef-0.1.2.tar.gz |(cd ../LIBBEEF; tar -xvf -)); fi
-	cd ../LIBBEEF; $(MAKE)
-
-libbeef_clean:
-	if test -d ../LIBBEEF; then (cd ../LIBBEEF ; $(MAKE) clean); fi
-libbeef_veryclean:
-	if test -d ../LIBBEEF; then (rm -R -f ../LIBBEEF); fi
 
 ###################################
 # LIBMBD
@@ -163,6 +137,6 @@ libmbd_clean:
 # cleaning
 ###################################
 
-clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libbeef_clean libmbd_clean
+clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libmbd_clean
 
-veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libbeef_veryclean libmbd_clean
+veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libmbd_clean

@@ -38,6 +38,7 @@ read_uspp.o : upf_kinds.o
 read_uspp.o : upf_params.o
 simpsn.o : upf_kinds.o
 splinelib.o : upf_kinds.o
+splinelib_gpu.o : upf_kinds.o
 upf.o : gth.o
 upf.o : pseudo_types.o
 upf.o : read_cpmd.o
@@ -70,6 +71,7 @@ uspp.o : upf_const.o
 uspp.o : upf_invmat.o
 uspp.o : upf_kinds.o
 uspp.o : upf_params.o
+uspp_gpu.o : uspp.o
 virtual_v2.o : pseudo_types.o
 virtual_v2.o : splinelib.o
 virtual_v2.o : upf.o

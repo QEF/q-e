@@ -30,6 +30,9 @@ SUBROUTINE orthoUwfc
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_bands,         ONLY : use_bgrp_in_hpsi
+  !
+  USE uspp_gpum,        ONLY : using_vkb
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   ! 
   IMPLICIT NONE
   !
@@ -81,6 +84,7 @@ SUBROUTINE orthoUwfc
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
+  CALL using_becp_auto(2)
   
   DO ik = 1, nks
      
@@ -90,6 +94,7 @@ SUBROUTINE orthoUwfc
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      npw = ngk (ik)
+     CALL using_vkb(1)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
@@ -108,6 +113,7 @@ SUBROUTINE orthoUwfc
   ENDDO
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto(2)
   !
   use_bgrp_in_hpsi = save_flag
   !
@@ -139,6 +145,9 @@ SUBROUTINE orthoUwfc2 (ik)
                                bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin 
+  !
+  USE uspp_gpum,        ONLY : using_vkb
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   ! 
   IMPLICIT NONE
   !
@@ -188,10 +197,12 @@ SUBROUTINE orthoUwfc2 (ik)
      !
      ! Allocate the array becp = <beta|wfcatom>
      CALL allocate_bec_type (nkb,natomwfc, becp)
+     CALL using_becp_auto(2); CALL using_vkb(0); 
      CALL calbec (npw, vkb, wfcatom, becp)
      ! Calculate swfcatom = S * phi
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      CALL deallocate_bec_type (becp)
+     CALL using_becp_auto(2)
      !  
      ! Compute the overlap matrix
      ! On the output: wfcatom = O^{-1/2} \phi (no ultrasoft S)
@@ -235,6 +246,8 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
+  !
+  USE uspp_gpum, ONLY : using_vkb
   ! 
   IMPLICIT NONE
   !
@@ -261,6 +274,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      npw = ngk (ik)
+     CALL using_vkb(1)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)

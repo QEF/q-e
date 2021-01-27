@@ -13,6 +13,8 @@ pcg_k.o \
 bpcg_gamma.o \
 bpcg_k.o
 
+-include make.gpu
+
 all : libparo.a
 
 libparo.a:  $(PARO)

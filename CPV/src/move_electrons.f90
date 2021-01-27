@@ -7,8 +7,8 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
-            cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
+SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
+            enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
   !----------------------------------------------------------------------------
   !
   ! ... this routine updates the electronic degrees of freedom
@@ -17,10 +17,11 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, &
-                                   drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp, &
+                                   drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp,  &
                                    taub, lambda, lambdam, lambdap, vpot, dbec, idesc
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb, nlcc_any
+  USE uspp_gpum,            ONLY : vkb_d
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE electrons_base,       ONLY : nbsp, nspin, f, nudx, nupdwn, nbspx_bgrp, nbsp_bgrp
   USE core,                 ONLY : rhoc
@@ -43,16 +44,16 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
-  USE wavefunctions, ONLY : cv0 ! Lingzhu Kong
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi, c0_d, cm_d
+  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
+  USE device_memcpy_m,        ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: nfi
-  LOGICAL,  INTENT(IN)    :: tfirst, tlast
+  LOGICAL,  INTENT(IN)    :: tprint, tfirst, tlast
   REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
   REAL(DP)                :: fion(:,:)
-  COMPLEX(DP)             :: c0_bgrp(:,:), cm_bgrp(:,:), phi_bgrp(:,:)
   REAL(DP), INTENT(IN)    :: dt2bye
   REAL(DP)                :: fccc, ccc
   REAL(DP)                :: enb, enbi
@@ -67,10 +68,14 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   CALL start_clock('move_electrons')
   electron_dynamic: IF ( tcg ) THEN
      !
+#if defined (__CUDA)
+     CALL errore(' move_electrons ', ' GPU version of runcg not yet implemented ', 1 )
+#else
      CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
                       fion, ema0bg, becdr_bgrp, lambdap, lambda, SIZE(lambda,1), vpot, c0_bgrp, &
-                      cm_bgrp, phi_bgrp, dbec, l_cprestart  )
+                      cm_bgrp, phi, dbec, l_cprestart  )
+#endif
      !
      CALL compute_stress( stress, detot, h, omega )
      !
@@ -80,12 +85,12 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
           CALL get_wannier_center( tfirst, cm_bgrp, bec_bgrp, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, &
+     CALL rhoofr( nfi, c0_bgrp, c0_d, bec_bgrp, dbec, becsum, rhor, &
                   drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
      !
 !=================================================================
 !exx_wf related
-     IF ( dft_is_hybrid().AND.exx_is_active() ) THEN
+     IF ( xclib_dft_is('hybrid').AND.exx_is_active() ) THEN
         !
         IF ( lwfpbe0nscf ) THEN
            !
@@ -105,7 +110,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
 !=================================================================
      ! ... put core charge (if present) in rhoc(r)
      !
-     IF ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
+     IF ( nlcc_any ) CALL set_cc( rhoc )
      !
      IF ( lwf ) THEN
         !
@@ -154,9 +159,10 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      !
      !=======================================================================
      !
-     CALL newd( vpot, irb, eigrb, becsum, fion )
+     CALL newd( vpot, becsum, fion, tprint )
      !
      CALL prefor( eigr, vkb )
+     CALL dev_memcpy( vkb_d, vkb )
      !
      IF( force_pairing ) THEN
         !
@@ -165,9 +171,11 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
         !
      ELSE
         !
-        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp )
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d )
         !
      ENDIF
+     !
+     CALL dev_memcpy( cm_d, cm_bgrp )  ! cm contains the updated wavefunctions
      !
      !----------------------------------------------------------------------
      !                 contribution to fion due to lambda
@@ -175,13 +183,17 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      !
      ! ... nlfq needs deeq bec
      !
-     IF ( tfor .OR. tprnfor ) THEN
-        CALL nlfq_bgrp( c0_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+     IF ( tfor .OR. ( tprnfor .AND. tprint ) ) THEN
+#if defined (__CUDA)
+        CALL nlfq_bgrp( c0_d, vkb_d, bec_bgrp, becdr_bgrp, fion )
+#else
+        CALL nlfq_bgrp( c0_bgrp, vkb, bec_bgrp, becdr_bgrp, fion )
+#endif
      END IF
      !
-     IF ( (tfor.or.tprnfor) .AND. tefield ) &
+     IF ( (tfor.or.(tprnfor.AND.tprint)) .AND. tefield ) &
         CALL bforceion( fion, .TRUE. , ipolp, qmat, bec_bgrp, becdr_bgrp, gqq, evalue )
-     IF ( (tfor.or.tprnfor) .AND. tefield2 ) &
+     IF ( (tfor.or.(tprnfor.AND.tprint)) .AND. tefield2 ) &
         CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec_bgrp, becdr_bgrp, gqq2, evalue2 )
      !
      IF( force_pairing ) THEN
@@ -199,13 +211,17 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
      !
-     CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
+#if defined (__CUDA)
+     CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb_d, phi, nbspx_bgrp, ema0bg )
+#else
+     CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+#endif
      !
      ! ... begin try and error loop (only one step!)
      !
      ! ... nlfl and nlfh need: lambda (guessed) becdr
      !
-     IF ( tfor .OR. tprnfor ) THEN
+     IF ( tfor .OR. (tprnfor .AND. tprint) ) THEN
         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
      END IF
      !

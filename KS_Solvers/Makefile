@@ -32,7 +32,10 @@ DENSE/rotate_HSpsi_gamma.o \
 DENSE/rotate_HSpsi_k.o \
 DENSE/rotate_wfc_gamma.o \
 DENSE/rotate_wfc_k.o 
-# add here other objects, e.g. NewSolver/*.o
+
+-include make.gpu 
+
+# add here other objects, e.g. ParO/*.o NewSolver/*.o
 
 libks_solvers.a: $(ALLOBJS)
 	$(AR) $(ARFLAGS) $@ $?

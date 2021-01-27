@@ -55,9 +55,11 @@ SUBROUTINE run_pwscf( exit_status )
   USE qmmm,                 ONLY : qmmm_initialization, qmmm_shutdown, &
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
-  USE funct,                ONLY : dft_is_hybrid, stop_exx 
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
+  !
+  USE device_fbuff_m,             ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -76,6 +78,9 @@ SUBROUTINE run_pwscf( exit_status )
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
+  !
+  INTEGER :: ierr
+  ! collect error codes
   !
   ions_status = 3
   exit_status = 0
@@ -197,7 +202,7 @@ SUBROUTINE run_pwscf( exit_status )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
-        IF (dft_is_hybrid() )  CALL stop_exx()
+        IF ( xclib_dft_is('hybrid') )  CALL stop_exx()
         !
         ! ... save restart information for the new configuration
         !
@@ -276,6 +281,9 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ethr = 1.0D-6
      !
+     CALL dev_buf%reinit( ierr )
+     IF ( ierr .ne. 0 ) CALL errore( 'run_pwscf', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr) )
+     !
   ENDDO main_loop
   !
   ! ... save final data file
@@ -315,7 +323,7 @@ SUBROUTINE reset_gvectors( )
   USE basis,      ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  USE funct,      ONLY : dft_is_hybrid
+  USE xc_lib,     ONLY : xclib_dft_is
   ! 
   IMPLICIT NONE
   !
@@ -340,7 +348,7 @@ SUBROUTINE reset_gvectors( )
   !
   ! ... re-set and re-initialize EXX-related stuff
   !
-  IF ( dft_is_hybrid() ) CALL reset_exx( )
+  IF ( xclib_dft_is('hybrid') ) CALL reset_exx( )
   !
 END SUBROUTINE reset_gvectors
 !

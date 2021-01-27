@@ -6,7 +6,7 @@ include ../make.inc
 MODFLAGS=$(MOD_FLAG).
 
 UTIL = clocks_handler.o \
-cuda_util.o \
+device_helper.o \
 divide.o \
 data_buffer.o \
 error_handler.o \

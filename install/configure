@@ -653,8 +653,6 @@ wget
 ranlib
 hdf5_line
 hdf5_libs
-beef_libs_switch
-beef_libs
 elpa_line
 elpa_libs
 scalapack_line
@@ -781,8 +779,6 @@ with_scalapack
 with_elpa_include
 with_elpa_lib
 with_elpa_version
-with_libbeef
-with_libbeef_prefix
 with_hdf5
 with_hdf5_libs
 with_hdf5_include
@@ -1460,10 +1456,6 @@ Optional Packages:
                           (default: no)
   --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
                           default: 2016)
-  --with-libbeef          (yes|no) link against library for BEEF xc support
-                          (default: yes)
-  --with-libbeef-prefix   path to directory containing libbeef.a (default:
-                          none)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
                           that a valid installation with version >= 1.8.16 is
                           available, and h5cc and h5fc are in the default
@@ -3382,7 +3374,7 @@ case "$arch:$f90_flavor" in
 *:ifort* )
         try_cc="icc ecc $try_cc"
         ;;
-*:pgf90 )
+*:pgf90 | *:nvfortran )
         try_cc="pgcc $try_cc"
         ;;
 cray*:* )
@@ -3764,8 +3756,9 @@ try_cpp="cpp"
 
 case "$arch:$cc" in
 *:pgcc )
-        # Do I need preprocessing here?
         try_cflags="-fast -Mpreprocess"
+        # Workaround for BEEF compilation with PGI v.19 and previous
+        if test "$f90_flavor" = "pgf90"; then try_cflags="-c11 $try_cflags"; fi
         ;;
 crayxt*:cc )
         # Actually we need something like is done for ftn to detect
@@ -4411,9 +4404,12 @@ fi
 
    if test "x$NVCC" = "xno" && test "x$enable_cuda_env_check" = "xyes"
    then
-      as_fn_error $? "Cannot find nvcc compiler. To enable CUDA, please add path to
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot find nvcc compiler. To enable CUDA, please add path to
                     nvcc in the PATH environment variable and/or specify the path
-                    where CUDA is installed using: --with-cuda=PATH" "$LINENO" 5
+                    where CUDA is installed using: --with-cuda=PATH" >&5
+$as_echo "$as_me: WARNING: Cannot find nvcc compiler. To enable CUDA, please add path to
+                    nvcc in the PATH environment variable and/or specify the path
+                    where CUDA is installed using: --with-cuda=PATH" >&2;}
    fi
 
 
@@ -4443,9 +4439,12 @@ $as_echo_n "checking whether nvcc works... " >&6; }
    }
 EOF
 
-   if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+   if test "x$NVCC" != "xno"
    then
-      ac_compile_nvcc=yes
+      if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+      then
+         ac_compile_nvcc=yes
+      fi
    fi
    rm -f conftest.cu conftest.o
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_compile_nvcc" >&5
@@ -4453,7 +4452,8 @@ $as_echo "$ac_compile_nvcc" >&6; }
 
    if test "x$ac_compile_nvcc" = "xno" && test "x$enable_cuda_env_check" = "xyes"
    then
-      as_fn_error $? "CUDA compiler has problems." "$LINENO" 5
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CUDA compiler has problems." >&5
+$as_echo "$as_me: WARNING: CUDA compiler has problems." >&2;}
    fi
 
 
@@ -5089,10 +5089,7 @@ else
       		    mkl_lib="mkl_intel_lp64"
                     mkl_omp="mkl_intel_thread"
 		    # NB: with nvidia hpc sdk 2020, linking to threaded mkl
-		    # v.19.1 update 4 fails due to a missing symbol,
-		    # __kmpc_critical_with_hint, that is found in OMP LLVM
-		    # or in Intel compiler library libiomp5.so
-		    # add_mkl_omp="-liomp5"
+		    # v.19.1 update 4 fails due to a missing symbol
 		    ;;
 	       pgf* )
                     # For obsolete PGI versions (superseded by nvfortran)
@@ -7456,100 +7453,6 @@ fi
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${elpa_libs}" >&5
 $as_echo "${elpa_libs}" >&6; }
-
-
-
-
-
-
-# Setting BEEF...
-
-
-beef_libs_switch=
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking BEEF" >&5
-$as_echo_n "checking BEEF... " >&6; }
-
-beef_libs=$BEEF_LIBS
-
-
-# Check whether --with-libbeef was given.
-if test "${with_libbeef+set}" = set; then :
-  withval=$with_libbeef; if   test "$withval" = "no" ; then
-      with_beef=0
-   else
-      with_beef=1
-   fi
-else
-  with_beef=1
-fi
-
-
-
-# Check whether --with-libbeef-prefix was given.
-if test "${with_libbeef_prefix+set}" = set; then :
-  withval=$with_libbeef_prefix; libbeef_prefix="$withval"
-
-else
-  libbeef_prefix=""
-fi
-
-
-if test "$with_beef" -ne 0
-then
-    BEEF_LDFLAGS_SAVE="$LDFLAGS"
-    LDFLAGS="$beef_libs $LDFLAGS"
-    if ! test "$libbeef_prefix"x = "x"
-    then
-        beefprefix=1
-        LDFLAGS="$LDFLAGS -L$libbeef_prefix/lib -L$libbeef_prefix"
-
-        LIBS="$LIBS -lbeef"
-        cat > conftest.$ac_ext <<_ACEOF
-
-          SUBROUTINE ddot
-          END SUBROUTINE
-          SUBROUTINE dgemv
-          END SUBROUTINE
-          PROGRAM main
-          CALL beefx
-          END
-
-_ACEOF
-if ac_fn_f77_try_link "$LINENO"; then :
-  usebeef=1
-else
-  usebeef=0
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-    else
-        beefprefix=0
-        usebeef=1
-    fi
-
-    if test "$usebeef" -ne 0
-    then
-        if test "$beefprefix" -ne 0
-        then
-            beef_libs="$beef_libs -L$libbeef_prefix/lib -L$libbeef_prefix -lbeef"
-            beef_libs_switch="external"
-        else
-            beef_libs="\$(TOPDIR)/LIBBEEF/libbeef.a"
-            beef_libs_switch="internal"
-        fi
-        echo "-lbeef"
-        echo setting BEEF_LIBS... $beef_libs
-
-    else
-        echo no
-        try_dflags="$try_dflags -D__NOBEEF"
-    fi
-    LDFLAGS="$BEEF_LDFLAGS_SAVE"
-else
-    echo no
-    try_dflags="$try_dflags -D__NOBEEF"
-fi
 
 
 

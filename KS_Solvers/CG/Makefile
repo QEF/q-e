@@ -9,6 +9,8 @@ CG = \
 ccgdiagg.o \
 rcgdiagg.o 
 
+-include make.gpu
+
 all : libcg.a
 
 

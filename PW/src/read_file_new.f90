@@ -21,6 +21,8 @@ SUBROUTINE read_file()
   USE wavefunctions,    ONLY : evc
   USE pw_restart_new,   ONLY : read_collected_wfc
   !
+  USE wavefunctions_gpum, ONLY : using_evc
+  !
   IMPLICIT NONE
   !
   INTEGER :: ik
@@ -43,6 +45,7 @@ SUBROUTINE read_file()
      !
      WRITE( stdout, '(5x,A)') &
           'Reading collected, re-writing distributed wavefunctions'
+     CALL using_evc(1)
      DO ik = 1, nks
         CALL read_collected_wfc ( restart_dir(), ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
@@ -71,9 +74,12 @@ SUBROUTINE read_file_new ( needwf )
   USE gvect,          ONLY : ngm, g
   USE gvecw,          ONLY : gcutw
   USE klist,          ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,       ONLY : isk
+  USE lsda_mod,       ONLY : isk, nspin
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
+  USE xc_lib,         ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  !
+  USE wvfct_gpum,     ONLY : using_et, using_wg, using_wg_d
   !
   IMPLICIT NONE
   !
@@ -87,6 +93,10 @@ SUBROUTINE read_file_new ( needwf )
   ! ... Read the contents of the xml data file
   !
   CALL read_xml_file ( wfc_is_collected )
+  !
+  ! ... initialize Libxc if needed
+  !
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin )
   !
   ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
   ! ... charge density / potential / ... , but not KS orbitals
@@ -106,8 +116,14 @@ SUBROUTINE read_file_new ( needwf )
      ! ... of k-points in the current pool
      !
      CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+     CALL using_et(1)
      CALL poolscatter( nbnd, nkstot, et, nks, et )
+     CALL using_wg(1)
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+#if defined(__CUDA)
+     ! Updating wg here. Should not be done and will be removed ASAP.
+     CALL using_wg_d(0)
+#endif
      !
      ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
      ! ... FIXME: the latter should be read from file, not recomputed
@@ -164,7 +180,7 @@ SUBROUTINE post_xml_init (  )
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
-  CHARACTER(LEN=20) :: dft_name
+  CHARACTER(LEN=32) :: dft_name
   !
   ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !

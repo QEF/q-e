@@ -38,6 +38,8 @@ write_upf_new.o \
 xmltools.o \
 ylmr2.o
 
+-include make.gpu
+
 TLDEPS=libfox
 
 all : libupf.a virtual_v2.x upfconv.x
