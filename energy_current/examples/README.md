@@ -1,114 +1,124 @@
+# INSTALLATION OVERVIEW
+###
+#### Before running the examples, you need to be sure that QEHeat is installed.
+#### To compile, we suggest the following procedure. As usual in a QuantumEspresso installation, enter the distribution folder and run autoconf :
+####
+#### > ./configure
+#### 
+#### Enter than the QEHeat folder and compile:
+####
+#### >  cd /energy_current/src
+#### >  make all
+####
+#### This should produce in a single shot the executables pw.x, cp.x and also all_currents.x, the executable for QEHeat, in the respective src and bin folders.
+####
+#### TROUBLESHOOT: 
+#### If problems occurs, we suggest to enter the main folder of the distribution and compile only pw.x independently:
+####
+#### >  make clean
+#### >  make veryclean
+#### >  ./configure
+#### >  make pw
+####
+#### This way one can recognize if the problem comes from compiling QEHeat or the standard QuantumEspresso distribution.
+####
+~                                          
 
-# Example single
+# EXAMPLES
+### 
+#### See also ../../Doc/INPUT_ALL_CURRENTS.html for a description of the inputs.
+#### To run an example, enter in the respective trajectory and execute the script run_example.sh. Modify it if necessary.
+#### In general, running a Qeheat calculation just needs the execution of the command: all_currents.x -in input_energycurrent , 
+#### after the input file has been prepared.
+####
+#### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
+####
+#### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 12. 
+#### Example 3 can be easily run on a single core (serial) installation.
 
-Here we compute the energy current from one snapshot.
-To calculate the energy current, for each snapshot at time t, we need to do the following:
 
-- prepare the input, for example `input_energycurrent`:
+
+# 1. example_SiO2_single  
+
+
+
+Here we compute the energy current and its indivial components for a single snapshot of Silica. 
+For this purpose, one needs the additional namelist in the input file :
+
 ```
- &energy_current
+&energy_current
     delta_t=   0.500,
     file_output= 'current_hz',
     eta=   0.100,
     n_max=     5,
  /
- &CONTROL
-    calculation='md',
-    restart_mode='from_scratch',
-    pseudo_dir='./pseudo',
-    outdir='./save',
-/
- &SYSTEM
-    ibrav=1,
-    celldm(1)=   18.866000000000000,
-    nat=    72,
-    ntyp=     2,
-    ecutwfc=  70.000,
-/
- &ELECTRONS
-    conv_thr = 1.D-10,
-    mixing_beta = 0.7,
-/
- & IONS
+
+& IONS
     ion_velocities = 'from_input',
-/
- ATOMIC_SPECIES
-   Si     28.08550000 Si_ONCV_PBE-1.1.upf
-   O     15.99940000 O_ONCV_PBE-1.0.upf
- ATOMIC_POSITIONS {bohr}
-   ...put here atomic positions, as in pw input file...
-
- ATOMIC_VELOCITIES
-   ...put here atomic velocities... (usual PW units)
-
- K_POINTS {Gamma}  
-```
-- run the code:
-```
-all_currents.x -in input_energycurrent
 ```
 
-# Example trajectory
+and the CARD ATOMIC_VELOCITIES in the input file must be filled as well with the istantenous atomic velocities.
+These are the ingredients needed for a basic single snapshot calculation.
+ 
+The files produced, apart from the standard output, are :
 
-Here we compute the energy current from a cp trajectory
-To calculate the energy current, for every timestep of the trajectory `traj.pos` and `traj.vel` (velocities are in cp units in this example) located in the folder 'trajectory', we need to do the following:
+- `file_output.dat` : this reports the total energy current, the eletronic current and the center of mass velocity for each species.
+Only file_output.dat needs to be used to evaluate the thermal conductivity coefficient.
 
-- prepare the input, for example `input_energycurrent`:
+- `file_output` : this reports the total energy current divided in individual components, if a more specific analysis is needed. This file is mainly thought for development purposes.
+
+`file_output.dat` comes with a header specifying the output units. The same units are used in the more detailed current decomposion given in `file_output`.
+ See also the description ../../Doc/INPUT_ALL_CURRENTS.html 
+
+
+
+# 2. example_H2O_trajectory
+
+
+
+Here we evaluate the energy current from a previously computed Car-Parrinello (CP) trajectory, which is provided together with the input file. The trajectory provided 
+comes from a 125 water molecule simulation. 
+
+We calculate the energy current for every timestep of the trajectory located in  `${trajdir}.pos` and `${trajdir}.vel` (velocities are in CP units in this example). 
+For this purpose we need to insert some additional keywords in the energy_current namelists :
+
 ```
  &energy_current
     delta_t=   0.500,
     file_output= 'current_hz',
     eta=   0.100,
     n_max=     5,
-    trajdir='trajectory/traj'
+    trajdir='traj'
     first_step=1,
     vel_input_units='CP'
  /
- &CONTROL
-    calculation='md',
-    restart_mode='from_scratch',
-    pseudo_dir='./pseudo',
-    outdir='./save',
-/
- &SYSTEM
-    ibrav=1,
-    celldm(1)=   18.866000000000000,
-    nat=    72,
-    ntyp=     2,
-    ecutwfc=  70.000,
-/
- &ELECTRONS
-    conv_thr = 1.D-10,
-    mixing_beta = 0.7,
-/
- & IONS
-    ion_velocities = 'from_input',
-/
- ATOMIC_SPECIES
-   Si     28.08550000 Si_ONCV_PBE-1.1.upf
-   O     15.99940000 O_ONCV_PBE-1.0.upf
- ATOMIC_POSITIONS {bohr}
-   ...put here atomic positions, as in pw input file...
-
- ATOMIC_VELOCITIES
-   ...put here atomic velocities... (CP units)
-
- K_POINTS {Gamma}  
-```
-- run the code:
-```
-all_currents.x -in input_energycurrent
 ```
 
-note that the only differences are `trajdir` and `first_step` in the `energy_current` namelist. The snapshot of the input file will be skipped.
+note that the only different keywords with respect to a single snapshot calculations are `trajdir` and `first_step` in the `energy_current` namelist. Still, in the IONS namelist 
+the keyword ion_velocities='from_input' must be set and the ATOMIC_VELOCITIES card must be filled.
 
-# Output
+The output with the istantenous energy currents is written in the files with names `${file_output}` and `${file_output}.dat`, as in example 1. 
+The same format of the single snapshot calculation is kept, data from all the snapshots of the trajectory being appended sequentially.
 
-The output is written in the file specified by `file_output`. Then a column formatted file is written in `file_output`.dat, with the following content:
-```
-STEP t_ps Jx Jy Jz
-.    .    .  .  .
-.    .    .  .  .
-.    .    .  .  .
-```
-STEP and t_ps are the same of the input trajectory.
+If computational time is an issue, for this example we suggest to insert the flag last_step=xxx in the energy_current namelist,
+replacing xxx with the desired index step, and than execute the run script.
+Note that the keywords  `last_step` and  `first_step` refer to the indexes reported in the files  `${trajdir}.pos` and `${trajdir}.vel` and are not sequential indexes. The snapshot
+in the input file is assigned an index 0. As a concrete example, the combination of `first_step=1`  and `last_step=953008` will skip the snapshot of the input file and
+evaluate only the first snapshot of the trajectory because 953008 is the first index that appears in the trajectory file.
+
+
+
+# 3. example_small_H2O_trajectory
+
+
+
+This example is very similar to the previous one, but a Car-Parrinello trajectory is computed on-the-fly via the cp.x program of the just installed QE distribution. It produces the  
+trajectory of a single water molecule and therefore the calculation is suited for a serial environment. 
+
+Note that the trajectory produced by cp.x will be probably different due to the stochasticity inherent in the Car-Parrinello molecular dynamics simulation. For exact comparison 
+with a novel installation one can substitute `trajdir='reference/traj/cp'` and comment in the run_example_water script the call to cp.x. This way the files produced by `file_output`
+should be comparable with the reference. 
+
+
+
+

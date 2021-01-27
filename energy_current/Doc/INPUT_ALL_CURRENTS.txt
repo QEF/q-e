@@ -197,6 +197,9 @@ NAMELIST: &ENERGY_CURRENT
    Default:        0
    Description:    The program will start with step  istep >= "first_step".
                    If greater than zero the input file's positions and velocities will be ignored.
+                   Note that this is not a sequential index but refers to the indexes reported in
+                   the input trajectory file. The index of 0 is assigned to the snapshot described
+                   in the input namelist file.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -206,6 +209,8 @@ NAMELIST: &ENERGY_CURRENT
    Default:        0
    Description:    The program will end with step  istep <= "last_step".
                    If 0, it will stop at the end of the trajectory file
+                   Note that this is not a sequential index but refers to the indexes reported in
+                   the input trajectory file.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -337,4 +342,4 @@ NAMELIST: &ENERGY_CURRENT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Wed Oct 21 09:41:47 CEST 2020
+This file has been created by helpdoc utility on Thu Jan 14 16:17:56 CET 2021

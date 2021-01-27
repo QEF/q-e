@@ -1,8 +1,13 @@
 
 
-[energy_current_*/]
-program = ALL_CURRENTS
+[energy_current_rotation/]
+program = h2o_mol
 
+[energy_current_translation/]
+program = translation
+
+[energy_current_h2o]
+program = h2o_mol_t
 
 [categories]
 all_currents_all = energy_current_*

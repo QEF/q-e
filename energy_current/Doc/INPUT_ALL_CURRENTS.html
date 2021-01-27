@@ -308,6 +308,9 @@ assume velocities are given in pw.x time units
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 The program will start with step  istep &gt;= <a href="#first_step">first_step</a>.
 If greater than zero the input file's positions and velocities will be ignored.
+Note that this is not a sequential index but refers to the indexes reported in
+the input trajectory file. The index of 0 is assigned to the snapshot described
+in the input namelist file.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -324,6 +327,8 @@ If greater than zero the input file's positions and velocities will be ignored.
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 The program will end with step  istep &lt;= <a href="#last_step">last_step</a>.
 If 0, it will stop at the end of the trajectory file
+Note that this is not a sequential index but refers to the indexes reported in
+the input trajectory file.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -549,7 +554,7 @@ You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Wed Oct 21 09:41:47 CEST 2020.
+	  This file has been created by helpdoc utility on Thu Jan 14 16:17:57 CET 2021.
 	</small>
 </body>
 </html>

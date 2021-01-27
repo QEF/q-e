@@ -323,7 +323,7 @@ contains
 
    subroutine write_results(traj, write_ave, j, ave_cur)
       use kinds, only: dp
-      use ions_base, ONLY: nsp
+      use ions_base, ONLY: nsp, na
       use cell_base, only: alat
       use io_global, ONLY: ionode
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_get_last_step
@@ -335,10 +335,12 @@ contains
       type(j_all), intent(in) :: j
       type(online_average), intent(inout) :: ave_cur
       type(timestep) :: ts
-      integer :: iun, step, itype
+      integer :: iun,icoord, step, itype
       integer, external :: find_free_unit
       real(dp) :: time, J_tot(3)
+      logical :: file_exists
 
+      INQUIRE(FILE=trim(file_output)//'.dat', EXIST=file_exists)
       if (traj%traj%nsteps > 0) then
          call cpv_trajectory_get_last_step(traj, ts)
          step = ts%nstep
@@ -350,10 +352,12 @@ contains
       if (ionode) then
          iun = find_free_unit()
          open (iun, file=trim(file_output), position='append')
-         write (iun, *) 'Passo: ', step
+         write (iun, *) 'step: ', step, ' dt: ', delta_t
          write (iun, '(A,10E20.12)') 'h&K-XC', j%J_xc(:)
          write (iun, '(A,10E20.12)') 'h&K-H', j%J_hartree(:)
-         write (iun, '(A,1F15.7,9E20.12)') 'h&K-K', delta_t, j%J_kohn(1:3), j%J_kohn_a(1:3), j%J_kohn_b(1:3)
+         write (iun, '(A,3E20.12)') 'h&K-K', j%J_kohn(1:3)
+         write (iun, '(A,3E20.12)') 'h&K-K_a', j%J_kohn_a(1:3)
+         write (iun, '(A,3E20.12)') 'h&K-K_b', j%J_kohn_b(1:3)
          write (iun, '(A,3E20.12)') 'h&K-ELE', j%J_electron(1:3)
          write (iun, '(A,3E20.12)') 'ionic:', j%i_current(:)
          write (iun, '(A,3E20.12)') 'ionic_a:', j%i_current_a(:)
@@ -370,17 +374,45 @@ contains
          !remember to modify the set_first_step_restart() subroutine,
          !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
+         if (.not. file_exists) then
+             write(iun,'(A)') '#units:'
+             write(iun,'(A)') '# Ry = 2.1799e-18J = 13.606eV'
+             write(iun,'(A)') '# a0 = 5.2918e-11m,'
+             write(iun,'(A)') '# tau = 4.8378e-17s'
+             write(iun,'(A)') '# TIME: same as input trajectory'
+             write(iun,'(A)') '# J: Ry*a0/tau'
+             write(iun,'(A)') '# J_el: number * a0/tau'
+             write(iun,'(A)') '# J_cm: number * a0/tau'
+             write(iun,'(A)',advance='no') '# STEP TIME J[1] J[2] J[3] J_el[1] J_el[2] J_el[3] '
+             do itype = 1, nsp
+               do icoord = 1, 3
+                write (iun, '(A,I1,A,I1,A)', advance='no') 'J_cm',itype,'[',icoord,'] '
+               end do
+             end do
+             write(iun,'(A)') ''
+         end if
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
             J_tot, j%J_electron(1:3)
          do itype = 1, nsp
-            write (iun, '(3E20.12)', advance='no') alat*j%v_cm(:, itype)
+            write (iun, '(3E20.12)', advance='no') real(na(itype), dp)*alat*j%v_cm(:, itype)
             write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*j%v_cm(:, itype)
          end do
          write (iun, '(A)') ''
          close (iun)
          call online_average_do(ave_cur, J_tot)
          if (write_ave) then
+            INQUIRE(FILE=trim(file_output)//'.stat', EXIST=file_exists)
             open (iun, file=trim(file_output)//'.stat', position='append')
+            if (.not. file_exists) then
+                write(iun,'(A)') '#units:'
+                write(iun,'(A)') '# Ry = 2.1799e-18J = 13.606eV'
+                write(iun,'(A)') '# a0 = 5.2918e-11m,'
+                write(iun,'(A)') '# tau = 4.8378e-17s'
+                write(iun,'(A)') '# TIME: same as input trajectory'
+                write(iun,'(A)') '# J: Ry*a0/tau (average of the results)'
+                write(iun,'(A)') '# sigma_J: Ry*a0/tau (standard deviation of the results)'
+                write(iun,'(A)') '# STEP TIME J[1] J[2] J[3] sigma_J[1] sigma_J[2] sigma_J[3] '
+            end if
             write (iun, '(1I7,1E14.6)', advance='no') step, time
             call online_average_print(ave_cur, iun)
             write (iun, '(A)') ''
@@ -595,7 +627,7 @@ contains
    subroutine cm_vel(v_cm, vel_cm)
       !calculates center of mass velocities for each atomic type and eventually subtract it from the velocity of each atom
       use kinds, only: dp
-      use ions_base, ONLY: nat, nsp, ityp
+      use ions_base, ONLY: nat, nsp, ityp, na
       use dynamics_module, only: vel
       implicit none
       real(dp), allocatable, intent(inout) :: v_cm(:, :)
@@ -615,6 +647,8 @@ contains
          delta = (vel(:, iatom) - v_cm(:, itype))/real(counter(itype), dp)
          v_cm(:, itype) = v_cm(:, itype) + delta
       end do
+      if (na(1) .eq. 0) &
+         na(1:nsp)=counter
       if (present(vel_cm)) then
          do iatom = 1, nat
             itype = ityp(iatom)

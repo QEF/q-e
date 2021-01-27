@@ -132,7 +132,7 @@ contains
       allocate (charge_g(ngm))
       call compute_charge(psic, evc, npw, nbnd, ngm, dffts, charge, charge_g)
 !
-!initialization of  u_g
+!initialization of  u_g, Eq. 27
       allocate (u_g(ngm, 3))
       u_g = 0.d0
       do a = 1, 3
@@ -146,7 +146,7 @@ contains
          end do
       end do
 !
-!computation of the current
+!computation of the current, , Eq. 26
       j_zero = 0.d0
       do a = 1, 3
          do igm = gstart, ngm
@@ -161,6 +161,7 @@ contains
 
       call mp_sum(j_zero, intra_pool_comm)
       if (l_non_loc) then
+         ! Add non local part, Eq. 34      
          call add_nc_curr(j_zero, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                           g, tpiba, nat, ityp, nsp, xk, igk_k, ec_test_)
       end if
@@ -205,7 +206,7 @@ contains
       complex(DP), allocatable :: xdvkb(:, :, :, :)
 
       allocate (vkb1(npwx, nkb))
-      !do nothing if there is no non local potential
+!do nothing if there is no non local potential
       if (nkb <= 0) return
       do nt = 1, nsp
          if ((upf(nt)%typ .eq. "US") .or. (upf(nt)%typ .eq. "PAW")) then
@@ -223,13 +224,18 @@ contains
       allocate (xvkb(npwx, nkb, 3))
       allocate (dvkb(npwx, nkb, 3))
       allocate (xdvkb(npwx, nkb, 3, 3))
-
-!inizializzazione di vkb (per essere sicuri che lo sia) e xvkb
+!      
+!  initialization of vkb (just to be sure) and xvkb
+!  - vkb is the Fourier transform of the beta functions, 
+!  - xvkb is the Fourier tranform of xbeta. 
+!  Both are needed in Eq. 36
       CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call init_us_3(npw, xvkb, tabr, ec_test_)
-!!
-!inizializzazione di dvkb e xdvkb (nb il ciclo su ipw va dentro per essere
-!ottimizzato)
+!
+! initialization of dvkb and xdvkb
+! - dvkb is ( - partial_a beta ) (note the minus sign in Eq. 36, 37)
+! - xdvkb is ( - partial_a x_b beta ) (note the minus sign in Eq. 36, 37)
+! , via identities in Eq. 37, 38
       dvkb = 0.d0
       do ipol = 1, 3
          do ikb = 1, nkb
@@ -252,9 +258,7 @@ contains
             end do
          end do
       end do
-!
-!
-!prodotti scalari (si possono evitare di fare tutti?), qui si esegue comunicazione MPI.
+! Scalar products. Note that here we have MPI communication between the nodes.
       call calbec(npw, vkb, evc, becp)
       do ipol = 1, 3
          CALL calbec(npw, xvkb(1:npwx, 1:nkb, ipol), evc, becpr(ipol))
@@ -268,10 +272,14 @@ contains
             call calbec(npw, xdvkb(1:npwx, 1:nkb, ipol, jpol), evc, becprd(ipol, jpol))
          end do
       end do
-
-!
-!a questo punto possiamo usare le quantità calcolate per calcolare la corrente (OpenMP do?)
+! Here we loaded :
+! becp -> <phi|beta>
+! becpr -> <phi|xbeta>
+! becpd -> <phi|-partial_a beta>
+! becprd -> <phi|- partial_a x_b beta>
+! Now we use these scalar products to evaluate the current, Eq. 35,36
       J_nl = 0.d0
+      ! J_1 & J_2 for debugging purposes
       J_1 = 0.d0
       J_2 = 0.d0
       ijkb = 0
@@ -310,7 +318,7 @@ contains
          end do
       end do
 !
-!il fattore due è fatto per la degenrazione di spin
+! the factor 2 is there for spin degeneracy
       current(:) = current(:) + 2.d0*J_nl(:)
 !
 !free memory
@@ -379,11 +387,11 @@ contains
       !logical  ::l_plot
 
 !
-!Inizializzo H_g
+!Initialization H_g
 !
       H_g = 0.d0
       do it = 1, nsp
-!inizializzazione parti radiali
+!initialization  radial part
          do igl = 1, ngl
             xg = sqrt(gl(igl))*tpiba
             if (spline_ps) then
@@ -397,8 +405,11 @@ contains
                i1 = i0 + 1
                i2 = i0 + 2
                i3 = i0 + 3
-!tablocal_hg e' probabilmente fatto su una griglia 1D ed e' inizializzato in init_us_1a.f90, e' indipendente dalla cell
-!H_g_rad serve per fare un integrale radiale, interpolando tablocal_hg
+! tablocal_hg is computed on a 1D in reciprocal space 
+! and is initialized in  init_us_1a.f90. It is independent of the cell and depends only on the local pseudo.
+! H_g_rad is the the radial counterpart of H_g and is computed at the desired G values defined by the reciprocal 
+! lattice interpolating tablocal_hg
+!
                H_g_rad(igl, 0) = tablocal_hg(i0, it, 1)*ux*vx*wx/6.d0 + &
                            &tablocal_hg(i1, it, 1)*px*vx*wx/2.d0 - &
                            &tablocal_hg(i2, it, 1)*px*ux*wx/2.d0 + &
@@ -409,10 +420,11 @@ contains
                            &tablocal_hg(i3, it, 2)*px*ux*vx/6.d0
             end if
          end do
+! Now we use H_g_rad to evaluate H_g, adding some "structure factors"
          do a = 1, 3
             do b = 1, 3
                if (a >= b) then
-!
+! Eq. 31. Add h1 to H_g
                   do igm = gstart, ngm
                      H_g(igm, a, b, it) = g(a, igm)*g(b, igm)/gg(igm)* &
                                         (sqrt(gg(igm))*tpiba*H_g_rad(igtongl(igm), 1) - 2.d0*zv(it)*fpi/omega*2.d0/(gg(igm)*tpiba2))
@@ -420,14 +432,15 @@ contains
                   end do
 !
                end if
+! Add Eq. 32. Add h2 to H_g
                if (a == b) then
-!
                   do igm = gstart, ngm
 !
                      H_g(igm, a, b, it) = H_g(igm, a, b, it) - &
                                           (H_g_rad(igtongl(igm), 0) - fpi/omega*2.d0*zv(it)/(tpiba2*gg(igm)))
 !
                   end do
+! G=0 components from Eq. 32
                   if (gstart == 2) then
                      H_g(1, a, b, it) = -H_g_rad(1, 0)
                   end if
@@ -490,22 +503,22 @@ contains
       !    Initialization of the variables
       !
 
-!!!!!!!aggiunta di codice per la zero_current
-!tabr(nqxq,nbetam,nsp,1:3) e tablocal(nqxq,nsp,0:2)
-!contiene f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r)
-!dove la è il momento angolare della beta function (ce ne possono
-!essere più di una con il medesimo l) e
-!lb è il momento angolare della funzione di bessel
-!si può avere solo lb=la+1 lb=la-1 o lb=la
-!e questi tre casi sono rappresentati dall'ultimo indice
-!3.71
+!!!!!!! init_us_1a initializes tabr & tabocal
+! 1. tabr(nqxq,nbetam,nsp,1:3) 
+! Contains the integrals f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r) needed in Eq. 41 
+! - la is the angolar momentum of the beta function (more than one function 
+! with the same l are allowed ) 
+! - lb is the angular moment of bessel function 
+! - only lb=la+1, lb=la-1 or lb=la are allowed
+!   these 3 cases are represented by the last index
+!
+! 2. tablocal(nqxq,nsp,0:2)
+! The radial integrals needed in Eq. 31 , 32. They depend on the modulus of G (nqxq), on the atom (nsp)
+! Third index refers to the bessel function with l=0 (0) or l=1 (1)
+
       ndm = MAXVAL(upf(:)%kkbeta)
       allocate (aux(ndm))
       allocate (besr(ndm))
-
-!
-!inizializzazione di tabr
-! questo può essere estratto. Il resto della routine è init_us_1.f90 di PW
 !
       pref = fpi/sqrt(omega)
       call divide(intra_bgrp_comm, nqxq, startq, lastq)
@@ -515,12 +528,13 @@ contains
             l = upf(nt)%lll(nb)
             do iq = startq, lastq
                qi = (iq - 1)*dq
-!inizializzazione tabella con l_bessel=l
-               !                  kkbeta dice dove bessel va a zero
+!initializzation of table with l_bessel=l
+!kkbeta tells where bessel function goes to zero
                call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
                do ir = 1, upf(nt)%kkbeta
-                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir) ! nel file upf c'è x per il proiettorie
-                  !quindi qui c'è solo r^2)
+                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir) 
+                  ! upf files contains x times the projector
+                  ! that is why  we have only two rgrids r^2)
                enddo
                call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
                tabr(iq, nb, nt, 2) = vqint*pref
@@ -531,7 +545,7 @@ contains
                enddo
                call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
                tabr(iq, nb, nt, 3) = vqint*pref
-!l_bessel=l-1, solo se l>0
+!l_bessel=l-1, only if l>0
                if (l > 0) then
                   call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l - 1, besr)
                   do ir = 1, upf(nt)%kkbeta
@@ -551,9 +565,8 @@ contains
          CALL errore('init_us_1a', 'splines for tabr not implemented', 1)
       endif
 !!!!!!!!!!!!!!
-!inizializzazione di tablocal_hg 3.17 3.20
-      !attenzione alla nuova griglia che deve essere compatibile con quella
-!dello pseudo locale
+!Initialization of tablocal_hg
+!Warning the new grid must be compatible with the one of the local pseudo
       rm = MAXVAL(rgrid(:)%mesh)
       deallocate (besr)
       allocate (besr(rm))
@@ -566,7 +579,7 @@ contains
       do nt = 1, nsp
          do iq = startq, lastq
             qi = (iq - 1)*dq
-!inizializzazione con l=0
+!initialization of l=0
             call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 0, besr)
             do ir = 1, rgrid(nt)%mesh
                aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &
@@ -574,7 +587,7 @@ contains
             end do
             call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
             tablocal_hg(iq, nt, 1) = vqint*pref
-!inizializzazione con l=1
+!initialization of l=1
             call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 1, besr)
             do ir = 1, rgrid(nt)%mesh
                aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &
