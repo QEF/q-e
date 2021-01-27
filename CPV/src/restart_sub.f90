@@ -164,7 +164,9 @@ SUBROUTINE from_restart( )
    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
    !
    CALL prefor( eigr, vkb )
+#if defined(__CUDA)
    CALL dev_memcpy( vkb_d, vkb )
+#endif
    !
    CALL formf( .TRUE. , eself )
    !
