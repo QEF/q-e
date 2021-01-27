@@ -52,10 +52,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
   !! Function to compute the number of electrons for a given energy
   !! Function to compute the first derivative of the number of electrons
   !! Function to compute the second derivative of the number of electrons
-  REAL(DP), EXTERNAL :: wgauss, w0gauss, w1gauss
-  !! Function to compute the occupation
-  !! Function to compute the distribution function ( smearing delta)
-  !! Function to compute the first derivative of the distribution function
   INTEGER :: i, kpoint, Ngauss_
   INTEGER :: info, maxiter_aux
   !
@@ -146,10 +142,7 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     efermig = ef
 
     IF (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
-    WRITE( stdout, '(5x,"Warning: Final Fermi energy from Bisection using the inputted smearing (M-P or cold)"/ &
-      &      5x,"Ef (eV) = ",f15.6," Num. electrons = ",f10.6," electrons")' ) &
-      Ef * rytoev, num_electrons(Ef)
-    WRITE( stdout, '(5x, a)' ) "Warning: I's possible that your 'degauss' is too large!"
+    WRITE( stdout, '(5x,"Minimization algorithm failed to find Fermi energy: reverting to bisection. Probable cause: smearing is larger than the electronic band-gap.")' ) 
   end if
 
   98765 continue
