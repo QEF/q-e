@@ -366,7 +366,7 @@ qe_install_targets(qe_ext_prof_tool)
 if(QE_ENABLE_PROFILE_NVTX)
    target_link_libraries(qe_ext_prof_tool
 	INTERFACE
-        libnvToolsExt.so)
+        CUDA::nvToolsExt)
 endif(QE_ENABLE_PROFILE_NVTX)
 ########################################################### 
 if(QE_ENABLE_HDF5)
