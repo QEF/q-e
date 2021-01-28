@@ -380,7 +380,7 @@ CONTAINS
     ! ... modify auxs1, aux2, vgss_s, vgss_l
     IF (laue) THEN
       IF (rismt%gvec%gstart > 1) THEN
-        v0 = e2 * pi * tt0 * rhog(1)
+        v0 = e2 * pi * tt0 * DBLE(rhog(1))
         vgss_s(1) = vgss_s(1) + v0
         vgss_l(1) = vgss_l(1) - v0
         auxs1(rismt%dfft%nl(1)) = auxs1(rismt%dfft%nl(1)) + v0
@@ -456,8 +456,8 @@ CONTAINS
     IF (gamma_only) THEN
 !$omp parallel do default(shared) private(ig)
       DO ig = 1, rismt%gvec%ngm
-        auxs1(rismt%dfft%nl(ig)) = CONJG(vgss_s(ig))
-        auxs2(rismt%dfft%nl(ig)) = CONJG(vgss_l(ig))
+        auxs1(rismt%dfft%nlt(ig)) = CONJG(vgss_s(ig))
+        auxs2(rismt%dfft%nlt(ig)) = CONJG(vgss_l(ig))
       END DO
 !$omp end parallel do
     END IF
