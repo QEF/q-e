@@ -70,6 +70,7 @@ if(QE_ENABLE_CUDA)
     # OpenMP enable by default if CUDA is enable
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" ON)
+    
 else()
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" OFF)
@@ -81,7 +82,7 @@ option(QE_ENABLE_TEST
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_PROFILE_NVTX
-    "enable execution of NVidia profiler plugin" OFF) 
+        "enable execution of NVidia profiler plugin" OFF) 
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
 option(QE_ENABLE_MPI_MODULE
@@ -192,9 +193,9 @@ endif()
 ###########################################################
 # CUDA
 ###########################################################
-if(QE_ENABLE_CUDA)
+if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
     find_package(CUDAToolkit REQUIRED)
-endif(QE_ENABLE_CUDA)
+endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
 # OpenMP
