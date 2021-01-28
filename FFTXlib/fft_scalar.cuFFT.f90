@@ -322,8 +322,6 @@
         END DO
 #endif
 
-        !CALL ZDSCAL( ldx * ldy * nzl, tscale, r_d(1), 1)
-        !
      ELSE IF( isign > 0 ) THEN
         !
         !print *,"exec cufft INV",nx,ny,ldx,ldy,nzl
