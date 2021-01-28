@@ -22,7 +22,7 @@ band=`sed -n "/bands (ev)/{n;n;p}" $fname | awk '{print $1; print $2; print $3; 
 
 # NSCF
 #ef1=`grep Fermi $fname | head -$max_iter | awk '{print $5}'`
-ef1=$(awk 'BEGIN{ii=0} /^ *the Fermi energy is/{print $5; if(++ii=>'$max_iter') exit;}' $fname)
+ef1=$(awk 'BEGIN{ii=0} /^ *the Fermi energy is/{print $5; if(++ii>='$max_iter') exit;}' $fname)
 eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
 ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print $7; print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
