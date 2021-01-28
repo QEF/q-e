@@ -456,8 +456,8 @@ CONTAINS
     IF (gamma_only) THEN
 !$omp parallel do default(shared) private(ig)
       DO ig = 1, rismt%gvec%ngm
-        auxs1(rismt%dfft%nlt(ig)) = CONJG(vgss_s(ig))
-        auxs2(rismt%dfft%nlt(ig)) = CONJG(vgss_l(ig))
+        auxs1(rismt%dfft%nlm(ig)) = CONJG(vgss_s(ig))
+        auxs2(rismt%dfft%nlm(ig)) = CONJG(vgss_l(ig))
       END DO
 !$omp end parallel do
     END IF
