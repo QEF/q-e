@@ -678,7 +678,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
               end do
            end do
 
-           call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1+ h*howmany ), 1)
+           f(h*howmany+1:h*howmany+ldx*ldy*nz) = f(h*howmany+1:h*howmany+ldx*ldy*nz) * (1.0_DP/(nx*ny*nz))
         END DO
 
      END IF

@@ -760,7 +760,6 @@
            end do
         end do
 
-        !call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f_d(1), 1)
         tscale = 1.0_DP / DBLE( nx * ny * nz )
         !$cuf kernel do(1) <<<*,*,0,stream>>>
         DO i=1, nx*ny*nz
