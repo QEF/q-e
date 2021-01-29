@@ -31,7 +31,6 @@ dvscf_interpolate.o \
 bcast_ph_input.o \
 c_bands_ph.o \
 cch_psi_all.o \
-ccg_psi.o \
 check_if_partial_dyn.o \
 check_initial_status.o \
 check_restart_recover.o \
