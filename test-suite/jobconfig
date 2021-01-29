@@ -52,19 +52,19 @@ inputs_args = ('vdW-DF3-opt1.in',''), ('vdW-DF3-opt2.in',''), ('rVV10.in',''), (
 
 [pw_workflow_vc-relax_dos/]
 program = PW
-inputs_args = ('vc-relax1.in' ,'1'), ('dos2.in' ,'2')
+inputs_args = ('vc-relax-dos-1.in' ,'1'), ('vc-relax-dos-2.in' ,'2')
 
 [pw_workflow_relax_relax/]
 program = PW
-inputs_args = ('relax1.in' ,'1'), ('relax2.in' ,'2')
+inputs_args = ('relax-1.in' ,'1'), ('relax-2.in' ,'2')
 
 [pw_workflow_vc-relax_scf/]
 program = PW
-inputs_args = ('vc-relax1.in' ,'1'), ('scf2.in' ,'2')
+inputs_args = ('vc-relax-scf-1.in' ,'1'), ('vc-relax-scf-2.in' ,'2')
 
 [pw_workflow_scf_dos/]
 program = PW
-inputs_args = ('scf1.in' ,'1'), ('dos2.in' ,'2')
+inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
 [ph_base/]
 program = PH
