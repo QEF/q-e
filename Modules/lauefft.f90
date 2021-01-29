@@ -754,6 +754,10 @@ CONTAINS
         CALL errore('fw_lauefft_2xy', 'my_nr2p != nr2x, but not parallel', 1)
       END IF
       !
+      IF (.NOT. lauefft0%dfft%use_pencil_decomposition) THEN
+        CALL errore('fw_lauefft_2xy', 'my_nr2p != nr2x, but not pencil_decomposed', 1)
+      END IF
+      !
       ! Rx, Ry, Rz
       CALL cft_1z(cinp, np2 * np3, n1, nx1, -1, cout)
       ! Gx, Ry, Rz
@@ -953,6 +957,10 @@ CONTAINS
       !
       IF (.NOT. lauefft0%dfft%lpara) THEN
         CALL errore('inv_lauefft_2xy', 'my_nr2p != nr2x, but not parallel', 1)
+      END IF
+      !
+      IF (.NOT. lauefft0%dfft%use_pencil_decomposition) THEN
+        CALL errore('inv_lauefft_2xy', 'my_nr2p != nr2x, but not pencil-decomposed', 1)
       END IF
       !
       ! Rz, Gy, Gx
