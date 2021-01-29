@@ -7,9 +7,9 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 
 CG = \
 ccgdiagg.o \
-rcgdiagg.o 
-
--include make.gpu
+rcgdiagg.o \
+rcgdiagg_gpu.o \
+ccgdiagg_gpu.o
 
 all : libcg.a
 

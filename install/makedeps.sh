@@ -96,7 +96,23 @@ for dir in $dirs; do
 
     esac
 
+    # list of all system modules
+    sysdeps="iso_c_binding iso_fortran_env f90_unix_io f90_unix_env \
+             f90_unix_proc ifcore ifport"
+
+    # list of all external library modules or include files
+    libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \
+             xc_version.h xc_f03_lib_m elpa elpa1 \
+             mbd w90_io fox_dom fox_wxml m_common_io \
+             device_fbuff_m device_memcpy_m device_auxfunc_m"
+
+    # list of all cuda-related modules
+    cudadeps="cublas cudafor curand cufft flops_tracker cusolverdn \
+              zhegvdx_gpu dsyevd_gpu dsygvdx_gpu eigsolve_vars     \
+              nvtx_inters"
+
     # generate dependencies file (only for directories that are present)
+
     if test -d $TOPDIR/../$DIR
     then
 	cd $TOPDIR/../$DIR
@@ -104,67 +120,12 @@ for dir in $dirs; do
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
-        # handle special cases: modules for C-fortran binding,
-        #   	                hdf5, MPI, FoX, libxc, cuda, OMP
-        sed '/@iso_c_binding@/d' make.depend > tmp; mv tmp make.depend
-        sed '/@hdf5@/d' make.depend > tmp; mv tmp make.depend
-        sed '/@mpi@/d'  make.depend > tmp; mv tmp make.depend
-        sed '/@fox_dom@/d;/@fox_wxml@/d;/@m_common_io@/d' make.depend > tmp; mv tmp make.depend
-        sed '/@xc_version.h@/d;/@xc_f03_lib_m@/d' make.depend > tmp; mv tmp make.depend
-        sed '/@cublas@/d;/@cudafor@/d' make.depend > tmp ; mv tmp make.depend
-        sed '/@device_fbuff_m@/d;/@device_memcpy_m@/d;/@device_auxfunc_m/d' make.depend > tmp ; mv tmp make.depend
-        sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
-
-        if test "$DIR" = "FFTXlib"
-        then
-            # more special cases: modules for FFTs, GPU, OpenMP
-            sed '/@mkl_dfti/d' make.depend > tmp; mv tmp make.depend
-            sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend > tmp; mv tmp make.depend
-            sed '/@cufft@/d;/@flops_tracker@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "LAXlib"
-        then
-            # more special cases: modules for ELPA, GPUs
-            sed '/@elpa1@/d;/@elpa@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@cusolverdn@/d;/@gbuffers@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend > tmp ; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "UtilXlib"
-        then
-            sed '/@ifcore@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "Modules"
-        then
-            sed '/@mbd@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@curand@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "XClib"
-        then
-            sed '/@xc_f90_lib_m@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
-        then
-            sed '/@environ_/d;/@solvent_tddfpt@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "CPV/src"
-        then
-            sed '/@f90_unix_proc@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "EPW/src"
-        then
-            sed '/@f90_unix_io@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@f90_unix_env@/d' make.depend> tmp; mv tmp make.depend
-            sed '/@w90_io@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@ifport@/d' make.depend > tmp; mv tmp make.depend
-        fi
+        # remove unwanted dependency upon system and library modules
+	for no_dep in $sysdeps $libdeps $cudadeps; do
+            echo "/@$no_dep@/d" >> removedeps.tmp
+	done
+        sed -f removedeps.tmp make.depend  > tmp; mv tmp make.depend
+	/bin/rm removedeps.tmp
 
         # check for missing dependencies 
         if grep @ make.depend

@@ -141,7 +141,16 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
--include make.gpu
+# GPU versions of modules
+MODULES += \
+  wavefunctions_gpu.o \
+  recvec_gpu.o \
+  becmod_gpu.o \
+  becmod_subs_gpu.o \
+  cuda_subroutines.o \
+  dylmr2_gpu.o \
+  random_numbers_gpu.o \
+  sph_bes_gpu.o
 
 TLDEPS= libfox libutil libla libfft librxc
 

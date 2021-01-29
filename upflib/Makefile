@@ -38,7 +38,12 @@ write_upf_new.o \
 xmltools.o \
 ylmr2.o
 
--include make.gpu
+# GPU versions of routines
+OBJS += \
+  uspp_gpu.o \
+  simpsn_gpu.o \
+  splinelib_gpu.o \
+  ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x
 
