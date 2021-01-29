@@ -34,7 +34,6 @@ dnonloccorr.o \
 dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
-compute_intq.o \
 set_intq_nc.o \
 lr_sym_mod.o \
 orthogonalize.o \

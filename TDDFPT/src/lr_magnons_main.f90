@@ -245,16 +245,10 @@ SUBROUTINE lr_print_preamble_magnons()
 
     WRITE( stdout, '(/5x,"----------------------------------------")' )
     WRITE( stdout, '(/5x,"Please cite this project as:")' )
-    WRITE( stdout, '(/5x,"I. Timrov, N. Vast, R. Gebauer, and S. Baroni,",                       &
-                   & /5x,"Electron energy loss and inelastic x-ray scattering cross sections",   &
-                   & /5x,"from time-dependent density-functional perturbation theory",           &
-                   & /5x,"Phys. Rev. B 88, 064301 (2013); ibid. 91, 139901 (2015). ")' )
-    WRITE( stdout, '(/5x,"and")' )
-    WRITE( stdout, '(/5x,"I. Timrov, N. Vast, R. Gebauer, and S. Baroni,",                            &
-                   & /5x,"turboEELS - A code for the simulation of the electron energy loss and",     &
-                   & /5x,"inelastic X-ray scattering spectra using the Liouville - Lanczos approach", &
-                   & /5x,"to time-dependent density-functional perturbation theory", &
-                   & /5x,"Comp. Phys. Commun. 196, 460 (2015). ")' )
+    WRITE( stdout, '(/5x,"T. Gorni, Iurii Timrov and S. Baroni,", &
+                   & /5x,"Spin dynamics from time-dependent density functional", &
+                   & /5x,"perturbation theory", &
+                   & /5x,"The European Physical Journal B volume 91, Article number: 249 (2018).")')
     WRITE( stdout, '(/5x,"----------------------------------------")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )

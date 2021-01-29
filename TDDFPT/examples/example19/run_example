@@ -11,7 +11,7 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x, turbo_magnons.x, and turbo_spectrum.x"
-$ECHO "to calculate the electron energy loss spectrum of bulk bismuth."
+$ECHO "to calculate magnon dispersion of bulk iron."
 
 # set the needed environment variables
 . ../../../environment_variables
