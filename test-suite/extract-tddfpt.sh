@@ -19,43 +19,37 @@ turbospec=$(echo $fname | awk '/pp.in/{print 1}' )
 turbospeceels=$(echo $fname | awk '/pp_eels.in/{print 1}' )
 
 # SCF
-if (( scf == 1 ))
-then
-e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
-n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
-f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
-p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
+if [ "$scf" = "1" ]; then
+        e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
+        n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
+        f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
+        p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 fi
 
-
 # turbo_lanczos.x
-if (( turbolancz == 1 ))
-then
-alpha=`grep "alpha(" $fname | awk '{print $2}'`
-beta=`grep "beta( " $fname | awk '{print $3}'`
-gamma=`grep "gamma(" $fname | awk '{print $2}'`
+if [ "$turbolancz" = "1" ]; then
+        alpha=`grep "alpha(" $fname | awk '{print $2}'`
+        beta=`grep "beta( " $fname | awk '{print $3}'`
+        gamma=`grep "gamma(" $fname | awk '{print $2}'`
 fi
 
 #turbo_eels.x
-if (( eels == 1 ))
-then
-nblanczos=`grep "Number of Lanczos iterations" $fname | awk '{print $6}'`
+if [ "$eels" = "1" ]; then
+        nblanczos=`grep "Number of Lanczos iterations" $fname | awk '{print $6}'`
 fi
 
 # turbo_spectrum.x
-if (( turbospec == 1 ))
-then
-rechi=`grep "chi_1_1=" $fname | awk '{print $3}'`
-imchi=`grep "chi_1_1=" $fname | awk '{print $4}'`
+if [ "$turbospec" = "1" ]; then
+        rechi=`grep "chi_1_1=" $fname | awk '{print $3}'`
+        imchi=`grep "chi_1_1=" $fname | awk '{print $4}'`
 fi
 
-if (( turbospeceels == 1 ))
-then
-freq=`tail -n +2 $fname | awk '{print $1}'`
-reepsm1=`tail -n +2 $fname | awk '{print $2}'`
-imepsm1=`tail -n +2 $fname | awk '{print $3}'`
-reeps=`tail -n +2 $fname | awk '{print $4}'`
-imeps=`tail -n +2 $fname | awk '{print $5}'`
+if [ "$turbospeceels" = "1" ]; then
+        freq=`tail -n +2 $fname | awk '{print $1}'`
+        reepsm1=`tail -n +2 $fname | awk '{print $2}'`
+        imepsm1=`tail -n +2 $fname | awk '{print $3}'`
+        reeps=`tail -n +2 $fname | awk '{print $4}'`
+        imeps=`tail -n +2 $fname | awk '{print $5}'`
 fi
 
 
