@@ -28,7 +28,7 @@ SUBROUTINE lr_solve_e
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
                                    & d0psi_rs, eels, lr_exx,  magnons, &
-                                   & V0psi, b_pol, O_psi, n_op, nbnd_occx
+                                   & V0psi, b_pol, O_psi, n_op
   USE lsda_mod,             ONLY : lsda, isk, current_spin,nspin
   USE uspp,                 ONLY : vkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
@@ -36,7 +36,7 @@ SUBROUTINE lr_solve_e
   USE wavefunctions,        ONLY : evc
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_max, mp_min, mp_barrier
-  USE control_lr,           ONLY : alpha_pv
+  USE control_lr,           ONLY : alpha_pv, nbnd_occx
   USE qpoint,               ONLY : nksq
   USE noncollin_module,     ONLY : npol,noncolin
   USE uspp_param,           ONLY : nhm

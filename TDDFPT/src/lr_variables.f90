@@ -149,8 +149,6 @@ MODULE lr_variables
   ! Lanczos preconditioning
   LOGICAL :: lan_precondition
   !
-  INTEGER :: nbnd_occx
-  !
   !------------------------------------------------------------------------!
   !
   ! Lanczos Matrix

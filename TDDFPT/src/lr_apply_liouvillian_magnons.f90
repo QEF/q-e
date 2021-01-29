@@ -19,7 +19,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE kinds,                ONLY : DP
   USE fft_base,             ONLY : dfftp, dffts
   USE klist,                ONLY : xk, igk_k, ngk
-  USE lr_variables,         ONLY : no_hxc, iunTwfc, nbnd_occx
+  USE lr_variables,         ONLY : no_hxc, iunTwfc
   USE lsda_mod,             ONLY : current_spin
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE uspp,                 ONLY : vkb
@@ -32,7 +32,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE buffers,              ONLY : get_buffer
   USE qpoint,               ONLY : ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
-  USE control_lr,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ, nbnd_occx
   USE dv_of_drho_lr
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate

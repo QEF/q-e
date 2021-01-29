@@ -71,10 +71,7 @@ lr_sternheimer.o\
 lr_apply_liouvillian_magnons.o\
 lr_dvpsi_magnons.o\
 lr_Opsi_magnons.o\
-lr_calc_dens_magnons.o\
-lr_dot_magnons.o\
-lanczos_pseudohermitian_c.o\
-lanczos_nonhermitian_c.o
+lr_calc_dens_magnons.o
 
 TLDEPS=lrmods
 

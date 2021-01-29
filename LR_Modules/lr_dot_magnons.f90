@@ -27,9 +27,8 @@ FUNCTION lr_dot_magnons(x,y)
   USE gvect,                ONLY : gstart, ngm, g
   USE mp,                   ONLY : mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
-  USE lr_variables,         ONLY : lr_verbosity, magnons, nbnd_occx
   USE noncollin_module,     ONLY : noncolin, npol
-  USE control_lr,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ, nbnd_occx
   USE qpoint,               ONLY : nksq
   !
   IMPLICIT NONE
@@ -41,10 +40,6 @@ FUNCTION lr_dot_magnons(x,y)
   INTEGER :: ibnd, ik
   REAL(kind=dp), EXTERNAL    :: DDOT
   COMPLEX(kind=dp), EXTERNAL :: ZDOTC
-  !
-  IF (lr_verbosity > 5) THEN
-     WRITE(stdout,'("<lr_dot>")')
-  ENDIF
   !
   CALL start_clock ('lr_dot_magnons')
   !
@@ -60,8 +55,6 @@ FUNCTION lr_dot_magnons(x,y)
   CALL lr_dot_k_magnons()
   !
 !  lr_dot_magnons = lr_dot_magnons/degspin
-  !
-  IF (lr_verbosity > 5) WRITE(stdout,'("<end of lr_dot>")')
   !
   CALL stop_clock ('lr_dot_magnons')
   !

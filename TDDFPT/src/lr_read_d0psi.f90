@@ -19,11 +19,12 @@ SUBROUTINE lr_read_d0psi()
   USE io_files,             ONLY : prefix, diropn, tmp_dir, wfc_dir
   USE lr_variables,         ONLY : d0psi, d0psi2, n_ipol, LR_polarization, &
                                    & lr_verbosity, nwordd0psi, iund0psi, eels, &
-                                   & magnons, V0psi, O_psi, b_pol, n_op, nbnd_occx
+                                   & magnons, V0psi, O_psi, b_pol, n_op
   USE wvfct,                ONLY : nbnd, npwx, et
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : nksq
   USE noncollin_module,     ONLY : npol
+  USE control_lr,           ONLY : nbnd_occx
   !
   IMPLICIT NONE
   !

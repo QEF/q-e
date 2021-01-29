@@ -1,6 +1,4 @@
-subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
-                                 & qjold_r, qj_l, Aqj_l, qjold_l, n_ipol, u, &
-                                 & alpha, beta, gamma, zeta)
+subroutine lanczos_pseudohermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, qjold_r, n_ipol, u, alpha, beta, gamma, zeta)
    !
    !! Bi-Orthogonal Lanczos algorithm for magnons 
    !! 
@@ -12,7 +10,6 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    !! Lanczos vectors
    !
    USE kinds,                    ONLY : dp
-   USE lr_variables,             ONLY : force_zero_alpha
    !
    INTEGER, INTENT(IN)               :: j
    !! iteration index
@@ -26,18 +23,12 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    !! polarization, forth dimension of u and dimension of zeta
    COMPLEX(kind=dp), INTENT(INOUT)   :: Aqj_r(npwx_npol,nbnd_occ,nksq, 2)
    !! operator applied to right qj vector 
-   COMPLEX(kind=dp), INTENT(INOUT)   :: Aqj_l(npwx_npol,nbnd_occ,nksq, 2)
-   !! operator applied to left qj vector
    COMPLEX(kind=dp), INTENT(IN)      :: u(npwx_npol,nbnd_occ,nksq, 2, n_ipol)
    !! second lanczos vector, in qe O_psi for magnons
    COMPLEX(kind=dp), INTENT(INOUT)   :: qj_r(npwx_npol,nbnd_occ,nksq, 2)
    !! right qj vector, become right qj+1 vector
    COMPLEX(kind=dp), INTENT(INOUT)   :: qjold_r(npwx_npol,nbnd_occ,nksq, 2)
    !! right qj-1 vector, become right qj vector
-   COMPLEX(kind=dp), INTENT(INOUT)   :: qj_l(npwx_npol,nbnd_occ,nksq, 2)
-   !! left qj vector, become left qj+1 vector
-   COMPLEX(kind=dp), INTENT(INOUT)   :: qjold_l(npwx_npol,nbnd_occ,nksq, 2)
-   !! left qj-1 vector, become left qj vector
    COMPLEX(kind=dp), INTENT(OUT)     :: alpha
    !! diagonal cofficient of the tridiagonal matrix
    REAL(kind=dp),    INTENT(OUT)     :: beta
@@ -46,6 +37,8 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    !! upper coefficient of the tridiagonal matrix
    COMPLEX(kind=dp), INTENT(OUT)     :: zeta(n_ipol)
    !! (u,q_j) products
+   ! dummy variable
+   COMPLEX(kind=dp)   :: Aqj_l(npwx_npol,nbnd_occ,nksq, 2)
    !   
    COMPLEX(kind=dp),EXTERNAL :: lr_dot_magnons
    !
@@ -56,7 +49,9 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    ! Orthogonality requirement: <v|\bar{L}|v> = 1
    ! computes gamma and beta
    !
-   gamma = lr_dot_magnons(qj_l, qj_r)
+   qj_r(:,:,:,2) = - qj_r(:,:,:,2)
+   gamma = lr_dot_magnons(qj_r, Aqj_r)
+   qj_r(:,:,:,2) = - qj_r(:,:,:,2)
    !
    beta = sqrt(abs(gamma))
    !
@@ -67,17 +62,14 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),qj_r(1,1,1,1),1)
    CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),Aqj_r(1,1,1,1),1)
    !
-   CALL zscal(size_evc,1.0d0/conjg(gamma),qj_l(1,1,1,1),1)
-   CALL zscal(size_evc,1.0d0/conjg(gamma),Aqj_l(1,1,1,1),1)
    !
    ! computes alpha 
    !
    alpha = (0.0d0, 0.0d0)
-   alpha = lr_dot_magnons(qj_l, Aqj_r)
+   Aqj_l = Aqj_r
+   Aqj_l(:,:,:,2) = -Aqj_l(:,:,:,2)
    !
-   IF (force_zero_alpha) THEN
-      alpha = (0.0d0,0.0d0)
-   ENDIF
+   alpha = lr_dot_magnons(Aqj_l, Aqj_r)
    !
    ! Calculation of zeta coefficients.
    ! See Eq.(35) in Malcioglu et al., Comput. Phys. Commun. 182, 1744 (2011).
@@ -93,15 +85,11 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    ENDDO
    !
    ! Aqj_r = Aqj_r -alpha*qj_r -gamma*qjold_r
-   ! Aqj_l = Aqj_l -alpha**qj_l - beta*qjold_l
    ! Renormalization will be done in the begining of the next iteration.
    ! In the non-Hermitian case, similar operation needs to be done also for p(i).
    !
    CALL zaxpy(size_evc,-alpha,qj_r(1,1,1,1),1,Aqj_r(1,1,1,1),1)
    CALL zaxpy(size_evc,-gamma,qjold_r(1,1,1,1),1,Aqj_r(1,1,1,1),1)
-   !
-   CALL zaxpy(size_evc,-conjg(alpha),qj_l(1,1,1,1),1,Aqj_l(1,1,1,1),1)
-   CALL zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),qjold_l(1,1,1,1),1,Aqj_l(1,1,1,1),1)
    !
    ! X. Ge: Throw away q(i-1), and make q(i+1) to be the current vector,
    ! be ready for the next iteration. Aqj will be free again after this
@@ -110,7 +98,4 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
    CALL zcopy(size_evc,qj_r(1,1,1,1),1,qjold_r(1,1,1,1),1) ! qjold_r = qj_r
    CALL zcopy(size_evc,Aqj_r(1,1,1,1),1,qj_r(1,1,1,1),1)    ! qj_r = Aqj_r
    !
-   CALL zcopy(size_evc,qj_l(1,1,1,1),1,qjold_l(1,1,1,1),1) ! qjold_l = qj_l
-   CALL zcopy(size_evc,Aqj_l(1,1,1,1),1,qj_l(1,1,1,1),1)   ! qj_l = Aqj_l
-   !
-end subroutine lanczos_nonhermitian_c
+end subroutine lanczos_pseudohermitian_c

@@ -39,10 +39,9 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   USE io_files,              ONLY : iunwfc, nwordwfc
   USE buffers,               ONLY : get_buffer
   USE fft_interfaces,        ONLY : fft_interpolate
-  USE lr_variables,          ONLY : iunTwfc, nbnd_occx
-
+  USE lr_variables,          ONLY : iunTwfc
   USE cell_base,             ONLY : omega
-  USE control_lr,            ONLY : nbnd_occ
+  USE control_lr,            ONLY : nbnd_occ, nbnd_occx
   USE fft_interfaces,        ONLY : invfft
   !
   IMPLICIT NONE

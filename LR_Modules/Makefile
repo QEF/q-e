@@ -61,8 +61,11 @@ mode_group.o \
 mix_pot.o \
 lrcom.o \
 lr_dot.o \
+lr_dot_magnons.o \
 lanczos_pseudohermitian.o \
-lanczos_nonhermitian.o 
+lanczos_nonhermitian.o \
+lanczos_pseudohermitian_c.o \
+lanczos_nonhermitian_c.o 
 
 TLDEPS=mods pwlibs
 

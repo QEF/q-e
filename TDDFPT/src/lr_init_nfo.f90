@@ -22,7 +22,7 @@ SUBROUTINE lr_init_nfo()
   USE wvfct,                ONLY : nbnd
   USE lr_variables,         ONLY : lr_verbosity, eels, size_evc, calculator, &
                                  & iund0psi, iudwf, iu1dwf,&
-                                 & iundvpsi, nbnd_occx, magnons, iunTwfc, & 
+                                 & iundvpsi, magnons, iunTwfc, & 
                                  & restart
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : tpi, eps8
@@ -40,7 +40,8 @@ SUBROUTINE lr_init_nfo()
   USE eqv,                  ONLY : evq
   USE becmod,               ONLY : calbec, allocate_bec_type
   USE lrus,                 ONLY : becp1
-  USE control_lr,           ONLY : alpha_pv, alpha_mix, tr2_ph, nbnd_occ
+  USE control_lr,           ONLY : alpha_pv, alpha_mix, tr2_ph, nbnd_occ, &
+                                   nbnd_occx
   USE qpoint,               ONLY : xq, ikks, ikqs, nksq, eigqts, npwq
   USE eqv,                  ONLY : evq
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
@@ -288,17 +289,11 @@ SUBROUTINE lr_init_nfo()
   !
   if ( allocated(Tevc) ) deallocate( Tevc )
   !
-  IF(magnons) nbnd_occx = MAXVAL( nbnd_occ )
   IF(magnons) THEN
    do ik = 1, nks
      write(stdout,*) mpime, ik, nbnd_occ(ik), nbnd_occx
    enddo
   ENDIF
-  !
-#if defined(__MPI)
-  ! find the maximum across pools
-  CALL mp_max( nbnd_occx, inter_pool_comm )
-#endif
   !
   ! 4) Compute alpha_pv
   !

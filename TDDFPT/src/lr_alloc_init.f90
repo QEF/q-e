@@ -27,12 +27,12 @@ SUBROUTINE lr_alloc_init()
                                  & w_T_zeta_store, w_T_npol,chi
   USE realus,               ONLY : tg_psic
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp
   USE lrus,                 ONLY : int3, int3_nc, becp1
   USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
   USE qpoint,               ONLY : nksq, eigqts
-  USE control_lr,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ, nbnd_occx
   !
   IMPLICIT NONE
   !

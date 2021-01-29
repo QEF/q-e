@@ -33,13 +33,13 @@ SUBROUTINE lr_Opsi_magnons (ik, ip, dOpsi)
   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
   use klist,                 only : xk, igk_k, ngk
   use gvect,                 only : ngm, g
-  USE control_lr,            ONLY : nbnd_occ
+  USE control_lr,            ONLY : nbnd_occ, nbnd_occx
   USE io_files,              ONLY : iunwfc, nwordwfc
   use uspp,                  only : vkb, okvan
   USE mp_bands,              ONLY : ntask_groups
   USE buffers,               ONLY : get_buffer
   USE fft_helper_subroutines
-  USE lr_variables,          ONLY : iunTwfc, nbnd_occx
+  USE lr_variables,          ONLY : iunTwfc
   USE lr_magnons_routines,   ONLY : pauli
  
   IMPLICIT NONE
