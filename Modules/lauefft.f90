@@ -755,7 +755,7 @@ CONTAINS
       END IF
       !
       IF (.NOT. lauefft0%dfft%use_pencil_decomposition) THEN
-        CALL errore('fw_lauefft_2xy', 'my_nr2p != nr2x, but not pencil_decomposed', 1)
+        CALL errore('fw_lauefft_2xy', 'my_nr2p != nr2x, but not pencil-decomposed', 1)
       END IF
       !
       ! Rx, Ry, Rz
