@@ -433,7 +433,13 @@ CONTAINS
     !
     ! SLAB decomposition
     IF ( ALLOCATED( desc%srh ) )   DEALLOCATE( desc%srh )
-    ierr = cudaStreamDestroy( desc%a2a_comp )
+    IF (desc%a2a_comp /= 0) THEN 
+      ierr = cudaStreamDestroy( desc%a2a_comp )
+      CALL fftx_error__("fft_type_deallocate","failed destroying stream a2a_comp", ierr)
+      desc%a2a_comp = 0
+    END IF 
+  
+    
 
     IF ( ALLOCATED(desc%bstreams) ) THEN
         nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
