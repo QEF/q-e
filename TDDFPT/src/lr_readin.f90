@@ -261,6 +261,10 @@ SUBROUTINE lr_readin
         n_ipol = 1
         LR_polarization = b_pol
         !
+     ELSEIF (magnons .and. ((b_pol>3).or.(b_pol<0))) THEN
+        !
+        CALL errore( 'lr_readin', 'b_pol must be 0, 1, 2 or 3',1)
+        !
      ELSE
         !
         ! Optics: set up polarization direction(s)
