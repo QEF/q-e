@@ -46,8 +46,11 @@ set(sources
     mix_pot.f90
     lrcom.f90
     lr_dot.f90
+    lr_dot_magnons.f90
     lanczos_pseudohermitian.f90
     lanczos_nonhermitian.f90
+    lanczos_pseudohermitian_c.f90
+    lanczos_nonhermitian_c.f90
     set_kplusq_nc.f90
     lr_sym_mod.f90
     ccg_psi.f90
