@@ -51,6 +51,7 @@ MODULE mytime
   CHARACTER(len=12) :: clock_label(maxclock)
   INTEGER           :: called(maxclock)
   INTEGER           :: gpu_called(maxclock)
+  INTEGER           :: max_print_depth = maxclock  ! used to gauge the amount of output. default: a very deep depth
   !
   REAL(DP)          :: mpi_per_thread = 1.0_DP
 
@@ -58,7 +59,6 @@ MODULE mytime
   LOGICAL :: no
 #if defined (__TRACE)
   INTEGER :: trace_depth = 0
-  INTEGER :: max_print_depth = maxclock  ! used to gauge the ammount of output. default: a very deep depth
   INTEGER :: mpime
 #endif
 #if defined(__CUDA)
@@ -81,11 +81,7 @@ MODULE mytime
 END MODULE mytime
 !
 !----------------------------------------------------------------------------
-#if defined (__TRACE)
-SUBROUTINE init_clocks( go, max_print_depth_ )
-#else
 SUBROUTINE init_clocks( go )
-#endif
   !----------------------------------------------------------------------------
   !
   ! ... go = .TRUE.  : clocks will run
@@ -106,9 +102,6 @@ SUBROUTINE init_clocks( go )
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: go
-#if defined (__TRACE)
-  INTEGER, INTENT(IN), OPTIONAL :: max_print_depth_
-#endif
   INTEGER :: n, ierr
   !
 #if defined(_OPENMP)
@@ -136,10 +129,7 @@ SUBROUTINE init_clocks( go )
   ENDDO
 #if defined (__TRACE)
   write(stdout,*) '*** Code flow traced exploiting clocks calls ***'
-  if (present(max_print_depth_)) then
-     max_print_depth = max_print_depth_
-     write(stdout,*) '--- Code flow traced down to depth ',max_print_depth
-  end if
+  write(stdout,*) '--- Code flow traced down to depth ',max_print_depth
   mpime = 0
 #if defined(__MPI)
   ierr = 0
@@ -157,6 +147,15 @@ SUBROUTINE init_clocks( go )
   !
 END SUBROUTINE init_clocks
 !
+!----------------------------------------------------------------------------
+SUBROUTINE set_trace_max_depth(max_depth_)
+  USE mytime, ONLY: max_print_depth
+  IMPLICIT NONE
+  INTEGER  :: max_depth_
+  ! 
+  max_print_depth = max_depth_   
+END SUBROUTINE set_trace_max_depth 
+! 
 !----------------------------------------------------------------------------
 SUBROUTINE start_clock( label )
   !----------------------------------------------------------------------------
