@@ -70,6 +70,7 @@ if(QE_ENABLE_CUDA)
     # OpenMP enable by default if CUDA is enable
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" ON)
+    
 else()
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" OFF)
@@ -80,6 +81,8 @@ option(QE_ENABLE_TEST
     "enable unit tests" OFF)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
+option(QE_ENABLE_PROFILE_NVTX
+        "enable execution of NVidia profiler plugin" OFF) 
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
 option(QE_ENABLE_MPI_MODULE
@@ -119,6 +122,9 @@ endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
 endif()
+if(QE_ENABLE_PROFILE_NVTX)
+   qe_add_global_compile_definitions(__PROFILE_NVTX) 
+endif() 
 if(QE_ENABLE_MPI_INPLACE)
     qe_add_global_compile_definitions(__USE_INPLACE_MPI)
 endif()
@@ -187,9 +193,9 @@ endif()
 ###########################################################
 # CUDA
 ###########################################################
-if(QE_ENABLE_CUDA)
+if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
     find_package(CUDAToolkit REQUIRED)
-endif(QE_ENABLE_CUDA)
+endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
 # OpenMP
@@ -351,6 +357,19 @@ add_library(qe_hdf5_fortran INTERFACE)
 add_library(qe_hdf5_c INTERFACE)
 qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
 ###########################################################
+# PROFILERS LIBRARIES
+# the target for profiler libray will be defined if
+# some profiler is enabled
+add_library(qe_ext_prof_tool INTERFACE)
+qe_install_targets(qe_ext_prof_tool) 
+###########################################################
+# this should work with nvfortran 
+if(QE_ENABLE_PROFILE_NVTX)
+   target_link_libraries(qe_ext_prof_tool
+	INTERFACE
+        CUDA::nvToolsExt)
+endif(QE_ENABLE_PROFILE_NVTX)
+########################################################### 
 if(QE_ENABLE_HDF5)
     if(QE_ENABLE_MPI)
         option(HDF5_PREFER_PARALLEL "Prefer parallel HDF5" ON)
