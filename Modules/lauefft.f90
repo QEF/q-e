@@ -35,12 +35,13 @@ MODULE lauefft
   ! ... , where it has to be izright_end <= izcell_end and izleft_start >= izcell_start.
   ! ... in [izleft_gedge,izleft_end] or [izright_start,izright_gedge], g(z) has to be 0.
   !
-  USE control_flags, ONLY : gamma_only
-  USE fft_scalar,    ONLY : cft_1z, cft_2xy
-  USE fft_scatter,   ONLY : fft_scatter_xy, fft_scatter_yz
-  USE fft_types,     ONLY : fft_type_descriptor
-  USE kinds,         ONLY : DP
-  USE mp,            ONLY : mp_sum, mp_rank, mp_size
+  USE control_flags,  ONLY : gamma_only
+  USE fft_scalar,     ONLY : cft_1z, cft_2xy
+  USE fft_scatter,    ONLY : fft_scatter_xy, fft_scatter_yz
+  USE fft_scatter_2d, ONLY : fft_scatter2x1 => fft_scatter
+  USE fft_types,      ONLY : fft_type_descriptor
+  USE kinds,          ONLY : DP
+  USE mp,             ONLY : mp_sum, mp_rank, mp_size
   USE parallel_include
   !
   IMPLICIT NONE
@@ -652,7 +653,7 @@ CONTAINS
     INTEGER                  :: jgxy2
     INTEGER                  :: n1, nx1, np1
     INTEGER                  :: n2, nx2, np2
-    INTEGER                  :: n3, np3
+    INTEGER                  :: n3, nx3, np3
     INTEGER                  :: i3
     INTEGER                  :: i3min, i3max
     INTEGER                  :: i3sta, i3end
@@ -666,6 +667,7 @@ CONTAINS
     n3  = lauefft0%dfft%nr3
     nx1 = lauefft0%dfft%nr1x
     nx2 = lauefft0%dfft%nr2x
+    nx3 = lauefft0%dfft%nr3x
     np1 = lauefft0%dfft%nr1p(lauefft0%dfft%mype2 + 1)
     np2 = lauefft0%dfft%my_nr2p
     np3 = lauefft0%dfft%my_nr3p
@@ -727,13 +729,20 @@ CONTAINS
         !
       END IF
       !
-      IF (lauefft0%dfft%lpara) THEN
+      IF (lauefft0%dfft%lpara .AND. lauefft0%dfft%use_pencil_decomposition) THEN
         !
         ! Gx, Gy, Rz
         CALL fft_scatter_xy(lauefft0%dfft, cout, cinp, lauefft0%dfft%nnr, -1)
         ! Gy, Gx, Rz
         CALL fft_scatter_yz(lauefft0%dfft, cinp, cout, lauefft0%dfft%nnr, -1)
         ! Rz, Gy, Gx
+        !
+      ELSE IF (lauefft0%dfft%lpara) THEN
+        !
+        ! Gx, Gy, Rz
+        CALL fft_scatter2x1(lauefft0%dfft, &
+        & cout, nx3, lauefft0%dfft%nnr, cinp, lauefft0%dfft%nsp, lauefft0%dfft%nr3p, -1)
+        ! Rz, Gx, Gy
         !
       END IF
       !
@@ -808,7 +817,7 @@ CONTAINS
     INTEGER                  :: jgxy2
     INTEGER                  :: n1, nx1, np1
     INTEGER                  :: n2, nx2, np2
-    INTEGER                  :: n3, np3
+    INTEGER                  :: n3, nx3, np3
     INTEGER                  :: i3
     INTEGER                  :: i3min, i3max
     INTEGER                  :: i3sta, i3end
@@ -822,6 +831,7 @@ CONTAINS
     n3  = lauefft0%dfft%nr3
     nx1 = lauefft0%dfft%nr1x
     nx2 = lauefft0%dfft%nr2x
+    nx3 = lauefft0%dfft%nr3x
     np1 = lauefft0%dfft%nr1p(lauefft0%dfft%mype2 + 1)
     np2 = lauefft0%dfft%my_nr2p
     np3 = lauefft0%dfft%my_nr3p
@@ -876,13 +886,20 @@ CONTAINS
       !
       ! ... Ry-axis is NOT distributed
       !
-      IF (lauefft0%dfft%lpara) THEN
+      IF (lauefft0%dfft%lpara .AND. lauefft0%dfft%use_pencil_decomposition) THEN
         !
         ! Rz, Gy, Gx
         CALL fft_scatter_yz(lauefft0%dfft, cout, cinp, lauefft0%dfft%nnr, +1)
         ! Gy, Gx, Rz
         CALL fft_scatter_xy(lauefft0%dfft, cinp, cout, lauefft0%dfft%nnr, +1)
         ! Gx, Gy, Rz
+        !
+      ELSE IF (lauefft0%dfft%lpara) THEN
+        !
+        ! Rz, Gy, Gx
+        CALL fft_scatter2x1(lauefft0%dfft, &
+        & cinp, nx3, lauefft0%dfft%nnr, cout, lauefft0%dfft%nsp, lauefft0%dfft%nr3p, +1)
+        ! Gy, Gx, Rz
         !
       END IF
       !
