@@ -20,9 +20,9 @@ Fixed in development version:
   * ELF with nspin=2 was not correct (noticed by Dong Yang, JSG)
   * "cube" file with data interpolated by B-splines was not correct 
     (fixed by Satomichi Nisihara)
-  * Dumb and horrible bug in PAW relativistic calculations: a bad tag name
-    was searched for in PP, leading to a small but nonnegligible error.
-    Noticed by Minkyu Park (Univ. of Ulsan, Rep. of Korea).
+  * Dumb and horrible bug in PAW relativistic calculations (QE 6.7 only):
+    a bad tag name was searched for in PP, leading to a small but non
+    negligible error. Noticed by Minkyu Park (Univ. of Ulsan, Rep. of Korea).
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
