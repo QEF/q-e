@@ -16,9 +16,9 @@ default :
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests                   : run-tests-serial (default)'
 	@echo ' run-tests-serial            : run all tests in SERIAL' 
-	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
+	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp,tddfpt} only, as above'
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
+	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp,tddfpt} only, as above'
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
@@ -41,9 +41,9 @@ pseudo :
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial  
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial run-tests-tddfpt-serial
 
-run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel
+run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel run-tests-tddfpt-parallel
 
 
 run-tests-cp-serial : prolog pseudo
@@ -90,6 +90,12 @@ run-tests-pp-serial : prolog pseudo
 run-tests-pp-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
 
+run-tests-tddfpt-serial : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
+
+run-tests-tddfpt-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
+
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
@@ -122,7 +128,7 @@ create-reference-epw : pseudo prolog
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
 
 
-compare : compare-cp compare-pw compare-ph compare-epw
+compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt
 
 compare-cp : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=cp_all  --verbose compare 2>&1 | tee out.CP.`date +%Y%m%d_%H%M%S`
@@ -136,11 +142,14 @@ compare-ph : prolog
 compare-epw : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=epw_all  --verbose compare 2>&1 | tee out.EPW.`date +%Y%m%d_%H%M%S`
 
+compare-tddfpt : prolog
+	${TESTCODE_DIR}/bin/testcode.py --category=tddfpt_all  --verbose compare 2>&1 | tee out.TDDFPT.`date +%Y%m%d_%H%M%S`
+
 clean:
 # output files
-	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test*
+	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test* tddfpt_*/test*
 # error files
-	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH
+	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH tddfpt_*/CRASH
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
@@ -194,6 +203,9 @@ clean:
 	@rm -f zg_conf/equil_pos.txt zg_conf/ZG-*_0.020.dat
 
 	@rm -f userconfig
+
+# Cleaning TDDFPT final files
+	@rm -rf tddfpt_*/*.plot_chi.dat tddfpt_*/*.plot_eps.dat tddfpt_*/out/ tddfpt_*/turbo_spectrum.out
 
 # Calling 'purge' means remove all reference outputs... be careful!
 purge: clean

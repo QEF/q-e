@@ -2,7 +2,6 @@
     calculation = 'scf'
     title = 'TDDFPT CH4 Test'
     restart_mode='from_scratch',
-    pseudo_dir = './',
     outdir='./out',
     prefix='CH4'
  /
