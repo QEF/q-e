@@ -420,7 +420,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! compute the derivative of xc-potential w.r.t local density.
    ! some routine in PH and flibs will be called
    !
-   use funct,  only : dft_is_gradient
+   use xc_lib, only : xclib_set_threshold, xclib_dft_is
    !
    implicit none
    !
@@ -431,16 +431,21 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    !
    ! local variables
    !
+   real(kind=8), allocatable :: rho_d(:,:), dvxc_d(:,:,:)
    integer :: i
    !
    !
    !
-   if ( dft_is_gradient() ) &
+   if ( xclib_dft_is('gradient') ) &
       call errore ('dvxc_dn', 'gradient correction to dvxc not yet implemented', 1)
    !
    ! LDA only
    !
-   CALL dmxc_lda( mesh, rho, dvxc )   
+   allocate( rho_d(mesh,1), dvxc_d(mesh,1,1) )    !-PROVISIONAL
+   rho_d(:,1) = rho
+   CALL xclib_set_threshold( 'lda', 1.d-10 )
+   CALL dmxc( mesh, 1, rho_d, dvxc_d )   
+   deallocate( rho_d, dvxc_d )
    !
    return
    !

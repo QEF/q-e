@@ -2000,7 +2000,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE exx, ONLY : vexx
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE funct, ONLY : exx_is_active
+  USE xc_lib, ONLY: exx_is_active
   USE gvect, ONLY : ngm, g
   USE io_files, ONLY : nwordwfc, iunwfc
   USE io_global, ONLY : ionode

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2010 Quantum ESPRESSO group
+! Copyright (C) 2003-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,6 +29,7 @@ MODULE bfgs_module
    ! ... Modified for variable-cell-shape relaxation ( 2007-2008 ) by 
    ! ...   Javier Antonio Montoya, Lorenzo Paulatto and Stefano de Gironcoli
    ! ... Re-analyzed by Stefano de Gironcoli ( 2010 )
+   ! ... FCP case added by Minoru Otani and collaborators (2020)
    !
    ! ... references :
    !
@@ -43,9 +44,7 @@ MODULE bfgs_module
    !
    !
    USE kinds,     ONLY : DP
-   USE io_files,  ONLY : iunbfgs, prefix
-   USE constants, ONLY : eps8, eps16
-   USE cell_base, ONLY : iforceh      ! FIXME: should be passed as argument
+   USE constants, ONLY : eps4, eps8, eps16, RYTOEV
    !
    USE basic_algebra_routines
    USE matrix_inversion
@@ -56,19 +55,16 @@ MODULE bfgs_module
    !
    ! ... public methods
    !
-   PUBLIC :: bfgs, terminate_bfgs, bfgs_get_n_iter 
-   !
-   ! ... public variables
-   !
-   PUBLIC :: bfgs_ndim,        &
-             trust_radius_ini, trust_radius_min, trust_radius_max, &
-             w_1,              w_2
+   PUBLIC :: bfgs, init_bfgs, terminate_bfgs, bfgs_get_n_iter 
    !
    ! ... global module variables
    !
    SAVE
    !
-   CHARACTER (len=8) :: fname="energy" ! name of the function to be minimized
+   CHARACTER (len=18) :: fname="energy"
+   !! name of the function to be minimized
+   CHARACTER (len=320):: bfgs_file=" "
+   !! name of file (with path) used to store and retrieve the status
    !
    REAL(DP), ALLOCATABLE :: &
       pos(:),            &! positions + cell
@@ -77,6 +73,7 @@ MODULE bfgs_module
       grad_p(:),         &! gradients at the previous accepted iteration
       inv_hess(:,:),     &! inverse hessian matrix (updated using BFGS formula)
       metric(:,:),       &
+      inv_metric(:,:),   &
       h_block(:,:),      &
       hinv_block(:,:),   &
       step(:),           &! the (new) search direction (normalized NR step)
@@ -98,18 +95,19 @@ MODULE bfgs_module
                           ! set to the minimum value at the previous step
                           ! set to 2 if trust_radius is reset again: exit
    LOGICAL :: &
-      conv_bfgs           ! .TRUE. when bfgs convergence has been achieved
+      conv_bfgs = .FALSE. ! .TRUE. when bfgs convergence has been achieved
    !
-   ! ... default values for the following variables are set in
-   ! ... Modules/read_namelist.f90 (SUBROUTINE ions_defaults)
+   ! ... default values for bfgs_ndim, trust_radius_max, trust_radius_min,
+   ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
+   ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
-   ! ... Note that trust_radius_max, trust_radius_min, trust_radius_ini,
-   ! ... w_1, w_2, bfgs_ndim have a default value, but can also be assigned
-   ! ... in the input.
-   !
+   LOGICAL :: &
+      bfgs_initialized = .FALSE.
+   INTEGER :: &
+      stdout              ! standard output for writing
    INTEGER :: &
       bfgs_ndim           ! dimension of the subspace for GDIIS
-                          ! fixed to 1 for standard BFGS algorithm
+                          ! for standard BFGS algorithm, bfgs_ndim=1
    REAL(DP)  :: &
       trust_radius_ini,  &! suggested initial displacement
       trust_radius_min,  &! minimum allowed displacement
@@ -122,26 +120,61 @@ MODULE bfgs_module
 CONTAINS
    !
    !------------------------------------------------------------------------
-   SUBROUTINE bfgs( pos_in, h, energy, grad_in, fcell, fixion, scratch, stdout,&
-                 energy_thr, grad_thr, cell_thr, energy_error, grad_error,     &
-                 cell_error, lmovecell, step_accepted, stop_bfgs, istep )
+   SUBROUTINE init_bfgs( stdout_, bfgs_ndim_, trust_radius_max_, &
+                   trust_radius_min_, trust_radius_ini_, w_1_, w_2_)
+     !------------------------------------------------------------------------
+     !
+     ! ... set values for several parameters of the algorithm
+     !
+     INTEGER, INTENT(IN) :: &
+          stdout_, &
+          bfgs_ndim_
+     REAL(DP), INTENT(IN)  :: &
+        trust_radius_ini_, &
+        trust_radius_min_, &
+        trust_radius_max_, &
+        w_1_,              &
+        w_2_
+     !
+     stdout            = stdout_
+     bfgs_ndim         = bfgs_ndim_
+     trust_radius_max  = trust_radius_max_
+     trust_radius_min  = trust_radius_min_
+     trust_radius_ini  = trust_radius_ini_
+     w_1               = w_1_
+     w_2               = w_2_
+     bfgs_initialized  = .true.
+     !
+   END SUBROUTINE init_bfgs
+   !------------------------------------------------------------------------
+   !
+   SUBROUTINE bfgs( filebfgs, pos_in, h, nelec, energy, &
+                   grad_in, fcell, iforceh, felec, &
+                   energy_thr, grad_thr, cell_thr, fcp_thr, &
+                   energy_error, grad_error, cell_error, fcp_error, &
+                   lmovecell, lfcp, fcp_cap, fcp_hess, step_accepted, stop_bfgs, istep )
       !------------------------------------------------------------------------
       !
       ! ... list of input/output arguments :
       !
-      !  pos            : vector containing 3N coordinates of the system ( x )
+      !  filebfgs       : file name for storing and retrieving data
+      !  pos_in         : vector containing 3N coordinates of the system ( x )
+      !  h              : 3x3 matrix of the primitive lattice vectors
+      !  nelec          : number of elecrons (for FCP)
       !  energy         : energy of the system ( V(x) )
       !  grad           : vector containing 3N components of grad( V(x) )
-      !  fixion         : vector used to freeze a deg. of freedom
-      !  scratch        : scratch directory
-      !  stdout         : unit for standard output
-      !  energy_thr     : treshold on energy difference for BFGS convergence
-      !  grad_thr       : treshold on grad difference for BFGS convergence
-      !                    the largest component of grad( V(x) ) is considered
+      !  fcell          : 3x3 matrix containing the stress tensor
+      !  iforceh        : 3x3 matrix containing cell constraints
+      !  energy_thr     : threshold on energy difference for BFGS convergence
+      !  grad_thr       : threshold on grad difference for BFGS convergence
+      !                   the largest component of grad( V(x) ) is considered
+      !  cell_thr       : threshold on grad of cell for BFGS convergence
+      !  fcp_thr        : treshold on grad of FCP for BFGS convergence
       !  energy_error   : energy difference | V(x_i) - V(x_i-1) |
       !  grad_error     : the largest component of
       !                         | grad(V(x_i)) - grad(V(x_i-1)) |
       !  cell_error     : the largest component of: omega*(stress-press*I)
+      !  fcp_error      : | grad(V(x_FCP)) |
       !  step_accepted  : .TRUE. if a new BFGS step is done
       !  stop_bfgs      : .TRUE. if BFGS convergence has been achieved
       !
@@ -149,15 +182,19 @@ CONTAINS
       !
       REAL(DP),         INTENT(INOUT) :: pos_in(:)
       REAL(DP),         INTENT(INOUT) :: h(3,3)
+      REAL(DP),         INTENT(INOUT) :: nelec ! number of electrons
       REAL(DP),         INTENT(INOUT) :: energy
       REAL(DP),         INTENT(INOUT) :: grad_in(:)
       REAL(DP),         INTENT(INOUT) :: fcell(3,3)
-      INTEGER,          INTENT(IN)    :: fixion(:)
-      CHARACTER(LEN=*), INTENT(IN)    :: scratch
-      INTEGER,          INTENT(IN)    :: stdout
-      REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr, cell_thr
+      REAL(DP),         INTENT(INOUT) :: felec ! force on FCP
+      CHARACTER(LEN=*), INTENT(IN)    :: filebfgs
+      REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr, cell_thr, fcp_thr
+      INTEGER,          INTENT(IN)    :: iforceh(3,3)
       LOGICAL,          INTENT(IN)    :: lmovecell
-      REAL(DP),         INTENT(OUT)   :: energy_error, grad_error, cell_error
+      LOGICAL,          INTENT(IN)    :: lfcp ! include FCP, or not ?
+      REAL(DP),         INTENT(IN)    :: fcp_cap ! capacitance for FCP
+      REAL(DP),         INTENT(IN)    :: fcp_hess ! hessian for FCP
+      REAL(DP),         INTENT(OUT)   :: energy_error, grad_error, cell_error, fcp_error
       LOGICAL,          INTENT(OUT)   :: step_accepted, stop_bfgs
       INTEGER,          INTENT(OUT)   :: istep
       !
@@ -167,9 +204,15 @@ CONTAINS
       ! ... for scaled coordinates
       REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3), omega
       !
+      ! ... additional dimensions of cell and FCP
+      INTEGER, PARAMETER :: NADD = 9 + 1
       !
+      !
+      IF ( .NOT.bfgs_initialized ) CALL errore('bfgs',' not initialized',1)
+      !
+      IF ( bfgs_file == " ") bfgs_file = TRIM(filebfgs)
       lwolfe=.false.
-      n = SIZE( pos_in ) + 9
+      n = SIZE( pos_in ) + NADD
       nat = size (pos_in) / 3
       if (nat*3 /= size (pos_in)) call errore('bfgs',' strange dimension',1)
       !
@@ -189,9 +232,10 @@ CONTAINS
       ALLOCATE( step_old( n ) )
       ALLOCATE( pos_best( n ) )
       ! ... scaled coordinates work-space
-      ALLOCATE( hinv_block( n-9, n-9 ) )
+      ALLOCATE( hinv_block( n-NADD, n-NADD ) )
       ! ... cell related work-space
       ALLOCATE( metric( n , n  ) )
+      ALLOCATE( inv_metric( n , n  ) )
       !
       ! ... the BFGS file read (pos & grad) in scaled coordinates
       !
@@ -207,20 +251,40 @@ CONTAINS
       call invmat(3,g,ginv)
       metric = 0.d0
       FORALL ( k=0:nat-1,   i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = g(i,j)
-      FORALL ( k=nat:nat+2, i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = 0.04 * omega * ginv(i,j)
+      FORALL ( k=nat:nat+2, i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = 0.04d0 * omega * ginv(i,j)
+      !
+      IF ( lfcp ) THEN
+         IF ( fcp_cap > eps4 ) THEN
+            metric(n,n) = (0.5d0 / (0.1d0 * fcp_cap)) ** 2
+         ELSE
+            metric(n,n) = 1.d0
+         END IF
+      ELSE
+         metric(n,n) = 1.d0
+      END IF
+      !
+      ! ... generate inverse of metric
+      inv_metric = 0.d0
+      FORALL ( k=0:nat-1,   i=1:3, j=1:3 ) inv_metric(i+3*k,j+3*k) = ginv(i,j)
+      FORALL ( k=nat:nat+2, i=1:3, j=1:3 ) inv_metric(i+3*k,j+3*k) = g(i,j) / (0.04d0 * omega)
+      inv_metric(n,n) = 1.d0 / metric(n,n)
       !
       ! ... generate bfgs vectors for the degrees of freedom and their gradients
-      pos = 0.0
-      pos(1:n-9) = pos_in
-      if (lmovecell) FORALL( i=1:3, j=1:3)  pos( n-9 + j+3*(i-1) ) = h(i,j)
-      grad = 0.0
-      grad(1:n-9) = grad_in
-      if (lmovecell) FORALL( i=1:3, j=1:3) grad( n-9 + j+3*(i-1) ) = fcell(i,j)*iforceh(i,j)
+      pos = 0.d0
+      pos(1:n-NADD) = pos_in
+      if (lmovecell) FORALL( i=1:3, j=1:3)  pos( n-NADD + j+3*(i-1) ) = h(i,j)
+      if (lfcp) pos( n ) = nelec
+      grad = 0.d0
+      grad(1:n-NADD) = grad_in
+      if (lmovecell) FORALL( i=1:3, j=1:3) grad( n-NADD + j+3*(i-1) ) = fcell(i,j)*iforceh(i,j)
+      if (lfcp) grad( n ) = felec
       !
       ! if the cell moves the quantity to be minimized is the enthalpy
+      fname = "energy"
       IF ( lmovecell ) fname="enthalpy"
+      IF ( lfcp ) fname = "grand-" // TRIM(fname)
       !
-      CALL read_bfgs_file( pos, grad, fixion, energy, scratch, n, stdout )
+      CALL read_bfgs_file( pos, grad, energy, n, lfcp, fcp_hess )
       !
       scf_iter = scf_iter + 1
       istep    = scf_iter
@@ -232,29 +296,34 @@ CONTAINS
       ! ... obscure PGI bug as of v.17.4
       !
 #if defined (__PGI)
-      grad_in = MATMUL( TRANSPOSE(hinv_block), grad(1:n-9) )
+      grad_in = MATMUL( TRANSPOSE(hinv_block), grad(1:n-NADD) )
       grad_error = MAXVAL( ABS( grad_in ) )
 #else
-      grad_error = MAXVAL( ABS( MATMUL( TRANSPOSE(hinv_block), grad(1:n-9)) ) )
+      grad_error = MAXVAL( ABS( MATMUL( TRANSPOSE(hinv_block), grad(1:n-NADD)) ) )
 #endif
       conv_bfgs = energy_error < energy_thr
       conv_bfgs = conv_bfgs .AND. ( grad_error < grad_thr )
       !
       IF( lmovecell) THEN
-          cell_error = MAXVAL( ABS( MATMUL ( TRANSPOSE ( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) ),&
+          cell_error = MAXVAL( ABS( MATMUL ( TRANSPOSE ( RESHAPE( grad(n-NADD+1:n-1), (/ 3, 3 /) ) ),&
                                              TRANSPOSE(h) ) ) ) / omega
           conv_bfgs = conv_bfgs .AND. ( cell_error < cell_thr ) 
 #undef DEBUG
 #if defined(DEBUG)
-           write (*,'(3f15.10)') TRANSPOSE ( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) )
+           write (*,'(3f15.10)') TRANSPOSE ( RESHAPE( grad(n-NADD+1:n-1), (/ 3, 3 /) ) )
            write (*,*)
            write (*,'(3f15.10)') TRANSPOSE(h)
            write (*,*)
-           write (*,'(3f15.10)') MATMUL (TRANSPOSE( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) ),&
+           write (*,'(3f15.10)') MATMUL (TRANSPOSE( RESHAPE( grad(n-NADD+1:n-1), (/ 3, 3 /) ) ),&
                                              TRANSPOSE(h) ) / omega
            write (*,*)
            write (*,*) cell_error/cell_thr*0.5d0
 #endif
+      END IF
+      !
+      IF( lfcp ) THEN
+          fcp_error = ABS( grad( n ) )
+          conv_bfgs = conv_bfgs .AND. ( fcp_error < fcp_thr )
       END IF
       !
       ! ... converged (or useless to go on): quick return
@@ -283,9 +352,11 @@ CONTAINS
       !
       ! ... the bfgs algorithm starts here
       !
-      IF ( .NOT. energy_wolfe_condition( energy ) .AND. (scf_iter > 1) ) THEN
+      IF ( .NOT. energy_wolfe_condition( energy ) .AND. (scf_iter > 1) .AND. (.NOT. lfcp) ) THEN
          !
-         ! ... the previous step is rejected, line search goes on
+         ! ... Wolfe condition not met: the previous step is rejected,
+         ! ... line search goes on
+         ! ... Note that for the FCP case, the Wolfe condition is ignored
          !
          step_accepted = .FALSE.
          !
@@ -341,10 +412,10 @@ CONTAINS
                tr_min_hit = 1
             END IF
             !
-            CALL reset_bfgs( n )
+            CALL reset_bfgs( n, lfcp, fcp_hess )
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             ! normalize step but remember its length
             nr_step_length = scnorm(step)
             step(:) = step(:) / nr_step_length
@@ -375,12 +446,16 @@ CONTAINS
             !
             nr_step_length_old = nr_step_length
             !
-            WRITE( UNIT = stdout, &
-                 & FMT = '(5X,"CASE: ",A,"_new < ",A,"_old",/)' ) fname,fname
+            IF ( .NOT. lfcp ) THEN
+               !
+               WRITE( UNIT = stdout, &
+                    & FMT = '(5X,"CASE: ",A,"_new < ",A,"_old",/)' ) fname,fname
+               !
+            END IF
             !
             CALL check_wolfe_conditions( lwolfe, energy, grad )
             !
-            CALL update_inverse_hessian( pos, grad, n, stdout )
+            CALL update_inverse_hessian( pos, grad, n, lfcp, fcp_hess )
             !
          END IF
          ! compute new search direction and store NR step length
@@ -395,7 +470,7 @@ CONTAINS
             ! ... standard Newton-Raphson step
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
@@ -403,9 +478,9 @@ CONTAINS
             WRITE( UNIT = stdout, &
                    FMT = '(5X,"uphill step: resetting bfgs history",/)' )
             !
-            CALL reset_bfgs( n )
+            CALL reset_bfgs( n, lfcp, fcp_hess )
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          !
@@ -422,7 +497,7 @@ CONTAINS
             !
          ELSE
             !
-            CALL compute_trust_radius( lwolfe, energy, grad, n, stdout )
+            CALL compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_hess )
             !
          END IF
          !
@@ -440,7 +515,7 @@ CONTAINS
       ! ... information required by next iteration is saved here ( this must
       ! ... be done before positions are updated )
       !
-      CALL write_bfgs_file( pos, energy, grad, scratch )
+      CALL write_bfgs_file( pos, energy, grad )
       !
       ! ... positions and cell are updated
       !
@@ -448,10 +523,11 @@ CONTAINS
       !
 1000  stop_bfgs = conv_bfgs
       ! ... input ions+cell variables
-      IF ( lmovecell ) FORALL( i=1:3, j=1:3) h(i,j) = pos( n-9 + j+3*(i-1) )
-      pos_in = pos(1:n-9)
+      pos_in = pos(1:n-NADD)
+      IF ( lmovecell ) FORALL( i=1:3, j=1:3) h(i,j) = pos( n-NADD + j+3*(i-1) )
+      IF ( lfcp ) nelec = pos( n )
       ! ... update forces
-      grad_in = grad(1:n-9)
+      grad_in = grad(1:n-NADD)
       !
       ! ... work-space deallocation
       !
@@ -467,6 +543,7 @@ CONTAINS
       DEALLOCATE( pos_best )
       DEALLOCATE( hinv_block )
       DEALLOCATE( metric )
+      DEALLOCATE( inv_metric )
       !
       RETURN
       !
@@ -559,7 +636,7 @@ CONTAINS
             ! ... last gradient and reset gdiis history
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-NADD+j+3*(i-1) ) = step( n-NADD+j+3*(i-1) )*iforceh(i,j)
             !
             gdiis_iter = 0
             !
@@ -572,46 +649,55 @@ CONTAINS
    END SUBROUTINE bfgs
    !
    !------------------------------------------------------------------------
-   SUBROUTINE reset_bfgs( n )
+   SUBROUTINE reset_bfgs( n, lfcp, fcp_hess )
       !------------------------------------------------------------------------
       ! ... inv_hess in re-initialized to the initial guess 
       ! ... defined as the inverse metric 
       !
       INTEGER, INTENT(IN) :: n
+      LOGICAL,  INTENT(IN) :: lfcp
+      REAL(DP), INTENT(IN) :: fcp_hess
       !
-      call invmat(n, metric, inv_hess)
+      inv_hess = inv_metric
+      !
+      IF ( lfcp ) THEN
+         !
+         IF ( fcp_hess > eps4 ) THEN
+            !
+            inv_hess(n,n) = fcp_hess
+            !
+         END IF
+         !
+      END IF
       !
       gdiis_iter = 0
       !
    END SUBROUTINE reset_bfgs
    !
    !------------------------------------------------------------------------
-   SUBROUTINE read_bfgs_file( pos, grad, fixion, energy, scratch, n, stdout )
+   SUBROUTINE read_bfgs_file( pos, grad, energy, n, lfcp, fcp_hess )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
       REAL(DP),         INTENT(INOUT) :: pos(:)
       REAL(DP),         INTENT(INOUT) :: grad(:)
-      INTEGER,          INTENT(IN)    :: fixion(:)
-      CHARACTER(LEN=*), INTENT(IN)    :: scratch
       INTEGER,          INTENT(IN)    :: n
-      INTEGER,          INTENT(IN)    :: stdout
+      LOGICAL,          INTENT(IN)    :: lfcp
+      REAL(DP),         INTENT(IN)    :: fcp_hess
       REAL(DP),         INTENT(INOUT) :: energy
       !
-      CHARACTER(LEN=256) :: bfgs_file
+      INTEGER            :: iunbfgs
       LOGICAL            :: file_exists
       !
       !
-      bfgs_file = TRIM( scratch ) // TRIM( prefix ) // '.bfgs'
-      !
-      INQUIRE( FILE = TRIM( bfgs_file ) , EXIST = file_exists )
+      INQUIRE( FILE = bfgs_file, EXIST = file_exists )
       !
       IF ( file_exists ) THEN
          !
          ! ... bfgs is restarted from file
          !
-         OPEN( UNIT = iunbfgs, FILE = TRIM( bfgs_file ), &
+         OPEN( NEWUNIT = iunbfgs, FILE = bfgs_file, &
                STATUS = 'UNKNOWN', ACTION = 'READ' )
          !
          READ( iunbfgs, * ) pos_p
@@ -639,7 +725,17 @@ CONTAINS
          WRITE( UNIT = stdout, FMT = '(/,5X,"BFGS Geometry Optimization")' )
          !
          ! initialize the inv_hess to the inverse of the metric
-         call invmat(n, metric, inv_hess)
+         inv_hess = inv_metric
+         !
+         IF ( lfcp ) THEN
+            !
+            IF ( fcp_hess > eps4 ) THEN
+               !
+               inv_hess(n,n) = fcp_hess
+               !
+            END IF
+            !
+         END IF
          !
          pos_p      = 0.0_DP
          grad_p     = 0.0_DP
@@ -662,7 +758,7 @@ CONTAINS
    END SUBROUTINE read_bfgs_file
    !
    !------------------------------------------------------------------------
-   SUBROUTINE write_bfgs_file( pos, energy, grad, scratch )
+   SUBROUTINE write_bfgs_file( pos, energy, grad )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -670,11 +766,10 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: pos(:)
       REAL(DP),         INTENT(IN) :: energy
       REAL(DP),         INTENT(IN) :: grad(:)
-      CHARACTER(LEN=*), INTENT(IN) :: scratch
       !
+      INTEGER :: iunbfgs
       !
-      OPEN( UNIT = iunbfgs, FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs', &
-            STATUS = 'UNKNOWN', ACTION = 'WRITE' )
+      OPEN( NEWUNIT = iunbfgs, FILE = bfgs_file, STATUS = 'UNKNOWN', ACTION = 'WRITE' )
       !
       WRITE( iunbfgs, * ) pos
       WRITE( iunbfgs, * ) grad
@@ -692,8 +787,7 @@ CONTAINS
       !
    END SUBROUTINE write_bfgs_file
    !
-   !------------------------------------------------------------------------
-   SUBROUTINE update_inverse_hessian( pos, grad, n, stdout )
+   SUBROUTINE update_inverse_hessian( pos, grad, n, lfcp, fcp_hess )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -701,7 +795,8 @@ CONTAINS
       REAL(DP), INTENT(IN)  :: pos(:)
       REAL(DP), INTENT(IN)  :: grad(:)
       INTEGER,  INTENT(IN)  :: n
-      INTEGER,  INTENT(IN)  :: stdout
+      LOGICAL,  INTENT(IN)  :: lfcp
+      REAL(DP), INTENT(IN)  :: fcp_hess
       INTEGER               :: info
       !
       REAL(DP), ALLOCATABLE :: y(:), s(:)
@@ -724,7 +819,7 @@ CONTAINS
                          &     "behaviour in update_inverse_hessian")' )
          WRITE( stdout, '(  5X,"         resetting bfgs history",/)' )
          !
-         CALL reset_bfgs( n )
+         CALL reset_bfgs( n, lfcp, fcp_hess )
          !
          RETURN
          !
@@ -820,7 +915,7 @@ CONTAINS
    END FUNCTION gradient_wolfe_condition
    !
    !------------------------------------------------------------------------
-   SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, stdout )
+   SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, lfcp, fcp_hess )
       !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -829,12 +924,13 @@ CONTAINS
       REAL(DP), INTENT(IN)  :: energy
       REAL(DP), INTENT(IN)  :: grad(:)
       INTEGER,  INTENT(IN)  :: n
-      INTEGER,  INTENT(IN)  :: stdout
+      LOGICAL,  INTENT(IN)  :: lfcp
+      REAL(DP), INTENT(IN)  :: fcp_hess
       !
       REAL(DP) :: a
       LOGICAL  :: ltest
       !
-      ltest = ( energy - energy_p ) < w_1 * ( grad_p .dot. step_old ) * trust_radius_old
+      ltest = energy_wolfe_condition( energy )
       !
       ! The instruction below replaces the original instruction:
       !    ltest = ltest .AND. ( nr_step_length_old > trust_radius_old )
@@ -871,7 +967,7 @@ CONTAINS
          WRITE( UNIT = stdout, &
                 FMT = '(5X,"small trust_radius: resetting bfgs history",/)' )
          !
-         CALL reset_bfgs( n )
+         CALL reset_bfgs( n, lfcp, fcp_hess )
          step(:) = - ( inv_hess(:,:) .times. grad(:) )
          !
          nr_step_length = scnorm(step)
@@ -904,9 +1000,12 @@ CONTAINS
       REAL(DP), INTENT(IN) :: vect(:)
       REAL(DP) :: ss
       INTEGER :: i,k,l,n
+      INTEGER :: ndim
+      !
+      ndim = SIZE (vect)
       !
       scnorm = 0._DP
-      n = SIZE (vect) / 3
+      n = (ndim - 1) / 3
       do i=1,n
          ss = 0._DP
          do k=1,3
@@ -918,20 +1017,21 @@ CONTAINS
          scnorm = MAX (scnorm, SQRT (ss) )
       end do
       !
+      ss = vect(ndim) * metric(ndim,ndim) * vect(ndim)
+      scnorm = MAX (scnorm, SQRT (ss) )
+      !
    END FUNCTION scnorm
    !
    !------------------------------------------------------------------------
-   SUBROUTINE terminate_bfgs( energy, energy_thr, grad_thr, cell_thr, &
-                              lmovecell, stdout, scratch )
+   SUBROUTINE terminate_bfgs( energy, energy_thr, grad_thr, cell_thr, fcp_thr, &
+                              lmovecell, lfcp )
       !------------------------------------------------------------------------
       !
       USE io_files, ONLY : delete_if_present
       !
       IMPLICIT NONE
-      REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr
-      LOGICAL,          INTENT(IN) :: lmovecell
-      INTEGER,          INTENT(IN) :: stdout
-      CHARACTER(LEN=*), INTENT(IN) :: scratch
+      REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr, fcp_thr
+      LOGICAL,          INTENT(IN) :: lmovecell, lfcp
       !
       IF ( conv_bfgs ) THEN
          !
@@ -947,12 +1047,19 @@ CONTAINS
               & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&
               &            " Ry/Bohr)")') energy_thr, grad_thr
          END IF
+         !
+         IF ( lfcp ) THEN
+            WRITE( UNIT = stdout, &
+              & FMT = '(5X,"(criteria: force on FCP < ",ES8.1," eV)")') fcp_thr * RYTOEV
+         END IF
+         !
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"Final ",A," = ",F18.10," Ry")' ) fname, energy
          !
-         CALL delete_if_present( TRIM( scratch ) // TRIM( prefix ) // '.bfgs' )
+         CALL delete_if_present( bfgs_file )
+         bfgs_file = " "
          !
       ELSE
          !

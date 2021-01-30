@@ -64,6 +64,7 @@ dvqpsi.o : ../../PHonon/PH/phcom.o
 dvqpsi.o : ../../PW/src/pwcom.o
 dvqpsi.o : ../../PW/src/scf_mod.o
 dvqpsi.o : ../../UtilXlib/mp.o
+dvqpsi.o : ../../XClib/xc_lib.o
 dvqpsi.o : ../../upflib/uspp.o
 dvqpsi.o : constants_epw.o
 dvqpsi.o : elph2.o
@@ -337,7 +338,6 @@ epw_setup.o : ../../LR_Modules/lrcom.o
 epw_setup.o : ../../Modules/cell_base.o
 epw_setup.o : ../../Modules/control_flags.o
 epw_setup.o : ../../Modules/fft_base.o
-epw_setup.o : ../../Modules/funct.o
 epw_setup.o : ../../Modules/ions_base.o
 epw_setup.o : ../../Modules/kind.o
 epw_setup.o : ../../Modules/mp_global.o
@@ -348,6 +348,7 @@ epw_setup.o : ../../PW/src/pwcom.o
 epw_setup.o : ../../PW/src/scf_mod.o
 epw_setup.o : ../../PW/src/symm_base.o
 epw_setup.o : ../../UtilXlib/mp.o
+epw_setup.o : ../../XClib/xc_lib.o
 epw_setup.o : ../../upflib/uspp.o
 epw_setup.o : constants_epw.o
 epw_setup.o : epwcom.o

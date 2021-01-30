@@ -40,6 +40,7 @@ then
   echo "Running TURBO SPECTRUM CHI ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  cp $3 turbo_spectrum.out
   cp *.plot_chi.dat $3
   if [[ -e CRASH ]]
   then
@@ -50,6 +51,7 @@ then
   echo "Running TURBO SPECTRUM EELS ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/turbo_spectrum.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  cp $3 turbo_spectrum.out
   cp *.plot_eps.dat $3
   if [[ -e CRASH ]]
   then

@@ -108,7 +108,7 @@ ld1inc.o \
 parameters.o
 
 QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a \
-       ../../FFTXlib/libqefft.a ../../UtilXlib/libutil.a
+       ../../FFTXlib/libqefft.a ../../UtilXlib/libutil.a  ../../XClib/xc_lib.a
 
 TLDEPS= bindir libs mods
 

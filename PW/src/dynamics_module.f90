@@ -1337,7 +1337,6 @@ CONTAINS
       USE ener,        ONLY : etot
       USE cell_base,   ONLY : alat
       USE ions_base,   ONLY : nat, tau
-      USE io_files,    ONLY : iunbfgs, tmp_dir
       !
       IMPLICIT NONE
       !
@@ -1352,6 +1351,7 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
       REAL(DP)              :: sdoty, pg_norm
       INTEGER               :: dim
+      INTEGER               :: iunbfgs
       CHARACTER(LEN=256)    :: bfgs_file
       LOGICAL               :: file_exists
       !
@@ -1376,7 +1376,7 @@ CONTAINS
       !
       IF ( file_exists ) THEN
          !
-         OPEN( UNIT = iunbfgs, &
+         OPEN( NEWUNIT = iunbfgs, &
                FILE = TRIM( bfgs_file ), STATUS = 'OLD', ACTION = 'READ' )
          !
          READ( iunbfgs, * ) pos_p
@@ -1432,7 +1432,7 @@ CONTAINS
          !
       ENDIF
       !
-      OPEN( UNIT = iunbfgs, &
+      OPEN( NEWUNIT = iunbfgs, &
             FILE = TRIM( bfgs_file ), STATUS = 'UNKNOWN', ACTION = 'WRITE' )
       !
       WRITE( iunbfgs, * ) pos(:)

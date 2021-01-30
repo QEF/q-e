@@ -47,6 +47,7 @@ MODULE cp_restart_new
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
                                            tksw, do_makov_payne, smallmem,   &
+                                           mbd_vdw,                           &
                                            llondon, lxdm, ts_vdw, tfor, tpre
       USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf, lwf ! Lingzhu Kong
       USE constants,                ONLY : e2
@@ -66,9 +67,9 @@ MODULE cp_restart_new
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ityp 
-      USE funct,                    ONLY : get_dft_name, &
-           dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
-           dft_is_nonlocc, get_nonlocc_name
+      USE funct,                    ONLY : get_dft_name, dft_is_nonlocc, get_nonlocc_name
+      USE xc_lib,                   ONLY : xclib_dft_is, xclib_get_exx_fraction, &
+                                           get_screening_parameter
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
                                            Hubbard_lmax, Hubbard_U
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
@@ -298,10 +299,10 @@ MODULE cp_restart_new
                                 U_PROJECTION_TYPE = 'atomic', U = Hubbard_U, STARTING_NS = starting_ns_eigenvalue) 
         END IF
         !
-        IF (dft_is_hybrid())  THEN 
+        IF (xclib_dft_is('hybrid'))  THEN 
            ALLOCATE (hybrid_) 
            CALL qexsd_init_hybrid(OBJ = hybrid_, DFT_IS_HYBRID = .TRUE. , ECUTFOCK = ecutwfc, &
-                                 EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = get_screening_parameter(),&
+                                 EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = get_screening_parameter(),&
                                  EXXDIV_TREATMENT = 'none',  X_GAMMA_EXTRAPOLATION = .FALSE.) 
         END IF 
         empirical_vdW = ( TRIM(vdw_corr) /= 'none' )  
@@ -549,7 +550,7 @@ MODULE cp_restart_new
       USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
-                                           ts_vdw, lxdm, iverbosity, lwf
+                                           ts_vdw, mbd_vdw, lxdm, iverbosity, lwf
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
@@ -774,7 +775,7 @@ MODULE cp_restart_new
            Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            Hubbard_dum, &
            vdw_corr, scal6, lon_rcut, vdw_isolated)
-      CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+      CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !
       lsda_ = output_obj%magnetization%lsda

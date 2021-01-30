@@ -13,15 +13,20 @@
 !=----------------------------------------------------------------------------=!
    MODULE uspp_gpum
 !=----------------------------------------------------------------------------=!
-     USE upf_kinds,     ONLY : DP
-!     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
      IMPLICIT NONE
      SAVE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
+     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
+     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+     INTEGER :: iverbosity = 0
+#if defined(__DEBUG)
+     iverbosity = 1
+#endif
      !
-     integer :: iverbosity = 0
      INTEGER, ALLOCATABLE :: indv_d(:, :)
      INTEGER, ALLOCATABLE :: nhtol_d(:, :)
      INTEGER, ALLOCATABLE :: nhtolm_d(:, :)
@@ -89,7 +94,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -97,7 +102,7 @@
          !
          IF (indv_ood) THEN
              IF ((.not. allocated(indv_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_indv_d', 'PANIC: sync of indv from indv_d with unallocated array. Bye!!', 1)
+                CALL errore('using_indv_d', 'PANIC: sync of indv from indv_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(indv)) THEN
@@ -123,7 +128,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_indv_d ", debug_info, indv_d_ood
          !
@@ -150,7 +155,7 @@
          ENDIF
          IF (intento > 0)    indv_ood = .true.
 #else
-         CALL upf_error('using_indv_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_indv_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_indv_d
      !
@@ -165,7 +170,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -173,7 +178,7 @@
          !
          IF (nhtol_ood) THEN
              IF ((.not. allocated(nhtol_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_nhtol_d', 'PANIC: sync of nhtol from nhtol_d with unallocated array. Bye!!', 1)
+                CALL errore('using_nhtol_d', 'PANIC: sync of nhtol from nhtol_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(nhtol)) THEN
@@ -199,7 +204,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_nhtol_d ", debug_info, nhtol_d_ood
          !
@@ -226,7 +231,7 @@
          ENDIF
          IF (intento > 0)    nhtol_ood = .true.
 #else
-         CALL upf_error('using_nhtol_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_nhtol_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtol_d
      !
@@ -241,7 +246,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -249,7 +254,7 @@
          !
          IF (nhtolm_ood) THEN
              IF ((.not. allocated(nhtolm_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_nhtolm_d', 'PANIC: sync of nhtolm from nhtolm_d with unallocated array. Bye!!', 1)
+                CALL errore('using_nhtolm_d', 'PANIC: sync of nhtolm from nhtolm_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(nhtolm)) THEN
@@ -275,7 +280,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_nhtolm_d ", debug_info, nhtolm_d_ood
          !
@@ -302,7 +307,7 @@
          ENDIF
          IF (intento > 0)    nhtolm_ood = .true.
 #else
-         CALL upf_error('using_nhtolm_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_nhtolm_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtolm_d
      !
@@ -317,7 +322,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -325,7 +330,7 @@
          !
          IF (ijtoh_ood) THEN
              IF ((.not. allocated(ijtoh_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_ijtoh_d', 'PANIC: sync of ijtoh from ijtoh_d with unallocated array. Bye!!', 1)
+                CALL errore('using_ijtoh_d', 'PANIC: sync of ijtoh from ijtoh_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(ijtoh)) THEN
@@ -351,7 +356,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_ijtoh_d ", debug_info, ijtoh_d_ood
          !
@@ -378,7 +383,7 @@
          ENDIF
          IF (intento > 0)    ijtoh_ood = .true.
 #else
-         CALL upf_error('using_ijtoh_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_ijtoh_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_ijtoh_d
      !
@@ -393,7 +398,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -401,7 +406,7 @@
          !
          IF (indv_ijkb0_ood) THEN
              IF ((.not. allocated(indv_ijkb0_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_indv_ijkb0_d', 'PANIC: sync of indv_ijkb0 from indv_ijkb0_d with unallocated array. Bye!!', 1)
+                CALL errore('using_indv_ijkb0_d', 'PANIC: sync of indv_ijkb0 from indv_ijkb0_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(indv_ijkb0)) THEN
@@ -427,7 +432,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_indv_ijkb0_d ", debug_info, indv_ijkb0_d_ood
          !
@@ -454,7 +459,7 @@
          ENDIF
          IF (intento > 0)    indv_ijkb0_ood = .true.
 #else
-         CALL upf_error('using_indv_ijkb0_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_indv_ijkb0_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_indv_ijkb0_d
      !
@@ -469,7 +474,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -477,7 +482,7 @@
          !
          IF (vkb_ood) THEN
              IF ((.not. allocated(vkb_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_vkb_d', 'PANIC: sync of vkb from vkb_d with unallocated array. Bye!!', 1)
+                CALL errore('using_vkb_d', 'PANIC: sync of vkb from vkb_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(vkb)) THEN
@@ -503,7 +508,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_vkb_d ", debug_info, vkb_d_ood
          !
@@ -530,7 +535,7 @@
          ENDIF
          IF (intento > 0)    vkb_ood = .true.
 #else
-         CALL upf_error('using_vkb_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_vkb_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_vkb_d
      !
@@ -545,7 +550,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -553,7 +558,7 @@
          !
          IF (becsum_ood) THEN
              IF ((.not. allocated(becsum_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_becsum_d', 'PANIC: sync of becsum from becsum_d with unallocated array. Bye!!', 1)
+                CALL errore('using_becsum_d', 'PANIC: sync of becsum from becsum_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(becsum)) THEN
@@ -579,7 +584,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_becsum_d ", debug_info, becsum_d_ood
          !
@@ -606,7 +611,7 @@
          ENDIF
          IF (intento > 0)    becsum_ood = .true.
 #else
-         CALL upf_error('using_becsum_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_becsum_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_becsum_d
      !
@@ -621,7 +626,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -629,7 +634,7 @@
          !
          IF (ebecsum_ood) THEN
              IF ((.not. allocated(ebecsum_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_ebecsum_d', 'PANIC: sync of ebecsum from ebecsum_d with unallocated array. Bye!!', 1)
+                CALL errore('using_ebecsum_d', 'PANIC: sync of ebecsum from ebecsum_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(ebecsum)) THEN
@@ -655,7 +660,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_ebecsum_d ", debug_info, ebecsum_d_ood
          !
@@ -682,7 +687,7 @@
          ENDIF
          IF (intento > 0)    ebecsum_ood = .true.
 #else
-         CALL upf_error('using_ebecsum_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_ebecsum_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_ebecsum_d
      !
@@ -697,7 +702,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -705,7 +710,7 @@
          !
          IF (dvan_ood) THEN
              IF ((.not. allocated(dvan_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_dvan_d', 'PANIC: sync of dvan from dvan_d with unallocated array. Bye!!', 1)
+                CALL errore('using_dvan_d', 'PANIC: sync of dvan from dvan_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(dvan)) THEN
@@ -731,7 +736,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_dvan_d ", debug_info, dvan_d_ood
          !
@@ -758,7 +763,7 @@
          ENDIF
          IF (intento > 0)    dvan_ood = .true.
 #else
-         CALL upf_error('using_dvan_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_dvan_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_dvan_d
      !
@@ -773,7 +778,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -781,7 +786,7 @@
          !
          IF (deeq_ood) THEN
              IF ((.not. allocated(deeq_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_deeq_d', 'PANIC: sync of deeq from deeq_d with unallocated array. Bye!!', 1)
+                CALL errore('using_deeq_d', 'PANIC: sync of deeq from deeq_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(deeq)) THEN
@@ -807,7 +812,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_deeq_d ", debug_info, deeq_d_ood
          !
@@ -834,7 +839,7 @@
          ENDIF
          IF (intento > 0)    deeq_ood = .true.
 #else
-         CALL upf_error('using_deeq_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_deeq_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_deeq_d
      !
@@ -849,7 +854,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -857,7 +862,7 @@
          !
          IF (qq_nt_ood) THEN
              IF ((.not. allocated(qq_nt_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_qq_nt_d', 'PANIC: sync of qq_nt from qq_nt_d with unallocated array. Bye!!', 1)
+                CALL errore('using_qq_nt_d', 'PANIC: sync of qq_nt from qq_nt_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(qq_nt)) THEN
@@ -883,7 +888,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_qq_nt_d ", debug_info, qq_nt_d_ood
          !
@@ -910,7 +915,7 @@
          ENDIF
          IF (intento > 0)    qq_nt_ood = .true.
 #else
-         CALL upf_error('using_qq_nt_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_qq_nt_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_nt_d
      !
@@ -925,7 +930,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -933,7 +938,7 @@
          !
          IF (qq_at_ood) THEN
              IF ((.not. allocated(qq_at_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_qq_at_d', 'PANIC: sync of qq_at from qq_at_d with unallocated array. Bye!!', 1)
+                CALL errore('using_qq_at_d', 'PANIC: sync of qq_at from qq_at_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(qq_at)) THEN
@@ -959,7 +964,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_qq_at_d ", debug_info, qq_at_d_ood
          !
@@ -986,7 +991,7 @@
          ENDIF
          IF (intento > 0)    qq_at_ood = .true.
 #else
-         CALL upf_error('using_qq_at_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_qq_at_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_at_d
      !
@@ -1001,7 +1006,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -1009,7 +1014,7 @@
          !
          IF (nhtoj_ood) THEN
              IF ((.not. allocated(nhtoj_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_nhtoj_d', 'PANIC: sync of nhtoj from nhtoj_d with unallocated array. Bye!!', 1)
+                CALL errore('using_nhtoj_d', 'PANIC: sync of nhtoj from nhtoj_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(nhtoj)) THEN
@@ -1035,7 +1040,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_nhtoj_d ", debug_info, nhtoj_d_ood
          !
@@ -1062,7 +1067,7 @@
          ENDIF
          IF (intento > 0)    nhtoj_ood = .true.
 #else
-         CALL upf_error('using_nhtoj_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_nhtoj_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtoj_d
      !
@@ -1077,7 +1082,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -1085,7 +1090,7 @@
          !
          IF (qq_so_ood) THEN
              IF ((.not. allocated(qq_so_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_qq_so_d', 'PANIC: sync of qq_so from qq_so_d with unallocated array. Bye!!', 1)
+                CALL errore('using_qq_so_d', 'PANIC: sync of qq_so from qq_so_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(qq_so)) THEN
@@ -1111,7 +1116,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_qq_so_d ", debug_info, qq_so_d_ood
          !
@@ -1138,7 +1143,7 @@
          ENDIF
          IF (intento > 0)    qq_so_ood = .true.
 #else
-         CALL upf_error('using_qq_so_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_qq_so_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_so_d
      !
@@ -1153,7 +1158,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -1161,7 +1166,7 @@
          !
          IF (dvan_so_ood) THEN
              IF ((.not. allocated(dvan_so_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_dvan_so_d', 'PANIC: sync of dvan_so from dvan_so_d with unallocated array. Bye!!', 1)
+                CALL errore('using_dvan_so_d', 'PANIC: sync of dvan_so from dvan_so_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(dvan_so)) THEN
@@ -1187,7 +1192,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_dvan_so_d ", debug_info, dvan_so_d_ood
          !
@@ -1214,7 +1219,7 @@
          ENDIF
          IF (intento > 0)    dvan_so_ood = .true.
 #else
-         CALL upf_error('using_dvan_so_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_dvan_so_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_dvan_so_d
      !
@@ -1229,7 +1234,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA)  || defined(__CUDA_GNU)
          INTEGER :: intento_
          intento_ = intento
          !
@@ -1237,7 +1242,7 @@
          !
          IF (deeq_nc_ood) THEN
              IF ((.not. allocated(deeq_nc_d)) .and. (intento_ < 2)) THEN
-                CALL upf_error('using_deeq_nc_d', 'PANIC: sync of deeq_nc from deeq_nc_d with unallocated array. Bye!!', 1)
+                CALL errore('using_deeq_nc_d', 'PANIC: sync of deeq_nc from deeq_nc_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(deeq_nc)) THEN
@@ -1263,7 +1268,7 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)
+#if defined(__CUDA) || defined(__CUDA_GNU)
          !
          IF (PRESENT(debug_info) ) print *, "using_deeq_nc_d ", debug_info, deeq_nc_d_ood
          !
@@ -1290,7 +1295,7 @@
          ENDIF
          IF (intento > 0)    deeq_nc_ood = .true.
 #else
-         CALL upf_error('using_deeq_nc_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_deeq_nc_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_deeq_nc_d
      !

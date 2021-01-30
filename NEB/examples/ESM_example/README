@@ -1,26 +1,56 @@
-This example shows how to calculate the minimum energy path (MEP) 
-by using the nudged elastic band (NEB) method in conjunction with 
-the Effective Screening Medium Method (ESM) and constant bias potential 
-(constant-mu) method.
+This example shows how to calculate the minimum energy path (MEP)
+by using the nudged elastic band (NEB) method in conjunction with
+the Effective Screening Medium Method (ESM) and two constant bias potential
+methods (FCP & GCSCF)
 
-Before starting this example, see also examples for the ESM method in
-pw.x (PW/examples/ESM_example).
+Before starting this example, see also examples for the ESM method and
+two constant bias potential methods (FCP & GCSCF) in pw.x
+(PW/examples/ESM_example).
 
-The example calculation proceeds as follows:
+The example calculations are divided into the following three parts,
+1) NEB example with ESM, constant-N calculation (run_example_ESM)
+2) NEB example with FCP, constant-mu calculation (run_example_FCP)
+3) NEB example with GCSCF, constant-mu calculation (run_example_GCSCF)
 
-1) make an NEB calculation for H atom diffusion on Al(001) surface with
-   ordinaly periodic boundary condition (no ESM),
-   (input=Al001+H_pbc.in, output=Al001+H_pbc.out). This calculation 
-   shows the MEP of H atom (Bridge site -> top site -> bridge site).
-   This is a reference calculation for the following ESM calculations.
+The 'run_example' file executes the above three calculations.
 
-2) make an NEB calculation for H atom diffusion on Al(001) surface with
-   ESM (bc3), (input=Al001+H_bc3.in, output=Al001+H_bc3.out).
+1) NEB example with ESM, constant-N calculation (run_example_ESM)
+1-1) make an NEB calculation for H atom diffusion on Al(001) surface with
+     ESM (bc3). This calculation shows the MEP of H atom (Bridge site ->
+     top site -> bridge site).
+     (input=Al001+H_bc3.in, output=Al001+H_bc3.out).
+     Excess charge & Fermi energy at initial geometry)
+     tot_charge   = 0.0
+     Fermi energy = -4.5 eV
+1-2) repeat #1-1 with tot_charge = 0.0215 (positively charged surface)
+     (input=Al001+H_bc3_n215.in, output=Al001+H_bc3_n215.out).
+     Excess charge & Fermi energy at initial geometry)
+     tot_charge   = 0.0215
+     Fermi energy = -5.0 eV (i.e. applied potential =-0.5 V vs PZC)
 
-3) repeat #2 under a constant bias potential (constant-mu) condition.
-   The target Fermi energy is set to that for the initial geometory
-   of #2 system. This Fermi energy is the reference of the bias potential.
 
-4) repeat #3 but with a lower target Fermi energy (-0.5V)
+2) NEB example with FCP, constant-mu calculation (run_example_FCP)
+2-1) repeat #1-2 under a constant bias potential condition using FCP.
+     The target Fermi energy is -5.0 eV.
+     (input=Al001+H_FCP_vm05.in, output=Al001+H_FCP_vm05.out)
+     NB----------------------------------------------------------------
+     | i) If first_last_opt = .FLASE. (default)                       |
+     | Need to specify the TOTAL_CHARGE card in the initial and final |
+     | geometries to set the Fermi energy of those systems to become  |
+     | a desired value. For intermediate images, the initial charge   |
+     | of the system is given by lenear interpolation between         |
+     | the first and the last configurations.                         |
+     | ii) If first_last_opt = .TRUE.                                 |
+     | FCP can converge to the target Fermi energy without specifying |
+     | the TOTAL_CHARGE card, but you can get better convergence if   |
+     | you specify it.                                                |
+     ------------------------------------------------------------------
 
-5) repeat #3 but with a higher target Fermi energy (+0.5V)
+3) NEB example with GCSCF, constant-mu calculation (run_example_GCSCF)
+3-1) repeat #1-2 under a constant bias potential condition using GCSCF.
+     The target Fermi energy is -5.0 eV.
+     (input=Al001+H_GCSCF_vm05.in, output=Al001+H_GCSCF_vm05.out)
+     NB------------------------------------------------------------------
+     | No need to specify the TOTAL_CHARGE card. GCSCF is automatically |
+     | converged to the target Fermi energy.                             |
+     --------------------------------------------------------------------

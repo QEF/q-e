@@ -12,9 +12,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY: DP
-  USE funct,            ONLY: dft_is_gradient, dft_is_meta, get_meta
-  USE xc_gga,           ONLY: xc_gcx
-  USE xc_mgga,          ONLY: xc_metagcx
+  USE xc_lib,           ONLY: xclib_dft_is, xclib_get_id, xc_gcx
   USE spin_orb,         ONLY: domag
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum
@@ -47,13 +45,13 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   REAL(DP) :: sigma_gradcorr(3, 3)
   !
   !
-  IF ( .NOT. dft_is_gradient() .AND. .NOT. dft_is_meta() ) RETURN
+  IF ( .NOT. xclib_dft_is('gradient') .AND. .NOT. xclib_dft_is('meta') ) RETURN
   !
-  IF ( dft_is_meta() .and. nspin>1 )  CALL errore('stres_gradcorr', &
+  IF ( xclib_dft_is('meta') .and. nspin>1 )  CALL errore('stres_gradcorr', &
        'Meta-GGA stress does not work with spin polarization',1)
   !
   np = 1
-  IF ( nspin==2 .AND. dft_is_meta() ) np=3
+  IF ( nspin==2 .AND. xclib_dft_is('meta') ) np=3
   !
   nspin0 = nspin
   IF (nspin==4) nspin0 = 1
@@ -117,7 +115,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
      !
      grho2(:,1) = grho(1,:,1)**2 + grho(2,:,1)**2 + grho(3,:,1)**2
      !
-     IF ( dft_is_meta() .AND. get_meta() /= 4 ) THEN
+     IF ( xclib_dft_is('meta') .AND. xclib_get_id('MGGA','EXCH') /= 4 ) THEN
         kedtau(:,1) = kedtau(:,1) / e2
         CALL xc_metagcx( nrxx, 1, np, rhoaux, grho, kedtau, sx, sc, &
                          v1x, v2x, v3x, v1c, v2c, v3c )
@@ -139,7 +137,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
      !
      grho2(:,:) = grho(1,:,:)**2 + grho(2,:,:)**2 + grho(3,:,:)**2
      !
-     IF ( dft_is_meta() ) THEN
+     IF ( xclib_dft_is('meta') ) THEN
         !
         kedtau(:,1:nspin0) = kedtau(:,1:nspin0) / e2
         CALL xc_metagcx( nrxx, nspin0, np, rhoaux, grho, kedtau, sx, sc, &

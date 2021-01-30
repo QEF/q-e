@@ -17,8 +17,8 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   USE cell_base,              ONLY : alat, at, bg, omega, tpiba
   USE gvect,                  ONLY : g
   USE scf,                    ONLY : rho, v
-  USE wavefunctions,          ONLY : evc, psic
-  USE funct,                  ONLY : dft_is_meta
+  USE wavefunctions,          ONLY : evc
+  USE xc_lib,                 ONLY : xclib_dft_is
   USE klist,                  ONLY : nks, xk, ngk
   USE buffers,                ONLY : get_buffer
   USE io_files,               ONLY : iunwfc, nwordwfc
@@ -58,7 +58,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   attributes(DEVICE) :: gradwfc_d, crosstaus_d, vkin_d, rhokin_d, ix_d, iy_d
 #endif
   !
-  IF ( .NOT. dft_is_meta() ) RETURN
+  if ( .not. xclib_dft_is('meta') ) return
   !
   current_spin = 1
   !

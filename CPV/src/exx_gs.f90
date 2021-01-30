@@ -1823,11 +1823,20 @@ SUBROUTINE getrhol_sphere( np_in_sp_me, np_in_sp, psi, psi2, rho, rho_in_sp, tra
     !$omp parallel do 
     DO ip = 1, np_in_sp_me 
       rho(ip) = psi(ip) * psi2(ip) * sa1
+#if ! defined(__PGI)
+! workaround for a likely PGI bug: for no apparent reasons,
+! this loop crashes with PGI v.19.10 and 20.9 - PG
       IF( ip.LE.np_in_sp ) THEN
         rho_in_sp( ip ) = rho(ip)
       END IF
+#endif
     ENDDO
     !$omp end parallel do 
+#if defined(__PGI)
+    DO ip = 1, np_in_sp
+      rho_in_sp( ip ) = rho( ip )
+    ENDDO
+#endif
     !
     RETURN
 END SUBROUTINE getrhol_sphere

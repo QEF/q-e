@@ -84,7 +84,7 @@ SUBROUTINE test_gcxc( nnr, nspin, rhor, grhor )
              CALL becke88 (arho, grho2(1), sx, v1x, v2x)
              CALL wrap_b88 (arho, grho2(1), sx_w, v1x_w, v2x_w)  ! DEBUG
              CALL glyp (arho, grho2(1), sc, v1c, v2c)
-             CALL wrap_glyp (arho, grho2(1), sc_w, v1c_w, v2c_w)  ! DEBUG
+             !CALL wrap_glyp (arho, grho2(1), sc_w, v1c_w, v2c_w)  ! DEBUG
 
              sx_d = (sx_w - sx) / (abs(sx) + abs(sx_w))
              sc_d = (sc_w - sc) / (abs(sc) + abs(sc_w))
@@ -128,7 +128,7 @@ END SUBROUTINE test_gcxc
 
 SUBROUTINE test_xc( nnr, nspin, rhor, grhor )
   USE kinds, ONLY: DP
-  USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc
+  USE xc_lib, ONLY: xclib_get_id
 
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nnr, nspin
@@ -142,10 +142,10 @@ SUBROUTINE test_xc( nnr, nspin, rhor, grhor )
   INTEGER iexch,icorr,igcx,igcc
 
 
-  iexch = get_iexch()
-  icorr = get_icorr()
-  igcx  = get_igcx()
-  igcc  = get_igcc()
+  iexch = xclib_get_id('LDA','EXCH')
+  icorr = xclib_get_id('LDA','CORR')
+  igcx  = xclib_get_id('GGA','EXCH')
+  igcc  = xclib_get_id('GGA','CORR')
 
   rhon  = rhor
   grhon = grhor

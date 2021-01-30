@@ -60,7 +60,6 @@ phq_readin.o : ../../LR_Modules/lrcom.o
 phq_readin.o : ../../Modules/check_stop.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/fft_base.o
-phq_readin.o : ../../Modules/funct.o
 phq_readin.o : ../../Modules/io_files.o
 phq_readin.o : ../../Modules/io_global.o
 phq_readin.o : ../../Modules/ions_base.o
@@ -87,6 +86,7 @@ phq_readin.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../PW/src/start_k.o
 phq_readin.o : ../../PW/src/tetra.o
 phq_readin.o : ../../UtilXlib/mp.o
+phq_readin.o : ../../XClib/xc_lib.o
 phq_readin.o : ../../upflib/uspp.o
 solve_head.o : ../../FFTXlib/fft_interfaces.o
 solve_head.o : ../../LR_Modules/lrcom.o

@@ -15,7 +15,6 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi_d(-G)=psi_d*(G), except G=0
   !
-  USE LAXlib,       ONLY : diaghg
 #if defined(__CUDA)
   USE cudafor
   USE cublas
@@ -30,7 +29,7 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   IMPLICIT NONE
   !
-  !INCLUDE 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
   !
   ! ... I/O variables
   !

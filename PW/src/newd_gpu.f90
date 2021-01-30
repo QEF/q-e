@@ -318,18 +318,20 @@ SUBROUTINE newd_gpu( )
            !
         ELSE
            !
+           if ( nht > 0 ) THEN
            !$cuf kernel do(4)
-           DO is = 1, nspin
-              DO na = 1, nat
-                 DO jh = 1, nht
-                    DO ih = 1, nht
-                       !
-                       IF ( ityp_d(na) == nt ) deeq_d(ih,jh,na,is) = dvan_d(ih,jh,nt)
-                       !
+              DO is = 1, nspin
+                 DO na = 1, nat
+                    DO jh = 1, nht
+                       DO ih = 1, nht
+                          !
+                          IF ( ityp_d(na) == nt ) deeq_d(ih,jh,na,is) = dvan_d(ih,jh,nt)
+                          !
+                       END DO
                     END DO
                  END DO
               END DO
-           END DO
+           end if
            !
         END IF
         !

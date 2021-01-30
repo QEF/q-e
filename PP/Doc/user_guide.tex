@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.6}
+\def\version{6.7}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -74,6 +74,9 @@ The \PostProc\ package was originally developed by Stefano Baroni,
 Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi 
 (Univ. Udine), and many others. We mention in particular: 
 \begin{itemize}
+\item Minsu Ghim (Seoul National U.) for Ji Hoon Ryoo's spin-current matrix
+      elements (Phys. Rev. B 99, 235113) for spin Hall conductivity using
+      Wannier interpolation, in pw2wannier.f90
 \item Yang Jiao, Elsebeth Schr\"oder, Per Hyldgaard (Chalmers) for the
   \texttt{ppacf.x} code;
 \item Alberto Otero-de-la-Roza for the \texttt{pw2critic.x} utility;
@@ -315,8 +318,17 @@ There are several Wannier-related utilities in \PostProc:
 \item The "Poor Man Wannier" code \texttt{pmw.x}, to be used
 in conjunction with DFT+U calculations (see Example 05)
 \item The interface with Wannier90 code, \texttt{pw2wannier.x}:
-see the documentation in \texttt{W90/} (you have to install the 
-Wannier90 plug-in)
+see the documentation in \texttt{W90/} (you may install the 
+Wannier90 plug-in via \texttt{make w90} ). For spin-current
+matrix elements, implemented in routine \texttt{compute\_shc}:
+``it writes .sIu and .sHu files used for
+WANNIER-BERRI (https://github.com/stepan-tsirkin/wannier-berri/),
+and also will be utilized through postw90.x
+(https://github.com/manxkim/wannier90/tree/SHC/src) in Wannier90.
+In WANNIER-BERRI, .sHu and .sIu files can be used to calculate the
+quantity "opt\_SHCryoo". In Wannier90, add "berry\_task = shc" and
+"shc\_ryoo=.true.". in the input parameters of postw90.x. They
+activate the calculation of SHC using .sHu and .sIu.''
 \item The \texttt{wannier\_ham.x} code generates a model Hamiltonian 
 in Wannier functions basis: see \texttt{WannierHam\_example/}.
 \end{enumerate}
@@ -370,7 +382,7 @@ function. Documentation is in file \texttt{Doc/eps\_man.tex}.
 
 Code \texttt{initial\_state.x} calculates the initial state contribution
 to the Core-level shift. See \texttt{CLS\_IS\_example/} for
-an example, and \texttt{CLS\_FS\_example/} for the corrsponding
+an example, and \texttt{CLS\_FS\_example/} for the corresponding
 final state calculation of Core-level shifts.
 
 \section{Troubleshooting}
@@ -382,18 +394,14 @@ pay attention to it but do not assume that something is necessarily wrong in
 your calculation: most warning messages signal harmless problems.
 
 \paragraph{Some postprocessing codes complain that they do not find some files}
+Most likely you are not reading the correct data files, or you are not
+following the correct procedure for postprocessing.
+
 For Linux PC clusters in parallel execution: in at least some versions
 of MPICH, the current directory is set to the directory where the executable
 code resides, instead of being set to the directory where the code is executed.
 This MPICH weirdness may cause unexpected failures in some postprocessing
 codes that expect a data file in the current directory. Workaround: use
 symbolic links, or copy the executable to the current directory.
-
-\paragraph{{\em error in davcio} in postprocessing codes}
-Most likely you are not reading the correct data files, or you are not
-following the correct procedure for postprocessing. In parallel execution: 
-if you did not set \texttt{wf\_collect=.true.}, the number of processors and 
-pools for the phonon run should be the same as for the
-self-consistent run; all files must be visible to all processors.
 
 \end{document}

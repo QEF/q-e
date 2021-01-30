@@ -11,7 +11,7 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  USE funct,             ONLY : dft_is_meta
+  USE xc_lib,            ONLY : xclib_dft_is
   USE metagga_cp,        ONLY : kedtaur, kedtaus, kedtaug
   USE cell_base,         ONLY : boxdimensions
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init
@@ -159,7 +159,7 @@ MODULE cp_main_variables
          CALL errore( ' allocate_mainvar ', ' unable to allocate iabox ', ierr )
       nabox = 0
       !
-      IF ( dft_is_meta() ) THEN
+      IF ( xclib_dft_is('meta') ) THEN
          !
          ! ... METAGGA
          !

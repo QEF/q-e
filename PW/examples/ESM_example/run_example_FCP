@@ -1,0 +1,401 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  FCP EXAMPLE
+##
+###############################################################################
+
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "run_example_FCP: starting"
+$ECHO
+$ECHO "This example shows how to use ficticious charge particle (FCP) to"
+$ECHO "calculate Al(001) using bc2 & bc3 boundary conditions."
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x"
+PSEUDO_LIST="Al.pbe-n-van.UPF H.pbe-van_ak.UPF O.pbe-van_ak.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+       echo $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO
+
+# constant-mu calculation for Al(001) with ESM bc2 (metal-slab-metal),
+# target mu = potential of zero charge (neutral surface)
+cat > Al001_bc2_FCP_v00.in << EOF
+&control
+  calculation='relax',
+  restart_mode='from_scratch',
+  prefix='Al001_bc2_FCP_v00',
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/',
+  tprnfor = .TRUE.
+  lfcp = .TRUE.
+/
+&system
+  ibrav = 0,
+  nat= 4, ntyp= 1,
+  ecutwfc = 20.0,
+  occupations='smearing', smearing='mp', degauss=0.03
+  assume_isolated='esm', esm_bc='bc2'
+/
+&electrons
+  mixing_beta = 0.3
+/
+&ions
+  ion_dynamics = 'bfgs'
+/
+&fcp
+  fcp_mu = -4.2510,
+  fcp_dynamics = 'bfgs',
+  fcp_conv_thr = 1.d-2,
+  freeze_all_atoms = .TRUE.
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+  5.7269000760    0.0000000000    0.0000000000
+  0.0000000000    5.7269000760    0.0000000000
+  0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+K_POINTS automatic
+  6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc2 (metal-slab-metal)"
+$ECHO "  (target mu = 0V vs pzc)...\c"
+$PW_COMMAND < Al001_bc2_FCP_v00.in > Al001_bc2_FCP_v00.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc2_FCP_v00.esm1 $TMP_DIR/Al001_bc2_FCP_v00.xml .
+
+# constant-mu calculation for Al(001) with ESM bc2 (metal-slab-metal),
+# target mu = +0.5V vs pzc
+cat > Al001_bc2_FCP_vp05.in << EOF
+&control
+  calculation='relax',
+  restart_mode='from_scratch',
+  prefix='Al001_bc2_FCP_vp05',
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/',
+  tprnfor = .TRUE.
+  lfcp = .TRUE.
+/
+&system
+  ibrav = 0,
+  nat= 4, ntyp= 1,
+  ecutwfc = 20.0,
+  occupations='smearing', smearing='mp', degauss=0.03
+  assume_isolated='esm', esm_bc='bc2'
+/
+&electrons
+  mixing_beta = 0.3
+/
+&ions
+  ion_dynamics = 'bfgs'
+/
+&fcp
+  fcp_mu = -3.7510,
+  fcp_dynamics = 'bfgs',
+  fcp_conv_thr = 1.d-2,
+  freeze_all_atoms = .TRUE.
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+  5.7269000760    0.0000000000    0.0000000000
+  0.0000000000    5.7269000760    0.0000000000
+  0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+K_POINTS automatic
+  6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc2 (metal-slab-metal)"
+$ECHO "  (target mu = +0.5V vs pzc)...\c"
+$PW_COMMAND < Al001_bc2_FCP_vp05.in > Al001_bc2_FCP_vp05.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc2_FCP_vp05.esm1 $TMP_DIR/Al001_bc2_FCP_vp05.xml .
+
+# constant-mu calculation for Al(001) with ESM bc2 (metal-slab-metal),
+# target mu = -0.5V vs pzc
+cat > Al001_bc2_FCP_vm05.in << EOF
+&control
+  calculation='relax',
+  restart_mode='from_scratch',
+  prefix='Al001_bc2_FCP_vm05',
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/',
+  tprnfor = .TRUE.
+  lfcp = .TRUE.
+/
+&system
+  ibrav = 0,
+  nat= 4, ntyp= 1,
+  ecutwfc = 20.0,
+  occupations='smearing', smearing='mp', degauss=0.03
+  assume_isolated='esm', esm_bc='bc2'
+/
+&electrons
+  mixing_beta = 0.3
+/
+&ions
+  ion_dynamics = 'bfgs'
+/
+&fcp
+  fcp_mu = -4.7510,
+  fcp_dynamics = 'bfgs',
+  fcp_conv_thr = 1.d-2,
+  freeze_all_atoms = .TRUE.
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+  5.7269000760    0.0000000000    0.0000000000
+  0.0000000000    5.7269000760    0.0000000000
+  0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+K_POINTS automatic
+  6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc2 (metal-slab-metal)"
+$ECHO "  (target mu = -0.5V vs pzc)...\c"
+$PW_COMMAND < Al001_bc2_FCP_vm05.in > Al001_bc2_FCP_vm05.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc2_FCP_vm05.esm1 $TMP_DIR/Al001_bc2_FCP_vm05.xml .
+
+# constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal),
+# target mu = potential of zero charge (neutral surface)
+cat > Al001_bc3_FCP_v00.in << EOF
+&control
+  calculation='relax',
+  restart_mode='from_scratch',
+  prefix='Al001_bc3_FCP_v00',
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/',
+  tprnfor = .TRUE.
+  lfcp = .TRUE.
+/
+&system
+  ibrav = 0,
+  nat= 4, ntyp= 1,
+  ecutwfc = 20.0,
+  occupations='smearing', smearing='mp', degauss=0.03
+  assume_isolated='esm', esm_bc='bc3'
+/
+&electrons
+  mixing_beta = 0.3
+/
+&ions
+  ion_dynamics = 'bfgs'
+/
+&fcp
+  fcp_mu = -4.2490,
+  fcp_dynamics = 'bfgs',
+  fcp_conv_thr = 1.d-2,
+  freeze_all_atoms = .TRUE.
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+  5.7269000760    0.0000000000    0.0000000000
+  0.0000000000    5.7269000760    0.0000000000
+  0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+K_POINTS automatic
+  6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (target mu = 0V vs pzc)...\c"
+$PW_COMMAND < Al001_bc3_FCP_v00.in > Al001_bc3_FCP_v00.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_FCP_v00.esm1 $TMP_DIR/Al001_bc3_FCP_v00.xml .
+
+# constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal),
+# target mu = +0.5V vs pzc
+cat > Al001_bc3_FCP_vp05.in << EOF
+&control
+  calculation='relax',
+  restart_mode='from_scratch',
+  prefix='Al001_bc3_FCP_vp05',
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/',
+  tprnfor = .TRUE.
+  lfcp = .TRUE.
+/
+&system
+  ibrav = 0,
+  nat= 4, ntyp= 1,
+  ecutwfc = 20.0,
+  occupations='smearing', smearing='mp', degauss=0.03
+  assume_isolated='esm', esm_bc='bc3'
+/
+&electrons
+  mixing_beta = 0.3
+/
+&ions
+  ion_dynamics = 'bfgs'
+/
+&fcp
+  fcp_mu = -3.7490,
+  fcp_dynamics = 'bfgs',
+  fcp_conv_thr = 1.d-2,
+  freeze_all_atoms = .TRUE.
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+  5.7269000760    0.0000000000    0.0000000000
+  0.0000000000    5.7269000760    0.0000000000
+  0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+K_POINTS automatic
+  6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (target mu = +0.5V vs pzc)...\c"
+$PW_COMMAND < Al001_bc3_FCP_vp05.in > Al001_bc3_FCP_vp05.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_FCP_vp05.esm1 $TMP_DIR/Al001_bc3_FCP_vp05.xml .
+
+# constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal),
+# target mu = -0.5V vs pzc
+cat > Al001_bc3_FCP_vm05.in << EOF
+&control
+  calculation='relax',
+  restart_mode='from_scratch',
+  prefix='Al001_bc3_FCP_vm05',
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/',
+  tprnfor = .TRUE.
+  lfcp = .TRUE.
+/
+&system
+  ibrav = 0,
+  nat= 4, ntyp= 1,
+  ecutwfc = 20.0,
+  occupations='smearing', smearing='mp', degauss=0.03
+  assume_isolated='esm', esm_bc='bc3'
+/
+&electrons
+  mixing_beta = 0.3
+/
+&ions
+  ion_dynamics = 'bfgs'
+/
+&fcp
+  fcp_mu = -4.7490,
+  fcp_dynamics = 'bfgs',
+  fcp_conv_thr = 1.d-2,
+  freeze_all_atoms = .TRUE.
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS angstrom
+  5.7269000760    0.0000000000    0.0000000000
+  0.0000000000    5.7269000760    0.0000000000
+  0.0000000000    0.0000000000   11.9999975199
+ATOMIC_POSITIONS angstrom
+Al   0.0000000000    0.0000000000    0.0000000000
+Al   2.8634500380    0.0000000000    0.0000000000
+Al   0.0000000000    2.8634500380    0.0000000000
+Al   2.8634500380    2.8634500380    0.0000000000
+K_POINTS automatic
+  6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (target mu = -0.5V vs pzc)...\c"
+$PW_COMMAND < Al001_bc3_FCP_vm05.in > Al001_bc3_FCP_vm05.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_FCP_vm05.esm1 $TMP_DIR/Al001_bc3_FCP_vm05.xml .
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/
+$ECHO " done"
+
+$ECHO
+$ECHO "run_example_FCP: done"

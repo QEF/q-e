@@ -106,6 +106,7 @@ vofrho.o \
 wannier_base.o \
 wannier.o \
 wave.o \
+wave_base.o \
 wave_types.o \
 wf.o \
 makov_payne.o
@@ -113,7 +114,7 @@ makov_payne.o
 LOBJS = \
 entropy.o 
 
-QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../XClib/xc_lib.a
 
 TLDEPS= bindir libs mods
 

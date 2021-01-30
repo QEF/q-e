@@ -110,41 +110,33 @@ libcuda_devxlib :
 	touch ../install/libcuda_devxlib # do not download and configure again
 
 libcuda_devxlib_clean:
-	rm libcuda_devxlib
-	cd ../external/devxlib; \
-	if test -f make.inc; then ($(MAKE) clean); fi
+	if test -f libcuda_devxlib; then rm libcuda_devxlib; fi
+	if test -d ../external/devxlib; then \
+	   (cd ../external/devxlib; if test -f make.inc; then $(MAKE) clean; fi); fi
 libcuda_devxlib_veryclean:
-	cd ../external/devxlib; \
-	if test -f make.inc; then ($(MAKE) distclean && rm make.inc); fi
+	if test -d ../external/devxlib; then \
+	   (cd ../external/devxlib; if test -f make.inc; then \
+	      ($(MAKE) distclean && rm make.inc); fi); fi
 
 ###################################
-# BEEF
+# LIBMBD
 ###################################
-# NOTA BENE: BEEF is not strictly speaking a mathematical libraries
-# It should be compiled like, and together with, the other XC functionals
 
-libbeef : libbeef_$(BEEF_LIBS_SWITCH)
+libmbd:
+	if test ! -d ../MBD; then \
+        mkdir ../MBD; \
+	(gzip -dc ../archive/libmbd-0.10.3.tar.gz | (cd ../MBD; tar -xvf -)); \
+	(gzip -dc ../archive/libmbd-0.10.3-non-cmake-makefiles.tar.gz | (cd ../MBD; tar -xvf -)); \
+	cd ../MBD/libmbd-0.10.3/src; export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
+	cp serial.make Makefile; $(MAKE) ; cp *.mod *.a ../..; cd ../.. ;fi
 
-libbeef_external : fake_libbeef_external
-
-fake_libbeef_external :
-	touch fake_libbeef.a
-	-rm fake_libbeef.a
-
-libbeef_internal:
-	if test ! -d ../LIBBEEF; then mkdir ../LIBBEEF; \
-	( gzip -dc ../archive/libbeef-0.1.2.tar.gz |(cd ../LIBBEEF; tar -xvf -)); fi
-	cd ../LIBBEEF; $(MAKE)
-
-libbeef_clean:
-	if test -d ../LIBBEEF; then (cd ../LIBBEEF ; $(MAKE) clean); fi
-libbeef_veryclean:
-	if test -d ../LIBBEEF; then (rm -R -f ../LIBBEEF); fi
+libmbd_clean:
+	if test -d ../MBD; then (rm -R -f ../MBD); fi
 
 ###################################
 # cleaning
 ###################################
 
-clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libbeef_clean
+clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libmbd_clean
 
-veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libbeef_veryclean
+veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libmbd_clean

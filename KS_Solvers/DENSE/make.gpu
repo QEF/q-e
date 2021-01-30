@@ -1,5 +1,0 @@
-# Makefile for CG GPU
-
-DENSE += \
-rotate_wfc_k_gpu.o \
-rotate_wfc_gamma_gpu.o 

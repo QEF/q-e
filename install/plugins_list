@@ -5,12 +5,7 @@
 # as published by the Free Software Foundation; either version 2
 # of the License. See the file `License' in the root directory
 # of the present distribution.
-
-########################################
-# definition of plugins version and URL
-########################################
 #
-URL=http://files.qe-forge.org/index.php?file=
 RELEASE_VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../include/qe_version.h )
 #
 #

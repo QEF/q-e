@@ -443,7 +443,7 @@ MODULE qexsd_input
    !
    ! 
    !--------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_boundary_conditions(obj,assume_isolated,esm_bc, fcp_opt, fcp_mu, esm_nfit,esm_w, esm_efield)
+   SUBROUTINE qexsd_init_boundary_conditions(obj, assume_isolated, esm_bc, esm_nfit, esm_w, esm_efield, fcp, fcp_mu)
    !--------------------------------------------------------------------------------------------
    ! 
    IMPLICIT NONE
@@ -451,7 +451,7 @@ MODULE qexsd_input
    TYPE (boundary_conditions_type)              :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
    CHARACTER(LEN=*),OPTIONAL,INTENT(IN)         :: esm_bc
-   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp_opt
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp
    REAL(DP),OPTIONAL,INTENT(IN)                 :: fcp_mu
    INTEGER,OPTIONAL,INTENT(IN)                  :: esm_nfit
    REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
@@ -460,16 +460,29 @@ MODULE qexsd_input
    LOGICAL                                      :: esm_ispresent = .FALSE.
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
+   esm_ispresent = .FALSE.
+   !
    IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
       esm_ispresent = .TRUE. 
-      ALLOCATE(esm_obj) 
-      CALL qes_init (esm_obj,"esm",bc=TRIM(esm_bc),nfit=esm_nfit,w=esm_w,efield=esm_efield)
+      ALLOCATE(esm_obj)
+      CALL qes_init (esm_obj, "esm", BC=TRIM(esm_bc), NFIT=esm_nfit, W=esm_w, EFIELD=esm_efield)
    END IF 
-   CALL qes_init (obj,TAGNAME,ASSUME_ISOLATED =assume_isolated, FCP_OPT= fcp_opt, FCP_MU = fcp_mu, ESM = esm_obj)
-   IF ( esm_ispresent ) THEN
+   !
+   IF (esm_ispresent) THEN
+      IF (PRESENT(fcp)) THEN
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP=fcp, FCP_MU=fcp_mu)
+      ELSE
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj)
+      END IF
+   ELSE
+      CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated)
+   END IF
+   !
+   IF (esm_ispresent) THEN
       CALL qes_reset (esm_obj)
-      DEALLOCATE(esm_obj) 
-   END IF 
+      DEALLOCATE(esm_obj)
+   END IF
+   !
    END SUBROUTINE qexsd_init_boundary_conditions
    ! 
    !

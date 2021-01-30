@@ -770,9 +770,9 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_energy ( totenergy_, veff_, &
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, iint, vloc, energies_ , unit_)
-    USE funct, ONLY: dft_is_gradient
+    USE xc_lib,       ONLY: xclib_dft_is
     USE radial_grids, ONLY: hartree
-    USE io_global, ONLY : stdout, ionode
+    USE io_global,    ONLY : stdout, ionode
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: totenergy_            ! H+XC+DC
     REAL(dp), INTENT(OUT) :: veff_(ndmx,2)         ! effective potential
@@ -855,7 +855,7 @@ CONTAINS
           aux(i)=exc *  rhovtot(i)
        END IF
     END DO
-    IF (dft_is_gradient()) THEN
+    IF (xclib_dft_is('gradient')) THEN
        IF (nlcc_) THEN
           CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,&
                      pawset_%grid%r2,vcharge_,ccharge_,vgc,egc, &

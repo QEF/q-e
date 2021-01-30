@@ -19,7 +19,7 @@ SUBROUTINE print_clock_pw()
    USE realus,             ONLY : real_space
    USE noncollin_module,   ONLY : noncolin
    USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
-   USE funct,              ONLY : dft_is_hybrid
+   USE xc_lib,             ONLY : xclib_dft_is
    USE bp,                 ONLY : lelfield
    !
    IMPLICIT NONE
@@ -251,7 +251,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'stres_hub' )
    ENDIF
    !
-   IF ( dft_is_hybrid() ) THEN
+   IF ( xclib_dft_is('hybrid') ) THEN
       WRITE( stdout, '(/,5X,"EXX routines")' )
       CALL print_clock( 'exx_grid' )
       CALL print_clock( 'exxinit' )

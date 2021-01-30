@@ -17,7 +17,7 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   !
   USE kinds,              ONLY: DP
   USE noncollin_module,   ONLY: npol
-  USE funct,              ONLY: exx_is_active
+  USE xc_lib,             ONLY: exx_is_active
   USE mp_bands,           ONLY: use_bgrp_in_hpsi, inter_bgrp_comm
   USE mp,                 ONLY: mp_allgather, mp_size, &
                                 mp_type_create_column_section, mp_type_free
@@ -101,7 +101,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE uspp,                    ONLY: nkb
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, U_projection
   USE gvect,                   ONLY: gstart
-  USE funct,                   ONLY: dft_is_meta
   USE control_flags,           ONLY: gamma_only
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
@@ -110,7 +109,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
                                      v_loc_psir_inplace
   USE fft_base,                ONLY: dffts
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
-  USE funct,                   ONLY: exx_is_active
+  USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   USE device_memcpy_m,           ONLY: dev_memcpy, dev_memset
   !
@@ -145,7 +144,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
-                    dft_is_meta() .OR. &
+                     xclib_dft_is('meta') .OR. &
                     (lda_plus_u .AND. U_projection.NE."pseudo" ) .OR. &
                     exx_is_active() .OR. lelfield
 
@@ -268,7 +267,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !  
   CALL stop_clock_gpu( 'h_psi:pot' )
   !
-  if (dft_is_meta()) then
+  IF (xclib_dft_is('meta')) THEN
      CALL dev_memcpy(hpsi_host, hpsi_d) ! hpsi_host = hpsi_d
      call h_psi_meta (lda, n, m, psi_host, hpsi_host)
      CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
