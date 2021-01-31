@@ -399,7 +399,7 @@
       !
       CALL start_clock( 'dforce' ) 
       !
-      IF(dft_is_hybrid().AND.exx_is_active()) THEN
+      IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
          allocate( exx_a( dffts%nnr ) ); exx_a=0.0_DP
          allocate( exx_b( dffts%nnr ) ); exx_b=0.0_DP
          allocate( exx_potential_d, source=exx_potential )
@@ -443,7 +443,7 @@
             iss2=iss1
          END IF
 
-         IF (dft_is_hybrid().AND.exx_is_active()) THEN
+         IF (xclib_dft_is('hybrid').AND.exx_is_active()) THEN
            IF (ii.le.n) THEN
              IF ( (mod(n,2).ne.0 ) .and. (ii.eq.n) ) THEN
                !$cuf kernel do(1) 
@@ -574,7 +574,7 @@
       DEALLOCATE( df_d )
       DEALLOCATE( da_d )
       DEALLOCATE( psi )
-      IF (dft_is_hybrid().AND.exx_is_active()) DEALLOCATE(exx_potential_d)
+      IF (xclib_dft_is('hybrid').AND.exx_is_active()) DEALLOCATE(exx_potential_d)
       NULLIFY(nl_d) 
       NULLIFY(nlm_d)
 !
