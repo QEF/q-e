@@ -114,9 +114,6 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
 qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
 if(QE_ENABLE_CUDA)
-    include(CheckLanguage)
-    check_language(CUDA)
-    enable_language(CUDA)
     qe_add_global_compile_definitions(__CUDA)
 endif()
 if(QE_ENABLE_TRACE)
