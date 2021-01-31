@@ -1,5 +1,5 @@
 
-     Program CP v.6.6 starts on  9Nov2020 at 15:50:27 
+     Program CP v.6.6 starts on  9Nov2020 at 15: 7:10 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -169,7 +169,7 @@
    ibrav =   14       cell parameters read from input file
 
    Matrix Multiplication Performances
-   ortho mmul, time for parallel driver      =   0.00000 with    1 procs
+   ortho mmul, time for parallel driver      =   0.00001 with    1 procs
 
    Constraints matrixes will be distributed block like on
    ortho sub-group =    1*   1 procs
@@ -209,18 +209,18 @@
      radius to compute pairs:   6.0 A.U.   maximum number of neighbors:   60
 
    parameters used to solve Poisson equation
-     cube side length for self potential:  10.0 A.U.   cube side length for pair potential:  10.0 A.U.
+     radius for self potential:   5.0 A.U.   radius for pair potential:   5.0 A.U.
      Poisson solver discretized using   7   points in each dimension
 
    parameters used for multipole expansion
-     cube side length for self potential:  12.0 A.U.   cube side length for pair potential:  12.0 A.U.
+     radius for self potential:   6.0 A.U.   radius for pair potential:   6.0 A.U.
      maximum angular momentum:   6
 
-   number of grid points in Poisson cube 
-     self potential:   59319   pair potential:   59319
+   number of grid points in Poisson spehere 
+     self potential:   37993   pair potential:   37993
 
-   number of grid points in multipole expansion cube: 
-     self potential:  103823   pair potential:  103823
+   number of grid points in multipole expansion spehere: 
+     self potential:   65204   pair potential:   65204
 
    ----------------------------------------------------
  ------------------------DYNAMICS IN THE WANNIER BASIS--------------------------
@@ -477,123 +477,120 @@ inw = 6:   1   0   1   0.000000
    Exact Exchange is turned on ...
    MLWF step   20  Convergence =  3.259E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     91    0.000264324602969    0.0    0.00      -0.774499214469     -16.988982428379     -16.988982428379     -16.988982428379     -16.988718103776   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  2.744E-06  Not Generated
+     91    0.000264981768898    0.0    0.00      -0.774263710105     -16.988746924015     -16.988746924015     -16.988746924015     -16.988481942246   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.746E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     92    0.000276087324633    0.0    0.00      -0.774691644454     -16.989139213546     -16.989139213546     -16.989139213546     -16.988863126221   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  2.294E-06  Not Generated
+     92    0.000278020381695    0.0    0.00      -0.774460572604     -16.988906785472     -16.988906785472     -16.988906785472     -16.988628765091   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.298E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     93    0.000287175134800    0.0    0.00      -0.774979354869     -16.989316873975     -16.989316873975     -16.989316873975     -16.989029698841   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  2.011E-06  Not Generated
+     93    0.000290109402415    0.0    0.00      -0.774754707282     -16.989088495170     -16.989088495170     -16.989088495170     -16.988798385767   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.015E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     94    0.000274311711021    0.0    0.00      -0.775292527838     -16.989476272438     -16.989476272438     -16.989476272438     -16.989201960727   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.874E-06  Not Generated
+     94    0.000277734637201    0.0    0.00      -0.775075651503     -16.989252707989     -16.989252707989     -16.989252707989     -16.988974973352   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.877E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     95    0.000240295064791    0.0    0.00      -0.775582025133     -16.989600325991     -16.989600325991     -16.989600325991     -16.989360030926   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.817E-06  Not Generated
+     95    0.000243739329736    0.0    0.00      -0.775373043256     -16.989381466160     -16.989381466160     -16.989381466160     -16.989137726830   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.819E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     96    0.000196778578572    0.0    0.00      -0.775819108890     -16.989689047180     -16.989689047180     -16.989689047180     -16.989492268602   0.0000   0.0000   0.0000   0.0000
+     96    0.000199908362527    0.0    0.00      -0.775617860185     -16.989474301712     -16.989474301712     -16.989474301712     -16.989274393350   0.0000   0.0000   0.0000   0.0000
    MLWF step   20  Convergence =  1.781E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     97    0.000154479894365    0.0    0.00      -0.775992390923     -16.989749795707     -16.989749795707     -16.989749795707     -16.989595315813   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.732E-06  Not Generated
+     97    0.000157094576019    0.0    0.00      -0.775798508716     -16.989538743552     -16.989538743552     -16.989538743552     -16.989381648976   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.730E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     98    0.000119435930315    0.0    0.00      -0.776103378724     -16.989791945390     -16.989791945390     -16.989791945390     -16.989672509459   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.659E-06  Not Generated
+     98    0.000121446814514    0.0    0.00      -0.775916264972     -16.989583821090     -16.989583821090     -16.989583821090     -16.989462374275   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.657E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-     99    0.000093154586612    0.0    0.00      -0.776161606843     -16.989822722811     -16.989822722811     -16.989822722811     -16.989729568225   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.567E-06  Not Generated
+     99    0.000094561201392    0.0    0.00      -0.775980536569     -16.989616829885     -16.989616829885     -16.989616829885     -16.989522268684   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.564E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    100    0.000074426958631    0.0    0.00      -0.776180460907     -16.989846673027     -16.989846673027     -16.989846673027     -16.989772246068   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.462E-06  Not Generated
+    100    0.000075291075919    0.0    0.00      -0.776004835417     -16.989642545958     -16.989642545958     -16.989642545958     -16.989567254882   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.458E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    101    0.000061138986532    0.0    0.00      -0.776173796831     -16.989866363895     -16.989866363895     -16.989866363895     -16.989805224908   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.352E-06  Not Generated
+    101    0.000061558307780    0.0    0.00      -0.776002933124     -16.989663435769     -16.989663435769     -16.989663435769     -16.989601877462   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.348E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    102    0.000051368788952    0.0    0.00      -0.776153896450     -16.989882867387     -16.989882867387     -16.989882867387     -16.989831498599   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.241E-06  Not Generated
+    102    0.000051454895745    0.0    0.00      -0.775987139602     -16.989680765867     -16.989680765867     -16.989680765867     -16.989629310971   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.238E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    103    0.000043780145451    0.0    0.00      -0.776130162305     -16.989896767557     -16.989896767557     -16.989896767557     -16.989852987411   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.133E-06  Not Generated
+    103    0.000043640070063    0.0    0.00      -0.775966888026     -16.989695111014     -16.989695111014     -16.989695111014     -16.989651470944   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.131E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    104    0.000037588733840    0.0    0.00      -0.776108865759     -16.989908400808     -16.989908400808     -16.989908400808     -16.989870812074   0.0000   0.0000   0.0000   0.0000
-   MLWF step   20  Convergence =  1.029E-06  Not Generated
+    104    0.000037311868337    0.0    0.00      -0.775948481304     -16.989706981783     -16.989706981783     -16.989706981783     -16.989669669915   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.027E-06  Not Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    105    0.000032377199474    0.0    0.00      -0.776093367045     -16.989918085209     -16.989918085209     -16.989918085209     -16.989885708010   0.0000   0.0000   0.0000   0.0000
-   MLWF step   19  Convergence =  9.670E-07  Generated
+    105    0.000032029107821    0.0    0.00      -0.775935301841     -16.989716822952     -16.989716822952     -16.989716822952     -16.989684793844   0.0000   0.0000   0.0000   0.0000
+   MLWF step   19  Convergence =  9.645E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    106    0.000027497762264    0.0    0.00      -0.776084723140     -16.989926154602     -16.989926154602     -16.989926154602     -16.989898656839   0.0000   0.0000   0.0000   0.0000
-   MLWF step   17  Convergence =  9.809E-07  Generated
+    106    0.000027130674367    0.0    0.00      -0.775928467970     -16.989724845256     -16.989724845256     -16.989724845256     -16.989697714582   0.0000   0.0000   0.0000   0.0000
+   MLWF step   17  Convergence =  9.775E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    107    0.000022785370857    0.0    0.00      -0.776082403665     -16.989932922737     -16.989932922737     -16.989932922737     -16.989910137366   0.0000   0.0000   0.0000   0.0000
-   MLWF step   17  Convergence =  9.906E-07  Generated
+    107    0.000022435313546    0.0    0.00      -0.775927494506     -16.989731438982     -16.989731438982     -16.989731438982     -16.989709003668   0.0000   0.0000   0.0000   0.0000
+   MLWF step   17  Convergence =  9.862E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    108    0.000019253043935    0.0    0.00      -0.776084986628     -16.989938574609     -16.989938574609     -16.989938574609     -16.989919321565   0.0000   0.0000   0.0000   0.0000
-   MLWF step   16  Convergence =  9.974E-07  Generated
+    108    0.000018925836869    0.0    0.00      -0.775931049900     -16.989736858949     -16.989736858949     -16.989736858949     -16.989717933112   0.0000   0.0000   0.0000   0.0000
+   MLWF step   16  Convergence =  9.916E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    109    0.000016212725231    0.0    0.00      -0.776090733441     -16.989943248306     -16.989943248306     -16.989943248306     -16.989927035581   0.0000   0.0000   0.0000   0.0000
-   MLWF step   16  Convergence =  9.690E-07  Generated
+    109    0.000015915136915    0.0    0.00      -0.775937460368     -16.989741348692     -16.989741348692     -16.989741348692     -16.989725433555   0.0000   0.0000   0.0000   0.0000
+   MLWF step   15  Convergence =  9.956E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    110    0.000013892559628    0.0    0.00      -0.776097997537     -16.989947179134     -16.989947179134     -16.989947179134     -16.989933286574   0.0000   0.0000   0.0000   0.0000
-   MLWF step   14  Convergence =  9.684E-07  Generated
+    110    0.000013361318841    0.0    0.00      -0.775945092146     -16.989745031679     -16.989745031679     -16.989745031679     -16.989731670360   0.0000   0.0000   0.0000   0.0000
+   MLWF step   15  Convergence =  9.666E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    111    0.000011569429745    0.0    0.00      -0.776105451416     -16.989950440139     -16.989950440139     -16.989950440139     -16.989938870709   0.0000   0.0000   0.0000   0.0000
-   MLWF step   13  Convergence =  9.852E-07  Generated
+    111    0.000011445013223    0.0    0.00      -0.775952719324     -16.989748123322     -16.989748123322     -16.989748123322     -16.989736678309   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.989E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    112    0.000009651967719    0.0    0.00      -0.776112187914     -16.989953198063     -16.989953198063     -16.989953198063     -16.989943546096   0.0000   0.0000   0.0000   0.0000
-   MLWF step   13  Convergence =  9.780E-07  Generated
+    112    0.000009301204820    0.0    0.00      -0.775959478983     -16.989750608766     -16.989750608766     -16.989750608766     -16.989741307561   0.0000   0.0000   0.0000   0.0000
+   MLWF step   13  Convergence =  9.913E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    113    0.000008259095533    0.0    0.00      -0.776117709450     -16.989955540884     -16.989955540884     -16.989955540884     -16.989947281788   0.0000   0.0000   0.0000   0.0000
-   MLWF step   11  Convergence =  9.997E-07  Generated
+    113    0.000008010809158    0.0    0.00      -0.775964939193     -16.989752724447     -16.989752724447     -16.989752724447     -16.989744713637   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.711E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    114    0.000006840781079    0.0    0.00      -0.776121856679     -16.989957501014     -16.989957501014     -16.989957501014     -16.989950660232   0.0000   0.0000   0.0000   0.0000
-   MLWF step   12  Convergence =  9.727E-07  Generated
+    114    0.000006836661088    0.0    0.00      -0.775968972745     -16.989754568057     -16.989754568057     -16.989754568057     -16.989747731396   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.882E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    115    0.000006000971247    0.0    0.00      -0.776124716009     -16.989959188230     -16.989959188230     -16.989959188230     -16.989953187259   0.0000   0.0000   0.0000   0.0000
-   MLWF step   10  Convergence =  9.673E-07  Generated
+    115    0.000005627646575    0.0    0.00      -0.775971681251     -16.989756043322     -16.989756043322     -16.989756043322     -16.989750415676   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.967E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    116    0.000005025362932    0.0    0.00      -0.776126507066     -16.989960614524     -16.989960614524     -16.989960614524     -16.989955589161   0.0000   0.0000   0.0000   0.0000
-   MLWF step    9  Convergence =  9.839E-07  Generated
+    116    0.000004786586423    0.0    0.00      -0.775973321077     -16.989757382803     -16.989757382803     -16.989757382803     -16.989752596217   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.755E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    117    0.000004188716763    0.0    0.00      -0.776127507938     -16.989961803363     -16.989961803363     -16.989961803363     -16.989957614646   0.0000   0.0000   0.0000   0.0000
-   MLWF step    9  Convergence =  9.881E-07  Generated
+    117    0.000004171469906    0.0    0.00      -0.775974194629     -16.989758482398     -16.989758482398     -16.989758482398     -16.989754310928   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.855E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    118    0.000003598083177    0.0    0.00      -0.776127987757     -16.989962829291     -16.989962829291     -16.989962829291     -16.989959231208   0.0000   0.0000   0.0000   0.0000
-   MLWF step    8  Convergence =  9.972E-07  Generated
-   nj_max nj_min nj_avg :     2     1  1.50
-    119    0.000003042713407    0.0    0.00      -0.776128172882     -16.989963647939     -16.989963647939     -16.989963647939     -16.989960605225   0.0000   0.0000   0.0000   0.0000
+    118    0.000003440873877    0.0    0.00      -0.775974565722     -16.989759400044     -16.989759400044     -16.989759400044     -16.989755959171   0.0000   0.0000   0.0000   0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.304271D-05  0.1D-03  0.818647D-06  0.1D-05  0.000000D+00  0.1D+11
+   MAIN:   0.344087D-05  0.1D-03  0.917646D-06  0.1D-05  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
-   MLWF step    8  Convergence =  9.886E-07  Generated
+   MLWF step    8  Convergence =  9.903E-07  Generated
 
- * Physical Quantities at step:   120
+ * Physical Quantities at step:   119
    nj_max nj_min nj_avg :     2     1  1.50
-     Pressure of Nuclei (GPa)             0.00000    120
-     Pressure Total (GPa)            -8.56487    120
+     Pressure of Nuclei (GPa)             0.00000    119
+     Pressure Total (GPa)            -8.56155    119
 
 
-                total energy =      -16.98996437119 Hartree a.u.
-              kinetic energy =       11.86341 Hartree a.u.
-        electrostatic energy =      -18.08547 Hartree a.u.
+                total energy =      -16.98976022495 Hartree a.u.
+              kinetic energy =       11.86393 Hartree a.u.
+        electrostatic energy =      -18.08556 Hartree a.u.
                          esr =        0.14128 Hartree a.u.
                        eself =       18.94976 Hartree a.u.
-      pseudopotential energy =       -8.65086 Hartree a.u.
-  n-l pseudopotential energy =        2.05419 Hartree a.u.
- exchange-correlation energy =       -3.39510 Hartree a.u.
+      pseudopotential energy =       -8.65098 Hartree a.u.
+  n-l pseudopotential energy =        2.05407 Hartree a.u.
+ exchange-correlation energy =       -3.39525 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
 
 
 
-                  exx energy =       -0.77613 Hartree a.u.
-       total energy with exx =      -16.98996 Hartree a.u.
+                  exx energy =       -0.77597 Hartree a.u.
+       total energy with exx =      -16.98976 Hartree a.u.
 
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -28.25  -14.17  -10.52   -8.25
+  -28.24  -14.17  -10.52   -8.24
  
  
    CELL_PARAMETERS
@@ -610,9 +607,9 @@ inw = 6:   1   0   1   0.000000
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -8.02695874        -0.27749872        -0.00157361
-       -0.27749872        -8.02702182        -0.00144162
-       -0.00157361        -0.00144162        -9.64063945
+       -8.02359135        -0.27570514        -0.00125853
+       -0.27570514        -8.02366372        -0.00114591
+       -0.00125853        -0.00114591        -9.63740540
    ATOMIC_POSITIONS
    O       0.99000000000000E-02     0.99000000000000E-02     0.00000000000000E+00
    H       0.18325000000000E+01    -0.22430000000000E+00    -0.10000000000000E-03
@@ -624,9 +621,9 @@ inw = 6:   1   0   1   0.000000
    H       0.00000000000000E+00     0.00000000000000E+00     0.00000000000000E+00
  
    Forces acting on atoms (au):
-   O      -0.94079244919403E-02    -0.94045915368304E-02    -0.41786564122279E-03
-   H       0.81374511625465E-02     0.18677269331303E-02    -0.17405278160001E-03
-   H       0.18666331092524E-02     0.81319991976265E-02    -0.19330520643644E-03
+   O      -0.94510901602491E-02    -0.94473367310766E-02    -0.47093382448825E-03
+   H       0.80975005366113E-02     0.18706080918121E-02    -0.19043957418766E-03
+   H       0.18693502575646E-02     0.80912469718814E-02    -0.21178971509189E-03
  
 
 
@@ -634,109 +631,111 @@ inw = 6:   1   0   1   0.000000
    Species  Temp (K)   Mean Square Displacement (a.u.)
         1   0.00E+00     0.0000E+00
         2   0.00E+00     0.0000E+00
-    120    0.000002643407192    0.0    0.00      -0.776128230686     -16.989964371190     -16.989964371190     -16.989964371190     -16.989961727783   0.0000   0.0000   0.0000   0.0000
+    119    0.000002935376652    0.0    0.00      -0.775974658149     -16.989760224954     -16.989760224954     -16.989760224954     -16.989757289578   0.0000   0.0000   0.0000   0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.264341D-05  0.1D-03  0.723252D-06  0.1D-05  0.000000D+00  0.1D+11
+   MAIN:   0.293538D-05  0.1D-03  0.824910D-06  0.1D-05  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
-   MLWF step    7  Convergence =  9.862E-07  Generated
+   MLWF step    8  Convergence =  9.723E-07  Generated
 
    writing restart file (with schema): ./h2o_51.save/
-     restart      :      0.00s CPU      0.02s WALL (       1 calls)
+     restart      :      0.00s CPU      0.01s WALL (       1 calls)
 
 
    Averaged Physical Quantities
                       accumulated      this run
-   ekinc         :        0.51670       0.51670 (AU)
-   ekin          :       10.82273      10.82273 (AU)
-   epot          :      -27.92530     -27.92530 (AU)
-   total energy  :      -14.98961     -14.98961 (AU)
+   ekinc         :        0.52104       0.52104 (AU)
+   ekin          :       10.81407      10.81407 (AU)
+   epot          :      -27.90682     -27.90682 (AU)
+   total energy  :      -14.97275     -14.97275 (AU)
    temperature   :        0.00000       0.00000 (K )
-   enthalpy      :      -14.98961     -14.98961 (AU)
-   econs         :      -14.98961     -14.98961 (AU)
-   pressure      :        0.07424       0.07424 (Gpa)
+   enthalpy      :      -14.97275     -14.97275 (AU)
+   econs         :      -14.97275     -14.97275 (AU)
+   pressure      :        0.14754       0.14754 (Gpa)
    volume        :     1728.00000    1728.00000 (AU)
 
 
 
      Called by MAIN_LOOP:
-     initialize   :      0.09s CPU      0.12s WALL (       1 calls)
-     main_loop    :     11.41s CPU     11.85s WALL (     120 calls)
-     cpr_total    :     11.55s CPU     12.11s WALL (       1 calls)
+     initialize   :      0.10s CPU      0.12s WALL (       1 calls)
+     main_loop    :      5.94s CPU      6.45s WALL (     119 calls)
+     cpr_total    :      6.10s CPU      6.64s WALL (       1 calls)
 
      Called by INIT_RUN:
 
      Called by CPR:
-     cpr_md       :     11.55s CPU     12.11s WALL (     120 calls)
-     move_electro :     11.38s CPU     11.79s WALL (     120 calls)
-     wf_close_opt :      0.13s CPU      0.15s WALL (     120 calls)
+     cpr_md       :      6.10s CPU      6.64s WALL (     119 calls)
+     move_electro :      5.90s CPU      6.41s WALL (     119 calls)
+     wf_close_opt :      0.16s CPU      0.18s WALL (     119 calls)
 
      Called by WANNIER_MODULES:
      wf_init      :      0.03s CPU      0.03s WALL (       1 calls)
-     wf_close_opt :      0.13s CPU      0.15s WALL (     120 calls)
-     wf_1         :      0.04s CPU      0.04s WALL (     120 calls)
-     wf_2         :      0.09s CPU      0.10s WALL (     120 calls)
+     wf_close_opt :      0.16s CPU      0.18s WALL (     119 calls)
+     wf_1         :      0.04s CPU      0.05s WALL (     119 calls)
+     wf_2         :      0.11s CPU      0.12s WALL (     119 calls)
 
      Called by EXACT_EXCHANGE:
-     exact_exchan :      9.63s CPU      9.89s WALL (      30 calls)
-     getpairv     :      6.37s CPU      6.49s WALL (      30 calls)
-     exx_gs_setup :      0.12s CPU      0.12s WALL (      30 calls)
-     exx_pairs    :      0.00s CPU      0.00s WALL (      30 calls)
-     r_orbital    :      0.04s CPU      0.06s WALL (      30 calls)
-     totalenergy  :      0.20s CPU      0.21s WALL (      30 calls)
-     vl2vg        :      0.03s CPU      0.03s WALL (      30 calls)
-     send_psi     :      0.01s CPU      0.01s WALL (      30 calls)
-     send_psi_wai :      0.01s CPU      0.01s WALL (      30 calls)
-     getvofr      :      2.78s CPU      2.83s WALL (      30 calls)
-     getvofr_qlm  :      3.74s CPU      3.75s WALL (      90 calls)
-     getvofr_boun :      1.22s CPU      1.23s WALL (      90 calls)
-     getvofr_gete :      0.06s CPU      0.06s WALL (      90 calls)
-     exx_cell_der :      0.05s CPU      0.06s WALL (     120 calls)
+     exact_exchan :      3.91s CPU      4.18s WALL (      29 calls)
+     getpairv     :      3.59s CPU      3.77s WALL (      29 calls)
+     exx_gs_setup :      0.01s CPU      0.01s WALL (      29 calls)
+     exx_pairs    :      0.00s CPU      0.00s WALL (      29 calls)
+     r_orbital    :      0.04s CPU      0.08s WALL (      29 calls)
+     totalenergy  :      0.02s CPU      0.02s WALL (      29 calls)
+     vl2vg        :      0.02s CPU      0.03s WALL (      29 calls)
+     send_psi     :      0.02s CPU      0.02s WALL (      29 calls)
+     sendv        :      0.20s CPU      0.21s WALL (      29 calls)
+     send_psi_wai :      0.01s CPU      0.01s WALL (      29 calls)
+     getvofr      :      3.39s CPU      3.51s WALL (      87 calls)
+     getvofr_qlm  :      0.20s CPU      0.21s WALL (      87 calls)
+     getvofr_boun :      0.15s CPU      0.16s WALL (      87 calls)
+     getvofr_gete :      0.05s CPU      0.05s WALL (      87 calls)
+     getvofr_hpot :      2.95s CPU      3.05s WALL (      87 calls)
+     exx_cell_der :      0.06s CPU      0.06s WALL (     116 calls)
 
      Called by move_electrons:
-     rhoofr       :      0.24s CPU      0.26s WALL (     121 calls)
-     vofrho       :      1.39s CPU      1.53s WALL (     121 calls)
-     dforce       :      0.13s CPU      0.13s WALL (     242 calls)
-     calphi       :      0.00s CPU      0.00s WALL (     121 calls)
-     nlfl         :      0.00s CPU      0.00s WALL (     121 calls)
+     rhoofr       :      0.27s CPU      0.30s WALL (     120 calls)
+     vofrho       :      1.57s CPU      1.78s WALL (     120 calls)
+     dforce       :      0.15s CPU      0.17s WALL (     240 calls)
+     calphi       :      0.00s CPU      0.00s WALL (     120 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (     120 calls)
 
      Called by ortho:
-     ortho_iter   :      0.00s CPU      0.00s WALL (     121 calls)
-     rsg          :      0.00s CPU      0.00s WALL (     121 calls)
-     rhoset       :      0.00s CPU      0.00s WALL (     121 calls)
-     sigset       :      0.00s CPU      0.00s WALL (     121 calls)
-     tauset       :      0.00s CPU      0.00s WALL (     121 calls)
-     ortho        :      0.01s CPU      0.01s WALL (     121 calls)
-     updatc       :      0.00s CPU      0.00s WALL (     121 calls)
+     ortho_iter   :      0.00s CPU      0.00s WALL (     120 calls)
+     rsg          :      0.00s CPU      0.00s WALL (     120 calls)
+     rhoset       :      0.00s CPU      0.00s WALL (     120 calls)
+     sigset       :      0.00s CPU      0.00s WALL (     120 calls)
+     tauset       :      0.00s CPU      0.00s WALL (     120 calls)
+     ortho        :      0.01s CPU      0.02s WALL (     120 calls)
+     updatc       :      0.00s CPU      0.00s WALL (     120 calls)
 
      Small boxes:
 
      Low-level routines:
-     prefor       :      0.00s CPU      0.00s WALL (     121 calls)
-     nlfq         :      0.00s CPU      0.00s WALL (     121 calls)
-     nlsm1        :      0.00s CPU      0.00s WALL (     122 calls)
-     nlsm2        :      0.00s CPU      0.00s WALL (     121 calls)
-     fft          :      0.43s CPU      0.48s WALL (     969 calls)
-     ffts         :      0.10s CPU      0.10s WALL (     242 calls)
-     fftw         :      0.20s CPU      0.22s WALL (     786 calls)
-     fft_scatt_xy :      0.09s CPU      0.10s WALL (    1997 calls)
-     fft_scatt_yz :      0.19s CPU      0.21s WALL (    1997 calls)
-     fft_scatt_tg :      0.01s CPU      0.01s WALL (     726 calls)
-     betagx       :      0.01s CPU      0.01s WALL (       1 calls)
+     prefor       :      0.00s CPU      0.00s WALL (     120 calls)
+     nlfq         :      0.00s CPU      0.00s WALL (     120 calls)
+     nlsm1        :      0.00s CPU      0.00s WALL (     121 calls)
+     nlsm2        :      0.00s CPU      0.00s WALL (     120 calls)
+     fft          :      0.52s CPU      0.59s WALL (     961 calls)
+     ffts         :      0.12s CPU      0.12s WALL (     240 calls)
+     fftw         :      0.22s CPU      0.26s WALL (     778 calls)
+     fft_scatt_xy :      0.11s CPU      0.13s WALL (    1979 calls)
+     fft_scatt_yz :      0.22s CPU      0.25s WALL (    1979 calls)
+     fft_scatt_tg :      0.01s CPU      0.01s WALL (     720 calls)
+     betagx       :      0.02s CPU      0.02s WALL (       1 calls)
      qradx        :      0.00s CPU      0.00s WALL (       1 calls)
      gram         :      0.00s CPU      0.00s WALL (       1 calls)
      nlinit       :      0.03s CPU      0.03s WALL (       1 calls)
      init_dim     :      0.01s CPU      0.01s WALL (       1 calls)
      newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
-     from_scratch :      0.03s CPU      0.04s WALL (       1 calls)
+     from_scratch :      0.02s CPU      0.04s WALL (       1 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
-     calbec       :      0.00s CPU      0.00s WALL (     122 calls)
+     calbec       :      0.00s CPU      0.00s WALL (     121 calls)
  
  
-     CP           :     11.65s CPU     12.24s WALL
+     CP           :      6.21s CPU      6.78s WALL
 
  
-   This run was terminated on:  15:50:40   9Nov2020            
+   This run was terminated on:  15: 7:17   9Nov2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
