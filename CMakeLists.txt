@@ -114,9 +114,6 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
 qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
 if(QE_ENABLE_CUDA)
-    include(CheckLanguage)
-    check_language(CUDA)
-    enable_language(CUDA)
     qe_add_global_compile_definitions(__CUDA)
 endif()
 if(QE_ENABLE_TRACE)
@@ -194,7 +191,16 @@ endif()
 # CUDA
 ###########################################################
 if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
-    find_package(CUDAToolkit REQUIRED)
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+      add_library(CUDA::cufft INTERFACE IMPORTED)
+      set_target_properties(CUDA::cufft PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cufft")
+      add_library(CUDA::cublas INTERFACE IMPORTED)
+      set_target_properties(CUDA::cublas PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cublas")
+      add_library(CUDA::cusolver INTERFACE IMPORTED)
+      set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cusolver")
+    else()
+      find_package(CUDAToolkit REQUIRED)
+    endif()
 endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
