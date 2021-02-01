@@ -40,6 +40,7 @@ upf_kinds.o \
 upf_params.o \
 upf_parallel_include.o \
 upf_spinorb.o \
+upf_spinorb_gpum.o \
 upf_to_internal.o \
 upf_utils.o \
 us_gpum.o \

@@ -416,8 +416,8 @@ SUBROUTINE newd_gpu( )
     SUBROUTINE newd_so_gpu(nt)
       !------------------------------------------------------------------------
       !
-      USE spin_orb_gpum, ONLY : fcoef_d, using_fcoef_d
-      USE ions_base,     ONLY : nat
+      USE upf_spinorb_gpum, ONLY : fcoef_d, using_fcoef_d
+      USE ions_base,        ONLY : nat
       !
       IMPLICIT NONE
       !
