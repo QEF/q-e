@@ -18,6 +18,15 @@ becmod.o : kind.o
 becmod.o : mp_bands.o
 becmod.o : noncol.o
 becmod.o : recvec.o
+becmod_gpu.o : becmod.o
+becmod_subs_gpu.o : ../UtilXlib/mp.o
+becmod_subs_gpu.o : becmod.o
+becmod_subs_gpu.o : becmod_gpu.o
+becmod_subs_gpu.o : control_flags.o
+becmod_subs_gpu.o : kind.o
+becmod_subs_gpu.o : mp_bands.o
+becmod_subs_gpu.o : noncol.o
+becmod_subs_gpu.o : recvec.o
 bfgs_module.o : basic_algebra_routines.o
 bfgs_module.o : constants.o
 bfgs_module.o : invmat.o
@@ -67,6 +76,7 @@ dist.o : io_global.o
 dist.o : ions_base.o
 dist.o : kind.o
 dylmr2.o : kind.o
+dylmr2_gpu.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
@@ -182,6 +192,7 @@ mp_bands.o : ../UtilXlib/mp.o
 mp_bands.o : ../UtilXlib/parallel_include.o
 mp_exx.o : ../UtilXlib/mp.o
 mp_exx.o : ../UtilXlib/parallel_include.o
+mp_exx.o : control_flags.o
 mp_exx.o : io_global.o
 mp_exx.o : mp_bands.o
 mp_global.o : ../UtilXlib/mp.o
@@ -287,6 +298,8 @@ qmmm.o : mp_pools.o
 qmmm.o : mp_world.o
 radial_gradients.o : kind.o
 random_numbers.o : kind.o
+random_numbers_gpu.o : kind.o
+random_numbers_gpu.o : random_numbers.o
 read_cards.o : additional_kpoints.o
 read_cards.o : autopilot.o
 read_cards.o : bz_form.o
@@ -334,7 +347,9 @@ read_pseudo.o : wrappers.o
 recips.o : kind.o
 recvec.o : ../UtilXlib/mp.o
 recvec.o : constants.o
+recvec.o : control_flags.o
 recvec.o : kind.o
+recvec_gpu.o : recvec.o
 recvec_subs.o : ../FFTXlib/fft_ggen.o
 recvec_subs.o : ../FFTXlib/fft_types.o
 recvec_subs.o : ../UtilXlib/mp.o
@@ -359,6 +374,8 @@ sort.o : kind.o
 space_group.o : kind.o
 sph_bes.o : constants.o
 sph_bes.o : kind.o
+sph_bes_gpu.o : constants.o
+sph_bes_gpu.o : kind.o
 sph_dbes.o : constants.o
 sph_dbes.o : kind.o
 timestep.o : kind.o
@@ -385,6 +402,7 @@ wannier_gw.o : kind.o
 wannier_gw.o : recvec.o
 wannier_new.o : kind.o
 wavefunctions.o : kind.o
+wavefunctions_gpu.o : wavefunctions.o
 wgauss.o : constants.o
 wgauss.o : kind.o
 wrappers.o : io_global.o

@@ -2,7 +2,6 @@
     calculation = 'scf'
     title = 'TDDFPT-EELS Example Si (NC PP)'
     restart_mode='from_scratch',
-    pseudo_dir = './',
     outdir='./out',
     prefix='Si'
  /

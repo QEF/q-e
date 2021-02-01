@@ -1083,6 +1083,7 @@ end subroutine recips
   END SUBROUTINE fft_base_info
 end program test
 
+#if !defined(__FFTX_USE_EXTERNAL_CLOCK)
 subroutine start_clock(label)
   use timers
   use fft_param
@@ -1264,7 +1265,7 @@ subroutine print_clock(mype, npes, ncount)
 1022  FORMAT(' |fft_scatt_many_xy   | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
 
 end subroutine
-
+#endif
 !
 ! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the

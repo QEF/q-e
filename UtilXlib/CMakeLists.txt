@@ -9,6 +9,7 @@ set(src_util
     mp.f90
     mp_base.f90
     mp_bands_util.f90
+    nvtx_wrapper.f90
     parallel_include.f90
     util_param.f90
     thread_util.f90
@@ -49,42 +50,47 @@ if(QE_ENABLE_TEST)
     set(source_names
         test_mp_count_nodes
         test_mp_bcast_i1
-        test_mp_bcast_i1_gpu
         test_mp_bcast_iv
-        test_mp_bcast_iv_gpu
         test_mp_bcast_im
-        test_mp_bcast_im_gpu
         test_mp_bcast_it
-        test_mp_bcast_it_gpu
-        test_mp_bcast_i4d_gpu
-        test_mp_bcast_r4d_gpu
-        test_mp_bcast_c4d_gpu
-        test_mp_bcast_c5d_gpu
-        test_mp_bcast_r5d_gpu
-        test_mp_bcast_c6d_gpu
         test_mp_bcast_iv_buffer
-        test_mp_bcast_iv_buffer_gpu
         test_mp_bcast_lv_buffer
-        test_mp_bcast_lv_buffer_gpu
         test_mp_bcast_rv_buffer
-        test_mp_bcast_rv_buffer_gpu
-        test_mp_max_iv_buffer_gpu
         test_mp_max_iv_buffer
         test_mp_max_rv_buffer
-        test_mp_max_rv_buffer_gpu
-        test_mp_min_iv_buffer_gpu
         test_mp_min_iv_buffer
         test_mp_min_rv_buffer
-        test_mp_min_rv_buffer_gpu
         test_mp_sum_iv_buffer
-        test_mp_sum_rv_buffer
-        test_mp_sum_iv_buffer_gpu
-        test_mp_sum_rv_buffer_gpu)
+        test_mp_sum_rv_buffer)
+
+    if(QE_ENABLE_CUDA)
+        set(source_names ${source_names}
+            test_mp_bcast_i1_gpu
+            test_mp_bcast_iv_gpu
+            test_mp_bcast_im_gpu
+            test_mp_bcast_it_gpu
+            test_mp_bcast_i4d_gpu
+            test_mp_bcast_r4d_gpu
+            test_mp_bcast_c4d_gpu
+            test_mp_bcast_c5d_gpu
+            test_mp_bcast_r5d_gpu
+            test_mp_bcast_c6d_gpu
+            test_mp_bcast_iv_buffer_gpu
+            test_mp_bcast_lv_buffer_gpu
+            test_mp_bcast_rv_buffer_gpu
+            test_mp_max_iv_buffer_gpu
+            test_mp_max_rv_buffer_gpu
+            test_mp_min_iv_buffer_gpu
+            test_mp_min_rv_buffer_gpu
+            test_mp_sum_iv_buffer_gpu
+            test_mp_sum_rv_buffer_gpu)
+    endif()
 
     # TODO rename all sources *.f90 -> *.F90
     set(src_tests)
     FOREACH(NAME ${source_names})
         set(src_test tests/${NAME}.f90)
+        qe_enable_cuda_fortran("${src_test}")
         set(src_tests ${src_tests} "${src_test}")
         string(REPLACE "test_" "test_qe_utilx_" TGT_NAME ${NAME})
         qe_add_executable(${TGT_NAME} ${src_test})

@@ -60,5 +60,5 @@ if(QE_ENABLE_TEST)
             qe_openmp_fortran
             qe_mpi_fortran
             qe_xclib)
-    add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
+    #add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
 endif(QE_ENABLE_TEST)

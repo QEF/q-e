@@ -21,7 +21,8 @@ mp_bands_util.o \
 parallel_include.o \
 set_mpi_comm_4_solvers.o \
 util_param.o \
-thread_util.o
+thread_util.o \
+nvtx_wrapper.o 
 
 all : libutil.a
 

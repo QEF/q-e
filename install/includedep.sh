@@ -39,11 +39,12 @@ sort | uniq > includedep.tmp1        # remove duplicates
 
 # create list of available include files
 # for each file, create a line of the form:
-# s/@file_name@/pathname/g
-echo $includes | tr " " "\n" |
-sed 's/\//\\\//g
-     s/.*\/\([^/]*\)/\1 &/' |         # escape slashes
-awk '{print "s/@" $1 "@/" $2 "/" }' > includedep.tmp2
+# s?@file_name@?pathname?g
+# (the "?" remove the need to escape "/" in the pathname)
+
+for i in $includes; do
+    echo "s?@$(basename $i)@?$i?" >>  includedep.tmp2
+done
 
 # replace file names with pathnames
 # by applying the file of substitution patterns just created

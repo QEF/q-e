@@ -3,15 +3,15 @@ Quantum ESPRESSO GPU
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-This repository contains the up to date GPU accelerated version of QuantumESPRESSO.
+This repository also contains the GPU-accelerated version of Quantum ESPRESSO.
 
 Installation
 ============
 
-This version is tested against PGI compilers v. >= 17.4. The configure 
-script checks the presence of a PGI compiler and of a few cuda libraries.
-For this reason path pointing to cudatoolkit must be present in the
-`LD_LIBRARY_PATH`.
+This version is tested against PGI (now nvfortran) compilers v. >= 17.4. 
+The configure script checks for the presence of a PGI compiler and of a few 
+cuda libraries.For this reason path pointing to cudatoolkit must be present
+in `LD_LIBRARY_PATH`.
 
 A template for the configure command is:
 
@@ -51,18 +51,6 @@ a problem in `cusolver` missing `GOmp` (GNU Openmp). The solution to this
 problem is removing cudatoolkit from the `LD_LIBRARY_PATH` before compiling.
 
 Serial compilation is also supported.
-
-Active branches
-===============
-
-There are currently two active branches:
-
-* gpu_develop
-* gpu_exx
-* gpu_forces
-
-These branches are aligned with the develop branch of `QEF/q-e`.
-
 
 Execution
 =========

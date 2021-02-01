@@ -250,7 +250,7 @@
               end do
            end do
            tscale = 1.0_DP / ( nx * ny )
-           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+           r(1:ldx * ldy * nzl) = r(1:ldx * ldy * nzl) * tscale
         ELSE IF( isign > 0 ) THEN
            do i = 1, nx
               do k = 1, nzl
@@ -269,7 +269,7 @@
         IF( isign < 0 ) THEN
            call dfftw_execute_dft( fw_plan( 1, ip), r(1:), r(1:))
            tscale = 1.0_DP / ( nx * ny )
-           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+           r(1:ldx * ldy * nzl) = r(1:ldx * ldy * nzl) * tscale
         ELSE IF( isign > 0 ) THEN
            call dfftw_execute_dft( bw_plan( 1, ip), r(1:), r(1:))
         END IF
@@ -413,7 +413,7 @@
      IF( isign < 0 ) THEN
         call dfftw_execute_dft( fw_plan(ip), f(1:), f(1:))
         tscale = 1.0_DP / DBLE( nx * ny * nz )
-        call ZDSCAL( nx * ny * nz, tscale, f(1), 1)
+        f(1:nx * ny * nz) = f(1:nx * ny * nz) * tscale
 
      ELSE IF( isign > 0 ) THEN
 
@@ -603,7 +603,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
            end do
         end do
 
-        call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1), 1)
+        f(1:ldx * ldy * nz) = f(1:ldx * ldy * nz) * (1.0_DP/(nx * ny * nz))
 
      END IF
      RETURN

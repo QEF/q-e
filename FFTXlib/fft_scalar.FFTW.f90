@@ -264,7 +264,7 @@
         tscale = 1.0_DP / ( nx * ny )
         !
         CALL fftw_inplace_drv_2d( fw_plan_2d(ip), nzl, r(1), 1, ldx*ldy )
-        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+        r(1:ldx * ldy * nzl) = r(1:ldx * ldy * nzl) * tscale
         !
      ELSE IF( isign > 0 ) THEN
         !
@@ -367,7 +367,7 @@
        end do
 
        tscale = 1.0_DP / ( nx * ny )
-       CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+       r(1:ldx * ldy * nzl) = r(1:ldx * ldy * nzl) * tscale
 
      ELSE IF( isign > 0 ) THEN
 
@@ -496,7 +496,7 @@
        call FFTW_INPLACE_DRV_3D( fw_plan(ip), 1, f(1), 1, 1 )
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
-       call ZDSCAL( nx * ny * nz, tscale, f(1), 1)
+       f(1:nx * ny * nz) = f(1:nx * ny * nz) * tscale
 
      ELSE IF( isign > 0 ) THEN
 
@@ -678,7 +678,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
               end do
            end do
 
-           call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1+ h*howmany ), 1)
+           f(h*howmany+1:h*howmany+ldx*ldy*nz) = f(h*howmany+1:h*howmany+ldx*ldy*nz) * (1.0_DP/(nx*ny*nz))
         END DO
 
      END IF

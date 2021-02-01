@@ -148,8 +148,13 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-5, 1.0e-4, 'beta'),
               (1.0e-5, 1.0e-4, 'gamma'),
               (1.0e-5, 1.0e-4, 'average'),
-              (1.0e-3, 1.0e-4, 'plotchi'),
-              (1.0e-4, 1.0e-4, 'epsm1'),
+              (3.0e-3,   None, 'rechi'),
+              (3.0e-3,   None, 'imchi'),
+              (3.0e-3,   None, 'freq'),
+              (3.0e-3,   None, 'reepsm1'),
+              (3.0e-3,   None, 'imepsm1'),
+              (3.0e-3,   None, 'reeps'),
+              (3.0e-3,   None, 'imeps'),
               (1.0e-5, 5.0e-4, 'averageosc'))
 
 skip_program = grep
