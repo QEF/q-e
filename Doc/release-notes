@@ -23,6 +23,11 @@ Fixed in development version:
   * Dumb and horrible bug in PAW relativistic calculations (QE 6.7 only):
     a bad tag name was searched for in PP, leading to a small but non
     negligible error. Noticed by Minkyu Park (Univ. of Ulsan, Rep. of Korea).
+  * Solution to the long-standing problem of non-monotonic N(E) in 
+    Methfessel-Paxton and Marzari-Vanderbilt smearing, occasionally resulting 
+    in an incorrect choice of the Fermi energy (Flaviano José dos Santos, EPFL).
+    Results, in particular for the Fermi energy, may change a little bit, but
+    either they are the same or are systematically improved wrt previous ones.
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
