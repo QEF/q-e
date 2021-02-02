@@ -386,7 +386,15 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... energy is converted from rydberg to hartree
       !
-      pes(image) = etot / e2
+      IF ( lfcp ) THEN
+         !
+         pes(image) = etot / e2 + fcp_mu * tot_charge
+         !
+      ELSE
+         !
+         pes(image) = etot / e2
+         !
+      END IF
       !
       ! ... add potentio-stat contribution
       IF ( lfcp ) pes(image) = pes(image) + ef / e2 * tot_charge
