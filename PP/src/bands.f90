@@ -287,6 +287,8 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         closest_band(:,ik) = -1
         done(:) =0
         psr(:,:) = DBLE(ps*DCONJG(ps)) ! square modulus of overlap
+        
+        ! Set-up a mask that is .true. only for bands that are less than 0.5 eV away
         DO ibnd = 1,nbnd
         DO jbnd = 1,nbnd
           mask(ibnd,jbnd) = ABS(et(jbnd,ik)-et(ibnd,ik-1))<0.5/rytoev
