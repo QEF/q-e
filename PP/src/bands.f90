@@ -174,6 +174,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   INTEGER :: iunpun_sigma(4), ios(0:4), done(nbnd), maxpos(2)
   CHARACTER(len=256) :: nomefile
   REAL(dp):: pscur, psmax, psr(nbnd,nbnd)
+  LOGICAL :: mask(nbnd,nbnd)
   COMPLEX(dp), ALLOCATABLE :: psi(:,:), spsi(:,:), ps(:,:)
   INTEGER, ALLOCATABLE :: work(:), igg(:)
   INTEGER, ALLOCATABLE :: closest_band(:,:)! index for band ordering
@@ -286,16 +287,25 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         closest_band(:,ik) = -1
         done(:) =0
         psr(:,:) = DBLE(ps*DCONJG(ps)) ! square modulus of overlap
+        DO ibnd = 1,nbnd
+        DO jbnd = 1,nbnd
+          mask(ibnd,jbnd) = ABS(et(jbnd,ik)-et(ibnd,ik-1))<0.5/rytoev
+        ENDDO
+        ENDDO
+        !
         DO iter=1,nbnd
-          maxpos = MAXLOC(psr) ! find the maximum of all overlaps
+          maxpos = MAXLOC(psr, MASK=mask) ! find the maximum of all overlaps
           ibnd = maxpos(1) 
           jbnd = maxpos(2)
-          closest_band(jbnd,ik) = ibnd ! band closer to iband was jband
+          !WRITE(*, '(3i3,f12.6)') iter, ibnd, jbnd, psr(ibnd,jbnd)
+          IF(ibnd==0 .or. jbnd==0) CALL errore("overlap", "mask has killed me", 2)
+          closest_band(jbnd,ik) = ibnd ! band closer to ibnd was jband
 
-          IF(ABS(et(jbnd,ik)-et(ibnd,ik-1))>0.2/rytoev) THEN
+          IF(ABS(et(jbnd,ik)-et(ibnd,ik-1))>0.1/rytoev) THEN
              WRITE(*,'(7x, "Overlap warning: bands", i3, " and", i3, '&
                          //'" are very far away! (ik, e1, e2)", i4, 2f12.6)') &
                    jbnd, ibnd, ik, et(jbnd,ik)*rytoev,et(ibnd,ik-1)*rytoev
+             
           ENDIF
           done( closest_band(jbnd,ik) ) = 1
           ! Set the entire line and entire row of overlap matrix to -1:
