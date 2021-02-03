@@ -281,13 +281,12 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         !
         ! ps(ibnd,jbnd) = <S\psi_{k-1,ibnd} | \psi_{k,jbnd}>
         !
-        ! assign bands on the basis of the relative overlap
-        ! Look for the largest of all overlaps
+        ! assign bands on the basis of the relative overlap square modulus
         !
         closest_band(:,ik) = -1
         psr(:,:) = DBLE(ps*DCONJG(ps)) ! square modulus of overlap
         
-        ! Set-up a mask that is .true. only for bands that are less than 0.5 eV away
+        ! Set-up a mask that is .true. only for bands that are less than 0.5 eV apart
         DO ibnd = 1,nbnd
         DO jbnd = 1,nbnd
           mask(ibnd,jbnd) = ABS(et(jbnd,ik)-et(ibnd,ik-1))<0.5/rytoev
@@ -300,7 +299,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
           jbnd = maxpos(2)
           !WRITE(*, '(3i3,f12.6)') iter, ibnd, jbnd, psr(ibnd,jbnd)
           IF(ibnd==0 .or. jbnd==0) CALL errore("overlap", "mask has killed me", 2)
-          closest_band(jbnd,ik) = ibnd ! band closer to ibnd was jband
+          closest_band(jbnd,ik) = ibnd ! wfvc closer to jbnd at ik was iband at ik-1
 
           IF(ABS(et(jbnd,ik)-et(ibnd,ik-1))>0.1/rytoev) THEN
              WRITE(*,'(7x, "Overlap warning: bands", i3, " and", i3, '&
