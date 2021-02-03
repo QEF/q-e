@@ -171,7 +171,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   ! becp   : <psi|beta> at current  k-point
   INTEGER :: ibnd, jbnd, iter, i, ik, ig, ig1, ig2, ipol, npw, ngmax, jmax
   INTEGER :: nks1tot, nks2tot, nks1, nks2
-  INTEGER :: iunpun_sigma(4), ios(0:4), done(nbnd), maxpos(2)
+  INTEGER :: iunpun_sigma(4), ios(0:4), maxpos(2)
   CHARACTER(len=256) :: nomefile
   REAL(dp):: pscur, psmax, psr(nbnd,nbnd)
   LOGICAL :: mask(nbnd,nbnd)
@@ -285,7 +285,6 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         ! Look for the largest of all overlaps
         !
         closest_band(:,ik) = -1
-        done(:) =0
         psr(:,:) = DBLE(ps*DCONJG(ps)) ! square modulus of overlap
         
         ! Set-up a mask that is .true. only for bands that are less than 0.5 eV away
@@ -309,10 +308,9 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
                    jbnd, ibnd, ik, et(jbnd,ik)*rytoev,et(ibnd,ik-1)*rytoev
              
           ENDIF
-          done( closest_band(jbnd,ik) ) = 1
           ! Set the entire line and entire row of overlap matrix to -1:
           !  The line, because I have found where bands jbnd,(ik-1) has gone
-          !  The row, because I have found where band ibnd,ik come from
+          !  The row, because I have found where band ibnd,ik comes from
           psr(:,jbnd) = -1._dp 
           psr(ibnd,:) = -1._dp
         END DO
