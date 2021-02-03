@@ -337,10 +337,13 @@ END SUBROUTINE do_sl2rho
 !-----------------------------------------------------------------------
 SUBROUTINE do_dori (dori)
   !-----------------------------------------------------------------------
-  !
-  !  reduced density gradient
-  !     rdg(r) = (1/2) (1/(3*pi**2))**(1/3) * |\nabla rho(r)|/rho(r)**(4/3)
-  !
+  ! D. Yang & Q.Liu
+  ! density overlap regions indicator（DOI: 10.1021/ct500490b）
+  ! theta(r) = 4 * (laplacian(rho(r)) * grad(rho(r)) * rho(r) 
+  !            + | grad(rho(r)) |**2 * grad(rho(r)))
+  !            / (| grad(rho(r)) |**2)**3
+  ! DORI(r) = theta(r) / (1 = theta(r))
+
   USE kinds,                ONLY: DP
   USE constants,            ONLY: pi
   USE fft_base,             ONLY: dfftp
@@ -356,13 +359,11 @@ SUBROUTINE do_dori (dori)
   ALLOCATE( grho(3,dfftp%nnr), hrho(3,3,dfftp%nnr))
   ALLOCATE(sum_grho(dfftp%nnr), temp(2,3,dfftp%nnr))
 
-!  DO is = 2, nspin
-!     rho%of_r (:, 1) =  rho%of_r (:, 1) + rho%of_r (:, is)
-!  ENDDO
-!
+
   ! calculate hessian of rho (gradient is discarded)
   CALL fft_hessian( dfftp, rho%of_r(:,1), g, grho, hrho )
 
+  ! calculate theta(r)
   sum_grho(:) = grho(1,:)**2 + grho(2,:)**2 + grho(3,:)**2
   DO i = 1, 3
      temp(1,i,:) = 0.0d0
@@ -376,14 +377,9 @@ SUBROUTINE do_dori (dori)
   DO i = 1, 3
      dori(:) = dori(:) + (temp(1,i,:)-temp(2,i,:))**2
   ENDDO
+  ! calculate dori(r) 
   dori(:) = 4/(sum_grho(:)+1.d-5)**3*dori(:)
   dori(:) = dori(:) / (1 + dori(:))
-  !CALL do_rdg(sum_grho)
-  !DO i = 1, dfftp%nnr
-  !   IF (abs(rho%of_r (i,1)) <= 5.d-3 .and. abs(sum_grho(i))<=1e-2) THEN
-  !      dori(i) = 0.d0
-  !   ENDIF
-  !ENDDO
   
   DEALLOCATE( grho, hrho, temp )
   DEALLOCATE( sum_grho )
