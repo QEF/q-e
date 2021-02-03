@@ -161,9 +161,10 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
         IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN        
           !
           IF (loto_2d) THEN
-            geg = (alat / tpi) * SQRT(geg) * (1.0 + grg * SQRT(geg))
+            facgd = fac * (tpi / alat) * EXP(-geg / (alph * 4.0d0)) / (SQRT(geg) * (1.0 + grg * SQRT(geg)))       
+          ELSE
+            facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
           ENDIF
-          facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg          
           !
           DO na = 1, nat
             zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
@@ -202,10 +203,11 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
         !
         IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN        
           !
-          IF (loto_2d) THEN 
-            geg = (alat / tpi) * SQRT(geg) * (1.0 + grg * SQRT(geg))      
+          IF (loto_2d) THEN
+            facgd = fac * (tpi / alat) * EXP(-geg / (alph * 4.0d0)) / (SQRT(geg) * (1.0 + grg * SQRT(geg)))
+          ELSE
+            facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
           ENDIF
-          facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
           !
           DO nb = 1, nat
             zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
