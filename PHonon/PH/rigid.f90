@@ -47,7 +47,7 @@ SUBROUTINE rgd_blk(nr1, nr2, nr3, nat, dyn, q, tau, epsil, zeu, bg, omega, alat,
   !! Unit cell volume 
   REAL(KIND = DP), INTENT(in) :: alat
   !! Cell dimension units
-  COMPLEX(KIND = DP), INTENT(inout) :: dyn(3, nat, 3, nat)
+  COMPLEX(KIND = DP), INTENT(inout) :: dyn(3, 3, nat, nat)
   !! Dynamical matrix
   !
   ! Local variables
