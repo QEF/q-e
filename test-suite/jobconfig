@@ -40,7 +40,7 @@ inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.
 
 [pw_spinorbit/]
 program = PW
-inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,''), ('spinorbit-pbe.in' ,'')
+inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,''), ('spinorbit-pbe.in' ,''), ('spinorbit-paw.in','')
 
 [pw_uspp/]
 program = PW
@@ -52,19 +52,19 @@ inputs_args = ('vdW-DF3-opt1.in',''), ('vdW-DF3-opt2.in',''), ('rVV10.in',''), (
 
 [pw_workflow_vc-relax_dos/]
 program = PW
-inputs_args = ('vc-relax1.in' ,'1'), ('dos2.in' ,'2')
+inputs_args = ('vc-relax-dos-1.in' ,'1'), ('vc-relax-dos-2.in' ,'2')
 
 [pw_workflow_relax_relax/]
 program = PW
-inputs_args = ('relax1.in' ,'1'), ('relax2.in' ,'2')
+inputs_args = ('relax-1.in' ,'1'), ('relax-2.in' ,'2')
 
 [pw_workflow_vc-relax_scf/]
 program = PW
-inputs_args = ('vc-relax1.in' ,'1'), ('scf2.in' ,'2')
+inputs_args = ('vc-relax-scf-1.in' ,'1'), ('vc-relax-scf-2.in' ,'2')
 
 [pw_workflow_scf_dos/]
 program = PW
-inputs_args = ('scf1.in' ,'1'), ('dos2.in' ,'2')
+inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
 [ph_base/]
 program = PH
@@ -164,11 +164,11 @@ inputs_args = ('zg.in', '')
 
 [tddfpt_CH4/]
 program = TDDFPT
-inputs_args = ('CH4.pw-in', '1'), ('CH4.tddfpt-in', '2'), ('CH4.tddfpt_pp-in', '3')
+inputs_args = ('CH4.pw.in', '1'), ('CH4.tddfpt.in', '2'), ('CH4.tddfpt_pp.in', '3')
 
 [tddfpt_eels-si/]
 program = TDDFPT
-inputs_args = ('Si.pw-in', '1'), ('Si.tddfpt-eels-in', '5'), ('Si.tddfpt_pp_eels-in', '4')
+inputs_args = ('Si.pw.in', '1'), ('Si.tddfpt-eels.in', '5'), ('Si.tddfpt_pp_eels.in', '4')
 
 [hp_insulator_us/]
 program = HP

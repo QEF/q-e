@@ -142,8 +142,8 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     efermig = ef
 
     IF (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
-    WRITE( stdout, '(5x,"Minimization algorithm failed to find Fermi energy: reverting to bisection.&
-                       & Probable cause: smearing is larger than the electronic band-gap.")' )
+    WRITE( stdout, '(5x,"Minimization algorithm failed to find Fermi energy: reverting to bisection",&
+     & /,5x,"Possible cause: smearing is larger than the electronic band-gap.")' )
   end if
 
   98765 continue
@@ -272,7 +272,7 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
 
     real(DP)                     :: abs_tol, fx, Elw_local, Eup_local
     integer                      :: i
-    real(DP)                     :: f
+    real(DP), EXTERNAL           :: f
 
     abs_tol = abs(tol)
 
