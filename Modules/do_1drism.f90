@@ -101,6 +101,7 @@ SUBROUTINE do_1drism(rismt, maxiter, rmsconv, nbox, eta, gbond, lhand, cool, tit
   lconv       = .FALSE.
   rismt%avail = .FALSE.
   rmssave     = 1.0E+99_DP
+  rmscurr     = 1.0E+99_DP
   !
   IF (gbond > 0.0_DP) THEN
     gmax = GMAX_SCALE / gbond
