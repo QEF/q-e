@@ -272,7 +272,7 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
 
     real(DP)                     :: abs_tol, fx, Elw_local, Eup_local
     integer                      :: i
-    real(DP)                     :: f
+    real(DP), EXTERNAL           :: f
 
     abs_tol = abs(tol)
 
