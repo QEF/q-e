@@ -1150,7 +1150,7 @@ SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
       do j = nb(2), nb(5)
         do i = nb(1), nb(4)
           r(i,j,k) = r(i,j,k) - 1.0d0 * d1(i,j,k)
-          d0(i,j,k) = r(i,j,k) !MCA
+          d0(i,j,k) = r(i,j,k) 
           nro = nro + r(i,j,k)*r(i,j,k) 
         end do
       end do
@@ -1167,7 +1167,7 @@ SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
 #ifdef __CUDA
         !$cuf kernel do (3)
 #else
-    !$omp parallel do reduction(+:alfa)
+        !$omp parallel do reduction(+:alfa)
 #endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
@@ -1177,7 +1177,7 @@ SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
           end do
         end do   
 #ifndef __CUDA
-    !$omp end parallel do
+        !$omp end parallel do
 #endif
         !
         nr = 0.d0
@@ -1185,7 +1185,7 @@ SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
 #ifdef __CUDA
         !$cuf kernel do (3)
 #else
-    !$omp parallel do reduction(+:nr)
+        !$omp parallel do reduction(+:nr)
 #endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
@@ -1197,7 +1197,7 @@ SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
           end do
         end do   
 #ifndef __CUDA
-    !$omp end parallel do
+        !$omp end parallel do
 #endif
         !                                 ! std CG_7 : x = x + alfa * p;
         !                                 ! std CG_8 : r = r - alfa * Ap;
@@ -1206,7 +1206,7 @@ SUBROUTINE CG_CUBE(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
 #ifdef __CUDA
         !$cuf kernel do (3)
 #else
-    !$omp parallel do
+        !$omp parallel do
 #endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)

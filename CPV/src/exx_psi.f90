@@ -118,7 +118,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         END IF
         !
 #ifdef __CUDA
-      end associate
+        end associate
 #endif
       END DO !loop over state i
 

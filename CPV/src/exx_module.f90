@@ -1902,7 +1902,7 @@ CONTAINS
     ! Integration: I_{mn} = \int \dd r \rho(r) r_m dv_n (r)
     !----------------------------------------------------------------------------------
 #ifdef __CUDA
-associate (ha_proj=>ha_proj_d, hb_proj=>hb_proj_d, hc_proj=>hc_proj_d, Jim=>Jim_d, &
+    associate (ha_proj=>ha_proj_d, hb_proj=>hb_proj_d, hc_proj=>hc_proj_d, Jim=>Jim_d, &
     &      coe_1st_derv=>coe_1st_derv_d )
     !$cuf kernel do (3)
 #else
@@ -1953,7 +1953,7 @@ associate (ha_proj=>ha_proj_d, hb_proj=>hb_proj_d, hc_proj=>hc_proj_d, Jim=>Jim_
       END DO
     END DO
 #ifdef __CUDA
-end associate
+    end associate
 #else
     !$omp end parallel do
 #endif

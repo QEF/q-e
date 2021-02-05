@@ -403,10 +403,10 @@ SUBROUTINE exx_gs(nfi, c)
           ! (using the translation vector "tran" from middle of wfc to the center of box)
           if (texx_cube) then
 #ifdef __CUDA
-          CALL getpsicb( nrg, p_me_r, psi_d(1,iobtl), psime_pair_send_d(1, itr, iobtl), tran)
-          psime_pair_send(:,itr,iobtl) = psime_pair_send_d(:, itr, iobtl)
+            CALL getpsicb( nrg, p_me_r, psi_d(1,iobtl), psime_pair_send_d(1, itr, iobtl), tran)
+            psime_pair_send(:,itr,iobtl) = psime_pair_send_d(:, itr, iobtl)
 #else
-          CALL getpsicb( nrg, p_me_r, psi(1,iobtl), psime_pair_send(1, itr, iobtl), tran)
+            CALL getpsicb( nrg, p_me_r, psi(1,iobtl), psime_pair_send(1, itr, iobtl), tran)
 #endif
           else
             CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psime_pair_send(1, itr, iobtl), tran)
@@ -1095,9 +1095,9 @@ SUBROUTINE exx_gs(nfi, c)
       coeke(:,2,1) = coeke(:,1,2) ! symmetry of coeke
       coeke(:,3,1) = coeke(:,1,3) ! symmetry of coeke
 #ifdef __CUDA
-    coeke_d = coeke
-    coemicf_d = coemicf
-    coe_1st_derv_d = coe_1st_derv
+      coeke_d = coeke
+      coemicf_d = coemicf
+      coe_1st_derv_d = coe_1st_derv
 #endif
       !
       ! a samall check on the shape of user defined cell (if any)
@@ -1195,18 +1195,18 @@ SUBROUTINE exx_gs(nfi, c)
       END DO
       !---------------------------------------------------------------------------------------------
 #ifdef __CUDA
-   !end associate
-   !me_cs = me_cs_d 
-   !me_rs = me_rs_d 
-   !me_ri = me_ri_d 
-   !me_rc = me_rc_d 
-   !DEALLOCATE(h_d)
-   me_cs_d = me_cs 
-   me_rs_d = me_rs 
-   me_ri_d = me_ri 
-   me_rc_d = me_rc 
+      !end associate
+      !me_cs = me_cs_d 
+      !me_rs = me_rs_d 
+      !me_ri = me_ri_d 
+      !me_rc = me_rc_d 
+      !DEALLOCATE(h_d)
+      me_cs_d = me_cs 
+      me_rs_d = me_rs 
+      me_ri_d = me_ri 
+      me_rc_d = me_rc 
 #endif
-      !return
+      return
     end subroutine exx_gs_setup_cube
 
     subroutine  exx_gs_setup_sphere()
