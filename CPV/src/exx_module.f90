@@ -1978,5 +1978,16 @@ end associate
     RETURN
   END SUBROUTINE exx_energy_cell_derivative_cube
   !--------------------------------------------------------------------------------------------------------------
-  !
+
+#ifdef __CUDA
+  attributes(host,device) &
+#endif
+  integer function l2gcb(n,l,t)
+    !! This function is the cube analogue of the `l2goff` function in exx_gs.f90.
+    !! These functions provides a local to global grid transformation to allow
+    !! sparse matrix/vector operations.
+    implicit none
+    integer, value :: n, l, t
+    l2gcb = MOD(l-t-1+n, n)+1
+  end function l2gcb
 END MODULE exx_module

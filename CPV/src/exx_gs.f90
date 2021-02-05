@@ -1,18 +1,3 @@
-module dummy_exx
-  implicit none
-contains
-
-#ifdef __CUDA
-  attributes(host,device) &
-#endif
-  integer function l2gcb(n,l,t)
-    implicit none
-    integer, value :: n, l, t
-    l2gcb = MOD(l-t-1+n, n)+1
-  end function l2gcb
-
-end module dummy_exx
-
 SUBROUTINE exx_gs(nfi, c)
     !=======================================================================================
     ! Code Version 1.0 (Princeton University, September 2014)
@@ -1878,9 +1863,9 @@ END SUBROUTINE l2goff
 !==============================================================================
 SUBROUTINE getpsicb(nrg,nrl,psig,psil,tran)
     !
-    USE kinds, ONLY  : DP
+    USE kinds,            ONLY  : DP
     USE fft_base,         ONLY  : dfftp
-    USE dummy_exx, ONLY : l2gcb
+    USE exx_module,       ONLY  : l2gcb
     !
     IMPLICIT NONE
     !
@@ -1924,17 +1909,12 @@ SUBROUTINE getpsicb(nrg,nrl,psig,psil,tran)
 END SUBROUTINE getpsicb
 !==============================================================================
 
-!integer function l2gcb(n,l,t)
-!  implicit none
-!  integer :: n, l, t
-!  l2gcb = MOD(l-t-1+n, n)+1
-!end function l2gcb
 SUBROUTINE updateforce_loc(nrg, me_r, vpsil, potme, psime1, psime2, tran)
     !
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
-    USE fft_base,         ONLY  : dfftp
-    USE dummy_exx,               ONLY  : l2gcb
+    USE fft_base,                ONLY  : dfftp
+    USE exx_module,              ONLY  : l2gcb
     !
     IMPLICIT NONE
     !
@@ -1998,8 +1978,8 @@ SUBROUTINE updateforce_slf(nrg, me_r, vpsil, potme, psime, tran)
     !
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
-    USE fft_base,         ONLY  : dfftp
-    USE dummy_exx,               ONLY  : l2gcb
+    USE fft_base,                ONLY  : dfftp
+    USE exx_module,              ONLY  : l2gcb
     !
     IMPLICIT NONE
     !
@@ -2060,7 +2040,7 @@ SUBROUTINE updateforce_rec(nrg, me_r, vpsil, force, tran)
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
     USE fft_base,                ONLY  : dfftp
-    USE dummy_exx,               ONLY  : l2gcb
+    USE exx_module,              ONLY  : l2gcb
     !
     IMPLICIT NONE
     !
