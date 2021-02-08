@@ -37,7 +37,6 @@ contains
       use becmod
       USE eqv, ONLY: dpsi, dvpsi !TODO: those variables looks like they can be local variables
       USE mp_pools, ONLY: intra_pool_comm
-      USE funct, ONLY: get_igcx, get_igcc
       use compute_charge_mod, only: compute_charge
       use project_mod, only: project
       use extrapolation, only : update_pot
