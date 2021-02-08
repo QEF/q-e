@@ -24,6 +24,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
+  USE uspp_gpum,                ONLY : vkb_d
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
                                        ekincm, print_energies
@@ -80,7 +81,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        electrons_nosevel, electrons_noseupd
   USE pres_ai_mod,              ONLY : P_ext, P_in, P_fin, pvar, volclu, &
                                        surfclu, Surf_t, abivol, abisur
-  USE wavefunctions,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, cm_d, phi, c0_d
   USE wannier_module,           ONLY : allocate_wannier
   USE cp_interfaces,            ONLY : printout_new, move_electrons, newinit
   USE cell_nose,                ONLY : xnhh0, xnhhm, xnhhp, vnhh, temph, &
@@ -96,14 +97,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp_bgrp, nfi, idesc, &
-                                       drhor, drhog, bec_bgrp, dbec
+                                       drhor, drhog, bec_bgrp, dbec, bec_d, iabox, nabox
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : writefile, eigs, strucf, phfacs
-  USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec_bgrp, calbec, caldbec_bgrp
+  USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec, caldbec_bgrp
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
@@ -116,8 +117,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE fft_base,                 ONLY : dfftp, dffts
   USE london_module,            ONLY : energy_london, force_london, stres_london
   USE input_parameters,         ONLY : tcpbo
-  USE funct,                    ONLY : dft_is_hybrid, start_exx, exx_is_active
-  USE funct,                    ONLY : dft_is_meta
+  USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
+  USE device_memcpy_m,            ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -177,7 +178,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !  tlast  = .FALSE.
   nacc   = 5
   !
-  if (dft_is_meta()) then
+  if ( xclib_dft_is('meta') ) then
     !HK/MCA : for SCAN0 calculation the initial SCAN has to converge better than the PBE -> PBE0 case
     exx_start_thr = 1.E+1_DP
   else
@@ -267,7 +268,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! 
      IF ( (okvan .or. nlcc_any ) .AND. (tfor .OR. thdyn .OR. tfirst) ) THEN
         !
-        CALL initbox( tau0, alat, at, ainv, taub, irb )
+        CALL initbox( tau0, alat, at, ainv, taub, irb, iabox, nabox )
         !
         CALL phbox( taub, iverbosity, eigrb )
         !
@@ -289,13 +290,17 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     ! ... why this call ??? from Paolo Umari
+     IF( force_pairing ) THEN
+          c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
+          cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
+         !phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+          CALL dev_memcpy(phi(:,iupdwn(2):), phi, [1, ubound(phi)], 1, [1, nbsp])
+      lambda(:,:, 2) = lambda(:,:, 1)
+     ENDIF
      !
-     IF ( tefield .or. tefield2 ) THEN
-        !
-        CALL calbec( 1, nsp, eigr, c0_bgrp, bec_bgrp ) ! ATTENZIONE  
-        !
-     END IF
+#if defined(__CUDA)
+     CALL dev_memcpy( c0_d, c0_bgrp )
+#endif
      !
      ! Autopilot (Dynamic Rules) Implimentation    
      !
@@ -323,13 +328,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      !=======================================================================
      !
-     IF( force_pairing ) THEN
-          c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
-          cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
-         phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
-      lambda(:,:, 2) = lambda(:,:, 1)
-     ENDIF
-     !
      ! ... fake electronic kinetic energy
      !
      IF ( .NOT. tcg ) THEN
@@ -340,9 +338,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3), &
-                          fion, c0_bgrp, cm_bgrp, phi_bgrp, &
-                          enthal, enb, enbi, fccc, ccc, dt2bye, stress, .false. )
+     CALL move_electrons( nfi, tprint, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3), &
+                          fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress, .false. )
      !
      IF (lda_plus_u) fion = fion + forceh
      !
@@ -538,6 +535,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
+#if defined(__CUDA)
+        CALL dev_memcpy( vkb_d, vkb )
+#endif
         !
      END IF
      !
@@ -554,13 +554,17 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#if defined (__CUDA)
+           CALL ortho( vkb_d, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#else
+           CALL ortho( vkb, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#endif
            !
          ELSE
            !
            CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw )
            !
-           IF ( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+           IF ( iverbosity > 2 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp_bgrp )
            !
          END IF
          !
@@ -569,23 +573,31 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, 9, nudx, 1.D0, ionode, stdout )
          !
          IF ( tortho ) THEN
-           CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
+#if defined (__CUDA)
+            CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, cm_d, idesc )
+            CALL dev_memcpy( bec_bgrp, bec_d )
+            CALL dev_memcpy( cm_bgrp, cm_d )
+#else
+            CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
+#endif
          END IF
          !
          IF( force_pairing ) THEN
-           c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
-           cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
-           phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
+           c0_bgrp(:,iupdwn(2):nbsp)   =     c0_bgrp(:,1:nupdwn(2))
+           cm_bgrp(:,iupdwn(2):nbsp)   =     cm_bgrp(:,1:nupdwn(2))
+           !phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+           CALL dev_memcpy(phi(:,iupdwn(2):), phi, [1, ubound(phi)], 1, [1, nbsp])
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !
-         CALL calbec_bgrp( 1, nsp, eigr, cm_bgrp, bec_bgrp, 1 )
+         ! the following compute only on NC pseudo components
+         CALL calbec( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 1 ) 
          !
          IF ( tpre ) THEN
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
          END IF
          !
-         IF ( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+         IF ( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp_bgrp )
          !
        END IF
        !
@@ -802,7 +814,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            ! ... restart with CP
            !
            IF ( okvan .or. nlcc_any ) THEN
-              CALL initbox( tau0, alat, at, ainv, taub, irb )
+              CALL initbox( tau0, alat, at, ainv, taub, irb, iabox, nabox )
               CALL phbox( taub, iverbosity, eigrb ) 
            END IF
            CALL r_to_s( tau0, taus, nat, ainv )
@@ -817,9 +829,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            lambdam = lambda
            !
-           CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3),&
-                                fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb,&
-                                enbi, fccc, ccc, dt2bye, stress,.true. )
+           CALL move_electrons( nfi, tprint, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3),&
+                                fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress,.true. )
            !
         END IF
         !
@@ -870,7 +881,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !The following criteria is used to turn on exact exchange calculation when
      !GGA energy is converged up to 100 times of the input etot convergence thereshold  
      !
-     IF( .NOT.exx_is_active().AND.dft_is_hybrid().AND.tconvthrs%active ) THEN
+     IF( .NOT.exx_is_active().AND.xclib_dft_is('hybrid').AND.tconvthrs%active ) THEN
        !
        IF(delta_etot.LT.tconvthrs%derho*exx_start_thr) THEN
          !
@@ -985,7 +996,7 @@ SUBROUTINE terminate_run()
   USE control_flags,     ONLY : lwf, lwfpbe0nscf
   USE tsvdw_module,      ONLY : tsvdw_finalize
   USE exx_module,        ONLY : exx_finalize
-  USE funct,             ONLY : dft_is_hybrid, exx_is_active
+  USE xc_lib,     ONLY : xclib_dft_is, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -1022,7 +1033,7 @@ SUBROUTINE terminate_run()
   END IF
   !==============================================================
   !exx_wf related
-  IF ( dft_is_hybrid().AND.exx_is_active() ) THEN
+  IF ( xclib_dft_is('hybrid').AND.exx_is_active() ) THEN
     !
     WRITE( stdout, '(/5x,"Called by EXACT_EXCHANGE:")' )
     CALL print_clock('exact_exchange')   ! total time for exx
@@ -1095,6 +1106,7 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'nlfq' )
   CALL print_clock( 'nlsm1' )
   CALL print_clock( 'nlsm2' )
+  CALL print_clock( 'nlsm1us' )
   CALL print_clock( 'fft' )
   CALL print_clock( 'ffts' )
   CALL print_clock( 'fftw' )
@@ -1115,6 +1127,7 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'new_ns' )
   CALL print_clock( 'strucf' )
   CALL print_clock( 'calbec' )
+  CALL print_clock( 'exch_corr' )
 !==============================================================
   IF (ts_vdw) THEN
     WRITE( stdout, '(/5x,"Called by tsvdw:")' )

@@ -18,8 +18,8 @@ SUBROUTINE stop_run_path( lflag )
   USE environment,        ONLY : environment_end
   USE path_variables,     ONLY : path_deallocation
   USE path_io_units_module,      ONLY : iunpath
-  USE fcp_opt_routines,          ONLY : fcp_opt_deallocation
-  USE fcp_variables,             ONLY : lfcpopt
+  USE fcp_variables,             ONLY : lfcp, fcp_deallocation
+  USE gcscf_variables,           ONLY : lgcscf, gcscf_deallocation
   !
   IMPLICIT NONE
   !
@@ -39,7 +39,8 @@ SUBROUTINE stop_run_path( lflag )
   CALL clean_pw( .TRUE. )
   !
   CALL path_deallocation()
-  IF ( lfcpopt ) CALL fcp_opt_deallocation()
+  IF ( lfcp ) CALL fcp_deallocation()
+  IF ( lgcscf ) CALL gcscf_deallocation()
   !
   CALL mp_global_end()
   !

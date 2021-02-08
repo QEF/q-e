@@ -21,6 +21,7 @@ rotate_wannier.o\
 write_wannier_matrix.o\
 direct_v_exc.o\
 direct_w_exc.o\
+direct_www.o \
 exc_h_a.o\
 sdescent.o\
 check_basis.o\
@@ -46,7 +47,7 @@ qpcorrections.o
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 	 ../../upflib/libupf.a  ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../XClib/xc_lib.a
 PWOBJS = ../../PW/src/libpw.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a

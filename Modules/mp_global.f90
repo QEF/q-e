@@ -83,7 +83,11 @@ CONTAINS
     ! Init orthopools is done during EXX bootstrap but,
     ! if they become more used, do it here:
     ! CALL mp_start_orthopools ( intra_image_comm )
+#if defined (__CUDA_OPTIMIZED)
+    CALL mp_start_bands ( 1 , ntg_, nyfft_, intra_pool_comm )
+#else
     CALL mp_start_bands ( nband_, ntg_, nyfft_, intra_pool_comm )
+#endif
     CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
     !
     RETURN

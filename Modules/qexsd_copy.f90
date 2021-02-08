@@ -206,7 +206,7 @@ CONTAINS
   END SUBROUTINE qexsd_copy_atomic_structure
   !
   !------------------------------------------------------------------------
-  SUBROUTINE qexsd_copy_symmetry ( symms_obj, &
+  SUBROUTINE qexsd_copy_symmetry ( symms_obj, spacegroup, &
        nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
        noinv, nosym, no_t_rev, flags_obj )
     !------------------------------------------------------------------------
@@ -217,6 +217,7 @@ CONTAINS
     ! 
     TYPE ( symmetries_type )             :: symms_obj 
     TYPE (symmetry_flags_type), OPTIONAL :: flags_obj
+    INTEGER, INTENT(OUT) :: spacegroup
     INTEGER, INTENT(OUT) :: nrot
     INTEGER, INTENT(OUT) :: nsym
     INTEGER, INTENT(OUT) :: s(:,:,:)
@@ -240,6 +241,7 @@ CONTAINS
        no_t_rev=.FALSE.
     ENDIF
     !
+    spacegroup = symms_obj%space_group
     nrot = symms_obj%nrot 
     nsym = symms_obj%nsym
     !  

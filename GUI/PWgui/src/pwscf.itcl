@@ -74,26 +74,31 @@ $gui addModule module neb "NEB.X's neb.dat" [file join $env(PWGUI) modules neb n
 }
 
 $gui addModule module ph "PH.X" [file join $env(PWGUI) modules ph ph.tcl] {
-    {{PH.X Input Files} {*.ph.in *.ph.inp}}
+    {{PH.X Input Files} {*.ph.in *.ph.inp *.in *.inp}}
 }
 $gui addModule module pp "PP.X" [file join $env(PWGUI) modules pp pp.tcl] {
-    {{PP.X Input Files} {*.pp.in *.pp.inp}}
+    {{PP.X Input Files} {*.pp.in *.pp.inp *.in *.inp}}
 }
 $gui addModule module pr "ProjWFC.X" [file join $env(PWGUI) modules projwfc projwfc.tcl] {
-    {{ProjWFC.X Input Files} {*.pr.in *.pr.inp}}
+    {{ProjWFC.X Input Files} {*.pr.in *.pr.inp *.in *.inp}}
 }
 $gui addModule module bands "Bands.X" [file join $env(PWGUI) modules bands bands.tcl] {
-    {{Bands.X Input Files} {*.bands.in *.bands.inp}}
+    {{Bands.X Input Files} {*.bands.in *.bands.inp *.in *.inp}}
 }
 $gui addModule module dos "Dos.X" [file join $env(PWGUI) modules dos dos.tcl] {
-    {{Dos.X Input Files} {*.dos.in *.dos.inp}}
+    {{Dos.X Input Files} {*.dos.in *.dos.inp *.in *.inp}}
 }
 #$gui addModule module d3 "D3.X" [file join $env(PWGUI) modules d3 d3.tcl] {
-#    {{D3.X Input Files} {*.d3.in *.d3.inp}}
+#    {{D3.X Input Files} {*.d3.in *.d3.inp *.in *.inp}}
 #}
 $gui addModule module ld "LD1.X" [file join $env(PWGUI) modules atomic atomic.tcl] {
-    {{LD1.X Input Files} {*.ld1.in *.ld1.inp}}
+    {{LD1.X Input Files} {*.ld1.in *.ld1.inp *.in *.inp}}
 }
+
+$gui addModule module hp "HP.X" [file join $env(PWGUI) modules hp hp.tcl] {
+    {{HP.X Input Files} {*.hp.in *.hp.inp *.in *.inp}}
+}
+
 
 #$gui addModule cascade pwscf "PWscf files ..." {
 #   $gui addModule command ...
@@ -124,6 +129,7 @@ $gui addHelp help bands     "Bands.X Input Syntax"  [file join $env(PWGUI) doc p
 $gui addHelp help dos         "Dos.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_DOS.html] none
 #$gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html] none
 $gui addHelp help ld          "LD1.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_LD1.html] none
+$gui addHelp help hp          "HP.X Input Syntax"   [file join $env(PWGUI) doc pwdocs INPUT_HP.html] none
 
 $gui addHelp separator
 

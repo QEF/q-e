@@ -50,6 +50,12 @@ MODULE mp_exx
   INTEGER, ALLOCATABLE :: iexx_iend(:)   ! ending band index used in the outer loop
   INTEGER, ALLOCATABLE :: all_start(:)   ! starting band inded for the inner loop
   INTEGER, ALLOCATABLE :: all_end(:)     ! ending band index used in the inner loop
+
+  INTEGER, ALLOCATABLE :: iexx_istart_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: iexx_istart_d
+#endif
+
   INTEGER :: max_contributors
   !
   ! flag for whether the exx part of the calculation is in progress
@@ -143,6 +149,7 @@ CONTAINS
   SUBROUTINE init_index_over_band(comm,nbnd,m)
     !
     USE io_global, ONLY : stdout
+    USE control_flags, ONLY : use_gpu
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: comm, nbnd
     INTEGER, INTENT(IN) :: m
@@ -159,6 +166,7 @@ CONTAINS
     IF (ALLOCATED(all_start)) THEN
        DEALLOCATE( all_start, all_end )
        DEALLOCATE( iexx_istart, iexx_iend )
+       IF(use_gpu) DEALLOCATE(iexx_istart_d)
     END IF
     ALLOCATE( all_start(negrp) )
     ALLOCATE( all_end(negrp) )
@@ -219,6 +227,9 @@ CONTAINS
     END DO
     max_pairs = CEILING(REAL(nbnd*m)/REAL(negrp))
     n_underloaded = MODULO(max_pairs*negrp-nbnd*m,negrp)
+    !
+    !allocate and upload
+    IF(use_gpu) ALLOCATE(iexx_istart_d, source=iexx_istart)
     !
     ! allocate arrays
     !

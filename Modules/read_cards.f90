@@ -211,7 +211,11 @@ CONTAINS
       ELSEIF ( trim(card) == 'WANNIER_AC' .and. ( prog == 'WA' )) THEN
          !
          CALL card_wannier_ac( input_line )
-
+         !
+      ELSEIF ( trim(card) == 'TOTAL_CHARGE' ) THEN
+         !
+         CALL card_total_charge( input_line )
+         !
       ELSE
          !
          IF ( ionode ) &
@@ -1935,4 +1939,55 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_wannier_ac
+   !
+   !
+   !------------------------------------------------------------------------
+   !    BEGIN manual
+   !----------------------------------------------------------------------
+   !
+   ! TOTAL_CHARGE
+   !
+   !   set the total charge
+   !
+   ! Syntax:
+   !
+   !   TOTAL_CHARGE
+   !      tot_charge
+   !
+   ! Example:
+   !
+   ! TOTAL_CHARGE
+   !   0.1
+   !
+   !----------------------------------------------------------------------
+   !    END manual
+   !------------------------------------------------------------------------
+   !
+   SUBROUTINE card_total_charge( input_line )
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(len=256) :: input_line
+      LOGICAL, EXTERNAL  :: matches
+      INTEGER            :: iv, ip, ierr
+      CHARACTER(len=10)  :: lb_mol
+      CHARACTER(len=256) :: molfile
+      !
+      !
+      IF ( ttotcharge ) THEN
+         CALL errore( ' card_total_charge ', 'two occurrences', 2 )
+      ENDIF
+      !
+      CALL read_line( input_line )
+      READ( input_line, *, iostat=ierr ) tot_charge
+      !
+      CALL errore( ' card_total_charge ', &
+         & 'cannot read total_charge from: '//trim(input_line), abs(ierr))
+      !
+      ttotcharge = .true.
+      !
+      RETURN
+      !
+   END SUBROUTINE card_total_charge
+   !
 END MODULE read_cards_module

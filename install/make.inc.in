@@ -59,10 +59,12 @@ MOD_FLAG      = @imod@
 # Each Makefile can add directories to MODFLAGS and libraries to QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
+               $(MOD_FLAG)$(TOPDIR)/XClib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
+	       $(MOD_FLAG)$(TOPDIR)/MBD \
 	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
 
 # Compilers: fortran-90, fortran-77, C
@@ -70,9 +72,6 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 # compiler that produces executables for parallel execution using MPI
 # (such as for instance mpif90, mpf90, mpxlf90,...);
 # otherwise, an ordinary fortran-90 compiler (f90, g95, xlf90, ifort,...)
-# If you have a parallel machine but no suitable candidate for MPIF90,
-# try to specify the directory containing "mpif.h" in IFLAGS
-# and to specify the location of MPI libraries in MPI_LIBS
 
 MPIF90         = @mpif90@
 F90           = @f90@
@@ -88,7 +87,7 @@ GPU_ARCH=@gpu_arch@
 CUDA_RUNTIME=@gpu_runtime@
 
 # CUDA F90 Flags
-CUDA_F90FLAGS=@cuda_fflags@
+CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
@@ -149,8 +148,8 @@ HDF5_LIBS = @hdf5_libs@
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
             -lFoX_utils -lFoX_fsys 
 FOX_FLAGS = @foxflags@
-# For parallel execution, the correct path to MPI libraries must
-# be specified in MPI_LIBS (except for IBM if you use mpxlf)
+
+# MPI libraries (should not be needed)
 
 MPI_LIBS       = @mpi_libs@
 
@@ -158,14 +157,13 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
-# library for bayesian error estimate functionals
+# library for many-body dispersion
 
-BEEF_LIBS      = @beef_libs@
-BEEF_LIBS_SWITCH = @beef_libs_switch@
+MBD_LIBS= $(TOPDIR)/MBD/libmbd.a
 
 # CUDA libraries
-CUDA_LIBS=@cuda_libs@
-CUDA_EXTLIBS = @cuda_extlibs@
+CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
+CUDA_EXTLIBS = devxlib @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -183,7 +181,9 @@ FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(BEEF_LIBS) $(LIBXC_LIBS) $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
+QELIBS         = $(MBD_LIBS) $(LIBXC_LIBS) \
+                 $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
+		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

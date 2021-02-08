@@ -38,6 +38,11 @@ SUBROUTINE allocate_nlpot
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
+  USE uspp_gpum,        ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
+                               using_deeq, using_deeq_nc, using_deeq_nc_d, &
+                               using_qq_at, using_qq_so, using_becsum, using_ebecsum
+  USE us_gpum,          ONLY : using_tab, using_tab_at, using_tab_d2y, using_qrad
+  !
   IMPLICIT NONE
   !
   INTEGER :: nwfcm
@@ -52,7 +57,6 @@ SUBROUTINE allocate_nlpot
   ALLOCATE( nhtolm(nhm,nsp) )
   ALLOCATE( nhtoj(nhm,nsp)  )
   ALLOCATE( ijtoh(nhm,nhm,nsp) )
-  ALLOCATE( indv_ijkb0(nat)    )
   ALLOCATE( deeq(nhm,nhm,nat,nspin) )
   IF ( noncolin ) THEN
      ALLOCATE( deeq_nc(nhm,nhm,nat,nspin) )
@@ -66,6 +70,10 @@ SUBROUTINE allocate_nlpot
   ELSE
     ALLOCATE( dvan(nhm,nhm,nsp) )
   ENDIF
+  ALLOCATE (becsum( nhm * (nhm + 1)/2, nat, nspin))
+  IF (tqr) ALLOCATE (ebecsum( nhm * (nhm + 1)/2, nat, nspin))
+  CALL using_becsum(2); IF (tqr) CALL using_ebecsum(2)
+  ALLOCATE( indv_ijkb0(nat)    )
   ! GIPAW needs a slighly larger q-space interpolation for quantities calculated
   ! at k+q_gipaw, and I'm using the spline_ps=.true. flag to signal that
   IF ( spline_ps .AND. cell_factor <= 1.1d0 ) cell_factor = 1.1d0
@@ -75,10 +83,7 @@ SUBROUTINE allocate_nlpot
   !
   nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
-  !
   IF (lmaxq > 0) ALLOCATE (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))
-  ALLOCATE (becsum( nhm * (nhm + 1)/2, nat, nspin))
-  if (tqr) ALLOCATE (ebecsum( nhm * (nhm + 1)/2, nat, nspin))
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)
@@ -92,6 +97,17 @@ SUBROUTINE allocate_nlpot
   !
   nwfcm = MAXVAL( upf(1:nsp)%nwfc )
   ALLOCATE( tab_at(nqx,nwfcm,nsp) )
+
+  CALL using_indv_ijkb0(2)
+  CALL using_deeq(2)
+  IF (noncolin) CALL using_deeq_nc(2)
+  CALL using_qq_at(2)
+  IF (lspinorb) CALL using_qq_so(2)
+  ! us module
+  CALL using_tab(2)
+  CALL using_tab_at(2)
+  IF (lmaxq > 0) CALL using_qrad(2)
+  IF (spline_ps) CALL using_tab_d2y(2)
   !
   RETURN
   !

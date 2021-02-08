@@ -58,14 +58,13 @@ set(sources
     addusddenseq.f90)
 
 qe_add_library(qe_lr_modules ${sources})
-add_library(QE::LR_Modules ALIAS qe_lr_modules)
 target_link_libraries(qe_lr_modules
     PRIVATE
-        QE::Modules
-        QE::PW
-        QE::UPF
-        QE::UTILX
-        QE::FFTX)
+        qe_modules
+        qe_pw
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 

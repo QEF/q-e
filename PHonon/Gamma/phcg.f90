@@ -421,21 +421,23 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
+  USE xc_lib,    ONLY : xclib_set_threshold
   USE cgcom
   !
   IMPLICIT NONE
   !
   INTEGER :: i, j
   REAL(DP), DIMENSION(3,3) :: chi(3,3)
-  REAL(DP), DIMENSION(dfftp%nnr) ::  rhotot, sign_r
+  REAL(DP), DIMENSION(dfftp%nnr,1) ::  rhotot, sign_r
   !
   CALL newscf
   !
   !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  rhotot(:) = rho%of_r(:,1) + rho_core(:)
+  rhotot(:,1) = rho%of_r(:,1) + rho_core(:)
   !
-  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
+  CALL xclib_set_threshold( 'lda', 1.E-10_DP )
+  CALL dmxc( dfftp%nnr, 1, rhotot, dmuxc )
   !
   !
   !  re-initialize data needed for gradient corrections

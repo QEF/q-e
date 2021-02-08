@@ -1195,6 +1195,8 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
   USE spin_orb,           ONLY : lspinorb
   USE constants,          ONLY : rytoev
   !
+  USE wvfct_gpum,         ONLY: using_et
+  !
   IMPLICIT NONE
   !
   LOGICAL :: kresolveddos
@@ -1217,6 +1219,7 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
      nspin1 = 1
   ENDIF
   !
+  CALL using_et(0)
   DO ns = 1, nspin1
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin

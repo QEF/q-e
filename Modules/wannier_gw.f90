@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+! Modified by Joshua Elliott November 2020 as JDE
+!
 !--------------------------------------------------------------------------
 !
 MODULE wannier_gw
@@ -205,7 +208,13 @@ MODULE wannier_gw
   INTEGER :: len_head_block_freq!length of blocks on frequency
   INTEGER :: len_head_block_wfc!length of blocks on unperturbed occupied wfcs 
 
-  
+! JDE
+  LOGICAL :: l_no_GW_just_screening   ! When true use strategy to compute screening via iterative minimization
+  LOGICAL :: l_no_GW_bare_coulomb     ! When true only do not compute correlation part of W for just_screening
+  INTEGER :: no_GW_cg_maxit           ! Maximum number of conj. grad. steps in calculation of (1-vP) operator
+  REAL(KIND=DP) :: no_GW_cg_threshold ! Convergence threshold for conj. grad. calculation of (1-vP) operator
+  COMPLEX(KIND=DP), ALLOCATABLE :: ewvc(:,:,:)
+! JDE  
 
   INTERFACE free_memory
 

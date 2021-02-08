@@ -13,7 +13,6 @@ additional_kpoints.o \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
-beef_interface.o \
 bfgs_module.o \
 bspline.o \
 bz_form.o \
@@ -24,18 +23,10 @@ compute_dipole.o \
 constants.o \
 constraints_module.o \
 control_flags.o \
-correlation_lda_lsda.o \
-correlation_gga.o \
 coulomb_vcut.o \
-dgcxc_drivers.o \
 dist.o \
-dmxc_drivers.o \
-dgcxc_drivers.o \
 electrons_base.o \
 environment.o \
-exchange_lda_lsda.o \
-exchange_gga.o \
-fcp_variables.o \
 fd_gradient.o \
 fft_base.o \
 fft_rho.o \
@@ -79,23 +70,21 @@ recvec.o \
 recvec_subs.o \
 run_info.o \
 space_group.o \
+set_para_diag.o \
 set_signal.o \
 set_vdw_corr.o \
 setqf.o \
 timestep.o\
 tsvdw.o\
+mbdlib.o\
 version.o \
 wannier_gw.o\
 wannier_new.o \
-wave_base.o \
 wavefunctions.o \
 wrappers.o\
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
-xc_lda_lsda_drivers.o \
-xc_gga_drivers.o \
-xc_mgga_drivers.o \
 io_base.o \
 qes_types_module.o \
 qes_libs_module.o  \
@@ -122,19 +111,15 @@ zvscal.o
 OBJS = \
 atom_weight.o \
 capital.o \
-correlation_gga.o \
 cryst_to_car.o \
 erf.o \
-exchange_gga.o \
 expint.o \
 generate_k_along_lines.o \
-more_functionals.o \
 has_xml.o \
 inpfile.o \
 int_to_char.o \
 latgen.o \
 linpack.o \
-metagga.o \
 matches.o \
 plot_io.o \
 radial_gradients.o \
@@ -156,7 +141,18 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libfox libutil libla libfft
+# GPU versions of modules
+MODULES += \
+  wavefunctions_gpu.o \
+  recvec_gpu.o \
+  becmod_gpu.o \
+  becmod_subs_gpu.o \
+  cuda_subroutines.o \
+  dylmr2_gpu.o \
+  random_numbers_gpu.o \
+  sph_bes_gpu.o
+
+TLDEPS= libfox libutil libla libfft librxc
 
 all : libqemod.a
 

@@ -22,7 +22,7 @@ MODULE io_files
   !
   SAVE
   PUBLIC :: create_directory, check_tempdir, clean_tempdir, check_file_exist, &
-       delete_if_present, check_writable, restart_dir, xmlfile, check_restartfile
+       delete_if_present, check_writable, restart_dir, xmlfile
   !
   ! ... directory for all temporary files
   CHARACTER(len=256) :: tmp_dir = './'
@@ -57,7 +57,7 @@ MODULE io_files
   CHARACTER(LEN=256) :: output_drho= ' '
   !
   CHARACTER(LEN=5 ), PARAMETER :: crash_file  = 'CRASH'
-  CHARACTER (LEN=261) :: exit_file = 'os.EXIT' ! file required for a soft exit  
+  CHARACTER (LEN=320) :: exit_file = 'os.EXIT' ! file required for a soft exit  
   !
   CHARACTER (LEN=20), PARAMETER :: xmlpun_schema = 'data-file-schema.xml'
   !
@@ -79,8 +79,6 @@ MODULE io_files
   ! NEB
   INTEGER :: iunnewimage = 28 ! unit for parallelization among images
   INTEGER :: iunlock     = 29 ! as above (locking file)
-  !
-  INTEGER :: iunbfgs     = 30 ! unit for the bfgs restart file
   !
   INTEGER :: iuntmp      = 90 ! temporary unit, when used must be closed ASAP
   !
@@ -167,7 +165,6 @@ CONTAINS
     LOGICAL, INTENT(out)         :: exst, pfs
     !
     INTEGER             :: ios, image, proc, nofi, length
-    CHARACTER (len=256) :: file_path, filename
     CHARACTER(len=6), EXTERNAL :: int_to_char
     !
     ! ... create tmp_dir on ionode
@@ -209,7 +206,7 @@ CONTAINS
     !
     CHARACTER(len=*), INTENT(in) :: tmp_dir
     !
-    CHARACTER (len=256) :: file_path, filename
+    CHARACTER (len=256) :: file_path
     !
     ! ... remove temporary files from tmp_dir ( only by the master node )
     !
@@ -252,14 +249,14 @@ CONTAINS
   SUBROUTINE delete_if_present(filename, para)
   !--------------------------------------------------------------------------
   !!
-  !! Same as the delete_if_present subroutine but allows for other cores to 
-  !! enters (SP - Jan 2020). Ideally, both could be merged. 
+  !! As the name says - if para is present and para=.true., filename is
+  !! deleted by all cores; otherwise, on ionode only (SP - Jan 2020)
   !!  
   !
   IMPLICIT NONE
   !
   CHARACTER(len = *), INTENT(in) :: filename
-  !! Name of the file 
+  !! Name of the file to be deleted
   LOGICAL, OPTIONAL, INTENT(in) :: para
   !! Optionally, the remove can be done by all the cores. 
   ! 
@@ -267,9 +264,7 @@ CONTAINS
   LOGICAL :: exst
   !! Check if the file exist
   INTEGER :: iunit
-  !! UNit of the file 
-  INTEGER, EXTERNAL :: find_free_unit
-  !! Find a unallocated unit
+  !! Unit of the file 
   ! 
   IF (PRESENT(para)) THEN
     IF (.NOT. para) THEN
@@ -283,9 +278,7 @@ CONTAINS
   !
   IF (exst) THEN
     !
-    iunit = find_free_unit()
-    !
-    OPEN(UNIT = iunit, FILE = filename, STATUS = 'OLD')
+    OPEN(NEWUNIT = iunit, FILE = filename, STATUS = 'OLD')
     CLOSE(UNIT = iunit, STATUS = 'DELETE')
     !
     WRITE(UNIT = stdout, FMT = '(/,5X,"File ", A, " deleted, as requested")') TRIM(filename)
@@ -368,35 +361,7 @@ CONTAINS
     !
     RETURN
     !
-    END FUNCTION xmlfile
-    !
-    !------------------------------------------------------------------------
-    FUNCTION check_restartfile( ndr )
-      !------------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL                      :: check_restartfile
-      INTEGER, INTENT(IN), OPTIONAL:: ndr
-      CHARACTER(LEN=320)           :: filename
-      LOGICAL                      :: lval
-      !
-      !
-      filename = xmlfile( ndr )
-      !
-      IF ( ionode ) THEN
-         !
-         INQUIRE( FILE = TRIM( filename ), EXIST = lval )
-         !
-      END IF
-      !
-      CALL mp_bcast( lval, ionode_id, intra_image_comm )
-      !
-      check_restartfile = lval
-      !
-      RETURN
-      !
-    END FUNCTION check_restartfile
+  END FUNCTION xmlfile
 !
 !-----------------------------------------------------------------------
 subroutine diropn (unit, extension, recl, exst, tmp_dir_)
@@ -425,7 +390,7 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !
   !    local variables
   !
-  character(len=256) :: tempfile, filename
+  character(len=320) :: tempfile
   ! complete file name
   real(dp):: dummy
   integer*8 :: unf_recl
@@ -446,11 +411,10 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !    then we check the filename extension
   !
   if (extension == ' ') call errore ('diropn','filename extension not given',2)
-  filename = trim(prefix) // "." // trim(extension)
   if (present(tmp_dir_)) then
-     tempfile = trim(tmp_dir_) // trim(filename) //nd_nmbr
+     tempfile = trim(tmp_dir_)// trim(prefix) //"."// trim(extension)//nd_nmbr
   else
-     tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+     tempfile = trim(tmp_dir) // trim(prefix) //"."// trim(extension)//nd_nmbr
   endif
 
   inquire (file = tempfile, exist = exst)

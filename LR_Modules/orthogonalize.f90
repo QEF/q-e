@@ -37,7 +37,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   USE uspp,             ONLY : vkb, okvan
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
   USE mp,               ONLY : mp_sum
-  USE funct,            ONLY : exx_is_active
+  USE xc_lib,           ONLY : exx_is_active
   USE control_flags,    ONLY : gamma_only
   USE gvect,            ONLY : gstart
   USE control_lr,       ONLY : alpha_pv, nbnd_occ

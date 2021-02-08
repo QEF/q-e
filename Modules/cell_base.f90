@@ -686,14 +686,27 @@
      ! set constraints on cell dynamics/optimization
 
      CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
+     CHARACTER(LEN=80) :: cell_dofree_
+     
+     IF(cell_dofree(1:5) == 'ibrav') THEN
+       iforceh = 1
+       enforce_ibrav = .true.
+       IF(cell_dofree(6:6)=="+")THEN
+         cell_dofree_ = cell_dofree(7:)
+       ELSE
+         cell_dofree_="default"
+       ENDIF
+     ELSE
+       cell_dofree_ = cell_dofree
+     ENDIF
 
-     SELECT CASE ( TRIM( cell_dofree ) )
+     SELECT CASE ( TRIM( cell_dofree_ ) )
 
-            CASE ( 'all', 'default' )
+            CASE ( 'all', 'default', '' )
               iforceh = 1
-            CASE ( 'ibrav')
-              iforceh = 1
-              enforce_ibrav = .true.
+            !CASE ( 'ibrav')
+            !  iforceh = 1
+            !  enforce_ibrav = .true.
             CASE ( 'shape' )
               iforceh = 1
               fix_volume = .true.

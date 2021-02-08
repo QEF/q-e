@@ -28,17 +28,19 @@ SUBROUTINE from_restart( )
    USE gvect,    ONLY : mill, eigts1, eigts2, eigts3 
    USE printout_base,         ONLY : printout_pos
    USE gvecw,                 ONLY : ngw
-   USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec_bgrp, caldbec_bgrp
+   USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec, caldbec_bgrp
    USE energies,              ONLY : eself, dft_energy_type
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
    USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
+   USE uspp_gpum,             ONLY : vkb_d
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
-                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc
+                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc, iabox, nabox
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp, dffts
    USE matrix_inversion
+   USE device_memcpy_m,         ONLY : dev_memcpy
    !
    IMPLICIT NONE
 
@@ -153,7 +155,7 @@ SUBROUTINE from_restart( )
    ! ... to starting cell (from ndr or again standard input)
    !
    IF ( okvan .or. nlcc_any ) THEN
-      CALL initbox( tau0, alat, at, ainv, taub, irb )
+      CALL initbox( tau0, alat, at, ainv, taub, irb, iabox, nabox )
       CALL phbox( taub, iverbosity, eigrb )
    END IF
    !
@@ -162,6 +164,9 @@ SUBROUTINE from_restart( )
    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
    !
    CALL prefor( eigr, vkb )
+#if defined(__CUDA)
+   CALL dev_memcpy( vkb_d, vkb )
+#endif
    !
    CALL formf( .TRUE. , eself )
    !
@@ -187,7 +192,7 @@ SUBROUTINE from_restart( )
       !
    END IF
    !
-   CALL calbec_bgrp( 1, nsp, eigr, c0_bgrp, bec_bgrp )
+   CALL calbec( nbsp_bgrp, vkb, c0_bgrp, bec_bgrp, 0 )
    !
    IF ( tpre     ) CALL caldbec_bgrp( eigr, c0_bgrp, dbec, idesc )
    !

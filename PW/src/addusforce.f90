@@ -55,6 +55,8 @@ SUBROUTINE addusforce_g( forcenl )
   USE control_flags,      ONLY : gamma_only
   USE fft_interfaces,     ONLY : fwfft
   !
+  USE uspp_gpum,     ONLY : using_becsum
+  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(INOUT) :: forcenl (3, nat)
@@ -114,6 +116,9 @@ SUBROUTINE addusforce_g( forcenl )
   DO ig = 1, ngm_l
      qmod(ig) = SQRT( gg(ngm_s+ig-1) )*tpiba
   ENDDO
+  !
+  ! Sync if needed
+  CALL using_becsum(0)
   !
   DO nt = 1, ntyp
      IF ( upf(nt)%tvanp ) THEN

@@ -397,6 +397,58 @@ SUBROUTINE cutoff_stres_evloc( psic_G, strf, evloc )
   !
 END SUBROUTINE cutoff_stres_evloc
 !
+!----------------------------------------------------------------------
+SUBROUTINE cutoff_stres_evloc_gpu( psicG_d, strf_d, evloc )
+  !----------------------------------------------------------------------
+  !! cutoff_stres_evloc - gpu version
+  !
+  USE kinds
+  USE ions_base,  ONLY : ntyp => nsp
+  !USE vlocal,     ONLY : strf
+  USE gvect,      ONLY : ngm , gstart
+  USE io_global,  ONLY : stdout
+  USE fft_base,   ONLY : dfftp
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN) :: psicG_d(dfftp%nnr)
+  !! charge density in G space
+  COMPLEX(DP), INTENT(IN) :: strf_d(ngm,ntyp)
+  REAL(DP), INTENT(INOUT) :: evloc
+  !! the energy of the electrons in the local ionic potential
+  !
+  ! ... local variables
+  !
+  REAL(DP), ALLOCATABLE :: lrVloc_d(:,:)
+  INTEGER, POINTER :: nl_d(:)
+  INTEGER :: ng, nt
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: psicG_d, strf_d, nl_d, lrVloc_d
+#endif  
+  !
+  nl_d => dfftp%nl_d
+  !
+  ALLOCATE( lrVloc_d(ngm,ntyp) )
+  lrVloc_d = lr_Vloc
+  !
+  ! If gstart=2, it means g(1) is G=0, but we have nothing to add for G=0
+  ! So we start at gstart.
+  !
+  !$cuf kernel do (2)
+  DO nt = 1, ntyp
+     DO ng = gstart, ngm
+        evloc = evloc + DBLE( CONJG(psicG_d(nl_d(ng))) * strf_d(ng,nt) ) &
+                        * lrVloc_d(ng,nt) 
+     ENDDO
+  ENDDO
+  !
+  DEALLOCATE( lrVloc_d )
+  !
+  RETURN
+  !
+END SUBROUTINE cutoff_stres_evloc_gpu
+!
 !
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmaloc( psic_G, strf, sigmaloc )
@@ -445,7 +497,7 @@ SUBROUTINE cutoff_stres_sigmaloc( psic_G, strf, sigmaloc )
         ! with respect to G
         DO l = 1, 3
            IF (l == 3) THEN
-              dlr_Vloc = - 1.0d0/ (gg(ng)*tpiba2) * lr_Vloc(ng,nt)  &
+              dlr_Vloc = - 1.0d0/(gg(ng)*tpiba2) * lr_Vloc(ng,nt)  &
                                * (1.0d0+ gg(ng)*tpiba2/4.0d0)
            ELSE
               dlr_Vloc = - 1.0d0/ (gg(ng)*tpiba2) * lr_Vloc(ng,nt)  &
@@ -465,6 +517,104 @@ SUBROUTINE cutoff_stres_sigmaloc( psic_G, strf, sigmaloc )
   RETURN
   !
 END SUBROUTINE cutoff_stres_sigmaloc
+!
+!
+!----------------------------------------------------------------------
+SUBROUTINE cutoff_stres_sigmaloc_gpu( psicG_d, strf_d, sigmaloc )
+  !----------------------------------------------------------------------
+  !! This subroutine adds the contribution from the cutoff long-range part 
+  !! of the local part of the ionic potential to the rest of the 
+  !! \(\text{sigmaloc}\). That is, the rest of Eq. (63) of PRB 96, 075448.
+  !
+  USE kinds
+  USE ions_base,   ONLY : ntyp => nsp
+  USE vlocal,      ONLY : strf
+  USE constants,   ONLY : eps8
+  USE gvect,       ONLY : ngm, gstart !, g, gg
+  USE gvect_gpum,  ONLY : g_d, gg_d
+  USE cell_base,   ONLY : tpiba, tpiba2, alat, omega
+  USE io_global,   ONLY : stdout
+  USE fft_base,    ONLY : dfftp
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN) :: psicG_d(dfftp%nnr)
+  !! charge density in G space
+  COMPLEX(DP), INTENT(IN) :: strf_d(ngm,ntyp)
+  REAL(DP), INTENT(INOUT) :: sigmaloc(3,3)
+  !! stress contribution for the local ionic potential
+  !
+  ! ... local variables
+  !
+  INTEGER :: ng, nt, l, m
+  INTEGER,  POINTER :: nl_d(:)
+  REAL(DP), ALLOCATABLE :: lrVloc_d(:,:), cutoff2D_d(:)
+  REAL(DP) :: Gp, G2lzo2Gp, beta, dlr_Vloc1, dlr_Vloc2, dlr_Vloc3, &
+              no_lm_dep
+  REAL(DP) :: sigmaloc11, sigmaloc31, sigmaloc21, sigmaloc32, &
+              sigmaloc22, sigmaloc33
+#if defined(__CUDA)
+  attributes(DEVICE) :: psicG_d, strf_d, nl_d, lrVloc_d, cutoff2D_d
+#endif
+  !
+  nl_d => dfftp%nl_d
+  !
+  ALLOCATE( lrVloc_d(ngm,ntyp), cutoff2D_d(ngm) )
+  lrVloc_d   = lr_Vloc
+  cutoff2D_d = cutoff_2D
+  !
+  sigmaloc11 = 0._DP  ;  sigmaloc31 = 0._DP
+  sigmaloc21 = 0._DP  ;  sigmaloc32 = 0._DP
+  sigmaloc22 = 0._DP  ;  sigmaloc33 = 0._DP
+  !
+  ! no G=0 contribution
+  !
+  !$cuf kernel do (2) <<<*,*>>>
+  DO nt = 1, ntyp
+     DO ng = gstart, ngm
+        !
+        Gp = SQRT( g_d(1,ng)**2 + g_d(2,ng)**2 )*tpiba
+        ! below is a somewhat cumbersome way to define beta of Eq. (61) of PRB 96, 075448
+        IF (Gp < eps8) THEN
+           ! G^2*lz/2|Gp|
+           G2lzo2Gp = 0._DP
+           beta = 0._DP
+        ELSE
+           G2lzo2Gp = gg_d(ng)*tpiba2*lz/2._DP/Gp
+           beta = G2lzo2Gp*(1._DP-cutoff2D_d(ng))/cutoff2D_d(ng)
+        ENDIF
+        ! dlrVloc corresponds to the derivative of the long-range local ionic potential
+        ! with respect to G
+        dlr_Vloc1 = - 1._DP/ (gg_d(ng)*tpiba2) * lrVloc_d(ng,nt)  &
+                               * (1._DP- beta + gg_d(ng)*tpiba2/4._DP)
+        dlr_Vloc2 = - 1._DP/ (gg_d(ng)*tpiba2) * lrVloc_d(ng,nt)  &
+                               * (1._DP- beta + gg_d(ng)*tpiba2/4._DP)
+        dlr_Vloc3 = - 1._DP/ (gg_d(ng)*tpiba2) * lrVloc_d(ng,nt)  &
+                               * (1._DP+ gg_d(ng)*tpiba2/4._DP)
+        no_lm_dep = DBLE( CONJG( psicG_d(nl_d(ng) ) ) &
+                              * strf_d(ng,nt) ) * 2._DP * tpiba2
+        sigmaloc11 = sigmaloc11 + no_lm_dep * dlr_Vloc1 * g_d(1,ng) * g_d(1,ng)
+        sigmaloc21 = sigmaloc21 + no_lm_dep * dlr_Vloc2 * g_d(2,ng) * g_d(1,ng)
+        sigmaloc22 = sigmaloc22 + no_lm_dep * dlr_Vloc2 * g_d(2,ng) * g_d(2,ng)
+        sigmaloc31 = sigmaloc31 + no_lm_dep * dlr_Vloc3 * g_d(3,ng) * g_d(1,ng)
+        sigmaloc32 = sigmaloc32 + no_lm_dep * dlr_Vloc3 * g_d(3,ng) * g_d(2,ng)
+        sigmaloc33 = sigmaloc33 + no_lm_dep * dlr_Vloc3 * g_d(3,ng) * g_d(3,ng)
+        !
+     ENDDO
+  ENDDO
+  !
+  sigmaloc(1,1) = sigmaloc(1,1) + sigmaloc11
+  sigmaloc(2,1) = sigmaloc(2,1) + sigmaloc21
+  sigmaloc(2,2) = sigmaloc(2,2) + sigmaloc22
+  sigmaloc(3,1) = sigmaloc(3,1) + sigmaloc31
+  sigmaloc(3,2) = sigmaloc(3,2) + sigmaloc32
+  sigmaloc(3,3) = sigmaloc(3,3) + sigmaloc33
+  !
+  DEALLOCATE( lrVloc_d, cutoff2D_d )
+  !
+  RETURN
+  !
+END SUBROUTINE cutoff_stres_sigmaloc_gpu
 !
 !
 !----------------------------------------------------------------------
@@ -523,6 +673,97 @@ END SUBROUTINE cutoff_stres_sigmahar
 !
 !
 !----------------------------------------------------------------------
+SUBROUTINE cutoff_stres_sigmahar_gpu( psicG_d, sigmahar )
+  !----------------------------------------------------------------------
+  !! This subroutine cuts off the Hartree part of the stress.  
+  !! See Eq. (62) of PRB 96, 075448.
+  !
+  USE kinds
+  USE gvect,      ONLY: ngm, gstart
+  USE constants,  ONLY: eps8
+  USE cell_base,  ONLY: tpiba2, alat, tpiba
+  USE io_global,  ONLY: stdout
+  USE fft_base,   ONLY: dfftp
+  USE gvect_gpum, ONLY: g_d, gg_d
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN) :: psicG_d(dfftp%nnr)
+  !! charge density in G-space
+  REAL(DP), INTENT(INOUT) :: sigmahar(3,3)
+  !! hartree contribution to stress
+  !
+  ! ... local variables
+  !
+  INTEGER :: ng, nt, l, m
+  INTEGER, POINTER :: nl_d(:)
+  REAL(DP) :: Gp, G2lzo2Gp, beta, shart, g2, fact
+  REAL(DP) :: sigmahar11, sigmahar31, sigmahar21, &
+              sigmahar32, sigmahar22, sigmahar33
+  REAL(DP), ALLOCATABLE :: cutoff2D_d(:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: psicG_d, cutoff2D_d, nl_d
+#endif
+  !
+  ALLOCATE( cutoff2D_d(ngm) )
+  cutoff2D_d = cutoff_2D
+  !
+  nl_d => dfftp%nl_d
+  !
+  sigmahar11 = 0._DP  ;  sigmahar31 = 0._DP
+  sigmahar21 = 0._DP  ;  sigmahar32 = 0._DP
+  sigmahar22 = 0._DP  ;  sigmahar33 = 0._DP
+  !
+  !$cuf kernel do (1) <<<*,*>>>
+  DO ng = gstart, ngm
+     Gp = SQRT(g_d(1,ng)**2 + g_d(2,ng)**2)*tpiba
+     IF (Gp < eps8) THEN
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
+     ELSE
+        G2lzo2Gp = gg_d(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff2D_d(ng))/cutoff2D_d(ng)
+     ENDIF
+     !
+     g2 = gg_d(ng) * tpiba2
+     !
+     shart = DBLE(psicG_d(nl_d(ng))*CONJG(psicG_d(nl_d(ng)))) /&
+             g2 * cutoff2D_d(ng)
+     !
+     fact = 1._DP - beta
+     !
+     sigmahar11 = sigmahar11 + shart *tpiba2*2._DP * &
+                               g_d(1,ng) * g_d(1,ng) / g2 * fact
+     sigmahar21 = sigmahar21 + shart *tpiba2*2._DP * &
+                               g_d(2,ng) * g_d(1,ng) / g2 * fact
+     sigmahar22 = sigmahar22 + shart *tpiba2*2._DP * &
+                               g_d(2,ng) * g_d(2,ng) / g2 * fact
+     sigmahar31 = sigmahar31 + shart *tpiba2*2._DP * &
+                               g_d(3,ng) * g_d(1,ng) / g2
+     sigmahar32 = sigmahar32 + shart *tpiba2*2._DP * &
+                               g_d(3,ng) * g_d(2,ng) / g2
+     sigmahar33 = sigmahar33 + shart *tpiba2*2._DP * &
+                               g_d(3,ng) * g_d(3,ng) / g2
+     !
+  ENDDO   
+  !
+  sigmahar(1,1) = sigmahar(1,1) + sigmahar11
+  sigmahar(2,1) = sigmahar(2,1) + sigmahar21
+  sigmahar(2,2) = sigmahar(2,2) + sigmahar22
+  sigmahar(3,1) = sigmahar(3,1) + sigmahar31
+  sigmahar(3,2) = sigmahar(3,2) + sigmahar32
+  sigmahar(3,3) = sigmahar(3,3) + sigmahar33
+  !sigma is multiplied by 0.5*fpi*e2 after
+  !
+  DEALLOCATE( cutoff2D_d )
+  !
+  RETURN
+  !
+END SUBROUTINE cutoff_stres_sigmahar_gpu
+!
+!
+!----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !----------------------------------------------------------------------
   !! This subroutine cuts off the Ewald part of the stress.  
@@ -559,19 +800,19 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   ! sdewald is the last term in equation B1 of PRB 32 3792.
   ! See also similar comment for ewaldg in cutoff_ewald routine
   !
-  sdewald = 0.0D0
+  sdewald = 0._DP
   DO ng = gstart, ngm
      Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
      IF (Gp < eps8) THEN
-        G2lzo2Gp = 0.0d0
-        beta = 0.0d0
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
      ELSE
-        G2lzo2Gp = gg(ng)*tpiba2*lz/2.0d0/Gp
-        beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
+        G2lzo2Gp = gg(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff_2D(ng))/cutoff_2D(ng)
      ENDIF
      g2 = gg(ng) * tpiba2
-     g2a = g2 / 4.d0 / alpha
-     rhostar = (0.d0, 0.d0)
+     g2a = g2 / 4._DP / alpha
+     rhostar = (0._DP,0._DP)
      DO na = 1, nat
         arg = (g(1,ng) * tau(1,na) + g(2,ng) * tau(2,na) + &
                g(3,ng) * tau(3,na) ) * tpi
@@ -602,5 +843,117 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !
 END SUBROUTINE cutoff_stres_sigmaewa
 !
+!----------------------------------------------------------------------
+SUBROUTINE cutoff_stres_sigmaewa_gpu( alpha, sdewald, sigmaewa )
+  !----------------------------------------------------------------------
+  !! This subroutine cuts off the Ewald part of the stress.  
+  !! See Eq. (64) in PRB 96 075448
+  !
+  USE kinds
+  USE ions_base,   ONLY : nat, zv, tau, ityp
+  USE constants,   ONLY : e2, eps8
+  USE gvect,       ONLY : ngm, gstart
+  USE cell_base,   ONLY : tpiba2, alat, omega, tpiba
+  USE io_global,   ONLY : stdout
+  !
+  USE gvect_gpum,  ONLY : g_d, gg_d
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: alpha
+  !! tuning param for LR/SR separation
+  REAL(DP), INTENT(INOUT) :: sigmaewa(3,3)
+  !! ewald contribution to stress
+  REAL(DP), INTENT(INOUT) :: sdewald
+  !! constant and diagonal terms
+  !
+  ! ... local variables
+  !
+  INTEGER :: ng, na, l, m, ntyp
+  REAL(DP) :: Gp, G2lzo2Gp, beta, sewald, g2, g2a, arg, fact
+  REAL(DP) :: sigma11, sigma21, sigma22, sigma31, sigma32, sigma33
+  COMPLEX(DP) :: rhostar
+  !
+  INTEGER , ALLOCATABLE :: ityp_d(:)
+  REAL(DP), ALLOCATABLE :: cutoff2D_d(:), tau_d(:,:), zv_d(:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: cutoff2D_d, tau_d, zv_d, ityp_d
+#endif
+  !
+  ntyp = SIZE(zv)
+  ALLOCATE( cutoff2D_d(ngm), tau_d(3,nat), zv_d(ntyp) )
+  ALLOCATE( ityp_d(nat) )
+  cutoff2D_d = cutoff_2D
+  tau_d = tau
+  zv_d = zv
+  ityp_d = ityp
+  ! g(1) is a problem if it's G=0, because we divide by G^2. 
+  ! So start at gstart.
+  ! fact=1.0d0, gamma_only not implemented
+  ! G=0 componenent of the long-range part of the local part of the 
+  ! pseudopotminus the Hartree potential is set to 0.
+  ! in other words, sdewald=0.  
+  ! sdewald is the last term in equation B1 of PRB 32 3792.
+  ! See also similar comment for ewaldg in cutoff_ewald routine
+  !
+  sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
+  sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
+  !
+  sdewald = 0._DP
+  !
+  !$cuf kernel do (1) <<<*,*>>>
+  DO ng = gstart, ngm
+     Gp = SQRT( g_d(1,ng)**2 + g_d(2,ng)**2 )*tpiba
+     IF (Gp < eps8) THEN
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
+     ELSE
+        G2lzo2Gp = gg_d(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff2D_d(ng))/cutoff2D_d(ng)
+     ENDIF
+     g2 = gg_d(ng) * tpiba2
+     g2a = g2 / 4._DP / alpha
+     rhostar = (0._DP,0._DP)
+     DO na = 1, nat
+        arg = (g_d(1,ng) * tau_d(1,na) + g_d(2,ng) * tau_d(2,na) + &
+               g_d(3,ng) * tau_d(3,na) ) * tpi
+        rhostar = rhostar + CMPLX(zv_d(ityp_d(na))) * CMPLX(COS(arg),SIN(arg),KIND=DP)
+     ENDDO
+     rhostar = rhostar / CMPLX(omega)
+     sewald = tpi * e2 * EXP(-g2a) / g2* cutoff2D_d(ng) * ABS(rhostar)**2
+     ! ... sewald is an other diagonal term that is similar to the diagonal terms 
+     ! in the other stress contributions. It basically gives a term prop to 
+     ! the ewald energy
+     !
+     sdewald = sdewald - sewald
+     sigma11 = sigma11 + sewald * tpiba2 * 2._DP * &
+                 g_d(1,ng) * g_d(1,ng) / g2 * (1._DP+g2a-beta)
+     sigma21 = sigma21 + sewald * tpiba2 * 2._DP * &
+                 g_d(2,ng) * g_d(1,ng) / g2 * (1._DP+g2a-beta)          
+     sigma22 = sigma22 + sewald * tpiba2 * 2._DP * &
+                 g_d(2,ng) * g_d(2,ng) / g2 * (1._DP+g2a-beta)         
+     sigma31 = sigma31 + sewald * tpiba2 * 2._DP * &
+                 g_d(3,ng) * g_d(1,ng) / g2 * (g2a+1._DP)          
+     sigma32 = sigma32 + sewald * tpiba2 * 2._DP * &
+                 g_d(3,ng) * g_d(2,ng) / g2 * (g2a+1._DP)          
+     sigma33 = sigma33 + sewald * tpiba2 * 2._DP * &
+                 g_d(3,ng) * g_d(3,ng) / g2 * (g2a+1._DP)
+     !
+  ENDDO
+  !
+  sigmaewa(1,1) = sigmaewa(1,1) + sigma11
+  sigmaewa(2,1) = sigmaewa(2,1) + sigma21
+  sigmaewa(2,2) = sigmaewa(2,2) + sigma22
+  sigmaewa(3,1) = sigmaewa(3,1) + sigma31
+  sigmaewa(3,2) = sigmaewa(3,2) + sigma32
+  sigmaewa(3,3) = sigmaewa(3,3) + sigma33
+  !
+  DEALLOCATE( cutoff2D_d, tau_d, zv_d )
+  DEALLOCATE( ityp_d )
+  !
+  RETURN
+  !
+END SUBROUTINE cutoff_stres_sigmaewa_gpu
 !
 END MODULE Coul_cut_2D

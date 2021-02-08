@@ -43,6 +43,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE becmod,               ONLY: calbec,bec_type,allocate_bec_type,deallocate_bec_type
    USE spin_orb,             ONLY: lspinorb
    !
+   USE uspp_gpum, ONLY : using_vkb
    IMPLICIT NONE
    !
    REAL(DP), INTENT(OUT) :: el_pola
@@ -404,6 +405,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                igk0(:)= igk_k(:,ik)
                CALL get_buffer( psi,nwordwfc,iunwfc,nx_el(kpoint-1,pdir) )
                IF (okvan) THEN
+                  CALL using_vkb(1)
                   CALL init_us_2( npw0,igk0,xk(1,nx_el(kpoint-1,pdir)),vkb )
                   CALL calbec( npw0, vkb, psi, becp0)
                ENDIF
@@ -416,6 +418,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                   igk1(:)= igk_k(:,ik)
                   CALL get_buffer( psi1,nwordwfc,iunwfc,nx_el(kpoint,pdir) )
                   IF (okvan) THEN
+                     CALL using_vkb(1)
                      CALL init_us_2( npw1,igk1,xk(1,nx_el(kpoint,pdir)),vkb )
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                   ENDIF
@@ -426,6 +429,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                   igk1(:)= igk_k(:,ik)
                   CALL get_buffer( psi1,nwordwfc,iunwfc,nx_el(kstart,pdir) )
                   IF (okvan) THEN
+                     CALL using_vkb(1)
                      CALL init_us_2( npw1,igk1,xk(1,nx_el(kstart,pdir)),vkb )
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                   ENDIF

@@ -2,10 +2,13 @@
 
 include ../make.inc
 
-MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG)../EIGENSOLVER_GPU/lib_eigsolve $(MOD_FLAG). 
+
+EXTLIBS=$(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(MPI_LIBS)
+
 
 LAX = la_types.o \
 la_error.o \
+la_module.o \
 la_helper.o \
 cdiaghg.o \
 rdiaghg.o \
@@ -26,7 +29,7 @@ libqela.a:  $(LAX)
 	$(RANLIB) $@    
 
 la_test.x : test.o libqela.a 
-	$(LD) $(LDFLAGS) -o la_test.x test.o libqela.a $(QELIBS)
+	$(LD) $(LDFLAGS) -o la_test.x test.o libqela.a $(EXTLIBS)
 
 TEST : la_test.x
 

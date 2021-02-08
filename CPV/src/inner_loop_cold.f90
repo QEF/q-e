@@ -7,7 +7,7 @@
 !
 !
 !====================================================================
-   SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+   SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
                           sfac, c0, bec, dbec, firstiter, vpot )
 !====================================================================
@@ -109,7 +109,7 @@
 
         ! calculates the overlaps bec between the wavefunctions c0
         ! and the beta functions
-        CALL calbec( 1, nsp, eigr, c0, bec )
+        CALL calbec( n, betae, c0, bec )
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      
@@ -119,7 +119,7 @@
         ! calculates the electronic charge density
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                      rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-        IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+        IF(nlcc_any) CALL set_cc( rhoc )
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
@@ -141,7 +141,7 @@
       ! the augmentation charges and the 
       ! corresponding contribution to the ionic force
        
-         CALL newd( vpot, irb, eigrb, rhovan, fion2 )
+         CALL newd( vpot, rhovan, fion2, .true. )
 
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0
@@ -260,7 +260,7 @@
         ! calculates the electronic charge density
          CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                      rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+         IF(nlcc_any) CALL set_cc( rhoc )
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
@@ -409,7 +409,7 @@
       ! calculates the electronic charge density
       CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                    rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-      IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+      IF(nlcc_any) CALL set_cc( rhoc )
   
       ! calculates the SCF potential, the total energy
       ! and the ionic forces

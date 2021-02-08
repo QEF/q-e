@@ -23,6 +23,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   USE uspp_param,      ONLY: nh, nhm
   USE becmod,          ONLY: bec_type, becp
   !
+  USE uspp_gpum,     ONLY : using_vkb, using_indv_ijkb0, using_deeq, using_deeq_nc
+  USE becmod_subs_gpum, ONLY : using_becp_auto
+  !
   IMPLICIT NONE
   !
   ! ... I/O variables
@@ -43,6 +46,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !
   !
   CALL start_clock( 'add_vuspsi' )  
+  CALL using_becp_auto(0)
   !
   IF ( gamma_only ) THEN
      !
@@ -79,6 +83,10 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
        !
        IF ( nkb == 0 ) RETURN
+       !
+       CALL using_vkb(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq(0)
        !
        IF ( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -184,6 +192,10 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
+       CALL using_vkb(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq(0)
+       !
        ALLOCATE( ps(nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
@@ -232,6 +244,10 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        INTEGER :: ierr, ijkb0
        !
        IF ( nkb == 0 ) RETURN
+       !
+       CALL using_vkb(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq_nc(0)
        !
        ALLOCATE( ps(  nkb,npol, m), STAT=ierr )
        IF( ierr /= 0 ) &

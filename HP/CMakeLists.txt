@@ -1,4 +1,4 @@
-set(sources
+set(src_hp
     src/hp_allocate_q.f90
     src/hp_bcast_input.f90
     src/hpcom.f90
@@ -43,30 +43,32 @@ set(sources
     src/hp_write_chi_full.f90
     src/hp_write_dnsq.f90)
 
-qe_add_library(qe_hp ${sources})
-add_library(QE::HP ALIAS qe_hp)
+qe_add_library(qe_hp ${src_hp})
 target_link_libraries(qe_hp
     PRIVATE
-        QE::PW
-        QE::LR_Modules
-        QE::Modules
-        QE::FFTX
-        QE::UTILX
-        QE::UPF)
+        qe_pw
+        qe_lr_modules
+        qe_modules
+        qe_fftx
+        qe_upflib
+        qe_xclib)
 
 ###########################################################
 # hp.x
 ###########################################################
-set(sources src/hp_main.f90)
-qe_add_executable(qe_hp_exe ${sources})
-set_target_properties(qe_hp_exe PROPERTIES OUTPUT_NAME hp.x)
+set(src_hp_x src/hp_main.f90)
+qe_enable_cuda_fortran("${src_hp_x}")
+qe_add_executable(qe_hp_exe ${src_hp_x})
+set_target_properties(qe_hp_exe 
+    PROPERTIES 
+        OUTPUT_NAME hp.x)
 target_link_libraries(qe_hp_exe
     PRIVATE
-        QE::PW
-        QE::LAX
-        QE::Modules
-        QE::HP
-        QE::UTILX)
+        qe_pw
+        qe_lax
+        qe_modules
+        qe_hp
+        qe_xclib)
 
 ###########################################################
 

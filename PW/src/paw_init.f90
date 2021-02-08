@@ -102,13 +102,13 @@ MODULE paw_init
     USE mp,                 ONLY : mp_sum
     USE io_global,          ONLY : stdout, ionode
     USE control_flags,      ONLY : iverbosity
-    USE funct,              ONLY : dft_is_hybrid
+    USE xc_lib,             ONLY : xclib_dft_is
     !
     INTEGER :: nt, np, ia, ia_s, ia_e, mykey, nnodes
     INTEGER :: info(0:nproc_image-1,ntyp)
     !
     ! FIXME: the PAW EXX code is not parallelized (but it is very fast)
-    IF ( dft_is_hybrid() ) RETURN
+    IF ( xclib_dft_is('hybrid') ) RETURN
     !
     IF (ionode) &
     WRITE(stdout,"(5x,a)") &
@@ -179,6 +179,8 @@ MODULE paw_init
     USE basis,                ONLY : starting_wfc
     USE noncollin_module,     ONLY : nspin_mag, angle1, angle2
     !
+    USE uspp_gpum,          ONLY : using_becsum
+    !
     IMPLICIT NONE
     !
     !REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
@@ -193,7 +195,9 @@ MODULE paw_init
     IF ( starting_wfc=='atomic+random') noise = 0.05_DP
     IF ( starting_wfc=='random')        noise = 0.10_DP
     !
+    CALL using_becsum(2)
     becsum = 0.0_DP
+    !
     na_loop: DO na = 1, nat
        nt = ityp(na)
        is_paw: IF (upf(nt)%tpawp) THEN
@@ -271,7 +275,7 @@ MODULE paw_init
     USE lsda_mod,           ONLY : nspin
     USE spin_orb,           ONLY : domag
     USE noncollin_module,   ONLY : noncolin
-    USE funct,              ONLY : dft_is_gradient
+    USE xc_lib,             ONLY : xclib_dft_is
     USE mp_images,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
     !
@@ -336,7 +340,7 @@ MODULE paw_init
                lmax_add  = 0
             ELSE
                 ! 
-                IF ( dft_is_gradient() ) THEN
+                IF ( xclib_dft_is('gradient') ) THEN
                    ! Integrate up to a higher maximum lm if using gradient
                    ! correction check expression for d(y_lm)/d\theta for details
                    lmax_safe = lm_fact_x*upf(nt)%lmax_rho
@@ -442,7 +446,7 @@ MODULE paw_init
     !            remember to update it if you change this!
     !
     USE constants,              ONLY : pi, fpi, eps8
-    USE funct,                  ONLY : dft_is_gradient
+    USE xc_lib,                 ONLY : xclib_dft_is
     USE paw_variables,          ONLY : paw_radial_integrator
     !
     INTEGER, INTENT(IN) :: l
@@ -546,7 +550,7 @@ MODULE paw_init
     ! if gradient corrections will be used than we need
     ! to initialize the gradient of ylm, as we are working in spherical
     ! coordinates the formula involves \hat{theta} and \hat{phi}
-    gradient: IF (dft_is_gradient()) THEN
+    gradient: IF (xclib_dft_is('gradient')) THEN
         ALLOCATE( rad%dylmt(rad%nx,rad%lm_max), &
                   rad%dylmp(rad%nx,rad%lm_max), &
                   aux(rad%nx,rad%lm_max) )

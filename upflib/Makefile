@@ -9,7 +9,6 @@ QEMODS = libupf.a
 OBJS= \
 atom.o \
 atomic_number.o \
-emend_upf.o \
 upf_erf.o \
 upf_utils.o \
 gth.o \
@@ -19,9 +18,7 @@ read_cpmd.o \
 read_fhi.o \
 read_ncpp.o \
 read_upf_new.o \
-read_upf_schema.o \
 read_upf_v1.o \
-read_upf_v2.o \
 read_uspp.o \
 splinelib.o \
 simpsn.o \
@@ -37,24 +34,22 @@ upf_params.o \
 upf_parallel_include.o \
 upf_to_internal.o \
 uspp.o \
-write_upf.o \
 write_upf_new.o \
-write_upf_schema.o \
-write_upf_v2.o \
 xmltools.o \
 ylmr2.o
 
-TLDEPS=libfox
+# GPU versions of routines
+OBJS += \
+  uspp_gpu.o \
+  simpsn_gpu.o \
+  splinelib_gpu.o \
+  ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x
 
 libupf.a: $(MODULES) $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
-
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 virtual_v2.x : virtual_v2.o $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ virtual_v2.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)

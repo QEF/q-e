@@ -98,12 +98,11 @@ set(sources
     src/parameters.f90)
 
 qe_add_library(qe_atomic ${sources})
-add_library(QE::ATOMIC ALIAS qe_atomic)
 target_link_libraries(qe_atomic
     PRIVATE
-        QE::UPF
-        QE::UTILX
-        QE::Modules)
+        qe_upflib
+        qe_modules
+        qe_xclib)
 
 ###########################################################
 # ld1.x
@@ -113,11 +112,11 @@ qe_add_executable(qe_atomic_exe ${sources})
 set_target_properties(qe_atomic_exe PROPERTIES OUTPUT_NAME ld1.x)
 target_link_libraries(qe_atomic_exe
     PRIVATE
-        QE::UPF
-        QE::Modules
-        QE::ATOMIC
-        QE::UTILX)
-
+        qe_upflib
+        qe_modules
+        qe_atomic
+        qe_xclib)
+        
 ###########################################################
 
 qe_install_targets(

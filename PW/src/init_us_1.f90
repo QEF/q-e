@@ -42,6 +42,19 @@ subroutine init_us_1
   USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
+  USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
+                           using_indv, using_indv_d, &
+                           using_nhtolm, using_nhtolm_d, &
+                           using_qq_at, using_qq_at_d, &
+                           using_qq_so, using_qq_so_d, &
+                           using_ijtoh, using_ijtoh_d, &
+                           using_nhtol, using_nhtol_d, &
+                           using_nhtoj, using_nhtoj_d, &
+                           using_dvan_so, using_dvan_so_d, &
+                           using_dvan, using_dvan_d
+  USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
+  USE spin_orb_gpum,ONLY : using_fcoef, using_fcoef_d
+  !
   implicit none
   !
   !     here a few local variables
@@ -68,6 +81,10 @@ subroutine init_us_1
   real(DP), EXTERNAL :: spinor
   !
   call start_clock ('init_us_1')
+  !
+  !    NB: duplicated modules' variables are syncronized at the end. This
+  !        may lead to problems if these variables are using during function
+  !        calls in this subroutines. However this should never happen.
   !
   !    Initialization of the variables
   !
@@ -99,15 +116,17 @@ subroutine init_us_1
        rot_ylm(n,n1)=CMPLX(1.0_dp/sqrt2,0.d0,kind=DP)
        rot_ylm(n,n1+1)=CMPLX(0.d0, 1.0_dp/sqrt2,kind=DP)
      enddo
-     fcoef=(0.d0,0.d0)
-     dvan_so = (0.d0,0.d0)
-     qq_so=(0.d0,0.d0)
-     qq_at  = 0.d0
+  endif
+  if ( nhm > 0 ) then
+     if (lspinorb) then
+        fcoef=(0.d0,0.d0)
+        dvan_so = (0.d0,0.d0)
+        qq_so=(0.d0,0.d0)
+     else
+        dvan = 0.d0
+     end if
      qq_nt=0.d0
-  else
-     qq_nt=0.d0
      qq_at  = 0.d0
-     dvan = 0.d0
   endif
   !
   !   For each pseudopotential we initialize the indices nhtol, nhtolm,
@@ -140,7 +159,7 @@ subroutine init_us_1
      !
      ! ijtoh map augmentation channel indexes ih and jh to composite
      ! "triangular" index ijh
-     ijtoh(:,:,nt) = -1
+     if ( nhm > 0 ) ijtoh(:,:,nt) = -1
      ijv = 0
      do ih = 1,nh(nt)
          do jh = ih,nh(nt)
@@ -301,9 +320,11 @@ subroutine init_us_1
   endif
 #endif
   ! finally we set the atomic specific qq_at matrices
-  do na=1, nat
-     qq_at(:,:, na) = qq_nt(:,:,ityp(na))
-  end do
+  if ( nhm > 0 ) then
+     do na=1, nat
+        qq_at(:,:, na) = qq_nt(:,:,ityp(na))
+     end do
+  end if
   !
   !     fill the interpolation table tab
   !
@@ -335,6 +356,7 @@ subroutine init_us_1
 
   ! initialize spline interpolation
   if (spline_ps) then
+     CALL using_tab_d2y(2);
      allocate( xdata(nqx) )
      do iq = 1, nqx
         xdata(iq) = (iq - 1) * dq
@@ -348,6 +370,24 @@ subroutine init_us_1
      deallocate(xdata)
   endif
 
+#if defined (__CUDA)
+  CALL using_tab(2)
+  IF (lmaxq > 0) CALL using_qrad(2)
+  CALL using_indv(2); CALL using_indv_d(0) ! trick to update immediately
+  CALL using_nhtolm(2); CALL using_nhtolm_d(0) ! trick to update immediately
+  CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
+  CALL using_ijtoh(2); CALL using_ijtoh_d(0) ! trick to update immediately
+  CALL using_nhtol(2); CALL using_nhtol_d(0)
+  CALL using_nhtoj(2); CALL using_nhtoj_d(0)
+  CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
+  IF (lspinorb) THEN 
+      CALL using_qq_so(2); CALL using_qq_so_d(0) ! trick to update immediately
+      CALL using_fcoef(2) ; CALL using_fcoef_d(0)
+      CALL using_dvan_so(2) ; CALL using_dvan_so_d(0)
+  ELSE
+      CALL using_dvan(2) ; CALL using_dvan_d(0)
+  END IF
+#endif
   call stop_clock ('init_us_1')
   return
 end subroutine init_us_1
@@ -370,6 +410,8 @@ SUBROUTINE compute_qrad ( )
   USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
+  USE us_gpum,      ONLY : using_qrad
+  !
   IMPLICIT NONE
   !
   INTEGER :: ndm, startq, lastq, nt, l, nb, mb, ijv, iq, ir
@@ -384,7 +426,9 @@ SUBROUTINE compute_qrad ( )
   ndm = MAXVAL ( upf(:)%kkbeta )
   ALLOCATE (aux ( ndm))
   ALLOCATE (besr( ndm))
-
+  !
+  CALL using_qrad(2)
+  !
   CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
   !
   qrad(:,:,:,:)= 0.d0
