@@ -65,8 +65,8 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     Elw = MIN( Elw, et(1,kpoint) )
     Eup = MAX( Eup, et(nbnd,kpoint) )
   ENDDO
-  Eup = Eup + 2 * Degauss
-  Elw = Elw - 2 * Degauss
+  Eup = Eup + 10 * Degauss
+  Elw = Elw - 10 * Degauss
   !
   ! ... find min and max across pools
   !
