@@ -759,22 +759,14 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ENDIF
         !
      CASE( 43 ) ! 'beefx'
-        IF (rho(1) > small .AND. SQRT (ABS (grho2(1)) ) > small) THEN
-           call beefx(2.0_DP*rho(1), 4.0_DP*grho2(1), sx(1), v1x(1), v2x(1), 0)
-        ELSE
-           sx(1) = 0.0_DP
-           v1x(1) = 0.0_DP
-           v2x(1) = 0.0_DP
-        ENDIF
-        IF (rho(2) > small .AND. SQRT (ABS (grho2(2)) ) > small) THEN
-           CALL beefx(2.0_DP*rho(2), 4.0_DP*grho2(2), sx(2), v1x(2), v2x(2), 0)
-           CALL beefx(2.0_DP*rho(2), 4.0_DP*grho2(2), sx(2), v1x(2), v2x(2), 0)
-        ELSE
-           sx(2) = 0.0_DP
-           v1x(2) = 0.0_DP
-           v2x(2) = 0.0_DP
-        ENDIF
-        sx_tot(ir) = 0.5_DP * (sx(1) + sx(2))
+        !
+        rho = 2.0_DP * rho
+        grho2 = 4.0_DP * grho2
+        !
+        CALL beefx(rho(1), grho2(1), sx(1), v1x(1), v2x(1), 0)
+        CALL beefx(rho(2), grho2(2), sx(2), v1x(2), v2x(2), 0)
+        !
+        sx_tot(ir) = 0.5_DP * (sx(1)*rnull(1) + sx(2)*rnull(2))
         v2x  = 2.0_DP * v2x
      !
      ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
