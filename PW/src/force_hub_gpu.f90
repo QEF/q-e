@@ -1496,7 +1496,7 @@ SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
       ! Calculate doverlap_us = < phi_I | dS/d\tau(alpha,ipol) | phi_J >
       ALLOCATE (doverlap_us_d(natomwfc,natomwfc))
       CALL matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, &
-               natomwfc, wfcatom_d, natomwfc, wfcatom_d, doverlap_us_d)
+               natomwfc, wfcatom_d, natomwfc, wfcatom_d, doverlap_us_d, 1, natomwfc, 0)
        CALL dev_mem_addscal(doverlap_d , doverlap_us_d)
       DEALLOCATE (doverlap_us_d)
    ENDIF

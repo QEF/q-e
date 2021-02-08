@@ -49,7 +49,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
                            using_dvan_so, using_dvan_so_d, &
                            using_dvan, using_dvan_d
   USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
-  USE spin_orb_gpum,ONLY : using_fcoef, using_fcoef_d
+  USE upf_spinorb_gpum, ONLY : using_fcoef, using_fcoef_d
   !
   implicit none
   !

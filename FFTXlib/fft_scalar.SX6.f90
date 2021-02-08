@@ -434,7 +434,7 @@
 #endif
      IF ( isign < 0) THEN
         tscale = 1.0_DP / DBLE( nx * ny * nz )
-        call ZDSCAL( ldx * ldy * ldz, tscale, f(1), 1)
+        f(1:ldx * ldy * ldz) = f(1:ldx * ldy * ldz) * tscale
      END IF
 #else
      ! for some reason the error variable is not set by this driver on NEC SX machines

@@ -70,6 +70,7 @@ if(QE_ENABLE_CUDA)
     # OpenMP enable by default if CUDA is enable
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" ON)
+    
 else()
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" OFF)
@@ -77,9 +78,11 @@ endif()
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
 option(QE_ENABLE_TEST
-    "enable unit tests" OFF)
+    "enable unit tests" ON)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
+option(QE_ENABLE_PROFILE_NVTX
+        "enable execution of NVidia profiler plugin" OFF) 
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
 option(QE_ENABLE_MPI_MODULE
@@ -111,14 +114,14 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
 qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
 if(QE_ENABLE_CUDA)
-    include(CheckLanguage)
-    check_language(CUDA)
-    enable_language(CUDA)
     qe_add_global_compile_definitions(__CUDA)
 endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
 endif()
+if(QE_ENABLE_PROFILE_NVTX)
+   qe_add_global_compile_definitions(__PROFILE_NVTX) 
+endif() 
 if(QE_ENABLE_MPI_INPLACE)
     qe_add_global_compile_definitions(__USE_INPLACE_MPI)
 endif()
@@ -187,9 +190,18 @@ endif()
 ###########################################################
 # CUDA
 ###########################################################
-if(QE_ENABLE_CUDA)
-    find_package(CUDAToolkit REQUIRED)
-endif(QE_ENABLE_CUDA)
+if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+      add_library(CUDA::cufft INTERFACE IMPORTED)
+      set_target_properties(CUDA::cufft PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cufft")
+      add_library(CUDA::cublas INTERFACE IMPORTED)
+      set_target_properties(CUDA::cublas PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cublas")
+      add_library(CUDA::cusolver INTERFACE IMPORTED)
+      set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cusolver")
+    else()
+      find_package(CUDAToolkit REQUIRED)
+    endif()
+endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
 # OpenMP
@@ -351,6 +363,19 @@ add_library(qe_hdf5_fortran INTERFACE)
 add_library(qe_hdf5_c INTERFACE)
 qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
 ###########################################################
+# PROFILERS LIBRARIES
+# the target for profiler libray will be defined if
+# some profiler is enabled
+add_library(qe_ext_prof_tool INTERFACE)
+qe_install_targets(qe_ext_prof_tool) 
+###########################################################
+# this should work with nvfortran 
+if(QE_ENABLE_PROFILE_NVTX)
+   target_link_libraries(qe_ext_prof_tool
+	INTERFACE
+        CUDA::nvToolsExt)
+endif(QE_ENABLE_PROFILE_NVTX)
+########################################################### 
 if(QE_ENABLE_HDF5)
     if(QE_ENABLE_MPI)
         option(HDF5_PREFER_PARALLEL "Prefer parallel HDF5" ON)
@@ -430,6 +455,13 @@ add_subdirectory(TDDFPT)
 add_subdirectory(XSpectra)
 if(QE_ENABLE_DOC)
     add_subdirectory(Doc)
+endif()
+
+###########################################################
+# Tests
+###########################################################
+if(QE_ENABLE_TEST)
+  add_subdirectory(test-suite)
 endif()
 
 ###########################################################
@@ -554,7 +586,6 @@ add_custom_target(pp
         qe_pp_fermisurface_exe
         qe_pp_fermiproj_exe
         qe_pp_ppacf_exe
-        qe_pp_benchmarklibxc_exe
     COMMENT
         "postprocessing programs")
 

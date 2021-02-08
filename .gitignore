@@ -1,4 +1,5 @@
 build/
+/build_*/
 .vscode/
 
 *~
@@ -38,6 +39,7 @@ D3Q
 W90
 archive/wannier90-*tgz
 wannier90-*
+devicexlib
 tempdir
 EPW/src/tags
 EPW/src/tmp

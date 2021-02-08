@@ -40,6 +40,7 @@ upf_kinds.o \
 upf_params.o \
 upf_parallel_include.o \
 upf_spinorb.o \
+upf_spinorb_gpum.o \
 upf_to_internal.o \
 upf_utils.o \
 us_gpum.o \
@@ -49,19 +50,18 @@ write_upf_new.o \
 xmltools.o \
 ylmr2.o
 
--include make.gpu
-
-TLDEPS=libfox
+# GPU versions of routines
+OBJS += \
+  uspp_gpu.o \
+  simpsn_gpu.o \
+  splinelib_gpu.o \
+  ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x
 
 libupf.a: $(MODULES) $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
-
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 virtual_v2.x : virtual_v2.o $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ virtual_v2.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)

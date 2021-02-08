@@ -39,6 +39,8 @@ set(src_upflib
     xmltools.f90
     ylmr2.f90
     # GPU
+    us_gpum.f90
+    upf_spinorb_gpum.f90
     uspp_gpu.f90
     ylmr2_gpu.f90
     simpsn_gpu.f90

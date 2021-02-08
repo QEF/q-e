@@ -73,7 +73,7 @@ SUBROUTINE clean_pw( lflag )
   USE scf_gpum,                  ONLY : deallocate_scf_gpu
   USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
   USE us_gpum,                   ONLY : deallocate_us_gpu
-  USE spin_orb_gpum,             ONLY : deallocate_spin_orb_gpu
+  USE upf_spinorb_gpum,          ONLY : deallocate_spin_orb_gpu
   !
   IMPLICIT NONE
   !
