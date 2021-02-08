@@ -78,7 +78,7 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    DEALLOCATE( dylm )
    !
    q(:) = SQRT(q(:))*tpiba
-   CALL radial_wfc ( npw, q, nwfcm, ntyp, chiq )
+   CALL interp_at_dwfc ( npw, q, nwfcm, ntyp, chiq )
    !
    ALLOCATE( sk(npw) )
    !

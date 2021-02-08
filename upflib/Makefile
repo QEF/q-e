@@ -15,6 +15,7 @@ init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
 init_at_1.o \
+interp_at_wfc.o \
 paw_variables.o \
 pseudo_types.o \
 qvan2.o \
@@ -52,9 +53,10 @@ ylmr2.o
 
 # GPU versions of routines
 OBJS += \
-  uspp_gpu.o \
+  interp_at_wfc_gpu.o \
   simpsn_gpu.o \
   splinelib_gpu.o \
+  uspp_gpu.o \
   ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x

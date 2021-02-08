@@ -44,6 +44,14 @@ init_us_b0.o : upf_io.o
 init_us_b0.o : upf_kinds.o
 init_us_b0.o : uspp.o
 init_us_b0.o : uspp_data.o
+interp_at_wfc.o : upf_kinds.o
+interp_at_wfc.o : us_gpum.o
+interp_at_wfc.o : uspp.o
+interp_at_wfc.o : uspp_data.o
+interp_at_wfc_gpu.o : upf_kinds.o
+interp_at_wfc_gpu.o : us_gpum.o
+interp_at_wfc_gpu.o : uspp.o
+interp_at_wfc_gpu.o : uspp_data.o
 paw_variables.o : upf_kinds.o
 pseudo_types.o : upf_kinds.o
 qvan2.o : upf_kinds.o
