@@ -11,23 +11,6 @@
 ! This macro force the normalization of betamix matrix, usually not necessary
 !#define __NORMALIZE_BETAMIX
 !
-#if defined(__GFORTRAN__)
-#if (__GNUC__<4) || ((__GNUC__==4) && (__GNUC_MINOR__<8))
-#define __GFORTRAN_HACK
-#endif
-#endif
-
-MODULE mix_save
-#if defined(__GFORTRAN_HACK)   
-! gfortran hack - for some mysterious reason gfortran doesn't save
-!                 derived-type variables even with the SAVE attribute
-  USE scf, ONLY : mix_type
-  TYPE(mix_type), ALLOCATABLE, SAVE :: &
-    df(:),        &! information from preceding iterations
-    dv(:)          !     "  "       "     "        "  "
-#endif
-END MODULE mix_save
-
 !----------------------------------------------------------------------------
 SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
                     iunmix, conv )
@@ -61,9 +44,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   USE ldaU,          ONLY : lda_plus_u, lda_plus_u_kind, ldim_u, &
                             max_num_neighbors, nsg, nsgnew
   USE io_files,      ONLY : diropn
-#if defined(__GFORTRAN_HACK)
-  USE mix_save
-#endif
   !
   IMPLICIT NONE
   !
@@ -117,11 +97,9 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   INTEGER, SAVE :: &
     mixrho_iter = 0    ! history of mixing
-#if !defined(__GFORTRAN_HACK)
   TYPE(mix_type), ALLOCATABLE, SAVE :: &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
-#endif
   REAL(DP) :: norm
   INTEGER, PARAMETER :: read_ = -1, write_ = +1
   !
