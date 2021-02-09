@@ -64,7 +64,7 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    CALL ylmr2( (lmax_wfc+1)**2, npw, gk, q, ylm )
    !
    q(:) = SQRT(q(:))*tpiba
-   CALL radial_dwfc ( npw, q, nwfcm, ntyp, djl )
+   CALL interp_at_dwfc ( npw, q, nwfcm, ntyp, djl )
    !
    DEALLOCATE( q, gk )
    !
