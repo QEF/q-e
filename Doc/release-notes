@@ -30,6 +30,8 @@ Fixed in development version:
     either they are the same or are systematically improved wrt previous ones.
   * There was a missing 2pi/a factor in the case of loto_2d = .true.. Found 
     and explained in M. Royo and M. Stengel, https://arxiv.org/abs/2012.07961.
+  * The rho => 0 limit of spin-polarized BEEF XC energy was not correct,
+    leading to problems in structural optimization
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
