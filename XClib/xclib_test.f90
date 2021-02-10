@@ -33,6 +33,7 @@ PROGRAM xclib_test
                          xclib_finalize_libxc
   USE xclib_parallel_include
 #if defined(__LIBXC)
+#include "xc_version.h"
   USE xc_f03_lib_m
   USE dft_par_mod, ONLY: xc_func, xc_info
 #endif
@@ -48,6 +49,11 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
   CHARACTER(LEN=120) :: lxc_kind, lxc_family
   INTEGER :: n_ext, id(6)
+#if (XC_MAJOR_VERSION>5)
+  !workaround to keep compatibility with libxc develop version
+  INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
+  INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
+#endif
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
