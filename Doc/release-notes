@@ -31,7 +31,11 @@ Fixed in development version:
   * There was a missing 2pi/a factor in the case of loto_2d = .true.. Found 
     and explained in M. Royo and M. Stengel, https://arxiv.org/abs/2012.07961.
   * The rho => 0 limit of spin-polarized BEEF XC energy was not correct,
-    leading to problems in structural optimization
+    leading to funny total energy numbers and problems in structural optimization
+    (fixed by Gabriel S. Gusmão, Georgia Tech)
+  * In some cases the new xml code of v.6.7 wrote UPF files that could not be read
+    because they contained too long lines (noticed by Felix Goudreault, U. Montreal)
+  * Variable-cell hybrid DFT fixed: it was broken since v.6.5.
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
