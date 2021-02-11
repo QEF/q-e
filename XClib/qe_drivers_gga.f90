@@ -80,9 +80,14 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 #endif
   !
   !
-!$omp parallel if(ntids==1)
-!$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
-!$omp             v2x, v2x_, v2xsr, sc, v1c, v2c )
+!$omp parallel if(ntids==1) default(none) &
+!$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
+!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c ) &
+!$omp shared( rho_in, grho_in, length, igcx, exx_started, &
+!$omp         grho_threshold_gga, rho_threshold_gga, gau_parameter, &
+!$omp         screening_parameter, exx_fraction, igcc, v1x_out, v2x_out, &
+!$omp         v1c_out, v2c_out, sx_out, sc_out )
+!$omp do
   DO ir = 1, length  
      !
      grho = grho_in(ir)
@@ -437,9 +442,12 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   sx_tot = 0.0_DP
   !
   !
-!$omp parallel if(ntids==1)
-!$omp do private( rho, grho2, rnull, sx, sxsr, v1x, v1xsr, &
-!$omp             v2x, v2xsr )
+!$omp parallel if(ntids==1) default(none) &
+!$omp private( rho, grho2, rnull, sx, sxsr, v1x, v1xsr, &
+!$omp             v2x, v2xsr, iflag ) &
+!$omp    shared(rho_in, length, grho2_in, sx_tot, v1x_out, v2x_out,&
+!$omp           igcx, exx_started, exx_fraction, screening_parameter, gau_parameter)
+!$omp do
   DO ir = 1, length  
      !
      rho(:) = rho_in(ir,:)
@@ -833,8 +841,12 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   ntids = omp_get_num_threads()
 #endif
   !
-!$omp parallel if(ntids==1)
-!$omp do private( rho, zeta, grho, sc, v1c, v2c )
+!$omp parallel if(ntids==1) default(none) &
+!$omp private( rho, zeta, grho, sc, v1c, v2c ) &
+!$omp shared( igcc, sc_out, v1c_out, v2c_out, &
+!$omp         rho_threshold_gga, zeta_io, length, &
+!$omp         grho_in, rho_in )
+!$omp do
   DO ir = 1, length
     !
     rho  = rho_in(ir)
@@ -952,8 +964,12 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   ntids = omp_get_num_threads()
 #endif
   !
-!$omp parallel if(ntids==1)
-!$omp do private( rho, grho, grho_ud )
+!$omp parallel if(ntids==1) default(none) &
+!$omp private( rho, grho, grho_ud ) &
+!$omp shared( length, rho_in, grho_in, grho_ud_in, &
+!$omp         rho_threshold_gga, sc, exx_started, &
+!$omp         igcc, v1c, v2c, v2c_ud)
+!$omp do
   DO ir = 1, length
     !
     rho(:) = rho_in(ir,:)
