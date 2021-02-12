@@ -128,7 +128,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                    22 = kinetic energy density (for meta-GGA and XDM only)
 
                   123 = DORI: density overlap regions indicator
-		       （DOI: 10.1021/ct500490b）Implemented by D. Yang & Q.Liu
+		        (doi: 10.1021/ct500490b) Implemented by D. Yang & Q.Liu
             }
         }
 
