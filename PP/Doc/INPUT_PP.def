@@ -126,6 +126,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                         For PAW calculations only; requires a very dense real-space grid. 
 
                    22 = kinetic energy density (for meta-GGA and XDM only)
+
+                  123 = DORI: density overlap regions indicator
+		       （DOI: 10.1021/ct500490b）Implemented by D. Yang & Q.Liu
             }
         }
 
