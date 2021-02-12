@@ -288,6 +288,20 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         raux(:) = rho%kin_r(:,1)
      ENDIF
 
+  ELSEIF (plot_num == 119) THEN
+     !
+     ! Reduced density gradient (rho > 0.05)
+     !
+     IF (noncolin) CALL errore('punch_plot','rdg+noncolin not yet implemented',1)
+     CALL do_rdg_ (raux)           ! in elf.f90
+
+  ELSEIF (plot_num == 123) THEN
+     !
+     ! Density Overlap Regions Indicator
+     !
+     IF (noncolin) CALL errore('punch_plot','dori+noncolin not yet implemented',1)
+     CALL do_dori (raux)           ! in elf.f90
+
   ELSE
 
      CALL infomsg ('punch_plot', 'plot_num not implemented')
