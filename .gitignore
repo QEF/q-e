@@ -25,6 +25,7 @@ FoX
 include/fft_defs.h
 include/configure.h
 include/c_defs.h
+include/qe_cdefs.h
 install/config.log
 install/config.status
 install/configure.msg
