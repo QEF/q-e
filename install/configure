@@ -6113,7 +6113,7 @@ if test "$fft_libs" = ""; then
 
    elif test "$have_armpl" -eq 1; then
       # no check needed if ARM libraries have been detected
-      try_dflags="$try_dflags -D__ARM_LIB"
+      try_dflags="$try_dflags -D__FFTW3"
       have_fft=1
 
    elif test "$have_essl" -eq 1; then
