@@ -58,7 +58,6 @@ Parallel execution routines:
 Low level library wrappers:
 
     fft_scalar.f90
-    fft_scalar.ARM_LIB.f90
     fft_scalar.DFTI.f90
     fft_scalar.ESSL.f90
     fft_scalar.FFTW.f90 fftw_interfaces.f90
