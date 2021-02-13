@@ -8,13 +8,14 @@
 !
 !--------------------------------------------------------------------------!
 ! FFT scalar drivers Module - contains machine-dependent routines for      !
-! internal FFTW, FFTW v.3, IBM ESSL, Intel DFTI, ARMlib                    !
+! internal FFTW, FFTW v.3, IBM ESSL, Intel DFTI
 ! (both 3d for serial execution and 1d+2d FFTs for parallel execution);    !
 ! legacy NEC ASL libraries (3d only, no parallel execution)                !
+! CUDA FFT for NVidiia GPUs
 ! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
 ! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
 ! Nicolas Lacorne, Filippo Spiga, Nicola Varini, Jason Wood                !
-! Last update Oct 2017                                                     !
+! Last update Feb 2021
 !--------------------------------------------------------------------------!
 
 !=----------------------------------------------------------------------=!
@@ -30,8 +31,6 @@
      USE fft_scalar_essl
 #elif defined(__SX6)
      USE fft_scalar_sx6
-#elif defined(__ARM_LIB)
-     USE fft_scalar_arm
 #elif defined(__FFTW)
      USE fft_scalar_fftw
 #else
