@@ -72,7 +72,7 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
      qg(ig) = SQRT( qg(ig) )*tpiba
   END DO
   !
-  CALL radial_wfc ( npw, qg, nwfcm, ntyp, chiq )
+  CALL interp_at_wfc ( npw, qg, nwfcm, ntyp, chiq )
   !
   DEALLOCATE( qg, gk )
   ALLOCATE( aux(npw), sk(npw) )
@@ -345,49 +345,3 @@ CONTAINS
    END SUBROUTINE atomic_wfc___
    !
 END SUBROUTINE atomic_wfc
-!-----------------------------------------------------------------------
-SUBROUTINE radial_wfc ( npw, qg, nwfcm, ntyp, chiq )
-  !-----------------------------------------------------------------------
-  !
-  ! computes chiq: radial fourier transform of atomic orbitals chi
-  !
-  USE upf_kinds,  ONLY : dp
-  USE uspp_param, ONLY : upf
-  USE uspp_data,  ONLY : tab_at, dq
-  USE us_gpum,    ONLY : using_tab_at
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN)  :: npw
-  INTEGER, INTENT(IN)  :: nwfcm
-  INTEGER, INTENT(IN)  :: ntyp
-  REAL(dp), INTENT(IN) :: qg(npw)
-  REAL(dp), INTENT(OUT):: chiq(npw,nwfcm,ntyp)
-  !
-  INTEGER :: nt, nb, ig
-  INTEGER :: i0, i1, i2, i3
-  REAL(dp):: px, ux, vx, wx
-  !
-  DO nt = 1, ntyp
-     DO nb = 1, upf(nt)%nwfc
-        IF ( upf(nt)%oc (nb) >= 0.d0) THEN
-           DO ig = 1, npw
-              px = qg (ig) / dq - int (qg (ig) / dq)
-              ux = 1.d0 - px
-              vx = 2.d0 - px
-              wx = 3.d0 - px
-              i0 = int( qg (ig) / dq ) + 1
-              i1 = i0 + 1
-              i2 = i0 + 2
-              i3 = i0 + 3
-              chiq (ig, nb, nt) = &
-                     tab_at (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                     tab_at (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                     tab_at (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                     tab_at (i3, nb, nt) * px * ux * vx / 6.d0
-           ENDDO
-        ENDIF
-     ENDDO
-  ENDDO
-
-END SUBROUTINE radial_wfc

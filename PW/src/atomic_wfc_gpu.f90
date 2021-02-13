@@ -18,18 +18,13 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,            ONLY : natomwfc
   !USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
+  USE gvect_gpum,       ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
   USE klist,            ONLY : xk, ngk, igk_k_d !, igk_k
   USE wvfct,            ONLY : npwx
-  USE uspp_data,        ONLY : tab_at, dq
   USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,         ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                                starting_spin_angle
-  USE mp_bands,         ONLY : inter_bgrp_comm
-  USE mp,               ONLY : mp_sum
-  !
-  USE gvect_gpum,       ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
-  USE us_gpum,          ONLY : using_tab_at, using_tab_at_d, tab_at_d
   !
   IMPLICIT NONE
   !
@@ -44,7 +39,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
              i0, i1, i2, i3, nwfcm, npw
   COMPLEX(DP) :: kphase, lphase
   REAL(DP)    :: arg, px, ux, vx, wx
-  INTEGER     :: ig_start, ig_end, mil1, mil2, mil3
+  INTEGER     :: mil1, mil2, mil3
   !
   REAL(DP) :: xk1, xk2, xk3, qgr
   REAL(DP), ALLOCATABLE :: chiq_d(:,:,:)
@@ -86,13 +81,10 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   !
   CALL ylmr2_gpu( (lmax_wfc+1)**2, npw, gk_d, qg_d, ylm_d )
   !
-  ! from now to the end of the routine the ig loops are distributed across bgrp
-  CALL divide( inter_bgrp_comm, npw, ig_start, ig_end )
-  !
   ! set now q=|k+G| in atomic units
   !
   !$cuf kernel do (1) <<<*,*>>>
-  DO ig = ig_start, ig_end
+  DO ig = 1, npw
      qg_d(ig) = SQRT( qg_d(ig) )*tpiba
   END DO
   !
@@ -100,35 +92,8 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   !
   ! chiq = radial fourier transform of atomic orbitals chi
   !
-  CALL using_tab_at(0)
-  CALL using_tab_at_d(0)
+  CALL interp_at_wfc_gpu ( npw, qg_d, nwfcm, ntyp, chiq_d )
   !
-  DO nt = 1, ntyp
-     DO nb = 1, upf(nt)%nwfc
-        IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN
-           !
-           !$cuf kernel do (1) <<<*,*>>>
-           DO ig = ig_start, ig_end
-              qgr = qg_d(ig)
-              px = qgr / dq - DBLE(INT(qgr/dq))
-              ux = 1.d0 - px
-              vx = 2.d0 - px
-              wx = 3.d0 - px
-              i0 = INT(qgr/dq) + 1
-              i1 = i0 + 1
-              i2 = i0 + 2
-              i3 = i0 + 3
-              chiq_d(ig,nb,nt) = &
-                     tab_at_d(i0,nb,nt) * ux * vx * wx / 6.d0 + &
-                     tab_at_d(i1,nb,nt) * px * vx * wx / 2.d0 - &
-                     tab_at_d(i2,nb,nt) * px * ux * wx / 2.d0 + &
-                     tab_at_d(i3,nb,nt) * px * ux * vx / 6.d0
-           END DO
-           !
-        END IF
-     END DO
-  END DO
-
   DEALLOCATE( qg_d, gk_d )
   !
   IF (noncolin) ALLOCATE( aux_d(npw) )
@@ -142,7 +107,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
      !     sk is the structure factor
      !
      !$cuf kernel do (1) <<<*,*>>>
-     DO ig = ig_start, ig_end
+     DO ig = 1, npw
         iig = igk_k_d(ig,ik)
         mil1 = mill_d(1,iig)
         mil2 = mill_d(2,iig)
@@ -195,9 +160,6 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   IF (noncolin) DEALLOCATE( aux_d )
   DEALLOCATE( sk_d, chiq_d, ylm_d )
 
-  ! collect results across bgrp
-  CALL mp_sum( wfcatom_d, inter_bgrp_comm )
-
   CALL stop_clock( 'atomic_wfc' )
   RETURN
 
@@ -231,14 +193,14 @@ CONTAINS
                   rot_ylm_in1 = rot_ylm(ind,n1)
                   IF (ABS(rot_ylm_in1) > 1.d-8) THEN
                     !$cuf kernel do (1) <<<*,*>>>
-                    DO ig = ig_start, ig_end
+                    DO ig = 1, npw
                       aux_d(ig) = aux_d(ig) + rot_ylm_in1 * &
                                   CMPLX(ylm_d(ig,ind1))
                     ENDDO
                   ENDIF
                ENDDO
                !$cuf kernel do (1) <<<*,*>>>
-               DO ig = ig_start, ig_end
+               DO ig = 1, npw
                   wfcatom_d(ig,is,n_starting_wfc) = lphase * &
                                 sk_d(ig)*aux_d(ig)*CMPLX(fact_is* &
                                 chiq_d(ig,nb,nt))
@@ -318,7 +280,7 @@ CONTAINS
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       !
       !$cuf kernel do (1) <<<*,*>>>
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
         aux_d(ig) = sk_d(ig)* CMPLX(ylm_d(ig,lm)*chiaux_d(ig))
       END DO
       !
@@ -326,7 +288,7 @@ CONTAINS
       ! first : rotation with angle alpha around (OX)
       !
       !$cuf kernel do (1) <<<*,*>>>
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
          fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
          !
@@ -379,7 +341,7 @@ CONTAINS
       IF ( n_starting_wfc + 2*l+1 > natomwfc) CALL errore &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       !$cuf kernel do (1) <<<*,*>>>
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          aux_d(ig) = sk_d(ig)*CMPLX(ylm_d(ig,lm)*chiq_d(ig,nb,nt))
       END DO
       !
@@ -387,7 +349,7 @@ CONTAINS
       ! first : rotation with angle alpha around (OX)
       !
       !$cuf kernel do (1) <<<*,*>>>
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
          fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
          !
@@ -433,7 +395,7 @@ CONTAINS
          ('atomic_wfc___', 'internal error: too many wfcs', 1)
       !
       !$cuf kernel do (1) <<<*,*>>>
-      DO ig = ig_start, ig_end
+      DO ig = 1, npw
          wfcatom_d(ig,1,n_starting_wfc) = lphase * &
             sk_d(ig) * CMPLX(ylm_d(ig,lm) * chiq_d(ig,nb,nt))
       ENDDO

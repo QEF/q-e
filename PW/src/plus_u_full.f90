@@ -351,7 +351,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
      qg(ig) = SQRT(qg(ig))*tpiba
   ENDDO
   !
-  CALL radial_wfc ( npw, qg, nwfcm, ntyp, chiq )
+  CALL interp_at_wfc ( npw, qg, nwfcm, ntyp, chiq )
   !
   DEALLOCATE( qg, gk )
   ALLOCATE( aux(npw), sk(npw) )
