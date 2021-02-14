@@ -437,6 +437,10 @@ SUBROUTINE setup()
   IF ( doublegrid .AND. ( .NOT.okvan .AND. .NOT.okpaw .AND. &
                           .NOT. ANY (upf(1:ntyp)%nlcc)      ) ) &
        CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
+  IF ( ecutwfc > 10000.d0 .OR. ecutwfc < 1.d0 ) THEN
+       WRITE(stdout,*) 'ECUTWFC = ', ecutwfc
+       CALL errore ( 'setup', 'meaningless value for ecutwfc', 1)
+  END IF
   gcutm = dual * ecutwfc / tpiba2
   gcutw = ecutwfc / tpiba2
   !
