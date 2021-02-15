@@ -122,11 +122,7 @@ hinit1.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
-init_us_0.o \
-init_us_b0.o \
-init_us_1.o \
 init_us_2.o \
-init_at_1.o \
 init_vloc.o \
 input.o \
 io_rho_xml.o \
@@ -190,7 +186,6 @@ pwcom.o \
 pw2blip.o \
 pw2casino.o \
 pw2casino_write.o \
-qvan2.o \
 rdiagh.o \
 read_conf_from_file.o \
 read_file_new.o \

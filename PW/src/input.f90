@@ -311,7 +311,7 @@ SUBROUTINE iosys()
   USE dftd3_qe,              ONLY : dftd3_printout, dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
-  USE us,                    ONLY : spline_ps_ => spline_ps
+  USE uspp_data,             ONLY : spline_ps_ => spline_ps
   !
   USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY : input_type

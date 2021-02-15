@@ -62,6 +62,8 @@ for dir in $dirs; do
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
     case $DIR in 
+        upflib )
+             DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib" ;;
         Modules )
              DEPENDS="$DEPEND1" ;;
         LR_Modules )

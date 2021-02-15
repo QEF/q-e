@@ -22,11 +22,8 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    USE klist,      ONLY: xk, ngk, igk_k
    USE gvect,      ONLY: mill, eigts1, eigts2, eigts3, g
    USE wvfct,      ONLY: npwx
-   USE us,         ONLY: tab_at, dq
    USE uspp_param, ONLY: upf
    USE basis,      ONLY : natomwfc
-   !
-   USE us_gpum,    ONLY : using_tab_at
    !
    IMPLICIT NONE
    !
@@ -39,9 +36,9 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    !
    ! ... local variables
    !
-   INTEGER     :: ig, na, nt, nb, l, lm, m, iig, ipol, iatw, i0, i1, i2, i3, &
+   INTEGER     :: ig, na, nt, nb, l, lm, m, iig, ipol, iatw, &
                   lmax_wfc, nwfcm, npw
-   REAL(DP)    :: qt, arg, px, ux, vx, wx
+   REAL(DP)    :: arg
    COMPLEX(DP) :: phase, pref
    !
    REAL(DP),    ALLOCATABLE :: q(:), gk(:,:), dylm(:,:), dylm_u(:,:), &
@@ -56,7 +53,7 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
       lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(nt)%lchi(1:upf(nt)%nwfc) ) )
    enddo
    !
-   ALLOCATE( q(npw), gk(3,npw), chiq(npwx,nwfcm,ntyp) )
+   ALLOCATE( q(npw), gk(3,npw), chiq(npw,nwfcm,ntyp) )
    !
    dwfcat(:,:) = (0.d0,0.d0)
    DO ig = 1,npw
@@ -80,33 +77,8 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    !
    DEALLOCATE( dylm )
    !
-   !
-   !    here we compute the radial fourier transform of the chi functions
-   !
-   CALL using_tab_at(0)
-   q(:) = SQRT(q(:))
-   !
-   DO nt = 1, ntyp
-      DO nb = 1, upf(nt)%nwfc
-         IF (upf(nt)%oc(nb) >= 0.d0) THEN
-            DO ig = 1, npw
-               qt=q(ig)*tpiba
-               px = qt / dq - INT(qt/dq)
-               ux = 1.d0 - px
-               vx = 2.d0 - px
-               wx = 3.d0 - px
-               i0 = qt / dq + 1
-               i1 = i0 + 1
-               i2 = i0 + 2
-               i3 = i0 + 3
-               chiq(ig,nb,nt) = tab_at(i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                                tab_at(i1, nb, nt) * px * vx * wx / 2.d0 - &
-                                tab_at(i2, nb, nt) * px * ux * wx / 2.d0 + &
-                                tab_at(i3, nb, nt) * px * ux * vx / 6.d0
-            ENDDO
-         ENDIF
-      ENDDO
-   ENDDO
+   q(:) = SQRT(q(:))*tpiba
+   CALL interp_at_dwfc ( npw, q, nwfcm, ntyp, chiq )
    !
    ALLOCATE( sk(npw) )
    !

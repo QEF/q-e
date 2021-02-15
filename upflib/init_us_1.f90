@@ -1,4 +1,4 @@
-
+!
 ! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_1
+subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   !----------------------------------------------------------------------
   !
   !   This routine performs the following tasks:
@@ -25,21 +25,17 @@ subroutine init_us_1
   !   g) It computes the qq terms which define the S matrix.
   !   h) It fills the interpolation table "tab" for the beta functions
   !
-  USE kinds,        ONLY : DP
-  USE constants,    ONLY : fpi, sqrt2
+  USE upf_kinds,    ONLY : DP
+  USE upf_const,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
-  USE ions_base,    ONLY : ntyp => nsp, ityp, nat
-  USE cell_base,    ONLY : omega
-  USE gvect,        ONLY : g, gg
-  USE lsda_mod,     ONLY : nspin
-  USE us,           ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
+  USE upf_ions,     ONLY : ntyp => nsp, ityp, nat
+  USE uspp_data,    ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
   USE splinelib
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv,&
                            ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb
-  USE spin_orb,     ONLY : lspinorb, rot_ylm, fcoef, lmaxx
+  USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, lmaxx
   USE paw_variables,ONLY : okpaw
-  USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
   USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
@@ -53,14 +49,19 @@ subroutine init_us_1
                            using_dvan_so, using_dvan_so_d, &
                            using_dvan, using_dvan_d
   USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
-  USE spin_orb_gpum,ONLY : using_fcoef, using_fcoef_d
+  USE upf_spinorb_gpum, ONLY : using_fcoef, using_fcoef_d
   !
   implicit none
+  !
+  real(DP), intent(in) :: omega
+  integer,  intent(in) :: ngm
+  real(DP), intent(in) :: g(3,ngm), gg(ngm)
+  integer,  intent(in) :: intra_bgrp_comm
   !
   !     here a few local variables
   !
   integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, startq, &
-       lastq, ilast, ndm, ia
+             lastq, ilast, ndm, ia
   ! various counters
   real(DP), allocatable :: aux (:), besr (:)
   ! various work space
@@ -258,7 +259,7 @@ subroutine init_us_1
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL compute_qrad( )
+  IF ( lmaxq > 0 ) CALL compute_qrad(omega,intra_bgrp_comm)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q
@@ -393,26 +394,27 @@ subroutine init_us_1
 end subroutine init_us_1
 
 !----------------------------------------------------------------------
-SUBROUTINE compute_qrad ( )
+SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   !----------------------------------------------------------------------
   !
   ! Compute interpolation table qrad(i,nm,l+1,nt) = Q^{(L)}_{nm,nt}(q_i)
   ! of angular momentum L, for atom of type nt, on grid q_i, where
   ! nm = combined index for n,m=1,nh(nt)
   !
-  USE kinds,        ONLY : dp
-  USE constants,    ONLY : fpi
-  USE ions_base,    ONLY : ntyp => nsp
-  USE cell_base,    ONLY : omega
+  USE upf_kinds,    ONLY : dp
+  USE upf_const,    ONLY : fpi
+  USE upf_ions,     ONLY : ntyp => nsp
   USE atom,         ONLY : rgrid
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
-  USE us,           ONLY : nqxq, dq, qrad
-  USE mp_bands,     ONLY : intra_bgrp_comm
+  USE uspp_data,    ONLY : nqxq, dq, qrad
   USE mp,           ONLY : mp_sum
   !
   USE us_gpum,      ONLY : using_qrad
   !
   IMPLICIT NONE
+  !
+  real(DP), intent(in) :: omega
+  integer,  intent(in) :: intra_bgrp_comm
   !
   INTEGER :: ndm, startq, lastq, nt, l, nb, mb, ijv, iq, ir
   ! various indices

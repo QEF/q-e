@@ -43,6 +43,7 @@ Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
     Fermi energy works. Currently, molecular dynamics with FCP does not work.
   * Exchange-correlation code moved to XClib/
+  * More pseudopotential-related code moved to upflib/
 
 New in 6.7 version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from

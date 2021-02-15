@@ -1,10 +1,15 @@
 set(src_upflib
     atom.f90 
     atomic_number.f90 
-    upf_erf.f90 
-    upf_utils.f90 
+    init_us_0.f90
+    init_us_b0.f90
+    init_us_1.f90
+    init_at_1.f90
+    interp_at_wfc.f90
     gth.f90 
+    paw_variables.f90
     pseudo_types.f90 
+    qvan2.f90
     radial_grids.f90 
     read_cpmd.f90 
     read_fhi.f90 
@@ -18,18 +23,26 @@ set(src_upflib
     upf_auxtools.f90 
     upf_const.f90 
     upf_error.f90 
+    upf_erf.f90 
     upf_free_unit.f90 
     upf_invmat.f90 
     upf_io.f90 
+    upf_ions.f90 
     upf_kinds.f90 
+    upf_spinorb.f90
     upf_params.f90 
     upf_parallel_include.f90 
     upf_to_internal.f90 
+    upf_utils.f90 
     uspp.f90 
+    uspp_data.f90 
     write_upf_new.f90 
     xmltools.f90
     ylmr2.f90
     # GPU
+    interp_at_wfc_gpu.f90
+    us_gpum.f90
+    upf_spinorb_gpum.f90
     uspp_gpu.f90
     ylmr2_gpu.f90
     simpsn_gpu.f90
@@ -41,9 +54,12 @@ target_link_libraries(qe_upflib
     PRIVATE
         qe_mpi_fortran
         qe_lapack
-        qe_utilx
-        qe_fox
-        qe_devxlib)
+        qe_utilx)
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_upflib
+        PRIVATE
+            qe_devxlib)
+endif()
 
 ##############################################################
 # virtual_v2.x 

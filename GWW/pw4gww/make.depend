@@ -215,7 +215,7 @@ openfil_pw4gww.o : ../../Modules/noncol.o
 openfil_pw4gww.o : ../../PW/src/atomic_wfc_mod.o
 openfil_pw4gww.o : ../../PW/src/ldaU.o
 openfil_pw4gww.o : ../../PW/src/pwcom.o
-openfil_pw4gww.o : ../../upflib/uspp.o
+openfil_pw4gww.o : ../../upflib/upf_ions.o
 operator_1_vp.o : ../../FFTXlib/fft_interfaces.o
 operator_1_vp.o : ../../Modules/becmod.o
 operator_1_vp.o : ../../Modules/cell_base.o

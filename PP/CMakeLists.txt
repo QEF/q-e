@@ -69,6 +69,7 @@ target_link_libraries(qe_pp_exe
         qe_modules
         qe_pp
         qe_fftx
+        qe_upflib
         qe_xclib)
 
 ###########################################################

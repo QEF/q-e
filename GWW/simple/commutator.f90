@@ -14,7 +14,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   USE klist,      ONLY : ngk
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
+  USE uspp_data,  ONLY : nqx, tab, tab_d2y, dq, spline_ps
   USE m_gth,      ONLY : mk_dffnl_gth
   USE splinelib
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
@@ -176,7 +176,7 @@ subroutine gen_beta_simple_2 (qk, npw_max, u, dvkb)
   USE klist,      ONLY : ngk, igk_k
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
+  USE uspp_data,  ONLY : nqx, tab, tab_d2y, dq, spline_ps
   USE splinelib
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !

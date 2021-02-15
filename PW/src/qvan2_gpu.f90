@@ -147,7 +147,7 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   USE kinds,       ONLY: DP
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, nhtolm, indv
-  USE us,          ONLY: dq
+  USE uspp_data,   ONLY: dq
   !
   USE us_gpum,     ONLY : using_qrad_d
   USE uspp_gpum,   ONLY : using_indv_d, using_nhtolm_d, &

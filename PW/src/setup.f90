@@ -67,7 +67,7 @@ SUBROUTINE setup()
                                  lbands, use_para_diag, gamma_only, &
                                  restart, use_gpu
   USE cellmd,             ONLY : calc
-  USE uspp_param,         ONLY : upf, n_atom_wfc
+  USE upf_ions,           ONLY : upf, n_atom_wfc
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&

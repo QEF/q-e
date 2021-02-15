@@ -55,7 +55,6 @@ noncol.o \
 open_close_input_file.o \
 parameters.o \
 parser.o \
-paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \

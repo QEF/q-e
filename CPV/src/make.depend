@@ -147,6 +147,7 @@ cp_restart_new.o : ../../Modules/tsvdw.o
 cp_restart_new.o : ../../Modules/wrappers.o
 cp_restart_new.o : ../../UtilXlib/mp.o
 cp_restart_new.o : ../../XClib/xc_lib.o
+cp_restart_new.o : ../../upflib/upf_ions.o
 cp_restart_new.o : ../../upflib/uspp.o
 cp_restart_new.o : energies.o
 cp_restart_new.o : ldaU_cp.o

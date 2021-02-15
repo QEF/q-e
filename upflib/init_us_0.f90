@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------------------
-SUBROUTINE init_us_0
+SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   !---------------------------------------------------------------------------------
   !! This routine performs the following task: for each uspp or paw pseudopotential
   !! the l-dependent aumentation charge \(\text{ q_nb_mb_l}\)(r), stored in
@@ -21,19 +21,18 @@ SUBROUTINE init_us_0
   !! \[ \text{filter}(x,a,\text{nn}) = e^{-\text{axx}} \sum_{k=0,\text{nn}} 
   !!                                   \frac{\text{axx}^k}{k!}\ . \]
   !
-  USE kinds,        ONLY: DP
-  USE gvect,        ONLY: ecutrho
-  USE io_global,    ONLY: stdout
-  USE constants,    ONLY: fpi, sqrt2, eps8, eps6
+  USE upf_kinds,    ONLY: DP
+  USE upf_io,       ONLY: stdout
+  USE upf_const,    ONLY: fpi, sqrt2, eps8, eps6
   USE atom,         ONLY: rgrid
-  USE ions_base,    ONLY: ntyp => nsp
-  USE cell_base,    ONLY: omega, tpiba
-  USE us,           ONLY: dq
-  USE uspp_param,   ONLY: upf, lmaxq, nbetam
-  USE mp_bands,     ONLY: intra_bgrp_comm
+  USE uspp_data,    ONLY: dq
+  USE uspp_param,   ONLY: ntyp => nsp, upf, lmaxq, nbetam
   USE mp,           ONLY: mp_sum
   !
   IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: ecutrho
+  INTEGER,  INTENT(IN) :: intra_bgrp_comm
   !
   ! ... local variables
   !

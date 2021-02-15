@@ -47,7 +47,7 @@ SUBROUTINE memory_report()
   USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
   USE uspp_param,ONLY : lmaxkb, upf, nh, nbetam
-  USE us,        ONLY : dq
+  USE uspp_data, ONLY : dq
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem, tqr, iverbosity

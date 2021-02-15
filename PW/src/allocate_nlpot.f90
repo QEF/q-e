@@ -30,7 +30,7 @@ SUBROUTINE allocate_nlpot
   USE noncollin_module, ONLY : noncolin
   USE gvect,            ONLY : ecutrho
   USE gvecw,            ONLY : ecutwfc
-  USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
+  USE uspp_data,        ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
   USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq_at, qq_nt, &
                                dvan, deeq, indv_ijkb0, okvan, nhtoj, &
