@@ -47,7 +47,7 @@ SUBROUTINE clean_pw( lflag )
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
-  USE spin_orb,             ONLY : deallocate_spinorb, lspinorb, fcoef
+  USE upf_spinorb,          ONLY : deallocate_spinorb, lspinorb
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
@@ -74,7 +74,7 @@ SUBROUTINE clean_pw( lflag )
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   USE uspp_gpum,            ONLY : deallocate_uspp_gpu
   USE us_gpum,              ONLY : deallocate_us_gpu
-  USE upf_spinorb_gpum,     ONLY : deallocate_spin_orb_gpu
+  USE upf_spinorb_gpum,     ONLY : deallocate_spinorb_gpu
   !
   IMPLICIT NONE
   !

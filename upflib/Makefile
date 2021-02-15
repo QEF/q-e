@@ -42,10 +42,8 @@ upf_kinds.o \
 upf_params.o \
 upf_parallel_include.o \
 upf_spinorb.o \
-upf_spinorb_gpum.o \
 upf_to_internal.o \
 upf_utils.o \
-us_gpum.o \
 uspp.o \
 uspp_data.o \
 write_upf_new.o \
@@ -58,6 +56,8 @@ OBJS += \
   simpsn_gpu.o \
   splinelib_gpu.o \
   qvan2_gpu.o \
+  upf_spinorb_gpum.o \
+  us_gpum.o \
   uspp_gpu.o \
   ylmr2_gpu.o
 

@@ -18,6 +18,7 @@ MODULE uspp_data
   PUBLIC :: nqxq, nqx, dq, spline_ps
   PUBLIC :: qrad,   tab,   tab_at,   tab_d2y
   PUBLIC :: qrad_d, tab_d, tab_at_d, tab_d2y_d
+  PUBLIC :: deallocate_uspp_data
   !
   INTEGER :: nqxq
   !! size of interpolation table
