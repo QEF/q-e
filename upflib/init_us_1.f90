@@ -48,7 +48,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
                            using_nhtoj, using_nhtoj_d, &
                            using_dvan_so, using_dvan_so_d, &
                            using_dvan, using_dvan_d
-  USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
+  USE uspp_data_gpum,   ONLY : using_tab, using_tab_d2y, using_qrad
   USE upf_spinorb_gpum, ONLY : using_fcoef, using_fcoef_d
   !
   implicit none
@@ -409,7 +409,7 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   USE uspp_data,    ONLY : nqxq, dq, qrad
   USE mp,           ONLY : mp_sum
   !
-  USE us_gpum,      ONLY : using_qrad
+  USE uspp_data_gpum,      ONLY : using_qrad
   !
   IMPLICIT NONE
   !

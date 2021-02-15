@@ -148,9 +148,9 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, nhtolm, indv
   !
-  USE us_gpum,     ONLY : using_qrad_d
-  USE uspp_gpum,   ONLY : using_indv_d, using_nhtolm_d, &
-                          using_indv, using_nhtolm
+  USE uspp_data_gpum, ONLY : using_qrad_d
+  USE uspp_gpum,      ONLY : using_indv_d, using_nhtolm_d, &
+                             using_indv, using_nhtolm
 #if defined(__CUDA)
   USE cudafor
   USE qvan2_gpum,  ONLY : qvan2_kernel

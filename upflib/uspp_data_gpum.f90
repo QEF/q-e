@@ -8,7 +8,7 @@
 #define DIMS3D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3)
 #define DIMS4D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4)
 !=----------------------------------------------------------------------------=!
-   MODULE us_gpum
+   MODULE uspp_data_gpum
 !=----------------------------------------------------------------------------=!
 #if defined(__CUDA)
      USE cudafor
@@ -346,6 +346,6 @@
        tab_d2y_d_ood = .false.
      END SUBROUTINE deallocate_us_gpu
 !=----------------------------------------------------------------------------=!
-   END MODULE us_gpum
+   END MODULE uspp_data_gpum
 !=----------------------------------------------------------------------------=!!
 

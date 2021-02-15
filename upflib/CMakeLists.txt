@@ -41,10 +41,10 @@ set(src_upflib
     xmltools.f90
     ylmr2.f90
     # GPU
+    uspp_data_gpum.f90
+    upf_spinorb_gpum.f90
     interp_at_wfc_gpu.f90
     qvan2_gpu.f90
-    us_gpum.f90
-    upf_spinorb_gpum.f90
     uspp_gpu.f90
     ylmr2_gpu.f90
     simpsn_gpu.f90

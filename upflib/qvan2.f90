@@ -23,7 +23,7 @@ SUBROUTINE qvan2( ngy, ih, jh, np, qmod, qg, ylmk0 )
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtolm
   !
-  USE us_gpum, ONLY : using_qrad
+  USE uspp_data_gpum, ONLY : using_qrad
   !
   IMPLICIT NONE
   !

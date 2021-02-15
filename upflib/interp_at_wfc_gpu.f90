@@ -7,7 +7,7 @@ SUBROUTINE interp_at_wfc_gpu ( npw, qg_d, nwfcm, ntyp, chiq_d )
   USE upf_kinds,  ONLY : dp
   USE uspp_param, ONLY : upf
   USE uspp_data,  ONLY : dq, tab_at, tab_at_d
-  USE us_gpum,    ONLY : using_tab_at, using_tab_at_d
+  USE uspp_data_gpum,    ONLY : using_tab_at, using_tab_at_d
   !
   IMPLICIT NONE
   !

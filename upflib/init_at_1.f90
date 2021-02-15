@@ -20,7 +20,7 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   USE uspp_param,   ONLY : upf
   USE mp,           ONLY : mp_sum
   !
-  USE us_gpum,      ONLY : using_tab_at
+  USE uspp_data_gpum,      ONLY : using_tab_at
   !
   IMPLICIT NONE
   !

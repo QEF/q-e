@@ -21,7 +21,7 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
   !
-  USE us_gpum, ONLY : using_qrad
+  USE uspp_data_gpum, ONLY : using_qrad
   !
   IMPLICIT NONE
   !
