@@ -1,0 +1,21 @@
+# Copyright (C) 2021 Quantum ESPRESSO group
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
+# of the present distribution.
+
+Integrating CMake/CTest with test-suite is work-in-progress.
+Result (numbers) checking has not been added.
+
+Pass/fail of a run is determined by the exit code.
+0 is the default exit code for pass.
+When a calculation is not converged, QE returns non-zero error code with a reason given in the output.
+That stop message can be used for validation by providing XXX.expected_exit_msg next to XXX.in input file.
+
+Each top level folder, for example 'pw_uspp', contains several tests which will be run as concurrently as possible.
+However, tests may has dependency on others. For example, 'nscf' or 'band' depends on 'scf' and 'restart' also depends on previous runs. So the follow to depdency rules are applied to prevent such tests running concurrently.
+
+1. XX-N.in depends on XX.in
+2. XX-N.in depends on XX-M.in where M = N - 1.

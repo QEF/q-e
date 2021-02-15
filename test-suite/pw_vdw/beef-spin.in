@@ -1,0 +1,32 @@
+&CONTROL
+    calculation='scf'
+    tprnfor=.true.
+    tstress=.true.
+/
+&SYSTEM
+  ibrav=1,
+  a = 10.0,
+  nat=2,
+  ntyp=2,
+  ecutwfc=25.0
+  ecutrho=200.0
+  nbnd=8,
+  occupations='smearing',
+  smearing='fd',
+  degauss=0.01
+  nspin=2,
+  starting_magnetization(1)=0.0,
+  starting_magnetization(2)=0.1,
+  input_dft='BEEF-vdW'
+/
+&ELECTRONS
+  conv_thr=1e-07,
+  mixing_beta=0.1
+/
+ATOMIC_SPECIES
+C 12.011 C.pbe-rrkjus.UPF
+O 15.999 O.pbe-rrkjus.UPF
+ATOMIC_POSITIONS {angstrom}
+C       0.00  0.00  0.00
+O       0.00  0.00  1.09
+K_POINTS Gamma

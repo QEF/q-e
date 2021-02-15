@@ -87,8 +87,12 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   ntids = omp_get_num_threads()
 #endif
   !
-!$omp parallel if(ntids==1)
-!$omp do private( rho, rs, ex, ec, ec_, vx, vc, vc_ )
+!$omp parallel if(ntids==1) default(none) &
+!$omp private( rho, rs, ex, ec, ec_, vx, vc, vc_ ) &
+!$omp shared( rho_in, length, iexch, icorr, ex_out, ec_out, vx_out, vc_out, &
+!$omp         finite_size_cell_volume, exx_fraction, exx_started, &
+!$omp         rho_threshold_lda )
+!$omp do
   DO ir = 1, length
      !
      rho = ABS(rho_in(ir))
@@ -298,8 +302,12 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   ntids = omp_get_num_threads()
 #endif
   !
-!$omp parallel if(ntids==1)
-!$omp do private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_ )
+!$omp parallel if(ntids==1) default(none) &
+!$omp private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_ ) &
+!$omp shared( length, iexch, icorr, exx_fraction, &
+!$omp         vx_out, vc_out, ex_out, ec_out, &
+!$omp         zeta_in, exx_started, rho_in, rho_threshold_lda)
+!$omp do
   DO ir = 1, length
      !
      zeta = zeta_in(ir)

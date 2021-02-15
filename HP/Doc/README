@@ -1,25 +1,35 @@
-The calculation of Hubbard parameters using hp.x is based on 
-density-functional perturbation theory (DFPT):
-I. Timrov, N. Marzari and M. Cococcioni, 
-"Hubbard parameters from density-functional perturbation theory", 
-Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805
+======================================================================================
+=  The calculation of Hubbard parameters using the HP code is based on DFPT:         =
+=  - I. Timrov, N. Marzari and M. Cococcioni,                                        =
+=    "Hubbard parameters from density-functional perturbation theory",               =
+=    Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805                                =
+=  - I. Timrov, N. Marzari and M. Cococcioni,                                        =
+=    "Self-consistent Hubbard parameters from density-functional perturbation theory =
+=     in the ultrasoft and projector-augmented wave formulations",                   =
+=    Phys. Rev. B 103, 045141 (2021); arXiv:2011.03271                               =
+======================================================================================
 
-The DFPT approach (as the linear-response cDFT approach) has a limitation: 
-it is applicable only to open-shell systems. For more details see 
-K. Yu and E.A. Carter, J. Chem. Phys. 140, 121105 (2014).
-
-Self-consistent calculation of Hubbard parameters can be performed using DFPT 
-with the same strategy as explained in H. Hsu et al., Phys. Rev. B 79, 125124 (2009).
-
-Example of the application of the HP code:
+Some examples of the application of the HP code:
 - C. Ricca, I. Timrov, M. Cococcioni, N. Marzari, and U. Aschauer,
   "Self-consistent site-dependent DFT+U study of stoichiometric and defective SrMnO3",
   Phys. Rev. B 99, 094102 (2019); arXiv:1811.10858
 - C. Ricca, I. Timrov, M. Cococcioni, N. Marzari, and U. Aschauer,
   "Self-consistent DFT+U+V study of oxygen vacancies in SrTiO3",
   Phys. Rev. Research 2, 023313 (2020); arXiv:2004.04142
+- I. Timrov, P. Agrawal, X. Zhang, S. Erat, R. Liu, A. Braun, M. Cococcioni,
+  M. Calandra, N. Marzari, and D. Passerone,
+  "Electronic structure of pristine and Ni-substituted LaFeO3 from near edge x-ray 
+   absorption fine structure experiments and first-principles simulations",
+  Phys. Rev. Research 2, 033265 (2020); arXiv:2004.04142
+- I. Timrov, F. Aquilante, L. Binci, M. Cococcioni, and N. Marzari,
+  "Pulay forces in density-functional theory with extended Hubbard functionals: 
+   From nonorthogonalized to orthogonalized manifolds",
+  Phys. Rev. B 102, 235159 (2020); arXiv:2010.13485  
 
+Note: The DFPT approach (as the linear-response cDFT approach) has a limitation:
+it is applicable only to open-shell systems. For more details see
+K. Yu and E.A. Carter, J. Chem. Phys. 140, 121105 (2014).
 
-Tutorial on how to use hp.x:
+Tutorial on how to use the HP code:
 https://agenda.ethernet.edu.et/event/33/
 Check "Day2_DFT+U.tar"
