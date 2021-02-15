@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------
-MODULE xclib_parallel_include
+MODULE xclib_utils_and_para
 !-----------------------------------------------------
 !! MPI stuff
 !
@@ -26,4 +26,7 @@ MODULE xclib_parallel_include
         INTEGER, PARAMETER :: MPI_COMM_NULL  = -1
         INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
-END MODULE xclib_parallel_include
+        ! standard output unit
+        INTEGER, PARAMETER :: stdout = 6
+        !
+END MODULE xclib_utils_and_para
