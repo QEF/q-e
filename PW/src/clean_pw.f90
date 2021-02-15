@@ -39,6 +39,7 @@ SUBROUTINE clean_pw( lflag )
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE uspp_data,            ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
+  USE uspp_data,            ONLY : deallocate_uspp_data
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : deallocate_gth
   USE ldaU,                 ONLY : deallocate_ldaU
@@ -46,7 +47,7 @@ SUBROUTINE clean_pw( lflag )
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
-  USE spin_orb,             ONLY : lspinorb, fcoef
+  USE spin_orb,             ONLY : deallocate_spinorb, lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
@@ -67,13 +68,13 @@ SUBROUTINE clean_pw( lflag )
   USE tsvdw_module,         ONLY : tsvdw_finalize
   USE dftd3_qe,             ONLY : dftd3_clean
   !
-  USE wavefunctions_gpum, ONLY : deallocate_wavefunctions_gpu
-  USE wvfct_gpum,                ONLY : deallocate_wvfct_gpu !et
-  USE gvect_gpum,                ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
-  USE scf_gpum,                  ONLY : deallocate_scf_gpu
-  USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
-  USE us_gpum,                   ONLY : deallocate_us_gpu
-  USE upf_spinorb_gpum,          ONLY : deallocate_spin_orb_gpu
+  USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
+  USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu !et
+  USE gvect_gpum,           ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
+  USE scf_gpum,             ONLY : deallocate_scf_gpu
+  USE uspp_gpum,            ONLY : deallocate_uspp_gpu
+  USE us_gpum,              ONLY : deallocate_us_gpu
+  USE upf_spinorb_gpum,     ONLY : deallocate_spin_orb_gpu
   !
   IMPLICIT NONE
   !
@@ -141,9 +142,6 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
   CALL deallocate_scf_gpu()
-  IF (spline_ps) THEN
-    IF ( ALLOCATED( tab_d2y) )   DEALLOCATE( tab_d2y )
-  ENDIF
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
@@ -154,21 +152,20 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( qrad )   )     DEALLOCATE( qrad   )
-  IF ( ALLOCATED( tab )    )     DEALLOCATE( tab    )
-  IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
+  CALL deallocate_uspp_data()
+  CALL deallocate_us_gpu()
+  !
   IF ( lspinorb ) THEN
-     IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef  )
-     CALL deallocate_spin_orb_gpu()
+     CALL deallocate_spinorb()
+     CALL deallocate_spinorb_gpu()
   ENDIF
   !
-  CALL deallocate_igk()
   CALL deallocate_uspp() 
   CALL deallocate_uspp_gpu()
-  CALL deallocate_us_gpu()
   !
   CALL deallocate_gth( lflag ) 
   CALL deallocate_noncol()
+  CALL deallocate_igk()
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
