@@ -31,6 +31,8 @@ SUBROUTINE hinit1()
   USE paw_onecenter,       ONLY : paw_potential
   USE paw_symmetry,        ONLY : paw_symmetrize_ddd
   USE dfunct,              ONLY : newd
+  USE exx_base,            ONLY : coulomb_fac, coulomb_done
+
   !
   USE scf_gpum,      ONLY : using_vrs
   
@@ -91,6 +93,11 @@ SUBROUTINE hinit1()
     IF ( use_wannier ) CALL orthoatwfc_gpu( .TRUE. )
   ENDIF
   !
+  ! ... The following line forces recalculation of terms used by EXX
+  ! ... It is actually needed only in case of variable-cell calculations
+  ! FIXME: array coulomb_fac may take a large amount of memory: worth it? 
+  !
+  IF ( ALLOCATED(coulomb_fac) ) DEALLOCATE (coulomb_fac, coulomb_done)
   !
   RETURN
   !

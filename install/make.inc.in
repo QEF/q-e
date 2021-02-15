@@ -72,9 +72,6 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 # compiler that produces executables for parallel execution using MPI
 # (such as for instance mpif90, mpf90, mpxlf90,...);
 # otherwise, an ordinary fortran-90 compiler (f90, g95, xlf90, ifort,...)
-# If you have a parallel machine but no suitable candidate for MPIF90,
-# try to specify the directory containing "mpif.h" in IFLAGS
-# and to specify the location of MPI libraries in MPI_LIBS
 
 MPIF90         = @mpif90@
 F90           = @f90@
@@ -151,8 +148,8 @@ HDF5_LIBS = @hdf5_libs@
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
             -lFoX_utils -lFoX_fsys 
 FOX_FLAGS = @foxflags@
-# For parallel execution, the correct path to MPI libraries must
-# be specified in MPI_LIBS (except for IBM if you use mpxlf)
+
+# MPI libraries (should not be needed)
 
 MPI_LIBS       = @mpi_libs@
 

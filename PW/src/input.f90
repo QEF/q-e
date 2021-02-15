@@ -1380,10 +1380,6 @@ SUBROUTINE iosys()
       IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
               'Makov-Payne correction defined only for cubic lattices', 1)
       !
-    CASE( 'dcc' )
-      !
-      CALL errore('iosys','density countercharge correction currently disabled',1)
-      !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
       do_comp_mt     = .true.
@@ -1396,7 +1392,15 @@ SUBROUTINE iosys()
       !
       do_cutoff_2D   = .true.
       !
-
+    CASE ( 'none' )
+      !
+      CONTINUE
+      !
+    CASE DEFAULT
+      !
+      CALL errore('iosys','unknown value assume_isolated="' // &
+              & TRIM(assume_isolated) // '"',1)
+      !
   END SELECT
   !
   IF ( do_comp_mt .AND. lstres ) THEN

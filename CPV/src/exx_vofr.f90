@@ -657,10 +657,16 @@ SUBROUTINE setplm(x, y, lpole, plm)
 END SUBROUTINE setplm 
 
 module multipole_expansion
+#ifdef __CUDA
+  use cudafor
+#endif
   use kinds, only : dp
   implicit none
 contains
 
+#ifdef __CUDA
+  attributes(device, host) &
+#endif
     function get_plm(x, y, l, m) result (plm)
     !
     ! this subroutine calculates all of the associated Legendre polynomials up 
@@ -909,6 +915,9 @@ SUBROUTINE getvofr_cube(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state,
     USE io_global,               ONLY  :  stdout
     USE fft_scalar,              ONLY  :  cfft3d
     USE wannier_base,            ONLY  :  poisson_eps
+#ifdef __CUDA
+    USE exx_module,              ONLY  : coemicf_d, coeke_d  
+#endif
     USE exx_module,              ONLY  :  coemicf, coeke
     USE exx_module,              ONLY  :  fbsscale
     USE exx_module,              ONLY  :  nord2
@@ -955,6 +964,10 @@ SUBROUTINE getvofr_cube(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state,
     LOGICAL                   :: anti_alising = .FALSE.
     REAL(DP)                  :: sigma = 0.0D0
     !-----------------------------------------------------------------------
+#ifdef __CUDA
+    attributes(device) :: qlm
+    attributes(device) :: potme, rhops
+#endif
     
 
     !-----------------------------------------------------------------------
@@ -1025,7 +1038,11 @@ SUBROUTINE getvofr_cube(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state,
 
     subroutine  cg_solver_stdcg()
       implicit none
+#ifdef __CUDA
+      CALL CG_CUBE(nstep, ncb, poisson_eps, fbsscale, coemicf_d, coeke_d, rho_ps, pot_ps)
+#else
       CALL CG_CUBE(nstep, ncb, poisson_eps, fbsscale, coemicf, coeke, rho_ps, pot_ps)
+#endif
       !
       return
     end subroutine cg_solver_stdcg
@@ -1039,10 +1056,17 @@ SUBROUTINE getqlm_cube(ps_r, hcub, rho, qlm)
     USE kinds,            ONLY  :  DP
     USE exx_module,       ONLY  :  lpole=>lmax
     USE exx_module,       ONLY  :  clm
+#ifdef __CUDA
+    USE exx_module,       ONLY  :  me_cs => me_cs_d
+    USE exx_module,       ONLY  :  me_rc => me_rc_d
+    USE exx_module,       ONLY  :  me_ri => me_ri_d
+    USE exx_module,       ONLY  :  me_rs => me_rs_d
+#else
     USE exx_module,       ONLY  :  me_cs
     USE exx_module,       ONLY  :  me_rc
     USE exx_module,       ONLY  :  me_ri
     USE exx_module,       ONLY  :  me_rs
+#endif
     USE multipole_expansion, ONLY  :  get_plm
     !
     IMPLICIT NONE
@@ -1055,6 +1079,9 @@ SUBROUTINE getqlm_cube(ps_r, hcub, rho, qlm)
     COMPLEX(DP) :: qlm(0:lpole, 0:lpole)
     COMPLEX(DP) :: qlm_tmp
     real(dp) :: coef_l
+#ifdef __CUDA
+    attributes(device) :: rho, qlm
+#endif
     !------------------------------------------------------------------------------
     !
     !------------------------------------------------------------------------------
@@ -1072,7 +1099,11 @@ SUBROUTINE getqlm_cube(ps_r, hcub, rho, qlm)
           coef_l = 2.d0*clm(l,m)*hcub
         end if ! m.eq.0
         qlm_tmp = (0.d0, 0.d0)
+#ifdef __CUDA
+        !$cuf kernel do (3)
+#else
         !$omp parallel do collapse(3) private(i,j,k,x,y,z,sqrxy,costheta,sintheta) reduction(+:qlm_tmp)
+#endif
         DO k=ps_r(3),ps_r(6)
           DO j=ps_r(2),ps_r(5)
             DO i=ps_r(1),ps_r(4)
@@ -1090,7 +1121,9 @@ SUBROUTINE getqlm_cube(ps_r, hcub, rho, qlm)
             END DO ! i
           END DO ! j
         END DO ! k
+#ifndef __CUDA
         !$omp end parallel do
+#endif
         qlm(l,m) = qlm_tmp
       END DO ! m
     END DO ! l
@@ -1107,10 +1140,17 @@ SUBROUTINE exx_boundaryv_cube(me_r, ps_r, potme, qlm)
     USE kinds,            ONLY  :  DP
     USE exx_module,       ONLY  :  lpole=>lmax 
     USE exx_module,       ONLY  :  clm
+#ifdef __CUDA
+    USE exx_module,       ONLY  :  me_cs => me_cs_d
+    USE exx_module,       ONLY  :  me_rc => me_rc_d
+    USE exx_module,       ONLY  :  me_ri => me_ri_d
+    USE exx_module,       ONLY  :  me_rs => me_rs_d
+#else
     USE exx_module,       ONLY  :  me_cs
     USE exx_module,       ONLY  :  me_rc
     USE exx_module,       ONLY  :  me_ri
     USE exx_module,       ONLY  :  me_rs
+#endif
     USE multipole_expansion, ONLY  : get_plm
     !
     IMPLICIT  NONE
@@ -1120,6 +1160,9 @@ SUBROUTINE exx_boundaryv_cube(me_r, ps_r, potme, qlm)
     INTEGER       :: me_r(6), ps_r(6)
     REAL(DP)      :: potme(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     COMPLEX(DP)   :: qlm(0:lpole, 0:lpole)
+#ifdef __CUDA
+    attributes(device) :: potme, qlm
+#endif
     !--------------------------------------------------------------------
     !
     !--------------------------------------------------------------------
@@ -1141,7 +1184,11 @@ SUBROUTINE exx_boundaryv_cube(me_r, ps_r, potme, qlm)
     !------------------------------------------------------------------------------
     ! JJ: to continue
     !------------------------------------------------------------------------------
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(x,y,z,sqrxy,costheta,sintheta,cpot_r) schedule(guided)
+#endif
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
@@ -1172,7 +1219,9 @@ SUBROUTINE exx_boundaryv_cube(me_r, ps_r, potme, qlm)
         END DO
       END DO
     END DO
+#ifndef __CUDA
     !$omp end parallel do
+#endif
     !------------------------------------------------------------------------------
     !------------------------------------------------------------------------------
     !
@@ -1187,7 +1236,11 @@ SUBROUTINE geterho_cube(me_r, ps_r, potme, rhops)
     !
     USE kinds,            ONLY  :  DP
     USE exx_module,       ONLY  :  nord2
+#ifdef __CUDA
+    USE exx_module,       ONLY  :  coeke => coeke_d
+#else
     USE exx_module,       ONLY  :  coeke
+#endif
     USE constants,        ONLY  :  eps12
     !
     IMPLICIT NONE
@@ -1197,6 +1250,9 @@ SUBROUTINE geterho_cube(me_r, ps_r, potme, rhops)
     INTEGER       :: me_r(6), ps_r(6)
     REAL(DP)      :: potme(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     REAL(DP)      :: rhops(ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))
+#ifdef __CUDA
+    attributes(device) :: potme, rhops
+#endif
     !--------------------------------------------------------------------
     !
     !--------------------------------------------------------------------
@@ -1211,7 +1267,11 @@ SUBROUTINE geterho_cube(me_r, ps_r, potme, rhops)
     ps_r4 = ps_r(4); ps_r5 = ps_r(5); ps_r6 = ps_r(6)
 
     !------------------------------------------------------------------------------
+#ifdef __CUDA
+    !$cuf kernel do(3)
+#else
     !$omp parallel do private(i,j,k,ish) schedule(guided)
+#endif
     !------------------------------------------------------------------------------
     DO k=ps_r3,ps_r6
       DO j=ps_r2,ps_r5
@@ -1249,7 +1309,9 @@ SUBROUTINE geterho_cube(me_r, ps_r, potme, rhops)
         END DO
       END DO
     END DO
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !-----------------------------------------------------------------------
     RETURN
     !-----------------------------------------------------------------------
@@ -1294,6 +1356,9 @@ SUBROUTINE ps2me(me_r, ps_r, potme, potps)
     INTEGER       :: me_r(6), ps_r(6)
     REAL(DP)      :: potme(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     REAL(DP)      :: potps(ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))
+#ifdef __CUDA
+    attributes(device) :: potps, potme
+#endif
     !--------------------------------------------------------------------
     ! local variables
     !--------------------------------------------------------------------
@@ -1304,7 +1369,11 @@ SUBROUTINE ps2me(me_r, ps_r, potme, potps)
     ps_r1 = ps_r(1); ps_r2 = ps_r(2); ps_r3 = ps_r(3)
     ps_r4 = ps_r(4); ps_r5 = ps_r(5); ps_r6 = ps_r(6)
     !
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k)
+#endif
     DO k=ps_r3,ps_r6
       DO j=ps_r2,ps_r5
         DO i=ps_r1,ps_r4
@@ -1312,7 +1381,9 @@ SUBROUTINE ps2me(me_r, ps_r, potme, potps)
         END DO
       END DO
     END DO
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !--------------------------------------------------------------------
     !potme(ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6)) = potps(:,:,:)
     !--------------------------------------------------------------------

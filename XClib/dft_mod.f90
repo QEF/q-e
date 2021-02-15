@@ -11,6 +11,7 @@ MODULE dft_mod
   !! Routines to set and/or recover DFT names, parameters and flags.
   !
 #if defined(__LIBXC)
+#include "xc_version.h"
     USE xc_f03_lib_m
 #endif  
   !
@@ -505,7 +506,7 @@ CONTAINS
     INTEGER, PARAMETER :: ID_MAX_LIBXC=600
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
-#if (XC_MAJOR_VERSION > 5)
+#if (XC_MAJOR_VERSION>5)
     !workaround to keep compatibility with libxc develop version
     INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
     INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
@@ -547,6 +548,10 @@ CONTAINS
                 IF ( LEN(TRIM(name)) > prev_len(2) ) icorr = i
                 is_libxc(2) = .TRUE.
                 prev_len(2) = LEN(TRIM(name))
+                IF (fkind==XC_EXCHANGE_CORRELATION) THEN
+                  iexch = 0
+                  is_libxc(1) = .FALSE.
+                ENDIF
              ENDIF
              fkind_v(1) = fkind
              !
@@ -1047,7 +1052,7 @@ CONTAINS
          CALL xclib_error( 'xclib_dft_is_libxc', 'input not recognized', 1 )
        END SELECT
      ELSE
-       IF (TRIM(cfamily)=='ANY'.AND.ANY(is_libxc(:))) xclib_dft_is_libxc=.TRUE.
+       IF (family=='ANY'.AND.ANY(is_libxc(:))) xclib_dft_is_libxc=.TRUE.
      ENDIF
      !
      RETURN
@@ -1233,7 +1238,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
     !! 1: unpolarized case; 2: polarized
-    INTEGER :: iid, ip
+    INTEGER :: iid, ip, p0, pn
     INTEGER :: id_vec(6)
     !
 #if defined(__LIBXC)
@@ -1250,6 +1255,10 @@ CONTAINS
         CALL xc_f03_func_init( xc_func(iid), id_vec(iid), xclib_nspin )
         xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
+        p0 = 1  ;  pn = n_ext_params(iid)
+#if (XC_MAJOR_VERSION<=5)
+        p0 = 0  ;  pn = pn-1
+#endif
         DO ip = 1, n_ext_params(iid)
           par_list(iid,ip) = xc_f03_func_info_get_ext_params_default_value( &
                                                            xc_info(iid), ip )

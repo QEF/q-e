@@ -736,13 +736,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         ! ... mix_rho mixes several quantities: rho in g-space, tauk (for
         ! ... meta-gga), ns and ns_nc (for lda+u) and becsum (for paw)
-        ! ... The mixing could in principle be done on pool 0 only, but
-        ! ... mix_rho contains a call to rho_ddot that in the PAW case
-        ! ... is parallelized on the entire image
+        ! ... The mixing is done on pool 0 only (image parallelization
+        ! ... inside mix_rho => rho_ddot => PAW_ddot is no longer there)
         !
-        ! IF ( my_pool_id == root_pool ) 
-        CALL mix_rho( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, &
-                      iunmix, conv_elec )
+        IF ( my_pool_id == root_pool ) CALL mix_rho( rho, rhoin, &
+                mixing_beta, dr2, tr2_min, iter, nmix, iunmix, conv_elec )
         !
         ! ... Results are broadcast from pool 0 to others to prevent trouble
         ! ... on machines unable to yield the same results for the same 
@@ -755,6 +753,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
               IF (ALLOCATED(rhoin%ns_nc)) CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
            ELSE
               IF (ALLOCATED(rhoin%ns)) CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
+           ENDIF
+           ! DFT+U+V: this variable is not in "mix-type" variable rhoin
+           IF (lda_plus_u_kind.EQ.2) THEN
+              IF (ALLOCATED(nsg) ) CALL mp_bcast ( nsg, root_pool, inter_pool_comm)
            ENDIF
         ENDIF
         !

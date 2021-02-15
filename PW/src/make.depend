@@ -1238,6 +1238,7 @@ hinit1.o : ../../Modules/noncol.o
 hinit1.o : ../../Modules/recvec.o
 hinit1.o : ../../Modules/wannier_new.o
 hinit1.o : ../../upflib/paw_variables.o
+hinit1.o : exx_base.o
 hinit1.o : ldaU.o
 hinit1.o : martyna_tuckerman.o
 hinit1.o : newd.o

@@ -89,6 +89,11 @@ foreach(test_category IN LISTS qe_test_categories)
           set(actual_test_num_threads 1)
         endif()
 
+        set(expected_exit_msg_file "${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/${test_input_file_name_no_extension}.expected_exit_msg")
+        if(EXISTS "${expected_exit_msg_file}")
+          file(STRINGS "${expected_exit_msg_file}" expected_exit_msg)
+        endif()
+
         math(EXPR TOT_PROCS "${actual_test_num_procs} * ${actual_test_num_threads}")
         #message("${subfolder_name} on ${TOT_PROCS} processes_x_threads")
 
@@ -98,6 +103,12 @@ foreach(test_category IN LISTS qe_test_categories)
                              REQUIRED_FILES ${test_input_relative}
                              RESOURCE_LOCK shared_workdir_${test_work_dir}
                              DEPENDS ${check_pseudo_test_name})
+
+        if(DEFINED expected_exit_msg)
+          set_tests_properties(${test_name} PROPERTIES PASS_REGULAR_EXPRESSION "${expected_exit_msg}")
+          unset(expected_exit_msg)
+        endif()
+
         set_property(TEST ${test_name} APPEND PROPERTY LABELS "system;${subfolder_name}")
         if(in_test_series)
           set_property(TEST ${test_name} APPEND PROPERTY DEPENDS "${base_test_name};${last_test_name}")
