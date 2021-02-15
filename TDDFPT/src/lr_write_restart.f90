@@ -34,6 +34,7 @@ SUBROUTINE lr_write_restart()
   use lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : alat, omega
   USE qpoint,               ONLY : nksq
+  USE control_lr,           ONLY : nbnd_occx
   !
   IMPLICIT NONE
   CHARACTER(len=6), EXTERNAL :: int_to_char
@@ -201,7 +202,7 @@ SUBROUTINE lr_write_restart()
     !
     IF (magnons) THEN
        !
-       nwordrestart = 2 * 2 * nbnd * npwx * npol * nksq
+       nwordrestart = 2 * 2 * nbnd_occx * npwx * npol * nksq
        !
        CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
        !

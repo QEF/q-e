@@ -15,7 +15,7 @@ SUBROUTINE print_clock_lr()
    USE io_global,        ONLY : stdout
    USE mp_world,         ONLY : mpime, root
    USE realus,           ONLY : real_space
-   USE lr_variables,     ONLY : davidson, eels
+   USE lr_variables,     ONLY : davidson, eels, magnons
    USE xc_lib,           ONLY : xclib_dft_is
    !
    IMPLICIT NONE
@@ -24,6 +24,8 @@ SUBROUTINE print_clock_lr()
    !
    IF (eels) THEN
       CALL print_clock( 'lr_eels_main' )
+   ELSEIF (magnons) THEN
+      CALL print_clock( 'lr_magnons_main' )
    ELSEIF (davidson) THEN
       CALL print_clock( 'lr_dav_main' )
    ELSE

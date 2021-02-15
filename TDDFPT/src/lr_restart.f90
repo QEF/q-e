@@ -36,6 +36,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE fft_base,             ONLY : dfftp
   USE noncollin_module,     ONLY : nspin_mag, npol
   USE qpoint,               ONLY : nksq
+  USE control_lr,           ONLY : nbnd_occx
 
   IMPLICIT NONE
   !
@@ -209,7 +210,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ! Reading Lanczos vectors
   !
   IF (magnons) THEN
-     nwordrestart = 2 * 2 * nbnd * npwx * npol * nksq
+     nwordrestart = 2 * 2 * nbnd_occx * npwx * npol * nksq
      !
      CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
      !
