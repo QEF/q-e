@@ -24,6 +24,20 @@ MODULE upf_spinorb
   !! transform real spherical harmonics into complex ones
   COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
   !! function needed to account for spinors.
+  !
+  ! GPU vars
+  COMPLEX(DP), ALLOCATABLE :: fcoef_d(:,:,:,:,:)
+#if defined(__CUDA)
+  attributes (DEVICE) :: fcoef_d
+#endif
+
+CONTAINS
+
+  SUBROUTINE deallocate_spinorb
+     IMPLICIT NONE
+     IF( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef )
+     IF( ALLOCATED( fcoef_d ) ) DEALLOCATE( fcoef_d )
+  END SUBROUTINE deallocate_spinorb
 
 END MODULE upf_spinorb
 
