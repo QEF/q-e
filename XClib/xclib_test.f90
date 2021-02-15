@@ -31,7 +31,7 @@ PROGRAM xclib_test
                          xclib_get_ID, xclib_reset_dft, xc_gcx,           &
                          xclib_dft_is_libxc, xclib_init_libxc,            &
                          xclib_finalize_libxc
-  USE xclib_utils and_para
+  USE xclib_utils_and_para
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -62,7 +62,6 @@ PROGRAM xclib_test
   INTEGER :: nnodes, nlen
   !
   INTEGER, PARAMETER :: stdin  = 5
-  INTEGER, PARAMETER :: stdout = 6
   !
   !-------- Grid dim vars --------------------
   INTEGER, PARAMETER :: npoints = 90000

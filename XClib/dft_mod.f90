@@ -179,8 +179,7 @@ CONTAINS
        dft_defined = xclib_set_dft_IDs(1,4,25,0,0,0)
     ! special case : RPBE
     CASE( 'RPBE' )
-       CALL xclib_error( 'set_dft_from_name', &
-                    'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)', 1 )
+       dft_defined = xclib_set_dft_IDs(1,4,44,4,0,0)
     ! special case : PBE0
     CASE( 'PBE0' )
        dft_defined = xclib_set_dft_IDs(6,4,8,4,0,0)
