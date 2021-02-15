@@ -25,7 +25,7 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   USE splinelib
   USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh
   !
-  USE us_gpum,    ONLY : using_tab, using_tab_d2y
+  USE uspp_data_gpum,    ONLY : using_tab, using_tab_d2y
   !
   IMPLICIT NONE
   !

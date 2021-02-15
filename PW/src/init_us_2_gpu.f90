@@ -23,9 +23,8 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
   USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib_gpum, ONLY : splint_eq_gpu
-!  USE ylmr2_gpum,  ONLY : ylmr2_gpu
   !
-  USE us_gpum,    ONLY : using_tab_d, using_tab_d2y_d
+  USE uspp_data_gpum,   ONLY : using_tab_d, using_tab_d2y_d
   USE device_fbuff_m,   ONLY : dev_buf
 #if defined(__CUDA)
   USE cudafor

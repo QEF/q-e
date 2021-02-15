@@ -73,7 +73,7 @@ SUBROUTINE clean_pw( lflag )
   USE gvect_gpum,           ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   USE uspp_gpum,            ONLY : deallocate_uspp_gpu
-  USE us_gpum,              ONLY : deallocate_us_gpu
+  USE uspp_data_gpum,       ONLY : deallocate_uspp_data_gpu
   USE upf_spinorb_gpum,     ONLY : deallocate_spinorb_gpu
   !
   IMPLICIT NONE
@@ -153,7 +153,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
   CALL deallocate_uspp_data()
-  CALL deallocate_us_gpu()
+  CALL deallocate_uspp_data_gpu()
   !
   IF ( lspinorb ) THEN
      CALL deallocate_spinorb()

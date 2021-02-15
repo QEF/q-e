@@ -339,12 +339,12 @@
 #endif
      END SUBROUTINE using_tab_d2y_d
      !
-     SUBROUTINE deallocate_us_gpu
+     SUBROUTINE deallocate_uspp_data_gpu
        qrad_d_ood = .false.
        tab_d_ood = .false.
        tab_at_d_ood = .false.
        tab_d2y_d_ood = .false.
-     END SUBROUTINE deallocate_us_gpu
+     END SUBROUTINE deallocate_uspp_data_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE uspp_data_gpum
 !=----------------------------------------------------------------------------=!!

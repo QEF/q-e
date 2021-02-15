@@ -24,7 +24,7 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
   !
-  USE us_gpum,      ONLY : using_tab, using_tab_d2y
+  USE uspp_data_gpum,   ONLY : using_tab, using_tab_d2y
   !
   IMPLICIT NONE
   !

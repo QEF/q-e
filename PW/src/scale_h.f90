@@ -30,8 +30,7 @@ SUBROUTINE scale_h
   USE mp_bands,       ONLY : intra_bgrp_comm
   !
   USE gvect_gpum,     ONLY : using_g, using_g_d, using_gg, using_gg_d
-  USE us_gpum,        ONLY : using_tab, using_tab_at, using_qrad
-  !
+  USE uspp_data_gpum, ONLY : using_tab, using_tab_at, using_qrad
   !
   IMPLICIT NONE
   !

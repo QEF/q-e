@@ -41,7 +41,7 @@ SUBROUTINE allocate_nlpot
   USE uspp_gpum,        ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
                                using_deeq, using_deeq_nc, using_deeq_nc_d, &
                                using_qq_at, using_qq_so, using_becsum, using_ebecsum
-  USE us_gpum,          ONLY : using_tab, using_tab_at, using_tab_d2y, using_qrad
+  USE uspp_data_gpum,   ONLY : using_tab, using_tab_at, using_tab_d2y, using_qrad
   !
   IMPLICIT NONE
   !

@@ -3783,7 +3783,7 @@ end associate
   USE becmod,        ONLY : calbec
   USE mp_exx,        ONLY : ibands, nibands, my_egrp_id
   !
-  USE us_gpum,       ONLY : using_tab, using_tab_d2y
+  USE uspp_data_gpum,ONLY : using_tab, using_tab_d2y
   !
   IMPLICIT NONE
   !
