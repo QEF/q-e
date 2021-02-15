@@ -485,10 +485,6 @@ divide_class_so.o : ../../Modules/noncol.o
 divide_class_so.o : pwcom.o
 divide_et_impera.o : ../../Modules/kind.o
 divide_et_impera.o : ../../Modules/mp_pools.o
-dqvan2.o : ../../Modules/kind.o
-dqvan2.o : ../../upflib/us_gpum.o
-dqvan2.o : ../../upflib/uspp.o
-dqvan2.o : ../../upflib/uspp_data.o
 drhoc.o : ../../Modules/constants.o
 drhoc.o : ../../Modules/kind.o
 drhoc_gpu.o : ../../Modules/constants.o
@@ -2086,11 +2082,6 @@ pwscf.o : ../../Modules/command_line_options.o
 pwscf.o : ../../Modules/environment.o
 pwscf.o : ../../Modules/mp_global.o
 pwscf.o : ../../Modules/read_input.o
-qvan2_gpu.o : ../../Modules/kind.o
-qvan2_gpu.o : ../../upflib/us_gpum.o
-qvan2_gpu.o : ../../upflib/uspp.o
-qvan2_gpu.o : ../../upflib/uspp_data.o
-qvan2_gpu.o : ../../upflib/uspp_gpu.o
 rdiagh.o : ../../Modules/kind.o
 rdiagh.o : ../../Modules/mp_bands.o
 rdiagh.o : ../../UtilXlib/mp.o

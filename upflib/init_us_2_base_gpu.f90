@@ -18,11 +18,12 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   USE constants,    ONLY : tpi
   USE gvect_gpum,   ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
   USE wvfct,        ONLY : npwx
-  USE uspp_data,    ONLY : nqx, dq, spline_ps, tab_d, tab_d2y_d
-  USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
-  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
+  USE uspp_data,    ONLY : nqx, dq, spline_ps
+  USE us_gpum,      ONLY : tab_d, tab_d2y_d
   USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib_gpum, ONLY : splint_eq_gpu
+  USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
+  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
 !  USE ylmr2_gpum,  ONLY : ylmr2_gpu
   !
   USE us_gpum,    ONLY : using_tab_d, using_tab_d2y_d

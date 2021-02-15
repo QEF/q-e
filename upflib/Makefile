@@ -10,6 +10,7 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib
 OBJS= \
 atom.o \
 atomic_number.o \
+dqvan2.o \
 gth.o \
 init_us_0.o \
 init_us_b0.o \
@@ -56,6 +57,7 @@ OBJS += \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
   splinelib_gpu.o \
+  qvan2_gpu.o \
   uspp_gpu.o \
   ylmr2_gpu.o
 

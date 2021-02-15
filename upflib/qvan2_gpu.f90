@@ -22,10 +22,9 @@ attributes(global) subroutine qvan2_kernel(ngy, ih, jh, np, qmod_d, qg_d, ylmk0_
    !     q(g,i,j) = sum_lm (-i)^l ap(lm,i,j) yr_lm(g^) qrad(g,l,i,j)
    !
    !
-   USE kinds, ONLY: DP
-   USE us_gpum, ONLY: qrad_d
-   USE uspp,      ONLY: lpl_d, lpx_d, ap_d
-   USE uspp_gpum, ONLY : indv_d, nhtolm_d
+   USE upf_kinds, ONLY: DP
+   USE uspp_data, ONLY: qrad_d
+   USE uspp,      ONLY: lpl_d, lpx_d, ap_d, indv_d, nhtolm_d
    implicit none
    !
    ! Input variables
@@ -144,10 +143,10 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   !     q(g,i,j) = sum_lm (-i)^l ap(lm,i,j) yr_lm(g^) qrad(g,l,i,j)
   !
   !
-  USE kinds,       ONLY: DP
+  USE upf_kinds,   ONLY: DP
+  USE uspp_data,   ONLY: dq
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, nhtolm, indv
-  USE uspp_data,   ONLY: dq
   !
   USE us_gpum,     ONLY : using_qrad_d
   USE uspp_gpum,   ONLY : using_indv_d, using_nhtolm_d, &

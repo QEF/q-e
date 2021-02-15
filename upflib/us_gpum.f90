@@ -24,15 +24,6 @@
      iverbosity = 1
 #endif
      !
-     REAL(DP), ALLOCATABLE :: qrad_d(:, :, :, :)
-     REAL(DP), ALLOCATABLE :: tab_d(:, :, :)
-     REAL(DP), ALLOCATABLE :: tab_at_d(:, :, :)
-     REAL(DP), ALLOCATABLE :: tab_d2y_d(:, :, :)
-     !
-#if defined(__CUDA)
-     attributes (DEVICE) :: qrad_d, tab_d, tab_at_d, tab_d2y_d
-#endif
-
      LOGICAL :: qrad_ood = .false.    ! used to flag out of date variables
      LOGICAL :: qrad_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: tab_ood = .false.    ! used to flag out of date variables
@@ -51,7 +42,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp_data, ONLY : qrad
+         USE uspp_data, ONLY : qrad, qrad_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -85,7 +76,7 @@
      !
      SUBROUTINE using_qrad_d(intento, debug_info)
          !
-         USE uspp_data, ONLY : qrad
+         USE uspp_data, ONLY : qrad, qrad_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -127,7 +118,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp_data, ONLY : tab
+         USE uspp_data, ONLY : tab, tab_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -161,7 +152,7 @@
      !
      SUBROUTINE using_tab_d(intento, debug_info)
          !
-         USE uspp_data, ONLY : tab
+         USE uspp_data, ONLY : tab, tab_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -203,7 +194,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp_data, ONLY : tab_at
+         USE uspp_data, ONLY : tab_at, tab_at_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -237,7 +228,7 @@
      !
      SUBROUTINE using_tab_at_d(intento, debug_info)
          !
-         USE uspp_data, ONLY : tab_at
+         USE uspp_data, ONLY : tab_at, tab_at_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -279,7 +270,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp_data, ONLY : tab_d2y
+         USE uspp_data, ONLY : tab_d2y, tab_d2y_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -313,7 +304,7 @@
      !
      SUBROUTINE using_tab_d2y_d(intento, debug_info)
          !
-         USE uspp_data, ONLY : tab_d2y
+         USE uspp_data, ONLY : tab_d2y, tab_d2y_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -349,15 +340,12 @@
      END SUBROUTINE using_tab_d2y_d
      !
      SUBROUTINE deallocate_us_gpu
-       IF( ALLOCATED( qrad_d ) ) DEALLOCATE( qrad_d )
        qrad_d_ood = .false.
-       IF( ALLOCATED( tab_d ) ) DEALLOCATE( tab_d )
        tab_d_ood = .false.
-       IF( ALLOCATED( tab_at_d ) ) DEALLOCATE( tab_at_d )
        tab_at_d_ood = .false.
-       IF( ALLOCATED( tab_d2y_d ) ) DEALLOCATE( tab_d2y_d )
        tab_d2y_d_ood = .false.
      END SUBROUTINE deallocate_us_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE us_gpum
 !=----------------------------------------------------------------------------=!!
+

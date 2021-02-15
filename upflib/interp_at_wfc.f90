@@ -6,7 +6,7 @@ SUBROUTINE interp_at_wfc ( npw, qg, nwfcm, ntyp, chiq )
   !
   USE upf_kinds,  ONLY : dp
   USE uspp_param, ONLY : upf
-  USE uspp_data,  ONLY : tab_at, dq
+  USE uspp_data,  ONLY : dq, tab_at
   USE us_gpum,    ONLY : using_tab_at
   !
   IMPLICIT NONE

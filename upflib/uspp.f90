@@ -48,19 +48,33 @@ MODULE uspp
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, indv_ijkb0, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum, deallocate_uspp
-       
+  PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, indv_ijkb0_d, &
+            vkb_d, dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
+            becsum_d, ebecsum_d
+  !      
   PUBLIC :: okvan, nlcc_any
-  PUBLIC :: qq_so, dvan_so, deeq_nc 
+  PUBLIC :: qq_so,   dvan_so,   deeq_nc 
+  PUBLIC :: qq_so_d, dvan_so_d, deeq_nc_d 
   PUBLIC :: dbeta
+  !
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
+  !
   INTEGER ::             &! for each pair of combined momenta lm(1),lm(2): 
        lpx(nlx,nlx),     &! maximum combined angular momentum LM
        lpl(nlx,nlx,mx)    ! list of combined angular momenta  LM
-  REAL(DP) :: &
-       ap(lqmax*lqmax,nlx,nlx)
-  ! Clebsch-Gordan coefficients for spherical harmonics
+  REAL(DP) :: ap(lqmax*lqmax,nlx,nlx)
+                          ! Clebsch-Gordan coefficients for spherical harmonics
+  ! GPU vars
+  INTEGER, ALLOCATABLE ::  & ! for each pair of combined momenta lm(1),lm(2): 
+       lpx_d(:,:),         & ! maximum combined angular momentum LM
+       lpl_d(:,:,:)          ! list of combined angular momenta  LM
+  REAL(DP), ALLOCATABLE :: ap_d(:,:,:)
+#if defined (__CUDA)
+  attributes(DEVICE) :: lpx_d, lpl_d, ap_d
+#endif
+  !
   !
   INTEGER :: nkb,        &! total number of beta functions, with struct.fact.
              nkbus        ! as above, for US-PP only
@@ -72,6 +86,17 @@ MODULE uspp
        ijtoh(:,:,:),     &! correspondence beta indexes ih,jh -> composite index ijh
        indv_ijkb0(:)      ! first beta (index in the solid) for each atom 
   !
+  ! GPU vars
+  !
+  INTEGER, ALLOCATABLE :: indv_d(:,:)
+  INTEGER, ALLOCATABLE :: nhtol_d(:,:)
+  INTEGER, ALLOCATABLE :: nhtolm_d(:,:)
+  INTEGER, ALLOCATABLE :: ijtoh_d(:,:,:)
+  INTEGER, ALLOCATABLE :: indv_ijkb0_d(:)
+#if defined (__CUDA)
+  attributes(DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d
+#endif
+
   LOGICAL :: &
        okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
        nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
@@ -94,6 +119,25 @@ MODULE uspp
        dvan_so(:,:,:,:),         &! D_{nm}
        deeq_nc(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
   !
+  ! GPU vars
+  !
+  COMPLEX(DP), ALLOCATABLE :: vkb_d(:,:)
+  REAL(DP),    ALLOCATABLE :: becsum_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: ebecsum_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: deeq_d(:,:,:,:)
+  REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: qq_at_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: qq_so_d(:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
+#if defined(__CUDA)
+  attributes (DEVICE) :: vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
+                         qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
+#endif
+
+  !
   ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
   ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
   !
@@ -102,14 +146,6 @@ MODULE uspp
   REAL(DP), ALLOCATABLE :: &
        dbeta(:,:,:,:,:)      ! derivative of beta functions w.r.t. cell for CP (without struct.factor)
   !
-#if defined (__CUDA)
-  PUBLIC :: lpx_d, lpl_d, ap_d
-  INTEGER, ALLOCATABLE, DEVICE ::             &! for each pair of combined momenta lm(1),lm(2): 
-       lpx_d(:,:),     &! maximum combined angular momentum LM
-       lpl_d(:,:,:)    ! list of combined angular momenta  LM
-  REAL(DP), ALLOCATABLE, DEVICE :: &
-       ap_d(:,:,:)
-#endif
 CONTAINS
   !
   !-----------------------------------------------------------------------
@@ -190,18 +226,17 @@ CONTAINS
           end do
        end do
     end do
-    
+    ! 
     deallocate(mly)
     deallocate(ylm)
     deallocate(rr)
     deallocate(r)
+    !
 #if defined (__CUDA)
     IF (ALLOCATED(ap_d)) DEALLOCATE(ap_d)
     ALLOCATE(ap_d, SOURCE=ap)
-    !
     IF (ALLOCATED(lpx_d)) DEALLOCATE(lpx_d)
     ALLOCATE(lpx_d, SOURCE=lpx)
-    !
     IF (ALLOCATED(lpl_d)) DEALLOCATE(lpl_d)
     ALLOCATE(lpl_d, SOURCE=lpl)
 #endif
@@ -346,11 +381,25 @@ CONTAINS
     IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
-#if defined (__CUDA)
-    IF( ALLOCATED( ap_d ) )       DEALLOCATE(ap_d)
-    IF( ALLOCATED( lpx_d ) )      DEALLOCATE(lpx_d)
-    IF( ALLOCATED( lpl_d ) )      DEALLOCATE(lpl_d)
-#endif
+    IF( ALLOCATED( ap_d ) )       DEALLOCATE( ap_d )
+    IF( ALLOCATED( lpx_d ) )      DEALLOCATE( lpx_d )
+    IF( ALLOCATED( lpl_d ) )      DEALLOCATE( lpl_d )
+    IF( ALLOCATED( indv_d ) )     DEALLOCATE( indv_d )
+    IF( ALLOCATED( nhtol_d ) )    DEALLOCATE( nhtol_d )
+    IF( ALLOCATED( nhtolm_d ) )   DEALLOCATE( nhtolm_d )
+    IF( ALLOCATED( ijtoh_d ) )    DEALLOCATE( ijtoh_d )
+    IF( ALLOCATED( indv_ijkb0_d)) DEALLOCATE( indv_ijkb0_d )
+    IF( ALLOCATED( vkb_d ) )      DEALLOCATE( vkb_d )
+    IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
+    IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )
+    IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
+    IF( ALLOCATED( deeq_d ) )     DEALLOCATE( deeq_d )
+    IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
+    IF( ALLOCATED( qq_at_d ) )    DEALLOCATE( qq_at_d )
+    IF( ALLOCATED( nhtoj_d ) )    DEALLOCATE( nhtoj_d )
+    IF( ALLOCATED( qq_so_d ) )    DEALLOCATE( qq_so_d )
+    IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
+    IF( ALLOCATED( deeq_nc_d ) )  DEALLOCATE( deeq_nc_d )
     !
   END SUBROUTINE deallocate_uspp
   !

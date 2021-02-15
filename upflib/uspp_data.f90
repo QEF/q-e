@@ -14,7 +14,10 @@ MODULE uspp_data
   !
   SAVE
   PRIVATE
-  PUBLIC :: nqxq, nqx, dq, qrad, tab, tab_at, tab_d2y, spline_ps
+  !
+  PUBLIC :: nqxq, nqx, dq, spline_ps
+  PUBLIC :: qrad,   tab,   tab_at,   tab_d2y
+  PUBLIC :: qrad_d, tab_d, tab_at_d, tab_d2y_d
   !
   INTEGER :: nqxq
   !! size of interpolation table
@@ -31,6 +34,32 @@ MODULE uspp_data
   LOGICAL :: spline_ps = .FALSE.
   REAL(DP), ALLOCATABLE :: tab_d2y(:,:,:)
   !! for cubic splines
+  !
+  ! GPUs vars
+  !
+  REAL(DP), ALLOCATABLE :: qrad_d(:,:,:,:)
+  REAL(DP), ALLOCATABLE :: tab_d(:,:,:)
+  REAL(DP), ALLOCATABLE :: tab_at_d(:,:,:)
+  REAL(DP), ALLOCATABLE :: tab_d2y_d(:,:,:)
+  !   
+#if defined(__CUDA)
+  attributes (DEVICE) :: qrad_d, tab_d, tab_at_d, tab_d2y_d
+#endif
+  !
+contains
+  !
+  subroutine deallocate_uspp_data()
+     IMPLICIT NONE
+     IF( ALLOCATED( qrad ) )      DEALLOCATE( qrad )
+     IF( ALLOCATED( tab ) )       DEALLOCATE( tab )
+     IF( ALLOCATED( tab_at ) )    DEALLOCATE( tab_at )
+     IF( ALLOCATED( tab_d2y ) )   DEALLOCATE( tab_d2y )
+     !
+     IF( ALLOCATED( qrad_d ) )    DEALLOCATE( qrad_d )
+     IF( ALLOCATED( tab_d ) )     DEALLOCATE( tab_d )
+     IF( ALLOCATED( tab_at_d ) )  DEALLOCATE( tab_at_d )
+     IF( ALLOCATED( tab_d2y_d ) ) DEALLOCATE( tab_d2y_d )
+  end subroutine 
   !
 END MODULE uspp_data
 

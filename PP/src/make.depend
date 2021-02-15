@@ -52,7 +52,6 @@ atomic_wfc_nc_proj.o : ../../Modules/recvec.o
 atomic_wfc_nc_proj.o : ../../PW/src/atomic_wfc_mod.o
 atomic_wfc_nc_proj.o : ../../PW/src/pwcom.o
 atomic_wfc_nc_proj.o : ../../upflib/uspp.o
-atomic_wfc_nc_proj.o : ../../upflib/uspp_data.o
 average.o : ../../FFTXlib/fft_scalar.o
 average.o : ../../Modules/cell_base.o
 average.o : ../../Modules/constants.o

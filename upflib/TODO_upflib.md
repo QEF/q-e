@@ -34,6 +34,3 @@
   upflib/advlib      advanced initializations (init_us_0,1,2)
   upflib/tools       tools from upftools
   
-  AF: probably structuring is not the highest priority now, though it can
-      be useful to organize the material.
-  PG: agreed
