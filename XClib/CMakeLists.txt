@@ -13,7 +13,7 @@ set(sources_xclib
     qe_funct_mgga.f90
     qe_kind.f90
     xclib_error.f90
-    xclib_para_m.f90
+    xclib_utils_and_para.f90
     xc_beef_interface.f90
     xc_input_params_mod.f90
     xc_lib.f90
