@@ -54,7 +54,6 @@ ylmr2.o
 OBJS += \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
-  splinelib_gpu.o \
   qvan2_gpu.o \
   upf_spinorb_gpum.o \
   uspp_data_gpum.o \

@@ -47,8 +47,7 @@ set(src_upflib
     qvan2_gpu.f90
     uspp_gpu.f90
     ylmr2_gpu.f90
-    simpsn_gpu.f90
-    splinelib_gpu.f90)
+    simpsn_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")
 
 qe_add_library(qe_upflib ${src_upflib})

@@ -22,7 +22,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
   USE m_gth,        ONLY : mk_ffnl_gth
-  USE splinelib_gpum, ONLY : splint_eq_gpu
+  USE splinelib,    ONLY : splint_eq
   !
   USE uspp_data_gpum,   ONLY : using_tab_d, using_tab_d2y_d
   USE device_fbuff_m,   ONLY : dev_buf
@@ -118,7 +118,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
      qg_d(ig) = sqrt(qg_d(ig))*tpiba
   enddo
 
-  ! JR Don't need this when using splint_eq_gpu
+  ! JR Don't need this when using splint_eq
   !if (spline_ps) then
   !  allocate(xdata(nqx))
   !  do iq = 1, nqx
@@ -135,7 +135,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
            CALL mk_ffnl_gth( nt, nb, npw_, omega, qg_h, vq_h )
            vq_d = vq_h
         else if (spline_ps) then
-           call splint_eq_gpu(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
+           call splint_eq(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
         else
            !$cuf kernel do(1) <<<*,*>>>
            do ig = 1, npw_

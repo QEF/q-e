@@ -59,7 +59,7 @@ init_us_2_base_gpu.o : @ions_base@
 init_us_2_base_gpu.o : @kinds@
 init_us_2_base_gpu.o : @wvfct@
 init_us_2_base_gpu.o : gth.o
-init_us_2_base_gpu.o : splinelib_gpu.o
+init_us_2_base_gpu.o : splinelib.o
 init_us_2_base_gpu.o : uspp.o
 init_us_2_base_gpu.o : uspp_data.o
 init_us_2_base_gpu.o : uspp_data_gpum.o
@@ -117,7 +117,6 @@ read_uspp.o : upf_kinds.o
 read_uspp.o : upf_params.o
 simpsn.o : upf_kinds.o
 splinelib.o : upf_kinds.o
-splinelib_gpu.o : upf_kinds.o
 upf.o : gth.o
 upf.o : pseudo_types.o
 upf.o : read_cpmd.o

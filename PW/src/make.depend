@@ -1322,7 +1322,7 @@ init_us_2_gpu.o : ../../Modules/ions_base.o
 init_us_2_gpu.o : ../../Modules/kind.o
 init_us_2_gpu.o : ../../Modules/recvec_gpu.o
 init_us_2_gpu.o : ../../upflib/gth.o
-init_us_2_gpu.o : ../../upflib/splinelib_gpu.o
+init_us_2_gpu.o : ../../upflib/splinelib.o
 init_us_2_gpu.o : ../../upflib/uspp.o
 init_us_2_gpu.o : ../../upflib/uspp_data.o
 init_us_2_gpu.o : ../../upflib/uspp_data_gpum.o

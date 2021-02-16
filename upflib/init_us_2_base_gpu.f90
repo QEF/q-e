@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
+SUBROUTINE init_us_2_base_gpu ( npw_, igk__d, q_, vkb__d )
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
   !! structure factor, for all atoms, in reciprocal space.
@@ -20,7 +20,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   USE wvfct,        ONLY : npwx
   USE uspp_data,    ONLY : nqx, dq, spline_ps, tab_d, tab_d2y_d
   USE m_gth,        ONLY : mk_ffnl_gth
-  USE splinelib_gpum,   ONLY : splint_eq_gpu
+  USE splinelib,    ONLY : splint_eq
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
   !
@@ -226,4 +226,4 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
 
   call stop_clock_gpu ('init_us_2')
   return
-end subroutine init_us_2_gpu
+end subroutine init_us_2_base_gpu
