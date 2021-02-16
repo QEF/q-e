@@ -3,7 +3,7 @@
 include ../make.inc
 
 XCL = \
-xclib_para_m.o \
+xclib_utils_and_para.o \
 xclib_error.o \
 qe_kind.o \
 qe_constants.o \

@@ -21,7 +21,7 @@ endif()
 # CMake < v3.18 cannot discover the ARM Performance Library
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
     if(CMAKE_VERSION VERSION_LESS 3.18.0)
-        message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
+        message("-- CMake versions less than 3.18 cannot automatically discover the ARM Performance Library!")
     endif()
 endif()
 

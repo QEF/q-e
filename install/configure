@@ -3195,6 +3195,7 @@ case "$arch" in
         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
         xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
         armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
+        frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
         #
         if test "$ifort_version" != ""
         then
@@ -3237,6 +3238,12 @@ case "$arch" in
                 f90_minor_version=`echo $version | cut -d. -f2`
                 f90_in_mpif90="armflang"
                 try_foxflags="-D__PGI"
+        elif test "$frt_version" != ""
+        then
+                version=`echo $frt_version | cut -d" " -f 5`
+                echo "${ECHO_T}frt $version"
+                f90_in_mpif90="frt"
+                try_foxflags="-D__FUJITSU"
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
@@ -6113,7 +6120,7 @@ if test "$fft_libs" = ""; then
 
    elif test "$have_armpl" -eq 1; then
       # no check needed if ARM libraries have been detected
-      try_dflags="$try_dflags -D__ARM_LIB"
+      try_dflags="$try_dflags -D__FFTW3"
       have_fft=1
 
    elif test "$have_essl" -eq 1; then
