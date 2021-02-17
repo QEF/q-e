@@ -7,6 +7,7 @@ set(src_upflib
     init_us_1.f90
     init_at_1.f90
     interp_at_wfc.f90
+    init_us_2_base.f90
     gth.f90 
     paw_variables.f90
     pseudo_types.f90 
@@ -41,6 +42,7 @@ set(src_upflib
     xmltools.f90
     ylmr2.f90
     # GPU
+    init_us_2_base_gpu.f90
     uspp_data_gpum.f90
     upf_spinorb_gpum.f90
     interp_at_wfc_gpu.f90

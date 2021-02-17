@@ -272,7 +272,6 @@ PWLIBS += \
   g2_kin_gpu.o \
   scf_mod_gpu.o \
   usnldiag_gpu.o \
-  init_us_2_gpu.o \
   add_vuspsi_gpu.o \
   addusdens_gpu.o \
   sum_band_gpu.o \

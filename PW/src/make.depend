@@ -1306,15 +1306,11 @@ init_run.o : pwcom.o
 init_run.o : pwcom_gpu.o
 init_run.o : symme.o
 init_us_2.o : ../../Modules/cell_base.o
-init_us_2.o : ../../Modules/constants.o
+init_us_2.o : ../../Modules/fft_base.o
 init_us_2.o : ../../Modules/ions_base.o
 init_us_2.o : ../../Modules/kind.o
 init_us_2.o : ../../Modules/recvec.o
-init_us_2.o : ../../upflib/gth.o
-init_us_2.o : ../../upflib/splinelib.o
 init_us_2.o : ../../upflib/uspp.o
-init_us_2.o : ../../upflib/uspp_data.o
-init_us_2.o : ../../upflib/uspp_data_gpum.o
 init_us_2.o : pwcom.o
 init_us_2_gpu.o : ../../Modules/cell_base.o
 init_us_2_gpu.o : ../../Modules/constants.o
