@@ -69,7 +69,6 @@ SUBROUTINE read_cpmd(iunps, upf)
   CHARACTER (len=4) token
   REAL (dp) :: amesh_, vnl0(0:3)
   LOGICAL :: grid_read = .false., wfc_read=.false.
-  REAL(dp), EXTERNAL :: upf_erf
   !
   info_lines = 0
 10 READ (iunps,'(A)',end=20,err=20) line
@@ -289,7 +288,7 @@ SUBROUTINE read_cpmd(iunps, upf)
      DO l=0, lmax
         DO i=1, mesh
            vnl(i,l) = ( a(l) + b(l)*r(i)**2 ) * exp (-alpha(l)*r(i)**2) - &
-                       zv * upf_erf (sqrt(alphaloc)*r(i))/r(i)
+                       zv * erf (sqrt(alphaloc)*r(i))/r(i)
         ENDDO
      ENDDO
   ENDIF
@@ -313,7 +312,6 @@ SUBROUTINE convert_cpmd(upf)
   !
   REAL(dp), ALLOCATABLE :: aux(:)
   REAL(dp) :: x, x2, vll, rcloc, fac
-  REAL(dp), EXTERNAL :: upf_erf
   CHARACTER (len=20):: dft
   CHARACTER (len=2):: label
   CHARACTER (len=1):: spdf(0:3) = ['S','P','D','F']
@@ -470,7 +468,7 @@ SUBROUTINE convert_cpmd(upf)
      DO i=1,upf%mesh
         x = upf%r(i)/rc
         x2=x**2
-        upf%vloc(i) = e2 * ( -upf%zp*upf_erf(x/sqrt(2.d0))/upf%r(i) + &
+        upf%vloc(i) = e2 * ( -upf%zp*erf(x/sqrt(2.d0))/upf%r(i) + &
              exp ( -0.5d0*x2 ) * (c(1) + x2*( c(2) + x2*( c(3) + x2*c(4) ) ) ) )
      ENDDO
      upf%nbeta=0

@@ -47,7 +47,6 @@ set(src_pw
    src/divide_class.f90 
    src/divide_class_so.f90 
    src/divide_et_impera.f90 
-   src/dqvan2.f90 
    src/drhoc.f90 
    src/rotate_wfc.f90 
    src/run_driver.f90 
@@ -263,7 +262,6 @@ set(src_pw
    src/orthoatwfc_gpu.f90
    src/wfcinit_gpu.f90
    src/stres_loc_gpu.f90
-   src/qvan2_gpu.f90
    src/add_paw_to_deeq_gpu.f90
    src/addusdens_gpu.f90
    src/init_us_2_gpu.f90

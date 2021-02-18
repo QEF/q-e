@@ -37,7 +37,7 @@ init_us_1.o : upf_spinorb.o
 init_us_1.o : upf_spinorb_gpum.o
 init_us_1.o : uspp.o
 init_us_1.o : uspp_data.o
-init_us_1.o : uspp_gpu.o
+init_us_1.o : uspp_gpum.o
 init_us_2_base.o : gth.o
 init_us_2_base.o : splinelib.o
 init_us_2_base.o : upf_const.o
@@ -73,7 +73,7 @@ qvan2.o : uspp_data.o
 qvan2_gpu.o : upf_kinds.o
 qvan2_gpu.o : uspp.o
 qvan2_gpu.o : uspp_data.o
-qvan2_gpu.o : uspp_gpu.o
+qvan2_gpu.o : uspp_gpum.o
 radial_grids.o : upf_const.o
 radial_grids.o : upf_kinds.o
 read_cpmd.o : pseudo_types.o
@@ -117,7 +117,6 @@ upf_auxtools.o : upf_const.o
 upf_auxtools.o : upf_io.o
 upf_auxtools.o : upf_kinds.o
 upf_const.o : upf_kinds.o
-upf_erf.o : upf_kinds.o
 upf_error.o : upf_parallel_include.o
 upf_invmat.o : upf_kinds.o
 upf_ions.o : pseudo_types.o
@@ -141,7 +140,7 @@ uspp.o : upf_invmat.o
 uspp.o : upf_kinds.o
 uspp.o : upf_params.o
 uspp_data.o : upf_kinds.o
-uspp_gpu.o : uspp.o
+uspp_gpum.o : uspp.o
 virtual_v2.o : pseudo_types.o
 virtual_v2.o : splinelib.o
 virtual_v2.o : upf.o

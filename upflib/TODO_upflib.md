@@ -18,14 +18,11 @@
     - spinorb    => upf_spinorb
   Makefile simplified
 
-* To Be Done:
-  - The same code interpolating tab_at appears in atomic_wfc, gen_at_dy,
-    plus_u_full. It should be extracted and put into u_fdata
-  - The same code appears also in PP/src/atomic_wfc_nc_proj.f90, that should
-    be merged with (or into) PW/src/atomic_wfc.f90
-  - Very similar code in gen_at_dj should also be moved into uspp_data
+* Note:
   - nsp is both in upf_ions and in uspp_param
   - lmaxx and lqmax are both in upf_params and in spinorb
+  - upf_erf is likely obsolete: the erf function should be standard fortran
+    and work for all compilers (wasn't true years ago)
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as

@@ -34,8 +34,6 @@ upf.o \
 upf_auxtools.o \
 upf_const.o \
 upf_error.o \
-upf_erf.o \
-upf_free_unit.o \
 upf_invmat.o \
 upf_io.o \
 upf_ions.o \
@@ -53,12 +51,12 @@ ylmr2.o
 
 # GPU versions of routines
 OBJS += \
+  upf_spinorb_gpum.o \
+  uspp_gpum.o \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
   qvan2_gpu.o \
   init_us_2_base_gpu.o \
-  upf_spinorb_gpum.o \
-  uspp_gpu.o \
   ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x

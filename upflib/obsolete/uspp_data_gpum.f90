@@ -15,10 +15,7 @@
 #endif
      IMPLICIT NONE
      SAVE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
-     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
-     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+     !
      INTEGER :: iverbosity = 0
 #if defined(__DEBUG)
      iverbosity = 1
