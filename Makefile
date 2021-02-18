@@ -63,6 +63,8 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
+kc : pw pp w90
+
 pw : pwlibs
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
@@ -148,8 +150,6 @@ gui :
 	fi
 
 pwall : pw neb ph pp pwcond acfdt
-
-kc    : pw pp w90
 
 all   : pwall cp ld1 tddfpt hp xspectra gwl kc
 
