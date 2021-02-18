@@ -41,9 +41,9 @@ set(src_upflib
     # GPU
     uspp_data_gpum.f90
     upf_spinorb_gpum.f90
+    uspp_gpum.f90
     interp_at_wfc_gpu.f90
     qvan2_gpu.f90
-    uspp_gpu.f90
     ylmr2_gpu.f90
     simpsn_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")

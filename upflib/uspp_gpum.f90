@@ -9,7 +9,6 @@
 #define DIMS2D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2)
 #define DIMS3D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3)
 #define DIMS4D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4)
-#define DIMS5D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4),lbound(arr,5):ubound(arr,5)
 !=----------------------------------------------------------------------------=!
    MODULE uspp_gpum
 !=----------------------------------------------------------------------------=!
@@ -21,10 +20,6 @@
                          qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
      IMPLICIT NONE
      SAVE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
-     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
-     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
      INTEGER :: iverbosity = 0
 #if defined(__DEBUG)
      iverbosity = 1

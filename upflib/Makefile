@@ -50,12 +50,12 @@ ylmr2.o
 
 # GPU versions of routines
 OBJS += \
+  upf_spinorb_gpum.o \
+  uspp_data_gpum.o \
+  uspp_gpum.o \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
   qvan2_gpu.o \
-  upf_spinorb_gpum.o \
-  uspp_data_gpum.o \
-  uspp_gpu.o \
   ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x
