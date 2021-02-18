@@ -83,7 +83,6 @@
 #endif
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: gg(:), tpiba2
-       REAL(DP), EXTERNAL :: qe_erf
        REAL(DP) :: gcutz
        INTEGER :: ig
        !
@@ -93,7 +92,7 @@
        IF( gcutz > 0.0d0 ) THEN
           DO ig=1,ngw
              g2kin(ig) = gg(ig) + gcutz * &
-                     ( 1.0d0 + qe_erf( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
+                     ( 1.0d0 + ERF( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
           ENDDO
        ELSE
           g2kin( 1 : ngw ) = gg( 1 : ngw )
