@@ -34,7 +34,6 @@ upf_auxtools.o \
 upf_const.o \
 upf_error.o \
 upf_erf.o \
-upf_free_unit.o \
 upf_invmat.o \
 upf_io.o \
 upf_ions.o \
