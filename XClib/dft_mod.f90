@@ -337,8 +337,9 @@ CONTAINS
         !
         IF ( n_ext_params /= 0 ) THEN       
           WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends",&
-                        &/5X," on external parameters: the correct operation in",&
-                        &/5X," QE is not guaranteed with default values.")' ) id_vec(ii)
+                        &/5X," on external parameters: check the user_guide of",&
+                        &/5X," QE if you need to modify them or to check their", &
+                        &/5x," default values.")' ) id_vec(ii)
         ENDIF
         IF ( flag_v(1) == 0 ) THEN
           WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
