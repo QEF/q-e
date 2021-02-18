@@ -837,6 +837,7 @@ wannier2odd.o : ../../Modules/control_flags.o
 wannier2odd.o : ../../Modules/fft_base.o
 wannier2odd.o : ../../Modules/io_base.o
 wannier2odd.o : ../../Modules/io_files.o
+wannier2odd.o : ../../Modules/io_global.o
 wannier2odd.o : ../../Modules/kind.o
 wannier2odd.o : ../../Modules/mp_bands.o
 wannier2odd.o : ../../Modules/mp_pools.o
