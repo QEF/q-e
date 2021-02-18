@@ -47,7 +47,6 @@ set(src_pw
    src/divide_class.f90 
    src/divide_class_so.f90 
    src/divide_et_impera.f90 
-   src/dqvan2.f90 
    src/drhoc.f90 
    src/rotate_wfc.f90 
    src/run_driver.f90 
