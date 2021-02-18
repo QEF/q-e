@@ -52,7 +52,6 @@ ylmr2.o
 # GPU versions of routines
 OBJS += \
   upf_spinorb_gpum.o \
-  uspp_data_gpum.o \
   uspp_gpum.o \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
