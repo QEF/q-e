@@ -9,8 +9,6 @@ MODULE esm_force_mod
 
   IMPLICIT NONE
 
-  REAL(DP), EXTERNAL   :: qe_erf, qe_erfc
-
 CONTAINS
 
   SUBROUTINE esm_force_ew(forceion)
@@ -49,7 +47,7 @@ CONTAINS
         CALL errore('esm_force_ew', 'optimal alpha not found', 1)
       END IF
       upperbound = e2*charge**2*sqrt(2.d0*alpha/tpi)* &
-                   qe_erfc(sqrt(tpiba2*gcutm/4.d0/alpha))
+                   erfc(sqrt(tpiba2*gcutm/4.d0/alpha))
       IF (upperbound < 1.0d-7) EXIT
     END DO
     !write(*,'(5X,A,F5.2)')'alpha used in esm ewald force :',alpha
@@ -184,7 +182,7 @@ CONTAINS
         DO nr = 1, nrm
           rr = sqrt(r2(nr))*alat
           force(:, na) = force(:, na) &
-                         - fac/rr**2*(qe_erfc(tmp*rr)/rr + 2.d0*tmp/sqrt(pi) &
+                         - fac/rr**2*(erfc(tmp*rr)/rr + 2.d0*tmp/sqrt(pi) &
                                       *EXP(-tmp**2*rr**2))*r(:, nr)*alat
         ENDDO
       ENDDO
@@ -312,7 +310,7 @@ CONTAINS
               rr = sqrt(r2(nr))*alat
               DO ipol = 1, 3
                 force(ipol, na) = force(ipol, na) &
-                                  - fac/rr**2*(qe_erfc(tmp*rr)/rr + 2.d0*tmp/sqrt(pi) &
+                                  - fac/rr**2*(erfc(tmp*rr)/rr + 2.d0*tmp/sqrt(pi) &
                                   *EXP(-tmp**2*rr**2))*r(ipol, nr)*alat
               ENDDO
             ENDDO
@@ -505,7 +503,7 @@ CONTAINS
         ENDIF
         t2_for = zv(ityp(it1))*zv(ityp(it2))*fpi/sa
         ! bc1
-        kk1_for = 0.5d0*qe_erf(tmp*(z - zp))
+        kk1_for = 0.5d0*erf(tmp*(z - zp))
         kk2_for = 0.d0
 
         c1_for(:) = 0.d0; c2_for(:) = 0.d0
@@ -594,7 +592,7 @@ CONTAINS
         ENDIF
         t2_for = zv(ityp(it1))*zv(ityp(it2))*fpi/sa
         ! bc2
-        kk1_for = 0.5d0*qe_erf(tmp*(z - zp))
+        kk1_for = 0.5d0*erf(tmp*(z - zp))
         kk2_for = -0.5d0*(z/z1)
 
         c1_for(:) = 0.d0; c2_for(:) = 0.d0
@@ -697,7 +695,7 @@ CONTAINS
         ENDIF
         t2_for = zv(ityp(it1))*zv(ityp(it2))*fpi/sa
         ! bc3
-        kk1_for = 0.5d0*qe_erf(tmp*(z - zp))
+        kk1_for = 0.5d0*erf(tmp*(z - zp))
         kk2_for = -0.5d0
 
         c1_for(:) = 0.d0; c2_for(:) = 0.d0
@@ -805,18 +803,18 @@ CONTAINS
         arg106 = aaa/tmp + tmp*(z1 - zp)
         IF (z < z1) THEN  ! factor 1/2 <- non-reciprocality
           IF (zp < z1) THEN
-            kk1_for = 0.5d0*(qe_erf(arg101) - qe_erf(arg102))/2.d0 &
+            kk1_for = 0.5d0*(erf(arg101) - erf(arg102))/2.d0 &
                       - 0.5d0*exp_erfc(arg006, arg106)/2.d0
-            kk2_for = -0.5d0*qe_erfc(arg101)/2.d0
+            kk2_for = -0.5d0*erfc(arg101)/2.d0
           ELSE
-            kk1_for = 0.5d0*(qe_erf(arg101) - qe_erf(arg102))/2.d0 &
+            kk1_for = 0.5d0*(erf(arg101) - erf(arg102))/2.d0 &
                       - 0.5d0*exp_erfc(arg006, arg106)/2.d0
             kk2_for = -0.5d0*exp_erfc(arg004, arg101)/2.d0
           ENDIF
         ELSE
           IF (zp < z1) THEN
             kk1_for = -0.5d0*exp_erfc(arg006, arg104)/2.d0
-            kk2_for = -0.5d0*qe_erfc(arg101)/2.d0
+            kk2_for = -0.5d0*erfc(arg101)/2.d0
           ELSE
             kk1_for = -0.5d0*exp_erfc(arg006, arg104)/2.d0
             kk2_for = -0.5d0*exp_erfc(arg004, arg101)/2.d0
@@ -1124,7 +1122,7 @@ CONTAINS
           END IF
           z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc1
-          cc1 = 0.5d0*qe_erf(tmp*(z - zp))
+          cc1 = 0.5d0*erf(tmp*(z - zp))
           cc2 = (0.d0, 0.d0)
 
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
@@ -1298,7 +1296,7 @@ CONTAINS
           END IF
           z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc2
-          cc1 = 0.5d0*qe_erf(tmp*(z - zp))
+          cc1 = 0.5d0*erf(tmp*(z - zp))
           cc2 = -0.5d0*(z/z1)
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
         ENDDO
@@ -1463,7 +1461,7 @@ CONTAINS
           END IF
           z = DBLE(k3) / DBLE(dfftp%nr3) * L
           ! bc3
-          cc1 = 0.5d0*qe_erf(tmp*(z - zp))
+          cc1 = 0.5d0*erf(tmp*(z - zp))
           cc2 = -0.5d0
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
         ENDDO
@@ -1679,7 +1677,7 @@ CONTAINS
           arg104 = aaa/tmp + tmp*(z - zp)
           arg106 = aaa/tmp + tmp*(z1 - zp)
           IF (z < z1) THEN
-            cc1 = 0.5d0*(qe_erf(arg101) - qe_erf(arg102))
+            cc1 = 0.5d0*(erf(arg101) - erf(arg102))
             cc2 = -0.5d0*exp_erfc(arg006, arg106)
           ELSE
             cc1 = 0.d0
