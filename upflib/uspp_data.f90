@@ -18,7 +18,10 @@ MODULE uspp_data
   PUBLIC :: nqxq, nqx, dq, spline_ps
   PUBLIC :: qrad,   tab,   tab_at,   tab_d2y
   PUBLIC :: qrad_d, tab_d, tab_at_d, tab_d2y_d
+  !
+  PUBLIC :: allocate_uspp_data
   PUBLIC :: deallocate_uspp_data
+  PUBLIC :: scale_uspp_data
   !
   INTEGER :: nqxq
   !! size of interpolation table
@@ -49,18 +52,58 @@ MODULE uspp_data
   !
 contains
   !
-  subroutine deallocate_uspp_data()
-     IMPLICIT NONE
-     IF( ALLOCATED( qrad ) )      DEALLOCATE( qrad )
-     IF( ALLOCATED( tab ) )       DEALLOCATE( tab )
-     IF( ALLOCATED( tab_at ) )    DEALLOCATE( tab_at )
-     IF( ALLOCATED( tab_d2y ) )   DEALLOCATE( tab_d2y )
+  subroutine allocate_uspp_data(use_gpu,nqxq_,nqx_,nbetam,nwfcm,lmaxq,nsp)
+     implicit none
+     logical, intent(in) :: use_gpu
+     integer, intent(in) :: nqxq_,nqx_,nbetam,nwfcm,lmaxq,nsp
      !
-     IF( ALLOCATED( qrad_d ) )    DEALLOCATE( qrad_d )
-     IF( ALLOCATED( tab_d ) )     DEALLOCATE( tab_d )
-     IF( ALLOCATED( tab_at_d ) )  DEALLOCATE( tab_at_d )
-     IF( ALLOCATED( tab_d2y_d ) ) DEALLOCATE( tab_d2y_d )
+     if (nqxq_/=nqxq) call errore("allocate_uspp_data","invalid nqxq_",1)
+     if (nqx_/=nqx)   call errore("allocate_uspp_data","invalid nqx_",1)
+     !
+     if (lmaxq>0) allocate(qrad(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
+     allocate(tab(nqx_,nbetam,nsp))
+     allocate(tab_at(nqx_,nwfcm,nsp))
+     if (spline_ps) allocate(tab_d2y(nqx_,nbetam,nsp))
+     !
+     IF (use_gpu) then
+        ! allocations with zero size protected
+        ! since problematic with CUDAfor
+        if (lmaxq>0.and.nbetam>0)  &
+                       allocate(qrad_d(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
+        if (nbetam>0)  allocate(tab_d(nqx_,nbetam,nsp))
+        if (nwfcm>0)   allocate(tab_at_d(nqx_,nwfcm,nsp))
+        if (spline_ps) allocate(tab_d2y_d(nqx_,nbetam,nsp))
+     endif
+     !
+  end subroutine allocate_uspp_data
+  !
+  subroutine deallocate_uspp_data()
+     implicit none
+     if( allocated( qrad ) )      deallocate( qrad )
+     if( allocated( tab ) )       deallocate( tab )
+     if( allocated( tab_at ) )    deallocate( tab_at )
+     if( allocated( tab_d2y ) )   deallocate( tab_d2y )
+     !
+     if( allocated( qrad_d ) )    deallocate( qrad_d )
+     if( allocated( tab_d ) )     deallocate( tab_d )
+     if( allocated( tab_at_d ) )  deallocate( tab_at_d )
+     if( allocated( tab_d2y_d ) ) deallocate( tab_d2y_d )
   end subroutine 
+  !
+  subroutine scale_uspp_data( vol_ratio_m1 )
+     ! vol_ratio_m1 = omega_old / omega
+     implicit none
+     real(DP), intent(in) :: vol_ratio_m1
+     !
+     tab(:,:,:)    = tab(:,:,:) * SQRT(vol_ratio_m1)
+     qrad(:,:,:,:) = qrad(:,:,:,:) * vol_ratio_m1
+     tab_at(:,:,:) = tab_at(:,:,:) * SQRT(vol_ratio_m1)
+#if defined __CUDA
+     tab_d=tab
+     qrad_d=qrad
+     tab_at_d=tab_at
+#endif
+  end subroutine scale_uspp_data
   !
 END MODULE uspp_data
 

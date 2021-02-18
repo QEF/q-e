@@ -16,11 +16,9 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   USE atom,         ONLY : rgrid, msh
   USE upf_const,    ONLY : fpi
   USE upf_ions,     ONLY : ntyp => nsp
-  USE uspp_data,    ONLY : tab_at, nqx, dq
+  USE uspp_data,    ONLY : tab_at, tab_at_d, nqx, dq
   USE uspp_param,   ONLY : upf
   USE mp,           ONLY : mp_sum
-  !
-  USE uspp_data_gpum,      ONLY : using_tab_at
   !
   IMPLICIT NONE
   !
@@ -33,7 +31,7 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   REAL(DP) :: vqint, pref, q
   !
   CALL start_clock( 'init_at_1' )
-  CALL using_tab_at(2)
+  !CALL using_tab_at(2)
   !
   ndm = MAXVAL(msh(1:ntyp))
   ALLOCATE( aux(ndm), vchi(ndm) )
@@ -70,10 +68,14 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   !
   CALL mp_sum( tab_at, intra_bgrp_comm )
   !
+#if defined __CUDA
+  ! update GPU memory (taking care of zero-dim allocations)
+  if (SIZE(tab_at)>0) tab_at_d=tab_at
+#endif
+  !
   DEALLOCATE( aux, vchi )
   !
   CALL stop_clock ( 'init_at_1' )
-  !
   !
   RETURN
   !

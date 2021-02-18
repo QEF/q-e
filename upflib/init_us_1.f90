@@ -29,11 +29,12 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   USE upf_const,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
   USE upf_ions,     ONLY : ntyp => nsp, ityp, nat
-  USE uspp_data,    ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
+  USE uspp_data,    ONLY : nqxq, dq, nqx, spline_ps, tab, tab_d2y, qrad, &
+                           tab_d, tab_d2y_d, qrad_d
   USE splinelib
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv,&
                            ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0
-  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb
+  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam
   USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
@@ -48,7 +49,6 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
                            using_nhtoj, using_nhtoj_d, &
                            using_dvan_so, using_dvan_so_d, &
                            using_dvan, using_dvan_d
-  USE uspp_data_gpum,   ONLY : using_tab, using_tab_d2y, using_qrad
   USE upf_spinorb_gpum, ONLY : using_fcoef, using_fcoef_d
   !
   implicit none
@@ -101,10 +101,10 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   end do
 
   if (lspinorb) then
-!
-!  In the spin-orbit case we need the unitary matrix u which rotates the
-!  real spherical harmonics and yields the complex ones.
-!
+     !
+     !  In the spin-orbit case we need the unitary matrix u which rotates the
+     !  real spherical harmonics and yields the complex ones.
+     !
      rot_ylm=(0.d0,0.d0)
      l=lmaxx
      rot_ylm(l+1,1)=(1.d0,0.d0)
@@ -186,9 +186,9 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
      !    Here we initialize the D of the solid
      !
      if (upf(nt)%has_so) then
-     !
-     !  first calculate the fcoef coefficients
-     !
+       !
+       !  first calculate the fcoef coefficients
+       !
        do ih = 1, nh (nt)
           li = nhtol(ih, nt)
           ji = nhtoj(ih, nt)
@@ -215,9 +215,9 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
             endif
           enddo
         enddo
-!
-!   and calculate the bare coefficients
-!
+        !
+        !   and calculate the bare coefficients
+        !
         do ih = 1, nh (nt)
            vi = indv (ih, nt)
            do jh = 1, nh (nt)
@@ -352,12 +352,17 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   enddo
   deallocate (besr)
   deallocate (aux)
-
+  !
   call mp_sum(  tab, intra_bgrp_comm )
-
+  !
+#if defined __CUDA
+  ! update GPU memory (taking care of zero-dim allocations)
+  if (nbetam>0) tab_d=tab
+#endif
+  !
   ! initialize spline interpolation
   if (spline_ps) then
-     CALL using_tab_d2y(2);
+     !CALL using_tab_d2y(2);
      allocate( xdata(nqx) )
      do iq = 1, nqx
         xdata(iq) = (iq - 1) * dq
@@ -369,11 +374,15 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
         enddo
      enddo
      deallocate(xdata)
+     !
+#if defined __CUDA
+     if (nbetam>0) tab_d2y_d=tab_d2y
+#endif
   endif
 
 #if defined (__CUDA)
-  CALL using_tab(2)
-  IF (lmaxq > 0) CALL using_qrad(2)
+  !CALL using_tab(2)
+  !IF (lmaxq > 0) CALL using_qrad(2)
   CALL using_indv(2); CALL using_indv_d(0) ! trick to update immediately
   CALL using_nhtolm(2); CALL using_nhtolm_d(0) ! trick to update immediately
   CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
@@ -406,10 +415,8 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   USE upf_ions,     ONLY : ntyp => nsp
   USE atom,         ONLY : rgrid
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
-  USE uspp_data,    ONLY : nqxq, dq, qrad
+  USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
   USE mp,           ONLY : mp_sum
-  !
-  USE uspp_data_gpum,      ONLY : using_qrad
   !
   IMPLICIT NONE
   !
@@ -429,7 +436,7 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   ALLOCATE (aux ( ndm))
   ALLOCATE (besr( ndm))
   !
-  CALL using_qrad(2)
+  !CALL using_qrad(2)
   !
   CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
   !
@@ -478,6 +485,10 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
      ENDIF
      ! ntyp
   ENDDO
+  !
+#if defined __CUDA
+  qrad_d=qrad
+#endif
   !
   DEALLOCATE (besr)
   DEALLOCATE (aux)

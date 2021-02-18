@@ -58,7 +58,6 @@ OBJS += \
   qvan2_gpu.o \
   init_us_2_base_gpu.o \
   upf_spinorb_gpum.o \
-  uspp_data_gpum.o \
   uspp_gpu.o \
   ylmr2_gpu.o
 

@@ -21,8 +21,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega
   USE splinelib,    ONLY : splint_eq
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
-  !
-  USE uspp_data_gpum,   ONLY : using_tab_d, using_tab_d2y_d
   USE device_fbuff_m,   ONLY : dev_buf
   !
   implicit none
@@ -82,8 +80,8 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega
   !
   if (lmaxkb<0) return
   
-  call using_tab_d(0)
-  if (spline_ps) call using_tab_d2y_d(0)
+  !call using_tab_d(0)
+  !if (spline_ps) call using_tab_d2y_d(0)
 
   ! JR Eventually replace with smarter allocation/deallocation of GPU temp arrays
   ! PB use buffer class here
