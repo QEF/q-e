@@ -27,7 +27,6 @@ SUBROUTINE g2_kin( ik )
   ! ... local variables
   !
   INTEGER :: ig, npw
-  REAL(DP), EXTERNAL :: qe_erf
   !
   !
   CALL using_g2kin(1)
@@ -41,7 +40,7 @@ SUBROUTINE g2_kin( ik )
      DO ig = 1, npw
         !
         g2kin(ig) = g2kin(ig) + qcutz * &
-             ( 1.D0 + qe_erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
+             ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
         !
      END DO
      !

@@ -679,7 +679,6 @@ FUNCTION poshm(x)
 
   REAL(kind=DP) :: poshm
   REAL(kind=DP), INTENT(in) :: x
-  REAL(kind=DP), EXTERNAL :: erfc
 
   REAL(kind=DP) :: pi,a
 
