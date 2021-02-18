@@ -13,7 +13,7 @@ Information on the mailing lists and on how to report bugs can be found in the
 You can contribute even more by:
 
 3.  preparing new tests for the test suite: see the
-[Wiki page](https://gitlab.com/QEF/q-e/wikis/Test-suite-and-test-farm);
+[Wiki page](https://gitlab.com/QEF/q-e/wikis/Developers/Test-suite-and-test-farm);
 
 4.  improving the documentation;
 
