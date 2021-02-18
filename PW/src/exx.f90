@@ -3782,9 +3782,6 @@ end associate
   USE uspp_param,    ONLY : upf, lmaxkb, nhm, nh
   USE becmod,        ONLY : calbec
   USE mp_exx,        ONLY : ibands, nibands, my_egrp_id
-  !
-  USE uspp_data_gpum,ONLY : using_tab, using_tab_d2y
-  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: npw_
@@ -3819,8 +3816,8 @@ end associate
   !
   IF (lmaxkb < 0) RETURN
   !
-  CALL using_tab(0)
-  IF (spline_ps) CALL using_tab_d2y(0)
+  !CALL using_tab(0)
+  !IF (spline_ps) CALL using_tab_d2y(0)
   !
   ALLOCATE( vkb1(npw_,nhm) )
   ALLOCATE( sk(npw_) )    

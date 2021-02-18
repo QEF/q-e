@@ -24,9 +24,6 @@ SUBROUTINE gen_us_dy( ik, u, dvkb )
   USE uspp_data,   ONLY: nqx, tab, tab_d2y, dq, spline_ps
   USE splinelib
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh
-  !
-  USE uspp_data_gpum,    ONLY : using_tab, using_tab_d2y
-  !
   IMPLICIT NONE
   !
   INTEGER  :: ik
@@ -56,8 +53,8 @@ SUBROUTINE gen_us_dy( ik, u, dvkb )
   dvkb(:,:) = (0.d0, 0.d0)
   IF (lmaxkb <= 0) RETURN
   !
-  CALL using_tab(0);
-  IF (spline_ps) CALL using_tab_d2y(0);
+  !CALL using_tab(0);
+  !IF (spline_ps) CALL using_tab_d2y(0);
   !
   npw = ngk(ik)
   ALLOCATE( vkb0(npw,nbetam,ntyp), dylm_u(npw,(lmaxkb+1)**2), gk(3,npw) )

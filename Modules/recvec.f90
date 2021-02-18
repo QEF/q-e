@@ -37,6 +37,7 @@
      !     G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
      !
      REAL(DP), ALLOCATABLE, TARGET :: gg(:) 
+     REAL(DP), ALLOCATABLE         :: gg_d(:)    ! device
 
      !     gl(i) = i-th shell of G^2 (in units of tpiba2)
      !     igtongl(n) = shell index for n-th G-vector
@@ -44,21 +45,20 @@
      REAL(DP), POINTER, PROTECTED            :: gl(:)
      INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl(:)
      ! Duplicate of the above variables (new style duplication).
-     REAL(DP), ALLOCATABLE                   :: gl_d(:)
-     INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:)
-#if defined(__CUDA)
-     attributes(DEVICE) :: gl_d, igtongl_d
-#endif
+     REAL(DP), ALLOCATABLE                   :: gl_d(:)      ! device
+     INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:) ! device
      !
      !     G-vectors cartesian components ( in units tpiba =(2pi/a)  )
      !
      REAL(DP), ALLOCATABLE, TARGET :: g(:,:) 
+     REAL(DP), ALLOCATABLE         :: g_d(:,:)   ! device
 
      !     mill = miller index of G vectors (local to each processor)
      !            G(:) = mill(1)*bg(:,1)+mill(2)*bg(:,2)+mill(3)*bg(:,3) 
      !            where bg are the reciprocal lattice basis vectors 
      !
      INTEGER, ALLOCATABLE, TARGET :: mill(:,:)
+     INTEGER, ALLOCATABLE         :: mill_d(:,:) ! device
      
      !     ig_l2g  = converts a local G-vector index into the global index
      !               ("l2g" means local to global): ig_l2g(i) = index of i-th
@@ -73,7 +73,14 @@
      ! the phases e^{-iG*tau_s} used to calculate structure factors
      !
      COMPLEX(DP), ALLOCATABLE :: eigts1(:,:), eigts2(:,:), eigts3(:,:)
-     !
+     COMPLEX(DP), ALLOCATABLE :: eigts1_d(:,:)    ! device
+     COMPLEX(DP), ALLOCATABLE :: eigts2_d(:,:)
+     COMPLEX(DP), ALLOCATABLE :: eigts3_d(:,:)
+     !   
+#if defined(__CUDA)
+     attributes(DEVICE) :: gl_d, igtongl_d
+     attributes(DEVICE) :: gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
+#endif
    CONTAINS
 
      SUBROUTINE gvect_init( ngm_ , comm )
@@ -105,8 +112,11 @@
        ALLOCATE( mill(3, ngm) )
        ALLOCATE( ig_l2g(ngm) )
        ALLOCATE( igtongl(ngm) )
-       IF (use_gpu) ALLOCATE( igtongl_d(ngm) )
-       IF (use_gpu) ALLOCATE( gl_d(ngm) )
+       !
+       IF (use_gpu) THEN
+          ALLOCATE( igtongl_d(ngm) )
+          ALLOCATE( gl_d(ngm) )
+       ENDIF
        !
        RETURN 
        !
@@ -125,27 +135,36 @@
           IF ( ASSOCIATED( gl ) ) DEALLOCATE ( gl )
        END IF
        !
-       IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
-       IF( ALLOCATED( g ) )  DEALLOCATE( g )
+       IF( ALLOCATED( gg ) )     DEALLOCATE( gg )
+       IF( ALLOCATED( g ) )      DEALLOCATE( g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
-       IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
-       IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
+       IF( ALLOCATED( mill ) )   DEALLOCATE( mill )
+       IF( ALLOCATED( igtongl )) DEALLOCATE( igtongl )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( eigts1 ) ) DEALLOCATE( eigts1 )
        IF( ALLOCATED( eigts2 ) ) DEALLOCATE( eigts2 )
        IF( ALLOCATED( eigts3 ) ) DEALLOCATE( eigts3 )
+       !
+       ! GPU vars
        IF (use_gpu) THEN
-          IF (ALLOCATED( igtongl_d ) ) DEALLOCATE( igtongl_d )
-          IF (ALLOCATED( gl_d ) ) DEALLOCATE( gl_d )
-       END IF
+          IF (ALLOCATED( igtongl_d )) DEALLOCATE( igtongl_d )
+          IF (ALLOCATED( gl_d ) )     DEALLOCATE( gl_d )
+          IF (ALLOCATED( gg_d ) )     DEALLOCATE( gg_d )
+          IF (ALLOCATED( g_d ) )      DEALLOCATE( g_d )
+          IF (ALLOCATED( mill_d ) )   DEALLOCATE( mill_d )
+          IF (ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
+          IF (ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
+          IF (ALLOCATED( eigts3_d ) ) DEALLOCATE( eigts3_d )
+       ENDIF
+       ! 
      END SUBROUTINE deallocate_gvect
 
      SUBROUTINE deallocate_gvect_exx()
-       IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
-       IF( ALLOCATED( g ) )  DEALLOCATE( g )
-       IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
+       IF( ALLOCATED( gg ) )      DEALLOCATE( gg )
+       IF( ALLOCATED( g ) )       DEALLOCATE( g )
+       IF( ALLOCATED( mill ) )    DEALLOCATE( mill )
        IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
-       IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
+       IF( ALLOCATED( ig_l2g ) )  DEALLOCATE( ig_l2g )
      END SUBROUTINE deallocate_gvect_exx
      !
      !-----------------------------------------------------------------------

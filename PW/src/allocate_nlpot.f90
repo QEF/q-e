@@ -22,7 +22,7 @@ SUBROUTINE allocate_nlpot
   !! * nqx: number of points of the interpolation table
   !! * nqxq: as above, for q-function interpolation table
   !
-  USE control_flags,    ONLY : tqr
+  USE control_flags,    ONLY : tqr, use_gpu
   USE ions_base,        ONLY : nat, nsp
   USE cellmd,           ONLY : cell_factor
   USE klist,            ONLY : qnorm
@@ -30,8 +30,7 @@ SUBROUTINE allocate_nlpot
   USE noncollin_module, ONLY : noncolin
   USE gvect,            ONLY : ecutrho
   USE gvecw,            ONLY : ecutwfc
-  USE uspp_data,        ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
-                               nqxq, spline_ps
+  USE uspp_data,        ONLY : dq, nqx, nqxq, spline_ps, allocate_uspp_data
   USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq_at, qq_nt, &
                                dvan, deeq, indv_ijkb0, okvan, nhtoj, &
                                becsum, ebecsum, qq_so, dvan_so, deeq_nc
@@ -41,7 +40,6 @@ SUBROUTINE allocate_nlpot
   USE uspp_gpum,        ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
                                using_deeq, using_deeq_nc, using_deeq_nc_d, &
                                using_qq_at, using_qq_so, using_becsum, using_ebecsum
-  USE uspp_data_gpum,   ONLY : using_tab, using_tab_at, using_tab_d2y, using_qrad
   !
   IMPLICIT NONE
   !
@@ -83,31 +81,26 @@ SUBROUTINE allocate_nlpot
   !
   nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
-  IF (lmaxq > 0) ALLOCATE (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)
   !
   nqx = INT( (SQRT(ecutwfc) / dq + 4) * cell_factor )
-  !
-  ALLOCATE( tab(nqx,nbetam,nsp) )
-  !
-  ! d2y is for the cubic splines
-  IF (spline_ps) ALLOCATE( tab_d2y(nqx,nbetam,nsp) )
-  !
   nwfcm = MAXVAL( upf(1:nsp)%nwfc )
-  ALLOCATE( tab_at(nqx,nwfcm,nsp) )
 
+  !
+  ! actual allocation
+  !
+  call allocate_uspp_data(use_gpu,nqxq,nqx,nbetam,nwfcm,lmaxq,nsp)
+
+  !
+  ! synchronization
+  !
   CALL using_indv_ijkb0(2)
   CALL using_deeq(2)
   IF (noncolin) CALL using_deeq_nc(2)
   CALL using_qq_at(2)
   IF (lspinorb) CALL using_qq_so(2)
-  ! us module
-  CALL using_tab(2)
-  CALL using_tab_at(2)
-  IF (lmaxq > 0) CALL using_qrad(2)
-  IF (spline_ps) CALL using_tab_d2y(2)
   !
   RETURN
   !

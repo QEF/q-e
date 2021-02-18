@@ -16,6 +16,7 @@ init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
 init_at_1.o \
+init_us_2_base.o \
 interp_at_wfc.o \
 paw_variables.o \
 pseudo_types.o \
@@ -56,6 +57,7 @@ OBJS += \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
   qvan2_gpu.o \
+  init_us_2_base_gpu.o \
   ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x

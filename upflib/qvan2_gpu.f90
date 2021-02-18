@@ -148,7 +148,6 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, nhtolm, indv
   !
-  USE uspp_data_gpum, ONLY : using_qrad_d
   USE uspp_gpum,      ONLY : using_indv_d, using_nhtolm_d, &
                              using_indv, using_nhtolm
 #if defined(__CUDA)
@@ -212,7 +211,7 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
        call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   !
   ! Sync (if needed) global variables used in kernel
-  CALL using_qrad_d(0)
+  !CALL using_qrad_d(0)
   CALL using_indv_d(0)
   CALL using_nhtolm_d(0)
   !

@@ -21,8 +21,6 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
   !
-  USE uspp_data_gpum, ONLY : using_qrad
-  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ngy
@@ -93,7 +91,7 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   IF (ivl > nlx .OR. jvl > nlx) &
        CALL errore (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   !
-  CALL using_qrad(0)
+  !CALL using_qrad(0)
   !
   dqg(:) = (0.d0,0.d0)
   !

@@ -7,55 +7,67 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
+SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, vkb_, tau, tpiba, omega, &
+                           nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g )
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
   !! structure factor, for all atoms, in reciprocal space.
   !
-  USE kinds,        ONLY : DP
-  USE ions_base,    ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,    ONLY : tpiba, omega
-  USE constants,    ONLY : tpi
-  USE gvect,        ONLY : eigts1, eigts2, eigts3, mill, g
-  USE wvfct,        ONLY : npwx
+  USE upf_kinds,    ONLY : DP
+  USE upf_const,    ONLY : tpi
+  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
   USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps
   USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
   !
-  USE uspp_data_gpum,      ONLY : using_tab, using_tab_d2y
-  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: npw_
   !! number of PWs 
+  INTEGER, INTENT(IN) :: npwx
+  !! leading dim of vkb_
   INTEGER, INTENT(IN) :: igk_(npw_)
   !! indices of G in the list of q+G vectors
   REAL(DP), INTENT(IN) :: q_(3)
   !! q vector (2pi/a units)
   COMPLEX(DP), INTENT(OUT) :: vkb_(npwx,nkb)
   !! beta functions (npw_ <= npwx)
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions (cc alat units)
+  REAL(DP), INTENT(IN) :: tpiba, omega
+  !! reclat units and cell volume
+  INTEGER, INTENT(IN) :: nr1,nr2,nr3
+  !! fft dims (dense grid)
+  COMPLEX(DP), INTENT(IN) :: eigts1(-nr1:nr1,nat)
+  !! structure factor 1
+  COMPLEX(DP), INTENT(IN) :: eigts2(-nr2:nr2,nat)
+  !! structure factor 2
+  COMPLEX(DP), INTENT(IN) :: eigts3(-nr3:nr3,nat)
+  !! structure factor 3
+  INTEGER, INTENT(IN) :: mill(3,*)
+  !! miller index map
+  REAL(DP), INTENT(IN) :: g(3,*)
+  !! g vectors (2pi/a units)
   !
   ! ... Local variables
   !
-  INTEGER :: i0, i1, i2, i3, ig, ig_orig, lm, na, nt, nb, ih, jkb
-  REAL(DP) :: px, ux, vx, wx, arg
-  REAL(DP), ALLOCATABLE :: gk(:,:), qg(:), vq(:), ylm(:,:), vkb1(:,:)
+  INTEGER     :: i0, i1, i2, i3, ig, ig_orig, lm, na, nt, nb, ih, jkb
+  REAL(DP)    :: px, ux, vx, wx, arg
   COMPLEX(DP) :: phase, pref
+  REAL(DP),    ALLOCATABLE :: gk(:,:), qg(:), vq(:), ylm(:,:), vkb1(:,:)
+  REAL(DP),    ALLOCATABLE :: xdata(:)
   COMPLEX(DP), ALLOCATABLE :: sk(:)
-  REAL(DP), ALLOCATABLE :: xdata(:)
-  INTEGER :: iq
+  INTEGER     :: iq
   ! cache blocking parameters
   INTEGER, PARAMETER :: blocksize = 256
-  INTEGER :: iblock, numblock, realblocksize
+  INTEGER     :: iblock, numblock, realblocksize
   !
   IF (lmaxkb < 0) RETURN
   !
-  CALL start_clock( 'init_us_2' )
-  !
-  CALL using_tab(0)
-  IF (spline_ps) CALL using_tab_d2y(0)
+  !CALL using_tab(0)
+  !IF (spline_ps) CALL using_tab_d2y(0)
   !
   ! write(*,'(3i4,i5,3f10.5)') size(tab,1), size(tab,2), size(tab,3), size(vq), q_
   !
@@ -195,10 +207,7 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   !
   IF (spline_ps) DEALLOCATE( xdata )
   !
-  CALL stop_clock( 'init_us_2' )
-  !
-  !
   RETURN
   !
-END SUBROUTINE init_us_2
+END SUBROUTINE init_us_2_base
 
