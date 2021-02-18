@@ -24,7 +24,6 @@ set(src_upflib
     upf_auxtools.f90 
     upf_const.f90 
     upf_error.f90 
-    upf_erf.f90 
     upf_invmat.f90 
     upf_io.f90 
     upf_ions.f90 
