@@ -35,7 +35,7 @@ MODULE fft_supercell
   REAL(DP) :: at_cp(3,3)
   REAL(DP) :: bg_cp(3,3)
   REAL(DP) :: omega_cp
-  LOGICAL :: gamma_only_cp=.true.  ! CHECK ALSO npwxcp WHEN USING GAMMA TRICK
+  LOGICAL :: gamma_only_x     ! CHECK ALSO npwxcp WHEN USING GAMMA TRICK
   !
   INTEGER :: nat_cp
   INTEGER, ALLOCATABLE :: ityp_cp(:)
@@ -44,7 +44,7 @@ MODULE fft_supercell
   ! in the following all the G-vectors related quantities
   ! connected to the dfftcp are defined
   !
-  INTEGER :: npwxcp = 0                      ! eq to npwx (in gvecw)
+  INTEGER :: npwxcp = 0                      ! eq to npwx (in wvfct)
   INTEGER :: ngmcp = 0                       ! eq to ngm (in gvect)
   INTEGER :: ngmcpx = 0                      ! eq to ngmx (in gvect)
   INTEGER :: ngmcp_g = 0                     ! eq to ngm_g (in gvect)
@@ -57,7 +57,7 @@ MODULE fft_supercell
   INTEGER, ALLOCATABLE, TARGET :: ig_l2g_cp(:)                 ! eq to ig_l2g (in gvect)
   INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl_cp(:)     ! eq to igtongl (in gvect)
   !
-  INTEGER :: iunwann=124           ! unit for supercell Wannier functions
+  INTEGER :: iunwann=224           ! unit for supercell Wannier functions
   INTEGER :: nwordwann             ! record length for Wannier functions
   !
   LOGICAL :: check_fft=.false.     ! if .true. dfftcp is built with the same inputs
@@ -108,6 +108,8 @@ CONTAINS
     LOGICAL :: lpara
     !
     !
+    CALL dealloc_sc_fft
+    !
     ! ...  we find the supercell lattice vectors and volume
     !
     DO i = 1, 3
@@ -122,8 +124,8 @@ CONTAINS
     ! ...  determine atomic positions and types in the supercell
     !
     nat_cp = nat * num_kpts
-    ALLOCATE( tau_cp(3,nat_cp) )
-    ALLOCATE( ityp_cp(nat_cp) )
+    IF ( .not. ALLOCATED(tau_cp) ) ALLOCATE( tau_cp(3,nat_cp) )
+    IF ( .not. ALLOCATED(ityp_cp) ) ALLOCATE( ityp_cp(nat_cp) )
     !
     ir = 0
     !
@@ -155,13 +157,13 @@ CONTAINS
     !
     IF ( check_fft ) THEN
       ! 
-      gamma_only_cp = gamma_only
+      gamma_only_x = gamma_only
       at_cp(:,:) = at(:,:)
       bg_cp(:,:) = bg(:,:)
       omega_cp = omega
       !
       nkscp = nks
-      ALLOCATE( xkcp(3,nkscp) )
+      IF ( .not. ALLOCATED(xkcp) ) ALLOCATE( xkcp(3,nkscp) )
       xkcp(:,:) = xk(:,:)
       !
       nat_cp = nat
@@ -197,7 +199,7 @@ CONTAINS
     ELSE
       !
       nkscp = 1
-      ALLOCATE( xkcp(3,nkscp) )
+      IF ( .not. ALLOCATED(xkcp) ) ALLOCATE( xkcp(3,nkscp) )
       xkcp(:,1) = (/ 0.D0, 0.D0, 0.D0 /)
       !
       ! force the supercell FFT grid to be a multiple of the 
@@ -214,12 +216,12 @@ CONTAINS
     !
     ! task group are disabled if real_space calculation of calbec is used
     dfftcp%has_task_groups = (ntask_groups >1) .and. .not. real_space
-    CALL fft_type_init( dfftcp, smap_cp, "wave", gamma_only_cp, lpara, intra_bgrp_comm,&
+    CALL fft_type_init( dfftcp, smap_cp, "wave", gamma_only_x, lpara, intra_bgrp_comm,&
          at_cp, bg_cp, gkcut, gcutms/gkcut, fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
     dfftcp%rho_clock_label='ffts' ; dfftcp%wave_clock_label='fftw'
     !
     ngmcp_ = dfftcp%ngl( dfftcp%mype + 1 )
-    IF ( gamma_only_cp ) ngmcp_ = ( ngmcp_ + 1 ) / 2
+    IF ( gamma_only_x ) ngmcp_ = ( ngmcp_ + 1 ) / 2
     CALL gveccp_init( ngmcp_, intra_bgrp_comm )
     !
     !
@@ -235,9 +237,9 @@ CONTAINS
     IF (dfftcp%nnr <= 0) CALL errore( 'setup_scell_fft', 'wrong nnr',  1 )
     !
     ! NB: ggen normally would have dfftp and ggens dffts... here I put dfftcp in both !!!
-    CALL ggen ( dfftcp, gamma_only_cp, at_cp, bg_cp, gcutm, ngmcp_g, ngmcp, &
+    CALL ggen ( dfftcp, gamma_only_x, at_cp, bg_cp, gcutm, ngmcp_g, ngmcp, &
          g_cp, gg_cp, mill_cp, ig_l2g_cp, gstart_cp )
-    CALL ggens( dfftcp, gamma_only_cp, at_cp, g_cp, gg_cp, mill_cp, gcutms, ngmcp )
+    CALL ggens( dfftcp, gamma_only_x, at_cp, g_cp, gg_cp, mill_cp, gcutms, ngmcp )
     CALL gshells_cp( lmovecell )
     CALL fftcp_base_info( ionode, stdout )
     !
@@ -286,7 +288,7 @@ CONTAINS
        &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &
        &         ngmcp_g, dfftcp%nr1, dfftcp%nr2, dfftcp%nr3
        IF ( .not. check_fft ) THEN
-         IF ( gamma_only_cp ) THEN
+         IF ( gamma_only_x ) THEN
            WRITE( stdout, '(/5X,"Gamma-only algorithm is used &
                           --> real wavefunctions")')
          ELSE
@@ -405,6 +407,24 @@ CONTAINS
     !
     !
   END SUBROUTINE gshells_cp 
+  !
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE dealloc_sc_fft
+    !----------------------------------------------------------------------
+    !
+    !
+    IMPLICIT NONE
+    !
+    !
+    IF ( ALLOCATED(gg_cp) ) DEALLOCATE( gg_cp )
+    IF ( ALLOCATED(g_cp) ) DEALLOCATE( g_cp )
+    IF ( ALLOCATED(mill_cp) ) DEALLOCATE( mill_cp )
+    IF ( ALLOCATED(ig_l2g_cp) ) DEALLOCATE( ig_l2g_cp )
+    IF ( ALLOCATED(igtongl_cp) ) DEALLOCATE( igtongl_cp )
+    !
+    !
+  END SUBROUTINE dealloc_sc_fft 
   !
   !
   !---------------------------------------------------------------------

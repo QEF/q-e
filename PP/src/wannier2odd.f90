@@ -9,9 +9,9 @@
 ! Written by Riccardo De Gennaro, EPFL (Sept 2020).
 !
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 MODULE wannier2odd
-  !---------------------------------------------------------------------
+  !--------------------------------------------------------------------------
   !
   USE kinds,               ONLY : DP
   !
@@ -22,11 +22,20 @@ MODULE wannier2odd
   !
   PUBLIC :: wan2odd
   !
+  COMPLEX(DP), ALLOCATABLE :: evcx(:,:)
+  COMPLEX(DP), ALLOCATABLE :: evcx_dis(:,:)
+  COMPLEX(DP), ALLOCATABLE :: evcw(:)
+  COMPLEX(DP), ALLOCATABLE :: ewan(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psicx(:)
+  COMPLEX(DP), ALLOCATABLE :: rhor(:), rhow(:)         ! real space supercell density
+  COMPLEX(DP), ALLOCATABLE :: rhog(:,:), rhowg(:,:)    ! G-space supercell density
+  !
+  !
   CONTAINS
   !
-  !---------------------------------------------------------------------
-  SUBROUTINE wan2odd( seedname, ikstart, plot, split_evc_file )
-    !-------------------------------------------------------------------
+  !--------------------------------------------------------------------------
+  SUBROUTINE wan2odd( seedname, ikstart, plot, split_evc_file, gamma_trick )
+    !------------------------------------------------------------------------
     !
     ! ...  This routine:
     !
@@ -42,6 +51,7 @@ MODULE wannier2odd
     ! ...  4) Wannier functions are finally written in a CP-readable
     ! ...     file
     !
+    USE io_global,           ONLY : stdout
     USE io_files,            ONLY : nwordwfc, iunwfc, restart_dir
     USE io_base,             ONLY : write_rhog
     USE mp_pools,            ONLY : my_pool_id
@@ -61,8 +71,8 @@ MODULE wannier2odd
     USE constants,           ONLY : tpi
     USE noncollin_module,    ONLY : npol
     USE scell_wfc,           ONLY : extend_wfc
-    USE fft_supercell,       ONLY : dfftcp, setup_scell_fft, bg_cp, at_cp, &
-                                    gamma_only_cp, npwxcp, ngmcp, mill_cp, ig_l2g_cp, &
+    USE fft_supercell,       ONLY : dfftcp, setup_scell_fft, bg_cp, at_cp, omega_cp, &
+                                    gamma_only_x, npwxcp, ngmcp, mill_cp, ig_l2g_cp, &
                                     iunwann, nwordwann, check_fft
     USE cp_files,            ONLY : write_wannier_cp
     USE read_wannier
@@ -74,6 +84,7 @@ MODULE wannier2odd
     INTEGER, INTENT(IN) :: ikstart
     LOGICAL, INTENT(IN) :: plot
     LOGICAL, INTENT(IN) :: split_evc_file
+    LOGICAL, INTENT(IN) :: gamma_trick
     !
     CHARACTER(LEN=256) :: dirname
     INTEGER :: ik, ikevc, ibnd, iw, ip
@@ -83,27 +94,24 @@ MODULE wannier2odd
     INTEGER :: nwordwfcx                            ! record length for supercell wfcs
     INTEGER :: iunwfcx = 24                         ! unit for supercell wfc file
     INTEGER :: io_level = 1
-    LOGICAL :: exst
+    LOGICAL :: exst, opnd
     LOGICAL :: calc_rho=.true.
-    COMPLEX(DP), ALLOCATABLE :: evcx(:,:)
-    COMPLEX(DP), ALLOCATABLE :: evcx_dis(:,:)
-    COMPLEX(DP), ALLOCATABLE :: evcw(:)
-    COMPLEX(DP), ALLOCATABLE :: ewan(:,:)
-    COMPLEX(DP), ALLOCATABLE :: psicx(:)
-    COMPLEX(DP), ALLOCATABLE :: rhor(:)             ! real space supercell density
-    COMPLEX(DP), ALLOCATABLE :: rhog(:,:)           ! G-space supercell density
     REAL(DP) :: kvec(3), rvec(3)
     REAL(DP) :: dot_prod
     COMPLEX(DP) :: phase
+    LOGICAL :: wf_is_cmplx
+    REAL(DP) :: ratio
     !
     !
     CALL start_clock( 'wannier2odd' )
     !
     !
-    ! ... initialize the supercell and read from Wannier90
+    ! ... read Wannier90 output and initialize the supercell
     !
     CALL read_wannier_chk( seedname )
-    CALL setup_scell_fft
+    gamma_only_x = gamma_trick
+    IF ( gamma_trick ) WRITE( stdout, 10 ) 
+    CALL setup_scell_fft( )
     !
     !
     ! ... if all the occupied states are in, we calculate also
@@ -114,6 +122,8 @@ MODULE wannier2odd
     !
     nwordwfcx = num_bands*npwxcp*npol
     nwordwann = num_wann*npwxcp*npol
+    !
+    CALL dealloc_w2odd( )
     ALLOCATE( evcx(npwxcp*npol,num_bands) )
     ALLOCATE( evcw(npwxcp*npol) )
     ALLOCATE( ewan(npwxcp*npol,num_wann) )
@@ -124,6 +134,10 @@ MODULE wannier2odd
       ALLOCATE( rhor(dfftcp%nnr) )
       ALLOCATE( rhog(ngmcp,nspin) )
       rhor(:) = ( 0.D0, 0.D0 )
+      !
+      ALLOCATE( rhow(dfftcp%nnr) )
+      ALLOCATE( rhowg(ngmcp,nspin) )
+      rhow(:) = ( 0.D0, 0.D0 )
       !
     ENDIF
     !
@@ -167,6 +181,11 @@ MODULE wannier2odd
         CALL extend_wfc( psic, psicx, dfftcp, kvec )
         !
         ! ... calculate the total density in the supercell
+        ! NB: for some reason the weights wg sum up to 2 (and not to 1!),
+        !     maybe it includes the spin (?). The result is that, although
+        !     here we are considering only the psicx of one spin channel,
+        !     the charge corresponding to this density is total and so it 
+        !     matches directly nelec (and not simply nelup)
         !
         IF ( calc_rho ) &
           rhor(:) = rhor(:) + ( DBLE( psicx(:) )**2 + &
@@ -264,11 +283,37 @@ MODULE wannier2odd
                   evcw(:) = evcx(:,ip)
                 ENDIF
                 !
-                ewan(:,iw) = ewan(:,iw) + phase * u_mat(ip,iw,ik) * evcw(:) / SQRT(DBLE(num_kpts))
+                ewan(:,iw) = ewan(:,iw) + phase * u_mat(ip,iw,ik) * evcw(:) / SQRT(DBLE(num_kpts)) 
                 !
               ENDDO
               !
             ENDDO ! ik
+            !
+!            CALL check_complex_wfc( ewan(:,iw), wf_is_cmplx, ratio )
+!            !
+!            ! ... if gamma_only_x=.true. the Wannier functions must be real;
+!            ! ... if one of the realized WFs is found to be complex then the
+!            ! ... code will restart without using the gamma-trick (complex wfc)
+!            ! 
+!            IF ( gamma_only_x .and. wf_is_cmplx ) THEN
+!              !
+!              WRITE( stdout, 20 ) ir, iw
+!              WRITE( stdout, 21 ) ratio
+!              CALL errore( 'wan2odd', 'complex Wannier functions are incompatible with gamma_trick=.true.', 1 )
+!              !
+!            ENDIF
+            !
+            ! ... recalculate the total density from the WFs
+            !
+            IF ( calc_rho ) THEN
+              !
+              psicx(:) = ( 0.D0, 0.D0 )
+              psicx( dfftcp%nl(1:npwxcp) ) = ewan(1:npwxcp,iw)
+              IF( gamma_only_x ) psicx( dfftcp%nlm(1:npwxcp) ) = CONJG(ewan(1:npwxcp,iw))
+              CALL invfft( 'Wave', psicx, dfftcp )
+              rhow(:) = rhow(:) + DBLE( psicx(:) )**2 + AIMAG( psicx(:) )**2
+              !
+            ENDIF
             !
           ENDDO ! iw
           !
@@ -281,16 +326,23 @@ MODULE wannier2odd
     !
     CALL close_buffer( iunwfcx, 'delete' )
     !
-    ! ... write G-space density to file
+    ! ... checks the consistency between the Wannier and Bloch
+    ! ... densities and write the G-space density to file
     !
     IF ( calc_rho ) THEN
+      !
+      rhowg(:,:) = ( 0.D0, 0.D0 )
+      CALL fwfft( 'Rho', rhow, dfftcp )
+      rhowg(1:ngmcp,1) = rhow( dfftcp%nl(1:ngmcp) ) / omega_cp
+      IF ( nspin == 1 ) rhowg(:,1) = rhowg(:,1) * 2    !!! factor 2 for the other spin-component
+      CALL check_rho( rhowg, rhog )
       !
       dirname = './'
       IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
            CALL write_rhog( TRIM(dirname) // "charge-density-x", &
            root_bgrp, intra_bgrp_comm, &
            bg_cp(:,1)*tpiba, bg_cp(:,2)*tpiba, bg_cp(:,3)*tpiba, &
-           gamma_only_cp, mill_cp, ig_l2g_cp, rhog(:,:) )
+           gamma_only_x, mill_cp, ig_l2g_cp, rhowg(:,:) )
       !
     ENDIF
     !
@@ -303,6 +355,12 @@ MODULE wannier2odd
     IF ( .not. plot ) CALL close_buffer( iunwann, 'delete' )
     !
     CALL stop_clock( 'wannier2odd' )
+    !
+    !
+    10 FORMAT( /, 2X, 'WARNING: gamma_trick=.true. forces the Wannier functions to be real.', /, &
+                 11X, 'DO THIS WITH CAUTION !', / )
+    20 FORMAT( 5X, 'The Wannier function ( ', I4, ', ', I4, ' ) is found to be complex' )
+    21 FORMAT( 5X, 'Maximum Im/Re ratio = ', E15.8 )
     !
     !
   END SUBROUTINE wan2odd
@@ -374,6 +432,71 @@ MODULE wannier2odd
     !
     !
   END SUBROUTINE check_rho
+  !
+  !
+  !---------------------------------------------------------------------
+  SUBROUTINE check_complex_wfc( evc, wf_is_cmplx, ratio )
+    !-------------------------------------------------------------------
+    !
+    ! ...  this routine checks whether the input wavefunction (in PWs)
+    ! ...  is real or complex: if the maximum value of the Im/Re ratio
+    ! ...  of the wavefunction on the real grid is bigger the chosen
+    ! ...  threshold, evc is considered complex
+    !
+    ! ... WIP: NOT ABLE TO REPRODUCE WANNIER90  maximum Im/Re ratio yet !!!
+    !
+    USE mp_bands,            ONLY : intra_bgrp_comm
+    USE mp,                  ONLY : mp_max
+    USE fft_interfaces,      ONLY : invfft, fwfft
+    USE fft_supercell,       ONLY : dfftcp, npwxcp
+    !
+    !
+    IMPLICIT NONE
+    !
+    COMPLEX(DP), INTENT(IN) :: evc(:) 
+    LOGICAL, INTENT(OUT) :: wf_is_cmplx
+    REAL(DP), INTENT(OUT) :: ratio
+    !
+    COMPLEX(DP), ALLOCATABLE :: psic(:)
+    REAL(DP) :: thr=1.D-3
+    !
+    !
+    wf_is_cmplx = .false.
+    !
+    ALLOCATE( psic(dfftcp%nnr) )
+    psic(:) = ( 0.D0, 0.D0 )
+    psic( dfftcp%nl(1:npwxcp) ) = evc(1:npwxcp)
+    CALL invfft( 'Wave', psic, dfftcp )
+    !
+    ratio = MAXVAL( ABS( AIMAG(psic(:)) / DBLE(psic(:)) ) )
+    CALL mp_max( ratio, intra_bgrp_comm )
+    !
+    IF ( ratio .gt. thr ) wf_is_cmplx = .true.
+    !
+    !
+  END SUBROUTINE check_complex_wfc
+  !
+  !
+  !---------------------------------------------------------------------
+  SUBROUTINE dealloc_w2odd
+    !-------------------------------------------------------------------
+    !
+    !
+    IMPLICIT NONE
+    !
+    !
+    IF ( ALLOCATED(evcx) ) DEALLOCATE( evcx )
+    IF ( ALLOCATED(evcw) ) DEALLOCATE( evcw )
+    IF ( ALLOCATED(ewan) ) DEALLOCATE( ewan )
+    IF ( ALLOCATED(psicx) ) DEALLOCATE( psicx )
+    IF ( ALLOCATED(rhor) ) DEALLOCATE( rhor )
+    IF ( ALLOCATED(rhog) ) DEALLOCATE( rhog )
+    IF ( ALLOCATED(rhow) ) DEALLOCATE( rhow )
+    IF ( ALLOCATED(rhowg) ) DEALLOCATE( rhowg )
+    IF ( ALLOCATED(evcx_dis) ) DEALLOCATE( evcx_dis )
+    !
+    !
+  END SUBROUTINE dealloc_w2odd
   !
   !
 END MODULE wannier2odd

@@ -43,7 +43,7 @@ MODULE plot_wan2odd
     USE parameters,          ONLY : ntypx
     USE scell_wfc,           ONLY : bcast_psic
     USE fft_supercell,       ONLY : dfftcp, at_cp, nat_cp, tau_cp, ityp_cp, &
-                                    ngmcp, npwxcp, iunwann, nwordwann, gamma_only_cp
+                                    ngmcp, npwxcp, iunwann, nwordwann, gamma_only_x
     !
     !
     IMPLICIT NONE
@@ -53,7 +53,7 @@ MODULE plot_wan2odd
     INTEGER, INTENT(IN) :: nwann          ! number of WFs
     !
     CHARACTER(LEN=30) :: filename
-    INTEGER :: fileunit=224
+    INTEGER :: fileunit=324
     INTEGER :: ir, ibnd, iw
     INTEGER :: i, j, rr
     INTEGER :: nnrg
@@ -100,7 +100,7 @@ MODULE plot_wan2odd
         WRITE( filename, 100 ) ir, ibnd
         evc(:,ibnd) = evc(:,ibnd) / SQRT(DBLE(nrtot))
         psic(dfftcp%nl(1:npwxcp)) = evc(1:npwxcp,ibnd)
-        IF ( gamma_only_cp ) psic(dfftcp%nlm(1:npwxcp)) = CONJG( evc(1:npwxcp,ibnd) )
+        IF ( gamma_only_x ) psic(dfftcp%nlm(1:npwxcp)) = CONJG( evc(1:npwxcp,ibnd) )
         CALL invfft( 'Wave', psic, dfftcp )
         CALL bcast_psic( psic, psicg, dfftcp )
         CALL real_wann_max_mod( psicg, nnrg )

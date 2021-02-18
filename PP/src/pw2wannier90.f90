@@ -91,6 +91,7 @@ module wannier
    character(len=255) :: wannier_plot_list
    integer, allocatable :: wann_to_plot(:)
    logical :: split_evc_file
+   logical :: gamma_trick           ! determines whether or not using SC real wfc (wannier2odd mode) 
 end module wannier
 !
 
@@ -137,7 +138,7 @@ PROGRAM pw2wannier90
    ! begin change Vitale
        scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
    ! end change Vitale
-       wannier_plot, wannier_plot_list, split_evc_file
+       wannier_plot, wannier_plot_list, split_evc_file, gamma_trick
   !
   ! initialise environment
   !
@@ -190,6 +191,7 @@ PROGRAM pw2wannier90
      wannier_plot = .false.
      wannier_plot_list = 'all'
      split_evc_file = .false.
+     gamma_trick = .false.
      !
      !     reading the namelist inputpp
      !
@@ -233,6 +235,7 @@ PROGRAM pw2wannier90
   CALL mp_bcast(wannier_plot,ionode_id, world_comm)
   CALL mp_bcast(wannier_plot_list,ionode_id, world_comm)
   CALL mp_bcast(split_evc_file,ionode_id, world_comm) 
+  CALL mp_bcast(gamma_trick,ionode_id, world_comm) 
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -498,7 +501,7 @@ PROGRAM pw2wannier90
      CALL read_nnkp
      CALL get_wannier_to_plot
      CALL openfil_pp
-     CALL wan2odd( seedname, ikstart, wannier_plot, split_evc_file )
+     CALL wan2odd( seedname, ikstart, wannier_plot, split_evc_file, gamma_trick )
      IF ( wannier_plot ) CALL plot_wann( wann_to_plot, iknum, n_wannier )
      !
      IF ( ionode ) WRITE( stdout, *  )
