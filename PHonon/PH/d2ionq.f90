@@ -72,7 +72,6 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   complex(DP) :: dy1 (3 * nat, nmodes), dy2 (3 * nat, nmodes), &
        dy3 (3 * nat, nmodes), facg, fnat, work
   ! work spaces, factors
-  real(DP), external :: qe_erfc
 
   call start_clock ('d2ionq')
 
@@ -93,7 +92,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   if (alpha == 0.d0) call errore ('d2ionq', 'optimal alpha not found',1)
 
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
-       qe_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
+       erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
 
   if (upperbound > 1.d-9) goto 11
 
@@ -200,9 +199,9 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
            qrg = tpi * (q (1) * (r (1, nr) + dtau (1) ) + &
                         q (2) * (r (2, nr) + dtau (2) ) + &
                         q (3) * (r (3, nr) + dtau (3) ) )
-           d2f = (3.d0 * qe_erfc (ar) + sqrt (8.d0 / tpi) * ar * &
+           d2f = (3.d0 * erfc (ar) + sqrt (8.d0 / tpi) * ar * &
                     (3.d0 + 2.d0 * ar**2) * exp ( - ar**2) ) / rr**5
-           df = ( - qe_erfc (ar) - sqrt (8.d0 / tpi) * ar * exp ( - ar**2) ) &
+           df = ( - erfc (ar) - sqrt (8.d0 / tpi) * ar * exp ( - ar**2) ) &
                 / rr**3
            do icart = 1, 3
               na_icart = 3 * (na - 1) + icart
