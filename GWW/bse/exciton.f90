@@ -102,7 +102,6 @@ contains
     SUBROUTINE write_exc(a)
     !this subroutine writes the excitonic vectors on disk
     !the file name is taken from the label
-!    USE io_files,             ONLY : find_free_unit, prefix
     USE io_files,             ONLY : prefix,tmp_dir
     USE mp_world,  ONLY : mpime
     implicit none
@@ -147,7 +146,6 @@ contains
     !the file name is taken from the label
 
 
-!    USE io_files,             ONLY : find_free_unit, prefix
     USE io_files,             ONLY :  prefix,tmp_dir
     USE io_global,            ONLY : stdout
     USE mp_world,  ONLY : mpime

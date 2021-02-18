@@ -576,7 +576,6 @@ MODULE bse_basic_structures
 
       subroutine write_wfnr(wfnr)
       ! this subroutines writes on disk the type v_state_r for every processor
-!      USE io_files,             ONLY : find_free_unit, prefix
       USE io_files,             ONLY :  tmp_dir,prefix
       USE mp_world,  ONLY : mpime
       implicit none
@@ -608,7 +607,6 @@ MODULE bse_basic_structures
 
       subroutine read_wfnr(wfnr)
       ! this subroutines reads from disk the type v_state_r for every processor
-!      USE io_files,             ONLY : find_free_unit, prefix
       USE io_files,             ONLY : tmp_dir, prefix
       USE mp_world,  ONLY : mpime
       implicit none
@@ -641,7 +639,6 @@ MODULE bse_basic_structures
 	
       subroutine write_cwfnr(wfnr)
       ! this subroutines writes on disk the type v_state_r for every processor
-!      USE io_files,             ONLY : find_free_unit, prefix
       USE io_files,             ONLY :  tmp_dir,prefix
       USE mp_world,  ONLY : mpime
       implicit none
@@ -671,7 +668,6 @@ MODULE bse_basic_structures
 
       subroutine read_cwfnr(wfnr)
       ! this subroutines reads from disk the type v_state_r for every processor
-!      USE io_files,             ONLY : find_free_unit, prefix
       USE io_files,             ONLY : tmp_dir,prefix
       USE mp_world,  ONLY : mpime
       implicit none
@@ -702,7 +698,6 @@ MODULE bse_basic_structures
 
       subroutine read_omat(ispin,o)
       ! this subroutines reads the overlap matrix written by pw4gww
-!      USE io_files,             ONLY : find_free_unit, prefix
       USE io_files,             ONLY : prefix,tmp_dir
       USE io_global,            ONLY : ionode, ionode_id
       USE mp,                   ONLY : mp_bcast
@@ -746,7 +741,6 @@ MODULE bse_basic_structures
 
       subroutine read_iimat(iimat,ispin) 
       ! this subroutines reads the ii matrix written by pw4gww
-!      USE io_files,             ONLY : find_free_unit, prefix
       USE io_files,             ONLY :  prefix, tmp_dir
       USE io_global,            ONLY : ionode, ionode_id
       USE mp,                   ONLY : mp_bcast
@@ -877,7 +871,6 @@ MODULE bse_basic_structures
       !each processor reads the vww(G) written by pw4gww
       !be careful to check that the iimat that is passed to the subroutine is the related to the correct spin channel
 
-!      USE io_files,             ONLY : find_free_unit, prefix,diropn
       USE io_files,             ONLY : prefix,diropn
       USE io_global, ONLY : stdout, ionode 
 
@@ -944,7 +937,6 @@ MODULE bse_basic_structures
       !be careful to check that the iimat that is passed to the subroutine is the related to the correct spin channel
 
 
-!      USE io_files,             ONLY : find_free_unit, prefix
       USE io_files,             ONLY :  prefix, tmp_dir
       USE io_global,            ONLY : ionode, ionode_id
       USE mp,                   ONLY : mp_bcast, mp_barrier

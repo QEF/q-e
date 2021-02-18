@@ -15,7 +15,6 @@ USE io_files, ONLY : tmp_dir,prefix
 USE mp_world, ONLY : mpime, nproc
 USE mp, ONLY: mp_sum
 USE mp_world,             ONLY : world_comm
-!USE io_files, ONLY : find_free_unit
 USE ions_base,      ONLY : nat, tau, atm,ityp
  
 implicit none
