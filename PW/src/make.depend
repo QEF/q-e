@@ -200,7 +200,6 @@ allocate_nlpot.o : ../../Modules/noncol.o
 allocate_nlpot.o : ../../Modules/recvec.o
 allocate_nlpot.o : ../../upflib/uspp.o
 allocate_nlpot.o : ../../upflib/uspp_data.o
-allocate_nlpot.o : ../../upflib/uspp_data_gpum.o
 allocate_nlpot.o : ../../upflib/uspp_gpum.o
 allocate_nlpot.o : pwcom.o
 allocate_wfc.o : ../../Modules/gvecw.o
@@ -370,7 +369,6 @@ clean_pw.o : ../../upflib/upf_spinorb.o
 clean_pw.o : ../../upflib/upf_spinorb_gpum.o
 clean_pw.o : ../../upflib/uspp.o
 clean_pw.o : ../../upflib/uspp_data.o
-clean_pw.o : ../../upflib/uspp_data_gpum.o
 clean_pw.o : ../../upflib/uspp_gpum.o
 clean_pw.o : Coul_cut_2D.o
 clean_pw.o : atomic_wfc_mod.o
@@ -691,7 +689,6 @@ exx.o : ../../upflib/paw_variables.o
 exx.o : ../../upflib/splinelib.o
 exx.o : ../../upflib/uspp.o
 exx.o : ../../upflib/uspp_data.o
-exx.o : ../../upflib/uspp_data_gpum.o
 exx.o : ../../upflib/uspp_gpum.o
 exx.o : buffers.o
 exx.o : exx_band.o
