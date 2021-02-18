@@ -1392,7 +1392,7 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   USE spin_orb,             ONLY : domag
   !
   USE uspp_gpum,            ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
-  USE upf_spinorb_gpum,     ONLY : fcoef_d
+  USE upf_spinorb,          ONLY : fcoef_d
   !
   IMPLICIT NONE
   

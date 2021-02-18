@@ -366,7 +366,6 @@ clean_pw.o : ../../upflib/gth.o
 clean_pw.o : ../../upflib/pseudo_types.o
 clean_pw.o : ../../upflib/radial_grids.o
 clean_pw.o : ../../upflib/upf_spinorb.o
-clean_pw.o : ../../upflib/upf_spinorb_gpum.o
 clean_pw.o : ../../upflib/uspp.o
 clean_pw.o : ../../upflib/uspp_data.o
 clean_pw.o : ../../upflib/uspp_gpum.o
@@ -1305,16 +1304,6 @@ init_us_2.o : ../../Modules/kind.o
 init_us_2.o : ../../Modules/recvec.o
 init_us_2.o : ../../upflib/uspp.o
 init_us_2.o : pwcom.o
-init_us_2_gpu.o : ../../Modules/cell_base.o
-init_us_2_gpu.o : ../../Modules/constants.o
-init_us_2_gpu.o : ../../Modules/ions_base.o
-init_us_2_gpu.o : ../../Modules/kind.o
-init_us_2_gpu.o : ../../Modules/recvec_gpu.o
-init_us_2_gpu.o : ../../upflib/gth.o
-init_us_2_gpu.o : ../../upflib/splinelib.o
-init_us_2_gpu.o : ../../upflib/uspp.o
-init_us_2_gpu.o : ../../upflib/uspp_data.o
-init_us_2_gpu.o : pwcom.o
 init_vloc.o : ../../Modules/cell_base.o
 init_vloc.o : ../../Modules/ions_base.o
 init_vloc.o : ../../Modules/kind.o
@@ -1654,7 +1643,7 @@ newd_gpu.o : ../../Modules/recvec_gpu.o
 newd_gpu.o : ../../Modules/wavefunctions.o
 newd_gpu.o : ../../Modules/wavefunctions_gpu.o
 newd_gpu.o : ../../UtilXlib/mp.o
-newd_gpu.o : ../../upflib/upf_spinorb_gpum.o
+newd_gpu.o : ../../upflib/upf_spinorb.o
 newd_gpu.o : ../../upflib/uspp.o
 newd_gpu.o : ../../upflib/uspp_gpum.o
 newd_gpu.o : ldaU.o
@@ -2713,7 +2702,7 @@ sum_band_gpu.o : ../../Modules/wavefunctions_gpu.o
 sum_band_gpu.o : ../../UtilXlib/mp.o
 sum_band_gpu.o : ../../XClib/xc_lib.o
 sum_band_gpu.o : ../../upflib/paw_variables.o
-sum_band_gpu.o : ../../upflib/upf_spinorb_gpum.o
+sum_band_gpu.o : ../../upflib/upf_spinorb.o
 sum_band_gpu.o : ../../upflib/uspp.o
 sum_band_gpu.o : ../../upflib/uspp_gpum.o
 sum_band_gpu.o : buffers.o

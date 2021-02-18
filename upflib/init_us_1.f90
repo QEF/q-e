@@ -33,9 +33,10 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
                            tab_d, tab_d2y_d, qrad_d
   USE splinelib
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv,&
-                           ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0
+                           ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0, &
+                           qq_so_d, dvan_so_d, dvan_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam
-  USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, lmaxx
+  USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
   !
@@ -43,13 +44,9 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
                            using_indv, using_indv_d, &
                            using_nhtolm, using_nhtolm_d, &
                            using_qq_at, using_qq_at_d, &
-                           using_qq_so, using_qq_so_d, &
                            using_ijtoh, using_ijtoh_d, &
                            using_nhtol, using_nhtol_d, &
-                           using_nhtoj, using_nhtoj_d, &
-                           using_dvan_so, using_dvan_so_d, &
-                           using_dvan, using_dvan_d
-  USE upf_spinorb_gpum, ONLY : using_fcoef, using_fcoef_d
+                           using_nhtoj, using_nhtoj_d
   !
   implicit none
   !
@@ -355,10 +352,6 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   !
   call mp_sum(  tab, intra_bgrp_comm )
   !
-#if defined __CUDA
-  ! update GPU memory (taking care of zero-dim allocations)
-  if (nbetam>0) tab_d=tab
-#endif
   !
   ! initialize spline interpolation
   if (spline_ps) then
@@ -380,6 +373,21 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
 #endif
   endif
 
+#if defined __CUDA
+  ! update GPU memory (taking care of zero-dim allocations)
+  if (nbetam>0) tab_d=tab
+  if (spline_ps) then
+     if (nbetam>0) tab_d2y_d=tab_d2y
+  endif
+  if (lspinorb.and.nhm>0) then 
+     fcoef_d=fcoef
+     qq_so_d=qq_so
+     dvan_so_d=dvan_so
+  else if (nhm>0) then
+     dvan_d=dvan
+  endif
+#endif
+
 #if defined (__CUDA)
   !CALL using_tab(2)
   !IF (lmaxq > 0) CALL using_qrad(2)
@@ -390,13 +398,13 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   CALL using_nhtol(2); CALL using_nhtol_d(0)
   CALL using_nhtoj(2); CALL using_nhtoj_d(0)
   CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
-  IF (lspinorb) THEN 
-      CALL using_qq_so(2); CALL using_qq_so_d(0) ! trick to update immediately
-      CALL using_fcoef(2) ; CALL using_fcoef_d(0)
-      CALL using_dvan_so(2) ; CALL using_dvan_so_d(0)
-  ELSE
-      CALL using_dvan(2) ; CALL using_dvan_d(0)
-  END IF
+  !IF (lspinorb) THEN 
+      !CALL using_qq_so(2); CALL using_qq_so_d(0) ! trick to update immediately
+      !CALL using_fcoef(2) ; CALL using_fcoef_d(0)
+      !CALL using_dvan_so(2) ; CALL using_dvan_so_d(0)
+  !ELSE
+      !CALL using_dvan(2) ; CALL using_dvan_d(0)
+  !END IF
 #endif
   call stop_clock ('init_us_1')
   return

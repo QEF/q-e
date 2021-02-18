@@ -416,8 +416,8 @@ SUBROUTINE newd_gpu( )
     SUBROUTINE newd_so_gpu(nt)
       !------------------------------------------------------------------------
       !
-      USE upf_spinorb_gpum, ONLY : fcoef_d, using_fcoef_d
-      USE ions_base,        ONLY : nat
+      USE upf_spinorb,    ONLY : fcoef_d
+      USE ions_base,      ONLY : nat
       !
       IMPLICIT NONE
       !
@@ -425,7 +425,7 @@ SUBROUTINE newd_gpu( )
 
       INTEGER :: ijs, is1, is2, kh, lh, nhnt, ih, jh, na
       !
-      CALL using_fcoef_d(0)
+      !CALL using_fcoef_d(0)
       !
       nhnt = nh(nt)
       ijs = 0

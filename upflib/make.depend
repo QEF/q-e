@@ -34,7 +34,6 @@ init_us_1.o : upf_const.o
 init_us_1.o : upf_ions.o
 init_us_1.o : upf_kinds.o
 init_us_1.o : upf_spinorb.o
-init_us_1.o : upf_spinorb_gpum.o
 init_us_1.o : uspp.o
 init_us_1.o : uspp_data.o
 init_us_1.o : uspp_gpum.o
@@ -124,7 +123,6 @@ upf_ions.o : upf_params.o
 upf_ions.o : uspp.o
 upf_spinorb.o : upf_kinds.o
 upf_spinorb.o : upf_params.o
-upf_spinorb_gpum.o : upf_spinorb.o
 upf_to_internal.o : pseudo_types.o
 upf_to_internal.o : radial_grids.o
 upf_to_internal.o : upf_kinds.o

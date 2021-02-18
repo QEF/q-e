@@ -73,7 +73,6 @@ SUBROUTINE clean_pw( lflag )
   USE gvect_gpum,           ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   USE uspp_gpum,            ONLY : deallocate_uspp_gpu
-  USE upf_spinorb_gpum,     ONLY : deallocate_spinorb_gpu
   !
   IMPLICIT NONE
   !
@@ -155,7 +154,6 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( lspinorb ) THEN
      CALL deallocate_spinorb()
-     CALL deallocate_spinorb_gpu()
   ENDIF
   !
   CALL deallocate_uspp() 
