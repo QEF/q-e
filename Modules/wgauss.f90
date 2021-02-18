@@ -42,7 +42,6 @@ function wgauss (x, n)
   integer :: i, ni
   ! counter on the n indices
   ! counter on 2n
-  real(DP) :: gauss_freq
   real(DP), parameter :: maxarg = 200.d0
   ! maximum value for the argument of the exponential
   real(DP), parameter :: c =  0.7071067811865475_DP
@@ -70,8 +69,8 @@ function wgauss (x, n)
 
   endif
   ! Methfessel-Paxton
-  gauss_freq = 0.5_DP * ERFC( - x * c)
-  wgauss = gauss_freq (x * sqrt (2.0d0) )
+  !gauss_freq(x) = 0.5_DP * ERFC( - x * c)
+  wgauss = 0.5_DP * ERFC( - x * sqrt (2.0d0) * c)
   if (n.eq.0) return
   hd = 0.d0
   arg = min (maxarg, x**2)
