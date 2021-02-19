@@ -264,7 +264,6 @@ set(src_pw
    src/stres_loc_gpu.f90
    src/add_paw_to_deeq_gpu.f90
    src/addusdens_gpu.f90
-   src/init_us_2_gpu.f90
    src/addusforce_gpu.f90
    src/deriv_drhoc_gpu.f90
    src/s_psi_gpu.f90
