@@ -94,7 +94,6 @@ SUBROUTINE stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg, tau,    &
   !
   INTEGER,  ALLOCATABLE :: ityp_d(:)
   REAL(DP), ALLOCATABLE :: zv_d(:), tau_d(:,:)
-  REAL(DP), EXTERNAL :: qe_erfc
   !
 #if defined(__CUDA)
   attributes(DEVICE) :: g_d, gg_d, zv_d, ityp_d, tau_d
@@ -122,7 +121,7 @@ SUBROUTINE stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg, tau,    &
   !
   IF (alpha==0.0) CALL errore( 'stres_ew', 'optimal alpha not found', 1 )
   upperbound = e2 * charge**2 * SQRT(2 * alpha / tpi) * &
-               qe_erfc ( SQRT(tpiba2 * gcutm / 4._DP / alpha) )
+               erfc ( SQRT(tpiba2 * gcutm / 4._DP / alpha) )
   !
   IF (upperbound > 1d-7) GOTO 12
   !
@@ -214,7 +213,7 @@ SUBROUTINE stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg, tau,    &
            DO nr = 1, nrm
               rr = SQRT(r2 (nr) ) * alat
               fac = - e2 / 2.0_DP/ omega * alat**2 * zv(ityp(na)) * &
-                    zv(ityp(nb)) / rr**3 * (qe_erfc(SQRT(alpha) * rr) + &
+                    zv(ityp(nb)) / rr**3 * (erfc(SQRT(alpha) * rr) + &
                     rr * SQRT(8.0_DP * alpha / tpi) * EXP( - alpha * rr**2) )
               DO l = 1, 3
                  DO m = 1, l

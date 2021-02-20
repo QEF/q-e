@@ -42,10 +42,11 @@ function wgauss (x, n)
   integer :: i, ni
   ! counter on the n indices
   ! counter on 2n
-  real(DP), external :: gauss_freq, qe_erf
   real(DP), parameter :: maxarg = 200.d0
   ! maximum value for the argument of the exponential
-
+  real(DP), parameter :: c =  0.7071067811865475_DP
+  ! c = sqrt(1/2)
+  
   ! Fermi-Dirac smearing
   if (n.eq. - 99) then
      if (x.lt. - maxarg) then
@@ -62,13 +63,14 @@ function wgauss (x, n)
   if (n.eq. - 1) then
      xp = x - 1.0d0 / sqrt (2.0d0)
      arg = min (maxarg, xp**2)
-     wgauss = 0.5d0 * qe_erf (xp) + 1.0d0 / sqrt (2.0d0 * pi) * exp ( - &
+     wgauss = 0.5d0 * erf(xp) + 1.0d0 / sqrt (2.0d0 * pi) * exp ( - &
           arg) + 0.5d0
      return
 
   endif
   ! Methfessel-Paxton
-  wgauss = gauss_freq (x * sqrt (2.0d0) )
+  !gauss_freq(x) = 0.5_DP * ERFC( - x * c)
+  wgauss = 0.5_DP * ERFC( - x * sqrt (2.0d0) * c)
   if (n.eq.0) return
   hd = 0.d0
   arg = min (maxarg, x**2)
