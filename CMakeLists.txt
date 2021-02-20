@@ -95,6 +95,8 @@ option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
 option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
+option(QE_ENABLE_LIBXC
+    "enable LIBXC execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
 option(QE_ENABLE_DOC
@@ -355,6 +357,33 @@ if(QE_ENABLE_ELPA)
             ${ELPA_INCLUDE_DIRS}
             ${ELPA_INCLUDE_DIRS_DEP})
 endif(QE_ENABLE_ELPA)
+
+###########################################################
+# LIBXC
+## The following targets will be defined:
+add_library(qe_external_libxc INTERFACE)
+qe_install_targets(qe_external_libxc)
+###########################################################
+if(QE_ENABLE_LIBXC)
+    target_compile_definitions(qe_external_libxc INTERFACE "__LIBXC")
+
+    find_package(Libxc)
+    #find_package(Libxc 5.1.2 EXACT CONFIG REQUIRED COMPONENTS shared Fortran)
+    
+    if(${Libxc_FOUND})
+        if (${Libxc_VERSION} VERSION_GREATER_EQUAL "5.1.2" )
+            message(STATUS "Libxc version ${Libxc_VERSION} found.")
+        else()
+            message(WARNING "Libxc version ${Libxc_VERSION} found."
+                            "Cmake compilation of QE tested for v5.1.2 or later only.")
+        endif()
+        target_link_libraries(qe_external_libxc INTERFACE Libxc::xcf03)
+        target_include_directories(qe_external_libxc INTERFACE ${Libxc_INCLUDE_DIR})
+        target_compile_definitions(qe_external_libxc INTERFACE ${Libxc_DEFINITIONS})
+    else()
+         message(FATAL_ERROR "Failed to find Libxc package.")
+    endif()
+endif(QE_ENABLE_LIBXC)
 
 ###########################################################
 # HDF5
