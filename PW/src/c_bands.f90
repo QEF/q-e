@@ -596,7 +596,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
                    CALL using_evc_d(1); CALL using_et_d(1);
-                   CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc_d, et_d(1,ik) )
+                   CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc_d, et_d(1,ik) )
                 END IF
                 !
                 avg_iter = avg_iter + 1.D0
