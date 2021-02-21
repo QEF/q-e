@@ -378,7 +378,7 @@ MODULE cp_restart_new
             wk_ = 2.0_dp
          END IF
          CALL qexsd_init_k_points_ibz( k_points_ibz, 'Gamma', &
-              'CP',1,1,1,0,0,0,1,xk,wk_,alat,a1,.false.) 
+              'CP',1,1,1,0,0,0,1,alat,a1,.false.,xk,wk_) 
          bands_occu%tagname="occupations_kind"
          bands_occu%lread=.false.
          bands_occu%lwrite=.true.
