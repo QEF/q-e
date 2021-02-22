@@ -625,7 +625,6 @@
       use small_box,          only: omegab, tpibab
       USE cp_interfaces,      ONLY: fill_qrl
       USE device_memcpy_m,    ONLY: dev_memcpy
-      !use uspp_gpum,  ONLY: using_qq_nt, using_qq_nt_d
       !
       IMPLICIT NONE
       !
@@ -799,9 +798,7 @@
 
       end do
 
-      !CALL using_qq_nt(2)
 #if defined (__CUDA)
-      !CALL using_qq_nt_d(0)
       call dev_memcpy(qq_nt_d,qq_nt)
       !
       !$cuf kernel do (3)
@@ -1067,7 +1064,6 @@
       use small_box,         only: omegab, tpibab
       USE betax,             ONLY: qradx, dqradx, refg, mmx
       USE device_memcpy_m,   ONLY: dev_memcpy
-      !use uspp_gpum,  ONLY: using_qq_nt, using_qq_nt_d
       !
       implicit none
 
@@ -1154,9 +1150,7 @@
 
       end do
 
-      !CALL using_qq_nt(2)
 #if defined (__CUDA)
-      !CALL using_qq_nt_d(0)
       call dev_memcpy(qq_nt_d,qq_nt)
       !
       !$cuf kernel do (3)
