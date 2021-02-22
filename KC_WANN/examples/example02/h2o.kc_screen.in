@@ -1,0 +1,20 @@
+KI Silicon
+&control
+  prefix='h2o'
+  outdir='./out'
+  kc_iverbosity = 2
+  kc_at_ks=.true.
+  read_unitary_matrix = .false.
+  assume_isolated = 'mt'
+/
+&screen
+  tr2_ph=1.0d-18
+  nmix_ph = 4
+  niter_ph = 33
+  lrpa =.false.
+  fix_orb = .false.
+  i_orb = -1
+  mp1 = 1 
+  mp2 = 1
+  mp3 = 1
+ /

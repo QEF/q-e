@@ -1,0 +1,17 @@
+KI Silicon
+ &inputkc
+  tr2_ph=1.0d-18
+  prefix='Si'
+  outdir='./out'
+  kc_at_ks=.false.
+  read_unitary_matrix = .true.
+  qp_symm = .TRUE.
+  seedname = 'Si'
+  num_wann_occ = 32
+  check_ks = .true. 
+  iverbosity = 2
+  niter_ph = 33
+  lrpa =.false.
+  have_empty = .false. 
+  has_disentangle = .false. 
+ /

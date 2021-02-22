@@ -1,0 +1,24 @@
+KI H2O
+&control
+  prefix='h2o'
+  outdir='./out'
+  kc_iverbosity = 2
+  kc_at_ks=.true.
+  homo_only = .false.
+  read_unitary_matrix = .false.
+  assume_isolated = 'mt' 
+/
+&ham
+  mp1 = 1
+  mp2 = 1
+  mp3 = 1
+  do_bands = .false.
+  use_ws_distance = .false.
+  write_hr = .true.
+  l_alpha_corr = .true.
+/
+K_POINTS crystal_b
+ 3
+ 0.00 0.00 0.00 10
+ 0.50 0.00 0.00 10
+ 0.00 0.00 0.00 1

@@ -1,0 +1,151 @@
+
+     Program PW2WANNIER v.6.2 starts on 26Feb2020 at 11:13:17 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+ 
+  Reading nscf_save data
+
+     Reading data from directory:
+     ./out/Si.save
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         289     289     73                 6555     6555     821
+     Max         290     290     74                 6559     6559     823
+     Sum        1159    1159    295                26229    26229    3287
+ 
+ 
+  Spin CASE ( default = unpolarized )
+ 
+  Wannier mode is: standalone     
+ 
+  -----------------
+  *** Reading nnkp 
+  -----------------
+ 
+  Checking info from wannier.nnkp file
+ 
+  - Real lattice is ok
+  - Reciprocal lattice is ok
+  - K-points are ok
+  - Number of wannier functions is ok ( 32)
+  - All guiding functions are given 
+ 
+ Projections:
+    0.000000    0.000000    0.000000 -3  1  1    1.000000
+    0.000000    0.000000    0.000000 -3  2  1    1.000000
+    0.000000    0.000000    0.000000 -3  3  1    1.000000
+    0.000000    0.000000    0.000000 -3  4  1    1.000000
+   -0.250000    0.250000    0.000000 -3  1  1    1.000000
+   -0.250000    0.250000    0.000000 -3  2  1    1.000000
+   -0.250000    0.250000    0.000000 -3  3  1    1.000000
+   -0.250000    0.250000    0.000000 -3  4  1    1.000000
+    0.000000    0.250000    0.250000 -3  1  1    1.000000
+    0.000000    0.250000    0.250000 -3  2  1    1.000000
+    0.000000    0.250000    0.250000 -3  3  1    1.000000
+    0.000000    0.250000    0.250000 -3  4  1    1.000000
+   -0.250000    0.500000    0.250000 -3  1  1    1.000000
+   -0.250000    0.500000    0.250000 -3  2  1    1.000000
+   -0.250000    0.500000    0.250000 -3  3  1    1.000000
+   -0.250000    0.500000    0.250000 -3  4  1    1.000000
+   -0.250000    0.000000    0.250000 -3  1  1    1.000000
+   -0.250000    0.000000    0.250000 -3  2  1    1.000000
+   -0.250000    0.000000    0.250000 -3  3  1    1.000000
+   -0.250000    0.000000    0.250000 -3  4  1    1.000000
+   -0.500000    0.250000    0.250000 -3  1  1    1.000000
+   -0.500000    0.250000    0.250000 -3  2  1    1.000000
+   -0.500000    0.250000    0.250000 -3  3  1    1.000000
+   -0.500000    0.250000    0.250000 -3  4  1    1.000000
+   -0.250000    0.250000    0.500000 -3  1  1    1.000000
+   -0.250000    0.250000    0.500000 -3  2  1    1.000000
+   -0.250000    0.250000    0.500000 -3  3  1    1.000000
+   -0.250000    0.250000    0.500000 -3  4  1    1.000000
+   -0.500000    0.500000    0.500000 -3  1  1    1.000000
+   -0.500000    0.500000    0.500000 -3  2  1    1.000000
+   -0.500000    0.500000    0.500000 -3  3  1    1.000000
+   -0.500000    0.500000    0.500000 -3  4  1    1.000000
+ 
+  Reading data about k-point neighbours 
+ 
+  All neighbours are found 
+ 
+  Opening pp-files 
+ 
+ 
+  ---------------
+  *** Compute  A 
+  ---------------
+ 
+  AMN: iknum =        1
+       1
+
+  AMN calculated
+ 
+  ---------------
+  *** Compute  M 
+  ---------------
+ 
+  MMN: iknum =        1
+       1
+
+  MMN calculated
+ 
+  -----------------------------------
+  *** Orbital terms are not computed 
+  -----------------------------------
+ 
+  ----------------
+  *** Write bands 
+  ----------------
+ 
+ 
+  --------------------
+  *** Write plot info 
+  --------------------
+ 
+ UNK: iknum =        1
+       1
+
+  UNK written
+ 
+  -----------------------------
+  *** Parity info is not printed 
+  -----------------------------
+ 
+  ------------
+  *** Stop pp 
+  ------------
+ 
+ 
+     init_pw2wan  :      0.20s CPU      0.22s WALL (       1 calls)
+     compute_amn  :      0.35s CPU      0.37s WALL (       1 calls)
+     compute_mmn  :      0.11s CPU      0.12s WALL (       1 calls)
+     write_unk    :     13.57s CPU     13.63s WALL (       1 calls)
+ 
+     PW2WANNIER   :    14.12s CPU        14.22s WALL
+
+ 
+   This run was terminated on:  11:13:32  26Feb2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
+ 

@@ -1,0 +1,31 @@
+&control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='Si',
+    pseudo_dir = '../../pseudo/',
+    outdir='./out'
+    verbosity = "high"
+/
+&system
+    ibrav=2, 
+    celldm(1)=10.263101844
+    nat= 2, ntyp= 2,
+    ecutwfc = 20.0,
+    nbnd=4
+    nosym = .true.
+/
+&electrons
+    diagonalization='david'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-10
+/
+&ions
+/
+ATOMIC_SPECIES
+Si1 28.085 Si_ONCV_PBE-1.0.upf
+Si2 28.085 Si_ONCV_PBE-1.0.upf
+ATOMIC_POSITIONS
+Si1 0 0 0 
+Si2 0.25 0.25 0.25
+K_POINTS automatic
+ 2 2 2 0 0 0 

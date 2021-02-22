@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum Espresso" package="KC_WANN" program="kc_screen.x" >
+   <toc>
+   </toc>
+   <intro>
+<b>Input data format:</b> { } = optional, [ ] = it depends, # = comment
+
+<b>Structure of the input data:</b>
+===============================================================================
+
+<b>&amp;CONTROL</b>
+   ...
+<b>/</b>
+
+<b>&amp;WANNIER</b>
+   ...
+<b>/</b>
+
+<b>&amp;SCREEN</b>
+   ...
+<b>/</b>
+   </intro>
+   <namelist name="CONTROL" >
+      <var name="prefix" type="CHARACTER" >
+         <default> &apos;pwscf&apos;
+         </default>
+         <info>
+Prepended to input/output filenames; must be the same
+used in the previous PW calculations.
+         </info>
+      </var>
+      <var name="outdir" type="CHARACTER" >
+         <default>
+<br/> current directory (&apos;./&apos;)
+         </default>
+         <info>
+Directory containing input, output, and scratch files;
+must be the same as specified in the calculation of
+previous PW calculation.
+         </info>
+      </var>
+      <var name="kc_iverbosity" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+= 0 : minimal output
+= 1 : as above + performs additional checks.
+&gt; 1 : as above + additional infos on all the steps.
+         </info>
+      </var>
+      <var name="kc_at_ks" type="LOGICAL" >
+         <default> .TRUE.
+         </default>
+         <info>
+If true the KS canonical orbitals are used instead of Wannier;
+functions. It make sense for isolated system only.
+         </info>
+      </var>
+      <var name="read_unitary_matrix" type="LOGICAL" >
+         <default> .FALSE.
+         </default>
+         <info>
+If true read the Unitary matrix written by Wannier90.
+Implicitely means a previous wannier90 calculation was
+performed and a KC calculation will be performed starting
+from MLWF. Resuires &apos;write_hr = .true.&apos; in wannier90.
+         </info>
+      </var>
+      <var name="spread_check" type="LOGICAL" >
+         <default> .FALSE.
+         </default>
+         <info>
+NOT IMPLMENTED YET. Check on the spread of the Wannier functions
+to reduce the number of independent Linear Response calculations.
+         </info>
+      </var>
+      <var name="spread_thr" type="REAL" >
+         <default> 0.001 Ry
+         </default>
+         <info>
+NOT IMPLMENTED YET. Two or more Wannier functions are considered
+identical if their spread (self-hartree) differ by less than spread_thr.
+Requires <ref>spread_check</ref> = .true.
+         </info>
+      </var>
+      <var name="homo_only" type="LOGICAL" >
+         <default> FALSE
+         </default>
+         <info>
+If <ref>kc_at_ks</ref> = .TRUE. only the screening paramenter for the HOMO is
+calculated. Mainly for a perturbative calculation of the first Ionization
+Potential in isolated systems.
+         </info>
+      </var>
+      <var name="l_vcut" type="LOGICAL" >
+         <default> FALSE
+         </default>
+         <info>
+If .TRUE. the Gygi-Baldereschi scheme is used to deal with
+the q-&gt;0 divergence of the Coulomb integral (bare and screened).
+Improves the convergence wrt k/q-point sampling.
+Requires to correctly set <ref>eps_inf</ref> for the calculation of
+the screened interaction.
+
+Use it only for periodic system.
+For isoleted system use <ref>assume_isolated</ref>, instead.
+         </info>
+      </var>
+      <var name="assume_isolated" type="CHARACTER" >
+         <default> &apos;none&apos;
+         </default>
+         <options>
+            <info>
+Used to perform calculation assuming the system to be
+isolated (a molecule or a cluster in a 3D supercell).
+
+Currently available choices:
+            </info>
+            <opt val="'none'" > (default): regular periodic calculation w/o any correction.
+            </opt>
+            <opt val="'martyna-tuckerman', 'm-t', 'mt'" >
+Martyna-Tuckerman correction
+to both total energy and scf potential. Adapted from:
+G.J. Martyna, and M.E. Tuckerman,
+&quot;A reciprocal space based method for treating long
+range interactions in ab-initio and force-field-based
+calculation in clusters&quot;, J. Chem. Phys. 110, 2810 (1999),
+<a href="http://dx.doi.org/10.1063/1.477923">doi:10.1063/1.477923</a>.
+            </opt>
+         </options>
+      </var>
+      <var name="spin_component" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+Which spin channel to calculate (only collinear calculation).
+1 = spin up channel
+2 = spin down channel
+It has to be consistent with the previous Wannier90
+calculation (see &apos;spin&apos; keyword in Wann90 documentation)
+         </info>
+      </var>
+   </namelist>
+   <namelist name="WANNIER" >
+      <var name="seedname" type="CHARACTER" >
+         <default> wann
+         </default>
+         <info>
+The seedname of the previous Wannier90 calculation for occupied states.
+NOTA BENE: the code implicitely assumed that the seedname for empty
+state is the same as that for occupied state with &quot;_emp&quot; appended.
+Keep this in mind when set up the wannier90 inputs.
+
+For example:
+wann.win         is the wannier90 input file for the occupied states.
+wann_emp.win     is the wannier90 input file for the empty states.
+         </info>
+      </var>
+      <var name="num_wann_occ" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+The number of wannier function for the occupied manifold.
+It has to coincide with the number of occupied KS orbitals.
+The whole KS manifold has to be wannierised (no &apos;exclude_band&apos;
+option for occupied state, at the moment).
+         </info>
+      </var>
+      <var name="num_wann_emp" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+The number of wannier function for the empty manifold.
+It has to coincide with the number of empty wannier function
+from the previous wannier90 calculation
+         </info>
+      </var>
+      <var name="have_empty" type="LOGICAL" >
+         <default> FALSE
+         </default>
+         <info>
+If true empty state are computed. Require a previous wannier90
+calculation for the empty manifold. The code search for the
+unitary matrices in the wannier90 file seedname_emp_u.mat
+         </info>
+      </var>
+      <var name="has_disentangle" type="LOGICAL" >
+         <default> FALSE
+         </default>
+         <info>
+ Specify if a disentangle unitary matrix needs to be read. Requires
+a consisten calcuation from the previous wannier90 run.
+         </info>
+      </var>
+   </namelist>
+   <namelist name="SCREEN" >
+      <vargroup type="INTEGER" >
+         <var name="mp1" >
+         </var>
+         <var name="mp2" >
+         </var>
+         <var name="mp3" >
+         </var>
+         <default> -1,-1,-1
+         </default>
+         <info>
+Parameters of the Monkhorst-Pack grid (no offset).
+Same meaning as for nk1, nk2, nk3 in the input of pw.x.
+It has to coincide with the regular mesh used for the
+  wannier90 calculation.
+         </info>
+      </vargroup>
+      <var name="lrpa" type="LOGICAL" >
+         <default> .FALSE.
+         </default>
+         <info>
+If .true. the response function is computed neglecting xc
+effects both in the kernel and in the response function (RPA).
+         </info>
+      </var>
+      <var name="niter_ph" type="INTEGER" >
+         <default> maxter=100
+         </default>
+         <info>
+Maximum number of iterations in a scf step. If you want
+more than 100, edit variable &quot;maxter&quot; in PH/phcom.f90
+         </info>
+      </var>
+      <var name="nmix_ph" type="INTEGER" >
+         <default> 4
+         </default>
+         <info> Number of iterations used in potential mixing.
+         </info>
+      </var>
+      <var name="tr2_ph" type="REAL" >
+         <default> 1e-14
+         </default>
+         <info> Threshold for self-consistency.
+         </info>
+      </var>
+      <var name="i_orb" type="INTEGER" >
+         <default> -1
+         </default>
+         <info>
+Perform the screening calculation for a particular orbital.
+If i_orb = -1 (default) all the orbitals are computed.
+Assumes values between 1 and the total number of wannier
+functions.
+         </info>
+      </var>
+      <var name="eps_inf" type="REAL" >
+         <default> 1.d0
+         </default>
+         <info>
+The macroscopic dielectric constant. Needed for the Gygi-Baldereschi
+scheme if <ref>l_vcut</ref> = .TRUE.
+Typically from exp or from a ph.x calculation.
+NOTA BENE: This would be equivalent to a Makov-Payne correction.
+           it is perfectly fine for cubic systems. Not so for
+           anisotropic dielectric matrices.
+         </info>
+      </var>
+   </namelist>
+</input_description>

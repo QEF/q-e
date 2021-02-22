@@ -1,0 +1,32 @@
+KI Si
+&control
+  prefix='Si'
+  outdir='./out'
+  kc_iverbosity = 2
+  kc_at_ks=.false.
+  homo_only = .false.
+  read_unitary_matrix = .true.
+/
+&wannier
+  seedname = 'Si'
+  check_ks = .true. 
+  num_wann_occ = 4
+  num_wann_emp = 4
+  have_empty = .true.
+  has_disentangle = .true.
+/
+&ham
+  mp1 = 2
+  mp2 = 2
+  mp3 = 2
+  do_bands = .true.
+  use_ws_distance = .true.
+  write_hr = .true.
+  l_alpha_corr = .false.
+  lrpa = .false.
+/
+K_POINTS crystal_b
+ 3
+ 0.00 0.00 0.00 10
+ 0.50 0.00 0.00 10
+ 0.00 0.00 0.00 1

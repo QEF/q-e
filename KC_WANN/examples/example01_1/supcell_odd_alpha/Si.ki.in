@@ -1,0 +1,10 @@
+KI Be2
+ &inputki
+  prefix='Si'
+  outdir='./out'
+  kc_at_ks=.false.
+  have_empty = .true.
+  has_disentangle = .true.
+  read_unitary_matrix = .true.
+  qp_symm = .TRUE.
+ /
