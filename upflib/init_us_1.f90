@@ -347,7 +347,6 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   !
   ! initialize spline interpolation
   if (spline_ps) then
-     !CALL using_tab_d2y(2);
      allocate( xdata(nqx) )
      do iq = 1, nqx
         xdata(iq) = (iq - 1) * dq
@@ -391,25 +390,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   indv_ijkb0_d=indv_ijkb0
   !
 #endif
-
-#if defined (__CUDA)
-  !CALL using_tab(2)
-  !IF (lmaxq > 0) CALL using_qrad(2)
-  !CALL using_indv(2); CALL using_indv_d(0) ! trick to update immediately
-  !CALL using_nhtolm(2); CALL using_nhtolm_d(0) ! trick to update immediately
-  !CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
-  !CALL using_ijtoh(2); CALL using_ijtoh_d(0) ! trick to update immediately
-  !CALL using_nhtol(2); CALL using_nhtol_d(0)
-  !CALL using_nhtoj(2); CALL using_nhtoj_d(0)
-  !CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
-  !IF (lspinorb) THEN 
-      !CALL using_qq_so(2); CALL using_qq_so_d(0) ! trick to update immediately
-      !CALL using_fcoef(2) ; CALL using_fcoef_d(0)
-      !CALL using_dvan_so(2) ; CALL using_dvan_so_d(0)
-  !ELSE
-      !CALL using_dvan(2) ; CALL using_dvan_d(0)
-  !END IF
-#endif
+  !
   call stop_clock ('init_us_1')
   return
   !
@@ -448,8 +429,6 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   ndm = MAXVAL ( upf(:)%kkbeta )
   ALLOCATE (aux ( ndm))
   ALLOCATE (besr( ndm))
-  !
-  !CALL using_qrad(2)
   !
   CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
   !

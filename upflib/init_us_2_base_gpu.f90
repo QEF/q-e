@@ -80,9 +80,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega
   !
   if (lmaxkb<0) return
   
-  !call using_tab_d(0)
-  !if (spline_ps) call using_tab_d2y_d(0)
-
   ! JR Eventually replace with smarter allocation/deallocation of GPU temp arrays
   ! PB use buffer class here
   !allocate (vkb1_d( npw_,nhm))

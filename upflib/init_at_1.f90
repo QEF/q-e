@@ -31,7 +31,6 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   REAL(DP) :: vqint, pref, q
   !
   CALL start_clock( 'init_at_1' )
-  !CALL using_tab_at(2)
   !
   ndm = MAXVAL(msh(1:ntyp))
   ALLOCATE( aux(ndm), vchi(ndm) )

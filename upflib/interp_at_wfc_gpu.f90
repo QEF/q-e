@@ -23,9 +23,6 @@ SUBROUTINE interp_at_wfc_gpu ( npw, qg_d, nwfcm, ntyp, chiq_d )
   INTEGER :: i0, i1, i2, i3
   REAL(dp):: qgr, px, ux, vx, wx
   !
-  !CALL using_tab_at(0)
-  !CALL using_tab_at_d(0)
-  !
   DO nt = 1, ntyp
      DO nb = 1, upf(nt)%nwfc
         IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN

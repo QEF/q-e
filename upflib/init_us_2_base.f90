@@ -66,11 +66,6 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, vkb_, tau, tpiba, omega, &
   !
   IF (lmaxkb < 0) RETURN
   !
-  !CALL using_tab(0)
-  !IF (spline_ps) CALL using_tab_d2y(0)
-  !
-  ! write(*,'(3i4,i5,3f10.5)') size(tab,1), size(tab,2), size(tab,3), size(vq), q_
-  !
   ! setting cache blocking size
   numblock = (npw_+blocksize-1)/blocksize
   !

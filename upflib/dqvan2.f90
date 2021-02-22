@@ -91,8 +91,6 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   IF (ivl > nlx .OR. jvl > nlx) &
        CALL errore (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   !
-  !CALL using_qrad(0)
-  !
   dqg(:) = (0.d0,0.d0)
   !
   !    and make the sum over the non zero LM

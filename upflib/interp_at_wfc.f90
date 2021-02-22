@@ -20,7 +20,6 @@ SUBROUTINE interp_at_wfc ( npw, qg, nwfcm, ntyp, chiq )
   INTEGER :: i0, i1, i2, i3
   REAL(dp):: qgr, px, ux, vx, wx
   !
-  !CALL using_tab_at(0)
   DO nt = 1, ntyp
      DO nb = 1, upf(nt)%nwfc
         IF ( upf(nt)%oc (nb) >= 0.d0) THEN
@@ -68,7 +67,6 @@ SUBROUTINE interp_at_dwfc ( npw, qg, nwfcm, ntyp, dchiq )
   INTEGER :: i0, i1, i2, i3
   REAL(dp):: px, ux, vx, wx
   !
-  !CALL using_tab_at(0)
   DO nt=1,ntyp
      DO nb=1,upf(nt)%nwfc
         IF (upf(nt)%oc(nb) >= 0.d0) THEN

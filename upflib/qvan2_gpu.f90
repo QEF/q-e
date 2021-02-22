@@ -190,9 +190,6 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   attributes(device):: ylmk0_d, qmod_d, qg_d
 #endif
   !
-  !CALL using_indv(0)
-  !CALL using_nhtolm(0)
-  !
   nb = indv (ih, np)
   mb = indv (jh, np)
   if (nb.ge.mb) then
@@ -206,11 +203,6 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
        call errore (' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
   if (ivl > nlx .OR. jvl > nlx) &
        call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
-  !
-  ! Sync (if needed) global variables used in kernel
-  !CALL using_qrad_d(0)
-  !CALL using_indv_d(0)
-  !CALL using_nhtolm_d(0)
   !
 #if defined(__CUDA)
   tBlock = dim3(256,1,1)
