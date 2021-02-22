@@ -33,14 +33,13 @@ SUBROUTINE from_restart( )
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
-   USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
-   USE uspp_gpum,             ONLY : vkb_d
+   USE uspp,                  ONLY : okvan, vkb, vkb_d, nkb, nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
                                      sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc, iabox, nabox
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp, dffts
+   USE device_memcpy_m,       ONLY : dev_memcpy
    USE matrix_inversion
-   USE device_memcpy_m,         ONLY : dev_memcpy
    !
    IMPLICIT NONE
 

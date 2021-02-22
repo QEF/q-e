@@ -20,7 +20,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
+  USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc, using_vkb
   USE wavefunctions,        ONLY : evc
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
@@ -30,11 +30,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_deeq
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
-  !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  !USE uspp_gpum,           ONLY : using_deeq
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: ik
@@ -436,7 +435,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        CALL gen_us_dj( ik, dvkb )
        !
        CALL using_evc(0); CALL using_et(0) ! this is redundant
-       CALL using_deeq(0)
+       !CALL using_deeq(0)
        
        DO ibnd = 1, nbnd
           IF (noncolin) THEN

@@ -32,14 +32,13 @@ SUBROUTINE orthoUwfc_gpu
   USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
   USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb
+  USE uspp,       ONLY : nkb, vkb, vkb_d, using_vkb_d
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_bands,         ONLY : use_bgrp_in_hpsi
   !
-  USE uspp_gpum,        ONLY : using_vkb, using_vkb_d, vkb_d
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
@@ -113,7 +112,6 @@ SUBROUTINE orthoUwfc_gpu
      ENDIF
      !
      npw = ngk(ik)
-     !CALL using_vkb(1)
      CALL using_vkb_d(2)
      CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
      !
@@ -165,13 +163,11 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb
+  USE uspp,       ONLY : nkb, vkb, vkb_d, using_vkb_d
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
-  !
-  USE uspp_gpum,        ONLY : using_vkb, using_vkb_d, vkb_d
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
@@ -210,7 +206,6 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
      ENDIF
      !
      npw = ngk(ik)
-     !CALL using_vkb(1)
      CALL using_vkb_d(2)
      CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
      !

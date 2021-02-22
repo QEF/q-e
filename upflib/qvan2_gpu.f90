@@ -147,9 +147,6 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   USE uspp_data,   ONLY: dq
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, nhtolm, indv
-  !
-  USE uspp_gpum,      ONLY : using_indv_d, using_nhtolm_d, &
-                             using_indv, using_nhtolm
 #if defined(__CUDA)
   USE cudafor
   USE qvan2_gpum,  ONLY : qvan2_kernel
@@ -193,8 +190,8 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   attributes(device):: ylmk0_d, qmod_d, qg_d
 #endif
   !
-  CALL using_indv(0)
-  CALL using_nhtolm(0)
+  !CALL using_indv(0)
+  !CALL using_nhtolm(0)
   !
   nb = indv (ih, np)
   mb = indv (jh, np)
@@ -212,8 +209,8 @@ subroutine qvan2_gpu (ngy, ih, jh, np, qmod_d, qg_d, ylmk0_d)
   !
   ! Sync (if needed) global variables used in kernel
   !CALL using_qrad_d(0)
-  CALL using_indv_d(0)
-  CALL using_nhtolm_d(0)
+  !CALL using_indv_d(0)
+  !CALL using_nhtolm_d(0)
   !
 #if defined(__CUDA)
   tBlock = dim3(256,1,1)

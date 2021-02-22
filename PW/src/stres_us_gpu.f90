@@ -20,7 +20,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb
+  USE uspp,                 ONLY : nkb, vkb_d, using_vkb, using_vkb_d, deeq_d
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
@@ -30,16 +30,13 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, &
                                    mp_circular_shift_left 
-  !
   USE wavefunctions_gpum,   ONLY : using_evc, using_evc_d, evc_d
   USE wvfct_gpum,           ONLY : using_et
-  USE uspp_gpum,            ONLY : vkb_d, using_vkb, using_vkb_d, &
-                                   deeq_d, using_deeq_d
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto, &
                                    calbec_gpu
-  USE device_fbuff_m,             ONLY : dev_buf
-  USE device_memcpy_m,        ONLY : dev_memcpy
+  USE device_fbuff_m,       ONLY : dev_buf
+  USE device_memcpy_m,      ONLY : dev_memcpy
   !
   !
   IMPLICIT NONE
@@ -484,8 +481,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        ENDIF
        IF (ANY(ierrs /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
        !
-       CALL using_deeq_d(0)
-       !
+       !CALL using_deeq_d(0)
        CALL using_et(0)
        !
        ! ... the contribution is calculated only on one processor because

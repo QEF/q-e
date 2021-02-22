@@ -55,7 +55,7 @@ SUBROUTINE addusforce_g( forcenl )
   USE control_flags,      ONLY : gamma_only
   USE fft_interfaces,     ONLY : fwfft
   !
-  USE uspp_gpum,     ONLY : using_becsum
+  !USE uspp_gpum,     ONLY : using_becsum
   !
   IMPLICIT NONE
   !
@@ -118,7 +118,7 @@ SUBROUTINE addusforce_g( forcenl )
   ENDDO
   !
   ! Sync if needed
-  CALL using_becsum(0)
+  !CALL using_becsum(0)
   !
   DO nt = 1, ntyp
      IF ( upf(nt)%tvanp ) THEN

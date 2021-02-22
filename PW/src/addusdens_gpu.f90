@@ -53,16 +53,16 @@ SUBROUTINE addusdens_g_gpu(rho)
   USE gvect_gpum,           ONLY : gg_d, g_d, &
                                    eigts1_d, eigts2_d, eigts3_d, mill_d
   USE noncollin_module,     ONLY : noncolin, nspin_mag
-  USE uspp,                 ONLY : okvan
+  USE uspp,                 ONLY : okvan, becsum_d
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
-  USE uspp_gpum,            ONLY : becsum_d, using_becsum_d
-  USE device_fbuff_m,             ONLY : dev_buf, pin_buf
-  USE device_memcpy_m,        ONLY : dev_memcpy, dev_memset
+  !USE uspp_gpum,           ONLY : using_becsum_d
+  USE device_fbuff_m,       ONLY : dev_buf, pin_buf
+  USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -115,7 +115,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   IF ( ngm_l <= 0 ) GO TO 10
   !
   ! Sync becsum if needed
-  CALL using_becsum_d(0)
+  !CALL using_becsum_d(0)
   !
   !ALLOCATE (qmod_d(ngm_l), qgm_d(ngm_l) )
   !ALLOCATE (ylmk0_d(ngm_l, lmaxq * lmaxq) )

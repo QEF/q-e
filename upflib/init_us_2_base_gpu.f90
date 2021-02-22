@@ -236,9 +236,10 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega
   CALL dev_buf%release_buffer(  vq_d, istat(4) )
   CALL dev_buf%release_buffer( ylm_d, istat(5) )
   CALL dev_buf%release_buffer(  gk_d, istat(6) )
+  !
   IF (is_gth) THEN
      deallocate ( qg_h, vq_h )
   END IF
-
+  !
   return
 end subroutine init_us_2_base_gpu

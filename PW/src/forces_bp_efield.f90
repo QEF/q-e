@@ -55,7 +55,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE constants,            ONLY : pi, tpi
    USE gvect,                ONLY : ngm,  g, gcutm, ngm_g, ngmx, ig_l2g
    USE fft_base,             ONLY : dfftp
-   USE uspp,                 ONLY : nkb, vkb, okvan
+   USE uspp,                 ONLY : nkb, vkb, okvan, using_vkb
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, ngk, igk_k
@@ -72,8 +72,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE spin_orb,             ONLY : lspinorb
    USE mytime,               ONLY :
    USE parallel_include
-   !
-   USE uspp_gpum,            ONLY : using_vkb
    !
    IMPLICIT NONE
    !

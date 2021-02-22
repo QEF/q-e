@@ -41,7 +41,6 @@ set(src_upflib
     ylmr2.f90
     # GPU
     init_us_2_base_gpu.f90
-    uspp_gpum.f90
     interp_at_wfc_gpu.f90
     qvan2_gpu.f90
     ylmr2_gpu.f90

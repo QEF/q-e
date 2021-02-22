@@ -28,7 +28,8 @@ SUBROUTINE sum_band()
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
-  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan
+  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
+                                   using_vkb
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
@@ -43,11 +44,10 @@ SUBROUTINE sum_band()
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_becsum, using_ebecsum
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
-  !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  !USE uspp_gpum,            ONLY : using_becsum, using_ebecsum
   IMPLICIT NONE
   !
   ! ... local variables
@@ -66,10 +66,10 @@ SUBROUTINE sum_band()
   CALL start_clock( 'sum_band' )
   !
   if ( nhm > 0 ) then
-     CALL using_becsum(2)
+     !CALL using_becsum(2)
      !
      becsum(:,:,:) = 0.D0
-     if (tqr) CALL using_ebecsum(2)
+     !if (tqr) CALL using_ebecsum(2)
      if (tqr) ebecsum(:,:,:) = 0.D0
   end if
   rho%of_r(:,:)      = 0.D0
@@ -180,13 +180,13 @@ SUBROUTINE sum_band()
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
      !
-     CALL using_becsum(1)
+     !CALL using_becsum(1)
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
      !
      ! ... same for ebecsum, a correction to becsum (?) in real space
      !
-     IF (tqr) CALL using_ebecsum(1)
+     !IF (tqr) CALL using_ebecsum(1)
      IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
      IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
      !
@@ -501,9 +501,9 @@ SUBROUTINE sum_band()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
+       !IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
+       !IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
        !
        IF( use_tg ) THEN
@@ -923,7 +923,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE becmod,        ONLY : becp, calbec, allocate_bec_type
   USE control_flags, ONLY : gamma_only, tqr
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE uspp,          ONLY : nkb, vkb, becsum, ebecsum, indv_ijkb0
+  USE uspp,          ONLY : nkb, vkb, becsum, ebecsum, indv_ijkb0, &
+                            using_vkb
   USE uspp_param,    ONLY : upf, nh, nhm
   USE wvfct,         ONLY : nbnd, wg, et, current_k
   USE klist,         ONLY : ngk
@@ -936,10 +937,9 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, &
-                                        using_becsum, using_ebecsum
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
+  USE wvfct_gpum,         ONLY : using_et
+  !USE uspp_gpum,         ONLY : using_indv_ijkb0, using_becsum, using_ebecsum
+  USE becmod_subs_gpum,   ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -965,7 +965,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(0)
   CALL using_vkb(0)
-  CALL using_indv_ijkb0(0)
+  !CALL using_indv_ijkb0(0)
   CALL using_becp_auto(2)
   !
   CALL start_clock( 'sum_band:calbec' )
@@ -1115,8 +1115,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
               !
               ! copy output from GEMM into desired format
               !
-              CALL using_becsum(1)
-              if (tqr) CALL using_ebecsum(1)
+              !CALL using_becsum(1)
+              !if (tqr) CALL using_ebecsum(1)
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
                  CALL add_becsum_nc (na, np, aux_nc, becsum )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN

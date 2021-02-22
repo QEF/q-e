@@ -1092,7 +1092,6 @@ subroutine nlinit
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
                                   dbeta
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish
-      use uspp_gpum,       ONLY : using_qq_nt, using_qq_nt_d, qq_nt_d
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb

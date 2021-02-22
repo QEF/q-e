@@ -40,22 +40,33 @@ MODULE uspp
   ! - Clebsch-Gordan coefficients "ap", auxiliary variables "lpx", "lpl"
   ! - beta and q functions of the solid
   !
-  USE upf_kinds,  ONLY: DP
-  USE upf_params, ONLY: lmaxx, lqmax
+  USE upf_kinds,   ONLY: DP
+  USE upf_params,  ONLY: lmaxx, lqmax
+  USE upf_spinorb, ONLY: fcoef, fcoef_d 
   IMPLICIT NONE
   PRIVATE
   SAVE
+  !
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, indv_ijkb0, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
-            becsum, ebecsum, deallocate_uspp
+            becsum, ebecsum
   PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, indv_ijkb0_d, &
             vkb_d, dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
             becsum_d, ebecsum_d
-  !      
   PUBLIC :: okvan, nlcc_any
-  PUBLIC :: qq_so,   dvan_so,   deeq_nc 
-  PUBLIC :: qq_so_d, dvan_so_d, deeq_nc_d 
+  PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
+  PUBLIC :: qq_so_d, dvan_so_d, deeq_nc_d, fcoef_d 
   PUBLIC :: dbeta
+  !
+  PUBLIC :: allocate_uspp, deallocate_uspp
+  !
+  ! GPU sync
+  !
+  PUBLIC  :: using_vkb, using_vkb_d
+  LOGICAL :: vkb_d_ood = .false.    ! used to flag out of date variables
+  LOGICAL :: vkb_ood   = .false.    ! used to flag out of date variables
+  !
+  ! Vars
   !
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
@@ -358,10 +369,79 @@ CONTAINS
   end function compute_ap
   !
   !-----------------------------------------------------------------------
+  subroutine allocate_uspp(use_gpu,noncolin,lspinorb,tqr,nhm,nsp,nat,nspin)
+    !-----------------------------------------------------------------------
+    implicit none
+    logical, intent(in) :: use_gpu
+    logical, intent(in) :: noncolin,lspinorb,tqr
+    integer, intent(in) :: nhm,nsp,nat,nspin
+    !
+    !if (nhm_/=nhm) call errore("allocate_uspp","invalid nhm",1)
+    !if (nsp_/=nsp) call errore("allocate_uspp","invalid nsp",1)
+    !
+    allocate( indv(nhm,nsp)   )
+    allocate( nhtol(nhm,nsp)  )
+    allocate( nhtolm(nhm,nsp) )
+    allocate( nhtoj(nhm,nsp)  )
+    allocate( ijtoh(nhm,nhm,nsp) )
+    allocate( deeq(nhm,nhm,nat,nspin) )
+    if ( noncolin ) then
+       allocate( deeq_nc(nhm,nhm,nat,nspin) )
+    endif
+    allocate( qq_at(nhm,nhm,nat) )
+    allocate( qq_nt(nhm,nhm,nsp) )
+    if ( lspinorb ) then
+       allocate( qq_so(nhm,nhm,4,nsp) )
+       allocate( dvan_so(nhm,nhm,nspin,nsp) )
+       allocate( fcoef(nhm,nhm,2,2,nsp) )
+    else
+       allocate( dvan(nhm,nhm,nsp) )
+    endif
+    allocate(becsum( nhm*(nhm+1)/2, nat, nspin))
+    if (tqr) then
+       allocate(ebecsum( nhm*(nhm+1)/2, nat, nspin))
+    endif
+    allocate( indv_ijkb0(nat) )
+    !
+    ! GPU-vars (protecting zero-size allocations)
+    !
+    if (use_gpu) then
+      !
+      if (nhm>0) then
+        allocate( indv_d(nhm,nsp)   )
+        allocate( nhtol_d(nhm,nsp)  )
+        allocate( nhtolm_d(nhm,nsp) )
+        allocate( nhtoj_d(nhm,nsp)  )
+        allocate( ijtoh_d(nhm,nhm,nsp) )
+        allocate( deeq_d(nhm,nhm,nat,nspin) )
+        if ( noncolin ) then
+           allocate( deeq_nc_d(nhm,nhm,nat,nspin) )
+        endif
+        allocate( qq_at_d(nhm,nhm,nat) )
+        allocate( qq_nt_d(nhm,nhm,nsp) )
+        if ( lspinorb ) then
+           allocate( qq_so_d(nhm,nhm,4,nsp) )
+           allocate( dvan_so_d(nhm,nhm,nspin,nsp) )
+           allocate( fcoef_d(nhm,nhm,2,2,nsp) )
+        else
+           allocate( dvan_d(nhm,nhm,nsp) )
+        endif
+        allocate(becsum_d( nhm*(nhm+1)/2, nat, nspin))
+        if (tqr) then
+           allocate(ebecsum_d( nhm*(nhm+1)/2, nat, nspin))
+        endif
+        !
+      endif
+      allocate( indv_ijkb0_d(nat) )
+      !
+    endif
+    !
+  end subroutine allocate_uspp
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE deallocate_uspp()
     !-----------------------------------------------------------------------
-    !
-    !
+    IMPLICIT NONE
     IF( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
     IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
     IF( ALLOCATED( nhtolm ) )     DEALLOCATE( nhtolm )
@@ -378,9 +458,11 @@ CONTAINS
     IF( ALLOCATED( qq_so ) )      DEALLOCATE( qq_so )
     IF( ALLOCATED( dvan_so ) )    DEALLOCATE( dvan_so )
     IF( ALLOCATED( deeq_nc ) )    DEALLOCATE( deeq_nc )
+    IF( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
     IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
+    ! GPU variables
     IF( ALLOCATED( ap_d ) )       DEALLOCATE( ap_d )
     IF( ALLOCATED( lpx_d ) )      DEALLOCATE( lpx_d )
     IF( ALLOCATED( lpl_d ) )      DEALLOCATE( lpl_d )
@@ -400,8 +482,50 @@ CONTAINS
     IF( ALLOCATED( qq_so_d ) )    DEALLOCATE( qq_so_d )
     IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
     IF( ALLOCATED( deeq_nc_d ) )  DEALLOCATE( deeq_nc_d )
+    IF( ALLOCATED( fcoef_d ) )    DEALLOCATE( fcoef_d )
     !
   END SUBROUTINE deallocate_uspp
   !
+  ! In the following, allocations are not checked and assume
+  ! to be dimensioned correctly.
+  !
+  ! intento is used to specify what the variable will  be used for :
+  !  0 -> in , the variable needs to be synchronized but won't be changed
+  !  1 -> inout , the variable needs to be synchronized AND will be changed
+  !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+  ! 
+  SUBROUTINE using_vkb(intento)
+      !
+      !USE uspp, ONLY : vkb, vkb_d
+      implicit none
+      INTEGER, INTENT(IN) :: intento
+      IF (size(vkb)==0) return
+#if defined(__CUDA)  || defined(__CUDA_GNU)
+      IF (vkb_ood) THEN
+          IF (intento < 2) vkb = vkb_d
+          vkb_ood = .false.
+      ENDIF
+      IF (intento > 0)    vkb_d_ood = .true.
+#endif
+  END SUBROUTINE using_vkb
+  !
+  SUBROUTINE using_vkb_d(intento)
+      !
+      !USE uspp, ONLY : vkb, vkb_d
+      implicit none
+      INTEGER, INTENT(IN) :: intento
+      IF (size(vkb)==0) return
+#if defined(__CUDA) || defined(__CUDA_GNU)
+      !
+      IF (vkb_d_ood) THEN
+          IF (intento < 2) vkb_d = vkb
+          vkb_d_ood = .false.
+      ENDIF
+      IF (intento > 0)    vkb_ood = .true.
+#else
+      CALL errore('using_vkb_d', 'no GPU support', 1)
+#endif
+  END SUBROUTINE using_vkb_d
+  !   
 END MODULE uspp
 

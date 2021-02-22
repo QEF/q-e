@@ -363,9 +363,8 @@ MODULE exx
                                      transform_evc_to_exx, igk_exx, evc_exx
     !
     USE wavefunctions_gpum,   ONLY : using_evc
-    USE uspp_gpum,            ONLY : using_vkb ! is this needed?
-    USE device_memcpy_m,        ONLY : dev_memset
-    USE device_fbuff_m,             ONLY : dev_buf
+    USE device_memcpy_m,      ONLY : dev_memset
+    USE device_fbuff_m,       ONLY : dev_buf
     !
     IMPLICIT NONE
     !
@@ -2687,12 +2686,9 @@ end associate
     USE mp,                     ONLY : mp_sum
     USE becmod,                 ONLY : bec_type, allocate_bec_type, &
                                        deallocate_bec_type, calbec
-    USE uspp,                   ONLY : okvan,nkb,vkb
+    USE uspp,                   ONLY : okvan,nkb,vkb, using_vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
-    !
     USE wavefunctions_gpum,     ONLY : using_evc
-    USE uspp_gpum,              ONLY : using_vkb 
-    !
     IMPLICIT NONE
     !
     TYPE(bec_type) :: becpsi
@@ -3948,7 +3944,7 @@ end associate
     !
     USE wvfct,            ONLY : nbnd, npwx, current_k
     USE klist,            ONLY : nks, xk, ngk, igk_k
-    USE uspp,             ONLY : nkb, vkb, okvan
+    USE uspp,             ONLY : nkb, vkb, okvan, using_vkb
     USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
                                  bec_type, calbec
     USE lsda_mod,         ONLY : current_spin, lsda, isk
@@ -3960,7 +3956,6 @@ end associate
     USE wavefunctions,    ONLY : evc
     !
     USE wavefunctions_gpum, ONLY : using_evc
-    USE uspp_gpum,          ONLY : using_vkb
     !
     IMPLICIT NONE
     !
