@@ -199,7 +199,7 @@ SUBROUTINE newd( )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
+  USE uspp,                 ONLY : deeq, deeq_d, dvan, deeq_nc, deeq_nc_d, dvan_so, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : noncolin, nspin_mag
@@ -209,7 +209,7 @@ SUBROUTINE newd( )
   USE control_flags,        ONLY : tqr
   USE ldaU,                 ONLY : lda_plus_U, U_projection
   !
-  USE uspp_gpum,     ONLY : using_deeq, using_deeq_nc
+  !USE uspp_gpum,           ONLY : using_deeq, using_deeq_nc
   !
   IMPLICIT NONE
   !
@@ -217,14 +217,15 @@ SUBROUTINE newd( )
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
   !
+  ! Note: lspinorb implies noncolin. 
   !
   IF ( .NOT. okvan ) THEN
-     ! Sync
-     IF ( lspinorb .or. noncolin ) THEN
-       CALL using_deeq_nc(1)
-     ELSE
-       CALL using_deeq(1)
-     END IF
+     !! Sync
+     !IF ( lspinorb .or. noncolin ) THEN
+     !  CALL using_deeq_nc(1)
+     !ELSE
+     !  CALL using_deeq(1)
+     !END IF
      !
      ! ... no ultrasoft potentials: use bare coefficients for projectors
      !
@@ -256,6 +257,14 @@ SUBROUTINE newd( )
         !
      ENDDO
      !
+#if defined __CUDA
+     if (noncolin) then
+        if (nhm>0) deeq_nc_d=deeq_nc
+     else
+        if (nhm>0) deeq_d=deeq
+     endif
+#endif
+     !
      ! ... early return
      !
      RETURN
@@ -264,9 +273,9 @@ SUBROUTINE newd( )
   !
   CALL start_clock( 'newd' )
   !
-  ! Sync
-  CALL using_deeq(2)   ! deeq is set to 0 in both newq and newq_r
-  IF ( lspinorb .or. noncolin ) CALL using_deeq_nc(1) ! lspinorb implies noncolin. Why here? Better move it in newd_so / newd_nc
+  !! Sync
+  !CALL using_deeq(2)   ! deeq is set to 0 in both newq and newq_r
+  !IF ( lspinorb .or. noncolin ) CALL using_deeq_nc(1) 
   !
   IF (tqr) THEN
      CALL newq_r( v%of_r, deeq, .FALSE. )
@@ -313,6 +322,15 @@ SUBROUTINE newd( )
   IF (.NOT.noncolin) CALL add_paw_to_deeq( deeq )
   !
   IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq( deeq )
+  !
+  ! sync with GPUs
+#if defined __CUDA
+  if (noncolin) then
+     if (nhm>0) deeq_nc_d=deeq_nc
+  else
+     if (nhm>0) deeq_d=deeq
+  endif
+#endif
   !
   CALL stop_clock( 'newd' )
   !

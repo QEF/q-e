@@ -51,7 +51,6 @@ ylmr2.o
 
 # GPU versions of routines
 OBJS += \
-  uspp_gpum.o \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
   qvan2_gpu.o \

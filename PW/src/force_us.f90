@@ -17,7 +17,8 @@ SUBROUTINE force_us( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
-  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0, &
+                                   using_vkb
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -33,12 +34,10 @@ SUBROUTINE force_us( forcenl )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
 
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, using_qq_at, &
-                                        using_deeq
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
-  !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  !USE uspp_gpum,           ONLY : using_deeq, using_indv_ijkb0, using_qq_at
   IMPLICIT NONE
   !
   REAL(DP), INTENT(OUT) :: forcenl(3,nat)
@@ -83,7 +82,8 @@ SUBROUTINE force_us( forcenl )
         IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      ENDIF
      !
-     CALL using_vkb(0); CALL using_becp_auto(2)
+     CALL using_vkb(0); 
+     CALL using_becp_auto(2)
      CALL calbec( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3
@@ -168,9 +168,9 @@ SUBROUTINE force_us( forcenl )
        !
        !
        CALL using_et(0)
-       CALL using_indv_ijkb0(0)
-       CALL using_deeq(0)
-       CALL using_qq_at(0)
+       !CALL using_indv_ijkb0(0)
+       !CALL using_deeq(0)
+       !CALL using_qq_at(0)
 
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
@@ -229,7 +229,7 @@ SUBROUTINE force_us( forcenl )
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
        CALL using_et(0)
-       CALL using_indv_ijkb0(0)
+       !CALL using_indv_ijkb0(0)
        DO ibnd = 1, nbnd
           !
           IF (noncolin) THEN

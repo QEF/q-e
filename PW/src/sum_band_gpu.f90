@@ -31,7 +31,8 @@ SUBROUTINE sum_band_gpu()
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
-  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan
+  USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
+                                   becsum_d, ebecsum_d, vkb_d, using_vkb, using_vkb_d
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions,        ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
@@ -46,14 +47,12 @@ SUBROUTINE sum_band_gpu()
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
-
-  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : becsum_d, ebecsum_d, vkb_d, using_vkb, &
-                                        using_vkb_d, using_becsum_d, using_ebecsum_d, &
-                                        using_becsum, using_ebecsum
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
+  USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  !USE uspp_gpum,           ONLY : using_becsum_d, using_ebecsum_d, &
+  !                                using_becsum, using_ebecsum
   IMPLICIT NONE
   !
   ! ... local variables
@@ -72,10 +71,10 @@ SUBROUTINE sum_band_gpu()
   CALL start_clock_gpu( 'sum_band' )
   !
   if ( nhm > 0 ) then
-     CALL using_becsum_d(2)
+     !CALL using_becsum_d(2)
      !
      becsum_d(:,:,:) = 0.D0
-     if (tqr) CALL using_ebecsum_d(2)
+     !if (tqr) CALL using_ebecsum_d(2)
      if (tqr) ebecsum_d(:,:,:) = 0.D0
   end if
   rho%of_r(:,:)      = 0.D0
@@ -186,17 +185,23 @@ SUBROUTINE sum_band_gpu()
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
      !
-     CALL using_becsum(1)   ! use host copy to do the comunication. This avoids going back an forth GPU data
+     !!CALL using_becsum(1)   ! use host copy to do the comunication. This avoids going back an forth GPU data
+     !becsum=becsum_d         ! becsum is already uptodate, see sum_band*gpu
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
-     CALL using_becsum_d(0)
+     !CALL using_becsum_d(0)
+     becsum_d=becsum
      !
      ! ... same for ebecsum, a correction to becsum (?) in real space
      !
-     IF (tqr) CALL using_ebecsum(1)
-     IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
-     IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
-     IF (tqr) CALL using_ebecsum_d(0)
+     IF (tqr) THEN
+        !!CALL using_ebecsum(1)
+        !ebecsum=ebecsum_d
+        CALL mp_sum(ebecsum, inter_pool_comm )
+        CALL mp_sum(ebecsum, inter_bgrp_comm )
+        !CALL using_ebecsum_d(0)
+        ebecsum_d=ebecsum
+     ENDIF
      !
      ! ... PAW: symmetrize becsum and store it
      ! ... FIXME: the same should be done for USPP as well
@@ -300,6 +305,7 @@ SUBROUTINE sum_band_gpu()
        attributes(device) :: dffts_nl_d, dffts_nlm_d
        attributes(pinned) :: tg_rho_h
 #endif
+
        !
        CALL using_evc_d(0); CALL using_et(0)
        dffts_nl_d  => dffts%nl_d
@@ -376,7 +382,7 @@ SUBROUTINE sum_band_gpu()
                    ! ... 2*ntgrp ffts at the same time
                    !
                    IF( idx + ibnd - 1 < ibnd_end ) THEN
-!$cuf kernel do(1) <<<*,*>>>
+                      !$cuf kernel do(1) <<<*,*>>>
                       DO j = 1, npw
                          tg_psi_d(dffts_nl_d (j)+ioff)=     evc_d(j,idx+ibnd-1)+&
                               (0.0d0,1.d0) * evc_d(j,idx+ibnd)
@@ -384,7 +390,7 @@ SUBROUTINE sum_band_gpu()
                               (0.0d0,1.d0) * evc_d(j,idx+ibnd) )
                       END DO
                    ELSE IF( idx + ibnd - 1 == ibnd_end ) THEN
-!$cuf kernel do(1) <<<*,*>>>
+                      !$cuf kernel do(1) <<<*,*>>>
                       DO j = 1, npw
                          tg_psi_d(dffts_nl_d (j)+ioff)=       evc_d(j,idx+ibnd-1)
                          tg_psi_d(dffts_nlm_d(j)+ioff)=CONJG( evc_d(j,idx+ibnd-1) )
@@ -533,10 +539,18 @@ SUBROUTINE sum_band_gpu()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
+       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0) THEN
+          !CALL using_becsum(1)
+          !becsum=becsum_d      ! already updated in sum_bec_gpu
+          CALL mp_sum( becsum, becp%comm )
+          becsum_d=becsum
+       ENDIF
+       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm>0) THEN
+          !CALL using_ebecsum(1)
+          !ebecsum=ebecsum_d    ! already updated in sum_bec_gpu
+          CALL mp_sum( ebecsum, becp%comm )
+          ebecsum_d=ebecsum
+       ENDIF
        !
        IF( use_tg ) THEN
           DEALLOCATE( tg_psi_d )
@@ -558,9 +572,9 @@ SUBROUTINE sum_band_gpu()
        !! \(\texttt{sum_band}\) - part for k-points version
        !
        USE wavefunctions_gpum, ONLY : psic_nc_d
-       USE mp_bands,     ONLY : me_bgrp
-       USE mp,           ONLY : mp_sum, mp_get_comm_null
-       USE control_flags, ONLY : many_fft
+       USE mp_bands,           ONLY : me_bgrp
+       USE mp,                 ONLY : mp_sum, mp_get_comm_null
+       USE control_flags,      ONLY : many_fft
        USE fft_helper_subroutines
        !
        IMPLICIT NONE
@@ -687,7 +701,7 @@ SUBROUTINE sum_band_gpu()
                       ! ... ntgrp ffts at the same time
                       !
                       IF( idx + ibnd - 1 <= ibnd_end ) THEN
-!$cuf kernel do(1)
+                         !$cuf kernel do(1)
                          DO j = 1, npw
                             tg_psi_nc_d( dffts_nl_d(igk_k_d(j,ik) ) + ioff, 1 ) = &
                                                        evc_d( j, idx+ibnd-1 )
@@ -737,7 +751,7 @@ SUBROUTINE sum_band_gpu()
 !
                    psic_nc_d = (0.D0,0.D0)
 
-!$cuf kernel do(1)
+                   !$cuf kernel do(1)
                    DO j = 1, npw
                       psic_nc_d( dffts_nl_d(igk_k_d(j,ik) ), 1 ) = &
                                                  evc_d( j, ibnd )
@@ -769,7 +783,7 @@ SUBROUTINE sum_band_gpu()
                 !
                 IF( use_tg ) THEN
                    !
-!$cuf kernel do(1)
+                   !$cuf kernel do(1)
                    DO j = 1, SIZE( tg_psi_d )
                       tg_psi_d(j) = ( 0.D0, 0.D0 )
                    END DO
@@ -784,7 +798,7 @@ SUBROUTINE sum_band_gpu()
                       ! ... ntgrp ffts at the same time
                       !
                       IF( idx + ibnd - 1 <= ibnd_end ) THEN
-!$cuf kernel do(1)
+                         !$cuf kernel do(1)
                          DO j = 1, npw
                             tg_psi_d( dffts_nl_d(igk_k_d(j,ik))+ioff ) = evc_d(j,idx+ibnd-1)
                          END DO
@@ -899,10 +913,18 @@ SUBROUTINE sum_band_gpu()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
+       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0 ) THEN 
+          !CALL using_becsum(1)
+          !becsum=becsum_d        ! already updated in sum_bec_gpu
+          CALL mp_sum( becsum, becp%comm )
+          becsum_d=becsum
+       ENDIF
+       IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm> 0) THEN
+          !CALL using_ebecsum(1)
+          !ebecsum=ebecsum_d      ! already updated in sum_bec_gpu
+          CALL mp_sum( ebecsum, becp%comm )
+          ebecsum_d=ebecsum
+       ENDIF
        !
        IF( use_tg ) THEN
           IF (noncolin) THEN
@@ -937,15 +959,14 @@ SUBROUTINE sum_band_gpu()
 #endif
         INTEGER :: ir
 
-!$cuf kernel do(1)
+        !$cuf kernel do(1)
         DO ir = 1, nrxxs_loc
            !
            rho_loc_d(ir) = rho_loc_d(ir) + &
                          w1_loc * ( DBLE( psic_loc_d(ir) )**2 + &
                                    AIMAG( psic_loc_d(ir) )**2 )
-           !
         END DO
-
+        !
      END SUBROUTINE get_rho_gpu
      !
      SUBROUTINE get_rho(rho_loc_h, nrxxs_loc, w1_loc, psic_loc_h)
@@ -981,7 +1002,7 @@ SUBROUTINE sum_band_gpu()
 #endif
         INTEGER :: ir
 
-!$cuf kernel do(1)
+        !$cuf kernel do(1)
         DO ir = 1, nrxxs_loc
            !
            rho_loc_d(ir) = rho_loc_d(ir) + &
@@ -1006,7 +1027,7 @@ SUBROUTINE sum_band_gpu()
 #endif
         INTEGER :: ir
 
-!$cuf kernel do(1)
+        !$cuf kernel do(1)
         DO ir = 1, nrxxs_loc
            !
            rho_loc_d(ir,2) = rho_loc_d(ir,2) + w1_loc*2.D0* &
@@ -1048,35 +1069,33 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 #define cublasZgemm zgemm
 #define cublasDgemm dgemm
 #endif
-  USE kinds,         ONLY : DP
-  USE becmod,        ONLY : becp, calbec, allocate_bec_type
-  USE control_flags, ONLY : gamma_only, tqr
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE uspp,          ONLY : nkb, becsum, ebecsum, indv_ijkb0
-  USE uspp_param,    ONLY : upf, nh, nhm
-  USE wvfct,         ONLY : nbnd, wg, et, current_k
-  USE klist,         ONLY : ngk, nkstot
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions, ONLY : evc
-  USE realus,        ONLY : real_space, &
-                            invfft_orbital_gamma, calbec_rs_gamma, &
-                            invfft_orbital_k, calbec_rs_k
-  USE us_exx,        ONLY : store_becxx0
-  USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
-  USE mp,            ONLY : mp_sum
+  USE kinds,              ONLY : DP
+  USE becmod,             ONLY : becp, calbec, allocate_bec_type
+  USE control_flags,      ONLY : gamma_only, tqr
+  USE ions_base,          ONLY : nat, ntyp => nsp, ityp
+  USE uspp,               ONLY : nkb, becsum, ebecsum, indv_ijkb0, &
+                                 vkb_d, becsum_d, ebecsum_d, indv_ijkb0_d, using_vkb_d
+  USE uspp_param,         ONLY : upf, nh, nhm
+  USE wvfct,              ONLY : nbnd, wg, et, current_k
+  USE klist,              ONLY : ngk, nkstot
+  USE noncollin_module,   ONLY : noncolin, npol
+  USE wavefunctions,      ONLY : evc
+  USE realus,             ONLY : real_space, &
+                                 invfft_orbital_gamma, calbec_rs_gamma, &
+                                 invfft_orbital_k, calbec_rs_k
+  USE us_exx,             ONLY : store_becxx0
+  USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
+  USE mp,                 ONLY : mp_sum
   !
-  ! GPU modules here
   USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
-  USE wvfct_gpum,                ONLY : et_d, wg_d, using_et, using_et_d, using_wg_d
-  USE uspp_gpum,                 ONLY : using_indv_ijkb0, &
-                                        using_becsum, using_ebecsum
-  USE becmod_subs_gpum,          ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto
-  USE becmod_gpum,               ONLY : becp_d
-  USE uspp_gpum,                 ONLY : vkb_d, becsum_d, ebecsum_d, indv_ijkb0_d
-  USE uspp_gpum,                 ONLY : using_vkb_d, using_becsum_d, using_ebecsum_d, using_indv_ijkb0_d
+  USE wvfct_gpum,         ONLY : et_d, wg_d, using_et, using_et_d, using_wg_d
+  USE becmod_subs_gpum,   ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto
+  USE becmod_gpum,        ONLY : becp_d
+  !USE uspp_gpum,         ONLY : using_indv_ijkb0, using_becsum, using_ebecsum
+  !USE uspp_gpum,         ONLY : using_becsum_d, using_ebecsum_d, using_indv_ijkb0_d
   !
   ! Used to avoid unnecessary memcopy
-  USE xc_lib,                    ONLY : xclib_dft_is
+  USE xc_lib,             ONLY : xclib_dft_is
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -1097,9 +1116,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   attributes(DEVICE) :: becp_d_r_d, becp_d_k_d, becp_d_nc_d
 #endif
   CALL using_wg_d(0)
-  CALL using_indv_ijkb0_d(0)
-  CALL using_becsum_d(1)
-  IF (tqr) CALL using_ebecsum_d(1)
+  !CALL using_indv_ijkb0_d(0)
+  !CALL using_becsum_d(1)
+  !IF (tqr) CALL using_ebecsum_d(1)
   !
   CALL start_clock_gpu( 'sum_band:calbec' )
   npw = ngk(ik)
@@ -1171,7 +1190,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               IF ( noncolin ) THEN
                  !
                  becp_d_nc_d => becp_d%nc_d
-!$cuf kernel do(2)
+                 !$cuf kernel do(2)
                  DO is = 1, npol
                     DO ih = 1, nhnt
                        ikb = indv_ijkb0_d(na) + ih
@@ -1191,8 +1210,8 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !
                  becp_d_r_d => becp_d%r_d
                  ibnd_begin = becp_d%ibnd_begin
-!$cuf kernel do(2)
-                DO ih = 1, nhnt
+                 !$cuf kernel do(2)
+                 DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
                        ikb = indv_ijkb0_d(na) + ih
                        ibnd = ibnd_loc + ibnd_begin - 1
@@ -1208,25 +1227,26 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
                       1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
                       auxg_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
-               if (tqr) then
-                 CALL using_et_d(0)
-!$cuf kernel do(1)
-                 DO ih = 1, nhnt
-                    ikb = indv_ijkb0_d(na) + ih
-                    DO ibnd_loc = 1, nbnd_loc
-                    auxg_d(ibnd_loc,ih) = et_d(ibnd_loc,ik) * auxg_d(ibnd_loc,ih)
-                    END DO
-                 END DO
+                 !
+                 if (tqr) then
+                   CALL using_et_d(0)
+                   !$cuf kernel do(1)
+                   DO ih = 1, nhnt
+                      ikb = indv_ijkb0_d(na) + ih
+                      DO ibnd_loc = 1, nbnd_loc
+                      auxg_d(ibnd_loc,ih) = et_d(ibnd_loc,ik) * auxg_d(ibnd_loc,ih)
+                      END DO
+                   END DO
 
-                 CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                      1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
-                      auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
-               end if
+                   CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
+                        1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
+                        auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
+                 end if
                  !
               ELSE
                  !
                  becp_d_k_d => becp_d%k_d
-!$cuf kernel do(2) <<<*,*>>>
+                 !$cuf kernel do(2) <<<*,*>>>
                  DO ih = 1, nhnt
                     DO ibnd = ibnd_start, ibnd_end
                        ikb = indv_ijkb0_d(na) + ih
@@ -1243,7 +1263,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !
                if (tqr) then
                  CALL using_et_d(0)
-!$cuf kernel do(2)
+                 !$cuf kernel do(2)
                  DO ih = 1, nhnt
                     DO ibnd = ibnd_start, ibnd_end
                        ikb = indv_ijkb0_d(na) + ih
@@ -1266,7 +1286,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  CALL add_becsum_so_gpu (na, np, aux_nc_d, becsum_d )
               ELSE
                  !
-!$cuf kernel do(2) <<<*,*>>>
+                 !$cuf kernel do(2) <<<*,*>>>
                  DO ih = 1, nhnt
                     DO jh = 1, nhnt
                        ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh_d(ih,jh,np) ?  OPTIMIZE !!
@@ -1309,6 +1329,12 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      !
   END DO
   !
+  ! sync 
+  if (nhm > 0) then
+     becsum=becsum_d
+     ebecsum=ebecsum_d
+  endif
+  !
   CALL stop_clock_gpu( 'sum_band:becsum' )
   !
 END SUBROUTINE sum_bec_gpu
@@ -1326,11 +1352,10 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
+  USE uspp,                 ONLY : ijtoh_d
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE spin_orb,             ONLY : domag
-  !
-  USE uspp_gpum,            ONLY : ijtoh_d
   !
   IMPLICIT NONE
   !
@@ -1348,7 +1373,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
   !
   nhnp = nh(np)
 
-!$cuf kernel do(2) <<<*,*>>>
+  !$cuf kernel do(2) <<<*,*>>>
   DO ih = 1, nhnp
      DO jh = 1, nhnp
         IF ( jh >= ih ) THEN
@@ -1390,10 +1415,8 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE spin_orb,             ONLY : domag
-  !
-  USE uspp_gpum,            ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
+  USE uspp,                 ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
   USE upf_spinorb,          ONLY : fcoef_d
-  !
   IMPLICIT NONE
   
   INTEGER, INTENT(IN) :: na, np
@@ -1450,3 +1473,4 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
 END DO
 
 END SUBROUTINE add_becsum_so_gpu
+

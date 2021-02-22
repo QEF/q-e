@@ -47,7 +47,6 @@ SUBROUTINE clean_pw( lflag )
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
-  USE upf_spinorb,          ONLY : deallocate_spinorb, lspinorb
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
@@ -69,10 +68,9 @@ SUBROUTINE clean_pw( lflag )
   USE dftd3_qe,             ONLY : dftd3_clean
   !
   USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
-  USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu !et
-  USE gvect_gpum,           ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
+  USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
+  USE gvect_gpum,           ONLY : deallocate_gvect_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
-  USE uspp_gpum,            ONLY : deallocate_uspp_gpu
   !
   IMPLICIT NONE
   !
@@ -151,13 +149,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
   CALL deallocate_uspp_data()
-  !
-  IF ( lspinorb ) THEN
-     CALL deallocate_spinorb()
-  ENDIF
-  !
   CALL deallocate_uspp() 
-  CALL deallocate_uspp_gpu()
   !
   CALL deallocate_gth( lflag ) 
   CALL deallocate_noncol()

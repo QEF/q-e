@@ -29,8 +29,8 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : g, gg, ngm, gstart, mill, &
-                                   eigts1, eigts2, eigts3
+  USE gvect,                ONLY : g, gg, ngm, gstart, mill, eigts1, eigts2, eigts3,&
+                                   g_d, gg_d, mill_d, eigts1_d, eigts2_d, eigts3_d
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -42,11 +42,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
-  !
-  USE gvect_gpum,           ONLY : g_d, gg_d, mill_d, &
-                                   eigts1_d, eigts2_d, eigts3_d
-  USE device_fbuff_m,             ONLY : buffer=>dev_buf
-  !
+  USE device_fbuff_m,       ONLY : buffer=>dev_buf
   IMPLICIT NONE
   !
   !
@@ -106,7 +102,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
      ALLOCATE( vaux_d(ngm_l,nspin_mag), qmod_d(ngm_l), ylmk0_d( ngm_l, lmaxq*lmaxq ) )
      !
      CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
-!$cuf kernel do
+     !$cuf kernel do
      DO ig = 1, ngm_l
         qmod_d (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
      ENDDO
@@ -122,15 +118,16 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         psic_d(1:dfftp%nnr) = vr(1:dfftp%nnr,is)
 
      ELSE
-!$omp parallel do default(shared) private(ig)
+        !$omp parallel do default(shared) private(ig)
         do ig=1,dfftp%nnr
            psic(ig) = vltot(ig) + vr(ig,is)
         end do
-!$omp end parallel do
+        !$omp end parallel do
         psic_d(1:dfftp%nnr) = psic(1:dfftp%nnr)
      END IF
      CALL fwfft ('Rho', psic_d, dfftp)
-!$cuf kernel do
+     !
+     !$cuf kernel do
      do ig=1,ngm_l
         vaux_d(ig, is) = psic_d(dfftp_nl_d(ngm_s+ig-1))
      end do
@@ -178,7 +175,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !
         DO is = 1, nspin_mag
-!$cuf kernel do(2)
+           !$cuf kernel do(2)
            DO na = 1, nat
               DO ig=1,ngm_l
                  nb = na_to_nab_d(na)
@@ -198,7 +195,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
                 CALL cudaDGER(nij, nab,-1.0_dp, qgm_d, 2*ngm_l,aux_d,2*ngm_l,deeaux_d,nij)
            !
            nhnt = nh(nt)
-!$cuf kernel do(3)
+           !$cuf kernel do(3)
            DO na = 1, nat
               DO ih = 1, nhnt
                  DO jh = 1, nhnt
@@ -243,23 +240,19 @@ SUBROUTINE newd_gpu( )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : deeq, okvan
+  USE uspp,                 ONLY : deeq, okvan, deeq, deeq_d, deeq_nc, deeq_nc_d, dvan_d, dvan_so_d
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
-  USE realus,        ONLY : newq_r
-  USE control_flags, ONLY : tqr
-  USE ldaU,          ONLY : lda_plus_U, U_projection
+  USE realus,               ONLY : newq_r
+  USE control_flags,        ONLY : tqr
+  USE ldaU,                 ONLY : lda_plus_U, U_projection
+  USE device_fbuff_m,       ONLY : buffer=>dev_buf
   !
-  USE uspp_gpum,     ONLY : deeq_d, deeq_nc_d, &
-                            using_deeq, using_deeq_nc, &
-                            using_deeq_d, using_deeq_nc_d, &
-                            dvan_d, dvan_so_d
-                            
-  USE device_fbuff_m,      ONLY : buffer=>dev_buf
-  !
+  !USE uspp_gpum,    ONLY : using_deeq, using_deeq_nc, &
+  !                         using_deeq_d, using_deeq_nc_d
   IMPLICIT NONE
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb, ierr
@@ -272,12 +265,12 @@ SUBROUTINE newd_gpu( )
 #endif
   !
   IF ( .NOT. okvan ) THEN
-     ! Sync
-     IF ( lspinorb .or. noncolin ) THEN
-       CALL using_deeq_nc_d(1)
-     ELSE
-       CALL using_deeq_d(1)    ! Can these be changed from INOUT to OUT?
-     END IF
+     !! Sync
+     !IF ( lspinorb .or. noncolin ) THEN
+     !  CALL using_deeq_nc_d(1)
+     !ELSE
+     !  CALL using_deeq_d(1)    ! Can these be changed from INOUT to OUT?
+     !END IF
      !
      ! ... no ultrasoft potentials: use bare coefficients for projectors
      !
@@ -340,6 +333,14 @@ SUBROUTINE newd_gpu( )
      ! ... early return
      !
      CALL buffer%release_buffer(ityp_d, ierr)
+     !
+     ! ... sync with CPU
+     if (noncolin) then
+        deeq_nc=deeq_nc_d
+     else
+        deeq=deeq_d
+     endif
+     !
      RETURN
      !
   END IF
@@ -352,13 +353,14 @@ SUBROUTINE newd_gpu( )
   ityp_d(1:nat)=ityp(1:nat)
   !
   ! Sync
-  CALL using_deeq_d(2)
-  IF ( lspinorb .or. noncolin ) CALL using_deeq_nc_d(1) ! lspinorb implies noncolin 
+  !CALL using_deeq_d(2)
+  !IF ( lspinorb .or. noncolin ) CALL using_deeq_nc_d(1) ! lspinorb implies noncolin 
   !
   IF (tqr) THEN
-     CALL using_deeq(2)
+     !CALL using_deeq(2)
      CALL newq_r(v%of_r,deeq,.false.)
-     CALL using_deeq_d(1)
+     deeq_d=deeq
+     !CALL using_deeq_d(1)
   ELSE
      CALL newq_gpu(v%of_r,deeq_d,.false.)
   END IF
@@ -408,6 +410,12 @@ SUBROUTINE newd_gpu( )
   CALL buffer%release_buffer(ityp_d, ierr)
   CALL stop_clock_gpu( 'newd' )
   !
+  if (noncolin) then
+     deeq_nc=deeq_nc_d
+  else
+     deeq=deeq_d
+  endif
+  !
   RETURN
   !
   CONTAINS
@@ -437,7 +445,7 @@ SUBROUTINE newd_gpu( )
             ijs = ijs + 1
             !
             IF (domag) THEN
-!$cuf kernel do(3)
+               !$cuf kernel do(3)
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -479,7 +487,7 @@ SUBROUTINE newd_gpu( )
                !
             ELSE
                !
-!$cuf kernel do(3) <<<*,*>>>
+               !$cuf kernel do(3) <<<*,*>>>
                DO na = 1, nat
                   !
                   DO ih = 1, nhnt
@@ -534,7 +542,7 @@ SUBROUTINE newd_gpu( )
       !
       nhnt = nh(nt)
       !
-!$cuf kernel do(3)
+      !$cuf kernel do(3)
       DO na = 1, nat
          !
          DO ih = 1, nhnt

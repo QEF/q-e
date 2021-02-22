@@ -14,6 +14,8 @@ MODULE upf_spinorb
   USE upf_params,  ONLY : lmaxx, lqmax 
   !
   !! FIXME: rot_ylm could be dynamically allocated
+  !!    AF: this module could be merged with uspp, where
+  !         other SO variables are
   !
   IMPLICIT NONE
   SAVE
@@ -30,14 +32,6 @@ MODULE upf_spinorb
 #if defined(__CUDA)
   attributes (DEVICE) :: fcoef_d
 #endif
-
-CONTAINS
-
-  SUBROUTINE deallocate_spinorb
-     IMPLICIT NONE
-     IF( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef )
-     IF( ALLOCATED( fcoef_d ) ) DEALLOCATE( fcoef_d )
-  END SUBROUTINE deallocate_spinorb
 
 END MODULE upf_spinorb
 

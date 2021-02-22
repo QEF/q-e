@@ -24,16 +24,13 @@ SUBROUTINE orthoUwfc
   USE klist,      ONLY : nks, xk, ngk, igk_k
   USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb
+  USE uspp,       ONLY : nkb, vkb, using_vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_bands,         ONLY : use_bgrp_in_hpsi
-  !
-  USE uspp_gpum,        ONLY : using_vkb
   USE becmod_subs_gpum, ONLY : using_becp_auto
-  ! 
   IMPLICIT NONE
   !
   !
@@ -140,15 +137,12 @@ SUBROUTINE orthoUwfc2 (ik)
   USE klist,            ONLY : nks, xk, ngk, igk_k
   USE ldaU,             ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,            ONLY : npwx
-  USE uspp,             ONLY : nkb, vkb
+  USE uspp,             ONLY : nkb, vkb, using_vkb
   USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
                                bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin 
-  !
-  USE uspp_gpum,        ONLY : using_vkb
   USE becmod_subs_gpum, ONLY : using_becp_auto
-  ! 
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik ! the k point under consideration
@@ -241,14 +235,11 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb
+  USE uspp,       ONLY : nkb, vkb, using_vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
-  !
-  USE uspp_gpum, ONLY : using_vkb
-  ! 
   IMPLICIT NONE
   !
   LOGICAL, INTENT(in) :: orthogonalize_wfc

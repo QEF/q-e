@@ -13,18 +13,17 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   !    add nonlocal pseudopotential term to diagonal part of Hamiltonian
   !    compute the diagonal part of the S matrix
   !
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE lsda_mod, ONLY: current_spin
-  USE uspp,  ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, indv_ijkb0
-  USE uspp_param, ONLY: upf, nh
-  USE spin_orb, ONLY: lspinorb
+  USE kinds,            ONLY: DP
+  USE ions_base,        ONLY: nat, ityp, ntyp => nsp
+  USE wvfct,            ONLY: npwx
+  USE lsda_mod,         ONLY: current_spin
+  USE uspp,             ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, indv_ijkb0, &
+                              using_vkb
+  USE uspp_param,       ONLY: upf, nh
+  USE spin_orb,         ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
-  !
-  USE uspp_gpum, ONLY : using_vkb, using_indv_ijkb0, using_deeq, using_deeq_nc, &
-                        using_qq_at, using_qq_so
-  !
+  !USE uspp_gpum, ONLY : using_vkb, using_indv_ijkb0, using_deeq, using_deeq_nc, &
+  !                      using_qq_at, using_qq_so
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: npw
@@ -42,11 +41,11 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   !
   ! Sync
   CALL using_vkb(0)
-  CALL using_indv_ijkb0(0)
-  CALL using_deeq(0)
-  IF (lspinorb .or. lspinorb) CALL using_deeq_nc(0)
-  IF (.not. lspinorb)         CALL using_qq_at(0)
-  IF (lspinorb)               CALL using_qq_so(0)
+  !CALL using_indv_ijkb0(0)
+  !CALL using_deeq(0)
+  !IF (lspinorb .or. lspinorb) CALL using_deeq_nc(0)
+  !IF (.not. lspinorb)         CALL using_qq_at(0)
+  !IF (lspinorb)               CALL using_qq_so(0)
 
   ! setting cache blocking size
   numblock  = (npw+blocksize-1)/blocksize

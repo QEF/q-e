@@ -25,7 +25,7 @@ SUBROUTINE stres_hub ( sigmah )
                              wfcU, nwfcU, copy_U_wfc
    USE becmod,        ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
    USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
-   USE uspp,          ONLY : nkb, vkb, okvan
+   USE uspp,          ONLY : nkb, vkb, okvan, using_vkb
    USE klist,         ONLY : nks, xk, ngk, igk_k
    USE basis,         ONLY : natomwfc, wfcatom, swfcatom
    USE io_files,      ONLY : nwordwfc, iunwfc, nwordwfcU
@@ -37,14 +37,10 @@ SUBROUTINE stres_hub ( sigmah )
    USE mp,            ONLY : mp_sum
    USE control_flags, ONLY : gamma_only
    USE mp_bands,      ONLY : use_bgrp_in_hpsi
-   USE noncollin_module, ONLY : noncolin
-   USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
-                                us_dy, us_dj
-   !
+   USE noncollin_module,   ONLY : noncolin
+   USE force_mod,          ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
+                                  us_dy, us_dj
    USE wavefunctions_gpum, ONLY : using_evc
-   USE becmod_subs_gpum,   ONLY : using_becp_auto
-   USE uspp_gpum,          ONLY : using_vkb
-   !
    IMPLICIT NONE
    !
    REAL(DP), INTENT(OUT) :: sigmah(3,3) 
@@ -356,10 +352,8 @@ SUBROUTINE dndepsilon_k ( ipol,jpol,ldim,proj,spsi,ik,nb_s,nb_e,mykey,lpuk,dns )
    USE ldaU,              ONLY : nwfcU, offsetU, Hubbard_l, is_hubbard,  &
                                  ldim_back, offsetU_back, offsetU_back1, &
                                  is_hubbard_back, Hubbard_l_back, backall
-   !
-   USE wavefunctions_gpum,   ONLY : using_evc
-   USE becmod_subs_gpum,     ONLY : using_becp_auto
-   USE uspp_gpum,            ONLY : using_vkb
+   USE wavefunctions_gpum,ONLY : using_evc
+   USE becmod_subs_gpum,  ONLY : using_becp_auto
    IMPLICIT NONE
    !
    ! I/O variables 
@@ -968,10 +962,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   !
-   USE wavefunctions_gpum,   ONLY: using_evc
-   USE uspp_gpum,            ONLY: using_qq_at, using_vkb
-   !
+   USE wavefunctions_gpum,   ONLY : using_evc
+   !USE uspp_gpum,           ONLY : using_qq_at
    IMPLICIT NONE
    !
    ! I/O variables 
@@ -1011,7 +1003,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    qm1(:)     ! 1/|k+G|
    !
    CALL using_evc(0)
-   CALL using_qq_at(0)
+   !CALL using_qq_at(0)
    CALL start_clock('dprojdepsilon')
    ! 
    ! Number of plane waves at the k point with the index ik
@@ -1207,16 +1199,12 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
+   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan, using_vkb
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
    USE klist,                ONLY : xk, igk_k, ngk
    USE force_mod,            ONLY : us_dy, us_dj
-   !
-   USE uspp_gpum,        ONLY : using_vkb
-   USE becmod_subs_gpum, ONLY : using_becp_auto
-   !
    IMPLICIT NONE
    !
    ! Input/Output
@@ -1389,17 +1377,14 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                                     backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
+   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan, using_vkb
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
    USE basis,                ONLY : natomwfc
    USE force_mod,            ONLY : at_dy, at_dj, us_dy, us_dj
-   !
-   USE wavefunctions_gpum,   ONLY: using_evc
-   USE uspp_gpum,            ONLY: using_vkb, using_indv_ijkb0, using_qq_at
-   USE becmod_subs_gpum,     ONLY: using_becp_auto
-   !
+   USE wavefunctions_gpum,   ONLY : using_evc
+   !USE uspp_gpum,           ONLY : using_indv_ijkb0, using_qq_at
    IMPLICIT NONE
    !
    ! I/O variables
@@ -1444,8 +1429,8 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !       qm1(npwx)
    !
    CALL using_evc(0)
-   CALL using_indv_ijkb0(0)
-   CALL using_qq_at(0)
+   !CALL using_indv_ijkb0(0)
+   !CALL using_qq_at(0)
    ! See the implementation in dprojdepsilon_k
    IF (U_projection.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
                     " Forces with gamma-only and ortho-atomic are not supported",1)

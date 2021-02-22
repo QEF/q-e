@@ -18,7 +18,7 @@ SUBROUTINE compute_deff( deff, et )
   USE uspp_param,  ONLY: nhm
   USE lsda_mod,    ONLY: current_spin
   !
-  USE uspp_gpum, ONLY : using_deeq, using_qq_at
+  !USE uspp_gpum, ONLY : using_deeq, using_qq_at
   !
   IMPLICIT NONE
   !
@@ -31,8 +31,8 @@ SUBROUTINE compute_deff( deff, et )
   !
   INTEGER :: nt, na, is
   !
-  CALL using_deeq(0)
-  CALL using_qq_at(0)
+  !CALL using_deeq(0)
+  !CALL using_qq_at(0)
   !
   deff(:,:,:) = deeq(:,:,:,current_spin)
   !
@@ -71,7 +71,7 @@ SUBROUTINE compute_deff_nc( deff, et )
   USE uspp_param,       ONLY: nhm
   USE lsda_mod,         ONLY: nspin
   !
-  USE uspp_gpum, ONLY : using_deeq_nc, using_qq_at, using_qq_so
+  !USE uspp_gpum, ONLY : using_deeq_nc, using_qq_at, using_qq_so
   !
   IMPLICIT NONE
   !
@@ -84,9 +84,9 @@ SUBROUTINE compute_deff_nc( deff, et )
   !
   INTEGER :: nt, na, is, js, ijs
   !
-  CALL using_deeq_nc(0)
-  IF (.not. lspinorb) CALL using_qq_at(0)
-  IF (lspinorb) CALL using_qq_so(0)
+  !CALL using_deeq_nc(0)
+  !IF (.not. lspinorb) CALL using_qq_at(0)
+  !IF (lspinorb) CALL using_qq_so(0)
   !
   deff=deeq_nc
   IF (okvan) THEN

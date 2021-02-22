@@ -228,14 +228,14 @@ MODULE realus
       USE constants,  ONLY : pi, fpi, eps16, eps6
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, alat
-      USE uspp,       ONLY : okvan, qq_at, qq_nt, nhtol
+      USE uspp,       ONLY : okvan, qq_at, qq_at_d, qq_nt, nhtol
       USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_type_descriptor
       USE mp_bands,   ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       !
-      USE uspp_gpum,  ONLY : using_qq_at
+      !USE uspp_gpum,  ONLY : using_qq_at
       !
       IMPLICIT NONE
       !
@@ -318,7 +318,7 @@ MODULE realus
       inv_nr2 = 1.D0 / dble( dfft%nr2 )
       inv_nr3 = 1.D0 / dble( dfft%nr3 )
       !
-      CALL using_qq_at(1)
+      !CALL using_qq_at(1)
       !
       ! the qq_at matrices are recalculated  here. initialize them 
       qq_at(:,:,:) =0.d0
@@ -404,10 +404,18 @@ MODULE realus
          !
       ENDDO
       !
-      CALL using_qq_at(1)
+      !CALL using_qq_at(1)
       ! collect the result of the qq_at matrix across processors 
+      ! and sync on GPUs
+      !
       CALL mp_sum( qq_at, intra_bgrp_comm )
-      ! and test that they don't differ too much from the result computed on the atomic grid
+#if defined __CUDA
+      qq_at_d=qq_at
+#endif
+      !
+      ! and test that they don't differ too much 
+      ! from the result computed on the atomic grid
+      !
       ALLOCATE (diff(nsp))
       diff(:)=0.0_dp
       do ia=1,nat
@@ -448,16 +456,18 @@ MODULE realus
       !! First we compute the radial \(Q(r)\) (\(\text{qtot}\)) for each \(l\),
       !! then we interpolate it in our mesh (contained in \(\text{tabp}\)), finally
       !! we multiply by the spherical harmonics and store it into \(\text{tab}\).
+      !!
+      !! Sync with GPU memory is performed outside
       !
       USE constants,  ONLY : eps16, eps6
-      USE uspp,       ONLY : indv, nhtolm, ap, qq_at
+      USE uspp,       ONLY : indv, nhtolm, ap, qq_at, qq_at_d
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint
       USE cell_base,  ONLY : omega
       USE fft_base,   ONLY : dfftp
       !
-      USE uspp_gpum,  ONLY : using_qq_at
+      !USE uspp_gpum,  ONLY : using_qq_at
       !
       IMPLICIT NONE
       !
@@ -584,8 +594,11 @@ MODULE realus
          ENDDO
       ENDDO
       !
-      CALL using_qq_at(1)
+      !CALL using_qq_at(1)
+      ! sync to GPUs is performed outside
+      !
       ! compute qq_at interating qr in the sphere 
+      !
       ijh = 0
       DO ih = 1, nh(nt)
          DO jh = ih, nh(nt)
@@ -595,7 +608,6 @@ MODULE realus
          END DO
       END DO
       qq_at(:,:,ia) = qq_at(:,:,ia) * omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-
       !
       DEALLOCATE( qtot, dqtot )
       DEALLOCATE( wsp, xsp )
@@ -1303,7 +1315,7 @@ MODULE realus
       USE gvect,            ONLY : gstart
 #endif
       !
-      USE uspp_gpum,        ONLY : using_becsum
+      !USE uspp_gpum,        ONLY : using_becsum
       !
       IMPLICIT NONE
       ! The charge density to be augmented (in G-space)
@@ -1321,7 +1333,7 @@ MODULE realus
       !
       CALL start_clock( 'addusdens' )
       !
-      CALL using_becsum(0)
+      !CALL using_becsum(0)
       !
       ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
       rhor(:,:) = 0.0_dp
@@ -1419,7 +1431,7 @@ MODULE realus
       USE mp_bands,   ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       !
-      USE uspp_gpum,  ONLY : using_becsum, using_ebecsum
+      !USE uspp_gpum,  ONLY : using_becsum, using_ebecsum
       !
       IMPLICIT NONE
       !
@@ -1431,7 +1443,7 @@ MODULE realus
       !
       IF (.not.okvan) RETURN
       !
-      CALL using_becsum(0); CALL using_ebecsum(0)
+      !CALL using_becsum(0); CALL using_ebecsum(0)
       !
       ALLOCATE ( forceq(3,nat) )
       forceq(:,:) = 0.0_dp
@@ -1514,7 +1526,7 @@ MODULE realus
 !      USE mp_bands,   ONLY : intra_bgrp_comm
 !      USE mp,         ONLY : mp_sum
       !
-      USE uspp_gpum,  ONLY : using_becsum, using_ebecsum
+      !USE uspp_gpum,  ONLY : using_becsum, using_ebecsum
       !
       IMPLICIT NONE
       !
@@ -1526,7 +1538,7 @@ MODULE realus
       !
       IF (.not.okvan) RETURN
       !
-      CALL using_becsum(0); CALL using_ebecsum(0)
+      !CALL using_becsum(0); CALL using_ebecsum(0)
       !
       sus(:,:) = 0.0_dp
       !
@@ -1863,7 +1875,7 @@ MODULE realus
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       !
-      USE uspp_gpum,              ONLY : using_qq_at
+      !USE uspp_gpum,              ONLY : using_qq_at
       USE becmod_gpum,            ONLY : using_becp_r
       !
       IMPLICIT NONE
@@ -1879,7 +1891,7 @@ MODULE realus
       IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
       ! Sync
-      CALL using_qq_at(0)
+      !CALL using_qq_at(0)
       CALL using_becp_r(0)
 
       ALLOCATE( w1(nhm), w2(nhm) )
@@ -1946,7 +1958,7 @@ MODULE realus
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       !
-      USE uspp_gpum,              ONLY : using_qq_at
+      !USE uspp_gpum,              ONLY : using_qq_at
       USE becmod_gpum,            ONLY : using_becp_k
       !
       IMPLICIT NONE
@@ -1965,7 +1977,7 @@ MODULE realus
       IF( dffts%has_task_groups ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
 
       ! Sync
-      CALL using_qq_at(0)
+      !CALL using_qq_at(0)
       CALL using_becp_k(0)
 
       call set_xkphase(current_k)
@@ -2035,7 +2047,7 @@ MODULE realus
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   !
-  USE uspp_gpum,              ONLY : using_deeq
+  !USE uspp_gpum,              ONLY : using_deeq
   USE becmod_gpum,            ONLY : using_becp_r
   !
   IMPLICIT NONE
@@ -2051,7 +2063,7 @@ MODULE realus
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
 
   ! Sync
-  CALL using_deeq(0)
+  !CALL using_deeq(0)
   CALL using_becp_r(0)
   !
   fac = sqrt(omega)
@@ -2121,7 +2133,7 @@ MODULE realus
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   !
-  USE uspp_gpum,              ONLY : using_deeq
+  !USE uspp_gpum,              ONLY : using_deeq
   USE becmod_gpum,            ONLY : using_becp_k
   !
   IMPLICIT NONE
@@ -2137,7 +2149,7 @@ MODULE realus
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
   !
-  CALL using_deeq(0)
+  !CALL using_deeq(0)
   CALL using_becp_k(0)
   !
   call set_xkphase(current_k)
@@ -2250,14 +2262,12 @@ MODULE realus
     !
     IF( dffts%has_task_groups ) THEN
         !
-
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         CALL tg_get_recip_inc( dffts, right_inc )
         ntgrp = fftx_ntgrp(dffts)
         !
         DO idx = 1, 2*ntgrp, 2
-
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
                  tg_psic(dffts%nl (igk_k(j,1))+ioff) =      orbital(j,idx+ibnd-1) +&
@@ -2271,11 +2281,8 @@ MODULE realus
                  tg_psic(dffts%nlm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1))
               ENDDO
            ENDIF
-
            ioff = ioff + right_inc
-
         ENDDO
-        !
         !
         CALL invfft ('tgWave', tg_psic, dffts)
         !
@@ -2480,7 +2487,7 @@ MODULE realus
     !! OBM 110908
     !
     USE kinds,                    ONLY : DP
-    USE wavefunctions,     ONLY : psic
+    USE wavefunctions,            ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
     USE fft_base,                 ONLY : dffts

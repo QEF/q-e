@@ -22,7 +22,7 @@ SUBROUTINE allocate_wfc()
   USE wavefunctions,       ONLY : evc
   USE wannier_new,         ONLY : use_wannier
   ! GPU modules
-  USE wavefunctions_gpum, ONLY : using_evc
+  USE wavefunctions_gpum,  ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -51,13 +51,11 @@ SUBROUTINE allocate_wfc_k()
   !! Requires that k-points are set up and distributed (if parallelized).
   !
   USE wvfct,            ONLY : npwx, g2kin
-  USE uspp,             ONLY : vkb, nkb
+  USE uspp,             ONLY : vkb, vkb_d, nkb, using_vkb
   USE gvecw,            ONLY : gcutw
   USE gvect,            ONLY : ngm, g
   USE klist,            ONLY : xk, nks, init_igk
-  ! GPU modules
   USE wvfct_gpum,       ONLY : using_g2kin
-  USE uspp_gpum,        ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -77,7 +75,10 @@ SUBROUTINE allocate_wfc_k()
   !   beta functions
   !
   ALLOCATE( vkb(npwx,nkb) )
-  CALL using_vkb(2)
+#if defined __CUDA
+  IF (nkb>0) ALLOCATE( vkb_d(npwx,nkb) )
+#endif
+  !CALL using_vkb(2)
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !

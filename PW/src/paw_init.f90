@@ -178,9 +178,7 @@ MODULE paw_init
     USE random_numbers,       ONLY : randy
     USE basis,                ONLY : starting_wfc
     USE noncollin_module,     ONLY : nspin_mag, angle1, angle2
-    !
-    USE uspp_gpum,          ONLY : using_becsum
-    !
+    !USE uspp_gpum,            ONLY : using_becsum
     IMPLICIT NONE
     !
     !REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
@@ -195,7 +193,7 @@ MODULE paw_init
     IF ( starting_wfc=='atomic+random') noise = 0.05_DP
     IF ( starting_wfc=='random')        noise = 0.10_DP
     !
-    CALL using_becsum(2)
+    !CALL using_becsum(2)
     becsum = 0.0_DP
     !
     na_loop: DO na = 1, nat
