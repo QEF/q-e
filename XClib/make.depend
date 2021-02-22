@@ -61,5 +61,6 @@ xclib_test.o : qe_kind.o
 xclib_test.o : xc_input_params_mod.o
 xclib_test.o : xc_lib.o
 xclib_test.o : xclib_utils_and_para.o
+xclib_test.o : ../upflib/xmltools.o
 beefun.o : beefleg.h
 beefun.o : pbecor.h

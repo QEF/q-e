@@ -32,6 +32,12 @@ PROGRAM xclib_test
                          xclib_dft_is_libxc, xclib_init_libxc,            &
                          xclib_finalize_libxc
   USE xclib_utils_and_para
+  
+  !--xml
+  USE xmltools,    ONLY: xml_openfile, xml_closefile,xmlr_readtag,&
+                         xmlw_writetag, xmlw_opentag, xmlw_closetag,&
+                         xmlr_opentag, xmlr_closetag, get_attr, add_attr
+  
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -150,6 +156,15 @@ PROGRAM xclib_test
   REAL(DP) :: aver_sndu, aver_recu
   REAL(DP) :: vaver(2), vmax(2), vmin(2)
   !
+  
+  !--xml
+  CHARACTER(LEN=1) :: dummy
+  CHARACTER(LEN=8) :: filename="bnch.xml"
+  integer :: iunpun, iun
+  LOGICAL :: found
+  !
+  
+  !
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: proc_name(:)
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: node_name(:)
   INTEGER, ALLOCATABLE :: proc2node(:)
@@ -212,14 +227,54 @@ PROGRAM xclib_test
   ! GET INPUT FROM FILE
   !==========================================================================
   !
-  ios=0
+  !--xml
   IF (mype==root) THEN
-    READ( unit=stdin, nml=input_namelist, iostat=ios )
+    !
+    READ( stdin, input_namelist )
+    !
     IF ( test(1:4)=='gen-' ) THEN
-      test = 'exe-benchmark'
-      WRITE( unit=stdout, nml=input_namelist, DELIM='QUOTE', iostat=ios )
-      test = 'gen-benchmark'
-    ENDIF  
+      !
+      IF ( family=='LDA' ) THEN
+        iunpun = xml_openfile( "./"//TRIM(filename) )
+        IF ( iunpun == -1 ) RETURN
+        !
+        CALL xmlw_opentag( "XCTEST-DATA-SET" )
+        CALL add_attr( "DFT1", dft1 )
+        CALL add_attr( "DFT2", dft1 )
+        CALL add_attr( "FAMILY", family )
+        CALL add_attr( "VXC_DERIVATIVE", DF_OK )
+        CALL add_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
+        CALL xmlw_writetag( "HEADER", "" )
+      ELSE
+        test = 'exe-benchmark'
+        WRITE( stdout, input_namelist )
+        test = 'gen-benchmark'
+      ENDIF
+      !
+    ELSEIF ( test(1:4)=='exe-' ) THEN
+      !
+      INQUIRE( FILE = filename, exist=found )
+      IF (.NOT. found ) THEN
+        ierr=1
+        CALL xclib_infomsg( 'xclib_test', 'xml data file not found' )
+      ENDIF
+      !
+      iun = xml_openfile( filename )
+      IF ( iun==-1 ) THEN
+        ierr=2
+        CALL xclib_infomsg( 'xclib_test', 'xml data file not readable' )
+      ENDIF
+      !
+      CALL xmlr_opentag( "XCTEST-DATA-SET" )
+      ! 
+      CALL xmlr_readtag ("HEADER", dummy)
+      CALL get_attr( "DFT1", dft1 )
+      CALL get_attr( "DFT2", dft2 )
+      CALL get_attr( "FAMILY", family )
+      CALL get_attr( "VXC_DERIVATIVE", DF_OK )
+      CALL get_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
+      !
+    ENDIF
   ENDIF
   !
   !==========================================================================
@@ -623,7 +678,23 @@ PROGRAM xclib_test
   !
   IF (test=='exe-benchmark' .AND. mype==root) THEN
     IF (.NOT. DF_OK) THEN
-      IF (family=='LDA' ) READ(stdin, lda_benchmark_data)
+    
+      !--xml
+      IF (family=='LDA' ) THEN
+        CALL xmlr_opentag( "XC_DATA" )
+        CALL xmlr_readtag( "EX_AVER", ex_aver_b(:) )
+        CALL xmlr_readtag( "EC_AVER", ec_aver_b(:) )
+        CALL xmlr_readtag( "VX_AVER", vx_aver_b(:,:) )
+        CALL xmlr_readtag( "VC_AVER", vc_aver_b(:,:) )
+        CALL xmlr_readtag( "EX", ex2(:) )
+        CALL xmlr_readtag( "EC", ec2(:) )
+        CALL xmlr_readtag( "VX", vx2(:,:) )
+        CALL xmlr_readtag( "VC", vc2(:,:) )
+        CALL xmlr_closetag()
+        CALL xmlr_closetag()
+      ENDIF
+      !
+      
       IF (family=='GGA' ) READ(stdin, gga_benchmark_data)
       IF (family=='MGGA') READ(stdin, mgga_benchmark_data)
     ELSE
@@ -1306,10 +1377,27 @@ PROGRAM xclib_test
      ! 
   ENDIF
   !
-  !
+  
+  !--xml
   IF (test=='gen-benchmark' .AND. mype==root) THEN
     IF (.NOT. DF_OK) THEN
-      IF ( family=='LDA' ) WRITE(stdout,lda_benchmark_data)
+     
+      !
+      IF ( family=='LDA' ) THEN
+        CALL xmlw_opentag( "XC_DATA" )
+        CALL xmlw_writetag( "EX_AVER", ex_aver_b(:) )
+        CALL xmlw_writetag( "EC_AVER", ec_aver_b(:) )
+        CALL xmlw_writetag( "VX_AVER", vx_aver_b(:,:) )
+        CALL xmlw_writetag( "VC_AVER", vc_aver_b(:,:) )
+        CALL xmlw_writetag( "EX", ex2(:) )
+        CALL xmlw_writetag( "EC", ec2(:) )
+        CALL xmlw_writetag( "VX", vx2(:,:) )
+        CALL xmlw_writetag( "VC", vc2(:,:) )
+        CALL xmlw_closetag()
+        CALL xmlw_closetag()
+      ENDIF
+      !
+      
       IF ( family=='GGA' ) WRITE(stdout,gga_benchmark_data)
       IF ( family=='MGGA') WRITE(stdout,mgga_benchmark_data)
     ELSE
@@ -1317,7 +1405,8 @@ PROGRAM xclib_test
       IF ( family=='GGA' ) WRITE(stdout,dgga_benchmark_data)
     ENDIF
   ENDIF  
-  ! 
+  !
+  
   !
   401 FORMAT('rho: ',F17.14)
   402 FORMAT('rho(up,down): ',F17.14,4x,F17.14)

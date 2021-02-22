@@ -2,6 +2,8 @@
 
 include ../make.inc
 
+MODFLAGS= $(BASEMOD_FLAGS)
+
 XCL = \
 xclib_utils_and_para.o \
 xclib_error.o \
@@ -31,15 +33,18 @@ BEEF = \
 pbecor.o \
 beefun.o
 
+UPFF = \
+../upflib/libupf.a
+
 all: xc_lib.a
 
 xc_lib.a: $(XCL) $(BEEF)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-xclib_test.x : xclib_test.o xc_lib.a 
-	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		xclib_test.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
+xclib_test.x : xclib_test.o xc_lib.a
+	$(LD) $(UPFF) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
+		xclib_test.o xc_lib.a $(UPFF) $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 test : xclib_test.x
