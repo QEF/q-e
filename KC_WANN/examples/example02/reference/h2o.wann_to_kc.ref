@@ -1,0 +1,123 @@
+
+     Program KC_WANN v.6.2 starts on 26Feb2020 at 11:42:48 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+
+     KCWANN INPUT SUMMARY 
+     ==========================================
+     # title               =        KI Silicon
+     # out_dir             =            ./out/
+     # prefix              =               h2o
+     # seedname            =               h2o
+     # kc_iverbosity       =                 2
+     # kc_at_ks            =                 T
+     # spread_check        =                 F
+     # homo_only           =                 F
+     # read_unitary_matrix =                 F
+     # check_ks            =                 F
+     # num_wann_occ        =                 0
+     # have_empty          =                 F
+     # has_disentangle     =                 F
+     # spin_component      =                 1
+     # lrpa                =                 F
+     # fix_orb             =                 F
+     # tr2_ph              =          0.10E-15
+     # niter_ph            =               100
+     # nmix_ph             =                 4
+     # qp_symm             =                 F
+     # kipz_corr           =                 F
+     # compute_hf          =                 F
+     # MP grid             =    -1    -1    -1
+     ==========================================
+
+     INFO: Reading pwscf data
+
+     Reading data from directory:
+     ./out/h2o.save
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         975     975    244                44983    44983    5620
+     Max         977     977    245                44984    44984    5623
+     Sum        3905    3905    979               179933   179933   22489
+ 
+     Generating pointlists ...
+     new r_m :   0.0415 (alat units)  0.7463 (a.u.) for type    1
+     new r_m :   0.0415 (alat units)  0.7463 (a.u.) for type    2
+
+     INFO: Buffer for KS wfcs, OPENED
+
+     INFO: Buffer for WFs, OPENED
+
+     INFO: Buffer for WF rho, OPENED
+
+     INFO: NO ROTATION, using the canonical KS manifold
+
+
+     INFO: Minimizing orbitals DEFINED
+
+
+     INFO: PREPARING THE KCWANN CALCULATION ...
+
+        ==============================================================================
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (  1  1  )        1        +  0.0000  0.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+     INFO: PREPARING THE KCWANN CALCULATION ... DONE
+
+
+ 
+     KC_WANN      :     0.61s CPU         0.86s WALL
+
+     INITIALIZATION: 
+ 
+     init_vloc    :      0.07s CPU      0.07s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+      General routines
+     fft          :      0.04s CPU      0.05s WALL (      19 calls)
+     fftw         :      0.01s CPU      0.02s WALL (      16 calls)
+     davcio       :      0.00s CPU      0.03s WALL (       7 calls)
+ 
+ 
+     KC_WANN      :     0.61s CPU         0.86s WALL
+
+ 
+   This run was terminated on:  11:42:48  26Feb2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

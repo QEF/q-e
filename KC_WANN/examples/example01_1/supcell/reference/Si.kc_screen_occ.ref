@@ -1,0 +1,254 @@
+
+     Program KC_WANN v.6.2 starts on 26Feb2020 at 11:14:35 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+
+     KCWANN INPUT SUMMARY 
+     ==========================================
+     # title               =        KI Silicon
+     # out_dir             =            ./out/
+     # prefix              =                Si
+     # seedname            =                Si
+     # kc_iverbosity       =                 2
+     # kc_at_ks            =                 F
+     # spread_check        =                 F
+     # homo_only           =                 F
+     # read_unitary_matrix =                 T
+     # check_ks            =                 T
+     # num_wann_occ        =                32
+     # num_wann_emp        =                32
+     # have_empty          =                 T
+     # has_disentangle     =                 T
+     # spin_component      =                 1
+     # lrpa                =                 F
+     # tr2_ph              =          0.10E-17
+     # niter_ph            =                33
+     # nmix_ph             =                 4
+     # i_orb               =                 1
+     # qp_symm             =                 F
+     # kipz_corr           =                 F
+     # compute_hf          =                 F
+     # MP grid             =    -1    -1    -1
+     ==========================================
+
+     INFO: Reading pwscf data
+
+     Reading data from directory:
+     ./out/Si.save
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         289     289     73                 6555     6555     821
+     Max         290     290     74                 6559     6559     823
+     Sum        1159    1159    295                26229    26229    3287
+ 
+
+     INFO: Buffer for KS wfcs, OPENED
+
+     INFO: Optimal Matrix READ
+
+     INFO: total number of Wannier functions   64
+
+     INFO: Unitary matrix, READ from file
+
+     INFO: Buffer for WF rho, OPENED
+
+        ==============================================================================
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+     INFO: total number of wannier to compute    1 from     1 to     1
+     INFO: PREPARING THE KCWANN CALCULATION ... DONE
+
+
+
+
+     INFO: LR CALCULATION ...
+
+
+     ==============================================================================
+     Calculation of q =    0.0000000   0.0000000   0.0000000  [Cart ]
+     Calculation of q =    0.0000000   0.0000000   0.0000000  [Cryst]
+     ==============================================================================
+
+        INFO: prepare_q DONE
+
+        INFO: rhowan_q(r) RETRIVED
+
+        INFO: kc_q initialization DONE
+
+        DEBUG: \int dr [rho - rho_PWSCF] =      -0.176587E-12
+
+weight =    1  1.00000000
+
+        Start linear response calculation for the wannier #  1    spin =  1
+NICOLA    1      2.0000    -0.37776323  0.00000003
+NICOLA    1      2.0000    -0.20202504 -0.00000005
+NICOLA    1      2.0000    -0.12495263  0.00000007
+NICOLA    1      2.0000    -0.12602126 -0.00000005
+
+      iter #   1 total cpu time :     0.8 secs   av.it.:  16.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.345E-07
+NICOLA    1      2.0000     0.33472520 -0.00000004
+NICOLA    1      2.0000     0.06942321  0.00000003
+NICOLA    1      2.0000     0.03405673 -0.00000006
+NICOLA    1      2.0000     0.03342891  0.00000007
+
+      iter #   2 total cpu time :     1.1 secs   av.it.:  16.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.871E-07
+NICOLA    1      2.0000    -0.14083498  0.00000003
+NICOLA    1      2.0000    -0.04939094  0.00000001
+NICOLA    1      2.0000    -0.03270483 -0.00000007
+NICOLA    1      2.0000    -0.03281595  0.00000003
+
+      iter #   3 total cpu time :     1.3 secs   av.it.:  15.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.268E-08
+NICOLA    1      2.0000    -0.11001021 -0.00000002
+NICOLA    1      2.0000    -0.07530333 -0.00000002
+NICOLA    1      2.0000    -0.04810084  0.00000004
+NICOLA    1      2.0000    -0.04850260 -0.00000001
+
+      iter #   4 total cpu time :     1.6 secs   av.it.:  15.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.713E-10
+NICOLA    1      2.0000    -0.11126751 -0.00000000
+NICOLA    1      2.0000    -0.07310036  0.00000001
+NICOLA    1      2.0000    -0.04723224  0.00000000
+NICOLA    1      2.0000    -0.04772052 -0.00000001
+
+      iter #   5 total cpu time :     1.8 secs   av.it.:  17.0
+      thresh= 1.647E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.426E-12
+NICOLA    1      2.0000    -0.11126018  0.00000000
+NICOLA    1      2.0000    -0.07312162 -0.00000003
+NICOLA    1      2.0000    -0.04731519  0.00000001
+NICOLA    1      2.0000    -0.04779636  0.00000002
+
+      iter #   6 total cpu time :     2.1 secs   av.it.:  19.0
+      thresh= 1.558E-08 alpha_mix =  0.700 |ddv_scf|^2 =  6.912E-14
+NICOLA    1      2.0000    -0.11121897 -0.00000000
+NICOLA    1      2.0000    -0.07306795  0.00000003
+NICOLA    1      2.0000    -0.04725118  0.00000001
+NICOLA    1      2.0000    -0.04773084 -0.00000004
+
+      iter #   7 total cpu time :     2.4 secs   av.it.:  21.0
+      thresh= 2.629E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.895E-15
+NICOLA    1      2.0000    -0.11120357  0.00000000
+NICOLA    1      2.0000    -0.07305578 -0.00000010
+NICOLA    1      2.0000    -0.04724496  0.00000000
+NICOLA    1      2.0000    -0.04772485  0.00000009
+
+      iter #   8 total cpu time :     2.8 secs   av.it.:  23.0
+      thresh= 5.381E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.239E-16
+NICOLA    1      2.0000    -0.11120924 -0.00000000
+NICOLA    1      2.0000    -0.07305778  0.00000011
+NICOLA    1      2.0000    -0.04724635  0.00000001
+NICOLA    1      2.0000    -0.04772614 -0.00000012
+
+      iter #   9 total cpu time :     3.1 secs   av.it.:  23.0
+      thresh= 2.289E-10 alpha_mix =  0.700 |ddv_scf|^2 =  4.904E-17
+NICOLA    1      2.0000    -0.11120876 -0.00000000
+NICOLA    1      2.0000    -0.07305740 -0.00000028
+NICOLA    1      2.0000    -0.04724549 -0.00000000
+NICOLA    1      2.0000    -0.04772514  0.00000029
+
+      iter #  10 total cpu time :     3.5 secs   av.it.:  25.0
+      thresh= 7.003E-11 alpha_mix =  0.700 |ddv_scf|^2 =  4.915E-18
+NICOLA    1      2.0000    -0.11120781  0.00000000
+NICOLA    1      2.0000    -0.07305623  0.00000027
+NICOLA    1      2.0000    -0.04724553  0.00000002
+NICOLA    1      2.0000    -0.04772537 -0.00000029
+
+      iter #  11 total cpu time :     3.9 secs   av.it.:  26.0
+      thresh= 2.217E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.845E-18
+NICOLA    1      2.0000    -0.07305684 -0.00000009
+NICOLA    1      2.0000    -0.04724545  0.00000000
+NICOLA    1      2.0000    -0.04772518  0.00000009
+NICOLA    1      2.0000    -0.11120825 -0.00000000
+
+      iter #  12 total cpu time :     4.3 secs   av.it.:  26.0
+      thresh= 1.687E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.166E-19
+
+        iq =   1   iwann =   1   rPi_q =    -0.27923572    -0.00000000   rPi_q_RS =    -0.27923572    -0.00000000   uPi_q =     0.46930722     0.00000000   Self Hartree =     0.27442164    -0.00000000
+
+
+     INFO: LR CALCULATION ... DONE
+
+
+
+
+
+        iwann =     1   relaxed =      0.19007150   unrelaxed =      0.46930722   alpha =  0.40500443   self Hartree =  0.27442164
+
+
+
+
+        INFO: iq =     1   Structure Factor S(q) [Re, Im] =   1.00000000  0.00000000
+
+        iwann=   1   int rho_wann(r) [Re, Im] =    1.000000    0.000000
+        iwann=   1   int Im[rho_wann(r)]      =    0.000000
+ 
+     KC_WANN      :     4.12s CPU         4.33s WALL
+
+     INITIALIZATION: 
+     phq_init     :      0.04s CPU      0.04s WALL (       1 calls)
+ 
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+     solve_linter :      3.62s CPU      3.74s WALL (       1 calls)
+ 
+     solve_linter :      3.62s CPU      3.74s WALL (       1 calls)
+     ortho        :      0.01s CPU      0.01s WALL (      12 calls)
+     cgsolve      :      3.11s CPU      3.18s WALL (      12 calls)
+     incdrhoscf   :      0.29s CPU      0.29s WALL (      24 calls)
+     dv_of_drho   :      0.05s CPU      0.06s WALL (      12 calls)
+     mix_pot      :      0.01s CPU      0.03s WALL (      12 calls)
+ 
+ 
+     cgsolve      :      3.11s CPU      3.18s WALL (      12 calls)
+     ch_psi       :      3.02s CPU      3.09s WALL (     344 calls)
+ 
+     ch_psi       :      3.02s CPU      3.09s WALL (     344 calls)
+     h_psi        :      2.74s CPU      2.81s WALL (     344 calls)
+     last         :      0.25s CPU      0.26s WALL (     344 calls)
+ 
+     h_psi        :      2.74s CPU      2.81s WALL (     344 calls)
+     add_vuspsi   :      0.13s CPU      0.13s WALL (     344 calls)
+ 
+     incdrhoscf   :      0.29s CPU      0.29s WALL (      24 calls)
+ 
+ 
+      General routines
+     calbec       :      0.25s CPU      0.26s WALL (     692 calls)
+     fft          :      0.05s CPU      0.05s WALL (     169 calls)
+     ffts         :      0.00s CPU      0.00s WALL (      16 calls)
+     fftw         :      2.57s CPU      2.64s WALL (   18066 calls)
+     davcio       :      0.01s CPU      0.07s WALL (     127 calls)
+ 
+ 
+     KC_WANN      :     4.12s CPU         4.33s WALL
+
+ 
+   This run was terminated on:  11:14:40  26Feb2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

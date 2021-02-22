@@ -1,0 +1,14 @@
+ODD_ALPHA Be2
+ &inputodd
+  tr2_ph=1.0d-18,
+  prefix='lda'
+  outdir='./TMP'
+  xqq(1)= 0.00, xqq(2)= 0.00, xqq(3)= 0.00, wq=1.00
+  !
+  kc_at_ks = .false.
+  read_unitary_matrix=.true.
+  homo_only = .false.
+  fix_orb = .false.
+  spread_check = .false.
+  spread_thr = 0.001
+ /

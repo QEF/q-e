@@ -1,0 +1,152 @@
+
+     Program KC_WANN v.6.2 starts on 26Feb2020 at 11:14:34 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+
+     KCWANN INPUT SUMMARY 
+     ==========================================
+     # title               =        KI Silicon
+     # out_dir             =            ./out/
+     # prefix              =                Si
+     # seedname            =                Si
+     # kc_iverbosity       =                 2
+     # kc_at_ks            =                 F
+     # spread_check        =                 F
+     # homo_only           =                 F
+     # read_unitary_matrix =                 T
+     # check_ks            =                 T
+     # num_wann_occ        =                32
+     # num_wann_emp        =                32
+     # have_empty          =                 T
+     # has_disentangle     =                 T
+     # spin_component      =                 1
+     # lrpa                =                 F
+     # tr2_ph              =          0.10E-15
+     # niter_ph            =               100
+     # nmix_ph             =                 4
+     # qp_symm             =                 F
+     # kipz_corr           =                 F
+     # compute_hf          =                 F
+     # MP grid             =    -1    -1    -1
+     ==========================================
+
+     INFO: Reading pwscf data
+
+     Reading data from directory:
+     ./out/Si.save
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         289     289     73                 6555     6555     821
+     Max         290     290     74                 6559     6559     823
+     Sum        1159    1159    295                26229    26229    3287
+ 
+
+     INFO: Buffer for KS wfcs, OPENED
+
+     INFO: Optimal Matrix READ
+
+     INFO: total number of Wannier functions   64
+
+     INFO: Unitary matrix, READ from file
+
+     INFO: Buffer for WFs, OPENED
+
+     INFO: Buffer for WF rho, OPENED
+
+     INFO: Minimizing orbitals from Unitary Matrix Rotation
+
+        INFO: Performing a check on the eigenvalues of the rotated KS Hamilotnian ... 
+
+        KS Hamiltonian calculation at k=      0.0000      0.0000      0.0000   ...    DONE 
+
+WANN    -5.4905  -3.1401  -3.1401  -3.1401  -3.1401  -1.3252  -1.3252  -1.3252
+WANN    -1.3252  -1.3252  -1.3252  -0.5116  -0.5116  -0.5116  -0.5116   3.6152
+WANN     3.6152   3.6152   3.6152   3.6152   3.6152   5.3079   5.3079   5.3079
+WANN     5.3079   5.3079   5.3079   5.3079   5.3079   6.5464   6.5464   6.5464
+WANN     7.1422   7.1422   7.1423   7.1423   7.1423   7.1423   8.7454   8.7454
+WANN     8.7454   8.7454   9.9710   9.9710   9.9710  10.0101  12.5388  12.5388
+WANN    12.5388  12.5388  12.5388  12.5388  12.5388  12.5388  15.5129  15.5129
+WANN    15.5129  15.5129  16.7079  16.7079  16.7079  16.7079  16.7079  16.7079
+PWSCF   -5.4905  -3.1401  -3.1401  -3.1401  -3.1401  -1.3252  -1.3252  -1.3252
+PWSCF   -1.3252  -1.3252  -1.3252  -0.5116  -0.5116  -0.5116  -0.5116   3.6152
+PWSCF    3.6152   3.6152   3.6152   3.6152   3.6152   5.3079   5.3079   5.3079
+PWSCF    5.3079   5.3079   5.3079   5.3079   5.3079   6.5464   6.5464   6.5464
+PWSCF    7.1423   7.1423   7.1423   7.1423   7.1423   7.1423   8.0304   8.0304
+PWSCF    8.0304   8.0305   8.9866   8.9866   8.9866   9.7641   9.7641   9.7641
+PWSCF    9.7641   9.7641   9.7641   9.7641   9.7641   9.8774  14.1717  14.1717
+PWSCF   14.1717  14.1717  14.1923  14.1923  14.4675  16.6030  16.6030  16.6030
+
+        INFO: Performing a check on the eigenvalues of the rotated KS Hamilotnian ... DONE
+
+     INFO: Minimizing orbitals DEFINED
+
+
+     INFO: PREPARING THE KCWANN CALCULATION ...
+
+        ==============================================================================
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+        The map (iq,ik) --> ip + G      (  1  1  )        1        +  0.0000  0.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+        INFO: rho_q(r) DONE 
+
+     INFO: PREPARING THE KCWANN CALCULATION ... DONE
+
+
+ 
+     KC_WANN      :     0.50s CPU         0.67s WALL
+
+     INITIALIZATION: 
+ 
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+ 
+ 
+ 
+     h_psi        :      0.02s CPU      0.02s WALL (       1 calls)
+ 
+     h_psi        :      0.02s CPU      0.02s WALL (       1 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+ 
+      General routines
+     calbec       :      0.00s CPU      0.00s WALL (       1 calls)
+     fft          :      0.02s CPU      0.02s WALL (      10 calls)
+     fftw         :      0.04s CPU      0.04s WALL (     256 calls)
+     davcio       :      0.00s CPU      0.05s WALL (       6 calls)
+ 
+ 
+     KC_WANN      :     0.50s CPU         0.67s WALL
+
+ 
+   This run was terminated on:  11:14:35  26Feb2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

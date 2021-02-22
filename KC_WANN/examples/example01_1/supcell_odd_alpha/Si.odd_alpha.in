@@ -1,0 +1,17 @@
+ODD_ALPHA Si
+ &inputodd
+  tr2_ph=1.0d-16,
+  prefix='Si'
+  outdir='./out'
+  xqq(1)= 0.00, xqq(2)= 0.00, xqq(3)= 0.00, wq=1.00
+  !
+  kc_at_ks = .false.
+  read_unitary_matrix=.true.
+  have_empty = .true.
+  has_disentangle = .true.
+  ! 
+  homo_only = .false.
+  fix_orb = .false.
+  spread_check = .true.
+  spread_thr = 0.001
+ /

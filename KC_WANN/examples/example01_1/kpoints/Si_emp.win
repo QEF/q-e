@@ -1,0 +1,59 @@
+num_bands         =   16       
+num_wann          =   4
+exclude_bands     =  1-4
+use_ws_distance   = .true.
+
+!restart = plot
+write_hr = .true.
+write_xyz = .true.
+
+bands_plot              = .true.
+bands_num_points        = 20
+begin kpoint_path
+ G 0.000 0.000 0.000  X 0.500 0.000 0.000
+ X 0.500 0.000 0.000  G 0.000 0.000 0.000
+end kpoint_path
+
+dis_froz_max      = 8.0
+dis_win_max       = 20
+!dis_win_max = 16.5
+!dis_froz_max = 11.0
+!dis_num_iter = 500
+
+wannier_plot = .false.
+wannier_plot_list = 1
+
+num_iter          = 500
+num_print_cycles  = 10
+
+write_u_matrices = .true.
+
+Begin Atoms_Frac
+ Si1 0.00 0.00 0.00
+ Si2 0.25 0.25 0.25
+End Atoms_Frac
+    
+Begin Projections     
+Si2 : sp3 
+End Projections       
+    
+begin unit_cell_cart
+bohr
+-5.1315510  0.00000 5.1315510
+ 0.00000  5.1315510 5.1315510
+-5.1315510  5.1315510 0.00000
+end unit_cell_cart
+
+
+mp_grid      = 2 2 2  
+
+begin kpoints
+  0.00000000  0.00000000  0.00000000
+  0.00000000  0.00000000  0.50000000
+  0.00000000  0.50000000  0.00000000
+  0.00000000  0.50000000  0.50000000
+  0.50000000  0.00000000  0.00000000
+  0.50000000  0.00000000  0.50000000
+  0.50000000  0.50000000  0.00000000
+  0.50000000  0.50000000  0.50000000
+end Kpoints

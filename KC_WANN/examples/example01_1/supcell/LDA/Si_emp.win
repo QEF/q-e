@@ -1,0 +1,56 @@
+num_bands         =   128
+num_wann          =   32
+exclude_bands     =   1-32
+
+dis_froz_max      = 8.0
+dis_win_max       = 20
+
+!restart = plot 
+wannier_plot = .true.
+wannier_plot_list = 1
+
+guiding_centres = .true.
+
+num_iter          = 100
+num_print_cycles  = 1
+
+write_u_matrices = .true.
+
+Begin Atoms_Frac
+ Si1  0.00000000  0.00000000  0.00000000
+ Si1  0.00000000  0.00000000  0.50000000
+ Si1  0.00000000  0.50000000  0.00000000
+ Si1  0.00000000  0.50000000  0.50000000
+ Si1  0.50000000  0.00000000  0.00000000
+ Si1  0.50000000  0.00000000  0.50000000
+ Si1  0.50000000  0.50000000  0.00000000
+ Si1  0.50000000  0.50000000  0.50000000
+ Si2  0.12500000  0.12500000  0.12500000
+ Si2  0.12500000  0.12500000  0.62500000
+ Si2  0.12500000  0.62500000  0.12500000
+ Si2  0.12500000  0.62500000  0.62500000
+ Si2  0.62500000  0.12500000  0.12500000
+ Si2  0.62500000  0.12500000  0.62500000
+ Si2  0.62500000  0.62500000  0.12500000
+ Si2  0.62500000  0.62500000  0.62500000
+End Atoms_Frac
+    
+Begin Projections     
+Si2 : sp3 
+End Projections       
+    
+begin unit_cell_cart
+bohr
+-10.263101844  0.00000 10.263101844
+ 0.00000  10.263101844 10.263101844
+-10.263101844 10.263101844 0.00000
+end unit_cell_cart
+
+mp_grid      = 1 1 1 
+
+begin kpoints
+  0.00000000  0.00000000  0.00000000 
+end Kpoints
+
+use_bloch_phases = .false.
+gamma_only = .false.

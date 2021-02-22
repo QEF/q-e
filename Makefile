@@ -132,6 +132,10 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
+kcwann : pw lrmods phlibs pp w90
+	if test -d KC_WANN ; then \
+	( cd KC_WANN ; $(MAKE) all || exit 1 ) ; fi
+
 gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
@@ -280,7 +284,7 @@ clean :
 		CPV LAXlib FFTXlib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upflib \
-		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
+		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI KC_WANN \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

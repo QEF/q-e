@@ -1,0 +1,29 @@
+KI Silicon
+&control
+  prefix='Si'
+  outdir='./out'
+  kc_iverbosity = 2
+  kc_at_ks=.false.
+  homo_only = .false.
+  read_unitary_matrix = .true.
+  l_vcut = .false.
+/
+&wannier
+  seedname = 'Si'
+  num_wann_occ = 32
+  num_wann_emp = 32
+  have_empty = .true. 
+  has_disentangle = .true.  
+  check_ks = .true. 
+/
+&screen
+  tr2_ph=1.0d-18
+  nmix_ph = 4
+  niter_ph = 33
+  lrpa =.false.
+  fix_orb = .false.
+  i_orb = 33
+  mp1 = 1
+  mp2 = 2
+  mp3 = 2
+ /
