@@ -51,14 +51,16 @@ qe_enable_cuda_fortran("${src_upflib}")
 qe_add_library(qe_upflib ${src_upflib})
 target_link_libraries(qe_upflib
     PRIVATE
+        qe_devxlib
         qe_mpi_fortran
         qe_lapack
         qe_utilx)
-if(QE_ENABLE_CUDA)
-    target_link_libraries(qe_upflib
-        PRIVATE
-            qe_devxlib)
-endif()
+# should the devxlib dependency be permanent or cuda-only?
+#if(QE_ENABLE_CUDA)
+#    target_link_libraries(qe_upflib
+#        PRIVATE
+#            qe_devxlib)
+#endif()
 
 ##############################################################
 # virtual_v2.x 
