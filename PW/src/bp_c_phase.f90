@@ -179,8 +179,7 @@ SUBROUTINE c_phase
    USE mp,                   ONLY : mp_sum
    USE qes_libs_module,      ONLY : qes_reset
    USE qexsd_init,           ONLY : qexsd_init_berryPhaseOutput,  qexsd_bp_obj
-   !
-   USE wavefunctions_gpum, ONLY : using_evc
+   USE wavefunctions_gpum,   ONLY : using_evc
 
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE

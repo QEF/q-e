@@ -36,7 +36,6 @@ SUBROUTINE force_us_gpu( forcenl )
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
-
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
@@ -44,8 +43,6 @@ SUBROUTINE force_us_gpu( forcenl )
   USE device_fbuff_m,       ONLY : dev_buf
   USE control_flags,        ONLY : use_gpu
   !
-  !USE uspp_gpum,           ONLY : using_indv_ijkb0, using_qq_at, &
-  !                                using_deeq
   IMPLICIT NONE
   !
   REAL(DP), INTENT(OUT) :: forcenl(3,nat)
@@ -169,8 +166,8 @@ SUBROUTINE force_us_gpu( forcenl )
        USE cublas
 #endif
        USE uspp,                 ONLY : qq_at_d, deeq_d
-       !USE uspp_gpum,           ONLY : using_qq_at_d, using_deeq_d
        USE wvfct_gpum,           ONLY : wg_d, using_wg_d, et_d, using_et_d
+       !
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
@@ -201,10 +198,6 @@ SUBROUTINE force_us_gpu( forcenl )
        !
        CALL using_et_d(0)
        CALL using_wg_d(0)
-       !CALL using_indv_ijkb0(0)
-       !CALL using_deeq_d(0)
-       !CALL using_deeq(0)
-       !CALL using_qq_at_d(0)
        !!!!! CHECK becp (set above)
        becp_d_ibnd_begin = becp_d%ibnd_begin
        becp_d_nbnd_loc = becp_d%nbnd_loc
@@ -274,8 +267,8 @@ SUBROUTINE force_us_gpu( forcenl )
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
        CALL using_et(0)
-       !CALL using_indv_ijkb0(0)
        CALL using_becp_auto(0);
+       !
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              CALL compute_deff_nc( deff_nc, et(ibnd,ik) )

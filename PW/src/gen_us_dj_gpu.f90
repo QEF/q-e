@@ -29,7 +29,6 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   USE gvect,       ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
   USE device_fbuff_m,   ONLY: dev_buf
   !
-  !
   IMPLICIT NONE
   !
   INTEGER  :: ik
@@ -60,10 +59,6 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
 #endif
   !
   IF (nkb == 0) RETURN
-  !
-  !CALL using_tab(0)
-  !CALL using_tab_d(0)
-  !IF (spline_ps) CALL using_tab_d2y(0)
   !
   npw = ngk(ik)
   !

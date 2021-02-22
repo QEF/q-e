@@ -22,8 +22,9 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_data,  ONLY: nqx, tab, tab_d2y, dq, spline_ps
   USE m_gth,      ONLY: mk_dffnl_gth
-  USE splinelib
   USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh
+  USE splinelib
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik
@@ -57,9 +58,6 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   IF (nkb == 0) RETURN
   !
   CALL start_clock( 'stres_us31' )
-  !
-  !CALL using_tab(0);
-  !IF (spline_ps) CALL using_tab_d2y(0);
   !
   npw = ngk(ik)
   ALLOCATE( djl(npw,nbetam,ntyp)   )    

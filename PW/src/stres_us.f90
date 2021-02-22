@@ -33,7 +33,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
-  !USE uspp_gpum,           ONLY : using_deeq
+  !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: ik
@@ -435,8 +435,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        CALL gen_us_dj( ik, dvkb )
        !
        CALL using_evc(0); CALL using_et(0) ! this is redundant
-       !CALL using_deeq(0)
-       
+       ! 
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              work2_nc = (0.D0,0.D0)

@@ -17,7 +17,6 @@ SUBROUTINE compute_deff_gpu( deff_d, et )
   USE uspp,        ONLY: okvan, deeq_d, qq_at_d
   USE uspp_param,  ONLY: nhm
   USE lsda_mod,    ONLY: current_spin
-  !USE uspp_gpum,   ONLY: using_deeq_d, using_qq_at_d
   !
   IMPLICIT NONE
   !
@@ -33,9 +32,6 @@ SUBROUTINE compute_deff_gpu( deff_d, et )
 #if defined(__CUDA)
   attributes(DEVICE) ::  deff_d
 #endif  
-  !
-  !CALL using_deeq_d(0)
-  !CALL using_qq_at_d(0)
   !
   IF (.NOT. okvan) THEN
      !
@@ -81,11 +77,7 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
   USE uspp,             ONLY: okvan, deeq_nc_d, qq_so_d, qq_at_d
   USE uspp_param,       ONLY: nhm
   USE lsda_mod,         ONLY: nspin
-  !
-  !USE uspp_gpum,        ONLY: using_deeq_nc_d, using_qq_at_d,    &
-  !                            using_qq_so_d, deeq_nc_d, qq_so_d, &
-  !                            qq_at_d
-  USE device_memcpy_m,    ONLY: dev_memcpy
+  USE device_memcpy_m,  ONLY: dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -103,10 +95,6 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
 #if defined(__CUDA)
   attributes(DEVICE) ::  deff_d, na_d, nt_d
 #endif  
-  !
-  !CALL using_deeq_nc_d(0)
-  !IF (.NOT. lspinorb) CALL using_qq_at_d(0)
-  !IF (lspinorb) CALL using_qq_so_d(0)
   !
   CALL dev_memcpy( deff_d, deeq_nc_d )
   !

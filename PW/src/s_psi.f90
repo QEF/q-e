@@ -84,8 +84,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   !
   USE kinds,            ONLY: DP
   USE becmod,           ONLY: becp
-  USE uspp,             ONLY: vkb, nkb, okvan, qq_at, qq_so, indv_ijkb0, &
-                              using_vkb
+  USE uspp,             ONLY: vkb, nkb, okvan, qq_at, qq_so, indv_ijkb0, using_vkb
   USE spin_orb,         ONLY: lspinorb
   USE uspp_param,       ONLY: upf, nh, nhm
   USE ions_base,        ONLY: nat, nsp, ityp
@@ -97,7 +96,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
                               fwfft_orbital_k, calbec_rs_k, s_psir_k
   USE wavefunctions,    ONLY: psic
   USE fft_base,         ONLY: dffts
-  !USE uspp_gpum,       ONLY: using_indv_ijkb0, using_qq_at, using_qq_so
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda
@@ -186,7 +185,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !---------------------------------------------------------------------
        !! Gamma version of \(\textrm{s_psi}\) routine.
        !
-       USE mp,            ONLY: mp_get_comm_null, mp_circular_shift_left
+       USE mp,            ONLY : mp_get_comm_null, mp_circular_shift_left
        USE becmod_gpum,   ONLY : using_becp_r
        !
        IMPLICIT NONE  
@@ -202,8 +201,6 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        REAL(DP), ALLOCATABLE :: ps(:,:)
        ! the product vkb and psi
        !
-       !CALL using_indv_ijkb0(0)
-       !CALL using_qq_at(0)
        CALL using_becp_r(0)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
@@ -315,8 +312,6 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !
        ALLOCATE( ps( nkb, m ), STAT=ierr )
        !
-       !CALL using_indv_ijkb0(0)
-       !CALL using_qq_at(0)
        CALL using_becp_k(0)
        !
        IF( ierr /= 0 ) &
@@ -389,9 +384,6 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        COMPLEX (DP), ALLOCATABLE :: ps(:,:,:)
        ! the product vkb and psi
        !
-       !CALL using_indv_ijkb0(0)
-       !IF ( .NOT. lspinorb ) CALL using_qq_at(0)
-       !IF (lspinorb)         CALL using_qq_so(0)
        CALL using_becp_nc(0)
        !
        ALLOCATE( ps(nkb,npol,m), STAT=ierr )

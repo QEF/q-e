@@ -28,7 +28,6 @@ SUBROUTINE scale_h
   USE xc_lib,         ONLY : xclib_dft_is
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
-  !
   USE gvect_gpum,     ONLY : using_g, using_g_d, using_gg, using_gg_d
   !
   IMPLICIT NONE
@@ -86,8 +85,6 @@ SUBROUTINE scale_h
   ENDIF
   !
   ! scale the non-local pseudopotential tables
-  !
-  !CALL using_tab(1); CALL using_tab_at(1); CALL using_qrad(1)
   !
   call scale_uspp_data( omega_old/omega )
 

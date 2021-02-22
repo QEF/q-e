@@ -37,7 +37,6 @@ SUBROUTINE new_ns( ns )
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-  !
   USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
@@ -240,10 +239,8 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ldaU,                 ONLY : is_hubbard, nwfcU
     USE becmod,               ONLY : bec_type, calbec, &
                                      allocate_bec_type, deallocate_bec_type
-    !
     USE wavefunctions_gpum,   ONLY : using_evc
     USE becmod_subs_gpum,     ONLY : using_becp_auto
-    !USE uspp_gpum,           ONLY : using_indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -259,8 +256,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     INTEGER :: ib, iw, nt, na, ikb, ih, npw
     !
     IF ( nkb == 0 ) RETURN
-    !
-    !CALL using_indv_ijkb0(0)
     !
     ! Number of plane waves at a given k point
     !

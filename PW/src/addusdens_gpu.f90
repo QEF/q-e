@@ -59,8 +59,6 @@ SUBROUTINE addusdens_g_gpu(rho)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  !
-  !USE uspp_gpum,           ONLY : using_becsum_d
   USE device_fbuff_m,       ONLY : dev_buf, pin_buf
   USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
   !
@@ -114,9 +112,6 @@ SUBROUTINE addusdens_g_gpu(rho)
   ! for the extraordinary unlikely case of more processors than G-vectors
   IF ( ngm_l <= 0 ) GO TO 10
   !
-  ! Sync becsum if needed
-  !CALL using_becsum_d(0)
-  !
   !ALLOCATE (qmod_d(ngm_l), qgm_d(ngm_l) )
   !ALLOCATE (ylmk0_d(ngm_l, lmaxq * lmaxq) )
   CALL dev_buf%lock_buffer(qmod_d, ngm_l, ierr )
@@ -127,7 +122,7 @@ SUBROUTINE addusdens_g_gpu(rho)
 
   CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
   
-!$cuf kernel do(1) <<<*,*>>>
+  !$cuf kernel do(1) <<<*,*>>>
   DO ig = 1, ngm_l
      qmod_d (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
   ENDDO
@@ -163,7 +158,8 @@ SUBROUTINE addusdens_g_gpu(rho)
            IF ( ityp(na) == nt ) THEN
               nb = nb + 1
               !tbecsum(:,nb,:) = becsum(1:nij,na,1:nspin_mag)
-!$cuf kernel do(2) <<<*,*>>>
+              !
+              !$cuf kernel do(2) <<<*,*>>>
               DO im = 1, nspin_mag
                  DO ij = 1, nij
                    tbecsum_d(ij,nb,im) = becsum_d(ij,na,im)

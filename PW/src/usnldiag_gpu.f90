@@ -24,8 +24,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE spin_orb,         ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
   USE device_memcpy_m,  ONLY: dev_memset
-  !USE uspp_gpum, ONLY : using_indv_ijkb0, using_deeq_d, using_deeq_nc_d, &
-  !                      using_qq_at_d, using_qq_so_d
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: npw
@@ -41,11 +40,6 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   INTEGER :: ig, ipol
   !
   CALL using_vkb_d(0)
-  !CALL using_indv_ijkb0(0)
-  !CALL using_deeq_d(0)
-  !IF (lspinorb .or. noncolin) CALL using_deeq_nc_d(0)
-  !IF (.not. lspinorb)         CALL using_qq_at_d(0)
-  !IF (lspinorb)               CALL using_qq_so_d(0)
   !
   ! initialise s_diag
   !
@@ -81,7 +75,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
@@ -109,7 +103,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
@@ -152,7 +146,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw   ! change this to 2*npw ?
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
@@ -186,7 +180,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
@@ -235,7 +229,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw   ! change this to 2*npw ?
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
@@ -271,7 +265,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0

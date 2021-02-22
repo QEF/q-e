@@ -22,8 +22,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   USE uspp_param,       ONLY: upf, nh
   USE spin_orb,         ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
-  !USE uspp_gpum, ONLY : using_vkb, using_indv_ijkb0, using_deeq, using_deeq_nc, &
-  !                      using_qq_at, using_qq_so
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: npw
@@ -41,12 +40,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   !
   ! Sync
   CALL using_vkb(0)
-  !CALL using_indv_ijkb0(0)
-  !CALL using_deeq(0)
-  !IF (lspinorb .or. lspinorb) CALL using_deeq_nc(0)
-  !IF (.not. lspinorb)         CALL using_qq_at(0)
-  !IF (lspinorb)               CALL using_qq_so(0)
-
+  !
   ! setting cache blocking size
   numblock  = (npw+blocksize-1)/blocksize
   !

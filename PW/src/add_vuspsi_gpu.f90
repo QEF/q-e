@@ -21,10 +21,8 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   USE noncollin_module
   USE uspp,            ONLY: indv_ijkb0, nkb, vkb_d, deeq_d, deeq_nc_d, using_vkb_d
   USE uspp_param,      ONLY: nh, nhm
-  USE becmod_gpum,     ONLY : bec_type_d, becp_d, using_becp_r_d, using_becp_k_d, using_becp_nc_d
-  !
-  !USE uspp_gpum,      ONLY : using_indv_ijkb0, using_deeq_d, using_deeq_nc_d
-  !
+  USE becmod_gpum,     ONLY: bec_type_d, becp_d, using_becp_r_d, &
+                             using_becp_k_d, using_becp_nc_d
   IMPLICIT NONE
   !
   ! ... I/O variables
@@ -95,8 +93,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb_d(0)
-       !CALL using_indv_ijkb0(0)
-       !CALL using_deeq_d(0)
        CALL using_becp_r_d(0)
        !
        IF( becp_d%comm == mp_get_comm_null() ) THEN
@@ -216,8 +212,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb_d(0)
-       !CALL using_indv_ijkb0(0)
-       !CALL using_deeq_d(0)
        CALL using_becp_k_d(0)
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb,m /), ierr ) ! ALLOCATE (ps_d (nkb,m), STAT=ierr )
@@ -294,8 +288,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb_d(0)
-       !CALL using_indv_ijkb0(0)
-       !CALL using_deeq_nc_d(0)
        CALL using_becp_nc_d(0)
        !
        ! ALLOCATE (ps_d( nkb, npol, m), STAT=ierr )

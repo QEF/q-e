@@ -47,14 +47,12 @@ SUBROUTINE force_hub_gpu( forceh )
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
    USE noncollin_module,     ONLY : noncolin
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
-   !
    USE becmod_gpum,          ONLY : bec_type_d, becp_d
    USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE becmod_subs_gpum,     ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto, &
                                     allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
-   !USE uspp_gpum,           ONLY : using_indv_ijkb0
    !
    IMPLICIT NONE
    !
@@ -140,7 +138,6 @@ SUBROUTINE force_hub_gpu( forceh )
    !    we start a loop on k points
    !
    CALL using_evc_d(0)
-   !CALL using_indv_ijkb0(0)
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
    IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
@@ -1135,11 +1132,9 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
-   !
-   USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
+   USE wavefunctions_gpum,   ONLY : evc_d
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
-   !USE uspp_gpum,           ONLY : using_qq_at_d
    !
    IMPLICIT NONE
    !
@@ -1390,17 +1385,16 @@ SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
    !
    ! This routine computes the derivative of O^{-1/2} transposed 
    !
-   USE kinds,          ONLY : DP
-   USE cell_base,      ONLY : tpiba
-   USE gvect_gpum,     ONLY : g_d
-   USE uspp,           ONLY : okvan
-   USE klist,          ONLY : xk, ngk, igk_k_d
-   USE basis,          ONLY : natomwfc, wfcatom, swfcatom
-   USE force_mod,      ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
-   USE mp_bands,       ONLY : intra_bgrp_comm
-   USE mp,             ONLY : mp_sum
-   USE ldaU,           ONLY : U_projection
-   !
+   USE kinds,            ONLY : DP
+   USE cell_base,        ONLY : tpiba
+   USE gvect_gpum,       ONLY : g_d
+   USE uspp,             ONLY : okvan
+   USE klist,            ONLY : xk, ngk, igk_k_d
+   USE basis,            ONLY : natomwfc, wfcatom, swfcatom
+   USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
+   USE mp_bands,         ONLY : intra_bgrp_comm
+   USE mp,               ONLY : mp_sum
+   USE ldaU,             ONLY : U_projection
    USE device_memcpy_m,  ONLY : dev_memcpy, dev_memset
    USE device_auxfunc_m, ONLY : dev_mem_addscal
    USE device_fbuff_m,   ONLY : dev_buf
@@ -1531,11 +1525,9 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    USE uspp_param,           ONLY : nh
    USE klist,                ONLY : igk_k_d, ngk
    USE becmod_subs_gpum,     ONLY : calbec_gpu
-   !
    USE gvect_gpum,           ONLY : g_d
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
-   !USE uspp_gpum,           ONLY : using_qq_at_d
    !
    IMPLICIT NONE
    !
@@ -1584,7 +1576,6 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    CALL dev_buf%lock_buffer(qq     , [nh(nt),nh(nt)], ierr) ! ALLOCATE ( qq(nh(nt),nh(nt)) )
    IF ( ierr /= 0 ) CALL errore('matrix_element_of_dSdtau_gpu','Buffers allocation failed',ierr)
    !
-   !CALL using_qq_at_d(0)
    !$cuf kernel do(2)
    DO jh=1,nh_nt
       DO ih=1,nh_nt
@@ -1705,14 +1696,12 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE uspp,                 ONLY : nkb, vkb_d, qq_at_d, using_vkb_d
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
-   USE becmod_gpum,               ONLY : bec_type_d, becp_d
-   USE becmod_subs_gpum,               ONLY : calbec_gpu
+   USE becmod_gpum,          ONLY : bec_type_d, becp_d
+   USE becmod_subs_gpum,     ONLY : calbec_gpu
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
-   !
    USE wavefunctions_gpum,   ONLY : using_evc_d, evc_d
-   !USE uspp_gpum,           ONLY : using_qq_at_d
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
    !
@@ -1869,7 +1858,6 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
    !
    CALL using_vkb_d(0)
-   !CALL using_qq_at_d(0)
    !
 !$cuf kernel do(2)
    DO ih = 1, nh(nt)

@@ -361,8 +361,6 @@ MODULE exx
                                      erfc_scrlen, gau_scrlen, exx_divergence
     USE exx_band,             ONLY : change_data_structure, nwordwfc_exx, &
                                      transform_evc_to_exx, igk_exx, evc_exx
-    !
-    USE wavefunctions_gpum,   ONLY : using_evc
     USE device_memcpy_m,      ONLY : dev_memset
     USE device_fbuff_m,       ONLY : dev_buf
     !
@@ -3812,9 +3810,6 @@ end associate
   !
   IF (lmaxkb < 0) RETURN
   !
-  !CALL using_tab(0)
-  !IF (spline_ps) CALL using_tab_d2y(0)
-  !
   ALLOCATE( vkb1(npw_,nhm) )
   ALLOCATE( sk(npw_) )    
   ALLOCATE( qg(npw_) )    
@@ -3942,19 +3937,18 @@ end associate
     !----------------------------------------------------------------------------
     !! ACE Initialization
     !
-    USE wvfct,            ONLY : nbnd, npwx, current_k
-    USE klist,            ONLY : nks, xk, ngk, igk_k
-    USE uspp,             ONLY : nkb, vkb, okvan, using_vkb
-    USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
-                                 bec_type, calbec
-    USE lsda_mod,         ONLY : current_spin, lsda, isk
-    USE io_files,         ONLY : nwordwfc, iunwfc
-    USE buffers,          ONLY : get_buffer
-    USE mp_pools,         ONLY : inter_pool_comm
-    USE mp_bands,         ONLY : intra_bgrp_comm
-    USE mp,               ONLY : mp_sum
-    USE wavefunctions,    ONLY : evc
-    !
+    USE wvfct,              ONLY : nbnd, npwx, current_k
+    USE klist,              ONLY : nks, xk, ngk, igk_k
+    USE uspp,               ONLY : nkb, vkb, okvan, using_vkb
+    USE becmod,             ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   bec_type, calbec
+    USE lsda_mod,           ONLY : current_spin, lsda, isk
+    USE io_files,           ONLY : nwordwfc, iunwfc
+    USE buffers,            ONLY : get_buffer
+    USE mp_pools,           ONLY : inter_pool_comm
+    USE mp_bands,           ONLY : intra_bgrp_comm
+    USE mp,                 ONLY : mp_sum
+    USE wavefunctions,      ONLY : evc
     USE wavefunctions_gpum, ONLY : using_evc
     !
     IMPLICIT NONE

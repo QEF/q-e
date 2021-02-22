@@ -47,7 +47,6 @@ SUBROUTINE force_hub( forceh )
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
    USE noncollin_module,     ONLY : noncolin
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
-   !
    USE wavefunctions_gpum,   ONLY : using_evc
    USE becmod_subs_gpum,     ONLY : using_becp_auto
    !
@@ -1024,7 +1023,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
-   !
    USE wavefunctions_gpum,   ONLY : using_evc
    !
    IMPLICIT NONE
@@ -1386,9 +1384,7 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    USE klist,                ONLY : igk_k, ngk
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
-   !
    USE wavefunctions_gpum,   ONLY : using_evc
-   !USE uspp_gpum,           ONLY : using_qq_at
    !
    IMPLICIT NONE
    !
@@ -1435,7 +1431,6 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    !
    !
    CALL using_vkb(0)
-   !CALL using_qq_at(0)
    !
 !!omp parallel do default(shared) private(ig,ih)
    ! Beta function
@@ -1540,9 +1535,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
-   !
    USE wavefunctions_gpum,   ONLY : using_evc
-   !USE uspp_gpum,           ONLY : using_qq_at
    !
    IMPLICIT NONE
    !

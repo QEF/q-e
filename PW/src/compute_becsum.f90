@@ -33,7 +33,6 @@ SUBROUTINE compute_becsum( iflag )
                                    bec_type, becp
   USE wavefunctions_gpum,   ONLY : using_evc
   USE becmod_subs_gpum,     ONLY : using_becp_auto
-  !USE uspp_gpum,           ONLY : using_becsum
   !
   IMPLICIT NONE
   !
@@ -52,7 +51,6 @@ SUBROUTINE compute_becsum( iflag )
   !
   IF ( iflag == 1) CALL weights( )
   !
-  !CALL using_becsum(2)
   becsum(:,:,:) = 0.D0
   CALL allocate_bec_type( nkb,nbnd, becp,intra_bgrp_comm )
   CALL using_becp_auto(2)

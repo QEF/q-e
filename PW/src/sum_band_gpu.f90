@@ -47,12 +47,10 @@ SUBROUTINE sum_band_gpu()
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
-  !
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
-  !USE uspp_gpum,           ONLY : using_becsum_d, using_ebecsum_d, &
-  !                                using_becsum, using_ebecsum
+  !
   IMPLICIT NONE
   !
   ! ... local variables
@@ -71,10 +69,7 @@ SUBROUTINE sum_band_gpu()
   CALL start_clock_gpu( 'sum_band' )
   !
   if ( nhm > 0 ) then
-     !CALL using_becsum_d(2)
-     !
      becsum_d(:,:,:) = 0.D0
-     !if (tqr) CALL using_ebecsum_d(2)
      if (tqr) ebecsum_d(:,:,:) = 0.D0
   end if
   rho%of_r(:,:)      = 0.D0
@@ -185,21 +180,20 @@ SUBROUTINE sum_band_gpu()
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
      !
-     !!CALL using_becsum(1)   ! use host copy to do the comunication. This avoids going back an forth GPU data
-     !becsum=becsum_d         ! becsum is already uptodate, see sum_band*gpu
+     ! use host copy to do the comunication. This avoids going back an forth GPU data
+     ! becsum=becsum_d     not needed 
+     ! since becsum is already uptodate, see sum_band*gpu
+     !
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
-     !CALL using_becsum_d(0)
      becsum_d=becsum
      !
      ! ... same for ebecsum, a correction to becsum (?) in real space
      !
      IF (tqr) THEN
-        !!CALL using_ebecsum(1)
-        !ebecsum=ebecsum_d
+        !ebecsum=ebecsum_d   not needed as above
         CALL mp_sum(ebecsum, inter_pool_comm )
         CALL mp_sum(ebecsum, inter_bgrp_comm )
-        !CALL using_ebecsum_d(0)
         ebecsum_d=ebecsum
      ENDIF
      !
@@ -305,7 +299,6 @@ SUBROUTINE sum_band_gpu()
        attributes(device) :: dffts_nl_d, dffts_nlm_d
        attributes(pinned) :: tg_rho_h
 #endif
-
        !
        CALL using_evc_d(0); CALL using_et(0)
        dffts_nl_d  => dffts%nl_d
@@ -540,14 +533,12 @@ SUBROUTINE sum_band_gpu()
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0) THEN
-          !CALL using_becsum(1)
-          !becsum=becsum_d      ! already updated in sum_bec_gpu
+          !becsum=becsum_d      not needed, since already updated in sum_bec_gpu
           CALL mp_sum( becsum, becp%comm )
           becsum_d=becsum
        ENDIF
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm>0) THEN
-          !CALL using_ebecsum(1)
-          !ebecsum=ebecsum_d    ! already updated in sum_bec_gpu
+          !ebecsum=ebecsum_d    as above
           CALL mp_sum( ebecsum, becp%comm )
           ebecsum_d=ebecsum
        ENDIF
@@ -914,14 +905,12 @@ SUBROUTINE sum_band_gpu()
        ! ... with distributed <beta|psi>, sum over bands
        !
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. nhm>0 ) THEN 
-          !CALL using_becsum(1)
-          !becsum=becsum_d        ! already updated in sum_bec_gpu
+          !becsum=becsum_d     not needed, since already updated in sum_bec_gpu
           CALL mp_sum( becsum, becp%comm )
           becsum_d=becsum
        ENDIF
        IF ( okvan .AND. becp%comm /= mp_get_comm_null() .AND. tqr .AND. nhm> 0) THEN
-          !CALL using_ebecsum(1)
-          !ebecsum=ebecsum_d      ! already updated in sum_bec_gpu
+          !ebecsum=ebecsum_d    not needed as above
           CALL mp_sum( ebecsum, becp%comm )
           ebecsum_d=ebecsum
        ENDIF
@@ -1086,13 +1075,10 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE us_exx,             ONLY : store_becxx0
   USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
   USE mp,                 ONLY : mp_sum
-  !
   USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,         ONLY : et_d, wg_d, using_et, using_et_d, using_wg_d
   USE becmod_subs_gpum,   ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto
   USE becmod_gpum,        ONLY : becp_d
-  !USE uspp_gpum,         ONLY : using_indv_ijkb0, using_becsum, using_ebecsum
-  !USE uspp_gpum,         ONLY : using_becsum_d, using_ebecsum_d, using_indv_ijkb0_d
   !
   ! Used to avoid unnecessary memcopy
   USE xc_lib,             ONLY : xclib_dft_is
@@ -1115,19 +1101,20 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 #if defined(__CUDA)
   attributes(DEVICE) :: becp_d_r_d, becp_d_k_d, becp_d_nc_d
 #endif
+  !
   CALL using_wg_d(0)
-  !CALL using_indv_ijkb0_d(0)
-  !CALL using_becsum_d(1)
-  !IF (tqr) CALL using_ebecsum_d(1)
   !
   CALL start_clock_gpu( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
-     CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
+     CALL using_evc_d(0) 
+     CALL using_vkb_d(0) 
+     CALL using_becp_d_auto(2)
      ! calbec computes becp = <vkb_i|psi_j>
      CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
   ELSE
-     CALL using_evc(0); CALL using_becp_auto(2)
+     CALL using_evc(0) 
+     CALL using_becp_auto(2)
      if (gamma_only) then
         do ibnd = ibnd_start, ibnd_end, 2
            call invfft_orbital_gamma(evc,ibnd,ibnd_end) 
@@ -1261,20 +1248,20 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                       1.0_dp, auxk1_d, 2*this_bgrp_nbnd, auxk2_d, 2*this_bgrp_nbnd, &
                       0.0_dp, aux_gk_d, nhnt )
                  !
-               if (tqr) then
-                 CALL using_et_d(0)
-                 !$cuf kernel do(2)
-                 DO ih = 1, nhnt
-                    DO ibnd = ibnd_start, ibnd_end
-                       ikb = indv_ijkb0_d(na) + ih
-                       auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
-                    END DO
-                 END DO
+                 if (tqr) then
+                   CALL using_et_d(0)
+                   !$cuf kernel do(2)
+                   DO ih = 1, nhnt
+                      DO ibnd = ibnd_start, ibnd_end
+                         ikb = indv_ijkb0_d(na) + ih
+                         auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
+                      END DO
+                   END DO
 
-                 CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
-                      1.0_dp, auxk1_d, 2*this_bgrp_nbnd, auxk2_d, 2*this_bgrp_nbnd, &
-                      0.0_dp, aux_egk_d, nhnt )
-               end if
+                   CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
+                        1.0_dp, auxk1_d, 2*this_bgrp_nbnd, auxk2_d, 2*this_bgrp_nbnd, &
+                        0.0_dp, aux_egk_d, nhnt )
+                 end if
 
               END IF
               !
@@ -1332,7 +1319,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   ! sync 
   if (nhm > 0) then
      becsum=becsum_d
-     ebecsum=ebecsum_d
+     if (tqr) ebecsum=ebecsum_d
   endif
   !
   CALL stop_clock_gpu( 'sum_band:becsum' )

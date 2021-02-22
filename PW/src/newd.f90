@@ -86,24 +86,24 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   DO is = 1, nspin_mag
      !
      IF ( (nspin_mag == 4 .AND. is /= 1) .OR. skip_vltot ) THEN 
-!$omp parallel do default(shared) private(ig)
+        !$omp parallel do default(shared) private(ig)
         DO ig = 1, dfftp%nnr
            psic(ig) = vr(ig,is)
         ENDDO
-!$omp end parallel do
+        !$omp end parallel do
      ELSE
-!$omp parallel do default(shared) private(ig)
+        !$omp parallel do default(shared) private(ig)
         DO ig = 1, dfftp%nnr
            psic(ig) = vltot(ig) + vr(ig,is)
         ENDDO
-!$omp end parallel do
+        !$omp end parallel do
      ENDIF
      CALL fwfft( 'Rho', psic, dfftp )
-!$omp parallel do default(shared) private(ig)
-        DO ig = 1, ngm_l
-           vaux(ig,is) = psic(dfftp%nl(ngm_s+ig-1))
-        ENDDO
-!$omp end parallel do
+     !$omp parallel do default(shared) private(ig)
+     DO ig = 1, ngm_l
+        vaux(ig,is) = psic(dfftp%nl(ngm_s+ig-1))
+     ENDDO
+     !$omp end parallel do
      !
   ENDDO
   !
@@ -142,14 +142,14 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
            DO na = 1, nat
               IF ( ityp(na) == nt ) THEN
                  nb = nb + 1
-!$omp parallel do default(shared) private(ig)
+                 !$omp parallel do default(shared) private(ig)
                  DO ig = 1, ngm_l
                     aux(ig, nb) = vaux(ig,is) * CONJG( &
                       eigts1(mill(1,ngm_s+ig-1),na) * &
                       eigts2(mill(2,ngm_s+ig-1),na) * &
                       eigts3(mill(3,ngm_s+ig-1),na) )
                  ENDDO
-!$omp end parallel do
+                 !$omp end parallel do
               ENDIF
            ENDDO
            !
@@ -209,8 +209,6 @@ SUBROUTINE newd( )
   USE control_flags,        ONLY : tqr
   USE ldaU,                 ONLY : lda_plus_U, U_projection
   !
-  !USE uspp_gpum,           ONLY : using_deeq, using_deeq_nc
-  !
   IMPLICIT NONE
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
@@ -220,12 +218,6 @@ SUBROUTINE newd( )
   ! Note: lspinorb implies noncolin. 
   !
   IF ( .NOT. okvan ) THEN
-     !! Sync
-     !IF ( lspinorb .or. noncolin ) THEN
-     !  CALL using_deeq_nc(1)
-     !ELSE
-     !  CALL using_deeq(1)
-     !END IF
      !
      ! ... no ultrasoft potentials: use bare coefficients for projectors
      !
@@ -272,10 +264,6 @@ SUBROUTINE newd( )
   ENDIF
   !
   CALL start_clock( 'newd' )
-  !
-  !! Sync
-  !CALL using_deeq(2)   ! deeq is set to 0 in both newq and newq_r
-  !IF ( lspinorb .or. noncolin ) CALL using_deeq_nc(1) 
   !
   IF (tqr) THEN
      CALL newq_r( v%of_r, deeq, .FALSE. )

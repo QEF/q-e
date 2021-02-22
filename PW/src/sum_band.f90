@@ -29,7 +29,7 @@ SUBROUTINE sum_band()
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
-                                   using_vkb
+                                   using_vkb, becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
@@ -47,7 +47,7 @@ SUBROUTINE sum_band()
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
-  !USE uspp_gpum,            ONLY : using_becsum, using_ebecsum
+  !
   IMPLICIT NONE
   !
   ! ... local variables
@@ -66,10 +66,7 @@ SUBROUTINE sum_band()
   CALL start_clock( 'sum_band' )
   !
   if ( nhm > 0 ) then
-     !CALL using_becsum(2)
-     !
      becsum(:,:,:) = 0.D0
-     !if (tqr) CALL using_ebecsum(2)
      if (tqr) ebecsum(:,:,:) = 0.D0
   end if
   rho%of_r(:,:)      = 0.D0
@@ -180,15 +177,20 @@ SUBROUTINE sum_band()
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
      !
-     !CALL using_becsum(1)
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
      !
      ! ... same for ebecsum, a correction to becsum (?) in real space
      !
-     !IF (tqr) CALL using_ebecsum(1)
      IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
      IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
+     !
+#if defined __CUDA
+     if (nhm>0) then
+        becsum_d=becsum
+        if (tqr) ebecsum_d=ebecsum
+     endif
+#endif
      !
      ! ... PAW: symmetrize becsum and store it
      ! ... FIXME: the same should be done for USPP as well
@@ -501,9 +503,7 @@ SUBROUTINE sum_band()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
-       !IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
-       !IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
        !
        IF( use_tg ) THEN
@@ -712,7 +712,7 @@ SUBROUTINE sum_band()
                    ! compute the number of chuncks
                    numblock  = (npw+blocksize-1)/blocksize
                    !
-!$omp parallel
+                !$omp parallel
                    CALL threaded_barrier_memset(tg_psi, 0.D0, ntgrp*right_nnr*2)
                    !
                    ! ... ntgrp ffts at the same time
@@ -725,7 +725,7 @@ SUBROUTINE sum_band()
                       END DO
                    END DO
                    !$omp end do nowait
-!$omp end parallel
+                !$omp end parallel
                    !
                    CALL invfft ('tgWave', tg_psi, dffts)
                    !
@@ -754,7 +754,7 @@ SUBROUTINE sum_band()
                    !
                 ELSE
                    !
-!$omp parallel
+                !$omp parallel
                    CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
                    !
                    !$omp do
@@ -762,7 +762,7 @@ SUBROUTINE sum_band()
                       psic(dffts%nl(igk_k(j,ik))) = evc(j,ibnd)
                    ENDDO
                    !$omp end do nowait
-!$omp end parallel
+                !$omp end parallel
                    !
                    CALL invfft ('Wave', psic, dffts)
                    !
@@ -837,7 +837,7 @@ SUBROUTINE sum_band()
 
         INTEGER :: ir
 
-!$omp parallel do
+        !$omp parallel do
         DO ir = 1, nrxxs_loc
            !
            rho_loc(ir) = rho_loc(ir) + &
@@ -845,7 +845,7 @@ SUBROUTINE sum_band()
                                    AIMAG( psic_loc(ir) )**2 )
            !
         END DO
-!$omp end parallel do
+        !$omp end parallel do
 
      END SUBROUTINE get_rho
 
@@ -860,7 +860,7 @@ SUBROUTINE sum_band()
 
         INTEGER :: ir
 
-!$omp parallel do
+        !$omp parallel do
         DO ir = 1, nrxxs_loc
            !
            rho_loc(ir) = rho_loc(ir) + &
@@ -868,7 +868,7 @@ SUBROUTINE sum_band()
                          w2_loc * AIMAG( psic_loc(ir) )**2
            !
         END DO
-!$omp end parallel do
+        !$omp end parallel do
 
      END SUBROUTINE get_rho_gamma
 
@@ -884,7 +884,7 @@ SUBROUTINE sum_band()
 
         INTEGER :: ir
 
-!$omp parallel do
+        !$omp parallel do
         DO ir = 1, nrxxs_loc
            !
            rho_loc(ir,2) = rho_loc(ir,2) + w1_loc*2.D0* &
@@ -900,7 +900,7 @@ SUBROUTINE sum_band()
                           -DBLE(psic_loc(ir,2))**2-AIMAG(psic_loc(ir,2))**2)
            !
         END DO
-!$omp end parallel do
+        !$omp end parallel do
 
      END SUBROUTINE get_rho_domag
 
@@ -919,26 +919,25 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !
   !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
-  USE kinds,         ONLY : DP
-  USE becmod,        ONLY : becp, calbec, allocate_bec_type
-  USE control_flags, ONLY : gamma_only, tqr
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE uspp,          ONLY : nkb, vkb, becsum, ebecsum, indv_ijkb0, &
-                            using_vkb
-  USE uspp_param,    ONLY : upf, nh, nhm
-  USE wvfct,         ONLY : nbnd, wg, et, current_k
-  USE klist,         ONLY : ngk
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions, ONLY : evc
-  USE realus,        ONLY : real_space, &
-                            invfft_orbital_gamma, calbec_rs_gamma, &
-                            invfft_orbital_k, calbec_rs_k
-  USE us_exx,        ONLY : store_becxx0
-  USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
-  USE mp,            ONLY : mp_sum
+  USE kinds,              ONLY : DP
+  USE becmod,             ONLY : becp, calbec, allocate_bec_type
+  USE control_flags,      ONLY : gamma_only, tqr
+  USE ions_base,          ONLY : nat, ntyp => nsp, ityp
+  USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, indv_ijkb0, &
+                                 using_vkb
+  USE uspp_param,         ONLY : upf, nh, nhm
+  USE wvfct,              ONLY : nbnd, wg, et, current_k
+  USE klist,              ONLY : ngk
+  USE noncollin_module,   ONLY : noncolin, npol
+  USE wavefunctions,      ONLY : evc
+  USE realus,             ONLY : real_space, &
+                                 invfft_orbital_gamma, calbec_rs_gamma, &
+                                 invfft_orbital_k, calbec_rs_k
+  USE us_exx,             ONLY : store_becxx0
+  USE mp_bands,           ONLY : nbgrp,inter_bgrp_comm
+  USE mp,                 ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,         ONLY : using_et
-  !USE uspp_gpum,         ONLY : using_indv_ijkb0, using_becsum, using_ebecsum
   USE becmod_subs_gpum,   ONLY : using_becp_auto
   !
   IMPLICIT NONE
@@ -965,7 +964,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(0)
   CALL using_vkb(0)
-  !CALL using_indv_ijkb0(0)
   CALL using_becp_auto(2)
   !
   CALL start_clock( 'sum_band:calbec' )
@@ -1030,7 +1028,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
               !
               IF ( noncolin ) THEN
                  !
-!$omp parallel do default(shared), private(is,ih,ikb,ibnd)
+                 !$omp parallel do default(shared), private(is,ih,ikb,ibnd)
                  DO is = 1, npol
                     DO ih = 1, nh(np)
                        ikb = indv_ijkb0(na) + ih
@@ -1042,7 +1040,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                        END DO
                     END DO
                  END DO
-!$omp end parallel do
+                 !$omp end parallel do
                  !
                  CALL ZGEMM ( 'C', 'N', npol*nh(np), npol*nh(np), this_bgrp_nbnd, &
                       (1.0_dp,0.0_dp), auxk1, this_bgrp_nbnd, auxk2, this_bgrp_nbnd, &
@@ -1050,7 +1048,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !
               ELSE IF ( gamma_only ) THEN
                  !
-!$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
+                 !$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
                  DO ih = 1, nh(np)
                     ikb = indv_ijkb0(na) + ih
                     DO ibnd_loc = 1, nbnd_loc
@@ -1058,12 +1056,12 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                        auxg(ibnd_loc,ih)= wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
                     END DO
                  END DO
-!$omp end parallel do
+                 !$omp end parallel do
                  CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
                       1.0_dp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
                       auxg, nbnd_loc, 0.0_dp, aux_gk, nh(np) )
                if (tqr) then
-!$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
+                 !$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
                  DO ih = 1, nh(np)
                     ikb = indv_ijkb0(na) + ih
                     DO ibnd_loc = 1, nbnd_loc
@@ -1071,7 +1069,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                        auxg(ibnd_loc,ih) = et(ibnd,ik) * auxg(ibnd_loc,ih)
                     END DO
                  END DO
-!$omp end parallel do
+                 !$omp end parallel do
                  CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
                       1.0_dp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
                       auxg, nbnd_loc, 0.0_dp, aux_egk, nh(np) )
@@ -1079,7 +1077,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !
               ELSE
                  !
-!$omp parallel do default(shared), private(ih,ikb,ibnd)
+                 !$omp parallel do default(shared), private(ih,ikb,ibnd)
                  DO ih = 1, nh(np)
                     ikb = indv_ijkb0(na) + ih
                     DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
@@ -1088,7 +1086,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                        auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,kbnd)
                     END DO
                  END DO
-!$omp end parallel do
+                 !$omp end parallel do
                  !
                  ! only the real part is computed
                  !
@@ -1096,27 +1094,26 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                       1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
                       0.0_dp, aux_gk, nh(np) )
                  !
-               if (tqr) then
-!$omp parallel do default(shared), private(ih,ikb,ibnd)
-                 DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
-                    DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
-                       ibnd = ibnd_start + kbnd - 1
-                       auxk2(ibnd,ih) = et(ibnd,ik)*auxk2(ibnd,ih)
-                    END DO
-                 END DO
-!$omp end parallel do
-                 CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*this_bgrp_nbnd, &
-                      1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
-                      0.0_dp, aux_egk, nh(np) )
-               end if
-
+                 if (tqr) then
+                   !$omp parallel do default(shared), private(ih,ikb,ibnd)
+                   DO ih = 1, nh(np)
+                      ikb = indv_ijkb0(na) + ih
+                      DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
+                         ibnd = ibnd_start + kbnd - 1
+                         auxk2(ibnd,ih) = et(ibnd,ik)*auxk2(ibnd,ih)
+                      END DO
+                   END DO
+                   !$omp end parallel do
+                   !
+                   CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*this_bgrp_nbnd, &
+                        1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
+                        0.0_dp, aux_egk, nh(np) )
+                 end if
+                 !
               END IF
               !
               ! copy output from GEMM into desired format
               !
-              !CALL using_becsum(1)
-              !if (tqr) CALL using_ebecsum(1)
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
                  CALL add_becsum_nc (na, np, aux_nc, becsum )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN

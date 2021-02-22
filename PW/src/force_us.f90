@@ -33,11 +33,10 @@ SUBROUTINE force_us( forcenl )
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
-
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
-  !USE uspp_gpum,           ONLY : using_deeq, using_indv_ijkb0, using_qq_at
+  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(OUT) :: forcenl(3,nat)
@@ -168,10 +167,7 @@ SUBROUTINE force_us( forcenl )
        !
        !
        CALL using_et(0)
-       !CALL using_indv_ijkb0(0)
-       !CALL using_deeq(0)
-       !CALL using_qq_at(0)
-
+       !
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
           ALLOCATE( aux(nh(nt),becp%nbnd_loc) )
@@ -183,19 +179,21 @@ SUBROUTINE force_us( forcenl )
                             1.0_dp, qq_at(1,1,na), nhm, becp%r(ijkb0+1,1), &
                             nkb, 0.0_dp, aux, nh(nt) )
                 ! multiply by -\epsilon_n
-!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih)
+                !
+                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih)
                 DO ih = 1, nh(nt)
                    DO ibnd_loc = 1, becp%nbnd_loc
                       ibnd = ibnd_loc + becp%ibnd_begin - 1
                       aux(ih,ibnd_loc) = - et(ibnd,ik) * aux(ih,ibnd_loc)
                    ENDDO
                 ENDDO
-!$omp end parallel do
+                !$omp end parallel do
+                !
                 ! add  \sum_j d_{ij} <beta_j|psi>
                 CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt), &
                             1.0_dp, deeq(1,1,na,current_spin), nhm, &
                             becp%r(ijkb0+1,1), nkb, 1.0_dp, aux, nh(nt) )
-!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl)
+                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl)
                 DO ih = 1, nh(nt)
                    DO ibnd_loc = 1, becp%nbnd_loc
                       ibnd = ibnd_loc + becp%ibnd_begin - 1
@@ -204,7 +202,7 @@ SUBROUTINE force_us( forcenl )
                            dbecp%r(ijkb0+ih,ibnd_loc) * wg(ibnd,ik)
                    ENDDO
                 ENDDO
-!$omp end parallel do
+                !$omp end parallel do
                 !
              ENDIF
           ENDDO
@@ -229,7 +227,7 @@ SUBROUTINE force_us( forcenl )
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
        CALL using_et(0)
-       !CALL using_indv_ijkb0(0)
+       !
        DO ibnd = 1, nbnd
           !
           IF (noncolin) THEN

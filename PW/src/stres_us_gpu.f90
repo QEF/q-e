@@ -38,7 +38,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE device_fbuff_m,       ONLY : dev_buf
   USE device_memcpy_m,      ONLY : dev_memcpy
   !
-  !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: ik
@@ -481,7 +480,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        ENDIF
        IF (ANY(ierrs /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
        !
-       !CALL using_deeq_d(0)
        CALL using_et(0)
        !
        ! ... the contribution is calculated only on one processor because

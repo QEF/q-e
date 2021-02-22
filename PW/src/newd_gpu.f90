@@ -251,8 +251,6 @@ SUBROUTINE newd_gpu( )
   USE ldaU,                 ONLY : lda_plus_U, U_projection
   USE device_fbuff_m,       ONLY : buffer=>dev_buf
   !
-  !USE uspp_gpum,    ONLY : using_deeq, using_deeq_nc, &
-  !                         using_deeq_d, using_deeq_nc_d
   IMPLICIT NONE
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb, ierr
@@ -265,12 +263,6 @@ SUBROUTINE newd_gpu( )
 #endif
   !
   IF ( .NOT. okvan ) THEN
-     !! Sync
-     !IF ( lspinorb .or. noncolin ) THEN
-     !  CALL using_deeq_nc_d(1)
-     !ELSE
-     !  CALL using_deeq_d(1)    ! Can these be changed from INOUT to OUT?
-     !END IF
      !
      ! ... no ultrasoft potentials: use bare coefficients for projectors
      !
@@ -312,7 +304,7 @@ SUBROUTINE newd_gpu( )
         ELSE
            !
            if ( nht > 0 ) THEN
-           !$cuf kernel do(4)
+              !$cuf kernel do(4)
               DO is = 1, nspin
                  DO na = 1, nat
                     DO jh = 1, nht
@@ -324,6 +316,7 @@ SUBROUTINE newd_gpu( )
                     END DO
                  END DO
               END DO
+              !
            end if
            !
         END IF
@@ -352,15 +345,9 @@ SUBROUTINE newd_gpu( )
   CALL buffer%lock_buffer(ityp_d, nat, ierr)
   ityp_d(1:nat)=ityp(1:nat)
   !
-  ! Sync
-  !CALL using_deeq_d(2)
-  !IF ( lspinorb .or. noncolin ) CALL using_deeq_nc_d(1) ! lspinorb implies noncolin 
-  !
   IF (tqr) THEN
-     !CALL using_deeq(2)
      CALL newq_r(v%of_r,deeq,.false.)
      deeq_d=deeq
-     !CALL using_deeq_d(1)
   ELSE
      CALL newq_gpu(v%of_r,deeq_d,.false.)
   END IF
@@ -432,8 +419,6 @@ SUBROUTINE newd_gpu( )
       INTEGER :: nt
 
       INTEGER :: ijs, is1, is2, kh, lh, nhnt, ih, jh, na
-      !
-      !CALL using_fcoef_d(0)
       !
       nhnt = nh(nt)
       ijs = 0
