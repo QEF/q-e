@@ -34,9 +34,9 @@ MODULE dft_par_mod
     !! pointers to libxc functional structs
     TYPE(xc_f03_func_info_t) :: xc_info(6)
     !! pointers to libxc info structs
-    INTEGER  :: n_ext_params(6) = 0._DP
+    INTEGER  :: n_ext_params(6) = 0
     !! number of external parameters for each functional
-    REAL(DP) :: par_list(6,10)
+    REAL(DP) :: par_list(6,50)
     !! list of external parameters
 #endif
     !

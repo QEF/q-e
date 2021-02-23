@@ -91,7 +91,6 @@ environment.o : mp_pools.o
 environment.o : mp_world.o
 environment.o : qeh5_module.o
 environment.o : version.o
-erf.o : kind.o
 expint.o : kind.o
 fd_gradient.o : ../FFTXlib/fft_types.o
 fd_gradient.o : ../FFTXlib/scatter_mod.o

@@ -529,10 +529,10 @@ MODULE pw_restart_new
          END IF
          IF (nks_start == 0 .AND. nk1*nk2*nk3 > 0 ) THEN 
             CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, "automatic", calculation, &
-                 nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
+                 nk1, nk2, nk3, k1, k2, k3, nks_start, alat, at(:,1), .TRUE.)
          ELSE
             CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, k_points, calculation, &
-                                nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
+                 nk1, nk2, nk3, k1, k2, k3, nks_start, alat, at(:,1), .TRUE., xk_start, wk_start)
          END IF
          qexsd_start_k_obj%tagname = 'starting_kpoints'
          occupations = schema_occupations( lgauss, ltetra, tetra_type, &

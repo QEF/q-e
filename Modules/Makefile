@@ -111,7 +111,6 @@ OBJS = \
 atom_weight.o \
 capital.o \
 cryst_to_car.o \
-erf.o \
 expint.o \
 generate_k_along_lines.o \
 has_xml.o \

@@ -739,7 +739,6 @@ PROGRAM xclib_test
       !
       IF ( .NOT. LDA ) THEN
         ex1 = 0.d0  ;  ec1 = 0.d0
-        vx1 = 0.d0  ;  vc1 = 0.d0
       ENDIF
       !
       CALL xc_gcx( nnrt, ns, rho, grho, exg1, ecg1, v1x1, v2x1, v1c1, &
@@ -747,8 +746,10 @@ PROGRAM xclib_test
       !
       ex1 = ex1*rho_tz(:,1) + exg1
       ec1 = ec1*rho_tz(:,1) + ecg1
-      v1x1 = v1x1 + vx1
-      v1c1 = v1c1 + vc1
+      IF ( LDA ) THEN
+        v1x1 = v1x1 + vx1
+        v1c1 = v1c1 + vc1
+      ENDIF
       !
     ELSE
       !
@@ -808,7 +809,6 @@ PROGRAM xclib_test
         !
         IF ( .NOT. LDA ) THEN
           ex2 = 0.d0  ;  ec2 = 0.d0
-          vx2 = 0.d0  ;  vc2 = 0.d0
         ENDIF
         !
         CALL xc_gcx( nnrbt, ns, rho(1:nnrbt,:), grho(:,1:nnrbt,:), exg2, &
@@ -816,8 +816,10 @@ PROGRAM xclib_test
         !
         ex2 = ex2*rho_tz(1:nnrbt,1) + exg2
         ec2 = ec2*rho_tz(1:nnrbt,1) + ecg2
-        v1x2 = v1x2 + vx2
-        v1c2 = v1c2 + vc2
+        IF ( LDA ) THEN
+          v1x2 = v1x2 + vx2
+          v1c2 = v1c2 + vc2
+        ENDIF
         !
       ELSE
         !

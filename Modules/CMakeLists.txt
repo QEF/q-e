@@ -97,8 +97,7 @@ set(src_modules
     # list of subroutines and functions (not modules) previously found in flib/
     atom_weight.f90 
     capital.f90 
-    cryst_to_car.f90 
-    erf.f90 
+    cryst_to_car.f90
     expint.f90 
     generate_k_along_lines.f90 
     more_functionals.f90 

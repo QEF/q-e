@@ -85,7 +85,6 @@ FUNCTION ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! buffer variable
   ! used to optimize alpha
   COMPLEX(DP) :: rhon
-  REAL(DP), EXTERNAL :: qe_erfc
   !
   tpiba2 = (tpi / alat) **2
   charge = 0.d0
@@ -99,7 +98,7 @@ FUNCTION ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! upperbound is a safe upper bound for the error in the sum over G
   !
   IF ( alpha <= 0.d0 ) CALL errore( 'ewald', 'optimal alpha not found', 1 )
-  upperbound = 2.d0 * charge**2 * SQRT(2.d0 * alpha / tpi) * qe_erfc( &
+  upperbound = 2.d0 * charge**2 * SQRT(2.d0 * alpha / tpi) * erfc( &
        SQRT(tpiba2 * gcutm / 4.d0 / alpha) )
   IF (upperbound > 1.0d-7) GOTO 100
   !
@@ -167,7 +166,7 @@ FUNCTION ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
            DO nr = 1, nrm
               rr = SQRT(r2(nr)) * alat
               ewaldr = ewaldr + zv(ityp(na)) * zv(ityp(nb)) * &
-                       qe_erfc(SQRT(alpha) * rr) / rr
+                       erfc(SQRT(alpha) * rr) / rr
            ENDDO
         ENDDO
      ENDDO

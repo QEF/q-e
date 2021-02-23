@@ -337,8 +337,9 @@ CONTAINS
         !
         IF ( n_ext_params /= 0 ) THEN       
           WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends",&
-                        &/5X," on external parameters: the correct operation in",&
-                        &/5X," QE is not guaranteed with default values.")' ) id_vec(ii)
+                        &/5X," on external parameters: check the user_guide of",&
+                        &/5X," QE if you need to modify them or to check their", &
+                        &/5x," default values.")' ) id_vec(ii)
         ENDIF
         IF ( flag_v(1) == 0 ) THEN
           WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
@@ -1255,11 +1256,12 @@ CONTAINS
         CALL xc_f03_func_init( xc_func(iid), id_vec(iid), xclib_nspin )
         xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
-        p0 = 1  ;  pn = n_ext_params(iid)
 #if (XC_MAJOR_VERSION<=5)
-        p0 = 0  ;  pn = pn-1
+        p0 = 0  ;  pn = n_ext_params(iid)-1
+#else
+        p0 = 1  ;  pn = n_ext_params(iid)
 #endif
-        DO ip = 1, n_ext_params(iid)
+        DO ip = p0, pn
           par_list(iid,ip) = xc_f03_func_info_get_ext_params_default_value( &
                                                            xc_info(iid), ip )
         ENDDO

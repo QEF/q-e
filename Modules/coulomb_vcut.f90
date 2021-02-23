@@ -262,7 +262,6 @@ END FUNCTION vcut_formula
   logical, parameter :: shifted=.false.
   integer :: n1max
   real(dp) :: i1_real,i2_real,i3_real
-  real(DP), external :: qe_erf
 
   n1=security*sqrt(sum(a(:,1)**2))*sigma
   n2=security*sqrt(sum(a(:,2)**2))*sigma
@@ -314,7 +313,7 @@ END FUNCTION vcut_formula
         if(modr*sigma<eps6) then
           tmp=e2*sqrt(2.0/pi)*sigma
         else
-          tmp=e2*qe_erf(sigma*sqrt(0.5)*modr)/modr
+          tmp=e2*ERF(sigma*sqrt(0.5)*modr)/modr
         end if
         res=res+weight*factor*tmp*cos(sum(r*q))
       end do

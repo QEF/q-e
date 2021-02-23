@@ -802,14 +802,16 @@ Alternatively, the link to \libxc\ can be activated after the configuration of  
 \begin{itemize}
 	\item add \texttt{-D\_\_LIBXC} to \texttt{DFLAGS}
 	\item add \texttt{-I/path/to/libxc/include/} to \texttt{IFLAGS}
-	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc}
-\end{itemize}
-Then \qe\ can be compiled as usual. If the version of \libxc\ is older than 5.0.0, the last point must be replaced by:
-\begin{itemize}
 	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc}
 \end{itemize}
-\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be replaced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
+Then \qe\ can be compiled as usual.
 
+\paragraph{Note for version 5.0.0:} if the version of \libxc\ is 5.0.0, the last point must be replaced by:
+\begin{itemize}
+	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc}
+\end{itemize}
+since the \texttt{f03} interfaces are no longer available. They have been restored in following releases. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be replaced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
+ 
 \subsubsection{Usage}
 In order to use \libxc\ functionals, you must enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. For example, to use the \libxc\ version of the PBE functionals (both exchange and correlation):
 \begin{verbatim}
@@ -1025,12 +1027,7 @@ the last written output file to understand why.
 \subsubsection{All architectures}
 \begin{itemize}
 \item
-Working Fortran and C compilers, compliant with F2003 and C89 standards
-(see Sec.\ref{Sec:Installation})
-respectively, are needed in order to compile \qe. Most recent Fortran
-compilers will do the job.
-
-C and Fortran compilers must be in your PATH.
+Working Fortran and C compilers must be present in your PATH.
 If \configure\ says that you have no working compiler, well,
 you have no working compiler, at least not in your PATH, and
 not among those recognized by \configure.
