@@ -1,3 +1,4 @@
+##NOTES##
 
 * Routines or utilities existing in two copies, one for QE and one for upflib:
   - randy
@@ -6,23 +7,30 @@
     simplified version, in module upf_invmat, file upf_invmat.f90
   - capital, lowercase, isnumeric, matches, version_compare
     in module upf_utils, file upf_utils.f90
-  - qe_erf
-    as upf_erf, in file upf_erf.f90
   - errore and infomsg
     as upf_error, in file upf_error.f90
-  The following modules have been (partially) duplicated:
-    - kinds      => upf_kinds  (only dp)
-    - parameters => upf_params
-    - constants  => upf_const
-    - ions_base  => upf_ions   (only ityp, nsp)
-    - spinorb    => upf_spinorb
-  Makefile simplified
 
-* Note:
-  - nsp is both in upf_ions and in uspp_param
+* Module variables that have been (partially) duplicated:
+   - kinds      => upf_kinds  (only dp)
+   - parameters => upf_params
+   - constants  => upf_const
+   - spinorb    => upf_spinorb
+
+* TO BE DONE: 
+  - ions_base points to upf_ions for variables na(npsx), nax, nat, ityp, nsp.
+    The latter points to uspp for nsp and to upf_params for npsx (this is
+    similar to but not exactly the same as variables ntypx in ions_base)
+    These variables are however used in a very few places inside upflib:
+    init_at_1.f90:  USE upf_ions,     ONLY : ntyp => nsp
+    init_us_1.f90:  USE upf_ions,     ONLY : ntyp => nsp, ityp, nat
+    init_us_1.f90:  USE upf_ions,     ONLY : ntyp => nsp
+    init_us_2_base.f90:  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
+    init_us_2_base_gpu.f90:  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
+    while na, nax are never used
+  - first step: pass ntyp, nat, ityp as arguments, remove reference to upf_ions
+  - second step: nsp becomes an internal variable, not to be exported
+  - finally, upf_ions can be deleted and its variables moved back to ions_base
   - lmaxx and lqmax are both in upf_params and in spinorb
-  - upf_erf is likely obsolete: the erf function should be standard fortran
-    and work for all compilers (wasn't true years ago)
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
