@@ -9,22 +9,21 @@
 !----------------------------------------------------------------------------
 MODULE basic_algebra_routines
   !----------------------------------------------------------------------------
+  !! Written by Carlo Sbraccia ( 16/12/2003 )
   !
-  ! ... Written by Carlo Sbraccia ( 16/12/2003 )
+  !! This module contains a limited number of functions and operators
+  !! for vectorial algebra. Wherever possible the appropriate BLAS routine
+  !! ( always the double precision version ) is used.
   !
-  ! ... This module contains a limited number of functions and operators
-  ! ... for vectorial algebra. Wherever possible the appropriate BLAS routine
-  ! ... ( always the double precision version ) is used.
+  !! List of public methods :
   !
-  ! ... List of public methods :
-  !
-  !  x .dot. y          dot product between vectors ( <x|y> )
-  !  x .ext. y          external (vector) product between vectors ( <x|y> )
-  !  norm( x )          norm of a vector ( SQRT(<x|x>) )
-  !  A .times. x        matrix-vector multiplication ( A|x> )
-  !  x .times. A        vector-matrix multiplication ( <x|A )
-  !  matrix( x, y )     vector-vector multiplication ( |x><y| )
-  !  identity( N )      identity matrix of rank N
+  !!  * x .dot. y          dot product between vectors ( <x|y> )
+  !!  * x .ext. y          external (vector) product between vectors ( <x|y> )
+  !!  * norm( x )          norm of a vector ( SQRT(<x|x>) )
+  !!  * A .times. x        matrix-vector multiplication ( A|x> )
+  !!  * x .times. A        vector-matrix multiplication ( <x|A )
+  !!  * matrix( x, y )     vector-vector multiplication ( |x><y| )
+  !!  * identity( N )      identity matrix of rank N
   !
   USE kinds,  ONLY : DP
   !
