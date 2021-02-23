@@ -2,7 +2,7 @@
 
 include ../make.inc
 
-MODFLAGS= $(BASEMOD_FLAGS)
+MODFLAGS= $(MOD_FLAG)$(TOPDIR)/upflib
 
 XCL = \
 xclib_utils_and_para.o \
@@ -33,9 +33,6 @@ BEEF = \
 pbecor.o \
 beefun.o
 
-UPFF = \
-../upflib/libupf.a
-
 all: xc_lib.a
 
 xc_lib.a: $(XCL) $(BEEF)
@@ -43,8 +40,8 @@ xc_lib.a: $(XCL) $(BEEF)
 	$(RANLIB) $@
 
 xclib_test.x : xclib_test.o xc_lib.a
-	$(LD) $(UPFF) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		xclib_test.o xc_lib.a $(UPFF) $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
+	$(LD) ../upflib/libupf.a $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
+		xclib_test.o xc_lib.a ../upflib/libupf.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 test : xclib_test.x
