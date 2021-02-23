@@ -26,22 +26,31 @@ Four options available:
                 test='dft-info'
                 dft1='mgga_x_scan mgga_c_scan'
             /
-    
-* gen-benchmark: the program generates a set of data to compare the
-                 XC output to.
+      
+* gen-benchmark: the program generates an xml file with a set of data
+                 to compare the XC output to. No need to add the 
+                 '> output_file' to the submission.
                  Example of input file content:
                  
                  &INPUT_NAMELIST
                     test='gen-benchmark'
+                    filename_xml='test_gga.xml'
                     family='GGA'
                     dft1='PBE'
-                    nspin=2
+                    nspin=1
                     DF_OK=.FALSE.
                  /
 
-* exe-benchmark: the program takes as input the data file generated
+* exe-benchmark: the program reads the xml data file generated
                  previously with the 'gen-benchmark' option and
                  compares the output of the XC routines.
+                 Example of input file:
+                 
+                 &INPUT_NAMELIST
+                    test='exe-benchmark'
+                    filename_xml='test_gga.xml'
+                    dft2='PBE'
+                 /
 
 * dft-comparison: the program compares two different DFTs on a large 
                   grid of points. Max, min and average percentage 

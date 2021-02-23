@@ -157,7 +157,7 @@ PROGRAM xclib_test
   REAL(DP) :: vaver(2), vmax(2), vmin(2)
   ! ... xml
   CHARACTER(LEN=1) :: dummy
-  CHARACTER(LEN=8) :: filename="bnch.xml"
+  CHARACTER(LEN=30) :: filename_xml=""
   INTEGER :: iunpun, iun
   LOGICAL :: found
   !
@@ -172,7 +172,7 @@ PROGRAM xclib_test
   INTEGER :: PROVIDED
 #endif
   !
-  NAMELIST/input_namelist/ test, nspin, family, DF_OK, dft1, dft2
+  NAMELIST/input_namelist/ test, filename_xml, nspin, family, DF_OK, dft1, dft2
   !
 #if defined(__MPI)
   !
@@ -218,12 +218,11 @@ PROGRAM xclib_test
     !
     IF ( test(1:4)=='gen-' ) THEN
       !
-      iunpun = xml_openfile( "./"//TRIM(filename) )
+      iunpun = xml_openfile( "./"//TRIM(filename_xml) )
       IF ( iunpun == -1 ) RETURN
       !
       CALL xmlw_opentag( "XCTEST-DATA-SET" )
       CALL add_attr( "DFT1", dft1 )
-      CALL add_attr( "DFT2", dft1 )
       CALL add_attr( "FAMILY", family )
       CALL add_attr( "VXC_DERIVATIVE", DF_OK )
       CALL add_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
@@ -231,26 +230,27 @@ PROGRAM xclib_test
       !
     ELSEIF ( test(1:4)=='exe-' ) THEN
       !
-      INQUIRE( FILE = filename, exist=found )
+      INQUIRE( FILE = filename_xml, exist=found )
       IF (.NOT. found ) THEN
         ierr=1
         CALL xclib_infomsg( 'xclib_test', 'xml data file not found' )
       ENDIF
       !
-      iun = xml_openfile( filename )
+      iun = xml_openfile( filename_xml )
       IF ( iun==-1 ) THEN
         ierr=2
         CALL xclib_infomsg( 'xclib_test', 'xml data file not readable' )
       ENDIF
       !
       CALL xmlr_opentag( "XCTEST-DATA-SET" )
-      ! 
-      CALL xmlr_readtag ("HEADER", dummy)
+      !
+      CALL xmlr_readtag( "HEADER", dummy )
       CALL get_attr( "DFT1", dft1 )
-      CALL get_attr( "DFT2", dft2 )
       CALL get_attr( "FAMILY", family )
       CALL get_attr( "VXC_DERIVATIVE", DF_OK )
       CALL get_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
+      !
+      IF ( TRIM(dft2)=='none' ) dft2=dft1
       !
     ENDIF
   ENDIF
