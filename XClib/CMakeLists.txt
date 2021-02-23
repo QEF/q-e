@@ -62,6 +62,7 @@ if(QE_ENABLE_TEST)
         PRIVATE
             qe_openmp_fortran
             qe_mpi_fortran
+            qe_upflib
             qe_external_libxc
             qe_xclib)
 

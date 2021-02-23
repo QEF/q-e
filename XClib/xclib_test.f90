@@ -155,15 +155,11 @@ PROGRAM xclib_test
   !
   REAL(DP) :: aver_sndu, aver_recu
   REAL(DP) :: vaver(2), vmax(2), vmin(2)
-  !
-  
-  !--xml
+  ! ... xml
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=8) :: filename="bnch.xml"
-  integer :: iunpun, iun
+  INTEGER :: iunpun, iun
   LOGICAL :: found
-  !
-  
   !
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: proc_name(:)
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: node_name(:)
@@ -178,18 +174,6 @@ PROGRAM xclib_test
   !
   NAMELIST/input_namelist/ test, nspin, family, DF_OK, dft1, dft2
   !
-  NAMELIST/lda_benchmark_data /ex_aver_b, ec_aver_b, vx_aver_b, vc_aver_b,    &
-                               ex2, ec2, vx2, vc2
-  NAMELIST/dlda_benchmark_data/dv_aver_b, dmuxc2
-  NAMELIST/gga_benchmark_data /ex_aver_b, ec_aver_b, v1x_aver_b, v1c_aver_b,  &
-                               v2x_aver_b, v2c_aver_b,v2c_ud1_aver, ex2, ec2, &
-                               v1x2, v1c2, v2x2, v2c2, v2c_ud2
-  NAMELIST/dgga_benchmark_data/dvrr_aver_b, dvsr_aver_b, dvss_aver_b,dvxcrr2, &
-                               dvxcsr2, dvxcss2
-  NAMELIST/mgga_benchmark_data/ex_aver_b, ec_aver_b, ex_aver_b, ec_aver_b,    &
-                               v1x_aver_b, v1c_aver_b, v2x_aver_b, v2c_aver_b,&
-                               v3x_aver_b, v3c_aver_b, ex2, ec2, v1x2, v1c2,  &
-                               v2x2, v2c2, v3x2, v3c2
 #if defined(__MPI)
   !
 #if defined(_OPENMP)
@@ -234,22 +218,16 @@ PROGRAM xclib_test
     !
     IF ( test(1:4)=='gen-' ) THEN
       !
-      IF ( family=='LDA' ) THEN
-        iunpun = xml_openfile( "./"//TRIM(filename) )
-        IF ( iunpun == -1 ) RETURN
-        !
-        CALL xmlw_opentag( "XCTEST-DATA-SET" )
-        CALL add_attr( "DFT1", dft1 )
-        CALL add_attr( "DFT2", dft1 )
-        CALL add_attr( "FAMILY", family )
-        CALL add_attr( "VXC_DERIVATIVE", DF_OK )
-        CALL add_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
-        CALL xmlw_writetag( "HEADER", "" )
-      ELSE
-        test = 'exe-benchmark'
-        WRITE( stdout, input_namelist )
-        test = 'gen-benchmark'
-      ENDIF
+      iunpun = xml_openfile( "./"//TRIM(filename) )
+      IF ( iunpun == -1 ) RETURN
+      !
+      CALL xmlw_opentag( "XCTEST-DATA-SET" )
+      CALL add_attr( "DFT1", dft1 )
+      CALL add_attr( "DFT2", dft1 )
+      CALL add_attr( "FAMILY", family )
+      CALL add_attr( "VXC_DERIVATIVE", DF_OK )
+      CALL add_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
+      CALL xmlw_writetag( "HEADER", "" )
       !
     ELSEIF ( test(1:4)=='exe-' ) THEN
       !
@@ -678,29 +656,55 @@ PROGRAM xclib_test
   !
   IF (test=='exe-benchmark' .AND. mype==root) THEN
     IF (.NOT. DF_OK) THEN
-    
-      !--xml
-      IF (family=='LDA' ) THEN
-        CALL xmlr_opentag( "XC_DATA" )
-        CALL xmlr_readtag( "EX_AVER", ex_aver_b(:) )
-        CALL xmlr_readtag( "EC_AVER", ec_aver_b(:) )
+      CALL xmlr_opentag( "XC_DATA" )
+      CALL xmlr_readtag( "EX_AVER", ex_aver_b(:) )
+      CALL xmlr_readtag( "EC_AVER", ec_aver_b(:) )
+      IF ( family=='LDA' ) THEN
         CALL xmlr_readtag( "VX_AVER", vx_aver_b(:,:) )
         CALL xmlr_readtag( "VC_AVER", vc_aver_b(:,:) )
-        CALL xmlr_readtag( "EX", ex2(:) )
-        CALL xmlr_readtag( "EC", ec2(:) )
-        CALL xmlr_readtag( "VX", vx2(:,:) )
-        CALL xmlr_readtag( "VC", vc2(:,:) )
-        CALL xmlr_closetag()
-        CALL xmlr_closetag()
+      ELSE
+        CALL xmlr_readtag( "V1X_AVER", v1x_aver_b(:,:) )
+        CALL xmlr_readtag( "V1C_AVER", v1c_aver_b(:,:) )
+        CALL xmlr_readtag( "V2X_AVER", v2x_aver_b(:,:) )
+        CALL xmlr_readtag( "V2C_AVER", v2c_aver_b(:,:) )
+        IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
+        IF ( family=='MGGA' ) THEN
+          CALL xmlr_readtag( "V3X_AVER", v3x_aver_b(:,:) )
+          CALL xmlr_readtag( "V3C_AVER", v3c_aver_b(:,:) )
+        ENDIF
       ENDIF
-      !
-      
-      IF (family=='GGA' ) READ(stdin, gga_benchmark_data)
-      IF (family=='MGGA') READ(stdin, mgga_benchmark_data)
-    ELSE
-      IF (family=='LDA')  READ(stdin, dlda_benchmark_data)
-      IF (family=='GGA')  READ(stdin, dgga_benchmark_data)
+      CALL xmlr_readtag( "EX", ex2(:) )
+      CALL xmlr_readtag( "EC", ec2(:) )
+      IF ( family=='LDA' ) THEN
+        CALL xmlr_readtag( "VX", vx2(:,:) )
+        CALL xmlr_readtag( "VC", vc2(:,:) )        
+      ELSE
+        CALL xmlr_readtag( "V1X", v1x2(:,:) )
+        CALL xmlr_readtag( "V1C", v1c2(:,:) )
+        CALL xmlr_readtag( "V2X", v2x2(:,:) )
+        CALL xmlr_readtag( "V2C", v2c2(:,:) )
+        IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
+        IF ( family=='MGGA' ) THEN
+          CALL xmlr_readtag( "V3X", v3x2(:,:) )
+          CALL xmlr_readtag( "V3C", v3c2(:,:) )
+        ENDIF  
+      ENDIF
+    ELSE !DF_OK
+      CALL xmlr_opentag( "dXC_DATA" )
+      IF (family=='LDA') THEN 
+        CALL xmlr_readtag( "dV_AVER", dv_aver_b(:) )
+        CALL xmlr_readtag( "dV", dmuxc2(:,:,:) )
+      ELSE
+        CALL xmlr_readtag( "dVrr_AVER", dvrr_aver_b(:,:) )
+        CALL xmlr_readtag( "dVsr_AVER", dvsr_aver_b(:,:) )
+        CALL xmlr_readtag( "dVss_AVER", dvss_aver_b(:,:) )
+        CALL xmlr_readtag( "dVXCrr", dvxcrr2(:,:,:) )
+        CALL xmlr_readtag( "dVXCsr", dvxcsr2(:,:,:) )
+        CALL xmlr_readtag( "dVXCss", dvxcss2(:,:,:) )
+      ENDIF
     ENDIF
+    CALL xmlr_closetag()
+    CALL xmlr_closetag()
   ENDIF
   !
   !==========================================================================
@@ -1377,36 +1381,58 @@ PROGRAM xclib_test
      ! 
   ENDIF
   !
-  
-  !--xml
   IF (test=='gen-benchmark' .AND. mype==root) THEN
     IF (.NOT. DF_OK) THEN
-     
-      !
+      CALL xmlw_opentag( "XC_DATA" )
+      CALL xmlw_writetag( "EX_AVER", ex_aver_b(:) )
+      CALL xmlw_writetag( "EC_AVER", ec_aver_b(:) )
       IF ( family=='LDA' ) THEN
-        CALL xmlw_opentag( "XC_DATA" )
-        CALL xmlw_writetag( "EX_AVER", ex_aver_b(:) )
-        CALL xmlw_writetag( "EC_AVER", ec_aver_b(:) )
         CALL xmlw_writetag( "VX_AVER", vx_aver_b(:,:) )
         CALL xmlw_writetag( "VC_AVER", vc_aver_b(:,:) )
-        CALL xmlw_writetag( "EX", ex2(:) )
-        CALL xmlw_writetag( "EC", ec2(:) )
-        CALL xmlw_writetag( "VX", vx2(:,:) )
-        CALL xmlw_writetag( "VC", vc2(:,:) )
-        CALL xmlw_closetag()
-        CALL xmlw_closetag()
+      ELSE
+        CALL xmlw_writetag( "V1X_AVER", v1x_aver_b(:,:) )
+        CALL xmlw_writetag( "V1C_AVER", v1c_aver_b(:,:) )
+        CALL xmlw_writetag( "V2X_AVER", v2x_aver_b(:,:) )
+        CALL xmlw_writetag( "V2C_AVER", v2c_aver_b(:,:) )
+        IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
+        IF ( family=='MGGA' ) THEN
+          CALL xmlw_writetag( "V3X_AVER", v3x_aver_b(:,:) )
+          CALL xmlw_writetag( "V3C_AVER", v3c_aver_b(:,:) )
+        ENDIF
       ENDIF
-      !
-      
-      IF ( family=='GGA' ) WRITE(stdout,gga_benchmark_data)
-      IF ( family=='MGGA') WRITE(stdout,mgga_benchmark_data)
-    ELSE
-      IF ( family=='LDA' ) WRITE(stdout,dlda_benchmark_data)
-      IF ( family=='GGA' ) WRITE(stdout,dgga_benchmark_data)
+      CALL xmlw_writetag( "EX", ex2(:) )
+      CALL xmlw_writetag( "EC", ec2(:) )
+      IF ( family=='LDA' ) THEN
+        CALL xmlw_writetag( "VX", vx2(:,:) )
+        CALL xmlw_writetag( "VC", vc2(:,:) )        
+      ELSE
+        CALL xmlw_writetag( "V1X", v1x2(:,:) )
+        CALL xmlw_writetag( "V1C", v1c2(:,:) )
+        CALL xmlw_writetag( "V2X", v2x2(:,:) )
+        CALL xmlw_writetag( "V2C", v2c2(:,:) )
+        IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud", v2c_ud2(:) )
+        IF ( family=='MGGA' ) THEN
+          CALL xmlw_writetag( "V3X", v3x2(:,:) )
+          CALL xmlw_writetag( "V3C", v3c2(:,:) )
+        ENDIF  
+      ENDIF
+    ELSE !DF_OK
+      CALL xmlw_opentag( "dXC_DATA" )
+      IF (family=='LDA') THEN 
+        CALL xmlw_writetag( "dV_AVER", dv_aver_b(:) )
+        CALL xmlw_writetag( "dV", dmuxc2(:,:,:) )
+      ELSE
+        CALL xmlw_writetag( "dVrr_AVER", dvrr_aver_b(:,:) )
+        CALL xmlw_writetag( "dVsr_AVER", dvsr_aver_b(:,:) )
+        CALL xmlw_writetag( "dVss_AVER", dvss_aver_b(:,:) )
+        CALL xmlw_writetag( "dVXCrr", dvxcrr2(:,:,:) )
+        CALL xmlw_writetag( "dVXCsr", dvxcsr2(:,:,:) )
+        CALL xmlw_writetag( "dVXCss", dvxcss2(:,:,:) )
+      ENDIF
     ENDIF
-  ENDIF  
-  !
-  
+    CALL xmlw_closetag()
+    CALL xmlw_closetag()
+  ENDIF 
   !
   401 FORMAT('rho: ',F17.14)
   402 FORMAT('rho(up,down): ',F17.14,4x,F17.14)
