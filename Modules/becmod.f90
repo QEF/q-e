@@ -9,10 +9,12 @@
 !
 MODULE becmod
   !
-  ! ... *bec* contain <beta|psi> - used in h_psi, s_psi, many other places
-  ! ... calbec( npw, beta, psi, betapsi [, nbnd ] ) is an interface calculating
-  ! ...    betapsi(i,j)  = <beta(i)|psi(j)>   (the sum is over npw components)
-  ! ... or betapsi(i,s,j)= <beta(i)|psi(s,j)> (s=polarization index)
+  !! \(\textit{bec}\) contains <beta|psi> - used in \(\texttt{h_psi}\),
+  !! \(\texttt{s_psi}\), many other places.  
+  !! \(\texttt{calbec( npw, beta, psi, betapsi [, nbnd ] )}\) is an interface
+  !! calculating \(\text{betapsi}(i,j)  = <beta(i)|psi(j)> \) (the sum is over npw 
+  !! components) or \( \text{betapsi}(i,s,j)= <beta(i)|psi(s,j)>\) (s=polarization
+  !! index)
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : gamma_only, smallmem
@@ -22,9 +24,12 @@ MODULE becmod
   SAVE
   !
   TYPE bec_type
-     REAL(DP),   ALLOCATABLE :: r(:,:)    ! appropriate for gammaonly
-     COMPLEX(DP),ALLOCATABLE :: k(:,:)    ! appropriate for generic k
-     COMPLEX(DP),ALLOCATABLE :: nc(:,:,:)   ! appropriate for noncolin
+     REAL(DP),   ALLOCATABLE :: r(:,:)
+     !! appropriate for gammaonly
+     COMPLEX(DP),ALLOCATABLE :: k(:,:)
+     !! appropriate for generic k
+     COMPLEX(DP),ALLOCATABLE :: nc(:,:,:)
+     !! appropriate for noncolin
      INTEGER :: comm
      INTEGER :: nbnd
      INTEGER :: nproc
@@ -139,13 +144,13 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd, comm )
     !-----------------------------------------------------------------------
+    !! matrix times matrix with summation index (k=1,npw) running on
+    !! half of the G-vectors or PWs - assuming k=0 is the G=0 component:
     !
-    ! ... matrix times matrix with summation index (k=1,npw) running on
-    ! ... half of the G-vectors or PWs - assuming k=0 is the G=0 component:
-    ! ... betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j)
+    !! $$ betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j) $$
     !
     USE mp,        ONLY : mp_sum
-
+    !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
@@ -198,9 +203,9 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_k ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
-    !
-    ! ... matrix times matrix with summation index (k=1,npw) running on
-    ! ... G-vectors or PWs : betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)
+    !! Matrix times matrix with summation index (k=1,npw) running on
+    !! G-vectors or PWs:
+    !! $$ betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)$$
     !
     USE mp_bands, ONLY : intra_bgrp_comm
     USE mp,       ONLY : mp_sum
@@ -256,11 +261,11 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_nc ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
+    !! Matrix times matrix with summation index (k below) running on
+    !! G-vectors or PWs corresponding to two different polarizations:
     !
-    ! ... matrix times matrix with summation index (k below) running on
-    ! ... G-vectors or PWs corresponding to two different polarizations:
-    ! ... betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)
-    ! ... betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)
+    !! * \(betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)\)
+    !! * \(betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)\)
     !
     USE mp_bands, ONLY : intra_bgrp_comm
     USE mp,       ONLY : mp_sum
