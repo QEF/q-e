@@ -8,40 +8,37 @@
 !----------------------------------------------------------------------------
 MODULE bfgs_module
    !----------------------------------------------------------------------------
+   !! Ionic relaxation through the Newton-Raphson optimization scheme
+   !! based on the Broyden-Fletcher-Goldfarb-Shanno algorithm for the
+   !! estimate of the inverse Hessian matrix.  
+   !! The ionic relaxation is performed converting cartesian (and cell) 
+   !! positions into internal coordinates.  
+   !! The algorithm uses a "trust radius" line search based on Wolfe 
+   !! conditions. Steps are rejected until the first Wolfe condition
+   !! (sufficient energy decrease) is satisfied. Updated step length
+   !! is estimated from quadratic interpolation.  
+   !! When the step is accepted inverse hessian is updated according to 
+   !! BFGS scheme and a new search direction is obtained from NR or GDIIS
+   !! method. The corresponding step length is limited by trust_radius_max 
+   !! and can't be larger than the previous step multiplied by a certain 
+   !! factor determined by Wolfe and other convergence conditions.
    !
-   ! ... Ionic relaxation through the Newton-Raphson optimization scheme
-   ! ... based on the Broyden-Fletcher-Goldfarb-Shanno algorithm for the
-   ! ... estimate of the inverse Hessian matrix.
-   ! ... The ionic relaxation is performed converting cartesian (and cell) 
-   ! ... positions into internal coordinates.
-   ! ... The algorithm uses a "trust radius" line search based on Wolfe 
-   ! ... conditions. Steps are rejected until the first Wolfe condition
-   ! ... (sufficient energy decrease) is satisfied. Updated step length
-   ! ... is estimated from quadratic interpolation. 
-   ! ... When the step is accepted inverse hessian is updated according to 
-   ! ... BFGS scheme and a new search direction is obtained from NR or GDIIS
-   ! ... method. The corresponding step length is limited by trust_radius_max 
-   ! ... and can't be larger than the previous step multiplied by a certain 
-   ! ... factor determined by Wolfe and other convergence conditions.
+   !! Originally written (5/12/2003) and maintained (2003-2007) by 
+   !! Carlo Sbraccia.  
+   !! Modified for variable-cell-shape relaxation (2007-2008) by 
+   !! Javier Antonio Montoya, Lorenzo Paulatto and Stefano de Gironcoli.  
+   !! Re-analyzed by Stefano de Gironcoli (2010).  
+   !! FCP case added by Minoru Otani and collaborators (2020).
    !
-   ! ... Originally written ( 5/12/2003 ) and maintained ( 2003-2007 ) by 
-   ! ... Carlo Sbraccia
-   ! ... Modified for variable-cell-shape relaxation ( 2007-2008 ) by 
-   ! ...   Javier Antonio Montoya, Lorenzo Paulatto and Stefano de Gironcoli
-   ! ... Re-analyzed by Stefano de Gironcoli ( 2010 )
-   ! ... FCP case added by Minoru Otani and collaborators (2020)
-   !
-   ! ... references :
-   !
-   ! ... 1) Roger Fletcher, Practical Methods of Optimization, John Wiley and
-   ! ...    Sons, Chichester, 2nd edn, 1987.
-   ! ... 2) Salomon R. Billeter, Alexander J. Turner, Walter Thiel,
-   ! ...    Phys. Chem. Chem. Phys. 2, 2177 (2000).
-   ! ... 3) Salomon R. Billeter, Alessandro Curioni, Wanda Andreoni,
-   ! ...    Comput. Mat. Science 27, 437, (2003).
-   ! ... 4) Ren Weiqing, PhD Thesis: Numerical Methods for the Study of Energy
-   ! ...    Landscapes and Rare Events.
-   !
+   !! References:  
+   !! 1) Roger Fletcher, Practical Methods of Optimization, John Wiley and
+   !!    Sons, Chichester, 2nd edn, 1987.  
+   !! 2) Salomon R. Billeter, Alexander J. Turner, Walter Thiel,
+   !!    Phys. Chem. Chem. Phys. 2, 2177 (2000).  
+   !! 3) Salomon R. Billeter, Alessandro Curioni, Wanda Andreoni,
+   !!    Comput. Mat. Science 27, 437, (2003).  
+   !! 4) Ren Weiqing, PhD Thesis: Numerical Methods for the Study of Energy
+   !!    Landscapes and Rare Events.
    !
    USE kinds,     ONLY : DP
    USE constants, ONLY : eps4, eps8, eps16, RYTOEV
@@ -66,56 +63,77 @@ MODULE bfgs_module
    CHARACTER (len=320):: bfgs_file=" "
    !! name of file (with path) used to store and retrieve the status
    !
-   REAL(DP), ALLOCATABLE :: &
-      pos(:),            &! positions + cell
-      grad(:),           &! gradients + cell_force
-      pos_p(:),          &! positions at the previous accepted iteration
-      grad_p(:),         &! gradients at the previous accepted iteration
-      inv_hess(:,:),     &! inverse hessian matrix (updated using BFGS formula)
-      metric(:,:),       &
-      inv_metric(:,:),   &
-      h_block(:,:),      &
-      hinv_block(:,:),   &
-      step(:),           &! the (new) search direction (normalized NR step)
-      step_old(:),       &! the previous search direction (normalized NR step)
-      pos_old(:,:),      &! list of m old positions - used only by gdiis
-      grad_old(:,:),     &! list of m old gradients - used only by gdiis
-      pos_best(:)         ! best extrapolated positions - used only by gdiis
-   REAL(DP) :: &
-      nr_step_length,    &! length of (new) Newton-Raphson step
-      nr_step_length_old,&! length of previous Newton-Raphson step
-      trust_radius,      &! new displacement along the search direction
-      trust_radius_old,  &! old displacement along the search direction
-      energy_p            ! energy at previous accepted iteration
-   INTEGER :: &
-      scf_iter,          &! number of scf iterations
-      bfgs_iter,         &! number of bfgs iterations
-      gdiis_iter,        &! number of gdiis iterations
-      tr_min_hit = 0      ! set to 1 if the trust_radius has already been
-                          ! set to the minimum value at the previous step
-                          ! set to 2 if trust_radius is reset again: exit
-   LOGICAL :: &
-      conv_bfgs = .FALSE. ! .TRUE. when bfgs convergence has been achieved
+   REAL(DP), ALLOCATABLE :: pos(:)
+   !! positions + cell
+   REAL(DP), ALLOCATABLE :: grad(:)
+   !! gradients + cell_force
+   REAL(DP), ALLOCATABLE :: pos_p(:)
+   !! positions at the previous accepted iteration
+   REAL(DP), ALLOCATABLE :: grad_p(:)
+   !! gradients at the previous accepted iteration
+   REAL(DP), ALLOCATABLE :: inv_hess(:,:)
+   !! inverse hessian matrix (updated using BFGS formula)
+   REAL(DP), ALLOCATABLE :: metric(:,:)
+   REAL(DP), ALLOCATABLE :: inv_metric(:,:)
+   REAL(DP), ALLOCATABLE :: h_block(:,:)
+   REAL(DP), ALLOCATABLE :: hinv_block(:,:)
+   REAL(DP), ALLOCATABLE :: step(:)
+   !! the (new) search direction (normalized NR step)
+   REAL(DP), ALLOCATABLE :: step_old(:)
+   !! the previous search direction (normalized NR step)
+   REAL(DP), ALLOCATABLE :: pos_old(:,:)
+   !! list of m old positions - used only by gdiis
+   REAL(DP), ALLOCATABLE :: grad_old(:,:)
+   !! list of m old gradients - used only by gdiis
+   REAL(DP), ALLOCATABLE :: pos_best(:)
+   !! best extrapolated positions - used only by gdiis
+   !
+   REAL(DP) :: nr_step_length
+   !! length of (new) Newton-Raphson step
+   REAL(DP) :: nr_step_length_old
+   !! length of previous Newton-Raphson step
+   REAL(DP) :: trust_radius
+   !! new displacement along the search direction
+   REAL(DP) :: trust_radius_old
+   !! old displacement along the search direction
+   REAL(DP) :: energy_p
+   !! energy at previous accepted iteration
+   !
+   INTEGER :: scf_iter
+   !! number of scf iterations
+   INTEGER :: bfgs_iter
+   !! number of bfgs iterations
+   INTEGER :: gdiis_iter
+   !! number of gdiis iterations
+   INTEGER :: tr_min_hit = 0
+   !! set to 1 if the trust_radius has already been set to the minimum value
+   !! at the previous step. Set to 2 if trust_radius is reset again: exit.
+   LOGICAL :: conv_bfgs = .FALSE.
+   !! .TRUE. when bfgs convergence has been achieved
    !
    ! ... default values for bfgs_ndim, trust_radius_max, trust_radius_min,
    ! ... trust_radius_ini, w_1, w_2, are set in Modules/read_namelist.f90
    ! ... (SUBROUTINE ions_defaults) and can be assigned in the input
    !
-   LOGICAL :: &
-      bfgs_initialized = .FALSE.
-   INTEGER :: &
-      stdout              ! standard output for writing
-   INTEGER :: &
-      bfgs_ndim           ! dimension of the subspace for GDIIS
-                          ! for standard BFGS algorithm, bfgs_ndim=1
-   REAL(DP)  :: &
-      trust_radius_ini,  &! suggested initial displacement
-      trust_radius_min,  &! minimum allowed displacement
-      trust_radius_max    ! maximum allowed displacement
-
-   REAL(DP)  ::          &! parameters for Wolfe conditions
-      w_1,               &! 1st Wolfe condition: sufficient energy decrease
-      w_2                 ! 2nd Wolfe condition: sufficient gradient decrease
+   LOGICAL :: bfgs_initialized = .FALSE.
+   INTEGER :: stdout
+   !! standard output for writing
+   INTEGER :: bfgs_ndim
+   !! dimension of the subspace for GDIIS for standard BFGS algorithm,
+   !! \(\text{bfgs_ndim}=1\)
+   REAL(DP) :: trust_radius_ini
+   !! suggested initial displacement
+   REAL(DP) :: trust_radius_min
+   !! minimum allowed displacement
+   REAL(DP) :: trust_radius_max
+   !! maximum allowed displacement
+   !
+   ! ... parameters for Wolfe conditions
+   !
+   REAL(DP) :: w_1
+   !! 1st Wolfe condition: sufficient energy decrease
+   REAL(DP) :: w_2
+   !! 2nd Wolfe condition: sufficient gradient decrease
    !
 CONTAINS
    !
@@ -123,8 +141,7 @@ CONTAINS
    SUBROUTINE init_bfgs( stdout_, bfgs_ndim_, trust_radius_max_, &
                    trust_radius_min_, trust_radius_ini_, w_1_, w_2_)
      !------------------------------------------------------------------------
-     !
-     ! ... set values for several parameters of the algorithm
+     !! set values for several parameters of the algorithm
      !
      INTEGER, INTENT(IN) :: &
           stdout_, &
@@ -146,57 +163,68 @@ CONTAINS
      bfgs_initialized  = .true.
      !
    END SUBROUTINE init_bfgs
-   !------------------------------------------------------------------------
    !
+   !------------------------------------------------------------------------
    SUBROUTINE bfgs( filebfgs, pos_in, h, nelec, energy, &
                    grad_in, fcell, iforceh, felec, &
                    energy_thr, grad_thr, cell_thr, fcp_thr, &
                    energy_error, grad_error, cell_error, fcp_error, &
                    lmovecell, lfcp, fcp_cap, fcp_hess, step_accepted, stop_bfgs, istep )
       !------------------------------------------------------------------------
-      !
-      ! ... list of input/output arguments :
-      !
-      !  filebfgs       : file name for storing and retrieving data
-      !  pos_in         : vector containing 3N coordinates of the system ( x )
-      !  h              : 3x3 matrix of the primitive lattice vectors
-      !  nelec          : number of elecrons (for FCP)
-      !  energy         : energy of the system ( V(x) )
-      !  grad           : vector containing 3N components of grad( V(x) )
-      !  fcell          : 3x3 matrix containing the stress tensor
-      !  iforceh        : 3x3 matrix containing cell constraints
-      !  energy_thr     : threshold on energy difference for BFGS convergence
-      !  grad_thr       : threshold on grad difference for BFGS convergence
-      !                   the largest component of grad( V(x) ) is considered
-      !  cell_thr       : threshold on grad of cell for BFGS convergence
-      !  fcp_thr        : treshold on grad of FCP for BFGS convergence
-      !  energy_error   : energy difference | V(x_i) - V(x_i-1) |
-      !  grad_error     : the largest component of
-      !                         | grad(V(x_i)) - grad(V(x_i-1)) |
-      !  cell_error     : the largest component of: omega*(stress-press*I)
-      !  fcp_error      : | grad(V(x_FCP)) |
-      !  step_accepted  : .TRUE. if a new BFGS step is done
-      !  stop_bfgs      : .TRUE. if BFGS convergence has been achieved
+      !! BFGS algorithm.
       !
       IMPLICIT NONE
       !
       REAL(DP),         INTENT(INOUT) :: pos_in(:)
+      !! vector containing 3N coordinates of the system ( x )
       REAL(DP),         INTENT(INOUT) :: h(3,3)
-      REAL(DP),         INTENT(INOUT) :: nelec ! number of electrons
+      !! 3x3 matrix of the primitive lattice vectors
+      REAL(DP),         INTENT(INOUT) :: nelec
+      !! number of electrons (for FCP)
       REAL(DP),         INTENT(INOUT) :: energy
+      !! energy of the system ( V(x) )
       REAL(DP),         INTENT(INOUT) :: grad_in(:)
+      !! vector containing 3N components of grad( V(x) )
       REAL(DP),         INTENT(INOUT) :: fcell(3,3)
-      REAL(DP),         INTENT(INOUT) :: felec ! force on FCP
+      !! 3x3 matrix containing the stress tensor
+      REAL(DP),         INTENT(INOUT) :: felec 
+      !! force on FCP
       CHARACTER(LEN=*), INTENT(IN)    :: filebfgs
-      REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr, cell_thr, fcp_thr
+      !! file name for storing and retrieving data
+      REAL(DP),         INTENT(IN)    :: energy_thr
+      !! threshold on energy difference for BFGS convergence
+      REAL(DP),         INTENT(IN)    :: grad_thr
+      !! threshold on grad difference for BFGS convergence
+      !! the largest component of grad( V(x) ) is considered
+      REAL(DP),         INTENT(IN)    :: cell_thr
+      !! threshold on grad of cell for BFGS convergence
+      REAL(DP),         INTENT(IN)    :: fcp_thr
+      !! treshold on grad of FCP for BFGS convergence
       INTEGER,          INTENT(IN)    :: iforceh(3,3)
+      !! 3x3 matrix containing cell constraints
       LOGICAL,          INTENT(IN)    :: lmovecell
-      LOGICAL,          INTENT(IN)    :: lfcp ! include FCP, or not ?
-      REAL(DP),         INTENT(IN)    :: fcp_cap ! capacitance for FCP
-      REAL(DP),         INTENT(IN)    :: fcp_hess ! hessian for FCP
-      REAL(DP),         INTENT(OUT)   :: energy_error, grad_error, cell_error, fcp_error
-      LOGICAL,          INTENT(OUT)   :: step_accepted, stop_bfgs
+      LOGICAL,          INTENT(IN)    :: lfcp
+      !! include FCP, or not ?
+      REAL(DP),         INTENT(IN)    :: fcp_cap
+      !! capacitance for FCP
+      REAL(DP),         INTENT(IN)    :: fcp_hess
+      !! hessian for FCP
+      REAL(DP),         INTENT(OUT)   :: energy_error
+      !! energy difference \(\| V(x_i) - V(x_{i-1}) \|\)
+      REAL(DP),         INTENT(OUT)   :: grad_error
+      !! the largest component of \(\|\text{grad}(V(x_i)) -
+      !! \text{grad}(V(x_{i-1}))\|\)
+      REAL(DP),         INTENT(OUT)   :: cell_error
+      !! the largest component of: omega*(stress-press*I)
+      REAL(DP),         INTENT(OUT)   :: fcp_error
+      !! \(\| \text{grad}(V(x_{FCP})) \|\)
+      LOGICAL,          INTENT(OUT)   :: step_accepted
+      !! .TRUE. if a new BFGS step is done
+      LOGICAL,          INTENT(OUT)   :: stop_bfgs
+      !! .TRUE. if BFGS convergence has been achieved
       INTEGER,          INTENT(OUT)   :: istep
+      !
+      ! ... local variables
       !
       INTEGER  :: n, i, j, k, nat
       LOGICAL  :: lwolfe
@@ -552,6 +580,8 @@ CONTAINS
       !--------------------------------------------------------------------
       SUBROUTINE gdiis_step()
          !--------------------------------------------------------------------
+         !! GDIIS extrapolation
+         !
          USE basic_algebra_routines
          IMPLICIT NONE
          !
@@ -651,8 +681,8 @@ CONTAINS
    !------------------------------------------------------------------------
    SUBROUTINE reset_bfgs( n, lfcp, fcp_hess )
       !------------------------------------------------------------------------
-      ! ... inv_hess in re-initialized to the initial guess 
-      ! ... defined as the inverse metric 
+      !! \(\text{inv_hess}\) in re-initialized to the initial guess 
+      !! defined as the inverse metric.
       !
       INTEGER, INTENT(IN) :: n
       LOGICAL,  INTENT(IN) :: lfcp
