@@ -36,6 +36,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE dv_of_drho_lr
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
+  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
+                                   apply_dpot_bands
  
   IMPLICIT NONE
   !
@@ -46,46 +48,30 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   ! Local variables
   !
   LOGICAL :: interaction1
-  INTEGER :: i,j,ir, ibnd, ig, ia, ios, is, incr, v_siz, ipol
+  INTEGER :: i,j,ir, ibnd, ig, ia, ios, is, ipol
   INTEGER :: ik,  &
              ikk, & ! index of the point k
              ikq, & ! index of the point k+q
              npwq   ! number of the plane-waves at point k+q
-  COMPLEX(DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), revc(:,:), &
+  COMPLEX(DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), &
                             & dvrsc(:,:), dvrssc(:,:), &
-                            & sevc1_new(:,:,:), &
+                            & sevc1_new(:,:,:)
   ! Change of the Hartree and exchange-correlation (HXC) potential
-                            & tg_psic(:,:), tg_dvrssc(:,:)
-  ! Task groups: wfct in R-space and the response HXC potential
   !
   CALL start_clock('lr_apply')
   !
   ALLOCATE (hpsi(npwx*npol,nbnd))
   ALLOCATE (spsi(npwx*npol,nbnd))
   ALLOCATE (sevc1_new(npwx*npol,nbnd,nksq))
-  ALLOCATE (revc(dffts%nnr,npol))
   ALLOCATE (dvrsc(dfftp%nnr,nspin_mag))
   ALLOCATE (dvrssc(dffts%nnr,nspin_mag))
   IF (.not. ALLOCATED(psic)) ALLOCATE(psic(dfftp%nnr))
+  CALL apply_dpot_allocate()
   hpsi(:,:)   = (0.d0,0.d0)
   spsi(:,:)   = (0.d0,0.d0)
-  revc(:,:)   = (0.d0,0.d0)
   dvrsc(:,:)  = (0.0d0,0.0d0)
   dvrssc(:,:) = (0.0d0,0.0d0)
   sevc1_new(:,:,:) = (0.0d0,0.0d0)
-  !
-  incr = 1
-  !
-  IF ( dffts%has_task_groups ) THEN
-     !
-     v_siz =  dffts%nnr_tg 
-     !
-     ALLOCATE( tg_dvrssc(v_siz,nspin_mag) )
-     ALLOCATE( tg_psic(v_siz,npol) )
-     !
-     incr = fftx_ntgrp(dffts)
-     !
-  ENDIF
   !
   IF (no_hxc) THEN
      interaction1 = .false.
@@ -164,9 +150,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      dpsi(:,:)  = (0.d0,0.d0)
      dvpsi(:,:) = (0.d0,0.d0)
      !
-     ! 1) Hartree and exchange-correlation term.  
-     !    The multiplication of the HXC potential dvrssc with
-     !    the unperturbed wavefunctions revc is done in R-space.
+     ! 1) Hartree and exchange-correlation term.
      !    If interaction1=.true. calculate HXC term
      !    If interaction1=.false. skip this step and go to 2)
      !
@@ -176,59 +160,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ! We need to redistribute it so that it is completely contained in the
         ! processors of an orbital TASK-GROUP.
         !
-        IF ( dffts%has_task_groups ) THEN
-           !
-           IF (noncolin) THEN
-              !
-              CALL tg_cgather( dffts, dvrssc(:,1), tg_dvrssc(:,1))
-              !
-              IF (domag) THEN
-                 DO ipol = 2, 4
-                    CALL tg_cgather( dffts, dvrssc(:,ipol), tg_dvrssc(:,ipol))
-                 ENDDO
-              ENDIF
-              !
-           ELSE
-              !
-              CALL tg_cgather( dffts, dvrssc(:,current_spin), tg_dvrssc(:,1))
-              !
-           ENDIF
-           !
-        ENDIF
-        !
-        DO ibnd = 1, nbnd_occ(ikk), incr
-           !
-           IF ( dffts%has_task_groups ) THEN
-              !
-              ! FFT to R-space
-              !
-              CALL cft_wave_tg(ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
-              !
-              ! Multiply the HXC potential with unperturbed wfct's
-              !
-              CALL apply_dpot(v_siz, tg_psic, tg_dvrssc, 1)
-              !
-              ! back-FFT to G-space
-              !
-              CALL cft_wave_tg(ik,dvpsi, tg_psic,-1, v_siz, ibnd, nbnd_occ(ikk))
-              !
-           ELSE
-              !
-              ! FFT to R-space
-              !
-              CALL cft_wave(ik, evc(1,ibnd), revc, +1)
-              !
-              ! Multiply the HXC potential with unperturbed wfct's 
-              !
-              CALL apply_dpot(dffts%nnr, revc, dvrssc, current_spin)
-              !
-              ! back-FFT to G-space
-              !
-              CALL cft_wave(ik, dvpsi(1,ibnd), revc, -1)
-              !
-           ENDIF
-           !
-        ENDDO
+        CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvrssc, evc, dvpsi)
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
@@ -296,18 +228,13 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      !
   ENDDO ! loop on ik
   !
+  CALL apply_dpot_deallocate()
   DEALLOCATE (dvrsc)
-  DEALLOCATE (dvrssc) 
+  DEALLOCATE (dvrssc)
   DEALLOCATE (hpsi)
   DEALLOCATE (spsi)
-  DEALLOCATE (revc)
   DEALLOCATE (sevc1_new)
   IF (ALLOCATED(psic)) DEALLOCATE(psic)
-  !
-  IF ( dffts%has_task_groups ) THEN
-     DEALLOCATE( tg_dvrssc )
-     DEALLOCATE( tg_psic )
-  ENDIF
   !
   IF (interaction1)      CALL stop_clock('lr_apply_int')
   IF (.NOT.interaction1) CALL stop_clock('lr_apply_no')

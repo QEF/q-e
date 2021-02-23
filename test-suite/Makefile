@@ -128,7 +128,7 @@ create-reference-epw : pseudo prolog
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
 
 
-compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt
+compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt compare-hp
 
 compare-cp : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=cp_all  --verbose compare 2>&1 | tee out.CP.`date +%Y%m%d_%H%M%S`
@@ -144,6 +144,9 @@ compare-epw : prolog
 
 compare-tddfpt : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=tddfpt_all  --verbose compare 2>&1 | tee out.TDDFPT.`date +%Y%m%d_%H%M%S`
+
+compare-hp : prolog
+	${TESTCODE_DIR}/bin/testcode.py --category=hp_all  --verbose compare 2>&1 | tee out.HP.`date +%Y%m%d_%H%M%S`
 
 clean:
 # output files
