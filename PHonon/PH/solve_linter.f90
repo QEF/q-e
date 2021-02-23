@@ -85,6 +85,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE fft_interfaces,       ONLY : fft_interpolate
   USE ldaU,                 ONLY : lda_plus_u
   USE nc_mag_aux,           ONLY : int1_nc_save, deeq_nc_save, int3_save
+  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
+                                   apply_dpot_bands
 
   implicit none
 
@@ -116,8 +118,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ! change of rho / scf potential (output)
   ! change of scf potential (output)
   complex(DP), allocatable :: ldos (:,:), ldoss (:,:), mixin(:), mixout(:), &
-       dbecsum (:,:,:,:), dbecsum_nc(:,:,:,:,:,:), aux1 (:,:), tg_dv(:,:), &
-       tg_psic(:,:), aux2(:,:), drhoc(:), dbecsum_aux (:,:,:,:)
+       dbecsum (:,:,:,:), dbecsum_nc(:,:,:,:,:,:), aux2(:,:), drhoc(:), &
+       dbecsum_aux (:,:,:,:)
   ! Misc work space
   ! ldos : local density of states af Ef
   ! ldoss: as above, without augmentation charges
@@ -144,8 +146,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
              is,         & ! counter on spin polarizations
              nrec,       & ! the record number for dvpsi and dpsi
              ios,        & ! integer variable for I/O control
-             incr,       & ! used for tg
-             v_siz,      & ! size of the potential
              ipol,       & ! counter on polarization
              mode,       &  ! mode index
              isolv,      & ! counter on linear systems
@@ -186,7 +186,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ALLOCATE(mixin(1))
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe, nsolv))
-  allocate (aux1 ( dffts%nnr, npol))
   allocate (h_diag ( npwx*npol, nbnd))
   allocate (aux2(npwx*npol, nbnd))
   allocate (drhoc(dfftp%nnr))
@@ -194,15 +193,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ALLOCATE (int3_save( nhm, nhm, nat, nspin_mag, npe, 2))
      ALLOCATE (dbecsum_aux ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
   ENDIF
-  incr=1
-  IF ( dffts%has_task_groups ) THEN
-     !
-     v_siz =  dffts%nnr_tg
-     ALLOCATE( tg_dv  ( v_siz, nspin_mag ) )
-     ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = fftx_ntgrp(dffts)
-     !
-  ENDIF
+  CALL apply_dpot_allocate()
   !
   if (rec_code_read == 10.AND.ext_recover) then
      ! restart from Phonon calculation
@@ -338,33 +329,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                     IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,2)
                  ENDIF
                  !
-                 !  Set the potential for task groups
+                 CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins(:, :, ipert), evc, aux2)
+                 dvpsi = dvpsi + aux2
                  !
-                 IF( dffts%has_task_groups ) THEN
-                    IF (noncolin) THEN
-                       CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
-                       IF (domag) THEN
-                          DO ipol=2,4
-                             CALL tg_cgather( dffts, dvscfins(:,ipol,ipert), tg_dv(:,ipol))
-                          ENDDO
-                       ENDIF
-                    ELSE
-                       CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), tg_dv(:,1))
-                    ENDIF
-                 ENDIF
-                 aux2=(0.0_DP,0.0_DP)
-                 do ibnd = 1, nbnd_occ (ikk), incr
-                    IF( dffts%has_task_groups ) THEN
-                       call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ (ikk) )
-                       call apply_dpot(v_siz, tg_psic, tg_dv, 1)
-                       call cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd_occ (ikk))
-                    ELSE
-                       call cft_wave (ik, evc (1, ibnd), aux1, +1)
-                       call apply_dpot(dffts%nnr,aux1, dvscfins(1,1,ipert), current_spin)
-                       call cft_wave (ik, aux2 (1, ibnd), aux1, -1)
-                    ENDIF
-                 enddo
-                 dvpsi=dvpsi+aux2
                  call stop_clock ('vpsifft')
                  !
                  !  In the case of US pseudopotentials there is an additional
@@ -721,10 +688,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      end if
   endif
   if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
+  !
+  CALL apply_dpot_deallocate()
   if (allocated(ldoss)) deallocate (ldoss)
   if (allocated(ldos)) deallocate (ldos)
   deallocate (h_diag)
-  deallocate (aux1)
   deallocate (dbecsum)
   IF (okpaw) THEN
      if (allocated(becsum1)) deallocate (becsum1)
@@ -738,10 +706,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   deallocate (dvscfin)
   deallocate(aux2)
   deallocate(drhoc)
-  IF ( dffts%has_task_groups ) THEN
-     DEALLOCATE( tg_dv )
-     DEALLOCATE( tg_psic )
-  ENDIF
   IF (noncolin.AND.domag.AND.okvan) THEN
      DEALLOCATE (int3_save)
      DEALLOCATE (dbecsum_aux)

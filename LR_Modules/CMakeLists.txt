@@ -3,6 +3,7 @@ set(sources
     addusdbec.f90
     addusdbec_nc.f90
     apply_dpot.f90
+    apply_dpot_mod.f90
     addusldos.f90
     adddvepsi_us.f90
     cft_wave.f90
