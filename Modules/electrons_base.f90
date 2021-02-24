@@ -17,39 +17,60 @@
       IMPLICIT NONE
       SAVE
 
-      INTEGER :: nbnd       = 0    !  number electronic bands, each band contains
-                                   !  two spin states
-      INTEGER :: nbndx      = 0    !  array dimension nbndx >= nbnd
-      INTEGER :: nspin      = 0    !  nspin = number of spins (1=no spin, 2=LSDA)
-      INTEGER :: nel(2)     = 0    !  number of electrons (up, down)
-      INTEGER :: nelt       = 0    !  total number of electrons ( up + down )
-      INTEGER :: nupdwn(2)  = 0    !  number of states with spin up (1) and down (2)
-      INTEGER :: iupdwn(2)  = 0    !  first state with spin (1) and down (2)
-      INTEGER :: nudx       = 0    !  max (nupdw(1),nupdw(2))
-      INTEGER :: nbsp       = 0    !  total number of electronic states 
-                                   !  (nupdwn(1)+nupdwn(2))
-      INTEGER :: nbspx      = 0    !  array dimension nbspx >= nbsp
+      INTEGER :: nbnd       = 0
+      !! number electronic bands, each band contains two spin states
+      INTEGER :: nbndx      = 0
+      !! array dimension nbndx >= nbnd
+      INTEGER :: nspin      = 0
+      !! nspin = number of spins (1=no spin, 2=LSDA)
+      INTEGER :: nel(2)     = 0
+      !! number of electrons (up, down)
+      INTEGER :: nelt       = 0
+      !! total number of electrons ( up + down )
+      INTEGER :: nupdwn(2)  = 0
+      !! number of states with spin up (1) and down (2)
+      INTEGER :: iupdwn(2)  = 0
+      !! first state with spin (1) and down (2)
+      INTEGER :: nudx       = 0
+      !! max (nupdw(1),nupdw(2))
+      INTEGER :: nbsp       = 0
+      !! total number of electronic states nupdwn(1)+nupdwn(2)
+      INTEGER :: nbspx      = 0
+      !! array dimension nbspx >= nbsp
       !
-      INTEGER :: nupdwn_bgrp(2)  = 0    !  number of states with spin up (1) and down (2) in this band group
-      INTEGER :: iupdwn_bgrp(2)  = 0    !  first state with spin (1) and down (2) in this band group
-      INTEGER :: nudx_bgrp       = 0    !  max (nupdw_bgrp(1),nupdw_bgrp(2)) in this band group
-      INTEGER :: nbsp_bgrp       = 0    !  total number of electronic states 
-                                        !  (nupdwn_bgrp(1)+nupdwn_bgrp(2)) in this band group
-      INTEGER :: nbspx_bgrp      = 0    !  array dimension nbspx_bgrp >= nbsp_bgrp local to the band group
-      INTEGER :: i2gupdwn_bgrp(2)= 0    !  global index of the first local band
-
+      INTEGER :: nupdwn_bgrp(2)  = 0
+      !! number of states with spin up (1) and down (2) in this band group
+      INTEGER :: iupdwn_bgrp(2)  = 0
+      !! first state with spin (1) and down (2) in this band group
+      INTEGER :: nudx_bgrp       = 0
+      !! max (nupdw_bgrp(1),nupdw_bgrp(2)) in this band group
+      INTEGER :: nbsp_bgrp       = 0
+      !! total number of electronic states (nupdwn_bgrp(1)+nupdwn_bgrp(2))
+      !! in this band group
+      INTEGER :: nbspx_bgrp      = 0
+      !! array dimension nbspx_bgrp >= nbsp_bgrp local to the band group
+      INTEGER :: i2gupdwn_bgrp(2)= 0
+      !! global index of the first local band
+      !
       LOGICAL :: telectrons_base_initval = .FALSE.
-      LOGICAL :: keep_occ = .FALSE.  ! if .true. when reading restart file keep 
-                                     ! the occupations calculated in initval
-
-      REAL(DP), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
-      REAL(DP) :: qbac = 0.0_DP       ! background neutralizing charge
-      INTEGER, ALLOCATABLE :: ispin(:) ! spin of each state
-
-      REAL(DP), ALLOCATABLE :: f_bgrp(:)  ! occupation numbers ( at gamma )
-      REAL(DP), ALLOCATABLE :: f_d(:)     ! occupation numbers ( at gamma )
-      INTEGER, ALLOCATABLE  :: ispin_bgrp(:) ! spin of each state
-      INTEGER, ALLOCATABLE :: ibgrp_g2l(:)    ! local index of the i-th global band index
+      LOGICAL :: keep_occ = .FALSE.
+      !! if TRUE when reading restart file keep the occupations calculated in initval
+      !
+      REAL(DP), ALLOCATABLE :: f(:)
+      !! occupation numbers ( at gamma )
+      REAL(DP) :: qbac = 0.0_DP
+      !! background neutralizing charge
+      INTEGER, ALLOCATABLE :: ispin(:)
+      !! spin of each state
+      !
+      REAL(DP), ALLOCATABLE :: f_bgrp(:)
+      !! occupation numbers ( at gamma )
+      REAL(DP), ALLOCATABLE :: f_d(:)
+      !! occupation numbers ( at gamma )
+      INTEGER, ALLOCATABLE  :: ispin_bgrp(:)
+      !! spin of each state
+      INTEGER, ALLOCATABLE :: ibgrp_g2l(:)
+      !! local index of the i-th global band index
 #if defined (__CUDA)
       ATTRIBUTES( DEVICE ) :: f_d
 #endif
@@ -61,7 +82,9 @@
 
     SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nbnd_ , nspin_ , &
           occupations_ , f_inp, tot_charge_, tot_magnetization_ )
-
+      !
+      !! Initialize electronic configuration.
+      !
       USE constants,         ONLY   : eps8
       USE io_global,         ONLY   : stdout
 
@@ -343,6 +366,8 @@
 !----------------------------------------------------------------------------
 !
     subroutine set_nelup_neldw ( tot_magnetization_, nelec_, nelup_, neldw_ )
+      !
+      !! Set number of spin up and spin down electrons.
       !
       USE kinds,     ONLY : DP
       USE constants, ONLY : eps8

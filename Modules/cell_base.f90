@@ -7,117 +7,144 @@
 !
 !------------------------------------------------------------------------------!
   MODULE cell_base
-!------------------------------------------------------------------------------!
-
-    USE kinds, ONLY : DP
+    !------------------------------------------------------------------------------!
+    !! Cell parameters and initialization.
+    !
+    USE kinds,     ONLY : DP
     USE constants, ONLY : pi, bohr_radius_angs
     USE io_global, ONLY : stdout
-!
+    !
     IMPLICIT NONE
     SAVE
     !
-    !  ibrav: index of the bravais lattice (see latgen.f90)
-    INTEGER          :: ibrav
-    !  celldm: old-style parameters of the simulation cell (se latgen.f90)
+    INTEGER :: ibrav
+    !! Index of the bravais lattice (see latgen.f90)
     REAL(DP) :: celldm(6) = (/ 0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP /)
-    !  traditional crystallographic cell parameters (alpha=cosbc and so on)
-    
-    REAL(DP) :: a, b, c, cosab, cosac, cosbc
-    ! format of input cell parameters:
-    ! 'alat','bohr','angstrom'
+    !! Old-style parameters of the simulation cell (se latgen.f90)
+    REAL(DP) :: a
+    !! Traditional crystallographic cell parameters (alpha=cosbc and so on)
+    REAL(DP) :: b, c, cosab, cosac, cosbc
+    !
     CHARACTER(len=80) :: cell_units
-    !  alat: lattice parameter - often used to scale quantities, or
-    !  in combination to other parameters/constants to define new units
+    !! Format of input cell parameters: 'alat','bohr','angstrom'
     REAL(DP) :: alat = 0.0_DP
-    ! omega: volume of the simulation cell
+    !! Lattice parameter - often used to scale quantities, or in
+    !! combination to other parameters/constants to define new units.
     REAl(DP) :: omega = 0.0_DP
-    ! tpiba: 2 PI/alat, tpiba2=tpiba^2
-    REAL(DP) :: tpiba  = 0.0_DP, tpiba2 = 0.0_DP
+    !! Volume of the simulation cell.
+    REAL(DP) :: tpiba  = 0.0_DP
+    !! 2 PI/alat
+    REAL(DP) :: tpiba2 = 0.0_DP
+    !! tpiba2=tpiba^2
+    !
     !  direct and reciprocal lattice primitive vectors
-    !  at(:,i) are the lattice vectors of the simulation cell, a_i,
-    !          in alat units: a_i(:) = at(:,i)/alat
-    !  bg(:,i) are the reciprocal lattice vectors, b_i,
-    !          in tpiba=2pi/alat units: b_i(:) = bg(:,i)/tpiba
     REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+    !! The lattice vectors of the simulation cell, a_i, in alat units:
+    !! a_i(:) = at(:,i)/alat
     REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+    !! The reciprocal lattice vectors, b_i, in tpiba=2pi/alat units:
+    !! b_i(:) = bg(:,i)/tpiba
     !
     ! parameters for reference cell 
     REAL(DP) :: ref_tpiba2 = 0.0_DP
+    !! Parameters for reference cell
     REAL(DP) :: ref_at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
     REAL(DP) :: ref_bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
     !
-    ! parameter to store tpiba2 calculated from the input cell parameter 
-    ! used in emass_preconditioning, required for restarting variable cell calculation correctly in CP
     REAL(DP) :: init_tpiba2 = 0.0_DP
+    !! Parameter to store tpiba2 calculated from the input cell parameter 
+    !! used in emass_preconditioning, required for restarting variable cell calculation 
+    !! correctly in CP.
     !
-! -------------------------------------------------------------------------
-! ...  periodicity box
-! ...  In the matrix "a" every row is the vector of each side of 
-! ...  the cell in the real space
-
+    ! -------------------------------------------------------------------------!
+        !
         TYPE boxdimensions
-          REAL(DP) :: a(3,3)    ! direct lattice generators
-          REAL(DP) :: m1(3,3)   ! reciprocal lattice generators
-          REAL(DP) :: omega     ! cell volume = determinant of a
-          REAL(DP) :: g(3,3)    ! metric tensor
-          REAL(DP) :: gvel(3,3) ! metric velocity
-          REAL(DP) :: pail(3,3) ! stress tensor ( scaled coor. )
-          REAL(DP) :: paiu(3,3) ! stress tensor ( cartesian coor. )
-          REAL(DP) :: hmat(3,3) ! cell parameters ( transpose of "a" )
-          REAL(DP) :: hvel(3,3) ! cell velocity
+          !! Periodicity box: in the matrix "a" every row is the vector
+          !! of each side of the cell in the real space
+          REAL(DP) :: a(3,3)
+          !! direct lattice generators
+          REAL(DP) :: m1(3,3)
+          !! reciprocal lattice generators
+          REAL(DP) :: omega
+          !! cell volume = determinant of a
+          REAL(DP) :: g(3,3)
+          !! metric tensor
+          REAL(DP) :: gvel(3,3)
+          !! metric velocity
+          REAL(DP) :: pail(3,3)
+          !! stress tensor ( scaled coor. )
+          REAL(DP) :: paiu(3,3)
+          !! stress tensor ( cartesian coor. )
+          REAL(DP) :: hmat(3,3)
+          !! cell parameters ( transpose of "a" )
+          REAL(DP) :: hvel(3,3)
+          !! cell velocity
           REAL(DP) :: hinv(3,3)
           REAL(DP) :: deth
           INTEGER :: perd(3)
         END TYPE boxdimensions
-
+        !
         !  The following relations should always be kept valid:
         !     h = at*alat; ainv = h^(-1); ht=transpose(h)
-        REAL(DP) :: h(3,3)    = 0.0_DP ! simulation cell at time t 
+        !
+        REAL(DP) :: h(3,3)    = 0.0_DP
+        !! simulation cell at time t 
         REAL(DP) :: ainv(3,3) = 0.0_DP
-        REAL(DP) :: hold(3,3) = 0.0_DP ! simulation cell at time t-delt
-        REAL(DP) :: hnew(3,3) = 0.0_DP ! simulation cell at time t+delt
-        REAL(DP) :: velh(3,3) = 0.0_DP ! simulation cell velocity
-        REAL(DP) :: deth      = 0.0_DP ! determinant of h ( cell volume )
-
-        INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
-                                       ! is not allowed to move
-        LOGICAL   :: enforce_ibrav = .FALSE.! True if ibrav representation is fix
-        LOGICAL   :: fix_volume = .FALSE.! True if cell volume is kept fixed
-        LOGICAL   :: fix_area = .FALSE.  ! True if area in xy plane is kept constant
-        LOGICAL   :: isotropic = .FALSE. ! True if volume option is chosen for cell_dofree 
-        REAL(DP) :: wmass = 0.0_DP     ! cell fictitious mass
-        REAL(DP) :: press = 0.0_DP     ! external pressure 
-
-        REAL(DP) :: frich  = 0.0_DP    ! friction parameter for cell damped dynamics
-        REAL(DP) :: greash = 1.0_DP    ! greas parameter for damped dynamics
-
+        REAL(DP) :: hold(3,3) = 0.0_DP
+        !! simulation cell at time t-delt
+        REAL(DP) :: hnew(3,3) = 0.0_DP
+        !! simulation cell at time t+delt
+        REAL(DP) :: velh(3,3) = 0.0_DP
+        !! simulation cell velocity
+        REAL(DP) :: deth      = 0.0_DP
+        !! determinant of h ( cell volume )
+        !
+        INTEGER   :: iforceh(3,3) = 1
+        !! if iforceh( i, j ) = 0 then h( i, j ) is not allowed to move
+        LOGICAL   :: enforce_ibrav = .FALSE.
+        !! True if ibrav representation is fix
+        LOGICAL   :: fix_volume = .FALSE.
+        !! True if cell volume is kept fixed
+        LOGICAL   :: fix_area = .FALSE.
+        !! True if area in xy plane is kept constant
+        LOGICAL   :: isotropic = .FALSE.
+        !! True if volume option is chosen for cell_dofree 
+        REAL(DP) :: wmass = 0.0_DP
+        !! cell fictitious mass
+        REAL(DP) :: press = 0.0_DP
+        !! external pressure 
+        !
+        REAL(DP) :: frich  = 0.0_DP
+        !! friction parameter for cell damped dynamics
+        REAL(DP) :: greash = 1.0_DP
+        !! greas parameter for damped dynamics
+        !
         LOGICAL :: tcell_base_init = .FALSE.
-
+        !
         INTERFACE cell_init
           MODULE PROCEDURE cell_init_ht, cell_init_a
         END INTERFACE
-
+        !
         INTERFACE pbcs
           MODULE PROCEDURE pbcs_components, pbcs_vectors
         END INTERFACE
-
+        !
         INTERFACE s_to_r
           MODULE PROCEDURE s_to_r1, s_to_r1b, s_to_r3
         END INTERFACE
-
+        !
         INTERFACE r_to_s
           MODULE PROCEDURE r_to_s1, r_to_s1b, r_to_s3
         END INTERFACE
-!------------------------------------------------------------------------------!
+        !
   CONTAINS
-!------------------------------------------------------------------------------!
-!
+  !
+  !------------------------------------------------------------------------------!
   SUBROUTINE cell_base_init( ibrav_, celldm_, a_, b_, c_, cosab_, cosac_, &
-               cosbc_, trd_ht, rd_ht, cell_units_ )
+                             cosbc_, trd_ht, rd_ht, cell_units_ )
+    !-----------------------------------------------------------------------------!
+    !! Initialize cell_base module variables, set up crystal lattice.
     !
-    ! ... initialize cell_base module variables, set up crystal lattice
-    !
-
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ibrav_
     REAL(DP), INTENT(IN) :: celldm_ (6)
@@ -125,7 +152,7 @@
     REAL(DP), INTENT(IN) :: rd_ht (3,3)
     CHARACTER(LEN=*), INTENT(IN) :: cell_units_
     REAL(DP), INTENT(IN) :: a_ , b_ , c_ , cosab_, cosac_, cosbc_
-
+    !
     REAL(DP) :: units
     !
     IF ( ibrav_ == 0 .and. .not. trd_ht ) THEN
@@ -240,16 +267,16 @@
   !
   END SUBROUTINE cell_base_init
   !
+  !------------------------------------------------------------------------!
   SUBROUTINE ref_cell_base_init( ref_alat, rd_ref_ht, ref_cell_units )
+      !--------------------------------------------------------------------!
+      !! Initialize cell_base module variables, set up crystal lattice
       !
-      ! ... initialize cell_base module variables, set up crystal lattice
-      !
-
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: rd_ref_ht (3,3)
       REAL(DP), INTENT(INOUT) :: ref_alat
       CHARACTER(LEN=*), INTENT(IN) :: ref_cell_units
-
+      !
       REAL(DP) :: units, ref_omega
       !
       ! ... reference cell lattice vectors read from REF_CELL_PARAMETERS Card: find units
@@ -544,8 +571,8 @@
 !------------------------------------------------------------------------------!
 
       SUBROUTINE pbcs_components(x1, y1, z1, x2, y2, z2, m)
-! ... This subroutine compute the periodic boundary conditions in the scaled
-! ... variables system
+        !! This subroutine compute the periodic boundary conditions in the scaled
+        !! variables system.
         USE kinds
         INTEGER, INTENT(IN)  :: M
         REAL(DP),  INTENT(IN)  :: X1,Y1,Z1
@@ -561,8 +588,8 @@
 !------------------------------------------------------------------------------!
 
       SUBROUTINE pbcs_vectors(v, w, m)
-! ... This subroutine compute the periodic boundary conditions in the scaled
-! ... variables system
+        !! This subroutine compute the periodic boundary conditions in the scaled
+        !! variables system.
         USE kinds
         INTEGER, INTENT(IN)  :: m
         REAL(DP),  INTENT(IN)  :: v(3)
@@ -578,8 +605,7 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE set_h_ainv()
-    !
-    ! CP-PW compatibility: align CP arrays H and ainv to at and bg
+    !! CP-PW compatibility: align CP arrays H and ainv to at and bg.
     !
     IMPLICIT NONE
     !
@@ -682,8 +708,7 @@
 
 !------------------------------------------------------------------------------!
   SUBROUTINE init_dofree ( cell_dofree ) 
-
-     ! set constraints on cell dynamics/optimization
+     !! Set constraints on cell dynamics/optimization
 
      CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
      CHARACTER(LEN=80) :: cell_dofree_
@@ -1048,9 +1073,7 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_gamma( hgamma, ainv, h, velh )
-    !
-    ! Compute hgamma = g^-1 * dg/dt
-    ! that enters in the ions equation of motion
+    !! Compute hgamma = g^-1 * dg/dt that enters in the ions equation of motion.
     !
     IMPLICIT NONE
     REAL(DP), INTENT(OUT) :: hgamma(3,3)

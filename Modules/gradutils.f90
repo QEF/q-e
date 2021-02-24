@@ -12,10 +12,9 @@
 !        (2\pi/a) that maybe should be taken out from here?
 !--------------------------------------------------------------------
 SUBROUTINE external_gradient( a, grada )
-!--------------------------------------------------------------------
-  ! 
-  ! Interface for computing gradients of a real function in real space,
-  ! to be called by an external module
+  !--------------------------------------------------------------------
+  !! Interface for computing gradients of a real function in real space,
+  !! to be called by an external module.
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
@@ -24,34 +23,39 @@ SUBROUTINE external_gradient( a, grada )
   IMPLICIT NONE
   !
   REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
+  !! a real function on the real-space
   REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
-
-! A in real space, grad(A) in real space
+  !! grad(A) in real space
+  !
+  ! A in real space, grad(A) in real space
   CALL fft_gradient_r2r( dfftp, a, g, grada )
-
+  !
   RETURN
-
+  !
 END SUBROUTINE external_gradient
+!
 !----------------------------------------------------------------------------
 SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
   !----------------------------------------------------------------------------
+  !! Calculates \({\bf ga}\), the gradient of \({\bf a}\).
   !
-  ! ... Calculates ga = \grad a
-  ! ... input : dfft     FFT descriptor
-  ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in 2\pi/a units
-  ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
-  !
-  USE kinds,     ONLY : DP
-  USE cell_base, ONLY : tpiba
-  USE fft_interfaces,ONLY : fwfft, invfft 
-  USE fft_types, ONLY : fft_type_descriptor
+  USE kinds,           ONLY : DP
+  USE cell_base,       ONLY : tpiba
+  USE fft_interfaces,  ONLY : fwfft, invfft 
+  USE fft_types,       ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor),INTENT(IN) :: dfft
-  REAL(DP), INTENT(IN)  :: a(dfft%nnr), g(3,dfft%ngm)
+  !! FFT descriptor
+  REAL(DP), INTENT(IN)  :: a(dfft%nnr)
+  !! a real function on the real-space FFT grid
+  REAL(DP), INTENT(IN)  :: g(3,dfft%ngm)
+  !! G-vectors, in 2\pi/a units
   REAL(DP), INTENT(OUT) :: ga(3,dfft%nnr)
+  !! gradient of a, real, on the real-space FFT grid
+  !
+  ! ... local variables
   !
   INTEGER  :: ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
@@ -99,10 +103,13 @@ SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
 END SUBROUTINE fft_gradient_r2r
 !
 !--------------------------------------------------------------------
-SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
+SUBROUTINE fft_qgradient( dfft, a, xq, g, ga )
   !--------------------------------------------------------------------
+  !! Like \texttt{fft\_gradient\_r2r}, for complex arrays having a 
+  !! \(e^{iqr}\) behavior.
   !
-  ! Like fft_gradient_r2r, for complex arrays having a e^{iqr} behavior
+  
+  
   ! ... input : dfft     FFT descriptor
   ! ...         a(:)     a complex function on the real-space FFT grid
   ! ...         xq(3)    q-vector, in 2\pi/a units
