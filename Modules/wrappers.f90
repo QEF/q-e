@@ -6,19 +6,18 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-!
-! This module contains fortran wrappers to POSIX system calls. 
-! The wrappers are used to convert the Fortran CHARACTER array to
-! null-terminated C *char. The conversion and the interface is done
-! with the F95 intrinsic iso_c_binding module.
-!
-! Additionally, it provides interfaces to the C functions in clib/: 
-! eval_infix, md5_from_file, f_mkdir_safe
-!
-! NOTE: the mkdir function is NOT called directly as it returns error if
-!       directory already exists. We use instead a C wrapper c_mkdir_safe
-!
 MODULE wrappers
+  !------------------------------------------------------------------------
+  !! This module contains fortran wrappers to POSIX system calls.  
+  !! The wrappers are used to convert the Fortran CHARACTER array to
+  !! null-terminated C *char. The conversion and the interface is done
+  !! with the F95 intrinsic \(\texttt{iso_c_binding module}\).  
+  !! Additionally, it provides interfaces to the C functions in clib/: 
+  !! \(\texttt{eval_infix, md5_from_file, f_mkdir_safe}\)
+  !
+  ! NOTE: the mkdir function is NOT called directly as it returns error if
+  !       directory already exists. We use instead a C wrapper c_mkdir_safe
+  !
   USE kinds, ONLY : DP
   USE io_global, ONLY : stdout
   USE ISO_C_BINDING

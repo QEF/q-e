@@ -9,6 +9,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE wavefunctions
 !=----------------------------------------------------------------------------=!
+     !! Wavefunction arrays.
+     !
      USE kinds, ONLY :  DP
 #if defined (__CUDA)
      USE cudafor
@@ -19,16 +21,18 @@
 
      !
      COMPLEX(DP), ALLOCATABLE, TARGET :: &
-       evc(:,:)     ! wavefunctions in the PW basis set
-                    ! noncolinear case: first index
-                    ! is a combined PW + spin index
+       evc(:,:)
+       !! wavefunctions in the PW basis set.  
+       !! noncolinear case: first index is a combined PW + spin index
+       !
 #if defined(__CUDA)
        attributes(PINNED) :: evc
 #endif
      !
-     COMPLEX(DP) , ALLOCATABLE, TARGET :: &
-       psic(:), &      ! additional memory for FFT
-       psic_nc(:,:)    ! as above for the noncolinear case
+     COMPLEX(DP) , ALLOCATABLE, TARGET :: psic(:)
+     !! additional memory for FFT
+     COMPLEX(DP) , ALLOCATABLE, TARGET :: psic_nc(:,:)
+     !! additional memory for FFT for the noncolinear case
      !
      !
      ! electronic wave functions, CPV code

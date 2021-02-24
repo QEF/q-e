@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
   FUNCTION trimcheck ( directory )
     !-----------------------------------------------------------------------
-    !
-    ! ... verify if directory ends with / or \ for Windows, add one if needed
-    ! ... trim white spaces and put the result in trimcheck
+    !! Verify if directory ends with / or \ for Windows, add one if needed.  
+    !! Trim white spaces and put the result in trimcheck.
     !
     IMPLICIT NONE
     !
