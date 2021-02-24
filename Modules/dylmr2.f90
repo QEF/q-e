@@ -8,26 +8,27 @@
 !-----------------------------------------------------------------------
 subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   !-----------------------------------------------------------------------
-  !
-  !     compute \partial Y_lm(G) \over \partial (G)_ipol
-  !     using simple numerical derivation (SdG)
-  !     The spherical harmonics are calculated in ylmr2
+  !! Compute \partial Y_lm(G) \over \partial (G)_ipol
+  !! using simple numerical derivation (SdG)
+  !! The spherical harmonics are calculated in ylmr2
   !
   USE kinds, ONLY : DP
   implicit none
   !
-  !    here the I/O variables
+  integer :: nylm
+  !! input: number of spherical harmonics
+  integer :: ngy
+  !! input: the number of g vectors to compute
+  integer :: ipol
+  !! input: desired polarization
+  real(DP) :: g(3,ngy)
+  !! input: the coordinates of g vectors
+  real(DP) :: gg (ngy)
+  !! input: the moduli of g vectors
+  real(DP) :: dylm (ngy, nylm)
+  !! output: the spherical harmonics derivatives
   !
-  integer :: nylm, ngy, ipol
-  ! input: number of spherical harmonics
-  ! input: the number of g vectors to compute
-  ! input: desired polarization
-  real(DP) :: g (3, ngy), gg (ngy), dylm (ngy, nylm)
-  ! input: the coordinates of g vectors
-  ! input: the moduli of g vectors
-  ! output: the spherical harmonics derivatives
-  !
-  !    and here the local variables
+  ! ... local variables
   !
   integer :: ig, lm
   ! counter on g vectors
