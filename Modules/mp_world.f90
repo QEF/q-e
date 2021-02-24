@@ -8,6 +8,9 @@
 !----------------------------------------------------------------------------
 MODULE mp_world
   !----------------------------------------------------------------------------
+  !! World group - all QE routines using \(\texttt{mp\_world\_start}\) to 
+  !! start MPI will work in the communicator passed as input to 
+  !! \(\texttt{mp\_world\_start}\)
   !
   USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes 
   USE io_global, ONLY : meta_ionode_id, meta_ionode
@@ -23,18 +26,23 @@ MODULE mp_world
   ! ... World group - all QE routines using mp_world_start to start MPI
   ! ... will work in the communicator passed as input to mp_world_start
   !
-  INTEGER :: nnode = 1  ! number of nodes
-  INTEGER :: nproc = 1  ! number of processors
-  INTEGER :: mpime = 0  ! processor index (starts from 0 to nproc-1)
-  INTEGER :: root  = 0  ! index of the root processor
-  INTEGER :: world_comm = 0  ! communicator
-  !
-  ! ... library_mode =.true. if QE is called as a library by an external code
-  ! ... if true, MPI_Init()     is not called when starting MPI,
-  ! ...          MPI_Finalize() is not called when stopping MPI
+  INTEGER :: nnode = 1
+  !! number of nodes
+  INTEGER :: nproc = 1
+  !! number of processors
+  INTEGER :: mpime = 0
+  !! processor index (starts from 0 to nproc-1)
+  INTEGER :: root  = 0
+  !! index of the root processor
+  INTEGER :: world_comm = 0
+  !! communicator
   !
 #if defined(__MPI)
   LOGICAL :: library_mode = .FALSE.
+  !! library\_mode = TRUE if QE is called as a library by an external code.  
+  !! If true:  
+  !! - \(\texttt{MPI\_Init()}\)    is not called when starting MPI;  
+  !! - \(\texttt{MPI_Finalize()}\) is not called when stopping MPI.
 #endif
   !
   PRIVATE
