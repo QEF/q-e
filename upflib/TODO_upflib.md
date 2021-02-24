@@ -12,9 +12,7 @@
 
 * Module variables that have been (partially) duplicated:
    - kinds      => upf_kinds  (only dp)
-   - parameters => upf_params
    - constants  => upf_const
-   - spinorb    => upf_spinorb
 
 * TO BE DONE: 
   - ions_base points to upf_ions for variables na(npsx), nax, nat, ityp, nsp.
@@ -30,7 +28,7 @@
   - first step: pass ntyp, nat, ityp as arguments, remove reference to upf_ions
   - second step: nsp becomes an internal variable, not to be exported
   - finally, upf_ions can be deleted and its variables moved back to ions_base
-  - lmaxx and lqmax are both in upf_params and in spinorb
+  - upf_spinorb contains just two variables: merge into uspp?
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
