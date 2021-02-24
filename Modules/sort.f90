@@ -8,18 +8,19 @@
 !---------------------------------------------------------------------
 subroutine hpsort_eps (n, ra, ind, eps)
   !---------------------------------------------------------------------
-  ! sort an array ra(1:n) into ascending order using heapsort algorithm,
-  ! and considering two elements being equal if their values differ
-  ! for less than "eps".
-  ! n is input, ra is replaced on output by its sorted rearrangement.
-  ! create an index table (ind) by making an exchange in the index array
-  ! whenever an exchange is made on the sorted data array (ra).
-  ! in case of equal values in the data array (ra) the values in the
-  ! index array (ind) are used to order the entries.
-  ! if on input ind(1)  = 0 then indices are initialized in the routine,
-  ! if on input ind(1) != 0 then indices are assumed to have been
-  !                initialized before entering the routine and these
-  !                indices are carried around during the sorting process
+  !! Sort an array ra(1:n) into ascending order using heapsort algorithm,
+  !! and considering two elements being equal if their values differ
+  !! for less than "eps".  
+  !! \(\text{n}\) is input, \(\text{ra}\) is replaced on output by its 
+  !! sorted rearrangement.  
+  !! Create an index table (ind) by making an exchange in the index array
+  !! whenever an exchange is made on the sorted data array (\(\text{ra}\)).  
+  !! In case of equal values in the data array (\(\text{ra}\)) the values
+  !! in the index array (ind) are used to order the entries.  
+  !! If on input ind(1) = 0 then indices are initialized in the routine,
+  !! if on input ind(1) != 0 then indices are assumed to have been
+  !! initialized before entering the routine and these indices are carried
+  !! around during the sorting process.
   !
   ! no work space needed !
   ! free us from machine-dependent sorting-routines !
@@ -134,16 +135,17 @@ end subroutine hpsort_eps
 !---------------------------------------------------------------------
 subroutine hpsort (n, ra, ind)  
   !---------------------------------------------------------------------
-  ! sort an array ra(1:n) into ascending order using heapsort algorithm.
-  ! n is input, ra is replaced on output by its sorted rearrangement.
-  ! create an index table (ind) by making an exchange in the index array
-  ! whenever an exchange is made on the sorted data array (ra).
-  ! in case of equal values in the data array (ra) the values in the
-  ! index array (ind) are used to order the entries.
-  ! if on input ind(1)  = 0 then indices are initialized in the routine,
-  ! if on input ind(1) != 0 then indices are assumed to have been
-  !                initialized before entering the routine and these
-  !                indices are carried around during the sorting process
+  !! Sort an array ra(1:n) into ascending order using heapsort algorithm.
+  !! \(\text{n}\) is input, \(\text{ra}\) is replaced on output by its 
+  !! sorted rearrangement.  
+  !! Create an index table (ind) by making an exchange in the index array
+  !! whenever an exchange is made on the sorted data array (ra).  
+  !! In case of equal values in the data array (ra) the values in the
+  !! index array (ind) are used to order the entries.  
+  !! If on input ind(1) = 0 then indices are initialized in the routine,
+  !! If on input ind(1) != 0 then indices are assumed to have been
+  !! initialized before entering the routine and these indices are carried
+  !! around during the sorting process.
   !
   ! no work space needed !
   ! free us from machine-dependent sorting-routines !
@@ -251,16 +253,17 @@ end subroutine hpsort
 !---------------------------------------------------------------------
 subroutine ihpsort (n, ia, ind)  
   !---------------------------------------------------------------------
-  ! sort an integer array ia(1:n) into ascending order using heapsort algorithm.
-  ! n is input, ia is replaced on output by its sorted rearrangement.
-  ! create an index table (ind) by making an exchange in the index array
-  ! whenever an exchange is made on the sorted data array (ia).
-  ! in case of equal values in the data array (ia) the values in the
-  ! index array (ind) are used to order the entries.
-  ! if on input ind(1)  = 0 then indices are initialized in the routine,
-  ! if on input ind(1) != 0 then indices are assumed to have been
-  !                initialized before entering the routine and these
-  !                indices are carried around during the sorting process
+  !! Sort an integer array ia(1:n) into ascending order using heapsort 
+  !! algorithm. \(\text{n}\) is input, \(\text{ia}\) is replaced on output
+  !! by its sorted rearrangement.  
+  !! Create an index table (ind) by making an exchange in the index array
+  !! whenever an exchange is made on the sorted data array (ia).  
+  !! in case of equal values in the data array (ia) the values in the
+  !! index array (ind) are used to order the entries.  
+  !! If on input ind(1)  = 0 then indices are initialized in the routine,
+  !! If on input ind(1) != 0 then indices are assumed to have been
+  !! initialized before entering the routine and these indices are carried
+  !! around during the sorting process.
   !
   ! no work space needed !
   ! free us from machine-dependent sorting-routines !

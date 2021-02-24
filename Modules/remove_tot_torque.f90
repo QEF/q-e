@@ -8,12 +8,20 @@
 !----------------------------------------------------------------------------
 SUBROUTINE remove_tot_torque( nat, tau, mass, force )
   !----------------------------------------------------------------------------
+  !! This routine sets to zero the total torque associated to the internal
+  !! forces acting on the atoms by correcting the force vector.
   !
-  ! ... This routine sets to zero the total torque associated to the internal
-  ! ... forces acting on the atoms by correcting the force vector.
+  !! The algorithm is based on the following expressions ( F' is the
+  !! torqueless force ) :
+  ! 
+  !! $$ {\bf m} = \frac{1}{N} \sum_i d {\bf R}_i\times {\bf F}_i $$
   !
-  ! ... The algorithm is based on the following expressions ( F' is the
-  ! ... torqueless force ) :
+  !! $$ {\bf F}_i' = {\bf F}_i - \frac{1}{\|d {\bf R}_i\|^2} {\bf m} \times d {\bf R}_i $$
+  !
+  !! with \( d {\bf R}_i = {\bf R}_i - {\bf R}_\text{cm} \)
+  !
+  !! Written by Carlo Sbraccia (2006).
+  !
   !                 _
   !        _    1  \   __      _        __       _     _
   ! ...    m = --- /_  dR_i /\ F_i ,    dR_i = ( R_i - R_cm ) ,
@@ -24,16 +32,20 @@ SUBROUTINE remove_tot_torque( nat, tau, mass, force )
   !                      |dR_i|^2
   !
   !
-  ! ... written by carlo sbraccia (2006)
-  !
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN)    :: nat
-  REAL(DP), INTENT(IN)    :: tau(3,nat)
+  INTEGER,  INTENT(IN) :: nat
+  !! number of atoms
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions
   REAL(DP), INTENT(IN)    :: mass(nat)
+  !! atomic mass
   REAL(DP), INTENT(INOUT) :: force(3,nat)
+  !! force on atoms
+  !
+  ! ... local variables
   !
   INTEGER  :: ia
   REAL(DP) :: m(3), mo(3), tauref(3), delta(3), sumf(3)
