@@ -7,15 +7,14 @@
 !----------------------------------------------------------------------------
 MODULE qexsd_module
   !----------------------------------------------------------------------------
+  !! This module contains subroutines used to read and write in XML format,
+  !! according to the "schema", the data produced by Quantum ESPRESSO.
   !
-  ! This module contains subroutines used to read and write in XML format,
-  ! according to the "schema", the data produced by Quantum ESPRESSO
-  !
-  ! Based on initial work by Carlo Sbraccia (2003)
-  ! and on the qexml.f90 routines written by Andrea Ferretti (2006)
-  ! Modified by Simone Ziraldo (2013).
-  ! Rewritten by Giovanni Borghi, A. Ferretti, et al. (2015).
-  ! Heavily modified by Pietro Delugas and Paolo Giannozzi (2016 on)
+  !! Based on initial work by Carlo Sbraccia (2003)
+  !! and on the qexml.f90 routines written by Andrea Ferretti (2006)
+  !! Modified by Simone Ziraldo (2013).
+  !! Rewritten by Giovanni Borghi, A. Ferretti, et al. (2015).
+  !! Heavily modified by Pietro Delugas and Paolo Giannozzi (2016 on)
   !
   !
   USE kinds,            ONLY : DP

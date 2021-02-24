@@ -7,11 +7,13 @@
 !
 subroutine radial_gradient(f,gf,r,mesh,iflag)
   !
-  !  This subroutine calculates the derivative with respect to r of a
-  !  radial function defined on the mesh r. If iflag=0 it uses all mesh
-  !  points. If iflag=1 it uses only a coarse grained mesh close to the
-  !  origin, to avoid large errors in the derivative when the function
-  !  is too smooth.
+  !! This subroutine calculates the derivative with respect to r of a
+  !! radial function defined on the mesh r.
+  !
+  !! * If \(\text{iflag}=0\) it uses all mesh points.
+  !! * If iflag=1 it uses only a coarse grained mesh close to the
+  !!   origin, to avoid large errors in the derivative when the function
+  !!   is too smooth.
   !
   use kinds, only : DP
   implicit none
@@ -111,8 +113,8 @@ end subroutine radial_gradient
 
 subroutine fit_pol(xdata,ydata,n,degree,b)
   !
-  ! This routine finds the coefficients of the least-square polynomial which 
-  ! interpolates the n input data points.
+  !! This routine finds the coefficients of the least-square polynomial which 
+  !! interpolates the n input data points.
   !
   use kinds, ONLY : DP
   implicit none

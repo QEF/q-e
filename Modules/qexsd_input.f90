@@ -8,10 +8,10 @@
 !---------------------------------------------------------
 MODULE qexsd_input
 !--------------------------------------------------------
-  ! This module contains the data structures for the XML input of pw.x
-  ! and the routines neeeded to initialise it
+  !! This module contains the data structures for the XML input of pw.x
+  !! and the routines neeeded to initialise it
   !----------------------------------------------------------------------------
-  ! First version March 2016, modified Aug. 2019
+  !! First version March 2016, modified Aug. 2019
   !----------- ------------- --------------------------------------------------- 
   USE kinds, ONLY : dp
   !
