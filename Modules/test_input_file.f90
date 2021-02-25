@@ -7,7 +7,7 @@
 !
 LOGICAL FUNCTION test_input_xml (myunit)
    !
-   ! check if file opened as unit "myunit" is a xml file or not
+   !! Check if file opened as unit "myunit" is a xml file or not.
    !
    IMPLICIT NONE
    !

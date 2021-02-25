@@ -6,6 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE wy_pos
+
+!! Main subroutine: \(\texttt{wypos}\). Converts atomic positions
+!! given in Wyckoff convention: multiplicity-letter + parameter(s),
+!! to crystal positions.
+
 USE kinds,  ONLY : DP
 IMPLICIT NONE
 
@@ -17,18 +22,16 @@ PUBLIC wypos
 CONTAINS
    SUBROUTINE wypos(tau,wp,inp,space_group_number,uniqueb,&
                                       rhombohedral,origin_choice)
-
    !-----------------------------------------------------------
-   ! Convert atomic positions given in Wyckoff convention:
-   ! multiplicity-letter + parameter(s), to crystal positions
-   !   wp = Wyckoff label (e.g. 8c)
-   !   inp(3) = parameter(s) (if needed)
+   !! Convert atomic positions given in Wyckoff convention:
+   !! multiplicity-letter + parameter(s), to crystal positions.
    !-----------------------------------------------------------
 
       REAL(DP), DIMENSION(3), INTENT(OUT) :: tau
       REAL(DP), INTENT(IN) :: inp(3)
+      !! parameter(s) (if needed)
       CHARACTER(LEN=*), INTENT (IN) :: wp
-
+      !! Wyckoff label (e.g. 8c)
       INTEGER, INTENT(IN) :: space_group_number
       LOGICAL, INTENT(IN) :: uniqueb, rhombohedral
       INTEGER, INTENT(IN) :: origin_choice

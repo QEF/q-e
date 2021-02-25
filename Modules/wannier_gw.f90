@@ -12,7 +12,7 @@
 !
 MODULE wannier_gw
   !
-  ! ... The variables needed for gww-gwl code (head.x)
+  !! The variables needed for gww-gwl code (head.x)
   !
   USE kinds, ONLY: DP
   !

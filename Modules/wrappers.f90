@@ -11,7 +11,7 @@ MODULE wrappers
   !! This module contains fortran wrappers to POSIX system calls.  
   !! The wrappers are used to convert the Fortran CHARACTER array to
   !! null-terminated C *char. The conversion and the interface is done
-  !! with the F95 intrinsic \(\texttt{iso_c_binding module}\).  
+  !! with the F95 intrinsic \(\texttt{iso_c_binding}\) module.  
   !! Additionally, it provides interfaces to the C functions in clib/: 
   !! \(\texttt{eval_infix, md5_from_file, f_mkdir_safe}\)
   !
