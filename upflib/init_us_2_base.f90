@@ -7,15 +7,14 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, vkb_, tau, tpiba, omega, &
-                           nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g )
+SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, ntyp, &
+     tpiba, omega, nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g, vkb_ )
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
   !! structure factor, for all atoms, in reciprocal space.
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
-  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
   USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps
   USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib
@@ -32,8 +31,12 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, vkb_, tau, tpiba, omega, &
   !! indices of G in the list of q+G vectors
   REAL(DP), INTENT(IN) :: q_(3)
   !! q vector (2pi/a units)
-  COMPLEX(DP), INTENT(OUT) :: vkb_(npwx,nkb)
-  !! beta functions (npw_ <= npwx)
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: ntyp
+  !! number of type of atoms
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! index of type per atom
   REAL(DP), INTENT(IN) :: tau(3,nat)
   !! atomic positions (cc alat units)
   REAL(DP), INTENT(IN) :: tpiba, omega
@@ -50,6 +53,8 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, vkb_, tau, tpiba, omega, &
   !! miller index map
   REAL(DP), INTENT(IN) :: g(3,*)
   !! g vectors (2pi/a units)
+  COMPLEX(DP), INTENT(OUT) :: vkb_(npwx,nkb)
+  !! beta functions (npw_ <= npwx)
   !
   ! ... Local variables
   !

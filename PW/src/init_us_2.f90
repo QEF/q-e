@@ -13,7 +13,7 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   !! structure factor, for all atoms, in reciprocal space.
   !
   USE kinds,        ONLY : DP
-  USE ions_base,    ONLY : tau
+  USE ions_base,    ONLY : nat, nsp, ityp, tau
   USE cell_base,    ONLY : tpiba, omega
   USE gvect,        ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,        ONLY : npwx
@@ -33,8 +33,9 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   !
   CALL start_clock( 'init_us_2' )
   !
-  CALL init_us_2_base(npw_, npwx, igk_, q_, vkb_, tau, tpiba, omega, &
-                      dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g )
+  CALL init_us_2_base(npw_, npwx, igk_, q_, nat, tau, ityp, nsp, &
+       tpiba, omega, dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, &
+       mill, g, vkb_ )
   !
   CALL stop_clock( 'init_us_2' )
   !
@@ -45,7 +46,7 @@ SUBROUTINE init_us_2_gpu( npw_, igk__d, q_, vkb__d )
   !----------------------------------------------------------------------
   !
   USE kinds,        ONLY : DP
-  USE ions_base,    ONLY : tau 
+  USE ions_base,    ONLY : nat, nsp, ityp, tau 
   USE cell_base,    ONLY : tpiba, omega
   USE gvect,        ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
   USE wvfct,        ONLY : npwx
@@ -64,9 +65,9 @@ SUBROUTINE init_us_2_gpu( npw_, igk__d, q_, vkb__d )
   !
   CALL start_clock( 'init_us_2_gpu' )
   !
-  CALL init_us_2_base_gpu(npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega, &
-                      dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1_d, eigts2_d, eigts3_d, &
-                      mill_d, g_d ) 
+  CALL init_us_2_base_gpu(npw_, npwx, igk__d, q_, nat, tau, ityp, nsp, &
+       tpiba, omega, dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1_d, eigts2_d, &
+       eigts3_d, mill_d, g_d, vkb__d ) 
   !
   CALL stop_clock( 'init_us_2_gpu' )
   !

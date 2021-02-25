@@ -7,15 +7,15 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega, &
-                               nr1, nr2, nr3, eigts1_d, eigts2_d, eigts3_d, mill_d, g_d)
+SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, ntyp, &
+     tpiba, omega, nr1, nr2, nr3, eigts1_d, eigts2_d, eigts3_d, mill_d, g_d, &
+     vkb__d )
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
   !! structure factor, for all atoms, in reciprocal space.
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
-  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
   USE uspp_data,    ONLY : nqx, dq, spline_ps, tab_d, tab_d2y_d
   USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib,    ONLY : splint_eq
@@ -32,8 +32,12 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega
   !! indices of G in the list of q+G vectors
   REAL(dp), INTENT(IN) :: q_(3)
   !! q vector (2pi/a units)
-  COMPLEX(dp), INTENT(OUT) :: vkb__d(npwx, nkb)
-  !! beta functions (npw_ <= npwx)
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: ntyp
+  !! number of type of atoms
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! index of type per atom
   REAL(DP), INTENT(IN) :: tau(3,nat)
   !! atomic positions (cc alat units)
   REAL(DP), INTENT(IN) :: tpiba, omega
@@ -50,6 +54,8 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, vkb__d, tau, tpiba, omega
   !! miller index map
   REAL(DP), INTENT(IN) :: g_d(3,*)
   !! g vectors (2pi/a units)
+  COMPLEX(dp), INTENT(OUT) :: vkb__d(npwx, nkb)
+  !! beta functions (npw_ <= npwx)
   !
 #if defined(__CUDA)
   attributes(DEVICE) :: igk__d, vkb__d

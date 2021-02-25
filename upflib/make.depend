@@ -39,14 +39,12 @@ init_us_1.o : uspp_data.o
 init_us_2_base.o : gth.o
 init_us_2_base.o : splinelib.o
 init_us_2_base.o : upf_const.o
-init_us_2_base.o : upf_ions.o
 init_us_2_base.o : upf_kinds.o
 init_us_2_base.o : uspp.o
 init_us_2_base.o : uspp_data.o
 init_us_2_base_gpu.o : gth.o
 init_us_2_base_gpu.o : splinelib.o
 init_us_2_base_gpu.o : upf_const.o
-init_us_2_base_gpu.o : upf_ions.o
 init_us_2_base_gpu.o : upf_kinds.o
 init_us_2_base_gpu.o : uspp.o
 init_us_2_base_gpu.o : uspp_data.o
