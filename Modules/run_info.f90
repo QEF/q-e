@@ -8,10 +8,12 @@
 !==-----------------------------------------------------------------------==!
 MODULE run_info
   !==-----------------------------------------------------------------------==!
-
+  !! Title of the simulation
+  !
   IMPLICIT NONE
-  ! ...  title of the simulation
+  !
   CHARACTER(LEN=75) :: title=' '
+  !! Title of the simulation
   !
 END MODULE run_info
 !==-----------------------------------------------------------------------==!
