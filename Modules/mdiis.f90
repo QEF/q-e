@@ -55,7 +55,7 @@ CONTAINS
   !--------------------------------------------------------------------------
   SUBROUTINE allocate_mdiis(mdiist, mbox, nvec, eta, next)
     !--------------------------------------------------------------------------
-    !! Initialize \(\texttt{mdiis\_type}\)
+    !! Initialize \(\texttt{mdiis_type}\)
     !
     IMPLICIT NONE
     !
@@ -84,7 +84,7 @@ CONTAINS
   !--------------------------------------------------------------------------
   SUBROUTINE deallocate_mdiis(mdiist)
     !--------------------------------------------------------------------------
-    !! Finalize \(\texttt{mdiis\_type}\)
+    !! Finalize \(\texttt{mdiis_type}\)
     !
     IMPLICIT NONE
     !
@@ -106,7 +106,7 @@ CONTAINS
   !--------------------------------------------------------------------------
   SUBROUTINE reset_mdiis(mdiist, keep1)
     !--------------------------------------------------------------------------
-    !! Reset \(\texttt{mdiis\_type}\).
+    !! Reset \(\texttt{mdiis\type}\).
     !
     IMPLICIT NONE
     TYPE(mdiis_type),  INTENT(INOUT) :: mdiist

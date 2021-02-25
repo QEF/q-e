@@ -232,7 +232,7 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvecs
 !=----------------------------------------------------------------------------=!
-     !! G vectors with \(\|G\|^2 < 4*\text{ecutwfc}\), cut-off for wavefunctions
+     !! G vectors with \(\|G\|^2 < 4\cdot\text{ecutwfc}\), cut-off for wavefunctions
      !! ("smooth" grid). Gamma tricks and units as for the "dense" grid.
      
      USE kinds, ONLY: DP
@@ -247,19 +247,21 @@
      !! local  number of smooth vectors (on this processor)
      INTEGER :: ngms_g=0
      !! global number of smooth vectors (summed on procs) 
-     !! in serial execution this is equal to ngms
+     !! in serial execution this is equal to \(\text{ngms}\)
      INTEGER :: ngsx = 0
      !! local number of smooth vectors, max across procs
 
      REAL(DP) :: ecuts = 0.0_DP
-     !! energy cut-off = 4*ecutwfc
+     !! energy cut-off = \(4\cdot\text{ecutwfc}\)
+
      REAL(DP) :: gcutms= 0.0_DP
-     !! ecuts/(2 pi/a)^2, cut-off for |G|^2
+     !! ecuts/(2 \pi/a)^2, cut-off for |G|^2
 
      REAL(DP) :: dual = 0.0_DP
-     !! ecutrho=dual*ecutwfc
+     !! \(\text{ecutrho}=\text{dual}\cdot\text{ecutwfc}
      LOGICAL  :: doublegrid = .FALSE.
-     !! true if smooth and dense grid differ. doublegrid = (dual > 4)
+     !! TRUE if smooth and dense grid differ. \(\text{doublegrid}=(\text{dual}>4)\)
+
 
    CONTAINS
 

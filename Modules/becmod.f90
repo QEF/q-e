@@ -6,15 +6,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-!
 MODULE becmod
-  !
-  !! \(\textit{bec}\) contains <beta|psi> - used in \(\texttt{h_psi}\),
-  !! \(\texttt{s_psi}\), many other places.  
-  !! \(\texttt{calbec( npw, beta, psi, betapsi [, nbnd ] )}\) is an interface
-  !! calculating \(\text{betapsi}(i,j)  = <beta(i)|psi(j)> \) (the sum is over npw 
-  !! components) or \( \text{betapsi}(i,s,j)= <beta(i)|psi(s,j)>\) (s=polarization
-  !! index)
+  !---------------------------------------------------------------------------
+  !! \(\texttt{becmod}\) contains \(\langle\text{beta}|\text{psi}\rangle\) - used
+  !! in \(\texttt{h_psi}\), \(\texttt{s_psi}\) and many other places.  
+  !! \(\texttt{calbec}\) is an interface calculating \(\text{betapsi}(i,j) =
+  !! \langle \text{beta}(i)|\text{psi}(j)\rangle \) (the sum is over \(\text{npw}\) 
+  !! components) or \( \text{betapsi}(i,s,j)= \langle\text{beta}(i)|\text{psi}(s,j)
+  !! \rangle\) (s=polarization index).
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : gamma_only, smallmem
@@ -38,8 +37,9 @@ MODULE becmod
      INTEGER :: ibnd_begin
   END TYPE bec_type
   !
-  TYPE (bec_type) :: becp  ! <beta|psi>
-
+  TYPE (bec_type) :: becp
+  !! \(\langle\text{beta}|\text{psi}\rangle\)
+  !
   PRIVATE
   !
   INTERFACE calbec

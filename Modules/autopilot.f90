@@ -57,10 +57,11 @@
 
 MODULE autopilot
   !---------------------------------------------------------------------------
-  !! This module handles the Autopilot Feature Suite.  
-  !! Written by Lee Atkinson, with help from the ATP team at Targacept, Inc  
-  !! Created June 2005  
-  !! Modified by Yonas Abraham, Sept 2006
+  !! This module handles the Autopilot Feature Suite.
+  !
+  !! Written by Lee Atkinson, with help from the ATP team at Targacept, Inc.  
+  !! Created June 2005.  
+  !! Modified by Yonas Abraham, Sept 2006.
   !
   ! The address for Targacept, Inc. is:
   !   200 East First Street, Suite

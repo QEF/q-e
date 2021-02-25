@@ -8,9 +8,9 @@
 !----------------------------------------------------------------------------
 MODULE mp_world
   !----------------------------------------------------------------------------
-  !! World group - all QE routines using \(\texttt{mp\_world\_start}\) to 
+  !! World group - all QE routines using \(\texttt{mp_world_start}\) to 
   !! start MPI will work in the communicator passed as input to 
-  !! \(\texttt{mp\_world\_start}\)
+  !! \(\texttt{mp_world_start}\)
   !
   USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes 
   USE io_global, ONLY : meta_ionode_id, meta_ionode
@@ -41,7 +41,7 @@ MODULE mp_world
   LOGICAL :: library_mode = .FALSE.
   !! library\_mode = TRUE if QE is called as a library by an external code.  
   !! If true:  
-  !! - \(\texttt{MPI\_Init()}\)    is not called when starting MPI;  
+  !! - \(\texttt{MPI_Init()}\)    is not called when starting MPI;  
   !! - \(\texttt{MPI_Finalize()}\) is not called when stopping MPI.
 #endif
   !
