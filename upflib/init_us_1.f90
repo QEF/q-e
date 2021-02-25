@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
+subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !----------------------------------------------------------------------
   !
   !   This routine performs the following tasks:
@@ -28,7 +28,6 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
-  USE upf_ions,     ONLY : ntyp => nsp, ityp, nat
   USE uspp_data,    ONLY : nqxq, dq, nqx, spline_ps, tab, tab_d2y, qrad, &
                            tab_d, tab_d2y_d, qrad_d
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
@@ -42,6 +41,9 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   USE splinelib
   implicit none
   !
+  integer,  intent(in) :: nat
+  integer,  intent(in) :: ntyp
+  integer,  intent(in) :: ityp(nat)
   real(DP), intent(in) :: omega
   integer,  intent(in) :: ngm
   real(DP), intent(in) :: g(3,ngm), gg(ngm)
@@ -248,7 +250,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL compute_qrad(omega,intra_bgrp_comm)
+  IF ( lmaxq > 0 ) CALL compute_qrad(ntyp, omega, intra_bgrp_comm)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q
@@ -397,7 +399,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
 end subroutine init_us_1
 
 !----------------------------------------------------------------------
-SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
+SUBROUTINE compute_qrad (ntyp, omega, intra_bgrp_comm)
   !----------------------------------------------------------------------
   !
   ! Compute interpolation table qrad(i,nm,l+1,nt) = Q^{(L)}_{nm,nt}(q_i)
@@ -406,7 +408,6 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   !
   USE upf_kinds,    ONLY : dp
   USE upf_const,    ONLY : fpi
-  USE upf_ions,     ONLY : ntyp => nsp
   USE atom,         ONLY : rgrid
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
@@ -414,6 +415,7 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   !
   IMPLICIT NONE
   !
+  integer,  intent(in) :: ntyp
   real(DP), intent(in) :: omega
   integer,  intent(in) :: intra_bgrp_comm
   !

@@ -15,7 +15,6 @@ gth.o : upf_params.o
 init_at_1.o : ../UtilXlib/mp.o
 init_at_1.o : atom.o
 init_at_1.o : upf_const.o
-init_at_1.o : upf_ions.o
 init_at_1.o : upf_kinds.o
 init_at_1.o : uspp.o
 init_at_1.o : uspp_data.o
@@ -31,7 +30,6 @@ init_us_1.o : atom.o
 init_us_1.o : paw_variables.o
 init_us_1.o : splinelib.o
 init_us_1.o : upf_const.o
-init_us_1.o : upf_ions.o
 init_us_1.o : upf_kinds.o
 init_us_1.o : upf_spinorb.o
 init_us_1.o : uspp.o

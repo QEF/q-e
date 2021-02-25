@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE init_at_1(omega,intra_bgrp_comm)
+SUBROUTINE init_at_1( ntyp, omega, intra_bgrp_comm)
   !-----------------------------------------------------------------------
   !! This routine computes a table with the radial Fourier transform 
   !! of the atomic wavefunctions.
@@ -15,13 +15,13 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   USE upf_kinds,    ONLY : DP
   USE atom,         ONLY : rgrid, msh
   USE upf_const,    ONLY : fpi
-  USE upf_ions,     ONLY : ntyp => nsp
   USE uspp_data,    ONLY : tab_at, tab_at_d, nqx, dq
   USE uspp_param,   ONLY : upf
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
   !
+  INTEGER,  INTENT(IN) :: ntyp
   REAL(DP), INTENT(IN) :: omega
   INTEGER,  INTENT(IN) :: intra_bgrp_comm
   !
