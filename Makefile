@@ -63,7 +63,7 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-kc : pw pp w90
+kc : pw pp w90 kcwann
 
 pw : pwlibs
 	if test -d PW ; then \
