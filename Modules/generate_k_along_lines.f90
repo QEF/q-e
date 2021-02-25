@@ -58,7 +58,7 @@ SUBROUTINE generate_k_in_plane(nkaux, xkaux, wkaux, xk, wk, nkstot)
 !! Generate a uniform mesh of k points on the plane defined by
 !! the origin xkaux(:,1), and two vectors \(\text{xkaux}(:,2)\)
 !! and \(\text{xkaux}(:,3)\).  
-!! The size of the mesh is \(\text{wkaux}(2)\text{wkaux}(3)\).
+!! The size of the mesh is \(\text{wkaux}(2)\cdot\text{wkaux}(3)\).
 !
  
 USE kinds, ONLY : DP

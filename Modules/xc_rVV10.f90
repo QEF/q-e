@@ -6,12 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-
 MODULE rVV10 
- 
-! This module is modeled after the vdW-DF implementation in
-! Modules/xc_vdW_DF.f90. See that file for references, explanations, and
-! many useful comments.
+  !--------------------------------------------------------------------------
+  !! This module is modeled after the vdW-DF implementation in
+  !! 'Modules/xc_vdW_DF.f90'. See that file for references, explanations, and
+  !! many useful comments.
 
   USE kinds,             ONLY : dp
   USE constants,         ONLY : pi
@@ -60,7 +59,9 @@ CONTAINS
 !                                       |_____________|
 
   SUBROUTINE xc_rVV10(rho_valence, rho_core, nspin, etxc, vtxc, v, b_value_)
-    
+  
+    !! Calculate exchange-correlation energy and potential for rVV10.
+
     ! Modules to include
     ! -------------------------------------------------------------------------
     
@@ -69,15 +70,24 @@ CONTAINS
     USE cell_base,       ONLY : omega, tpiba
     ! -------------------------------------------------------------------------
     
+    real(dp), intent(IN) :: rho_valence(:)
+    !! valence charge density
+    real(dp), intent(IN) :: rho_core(:)
+    !! core charge density
+    INTEGER,  INTENT(IN) :: nspin
+    !! number of spin components
+    real(dp), intent(inout) :: etxc
+    !! total XC energy
+    real(dp), intent(inout) :: vtxc
+    !! total XC potential
+    real(dp), intent(inout) :: v(:,:)
+    !! XC potential on rho grid
+    real(DP),optional,intent(in) :: b_value_
+    
+    !
     ! Local variables
     ! ----------------------------------------------------------------------------------
-    !                                               _
-    real(dp), intent(IN) :: rho_valence(:)         !     
-    real(dp), intent(IN) :: rho_core(:)            !  PWSCF input variables 
-    INTEGER,  INTENT(IN) :: nspin                  !
-    real(dp), intent(inout) :: etxc, vtxc, v(:,:)  !_  
-    real(DP),optional,intent(in) :: b_value_
-   
+    !   
     
     integer :: i_grid, theta_i, i_proc, I      
     real(dp) :: grid_cell_volume                
@@ -246,16 +256,22 @@ CONTAINS
 
   SUBROUTINE rVV10_stress (rho_valence, rho_core, nspin, sigma)
 
+      !! Calculate the stress tensor for rVV10.
+
       USE fft_base,        ONLY : dfftp
       use gvect,           ONLY : ngm, g
       USE cell_base,       ONLY : tpiba
 
       implicit none
 
-      real(dp), intent(IN) :: rho_valence(:)             !
-      real(dp), intent(IN) :: rho_core(:)                ! Input variables 
+      real(dp), intent(IN) :: rho_valence(:)
+      !! valence charge density
+      real(dp), intent(IN) :: rho_core(:)
+      !! core charge density
       INTEGER,  INTENT(IN) :: nspin
-      real(dp), intent(inout) :: sigma(3,3)              !  
+      !! number of spin components
+      real(dp), intent(inout) :: sigma(3,3)
+      !! stress tensor
 
       real(dp), allocatable :: gradient_rho(:,:)         !
       real(dp), allocatable :: total_rho(:)              ! Rho values
@@ -339,6 +355,8 @@ CONTAINS
    SUBROUTINE rVV10_stress_gradient (total_rho, gradient_rho, q0, dq0_drho, &
                                       dq0_dgradrho, thetas, sigma)
 
+      !! Calculate rVV10 stress with gradient correction.
+                                      
       !-----------------------------------------------------------------------------------
       ! Modules to include
       ! ----------------------------------------------------------------------------------
@@ -704,15 +722,16 @@ CONTAINS
 
 SUBROUTINE spline_interpolation (x, evaluation_points, values)
   
-  
-  real(dp), intent(in) :: x(:), evaluation_points(:)          ! Input variables.  The x values used to form the interpolation
-  !                                                           ! (q_mesh in this case) and the values of q0 for which we are 
-  !                                                           ! interpolating the function
-  
-  complex(dp), intent(inout) :: values(:,:)                   ! An output array (allocated outside this routine) that stores the
-  !                                                           ! interpolated values of the P_i (SOLER equation 3) polynomials.  The
-  !                                                           ! format is values(grid_point, P_i)
-  
+  real(dp), intent(in) :: x(:)
+  !! The x values used to form the interpolation
+  real(dp), intent(in) :: evaluation_points(:)
+  !! (q_mesh in this case) and the values of q0 for which we are 
+  !! interpolating the function.
+  complex(dp), intent(inout) :: values(:,:)
+  !! An output array (allocated outside this routine) that stores the
+  !! interpolated values of the P_i (SOLER equation 3) polynomials. The
+  !! format is values(grid_point, P_i).
+  !
   integer :: Ngrid_points, Nx                                 ! Total number of grid points to evaluate and input x points
   
   real(dp), allocatable, save :: d2y_dx2(:,:)                 ! The second derivatives required to do the interpolation
@@ -792,15 +811,16 @@ END SUBROUTINE spline_interpolation
 !                                |___________________________________|
 
 
-! This routine is modeled after an algorithm from "Numerical Recipes in C" by Cambridge
-! University Press, pages 96-97.  It was adapted for Fortran and for the problem at hand.
-
 SUBROUTINE initialize_spline_interpolation (x, d2y_dx2)
-  
-  real(dp), intent(in)  :: x(:)                    ! The input abscissa values 
-  real(dp), intent(inout) :: d2y_dx2(:,:)          ! The output array (allocated outside this routine)
-  !                                                ! that holds the second derivatives required for 
-  !                                                ! interpolating the function
+
+  !! This routine is modeled after an algorithm from "Numerical Recipes in C" by Cambridge
+  !! University Press, pages 96-97.  It was adapted for Fortran and for the problem at hand.
+
+  real(dp), intent(in)  :: x(:)
+  !! The input abscissa values 
+  real(dp), intent(inout) :: d2y_dx2(:,:)
+  !! The output array (allocated outside this routine) that holds the second derivatives
+  !! required for interpolating the function.
 
   integer :: Nx, P_i, index                        ! The total number of x points and some indexing
   !                                                ! variables
@@ -865,20 +885,18 @@ end SUBROUTINE initialize_spline_interpolation
 !                                         |____________________|
 
 
-! This routine is modeled after an algorithm from "Numerical Recipes in C" by Cambridge
-! University Press, page 97.  Adapted for Fortran and the problem at hand.  This function is used to 
-! find the Phi_alpha_beta needed for equations 11 and 14 of SOLER.
-
-
 subroutine interpolate_kernel(k, kernel_of_k)
+
+  !! This routine is modeled after an algorithm from "Numerical Recipes in C" by Cambridge
+  !! University Press, page 97.  Adapted for Fortran and the problem at hand.  This function is used to 
+  !! find the Phi_alpha_beta needed for equations 11 and 14 of SOLER.
+
+  real(dp), intent(in) :: k
+  !! Input value, the magnitude of the g-vector for the current point.
   
-  real(dp), intent(in) :: k                     ! Input value, the magnitude of the g-vector for the 
-  !                                             ! current point.
-  
-  real(dp), intent(inout) :: kernel_of_k(:,:)   ! An output array (allocated outside this routine)
-  !                                             ! that holds the interpolated value of the kernel
-  !                                             ! for each pair of q points (i.e. the phi_alpha_beta 
-  !                                             ! of the Soler method.
+  real(dp), intent(inout) :: kernel_of_k(:,:)
+  !! An output array (allocated outside this routine) that holds the interpolated value of
+  !! the kernel for each pair of q points (i.e. the phi_alpha_beta of the Soler method.
 
   integer :: q1_i, q2_i, k_i                    ! Indexing variables
  
