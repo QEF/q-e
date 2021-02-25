@@ -379,8 +379,8 @@ END FUNCTION vcut_minimal_image
 
 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!! tools from sax
+!************************************
+!** tools from sax
 
 function num_inverse(a) result(inv)
   real(dp)              :: inv(0:2,0:2)
@@ -413,7 +413,7 @@ function num_determinant(a) result(det)
     - a(1,1)*a(2,3)*a(3,2) - a(1,2)*a(2,1)*a(3,3) - a(1,3)*a(2,2)*a(3,1)
 end function num_determinant
 
-!!! end tools from sax
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!** end tools from sax
+!************************************
 END MODULE coulomb_vcut_module
 

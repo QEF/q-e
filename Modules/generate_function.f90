@@ -5,15 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------
-! Module to generate functions on the real space dense grid
-! Written by Oliviero Andreussi
-!----------------------------------------------------------------------
-!
 !=----------------------------------------------------------------------=!
 MODULE generate_function
 !=----------------------------------------------------------------------=!
-
+  !! Module to generate functions on the real space dense grid.  
+  !! Written by Oliviero Andreussi.
+  
   USE kinds, ONLY: DP
 
   IMPLICIT NONE
