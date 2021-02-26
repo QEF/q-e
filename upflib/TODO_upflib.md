@@ -15,20 +15,13 @@
    - constants  => upf_const
 
 * TO BE DONE: 
-  - ions_base points to upf_ions for variables na(npsx), nax, nat, ityp, nsp.
-    The latter points to uspp for nsp and to upf_params for npsx (this is
-    similar to but not exactly the same as variables ntypx in ions_base)
-    These variables are however used in a very few places inside upflib:
-    init_at_1.f90:  USE upf_ions,     ONLY : ntyp => nsp
-    init_us_1.f90:  USE upf_ions,     ONLY : ntyp => nsp, ityp, nat
-    init_us_1.f90:  USE upf_ions,     ONLY : ntyp => nsp
-    init_us_2_base.f90:  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
-    init_us_2_base_gpu.f90:  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
-    while na, nax are never used
-  - first step: pass ntyp, nat, ityp as arguments, remove reference to upf_ions
-    DONE
-  - second step: nsp becomes an internal variable, not to be exported
-  - finally, upf_ions can be deleted and its variables moved back to ions_base
+  - ions_base points to uspp_param for variable nsp: is this desirable?
+    There are two variables, ntyp (number of types of atoms) and nsp
+    (number of types of pseudopotentials), that are not exactly the same 
+    but they are in practice. Same for ntypx/nspx. Should we always pass
+    ntyp/nsp as argument, or always use the value in the module, or what?
+    Now there is a mixture of the two cases.
+  - upf_ions now contains just a function n_atom_wfc: move somewhere else?
   - upf_spinorb contains just two variables: merge into uspp?
 
 * upflib restructuring:

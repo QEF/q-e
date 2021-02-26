@@ -157,7 +157,7 @@ io_files.o : kind.o
 io_files.o : mp_images.o
 io_files.o : parameters.o
 io_files.o : wrappers.o
-ions_base.o : ../upflib/upf_ions.o
+ions_base.o : ../upflib/uspp.o
 ions_base.o : cell_base.o
 ions_base.o : constants.o
 ions_base.o : io_global.o

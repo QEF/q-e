@@ -77,7 +77,8 @@ MODULE cp_restart_new
       USE mp,                       ONLY : mp_sum, mp_barrier
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
       USE fft_rho,                  ONLY : rho_r2g
-      USE upf_ions,                 ONLY : n_atom_wfc, upf
+      USE upf_ions,                 ONLY : n_atom_wfc
+      USE uspp_param,               ONLY : upf
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
       USE wrappers,                 ONLY : f_copy

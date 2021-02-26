@@ -8,11 +8,9 @@
 !
 MODULE upf_ions
   !
-  USE uspp_param,   ONLY : nsp, upf
   IMPLICIT NONE
-  SAVE
-  !     nsp       = number of species
-  !
+  PRIVATE
+  PUBLIC :: n_atom_wfc
   
 CONTAINS
   !
@@ -21,6 +19,8 @@ CONTAINS
   !----------------------------------------------------------------------------
   !
   ! ... Find number of starting atomic orbitals
+  !
+  USE uspp_param,   ONLY : upf
   !
   IMPLICIT NONE
   !

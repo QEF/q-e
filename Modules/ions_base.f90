@@ -11,7 +11,7 @@
 
       USE kinds,      ONLY : DP
       USE parameters, ONLY : ntypx
-      USE upf_ions,   ONLY : nsp
+      USE uspp_param, ONLY : nsp
       !
       IMPLICIT NONE
       SAVE
