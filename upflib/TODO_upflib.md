@@ -26,6 +26,7 @@
     init_us_2_base_gpu.f90:  USE upf_ions,     ONLY : nat, ntyp => nsp, ityp
     while na, nax are never used
   - first step: pass ntyp, nat, ityp as arguments, remove reference to upf_ions
+    DONE
   - second step: nsp becomes an internal variable, not to be exported
   - finally, upf_ions can be deleted and its variables moved back to ions_base
   - upf_spinorb contains just two variables: merge into uspp?

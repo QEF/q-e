@@ -21,8 +21,7 @@ MODULE uspp_param
   INTEGER :: &
        nh(npsx),             &! number of beta functions per atomic type
        nhm,                  &! max number of different beta functions per atom
-       nbetam,               &! max number of beta functions
-       iver(3,npsx)           ! version of the atomic code
+       nbetam                 ! max number of beta functions
   INTEGER :: &
        lmaxkb,               &! max angular momentum
        lmaxq                  ! max angular momentum + 1 for Q functions

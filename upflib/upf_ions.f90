@@ -8,9 +8,7 @@
 !
 MODULE upf_ions
   !
-  USE pseudo_types, ONLY : pseudo_upf
   USE uspp_param,   ONLY : nsp, upf
-  USE upf_params,   ONLY : npsx
   IMPLICIT NONE
   SAVE
   !     nsp       = number of species
