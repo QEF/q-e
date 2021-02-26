@@ -1091,7 +1091,7 @@ subroutine nlinit
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
                                   dbeta
-      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish
+      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb
@@ -1511,7 +1511,7 @@ end subroutine dylmr2_
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: gstart
       USE uspp,               ONLY: nkb, qq_nt, indv_ijkb0
-      USE uspp_param,         ONLY: nh, ish, upf
+      USE uspp_param,         ONLY: nh, upf
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
       USE cp_interfaces,      ONLY: calbec

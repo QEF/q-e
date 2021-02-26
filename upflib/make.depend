@@ -112,8 +112,6 @@ upf_auxtools.o : upf_kinds.o
 upf_const.o : upf_kinds.o
 upf_error.o : upf_parallel_include.o
 upf_invmat.o : upf_kinds.o
-upf_ions.o : pseudo_types.o
-upf_ions.o : upf_params.o
 upf_ions.o : uspp.o
 upf_spinorb.o : upf_kinds.o
 upf_spinorb.o : upf_params.o

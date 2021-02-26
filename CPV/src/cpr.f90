@@ -22,7 +22,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tfirst, tlast !moved here to make
                                                      !autopilot work
   USE core,                     ONLY : rhoc
-  USE uspp_param,               ONLY : nhm, nh, ish
+  USE uspp_param,               ONLY : nhm, nh
   USE uspp,                     ONLY : nkb, vkb, vkb_d, becsum, deeq, okvan, nlcc_any
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &

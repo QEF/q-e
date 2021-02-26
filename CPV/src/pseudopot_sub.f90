@@ -59,8 +59,7 @@
                             ityp     !  the atomi specie for each atom
       use uspp,       only: nkb, &   !
                             nkbus    !
-      use uspp_param, only: ish,    &!
-                            upf,    &!
+      use uspp_param, only: upf,    &!
                             lmaxkb, &!
                             nhm,    &!
                             nbetam, &!
@@ -91,7 +90,8 @@
             ind = ind + 2 * upf(is)%lll( iv ) + 1
          end do
          nh(is) = ind
-         ish(is)=nkb
+         ! next variable no longer used or existing
+         ! ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
          if(  upf(is)%tvanp ) nkbus = nkbus + na(is) * nh(is)
       end do
@@ -476,7 +476,7 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, ish
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
@@ -611,7 +611,7 @@
       use io_global,          only: stdout
       USE ions_base,          ONLY: nsp
       USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
-      use uspp_param,         only: lmaxkb, ish
+      use uspp_param,         only: lmaxkb
       USE atom,               ONLY: rgrid
       USE uspp,               ONLY: indv
       use uspp,               only: qq_nt, qq_nt_d, beta

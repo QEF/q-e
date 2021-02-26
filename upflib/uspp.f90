@@ -25,10 +25,11 @@ MODULE uspp_param
   INTEGER :: &
        lmaxkb,               &! max angular momentum
        lmaxq                  ! max angular momentum + 1 for Q functions
-  INTEGER :: &
-       nvb,                  &! number of species with Vanderbilt PPs (CPV)
-       ish(npsx)              ! for each specie the index of the first beta 
-                              ! function: ish(1)=1, ish(i)=1+SUM(nh(1:i-1))
+!  INTEGER :: &
+!       nvb,                 &! number of species with Vanderbilt PPs (CPV)
+!       ish(npsx)             ! for each specie the index of the first beta 
+!                             ! function: ish(1)=1, ish(i)=1+SUM(nh(1:i-1))
+! the two variables above are no longer used in CP 
 
 END MODULE uspp_param
 !
