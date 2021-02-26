@@ -11,7 +11,7 @@
 
       USE kinds,      ONLY : DP
       USE parameters, ONLY : ntypx
-      USE upf_ions,   ONLY : nsp,na,nax,nat,ityp
+      USE upf_ions,   ONLY : nsp
       !
       IMPLICIT NONE
       SAVE
@@ -20,6 +20,14 @@
       !     na(is)    = number of atoms of species is
       !     nax       = max number of atoms of a given species
       !     nat       = total number of atoms of all species
+ 
+      INTEGER :: nax      = 0
+      INTEGER :: nat      = 0
+      INTEGER :: na(ntypx)= 0
+
+      !     ityp( i ) = the type of i-th atom in stdin
+
+      INTEGER,  ALLOCATABLE :: ityp(:)
 
       !     zv(is)    = (pseudo-)atomic charge
       !     amass(is) = mass of ions, in atomic mass units

@@ -14,15 +14,7 @@ MODULE upf_ions
   IMPLICIT NONE
   SAVE
   !     nsp       = number of species
-  !     na(is)    = number of atoms of species is
-  !     nax       = max number of atoms of a given species
-  !     nat       = total number of atoms of all species
-  INTEGER :: na(npsx) = 0 
-  INTEGER :: nax      = 0 
-  INTEGER :: nat      = 0 
   !
-  !     ityp( i ) = the type of i-th atom in stdin
-  INTEGER,  ALLOCATABLE :: ityp(:)
   
 CONTAINS
   !
