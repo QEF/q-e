@@ -15,7 +15,7 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
   USE uspp_data,    ONLY : dq
-  USE uspp_param,   ONLY : ntyp => nsp, upf, nbetam
+  USE uspp_param,   ONLY : nsp, upf, nbetam
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -63,11 +63,11 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   WRITE( stdout, '(/5X,"PSEUDOPOTENTIAL Beta Smoothing: ==============================================")' )
   IF (tprint) THEN
      WRITE( stdout,'(/5X,"table grid dimensions:  NQX =",I7," NBETAM =", I4)') nqx, nbetam
-     WRITE( stdout,'(11X,"initial rcut indices:",10i7)') upf(1:ntyp)%kkbeta
-     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)') (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp)
+     WRITE( stdout,'(11X,"initial rcut indices:",10i7)') upf(1:nsp)%kkbeta
+     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)') (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,nsp)
   END IF
   !
-  DO nt=1,ntyp
+  DO nt=1,nsp
      rcut = rgrid(nt)%r(upf(nt)%kkbeta)
      DO ir = upf(nt)%kkbeta, upf(nt)%mesh
         IF ( rgrid(nt)%r(ir) < rcut + drcut ) upf(nt)%kkbeta=ir
@@ -86,7 +86,7 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   CALL divide( intra_bgrp_comm, nqx, startq, lastq )
   !
   !- loop over pseudopotentials
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      WRITE( stdout, '(/5X,a,i4)' ) 'Smoothing PSEUDO #', nt
      IF ( upf(nt)%is_gth ) CYCLE
      !
@@ -227,8 +227,8 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   ENDDO
   !- end of loop over pseudopotentials
   IF (tprint) THEN
-     WRITE( stdout,'(/13X,"final rcut indices:",10i7)') upf(1:ntyp)%kkbeta
-     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)') (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp)
+     WRITE( stdout,'(/13X,"final rcut indices:",10i7)') upf(1:nsp)%kkbeta
+     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)') (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,nsp)
   END IF
   WRITE( stdout, '(/5X,"PSEUDOPOTENTIAL end Beta Smoothing: ==========================================")' )
   !

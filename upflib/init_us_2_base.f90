@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, ntyp, &
+SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
      tpiba, omega, nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g, vkb_ )
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
@@ -19,7 +19,7 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, ntyp, &
   USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
-  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
+  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   !
   IMPLICIT NONE
   !
@@ -33,8 +33,6 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, ntyp, &
   !! q vector (2pi/a units)
   INTEGER, INTENT(IN) :: nat
   !! number of atoms
-  INTEGER, INTENT(IN) :: ntyp
-  !! number of type of atoms
   INTEGER, INTENT(IN) :: ityp(nat)
   !! index of type per atom
   REAL(DP), INTENT(IN) :: tau(3,nat)
@@ -115,7 +113,7 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, ntyp, &
      !
      ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
      jkb = 0
-     DO nt = 1, ntyp
+     DO nt = 1, nsp
         ! ... calculate beta in G-space using an interpolation table:
         !     f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
         DO nb = 1, upf(nt)%nbeta

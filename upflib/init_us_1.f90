@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
+subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !----------------------------------------------------------------------
   !
   !   This routine performs the following tasks:
@@ -34,7 +34,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
                            ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0, &
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, qq_at_d, &
                            qq_nt_d, indv_d, qq_so_d, dvan_so_d, indv_ijkb0_d
-  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam
+  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam, nsp
   USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
@@ -42,7 +42,6 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   implicit none
   !
   integer,  intent(in) :: nat
-  integer,  intent(in) :: ntyp
   integer,  intent(in) :: ityp(nat)
   real(DP), intent(in) :: omega
   integer,  intent(in) :: ngm
@@ -86,7 +85,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   ! but in some versions of the PP files lmax is not set to the maximum
   ! l of the beta functions but includes the l of the local potential
   !
-  do nt=1,ntyp
+  do nt=1,nsp
      upf(nt)%nqlc = MIN ( upf(nt)%nqlc, lmaxq )
      IF ( upf(nt)%nqlc < 0 )  upf(nt)%nqlc = 0
   end do
@@ -126,7 +125,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !   atomic D terms
   !
   ijkb0 = 0
-  do nt = 1, ntyp
+  do nt = 1, nsp
      ih = 1
      do nb = 1, upf(nt)%nbeta
         l = upf(nt)%lll (nb)
@@ -250,7 +249,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL compute_qrad(ntyp, omega, intra_bgrp_comm)
+  IF ( lmaxq > 0 ) CALL compute_qrad(omega, intra_bgrp_comm)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q
@@ -260,7 +259,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
 #endif
   allocate (ylmk0( lmaxq * lmaxq))
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
-  do nt = 1, ntyp
+  do nt = 1, nsp
     if ( upf(nt)%tvanp ) then
       if (upf(nt)%has_so) then
         do ih=1,nh(nt)
@@ -326,7 +325,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   pref = fpi / sqrt (omega)
   call divide (intra_bgrp_comm, nqx, startq, lastq)
   tab (:,:,:) = 0.d0
-  do nt = 1, ntyp
+  do nt = 1, nsp
      if ( upf(nt)%is_gth ) cycle
      do nb = 1, upf(nt)%nbeta
         l = upf(nt)%lll (nb)
@@ -353,7 +352,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      do iq = 1, nqx
         xdata(iq) = (iq - 1) * dq
      enddo
-     do nt = 1, ntyp
+     do nt = 1, nsp
         do nb = 1, upf(nt)%nbeta 
            d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
            call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
@@ -399,7 +398,7 @@ subroutine init_us_1( nat, ntyp, ityp, omega, ngm, g, gg, intra_bgrp_comm )
 end subroutine init_us_1
 
 !----------------------------------------------------------------------
-SUBROUTINE compute_qrad (ntyp, omega, intra_bgrp_comm)
+SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
   !----------------------------------------------------------------------
   !
   ! Compute interpolation table qrad(i,nm,l+1,nt) = Q^{(L)}_{nm,nt}(q_i)
@@ -409,13 +408,12 @@ SUBROUTINE compute_qrad (ntyp, omega, intra_bgrp_comm)
   USE upf_kinds,    ONLY : dp
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
-  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
+  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb, nsp
   USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
   !
-  integer,  intent(in) :: ntyp
   real(DP), intent(in) :: omega
   integer,  intent(in) :: intra_bgrp_comm
   !
@@ -435,7 +433,7 @@ SUBROUTINE compute_qrad (ntyp, omega, intra_bgrp_comm)
   CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
   !
   qrad(:,:,:,:)= 0.d0
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      if ( upf(nt)%tvanp ) then
         DO l = 0, upf(nt)%nqlc -1
            !
@@ -477,7 +475,7 @@ SUBROUTINE compute_qrad (ntyp, omega, intra_bgrp_comm)
         qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
         CALL mp_sum ( qrad (:, :, :, nt), intra_bgrp_comm )
      ENDIF
-     ! ntyp
+     ! nsp
   ENDDO
   !
   DEALLOCATE (besr)

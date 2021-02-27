@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, ntyp, &
+SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
      tpiba, omega, nr1, nr2, nr3, eigts1_d, eigts2_d, eigts3_d, mill_d, g_d, &
      vkb__d )
   !----------------------------------------------------------------------
@@ -20,7 +20,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, ntyp, &
   USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib,    ONLY : splint_eq
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
-  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
+  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   USE device_fbuff_m,   ONLY : dev_buf
   !
   implicit none
@@ -34,8 +34,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, ntyp, &
   !! q vector (2pi/a units)
   INTEGER, INTENT(IN) :: nat
   !! number of atoms
-  INTEGER, INTENT(IN) :: ntyp
-  !! number of type of atoms
   INTEGER, INTENT(IN) :: ityp(nat)
   !! index of type per atom
   REAL(DP), INTENT(IN) :: tau(3,nat)
@@ -103,7 +101,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, ntyp, &
   IF (ANY(istat /= 0)) CALL errore( 'init_us_2_gpu', 'cannot allocate buffers', -1 )
 
   is_gth = .false.
-  do nt = 1, ntyp
+  do nt = 1, nsp
      is_gth = upf(nt)%is_gth
      if (is_gth) then
         allocate (  qg_h( npw_))    
@@ -147,7 +145,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, ntyp, &
 
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
-  do nt = 1, ntyp
+  do nt = 1, nsp
      do nb = 1, upf(nt)%nbeta
         if ( upf(nt)%is_gth ) then
            qg_h = qg_d

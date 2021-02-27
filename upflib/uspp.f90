@@ -10,7 +10,6 @@ MODULE uspp_param
   ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
   !  
   USE pseudo_types, ONLY : pseudo_upf
-  USE upf_kinds,    ONLY : DP
   USE upf_params,   ONLY : npsx
   IMPLICIT NONE
   SAVE
