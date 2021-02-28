@@ -59,7 +59,7 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
   IF ( ionode ) THEN
      !
      WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
-                     &     "of the eigenvalue problem:")' ) 
+                     &     "of the eigenvalue problem:")' )
      IF ( use_para_diag ) THEN
         IF (ortho_parent_comm == intra_pool_comm) THEN
            WRITE( stdout, '(5X,"one sub-group per k-point group (pool) will be used")' )
@@ -68,7 +68,7 @@ SUBROUTINE set_para_diag( nbnd, use_para_diag )
         ELSE
            CALL errore( 'setup','Unexpected sub-group communicator ', 1 )
         END IF
-#if defined(__ELPA)  || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019)
+#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
         WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)

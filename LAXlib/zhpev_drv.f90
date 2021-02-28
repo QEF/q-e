@@ -84,7 +84,7 @@ CONTAINS
 !          of A are overwritten by the corresponding elements of the
 !          tridiagonal matrix T, and the elements below the first
 !          subdiagonal, with the array TAU, represent the unitary
-!          matrix Q as a product of elementary reflectors; 
+!          matrix Q as a product of elementary reflectors;
 !
 !  LDA     (input) INTEGER
 !          Leading dimension of the local matrix AP, LDA > NRL
@@ -95,7 +95,7 @@ CONTAINS
 !
 !  E       (output) DOUBLE PRECISION array, dimension (N-1)
 !          The off-diagonal elements of the tridiagonal matrix T:
-!          E(i) = A(i+1,i) 
+!          E(i) = A(i+1,i)
 !
 !  TAU     (output) COMPLEX(DP) array, dimension (N-1)
 !          The __SCALAR factors of the elementary reflectors (see Further
@@ -132,11 +132,11 @@ CONTAINS
       PARAMETER   ( ONE = ( 1.0_DP, 0.0_DP ),ZERO = ( 0.0_DP, 0.0_DP ),  &
      &             HALF = ( 0.5_DP, 0.0_DP ) )
       REAL(DP)      RONE, RZERO
-      PARAMETER   ( RONE = 1.0_DP, RZERO = 0.0_DP ) 
+      PARAMETER   ( RONE = 1.0_DP, RZERO = 0.0_DP )
 
       INTEGER QI
       INTEGER IL(N+1)
-      INTEGER OW(N+1)  
+      INTEGER OW(N+1)
       COMPLEX(DP) CTMP
       COMPLEX(DP) CTMPV(N+1)
       COMPLEX(DP) TAUL(N+1)
@@ -154,7 +154,7 @@ CONTAINS
 !     ..
 !     .. External Subroutines ..
       EXTERNAL           zaxpy
-      EXTERNAL           zdscal, zscal                                          
+      EXTERNAL           zdscal, zscal
 !     ..
 !     .. External Functions ..
       ! some compiler don't like complex functions
@@ -178,19 +178,19 @@ CONTAINS
 
       DO I = 1,N+1
         QI     = (I-1)/NPROC
-        OW(I)  = MOD((I-1),NPROC) 
+        OW(I)  = MOD((I-1),NPROC)
         IF(ME .le. OW(I) ) then
           IL(I) = QI + 1
         ELSE
           IL(I) = QI
         END IF
-      END DO                                                                    
+      END DO
 !
-!        Reduce the lower triangle of A. 
+!        Reduce the lower triangle of A.
 !
          IF (OW(1).EQ.ME) THEN
            AP( IL(1), 1 ) = DBLE( AP( IL(1), 1 ) )
-         END IF                                                             
+         END IF
 
          DO I = 1, N - 1
 !
@@ -198,10 +198,10 @@ CONTAINS
 !           to annihilate A(i+2:n,i)
 !
             IF (OW(I+1).EQ.ME) THEN
-              ALPHA = AP( IL(I+1), I ) 
-            END IF                                                             
+              ALPHA = AP( IL(I+1), I )
+            END IF
 
-#if defined __MPI 
+#if defined __MPI
            CALL MPI_BCAST( alpha, 2, MPI_DOUBLE_PRECISION, ow( i+1 ), comm, ierr )
            IF( ierr /= 0 ) CALL lax_error__( ' ptredv ', 'error in mpi_bcast 1', ierr )
 #endif
@@ -223,7 +223,7 @@ CONTAINS
                    XNORM = 0.0_DP
                 END IF
 #if defined __MPI
-                XNORM = XNORM ** 2 
+                XNORM = XNORM ** 2
                 CALL MPI_ALLREDUCE( MPI_IN_PLACE, xnorm, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
                 IF( ierr /= 0 ) CALL lax_error__( ' pzhptrd ', 'error in mpi_allreduce 1', ierr )
                 XNORM = SQRT( xnorm )
@@ -236,10 +236,10 @@ CONTAINS
               ALPHI = AIMAG( ALPHA )
               IF( XNORM.EQ.RZERO .AND. ALPHI.EQ.RZERO ) THEN
                 TAUI = RZERO
-              ELSE  
+              ELSE
                 BETA = -SIGN( DLAPY3( ALPHR, ALPHI, XNORM ), ALPHR )
                 SAFMIN = DLAMCH( 'S' ) / DLAMCH( 'E' )
-                RSAFMN = RONE / SAFMIN   
+                RSAFMN = RONE / SAFMIN
                 IF( DABS( BETA ).LT.SAFMIN ) THEN
                   KNT = 0
    10             CONTINUE
@@ -252,12 +252,12 @@ CONTAINS
                   BETA = BETA*RSAFMN
                   ALPHI = ALPHI*RSAFMN
                   ALPHR = ALPHR*RSAFMN
-                  IF( DABS( BETA ).LT.SAFMIN ) GO TO 10 
+                  IF( DABS( BETA ).LT.SAFMIN ) GO TO 10
 
                   IF((N-I-1).GT.0) THEN
                     XNORM = DZNRM2( NI1, AP( I2, I ), 1 )
 #if defined __MPI
-                    XNORM = XNORM ** 2 
+                    XNORM = XNORM ** 2
                     CALL MPI_ALLREDUCE( MPI_IN_PLACE, xnorm, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
                     IF( ierr /= 0 ) CALL lax_error__( ' pzhptrd ', 'error in mpi_allreduce 2', ierr )
                     XNORM = SQRT( XNORM )
@@ -280,7 +280,7 @@ CONTAINS
                   ALPHA = BETA
                   DO J = 1, KNT
                     ALPHA = ALPHA*SAFMIN
-                  END DO   
+                  END DO
 
                 ELSE
 
@@ -295,7 +295,7 @@ CONTAINS
 
                   ALPHA = BETA
                 END IF
-              END IF    
+              END IF
             ENDIF
 !
             E( I ) = ALPHA
@@ -334,17 +334,17 @@ CONTAINS
                  APKI(J) = AP(J,I)
                ENDDO
 #endif
-               DO J = I+1, N+1 
+               DO J = I+1, N+1
                  TAU(J-1) = ZERO
                END DO
-               DO JL = I1, NRL 
+               DO JL = I1, NRL
                  J = ME + (JL-1)*NPROC + 1
                  TAU(J-1) = ZERO
                  DO K = I+1, J
                    TAU(J-1) = TAU(J-1) + TAUI * AP(JL,K) * APKI(K)
                  END DO
                END DO
-               DO J = I+1, N 
+               DO J = I+1, N
                  IF(OW(J+1).EQ.ME) THEN
                    J1 = IL(J+1)
                  ELSE
@@ -396,7 +396,7 @@ CONTAINS
 
 #if defined __MPI
                IF ( NI1 > 0 ) CALL zaxpy(NI1,ALPHA,AP(I1,I),1,TAUL(1),1)
-               
+
                JL = 1
                DO J = I, N
                  CTMPV(J) = ZERO
@@ -453,7 +453,7 @@ CONTAINS
             IF(OW(I).EQ.ME) THEN
               D( I ) = DBLE(AP( IL(I),I ))
             END IF
-#if defined __MPI 
+#if defined __MPI
             CALL MPI_BCAST( d(i), 1, MPI_DOUBLE_PRECISION, ow(i), comm, ierr )
             IF( ierr /= 0 ) CALL lax_error__( ' ptredv ', 'error in mpi_bcast 2', ierr )
 #endif
@@ -571,12 +571,12 @@ CONTAINS
 !     .. Parameters ..
 
       COMPLEX(DP)         ONE, ZERO
-      PARAMETER          ( ONE = (1.0_DP,0.0_DP), ZERO = (0.0_DP,0.0_DP) ) 
+      PARAMETER          ( ONE = (1.0_DP,0.0_DP), ZERO = (0.0_DP,0.0_DP) )
 
       !  change the following parameters to tune the performances
       !
-      INTEGER, PARAMETER :: opt_zgemv = 40  
-      INTEGER, PARAMETER :: opt_zgerc = 40  
+      INTEGER, PARAMETER :: opt_zgemv = 40
+      INTEGER, PARAMETER :: opt_zgerc = 40
 
       INTEGER QI
       INTEGER IL(N+1)
@@ -641,7 +641,7 @@ CONTAINS
         IF(OW(J+1).EQ.ME) THEN
           J1 = IL(J+1)
         ELSE
-          J1 = IL(J+1) + 1 
+          J1 = IL(J+1) + 1
         ENDIF
         DO KL = J1, NRL
           Q( KL, J ) = AP( KL, J-1 )
@@ -671,7 +671,7 @@ CONTAINS
               IF(OW(I+1).EQ.ME) THEN
                 I1 = IL(I+1)
               ELSE
-                I1 = IL(I+1) + 1 
+                I1 = IL(I+1) + 1
               ENDIF
               !
               IF( N-1-I > OPT_ZGEMV ) THEN
@@ -684,10 +684,10 @@ CONTAINS
                  DO J = 1, N-1-I
                     CTMP = ZERO
                     DO KL = I1, NRL
-                       CTMP = CTMP + CONJG( Q( KL, J+I+1 ) ) * Q( KL,I+1 )  
+                       CTMP = CTMP + CONJG( Q( KL, J+I+1 ) ) * Q( KL,I+1 )
                      END DO
                      WORK(J) = CTMP
-                  END DO 
+                  END DO
               END IF
 
 #if defined __MPI
@@ -699,15 +699,15 @@ CONTAINS
               !
               IF( N-1-I > opt_zgerc ) THEN
                  IF( NRL-I1+1 > 0 ) THEN
-                    CALL zgerc( NRL-I1+1, N-1-I, -TAU(I), Q(I1, I+1), 1, work, 1, Q( I1, 1+I+1 ), ldq ) 
+                    CALL zgerc( NRL-I1+1, N-1-I, -TAU(I), Q(I1, I+1), 1, work, 1, Q( I1, 1+I+1 ), ldq )
                  END IF
-              ELSE 
+              ELSE
                  DO J = 1, N-1-I
-                   CTMP = -TAU(I) * CONJG( WORK( J ) ) 
+                   CTMP = -TAU(I) * CONJG( WORK( J ) )
                    DO KL = I1, NRL
-                     Q( KL, J+I+1 ) = Q( KL, J+I+1 ) + CTMP * Q(KL, I+1)    
+                     Q( KL, J+I+1 ) = Q( KL, J+I+1 ) + CTMP * Q(KL, I+1)
                    END DO
-                 END DO 
+                 END DO
               END IF
             END IF
           END IF
@@ -716,7 +716,7 @@ CONTAINS
             IF(OW(I+2).EQ.ME) THEN
               I2 = IL(I+2)              ! I+2
             ELSE
-              I2 = IL(I+2) + 1          ! local ind. of the first element > I+2 
+              I2 = IL(I+2) + 1          ! local ind. of the first element > I+2
             ENDIF
             NI1 = NRL - I2 + 1          ! N-I-1
             IF ( NI1 > 0 ) CALL zscal( NI1, -TAU( I ), Q( I2, I+1 ), 1 )
@@ -733,7 +733,7 @@ CONTAINS
               Q( IL(L+1), I+1 ) = ZERO
             END IF
           END DO
-        END DO   
+        END DO
       END IF
 
 
@@ -829,7 +829,7 @@ CONTAINS
 !          If COMPZ = 'N', then Z is not referenced.
 !          The rows of the matrix are distributed among processors
 !          with blocking factor 1, i.e. for NPROC = 4 :
-!              ROW Index | Processor index owning the row 
+!              ROW Index | Processor index owning the row
 !                    1   |    0
 !                    2   |    1
 !                    3   |    2
@@ -891,7 +891,7 @@ CONTAINS
 !
       INFO = 0
 
-! DEBUG START 
+! DEBUG START
 !      if( n > 400 ) then
 !      write( 4000 + me, * ) LDZ, N, NRL, NPROC, ME, comm
 !      do i = 1, n
@@ -909,7 +909,7 @@ CONTAINS
 !      call mpi_barrier( comm, i )
 !      stop 'qui'
 !      end if
-! DEBUG END 
+! DEBUG END
 
 !
       IF( LSAME( COMPZ, 'N' ) ) THEN
@@ -981,7 +981,7 @@ CONTAINS
       SAFMIN  = dvar(3)
       SAFMAX  = dvar(4)
       SSFMAX  = dvar(5)
-      SSFMIN  = dvar(6) 
+      SSFMIN  = dvar(6)
 !
 !     Compute the eigenvalues and eigenvectors of the tridiagonal
 !     matrix.
@@ -1140,7 +1140,7 @@ CONTAINS
 !        Form shift.
 !
          !
-         ! iteration is performed on one processor and results broadcast 
+         ! iteration is performed on one processor and results broadcast
          ! to all others to prevent potential problems if all processors
          ! do not behave in exactly the same way (even with the same data!)
          !
@@ -1202,7 +1202,7 @@ CONTAINS
                  Z( KL, J+L-1 ) = STEMP*ZTEMP + CTEMP*Z( KL, J+L-1 )
                END DO
              END IF
-           END DO                                                         
+           END DO
          END IF
 !
          GO TO 40
@@ -1282,7 +1282,7 @@ CONTAINS
 !        Form shift.
 !
          !
-         ! iteration is performed on one processor and results broadcast 
+         ! iteration is performed on one processor and results broadcast
          ! to all others to prevent potential problems if all processors
          ! do not behave in exactly the same way (even with the same data!)
          !
@@ -1344,7 +1344,7 @@ CONTAINS
                      Z( KL, J+M-1 ) = STEMP*ZTEMP + CTEMP*Z(KL, J+M-1)
                   END DO
                END IF
-            END DO                                                         
+            END DO
          END IF
 !
          GO TO 90
@@ -1424,10 +1424,10 @@ CONTAINS
 
   SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx, ortho_comm )
 
-#if  defined(__ELPA_2015)|| defined(__ELPA_2016) || defined(__ELPA_2017)
+#if defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017)
      USE elpa1
 
-#elif defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019)
+#elif defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
      use elpa
 
 #endif
@@ -1456,13 +1456,13 @@ CONTAINS
      INTEGER     :: LWORK, LRWORK, LIWORK
      INTEGER     :: desch( 10 ), info, ierr
      CHARACTER   :: jobv
-#if defined(__ELPA)   || defined(__ELPA_2015) || defined(__ELPA_2016)|| defined(__ELPA_2017)  || defined(__ELPA_2018) || defined(__ELPA_2019)    
+#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
      INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
      LOGICAL     :: success
 #endif
-#if defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019)
+#if defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
      class(elpa_t), pointer :: elpa_h
-#endif 
+#endif
      !
      IF( tv ) THEN
         ALLOCATE( v( SIZE( h, 1 ), SIZE( h, 2 ) ) )
@@ -1472,46 +1472,48 @@ CONTAINS
      END IF
 
      call descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, size(h,1), info )
-     
-#if defined(__ELPA)   || defined(__ELPA_2015) || defined(__ELPA_2016)|| defined(__ELPA_2017)  || defined(__ELPA_2018) || defined(__ELPA_2019)
+
+#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
      CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
 
-#if defined(__ELPA)  || defined(__ELPA_2018) || defined(__ELPA_2019)
+#if defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
   ! => from elpa-2018.11.001 to 2019.xx.xx
-  if (elpa_init(20181101) /= ELPA_OK) then        
-    print *, "ELPA API version in use not supported"
+  if (elpa_init(20181101) /= ELPA_OK) then
+    print *, "ELPA API version in use not supported. Aborting ..."
     stop
   endif
 
   elpa_h => elpa_allocate(ierr)
   if (ierr /= ELPA_OK) then
-    print *, "ELPA API version in use is not supported"
+    print *,"Problem initializing ELPA. Aborting ..."
     stop
   endif
 
+#if defined(__DEBUG)
   call elpa_h%set("debug",1,ierr)
+#endif
 
   ! set parameters describing the matrix and it's MPI distribution
   call elpa_h%set("na", n, ierr)
   call elpa_h%set("nev", n, ierr)
-  call elpa_h%set("nblk", size(h,2), ierr) 
-  call elpa_h%set("local_nrows", size(h,1),ierr)      
-  call elpa_h%set("local_ncols", nb,ierr) 
-  call elpa_h%set("mpi_comm_parent", ortho_comm, ierr) 
-  call elpa_h%set("process_row", my_prow, ierr) 
+  call elpa_h%set("nblk", size(h,2), ierr)
+  call elpa_h%set("local_nrows", size(h,1),ierr)
+  call elpa_h%set("local_ncols", nb,ierr)
+  call elpa_h%set("mpi_comm_parent", ortho_comm, ierr)
+  call elpa_h%set("process_row", my_prow, ierr)
   call elpa_h%set("process_col", my_pcol, ierr)
 
   ierr = elpa_h%setup()
   if (ierr .ne. ELPA_OK) then
-     print *,"Problem setting up options. Aborting ..."
+     print *,"Problem setting up ELPA options. Aborting ..."
      stop
   endif
 
   call elpa_h%set("solver", ELPA_SOLVER_1STAGE, ierr)
   call elpa_h%eigenvectors(h, w, v, ierr)
-  
-  call elpa_deallocate(elpa_h)
-  call elpa_uninit()
+
+  call elpa_deallocate(elpa_h, ierr)
+  call elpa_uninit(ierr)
 
 
 #elif defined(__ELPA_2016) || defined(__ELPA_2017)
@@ -1531,7 +1533,7 @@ CONTAINS
 
      h = v
 
-#if defined(__MPI) && (defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017)) 
+#if defined(__MPI) && (defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017))
      CALL mpi_comm_free( mpi_comm_rows, ierr )
      CALL mpi_comm_free( mpi_comm_cols, ierr )
 #endif
@@ -1599,7 +1601,7 @@ END MODULE zhpev_module
         END IF
 
         RETURN
-   END SUBROUTINE 
+   END SUBROUTINE
 
 !==----------------------------------------------==!
 
@@ -1632,4 +1634,4 @@ END MODULE zhpev_module
      DEALLOCATE( rwork )
 
      RETURN
-   END SUBROUTINE 
+   END SUBROUTINE

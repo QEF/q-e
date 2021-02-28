@@ -1454,7 +1454,7 @@ Optional Packages:
                           (default: no)
   --with-elpa-lib         Specify full path ELPA static or dynamic library
                           (default: no)
-  --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
+  --with-elpa-version     Specify ELPA version, only year (2015 - 2020,
                           default: 2016)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
                           that a valid installation with version >= 1.8.16 is
@@ -7441,6 +7441,8 @@ if test "$with_elpa_libs" -eq 1; then
         try_dflags="$try_dflags -D__ELPA_2018"
       elif test "$with_elpa_version" = "2019"; then
         try_dflags="$try_dflags -D__ELPA_2019"
+      elif test "$with_elpa_version" = "2020"; then
+        try_dflags="$try_dflags -D__ELPA_2020"
       else
         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2016" >&5
 $as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2016" >&2;}
