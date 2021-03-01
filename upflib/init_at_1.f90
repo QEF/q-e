@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE init_at_1(omega,intra_bgrp_comm)
+SUBROUTINE init_at_1( omega, intra_bgrp_comm)
   !-----------------------------------------------------------------------
   !! This routine computes a table with the radial Fourier transform 
   !! of the atomic wavefunctions.
@@ -15,12 +15,9 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   USE upf_kinds,    ONLY : DP
   USE atom,         ONLY : rgrid, msh
   USE upf_const,    ONLY : fpi
-  USE upf_ions,     ONLY : ntyp => nsp
-  USE uspp_data,    ONLY : tab_at, nqx, dq
-  USE uspp_param,   ONLY : upf
+  USE uspp_data,    ONLY : tab_at, tab_at_d, nqx, dq
+  USE uspp_param,   ONLY : nsp, upf
   USE mp,           ONLY : mp_sum
-  !
-  USE us_gpum,      ONLY : using_tab_at
   !
   IMPLICIT NONE
   !
@@ -33,9 +30,8 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   REAL(DP) :: vqint, pref, q
   !
   CALL start_clock( 'init_at_1' )
-  CALL using_tab_at(2)
   !
-  ndm = MAXVAL(msh(1:ntyp))
+  ndm = MAXVAL(msh(1:nsp))
   ALLOCATE( aux(ndm), vchi(ndm) )
   !
   ! chiq = radial fourier transform of atomic orbitals chi
@@ -47,7 +43,7 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   !
   tab_at(:,:,:) = 0.0_DP
   !
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      DO nb = 1, upf(nt)%nwfc
         !
         IF (upf(nt)%oc(nb) >= 0.0_DP) THEN
@@ -70,10 +66,14 @@ SUBROUTINE init_at_1(omega,intra_bgrp_comm)
   !
   CALL mp_sum( tab_at, intra_bgrp_comm )
   !
+#if defined __CUDA
+  ! update GPU memory (taking care of zero-dim allocations)
+  if (SIZE(tab_at)>0) tab_at_d=tab_at
+#endif
+  !
   DEALLOCATE( aux, vchi )
   !
   CALL stop_clock ( 'init_at_1' )
-  !
   !
   RETURN
   !

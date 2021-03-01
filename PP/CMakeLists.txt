@@ -245,6 +245,7 @@ target_link_libraries(qe_pp_pw2wannier90_exe
         qe_pp
         qe_fftx
         qe_upflib
+        qe_cpv
         qe_xclib)
 
 ###########################################################
@@ -257,6 +258,7 @@ target_link_libraries(qe_pp_pw2critic_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -270,6 +272,7 @@ target_link_libraries(qe_pp_wfck2r_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -283,6 +286,7 @@ target_link_libraries(qe_pp_initial_state_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_upflib)
 
@@ -336,6 +340,7 @@ target_link_libraries(qe_pp_wannierham_exe
         qe_clib
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp)
 
 ###########################################################
@@ -348,6 +353,7 @@ target_link_libraries(qe_pp_wannierplot_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 

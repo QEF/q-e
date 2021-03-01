@@ -12,23 +12,15 @@
 #if defined(__CUDA)
      USE cudafor
 #endif
+     USE upf_spinorb,  ONLY: fcoef_d
      IMPLICIT NONE
      SAVE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
-     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
-     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+     !
      INTEGER :: iverbosity = 0
 #if defined(__DEBUG)
      iverbosity = 1
 #endif
      !
-     COMPLEX(DP), ALLOCATABLE :: fcoef_d(:, :, :, :, :)
-     !
-#if defined(__CUDA)
-     attributes (DEVICE) :: fcoef_d
-#endif
-
      LOGICAL :: fcoef_ood = .false.    ! used to flag out of date variables
      LOGICAL :: fcoef_d_ood = .false.    ! used to flag out of date variables
      !
@@ -41,7 +33,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE upf_spinorb, ONLY : fcoef
+         USE upf_spinorb, ONLY : fcoef, fcoef_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -75,7 +67,7 @@
      !
      SUBROUTINE using_fcoef_d(intento, debug_info)
          !
-         USE upf_spinorb, ONLY : fcoef
+         USE upf_spinorb, ONLY : fcoef, fcoef_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -110,10 +102,9 @@
 #endif
      END SUBROUTINE using_fcoef_d
      !
-     SUBROUTINE deallocate_spin_orb_gpu
-       IF( ALLOCATED( fcoef_d ) ) DEALLOCATE( fcoef_d )
+     SUBROUTINE deallocate_spinorb_gpu
        fcoef_d_ood = .false.
-     END SUBROUTINE deallocate_spin_orb_gpu
+     END SUBROUTINE deallocate_spinorb_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE upf_spinorb_gpum
 !=----------------------------------------------------------------------------=!

@@ -50,7 +50,7 @@ MODULE xmltools
   INTEGER :: nattr
   CHARACTER(LEN=:), ALLOCATABLE :: attrlist
   !
-  ! variables used keep track of open tags
+  ! variables used to keep track of open tags
   !
   INTEGER :: nlevel = -1
   INTEGER, PARAMETER :: maxlength=80, maxlevel=9

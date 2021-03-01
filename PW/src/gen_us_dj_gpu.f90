@@ -12,6 +12,9 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   !! Calculates the kleinman-bylander pseudopotentials with the
   !! derivative of the spherical harmonics projected on vector u
   !
+  ! AF: more gpu-resident variables can be used, avoiding local GPU-alloc
+  !     and host2dev transfers
+  !
   USE kinds,       ONLY: DP
   USE constants,   ONLY: tpi
   USE ions_base,   ONLY: nat, ntyp => nsp, ityp, tau
@@ -19,15 +22,12 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   USE klist,       ONLY: xk, ngk, igk_k_d
   USE wvfct,       ONLY: npwx
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,   ONLY: nqx, tab, tab_d2y, dq, spline_ps
+  USE uspp_data,   ONLY: nqx, tab, tab_d2y, tab_d, dq, spline_ps
   USE m_gth,       ONLY: mk_dffnl_gth, mk_dffnl_gth_gpu
   USE splinelib
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
-  !
-  USE us_gpum,     ONLY: using_tab, using_tab_d2y, &
-                         using_tab_d, tab_d
-  USE gvect_gpum,  ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
-  USE device_fbuff_m,    ONLY: dev_buf
+  USE gvect,       ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE device_fbuff_m,   ONLY: dev_buf
   !
   IMPLICIT NONE
   !
@@ -59,11 +59,6 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
 #endif
   !
   IF (nkb == 0) RETURN
-  !
-  CALL using_tab(0)
-  CALL using_tab_d(0)
-  !
-  IF (spline_ps) CALL using_tab_d2y(0)
   !
   npw = ngk(ik)
   !

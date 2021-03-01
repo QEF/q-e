@@ -14,6 +14,8 @@ MODULE upf_spinorb
   USE upf_params,  ONLY : lmaxx, lqmax 
   !
   !! FIXME: rot_ylm could be dynamically allocated
+  !!    AF: this module could be merged with uspp, where
+  !         other SO variables are
   !
   IMPLICIT NONE
   SAVE
@@ -24,6 +26,12 @@ MODULE upf_spinorb
   !! transform real spherical harmonics into complex ones
   COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
   !! function needed to account for spinors.
+  !
+  ! GPU vars
+  COMPLEX(DP), ALLOCATABLE :: fcoef_d(:,:,:,:,:)
+#if defined(__CUDA)
+  attributes (DEVICE) :: fcoef_d
+#endif
 
 END MODULE upf_spinorb
 

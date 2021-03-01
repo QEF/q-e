@@ -7,39 +7,58 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
+SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
+     tpiba, omega, nr1, nr2, nr3, eigts1_d, eigts2_d, eigts3_d, mill_d, g_d, &
+     vkb__d )
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
   !! structure factor, for all atoms, in reciprocal space.
   !
-  USE kinds,        ONLY : DP
-  USE ions_base,    ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,    ONLY : tpiba, omega
-  USE constants,    ONLY : tpi
-  USE gvect_gpum,   ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
-  USE wvfct,        ONLY : npwx
-  USE uspp_data,    ONLY : nqx, dq, spline_ps
-  USE us_gpum,      ONLY : tab_d, tab_d2y_d
+  USE upf_kinds,    ONLY : DP
+  USE upf_const,    ONLY : tpi
+  USE uspp_data,    ONLY : nqx, dq, spline_ps, tab_d, tab_d2y_d
   USE m_gth,        ONLY : mk_ffnl_gth
-  USE splinelib_gpum, ONLY : splint_eq_gpu
+  USE splinelib,    ONLY : splint_eq
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
-  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
-!  USE ylmr2_gpum,  ONLY : ylmr2_gpu
-  !
-  USE us_gpum,    ONLY : using_tab_d, using_tab_d2y_d
+  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   USE device_fbuff_m,   ONLY : dev_buf
-#if defined(__CUDA)
-  USE cudafor
-#endif
   !
   implicit none
   !
-  INTEGER, INTENT (IN) :: npw_
-  INTEGER, INTENT (IN) :: igk__d (npw_)
+  INTEGER,  INTENT(IN) :: npw_
+  INTEGER,  INTENT(IN) :: npwx
+  !! leading dim of vkb_
+  INTEGER,  INTENT(IN) :: igk__d(npw_)
+  !! indices of G in the list of q+G vectors
   REAL(dp), INTENT(IN) :: q_(3)
-  COMPLEX(dp), INTENT(OUT) :: vkb__d (npwx, nkb)
+  !! q vector (2pi/a units)
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! index of type per atom
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions (cc alat units)
+  REAL(DP), INTENT(IN) :: tpiba, omega
+  !! reclat units and cell volume
+  INTEGER, INTENT(IN) :: nr1,nr2,nr3
+  !! fft dims (dense grid)
+  COMPLEX(DP), INTENT(IN) :: eigts1_d(-nr1:nr1,nat)
+  !! structure factor 1
+  COMPLEX(DP), INTENT(IN) :: eigts2_d(-nr2:nr2,nat)
+  !! structure factor 2
+  COMPLEX(DP), INTENT(IN) :: eigts3_d(-nr3:nr3,nat)
+  !! structure factor 3
+  INTEGER, INTENT(IN) :: mill_d(3,*)
+  !! miller index map
+  REAL(DP), INTENT(IN) :: g_d(3,*)
+  !! g vectors (2pi/a units)
+  COMPLEX(dp), INTENT(OUT) :: vkb__d(npwx, nkb)
+  !! beta functions (npw_ <= npwx)
+  !
 #if defined(__CUDA)
   attributes(DEVICE) :: igk__d, vkb__d
+  attributes(DEVICE) :: eigts1_d, eigts2_d, eigts3_d
+  attributes(DEVICE) :: mill_d, g_d
 #endif
   !
   !     Local variables
@@ -63,12 +82,8 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
 #endif
   !
   !
-  if (lmaxkb.lt.0) return
-  call start_clock_gpu ('init_us_2')
+  if (lmaxkb<0) return
   
-  call using_tab_d(0)
-  if (spline_ps) call using_tab_d2y_d(0)
-
   ! JR Eventually replace with smarter allocation/deallocation of GPU temp arrays
   ! PB use buffer class here
   !allocate (vkb1_d( npw_,nhm))
@@ -86,7 +101,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   IF (ANY(istat /= 0)) CALL errore( 'init_us_2_gpu', 'cannot allocate buffers', -1 )
 
   is_gth = .false.
-  do nt = 1, ntyp
+  do nt = 1, nsp
      is_gth = upf(nt)%is_gth
      if (is_gth) then
         allocate (  qg_h( npw_))    
@@ -130,14 +145,14 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
 
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
-  do nt = 1, ntyp
+  do nt = 1, nsp
      do nb = 1, upf(nt)%nbeta
         if ( upf(nt)%is_gth ) then
            qg_h = qg_d
            CALL mk_ffnl_gth( nt, nb, npw_, omega, qg_h, vq_h )
            vq_d = vq_h
         else if (spline_ps) then
-           call splint_eq_gpu(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
+           call splint_eq(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
         else
            !$cuf kernel do(1) <<<*,*>>>
            do ig = 1, npw_
@@ -222,10 +237,10 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   CALL dev_buf%release_buffer(  vq_d, istat(4) )
   CALL dev_buf%release_buffer( ylm_d, istat(5) )
   CALL dev_buf%release_buffer(  gk_d, istat(6) )
+  !
   IF (is_gth) THEN
      deallocate ( qg_h, vq_h )
   END IF
-
-  call stop_clock_gpu ('init_us_2')
+  !
   return
-end subroutine init_us_2_gpu
+end subroutine init_us_2_base_gpu

@@ -10,11 +10,13 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib
 OBJS= \
 atom.o \
 atomic_number.o \
+dqvan2.o \
 gth.o \
 init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
 init_at_1.o \
+init_us_2_base.o \
 interp_at_wfc.o \
 paw_variables.o \
 pseudo_types.o \
@@ -32,8 +34,6 @@ upf.o \
 upf_auxtools.o \
 upf_const.o \
 upf_error.o \
-upf_erf.o \
-upf_free_unit.o \
 upf_invmat.o \
 upf_io.o \
 upf_ions.o \
@@ -41,10 +41,8 @@ upf_kinds.o \
 upf_params.o \
 upf_parallel_include.o \
 upf_spinorb.o \
-upf_spinorb_gpum.o \
 upf_to_internal.o \
 upf_utils.o \
-us_gpum.o \
 uspp.o \
 uspp_data.o \
 write_upf_new.o \
@@ -55,8 +53,8 @@ ylmr2.o
 OBJS += \
   interp_at_wfc_gpu.o \
   simpsn_gpu.o \
-  splinelib_gpu.o \
-  uspp_gpu.o \
+  qvan2_gpu.o \
+  init_us_2_base_gpu.o \
   ylmr2_gpu.o
 
 all : libupf.a virtual_v2.x upfconv.x

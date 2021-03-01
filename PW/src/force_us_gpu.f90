@@ -17,8 +17,8 @@ SUBROUTINE force_us_gpu( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
   USE gvect_gpum,           ONLY : g_d
-  USE uspp,                 ONLY : nkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0
-  USE uspp_gpum,            ONLY : vkb_d, using_vkb, using_vkb_d
+  USE uspp,                 ONLY : nkb, vkb_d, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0, &
+                                   using_vkb, using_vkb_d
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -36,14 +36,11 @@ SUBROUTINE force_us_gpu( forcenl )
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
-
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
-  USE uspp_gpum,            ONLY : using_vkb, using_indv_ijkb0, using_qq_at, &
-                                   using_deeq
   USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
-                                    synchronize_bec_type_gpu
-  USE device_fbuff_m,             ONLY : dev_buf
+                                   synchronize_bec_type_gpu
+  USE device_fbuff_m,       ONLY : dev_buf
   USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE
@@ -93,11 +90,11 @@ SUBROUTINE force_us_gpu( forcenl )
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
         IF ( nkb > 0 ) CALL using_vkb_d(1)
-        IF ( nkb > 0 ) &
-             CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+        IF ( nkb > 0 ) CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
      ENDIF
      !
-     CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
+     CALL using_evc_d(0); CALL using_vkb_d(0); 
+     CALL using_becp_d_auto(2)
      CALL calbec_gpu ( npw, vkb_d, evc_d, becp_d )
      !
      CALL using_evc_d(0)
@@ -168,8 +165,9 @@ SUBROUTINE force_us_gpu( forcenl )
 #if defined(__CUDA)
        USE cublas
 #endif
-       USE uspp_gpum,            ONLY : qq_at_d, using_qq_at_d, deeq_d, using_deeq_d
+       USE uspp,                 ONLY : qq_at_d, deeq_d
        USE wvfct_gpum,           ONLY : wg_d, using_wg_d, et_d, using_et_d
+       !
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
@@ -200,10 +198,6 @@ SUBROUTINE force_us_gpu( forcenl )
        !
        CALL using_et_d(0)
        CALL using_wg_d(0)
-       CALL using_indv_ijkb0(0)
-       CALL using_deeq_d(0)
-       CALL using_deeq(0)
-       CALL using_qq_at_d(0)
        !!!!! CHECK becp (set above)
        becp_d_ibnd_begin = becp_d%ibnd_begin
        becp_d_nbnd_loc = becp_d%nbnd_loc
@@ -273,8 +267,8 @@ SUBROUTINE force_us_gpu( forcenl )
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
        CALL using_et(0)
-       CALL using_indv_ijkb0(0)
        CALL using_becp_auto(0);
+       !
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              CALL compute_deff_nc( deff_nc, et(ibnd,ik) )

@@ -9,45 +9,22 @@
 #define DIMS2D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2)
 #define DIMS3D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3)
 #define DIMS4D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4)
-#define DIMS5D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4),lbound(arr,5):ubound(arr,5)
 !=----------------------------------------------------------------------------=!
    MODULE uspp_gpum
 !=----------------------------------------------------------------------------=!
 #if defined(__CUDA)
      USE cudafor
 #endif
+     USE uspp,     ONLY: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d, &
+                         vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
+                         qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
      IMPLICIT NONE
      SAVE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-     INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
-     INTEGER, PARAMETER :: i4b = selected_int_kind(9)
-     INTEGER, PARAMETER :: i8b = selected_int_kind(18)
      INTEGER :: iverbosity = 0
 #if defined(__DEBUG)
      iverbosity = 1
 #endif
      !
-     INTEGER, ALLOCATABLE :: indv_d(:, :)
-     INTEGER, ALLOCATABLE :: nhtol_d(:, :)
-     INTEGER, ALLOCATABLE :: nhtolm_d(:, :)
-     INTEGER, ALLOCATABLE :: ijtoh_d(:, :, :)
-     INTEGER, ALLOCATABLE :: indv_ijkb0_d(:)
-     COMPLEX(DP), ALLOCATABLE :: vkb_d(:, :)
-     REAL(DP), ALLOCATABLE :: becsum_d(:, :, :)
-     REAL(DP), ALLOCATABLE :: ebecsum_d(:, :, :)
-     REAL(DP), ALLOCATABLE :: dvan_d(:, :, :)
-     REAL(DP), ALLOCATABLE :: deeq_d(:, :, :, :)
-     REAL(DP), ALLOCATABLE :: qq_nt_d(:, :, :)
-     REAL(DP), ALLOCATABLE :: qq_at_d(:, :, :)
-     REAL(DP), ALLOCATABLE :: nhtoj_d(:, :)
-     COMPLEX(DP), ALLOCATABLE :: qq_so_d(:, :, :, :)
-     COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:, :, :, :)
-     COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:, :, :, :)
-     !
-#if defined(__CUDA)
-     attributes (DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d, vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
-#endif
-
      LOGICAL :: indv_ood = .false.    ! used to flag out of date variables
      LOGICAL :: indv_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: nhtol_ood = .false.    ! used to flag out of date variables
@@ -90,7 +67,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : indv
+         USE uspp, ONLY : indv, indv_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -124,7 +101,7 @@
      !
      SUBROUTINE using_indv_d(intento, debug_info)
          !
-         USE uspp, ONLY : indv
+         USE uspp, ONLY : indv, indv_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -166,7 +143,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : nhtol
+         USE uspp, ONLY : nhtol, nhtol_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -200,7 +177,7 @@
      !
      SUBROUTINE using_nhtol_d(intento, debug_info)
          !
-         USE uspp, ONLY : nhtol
+         USE uspp, ONLY : nhtol, nhtol_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -242,7 +219,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : nhtolm
+         USE uspp, ONLY : nhtolm, nhtolm_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -276,7 +253,7 @@
      !
      SUBROUTINE using_nhtolm_d(intento, debug_info)
          !
-         USE uspp, ONLY : nhtolm
+         USE uspp, ONLY : nhtolm, nhtolm_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -318,7 +295,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : ijtoh
+         USE uspp, ONLY : ijtoh, ijtoh_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -352,7 +329,7 @@
      !
      SUBROUTINE using_ijtoh_d(intento, debug_info)
          !
-         USE uspp, ONLY : ijtoh
+         USE uspp, ONLY : ijtoh, ijtoh_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -394,7 +371,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : indv_ijkb0
+         USE uspp, ONLY : indv_ijkb0, indv_ijkb0_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -428,7 +405,7 @@
      !
      SUBROUTINE using_indv_ijkb0_d(intento, debug_info)
          !
-         USE uspp, ONLY : indv_ijkb0
+         USE uspp, ONLY : indv_ijkb0, indv_ijkb0_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -470,7 +447,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : vkb
+         USE uspp, ONLY : vkb, vkb_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -504,7 +481,7 @@
      !
      SUBROUTINE using_vkb_d(intento, debug_info)
          !
-         USE uspp, ONLY : vkb
+         USE uspp, ONLY : vkb, vkb_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -546,7 +523,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : becsum
+         USE uspp, ONLY : becsum, becsum_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -580,7 +557,7 @@
      !
      SUBROUTINE using_becsum_d(intento, debug_info)
          !
-         USE uspp, ONLY : becsum
+         USE uspp, ONLY : becsum, becsum_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -622,7 +599,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : ebecsum
+         USE uspp, ONLY : ebecsum, ebecsum_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -656,7 +633,7 @@
      !
      SUBROUTINE using_ebecsum_d(intento, debug_info)
          !
-         USE uspp, ONLY : ebecsum
+         USE uspp, ONLY : ebecsum, ebecsum_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -698,7 +675,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : dvan
+         USE uspp, ONLY : dvan, dvan_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -732,7 +709,7 @@
      !
      SUBROUTINE using_dvan_d(intento, debug_info)
          !
-         USE uspp, ONLY : dvan
+         USE uspp, ONLY : dvan, dvan_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -774,7 +751,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : deeq
+         USE uspp, ONLY : deeq, deeq_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -808,7 +785,7 @@
      !
      SUBROUTINE using_deeq_d(intento, debug_info)
          !
-         USE uspp, ONLY : deeq
+         USE uspp, ONLY : deeq, deeq_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -850,7 +827,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : qq_nt
+         USE uspp, ONLY : qq_nt, qq_nt_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -884,7 +861,7 @@
      !
      SUBROUTINE using_qq_nt_d(intento, debug_info)
          !
-         USE uspp, ONLY : qq_nt
+         USE uspp, ONLY : qq_nt, qq_nt_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -926,7 +903,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : qq_at
+         USE uspp, ONLY : qq_at, qq_at_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -960,7 +937,7 @@
      !
      SUBROUTINE using_qq_at_d(intento, debug_info)
          !
-         USE uspp, ONLY : qq_at
+         USE uspp, ONLY : qq_at, qq_at_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1002,7 +979,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : nhtoj
+         USE uspp, ONLY : nhtoj, nhtoj_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1036,7 +1013,7 @@
      !
      SUBROUTINE using_nhtoj_d(intento, debug_info)
          !
-         USE uspp, ONLY : nhtoj
+         USE uspp, ONLY : nhtoj, nhtoj_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1078,7 +1055,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : qq_so
+         USE uspp, ONLY : qq_so, qq_so_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1112,7 +1089,7 @@
      !
      SUBROUTINE using_qq_so_d(intento, debug_info)
          !
-         USE uspp, ONLY : qq_so
+         USE uspp, ONLY : qq_so, qq_so_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1154,7 +1131,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : dvan_so
+         USE uspp, ONLY : dvan_so, dvan_so_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1188,7 +1165,7 @@
      !
      SUBROUTINE using_dvan_so_d(intento, debug_info)
          !
-         USE uspp, ONLY : dvan_so
+         USE uspp, ONLY : dvan_so, dvan_so_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1230,7 +1207,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : deeq_nc
+         USE uspp, ONLY : deeq_nc, deeq_nc_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1264,7 +1241,7 @@
      !
      SUBROUTINE using_deeq_nc_d(intento, debug_info)
          !
-         USE uspp, ONLY : deeq_nc
+         USE uspp, ONLY : deeq_nc, deeq_nc_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -1300,37 +1277,21 @@
      END SUBROUTINE using_deeq_nc_d
      !
      SUBROUTINE deallocate_uspp_gpu
-       IF( ALLOCATED( indv_d ) ) DEALLOCATE( indv_d )
        indv_d_ood = .false.
-       IF( ALLOCATED( nhtol_d ) ) DEALLOCATE( nhtol_d )
        nhtol_d_ood = .false.
-       IF( ALLOCATED( nhtolm_d ) ) DEALLOCATE( nhtolm_d )
        nhtolm_d_ood = .false.
-       IF( ALLOCATED( ijtoh_d ) ) DEALLOCATE( ijtoh_d )
        ijtoh_d_ood = .false.
-       IF( ALLOCATED( indv_ijkb0_d ) ) DEALLOCATE( indv_ijkb0_d )
        indv_ijkb0_d_ood = .false.
-       IF( ALLOCATED( vkb_d ) ) DEALLOCATE( vkb_d )
        vkb_d_ood = .false.
-       IF( ALLOCATED( becsum_d ) ) DEALLOCATE( becsum_d )
        becsum_d_ood = .false.
-       IF( ALLOCATED( ebecsum_d ) ) DEALLOCATE( ebecsum_d )
        ebecsum_d_ood = .false.
-       IF( ALLOCATED( dvan_d ) ) DEALLOCATE( dvan_d )
        dvan_d_ood = .false.
-       IF( ALLOCATED( deeq_d ) ) DEALLOCATE( deeq_d )
        deeq_d_ood = .false.
-       IF( ALLOCATED( qq_nt_d ) ) DEALLOCATE( qq_nt_d )
        qq_nt_d_ood = .false.
-       IF( ALLOCATED( qq_at_d ) ) DEALLOCATE( qq_at_d )
        qq_at_d_ood = .false.
-       IF( ALLOCATED( nhtoj_d ) ) DEALLOCATE( nhtoj_d )
        nhtoj_d_ood = .false.
-       IF( ALLOCATED( qq_so_d ) ) DEALLOCATE( qq_so_d )
        qq_so_d_ood = .false.
-       IF( ALLOCATED( dvan_so_d ) ) DEALLOCATE( dvan_so_d )
        dvan_so_d_ood = .false.
-       IF( ALLOCATED( deeq_nc_d ) ) DEALLOCATE( deeq_nc_d )
        deeq_nc_d_ood = .false.
      END SUBROUTINE deallocate_uspp_gpu
 !=----------------------------------------------------------------------------=!

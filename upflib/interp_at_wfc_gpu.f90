@@ -1,21 +1,19 @@
 !-----------------------------------------------------------------------
-SUBROUTINE interp_at_wfc_gpu ( npw, qg_d, nwfcm, ntyp, chiq_d )
+SUBROUTINE interp_at_wfc_gpu ( npw, qg_d, nwfcm, chiq_d )
   !-----------------------------------------------------------------------
   !
   ! computes chiq: radial fourier transform of atomic orbitals chi
   !
   USE upf_kinds,  ONLY : dp
-  USE uspp_param, ONLY : upf
-  USE uspp_data,  ONLY : tab_at, dq
-  USE us_gpum,    ONLY : using_tab_at, using_tab_at_d, tab_at_d
+  USE uspp_param, ONLY : upf, nsp
+  USE uspp_data,  ONLY : dq, tab_at, tab_at_d
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)  :: npw
   INTEGER, INTENT(IN)  :: nwfcm
-  INTEGER, INTENT(IN)  :: ntyp
   REAL(dp), INTENT(IN) :: qg_d(npw)
-  REAL(dp), INTENT(OUT):: chiq_d(npw,nwfcm,ntyp)
+  REAL(dp), INTENT(OUT):: chiq_d(npw,nwfcm,nsp)
 #if defined(__CUDA)
   attributes(DEVICE) :: qg_d, chiq_d
 #endif 
@@ -24,10 +22,7 @@ SUBROUTINE interp_at_wfc_gpu ( npw, qg_d, nwfcm, ntyp, chiq_d )
   INTEGER :: i0, i1, i2, i3
   REAL(dp):: qgr, px, ux, vx, wx
   !
-  CALL using_tab_at(0)
-  CALL using_tab_at_d(0)
-  !
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      DO nb = 1, upf(nt)%nwfc
         IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN
            !

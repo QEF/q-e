@@ -1,4 +1,4 @@
-clocks_handler.o  : nvtx_wrapper.o
+clocks_handler.o : nvtx_wrapper.o
 clocks_handler.o : parallel_include.o
 clocks_handler.o : util_param.o
 data_buffer.o : util_param.o

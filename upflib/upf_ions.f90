@@ -8,21 +8,9 @@
 !
 MODULE upf_ions
   !
-  USE pseudo_types, ONLY : pseudo_upf
-  USE uspp_param,   ONLY : nsp, upf
-  USE upf_params,   ONLY : npsx
   IMPLICIT NONE
-  SAVE
-  !     nsp       = number of species
-  !     na(is)    = number of atoms of species is
-  !     nax       = max number of atoms of a given species
-  !     nat       = total number of atoms of all species
-  INTEGER :: na(npsx) = 0 
-  INTEGER :: nax      = 0 
-  INTEGER :: nat      = 0 
-  !
-  !     ityp( i ) = the type of i-th atom in stdin
-  INTEGER,  ALLOCATABLE :: ityp(:)
+  PRIVATE
+  PUBLIC :: n_atom_wfc
   
 CONTAINS
   !
@@ -31,6 +19,8 @@ CONTAINS
   !----------------------------------------------------------------------------
   !
   ! ... Find number of starting atomic orbitals
+  !
+  USE uspp_param,   ONLY : upf
   !
   IMPLICIT NONE
   !

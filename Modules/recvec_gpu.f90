@@ -13,9 +13,7 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvect_gpum
 !=----------------------------------------------------------------------------=!
-#if defined(__CUDA)
-     USE cudafor
-#endif
+     USE gvect, ONLY : gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
      IMPLICIT NONE
      SAVE
      INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
@@ -27,17 +25,6 @@
      iverbosity = 1
 #endif
      !
-     REAL(DP), ALLOCATABLE :: gg_d(:)
-     REAL(DP), ALLOCATABLE :: g_d(:, :)
-     INTEGER, ALLOCATABLE :: mill_d(:, :)
-     COMPLEX(DP), ALLOCATABLE :: eigts1_d(:, :)
-     COMPLEX(DP), ALLOCATABLE :: eigts2_d(:, :)
-     COMPLEX(DP), ALLOCATABLE :: eigts3_d(:, :)
-     !
-#if defined(__CUDA)
-     attributes (DEVICE) :: gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
-#endif
-
      LOGICAL :: gg_ood = .false.    ! used to flag out of date variables
      LOGICAL :: gg_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: g_ood = .false.    ! used to flag out of date variables
@@ -60,7 +47,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE gvect, ONLY : gg
+         USE gvect, ONLY : gg, gg_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -94,7 +81,7 @@
      !
      SUBROUTINE using_gg_d(intento, debug_info)
          !
-         USE gvect, ONLY : gg
+         USE gvect, ONLY : gg, gg_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -136,7 +123,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE gvect, ONLY : g
+         USE gvect, ONLY : g, g_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -170,7 +157,7 @@
      !
      SUBROUTINE using_g_d(intento, debug_info)
          !
-         USE gvect, ONLY : g
+         USE gvect, ONLY : g, g_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -212,7 +199,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE gvect, ONLY : mill
+         USE gvect, ONLY : mill, mill_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -246,7 +233,7 @@
      !
      SUBROUTINE using_mill_d(intento, debug_info)
          !
-         USE gvect, ONLY : mill
+         USE gvect, ONLY : mill, mill_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -288,7 +275,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE gvect, ONLY : eigts1
+         USE gvect, ONLY : eigts1, eigts1_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -322,7 +309,7 @@
      !
      SUBROUTINE using_eigts1_d(intento, debug_info)
          !
-         USE gvect, ONLY : eigts1
+         USE gvect, ONLY : eigts1, eigts1_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -364,7 +351,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE gvect, ONLY : eigts2
+         USE gvect, ONLY : eigts2,eigts2_d 
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -398,7 +385,7 @@
      !
      SUBROUTINE using_eigts2_d(intento, debug_info)
          !
-         USE gvect, ONLY : eigts2
+         USE gvect, ONLY : eigts2,eigts2_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -440,7 +427,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE gvect, ONLY : eigts3
+         USE gvect, ONLY : eigts3,eigts3_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -474,7 +461,7 @@
      !
      SUBROUTINE using_eigts3_d(intento, debug_info)
          !
-         USE gvect, ONLY : eigts3
+         USE gvect, ONLY : eigts3,eigts3_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -510,17 +497,11 @@
      END SUBROUTINE using_eigts3_d
      !
      SUBROUTINE deallocate_gvect_gpu
-       IF( ALLOCATED( gg_d ) ) DEALLOCATE( gg_d )
        gg_d_ood = .false.
-       IF( ALLOCATED( g_d ) ) DEALLOCATE( g_d )
        g_d_ood = .false.
-       IF( ALLOCATED( mill_d ) ) DEALLOCATE( mill_d )
        mill_d_ood = .false.
-       IF( ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
        eigts1_d_ood = .false.
-       IF( ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
        eigts2_d_ood = .false.
-       IF( ALLOCATED( eigts3_d ) ) DEALLOCATE( eigts3_d )
        eigts3_d_ood = .false.
      END SUBROUTINE deallocate_gvect_gpu
 !=----------------------------------------------------------------------------=!

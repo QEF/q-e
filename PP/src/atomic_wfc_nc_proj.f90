@@ -71,7 +71,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
      qg(ig) = sqrt(qg(ig))*tpiba
   ENDDO
   !
-  CALL interp_at_wfc ( npw, qg, nwfcm, ntyp, chiq )
+  CALL interp_at_wfc ( npw, qg, nwfcm, chiq )
   !
   DEALLOCATE (qg, gk)
   ALLOCATE ( aux(npw), sk(npw) )

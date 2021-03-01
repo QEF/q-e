@@ -636,7 +636,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc, &
                                    iunoldwfc2, diropn
   USE buffers,              ONLY : get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb, okvan
+  USE uspp,                 ONLY : nkb, vkb, okvan, using_vkb
   USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_flags,        ONLY : gamma_only
@@ -645,11 +645,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE mp_images,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_barrier
   USE mp_bands,             ONLY : use_bgrp_in_hpsi
-
-  !
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE uspp_gpum,                 ONLY : using_vkb
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !

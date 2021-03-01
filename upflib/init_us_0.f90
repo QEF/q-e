@@ -26,7 +26,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   USE upf_const,    ONLY: fpi, sqrt2, eps8, eps6
   USE atom,         ONLY: rgrid
   USE uspp_data,    ONLY: dq
-  USE uspp_param,   ONLY: ntyp => nsp, upf, lmaxq, nbetam
+  USE uspp_param,   ONLY: nsp, upf, lmaxq, nbetam
   USE mp,           ONLY: mp_sum
   !
   IMPLICIT NONE
@@ -69,7 +69,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   !
   drcut = ABS(LOG(eps8))/SQRT(ecutrho)
   !
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      !
      rcut = rgrid(nt)%r(upf(nt)%kkbeta)
      WRITE (stdout,*)  'RCUT:', rcut, drcut, rcut+drcut
@@ -84,7 +84,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   !
   IF (tprint) THEN
      WRITE (stdout,*) " PSEUDOPOTENTIAL REPORT "
-     WRITE (stdout,*) ' NDM :', ndm, '   ', upf(1:ntyp)%kkbeta
+     WRITE (stdout,*) ' NDM :', ndm, '   ', upf(1:nsp)%kkbeta
      WRITE (stdout,*) ' LMAXQ :', lmaxq, ' NBETAM :', nbetam
   ENDIF
   !
@@ -102,7 +102,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   ! but in some versions of the PP files lmax is not set to the maximum
   ! l of the beta functions but includes the l of the local potential
   !
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      !
      upf(nt)%nqlc = MIN( upf(nt)%nqlc, lmaxq )
      IF (upf(nt)%nqlc < 0)  upf(nt)%nqlc = 0
@@ -122,7 +122,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
                                 ', filter(0.9d0)=', filter(0.9d0,a,nn), &
                                 ', filter(0.8d0)=', filter(0.8d0,a,nn)
   !
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      WRITE (stdout,*) ' NT = ', nt
      !
      IF ( upf(nt)%tvanp ) THEN
@@ -537,7 +537,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
         ENDDO
         !
      ENDIF
-     ! ntyp
+     ! nsp
   ENDDO
   !
   DEALLOCATE( ylmk0 )

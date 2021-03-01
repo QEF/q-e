@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
+subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !----------------------------------------------------------------------
   !
   !   This routine performs the following tasks:
@@ -28,31 +28,21 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
-  USE upf_ions,     ONLY : ntyp => nsp, ityp, nat
-  USE uspp_data,    ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
-  USE splinelib
-  USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv,&
-                           ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0
-  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb
-  USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, lmaxx
+  USE uspp_data,    ONLY : nqxq, dq, nqx, spline_ps, tab, tab_d2y, qrad, &
+                           tab_d, tab_d2y_d, qrad_d
+  USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
+                           ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0, &
+                           nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, qq_at_d, &
+                           qq_nt_d, indv_d, qq_so_d, dvan_so_d, indv_ijkb0_d
+  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam, nsp
+  USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
-  !
-  USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
-                           using_indv, using_indv_d, &
-                           using_nhtolm, using_nhtolm_d, &
-                           using_qq_at, using_qq_at_d, &
-                           using_qq_so, using_qq_so_d, &
-                           using_ijtoh, using_ijtoh_d, &
-                           using_nhtol, using_nhtol_d, &
-                           using_nhtoj, using_nhtoj_d, &
-                           using_dvan_so, using_dvan_so_d, &
-                           using_dvan, using_dvan_d
-  USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
-  USE upf_spinorb_gpum, ONLY : using_fcoef, using_fcoef_d
-  !
+  USE splinelib
   implicit none
   !
+  integer,  intent(in) :: nat
+  integer,  intent(in) :: ityp(nat)
   real(DP), intent(in) :: omega
   integer,  intent(in) :: ngm
   real(DP), intent(in) :: g(3,ngm), gg(ngm)
@@ -95,16 +85,16 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   ! but in some versions of the PP files lmax is not set to the maximum
   ! l of the beta functions but includes the l of the local potential
   !
-  do nt=1,ntyp
+  do nt=1,nsp
      upf(nt)%nqlc = MIN ( upf(nt)%nqlc, lmaxq )
      IF ( upf(nt)%nqlc < 0 )  upf(nt)%nqlc = 0
   end do
 
   if (lspinorb) then
-!
-!  In the spin-orbit case we need the unitary matrix u which rotates the
-!  real spherical harmonics and yields the complex ones.
-!
+     !
+     !  In the spin-orbit case we need the unitary matrix u which rotates the
+     !  real spherical harmonics and yields the complex ones.
+     !
      rot_ylm=(0.d0,0.d0)
      l=lmaxx
      rot_ylm(l+1,1)=(1.d0,0.d0)
@@ -135,7 +125,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   !   atomic D terms
   !
   ijkb0 = 0
-  do nt = 1, ntyp
+  do nt = 1, nsp
      ih = 1
      do nb = 1, upf(nt)%nbeta
         l = upf(nt)%lll (nb)
@@ -186,9 +176,9 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
      !    Here we initialize the D of the solid
      !
      if (upf(nt)%has_so) then
-     !
-     !  first calculate the fcoef coefficients
-     !
+       !
+       !  first calculate the fcoef coefficients
+       !
        do ih = 1, nh (nt)
           li = nhtol(ih, nt)
           ji = nhtoj(ih, nt)
@@ -215,9 +205,9 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
             endif
           enddo
         enddo
-!
-!   and calculate the bare coefficients
-!
+        !
+        !   and calculate the bare coefficients
+        !
         do ih = 1, nh (nt)
            vi = indv (ih, nt)
            do jh = 1, nh (nt)
@@ -259,7 +249,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL compute_qrad(omega,intra_bgrp_comm)
+  IF ( lmaxq > 0 ) CALL compute_qrad(omega, intra_bgrp_comm)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q
@@ -269,7 +259,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
 #endif
   allocate (ylmk0( lmaxq * lmaxq))
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
-  do nt = 1, ntyp
+  do nt = 1, nsp
     if ( upf(nt)%tvanp ) then
       if (upf(nt)%has_so) then
         do ih=1,nh(nt)
@@ -335,7 +325,7 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   pref = fpi / sqrt (omega)
   call divide (intra_bgrp_comm, nqx, startq, lastq)
   tab (:,:,:) = 0.d0
-  do nt = 1, ntyp
+  do nt = 1, nsp
      if ( upf(nt)%is_gth ) cycle
      do nb = 1, upf(nt)%nbeta
         l = upf(nt)%lll (nb)
@@ -352,49 +342,63 @@ subroutine init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
   enddo
   deallocate (besr)
   deallocate (aux)
-
+  !
   call mp_sum(  tab, intra_bgrp_comm )
-
+  !
+  !
   ! initialize spline interpolation
   if (spline_ps) then
-     CALL using_tab_d2y(2);
      allocate( xdata(nqx) )
      do iq = 1, nqx
         xdata(iq) = (iq - 1) * dq
      enddo
-     do nt = 1, ntyp
+     do nt = 1, nsp
         do nb = 1, upf(nt)%nbeta 
            d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
            call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
         enddo
      enddo
      deallocate(xdata)
+     !
   endif
 
-#if defined (__CUDA)
-  CALL using_tab(2)
-  IF (lmaxq > 0) CALL using_qrad(2)
-  CALL using_indv(2); CALL using_indv_d(0) ! trick to update immediately
-  CALL using_nhtolm(2); CALL using_nhtolm_d(0) ! trick to update immediately
-  CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
-  CALL using_ijtoh(2); CALL using_ijtoh_d(0) ! trick to update immediately
-  CALL using_nhtol(2); CALL using_nhtol_d(0)
-  CALL using_nhtoj(2); CALL using_nhtoj_d(0)
-  CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
-  IF (lspinorb) THEN 
-      CALL using_qq_so(2); CALL using_qq_so_d(0) ! trick to update immediately
-      CALL using_fcoef(2) ; CALL using_fcoef_d(0)
-      CALL using_dvan_so(2) ; CALL using_dvan_so_d(0)
-  ELSE
-      CALL using_dvan(2) ; CALL using_dvan_d(0)
-  END IF
+#if defined __CUDA
+  !
+  ! update GPU memory (taking care of zero-dim allocations)
+  !
+  if (nbetam>0) then
+      if (lmaxq>0) qrad_d=qrad
+      tab_d=tab
+      if (spline_ps) tab_d2y_d=tab_d2y
+  endif
+  !
+  if (nhm>0) then
+     indv_d=indv
+     nhtol_d=nhtol
+     nhtolm_d=nhtolm
+     nhtoj_d=nhtoj
+     ijtoh_d=ijtoh
+     qq_at_d=qq_at
+     qq_nt_d=qq_nt
+     if (lspinorb) then
+        qq_so_d=qq_so
+        dvan_so_d=dvan_so
+        fcoef_d=fcoef
+     else
+        dvan_d=dvan
+     endif
+  endif
+  indv_ijkb0_d=indv_ijkb0
+  !
 #endif
+  !
   call stop_clock ('init_us_1')
   return
+  !
 end subroutine init_us_1
 
 !----------------------------------------------------------------------
-SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
+SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
   !----------------------------------------------------------------------
   !
   ! Compute interpolation table qrad(i,nm,l+1,nt) = Q^{(L)}_{nm,nt}(q_i)
@@ -403,13 +407,10 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   !
   USE upf_kinds,    ONLY : dp
   USE upf_const,    ONLY : fpi
-  USE upf_ions,     ONLY : ntyp => nsp
   USE atom,         ONLY : rgrid
-  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
-  USE uspp_data,    ONLY : nqxq, dq, qrad
+  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb, nsp
+  USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
   USE mp,           ONLY : mp_sum
-  !
-  USE us_gpum,      ONLY : using_qrad
   !
   IMPLICIT NONE
   !
@@ -429,12 +430,10 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
   ALLOCATE (aux ( ndm))
   ALLOCATE (besr( ndm))
   !
-  CALL using_qrad(2)
-  !
   CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
   !
   qrad(:,:,:,:)= 0.d0
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      if ( upf(nt)%tvanp ) then
         DO l = 0, upf(nt)%nqlc -1
            !
@@ -476,7 +475,7 @@ SUBROUTINE compute_qrad (omega,intra_bgrp_comm)
         qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
         CALL mp_sum ( qrad (:, :, :, nt), intra_bgrp_comm )
      ENDIF
-     ! ntyp
+     ! nsp
   ENDDO
   !
   DEALLOCATE (besr)

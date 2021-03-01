@@ -37,7 +37,6 @@ SUBROUTINE new_ns( ns )
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-  !
   USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
@@ -232,17 +231,15 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ions_base,            ONLY : nat, ityp, ntyp => nsp
     USE klist,                ONLY : xk, igk_k, ngk
     USE becmod,               ONLY : becp
-    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
+    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0, using_vkb
     USE uspp_param,           ONLY : nhm, nh
     USE wvfct,                ONLY : nbnd
     USE wavefunctions,        ONLY : evc
     USE control_flags,        ONLY : gamma_only
     USE ldaU,                 ONLY : is_hubbard, nwfcU
     USE becmod,               ONLY : bec_type, calbec, &
-                                   allocate_bec_type, deallocate_bec_type
-    !
+                                     allocate_bec_type, deallocate_bec_type
     USE wavefunctions_gpum,   ONLY : using_evc
-    USE uspp_gpum,            ONLY : using_vkb, using_indv_ijkb0
     USE becmod_subs_gpum,     ONLY : using_becp_auto
     !
     IMPLICIT NONE
@@ -259,8 +256,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     INTEGER :: ib, iw, nt, na, ikb, ih, npw
     !
     IF ( nkb == 0 ) RETURN
-    !
-    CALL using_indv_ijkb0(0)
     !
     ! Number of plane waves at a given k point
     !
@@ -335,10 +330,7 @@ SUBROUTINE new_ns_nc( ns )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
-  !
   USE wavefunctions_gpum,   ONLY : using_evc
-  USE uspp_gpum,            ONLY : using_vkb
-  !
   IMPLICIT NONE
   !
   COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)

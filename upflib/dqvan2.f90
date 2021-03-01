@@ -6,8 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0,&
-                 dqg )
+SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   !-----------------------------------------------------------------------
   !! This routine computes the derivatives of the Fourier transform of
   !! the Q function needed in stress assuming that the radial fourier
@@ -17,12 +16,10 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0,&
   !!     dq(g,i,j) = sum_lm (-i)^l ap(lm,i,j) *
   !!                ( yr_lm(g^) dqrad(g,l,i,j) + dyr_lm(g^) qrad(g,l,i,j))
   !
-  USE kinds,       ONLY: DP
+  USE upf_kinds,   ONLY: DP
   USE uspp_data,   ONLY: dq, qrad
   USE uspp_param,  ONLY: lmaxq, nbetam
   USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
-  !
-  USE us_gpum, ONLY : using_qrad
   !
   IMPLICIT NONE
   !
@@ -93,8 +90,6 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0,&
        CALL errore (' dqvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
   IF (ivl > nlx .OR. jvl > nlx) &
        CALL errore (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
-  !
-  CALL using_qrad(0)
   !
   dqg(:) = (0.d0,0.d0)
   !

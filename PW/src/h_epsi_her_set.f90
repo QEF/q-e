@@ -24,7 +24,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE scf,                ONLY: vrs  
   USE gvect
   USE fft_base,           ONLY: dfftp
-  USE uspp,               ONLY: okvan, nkb, vkb
+  USE uspp,               ONLY: okvan, nkb, vkb, using_vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
@@ -37,11 +37,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE fixed_occ
   USE mp,                 ONLY: mp_sum
   USE mp_bands,           ONLY: intra_bgrp_comm
-  USE becmod,             ONLY: bec_type, becp, calbec,ALLOCATE_bec_type, &
-                                deALLOCATE_bec_type
-  !
-  USE uspp_gpum, ONLY : using_vkb
-  !
+  USE becmod,             ONLY: bec_type, becp, calbec,allocate_bec_type, &
+                                deallocate_bec_type
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: pdir

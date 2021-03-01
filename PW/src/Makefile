@@ -58,7 +58,6 @@ deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
-dqvan2.o \
 drhoc.o \
 rotate_wfc.o \
 run_driver.o \
@@ -273,9 +272,7 @@ PWLIBS += \
   g2_kin_gpu.o \
   scf_mod_gpu.o \
   usnldiag_gpu.o \
-  init_us_2_gpu.o \
   add_vuspsi_gpu.o \
-  qvan2_gpu.o \
   addusdens_gpu.o \
   sum_band_gpu.o \
   newd_gpu.o \

@@ -1,28 +1,25 @@
 !-----------------------------------------------------------------------
-SUBROUTINE interp_at_wfc ( npw, qg, nwfcm, ntyp, chiq )
+SUBROUTINE interp_at_wfc ( npw, qg, nwfcm, chiq )
   !-----------------------------------------------------------------------
   !
   ! computes chiq: radial fourier transform of atomic orbitals chi
   !
   USE upf_kinds,  ONLY : dp
-  USE uspp_param, ONLY : upf
-  USE uspp_data,  ONLY : tab_at, dq
-  USE us_gpum,    ONLY : using_tab_at
+  USE uspp_param, ONLY : upf, nsp
+  USE uspp_data,  ONLY : dq, tab_at
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)  :: npw
   INTEGER, INTENT(IN)  :: nwfcm
-  INTEGER, INTENT(IN)  :: ntyp
   REAL(dp), INTENT(IN) :: qg(npw)
-  REAL(dp), INTENT(OUT):: chiq(npw,nwfcm,ntyp)
+  REAL(dp), INTENT(OUT):: chiq(npw,nwfcm,nsp)
   !
   INTEGER :: nt, nb, ig
   INTEGER :: i0, i1, i2, i3
   REAL(dp):: qgr, px, ux, vx, wx
   !
-  CALL using_tab_at(0)
-  DO nt = 1, ntyp
+  DO nt = 1, nsp
      DO nb = 1, upf(nt)%nwfc
         IF ( upf(nt)%oc (nb) >= 0.d0) THEN
            DO ig = 1, npw
@@ -48,30 +45,27 @@ SUBROUTINE interp_at_wfc ( npw, qg, nwfcm, ntyp, chiq )
 END SUBROUTINE interp_at_wfc
 
 !-----------------------------------------------------------------------
-SUBROUTINE interp_at_dwfc ( npw, qg, nwfcm, ntyp, dchiq )
+SUBROUTINE interp_at_dwfc ( npw, qg, nwfcm, dchiq )
   !-----------------------------------------------------------------------
   !
   ! computes dchi/dq
   !
   USE upf_kinds,  ONLY : dp
-  USE uspp_param, ONLY : upf
+  USE uspp_param, ONLY : upf, nsp
   USE uspp_data,  ONLY : tab_at, dq
-  USE us_gpum,    ONLY : using_tab_at
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)  :: npw
   INTEGER, INTENT(IN)  :: nwfcm
-  INTEGER, INTENT(IN)  :: ntyp
   REAL(dp), INTENT(IN) :: qg(npw)
-  REAL(dp), INTENT(OUT):: dchiq(npw,nwfcm,ntyp)
+  REAL(dp), INTENT(OUT):: dchiq(npw,nwfcm,nsp)
   !
   INTEGER :: nt, nb, ig
   INTEGER :: i0, i1, i2, i3
   REAL(dp):: px, ux, vx, wx
   !
-  CALL using_tab_at(0)
-  DO nt=1,ntyp
+  DO nt=1,nsp
      DO nb=1,upf(nt)%nwfc
         IF (upf(nt)%oc(nb) >= 0.d0) THEN
            DO ig = 1, npw

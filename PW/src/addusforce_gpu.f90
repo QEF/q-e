@@ -47,18 +47,15 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE gvect,              ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
   USE noncollin_module,   ONLY : nspin_mag
   USE scf,                ONLY : v, vltot
-  USE uspp,               ONLY : becsum, okvan
+  USE uspp,               ONLY : becsum, becsum_d, okvan
   USE uspp_param,         ONLY : upf, lmaxq, nh, nhm
   USE mp_bands,           ONLY : intra_bgrp_comm
   USE mp_pools,           ONLY : inter_pool_comm
   USE mp,                 ONLY : mp_sum
   USE control_flags,      ONLY : gamma_only
   USE fft_interfaces,     ONLY : fwfft
-  !
   USE gvect_gpum,         ONLY : gg_d, g_d, eigts1_d, eigts2_d, eigts3_d, mill_d
-  !
-  USE uspp_gpum,     ONLY : using_becsum_d, becsum_d
-  USE device_fbuff_m,      ONLY : dev_buf
+  USE device_fbuff_m,     ONLY : dev_buf
 #if defined(__CUDA) 
   USE cudafor 
   USE cublas
@@ -147,9 +144,6 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   DO ig = 1, ngm_l
      qmod_d(ig) = SQRT( gg_d(ngm_s+ig-1) )*tpiba
   ENDDO
-  !
-  ! Sync if needed
-  CALL using_becsum_d(0)
   !
   DO nt = 1, ntyp
      IF ( upf(nt)%tvanp ) THEN

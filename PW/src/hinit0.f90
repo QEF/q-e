@@ -44,9 +44,9 @@ SUBROUTINE hinit0()
   !
   IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
   IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
-  CALL init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
+  CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
-  CALL init_at_1(omega,intra_bgrp_comm)
+  CALL init_at_1(omega, intra_bgrp_comm)
   !
   IF ( restart .AND. startingconfig == 'file' ) THEN
      !
