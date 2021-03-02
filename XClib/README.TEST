@@ -1,3 +1,15 @@
+
+===================== XC_INFO =====================================
+
+xc_info.x is a small serial program that provides infos on XC 
+functionals. If the functionals are from libxc the external parameters,
+when present, are listed with a brief description and their default 
+value. Run command:
+
+	./xc_info.x
+
+===================== XCLIB_TEST ==================================
+
 xclib_test.x is a testing program for the XClib library.
 ------
 This is still a prototype version. The next release will include a simpler 
@@ -14,19 +26,8 @@ Then you can run tests using commands like:
 	./xclib_test.x < input_file > output_file                [ serial ]
         mpirun -np=2 xclib_test.x < input_file > output file     [parallel]
 
-Four options available:
-
-* dft-info: infos on the input dft are provided. If the functionals
-            functionals are from libxc the external parameters, when
-            present, are listed with a brief description and their
-            default value.
-            Example of input_file content:
-
-            &INPUT_NAMELIST
-                test='dft-info'
-                dft1='mgga_x_scan mgga_c_scan'
-            /
-      
+Three options available:
+            
 * gen-benchmark: the program generates an xml file with a set of data
                  to compare the XC output to. No need to add the 
                  '> output_file' to the submission.

@@ -33,11 +33,16 @@ BEEF = \
 pbecor.o \
 beefun.o
 
-all: xc_lib.a
+all: xc_lib.a xc_info.x
 
 xc_lib.a: $(XCL) $(BEEF)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
+
+xc_info.x : xc_info.o xc_lib.a
+	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
+		xc_info.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
+	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 xclib_test.x : xclib_test.o xc_lib.a
 	$(LD) ../upflib/libupf.a $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \

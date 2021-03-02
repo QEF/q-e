@@ -11,7 +11,6 @@ PROGRAM xclib_test
   !==========================================================================
   !! Testing program for xc\_lib library in QE. Different options:
   !
-  !! * dft-info: provides infos on the input DFT (both QE and Libxc);
   !! * xc-benchmark: difference with respect to a given set of benchmark data
   !!   (on file);
   !! * gen-benchmark: generates set of benchmark data on file;
@@ -55,11 +54,6 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
   CHARACTER(LEN=120) :: lxc_kind, lxc_family
   INTEGER :: n_ext, id(6)
-#if (XC_MAJOR_VERSION>5)
-  !workaround to keep compatibility with libxc develop version
-  INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
-  INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
-#endif
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -316,124 +310,6 @@ PROGRAM xclib_test
 #if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
-  !
-  !==========================================================================
-  ! PRINT DFT INFOS
-  !==========================================================================
-  !
-  IF ( TRIM(test)=='dft-info' .AND. mype==root ) THEN
-    !
-    CALL xclib_set_dft_from_name( dft1 )
-    !
-    iexch1 = xclib_get_ID('LDA','EXCH')
-    is_libxc(1) = xclib_dft_is_libxc('LDA','EXCH')
-    icorr1 = xclib_get_ID('LDA','CORR')
-    is_libxc(2) = xclib_dft_is_libxc('LDA','CORR')
-    IF (iexch1+icorr1/=0)  LDA = .TRUE.
-    igcx1 = xclib_get_ID('GGA','EXCH')
-    is_libxc(3) = xclib_dft_is_libxc('GGA','EXCH')
-    igcc1 = xclib_get_ID('GGA','CORR')
-    is_libxc(4) = xclib_dft_is_libxc('GGA','CORR')
-    IF (igcx1+igcc1/=0)    GGA = .TRUE.
-    imeta1  = xclib_get_ID('MGGA','EXCH')
-    is_libxc(5) = xclib_dft_is_libxc('MGGA','EXCH')
-    imetac1 = xclib_get_ID('MGGA','CORR')
-    is_libxc(6) = xclib_dft_is_libxc('MGGA','CORR')
-    IF (imeta1+imetac1/=0) MGGA = .TRUE.
-    !
-    WRITE(stdout,*) " "
-    WRITE(stdout,*) "=================================== "//CHAR(10)//" "
-    WRITE(stdout,*) "XC functional IDs:"
-    WRITE(stdout,*) CHAR(10)//"LDA IDs"
-    WRITE(stdout,121) iexch1, is_libxc(1), icorr1, is_libxc(2)
-    WRITE(stdout,*) CHAR(10)//"GGA IDs"
-    WRITE(stdout,121) igcx1, is_libxc(3), igcc1, is_libxc(4)
-    WRITE(stdout,*) CHAR(10)//"MGGA IDs"
-    WRITE(stdout,121) imeta1, is_libxc(5), imetac1, is_libxc(6)
-    !
-    IF (ANY(.NOT.is_libxc(:))) THEN
-      WRITE(stdout,*) CHAR(10)//"References for QE functionals are temporarily&
-                                & listed in Modules/funct.f90"
-    ENDIF
-    !
-#if defined(__LIBXC)
-    !
-    IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1, .FALSE. )
-    !
-    WRITE(stdout,*) CHAR(10)//"LIBXC functional infos:"
-    !
-    id(1) = iexch1 ; id(2) = icorr1
-    id(3) = igcx1  ; id(4) = igcc1
-    id(5) = imeta1 ; id(6) = imetac1
-    !
-    DO i = 1, 6
-      IF (is_libxc(i)) THEN
-        WRITE(stdout,*) CHAR(10)//"Functional with ID:", id(i)
-        !
-        SELECT CASE( xc_f03_func_info_get_kind(xc_info(i)) )
-        CASE( XC_EXCHANGE )
-          WRITE(lxc_kind, '(a)') 'Exchange functional'
-        CASE( XC_CORRELATION )
-          WRITE(lxc_kind, '(a)') 'Correlation functional'
-        CASE( XC_EXCHANGE_CORRELATION )
-          WRITE(lxc_kind, '(a)') 'Exchange+Correlation functional'
-        CASE( XC_KINETIC )
-          WRITE(lxc_kind, '(a)') 'Kinetic energy functional - not implemented&
-                                 &in QE.'
-        CASE DEFAULT
-          WRITE(lxc_kind, '(a)') 'Unknown kind'
-        END SELECT
-        !
-        SELECT CASE( xc_f03_func_info_get_family(xc_info(i)) )
-        CASE( XC_FAMILY_LDA )
-          WRITE(lxc_family,'(a)') "LDA"
-        CASE( XC_FAMILY_GGA )
-          WRITE(lxc_family,'(a)') "GGA"
-        CASE( XC_FAMILY_HYB_GGA )
-          WRITE(lxc_family,'(a)') "Hybrid GGA"
-        CASE( XC_FAMILY_MGGA )
-          WRITE(lxc_family,'(a)') "MGGA"
-        CASE( XC_FAMILY_HYB_MGGA )
-          WRITE(lxc_family,'(a)') "Hybrid MGGA"
-        CASE DEFAULT
-          WRITE(lxc_family,'(a)') "unknown"
-        END SELECT
-        !
-        WRITE(*,'("The functional ''", a, "'' is a ", a, ", it belongs to &
-               &the ''", a, "'' family and is defined in the reference(s): &
-               &")') TRIM(xc_f03_func_info_get_name(xc_info(i))), TRIM(lxc_kind)&
-               ,TRIM(lxc_family)
-        ii = 0
-        DO WHILE( ii >= 0 )
-         WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(xc_f03_func_reference_get_ref( &
-                                   xc_f03_func_info_get_references(xc_info(i), ii)))
-        ENDDO
-        !
-        WRITE(stdout,*)
-        n_ext = xc_f03_func_info_get_n_ext_params( xc_info(i) )
-        WRITE(stdout,*) 'Number of external parameters: ', n_ext
-        !
-        IF ( n_ext/=0 ) THEN
-          DO ii = 0, n_ext-1
-            WRITE(stdout,*) &
-              TRIM(xc_f03_func_info_get_ext_params_description(xc_info(i), ii))
-            WRITE(stdout,*) 'Default value: ', &
-                   xc_f03_func_info_get_ext_params_default_value(xc_info(i), ii)
-          ENDDO
-        ENDIF
-        !
-      ENDIF
-    ENDDO
-    !
-    IF (xclib_dft_is_libxc('ANY')) CALL xclib_finalize_libxc()
-    !
-#endif
-    !
-    121 FORMAT('Exch: ',I3,' is libxc: ',L1,';  Corr: ',I3,' is libxc: ',L1 )
-    !
-    GOTO 10
-    !
-  ENDIF !dft-info
   !
   !
   ! ... point distribution over CPUs
