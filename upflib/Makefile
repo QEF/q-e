@@ -3,7 +3,7 @@
 include ../make.inc
 
 QEMODS = libupf.a
-MODFLAGS= $(MOD_FLAG)../UtilXlib
+MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../external/devxlib/src
 
 # list of modules
 
