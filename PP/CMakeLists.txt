@@ -212,7 +212,6 @@ set_target_properties(qe_pp_xctest_exe PROPERTIES OUTPUT_NAME xctest.x)
 target_link_libraries(qe_pp_xctest_exe
     PRIVATE
         qe_modules
-        qe_cpv
         qe_pp
         qe_xclib)
 
@@ -245,7 +244,6 @@ target_link_libraries(qe_pp_pw2wannier90_exe
         qe_pp
         qe_fftx
         qe_upflib
-        qe_cpv
         qe_xclib)
 
 ###########################################################
