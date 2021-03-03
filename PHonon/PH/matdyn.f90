@@ -68,11 +68,10 @@ PROGRAM matdyn
   !                  (must be specified if dos=.true., ignored otherwise)
   !     deltaE    energy step, in cm^(-1), for DOS calculation: from min
   !               to max phonon energy (default: 1 cm^(-1) if ndos, see
-  !     degauss   DOS broadening (in cm^-1). Default 0 - meaning use tetrahedra
-  !               to max phonon energy (default: 1 cm^(-1) if ndos, see
   !               below, is not specified)
   !     ndos      number of energy steps for DOS calculations
   !               (default: calculated from deltaE if not specified)
+  !     degauss   DOS broadening (in cm^-1). Default 0 - meaning use tetrahedra
   !     fldos     output file for dos (default: 'matdyn.dos')
   !               the dos is in states/cm(-1) plotted vs omega in cm(-1)
   !               and is normalised to 3*nat, i.e. the number of phonons
@@ -641,7 +640,7 @@ PROGRAM matdyn
 
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
         !
-        ! Un-normalize eigen vectors and populate zq
+        ! Convert from displacements to eigenvectors (see rigid.f90 :: dyndiag)
         do i = 1, 3*nat
            do na = 1, nat
               do ipol = 1,3
