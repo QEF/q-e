@@ -8,23 +8,7 @@
 !----------------------------------------------------------------------------
 MODULE command_line_options
   !----------------------------------------------------------------------------
-  !
-  ! ... Utilities to read command-line variables and to set related variables:
-  ! ... "get_command_line()" with no arguments: 
-  ! ...                      reads the command line,
-  ! ...                      interprets QE-specific variables,
-  ! ...                      stores the corresponding values
-  ! ...                      (nimage, npool, ntg, nyfft, nband, ndiag),
-  ! ...                      broadcasts them to all processors,
-  ! ...                      leaves the rest of the command line 
-  ! ...                      (including the code name) in "command_line"
-  ! ... "get_command_line(input_command_line)" with a string argument:
-  ! ...                      as above, but reading from the input string
-  ! ... Variables are read on one processor and broadcast to all others
-  ! ... because there is no guarantee that all processors have access to
-  ! ... command-line options in parallel execution.
-  ! ... "set_command_line" directly sets nimage, npool, ntg, nyfft, nband, ndiag.
-  ! ... Useful to initialize parallelism when QE is used as a library
+  !! Utilities to read command-line variables and to set related variables.
   !
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : root, world_comm
@@ -49,6 +33,16 @@ MODULE command_line_options
 CONTAINS
   !
   SUBROUTINE get_command_line ( input_command_line )
+     
+     !! With no arguments: reads the command line, interprets QE-specific variables,
+     !! stores the corresponding values (nimage, npool, ntg, nyfft, nband, ndiag),
+     !! broadcasts them to all processors, leaves the rest of the command line 
+     !! (including the code name) in "command\_line".  
+     !! With a string argument: as above, but reading from the input string.  
+     !! Variables are read on one processor and broadcast to all others because
+     !! there is no guarantee that all processors have access to command-line
+     !! options in parallel execution.
+     
      IMPLICIT NONE
      CHARACTER(LEN=*), OPTIONAL :: input_command_line 
      INTEGER :: narg
@@ -227,7 +221,10 @@ CONTAINS
   END SUBROUTINE my_getarg 
 
   SUBROUTINE set_command_line ( nimage, npool, ntg, nmany, nyfft, nband, ndiag, pencil_decomposition)
-     ! directly set command line options without going through the command line
+     
+     !! directly set command line options without going through the command line. Useful to initialize
+     !! parallelism when QE is used as a library
+     
      IMPLICIT NONE
 
      INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nmany, nyfft, nband, ndiag, pencil_decomposition
