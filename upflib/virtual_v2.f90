@@ -28,7 +28,6 @@ PROGRAM virtual_test
 
   USE upf_kinds, ONLY: dp
   USE pseudo_types, ONLY : pseudo_upf, deallocate_pseudo_upf
-  USE upf_module, ONLY : read_ps
   USE write_upf_new, ONLY : write_upf
   USE upf_io, ONLY : stdin, stdout
   !
