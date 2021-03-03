@@ -110,7 +110,7 @@ MODULE dft_par_mod
     DATA corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
                 'OBW', 'GL' , 'KZK' /
     !
-    DATA gradx / 'NOGX', 'B88',  'GGX',  'PBX',  'RPB',  'HCTH', 'OPTX', &
+    DATA gradx / 'NOGX', 'B88',  'GGX',  'PBX',  'REVX', 'HCTH', 'OPTX', &
                  'xxxx', 'PB0X', 'B3LP', 'PSX',  'WCX',  'HSE',  'RW86', 'PBE', &
                  'xxxx', 'C09X', 'SOX',  'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
                  'OBK8', 'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', &

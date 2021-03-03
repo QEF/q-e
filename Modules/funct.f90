@@ -55,7 +55,8 @@ MODULE funct
   !              "pw91"  = "sla+pw+ggx+ggc"    = PW91 (aka GGA)
   !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
   !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
-  !              "revpbe"= "sla+pw+rpb+pbc"    = revPBE (Zhang-Yang)
+  !              "revpbe"= "sla+pw+revx+pbc"   = revPBE (Zhang-Yang)
+  !              "rpbe"  = "sla+pw+rpbx+pbc"   = RPBE (Hammer-Hansen-Norskov)
   !              "pw86pbe" = "sla+pw+pw86+pbc" = PW86 exchange + PBE correlation
   !              "b86bpbe" = "sla+pw+b86b+pbc" = B86b exchange + PBE correlation
   !              "pbesol"= "sla+pw+psx+psc"    = PBEsol
@@ -79,7 +80,7 @@ MODULE funct
   !              "x3lyp"                        = X3LYP
   !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
-  !              "vdw-df"       ="sla+pw+rpb +vdw1"      = vdW-DF1
+  !              "vdw-df"       ="sla+pw+revx+vdw1"      = vdW-DF1
   !              "vdw-df2"      ="sla+pw+rw86+vdw2"      = vdW-DF2
   !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"      = vdW-DF-C09
   !              "vdw-df2-c09"  ="sla+pw+c09x+vdw2"      = vdW-DF2-C09
@@ -132,7 +133,7 @@ MODULE funct
   !              "b88"    Becke88 (beta=0.0042)          igcx =1
   !              "ggx"    Perdew-Wang 91                 igcx =2
   !              "pbx"    Perdew-Burke-Ernzenhof exch    igcx =3
-  !              "rpb"    revised PBE by Zhang-Yang      igcx =4
+  !              "revx"   revised PBE by Zhang-Yang      igcx =4
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
   !              "optx"   Handy's exchange functional    igcx =6
   !              "pb0x"   PBE0 (PBE exchange*0.75)       igcx =8
@@ -170,7 +171,7 @@ MODULE funct
   !              "b86x"   B86b exchange * 0.75           igcx =41
   !              "b88x"   B88 exchange * 0.50            igcx =42
   !              "beex"   BEE exchange                   igcx =43 
-  !              "rpbe"   Hammer-Hansen-Norskov          igcx =44
+  !              "rpbx"   Hammer-Hansen-Norskov          igcx =44
   !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
   !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
   !
