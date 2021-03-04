@@ -16,12 +16,12 @@ set(src_upflib
     read_cpmd.f90 
     read_fhi.f90 
     read_ncpp.f90 
+    read_ps.f90 
     read_upf_new.f90 
     read_upf_v1.f90 
     read_uspp.f90 
     splinelib.f90 
     simpsn.f90 
-    upf.f90 
     upf_auxtools.f90 
     upf_const.f90 
     upf_error.f90 
