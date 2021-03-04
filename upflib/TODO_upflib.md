@@ -17,11 +17,11 @@
 * TO BE DONE: 
   - set the correct value of nsp in uspp_param when allocate_uspp is called,
     use it ONLY inside upflib, remove link of nsp in ions_base to uspp_param
-  - nh should be dynamically allocated together with upf(:), or at the very
-    beginning anyway. It seems to me that it belongs to the upf structure,
-    but it is used in too many places. Then, npsx can be removed.
-  - pre_init, in PW/src/init_run.f90, should be moved to upflib.
-    Same for pseudopotential_indexes from CPV/src/pseudopot_sub.f90.
+  - nh is allocated in nit_nh but maybe it should allocateed when upf is read?
+    Also:  nh is a separate variable but maybe it should be part of upf?
+    It is used in many many places, though!
+  - Merge pseudopotential_indexes from CPV/src/pseudopot_sub.f90 with the
+    uspp initialization in upflib (init_us_1 etc)
   - upf_ions now contains just a function n_atom_wfc: move somewhere else?
   - upf_spinorb contains just two variables: merge into uspp?
 

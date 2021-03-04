@@ -53,7 +53,6 @@ SUBROUTINE allocate_nlpot
   ! allocate an array that includes q+G vectors up to |q+G|_max <= |Gmax|+|q|
   !
   nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
-  lmaxq = 2*lmaxkb+1
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)

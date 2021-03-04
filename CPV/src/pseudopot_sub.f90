@@ -60,9 +60,9 @@
       use uspp,       only: nkb, &   !
                             nkbus    !
       use uspp_param, only: upf,    &!
+                            init_nh,&!
                             lmaxkb, &!
                             nhm,    &!
-                            nbetam, &!
                             nh,     &!
                             lmaxq    !
       use uspp,       only: nhtol,  &!
@@ -75,30 +75,23 @@
      
       !
       INTEGER :: is, iv, ind, il, lm, ih, jh, ijv, ijkb0, ia
+      !
+      !     find  number of beta functions per species and max l
       !     ------------------------------------------------------------------
-      !     find  number of beta functions per species, max dimensions,
-      !     total number of beta functions (all and Vanderbilt only)
+      CALL init_nh ()
+      !
+      !     find total number of beta functions (all and Vanderbilt only)
       !     ------------------------------------------------------------------
-      lmaxkb   = -1
       nkb      =  0
       nkbus    =  0
       !
       do is = 1, nsp
-         ind = 0
-         do iv = 1, upf(is)%nbeta
-            lmaxkb = max( lmaxkb, upf(is)%lll( iv ) )
-            ind = ind + 2 * upf(is)%lll( iv ) + 1
-         end do
-         nh(is) = ind
          ! next variable no longer used or existing
          ! ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
          if(  upf(is)%tvanp ) nkbus = nkbus + na(is) * nh(is)
       end do
-      nhm    = MAXVAL( nh(1:nsp) )
-      nbetam = MAXVAL( upf(1:nsp)%nbeta )
       if (lmaxkb > lmaxx) call errore(' pseudopotential_indexes ',' l > lmax ',lmaxkb)
-      lmaxq = 2*lmaxkb + 1
       !
       ! the following prevents an out-of-bound error: nqlc(is)=2*lmax+1
       ! but in some versions of the PP files lmax is not set to the maximum

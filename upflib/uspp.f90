@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2011 Quantum ESPRESSO group
+! Copyright (C) 2004-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,26 +10,62 @@ MODULE uspp_param
   ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
   !  
   USE pseudo_types, ONLY : pseudo_upf
-  USE upf_params,   ONLY : npsx
   IMPLICIT NONE
   SAVE
   !
   INTEGER :: nsp = 0 
   TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
+  !! the upf structure contains all info on atomic pseudopotential parameters
+  INTEGER, ALLOCATABLE :: nh(:)
+  !! number of beta functions per atomic type (maybe it should be in upf?)
+  INTEGER :: nhm
+  !! max number of different beta functions per atom
+  INTEGER ::nbetam
+  !! max number of beta functions
+  INTEGER :: lmaxkb
+  !! max angular momentum of beta functions
+  INTEGER :: lmaxq
+  !! max angular momentum + 1 for Q functions
   !
-  INTEGER :: &
-       nh(npsx),             &! number of beta functions per atomic type
-       nhm,                  &! max number of different beta functions per atom
-       nbetam                 ! max number of beta functions
-  INTEGER :: &
-       lmaxkb,               &! max angular momentum
-       lmaxq                  ! max angular momentum + 1 for Q functions
-!  INTEGER :: &
-!       nvb,                 &! number of species with Vanderbilt PPs (CPV)
-!       ish(npsx)             ! for each specie the index of the first beta 
-!                             ! function: ish(1)=1, ish(i)=1+SUM(nh(1:i-1))
-! the two variables above are no longer used in CP 
-
+CONTAINS
+  !
+  SUBROUTINE init_nh ()
+    !
+    !!     calculates the number of beta functions for each atomic type
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: nt, nb
+    !
+    ! Check is needed, init_nh may be called more than once (but it shouldn't!)
+    ! Maybe nh should be allocated when upf is, when upf is read?
+    !
+    IF ( .NOT. ALLOCATED(nh) ) ALLOCATE ( nh(nsp) )
+    !
+    lmaxkb = - 1
+    DO nt = 1, nsp
+       !
+       nh (nt) = 0
+       !
+       ! do not add any beta projector if pseudo in 1/r fmt (AF)
+       !
+       IF ( upf(nt)%tcoulombp ) CYCLE 
+       !
+       DO nb = 1, upf(nt)%nbeta
+          nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
+          lmaxkb = MAX (lmaxkb, upf(nt)%lll(nb) )
+       ENDDO
+       !
+    ENDDO
+    lmaxq = 2*lmaxkb+1
+    !
+    ! calculate the maximum number of beta functions
+    !
+    nhm = MAXVAL (nh (1:nsp))
+    nbetam = MAXVAL (upf(:)%nbeta)
+    !
+  END SUBROUTINE init_nh
+  !
 END MODULE uspp_param
 !
 !
