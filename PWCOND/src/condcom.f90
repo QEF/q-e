@@ -54,14 +54,13 @@ END MODULE geomcell_cond
 !
 !
 MODULE orbcell_cond
-  USE upf_params,   only: npsx
   use radial_grids, only: ndmx
   USE kinds, only : DP
   !
   !  description of nonlocal orbitals
   SAVE
   !
-  INTEGER, PARAMETER :: nbrx = 14
+  INTEGER, PARAMETER :: nbrx = 14, npsx = 10
   !
   INTEGER     ::     &
      norbl,          &  ! number of orbitals for the left lead
