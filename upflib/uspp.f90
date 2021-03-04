@@ -20,9 +20,9 @@ MODULE uspp_param
   !! number of beta functions, with angular parts, per atomic type 
   INTEGER :: nhm
   !! max number of beta functions, including angular parts, across atoms
-  INTEGER ::nbetam
+  INTEGER :: nbetam
   !! max number of radial beta functions
-  INTEGER ::nwfcm
+  INTEGER :: nwfcm
   !! max number of radial atomic wavefunctions across atoms
   INTEGER :: lmaxkb
   !! max angular momentum of beta functions
@@ -63,9 +63,9 @@ CONTAINS
     !
     ! calculate max numbers of beta functions and of atomic wavefunctions
     !
-    nhm = MAXVAL (nh (1:nsp))
+    nhm    = MAXVAL (nh (1:nsp))
     nbetam = MAXVAL (upf(1:nsp)%nbeta)
-    nwfcm = MAXVAL (upf(1:nsp)%nwfc)
+    nwfcm  = MAXVAL (upf(1:nsp)%nwfc)
     !
   END SUBROUTINE init_uspp_dims
   !

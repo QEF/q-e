@@ -17,8 +17,8 @@
 * TO BE DONE: 
   - set the correct value of nsp in uspp_param when allocate_uspp is called,
     use it ONLY inside upflib, remove link of nsp in ions_base to uspp_param
-  - nh is allocated in nit_nh but maybe it should allocateed when upf is read?
-    Also:  nh is a separate variable but maybe it should be part of upf?
+  - nh(:) is allocated in init_uspp_dims, but maybe it should allocated
+    together with upf(:), when upf is read? Or maybe nh should be part of upf?
     It is used in many many places, though!
   - Merge pseudopotential_indexes from CPV/src/pseudopot_sub.f90 with the
     uspp initialization in upflib (init_us_1 etc)
