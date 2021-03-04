@@ -17,11 +17,13 @@ MODULE uspp_param
   TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
   !! the upf structure contains all info on atomic pseudopotential parameters
   INTEGER, ALLOCATABLE :: nh(:)
-  !! number of beta functions per atomic type (maybe it should be in upf?)
+  !! number of beta functions, with angular parts, per atomic type 
   INTEGER :: nhm
-  !! max number of different beta functions per atom
+  !! max number of beta functions, including angular parts, across atoms
   INTEGER ::nbetam
-  !! max number of beta functions
+  !! max number of radial beta functions
+  INTEGER ::nwfcm
+  !! max number of radial atomic wavefunctions across atoms
   INTEGER :: lmaxkb
   !! max angular momentum of beta functions
   INTEGER :: lmaxq
@@ -29,7 +31,7 @@ MODULE uspp_param
   !
 CONTAINS
   !
-  SUBROUTINE init_nh ()
+  SUBROUTINE init_uspp_dims ()
     !
     !!     calculates the number of beta functions for each atomic type
     !
@@ -37,8 +39,8 @@ CONTAINS
     !
     INTEGER :: nt, nb
     !
-    ! Check is needed, init_nh may be called more than once (but it shouldn't!)
-    ! Maybe nh should be allocated when upf is, when upf is read?
+    ! Check is needed, may be called more than once (but it shouldn't be!)
+    ! Maybe nh should be allocated when upf is, when upf is read ?
     !
     IF ( .NOT. ALLOCATED(nh) ) ALLOCATE ( nh(nsp) )
     !
@@ -59,12 +61,13 @@ CONTAINS
     ENDDO
     lmaxq = 2*lmaxkb+1
     !
-    ! calculate the maximum number of beta functions
+    ! calculate max numbers of beta functions and of atomic wavefunctions
     !
     nhm = MAXVAL (nh (1:nsp))
-    nbetam = MAXVAL (upf(:)%nbeta)
+    nbetam = MAXVAL (upf(1:nsp)%nbeta)
+    nwfcm = MAXVAL (upf(1:nsp)%nwfc)
     !
-  END SUBROUTINE init_nh
+  END SUBROUTINE init_uspp_dims
   !
 END MODULE uspp_param
 !

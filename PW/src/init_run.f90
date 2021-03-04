@@ -173,12 +173,12 @@ SUBROUTINE pre_init()
   !----------------------------------------------------------------------------
   !
   USE ions_base,        ONLY : nat, nsp, ityp
-  USE uspp_param,       ONLY : upf, nh, init_nh
+  USE uspp_param,       ONLY : upf, nh, init_uspp_dims
   USE uspp,             ONLY : nkb, nkbus
   IMPLICIT NONE
   INTEGER :: na, nt, nb
   !
-  CALL init_nh ( )
+  CALL init_uspp_dims ( )
   !
   ! calculate the number of beta functions of the solid
   !

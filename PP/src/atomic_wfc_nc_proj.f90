@@ -24,7 +24,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,      ONLY : xk, ngk, igk_k
   USE wvfct,      ONLY : npwx, nbnd
-  USE uspp_param, ONLY : upf
+  USE uspp_param, ONLY : upf, nwfcm
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx
   !
@@ -33,8 +33,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   INTEGER, INTENT(in) :: ik
   COMPLEX(DP), INTENT(out) :: wfcatom (npwx, npol, natomwfc)
   !
-  INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-       nwfcm, npw
+  INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, npw
   real(DP), ALLOCATABLE :: qg(:), ylm (:,:), chiq (:,:,:), gk (:,:)
   COMPLEX(DP), ALLOCATABLE :: sk (:), aux(:)
   COMPLEX(DP) :: kphase, lphase
@@ -48,7 +47,6 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
      lmax_wfc = max ( lmax_wfc, maxval (upf(nt)%lchi(1:upf(nt)%nwfc) ) )
   ENDDO
   !
-  nwfcm = maxval ( upf(1:ntyp)%nwfc )
   npw = ngk(ik)
   !
   ALLOCATE ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &

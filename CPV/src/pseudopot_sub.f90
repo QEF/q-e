@@ -60,11 +60,11 @@
       use uspp,       only: nkb, &   !
                             nkbus    !
       use uspp_param, only: upf,    &!
-                            init_nh,&!
                             lmaxkb, &!
                             nhm,    &!
                             nh,     &!
-                            lmaxq    !
+                            lmaxq,  &!
+                            init_uspp_dims
       use uspp,       only: nhtol,  &!
                             nhtolm, &!
                             indv,   &!
@@ -78,7 +78,7 @@
       !
       !     find  number of beta functions per species and max l
       !     ------------------------------------------------------------------
-      CALL init_nh ()
+      CALL init_uspp_dims ()
       !
       !     find total number of beta functions (all and Vanderbilt only)
       !     ------------------------------------------------------------------

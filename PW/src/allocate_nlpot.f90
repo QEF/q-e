@@ -13,8 +13,7 @@ SUBROUTINE allocate_nlpot
   !! pseudopotential for each atom or atomic species.
   !
   !! Requires in input:  
-  !! * dimensions: nhm, nsp, nat, lmaxkb, nbetam, nspin
-  !! * pseudopot info: upf%nwfc
+  !! * dimensions: nhm, nsp, nat, lmaxkb, nbetam, nwfcm, nspin
   !! * parameters: ecutrho, qnorm, dq, ecutwfc, cell_factor
   !! * options: tqr, noncolin, lspinorb, spline_ps
   !
@@ -33,10 +32,8 @@ SUBROUTINE allocate_nlpot
   USE gvecw,            ONLY : ecutwfc
   USE uspp_data,        ONLY : dq, nqx, nqxq, spline_ps, allocate_uspp_data
   USE uspp,             ONLY : allocate_uspp
-  USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nsp, nbetam
+  USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nsp, nbetam, nwfcm
   IMPLICIT NONE
-  !
-  INTEGER :: nwfcm
   !
   ! Note: computation of the number of beta functions for
   ! each atomic type and the maximum number of beta functions
@@ -58,7 +55,6 @@ SUBROUTINE allocate_nlpot
   ! coming from cell contraction during variable cell relaxation/MD)
   !
   nqx = INT( (SQRT(ecutwfc) / dq + 4) * cell_factor )
-  nwfcm = MAXVAL( upf(1:nsp)%nwfc )
   !
   ! uspp_data  actual allocation
   !

@@ -298,7 +298,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   USE gvect,             ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,             ONLY : xk, ngk, igk_k
   USE wvfct,             ONLY : npwx, nbnd
-  USE uspp_param,        ONLY : upf
+  USE uspp_param,        ONLY : upf, nwfcm
   USE noncollin_module,  ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,          ONLY : lspinorb, rot_ylm, fcoef, domag, &
                                 starting_spin_angle
@@ -312,8 +312,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   !
   ! ... local variables
   !
-  INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-       nwfcm, npw
+  INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, npw
   REAL(DP), ALLOCATABLE :: qg(:), ylm(:,:), chiq(:,:,:), gk(:,:)
   COMPLEX(DP), ALLOCATABLE :: sk(:), aux(:)
   COMPLEX(DP) :: kphase
@@ -328,7 +327,6 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
      lmax_wfc = MAX( lmax_wfc, MAXVAL(upf(nt)%lchi(1:upf(nt)%nwfc)) )
   ENDDO
   !
-  nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
   npw = ngk(ik)
   ALLOCATE ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &
        gk(3,npw), qg(npw) )
