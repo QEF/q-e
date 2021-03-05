@@ -367,7 +367,10 @@ qe_install_targets(qe_external_libxc)
 if(QE_ENABLE_LIBXC)
     target_compile_definitions(qe_external_libxc INTERFACE "__LIBXC")
 
-    find_package(Libxc 5.1.2 REQUIRED COMPONENTS Fortran)
+    find_package(Libxc 5.1.2 COMPONENTS Fortran)
+    if (NOT Libxc_FOUND)
+        find_package(Libxc 5.1.2 COMPONENTS Fortran CONFIG)
+    endif()
 
     if(${Libxc_FOUND})
         if (${Libxc_VERSION} VERSION_GREATER_EQUAL "5.1.2" )
