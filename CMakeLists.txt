@@ -369,6 +369,7 @@ if(QE_ENABLE_LIBXC)
 
     find_package(Libxc 5.1.2 COMPONENTS Fortran)
     if (NOT Libxc_FOUND)
+        message(STATUS "Libxc searching failed in CMake Module mode, trying Config mode")
         find_package(Libxc 5.1.2 COMPONENTS Fortran CONFIG)
     endif()
 
