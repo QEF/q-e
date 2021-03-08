@@ -10,9 +10,9 @@
 !
 MODULE london_module
   !
-  ! Module for Dispersion Correction
-  ! [ V. Barone et al. J. Comp. Chem., 30, 934 (2009) ]
-  ! [ S. Grimme, J. Comp. Chem., 27, 1787 (2006) ].
+  !! Module for Dispersion Correction.  
+  !! [ V. Barone et al. J. Comp. Chem., 30, 934 (2009) ]  
+  !! [ S. Grimme, J. Comp. Chem., 27, 1787 (2006) ].
   !
   USE kinds ,           ONLY : DP
   USE parameters ,      ONLY : nsx
@@ -22,36 +22,37 @@ MODULE london_module
   SAVE
   !
   !
-  REAL(DP)                  :: C6_i(nsx) 
-  REAL ( DP ) , ALLOCATABLE :: R_vdw ( : ) ,     &
-                               C6_ij ( : , : ) , &
-                               R_sum ( : , : ) , &
-                               r     ( : , : ) , &
-                               dist2 ( : )
+  REAL(DP) :: C6_i(nsx)
+  !! C6\_i(ntyp) : atomic C6 coefficient of each atom type
+  REAL ( DP ) , ALLOCATABLE :: R_vdw( : )
+  !! R\_vdw(ntyp) : Van der Waals Radii of each atom type
+  REAL ( DP ) , ALLOCATABLE :: C6_ij( : , : )
+  !! C6\_ij(ntyp,ntyp) : C6 coefficients of each atom type pair:
+  !! \(\sqrt{C6i\cdot C6j}\)
+  REAL ( DP ) , ALLOCATABLE :: R_sum( : , : )
+  !! R\_sum(ntyp,ntyp) : sum of VdW radii
+  REAL ( DP ) , ALLOCATABLE :: r( : , : )
+  !! r(3,mxr) : ordered distance vectors
+  REAL ( DP ) , ALLOCATABLE :: dist2 ( : )
+  !! dist2(mxr) : ordered distances
   !
-  ! C6_i  ( ntyp )        : atomic C6 coefficient of each atom type
-  ! R_vdw ( ntyp )        : Van der Waals Radii of each atom type
-  ! C6_ij ( ntyp , ntyp ) : C6 coefficients of each atom type pair: sqrt ( C6i * C6j )
-  ! R_sum ( ntyp , ntyp ) : sum of VdW radii
-  ! r     ( 3 , mxr )     : ordered distance vectors
-  ! dist2 ( mxr )         : ordered distances
   !
-  REAL ( DP ) , PUBLIC :: scal6=0._dp , lon_rcut=0._dp , &
-       in_C6 ( nsx ) = -1.0_dp, in_rvdw( nsx ) = -1.0_dp
-  !
-  ! scal6    : global scaling factor
-  ! lon_rcut : public cut-off radius
-  ! in_C6 ( ntyp ) : input (user) specified atomic C6 coefficients
-  ! in_rvdw ( ntyp ) : input (user) specified atomic vdw radii
+  REAL ( DP ) , PUBLIC :: scal6=0._dp
+  !! global scaling factor
+  REAL ( DP ) , PUBLIC :: lon_rcut=0._dp
+  !! public cut-off radius
+  REAL ( DP ) , PUBLIC :: in_C6 ( nsx ) = -1.0_dp
+  !! in\_C6(ntyp) : input (user) specified atomic C6 coefficients
+  REAL ( DP ) , PUBLIC :: in_rvdw( nsx ) = -1.0_dp
+  !! in\_rvdw(ntyp) : input (user) specified atomic vdw radii
   !
   INTEGER :: mxr
+  !! max number of r ( see rgen )
   !
-  ! max number of r ( see rgen)
-  !
-  REAL ( DP ) :: r_cut , beta = 20.0_DP
-  !
-  ! beta  : damping function parameter 
-  ! r_cut : cut-off radius in alat units
+  REAL ( DP ) :: r_cut
+  !! cut-off radius in alat units
+  REAL ( DP ) :: beta = 20.0_DP
+  !! damping function parameter 
   !
   CONTAINS
    !
@@ -61,7 +62,7 @@ MODULE london_module
    !
    SUBROUTINE init_london ( )
       !
-      ! extract parameters from database and compute C6_ij and R_sum(i,j)
+      !! Extract parameters from database and compute C6\_ij and R\_sum(i,j).
       !
       USE ions_base ,          ONLY : ntyp => nsp, &
                                       atom_label => atm
@@ -297,20 +298,29 @@ MODULE london_module
    !
    FUNCTION energy_london ( alat , nat , ityp , at , bg , tau )
     !
-    ! here we compute the dispersion contribution to the total energy
-    !
-    ! E = - ( C_6^ij / R_ij ** 6 ) * f_damp ( R_ij ) * scal6
-    !
-    ! where f_damp is the damping function:
-    !
-    ! f_damp ( R_ij ) = [ 1 + exp ( -beta ( R_ij / (R_i^0+R_j^0) - 1 )) ] ** (-1)
-    !
-    ! and scal6 is a global scaling factor
+    !! Here we compute the dispersion contribution to the total energy:
+    !! $$ E = -( C_6^{ij} / R_{ij}^6 ) f_\text{damp}( R_{ij} ) \text{scal6} $$
+    !! where f_damp is the damping function:
+    !! $$ f_\text{damp}(R_{ij}) = [1+\exp{-\text{beta}(R_{ij}/(R_i^0+R_j^0)-1 )}]^{-1} $$
+    !! and \(\text{scal6}\) is a global scaling factor.
     !
     USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
     !
     IMPLICIT NONE
+    !
+    INTEGER , INTENT ( IN ) :: nat
+    !! number of atoms
+    INTEGER , INTENT ( IN ) :: ityp ( nat ) 
+    !! type of each atom
+    REAL ( DP ) , INTENT ( IN ) :: alat
+    !! the cell parameter
+    REAL ( DP ) , INTENT ( IN ) :: tau (3, nat)
+    !! atomic positions in alat units
+    REAL ( DP ) , INTENT ( IN ) :: at ( 3 , 3 )
+    !! direct lattice vectors
+    REAL ( DP ) , INTENT ( IN ) :: bg ( 3 , 3 )
+    !! reciprocal lattice vectors
     !
     INTEGER :: ata , atb , nrm , nr
     ! locals : 
@@ -321,11 +331,6 @@ MODULE london_module
     INTEGER :: na_s, na_e, mykey
     ! locals :    parallelization stuff
     !
-    INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
-    ! input:
-    ! nat :   number of atoms
-    ! itype : type of each atom
-    !
     REAL ( DP ) :: dist , f_damp , energy_london , dtau ( 3 ) , dist6
     ! locals:
     ! dist          : distance R_ij between the current pair of atoms
@@ -334,13 +339,6 @@ MODULE london_module
     ! dtau          : output of rgen ( not used )
     ! dist6         : distance**6
     !
-    REAL ( DP ) , INTENT ( IN ) :: alat , tau (3, nat) , &
-                                   at ( 3 , 3 ) , bg ( 3 , 3 )
-    ! input :
-    ! alat : the cell parameter
-    ! tau  : atomic positions in alat units
-    ! at   : direct lattice vectors
-    ! bg   : reciprocal lattice vectors
     !
     energy_london = 0.d0
     !
@@ -402,15 +400,28 @@ MODULE london_module
    END FUNCTION energy_london
    !
    !---------------------------------------------------------------------------
-   ! Compute dispersion forces acting on atoms
-   !---------------------------------------------------------------------------
    !
    FUNCTION force_london ( alat , nat , ityp , at , bg , tau )
+    !
+    !! Compute dispersion forces acting on atoms.
     !
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
     !
     IMPLICIT NONE
+    !
+    INTEGER , INTENT ( IN ) :: nat
+    !! number of atoms
+    INTEGER , INTENT ( IN ) :: ityp ( nat )
+    !! type of each atom
+    REAL ( DP ) , INTENT ( IN ) :: alat
+    !! the cell parameter
+    REAL ( DP ) , INTENT ( IN ) :: tau (3, nat)
+    !! atomic positions in alat units
+    REAL ( DP ) , INTENT ( IN ) :: at ( 3 , 3 )
+    !! direct lattice vectors
+    REAL ( DP ) , INTENT ( IN ) :: bg ( 3 , 3 )
+    !! reciprocal lattice vectors
     !
     INTEGER :: ata , atb , nrm , nr , ipol
     ! locals :
@@ -421,11 +432,6 @@ MODULE london_module
     !
     INTEGER :: na_s, na_e, mykey
     ! locals :    parallelization stuff
-    !
-    INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
-    ! input:    
-    ! nat  : number of atoms
-    ! ityp : type of each atom
     !
     REAL ( DP ) :: dist , f_damp , dtau ( 3 ) , force_london ( 3 , nat ) , &
                    dist6 , dist7 , exparg , expval , par , fac , add, aux(3)
@@ -438,13 +444,6 @@ MODULE london_module
     ! dist7        :  dist**7
     ! ...  and some buffers
     !
-    REAL ( DP ) , INTENT ( IN ) :: alat , tau (3, nat) , &
-                                   at ( 3 , 3 ) , bg ( 3 , 3 )
-    ! input:
-    ! alat : the cell parameter
-    ! tau  : atomic positions in alat units
-    ! at   : direct lattice vectors
-    ! bg   : reciprocal lattice vectors
     !
     ! parallelization: divide atoms across processors of this image
     ! (different images have different atomic positions)
@@ -519,16 +518,30 @@ MODULE london_module
    !
    !
    !---------------------------------------------------------------------------
-   ! Compute dispersion contribution to the stress tensor
-   !---------------------------------------------------------------------------
    !
    FUNCTION stres_london ( alat , nat , ityp , at , bg , tau , omega )
     !
+    !! Compute dispersion contribution to the stress tensor.
     !
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
     !
     IMPLICIT NONE
+    !
+    INTEGER , INTENT ( IN ) :: nat
+    !! number of atoms
+    INTEGER , INTENT ( IN ) :: ityp ( nat ) 
+    !! type of each atom
+    REAL ( DP ) , INTENT ( IN ) :: alat
+    !! the cell parameter
+    REAL ( DP ) , INTENT ( IN ) :: tau (3, nat)
+    !! atomic positions in alat units
+    REAL ( DP ) , INTENT ( IN ) :: omega
+    !! unit cell volume
+    REAL ( DP ) , INTENT ( IN ) :: at ( 3 , 3 )
+    !! direct lattice vectors
+    REAL ( DP ) , INTENT ( IN ) :: bg ( 3 , 3 )
+    !! reciprocal lattice vectors
     !
     INTEGER :: ata , atb , nrm , nr , ipol , lpol , spol
     ! locals :
@@ -540,11 +553,6 @@ MODULE london_module
     INTEGER :: na_s, na_e, mykey
     ! locals :    parallelization stuff
     !
-    INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
-    ! input:
-    ! nat  : number of atoms
-    ! ityp : type of each atom
-    !
     REAL ( DP ) :: dist , f_damp , dtau ( 3 ) , stres_london ( 3 , 3 ) , &
                    dist6 , dist7 , exparg , expval , par , fac , add
     ! locals:
@@ -555,15 +563,6 @@ MODULE london_module
     ! dist6        : dist**6
     ! dist7        : dist**7
     !       and some buffers
-    !
-    REAL ( DP ) , INTENT ( IN ) :: alat , tau (3, nat) , omega , &
-                                   at ( 3 , 3 ) , bg ( 3 , 3 )
-    ! input :
-    ! alat  : the cell parameter
-    ! tau   : atomic positions in alat units
-    ! omega : unit cell volume
-    ! at    : direct lattice vectors
-    ! bg    : reciprocal lattice vectors
     !
     !
     ! parallelization: divide atoms across processors of this image
@@ -647,10 +646,10 @@ MODULE london_module
    END FUNCTION stres_london
    !
    !---------------------------------------------------------------------------
-   ! clean memory
-   !---------------------------------------------------------------------------
    !
    SUBROUTINE dealloca_london
+   !
+   !! Clean memory.
    !
    IMPLICIT NONE
    !
