@@ -14,7 +14,6 @@ PROGRAM xclib_test
   !! * xc-benchmark: difference with respect to a given set of benchmark data
   !!   (on file);
   !! * gen-benchmark: generates set of benchmark data on file;
-  !! * dft-comparison: shows difference between two DFTs (E and V differences).
   !
   !! Available cases:
   !
@@ -70,7 +69,7 @@ PROGRAM xclib_test
   !
   !-------- Input vars -----------------------
   CHARACTER(LEN=30) :: test, family
-  CHARACTER(LEN=30) :: dft1, dft2
+  CHARACTER(LEN=30) :: dft
   INTEGER :: nspin
   LOGICAL :: DF_OK
   !
@@ -106,7 +105,7 @@ PROGRAM xclib_test
   REAL(DP) :: grho2(2), grho_ud
   REAL(DP) :: rhoi(2), grhoi(3,2), taui(2)
   !
-  !--------- dft1 vars --------------------------
+  !--------- set1 vars --------------------------
   REAL(DP), ALLOCATABLE :: ex1(:), ec1(:)
   REAL(DP), ALLOCATABLE :: exg1(:), ecg1(:)
   REAL(DP), ALLOCATABLE :: vx1(:,:), vc1(:,:)
@@ -117,7 +116,7 @@ PROGRAM xclib_test
   REAL(DP), ALLOCATABLE :: v1c1(:,:), v2c_ud1(:)
   REAL(DP), ALLOCATABLE :: v2c1(:,:), v3c1(:,:)
   !
-  !--------- dft2 vars ---------------------------
+  !--------- set2 vars ---------------------------
   REAL(DP), ALLOCATABLE :: ex2(:), ec2(:)
   REAL(DP), ALLOCATABLE :: exg2(:), ecg2(:)
   REAL(DP), ALLOCATABLE :: vx2(:,:), vc2(:,:)
@@ -134,6 +133,7 @@ PROGRAM xclib_test
   LOGICAL :: v1x_is_out, v2x_is_out, v1c_is_out, v2c_is_out, &
              v3x_is_out, v3c_is_out, &
              dvxcrr_is_out, dvxcsr_is_out, dvxcss_is_out, dvgga_is_out
+  LOGICAL :: test_passed = .TRUE.
   ! ... LDA aver
   REAL(DP) :: ex_aver_b(2),   ec_aver_b(2),   &
               vx_aver_b(1,2), vc_aver_b(1,2), &
@@ -166,7 +166,7 @@ PROGRAM xclib_test
   INTEGER :: PROVIDED
 #endif
   !
-  NAMELIST/input_namelist/ test, filename_xml, nspin, family, DF_OK, dft1, dft2
+  NAMELIST/input_namelist/ test, filename_xml, nspin, family, DF_OK, dft
   !
 #if defined(__MPI)
   !
@@ -196,8 +196,7 @@ PROGRAM xclib_test
   !
   ! ... init
   test = 'none'
-  dft1 = 'none'
-  dft2 = 'none'
+  dft = 'none'
   DF_OK = .FALSE.
   nspin = 1
   !
@@ -216,7 +215,7 @@ PROGRAM xclib_test
       IF ( iunpun == -1 ) RETURN
       !
       CALL xmlw_opentag( "XCTEST-DATA-SET" )
-      CALL add_attr( "DFT1", dft1 )
+      CALL add_attr( "DFT", dft )
       CALL add_attr( "FAMILY", family )
       CALL add_attr( "VXC_DERIVATIVE", DF_OK )
       CALL add_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
@@ -239,12 +238,10 @@ PROGRAM xclib_test
       CALL xmlr_opentag( "XCTEST-DATA-SET" )
       !
       CALL xmlr_readtag( "HEADER", dummy )
-      CALL get_attr( "DFT1", dft1 )
+      CALL get_attr( "DFT", dft )
       CALL get_attr( "FAMILY", family )
       CALL get_attr( "VXC_DERIVATIVE", DF_OK )
       CALL get_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
-      !
-      IF ( TRIM(dft2)=='none' ) dft2=dft1
       !
     ENDIF
   ENDIF
@@ -256,8 +253,7 @@ PROGRAM xclib_test
 #if defined(__MPI)
   CALL MPI_BCAST( test,   30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST( family, 30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST( dft1,   30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST( dft2,   30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST( dft,    30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST( nspin,   1, MPI_INT,       0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST( DF_OK,   1, MPI_LOGICAL,   0, MPI_COMM_WORLD, ierr )
 #endif
@@ -311,7 +307,6 @@ PROGRAM xclib_test
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
   !
-  !
   ! ... point distribution over CPUs
   !
   nr = 0
@@ -336,7 +331,7 @@ PROGRAM xclib_test
   !
   ! ... initialize first DFT
   !
-  CALL xclib_set_dft_from_name( dft1 )
+  CALL xclib_set_dft_from_name( dft )
   !
   LDA = .FALSE.
   GGA = .FALSE.
@@ -441,28 +436,30 @@ PROGRAM xclib_test
   !
   ! ... dft2 output / benchmark data arrays
   !
-  IF (.NOT. DF_OK) ALLOCATE( ex2(nnrbt), ec2(nnrbt) )
-  !
-  IF ( LDA .OR. GGA ) THEN
-     IF ( LDA ) THEN
-       IF ( .NOT. DF_OK ) ALLOCATE( vx2(nnrbt,ns), vc2(nnrbt,ns) )
-       IF ( DF_OK ) ALLOCATE( dmuxc2(nnrbt,ns,ns) )
-     ENDIF
-     !
-     IF ( GGA ) THEN
-       IF ( .NOT. DF_OK ) THEN
-         ALLOCATE( exg2(nnrbt), ecg2(nnrbt) )
-         ALLOCATE( v1x2(nnrbt,ns), v2x2(nnrbt,ns) )
-         ALLOCATE( v1c2(nnrbt,ns), v2c2(nnrbt,ns), v2c_ud2(nnrbt) )
-       ELSE
-         ALLOCATE( dvxcrr2(nnrbt,ns,ns), dvxcsr2(nnrbt,ns,ns), &
-                   dvxcss2(nnrbt,ns,ns) )
+  IF ( test == 'exe-benchmark' ) THEN
+    IF (.NOT. DF_OK) ALLOCATE( ex2(nnrbt), ec2(nnrbt) )
+    !
+    IF ( LDA .OR. GGA ) THEN
+       IF ( LDA ) THEN
+         IF ( .NOT. DF_OK ) ALLOCATE( vx2(nnrbt,ns), vc2(nnrbt,ns) )
+         IF ( DF_OK ) ALLOCATE( dmuxc2(nnrbt,ns,ns) )
        ENDIF
-     ENDIF
-  ELSEIF ( MGGA ) THEN
-     ALLOCATE( v1x2(nnrbt,ns), v2x2(nnrbt,ns), v3x2(nnrbt,ns) )
-     ALLOCATE( v1c2(nnrbt,ns), v2c2(nnrbt,ns), v3c2(nnrbt,ns) )
-     ALLOCATE( v2cm2(np,nnrbt,ns) )
+       !
+       IF ( GGA ) THEN
+         IF ( .NOT. DF_OK ) THEN
+           ALLOCATE( exg2(nnrbt), ecg2(nnrbt) )
+           ALLOCATE( v1x2(nnrbt,ns), v2x2(nnrbt,ns) )
+           ALLOCATE( v1c2(nnrbt,ns), v2c2(nnrbt,ns), v2c_ud2(nnrbt) )
+         ELSE
+           ALLOCATE( dvxcrr2(nnrbt,ns,ns), dvxcsr2(nnrbt,ns,ns), &
+                     dvxcss2(nnrbt,ns,ns) )
+         ENDIF
+       ENDIF
+    ELSEIF ( MGGA ) THEN
+       ALLOCATE( v1x2(nnrbt,ns), v2x2(nnrbt,ns), v3x2(nnrbt,ns) )
+       ALLOCATE( v1c2(nnrbt,ns), v2c2(nnrbt,ns), v3c2(nnrbt,ns) )
+       ALLOCATE( v2cm2(np,nnrbt,ns) )
+    ENDIF
   ENDIF
   !
   !==========================================================================
@@ -491,40 +488,6 @@ PROGRAM xclib_test
   !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1       0.1  0.2
   !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1       0.2  0.1
   ! --------------------------  
-  !
-  IF (test(5:13)=='benchmark' .AND. mype==root) THEN
-    IF (nspin == 1) THEN
-      rho_b(1,1) = 0.6_DP ; rhotz_b(1,1) = 0.6_DP
-      IF (family/='LDA')  grho_b(:,1,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
-      IF (family=='MGGA') tau_b(1,1) = 0.1_DP
-    ELSE
-      DO i = 1, nnr_b
-        IF (MOD(i,2)==0) rho_b(i,:) = (/ 0.6_DP, 0.1_DP /) 
-        IF (MOD(i,2)/=0) rho_b(i,:) = (/ 0.1_DP, 0.6_DP /)
-        IF (MOD(i,2)==0) rhotz_b(i,:) = (/ 0.7_DP, 0.5_DP /) 
-        IF (MOD(i,2)/=0) rhotz_b(i,:) = (/ 0.7_DP, -0.5_DP /)
-        IF ( family/='LDA') THEN
-          IF (i<=2) THEN
-            grho_b(:,i,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
-            grho_b(:,i,2) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
-          ELSE
-            grho_b(:,i,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
-            grho_b(:,i,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
-          ENDIF
-        ENDIF
-      ENDDO
-      !
-      IF (family=='MGGA') THEN
-        rho_b(5,:) = (/ 0.1_DP, 0.6_DP /)
-        grho_b(:,5,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
-        grho_b(:,5,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
-        DO i = 1, 4
-          tau_b(i,:) = (/ 0.1_DP, 0.2_DP/)
-        ENDDO  
-        tau_b(5,:) = (/ 0.2_DP, 0.1_DP /)
-      ENDIF
-    ENDIF
-  ENDIF
   !
   !==========================================================================
   ! READ BENCHMARK DATA FROM FILE
@@ -626,57 +589,82 @@ PROGRAM xclib_test
      !
   ENDDO
   !
+  IF (mype==root) THEN
+    IF (nspin == 1) THEN
+      rho(1,1) = 0.6_DP ; rho_tz(1,1) = 0.6_DP
+      IF (family/='LDA')  grho(:,1,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+      IF (family=='MGGA') tau(1,1) = 0.1_DP
+    ELSE
+      DO i = 1, nnr_b
+        IF (MOD(i,2)==0) rho(i,:) = (/ 0.6_DP, 0.1_DP /) 
+        IF (MOD(i,2)/=0) rho(i,:) = (/ 0.1_DP, 0.6_DP /)
+        IF (MOD(i,2)==0) rho_tz(i,:) = (/ 0.7_DP, 0.5_DP /) 
+        IF (MOD(i,2)/=0) rho_tz(i,:) = (/ 0.7_DP, -0.5_DP /)
+        IF ( family/='LDA') THEN
+          IF (i<=2) THEN
+            grho(:,i,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+            grho(:,i,2) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+          ELSE
+            grho(:,i,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+            grho(:,i,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+          ENDIF
+        ENDIF
+      ENDDO
+      !
+      IF (family=='MGGA') THEN
+        rho(5,:) = (/ 0.1_DP, 0.6_DP /)
+        grho(:,5,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+        grho(:,5,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+        DO i = 1, 4
+          tau(i,:) = (/ 0.1_DP, 0.2_DP/)
+        ENDDO  
+        tau(5,:) = (/ 0.2_DP, 0.1_DP /)
+      ENDIF
+    ENDIF
+  ENDIF
+  !
+  !
   !--- THRESHOLD POINTS ---
   !
-  rho(nnr+1,1) = thresh_lda/3.0_DP
-  IF (.NOT. POLARIZED) rho_tz(nnr+1,1) = rho(nnr+1,1)
-  IF ( POLARIZED ) THEN
-     rho(nnr+1,2) = rho(nnr,1)
-     rho_tz(nnr+1,1) = rho(nnr+1,1) + rho(nnr+1,2)
-     rho_tz(nnr+1,2) = rho(nnr+1,1) - rho(nnr+1,2)
-  ENDIF
-  !
-  IF ( GGA .OR. MGGA ) THEN
-    grho(:,nnr+1,1) = grho(:,nnr,1)
-    !
-    rho(nnr+2,:) = rho(nnr,:)
-    IF (.NOT. POLARIZED) rho_tz(nnr+2,1) = rho(nnr+2,1)
-    !
-    grho(:,nnr+2,1) = thresh_gga/10
-    IF ( POLARIZED ) THEN
-      rho_tz(nnr+2,1) = rho(nnr+2,1) + rho(nnr+2,2)
-      rho_tz(nnr+2,2) = rho(nnr+2,1) - rho(nnr+2,2)
-      grho(:,nnr+2,2) = grho(:,nnr,2)
-    ENDIF
-    !
-    IF ( MGGA ) THEN  
-      tau(nnr+1,:) = tau(nnr,:)
-      tau(nnr+2,:) = tau(nnr,:)
-      rho(nnr+3,:) = rho(nnr,:)
-      grho(:,nnr+3,:) = grho(:,nnr,:)
-      tau(nnr+3,1) = thresh_mgga/10
-      IF ( POLARIZED ) tau(nnr+3,2) = tau(nnr,2)
-    ENDIF
-    !
-  ENDIF
-  !
   IF (mype==root .AND. test(5:13)=='benchmark') THEN
-    rho_b(nnrb+1:nnrbt,:) = rho(nnr+1:nnr+nthr,:)
-    rhotz_b(nnrb+1:nnrbt,:) = rho_tz(nnr+1:nnr+nthr,:)
-    IF (family/='LDA') grho_b(:,nnrb+1:nnrbt,:) = grho(:,nnr+1:nnr+nthr,:)
-    IF (family=='MGGA') tau_b(nnrb+1:nnrbt,:) = tau(nnr+1:nnr+nthr,:)
+    rho(nnr_b+1,1) = thresh_lda/3.0_DP
+    IF (.NOT. POLARIZED) rho_tz(nnr_b+1,1) = rho(nnr_b+1,1)
+    IF ( POLARIZED ) THEN
+       rho(nnr_b+1,2) = rho(nnr_b,1)
+       rho_tz(nnr_b+1,1) = rho(nnr_b+1,1) + rho(nnr_b+1,2)
+       rho_tz(nnr_b+1,2) = rho(nnr_b+1,1) - rho(nnr_b+1,2)
+    ENDIF
     !
-    rho(1:nnrbt,1:ns) = rho_b(1:nnrbt,1:ns)
-    rho_tz(1:nnrbt,1:ns) = rhotz_b(1:nnrbt,1:ns)
-    IF (family/='LDA')  grho(:,1:nnrbt,1:ns) = grho_b(:,1:nnrbt,1:ns)
-    IF (family=='MGGA') tau(1:nnrbt,1:ns) = tau_b(1:nnrbt,1:ns)
+    IF ( GGA .OR. MGGA ) THEN
+      grho(:,nnr_b+1,1) = grho(:,nnr_b,1)
+      !
+      rho(nnr_b+2,:) = rho(nnr_b,:)
+      IF (.NOT. POLARIZED) rho_tz(nnr_b+2,1) = rho(nnr_b+2,1)
+      !
+      grho(:,nnr_b+2,1) = thresh_gga/10
+      IF ( POLARIZED ) THEN
+        rho_tz(nnr_b+2,1) = rho(nnr_b+2,1) + rho(nnr_b+2,2)
+        rho_tz(nnr_b+2,2) = rho(nnr_b+2,1) - rho(nnr_b+2,2)
+        grho(:,nnr_b+2,2) = grho(:,nnr_b,2)
+      ENDIF
+      !
+      IF ( MGGA ) THEN  
+        tau(nnr_b+1,:) = tau(nnr_b,:)
+        tau(nnr_b+2,:) = tau(nnr_b,:)
+        rho(nnr_b+3,:) = rho(nnr_b,:)
+        grho(:,nnr_b+3,:) = grho(:,nnr_b,:)
+        tau(nnr_b+3,1) = thresh_mgga/10
+        IF ( POLARIZED ) tau(nnr_b+3,2) = tau(nnr_b,2)
+      ENDIF
+      !
+    ENDIF
   ENDIF
   !
   !==========================================================================
   ! CALCULATION OF ENERGIES AND POTENTIAL ARRAYS
   !==========================================================================
   !
-  ! ... xclib calls for DFT1
+  ! ... xclib calls for DFT
   !
   IF ( LDA ) THEN
      !
@@ -724,8 +712,11 @@ PROGRAM xclib_test
      v2c1 = v2cm1(1,:,:)
   ENDIF
   !
-  ! ... xclib calls for DFT2
+  !==========================================================================
+  ! COMPUTE AND PRINT TEST RESULTS
+  !==========================================================================
   !
+<<<<<<< HEAD
   IF (test == 'dft-comparison'.OR. test(1:4)=='gen-') THEN
     !
     IF (test == 'dft-comparison') THEN
@@ -795,36 +786,123 @@ PROGRAM xclib_test
       v2c2 = v2cm2(1,:,:)
     ENDIF    
     !
+=======
+  IF ( .NOT. DF_OK ) THEN
+    CALL evxc_stats( 'Ex', ex1, ex_aver_b )
+    CALL evxc_stats( 'Ec', ec1, ec_aver_b )
+>>>>>>> XClib test - adds and simplification 1
   ENDIF
   !
+  IF ( LDA .AND. .NOT. GGA ) THEN
+     IF ( .NOT. DF_OK ) THEN
+       CALL evxc_stats( 'Vx', vx1, vx_aver_b(1,:) )
+       CALL evxc_stats( 'Vc', vc1, vc_aver_b(1,:) )
+     ELSE
+       CALL derivxc_stats( 'dmuxc', dmuxc1, dv_aver_b )
+     ENDIF
+  ELSEIF ( GGA ) THEN
+     IF ( .NOT. DF_OK ) THEN
+       CALL evxc_stats( 'V1x', v1x1, v1x_aver_b )
+       CALL evxc_stats( 'V2x', v2x1, v2x_aver_b )
+       CALL evxc_stats( 'V1c', v1c1, v1c_aver_b )
+       CALL evxc_stats( 'V2c', v2c1, v2c_aver_b ) 
+     ELSE
+       CALL derivxc_stats( 'dvxcrr', dvxcrr1, dvrr_aver_b )
+       CALL derivxc_stats( 'dvxcsr', dvxcsr1, dvsr_aver_b )
+       CALL derivxc_stats( 'dvxcss', dvxcss1, dvss_aver_b )
+     ENDIF
+  ELSEIF ( MGGA ) THEN 
+     CALL evxc_stats( 'V1x', v1x1, v1x_aver_b(1,:) )
+     CALL evxc_stats( 'V2x', v2x1, v2x_aver_b(1,:) )
+     CALL evxc_stats( 'V1c', v1c1, v1c_aver_b(1,:) )
+     CALL evxc_stats( 'V2c', v2c1, v2c_aver_b(1,:) )
+     CALL evxc_stats( 'V3x', v3x1, v3x_aver_b(1,:) )
+     CALL evxc_stats( 'V3c', v3c1, v3c_aver_b(1,:) )
+  ENDIF
   !
-  !==========================================================================
-  ! COMPUTE AND PRINT TEST RESULTS
-  !==========================================================================
+  !=============================================================================
   !
+  IF (test=='gen-benchmark' .AND. mype==root) THEN
+    IF (.NOT. DF_OK) THEN
+      CALL xmlw_opentag( "XC_DATA" )
+      CALL xmlw_writetag( "EX_AVER", ex_aver_b(:) )
+      CALL xmlw_writetag( "EC_AVER", ec_aver_b(:) )
+      IF ( family=='LDA' ) THEN
+        CALL xmlw_writetag( "VX_AVER", vx_aver_b(:,:) )
+        CALL xmlw_writetag( "VC_AVER", vc_aver_b(:,:) )
+      ELSE
+        CALL xmlw_writetag( "V1X_AVER", v1x_aver_b(:,:) )
+        CALL xmlw_writetag( "V1C_AVER", v1c_aver_b(:,:) )
+        CALL xmlw_writetag( "V2X_AVER", v2x_aver_b(:,:) )
+        CALL xmlw_writetag( "V2C_AVER", v2c_aver_b(:,:) )
+        IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
+        IF ( family=='MGGA' ) THEN
+          CALL xmlw_writetag( "V3X_AVER", v3x_aver_b(:,:) )
+          CALL xmlw_writetag( "V3C_AVER", v3c_aver_b(:,:) )
+        ENDIF
+      ENDIF
+      CALL xmlw_writetag( "EX", ex1(1:nnrbt) )
+      CALL xmlw_writetag( "EC", ec1(1:nnrbt) )
+      IF ( family=='LDA' ) THEN
+        CALL xmlw_writetag( "VX", vx1(1:nnrbt,:) )
+        CALL xmlw_writetag( "VC", vc1(1:nnrbt,:) )        
+      ELSE
+        CALL xmlw_writetag( "V1X", v1x1(1:nnrbt,:) )
+        CALL xmlw_writetag( "V1C", v1c1(1:nnrbt,:) )
+        CALL xmlw_writetag( "V2X", v2x1(1:nnrbt,:) )
+        CALL xmlw_writetag( "V2C", v2c1(1:nnrbt,:) )
+        IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud", v2c_ud1(1:nnrbt) )
+        IF ( family=='MGGA' ) THEN
+          CALL xmlw_writetag( "V3X", v3x1(1:nnrbt,:) )
+          CALL xmlw_writetag( "V3C", v3c1(1:nnrbt,:) )
+        ENDIF  
+      ENDIF
+    ELSE !DF_OK
+      CALL xmlw_opentag( "dXC_DATA" )
+      IF (family=='LDA') THEN 
+        CALL xmlw_writetag( "dV_AVER", dv_aver_b(:) )
+        CALL xmlw_writetag( "dV", dmuxc1(1:nnrbt,:,:) )
+      ELSE
+        CALL xmlw_writetag( "dVrr_AVER", dvrr_aver_b(:,:) )
+        CALL xmlw_writetag( "dVsr_AVER", dvsr_aver_b(:,:) )
+        CALL xmlw_writetag( "dVss_AVER", dvss_aver_b(:,:) )
+        CALL xmlw_writetag( "dVXCrr", dvxcrr1(1:nnrbt,:,:) )
+        CALL xmlw_writetag( "dVXCsr", dvxcsr1(1:nnrbt,:,:) )
+        CALL xmlw_writetag( "dVXCss", dvxcss1(1:nnrbt,:,:) )
+      ENDIF
+    ENDIF
+    CALL xmlw_closetag()
+    CALL xmlw_closetag()
+    GO TO 10
+  ENDIF 
+  
+  
+  
+  
+  
   IF (mype==root .AND. test(1:4)/='gen-') THEN
     WRITE(stdout,*) ' '
     WRITE(stdout,911) npoints
-  ENDIF  
-  !
-  !... calculate statistics of E over a large number of points (npoints)
-  !
-  IF ( .NOT. DF_OK ) THEN
-    CALL evxc_stats( 'Ex', ex1, ex2, ex_aver_b )
-    CALL evxc_stats( 'Ec', ec1, ec2, ec_aver_b )
   ENDIF
+  !
+  ! ... calculate statistics of E over a large number of points (npoints)
+  !
+  !IF ( .NOT. DF_OK ) THEN
+  !  CALL evxc_stats( 'Ex', ex1, ex_aver_b )
+  !  CALL evxc_stats( 'Ec', ec1, ec_aver_b )
+  !ENDIF
   !
   !
   IF ( LDA .AND. .NOT. GGA ) THEN
      !
      ! ... calculate statistics of V over a large number of points (npoints)
      !
-     IF ( .NOT. DF_OK ) THEN
-       CALL evxc_stats( 'Vx', vx1, vx2, vx_aver_b(1,:) )
-       CALL evxc_stats( 'Vc', vc1, vc2, vc_aver_b(1,:) )
-     ELSE
-       CALL derivxc_stats( 'dmuxc', dmuxc1, dmuxc2, dv_aver_b )
-     ENDIF
+!      IF ( .NOT. DF_OK ) THEN
+!        CALL evxc_stats( 'Vx', vx1, vx_aver_b(1,:) )
+!        CALL evxc_stats( 'Vc', vc1, vc_aver_b(1,:) )
+!      ELSE
+!        CALL derivxc_stats( 'dmuxc', dmuxc1, dv_aver_b )
+!      ENDIF
      !
      !
      IF (test(5:13)=='benchmark') THEN
@@ -833,33 +911,29 @@ PROGRAM xclib_test
        something_out = .TRUE. ; dmuxc_is_out = .TRUE.
      ENDIF  
      !
-     ! 
+     !
      iout = 0
      !
-     DO ii = 1, nnrb
+     IF ( mype==root .AND. test=='exe-benchmark') THEN
+     DO ii = 1, nnr_b
         !
-        IF ( mype/=root ) CYCLE
         !
-        IF ( test == 'dft-comparison' ) THEN
-          !
-          IF ( .NOT. DF_OK ) THEN
-            ex_is_out = is_it_out( diff_thr_e_lda, 1, ex1(ii:ii), ex2(ii:ii) )
-            ec_is_out = is_it_out( diff_thr_e_lda, 1, ec1(ii:ii), ec2(ii:ii) )
-            vx_is_out = is_it_out( diff_thr_v_lda,ns, vx1(ii,:), vx2(ii,:) )
-            vc_is_out = is_it_out( diff_thr_v_lda,ns, vc1(ii,:), vc2(ii,:) )
-            something_out = ANY((/ex_is_out, ec_is_out, vx_is_out, vc_is_out/))
-          ELSE
-            dmuxc_is_out = is_dit_out( diff_thr_dmuxc, dmuxc1(ii,:,:), &
-                                       dmuxc2(ii,:,:) )
-          ENDIF
-          !
+        IF ( .NOT. DF_OK ) THEN
+          ex_is_out = is_it_out( diff_thr_e_lda, 1, ex1(ii:ii), ex2(ii:ii) )
+          ec_is_out = is_it_out( diff_thr_e_lda, 1, ec1(ii:ii), ec2(ii:ii) )
+          vx_is_out = is_it_out( diff_thr_v_lda,ns, vx1(ii,:), vx2(ii,:) )
+          vc_is_out = is_it_out( diff_thr_v_lda,ns, vc1(ii,:), vc2(ii,:) )
+          something_out = ANY((/ex_is_out, ec_is_out, vx_is_out, vc_is_out/))
+        ELSE
+          dmuxc_is_out = is_dit_out( diff_thr_dmuxc, dmuxc1(ii,:,:), &
+                                     dmuxc2(ii,:,:) )
         ENDIF
         !        
         IF ( something_out .OR. dmuxc_is_out ) THEN
           !
           iout = iout + 1
           !
-          IF (iout<=10) THEN
+          !IF (iout<=10) THEN
             IF (test(1:4)/='gen-') WRITE(stdout,*) " "
             !
             IF ( test=='exe-benchmark' ) THEN
@@ -885,15 +959,16 @@ PROGRAM xclib_test
               CALL print_diff2( 'dmuxc', dmuxc1(ii,:,:), dmuxc2(ii,:,:) )
             ENDIF !df_ok
             !
-          ENDIF
+          !ENDIF
           !
         ENDIF
         !
      ENDDO
+     ENDIF !root /=gen-
      !
      ! ... THRESHOLD TEST 
      !
-     IF ( mype == root ) THEN
+     IF ( mype == root .AND. test=='exe-benchmark') THEN
        IF ( test/='gen-benchmark' ) THEN
          WRITE(stdout,*) " "
          WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---"
@@ -901,6 +976,8 @@ PROGRAM xclib_test
        ENDIF  
        !
        DO ithr = 1, nthr
+         !
+         iout = iout + 1
          !
          nnrit  = nnr + ithr
          nnrbit = nnrb + ithr
@@ -930,22 +1007,7 @@ PROGRAM xclib_test
        ENDDO
      ENDIF
      !
-     !
   ELSEIF ( GGA ) THEN
-     !
-     ! ... calculate statistics over a large number of points (npoints)
-     !
-     IF ( .NOT. DF_OK ) THEN
-       CALL evxc_stats( 'V1x', v1x1, v1x2, v1x_aver_b )
-       CALL evxc_stats( 'V2x', v2x1, v2x2, v2x_aver_b )
-       CALL evxc_stats( 'V1c', v1c1, v1c2, v1c_aver_b )
-       CALL evxc_stats( 'V2c', v2c1, v2c2, v2c_aver_b )
-     ELSE
-       CALL derivxc_stats( 'dvxcrr', dvxcrr1, dvxcrr2, dvrr_aver_b )
-       CALL derivxc_stats( 'dvxcsr', dvxcsr1, dvxcsr2, dvsr_aver_b )
-       CALL derivxc_stats( 'dvxcss', dvxcss1, dvxcss2, dvss_aver_b )
-     ENDIF
-     !
      !
      IF (test(5:13)=='benchmark')  THEN
        ex_is_out = .TRUE.  ; ec_is_out = .TRUE.
@@ -958,11 +1020,9 @@ PROGRAM xclib_test
      !
      iout = 0
      !
-     DO ii = 1, nnrb
-       !
-       IF (mype/=root) CYCLE
-       !
-       IF (test=='dft-comparison') THEN
+     IF (mype==root .AND. test/='gen-benchmark') THEN 
+       DO ii = 1, nnrb
+         !
          IF ( .NOT. DF_OK ) THEN
            ex_is_out = is_it_out( diff_thr_e_gga, 1, ex1(ii:ii), ex2(ii:ii) )
            ec_is_out = is_it_out( diff_thr_e_gga, 1, ec1(ii:ii), ec2(ii:ii) )
@@ -979,14 +1039,10 @@ PROGRAM xclib_test
            dvxcss_is_out = is_dit_out(diff_thr_dv,dvxcss1(ii,:,:),dvxcss2(ii,:,:))
            dvgga_is_out = ANY((/dvxcrr_is_out, dvxcsr_is_out, dvxcss_is_out/))
          ENDIF
-       ENDIF
-       !
-       !
-       IF ( something_out .OR. dvgga_is_out ) THEN
          !
-         iout = iout + 1 
-         ! 
-         IF (iout<=10) THEN 
+         IF ( something_out .OR. dvgga_is_out ) THEN
+           !
+           iout = iout + 1 
            !
            IF ( test=='exe-benchmark' ) THEN 
              WRITE(stdout,*) " "
@@ -1013,8 +1069,7 @@ PROGRAM xclib_test
                WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
              ENDIF 
              WRITE(stdout,*) " "
-           ENDIF  
-           ! 
+           ENDIF
            ! 
            IF (.NOT. DF_OK) THEN 
              ! 
@@ -1035,18 +1090,17 @@ PROGRAM xclib_test
                                                            dvxcsr2(ii,:,:) ) 
              IF (dvxcss_is_out) CALL print_diff2( 'dvxcss',dvxcss1(ii,:,:), &
                                                            dvxcss2(ii,:,:) ) 
-           ENDIF 
-           ! 
-         ENDIF !iout 
+           ENDIF
+           !
+         ENDIF  
          ! 
-       ENDIF 
-       ! 
-     ENDDO 
+       ENDDO 
+     ENDIF !test/=gen-bench
      ! 
      ! 
      ! ... THRESHOLD TEST 
      ! 
-     IF (mype==root) THEN
+     IF (mype==root .AND. test/='gen-benchmark') THEN
        IF (test(1:4)/='gen-' ) THEN
          WRITE(stdout,*) " " 
          WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---" 
@@ -1054,6 +1108,8 @@ PROGRAM xclib_test
        ENDIF  
        ! 
        DO ithr = 1, nthr 
+         !
+         iout = iout + 1 
          !
          nnrbit = nnrb + ithr
          !
@@ -1106,22 +1162,22 @@ PROGRAM xclib_test
      !
      ! ... calculate statistics over a large number of points (npoints) 
      ! 
-     CALL evxc_stats( 'V1x', v1x1, v1x2, v1x_aver_b(1,:) )
-     CALL evxc_stats( 'V2x', v2x1, v2x2, v2x_aver_b(1,:) )
-     CALL evxc_stats( 'V1c', v1c1, v1c2, v1c_aver_b(1,:) )
-     CALL evxc_stats( 'V2c', v2c1, v2c2, v2c_aver_b(1,:) )
-     CALL evxc_stats( 'V3x', v3x1, v3x2, v3x_aver_b(1,:) )
-     CALL evxc_stats( 'V3c', v3c1, v3c2, v3c_aver_b(1,:) )
+     CALL evxc_stats( 'V1x', v1x1, v1x_aver_b(1,:) )
+     CALL evxc_stats( 'V2x', v2x1, v2x_aver_b(1,:) )
+     CALL evxc_stats( 'V1c', v1c1, v1c_aver_b(1,:) )
+     CALL evxc_stats( 'V2c', v2c1, v2c_aver_b(1,:) )
+     CALL evxc_stats( 'V3x', v3x1, v3x_aver_b(1,:) )
+     CALL evxc_stats( 'V3c', v3c1, v3c_aver_b(1,:) )
      ! 
      ! ... calculate values over a few benchmark points (nnr_b) 
      ! 
-     IF (mype == root) THEN 
+     IF (mype == root .AND. test/='gen-benchmark') THEN 
        !
        IF (test(5:13)=='benchmark') THEN
          ex_is_out = .TRUE.  ; ec_is_out = .TRUE.
-         v1x_is_out = .TRUE. ; v2x_is_out = .TRUE. 
-         v3x_is_out = .TRUE. ; v1c_is_out = .TRUE. 
-         v2c_is_out = .TRUE. ; v3c_is_out = .TRUE. 
+         v1x_is_out = .TRUE. ; v2x_is_out = .TRUE.
+         v3x_is_out = .TRUE. ; v1c_is_out = .TRUE.
+         v2c_is_out = .TRUE. ; v3c_is_out = .TRUE.
          something_out = .TRUE. 
        ENDIF 
        ! 
@@ -1129,20 +1185,17 @@ PROGRAM xclib_test
        !
        DO ii = 1, nnrb 
          !
-         IF (test=='dft-comparison') THEN 
-           !
-           ex_is_out = is_it_out( diff_thr_e_mgga, 1, ex1(ii:ii), ex2(ii:ii) ) 
-           ec_is_out = is_it_out( diff_thr_e_mgga, 1, ec1(ii:ii), ec2(ii:ii) ) 
-           v1x_is_out = is_it_out( diff_thr_vmgga,ns,v1x1(ii,:),v1x2(ii,:) )
-           v2x_is_out = is_it_out( diff_thr_vmgga,ns,v2x1(ii,:),v2x2(ii,:) )
-           v3x_is_out = is_it_out( diff_thr_vmgga,ns,v3x1(ii,:),v3x2(ii,:) )
-           v1c_is_out = is_it_out( diff_thr_vmgga,ns,v1c1(ii,:),v1c2(ii,:) )
-           v2c_is_out = is_it_out( diff_thr_vmgga,ns,v2c1(ii,:),v2c2(ii,:) )
-           v3c_is_out = is_it_out( diff_thr_vmgga,ns,v3c1(ii,:),v3c2(ii,:) )
-           something_out = ANY((/ex_is_out,ec_is_out, v1x_is_out, v2x_is_out, &
-                                 v3x_is_out, v1c_is_out, v2c_is_out, &
-                                 v3c_is_out/))
-         ENDIF
+         ex_is_out = is_it_out( diff_thr_e_mgga, 1, ex1(ii:ii), ex2(ii:ii) ) 
+         ec_is_out = is_it_out( diff_thr_e_mgga, 1, ec1(ii:ii), ec2(ii:ii) ) 
+         v1x_is_out = is_it_out( diff_thr_vmgga,ns,v1x1(ii,:),v1x2(ii,:) )
+         v2x_is_out = is_it_out( diff_thr_vmgga,ns,v2x1(ii,:),v2x2(ii,:) )
+         v3x_is_out = is_it_out( diff_thr_vmgga,ns,v3x1(ii,:),v3x2(ii,:) )
+         v1c_is_out = is_it_out( diff_thr_vmgga,ns,v1c1(ii,:),v1c2(ii,:) )
+         v2c_is_out = is_it_out( diff_thr_vmgga,ns,v2c1(ii,:),v2c2(ii,:) )
+         v3c_is_out = is_it_out( diff_thr_vmgga,ns,v3c1(ii,:),v3c2(ii,:) )
+         something_out = ANY((/ex_is_out,ec_is_out, v1x_is_out, v2x_is_out, &
+                               v3x_is_out, v1c_is_out, v2c_is_out, &
+                               v3c_is_out/))
          !
          IF ( something_out ) THEN 
             ! 
@@ -1197,10 +1250,9 @@ PROGRAM xclib_test
        ENDDO 
      ENDIF   
      ! 
-     ! 
      ! ... THRESHOLD TEST 
      ! 
-     IF ( mype==root ) THEN 
+     IF ( mype==root  .AND. test/='gen-benchmark') THEN 
        !
        IF (test/='gen-benchmark') THEN
          WRITE(stdout,*) " "  
@@ -1209,6 +1261,8 @@ PROGRAM xclib_test
        ENDIF  
        !  
        DO ithr = 1, nthr  
+         !
+         iout = iout + 1 
          !
          nnrbit = nnrb + ithr
          !
@@ -1256,59 +1310,10 @@ PROGRAM xclib_test
      ENDIF  !mype
      ! 
   ENDIF
-  !
-  IF (test=='gen-benchmark' .AND. mype==root) THEN
-    IF (.NOT. DF_OK) THEN
-      CALL xmlw_opentag( "XC_DATA" )
-      CALL xmlw_writetag( "EX_AVER", ex_aver_b(:) )
-      CALL xmlw_writetag( "EC_AVER", ec_aver_b(:) )
-      IF ( family=='LDA' ) THEN
-        CALL xmlw_writetag( "VX_AVER", vx_aver_b(:,:) )
-        CALL xmlw_writetag( "VC_AVER", vc_aver_b(:,:) )
-      ELSE
-        CALL xmlw_writetag( "V1X_AVER", v1x_aver_b(:,:) )
-        CALL xmlw_writetag( "V1C_AVER", v1c_aver_b(:,:) )
-        CALL xmlw_writetag( "V2X_AVER", v2x_aver_b(:,:) )
-        CALL xmlw_writetag( "V2C_AVER", v2c_aver_b(:,:) )
-        IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
-        IF ( family=='MGGA' ) THEN
-          CALL xmlw_writetag( "V3X_AVER", v3x_aver_b(:,:) )
-          CALL xmlw_writetag( "V3C_AVER", v3c_aver_b(:,:) )
-        ENDIF
-      ENDIF
-      CALL xmlw_writetag( "EX", ex2(:) )
-      CALL xmlw_writetag( "EC", ec2(:) )
-      IF ( family=='LDA' ) THEN
-        CALL xmlw_writetag( "VX", vx2(:,:) )
-        CALL xmlw_writetag( "VC", vc2(:,:) )        
-      ELSE
-        CALL xmlw_writetag( "V1X", v1x2(:,:) )
-        CALL xmlw_writetag( "V1C", v1c2(:,:) )
-        CALL xmlw_writetag( "V2X", v2x2(:,:) )
-        CALL xmlw_writetag( "V2C", v2c2(:,:) )
-        IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud", v2c_ud2(:) )
-        IF ( family=='MGGA' ) THEN
-          CALL xmlw_writetag( "V3X", v3x2(:,:) )
-          CALL xmlw_writetag( "V3C", v3c2(:,:) )
-        ENDIF  
-      ENDIF
-    ELSE !DF_OK
-      CALL xmlw_opentag( "dXC_DATA" )
-      IF (family=='LDA') THEN 
-        CALL xmlw_writetag( "dV_AVER", dv_aver_b(:) )
-        CALL xmlw_writetag( "dV", dmuxc2(:,:,:) )
-      ELSE
-        CALL xmlw_writetag( "dVrr_AVER", dvrr_aver_b(:,:) )
-        CALL xmlw_writetag( "dVsr_AVER", dvsr_aver_b(:,:) )
-        CALL xmlw_writetag( "dVss_AVER", dvss_aver_b(:,:) )
-        CALL xmlw_writetag( "dVXCrr", dvxcrr2(:,:,:) )
-        CALL xmlw_writetag( "dVXCsr", dvxcsr2(:,:,:) )
-        CALL xmlw_writetag( "dVXCss", dvxcss2(:,:,:) )
-      ENDIF
-    ENDIF
-    CALL xmlw_closetag()
-    CALL xmlw_closetag()
-  ENDIF 
+  
+  
+  IF (iout/=0) test_passed = .FALSE.
+  
   !
   401 FORMAT('rho: ',F17.14)
   402 FORMAT('rho(up,down): ',F17.14,4x,F17.14)
@@ -1342,7 +1347,7 @@ PROGRAM xclib_test
     IF ( MGGA ) DEALLOCATE( tau_b )
   ENDIF
   !
-  ! ... dft1 output arrays
+  ! ... set1 output arrays
   !
   IF (.NOT. DF_OK) DEALLOCATE( ex1, ec1 )
   !
@@ -1369,29 +1374,31 @@ PROGRAM xclib_test
      DEALLOCATE( v2cm1 )
   ENDIF
   !
-  ! ... dft2 output / benchmark data arrays
+  ! ... set2 output / benchmark data arrays
   !
-  IF (.NOT. DF_OK) DEALLOCATE( ex2, ec2 )
-  !
-  IF ( LDA .OR. GGA ) THEN
-     IF ( LDA ) THEN
-       IF ( .NOT. DF_OK ) DEALLOCATE( vx2, vc2 )
-       IF ( DF_OK ) DEALLOCATE( dmuxc2 )
-     ENDIF
-     !
-     IF ( GGA ) THEN
-       IF ( .NOT. DF_OK ) THEN
-         DEALLOCATE( exg2, ecg2 )
-         DEALLOCATE( v1x2, v2x2 )
-         DEALLOCATE( v1c2, v2c2, v2c_ud2 )
-       ELSE
-         DEALLOCATE( dvxcrr2, dvxcsr2, dvxcss2 )
+  IF ( test == 'exe-benchmark' ) THEN
+    IF (.NOT. DF_OK) DEALLOCATE( ex2, ec2 )
+    !
+    IF ( LDA .OR. GGA ) THEN
+       IF ( LDA ) THEN
+         IF ( .NOT. DF_OK ) DEALLOCATE( vx2, vc2 )
+         IF ( DF_OK ) DEALLOCATE( dmuxc2 )
        ENDIF
-     ENDIF
-  ELSEIF ( MGGA ) THEN
-     DEALLOCATE( v1x2, v2x2, v3x2 )
-     DEALLOCATE( v1c2, v2c2, v3c2 )
-     DEALLOCATE( v2cm2 )
+       !
+       IF ( GGA ) THEN
+         IF ( .NOT. DF_OK ) THEN
+           DEALLOCATE( exg2, ecg2 )
+           DEALLOCATE( v1x2, v2x2 )
+           DEALLOCATE( v1c2, v2c2, v2c_ud2 )
+         ELSE
+           DEALLOCATE( dvxcrr2, dvxcsr2, dvxcss2 )
+         ENDIF
+       ENDIF
+    ELSEIF ( MGGA ) THEN
+       DEALLOCATE( v1x2, v2x2, v3x2 )
+       DEALLOCATE( v1c2, v2c2, v3c2 )
+       DEALLOCATE( v2cm2 )
+    ENDIF
   ENDIF
   !
   DEALLOCATE( proc_name )
@@ -1412,144 +1419,22 @@ PROGRAM xclib_test
  CONTAINS
  !
  !
- !------------------------------------------------------------------------
- SUBROUTINE diff_average( thr, x_dft1, x_dft2, aver_abs_perc, nnr_nt )
-  !----------------------------------------------------------------------
-  !! Calculates average difference (both absolute and percentage) between
-  !! dft1 and dft2 quantities.
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN)  :: thr
-  REAL(DP), INTENT(IN)  :: x_dft1(nnr), x_dft2(nnr)
-  REAL(DP), INTENT(OUT) :: aver_abs_perc(2)
-  !! 1: absolute difference;  2: percentage difference
-  INTEGER, INTENT(OUT) :: nnr_nt
-  !
-  INTEGER  :: i
-  !REAL(DP) :: calc_perc_diff
-  REAL(DP) :: abs_diff, perc_diff
-  !
-  nnr_nt = 0
-  aver_abs_perc = 0._DP
-  !
-  DO i = 1, nnr
-    abs_diff  = ABS(x_dft1(i) - x_dft2(i))
-    perc_diff = calc_perc_diff( thr, x_dft1(i), x_dft2(i) )
-    aver_abs_perc(1) = aver_abs_perc(1) + abs_diff
-    IF ( perc_diff < 0._DP ) CYCLE
-    nnr_nt = nnr_nt+1
-    aver_abs_perc(2) = aver_abs_perc(2) + perc_diff
-  ENDDO
-  !
-  aver_abs_perc(1) = aver_abs_perc(1) / DBLE(npoints)
-  aver_abs_perc(2) = aver_abs_perc(2) / DBLE(npoints)
-  !
-  RETURN
-  !
- END SUBROUTINE diff_average
- !
- !
- !------------------------------------------------------------------------
- SUBROUTINE diff_max( thr, x_dft1, x_dft2, max_abs_perc )
-  !-----------------------------------------------------------------------
-  !! Finds the max difference (both absolute and percentage) between dft1
-  !! and dft2 quantities.
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN)  :: thr
-  REAL(DP), INTENT(IN)  :: x_dft1(nnr), x_dft2(nnr)
-  REAL(DP), INTENT(OUT) :: max_abs_perc(2)
-  !
-  INTEGER :: i
-  !REAL(DP) :: calc_perc_diff
-  REAL(DP) :: abs_diff, perc_diff
-  REAL(DP) :: abs_diff_prev, perc_diff_prev
-  !
-  abs_diff_prev  = 0.0_DP
-  perc_diff_prev = 0.0_DP
-  !
-  DO i = 1, nnr
-    abs_diff  = ABS(x_dft1(i) - x_dft2(i))
-    perc_diff = calc_perc_diff( thr, x_dft1(i), x_dft2(i) )
-    IF ( abs_diff > abs_diff_prev ) THEN
-      max_abs_perc(1) = abs_diff
-      abs_diff_prev = abs_diff
-    ENDIF
-    IF ( perc_diff > perc_diff_prev ) THEN
-      max_abs_perc(2) = perc_diff
-      perc_diff_prev = perc_diff
-    ENDIF
-  ENDDO
-  !
-  RETURN
-  !
- END SUBROUTINE diff_max
- !
- !
- !-------------------------------------------------------------------------
- SUBROUTINE diff_min( thr, x_dft1, x_dft2, min_abs_perc )
-  !------------------------------------------------------------------------
-  !! Finds the max difference (both absoulte and percentage) between dft1
-  !! and dft2 quantities.
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN)  :: thr
-  REAL(DP), INTENT(IN)  :: x_dft1(nnr), x_dft2(nnr)
-  REAL(DP), INTENT(OUT) :: min_abs_perc(2)
-  !
-  INTEGER  :: i
-  !REAL(DP) :: calc_perc_diff
-  REAL(DP) :: abs_diff, perc_diff
-  REAL(DP) :: perc_diff_prev, abs_diff_prev
-  !
-  abs_diff_prev  = 1000._DP
-  perc_diff_prev = 1000._DP
-  !
-  DO i = 1, nnr
-    abs_diff  = ABS(x_dft1(i) - x_dft2(i))
-    perc_diff = calc_perc_diff( thr, x_dft1(i), x_dft2(i) )
-    IF ( abs_diff < abs_diff_prev .and. abs_diff>0._DP ) THEN
-      min_abs_perc(1) = abs_diff
-      abs_diff_prev = abs_diff
-    ENDIF
-    IF ( perc_diff < 0._DP ) CYCLE
-    IF ( perc_diff < perc_diff_prev ) THEN
-      min_abs_perc(2) = perc_diff
-      perc_diff_prev = perc_diff
-    ENDIF
-  ENDDO
-  !
-  RETURN
-  !
- END SUBROUTINE diff_min
- !
  !--------------------------------------------------------------------
- SUBROUTINE print_stat( what, vaver, vmax, vmin, averref )
+ SUBROUTINE print_stat( what, vaver, averref )
   !------------------------------------------------------------------
   !! Prints average, max and min differences between XC arrays
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*), INTENT(IN) :: what
-  REAL(DP), INTENT(IN) :: vaver(2), vmax(2), vmin(2)
+  REAL(DP), INTENT(IN) :: vaver(2)
   REAL(DP), OPTIONAL :: averref
   !
-  IF (test=='dft-comparison') THEN
-    WRITE(stdout,*) " "
-    WRITE(stdout,*) " ", TRIM(what)
-    WRITE(stdout,*) "AVR abs: ", vaver(1), "   AVR %: ", vaver(2)
-    WRITE(stdout,*) "MAX abs: ", vmax(1),  "   MAX %: ", vmax(2)
-    WRITE(stdout,*) "MIN abs: ", vmin(1),  "   MIN %: ", vmin(2)
-  ELSEIF (test=='exe-benchmark') THEN
-    WRITE(stdout,*) " "
-    WRITE(stdout,*) " ", TRIM(what)
-    WRITE(stdout,*) "AVR test: ", vaver(1)
-    WRITE(stdout,*) "AVR ref : ", averref
-    WRITE(stdout,*) "diff    : ", vaver(1)-averref
-  ENDIF
+  WRITE(stdout,*) " "
+  WRITE(stdout,*) " ", TRIM(what)
+  WRITE(stdout,*) "AVR test: ", vaver(1)
+  WRITE(stdout,*) "AVR ref : ", averref
+  WRITE(stdout,*) "diff    : ", vaver(1)-averref
   !
  END SUBROUTINE print_stat
  !
@@ -1639,7 +1524,7 @@ PROGRAM xclib_test
  END SUBROUTINE print_diff2
  !
  !-------------------------------------------------------------------------
- SUBROUTINE evxc_stats( what, xc_1, xc_2, aver )
+ SUBROUTINE evxc_stats( what, xc_1, aver )
   !------------------------------------------------------------------------
   !! If test=dft-comparison calculates average, max and min difference 
   !! between output arrays of dft1 and dft2.  
@@ -1653,10 +1538,9 @@ PROGRAM xclib_test
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
   REAL(DP), INTENT(IN) :: xc_1(nnrt,ns)
-  REAL(DP), INTENT(IN) :: xc_2(nnrt,ns)
   REAL(DP), INTENT(INOUT) :: aver(2)
   !
-  REAL(DP) :: xc_aver(2,2), xc_max(2,2), xc_min(2,2)
+  REAL(DP) :: xc_aver(2,2)
   REAL(DP) :: thr, aver_snd(1), aver_rec(1)
   INTEGER :: ierr2
   !
@@ -1671,85 +1555,50 @@ PROGRAM xclib_test
     IF (what(1:1)=='V') thr = diff_thr_vmgga
   ENDIF
   !
-  IF (test/='gen-benchmark') THEN
+  IF (mype==root .AND. test/='gen-benchmark') THEN
     WRITE(stdout,*) " "
     IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) TRIM(what)
   ENDIF
   !
-  xc_aver=0._DP ; xc_max=0._DP ; xc_min=0._DP
+  xc_aver=0._DP
   !
-  IF ( test=='dft-comparison' ) THEN
-    CALL diff_average( thr, xc_1(1:nnr,1), xc_2(1:nnr,1), xc_aver(:,1),nnr_int)
-    CALL diff_max( thr, xc_1(1:nnr,1), xc_2(1:nnr,1), xc_max(:,1) )
-    CALL diff_min( thr, xc_1(1:nnr,1), xc_2(1:nnr,1), xc_min(:,1) )
-  ELSE
-    xc_aver(1,1) = SUM(xc_1(1:nnr,1))/DBLE(npoints)
-    xc_max(1,1) = MAXVAL( xc_1(1:nnr,1) )
-    xc_min(1,1) = MINVAL( xc_1(1:nnr,1) )
-    !
+  xc_aver(1,1) = SUM(xc_1(1:nnr,1))/DBLE(npoints)
+  !
 #if defined(__MPI)
-    aver_snd = xc_aver(1,1)
-    CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM,0, &
-                     comm, ierr2 )
-    xc_aver(1:1,1) = aver_rec
+  aver_snd = xc_aver(1,1)
+  CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM,0, &
+                   comm, ierr2 )
+  xc_aver(1:1,1) = aver_rec
 #endif
-  ENDIF
   !
   IF ( .NOT. POLARIZED .OR. what(1:1)=='E' ) THEN
-     IF (mype==root) THEN
-       IF (test=='dft-comparison')  THEN
-         CALL print_stat( what, xc_aver(:,1), xc_max(:,1), xc_min(:,1) )
-       ELSE  
-         CALL print_stat( what, xc_aver(:,1),xc_max(:,1),xc_min(:,1),aver(1) )
-       ENDIF
-     ENDIF
+    IF (mype==root .AND. test(1:4)=='exe-') CALL print_stat( what, xc_aver(:,1), aver(1) )
   ELSE
-    IF ( test=='dft-comparison' ) THEN
-      CALL diff_average(thr,xc_1(1:nnr,2),xc_2(1:nnr,2),xc_aver(:,2),nnr_int)
-      CALL diff_max( thr, xc_1(1:nnr,2), xc_2(1:nnr,2), xc_max(:,2) )
-      CALL diff_min( thr, xc_1(1:nnr,2), xc_2(1:nnr,2), xc_min(:,2) )
-      !
-      IF (TRIM(what)=='V2c' .AND. GGA ) THEN
-        CALL diff_average( diff_thr_vgga, v2c_ud1, v2c_ud2, vaver, nnr_int )
-        CALL diff_max( diff_thr_vgga, v2c_ud1, v2c_ud2, vmax )
-        CALL diff_min( diff_thr_vgga, v2c_ud1, v2c_ud2, vmin )
-        !
-        IF (mype==root) CALL print_stat( 'cross', vaver, vmax, vmin )
-      ENDIF
-      !      
-    ELSE
-      xc_aver(1,2) = SUM(xc_1(1:nnr,2))/npoints
-      xc_max(1,2) = MAXVAL( xc_1(1:nnr,2) )
-      xc_min(1,2) = MINVAL( xc_1(1:nnr,2) )
-      !
+    xc_aver(1,2) = SUM(xc_1(1:nnr,2))/npoints
+    !
 #if defined(__MPI)
-      aver_snd = xc_aver(1,2)
-      CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
-                       0, comm, ierr2 )
-      xc_aver(1:1,2) = aver_rec
+    aver_snd = xc_aver(1,2)
+    CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                     0, comm, ierr2 )
+    xc_aver(1:1,2) = aver_rec
+#endif
+    !
+    IF (TRIM(what)=='V2c' .AND. GGA ) THEN
+      v2c_ud1_aver(1) = SUM(v2c_ud1(1:nnr))/npoints
+      ! 
+#if defined(__MPI)
+      aver_sndu = v2c_ud1_aver(1)
+      CALL MPI_REDUCE( aver_sndu, aver_recu, 1, MPI_DOUBLE_PRECISION, &
+                       MPI_SUM, 0, comm, ierrm )
+      v2c_ud1_aver(1) = aver_recu
 #endif
       !
-      IF (TRIM(what)=='V2c' .AND. GGA ) THEN
-        v2c_ud1_aver(1) = SUM(v2c_ud1(1:nnr))/npoints
-        v2c_ud1_max(1) = MAXVAL( v2c_ud1(1:nnr) )
-        v2c_ud1_min(1) = MINVAL( v2c_ud1(1:nnr) )
-        ! 
-#if defined(__MPI)
-        aver_sndu = v2c_ud1_aver(1)
-        CALL MPI_REDUCE( aver_sndu, aver_recu, 1, MPI_DOUBLE_PRECISION, &
-                         MPI_SUM, 0, comm, ierrm )
-        v2c_ud1_aver(1) = aver_recu
-#endif
-        !
-        IF (mype==root) CALL print_stat( 'cross', v2c_ud1_aver, v2c_ud1_max, &
-                                         v2c_ud1_min, v2c_aver_b(1,3) )
-      ENDIF
-      !
+      IF (mype==root .AND. test(1:4)=='exe-') CALL print_stat( 'cross', v2c_ud1_aver, v2c_aver_b(1,3) )
     ENDIF
     !
-    IF (mype==root) THEN
-      CALL print_stat( 'up',  xc_aver(:,1),xc_max(:,1),xc_min(:,1), aver(1) )
-      CALL print_stat( 'down',xc_aver(:,2),xc_max(:,2),xc_min(:,2), aver(2) )
+    IF (mype==root .AND. test(1:4)=='exe-') THEN
+      CALL print_stat( 'up',  xc_aver(:,1), aver(1) )
+      CALL print_stat( 'down',xc_aver(:,2), aver(2) )
     ENDIF 
     !
   ENDIF
@@ -1765,7 +1614,7 @@ PROGRAM xclib_test
  !
  !
  !---------------------------------------------------------------------
- SUBROUTINE derivxc_stats( what, dxc_qe, dxc_lxc, aver )
+ SUBROUTINE derivxc_stats( what, dxc_qe, aver )
   !--------------------------------------------------------------------
   !! Same as \(\texttt{evxc_stats}\), but for derivatives of Vxc.
   !
@@ -1773,10 +1622,9 @@ PROGRAM xclib_test
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
   REAL(DP), INTENT(IN) :: dxc_qe(nnrt,ns,ns)
-  REAL(DP), INTENT(IN) :: dxc_lxc(nnrt,ns,ns)
   REAL(DP), INTENT(INOUT) :: aver(3)
   !
-  REAL(DP) :: dxc_aver(2,np), dxc_max(2,np), dxc_min(2,np)
+  REAL(DP) :: dxc_aver(2,np)
   REAL(DP) :: thr, aver_snd(1), aver_rec(1)
   INTEGER :: ierr2
   !
@@ -1788,83 +1636,41 @@ PROGRAM xclib_test
     WRITE(stdout,*) what
   ENDIF
   !
-  dxc_aver=0._DP ; dxc_min=0._DP ; dxc_max=0._DP
+  dxc_aver=0._DP
   !
-  IF ( test=='dft-comparison' ) THEN
-    CALL diff_average( thr, dxc_qe(1:nnr,1,1), dxc_lxc(1:nnr,1,1), &
-                       dxc_aver(1:nnr,1), nnr_int )
-    CALL diff_max( thr, dxc_qe(1:nnr,1,1), dxc_lxc(1:nnr,1,1),     &
-                   dxc_max(1:nnr,1) )
-    CALL diff_min( thr, dxc_qe(1:nnr,1,1), dxc_lxc(1:nnr,1,1),     &
-                   dxc_min(1:nnr,1) )
-  ELSE
-    dxc_aver(1,1) = SUM(dxc_qe(1:nnr,1,1))/DBLE(npoints)
-    dxc_max(1,1) = MAXVAL( dxc_qe(1:nnr,1,1) )
-    dxc_min(1,1) = MINVAL( dxc_qe(1:nnr,1,1) )
-    !
+  dxc_aver(1,1) = SUM(dxc_qe(1:nnr,1,1))/DBLE(npoints)
+  !
 #if defined(__MPI)
-    aver_snd = dxc_aver(1,1)
-    CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
-                     0, comm, ierr2 )
-    dxc_aver(1:1,1) = aver_rec
+  aver_snd = dxc_aver(1,1)
+  CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                   0, comm, ierr2 )
+  dxc_aver(1:1,1) = aver_rec
 #endif
-  ENDIF
   !
   IF ( .NOT. POLARIZED ) THEN
-    IF (mype==root) THEN
-      IF (test=='dft-comparison') THEN
-        CALL print_stat( what, dxc_aver(1:nnr,1), dxc_max(1:nnr,1),   &
-                         dxc_min(1:nnr,1) )
-      ELSE
-        CALL print_stat( what, dxc_aver(1:nnrb,1), dxc_max(1:nnrb,1), &
-                         dxc_min(1:nnrb,1), aver(1) )
-      ENDIF  
-    ENDIF  
+    IF (mype==root) CALL print_stat( what, dxc_aver(1:nnrb,1), aver(1) )
   ELSE
-    IF ( test=='dft-comparison' ) THEN
-      CALL diff_average( thr, dxc_qe(1:nnr,1,2), dxc_lxc(1:nnr,1,2), &
-                         dxc_aver(1:nnr,2), nnr_int )
-      CALL diff_max( thr, dxc_qe(1:nnr,1,2), dxc_lxc(1:nnr,1,2),     &
-                     dxc_max(1:nnr,2) )
-      CALL diff_min( thr, dxc_qe(1:nnr,1,2), dxc_lxc(1:nnr,1,2),     &
-                     dxc_min(1:nnr,2) )
-      !
-      CALL diff_average( thr, dxc_qe(1:nnr,2,2), dxc_lxc(1:nnr,2,2), &
-                         dxc_aver(1:nnr,3), nnr_int )
-      CALL diff_max( thr, dxc_qe(1:nnr,2,2), dxc_lxc(1:nnr,2,2),     &
-                     dxc_max(1:nnr,3) )
-      CALL diff_min( thr, dxc_qe(1:nnr,2,2), dxc_lxc(1:nnr,2,2),     &
-                     dxc_min(1:nnr,3) )
-    ELSE
-      dxc_aver(1,2) = SUM(dxc_qe(1:nnr,1,2))/DBLE(npoints)
-      dxc_max(1,2) = MAXVAL( dxc_qe(1:nnr,1,2) )
-      dxc_min(1,2) = MINVAL( dxc_qe(1:nnr,1,2) )
-      !
+    dxc_aver(1,2) = SUM(dxc_qe(1:nnr,1,2))/DBLE(npoints)
+    !
 #if defined(__MPI)
-      aver_snd = dxc_aver(1,2)
-      CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, &
-                       MPI_SUM, 0, comm, ierr2 )
-      dxc_aver(1:1,2) = aver_rec
+    aver_snd = dxc_aver(1,2)
+    CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, &
+                     MPI_SUM, 0, comm, ierr2 )
+    dxc_aver(1:1,2) = aver_rec
 #endif
-      dxc_aver(1,3) = SUM(dxc_qe(1:nnr,2,2))/DBLE(npoints)
-      dxc_max(1,3) = MAXVAL( dxc_qe(1:nnr,2,2) )
-      dxc_min(1,3) = MINVAL( dxc_qe(1:nnr,2,2) )
-      !
+    dxc_aver(1,3) = SUM(dxc_qe(1:nnr,2,2))/DBLE(npoints)
+    !
 #if defined(__MPI)
-      aver_snd = dxc_aver(1,3)
-      CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, &
-                       MPI_SUM, 0, comm, ierr2 )
-      dxc_aver(1:1,3) = aver_rec
+    aver_snd = dxc_aver(1,3)
+    CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, &
+                     MPI_SUM, 0, comm, ierr2 )
+    dxc_aver(1:1,3) = aver_rec
 #endif
-    ENDIF
     !
     IF (mype==root) THEN
-      CALL print_stat( 'up-up', dxc_aver(:,1), dxc_max(:,1), dxc_min(:,1),  &
-                       aver(1) )
-      CALL print_stat( 'up-down', dxc_aver(:,2), dxc_max(:,2), dxc_min(:,2),&
-                       aver(2) )
-      CALL print_stat( 'down-down',dxc_aver(:,3), dxc_max(:,3),dxc_min(:,3),&
-                       aver(3) )
+      CALL print_stat( 'up-up',    dxc_aver(:,1), aver(1) )
+      CALL print_stat( 'up-down',  dxc_aver(:,2), aver(2) )
+      CALL print_stat( 'down-down',dxc_aver(:,3), aver(3) )
     ENDIF  
     !
   ENDIF
@@ -1920,26 +1726,5 @@ PROGRAM xclib_test
   !
  END FUNCTION
  !
- !------------------------------------------------------------------------
- FUNCTION calc_perc_diff( thr, x_qe, x_lxc )
-  !----------------------------------------------------------------------
-  !! Calculates difference between qe and libxc quantities in percentage.
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN) :: thr
-  REAL(DP), INTENT(IN) :: x_qe, x_lxc
-  REAL(DP) :: calc_perc_diff
-  !
-  REAL(DP) :: perc_diff
-  !
-  perc_diff = -1.d0
-  IF ( ABS(x_qe)<10.d0*thr .AND. ABS(x_qe-x_lxc)<10.d0*thr ) RETURN
-  IF ( ABS(x_qe)==0.d0 .AND. ABS(x_qe-x_lxc)>thr ) calc_perc_diff = 100.d0
-  IF ( ABS(x_qe)>thr ) calc_perc_diff = ABS( (x_qe-x_lxc)/x_qe )*100.d0
-  !
-  RETURN
-  !
- END FUNCTION calc_perc_diff
  !
 END PROGRAM xclib_test
