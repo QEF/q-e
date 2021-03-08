@@ -1424,10 +1424,10 @@ CONTAINS
 
   SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx, ortho_comm )
 
-#if defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017)
+#if defined(__ELPA_2015) || defined(__ELPA_2016)
      USE elpa1
 
-#elif defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
+#elif defined(__ELPA)
      use elpa
 
 #endif
@@ -1456,11 +1456,11 @@ CONTAINS
      INTEGER     :: LWORK, LRWORK, LIWORK
      INTEGER     :: desch( 10 ), info, ierr
      CHARACTER   :: jobv
-#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
+#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016)
      INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
      LOGICAL     :: success
 #endif
-#if defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
+#if defined(__ELPA)
      class(elpa_t), pointer :: elpa_h
 #endif
      !
@@ -1473,10 +1473,10 @@ CONTAINS
 
      call descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, size(h,1), info )
 
-#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
+#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016)
      CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
 
-#if defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019) || defined(__ELPA_2020)
+#if defined(__ELPA)
   ! => from elpa-2018.11.001 to 2019.xx.xx
   if (elpa_init(20181101) /= ELPA_OK) then
     print *, "ELPA API version in use not supported. Aborting ..."
@@ -1516,7 +1516,7 @@ CONTAINS
   call elpa_uninit(ierr)
 
 
-#elif defined(__ELPA_2016) || defined(__ELPA_2017)
+#elif defined(__ELPA_2016)
      ! -> from ELPA 2016.11.001_pre thru 2017.XX.XX to elpa-2018.05.001
      ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      success = solve_evp_complex_1stage_double(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
@@ -1533,7 +1533,7 @@ CONTAINS
 
      h = v
 
-#if defined(__MPI) && (defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017))
+#if defined(__MPI) && (defined(__ELPA_2015) || defined(__ELPA_2016))
      CALL mpi_comm_free( mpi_comm_rows, ierr )
      CALL mpi_comm_free( mpi_comm_cols, ierr )
 #endif

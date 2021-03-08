@@ -28,13 +28,13 @@ AC_ARG_WITH(elpa-lib,
 
 AC_ARG_WITH(elpa-version,
    [AS_HELP_STRING([--with-elpa-version],
-       [Specify ELPA version, only year (2015 - 2019, default: 2016)])],
+       [Specify ELPA API version (2015 for ELPA releases 2015.x and 2016.05; 2016 for ELPA releases 2016.11, 2017.x and 2018.05; default 2018 for ELPA releases 2018.11 and beyond)])],
    [if  test "$withval" = "no" ; then
       with_elpa_version=0
    else
       with_elpa_version="$withval"
    fi],
-   [with_elpa_version="2016"])
+   [with_elpa_version="2018"])
 
 
 elpa_line="@delete@"
@@ -49,16 +49,12 @@ if test "$with_elpa_libs" -eq 1; then
       elif test "$with_elpa_version" = "2016"; then
         try_dflags="$try_dflags -D__ELPA_2016"
       elif test "$with_elpa_version" = "2017"; then
-        try_dflags="$try_dflags -D__ELPA_2017"
-      elif test "$with_elpa_version" = "2018"; then
-        try_dflags="$try_dflags -D__ELPA_2018"
-      elif test "$with_elpa_version" = "2019"; then
-        try_dflags="$try_dflags -D__ELPA_2019"
-      elif test "$with_elpa_version" = "2020"; then
-        try_dflags="$try_dflags -D__ELPA_2020"
-      else
-        AC_MSG_WARN([*** Invalid ELPA version, defaulting to 2016])
         try_dflags="$try_dflags -D__ELPA_2016"
+      elif test "$with_elpa_version" = "2018"; then
+        try_dflags="$try_dflags -D__ELPA"
+      else
+        AC_MSG_WARN([*** Invalid ELPA version, defaulting to 2018])
+        try_dflags="$try_dflags -D__ELPA"
       fi
 
       try_iflags="$try_iflags -I$elpa_include"
