@@ -11,22 +11,21 @@
 !---------------------------------------------
 !
 !=----------------------------------------------------------------------------=!
-!
 MODULE input_parameters
-!
 !=----------------------------------------------------------------------------=!
+!!  This module contains:
 !
-!  this module contains
-!  1) the definitions of all input parameters
-!     (both those read from namelists and those read from cards)
-!  2) the definitions of all namelists
-!  3) routines that allocate data needed in input
-!  Note that all values are initialized, but the default values should be
-!  set in the appropriate routines contained in module "read_namelists"
-!  The documentation of input variables can be found in Doc/INPUT_PW.*
-!  (for pw.x) or in Doc/INPUT_CP (for cp.x)
-!  Originally written by Carlo Cavazzoni for FPMD
+!!  * the definitions of all input parameters (both those read from namelists 
+!!    and those read from cards);
+!!  * the definitions of all namelists;
+!!  * routines that allocate data needed in input.
 !
+!!  Note that all values are initialized, but the default values should be
+!!  set in the appropriate routines contained in module \(\texttt{read_namelists}\).  
+!!  The documentation of input variables can be found in Doc/INPUT_PW.*
+!!  (for pw.x) or in Doc/INPUT_CP (for cp.x).
+!
+!!  Originally written by Carlo Cavazzoni for FPMD.
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
