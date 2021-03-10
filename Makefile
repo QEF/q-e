@@ -194,7 +194,7 @@ librxc :
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-libupf : libfox libutil
+libupf : libfox libutil libcuda
 	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :

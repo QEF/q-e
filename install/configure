@@ -1454,8 +1454,10 @@ Optional Packages:
                           (default: no)
   --with-elpa-lib         Specify full path ELPA static or dynamic library
                           (default: no)
-  --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
-                          default: 2016)
+  --with-elpa-version     Specify ELPA API version (2015 for ELPA releases
+                          2015.x and 2016.05; 2016 for ELPA releases 2016.11,
+                          2017.x and 2018.05; default 2018 for ELPA releases
+                          2018.11 and beyond)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
                           that a valid installation with version >= 1.8.16 is
                           available, and h5cc and h5fc are in the default
@@ -7419,7 +7421,7 @@ if test "${with_elpa_version+set}" = set; then :
       with_elpa_version="$withval"
    fi
 else
-  with_elpa_version="2016"
+  with_elpa_version="2018"
 fi
 
 
@@ -7436,15 +7438,13 @@ if test "$with_elpa_libs" -eq 1; then
       elif test "$with_elpa_version" = "2016"; then
         try_dflags="$try_dflags -D__ELPA_2016"
       elif test "$with_elpa_version" = "2017"; then
-        try_dflags="$try_dflags -D__ELPA_2017"
-      elif test "$with_elpa_version" = "2018"; then
-        try_dflags="$try_dflags -D__ELPA_2018"
-      elif test "$with_elpa_version" = "2019"; then
-        try_dflags="$try_dflags -D__ELPA_2019"
-      else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2016" >&5
-$as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2016" >&2;}
         try_dflags="$try_dflags -D__ELPA_2016"
+      elif test "$with_elpa_version" = "2018"; then
+        try_dflags="$try_dflags -D__ELPA"
+      else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2018" >&5
+$as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2018" >&2;}
+        try_dflags="$try_dflags -D__ELPA"
       fi
 
       try_iflags="$try_iflags -I$elpa_include"
