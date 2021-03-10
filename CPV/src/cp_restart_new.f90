@@ -155,6 +155,7 @@ MODULE cp_restart_new
       REAL(DP), ALLOCATABLE :: tau(:,:)
       COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
+      REAL(DP)              :: stress(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
       REAL(DP)              :: wk_(2), nelec
@@ -410,8 +411,8 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
          output_obj%stress_ispresent=tpre
          ! FIXME: may be wrong or incomplete
-         IF ( tpre) h = -MATMUL( detot, ht ) / omega
-         CALL qexsd_init_stress(output_obj%stress, h, tpre ) 
+         IF ( tpre) stress = -MATMUL( detot, ht ) / omega
+         CALL qexsd_init_stress(output_obj%stress, stress, tpre )
 !-------------------------------------------------------------------------------
 ! ... non existent or not implemented fields
 !-------------------------------------------------------------------------------
