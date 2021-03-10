@@ -13,7 +13,8 @@ MODULE xml_io_rism
   ! ... this module contains subroutines used to read and write
   ! ... 1D- and 3D-RISM data in XML format
   !
-  USE iotk_module
+  USE FoX_dom
+  USE FoX_wxml
   USE constants, ONLY : eps8
   USE fft_types, ONLY : fft_type_descriptor
   USE io_files,  ONLY : check_file_exist
@@ -26,17 +27,7 @@ MODULE xml_io_rism
   SAVE
   PRIVATE
   !
-  ! ... define constants
-#if defined (__1DRISM_BINARY)
-  LOGICAL :: l1drism_binary = .TRUE.
-#else
-  LOGICAL :: l1drism_binary = .FALSE.
-#endif
-  LOGICAL :: l3drism_binary = .TRUE.
-  !
   ! ... public components
-  PUBLIC :: l1drism_binary
-  PUBLIC :: l3drism_binary
   PUBLIC :: read_1drism_xml
   PUBLIC :: write_1drism_xml
   PUBLIC :: read_3drism_xml
@@ -69,12 +60,13 @@ CONTAINS
     LOGICAL,          INTENT(IN) :: ionode
     INTEGER,          INTENT(IN) :: intra_group_comm
     !
+    TYPE(xmlf_t)            :: xf
     INTEGER                 :: ierr
     INTEGER                 :: isite
+    CHARACTER(LEN=8)        :: isitestr
     INTEGER                 :: rism1d_unit
     CHARACTER(LEN=256)      :: rism1d_file
     CHARACTER(LEN=10)       :: rism1d_extension
-    CHARACTER(iotk_attlenx) :: attr
     INTEGER                 :: io_group
     INTEGER                 :: me_group
     REAL(DP), ALLOCATABLE   :: zvv1(:)
@@ -85,29 +77,28 @@ CONTAINS
     me_group = mp_rank(intra_group_comm)
     !
     ! ... decide file name and unit
-    rism1d_extension = '.dat'
-    IF (.NOT. l1drism_binary) THEN
-      rism1d_extension = '.xml'
-    END IF
+    rism1d_extension = '.xml'
     !
     rism1d_file = TRIM(rism1d_file_base) // TRIM(rism1d_extension)
     rism1d_unit = find_free_unit()
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_write(rism1d_unit, FILE=rism1d_file,  BINARY=l1drism_binary, IERR=ierr)
+      CALL xml_OpenFile (filename = TRIM(rism1d_file), XF = xf, UNIT = rism1d_unit, PRETTY_PRINT =.true., &
+                       & REPLACE = .true., NAMESPACE = .true., IOSTAT = ierr)
       CALL errore('write_1drism_xml', &
       & 'cannot open ' // TRIM(rism1d_file) // ' file for writing', ierr)
     END IF
     !
     ! ... write header
     IF (ionode) THEN
-      CALL iotk_write_begin(rism1d_unit, "_1D-RISM")
+      CALL xml_newElement(xf, "_1D-RISM")
       !
-      CALL iotk_write_attr(attr, "name", TRIM(name), FIRST=.TRUE.)
-      CALL iotk_write_attr(attr, "ngrid", ngrid)
-      CALL iotk_write_attr(attr, "nsite", nsite)
-      CALL iotk_write_empty(rism1d_unit, "INFO", attr)
+      CALL xml_NewElement(xf, "INFO")
+      CALL xml_AddAttribute(xf, "name", TRIM(name))
+      CALL xml_AddAttribute(xf, "ngrid", ngrid)
+      CALL xml_AddAttribute(xf, "nsite", nsite)
+      CALL xml_EndElement(xf, "INFO")
     END IF
     !
     ! ... find the index of the ionode
@@ -134,7 +125,10 @@ CONTAINS
 #endif
       !
       IF (ionode) THEN
-        CALL iotk_write_dat(rism1d_unit, "site" // iotk_index(isite), zvv1)
+        WRITE(isitestr,'(I0)') isite
+        CALL xml_NewElement(xf, "site." // TRIM(isitestr))
+        CALL xml_AddCharacters(xf, zvv1)
+        CALL xml_EndElement(xf, "site." // TRIM(isitestr))
       END IF
     END DO
     !
@@ -142,9 +136,8 @@ CONTAINS
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_write_end(rism1d_unit, "_1D-RISM")
-      !
-      CALL iotk_close_write(rism1d_unit)
+      CALL xml_EndElement(xf, "_1D-RISM")
+      CALL xml_Close(xf)
     END IF
     !
   END SUBROUTINE write_1drism_xml
@@ -168,11 +161,13 @@ CONTAINS
     INTEGER,          INTENT(IN)  :: ionode_id
     INTEGER,          INTENT(IN)  :: intra_group_comm
     !
+    TYPE(Node), POINTER     :: doc
+    TYPE(Node), POINTER     :: rismNode,infoNode,siteNode
+    TYPE(DOMException)      :: ex
     INTEGER                 :: ierr
     INTEGER                 :: isite
-    INTEGER                 :: rism1d_unit
+    CHARACTER(LEN=8)        :: isitestr
     CHARACTER(LEN=256)      :: rism1d_file
-    CHARACTER(iotk_attlenx) :: attr
     INTEGER                 :: ngrid_
     INTEGER                 :: nsite_
     INTEGER                 :: io_group
@@ -180,20 +175,12 @@ CONTAINS
     LOGICAL                 :: exist
     REAL(DP), ALLOCATABLE   :: zvv1(:)
     !
-    INTEGER,  EXTERNAL      :: find_free_unit
-    !
     ! ... get process info.
     me_group = mp_rank(intra_group_comm)
     !
     ! ... search file
-    rism1d_unit = find_free_unit()
-    rism1d_file = TRIM(rism1d_file_base) // ".dat"
+    rism1d_file = TRIM(rism1d_file_base) // ".xml"
     exist = check_file_exist_1drism(TRIM(rism1d_file), ionode, ionode_id, intra_group_comm)
-    !
-    IF (.NOT. exist) THEN
-      rism1d_file = TRIM(rism1d_file_base) // ".xml"
-      exist = check_file_exist_1drism(TRIM(rism1d_file), ionode, ionode_id, intra_group_comm)
-    END IF
     !
     IF (.NOT. exist) THEN
       CALL errore('read_1drism_xml', 'searching for ' // TRIM(rism1d_file), 10)
@@ -201,18 +188,19 @@ CONTAINS
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_read(rism1d_unit, FILE=rism1d_file, IERR=ierr)
+      doc => parseFile(TRIM(rism1d_file), EX=ex)
+      ierr = getExceptionCode(ex)
       CALL errore('read_1drism_xml', &
       & 'cannot open ' // TRIM(rism1d_file) // ' file for reading', ierr)
     END IF
     !
     ! ... read header
     IF (ionode) THEN
-      CALL iotk_scan_begin(rism1d_unit, "_1D-RISM")
+      rismNode => getFirstChild(doc)
       !
-      CALL iotk_scan_empty(rism1d_unit, "INFO", attr)
-      CALL iotk_scan_attr(attr, "ngrid", ngrid_)
-      CALL iotk_scan_attr(attr, "nsite", nsite_)
+      infoNode => item(getElementsByTagname(rismNode, 'INFO'), 0)
+      CALL extractDataAttribute(infoNode, 'ngrid', ngrid_)
+      CALL extractDataAttribute(infoNode, 'nsite', nsite_)
       !
       IF (ngrid /= ngrid_) THEN
         CALL errore('read_1drism_xml', 'number of grids do not match', 1)
@@ -235,7 +223,9 @@ CONTAINS
     !
     DO isite = 1, nsite
       IF (ionode) THEN
-        CALL iotk_scan_dat(rism1d_unit, "site" // iotk_index(isite), zvv1)
+        WRITE(isitestr,'(I0)') isite
+        siteNode => item(getElementsByTagname(rismNode, 'site.' // TRIM(isitestr)), 0)
+        CALL extractDataContent(siteNode, zvv1)
       END IF
       !
 #if defined (__MPI)
@@ -255,9 +245,7 @@ CONTAINS
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_scan_end(rism1d_unit, "_1D-RISM")
-      !
-      CALL iotk_close_read(rism1d_unit)
+      CALL destroy(doc)
     END IF
     !
   END SUBROUTINE read_1drism_xml
@@ -321,7 +309,6 @@ CONTAINS
     INTEGER                 :: rism3d_unit
     CHARACTER(LEN=256)      :: rism3d_file
     CHARACTER(LEN=10)       :: rism3d_extension
-    CHARACTER(iotk_attlenx) :: attr
     INTEGER                 :: io_group_id
     INTEGER                 :: io_group2, io_group3
     INTEGER                 :: my_group_id
@@ -353,31 +340,21 @@ CONTAINS
     !
     ! ... decide file name and unit
     rism3d_extension = '.dat'
-    IF (.NOT. l3drism_binary) THEN
-      rism3d_extension = '.xml'
-    END IF
     !
     rism3d_file = TRIM(rism3d_file_base) // TRIM(rism3d_extension)
     rism3d_unit = find_free_unit()
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_write(rism3d_unit, FILE=rism3d_file, BINARY=l3drism_binary, IERR=ierr)
+      OPEN (UNIT = rism3d_unit, FILE=TRIM(rism3d_file), &
+          & FORM='unformatted', STATUS = 'replace', IOSTAT = ierr)
       CALL errore('write_3drism_xml', &
       & 'cannot open ' // TRIM(rism3d_file) // ' file for writing', ierr)
     END IF
     !
     ! ... write header
     IF (ionode) THEN
-      CALL iotk_write_begin(rism3d_unit, "_3D-RISM")
-      !
-      CALL iotk_write_attr(attr, "name", TRIM(name), FIRST=.TRUE.)
-      CALL iotk_write_attr(attr, "nsite", nsite)
-      CALL iotk_write_attr(attr, "ecut", ecut)
-      CALL iotk_write_attr(attr, "nr1", nr1)
-      CALL iotk_write_attr(attr, "nr2", nr2)
-      CALL iotk_write_attr(attr, "nr3", nr3)
-      CALL iotk_write_empty(rism3d_unit, "INFO", attr)
+      WRITE(rism3d_unit) nsite, ecut, nr1, nr2, nr3
     END IF
     !
     ! ... find the index of the group that will write zuv
@@ -416,10 +393,6 @@ CONTAINS
     !
     ! ... write zuv for each solvent's site
     DO isite = 1, nsite
-      IF (ionode) THEN
-        CALL iotk_write_begin(rism3d_unit, "site" // iotk_index(isite))
-      END IF
-      !
       IF (sowner(isite) == my_group_id) THEN
         iisite = isite - isite_start + 1
       ELSE
@@ -455,20 +428,14 @@ CONTAINS
         END IF
         !
         IF (ionode) THEN
-          CALL iotk_write_dat(rism3d_unit, "z" // iotk_index(k), zuv_plane)
+          WRITE(rism3d_unit) zuv_plane
         END IF
       END DO
-      !
-      IF (ionode) THEN
-        CALL iotk_write_end(rism3d_unit, "site" // iotk_index(isite))
-      END IF
     END DO
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_write_end(rism3d_unit, "_3D-RISM")
-      !
-      CALL iotk_close_write(rism3d_unit)
+      CLOSE(rism3d_unit)
     END IF
     !
     ! ... deallocate memory
@@ -507,7 +474,6 @@ CONTAINS
     INTEGER                 :: iisite
     INTEGER                 :: rism3d_unit
     CHARACTER(LEN=256)      :: rism3d_file
-    CHARACTER(iotk_attlenx) :: attr
     INTEGER                 :: nsite_
     REAL(DP)                :: ecut_
     INTEGER                 :: nr(3)
@@ -546,31 +512,20 @@ CONTAINS
     exist = check_file_exist(TRIM(rism3d_file))
     !
     IF (.NOT. exist) THEN
-      rism3d_file = TRIM(rism3d_file_base) // ".xml"
-      exist = check_file_exist(TRIM(rism3d_file))
-    END IF
-    !
-    IF (.NOT. exist) THEN
       CALL errore('read_3drism_xml', 'searching for ' // TRIM(rism3d_file), 10)
     END IF
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_read(rism3d_unit, FILE=rism3d_file, IERR=ierr)
+      OPEN (UNIT = rism3d_unit, FILE=TRIM(rism3d_file), &
+          & FORM='unformatted', STATUS = 'old', IOSTAT = ierr)
       CALL errore('read_3drism_xml', &
       & 'cannot open ' // TRIM(rism3d_file) // ' file for reading', ierr)
     END IF
     !
     ! ... read header
     IF (ionode) THEN
-      CALL iotk_scan_begin(rism3d_unit, "_3D-RISM")
-      !
-      CALL iotk_scan_empty(rism3d_unit, "INFO", attr)
-      CALL iotk_scan_attr(attr, "nsite", nsite_)
-      CALL iotk_scan_attr(attr, "ecut", ecut_)
-      CALL iotk_scan_attr(attr, "nr1", nr(1))
-      CALL iotk_scan_attr(attr, "nr2", nr(2))
-      CALL iotk_scan_attr(attr, "nr3", nr(3))
+      READ(rism3d_unit) nsite_, ecut_, nr(1), nr(2), nr(3)
       !
       IF (nsite /= nsite_) THEN
         CALL errore('read_3drism_xml', 'number of sites do not match', 1)
@@ -613,10 +568,6 @@ CONTAINS
     !
     ! ... read zuv for each solvent's site
     DO isite = 1, nsite
-      IF (ionode) THEN
-        CALL iotk_scan_begin(rism3d_unit, "site" // iotk_index(isite))
-      END IF
-      !
       IF (sowner(isite) == my_group_id) THEN
         iisite = isite - isite_start + 1
       ELSE
@@ -626,7 +577,7 @@ CONTAINS
       ! ... read zuv for each "z" plane
       DO k = 1, nr3
         IF (ionode) THEN
-          CALL iotk_scan_dat(rism3d_unit, "z" // iotk_index(k), zuv_plane)
+          READ(rism3d_unit) zuv_plane
         END IF
         !
         IF (sowner(isite) /= io_group_id) THEN
@@ -653,17 +604,11 @@ CONTAINS
         END IF
         !
       END DO
-      !
-      IF (ionode) THEN
-        CALL iotk_scan_end(rism3d_unit, "site" // iotk_index(isite))
-      END IF
     END DO
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_scan_end(rism3d_unit, "_3D-RISM")
-      !
-      CALL iotk_close_read(rism3d_unit)
+      CLOSE(rism3d_unit)
     END IF
     !
     ! ... deallocate memory
@@ -712,7 +657,6 @@ CONTAINS
     INTEGER                  :: rismlaue_unit
     CHARACTER(LEN=256)       :: rismlaue_file
     CHARACTER(LEN=10)        :: rismlaue_extension
-    CHARACTER(iotk_attlenx)  :: attr
     INTEGER                  :: io_group
     INTEGER                  :: io_group_id
     INTEGER                  :: me_group
@@ -740,31 +684,21 @@ CONTAINS
     !
     ! ... decide file name and unit
     rismlaue_extension = '.dat'
-    IF (.NOT. l3drism_binary) THEN
-      rismlaue_extension = '.xml'
-    END IF
     !
     rismlaue_file = TRIM(rismlaue_file_base) // TRIM(rismlaue_extension)
     rismlaue_unit = find_free_unit()
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_write(rismlaue_unit, FILE=rismlaue_file, BINARY=l3drism_binary, IERR=ierr)
+      OPEN (UNIT = rismlaue_unit, FILE=TRIM(rismlaue_file), &
+          & FORM='unformatted', STATUS = 'replace', IOSTAT = ierr)
       CALL errore('write_lauerism_xml', &
       & 'cannot open ' // TRIM(rismlaue_file) // ' file for writing', ierr)
     END IF
     !
     ! ... write header
     IF (ionode) THEN
-      CALL iotk_write_begin(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_write_attr(attr, "name", TRIM(name), FIRST=.TRUE.)
-      CALL iotk_write_attr(attr, "nsite", nsite)
-      CALL iotk_write_attr(attr, "ecut", ecut)
-      CALL iotk_write_attr(attr, "nr1", nr1)
-      CALL iotk_write_attr(attr, "nr2", nr2)
-      CALL iotk_write_attr(attr, "nr3", nr3)
-      CALL iotk_write_empty(rismlaue_unit, "INFO", attr)
+      WRITE(rismlaue_unit) nsite, ecut, nr1, nr2, nr3
     END IF
     !
     ! ... find the index of the group that will write zuv
@@ -872,15 +806,13 @@ CONTAINS
       END IF
       !
       IF (ionode) THEN
-        CALL iotk_write_dat(rismlaue_unit, "site" // iotk_index(isite), zuv_site)
+        WRITE(rismlaue_unit) zuv_site
       END IF
     END DO
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_write_end(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_close_write(rismlaue_unit)
+      CLOSE(rismlaue_unit)
     END IF
     !
     ! ... deallocate memory
@@ -922,7 +854,6 @@ CONTAINS
     INTEGER                  :: iisite
     INTEGER                  :: rismlaue_unit
     CHARACTER(LEN=256)       :: rismlaue_file
-    CHARACTER(iotk_attlenx)  :: attr
     INTEGER                  :: nsite_
     REAL(DP)                 :: ecut_
     INTEGER                  :: nr(3)
@@ -955,31 +886,20 @@ CONTAINS
     exist = check_file_exist(TRIM(rismlaue_file))
     !
     IF (.NOT. exist) THEN
-      rismlaue_file = TRIM(rismlaue_file_base) // ".xml"
-      exist = check_file_exist(TRIM(rismlaue_file))
-    END IF
-    !
-    IF (.NOT. exist) THEN
       CALL errore('read_lauerism_xml', 'searching for ' // TRIM(rismlaue_file), 10)
     END IF
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_read(rismlaue_unit, FILE=rismlaue_file, IERR=ierr)
+      OPEN (UNIT = rismlaue_unit, FILE=TRIM(rismlaue_file), &
+          & FORM='unformatted', STATUS = 'old', IOSTAT = ierr)
       CALL errore('read_lauerism_xml', &
       & 'cannot open ' // TRIM(rismlaue_file) // ' file for reading', ierr)
     END IF
     !
     ! ... read header
     IF (ionode) THEN
-      CALL iotk_scan_begin(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_scan_empty(rismlaue_unit, "INFO", attr)
-      CALL iotk_scan_attr(attr, "nsite", nsite_)
-      CALL iotk_scan_attr(attr, "ecut", ecut_)
-      CALL iotk_scan_attr(attr, "nr1", nr(1))
-      CALL iotk_scan_attr(attr, "nr2", nr(2))
-      CALL iotk_scan_attr(attr, "nr3", nr(3))
+      READ(rismlaue_unit) nsite_, ecut_, nr(1), nr(2), nr(3)
       !
       IF (nsite /= nsite_) THEN
         CALL errore('read_lauerism_xml', 'number of sites do not match', 1)
@@ -1024,7 +944,7 @@ CONTAINS
       END IF
       !
       IF (ionode) THEN
-        CALL iotk_scan_dat(rismlaue_unit, "site" // iotk_index(isite), zuv_site)
+        READ(rismlaue_unit) zuv_site
       END IF
       !
       IF (my_group_id == io_group_id) THEN
@@ -1067,9 +987,7 @@ CONTAINS
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_scan_end(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_close_read(rismlaue_unit)
+      CLOSE(rismlaue_unit)
     END IF
     !
     ! ... deallocate memory
@@ -1104,7 +1022,6 @@ CONTAINS
     INTEGER                  :: rismlaue_unit
     CHARACTER(LEN=256)       :: rismlaue_file
     CHARACTER(LEN=10)        :: rismlaue_extension
-    CHARACTER(iotk_attlenx)  :: attr
     INTEGER                  :: io_group
     INTEGER                  :: io_group_id
     INTEGER                  :: me_group
@@ -1123,27 +1040,21 @@ CONTAINS
     !
     ! ... decide file name and unit
     rismlaue_extension = '.dat'
-    IF (.NOT. l3drism_binary) THEN
-      rismlaue_extension = '.xml'
-    END IF
     !
     rismlaue_file = TRIM(rismlaue_file_base) // TRIM(rismlaue_extension)
     rismlaue_unit = find_free_unit()
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_write(rismlaue_unit, FILE=rismlaue_file, BINARY=l3drism_binary, IERR=ierr)
+      OPEN (UNIT = rismlaue_unit, FILE=TRIM(rismlaue_file), &
+          & FORM='unformatted', STATUS = 'replace', IOSTAT = ierr)
       CALL errore('write_lauedipole_xml', &
       & 'cannot open ' // TRIM(rismlaue_file) // ' file for writing', ierr)
     END IF
     !
     ! ... write header
     IF (ionode) THEN
-      CALL iotk_write_begin(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_write_attr(attr, "name", TRIM(name), FIRST=.TRUE.)
-      CALL iotk_write_attr(attr, "nsite", nsite)
-      CALL iotk_write_empty(rismlaue_unit, "INFO", attr)
+      WRITE(rismlaue_unit) nsite
     END IF
     !
     ! ... find the index of the group that will write zuv
@@ -1199,16 +1110,14 @@ CONTAINS
       CALL mp_barrier(intra_group_comm)
       !
       IF (ionode) THEN
-        CALL iotk_write_dat(rismlaue_unit, "site" // iotk_index(isite), zuv_site)
+        WRITE(rismlaue_unit) zuv_site
       END IF
       !
     END DO
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_write_end(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_close_write(rismlaue_unit)
+      CLOSE(rismlaue_unit)
     END IF
     !
     ! ... deallocate memory
@@ -1240,7 +1149,6 @@ CONTAINS
     INTEGER                 :: iisite
     INTEGER                 :: rismlaue_unit
     CHARACTER(LEN=256)      :: rismlaue_file
-    CHARACTER(iotk_attlenx) :: attr
     INTEGER                 :: nsite_
     INTEGER                 :: io_group
     INTEGER                 :: io_group_id
@@ -1265,27 +1173,20 @@ CONTAINS
     exist = check_file_exist(TRIM(rismlaue_file))
     !
     IF (.NOT. exist) THEN
-      rismlaue_file = TRIM(rismlaue_file_base) // ".xml"
-      exist = check_file_exist(TRIM(rismlaue_file))
-    END IF
-    !
-    IF (.NOT. exist) THEN
       CALL errore('read_lauedipole_xml', 'searching for ' // TRIM(rismlaue_file), 10)
     END IF
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_read(rismlaue_unit, FILE=rismlaue_file, IERR=ierr)
+      OPEN (UNIT = rismlaue_unit, FILE=TRIM(rismlaue_file), &
+          & FORM='unformatted', STATUS = 'old', IOSTAT = ierr)
       CALL errore('read_lauedipole_xml', &
       & 'cannot open ' // TRIM(rismlaue_file) // ' file for reading', ierr)
     END IF
     !
     ! ... read header
     IF (ionode) THEN
-      CALL iotk_scan_begin(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_scan_empty(rismlaue_unit, "INFO", attr)
-      CALL iotk_scan_attr(attr, "nsite", nsite_)
+      READ(rismlaue_unit) nsite_
       !
       IF (nsite /= nsite_) THEN
         CALL errore('read_lauedipole_xml', 'number of sites do not match', 1)
@@ -1322,7 +1223,7 @@ CONTAINS
       END IF
       !
       IF (ionode) THEN
-        CALL iotk_scan_dat(rismlaue_unit, "site" // iotk_index(isite), zuv_site)
+        READ(rismlaue_unit) zuv_site
       END IF
       !
       IF (me_group == io_group) THEN
@@ -1354,9 +1255,7 @@ CONTAINS
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_scan_end(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_close_read(rismlaue_unit)
+      CLOSE(rismlaue_unit)
     END IF
     !
     ! ... deallocate memory
@@ -1393,7 +1292,6 @@ CONTAINS
     INTEGER                 :: rismlaue_unit
     CHARACTER(LEN=256)      :: rismlaue_file
     CHARACTER(LEN=10)       :: rismlaue_extension
-    CHARACTER(iotk_attlenx) :: attr
     INTEGER                 :: io_group
     INTEGER                 :: io_group_id
     INTEGER                 :: me_group
@@ -1416,28 +1314,21 @@ CONTAINS
     !
     ! ... decide file name and unit
     rismlaue_extension = '.dat'
-    IF (.NOT. l3drism_binary) THEN
-      rismlaue_extension = '.xml'
-    END IF
     !
     rismlaue_file = TRIM(rismlaue_file_base) // TRIM(rismlaue_extension)
     rismlaue_unit = find_free_unit()
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_write(rismlaue_unit, FILE=rismlaue_file, BINARY=l3drism_binary, IERR=ierr)
+      OPEN (UNIT = rismlaue_unit, FILE=TRIM(rismlaue_file), &
+          & FORM='unformatted', STATUS = 'replace', IOSTAT = ierr)
       CALL errore('write_lauegxy0_xml', &
       & 'cannot open ' // TRIM(rismlaue_file) // ' file for writing', ierr)
     END IF
     !
     ! ... write header
     IF (ionode) THEN
-      CALL iotk_write_begin(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_write_attr(attr, "name", TRIM(name), FIRST=.TRUE.)
-      CALL iotk_write_attr(attr, "nsite", nsite)
-      CALL iotk_write_attr(attr, "nr3", nr3)
-      CALL iotk_write_empty(rismlaue_unit, "INFO", attr)
+      WRITE(rismlaue_unit) nsite, nr3
     END IF
     !
     ! ... find the index of the group that will write zuv
@@ -1494,15 +1385,13 @@ CONTAINS
       END IF
       !
       IF (ionode) THEN
-        CALL iotk_write_dat(rismlaue_unit, "site" // iotk_index(isite), zuv_site)
+        WRITE(rismlaue_unit) zuv_site
       END IF
     END DO
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_write_end(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_close_write(rismlaue_unit)
+      CLOSE(rismlaue_unit)
     END IF
     !
     ! ... deallocate memory
@@ -1538,7 +1427,6 @@ CONTAINS
     INTEGER                 :: iisite
     INTEGER                 :: rismlaue_unit
     CHARACTER(LEN=256)      :: rismlaue_file
-    CHARACTER(iotk_attlenx) :: attr
     INTEGER                 :: nsite_
     INTEGER                 :: nr3_
     INTEGER                 :: io_group
@@ -1568,28 +1456,20 @@ CONTAINS
     exist = check_file_exist(TRIM(rismlaue_file))
     !
     IF (.NOT. exist) THEN
-      rismlaue_file = TRIM(rismlaue_file_base) // ".xml"
-      exist = check_file_exist(TRIM(rismlaue_file))
-    END IF
-    !
-    IF (.NOT. exist) THEN
       CALL errore('read_lauegxy0_xml', 'searching for ' // TRIM(rismlaue_file), 10)
     END IF
     !
     ! ... open file
     IF (ionode) THEN
-      CALL iotk_open_read(rismlaue_unit, FILE=rismlaue_file, IERR=ierr)
+      OPEN (UNIT = rismlaue_unit, FILE=TRIM(rismlaue_file), &
+          & FORM='unformatted', STATUS = 'old', IOSTAT = ierr)
       CALL errore('read_lauegxy0_xml', &
       & 'cannot open ' // TRIM(rismlaue_file) // ' file for reading', ierr)
     END IF
     !
     ! ... read header
     IF (ionode) THEN
-      CALL iotk_scan_begin(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_scan_empty(rismlaue_unit, "INFO", attr)
-      CALL iotk_scan_attr(attr, "nsite", nsite_)
-      CALL iotk_scan_attr(attr, "nr3", nr3_)
+      READ(rismlaue_unit) nsite_, nr3_
       !
       IF (nsite /= nsite_) THEN
         CALL errore('read_lauegxy0_xml', 'number of sites do not match', 1)
@@ -1630,7 +1510,7 @@ CONTAINS
       END IF
       !
       IF (ionode) THEN
-        CALL iotk_scan_dat(rismlaue_unit, "site" // iotk_index(isite), zuv_site)
+        READ(rismlaue_unit) zuv_site
       END IF
       !
       IF (my_group_id == io_group_id) THEN
@@ -1656,9 +1536,7 @@ CONTAINS
     !
     ! ... close file
     IF (ionode) THEN
-      CALL iotk_scan_end(rismlaue_unit, "LAUE-RISM")
-      !
-      CALL iotk_close_read(rismlaue_unit)
+      CLOSE(rismlaue_unit)
     END IF
     !
     ! ... deallocate memory
