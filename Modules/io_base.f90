@@ -9,8 +9,8 @@
 MODULE io_base
   !----------------------------------------------------------------------------
   !
-  ! ... subroutines used to read and write binary data produced by QE
-  ! ... Author: Paolo Giannozzi, based on previous work by Carlo Cavazzoni
+  !! Subroutines used to read and write binary data produced by QE.  
+  !! Author: Paolo Giannozzi, based on previous work by Carlo Cavazzoni
   !
   USE kinds,     ONLY : dp
   !
@@ -812,10 +812,10 @@ MODULE io_base
     !
     SUBROUTINE charge_k_to_g ( ngm_g_file, rho_g, mill_g_file, root_in_group, &
          intra_group_comm , this_run_is_gamma_only)
-   !
-   ! this routine reorders G-vectors for the charge density on global mesh
-   ! from the k case to the gamma-only one
-   !
+      !
+      !! This routine reorders G-vectors for the charge density on global mesh
+      !! from the k case to the gamma-only one.
+      !
       USE io_global,     ONLY : stdout
       USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill, igtongl, ngl, gl
       USE mp,            ONLY : mp_size,mp_rank

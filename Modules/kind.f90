@@ -8,10 +8,11 @@
 !------------------------------------------------------------------------------!
 MODULE kinds
 !------------------------------------------------------------------------------!
-  ! 
+  !! kind definitions.
+  !
   IMPLICIT NONE
   SAVE
-  ! ... kind definitions
+  !
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
   INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
   INTEGER, PARAMETER :: i4b = selected_int_kind(9)
@@ -23,10 +24,9 @@ MODULE kinds
   CONTAINS
   !------------------------------------------------------------------------------!
     !
-    !!   Print information about the used data types.
-    !
     SUBROUTINE print_kind_info (stdout)
       !--------------------------------------------------------------------------!
+      !! Print information about the used data types.
       !
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: stdout

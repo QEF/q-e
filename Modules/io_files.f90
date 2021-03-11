@@ -8,6 +8,9 @@
 !=----------------------------------------------------------------------------=!
 MODULE io_files
 !=----------------------------------------------------------------------------=!
+  !! I/O related variables: file names, units, utilities.
+  !
+  ! ... IMPORTANT: when directory names are set, they must always end with "/"
   !
   USE parameters, ONLY: ntypx
   USE kinds,      ONLY: dp
@@ -15,39 +18,38 @@ MODULE io_files
   USE mp,         ONLY: mp_barrier, mp_bcast, mp_sum
   USE mp_images,  ONLY: me_image, intra_image_comm, nproc_image
   !
-  ! ... I/O related variables: file names, units, utilities
-  ! ... IMPORTANT: when directory names are set, they must always end with "/"
-  !
   IMPLICIT NONE
   !
   SAVE
   PUBLIC :: create_directory, check_tempdir, clean_tempdir, check_file_exist, &
        delete_if_present, check_writable, restart_dir, xmlfile
   !
-  ! ... directory for all temporary files
   CHARACTER(len=256) :: tmp_dir = './'
-  ! ... directory for large files on each node. Default: same as tmp_dir
+  !! directory for all temporary files
   CHARACTER(len=256) :: wfc_dir = 'undefined'
-  ! ... prefix is prepended to all file (and directory) names 
+  !! directory for large files on each node. Default: same as tmp_dir
   CHARACTER(len=256) :: prefix  = 'os'
-  ! ... postfix is appended to directory names
+  !! prefix is prepended to all file (and directory) names 
+  !
 #if defined (_WIN32)
 #if defined (__PGI)
   CHARACTER(len=6) :: postfix  = '.save/'
+  !! postfix is appended to directory names
 #else
   CHARACTER(len=6) :: postfix  = '.save\'
 #endif
 #else
   CHARACTER(len=6) :: postfix  = '.save/'
 #endif
-  ! ... for parallel case and distributed I/O: node number
-  CHARACTER(len=6)   :: nd_nmbr = '000000'
-  ! ... directory where pseudopotential files are found
-  CHARACTER(len=256) :: pseudo_dir = './'
-  ! ... location of PP files after a restart from file
-  CHARACTER(len=256) :: pseudo_dir_cur = ' '
-  CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
   !
+  CHARACTER(len=6)   :: nd_nmbr = '000000'
+  !! for parallel case and distributed I/O: node number
+  CHARACTER(len=256) :: pseudo_dir = './'
+  !! directory where pseudopotential files are found
+  CHARACTER(len=256) :: pseudo_dir_cur = ' '
+  !! location of PP files after a restart from file
+  CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
+  !! default: UPF
   CHARACTER(LEN=256) :: qexsd_fmt = ' ', qexsd_version = ' '
   LOGICAL            :: qexsd_init = .FALSE. 
   ! ... next two variables are no longer read from input but can be set
@@ -57,44 +59,64 @@ MODULE io_files
   CHARACTER(LEN=256) :: output_drho= ' '
   !
   CHARACTER(LEN=5 ), PARAMETER :: crash_file  = 'CRASH'
-  CHARACTER (LEN=320) :: exit_file = 'os.EXIT' ! file required for a soft exit  
+  CHARACTER (LEN=320) :: exit_file = 'os.EXIT'
+  !! file required for a soft exit  
   !
   CHARACTER (LEN=20), PARAMETER :: xmlpun_schema = 'data-file-schema.xml'
   !
   ! ... The units where various variables are saved
   ! ... Only units that are kept open during the run should be listed here
   !
-  INTEGER :: iunres      =  1 ! unit for the restart of the run
-  INTEGER :: iunpun      =  4 ! unit for saving the final results (data-file.xml)
-  INTEGER :: iunwfc      = 10 ! unit with wavefunctions
-  INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
-  INTEGER :: iunoldwfc2  = 12 ! as above at step -2
-  INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs * S 
-  INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
-  INTEGER :: iunmix      = 15 ! unit for saving mixing information
-  INTEGER :: iunwfc_exx  = 16 ! unit with exx wavefunctions
+  INTEGER :: iunres      =  1
+  !! unit for the restart of the run
+  INTEGER :: iunpun      =  4
+  !! unit for saving the final results (data-file.xml)
+  INTEGER :: iunwfc      = 10
+  !! unit with wavefunctions
+  INTEGER :: iunoldwfc   = 11
+  !! unit with old wavefunctions
+  INTEGER :: iunoldwfc2  = 12
+  !! as above at step -2
+  INTEGER :: iunhub      = 13
+  !! unit for saving Hubbard-U atomic wfcs * S 
+  INTEGER :: iunsat      = 14
+  !! unit for saving (orthogonal) atomic wfcs * S
+  INTEGER :: iunmix      = 15
+  !! unit for saving mixing information
+  INTEGER :: iunwfc_exx  = 16
+  !! unit with exx wavefunctions
   !
-  INTEGER :: iunexit     = 26 ! unit for a soft exit  
-  INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
+  INTEGER :: iunexit     = 26
+  !! unit for a soft exit  
+  INTEGER :: iunupdate   = 27
+  !! unit for saving old positions (extrapolation)
+  !
   ! NEB
-  INTEGER :: iunnewimage = 28 ! unit for parallelization among images
-  INTEGER :: iunlock     = 29 ! as above (locking file)
+  INTEGER :: iunnewimage = 28
+  !! unit for parallelization among images
+  INTEGER :: iunlock     = 29
+  !! as above (locking file)
   !
-  INTEGER :: iuntmp      = 90 ! temporary unit, when used must be closed ASAP
+  INTEGER :: iuntmp      = 90
+  !! temporary unit, when used must be closed ASAP
   !
-  INTEGER :: nwordwfc    =  2 ! length of record in wavefunction file
-  INTEGER :: nwordatwfc  =  2 ! length of record in atomic wfc file
-  INTEGER :: nwordwfcU   =  2 ! length of record in atomic hubbard wfc file
-  INTEGER :: nwordwann   =  2 ! length of record in sic wfc file
+  INTEGER :: nwordwfc    =  2
+  !! length of record in wavefunction file
+  INTEGER :: nwordatwfc  =  2
+  !! length of record in atomic wfc file
+  INTEGER :: nwordwfcU   =  2
+  !! length of record in atomic hubbard wfc file
+  INTEGER :: nwordwann   =  2
+  !! length of record in sic wfc file
   !
   !... finite electric field
   !
-  INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculating
-                              ! electric field operator
-  INTEGER :: iunefieldm  = 32 ! unit to store projectors for hermitean
-                              ! electric field potential
-  INTEGER :: iunefieldp  = 33 ! unit to store projectors for hermitean 
-                              ! electric field potential
+  INTEGER :: iunefield   = 31
+  !! unit to store wavefunction for calculating electric field operator
+  INTEGER :: iunefieldm  = 32
+  !! unit to store projectors for hermitean electric field potential
+  INTEGER :: iunefieldp  = 33
+  !! unit to store projectors for hermitean electric field potential
   !
   ! ... For Wannier Hamiltonian
   !
@@ -151,18 +173,18 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE check_tempdir ( tmp_dir, exst, pfs )
     !-----------------------------------------------------------------------
-    !
-    ! ... Verify if tmp_dir exists, creates it if not
-    ! ... On output:
-    ! ...    exst= .t. if tmp_dir exists
-    ! ...    pfs = .t. if tmp_dir visible from all procs of an image
+    !! Verify if \(\text{tmp_dir}\) exists, creates it if not.
     !
     USE wrappers,      ONLY : f_mkdir_safe
     !
     IMPLICIT NONE
     !
     CHARACTER(len=*), INTENT(in) :: tmp_dir
-    LOGICAL, INTENT(out)         :: exst, pfs
+    !! directory to check
+    LOGICAL, INTENT(out)         :: exst
+    !! TRUE if \(\text{tmp_dir}\) exists
+    LOGICAL, INTENT(out)         :: pfs
+    !! TRUE if tmp_dir visible from all procs of an image
     !
     INTEGER             :: ios, image, proc, nofi, length
     CHARACTER(len=6), EXTERNAL :: int_to_char
@@ -201,14 +223,13 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE clean_tempdir( tmp_dir )
     !-----------------------------------------------------------------------
+    !! Remove temporary files from \(\text{tmp_dir}\) (only by the master node).
     !
     IMPLICIT NONE
     !
     CHARACTER(len=*), INTENT(in) :: tmp_dir
     !
     CHARACTER (len=256) :: file_path
-    !
-    ! ... remove temporary files from tmp_dir ( only by the master node )
     !
     file_path = trim( tmp_dir ) // trim( prefix )
     IF ( ionode ) THEN
@@ -249,8 +270,9 @@ CONTAINS
   SUBROUTINE delete_if_present(filename, para)
   !--------------------------------------------------------------------------
   !!
-  !! As the name says - if para is present and para=.true., filename is
-  !! deleted by all cores; otherwise, on ionode only (SP - Jan 2020)
+  !! As the name says - if \(\text{para}\) is present and \(\text{para}\)=.TRUE., 
+  !! \(\text{filename}\) is deleted by all cores; otherwise, on ionode only.
+  !! (SP - Jan 2020).
   !!  
   !
   IMPLICIT NONE
@@ -294,10 +316,8 @@ CONTAINS
   !--------------------------------------------------------------------------
   FUNCTION check_writable ( file_path, process_id ) RESULT ( ios )
     !--------------------------------------------------------------------------
-    !
-    ! ... if run by multiple processes, specific "process_id" to avoid
-    ! ... opening, closing, deleting the same file from different processes
-    !
+    !! If run by multiple processes, specific "process_id" to avoid
+    !! opening, closing, deleting the same file from different processes.
     !
     IMPLICIT NONE
     !
@@ -329,13 +349,12 @@ CONTAINS
   !------------------------------------------------------------------------
   FUNCTION restart_dir( runit )
     !------------------------------------------------------------------------
+    !! Main restart directory (contains final / or Windows equivalent).
     !
     CHARACTER(LEN=256)  :: restart_dir
     INTEGER, INTENT(IN), OPTIONAL :: runit
     !
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
-    !
-    ! ... main restart directory (contains final / or Windows equivalent)
     !
     IF ( PRESENT (runit) ) THEN
        restart_dir = TRIM(tmp_dir) // TRIM(prefix) // '_' // &
@@ -351,11 +370,10 @@ CONTAINS
   !------------------------------------------------------------------------
   FUNCTION xmlfile ( runit )
     !------------------------------------------------------------------------
+    !! \(\texttt{xml}\) file in main restart directory.
     !
     CHARACTER(LEN=320)  :: xmlfile
     INTEGER, INTENT(IN), OPTIONAL :: runit
-    !
-    ! ... xml file in main restart directory 
     !
     xmlfile = TRIM( restart_dir(runit) ) // xmlpun_schema
     !
@@ -366,27 +384,28 @@ CONTAINS
 !-----------------------------------------------------------------------
 subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !-----------------------------------------------------------------------
-  !
-  !     Opens a direct-access file named "prefix"."extension" in directory
-  !     "tmp_dir_" if specified, in "tmp_dir" otherwise. 
-  !     In parallel execution, the node number is added to the file name.
-  !     The record length is "recl" double-precision numbers.
-  !     On output, "exst" is .T. if opened file already exists
-  !     If recl=-1, the file existence is checked, nothing else is done
+  !! Opens a direct-access file named "prefix"."extension" in directory
+  !! \(\text{tmp_dir_}\) if specified, in "tmp\_dir" otherwise.  
+  !! In parallel execution, the node number is added to the file name.
+  !! The record length is \(\text{recl}\) double-precision numbers.
+  !! On output, \(\text{exst}\) is TRUE if opened file already exists.
+  !! If \(\text{recl}=-1\), the file existence is checked, nothing else
+  !! is done.
   !
   implicit none
   !
   !    first the input variables
   !
   character(len=*) :: extension
-  ! input: name of the file to open
+  !! input: name of the file to open
   character(len=*), optional :: tmp_dir_
-  ! optional variable, if present it is used as tmp_dir
-  integer :: unit, recl
-  ! input: unit of the file to open
-  ! input: length of the records
+  !! optional variable, if present it is used as tmp_dir
+  integer :: unit
+  !! input: unit of the file to open
+  integer :: recl
+  !! input: length of the records
   logical :: exst
-  ! output: if true the file exists
+  !! output: if true the file exists
   !
   !    local variables
   !
@@ -439,24 +458,24 @@ end subroutine diropn
 !-----------------------------------------------------------------------
 subroutine seqopn (unit, extension, formatt, exst, tmp_dir_)
   !-----------------------------------------------------------------------
-  !
-  !     this routine opens a file named "prefix"."extension"
-  !     in tmp_dir for sequential I/O access
-  !     If appropriate, the node number is added to the file name
+  !! This routine opens a file named "prefix"."extension"
+  !! in \(\text{tmp_dir}\) for sequential I/O access.  
+  !! If appropriate, the node number is added to the file name.
   !
   implicit none
   !
   !    first the dummy variables
   !
-  character(len=*) :: formatt, extension
-  ! input: name of the file to connect
-  ! input: 'formatted' or 'unformatted'
+  character(len=*) :: extension
+  !! input: name of the file to connect
+  character(len=*) :: formatt
+  !! input: 'formatted' or 'unformatted'
   character(len=*), optional :: tmp_dir_
-  ! optional variable, if present it is used as tmp_dir
+  !! optional variable, if present it is used as tmp\_dir
   integer :: unit
-  ! input: unit to connect
+  !! input: unit to connect
   logical :: exst
-  ! output: true if the file already exist
+  !! output: true if the file already exist
   !
   !    here the local variables
   !
@@ -518,21 +537,24 @@ END MODULE io_files
 !----------------------------------------------------------------------------
 SUBROUTINE davcio( vect, nword, unit, nrec, io )
   !----------------------------------------------------------------------------
-  !
-  ! ... direct-access vector input/output
-  ! ... read/write nword words starting from the address specified by vect
+  !! Direct-access vector input/output.  
+  !! read/write \(\text{nword}\) words starting from the address specified by
+  !! \(\text{vect}\).
   !
   USE kinds ,     ONLY : DP
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: nword, unit, nrec, io
-    ! input: the dimension of vect
-    ! input: the unit where to read/write
-    ! input: the record where to read/write
-    ! input: flag if < 0 reading if > 0 writing
+  INTEGER, INTENT(IN) :: nword
+  !! the dimension of vect
+  INTEGER, INTENT(IN) :: unit
+  !! the unit where to read/write
+  INTEGER, INTENT(IN) :: nrec
+  !! the record where to read/write
+  INTEGER, INTENT(IN) :: io
+  !! flag if < 0 reading if > 0 writing
   REAL(DP), INTENT(INOUT) :: vect(nword)
-   ! input/output: the vector to read/write
+  !! input/output: the vector to read/write
   !
   INTEGER :: ios
     ! integer variable for I/O control
