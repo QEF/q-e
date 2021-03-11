@@ -27,11 +27,11 @@ if(QE_ENABLE_CUDA)
     if(QE_ENABLE_LAXLIB_CUSOLVER)
         if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
             message(WARNING "The version of CUDAToolkit used by PGI compiler internally cannot be determined. "
-                            "cuSOLVER features used by LAXLib are only supported from CUDAToolkit 11, "
+                            "cuSOLVER features used by LAXLib are only supported from CUDAToolkit 10.1, "
                             "disable it with '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF' if linking failed in cuSOLVER.")
         else()
-            if(CUDAToolkit_VERSION VERSION_LESS 11)
-                message(FATAL_ERROR "cuSOLVER for LAXLib is only supported from CUDA compiler 11, disable it with '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF'")
+            if(CUDAToolkit_VERSION VERSION_LESS 10.1)
+                message(FATAL_ERROR "cuSOLVER for LAXLib is only supported from CUDA compiler 10.1, disable it with '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF'")
             endif()
         endif()
         target_link_libraries(qe_lax
@@ -94,7 +94,6 @@ if(QE_ENABLE_TEST)
     target_link_libraries(qe_lax_test
         PRIVATE
             qe_mpi_fortran
-            qe_lapack
             qe_lax)
     add_test(NAME test_qe_lax 
         COMMAND ${QE_TESTS_DIR}/qe_lax_test.x)
