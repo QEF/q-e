@@ -22,7 +22,7 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    USE klist,       ONLY: xk, ngk, igk_k
    USE gvect,       ONLY: mill, eigts1, eigts2, eigts3, g
    USE wvfct,       ONLY: npwx
-   USE uspp_param,  ONLY: upf
+   USE uspp_param,  ONLY: upf, nwfcm
    USE basis,       ONLY: natomwfc
    !
    IMPLICIT NONE
@@ -34,14 +34,13 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    !
    ! ... local variables
    !
-   INTEGER :: l, na, nt, nb, iatw, iig, ig, m, lm, nwfcm, lmax_wfc, npw
+   INTEGER :: l, na, nt, nb, iatw, iig, ig, m, lm, lmax_wfc, npw
    REAL(DP) :: arg
    COMPLEX(DP) :: phase, pref
    REAL(DP),    ALLOCATABLE :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
    ! 
    npw = ngk(ik)
-   nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
    ! calculate max angular momentum required in wavefunctions
    lmax_wfc = 0
    do nt = 1, ntyp

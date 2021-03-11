@@ -462,7 +462,7 @@ MODULE spin_orb
   !
   !! Variables needed for calculations with spin-orbit
   !
-  USE upf_spinorb, ONLY : lspinorb, rot_ylm, fcoef, lmaxx, lqmax
+  USE upf_spinorb, ONLY : lspinorb, rot_ylm, fcoef, lmaxx
   !
   SAVE
   LOGICAL :: lforcet

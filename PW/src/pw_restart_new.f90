@@ -1141,7 +1141,7 @@ MODULE pw_restart_new
            lspinorb, domag, tot_magnetization )
       !
       bfield = 0.d0
-      CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+      CALL set_spin_vars( lsda, noncolin, domag, &
            npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
       !! Information for generating k-points and occupations
       CALL qexsd_copy_kpoints( output_obj%band_structure, &
