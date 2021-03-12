@@ -8,9 +8,8 @@
 !=----------------------------------------------------------------------------=!
 MODULE plugin_flags
   !=--------------------------------------------------------------------------=!
-  !
-  ! ... this module contains all basic variables that controls
-  ! ... the use or not of plugins.
+  !! This module contains all basic variables that controls
+  !! the use or not use of plugins.
   !----------------------------------------------
   !
   USE kinds

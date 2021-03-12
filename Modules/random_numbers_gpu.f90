@@ -8,6 +8,7 @@
 !----------------------------------------------------------------------------
 MODULE random_numbers_gpum
   !----------------------------------------------------------------------------
+  !! Module for random numbers generation - GPU double.
   !
   USE kinds, ONLY : DP
 #if defined(__CUDA)

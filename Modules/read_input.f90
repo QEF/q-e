@@ -5,12 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Read input data in PW and CP from text file (xml file to be implemented)
-! NOTE Aug 2018 (PG): reading of old xml input file using iotk deleted
 ! 
 !----------------------------------------------------------------------------
 MODULE read_input
    !---------------------------------------------------------------------------
+   !! Read input data in PW and CP from text file (xml file to be implemented).
+   !
+   ! NOTE Aug 2018 (PG): reading of old xml input file using iotk deleted
    !
    USE kinds,     ONLY: DP
    !
