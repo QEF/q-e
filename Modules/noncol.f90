@@ -8,56 +8,70 @@
 !----------------------------------------------------------------------------
 !
 MODULE noncollin_module
+  !
+  !! Variables related to the case of noncollinear magnetism.
+  !
   USE kinds, ONLY : DP
   USE parameters, ONLY : ntypx
   !
   SAVE
   !
-  INTEGER :: &
-      npol,               & !  number of coordinates of wfc
-      report,             & !  print the local quantities (magnet. and rho)
-                            !  every #report iterations
-      nspin_lsda = 1,     & !  =1 when nspin=1,4 =2 when nspin=2 
-      nspin_mag = 1,      & !  =1 when nspin=1,4 (domag=.false.), =2 when
-                            !   nspin=2, =4 nspin=4 (domag=.true.)
-      nspin_gga = 1,      & !  =1 when nspin=1,4 (domag=.false.)   
-                            !  =2 when nspin=2,4 (domag=.true.) (needed with gga)
-      i_cons = 0            !  indicator for constrained local quantities
+  INTEGER :: npol
+  !! number of coordinates of wfc
+  INTEGER :: report
+  !! print the local quantities (magnet. and rho) every #report iterations
+  INTEGER :: nspin_lsda = 1
+  !! equal to 1 when \(\text{nspin}=1,4\) and to 2 when \(\text{nspin}=2\)
+  INTEGER :: nspin_mag = 1
+  !! equal to 1 when \(\text{nspin}=1,4\) (\(\text{domag}=\text{FALSE}\)), to 2 when 
+  !! \(\text{nspin}=2\) and to 4 when \(\text{nspin}=4\) (\(\text{domag}=\text{TRUE}\))
+  INTEGER :: nspin_gga = 1
+  !! equal to 1 when \(\text{nspin}=1,4\) (\(\text{domag}=\text{FALSE}\)), equal
+  !! to 2 when \(\text{nspin}=2,4\) (\(\text{domag}=\text{TRUE}\)) (needed with GGA)
+  INTEGER :: i_cons = 0
+  !! indicator for constrained local quantities
   !
-  INTEGER, ALLOCATABLE :: &
-  !                         !  when spherical (non-overlapping) integration
-      pointlist(:)          !  regions are defined around atoms this index
-                            !  says for each point in the fft grid to which 
-                            !  atom it is assigned (0 if no atom is selected)
+  INTEGER, ALLOCATABLE :: pointlist(:)
+  !! when spherical (non-overlapping) integration regions are defined around
+  !! atoms this index says for each point in the fft grid to which atom
+  !! it is assigned (0 if no atom is selected).
   !
-  LOGICAL :: &
-      noncolin, &           !  true if noncollinear magnetism is allowed
-      lsign=.FALSE.         !  if true use the sign feature to calculate
-                            !  rhoup and rhodw
+  LOGICAL :: noncolin
+  !! TRUE if noncollinear magnetism is allowed
+  LOGICAL :: lsign=.FALSE.
+  !! if TRUE use the sign feature to calculate rhoup and rhodw
   !
-  REAL (DP) :: &
-      angle1(ntypx),       &!  Define the polar coordinates of the starting
-      angle2(ntypx),       &!  magnetization's direction for each atom
-      mcons(3,ntypx)=0.d0, &!  constrained values for local variables
-      magtot_nc(3),        &!  total magnetization
-      bfield(3)=0.d0,      &!  magnetic field used in some cases
-      vtcon,               &!  contribution of the constraining fields to
-                            !  the total energy
-      r_m(ntypx) = 0.0d0,  &!  Radius for local integrations for each type
-      lambda                !  prefactor in the penalty functional 
-                            !  for constraints
+  REAL(DP) :: angle1(ntypx)
+  !! define the polar coordinates of the starting magnetization
+  !! direction for each atom - first angle
+  REAL(DP) :: angle2(ntypx)
+  !! starting mag. direction - second angle.
+  REAL(DP) :: mcons(3,ntypx)=0.d0
+  !! constrained values for local variables
+  REAL(DP) :: magtot_nc(3)
+  !! total magnetization
+  REAL(DP) :: bfield(3)=0.d0
+  !! magnetic field used in some cases
+  REAL(DP) :: vtcon
+  !! contribution of the constraining fields to the total energy
+  REAL(DP) :: r_m(ntypx)=0.0d0
+  !! radius for local integrations for each type
+  REAL(DP) :: lambda
+  !! prefactor in the penalty functional for constraints
   !
-  REAL (DP), ALLOCATABLE :: &
-      factlist(:),         &! weight factors for local integrations
-      m_loc(:,:)            ! local integrated magnetization
-  REAL(DP) ::              &
-       ux(3)                 ! versor for deciding signs in gga
+  REAL(DP), ALLOCATABLE :: factlist(:)
+  !! weight factors for local integrations
+  REAL(DP), ALLOCATABLE :: m_loc(:,:)
+  !! local integrated magnetization
+  REAL(DP) :: ux(3)
+  !! versor for deciding signs in GGA
   !
   CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE deallocate_noncol()
       !------------------------------------------------------------------------
+      !! Deallocates arrays related to noncollinear magnetism.
       !
       IF ( ALLOCATED( pointlist) )       DEALLOCATE( pointlist )
       IF ( ALLOCATED( factlist ) )       DEALLOCATE( factlist )

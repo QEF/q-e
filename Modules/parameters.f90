@@ -7,7 +7,9 @@
 !
 !
 MODULE parameters
-  
+  !
+  !! Upper limits on k-points, atoms and supercell size.
+  !
   IMPLICIT NONE
   SAVE
 
@@ -21,7 +23,7 @@ MODULE parameters
   !! max number of atoms for DFT+U+V calculations
   INTEGER, PARAMETER :: sc_size = 1
   !! Defines the supercell in DFT+U+V as composed by the unit cells located
-  !! by (n1,n2,n3) in primitive vectors base with -sc_size <= ni <= sc_size,
-  !! \((2\text{sc_size}+1)^3\) is the number of cells.
+  !! by (n1,n2,n3) in primitive vectors base with \(-\text{sc_size} \leq ni
+  !! \leq \text{sc_size}\) and \((2\text{sc_size}+1)^3\) is the number of cells.
 
 END MODULE parameters
