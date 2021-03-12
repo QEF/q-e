@@ -15,10 +15,10 @@ program fd_ifc
   use constants,  ONLY : pi, bohr_radius_angs, amu_au, amu_ry
   use io_files,   ONLY : prefix, tmp_dir, psfile, pseudo_dir
   use io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup,mp_global_end
-  USE environment,ONLY : environment_start,environment_end
+  USE mp_global,  ONLY : mp_startup, mp_global_end
+  USE environment,ONLY : environment_start, environment_end
   USE mp,         ONLY : mp_bcast
-  USE cell_base,  ONLY : tpiba2, alat,omega, at, bg, ibrav, celldm
+  USE cell_base,  ONLY : tpiba2, alat, omega, at, bg, ibrav, celldm
   USE ions_base,  ONLY : amass, nat, nat, atm, zv, tau, ntyp => nsp, ityp
   USE kinds,      ONLY : dp
   USE gvecw,      ONLY : ecutwfc

@@ -194,12 +194,9 @@ if(QE_ENABLE_CUDA)
 
     target_link_libraries(qe_eigensolver_gpu
         PRIVATE
-            qe_openmp_fortran)
-    if(QE_ENABLE_CUDA)
-        target_link_libraries(qe_eigensolver_gpu
-        PRIVATE 
+            qe_openmp_fortran
+            qe_lapack
             CUDA::cusolver)
-    endif()
 
     qe_install_targets(qe_eigensolver_gpu)
 endif()

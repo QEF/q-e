@@ -140,17 +140,17 @@ qe_enable_cuda_fortran("${src_modules}")
 qe_add_library(qe_modules ${src_modules})
 target_link_libraries(qe_modules
     PRIVATE
-        qe_hdf5_fortran
         qe_openmp_fortran
         qe_fftx
         qe_lax
-        qe_upflib
         qe_clib # this is needed only by wrappers.f90
         qe_mpi_fortran
         qe_mbd
         qe_xclib
         qe_devxlib
     PUBLIC
+        qe_hdf5_fortran
+        qe_upflib
         qe_fox
         qe_utilx)
 
