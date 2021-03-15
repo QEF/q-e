@@ -94,184 +94,190 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
         CHARACTER(len=80) :: title = ' '
-          ! a string describing the current job
+        !! a string describing the current job
 
         CHARACTER(len=80) :: calculation = 'none'
-          ! Specify the type of the simulation
-          ! See below for allowed values
+        !! specify the type of the simulation
+
         CHARACTER(len=80) :: calculation_allowed(15)
+        !! allowed calculations (names)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf', &
           'vc-cp-wf', 'cp-wf-nscf', 'ensemble'/
         CHARACTER(len=80) :: verbosity = 'default'
-          ! define the verbosity of the code output
+        !! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
+        !! allowed verbosity options
         DATA verbosity_allowed / 'debug', 'high', 'medium', 'default', &
                                  'low', 'minimal' /
 
         CHARACTER(len=80) :: restart_mode = 'restart'
-          ! specify how to start/restart the simulation
+        !! specify how to start/restart the simulation
         CHARACTER(len=80) :: restart_mode_allowed(3)
+        !! allowed restart options
         DATA restart_mode_allowed / 'from_scratch', 'restart', 'reset_counters' /
 
         INTEGER :: nstep = 10
-          ! number of simulation steps, see "restart_mode"
+        !! number of simulation steps, see "restart_mode"
 
         INTEGER :: iprint = 10
-          ! number of steps/scf iterations between successive writings
-          ! of relevant physical quantities to standard output
+        !! number of steps/scf iterations between successive writings
+        !! of relevant physical quantities to standard output
         INTEGER :: max_xml_steps = 0 
-          ! max number of steps between successive appending of an xml step 
-          ! in the xml data file, default 0 means all steps are printed. 
+        !! max number of steps between successive appending of an xml step 
+        !! in the xml data file, default 0 means all steps are printed
         INTEGER :: isave = 100
-          ! number of steps between successive savings of
-          ! information needed to restart the run (see "ndr", "ndw")
-          ! used only in CP
+        !! number of steps between successive savings of
+        !! information needed to restart the run (see "ndr", "ndw").
+        !! Used only in CP
 
         LOGICAL :: tstress = .true.
-          !  .TRUE.  calculate the stress tensor
-          !  .FALSE. do not calculate the stress tensor
+        !! if TRUE calculate the stress tensor
 
         LOGICAL :: tprnfor = .true.
-          !  .TRUE.  calculate the atomic forces
-          !  .FALSE. do not calculate the atomic forces
+        !! if TRUE calculate the atomic forces
 
         REAL(DP) :: dt = 1.0_DP
-          ! time step for molecular dynamics simulation, in atomic units
-          ! CP: 1 a.u. of time = 2.4189 * 10^-17 s, PW: twice that much
-          ! Typical values for CP simulations are between 1 and 10 a.u.
-          ! For Born-Oppenheimer simulations, larger values can be used,
-          ! since it mostly depends only upon the mass of ions.
+        !! time step for molecular dynamics simulation, in atomic units.  
+        !! CP: 1 a.u. of time = 2.4189 * 10^-17 s, PW: twice that much.  
+        !! Typical values for CP simulations are between 1 and 10 a.u.  
+        !! For Born-Oppenheimer simulations, larger values can be used,
+        !! since it mostly depends only upon the mass of ions.
 
         INTEGER :: ndr = 50
-          ! Fortran unit from which the code reads the restart file
+        !! Fortran unit from which the code reads the restart file
 
         INTEGER :: ndw = 50
-          ! Fortran unit to which the code writes the restart file
+        !! Fortran unit to which the code writes the restart file
 
         CHARACTER(len=256) :: outdir = './'
-          ! specify the directory where the code opens output and restart
-          ! files. When possible put this directory in the fastest available
-          ! filesystem ( not NFS! )
+        !! specify the directory where the code opens output and restart
+        !! files. When possible put this directory in the fastest available
+        !! filesystem ( not NFS! )
 
         CHARACTER(len=256) :: prefix = 'prefix'
-          ! specify the prefix for the output file, if not specified the
-          ! files are opened as standard fortran units.
+        !! specify the prefix for the output file, if not specified the
+        !! files are opened as standard fortran units.
 
         CHARACTER(len=256) :: pseudo_dir = './'
-          ! specify the directory containing the pseudopotentials
+        !! specify the directory containing the pseudopotentials
 
         REAL(DP) :: refg = 0.05_DP
-          ! Accurancy of the interpolation table, interval between
-          ! table values in Rydberg
+        !! Accurancy of the interpolation table, interval between
+        !! table values in Rydberg
 
         CHARACTER(len=256) :: wfcdir = 'undefined'
-          ! scratch directory that is hopefully local to the node
-          ! to store large, usually temporary files.
+        !! scratch directory that is hopefully local to the node
+        !! to store large, usually temporary files.
 
         REAL(DP) :: max_seconds = 1.0E+7_DP
-          ! smoothly terminate program after the specified number of seconds
-          ! this parameter is typically used to prevent an hard kill from
-          ! the queuing system.
+        !! smoothly terminate program after the specified number of seconds
+        !! this parameter is typically used to prevent an hard kill from
+        !! the queuing system.
 
         REAL(DP) :: ekin_conv_thr = 1.0E-5_DP
-          ! convergence criterion for electron minimization
-          ! this criterion is met when "ekin < ekin_conv_thr"
-          ! convergence is achieved when all criteria are met
+        !! convergence criterion for electron minimization. 
+        !! This criterion is met when "ekin < ekin_conv_thr",
+        !! convergence is achieved when all criteria are met.
 
         REAL(DP) :: etot_conv_thr = 1.0E-4_DP
-          ! convergence criterion for ion minimization
-          ! this criterion is met when "etot(n+1)-etot(n) < etot_conv_thr",
-          ! where "n" is the step index, "etot" the DFT energy
-          ! convergence is achieved when all criteria are met
+        !! convergence criterion for ion minimization.
+        !! This criterion is met when \(\text{etot}(n+1)-\text{etot}(n)
+        !! < \text{etot_conv_thr}\), where "n" is the step index,
+        !! \(\text{etot}\) the DFT energy. Convergence is achieved when
+        !! all criteria are met.
 
         REAL(DP) :: forc_conv_thr = 1.0E-3_DP
-          ! convergence criterion for ion minimization
-          ! this criterion is met when "MAXVAL(fion) < forc_conv_thr",
-          ! where fion are the atomic forces
-          ! convergence is achieved when all criteria are met
+        !! convergence criterion for ion minimization-
+        !! This criterion is met when \(\text{MAXVAL(fion)} < 
+        !! \text{forc_conv_thr}\), where \(\text{fion}\) are the atomic
+        !! forces. Convergence is achieved when all criteria are met.
 
         CHARACTER(len=80) :: disk_io = 'default'
-          ! Specify the amount of I/O activities
+        !! Specify the amount of I/O activities.
 
         LOGICAL :: tefield  = .false.
-          ! if .TRUE. a sawtooth potential simulating a finite electric field
-          ! is added to the local potential = only used in PW
+        !! if TRUE a sawtooth potential simulating a finite electric field
+        !! is added to the local potential - only used in PW
 
           ! TB - added gate also below to the namelist
         LOGICAL :: gate = .FALSE.
-          ! if .TRUE. a charged plate in charged systems is added with a
-          ! total charge which is opposite to the charge of the system
+        !! if TRUE a charged plate in charged systems is added with a
+        !! total charge which is opposite to the charge of the system
 
           LOGICAL :: tefield2  = .false.
-          ! if .TRUE. a second finite electric field is added to the local potential
-          ! only used in CP
+          !! if TRUE a second finite electric field is added to the local potential
+          !! only used in CP
 
         LOGICAL :: lelfield = .false.
-          ! if .TRUE. a static homogeneous electric field is present
-          ! via the modern theory of polarizability - differs from tefield!
+        !! if TRUE a static homogeneous electric field is present
+        !! via the modern theory of polarizability - differs from tefield!
 
         LOGICAL :: lorbm = .false.
-          ! if .TRUE. an orbital magnetization is computed (Kubo terms)
+        !! if TRUE an orbital magnetization is computed (Kubo terms)
 
         LOGICAL :: dipfield = .false.
-          ! if .TRUE. the dipole field is subtracted
-          ! only used in PW for surface calculations
+        !! if TRUE the dipole field is subtracted only used in PW for 
+        !! surface calculations
 
         LOGICAL :: lberry = .false.
-          ! if .TRUE., use modern theory of the polarization
+        !! if TRUE, use modern theory of the polarization
 
         INTEGER :: gdir = 0
-          ! G-vector for polarization calculation ( related to lberry )
-          ! only used in PW
+        !! G-vector for polarization calculation (related to \(\(\text{lberry}\)).
+        !! Used in PW only
 
         INTEGER :: nppstr = 0
-          ! number of k-points (parallel vector) ( related to lberry )
-          ! only used in PW
+        !! number of k-points (parallel vector) (related to \(\text{lberry}\)).
+        !! Used in PW only.
 
         INTEGER  :: nberrycyc = 1
-          !number of covergence cycles on electric field
+        !! number of covergence cycles on electric field
 
         LOGICAL :: wf_collect = .true.
-          ! This flag controls the way wavefunctions are stored to disk:
-          !  .TRUE.  collect wavefunctions from all processors, store them
-          !          into a single restart file on a single processors
-          !  .FALSE. do not collect wavefunctions, store them into distributed
-          !          files - NO LONGER IMPLEMENTED SINCE v.6.3
+        !! This flag controls the way wavefunctions are stored to disk:  
+        !! TRUE:  collect wavefunctions from all processors, store them
+        !!        into a single restart file on a single processors;  
+        !! FALSE: do not collect wavefunctions, store them into distributed
+        !!        files - NO LONGER IMPLEMENTED SINCE v.6.3 .
 
         LOGICAL :: saverho = .true.
-          ! This flag controls the saving of charge density in CP codes:
-          !  .TRUE.  save charge density to restart dir
-          !  .FALSE. do not save charge density
+        !! This flag controls the saving of charge density in CP codes:  
+        !! TRUE:  save charge density to restart dir;  
+        !! FALSE: do not save charge density.
 
-        LOGICAL :: tabps = .false. ! for ab-initio pressure and/or surface
-                                   ! calculations
+        LOGICAL :: tabps = .false.
+        !! for ab-initio pressure and/or surface calculations
 
-        LOGICAL :: use_wannier = .false. ! use or not Wannier functions
+        LOGICAL :: use_wannier = .false.
+        !! use or not Wannier functions
 
         LOGICAL :: lecrpa = .FALSE.
-          ! if true symmetry in scf run is neglected for RPA Ec calculation
-          ! 
-        LOGICAL :: lfcp = .FALSE.     ! FCP calculation. enabled if .true.
+        !! if TRUE symmetry in scf run is neglected for RPA Ec calculation
+        ! 
+        LOGICAL :: lfcp = .FALSE.
+        !! FCP calculation. enabled if TRUE
 
-        LOGICAL :: tqmmm = .FALSE.    ! QM/MM coupling. enabled if .true.
+        LOGICAL :: tqmmm = .FALSE.
+        !! QM/MM coupling. enabled if TRUE
 
         CHARACTER(len=256) :: vdw_table_name = ' '
 
         CHARACTER(len=10) :: point_label_type='SC'
 
         CHARACTER(len=80) :: memory = 'default' 
-          ! controls memory usage 
+        !! controls memory usage 
         CHARACTER(len=80) :: memory_allowed(3)
+        !! \(\text{small}\): QE tries to use (when implemented) algorithms using less memory,
+        !! even if they are slower than the default;  
+        !! \(\text{large}\): QE tries to use (when implemented) algorithms using more memory
+        !! to enhance performance.
         DATA memory_allowed / 'small', 'default', 'large' /
-          ! if memory = 'small' then QE tries to use (when implemented) algorithms using less memory,
-          !                     even if they are slower than the default
-          ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
-          !                     to enhance performance.
+          
 
         !
-        ! location of xml input according to xsd schema
         CHARACTER(len=256) :: input_xml_schema_file = ' '
+        !! location of xml input according to xsd schema
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
@@ -287,111 +293,115 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
         INTEGER :: ibrav = 14
-          ! index of the the Bravais lattice
-          ! Note: in variable cell CP molecular dynamics, usually one does
-          !       not want to put constraints on the cell symmetries, thus
-          !       ibrav = 14 is used
+        !! index of the the Bravais lattice.  
+        !! Note: in variable cell CP molecular dynamics, usually one does
+        !!       not want to put constraints on the cell symmetries, thus
+        !!       ibrav = 14 is used
 
         REAL(DP) :: celldm(6) = 0.0_DP
-          ! dimensions of the cell (lattice parameters and angles)
-
+        !! dimensions of the cell (lattice parameters and angles)
+        
+        ! Alternate definition of the cell - use either this or celldm
         REAL(DP) :: a = 0.0_DP
+        !! lattice parameters (a,b,c)
         REAL(DP) :: c = 0.0_DP
         REAL(DP) :: b = 0.0_DP
         REAL(DP) :: cosab = 0.0_DP
+        !! lattice angles (cosab, cosac, cosbc)
         REAL(DP) :: cosac = 0.0_DP
         REAL(DP) :: cosbc = 0.0_DP
-          ! Alternate definition of the cell - use either this or celldm
 
         REAL(DP) :: ref_alat = 0.0_DP
-          ! reference cell alat in a.u. (see REF_CELL_PARAMETERS card) 
+        !! reference cell alat in a.u. (see REF\_CELL\_PARAMETERS card) 
 
         INTEGER :: nat = 0
-          ! total number of atoms
+        !! total number of atoms
 
         INTEGER :: ntyp = 0
-          ! number of atomic species
+        !! number of atomic species
 
         INTEGER :: nbnd = 0
-          ! number of electronic states, this parameter is MANDATORY in CP
+        !! number of electronic states, this parameter is MANDATORY in CP
 
         REAL(DP):: tot_charge = 0.0_DP
-          ! total system charge
+        !! total system charge
 
         REAL(DP) :: tot_magnetization = -1.0_DP
-          ! majority - minority spin.
-          ! A value < 0 means unspecified
+        !! majority - minority spin. A value < 0 means unspecified
 
         REAL(DP) :: ecutwfc = 0.0_DP
-          ! energy cutoff for wave functions in k-space ( in Rydberg )
-          ! this parameter is MANDATORY
+        !! energy cutoff for wave functions in k-space ( in Rydberg ).
+        !! this parameter is MANDATORY
 
         REAL(DP) :: ecutrho = 0.0_DP
-          ! energy cutoff for charge density in k-space ( in Rydberg )
-          ! by default its value is "4 * ecutwfc"
+        !! energy cutoff for charge density in k-space (in Rydberg).
+        !! By default its value is \(4 \text{ecutwfc}\)
 
         INTEGER :: nr1 = 0
+        !! dimensions of the real space grid for charge and potentials.
+        !! Presently NOT used in CP.
         INTEGER :: nr2 = 0
         INTEGER :: nr3 = 0
-          ! dimensions of the real space grid for charge and potentials
-          ! presently NOT used in CP
 
         INTEGER :: nr1s = 0
+        !! dimensions of the real space grid for wavefunctions.
+        !! Presently NOT used in CP
         INTEGER :: nr2s = 0
         INTEGER :: nr3s = 0
-          ! dimensions of the real space grid for wavefunctions
-          ! presently NOT used in CP
 
         INTEGER :: nr1b = 0
+        !! dimensions of the "box" grid for Ultrasoft pseudopotentials
         INTEGER :: nr2b = 0
         INTEGER :: nr3b = 0
-          ! dimensions of the "box" grid for Ultrasoft pseudopotentials
 
         CHARACTER(len=80) :: occupations = 'fixed'
-          ! select the way electronic states are filled
-          ! See card 'OCCUPATIONS' if ocupations='from_input'
+        !! select the way electronic states are filled.
+        !! See card 'OCCUPATIONS' if \(\text{ocupations}=\text{from_input}\)
 
         CHARACTER(len=80) :: smearing = 'gaussian'
-          ! select the way electronic states are filled for metalic systems
+        !! select the way electronic states are filled for metalic systems
 
         REAL(DP) :: degauss = 0.0_DP
-          ! parameter for the smearing functions - NOT used in CP
+        !! parameter for the smearing functions - NOT used in CP
 
         INTEGER :: nspin = 1
-          ! number of spinors
-          ! "nspin = 1" for LDA simulations
-          ! "nspin = 2" for LSD simulations
-          ! "nspin = 4" for NON COLLINEAR simulations
+        !! number of spinors:  
+        !! \(\text{nspin}=1\) for LDA simulations;  
+        !! \(\text{nspin}=2\) for LSD simulations;  
+        !! \(\text{nspin}=4\) for NON COLLINEAR simulations.
 
-
-        LOGICAL :: nosym = .true., noinv = .false.
-          ! (do not) use symmetry, q => -q symmetry in k-point generation
+        LOGICAL :: nosym = .true.
+        !! (do not) use symmetry
+        LOGICAL :: noinv = .false.
+        !! (do not) use q => -q symmetry in k-point generation
         LOGICAL :: nosym_evc = .false.
-          ! if .true. use symmetry only to symmetrize k points
+        !! if TRUE use symmetry only to symmetrize k points
 
         LOGICAL :: force_symmorphic = .false.
-          ! if .true. disable fractionary translations (nonsymmorphic groups)
+        !! if TRUE disable fractionary translations (nonsymmorphic groups)
         LOGICAL :: use_all_frac = .false.
-          ! if .true. enable usage of all fractionary translations, 
-          ! disabling check if they are commensurate with FFT grid
+        !! if TRUE enable usage of all fractionary translations, 
+        !! disabling check if they are commensurate with FFT grid
 
         REAL(DP) :: ecfixed = 0.0_DP, qcutz = 0.0_DP, q2sigma = 0.0_DP
-          ! parameters for modified kinetic energy functional to be used
-          ! in variable-cell constant cut-off simulations
+        !! parameters for modified kinetic energy functional to be used
+        !! in variable-cell constant cut-off simulations
 
         CHARACTER(len=80) :: input_dft = 'none'
-          ! Variable used to overwrite dft definition contained in
-          ! pseudopotential files; 'none' means DFT is read from pseudos.
-          ! Only used in PW - allowed values: any legal DFT value
+        !! Variable used to overwrite dft definition contained in
+        !! pseudopotential files; 'none' means DFT is read from pseudos.
+        !! Used in PW only - allowed values: any legal DFT value
 
         REAL(DP) :: starting_charge( nsx ) = 0.0_DP
-          ! ONLY PW
+        !! PW ONLY
 
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
-          ! ONLY PW
+        !! PW ONLY
 
         LOGICAL :: lda_plus_u = .false.
-          ! Use DFT+U(+V) method - following are the needed parameters
+        !! Use DFT+U(+V) method
+        !
+        ! the following are the needed parameters for DFT+U method
         INTEGER :: lda_plus_u_kind = 0
         INTEGER :: lback(nsx) = -1
         INTEGER :: l1back(nsx) = -1
@@ -423,17 +433,20 @@ MODULE input_parameters
           ! next group of variables PWSCF ONLY
           ! 
           !
-        REAL(DP) :: exx_fraction = -1.0_DP      ! if negative, use defaults
+        REAL(DP) :: exx_fraction = -1.0_DP
+        !! exact exchange fraction. If negative, use defaults
         REAL(DP) :: screening_parameter = -1.0_DP
-        INTEGER  :: nqx1 = 0, nqx2 = 0, nqx3=0  ! use the same values as nk1, nk2, nk3
-        !gau-pbe in
+        INTEGER  :: nqx1 = 0
+        !! use the same values as \(\text{nk1, nk2, nk3}\)
+        INTEGER  :: nqx2 = 0, nqx3=0  
+        !
         REAL(DP) :: gau_parameter = -1.0_DP
-        !gau-pbe out
+        !! gau-pbe
           !
         CHARACTER(len=80) :: exxdiv_treatment = 'gygi-baldereschi'
-          ! define how ro cure the Coulomb divergence in EXX
-          ! Allowed values are:
+        !! define how ro cure the Coulomb divergence in EXX.
         CHARACTER(len=80) :: exxdiv_treatment_allowed(6)
+        !! Allowed values for \(\text{exxdiv_treatment}\)
         DATA exxdiv_treatment_allowed / 'gygi-baldereschi', 'gygi-bald', 'g-b',&
              'vcut_ws', 'vcut_spherical', 'none' /
           !
@@ -482,45 +495,48 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: constrained_magnetization = 'none'
         REAL(DP) :: B_field(3) = 0.0_DP
-          ! A fixed magnetic field defined by the vector B_field is added
-          ! to the exchange and correlation magnetic field.
+        !! A fixed magnetic field defined by the vector B_field is added
+        !! to the exchange and correlation magnetic field.
 
         CHARACTER(len=80) :: sic = 'none'
-          ! CP only - SIC correction (D'avezac Mauri)
-          ! Parameters for SIC calculation
+        !! CP only - SIC correction (D'avezac Mauri)
+        !
+        ! Parameters for SIC calculation
         REAL(DP) :: sic_epsilon = 0.0_DP
         REAL(DP) :: sic_alpha   = 0.0_DP
         LOGICAL   :: force_pairing = .false.
 
         LOGICAL :: spline_ps = .false.
-          ! use spline interpolation for pseudopotential
+        !! use spline interpolation for pseudopotential
         LOGICAL :: one_atom_occupations=.false.
 
         CHARACTER(len=80) :: assume_isolated = 'none'
-          ! possible corrections for isolated systems:
-          !  'none', 'makov-payne', 'martyna-tuckerman', 'esm'
-          ! plus ENVIRON-specific:
-          !  'slabx', 'slaby', 'slabz', 'pcc'
+        !! Possible corrections for isolated systems:  
+        !!  'none', 'makov-payne', 'martyna-tuckerman', 'esm'  
+        !! Plus ENVIRON-specific:  
+        !!  'slabx', 'slaby', 'slabz', 'pcc'
 
         CHARACTER(len=80) :: vdw_corr = 'none'
-          ! semi-empirical van der Waals corrections
-          ! (not to be confused with nonlocal functionals,
-          !  specified in input_dft!). Default is 'none', allowed values:
-          !  'dft-d' or 'grimme-d2' [S.Grimme, J.Comp.Chem. 27, 1787 (2006)]
-          !  'ts', 'ts-vdW', 'tkatchenko-scheffler'
-          !  (Tkatchenko & Scheffler, Phys. Rev. Lett. 102, 073005 (2009))
-          !  'xdm' (Otero de la Roza and Johnson, J. Chem. Phys. 136 (2012) 174109)
+        !! semi-empirical van der Waals corrections (not to be confused with 
+        !! nonlocal functionals, specified in input_dft!). Default is 'none',
+        !! allowed values:  
+        !! 'dft-d' or 'grimme-d2' [S.Grimme, J.Comp.Chem. 27, 1787 (2006)]  
+        !! 'ts', 'ts-vdW', 'tkatchenko-scheffler'
+        !!  (Tkatchenko & Scheffler, Phys. Rev. Lett. 102, 073005 (2009))  
+        !!  'xdm' (Otero de la Roza and Johnson, J. Chem. Phys. 136 (2012) 174109)
 
         LOGICAL   :: london = .false.
-          ! OBSOLESCENT: same as vdw_corr='grimme-d2'
-          ! other DFT-D parameters ( see Modules/mm_dispersion.f90 )
-          ! london_s6 = default global scaling parameter for PBE
-          ! london_c6 = user specified atomic C6 coefficients
-          ! london_rvdw = user specified atomic vdw radii
+        !! OBSOLESCENT: same as vdw_corr='grimme-d2'  
+        !
+        ! Other DFT-D parameters ( see Modules/mm_dispersion.f90 )  
+        !
         REAL ( DP ) :: london_s6   =   0.75_DP ,&
-                       london_rcut = 200.00_DP , &
-                       london_c6( nsx ) = -1.0_DP, &
-                       london_rvdw( nsx ) = -1.0_DP
+        !! default global scaling parameter for PBE
+        REAL ( DP ) :: london_rcut = 200.00_DP , &
+        REAL ( DP ) :: london_c6( nsx ) = -1.0_DP
+        !! user specified atomic C6 coefficients
+        REAL ( DP ) :: london_rvdw( nsx ) = -1.0_DP
+        !! user specified atomic vdw radii
 
           ! Grimme-D3 (DFT-D3) dispersion correction.
           ! version=3 is Grimme-D3, version=2 is Grimme-D2,
@@ -530,88 +546,89 @@ MODULE input_parameters
         logical ::     dftd3_threebody = .true.
 
         LOGICAL   :: ts_vdw = .false.
-          ! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
+        !! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
         LOGICAL   :: mbd_vdw = .false.
-          ! added for consistency with ts_vdw
+        !! added for consistency with \(\text{ts_vdw}\)
         LOGICAL :: ts_vdw_isolated = .FALSE.
-          ! if .TRUE., TS-vdW correction for isolated system
-          ! if .FALSE., TS-vdW correction for periodic system
+        !! if TRUE, TS-vdW correction for isolated system;  
+        !! if FALSE, TS-vdW correction for periodic system.
         REAL(DP) :: ts_vdw_econv_thr = 1.0E-6_DP
-          ! convergence criterion for TS-vdW energy for periodic system 
-          !
+        !! convergence criterion for TS-vdW energy for periodic system 
+        !
 
         LOGICAL :: xdm = .FALSE.
-          ! OBSOLESCENT: same as vdw_corr='xdm'
+        !! OBSOLESCENT: same as vdw_corr='xdm'
         REAL(DP) :: xdm_a1 = 0.0_DP
         REAL(DP) :: xdm_a2 = 0.0_DP
-          !
+        !
         CHARACTER(LEN=3) :: esm_bc = 'pbc'
-          ! 'pbc': ordinary calculation with periodic boundary conditions
-          ! 'bc1': vacuum-slab-vacuum
-          ! 'bc2': metal-slab-metal
-          ! 'bc3': vacuum-slab-metal
+        !! 'pbc': ordinary calculation with periodic boundary conditions;  
+        !! 'bc1': vacuum-slab-vacuum;  
+        !! 'bc2': metal-slab-metal;  
+        !! 'bc3': vacuum-slab-metal.
 
         REAL(DP) :: esm_efield = 0.0_DP
-          ! applied electronic field [Ryd/a.u.] (used only for esm_bc='bc2')
+        !! applied electronic field [Ryd/a.u.] (used only for esm_bc='bc2')
 
         REAL(DP) :: esm_w = 0.0_DP
-          ! position of effective screening medium from z0=L_z/2 [a.u.]
-          ! note: z1 is given by z1=z0+abs(esm_w)
+        !! position of effective screening medium from z0=L_z/2 [a.u.]
+        !! note: z1 is given by \(\z1=z0+\text{abs}(\text{esm_w})\)
 
         REAL(DP) :: esm_a = 0.0_DP
-          ! smoothness parameter for smooth-ESM (exp(2a(z-z1)))
+        !! smoothness parameter for smooth-ESM \(\exp{2a(z-z1)}\)
 
         REAL(DP) :: esm_zb = 0.0_DP
-          ! smearing width for Ewald summation (RSUM) in smooth-ESM
+        !! smearing width for Ewald summation (RSUM) in smooth-ESM
 
         INTEGER :: esm_nfit = 4
-          ! number of z-grid points for polynomial fitting at cell edge
+        !! number of z-grid points for polynomial fitting at cell edge
 
         LOGICAL :: esm_debug = .FALSE.
-          ! used to enable debug mode (output v_hartree and v_local)
+        !! used to enable debug mode (output \(\text{v_hartree}\) and
+        !! \(\text{v_local}\))
 
         INTEGER :: esm_debug_gpmax = 0
-          ! if esm_debug is .TRUE., calculate v_hartree and v_local
-          ! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
+        !! if esm_debug is TRUE, calculate \(\text{v_hartree}\) and \(\text{v_local}\)
+        !! for \(\text{abs}(gp)<=\text{esm_debug_gpmax}\) (gp is integer and has 
+        !! \(\text{tpiba}\) unit)
 
         LOGICAL :: lgcscf = .FALSE.
-          ! if .TRUE., GC-SCF is used
+        !! if TRUE, GC-SCF is used
 
         LOGICAL :: gcscf_ignore_mun = .FALSE.
-          ! if .TRUE., ignore the term of -mu * N
+        !! if TRUE, ignore the term of -mu * N
 
         REAL(DP) :: gcscf_mu = 0.0_DP
-          ! target Fermi energy of GC-SCF (in eV)
+        !! target Fermi energy of GC-SCF (in eV)
 
         REAL(DP) :: gcscf_conv_thr = 1.0E-2_DP
-          ! convergence threshold of GC-SCF (in eV)
+        !! convergence threshold of GC-SCF (in eV)
 
         REAL(DP) :: gcscf_gk = 0.4_DP
-          ! wavenumber shift for Kerker operator (in 1/bohr)
+        !! wavenumber shift for Kerker operator (in 1/bohr)
 
         REAL(DP) :: gcscf_gh = 1.5_DP
-          ! wavenumber shift for Hartree metric (in 1/bohr)
+        !! wavenumber shift for Hartree metric (in 1/bohr)
 
         REAL(DP) :: gcscf_beta = 0.05_DP
-          ! mixing rate of Fermi energy
+        !! mixing rate of Fermi energy
 
         INTEGER :: space_group = 0
-          ! space group number for coordinates given in crystallographic form
-          !
+        !! space group number for coordinates given in crystallographic form
+        !
         LOGICAL :: uniqueb=.FALSE.
-          ! if .TRUE. for monoclinic lattice choose the b unique primitive 
-          ! vectors
-          !
+        !! if TRUE for monoclinic lattice choose the b unique primitive 
+        !! vectors
+        !
         INTEGER :: origin_choice = 1 
-          ! for space groups that have more than one origin choice, choose
-          ! the origin (can be 1 or 2)
-          !
+        !! for space groups that have more than one origin choice, choose
+        !! the origin (can be 1 or 2)
+        !
         LOGICAL :: rhombohedral = .TRUE.
-          !
-          ! if .TRUE. for rhombohedral space groups give the coordinates 
-          ! in rhombohedral axes. If .FALSE. in hexagonal axes, that are
-          ! converted internally in rhombohedral axes.  
-          !
+        !! if TRUE for rhombohedral space groups give the coordinates 
+        !! in rhombohedral axes. If FALSE in hexagonal axes, that are
+        !! converted internally in rhombohedral axes.  
+        !
 
 
 
