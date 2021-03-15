@@ -530,12 +530,12 @@ MODULE input_parameters
         !
         ! Other DFT-D parameters ( see Modules/mm_dispersion.f90 )  
         !
-        REAL ( DP ) :: london_s6   =   0.75_DP ,&
+        REAL(DP) :: london_s6   =   0.75_DP
         !! default global scaling parameter for PBE
-        REAL ( DP ) :: london_rcut = 200.00_DP , &
-        REAL ( DP ) :: london_c6( nsx ) = -1.0_DP
+        REAL(DP) :: london_rcut = 200.00_DP
+        REAL(DP) :: london_c6( nsx ) = -1.0_DP
         !! user specified atomic C6 coefficients
-        REAL ( DP ) :: london_rvdw( nsx ) = -1.0_DP
+        REAL(DP) :: london_rvdw( nsx ) = -1.0_DP
         !! user specified atomic vdw radii
 
           ! Grimme-D3 (DFT-D3) dispersion correction.
@@ -671,344 +671,336 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 
         REAL(DP) :: emass = 0.0_DP
-          ! effective electron mass in the CP Lagrangian,
-          ! in atomic units ( 1 a.u. of mass = 1/1822.9 a.m.u. = 9.10939 * 10^-31 kg )
-          ! Typical values in CP simulation are between 100. and 1000.
+        !! effective electron mass in the CP Lagrangian,
+        !! in atomic units (\(1 \text{a.u. of mass} = 1/1822.9 \text{a.m.u.} = 
+        !! 9.10939\cdot 10^{-31} kg\)).  
+        !! Typical values in CP simulation are between 100. and 1000.
 
         REAL(DP) :: emass_cutoff = 0.0_DP
-          ! mass cut-off (in Rydbergs) for the Fourier acceleration
-          ! effective mass is rescaled for "G" vector components with kinetic
-          ! energy above "emass_cutoff"
-          ! Use a value grether than "ecutwfc" to disable Fourier acceleration.
+        !! mass cut-off (in Rydbergs) for the Fourier acceleration.  
+        !! Effective mass is rescaled for "G" vector components with kinetic
+        !! energy above \(\text{emass_cutoff}\)
+        !! Use a value greater than \(\text{ecutwfc}\) to disable Fourier 
+        !! acceleration.
 
         CHARACTER(len=80) :: orthogonalization = 'ortho'
-          ! orthogonalization = 'Gram-Schmidt' | 'ortho'*
-          ! selects the orthonormalization method for electronic wave functions
-          !  'Gram-Schmidt'  use Gram-Schmidt algorithm
-          !  'ortho'         use iterative algorithm
+        !! selects the orthonormalization method for electronic wave functions:  
+        !! -'Gram-Schmidt'  uses Gram-Schmidt algorithm;  
+        !! -'ortho'         uses iterative algorithm.
 
         REAL(DP) :: ortho_eps = 1.E-9_DP
-          ! meaningful only if orthogonalization = 'ortho'
-          ! tolerance for iterative orthonormalization,
-          ! a value of 1.d-8 is usually sufficent
+        !! meaningful only if orthogonalization = 'ortho'.
+        !! Tolerance for iterative orthonormalization,
+        !! a value of 1.d-8 is usually sufficent.
 
         INTEGER   :: ortho_max = 50
-          ! meaningful only if orthogonalization = 'ortho'
-          ! maximum number of iterations for orthonormalization
-          ! usually between 20 and 300.
+        !! meaningful only if orthogonalization = 'ortho'.
+        !! Maximum number of iterations for orthonormalization
+        !! usually between 20 and 300.
 
         INTEGER :: electron_maxstep = 1000
-          ! maximum number of steps in electronic minimization
-          ! This parameter apply only when using 'cg' electronic or
-          ! ionic dynamics and electron_dynamics = 'CP-BO'
+        !! maximum number of steps in electronic minimization.
+        !! This parameter applies only when using 'cg' electronic or
+        !! ionic dynamics and electron\_dynamics = 'CP-BO'
         LOGICAL :: scf_must_converge = .true.
-          ! stop or continue if SCF does not converge
+        !! stop or continue if SCF does not converge
 
         CHARACTER(len=80) :: electron_dynamics = 'none'
-          ! set how electrons should be moved
+        !! set how electrons should be moved
         CHARACTER(len=80) :: electron_dynamics_allowed(7)
         DATA electron_dynamics_allowed &
           / 'default', 'sd', 'cg', 'damp', 'verlet', 'none', 'cp-bo' /
 
         REAL(DP) :: electron_damping = 0.0_DP
-          ! meaningful only if " electron_dynamics = 'damp' "
-          ! damping frequency times delta t, optimal values could be
-          ! calculated with the formula
-          !        sqrt(0.5*log((E1-E2)/(E2-E3)))
-          ! where E1 E2 E3 are successive values of the DFT total energy
-          ! in a steepest descent simulations
+        !! meaningful only if electron\_dynamics = 'damp'.
+        !! Damping frequency times delta t, optimal values could be
+        !! calculated with the formula:  
+        !!        \(\sqrt{0.5*\log{(E1-E2)/(E2-E3)}}\)  
+        !! where E1 E2 E3 are successive values of the DFT total energy
+        !! in a steepest descent simulations
 
         CHARACTER(len=80) :: electron_velocities = 'default'
-          ! electron_velocities = 'zero' | 'default'*
-          ! 'zero'    restart setting electronic velocities to zero
-          ! 'default' restart using electronic velocities of the previous run
+        !! electron_velocities:  
+        !! -'zero'    restart setting electronic velocities to zero;  
+        !! -'default' restart using electronic velocities of the previous run.
 
         CHARACTER(len=80) :: electron_temperature = 'not_controlled'
-          ! electron_temperature = 'nose' | 'not_controlled'* | 'rescaling'
-          ! 'nose'           control electronic temperature using Nose thermostat
-          !                  see parameter "fnosee" and "ekincw"
-          ! 'rescaling'      control electronic temperature via velocities rescaling
-          ! 'not_controlled' electronic temperature is not controlled
+        !! electron_temperature:  
+        !! -'nose'           control electronic temperature using Nose thermostat
+        !!                  see parameter "fnosee" and "ekincw";  
+        !! -'rescaling'      control electronic temperature via velocities rescaling;  
+        !! -'not_controlled' electronic temperature is not controlled-
 
         REAL(DP) :: ekincw = 0.0_DP
-          ! meaningful only with "electron_temperature /= 'not_controlled' "
-          ! value of the average kinetic energy (in atomic units) forced
-          ! by the temperature control
+        !! meaningful only with electron\_temperature different from 'not\_controlled'.
+        !! Value of the average kinetic energy (in atomic units) forced by the 
+        !! temperature control
 
         REAL(DP) :: fnosee = 0.0_DP
-          ! meaningful only with "electron_temperature = 'nose' "
-          ! oscillation frequency of the nose thermostat (in terahertz)
+        !! meaningful only with "electron\_temperature = 'nose' ".
+        !! Oscillation frequency of the nose thermostat (in terahertz)
 
         CHARACTER(len=80) :: startingwfc = 'random'
-          ! startingwfc = 'atomic' | 'atomic+random' | 'random' | 'file'
-          ! define how the code should initialize the wave function
-          ! 'atomic'   start from superposition of atomic wave functions
-          ! 'atomic+random' as above, plus randomization
-          ! 'random'   start from random wave functions
-          ! 'file'     read wavefunctions from file
+        !! define how the code should initialize the wave function:  
+        !! -'atomic'   start from superposition of atomic wave functions;  
+        !! -'atomic+random' as above, plus randomization;  
+        !! -'random'   start from random wave functions;  
+        !! -'file'     read wavefunctions from file.
 
         REAL(DP) :: ampre = 0.0_DP
-          ! meaningful only if "startingwfc = 'random'", amplitude of the
-          ! randomization ( allowed values: 0.0 - 1.0 )
+        !! meaningful only if startingwfc='random'. Amplitude of the
+        !! randomization ( allowed values: 0.0 - 1.0 )
 
         REAL(DP) :: grease = 0.0_DP
-          ! a number <= 1, very close to 1: the damping in electronic
-          ! damped dynamics is multiplied at each time step by "grease"
-          ! (avoids overdamping close to convergence: Obsolete ?)
-          ! grease = 1 : normal damped dynamics
-          ! used only in CP
+        !! a number smaller or equal to 1, very close to 1: the damping in
+        !! electronic damped dynamics is multiplied at each time step by 
+        !! "grease" (avoids overdamping close to convergence: Obsolete ?).
+        !! grease = 1 : normal damped dynamics. Used only in CP
 
         INTEGER :: diis_size = 0
-          ! meaningful only with " electron_dynamics = 'diis' "
-          ! size of the matrix used for the inversion in the iterative subspace
-          ! default is 4, allowed value 1-5
+        !! meaningful only with electron\_dynamics='diis'.
+        !! Size of the matrix used for the inversion in the iterative subspace
+        !! default is 4, allowed value 1-5
 
         INTEGER :: diis_nreset = 0
-          ! meaningful only with " electron_dynamics = 'diis' "
-          ! number of steepest descendent step after a reset of the diis
-          ! iteration, default value is 3
+        !! meaningful only with electron\_dynamics='diis'.
+        !! Number of steepest descendent step after a reset of the diis
+        !! iteration, default value is 3
 
         REAL(DP) :: diis_hcut = 0.0_DP
-          ! meaningful only with " electron_dynamics = 'diis' "
-          ! energy cutoff (a.u.), above which an approximate diagonal
-          ! hamiltonian is used in finding the direction to the minimum
-          ! default is "1.0"
+        !! meaningful only with electron\_dynamics = 'diis'.
+        !! Energy cutoff (a.u.), above which an approximate diagonal
+        !! hamiltonian is used in finding the direction to the minimum
+        !! default is 1.0
 
         REAL(DP) :: diis_wthr = 1.E-4_DP
-          ! meaningful only with " electron_dynamics = 'diis' "
-          ! convergence threshold for wave function
-          ! this criterion is satisfied when the maximum change
-          ! in the wave functions component between two diis steps
-          ! is less than this threshold
-          ! default value is ekin_conv_thr
+        !! meaningful only with electron\_dynamics='diis'. Convergence threshold
+        !! for wave function. This criterion is satisfied when the maximum change
+        !! in the wave functions component between two diis steps is less than 
+        !! this threshold. Default value is \(\text{ekin\_conv\_thr}\).
 
         REAL(DP) :: diis_delt = 1.0_DP
-          ! meaningful only with " electron_dynamics = 'diis' "
-          ! electronic time step used in the steepest descendent step
-          ! default is "dt"
+        !! meaningful only with electron\_dynamics='diis'.
+        !! Electronic time step used in the steepest descendent step.
+        !! Default is \(\text{dt}\)
 
         INTEGER :: diis_maxstep = 100
-          ! meaningful only with " electron_dynamics = 'diis' "
-          ! maximum number of iteration in the diis minimization
-          ! default is electron_maxstep
+        !! meaningful only with electron_dynamics='diis'.
+        !! Maximum number of iteration in the diis minimization.
+        !! Default is \(\text{electron\_maxstep}.
 
         LOGICAL :: diis_rot = .false.
-          ! meaningful only with " electron_dynamics = 'diis' "
-          ! if "diis_rot = .TRUE." enable diis with charge mixing and rotations
-          ! default is "diis_rot = .FALSE."
+        !! meaningful only with electron\_dynamics='diis'.
+        !! If TRUE enable diis with charge mixing and rotations.
+        !! Default value is FALSE.
 
         REAL(DP) :: diis_fthr = 1.E-3_DP
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! convergence threshold for ionic force
-          ! this criterion is satisfied when the maximum change
-          ! in the atomic force between two diis steps
-          ! is less than this threshold
-          ! default value is "0.0"
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        !! Convergence threshold for ionic force. This criterion is satisfied
+        !! when the maximum change in the atomic force between two diis steps
+        !! is less than this threshold. Default value is 0.0.
 
         REAL(DP) :: diis_temp = 0.0_DP
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! electronic temperature, significant only if ???
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        ! Electronic temperature, significant only if ???
 
         REAL(DP) :: diis_achmix  = 0.0_DP
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! "A" parameter in the charge mixing formula
-          ! chmix = A * G^2 / (G^2 + G0^2) , G represents reciprocal lattice vectors
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        !! "A" parameter in the charge mixing formula:  
+        !! \(\text{chmix}=A\cdot G^2/(G^2 + G0^2)\), where G represents reciprocal
+        !! lattice vectors.
 
         REAL(DP) :: diis_g0chmix  = 0.0_DP
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! "G0^2" parameter in the charge mixing formula
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        !! \(G0^2\) is the parameter in the charge mixing formula.
 
         INTEGER :: diis_nchmix = 0
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! dimension of the charge mixing
+        !! meaningful only with electron\_dynamics='diis' and "diis\_rot=TRUE.
+        !! Dimension of the charge mixing.
 
         REAL(DP) :: diis_g1chmix = 0.0_DP
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! "G1^2" parameter in the charge mixing formula
-          ! metric = (G^2 + G1^2) / G^2 , G represents reciprocal lattice vectors
+        !! meaningful only with electron\_dynamics='diis' and "diis\_rot=TRUE.
+        !! \(G1^2\) parameter in the charge mixing formula.  
+        !! \(\text{metric}=(G^2+G1^2)/G^2\), G represents reciprocal lattice vectors
 
         INTEGER :: diis_nrot(3) = 0
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! start upgrading the charge density every "diis_nrot(1)" steps,
-          ! then every "diis_nrot(2)", and at the end every "diis_nrot(3)",
-          ! depending on "diis_rothr"
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        !! Start upgrading the charge density every diis\_nrot(1) steps,
+        !! then every diis\_nrot(2), and at the end every diis\_nrot(3),
+        !! depending on diis\_rothr
 
         REAL(DP) :: diis_rothr(3) = 1.E-4_DP
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! threshold on the charge difference between two diis step
-          ! when max charge difference is less than "diis_rothr(1)", switch
-          ! between the "diis_nrot(1)" upgrade frequency to "diis_nrot(2)",
-          ! then when the max charge difference is less than "diis_rothr(2)",
-          ! switch between "diis_nrot(2)" and "diis_nrot(3)", upgrade frequency,
-          ! finally when the max charge difference is less than "diis_nrot(3)"
-          ! convergence is achieved
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        !! Threshold on the charge difference between two diis step.
+        !! When max charge difference is less than diis\_rothr(1), switch
+        !! between the diis\_nrot(1) upgrade frequency to diis\_nrot(2),
+        !! then when the max charge difference is less than diis\_rothr(2),
+        !! switch between diis\_nrot(2) and diis\_nrot(3), upgrade frequency,
+        !! finally when the max charge difference is less than diis\_nrot(3)
+        !! convergence is achieved.
 
         REAL(DP) :: diis_ethr = 1.E-4_DP
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! convergence threshold for energy
-          ! this criterion is satisfied when the change
-          ! in the energy between two diis steps
-          ! is less than this threshold
-          ! default value is etot_conv_thr
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        !! Convergence threshold for energy. This criterion is satisfied when 
+        !! the change in the energy between two diis steps is less than this 
+        !! threshold. Default value is \(\text{etot_conv_thr}\)
 
         LOGICAL :: diis_chguess = .false.
-          ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! if "diis_chguess = .TRUE." enable charge density guess
-          ! between two diis step, defaut value is "diis_chguess = .FALSE."
+        !! meaningful only with electron\_dynamics='diis' and diis\_rot=TRUE.
+        !! If diis\_chguess=TRUE enable charge density guess between two diis step,
+        !! defaut value is FALSE.
 
         CHARACTER(len=80) :: mixing_mode = 'default'
-          ! type of mixing algorithm for charge self-consistency
-          ! used only in PWscf
+        !! type of mixing algorithm for charge self-consistency.
+        !! Used in PWscf only.
 
         REAL(DP) :: mixing_beta = 0.0_DP
-          ! parameter for mixing algorithm
-          ! used only in PWscf
+        !! parameter for mixing algorithm. Used in PWscf only.
 
         INTEGER :: mixing_ndim = 0
-          ! dimension of mixing subspace
-          ! used only in PWscf
+        !! dimension of mixing subspace. Used in PWscf only.
 
         CHARACTER(len=80) :: diagonalization = 'david'
-          ! diagonalization = 'david', 'cg' or 'ppcg'
-          ! algorithm used by PWscf for iterative diagonalization
+        !! diagonalization = 'david', 'cg' or 'ppcg'.
+        !! Algorithm used by PWscf for iterative diagonalization.
 
         REAL(DP) :: diago_thr_init = 0.0_DP
-          ! convergence threshold for the first iterative diagonalization.
-          ! used only in PWscf
+        !! convergence threshold for the first iterative diagonalization.
+        !! Used in PWscf only.
 
         INTEGER :: diago_cg_maxiter = 100
-          ! max number of iterations for the first iterative diagonalization
-          ! using conjugate-gradient algorithm - used only in PWscf
+        !! max number of iterations for the first iterative diagonalization.
+        !! Using conjugate-gradient algorithm - used in PWscf only.
 
         INTEGER :: diago_ppcg_maxiter = 100
-          ! max number of iterations for the first iterative diagonalization
-          ! using projected preconditioned conjugate-gradient algorithm - used only in PWscf
+        !! max number of iterations for the first iterative diagonalization
+        !! using projected preconditioned conjugate-gradient algorithm - 
+        !! used in PWscf only.
 
         INTEGER :: diago_david_ndim = 4
-          ! dimension of the subspace used in Davidson diagonalization
-          ! used only in PWscf
+        !! dimension of the subspace used in Davidson diagonalization
+        !! used in PWscf only.
 
         LOGICAL :: diago_full_acc = .false.
 
         REAL(DP) :: conv_thr = 1.E-6_DP
-          ! convergence threshold in electronic ONLY minimizations
-          ! used only in PWscf
-          ! used in electron_dynamics = 'CP-BO' in CP and PWscf
+        !! convergence threshold in electronic ONLY minimizations.
+        !! Used in PWscf only.
+        !! Used with electron\_dynamics = 'CP-BO' in CP and PWscf
 
         INTEGER :: mixing_fixed_ns  = 0
-          ! For DFT+U calculations, PWscf only
+        !! For DFT+U calculations, PWscf only.
 
         CHARACTER(len=80) :: startingpot = 'potfile'
-          ! specify the file containing the DFT potential of the system
-          ! used only in PWscf
+        !! specify the file containing the DFT potential of the system.
+        !! Used in PWscf only.
 
         INTEGER :: n_inner = 2
-          ! number of inner loop per CG iteration.
-          ! used only in CP
+        !! number of inner loop per CG iteration. Used in CP only.
 
         INTEGER :: niter_cold_restart = 1
-          !frequency of full cold smearing inner cycle (in iterations)
+        !! frequency of full cold smearing inner cycle (in iterations).
 
         REAL(DP) :: lambda_cold
-         !step for not complete cold smearing inner cycle
+        !! step for not complete cold smearing inner cycle.
 
         LOGICAL :: tgrand = .false.
-          ! whether to do grand-canonical calculations.
+        !! whether to do grand-canonical calculations.
 
         REAL(DP) :: fermi_energy = 0.0_DP
-          ! chemical potential of the grand-canonical ensemble.
+        !! chemical potential of the grand-canonical ensemble.
 
         CHARACTER(len=80) :: rotation_dynamics = "line-minimization"
-          ! evolution the rotational degrees of freedom.
+        !! evolution of the rotational degrees of freedom.
 
         CHARACTER(len=80) :: occupation_dynamics = "line-minimization"
-          ! evolution of the occupational degrees of freedom.
+        !! evolution of the occupational degrees of freedom.
 
         REAL(DP) :: rotmass = 0
-          ! mass for the rotational degrees of freedom.
+        !! mass for the rotational degrees of freedom.
 
         REAL(DP) :: occmass = 0
-          ! mass for the occupational degrees of freedom.
+        !! mass for the occupational degrees of freedom.
 
         REAL(DP) :: occupation_damping = 0
-          ! damping for the rotational degrees of freedom.
+        !! damping for the rotational degrees of freedom.
 
         REAL(DP) :: rotation_damping = 0
-          ! damping for the occupational degrees of freedom.
+        !! damping for the occupational degrees of freedom.
 
         LOGICAL :: tcg = .true.
-          ! if true perform in cpv conjugate gradient minimization of electron energy
+        !! if TRUE perform in cpv conjugate gradient minimization of electron energy
 
         INTEGER :: maxiter = 100
-          ! max number of conjugate gradient iterations
+        !! max number of conjugate gradient iterations
 
         REAL(DP)  :: etresh =1.0E-7_DP
-          ! treshhold on energy
+        !! treshhold on energy
 
         REAL(DP) :: passop =0.3_DP
-          ! small step for parabolic interpolation
+        !! small step for parabolic interpolation
 
         INTEGER :: niter_cg_restart
-          !frequency of restart for the conjugate gradient algorithm in iterations
+        !! frequency of restart for the conjugate gradient algorithm in iterations.
 
         INTEGER  :: epol = 3
-          ! electric field direction
+        !! electric field direction.
 
         REAL(DP) :: efield =0.0_DP
-          ! electric field intensity in atomic units
+        !! electric field intensity in atomic units.
 
-          ! real_space routines for US pps
           LOGICAL :: real_space = .false.
-
+          !! real_space routines for US pps.
 
         REAL(DP) :: efield_cart(3)
-          ! electric field vector in cartesian system of reference
+        !! electric field vector in cartesian system of reference.
         
        CHARACTER(len=80) :: efield_phase='none'
-          ! for Berry's phase electric field selection of string phases
+       !! for Berry's phase electric field selection of string phases.
 
        INTEGER  :: epol2 = 3
-          ! electric field direction
+       !! electric field direction
 
         REAL(DP) :: efield2 =0.0_DP
-          ! electric field intensity in atomic units
+        !! electric field intensity in atomic units.
 
         LOGICAL :: tqr = .false.
-          ! US contributions are added in real space
+        !! US contributions are added in real space.
 
         LOGICAL :: tq_smoothing = .false.
-          ! US augmentation charge is smoothed before use
+        !! US augmentation charge is smoothed before use.
 
         LOGICAL :: tbeta_smoothing = .false.
-          ! beta function are smoothed before use
+        !! beta function are smoothed before use.
 
         LOGICAL :: occupation_constraints = .false.
-          ! If true perform CP dynamics with constrained occupations
-          ! to be used together with penalty functional ...
+        !! If TRUE perform CP dynamics with constrained occupations.
+        !! To be used together with penalty functional ...
 
         !
         ! ... CP-BO ...
         LOGICAL :: tcpbo = .FALSE.
-          ! if true perform CP-BO minimization of electron energy
+        !! if TRUE perform CP-BO minimization of electron energy
 
         REAL(DP) :: emass_emin = 0.0_DP
-          ! meaningful only if electron_dynamics = 'CP-BO'
-          ! effective electron mass used in CP-BO electron minimization in
-          ! atomic units ( 1 a.u. of mass = 1/1822.9 a.m.u. = 9.10939 * 10^-31 kg )
+        !! meaningful only if electron_dynamics = 'CP-BO'.
+        !! Effective electron mass used in CP-BO electron minimization in
+        !! atomic units (\( 1 \text{a.u. of mass} = 1/1822.9 \text{a.m.u.} =
+        !! 9.10939\cdot 10^{-31} kg\))
 
         REAL(DP) :: emass_cutoff_emin = 0.0_DP
-          ! meaningful only if electron_dynamics = 'CP-BO'
-          ! mass cut-off (in Rydbergs) for the Fourier acceleration in CP-BO
-          ! electron minimization
+        !! meaningful only if electron_dynamics = 'CP-BO'.
+        !! Mass cut-off (in Rydbergs) for the Fourier acceleration in CP-BO
+        !! electron minimization.
 
         REAL(DP) :: electron_damping_emin = 0.0_DP
-          ! meaningful only if electron_dynamics = 'CP-BO'
-          ! damping parameter utilized in CP-BO electron minimization
+        !! meaningful only if electron_dynamics = 'CP-BO'.
+        !! Damping parameter utilized in CP-BO electron minimization.
 
         REAL(DP) :: dt_emin = 0.0_DP
-          ! meaningful only if electron_dynamics = 'CP-BO'
-          ! time step for CP-BO electron minimization dynamics, in atomic units
-          ! CP: 1 a.u. of time = 2.4189 * 10^-17 s, PW: twice that much
+        !! meaningful only if electron_dynamics = 'CP-BO'.
+        !! Time step for CP-BO electron minimization dynamics, in atomic units.
+        !! CP: \(1 \text{a.u. of time} = 2.4189\cdot 10^{-17} s\), PW: twice that much.
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, scf_must_converge, ortho_eps, ortho_max, electron_dynamics,   &
