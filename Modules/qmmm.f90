@@ -8,6 +8,7 @@
 !==-----------------------------------------------------------------------==!
 MODULE qmmm
   !==---------------------------------------------------------------------==!
+  !! QM/MM approach management.
   USE io_global,        ONLY : ionode, ionode_id, stdout
   USE mp_world,         ONLY : world_comm
   USE mp_pools,         ONLY : intra_pool_comm

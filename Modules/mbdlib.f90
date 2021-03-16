@@ -4,10 +4,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! To be used in conjunction with the libmbd library
-! library by JH, this wrapper by SG (Luxembourg)
 
 MODULE libmbd_interface
+  
+  !! To be used in conjunction with the \(\texttt{libmbd}\) library.
+  ! library by JH, this wrapper by SG (Luxembourg)
 
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout  !output file

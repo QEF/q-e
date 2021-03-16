@@ -9,6 +9,8 @@
 !--------------------------------------------------------------------
 
 module sph_bes_gpum
+!! Spherical Bessel functions - GPU version.
+
 contains
 #if defined(__CUDA)
 attributes(DEVICE) subroutine sph_bes_gpu (msh, r, q, l, jl)

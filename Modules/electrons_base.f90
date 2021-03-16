@@ -8,7 +8,7 @@
 !------------------------------------------------------------------------------!
   MODULE electrons_base
 !------------------------------------------------------------------------------!
-
+      !! Variables and routines related to electronic configuration.
       USE kinds, ONLY: DP
 #if defined (__CUDA)
       USE cudafor

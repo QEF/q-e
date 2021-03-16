@@ -12,7 +12,7 @@
 !==-----------------------------------------------------------------------==!
 MODULE environment
   !==-----------------------------------------------------------------------==!
-
+  !! Environment management.
   USE kinds, ONLY: DP
   USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode

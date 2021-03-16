@@ -572,7 +572,7 @@ MODULE input_parameters
 
         REAL(DP) :: esm_w = 0.0_DP
         !! position of effective screening medium from z0=L_z/2 [a.u.]
-        !! note: z1 is given by \(\z1=z0+\text{abs}(\text{esm_w})\)
+        !! note: z1 is given by \(z1=z0+\text{abs}(\text{esm_w})\)
 
         REAL(DP) :: esm_a = 0.0_DP
         !! smoothness parameter for smooth-ESM \(\exp{2a(z-z1)}\)
@@ -589,7 +589,7 @@ MODULE input_parameters
 
         INTEGER :: esm_debug_gpmax = 0
         !! if esm_debug is TRUE, calculate \(\text{v_hartree}\) and \(\text{v_local}\)
-        !! for \(\text{abs}(gp)<=\text{esm_debug_gpmax}\) (gp is integer and has 
+        !! for \(\text{abs}(gp)\leq\text{esm_debug_gpmax}\) (gp is integer and has 
         !! \(\text{tpiba}\) unit)
 
         LOGICAL :: lgcscf = .FALSE.
@@ -715,17 +715,17 @@ MODULE input_parameters
         !! meaningful only if electron\_dynamics = 'damp'.
         !! Damping frequency times delta t, optimal values could be
         !! calculated with the formula:  
-        !!        \(\sqrt{0.5*\log{(E1-E2)/(E2-E3)}}\)  
+        !!        \(\sqrt{0.5\log{(E1-E2)/(E2-E3)}}\)  
         !! where E1 E2 E3 are successive values of the DFT total energy
         !! in a steepest descent simulations
 
         CHARACTER(len=80) :: electron_velocities = 'default'
-        !! electron_velocities:  
+        !! electron velocities:  
         !! -'zero'    restart setting electronic velocities to zero;  
         !! -'default' restart using electronic velocities of the previous run.
 
         CHARACTER(len=80) :: electron_temperature = 'not_controlled'
-        !! electron_temperature:  
+        !! electron temperature:  
         !! -'nose'           control electronic temperature using Nose thermostat
         !!                  see parameter "fnosee" and "ekincw";  
         !! -'rescaling'      control electronic temperature via velocities rescaling;  
@@ -754,7 +754,7 @@ MODULE input_parameters
         REAL(DP) :: grease = 0.0_DP
         !! a number smaller or equal to 1, very close to 1: the damping in
         !! electronic damped dynamics is multiplied at each time step by 
-        !! "grease" (avoids overdamping close to convergence: Obsolete ?).
+        !! "grease" (avoids overdamping close to convergence: obsolete?).
         !! grease = 1 : normal damped dynamics. Used only in CP
 
         INTEGER :: diis_size = 0
@@ -777,7 +777,7 @@ MODULE input_parameters
         !! meaningful only with electron\_dynamics='diis'. Convergence threshold
         !! for wave function. This criterion is satisfied when the maximum change
         !! in the wave functions component between two diis steps is less than 
-        !! this threshold. Default value is \(\text{ekin\_conv\_thr}\).
+        !! this threshold. Default value is \(\text{ekin_conv_thr}\).
 
         REAL(DP) :: diis_delt = 1.0_DP
         !! meaningful only with electron\_dynamics='diis'.
@@ -787,7 +787,7 @@ MODULE input_parameters
         INTEGER :: diis_maxstep = 100
         !! meaningful only with electron_dynamics='diis'.
         !! Maximum number of iteration in the diis minimization.
-        !! Default is \(\text{electron\_maxstep}.
+        !! Default is \(\text{electron_maxstep}\).
 
         LOGICAL :: diis_rot = .false.
         !! meaningful only with electron\_dynamics='diis'.

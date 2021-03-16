@@ -166,6 +166,8 @@ END MODULE
 #else
 
 MODULE set_signal
+!! This module is a Fortran 2003 interface to the customize_signals.c C file
+!! Compatible with Intel/PGI/Gcc(>=4.3) compilers
 
 USE io_global, ONLY : stdout
 

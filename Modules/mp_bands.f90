@@ -126,11 +126,11 @@ END MODULE mp_bands
 !
 !     
 MODULE mp_bands_TDDFPT
-!
-! NB: These two variables used to be in mp_bands and are loaded from mp_global in TDDFPT 
-!     I think they would better stay in a TDDFPT specific module but leave them here not to
-!     be too invasive on a code I don't know well. SdG
-!     
+  !! Starting and ending band indexes in bgrp parallelization.
+  ! NB: These two variables used to be in mp_bands and are loaded from mp_global in TDDFPT 
+  !     I think they would better stay in a TDDFPT specific module but leave them here not to
+  !     be too invasive on a code I don't know well. SdG
+  !     
   INTEGER :: ibnd_start = 0
   !! starting band index used in bgrp parallelization.
   INTEGER :: ibnd_end = 0

@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE space_group
+  !! Space groups, symmetries, Bravais lattices.
   USE kinds, ONLY: DP
   IMPLICIT NONE
 
@@ -22,10 +23,10 @@ MODULE space_group
    
    SUBROUTINE sym_brav(space_group_number,sym_n,ibrav)
    
-   ! Sym_brav ->   
-   ! input    spacegroup number
-   ! output   sym_n = symmetries number
-   !          ibrav = Bravais lattice number 
+   !! Sym\_brav:  
+   !! - input: spacegroup number;  
+   !! - output: symmetries number (\(\text{sym_n}\)), Bravais
+   !! lattice number (\(\text{ibrav}\))
 
       INTEGER, INTENT(IN) :: space_group_number
       INTEGER, INTENT(OUT) :: sym_n,ibrav
