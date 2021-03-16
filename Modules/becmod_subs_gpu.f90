@@ -8,6 +8,7 @@
 !----------------------------------------------------------------------------
 !
 MODULE becmod_subs_gpum
+  !! GPU version of the \(\texttt{becmod}\)-routines.
   
   ! NOTA BENE : THE SUBROUTINES IN THIS FILE ARE ONLY PARTIALLY TESTED!
    

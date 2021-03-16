@@ -1031,124 +1031,120 @@ MODULE input_parameters
 
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
-          ! set how ions should be moved
+        !! set how ions should be moved
         CHARACTER(len=80) :: ion_dynamics_allowed(10)
+        !! allowed options for ion\_dynamics.
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'bfgs', 'beeman',& 
                                     'langevin-smc', 'ipi' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
-          ! pseudo-atomic radius of the i-th atomic species (CP only)
-          ! for Ewald summation: typical values range between 0.5 and 2.0 
+        !! pseudo-atomic radius of the i-th atomic species (CP only).
+        !! For Ewald summation: typical values range between 0.5 and 2.0 
        INTEGER :: iesr = 1
-          ! perform Ewald summation on iesr*iesr*iesr cells - CP only
+       !! perform Ewald summation on \(\text{iesr}^3\) cells - CP only
 
         REAL(DP) :: ion_damping = 0.2_DP
-          ! meaningful only if " ion_dynamics = 'damp' "
-          ! damping frequency times delta t, optimal values could be
-          ! calculated with the formula
-          !        sqrt(0.5*log((E1-E2)/(E2-E3)))
-          ! where E1 E2 E3 are successive values of the DFT total energy
-          ! in a ionic steepest descent simulation
+        !! meaningful only if ion\_dynamics='damp'. Damping frequency times
+        !! delta t, optimal values could be calculated with the formula:  
+        !! \( \sqrt(0.5\cdot\log{(E1-E2)/(E2-E3)}) \)  
+        !! where \(E1\ E2\ E3\) are successive values of the DFT total energy
+        !! in a ionic steepest descent simulation.
 
         CHARACTER(len=80) :: ion_positions = 'default'
-          ! ion_positions = 'default'* | 'from_input'
-          ! 'default'    restart the simulation with atomic positions read
-          !              from the restart file
-          ! 'from_input' restart the simulation with atomic positions read
-          !              from standard input ( see the card 'ATOMIC_POSITIONS' )
+        !! allowed options:  
+        !! -'default'    restart the simulation with atomic positions read
+        !!               from the restart file;  
+        !! -'from_input' restart the simulation with atomic positions read
+        !!               from standard input (see the card 'ATOMIC_POSITIONS').
 
         CHARACTER(len=80) :: ion_velocities = 'default'
-          ! ion_velocities = 'zero' | 'default'* | 'random' | 'from_input'
-          ! 'default'    restart the simulation with atomic velocities read
-          !              from the restart file
-          ! 'random'     start the simulation with random atomic velocities
-          ! 'from_input' restart the simulation with atomic velocities read
-          !              from standard input (see the card 'ATOMIC_VELOCITIES' )
-          ! 'zero'       restart the simulation with atomic velocities set to zero
+        !! allowed options:  
+        !! -'default'    restart the simulation with atomic velocities read
+        !!               from the restart file;  
+        !! -'random'     start the simulation with random atomic velocities;  
+        !! -'from_input' restart the simulation with atomic velocities read
+        !!               from standard input (see the card 'ATOMIC_VELOCITIES');  
+        !! -'zero'       restart the simulation with atomic velocities set to zero.
 
         CHARACTER(len=80) :: ion_temperature = 'not_controlled'
-          ! ion_temperature = 'nose' | 'not_controlled'* | 'rescaling' |
-          !    'berendsen' | 'andersen' | 'rescale-v' | 'rescale-T' | 'reduce-T'
-          !
-          ! 'nose'           control ionic temperature using Nose thermostat
-          !                  see parameters "fnosep" and "tempw"
-          ! 'rescaling'      control ionic temperature via velocity rescaling
-          !                  see parameters "tempw" and "tolp"
-          ! 'rescale-v'      control ionic temperature via velocity rescaling
-          !                  see parameters "tempw" and "nraise"
-          ! 'rescale-T'      control ionic temperature via velocity rescaling
-          !                  see parameter "delta_t"
-          ! 'reduce-T'       reduce ionic temperature
-          !                  see parameters "nraise", delta_t"
-          ! 'berendsen'      control ionic temperature using "soft" velocity
-          !                  rescaling - see parameters "tempw" and "nraise"
-          ! 'andersen'       control ionic temperature using Andersen thermostat
-          !                  see parameters "tempw" and "nraise"
-          ! 'not_controlled' ionic temperature is not controlled
+        !! allowed options:  
+        !! -'nose'           control ionic temperature using Nose thermostat,
+        !!                   see parameters "fnosep" and "tempw";  
+        !! -'rescaling'      control ionic temperature via velocity rescaling,
+        !!                   see parameters "tempw" and "tolp";  
+        !! -'rescale-v'      control ionic temperature via velocity rescaling,
+        !!                   see parameters "tempw" and "nraise";  
+        !! -'rescale-T'      control ionic temperature via velocity rescaling,
+        !!                   see parameter "delta_t";  
+        !! -'reduce-T'       reduce ionic temperature, see parameters "nraise", delta_t";  
+        !! -'berendsen'      control ionic temperature using "soft" velocity
+        !!                   rescaling, see parameters "tempw" and "nraise";  
+        !! -'andersen'       control ionic temperature using Andersen thermostat,
+        !!                   see parameters "tempw" and "nraise";  
+        !! -'not_controlled' ionic temperature is not controlled.
 
         REAL(DP) :: tempw = 300.0_DP
-          ! meaningful only with "ion_temperature /= 'not_controlled' "
-          ! value of the ionic temperature (in Kelvin) forced
-          ! by the temperature control
+        !! meaningful only when ion\_temperature different from 'not\_controlled'.
+        !! Value of the ionic temperature (in Kelvin) forced by the temperature control.
 
         INTEGER, PARAMETER :: nhclm   = 4
+        !! max length for the chain; it can be easily increased
+        !! since the restart file should be able to handle it,
+        !! perhaps better to align \(\text{nhclm}\) by 4.
         REAL(DP) :: fnosep( nhclm )  = 50.0_DP
-          ! meaningful only with "ion_temperature = 'nose' "
-          ! oscillation frequency of the nose thermostat (in terahertz)
-          ! nhclm is the max length for the chain; it can be easily increased
-          ! since the restart file should be able to handle it
-          ! perhaps better to align nhclm by 4
-
+        !! meaningful only with ion\_temperature='nose'. Oscillation frequency of
+        !! the nose thermostat (in terahertz).
+        
         INTEGER   ::  nhpcl = 0
-          ! non-zero only with "ion_temperature = 'nose' "
-          ! this defines the length of the Nose-Hoover chain
+        !! non-zero only with ion\_temperature = 'nose'.
+        !! This defines the length of the Nose-Hoover chain.
 
         INTEGER   :: nhptyp = 0
-        ! this parameter set the nose hoover thermostat to more than one
+        !! this parameter set the nose hoover thermostat to more than one
 
         INTEGER   ::  nhgrp(nsx)=0
-          ! this is the array to assign thermostats to atomic types
-          ! allows to use various thermostat setups
+        !! this is the array to assign thermostats to atomic types.
+        !! Allows to use various thermostat setups.
 
         INTEGER   ::  ndega = 0
-          ! this is the parameter to control active degrees of freedom
-          ! used for temperature control and the Nose-Hoover chains
+        !! this is the parameter to control active degrees of freedom.
+        !! Used for temperature control and the Nose-Hoover chains.
 
         REAL(DP) :: tolp = 50.0_DP
-          ! meaningful only with "ion_temperature = 'rescaling' "
-          ! tolerance (in Kelvin) of the rescaling. When ionic temperature
-          ! differs from "tempw" more than "tolp" apply rescaling.
+        !! meaningful only with ion\_temperature='rescaling'.
+        !! Tolerance (in Kelvin) of the rescaling. When ionic temperature
+        !! differs from "tempw" more than "tolp" apply rescaling.
 
         REAL(DP)  ::  fnhscl(nsx)=-1.0_DP
-        ! this is to scale the target energy, in case there are constraints
-        ! the dimension is the same as nhgrp, meaning that atomic type
-        ! i with a group nhgrp(i) is scaled by fnhscl(i)
+        !! this is to scale the target energy, in case there are constraints
+        !! the dimension is the same as \(\text{nhgrp}\), meaning that atomic
+        !! type \(i\) with a group \(\text{nhgrp}(i)\) is scaled by \(\text{fnhscl}(i)\)
 
         LOGICAL   :: tranp(nsx) = .false.
-          ! tranp(i) control the randomization of the i-th atomic specie
-          ! .TRUE.   randomize ionic positions ( see "amprp" )
-          ! .FALSE.  do nothing
+        !! \(\text{tranp}(i)\) controls the randomization of the i-th atomic specie:  
+        !! -TRUE   randomize ionic positions ( see "amprp" );  
+        !! -FALSE  do nothing.
 
         REAL(DP) :: amprp(nsx) = 0.0_DP
-          ! amprp(i) meaningful only if "tranp(i) = .TRUE.", amplitude of the
-          ! randomization ( allowed values: 0.0 - 1.0 ) for the i-th atomic specie.
-          ! Add to the positions a random displacements vector ( in bohr radius )
-          ! defined as:  amprp( i ) * ( X, Y, Z )
-          ! where X, Y, Z are pseudo random number in the interval [ -0.5 , 0.5 ]
+        !! \(\text{amprp}(i)\) meaningful only if \(\text{tranp}(i)=\text{TRUE}\), amplitude
+        !! of the randomization (allowed values: 0.0 - 1.0) for the i-th atomic specie.  
+        !! Add to the positions a random displacements vector (in Bohr radius) defined as:
+        !! \(\text{amprp}(i)\cdot (X,Y,Z)\), where X, Y, Z are pseudo random number in the interval
+        !! \([-0.5, 0.5]\).
 
         REAL(DP) :: greasp = 0.0_DP
-          ! same as "grease", for ionic damped dynamics
-          ! NOT used in FPMD
+        !! same as "grease", for ionic damped dynamics.
+        !! NOT used in FPMD
 
         INTEGER   :: ion_nstepe = 1
-          ! number of electronic steps for each ionic step
+        !! number of electronic steps for each ionic step
 
         INTEGER   :: ion_maxstep = 1000
-          ! maximum number of step in ionic minimization
+        !! maximum number of step in ionic minimization
 
         REAL(DP) :: upscale = 100.0_DP
-          ! Max reduction allowed in scf threshold during optimization
+        !! Max reduction allowed in scf threshold during optimization
 
         CHARACTER(len=80) :: pot_extrapolation = 'default', &
                              wfc_extrapolation = 'default'
@@ -1162,9 +1158,9 @@ MODULE input_parameters
         !
 
         REAL(DP) :: delta_t = 1.0_DP
-
+        !! used to change temperature in PWscf
         INTEGER :: nraise = 1
-
+        !! used to change temperature in PWscf
         !
         ! ... variables added for new BFGS algorithm
         !
@@ -1194,86 +1190,83 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
         CHARACTER(len=80) :: cell_parameters = 'default'
-          ! cell_parameters = 'default'* | 'from_input'
-          ! 'default'    restart the simulation with cell parameters read
-          !              from the restart file or "celldm" if
-          !              "restart = 'from_scratch'"
-          ! 'from_input' restart the simulation with cell parameters
-          !              from standard input ( see the card 'CELL_PARAMETERS' )
+        !! allowed options:  
+        !! -'default'    restart the simulation with cell parameters read
+        !!               from the restart file or "celldm" if restart='from_scratch';  
+        !! -'from_input' restart the simulation with cell parameters
+        !!               from standard input (see the card 'CELL_PARAMETERS').
 
         CHARACTER(len=80) :: cell_dynamics  = 'none'
-          ! set how the cell should be moved
+        !! set how the cell should be moved
         CHARACTER(len=80) :: cell_dynamics_allowed(8)
         DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', &
                                      'damp-w', 'bfgs', 'ipi'  /
 
         CHARACTER(len=80) :: cell_velocities = 'default'
-          ! cell_velocities = 'zero' | 'default'*
-          ! 'zero'    restart setting cell velocitiy to zero
-          ! 'default' restart using cell velocity of the previous run
+        !! allowed options:  
+        !! -'zero'    restart setting cell velocitiy to zero;  
+        !! -'default' restart using cell velocity of the previous run
 
         REAL(DP) :: press = 0.0_DP
-          ! external pressure (in GPa, remember 1 kbar = 10^8 Pa)
+        !! external pressure (in GPa, remember \(1\text{kbar}=10^8\text{Pa}\))
 
         REAL(DP) :: wmass = 0.0_DP
-          ! effective cell mass in the Parrinello-Rahman Lagrangian (in atomic units)
-          ! of the order of magnitude of the total atomic mass
-          ! (sum of the mass of the atoms) within the simulation cell.
-          ! if you do not specify this parameters, the code will compute
-          ! its value based on some physical consideration
+        !! effective cell mass in the Parrinello-Rahman Lagrangian (in atomic units).
+        !! Of the order of magnitude of the total atomic mass
+        !! (sum of the mass of the atoms) within the simulation cell.
+        !! If you do not specify this parameters, the code will compute
+        !! its value based on some physical consideration.
 
         CHARACTER(len=80) :: cell_temperature  = 'not_controlled'
-          ! cell_temperature = 'nose' | 'not_controlled'* | 'rescaling'
-          ! 'nose'           control cell temperature using Nose thermostat
-          !                  see parameters "fnoseh" and "temph"
-          ! 'rescaling'      control cell temperature via velocities rescaling
-          ! 'not_controlled' cell temperature is not controlled
-          ! NOT used in FPMD
+        !! Allowed options:  
+        !! -'nose'           control cell temperature using Nose thermostat,
+        !!                   see parameters "fnoseh" and "temph";  
+        !! -'rescaling'      control cell temperature via velocities rescaling;  
+        !! -'not_controlled' cell temperature is not controlled.  
+        !! NOT used in FPMD
 
         REAL(DP) :: temph = 0.0_DP
-          ! meaningful only with "cell_temperature /= 'not_controlled' "
-          ! value of the cell temperature (in Kelvin) forced
-          ! by the temperature control
+        !! meaningful only with cell\_temperature different from 'not_controlled'.
+        !! Value of the cell temperature (in Kelvin) forced by the temperature control.
 
         REAL(DP) :: fnoseh = 1.0_DP
-          ! meaningful only with "cell_temperature = 'nose' "
-          ! oscillation frequency of the nose thermostat (in terahertz)
+        !! meaningful only with cell\_temperature = 'nose'.
+        !! Oscillation frequency of the nose thermostat (in terahertz)
 
         REAL(DP) :: greash = 0.0_DP
-          ! same as "grease", for cell damped dynamics
+        !! same as "grease", for cell damped dynamics
 
         CHARACTER(len=80) :: cell_dofree = 'all'
-          ! cell_dofree = 'all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz'
-          ! select which of the cell parameters should be moved
-          ! 'all'    all axis and angles are propagated (default)
-          ! 'volume' the cell is simply rescaled, without changing the shape
-          ! 'x'      only the "x" axis is moved
-          ! 'y'      only the "y" axis is moved
-          ! 'z'      only the "z" axis is moved
-          ! 'xy'     only the "x" and "y" axis are moved, angles are unchanged
-          ! 'xz'     only the "x" and "z" axis are moved, angles are unchanged
-          ! 'yz'     only the "y" and "z" axis are moved, angles are unchanged
-          ! 'xyz'    "x", "y" and "z" axis are moved, angles are unchanged
+        !! selects which of the cell parameters should be moved. Allowed options:  
+        !! -'all':    all axis and angles are propagated (default);  
+        !! -'volume': the cell is simply rescaled, without changing the shape;  
+        !! -'x':      only the "x" axis is moved;  
+        !! -'y':      only the "y" axis is moved;  
+        !! -'z':      only the "z" axis is moved;  
+        !! -'xy':     only the "x" and "y" axis are moved, angles are unchanged;  
+        !! -'xz':     only the "x" and "z" axis are moved, angles are unchanged;  
+        !! -'yz':     only the "y" and "z" axis are moved, angles are unchanged;  
+        !! -'xyz':    "x", "y" and "z" axis are moved, angles are unchanged.
 
         REAL(DP) :: cell_factor = 0.0_DP
-          ! NOT used in FPMD
+        !! NOT used in FPMD
 
         INTEGER   :: cell_nstepe = 1
-          ! number of electronic steps for each cell step
+        !! number of electronic steps for each cell step
 
         REAL(DP) :: cell_damping = 0.1_DP
-          ! meaningful only if " cell_dynamics = 'damp' "
-          ! damping frequency times delta t, optimal values could be
-          ! calculated with the formula
-          !        sqrt(0.5*log((E1-E2)/(E2-E3)))
-          ! where E1 E2 E3 are successive values of the DFT total energy
-          ! in a ionic steepest descent simulation
+        !! meaningful only if cell\_dynamics='damp'.
+        !! Damping frequency times delta t, optimal values could be
+        !! calculated with the formula:  
+        !! \( \sqrt(0.5\cdot\log{(E1-E2)/(E2-E3))}\),  
+        !! where E1 E2 E3 are successive values of the DFT total energy
+        !! in a ionic steepest descent simulation.
 
         REAL(DP) :: press_conv_thr = 0.5_DP
         
         LOGICAL :: treinit_gvecs  = .FALSE. 
-          ! if true all the quantities related to fft g vectors are updated at 
-          ! step of variable cell structural optimization 
+        !! if TRUE all the quantities related to fft g vectors are updated at 
+        !! step of variable cell structural optimization 
 
         NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, &
                           press, wmass, cell_temperature, temph, fnoseh,   &
@@ -1374,20 +1367,22 @@ MODULE input_parameters
 !  WANNIER_NEW Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 
-          LOGICAL :: &
-               plot_wannier = .false.,&
-                        ! if .TRUE. wannier number plot_wan_num is plotted
-               use_energy_int = .false., &
-                        ! if .TRUE. energy interval is used to generate wannier
-               print_wannier_coeff = .false.
-                        ! if .TRUE.
-          INTEGER, PARAMETER :: nwanx = 50  ! max number of wannier functions
-          INTEGER :: &
-               nwan,          &! number of wannier functions
-               plot_wan_num = 0,  &! number of wannier for plotting
-               plot_wan_spin = 1   ! spin of wannier for plotting
-          REAL(DP) :: &
-               constrain_pot(nwanx,2)                   ! constrained potential for wannier
+          LOGICAL :: plot_wannier = .false.
+          !! if TRUE wannier number plot_wan\_num is plotted
+          LOGICAL :: use_energy_int = .false.
+          !! if TRUE energy interval is used to generate wannier
+          LOGICAL :: print_wannier_coeff = .false.
+          ! if .TRUE.
+          INTEGER, PARAMETER :: nwanx = 50
+          !! max number of wannier functions
+          INTEGER :: nwan
+          !! number of wannier functions
+          INTEGER :: plot_wan_num = 0
+          !! number of wannier for plotting
+          INTEGER :: plot_wan_spin = 1
+          !! spin of wannier for plotting
+          REAL(DP) :: constrain_pot(nwanx,2)
+          !! constrained potential for wannier
           NAMELIST / wannier_ac / plot_wannier, use_energy_int, nwan, &
                                    plot_wan_num, plot_wan_spin, constrain_pot, print_wannier_coeff
 
@@ -1399,73 +1394,71 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
         REAL(DP) :: fcp_mu = 0.0_DP
-          ! target Fermi energy (in eV)
+        !! target Fermi energy (in eV)
 
         CHARACTER(LEN=16) :: fcp_dynamics = 'none'
-          ! 'none':            Not specified
-          ! 'lm':              Line-Minimization
-          ! 'newton':          Newton-Raphson algorithm (with DIIS)
-          ! 'bfgs':            BFGS algorithm (coupling with ions)
-          ! 'damp':            Damped dynamics (quick-min Verlet)
-          ! 'verlet':          Verlet dynamics
-          ! 'velocity-verlet': Velocity-Verlet dynamics
+        !! available options:  
+        !! -'none':            Not specified;  
+        !! -'lm':              Line-Minimization;  
+        !! -'newton':          Newton-Raphson algorithm (with DIIS);  
+        !! -'bfgs':            BFGS algorithm (coupling with ions);  
+        !! -'damp':            Damped dynamics (quick-min Verlet);  
+        !! -'verlet':          Verlet dynamics;  
+        !! -'velocity-verlet': Velocity-Verlet dynamics.
 
         CHARACTER(LEN=16) :: fcp_dynamics_allowed(7)
         DATA fcp_dynamics_allowed / 'none', 'lm', 'newton', 'bfgs', &
                                     'damp', 'verlet', 'velocity-verlet' /
 
         REAL(DP) :: fcp_conv_thr = 1.0E-2_DP
-          ! convergence threshold for FCP relaxation (in eV)
+        !! convergence threshold for FCP relaxation (in eV)
 
         INTEGER :: fcp_ndiis = 4
-          ! size of DIIS for Newton-Raphson algorithm
+        !! size of DIIS for Newton-Raphson algorithm
 
         REAL(DP) :: fcp_rdiis = 1.0_DP
-          ! step of DIIS for Newton-Raphson algorithm
+        !! step of DIIS for Newton-Raphson algorithm
 
         REAL(DP) :: fcp_mass = -1.0_DP
-          ! mass for the FCP
+        !! mass for the FCP
 
         REAL(DP) :: fcp_velocity = 0.0_DP
-          ! initial velocity for the FCP
+        !! initial velocity for the FCP
 
         CHARACTER(LEN=80) :: fcp_temperature = 'not_controlled'
-          ! fcp_temperature = 'rescaling' | 'rescale-v' | 'rescale-T' | 'reduce-T' |
-          !                   'berendsen' | 'andersen' | 'initial' | 'not_controlled'*
-          !
-          ! 'rescaling'      control FCP's temperature via velocity rescaling
-          !                  see parameters "fcp_tempw" and "fcp_tolp"
-          ! 'rescale-v'      control FCP's temperature via velocity rescaling
-          !                  see parameters "fcp_tempw" and "fcp_nraise"
-          ! 'rescale-T'      control FCP's temperature via velocity rescaling
-          !                  see parameter "fcp_delta_t"
-          ! 'reduce-T'       reduce FCP's temperature
-          !                  see parameters "fcp_nraise", "fcp_delta_t"
-          ! 'berendsen'      control FCP's temperature using "soft" velocity
-          !                  rescaling - see parameters "fcp_tempw" and "fcp_nraise"
-          ! 'andersen'       control FCP's temperature using Andersen thermostat
-          !                  see parameters "fcp_tempw" and "fcp_nraise"
-          ! 'initial'        initialize ion velocities to temperature fcp_tempw
-          !                  and leave uncontrolled further on
-          ! 'not_controlled' FCP's temperature is not controlled
+        !! Allowed options:  
+        !! -'rescaling':      control FCP's temperature via velocity rescaling,
+        !!                    see parameters "fcp\_tempw" and "fcp\_tolp";  
+        !! -'rescale-v':      control FCP's temperature via velocity rescaling,
+        !!                    see parameters "fcp\_tempw" and "fcp\_nraise";  
+        !! -'rescale-T':      control FCP's temperature via velocity rescaling,
+        !!                    see parameter "fcp\_delta\_t";  
+        !! -'reduce-T':       reduce FCP's temperature,
+        !!                    see parameters "fcp\_nraise", "fcp\_delta\_t";  
+        !! -'berendsen':      control FCP's temperature using "soft" velocity
+        !!                    rescaling - see parameters "fcp\_tempw" and "fcp\_nraise"
+        !! -'andersen':       control FCP's temperature using Andersen thermostat,
+        !!                    see parameters "fcp\_tempw" and "fcp\_nraise";  
+        !! -'initial':        initialize ion velocities to temperature fcp\_tempw
+        !!                    and leave uncontrolled further on;  
+        !! -'not_controlled': FCP's temperature is not controlled.
 
         REAL(DP) :: fcp_tempw = 300.0_DP
-          ! meaningful only with "fcp_temperature /= 'not_controlled' "
-          ! value of the FCP's temperature (in Kelvin) forced
-          ! by the temperature control
+        !! meaningful only with fcp\_temperature different from 'not\_controlled'.
+        !! Value of the FCP's temperature (in Kelvin) forced by the temperature control
 
         REAL(DP) :: fcp_tolp = 100.0_DP
-          ! parameter to control temperature
+        !! parameter to control temperature
 
         REAL(DP) :: fcp_delta_t = 1.0_DP
-          ! parameter to control temperature
+        !! parameter to control temperature
 
         INTEGER :: fcp_nraise = 1
-          ! parameter to control temperature
+        !! parameter to control temperature
 
         LOGICAL :: freeze_all_atoms = .FALSE.
-          ! freeze (or fix) all atoms.
-          ! to perform relaxation or dynamics only with FCP.
+        !! freeze (or fix) all atoms.
+        !! To perform relaxation or dynamics only with FCP.
 
         NAMELIST / fcp / fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis, &
                          fcp_mass, fcp_velocity, fcp_temperature, &
@@ -1487,10 +1480,13 @@ MODULE input_parameters
 !
 !    ATOMIC_SPECIES
 !
-        CHARACTER(len=3)  :: atom_label(nsx) = 'XX'   ! label of the atomic species being read
-        CHARACTER(len=80) :: atom_pfile(nsx) = 'YY'   ! pseudopotential file name
-        REAL(DP)          :: atom_mass(nsx)  = 0.0_DP ! atomic mass of the i-th atomic species
-          ! in atomic mass units: 1 a.m.u. = 1822.9 a.u. = 1.6605 * 10^-27 kg
+        CHARACTER(len=3)  :: atom_label(nsx) = 'XX'
+        !! label of the atomic species being read
+        CHARACTER(len=80) :: atom_pfile(nsx) = 'YY'
+        !! pseudopotential file name
+        REAL(DP)          :: atom_mass(nsx)  = 0.0_DP
+        !! atomic mass of the i-th atomic species in atomic mass units:  
+        !! \(1\text{a.m.u.}=1822.9\text{a.u.}=1.6605\cdot 10^{-27}kg\)
         LOGICAL   :: taspc = .false.
         LOGICAL   :: tkpoints = .false.
         LOGICAL   :: tforces = .false.
@@ -1506,26 +1502,29 @@ MODULE input_parameters
 !
 !    ATOMIC_POSITIONS
 !
-        REAL(DP), ALLOCATABLE :: rd_pos(:,:)  ! unsorted positions from input
+        REAL(DP), ALLOCATABLE :: rd_pos(:,:)
+        !! unsorted positions from input
         INTEGER,  ALLOCATABLE :: sp_pos(:)
         INTEGER,  ALLOCATABLE :: rd_if_pos(:,:)
         INTEGER,  ALLOCATABLE :: na_inp(:)
         LOGICAL  :: tapos = .false.
         LOGICAL  :: lsg   = .false.
         CHARACTER(len=80) :: atomic_positions = 'crystal'
-          ! atomic_positions = 'bohr' | 'angstrom' | 'crystal' | 'alat'
-          ! select the units for the atomic positions being read from stdin
+        !! atomic\_positions = 'bohr' | 'angstrom' | 'crystal' | 'alat'  
+        !! Select the units for the atomic positions being read from stdin
 
 !
 !    ION_VELOCITIES
 !
-        REAL(DP), ALLOCATABLE :: rd_vel(:,:)   ! unsorted velocities from input
+        REAL(DP), ALLOCATABLE :: rd_vel(:,:)
+        !! unsorted velocities from input
         INTEGER,  ALLOCATABLE :: sp_vel(:)
         LOGICAL  :: tavel          = .false.
 !
 !    ATOMIC_FORCES
 !
-        REAL(DP), ALLOCATABLE :: rd_for(:,:)  ! external forces applied to single atoms
+        REAL(DP), ALLOCATABLE :: rd_for(:,:)
+        !! external forces applied to single atoms
 
 !
 !    KPOINTS
@@ -1535,17 +1534,15 @@ MODULE input_parameters
         REAL(DP), ALLOCATABLE :: xk(:,:), wk(:)
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(len=80) :: k_points = 'gamma'
-          ! k_points = 'automatic' | 'crystal' | 'tpiba' | 'gamma'*
-          ! k_points = 'crystal_b' | 'tpiba_b'
-          ! select the k points mesh
-          ! 'automatic'  k points mesh is generated automatically
-          !              with Monkhorst-Pack algorithm
-          ! 'crystal'    k points mesh is given in stdin in scaled units
-          ! 'tpiba'      k points mesh is given in stdin in units of ( 2 PI / alat )
-          ! 'gamma'      only gamma point is used ( default in CPMD simulation )
-          ! _b means that a band input is given. The weights is a integer
-          !  number that gives the number of points between the present point
-          !  and the next. The weight of the last point is not used.
+        !! select the k points mesh. Available options:  
+        !! 'automatic':  k points mesh is generated automatically
+        !!               with Monkhorst-Pack algorithm;  
+        !! 'crystal':    k points mesh is given in stdin in scaled units;  
+        !! 'tpiba':      k points mesh is given in stdin in units of (2PI/alat);  
+        !! 'gamma':      only gamma point is used (default in CPMD simulation);  
+        !! 'crystal\_b', 'tpiba\_b': postfix '\_b' means that a band input is given.  
+        !! The weights is a integer number that gives the number of points between
+        !! the present point and the next. The weight of the last point is not used.
 !
 !    OCCUPATIONS
 !
@@ -1569,8 +1566,9 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
-      INTEGER :: nc_fields = 4   ! max number of fields that is allowed to
-                                 ! define a constraint
+      INTEGER :: nc_fields = 4
+      !! max number of fields that is allowed to
+      !! define a constraint
 
       INTEGER  :: nconstr_inp    = 0
       REAL(DP) :: constr_tol_inp = 1.E-6_DP
@@ -1585,8 +1583,8 @@ MODULE input_parameters
 !
       INTEGER, ALLOCATABLE :: iprnks( :, : )
       INTEGER :: nprnks( nspinx ) = 0
-        ! logical mask used to specify which kohn sham orbital should be
-        ! written to files 'KS.'
+      !! logical mask used to specify which kohn sham orbital should be
+      !! written to files 'KS.'
 
 !
 !   PLOT_WANNIER
@@ -1606,17 +1604,16 @@ MODULE input_parameters
 ! ----------------------------------------------------------------------
 
       LOGICAL :: xmloutput = .false.
-      ! if .true. PW produce an xml output
+      !! if TRUE PW produce an xml output
 
 CONTAINS
 !
 !----------------------------------------------------------------------------
 SUBROUTINE reset_input_checks()
   !-----------------------------------------------------------------------------
-  !
-  ! ... This routine sets to .false. flags used to check whether some variables
-  ! ... have been read. If called before reading, allows to read a different
-  ! ... input file without triggering bogus error messages - useful for NEB
+  !! This routine sets to FALSE flags used to check whether some variables
+  !! have been read. If called before reading, allows to read a different
+  !! input file without triggering bogus error messages - useful for NEB.
   !
   IMPLICIT NONE
   !

@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 MODULE becmod
   !---------------------------------------------------------------------------
-  !! \(\texttt{becmod}\) contains \(\langle\text{beta}|\text{psi}\rangle\) - used
+  !! This module contains \(\langle\text{beta}|\text{psi}\rangle\) - used
   !! in \(\texttt{h_psi}\), \(\texttt{s_psi}\) and many other places.  
   !! \(\texttt{calbec}\) is an interface calculating \(\text{betapsi}(i,j) =
   !! \langle \text{beta}(i)|\text{psi}(j)\rangle \) (the sum is over \(\text{npw}\) 
