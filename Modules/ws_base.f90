@@ -80,7 +80,7 @@ MODULE ws_base
     !---------------------------------------------------------------
     SUBROUTINE ws_init(a,ws)
       !---------------------------------------------------------------
-      !! Initializes a \texttt{ws\_type} variable.
+      !! Initializes a \(\texttt{ws_type}\) variable.
       !
       USE matrix_inversion
       REAL(DP), INTENT(IN) :: a(3,3)
@@ -101,7 +101,7 @@ MODULE ws_base
     !---------------------------------------------------------------
     SUBROUTINE ws_clean(ws)
       !---------------------------------------------------------------
-      !! Un-sets a \texttt{ws\_type} variable.
+      !! Un-sets a \(\texttt{ws_type}\) variable.
       !
       TYPE(ws_type), INTENT(OUT) :: ws
       !
