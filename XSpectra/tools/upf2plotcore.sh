@@ -62,8 +62,8 @@ cat $1 | awk '
   nris = int ( nris + 1e-5 )
 }
 
-/<PP_R>/,/<\/PP_R>/ { #E3
-  if ( $1 != "<PP_R>" && $1 != "</PP_R>" ) { #E4
+/<PP_R /,/<\/PP_R>/ { #E3
+  if ( $1 != "<PP_R" && $1 != "</PP_R>" ) { #E4
     for ( i = 1; i <= NF; i++ ) {
       r[++val] = 1*$i
     }
