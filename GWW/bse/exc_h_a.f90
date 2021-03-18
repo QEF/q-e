@@ -13,7 +13,6 @@ use bse_wannier, ONLY:num_nbndv,l_truncated_coulomb, &
                       l_contraction, l_read_www ! JDE
 use pwcom
 USE wvfct,     ONLY : npwx
-!use io_files,  ONLY : find_free_unit,diropn
 use io_files,  ONLY : diropn
 USE io_global, ONLY : stdout,ionode
 USE fft_custom_gwl

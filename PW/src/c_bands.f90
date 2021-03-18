@@ -19,7 +19,7 @@ SUBROUTINE c_bands( iter )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE klist,                ONLY : nkstot, nks, ngk, igk_k, igk_k_d, xk
-  USE uspp,                 ONLY : vkb, nkb
+  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart, use_gpu
@@ -32,9 +32,8 @@ SUBROUTINE c_bands( iter )
   USE check_stop,           ONLY : check_stop_now
   USE gcscf_module,         ONLY : lgcscf
 
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : vkb_d, using_vkb, using_vkb_d
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -184,7 +183,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
-  USE uspp,                 ONLY : vkb, nkb, okvan
+  USE uspp,                 ONLY : vkb, nkb, okvan, using_vkb
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
@@ -204,13 +203,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE mp,                   ONLY : mp_sum, mp_bcast
   USE xc_lib,               ONLY : exx_is_active
   USE gcscf_module,         ONLY : lgcscf
-
-  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
-  USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d, &
-                                        g2kin_d, using_g2kin, using_g2kin_d
-  USE uspp_gpum,                 ONLY : using_vkb
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
-  !
+  USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
+  USE wvfct_gpum,           ONLY : et_d, using_et, using_et_d, &
+                                   g2kin_d, using_g2kin, using_g2kin_d
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iter
@@ -596,7 +592,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                    CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
                 ELSE
                    CALL using_evc_d(1); CALL using_et_d(1);
-                   CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc_d, et_d(1,ik) )
+                   CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc_d, et_d(1,ik) )
                 END IF
                 !
                 avg_iter = avg_iter + 1.D0
@@ -864,22 +860,19 @@ SUBROUTINE c_bands_nscf( )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE basis,                ONLY : starting_wfc
-  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
-  USE uspp,                 ONLY : vkb, nkb
+  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k, igk_k_d
+  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
-  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
+  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
   USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
-
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb
-  !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
   IMPLICIT NONE
   !
   ! ... local variables
@@ -933,12 +926,17 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( lsda ) current_spin = isk(ik)
      !
-     CALL g2_kin( ik )
+     IF (.not. use_gpu ) CALL g2_kin( ik )
+     IF (      use_gpu ) CALL g2_kin_gpu( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL using_vkb(1)
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) THEN
+        IF (.not. use_gpu ) CALL using_vkb(1)
+        IF (.not. use_gpu ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+        IF (      use_gpu ) CALL using_vkb_d(1)
+        IF (      use_gpu ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
+     ENDIF
      !
      ! ... Needed for LDA+U
      !
@@ -960,7 +958,8 @@ SUBROUTINE c_bands_nscf( )
         !
      ELSE
         !
-        CALL init_wfc( ik )
+        IF (.not. use_gpu ) CALL init_wfc( ik )
+        IF (      use_gpu ) CALL init_wfc_gpu( ik )
         !
      ENDIF
      !

@@ -22,8 +22,6 @@ USE mp_world,             ONLY : world_comm
 USE wavefunctions, ONLY :  psic
 USE mp,          ONLY :mp_barrier
 
-!USE io_files,         ONLY : find_free_unit
-
 
 implicit none
 INTEGER, EXTERNAL :: find_free_unit

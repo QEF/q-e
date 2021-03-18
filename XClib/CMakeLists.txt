@@ -13,7 +13,7 @@ set(sources_xclib
     qe_funct_mgga.f90
     qe_kind.f90
     xclib_error.f90
-    xclib_para_m.f90
+    xclib_utils_and_para.f90
     xc_beef_interface.f90
     xc_input_params_mod.f90
     xc_lib.f90
@@ -28,6 +28,7 @@ target_link_libraries(qe_xclib
     PRIVATE
         qe_openmp_fortran
         qe_mpi_fortran
+        qe_external_libxc
         qe_libbeef)
 
 qe_install_targets(qe_xclib)
@@ -59,6 +60,7 @@ if(QE_ENABLE_TEST)
         PRIVATE
             qe_openmp_fortran
             qe_mpi_fortran
+            qe_external_libxc
             qe_xclib)
-    add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
+    #add_test(NAME test_qe_xclib COMMAND ${QE_TESTS_DIR}/qe_xclib_test.x)
 endif(QE_ENABLE_TEST)

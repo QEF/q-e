@@ -413,7 +413,6 @@ lr_readin.o : ../../Modules/kind.o
 lr_readin.o : ../../Modules/mp_bands.o
 lr_readin.o : ../../Modules/mp_global.o
 lr_readin.o : ../../Modules/mp_world.o
-lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../PW/src/esm.o
 lr_readin.o : ../../PW/src/io_rho_xml.o
@@ -426,6 +425,7 @@ lr_readin.o : ../../PW/src/scf_mod.o
 lr_readin.o : ../../PW/src/symm_base.o
 lr_readin.o : ../../UtilXlib/mp.o
 lr_readin.o : ../../XClib/xc_lib.o
+lr_readin.o : ../../upflib/paw_variables.o
 lr_readin.o : ../../upflib/uspp.o
 lr_readin.o : lr_charg_resp.o
 lr_readin.o : lr_dav_variables.o
@@ -475,7 +475,7 @@ lr_setup_nscf.o : ../../PW/src/atomic_wfc_mod.o
 lr_setup_nscf.o : ../../PW/src/pwcom.o
 lr_setup_nscf.o : ../../PW/src/start_k.o
 lr_setup_nscf.o : ../../PW/src/symm_base.o
-lr_setup_nscf.o : ../../upflib/uspp.o
+lr_setup_nscf.o : ../../upflib/upf_ions.o
 lr_smallgq.o : ../../LR_Modules/lrcom.o
 lr_smallgq.o : ../../Modules/cell_base.o
 lr_smallgq.o : ../../Modules/control_flags.o
@@ -519,7 +519,6 @@ lr_sternheimer.o : ../../Modules/mp_bands.o
 lr_sternheimer.o : ../../Modules/mp_images.o
 lr_sternheimer.o : ../../Modules/mp_pools.o
 lr_sternheimer.o : ../../Modules/noncol.o
-lr_sternheimer.o : ../../Modules/paw_variables.o
 lr_sternheimer.o : ../../Modules/recvec.o
 lr_sternheimer.o : ../../Modules/wavefunctions.o
 lr_sternheimer.o : ../../PW/src/buffers.o
@@ -527,6 +526,7 @@ lr_sternheimer.o : ../../PW/src/paw_onecenter.o
 lr_sternheimer.o : ../../PW/src/pwcom.o
 lr_sternheimer.o : ../../PW/src/scf_mod.o
 lr_sternheimer.o : ../../UtilXlib/mp.o
+lr_sternheimer.o : ../../upflib/paw_variables.o
 lr_sternheimer.o : ../../upflib/uspp.o
 lr_sternheimer.o : linear_solvers.o
 lr_sternheimer.o : lr_variables.o

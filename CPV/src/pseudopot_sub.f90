@@ -59,8 +59,7 @@
                             ityp     !  the atomi specie for each atom
       use uspp,       only: nkb, &   !
                             nkbus    !
-      use uspp_param, only: ish,    &!
-                            upf,    &!
+      use uspp_param, only: upf,    &!
                             lmaxkb, &!
                             nhm,    &!
                             nbetam, &!
@@ -91,7 +90,8 @@
             ind = ind + 2 * upf(is)%lll( iv ) + 1
          end do
          nh(is) = ind
-         ish(is)=nkb
+         ! next variable no longer used or existing
+         ! ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
          if(  upf(is)%tvanp ) nkbus = nkbus + na(is) * nh(is)
       end do
@@ -476,7 +476,7 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, ish
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
@@ -607,27 +607,24 @@
 
     SUBROUTINE exact_qradb_x( tpre )
       !
-      USE kinds,         ONLY : DP
-      use io_global,  only: stdout
-      USE ions_base,  ONLY: nsp
-      USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
-      use uspp_param, only: lmaxkb, ish
-      USE atom,       ONLY: rgrid
-      USE uspp,       ONLY: indv
-      use uspp,       only: qq_nt, beta
-      use uspp_gpum,  ONLY: using_qq_nt, using_qq_nt_d, qq_nt_d
-      USE betax,      only: refg, qradx, mmx, dqradx
+      USE kinds,              ONLY : DP
+      use io_global,          only: stdout
+      USE ions_base,          ONLY: nsp
+      USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
+      use uspp_param,         only: lmaxkb
+      USE atom,               ONLY: rgrid
+      USE uspp,               ONLY: indv
+      use uspp,               only: qq_nt, qq_nt_d, beta
+      USE betax,              only: refg, qradx, mmx, dqradx
       use smallbox_gvec,      only: ngb
-      use control_flags, only: iprint, iverbosity
-      use cell_base,  only: ainv
-      use constants,  only: pi, fpi
-      use qgb_mod,    only: qgb, dqgb
+      use control_flags,      only: iprint, iverbosity
+      use cell_base,          only: ainv
+      use constants,          only: pi, fpi
+      use qgb_mod,            only: qgb, dqgb
       use smallbox_gvec,      only: gb, gxb
-      use small_box,  only: omegab, tpibab
-      USE cp_interfaces, ONLY: fill_qrl
-#if defined (__CUDA)
-      USE cudafor
-#endif
+      use small_box,          only: omegab, tpibab
+      USE cp_interfaces,      ONLY: fill_qrl
+      USE device_memcpy_m,    ONLY: dev_memcpy
       !
       IMPLICIT NONE
       !
@@ -801,10 +798,10 @@
 
       end do
 
-      CALL using_qq_nt(2)
 #if defined (__CUDA)
-      CALL using_qq_nt_d(0)
-!$cuf kernel do (3)
+      call dev_memcpy(qq_nt_d,qq_nt)
+      !
+      !$cuf kernel do (3)
       DO is = 1, SIZE(qq_nt_d,3)
          DO jv=1,SIZE(qq_nt_d,2)
             DO iv=1,SIZE(qq_nt_d,1)
@@ -1053,24 +1050,21 @@
       ! interpolate array qradb(ig,iv,is)
       !
       !
-      USE kinds,         ONLY : DP
-      use control_flags, only: iprint, iverbosity
-      use io_global, only: stdout
-      use gvecw, only: ngw
-      use cell_base, only: ainv
-      use uspp, only: qq_nt, nhtolm, beta
-      use uspp_gpum,  ONLY: using_qq_nt, using_qq_nt_d, qq_nt_d
-      use constants, only: pi, fpi
-      use ions_base, only: nsp
-      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
-      use qgb_mod, only: qgb, dqgb
-      use smallbox_gvec, only: gb, gxb, ngb
-      use small_box,  only: omegab, tpibab
-      USE betax, ONLY: qradx, dqradx, refg, mmx
-#if defined (__CUDA)
-      USE cudafor
-#endif
-!
+      USE kinds,             ONLY: DP
+      use control_flags,     only: iprint, iverbosity
+      use io_global,         only: stdout
+      use gvecw,             only: ngw
+      use cell_base,         only: ainv
+      use uspp,              only: qq_nt, qq_nt_d, nhtolm, beta
+      use constants,         only: pi, fpi
+      use ions_base,         only: nsp
+      use uspp_param,        only: upf, lmaxq, lmaxkb, nbetam, nh
+      use qgb_mod,           only: qgb, dqgb
+      use smallbox_gvec,     only: gb, gxb, ngb
+      use small_box,         only: omegab, tpibab
+      USE betax,             ONLY: qradx, dqradx, refg, mmx
+      USE device_memcpy_m,   ONLY: dev_memcpy
+      !
       implicit none
 
       LOGICAL, INTENT(IN) :: tpre
@@ -1156,10 +1150,10 @@
 
       end do
 
-      CALL using_qq_nt(2)
 #if defined (__CUDA)
-      CALL using_qq_nt_d(0)
-!$cuf kernel do (3)
+      call dev_memcpy(qq_nt_d,qq_nt)
+      !
+      !$cuf kernel do (3)
       DO is = 1, SIZE(qq_nt_d,3)
          DO jv=1,SIZE(qq_nt_d,2)
             DO iv=1,SIZE(qq_nt_d,1)

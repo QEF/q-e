@@ -12,7 +12,8 @@ SUBROUTINE xclib_error( calling_routine, message, ierr )
   !! This is a simple routine which writes an error message to output (copied
   !! from laxlib).
   !
-  USE xclib_parallel_include
+  USE xclib_utils_and_para
+  !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: calling_routine
@@ -57,6 +58,8 @@ SUBROUTINE xclib_infomsg( calling_routine, message )
   !----------------------------------------------------------------------------
   !! This is a simple routine which writes an info/warning message to output.
   !
+  USE xclib_utils_and_para,  ONLY: stdout
+  !
   IMPLICIT NONE
   !
   CHARACTER (LEN=*), INTENT(IN) :: calling_routine
@@ -64,8 +67,8 @@ SUBROUTINE xclib_infomsg( calling_routine, message )
   CHARACTER (LEN=*), INTENT(IN) :: message
   !! the output message
   !
-  WRITE( UNIT = * , FMT = '(5X,"Message from routine ",A,":")' ) calling_routine
-  WRITE( UNIT = * , FMT = '(5X,A)' ) message
+  WRITE( UNIT=stdout ,FMT = '(5X,"Message from routine ",A,":")' ) calling_routine
+  WRITE( UNIT=stdout ,FMT = '(5X,A)' ) message
   !
   RETURN
   !

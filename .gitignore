@@ -22,9 +22,11 @@ build/
 
 bin/*
 FoX
+LIBBEEF
+MBD
 include/fft_defs.h
 include/configure.h
-include/c_defs.h
+include/qe_cdefs.h
 install/config.log
 install/config.status
 install/configure.msg
@@ -33,6 +35,8 @@ install/configure-*
 install/uncompress-*
 test-suite/*/test.err.*
 test-suite/*/test.out.*
+test-suite/*/pwscf*
+test-suite/userconfig
 */results
 S3DE
 D3Q

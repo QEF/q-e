@@ -16,6 +16,7 @@ MODULE splinelib
   PRIVATE
   !
   PUBLIC :: dosplineint, spline, splint, splint_deriv
+  PUBLIC :: splint_eq
   !
   INTERFACE dosplineint
      !
@@ -102,9 +103,8 @@ MODULE splinelib
                ( ( a**3 - a ) * d2y(klo) + ( b**3 - b ) * d2y(khi) ) * &
                ( h**2 ) / 6.0_DP
 
-      END FUNCTION splint
-
-
+    END FUNCTION splint
+    !
     !------------------------------------------------------------------------
     FUNCTION splint_deriv( xdata, ydata, d2y, x )
       !------------------------------------------------------------------------
@@ -140,61 +140,60 @@ MODULE splinelib
                  ( 3.0_DP*b**2 - 1.0_DP ) * db * d2y(khi) ) * &
                ( h**2 ) / 6.0_DP
 
-      END FUNCTION splint_deriv
-
-         !-------------------------------------------------------------------
-         FUNCTION locate( xx, x )
-           !-------------------------------------------------------------------
-           !
-           IMPLICIT NONE
-           !
-           REAL(DP), INTENT(IN) :: xx(:)
-           REAL(DP), INTENT(IN) :: x
-           !
-           INTEGER :: locate
-           INTEGER :: n, jl, jm, ju
-           LOGICAL :: ascnd
-           !
-           !
-           n     = SIZE( xx )
-           ascnd = ( xx(n) >= xx(1) )
-           jl    = 0
-           ju    = n + 1
-           !
-           main_loop: DO
-              !
-              IF ( ( ju - jl ) <= 1 ) EXIT main_loop
-              ! 
-              jm = ( ju + jl ) / 2
-              !
-              IF ( ascnd .EQV. ( x >= xx(jm) ) ) THEN
-                 !
-                 jl = jm
-                 !
-              ELSE
-                 !
-                 ju = jm
-                 !
-              END IF
-              !
-           END DO main_loop
-           !
-           IF ( x == xx(1) ) THEN
-              !
-              locate = 1
-              !
-           ELSE IF ( x == xx(n) ) THEN
-              !
-              locate = n - 1
-              !
-           ELSE 
-              !
-              locate = jl
-              !
-           END IF
-           !
-         END FUNCTION locate      
+    END FUNCTION splint_deriv
+    !
+    !-------------------------------------------------------------------
+    FUNCTION locate( xx, x )
+      !-------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(IN) :: xx(:)
+      REAL(DP), INTENT(IN) :: x
+      !
+      INTEGER :: locate
+      INTEGER :: n, jl, jm, ju
+      LOGICAL :: ascnd
+      !
+      !
+      n     = SIZE( xx )
+      ascnd = ( xx(n) >= xx(1) )
+      jl    = 0
+      ju    = n + 1
+      !
+      main_loop: DO
          !
+         IF ( ( ju - jl ) <= 1 ) EXIT main_loop
+         ! 
+         jm = ( ju + jl ) / 2
+         !
+         IF ( ascnd .EQV. ( x >= xx(jm) ) ) THEN
+            !
+            jl = jm
+            !
+         ELSE
+            !
+            ju = jm
+            !
+         END IF
+         !
+      END DO main_loop
+      !
+      IF ( x == xx(1) ) THEN
+         !
+         locate = 1
+         !
+      ELSE IF ( x == xx(n) ) THEN
+         !
+         locate = n - 1
+         !
+      ELSE 
+         !
+         locate = jl
+         !
+      END IF
+      !
+    END FUNCTION locate      
     !
     !------------------------------------------------------------------------
     SUBROUTINE dosplineint_1D( old_mesh, old_vec, new_mesh, new_vec )
@@ -289,5 +288,50 @@ MODULE splinelib
       DEALLOCATE( d2y )
       !
     END SUBROUTINE dosplineint_2D
+    !
+    !------------------------------------------------------------------------
+    ! This subroutine is equivalent to calling splint for a list of x values with
+    ! an equispaced xdata interpolation grid with spacing dq, xdata = [0, dq, 2dq....]
+    !------------------------------------------------------------------------
+    SUBROUTINE splint_eq( dq, ydata, d2y, xlist, s)
+      !------------------------------------------------------------------------
+      !   
+      IMPLICIT NONE
+      !   
+      REAL(DP), INTENT(IN) :: ydata(:), d2y(:), xlist(:)
+      REAL(DP), INTENT(OUT) :: s(:)
+      REAL(DP), INTENT(IN) :: dq
+      !   
+      INTEGER  :: xdim, n, ig, khi, klo 
+      REAL(DP) :: a, b, h, xlo, xhi, x
+      !   
+#if defined(__CUDA)
+      attributes(device) :: ydata, d2y, xlist, s
+#endif
+      !   
+      xdim = size(ydata)
+      n  = size(xlist)
+
+      !$cuf kernel do(1) <<<*,*>>>
+      do ig = 1, n
+        !   
+        x = xlist(ig)
+        klo = MAX( MIN( int(x/dq) + 1, ( xdim - 1 ) ), 1 ) 
+        !   
+        khi = klo + 1 
+        !   
+        xlo = (klo - 1) * dq
+        xhi = (khi - 1) * dq
+        h = xhi - xlo 
+        !   
+        a = ( xhi - x ) / h 
+        b = ( x - xlo ) / h 
+        !   
+        s(ig) = a * ydata(klo) + b * ydata(khi) + & 
+                  ( ( a*a*a - a ) * d2y(klo) + ( b*b*b - b ) * d2y(khi) ) * & 
+                  ( h*h ) / 6.0_DP
+      end do
+      !
+    END SUBROUTINE splint_eq
     !
 END MODULE splinelib

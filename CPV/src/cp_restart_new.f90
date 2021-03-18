@@ -77,7 +77,8 @@ MODULE cp_restart_new
       USE mp,                       ONLY : mp_sum, mp_barrier
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
       USE fft_rho,                  ONLY : rho_r2g
-      USE uspp_param,               ONLY : n_atom_wfc, upf
+      USE upf_ions,                 ONLY : n_atom_wfc
+      USE uspp_param,               ONLY : upf
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
       USE wrappers,                 ONLY : f_copy
@@ -154,6 +155,7 @@ MODULE cp_restart_new
       REAL(DP), ALLOCATABLE :: tau(:,:)
       COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
+      REAL(DP)              :: stress(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
       REAL(DP)              :: wk_(2), nelec
@@ -378,7 +380,7 @@ MODULE cp_restart_new
             wk_ = 2.0_dp
          END IF
          CALL qexsd_init_k_points_ibz( k_points_ibz, 'Gamma', &
-              'CP',1,1,1,0,0,0,1,xk,wk_,alat,a1,.false.) 
+              'CP',1,1,1,0,0,0,1,alat,a1,.false.,xk,wk_) 
          bands_occu%tagname="occupations_kind"
          bands_occu%lread=.false.
          bands_occu%lwrite=.true.
@@ -409,8 +411,8 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
          output_obj%stress_ispresent=tpre
          ! FIXME: may be wrong or incomplete
-         IF ( tpre) h = -MATMUL( detot, ht ) / omega
-         CALL qexsd_init_stress(output_obj%stress, h, tpre ) 
+         IF ( tpre) stress = -MATMUL( detot, ht ) / omega
+         CALL qexsd_init_stress(output_obj%stress, stress, tpre )
 !-------------------------------------------------------------------------------
 ! ... non existent or not implemented fields
 !-------------------------------------------------------------------------------

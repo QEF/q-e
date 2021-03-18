@@ -8,7 +8,6 @@ MODULE esm_common_mod
   CHARACTER(LEN=3)         :: esm_bc
   INTEGER, ALLOCATABLE     :: mill_2d(:, :), imill_2d(:, :)
   INTEGER                  :: ngm_2d = 0
-  REAL(DP), EXTERNAL       :: qe_erf, qe_erfc
 
 CONTAINS
 
@@ -365,7 +364,7 @@ CONTAINS
 
         !! BC1 terms
         Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
-                     *((z - za)*qe_erf(salp*(z - za)) &
+                     *((z - za)*erf(salp*(z - za)) &
                      + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
 
         IF (esm_bc == 'bc2') THEN
@@ -575,7 +574,7 @@ CONTAINS
     !                       1.00000000000000000d0/)
     !
     !IF (x < 709.0d0 .or. y < 4.0d0) THEN
-    !  exp_erfc = exp(x)*qe_erfc(y)
+    !  exp_erfc = exp(x)*erfc(y)
     !ELSE
     !  ym = 1d0/y
     !  ym2 = ym**2
@@ -584,7 +583,7 @@ CONTAINS
     !  exp_erfc = exp(-y**2 + x)*ym*(rtpim + ym2*nume/deno)
     !END IF
 
-    exp_erfc = exp(x + log(qe_erfc(y)))
+    exp_erfc = exp(x + log(erfc(y)))
 
     RETURN
   END FUNCTION exp_erfc

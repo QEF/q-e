@@ -267,7 +267,6 @@ hp_solve_linear_system.o : ../../Modules/ions_base.o
 hp_solve_linear_system.o : ../../Modules/kind.o
 hp_solve_linear_system.o : ../../Modules/mp_pools.o
 hp_solve_linear_system.o : ../../Modules/noncol.o
-hp_solve_linear_system.o : ../../Modules/paw_variables.o
 hp_solve_linear_system.o : ../../Modules/recvec.o
 hp_solve_linear_system.o : ../../Modules/wavefunctions.o
 hp_solve_linear_system.o : ../../PW/src/buffers.o
@@ -276,6 +275,7 @@ hp_solve_linear_system.o : ../../PW/src/paw_symmetry.o
 hp_solve_linear_system.o : ../../PW/src/pwcom.o
 hp_solve_linear_system.o : ../../PW/src/scf_mod.o
 hp_solve_linear_system.o : ../../UtilXlib/mp.o
+hp_solve_linear_system.o : ../../upflib/paw_variables.o
 hp_solve_linear_system.o : ../../upflib/uspp.o
 hp_solve_linear_system.o : hp_efermi_shift.o
 hp_solve_linear_system.o : hpcom.o

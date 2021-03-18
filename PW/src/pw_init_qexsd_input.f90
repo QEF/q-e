@@ -450,11 +450,11 @@
       gamma_xk(:,1)=[0._DP, 0._DP, 0._DP]
       gamma_wk(1)=1._DP
       CALL qexsd_init_k_points_ibz( obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, 1,         &
-                                    gamma_xk, gamma_wk ,alat,a1,ibrav_lattice) 
+                                    alat,a1,ibrav_lattice, gamma_xk, gamma_wk) 
 
   ELSE 
      CALL qexsd_init_k_points_ibz(obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot,      &
-                                   ip_xk, ip_wk,alat,a1, ibrav_lattice)
+                                   alat,a1, ibrav_lattice,ip_xk, ip_wk)
 
   END IF
   !--------------------------------------------------------------------------------------------------------------------------------

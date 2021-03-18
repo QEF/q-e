@@ -35,8 +35,8 @@ PROGRAM pw2gw
   USE mp_images,  ONLY : intra_image_comm
   USE mp_pools,   ONLY : kunit
   USE environment,ONLY : environment_start, environment_end
-  USE us,         ONLY : spline_ps
-  USE kinds,     ONLY : DP
+  USE uspp_data,  ONLY : spline_ps
+  USE kinds,      ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -158,7 +158,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
 
   USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : nhtol
-  USE us,         ONLY : tab, tab_d2y, spline_ps
+  USE uspp_data,  ONLY : tab, tab_d2y, spline_ps
   USE ions_base,  ONLY : ntyp => nsp
   USE klist,      ONLY : ngk
 
@@ -1166,7 +1166,7 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   USE cell_base,  ONLY : tpiba
   USE klist,      ONLY : xk, igk_k
   USE gvect,      ONLY : g
-  USE us,         ONLY : nqx, dq
+  USE uspp_data,  ONLY : nqx, dq
   USE splinelib,  ONLY : splint_deriv
   USE uspp_param, ONLY : upf
   !
@@ -1252,7 +1252,7 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   USE cell_base,  ONLY : tpiba
   USE klist,      ONLY : xk, igk_k
   USE gvect,      ONLY : g
-  USE us,         ONLY : nqx, dq
+  USE uspp_data,  ONLY : nqx, dq
   USE splinelib,  ONLY : splint
   USE uspp_param, ONLY : upf
   !

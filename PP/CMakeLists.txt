@@ -69,6 +69,7 @@ target_link_libraries(qe_pp_exe
         qe_modules
         qe_pp
         qe_fftx
+        qe_upflib
         qe_xclib)
 
 ###########################################################
@@ -203,19 +204,6 @@ target_link_libraries(qe_pp_pmw_exe
         qe_upflib)
 
 ###########################################################
-# xctest.x
-###########################################################
-set(src_xctest_x src/xctest.f90)
-qe_add_executable(qe_pp_xctest_exe ${src_xctest_x})
-set_target_properties(qe_pp_xctest_exe PROPERTIES OUTPUT_NAME xctest.x)
-target_link_libraries(qe_pp_xctest_exe
-    PRIVATE
-        qe_modules
-        qe_cpv
-        qe_pp
-        qe_xclib)
-
-###########################################################
 # projwfc.x
 ###########################################################
 set(src_projwfc_x src/projwfc.f90)
@@ -256,6 +244,7 @@ target_link_libraries(qe_pp_pw2critic_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -269,6 +258,7 @@ target_link_libraries(qe_pp_wfck2r_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -282,6 +272,7 @@ target_link_libraries(qe_pp_initial_state_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_upflib)
 
@@ -335,6 +326,7 @@ target_link_libraries(qe_pp_wannierham_exe
         qe_clib
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp)
 
 ###########################################################
@@ -347,6 +339,7 @@ target_link_libraries(qe_pp_wannierplot_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -506,7 +499,6 @@ qe_install_targets(
     qe_pp_plotproj_exe
     qe_pp_plotrho_exe
     qe_pp_pmw_exe
-    qe_pp_xctest_exe
     qe_pp_projwfc_exe
     qe_pp_pw2wannier90_exe
     qe_pp_pw2critic_exe

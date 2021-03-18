@@ -67,7 +67,8 @@ SUBROUTINE setup()
                                  lbands, use_para_diag, gamma_only, &
                                  restart, use_gpu
   USE cellmd,             ONLY : calc
-  USE uspp_param,         ONLY : upf, n_atom_wfc
+  USE upf_ions,           ONLY : n_atom_wfc
+  USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
@@ -437,6 +438,10 @@ SUBROUTINE setup()
   IF ( doublegrid .AND. ( .NOT.okvan .AND. .NOT.okpaw .AND. &
                           .NOT. ANY (upf(1:ntyp)%nlcc)      ) ) &
        CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
+  IF ( ecutwfc > 10000.d0 .OR. ecutwfc < 1.d0 ) THEN
+       WRITE(stdout,*) 'ECUTWFC = ', ecutwfc
+       CALL errore ( 'setup', 'meaningless value for ecutwfc', 1)
+  END IF
   gcutm = dual * ecutwfc / tpiba2
   gcutw = ecutwfc / tpiba2
   !

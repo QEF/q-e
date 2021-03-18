@@ -23,10 +23,11 @@
   USE mp_global,     ONLY : my_pool_id, world_comm, npool
   USE mp_images,     ONLY : my_image_id, nimage
   USE mp_world,      ONLY : mpime
+  USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id
-  USE us,            ONLY : nqxq, dq, qrad
-  USE gvect,         ONLY : gcutm
+  USE uspp_data,     ONLY : nqxq, dq, qrad
+  USE gvect,         ONLY : gcutm, ngm, g, gg
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
   USE io_files,      ONLY : prefix, tmp_dir
@@ -243,7 +244,8 @@
         !
         qrad(:, :, :, :) = zero
         ! RM - need to call init_us_1 to re-calculate qrad
-        CALL init_us_1()
+        ! PG - maybe it would be preferable to call compute_qrad?
+        CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       ENDIF
     ENDIF
     !

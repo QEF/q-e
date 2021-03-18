@@ -298,13 +298,10 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   USE gvect,             ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,             ONLY : xk, ngk, igk_k
   USE wvfct,             ONLY : npwx, nbnd
-  USE us,                ONLY : tab_at, dq
   USE uspp_param,        ONLY : upf
   USE noncollin_module,  ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,          ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                                 starting_spin_angle
-  !
-  USE us_gpum,           ONLY : using_tab_at
   !
   IMPLICIT NONE
   !
@@ -316,14 +313,13 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   ! ... local variables
   !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-             i0, i1, i2, i3, nwfcm, npw
+       nwfcm, npw
   REAL(DP), ALLOCATABLE :: qg(:), ylm(:,:), chiq(:,:,:), gk(:,:)
   COMPLEX(DP), ALLOCATABLE :: sk(:), aux(:)
   COMPLEX(DP) :: kphase
   REAL(DP) :: arg, px, ux, vx, wx
   !
   CALL start_clock( 'atomic_wfc' )
-  CALL using_tab_at(0)
   !
   ! ... calculate max angular momentum required in wavefunctions
   !
@@ -335,7 +331,7 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
   npw = ngk(ik)
   ALLOCATE ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &
-             sk(npw), gk(3,npw), qg(npw) )
+       gk(3,npw), qg(npw) )
   !
   DO ig = 1, npw
      iig = igk_k(ig,ik)
@@ -355,36 +351,13 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
      qg(ig) = SQRT(qg(ig))*tpiba
   ENDDO
   !
-  n_starting_wfc = 0
-  !
-  ! ... chiq = radial fourier transform of atomic orbitals chi
-  !
-  DO nt = 1, ntyp
-     DO nb = 1, upf(nt)%nwfc
-        IF ( upf(nt)%oc (nb) >= 0.d0) THEN
-           DO ig = 1, npw
-              px = qg (ig) / dq - INT(qg (ig) / dq)
-              ux = 1.d0 - px
-              vx = 2.d0 - px
-              wx = 3.d0 - px
-              i0 = INT( qg (ig) / dq ) + 1
-              i1 = i0 + 1
-              i2 = i0 + 2
-              i3 = i0 + 3
-              chiq(ig, nb, nt) = &
-                     tab_at (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                     tab_at (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                     tab_at (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                     tab_at (i3, nb, nt) * px * ux * vx / 6.d0
-           ENDDO
-        ENDIF
-     ENDDO
-  ENDDO
+  CALL interp_at_wfc ( npw, qg, nwfcm, chiq )
   !
   DEALLOCATE( qg, gk )
-  ALLOCATE( aux(npw) )
+  ALLOCATE( aux(npw), sk(npw) )
   !
   wfcatom(:,:,:) = (0.0_dp, 0.0_dp)
+  n_starting_wfc = 0
   !
   DO na = 1, nat
      arg = (xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na)) * tpi

@@ -35,6 +35,7 @@ gipaw_module.o : ../../upflib/atom.o
 gipaw_module.o : ../../upflib/splinelib.o
 gipaw_module.o : ../../upflib/upf_params.o
 gipaw_module.o : ../../upflib/uspp.o
+gipaw_module.o : ../../upflib/uspp_data.o
 gipaw_module.o : paw_gipaw.o
 init_gipaw_1.o : ../../Modules/cell_base.o
 init_gipaw_1.o : ../../Modules/constants.o
@@ -43,12 +44,12 @@ init_gipaw_1.o : ../../Modules/io_global.o
 init_gipaw_1.o : ../../Modules/ions_base.o
 init_gipaw_1.o : ../../Modules/kind.o
 init_gipaw_1.o : ../../Modules/mp_pools.o
-init_gipaw_1.o : ../../PW/src/pwcom.o
 init_gipaw_1.o : ../../UtilXlib/mp.o
 init_gipaw_1.o : ../../upflib/atom.o
 init_gipaw_1.o : ../../upflib/splinelib.o
 init_gipaw_1.o : ../../upflib/upf_params.o
 init_gipaw_1.o : ../../upflib/uspp.o
+init_gipaw_1.o : ../../upflib/uspp_data.o
 init_gipaw_1.o : gipaw_module.o
 init_gipaw_1.o : paw_gipaw.o
 init_gipaw_2.o : ../../Modules/cell_base.o
@@ -58,6 +59,7 @@ init_gipaw_2.o : ../../Modules/kind.o
 init_gipaw_2.o : ../../Modules/recvec.o
 init_gipaw_2.o : ../../PW/src/pwcom.o
 init_gipaw_2.o : ../../upflib/splinelib.o
+init_gipaw_2.o : ../../upflib/uspp_data.o
 init_gipaw_2.o : paw_gipaw.o
 io_routines.o : ../../Modules/constants.o
 io_routines.o : ../../Modules/io_global.o
@@ -107,7 +109,6 @@ paw_gipaw.o : ../../upflib/atom.o
 paw_gipaw.o : ../../upflib/pseudo_types.o
 paw_gipaw.o : ../../upflib/radial_grids.o
 paw_gipaw.o : ../../upflib/read_upf_v1.o
-paw_gipaw.o : ../../upflib/upf_params.o
 plot_xanes_cross_sections.o : ../../Modules/constants.o
 plot_xanes_cross_sections.o : ../../Modules/io_global.o
 plot_xanes_cross_sections.o : ../../Modules/kind.o
@@ -169,7 +170,6 @@ xanes_dipole.o : ../../Modules/ions_base.o
 xanes_dipole.o : ../../Modules/kind.o
 xanes_dipole.o : ../../Modules/mp_pools.o
 xanes_dipole.o : ../../Modules/mp_world.o
-xanes_dipole.o : ../../Modules/parameters.o
 xanes_dipole.o : ../../Modules/recvec.o
 xanes_dipole.o : ../../Modules/wavefunctions.o
 xanes_dipole.o : ../../PW/src/atomic_wfc_mod.o
@@ -194,7 +194,6 @@ xanes_dipole_general_edge.o : ../../Modules/ions_base.o
 xanes_dipole_general_edge.o : ../../Modules/kind.o
 xanes_dipole_general_edge.o : ../../Modules/mp_images.o
 xanes_dipole_general_edge.o : ../../Modules/mp_pools.o
-xanes_dipole_general_edge.o : ../../Modules/parameters.o
 xanes_dipole_general_edge.o : ../../Modules/recvec.o
 xanes_dipole_general_edge.o : ../../Modules/wavefunctions.o
 xanes_dipole_general_edge.o : ../../PW/src/ldaU.o
@@ -218,7 +217,6 @@ xanes_quadrupole.o : ../../Modules/ions_base.o
 xanes_quadrupole.o : ../../Modules/kind.o
 xanes_quadrupole.o : ../../Modules/mp_pools.o
 xanes_quadrupole.o : ../../Modules/mp_world.o
-xanes_quadrupole.o : ../../Modules/parameters.o
 xanes_quadrupole.o : ../../Modules/recvec.o
 xanes_quadrupole.o : ../../Modules/wavefunctions.o
 xanes_quadrupole.o : ../../PW/src/atomic_wfc_mod.o

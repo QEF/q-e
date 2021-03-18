@@ -28,7 +28,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE constants,            ONLY: pi, tpi
    USE fft_base,             ONLY: dfftp
    USE gvect,                ONLY: ngm, g, gcutm, ngm_g
-   USE uspp,                 ONLY: nkb, vkb, okvan
+   USE uspp,                 ONLY: nkb, vkb, okvan, using_vkb
    USE uspp_param,           ONLY: upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY: nspin
    USE klist,                ONLY: nelec, degauss, nks, xk, wk, ngk, igk_k
@@ -42,8 +42,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE mp_pools,             ONLY: intra_pool_comm
    USE becmod,               ONLY: calbec,bec_type,allocate_bec_type,deallocate_bec_type
    USE spin_orb,             ONLY: lspinorb
-   !
-   USE uspp_gpum, ONLY : using_vkb
    IMPLICIT NONE
    !
    REAL(DP), INTENT(OUT) :: el_pola

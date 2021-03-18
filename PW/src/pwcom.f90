@@ -437,35 +437,6 @@ MODULE cellmd
 END MODULE cellmd
 !
 !
-!
-MODULE us
-  !
-  !! These parameters are needed with the US pseudopotentials.
-  !
-  USE kinds,      ONLY : DP
-  !
-  SAVE
-  !
-  INTEGER :: nqxq
-  !! size of interpolation table
-  INTEGER :: nqx
-  !! number of interpolation points
-  REAL(DP), PARAMETER:: dq = 0.01D0
-  !! space between points in the pseudopotential tab.
-  REAL(DP), ALLOCATABLE :: qrad(:,:,:,:)
-  !! radial FT of Q functions
-  REAL(DP), ALLOCATABLE :: tab(:,:,:)
-  !! interpolation table for PPs
-  REAL(DP), ALLOCATABLE :: tab_at(:,:,:)
-  !! interpolation table for atomic wfc
-  LOGICAL :: spline_ps = .FALSE.
-  REAL(DP), ALLOCATABLE :: tab_d2y(:,:,:)
-  !! for cubic splines
-  !
-END MODULE us
-!
-!
-!
 MODULE fixed_occ
   !
   !! The quantities needed in calculations with fixed occupations.
@@ -491,24 +462,15 @@ MODULE spin_orb
   !
   !! Variables needed for calculations with spin-orbit
   !
-  USE kinds,       ONLY : DP
-  USE upf_params,  ONLY : lmaxx, lqmax
-  !! FIXME: rot_ylm could be dynamically allocated
+  USE upf_spinorb, ONLY : lspinorb, rot_ylm, fcoef, lmaxx, lqmax
   !
   SAVE
-  !
-  LOGICAL :: lspinorb
-  !! if .TRUE. this is a spin-orbit calculation
   LOGICAL :: lforcet
   !! if .TRUE. apply Force Theorem to calculate MAE 
   LOGICAL :: starting_spin_angle
   !! if .TRUE. the initial wavefunctions are spin-angle functions. 
   LOGICAL :: domag
   !! if .TRUE. magnetization is computed
-  COMPLEX (DP) :: rot_ylm(lqmax,lqmax)
-  !! transform real spherical harmonics into complex ones
-  COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
-  !! function needed to account for spinors.
   !
 END MODULE spin_orb
 !

@@ -21,7 +21,7 @@ endif()
 # CMake < v3.18 cannot discover the ARM Performance Library
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
     if(CMAKE_VERSION VERSION_LESS 3.18.0)
-        message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
+        message("-- CMake versions less than 3.18 cannot automatically discover the ARM Performance Library!")
     endif()
 endif()
 
@@ -78,7 +78,7 @@ endif()
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
 option(QE_ENABLE_TEST
-    "enable unit tests" OFF)
+    "enable unit tests" ON)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_PROFILE_NVTX
@@ -95,6 +95,8 @@ option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
 option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
+option(QE_ENABLE_LIBXC
+    "enable LIBXC execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
 option(QE_ENABLE_DOC
@@ -114,9 +116,6 @@ set(QE_FFTW_VENDOR "AUTO" CACHE
 qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
 if(QE_ENABLE_CUDA)
-    include(CheckLanguage)
-    check_language(CUDA)
-    enable_language(CUDA)
     qe_add_global_compile_definitions(__CUDA)
 endif()
 if(QE_ENABLE_TRACE)
@@ -194,7 +193,16 @@ endif()
 # CUDA
 ###########################################################
 if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
-    find_package(CUDAToolkit REQUIRED)
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+      add_library(CUDA::cufft INTERFACE IMPORTED)
+      set_target_properties(CUDA::cufft PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cufft")
+      add_library(CUDA::cublas INTERFACE IMPORTED)
+      set_target_properties(CUDA::cublas PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cublas")
+      add_library(CUDA::cusolver INTERFACE IMPORTED)
+      set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cusolver")
+    else()
+      find_package(CUDAToolkit REQUIRED)
+    endif()
 endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
@@ -349,6 +357,36 @@ if(QE_ENABLE_ELPA)
             ${ELPA_INCLUDE_DIRS}
             ${ELPA_INCLUDE_DIRS_DEP})
 endif(QE_ENABLE_ELPA)
+
+###########################################################
+# LIBXC
+## The following targets will be defined:
+add_library(qe_external_libxc INTERFACE)
+qe_install_targets(qe_external_libxc)
+###########################################################
+if(QE_ENABLE_LIBXC)
+    target_compile_definitions(qe_external_libxc INTERFACE "__LIBXC")
+
+    find_package(Libxc 5.1.2 COMPONENTS Fortran)
+    if (NOT Libxc_FOUND)
+        message(STATUS "Libxc searching failed in CMake Module mode, trying Config mode")
+        find_package(Libxc 5.1.2 COMPONENTS Fortran CONFIG)
+    endif()
+
+    if(${Libxc_FOUND})
+        if (${Libxc_VERSION} VERSION_GREATER_EQUAL "5.1.2" )
+            message(STATUS "Libxc version ${Libxc_VERSION} found.")
+        else()
+            message(FATAL_ERROR "Libxc version ${Libxc_VERSION} found. "
+                                "CMake compilation of QE tested for libxc v5.1.2 or later only.")
+        endif()
+        target_link_libraries(qe_external_libxc INTERFACE Libxc::xcf03)
+        target_include_directories(qe_external_libxc INTERFACE ${Libxc_INCLUDE_DIR})
+        target_compile_definitions(qe_external_libxc INTERFACE ${Libxc_DEFINITIONS})
+    else()
+         message(FATAL_ERROR "Failed to find Libxc package (>=5.1.2) with Fortran enabled.")
+    endif()
+endif(QE_ENABLE_LIBXC)
 
 ###########################################################
 # HDF5

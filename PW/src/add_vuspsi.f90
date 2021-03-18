@@ -14,17 +14,15 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !! It requires the products of psi with all beta functions
   !! in array becp(nkb,m) (calculated by calbec).
   !
-  USE kinds,           ONLY: DP
-  USE ions_base,       ONLY: nat, ntyp => nsp, ityp
-  USE lsda_mod,        ONLY: current_spin
-  USE control_flags,   ONLY: gamma_only
+  USE kinds,            ONLY: DP
+  USE ions_base,        ONLY: nat, ntyp => nsp, ityp
+  USE lsda_mod,         ONLY: current_spin
+  USE control_flags,    ONLY: gamma_only
   USE noncollin_module
-  USE uspp,            ONLY: vkb, nkb, deeq, deeq_nc, indv_ijkb0
-  USE uspp_param,      ONLY: nh, nhm
-  USE becmod,          ONLY: bec_type, becp
-  !
-  USE uspp_gpum,     ONLY : using_vkb, using_indv_ijkb0, using_deeq, using_deeq_nc
-  USE becmod_subs_gpum, ONLY : using_becp_auto
+  USE uspp,             ONLY: vkb, nkb, deeq, deeq_nc, indv_ijkb0, using_vkb
+  USE uspp_param,       ONLY: nh, nhm
+  USE becmod,           ONLY: bec_type, becp
+  USE becmod_subs_gpum, ONLY: using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -85,8 +83,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb(0)
-       CALL using_indv_ijkb0(0)
-       CALL using_deeq(0)
        !
        IF ( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -193,8 +189,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb(0)
-       CALL using_indv_ijkb0(0)
-       CALL using_deeq(0)
        !
        ALLOCATE( ps(nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
@@ -246,8 +240,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb(0)
-       CALL using_indv_ijkb0(0)
-       CALL using_deeq_nc(0)
        !
        ALLOCATE( ps(  nkb,npol, m), STAT=ierr )
        IF( ierr /= 0 ) &

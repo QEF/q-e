@@ -1454,8 +1454,10 @@ Optional Packages:
                           (default: no)
   --with-elpa-lib         Specify full path ELPA static or dynamic library
                           (default: no)
-  --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
-                          default: 2016)
+  --with-elpa-version     Specify ELPA API version (2015 for ELPA releases
+                          2015.x and 2016.05; 2016 for ELPA releases 2016.11,
+                          2017.x and 2018.05; default 2018 for ELPA releases
+                          2018.11 and beyond)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
                           that a valid installation with version >= 1.8.16 is
                           available, and h5cc and h5fc are in the default
@@ -3195,6 +3197,7 @@ case "$arch" in
         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
         xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
         armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
+        frt_version=`$mpif90 -v 2>&1 | grep "Fujitsu Fortran Compiler"`
         #
         if test "$ifort_version" != ""
         then
@@ -3237,6 +3240,12 @@ case "$arch" in
                 f90_minor_version=`echo $version | cut -d. -f2`
                 f90_in_mpif90="armflang"
                 try_foxflags="-D__PGI"
+        elif test "$frt_version" != ""
+        then
+                version=`echo $frt_version | cut -d" " -f 5`
+                echo "${ECHO_T}frt $version"
+                f90_in_mpif90="frt"
+                try_foxflags="-D__FUJITSU"
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
@@ -6113,7 +6122,7 @@ if test "$fft_libs" = ""; then
 
    elif test "$have_armpl" -eq 1; then
       # no check needed if ARM libraries have been detected
-      try_dflags="$try_dflags -D__ARM_LIB"
+      try_dflags="$try_dflags -D__FFTW3"
       have_fft=1
 
    elif test "$have_essl" -eq 1; then
@@ -6545,14 +6554,13 @@ if test "$with_libxc" -ne 0; then
 lxcf="f03"
 lxcf2="f03"
 if test ! -z "$with_libxc_prefix"; then
-lxc_version=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
-if test "$lxc_version" = 5; then
+lxc_version_major=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
+lxc_version_minor=`grep "XC_MINOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '0-9'`
+if test "$lxc_version_major" = 5; then
+if test "$lxc_version_minor" = 0; then
   lxcf="f90"
   lxcf2="f90"
 fi
-if test "$lxc_version" -gt 5; then
-  lxcf="f90"
-  lxcf2="f03"
 fi
 fi
 
@@ -7413,7 +7421,7 @@ if test "${with_elpa_version+set}" = set; then :
       with_elpa_version="$withval"
    fi
 else
-  with_elpa_version="2016"
+  with_elpa_version="2018"
 fi
 
 
@@ -7430,15 +7438,13 @@ if test "$with_elpa_libs" -eq 1; then
       elif test "$with_elpa_version" = "2016"; then
         try_dflags="$try_dflags -D__ELPA_2016"
       elif test "$with_elpa_version" = "2017"; then
-        try_dflags="$try_dflags -D__ELPA_2017"
-      elif test "$with_elpa_version" = "2018"; then
-        try_dflags="$try_dflags -D__ELPA_2018"
-      elif test "$with_elpa_version" = "2019"; then
-        try_dflags="$try_dflags -D__ELPA_2019"
-      else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2016" >&5
-$as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2016" >&2;}
         try_dflags="$try_dflags -D__ELPA_2016"
+      elif test "$with_elpa_version" = "2018"; then
+        try_dflags="$try_dflags -D__ELPA"
+      else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2018" >&5
+$as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2018" >&2;}
+        try_dflags="$try_dflags -D__ELPA"
       fi
 
       try_iflags="$try_iflags -I$elpa_include"

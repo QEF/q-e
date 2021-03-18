@@ -98,7 +98,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE becmod_gpum,             ONLY: becp_d
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
-  USE uspp,                    ONLY: nkb
+  USE uspp,                    ONLY: nkb, vkb_d, using_vkb_d
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, U_projection
   USE gvect,                   ONLY: gstart
   USE control_flags,           ONLY: gamma_only
@@ -111,12 +111,10 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
-  USE device_memcpy_m,           ONLY: dev_memcpy, dev_memset
+  USE device_memcpy_m,         ONLY: dev_memcpy, dev_memset
   !
-  USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
-  USE uspp_gpum,     ONLY : vkb_d, using_vkb_d
-  USE becmod_subs_gpum, ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto
-  !
+  USE wvfct_gpum,              ONLY: g2kin_d, using_g2kin_d
+  USE becmod_subs_gpum,        ONLY: calbec_gpu, using_becp_auto, using_becp_d_auto
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
@@ -257,7 +255,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock_gpu( 'h_psi:calbec' )
-     CALL using_vkb_d(0); CALL using_becp_d_auto(2)
+     CALL using_vkb_d(0); 
+     CALL using_becp_d_auto(2)
 !ATTENTION HERE: calling without (:,:) causes segfaults
      CALL calbec_gpu ( n, vkb_d(:,:), psi_d, becp_d, m )
      CALL stop_clock_gpu( 'h_psi:calbec' )

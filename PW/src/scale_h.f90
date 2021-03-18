@@ -20,7 +20,7 @@ SUBROUTINE scale_h
   USE constants,      ONLY : eps8
   USE gvect,          ONLY : g, gg, ngm
   USE klist,          ONLY : xk, wk, nkstot
-  USE us,             ONLY : nqxq, qrad, tab, tab_at, dq
+  USE uspp_data,      ONLY : nqxq, qrad, tab, tab_at, dq, scale_uspp_data
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init
@@ -28,10 +28,7 @@ SUBROUTINE scale_h
   USE xc_lib,         ONLY : xclib_dft_is
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
-  !
   USE gvect_gpum,     ONLY : using_g, using_g_d, using_gg, using_gg_d
-  USE us_gpum,        ONLY : using_tab, using_tab_at, using_qrad
-  !
   !
   IMPLICIT NONE
   !
@@ -89,11 +86,8 @@ SUBROUTINE scale_h
   !
   ! scale the non-local pseudopotential tables
   !
-  CALL using_tab(1); CALL using_tab_at(1); CALL using_qrad(1)
-  !
-  tab(:,:,:) = tab(:,:,:) * SQRT(omega_old/omega)
-  qrad(:,:,:,:) = qrad(:,:,:,:) * omega_old/omega
-  tab_at(:,:,:) = tab_at(:,:,:) * SQRT(omega_old/omega)
+  call scale_uspp_data( omega_old/omega )
+
   !
   ! recalculate the local part of the pseudopotential
   !

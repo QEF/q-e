@@ -12,22 +12,21 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   !! Calculates the kleinman-bylander pseudopotentials with the
   !! derivative of the spherical harmonics projected on vector u
   !
-  USE kinds,       ONLY: DP
-  USE io_global,   ONLY: stdout
-  USE constants,   ONLY: tpi
-  USE ions_base,   ONLY: nat, ntyp => nsp, ityp, tau
-  USE cell_base,   ONLY: tpiba
-  USE klist,       ONLY: xk, ngk, igk_k_d
-  USE wvfct,       ONLY: npwx
-  USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
-  USE us,          ONLY: nqx, tab, tab_d2y, dq, spline_ps
-  USE splinelib
-  USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
+  ! AF: more extensive use of GPU-resident vars possible
   !
-  USE us_gpum,     ONLY: using_tab, using_tab_d2y, &
-                         using_tab_d, tab_d
-  USE gvect_gpum,  ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
-  USE device_fbuff_m,    ONLY: dev_buf
+  USE kinds,           ONLY: DP
+  USE io_global,       ONLY: stdout
+  USE constants,       ONLY: tpi
+  USE ions_base,       ONLY: nat, ntyp => nsp, ityp, tau
+  USE cell_base,       ONLY: tpiba
+  USE klist,           ONLY: xk, ngk, igk_k_d
+  USE wvfct,           ONLY: npwx
+  USE uspp,            ONLY: nkb, indv, nhtol, nhtolm
+  USE uspp_data,       ONLY: nqx, tab, tab_d, tab_d2y, dq, spline_ps
+  USE uspp_param,      ONLY: upf, lmaxkb, nbetam, nh, nhm
+  USE gvect,           ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE device_fbuff_m,  ONLY: dev_buf
+  USE splinelib
   !
   IMPLICIT NONE
   !
@@ -70,11 +69,6 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   dvkb_d = (0._DP,0._DP)
   !
   IF (lmaxkb <= 0) RETURN
-  !
-  CALL using_tab(0)
-  CALL using_tab_d(0)
-  !
-  IF (spline_ps) CALL using_tab_d2y(0)
   !
   npw = ngk(ik)
   lmx2 = (lmaxkb+1)**2
@@ -123,6 +117,8 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   !
   !
   IF ( spline_ps ) THEN
+    !
+    ! AF: using splint_eq ??
     !
     ALLOCATE( q(npw), xdata(nqx), vkb0(npw,nbetam,ntyp) )
     q = q_d

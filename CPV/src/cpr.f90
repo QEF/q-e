@@ -22,9 +22,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tfirst, tlast !moved here to make
                                                      !autopilot work
   USE core,                     ONLY : rhoc
-  USE uspp_param,               ONLY : nhm, nh, ish
-  USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
-  USE uspp_gpum,                ONLY : vkb_d
+  USE uspp_param,               ONLY : nhm, nh
+  USE uspp,                     ONLY : nkb, vkb, vkb_d, becsum, deeq, okvan, nlcc_any
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
                                        ekincm, print_energies
@@ -118,7 +117,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE london_module,            ONLY : energy_london, force_london, stres_london
   USE input_parameters,         ONLY : tcpbo
   USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
-  USE device_memcpy_m,            ONLY : dev_memcpy
+  USE device_memcpy_m,          ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !

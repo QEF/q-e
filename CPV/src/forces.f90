@@ -361,6 +361,7 @@
       USE mp_global,              ONLY: me_bgrp
       USE control_flags,          ONLY: many_fft
       USE fft_helper_subroutines
+      USE exx_module,             ONLY: exx_potential
       USE device_memcpy_m,          ONLY : dev_memcpy
       USE cudafor
 !
@@ -383,6 +384,7 @@
       INTEGER     :: igno, igrp, ierr, ii
       INTEGER     :: idx, ioff
       REAL(DP)    :: fi, fip, dd, dv
+      REAL(DP)    :: tmp1, tmp2                      
       COMPLEX(DP) :: fp, fm
       complex(DP), parameter :: ci=(0.0d0,1.0d0)
 
@@ -391,12 +393,16 @@
       COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: df_d(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: da_d(:)
+      REAL(DP),    ALLOCATABLE, DEVICE :: exx_a(:), exx_b(:)       
+      REAL(DP),    ALLOCATABLE, DEVICE :: exx_potential_d(:,:)
       INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
       !
       CALL start_clock( 'dforce' ) 
       !
       IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
-         CALL errore(' dforce ', ' dft_is_hybrid and exx_is_active NOT implemented ', 1 )
+         allocate( exx_a( dffts%nnr ) ); exx_a=0.0_DP
+         allocate( exx_b( dffts%nnr ) ); exx_b=0.0_DP
+         allocate( exx_potential_d, source=exx_potential )
       END IF
 
       ALLOCATE( psi( dffts%nnr * many_fft ) )
@@ -432,19 +438,35 @@
          IF( ii < n ) THEN
             iss1=ispin( ii )
             iss2=ispin( ii + 1 )
-!$cuf kernel do(1)
-            DO ir=1,dffts%nnr
-               psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
-                                   v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
-            END DO
          ELSE IF( ii == n ) THEN
             iss1=ispin( ii )
             iss2=iss1
-!$cuf kernel do(1)
-            DO ir=1,dffts%nnr
-               psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
-                                   v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
-            END DO
+         END IF
+
+         IF (xclib_dft_is('hybrid').AND.exx_is_active()) THEN
+           IF (ii.le.n) THEN
+             IF ( (mod(n,2).ne.0 ) .and. (ii.eq.n) ) THEN
+               !$cuf kernel do(1) 
+               DO ir=1,dffts%nnr
+                  tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
+                  tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))
+                  psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
+               END DO
+             ELSE
+               !$cuf kernel do(1) 
+               DO ir=1,dffts%nnr
+                  tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
+                  tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))+exx_potential_d(ir, ii+1)
+                  psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
+               END DO
+             END IF
+           END IF
+         ELSE
+           !$cuf kernel do(1)
+           DO ir=1,dffts%nnr
+              psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
+                                  v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
+           END DO
          END IF
          ioff = ioff + dffts%nnr
       END DO
@@ -552,6 +574,7 @@
       DEALLOCATE( df_d )
       DEALLOCATE( da_d )
       DEALLOCATE( psi )
+      IF (xclib_dft_is('hybrid').AND.exx_is_active()) DEALLOCATE(exx_potential_d)
       NULLIFY(nl_d) 
       NULLIFY(nlm_d)
 !

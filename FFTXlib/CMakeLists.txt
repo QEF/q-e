@@ -169,8 +169,7 @@ target_link_libraries(qe_fftx
     PRIVATE
         qe_fft
         qe_openmp_fortran
-        qe_mpi_fortran
-        qe_utilx)
+        qe_mpi_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_fftx
         PRIVATE
@@ -195,6 +194,10 @@ if(QE_ENABLE_TEST)
             qe_openmp_fortran
             qe_mpi_fortran
             qe_fftx)
+    if(QE_ENABLE_CUDA)
+        set_property(TARGET qe_fftx_test APPEND PROPERTY COMPILE_DEFINITIONS "__FFTX_USE_EXTERNAL_CLOCK")
+        target_link_libraries(qe_fftx_test PRIVATE qe_utilx)
+    endif()
     add_test(NAME test_qe_fftx 
         COMMAND ${QE_TESTS_DIR}/qe_fftx_test.x)
 endif()

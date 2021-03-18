@@ -44,7 +44,6 @@ use bse_wannier, ONLY: l_truncated_coulomb, &
            truncation_radius, l_gtrick
 USE constants,        ONLY : e2, fpi
 USE cell_base,        ONLY : tpiba,omega,tpiba2
-!USE io_files,             ONLY : find_free_unit, prefix, diropn
 USE io_files,             ONLY :  prefix, diropn
 USE wavefunctions, ONLY :  psic
 USE io_global, ONLY : stdout, ionode, ionode_id
@@ -337,7 +336,6 @@ use bse_wannier, ONLY: l_truncated_coulomb, &
            truncation_radius,l_gtrick
 USE constants,        ONLY : e2, fpi
 USE cell_base,        ONLY : tpiba,omega,tpiba2
-!USE io_files,             ONLY : find_free_unit, prefix, diropn
 USE io_files,             ONLY :  prefix, diropn
 USE wavefunctions, ONLY :  psic
 USE io_global, ONLY : stdout, ionode, ionode_id

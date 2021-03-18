@@ -44,7 +44,6 @@ set(src_modules
     open_close_input_file.f90 
     parameters.f90 
     parser.f90 
-    paw_variables.f90 
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
@@ -98,8 +97,7 @@ set(src_modules
     # list of subroutines and functions (not modules) previously found in flib/
     atom_weight.f90 
     capital.f90 
-    cryst_to_car.f90 
-    erf.f90 
+    cryst_to_car.f90
     expint.f90 
     generate_k_along_lines.f90 
     more_functionals.f90 
@@ -142,17 +140,17 @@ qe_enable_cuda_fortran("${src_modules}")
 qe_add_library(qe_modules ${src_modules})
 target_link_libraries(qe_modules
     PRIVATE
-        qe_hdf5_fortran
         qe_openmp_fortran
         qe_fftx
         qe_lax
-        qe_upflib
         qe_clib # this is needed only by wrappers.f90
         qe_mpi_fortran
         qe_mbd
         qe_xclib
         qe_devxlib
     PUBLIC
+        qe_hdf5_fortran
+        qe_upflib
         qe_fox
         qe_utilx)
 

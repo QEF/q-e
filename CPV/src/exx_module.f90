@@ -128,6 +128,11 @@ MODULE exx_module
 #if defined(_OPENMP)
   INTEGER, EXTERNAL                   :: omp_get_max_threads
 #endif
+#if defined __CUDA
+  REAL(DP), ALLOCATABLE, PUBLIC, DEVICE       :: coe_1st_derv_d(:,:)      ! coe_1st_derv(neighbor, d/di)
+  REAL(DP), ALLOCATABLE, PUBLIC, DEVICE       :: coeke_d(:,:,:)           ! coeke(neighbor, d/di, d/dj)
+  REAL(DP), ALLOCATABLE, PUBLIC, DEVICE       :: coemicf_d(:,:,:)         ! coefficient for preconditioner
+#endif
   ! cubic domain related variables
   INTEGER, PARAMETER, PUBLIC          :: lm_mx=((lmax+1)*(lmax+2))/2  ! size of flattened 1d lm angular momentum ... 
   !----------------------------------------------------------------------------------------------------------------
@@ -149,6 +154,12 @@ MODULE exx_module
   REAL(DP), ALLOCATABLE, PUBLIC       :: me_rs(:,:,:,:)         ! distance^n  of every point in ME cube
   REAL(DP), ALLOCATABLE, PUBLIC       :: me_ri(:,:,:,:)         ! distance^-n of every point in ME cube
   COMPLEX(DP), ALLOCATABLE, PUBLIC    :: me_rc(:,:,:,:)         ! exp(i*m*phi_j) of everg point in PS cube
+#ifdef __CUDA
+  REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_cs_d(:,:,:,:)       ! coordinate  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_rs_d(:,:,:,:)       ! distance^n  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_ri_d(:,:,:,:)       ! distance^-n of every point in ME cube
+  COMPLEX(DP), ALLOCATABLE, PUBLIC, DEVICE :: me_rc_d(:,:,:,:)       ! exp(i*m*phi_j) of everg point in PS cube
+#endif
   REAL(DP), ALLOCATABLE, PUBLIC       :: selfrho(:,:,:)         ! self density stored in Poisson sphere for guess potential ...
   REAL(DP), ALLOCATABLE, PUBLIC       :: pairrho(:,:,:,:)       ! pair density stored in Poisson sphere for guess potential ...
   REAL(DP), PUBLIC                    :: fbsscale               ! coefficient for preconditioner
@@ -156,6 +167,13 @@ MODULE exx_module
   real(dp), allocatable, public  :: rho_ps(:)
   real(dp), allocatable, public  :: pot_ps(:)
   INTEGER ::  i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
+#ifdef __CUDA
+  attributes(device) :: rho_ps, pot_ps
+  attributes(pinned) :: psime_pair_send, psime_pair_recv
+  real(dp), allocatable, device :: psime_pair_recv_d(:,:,:),psime_pair_send_d(:,:,:)
+  real(dp), allocatable, device :: psi_d(:,:)!,rhops_d(:)
+  real(dp), allocatable, device :: vpsil_d(:,:)
+#endif
   !==========================================================================
   !
   ! PRIVATE variables 
@@ -277,6 +295,23 @@ CONTAINS
       !
       IF(exx_ps_rcut_s.GE.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
           & The exx_ps_rcut_self should be set smaller than the exx_me_rcut_self',1)
+#ifdef __CUDA
+      IF(.not. texx_cube) CALL errore('exx_module','EXX calculation error :  &
+          & Only cubic subdomain implemented in Exx',1)
+#endif
+
+      !
+      hx=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))
+      hy=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))
+      hz=DSQRT(h(1,3)*h(1,3)+h(2,3)*h(2,3)+h(3,3)*h(3,3))
+      IF(2*exx_me_rcut_s.GT.MIN(hx,hy,hz)) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_me_rcut_self should be set smaller than half the minimum cell length',1)
+      !
+      IF(fftx_ntgrp(dffts).GT.1) CALL errore('exx_module','EXX calculation error : &
+          & taskgroup (-ntg) > 1 needed for zeta>1 calculations currently broken and will&
+          & be fixed in an up-coming major update. Please contact Robert A. DiStasio Jr.&
+          & (distasio@cornell.edu) if you should need assistance reverting to an earlier&
+          & version with working taskgroup supoprt.',1)
       !
       hx=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))
       hy=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))
@@ -443,6 +478,10 @@ CONTAINS
       !
       ALLOCATE( coe_1st_derv(-nord1:nord1, 3)) ! coe_1st_derv(neighbor, d/di)
       ALLOCATE( coeke(-nord2:nord2, 3,3))      ! coeke(neighbor, d/di, d/dj)
+#ifdef __CUDA
+      ALLOCATE(coe_1st_derv_d, source=coe_1st_derv)
+      ALLOCATE(coeke_d,   source=coeke)
+#endif
       !
       IF (texx_cube) then
         CALL exx_initialize_cube
@@ -461,6 +500,9 @@ CONTAINS
     IMPLICIT NONE
     REAL(DP) :: hx, hy, hz                             !grid spacing along lattice directions
     ALLOCATE( coemicf(-nord2:nord2, 3,3))    ! coeke(neighbor, d/di, d/dj)
+#ifdef __CUDA
+    ALLOCATE(coemicf_d, source=coemicf)
+#endif
     nrg(1)=nr1;   nrg(2)=nr2;   nrg(3)=nr3
     nrgr(1)=nr1r; nrgr(2)=nr2r; nrgr(3)=nr3r
     !
@@ -577,6 +619,12 @@ CONTAINS
     ALLOCATE( me_ri(0:lmax+1,s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
     ALLOCATE( me_rc(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
     me_cs=0.0_DP; me_rs=0.0_DP; me_ri=0.0_DP; me_rc=0.0_DP
+#ifdef __CUDA
+      ALLOCATE(me_cs_d, source=me_cs)
+      ALLOCATE(me_rs_d, source=me_rs)
+      ALLOCATE(me_ri_d, source=me_ri)
+      ALLOCATE(me_rc_d, source=me_rc)
+#endif
     !
     WRITE(stdout,'(/,3X,"number of grid points in Poisson cube ",/ &
       &,5X,"self potential:",I8,3X,"pair potential:",I8)') n_s_ps, n_p_ps
@@ -803,6 +851,11 @@ CONTAINS
       IF( ALLOCATED( clm )     )        DEALLOCATE( clm)
       IF( ALLOCATED( coeke)    )        DEALLOCATE( coeke)
       IF( ALLOCATED( coe_1st_derv)   )  DEALLOCATE( coe_1st_derv)
+#ifdef __CUDA
+      IF( ALLOCATED( coe_1st_derv_d)    )      DEALLOCATE( coe_1st_derv_d)
+      IF( ALLOCATED( coeke_d)    )      DEALLOCATE( coeke_d)
+      IF( ALLOCATED( coemicf_d)    )    DEALLOCATE( coemicf_d)
+#endif
       IF( ALLOCATED( exx_potential ) )  DEALLOCATE( exx_potential )
       IF( ALLOCATED( rhopr ) )          DEALLOCATE( rhopr )
       IF( ALLOCATED( vwc)    )          DEALLOCATE( vwc )
@@ -838,6 +891,16 @@ CONTAINS
       IF( ALLOCATED( selfrho ) )        DEALLOCATE( selfrho )
       IF( ALLOCATED( pairrho ) )        DEALLOCATE( pairrho )
       IF( ALLOCATED( coemicf)    )      DEALLOCATE( coemicf)
+#ifdef __CUDA
+      IF( ALLOCATED( me_cs_d ) )          DEALLOCATE( me_cs_d )
+      IF( ALLOCATED( me_rs_d ) )          DEALLOCATE( me_rs_d )
+      IF( ALLOCATED( me_ri_d ) )          DEALLOCATE( me_ri_d )
+      IF( ALLOCATED( me_rc_d ) )          DEALLOCATE( me_rc_d )
+      IF (ALLOCATED(psime_pair_send_d))  DEALLOCATE(psime_pair_send_d)
+      IF (ALLOCATED(psime_pair_recv_d))  DEALLOCATE(psime_pair_recv_d)
+      IF(ALLOCATED(psi_d   ))  DEALLOCATE(psi_d   )
+      IF(ALLOCATED(vpsil_d))  DEALLOCATE(vpsil_d)
+#endif
       !
       RETURN
       !
@@ -1799,6 +1862,13 @@ CONTAINS
     integer              :: tran1, tran2, tran3
     REAL(DP)              :: r_alpha1, r_alpha2, r_alpha3
     !REAL(DP), ALLOCATABLE :: dvdr(:,:,:,:)
+#ifdef __CUDA
+    REAL(DP), device  :: ha_proj_d(3)
+    REAL(DP), device  :: hb_proj_d(3)
+    REAL(DP), device  :: hc_proj_d(3)
+    REAL(DP), device  :: Jim_d(3,3)
+    attributes(device) :: pot, rho
+#endif
     !----------------------------------------------------------------------------------
     
     !----------------------------------------------------------------------------------
@@ -1810,6 +1880,12 @@ CONTAINS
     tmp4 = 0.0_DP; tmp5 = 0.0_DP; tmp6 = 0.0_DP
     !----------------------------------------------------------------------------------
     Imn(:,:) = 0.0_DP
+#ifdef __CUDA
+    ha_proj_d = ha_proj
+    hb_proj_d = hb_proj
+    hc_proj_d = hc_proj
+    Jim_d = Jim
+#endif
     !----------------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------------
@@ -1825,12 +1901,18 @@ CONTAINS
     !----------------------------------------------------------------------------------
     ! Integration: I_{mn} = \int \dd r \rho(r) r_m dv_n (r)
     !----------------------------------------------------------------------------------
+#ifdef __CUDA
+    associate (ha_proj=>ha_proj_d, hb_proj=>hb_proj_d, hc_proj=>hc_proj_d, Jim=>Jim_d, &
+    &      coe_1st_derv=>coe_1st_derv_d )
+    !$cuf kernel do (3)
+#else
    !$omp parallel do collapse(3) reduction(+:tmp1,tmp2,tmp3,tmp4,tmp5,tmp6) &
    !$omp private(i,j,k,ii,jj,kk,ish) &
    !$omp private(r_alpha1, r_alpha2, r_alpha3) &
    !$omp private(dvdri1, dvdri2, dvdri3, dvdr1, dvdr2, dvdr3) &
    !$omp firstprivate(ha_proj, hb_proj, hc_proj) &
    !$omp firstprivate(Jim,tran1,tran2,tran3)
+#endif
     DO k = ps_r(3),ps_r(6)
       DO j = ps_r(2),ps_r(5)
         DO i = ps_r(1),ps_r(4)
@@ -1870,7 +1952,11 @@ CONTAINS
         END DO
       END DO
     END DO
+#ifdef __CUDA
+    end associate
+#else
     !$omp end parallel do
+#endif
     !----------------------------------------------------------------------------------
     Imn(1,1) = tmp1; Imn(1,2) = tmp2; Imn(1,3) = tmp3
     Imn(2,1) = tmp2; Imn(2,2) = tmp4; Imn(2,3) = tmp5
@@ -1892,5 +1978,16 @@ CONTAINS
     RETURN
   END SUBROUTINE exx_energy_cell_derivative_cube
   !--------------------------------------------------------------------------------------------------------------
-  !
+
+#ifdef __CUDA
+  attributes(host,device) &
+#endif
+  integer function l2gcb(n,l,t)
+    !! This function is the cube analogue of the `l2goff` function in exx_gs.f90.
+    !! These functions provides a local to global grid transformation to allow
+    !! sparse matrix/vector operations.
+    implicit none
+    integer, value :: n, l, t
+    l2gcb = MOD(l-t-1+n, n)+1
+  end function l2gcb
 END MODULE exx_module

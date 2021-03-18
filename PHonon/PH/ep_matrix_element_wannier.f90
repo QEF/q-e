@@ -352,6 +352,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE control_lr, ONLY : lgamma
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
+  USE apply_dpot_mod,   ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
 
   IMPLICIT NONE
   !
@@ -366,15 +367,15 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   INTEGER :: nrec, ik, ikk, ikq, ikqg,ipert, mode, ibnd, jbnd, ir, ig, &
        ios
 
-  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:)
+  COMPLEX(DP) , ALLOCATABLE :: elphmat (:,:,:)
   COMPLEX(DP), EXTERNAL :: zdotc
   INTEGER, EXTERNAL :: find_free_unit
   !
   allocate (evq(npol*npwx,nbnd))
-  ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , 3*nat))
+  CALL apply_dpot_allocate()
 
-  
+
 ! iunwfcwann=find_free_unit()
 ! CALL diropn (iunwfcwann, 'wfc', lrwfc, exst, dvscf_dir)
 ! IF (.NOT.exst) THEN
@@ -444,12 +445,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-
-        DO ibnd = 1, nbnd
-           CALL cft_wave (ik, evc(1, ibnd), aux1, +1)
-           CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
-           CALL cft_wave (ik, dvpsi(1, ibnd), aux1, -1)
-        END DO
+        CALL apply_dpot_bands(ik, nbnd, dvscfins(:, :, ipert), evc, dvpsi)
+        !
         CALL adddvscf (ipert, ik)
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
@@ -481,8 +478,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 
 !  CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' )
   !
+  CALL apply_dpot_deallocate()
   DEALLOCATE (elphmat)
-  DEALLOCATE (aux1)
   DEALLOCATE(evq)
   !
   RETURN

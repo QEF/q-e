@@ -10,6 +10,7 @@ adddvscf.o \
 addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \
+apply_dpot_mod.o \
 addusldos.o \
 adddvepsi_us.o \
 addusddenseq.o \

@@ -922,7 +922,7 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                 
           cx = EXP(-One/bx/bx) - One
        ENDIF
        !
-       Nx = bx * Prefac * ( SQRT(PI) * qe_erf(One/bx) + &       !<GPU:qe_erf=>qe_erf_d>
+       Nx = bx * Prefac * ( SQRT(PI) * ERF(One/bx) + & 
         (bx - Two*bx*bx*bx)*cx - Two*bx )
        !
        ! for convergency
@@ -1544,7 +1544,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
                          Four*B*(DHs2) + Eight*A*(DHs3))    &
                       * (One / (Sixteen * DHs72))           &
                        - f34*pi*SQRT(A) * EXP(f94*H*s2/A) * &
-                         (One - qe_erf(f32*s*SQRT(H/A)))                    !<GPU:qe_erf=>qe_erf_d>
+                         (One - ERF(f32*s*SQRT(H/A)))
         !
         d1sG_a = (One/r32)*srpi *                           &
                  ((r36*(Two*H + d1sH*s) / (A12*SQRT(H/A)))  &
@@ -1553,7 +1553,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
                       -r30*C*d1sDHs*DHs*(One+s2*F)          &
                       +r12*DHs2*(-B*d1sDHs + C*s*(d1sF*s + Two*F)))  &
                   - ((r54*EXP(f94*H*s2/A)*srpi*s*(Two*H+d1sH*s)*     &
-                     qe_erfc(f32*SQRT(H/A)*s))                       &      !<GPU:qe_erfc=>qe_erfc_d>
+                     ERFC(f32*SQRT(H/A)*s))                       &
                      / A12))
         !
         G_b    = (f1516 * srpi * s2) / DHs72
@@ -1651,7 +1651,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
       !
       IF (HsbwA94 < expfcutoff) THEN
         !
-        piexperf = pi*EXP(HsbwA94)*qe_erfc(HsbwA9412)                   !<GPU:qe_erfc=>qe_erfc_d>
+        piexperf = pi*EXP(HsbwA94)*ERFC(HsbwA9412)
         ! expei    = Exp(HsbwA94)*Ei(-HsbwA94)
         expei    = EXP(HsbwA94)*(-expint(1,HsbwA94))                   !<GPU:expint=>expint_d>
 
@@ -1859,104 +1859,6 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
 
 END SUBROUTINE wpbe_analy_erfc_approx_grad
 !
-!---------------------------------------------------------------------
-function qe_erf(x)                      !<GPU:DEVICE>
-  !---------------------------------------------------------------------
-  !     Error function - computed from the rational approximations of
-  !     W. J. Cody, Math. Comp. 22 (1969), pages 631-637.
-  !
-  !     for abs(x) le 0.47 erf is calculated directly
-  !     for abs(x) gt 0.47 erf is calculated via erf(x)=1-erfc(x)
-  USE kind_l,   ONLY: DP
-  implicit none
-  REAL(DP), intent(in) :: x
-  REAL(DP) :: x2, p1 (4), q1 (4)
-  REAL(DP) :: qe_erf    !<GPU:qe_erf=>qe_erf_d>
-  data p1 / 2.426679552305318E2, 2.197926161829415E1, &
-            6.996383488619136d0,  -3.560984370181538E-2 /
-  data q1 / 2.150588758698612E2, 9.116490540451490E1, &
-            1.508279763040779E1, 1.000000000000000d0 /
-  !
-  if (abs (x) > 6.0d0) then
-     !
-     !  erf(6)=1-10^(-17) cannot be distinguished from 1
-     !
-     qe_erf = sign (1.0d0, x)                                                  !<GPU:qe_erf=>qe_erf_d>
-  else
-     if (abs (x)  <= 0.47d0) then
-        x2 = x**2
-        qe_erf=x *(p1 (1) + x2 * (p1 (2) + x2 * (p1 (3) + x2 * p1 (4) ) ) ) &  !<GPU:qe_erf=>qe_erf_d>
-                / (q1 (1) + x2 * (q1 (2) + x2 * (q1 (3) + x2 * q1 (4) ) ) )
-     else
-        qe_erf = 1.0d0 - qe_erfc(x)                                            !<GPU:qe_erf=>qe_erf_d,qe_erfc=>qe_erfc_d>
-     endif
-  endif
-  !
-  return
-end function qe_erf
-!
-!---------------------------------------------------------------------
-function qe_erfc(x)                      !<GPU:DEVICE>
-  !---------------------------------------------------------------------
-  !
-  !     erfc(x) = 1-erf(x)  - See comments in erf
-  !
-  USE kind_l,   ONLY: DP
-  implicit none
-  !
-  REAL(DP),intent(in) :: x
-  REAL(DP)            :: qe_erfc                                         !<GPU:qe_erfc=>qe_erfc_d>
-  REAL(DP) :: ax, x2, xm2, p2 (8), q2 (8), p3 (5), q3 (5), pim1
-  !
-  data p2 / 3.004592610201616E2,  4.519189537118719E2, &
-            3.393208167343437E2,  1.529892850469404E2, &
-            4.316222722205674E1,  7.211758250883094d0,   &
-            5.641955174789740E-1,-1.368648573827167E-7 /
-  data q2 / 3.004592609569833E2,  7.909509253278980E2, &
-            9.313540948506096E2,  6.389802644656312E2, &
-            2.775854447439876E2,  7.700015293522947E1, &
-            1.278272731962942E1,  1.000000000000000d0 /
-  data p3 /-2.996107077035422E-3,-4.947309106232507E-2, &
-           -2.269565935396869E-1,-2.786613086096478E-1, &
-           -2.231924597341847E-2 /
-  data q3 / 1.062092305284679E-2, 1.913089261078298E-1, &
-            1.051675107067932d0,    1.987332018171353d0,    &
-            1.000000000000000d0 /
-
-  data pim1 / 0.56418958354775629d0 /
-  !        ( pim1= sqrt(1/pi) )
-  ax = abs (x)
-  if (ax > 26.0d0) then
-     !
-     !  erfc(26.0)=10^(-296); erfc( 9.0)=10^(-37);
-     !
-     qe_erfc = 0.0d0                                                            !<GPU:qe_erfc=>qe_erfc_d>
-  elseif (ax > 4.0d0) then
-     x2 = x**2
-     xm2 = (1.0d0 / ax) **2
-     qe_erfc = (1.0d0 / ax) * exp ( - x2) * (pim1 + xm2 * (p3 (1) &             !<GPU:qe_erfc=>qe_erfc_d>
-          + xm2 * (p3 (2) + xm2 * (p3 (3) + xm2 * (p3 (4) + xm2 * p3 (5) &
-          ) ) ) ) / (q3 (1) + xm2 * (q3 (2) + xm2 * (q3 (3) + xm2 * &
-          (q3 (4) + xm2 * q3 (5) ) ) ) ) )
-  elseif (ax > 0.47d0) then
-     x2 = x**2
-     qe_erfc = exp ( - x2) * (p2 (1) + ax * (p2 (2) + ax * (p2 (3) &            !<GPU:qe_erfc=>qe_erfc_d>
-          + ax * (p2 (4) + ax * (p2 (5) + ax * (p2 (6) + ax * (p2 (7) &
-          + ax * p2 (8) ) ) ) ) ) ) ) / (q2 (1) + ax * (q2 (2) + ax * &
-          (q2 (3) + ax * (q2 (4) + ax * (q2 (5) + ax * (q2 (6) + ax * &
-          (q2 (7) + ax * q2 (8) ) ) ) ) ) ) )
-  else
-     qe_erfc = 1.0d0 - qe_erf(ax)                          !<GPU:qe_erfc=>qe_erfc_d, qe_erf=>qe_erf_d>
-  endif
-  !
-  ! erf(-x)=-erf(x)  =>  erfc(-x) = 2-erfc(x)
-  !
-  if (x < 0.0d0) qe_erfc = 2.0d0 - qe_erfc                                      !<GPU:qe_erfc=>qe_erfc_d>
-  !
-  return
-end function qe_erfc
-!
-
 !------------------------------------------------------------------
 FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
 !-----------------------------------------------------------------------

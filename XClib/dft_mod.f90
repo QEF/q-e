@@ -10,7 +10,9 @@ MODULE dft_mod
   !--------------------------------------------------------------------------
   !! Routines to set and/or recover DFT names, parameters and flags.
   !
+  USE xclib_utils_and_para,  ONLY: stdout
 #if defined(__LIBXC)
+#include "xc_version.h"
     USE xc_f03_lib_m
 #endif  
   !
@@ -177,8 +179,7 @@ CONTAINS
        dft_defined = xclib_set_dft_IDs(1,4,25,0,0,0)
     ! special case : RPBE
     CASE( 'RPBE' )
-       CALL xclib_error( 'set_dft_from_name', &
-                    'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)', 1 )
+       dft_defined = xclib_set_dft_IDs(1,4,44,4,0,0)
     ! special case : PBE0
     CASE( 'PBE0' )
        dft_defined = xclib_set_dft_IDs(6,4,8,4,0,0)
@@ -335,24 +336,25 @@ CONTAINS
         ENDDO
         !
         IF ( n_ext_params /= 0 ) THEN       
-          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," depends",&
-                     &/5X," on external parameters: the correct operation in",&
-                     &/5X," QE is not guaranteed with default values.")' ) id_vec(ii)
+          WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends",&
+                        &/5X," on external parameters: check the user_guide of",&
+                        &/5X," QE if you need to modify them or to check their", &
+                        &/5x," default values.")' ) id_vec(ii)
         ENDIF
         IF ( flag_v(1) == 0 ) THEN
-          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
-                     &/5X,"provide Exc: its correct operation in QE is not ",&
-                     &/5X,"guaranteed.")' ) id_vec(ii)
+          WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                        &/5X,"provide Exc: its correct operation in QE is not ",&
+                        &/5X,"guaranteed.")' ) id_vec(ii)
         ENDIF
         IF ( flag_v(2) == 0 ) THEN
-          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
-                     &/5X,"provide Vxc: its correct operation in QE is not ",&
-                     &/5X,"guaranteed.")' ) id_vec(ii)
+          WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                        &/5X,"provide Vxc: its correct operation in QE is not ",&
+                        &/5X,"guaranteed.")' ) id_vec(ii)
         ENDIF
         IF (dftout(1:3) .EQ. 'XC-' .AND. flag_v(3) == 0 ) THEN
-          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
-                     &/5X,"provide Vxc derivative: its correct operation in QE is",&
-                     &/5X," not guaranteed when derivative is needed.")' ) id_vec(ii)
+          WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                        &/5X,"provide Vxc derivative: its correct operation in QE is",&
+                        &/5X," not guaranteed when derivative is needed.")' ) id_vec(ii)
         ENDIF
         CALL xc_f03_func_end( xc_func03 )
       ENDIF
@@ -385,27 +387,27 @@ CONTAINS
     ! check dft has not been previously set differently
     !
     IF (save_iexch /= notset .AND. save_iexch /= iexch) THEN
-       WRITE(*,*) iexch, save_iexch
+       WRITE(stdout,*) iexch, save_iexch
        CALL xclib_error( 'set_dft_from_name', ' conflicting values for iexch', 1 )
     ENDIF
     IF (save_icorr /= notset .AND. save_icorr /= icorr) THEN
-       WRITE(*,*) icorr, save_icorr
+       WRITE(stdout,*) icorr, save_icorr
        CALL xclib_error( 'set_dft_from_name', ' conflicting values for icorr', 1 )
     ENDIF
     IF (save_igcx /= notset  .AND. save_igcx /= igcx)   THEN
-       WRITE(*,*) igcx, save_igcx
+       WRITE(stdout,*) igcx, save_igcx
        CALL xclib_error( 'set_dft_from_name', ' conflicting values for igcx',  1 )
     ENDIF
     IF (save_igcc /= notset  .AND. save_igcc /= igcc)   THEN
-       WRITE (*,*) igcc, save_igcc
+       WRITE(stdout,*) igcc, save_igcc
        CALL xclib_error( 'set_dft_from_name', ' conflicting values for igcc',  1 )
     ENDIF
     IF (save_meta /= notset  .AND. save_meta /= imeta)  THEN
-       WRITE (*,*) imeta, save_meta
+       WRITE(stdout,*) imeta, save_meta
        CALL xclib_error( 'set_dft_from_name', ' conflicting values for imeta', 1 )
     ENDIF
     IF (save_metac /= notset  .AND. save_metac /= imetac)  THEN
-       WRITE (*,*) imetac, save_metac
+       WRITE(stdout,*) imetac, save_metac
        CALL xclib_error( 'set_dft_from_name', ' conflicting values for imetac', 1 )
     ENDIF
     !
@@ -472,7 +474,7 @@ CONTAINS
              !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
              matching = i
           ELSE
-             WRITE(*, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
+             WRITE(stdout, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
                                   matching, TRIM(name(matching))
              CALL xclib_error( 'set_dft', 'two conflicting matching values', 1 )
           ENDIF
@@ -505,7 +507,7 @@ CONTAINS
     INTEGER, PARAMETER :: ID_MAX_LIBXC=600
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
-#if (XC_MAJOR_VERSION > 5)
+#if (XC_MAJOR_VERSION>5)
     !workaround to keep compatibility with libxc develop version
     INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
     INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
@@ -547,6 +549,10 @@ CONTAINS
                 IF ( LEN(TRIM(name)) > prev_len(2) ) icorr = i
                 is_libxc(2) = .TRUE.
                 prev_len(2) = LEN(TRIM(name))
+                IF (fkind==XC_EXCHANGE_CORRELATION) THEN
+                  iexch = 0
+                  is_libxc(1) = .FALSE.
+                ENDIF
              ENDIF
              fkind_v(1) = fkind
              !
@@ -821,7 +827,7 @@ CONTAINS
     REAL(DP), INTENT(IN) :: exx_fraction_
     !! Imposed value of exact exchange fraction
     exx_fraction = exx_fraction_
-    WRITE( *,'(5x,a,f6.2)') 'EXX fraction changed: ', exx_fraction
+    WRITE( stdout,'(5x,a,f6.2)') 'EXX fraction changed: ', exx_fraction
     RETURN
   END SUBROUTINE xclib_set_exx_fraction
   !-----------------------------------------------------------------------
@@ -873,7 +879,7 @@ CONTAINS
     REAL(DP):: scrparm_
     !! Value to impose as screening parameter
     screening_parameter = scrparm_
-    WRITE( *,'(5x,a,f12.7)') 'EXX Screening parameter changed: ', &
+    WRITE(stdout,'(5x,a,f12.7)') 'EXX Screening parameter changed: ', &
          & screening_parameter
   END SUBROUTINE set_screening_parameter
   !-----------------------------------------------------------------------
@@ -895,7 +901,7 @@ CONTAINS
     REAL(DP):: gauparm_
     !! Value to impose as gau parameter
     gau_parameter = gauparm_
-    WRITE( *,'(5x,a,f12.7)') 'EXX Gau parameter changed: ', &
+    WRITE(stdout,'(5x,a,f12.7)') 'EXX Gau parameter changed: ', &
          & gau_parameter
   END SUBROUTINE set_gau_parameter
   !-----------------------------------------------------------------------
@@ -1047,7 +1053,7 @@ CONTAINS
          CALL xclib_error( 'xclib_dft_is_libxc', 'input not recognized', 1 )
        END SELECT
      ELSE
-       IF (TRIM(cfamily)=='ANY'.AND.ANY(is_libxc(:))) xclib_dft_is_libxc=.TRUE.
+       IF (family=='ANY'.AND.ANY(is_libxc(:))) xclib_dft_is_libxc=.TRUE.
      ENDIF
      !
      RETURN
@@ -1233,7 +1239,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
     !! 1: unpolarized case; 2: polarized
-    INTEGER :: iid, ip
+    INTEGER :: iid, ip, p0, pn
     INTEGER :: id_vec(6)
     !
 #if defined(__LIBXC)
@@ -1250,7 +1256,12 @@ CONTAINS
         CALL xc_f03_func_init( xc_func(iid), id_vec(iid), xclib_nspin )
         xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
-        DO ip = 1, n_ext_params(iid)
+#if (XC_MAJOR_VERSION<=5)
+        p0 = 0  ;  pn = n_ext_params(iid)-1
+#else
+        p0 = 1  ;  pn = n_ext_params(iid)
+#endif
+        DO ip = p0, pn
           par_list(iid,ip) = xc_f03_func_info_get_ext_params_default_value( &
                                                            xc_info(iid), ip )
         ENDDO

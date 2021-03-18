@@ -54,8 +54,10 @@ CONTAINS
     LOGICAL           :: exst, debug = .false.
     CHARACTER(LEN=80) :: code_version, uname
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
-    INTEGER :: ios, crashunit
+    CHARACTER(LEN=3)           :: env_maxdepth
+    INTEGER :: ios, crashunit, max_depth 
     INTEGER, EXTERNAL :: find_free_unit
+
 
     ! ... The Intel compiler allocates a lot of stack space
     ! ... Stack limit is often small, thus causing SIGSEGV and crash
@@ -67,8 +69,14 @@ CONTAINS
 #endif
     ! ... use ".FALSE." to disable all clocks except the total cpu time clock
     ! ... use ".TRUE."  to enable clocks
-
-    CALL init_clocks( .TRUE. )
+#if defined(__TRACE)
+    CALL get_environment_variable('ESPRESSO_MAX_DEPTH', env_maxdepth)
+    IF (env_maxdepth .NE. ' ') THEN 
+      READ(env_maxdepth,'(I3)',iostat=ios) max_depth
+      IF (ios == 0 ) CALL set_trace_max_depth( max_depth )
+    END IF
+#endif
+    CALL init_clocks(.TRUE.) 
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
@@ -224,10 +232,8 @@ CONTAINS
          &I5," processors")' ) nproc
 #endif
     !
-#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
     WRITE( stdout, '(/5X,"MPI processes distributed on ",&
          &I5," nodes")' ) nnode
-#endif
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I7)' ) nimage
     IF ( npool > 1 ) WRITE( stdout, &

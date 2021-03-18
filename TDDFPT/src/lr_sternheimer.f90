@@ -76,6 +76,8 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     USE paw_add_symmetry,       ONLY : paw_deqsymmetrize
     USE wavefunctions,          ONLY : psic
     USE lr_sym_mod,             ONLY : psymeq
+    USE apply_dpot_mod,         ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
+                                       apply_dpot_bands
     !
     IMPLICIT NONE
     !
@@ -106,16 +108,15 @@ SUBROUTINE one_sternheimer_step(iu, flag)
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    dbecsum_nc(:,:,:,:,:), & ! the becsum with dpsi
                    mixin(:), mixout(:), &  ! auxiliary for paw mixing
-                   aux1 (:,:),  ps (:,:), &
-                   tg_dv(:,:), &
-                   tg_psic(:,:), aux2(:,:), dvpsi1(:,:)
+                   ps (:,:), &
+                   aux2(:,:), dvpsi1(:,:)
     !
     LOGICAL :: conv_root, exst, all_done_asyn
     ! conv_root: true if linear system is converged
     INTEGER :: kter, iter0, ipol, ibnd, iter, lter, ik, ikk, ikq, &
                ig, is, nrec, ndim, npw, npwq, ios
     ! counters
-    INTEGER :: ltaver, lintercall, incr, jpol, v_siz, nwordd0psi
+    INTEGER :: ltaver, lintercall, jpol, nwordd0psi
     REAL(DP) :: xqmod2, alpha_pv0
     !
     REAL(DP) :: tcpu, get_clock
@@ -161,8 +162,8 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     ELSE
        ALLOCATE (h_diagr(npwx*npol, nbnd))
     ENDIF
-    ALLOCATE (aux1(dffts%nnr,npol))
     ALLOCATE (aux2(npwx*npol, nbnd))
+    CALL apply_dpot_allocate()
     IF (okpaw) mixin=(0.0_DP,0.0_DP)
     !
 
@@ -184,16 +185,6 @@ dvpsi =(0.0d0, 0.0d0)
        convt = .false.
        iter0 = 0
 !    ENDIF
-    !
-    incr=1
-    IF ( dffts%has_task_groups ) THEN
-       !
-       v_siz =  dffts%nnr_tg
-       ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
-       ALLOCATE( tg_psic( v_siz, npol ) )
-       incr = fftx_ntgrp(dffts)
-       !
-    ENDIF
     !
 !    IF ( ionode .AND. fildrho /= ' ') THEN
 !       INQUIRE (UNIT = iudrho, OPENED = exst)
@@ -343,38 +334,7 @@ dvpsi =(0.0d0, 0.0d0)
                 ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
                 ! dvscf_q from previous iteration (mix_potential)
                 !
-                IF ( dffts%has_task_groups ) THEN
-                   IF (noncolin) THEN
-                      CALL tg_cgather( dffts, dvscfins(:,1,ipol), &
-                                                       tg_dv(:,1))
-                      IF (domag) THEN
-                         DO jpol=2,4
-                            CALL tg_cgather( dffts, dvscfins(:,jpol,ipol), &
-                                                            tg_dv(:,jpol))
-                         ENDDO
-                      ENDIF
-                   ELSE
-                      CALL tg_cgather( dffts, dvscfins(:,current_spin,ipol), &
-                                                               tg_dv(:,1))
-                   ENDIF
-                ENDIF
-                !
-                aux2=(0.0_DP,0.0_DP)
-                DO ibnd = 1, nbnd_occ (ikk), incr
-                   IF ( dffts%has_task_groups ) THEN
-                      CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, &
-                                        nbnd_occ (ikk) )
-                      CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
-                      CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, &
-                                        nbnd_occ (ikk))
-                   ELSE
-                      CALL cft_wave (ik, evc (1, ibnd), aux1, +1)
-                      CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipol), &
-                                                               current_spin)
-                      CALL cft_wave (ik, aux2 (1, ibnd), aux1, -1)
-                   ENDIF
-
-                ENDDO
+                CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins(:, :, ipol), evc, aux2)
                 !
                 dvpsi=dvpsi+aux2
                 !
@@ -693,7 +653,7 @@ dvpsi =(0.0d0, 0.0d0)
        WRITE(stdout,'(/,6x,"chirz(q,w) =",2f15.6)') chirz(iu)
     ENDIF
     !
-    deallocate (aux1)
+    CALL apply_dpot_deallocate()
     IF (ldpsi1) THEN
        deallocate (dpsi1)
        deallocate (dvpsi1)
@@ -715,12 +675,6 @@ dvpsi =(0.0d0, 0.0d0)
     deallocate (dvscfin)
     if (noncolin) deallocate(dbecsum_nc)
     deallocate(aux2)
-    IF ( dffts%has_task_groups ) THEN
-       !
-       DEALLOCATE( tg_dv  )
-       DEALLOCATE( tg_psic)
-       !
-    ENDIF
 
 !    CLOSE( unit = iund0psi)
 !    CLOSE( unit = iudwf)

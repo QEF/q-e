@@ -34,9 +34,9 @@ MODULE dft_par_mod
     !! pointers to libxc functional structs
     TYPE(xc_f03_func_info_t) :: xc_info(6)
     !! pointers to libxc info structs
-    INTEGER  :: n_ext_params(6) = 0._DP
+    INTEGER  :: n_ext_params(6) = 0
     !! number of external parameters for each functional
-    REAL(DP) :: par_list(6,10)
+    REAL(DP) :: par_list(6,50)
     !! list of external parameters
 #endif
     !
@@ -110,7 +110,7 @@ MODULE dft_par_mod
     DATA corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
                 'OBW', 'GL' , 'KZK' /
     !
-    DATA gradx / 'NOGX', 'B88',  'GGX',  'PBX',  'RPB',  'HCTH', 'OPTX', &
+    DATA gradx / 'NOGX', 'B88',  'GGX',  'PBX',  'REVX', 'HCTH', 'OPTX', &
                  'xxxx', 'PB0X', 'B3LP', 'PSX',  'WCX',  'HSE',  'RW86', 'PBE', &
                  'xxxx', 'C09X', 'SOX',  'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
                  'OBK8', 'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', &

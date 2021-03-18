@@ -250,7 +250,6 @@ contains
     IMPLICIT NONE
     CHARACTER(len=256) :: tempfile, filename
     INTEGER :: free_unit
-    INTEGER, EXTERNAL :: find_free_unit
     LOGICAL :: exst
     !
     WRITE(stdout,'(5x,"Writing data for restart...")')
@@ -264,9 +263,7 @@ contains
     filename = trim(prefix) // ".restart_davidson_basis" 
     tempfile = trim(tmp_dir) // trim(filename)
     !
-    free_unit = find_free_unit()
-    !
-    OPEN (free_unit, file = tempfile, form = 'formatted', status = 'unknown') 
+    OPEN (NEWUNIT=free_unit, file = tempfile, form = 'formatted', status = 'unknown') 
     !
     WRITE(free_unit,*) dav_iter 
     WRITE(free_unit,*) num_basis 
@@ -338,7 +335,6 @@ contains
     IMPLICIT NONE
     CHARACTER(len=256) :: tempfile, filename
     INTEGER :: free_unit, ib
-    INTEGER, EXTERNAL :: find_free_unit
     LOGICAL :: exst
     !
     IF (.NOT.restart) RETURN
@@ -361,9 +357,7 @@ contains
        CALL errore('lr_restart_dav', 'Restart is not possible because of missing restart files...', 1)       
     ENDIF
     !
-    free_unit = find_free_unit()
-    !
-    OPEN (free_unit, file = tempfile, form = 'formatted', status = 'old')
+    OPEN (NEWUNIT=free_unit, file = tempfile, form = 'formatted', status = 'old')
     !
     READ(free_unit,*) dav_iter
     READ(free_unit,*) num_basis
@@ -1863,7 +1857,7 @@ contains
     use io_global,            only : stdout,ionode,ionode_id
     use mp,                   only : mp_bcast,mp_barrier                  
     use mp_world,             only : world_comm
-    USE cell_base,  ONLY : bg, ibrav, celldm
+    USE cell_base,  ONLY : at, bg, ibrav, celldm
     USE gvect,      ONLY : gcutm, ngm
     USE gvecw,      ONLY : ecutwfc
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
@@ -1879,7 +1873,6 @@ contains
     REAL(DP), ALLOCATABLE  :: raux (:)
     character(len=256) :: filename
     CHARACTER(len=6), EXTERNAL :: int_to_char
-    integer, external :: find_free_unit
 #if defined (__MPI)
     ! auxiliary vector for gathering info from multiple cores
     REAL(DP), ALLOCATABLE :: raux1 (:)
@@ -1910,11 +1903,10 @@ contains
         raux(ir)=sign(sqrt(dble(rhoc(ir)*conjg(rhoc(ir)))),dble(rhoc(ir)))
       end do
       
-      iunplot = find_free_unit()
       plot_num = - 1
       filename="drho-of-eign-"//trim(int_to_char(ieign))
       IF ( ionode ) THEN 
-        OPEN (unit = iunplot, file = trim(tmp_dir)//trim(filename),&
+        OPEN (NEWUNIT = iunplot, file = trim(tmp_dir)//trim(filename),&
            status = 'unknown', err = 100, iostat = ios)  
 100     CALL errore ('plotout', 'opening file', ABS (ios) )
         REWIND (iunplot)
@@ -1922,6 +1914,11 @@ contains
         WRITE (iunplot, '(8i8)') dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1,&
                                dfftp%nr2, dfftp%nr3, nat, ntyp
         WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
+        IF (ibrav == 0) THEN
+           DO ipol = 1,3
+              WRITE ( iunplot, * ) ( at(jpol,ipol),jpol=1,3 )
+           END DO
+        END IF
         WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, plot_num
         WRITE (iunplot, '(i4,3x,a2,3x,f5.2)') (nt, atm (nt), zv (nt), nt=1, ntyp)
         WRITE (iunplot, '(i4,3x,3f14.10,3x,i2)') (na, &
