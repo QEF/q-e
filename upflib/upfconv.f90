@@ -89,11 +89,11 @@ PROGRAM upfconv
   ELSE IF ( conversion == "-u" ) THEN
      fileout = filein(1:prefix_len) //'.UPF2'
      WRITE(*,*) 'UPF v.1 to UPF v.2 format conversion'
-  ELSE IF ( conversion == "-e" ) THEN
+  ELSE IF ( conversion == "-e" .or. conversion == "-E" ) THEN
      fileout = filein(1:prefix_len)
   ELSE
      WRITE(*,*) 'Invalid option ' // conversion
-     WRITE(*,*) 'Usage: upfconv -c|-u|-x|-e "pseudopotential file"'
+     WRITE(*,*) 'Usage: upfconv -c|-u|-x|-e|-E "pseudopotential file"'
      STOP
   END IF
   IF ( prefix_len < 1 ) THEN
@@ -182,10 +182,23 @@ SUBROUTINE write_files( upf_in, fileout )
         OPEN(unit=iunps, file = TRIM(fileout)//TRIM(upf_in%gipaw_core_orbital_el(j))//".out")
         WRITE(*,"('writing: ',a)") TRIM(fileout)//TRIM(upf_in%gipaw_core_orbital_el(j))//".out"
         DO n = 1, upf_in%mesh
-           WRITE(iunps,*) upf_in%r(n), upf_in%gipaw_wfs_ae(n,1)
+           WRITE(iunps,*) upf_in%r(n), upf_in%gipaw_core_orbital(n,j)
+           WRITE(iunps+1,*) upf_in%r(n), upf_in%gipaw_core_orbital(n,j)
         ENDDO
         CLOSE(iunps)
      ENDDO
+
+     ! write the same, but all in one file for xspectra
+     OPEN(unit=iunps, file = TRIM(fileout)//".xspectra")
+     WRITE(*,"('writing: ',a)") TRIM(fileout)//".xspectra"
+     WRITE(iunps,"('# mesh size',i6,'; core orbitals:',99(a3,', '))")  upf_in%mesh, upf_in%gipaw_core_orbital_el(:)
+     DO j = 1, upf_in%gipaw_ncore_orbitals
+         DO n = 1, upf_in%mesh
+           WRITE(iunps,*) upf_in%r(n), upf_in%gipaw_core_orbital(n,j)
+        ENDDO
+     ENDDO
+     CLOSE(iunps)
+
   ELSE
      WRITE(*,*) "Core charge not written: this pseudopotential does not contain gipaw data"
   ENDIF
