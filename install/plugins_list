@@ -29,4 +29,4 @@ GIPAW_URL=https://github.com/dceresoli/qe-gipaw/archive/$(RELEASE_VERSION).tar.g
 #
 # Package maintainer: Lorenzo Paulatto
 D3Q=d3q-latest
-D3Q_URL=https://d3q.sourceforge.io/d3q-qe$(RELEASE_VERSION)-latest.php?outname=d3q-qe$(RELEASE_VERSION)-latest.tgz
+D3Q_URL=https://anharmonic.github.io/release/d3q-qe$(RELEASE_VERSION)-latest.tgz

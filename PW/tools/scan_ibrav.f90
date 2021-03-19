@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-PROGRAM ibrav2cell
+PROGRAM scan_ibrav
 !----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
@@ -17,12 +17,13 @@ PROGRAM ibrav2cell
   IMPLICIT NONE
   CHARACTER(len=1024) :: line
   INTEGER,PARAMETER :: npar = 6+3 ! celldm(6) and 3 angles
+  INTEGER,PARAMETER :: nfnc = 9
   INTEGER,PARAMETER :: nibrav = 20
   INTEGER,PARAMETER :: ibrav_list(nibrav) =  (/1,2,3,-3,4,5,-5,6,7,8,9,-9,91,10,11,12,-12,13,-13,14/)
   INTEGER :: ibrav, ios, ii, i, info
   REAL(DP) :: celldm(6), angle(3), alat, chisq, chisq_aux
   !
-  REAL(DP) :: at(3,3), omega, R(3,3), par(npar), par_aux(npar), vchisq(npar)
+  REAL(DP) :: at(3,3), at_new(3,3), omega, R(3,3), par(npar), par_aux(npar), vchisq(npar)
   REAL(DP),PARAMETER :: grad_to_rad = pi/180
 !  REAL(DP) :: xi(npar,npar)
   INTEGER :: lwa, iwa(npar)
@@ -52,44 +53,47 @@ PROGRAM ibrav2cell
   WRITE(*, '("at2", 6f14.6)') at(:,2)
   WRITE(*, '("at3", 6f14.6)') at(:,3)
 
-  lwa = npar**2 + 6*npar
+!  lwa = npar**2 + 6*npar  M*N+5*N+M.
+  lwa = nfnc*npar+5*npar+nfnc
   ALLOCATE(wa(lwa))
       
   DO ii = 1, nibrav
     ibrav = ibrav_list(ii)
     !xi = 0._dp
     !FORALL(i=1:npar) xi(i,i) = 1._dp
-    par(1) = SQRT(SUM(at**2))/3
-    par(2) = 1._dp
-    par(3) = 1._dp
-    par(4) = 0.1_dp
-    par(5) = 0.1_dp
-    par(6) = 0.1_dp
+!    par(1) = SQRT(SUM(at(:,1)**2))
+    CALL  at2celldm (ibrav,alat,at(:,1), at(:,2), at(:,3),par)
+!    par(1) = SQRT(SUM(at**2))/3
+!    par(2) = 1._dp
+!    par(3) = 1._dp
+!    par(4) = 0.1_dp
+!    par(5) = 0.1_dp
+!    par(6) = 0.1_dp
     par(7) = 0._dp
     par(8) = 0._dp
     par(9) = 0._dp
-    WRITE(*,'("Scanning ibrav ",i3,"")') ibrav
-    CALL lmdif1(optimize_this_s, npar, npar, par, vchisq, 1.d-15, info, iwa, wa, lwa)
+    WRITE(*,'(2/,"Scanning ibrav ",i3)') ibrav
+    CALL lmdif1(optimize_this_s, nfnc, npar, par, vchisq, 1.d-8, info, iwa, wa, lwa)
     
     IF(info>0 .and. info<5) THEN
-       PRINT*, "Minimization succeeded"
+       !PRINT*, "Minimization succeeded"
     ELSEIF(info>=5) THEN
-       PRINT*, "Minimization stopped before convergence"
+      WRITE(*,'(a)')  "Minimization stopped before convergence"
     ELSEIF(info<=0) THEN 
-      PRINT*, "Minimization error", info
-      STOP
+      WRITE(*,'(a,i6)') "Minimization error", info
+      !STOP
     ENDIF
-    chisq = vchisq(1)
+    chisq = SUM(vchisq)
       
-    IF(chisq<1.d-6)THEN
-      WRITE(*,'(/,/,"____________ MATCH (chisq=",g7.1,") ____________")') chisq
+    IF(chisq<1.d-3) THEN
+      WRITE(*,'("Minimization succeeded  (chisq=",g7.1,")")') chisq
       WRITE(*, '("  ibrav = ",i3)') ibrav
       DO i = 1,6
         par_aux = par
         par_aux(i) = par_aux(i) * .5_dp
         !chisq_aux = optimize_this(par_aux)
-        CALL optimize_this_s(npar, npar, par_aux, vchisq, info)
-        chisq_aux = vchisq(1)
+        CALL optimize_this_s(nfnc, npar, par_aux, vchisq, info)
+        chisq_aux = SUM(vchisq)
         IF(chisq_aux/=chisq)THEN 
           WRITE(*, '("    celldm(",i2,") = ", f14.9)') i,par(i)
         ENDIF
@@ -99,10 +103,12 @@ PROGRAM ibrav2cell
                            " to be rotated if they are not in crystal coords!"
         WRITE(*, '("angles (around x,y,z)", 6f14.3)') par(7:9)
       ENDIF
-      WRITE(*, '("at1", 6f14.6)') at(:,1)
-      WRITE(*, '("at2", 6f14.6)') at(:,2)
-      WRITE(*, '("at3", 6f14.6)') at(:,3)
+      WRITE(*, '("at1", 6f14.6)') at_new(:,1)
+      WRITE(*, '("at2", 6f14.6)') at_new(:,2)
+      WRITE(*, '("at3", 6f14.6)') at_new(:,3)
       WRITE(*,*)
+    ELSE
+      WRITE(*,'("The best cell with this ibrav is not good enough (chisq=",g7.1,")")') chisq
     ENDIF
   ENDDO
 
@@ -118,29 +124,36 @@ PROGRAM ibrav2cell
     REAL(DP),INTENT(in)  :: p_(n_)
     
     REAL(DP) :: celldm_(6), angle_(3), at_(3,3), R(3,3), omega_, pars_(n_), penality
-    INTEGER :: ierr
+    INTEGER :: ierr, i,j,k
     CHARACTER(len=32) :: errormsg
     ! Global variables from main function: ibrav, at
 
     pars_ = p_ ! p_ is read only!
     !WRITE(*, '("A:", 6f10.4,3x,3f10.4)') pars_
-    CALL check_bounds(pars_, penality)
+    !CALL check_bounds(pars_, penality)
     !WRITE(*, '("B:", 6f10.4,3x,3f10.4)') pars_
     
     celldm_ = pars_(1:6)
     angle_  = pars_(7:9)*grad_to_rad   
     
     !WRITE(*, '(6(f14.4,2x),3x,3f10.4)') celldm_, angle_
-    CALL latgen_lib( ibrav, celldm_, at_(:,1), at_(:,2), at_(:,3), omega_, ierr, errormsg)
+    CALL latgen_lib( ibrav, celldm_, at_new(:,1), at_new(:,2), at_new(:,3), omega_, ierr, errormsg)
     !IF(ierr/=0) penalty=penalty*10
     !
     IF (ANY(angle_/=0._dp)) THEN
       R = rot(angle_(1), angle_(2), angle_(3)) 
-      at_ = matmul(R,at_)
+      at_new = matmul(R,at_new)
     ENDIF
 
-    f_ = 0._dp
-    f_(1) = SUM( (at-at_)**2 )*penality
+    !f_ = 0._dp
+    !f_(1) = SUM( (at-at_)**2 )*penality
+    k=0
+    DO i = 1,3
+    DO j = 1,3
+      k=k+1
+      f_(k) = (at(i,j)-at_new(i,j))**2
+    ENDDO
+    ENDDO
 
  END SUBROUTINE
  
@@ -195,6 +208,6 @@ PROGRAM ibrav2cell
    R = matmul(matmul(rotx(alpha),roty(beta)), rotz(gamma))
  endfunction
 
-END PROGRAM ibrav2cell
+END PROGRAM scan_ibrav
 !----------------------------------------------------------------------
 
