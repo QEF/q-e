@@ -9,22 +9,23 @@
 !--------------------------------------------------------------------
 subroutine sph_bes (msh, r, q, l, jl)
   !--------------------------------------------------------------------
-  !
-  ! ... input:
-  ! ...   msh     = number of grid points points
-  ! ...   r(1:msh)= radial grid
-  ! ...   q       = q
-  ! ...   l       = angular momentum (-1 <= l <= 6)
-  ! ... output:
-  ! ...   jl(1:msh) = j_l(q*r(i))  (j_l = spherical bessel function)
+  !! Spherical Bessel function.
   !
   use kinds, only: DP
   USE constants, ONLY : eps14
   !
   implicit none
   !
-  integer :: msh, l
-  real(DP) :: r (msh), q, jl (msh)
+  integer :: msh
+  !! number of grid points points
+  integer :: l
+  !! angular momentum (-1 <= l <= 6)
+  real(DP) :: r (msh)
+  !! radial grid
+  real(DP) :: q
+  !! q
+  real(DP) :: jl (msh)
+  !! Output: Spherical Bessel function \(j_l(q*r(i))\)
   !
   ! xseries = convergence radius of the series for small x of j_l(x)
   real(DP) :: x, xl, xseries = 0.05_dp

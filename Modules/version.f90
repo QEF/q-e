@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 MODULE global_version
-  !
+  !! QE version
   IMPLICIT NONE
   !
   SAVE

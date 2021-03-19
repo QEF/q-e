@@ -9,22 +9,22 @@
 !----------------------------------------------------------------------------
 MODULE basic_algebra_routines
   !----------------------------------------------------------------------------
+  !! This module contains a limited number of functions and operators
+  !! for vectorial algebra. Wherever possible the appropriate BLAS routine
+  !! (always the double precision version) is used.
   !
-  ! ... Written by Carlo Sbraccia ( 16/12/2003 )
+  !! List of public methods :
   !
-  ! ... This module contains a limited number of functions and operators
-  ! ... for vectorial algebra. Wherever possible the appropriate BLAS routine
-  ! ... ( always the double precision version ) is used.
+  !! * \(x.\text{dot}.y\): dot product between vectors (\(\langle x|y\rangle\));
+  !! * \(x.\text{ext}.y\): external (vector) product between vectors 
+  !!                       (\(\langle x|y\rangle\));
+  !! * \(\text{norm}(x)\): norm of a vector ( \(\sqrt{\langle x|x \rangle}\) );
+  !! * \(A.\text{times}.x\): matrix-vector multiplication ( \(A|x\rangle\) );
+  !! * \(x.\text{times}.A\): vector-matrix multiplication ( \(\langle x|A\) );
+  !! * \(\text{matrix}(x,y)\): vector-vector multiplication ( |x\langle\rangle y| );
+  !! * \(\text{identity}(N)\): identity matrix of rank N.
   !
-  ! ... List of public methods :
-  !
-  !  x .dot. y          dot product between vectors ( <x|y> )
-  !  x .ext. y          external (vector) product between vectors ( <x|y> )
-  !  norm( x )          norm of a vector ( SQRT(<x|x>) )
-  !  A .times. x        matrix-vector multiplication ( A|x> )
-  !  x .times. A        vector-matrix multiplication ( <x|A )
-  !  matrix( x, y )     vector-vector multiplication ( |x><y| )
-  !  identity( N )      identity matrix of rank N
+  !! Written by Carlo Sbraccia (16/12/2003)
   !
   USE kinds,  ONLY : DP
   !

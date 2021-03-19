@@ -8,7 +8,8 @@
 !------------------------------------------------------------------------------!
   MODULE ions_base
 !------------------------------------------------------------------------------!
-
+      !! Ions configuration management.
+      !
       USE kinds,      ONLY : DP
       USE parameters, ONLY : ntypx
       USE uspp_param, ONLY : nsp
@@ -577,8 +578,8 @@
 
   SUBROUTINE ions_reference_positions( tau )
 
-     !  Calculate the real position of atoms relative to the center of mass (cdm)
-     !  and store them in taui
+     !!  Calculate the real position of atoms relative to the center of mass (cdm)
+     !!  and store them in \(\text{taui}\).
      !    cdmi: initial position of the center of mass (cdm) in cartesian coor.  
 
      IMPLICIT NONE
@@ -601,8 +602,8 @@
 
    SUBROUTINE ions_displacement( dis, tau, nsp, nat, ityp )
 
-      !  Calculate the sum of the quadratic displacements of the atoms in the ref.
-      !    of cdm respect to the initial positions.
+      !!  Calculate the sum of the quadratic displacements of the atoms in the ref.
+      !!  of cdm with respect to the initial positions.
       !    taui: initial positions in real units in the ref. of cdm
 
       !  ----------------------------------------------

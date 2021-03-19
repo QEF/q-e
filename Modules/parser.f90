@@ -6,29 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! ... SUBROUTINE field_count:   accepts two string (one of them is optional) 
-!                               and one integer and count the number of fields
-!                               in the string separated by a blank or a tab 
-!                               character. If the optional string is specified
-!                               (it has anyway len=1) it is assumed as the 
-!                               separator character.
-!                               Ignores any character following the exclamation
-!                               mark (fortran comment)
-!
-! ... SUBROUTINE con_cam:       counts the number of fields in a string 
-!                               separated by the optional character
-!
-! ... SUBROUTINE field_compare: accepts two strings and one integer. Counts the
-!                               fields contained in the first string and 
-!                               compares it with the integer. 
-!                               If they are less than the integer calls the 
-!                               routine error and show by the second string the
-!                               name of the field where read-error occurred.
-!
-!
 !----------------------------------------------------------------------------
 MODULE parser
   !----------------------------------------------------------------------------
+  !! String parsing routines.
   !
   USE io_global, ONLY : stdout
   USE kinds, ONLY : DP
@@ -46,6 +27,11 @@ MODULE parser
   !--------------------------------------------------------------------------
   SUBROUTINE field_count( num, line, car )
     !--------------------------------------------------------------------------
+    !! Accepts two string (one of them is optional) and one integer and count
+    !! the number of fields in the string separated by a blank or a tab 
+    !! character. If the optional string is specified (it has anyway len=1)
+    !! it is assumed as the separator character.  
+    !! Ignores any character following the exclamation mark (fortran comment).
     !
     IMPLICIT NONE
     !
@@ -168,6 +154,10 @@ MODULE parser
   !--------------------------------------------------------------------------
   SUBROUTINE field_compare( str, nf, var )
     !--------------------------------------------------------------------------
+    !! Accepts two strings and one integer. Counts the fields contained in 
+    !! the first string and compares it with the integer.  
+    !! If they are less than the integer calls the routine error and show by 
+    !! the second string the name of the field where read-error occurred.
     !
     IMPLICIT NONE
     !
@@ -190,6 +180,9 @@ MODULE parser
   !--------------------------------------------------------------------------
   SUBROUTINE con_cam(num, line, car)
     !--------------------------------------------------------------------------
+    !! Counts the number of fields in a string separated by the optional
+    !! character.
+    !
     CHARACTER(LEN=*) :: line
     CHARACTER(LEN=1) :: sep
     CHARACTER(LEN=1), OPTIONAL :: car
@@ -226,7 +219,8 @@ MODULE parser
   !--------------------------------------------------------------------------
   SUBROUTINE get_field(n, field, str, sep)
     !--------------------------------------------------------------------------
-    ! Extract whitespace-separated nth block from string
+    !! Extract whitespace-separated n-th block from string.
+    !
     IMPLICIT NONE
     INTEGER,INTENT(IN) :: n
     CHARACTER(len=*),INTENT(OUT) :: field

@@ -8,9 +8,8 @@
   !-----------------------------------------------------------------------
   FUNCTION int_to_char( i )
     !-----------------------------------------------------------------------
-    !
-    ! ... converts an integer number of up to 6 figures
-    ! ... into a left-justifed character variable 
+    !! Converts an integer number of up to 6 figures into a left-justifed
+    !! character variable.
     !
     IMPLICIT NONE
     !

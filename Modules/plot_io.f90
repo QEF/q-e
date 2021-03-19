@@ -11,11 +11,10 @@ subroutine plot_io (filplot, title, nr1x, nr2x, nr3x, nr1, nr2, &
      nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecut, plot_num, atm, &
      ityp, zv, tau, plot, iflag)
   !-----------------------------------------------------------------------
-  !
-  !     iflag >0 : write header and the quantity to be plotted ("plot")
-  !                to file "filplot"
-  !     iflag< 0 : read everything (requires that all variables that are
-  !                read are allocated with the correct dimensions!)
+  !! * \(\text{iflag}>0\) : write header and the quantity to be plotted ("plot")
+  !!                        to file "filplot";
+  !! * \(\text{iflag}<0\) : read everything (requires that all variables that are
+  !!                        read are allocated with the correct dimensions!).
   !
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
@@ -93,8 +92,7 @@ subroutine read_io_header(filplot, title, nr1x, nr2x, nr3x, nr1, nr2, nr3, &
                   nat, ntyp, ibrav, celldm, at, gcutm, dual, ecut, plot_num)
      
   !-----------------------------------------------------------------------
-  !
-  !     read header of file "filplot" 
+  !! Read header of file \(\text{filplot}\).
   !
   USE io_global,  ONLY : stdout
   USE kinds, only : DP

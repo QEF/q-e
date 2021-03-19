@@ -9,31 +9,31 @@
 !-----------------------------------------------------------------------
 subroutine cryst_to_cart (nvec, vec, trmat, iflag)
   !-----------------------------------------------------------------------
-  !
-  !     This routine transforms the atomic positions or the k-point
-  !     components from crystallographic to cartesian coordinates 
-  !     ( iflag=1 ) and viceversa ( iflag=-1 ).
-  !     Output cartesian coordinates are stored in the input ('vec') array
-  !
+  !! This routine transforms the atomic positions or the k-point
+  !! components from crystallographic to cartesian coordinates 
+  !! ( iflag=1 ) and viceversa ( iflag=-1 ).  
+  !! Output cartesian coordinates are stored in the input ('vec') array
   !
   USE kinds, ONLY : DP
   implicit none
   !
-  integer, intent(in) :: nvec, iflag
-  ! nvec:  number of vectors (atomic positions or k-points)
-  !        to be transformed from crystal to cartesian and vice versa
-  ! iflag: gives the direction of the transformation
+  integer, intent(in) :: nvec
+  !! number of vectors (atomic positions or k-points) to be transformed
+  !! from crystal to cartesian and vice versa
+  integer, intent(in) :: iflag
+  !! it gives the direction of the transformation
   real(DP), intent(in) :: trmat (3, 3)
-  ! trmat: transformation matrix
-  ! if iflag=1:
-  !    trmat = at ,  basis of the real-space lattice,       for atoms   or
-  !          = bg ,  basis of the reciprocal-space lattice, for k-points
-  ! if iflag=-1: the opposite
-  real(DP), intent(inout) :: vec (3, nvec)
-  ! coordinates of the vector (atomic positions or k-points) to be
-  ! transformed - overwritten on output
+  !! transformation matrix. If \(\text{iflag}=1\):
   !
-  !    local variables
+  !! * \(\text{trmat} = at\), basis of the real-space lattice, for atoms;
+  !! * \(\text{trmat} = bg\), basis of the reciprocal-space lattice, for k-points.
+  !
+  !! If \(\text{iflag=-1} it is the opposite
+  real(DP), intent(inout) :: vec (3, nvec)
+  !! coordinates of the vector (atomic positions or k-points) to be
+  !! transformed - overwritten on output
+  !
+  ! ... local variables
   !
   integer :: nv, kpol
   ! counter on vectors

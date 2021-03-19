@@ -8,8 +8,7 @@
 !-----------------------------------------------------------------------------
 MODULE fft_rho
   !-----------------------------------------------------------------------------
-  !
-  ! ... FFT and inverse FFT of rho on the dense grid
+  !! FFT and inverse FFT of rho on the dense grid.
   !
   USE kinds,     ONLY : DP
   USE fft_interfaces, ONLY: fwfft, invfft

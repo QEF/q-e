@@ -7,17 +7,16 @@
 #if defined(__HDF5) && defined (__MPI) 
 module hdf5_qe
   !
+  !! This module contains some common subroutines used to read and write
+  !! in HDF5 format the data produced by Quantum ESPRESSO package.
+  !
+  !! Written by: Nicola Varini 2016
+  
   USE HDF5
   USE, intrinsic :: ISO_C_binding
   USE Kinds, ONLY : DP
-  !
+  
   implicit none
-  !
-  ! This module contains some common subroutines used to read and write
-  ! in HDF5 format the data produced by Quantum ESPRESSO package.
-  !
-  ! written by: Nicola Varini 2016
-  !  
 
   TYPE HDF5_type
    INTEGER(HID_T) :: file_id       ! File identifier 

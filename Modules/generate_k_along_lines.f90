@@ -1,12 +1,14 @@
 SUBROUTINE generate_k_along_lines(nkaux, xkaux, wkaux, xk, wk, nkstot)
 !
-!  This routine recieves as input a set of k point (xkaux) and integer weights
-!  (wkaux) and generates a set of k points along the lines 
-!  xkaux(:,i+1)-xkaux(:,i). Each line contains wkaux(i) points.
-!  The weights of each k point wk(i) is the length of the path from xk(:,1)
-!  to xk(i). Points with wkaux=0 do not increase the path length.
-!  The total number of output points must be nkstot, and xk and wk must
-!  be array of length nkstot.
+!! This routine recieves as input a set of k point (\(\text{xkaux}\)) and
+!! integer weights (\(\text{wkaux}\)) and generates a set of k points along
+!! the lines \(\text{xkaux}(:,i+1)-\text{xkaux}(:,i)\). Each line contains
+!! \(\text{wkaux}(i)\) points.  
+!! The weights of each k point \(\text{wk}(i)\) is the length of the path
+!! from \(\text{xk}(:,1)\) to \(\text{xk}(i)\). Points with \(\text{wkaux}=0\)
+!! do not increase the path length.  
+!! The total number of output points must be \(\text{nkstot}\), and \(\text{xk}\)
+!! and \(\text{wk}\) must be array of length \(\text{nkstot}\).
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
@@ -53,10 +55,10 @@ RETURN
 END SUBROUTINE generate_k_along_lines
 
 SUBROUTINE generate_k_in_plane(nkaux, xkaux, wkaux, xk, wk, nkstot)
-!
-!   Generate a uniform mesh of k points on the plane defined by
-!   the origin xkaux(:,1), and two vectors xkaux(:,2) and xkaux(:,3).
-!   The size of the mesh is wkaux(2)*wkaux(3).
+!! Generate a uniform mesh of k points on the plane defined by
+!! the origin xkaux(:,1), and two vectors \(\text{xkaux}(:,2)\)
+!! and \(\text{xkaux}(:,3)\).  
+!! The size of the mesh is \(\text{wkaux}(2)\cdot\text{wkaux}(3)\).
 !
  
 USE kinds, ONLY : DP

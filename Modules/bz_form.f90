@@ -6,7 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE bz_form
-    !
+
+    !! Tools for the definition of the Brillouin Zone.
+    
     USE kinds, ONLY : DP
     USE io_global, ONLY : stdout
     IMPLICIT NONE
@@ -15,40 +17,52 @@ MODULE bz_form
     
 
 TYPE bz
-    INTEGER :: ind      ! number of the bz
-    INTEGER :: nfaces   ! The number of faces
-    INTEGER :: nvertices ! The number of vertices
-    REAL(DP), ALLOCATABLE :: normal(:,:)  ! The G vector normal to each face
-                                          ! in unit 2 pi / celldm(1)
-    REAL(DP), ALLOCATABLE :: vertex_coord(:,:) ! coordinates of each vertex
-                                           !(carthesian units 2 pi / celldm(1))
-    INTEGER, ALLOCATABLE :: ivertex(:,:) ! for each vertex which faces define it
-    INTEGER, ALLOCATABLE :: indsur(:,:) ! for each surface the vertex that
-                                        ! define it
-    INTEGER :: xaxis, yaxis, zaxis   ! the indices of the surfaces that
-                                     ! intersect the x, y, and z axis
-    REAL(DP) :: xi(3), yi(3), zi(3)  ! the actual coordinates of intersection
-    INTEGER :: nlett                 ! number of letters for which the position
-                                     ! in the BZ is known
-    CHARACTER(LEN=3), ALLOCATABLE :: letter_list(:) ! list of each letter
-    REAL(DP), ALLOCATABLE :: letter_coord(:,:) ! coordinates of each letter
-    CHARACTER(LEN=20) :: letter_type  ! currently supported convention
-                                      ! for the name of the points
-    ! Setyawan-Curtarolo (SC) (default)  arXiv:1004.2974
-    ! Bilbao    (BI)         Bilbao crystallographic server
-    !                        see www.cryst.ehu.es/cryst/get_kvec.html
-    ! Bradley-Cracknell (BC) The mathematical theory of symmetry in solids
-                            ! is a subset of BI, so use the former
-
+!! Brillouin Zone type
+    INTEGER :: ind
+    !! number of the bz
+    INTEGER :: nfaces
+    !! The number of faces
+    INTEGER :: nvertices
+    !! The number of vertices
+    REAL(DP), ALLOCATABLE :: normal(:,:)
+    !! The G vector normal to each face in unit 2 pi / celldm(1)
+    REAL(DP), ALLOCATABLE :: vertex_coord(:,:)
+    !! coordinates of each vertex (carthesian units \(2\pi/\text{celldm}(1)\))
+    INTEGER, ALLOCATABLE :: ivertex(:,:)
+    !! for each vertex which faces define it
+    INTEGER, ALLOCATABLE :: indsur(:,:)
+    !! for each surface the vertex that define it
+    INTEGER :: xaxis, yaxis, zaxis
+    !! the indices of the surfaces that intersect the x, y, and z axis
+    REAL(DP) :: xi(3), yi(3), zi(3)
+    !! the actual coordinates of intersection
+    INTEGER :: nlett
+    !! number of letters for which the position in the BZ is known
+    CHARACTER(LEN=3), ALLOCATABLE :: letter_list(:)
+    !! list of each letter
+    REAL(DP), ALLOCATABLE :: letter_coord(:,:)
+    !! coordinates of each letter
+    CHARACTER(LEN=20) :: letter_type
+    !! currently supported convention for the name of the points:
+    !
+    !! * Setyawan-Curtarolo (SC) (default)  arXiv:1004.2974
+    !! * Bilbao    (BI)         Bilbao crystallographic server
+    !!                          see www.cryst.ehu.es/cryst/get_kvec.html
+    !! * Bradley-Cracknell (BC) The mathematical theory of symmetry in solids
+    !!                          is a subset of BI, so use the former.
     INTEGER :: npx = 8
- 
-    INTEGER :: ibrav              ! the bravais lattice index
-    REAL(DP) :: celldm(6)         ! the new celldm parameter. In the orthorombic
-                                  ! case switches the axis so that a < b < c
-    REAL(DP) :: omega             ! volume of the unit cell
-    REAL(DP) :: at(3,3), bg(3,3)  ! the direct and reciprocal lattices
-                                  ! used in this module. They are switched 
-                                  ! in the orthorombic cases 
+    INTEGER :: ibrav
+    !! the bravais lattice index
+    REAL(DP) :: celldm(6)
+    !! the new celldm parameter. In the orthorombic case switches the axis so
+    !! that a < b < c
+    REAL(DP) :: omega
+    !! volume of the unit cell
+    REAL(DP) :: at(3,3)
+    !! the direct lattice used in this module
+    REAL(DP) :: bg(3,3)  
+    !! the reciprocal lattice used in this module
+    ! They are switched in the orthorombic cases.
     LOGICAL :: switch_a_b = .FALSE., &  !  If true the axis are rotated
                switch_b_c = .FALSE., &  !  and the coordinates are switched
                rotate_a_b_c = .FALSE.
@@ -1599,8 +1613,8 @@ END SUBROUTINE init_bz_16
 
 SUBROUTINE compute_vertices(bz_struc)
 !
-!  This routine finds the coordinates of the vertex of the BZ, given
-!  the index of the three planes that define each vertex.
+!! This routine finds the coordinates of the vertex of the BZ, given
+!! the index of the three planes that define each vertex.
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
@@ -1617,10 +1631,10 @@ END SUBROUTINE compute_vertices
 
 SUBROUTINE find_letter_coordinate(bz_struc, letter, xk_let)
 !
-!  This routine checks if among the labels of special points defined
-!  for each BZ there is the label letter and in that case it 
-!  returns the coordinates of the point with that label. It stops
-!  if the letter is not recognized.
+!! This routine checks if among the labels of special points defined
+!! for each BZ there is the label letter and in that case it 
+!! returns the coordinates of the point with that label. It stops
+!! if the letter is not recognized.
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(IN) :: bz_struc
@@ -1646,9 +1660,9 @@ END SUBROUTINE find_letter_coordinate
 
 SUBROUTINE find_intersection( ivertex, normal, nfaces, outputk) 
 !
-! This routine receives as input the number of the three faces that define
-! a vertex of the BZ, the reciprocal vectors perpendicular to all the 
-! faces and gives as output the intersection point.
+!! This routine receives as input the number of the three faces that define
+!! a vertex of the BZ, the reciprocal vectors perpendicular to all the 
+!! faces and gives as output the intersection point.
 !
 !
 IMPLICIT NONE
@@ -1679,11 +1693,11 @@ END SUBROUTINE find_intersection
 
 SUBROUTINE find_bz_type(ibrav, celldm, ibz)
 !
-!  This routine identifies the bz type that corresponds to the given
-!  bravais lattice and structural parameters. In the orthorombic
-!  case it exchanges b/a and c/a so that a < b < c and sets the 
-!  three variables change_a_b, change_a_c, change_b_c. It sets
-!  celldm_bz
+!! This routine identifies the bz type that corresponds to the given
+!! bravais lattice and structural parameters. In the orthorombic
+!! case it exchanges b/a and c/a so that a < b < c and sets the 
+!! three variables change\_a\_b, change\_a\_c, change\_b\_c. It sets
+!! celldm\_bz
 !
 IMPLICIT NONE
 
@@ -1749,9 +1763,9 @@ END SUBROUTINE find_bz_type
 
 SUBROUTINE find_vertices(bz_struc) 
 !
-!  This routine uses the definition of the vertices of each face to 
-!  identify, for each vertex, the three faces that define it.
-!  At least three faces must contain the vertex
+!! This routine uses the definition of the vertices of each face to 
+!! identify, for each vertex, the three faces that define it.
+!! At least three faces must contain the vertex.
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
@@ -1779,9 +1793,9 @@ END SUBROUTINE find_vertices
 
 SUBROUTINE check_one_face_centerer_orthorombic(bz_struc)
 !
-!  This subroutine changes the order of a and b axis in one face centered
-!  orthorhombic lattice so that a < b. The bg corresponding to
-!  such a rotated orthorombic lattice are used to generate the BZ. 
+!! This subroutine changes the order of a and b axis in one face centered
+!! orthorhombic lattice so that a < b. The bg corresponding to
+!! such a rotated orthorombic lattice are used to generate the BZ. 
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
@@ -1802,9 +1816,9 @@ END SUBROUTINE check_one_face_centerer_orthorombic
 
 SUBROUTINE check_orthorombic(bz_struc)
 !
-!  This subroutine changes the order of a, b, and c axis in an
-!  orthorhombic lattice so that a < b < c. The bg corresponding to
-!  such a rotated orthorombic are used to generate the BZ.
+!! This subroutine changes the order of a, b, and c axis in an
+!! orthorhombic lattice so that a < b < c. The bg corresponding to
+!! such a rotated orthorombic are used to generate the BZ.
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
@@ -1821,6 +1835,9 @@ RETURN
 END SUBROUTINE check_orthorombic
 
 SUBROUTINE direct_and_reciprocal_lattice(bz_struc)
+!
+!! Generate direct and reciprocal lattice vectors.
+!
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
 REAL(DP) :: alat
@@ -1843,8 +1860,8 @@ END SUBROUTINE direct_and_reciprocal_lattice
 
 SUBROUTINE adjust_orthorombic(bz_struc)
 !
-!   This routine rotates the coordinates of the x,y,z points of bz_struc
-!   so that they correspond to the original orthorombic lattice
+!! This routine rotates the coordinates of the x,y,z points of bz_struc
+!! so that they correspond to the original orthorombic lattice.
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
@@ -1926,8 +1943,8 @@ END SUBROUTINE adjust_orthorombic
 
 SUBROUTINE adjust_orthorombic_vect(bz_struc,vect)
 !
-!   This routine rotates the coordinates of a vector of bz_struc
-!   so that they correspond to the original orthorombic lattice
+!! This routine rotates the coordinates of a vector of bz_struc
+!! so that they correspond to the original orthorombic lattice.
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(IN) :: bz_struc
@@ -1956,9 +1973,9 @@ END SUBROUTINE adjust_orthorombic_vect
 
 SUBROUTINE adjust_one_face_centered_orthorombic(bz_struc)
 !
-!   This routine rotates the coordinates of the x, y, z points of bz_struc
-!   so that they correspond to the original one face centered orthorombic 
-!   lattice
+!! This routine rotates the coordinates of the x, y, z points of bz_struc
+!! so that they correspond to the original one face centered orthorombic 
+!! lattice.
 !
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
@@ -1991,10 +2008,10 @@ END SUBROUTINE adjust_one_face_centered_orthorombic
 SUBROUTINE canonical_celldm(celldm, celldm_c, switch_a_b, switch_b_c, &
                                               rotate_a_b_c)
 !
-!  This subroutine changes the order of a, b, and c axis in an
-!  orthorhombic lattice so that a < b < c. The bg corresponding to
-!  such a rotated orthorombic are used to generate the BZ and then
-!  the coordinates are rotated so as to recover the original order.
+!! This subroutine changes the order of a, b, and c axis in an
+!! orthorhombic lattice so that a < b < c. The bg corresponding to
+!! such a rotated orthorombic are used to generate the BZ and then
+!! the coordinates are rotated so as to recover the original order.
 !
 IMPLICIT NONE
 REAL(DP), INTENT(IN) :: celldm(6)
@@ -2094,9 +2111,9 @@ END SUBROUTINE find_axis_coordinates
 
 SUBROUTINE inter_plane_line(x0, vect, bplane, xk)
 !
-!  This routine finds the intersection between the line passing through
-!  x0 and parallel to vect, and the plane passing through bplane/2 and
-!  perpendicular to bplane
+!! This routine finds the intersection between the line passing through
+!! \(\text{x0}\) and parallel to \(\text{vect}\), and the plane passing
+!! through \(\text{bplane}/2\) and perpendicular to \(\text{bplane}\).
 !
 IMPLICIT NONE
 
@@ -2123,12 +2140,13 @@ END SUBROUTINE inter_plane_line
 SUBROUTINE transform_label_coord(ibrav, celldm, xk, letter, label_list, &
                                  npk_label, nks, k_points, point_label_type )
 !
-!  This routine transforms the labels in the array letter into k points
-!  coordinates that are put in the array xk in the position indicated
-!  by label_list. If k_point='crystal' the coordinates are tranformed
-!  in the basis of the crystal. point_label_type selects the type of
-!  labels. npk_label is the size of the array letter and label_list,
-!  while nks is the size of the array xk.
+!! This routine transforms the labels in the array letter into k points
+!! coordinates that are put in the array \(\text{xk}\) in the position
+!! indicated by label_list. If \(\text{k_point}='\text{crystal}'\) the 
+!! coordinates are tranformed in the basis of the crystal.  
+!! \(\text{point_label_type}\) selects the type of labels.  
+!! \(\text{npk_label}\) is the size of the array letter and label\_list, while
+!! \(\text{nks}\) is the size of the array \(\text{xk}\).
 !
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: npk_label
@@ -2185,9 +2203,9 @@ END SUBROUTINE transform_label_coord
 
 SUBROUTINE find_n1n2_monoclinic(n1, n2, idir, bz_struc)
 !
-!   This routine finds the six reciprocal lattices closest to the origin and
-!   order them in order of increasing angle with the x-axis. These are the six
-!   normals to the faces of the monoclinic Brillouin zone.
+!! This routine finds the six reciprocal lattices closest to the origin and
+!! order them in order of increasing angle with the x-axis. These are the six
+!! normals to the faces of the monoclinic Brillouin zone.
 !
 USE constants, ONLY : pi
 IMPLICIT NONE

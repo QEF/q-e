@@ -12,6 +12,7 @@
 #define DIMS5D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4),lbound(arr,5):ubound(arr,5)
 !=----------------------------------------------------------------------------=!
    MODULE gvect_gpum
+   !! Module \(\texttt{gvect}\), GPU double.
 !=----------------------------------------------------------------------------=!
      USE gvect, ONLY : gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
      IMPLICIT NONE

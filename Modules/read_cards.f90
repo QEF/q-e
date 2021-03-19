@@ -8,9 +8,8 @@
 !---------------------------------------------------------------------------
 MODULE read_cards_module
    !---------------------------------------------------------------------------
-   !
-   ! ...  This module handles the reading of cards from standard input
-   ! ...  Original version written by Carlo Cavazzoni
+   !! This module handles the reading of cards from standard input.  
+   !! Original version written by Carlo Cavazzoni.
    !
    USE kinds,     ONLY : DP
    USE io_global, ONLY : stdout

@@ -8,10 +8,9 @@
 !----------------------------------------------------------------------------
 SUBROUTINE sph_dbes( MMAX, R, XG, L, DJL )
   !----------------------------------------------------------------------------
-  !
-  ! ... calculates derivatives of spherical bessel functions  j_l(Gr)
-  ! ... with respect to h_alpha,beta (without the factor GAGK(KK,IG)*HTM1)
-  ! ... i.e. -x * D(jl(x))/dx
+  !! Calculates derivatives of spherical Bessel functions \(j_l(Gr)\)
+  !! with respect to h_alpha, beta (without the factor GAGK(KK,IG)*HTM1), i.e:
+  !! \(-x  D(j_l(x))/dx \)
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps8
@@ -111,11 +110,11 @@ END SUBROUTINE sph_dbes
 !
 SUBROUTINE sph_dbes1 ( nr, r, xg, l, jl, djl )
   !
-  ! calculates x*dj_l(x)/dx using the recursion formula
-  !    dj_l(x)/dx = l/x*j_l(x) -  j_(l+1)(x)
-  ! for l=0, and for l>0 :
-  !    dj_l(x)/dx = j_(l-1)(x) - (l+1)/x *  j_l(x)
-  ! requires j_l(r) in input
+  !! Calculates \(x*dj_l(x)/dx\) using the recursion formula:
+  !! $$ dj_l(x)/dx = l/x j_l(x) - j_{l+1}(x) $$
+  !! for \(l=0\), and for \(l>0\):
+  !! $$ dj_l(x)/dx = j_{l-1}(x) - (l+1)/x j_l(x) $$
+  !! Requires \(j_l(r)\) in input.
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps8

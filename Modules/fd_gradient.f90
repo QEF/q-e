@@ -7,14 +7,13 @@
 !
 !
 !
-!----------------------------------------------------------------------
-! Module to compute finite differences gradients on dense real space grid
-! Written by Oliviero Andreussi
-!----------------------------------------------------------------------
 !
 !=----------------------------------------------------------------------=!
    MODULE fd_gradient
 !=----------------------------------------------------------------------=!
+   !! Module to compute finite differences gradients on dense real space grid.  
+   !! Written by Oliviero Andreussi.
+
 
       USE kinds, ONLY: DP
 

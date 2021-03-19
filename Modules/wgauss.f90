@@ -9,30 +9,29 @@
 !-----------------------------------------------------------------------
 function wgauss (x, n)
   !-----------------------------------------------------------------------
+  !! This function computes the approximate theta function for the
+  !! given order n, at the point x:
   !
-  !     this function computes the approximate theta function for the
-  !     given order n, at the point x.
-  !
-  ! --> (n>=0) : Methfessel-Paxton case. See PRB 40, 3616 (1989).
-  !
-  ! --> (n=-1 ): Cold smearing (Marzari-Vanderbilt-DeVita-Payne).
-  !              See PRL 82, 3296 (1999)
-  !       1/2*erf(x-1/sqrt(2)) + 1/sqrt(2*pi)*exp(-(x-1/sqrt(2))**2) + 1/2
-  !
-  ! --> (n=-99): Fermi-Dirac case: 1.0/(1.0+exp(-x)).
+  !! * \( n \geq 0 \): Methfessel-Paxton case. See PRB 40, 3616 (1989).
+  !! * \( n=-1 \): cold smearing (Marzari-Vanderbilt-DeVita-Payne,
+  !!   see PRL 82, 3296 (1999)):
+  !!   $$ \frac{1}{2} \text{erf}\(x-\frac{1}{\sqrt(2)}\) + \frac{1}{\sqrt{2\pi}} \exp
+  !!   {-\(x-\frac{1}{sqrt{2}}\)^2} + 1/2 $$
+  !! * \( n=-99 \): Fermi-Dirac case:
+  !!   $$ \frac{1.0}{1.0+\exp{-x}} $$
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
-  real(DP) :: wgauss, x
-  ! output: the value of the function
-  ! input: the argument of the function
+  real(DP) :: wgauss
+  !! output: the value of the function
+  real(DP) :: x
+  !! input: the argument of the function
   integer :: n
-  ! input: the order of the function
+  !! input: the order of the function
   !
-  !    the local variables
+  ! ... local variables
   !
-
   real(DP) :: a, hp, arg, hd, xp
   ! the coefficient a_n
   ! the hermitean function

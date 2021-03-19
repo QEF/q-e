@@ -57,18 +57,18 @@
 
 MODULE autopilot
   !---------------------------------------------------------------------------
+  !! This module handles the Autopilot Feature Suite.
   !
-  ! This module handles the Autopilot Feature Suite
-  ! Written by Lee Atkinson, with help from the ATP team at Targacept, Inc 
-  ! Created June 2005
-  ! Modified by Yonas Abraham, Sept 2006
+  !! Written by Lee Atkinson, with help from the ATP team at Targacept, Inc.  
+  !! Created June 2005.  
+  !! Modified by Yonas Abraham, Sept 2006.
   !
-  !   The address for Targacept, Inc. is:
-  !     200 East First Street, Suite
-  !     300, Winston-Salem, North Carolina 27101; 
-  !     Attn: Molecular Design.
+  ! The address for Targacept, Inc. is:
+  !   200 East First Street, Suite
+  !   300, Winston-Salem, North Carolina 27101; 
+  ! Attn: Molecular Design.
   !
-  ! See README.AUTOPILOT in the Doc directory for more information.
+  !! See README.AUTOPILOT in the Doc directory for more information.
   !---------------------------------------------------------------------------
 
   USE kinds
@@ -179,21 +179,23 @@ CONTAINS
   !----------------------------------------------------------------------------
   SUBROUTINE auto_error( calling_routine, message)
     !----------------------------------------------------------------------------
-    ! This routine calls errore based upon the pilot property flag.
-    ! If the flag is TRUE, the simulation will not stop,
-    !    but the pause property flag is set to TRUE,
-    !    causing pilot to force a state of sleep, 
-    !    until the user can mail proper commands.
-    ! Otherwise, its assumed that dynamics have not started
-    ! and this call is an indirect result of read_cards.
-    ! Thus the simulation will stop.
-    ! Either way errore will always issues a warning message.
-
+    !! This routine calls errore based upon the pilot property flag. 
+    !! If the flag is TRUE, the simulation will not stop, 
+    !! but the pause property flag is set to TRUE, 
+    !! causing pilot to force a state of sleep, 
+    !! until the user can mail proper commands. 
+    !! Otherwise, its assumed that dynamics have not started 
+    !! and this call is an indirect result of read_cards. 
+    !! Thus the simulation will stop. 
+    !! Either way errore will always issues a warning message.
+    !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=*), INTENT(IN) :: calling_routine, message
-    ! the name of the calling calling_routinee
-    ! the output message
+    CHARACTER(LEN=*), INTENT(IN) :: calling_routine
+    !! the name of the calling calling_routine
+    CHARACTER(LEN=*), INTENT(IN) :: message
+    !! the output message
+    !
     INTEGER :: ierr
     ! the error flag
 
@@ -225,12 +227,20 @@ CONTAINS
   ! Put this in setcontrol_flags on the select statement
   !-----------------------------------------------------------------------
   LOGICAL FUNCTION auto_check (ndr, outdir)
+    !---------------------------------------------------------------------
+    !! Checks if restart files are present.
+    !
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast
     USE mp_world,  ONLY : world_comm
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: ndr    !  I/O unit number
+    INTEGER, INTENT(IN) :: ndr
+    !! I/O unit number
     CHARACTER(LEN=*), INTENT(IN) :: outdir
+    !! output directory
+    !
+    ! ... local variables
+    !
     CHARACTER(LEN=256) :: dirname, filename
     CHARACTER (LEN=6), EXTERNAL :: int_to_char
     LOGICAL :: restart_p = .FALSE.
@@ -261,13 +271,13 @@ CONTAINS
 
 
   !-----------------------------------------------------------------------
-  ! INITIALIZE AUTOPILOT
-  !
-  ! Must be done, even if not in use.
-  ! Add this as a call in read_cards.f90 sub: card_default_values
-  !-----------------------------------------------------------------------
   SUBROUTINE init_autopilot
+    !---------------------------------------------------------------------
+    !! INITIALIZE AUTOPILOT: must be done, even if not in use.
+    !! Add this as a call in read_cards.f90 sub: card_default_values.
+    !
     IMPLICIT NONE
+    !
     integer :: event
 
     pause_p = .FALSE.
@@ -319,16 +329,20 @@ CONTAINS
 
 
 
-  !-----------------------------------------------------------------------
-  ! subroutine CARD_AUTOPILOT
-  !
-  ! called in READ_CARDS and in PARSE_MAILBOX
   !-----------------------------------------------------------------------  
   SUBROUTINE card_autopilot( input_line )
+    !--------------------------------------------------------------------
+    !! Called in READ_CARDS and in PARSE_MAILBOX.
+    !
     USE io_global, ONLY: ionode
+    !
     IMPLICIT NONE
-    INTEGER :: i, j, linelen
+    !
     CHARACTER(LEN=256) :: input_line
+    !
+    ! ... local variables
+    !
+    INTEGER :: i, j, linelen
     LOGICAL            :: process_this_line = .FALSE.
     LOGICAL            :: endrules = .FALSE.
     LOGICAL            :: tend = .FALSE.
@@ -420,16 +434,21 @@ CONTAINS
 
 
 
-
-  !-----------------------------------------------------------------------
-  ! ADD RULE
   !-----------------------------------------------------------------------
   SUBROUTINE add_rule( input_line )
+    !---------------------------------------------------------------------
+    !! ADD RULE
+    !
     USE io_global, ONLY: ionode
+    !
     IMPLICIT NONE
+    !
+    CHARACTER(LEN=256) :: input_line
+    !
+    ! ... local variables
+    !
     integer :: i, linelen
     integer :: eq1_pos, eq2_pos, plus_pos, colon_pos
-    CHARACTER(LEN=256) :: input_line
     CHARACTER(LEN=32)  :: var_label
     CHARACTER(LEN=32)  :: value_str
     INTEGER            :: on_step, now_step, plus_step
@@ -685,14 +704,21 @@ CONTAINS
 
 
   !-----------------------------------------------------------------------
-  ! ASSIGN_RULE
-  !-----------------------------------------------------------------------
   SUBROUTINE assign_rule(event, var, value)
+    !---------------------------------------------------------------------
+    !! ASSIGN RULE
+    !
     USE io_global, ONLY: ionode
+    !
     IMPLICIT NONE
-    INTEGER :: i, event, varlen
+    !
+    INTEGER :: event
     CHARACTER(LEN=32) :: var
     CHARACTER(LEN=32) :: value
+    !
+    ! ... local variables
+    !
+    INTEGER   :: i, varlen
     INTEGER   :: int_value
     LOGICAL   :: logical_value
     REAL      :: real_value
@@ -806,17 +832,18 @@ CONTAINS
 
 
 
-
-  !-----------------------------------------------------------------------
-  ! PARSE_MAILBOX
-  !
-  ! Read the mailbox with a mailbox parser
-  ! if it starts with ON_STEP, then apply to event table etc
-  ! if not the try to establish that its a variable to set right now
   !-----------------------------------------------------------------------
   SUBROUTINE parse_mailbox ()
+    !---------------------------------------------------------------------
+    !! Read the mailbox with a mailbox parser:
+    !
+    !! * if it starts with ON_STEP, then apply to event table etc;
+    !! * if not the try to establish that its a variable to set right now.
+    !
     USE io_global, ONLY: ionode
+    !
     IMPLICIT NONE
+    !
     INTEGER :: i
     CHARACTER(LEN=256) :: input_line
     LOGICAL            :: tend

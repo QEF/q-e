@@ -9,24 +9,25 @@
 !------------------------------------------------------------------------
 SUBROUTINE setdqf( nqf, qfcoef, mesh, r, l, drho )
   !-----------------------------------------------------------------------
-  !
-  ! ... Computes the derivative of the Q function, dQ/dr,
-  ! ... from its polynomial expansion (valid for r < rinner)
-  ! ... On input: nqf = number of polynomial coefficients
-  ! ...    qfcoef(nqf)= the coefficients defining Q
-  ! ...          mesh = number of mesh point
-  ! ...        r(mesh)= the radial mesh
-  ! ...             l = angular momentum
-  ! ... On output:
-  ! ...      drho(mesh)= dQ(r)/dr
+  !! Computes the derivative of the Q function, \(dQ/dr\), from its 
+  !! polynomial expansion (valid for r < rinner).
   !
   USE kinds, ONLY: dp
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(in):: nqf, l, mesh
-  REAL(dp), INTENT(in) :: r(mesh), qfcoef(nqf)
+  INTEGER, INTENT(in):: nqf
+  !! number of polynomial coefficients
+  INTEGER, INTENT(in) :: l
+  !! angular momentum
+  INTEGER, INTENT(in) :: mesh
+  !! number of mesh point
+  REAL(dp), INTENT(in) :: r(mesh)
+  !! the radial mesh
+  REAL(dp), INTENT(in) :: qfcoef(nqf)
+  !! the coefficients defining Q
   REAL(dp), INTENT(out) :: drho(mesh)
+  !! \(dQ(r)/dr\)
   !
   INTEGER  :: ir, i
   !

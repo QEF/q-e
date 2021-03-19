@@ -7,11 +7,10 @@
 !----------------------------------------------------------------------------
 MODULE qexsd_copy
   !----------------------------------------------------------------------------
+  !! This module contains some common subroutines used to copy data read from
+  !! XML format into data used by the Quantum ESPRESSO package.
   !
-  ! This module contains some common subroutines used to copy data read from
-  ! XML format into data used by the Quantum ESPRESSO package.
-  !
-  ! Written by Paolo Giannozzi, building upon pre-existing code
+  !! Written by Paolo Giannozzi, building upon pre-existing code.
   !
   USE kinds, ONLY : dp
   IMPLICIT NONE
