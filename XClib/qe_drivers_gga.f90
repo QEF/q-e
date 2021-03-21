@@ -821,7 +821,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF
         !
-        !
         ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
         ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
         ! routine: needs kinetic energy density in addition to rho and grad rho
