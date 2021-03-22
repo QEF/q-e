@@ -20,7 +20,7 @@
   CONTAINS
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE indabs_main(iq, totq, first_cycle)
+    SUBROUTINE indabs_main(iq, totq, first_cycle, iq_restart)
     !-----------------------------------------------------------------------
     !!
     !! Main routine for phonon assisted absorption
@@ -47,6 +47,8 @@
     !
     INTEGER, INTENT(in) :: iq
     !! Q-point index
+    INTEGER, INTENT(in) :: iq_restart
+    !! Restart q points, determine if initialization
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart
     INTEGER, INTENT(in) :: totq
@@ -191,6 +193,13 @@
     !
     nksqtotf = nktotf ! odd-even for k,k+q
     !
+    IF (iq = iq_restart) THEN
+      ALLOCATE(omegap(nomega), STAT = ierr)
+      IF (ierr /= 0) CALL errore('indabs', 'Error allocating omegap', 1)
+      DO iw = 1, nomega
+        omegap(iw) = omegamin + (iw - 1) * omegastep
+      ENDDO
+    ENDIF
     DO itemp = 1, nstemp
       IF (first_cycle .and. itemp == nstemp) THEN
         first_cycle = .false.

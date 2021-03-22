@@ -1366,7 +1366,7 @@
               CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
             ENDDO
           ENDIF
-          CALL indabs_main(iq, totq, first_cycle)
+          CALL indabs_main(iq, totq, first_cycle, iq_restart)
         ENDIF
         !
         ! Conductivity ---------------------------------------------------------
@@ -1688,8 +1688,14 @@
   ENDIF
   !
   IF (lindabs .AND. indabs_fca .AND. (.NOT. scattering)) THEN
-    DEALLOCATE(ef0_fca, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ef0_fca', 1)
+    IF (indabs_fca) THEN
+      DEALLOCATE(ef0_fca, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ef0_fca', 1)
+     ENDIF
+     DEALLOCATE(epsilon2_abs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs', 1)
+    DEALLOCATE(epsilon2_abs_lorenz, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs_lorenz', 1)
   ENDIF
   !
   CALL stop_clock('ephwann')
