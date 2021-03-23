@@ -60,7 +60,8 @@
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  gtemp, xkq, lower_bnd, upper_bnd, dos,&
-                            nbndep, ef0_fca, epsilon2_abs, epsilon2_abs_lorenz
+                            nbndep, ef0_fca, epsilon2_abs, epsilon2_abs_lorenz, &
+                            epsilon2_abs_all, epsilon2_abs_lorenz_all
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem
@@ -957,6 +958,10 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating epsilon2_abs', 1)
       ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating epsilon2_abs_lorenz', 1)
+      ALLOCATE(epsilon2_abs_all(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epsilon2_abs_all', 1)
+      ALLOCATE(epsilon2_abs_lorenz_all(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shiffle', 'Error allocating epsilon2_abs_lorenz_all', 1)
     ENDIF ! indabs
     !
     ! Restart in SERTA case or self-energy (electron or plasmon) case
@@ -979,7 +984,7 @@
       !
       ! Potential restart in indirect optics
       IF (lindabs) THEN
-        CALL indabs_read(iq_restart, totq, epsilon2_abs, epsilon2_abs_lorenz)
+        CALL indabs_read(iq_restart, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
       ENDIF
       !
       ! If you restart from reading a file. This prevent
@@ -1691,11 +1696,15 @@
     IF (indabs_fca) THEN
       DEALLOCATE(ef0_fca, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ef0_fca', 1)
-     ENDIF
-     DEALLOCATE(epsilon2_abs, STAT = ierr)
+    ENDIF
+    DEALLOCATE(epsilon2_abs, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs', 1)
     DEALLOCATE(epsilon2_abs_lorenz, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs_lorenz', 1)
+    DEALLOCATE(epsilon2_abs_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs_all', 1)
+    DEALLOCATE(epsilon2_abs_lorenz_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs_lorenz_all', 1)
   ENDIF
   !
   CALL stop_clock('ephwann')

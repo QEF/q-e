@@ -36,7 +36,8 @@
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
-                              nbndfst, nktotf, ef0_fca
+                              nbndfst, nktotf, ef0_fca, & 
+                              epsilon2_abs_all, epsilon2_abs_lorenz_all
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
@@ -175,8 +176,8 @@
 !      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
 !      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
       !
-      epsilon2_abs = 0.d0
-      epsilon2_abs_lorenz = 0.d0
+      epsilon2_abs_all = 0.d0
+      epsilon2_abs_lorenz_all = 0.d0
       DO iw = 1, nomega
         omegap(iw) = omegamin + (iw - 1) * omegastep
       ENDDO
@@ -193,12 +194,14 @@
     !
     nksqtotf = nktotf ! odd-even for k,k+q
     !
-    IF (iq = iq_restart) THEN
+    IF (iq == iq_restart .AND. iq_restart /= 1) THEN
       ALLOCATE(omegap(nomega), STAT = ierr)
       IF (ierr /= 0) CALL errore('indabs', 'Error allocating omegap', 1)
       DO iw = 1, nomega
         omegap(iw) = omegamin + (iw - 1) * omegastep
       ENDDO
+      epsilon2_abs = 0.d0
+      epsilon2_abs_lorenz = 0.d0
     ENDIF
     DO itemp = 1, nstemp
       IF (first_cycle .and. itemp == nstemp) THEN
@@ -340,7 +343,11 @@
             CALL mp_sum(epsilon2_abs, inter_pool_comm)
             CALL mp_sum(epsilon2_abs_lorenz, inter_pool_comm)
             CALL mp_barrier(inter_pool_comm)
-            CALL indabs_write(iq, totq, epsilon2_abs, epsilon2_abs_lorenz)
+            epsilon2_abs_all = epsilon2_abs_all + epsilon2_abs
+            epsilon2_abs_lorenz_all = epsilon2_abs_lorenz_all + epsilon2_abs_lorenz
+            CALL indabs_write(iq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
+            epsilon2_abs = 0.d0
+            epsilon2_abs_lorenz = 0.d0
           ENDIF
         ENDIF
       ENDIF ! Skip first step in restart
@@ -361,6 +368,9 @@
       !
 #endif
       !
+      !Add everything again to all
+      epsilon2_abs_all = epsilon2_abs_all + epsilon2_abs
+      epsilon2_abs_lorenz_all = epsilon2_abs_lorenz_all + epsilon2_abs_lorenz
       ! Output to stdout
       c = 'X'
       WRITE(c,"(i0)") neta
@@ -375,7 +385,7 @@
       ! For test-farm checking purposes, only show m=1
       WRITE(stdout, '(5x,a)') 'Photon energy (eV), Imaginary dielectric function along x,y,z'
       DO iw = 1, nomega
-        WRITE(stdout, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs(ipol, iw, 1, 1), ipol = 1, 3)
+        WRITE(stdout, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_all(ipol, iw, 1, 1), ipol = 1, 3)
       ENDDO
       WRITE(stdout, '(5x,a)')
       WRITE(stdout, '(5x,a)') 'Values with other broadenings for temperature X are reported in the files epsilon2_indabs_X.dat'
@@ -391,7 +401,7 @@
         WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
         WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
         DO iw = 1, nomega
-          WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
+          WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
         ENDDO
         CLOSE(iuindabs)
         ! 
@@ -400,7 +410,7 @@
         WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
         WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
         DO iw = 1, nomega
-          WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_lorenz(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
+          WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_lorenz_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
         ENDDO
         CLOSE(iuindabs)
       ENDDO
