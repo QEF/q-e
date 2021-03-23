@@ -61,7 +61,7 @@ MODULE additional_kpoints
      
      ! Simple case, EXX not used or used with self-exchange only: 
      IF( nqx1<=1 .and. nqx2<=1 .and. nqx3<=1 ) THEN
-       print*, "CASE ONE ============================================================", nkstot_old
+       !print*, "CASE ONE ============================================================", nkstot_old
        nkstot = nkstot_old + nkstot_add
        IF(nkstot>npk) CALL errore("add_kpoint", "Number of k-points exceeded: increase npk in pwcom", 1)
 !       ALLOCATE(xk(3,nkstot))
@@ -72,7 +72,7 @@ MODULE additional_kpoints
        wk(nkstot_old+1:nkstot_old+nkstot_add) = 0._dp
        nqtot=1
      ELSE
-       print*, "CASE TWO ============================================================"
+       !print*, "CASE TWO ============================================================"
      ! Complex case, EXX with a finite grid of q-points. Ideally, we would want to use
      ! The grid from module EXX, but it may not have been computed at this points.
      ! Furthermore, the q-point grid is obtained by opening the k-points one, so this would
