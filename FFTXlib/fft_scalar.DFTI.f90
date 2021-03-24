@@ -158,11 +158,10 @@
      DO ip = 1, ndims
         !   first check if there is already a table initialized
         !   for this combination of parameters
-        found = ( nz == zdims(1,ip) )
         !   The initialization in ESSL and FFTW v.3 depends on all three parameters
-        found = found .AND. ( nsl == zdims(2,ip) ) .AND. ( ldz == zdims(3,ip) )
+        found = ( nz == zdims(1,ip) ) .AND. ( nsl == zdims(2,ip) ) .AND. ( ldz == zdims(3,ip) )
         dfti_status = DftiGetValue(hand(ip)%desc, DFTI_PLACEMENT, placement)
-        found = found .AND. is_inplace .AND. (placement == DFTI_INPLACE)
+        found = found .AND. ( is_inplace .EQV. (placement == DFTI_INPLACE) )
         IF (found) EXIT
      END DO
      END SUBROUTINE lookup
