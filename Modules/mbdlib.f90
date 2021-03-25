@@ -8,7 +8,7 @@
 ! This module computes the Many-Body Dispersion (MBD)
 ! van der Waals correction to the system.
 ! The implementation is based on a portable Fortran library
-! by Jan Hermann. 
+! by Jan Hermann.
 ! Written by S. Goger (Luxembourg) and H-Y. Ko (Cornell)
 !#############################################################
 
@@ -46,7 +46,7 @@ MODULE libmbd_interface
 !#############################################################
 ! This subroutine sets up the library before the first call
 !#############################################################
-  SUBROUTINE init_mbd(nkstot, nks)
+  SUBROUTINE init_mbd()
   IMPLICIT NONE
 
   !
