@@ -19,13 +19,13 @@
   CONTAINS
     !
     !----------------------------------------------------------------------
-    SUBROUTINE indabs_write(iq, totq, epsilon2_abs, epsilon2_abs_lorenz)
+    SUBROUTINE indabs_write(iq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
     !----------------------------------------------------------------------
     !!
     !! Write indirect optical spectra
     !!
     USE kinds,     ONLY : DP
-    USE io_var,    ONLY : iuindabs
+    USE io_var,    ONLY : iuindabs_all
     USE io_files,  ONLY : diropn
     USE constants_epw, ONLY : zero
     USE mp,        ONLY : mp_barrier
@@ -46,9 +46,9 @@
     !! Length of the vector
 !    INTEGER :: neta = 9
     !! Number of broadenings
-    REAL(KIND = DP), INTENT(inout) :: epsilon2_abs(3, nomega, neta, nstemp)
+    REAL(KIND = DP), INTENT(inout) :: epsilon2_abs_all(3, nomega, neta, nstemp)
     !! Imaginary part of the dielectric function
-    REAL(KIND = DP), INTENT(inout) :: epsilon2_abs_lorenz(3, nomega, neta, nstemp)
+    REAL(KIND = DP), INTENT(inout) :: epsilon2_abs_lorenz_all(3, nomega, neta, nstemp)
     !! Imaginary part of the dielectric function, Lorenzian broadening
     !
     ! Local variables
@@ -80,7 +80,7 @@
           DO ieta = 1, neta
             DO iw = 1, nomega
               i = i + 1
-                aux(i) = epsilon2_abs(ipol, iw, ieta, itemp)
+                aux(i) = epsilon2_abs_all(ipol, iw, ieta, itemp)
             ENDDO
           ENDDO
         ENDDO
@@ -90,14 +90,14 @@
           DO ieta = 1, neta
             DO iw = 1, nomega
               i = i + 1
-                aux(i) = epsilon2_abs_lorenz(ipol, iw, ieta, itemp)
+                aux(i) = epsilon2_abs_lorenz_all(ipol, iw, ieta, itemp)
             ENDDO
           ENDDO
         ENDDO
       ENDDO
-      CALL diropn(iuindabs, 'indabs_restart', leps_all, exst)
-      CALL davcio(aux, leps_all, iuindabs, 1, +1)
-      CLOSE(iuindabs)
+      CALL diropn(iuindabs_all, 'indabs_restart', leps_all, exst)
+      CALL davcio(aux, leps_all, iuindabs_all, 1, +1)
+      CLOSE(iuindabs_all)
     ENDIF
     !
     !----------------------------------------------------------------------------
@@ -105,14 +105,14 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
-    SUBROUTINE indabs_read(iq, totq, epsilon2_abs, epsilon2_abs_lorenz)
+    SUBROUTINE indabs_read(iq, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
     !----------------------------------------------------------------------
     !!
     !! Read indirect optical spectra
     !!
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, ionode_id
-    USE io_var,    ONLY : iuindabs
+    USE io_var,    ONLY : iuindabs_all
     USE constants_epw, ONLY : zero
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_world,  ONLY : mpime, world_comm
@@ -133,9 +133,9 @@
     !! Length of the vector
 !    INTEGER :: neta = 9
     !! Number of broadenings
-    REAL(KIND = DP), INTENT(out) :: epsilon2_abs(3, nomega, neta, nstemp)
+    REAL(KIND = DP), INTENT(out) :: epsilon2_abs_all(3, nomega, neta, nstemp)
     !! Imaginary part of the dielectric function
-    REAL(KIND = DP), INTENT(out) :: epsilon2_abs_lorenz(3, nomega, neta, nstemp)
+    REAL(KIND = DP), INTENT(out) :: epsilon2_abs_lorenz_all(3, nomega, neta, nstemp)
     !! Imaginary part of the dielectric function, Lorenzian broadening
     !
     ! Local variables
@@ -172,8 +172,8 @@
       IF (exst) THEN ! read the file
         !
         leps_all = 2 * 3 * nomega * neta * nstemp + 2
-        CALL diropn(iuindabs, 'indabs_restart', leps_all, exst)
-        CALL davcio(aux, leps_all, iuindabs, 1, -1)
+        CALL diropn(iuindabs_all, 'indabs_restart', leps_all, exst)
+        CALL davcio(aux, leps_all, iuindabs_all, 1, -1)
         !
         !
         ! First element is the iteration number
@@ -204,7 +204,7 @@
             ENDDO
           ENDDO
         ENDDO
-        CLOSE(iuindabs)
+        CLOSE(iuindabs_all)
       ENDIF
     ENDIF
     !
@@ -212,8 +212,8 @@
     !
     IF (exst) THEN
       CALL mp_bcast(iq, ionode_id, world_comm)
-      CALL mp_bcast(epsilon2_abs, ionode_id, world_comm)
-      CALL mp_bcast(epsilon2_abs_lorenz, ionode_id, world_comm)
+      CALL mp_bcast(epsilon2_abs_all, ionode_id, world_comm)
+      CALL mp_bcast(epsilon2_abs_lorenz_all, ionode_id, world_comm)
       !
       WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iq,'/', totq
     ENDIF

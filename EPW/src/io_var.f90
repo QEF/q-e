@@ -162,6 +162,7 @@
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
+  INTEGER :: iuindabs_all    = 302 ! Indirect absorption read/write
   ! 
   ! Miscellaneous (326-350)
   INTEGER :: epwbib          = 326 ! EPW bibliographic file.       
