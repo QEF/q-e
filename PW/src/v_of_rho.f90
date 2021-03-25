@@ -135,7 +135,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   END IF
   !
   IF (mbd_vdw) THEN
-    call mbd_interface(tau*alat,rho%of_r(:,1))
+    call mbd_interface() ! self-consistent but only up to TS level
   END IF
   !
   CALL stop_clock( 'v_of_rho' )

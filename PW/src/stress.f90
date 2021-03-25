@@ -22,7 +22,7 @@ SUBROUTINE stress( sigma )
   USE ldaU,             ONLY : lda_plus_u, U_projection
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
-  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, use_gpu
+  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw, use_gpu
   USE xc_lib,           ONLY : xclib_dft_is
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
@@ -33,6 +33,7 @@ SUBROUTINE stress( sigma )
   USE xdm_module,       ONLY : stress_xdm
   USE exx,              ONLY : exx_stress
   USE tsvdw_module,     ONLY : HtsvdW
+  USE libmbd_interface, ONLY : HmbdvdW
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
   USE gvect_gpum,       ONLY : g_d, gg_d
@@ -47,7 +48,7 @@ SUBROUTINE stress( sigma )
   REAL(DP) :: sigmakin(3,3),  sigmaloc(3,3), sigmahar(3,3),                &
               sigmaxc(3,3),   sigmaxcc(3,3), sigmaewa(3,3), sigmanlc(3,3), &
               sigmabare(3,3), sigmah(3,3),   sigmael(3,3),  sigmaion(3,3), &
-              sigmad23(3,3),  sigmaxdm(3,3), sigma_ts(3,3), &
+              sigmad23(3,3),  sigmaxdm(3,3), sigma_ts(3,3), sigma_mbd(3,3),&
               sigma_nonloc_dft(3,3), sigmaexx(3,3)
   REAL(DP) :: sigmaloclong(3,3)  ! for ESM stress
   INTEGER  :: l, m
@@ -173,7 +174,14 @@ SUBROUTINE stress( sigma )
   ! vdW dispersion contribution: Tkatchenko-Scheffler
   !
   sigma_ts = 0.0_DP
-  IF ( ts_vdw ) sigma_ts = -2.0_DP*alat*MATMUL( HtsvdW, TRANSPOSE(at) )/omega
+    ! vdW dispersion contribution: Many-Body Dispersion
+  !
+  sigma_mbd = 0.0_DP
+  IF ( mbd_vdw ) THEN
+    sigma_mbd = HmbdvdW ! already converted in the interface
+  ELSE IF ( ts_vdw ) THEN ! Written like this as mbd_vdw needs ts_vdw
+    sigma_ts = -2.0_DP*alat*MATMUL( HtsvdW, TRANSPOSE(at) )/omega
+  ENDIF
   !
   !   DFT-non_local contribution
   !
@@ -186,7 +194,7 @@ SUBROUTINE stress( sigma )
                sigmaxc(:,:)  + sigmaxcc(:,:) + sigmaewa(:,:) +  &
                sigmanlc(:,:) + sigmah(:,:)   + sigmael(:,:)  +  &
                sigmaion(:,:) + sigmad23(:,:) + sigmaxdm(:,:) + &
-               sigma_nonloc_dft(:,:) + sigma_ts(:,:)
+               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:)
   !
   IF (xclib_dft_is('hybrid')) THEN
      sigmaexx = exx_stress()
@@ -226,7 +234,8 @@ SUBROUTINE stress( sigma )
      (sigmad23(l,1)*ry_kbar,sigmad23(l,2)*ry_kbar,sigmad23(l,3)*ry_kbar, l=1,3), &
      (sigmaxdm(l,1)*ry_kbar,sigmaxdm(l,2)*ry_kbar,sigmaxdm(l,3)*ry_kbar, l=1,3), &
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3),&
-     (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3)
+     (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3), &
+     (sigma_mbd(l,1)*ry_kbar,sigma_mbd(l,2)*ry_kbar,sigma_mbd(l,3)*ry_kbar, l=1,3)
 
   IF ( xclib_dft_is('hybrid') .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
