@@ -73,7 +73,7 @@ MODULE libmbd_interface
   IF( .NOT.vdw_isolated ) THEN
     inp%lattice_vectors = at*alat  ! Lattice vector in real space
   !                            !HK-TODO: cell vectors at (in PW) and h (in CP, note the transpose relationship)
-    !inp%k_grid = [7, 6, 5] the k points grid is not needed to be the same as for the PW calculation, but it would help the convergence (TODO)
+    inp%k_grid = [1, 1, 1] !the k points grid is not needed to be the same as for the PW calculation, but it would help the convergence (TODO)
   ENDIF
 
   select case (TRIM(get_dft_short()))  ! An empirical factor needs to be set based on the functiona
