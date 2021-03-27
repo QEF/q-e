@@ -82,8 +82,6 @@ $ECHO
 
 # self-consistent calculation
 cat > pt.scf.in << EOF
-Pt
-Pt
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
@@ -122,8 +120,6 @@ $ECHO " done"
 
 # a non self-consistent calculation
 cat > pt.nscf.in << EOF
-Pt
-Pt
  &control
     calculation = 'nscf'
     restart_mode='from_scratch',
@@ -190,7 +186,7 @@ cat > pt.pdos.in << EOF
  /
 EOF
 
-$ECHO "  running projuected DOS for Pt with spin-orbit ...\c"
+$ECHO "  running projected DOS for Pt with spin-orbit ...\c"
 $PDOS_COMMAND -in pt.pdos.in > pt.pdos.out
 check_failure $?
 $ECHO " done"

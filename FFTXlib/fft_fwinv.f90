@@ -11,15 +11,15 @@ SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
   !! Compute G-space to R-space for a specific grid type
   !! 
   !! **fft_kind = 'Rho'** : 
-  !!   inverse fourier transform of potentials and charge density f
+  !!   inverse (backward) fourier transform of potentials and charge density f
   !!   On output, f is overwritten
   !! 
   !! **fft_kind = 'Wave'** :
-  !!   inverse fourier transform of  wave functions f
+  !!   inverse (backward) fourier transform of  wave functions f
   !!   On output, f is overwritten
   !!
   !! **fft_kind = 'tgWave'** :
-  !!   inverse fourier transform of  wave functions f with task group
+  !!   inverse (backward) fourier transform of  wave functions f with task group
   !!   On output, f is overwritten
   !!
   !! **dfft = FFT grid descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
@@ -311,15 +311,15 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   !! Compute G-space to R-space for a specific grid type
   !! 
   !! **fft_kind = 'Rho'** : 
-  !!   inverse fourier transform of potentials and charge density f
+  !!   inverse (backward) fourier transform of potentials and charge density f
   !!   On output, f is overwritten
   !! 
   !! **fft_kind = 'Wave'** :
-  !!   inverse fourier transform of  wave functions f
+  !!   inverse (backward) fourier transform of  wave functions f
   !!   On output, f is overwritten
   !!
   !! **fft_kind = 'tgWave'** :
-  !!   inverse fourier transform of  wave functions f with task group
+  !!   inverse (backward) fourier transform of  wave functions f with task group
   !!   On output, f is overwritten
   !!
   !! **dfft = FFT grid descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
