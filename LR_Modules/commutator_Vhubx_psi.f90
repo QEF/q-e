@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE commutator_Vhubx_psi(ik, ipol)
+SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the commutator between the non-local
@@ -25,14 +25,12 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE kinds,          ONLY : DP
   USE io_files,       ONLY : iunhub, iunhub_noS, nwordwfcU
   USE wavefunctions,  ONLY : evc
-  USE control_lr,     ONLY : nbnd_occ
   USE wvfct,          ONLY : npwx, nbnd
   USE ions_base,      ONLY : nat, ityp, ntyp => nsp
   USE ldaU,           ONLY : Hubbard_l, Hubbard_U, Hubbard_J0, &
                              is_hubbard, nwfcU, offsetU, oatwfc
   USE uspp,           ONLY : vkb, nkb, okvan
   USE uspp_param,     ONLY : nh, upf
-  USE eqv,            ONLY : dpsi
   USE lsda_mod,       ONLY : lsda, current_spin, isk, nspin
   USE klist,          ONLY : xk, ngk, igk_k
   USE cell_base,      ONLY : tpiba, at
@@ -42,12 +40,18 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE mp_pools,       ONLY : intra_pool_comm
   USE buffers,        ONLY : get_buffer
   USE basis,          ONLY : natomwfc
+  USE noncollin_module, ONLY : noncolin, npol
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ik, ipol
-  ! k point index
-  ! polarization (crystal units)
+  INTEGER, INTENT(IN) :: ik
+  !! k point index
+  INTEGER, INTENT(IN) :: ipol
+  !! polarization in crystal coordinates
+  INTEGER, INTENT(IN) :: nbnd_calc
+  !! Number of bands to calculate [V_hub, x_ipol]|psi_ik>
+  COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol, nbnd)
+  !! Output wavefunction where [V_hub, x_ipol]|psi_ik> is added
   !
   REAL(DP), PARAMETER :: eps = 1.0d-8
   INTEGER     :: na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
@@ -213,7 +217,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
               CALL vecqqproj (npw, dkvkb, vkb, wfcatomk(:,ihubst), dpqq38(:,ihubst))
               CALL vecqqproj (npw, vkb, dkvkb, wfcatomk(:,ihubst), dpqq47(:,ihubst))
               !
-              DO ibnd = 1, nbnd_occ(ik)
+              DO ibnd = 1, nbnd_calc
                  proj3(ibnd,ihubst) = zdotc (npw, dpqq26(:,ihubst), 1, evc(:,ibnd), 1) + &
                                       zdotc (npw, dpqq47(:,ihubst), 1, evc(:,ibnd), 1) + &
                                       zdotc (npw, dpqq38(:,ihubst), 1, evc(:,ibnd), 1)
@@ -221,7 +225,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
               !
            ENDIF
            !
-           DO ibnd = 1, nbnd_occ(ik)
+           DO ibnd = 1, nbnd_calc
               !
               ! Calculate proj (ihubst,ibnd) = < S_{k}\phi_(k,I,m)| psi(ibnd,ik) >
               ! at ihubst (i.e. I, m).
@@ -272,13 +276,13 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                   !
                   nsaux = rho%ns(m1, m2, current_spin, nah)
                   !
-                  DO ibnd = 1, nbnd_occ(ik)
+                  DO ibnd = 1, nbnd_calc
                      trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + &     ! term_1234
                                    swfcatomk(:,ihubst1) * proj2(ibnd,ihubst2) ! term 5
                   ENDDO
                   !
                   IF (okvan) THEN
-                     DO ibnd = 1, nbnd_occ(ik)
+                     DO ibnd = 1, nbnd_calc
                         trm(:,ibnd) = trm(:,ibnd) + swfcatomk(:,ihubst1) * &
                                                     proj3(ibnd,ihubst2) ! term_6+7+8
                      ENDDO
@@ -286,7 +290,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                   !
                   ! termi (npwx,nbnd), trm (npwx,nbnd), summing for all bands and G vectors
                   !
-                  DO ibnd = 1, nbnd_occ(ik)
+                  DO ibnd = 1, nbnd_calc
                      IF (m1 == m2) termi(:,ibnd) = termi(:,ibnd) + 0.5d0 * trm(:,ibnd)
                      termi(:,ibnd) = termi(:,ibnd) - nsaux * trm(:,ibnd)
                   ENDDO
@@ -297,7 +301,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
             !
             ! We want to have -i d/dk
             !
-            DO ibnd = 1, nbnd_occ(ik)
+            DO ibnd = 1, nbnd_calc
                dpsi(:,ibnd) = dpsi(:,ibnd) + (0.d0,-1.d0) * termi(:,ibnd) * &
                                              (Hubbard_U(nt) - Hubbard_J0(nt))
             ENDDO
@@ -332,13 +336,13 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                      !
                      nsaux = rho%ns(m1, m2, op_spin, nah)
                      !
-                     DO ibnd = 1, nbnd_occ(ik)
+                     DO ibnd = 1, nbnd_calc
                         trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + & ! term_1234
                                       swfcatomk(:,ihubst1) * proj2(ibnd,ihubst2) ! term 5
                      ENDDO
                      !
                      IF (okvan) THEN
-                        DO ibnd = 1, nbnd_occ(ik)
+                        DO ibnd = 1, nbnd_calc
                            trm(:,ibnd) = trm(:,ibnd) + swfcatomk(:,ihubst1) &
                                                      * proj3(ibnd,ihubst2)  ! term_6+7+8
                         ENDDO
@@ -346,7 +350,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                      !
                      ! termi (npwx,nbnd), trm (npwx,nbnd), summing for all bands and G vectors
                      !
-                     DO ibnd = 1, nbnd_occ(ik)
+                     DO ibnd = 1, nbnd_calc
                         termi(:,ibnd) = termi(:,ibnd) + nsaux * trm(:,ibnd) ! sign change
                      ENDDO
                      !
@@ -356,7 +360,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                !
                ! We want to have -i d/dk
                !
-               DO ibnd = 1, nbnd_occ(ik)
+               DO ibnd = 1, nbnd_calc
                   dpsi(:,ibnd) = dpsi(:,ibnd) + (0.d0,-1.d0) * termi(:,ibnd) * Hubbard_J0(nt)
                ENDDO
                !
