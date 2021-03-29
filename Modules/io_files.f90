@@ -85,6 +85,8 @@ MODULE io_files
   !! unit for saving mixing information
   INTEGER :: iunwfc_exx  = 16
   !! unit with exx wavefunctions
+  INTEGER :: iunhub_noS  = 17
+  !! unit for saving Hubbard-U atomic wfcs
   !
   INTEGER :: iunexit     = 26
   !! unit for a soft exit  
