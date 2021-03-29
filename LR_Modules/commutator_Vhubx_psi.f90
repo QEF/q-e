@@ -23,7 +23,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   ! Modified by I. Timrov (01.10.2018)
   !
   USE kinds,          ONLY : DP
-  USE io_files,       ONLY : nwordwfcU
+  USE io_files,       ONLY : iunhub, iunhub_noS, nwordwfcU
   USE wavefunctions,  ONLY : evc
   USE control_lr,     ONLY : lgamma, nbnd_occ
   USE wvfct,          ONLY : npwx, nbnd
@@ -40,7 +40,6 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
   USE mp_pools,       ONLY : intra_pool_comm
-  USE units_lr,       ONLY : iuatwfc, iuatswfc
   USE buffers,        ONLY : get_buffer
   USE basis,          ONLY : natomwfc
   !
@@ -95,8 +94,8 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   ! 
   IF (lsda) THEN
     current_spin = isk(ik)
-    if (nspin.eq.2) then
-       if (current_spin.eq.1) then
+    if (nspin == 2) then
+       if (current_spin == 1) then
           op_spin = 2
        else
           op_spin = 1
@@ -106,13 +105,13 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
     endif
   ENDIF
   !
-  ! Read the atomic orbitals \phi at k from file (unit iuatwfc)
+  ! Read the atomic orbitals \phi at k from file (unit iunhub_noS)
   ! 
-  CALL get_buffer (wfcatomk, nwordwfcU, iuatwfc, ik)
+  CALL get_buffer (wfcatomk, nwordwfcU, iunhub_noS, ik)
   !
-  ! Read S*\phi at k from file (unit iuatswfc)
+  ! Read S*\phi at k from file (unit iunhub)
   !
-  CALL get_buffer (swfcatomk, nwordwfcU, iuatswfc, ik)
+  CALL get_buffer (swfcatomk, nwordwfcU, iunhub, ik)
   !
   ! Derivatives w.r.t. k of the atomic wfc 
   ! \phi'_(k+G,I,m)_ipol> = exp^-i(k+G)*tau_I * d/dk_ipol[\phi_0(k+G,I,m)]
@@ -238,11 +237,9 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
      !
   ENDDO
   !
-#if defined(__MPI)
   CALL mp_sum(proj1, intra_pool_comm)
   CALL mp_sum(proj2, intra_pool_comm)
   CALL mp_sum(proj3, intra_pool_comm)
-#endif
   !
   DO nah = 1, nat   ! the Hubbard atom 
      !
