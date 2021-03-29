@@ -25,7 +25,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE kinds,          ONLY : DP
   USE io_files,       ONLY : iunhub, iunhub_noS, nwordwfcU
   USE wavefunctions,  ONLY : evc
-  USE control_lr,     ONLY : lgamma, nbnd_occ
+  USE control_lr,     ONLY : nbnd_occ
   USE wvfct,          ONLY : npwx, nbnd
   USE ions_base,      ONLY : nat, ityp, ntyp => nsp
   USE ldaU,           ONLY : Hubbard_l, Hubbard_U, Hubbard_J0, &
