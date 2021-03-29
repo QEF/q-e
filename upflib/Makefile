@@ -25,12 +25,12 @@ radial_grids.o \
 read_cpmd.o \
 read_fhi.o \
 read_ncpp.o \
+read_ps.o \
 read_upf_new.o \
 read_upf_v1.o \
 read_uspp.o \
 splinelib.o \
 simpsn.o \
-upf.o \
 upf_auxtools.o \
 upf_const.o \
 upf_error.o \
