@@ -7,8 +7,8 @@ Optimization)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 ## USAGE
-
-Quick installation instructions for the impatient, using "make":
+Quick installation instructions for the impatient. Go to the directory 
+where this file is. Using "make"
 (`[]` means "optional"):
 ```
 ./configure [options]
