@@ -386,10 +386,7 @@ CONTAINS
       integer :: iun, ierr
       character(256) :: str
       logical :: icopy, exists
-      integer, external  :: find_free_unit
 
-      iun =  find_free_unit()
-      !
       INQUIRE(FILE=trim(filename), EXIST=exists)
       !
       IF(.not.exists) THEN
@@ -397,7 +394,7 @@ CONTAINS
         &             TRIM(filename) // '" not found', 1)
       ENDIF
       !
-      open(iun,FILE=trim(filename),status="old", IOSTAT=ierr)
+      open(NEWUNIT=iun,FILE=trim(filename),status="old", IOSTAT=ierr)
       !
       icopy=.false.
       copy_loop: do

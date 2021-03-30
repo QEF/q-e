@@ -56,7 +56,6 @@ CONTAINS
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     CHARACTER(LEN=3)           :: env_maxdepth
     INTEGER :: ios, crashunit, max_depth 
-    INTEGER, EXTERNAL :: find_free_unit
 
 
     ! ... The Intel compiler allocates a lot of stack space
@@ -94,8 +93,7 @@ CONTAINS
 
        INQUIRE( FILE=TRIM(crash_file), EXIST=exst )
        IF( exst ) THEN
-          crashunit = find_free_unit()
-          OPEN( UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
+          OPEN( NEWUNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
           IF (ios==0) THEN
              CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=ios )
           ELSE
