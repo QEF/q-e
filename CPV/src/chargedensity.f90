@@ -52,7 +52,6 @@
       USE ions_base,          ONLY: nat
       USE gvect,              ONLY: gstart, ig_l2g
       USE smallbox_gvec,      ONLY: ngb
-      USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
       USE cell_base,          ONLY: omega
       USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp, f_d
