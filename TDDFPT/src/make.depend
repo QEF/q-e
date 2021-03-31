@@ -69,6 +69,7 @@ lr_apply_liouvillian.o : lr_exx_kernel.o
 lr_apply_liouvillian.o : lr_variables.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_interfaces.o
+lr_apply_liouvillian_eels.o : ../../LR_Modules/apply_dpot_mod.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/dv_of_drho.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/lrcom.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_base.o
@@ -504,6 +505,7 @@ lr_solve_e.o : ../../upflib/uspp.o
 lr_solve_e.o : lr_variables.o
 lr_sternheimer.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_sternheimer.o : ../../FFTXlib/fft_interfaces.o
+lr_sternheimer.o : ../../LR_Modules/apply_dpot_mod.o
 lr_sternheimer.o : ../../LR_Modules/dv_of_drho.o
 lr_sternheimer.o : ../../LR_Modules/lr_sym_mod.o
 lr_sternheimer.o : ../../LR_Modules/lrcom.o
