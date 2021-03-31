@@ -178,7 +178,7 @@ SUBROUTINE stress( sigma )
   !
   sigma_mbd = 0.0_DP
   IF ( mbd_vdw ) THEN
-    sigma_mbd = HmbdvdW ! already converted in the interface
+    sigma_mbd = -2.0_DP*alat*MATMUL( HmbdvdW, TRANSPOSE(at) )/omega
   ELSE IF ( ts_vdw ) THEN ! Written like this as mbd_vdw needs ts_vdw
     sigma_ts = -2.0_DP*alat*MATMUL( HtsvdW, TRANSPOSE(at) )/omega
   ENDIF

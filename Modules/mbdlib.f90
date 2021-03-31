@@ -18,7 +18,7 @@ MODULE libmbd_interface
   USE io_global,        ONLY : stdout 
   USE tsvdw_module,     ONLY : veff_pub, vfree_pub, vdw_isolated
   USE ions_base,        ONLY : nat, atm, zv, tau, taui, ntyp => nsp, ityp
-  USE cell_base,        ONLY : alat, at, bg, omega  ! at: lattice vectors in real space
+  USE cell_base,        ONLY : alat, at, bg, omega, ainv
   USE funct,            ONLY : get_dft_short
   USE control_flags,    ONLY : conv_elec
   USE constants,        ONLY : ry_kbar
@@ -31,7 +31,8 @@ MODULE libmbd_interface
   REAL(dp), PUBLIC:: EmbdvdW  ! MBD correction to the energy
   REAL(dp), DIMENSION(:,:), ALLOCATABLE, PUBLIC:: FmbdvdW  ! Ionic force contribs. (-dE/dr)
   REAL(dp), DIMENSION(3, 3),             PUBLIC:: HmbdvdW  ! Cell derivative contribs. (-dE/da)
-  REAL(dp), DIMENSION(3, 3),             PUBLIC:: mbdstress  ! Cell derivative contribs. (-dE/da)
+  REAL(dp), DIMENSION(3, 3)                    :: omega_mbd_stress_hartree
+
 
   INTEGER:: na
   TYPE(mbd_input_t):: inp
@@ -130,8 +131,8 @@ MODULE libmbd_interface
   !
 
   IF(tforces .OR. tstress .AND. .NOT.vdw_isolated ) THEN
-    CALL calc%get_lattice_stress(mbdstress)
-    HmbdvdW=-2.0d0*mbdstress/omega ! conversion to rydberg
+    CALL calc%get_lattice_stress(omega_mbd_stress_hartree)
+    HmbdvdW=-MATMUL(omega_mbd_stress_hartree, TRANSPOSE(ainv)) 
   ENDIF
 
   RETURN
