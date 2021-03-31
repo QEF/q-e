@@ -31,7 +31,7 @@ MODULE libmbd_interface
   REAL(dp), PUBLIC:: EmbdvdW  ! MBD correction to the energy
   REAL(dp), DIMENSION(:,:), ALLOCATABLE, PUBLIC:: FmbdvdW  ! Ionic force contribs. (-dE/dr)
   REAL(dp), DIMENSION(3, 3),             PUBLIC:: HmbdvdW  ! Cell derivative contribs. (-dE/da)
-  REAL(dp), DIMENSION(3, 3)                    :: omega_mbd_stress_hartree
+  REAL(dp), DIMENSION(3, 3)                    :: cell_derivs
 
 
   INTEGER:: na
@@ -131,8 +131,8 @@ MODULE libmbd_interface
   !
 
   IF(tforces .OR. tstress .AND. .NOT.vdw_isolated ) THEN
-    CALL calc%get_lattice_stress(omega_mbd_stress_hartree)
-    HmbdvdW=-MATMUL(omega_mbd_stress_hartree, TRANSPOSE(ainv)) 
+    CALL calc%get_lattice_stress(cell_derivs)
+    HmbdvdW=MATMUL(cell_derivs, TRANSPOSE(ainv)) 
   ENDIF
 
   RETURN
