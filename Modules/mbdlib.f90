@@ -73,7 +73,6 @@ MODULE libmbd_interface
   !
   IF( .NOT.vdw_isolated ) THEN
     inp%lattice_vectors = at*alat  ! Lattice vector in real space
-  !                            !HK-TODO: cell vectors at (in PW) and h (in CP, note the transpose relationship)
     inp%k_grid = [1, 1, 1] !the k points grid is not needed to be the same as for the PW calculation, but it would help the convergence (TODO)
   ENDIF
 
@@ -109,6 +108,8 @@ MODULE libmbd_interface
 
   IF (.NOT.conv_elec) RETURN ! Wavefunction derivatives are still in progress,
 !for now we only can add correction for converged wavefunction
+ CALL infomsg('mbdlib','MBD wavefunction derivatives not yet supported. '//&
+  & 'Performing non-self-consistent MBD calculation upon SCF convergence.') 
 
   !
   ! Passing the current parameters to the library
