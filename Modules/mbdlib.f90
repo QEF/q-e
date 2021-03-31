@@ -58,7 +58,7 @@ MODULE libmbd_interface
   IF(tforces .OR. tstress .AND. .NOT.ALLOCATED(FmbdvdW)) ALLOCATE(FmbdvdW(3, nat))
   ALLOCATE(ratios(nat))
 
-
+  inp%log_level=1
   !
   ! Passing atom types and coordinates for LibMBD
   !
