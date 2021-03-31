@@ -27,7 +27,6 @@ PROGRAM upfconv
   !
   USE pseudo_types, ONLY : pseudo_upf, deallocate_pseudo_upf
   USE casino_pp,    ONLY : conv_upf2casino, write_casino_tab
-  USE upf_module,   ONLY : read_ps
   USE write_upf_new,ONLY : write_upf
   !
   IMPLICIT NONE

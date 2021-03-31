@@ -21,7 +21,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE gvect_gpum,       ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
   USE klist,            ONLY : xk, ngk, igk_k_d !, igk_k
   USE wvfct,            ONLY : npwx
-  USE uspp_param,       ONLY : upf
+  USE uspp_param,       ONLY : upf, nwfcm
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,         ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                                starting_spin_angle
@@ -36,7 +36,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   ! ... local variables
   !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-             i0, i1, i2, i3, nwfcm, npw
+             i0, i1, i2, i3, npw
   COMPLEX(DP) :: kphase, lphase
   REAL(DP)    :: arg, px, ux, vx, wx
   INTEGER     :: mil1, mil2, mil3
@@ -58,7 +58,6 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
      lmax_wfc = MAX( lmax_wfc, MAXVAL( upf(nt)%lchi(1:upf(nt)%nwfc) ) )
   END DO
   !
-  nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
   npw = ngk(ik)
   !
   ALLOCATE( ylm_d(npw,(lmax_wfc+1)**2), gk_d(3,npw), qg_d(npw) )

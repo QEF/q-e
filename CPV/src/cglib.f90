@@ -90,7 +90,7 @@
       use kinds, only: dp
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
       use uspp_param, only: nh, upf
-      use uspp, only :nkb, nkbus, qq_nt, indv_ijkb0
+      use uspp, only : nkb, qq_nt, indv_ijkb0
       use gvecw, only: ngw
       use ions_base, only: nat, ityp
       USE cp_main_variables, ONLY: idesc
@@ -338,7 +338,7 @@ subroutine pc2(a,beca,b,becb)
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh, upf
-      use uspp, only :nkb,qq_nt,nkbus, indv_ijkb0
+      use uspp, only :nkb,qq_nt, indv_ijkb0
       use io_global, ONLY: ionode, ionode_id
 
       implicit none

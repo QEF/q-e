@@ -11,8 +11,6 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
-      USE uspp,           ONLY : nkb, nkbus
-      USE uspp,           ONLY : qq_nt
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
@@ -153,7 +151,7 @@ CONTAINS
 !     on output: bec(i) is recalculated
 !
       USE ions_base,      ONLY: na, nat, ityp
-      USE uspp,           ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp,           ONLY: qq_nt, indv_ijkb0
       USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw

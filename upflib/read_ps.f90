@@ -1,31 +1,14 @@
-! Copyright (C) 2008 Quantum ESPRESSO group
+!
+! Copyright (C) 2008-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!=----------------------------------------------------------------------------=!
-      MODULE upf_module
-!=----------------------------------------------------------------------------=!
-!! author: Unknown 
-!! this module handles reading of unified pseudopotential format (UPF)
-!! in either v1 or v2 or schema format.
-!! @Note
-!! 14/11/17 Pietro Delugas: new revision passed from iotk to FoX lib,
-!!                          added support for new schema format
-      !
-      USE upf_kinds,           ONLY: DP
-      !
-      IMPLICIT NONE
-      PRIVATE
-      PUBLIC :: read_ps
-      !
-    CONTAINS
-      !
 SUBROUTINE read_ps ( filein, upf_in )
   !
-  ! stripped-down version of readpp in Modules/read_pseudo.f90:
-  ! for serial execution only
+  ! stripped-down version of readpp in Modules/read_pseudo.f90
+  ! for serial execution only and for usage in conversion codes
   !
   USE read_upf_v1_module, ONLY: read_upf_v1
   USE read_upf_new_module,ONLY: read_upf_new
@@ -128,7 +111,3 @@ SUBROUTINE read_ps ( filein, upf_in )
   !
   RETURN
 END SUBROUTINE read_ps
-!=----------------------------------------------------------------------------=!
-      END MODULE upf_module
-!=----------------------------------------------------------------------------=!
-

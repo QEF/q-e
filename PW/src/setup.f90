@@ -218,7 +218,7 @@ SUBROUTINE setup()
   !
   !  Set the different spin indices
   !
-  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+  CALL set_spin_vars( lsda, noncolin, domag, &
          npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
   !
   ! time reversal operation is set up to 0 by default
