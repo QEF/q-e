@@ -22,11 +22,10 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    USE kinds,       ONLY : DP
    USE uspp_param,  ONLY : nh
    USE ions_base,   ONLY : ityp
-   USE uspp,        ONLY : qq_nt
+   USE uspp,        ONLY : qq_nt, indv_ijkb0
    USE wvfct,       ONLY : npwx, nbnd
    USE mp_pools,    ONLY : intra_pool_comm
    USE mp,          ONLY : mp_sum
-   USE control_lr,  ONLY : ofsbeta
    !
    IMPLICIT NONE
    !
@@ -57,7 +56,7 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    !
    DO l1 = 1, nh(nt)
       ! 
-      ibeta1 = ofsbeta(na) + l1
+      ibeta1 = indv_ijkb0(na) + l1
       !     
       ! Calculate: projvec1vec2(ibnd) = < vec1(ibnd) | vec2 > for each l1 
       !
@@ -74,7 +73,7 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
       ! aux1 = \sum_l2 qq_nt(l1,l2,nt) * |vec3_(na,l2)>
       !
       DO l2 = 1, nh(nt)
-         ibeta2 = ofsbeta(na) + l2
+         ibeta2 = indv_ijkb0(na) + l2
          aux1(:) = aux1(:) + qq_nt(l1,l2,nt) * vec3(:,ibeta2)    
       ENDDO
       !
@@ -112,11 +111,10 @@ SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq)
    USE kinds,      ONLY : DP
    USE uspp_param, ONLY : nh
    USE ions_base,  ONLY : ityp
-   USE uspp,       ONLY : qq_nt
+   USE uspp,       ONLY : qq_nt, indv_ijkb0
    USE wvfct,      ONLY : npwx, nbnd
    USE mp_pools,   ONLY : intra_pool_comm
    USE mp,         ONLY : mp_sum
-   USE control_lr, ONLY : ofsbeta
    !
    IMPLICIT NONE
    !
@@ -145,12 +143,12 @@ SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq)
    !
    DO l1 = 1, nh(nt)
       ! 
-      ibeta1 = ofsbeta(na) + l1
+      ibeta1 = indv_ijkb0(na) + l1
       !
       aux1 = (0.d0, 0.d0)
       !
       DO l2 = 1, nh(nt)
-         ibeta2 = ofsbeta(na) + l2
+         ibeta2 = indv_ijkb0(na) + l2
          aux1(:) = aux1(:) + qq_nt(l1,l2,nt) * vec3(:,ibeta2)    
       ENDDO
       !
@@ -316,11 +314,10 @@ SUBROUTINE term_one (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     !--------------------------------------------------------------------
     ! 
     USE kinds,      ONLY : DP
-    USE uspp,       ONLY : nkb, okvan
+    USE uspp,       ONLY : nkb, okvan, indv_ijkb0
     USE wvfct,      ONLY : npwx, nbnd, wg 
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : ityp
-    USE control_lr, ONLY : ofsbeta
     USE ldaU_ph,    ONLY : proj1, projpb, projpdb
     USE klist,      ONLY : ngk, igk_k
     USE qpoint,     ONLY : ikks, ikqs
@@ -448,7 +445,7 @@ SUBROUTINE term_one (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
           !
           DO l = 1, nh(nt)
              !
-             ibeta = ofsbeta(na) + l
+             ibeta = indv_ijkb0(na) + l
              !     
              ! Calculate the 2nd derivative of the beta functions for 
              ! all l states of atom na 
@@ -506,11 +503,10 @@ SUBROUTINE term_one_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     !------------------------------------------------------------------------
     ! 
     USE kinds,      ONLY : DP
-    USE uspp,       ONLY : nkb, okvan
+    USE uspp,       ONLY : nkb, okvan, indv_ijkb0
     USE wvfct,      ONLY : npwx, nbnd, wg 
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : ityp
-    USE control_lr, ONLY : ofsbeta
     USE ldaU_ph,    ONLY : proj1, projpb, projpdb
     USE klist,      ONLY : ngk, igk_k
     USE qpoint,     ONLY : ikks, ikqs
@@ -628,7 +624,7 @@ SUBROUTINE term_one_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
           !
           DO l = 1,  nh(nt)
              !
-             ibeta = ofsbeta(na) + l
+             ibeta = indv_ijkb0(na) + l
              !     
              ! Calculate the 2nd derivative of the beta functions 
              ! for all l states of atom na 

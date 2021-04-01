@@ -38,14 +38,13 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : nh, nhm
   USE ions_base,  ONLY : nat, ityp
-  USE uspp,       ONLY : nkb, qq_nt, okvan
+  USE uspp,       ONLY : nkb, qq_nt, okvan, indv_ijkb0
   USE ldaU,       ONLY : nwfcU
   USE wvfct,      ONLY : npwx
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum 
   USE klist,      ONLY : ngk
   USE io_global,  ONLY : stdout
-  USE control_lr, ONLY : ofsbeta 
   !  
   IMPLICIT NONE
   !
@@ -101,8 +100,8 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
         ! Scalar products in the m3 m4 sum  
         !
         DO ih = 1, nh(nt)
-           sc1(ih) = ZDOTC (npw, vkb_(:,ih+ofsbeta(na)),  1, wfcatomk_(:,ihubst), 1)
-           sc2(ih) = ZDOTC (npw, dvkb_(:,ih+ofsbeta(na)), 1, wfcatomk_(:,ihubst), 1)
+           sc1(ih) = ZDOTC (npw, vkb_(:,ih+indv_ijkb0(na)),  1, wfcatomk_(:,ihubst), 1)
+           sc2(ih) = ZDOTC (npw, dvkb_(:,ih+indv_ijkb0(na)), 1, wfcatomk_(:,ihubst), 1)
         ENDDO
         !
         CALL mp_sum(sc1, intra_pool_comm)
@@ -124,8 +123,8 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
         DO m3 = 1, nh(nt)
            DO m4 = 1, nh(nt)  
               DO ig = 1, npwq
-                 aux1(ig) = dvkbkpq_(ig,m3+ofsbeta(na)) * qq_nt(m3,m4,nt) * sc1(m4)
-                 aux2(ig) =  vkbkpq_(ig,m3+ofsbeta(na)) * qq_nt(m3,m4,nt) * sc2(m4)
+                 aux1(ig) = dvkbkpq_(ig,m3+indv_ijkb0(na)) * qq_nt(m3,m4,nt) * sc1(m4)
+                 aux2(ig) =  vkbkpq_(ig,m3+indv_ijkb0(na)) * qq_nt(m3,m4,nt) * sc2(m4)
                  dqsphi(ig,ihubst) = dqsphi(ig,ihubst) + aux1(ig) + aux2(ig)
               ENDDO
            ENDDO
@@ -148,8 +147,8 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
         ! Scalar products in the m3 m4 sum
         !
         DO ih = 1, nh(nt)
-           sc1(ih) = ZDOTC (npwq, vkbkpq_(:,ih+ofsbeta(na)),  1, wfcatomkpq_(:,ihubst), 1)
-           sc2(ih) = ZDOTC (npwq, dvkbkpq_(:,ih+ofsbeta(na)), 1, wfcatomkpq_(:,ihubst), 1)
+           sc1(ih) = ZDOTC (npwq, vkbkpq_(:,ih+indv_ijkb0(na)),  1, wfcatomkpq_(:,ihubst), 1)
+           sc2(ih) = ZDOTC (npwq, dvkbkpq_(:,ih+indv_ijkb0(na)), 1, wfcatomkpq_(:,ihubst), 1)
         ENDDO
         !
         CALL mp_sum(sc1, intra_pool_comm)
@@ -171,8 +170,8 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
         DO m3 = 1, nh(nt)
            DO m4 = 1, nh(nt)
               DO ig = 1, npw  
-                 aux1(ig) = dvkb_(ig,m3+ofsbeta(na)) * qq_nt(m3,m4,nt) * sc1(m4)
-                 aux2(ig) =  vkb_(ig,m3+ofsbeta(na)) * qq_nt(m3,m4,nt) * sc2(m4)
+                 aux1(ig) = dvkb_(ig,m3+indv_ijkb0(na)) * qq_nt(m3,m4,nt) * sc1(m4)
+                 aux2(ig) =  vkb_(ig,m3+indv_ijkb0(na)) * qq_nt(m3,m4,nt) * sc2(m4)
                  dmqsphi(ig,ihubst) = dmqsphi(ig,ihubst) + aux1(ig) + aux2(ig)
                  !
               ENDDO

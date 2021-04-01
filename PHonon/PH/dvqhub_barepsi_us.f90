@@ -47,9 +47,9 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             proj1, proj2, dnsbare, effU 
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp,          ONLY : vkb,nkb 
+  USE uspp,          ONLY : vkb, nkb, indv_ijkb0
   USE qpoint,        ONLY : nksq, ikks, ikqs
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatwfc, iuatswfc
   USE uspp_param,    ONLY : nh
   USE lsda_mod,      ONLY : lsda, current_spin, isk
@@ -133,7 +133,7 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
         nt = ityp(na) 
         DO ih = 1, nh(nt)
            !
-           ibeta = ofsbeta(na) + ih
+           ibeta = indv_ijkb0(na) + ih
            !
            CALL dwfc (npw, igk_k(1,ikk), ikk, icart, &
                       vkb_(:,ibeta), dvkb(:,ibeta,icart))
