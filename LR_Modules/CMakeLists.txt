@@ -26,7 +26,6 @@ set(sources
     dv_rVV10.f90
     newdq.f90
     orthogonalize.f90
-    setup_offset_beta.f90
     setup_nscf.f90
     set_dbecsum_nc.f90
     set_int3_nc.f90

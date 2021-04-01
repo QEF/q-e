@@ -40,7 +40,6 @@ compute_intq.o \
 set_intq_nc.o \
 lr_sym_mod.o \
 orthogonalize.o \
-setup_offset_beta.o \
 setup_nscf.o \
 set_dbecsum_nc.o \
 set_int3_nc.o \

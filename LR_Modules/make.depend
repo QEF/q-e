@@ -443,9 +443,6 @@ setup_nscf.o : ../PW/src/symm_base.o
 setup_nscf.o : ../PW/src/tetra.o
 setup_nscf.o : ../upflib/upf_ions.o
 setup_nscf.o : lrcom.o
-setup_offset_beta.o : ../Modules/ions_base.o
-setup_offset_beta.o : ../upflib/uspp.o
-setup_offset_beta.o : lrcom.o
 sgam_lr.o : ../Modules/kind.o
 smallgq.o : ../Modules/cell_base.o
 smallgq.o : ../Modules/kind.o
