@@ -16,7 +16,7 @@ SUBROUTINE init_run()
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       force_pairing, use_para_diag
+                                       mbd_vdw, force_pairing, use_para_diag
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -161,6 +161,12 @@ SUBROUTINE init_run()
   !=======================================================================
   !
   IF (ts_vdw) CALL tsvdw_initialize()
+  ! 
+  !=======================================================================
+  !     MBD is not implemented yet in CP, only in PW
+  !=======================================================================
+  !
+  IF (mbd_vdw) CALL errore('init_run','mbd_vdw not yet supported for CP',1)
   !
   !=======================================================================
   !     Initialization of the exact exchange code (exx_module)

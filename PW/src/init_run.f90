@@ -31,6 +31,7 @@ SUBROUTINE init_run()
   USE dfunct,             ONLY : newd
   USE esm,                ONLY : do_comp_esm, esm_init
   USE tsvdw_module,       ONLY : tsvdw_initialize
+  USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE lsda_mod,           ONLY : nspin
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
@@ -129,6 +130,10 @@ SUBROUTINE init_run()
      CALL tsvdw_initialize()
      CALL set_h_ainv()
   END IF
+  IF (mbd_vdw) THEN
+     CALL init_mbd()
+  END IF
+
   !
   CALL allocate_wfc_k()
   CALL openfil()
