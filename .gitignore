@@ -45,6 +45,6 @@ archive/wannier90-*tgz
 wannier90-*
 devicexlib
 tempdir
-EPW/src/tags
+tags
 EPW/src/tmp
 LAXlib/*.fh
