@@ -19,7 +19,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   USE lsda_mod,        ONLY: current_spin
   USE control_flags,   ONLY: gamma_only
   USE noncollin_module
-  USE uspp,            ONLY: indv_ijkb0, nkb, vkb_d, deeq_d, deeq_nc_d, using_vkb_d
+  USE uspp,            ONLY: ofsbeta, nkb, vkb_d, deeq_d, deeq_nc_d, using_vkb_d
   USE uspp_param,      ONLY: nh, nhm
   USE becmod_gpum,     ONLY: bec_type_d, becp_d, using_becp_r_d, &
                              using_becp_k_d, using_becp_nc_d
@@ -122,7 +122,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        ps_d(:,:) = 0.D0
        !
        !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-       !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+       !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
        !
        DO nt = 1, ntyp
           !
@@ -137,8 +137,8 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 IF ( m_loc > 0 ) THEN
                   CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
                            deeq_d(1,1,na,current_spin), nhm, &
-                           becp_d%r_d(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
-                               ps_d(indv_ijkb0(na)+1,1), nkb )
+                           becp_d%r_d(ofsbeta(na)+1,1), nkb, 0.0_dp, &
+                               ps_d(ofsbeta(na)+1,1), nkb )
                 END IF
                 !
              END IF
@@ -245,8 +245,8 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 END DO
                 !
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeaux_d, nhm, becp_d%k_d(indv_ijkb0(na)+1,1), nkb, &
-                          (0.0_dp, 0.0_dp), ps_d(indv_ijkb0(na)+1,1), nkb )
+                           deeaux_d, nhm, becp_d%k_d(ofsbeta(na)+1,1), nkb, &
+                          (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1), nkb )
                 !
              END IF
              !
@@ -306,22 +306,22 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
              IF ( ityp(na) == nt ) THEN
                 !
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,1), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), 2*nkb, &
-                          (0.0_dp, 0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), 2*nkb )
+                           deeq_nc_d(1,1,na,1), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), 2*nkb, &
+                          (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1,1), 2*nkb )
 
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,2), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), 2*nkb, &
-                          (1.0_dp, 0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), 2*nkb )
-
-
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,3), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), 2*nkb, &
-                          (0.0_dp, 0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), 2*nkb )
+                           deeq_nc_d(1,1,na,2), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), 2*nkb, &
+                          (1.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,1,1), 2*nkb )
 
 
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc_d(1,1,na,4), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), 2*nkb, &
-                          (1.0_dp, 0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), 2*nkb )
+                           deeq_nc_d(1,1,na,3), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), 2*nkb, &
+                          (0.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,2,1), 2*nkb )
+
+
+                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           deeq_nc_d(1,1,na,4), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), 2*nkb, &
+                          (1.0_dp, 0.0_dp), ps_d(ofsbeta(na)+1,2,1), 2*nkb )
 
 !                DO ibnd = 1, m
 !                   !

@@ -18,7 +18,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nat, ityp, ntyp => nsp
   USE wvfct,            ONLY: npwx
-  USE uspp,             ONLY: indv_ijkb0, deeq_d, vkb_d, qq_at_d, qq_so_d, &
+  USE uspp,             ONLY: ofsbeta, deeq_d, vkb_d, qq_at_d, qq_so_d, &
                               deeq_nc_d, using_vkb_d
   USE uspp_param,       ONLY: upf, nh
   USE spin_orb,         ONLY: lspinorb
@@ -73,7 +73,7 @@ CONTAINS
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
                    !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
@@ -101,7 +101,7 @@ CONTAINS
         ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
                    !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
@@ -144,7 +144,7 @@ CONTAINS
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
                    !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw   ! change this to 2*npw ?
@@ -178,7 +178,7 @@ CONTAINS
         ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
                    !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
@@ -227,7 +227,7 @@ CONTAINS
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
                    !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw   ! change this to 2*npw ?
@@ -263,7 +263,7 @@ CONTAINS
         ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
                    !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 

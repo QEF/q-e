@@ -923,7 +923,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE becmod,             ONLY : becp, calbec, allocate_bec_type
   USE control_flags,      ONLY : gamma_only, tqr
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
-  USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, indv_ijkb0, &
+  USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta, &
                                  using_vkb
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
@@ -1017,7 +1017,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
         END IF
         !
         !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-        !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+        !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
         !
         DO na = 1, nat
            !
@@ -1031,7 +1031,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !$omp parallel do default(shared), private(is,ih,ikb,ibnd)
                  DO is = 1, npol
                     DO ih = 1, nh(np)
-                       ikb = indv_ijkb0(na) + ih
+                       ikb = ofsbeta(na) + ih
                        DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
                           ibnd = ibnd_start + kbnd - 1
                           auxk1(ibnd,ih+(is-1)*nh(np))= becp%nc(ikb,is,kbnd)
@@ -1050,7 +1050,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !
                  !$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
                  DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
+                    ikb = ofsbeta(na) + ih
                     DO ibnd_loc = 1, nbnd_loc
                        ibnd = (ibnd_start - 1) + ibnd_loc + becp%ibnd_begin - 1
                        auxg(ibnd_loc,ih)= wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
@@ -1058,12 +1058,12 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  END DO
                  !$omp end parallel do
                  CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
-                      1.0_dp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
+                      1.0_dp, becp%r(ofsbeta(na)+1,1), nkb,    &
                       auxg, nbnd_loc, 0.0_dp, aux_gk, nh(np) )
                if (tqr) then
                  !$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
                  DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
+                    ikb = ofsbeta(na) + ih
                     DO ibnd_loc = 1, nbnd_loc
                        ibnd = (ibnd_start - 1) + ibnd_loc + becp%ibnd_begin - 1
                        auxg(ibnd_loc,ih) = et(ibnd,ik) * auxg(ibnd_loc,ih)
@@ -1071,7 +1071,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  END DO
                  !$omp end parallel do
                  CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
-                      1.0_dp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
+                      1.0_dp, becp%r(ofsbeta(na)+1,1), nkb,    &
                       auxg, nbnd_loc, 0.0_dp, aux_egk, nh(np) )
                end if
                  !
@@ -1079,7 +1079,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  !
                  !$omp parallel do default(shared), private(ih,ikb,ibnd)
                  DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
+                    ikb = ofsbeta(na) + ih
                     DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
                        ibnd = ibnd_start + kbnd - 1
                        auxk1(ibnd,ih) = becp%k(ikb,kbnd) 
@@ -1097,7 +1097,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                  if (tqr) then
                    !$omp parallel do default(shared), private(ih,ikb,ibnd)
                    DO ih = 1, nh(np)
-                      ikb = indv_ijkb0(na) + ih
+                      ikb = ofsbeta(na) + ih
                       DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
                          ibnd = ibnd_start + kbnd - 1
                          auxk2(ibnd,ih) = et(ibnd,ik)*auxk2(ibnd,ih)

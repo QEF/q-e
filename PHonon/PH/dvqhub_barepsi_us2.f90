@@ -28,7 +28,7 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             proj1, proj2, effU 
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp,          ONLY : vkb, nkb, okvan, indv_ijkb0
+  USE uspp,          ONLY : vkb, nkb, okvan, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs
   USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatwfc, iuatswfc
@@ -103,7 +103,7 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
         nt = ityp(na)
         DO ih = 1, nh(nt)
            !
-           ibeta = indv_ijkb0(na) + ih
+           ibeta = ofsbeta(na) + ih
            !
            CALL dwfc (npw, igk_k(1,ikk), ikk, icart, &
                       vkb(:,ibeta), dvkb(:,ibeta,icart))

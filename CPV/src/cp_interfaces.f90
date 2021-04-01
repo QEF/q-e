@@ -823,11 +823,11 @@
 
    INTERFACE protate
       SUBROUTINE protate_x ( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
-                           ityp, nat, indv_ijkb0, nh, np_rot, me_rot, comm_rot  )
+                           ityp, nat, ofsbeta, nh, np_rot, me_rot, comm_rot  )
          USE kinds,            ONLY: DP
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: ngwl, nss, nrl, noff
-         INTEGER, INTENT(IN) :: ityp(:), nat, indv_ijkb0(:), nh(:)
+         INTEGER, INTENT(IN) :: ityp(:), nat, ofsbeta(:), nh(:)
          INTEGER, INTENT(IN) :: np_rot, me_rot, comm_rot  
          COMPLEX(DP), INTENT(IN) :: c0(:,:)
          COMPLEX(DP), INTENT(OUT) :: c0rot(:,:)

@@ -37,7 +37,7 @@ SUBROUTINE dynmat_hub_bare
                             effU, read_dns_bare, d2ns_type
   USE wavefunctions, ONLY : evc
   USE units_lr,      ONLY : iuwfc, lrwfc, iuatwfc, iuatswfc
-  USE uspp,          ONLY : vkb, nkb, indv_ijkb0
+  USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE uspp_param,    ONLY : nh
   USE klist,         ONLY : xk, ngk, igk_k
   USE control_lr,    ONLY : lgamma
@@ -207,7 +207,7 @@ SUBROUTINE dynmat_hub_bare
         DO na = 1, nat    
            nt = ityp(na)  
            DO ih = 1, nh(nt)
-              ibeta = indv_ijkb0(na) + ih
+              ibeta = ofsbeta(na) + ih
               DO ibnd = 1, nbnd
                  projpb(ibnd, ibeta) = ZDOTC (npw, evc(:,ibnd), 1, vkb(:,ibeta), 1)
               ENDDO
@@ -257,7 +257,7 @@ SUBROUTINE dynmat_hub_bare
                                          !
                                          DO ih = 1, nh(nt)
                                             !
-                                            ibeta = indv_ijkb0(ina) + ih
+                                            ibeta = ofsbeta(ina) + ih
                                             !
                                             CALL dwfc(npw, igk_k(:,ikk), ikk, icar, &
                                                       vkb(:,ibeta), dvkb(:,ibeta,icar))

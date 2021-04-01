@@ -33,7 +33,7 @@ SUBROUTINE dnsq_bare
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             dnsbare, dnsbare_all_modes, proj1, proj2, read_dns_bare
   USE wvfct,         ONLY : npwx, wg, nbnd 
-  USE uspp,          ONLY : vkb, nkb, indv_ijkb0
+  USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs
   USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatwfc, iuatswfc
@@ -152,7 +152,7 @@ SUBROUTINE dnsq_bare
               nt = ityp(na)
               DO ih = 1, nh(nt)
                  !
-                 ibeta = indv_ijkb0(na) + ih
+                 ibeta = ofsbeta(na) + ih
                  !
                  CALL dwfc (npw, igk_k(1,ikk), ikk, icart, &
                             vkb(:,ibeta), dvkb(:,ibeta,icart))

@@ -15,7 +15,7 @@
 #if defined(__CUDA)
      USE cudafor
 #endif
-     USE uspp,     ONLY: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d, &
+     USE uspp,     ONLY: indv_d, nhtol_d, nhtolm_d, ijtoh_d, ofsbeta_d, &
                          vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
                          qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
      IMPLICIT NONE
@@ -33,8 +33,8 @@
      LOGICAL :: nhtolm_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: ijtoh_ood = .false.    ! used to flag out of date variables
      LOGICAL :: ijtoh_d_ood = .false.    ! used to flag out of date variables
-     LOGICAL :: indv_ijkb0_ood = .false.    ! used to flag out of date variables
-     LOGICAL :: indv_ijkb0_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: ofsbeta_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: ofsbeta_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: vkb_ood = .false.    ! used to flag out of date variables
      LOGICAL :: vkb_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: becsum_ood = .false.    ! used to flag out of date variables
@@ -364,14 +364,14 @@
 #endif
      END SUBROUTINE using_ijtoh_d
      !
-     SUBROUTINE using_indv_ijkb0(intento, debug_info)
+     SUBROUTINE using_ofsbeta(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE uspp, ONLY : indv_ijkb0, indv_ijkb0_d
+         USE uspp, ONLY : ofsbeta, ofsbeta_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -379,66 +379,66 @@
          INTEGER :: intento_
          intento_ = intento
          !
-         IF (PRESENT(debug_info) ) print *, "using_indv_ijkb0 ", debug_info, indv_ijkb0_ood
+         IF (PRESENT(debug_info) ) print *, "using_ofsbeta ", debug_info, ofsbeta_ood
          !
-         IF (indv_ijkb0_ood) THEN
-             IF ((.not. allocated(indv_ijkb0_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_indv_ijkb0_d', 'PANIC: sync of indv_ijkb0 from indv_ijkb0_d with unallocated array. Bye!!', 1)
+         IF (ofsbeta_ood) THEN
+             IF ((.not. allocated(ofsbeta_d)) .and. (intento_ < 2)) THEN
+                CALL errore('using_ofsbeta_d', 'PANIC: sync of ofsbeta from ofsbeta_d with unallocated array. Bye!!', 1)
                 stop
              END IF
-             IF (.not. allocated(indv_ijkb0)) THEN
+             IF (.not. allocated(ofsbeta)) THEN
                 IF (intento_ /= 2) THEN
-                   print *, "WARNING: sync of indv_ijkb0 with unallocated array and intento /= 2? Changed to 2!"
+                   print *, "WARNING: sync of ofsbeta with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-                ! IF (intento_ > 0)    indv_ijkb0_d_ood = .true.
+                ! IF (intento_ > 0)    ofsbeta_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                IF ( iverbosity > 0 ) print *, "Really copied indv_ijkb0 D->H"
-                indv_ijkb0 = indv_ijkb0_d
+                IF ( iverbosity > 0 ) print *, "Really copied ofsbeta D->H"
+                ofsbeta = ofsbeta_d
              END IF
-             indv_ijkb0_ood = .false.
+             ofsbeta_ood = .false.
          ENDIF
-         IF (intento_ > 0)    indv_ijkb0_d_ood = .true.
+         IF (intento_ > 0)    ofsbeta_d_ood = .true.
 #endif
-     END SUBROUTINE using_indv_ijkb0
+     END SUBROUTINE using_ofsbeta
      !
-     SUBROUTINE using_indv_ijkb0_d(intento, debug_info)
+     SUBROUTINE using_ofsbeta_d(intento, debug_info)
          !
-         USE uspp, ONLY : indv_ijkb0, indv_ijkb0_d
+         USE uspp, ONLY : ofsbeta, ofsbeta_d
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA) || defined(__CUDA_GNU)
          !
-         IF (PRESENT(debug_info) ) print *, "using_indv_ijkb0_d ", debug_info, indv_ijkb0_d_ood
+         IF (PRESENT(debug_info) ) print *, "using_ofsbeta_d ", debug_info, ofsbeta_d_ood
          !
-         IF (.not. allocated(indv_ijkb0)) THEN
-             IF (intento /= 2) print *, "WARNING: sync of indv_ijkb0_d with unallocated array and intento /= 2?"
-             IF (allocated(indv_ijkb0_d)) DEALLOCATE(indv_ijkb0_d)
-             indv_ijkb0_d_ood = .false.
+         IF (.not. allocated(ofsbeta)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of ofsbeta_d with unallocated array and intento /= 2?"
+             IF (allocated(ofsbeta_d)) DEALLOCATE(ofsbeta_d)
+             ofsbeta_d_ood = .false.
              RETURN
          END IF
-         ! here we know that indv_ijkb0 is allocated, check if size is 0
-         IF ( SIZE(indv_ijkb0) == 0 ) THEN
-             print *, "Refusing to allocate 0 dimensional array indv_ijkb0_d. If used, code will crash."
+         ! here we know that ofsbeta is allocated, check if size is 0
+         IF ( SIZE(ofsbeta) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array ofsbeta_d. If used, code will crash."
              RETURN
          END IF
          !
-         IF (indv_ijkb0_d_ood) THEN
-             IF ( allocated(indv_ijkb0_d) .and. (SIZE(indv_ijkb0_d)/=SIZE(indv_ijkb0))) deallocate(indv_ijkb0_d)
-             IF (.not. allocated(indv_ijkb0_d)) ALLOCATE(indv_ijkb0_d(DIMS1D(indv_ijkb0)))  ! MOLD does not work on all compilers
+         IF (ofsbeta_d_ood) THEN
+             IF ( allocated(ofsbeta_d) .and. (SIZE(ofsbeta_d)/=SIZE(ofsbeta))) deallocate(ofsbeta_d)
+             IF (.not. allocated(ofsbeta_d)) ALLOCATE(ofsbeta_d(DIMS1D(ofsbeta)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                IF ( iverbosity > 0 ) print *, "Really copied indv_ijkb0 H->D"
-                indv_ijkb0_d = indv_ijkb0
+                IF ( iverbosity > 0 ) print *, "Really copied ofsbeta H->D"
+                ofsbeta_d = ofsbeta
              END IF
-             indv_ijkb0_d_ood = .false.
+             ofsbeta_d_ood = .false.
          ENDIF
-         IF (intento > 0)    indv_ijkb0_ood = .true.
+         IF (intento > 0)    ofsbeta_ood = .true.
 #else
-         CALL errore('using_indv_ijkb0_d', 'Trying to use device data without device compilated code!', 1)
+         CALL errore('using_ofsbeta_d', 'Trying to use device data without device compilated code!', 1)
 #endif
-     END SUBROUTINE using_indv_ijkb0_d
+     END SUBROUTINE using_ofsbeta_d
      !
      SUBROUTINE using_vkb(intento, debug_info)
          !
@@ -1281,7 +1281,7 @@
        nhtol_d_ood = .false.
        nhtolm_d_ood = .false.
        ijtoh_d_ood = .false.
-       indv_ijkb0_d_ood = .false.
+       ofsbeta_d_ood = .false.
        vkb_d_ood = .false.
        becsum_d_ood = .false.
        ebecsum_d_ood = .false.

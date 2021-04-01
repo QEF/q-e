@@ -99,9 +99,9 @@ SUBROUTINE diagonalization(q,sh,input,eig,ik,kptns)
        if ( sh%ityp(na) == nt ) then
            do j=1,sh%ntot_e
             do jh=1,sh%nh(nt)
-             jkb = sh%indv_ijkb0(na)+jh
+             jkb = sh%ofsbeta(na)+jh
              do ih=1,sh%nh(nt)
-               ikb = sh%indv_ijkb0(na)+ih  
+               ikb = sh%ofsbeta(na)+ih  
                ! 
                csca_nc(ikb,1,j) = csca_nc(ikb,1,j) +    & 
                               sh%deeq_nc(ih,jh,na,1)*b_nc(jkb,1,j)+ & 
@@ -135,8 +135,8 @@ SUBROUTINE diagonalization(q,sh,input,eig,ik,kptns)
           !
           deeaux(1:sh%nh(nt),1:sh%nh(nt)) = sh%deeqc(1:sh%nh(nt),1:sh%nh(nt),na) 
           call ZGEMM('N','N', sh%nh(nt), sh%ntot_e, sh%nh(nt), (1.d0,0.d0), &
-                     deeaux, sh%nh(nt), b_c(sh%indv_ijkb0(na)+1,1), sh%nkb, &
-                     (0.d0, 0.d0), csca_mat(sh%indv_ijkb0(na)+1,1), sh%nkb )
+                     deeaux, sh%nh(nt), b_c(sh%ofsbeta(na)+1,1), sh%nkb, &
+                     (0.d0, 0.d0), csca_mat(sh%ofsbeta(na)+1,1), sh%nkb )
           !
        endif    
       enddo

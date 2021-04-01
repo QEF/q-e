@@ -17,7 +17,7 @@ SUBROUTINE force_us( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
-  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0, &
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
                                    using_vkb
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
@@ -173,7 +173,7 @@ SUBROUTINE force_us( forcenl )
           ALLOCATE( aux(nh(nt),becp%nbnd_loc) )
           DO na = 1, nat
              IF ( ityp(na) == nt ) THEN
-                ijkb0 = indv_ijkb0(na)
+                ijkb0 = ofsbeta(na)
                 ! this is \sum_j q_{ij} <beta_j|psi>
                 CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt),        &
                             1.0_dp, qq_at(1,1,na), nhm, becp%r(ijkb0+1,1), &
@@ -240,7 +240,7 @@ SUBROUTINE force_us( forcenl )
           !
           DO nt = 1, ntyp
              DO na = 1, nat
-                ijkb0 = indv_ijkb0(na)
+                ijkb0 = ofsbeta(na)
                 IF ( ityp(na) == nt ) THEN
                    DO ih = 1, nh(nt)
                       ikb = ijkb0 + ih

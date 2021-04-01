@@ -19,7 +19,7 @@
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, indv_ijkb0
+  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, ofsbeta
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -74,11 +74,11 @@
               !
               DO ih = 1, nhnt
                  !
-                 ikb = indv_ijkb0(ia) + ih
+                 ikb = ofsbeta(ia) + ih
                  !
                  DO jh = ih, nhnt
                     !
-                    jkb = indv_ijkb0(ia) + jh
+                    jkb = ofsbeta(ia) + jh
                     !
                     DO ir = 1, mbia
                        !
@@ -117,7 +117,7 @@
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, indv_ijkb0
+  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, ofsbeta
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -159,10 +159,10 @@
               !
               DO ih = 1, nhnt
                  !
-                 ikb = indv_ijkb0(ia) + ih
+                 ikb = ofsbeta(ia) + ih
                  DO jh = ih, nhnt
                     !
-                    jkb = indv_ijkb0(ia) + jh
+                    jkb = ofsbeta(ia) + jh
                     !
                     DO ir = 1, mbia
                        !
@@ -199,7 +199,7 @@
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE gvect,                ONLY : ngm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb, indv_ijkb0
+  USE uspp,                 ONLY : okvan, becsum, nkb, ofsbeta
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -244,10 +244,10 @@
               !
               DO ih = 1, nhnt
                  !
-                 ikb = indv_ijkb0(ia) + ih
+                 ikb = ofsbeta(ia) + ih
                  DO jh = ih, nhnt
                     !
-                    jkb = indv_ijkb0(ia) + jh
+                    jkb = ofsbeta(ia) + jh
                     !
                     sca = sca + qq_op(ih,jh,ia) * becp_iw(ikb)*becp_jw(jkb)
                     !

@@ -46,10 +46,10 @@ MODULE uspp
   PRIVATE
   SAVE
   !
-  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, indv_ijkb0, &
+  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, ofsbeta, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
-  PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, indv_ijkb0_d, &
+  PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, ofsbeta_d, &
             vkb_d, dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
             becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
@@ -94,7 +94,7 @@ MODULE uspp
        nhtol(:,:),       &! correspondence n <-> angular momentum l
        nhtolm(:,:),      &! correspondence n <-> combined lm index for (l,m)
        ijtoh(:,:,:),     &! correspondence beta indexes ih,jh -> composite index ijh
-       indv_ijkb0(:)      ! first beta (index in the solid) for each atom 
+       ofsbeta(:)      ! first beta (index in the solid) for each atom 
   !
   ! GPU vars
   !
@@ -102,9 +102,9 @@ MODULE uspp
   INTEGER, ALLOCATABLE :: nhtol_d(:,:)
   INTEGER, ALLOCATABLE :: nhtolm_d(:,:)
   INTEGER, ALLOCATABLE :: ijtoh_d(:,:,:)
-  INTEGER, ALLOCATABLE :: indv_ijkb0_d(:)
+  INTEGER, ALLOCATABLE :: ofsbeta_d(:)
 #if defined (__CUDA)
-  attributes(DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d
+  attributes(DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, ofsbeta_d
 #endif
 
   LOGICAL :: &
@@ -400,7 +400,7 @@ CONTAINS
     if (tqr) then
        allocate(ebecsum( nhm*(nhm+1)/2, nat, nspin))
     endif
-    allocate( indv_ijkb0(nat) )
+    allocate( ofsbeta(nat) )
     !
     ! GPU-vars (protecting zero-size allocations)
     !
@@ -431,7 +431,7 @@ CONTAINS
         endif
         !
       endif
-      allocate( indv_ijkb0_d(nat) )
+      allocate( ofsbeta_d(nat) )
       !
     endif
     !
@@ -445,7 +445,7 @@ CONTAINS
     IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
     IF( ALLOCATED( nhtolm ) )     DEALLOCATE( nhtolm )
     IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
-    IF( ALLOCATED( indv_ijkb0 ) ) DEALLOCATE( indv_ijkb0 )
+    IF( ALLOCATED( ofsbeta ) ) DEALLOCATE( ofsbeta )
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
     IF( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
@@ -469,7 +469,7 @@ CONTAINS
     IF( ALLOCATED( nhtol_d ) )    DEALLOCATE( nhtol_d )
     IF( ALLOCATED( nhtolm_d ) )   DEALLOCATE( nhtolm_d )
     IF( ALLOCATED( ijtoh_d ) )    DEALLOCATE( ijtoh_d )
-    IF( ALLOCATED( indv_ijkb0_d)) DEALLOCATE( indv_ijkb0_d )
+    IF( ALLOCATED( ofsbeta_d)) DEALLOCATE( ofsbeta_d )
     IF( ALLOCATED( vkb_d ) )      DEALLOCATE( vkb_d )
     IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
     IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )

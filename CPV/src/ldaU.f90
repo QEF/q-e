@@ -14,7 +14,7 @@
 !
       USE kinds, ONLY: DP
       USE ions_base, ONLY: nat, ityp
-      USE uspp, ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp, ONLY: nkb, nkbus, qq_nt, ofsbeta
       USE uspp_param, ONLY: nh, upf
       USE gvecw, ONLY: ngw
       IMPLICIT NONE
@@ -39,8 +39,8 @@
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
                      IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         DO i=1,nwfc
                            qtemp(inl,i) = qtemp(inl,i) + qq_nt(iv,jv,is)*becwfc(jnl,i)
                         END DO
@@ -474,7 +474,7 @@
       use gvecw, only: ngw
       use gvect, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
-      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
+      USE uspp,           ONLY: nkb, qq_nt, ofsbeta
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
       USE ldaU_cp,        ONLY: nwfcU
       use cell_base,      ONLY: tpiba
@@ -548,7 +548,7 @@
          allocate (   auxwfc(nwfcU,nh(alpha_s)) )
          !
          do iv=1,nh(alpha_s)
-            inl=indv_ijkb0(alpha_a) + iv
+            inl=ofsbeta(alpha_a) + iv
             do m=1,nwfcU
                auxwfc(m,iv) = becwfc(inl,m)
             end do
@@ -559,7 +559,7 @@
                   auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
                   0.0_DP, wfcbeta, nwfcU )
          do iv=1,nh(alpha_s)
-            inl=indv_ijkb0(alpha_a) + iv
+            inl=ofsbeta(alpha_a) + iv
             do m=1,nwfcU
                auxwfc(m,iv) = wdb(inl,m,ipol)
             end do
@@ -574,7 +574,7 @@
             allocate (  betapsi(nh(alpha_s),nb_s:nb_e) )
             allocate ( dbetapsi(nh(alpha_s),nb_s:nb_e) )
             do iv=1,nh(alpha_s)
-               inl=indv_ijkb0(alpha_a) + iv
+               inl=ofsbeta(alpha_a) + iv
                do i=nb_s,nb_e
                   betapsi (iv,i)=bp(inl,i)
                   dbetapsi(iv,i)=dbp(inl,i,ipol)

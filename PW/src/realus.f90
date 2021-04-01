@@ -1631,7 +1631,7 @@ MODULE realus
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
-    USE uspp,                  ONLY : indv_ijkb0
+    USE uspp,                  ONLY : ofsbeta
     !
     IMPLICIT NONE
     !
@@ -1680,7 +1680,7 @@ MODULE realus
              !
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
-             ijkb0 = indv_ijkb0(ia)
+             ijkb0 = ofsbeta(ia)
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do 
              DO ir =1, mbia
@@ -1749,7 +1749,7 @@ MODULE realus
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
-    USE uspp,                  ONLY : indv_ijkb0
+    USE uspp,                  ONLY : ofsbeta
     USE becmod_gpum,           ONLY : using_becp_k
     !
     IMPLICIT NONE
@@ -1796,7 +1796,7 @@ MODULE realus
              !
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
-             ijkb0 = indv_ijkb0(ia)
+             ijkb0 = ofsbeta(ia)
              !
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do
@@ -1847,7 +1847,7 @@ MODULE realus
       USE cell_base,              ONLY : omega
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE uspp,                   ONLY : qq_at, indv_ijkb0
+      USE uspp,                   ONLY : qq_at, ofsbeta
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       USE becmod_gpum,            ONLY : using_becp_r
@@ -1881,7 +1881,7 @@ MODULE realus
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
                !print *, "mbia=",mbia
                !
-               ijkb0 = indv_ijkb0(ia)
+               ijkb0 = ofsbeta(ia)
                !
                !$omp parallel
                !$omp do
@@ -1927,7 +1927,7 @@ MODULE realus
       USE cell_base,              ONLY : omega
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE uspp,                   ONLY : qq_at, indv_ijkb0
+      USE uspp,                   ONLY : qq_at, ofsbeta
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       USE becmod_gpum,            ONLY : using_becp_k
@@ -1964,7 +1964,7 @@ MODULE realus
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
                !print *, "mbia=",mbia
                !
-               ijkb0 = indv_ijkb0(ia)
+               ijkb0 = ofsbeta(ia)
                !
                !$omp parallel
                !$omp do
@@ -2013,7 +2013,7 @@ MODULE realus
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq, indv_ijkb0
+  USE uspp,                   ONLY : deeq, ofsbeta
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   USE becmod_gpum,            ONLY : using_becp_r
@@ -2045,7 +2045,7 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
            !
-           ijkb0 = indv_ijkb0(ia)
+           ijkb0 = ofsbeta(ia)
            !
            !$omp parallel
            !$omp do
@@ -2096,7 +2096,7 @@ MODULE realus
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq, indv_ijkb0
+  USE uspp,                   ONLY : deeq, ofsbeta
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   USE becmod_gpum,            ONLY : using_becp_k
@@ -2129,7 +2129,7 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
 
-           ijkb0 = indv_ijkb0(ia)
+           ijkb0 = ofsbeta(ia)
 
            !$omp parallel
            !$omp do

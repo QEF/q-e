@@ -42,7 +42,7 @@ SUBROUTINE dnsq_orth()
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions, ONLY : evc
   USE eqv,           ONLY : evq
-  USE uspp,          ONLY : okvan, nkb, vkb, indv_ijkb0
+  USE uspp,          ONLY : okvan, nkb, vkb, ofsbeta
   USE control_flags, ONLY : iverbosity
   USE mp,            ONLY : mp_sum, mp_bcast 
   USE mp_pools,      ONLY : intra_pool_comm, inter_pool_comm
@@ -182,7 +182,7 @@ SUBROUTINE dnsq_orth()
               !
               DO ih = 1, nh(nt)
                  !
-                 ibeta = indv_ijkb0(na) + ih
+                 ibeta = ofsbeta(na) + ih
                  !
                  CALL dwfc (npw, igk_k(:,ikk), ikk, icart, &
                             vkb(:,ibeta), dvkb(:,ibeta,icart))

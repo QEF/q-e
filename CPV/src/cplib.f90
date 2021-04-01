@@ -900,7 +900,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
   !     contribution to the internal stress tensor due to the constraints
   !
   USE kinds,             ONLY : DP
-  use uspp,              ONLY : nkb, qq_nt, indv_ijkb0
+  use uspp,              ONLY : nkb, qq_nt, ofsbeta
   use uspp_param,        ONLY : nh, nhm, upf
   use ions_base,         ONLY : nat, ityp
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
@@ -990,7 +990,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
 !
                     do iv=1,nh(is)
                        do jv=1,nh(is)
-                          inl=indv_ijkb0(ia) + jv
+                          inl=ofsbeta(ia) + jv
                           if(abs(qq_nt(iv,jv,is)).gt.1.e-5) then
                              do i = 1, nc
                                 tmpbec(iv,i) = tmpbec(iv,i) +  qq_nt(iv,jv,is) * bec( inl, i, iss  )
@@ -1000,7 +1000,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
                     end do
 
                     do iv=1,nh(is)
-                       inl=indv_ijkb0(ia) + iv
+                       inl=ofsbeta(ia) + iv
                        do i = 1, nr
                           tmpdh(i,iv) = dbec( inl, i + (iss-1)*nrcx, ii, jj )
                        end do
@@ -1513,7 +1513,7 @@ end subroutine dylmr2_
       USE ions_base,          ONLY: na, nsp, nat, ityp
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: gstart
-      USE uspp,               ONLY: nkb, qq_nt, indv_ijkb0
+      USE uspp,               ONLY: nkb, qq_nt, ofsbeta
       USE uspp_param,         ONLY: nh, upf
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
@@ -1590,8 +1590,8 @@ end subroutine dylmr2_
                      IF( ityp(ia) /= is ) CYCLE
                      DO iv=1,nh(is)
                         DO jv=1,nh(is)
-                           inl = indv_ijkb0(ia) + iv
-                           jnl = indv_ijkb0(ia) + jv
+                           inl = ofsbeta(ia) + iv
+                           jnl = ofsbeta(ia) + jv
                            rsum = rsum + qq_nt(iv,jv,is)*becp_tmp(inl)*becp(jnl,ibgrp_k)
                         END DO
                      END DO
@@ -1720,7 +1720,7 @@ end subroutine dylmr2_
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE ions_base,         ONLY: na, nsp, nat, ityp
-      USE uspp,              ONLY: nhsa=>nkb, qq_nt, indv_ijkb0
+      USE uspp,              ONLY: nhsa=>nkb, qq_nt, ofsbeta
       USE uspp_param,        ONLY: nhm, nh, upf
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
@@ -1770,7 +1770,7 @@ end subroutine dylmr2_
       !
 !$omp parallel default(none), &
 !$omp shared(nrrx,nhm,nrcx,nsp,na,nspin,nrr,nupdwn,iupdwn,idesc,nh,qq_nt,bec,becdr_bgrp,ibgrp_l2g,tmplam,fion_tmp), &
-!$omp shared(upf, ityp,nat,indv_ijkb0), &
+!$omp shared(upf, ityp,nat,ofsbeta), &
 !$omp private(tmpdr,temp,tmpbec,is,k,ia,i,iss,nss,istart,ic,nc,jv,iv,inl,ir,nr)
 
       IF( nrrx > 0 ) THEN
@@ -1801,7 +1801,7 @@ end subroutine dylmr2_
                      ic = idesc( LAX_DESC_IC, iss )
                      nc = idesc( LAX_DESC_NC, iss )
                      DO jv=1,nh(is)
-                        inl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + jv
                         DO iv=1,nh(is)
                            IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
                               DO i=1,nc
@@ -1814,7 +1814,7 @@ end subroutine dylmr2_
                      ir = idesc( LAX_DESC_IR, iss )
                      nr = idesc( LAX_DESC_NR, iss )
                      DO iv=1,nh(is)
-                        inl = indv_ijkb0(ia) + iv
+                        inl = ofsbeta(ia) + iv
                         DO i=1,nrr(iss)
                            tmpdr(i,iv) = becdr_bgrp( inl, ibgrp_l2g(i,iss), k )
                         END DO
@@ -1977,7 +1977,7 @@ end subroutine dylmr2_
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nat, ityp
       USE gvecw,      ONLY : ngw
-      USE uspp,       ONLY : beta, nhtol, indv_ijkb0
+      USE uspp,       ONLY : beta, nhtol, ofsbeta
       USE uspp_param, ONLY : nh, upf
       USE gvect,      ONLY : gstart
 !
@@ -1996,7 +1996,7 @@ end subroutine dylmr2_
          is=ityp(ia)
          DO iv=1,nh(is)
             ci=cfact( nhtol(iv,is) + 1 )
-            inl = indv_ijkb0(ia) + iv
+            inl = ofsbeta(ia) + iv
             DO ig=1,ngw
                betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia)
             END DO

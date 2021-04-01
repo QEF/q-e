@@ -26,7 +26,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
   use ions_base, only : nax, nsp, na, nat, ityp
   use gvect, only: gstart
   use uspp_param, only: nh, nhm, upf
-  use uspp, only : nkb, indv_ijkb0
+  use uspp, only : nkb, ofsbeta
   use electrons_base, only: nx => nbspx, n => nbsp, ispin
   use mp, only: mp_sum, mp_alltoall
   use mp_global, only: intra_bgrp_comm, nproc_bgrp
@@ -187,8 +187,8 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
              IF( upf(is)%tvanp ) THEN !loop on vanderbilt species
                 do iv=1,nh(is)!loop on projectors
                    do jv=1,nh(is)
-                      inl = indv_ijkb0(ia) + iv
-                      jnl = indv_ijkb0(ia) + jv
+                      inl = ofsbeta(ia) + iv
+                      jnl = ofsbeta(ia) + jv
                       sca=sca+gqq(iv,jv,ia,is)*bec0(inl,ix)*bec0(jnl,jx)
                    enddo
                 enddo

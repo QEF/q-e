@@ -405,7 +405,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     USE kinds,      ONLY : DP
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : nat, ityp
-    USE uspp,       ONLY : qq_nt, nkb, indv_ijkb0
+    USE uspp,       ONLY : qq_nt, nkb, ofsbeta
     USE wvfct,      ONLY : npwx
     USE mp,         ONLY : mp_sum
     USE mp_pools,   ONLY : intra_pool_comm
@@ -437,14 +437,14 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
        !
        DO l1 = 1, nh(nt)
           !
-          ibeta1 = indv_ijkb0(na) + l1
+          ibeta1 = ofsbeta(na) + l1
           !
           !  aux1 = \sum_l2 qq_nt(l1,l2,nt) * |vec2(na,l2)>
           !
           aux1 = (0.d0, 0.d0)
           !
           DO l2 = 1, nh(nt)
-             ibeta2 = indv_ijkb0(na) + l2
+             ibeta2 = ofsbeta(na) + l2
              aux1(:) = aux1(:) + qq_nt(l1,l2,nt) * vec2(:,ibeta2)
           ENDDO
           !
