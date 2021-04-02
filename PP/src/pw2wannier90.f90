@@ -2638,8 +2638,7 @@ SUBROUTINE compute_orb
    USE constants,       ONLY : tpi
    USE uspp,            ONLY : nkb, vkb
    USE uspp_param,      ONLY : upf, nh, lmaxq
-   USE becmod,          ONLY : bec_type, becp, calbec, &
-                               allocate_bec_type, deallocate_bec_type
+   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type
    USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
@@ -2651,75 +2650,57 @@ SUBROUTINE compute_orb
    USE gvecs,           ONLY : doublegrid
    USE lsda_mod,        ONLY : nspin
    USE constants,       ONLY : rytoev
-
+   !
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL :: find_free_unit
-   !
-   complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
-   !
-   INTEGER :: mmn_tot, ik, ikp, ipol, npw, i, m, n
-   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
-   INTEGER :: ikevc, ikpevcq, s, counter
-   COMPLEX(DP), ALLOCATABLE :: phase(:), aux2(:), evcq(:,:), &
-                               becp2(:,:), Mkb(:,:), aux_b1(:, :)
-   real(DP), ALLOCATABLE    :: rbecp2(:,:)
-   COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
-   COMPLEX(DP)              :: mmn, zdotc, phase1
-   real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
    CHARACTER (len=60)       :: header
    LOGICAL                  :: any_uspp
-   INTEGER                  :: nn,inn,loop,loop2
-   LOGICAL                  :: nn_found
-   INTEGER                  :: istart,iend
-   ! begin change Lopez, Thonhauser, Souza
-   COMPLEX(DP)              :: sigma_x,sigma_y,sigma_z,cdum1,cdum2
-   integer                  :: npw_b1, npw_b2, i_b, i_b1, i_b2, ikp_b1, ikp_b2
-!   integer, allocatable     :: igk_b1(:), igk_b2(:)
-   complex(DP), allocatable :: evc_b1(:,:),evc_b2(:,:), evc_b(:, :, :), H_evc_b(:, :, :), &
-                               evc_aux(:, :), H_evc(:, :)
-   complex(DP), allocatable :: uHu(:,:),uIu(:,:)
-   ! end change Lopez, Thonhauser, Souza
+   INTEGER                  :: ik, npw, m, n
    INTEGER                  :: ibnd_n, ibnd_m
-
+   INTEGER                  :: i_b, i_b1, i_b2
+   COMPLEX(DP)              :: mmn, zdotc
+   COMPLEX(DP), ALLOCATABLE :: evc_b1(:,:), evc_b2(:,:), H_evc_b2(:, :)
+   COMPLEX(DP), ALLOCATABLE :: evc_b(:, :, :), H_evc_b(:, :, :)
+   COMPLEX(DP), ALLOCATABLE :: uHu(:,:), uIu(:,:)
+   !
+   IF (.NOT. (write_uHu .OR. write_uIu)) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, *) ' ----------------------------------------'
+      WRITE(stdout, *) ' *** uHu and uIu matrices are not computed '
+      WRITE(stdout, *) ' ----------------------------------------'
+      WRITE(stdout, *)
+      RETURN
+   ENDIF
+   !
    CALL start_clock('compute_orb')
-
+   !
    any_uspp = any(upf(1:ntyp)%tvanp)
-
+   !
    IF(gamma_only) CALL errore('pw2wannier90',&
         'write_uHu and write_uIu not yet implemented for gamma_only case',1) !ivo
    IF(any_uspp) CALL errore('pw2wannier90',&
         'write_uHu and write_uIu not yet implemented with USP',1) !ivo
-
-   ALLOCATE( phase(dffts%nnr) )
-   ALLOCATE( evcq(npol*npwx,nbnd) )
-
-   ALLOCATE(aux_b1(npol*npwx, nbnd))
-
-   ALLOCATE(evc_b(npol*npwx, nbnd, nnb))
-   ALLOCATE(H_evc_b(npol*npwx, nbnd, nnb))
-
-!   IF (gamma_only) ALLOCATE(aux2(npwx))
-
-   IF (wan_mode=='library') ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
-
-   if (write_uHu) allocate(uhu(num_bands,num_bands))
-   if (write_uIu) allocate(uIu(num_bands,num_bands))
-
-
 !ivo
 ! not sure this is really needed
    if((write_uhu.or.write_uIu).and.wan_mode=='library')&
         call errore('pw2wannier90',&
         'write_uhu, and write_uIu not meant to work library mode',1)
 !endivo
-
-
    !
+   ALLOCATE(evc_b(npol*npwx, nbnd, nnb))
+   ALLOCATE(evc_b1(npol*npwx, nbnd))
+   ALLOCATE(evc_b2(npol*npwx, nbnd))
    !
-   ! begin change Lopez, Thonhauser, Souza
+   IF (write_uHu) THEN
+      ALLOCATE(H_evc_b(npol*npwx, nbnd, nnb))
+      ALLOCATE(H_evc_b2(npol*npwx, nbnd))
+      ALLOCATE(uHu(num_bands, num_bands))
+   ENDIF
+   !
+   IF (write_uIu) THEN
+      ALLOCATE(uIu(num_bands, num_bands))
+   ENDIF
    !
    !====================================================================
    !
@@ -2730,222 +2711,174 @@ SUBROUTINE compute_orb
    !
    !====================================================================
    !
+   IF (write_uHu) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, *) ' -----------------'
+      WRITE(stdout, *) ' *** Compute  uHu '
+      WRITE(stdout, *) ' -----------------'
+      WRITE(stdout, *)
+      IF (ionode) THEN
+         CALL date_and_tim( cdate, ctime )
+         header='Created on '//cdate//' at '//ctime
+         IF (uHu_formatted) THEN
+            OPEN(NEWUNIT=iun_uhu, FILE=TRIM(seedname)//".uHu", FORM='FORMATTED')
+            WRITE(iun_uhu, *) header
+            WRITE(iun_uhu, *) nbnd-nexband, iknum, nnb
+         ELSE
+            OPEN(NEWUNIT=iun_uhu, FILE=TRIM(seedname)//".uHu", FORM='UNFORMATTED')
+            WRITE(iun_uhu) header
+            WRITE(iun_uhu) nbnd-nexband, iknum, nnb
+         ENDIF
+      ENDIF
+   ENDIF ! write_uHu
    !
+   IF (write_uIu) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, *) ' -----------------'
+      WRITE(stdout, *) ' *** Compute  uIu '
+      WRITE(stdout, *) ' -----------------'
+      WRITE(stdout, *)
+      IF (ionode) THEN
+         CALL date_and_tim( cdate, ctime )
+         header='Created on '//cdate//' at '//ctime
+         IF (uIu_formatted) THEN
+            OPEN(NEWUNIT=iun_uIu, FILE=TRIM(seedname)//".uIu", FORM='FORMATTED')
+            WRITE(iun_uIu, *) header
+            WRITE(iun_uIu, *) nbnd-nexband, iknum, nnb
+         ELSE
+            OPEN(NEWUNIT=iun_uIu, FILE=TRIM(seedname)//".uIu", FORM='UNFORMATTED')
+            WRITE(iun_uIu) header
+            WRITE(iun_uIu) nbnd-nexband, iknum, nnb
+         ENDIF
+      ENDIF
+   ENDIF
    !
-   if(write_uHu.or.write_uIu) then !ivo
-     !
-     !
-     !
-!     allocate(igk_b1(npwx),igk_b2(npwx),evc_b1(npol*npwx,nbnd),&
-     allocate(evc_b1(npol*npwx,nbnd),&
-          evc_b2(npol*npwx,nbnd),&
-          evc_aux(npol*npwx,nbnd))
-     !
-     if(write_uHu) then
-        allocate(H_evc(npol*npwx,nbnd))
-        write(stdout,*)
-        write(stdout,*) ' -----------------'
-        write(stdout,*) ' *** Compute  uHu '
-        write(stdout,*) ' -----------------'
-        write(stdout,*)
-        iun_uhu = find_free_unit()
-        if (ionode) then
-           CALL date_and_tim( cdate, ctime )
-           header='Created on '//cdate//' at '//ctime
-           if(uHu_formatted) then
-              open  (unit=iun_uhu, file=TRIM(seedname)//".uHu",form='FORMATTED')
-              write (iun_uhu,*) header
-              write (iun_uhu,*) nbnd-nexband, iknum, nnb
-           else
-              open  (unit=iun_uhu, file=TRIM(seedname)//".uHu",form='UNFORMATTED')
-              write (iun_uhu) header
-              write (iun_uhu) nbnd-nexband, iknum, nnb
-           endif
-        endif
-     endif
-     if(write_uIu) then
-        write(stdout,*)
-        write(stdout,*) ' -----------------'
-        write(stdout,*) ' *** Compute  uIu '
-        write(stdout,*) ' -----------------'
-        write(stdout,*)
-        iun_uIu = find_free_unit()
-        if (ionode) then
-           CALL date_and_tim( cdate, ctime )
-           header='Created on '//cdate//' at '//ctime
-           if(uIu_formatted) then
-              open  (unit=iun_uIu, file=TRIM(seedname)//".uIu",form='FORMATTED')
-              write (iun_uIu,*) header
-              write (iun_uIu,*) nbnd-nexband, iknum, nnb
-           else
-              open  (unit=iun_uIu, file=TRIM(seedname)//".uIu",form='UNFORMATTED')
-              write (iun_uIu) header
-              write (iun_uIu) nbnd-nexband, iknum, nnb
-           endif
-        endif
-     endif
-
-     CALL set_vrs(vrs,vltot,v%of_r,kedtau,v%kin_r,dfftp%nnr,nspin,doublegrid)
-     call allocate_bec_type ( nkb, nbnd, becp )
-!     ALLOCATE( workg(npwx) )
-
-     write(stdout,'(a,i8)') ' iknum = ',iknum
-     do ik = 1, iknum ! loop over k points
-        !
-        write (stdout,'(i8)') ik
-        !
-        npw = ngk(ik)
-        !
-        ! sort the wfc at k and set up stuff for h_psi
-        current_k=ik
-        CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
-        CALL g2_kin(ik)
-        !
-        ! Loop over the nearest neighbor b vectors
-        !
-        DO i_b = 1, nnb
+   CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
+   CALL allocate_bec_type(nkb, nbnd, becp)
+   !
+   WRITE(stdout,'(a,i8)') ' iknum = ',iknum
+   DO ik = 1, iknum ! loop over k points
+      !
+      WRITE(stdout,'(i8)') ik
+      !
+      npw = ngk(ik)
+      !
+      ! sort the wfc at k and set up stuff for h_psi
+      current_k = ik
+      CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
+      CALL g2_kin(ik)
+      !
+      ! Loop over the nearest neighbor b vectors and compute |u_{n,k+b}>
+      ! and H(k) * |u_{n,k+b}>
+      !
+      DO i_b = 1, nnb
+         !
+         !
+         IF (write_uHu) THEN
+            ! Compute both u_{n,k+b} and H * u_{n,k+b}
+            CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b), H_evc_b(:, :, i_b))
+         ELSE
+            ! Compute only u_{n,k+b}
+            CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b))
+         ENDIF
+         !
+      ENDDO ! nnb
+      !
+      ! Main loop to compute uHu and uIu.
+      !
+      DO i_b2 = 1, nnb
+         !
+         ! Copy |u_{n,k+b2}> and optionally H(k) * |u_{n,k+b2}> from evc_b and H_evc_b
+         !
+         evc_b2 = evc_b(:, :, i_b2)
+         IF (write_uHu) H_evc_b2 = H_evc_b(:, :, i_b2)
+         !
+         DO i_b1 = 1, nnb
             !
-            ! Compute |u_{n,k+b}> and optionally H(k) * |u_{n,k+b}>
+            ! Copy |u_{n,k+b1}> from evc_b
             !
-            IF (write_uHu) THEN
-               CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b), H_evc_b(:, :, i_b))
-            ELSE
-               CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b))
-            ENDIF
+            evc_b1 = evc_b(:, :, i_b1)
             !
-        ENDDO
-        !
-        do i_b2 = 1, nnb
-            !
-            ! Copy |u_{n,k+b2}> and optionally H(k) * |u_{n,k+b2}> from evc_b and H_evc_b
-            !
-            evc_aux = evc_b(:, :, i_b2)
-            IF (write_uHu) H_evc = H_evc_b(:, :, i_b2)
-            !
-            ! Loop over the nearest neighbor b vectors
-            !
-            DO i_b1 = 1, nnb
+            ibnd_m = 0
+            DO m = 1, nbnd
+               IF (excluded_band(m)) CYCLE
+               ibnd_m = ibnd_m + 1
                !
-               ! Copy |u_{n,k+b1}> from evc_b
+               IF (write_uHu) THEN
+                  ibnd_n = 0
+                  DO n = 1, nbnd  ! loop over bands of already computed ket
+                     IF (excluded_band(n)) CYCLE
+                     ibnd_n = ibnd_n + 1
+                     IF (noncolin) THEN
+                        mmn = zdotc (npw, evc_b1(1,m),1,H_evc_b2(1,n),1) + &
+                              zdotc (npw, evc_b1(1+npwx,m),1,H_evc_b2(1+npwx,n),1)
+                     ELSE
+                        mmn = zdotc (npw, evc_b1(1, m),1,H_evc_b2(1,n),1)
+                     ENDIF
+                     uHu(ibnd_n, ibnd_m) = mmn
+                     !
+                  ENDDO !n
+               ENDIF ! write_uHu
                !
-               aux_b1 = evc_b(:, :, i_b1)
+               IF (write_uIu) then !ivo
+                  ibnd_n = 0
+                  do n = 1, nbnd  ! loop over bands of already computed ket
+                     IF (excluded_band(n)) cycle
+                     ibnd_n = ibnd_n + 1
+                     IF (noncolin) THEN
+                        mmn = zdotc (npw, evc_b1(1,m),1,evc_b2(1,n),1) + &
+                              zdotc (npw, evc_b1(1+npwx,m),1,evc_b2(1+npwx,n),1)
+                     ELSE
+                        mmn = zdotc (npw, evc_b1(1, m),1,evc_b2(1,n),1)
+                     ENDIF ! noncolin
+                     uIu(ibnd_n, ibnd_m) = mmn
+                     !
+                  ENDDO ! n
+               ENDIF ! write_uIu
                !
-               ibnd_m = 0
-               DO m = 1, nbnd
-                  if (excluded_band(m)) cycle
-                  ibnd_m = ibnd_m + 1
-                  !
-                if(write_uHu) then !ivo
-                   ibnd_n = 0
-                   do n = 1, nbnd  ! loop over bands of already computed ket
-                      if (excluded_band(n)) cycle
-                      ibnd_n = ibnd_n + 1
-                      if(noncolin) then
-                         mmn = zdotc (npw, aux_b1(1,m),1,H_evc(1,n),1) + &
-                              zdotc (npw, aux_b1(1+npwx,m),1,H_evc(1+npwx,n),1)
-                      else
-                         mmn = zdotc (npw, aux_b1(1, m),1,H_evc(1,n),1)
-                      end if
-                      mmn = mmn * rytoev ! because wannier90 works in eV
-                      uHu(ibnd_n, ibnd_m) = mmn
-                      !
-                   end do !n
-                endif
-                if(write_uIu) then !ivo
-                   ibnd_n = 0
-                   do n = 1, nbnd  ! loop over bands of already computed ket
-                      if (excluded_band(n)) cycle
-                      ibnd_n = ibnd_n + 1
-                      if(noncolin) then
-                         mmn = zdotc (npw, aux_b1(1,m),1,evc_aux(1,n),1) + &
-                              zdotc (npw, aux_b1(1+npwx,m),1,evc_aux(1+npwx,n),1)
-                      else
-                         mmn = zdotc (npw, aux_b1(1, m),1,evc_aux(1,n),1)
-                      end if
-                      uIu(ibnd_n, ibnd_m) = mmn
-                      !
-                   end do !n
-                endif
-                !
-             end do ! m = 1, nbnd
-             if (write_uHu) call mp_sum(uHu, intra_pool_comm)
-             if (write_uIu) call mp_sum(uIu, intra_pool_comm)
-             !
-             if (ionode) then  ! write the files out to disk
-                if(write_uHu) then
-                   CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, uHu)
-                endif
-                if(write_uIu) then
-                   CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, uIu)
-                endif
-             endif ! end of io
-          end do ! i_b1
-       end do ! i_b2
-    end do ! ik
-    !
-    deallocate(evc_b1,evc_b2,evc_aux)
-    if(write_uHu) then
-       deallocate(H_evc)
-       deallocate(uHu)
-    end if
-    if(write_uIu) deallocate(uIu)
-    if (ionode.and.write_uHu) close (iun_uhu) !ivo
-    if (ionode.and.write_uIu) close (iun_uIu) !ivo
-    !
- else
-    if(.not.write_uHu) then
-       write(stdout,*)
-       write(stdout,*) ' -------------------------------'
-       write(stdout,*) ' *** uHu matrix is not computed '
-       write(stdout,*) ' -------------------------------'
-       write(stdout,*)
-    endif
-    if(.not.write_uIu) then
-       write(stdout,*)
-       write(stdout,*) ' -------------------------------'
-       write(stdout,*) ' *** uIu matrix is not computed '
-       write(stdout,*) ' -------------------------------'
-       write(stdout,*)
-    endif
- end if
+            ENDDO ! m
+            !
+            IF (write_uHu) uHu = uHu * rytoev ! because wannier90 works in eV
+            IF (write_uHu) CALL mp_sum(uHu, intra_pool_comm)
+            IF (write_uIu) CALL mp_sum(uIu, intra_pool_comm)
+            !
+            ! write the files out to disk
+            !
+            IF (ionode) THEN
+               IF (write_uHu) THEN
+                  CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, uHu)
+               ENDIF
+               IF (write_uIu) THEN
+                  CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, uIu)
+               ENDIF
+            ENDIF ! ionode
+            !
+         ENDDO ! i_b1
+      ENDDO ! i_b2
+   ENDDO ! ik
    !
+   ! Deallocate variables
    !
-   !
-   !
-   !
-   !
-   !====================================================================
-   !
-   ! END_m_orbit
-   !
-   !====================================================================
-   !
-   ! end change Lopez, Thonhauser, Souza
-   !
-   !
-   !
-
-!   IF (gamma_only) DEALLOCATE(aux2)
-   DEALLOCATE (phase)
-   DEALLOCATE(aux_b1)
-   DEALLOCATE(evcq)
+   CALL deallocate_bec_type(becp)
+   DEALLOCATE(evc_b1)
+   DEALLOCATE(evc_b2)
    DEALLOCATE(evc_b)
-   DEALLOCATE(H_evc_b)
-
-!   IF(any_uspp) THEN
-!      DEALLOCATE (  qb)
-!      CALL deallocate_bec_type (becp)
-!      IF (gamma_only) THEN
-!          DEALLOCATE (rbecp2)
-!       ELSE
-!          DEALLOCATE (becp2)
-!       ENDIF
-!    ENDIF
-   CALL deallocate_bec_type (becp)
-!
+   !
+   IF (write_uHu) THEN
+      DEALLOCATE(H_evc_b)
+      DEALLOCATE(H_evc_b2)
+      DEALLOCATE(uHu)
+      IF (ionode) CLOSE(iun_uHu)
+   ENDIF ! write_uHu
+   !
+   IF (write_uIu) THEN
+      DEALLOCATE(uIu)
+      IF (ionode) CLOSE(iun_uIu)
+   ENDIF ! write_uIu
+   !
    WRITE(stdout,*)
-   if(write_uHu) WRITE(stdout,*) ' uHu calculated'
-   if(write_uIu) WRITE(stdout,*) ' uIu calculated'
+   IF (write_uHu) WRITE(stdout, *) ' uHu calculated'
+   IF (write_uIu) WRITE(stdout, *) ' uIu calculated'
    !
    CALL stop_clock('compute_orb')
    !
@@ -3086,6 +3019,10 @@ SUBROUTINE compute_shc
       current_k = ik
       CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
       !
+      ! calculate the kinetic energy at ik, used in h_psi
+      !
+      CALL g2_kin(ik)
+      !
       ! compute  " H | u_n,k+b2 > "
       !
       DO i_b2 = 1, nnb ! nnb = # of nearest neighbors
@@ -3127,15 +3064,7 @@ SUBROUTINE compute_shc
             ENDDO ! ipol
          ENDDO ! n
          !
-         IF (write_sHu) THEN !ivo
-            !
-            ! calculate the kinetic energy at ik, used in h_psi
-            !
-            CALL g2_kin(ik)
-            !
-            CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
-            !
-         ENDIF
+         IF (write_sHu) CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
          !
          sHu = (0.D0, 0.D0)
          sIu = (0.D0, 0.D0)
@@ -5727,7 +5656,7 @@ SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, h_evc_kb)
       ENDDO ! npol
    ENDDO ! nbnd
    !
-   IF(PRESENT(h_evc_kb)) CALL h_psi(npwx, npw, nbnd, evc_kb, h_evc_kb)
+   IF (PRESENT(h_evc_kb)) CALL h_psi(npwx, npw, nbnd, evc_kb, h_evc_kb)
    !
    DEALLOCATE(phase)
    DEALLOCATE(evc_b)
