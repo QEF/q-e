@@ -31,6 +31,7 @@ SUBROUTINE init_run()
   USE dfunct,             ONLY : newd
   USE esm,                ONLY : do_comp_esm, esm_init
   USE tsvdw_module,       ONLY : tsvdw_initialize
+  USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE lsda_mod,           ONLY : nspin
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
@@ -129,6 +130,10 @@ SUBROUTINE init_run()
      CALL tsvdw_initialize()
      CALL set_h_ainv()
   END IF
+  IF (mbd_vdw) THEN
+     CALL init_mbd()
+  END IF
+
   !
   CALL allocate_wfc_k()
   CALL openfil()
@@ -173,32 +178,12 @@ SUBROUTINE pre_init()
   !----------------------------------------------------------------------------
   !
   USE ions_base,        ONLY : nat, nsp, ityp
-  USE uspp_param,       ONLY : upf, lmaxkb, nh, nhm, nbetam
+  USE uspp_param,       ONLY : upf, nh, init_uspp_dims
   USE uspp,             ONLY : nkb, nkbus
   IMPLICIT NONE
   INTEGER :: na, nt, nb
   !
-  !     calculate the number of beta functions for each atomic type
-  !
-  lmaxkb = - 1
-  DO nt = 1, nsp
-     !
-     nh (nt) = 0
-     !
-     ! do not add any beta projector if pseudo in 1/r fmt (AF)
-     IF ( upf(nt)%tcoulombp ) CYCLE 
-     !
-     DO nb = 1, upf(nt)%nbeta
-        nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
-        lmaxkb = MAX (lmaxkb, upf(nt)%lll(nb) )
-     ENDDO
-     !
-  ENDDO
-  !
-  ! calculate the maximum number of beta functions
-  !
-  nhm = MAXVAL (nh (1:nsp))
-  nbetam = MAXVAL (upf(:)%nbeta)
+  CALL init_uspp_dims ( )
   !
   ! calculate the number of beta functions of the solid
   !
@@ -209,6 +194,5 @@ SUBROUTINE pre_init()
      nkb = nkb + nh (nt)
      if (upf(nt)%tvanp) nkbus = nkbus + nh (nt)
   enddo
-
-
+  !
 END SUBROUTINE pre_init
