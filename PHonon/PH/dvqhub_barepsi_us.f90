@@ -47,9 +47,9 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             proj1, proj2, dnsbare, effU 
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp,          ONLY : vkb, nkb, ofsbeta
+  USE uspp,          ONLY : vkb,nkb 
   USE qpoint,        ONLY : nksq, ikks, ikqs
-  USE control_lr,    ONLY : lgamma
+  USE control_lr,    ONLY : lgamma, ofsbeta
   USE units_lr,      ONLY : iuatwfc, iuatswfc
   USE uspp_param,    ONLY : nh
   USE lsda_mod,      ONLY : lsda, current_spin, isk

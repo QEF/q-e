@@ -258,7 +258,6 @@ clean_pw_ph.o : phcom.o
 clean_pw_ph.o : save_ph_input.o
 clinear.o : ../../Modules/kind.o
 close_phq.o : ../../LR_Modules/lrcom.o
-close_phq.o : ../../Modules/io_files.o
 close_phq.o : ../../Modules/io_global.o
 close_phq.o : ../../Modules/mp_pools.o
 close_phq.o : ../../PW/src/buffers.o
@@ -392,6 +391,7 @@ deallocate_phq.o : ../../PW/src/ldaU.o
 deallocate_phq.o : elph.o
 deallocate_phq.o : phcom.o
 deallocate_phq.o : ramanm.o
+delta_sphi.o : ../../LR_Modules/lrcom.o
 delta_sphi.o : ../../Modules/io_global.o
 delta_sphi.o : ../../Modules/ions_base.o
 delta_sphi.o : ../../Modules/kind.o

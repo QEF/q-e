@@ -93,7 +93,7 @@
       USE mp_global,  ONLY : nproc_bgrp, intra_bgrp_comm
       USE ions_base,  only : nat, nsp, ityp
       USE gvecw,      only : ngw
-      USE uspp,       only : nkb, nhtol, beta, ofsbeta
+      USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
       USE uspp_param, only : nh, upf, nhm
       USE gvect,      ONLY : gstart
 !
@@ -157,7 +157,7 @@
         IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
           DO ia = 1, nat
             IF( ityp(ia) == is ) THEN
-              inl = ofsbeta(ia)
+              inl = indv_ijkb0(ia)
               do iv = 1, nh( is )
                 becp(inl+iv,:) = becps( inl+iv, : )
               end do
@@ -332,7 +332,7 @@
       !
       use kinds,          only : DP
       use uspp_param,     only : nh, upf
-      use uspp,           only : dvan, ofsbeta
+      use uspp,           only : dvan, indv_ijkb0
       use electrons_base, only : nbsp_bgrp, nspin, ispin_bgrp, f_bgrp, nbspx_bgrp
       use ions_base,      only : nsp, nat, ityp
       !
@@ -353,12 +353,12 @@
       ennl_t = 0.d0  
       !
 !$omp parallel num_threads(min(4,omp_get_num_threads())) default(none) &
-!$omp shared(nat,ityp,ofsbeta,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,rhovan,dvan,nspin,ennl_t) &
+!$omp shared(nat,ityp,indv_ijkb0,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,rhovan,dvan,nspin,ennl_t) &
 !$omp private(ia,is,indv,iv,inl,jv,ijv,jnl,sums,iss,i,sumt)
 !$omp do reduction(+:ennl_t)
       do ia = 1, nat
          is   = ityp(ia)
-         indv = ofsbeta(ia)
+         indv = indv_ijkb0(ia)
          do iv = 1, nh(is)
             inl = indv + iv
             do jv = iv, nh(is)
@@ -397,7 +397,7 @@
       !
       use kinds,          only : DP
       use uspp_param,     only : nh
-      use uspp,           only : ofsbeta
+      use uspp,           only : indv_ijkb0
       use electrons_base, only : ispin, f
       use ions_base,      only : nat, ityp
       !
@@ -420,8 +420,8 @@
          do iv = 1, nh(is)
             do jv = iv, nh(is)
                ijv = (jv-1)*jv/2 + iv
-               inl = ofsbeta(ia) + iv
-               jnl = ofsbeta(ia) + jv
+               inl = indv_ijkb0(ia) + iv
+               jnl = indv_ijkb0(ia) + jv
                rhovan( ijv, ia, iss ) = f(iwf) * bec(inl,iwf) * bec(jnl,iwf)
             end do
          end do
@@ -469,7 +469,7 @@ SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
   !
   USE kinds,      ONLY : DP
   use ions_base,  only : nat, ityp
-  use uspp,       only : nhtol, nkb, dbeta, ofsbeta
+  use uspp,       only : nhtol, nkb, dbeta, indv_ijkb0
   use uspp_param, only : nh, nhm
   use gvect,      only : gstart
   use gvecw,      only : ngw
@@ -500,7 +500,7 @@ SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
      do i=1,3
         do ia = 1, nat
            is = ityp(ia) 
-           inl = ofsbeta(ia)
+           inl = indv_ijkb0(ia)
            do iv=1,nh(is)
               l=nhtol(iv,is)
               !     q = 0   component (with weight 1.0)
@@ -536,7 +536,7 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
   use mp,         only : mp_sum
   use mp_global,  only : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
   use ions_base,  only : nat, ityp
-  use uspp,       only : nhtol, nkb, dbeta, ofsbeta
+  use uspp,       only : nhtol, nkb, dbeta, indv_ijkb0
   use uspp_param, only : nh, nhm
   use gvect,      only : gstart
   use gvecw,      only : ngw
@@ -580,7 +580,7 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
         end if
         do ia = 1, nat
            is = ityp(ia) 
-           inl = ofsbeta(ia)
+           inl = indv_ijkb0(ia)
            do iss=1,nspin
               IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
                  nr = idesc( LAX_DESC_NR, iss )
@@ -621,7 +621,7 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
   !
   USE kinds,      ONLY : DP
   use uspp_param, only : nh
-  use uspp,       only : nkb, dvan, deeq, ofsbeta
+  use uspp,       only : nkb, dvan, deeq, indv_ijkb0
   use ions_base,  only : nat, ityp
   use cell_base,  only : h
   use io_global,  only : stdout
@@ -650,7 +650,7 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
   drhovan=0.0d0
 
 !$omp parallel default(none) &
-!$omp shared(nat,ityp,ofsbeta,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,drhovan,dvan,nspin,denl) &
+!$omp shared(nat,ityp,indv_ijkb0,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,drhovan,dvan,nspin,denl) &
 !$omp shared(idesc,iupdwn,nupdwn,ibgrp_g2l,nrcx,dbec) &
 !$omp private(ia,is,iv,inl,jv,ijv,jnl,dsums,iss,i,dsum,ii,ir,k,j,nr,istart,nss,ibgrp)
 !$omp do reduction(+:denl)
@@ -659,8 +659,8 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
      do iv=1,nh(is)
         do jv=iv,nh(is)
            ijv = (jv-1)*jv/2 + iv
-           inl = ofsbeta(ia) + iv
-           jnl = ofsbeta(ia) + jv
+           inl = indv_ijkb0(ia) + iv
+           jnl = indv_ijkb0(ia) + jv
            dsums=0.d0
            do iss=1,nspin
               IF( ( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) .AND. &
@@ -723,7 +723,7 @@ subroutine nlfq_bgrp_x( c_bgrp, betae, bec_bgrp, becdr_bgrp, fion )
   !     contribution to fion due to nonlocal part
   !
   USE kinds,          ONLY : DP
-  use uspp,           only : nkb, dvan, deeq, ofsbeta
+  use uspp,           only : nkb, dvan, deeq, indv_ijkb0
   use uspp_param,     only : nhm, nh
   use ions_base,      only : nax, nat, ityp
   use electrons_base, only : nbsp_bgrp, f_bgrp, nbspx_bgrp, ispin_bgrp
@@ -766,7 +766,7 @@ subroutine nlfq_bgrp_x( c_bgrp, betae, bec_bgrp, becdr_bgrp, fion )
   fion_loc = 0.0d0
   !
 !$omp parallel default(none), &
-!$omp shared(becdr_bgrp,bec_bgrp,fion_loc,f_bgrp,deeq,dvan,nbsp_bgrp,ofsbeta,nh, &
+!$omp shared(becdr_bgrp,bec_bgrp,fion_loc,f_bgrp,deeq,dvan,nbsp_bgrp,indv_ijkb0,nh, &
 !$omp        nat,nhm,nbspx_bgrp,ispin_bgrp,nproc_bgrp,me_bgrp,ityp), &
 !$omp private(tmpbec,tmpdr,is,ia,iv,jv,k,inl,jnl,temp,i,mytid,ntids,sum_tmpdr)
 
@@ -792,7 +792,7 @@ subroutine nlfq_bgrp_x( c_bgrp, betae, bec_bgrp, becdr_bgrp, fion )
 #endif  
         tmpbec = 0.d0
         do jv=1,nh(is)
-           jnl = ofsbeta(ia) + jv
+           jnl = indv_ijkb0(ia) + jv
            do iv=1,nh(is)
               do i = 1, nbsp_bgrp
                  temp = dvan(iv,jv,is) + deeq(jv,iv,ia,ispin_bgrp( i ) )
@@ -802,7 +802,7 @@ subroutine nlfq_bgrp_x( c_bgrp, betae, bec_bgrp, becdr_bgrp, fion )
         end do
 
         do iv = 1, nh(is)
-           inl = ofsbeta(ia) + iv
+           inl = indv_ijkb0(ia) + iv
            do i = 1, nbsp_bgrp
               tmpdr(i,iv) = f_bgrp( i ) * becdr_bgrp( inl, i, k )
            end do

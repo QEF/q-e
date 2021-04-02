@@ -10,6 +10,8 @@ set(sources
     cgsolve_all.f90
     cg_psi.f90
     ch_psi_all.f90
+    commutator_Hx_psi.f90
+    commutator_Vhubx_psi.f90
     Coul_cut_2D_ph.f90
     check_q_points_sym.f90
     dfpt_tetra_mod.f90
@@ -24,6 +26,7 @@ set(sources
     dv_rVV10.f90
     newdq.f90
     orthogonalize.f90
+    setup_offset_beta.f90
     setup_nscf.f90
     set_dbecsum_nc.f90
     set_int3_nc.f90

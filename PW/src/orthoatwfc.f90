@@ -7,21 +7,18 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE orthoUwfc(save_wfcatom)
+SUBROUTINE orthoUwfc
   !-----------------------------------------------------------------------
   !
   ! This routine saves to buffer "iunhub" atomic wavefunctions having an
-  ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for
-  ! Atomic wavefunctions are orthogonalized if desired, depending upon
+  ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
+  ! Atomic wavefunctions are orthogonalized if desired, depending upon 
   ! the value of "U_projection". "swfcatom" must NOT be allocated on input.
-  !
-  ! If save_wfcatom == .TRUE., also write atomic wavefunctions before
-  ! applying S to buffer.
   !
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : get_buffer, save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunhub, iunhub_noS, nwordwfcU
+  USE io_files,   ONLY : iunhub, nwordwfcU
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k
@@ -36,8 +33,6 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   USE becmod_subs_gpum, ONLY : using_becp_auto
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN) :: save_wfcatom
-  !! If .TRUE., write atomic wavefunction before applying S to buffer
   !
   INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
        l, lm, ltot, ntot, ipol, npw
@@ -52,7 +47,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   ELSE IF (U_projection=="file") THEN
      !
      ! Read atomic wavefunctions from file (produced by pmw.x). In this case,
-     ! U-specific atomic wavefunctions wfcU coincide with atomic wavefunctions
+     ! U-specific atomic wavefunctions wfcU coincide with atomic wavefunctions 
      !
      WRITE( stdout,*) 'LDA+U Projector read from file '
      DO ik = 1, nks
@@ -65,7 +60,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are NOT orthogonalized'
   ELSE IF (U_projection=="ortho-atomic") THEN
      orthogonalize_wfc = .TRUE.
-     normalize_only = .FALSE.
+     normalize_only = .FALSE.    
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are orthogonalized'
      IF (gamma_only) CALL errore('orthoUwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
@@ -79,17 +74,17 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      WRITE( stdout,*) "U_projection_type =", U_projection
      CALL errore ("orthoUwfc"," this U_projection_type is not valid",1)
   END IF
-  !
+
   ALLOCATE ( wfcatom(npwx*npol, natomwfc), swfcatom(npwx*npol, natomwfc) )
-  !
+  
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
-  !
+
   ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec_type (nkb,natomwfc, becp)
+  CALL allocate_bec_type (nkb,natomwfc, becp) 
   CALL using_becp_auto(2)
-  !
+  
   DO ik = 1, nks
-     !
+     
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
      ELSE
@@ -98,9 +93,9 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      npw = ngk (ik)
      CALL using_vkb(1)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-     CALL calbec (npw, vkb, wfcatom, becp)
+     CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-     !
+
      IF (orthogonalize_wfc) &
         CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
@@ -109,18 +104,8 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      ! save to unit iunhub
      !
      CALL copy_U_wfc (swfcatom, noncolin)
-     IF ( nks > 1 ) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
-     !
-     ! If save_wfcatom=.TRUE. copy the orthonormalized wfcatom to wfcU and save
-     ! to unit iunhubnoS
-     !
-     IF (save_wfcatom) THEN
-        IF (orthogonalize_wfc) THEN
-           CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
-        ENDIF
-        CALL copy_U_wfc (wfcatom, noncolin)
-        CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
-     ENDIF
+     IF ( nks > 1 ) &
+          CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
   ENDDO
   DEALLOCATE (wfcatom, swfcatom)
@@ -130,7 +115,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   use_bgrp_in_hpsi = save_flag
   !
   RETURN
-  !
+  !     
 END SUBROUTINE orthoUwfc
 !
 !-----------------------------------------------------------------------

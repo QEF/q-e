@@ -22,10 +22,11 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    USE kinds,       ONLY : DP
    USE uspp_param,  ONLY : nh
    USE ions_base,   ONLY : ityp
-   USE uspp,        ONLY : qq_nt, ofsbeta
+   USE uspp,        ONLY : qq_nt
    USE wvfct,       ONLY : npwx, nbnd
    USE mp_pools,    ONLY : intra_pool_comm
    USE mp,          ONLY : mp_sum
+   USE control_lr,  ONLY : ofsbeta
    !
    IMPLICIT NONE
    !
@@ -111,10 +112,11 @@ SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq)
    USE kinds,      ONLY : DP
    USE uspp_param, ONLY : nh
    USE ions_base,  ONLY : ityp
-   USE uspp,       ONLY : qq_nt, ofsbeta
+   USE uspp,       ONLY : qq_nt
    USE wvfct,      ONLY : npwx, nbnd
    USE mp_pools,   ONLY : intra_pool_comm
    USE mp,         ONLY : mp_sum
+   USE control_lr, ONLY : ofsbeta
    !
    IMPLICIT NONE
    !
@@ -314,10 +316,11 @@ SUBROUTINE term_one (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     !--------------------------------------------------------------------
     ! 
     USE kinds,      ONLY : DP
-    USE uspp,       ONLY : nkb, okvan, ofsbeta
+    USE uspp,       ONLY : nkb, okvan
     USE wvfct,      ONLY : npwx, nbnd, wg 
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : ityp
+    USE control_lr, ONLY : ofsbeta
     USE ldaU_ph,    ONLY : proj1, projpb, projpdb
     USE klist,      ONLY : ngk, igk_k
     USE qpoint,     ONLY : ikks, ikqs
@@ -503,10 +506,11 @@ SUBROUTINE term_one_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     !------------------------------------------------------------------------
     ! 
     USE kinds,      ONLY : DP
-    USE uspp,       ONLY : nkb, okvan, ofsbeta
+    USE uspp,       ONLY : nkb, okvan
     USE wvfct,      ONLY : npwx, nbnd, wg 
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : ityp
+    USE control_lr, ONLY : ofsbeta
     USE ldaU_ph,    ONLY : proj1, projpb, projpdb
     USE klist,      ONLY : ngk, igk_k
     USE qpoint,     ONLY : ikks, ikqs

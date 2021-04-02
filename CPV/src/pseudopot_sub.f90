@@ -69,7 +69,7 @@
                             nhtolm, &!
                             indv,   &!
                             ijtoh,  &!
-                            ofsbeta !
+                            indv_ijkb0 !
 
       IMPLICIT NONE
      
@@ -107,13 +107,13 @@
       if( allocated( indv  ) ) deallocate( indv )
       if( allocated( nhtolm  ) ) deallocate( nhtolm )
       if( allocated( ijtoh  ) ) deallocate( ijtoh )
-      if( allocated( ofsbeta  ) ) deallocate( ofsbeta )
+      if( allocated( indv_ijkb0  ) ) deallocate( indv_ijkb0 )
       !
       allocate(nhtol(nhm,nsp))
       allocate(indv (nhm,nsp))
       allocate(nhtolm(nhm,nsp))
       allocate(ijtoh(nhm,nhm,nsp))
-      allocate(ofsbeta(nat))
+      allocate(indv_ijkb0(nat))
 
       !     ------------------------------------------------------------------
       !     definition of indices nhtol, indv, nhtolm
@@ -150,7 +150,7 @@
          !      atom ia in the global list of beta functions
          do ia = 1,nat
             IF ( ityp(ia) == is ) THEN
-               ofsbeta(ia) = ijkb0
+               indv_ijkb0(ia) = ijkb0
                ijkb0 = ijkb0 + nh(is)
            END IF
         end do
