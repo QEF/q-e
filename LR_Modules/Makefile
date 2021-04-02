@@ -21,8 +21,6 @@ cg_psi.o \
 ccg_psi.o \
 ch_psi_all.o \
 ch_psi_all_complex.o \
-commutator_Hx_psi.o \
-commutator_Vhubx_psi.o \
 Coul_cut_2D_ph.o \
 check_q_points_sym.o \
 dfpt_tetra_mod.o \

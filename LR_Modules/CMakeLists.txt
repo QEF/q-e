@@ -10,8 +10,6 @@ set(sources
     cgsolve_all.f90
     cg_psi.f90
     ch_psi_all.f90
-    commutator_Hx_psi.f90
-    commutator_Vhubx_psi.f90
     Coul_cut_2D_ph.f90
     check_q_points_sym.f90
     dfpt_tetra_mod.f90

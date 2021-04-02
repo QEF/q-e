@@ -37,6 +37,7 @@ hp_check_type.o : ../../PW/src/symm_base.o
 hp_check_type.o : hpcom.o
 hp_clean_q.o : ../../LR_Modules/lrcom.o
 hp_close_q.o : ../../LR_Modules/lrcom.o
+hp_close_q.o : ../../Modules/io_files.o
 hp_close_q.o : ../../PW/src/buffers.o
 hp_close_q.o : hpcom.o
 hp_dealloc_1.o : ../../LR_Modules/lrcom.o
@@ -256,6 +257,7 @@ hp_setup_q.o : ../../upflib/uspp.o
 hp_setup_q.o : hpcom.o
 hp_solve_linear_system.o : ../../FFTXlib/fft_helper_subroutines.o
 hp_solve_linear_system.o : ../../FFTXlib/fft_interfaces.o
+hp_solve_linear_system.o : ../../LR_Modules/apply_dpot_mod.o
 hp_solve_linear_system.o : ../../LR_Modules/dv_of_drho.o
 hp_solve_linear_system.o : ../../LR_Modules/lrcom.o
 hp_solve_linear_system.o : ../../Modules/becmod.o
