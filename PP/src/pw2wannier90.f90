@@ -453,7 +453,9 @@ PROGRAM pw2wannier90
      if(write_dmn  )  CALL print_clock( 'compute_dmn'  )!YN:
      IF(write_amn  )  CALL print_clock( 'compute_amn'  )
      IF(write_mmn  )  CALL print_clock( 'compute_mmn'  )
+     IF(write_spn  )  CALL print_clock( 'compute_spin'  )
      IF(write_sHu .OR. write_sIu) CALL print_clock( 'compute_shc'  )
+     IF(write_uHu .OR. write_uIu) CALL print_clock( 'compute_orb'  )
      IF(write_unk  )  CALL print_clock( 'write_unk'    )
      IF(write_unkg )  CALL print_clock( 'write_parity' )
      ! not sure if this should be called also in 'library' mode or not !!
@@ -2435,6 +2437,7 @@ SUBROUTINE compute_spin
    complex(dp) :: sigma_x_aug, sigma_y_aug, sigma_z_aug
    COMPLEX(DP), ALLOCATABLE :: be_n(:,:), be_m(:,:)
 
+   CALL start_clock("compute_spin")
 
    any_uspp = any(upf(1:ntyp)%tvanp)
 
@@ -2611,8 +2614,9 @@ SUBROUTINE compute_spin
 
    WRITE(stdout,*)
    WRITE(stdout,*) ' SPIN calculated'
-
-   RETURN
+   !
+   CALL stop_clock("compute_spin")
+   !
 END SUBROUTINE compute_spin
 
 !-----------------------------------------------------------------------
@@ -2678,6 +2682,8 @@ SUBROUTINE compute_orb
    complex(DP), allocatable :: uHu(:,:),uIu(:,:)
    ! end change Lopez, Thonhauser, Souza
    INTEGER                  :: ibnd_n, ibnd_m
+
+   CALL start_clock('compute_orb')
 
    any_uspp = any(upf(1:ntyp)%tvanp)
 
@@ -3037,8 +3043,9 @@ SUBROUTINE compute_orb
    WRITE(stdout,*)
    if(write_uHu) WRITE(stdout,*) ' uHu calculated'
    if(write_uIu) WRITE(stdout,*) ' uIu calculated'
-
-   RETURN
+   !
+   CALL stop_clock('compute_orb')
+   !
 END SUBROUTINE compute_orb
 !
 !-----------------------------------------------------------------------
