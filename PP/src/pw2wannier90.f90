@@ -2959,28 +2959,13 @@ SUBROUTINE compute_orb
                 endif
                 !
              end do ! m = 1, nbnd
+             !
              if (ionode) then  ! write the files out to disk
                 if(write_uhu) then
-                   if(uHu_formatted) then ! slow bulky way for transferable files
-                      do n=1,num_bands
-                         do m=1,num_bands
-                            write(iun_uHu,'(2ES20.10)') uHu(m,n)
-                         enddo
-                      enddo
-                   else  ! the fast way
-                      write(iun_uHu) ((uHu(n,m),n=1,num_bands),m=1,num_bands)
-                   endif
+                   CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, uHu)
                 endif
-                if(write_uiu) then
-                   if(uIu_formatted) then ! slow bulky way for transferable files
-                      do n=1,num_bands
-                         do m=1,num_bands
-                            write(iun_uIu,'(2ES20.10)') uIu(m,n)
-                         enddo
-                      enddo
-                   else ! the fast way
-                      write(iun_uIu) ((uIu(n,m),n=1,num_bands),m=1,num_bands)
-                   endif
+                if(write_uIu) then
+                   CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, uIu)
                 endif
              endif ! end of io
           end do ! i_b1
@@ -3295,26 +3280,10 @@ SUBROUTINE compute_shc
          IF (ionode) THEN  ! write the files out to disk
             DO ispol = 1, 3
                IF (write_sHu) THEN
-                  IF (sHu_formatted) THEN ! slow bulky way for transferable files
-                     DO n = 1, num_bands
-                        DO m = 1, num_bands
-                           WRITE(iun_sHu, '(2ES20.10)') sHu(m,n,ispol)
-                        ENDDO
-                     ENDDO
-                  ELSE  ! the fast way
-                     WRITE(iun_sHu) ((sHu(n,m,ispol), n=1,num_bands), m=1,num_bands)
-                  ENDIF
+                  CALL utility_write_array(iun_sHu, sHu_formatted, num_bands, sHu(:, :, ispol))
                ENDIF
                IF (write_sHu) THEN
-                  IF (sIu_formatted) THEN ! slow bulky way for transferable files
-                     DO n = 1, num_bands
-                        DO m = 1, num_bands
-                           WRITE(iun_sIu, '(2ES20.10)') sIu(m,n,ispol)
-                        ENDDO
-                     ENDDO
-                  ELSE ! the fast way
-                     WRITE(iun_sIu) ((sIu(n,m,ispol), n=1,num_bands), m=1,num_bands)
-                  ENDIF
+                  CALL utility_write_array(iun_sIu, sIu_formatted, num_bands, sIu(:, :, ispol))
                ENDIF
             ENDDO
          ENDIF ! end of io
@@ -3342,6 +3311,50 @@ SUBROUTINE compute_shc
    RETURN
    !
 END SUBROUTINE
+
+!--------------------------------------------------------------------------
+SUBROUTINE utility_write_array(iun, formatted, ndim, arr)
+   !------------------------------------------------------------------------
+   !!
+   !! Write a (ndim, ndim) array arr to file unit iun.
+   !!
+   !-----------------------------------------------------------------------
+   !
+   USE kinds, ONLY : DP
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: iun
+   !! Unit of the file to write. Must be already opened.
+   LOGICAL, INTENT(IN) :: formatted
+   !! If true, write formatted. If false, write unformatted.
+   INTEGER, INTENT(IN) :: ndim
+   !! Size of the array.
+   COMPLEX(DP), INTENT(IN) :: arr(ndim, ndim)
+   !! Array to write to file.
+   !
+   INTEGER :: m
+   !! Array index
+   INTEGER :: n
+   !! Array index
+   !
+   IF (formatted) THEN
+      ! Write formatted file. Slow bulky way for transferable files
+      DO n = 1, ndim
+         DO m = 1, ndim
+            WRITE(iun, '(2ES20.10)') arr(m, n)
+         ENDDO
+      ENDDO
+   ELSE
+      ! Write unformatted file. The fast way
+      WRITE(iun) ((arr(n,m), n=1, ndim), m=1, ndim)
+   ENDIF
+   !
+  !
+!--------------------------------------------------------------------------
+END SUBROUTINE utility_write_array
+!--------------------------------------------------------------------------
+
 !-----------------------------------------------------------------------
 SUBROUTINE compute_amn
    !-----------------------------------------------------------------------
