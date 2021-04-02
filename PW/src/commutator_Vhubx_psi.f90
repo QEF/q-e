@@ -7,48 +7,51 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE commutator_Vhubx_psi(ik, ipol)
+SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the commutator between the non-local
   ! Hubbard potential and the position operator, applied to psi
-  ! of the current k point, i.e. [V_hub,r]|psi_nk> . 
+  ! of the current k point, i.e. [V_hub,r]|psi_nk> .
   ! The result is added to dpsi.
   !
   ! Some insights about the formulas here can be found e.g.
-  ! in I. Timrov's PhD thesis, Sec. 6.1.3, 
+  ! in I. Timrov's PhD thesis, Sec. 6.1.3,
   ! https://pastel.archives-ouvertes.fr/pastel-00823758
   !
   ! Written  by A. Floris
   ! Modified by I. Timrov (01.10.2018)
   !
   USE kinds,          ONLY : DP
-  USE io_files,       ONLY : nwordwfcU
+  USE io_files,       ONLY : iunhub, iunhub_noS, nwordwfcU
   USE wavefunctions,  ONLY : evc
-  USE control_lr,     ONLY : lgamma, nbnd_occ
   USE wvfct,          ONLY : npwx, nbnd
   USE ions_base,      ONLY : nat, ityp, ntyp => nsp
   USE ldaU,           ONLY : Hubbard_l, Hubbard_U, Hubbard_J0, &
-                             is_hubbard, nwfcU, offsetU, oatwfc   
-  USE uspp,           ONLY : vkb, nkb, okvan 
-  USE uspp_param,     ONLY : nh, upf  
-  USE eqv,            ONLY : dpsi
+                             is_hubbard, nwfcU, offsetU, oatwfc
+  USE uspp,           ONLY : vkb, nkb, okvan
+  USE uspp_param,     ONLY : nh, upf
   USE lsda_mod,       ONLY : lsda, current_spin, isk, nspin
-  USE klist,          ONLY : xk, ngk, igk_k 
+  USE klist,          ONLY : xk, ngk, igk_k
   USE cell_base,      ONLY : tpiba, at
-  USE gvect,          ONLY : g 
+  USE gvect,          ONLY : g
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
   USE mp_pools,       ONLY : intra_pool_comm
-  USE units_lr,       ONLY : iuatwfc, iuatswfc
   USE buffers,        ONLY : get_buffer
   USE basis,          ONLY : natomwfc
+  USE noncollin_module, ONLY : noncolin, npol
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ik, ipol
-  ! k point index
-  ! polarization (crystal units)
+  INTEGER, INTENT(IN) :: ik
+  !! k point index
+  INTEGER, INTENT(IN) :: ipol
+  !! polarization in crystal coordinates
+  INTEGER, INTENT(IN) :: nbnd_calc
+  !! Number of bands to calculate [V_hub, x_ipol]|psi_ik>
+  COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol, nbnd)
+  !! Output wavefunction where [V_hub, x_ipol]|psi_ik> is added
   !
   REAL(DP), PARAMETER :: eps = 1.0d-8
   INTEGER     :: na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
@@ -58,7 +61,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   COMPLEX(DP), ALLOCATABLE :: dkwfcbessel(:,:), dkwfcylmr(:,:), dkwfcatomk(:,:),   &
                  dpqq26(:,:), dpqq38(:,:), dpqq47(:,:), dkvkbbessel(:,:),          &
                  dkvkbylmr(:,:), dkvkb(:,:), aux_1234(:), termi(:,:), trm(:,:),    &
-                 wfcatomk(:,:), swfcatomk(:,:), proj1(:,:), proj2(:,:), proj3(:,:)               
+                 wfcatomk(:,:), swfcatomk(:,:), proj1(:,:), proj2(:,:), proj3(:,:)
   COMPLEX(DP), EXTERNAL :: zdotc
   !
   CALL start_clock( 'commutator_Vhubx_psi' )
@@ -87,34 +90,34 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   ALLOCATE (gk(3,npw))
   ALLOCATE (g2k(npw))
   !
-  dpqq26     = (0.d0, 0.d0) 
+  dpqq26     = (0.d0, 0.d0)
   dpqq38     = (0.d0, 0.d0)
   dpqq47     = (0.d0, 0.d0)
-  dkwfcatomk = (0.d0, 0.d0) 
+  dkwfcatomk = (0.d0, 0.d0)
   dkvkb      = (0.d0, 0.d0)
-  ! 
+  !
   IF (lsda) THEN
     current_spin = isk(ik)
-    if (nspin.eq.2) then
-       if (current_spin.eq.1) then
+    if (nspin == 2) then
+       if (current_spin == 1) then
           op_spin = 2
        else
           op_spin = 1
        endif
-    else        
+    else
        op_spin=1
     endif
   ENDIF
   !
-  ! Read the atomic orbitals \phi at k from file (unit iuatwfc)
-  ! 
-  CALL get_buffer (wfcatomk, nwordwfcU, iuatwfc, ik)
+  ! Read the atomic orbitals \phi at k from file (unit iunhub_noS)
   !
-  ! Read S*\phi at k from file (unit iuatswfc)
+  CALL get_buffer (wfcatomk, nwordwfcU, iunhub_noS, ik)
   !
-  CALL get_buffer (swfcatomk, nwordwfcU, iuatswfc, ik)
+  ! Read S*\phi at k from file (unit iunhub)
   !
-  ! Derivatives w.r.t. k of the atomic wfc 
+  CALL get_buffer (swfcatomk, nwordwfcU, iunhub, ik)
+  !
+  ! Derivatives w.r.t. k of the atomic wfc
   ! \phi'_(k+G,I,m)_ipol> = exp^-i(k+G)*tau_I * d/dk_ipol[\phi_0(k+G,I,m)]
   ! where \phi_0(k+G,I,m) is the Fourier component of the atomic wfc localized in zero
   !
@@ -126,7 +129,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   DO ig = 1, npw
      !
      ! The gk factor is necessary because we do not want the derivative of the Bessel functions
-     ! w.r.t. the modulus (calculated in gen_at_dj.f90), but w.r.t. 
+     ! w.r.t. the modulus (calculated in gen_at_dj.f90), but w.r.t.
      ! the cartesian component and then to crystal component ipol
      ! gk_icart= d|k+G|/d(k+G)_icart
      !
@@ -140,7 +143,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
         gk(:,ig) = gk(:,ig) / SQRT(g2k(ig))
      ENDIF
      !
-     ! Derivative wrt crystal axis ipol 
+     ! Derivative wrt crystal axis ipol
      ! d|k+G|/d(k+G)_ipol = \sum_{icart} d|k+G|/d(k+G)_icart * at (icart,ipol)
      ! The derivative is done for all the atomic wfc and for each ig
      !
@@ -154,7 +157,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                                         + dkwfcbessel(ig,offpm+m1) *    &
                                           ( at (1, ipol) * gk (1, ig) + &
                                             at (2, ipol) * gk (2, ig) + &
-                                            at (3, ipol) * gk (3, ig) ) 
+                                            at (3, ipol) * gk (3, ig) )
             ENDDO
          ENDIF
      ENDDO
@@ -193,19 +196,19 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   ! Preliminary calculation of various scalar products
   ! The Hubbard terms
   !
-  DO nah = 1, nat 
+  DO nah = 1, nat
      !
-     nt = ityp (nah)  
+     nt = ityp (nah)
      !
-     IF (is_hubbard(nt)) THEN  
+     IF (is_hubbard(nt)) THEN
         !
         DO m = 1, 2 * Hubbard_l(nt) + 1
-           ! 
+           !
            ihubst = offsetU(nah) + m
            !
-           IF (okvan) THEN  
+           IF (okvan) THEN
               !
-              ! vecqqproj for terms 2,3,4,6,7,8 
+              ! vecqqproj for terms 2,3,4,6,7,8
               ! term 6 is the cc of term 2 with m <=> m'
               ! the same holds for 3 and 8, 4 and 7
               ! Note: these are the notations from private notes of A. Floris
@@ -213,24 +216,24 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
               CALL vecqqproj (npw, vkb, vkb, dkwfcatomk(:,ihubst), dpqq26(:,ihubst))
               CALL vecqqproj (npw, dkvkb, vkb, wfcatomk(:,ihubst), dpqq38(:,ihubst))
               CALL vecqqproj (npw, vkb, dkvkb, wfcatomk(:,ihubst), dpqq47(:,ihubst))
-              !     
-              DO ibnd = 1, nbnd_occ(ik)
+              !
+              DO ibnd = 1, nbnd_calc
                  proj3(ibnd,ihubst) = zdotc (npw, dpqq26(:,ihubst), 1, evc(:,ibnd), 1) + &
                                       zdotc (npw, dpqq47(:,ihubst), 1, evc(:,ibnd), 1) + &
-                                      zdotc (npw, dpqq38(:,ihubst), 1, evc(:,ibnd), 1)      
+                                      zdotc (npw, dpqq38(:,ihubst), 1, evc(:,ibnd), 1)
               ENDDO
-              !     
+              !
            ENDIF
            !
-           DO ibnd = 1, nbnd_occ(ik)
-              !                       
-              ! Calculate proj (ihubst,ibnd) = < S_{k}\phi_(k,I,m)| psi(ibnd,ik) > 
-              ! at ihubst (i.e. I, m).    
-              !              
-              proj1(ibnd,ihubst) = zdotc (npw, swfcatomk(:,ihubst),  1, evc(:,ibnd), 1)
-              proj2(ibnd,ihubst) = zdotc (npw, dkwfcatomk(:,ihubst), 1, evc(:,ibnd), 1) 
+           DO ibnd = 1, nbnd_calc
               !
-           ENDDO 
+              ! Calculate proj (ihubst,ibnd) = < S_{k}\phi_(k,I,m)| psi(ibnd,ik) >
+              ! at ihubst (i.e. I, m).
+              !
+              proj1(ibnd,ihubst) = zdotc (npw, swfcatomk(:,ihubst),  1, evc(:,ibnd), 1)
+              proj2(ibnd,ihubst) = zdotc (npw, dkwfcatomk(:,ihubst), 1, evc(:,ibnd), 1)
+              !
+           ENDDO
            !
         ENDDO
         !
@@ -238,110 +241,108 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
      !
   ENDDO
   !
-#if defined(__MPI)
   CALL mp_sum(proj1, intra_pool_comm)
   CALL mp_sum(proj2, intra_pool_comm)
   CALL mp_sum(proj3, intra_pool_comm)
-#endif
   !
-  DO nah = 1, nat   ! the Hubbard atom 
+  DO nah = 1, nat   ! the Hubbard atom
      !
-     nt = ityp (nah)  
+     nt = ityp (nah)
      !
      IF (is_hubbard(nt)) THEN
             !
             termi = (0.d0, 0.d0)
-            !    
+            !
             DO m1 = 1, 2*Hubbard_l(nt)+1
-               ! 
-               ihubst1 = offsetU(nah) + m1 
-               aux_1234 = (0.d0, 0.d0)    
+               !
+               ihubst1 = offsetU(nah) + m1
+               aux_1234 = (0.d0, 0.d0)
                !
                ! term1 + term2 + term3 + term4
                !
-               aux_1234 =  dkwfcatomk(:,ihubst1)   
-               ! 
+               aux_1234 =  dkwfcatomk(:,ihubst1)
+               !
                IF (okvan) THEN
                   aux_1234 = aux_1234 + dpqq26(:,ihubst1) &
                                       + dpqq38(:,ihubst1) &
-                                      + dpqq47(:,ihubst1) 
-               ENDIF 
-               ! 
-               DO m2 = 1, 2 * Hubbard_l(nt) + 1 
-                  !   
-                  ihubst2 = offsetU(nah) + m2 
+                                      + dpqq47(:,ihubst1)
+               ENDIF
+               !
+               DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                  !
+                  ihubst2 = offsetU(nah) + m2
                   !
                   trm = (0.d0, 0.d0)
-                  ! 
+                  !
                   nsaux = rho%ns(m1, m2, current_spin, nah)
                   !
-                  DO ibnd = 1, nbnd_occ(ik)
+                  DO ibnd = 1, nbnd_calc
                      trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + &     ! term_1234
-                                   swfcatomk(:,ihubst1) * proj2(ibnd,ihubst2) ! term 5  
+                                   swfcatomk(:,ihubst1) * proj2(ibnd,ihubst2) ! term 5
                   ENDDO
-                  ! 
-                  IF (okvan) THEN  
-                     DO ibnd = 1, nbnd_occ(ik)
+                  !
+                  IF (okvan) THEN
+                     DO ibnd = 1, nbnd_calc
                         trm(:,ibnd) = trm(:,ibnd) + swfcatomk(:,ihubst1) * &
                                                     proj3(ibnd,ihubst2) ! term_6+7+8
                      ENDDO
                   ENDIF
-                  !                    
+                  !
                   ! termi (npwx,nbnd), trm (npwx,nbnd), summing for all bands and G vectors
                   !
-                  DO ibnd = 1, nbnd_occ(ik)
+                  DO ibnd = 1, nbnd_calc
                      IF (m1 == m2) termi(:,ibnd) = termi(:,ibnd) + 0.5d0 * trm(:,ibnd)
-                     termi(:,ibnd) = termi(:,ibnd) - nsaux * trm(:,ibnd) 
+                     termi(:,ibnd) = termi(:,ibnd) - nsaux * trm(:,ibnd)
                   ENDDO
-                  ! 
+                  !
                ENDDO
                !
             ENDDO
             !
             ! We want to have -i d/dk
             !
-            DO ibnd = 1, nbnd_occ(ik)
+            DO ibnd = 1, nbnd_calc
                dpsi(:,ibnd) = dpsi(:,ibnd) + (0.d0,-1.d0) * termi(:,ibnd) * &
                                              (Hubbard_U(nt) - Hubbard_J0(nt))
             ENDDO
             !
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ! The following is for the J0\=0 case 
-            !  
+            ! The following is for the J0\=0 case
+            !
             IF (nspin.EQ.2 .AND. Hubbard_J0(nt).NE.0.d0) THEN
                !
                termi = (0.d0, 0.d0)
-               !    
-               DO m1 = 1, 2*Hubbard_l(nt)+1 
+               !
+               DO m1 = 1, 2*Hubbard_l(nt)+1
                   !
-                  ihubst1 = offsetU(nah) + m1 
-                  aux_1234 = (0.d0, 0.d0)    
+                  ihubst1 = offsetU(nah) + m1
+                  aux_1234 = (0.d0, 0.d0)
                   !
                   ! term1 + term2 + term3 + term4
-                  ! 
-                  aux_1234 = dkwfcatomk(:,ihubst1)   
+                  !
+                  aux_1234 = dkwfcatomk(:,ihubst1)
                   !
                   IF (okvan) THEN
                      aux_1234 = aux_1234 + dpqq26(:,ihubst1) &
                                          + dpqq38(:,ihubst1) &
-                                         + dpqq47(:,ihubst1) 
-                  ENDIF 
+                                         + dpqq47(:,ihubst1)
+                  ENDIF
                   !
-                  DO m2 = 1, 2*Hubbard_l(nt)+1 
-                     !   
-                     ihubst2 = offsetU(nah) + m2 
+                  DO m2 = 1, 2*Hubbard_l(nt)+1
+                     !
+                     ihubst2 = offsetU(nah) + m2
                      !
                      trm = (0.d0, 0.d0)
-                     ! 
+                     !
                      nsaux = rho%ns(m1, m2, op_spin, nah)
                      !
-                     DO ibnd = 1, nbnd_occ(ik)
+                     DO ibnd = 1, nbnd_calc
                         trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + & ! term_1234
-                                      swfcatomk(:,ihubst1) * proj2(ibnd,ihubst2) ! term 5  
+                                      swfcatomk(:,ihubst1) * proj2(ibnd,ihubst2) ! term 5
                      ENDDO
-                     ! 
-                     IF (okvan) THEN  
-                        DO ibnd = 1, nbnd_occ(ik)
+                     !
+                     IF (okvan) THEN
+                        DO ibnd = 1, nbnd_calc
                            trm(:,ibnd) = trm(:,ibnd) + swfcatomk(:,ihubst1) &
                                                      * proj3(ibnd,ihubst2)  ! term_6+7+8
                         ENDDO
@@ -349,24 +350,24 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                      !
                      ! termi (npwx,nbnd), trm (npwx,nbnd), summing for all bands and G vectors
                      !
-                     DO ibnd = 1, nbnd_occ(ik)
+                     DO ibnd = 1, nbnd_calc
                         termi(:,ibnd) = termi(:,ibnd) + nsaux * trm(:,ibnd) ! sign change
                      ENDDO
-                     ! 
+                     !
                   ENDDO
                   !
                ENDDO
                !
                ! We want to have -i d/dk
                !
-               DO ibnd = 1, nbnd_occ(ik)
+               DO ibnd = 1, nbnd_calc
                   dpsi(:,ibnd) = dpsi(:,ibnd) + (0.d0,-1.d0) * termi(:,ibnd) * Hubbard_J0(nt)
                ENDDO
                !
             ENDIF
-            ! 
+            !
      ENDIF
-     ! 
+     !
   ENDDO
   !
   DEALLOCATE (proj1)
@@ -389,27 +390,26 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   DEALLOCATE (xyz)
   DEALLOCATE (gk)
   DEALLOCATE (g2k)
-  !    
+  !
   CALL stop_clock ('commutator_Vhubx_psi')
   !
   RETURN
-  !    
+  !
 END SUBROUTINE commutator_Vhubx_psi
-   
+
 SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     !
-    ! Calculate dpqq (ig) = \sum {na l1 l2} vec1(ig ,na,l1) 
+    ! Calculate dpqq (ig) = \sum {na l1 l2} vec1(ig ,na,l1)
     !                * qq(na, l1 ,l2) * < vec2 (na,l2) | vec3 >
     !
     USE kinds,      ONLY : DP
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : nat, ityp
-    USE uspp,       ONLY : qq_nt, nkb
+    USE uspp,       ONLY : qq_nt, nkb, ofsbeta
     USE wvfct,      ONLY : npwx
     USE mp,         ONLY : mp_sum
     USE mp_pools,   ONLY : intra_pool_comm
-    USE control_lr, ONLY : ofsbeta
-    !    
+    !
     IMPLICIT NONE
     !
     ! Index of the displaced atom
@@ -426,14 +426,14 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     COMPLEX(DP), ALLOCATABLE :: aux1(:)
     COMPLEX(DP) :: projaux1vec3
     COMPLEX(DP), EXTERNAL :: zdotc
-    !    
+    !
     dpqq = (0.d0, 0.d0)
     !
     ALLOCATE (aux1(npwx))
     !
     DO na = 1, nat
        !
-       nt = ityp(na)    
+       nt = ityp(na)
        !
        DO l1 = 1, nh(nt)
           !
@@ -450,10 +450,8 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
           !
           projaux1vec3 = zdotc (npw, aux1, 1, vec3, 1)
           !
-#if defined(__MPI)
           CALL mp_sum(projaux1vec3, intra_pool_comm)
-#endif
-          !              
+          !
           ! Summing on na and l1 for each ig
           !
           dpqq(:) = dpqq(:) + vec1(:,ibeta1) *  projaux1vec3

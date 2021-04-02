@@ -445,10 +445,6 @@ subroutine phq_setup
      ! Initialize d1, d2, d3 to rotate the spherical harmonics
      !
      CALL d_matrix (d1, d2, d3)
-     ! 
-     ! Calculate the offset of beta functions for all atoms. 
-     !
-     CALL setup_offset_beta()
      !
   ENDIF
   !

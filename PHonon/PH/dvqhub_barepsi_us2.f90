@@ -28,9 +28,9 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             proj1, proj2, effU 
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp,          ONLY : vkb, nkb, okvan 
+  USE uspp,          ONLY : vkb, nkb, okvan, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatwfc, iuatswfc
   USE uspp_param,    ONLY : nh
   USE lsda_mod,      ONLY : lsda, current_spin, isk

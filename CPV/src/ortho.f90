@@ -377,7 +377,7 @@ CONTAINS
    !
 
    SUBROUTINE compute_qs_times_betas( bephi, bec_row, qbephi, qbecp, idesc )
-      USE uspp,           ONLY: nkb, qq_nt, qq_nt_d, indv_ijkb0, nkbus
+      USE uspp,           ONLY: nkb, qq_nt, qq_nt_d, ofsbeta, nkbus
       USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: nspin, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, nbsp, nupdwn, iupdwn
       USE ions_base,      ONLY: na, nat, nsp, ityp
@@ -428,7 +428,7 @@ CONTAINS
                DO ia = 1, nat
                   is = ityp(ia)
                   IF( upf(is)%tvanp ) THEN
-                     indv = indv_ijkb0(ia)
+                     indv = ofsbeta(ia)
                      nhs  = nh(is)
 #if defined (__CUDA)
                      CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt_d(1,1,is), SIZE(qq_nt_d,1), &
@@ -462,7 +462,7 @@ CONTAINS
    END SUBROUTINE compute_qs_times_betas
 
    SUBROUTINE keep_only_us(wrk)
-      USE uspp,           ONLY: indv_ijkb0
+      USE uspp,           ONLY: ofsbeta
       USE uspp_param,     ONLY: nh, upf
       USE ions_base,      ONLY: na, nat, nsp, ityp
 #if defined (__CUDA)
@@ -473,7 +473,7 @@ CONTAINS
       INTEGER :: ia, is, inl, nhs, iv
       DO ia = 1, nat
          is  = ityp(ia)
-         inl = indv_ijkb0(ia)
+         inl = ofsbeta(ia)
          nhs = nh(is)
          IF( .NOT. upf(is)%tvanp ) THEN
 !$cuf kernel do (1)

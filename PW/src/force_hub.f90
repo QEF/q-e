@@ -38,7 +38,7 @@ SUBROUTINE force_hub( forceh )
    USE mp,                   ONLY : mp_sum
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
                                     deallocate_bec_type
-   USE uspp,                 ONLY : nkb, vkb, indv_ijkb0, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, ofsbeta, using_vkb
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE klist,                ONLY : nks, xk, ngk, igk_k
@@ -155,7 +155,7 @@ SUBROUTINE force_hub( forceh )
       !
       DO alpha = 1, nat  ! forces are calculated by displacing atom alpha ...
          !
-         ijkb0 = indv_ijkb0(alpha) ! positions of beta functions for atom alpha
+         ijkb0 = ofsbeta(alpha) ! positions of beta functions for atom alpha
          !
          IF (lda_plus_u_kind.EQ.0) THEN
             !

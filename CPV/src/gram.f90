@@ -102,7 +102,7 @@ CONTAINS
       USE ions_base,          ONLY: nat, ityp
       USE gvecw,              ONLY: ngw
       USE uspp_param,         ONLY: nh, upf
-      USE uspp,               ONLY: qq_nt, indv_ijkb0
+      USE uspp,               ONLY: qq_nt, ofsbeta
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE kinds,              ONLY: DP
@@ -124,7 +124,7 @@ CONTAINS
          IF ( MOD( ia, nproc_bgrp ) == me_bgrp ) THEN
             is = ityp(ia)
             IF( upf(is)%tvanp ) THEN
-               indv = indv_ijkb0(ia)
+               indv = ofsbeta(ia)
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
                      IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
@@ -151,7 +151,7 @@ CONTAINS
 !     on output: bec(i) is recalculated
 !
       USE ions_base,      ONLY: na, nat, ityp
-      USE uspp,           ONLY: qq_nt, indv_ijkb0
+      USE uspp,           ONLY: qq_nt, ofsbeta
       USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw
@@ -210,12 +210,12 @@ CONTAINS
             is = ityp(ia)
             IF( upf(is)%tvanp ) THEN
                DO iv=1,nh(is)
-                  inl=indv_ijkb0(ia)+iv
+                  inl=ofsbeta(ia)+iv
                   bec_tmp(inl) = 2.d0 * DDOT( 2*ngw, cp_bgrp(1,ibgrp_i), 1, betae(1,inl), 1) &
                                  - g0 * DBLE(cp_bgrp(1,ibgrp_i) * CONJG(betae(1,inl)))
                END DO
             ELSE
-               inl= indv_ijkb0(ia)
+               inl= ofsbeta(ia)
                bec_tmp( inl + 1: inl + nh(is) ) = 0.0d0
             END IF
          END DO
@@ -233,7 +233,7 @@ CONTAINS
 
 !$omp parallel if( (kmax - iupdwn( iss )) > omp_get_num_threads() ) default(none), &
 !$omp shared(iupdwn,iss,kmax,nproc_bgrp,me_bgrp,nbspx,i,ibgrp_g2l,nh), &
-!$omp shared(indv_ijkb0,qq_nt,na,bec_tmp,bec_bgrp,csc2,nat,ityp,upf), &
+!$omp shared(ofsbeta,qq_nt,na,bec_tmp,bec_bgrp,csc2,nat,ityp,upf), &
 !$omp private( k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k )
 !$omp do
       DO k = iupdwn( iss ), kmax
@@ -244,7 +244,7 @@ CONTAINS
                IF ( MOD( ia-1, nproc_bgrp ) == me_bgrp ) THEN
                   is=ityp(ia)
                   IF( upf(is)%tvanp ) THEN
-                     inl = indv_ijkb0(ia)
+                     inl = ofsbeta(ia)
                      DO iv=1,nh(is)
                         DO jv=1,nh(is)
                            IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN

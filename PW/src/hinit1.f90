@@ -86,7 +86,7 @@ SUBROUTINE hinit1()
   ! ... in LDA+U calculations
   !
   IF (.NOT. use_gpu) THEN
-    IF ( lda_plus_u  ) CALL orthoUwfc() 
+    IF ( lda_plus_u  ) CALL orthoUwfc(.FALSE.)
     IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
   ELSE
     IF ( lda_plus_u  ) CALL orthoUwfc_gpu() 

@@ -97,7 +97,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 #endif
   USE kinds,            ONLY : DP
   USE becmod_gpum,      ONLY : becp_d
-  USE uspp,             ONLY : nkb, okvan, indv_ijkb0, vkb_d, using_vkb_d
+  USE uspp,             ONLY : nkb, okvan, ofsbeta, vkb_d, using_vkb_d
   USE spin_orb,         ONLY : lspinorb
   USE uspp_param,       ONLY : upf, nh, nhm
   USE ions_base,        ONLY : nat, nsp, ityp
@@ -266,7 +266,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ps_d(1:nkb,1:m_max) = 0.D0
        !
        !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-       !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+       !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
        !
        DO nt = 1, nsp
           IF ( upf(nt)%tvanp ) THEN
@@ -278,8 +278,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                    !
                    IF ( m_loc > 0 ) THEN
                       CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                                  qq_at_d(1,1,na), nhm, becp_d%r_d(indv_ijkb0(na)+1,1),&
-                                  nkb, 0.0_dp, ps_d(indv_ijkb0(na)+1,1), nkb )
+                                  qq_at_d(1,1,na), nhm, becp_d%r_d(ofsbeta(na)+1,1),&
+                                  nkb, 0.0_dp, ps_d(ofsbeta(na)+1,1), nkb )
                    END IF
                 END IF
              END DO
@@ -385,8 +385,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
                    CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                        qqc_d(1,1,na), nhm, becp_d%k_d(indv_ijkb0(na)+1,1), nkb, &
-                        (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1), nkb )
+                        qqc_d(1,1,na), nhm, becp_d%k_d(ofsbeta(na)+1,1), nkb, &
+                        (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1), nkb )
                    !
                 END IF
              END DO
@@ -469,8 +469,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                    IF ( ityp(na) == nt ) THEN
                       DO ipol=1,npol
                          CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                              qqc_d(1,1, na), nhm, becp_d%nc_d(indv_ijkb0(na)+1,ipol,1), nkb*npol, &
-                              (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,ipol,1), nkb*npol )
+                              qqc_d(1,1, na), nhm, becp_d%nc_d(ofsbeta(na)+1,ipol,1), nkb*npol, &
+                              (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,ipol,1), nkb*npol )
                        END DO
                     END IF
                 END DO
@@ -478,18 +478,18 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                 DO na = 1, nat
                    IF ( ityp(na) == nt ) THEN
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,1,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), nkb*npol, &
-                           (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), nkb*npol )
+                           qq_so_d(1,1,1,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,2,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), nkb*npol, &
-                           (1.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), nkb*npol )
+                           qq_so_d(1,1,2,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       !
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,3,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), nkb*npol, &
-                           (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), nkb*npol )
+                           qq_so_d(1,1,3,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,4,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), nkb*npol, &
-                           (1.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), nkb*npol )
+                           qq_so_d(1,1,4,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
                     END IF
                 END DO
              END IF
