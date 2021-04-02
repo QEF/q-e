@@ -2661,8 +2661,8 @@ SUBROUTINE compute_orb
    INTEGER :: mmn_tot, ik, ikp, ipol, npw, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq, s, counter
-   COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), evcq(:,:), &
-                               becp2(:,:), Mkb(:,:), aux_nc(:,:)
+   COMPLEX(DP), ALLOCATABLE :: phase(:), aux2(:), evcq(:,:), &
+                               becp2(:,:), Mkb(:,:), aux_b1(:, :)
    real(DP), ALLOCATABLE    :: rbecp2(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
    real(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
@@ -2676,9 +2676,10 @@ SUBROUTINE compute_orb
    INTEGER                  :: istart,iend
    ! begin change Lopez, Thonhauser, Souza
    COMPLEX(DP)              :: sigma_x,sigma_y,sigma_z,cdum1,cdum2
-   integer                  :: npw_b1, npw_b2, i_b1, i_b2, ikp_b1, ikp_b2
+   integer                  :: npw_b1, npw_b2, i_b, i_b1, i_b2, ikp_b1, ikp_b2
 !   integer, allocatable     :: igk_b1(:), igk_b2(:)
-   complex(DP), allocatable :: evc_b1(:,:),evc_b2(:,:),evc_aux(:,:),H_evc(:,:)
+   complex(DP), allocatable :: evc_b1(:,:),evc_b2(:,:), evc_b(:, :, :), H_evc_b(:, :, :), &
+                               evc_aux(:, :), H_evc(:, :)
    complex(DP), allocatable :: uHu(:,:),uIu(:,:)
    ! end change Lopez, Thonhauser, Souza
    INTEGER                  :: ibnd_n, ibnd_m
@@ -2695,11 +2696,10 @@ SUBROUTINE compute_orb
    ALLOCATE( phase(dffts%nnr) )
    ALLOCATE( evcq(npol*npwx,nbnd) )
 
-   IF(noncolin) THEN
-      ALLOCATE( aux_nc(npwx,npol) )
-   ELSE
-      ALLOCATE( aux(npwx) )
-   ENDIF
+   ALLOCATE(aux_b1(npol*npwx, nbnd))
+
+   ALLOCATE(evc_b(npol*npwx, nbnd, nnb))
+   ALLOCATE(H_evc_b(npol*npwx, nbnd, nnb))
 
 !   IF (gamma_only) ALLOCATE(aux2(npwx))
 
@@ -2795,154 +2795,59 @@ SUBROUTINE compute_orb
         write (stdout,'(i8)') ik
         !
         npw = ngk(ik)
+        !
         ! sort the wfc at k and set up stuff for h_psi
         current_k=ik
-        CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
+        CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
+        CALL g2_kin(ik)
         !
-        ! compute  " H | u_n,k+b2 > "
+        ! Loop over the nearest neighbor b vectors
         !
-        do i_b2 = 1, nnb ! nnb = # of nearest neighbors
-           !
-           ! read wfc at k+b2
-           ikp_b2 = kpb(ik,i_b2) ! for kpoint 'ik', index of neighbor 'i_b2'
-           !
-!           call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2, -1 ) !ivo
-           call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2+ikstart-1, -1 ) !ivo
-!           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b2, igk_b2, workg)
-! ivo; igkq -> igk_k(:,ikp_b2), npw_b2 -> ngk(ikp_b2), replaced by PG
-           npw_b2=ngk(ikp_b2)
-           !
-           ! compute the phase
-           IF (.not.zerophase(ik,i_b2)) THEN
-              phase(:) = ( 0.0D0, 0.0D0 )
-              if (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
-              call invfft('Wave', phase, dffts)
-           ENDIF
-           !
-           ! loop on bands
-           evc_aux = ( 0.0D0, 0.0D0 )
-           do n = 1, nbnd
-              !ivo replaced dummy m --> n everywhere on this do loop,
-              !    for consistency w/ band indices in comments
-              if (excluded_band(n)) cycle
-              if(noncolin) then
-                 psic_nc = ( 0.0D0, 0.0D0 ) !ivo
-                 do ipol = 1, 2
-!                    psic_nc = ( 0.0D0, 0.0D0 ) !ivo
-                    istart=(ipol-1)*npwx+1
-                    iend=istart+npw_b2-1 !ivo npw_b1 --> npw_b2
-                    psic_nc(dffts%nl (igk_k(1:npw_b2,ikp_b2) ),ipol ) = &
-                         evc_b2(istart:iend, n)
-                    IF (.not.zerophase(ik,i_b2)) THEN
-                    ! ivo igk_b1, npw_b1 --> igk_b2, npw_b2
-                    ! multiply by phase in real space - '1' unless neighbor is in a bordering BZ
-                       call invfft ('Wave', psic_nc(:,ipol), dffts)
-                       psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr))
-                       call fwfft ('Wave', psic_nc(:,ipol), dffts)
-                    ENDIF
-                    ! save the result
-                    iend=istart+npw-1
-                    evc_aux(istart:iend,n) = psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol )
-                 end do
-              else ! this is modeled after the pre-existing code at 1162
-                 psic = ( 0.0D0, 0.0D0 )
-                 ! Graham, changed npw --> npw_b2 on RHS. Do you agree?!
-                 psic(dffts%nl (igk_k(1:npw_b2,ikp_b2) ) ) = evc_b2(1:npw_b2, n)
-                 IF (.not.zerophase(ik,i_b2)) THEN
-                    call invfft ('Wave', psic, dffts)
-                    psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr))
-                    call fwfft ('Wave', psic, dffts)
-                 ENDIF
-                 evc_aux(1:npw,n) = psic(dffts%nl (igk_k(1:npw,ik) ) )
-              end if
-           end do !n
-
-           if(write_uHu) then !ivo
-              !
-              ! calculate the kinetic energy at ik, used in h_psi
-              !
-              CALL g2_kin (ik)
-              !
-              CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
-              !
-           endif
-           !
-           ! compute  " < u_m,k+b1 | "
-           !
-           do i_b1 = 1, nnb
-              !
-              ! read wfc at k+b1 !ivo replaced k+b2 --> k+b1
-              ikp_b1 = kpb(ik,i_b1)
-!              call davcio  (evc_b1, 2*nwordwfc, iunwfc, ikp_b1, -1 ) !ivo
-              call davcio  (evc_b1, 2*nwordwfc, iunwfc, ikp_b1+ikstart-1, -1 ) !ivo
-
-!              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b2, igk_b2, workg) !ivo
-!              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b1, igk_b1, workg) !ivo
-              npw_b1=ngk(ikp_b1)
-              !
-              ! compute the phase
-              IF (.not.zerophase(ik,i_b1)) THEN
-                 phase(:) = ( 0.0D0, 0.0D0 )
-                 if (ig_(ik,i_b1)>0) phase( dffts%nl(ig_(ik,i_b1)) ) = ( 1.0D0, 0.0D0 )
-                 !call cft3s (phase, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
-                 call invfft('Wave', phase, dffts)
-              ENDIF
-              !
-              ! loop on bands
-              ibnd_m = 0
-              do m = 1, nbnd
-                 if (excluded_band(m)) cycle
-                 ibnd_m = ibnd_m + 1
-                 if(noncolin) then
-                    aux_nc  = ( 0.0D0, 0.0D0 )
-                    psic_nc = ( 0.0D0, 0.0D0 ) !ivo
-                    do ipol = 1, 2
-!                      psic_nc = ( 0.0D0, 0.0D0 ) !ivo
-                       istart=(ipol-1)*npwx+1
-                       iend=istart+npw_b1-1  !ivo npw_b2 --> npw_b1
-                       psic_nc(dffts%nl (igk_k(1:npw_b1,ikp_b1) ),ipol ) = evc_b1(istart:iend, m) !ivo igk_b2,npw_b2 --> igk_b1,npw_b1
-                       IF (.not.zerophase(ik,i_b1)) THEN
-                          ! multiply by phase in real space - '1' unless neighbor is in a different BZ
-                          call invfft ('Wave', psic_nc(:,ipol), dffts)
-                          !psic_nc(1:nrxxs,ipol) = psic_nc(1:nrxxs,ipol) * conjg(phase(1:nrxxs))
-                          psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr))
-                          call fwfft ('Wave', psic_nc(:,ipol), dffts)
-                       ENDIF
-                       ! save the result
-                       aux_nc(1:npw,ipol) = psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol )
-                    end do
-                 else ! this is modeled after the pre-existing code at 1162
-                    aux  = ( 0.0D0 )
-                    psic = ( 0.0D0, 0.0D0 )
-                    ! Graham, changed npw --> npw_b1 on RHS. Do you agree?!
-!                    psic(dffts%nl (igk_b1(1:npw_b1) ) ) = evc_b1(1:npw_b1, m) !ivo igk_b2 --> igk_b1
-                    psic(dffts%nl (igk_k(1:npw_b1,ikp_b1) ) ) = evc_b1(1:npw_b1, m) !ivo igk_b2 --> igk_b1
-                    IF (.not.zerophase(ik,i_b1)) THEN
-                       call invfft ('Wave', psic, dffts)
-                       !psic(1:nrxxs) = psic(1:nrxxs) * conjg(phase(1:nrxxs))
-                       psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr))
-                       call fwfft ('Wave', psic, dffts)
-                    ENDIF
-                    aux(1:npw) = psic(dffts%nl (igk_k(1:npw,ik) ) )
-                 end if
-
-                !
-                !
+        DO i_b = 1, nnb
+            !
+            ! Compute |u_{n,k+b}> and optionally H(k) * |u_{n,k+b}>
+            !
+            IF (write_uHu) THEN
+               CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b), H_evc_b(:, :, i_b))
+            ELSE
+               CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b))
+            ENDIF
+            !
+        ENDDO
+        !
+        do i_b2 = 1, nnb
+            !
+            ! Copy |u_{n,k+b2}> and optionally H(k) * |u_{n,k+b2}> from evc_b and H_evc_b
+            !
+            evc_aux = evc_b(:, :, i_b2)
+            IF (write_uHu) H_evc = H_evc_b(:, :, i_b2)
+            !
+            ! Loop over the nearest neighbor b vectors
+            !
+            DO i_b1 = 1, nnb
+               !
+               ! Copy |u_{n,k+b1}> from evc_b
+               !
+               aux_b1 = evc_b(:, :, i_b1)
+               !
+               ibnd_m = 0
+               DO m = 1, nbnd
+                  if (excluded_band(m)) cycle
+                  ibnd_m = ibnd_m + 1
+                  !
                 if(write_uHu) then !ivo
                    ibnd_n = 0
                    do n = 1, nbnd  ! loop over bands of already computed ket
                       if (excluded_band(n)) cycle
                       ibnd_n = ibnd_n + 1
                       if(noncolin) then
-                         mmn = zdotc (npw, aux_nc(1,1),1,H_evc(1,n),1) + &
-                              zdotc (npw, aux_nc(1,2),1,H_evc(1+npwx,n),1)
+                         mmn = zdotc (npw, aux_b1(1,m),1,H_evc(1,n),1) + &
+                              zdotc (npw, aux_b1(1+npwx,m),1,H_evc(1+npwx,n),1)
                       else
-                         mmn = zdotc (npw, aux,1,H_evc(1,n),1)
+                         mmn = zdotc (npw, aux_b1(1, m),1,H_evc(1,n),1)
                       end if
                       mmn = mmn * rytoev ! because wannier90 works in eV
-                      call mp_sum(mmn, intra_pool_comm)
-!                      if (ionode) write (iun_uhu) mmn
-                      uHu(ibnd_n,ibnd_m)=mmn
+                      uHu(ibnd_n, ibnd_m) = mmn
                       !
                    end do !n
                 endif
@@ -2952,22 +2857,22 @@ SUBROUTINE compute_orb
                       if (excluded_band(n)) cycle
                       ibnd_n = ibnd_n + 1
                       if(noncolin) then
-                         mmn = zdotc (npw, aux_nc(1,1),1,evc_aux(1,n),1) + &
-                              zdotc (npw, aux_nc(1,2),1,evc_aux(1+npwx,n),1)
+                         mmn = zdotc (npw, aux_b1(1,m),1,evc_aux(1,n),1) + &
+                              zdotc (npw, aux_b1(1+npwx,m),1,evc_aux(1+npwx,n),1)
                       else
-                         mmn = zdotc (npw, aux,1,evc_aux(1,n),1)
+                         mmn = zdotc (npw, aux_b1(1, m),1,evc_aux(1,n),1)
                       end if
-                      call mp_sum(mmn, intra_pool_comm)
-!                      if (ionode) write (iun_uIu) mmn
-                      uIu(ibnd_n,ibnd_m)=mmn
+                      uIu(ibnd_n, ibnd_m) = mmn
                       !
                    end do !n
                 endif
                 !
              end do ! m = 1, nbnd
+             if (write_uHu) call mp_sum(uHu, intra_pool_comm)
+             if (write_uIu) call mp_sum(uIu, intra_pool_comm)
              !
              if (ionode) then  ! write the files out to disk
-                if(write_uhu) then
+                if(write_uHu) then
                    CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, uHu)
                 endif
                 if(write_uIu) then
@@ -3022,12 +2927,10 @@ SUBROUTINE compute_orb
 
 !   IF (gamma_only) DEALLOCATE(aux2)
    DEALLOCATE (phase)
-   IF(noncolin) THEN
-      DEALLOCATE(aux_nc)
-   ELSE
-      DEALLOCATE(aux)
-   ENDIF
+   DEALLOCATE(aux_b1)
    DEALLOCATE(evcq)
+   DEALLOCATE(evc_b)
+   DEALLOCATE(H_evc_b)
 
 !   IF(any_uspp) THEN
 !      DEALLOCATE (  qb)
@@ -5721,3 +5624,115 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
+
+
+!----------------------------------------------------------------------------
+SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, h_evc_kb)
+   !-------------------------------------------------------------------------
+   !!
+   !! For a given k point ik and b vector i_b, compute |u_{n, k+b}> and
+   !! optionally H(k) |u_{n, k+b}>.
+   !!
+   !-------------------------------------------------------------------------
+   !
+   USE kinds,           ONLY : DP
+   USE fft_base,        ONLY : dffts
+   USE fft_interfaces,  ONLY : fwfft, invfft
+   USE io_files,        ONLY : nwordwfc, iunwfc
+   USE wvfct,           ONLY : nbnd, npwx
+   USE wavefunctions,   ONLY : psic
+   USE klist,           ONLY : ngk, igk_k
+   USE noncollin_module,ONLY : npol
+   USE wannier,         ONLY : ikstart, zerophase, excluded_band, kpb, ig_
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: ik
+   !! Index of the k point
+   INTEGER, INTENT(IN) :: i_b
+   !! Index of the b vector
+   COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, nbnd)
+   !! Wavefunction u_{n,k+b}, with the G-vector ordering at k.
+   COMPLEX(DP), OPTIONAL, INTENT(OUT) :: h_evc_kb(npol*npwx, nbnd)
+   !! Wavefunction H(k) * u_{n,k+b}, with the G-vector ordering at k.
+   !
+   INTEGER :: ikp_b
+   !! Index of k+b
+   INTEGER :: npw
+   !! Number of plane waves at k
+   INTEGER :: npw_b
+   !! Number of plane waves at k+b
+   INTEGER :: istart
+   !! Starting G vector index
+   INTEGER :: iend
+   !! Ending G vector index
+   INTEGER :: ipol
+   !! Polarization index
+   INTEGER :: n
+   !! Band index
+   !
+   COMPLEX(DP), ALLOCATABLE :: phase(:)
+   !! Temporary storage for phase e&{i * G_kpb * r}
+   COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
+   !! Temporary storage for wavefunction at k+b
+   !
+   ALLOCATE(phase(dffts%nnr))
+   ALLOCATE(evc_b(npol*npwx, nbnd))
+   !
+   evc_kb = (0.0_DP, 0.0_DP)
+   !
+   npw = ngk(ik)
+   ikp_b = kpb(ik, i_b)
+   npw_b = ngk(ikp_b)
+   !
+   CALL davcio(evc_b, 2*nwordwfc, iunwfc, ikp_b + ikstart - 1, -1)
+   !
+   ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
+   ! Computed phase is used inside the loop over bands.
+   !
+   IF (.NOT. zerophase(ik, i_b)) THEN
+      phase(:) = (0.0_DP, 0.0_DP)
+      IF (ig_(ik, i_b) > 0) phase( dffts%nl(ig_(ik, i_b)) ) = (1.0_DP, 0.0_DP)
+      CALL invfft('Wave', phase, dffts)
+   ENDIF
+   !
+   ! Loop over bands
+   !
+   DO n = 1, nbnd
+      IF (excluded_band(n)) CYCLE
+      !
+      DO ipol = 1, npol
+         psic = (0.0_DP, 0.0_DP)
+         !
+         ! Copy evc_b to psic using the G-vector ordering at k+b.
+         !
+         istart = 1 + (ipol-1) * npwx
+         iend = istart + npw_b - 1
+         psic(dffts%nl( igk_k(1:npw_b, ikp_b) )) = evc_b(istart:iend, n)
+         !
+         ! Multiply e^{i * g_kpb * r} phase if necessary.
+         !
+         IF (.NOT. zerophase(ik, i_b)) THEN
+            CALL invfft('Wave', psic, dffts)
+            psic(1:dffts%nnr) = psic(1:dffts%nnr) * CONJG(phase(1:dffts%nnr))
+            CALL fwfft('Wave', psic, dffts)
+         ENDIF
+         !
+         ! Save |u_{n, k+b}> in evc_kb using the G-vector ordering at k.
+         !
+         istart = 1 + (ipol-1) * npwx
+         iend = istart + npw - 1
+         evc_kb(istart:iend, n) = psic(dffts%nl( igk_k(1:npw, ik) ))
+         !
+      ENDDO ! npol
+   ENDDO ! nbnd
+   !
+   IF(PRESENT(h_evc_kb)) CALL h_psi(npwx, npw, nbnd, evc_kb, h_evc_kb)
+   !
+   DEALLOCATE(phase)
+   DEALLOCATE(evc_b)
+   !
+!----------------------------------------------------------------------------
+END SUBROUTINE utility_compute_u_kb
+!----------------------------------------------------------------------------
+
