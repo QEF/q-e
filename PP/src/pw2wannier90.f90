@@ -2924,9 +2924,8 @@ SUBROUTINE compute_shc
    INTEGER :: ibnd_n, ibnd_m
    COMPLEX(DP) :: sigma_x, sigma_y, sigma_z, cdum1, cdum2
    !
-   COMPLEX(DP), ALLOCATABLE :: phase(:)
-   COMPLEX(DP), ALLOCATABLE :: evc_b2(:, :), evc_aux(:, :), H_evc(:, :)
-   COMPLEX(DP), ALLOCATABLE :: sHu(:, : ,:),sIu(:, :, :)
+   COMPLEX(DP), ALLOCATABLE :: evc_aux(:, :), H_evc(:, :)
+   COMPLEX(DP), ALLOCATABLE :: sHu(:, : ,:), sIu(:, :, :)
    !
    IF (.NOT. (write_sHu .OR. write_sIu)) THEN
       WRITE(stdout, *)
@@ -2954,9 +2953,7 @@ SUBROUTINE compute_shc
    IF (.NOT. noncolin) CALL errore('pw2wannier90',&
       'write_sHu and write_sIu only works with noncolin == .true.', 1)
    !
-   ALLOCATE(evc_b2(npol*npwx, nbnd))
    ALLOCATE(evc_aux(npol*npwx, nbnd))
-   ALLOCATE(phase(dffts%nnr) )
    !
    IF (write_sHu) THEN
       ALLOCATE(sHu(num_bands, num_bands, 3))
@@ -3027,44 +3024,11 @@ SUBROUTINE compute_shc
       !
       DO i_b2 = 1, nnb ! nnb = # of nearest neighbors
          !
-         ! read wfc at k+b2
-         ikp_b2 = kpb(ik, i_b2) ! for kpoint 'ik', index of neighbor 'i_b2'
-         !
-         CALL davcio(evc_b2, 2*nwordwfc, iunwfc, ikp_b2+ikstart-1, -1) !ivo
-         npw_b2 = ngk(ikp_b2)
-         !
-         ! compute the phase only if phase is not 1.
-         IF (.NOT. zerophase(ik, i_b2)) THEN
-            phase(:) = ( 0.0D0, 0.0D0 )
-            IF (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
-            CALL invfft('Wave', phase, dffts)
+         IF (write_sHu) THEN
+            CALL utility_compute_u_kb(ik, i_b2, evc_aux, H_evc)
+         ELSE
+            CALL utility_compute_u_kb(ik, i_b2, evc_aux)
          ENDIF
-         !
-         ! loop on bands
-         evc_aux = ( 0.0D0, 0.0D0 )
-         DO n = 1, nbnd
-            IF (excluded_band(n)) CYCLE
-            psic_nc = ( 0.0D0, 0.0D0 )
-            DO ipol = 1, 2
-               istart = (ipol-1) * npwx + 1
-               iend = istart + npw_b2 - 1
-               psic_nc(dffts%nl(igk_k(1:npw_b2,ikp_b2)), ipol) = evc_b2(istart:iend, n)
-               !
-               ! multiply by phase in real space if phase is not 1.
-               ! Phase is '1' unless neighbor is in a bordering BZ
-               IF (.NOT. zerophase(ik, i_b2)) THEN
-                  CALL invfft('Wave', psic_nc(:,ipol), dffts)
-                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * CONJG(phase(1:dffts%nnr))
-                  CALL fwfft('Wave', psic_nc(:,ipol), dffts)
-               ENDIF
-               !
-               ! save the result
-               iend = istart + npw - 1
-               evc_aux(istart:iend, n) = psic_nc(dffts%nl (igk_k(1:npw,ik) ), ipol )
-            ENDDO ! ipol
-         ENDDO ! n
-         !
-         IF (write_sHu) CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
          !
          sHu = (0.D0, 0.D0)
          sIu = (0.D0, 0.D0)
@@ -3092,9 +3056,9 @@ SUBROUTINE compute_shc
                   sigma_z = dot_product(evc(1:npw, m), H_evc(1:npw, n)) &
                           - dot_product(evc(npwx+1:npwx+npw, m), H_evc(npwx+1:npwx+npw, n))
                   !
-                  sHu(ibnd_n, ibnd_m, 1) = sigma_x * rytoev
-                  sHu(ibnd_n, ibnd_m, 2) = sigma_y * rytoev
-                  sHu(ibnd_n, ibnd_m, 3) = sigma_z * rytoev
+                  sHu(ibnd_n, ibnd_m, 1) = sigma_x
+                  sHu(ibnd_n, ibnd_m, 2) = sigma_y
+                  sHu(ibnd_n, ibnd_m, 3) = sigma_z
                ENDIF ! write_sHu
                !
                IF (write_sIu) THEN !ivo
@@ -3113,6 +3077,7 @@ SUBROUTINE compute_shc
             !
          ENDDO ! m
          !
+         IF (write_sHu) sHu = sHu * rytoev
          IF (write_sHu) CALL mp_sum(sHu, intra_pool_comm)
          IF (write_sIu) CALL mp_sum(sIu, intra_pool_comm)
          !
@@ -3130,9 +3095,7 @@ SUBROUTINE compute_shc
       ENDDO ! i_b2
    ENDDO ! ik
    !
-   DEALLOCATE(evc_b2)
    DEALLOCATE(evc_aux)
-   DEALLOCATE(phase)
    IF (write_sHu) THEN
       DEALLOCATE(H_evc)
       DEALLOCATE(sHu)
