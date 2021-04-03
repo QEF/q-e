@@ -2403,7 +2403,7 @@ SUBROUTINE compute_mmn
                                  IF (excluded_band(n)) CYCLE
                                  Mkb(m,n) = Mkb(m,n) + &
                                       phase1 * qb(ih,jh,nt,ind) * &
-                                      conjg( becp%k(ikb,m) ) * becp2%r(jkb,n)
+                                      conjg( becp%k(ikb,m) ) * becp2%k(jkb,n)
                               ENDDO
                            ENDIF
                         ENDDO ! m
