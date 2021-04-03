@@ -91,7 +91,81 @@ module wannier
    integer,allocatable :: rir(:,:)
    logical,allocatable :: zerophase(:,:)
    !
+   REAL(DP), ALLOCATABLE :: xk_all(:, :)
+   !! xk vector at all k points
+   !
    CONTAINS
+   !
+   !----------------------------------------------------------------------------
+   SUBROUTINE utility_read_wfc_from_pool(ipool, ik_local, evc)
+      !-------------------------------------------------------------------------
+      !! Read wavefunction evc from pool ipool, local k index ik_local
+      !-------------------------------------------------------------------------
+      USE kinds,           ONLY : DP
+      USE mp_pools,        ONLY : my_pool_id, nproc_pool, me_pool
+      USE io_files,        ONLY : prefix, tmp_dir, nwordwfc, iunwfc
+      USE wvfct,           ONLY : npwx
+      USE pwcom,           ONLY : nbnd
+      USE noncollin_module,ONLY : npol
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: ipool
+      !! Pool index
+      INTEGER, INTENT(IN) :: ik_local
+      !! Local k point index
+      COMPLEX(DP), INTENT(OUT) :: evc(npwx * npol, nbnd)
+      !! wavefunction is read from file
+      !
+      CHARACTER(LEN = 256) :: wfcfile
+      !! Temp file
+      INTEGER :: iproc
+      !! Processer index, which is the postfix of the filename.
+      INTEGER :: iun
+      !! File unit
+      INTEGER*8 :: unf_recl
+      !! Record length. Double precision to prevent integer overflow
+      INTEGER :: direct_io_factor
+      !! Factor for record length
+      INTEGER :: ios
+      !! Error number
+      REAL(KIND = DP) :: dummy
+      !! Dummy variable
+      CHARACTER(len=6), EXTERNAL :: int_to_char
+      !
+      evc = (0.0_DP, 0.0_DP)
+      !
+      IF (ipool == my_pool_id) THEN
+! print*, "pool ", my_pool_id, " Reading locally  pool, ik_local ", ipool, ik_local
+         !
+         ! If ipool is this pool, just read from the buffer
+         !
+         CALL davcio(evc, 2*nwordwfc, iunwfc, ik_local, -1)
+         !
+      ELSE
+         !
+         ! If ipool is not this pool, open wfc file, read, and close.
+         !
+         ! Processer id
+         iproc = ipool * nproc_pool + me_pool
+         !
+         wfcfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // TRIM(int_to_char( iproc+1 ))
+! print*, "pool ", my_pool_id, " Reading globally pool, ik_local ", ipool, ik_local, trim(wfcfile)
+         !
+         INQUIRE(IOLENGTH = direct_io_factor) dummy
+         unf_recl = direct_io_factor * INT(2*nwordwfc, KIND=KIND(unf_recl))
+         !
+         OPEN(NEWUNIT = iun, FILE = TRIM(wfcfile), FORM = 'unformatted', &
+            ACCESS = 'direct', IOSTAT = ios, RECL = unf_recl)
+         IF (ios /= 0) CALL errore('utility_read_wfc_from_pool', &
+            'error opening wfc file', 1)
+         READ(iun, REC = ik_local) evc
+         CLOSE(iun, STATUS = 'KEEP')
+      ENDIF
+      !
+   !----------------------------------------------------------------------------
+   END SUBROUTINE utility_read_wfc_from_pool
+   !----------------------------------------------------------------------------
    !
    !----------------------------------------------------------------------------
    SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, evc_kb_m, becp_kb)
@@ -109,12 +183,14 @@ module wannier
       USE kinds,           ONLY : DP
       USE fft_base,        ONLY : dffts
       USE fft_interfaces,  ONLY : fwfft, invfft
+      USE mp_pools,        ONLY : my_pool_id
       USE io_files,        ONLY : nwordwfc, iunwfc
       USE control_flags,   ONLY : gamma_only
-      USE gvect,           ONLY : gstart
+      USE gvect,           ONLY : gstart, g, ngm
+      USE gvecw,           ONLY : gcutw
       USE wvfct,           ONLY : nbnd, npwx
       USE wavefunctions,   ONLY : psic
-      USE klist,           ONLY : xk, ngk, igk_k
+      USE klist,           ONLY : xk, ngk, igk_k, nkstot
       USE noncollin_module,ONLY : npol
       USE becmod,          ONLY : bec_type, calbec
       USE uspp,            ONLY : vkb
@@ -122,16 +198,22 @@ module wannier
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: ik
-      !! Index of the k point
+      !! Local index of the k point
       INTEGER, INTENT(IN) :: i_b
       !! Index of the b vector
       COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, nbnd)
-      !! Wavefunction u_{n,k+b}, with the G-vector ordering at k.
+      !! Wavefunction u_{n,k+b}(G), with the G-vector ordering at k.
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: evc_kb_m(npwx, nbnd)
-      !! Optional. For gamma_only case, wavefunction u_{n,k+b} at -G.
+      !! Optional. For Gamma-only case. Complex conjugate of u_{n,k+b}(-G).
       TYPE(bec_type), OPTIONAL, INTENT(INOUT) :: becp_kb
       !! Optional. Product of beta functions with |psi_k+b>
       !
+      LOGICAL :: zerophase_kb
+      !! zerophase at (k, b)
+      INTEGER :: ig_kb
+      !! G vector index ig_ for (k, b)
+      INTEGER :: ik_g
+      !! Global index of k+b
       INTEGER :: ikp_b
       !! Index of k+b
       INTEGER :: npw
@@ -146,11 +228,21 @@ module wannier
       !! Polarization index
       INTEGER :: n
       !! Band index
+      INTEGER :: ipool_b
+      !! Pool index where ikp_b belongs to
+      INTEGER :: ik_b_local
+      !! Local k index of ikp_b in ipool_b
+      INTEGER :: igk_kb(npwx)
+      !! G vector index at k+b
+      REAL(DP) :: g2kin_(npwx)
+      !! Dummy g2kin_ to call gk_sort
       !
       COMPLEX(DP), ALLOCATABLE :: phase(:)
       !! Temporary storage for phase e&{i * G_kpb * r}
       COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
       !! Temporary storage for wavefunction at k+b
+      !
+      INTEGER, EXTERNAL :: global_kpoint_index
       !
       IF (PRESENT(evc_kb_m) .AND. (.NOT. gamma_only)) CALL errore("utility_compute_u_kb", &
          "evc_kb_m can be used only in the Gamma-only case", 1)
@@ -160,18 +252,39 @@ module wannier
       !
       evc_kb = (0.0_DP, 0.0_DP)
       !
-      npw = ngk(ik)
-      ikp_b = kpb(ik, i_b)
-      npw_b = ngk(ikp_b)
+      ik_g = global_kpoint_index(nkstot, ik)
       !
-      CALL davcio(evc_b, 2*nwordwfc, iunwfc, ikp_b + ikstart - 1, -1)
+      npw = ngk(ik)
+      !
+      ikp_b = kpb(ik_g - ikstart + 1, i_b) + ikstart - 1
+      ig_kb = ig_(ik_g - ikstart + 1, i_b)
+      zerophase_kb = zerophase(ik_g - ikstart + 1, i_b)
+! print*, "ikp_b", my_pool_id, nkstot, ik, ik_g, ikp_b
+      !
+      ! For a global k point index, find the pool and local k point index.
+      CALL pool_and_local_kpoint_index(nkstot, ikp_b, ipool_b, ik_b_local)
+! print*, "POOL_AND_LOCAL", my_pool_id, nkstot, ikp_b, ipool_b, ik_b_local
+      !
+      ! Read wavefunction from file
+      !
+      CALL utility_read_wfc_from_pool(ipool_b, ik_b_local, evc_b)
+      !
+      ! Set igk_kb, the G vector ordering at k+b.
+      IF (ipool_b == my_pool_id) THEN
+         ! Use local G vector ordering
+         npw_b = ngk(ik_b_local)
+         igk_kb = igk_k(:, ik_b_local)
+      ELSE
+         ! k point from different pool. Calculate G vector ordering.
+         CALL gk_sort(xk_all(1, ikp_b), ngm, g, gcutw, npw_b, igk_kb, g2kin_)
+      ENDIF
       !
       ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
       ! Computed phase is used inside the loop over bands.
       !
-      IF (.NOT. zerophase(ik, i_b)) THEN
+      IF (.NOT. zerophase_kb) THEN
          phase(:) = (0.0_DP, 0.0_DP)
-         IF (ig_(ik, i_b) > 0) phase( dffts%nl(ig_(ik, i_b)) ) = (1.0_DP, 0.0_DP)
+         IF (ig_kb > 0) phase( dffts%nl(ig_kb) ) = (1.0_DP, 0.0_DP)
          CALL invfft('Wave', phase, dffts)
       ENDIF
       !
@@ -187,13 +300,14 @@ module wannier
             !
             istart = 1 + (ipol-1) * npwx
             iend = istart + npw_b - 1
-            psic(dffts%nl( igk_k(1:npw_b, ikp_b) )) = evc_b(istart:iend, n)
+            psic(dffts%nl( igk_kb(1:npw_b) )) = evc_b(istart:iend, n)
             !
-            IF (gamma_only) psic(dffts%nlm( igk_k(1:npw_b, ikp_b) )) = CONJG(evc_b(istart:iend, n))
+            IF (gamma_only) psic(dffts%nlm( igk_kb(1:npw_b) )) = CONJG(evc_b(istart:iend, n))
             !
             ! Multiply e^{i * g_kpb * r} phase if necessary.
+            ! TODO: Add explanation on the phase factor
             !
-            IF (.NOT. zerophase(ik, i_b)) THEN
+            IF (.NOT. zerophase_kb) THEN
                CALL invfft('Wave', psic, dffts)
                psic(1:dffts%nnr) = psic(1:dffts%nnr) * CONJG(phase(1:dffts%nnr))
                CALL fwfft('Wave', psic, dffts)
@@ -218,7 +332,7 @@ module wannier
          !
          ! Compute the product of beta functions with |psi_k+b>
          !
-         CALL init_us_2(npw_b, igk_k(1, ikp_b), xk(1, ikp_b), vkb)
+         CALL init_us_2(npw_b, igk_kb, xk_all(1, ikp_b), vkb)
          CALL calbec(npw_b, vkb, evc_b, becp_kb)
          !
       ENDIF
@@ -243,11 +357,11 @@ PROGRAM pw2wannier90
   USE mp_global,  ONLY : mp_startup
   USE mp_pools,   ONLY : npool
   USE mp_bands,   ONLY : nbgrp
-  USE mp,         ONLY : mp_bcast
+  USE mp,         ONLY : mp_bcast, mp_barrier
   USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg
   USE lsda_mod,   ONLY : nspin, isk
-  USE klist,      ONLY : nkstot
+  USE klist,      ONLY : nkstot, nks, xk
   USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only
@@ -379,7 +493,13 @@ PROGRAM pw2wannier90
   !
   ! Check: kpoint distribution with pools not implemented
   !
-  IF (npool > 1) CALL errore('pw2wannier90', 'pools not implemented', npool)
+  IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
+      'pools not implemented for library mode', 1)
+  !
+  IF (npool > 1 .and. (write_unk .or. write_amn .or. write_eig &
+      .or. write_uhu .or. write_uIu .or. write_sHu .or. write_sIu &
+      .or. write_spn .or. write_dmn)) CALL errore('pw2wannier90', &
+   'pools not implemented for this feature', npool)
   !
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
@@ -391,6 +511,10 @@ PROGRAM pw2wannier90
   WRITE(stdout,*) ' Reading nscf_save data'
   CALL read_file
   WRITE(stdout,*)
+  !
+  !
+  IF (npool > 1 .and. gamma_only) CALL errore('pw2wannier90', &
+      'pools not compatible with gamma_only', 1)
   !
   IF (noncolin.and.gamma_only) CALL errore('pw2wannier90',&
        'Non-collinear and gamma_only not implemented',1)
@@ -432,6 +556,10 @@ PROGRAM pw2wannier90
      ikstop  = nkstot
      iknum   = nkstot
   END SELECT
+  !
+  ! Setup for pool parallelization
+  ALLOCATE(xk_all(3, nkstot))
+  CALL poolcollect(3, nks, xk, nkstot, xk_all)
   !
   CALL stop_clock( 'init_pw2wan' )
   !
@@ -598,6 +726,9 @@ PROGRAM pw2wannier90
      IF(write_uHu .OR. write_uIu) CALL print_clock( 'compute_orb'  )
      IF(write_unk  )  CALL print_clock( 'write_unk'    )
      IF(write_unkg )  CALL print_clock( 'write_parity' )
+     !
+     CALL mp_barrier(world_comm)
+     !
      ! not sure if this should be called also in 'library' mode or not !!
      CALL environment_end ( 'PW2WANNIER' )
      IF ( ionode ) WRITE( stdout, *  )
@@ -1253,7 +1384,7 @@ SUBROUTINE read_nnkp
         IF ( (g_kpb(1,ik,ib).eq.0) .and.  &
              (g_kpb(2,ik,ib).eq.0) .and.  &
              (g_kpb(3,ik,ib).eq.0) ) zerophase(ik,ib) = .true.
-        g_(:) = REAL( g_kpb(:,ik,ib) )
+        g_(:) = REAL( g_kpb(:,ik,ib), KIND=DP )
         CALL cryst_to_cart (1, g_, bg, 1)
         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
         ig_(ik,ib) = 0
@@ -2123,14 +2254,15 @@ END SUBROUTINE compute_dmn
 SUBROUTINE compute_mmn
    !-----------------------------------------------------------------------
    !
-   USE io_global,  ONLY : stdout, ionode
-   USE kinds,           ONLY: DP
+   USE kinds,           ONLY : DP
+   USE mp_world,        ONLY : world_comm
+   USE io_global,       ONLY : stdout, ionode
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions, ONLY : evc, psic, psic_nc
+   USE wavefunctions,   ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE klist,           ONLY : nkstot, xk, igk_k, ngk
+   USE klist,           ONLY : nks, nkstot, xk, igk_k, ngk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : omega, alat, tpiba, at, bg
@@ -2140,22 +2272,23 @@ SUBROUTINE compute_mmn
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_pools,        ONLY : intra_pool_comm
-   USE mp,              ONLY : mp_sum
+   USE mp_pools,        ONLY : intra_pool_comm, root_pool, my_pool_id, me_pool, npool
+   USE mp,              ONLY : mp_sum, mp_barrier
    USE noncollin_module,ONLY : noncolin, npol
+   USE lsda_mod,        ONLY : lsda, isk
    USE spin_orb,             ONLY : lspinorb
    USE gvecw,           ONLY : gcutw
    USE wannier
 
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL :: find_free_unit
-   !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
+   CHARACTER(LEN=256) :: filename
+   CHARACTER(LEN=256) :: line
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
-   INTEGER :: ikevc, ikpevcq, s, counter
+   INTEGER :: ikevc, ikpevcq, s, counter, ik_g, iun_mmn2
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), evc_kb_m(:,:), evc_kb(:,:), &
                                Mkb(:,:), aux_nc(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
@@ -2170,8 +2303,10 @@ SUBROUTINE compute_mmn
    INTEGER                  :: istart,iend
    INTEGER                  :: ibnd_n, ibnd_m
    TYPE(bec_type) :: becp2
-
-
+   !
+   INTEGER, EXTERNAL :: global_kpoint_index
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+   !
    CALL start_clock( 'compute_mmn' )
 
    any_uspp = any(upf(1:ntyp)%tvanp)
@@ -2190,13 +2325,17 @@ SUBROUTINE compute_mmn
    IF (wan_mode=='library') ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
 
    IF (wan_mode=='standalone') THEN
-      iun_mmn = find_free_unit()
-      IF (ionode) OPEN (unit=iun_mmn, file=trim(seedname)//".mmn",form='formatted')
-      CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime
-      IF (ionode) THEN
-         WRITE (iun_mmn,*) header
-         WRITE (iun_mmn,*) nbnd-nexband, iknum, nnb
+      IF (me_pool == root_pool) THEN
+         filename = TRIM(seedname) // ".mmn"
+         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
+         OPEN (NEWUNIT=iun_mmn, file=TRIM(filename), form='formatted')
+         !
+         CALL date_and_tim( cdate, ctime )
+         header='Created on '//cdate//' at '//ctime
+         IF (ionode) THEN
+            WRITE (iun_mmn,*) header
+            WRITE (iun_mmn,*) nbnd-nexband, iknum, nnb
+         ENDIF
       ENDIF
    ENDIF
 
@@ -2210,21 +2349,24 @@ SUBROUTINE compute_mmn
       !
       !     qb is  FT of Q(r)
       !
-      nbt = nnb * iknum
+      nbt = nnb * nks
       !
       ALLOCATE( qg(nbt) )
       ALLOCATE (dxk(3,nbt))
       !
       ind = 0
-      DO ik=1,iknum
-         DO ib=1,nnb
+      DO ik = 1, nks
+         IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+         ik_g = global_kpoint_index(nkstot, ik)
+         !
+         DO ib = 1, nnb
             ind = ind + 1
-            ikp = kpb(ik,ib)
+            ikp = kpb(ik_g - ikstart + 1, ib)
             !
-            g_(:) = REAL( g_kpb(:,ik,ib) )
+            g_(:) = REAL(g_kpb(:, ik_g - ikstart + 1, ib), KIND=DP)
             CALL cryst_to_cart (1, g_, bg, 1)
-            dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik)
-            qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
+            dxk(:, ind) = xk_all(:, ikp) + g_(:) - xk(:, ik)
+            qg(ind) = SUM(dxk(:,ind) * dxk(:,ind))
          ENDDO
 !         write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
       ENDDO
@@ -2256,12 +2398,17 @@ SUBROUTINE compute_mmn
    ALLOCATE( Mkb(nbnd,nbnd) )
    !
    ind = 0
-   DO ik=1,iknum
+   DO ik = 1, nks
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+      !
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
-      ikevc = ik + ikstart - 1
-         CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
+      !
+      ik_g = global_kpoint_index(nkstot, ik)
+      !
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       npw = ngk(ik)
       !
       !  USPP
@@ -2279,7 +2426,6 @@ SUBROUTINE compute_mmn
       DO ib=1,nnb
          !
          ind = ind + 1
-         ikp = kpb(ik,ib)
          !
          ! Read wavefunction at k+b. If any_uspp, also compute the product
          ! of beta functions with the wavefunctions.
@@ -2306,7 +2452,9 @@ SUBROUTINE compute_mmn
          ! loops on bands
          !
          IF (wan_mode=='standalone') THEN
-            IF (ionode) WRITE (iun_mmn,'(7i5)') ik, ikp, (g_kpb(ipol,ik,ib), ipol=1,3)
+            IF (me_pool == root_pool) WRITE (iun_mmn, '(5i5)') &
+               ik_g - ikstart + 1, kpb(ik_g - ikstart + 1, ib), &
+               (g_kpb(ipol,ik_g - ikstart + 1,ib), ipol=1,3)
          ENDIF
          !
          DO m=1,nbnd
@@ -2424,7 +2572,7 @@ SUBROUTINE compute_mmn
                IF (excluded_band(m)) CYCLE
                ibnd_m = ibnd_m + 1
                IF (wan_mode=='standalone') THEN
-                  IF (ionode) WRITE (iun_mmn,'(2f18.12)') Mkb(m,n)
+                  IF (me_pool == root_pool) WRITE (iun_mmn,'(2f18.12)') Mkb(m,n)
                ELSEIF (wan_mode=='library') THEN
                   m_mat(ibnd_m,ibnd_n,ib,ik)=Mkb(m,n)
                ELSE
@@ -2435,9 +2583,31 @@ SUBROUTINE compute_mmn
          !
       ENDDO !ib
    ENDDO  !ik
-
-   IF (ionode .and. wan_mode=='standalone') CLOSE (iun_mmn)
-
+   !
+   IF (me_pool == root_pool .AND. wan_mode=='standalone') CLOSE (iun_mmn, STATUS="KEEP")
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   !
+   IF (ionode .AND. npool > 1) THEN
+      filename = TRIM(seedname) // ".mmn"
+      OPEN (NEWUNIT=iun_mmn, file=TRIM(filename), form='formatted', STATUS="OLD", POSITION="APPEND")
+      !
+      DO n = 2, npool
+         filename = TRIM(seedname) // ".mmn" // TRIM(int_to_char(n))
+         OPEN(NEWUNIT=iun_mmn2, FILE=TRIM(filename), FORM='formatted')
+         DO WHILE (.TRUE.)
+            READ(iun_mmn2, '(A)', END=200) line
+            WRITE(iun_mmn, '(A)') TRIM(line)
+         ENDDO
+200      CLOSE(iun_mmn2, STATUS="DELETE")
+      ENDDO
+      !
+      CLOSE(iun_mmn, STATUS="KEEP")
+   ENDIF
+   !
    IF (gamma_only) DEALLOCATE(evc_kb_m)
    DEALLOCATE (Mkb, phase)
    IF (any_uspp) DEALLOCATE (dxk)
@@ -2454,13 +2624,14 @@ SUBROUTINE compute_mmn
       CALL deallocate_bec_type (becp)
       CALL deallocate_bec_type (becp2)
     ENDIF
-!
+   !
    WRITE(stdout,'(/)')
    WRITE(stdout,*) ' MMN calculated'
-
+   !
+   CALL mp_barrier(world_comm)
+   !
    CALL stop_clock( 'compute_mmn' )
-
-   RETURN
+   !
 END SUBROUTINE compute_mmn
 
 !-----------------------------------------------------------------------
@@ -2733,7 +2904,7 @@ SUBROUTINE compute_orb
    USE mp,              ONLY : mp_barrier
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE gvecs,           ONLY : doublegrid
-   USE lsda_mod,        ONLY : nspin
+   USE lsda_mod,        ONLY : lsda, nspin, isk, current_spin
    USE constants,       ONLY : rytoev
    !
    IMPLICIT NONE
@@ -2850,7 +3021,9 @@ SUBROUTINE compute_orb
    CALL allocate_bec_type(nkb, nbnd, becp)
    !
    WRITE(stdout,'(a,i8)') ' iknum = ',iknum
-   DO ik = 1, iknum ! loop over k points
+   DO ik = 1, nkstot ! loop over k points
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       WRITE(stdout,'(i8)') ik
       !
@@ -2858,6 +3031,7 @@ SUBROUTINE compute_orb
       !
       ! sort the wfc at k and set up stuff for h_psi
       current_k = ik
+      IF (lsda) current_spin = isk(ik)
       CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
       CALL g2_kin(ik)
       !

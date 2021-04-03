@@ -155,3 +155,67 @@ FUNCTION local_kpoint_index ( nkstot, ik_g ) RESULT (ik)
 END FUNCTION
 !----------------------------------------------------------------------------
  
+!----------------------------------------------------------------------------
+SUBROUTINE pool_and_local_kpoint_index ( nkstot, ik_g, ipool, ik_l)
+  !----------------------------------------------------------------------------
+  !! For given global k point index ik_g, calculate the pool index where that
+  !! k point belongs to, and calculate the local k point index in that pool.
+  !! Adapted from kfold.f90 of EPW
+  !
+  USE mp_pools,   ONLY: npool, kunit
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: nkstot
+  !! total number of k-points
+  INTEGER, INTENT(IN) :: ik_g
+  !! global index of k-point
+  INTEGER, INTENT(OUT) :: ipool
+  !! index of the pool where ik_g belongs to
+  INTEGER, INTENT(OUT) :: ik_l
+  !! local index of k-point
+  !
+  INTEGER  :: jpool, nks, rest, nbase
+  !
+  IF (ik_g > nkstot) CALL errore("pool_and_local_kpoint_index", &
+      "ik_g cannot be greater than nkstot", 1)
+  !
+  IF (npool == 1) THEN
+    ! simple case: no pools
+    ipool = 0
+    ik_l = ik_g
+    RETURN
+  ENDIF
+  !
+  ! Loop over pools and find whether ik_g belongs to this pool
+  !
+  DO jpool = 0, npool - 1
+    !
+    nks = kunit * ( nkstot / kunit / npool )
+    !
+    rest = ( nkstot - nks * npool ) / kunit
+    !
+    IF ( jpool < rest ) nks = nks + kunit
+    !
+    ! ... calculates nbase = the position in the list of the first point
+    ! ...                    that belongs to this pool, minus one
+    !
+    nbase = nks * jpool
+    IF ( jpool >= rest ) nbase = nbase + rest * kunit
+    !
+    ! This pool has global k point index nbase+1:nbase+nks
+    !
+    IF (ik_g >= nbase+1 .AND. ik_g <= nbase+nks) THEN
+      ipool = jpool
+      ik_l = ik_g - nbase
+      RETURN
+    ENDIF
+    !
+  ENDDO
+  !
+  ! if the subroutine did not return inside the loop, something is wrong.
+  !
+  CALL errore("pool_and_local_kpoint_index", "ipool not found", 1)
+  !
+END SUBROUTINE pool_and_local_kpoint_index
+!----------------------------------------------------------------------------
