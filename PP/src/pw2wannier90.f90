@@ -2127,9 +2127,11 @@ SUBROUTINE compute_mmn
       !  USPP
       !
       IF(any_uspp) THEN
+         !
+         ! Compute the product of beta functions with |psi_k>
          CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-         ! below we compute the product of beta functions with |psi>
          CALL calbec (npw, vkb, evc, becp)
+         !
       ENDIF
       !
       !
@@ -2247,64 +2249,67 @@ SUBROUTINE compute_mmn
          IF (any_uspp) THEN
             ijkb0 = 0
             DO nt = 1, ntyp
-               IF ( upf(nt)%tvanp ) THEN
-                  DO na = 1, nat
-                     !
-                     arg = dot_product( dxk(:,ind), tau(:,na) ) * tpi
-                     phase1 = cmplx( cos(arg), -sin(arg) ,kind=DP)
-                     !
-                     IF ( ityp(na) == nt ) THEN
-                        DO jh = 1, nh(nt)
-                           jkb = ijkb0 + jh
-                           DO ih = 1, nh(nt)
-                              ikb = ijkb0 + ih
-                              !
-                              DO m = 1,nbnd
-                                 IF (excluded_band(m)) CYCLE
-                                 IF (gamma_only) THEN
-                                    DO n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
-                                       IF (excluded_band(n)) CYCLE
-                                       Mkb(m,n) = Mkb(m,n) + &
-                                            phase1 * qb(ih,jh,nt,ind) * &
-                                            becp%r(ikb,m) * becp2%r(jkb,n)
-                                    ENDDO
-                                 else if (noncolin) then
-                                    DO n=1,nbnd
-                                       IF (excluded_band(n)) CYCLE
-                                       if (lspinorb) then
-                                          Mkb(m,n) = Mkb(m,n) + &
-                                            phase1 * ( &
-                                               qq_so(ih,jh,1,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
-                                             + qq_so(ih,jh,2,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 2, n) &
-                                             + qq_so(ih,jh,3,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 1, n) &
-                                             + qq_so(ih,jh,4,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) &
-                                             )
-                                       else
-                                          Mkb(m,n) = Mkb(m,n) + &
-                                            phase1 * qb(ih,jh,nt,ind) * &
-                                            (conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
-                                              + conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) )
-                                       endif
-                                    ENDDO
-                                 ELSE
-                                    DO n=1,nbnd
-                                       IF (excluded_band(n)) CYCLE
-                                       Mkb(m,n) = Mkb(m,n) + &
-                                            phase1 * qb(ih,jh,nt,ind) * &
-                                            conjg( becp%k(ikb,m) ) * becp2%r(jkb,n)
-                                    ENDDO
-                                 ENDIF
-                              ENDDO ! m
-                           ENDDO !ih
-                        ENDDO !jh
-                        ijkb0 = ijkb0 + nh(nt)
-                     ENDIF  !ityp
-                  ENDDO  !nat
-               ELSE  !tvanp
+               !
+               IF (.NOT. upf(nt)%tvanp) THEN
                   DO na = 1, nat
                      IF ( ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
                   ENDDO
-               ENDIF !tvanp
+                  CYCLE
+               ENDIF
+               !
+               DO na = 1, nat
+                  !
+                  IF ( ityp(na) /= nt ) CYCLE
+                  !
+                  arg = dot_product( dxk(:,ind), tau(:,na) ) * tpi
+                  phase1 = cmplx( cos(arg), -sin(arg) ,kind=DP)
+                  !
+                  DO jh = 1, nh(nt)
+                     jkb = ijkb0 + jh
+                     DO ih = 1, nh(nt)
+                        ikb = ijkb0 + ih
+                        !
+                        DO m = 1,nbnd
+                           IF (excluded_band(m)) CYCLE
+                           IF (gamma_only) THEN
+                              DO n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
+                                 IF (excluded_band(n)) CYCLE
+                                 Mkb(m,n) = Mkb(m,n) + &
+                                      phase1 * qb(ih,jh,nt,ind) * &
+                                      becp%r(ikb,m) * becp2%r(jkb,n)
+                              ENDDO
+                           ELSEIF (noncolin) then
+                              DO n=1,nbnd
+                                 IF (excluded_band(n)) CYCLE
+                                 IF (lspinorb) THEN
+                                    Mkb(m,n) = Mkb(m,n) + &
+                                      phase1 * ( &
+                                         qq_so(ih,jh,1,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
+                                       + qq_so(ih,jh,2,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 2, n) &
+                                       + qq_so(ih,jh,3,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 1, n) &
+                                       + qq_so(ih,jh,4,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) &
+                                       )
+                                 ELSE
+                                    Mkb(m,n) = Mkb(m,n) + &
+                                      phase1 * qb(ih,jh,nt,ind) * &
+                                      (conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
+                                        + conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) )
+                                 endif
+                              ENDDO
+                           ELSE
+                              DO n=1,nbnd
+                                 IF (excluded_band(n)) CYCLE
+                                 Mkb(m,n) = Mkb(m,n) + &
+                                      phase1 * qb(ih,jh,nt,ind) * &
+                                      conjg( becp%k(ikb,m) ) * becp2%r(jkb,n)
+                              ENDDO
+                           ENDIF
+                        ENDDO ! m
+                     ENDDO !ih
+                  ENDDO !jh
+                  ijkb0 = ijkb0 + nh(nt)
+                  !
+               ENDDO  !nat
             ENDDO !ntyp
          ENDIF ! any_uspp
          !
