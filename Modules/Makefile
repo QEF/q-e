@@ -127,7 +127,6 @@ remove_tot_torque.o \
 set_hubbard_l.o \
 set_hubbard_n.o \
 sort.o \
-sph_bes.o \
 sph_dbes.o \
 trimcheck.o \
 test_input_file.o \
@@ -147,8 +146,7 @@ MODULES += \
   becmod_subs_gpu.o \
   cuda_subroutines.o \
   dylmr2_gpu.o \
-  random_numbers_gpu.o \
-  sph_bes_gpu.o
+  random_numbers_gpu.o
 
 TLDEPS= libfox libutil libla libfft librxc
 
