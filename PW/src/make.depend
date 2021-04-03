@@ -498,8 +498,8 @@ drhoc.o : ../../Modules/constants.o
 drhoc.o : ../../Modules/kind.o
 drhoc_gpu.o : ../../Modules/constants.o
 drhoc_gpu.o : ../../Modules/kind.o
-drhoc_gpu.o : ../../Modules/sph_bes_gpu.o
 drhoc_gpu.o : ../../upflib/simpsn_gpu.o
+drhoc_gpu.o : ../../upflib/sph_bes_gpu.o
 dvloc_of_g.o : ../../Modules/constants.o
 dvloc_of_g.o : ../../Modules/kind.o
 dvloc_of_g.o : Coul_cut_2D.o
