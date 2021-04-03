@@ -2017,8 +2017,7 @@ SUBROUTINE compute_mmn
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq, s, counter
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), evcq(:,:), &
-                               becp2(:,:), Mkb(:,:), aux_nc(:,:), becp2_nc(:,:,:)
-   real(DP), ALLOCATABLE    :: rbecp2(:,:)
+                               Mkb(:,:), aux_nc(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
    real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
@@ -2030,6 +2029,7 @@ SUBROUTINE compute_mmn
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
    INTEGER                  :: ibnd_n, ibnd_m
+   TYPE(bec_type) :: becp2
 
 
    CALL start_clock( 'compute_mmn' )
@@ -2066,13 +2066,7 @@ SUBROUTINE compute_mmn
    !
    IF(any_uspp) THEN
       CALL allocate_bec_type ( nkb, nbnd, becp )
-      IF (gamma_only) THEN
-         ALLOCATE ( rbecp2(nkb,nbnd))
-      else if (noncolin) then
-         ALLOCATE ( becp2_nc(nkb,2,nbnd) )
-      ELSE
-         ALLOCATE ( becp2(nkb,nbnd) )
-      ENDIF
+      CALL allocate_bec_type ( nkb, nbnd, becp2 )
       !
       !     qb is  FT of Q(r)
       !
@@ -2161,21 +2155,13 @@ SUBROUTINE compute_mmn
          !
          npwq = ngk(ikp)
          IF(any_uspp) THEN
+            !
+            ! Compute the product of beta functions with |psi_k+b>
             CALL init_us_2 (npwq, igk_k(1,ikp), xk(1,ikp), vkb)
-            ! below we compute the product of beta functions with |psi>
-            IF (gamma_only) THEN
-               CALL calbec ( npwq, vkb, evcq, rbecp2 )
-            else if (noncolin) then
-               CALL calbec ( npwq, vkb, evcq, becp2_nc )
-
-               if (lspinorb) then
-                  qq_so = (0.0d0, 0.0d0)
-                  call transform_qq_so(qb(:,:,:,ind), qq_so)
-               endif
-
-            ELSE
-               CALL calbec ( npwq, vkb, evcq, becp2 )
-            ENDIF
+            CALL calbec ( npwq, vkb, evcq, becp2 )
+            !
+            IF (lspinorb) CALL transform_qq_so(qb(:,:,:,ind), qq_so)
+            !
          ENDIF
          !
          !
@@ -2280,7 +2266,7 @@ SUBROUTINE compute_mmn
                                        IF (excluded_band(n)) CYCLE
                                        Mkb(m,n) = Mkb(m,n) + &
                                             phase1 * qb(ih,jh,nt,ind) * &
-                                            becp%r(ikb,m) * rbecp2(jkb,n)
+                                            becp%r(ikb,m) * becp2%r(jkb,n)
                                     ENDDO
                                  else if (noncolin) then
                                     DO n=1,nbnd
@@ -2288,16 +2274,16 @@ SUBROUTINE compute_mmn
                                        if (lspinorb) then
                                           Mkb(m,n) = Mkb(m,n) + &
                                             phase1 * ( &
-                                               qq_so(ih,jh,1,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2_nc(jkb, 1, n) &
-                                             + qq_so(ih,jh,2,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2_nc(jkb, 2, n) &
-                                             + qq_so(ih,jh,3,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2_nc(jkb, 1, n) &
-                                             + qq_so(ih,jh,4,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2_nc(jkb, 2, n) &
+                                               qq_so(ih,jh,1,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
+                                             + qq_so(ih,jh,2,nt) * conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 2, n) &
+                                             + qq_so(ih,jh,3,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 1, n) &
+                                             + qq_so(ih,jh,4,nt) * conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) &
                                              )
                                        else
                                           Mkb(m,n) = Mkb(m,n) + &
                                             phase1 * qb(ih,jh,nt,ind) * &
-                                            (conjg( becp%nc(ikb, 1, m) ) * becp2_nc(jkb, 1, n) &
-                                              + conjg( becp%nc(ikb, 2, m) ) * becp2_nc(jkb, 2, n) )
+                                            (conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
+                                              + conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) )
                                        endif
                                     ENDDO
                                  ELSE
@@ -2305,7 +2291,7 @@ SUBROUTINE compute_mmn
                                        IF (excluded_band(n)) CYCLE
                                        Mkb(m,n) = Mkb(m,n) + &
                                             phase1 * qb(ih,jh,nt,ind) * &
-                                            conjg( becp%k(ikb,m) ) * becp2(jkb,n)
+                                            conjg( becp%k(ikb,m) ) * becp2%r(jkb,n)
                                     ENDDO
                                  ENDIF
                               ENDDO ! m
@@ -2359,13 +2345,7 @@ SUBROUTINE compute_mmn
       DEALLOCATE (  qb)
       DEALLOCATE (qq_so)
       CALL deallocate_bec_type (becp)
-      IF (gamma_only) THEN
-          DEALLOCATE (rbecp2)
-       else if (noncolin) then
-         deallocate (becp2_nc)
-       ELSE
-          DEALLOCATE (becp2)
-       ENDIF
+      CALL deallocate_bec_type (becp2)
     ENDIF
 !
    WRITE(stdout,'(/)')
