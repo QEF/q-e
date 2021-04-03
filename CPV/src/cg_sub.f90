@@ -39,7 +39,7 @@
       USE io_files,                 ONLY : tmp_dir, prefix
       use uspp,                     only : nkb, nkbus, &
                                            betae => vkb, rhovan => becsum, &
-                                           deeq, qq_nt, nlcc_any, indv_ijkb0
+                                           deeq, qq_nt, nlcc_any, ofsbeta
       use uspp_param,               only : nh, upf
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
                                            conv_thr, passop, enever, itercg,c0old
@@ -391,8 +391,8 @@
                     IF(upf(is)%tvanp) THEN
                        do iv=1,nh(is)
                           do jv=1,nh(is)
-                             inl = indv_ijkb0(ia) + iv
-                             jnl = indv_ijkb0(ia) + jv
+                             inl = ofsbeta(ia) + iv
+                             jnl = ofsbeta(ia) + jv
                              gamma=gamma+ qq_nt(iv,jv,is)*becm(inl,i)*bec0(jnl,i)
                           end do
                        end do
@@ -452,8 +452,8 @@
                              IF( upf(is)%tvanp ) THEN
                                 do iv=1,nh(is)
                                    do jv=1,nh(is)
-                                      inl = indv_ijkb0(ia) + iv
-                                      jnl = indv_ijkb0(ia) + jv
+                                      inl = ofsbeta(ia) + iv
+                                      jnl = ofsbeta(ia) + jv
                                       gamma=gamma+ qq_nt(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,jj+istart-1)*fmat_(j,i)
                                    end do
                                 end do

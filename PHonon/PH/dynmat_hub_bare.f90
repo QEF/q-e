@@ -37,10 +37,10 @@ SUBROUTINE dynmat_hub_bare
                             effU, read_dns_bare, d2ns_type
   USE wavefunctions, ONLY : evc
   USE units_lr,      ONLY : iuwfc, lrwfc, iuatwfc, iuatswfc
-  USE uspp,          ONLY : vkb, nkb
+  USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE uspp_param,    ONLY : nh
   USE klist,         ONLY : xk, ngk, igk_k
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE io_files,      ONLY : nwordwfcU, tmp_dir 
   USE lsda_mod,      ONLY : lsda, current_spin, isk, nspin
   USE modes,         ONLY : u, nmodes

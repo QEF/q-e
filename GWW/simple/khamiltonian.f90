@@ -23,7 +23,7 @@ subroutine khamiltonian
      USE cell_base, ONLY : omega
      USE ions_base,     ONLY: nat, ntyp => nsp, ityp
      USE uspp_param,    ONLY: nh, nhm
-     USE uspp,          ONLY: nkb, deeq, indv_ijkb0, deeq_nc
+     USE uspp,          ONLY: nkb, deeq, ofsbeta, deeq_nc
      USE lsda_mod,      ONLY : nspin
      USE becmod,        ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
      USE wvfct, ONLY : npwx
@@ -193,7 +193,7 @@ subroutine khamiltonian
       write(iun) npol
       write(iun) ityp(1:nat)
       write(iun) nh(1:ntyp)
-      write(iun) indv_ijkb0(1:nat)
+      write(iun) ofsbeta(1:nat)
       write(iun) nkpoints
     endif
     !

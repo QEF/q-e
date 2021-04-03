@@ -16,7 +16,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
   use kinds,              only: dp
   use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm
-  use uspp,               only: indv, lpx, lpl, ap,nhtolm, nkbus, indv_ijkb0
+  use uspp,               only: indv, lpx, lpl, ap,nhtolm, nkbus, ofsbeta
   use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
