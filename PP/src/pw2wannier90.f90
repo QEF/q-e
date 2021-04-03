@@ -2623,15 +2623,14 @@ END SUBROUTINE compute_spin
 SUBROUTINE compute_orb
    !-----------------------------------------------------------------------
    !
-   USE io_global,  ONLY : stdout, ionode
-   USE kinds,           ONLY: DP
+   USE kinds,           ONLY : DP
+   USE io_global,       ONLY : stdout, ionode
    USE wvfct,           ONLY : nbnd, npwx, current_k
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions, ONLY : evc, psic, psic_nc
+   USE wavefunctions,   ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
-   USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : tpiba2, alat, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -2642,7 +2641,6 @@ SUBROUTINE compute_orb
    USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
-   USE gvecw,           ONLY : gcutw
    USE wannier
    ! begin change Lopez, Thonhauser, Souza
    USE mp,              ONLY : mp_barrier
@@ -2653,16 +2651,25 @@ SUBROUTINE compute_orb
    !
    IMPLICIT NONE
    !
-   CHARACTER (len=9)        :: cdate,ctime
+   CHARACTER (len=9)        :: cdate, ctime
    CHARACTER (len=60)       :: header
    LOGICAL                  :: any_uspp
    INTEGER                  :: ik, npw, m, n
    INTEGER                  :: ibnd_n, ibnd_m
    INTEGER                  :: i_b, i_b1, i_b2
    COMPLEX(DP)              :: mmn, zdotc
-   COMPLEX(DP), ALLOCATABLE :: evc_b1(:,:), evc_b2(:,:), H_evc_b2(:, :)
-   COMPLEX(DP), ALLOCATABLE :: evc_b(:, :, :), H_evc_b(:, :, :)
-   COMPLEX(DP), ALLOCATABLE :: uHu(:,:), uIu(:,:)
+   COMPLEX(DP), ALLOCATABLE :: evc_b(:, :, :)
+   !! Wavefunction at k+b for all b vectors
+   COMPLEX(DP), ALLOCATABLE :: evc_b1(:,:)
+   !! Wavefunction at k+b1
+   COMPLEX(DP), ALLOCATABLE :: evc_b2(:,:)
+   !! Wavefunction at k+b2
+   COMPLEX(DP), ALLOCATABLE :: H_evc_b2(:, :)
+   !! H times Wavefunction at k+b2
+   COMPLEX(DP), ALLOCATABLE :: uHu(:, :)
+   !! Computed uHu matrix
+   COMPLEX(DP), ALLOCATABLE :: uIu(:, :)
+   !! Computed uIu matrix
    !
    IF (.NOT. (write_uHu .OR. write_uIu)) THEN
       WRITE(stdout, *)
@@ -2693,7 +2700,6 @@ SUBROUTINE compute_orb
    ALLOCATE(evc_b2(npol*npwx, nbnd))
    !
    IF (write_uHu) THEN
-      ALLOCATE(H_evc_b(npol*npwx, nbnd, nnb))
       ALLOCATE(H_evc_b2(npol*npwx, nbnd))
       ALLOCATE(uHu(num_bands, num_bands))
    ENDIF
@@ -2768,19 +2774,12 @@ SUBROUTINE compute_orb
       CALL init_us_2(npw, igk_k(1, ik), xk(1, ik), vkb)
       CALL g2_kin(ik)
       !
-      ! Loop over the nearest neighbor b vectors and compute |u_{n,k+b}>
-      ! and H(k) * |u_{n,k+b}>
+      ! Loop over the nearest neighbor b vectors and compute |u_{n,k+b}> and
+      ! save them to evc_b.
       !
       DO i_b = 1, nnb
          !
-         !
-         IF (write_uHu) THEN
-            ! Compute both u_{n,k+b} and H * u_{n,k+b}
-            CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b), H_evc_b(:, :, i_b))
-         ELSE
-            ! Compute only u_{n,k+b}
-            CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b))
-         ENDIF
+         CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b))
          !
       ENDDO ! nnb
       !
@@ -2788,15 +2787,15 @@ SUBROUTINE compute_orb
       !
       DO i_b2 = 1, nnb
          !
-         ! Copy |u_{n,k+b2}> and optionally H(k) * |u_{n,k+b2}> from evc_b and H_evc_b
-         !
+         ! Copy |u_{n,k+b2}> from evc_b
          evc_b2 = evc_b(:, :, i_b2)
-         IF (write_uHu) H_evc_b2 = H_evc_b(:, :, i_b2)
+         !
+         ! Compute H(k) * |u_{n,k+b2}>
+         IF (write_uHu) CALL h_psi(npwx, npw, nbnd, evc_b2, H_evc_b2)
          !
          DO i_b1 = 1, nnb
             !
             ! Copy |u_{n,k+b1}> from evc_b
-            !
             evc_b1 = evc_b(:, :, i_b1)
             !
             ibnd_m = 0
@@ -2865,7 +2864,6 @@ SUBROUTINE compute_orb
    DEALLOCATE(evc_b)
    !
    IF (write_uHu) THEN
-      DEALLOCATE(H_evc_b)
       DEALLOCATE(H_evc_b2)
       DEALLOCATE(uHu)
       IF (ionode) CLOSE(iun_uHu)
@@ -3020,15 +3018,13 @@ SUBROUTINE compute_shc
       !
       CALL g2_kin(ik)
       !
-      ! compute  " H | u_n,k+b2 > "
-      !
       DO i_b2 = 1, nnb ! nnb = # of nearest neighbors
          !
-         IF (write_sHu) THEN
-            CALL utility_compute_u_kb(ik, i_b2, evc_aux, H_evc)
-         ELSE
-            CALL utility_compute_u_kb(ik, i_b2, evc_aux)
-         ENDIF
+         ! compute  |u_{n,k+b2}> and H(k) * |u_{n,k+b2}>
+         !
+         CALL utility_compute_u_kb(ik, i_b2, evc_aux)
+         !
+         IF (write_sHu) CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
          !
          sHu = (0.D0, 0.D0)
          sIu = (0.D0, 0.D0)
@@ -5519,11 +5515,12 @@ END SUBROUTINE radialpart
 
 
 !----------------------------------------------------------------------------
-SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, h_evc_kb)
+SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb)
    !-------------------------------------------------------------------------
    !!
-   !! For a given k point ik and b vector i_b, compute |u_{n, k+b}> and
-   !! optionally H(k) |u_{n, k+b}>.
+   !! For a given k point ik and b vector i_b, compute |u_{n, k+b}>.
+   !!
+   !! Uses pre-computed information about b vector: kpb, zerophase, and ig_.
    !!
    !-------------------------------------------------------------------------
    !
@@ -5545,8 +5542,6 @@ SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, h_evc_kb)
    !! Index of the b vector
    COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, nbnd)
    !! Wavefunction u_{n,k+b}, with the G-vector ordering at k.
-   COMPLEX(DP), OPTIONAL, INTENT(OUT) :: h_evc_kb(npol*npwx, nbnd)
-   !! Wavefunction H(k) * u_{n,k+b}, with the G-vector ordering at k.
    !
    INTEGER :: ikp_b
    !! Index of k+b
@@ -5618,8 +5613,6 @@ SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, h_evc_kb)
          !
       ENDDO ! npol
    ENDDO ! nbnd
-   !
-   IF (PRESENT(h_evc_kb)) CALL h_psi(npwx, npw, nbnd, evc_kb, h_evc_kb)
    !
    DEALLOCATE(phase)
    DEALLOCATE(evc_b)
