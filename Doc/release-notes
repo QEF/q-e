@@ -44,6 +44,10 @@ Incompatible changes in development version:
     Fermi energy works. Currently, molecular dynamics with FCP does not work.
   * Exchange-correlation code moved to XClib/
   * More pseudopotential-related code moved to upflib/
+  * Pseudopotential-related duplicated variable indv_ijkb0 merged into
+    ofsbeta ("offset of beta functions")
+  * Code computing [H,x] commutator moved from LR_Modules/ to PW/src/ and
+    disentangled from linear-response variables - now is used in PP/ as well
 
 New in 6.7 version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from

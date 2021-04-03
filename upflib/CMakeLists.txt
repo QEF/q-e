@@ -20,6 +20,9 @@ set(src_upflib
     read_upf_new.f90 
     read_upf_v1.f90 
     read_uspp.f90 
+    spinor.f90 
+    sph_ind.f90 
+    sph_bes.f90 
     splinelib.f90 
     simpsn.f90 
     upf_auxtools.f90 
@@ -43,6 +46,7 @@ set(src_upflib
     init_us_2_base_gpu.f90
     interp_at_wfc_gpu.f90
     qvan2_gpu.f90
+    sph_bes_gpu.f90 
     ylmr2_gpu.f90
     simpsn_gpu.f90)
 qe_enable_cuda_fortran("${src_upflib}")

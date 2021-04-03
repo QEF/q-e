@@ -340,6 +340,7 @@ clean_pw.o : ../../Modules/constraints_module.o
 clean_pw.o : ../../Modules/control_flags.o
 clean_pw.o : ../../Modules/fft_base.o
 clean_pw.o : ../../Modules/ions_base.o
+clean_pw.o : ../../Modules/mbdlib.o
 clean_pw.o : ../../Modules/mm_dispersion.o
 clean_pw.o : ../../Modules/noncol.o
 clean_pw.o : ../../Modules/recvec.o
@@ -497,8 +498,8 @@ drhoc.o : ../../Modules/constants.o
 drhoc.o : ../../Modules/kind.o
 drhoc_gpu.o : ../../Modules/constants.o
 drhoc_gpu.o : ../../Modules/kind.o
-drhoc_gpu.o : ../../Modules/sph_bes_gpu.o
 drhoc_gpu.o : ../../upflib/simpsn_gpu.o
+drhoc_gpu.o : ../../upflib/sph_bes_gpu.o
 dvloc_of_g.o : ../../Modules/constants.o
 dvloc_of_g.o : ../../Modules/kind.o
 dvloc_of_g.o : Coul_cut_2D.o
@@ -970,6 +971,7 @@ forces.o : ../../Modules/fft_base.o
 forces.o : ../../Modules/io_global.o
 forces.o : ../../Modules/ions_base.o
 forces.o : ../../Modules/kind.o
+forces.o : ../../Modules/mbdlib.o
 forces.o : ../../Modules/mm_dispersion.o
 forces.o : ../../Modules/plugin_flags.o
 forces.o : ../../Modules/qmmm.o
@@ -1279,6 +1281,7 @@ init_run.o : ../../Modules/cell_base.o
 init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
 init_run.o : ../../Modules/ions_base.o
+init_run.o : ../../Modules/mbdlib.o
 init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/recvec_gpu.o
 init_run.o : ../../Modules/recvec_subs.o
@@ -2363,8 +2366,6 @@ setup.o : pwcom.o
 setup.o : start_k.o
 setup.o : symm_base.o
 setup.o : tetra.o
-sph_ind.o : ../../Modules/kind.o
-spinor.o : ../../Modules/kind.o
 start_k.o : ../../Modules/cell_base.o
 start_k.o : ../../Modules/kind.o
 stop_run.o : ../../Modules/environment.o
@@ -2614,6 +2615,7 @@ stress.o : ../../Modules/fft_base.o
 stress.o : ../../Modules/io_global.o
 stress.o : ../../Modules/ions_base.o
 stress.o : ../../Modules/kind.o
+stress.o : ../../Modules/mbdlib.o
 stress.o : ../../Modules/mm_dispersion.o
 stress.o : ../../Modules/recvec.o
 stress.o : ../../Modules/recvec_gpu.o

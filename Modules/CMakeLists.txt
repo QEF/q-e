@@ -115,7 +115,6 @@ set(src_modules
     set_hubbard_l.f90 
     set_hubbard_n.f90 
     sort.f90 
-    sph_bes.f90 
     sph_dbes.f90 
     trimcheck.f90 
     test_input_file.f90 
@@ -132,7 +131,6 @@ set(src_modules
     becmod_gpu.f90
     becmod_subs_gpu.f90
     dylmr2_gpu.f90
-    sph_bes_gpu.f90
     random_numbers_gpu.f90
     cuda_subroutines.f90)
 qe_enable_cuda_fortran("${src_modules}")

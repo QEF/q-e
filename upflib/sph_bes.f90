@@ -11,8 +11,8 @@ subroutine sph_bes (msh, r, q, l, jl)
   !--------------------------------------------------------------------
   !! Spherical Bessel function.
   !
-  use kinds, only: DP
-  USE constants, ONLY : eps14
+  USE upf_kinds, only: DP
+  USE upf_const, ONLY : eps14
   !
   implicit none
   !

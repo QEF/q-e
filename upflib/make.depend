@@ -103,6 +103,12 @@ read_uspp.o : upf_io.o
 read_uspp.o : upf_kinds.o
 read_uspp.o : upf_params.o
 simpsn.o : upf_kinds.o
+sph_bes.o : upf_const.o
+sph_bes.o : upf_kinds.o
+sph_bes_gpu.o : upf_const.o
+sph_bes_gpu.o : upf_kinds.o
+sph_ind.o : upf_kinds.o
+spinor.o : upf_kinds.o
 splinelib.o : upf_kinds.o
 upf_auxtools.o : pseudo_types.o
 upf_auxtools.o : upf_const.o

@@ -213,8 +213,6 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
-spinor.o \
-sph_ind.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \

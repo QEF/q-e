@@ -27,8 +27,8 @@ subroutine sph_bes_gpu (msh, r, q, l, jl)
   ! ... output:
   ! ...   jl(1:msh) = j_l(q*r(i))  (j_l = spherical bessel function)
   !
-  use kinds, only: DP
-  USE constants, ONLY : eps14
+  USE upf_kinds, only: DP
+  USE upf_const, ONLY : eps14
   !
   implicit none
   !

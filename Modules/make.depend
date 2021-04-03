@@ -169,6 +169,8 @@ latgen.o : io_global.o
 latgen.o : kind.o
 linpack.o : kind.o
 mbdlib.o : cell_base.o
+mbdlib.o : constants.o
+mbdlib.o : control_flags.o
 mbdlib.o : funct.o
 mbdlib.o : input_parameters.o
 mbdlib.o : io_global.o
@@ -371,10 +373,6 @@ set_vdw_corr.o : io_global.o
 setqf.o : kind.o
 sort.o : kind.o
 space_group.o : kind.o
-sph_bes.o : constants.o
-sph_bes.o : kind.o
-sph_bes_gpu.o : constants.o
-sph_bes_gpu.o : kind.o
 sph_dbes.o : constants.o
 sph_dbes.o : kind.o
 timestep.o : kind.o
