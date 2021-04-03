@@ -29,6 +29,8 @@ read_ps.o \
 read_upf_new.o \
 read_upf_v1.o \
 read_uspp.o \
+spinor.o \
+sph_ind.o \
 splinelib.o \
 simpsn.o \
 upf_auxtools.o \

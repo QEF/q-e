@@ -202,8 +202,6 @@ set(src_pw
    src/set_vrs.f90 
    src/setlocal.f90 
    src/setup.f90 
-   src/spinor.f90 
-   src/sph_ind.f90 
    src/stop_run.f90 
    src/stres_cc.f90 
    src/stres_ewa.f90 

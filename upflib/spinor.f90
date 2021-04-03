@@ -13,7 +13,7 @@ FUNCTION spinor( l, j, m, spin )
   !! projection along z of the total angular momentum m+-1/2. Spin selects
   !! the up (spin=1) or down (spin=2) coefficient.
   !
-  USE kinds
+  USE upf_kinds, only: dp
   !
   IMPLICIT NONE
   !
