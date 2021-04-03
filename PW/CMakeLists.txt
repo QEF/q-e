@@ -32,6 +32,8 @@ set(src_pw
    src/cdiagh.f90 
    src/clean_pw.f90 
    src/close_files.f90 
+   src/commutator_Hx_psi.f90
+   src/commutator_Vhubx_psi.f90
    src/compute_becsum.f90 
    src/compute_deff.f90 
    src/compute_dip.f90 

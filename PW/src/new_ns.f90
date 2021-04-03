@@ -231,7 +231,7 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ions_base,            ONLY : nat, ityp, ntyp => nsp
     USE klist,                ONLY : xk, igk_k, ngk
     USE becmod,               ONLY : becp
-    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0, using_vkb
+    USE uspp,                 ONLY : nkb, vkb, ofsbeta, using_vkb
     USE uspp_param,           ONLY : nhm, nh
     USE wvfct,                ONLY : nbnd
     USE wavefunctions,        ONLY : evc
@@ -284,7 +284,7 @@ SUBROUTINE compute_pproj( ik, q, p )
              IF ( is_hubbard(nt) ) THEN
                 DO ib = 1, nbnd
                    DO ih = 1, nh(nt)
-                      ikb = indv_ijkb0(na) + ih
+                      ikb = ofsbeta(na) + ih
                       DO iw = 1, nwfcU
                          IF ( gamma_only ) THEN
                             p%r(iw,ib) = p%r(iw,ib) + q(iw,ih,na)*becp%r(ikb,ib)

@@ -230,7 +230,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   ! Compute the commutator between the non-local Hubbard potential
   ! and the position operator
   !
-  IF (lda_plus_u) CALL commutator_Vhubx_psi(ik, ipol)
+  IF (lda_plus_u) CALL commutator_Vhubx_psi(ik, ipol, nbnd_occ, dpsi)
   !
   111 continue
   !

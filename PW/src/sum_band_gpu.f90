@@ -1062,8 +1062,8 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE becmod,             ONLY : becp, calbec, allocate_bec_type
   USE control_flags,      ONLY : gamma_only, tqr
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
-  USE uspp,               ONLY : nkb, becsum, ebecsum, indv_ijkb0, &
-                                 vkb_d, becsum_d, ebecsum_d, indv_ijkb0_d, using_vkb_d
+  USE uspp,               ONLY : nkb, becsum, ebecsum, ofsbeta, &
+                                 vkb_d, becsum_d, ebecsum_d, ofsbeta_d, using_vkb_d
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
   USE klist,              ONLY : ngk, nkstot
@@ -1164,7 +1164,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         END IF
         !
         !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-        !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+        !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
         !
         nhnt = nh(np)
         DO na = 1, nat
@@ -1180,7 +1180,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !$cuf kernel do(2)
                  DO is = 1, npol
                     DO ih = 1, nhnt
-                       ikb = indv_ijkb0_d(na) + ih
+                       ikb = ofsbeta_d(na) + ih
                        DO ibnd = ibnd_start, ibnd_end
                           auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,ibnd)
                           auxk2_d(ibnd,ih+(is-1)*nhnt)= wg_d(ibnd,ik) * &
@@ -1200,7 +1200,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !$cuf kernel do(2)
                  DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
-                       ikb = indv_ijkb0_d(na) + ih
+                       ikb = ofsbeta_d(na) + ih
                        ibnd = ibnd_loc + ibnd_begin - 1
                        auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg_d(ibnd,ik)
                     END DO
@@ -1212,21 +1212,21 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !     summation across bgrps performed outside will gives the right value.
                  !
                  CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                      1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
+                      1.0_dp/nbgrp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
                       auxg_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
                  !
                  if (tqr) then
                    CALL using_et_d(0)
                    !$cuf kernel do(1)
                    DO ih = 1, nhnt
-                      ikb = indv_ijkb0_d(na) + ih
+                      ikb = ofsbeta_d(na) + ih
                       DO ibnd_loc = 1, nbnd_loc
                       auxg_d(ibnd_loc,ih) = et_d(ibnd_loc,ik) * auxg_d(ibnd_loc,ih)
                       END DO
                    END DO
 
                    CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                        1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
+                        1.0_dp/nbgrp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
                         auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
                  end if
                  !
@@ -1236,7 +1236,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  !$cuf kernel do(2) <<<*,*>>>
                  DO ih = 1, nhnt
                     DO ibnd = ibnd_start, ibnd_end
-                       ikb = indv_ijkb0_d(na) + ih
+                       ikb = ofsbeta_d(na) + ih
                        auxk1_d(ibnd,ih) = becp_d_k_d(ikb,ibnd) 
                        auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,ibnd)
                     END DO
@@ -1253,7 +1253,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                    !$cuf kernel do(2)
                    DO ih = 1, nhnt
                       DO ibnd = ibnd_start, ibnd_end
-                         ikb = indv_ijkb0_d(na) + ih
+                         ikb = ofsbeta_d(na) + ih
                          auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
                       END DO
                    END DO

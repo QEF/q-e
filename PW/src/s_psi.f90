@@ -84,7 +84,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   !
   USE kinds,            ONLY: DP
   USE becmod,           ONLY: becp
-  USE uspp,             ONLY: vkb, nkb, okvan, qq_at, qq_so, indv_ijkb0, using_vkb
+  USE uspp,             ONLY: vkb, nkb, okvan, qq_at, qq_so, ofsbeta, using_vkb
   USE spin_orb,         ONLY: lspinorb
   USE uspp_param,       ONLY: upf, nh, nhm
   USE ions_base,        ONLY: nat, nsp, ityp
@@ -229,7 +229,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        ps(:,:) = 0.0_DP
        !
        !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-       !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+       !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
        !
        DO nt = 1, nsp
           IF ( upf(nt)%tvanp ) THEN
@@ -241,8 +241,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
                    !
                    IF ( m_loc > 0 ) THEN
                       CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                                  qq_at(1,1,na), nhm, becp%r(indv_ijkb0(na)+1,1),&
-                                  nkb, 0.0_dp, ps(indv_ijkb0(na)+1,1), nkb )
+                                  qq_at(1,1,na), nhm, becp%r(ofsbeta(na)+1,1),&
+                                  nkb, 0.0_dp, ps(ofsbeta(na)+1,1), nkb )
                    ENDIF
                 ENDIF
              ENDDO
@@ -327,8 +327,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
                 IF ( ityp(na) == nt ) THEN
                    qqc(:,:) = CMPLX ( qq_at(1:nh(nt),1:nh(nt),na), 0.0_DP, KIND=DP )
                    CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_DP,0.0_DP), &
-                        qqc, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
-                        (0.0_DP,0.0_DP), ps(indv_ijkb0(na)+1,1), nkb )
+                        qqc, nh(nt), becp%k(ofsbeta(na)+1,1), nkb, &
+                        (0.0_DP,0.0_DP), ps(ofsbeta(na)+1,1), nkb )
                 ENDIF
              ENDDO
              DEALLOCATE( qqc )
@@ -338,7 +338,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
              IF (nh(nt)>0) THEN
                 DO na = 1, nat
                    IF ( ityp(na) == nt ) THEN
-                      ps(indv_ijkb0(na)+1:indv_ijkb0(na)+nh(nt),1:m) = (0.0_DP,0.0_DP)
+                      ps(ofsbeta(na)+1:ofsbeta(na)+nh(nt),1:m) = (0.0_DP,0.0_DP)
                    ENDIF
                 ENDDO
              ENDIF
@@ -398,9 +398,9 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
                    DO ih = 1, nh(nt)
-                      ikb = indv_ijkb0(na) + ih
+                      ikb = ofsbeta(na) + ih
                       DO jh = 1, nh(nt)
-                         jkb = indv_ijkb0(na) + jh
+                         jkb = ofsbeta(na) + jh
                          IF ( .NOT. lspinorb ) THEN
                             DO ipol = 1, npol
                                DO ibnd = 1, m

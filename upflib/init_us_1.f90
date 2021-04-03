@@ -31,9 +31,9 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   USE uspp_data,    ONLY : nqxq, dq, nqx, spline_ps, tab, tab_d2y, qrad, &
                            tab_d, tab_d2y_d, qrad_d
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
-                           ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0, &
+                           ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, qq_at_d, &
-                           qq_nt_d, indv_d, qq_so_d, dvan_so_d, indv_ijkb0_d
+                           qq_nt_d, indv_d, qq_so_d, dvan_so_d, ofsbeta_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam, nsp
   USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
@@ -165,7 +165,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      !      atom ia in the global list of beta functions (ijkb0=0 for ia=1)
      do ia = 1,nat
        IF ( ityp(ia) == nt ) THEN
-          indv_ijkb0(ia) = ijkb0
+          ofsbeta(ia) = ijkb0
           ijkb0 = ijkb0 + nh(nt)
         END IF
      enddo
@@ -388,7 +388,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
         dvan_d=dvan
      endif
   endif
-  indv_ijkb0_d=indv_ijkb0
+  ofsbeta_d=ofsbeta
   !
 #endif
   !

@@ -24,7 +24,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
  
   use ions_base, only : nax, na, nsp, nat, ityp
   use uspp_param, only: upf, nh, nhm
-  use uspp, only : nkb, indv_ijkb0
+  use uspp, only : nkb, ofsbeta
   use kinds, only : dp
   use constants, only :
   use cell_base, only: at, alat
@@ -61,8 +61,8 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
      IF(upf(is)%tvanp) THEN
         do iv= 1,nh(is)
            do jv=1,nh(is)         
-              inl = indv_ijkb0(ia) + iv
-              jnl = indv_ijkb0(ia) + jv
+              inl = ofsbeta(ia) + iv
+              jnl = ofsbeta(ia) + jv
               temp=(0.d0,0.d0)
               temp1=(0.d0,0.d0)
               temp2=(0.d0,0.d0)

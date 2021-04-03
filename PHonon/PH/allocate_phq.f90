@@ -42,7 +42,7 @@ subroutine allocate_phq
   USE qpoint,        ONLY : nksq, eigqts, xk_col
   USE eqv,           ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
   USE lr_symm_base,  ONLY : rtau
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,       ONLY : dnsbare, dnsorth, dnsbare_all_modes, wfcatomk, &
                             dwfcatomk, sdwfcatomk, wfcatomkpq, dwfcatomkpq,  &
@@ -168,7 +168,6 @@ subroutine allocate_phq
      ALLOCATE (dwfcatomk(npwx,nwfcU,3))
      ALLOCATE (sdwfcatomk(npwx,nwfcU))
      ALLOCATE (dvkb(npwx,nkb,3))
-     ALLOCATE (ofsbeta(nat))
      !
      ALLOCATE (dnsbare(ldim,ldim,nspin,nat,3,nat))
      ALLOCATE (dnsbare_all_modes(ldim,ldim,nspin,nat,3*nat))
