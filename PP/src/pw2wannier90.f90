@@ -90,6 +90,131 @@ module wannier
    logical                  :: old_spinor_proj  ! for compatability for nnkp files prior to W90v2.0
    integer,allocatable :: rir(:,:)
    logical,allocatable :: zerophase(:,:)
+   !
+   CONTAINS
+   !
+   !----------------------------------------------------------------------------
+   SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb, becp_kb)
+      !-------------------------------------------------------------------------
+      !!
+      !! For a given k point ik and b vector i_b, compute |u_{n, k+b}>.
+      !! Optionally compute becp for k+b (for USPP case).
+      !!
+      !! Uses pre-computed information about b vector: kpb, zerophase, and ig_.
+      !!
+      !! TODO: Better name for evc_b
+      !!
+      !-------------------------------------------------------------------------
+      !
+      USE kinds,           ONLY : DP
+      USE fft_base,        ONLY : dffts
+      USE fft_interfaces,  ONLY : fwfft, invfft
+      USE io_files,        ONLY : nwordwfc, iunwfc
+      USE wvfct,           ONLY : nbnd, npwx
+      USE wavefunctions,   ONLY : psic
+      USE klist,           ONLY : xk, ngk, igk_k
+      USE noncollin_module,ONLY : npol
+      USE becmod,          ONLY : bec_type, calbec
+      USE uspp,            ONLY : vkb
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: ik
+      !! Index of the k point
+      INTEGER, INTENT(IN) :: i_b
+      !! Index of the b vector
+      COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, nbnd)
+      !! Wavefunction u_{n,k+b}, with the G-vector ordering at k.
+      TYPE(bec_type), OPTIONAL, INTENT(INOUT) :: becp_kb
+      !! Optional. Product of beta functions with |psi_k+b>
+      !
+      INTEGER :: ikp_b
+      !! Index of k+b
+      INTEGER :: npw
+      !! Number of plane waves at k
+      INTEGER :: npw_b
+      !! Number of plane waves at k+b
+      INTEGER :: istart
+      !! Starting G vector index
+      INTEGER :: iend
+      !! Ending G vector index
+      INTEGER :: ipol
+      !! Polarization index
+      INTEGER :: n
+      !! Band index
+      !
+      COMPLEX(DP), ALLOCATABLE :: phase(:)
+      !! Temporary storage for phase e&{i * G_kpb * r}
+      COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
+      !! Temporary storage for wavefunction at k+b
+      !
+      ALLOCATE(phase(dffts%nnr))
+      ALLOCATE(evc_b(npol*npwx, nbnd))
+      !
+      evc_kb = (0.0_DP, 0.0_DP)
+      !
+      npw = ngk(ik)
+      ikp_b = kpb(ik, i_b)
+      npw_b = ngk(ikp_b)
+      !
+      CALL davcio(evc_b, 2*nwordwfc, iunwfc, ikp_b + ikstart - 1, -1)
+      !
+      ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
+      ! Computed phase is used inside the loop over bands.
+      !
+      IF (.NOT. zerophase(ik, i_b)) THEN
+         phase(:) = (0.0_DP, 0.0_DP)
+         IF (ig_(ik, i_b) > 0) phase( dffts%nl(ig_(ik, i_b)) ) = (1.0_DP, 0.0_DP)
+         CALL invfft('Wave', phase, dffts)
+      ENDIF
+      !
+      ! Loop over bands
+      !
+      DO n = 1, nbnd
+         IF (excluded_band(n)) CYCLE
+         !
+         DO ipol = 1, npol
+            psic = (0.0_DP, 0.0_DP)
+            !
+            ! Copy evc_b to psic using the G-vector ordering at k+b.
+            !
+            istart = 1 + (ipol-1) * npwx
+            iend = istart + npw_b - 1
+            psic(dffts%nl( igk_k(1:npw_b, ikp_b) )) = evc_b(istart:iend, n)
+            !
+            ! Multiply e^{i * g_kpb * r} phase if necessary.
+            !
+            IF (.NOT. zerophase(ik, i_b)) THEN
+               CALL invfft('Wave', psic, dffts)
+               psic(1:dffts%nnr) = psic(1:dffts%nnr) * CONJG(phase(1:dffts%nnr))
+               CALL fwfft('Wave', psic, dffts)
+            ENDIF
+            !
+            ! Save |u_{n, k+b}> in evc_kb using the G-vector ordering at k.
+            !
+            istart = 1 + (ipol-1) * npwx
+            iend = istart + npw - 1
+            evc_kb(istart:iend, n) = psic(dffts%nl( igk_k(1:npw, ik) ))
+            !
+         ENDDO ! npol
+      ENDDO ! nbnd
+      !
+      IF (PRESENT(becp_kb)) THEN
+         !
+         ! Compute the product of beta functions with |psi_k+b>
+         !
+         CALL init_us_2(npw_b, igk_k(1, ikp_b), xk(1, ikp_b), vkb)
+         CALL calbec(npw_b, vkb, evc_b, becp_kb)
+         !
+      ENDIF
+      !
+      DEALLOCATE(phase)
+      DEALLOCATE(evc_b)
+      !
+   !----------------------------------------------------------------------------
+   END SUBROUTINE utility_compute_u_kb
+   !----------------------------------------------------------------------------
+   !
 end module wannier
 !
 
@@ -5497,112 +5622,3 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
-
-
-!----------------------------------------------------------------------------
-SUBROUTINE utility_compute_u_kb(ik, i_b, evc_kb)
-   !-------------------------------------------------------------------------
-   !!
-   !! For a given k point ik and b vector i_b, compute |u_{n, k+b}>.
-   !!
-   !! Uses pre-computed information about b vector: kpb, zerophase, and ig_.
-   !!
-   !-------------------------------------------------------------------------
-   !
-   USE kinds,           ONLY : DP
-   USE fft_base,        ONLY : dffts
-   USE fft_interfaces,  ONLY : fwfft, invfft
-   USE io_files,        ONLY : nwordwfc, iunwfc
-   USE wvfct,           ONLY : nbnd, npwx
-   USE wavefunctions,   ONLY : psic
-   USE klist,           ONLY : ngk, igk_k
-   USE noncollin_module,ONLY : npol
-   USE wannier,         ONLY : ikstart, zerophase, excluded_band, kpb, ig_
-   !
-   IMPLICIT NONE
-   !
-   INTEGER, INTENT(IN) :: ik
-   !! Index of the k point
-   INTEGER, INTENT(IN) :: i_b
-   !! Index of the b vector
-   COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, nbnd)
-   !! Wavefunction u_{n,k+b}, with the G-vector ordering at k.
-   !
-   INTEGER :: ikp_b
-   !! Index of k+b
-   INTEGER :: npw
-   !! Number of plane waves at k
-   INTEGER :: npw_b
-   !! Number of plane waves at k+b
-   INTEGER :: istart
-   !! Starting G vector index
-   INTEGER :: iend
-   !! Ending G vector index
-   INTEGER :: ipol
-   !! Polarization index
-   INTEGER :: n
-   !! Band index
-   !
-   COMPLEX(DP), ALLOCATABLE :: phase(:)
-   !! Temporary storage for phase e&{i * G_kpb * r}
-   COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
-   !! Temporary storage for wavefunction at k+b
-   !
-   ALLOCATE(phase(dffts%nnr))
-   ALLOCATE(evc_b(npol*npwx, nbnd))
-   !
-   evc_kb = (0.0_DP, 0.0_DP)
-   !
-   npw = ngk(ik)
-   ikp_b = kpb(ik, i_b)
-   npw_b = ngk(ikp_b)
-   !
-   CALL davcio(evc_b, 2*nwordwfc, iunwfc, ikp_b + ikstart - 1, -1)
-   !
-   ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
-   ! Computed phase is used inside the loop over bands.
-   !
-   IF (.NOT. zerophase(ik, i_b)) THEN
-      phase(:) = (0.0_DP, 0.0_DP)
-      IF (ig_(ik, i_b) > 0) phase( dffts%nl(ig_(ik, i_b)) ) = (1.0_DP, 0.0_DP)
-      CALL invfft('Wave', phase, dffts)
-   ENDIF
-   !
-   ! Loop over bands
-   !
-   DO n = 1, nbnd
-      IF (excluded_band(n)) CYCLE
-      !
-      DO ipol = 1, npol
-         psic = (0.0_DP, 0.0_DP)
-         !
-         ! Copy evc_b to psic using the G-vector ordering at k+b.
-         !
-         istart = 1 + (ipol-1) * npwx
-         iend = istart + npw_b - 1
-         psic(dffts%nl( igk_k(1:npw_b, ikp_b) )) = evc_b(istart:iend, n)
-         !
-         ! Multiply e^{i * g_kpb * r} phase if necessary.
-         !
-         IF (.NOT. zerophase(ik, i_b)) THEN
-            CALL invfft('Wave', psic, dffts)
-            psic(1:dffts%nnr) = psic(1:dffts%nnr) * CONJG(phase(1:dffts%nnr))
-            CALL fwfft('Wave', psic, dffts)
-         ENDIF
-         !
-         ! Save |u_{n, k+b}> in evc_kb using the G-vector ordering at k.
-         !
-         istart = 1 + (ipol-1) * npwx
-         iend = istart + npw - 1
-         evc_kb(istart:iend, n) = psic(dffts%nl( igk_k(1:npw, ik) ))
-         !
-      ENDDO ! npol
-   ENDDO ! nbnd
-   !
-   DEALLOCATE(phase)
-   DEALLOCATE(evc_b)
-   !
-!----------------------------------------------------------------------------
-END SUBROUTINE utility_compute_u_kb
-!----------------------------------------------------------------------------
-
