@@ -127,7 +127,6 @@ remove_tot_torque.o \
 set_hubbard_l.o \
 set_hubbard_n.o \
 sort.o \
-sph_dbes.o \
 trimcheck.o \
 test_input_file.o \
 date_and_tim.o \
