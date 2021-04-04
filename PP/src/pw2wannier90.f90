@@ -212,8 +212,9 @@ module wannier
       !! zerophase at (k, b)
       INTEGER :: ig_kb
       !! G vector index ig_ for (k, b)
-      INTEGER :: ik_g
-      !! Global index of k+b
+      INTEGER :: ik_g_w90
+      !! Global index of k+b. For lsda with spin down, subtract nkstot/2 to
+      !! start from 1.
       INTEGER :: ikp_b
       !! Index of k+b
       INTEGER :: npw
@@ -252,13 +253,13 @@ module wannier
       !
       evc_kb = (0.0_DP, 0.0_DP)
       !
-      ik_g = global_kpoint_index(nkstot, ik)
+      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
       !
       npw = ngk(ik)
       !
-      ikp_b = kpb(ik_g - ikstart + 1, i_b) + ikstart - 1
-      ig_kb = ig_(ik_g - ikstart + 1, i_b)
-      zerophase_kb = zerophase(ik_g - ikstart + 1, i_b)
+      ikp_b = kpb(ik_g_w90, i_b) + ikstart - 1
+      ig_kb = ig_(ik_g_w90, i_b)
+      zerophase_kb = zerophase(ik_g_w90, i_b)
 ! print*, "ikp_b", my_pool_id, nkstot, ik, ik_g, ikp_b
       !
       ! For a global k point index, find the pool and local k point index.
@@ -2287,7 +2288,7 @@ SUBROUTINE compute_mmn
    CHARACTER(LEN=256) :: filename
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
-   INTEGER :: ikevc, ikpevcq, s, counter, ik_g
+   INTEGER :: ikevc, ikpevcq, s, counter, ik_g_w90
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), evc_kb_m(:,:), evc_kb(:,:), &
                                Mkb(:,:), aux_nc(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
@@ -2356,13 +2357,13 @@ SUBROUTINE compute_mmn
       ind = 0
       DO ik = 1, nks
          IF (lsda .AND. isk(ik) /= ispinw) CYCLE
-         ik_g = global_kpoint_index(nkstot, ik)
+         ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
          !
          DO ib = 1, nnb
             ind = ind + 1
-            ikp = kpb(ik_g - ikstart + 1, ib)
+            ikp = kpb(ik_g_w90, ib)
             !
-            g_(:) = REAL(g_kpb(:, ik_g - ikstart + 1, ib), KIND=DP)
+            g_(:) = REAL(g_kpb(:, ik_g_w90, ib), KIND=DP)
             CALL cryst_to_cart (1, g_, bg, 1)
             dxk(:, ind) = xk_all(:, ikp) + g_(:) - xk(:, ik)
             qg(ind) = SUM(dxk(:,ind) * dxk(:,ind))
@@ -2405,7 +2406,7 @@ SUBROUTINE compute_mmn
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
       !
-      ik_g = global_kpoint_index(nkstot, ik)
+      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
       !
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       npw = ngk(ik)
@@ -2452,8 +2453,7 @@ SUBROUTINE compute_mmn
          !
          IF (wan_mode=='standalone') THEN
             IF (me_pool == root_pool) WRITE (iun_mmn, '(5i5)') &
-               ik_g - ikstart + 1, kpb(ik_g - ikstart + 1, ib), &
-               (g_kpb(ipol,ik_g - ikstart + 1,ib), ipol=1,3)
+               ik_g_w90, kpb(ik_g_w90, ib), (g_kpb(ipol, ik_g_w90, ib), ipol=1,3)
          ENDIF
          !
          DO m=1,nbnd
