@@ -496,7 +496,7 @@ PROGRAM pw2wannier90
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
   !
-  IF (npool > 1 .and. (write_unk .or. write_amn .or. write_eig &
+  IF (npool > 1 .and. (write_unk .or. write_amn &
       .or. write_uhu .or. write_uIu .or. write_sHu .or. write_sIu &
       .or. write_spn .or. write_dmn)) CALL errore('pw2wannier90', &
    'pools not implemented for this feature', npool)
@@ -677,7 +677,7 @@ PROGRAM pw2wannier90
         WRITE(stdout,*) ' *** Write bands '
         WRITE(stdout,*) ' ----------------'
         WRITE(stdout,*)
-     CALL write_band
+        CALL write_band
         WRITE(stdout,*)
      ELSE
         WRITE(stdout,*) ' --------------------------'
@@ -2285,10 +2285,9 @@ SUBROUTINE compute_mmn
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
    CHARACTER(LEN=256) :: filename
-   CHARACTER(LEN=256) :: line
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
-   INTEGER :: ikevc, ikpevcq, s, counter, ik_g, iun_mmn2
+   INTEGER :: ikevc, ikpevcq, s, counter, ik_g
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), evc_kb_m(:,:), evc_kb(:,:), &
                                Mkb(:,:), aux_nc(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
@@ -2591,22 +2590,7 @@ SUBROUTINE compute_mmn
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   IF (ionode .AND. npool > 1) THEN
-      filename = TRIM(seedname) // ".mmn"
-      OPEN (NEWUNIT=iun_mmn, file=TRIM(filename), form='formatted', STATUS="OLD", POSITION="APPEND")
-      !
-      DO n = 2, npool
-         filename = TRIM(seedname) // ".mmn" // TRIM(int_to_char(n))
-         OPEN(NEWUNIT=iun_mmn2, FILE=TRIM(filename), FORM='formatted')
-         DO WHILE (.TRUE.)
-            READ(iun_mmn2, '(A)', END=200) line
-            WRITE(iun_mmn, '(A)') TRIM(line)
-         ENDDO
-200      CLOSE(iun_mmn2, STATUS="DELETE")
-      ENDDO
-      !
-      CLOSE(iun_mmn, STATUS="KEEP")
-   ENDIF
+   CALL utility_merge_files("mmn", .TRUE.)
    !
    IF (gamma_only) DEALLOCATE(evc_kb_m)
    DEALLOCATE (Mkb, phase)
@@ -2617,7 +2601,7 @@ SUBROUTINE compute_mmn
       DEALLOCATE(aux)
    ENDIF
    DEALLOCATE(evc_kb)
-
+   !
    IF(any_uspp) THEN
       DEALLOCATE (  qb)
       DEALLOCATE (qq_so)
@@ -2628,13 +2612,63 @@ SUBROUTINE compute_mmn
    WRITE(stdout,'(/)')
    WRITE(stdout,*) ' MMN calculated'
    !
-   CALL mp_barrier(world_comm)
-   !
    CALL stop_clock( 'compute_mmn' )
    !
 END SUBROUTINE compute_mmn
 
-!-----------------------------------------------------------------------
+!--------------------------------------------------------------------------
+SUBROUTINE utility_merge_files(postfix, formatted)
+   !------------------------------------------------------------------------
+   !! For pool parallelization, each root_pool writes to different files.
+   !! Here, concatenate all prefix.postfix files
+   !------------------------------------------------------------------------
+   !
+   USE kinds,           ONLY : DP
+   USE io_global,       ONLY : ionode
+   USE mp_pools,        ONLY : npool
+   USE wannier,         ONLY : seedname
+   !
+   IMPLICIT NONE
+   !
+   CHARACTER(LEN=*) :: postfix
+   !! postfix for filename
+   LOGICAL, INTENT(IN) :: formatted
+   !! True if formatted file, false if unformatted file.
+   !
+   CHARACTER(LEN=256) :: filename
+   CHARACTER(LEN=256) :: line
+   INTEGER :: ipool, iun, iun2
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+   !
+   IF (.NOT. formatted) CALL errore("utility_merge_files", &
+      "unformatted file not implemented yet", 1)
+   !
+   IF (npool == 1) RETURN
+   IF (.NOT. ionode) RETURN
+   !
+   IF (formatted) THEN
+      filename = TRIM(seedname) // "." // TRIM(postfix)
+      OPEN (NEWUNIT=iun, file=TRIM(filename), form='formatted', STATUS="OLD", POSITION="APPEND")
+      !
+      DO ipool = 2, npool
+         filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
+         OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='formatted')
+         DO WHILE (.TRUE.)
+            READ(iun2, '(A)', END=200) line
+            WRITE(iun, '(A)') TRIM(line)
+      ENDDO
+200      CLOSE(iun2, STATUS="DELETE")
+      ENDDO
+      !
+      CLOSE(iun, STATUS="KEEP")
+      !
+   ENDIF ! formatted
+   !
+!--------------------------------------------------------------------------
+END SUBROUTINE utility_merge_files
+!--------------------------------------------------------------------------
+
+!--------------------------------------------------------------------------
 SUBROUTINE compute_spin
    !-----------------------------------------------------------------------
    !
@@ -4568,45 +4602,61 @@ END SUBROUTINE generate_guiding_functions
 
 SUBROUTINE write_band
    USE io_global,  ONLY : stdout, ionode
-   USE wvfct, ONLY : nbnd, et
-   USE klist, ONLY : nkstot
-   USE constants, ONLY: rytoev
+   USE mp,         ONLY : mp_barrier
+   USE mp_world,   ONLY : world_comm
+   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id
+   USE constants,  ONLY : rytoev
+   USE wvfct,      ONLY : nbnd, et
+   USE klist,      ONLY : nkstot, nks
+   USE lsda_mod,   ONLY : lsda, isk
    USE wannier
-
+   !
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL :: find_free_unit
+   CHARACTER(LEN=256) :: filename
+   INTEGER :: ik, ibnd, ibnd1, ikevc, ikevc_g
    !
-   INTEGER ik, ibnd, ibnd1, ikevc
-
-   IF (wan_mode=='standalone') THEN
-      iun_band = find_free_unit()
-      IF (ionode) OPEN (unit=iun_band, file=trim(seedname)//".eig",form='formatted')
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+   INTEGER, EXTERNAL :: global_kpoint_index
+   !
+   IF (wan_mode == 'standalone') THEN
+      IF (me_pool == root_pool) THEN
+         filename = TRIM(seedname) // ".eig"
+         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
+         OPEN(NEWUNIT=iun_band, FILE=TRIM(filename), FORM='FORMATTED')
+      ENDIF
+   ELSEIF (wan_mode == 'library') THEN
+      ALLOCATE(eigval(num_bands, iknum))
+   ELSE
+      CALL errore('write_band', 'value of wan_mode not recognised', 1)
    ENDIF
-
-   IF (wan_mode=='library') ALLOCATE(eigval(num_bands,iknum))
-
-   DO ik=ikstart,ikstop
+   !
+   !
+   DO ik = 1, nks
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       ikevc = ik - ikstart + 1
-      ibnd1=0
-      DO ibnd=1,nbnd
+      ikevc_g = global_kpoint_index(nkstot, ik) - ikstart + 1
+      !
+      ibnd1 = 0
+      DO ibnd = 1, nbnd
          IF (excluded_band(ibnd)) CYCLE
-         ibnd1=ibnd1 + 1
-         IF (wan_mode=='standalone') THEN
-            IF (ionode) WRITE (iun_band,'(2i5,f18.12)') ibnd1, ikevc, et(ibnd,ik)*rytoev
-         ELSEIF (wan_mode=='library') THEN
-            eigval(ibnd1,ikevc) = et(ibnd,ik)*rytoev
-         ELSE
-            CALL errore('write_band',' value of wan_mode not recognised',1)
+         ibnd1 = ibnd1 + 1
+         IF (wan_mode == 'standalone') THEN
+            IF (me_pool == root_pool) WRITE (iun_band,'(2i5,f18.12)') ibnd1, ikevc_g, et(ibnd,ik)*rytoev
+         ELSEIF (wan_mode == 'library') THEN
+            eigval(ibnd1,ikevc_g) = et(ibnd,ik)*rytoev
          ENDIF
       ENDDO
    ENDDO
-
-   IF (wan_mode=='standalone') THEN
-       IF (ionode) CLOSE (unit=iun_band)
+   !
+   IF (wan_mode == 'standalone') THEN
+      IF (me_pool == root_pool) CLOSE(iun_band, STATUS="KEEP")
    ENDIF
-
-   RETURN
+   !
+   CALL mp_barrier(world_comm)
+   !
+   CALL utility_merge_files("eig", .TRUE.)
+   !
 END SUBROUTINE write_band
 
 SUBROUTINE write_plot
