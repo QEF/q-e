@@ -270,12 +270,6 @@ bp_c_phase.o : ../../upflib/uspp.o
 bp_c_phase.o : bp_mod.o
 bp_c_phase.o : buffers.o
 bp_c_phase.o : pwcom.o
-bp_calc_btq.o : ../../Modules/cell_base.o
-bp_calc_btq.o : ../../Modules/constants.o
-bp_calc_btq.o : ../../Modules/ions_base.o
-bp_calc_btq.o : ../../Modules/kind.o
-bp_calc_btq.o : ../../upflib/atom.o
-bp_calc_btq.o : ../../upflib/uspp.o
 bp_mod.o : ../../Modules/becmod.o
 bp_mod.o : ../../Modules/cell_base.o
 bp_mod.o : ../../Modules/fft_base.o
@@ -283,9 +277,6 @@ bp_mod.o : ../../Modules/kind.o
 bp_mod.o : ../../Modules/mp_images.o
 bp_mod.o : ../../Modules/recvec.o
 bp_mod.o : ../../UtilXlib/mp.o
-bp_qvan3.o : ../../Modules/ions_base.o
-bp_qvan3.o : ../../Modules/kind.o
-bp_qvan3.o : ../../upflib/uspp.o
 bp_strings.o : ../../Modules/kind.o
 buffers.o : ../../Modules/io_files.o
 buffers.o : ../../Modules/kind.o

@@ -33,8 +33,6 @@ newd.o \
 beef.o \
 bp_mod.o \
 bp_c_phase.o \
-bp_calc_btq.o \
-bp_qvan3.o \
 bp_strings.o \
 buffers.o \
 c_bands.o \

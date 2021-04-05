@@ -24,7 +24,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   real(DP), intent(in) :: g (3, ng), gg (ng)
   !
   ! BEWARE: gg = g(1)^2 + g(2)^2 +g(3)^2  is not checked on input
-  !         incorrect results will ensue if the above does not hold
+  ! Incorrect results will ensue if gg != g(1)^2 + g(2)^2 +g(3)^2 
   !
   real(DP), intent(out) :: ylm (ng,lmax2)
   !
