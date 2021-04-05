@@ -7,13 +7,17 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
+SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the commutator between the non-local
   ! Hubbard potential and the position operator, applied to psi
-  ! of the current k point, i.e. [V_hub,r]|psi_nk> .
+  ! of the current k point, i.e. [V_hub, r \dot vpol]|psi_nk>.
   ! The result is added to dpsi.
+  !
+  ! vpol is the polarization vector in Cartesian coordinates.
+  ! For crystal coordinate, use vpol = at(:, ipol).
+  ! For Cartesian coordinate, use vpol = (1.0, 0.0, 0.0) or other permutations.
   !
   ! Some insights about the formulas here can be found e.g.
   ! in I. Timrov's PhD thesis, Sec. 6.1.3,
@@ -25,7 +29,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   USE kinds,          ONLY : DP
   USE io_files,       ONLY : iunhub, iunhub_noS, nwordwfcU
   USE wavefunctions,  ONLY : evc
-  USE wvfct,          ONLY : npwx, nbnd
+  USE wvfct,          ONLY : npwx
   USE ions_base,      ONLY : nat, ityp, ntyp => nsp
   USE ldaU,           ONLY : Hubbard_l, Hubbard_U, Hubbard_J0, &
                              is_hubbard, nwfcU, offsetU, oatwfc
@@ -33,7 +37,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   USE uspp_param,     ONLY : nh, upf
   USE lsda_mod,       ONLY : lsda, current_spin, isk, nspin
   USE klist,          ONLY : xk, ngk, igk_k
-  USE cell_base,      ONLY : tpiba, at
+  USE cell_base,      ONLY : tpiba
   USE gvect,          ONLY : g
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
@@ -46,18 +50,20 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   !
   INTEGER, INTENT(IN) :: ik
   !! k point index
-  INTEGER, INTENT(IN) :: ipol
-  !! polarization in crystal coordinates
   INTEGER, INTENT(IN) :: nbnd_calc
   !! Number of bands to calculate [V_hub, x_ipol]|psi_ik>
-  COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol, nbnd)
+  REAL(DP), INTENT(IN) :: vpol(3)
+  !! polarization vector in Cartesian coordinates
+  COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol, nbnd_calc)
   !! Output wavefunction where [V_hub, x_ipol]|psi_ik> is added
   !
   REAL(DP), PARAMETER :: eps = 1.0d-8
   INTEGER     :: na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
                  ihubst, ihubst1,  ihubst2, icart, op_spin, npw, offpm, offpmU
-  REAL(DP)    :: nsaux
-  REAL(DP), ALLOCATABLE :: xyz(:,:), gk(:,:), g2k(:)
+  REAL(DP)    :: nsaux, g2k, gk_ig(3)
+  REAL(DP), ALLOCATABLE :: xyz(:,:)
+  REAL(DP), ALLOCATABLE :: gk_vpol(:)
+  !! ipol component of the G/|G| vector, in crystal coordinates
   COMPLEX(DP), ALLOCATABLE :: dkwfcbessel(:,:), dkwfcylmr(:,:), dkwfcatomk(:,:),   &
                  dpqq26(:,:), dpqq38(:,:), dpqq47(:,:), dkvkbbessel(:,:),          &
                  dkvkbylmr(:,:), dkvkb(:,:), aux_1234(:), termi(:,:), trm(:,:),    &
@@ -69,9 +75,9 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   ! Number of plane waves at point ik
   npw = ngk(ik)
   !
-  ALLOCATE (proj1(nbnd,nwfcU))
-  ALLOCATE (proj2(nbnd,nwfcU))
-  ALLOCATE (proj3(nbnd,nwfcU))
+  ALLOCATE (proj1(nbnd_calc,nwfcU))
+  ALLOCATE (proj2(nbnd_calc,nwfcU))
+  ALLOCATE (proj3(nbnd_calc,nwfcU))
   ALLOCATE (dkwfcbessel(npwx,natomwfc))
   ALLOCATE (dkwfcylmr(npwx,natomwfc))
   ALLOCATE (dkwfcatomk(npwx,nwfcU))
@@ -84,11 +90,10 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   ALLOCATE (dkvkbylmr(npwx,nkb))
   ALLOCATE (dkvkb(npwx,nkb))
   ALLOCATE (aux_1234(npwx))
-  ALLOCATE (termi(npwx,nbnd))
-  ALLOCATE (trm(npwx,nbnd))
+  ALLOCATE (termi(npwx,nbnd_calc))
+  ALLOCATE (trm(npwx,nbnd_calc))
   ALLOCATE (xyz(3,3))
-  ALLOCATE (gk(3,npw))
-  ALLOCATE (g2k(npw))
+  ALLOCATE (gk_vpol(npw))
   !
   dpqq26     = (0.d0, 0.d0)
   dpqq38     = (0.d0, 0.d0)
@@ -124,7 +129,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   ! Derivative of Bessel functions and spherical harmonics wrt to crystal axis ipol
   !
   CALL gen_at_dj (ik, dkwfcbessel)
-  CALL gen_at_dy (ik, at(:,ipol), dkwfcylmr)
+  CALL gen_at_dy (ik, vpol, dkwfcylmr)
   !
   DO ig = 1, npw
      !
@@ -133,15 +138,21 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
      ! the cartesian component and then to crystal component ipol
      ! gk_icart= d|k+G|/d(k+G)_icart
      !
-     gk(:,ig) = (xk(:,ik) + g(:,igk_k(ig,ik))) * tpiba
+     gk_ig = (xk(:,ik) + g(:,igk_k(ig,ik))) * tpiba
+     g2k = SUM( gk_ig**2 )
      !
-     g2k(ig) = SUM( gk(1:3,ig)**2 )
+     ! Take the component along the vpol vector
+     gk_vpol(ig) = SUM(vpol(:) * gk_ig(:))
      !
-     IF (g2k(ig) < 1.0d-10) THEN
-        gk(:,ig) = 0.d0
+     IF (g2k < 1.0d-10) THEN
+        gk_vpol(ig) = 0.d0
      ELSE
-        gk(:,ig) = gk(:,ig) / SQRT(g2k(ig))
+        gk_vpol(ig) = gk_vpol(ig) / SQRT(g2k)
      ENDIF
+     !
+  ENDDO
+  !
+  DO ig = 1, npw
      !
      ! Derivative wrt crystal axis ipol
      ! d|k+G|/d(k+G)_ipol = \sum_{icart} d|k+G|/d(k+G)_icart * at (icart,ipol)
@@ -154,10 +165,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
             offpm  = oatwfc(na)
             DO m1 = 1, 2*Hubbard_l(nt)+1
                dkwfcatomk(ig,offpmU+m1) = dkwfcylmr(ig,offpm+m1)        &
-                                        + dkwfcbessel(ig,offpm+m1) *    &
-                                          ( at (1, ipol) * gk (1, ig) + &
-                                            at (2, ipol) * gk (2, ig) + &
-                                            at (3, ipol) * gk (3, ig) )
+                                        + dkwfcbessel(ig,offpm+m1) * gk_vpol(ig)
             ENDDO
          ENDIF
      ENDDO
@@ -172,7 +180,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
      ! Here the derivative of the Bessel functions and the spherical harmonics
      !
      CALL gen_us_dj (ik, dkvkbbessel)
-     CALL gen_us_dy (ik, at(:,ipol), dkvkbylmr)
+     CALL gen_us_dy (ik, vpol, dkvkbylmr)
      !
      jkb = 0
      DO nt = 1, ntyp
@@ -181,10 +189,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
               DO ikb = 1, nh(nt)
                  jkb = jkb + 1
                  DO ig = 1, npw
-                    dkvkb(ig,jkb) = dkvkbylmr(ig,jkb) + dkvkbbessel(ig,jkb) * &
-                                    (at (1, ipol) * gk (1, ig) + &
-                                     at (2, ipol) * gk (2, ig) + &
-                                     at (3, ipol) * gk (3, ig) )
+                    dkvkb(ig,jkb) = dkvkbylmr(ig,jkb) + dkvkbbessel(ig,jkb) * gk_vpol(ig)
                  ENDDO
               ENDDO
            ENDIF
@@ -388,8 +393,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol, nbnd_calc, dpsi)
   DEALLOCATE (termi)
   DEALLOCATE (trm)
   DEALLOCATE (xyz)
-  DEALLOCATE (gk)
-  DEALLOCATE (g2k)
+  DEALLOCATE (gk_vpol)
   !
   CALL stop_clock ('commutator_Vhubx_psi')
   !
