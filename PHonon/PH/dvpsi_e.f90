@@ -79,7 +79,7 @@ subroutine dvpsi_e (ik, ipol)
 
   ! calculate the commutator [H,x_ipol]  psi > and store it in dpsi
 
-  call commutator_Hx_psi (ikk, nbnd_occ(ikk), at(:, ipol), becp1(ik), becp2, dpsi )
+  call commutator_Hx_psi (ikk, nbnd_occ(ikk), at(:, ipol), becp1(ik), becp2, dpsi(:, 1:nbnd_occ(ikk)) )
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !    Apply -P^+_c
