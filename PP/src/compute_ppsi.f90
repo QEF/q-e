@@ -65,6 +65,9 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   !   so it is calculated separately here and multiplied in the calling
   !   routine.
   !
+  ! Note: The remaining part of this routine does a similar thing as
+  !       LR_Modules/adddvepsi_us.f90.
+  !
   npw = ngk(ik)
   !
   IF (okvan) THEN
