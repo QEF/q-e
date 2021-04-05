@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-subroutine commutator_Hx_psi (ik, nbnd_occ, vpol, becp1, becp2, dpsi)
+subroutine commutator_Hx_psi (ik, nbnd_calc, vpol, becp1, becp2, dpsi)
   !----------------------------------------------------------------------
   !
   ! On output: dpsi contains [H, r \dot vpol] | psi_ik >
@@ -40,11 +40,11 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, vpol, becp1, becp2, dpsi)
   USE ldaU,            ONLY : lda_plus_u
 
   implicit none
-  COMPLEX(DP), INTENT(OUT)    :: dpsi(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(OUT)    :: dpsi(npwx*npol, nbnd_calc)
   TYPE(bec_type), INTENT(IN)  :: becp1 ! dimensions ( nkb, nbnd )
   TYPE(bec_type), INTENT(INOUT) :: becp2 ! dimensions ( nkb, nbnd )
   !
-  INTEGER, INTENT(IN) :: ik, nbnd_occ
+  INTEGER, INTENT(IN) :: ik, nbnd_calc
   REAL(DP), INTENT(IN) :: vpol(3)
   !! polarization vector in Cartesian coordinates
   !
@@ -75,7 +75,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, vpol, becp1, becp2, dpsi)
   !
   ! this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
   !
-  do ibnd = 1, nbnd_occ
+  do ibnd = 1, nbnd_calc
      do ig = 1, npw
         dpsi(ig,ibnd) = gk_vpol(ig)*(0.d0,-2.d0)*evc (ig,ibnd)
      enddo
@@ -146,7 +146,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, vpol, becp1, becp2, dpsi)
      allocate (ps2 ( nkb, nbnd, 2))
      ps2=(0.d0,0.d0)
   END IF
-  DO ibnd = 1, nbnd_occ
+  DO ibnd = 1, nbnd_calc
      IF (noncolin) THEN
         CALL compute_deff_nc(deff_nc,et(ibnd,ik))
      ELSE
@@ -196,17 +196,17 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, vpol, becp1, becp2, dpsi)
   end do ! nbnd
   if (ikb /= nkb .OR. jkb /= nkb) call errore ('commutator_Hx_psi', 'unexpected error',1)
   IF (noncolin) THEN
-     CALL zgemm( 'N', 'N', npw, nbnd_occ*npol, nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_calc*npol, nkb, &
           (1.d0,0.d0), vkb(1,1), npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
           dpsi, npwx )
-     CALL zgemm( 'N', 'N', npw, nbnd_occ*npol, nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_calc*npol, nkb, &
           (1.d0,0.d0),work(1,1), npwx, psc(1,1,1,2), nkb, (1.d0,0.d0), &
           dpsi, npwx )
   ELSE
-     CALL zgemm( 'N', 'N', npw, nbnd_occ, nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_calc, nkb, &
           (1.d0,0.d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.d0), &
           dpsi(1,1), npwx )
-     CALL zgemm( 'N', 'N', npw, nbnd_occ, nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_calc, nkb, &
           (1.d0,0.d0),work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.d0), &
           dpsi(1,1), npwx )
   ENDIF
@@ -227,7 +227,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, vpol, becp1, becp2, dpsi)
   ! Compute the commutator between the non-local Hubbard potential
   ! and the position operator
   !
-  IF (lda_plus_u) CALL commutator_Vhubx_psi(ik, nbnd_occ, vpol, dpsi)
+  IF (lda_plus_u) CALL commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   !
   111 continue
   !

@@ -29,7 +29,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   USE kinds,          ONLY : DP
   USE io_files,       ONLY : iunhub, iunhub_noS, nwordwfcU
   USE wavefunctions,  ONLY : evc
-  USE wvfct,          ONLY : npwx, nbnd
+  USE wvfct,          ONLY : npwx
   USE ions_base,      ONLY : nat, ityp, ntyp => nsp
   USE ldaU,           ONLY : Hubbard_l, Hubbard_U, Hubbard_J0, &
                              is_hubbard, nwfcU, offsetU, oatwfc
@@ -54,7 +54,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   !! Number of bands to calculate [V_hub, x_ipol]|psi_ik>
   REAL(DP), INTENT(IN) :: vpol(3)
   !! polarization vector in Cartesian coordinates
-  COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol, nbnd)
+  COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol, nbnd_calc)
   !! Output wavefunction where [V_hub, x_ipol]|psi_ik> is added
   !
   REAL(DP), PARAMETER :: eps = 1.0d-8
@@ -75,9 +75,9 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   ! Number of plane waves at point ik
   npw = ngk(ik)
   !
-  ALLOCATE (proj1(nbnd,nwfcU))
-  ALLOCATE (proj2(nbnd,nwfcU))
-  ALLOCATE (proj3(nbnd,nwfcU))
+  ALLOCATE (proj1(nbnd_calc,nwfcU))
+  ALLOCATE (proj2(nbnd_calc,nwfcU))
+  ALLOCATE (proj3(nbnd_calc,nwfcU))
   ALLOCATE (dkwfcbessel(npwx,natomwfc))
   ALLOCATE (dkwfcylmr(npwx,natomwfc))
   ALLOCATE (dkwfcatomk(npwx,nwfcU))
@@ -90,8 +90,8 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
   ALLOCATE (dkvkbylmr(npwx,nkb))
   ALLOCATE (dkvkb(npwx,nkb))
   ALLOCATE (aux_1234(npwx))
-  ALLOCATE (termi(npwx,nbnd))
-  ALLOCATE (trm(npwx,nbnd))
+  ALLOCATE (termi(npwx,nbnd_calc))
+  ALLOCATE (trm(npwx,nbnd_calc))
   ALLOCATE (xyz(3,3))
   ALLOCATE (gk_vpol(npw))
   !
