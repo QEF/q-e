@@ -496,7 +496,7 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! This function computes the derivative of the Fermi-Dirac function
     !! It is therefore an approximation for a delta function
-    COMPLEX(KIND = DP) :: vkk(3, nbndfst, nbndfst)
+    COMPLEX(KIND = DP) :: vkk(3, nbndsub, nbndsub)
     !!- Velocity matrix elements at k
     COMPLEX(KIND = DP) :: optmat(3)
     !! Transition probability function
@@ -582,11 +582,11 @@
                 IF (ekkj - ekki - omegamin < - 6.0 * degaussw) CYCLE
                 !
                 optmat(:) = vkk(:,ibnd,jbnd)
-                pfac = wgki * (one - wgkj) - (one - wgki) * wgkj
+                pfac = wgki - wgkj
                 DO iw = 1, nomega
                   IF (ABS(ekkj - ekki  - omegap(iw)) > 6.0 * degaussw) CYCLE
                   !
-                  weighta = w0gauss((ekkj - ekki - omegap(iw))/degaussw, 0) / degaussw
+                  weighta = w0gauss((ekkj - ekki - omegap(iw)) / degaussw, 0) / degaussw 
                   !
                   DO ipol = 1, 3
                     epsilon2_abs_dir(ipol, iw, itemp) = epsilon2_abs_dir(ipol, iw, itemp) + (wkf(ikk) / 2.0) * cfac / &
@@ -629,23 +629,25 @@
     !
     !Output to file
     !
-    DO itemp = 1,nstemp
+    DO itemp = 1, nstemp
       WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
       nameF = 'epsilon2_dirabs_' // trim(adjustl(tp)) // 'K.dat'
       OPEN(UNIT = iudirabs, FILE = nameF)
       WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
-      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z'
+      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z,average'
       DO iw = 1, nomega
-        WRITE(iudirabs, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir(ipol, iw, 1), ipol = 1, 3)
+        WRITE(iudirabs, '(5x,f15.6,4E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir(ipol, iw, itemp), ipol = 1, 3), &
+                SUM(epsilon2_abs_dir(:, iw, itemp)) / 3.0d0
       ENDDO
       CLOSE(iudirabs)
       ! 
       nameF = 'epsilon2_dirabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
       OPEN(UNIT = iudirabs, FILE = nameF)
       WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
-      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z'
+      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z,average'
             DO iw = 1, nomega
-        WRITE(iudirabs, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_lorenz_dir(ipol, iw, 1), ipol = 1, 3)
+        WRITE(iudirabs, '(5x,f15.6,4E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_lorenz_dir(ipol, iw, itemp), ipol = 1, 3), &
+                SUM(epsilon2_abs_lorenz_dir(:, iw, itemp)) / 3.0d0
       ENDDO
       CLOSE(iudirabs)
     ENDDO
