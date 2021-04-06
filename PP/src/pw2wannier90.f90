@@ -18,8 +18,7 @@
 ! Jae-Mo Lihm - SCDM with noncollinear
 ! Ji Hoon Ryoo, Minsu Ghim - sHu, sIu terms for spin Hall conductivity
 !
-! NOTE: old_spinor_proj is still available for compatibility with old
-!       nnkp files but should be removed soon.
+! NOTE: old_spinor_proj is deprecated.
 !
 !
 module wannier
@@ -1233,28 +1232,22 @@ SUBROUTINE read_nnkp
   CALL mp_bcast(old_spinor_proj,ionode_id, world_comm)
 
   IF(old_spinor_proj)THEN
-  WRITE(stdout,'(//," ****** begin WARNING ****** ",/)')
-  WRITE(stdout,'(" The pw.x calculation was done with non-collinear spin ")')
-  WRITE(stdout,'(" but spinor = T was not specified in the wannier90 .win file!")')
-  WRITE(stdout,'(" Please set spinor = T and rerun wannier90.x -pp  ")')
-!  WRITE(stdout,'(/," If you are trying to reuse an old nnkp file, you can remove  ")')
-!  WRITE(stdout,'(" this check from pw2wannir90.f90 line 870, and recompile. ")')
-  WRITE(stdout,'(/," ******  end WARNING  ****** ",//)')
-!  CALL errore("pw2wannier90","Spinorbit without spinor=T",1)
+     WRITE(stdout,'(//," ****** begin WARNING ****** ",/)')
+     WRITE(stdout,'(" The pw.x calculation was done with non-collinear spin ")')
+     WRITE(stdout,'(" but spinor = T was not specified in the wannier90 .win file!")')
+     WRITE(stdout,'(" Please set spinor = T and rerun wannier90.x -pp  ")')
+     WRITE(stdout,'(/," ******  end WARNING  ****** ",//)')
+     CALL errore("pw2wannier90", "Spinorbit without spinor=T",1)
   ENDIF
 
   ! It is not clear if the next instruction is required or not, it probably depend
   ! on the version of wannier90 that was used to generate the nnkp file:
-  IF(old_spinor_proj) THEN
-     n_wannier=n_proj*2
-  ELSE
-     n_wannier=n_proj
-  ENDIF
+  n_wannier = n_proj
 
   ALLOCATE( center_w(3,n_proj), alpha_w(n_proj), gf(npwx,n_proj), &
        l_w(n_proj), mr_w(n_proj), r_w(n_proj), &
        zaxis(3,n_proj), xaxis(3,n_proj), csph(16,n_proj) )
-  if(noncolin.and..not.old_spinor_proj) then
+  if (noncolin) then
      ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) )
   endif
 
@@ -1276,7 +1269,7 @@ SUBROUTINE read_nnkp
              CALL errore('read_nnkp',' zona value must be positive', 1)
         ! convert wannier center in cartesian coordinates (in unit of alat)
         CALL cryst_to_cart( 1, center_w(:,iw), at, 1 )
-        if(noncolin.and..not.old_spinor_proj) then
+        if (noncolin) then
            READ(iun_nnkp,*) spin_eig(iw),(spin_qaxis(i,iw),i=1,3)
            xnorm = sqrt(spin_qaxis(1,iw)*spin_qaxis(1,iw) + spin_qaxis(2,iw)*spin_qaxis(2,iw) + &
              spin_qaxis(3,iw)*spin_qaxis(3,iw))
@@ -1328,7 +1321,7 @@ SUBROUTINE read_nnkp
   CALL mp_bcast(zaxis,ionode_id, world_comm)
   CALL mp_bcast(xaxis,ionode_id, world_comm)
   CALL mp_bcast(alpha_w,ionode_id, world_comm)
-  if(noncolin.and..not.old_spinor_proj) then
+  if (noncolin) then
      CALL mp_bcast(spin_eig,ionode_id, world_comm)
      CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
   end if
@@ -3571,117 +3564,96 @@ SUBROUTINE compute_amn
             sgf(:,:) = gf(:,:)
          !endif
       ENDIF
+
+      ! ===============================
+      ! Note
+      ! gf, gf_spinor: used only to run s_psi. Not used after here.
+      ! sgf_spinor: Used if noncolin && uspp
+      ! sgf: Used otherwise.
+      ! ===============================
+
+      ! TODO: mp_sum reduce
+
       !
       noncolin_case : &
       IF(noncolin) THEN
-         old_spinor_proj_case : &
-         IF(old_spinor_proj) THEN
-            ! we do the projection as g(r)*a(r) and g(r)*b(r)
-            DO ipol=1,npol
-               istart = (ipol-1)*npwx + 1
-               DO iw = 1,n_proj
-                  ibnd1 = 0
-                  DO ibnd = 1,nbnd
-                     IF (excluded_band(ibnd)) CYCLE
-                     amn=(0.0_dp,0.0_dp)
-                     !                  amn = zdotc(npw,evc_nc(1,ipol,ibnd),1,sgf(1,iw),1)
-                     if (any_uspp) then
-                        amn = zdotc(npw, evc(0,ibnd), 1, sgf_spinor(1, iw + (ipol-1)*n_proj), 1)
-                        amn = amn + zdotc(npw, evc(npwx+1,ibnd), 1, sgf_spinor(npwx+1, iw + (ipol-1)*n_proj), 1)
-                     else
-                        amn = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-                     endif
-                     CALL mp_sum(amn, intra_pool_comm)
-                     ibnd1=ibnd1+1
-                     IF (wan_mode=='standalone') THEN
-                        IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw+n_proj*(ipol-1), ik, amn
-                     ELSEIF (wan_mode=='library') THEN
-                        a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
-                     ELSE
-                        CALL errore('compute_amn',' value of wan_mode not recognised',1)
-                     ENDIF
-                  ENDDO
-               ENDDO
-            ENDDO
-         ELSE old_spinor_proj_case
-            DO iw = 1,n_proj
-               spin_z_pos=.false.;spin_z_neg=.false.
-               ! detect if spin quantisation axis is along z
-               if((abs(spin_qaxis(1,iw)-0.0d0)<eps6).and.(abs(spin_qaxis(2,iw)-0.0d0)<eps6) &
-                    .and.(abs(spin_qaxis(3,iw)-1.0d0)<eps6)) then
-                  spin_z_pos=.true.
-               elseif(abs(spin_qaxis(1,iw)-0.0d0)<eps6.and.abs(spin_qaxis(2,iw)-0.0d0)<eps6 &
-                    .and.abs(spin_qaxis(3,iw)+1.0d0)<eps6) then
-                  spin_z_neg=.true.
-               endif
-               if(spin_z_pos .or. spin_z_neg) then
-                  ibnd1 = 0
-                  DO ibnd = 1,nbnd
-                     IF (excluded_band(ibnd)) CYCLE
-                     if(spin_z_pos) then
-                        ipol=(3-spin_eig(iw))/2
-                     else
-                        ipol=(3+spin_eig(iw))/2
-                     endif
-                     istart = (ipol-1)*npwx + 1
-                     amn=(0.0_dp,0.0_dp)
-                     if (any_uspp) then
-                        amn = zdotc(npw, evc(1, ibnd), 1, sgf_spinor(1, iw), 1)
-                        amn = amn + zdotc(npw, evc(npwx+1, ibnd), 1, sgf_spinor(npwx+1, iw), 1)
-                     else
-                        amn = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-                     endif
-                     CALL mp_sum(amn, intra_pool_comm)
-                     ibnd1=ibnd1+1
-                     IF (wan_mode=='standalone') THEN
-                        IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
-                     ELSEIF (wan_mode=='library') THEN
-                        a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
-                     ELSE
-                        CALL errore('compute_amn',' value of wan_mode not recognised',1)
-                     ENDIF
-                  ENDDO
-               else
-                  ! general routine
-                  ! for quantisation axis (a,b,c)
-                  ! 'up'    eigenvector is 1/sqrt(1+c) [c+1,a+ib]
-                  ! 'down'  eigenvector is 1/sqrt(1-c) [c-1,a+ib]
-                  if(spin_eig(iw)==1) then
-                     fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw)+1)*cmplx(1.0d0,0.0d0,dp)
-                     fac(2)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+         DO iw = 1,n_proj
+            spin_z_pos=.false.;spin_z_neg=.false.
+            ! detect if spin quantisation axis is along z
+            if((abs(spin_qaxis(1,iw)-0.0d0)<eps6).and.(abs(spin_qaxis(2,iw)-0.0d0)<eps6) &
+                 .and.(abs(spin_qaxis(3,iw)-1.0d0)<eps6)) then
+               spin_z_pos=.true.
+            elseif(abs(spin_qaxis(1,iw)-0.0d0)<eps6.and.abs(spin_qaxis(2,iw)-0.0d0)<eps6 &
+                 .and.abs(spin_qaxis(3,iw)+1.0d0)<eps6) then
+               spin_z_neg=.true.
+            endif
+            if(spin_z_pos .or. spin_z_neg) then
+               ibnd1 = 0
+               DO ibnd = 1,nbnd
+                  IF (excluded_band(ibnd)) CYCLE
+                  if(spin_z_pos) then
+                     ipol=(3-spin_eig(iw))/2
                   else
-                     fac(1)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*(spin_qaxis(3,iw)-1)*cmplx(1.0d0,0.0d0,dp)
-                     fac(2)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+                     ipol=(3+spin_eig(iw))/2
                   endif
-                  ibnd1 = 0
-                  DO ibnd = 1,nbnd
-                     IF (excluded_band(ibnd)) CYCLE
-                     amn=(0.0_dp,0.0_dp)
-                     DO ipol=1,npol
-                        istart = (ipol-1)*npwx + 1
-                        amn_tmp=(0.0_dp,0.0_dp)
-                        if (any_uspp) then
-                          amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf_spinor(istart,iw),1)
-                          CALL mp_sum(amn_tmp, intra_pool_comm)
-                          amn=amn+amn_tmp
-                        else
-                          amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-                          CALL mp_sum(amn_tmp, intra_pool_comm)
-                          amn=amn+fac(ipol)*amn_tmp
-                        endif
-                     enddo
-                     ibnd1=ibnd1+1
-                     IF (wan_mode=='standalone') THEN
-                        IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
-                     ELSEIF (wan_mode=='library') THEN
-                           a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
-                        ELSE
-                           CALL errore('compute_amn',' value of wan_mode not recognised',1)
-                        ENDIF
-                     ENDDO
+                  istart = (ipol-1)*npwx + 1
+                  amn=(0.0_dp,0.0_dp)
+                  if (any_uspp) then
+                     amn = zdotc(npw, evc(1, ibnd), 1, sgf_spinor(1, iw), 1)
+                     amn = amn + zdotc(npw, evc(npwx+1, ibnd), 1, sgf_spinor(npwx+1, iw), 1)
+                  else
+                     amn = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
                   endif
-               end do
-            endif old_spinor_proj_case
+                  CALL mp_sum(amn, intra_pool_comm)
+                  ibnd1=ibnd1+1
+                  IF (wan_mode=='standalone') THEN
+                     IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                  ELSEIF (wan_mode=='library') THEN
+                     a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
+                  ELSE
+                     CALL errore('compute_amn',' value of wan_mode not recognised',1)
+                  ENDIF
+               ENDDO
+            else
+               ! general routine
+               ! for quantisation axis (a,b,c)
+               ! 'up'    eigenvector is 1/sqrt(1+c) [c+1,a+ib]
+               ! 'down'  eigenvector is 1/sqrt(1-c) [c-1,a+ib]
+               if(spin_eig(iw)==1) then
+                  fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw)+1)*cmplx(1.0d0,0.0d0,dp)
+                  fac(2)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+               else
+                  fac(1)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*(spin_qaxis(3,iw)-1)*cmplx(1.0d0,0.0d0,dp)
+                  fac(2)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+               endif
+               ibnd1 = 0
+               DO ibnd = 1,nbnd
+                  IF (excluded_band(ibnd)) CYCLE
+                  amn=(0.0_dp,0.0_dp)
+                  DO ipol=1,npol
+                     istart = (ipol-1)*npwx + 1
+                     amn_tmp=(0.0_dp,0.0_dp)
+                     if (any_uspp) then
+                       amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf_spinor(istart,iw),1)
+                       CALL mp_sum(amn_tmp, intra_pool_comm)
+                       amn=amn+amn_tmp
+                     else
+                       amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
+                       CALL mp_sum(amn_tmp, intra_pool_comm)
+                       amn=amn+fac(ipol)*amn_tmp
+                     endif
+                  enddo
+                  ibnd1=ibnd1+1
+                  IF (wan_mode=='standalone') THEN
+                     IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+                  ELSEIF (wan_mode=='library') THEN
+                        a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
+                     ELSE
+                        CALL errore('compute_amn',' value of wan_mode not recognised',1)
+                     ENDIF
+                  ENDDO
+               endif
+            end do
          ELSE  noncolin_case ! scalar wfcs
             DO iw = 1,n_proj
                ibnd1 = 0
@@ -4480,48 +4452,36 @@ subroutine orient_gf_spinor(npw)
 
 
    gf_spinor = (0.0d0, 0.0d0)
-   if (old_spinor_proj) then
-      iw_spinor = 1
-      DO ipol=1,npol
-        istart = (ipol-1)*npwx + 1
-        DO iw = 1,n_proj
-          ! generate 2*nproj spinor functions, one for each spin channel
-          gf_spinor(istart:istart+npw-1, iw_spinor) = gf(1:npw, iw)
-          iw_spinor = iw_spinor + 1
-        enddo
-      enddo
-   else
-     DO iw = 1,n_proj
-        spin_z_pos=.false.;spin_z_neg=.false.
-        ! detect if spin quantisation axis is along z
-        if((abs(spin_qaxis(1,iw)-0.0d0)<eps6).and.(abs(spin_qaxis(2,iw)-0.0d0)<eps6) &
-           .and.(abs(spin_qaxis(3,iw)-1.0d0)<eps6)) then
-           spin_z_pos=.true.
-        elseif(abs(spin_qaxis(1,iw)-0.0d0)<eps6.and.abs(spin_qaxis(2,iw)-0.0d0)<eps6 &
-           .and.abs(spin_qaxis(3,iw)+1.0d0)<eps6) then
-           spin_z_neg=.true.
-        endif
-        if(spin_z_pos .or. spin_z_neg) then
-           if(spin_z_pos) then
-              ipol=(3-spin_eig(iw))/2
-           else
-              ipol=(3+spin_eig(iw))/2
-           endif
-           istart = (ipol-1)*npwx + 1
-           gf_spinor(istart:istart+npw-1, iw) = gf(1:npw, iw)
+  DO iw = 1,n_proj
+     spin_z_pos=.false.;spin_z_neg=.false.
+     ! detect if spin quantisation axis is along z
+     if((abs(spin_qaxis(1,iw)-0.0d0)<eps6).and.(abs(spin_qaxis(2,iw)-0.0d0)<eps6) &
+        .and.(abs(spin_qaxis(3,iw)-1.0d0)<eps6)) then
+        spin_z_pos=.true.
+     elseif(abs(spin_qaxis(1,iw)-0.0d0)<eps6.and.abs(spin_qaxis(2,iw)-0.0d0)<eps6 &
+        .and.abs(spin_qaxis(3,iw)+1.0d0)<eps6) then
+        spin_z_neg=.true.
+     endif
+     if(spin_z_pos .or. spin_z_neg) then
+        if(spin_z_pos) then
+           ipol=(3-spin_eig(iw))/2
         else
-          if(spin_eig(iw)==1) then
-             fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw)+1)*cmplx(1.0d0,0.0d0,dp)
-             fac(2)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
-          else
-             fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw))*cmplx(1.0d0,0.0d0,dp)
-             fac(2)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
-          endif
-          gf_spinor(1:npw, iw) = gf(1:npw, iw) * fac(1)
-          gf_spinor(npwx + 1:npwx + npw, iw) = gf(1:npw, iw) * fac(2)
+           ipol=(3+spin_eig(iw))/2
         endif
-     enddo
-   endif
+        istart = (ipol-1)*npwx + 1
+        gf_spinor(istart:istart+npw-1, iw) = gf(1:npw, iw)
+     else
+       if(spin_eig(iw)==1) then
+          fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw)+1)*cmplx(1.0d0,0.0d0,dp)
+          fac(2)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+       else
+          fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw))*cmplx(1.0d0,0.0d0,dp)
+          fac(2)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+       endif
+       gf_spinor(1:npw, iw) = gf(1:npw, iw) * fac(1)
+       gf_spinor(npwx + 1:npwx + npw, iw) = gf(1:npw, iw) * fac(2)
+     endif
+  enddo
 end subroutine orient_gf_spinor
 !
 SUBROUTINE generate_guiding_functions(ik)
