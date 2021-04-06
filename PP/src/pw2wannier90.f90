@@ -3441,16 +3441,16 @@ SUBROUTINE utility_write_array(iun, formatted, ndim, arr)
 END SUBROUTINE utility_write_array
 !--------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
+!--------------------------------------------------------------------------
 SUBROUTINE compute_amn
    !-----------------------------------------------------------------------
    !
-   USE io_global,  ONLY : stdout, ionode
+   USE io_global,       ONLY : stdout, ionode
    USE kinds,           ONLY : DP
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions, ONLY : evc
+   USE wavefunctions,   ONLY : evc
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
    USE uspp,            ONLY : nkb, vkb
@@ -3489,7 +3489,7 @@ SUBROUTINE compute_amn
 
    any_uspp =any (upf(1:ntyp)%tvanp)
 
-   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
+   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands, n_wannier, iknum))
 
    IF (wan_mode=='standalone') THEN
       iun_amn = find_free_unit()
@@ -3503,8 +3503,7 @@ SUBROUTINE compute_amn
       header='Created on '//cdate//' at '//ctime
       IF (ionode) THEN
          WRITE (iun_amn,*) header
-         WRITE (iun_amn,*) nbnd-nexband,  iknum, n_wannier
-         !WRITE (iun_amn,*) nbnd-nexband,  iknum, n_proj
+         WRITE (iun_amn,*) nbnd-nexband, iknum, n_proj
       ENDIF
    ENDIF
    !
@@ -3513,20 +3512,17 @@ SUBROUTINE compute_amn
    ALLOCATE( sgf_spinor(2*npwx,n_proj))
    !
    IF (any_uspp) THEN
-      CALL allocate_bec_type ( nkb, n_wannier, becp)
+      CALL allocate_bec_type(nkb, n_proj, becp)
    ENDIF
    !
 
-   DO ik=1,iknum
+   DO ik = 1, iknum
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
       ikevc = ik + ikstart - 1
-!      if(noncolin) then
-!         call davcio (evc_nc, 2*nwordwfc, iunwfc, ikevc, -1 )
-!      else
-         CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-!      end if
+      !
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       npw = ngk(ik)
       CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
 
@@ -3575,35 +3571,34 @@ SUBROUTINE compute_amn
       ! TODO: mp_sum reduce
 
       !
-      noncolin_case : &
       IF(noncolin) THEN
-         DO iw = 1,n_proj
+         DO iw = 1, n_proj
             spin_z_pos=.false.;spin_z_neg=.false.
             ! detect if spin quantisation axis is along z
-            if((abs(spin_qaxis(1,iw)-0.0d0)<eps6).and.(abs(spin_qaxis(2,iw)-0.0d0)<eps6) &
+            IF((abs(spin_qaxis(1,iw)-0.0d0)<eps6).and.(abs(spin_qaxis(2,iw)-0.0d0)<eps6) &
                  .and.(abs(spin_qaxis(3,iw)-1.0d0)<eps6)) then
                spin_z_pos=.true.
-            elseif(abs(spin_qaxis(1,iw)-0.0d0)<eps6.and.abs(spin_qaxis(2,iw)-0.0d0)<eps6 &
-                 .and.abs(spin_qaxis(3,iw)+1.0d0)<eps6) then
+            ELSEIF(abs(spin_qaxis(1,iw)-0.0d0)<eps6.and.abs(spin_qaxis(2,iw)-0.0d0)<eps6 &
+                 .and.abs(spin_qaxis(3,iw)+1.0d0)<eps6) THEN
                spin_z_neg=.true.
-            endif
-            if(spin_z_pos .or. spin_z_neg) then
+            ENDIF
+            IF (spin_z_pos .OR. spin_z_neg) THEN
                ibnd1 = 0
                DO ibnd = 1,nbnd
                   IF (excluded_band(ibnd)) CYCLE
-                  if(spin_z_pos) then
+                  IF(spin_z_pos) THEN
                      ipol=(3-spin_eig(iw))/2
-                  else
+                  ELSE
                      ipol=(3+spin_eig(iw))/2
-                  endif
+                  ENDIF
                   istart = (ipol-1)*npwx + 1
                   amn=(0.0_dp,0.0_dp)
-                  if (any_uspp) then
+                  IF (any_uspp) THEN
                      amn = zdotc(npw, evc(1, ibnd), 1, sgf_spinor(1, iw), 1)
                      amn = amn + zdotc(npw, evc(npwx+1, ibnd), 1, sgf_spinor(npwx+1, iw), 1)
-                  else
+                  ELSE
                      amn = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-                  endif
+                  ENDIF
                   CALL mp_sum(amn, intra_pool_comm)
                   ibnd1=ibnd1+1
                   IF (wan_mode=='standalone') THEN
@@ -3613,19 +3608,19 @@ SUBROUTINE compute_amn
                   ELSE
                      CALL errore('compute_amn',' value of wan_mode not recognised',1)
                   ENDIF
-               ENDDO
-            else
+               ENDDO ! ibnd
+            ELSE ! .NOT. (spin_z_pos .OR. spin_z_neg)
                ! general routine
                ! for quantisation axis (a,b,c)
                ! 'up'    eigenvector is 1/sqrt(1+c) [c+1,a+ib]
                ! 'down'  eigenvector is 1/sqrt(1-c) [c-1,a+ib]
-               if(spin_eig(iw)==1) then
+               IF (spin_eig(iw)==1) THEN
                   fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw)+1)*cmplx(1.0d0,0.0d0,dp)
                   fac(2)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
-               else
+               ELSE
                   fac(1)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*(spin_qaxis(3,iw)-1)*cmplx(1.0d0,0.0d0,dp)
                   fac(2)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
-               endif
+               ENDIF
                ibnd1 = 0
                DO ibnd = 1,nbnd
                   IF (excluded_band(ibnd)) CYCLE
@@ -3633,64 +3628,65 @@ SUBROUTINE compute_amn
                   DO ipol=1,npol
                      istart = (ipol-1)*npwx + 1
                      amn_tmp=(0.0_dp,0.0_dp)
-                     if (any_uspp) then
+                     IF (any_uspp) THEN
                        amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf_spinor(istart,iw),1)
                        CALL mp_sum(amn_tmp, intra_pool_comm)
                        amn=amn+amn_tmp
-                     else
+                     ELSE
                        amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
                        CALL mp_sum(amn_tmp, intra_pool_comm)
                        amn=amn+fac(ipol)*amn_tmp
-                     endif
-                  enddo
+                     ENDIF
+                  ENDDO
                   ibnd1=ibnd1+1
                   IF (wan_mode=='standalone') THEN
                      IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
                   ELSEIF (wan_mode=='library') THEN
                         a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
-                     ELSE
-                        CALL errore('compute_amn',' value of wan_mode not recognised',1)
-                     ENDIF
-                  ENDDO
-               endif
-            end do
-         ELSE  noncolin_case ! scalar wfcs
-            DO iw = 1,n_proj
-               ibnd1 = 0
-               DO ibnd = 1,nbnd
-                  IF (excluded_band(ibnd)) CYCLE
-                  IF (gamma_only) THEN
-                     amn = 2.0_dp*ddot(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
-                     IF (gstart==2) amn = amn - real(conjg(evc(1,ibnd))*sgf(1,iw))
-                  ELSE
-                     amn = zdotc(npw,evc(1,ibnd),1,sgf(1,iw),1)
-                  ENDIF
-                  CALL mp_sum(amn, intra_pool_comm)
-                  ibnd1=ibnd1+1
-                  IF (wan_mode=='standalone') THEN
-                     IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
-                  ELSEIF (wan_mode=='library') THEN
-                     a_mat(ibnd1,iw,ik) = amn
                   ELSE
                      CALL errore('compute_amn',' value of wan_mode not recognised',1)
                   ENDIF
-               ENDDO
-            ENDDO
-         ENDIF noncolin_case
-      ENDDO  ! k-points
-      DEALLOCATE (sgf,csph, gf_spinor, sgf_spinor)
+               ENDDO ! ibnd
+            ENDIF ! spin_z_pos .OR. spin_z_neg
+         ENDDO ! iw
+      ELSE ! .NOT. noncolin
+         DO iw = 1,n_proj
+            ibnd1 = 0
+            DO ibnd = 1,nbnd
+               IF (excluded_band(ibnd)) CYCLE
+               IF (gamma_only) THEN
+                  amn = 2.0_dp*ddot(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
+                  IF (gstart==2) amn = amn - real(conjg(evc(1,ibnd))*sgf(1,iw))
+               ELSE
+                  amn = zdotc(npw,evc(1,ibnd),1,sgf(1,iw),1)
+               ENDIF
+               CALL mp_sum(amn, intra_pool_comm)
+               ibnd1=ibnd1+1
+               IF (wan_mode=='standalone') THEN
+                  IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+               ELSEIF (wan_mode=='library') THEN
+                  a_mat(ibnd1,iw,ik) = amn
+               ELSE
+                  CALL errore('compute_amn',' value of wan_mode not recognised',1)
+               ENDIF
+            ENDDO ! ibnd
+         ENDDO ! iw
+      ENDIF ! noncolin
+   ENDDO  ! k-points
+   !
+   DEALLOCATE (sgf,csph, gf_spinor, sgf_spinor)
+   !
    IF(any_uspp) THEN
      CALL deallocate_bec_type (becp)
    ENDIF
    !
-   IF (ionode .and. wan_mode=='standalone') CLOSE (iun_amn)
-
+   IF (ionode .AND. wan_mode=='standalone') CLOSE(iun_amn)
+   !
    WRITE(stdout,'(/)')
    WRITE(stdout,*) ' AMN calculated'
-
-   ! vv: This should be here and not in write_band
+   !
    CALL stop_clock( 'compute_amn' )
-   RETURN
+   !
 END SUBROUTINE compute_amn
 
 SUBROUTINE compute_amn_with_scdm
