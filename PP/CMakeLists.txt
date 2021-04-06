@@ -197,11 +197,11 @@ qe_add_executable(qe_pp_pmw_exe ${src_pmw_x})
 set_target_properties(qe_pp_pmw_exe PROPERTIES OUTPUT_NAME pmw.x)
 target_link_libraries(qe_pp_pmw_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_modules
         qe_pp
-        qe_upflib)
+        qe_upflib
+        qe_lapack)
 
 ###########################################################
 # projwfc.x
@@ -211,12 +211,12 @@ qe_add_executable(qe_pp_projwfc_exe ${src_projwfc_x})
 set_target_properties(qe_pp_projwfc_exe PROPERTIES OUTPUT_NAME projwfc.x)
 target_link_libraries(qe_pp_projwfc_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_modules
         qe_pp
         qe_lax
-        qe_upflib)
+        qe_upflib
+        qe_lapack)
 
 ###########################################################
 # pw2wannier90.x
@@ -226,13 +226,13 @@ qe_add_executable(qe_pp_pw2wannier90_exe ${src_pw2wannier90_x})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_modules
         qe_pp
         qe_fftx
         qe_upflib
-        qe_xclib)
+        qe_xclib
+        qe_lapack)
 
 ###########################################################
 # pw2critic.x
@@ -415,13 +415,13 @@ qe_add_executable(qe_pp_ppacf_exe ${src_ppacf_x})
 set_target_properties(qe_pp_ppacf_exe PROPERTIES OUTPUT_NAME ppacf.x)
 target_link_libraries(qe_pp_ppacf_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_pp
         qe_modules
         qe_fftx
         qe_upflib
-        qe_xclib)
+        qe_xclib
+        qe_lapack)
 
 ###########################################################
 # ef.x

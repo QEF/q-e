@@ -103,7 +103,8 @@ if(QE_ENABLE_TEST)
                 qe_utilx
                 qe_utilx_tests
                 qe_mpi_fortran
-                qe_modules)
+                qe_modules
+                qe_lapack)
         add_test(NAME ${TGT_NAME} COMMAND ${QE_TESTS_DIR}/${TGT_NAME}.x)
     ENDFOREACH(NAME)
 endif()

@@ -132,7 +132,6 @@ target_link_libraries(qe_cpv_exe
         qe_modules
         qe_lax
         qe_cpv
-        qe_lapack
         qe_xclib)
 
 ###########################################################
@@ -149,7 +148,6 @@ target_link_libraries(qe_cpv_manycp_exe
         qe_lax
         qe_modules
         qe_cpv
-        qe_lapack
         qe_xclib)
 
 ###########################################################
@@ -165,7 +163,6 @@ target_link_libraries(qe_cpv_cppp_exe
         qe_modules
         qe_cpv
         qe_clib
-        qe_lapack
         qe_xclib)
 
 ###########################################################
@@ -178,10 +175,10 @@ set_target_properties(qe_cpv_wfdd_exe
         OUTPUT_NAME wfdd.x)
 target_link_libraries(qe_cpv_wfdd_exe
     PRIVATE
-        qe_lapack
         qe_modules
         qe_cpv
-        qe_xclib)
+        qe_xclib
+        qe_lapack)
 
 ###########################################################
 
