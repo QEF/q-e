@@ -36,8 +36,7 @@ SUBROUTINE kc_readin()
   USE paw_variables, ONLY : okpaw
   USE uspp,          ONLY : okvan
   USE control_kc_wann
-  USE control_ph,    ONLY : tmp_dir_ph, tmp_dir_phq, alpha_mix, nmix_ph, tr2_ph
-  USE mp_images,     ONLY : my_image_id
+  USE control_ph,    ONLY : alpha_mix, nmix_ph, tr2_ph
   USE save_ph,       ONLY : tmp_dir_save
   USE control_flags, ONLY : iverbosity
   USE martyna_tuckerman,    ONLY : do_comp_mt
@@ -62,7 +61,6 @@ SUBROUTINE kc_readin()
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
   LOGICAL, EXTERNAL  :: has_xml
-  CHARACTER(LEN=6)   :: int_to_char
   LOGICAL            :: exst, parallelfs
   !
   ! kc_iverbosity   : verbosity control
@@ -230,9 +228,9 @@ SUBROUTINE kc_readin()
   ENDIF
   !
   tmp_dir_save=tmp_dir
-  tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
-  CALL check_tempdir ( tmp_dir_ph, exst, parallelfs )
-  tmp_dir_phq=tmp_dir_ph
+  tmp_dir_kc= TRIM (tmp_dir) // 'kcwann' //'/'
+  CALL check_tempdir ( tmp_dir_kc, exst, parallelfs )
+  tmp_dir_kcq=tmp_dir_kc
   !
   ! ... Check all namelist variables
   !

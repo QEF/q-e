@@ -15,13 +15,14 @@ MODULE control_kc_wann
   USE kinds,        ONLY : DP
   !
   SAVE
+  CHARACTER(LEN=256)       :: tmp_dir_kc, tmp_dir_kcq
   !
   COMPLEX (DP), ALLOCATABLE:: unimatrx(:,:,:)           ! Unitary matrix Canonical-variational OCC orbitals (n,n,kpoint)
   COMPLEX (DP), ALLOCATABLE:: unimatrx_opt(:,:,:)       ! Optimal Unitary matrix from EMP disentanglement
   COMPLEX (DP), ALLOCATABLE:: evc0(:,:)                 ! Variational orbitals at agiven kpoint
   REAL(DP), ALLOCATABLE    :: alpha_final(:)            ! Value of the screening parameter
   REAL(DP), ALLOCATABLE    :: alpha_final_full(:)       ! Value of the screening parameter in case the full hamiltonian is computed
-  LOGICAL :: l_unique_manifold                          ! IF true no occ/empty distinction from Wannier
+  LOGICAL                  :: l_unique_manifold         ! IF true no occ/empty distinction from Wannier
   !
   LOGICAL :: kc_at_ks                                   ! if TRUE calculate alphas for KS orbitals
   LOGICAL :: fix_orb                                    ! if TRUE freeze the response of the orbital we are looking at
@@ -36,7 +37,7 @@ MODULE control_kc_wann
   LOGICAL  :: qp_symm                                   ! if TRUE build and hermitin operator for the KI hamiltonian. This is in hte spirit of scQP GW.
   LOGICAL  :: kipz_corr                                 ! if TRUE add the PZ term of KIPZ. This is in the spirit of a perturbative approach 
   LOGICAL  :: compute_hf                                ! if TRUE compute the expectation value of the Fock operator on the orbitals
-  CHARACTER(len=256) :: seedname                        ! if TRUE compute the expectation value of the Fock operator on the orbitals
+  CHARACTER(len=256) :: seedname                        ! the seedname of the Wannier calculation
   INTEGER  :: num_wann_occ                              ! number of wannier function for the OCC manifold
   INTEGER  :: num_wann_emp                              ! number of wannier function for the EMP manifold
   INTEGER  :: num_wann                                  ! total number of wannier function num_wann = num_wann_occ + num_wann_emp

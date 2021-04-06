@@ -12,7 +12,7 @@ PROGRAM wann2kc
   !
   !!  This is one of the main drivers of the KC_WANN code 
   !!  It reads the PWSCF and Wannier90 outputs and prepare the 
-  !!  subsequent KC calculations. Call kc_Setup.f90 to compute 
+  !!  subsequent KC calculations. Call kc_setup.f90 to compute 
   !!  the periodic part of the wannier functions and save these
   !!  on file. 
   !!   
@@ -22,6 +22,7 @@ PROGRAM wann2kc
   USE environment,           ONLY : environment_start, environment_end
   USE check_stop,            ONLY : check_stop_init
   USE control_kc_wann,       ONLY : calculation
+  USE io_kcwann,             ONLY : write_mlwf
   !
   IMPLICIT NONE
   !
@@ -40,6 +41,9 @@ PROGRAM wann2kc
   !
   ! 3) Set up for the KC calculation. 
   CALL kc_setup( )
+  ! 
+  ! 4) Save MLWF on file 
+  CALL write_mlwf( ) 
   !
   CALL clean_pw( .TRUE. )
   CALL close_kc ( ) 

@@ -109,6 +109,7 @@ SUBROUTINE rotate_ks ()
      ik_eff = ik-(spin_component-1)*nkstot/nspin
      CALL save_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
      !
+     !
      ! ... Check that the rotation did not spoil the KS eigenvalues
      ! ... and store it for later Hamiltonian diagonalization
      !

@@ -3,7 +3,6 @@ SUBROUTINE self_hartree (iwann, sh)
   !----------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
-  USE io_global,            ONLY : stdout
   USE control_kc_wann,      ONLY : num_wann, nqstot, iurho_wann
   USE fft_base,             ONLY : dffts
   USE cell_base,            ONLY : omega

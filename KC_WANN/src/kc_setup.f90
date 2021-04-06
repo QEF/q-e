@@ -47,7 +47,7 @@ subroutine kc_setup
   USE buffers,           ONLY : open_buffer, save_buffer, close_buffer, get_buffer
   USE control_kc_wann,   ONLY : evc0, iuwfc_wann, iuwfc_wann_allk, kc_iverbosity, &
                                 spin_component, isq, read_unitary_matrix, & 
-                                num_wann, num_wann_occ, occ_mat !, wq, nqstot
+                                num_wann, num_wann_occ, occ_mat, tmp_dir_kc, tmp_dir_kcq!, wq, nqstot
   USE io_global,         ONLY : stdout
   USE klist,             ONLY : nkstot, xk
   USE cell_base,         ONLY : at !, bg
@@ -55,7 +55,6 @@ subroutine kc_setup
   USE disp,              ONLY : x_q, lgamma_iq
   !
   USE control_lr,       ONLY : nbnd_occ, lgamma
-  USE control_ph,       ONLY : tmp_dir_ph, tmp_dir_phq
   USE scf,              ONLY : rho
   USE save_ph,          ONLY : tmp_dir_save
   USE io_global,        ONLY : ionode, ionode_id
@@ -88,16 +87,16 @@ subroutine kc_setup
   !
   call start_clock ('kc_setup')
   !
-  ! 1) Computes the total local potential (external+scf) on the smooth grid
+  ! ... Computes the total local potential (external+scf) on the smooth grid
   !
   CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
   !
-  ! 2) Set non linear core correction stuff
+  ! ... Set non linear core correction stuff
   !
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
   if (nlcc_any) allocate (drc( ngm, ntyp))
   !
-  !  3) If necessary calculate the local magnetization. This information is
+  !  ... If necessary calculate the local magnetization. This information is
   !      needed in find_sym
   !
   IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
@@ -115,31 +114,44 @@ subroutine kc_setup
      if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
   ENDIF
   !
-  ! 5) Computes the number of occupied bands for each k point
+  ! ... Computes the number of occupied bands for each k point
   !
   call setup_nbnd_occ ( ) 
   !
-  ! Open buffers for the KS and eventualy the minimizing WFCs 
+  ! ... Open buffers for the KS and eventualy the minimizing WFCs 
   ! 
-  iuwfc = 20
-  lrwfc = nbnd * npwx
-  io_level = 1
+  iuwfc = 20; lrwfc = nbnd * npwx; io_level = 1
   CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
-  IF (.NOT.exst.AND..NOT.exst_mem) THEN
-     CALL errore ('kc_setup', 'file '//trim(prefix)//'.wfc not found', 1)
-  END IF
-  if (kc_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for KS wfcs, OPENED")')
   !
-  ! 8) READ the U matrix from Wannier and set the toal number of WFs
+  IF (.NOT.exst.AND..NOT.exst_mem) &
+       CALL errore ('kc_setup', 'file '//trim(prefix)//'.wfc not found', 1)
+  !
+  if (kc_iverbosity .gt. 1) &
+       WRITE(stdout,'(/,5X, "INFO: Buffer for KS wfcs, OPENED")')
+  !
+  ! ... READ the U matrix from Wannier and set the toal number of WFs
+  !
   IF (read_unitary_matrix) THEN 
+    !
     CALL read_wannier ( )
     if (kc_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Unitary matrix, READ from file")')
+    !
   ELSE
+    !
     num_wann = nbnd
     num_wann_occ = nbnd_occ(1) ! Assuming insulating
+    !
   ENDIF
+  ! 
+  !  ... Allocate relevant quantities ...
   !
-  ! ... Open a file to store the KS states in the WANNIER gauge
+  ALLOCATE (rhowann ( dffts%nnr, num_wann), rhowann_aux(dffts%nnr) )
+  ALLOCATE ( evc0(npwx, num_wann) )
+  ALLOCATE ( occ_mat (num_wann, num_wann, nkstot) )
+  occ_mat = 0.D0
+  !
+  ! ... Open a new buffer to store the KS states in the WANNIER gauge
+  !
   iuwfc_wann = 21
   io_level = 1
   lrwfc = num_wann * npwx 
@@ -147,24 +159,22 @@ subroutine kc_setup
   if (kc_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for WFs, OPENED")')
   !
   ! ... Open an other buffer for the KS states in the WANNIER gauge which contains
-  ! ... all the k points (not just the one in this pool). This is needed for each k-poit 
-  ! ... to have access to all the other k-points. MEMORY INTENSE
+  !     all the k points (not just the one in this pool). This is needed for each k-point 
+  !     to have access to all the other k-points. MEMORY INTENSE
+  !
   iuwfc_wann_allk = 210
   io_level = 1
   lrwfc = num_wann * npwx
   CALL open_buffer ( iuwfc_wann_allk, 'wfc_wann_allk', lrwfc, io_level, exst )
+  !
   if (kc_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for WFs ALL-k, OPENED")')
   !
-  !
-  ALLOCATE (rhowann ( dffts%nnr, num_wann), rhowann_aux(dffts%nnr) )
-  ALLOCATE ( evc0(npwx, num_wann) )
-  ALLOCATE ( occ_mat (num_wann, num_wann, nkstot) )
-  occ_mat = 0.D0
-  ! 
   ! ... Rotate the KS state to the localized gauge nd save on a buffer
+  !
   CALL rotate_ks () 
   !
-  ! ... pass all the k points to all the pool
+  ! ... pass all the WFs to all the pool (needed to have pool parallelization)
+  !
   CALL bcast_wfc ( igk_k_all, ngk_all )
   !
   DEALLOCATE ( nbnd_occ )  ! otherwise allocate_ph complains: FIXME
@@ -172,25 +182,22 @@ subroutine kc_setup
   ! 8)
   !CALL compute_map_ikq ()
   !
-  ! Compute the peridoic part of the wannier orbital and store it on file 
+  ! ... Compute the periodic part of the wannier orbital and store it on file 
   !
   WRITE(stdout,'(/)')
   WRITE( stdout, '(5X,"INFO: PREPARING THE KCWANN CALCULATION ...")')
   !
-  ! write the list of q points on a file
-  ! and store the q coordinates
+  !     Write the list of q points on a file and store the q coordinates
   !
   iun_qlist = 127
-  OPEN (iun_qlist, file = TRIM(tmp_dir)//TRIM(prefix)//'.qlist')
+  OPEN (iun_qlist, file = TRIM(tmp_dir_kc)//'qlist.txt')
   !
   nqs = nkstot/nspin
-  ALLOCATE (x_q (3, nqs) )
-  ALLOCATE ( isq(nqs) )
+  ALLOCATE (x_q (3, nqs), isq(nqs) )
   iq=1
   IF (ionode) THEN 
      WRITE(iun_qlist,'(i5)') nkstot/nspin 
      DO ik = 1, nkstot
-       !WRITE(*,*) ik, isk(ik)
        IF (lsda .AND. isk(ik) /= spin_component) CYCLE
        WRITE(iun_qlist, '(3f12.8)') xk(:,ik)
        x_q(:,iq) = xk(:,ik)  
@@ -202,7 +209,6 @@ subroutine kc_setup
   CALL mp_bcast (isq, ionode_id, intra_image_comm)
   !
   ALLOCATE ( lgamma_iq(nqs) )
-
   lgamma_iq(:) = .FALSE.
   !
   WRITE( stdout, '(/, 5X,"INFO: Compute Wannier-orbital Densities ...")')
@@ -240,20 +246,20 @@ subroutine kc_setup
     ! ... each q /= gamma is saved on a different directory
     lgamma = lgamma_iq(iq)
     !
-    tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '_q' &
+    tmp_dir_kcq= TRIM (tmp_dir_kc) //'q' &
                   & // TRIM(int_to_char(iq))//'/'
-    filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/charge-density.dat'
+    filename=TRIM(tmp_dir_kcq)//'charge-density.dat'
     IF (ionode) inquire (file =TRIM(filename), exist = exst)
     !
     CALL mp_bcast( exst, ionode_id, intra_image_comm )
     !
-    CALL create_directory( tmp_dir_phq )
-    tmp_dir=tmp_dir_phq
+    CALL create_directory( tmp_dir_kcq )
+    tmp_dir=tmp_dir_kcq
     CALL write_scf( rho, nspin )
     ! write the periodic part of the wannier orbital density on file
     DO i = 1, num_wann
       rhowann_aux (:) = rhowann(:,i) 
-      file_base=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/rhowann_iwann_'//TRIM(int_to_char(i))
+      file_base=TRIM(tmp_dir_kcq)//'rhowann_iwann_'//TRIM(int_to_char(i))
       CALL write_rhowann( file_base, rhowann_aux, dffts, ionode, inter_bgrp_comm )
     ENDDO
     tmp_dir=tmp_dir_save
@@ -270,4 +276,5 @@ subroutine kc_setup
   DEALLOCATE (rhowann, rhowann_aux )
   ! 
   RETURN
+  !
 END SUBROUTINE kc_setup

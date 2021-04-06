@@ -165,13 +165,23 @@ kc_initialize_ph.o : ../../PHonon/PH/ph_restart.o
 kc_initialize_ph.o : ../../PHonon/PH/phcom.o
 kc_initialize_ph.o : ../../PW/src/pwcom.o
 kc_io_new.o : ../../FFTXlib/fft_types.o
+kc_io_new.o : ../../Modules/cell_base.o
+kc_io_new.o : ../../Modules/control_flags.o
 kc_io_new.o : ../../Modules/hdf5_qe.o
+kc_io_new.o : ../../Modules/io_base.o
 kc_io_new.o : ../../Modules/io_files.o
 kc_io_new.o : ../../Modules/io_global.o
 kc_io_new.o : ../../Modules/kind.o
+kc_io_new.o : ../../Modules/mp_bands.o
 kc_io_new.o : ../../Modules/mp_images.o
+kc_io_new.o : ../../Modules/mp_pools.o
 kc_io_new.o : ../../Modules/parser.o
+kc_io_new.o : ../../Modules/recvec.o
+kc_io_new.o : ../../Modules/wrappers.o
+kc_io_new.o : ../../PW/src/buffers.o
+kc_io_new.o : ../../PW/src/pwcom.o
 kc_io_new.o : ../../UtilXlib/mp.o
+kc_io_new.o : kc_wann_com.o
 kc_openfilq.o : ../../LR_Modules/lrcom.o
 kc_openfilq.o : ../../Modules/control_flags.o
 kc_openfilq.o : ../../Modules/fft_base.o
@@ -184,6 +194,7 @@ kc_openfilq.o : ../../PHonon/PH/save_ph_input.o
 kc_openfilq.o : ../../PW/src/buffers.o
 kc_openfilq.o : ../../PW/src/pwcom.o
 kc_openfilq.o : ../../upflib/uspp.o
+kc_openfilq.o : kc_wann_com.o
 kc_phq_setup.o : ../../Modules/fft_base.o
 kc_phq_setup.o : ../../Modules/funct.o
 kc_phq_setup.o : ../../Modules/ions_base.o
@@ -207,6 +218,7 @@ kc_prepare_q.o : ../../PHonon/PH/phcom.o
 kc_prepare_q.o : ../../PW/src/pwcom.o
 kc_prepare_q.o : ../../PW/src/start_k.o
 kc_prepare_q.o : ../../UtilXlib/mp.o
+kc_prepare_q.o : kc_wann_com.o
 kc_readin.o : ../../LR_Modules/lrcom.o
 kc_readin.o : ../../Modules/control_flags.o
 kc_readin.o : ../../Modules/input_parameters.o
@@ -214,7 +226,6 @@ kc_readin.o : ../../Modules/io_files.o
 kc_readin.o : ../../Modules/io_global.o
 kc_readin.o : ../../Modules/kind.o
 kc_readin.o : ../../Modules/mp_global.o
-kc_readin.o : ../../Modules/mp_images.o
 kc_readin.o : ../../Modules/noncol.o
 kc_readin.o : ../../Modules/paw_variables.o
 kc_readin.o : ../../Modules/read_cards.o
@@ -382,7 +393,6 @@ screen_coeff.o : kc_wann_com.o
 screen_coeff.o : solve_linter_koop_mod.o
 self_hartree.o : ../../Modules/cell_base.o
 self_hartree.o : ../../Modules/fft_base.o
-self_hartree.o : ../../Modules/io_global.o
 self_hartree.o : ../../Modules/kind.o
 self_hartree.o : ../../Modules/mp_bands.o
 self_hartree.o : ../../Modules/recvec.o
@@ -430,6 +440,7 @@ structure_factor.o : kc_wann_com.o
 wann2kc.o : ../../Modules/check_stop.o
 wann2kc.o : ../../Modules/environment.o
 wann2kc.o : ../../Modules/mp_global.o
+wann2kc.o : kc_io_new.o
 wann2kc.o : kc_wann_com.o
 write_hr_to_file.o : ../../Modules/constants.o
 write_hr_to_file.o : ../../Modules/io_files.o

@@ -42,7 +42,7 @@ SUBROUTINE koopmans_ham ()
   !
   IF (on_site_only) WRITE(stdout, '(/,5X, "INFO: Skipping off-diag: only R=0 and i=j")') 
   !
-  ! The scalar term 
+  ! The scalar term R=0 i=j 
   deltah_scal=CMPLX(0.D0,0.D0,kind=DP)
   CALL ham_scalar (deltah_scal)
   ! 
@@ -149,8 +149,7 @@ SUBROUTINE koopmans_ham ()
     !----------------------------------------------------------------
     !
     USE kinds,                 ONLY : DP
-    USE control_kc_wann,       ONLY : num_wann, num_wann_occ, &
-                                      alpha_final, alpha_final_full
+    USE control_kc_wann,       ONLY : num_wann, alpha_final, alpha_final_full
     USE control_lr,            ONLY : lrpa
     !
     IMPLICIT NONE  
@@ -209,6 +208,7 @@ SUBROUTINE koopmans_ham ()
        !
        !WRITE(stdout,'("Nicola", i3, 6f12.8)') iwann, deltaH(iwann,iwann)
        !
+       ! Re-define the corrected screening parameter. 
        alpha_final(iwann) = alpha_(iwann) 
        WRITE( stdout, '(5X,"INFO: alpha RE-DEFINED ...", i5, f12.8)') iwann, alpha_final(iwann)
       !

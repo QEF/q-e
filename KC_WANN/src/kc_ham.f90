@@ -43,6 +43,7 @@ PROGRAM kc_ham
   !
   ! 4) Build up the Hamiltonian
   ! 4a) Diagonal term only to 2nd order
+  !     OBSOLETE: inside koopmans_ham this is triggered by on_site_only: FIXME
   CALL ham_R0_2nd ( )
   ! 4b) Full Hamiltonian to 2nd order 
   CALL koopmans_ham ( )

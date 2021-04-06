@@ -55,10 +55,6 @@ subroutine apply_u_matrix(evc_ks, evc_var, occ_mat, ik_eff, n_orb)
   !
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), aux1(:,:), Umat(:,:), Umat_opt(:,:), fuv(:,:), c_occ_mat(:,:)
   !
-  COMPLEX(DP) :: pippo
-  !
-  !
-  !
   ! ... Rotate the KS orbitals ... 
   ! ... |phi_i> = \sum_j |psi_j>*U_ji
   !

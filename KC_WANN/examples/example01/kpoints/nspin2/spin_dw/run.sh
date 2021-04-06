@@ -1,7 +1,7 @@
 #!/bin/bash/
 
-qepath="../../../../../../bin"
-wannpath="../../../../../../wannier90-2.1.0/"
+  qepath="../../../../../../bin"
+wannpath="../../../../../../bin/"
 
 #sh clean.sh
 

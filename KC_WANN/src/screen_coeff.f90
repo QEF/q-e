@@ -19,10 +19,11 @@ SUBROUTINE screen_coeff ()
   USE klist,                ONLY : nkstot
   USE mp,                   ONLY : mp_sum
   USE control_kc_wann,      ONLY : kc_iverbosity, spin_component, num_wann, iorb_start, l_do_alpha, &
-                                   iorb_end, alpha_final, nqstot, eps_inf, l_vcut, l_unique_manifold, group_alpha
+                                   iorb_end, alpha_final, nqstot, eps_inf, l_vcut, l_unique_manifold, &  
+                                   group_alpha, tmp_dir_kc, iurho_wann, tmp_dir_kcq
+  USE control_ph,           ONLY : tmp_dir_phq
   USE buffers,              ONLY : get_buffer, save_buffer
   USE io_global,            ONLY : stdout, ionode
-  USE control_kc_wann,      ONLY : iurho_wann
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE cell_base,            ONLY : at
   USE dv_of_drho_lr,        ONLY : dv_of_drho
@@ -34,7 +35,6 @@ SUBROUTINE screen_coeff ()
   USE gvecs,                ONLY : ngms
   USE io_files,             ONLY : tmp_dir, prefix
   USE save_ph,              ONLY : tmp_dir_save
-  USE control_ph,           ONLY : tmp_dir_phq
   USE solve_linter_koop_mod 
   USE exx_base,             ONLY : exx_divergence
   !
@@ -115,7 +115,7 @@ SUBROUTINE screen_coeff ()
   WRITE( stdout, '(5X,"INFO: LR CALCULATION ...")')
   !
   iun_res = 987
-  OPEN (iun_res, file = TRIM(tmp_dir)//TRIM(prefix)//'.LR_res.txt')
+  OPEN (iun_res, file = TRIM(tmp_dir_kc)//TRIM(prefix)//'.LR_res.txt')
   CALL restart_screen (num_wann, iq_start, vki_r, vki_u, sh, do_real_space)
   !
   DO iq = iq_start, nqs
@@ -128,7 +128,8 @@ SUBROUTINE screen_coeff ()
     lrrho=num_wann*dffts%nnr
     tmp_dir = tmp_dir_save  ! the periodic part are written on the original outdir 
     CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
-    tmp_dir = tmp_dir_phq   ! go back to the q-specific directory
+    tmp_dir = tmp_dir_kcq       ! go back to the q-specific directory
+    tmp_dir_phq = tmp_dir_kcq   ! This is needed to correctly set the outdir inside run_nscf
     ! ... Retrive the rho_wann_q(r) from buffer in REAL space
     !
     IF (kc_iverbosity .gt. -1 ) WRITE(stdout,'(8X, "INFO: rhowan_q(r) RETRIEVED"/)') 
@@ -295,7 +296,7 @@ SUBROUTINE screen_coeff ()
     tmp_dir = tmp_dir_save  ! the periodic part are written on the original outdir 
     lrrho=num_wann*dffts%nnr
     CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
-    tmp_dir = tmp_dir_phq   ! go back to the q-specific directory
+    tmp_dir = tmp_dir_kcq   ! go back to the q-specific directory
     !
     xq_(:) = -x_q(:,iq)
     ! calculate_phase has a - sign inside
@@ -347,8 +348,8 @@ SUBROUTINE restart_screen (num_wann, iq_start, vki_r, vki_u, sh, do_real_space)
   USE io_global,        ONLY : ionode, ionode_id, stdout
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : intra_image_comm
-  USE control_kc_wann,  ONLY : l_do_alpha, iorb_start, iorb_end
-  USE io_files,         ONLY : tmp_dir, prefix
+  USE control_kc_wann,  ONLY : l_do_alpha, iorb_start, iorb_end, tmp_dir_kc
+  USE io_files,         ONLY : prefix
   !
   IMPLICIT NONE
   !
@@ -363,7 +364,7 @@ SUBROUTINE restart_screen (num_wann, iq_start, vki_r, vki_u, sh, do_real_space)
   IF( .NOT. exst) RETURN
   !
   iun_res = 987
-  OPEN (iun_res, file = TRIM(tmp_dir)//TRIM(prefix)//'.LR_res.txt')
+  OPEN (iun_res, file = TRIM(tmp_dir_kc)//TRIM(prefix)//'.LR_res.txt')
   IF (ionode) THEN 
     !
     READ(986, '(i5)') iq_start
