@@ -490,6 +490,11 @@ PROGRAM pw2wannier90
   CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
   CALL mp_bcast(scdm_mu,ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
+  CALL mp_bcast(spn_formatted, ionode_id, world_comm)
+  CALL mp_bcast(uHu_formatted, ionode_id, world_comm)
+  CALL mp_bcast(uIu_formatted, ionode_id, world_comm)
+  CALL mp_bcast(sHu_formatted, ionode_id, world_comm)
+  CALL mp_bcast(sIu_formatted, ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -498,7 +503,7 @@ PROGRAM pw2wannier90
   !
   IF (npool > 1 .and. (write_unk &
       .or. write_uhu .or. write_uIu .or. write_sHu .or. write_sIu &
-      .or. write_spn .or. write_dmn)) CALL errore('pw2wannier90', &
+      .or. write_dmn)) CALL errore('pw2wannier90', &
    'pools not implemented for this feature', npool)
   !
   ! Check: bands distribution not implemented
@@ -2583,7 +2588,7 @@ SUBROUTINE compute_mmn
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   CALL utility_merge_files("mmn", .TRUE.)
+   CALL utility_merge_files("mmn", .TRUE., 0)
    !
    IF (gamma_only) DEALLOCATE(evc_kb_m)
    DEALLOCATE (Mkb, phase)
@@ -2610,7 +2615,7 @@ SUBROUTINE compute_mmn
 END SUBROUTINE compute_mmn
 
 !--------------------------------------------------------------------------
-SUBROUTINE utility_merge_files(postfix, formatted)
+SUBROUTINE utility_merge_files(postfix, formatted, ndata)
    !------------------------------------------------------------------------
    !! For pool parallelization, each root_pool writes to different files.
    !! Here, concatenate all prefix.postfix files
@@ -2627,19 +2632,20 @@ SUBROUTINE utility_merge_files(postfix, formatted)
    !! postfix for filename
    LOGICAL, INTENT(IN) :: formatted
    !! True if formatted file, false if unformatted file.
+   INTEGER, INTENT(IN) :: ndata
+   !! Used only if formatted = .FALSE. Length of data on each line.
    !
    CHARACTER(LEN=256) :: filename
    CHARACTER(LEN=256) :: line
-   INTEGER :: ipool, iun, iun2
+   INTEGER :: ipool, iun, iun2, i
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
-   !
-   IF (.NOT. formatted) CALL errore("utility_merge_files", &
-      "unformatted file not implemented yet", 1)
+   COMPLEX(DP), ALLOCATABLE :: arr(:)
    !
    IF (npool == 1) RETURN
    IF (.NOT. ionode) RETURN
    !
    IF (formatted) THEN
+      !
       filename = TRIM(seedname) // "." // TRIM(postfix)
       OPEN (NEWUNIT=iun, file=TRIM(filename), form='formatted', STATUS="OLD", POSITION="APPEND")
       !
@@ -2655,6 +2661,27 @@ SUBROUTINE utility_merge_files(postfix, formatted)
       !
       CLOSE(iun, STATUS="KEEP")
       !
+   ELSE ! .NOT. formatted
+      !
+      ALLOCATE(arr(ndata))
+      !
+      filename = TRIM(seedname) // "." // TRIM(postfix)
+      OPEN (NEWUNIT=iun, file=TRIM(filename), form='unformatted', STATUS="OLD", POSITION="APPEND")
+      !
+      DO ipool = 2, npool
+         filename = TRIM(seedname) // "." // TRIM(postfix) // TRIM(int_to_char(ipool))
+         OPEN(NEWUNIT=iun2, FILE=TRIM(filename), FORM='unformatted')
+         DO WHILE (.TRUE.)
+            READ(iun2, END=201) (arr(i), i=1, ndata)
+            WRITE(iun) (arr(i), i=1, ndata)
+         ENDDO
+201      CLOSE(iun2, STATUS="DELETE")
+      ENDDO
+      !
+      CLOSE(iun, STATUS="KEEP")
+      !
+      DEALLOCATE(arr)
+      !
    ENDIF ! formatted
    !
 !--------------------------------------------------------------------------
@@ -2666,15 +2693,16 @@ SUBROUTINE compute_spin
    !-----------------------------------------------------------------------
    !
    USE kinds,           ONLY : DP
-   USE mp,              ONLY : mp_sum
-   USE mp_pools,        ONLY : intra_pool_comm
+   USE mp,              ONLY : mp_sum, mp_barrier
+   USE mp_world,        ONLY : world_comm
+   USE mp_pools,        ONLY : intra_pool_comm, me_pool, root_pool, my_pool_id
    USE io_global,       ONLY : stdout, ionode
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions,   ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g
    USE cell_base,       ONLY : alat, at, bg
@@ -2689,7 +2717,7 @@ SUBROUTINE compute_spin
    USE mp,              ONLY : mp_barrier
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE gvecs,           ONLY : doublegrid
-   USE lsda_mod,        ONLY : nspin
+   USE lsda_mod,        ONLY : lsda, nspin, isk
    USE constants,       ONLY : rytoev
    USE uspp_param,      ONLY : upf, nh, nhm
    USE uspp,            ONLY : qq_nt, nhtol, nhtoj, indv
@@ -2698,10 +2726,9 @@ SUBROUTINE compute_spin
 
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL :: find_free_unit
-   !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
+   CHARACTER(LEN=256) :: filename
    INTEGER :: npw, ik, ikp, ipol, ib, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, nbt
    INTEGER :: ikevc, s, counter
@@ -2719,6 +2746,9 @@ SUBROUTINE compute_spin
    integer  :: np, is1, is2, kh, kkb
    complex(dp) :: sigma_x_aug, sigma_y_aug, sigma_z_aug
    COMPLEX(DP), ALLOCATABLE :: be_n(:,:), be_m(:,:)
+   !
+   INTEGER, EXTERNAL :: global_kpoint_index
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
    !
    IF (.NOT. noncolin) THEN
       WRITE(stdout, *)
@@ -2747,27 +2777,36 @@ SUBROUTINE compute_spin
         'write_spn not meant to work library mode', 1)
    !endivo
    !
-   IF (ionode) THEN
-      iun_spn = find_free_unit()
-      CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime
-      if(spn_formatted) THEN
-         OPEN (unit=iun_spn, file=trim(seedname)//".spn",form='formatted')
-         WRITE (iun_spn,*) header !ivo
-         WRITE (iun_spn,*) nbnd-nexband,iknum
-      else
-         OPEN (unit=iun_spn, file=trim(seedname)//".spn",form='unformatted')
-         WRITE (iun_spn) header !ivo
-         WRITE (iun_spn) nbnd-nexband,iknum
+   IF (me_pool == root_pool) THEN
+      filename = TRIM(seedname) // ".spn"
+      IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
+      IF (spn_formatted) THEN
+         OPEN (NEWUNIT=iun_spn, file=TRIM(filename), form='formatted')
+      ELSE
+         OPEN (NEWUNIT=iun_spn, file=TRIM(filename), form='unformatted')
       ENDIF
    ENDIF
    !
-   WRITE(stdout,'(a,i8)') ' iknum = ',iknum
+   IF (ionode) THEN
+      CALL date_and_tim( cdate, ctime )
+      header = 'Created on '//cdate//' at '//ctime
+      IF (spn_formatted) THEN
+         WRITE (iun_spn, *) header !ivo
+         WRITE (iun_spn, *) num_bands, iknum
+      ELSE
+         WRITE (iun_spn) header !ivo
+         WRITE (iun_spn) num_bands, iknum
+      ENDIF
+   ENDIF
    !
-   DO ik = 1, iknum
+   WRITE(stdout,'(a,i8)') ' iknum = ', iknum
+   !
+   DO ik = 1, nks
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+      !
       WRITE (stdout,'(i8)') ik
-      ikevc = ik + ikstart - 1
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       npw = ngk(ik)
       !
       !  USPP
@@ -2875,13 +2914,20 @@ SUBROUTINE compute_spin
       !
       ! Write to file
       !
-      IF (ionode) THEN
+      IF (me_pool == root_pool) THEN
          CALL utility_write_array(iun_spn, spn_formatted, 3, ((num_bands*(num_bands+1))/2), spn)
-      ENDIF ! ionode
+      ENDIF
       !
    ENDDO ! ik
    !
-   IF (ionode) CLOSE(iun_spn)
+   IF (me_pool == root_pool) CLOSE (iun_spn, STATUS="KEEP")
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   !
+   CALL utility_merge_files("spn", spn_formatted, 3*((num_bands*(num_bands+1))/2))
    !
    DEALLOCATE(spn)
    IF (any_uspp) THEN
@@ -3683,7 +3729,7 @@ SUBROUTINE compute_amn
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   CALL utility_merge_files("amn", .TRUE.)
+   CALL utility_merge_files("amn", .TRUE., 0)
    !
    DEALLOCATE(sgf)
    DEALLOCATE(csph)
@@ -4626,7 +4672,7 @@ SUBROUTINE write_band
    !
    CALL mp_barrier(world_comm)
    !
-   CALL utility_merge_files("eig", .TRUE.)
+   CALL utility_merge_files("eig", .TRUE., 0)
    !
 END SUBROUTINE write_band
 
