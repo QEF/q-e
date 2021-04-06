@@ -18,9 +18,8 @@ SUBROUTINE kc_openfilq()
                               lrdwf, lrbar
   USE units_lr,        ONLY : iuwfc, lrwfc
   USE io_files,        ONLY : tmp_dir, diropn, seqopn
-  USE control_ph,      ONLY : ext_recover, &
-                              tmp_dir_phq, &
-                              all_done
+  USE control_ph,      ONLY : ext_recover, all_done
+  USE control_kc_wann, ONLY : tmp_dir_kcq
   USE save_ph,         ONLY : tmp_dir_save
   USE wvfct,           ONLY : nbnd, npwx
   USE fft_base,        ONLY : dfftp
@@ -47,7 +46,7 @@ SUBROUTINE kc_openfilq()
   !     The file with the wavefunctions. In the lgamma case reads those
   !     written by pw.x. In the other cases those calculated by ph.x
   !
-  tmp_dir=tmp_dir_phq
+  tmp_dir=tmp_dir_kcq
   !
   IF (lgamma.AND.nk1.eq.0.AND.nk2.eq.0.AND.nk3.eq.0) tmp_dir=tmp_dir_save
   !
@@ -60,7 +59,7 @@ SUBROUTINE kc_openfilq()
   !
   ! From now on all files are written with the _ph prefix
   !
-  tmp_dir=tmp_dir_phq
+  tmp_dir=tmp_dir_kcq
   !
   !    The file with deltaV_{bare} * psi
   !    Used in solvelinter

@@ -22,7 +22,7 @@ SUBROUTINE ks_hamiltonian (evc, ik, h_dim)
   USE klist,                ONLY : init_igk, xk, nkstot
   USE mp,                   ONLY : mp_sum
   USE constants,            ONLY : rytoev
-  USE control_kc_wann,      ONLY : kc_iverbosity, Hamlt, calculation, spin_component, check_ks
+  USE control_kc_wann,      ONLY : Hamlt, calculation, spin_component, check_ks
   USE lsda_mod,             ONLY : nspin
   ! 
   IMPLICIT NONE
@@ -37,7 +37,6 @@ SUBROUTINE ks_hamiltonian (evc, ik, h_dim)
   !
   INTEGER :: iband, jband, ig, ik_eff
   !
-  !IF (kc_iverbosity .gt. 1 ) WRITE(stdout,'(/,8x, "KS Hamiltonian calculation at k=", 3f12.4, 2x, " ... ")', advance="no" )  xk(:,ik)
   IF (check_ks ) WRITE(stdout,'(/,8x, "KS Hamiltonian calculation at k=", 3f12.4, 2x, " ... ")', advance="no" )  xk(:,ik)
   !
   CALL allocate_bec_type ( nkb, h_dim, becp, intra_bgrp_comm )

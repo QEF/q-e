@@ -25,7 +25,8 @@ SUBROUTINE kc_prepare_q(do_band, do_iq, setup_pw, iq)
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : xq
-  USE control_ph,           ONLY : current_iq, tmp_dir_ph, tmp_dir_phq, u_from_file!, newgrid
+  USE control_ph,           ONLY : current_iq, u_from_file!, newgrid
+  USE control_kc_wann,      ONLY : tmp_dir_kc, tmp_dir_kcq
   USE control_lr,           ONLY : lgamma
   USE io_files,             ONLY : prefix
   USE output,               ONLY : fildyn
@@ -43,14 +44,14 @@ SUBROUTINE kc_prepare_q(do_band, do_iq, setup_pw, iq)
   INTEGER, INTENT(IN) :: iq
   LOGICAL, INTENT(OUT) :: do_band, do_iq, setup_pw
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
-  INTEGER :: ierr, nbnd_old, degspin
+  INTEGER :: nbnd_old, degspin
   REAL(DP) :: xq_(3)
   !
   do_iq=.TRUE.
   !
   current_iq = iq
   !
-  tmp_dir_phq=tmp_dir_ph
+  tmp_dir_kcq=tmp_dir_kc
   !
   !
   ! ... set the name for the output file
@@ -68,13 +69,8 @@ SUBROUTINE kc_prepare_q(do_band, do_iq, setup_pw, iq)
   ! ... each q /= gamma is saved on a different directory
   !
   IF (.NOT.lgamma) &
-     tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '_q' &
+     tmp_dir_kcq= TRIM (tmp_dir_kc) // 'q' &
                    & // TRIM(int_to_char(iq))//'/'
-  !
-  !  Save the current status of the run: all the flags, the list of q,
-  !  and the current q, the fact that we are before the bands
-  !
-  !CALL ph_writefile('init',0,0,ierr)
   !
   ! In the case of q != 0, we make first a non selfconsistent run
   ! But first we reset the grid of irrebucible Kpoints (NOT WORKING YET!!)

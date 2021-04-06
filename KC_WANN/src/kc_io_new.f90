@@ -17,7 +17,8 @@ MODULE io_kcwann
   LOGICAL,       SAVE      :: rho_binary = .TRUE.
   !
   PUBLIC :: rho_binary
-  PUBLIC :: write_rhowann, read_rhowann
+  PUBLIC :: write_rhowann, read_rhowann, write_mlwf, read_mlwf
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   CONTAINS
     !
@@ -216,7 +217,7 @@ MODULE io_kcwann
      COMPLEX(DP),          INTENT(OUT) :: rho(:)
      !
      INTEGER               :: rhounit, ierr, i, j, jj, k, kk, ldr, ip, k_
-     INTEGER               :: nr( 3 ), nr1_, nr2_, nr3_, nr1, nr2, nr3, nr1x, nr2x, nr3x
+     INTEGER               :: nr( 3 ), nr1, nr2, nr3, nr1x, nr2x, nr3x
      INTEGER               :: me_group, me_group2, me_group3, &
                               nproc_group, nproc_group2, nproc_group3
      CHARACTER(LEN=256)    :: rho_file
@@ -340,7 +341,356 @@ MODULE io_kcwann
      RETURN
      !
    END SUBROUTINE read_rhowann
-
-
+   !
+   !
+   ! NsC: Adapted from pw_write_binaries inside PW/scr/pw_restart_new.f90
+   SUBROUTINE write_mlwf( )
+     !------------------------------------------------------------------------
+     !
+     USE mp,                   ONLY : mp_sum, mp_max
+     USE io_base,              ONLY : write_wfc
+     USE cell_base,            ONLY : tpiba, bg
+     USE control_flags,        ONLY : gamma_only
+     USE gvect,                ONLY : ig_l2g
+     USE buffers,              ONLY : get_buffer
+     USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k
+     USE gvect,                ONLY : mill
+     USE wvfct,                ONLY : npwx, nbnd
+     USE lsda_mod,             ONLY : nspin, isk, lsda, nspin
+     USE mp_pools,             ONLY : intra_pool_comm
+     USE mp_bands,             ONLY : me_bgrp, root_bgrp, intra_bgrp_comm, &
+                                      root_bgrp_id, my_bgrp_id
+     USE wrappers,             ONLY : f_mkdir_safe
+     !
+     USE control_kc_wann,      ONLY : tmp_dir_kc
+     USE control_kc_wann,      ONLY : num_wann, spin_component, evc0, iuwfc_wann
+     !
+     IMPLICIT NONE
+     !
+     INTEGER               :: ios, ig, ispin
+     INTEGER               :: ik, ik_g, ike, iks, npw_g
+     INTEGER, EXTERNAL     :: global_kpoint_index
+     INTEGER,  ALLOCATABLE :: ngk_g(:), mill_k(:,:)
+     INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
+     CHARACTER(LEN=256)    :: dirname
+     CHARACTER(LEN=320)    :: filename
+     CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
+     !
+     INTEGER :: ik_eff
+     INTEGER :: lrwfc 
+     !
+     dirname = TRIM (tmp_dir_kc) 
+     !
+     ! ... check that restart_dir exists on all processors that write
+     ! ... wavefunctions; create one if restart_dir is not found. This
+     ! ... is needed for k-point parallelization, in the case of non-parallel
+     ! ... scratch file systems, that are not visible to all processors
+     !
+     IF ( my_bgrp_id == root_bgrp_id .AND. me_bgrp == root_bgrp ) THEN
+        ios = f_mkdir_safe( TRIM(dirname) )
+     END IF
+     !
+     ! ... write wavefunctions and k+G vectors
+     !
+     ! ... These are the global index of the first and last k-points in this pool
+     iks = global_kpoint_index (nkstot, 1)
+     ike = iks + nks - 1
+     !
+     ! ... ngk_g: global number of k+G vectors
+     !
+     ALLOCATE( ngk_g( nks ) )
+     ngk_g(1:nks) = ngk(1:nks)
+     CALL mp_sum( ngk_g, intra_bgrp_comm)
+     !
+     ! ... The igk_l2g array yields the correspondence between the
+     ! ... local k+G index and the global G index
+     !
+     ALLOCATE ( igk_l2g( npwx ) )
+     !
+     ! ... the igk_l2g_kdip local-to-global map yields the correspondence
+     ! ... between the global order of k+G and the local index for k+G.
+     !
+     ALLOCATE ( igk_l2g_kdip( npwx ) )
+     !
+     ALLOCATE ( mill_k( 3, npwx ) )
+     !
+     k_points_loop: DO ik = 1, nks
+        !
+        ! I deal with one component at the time in KCWANN
+        IF ( lsda .AND. isk(ik) /= spin_component) CYCLE
+        !
+        ! ik_g is the index of k-point ik in the global list
+        !
+        ik_g = ik + iks - 1
+        !
+        ! ... Compute the igk_l2g array from previously computed arrays
+        ! ... igk_k (k+G indices) and ig_l2g (local to global G index map)
+        !
+        igk_l2g = 0
+        DO ig = 1, ngk (ik)
+           igk_l2g(ig) = ig_l2g(igk_k(ig,ik))
+        END DO
+        !
+        ! ... npw_g is the maximum G vector index among all processors
+        !
+        npw_g = MAXVAL( igk_l2g(1:ngk(ik)) )
+        CALL mp_max( npw_g, intra_pool_comm )
+        !
+        igk_l2g_kdip = 0
+        CALL gk_l2gmap_kdip( npw_g, ngk_g(ik), ngk(ik), igk_l2g, &
+                             igk_l2g_kdip )
+        !
+        ! ... mill_k(:,i) contains Miller indices for (k+G)_i
+        !
+        DO ig = 1, ngk (ik)
+           mill_k(:,ig) = mill(:,igk_k(ig,ik))
+        END DO
+        !
+        ! ... read wavefunctions - do not read if already in memory (nsk==1)
+        !
+        lrwfc = num_wann * npwx 
+        ik_eff = ik-(spin_component-1)*nkstot/nspin
+        CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
+        !
+        IF ( nspin == 2 ) THEN
+           !
+           ! ... LSDA: spin mapped to k-points, isk(ik) tracks up and down spin
+           !
+           ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
+           ispin = isk(ik)
+           filename = TRIM(dirname) // 'mlwfc' // updw(ispin) // &
+                & TRIM(int_to_char(ik_g))
+           !
+        ELSE
+           !
+           ispin = 1
+           filename = TRIM(dirname) // 'mlwfc' // TRIM(int_to_char(ik_g))
+           !
+        ENDIF
+        !
+        ! ... Only the first band group of each pool writes
+        ! ... No warranty it works for more than one band group
+        !
+        IF ( my_bgrp_id == root_bgrp_id ) CALL write_wfc( iunpun, &
+             filename, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
+             ispin, nspin, evc0, npw_g, gamma_only, nbnd, &
+             igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
+             tpiba*bg(:,3), mill_k, 1.D0 )
+        !
+     END DO k_points_loop
+     !
+     DEALLOCATE ( mill_k )
+     DEALLOCATE ( igk_l2g_kdip )
+     DEALLOCATE ( igk_l2g )
+     DEALLOCATE ( ngk_g )
+     !
+     RETURN
+     !
+   END SUBROUTINE write_mlwf
+   !
+   !
+   SUBROUTINE gk_l2gmap_kdip( npw_g, ngk_g, ngk, igk_l2g, igk_l2g_kdip, igwk )
+     !-----------------------------------------------------------------------
+     !
+     ! ... This subroutine maps local G+k index to the global G vector index
+     ! ... the mapping is used to collect wavefunctions subsets distributed
+     ! ... across processors.
+     ! ... This map is used to obtained the G+k grids related to each kpt
+     !
+     USE mp_bands,             ONLY : intra_bgrp_comm
+     USE mp,                   ONLY : mp_sum
+     !
+     IMPLICIT NONE
+     !
+     ! ... Here the dummy variables
+     !
+     INTEGER, INTENT(IN)  :: npw_g, ngk_g, ngk
+     INTEGER, INTENT(IN)  :: igk_l2g(ngk)
+     INTEGER, INTENT(OUT) :: igk_l2g_kdip(ngk)
+     INTEGER, OPTIONAL, INTENT(OUT) :: igwk(ngk_g)
+     !
+     INTEGER, ALLOCATABLE :: igwk_(:), itmp(:), igwk_lup(:)
+     INTEGER              :: ig, ig_, ngg
+     !
+     !
+     ALLOCATE( itmp( npw_g ) )
+     ALLOCATE( igwk_( ngk_g ) )
+     !
+     itmp(:)  = 0
+     igwk_(:) = 0
+     !
+     DO ig = 1, ngk
+        itmp(igk_l2g(ig)) = igk_l2g(ig)
+     END DO
+     !
+     CALL mp_sum( itmp, intra_bgrp_comm )
+     !
+     ngg = 0
+     DO ig = 1, npw_g
+        !
+        IF ( itmp(ig) == ig ) THEN
+           !
+           ngg = ngg + 1
+           igwk_(ngg) = ig
+           !
+        END IF
+        !
+     END DO
+     !
+     IF ( ngg /= ngk_g ) &
+        CALL errore( 'gk_l2gmap_kdip', 'unexpected dimension in ngg', 1 )
+     !
+     IF ( PRESENT( igwk ) ) THEN
+        !
+        igwk(1:ngk_g) = igwk_(1:ngk_g)
+        !
+     END IF
+     !
+     ALLOCATE( igwk_lup( npw_g ) )
+     !
+!$omp parallel private(ig_, ig)
+!$omp workshare
+     igwk_lup = 0
+!$omp end workshare
+!$omp do
+     DO ig_ = 1, ngk_g
+        igwk_lup(igwk_(ig_)) = ig_
+     END DO
+!$omp end do
+!$omp do
+     DO ig = 1, ngk
+        igk_l2g_kdip(ig) = igwk_lup(igk_l2g(ig))
+     END DO
+!$omp end do
+!$omp end parallel
+     !
+     DEALLOCATE( igwk_lup )
+     !
+     DEALLOCATE( itmp, igwk_ )
+     !
+     RETURN
+     !
+   END SUBROUTINE gk_l2gmap_kdip
+   !
+   !
+   ! NsC: Adapted from read_collected_wfc inside PW/scr/pw_restart_new.f90
+   SUBROUTINE read_mlwf ( dirname, ik, evc )
+     !------------------------------------------------------------------------
+     !
+     ! ... reads from directory "dirname" (new file format) for k-point "ik"
+     ! ... wavefunctions from collected format into distributed array "evc"
+     !
+     USE control_flags,        ONLY : gamma_only
+     USE klist,                ONLY : nkstot, nks, ngk, igk_k
+     USE wvfct,                ONLY : npwx, nbnd
+     USE gvect,                ONLY : ig_l2g
+     USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm
+     USE mp_pools,             ONLY : me_pool, root_pool, &
+                                      intra_pool_comm
+     USE mp,                   ONLY : mp_sum, mp_max
+     USE io_base,              ONLY : read_wfc
+     USE lsda_mod,             ONLY : nspin, isk, nspin
+     !
+     IMPLICIT NONE
+     !
+     CHARACTER(LEN=*), INTENT(IN) :: dirname
+     INTEGER, INTENT(IN) :: ik
+     COMPLEX(dp), INTENT(OUT) :: evc(:,:)
+     !
+     CHARACTER(LEN=320)   :: filename, msg
+     INTEGER              :: ik_g, ig
+     INTEGER              :: npol_, nbnd_
+     INTEGER              :: ike, iks, ngk_g, npw_g, ispin
+     INTEGER, EXTERNAL    :: global_kpoint_index
+     INTEGER, ALLOCATABLE :: mill_k(:,:)
+     INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
+     LOGICAL              :: ionode_k
+     REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
+     CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
+     !
+     ! ... the root processor of each pool reads
+     !
+     ionode_k = (me_pool == root_pool)
+     !
+     iks = global_kpoint_index (nkstot, 1)
+     ike = iks + nks - 1
+     !
+     ! ik_g: index of k-point ik in the global list
+     !
+     ik_g = ik + iks - 1
+     !
+     ! ... the igk_l2g_kdip local-to-global map is needed to read wfcs
+     !
+     ALLOCATE ( igk_l2g_kdip( npwx ) )
+     !
+     ! ... The igk_l2g array yields the correspondence between the
+     ! ... local k+G index and the global G index - requires arrays
+     ! ... igk_k (k+G indices) and ig_l2g (local to global G index map)
+     !
+     ALLOCATE ( igk_l2g( npwx ) )
+     igk_l2g = 0
+     DO ig = 1, ngk(ik)
+        igk_l2g(ig) = ig_l2g(igk_k(ig,ik))
+     END DO
+     !
+     ! ... npw_g: the maximum G vector index among all processors
+     ! ... ngk_g: global number of k+G vectors for all k points
+     !
+     npw_g = MAXVAL( igk_l2g(1:ngk(ik)) )
+     CALL mp_max( npw_g, intra_pool_comm )
+     ngk_g = ngk(ik)
+     CALL mp_sum( ngk_g, intra_bgrp_comm)
+     !
+     ! ... now compute the igk_l2g_kdip local-to-global map
+     !
+     igk_l2g_kdip = 0
+     CALL gk_l2gmap_kdip( npw_g, ngk_g, ngk(ik), igk_l2g, &
+          igk_l2g_kdip )
+     DEALLOCATE ( igk_l2g )
+     !
+     IF ( nspin == 2 ) THEN
+        !
+        ! ... LSDA: spin mapped to k-points, isk(ik) tracks up and down spin
+        !
+        ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
+        ispin = isk(ik)
+        filename = TRIM(dirname) // 'mlwfc' // updw(ispin) // &
+             & TRIM(int_to_char(ik_g))
+        !
+     ELSE
+        !
+        filename = TRIM(dirname) // 'mlwfc' // TRIM(int_to_char(ik_g))
+        !
+     ENDIF
+     !
+     ! ... Miller indices are read from file (but not used)
+     !
+     ALLOCATE( mill_k ( 3,npwx ) )
+     !
+     evc=(0.0_DP, 0.0_DP)
+     !
+     CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
+          ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd_, &
+          igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
+     !
+     DEALLOCATE ( mill_k )
+     DEALLOCATE ( igk_l2g_kdip )
+     !
+     ! ... here one should check for consistency between what is read
+     ! ... and what is expected
+     !
+     IF ( nbnd_ < nbnd ) THEN
+        WRITE (msg,'("The number of bands for this run is",I6,", but only",&
+             & I6," bands were read from file")')  nbnd, nbnd_  
+        CALL errore ('pw_restart - read_collected_wfc', msg, 1 )
+     END IF
+     !
+     RETURN
+     !
+   END SUBROUTINE read_mlwf
 
 END MODULE io_kcwann
+
+
+
+

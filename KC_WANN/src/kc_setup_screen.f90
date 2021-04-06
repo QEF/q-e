@@ -36,7 +36,8 @@ subroutine kc_setup_screen
   USE buffers,           ONLY : open_buffer, save_buffer, close_buffer
   USE control_kc_wann,   ONLY : alpha_final, iurho_wann, kc_iverbosity, &
                                 read_unitary_matrix, num_wann, num_wann_occ, i_orb, iorb_start, &
-                                iorb_end, nqstot, occ_mat, l_do_alpha, group_alpha!, wq
+                                iorb_end, nqstot, occ_mat, l_do_alpha, group_alpha, &
+                                tmp_dir_kc, tmp_dir_kcq!, wq
   USE io_global,         ONLY : stdout
   USE klist,             ONLY : xk, nkstot
   USE cell_base,         ONLY : at !, bg
@@ -44,7 +45,6 @@ subroutine kc_setup_screen
   USE disp,              ONLY : x_q,  done_iq, lgamma_iq
   !
   USE control_lr,        ONLY : nbnd_occ
-  USE control_ph,        ONLY : tmp_dir_ph, tmp_dir_phq
   USE mp,                ONLY : mp_bcast
   USE io_kcwann,     ONLY : read_rhowann
   !
@@ -171,7 +171,7 @@ subroutine kc_setup_screen
   WRITE( stdout, '(/, 5X,"INFO: READING Wannier-orbital Densities ...")') 
   !
   iun_qlist = 127
-  OPEN (iun_qlist, file = TRIM(tmp_dir)//TRIM(prefix)//'.qlist')
+  OPEN (iun_qlist, file = TRIM(tmp_dir_kc)//'qlist.txt')
   !
   READ(iun_qlist,'(i5)') nqs
   nqstot = nqs
@@ -194,11 +194,11 @@ subroutine kc_setup_screen
     WRITE( stdout, '( 8X,"The  Wannier density at  q = ",3F12.7, "  [Cryst]")')  xq(:)
     WRITE( stdout, '( 8X, 78("="),/)')
     ! 
-    tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '_q' &
+    tmp_dir_kcq= TRIM (tmp_dir_kc) // 'q' &
                 & // TRIM(int_to_char(iq))//'/'
     !
     DO i = 1, num_wann
-      file_base=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/rhowann_iwann_'//TRIM(int_to_char(i))
+      file_base=TRIM(tmp_dir_kcq)//'rhowann_iwann_'//TRIM(int_to_char(i))
       CALL read_rhowann( file_base, dffts, rhowann_aux )
       rhowann(:,i) = rhowann_aux(:)
     ENDDO

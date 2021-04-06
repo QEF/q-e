@@ -16,7 +16,6 @@ subroutine kc_setup_ham
   USE kinds,             ONLY : DP
   USE ions_base,         ONLY : nat, ntyp => nsp, ityp
   USE io_files,          ONLY : tmp_dir
-  USE lsda_mod,          ONLY : nspin, starting_magnetization
   USE scf,               ONLY : v, vrs, vltot,  kedtau
   USE fft_base,          ONLY : dfftp, dffts
   USE gvect,             ONLY : ngm
@@ -26,32 +25,33 @@ subroutine kc_setup_ham
   USE noncollin_module,  ONLY : noncolin, m_loc, angle1, angle2, ux!, nspin_mag, npol
   USE wvfct,             ONLY : nbnd
   USE nlcc_ph,           ONLY : drc
-  USE uspp,              ONLY : nlcc_any
+  USE uspp,              ONLY : nlcc_any, nkb, vkb
   USE funct,             ONLY : dft_is_gradient
   !
   USE units_lr,          ONLY : iuwfc
-  USE wvfct,             ONLY : npwx
+  USE wvfct,             ONLY : npwx, current_k, npw
   USE control_flags,     ONLY : io_level
   USE io_files,          ONLY : prefix
   USE buffers,           ONLY : open_buffer, save_buffer, close_buffer
   USE control_kc_wann,   ONLY : alpha_final, evc0, iuwfc_wann, iurho_wann, kc_iverbosity, &
                                 read_unitary_matrix, hamlt, alpha_corr_done, &
                                 num_wann, num_wann_occ, i_orb, iorb_start, iorb_end, &
-                                calculation, nqstot, occ_mat ,alpha_final_full!, wq
+                                calculation, nqstot, occ_mat ,alpha_final_full, spin_component, &
+                                tmp_dir_kc, tmp_dir_kcq!, wq
   USE io_global,         ONLY : stdout
-  USE klist,             ONLY : nkstot, xk
+  USE klist,             ONLY : nkstot, xk, nks, ngk, igk_k
   USE cell_base,         ONLY : at !, bg
   USE fft_base,          ONLY : dffts
   USE disp,              ONLY : x_q,  done_iq, lgamma_iq
   !
-  USE control_lr,      ONLY : nbnd_occ
-  USE control_ph,      ONLY : tmp_dir_ph, tmp_dir_phq
-  USE mp,              ONLY : mp_bcast
-  USE eqv,             ONLY : dmuxc
+  USE control_lr,        ONLY : nbnd_occ
+  USE mp,                ONLY : mp_bcast
+  USE eqv,               ONLY : dmuxc
   !
-!  USE xml_io_base,     ONLY : write_rho
+  USE io_kcwann,         ONLY : read_rhowann, read_mlwf
+  USE lsda_mod,          ONLY : lsda, isk, nspin, current_spin, starting_magnetization
   !
-  USE io_kcwann,     ONLY : read_rhowann
+  !
   !USE symm_base,       ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
   !                            d1,d2,d3, time_reversal, set_sym_bl, &
   !                            find_sym, inverse_s, copy_sym
@@ -69,6 +69,11 @@ subroutine kc_setup_ham
   COMPLEX(DP), ALLOCATABLE :: rhowann(:,:), rhowann_aux(:)
   CHARACTER (LEN=256) :: file_base
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
+  !
+  INTEGER :: ik, ik_eff
+  CHARACTER(LEN=256)  :: dirname
+  INTEGER, EXTERNAL :: global_kpoint_index
+  LOGICAL :: mlwf_from_u = .FALSE.
   !
   !LOGICAL :: skip_equivalence
   !INTEGER :: nk1, nk2, nk3, k1, k2, k3
@@ -139,7 +144,9 @@ subroutine kc_setup_ham
   !
   ! 8) READ the U matrix from Wannier and set the toal number of WFs
   IF (read_unitary_matrix) THEN 
-    CALL read_wannier ( )
+    CALL read_wannier ( ) ! This is not needed if the Wannier ware written/read from file.
+                          ! For now needed to set-up the number of wannier. To be removed 
+                          ! as soon as a proper data-file will be written by wann2kc: FIXME
     if (kc_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Unitary matrix, READ from file")')
   ELSE
     num_wann = nbnd
@@ -147,20 +154,12 @@ subroutine kc_setup_ham
   ENDIF
   ! 
   ! Open a file to store the KS states in the WANNIER gauge
+  !
   iuwfc_wann = 21
   io_level = 1
   lrwfc = num_wann * npwx 
   CALL open_buffer ( iuwfc_wann, 'wfc_wann', lrwfc, io_level, exst )
   if (kc_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for WFs, OPENED")')
-  !
-  !iuwfc_wann = 21
-  !io_level = 1
-  !lrwfc = num_wann * npwx 
-  !CALL open_buffer ( iuwfc_wann, 'wfc_wann', lrwfc, io_level, exst_mem, exst, tmp_dir )
-  !IF (.NOT. exst .AND. .NOT. exst_mem) THEN
-  !   CALL errore ('kc_setup_ham', 'file '//trim(prefix)//'.wfc_wann not found', 1)
-  !END IF
-  !if (kc_iverbosity .gt. 1) WRITE(stdout,'(/,5X, "INFO: Buffer for WFs, OPENED")')
   !
   ! Open a buffer for the wannier orbital densities. Those have been written by wann2kc
   ! and must be in the outdir. If not STOP
@@ -180,8 +179,30 @@ subroutine kc_setup_ham
   alpha_corr_done = .FALSE.
   hamlt(:,:,:) = ZERO
   !
-  ! ... Rotate the KS state to the localized gauge nd save on a buffer
-  CALL rotate_ks () 
+  mlwf_from_u = .FALSE. ! Set this to true to revert to the previous behaviour (March 2021)
+  IF (mlwf_from_u) THEN 
+    !! ... Rotate the KS state to the localized gauge nd save on a buffer
+    WRITE(stdout,'(/,5X, "INFO: MLWF from U matrix: &
+                  Reading collected, re-writing distributed wavefunctions")')
+    CALL rotate_ks () 
+    !
+  ELSE 
+    dirname = TRIM (tmp_dir_kc) 
+    WRITE(stdout,'(/,5X, "INFO: MLWF read from file: &
+                  Reading collected, re-writing distributed wavefunctions")')
+    DO ik = 1, nks
+        !
+        current_k = ik
+        IF ( lsda ) current_spin = isk(ik)
+        IF ( lsda .AND. isk(ik) /= spin_component) CYCLE
+        npw = ngk(ik)
+        IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+        CALL read_mlwf ( dirname, ik, evc0 )
+        ik_eff = ik-(spin_component-1)*nkstot/nspin
+        CALL save_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
+        CALL ks_hamiltonian(evc0, ik, num_wann) 
+    END DO
+  ENDIF
   !
   DEALLOCATE ( nbnd_occ )  ! otherwise allocate_ph complains: FIXME
   !
@@ -191,7 +212,7 @@ subroutine kc_setup_ham
   !
   ! ... Read the q-point grid written by wann2kc
   iun_qlist = 127
-  OPEN (iun_qlist, file = TRIM(tmp_dir)//TRIM(prefix)//'.qlist')
+  OPEN (iun_qlist, file = TRIM(tmp_dir_kc)//'qlist.txt')
   !
   READ(iun_qlist,'(i5)') nqs
   nqstot = nqs 
@@ -214,11 +235,11 @@ subroutine kc_setup_ham
     WRITE( stdout, '( 8X,"The  Wannier density at  q = ",3F12.7, "  [Cryst]")')  xq(:)
     WRITE( stdout, '( 8X, 78("="),/)')
     ! 
-    tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '_q' &
+    tmp_dir_kcq= TRIM (tmp_dir_kc) // 'q' &
                 & // TRIM(int_to_char(iq))//'/'
     !
     DO i = 1, num_wann
-      file_base=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/rhowann_iwann_'//TRIM(int_to_char(i))
+      file_base=TRIM(tmp_dir_kcq)//'rhowann_iwann_'//TRIM(int_to_char(i))
       CALL read_rhowann( file_base, dffts, rhowann_aux )
       rhowann(:,i) = rhowann_aux(:)
     ENDDO
