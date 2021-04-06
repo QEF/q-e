@@ -2871,24 +2871,12 @@ SUBROUTINE compute_spin
       ENDDO ! m
       !
       CALL mp_sum(spn, intra_pool_comm)
-      spn = spn + spn_aug
+      IF (any_uspp) spn = spn + spn_aug
       !
       ! Write to file
       !
-      IF (ionode) THEN ! root node for i/o
-         IF (spn_formatted) THEN ! slow formatted way
-            counter = 0
-            do m = 1, num_bands
-               do n = 1, m
-                  counter = counter+1
-                  do s=1,3
-                     WRITE(iun_spn,'(2es26.16)') spn(s, counter)
-                  ENDDO
-               ENDDO
-            ENDDO
-         ELSE ! fast unformatted way
-            WRITE(iun_spn) ((spn(s,m),s=1,3),m=1,((num_bands*(num_bands+1))/2))
-         ENDIF
+      IF (ionode) THEN
+         CALL utility_write_array(iun_spn, spn_formatted, 3, ((num_bands*(num_bands+1))/2), spn)
       ENDIF ! ionode
       !
    ENDDO ! ik
@@ -3138,10 +3126,10 @@ SUBROUTINE compute_orb
             !
             IF (ionode) THEN
                IF (write_uHu) THEN
-                  CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, uHu)
+                  CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, num_bands, uHu)
                ENDIF
                IF (write_uIu) THEN
-                  CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, uIu)
+                  CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, num_bands, uIu)
                ENDIF
             ENDIF ! ionode
             !
@@ -3373,10 +3361,10 @@ SUBROUTINE compute_shc
          IF (ionode) THEN  ! write the files out to disk
             DO ispol = 1, 3
                IF (write_sHu) THEN
-                  CALL utility_write_array(iun_sHu, sHu_formatted, num_bands, sHu(:, :, ispol))
+                  CALL utility_write_array(iun_sHu, sHu_formatted, num_bands, num_bands, sHu(:, :, ispol))
                ENDIF
                IF (write_sHu) THEN
-                  CALL utility_write_array(iun_sIu, sIu_formatted, num_bands, sIu(:, :, ispol))
+                  CALL utility_write_array(iun_sIu, sIu_formatted, num_bands, num_bands, sIu(:, :, ispol))
                ENDIF
             ENDDO
          ENDIF ! end of io
@@ -3404,10 +3392,10 @@ SUBROUTINE compute_shc
 END SUBROUTINE
 
 !--------------------------------------------------------------------------
-SUBROUTINE utility_write_array(iun, formatted, ndim, arr)
+SUBROUTINE utility_write_array(iun, formatted, ndim1, ndim2, arr)
    !------------------------------------------------------------------------
    !!
-   !! Write a (ndim, ndim) array arr to file unit iun.
+   !! Write a (ndim1, ndim2) array arr to file unit iun.
    !!
    !-----------------------------------------------------------------------
    !
@@ -3419,9 +3407,11 @@ SUBROUTINE utility_write_array(iun, formatted, ndim, arr)
    !! Unit of the file to write. Must be already opened.
    LOGICAL, INTENT(IN) :: formatted
    !! If true, write formatted. If false, write unformatted.
-   INTEGER, INTENT(IN) :: ndim
-   !! Size of the array.
-   COMPLEX(DP), INTENT(IN) :: arr(ndim, ndim)
+   INTEGER, INTENT(IN) :: ndim1
+   !! First dimension of the array.
+   INTEGER, INTENT(IN) :: ndim2
+   !! Second dimension of the array.
+   COMPLEX(DP), INTENT(IN) :: arr(ndim1, ndim2)
    !! Array to write to file.
    !
    INTEGER :: m
@@ -3431,14 +3421,14 @@ SUBROUTINE utility_write_array(iun, formatted, ndim, arr)
    !
    IF (formatted) THEN
       ! Write formatted file. Slow bulky way for transferable files
-      DO n = 1, ndim
-         DO m = 1, ndim
+      DO n = 1, ndim2
+         DO m = 1, ndim1
             WRITE(iun, '(2ES20.10)') arr(m, n)
          ENDDO
       ENDDO
    ELSE
       ! Write unformatted file. The fast way
-      WRITE(iun) ((arr(n,m), n=1, ndim), m=1, ndim)
+      WRITE(iun) ((arr(m, n), m=1,ndim1), n=1,ndim2)
    ENDIF
    !
   !
