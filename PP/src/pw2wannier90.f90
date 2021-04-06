@@ -496,7 +496,7 @@ PROGRAM pw2wannier90
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
   !
-  IF (npool > 1 .and. (write_unk .or. write_amn &
+  IF (npool > 1 .and. (write_unk &
       .or. write_uhu .or. write_uIu .or. write_sHu .or. write_sIu &
       .or. write_spn .or. write_dmn)) CALL errore('pw2wannier90', &
    'pools not implemented for this feature', npool)
@@ -2566,7 +2566,7 @@ SUBROUTINE compute_mmn
                IF (wan_mode=='standalone') THEN
                   IF (me_pool == root_pool) WRITE (iun_mmn,'(2f18.12)') Mkb(m,n)
                ELSEIF (wan_mode=='library') THEN
-                  m_mat(ibnd_m,ibnd_n,ib,ik)=Mkb(m,n)
+                  m_mat(ibnd_m,ibnd_n,ib,ik_g_w90)=Mkb(m,n)
                ELSE
                   CALL errore('compute_mmn',' value of wan_mode not recognised',1)
                ENDIF
@@ -3465,8 +3465,8 @@ SUBROUTINE compute_amn
    USE io_global,       ONLY : stdout, ionode
    USE mp,              ONLY : mp_sum, mp_barrier
    USE mp_world,        ONLY : world_comm
-   USE mp_pools,        ONLY : intra_pool_comm
-   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE mp_pools,        ONLY : intra_pool_comm, me_pool, root_pool, my_pool_id
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions,   ONLY : evc
@@ -3478,22 +3478,26 @@ SUBROUTINE compute_amn
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : upf
    USE noncollin_module,ONLY : noncolin, npol
+   USE lsda_mod,        ONLY : lsda, isk
    USE constants,       ONLY : eps6
    USE wannier
    !
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL :: find_free_unit
+   CHARACTER(LEN=256) :: filename
    !
    COMPLEX(DP) :: zdotc,amn_tmp,fac(2)
    real(DP):: ddot
    COMPLEX(DP), ALLOCATABLE :: amn(:, :)
    COMPLEX(DP), ALLOCATABLE :: sgf(:,:)
-   INTEGER :: ik, npw, ibnd, ibnd1, iw,i, ikevc, nt, ipol
+   INTEGER :: ik, npw, ibnd, ibnd1, iw, i, nt, ipol, ik_g_w90
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
    LOGICAL            :: any_uspp, opnd, exst,spin_z_pos, spin_z_neg
    INTEGER            :: istart
+   !
+   INTEGER, EXTERNAL :: global_kpoint_index
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
    !
    CALL start_clock( 'compute_amn' )
    !
@@ -3507,62 +3511,65 @@ SUBROUTINE compute_amn
    IF (wan_mode=='library') ALLOCATE(a_mat(num_bands, n_wannier, iknum))
    !
    IF (wan_mode=='standalone') THEN
-      iun_amn = find_free_unit()
-      IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
-   ENDIF
-   !
-   WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
-   !
-   IF (wan_mode=='standalone') THEN
+      IF (me_pool == root_pool) THEN
+         filename = TRIM(seedname) // ".amn"
+         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
+         OPEN(NEWUNIT=iun_amn, FILE=TRIM(filename), FORM='formatted')
+      ENDIF
+      !
       CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime
+      header = 'Created on '//cdate//' at '//ctime
       IF (ionode) THEN
          WRITE (iun_amn,*) header
          WRITE (iun_amn,*) nbnd-nexband, iknum, n_proj
       ENDIF
    ENDIF
    !
+   WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
    !
    IF (any_uspp) THEN
       CALL allocate_bec_type(nkb, n_proj, becp)
    ENDIF
    !
-   DO ik = 1, iknum
+   DO ik = 1, nks
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+      !
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
-      ikevc = ik + ikstart - 1
       !
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
+      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
+      !
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1)
       npw = ngk(ik)
       CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if(noncolin) then
+      !
+      IF (noncolin) THEN
         sgf_spinor = (0.d0,0.d0)
-        call orient_gf_spinor(npw)
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        CALL orient_gf_spinor(npw)
+      ENDIF
       !
       !  USPP
       !
-      IF(any_uspp) THEN
-         CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+      IF (any_uspp) THEN
+         CALL init_us_2 (npw, igk_k(1, ik), xk(1, ik), vkb)
+         !
          ! below we compute the product of beta functions with trial func.
          IF (gamma_only) THEN
             CALL calbec ( npw, vkb, gf, becp, n_proj )
-         ELSE if (noncolin) then
+         ELSEIF (noncolin) THEN
             CALL calbec ( npw, vkb, gf_spinor, becp, n_proj )
-         else
+         ELSE
             CALL calbec ( npw, vkb, gf, becp, n_proj )
          ENDIF
+         !
          ! and we use it for the product S|trial_func>
-         if (noncolin) then
+         IF (noncolin) THEN
            CALL s_psi (npwx, npw, n_proj, gf_spinor, sgf_spinor)
-         else
+         ELSE
            CALL s_psi (npwx, npw, n_proj, gf, sgf)
-         endif
+         ENDIF
       ELSE
          sgf(:,:) = gf(:,:)
       ENDIF
@@ -3659,25 +3666,29 @@ SUBROUTINE compute_amn
       !
       IF (wan_mode == 'standalone') THEN
          DO iw = 1, n_proj
-            ibnd1 = 0
-            DO ibnd = 1, nbnd
-               IF (excluded_band(ibnd)) CYCLE
-               ibnd1 = ibnd1 + 1
-               IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn(ibnd1, iw)
+            DO ibnd = 1, num_bands
+               IF (me_pool == root_pool) WRITE(iun_amn,'(3i5,2f18.12)') &
+                  ibnd, iw, ik_g_w90, amn(ibnd, iw)
             ENDDO
          ENDDO
       ELSEIF (wan_mode=='library') THEN
          DO iw = 1, n_proj
-            ibnd1 = 0
-            DO ibnd = 1, nbnd
-               IF (excluded_band(ibnd)) CYCLE
-               ibnd1 = ibnd1 + 1
-               a_mat(ibnd1, iw, ik) = amn(ibnd1, iw)
+            DO ibnd = 1, num_bands
+               a_mat(ibnd, iw, ik_g_w90) = amn(ibnd, iw)
             ENDDO
          ENDDO
       ENDIF
       !
    ENDDO  ! k-points
+   !
+   IF (me_pool == root_pool .AND. wan_mode=='standalone') CLOSE (iun_amn, STATUS="KEEP")
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   !
+   CALL utility_merge_files("amn", .TRUE.)
    !
    DEALLOCATE(sgf)
    DEALLOCATE(csph)
