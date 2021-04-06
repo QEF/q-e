@@ -3444,6 +3444,17 @@ END SUBROUTINE utility_write_array
 !--------------------------------------------------------------------------
 SUBROUTINE compute_amn
    !-----------------------------------------------------------------------
+   !!
+   !! In the collinear case, n_proj and n_wannier are always the same.
+   !!
+   !! In the noncollinear case,
+   !! 1) standalone mode: n_proj is the number of spinor projections.
+   !!                     n_wannier = n_proj, but is never used here.
+   !! 2) library mode: n_proj is the number of scaler projections.
+   !!                  n_wannier = 2 * n_proj
+   !! (For the standalone mode, n_wannier used only in SCDM projections.)
+   !!
+   !-----------------------------------------------------------------------
    !
    USE io_global,       ONLY : stdout, ionode
    USE kinds,           ONLY : DP
