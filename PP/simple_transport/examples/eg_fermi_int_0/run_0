@@ -26,6 +26,6 @@ cat > input_0 << EOF
 &end
 EOF
 
-./fermi_int_0.x < input_0 
+../../src/fermi_int_0.x < input_0 
 
 
