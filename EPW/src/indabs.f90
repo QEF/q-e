@@ -192,6 +192,9 @@
 !          CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
 !        ENDDO
 !      ENDIF
+      IF (iq_restart == 1) THEN
+        CALL dirabs()
+      ENDIF
     ENDIF
     !
     ! The total number of k points
@@ -413,6 +416,240 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE indabs_main
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE dirabs()
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine calculates the direct part of the imaginary dielectric
+    !! function. 
+    !! Only independent particles scheme is implemented, as simple as 
+    !! Eq. (27) in Rohlfing, M and Louie, S. G. PRB 62.8 (2000)    
+    !
+    USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout
+    USE io_var,        ONLY : iudirabs
+    USE modes,         ONLY : nmodes
+    USE epwcom,        ONLY : nbndsub, nstemp, fsthick, degaussw, &
+                              eps_acustic, efermi_read, fermi_energy,&
+                              vme, omegamin, omegamax, omegastep, indabs_fca, &
+                              nomega, neta, lindabs
+    USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
+                              sigmar_all, efnew, gtemp, &
+                              dmef, omegap, epsilon2_abs_dir, epsilon2_abs_lorenz_dir, vmef, &
+                              nbndfst, nktotf, ef0_fca 
+    USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
+    USE mp,            ONLY : mp_barrier, mp_sum
+    USE mp_global,     ONLY : inter_pool_comm
+    USE cell_base,     ONLY : omega
+    !
+    IMPLICIT NONE
+    !
+    ! Local variables
+    CHARACTER(LEN = 256) :: nameF
+    !! Name of the file
+    CHARACTER(LEN = 10) :: c
+    !! Number of eta values, in string format
+    CHARACTER(LEN = 256) :: format_string
+    !! Format string
+    INTEGER :: ik
+    !! Counter on k-point index
+    INTEGER :: ikk
+    !! k-point index
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: jbnd
+    !! Counter on bands
+    INTEGER :: iw
+    !! Index for frequency
+    INTEGER :: ipol
+    !! Counter on polarization
+    INTEGER :: itemp
+    !! Counter on temperatures
+    INTEGER :: ierr
+    !! Error status
+    REAL(KIND = DP) :: ekki
+    !! Energy of the fine grid relative to the Fermi level, band i
+    REAL(KIND = DP) :: ekkj
+    !! Energy of the fine grid relative to the Fermi level, band j
+    REAL(KIND = DP) :: ef0
+    !! Fermi level
+    REAL(KIND = DP) :: wgki, wgkj
+    !! Fermi-Dirac occupation factor f_{i,k} and f_{j,k}
+    REAL(KIND = DP) :: weighta
+    !! delta function for absorption
+    REAL(KIND = DP) :: inv_degaussw
+    !! Inverse of the smearing for efficiency reasons
+    REAL(KIND = DP) :: inv_temp
+    !! Inverse of the temperature
+    REAL(KIND = DP) :: pfac
+    !! Occupation factor
+    REAL(KIND = DP) :: cfac
+    !! Absorption prefactor
+    REAL(KIND = DP), EXTERNAL :: dos_ef
+    !! Function to compute the Density of States at the Fermi level
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! Fermi-Dirac distribution function (when -99)
+    REAL(KIND = DP), EXTERNAL :: w0gauss
+    !! This function computes the derivative of the Fermi-Dirac function
+    !! It is therefore an approximation for a delta function
+    COMPLEX(KIND = DP) :: vkk(3, nbndfst, nbndfst)
+    !!- Velocity matrix elements at k
+    COMPLEX(KIND = DP) :: optmat(3)
+    !! Transition probability function
+    !
+    !! Define inverse so that multiply is more efficient
+    !
+    inv_degaussw = 1.0 / degaussw
+    ! Epsilon2 prefactor for velocity matrix elements, including factor of 2 for spin (weights for k-points are divided by 2 to be normalized to 1)
+    ! C = 8*pi^2*e^2 = 8*pi^2*2 approx 157.9136704
+    !
+    cfac = 16.d0 * pi**2
+    !
+    WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+    WRITE(stdout, '(5x,"Direct absorption with indepedent particle approximation")')
+    WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+    !
+    IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a)') 'The following temperatures are calculated:'
+    DO itemp = 1, nstemp
+      WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', gtemp(itemp) * ryd2ev, ' eV'
+    ENDDO
+!    IF (.NOT. lindabs) THEN
+!      ALLOCATE(omegap(nomega), STAT = ierr)
+!      IF (ierr /= 0) CALL errore('dirabs', 'Error allocating omegap', 1)
+!      DO iw = 1, nomega
+!        omegap(iw) = omegamin + (iw - 1) * omegastep
+!      ENDDO
+    ALLOCATE(epsilon2_abs_dir(3, nomega, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dirabs', 'Error allocating epsilon2_abs_dir', 1)
+    ALLOCATE(epsilon2_abs_lorenz_dir(3, nomega, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dirabs', 'Error allocating epsilon2_abs_lorenz_dir', 1)
+    epsilon2_abs_dir = 0.d0
+    epsilon2_abs_lorenz_dir = 0.d0
+    !
+    DO itemp = 1, nstemp
+      IF (indabs_fca) THEN
+        !
+        ef0 = ef0_fca(itemp)
+      ELSEIF (efermi_read) THEN
+        !
+        ef0 = fermi_energy
+      ELSE
+        !
+        ef0 = efnew
+      ENDIF
+      !
+      inv_temp = 1.0 / gtemp(itemp)
+      !
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        IF (vme) THEN
+          DO ibnd = 1, nbndsub
+            DO jbnd = 1, nbndsub
+              ! vmef is in units of Ryd * bohr
+              vkk(:, ibnd, jbnd) = vmef(:, ibnd, jbnd, ikk)
+            ENDDO
+          ENDDO
+         ELSE
+          DO ibnd = 1, nbndsub
+            DO jbnd = 1, nbndsub
+              ! Dme's already corrected for GW corrections in wan2bloch.f90
+              vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibnd, jbnd, ikk)
+            ENDDO
+          ENDDO
+        ENDIF
+        DO ibnd = 1, nbndsub
+          !  the energy of the electron at k (relative to Ef)
+          ekki = etf(ibnd, ikk) - ef0
+          IF (ABS(ekki) < fsthick * 4.0) THEN
+            !
+            ! Occupation factor
+            wgki = wgauss(-ekk * inv_temp, -99)
+            !
+            DO jbnd = 1, nbndsub
+              !
+              ekkj = etf(jbnd, ikk) - ef0
+              !
+              IF (ABS(ekkj) < fsthick * 4.0 .AND. ekkj < ekki + omegamax + 6.0 * degaussw) THEN
+                !
+                wgkj = wgauss(-ekkj * inv_temp, -99)
+                !
+                IF (ekkj - ekki - omegamax > 6.0 * degaussw) CYCLE
+                IF (ekkj - ekki - omegamin < - 6.0 * degaussw) CYCLE
+                !
+                optmat(:) = vkk(:,ibnd,jbnd)
+                pfac = wgki * (one - wgkj) - (one - wgki) * wgkj
+                DO iw = 1, nomega
+                  IF (ABS(ekkj - ekki  - omegap(iw)) > 6.0 * degaussw) CYCLE
+                  !
+                  weighta = w0gauss((ekkj - ekki - omegap(iw))/degaussw, 0) / degaussw
+                  !
+                  DO ipol = 1, 3
+                    epsilon2_abs_dir(ipol, iw, itemp) = epsilon2_abs_dir(ipolm iw, itemp) + (wkf(ikk) / 2.0) * cfac / &
+                        omegap(iw) ** 2 * pfac * weighta * ABS(optmat(ipol)) ** 2 / omega
+                    epsilon2_abs_lorenz_dir(ipol, iw, itemp) = epsilon2_abs_lorenz_dir(ipol, iw, itemp) + (wkf(ikk) / 2.0) * &
+                        cfac / omegap(iw) ** 2 * pfac * ABS(optmat(ipol)) ** 2  / omega * &
+                        (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw))**2)) / pi
+                  ENDDO ! ipol
+                ENDDO ! iw
+              ENDIF ! ekkj
+            ENDDO !jbnd
+          ENDIF ! ekki
+        ENDDO !ibnd
+      ENDDO !ik
+    ENDDO ! itemp
+    !
+    ! Sum the k-points across pool 
+    !
+#if defined(__MPI)
+    !
+    CALL mp_barrier(inter_pool_comm)
+    CALL mp_sum(epsilon2_abs_dir, inter_pool_comm)
+    CALL mp_sum(epsilon2_abs_lorenz_dir, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+    !
+#endif
+    ! 
+    ! Write to stdout
+    !
+    WRITE(stdout, '(5x,a)')
+    WRITE(stdout, '(5x,a)') 'Direct absorption versus energy'
+    WRITE(stdout, '(5x,a)') 'For the first temperature we have:'
+    WRITE(stdout, '(5x,a)') 'Photon energy (eV), Imaginary dielectric function along x,y,z'
+    DO iw = 1, nomega
+      WRITE(stdout, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir(ipol, iw, 1), ipol = 1, 3)
+    ENDDO
+    WRITE(stdout, '(5x,a)')
+    WRITE(stdout, '(5x,a)') 'Values with other for temperature X are reported in the files epsilon2_dirabs_X.dat'
+    WRITE(stdout, '(5x,a)')
+    !
+    !Output to file
+    !
+    DO itemp = 1,nstemp
+      WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
+      nameF = 'epsilon2_dirabs_' // trim(adjustl(tp)) // 'K.dat'
+      OPEN(UNIT = iudirabs, FILE = nameF)
+      WRITE(iuindabs, '(a)') '# Direct absorption versus energy'
+      WRITE(iuindabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z'
+      DO iw = 1, nomega
+        WRITE(iudirabs, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir(ipol, iw, 1), ipol = 1, 3)
+      ENDDO
+      CLOSE(iudirabs)
+      ! 
+      nameF = 'epsilon2_dirabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
+      OPEN(UNIT = iuindabs, FILE = nameF)
+      WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
+      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z'
+            DO iw = 1, nomega
+        WRITE(iudirabs, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir_lorenz(ipol, iw, 1), ipol = 1, 3)
+      ENDDO
+      CLOSE(iudirabs)
+    ENDDO
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE dirabs
     !-----------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------

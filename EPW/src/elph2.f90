@@ -118,6 +118,8 @@
     epsilon2_abs_lorenz(:, :, :, :), &! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     epsilon2_abs_all(:, :, :, :),   &!  For restart: Summed imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     epsilon2_abs_lorenz_all(:, :, :, :), &! For restart: Summed imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
+    epsilon2_abs_dir(:,:,:),    &! Imaginary part of dielectric function for direct absorption vs polarization, omega, temp
+    epsilon2_abs_dir_lorenz(:,:,:),  &! Imaginary part of dielectric function for direct absorption vs polarization, omega, temp Lorentz
     ef0_fca(:),               &!  Fermi level for free carrier absorption
     gtemp(:),                &!  Temperature used globally (units of Ry)
     mobilityh_save(:),       &!  Error in the hole mobility
