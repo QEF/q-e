@@ -259,7 +259,7 @@ integer function semifact(n)
   return
 end function semifact
 !
-SUBROUTINE sph_dbes1 ( nr, r, xg, l, jl, djl )
+SUBROUTINE sph_dbes ( nr, r, xg, l, jl, djl )
   !
   !! Calculates \(x*dj_l(x)/dx\) using the recursion formula:
   !! $$ dj_l(x)/dx = l/x j_l(x) - j_{l+1}(x) $$
@@ -295,4 +295,4 @@ SUBROUTINE sph_dbes1 ( nr, r, xg, l, jl, djl )
      end if
   end if
   !
-end SUBROUTINE sph_dbes1
+end SUBROUTINE sph_dbes

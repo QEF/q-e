@@ -413,7 +413,7 @@
 !
                if( tpre )then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l, jl, djl)
                   !
                endif
                !
@@ -536,7 +536,7 @@
                !
                if( tpre ) then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l-1, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l-1, jl, djl)
                   !
                endif
                !
@@ -604,7 +604,6 @@
       use io_global,          only: stdout
       USE ions_base,          ONLY: nsp
       USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
-      use uspp_param,         only: lmaxkb
       USE atom,               ONLY: rgrid
       USE uspp,               ONLY: indv
       use uspp,               only: qq_nt, qq_nt_d, beta
@@ -691,7 +690,7 @@
                !
                if( tpre ) then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l-1, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l-1, jl, djl)
                   !
                endif
                !
@@ -1051,7 +1050,7 @@
       use uspp,              only: qq_nt, qq_nt_d, nhtolm, beta
       use constants,         only: pi, fpi
       use ions_base,         only: nsp
-      use uspp_param,        only: upf, lmaxq, lmaxkb, nbetam, nh
+      use uspp_param,        only: upf, lmaxq, nbetam, nh
       use qgb_mod,           only: qgb, dqgb
       use smallbox_gvec,     only: gb, gxb, ngb
       use small_box,         only: omegab, tpibab
@@ -1304,7 +1303,7 @@
                !
                if( tpre )then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l, jl, djl)
                   !
                endif
                !

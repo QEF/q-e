@@ -403,13 +403,13 @@ SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
   !
   ! Compute interpolation table qrad(i,nm,l+1,nt) = Q^{(L)}_{nm,nt}(q_i)
   ! of angular momentum L, for atom of type nt, on grid q_i, where
-  ! nm = combined index for n,m=1,nh(nt)
+  ! nm = combined (n,m) index; n,m = 1,...,nbeta (number of beta functions)
   !
   USE upf_kinds,    ONLY : dp
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
-  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb, nsp
-  USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
+  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
+  USE uspp_data,    ONLY : nqxq, dq, qrad
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -437,8 +437,10 @@ SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
      if ( upf(nt)%tvanp ) then
         DO l = 0, upf(nt)%nqlc -1
            !
-           !     note that l is the true (combined) angular momentum
-           !     and that the arrays have dimensions 0..l (no more 1..l+1)
+           !     l is the true (combined) angular momentum
+           !     Note that the index of array qfuncl runs from 0 to l,
+           !     while the same index for qrad runs from 1 to l+1
+           !     FIXME: qrad has "holes" if USPP/PAW do not precede NCPP
            !
            DO iq = startq, lastq
               !
@@ -450,7 +452,7 @@ SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
               !
               DO nb = 1, upf(nt)%nbeta
                  !
-                 !    the Q are symmetric with respect to indices
+                 !    the Q are symmetric with respect to nb,nm indices
                  !
                  DO mb = nb, upf(nt)%nbeta
                     ijv = mb * (mb - 1) / 2 + nb

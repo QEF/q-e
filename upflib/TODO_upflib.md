@@ -21,9 +21,16 @@
     together with upf(:), when upf is read? Or maybe nh should be part of upf?
     It is used in many many places, though!
   - Merge pseudopotential_indexes from CPV/src/pseudopot_sub.f90 with the
-    uspp initialization in upflib (init_us_1 etc)
+    uspp initialization in upflib (init_us_1 etc); merge qvan2b and qvan2
+    (requires merge of interpolation tables qrad and qradb)
   - upf_ions now contains just a function n_atom_wfc: move somewhere else?
-  - upf_spinorb contains just two variables: merge into uspp?
+  - upf_spinorb contains just two variables: merge into uspp? add to it
+    the two functions spinor and sph_ind used only for spin-orbit?
+  - more functions to be moved from Modules/: dylmr2, dqvan2
+  - lmaxq should be "the maximum value of L in Q functions", not "... + 1"
+    and should be used to dimension arrays where l=0,...,L. The dimension
+    of spherical harmonics (2*lmaxkb+1)^2 is something different and should
+    be stored in a different variable (something like ylmdim, or maxlm)
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
