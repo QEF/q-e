@@ -189,7 +189,7 @@
             DO ieta = 1, neta
               DO iw = 1, nomega
                 i = i + 1
-                  epsilon2_abs(ipol, iw, ieta, itemp) = aux(i)
+                  epsilon2_abs_all(ipol, iw, ieta, itemp) = aux(i)
               ENDDO
             ENDDO
           ENDDO
@@ -199,7 +199,7 @@
             DO ieta = 1, neta
               DO iw = 1, nomega
                 i = i + 1
-                  epsilon2_abs_lorenz(ipol, iw, ieta, itemp) = aux(i)
+                  epsilon2_abs_lorenz_all(ipol, iw, ieta, itemp) = aux(i)
               ENDDO
             ENDDO
           ENDDO

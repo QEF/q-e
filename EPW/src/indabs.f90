@@ -154,7 +154,7 @@
     !
     cfac = 16.d0 * pi**2
     !
-    IF (iq == 1) THEN
+    IF (iq == iq_restart) THEN
       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
       WRITE(stdout, '(5x,"Phonon-assisted absorption")')
       WRITE(stdout, '(5x,a/)') REPEAT('=',67)
@@ -176,8 +176,12 @@
 !      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
 !      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
       !
-      epsilon2_abs_all = 0.d0
-      epsilon2_abs_lorenz_all = 0.d0
+      IF (iq_restart == 1) THEN
+        epsilon2_abs_all = 0.d0
+        epsilon2_abs_lorenz_all = 0.d0
+      ENDIF
+      epsilon2_abs = 0.d0
+      epsilon2_abs_lorenz = 0.d0
       DO iw = 1, nomega
         omegap(iw) = omegamin + (iw - 1) * omegastep
       ENDDO
@@ -194,15 +198,6 @@
     !
     nksqtotf = nktotf ! odd-even for k,k+q
     !
-    IF (iq == iq_restart .AND. iq_restart /= 1) THEN
-      ALLOCATE(omegap(nomega), STAT = ierr)
-      IF (ierr /= 0) CALL errore('indabs', 'Error allocating omegap', 1)
-      DO iw = 1, nomega
-        omegap(iw) = omegamin + (iw - 1) * omegastep
-      ENDDO
-      epsilon2_abs = 0.d0
-      epsilon2_abs_lorenz = 0.d0
-    ENDIF
     DO itemp = 1, nstemp
       IF (first_cycle .and. itemp == nstemp) THEN
         first_cycle = .false.
