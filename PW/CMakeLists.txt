@@ -313,7 +313,8 @@ target_link_libraries(qe_pw
         qe_mpi_fortran
         qe_xclib
         qe_devxlib
-        qe_ext_prof_tool)
+        qe_ext_prof_tool
+        qe_mbd)
 
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
@@ -335,7 +336,6 @@ target_link_libraries(qe_pw_exe
         qe_pw
         qe_modules
         qe_lax
-        qe_lapack
         qe_upflib)
 
 ###########################################################
@@ -349,8 +349,7 @@ set_target_properties(qe_pw_tools_ibrav2cell_exe
 target_link_libraries(qe_pw_tools_ibrav2cell_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # cell2ibrav.x
@@ -363,8 +362,7 @@ set_target_properties(qe_pw_tools_cell2ibrav_exe
 target_link_libraries(qe_pw_tools_cell2ibrav_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # ev.x
@@ -377,8 +375,7 @@ set_target_properties(qe_pw_tools_ev_exe
 target_link_libraries(qe_pw_tools_ev_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # kpoints.x
@@ -391,8 +388,7 @@ set_target_properties(qe_pw_tools_kpoints_exe
 target_link_libraries(qe_pw_tools_kpoints_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # pwi2xsf.x
@@ -405,8 +401,7 @@ set_target_properties(qe_pw_tools_pwi2xsf_exe
 target_link_libraries(qe_pw_tools_pwi2xsf_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 

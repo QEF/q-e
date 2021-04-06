@@ -20,12 +20,11 @@ target_link_libraries(qe_lax
         qe_scalapack
         qe_openmp_fortran
         qe_mpi_fortran
-        qe_lapack
         qe_utilx
         qe_devxlib)
 if(QE_ENABLE_CUDA)
     if(QE_ENABLE_LAXLIB_CUSOLVER)
-        if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+        if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
             message(WARNING "The version of CUDAToolkit used by PGI compiler internally cannot be determined. "
                             "cuSOLVER features used by LAXLib are only supported from CUDAToolkit 10.1, "
                             "disable it with '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF' if linking failed in cuSOLVER.")
@@ -94,7 +93,8 @@ if(QE_ENABLE_TEST)
     target_link_libraries(qe_lax_test
         PRIVATE
             qe_mpi_fortran
-            qe_lax)
+            qe_lax
+            qe_lapack)
     add_test(NAME test_qe_lax 
         COMMAND ${QE_TESTS_DIR}/qe_lax_test.x)
 endif(QE_ENABLE_TEST)

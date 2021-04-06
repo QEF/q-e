@@ -172,6 +172,7 @@ set(src_simple_ip
 qe_add_library(qe_gww ${src_gww})
 target_link_libraries(qe_gww
     PRIVATE
+        qe_gww_minpack
         qe_fftx
         qe_modules)
 

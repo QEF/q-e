@@ -85,7 +85,6 @@ target_link_libraries(qe_kssolver_ppcg
         qe_scalapack
         qe_openmp_fortran
         qe_lax
-        qe_lapack
         qe_utilx
         qe_mpi_fortran)
 
