@@ -453,6 +453,8 @@
     !! Number of eta values, in string format
     CHARACTER(LEN = 256) :: format_string
     !! Format string
+    CHARACTER(LEN = 20) :: tp
+    !! Temperature, in string format
     INTEGER :: ik
     !! Counter on k-point index
     INTEGER :: ikk
@@ -566,7 +568,7 @@
           IF (ABS(ekki) < fsthick * 4.0) THEN
             !
             ! Occupation factor
-            wgki = wgauss(-ekk * inv_temp, -99)
+            wgki = wgauss(-ekki * inv_temp, -99)
             !
             DO jbnd = 1, nbndsub
               !
@@ -587,11 +589,11 @@
                   weighta = w0gauss((ekkj - ekki - omegap(iw))/degaussw, 0) / degaussw
                   !
                   DO ipol = 1, 3
-                    epsilon2_abs_dir(ipol, iw, itemp) = epsilon2_abs_dir(ipolm iw, itemp) + (wkf(ikk) / 2.0) * cfac / &
+                    epsilon2_abs_dir(ipol, iw, itemp) = epsilon2_abs_dir(ipol, iw, itemp) + (wkf(ikk) / 2.0) * cfac / &
                         omegap(iw) ** 2 * pfac * weighta * ABS(optmat(ipol)) ** 2 / omega
                     epsilon2_abs_lorenz_dir(ipol, iw, itemp) = epsilon2_abs_lorenz_dir(ipol, iw, itemp) + (wkf(ikk) / 2.0) * &
                         cfac / omegap(iw) ** 2 * pfac * ABS(optmat(ipol)) ** 2  / omega * &
-                        (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw))**2)) / pi
+                        (degaussw / (degaussw**2 + (ekkj - ekki - omegap(iw))**2)) / pi
                   ENDDO ! ipol
                 ENDDO ! iw
               ENDIF ! ekkj
@@ -631,19 +633,19 @@
       WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
       nameF = 'epsilon2_dirabs_' // trim(adjustl(tp)) // 'K.dat'
       OPEN(UNIT = iudirabs, FILE = nameF)
-      WRITE(iuindabs, '(a)') '# Direct absorption versus energy'
-      WRITE(iuindabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z'
+      WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
+      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z'
       DO iw = 1, nomega
         WRITE(iudirabs, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir(ipol, iw, 1), ipol = 1, 3)
       ENDDO
       CLOSE(iudirabs)
       ! 
       nameF = 'epsilon2_dirabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
-      OPEN(UNIT = iuindabs, FILE = nameF)
+      OPEN(UNIT = iudirabs, FILE = nameF)
       WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
       WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z'
             DO iw = 1, nomega
-        WRITE(iudirabs, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir_lorenz(ipol, iw, 1), ipol = 1, 3)
+        WRITE(iudirabs, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_lorenz_dir(ipol, iw, 1), ipol = 1, 3)
       ENDDO
       CLOSE(iudirabs)
     ENDDO
