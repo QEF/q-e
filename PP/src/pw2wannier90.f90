@@ -2665,16 +2665,18 @@ END SUBROUTINE utility_merge_files
 SUBROUTINE compute_spin
    !-----------------------------------------------------------------------
    !
-   USE io_global,  ONLY : stdout, ionode
-   USE kinds,           ONLY: DP
+   USE kinds,           ONLY : DP
+   USE mp,              ONLY : mp_sum
+   USE mp_pools,        ONLY : intra_pool_comm
+   USE io_global,       ONLY : stdout, ionode
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions, ONLY : evc, psic, psic_nc
-   USE fft_base,        ONLY : dffts, dfftp
+   USE wavefunctions,   ONLY : evc, psic, psic_nc
+   USE fft_base,        ONLY : dffts
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE io_files,        ONLY : nwordwfc, iunwfc
-   USE gvect,           ONLY : g, ngm, gstart
+   USE gvect,           ONLY : g
    USE cell_base,       ONLY : alat, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
@@ -2682,21 +2684,17 @@ SUBROUTINE compute_spin
    USE uspp_param,      ONLY : upf, nh, lmaxq
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_pools,        ONLY : intra_pool_comm
-   USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
-   USE gvecw,           ONLY : gcutw
-   USE wannier
    ! begin change Lopez, Thonhauser, Souza
    USE mp,              ONLY : mp_barrier
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE gvecs,           ONLY : doublegrid
    USE lsda_mod,        ONLY : nspin
    USE constants,       ONLY : rytoev
-
-   USE uspp_param,           ONLY : upf, nh, nhm
-   USE uspp,                 ONLY: qq_nt, nhtol,nhtoj, indv
-   USE spin_orb,             ONLY : fcoef
+   USE uspp_param,      ONLY : upf, nh, nhm
+   USE uspp,            ONLY : qq_nt, nhtol, nhtoj, indv
+   USE spin_orb,        ONLY : fcoef
+   USE wannier
 
    IMPLICIT NONE
    !
@@ -2704,10 +2702,10 @@ SUBROUTINE compute_spin
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
-   INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, i, m, n
-   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
-   INTEGER :: ikevc, ikpevcq, s, counter
-   COMPLEX(DP)              :: mmn, zdotc, phase1
+   INTEGER :: npw, ik, ikp, ipol, ib, i, m, n
+   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, nbt
+   INTEGER :: ikevc, s, counter
+   COMPLEX(DP)              :: zdotc, phase1
    real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
    CHARACTER (len=60)       :: header
@@ -2716,54 +2714,57 @@ SUBROUTINE compute_spin
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
    COMPLEX(DP)              :: sigma_x,sigma_y,sigma_z,cdum1,cdum2
-   complex(DP), allocatable :: spn(:,:), spn_aug(:,:)
-
+   complex(DP), allocatable :: spn(:, :), spn_aug(:, :)
+   !
    integer  :: np, is1, is2, kh, kkb
    complex(dp) :: sigma_x_aug, sigma_y_aug, sigma_z_aug
    COMPLEX(DP), ALLOCATABLE :: be_n(:,:), be_m(:,:)
-
+   !
+   IF (.NOT. noncolin) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, *) " compute_spin is meaningful only for noncollinear cases"
+      WRITE(stdout, *) " Doing nothing and return."
+      WRITE(stdout, *)
+      RETURN
+   ENDIF
+   !
    CALL start_clock("compute_spin")
-
+   !
    any_uspp = any(upf(1:ntyp)%tvanp)
-
-   if (any_uspp) then
+   !
+   IF (any_uspp) THEN
       CALL allocate_bec_type ( nkb, nbnd, becp )
       ALLOCATE(be_n(nhm,2))
       ALLOCATE(be_m(nhm,2))
-   endif
-
-
-   if (write_spn) allocate(spn(3,(num_bands*(num_bands+1))/2))
-   if (write_spn) allocate(spn_aug(3,(num_bands*(num_bands+1))/2))
-   spn_aug = (0.0d0, 0.0d0)
-!ivo
-! not sure this is really needed
-   if((write_spn.or.write_uhu.or.write_uIu).and.wan_mode=='library')&
-        call errore('pw2wannier90',&
-        'write_spn, write_uhu, and write_uIu not meant to work library mode',1)
-!endivo
-
-   IF(write_spn.and.noncolin) THEN
-      IF (ionode) then
-         iun_spn = find_free_unit()
-         CALL date_and_tim( cdate, ctime )
-         header='Created on '//cdate//' at '//ctime
-         if(spn_formatted) then
-            OPEN (unit=iun_spn, file=trim(seedname)//".spn",form='formatted')
-            WRITE (iun_spn,*) header !ivo
-            WRITE (iun_spn,*) nbnd-nexband,iknum
-         else
-            OPEN (unit=iun_spn, file=trim(seedname)//".spn",form='unformatted')
-            WRITE (iun_spn) header !ivo
-            WRITE (iun_spn) nbnd-nexband,iknum
-         endif
+   ENDIF
+   !
+   ALLOCATE(spn(3, (num_bands*(num_bands+1))/2))
+   IF (any_uspp) ALLOCATE(spn_aug(3, (num_bands*(num_bands+1))/2))
+   !
+   !ivo
+   ! not sure this is really needed
+   IF (wan_mode=='library') CALL errore('pw2wannier90',&
+        'write_spn not meant to work library mode', 1)
+   !endivo
+   !
+   IF (ionode) THEN
+      iun_spn = find_free_unit()
+      CALL date_and_tim( cdate, ctime )
+      header='Created on '//cdate//' at '//ctime
+      if(spn_formatted) THEN
+         OPEN (unit=iun_spn, file=trim(seedname)//".spn",form='formatted')
+         WRITE (iun_spn,*) header !ivo
+         WRITE (iun_spn,*) nbnd-nexband,iknum
+      else
+         OPEN (unit=iun_spn, file=trim(seedname)//".spn",form='unformatted')
+         WRITE (iun_spn) header !ivo
+         WRITE (iun_spn) nbnd-nexband,iknum
       ENDIF
    ENDIF
    !
    WRITE(stdout,'(a,i8)') ' iknum = ',iknum
-
-   ind = 0
-   DO ik=1,iknum
+   !
+   DO ik = 1, iknum
       WRITE (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1
       CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
@@ -2776,127 +2777,131 @@ SUBROUTINE compute_spin
          ! below we compute the product of beta functions with |psi>
          CALL calbec (npw, vkb, evc, becp)
       ENDIF
-
-
-      IF(write_spn.and.noncolin) THEN
-         counter=0
-         DO m=1,nbnd
-            if(excluded_band(m)) cycle !ivo
-            DO n=1,m
-               if(excluded_band(n)) cycle !ivo
-               cdum1=zdotc(npw,evc(1,n),1,evc(npwx+1,m),1)
-               call mp_sum(cdum1,intra_pool_comm)
-               cdum2=zdotc(npw,evc(npwx+1,n),1,evc(1,m),1)
-               call mp_sum(cdum2,intra_pool_comm)
-               sigma_x=cdum1+cdum2
-               sigma_y=cmplx_i*(cdum2-cdum1)
-               sigma_z=zdotc(npw,evc(1,n),1,evc(1,m),1)&
-                    -zdotc(npw,evc(npwx+1,n),1,evc(npwx+1,m),1)
-               call mp_sum(sigma_z,intra_pool_comm)
-               counter=counter+1
-               spn(1,counter)=sigma_x
-               spn(2,counter)=sigma_y
-               spn(3,counter)=sigma_z
-
-               if (any_uspp) then
-                 sigma_x_aug = (0.0d0, 0.0d0)
-                 sigma_y_aug = (0.0d0, 0.0d0)
-                 sigma_z_aug = (0.0d0, 0.0d0)
-                 ijkb0 = 0
-
-                 DO np = 1, ntyp
-                    IF ( upf(np)%tvanp ) THEN
-                       DO na = 1, nat
-                          IF (ityp(na)==np) THEN
-                             be_m = 0.d0
-                             be_n = 0.d0
-                             DO ih = 1, nh(np)
-                                ikb = ijkb0 + ih
-                                IF (upf(np)%has_so) THEN
-                                    DO kh = 1, nh(np)
-                                       IF ((nhtol(kh,np)==nhtol(ih,np)).and. &
-                                            (nhtoj(kh,np)==nhtoj(ih,np)).and.     &
-                                            (indv(kh,np)==indv(ih,np))) THEN
-                                          kkb=ijkb0 + kh
-                                          DO is1=1,2
-                                             DO is2=1,2
-                                                be_n(ih,is1)=be_n(ih,is1)+  &
-                                                     fcoef(ih,kh,is1,is2,np)*  &
-                                                     becp%nc(kkb,is2,n)
-
-                                                be_m(ih,is1)=be_m(ih,is1)+  &
-                                                     fcoef(ih,kh,is1,is2,np)*  &
-                                                     becp%nc(kkb,is2,m)
-                                             ENDDO
-                                          ENDDO
-                                       ENDIF
+      !
+      counter = 0
+      DO m = 1, nbnd
+         IF (excluded_band(m)) CYCLE !ivo
+         DO n = 1, m
+            IF (excluded_band(n)) CYCLE !ivo
+            counter = counter+1
+            !
+            cdum1 = zdotc(npw,evc(1,n),1,evc(npwx+1,m),1)
+            cdum2 = zdotc(npw,evc(npwx+1,n),1,evc(1,m),1)
+            sigma_x = cdum1 + cdum2
+            sigma_y = cmplx_i*(cdum2-cdum1)
+            sigma_z = zdotc(npw,evc(1,n),1,evc(1,m),1) &
+                    - zdotc(npw,evc(npwx+1,n),1,evc(npwx+1,m),1)
+            spn(1, counter) = sigma_x
+            spn(2, counter) = sigma_y
+            spn(3, counter) = sigma_z
+            !
+            IF (any_uspp) THEN
+               !
+               sigma_x_aug = (0.0d0, 0.0d0)
+               sigma_y_aug = (0.0d0, 0.0d0)
+               sigma_z_aug = (0.0d0, 0.0d0)
+               ijkb0 = 0
+               !
+               DO np = 1, ntyp
+                  IF (.NOT. upf(np)%tvanp) THEN
+                     DO na = 1, nat
+                        IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+                     ENDDO
+                     CYCLE
+                  ENDIF
+                  !
+                  DO na = 1, nat
+                     IF (ityp(na) /= np) CYCLE
+                     !
+                     be_m = 0.d0
+                     be_n = 0.d0
+                     DO ih = 1, nh(np)
+                        ikb = ijkb0 + ih
+                        IF (upf(np)%has_so) THEN
+                           DO kh = 1, nh(np)
+                              IF ((nhtol(kh,np)==nhtol(ih,np)).AND. &
+                                   (nhtoj(kh,np)==nhtoj(ih,np)).AND.     &
+                                   (indv(kh,np)==indv(ih,np))) THEN
+                                 kkb=ijkb0 + kh
+                                 DO is1=1,2
+                                    DO is2=1,2
+                                       be_n(ih,is1)=be_n(ih,is1)+  &
+                                          fcoef(ih,kh,is1,is2,np)*  &
+                                          becp%nc(kkb,is2,n)
+                                       !
+                                       be_m(ih,is1)=be_m(ih,is1)+  &
+                                          fcoef(ih,kh,is1,is2,np)*  &
+                                          becp%nc(kkb,is2,m)
                                     ENDDO
-                                ELSE
-                                   DO is1=1,2
-                                      be_n(ih, is1) = becp%nc(ikb, is1, n)
-                                      be_m(ih, is1) = becp%nc(ikb, is1, m)
-                                   ENDDO
-                                ENDIF
-                             ENDDO
-                                DO ih = 1, nh(np)
-                                   DO jh = 1, nh(np)
-                                      sigma_x_aug = sigma_x_aug &
-                                        + qq_nt(ih,jh,np) * ( be_m(jh,2)*conjg(be_n(ih,1))+ be_m(jh,1)*conjg(be_n(ih,2)) )
-
-                                      sigma_y_aug = sigma_y_aug &
-                                      + qq_nt(ih,jh,np) * (  &
-                                          be_m(jh,1) * conjg(be_n(ih,2)) &
-                                          - be_m(jh,2) * conjg(be_n(ih,1)) &
-                                        ) * (0.0d0, 1.0d0)
-
-                                      sigma_z_aug = sigma_z_aug &
-                                      + qq_nt(ih,jh,np) * ( be_m(jh,1)*conjg(be_n(ih,1)) - be_m(jh,2)*conjg(be_n(ih,2)) )
-                                   ENDDO
-                                ENDDO
-                             ijkb0 = ijkb0 + nh(np)
-                          ENDIF
-                       ENDDO
-                    ELSE
-                       DO na = 1, nat
-                          IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-                       ENDDO
-                    ENDIF
-                 ENDDO
-                 spn_aug(1, counter) = sigma_x_aug
-                 spn_aug(2, counter) = sigma_y_aug
-                 spn_aug(3, counter) = sigma_z_aug
-               endif
+                                 ENDDO
+                              ENDIF
+                           ENDDO
+                        ELSE
+                           DO is1 = 1, 2
+                              be_n(ih, is1) = becp%nc(ikb, is1, n)
+                              be_m(ih, is1) = becp%nc(ikb, is1, m)
+                           ENDDO
+                        ENDIF
+                     ENDDO
+                     !
+                     DO ih = 1, nh(np)
+                        DO jh = 1, nh(np)
+                           sigma_x_aug = sigma_x_aug &
+                             + qq_nt(ih,jh,np) * ( be_m(jh,2)*conjg(be_n(ih,1))+ be_m(jh,1)*conjg(be_n(ih,2)) )
+                           !
+                           sigma_y_aug = sigma_y_aug &
+                              + qq_nt(ih,jh,np) * (  &
+                              be_m(jh,1) * conjg(be_n(ih,2)) &
+                              - be_m(jh,2) * conjg(be_n(ih,1)) &
+                            ) * (0.0d0, 1.0d0)
+                           !
+                           sigma_z_aug = sigma_z_aug &
+                              + qq_nt(ih,jh,np) * ( be_m(jh,1)*conjg(be_n(ih,1)) - be_m(jh,2)*conjg(be_n(ih,2)) )
+                        ENDDO
+                     ENDDO
+                     !
+                     ijkb0 = ijkb0 + nh(np)
+                  ENDDO
+               ENDDO
+               spn_aug(1, counter) = sigma_x_aug
+               spn_aug(2, counter) = sigma_y_aug
+               spn_aug(3, counter) = sigma_z_aug
+            ENDIF ! any_uspp
+         ENDDO ! n
+      ENDDO ! m
+      !
+      CALL mp_sum(spn, intra_pool_comm)
+      spn = spn + spn_aug
+      !
+      ! Write to file
+      !
+      IF (ionode) THEN ! root node for i/o
+         IF (spn_formatted) THEN ! slow formatted way
+            counter = 0
+            do m = 1, num_bands
+               do n = 1, m
+                  counter = counter+1
+                  do s=1,3
+                     WRITE(iun_spn,'(2es26.16)') spn(s, counter)
+                  ENDDO
+               ENDDO
             ENDDO
-         ENDDO
-         if(ionode) then ! root node for i/o
-            if(spn_formatted) then ! slow formatted way
-               counter=0
-               do m=1,num_bands
-                  do n=1,m
-                     counter=counter+1
-                     do s=1,3
-                         write(iun_spn,'(2es26.16)') spn(s,counter) + spn_aug(s,counter)
-                      enddo
-                   enddo
-                enddo
-             else ! fast unformatted way
-                write(iun_spn) ((spn(s,m) + spn_aug(s,m),s=1,3),m=1,((num_bands*(num_bands+1))/2))
-             endif
-          endif ! end of root activity
-
-
-      ENDIF
-
-   end DO
-
-   IF (ionode .and. write_spn .and. noncolin) CLOSE (iun_spn)
-
-   if(write_spn.and.noncolin) deallocate(spn, spn_aug)
-   if (any_uspp) then
-      deallocate(be_n, be_m)
-      call deallocate_bec_type(becp)
-   endif
-
+         ELSE ! fast unformatted way
+            WRITE(iun_spn) ((spn(s,m),s=1,3),m=1,((num_bands*(num_bands+1))/2))
+         ENDIF
+      ENDIF ! ionode
+      !
+   ENDDO ! ik
+   !
+   IF (ionode) CLOSE(iun_spn)
+   !
+   DEALLOCATE(spn)
+   IF (any_uspp) THEN
+      DEALLOCATE(spn_aug)
+      DEALLOCATE(be_n, be_m)
+      CALL deallocate_bec_type(becp)
+   ENDIF
+   !
    WRITE(stdout,*)
    WRITE(stdout,*) ' SPIN calculated'
    !
