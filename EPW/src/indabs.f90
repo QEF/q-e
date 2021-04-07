@@ -155,15 +155,6 @@
     cfac = 16.d0 * pi**2
     !
     IF (iq == iq_restart) THEN
-      WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-      WRITE(stdout, '(5x,"Phonon-assisted absorption")')
-      WRITE(stdout, '(5x,a/)') REPEAT('=',67)
-      !
-      IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-      WRITE(stdout, '(/5x,a)') 'The following temperatures are calculated:'
-      DO itemp = 1, nstemp
-        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', gtemp(itemp) * ryd2ev, ' eV'
-      ENDDO
       !
       !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
       !IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3, nomega, neta))
@@ -185,16 +176,18 @@
       DO iw = 1, nomega
         omegap(iw) = omegamin + (iw - 1) * omegastep
       ENDDO
-!      IF (indabs_fca) THEN
-        ! Calculates free carrier fermi level
-!        DO itemp = 1, nstemp
-!          etemp_fca = gtemp(itemp)
-!          CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
-!        ENDDO
-!      ENDIF
       IF (iq_restart == 1) THEN
         CALL dirabs()
       ENDIF
+      WRITE(stdout, '(/5x,a/)') REPEAT('=',67)
+      WRITE(stdout, '(5x,"Phonon-assisted absorption")')
+      WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+      !
+      IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+      WRITE(stdout, '(/5x,a)') 'The following temperatures are calculated:'
+      DO itemp = 1, nstemp
+        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', gtemp(itemp) * ryd2ev, ' eV'
+      ENDDO
     ENDIF
     !
     ! The total number of k points
