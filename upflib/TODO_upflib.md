@@ -31,6 +31,7 @@
     and should be used to dimension arrays where l=0,...,L. The dimension
     of spherical harmonics (2*lmaxkb+1)^2 is something different and should
     be stored in a different variable (something like ylmdim, or maxlm)
+  - an interpolation table for rho_at(G) would likely save a lot of code
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
