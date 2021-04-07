@@ -393,6 +393,7 @@ indabs.o : ../../Modules/cell_base.o
 indabs.o : ../../Modules/io_global.o
 indabs.o : ../../Modules/kind.o
 indabs.o : ../../Modules/mp_global.o
+indabs.o : ../../Modules/mp_world.o
 indabs.o : ../../PHonon/PH/phcom.o
 indabs.o : ../../Modules/noncol.o
 indabs.o : ../../UtilXlib/mp.o

@@ -26,12 +26,12 @@
     !! Main routine for phonon assisted absorption
     !!
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
+    USE io_global,     ONLY : stdout, ionode_id
     USE io_var,        ONLY : iuindabs
     USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nstemp, fsthick, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
-                              vme, omegamin, omegamax, omegastep, indabs_fca, &
+                              vme, omegamin, omegamax, omegastep, carrier, &
                               nomega, neta, restart, restart_step
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
@@ -40,6 +40,7 @@
                               epsilon2_abs_all, epsilon2_abs_lorenz_all
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
     USE mp,            ONLY : mp_barrier, mp_sum
+    USE mp_world,      ONLY : mpime
     USE mp_global,     ONLY : inter_pool_comm
     USE cell_base,     ONLY : omega
     USE io_indabs,     ONLY : indabs_write
@@ -199,7 +200,7 @@
         first_cycle = .false.
       ELSE
         !        
-        IF (indabs_fca) THEN
+        IF (carrier) THEN
           !
           ef0 = ef0_fca(itemp)
         ELSEIF (efermi_read) THEN
@@ -384,26 +385,28 @@
       !
       ! Output to file
       DO itemp = 1,nstemp
-        WRITE(c,"(i0)") neta + 1
-        WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
-        format_string = "("//TRIM(c) // "E22.14)"
-        nameF = 'epsilon2_indabs_' // trim(adjustl(tp)) // 'K.dat'
-        OPEN(UNIT = iuindabs, FILE = nameF)
-        WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
-        WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
-        DO iw = 1, nomega
-          WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
-        ENDDO
-        CLOSE(iuindabs)
-        ! 
-        nameF = 'epsilon2_indabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
-        OPEN(UNIT = iuindabs, FILE = nameF)
-        WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
-        WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
-        DO iw = 1, nomega
-          WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_lorenz_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
-        ENDDO
-        CLOSE(iuindabs)
+        IF (mpime == ionode_id) THEN
+          WRITE(c,"(i0)") neta + 1
+          WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
+          format_string = "("//TRIM(c) // "E22.14)"
+          nameF = 'epsilon2_indabs_' // trim(adjustl(tp)) // 'K.dat'
+          OPEN(UNIT = iuindabs, FILE = nameF)
+          WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
+          WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
+          DO iw = 1, nomega
+            WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
+          ENDDO
+          CLOSE(iuindabs)
+          ! 
+          nameF = 'epsilon2_indabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
+          OPEN(UNIT = iuindabs, FILE = nameF)
+          WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
+          WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
+          DO iw = 1, nomega
+            WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_lorenz_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
+          ENDDO
+          CLOSE(iuindabs)
+        ENDIF
       ENDDO
     ENDIF
     !
@@ -421,12 +424,12 @@
     !! Eq. (27) in Rohlfing, M and Louie, S. G. PRB 62.8 (2000)    
     !
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
+    USE io_global,     ONLY : stdout, ionode_id
     USE io_var,        ONLY : iudirabs
     USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, nstemp, fsthick, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
-                              vme, omegamin, omegamax, omegastep, indabs_fca, &
+                              vme, omegamin, omegamax, omegastep, carrier, &
                               nomega, neta, lindabs
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
@@ -436,6 +439,7 @@
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE cell_base,     ONLY : omega
+    USE mp_world,      ONLY : mpime
     !
     IMPLICIT NONE
     !
@@ -502,7 +506,7 @@
     !
     cfac = 16.d0 * pi**2
     !
-    WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+    WRITE(stdout, '(/5x,a/)') REPEAT('=',67)
     WRITE(stdout, '(5x,"Direct absorption with indepedent particle approximation")')
     WRITE(stdout, '(5x,a/)') REPEAT('=',67)
     !
@@ -525,7 +529,7 @@
     epsilon2_abs_lorenz_dir = 0.d0
     !
     DO itemp = 1, nstemp
-      IF (indabs_fca) THEN
+      IF (carrier) THEN
         !
         ef0 = ef0_fca(itemp)
       ELSEIF (efermi_read) THEN
@@ -623,27 +627,34 @@
     !Output to file
     !
     DO itemp = 1, nstemp
-      WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
-      nameF = 'epsilon2_dirabs_' // trim(adjustl(tp)) // 'K.dat'
-      OPEN(UNIT = iudirabs, FILE = nameF)
-      WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
-      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z,average'
-      DO iw = 1, nomega
-        WRITE(iudirabs, '(5x,f15.6,4E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir(ipol, iw, itemp), ipol = 1, 3), &
-                SUM(epsilon2_abs_dir(:, iw, itemp)) / 3.0d0
-      ENDDO
-      CLOSE(iudirabs)
-      ! 
-      nameF = 'epsilon2_dirabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
-      OPEN(UNIT = iudirabs, FILE = nameF)
-      WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
-      WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z,average'
-            DO iw = 1, nomega
-        WRITE(iudirabs, '(5x,f15.6,4E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_lorenz_dir(ipol, iw, itemp), ipol = 1, 3), &
-                SUM(epsilon2_abs_lorenz_dir(:, iw, itemp)) / 3.0d0
-      ENDDO
-      CLOSE(iudirabs)
+      IF (mpime == ionode_id) THEN
+        WRITE(tp,"(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
+        nameF = 'epsilon2_dirabs_' // trim(adjustl(tp)) // 'K.dat'
+        OPEN(UNIT = iudirabs, FILE = nameF)
+        WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
+        WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z,average'
+        DO iw = 1, nomega
+          WRITE(iudirabs, '(5x,f15.6,4E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_dir(ipol, iw, itemp), ipol = 1, 3), &
+                  SUM(epsilon2_abs_dir(:, iw, itemp)) / 3.0d0
+        ENDDO
+        CLOSE(iudirabs)
+        ! 
+        nameF = 'epsilon2_dirabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
+        OPEN(UNIT = iudirabs, FILE = nameF)
+        WRITE(iudirabs, '(a)') '# Direct absorption versus energy'
+        WRITE(iudirabs, '(a)') '# Photon energy (eV), Imaginary dielectric function along x,y,z,average'
+        DO iw = 1, nomega
+          WRITE(iudirabs, '(5x,f15.6,4E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs_lorenz_dir(ipol, iw, itemp), ipol = 1, 3), &
+                  SUM(epsilon2_abs_lorenz_dir(:, iw, itemp)) / 3.0d0
+        ENDDO
+        CLOSE(iudirabs)
+      ENDIF
     ENDDO
+    ! Deallocate
+    DEALLOCATE(epsilon2_abs_dir, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dirabs', 'Error deallocating epsilon2_abs_dir', 1)
+    DEALLOCATE(epsilon2_abs_lorenz_dir, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dirabs', 'Error deallocating epsilon2_abs_lorenz_dir', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE dirabs
