@@ -809,7 +809,7 @@
                               zero, eps80, eps6
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
-    USE epwcom,    ONLY : int_mob, nbndsub, nc_indabs, nstemp, fermi_energy, &
+    USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
                           system_2d, carrier, efermi_read, assume_metal, ngaussw
     USE klist_epw, ONLY : isk_dummy
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
@@ -999,11 +999,11 @@
     !
     WRITE(stdout, '(5x, "Intrinsic density = ", E18.6, "Cm^-3")' ) intrinsic_density
     WRITE(stdout, '(/5x, "calculating fermi level...")')
-    IF (ABS(nc_indabs) < intrinsic_density) THEN
-      WRITE(stdout, '(5x, a)') 'nc_indabs not given, or smaller than intrinsic density'
+    IF (ABS(ncarrier) < intrinsic_density) THEN
+      WRITE(stdout, '(5x, a)') 'ncarrier not given, or smaller than intrinsic density'
       WRITE(stdout, '(5x, a)') 'Setting the fermi level to mig-gap'
       fermi = (evbm + ecbm) / 2.d0
-    ELSEIF ( nc_indabs > intrinsic_density ) THEN
+    ELSEIF ( ncarrier > intrinsic_density ) THEN
       ! assuming free electron density
       eup = 10000d0 + ecbm
       elw = evbm - 10000d0
@@ -1029,7 +1029,7 @@
 !          rel_err = -1.0d0
 !        ELSE
           ! In this case ncarrier is a negative number
-         rel_err = (electron_density - nc_indabs) / electron_density
+         rel_err = (electron_density - ncarrier) / electron_density
 !        ENDIF
         !
         IF (ABS(rel_err) < eps6) THEN
@@ -1046,7 +1046,7 @@
         ef_tmp = (eup + elw) / 2.0d0
       ENDDO ! maxiter
       fermi = ef_tmp
-    ELSEIF ( nc_indabs < - intrinsic_density) THEN
+    ELSEIF ( ncarrier < - intrinsic_density) THEN
       ! assuming free hole density
       eup = 10000d0 + ecbm
       elw = evbm - 10000d0
@@ -1068,7 +1068,7 @@
 !          rel_err = -1000.0d0
 !        ELSE
           ! In this case ncarrier is a negative number
-        rel_err = (hole_density - ABS(nc_indabs)) / hole_density
+        rel_err = (hole_density - ABS(ncarrier)) / hole_density
 !        ENDIF
         !
         IF (ABS(rel_err) < eps6) THEN
@@ -1091,11 +1091,11 @@
                     5x, "ef_tmp = ", f10.6)' ) fermi * ryd2ev
     ENDIF
     WRITE(stdout, '(/5x, "Temperature ", f8.3, " K")' ) etemp_fca * ryd2ev / kelvin2eV
-    IF (nc_indabs > intrinsic_density) THEN
+    IF (ncarrier > intrinsic_density) THEN
       ef0_fca(itemp) = fermi
       WRITE(stdout, '(5x, "Electron density = ", E18.6, "Cm^-3")' ) electron_density
       WRITE(stdout, '(5x, "Calculated Fermi level = ", f10.5, " eV")' )  ef0_fca(itemp) * ryd2ev
-    ELSEIF (nc_indabs < - intrinsic_density) THEN
+    ELSEIF (ncarrier < - intrinsic_density) THEN
       ef0_fca(itemp) = fermi
       WRITE(stdout, '(5x, "Hole density = ", E18.6, "Cm^-3")' ) hole_density
       WRITE(stdout, '(5x, "Calculated Fermi level = ", f10.5, " eV")' )  ef0_fca(itemp) * ryd2ev

@@ -38,7 +38,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen, epbread,  &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal,   &
-                            cumulant, eliashberg, fermi_plot, indabs_fca,       &
+                            cumulant, eliashberg, fermi_plot,                   &
                             nomega, omegamin, omegamax, omegastep, neta
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
@@ -1363,7 +1363,7 @@
         !
         ! Indirect absorption
         IF (lindabs .AND. .NOT. scattering) THEN
-          IF (indabs_fca .and. (iq == iq_restart)) THEN
+          IF (carrier .and. (iq == iq_restart)) THEN
             ALLOCATE(ef0_fca(nstemp), STAT = ierr)
             IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
             DO itemp = 1, nstemp
@@ -1692,8 +1692,8 @@
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dos', 1)
   ENDIF
   !
-  IF (lindabs .AND. indabs_fca .AND. (.NOT. scattering)) THEN
-    IF (indabs_fca) THEN
+  IF (lindabs .AND. (.NOT. scattering)) THEN
+    IF (carrier) THEN
       DEALLOCATE(ef0_fca, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ef0_fca', 1)
     ENDIF

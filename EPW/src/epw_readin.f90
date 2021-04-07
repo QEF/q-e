@@ -59,7 +59,7 @@
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot,                           &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,        &
-                            epw_crysym, indabs_fca, nc_indabs
+                            epw_crysym
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -150,10 +150,10 @@
        lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         &
-       delta_approx, scattering, int_mob, scissor, ncarrier, carrier,nc_indabs,&
+       delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
        scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
-       epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,indabs_fca,&
+       epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           &
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
@@ -347,7 +347,6 @@
   ! omegastep       : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
   ! n_r             : Constant refractive index
   ! lindabs         : If .TRUE., do phonon-assisted absorption
-  ! indabs_fca      : If .TRUE., do phonon-assisted absorption considering free carrier absorption
   !
   ! Added by Felix Goudreault
   ! assume_metal     : If .TRUE. => we are dealing with a metal
@@ -540,7 +539,6 @@
   scissor    = 0.d0 ! eV
   carrier    = .FALSE.
   ncarrier   = 0.d0 ! cm^-3
-  nc_indabs  = 0.d0 ! cm^-3
   longrange  = .FALSE.
   shortrange = .FALSE.
   prtgkk     = .FALSE.
