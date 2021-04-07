@@ -9,6 +9,8 @@
 !                           from c_phase_field.f90
 ! May 2012, A. Dal Corso: Noncollinear/spin-orbit case allowed (experimental).
 ! January 2019 Ronald E Cohen, fixed mods and averages on same branch
+! April   2021 Paolo Giannozzi replaced calc_btq and qvan3 with "standard"
+!              QE way to compute Q(|G|) via interpolation table qrad + qvan2
 !
 !##############################################################################!
 !#                                                                            #!
@@ -31,10 +33,10 @@
 !#   LIST OF FILES                                                            #!
 !#   ~~~~~~~~~~~~~                                                            #!
 !#   The complete list of files added to the PWSCF distribution is:           #!
-!#   * ../PW/bp_calc_btq.f90                                                  #!
 !#   * ../PW/bp_c_phase.f90                                                   #!
-!#   * ../PW/bp_qvan3.f90                                                     #!
 !#   * ../PW/bp_strings.f90                                                   #!
+!#   * ../PW/bp_calc_btq.f90 REMOVED - replaced by interpolation array qrad   #!
+!#   * ../PW/bp_qvan3.f90    REMOVED - replaced by interpolation in qvan2     #!
 !#                                                                            #!
 !#   The PWSCF files that needed (minor) modifications were:                  #!
 !#   * ../PW/electrons.f90                                                    #!
@@ -241,6 +243,7 @@ SUBROUTINE c_phase
    LOGICAL, ALLOCATABLE :: l_cal(:) ! flag for occupied/empty states
    REAL(DP) :: t1,t !!REC
    REAL(DP) :: dk(3)
+   REAL(DP) :: dk2
    REAL(DP) :: dkmod
    REAL(DP) :: el_loc
    REAL(DP) :: eps
@@ -251,7 +254,6 @@ SUBROUTINE c_phase
    REAL(DP), ALLOCATABLE :: pdl_elec(:)
    REAL(DP), ALLOCATABLE :: phik(:)
    REAL(DP) :: phik_ave
-   REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(DP) :: weight
    REAL(DP) :: upol(3)
    REAL(DP) :: pdl_elec_dw
@@ -416,18 +418,19 @@ SUBROUTINE c_phase
 !                     electronic polarization: form factor                     !
 !  -------------------------------------------------------------------------   !
    if(okvan) then
-!  --- Calculate Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] ---
-      CALL calc_btq(dkmod,qrad_dk,0)
+!  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] is in array qrad---
+      ! CALL calc_btq(dkmod,qrad_dk,0) is no longer needed
 !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      dkmod=dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2(lmaxq*lmaxq, 1, dk, dkmod, ylm_dk)
+      dk2=dk(1)**2+dk(2)**2+dk(3)**2
+      CALL ylmr2(lmaxq*lmaxq, 1, dk, dk2, ylm_dk)
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
       q_dk = (0.d0, 0.d0)
       DO np =1, ntyp
          if( upf(np)%tvanp ) then
             DO iv = 1, nh(np)
                DO jv = iv, nh(np)
-                  call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)
+                  ! call to qvan3 no longer needed
+                  CALL qvan2(1,iv,jv,np,dkmod,pref,ylm_dk)
                   q_dk(iv,jv,np) = omega*pref
                   q_dk(jv,iv,np) = omega*pref
                ENDDO

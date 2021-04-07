@@ -115,7 +115,6 @@ set(src_modules
     set_hubbard_l.f90 
     set_hubbard_n.f90 
     sort.f90 
-    sph_dbes.f90 
     trimcheck.f90 
     test_input_file.f90 
     date_and_tim.f90 

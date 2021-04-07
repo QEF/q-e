@@ -22,8 +22,6 @@ set(src_pw
    src/beef.f90 
    src/bp_mod.f90 
    src/bp_c_phase.f90 
-   src/bp_calc_btq.f90 
-   src/bp_qvan3.f90 
    src/bp_strings.f90 
    src/buffers.f90 
    src/c_bands.f90 

@@ -373,8 +373,6 @@ set_vdw_corr.o : io_global.o
 setqf.o : kind.o
 sort.o : kind.o
 space_group.o : kind.o
-sph_dbes.o : constants.o
-sph_dbes.o : kind.o
 timestep.o : kind.o
 tsvdw.o : ../UtilXlib/mp.o
 tsvdw.o : ../UtilXlib/parallel_include.o

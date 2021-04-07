@@ -163,7 +163,6 @@
       double precision function sumk (et,nbnd,nks,wk,degauss,ngauss,ee)
 
 !$    use omp_lib
-      use kinds
 
       implicit none
 
