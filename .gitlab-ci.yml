@@ -36,15 +36,19 @@ build:cp:
 
 build:cmake-gnu:
   tags: [docker]
-  image: ubuntu:latest
+  image: ubuntu:20.04
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
   script:
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
-    - apt-get install --yes gfortran git cmake libopenblas0 libopenblas-dev libfftw3-3 libfftw3-dev libopenmpi3 libopenmpi-dev
+    - apt-get -qq update
+    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+    - apt-get install -qq build-essential git cmake libopenblas-dev libfftw3-dev libopenmpi-dev
     - cmake --version
     - mkdir build
     - cd build
-    - cmake -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=gcc .. && make
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_C_COMPILER=gcc .. && make
 
 build:pgi:
   tags: [docker]
@@ -52,6 +56,22 @@ build:pgi:
   script:
     - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no
     - make pw cp ph
+
+build:cmake-nvhpc:
+  tags: [docker]
+  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+  script:
+    - apt-get -qq update
+    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+    - apt-get install -qq git cmake libfftw3-dev
+    - cmake --version
+    - mkdir build
+    - cd build
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=nvfortran -DCMAKE_C_COMPILER=nvc -DQE_ENABLE_CUDA=ON .. && make pw cp ph
 
 #build:centos:
 #  image: centos:latest

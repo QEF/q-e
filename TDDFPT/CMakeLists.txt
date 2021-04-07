@@ -126,9 +126,9 @@ set_target_properties(qe_tddfpt_calculatespectrum_exe
         OUTPUT_NAME tddfpt_calculate_spectrum.x)
 target_link_libraries(qe_tddfpt_calculatespectrum_exe
     PRIVATE
-        qe_lapack
         qe_modules
-        qe_xclib)
+        qe_xclib
+        qe_lapack)
 
 ###########################################################
 

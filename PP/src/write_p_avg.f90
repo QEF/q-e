@@ -84,7 +84,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
              ik,  (xk (ipol, ik) , ipol = 1, 3)
      !
      ALLOCATE(ppsi(npwx*npol,nbnd_occ))
-     IF (okvan) ALLOCATE(ppsi_us(npwx*npol,nbnd_occ))
+     ALLOCATE(ppsi_us(npwx*npol,nbnd_occ))
      !
      npw = ngk(ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
@@ -117,7 +117,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
         ENDDO
      ENDDO
      DEALLOCATE(ppsi)
-     IF (okvan) DEALLOCATE(ppsi_us)
+     DEALLOCATE(ppsi_us)
      CALL mp_sum(matp, intra_bgrp_comm)
 
      IF (ionode) THEN
