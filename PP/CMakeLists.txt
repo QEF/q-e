@@ -434,8 +434,7 @@ qe_add_executable(qe_pp_st_ef_exe ${src_ef_x})
 set_target_properties(qe_pp_st_ef_exe PROPERTIES OUTPUT_NAME ef.x)
 target_link_libraries(qe_pp_st_ef_exe
     PRIVATE
-        qe_openmp_fortran
-        qe_modules)
+        qe_openmp_fortran)
 
 ###########################################################
 # dos_sp.x
@@ -450,8 +449,7 @@ qe_add_executable(qe_pp_st_dos_exe ${src_dos_sp_x})
 set_target_properties(qe_pp_st_dos_exe PROPERTIES OUTPUT_NAME dos_sp.x)
 target_link_libraries(qe_pp_st_dos_exe
     PRIVATE
-        qe_openmp_fortran
-        qe_modules)
+        qe_openmp_fortran)
 
 ###########################################################
 # fermi_int_0.x
