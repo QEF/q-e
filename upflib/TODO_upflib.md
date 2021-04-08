@@ -13,6 +13,7 @@
 * Module variables that have been (partially) duplicated:
    - kinds      => upf_kinds  (only dp)
    - constants  => upf_const
+   - nsp in ions_base points to nsp in uspp_param
 
 * TO BE DONE: 
   - set the correct value of nsp in uspp_param when allocate_uspp is called,
@@ -31,7 +32,12 @@
     and should be used to dimension arrays where l=0,...,L. The dimension
     of spherical harmonics (2*lmaxkb+1)^2 is something different and should
     be stored in a different variable (something like ylmdim, or maxlm)
-  - an interpolation table for rho_at(G) would likely save a lot of code
+  - Names of interpolation tables are random. Better names:
+      tab     => tab_beta      beta(G) functions, radial part
+      tab_d2y => tab_beta_d2y  spline info for beta(G)
+      qrad    => tab_q         Q(G) functions, radial part, for USPP/PAW
+      tab_at  => tab_atwfc     atomic phi(G), radial part
+                 tab_atrho     atomic rho(G) (may be useful to introduce it)
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as
