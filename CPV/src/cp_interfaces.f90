@@ -32,7 +32,6 @@
    PUBLIC :: build_cctab
    PUBLIC :: build_pstab
    PUBLIC :: check_tables
-   PUBLIC :: fill_qrl
    PUBLIC :: exact_qradb
    PUBLIC :: compute_xgtab
 
@@ -216,15 +215,6 @@
          IMPLICIT NONE
          REAL(DP), INTENT(OUT) :: gmax
       END FUNCTION check_tables_x
-   END INTERFACE
-
-   INTERFACE fill_qrl
-      SUBROUTINE fill_qrl_x( is, qrl )
-         USE kinds,      ONLY: DP         
-         IMPLICIT NONE
-         INTEGER,  INTENT(IN)  :: is
-         REAL(DP), INTENT(OUT) :: qrl( :, :, : )
-      END SUBROUTINE
    END INTERFACE
 
    INTERFACE exact_qradb
