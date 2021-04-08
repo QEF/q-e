@@ -2281,7 +2281,6 @@ SUBROUTINE compute_mmn
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
-   CHARACTER(LEN=256) :: filename
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq, s, counter, ik_g_w90
@@ -2291,8 +2290,6 @@ SUBROUTINE compute_mmn
    real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
-   CHARACTER (len=9)        :: cdate,ctime
-   CHARACTER (len=60)       :: header
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
@@ -2301,7 +2298,6 @@ SUBROUTINE compute_mmn
    TYPE(bec_type) :: becp2
    !
    INTEGER, EXTERNAL :: global_kpoint_index
-   CHARACTER(LEN=6), EXTERNAL :: int_to_char
    !
    CALL start_clock( 'compute_mmn' )
 
@@ -2321,18 +2317,8 @@ SUBROUTINE compute_mmn
    IF (wan_mode=='library') ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
 
    IF (wan_mode=='standalone') THEN
-      IF (me_pool == root_pool) THEN
-         filename = TRIM(seedname) // ".mmn"
-         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
-         OPEN (NEWUNIT=iun_mmn, file=TRIM(filename), form='formatted')
-         !
-         CALL date_and_tim( cdate, ctime )
-         header='Created on '//cdate//' at '//ctime
-         IF (ionode) THEN
-            WRITE (iun_mmn,*) header
-            WRITE (iun_mmn,*) nbnd-nexband, iknum, nnb
-         ENDIF
-      ENDIF
+      CALL utility_open_output_file("mmn", .TRUE., iun_mmn)
+      IF (ionode) WRITE(iun_mmn, *) num_bands, iknum, nnb
    ENDIF
 
    !
@@ -2726,14 +2712,11 @@ SUBROUTINE compute_spin
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
-   CHARACTER(LEN=256) :: filename
    INTEGER :: npw, ik, ikp, ipol, ib, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, nbt
    INTEGER :: ikevc, s, counter
    COMPLEX(DP)              :: zdotc, phase1
    real(DP)                 :: arg, g_(3)
-   CHARACTER (len=9)        :: cdate,ctime
-   CHARACTER (len=60)       :: header
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
@@ -2746,7 +2729,6 @@ SUBROUTINE compute_spin
    COMPLEX(DP), ALLOCATABLE :: be_n(:,:), be_m(:,:)
    !
    INTEGER, EXTERNAL :: global_kpoint_index
-   CHARACTER(LEN=6), EXTERNAL :: int_to_char
    !
    IF (.NOT. noncolin) THEN
       WRITE(stdout, *)
@@ -2775,24 +2757,12 @@ SUBROUTINE compute_spin
         'write_spn not meant to work library mode', 1)
    !endivo
    !
-   IF (me_pool == root_pool) THEN
-      filename = TRIM(seedname) // ".spn"
-      IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
-      IF (spn_formatted) THEN
-         OPEN (NEWUNIT=iun_spn, file=TRIM(filename), form='formatted')
-      ELSE
-         OPEN (NEWUNIT=iun_spn, file=TRIM(filename), form='unformatted')
-      ENDIF
-   ENDIF
+   CALL utility_open_output_file("spn", spn_formatted, iun_spn)
    !
    IF (ionode) THEN
-      CALL date_and_tim( cdate, ctime )
-      header = 'Created on '//cdate//' at '//ctime
       IF (spn_formatted) THEN
-         WRITE (iun_spn, *) header !ivo
          WRITE (iun_spn, *) num_bands, iknum
       ELSE
-         WRITE (iun_spn) header !ivo
          WRITE (iun_spn) num_bands, iknum
       ENDIF
    ENDIF
@@ -2969,9 +2939,6 @@ SUBROUTINE compute_orb
    !
    IMPLICIT NONE
    !
-   CHARACTER (len=9)        :: cdate, ctime
-   CHARACTER (len=60)       :: header
-   CHARACTER(LEN=256)       :: filename
    LOGICAL                  :: any_uspp
    INTEGER                  :: ik, npw, m, n
    INTEGER                  :: ibnd_n, ibnd_m
@@ -2991,7 +2958,6 @@ SUBROUTINE compute_orb
    !! Computed uIu matrix
    !
    INTEGER, EXTERNAL :: global_kpoint_index
-   CHARACTER(LEN=6), EXTERNAL :: int_to_char
    !
    IF (.NOT. (write_uHu .OR. write_uIu)) THEN
       WRITE(stdout, *)
@@ -3040,56 +3006,24 @@ SUBROUTINE compute_orb
    !====================================================================
    !
    IF (write_uHu) THEN
-      WRITE(stdout, *)
-      WRITE(stdout, *) ' -----------------'
       WRITE(stdout, *) ' *** Compute  uHu '
-      WRITE(stdout, *) ' -----------------'
-      WRITE(stdout, *)
-      IF (me_pool == root_pool) THEN
-         filename = TRIM(seedname) // ".uHu"
-         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
-         IF (uHu_formatted) THEN
-            OPEN (NEWUNIT=iun_uHu, file=TRIM(filename), form='formatted')
-         ELSE
-            OPEN (NEWUNIT=iun_uHu, file=TRIM(filename), form='unformatted')
-         ENDIF
-      ENDIF
+      CALL utility_open_output_file("uHu", uHu_formatted, iun_uHu)
       IF (ionode) THEN
-         CALL date_and_tim( cdate, ctime )
-         header = 'Created on '//cdate//' at '//ctime
          IF (uHu_formatted) THEN
-            WRITE(iun_uHu, *) header
             WRITE(iun_uHu, *) num_bands, iknum, nnb
          ELSE
-            WRITE(iun_uHu) header
             WRITE(iun_uHu) num_bands, iknum, nnb
          ENDIF
       ENDIF
    ENDIF ! write_uHu
    !
    IF (write_uIu) THEN
-      WRITE(stdout, *)
-      WRITE(stdout, *) ' -----------------'
       WRITE(stdout, *) ' *** Compute  uIu '
-      WRITE(stdout, *) ' -----------------'
-      WRITE(stdout, *)
-      IF (me_pool == root_pool) THEN
-         filename = TRIM(seedname) // ".uIu"
-         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
-         IF (uIu_formatted) THEN
-            OPEN (NEWUNIT=iun_uIu, file=TRIM(filename), form='formatted')
-         ELSE
-            OPEN (NEWUNIT=iun_uIu, file=TRIM(filename), form='unformatted')
-         ENDIF
-      ENDIF
+      CALL utility_open_output_file("uIu", uIu_formatted, iun_uIu)
       IF (ionode) THEN
-         CALL date_and_tim( cdate, ctime )
-         header = 'Created on '//cdate//' at '//ctime
          IF (uIu_formatted) THEN
-            WRITE(iun_uIu, *) header
             WRITE(iun_uIu, *) num_bands, iknum, nnb
          ELSE
-            WRITE(iun_uIu) header
             WRITE(iun_uIu) num_bands, iknum, nnb
          ENDIF
       ENDIF
@@ -3506,6 +3440,55 @@ END SUBROUTINE utility_write_array
 !--------------------------------------------------------------------------
 
 !--------------------------------------------------------------------------
+SUBROUTINE utility_open_output_file(postfix, formatted, iun)
+   !-----------------------------------------------------------------------
+   !! In ionode, open file seedname.postfix for output and write header line.
+   !! For pool parallelization, the root of each pool opens file
+   !! seedname.postfixID, where ID is the 1-based id of the pool.
+   !-----------------------------------------------------------------------
+   USE kinds,           ONLY : DP
+   USE io_global,       ONLY : ionode
+   USE mp_pools,        ONLY : my_pool_id, me_pool, root_pool
+   USE wannier,         ONLY : seedname
+   !
+   IMPLICIT NONE
+   !
+   CHARACTER(LEN=*), INTENT(IN) :: postfix
+   !! postfix for filename
+   LOGICAL, INTENT(IN) :: formatted
+   !! True if formatted file, false if unformatted file.
+   INTEGER, INTENT(OUT) :: iun
+   !! Unit of the file
+   !
+   CHARACTER(LEN=9) :: cdate, ctime
+   CHARACTER(LEN=60) :: header
+   CHARACTER(LEN=256) :: filename
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+   !
+   IF (me_pool == root_pool) THEN
+      filename = TRIM(seedname) // "." // TRIM(postfix)
+      IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
+      IF (formatted) THEN
+         OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='formatted')
+      ELSE
+         OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='unformatted')
+      ENDIF
+   ENDIF
+   !
+   IF (ionode) THEN
+      CALL date_and_tim(cdate, ctime)
+      header = 'Created on ' // cdate // ' at ' // ctime
+      IF (formatted) THEN
+         WRITE(iun, *) header
+      ELSE
+         WRITE(iun) header
+      ENDIF
+   ENDIF
+!--------------------------------------------------------------------------
+END SUBROUTINE utility_open_output_file
+!--------------------------------------------------------------------------
+
+!--------------------------------------------------------------------------
 SUBROUTINE compute_amn
    !-----------------------------------------------------------------------
    !!
@@ -3548,20 +3531,15 @@ SUBROUTINE compute_amn
    !
    IMPLICIT NONE
    !
-   CHARACTER(LEN=256) :: filename
-   !
    COMPLEX(DP) :: zdotc,amn_tmp,fac(2)
    real(DP):: ddot
    COMPLEX(DP), ALLOCATABLE :: amn(:, :)
    COMPLEX(DP), ALLOCATABLE :: sgf(:,:)
    INTEGER :: ik, npw, ibnd, ibnd1, iw, i, nt, ipol, ik_g_w90
-   CHARACTER (len=9)  :: cdate,ctime
-   CHARACTER (len=60) :: header
    LOGICAL            :: any_uspp, opnd, exst,spin_z_pos, spin_z_neg
    INTEGER            :: istart
    !
    INTEGER, EXTERNAL :: global_kpoint_index
-   CHARACTER(LEN=6), EXTERNAL :: int_to_char
    !
    CALL start_clock( 'compute_amn' )
    !
@@ -3575,18 +3553,8 @@ SUBROUTINE compute_amn
    IF (wan_mode=='library') ALLOCATE(a_mat(num_bands, n_wannier, iknum))
    !
    IF (wan_mode=='standalone') THEN
-      IF (me_pool == root_pool) THEN
-         filename = TRIM(seedname) // ".amn"
-         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
-         OPEN(NEWUNIT=iun_amn, FILE=TRIM(filename), FORM='formatted')
-      ENDIF
-      !
-      CALL date_and_tim( cdate, ctime )
-      header = 'Created on '//cdate//' at '//ctime
-      IF (ionode) THEN
-         WRITE (iun_amn,*) header
-         WRITE (iun_amn,*) nbnd-nexband, iknum, n_proj
-      ENDIF
+      CALL utility_open_output_file("amn", .TRUE., iun_amn)
+      IF (ionode) WRITE(iun_amn, *) num_bands, iknum, n_proj
    ENDIF
    !
    WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
