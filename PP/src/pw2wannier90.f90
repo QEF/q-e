@@ -501,8 +501,8 @@ PROGRAM pw2wannier90
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
   !
-  IF (npool > 1 .and. (write_unk .OR. write_dmn)) CALL errore('pw2wannier90', &
-     'pools not implemented for this feature', npool)
+  IF (npool > 1 .and. (write_unk .OR. write_dmn .OR. (write_amn .AND. scdm_proj))) &
+    CALL errore('pw2wannier90', 'pools not implemented for this feature', npool)
   !
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
