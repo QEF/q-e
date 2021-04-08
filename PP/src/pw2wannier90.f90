@@ -3171,24 +3171,24 @@ SUBROUTINE compute_shc
    !-----------------------------------------------------------------------
    !
    USE kinds,           ONLY : DP
-   USE mp,              ONLY : mp_sum
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp,              ONLY : mp_sum, mp_barrier
+   USE mp_world,        ONLY : world_comm
+   USE mp_pools,        ONLY : intra_pool_comm, my_pool_id, me_pool, root_pool
    USE io_global,       ONLY : stdout, ionode
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE constants,       ONLY : rytoev
-   USE fft_base,        ONLY : dffts, dfftp
-   USE fft_interfaces,  ONLY : fwfft, invfft
+   USE fft_base,        ONLY : dfftp
    USE control_flags,   ONLY : gamma_only
    USE wvfct,           ONLY : nbnd, npwx, current_k
-   USE wavefunctions,   ONLY : evc, psic_nc
-   USE klist,           ONLY : xk, ngk, igk_k
+   USE wavefunctions,   ONLY : evc
+   USE klist,           ONLY : xk, ngk, igk_k, nks
    USE uspp,            ONLY : nkb, vkb, okvan
    USE uspp_param,      ONLY : upf
-   USE becmod,          ONLY : bec_type, becp, calbec, &
-                               allocate_bec_type, deallocate_bec_type
+   USE becmod,          ONLY : bec_type, becp, allocate_bec_type, &
+                               deallocate_bec_type
    USE gvecs,           ONLY : doublegrid
    USE noncollin_module,ONLY : noncolin, npol
-   USE lsda_mod,        ONLY : nspin
+   USE lsda_mod,        ONLY : nspin, lsda, isk
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE wannier
    !
@@ -3196,11 +3196,8 @@ SUBROUTINE compute_shc
    !
    COMPLEX(DP), parameter :: cmplx_i = (0.0_DP, 1.0_DP)
    !
-   CHARACTER (len=9) :: cdate,ctime
-   CHARACTER (len=60) :: header
    LOGICAL :: any_uspp
    INTEGER :: ik, ipol, npw, m, n
-   INTEGER :: ikevc
    INTEGER :: istart, iend
    INTEGER :: ispol, npw_b2, i_b2, ikp_b2
    INTEGER :: ibnd_n, ibnd_m
@@ -3246,32 +3243,23 @@ SUBROUTINE compute_shc
    !
    IF (write_sHu) THEN
       write(stdout,*) ' *** Computing  sHu '
+      CALL utility_open_output_file("sHu", sHu_formatted, iun_sHu)
       IF (ionode) THEN
-         CALL date_and_tim( cdate, ctime )
-         header = 'Created on '//cdate//' at '//ctime
          IF (sHu_formatted) THEN
-            OPEN (newunit=iun_sHu, file=TRIM(seedname)//".sHu", form='FORMATTED')
-            WRITE(iun_sHu, *) header
             WRITE(iun_sHu, *) num_bands, iknum, nnb
          ELSE
-            OPEN (newunit=iun_sHu, file=TRIM(seedname)//".sHu", form='UNFORMATTED')
-            WRITE(iun_sHu) header
             WRITE(iun_sHu) num_bands, iknum, nnb
          ENDIF
       ENDIF
    ENDIF
+   !
    IF (write_sIu) THEN
       WRITE(stdout,*) ' *** Computing  sIu '
+      CALL utility_open_output_file("sIu", sIu_formatted, iun_sIu)
       IF (ionode) THEN
-         CALL date_and_tim( cdate, ctime )
-         header = 'Created on '//cdate//' at '//ctime
          IF (sIu_formatted) THEN
-            OPEN (newunit=iun_sIu, file=TRIM(seedname)//".sIu", form='FORMATTED')
-            WRITE(iun_sIu, *) header
             WRITE(iun_sIu, *) num_bands, iknum, nnb
          ELSE
-            OPEN (newunit=iun_sIu, file=TRIM(seedname)//".sIu", form='UNFORMATTED')
-            WRITE(iun_sIu) header
             WRITE(iun_sIu) num_bands, iknum, nnb
          ENDIF
       ENDIF
@@ -3283,7 +3271,9 @@ SUBROUTINE compute_shc
    WRITE(stdout, *)
    WRITE(stdout, '(a,i8)') ' iknum = ', iknum
    !
-   DO ik = 1, iknum ! loop over k points
+   DO ik = 1, nks ! loop over k points
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       WRITE(stdout, '(i8)', advance='no') ik
       IF (MOD(ik, 10) == 0) WRITE (stdout, *)
@@ -3291,15 +3281,11 @@ SUBROUTINE compute_shc
       !
       npw = ngk(ik)
       !
-      ikevc = ik + ikstart - 1
-      CALL davcio(evc, 2*nwordwfc, iunwfc, ikevc, -1)
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1)
       !
       ! sort the wfc at k and set up stuff for h_psi
       current_k = ik
       CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
-      !
-      ! calculate the kinetic energy at ik, used in h_psi
-      !
       CALL g2_kin(ik)
       !
       DO i_b2 = 1, nnb ! nnb = # of nearest neighbors
@@ -3361,7 +3347,7 @@ SUBROUTINE compute_shc
          IF (write_sHu) CALL mp_sum(sHu, intra_pool_comm)
          IF (write_sIu) CALL mp_sum(sIu, intra_pool_comm)
          !
-         IF (ionode) THEN  ! write the files out to disk
+         IF (me_pool == root_pool) THEN  ! write the files out to disk
             DO ispol = 1, 3
                IF (write_sHu) THEN
                   CALL utility_write_array(iun_sHu, sHu_formatted, num_bands, num_bands, sHu(:, :, ispol))
@@ -3375,15 +3361,25 @@ SUBROUTINE compute_shc
       ENDDO ! i_b2
    ENDDO ! ik
    !
+   IF (me_pool == root_pool) THEN
+      IF (write_sHu) CLOSE(iun_sHu, STATUS="KEEP")
+      IF (write_sIu) CLOSE(iun_sIu, STATUS="KEEP")
+   ENDIF
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   !
+   IF (write_sHu) CALL utility_merge_files("sHu", sHu_formatted, num_bands**2)
+   IF (write_sIu) CALL utility_merge_files("sIu", sIu_formatted, num_bands**2)
+   !
    DEALLOCATE(evc_aux)
    IF (write_sHu) THEN
       DEALLOCATE(H_evc)
       DEALLOCATE(sHu)
    ENDIF
    IF (write_sIu) DEALLOCATE(sIu)
-   !
-   IF (ionode .AND. write_sHu) CLOSE(iun_sHu)
-   IF (ionode .AND. write_sIu) CLOSE(iun_sIu)
    !
    WRITE(stdout,*)
    WRITE(stdout,*) ' shc calculated'
