@@ -33,7 +33,7 @@ module wannier
    logical, allocatable :: excluded_band(:)
    ! begin change Lopez, Thonhauser, Souza
    integer  :: iun_nnkp,iun_mmn,iun_amn,iun_band,iun_spn,iun_plot,iun_parity,&
-        nnbx,nexband,iun_uhu,&
+        nnbx,nexband,iun_uHu,&
         iun_uIu,& !ivo
    ! end change Lopez, Thonhauser, Souza
         iun_sHu, iun_sIu ! shc
@@ -501,10 +501,8 @@ PROGRAM pw2wannier90
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
   !
-  IF (npool > 1 .and. (write_unk &
-      .or. write_uhu .or. write_uIu .or. write_sHu .or. write_sIu &
-      .or. write_dmn)) CALL errore('pw2wannier90', &
-   'pools not implemented for this feature', npool)
+  IF (npool > 1 .and. (write_unk .OR. write_dmn)) CALL errore('pw2wannier90', &
+     'pools not implemented for this feature', npool)
   !
   ! Check: bands distribution not implemented
   IF (nbgrp > 1) CALL errore('pw2wannier90', 'bands (-nb) not implemented', nbgrp)
@@ -2628,7 +2626,7 @@ SUBROUTINE utility_merge_files(postfix, formatted, ndata)
    !
    IMPLICIT NONE
    !
-   CHARACTER(LEN=*) :: postfix
+   CHARACTER(LEN=*), INTENT(IN) :: postfix
    !! postfix for filename
    LOGICAL, INTENT(IN) :: formatted
    !! True if formatted file, false if unformatted file.
@@ -2949,25 +2947,21 @@ SUBROUTINE compute_orb
    !
    USE kinds,           ONLY : DP
    USE io_global,       ONLY : stdout, ionode
+   USE mp,              ONLY : mp_sum, mp_barrier
+   USE mp_world,        ONLY : world_comm
+   USE mp_pools,        ONLY : intra_pool_comm, my_pool_id, me_pool, root_pool
    USE wvfct,           ONLY : nbnd, npwx, current_k
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions,   ONLY : evc, psic, psic_nc
-   USE fft_base,        ONLY : dffts, dfftp
-   USE fft_interfaces,  ONLY : fwfft, invfft
-   USE klist,           ONLY : nkstot, xk, ngk, igk_k
-   USE gvect,           ONLY : g, ngm, gstart
-   USE cell_base,       ONLY : tpiba2, alat, at, bg
-   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
-   USE constants,       ONLY : tpi
+   USE fft_base,        ONLY : dfftp
+   USE klist,           ONLY : xk, ngk, igk_k, nks
+   USE gvect,           ONLY : g, gstart
+   USE ions_base,       ONLY : ntyp => nsp
    USE uspp,            ONLY : nkb, vkb
-   USE uspp_param,      ONLY : upf, nh, lmaxq
+   USE uspp_param,      ONLY : upf
    USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type
-   USE mp_pools,        ONLY : intra_pool_comm
-   USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE wannier
    ! begin change Lopez, Thonhauser, Souza
-   USE mp,              ONLY : mp_barrier
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE gvecs,           ONLY : doublegrid
    USE lsda_mod,        ONLY : lsda, nspin, isk, current_spin
@@ -2977,6 +2971,7 @@ SUBROUTINE compute_orb
    !
    CHARACTER (len=9)        :: cdate, ctime
    CHARACTER (len=60)       :: header
+   CHARACTER(LEN=256)       :: filename
    LOGICAL                  :: any_uspp
    INTEGER                  :: ik, npw, m, n
    INTEGER                  :: ibnd_n, ibnd_m
@@ -2994,6 +2989,9 @@ SUBROUTINE compute_orb
    !! Computed uHu matrix
    COMPLEX(DP), ALLOCATABLE :: uIu(:, :)
    !! Computed uIu matrix
+   !
+   INTEGER, EXTERNAL :: global_kpoint_index
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
    !
    IF (.NOT. (write_uHu .OR. write_uIu)) THEN
       WRITE(stdout, *)
@@ -3047,17 +3045,24 @@ SUBROUTINE compute_orb
       WRITE(stdout, *) ' *** Compute  uHu '
       WRITE(stdout, *) ' -----------------'
       WRITE(stdout, *)
+      IF (me_pool == root_pool) THEN
+         filename = TRIM(seedname) // ".uHu"
+         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
+         IF (uHu_formatted) THEN
+            OPEN (NEWUNIT=iun_uHu, file=TRIM(filename), form='formatted')
+         ELSE
+            OPEN (NEWUNIT=iun_uHu, file=TRIM(filename), form='unformatted')
+         ENDIF
+      ENDIF
       IF (ionode) THEN
          CALL date_and_tim( cdate, ctime )
-         header='Created on '//cdate//' at '//ctime
+         header = 'Created on '//cdate//' at '//ctime
          IF (uHu_formatted) THEN
-            OPEN(NEWUNIT=iun_uhu, FILE=TRIM(seedname)//".uHu", FORM='FORMATTED')
-            WRITE(iun_uhu, *) header
-            WRITE(iun_uhu, *) nbnd-nexband, iknum, nnb
+            WRITE(iun_uHu, *) header
+            WRITE(iun_uHu, *) num_bands, iknum, nnb
          ELSE
-            OPEN(NEWUNIT=iun_uhu, FILE=TRIM(seedname)//".uHu", FORM='UNFORMATTED')
-            WRITE(iun_uhu) header
-            WRITE(iun_uhu) nbnd-nexband, iknum, nnb
+            WRITE(iun_uHu) header
+            WRITE(iun_uHu) num_bands, iknum, nnb
          ENDIF
       ENDIF
    ENDIF ! write_uHu
@@ -3068,26 +3073,33 @@ SUBROUTINE compute_orb
       WRITE(stdout, *) ' *** Compute  uIu '
       WRITE(stdout, *) ' -----------------'
       WRITE(stdout, *)
-      IF (ionode) THEN
-         CALL date_and_tim( cdate, ctime )
-         header='Created on '//cdate//' at '//ctime
+      IF (me_pool == root_pool) THEN
+         filename = TRIM(seedname) // ".uIu"
+         IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
          IF (uIu_formatted) THEN
-            OPEN(NEWUNIT=iun_uIu, FILE=TRIM(seedname)//".uIu", FORM='FORMATTED')
-            WRITE(iun_uIu, *) header
-            WRITE(iun_uIu, *) nbnd-nexband, iknum, nnb
+            OPEN (NEWUNIT=iun_uIu, file=TRIM(filename), form='formatted')
          ELSE
-            OPEN(NEWUNIT=iun_uIu, FILE=TRIM(seedname)//".uIu", FORM='UNFORMATTED')
-            WRITE(iun_uIu) header
-            WRITE(iun_uIu) nbnd-nexband, iknum, nnb
+            OPEN (NEWUNIT=iun_uIu, file=TRIM(filename), form='unformatted')
          ENDIF
       ENDIF
-   ENDIF
+      IF (ionode) THEN
+         CALL date_and_tim( cdate, ctime )
+         header = 'Created on '//cdate//' at '//ctime
+         IF (uIu_formatted) THEN
+            WRITE(iun_uIu, *) header
+            WRITE(iun_uIu, *) num_bands, iknum, nnb
+         ELSE
+            WRITE(iun_uIu) header
+            WRITE(iun_uIu) num_bands, iknum, nnb
+         ENDIF
+      ENDIF
+   ENDIF ! write_uIu
    !
    CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
    CALL allocate_bec_type(nkb, nbnd, becp)
    !
    WRITE(stdout,'(a,i8)') ' iknum = ',iknum
-   DO ik = 1, nkstot ! loop over k points
+   DO ik = 1, nks ! loop over k points
       !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
@@ -3170,18 +3182,31 @@ SUBROUTINE compute_orb
             !
             ! write the files out to disk
             !
-            IF (ionode) THEN
+            IF (me_pool == root_pool) THEN
                IF (write_uHu) THEN
                   CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, num_bands, uHu)
                ENDIF
                IF (write_uIu) THEN
                   CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, num_bands, uIu)
                ENDIF
-            ENDIF ! ionode
+            ENDIF ! root_pool
             !
          ENDDO ! i_b1
       ENDDO ! i_b2
    ENDDO ! ik
+   !
+   IF (me_pool == root_pool) THEN
+      IF (write_uHu) CLOSE(iun_uHu, STATUS="KEEP")
+      IF (write_uIu) CLOSE(iun_uIu, STATUS="KEEP")
+   ENDIF
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   !
+   IF (write_uHu) CALL utility_merge_files("uHu", uHu_formatted, num_bands**2)
+   IF (write_uIu) CALL utility_merge_files("uIu", uIu_formatted, num_bands**2)
    !
    ! Deallocate variables
    !
@@ -3193,12 +3218,10 @@ SUBROUTINE compute_orb
    IF (write_uHu) THEN
       DEALLOCATE(H_evc_b2)
       DEALLOCATE(uHu)
-      IF (ionode) CLOSE(iun_uHu)
    ENDIF ! write_uHu
    !
    IF (write_uIu) THEN
       DEALLOCATE(uIu)
-      IF (ionode) CLOSE(iun_uIu)
    ENDIF ! write_uIu
    !
    WRITE(stdout,*)
