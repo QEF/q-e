@@ -32,8 +32,8 @@ FUNCTION spinor( l, j, m, spin )
   !
   REAL(DP) :: denom     ! denominator
   !
-  IF ( spin/=1 .AND. spin/=2 ) CALL errore( 'spinor', 'spin direction unknown', 1 )
-  IF ( m<-l-1  .OR.  m>l )     CALL errore( 'spinor', 'm not allowed', 1 )
+  IF ( spin/=1 .AND. spin/=2 ) CALL upf_error( 'spinor', 'spin direction unknown', 1 )
+  IF ( m<-l-1  .OR.  m>l )     CALL upf_error( 'spinor', 'm not allowed', 1 )
   !
   denom = 1.d0 / (2.d0*l+1.d0)
   !
@@ -48,7 +48,7 @@ FUNCTION spinor( l, j, m, spin )
         IF (spin == 2) spinor = -SQRT((l+m)*denom)
      ENDIF
   ELSE
-     CALL errore( 'spinor', 'j and l not compatible', 1 )
+     CALL upf_error( 'spinor', 'j and l not compatible', 1 )
   ENDIF
   !
   RETURN

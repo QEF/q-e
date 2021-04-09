@@ -40,7 +40,7 @@ subroutine sph_bes (msh, r, q, l, jl)
 
   if (abs (q) < eps14) then
      if (l == -1) then
-        call errore ('sph_bes', 'j_{-1}(0) ?!?', 1)
+        call upf_error ('sph_bes', 'j_{-1}(0) ?!?', 1)
      elseif (l == 0) then
         jl(:) = 1.d0
      else
@@ -52,7 +52,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   !  case l=-1
 
   if (l == - 1) then
-     if (abs (q * r (1) ) < eps14) call errore ('sph_bes', 'j_{-1}(0) ?!?',1)
+     if (abs (q * r (1) ) < eps14) call upf_error ('sph_bes', 'j_{-1}(0) ?!?',1)
 
 #if defined (__MASS)
 
@@ -240,7 +240,7 @@ subroutine sph_bes (msh, r, q, l, jl)
 
   else
 
-     call errore ('sph_bes', 'not implemented', abs(l))
+     call upf_error ('sph_bes', 'not implemented', abs(l))
 
   endif
   !
@@ -291,7 +291,7 @@ SUBROUTINE sph_dbes ( nr, r, xg, l, jl, djl )
         call sph_bes ( nr, r, xg, l+1, djl )
         djl(:) = - djl(:) * (xg * r(:) )
      else
-        call errore('sph_dbes','l < 0 not implemented', abs(l) )
+        call upf_error('sph_dbes','l < 0 not implemented', abs(l) )
      end if
   end if
   !

@@ -21,8 +21,8 @@ function sph_ind(l,j,m,spin)
 
   real(DP) :: j         ! total angular momentum
 
-  if (spin.ne.1.and.spin.ne.2) call errore('sph_ind','spin direction unknown',1)
-  if (m.lt.-l-1.or.m.gt.l) call errore('sph_ind','m not allowed',1)
+  if (spin.ne.1.and.spin.ne.2) call upf_error('sph_ind','spin direction unknown',1)
+  if (m.lt.-l-1.or.m.gt.l) call upf_error('sph_ind','m not allowed',1)
 
   if (abs(j-l-0.5d0).lt.1.d-8) then
      if (spin.eq.1) sph_ind= m
@@ -36,7 +36,7 @@ function sph_ind(l,j,m,spin)
      endif
   else
      write(6,*) l, j
-     call errore('sph_ind','l and j not compatible',1)
+     call upf_error('sph_ind','l and j not compatible',1)
   endif
   if (sph_ind.lt.-l.or.sph_ind.gt.l) sph_ind=0
   

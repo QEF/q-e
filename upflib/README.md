@@ -3,8 +3,8 @@
 
 This directory contains a library of pseudopotential-related code,
 extracted from the Quantum ESPRESSO distribution. This library depends only
-upon some modules and routines of the UtilXlib  and devXlib libraries, upon
-a few LAPACK routines, and requires a suitable `../make.inc` file in Makefile. 
+upon module mp.f90 of UtilXlib and upon a few modules and routines of devXlib;
+upon a few LAPACK routines; requires a suitable `../make.inc` file in Makefile. 
 Other than this, it can be independently compiled.
 
 Currently, it includes
@@ -13,7 +13,7 @@ Currently, it includes
 - setup of the interpolation tables and of other basic variables 
 - interpolation of pseudopotentials
 - generation of various pseudopotentials matrix elements
-- utilities: speherical harmonics, integration routines, etc. 
+- utilities: spherical harmonics and Bessel functions, integration routines
 Old UPF specifications can be found here:
 http://www.quantum-espresso.org/pseudopotentials/unified-pseudopotential-format
 The xml schema for the newer UPF definition can be found here:

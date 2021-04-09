@@ -48,7 +48,7 @@ subroutine sph_bes_gpu (msh, r, q, l, jl)
   if (abs (q) < eps14) then
      do ir = 1, msh
      if (l == -1) then
-        !call errore ('sph_bes', 'j_{-1}(0) ?!?', 1)
+        !call upf_error ('sph_bes', 'j_{-1}(0) ?!?', 1)
      elseif (l == 0) then
            jl(ir) = 1.d0
      else
@@ -61,7 +61,7 @@ subroutine sph_bes_gpu (msh, r, q, l, jl)
   !  case l=-1
 
   if (l == - 1) then
-     ! if (abs (q * r (1) ) < eps14) call errore ('sph_bes', 'j_{-1}(0) ?!?',1)
+     ! if (abs (q * r (1) ) < eps14) call upf_error ('sph_bes', 'j_{-1}(0) ?!?',1)
      do ir = 1, msh
         jl(ir) = cos (q * r (ir) ) / (q * r (ir) )
      end do
@@ -156,10 +156,10 @@ subroutine sph_bes_gpu (msh, r, q, l, jl)
      
      !else
      !
-     !   call errore ('sph_bes', 'not implemented', abs(l))
+     !   call upf_error ('sph_bes', 'not implemented', abs(l))
 
      endif
-     !if (l > 6 ) call errore ('sph_bes', 'not implemented', abs(l))
+     !if (l > 6 ) call upf_error ('sph_bes', 'not implemented', abs(l))
   end do 
   !
   return

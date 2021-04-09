@@ -57,8 +57,8 @@ contains
      logical, intent(in) :: use_gpu
      integer, intent(in) :: nqxq_,nqx_,nbetam,nwfcm,lmaxq,nsp
      !
-     if (nqxq_/=nqxq) call errore("allocate_uspp_data","invalid nqxq_",1)
-     if (nqx_/=nqx)   call errore("allocate_uspp_data","invalid nqx_",1)
+     if (nqxq_/=nqxq) call upf_error("allocate_uspp_data","invalid nqxq_",1)
+     if (nqx_/=nqx)   call upf_error("allocate_uspp_data","invalid nqx_",1)
      !
      if (lmaxq>0) allocate(qrad(nqxq_,nbetam*(nbetam+1)/2, lmaxq, nsp))
      allocate(tab(nqx_,nbetam,nsp))
