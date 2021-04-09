@@ -414,8 +414,8 @@ CONTAINS
     logical, intent(in) :: noncolin,lspinorb,tqr
     integer, intent(in) :: nhm,nsp,nat,nspin
     !
-    !if (nhm_/=nhm) call errore("allocate_uspp","invalid nhm",1)
-    !if (nsp_/=nsp) call errore("allocate_uspp","invalid nsp",1)
+    !if (nhm_/=nhm) call upf_error("allocate_uspp","invalid nhm",1)
+    !if (nsp_/=nsp) call upf_error("allocate_uspp","invalid nsp",1)
     !
     allocate( indv(nhm,nsp)   )
     allocate( nhtol(nhm,nsp)  )
@@ -561,7 +561,7 @@ CONTAINS
       ENDIF
       IF (intento > 0)    vkb_ood = .true.
 #else
-      CALL errore('using_vkb_d', 'no GPU support', 1)
+      CALL upf_error('using_vkb_d', 'no GPU support', 1)
 #endif
   END SUBROUTINE using_vkb_d
   !   

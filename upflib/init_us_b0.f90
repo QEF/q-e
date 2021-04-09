@@ -31,7 +31,7 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   LOGICAL, PARAMETER :: tprint=.FALSE. ! Whether the beta_l(r) and its relatives are printed or not.
   REAL(DP) :: rcut, drcut ! beta function cutoff radius and its estimated increase due to the filtering
 
-  REAL(DP), PARAMETER :: eps = 1.d-9 ! error tollerance for intergrals, norms etc.
+  REAL(DP), PARAMETER :: eps = 1.d-9 ! error tolerance for integrals, norms etc.
   !
   INTEGER :: nqx
   REAL(DP), ALLOCATABLE :: tab0(:,:), tab(:,:), beta(:,:), betas(:,:)
@@ -150,7 +150,7 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
      end do
      nf = min(nf+1,20) ; af = 1.125D0 * ( 2 * nf + 1);  error_estimate = missing_norm * filter(1.d0,af,nf)**2
      WRITE ( stdout, '(5x,"Smoothing truncation error estimate in Q",1pe12.4," < eps")' ) error_estimate
-     IF (error_estimate > eps ) CALL errore( 'init_us_b0','R and Q norms of beta are too different',nt)
+     IF (error_estimate > eps ) CALL upf_error( 'init_us_b0','R and Q norms of beta are too different',nt)
      WRITE(6,'(5X,a,a,f6.2,a,i4,2(a,f11.8))') 'FILTER parameters :', &
            ' a=',af,', nn=',nf,', filter(1.0/3)=', filter(1.d0/3,af,nf), ', filter(1.0)=', filter(1.d0,af,nf)
      !
@@ -282,8 +282,8 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
     if (filename(1:3)=='br_') WRITE(4,*) '# the radial beta_l(r) as defined in the pseudopotential'
     if (filename(1:3)=='brq') WRITE(4,*) '# the back radial fourier transform of beta_l in real space'
     WRITE(4,*) '# nbeta :', upf(nt)%nbeta,' kkbeta :',upf(nt)%kkbeta
-    if ( upf(nt)%nbeta > nbetam ) CALL errore('init_us_b0','wrong nbetam in write_beta_r', nbetam )
-    if ( upf(nt)%kkbeta > ndm )   CALL errore('init_us_b0','wrong ndm in write_beta_r', ndm )
+    if ( upf(nt)%nbeta > nbetam ) CALL upf_error('init_us_b0','wrong nbetam in write_beta_r', nbetam )
+    if ( upf(nt)%kkbeta > ndm )   CALL upf_error('init_us_b0','wrong ndm in write_beta_r', ndm )
     DO ir = 1, upf(nt)%kkbeta
        WRITE(4,'(12f16.10)') rgrid(nt)%r(ir), (beta_(ir,nb), nb=1,upf(nt)%nbeta)
     ENDDO

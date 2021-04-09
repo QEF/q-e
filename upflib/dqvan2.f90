@@ -87,9 +87,9 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
   jvl = nhtolm(jh, np)
   !
   IF (nb > nbetam .OR. mb > nbetam) &
-       CALL errore (' dqvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
+       CALL upf_error (' dqvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
   IF (ivl > nlx .OR. jvl > nlx) &
-       CALL errore (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
+       CALL upf_error (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   !
   dqg(:) = (0.d0,0.d0)
   !
@@ -115,7 +115,7 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0, dqg )
      ELSEIF ( (lp>=37) .AND. (lp<=49) ) THEN
         l = 7
      ELSE
-        CALL errore (' dqvan2 ', ' lp.gt.49 ', lp)
+        CALL upf_error (' dqvan2 ', ' lp.gt.49 ', lp)
      ENDIF
      !
      sig = (0.d0, -1.d0)**(l - 1)
