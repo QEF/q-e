@@ -116,7 +116,7 @@ MODULE dft_par_mod
                  'OBK8', 'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', &
                  'CX0',  'R860', 'CX0P', 'AHCX', 'AHF2', &
                  'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0',  'CX16', 'C090', &
-                 'B86X', 'B88X', 'BEEX', 'RPBX', 'W31X', 'W32X' /
+                 'B86X', 'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X' /
     !
     DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                  'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC', 'BEEC' /

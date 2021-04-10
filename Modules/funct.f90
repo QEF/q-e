@@ -56,7 +56,7 @@ MODULE funct
   !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
   !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
   !              "revpbe"= "sla+pw+revx+pbc"   = revPBE (Zhang-Yang)
-  !              "rpbe"  = "sla+pw+rpbx+pbc"   = RPBE (Hammer-Hansen-Norskov)
+  !              "rpbe"  = "sla+pw+hhnx+pbc"   = RPBE (Hammer-Hansen-Norskov)
   !              "pw86pbe" = "sla+pw+pw86+pbc" = PW86 exchange + PBE correlation
   !              "b86bpbe" = "sla+pw+b86b+pbc" = B86b exchange + PBE correlation
   !              "pbesol"= "sla+pw+psx+psc"    = PBEsol
@@ -171,7 +171,7 @@ MODULE funct
   !              "b86x"   B86b exchange * 0.75           igcx =41
   !              "b88x"   B88 exchange * 0.50            igcx =42
   !              "beex"   BEE exchange                   igcx =43 
-  !              "rpbx"   Hammer-Hansen-Norskov          igcx =44
+  !              "hhnx"   Hammer-Hansen-Norskov          igcx =44
   !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
   !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
   !
