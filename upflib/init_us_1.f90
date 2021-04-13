@@ -38,7 +38,6 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
-  USE splinelib
   implicit none
   !
   integer,  intent(in) :: nat
@@ -50,25 +49,17 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   !     here a few local variables
   !
-  integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, startq, &
-             lastq, ilast, ndm, ia
+  integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, ia
   ! various counters
-  real(DP), allocatable :: aux (:), besr (:)
-  ! various work space
-  real(DP) :: pref, qi
-  ! the prefactor of the beta functions
-  ! q-point grid for interpolation
   real(DP), allocatable :: ylmk0 (:)
   ! the spherical harmonics
-  real(DP) ::  vqint, j
-  ! interpolated value
+  real(DP) ::  j
   ! J=L+S (noninteger!)
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
              lk, mk, vk, kh, lh, ijkb0, na
   integer, external :: sph_ind
   complex(DP) :: coeff, qgm(1)
-  real(DP) :: ji, jk, d1
-  real(DP), allocatable :: xdata(:)
+  real(DP) :: ji, jk
   real(DP), EXTERNAL :: spinor
   !
   call start_clock ('init_us_1')
@@ -317,51 +308,10 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      end do
   end if
   !
-  !     fill the interpolation table tab
+  ! fill interpolation table tab (and tab_d2y for spline interpolation)
   !
-  ndm = MAXVAL ( upf(:)%kkbeta )
-  allocate( aux (ndm) )
-  allocate (besr( ndm))
-  pref = fpi / sqrt (omega)
-  call divide (intra_bgrp_comm, nqx, startq, lastq)
-  tab (:,:,:) = 0.d0
-  do nt = 1, nsp
-     if ( upf(nt)%is_gth ) cycle
-     do nb = 1, upf(nt)%nbeta
-        l = upf(nt)%lll (nb)
-        do iq = startq, lastq
-           qi = (iq - 1) * dq
-           call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
-           do ir = 1, upf(nt)%kkbeta
-              aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
-           enddo
-           call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-           tab (iq, nb, nt) = vqint * pref
-        enddo
-     enddo
-  enddo
-  deallocate (besr)
-  deallocate (aux)
+  CALL compute_beta ( omega, intra_bgrp_comm )
   !
-  call mp_sum(  tab, intra_bgrp_comm )
-  !
-  !
-  ! initialize spline interpolation
-  if (spline_ps) then
-     allocate( xdata(nqx) )
-     do iq = 1, nqx
-        xdata(iq) = (iq - 1) * dq
-     enddo
-     do nt = 1, nsp
-        do nb = 1, upf(nt)%nbeta 
-           d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
-           call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
-        enddo
-     enddo
-     deallocate(xdata)
-     !
-  endif
-
 #if defined __CUDA
   !
   ! update GPU memory (taking care of zero-dim allocations)
@@ -484,3 +434,81 @@ SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
   DEALLOCATE (aux)
   !
 END SUBROUTINE compute_qrad
+
+!----------------------------------------------------------------------
+SUBROUTINE compute_beta ( omega, intra_bgrp_comm ) 
+  !----------------------------------------------------------------------
+  !
+  ! Compute interpolation table for beta(G) radial functions
+  !
+  USE upf_kinds,    ONLY : dp
+  USE upf_const,    ONLY : fpi
+  USE atom,         ONLY : rgrid
+  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
+  USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps
+  USE mp,           ONLY : mp_sum
+  USE splinelib,    ONLY : spline
+  !
+  IMPLICIT NONE
+  !
+  real(DP), intent(in) :: omega
+  integer,  intent(in) :: intra_bgrp_comm
+  !
+  INTEGER :: ndm, startq, lastq, nt, l, nb, iq, ir
+  REAL(dp) :: qi
+  ! q-point grid for interpolation
+  REAL(dp) :: pref
+  ! the prefactor of the Q functions
+  real(DP) ::  vqint, d1
+  !
+  real(DP), allocatable :: xdata(:)
+  ! work space for spline
+  REAL(dp), allocatable :: aux (:)
+  ! work space
+  REAL(dp), allocatable :: besr(:)
+  ! work space
+  !
+  ndm = MAXVAL ( upf(:)%kkbeta )
+  allocate( aux (ndm) )
+  allocate (besr( ndm))
+  pref = fpi / sqrt (omega)
+  call divide (intra_bgrp_comm, nqx, startq, lastq)
+  tab (:,:,:) = 0.d0
+  do nt = 1, nsp
+     if ( upf(nt)%is_gth ) cycle
+     do nb = 1, upf(nt)%nbeta
+        l = upf(nt)%lll (nb)
+        do iq = startq, lastq
+           qi = (iq - 1) * dq
+           call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
+           do ir = 1, upf(nt)%kkbeta
+              aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
+           enddo
+           call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
+           tab (iq, nb, nt) = vqint * pref
+        enddo
+     enddo
+  enddo
+  deallocate (besr)
+  deallocate (aux)
+  !
+  call mp_sum(  tab, intra_bgrp_comm )
+  !
+  ! initialize spline interpolation
+  !
+  if (spline_ps) then
+     allocate( xdata(nqx) )
+     do iq = 1, nqx
+        xdata(iq) = (iq - 1) * dq
+     enddo
+     do nt = 1, nsp
+        do nb = 1, upf(nt)%nbeta 
+           d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
+           call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
+        enddo
+     enddo
+     deallocate(xdata)
+     !
+  endif
+  !
+END SUBROUTINE compute_beta
