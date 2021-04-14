@@ -169,7 +169,8 @@ CONTAINS
                    grad_in, fcell, iforceh, felec, &
                    energy_thr, grad_thr, cell_thr, fcp_thr, &
                    energy_error, grad_error, cell_error, fcp_error, &
-                   lmovecell, lfcp, fcp_cap, fcp_hess, step_accepted, stop_bfgs, istep )
+                   lmovecell, lfcp, fcp_cap, fcp_hess, step_accepted, &
+                   stop_bfgs, failed, istep )
       !------------------------------------------------------------------------
       !! BFGS algorithm.
       !
@@ -221,6 +222,8 @@ CONTAINS
       LOGICAL,          INTENT(OUT)   :: step_accepted
       !! .TRUE. if a new BFGS step is done
       LOGICAL,          INTENT(OUT)   :: stop_bfgs
+      !! .TRUE. if BFGS failed
+      LOGICAL,          INTENT(OUT)   :: failed
       !! .TRUE. if BFGS convergence has been achieved
       INTEGER,          INTENT(OUT)   :: istep
       !
@@ -235,6 +238,8 @@ CONTAINS
       ! ... additional dimensions of cell and FCP
       INTEGER, PARAMETER :: NADD = 9 + 1
       !
+      !
+      failed = .FALSE.
       !
       IF ( .NOT.bfgs_initialized ) CALL errore('bfgs',' not initialized',1)
       !
@@ -356,8 +361,12 @@ CONTAINS
       !
       ! ... converged (or useless to go on): quick return
       !
-      IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
-              'history already reset at previous step: stopping' )
+      IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) THEN
+         CALL infomsg( 'bfgs',&
+              'history already reset at previous step: exiting' )
+         failed = .TRUE.
+      END IF
+      !
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
       !
       WRITE(stdout, '(5X,"Energy error",T30,"= ",1PE12.1)') energy_error
@@ -987,7 +996,7 @@ CONTAINS
          ! ... previous step : something is going wrong
          !
          IF ( tr_min_hit == 1 ) THEN
-            CALL infomsg( 'bfgs', &
+            CALL infomsg( 'bfgs :: compute_trust_radius', &
                           'history already reset at previous step: stopping' )
             tr_min_hit = 2 
          ELSE
