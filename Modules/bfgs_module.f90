@@ -174,6 +174,8 @@ CONTAINS
       !------------------------------------------------------------------------
       !! BFGS algorithm.
       !
+      USE constants,              ONLY : ry_kbar
+      !
       IMPLICIT NONE
       !
       REAL(DP),         INTENT(INOUT) :: pos_in(:)
@@ -369,10 +371,11 @@ CONTAINS
       !
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
       !
-      WRITE(stdout, '(5X,"Energy error",T30,"= ",1PE12.1)') energy_error
-      WRITE(stdout, '(5X,"Gradient error",T30,"= ",1PE12.1)') grad_error
+      WRITE(stdout, '(5X,"Energy error",T30,"= ",1PE12.1," Ry")') energy_error
+      WRITE(stdout, '(5X,"Gradient error",T30,"= ",1PE12.1," Ry/Bohr")') grad_error
       IF( lmovecell ) WRITE(stdout, &
-         '(5X,"Cell gradient error",T30,"= ",1PE12.1,/)') cell_error
+          '(5X,"Cell gradient error",T30,"= ",1PE12.1," kbar")') &
+          cell_error * ry_kbar
       !
       IF ( conv_bfgs ) GOTO 1000
       !
