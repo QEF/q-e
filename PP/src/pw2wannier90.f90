@@ -247,6 +247,8 @@ module wannier
       IF (PRESENT(evc_kb_m) .AND. (.NOT. gamma_only)) CALL errore("utility_compute_u_kb", &
          "evc_kb_m can be used only in the Gamma-only case", 1)
       !
+      CALL start_clock("compute_u_kb")
+      !
       ALLOCATE(phase(dffts%nnr))
       ALLOCATE(evc_b(npol*npwx, nbnd))
       !
@@ -339,6 +341,8 @@ module wannier
       !
       DEALLOCATE(phase)
       DEALLOCATE(evc_b)
+      !
+      CALL stop_clock("compute_u_kb")
       !
    !----------------------------------------------------------------------------
    END SUBROUTINE utility_compute_u_kb
@@ -719,16 +723,20 @@ PROGRAM pw2wannier90
      WRITE(stdout,*) ' ------------'
      WRITE(stdout,*)
      !
-     IF ( ionode ) WRITE( stdout, *  )
-     CALL print_clock( 'init_pw2wan' )
-     if(write_dmn  )  CALL print_clock( 'compute_dmn'  )!YN:
-     IF(write_amn  )  CALL print_clock( 'compute_amn'  )
-     IF(write_mmn  )  CALL print_clock( 'compute_mmn'  )
-     IF(write_spn  )  CALL print_clock( 'compute_spin'  )
-     IF(write_sHu .OR. write_sIu) CALL print_clock( 'compute_shc'  )
-     IF(write_uHu .OR. write_uIu) CALL print_clock( 'compute_orb'  )
-     IF(write_unk  )  CALL print_clock( 'write_unk'    )
-     IF(write_unkg )  CALL print_clock( 'write_parity' )
+     WRITE(stdout, *)
+     CALL print_clock('init_pw2wan')
+     CALL print_clock('compute_dmn')
+     CALL print_clock('compute_amn')
+     CALL print_clock('compute_mmn')
+     CALL print_clock('compute_spin')
+     CALL print_clock('compute_shc')
+     CALL print_clock('compute_orb')
+     CALL print_clock('write_unk')
+     CALL print_clock('write_parity')
+     !
+     WRITE(stdout, '(/5x, "Internal routines:")')
+     CALL print_clock('compute_u_kb')
+     CALL print_clock('h_psi')
      !
      CALL mp_barrier(world_comm)
      !
