@@ -3115,7 +3115,7 @@ SUBROUTINE compute_orb
    USE mp,              ONLY : mp_sum, mp_barrier
    USE mp_world,        ONLY : world_comm
    USE mp_pools,        ONLY : intra_pool_comm, my_pool_id, me_pool, root_pool
-   USE wvfct,           ONLY : nbnd, npwx, current_k
+   USE wvfct,           ONLY : npwx, current_k
    USE control_flags,   ONLY : gamma_only
    USE fft_base,        ONLY : dfftp
    USE klist,           ONLY : xk, ngk, igk_k, nks
@@ -3136,7 +3136,6 @@ SUBROUTINE compute_orb
    !
    LOGICAL                  :: any_uspp
    INTEGER                  :: ik, npw, m, n
-   INTEGER                  :: ibnd_n, ibnd_m
    INTEGER                  :: i_b, i_b1, i_b2
    COMPLEX(DP)              :: mmn, zdotc
    COMPLEX(DP), ALLOCATABLE :: evc_b(:, :, :)
@@ -3178,12 +3177,12 @@ SUBROUTINE compute_orb
         'write_uhu, and write_uIu not meant to work library mode',1)
 !endivo
    !
-   ALLOCATE(evc_b(npol*npwx, nbnd, nnb))
-   ALLOCATE(evc_b1(npol*npwx, nbnd))
-   ALLOCATE(evc_b2(npol*npwx, nbnd))
+   ALLOCATE(evc_b(npol*npwx, num_bands, nnb))
+   ALLOCATE(evc_b1(npol*npwx, num_bands))
+   ALLOCATE(evc_b2(npol*npwx, num_bands))
    !
    IF (write_uHu) THEN
-      ALLOCATE(H_evc_b2(npol*npwx, nbnd))
+      ALLOCATE(H_evc_b2(npol*npwx, num_bands))
       ALLOCATE(uHu(num_bands, num_bands))
    ENDIF
    !
@@ -3225,7 +3224,7 @@ SUBROUTINE compute_orb
    ENDIF ! write_uIu
    !
    CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
-   CALL allocate_bec_type(nkb, nbnd, becp)
+   CALL allocate_bec_type(nkb, num_bands, becp)
    !
    WRITE(stdout,'(a,i8)') ' iknum = ',iknum
    DO ik = 1, nks ! loop over k points
@@ -3247,7 +3246,7 @@ SUBROUTINE compute_orb
       !
       DO i_b = 1, nnb
          !
-         CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b))
+         CALL utility_compute_u_kb_exclude(ik, i_b, evc_b(:, :, i_b))
          !
       ENDDO ! nnb
       !
@@ -3259,46 +3258,37 @@ SUBROUTINE compute_orb
          evc_b2 = evc_b(:, :, i_b2)
          !
          ! Compute H(k) * |u_{n,k+b2}>
-         IF (write_uHu) CALL h_psi(npwx, npw, nbnd, evc_b2, H_evc_b2)
+         IF (write_uHu) CALL h_psi(npwx, npw, num_bands, evc_b2, H_evc_b2)
          !
          DO i_b1 = 1, nnb
             !
             ! Copy |u_{n,k+b1}> from evc_b
             evc_b1 = evc_b(:, :, i_b1)
             !
-            ibnd_m = 0
-            DO m = 1, nbnd
-               IF (excluded_band(m)) CYCLE
-               ibnd_m = ibnd_m + 1
+            DO m = 1, num_bands
                !
                IF (write_uHu) THEN
-                  ibnd_n = 0
-                  DO n = 1, nbnd  ! loop over bands of already computed ket
-                     IF (excluded_band(n)) CYCLE
-                     ibnd_n = ibnd_n + 1
+                  DO n = 1, num_bands
                      IF (noncolin) THEN
                         mmn = zdotc (npw, evc_b1(1,m),1,H_evc_b2(1,n),1) + &
                               zdotc (npw, evc_b1(1+npwx,m),1,H_evc_b2(1+npwx,n),1)
                      ELSE
                         mmn = zdotc (npw, evc_b1(1, m),1,H_evc_b2(1,n),1)
                      ENDIF
-                     uHu(ibnd_n, ibnd_m) = mmn
+                     uHu(n, m) = mmn
                      !
                   ENDDO !n
                ENDIF ! write_uHu
                !
                IF (write_uIu) then !ivo
-                  ibnd_n = 0
-                  do n = 1, nbnd  ! loop over bands of already computed ket
-                     IF (excluded_band(n)) cycle
-                     ibnd_n = ibnd_n + 1
+                  do n = 1, num_bands
                      IF (noncolin) THEN
                         mmn = zdotc (npw, evc_b1(1,m),1,evc_b2(1,n),1) + &
                               zdotc (npw, evc_b1(1+npwx,m),1,evc_b2(1+npwx,n),1)
                      ELSE
                         mmn = zdotc (npw, evc_b1(1, m),1,evc_b2(1,n),1)
                      ENDIF ! noncolin
-                     uIu(ibnd_n, ibnd_m) = mmn
+                     uIu(n, m) = mmn
                      !
                   ENDDO ! n
                ENDIF ! write_uIu
@@ -3392,14 +3382,15 @@ SUBROUTINE compute_shc
    COMPLEX(DP), parameter :: cmplx_i = (0.0_DP, 1.0_DP)
    !
    LOGICAL :: any_uspp
-   INTEGER :: ik, ipol, npw, m, n
+   INTEGER :: ik, ipol, npw, m, n, ibnd_m
    INTEGER :: istart, iend
    INTEGER :: ispol, npw_b2, i_b2, ikp_b2
-   INTEGER :: ibnd_n, ibnd_m
    COMPLEX(DP) :: sigma_x, sigma_y, sigma_z, cdum1, cdum2
    !
-   COMPLEX(DP), ALLOCATABLE :: evc_aux(:, :), H_evc(:, :)
+   COMPLEX(DP), ALLOCATABLE :: evc_kb(:, :), H_evc(:, :)
    COMPLEX(DP), ALLOCATABLE :: sHu(:, : ,:), sIu(:, :, :)
+   COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
+   !! Wavefunction at k. Contains only the included bands.
    !
    IF (.NOT. (write_sHu .OR. write_sIu)) THEN
       WRITE(stdout, *)
@@ -3427,11 +3418,12 @@ SUBROUTINE compute_shc
    IF (.NOT. noncolin) CALL errore('pw2wannier90',&
       'write_sHu and write_sIu only works with noncolin == .true.', 1)
    !
-   ALLOCATE(evc_aux(npol*npwx, nbnd))
+   ALLOCATE(evc_k(npol*npwx, num_bands))
+   ALLOCATE(evc_kb(npol*npwx, num_bands))
    !
    IF (write_sHu) THEN
       ALLOCATE(sHu(num_bands, num_bands, 3))
-      ALLOCATE(H_evc(npol*npwx, nbnd))
+      ALLOCATE(H_evc(npol*npwx, num_bands))
    ENDIF
    IF (write_sIu) ALLOCATE(sIu(num_bands, num_bands, 3))
    !
@@ -3461,7 +3453,7 @@ SUBROUTINE compute_shc
    ENDIF
    !
    CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
-   CALL allocate_bec_type(nkb, nbnd, becp)
+   CALL allocate_bec_type(nkb, num_bands, becp)
    !
    WRITE(stdout, *)
    WRITE(stdout, '(a,i8)') ' iknum = ', iknum
@@ -3476,7 +3468,16 @@ SUBROUTINE compute_shc
       !
       npw = ngk(ik)
       !
-      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1)
+      ! Read wavefunctions at k, exclude the excluded bands
+      !
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1 )
+      !
+      ibnd_m = 0
+      DO m = 1, nbnd
+         IF (excluded_band(m)) CYCLE
+         ibnd_m = ibnd_m + 1
+         evc_k(:, ibnd_m) = evc(:, m)
+      ENDDO
       !
       ! sort the wfc at k and set up stuff for h_psi
       current_k = ik
@@ -3487,52 +3488,46 @@ SUBROUTINE compute_shc
          !
          ! compute  |u_{n,k+b2}> and H(k) * |u_{n,k+b2}>
          !
-         CALL utility_compute_u_kb(ik, i_b2, evc_aux)
+         CALL utility_compute_u_kb_exclude(ik, i_b2, evc_kb)
          !
-         IF (write_sHu) CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
+         IF (write_sHu) CALL h_psi(npwx, npw, num_bands, evc_kb, H_evc)
          !
          sHu = (0.D0, 0.D0)
          sIu = (0.D0, 0.D0)
          !
          ! loop on bands
-         ibnd_m = 0
-         DO m = 1, nbnd
-            IF (excluded_band(m)) CYCLE
-            ibnd_m = ibnd_m + 1
+         DO m = 1, num_bands
             !
-            ibnd_n = 0
-            DO n = 1, nbnd  ! loop over bands of already computed ket
-               IF (excluded_band(n)) CYCLE
-               ibnd_n = ibnd_n + 1
+            DO n = 1, num_bands
                !
                ! <a|sx|b> = (a2, b1) + (a1, b2)
                ! <a|sy|b> = I (a2, b1) - I (a1, b2)
                ! <a|sz|b> = (a1, b1) - (a2, b2)
                !
                IF (write_sHu) THEN !ivo
-                  cdum1 = dot_product(evc(1:npw, m), H_evc(npwx+1:npwx+npw, n))
-                  cdum2 = dot_product(evc(npwx+1:npwx+npw, m), H_evc(1:npw, n))
+                  cdum1 = dot_product(evc_k(1:npw, m), H_evc(npwx+1:npwx+npw, n))
+                  cdum2 = dot_product(evc_k(npwx+1:npwx+npw, m), H_evc(1:npw, n))
                   sigma_x = cdum1 + cdum2
                   sigma_y = cmplx_i * (cdum2 - cdum1)
-                  sigma_z = dot_product(evc(1:npw, m), H_evc(1:npw, n)) &
-                          - dot_product(evc(npwx+1:npwx+npw, m), H_evc(npwx+1:npwx+npw, n))
+                  sigma_z = dot_product(evc_k(1:npw, m), H_evc(1:npw, n)) &
+                          - dot_product(evc_k(npwx+1:npwx+npw, m), H_evc(npwx+1:npwx+npw, n))
                   !
-                  sHu(ibnd_n, ibnd_m, 1) = sigma_x
-                  sHu(ibnd_n, ibnd_m, 2) = sigma_y
-                  sHu(ibnd_n, ibnd_m, 3) = sigma_z
+                  sHu(n, m, 1) = sigma_x
+                  sHu(n, m, 2) = sigma_y
+                  sHu(n, m, 3) = sigma_z
                ENDIF ! write_sHu
                !
                IF (write_sIu) THEN !ivo
-                  cdum1 = dot_product(evc(1:npw, m), evc_aux(npwx+1:npwx+npw, n))
-                  cdum2 = dot_product(evc(npwx+1:npwx+npw, m), evc_aux(1:npw, n))
+                  cdum1 = dot_product(evc_k(1:npw, m), evc_kb(npwx+1:npwx+npw, n))
+                  cdum2 = dot_product(evc_k(npwx+1:npwx+npw, m), evc_kb(1:npw, n))
                   sigma_x = cdum1 + cdum2
                   sigma_y = cmplx_i * (cdum2 - cdum1)
-                  sigma_z = dot_product(evc(1:npw, m), evc_aux(1:npw, n)) &
-                          - dot_product(evc(npwx+1:npwx+npw, m), evc_aux(npwx+1:npwx+npw, n))
+                  sigma_z = dot_product(evc_k(1:npw, m), evc_kb(1:npw, n)) &
+                          - dot_product(evc_k(npwx+1:npwx+npw, m), evc_kb(npwx+1:npwx+npw, n))
                   !
-                  sIu(ibnd_n, ibnd_m, 1) = sigma_x
-                  sIu(ibnd_n, ibnd_m, 2) = sigma_y
-                  sIu(ibnd_n, ibnd_m, 3) = sigma_z
+                  sIu(n, m, 1) = sigma_x
+                  sIu(n, m, 2) = sigma_y
+                  sIu(n, m, 3) = sigma_z
                ENDIF ! write_sIu
             ENDDO ! n
             !
@@ -3569,7 +3564,8 @@ SUBROUTINE compute_shc
    IF (write_sHu) CALL utility_merge_files("sHu", sHu_formatted, num_bands**2)
    IF (write_sIu) CALL utility_merge_files("sIu", sIu_formatted, num_bands**2)
    !
-   DEALLOCATE(evc_aux)
+   DEALLOCATE(evc_k)
+   DEALLOCATE(evc_kb)
    IF (write_sHu) THEN
       DEALLOCATE(H_evc)
       DEALLOCATE(sHu)
