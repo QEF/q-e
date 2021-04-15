@@ -2724,7 +2724,6 @@ SUBROUTINE compute_spin
    INTEGER :: npw, ik, ikp, ipol, ib, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, nbt
    INTEGER :: ikevc, s, counter
-   COMPLEX(DP)              :: zdotc, phase1
    real(DP)                 :: arg, g_(3)
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
@@ -2799,14 +2798,14 @@ SUBROUTINE compute_spin
          IF (excluded_band(m)) CYCLE !ivo
          DO n = 1, m
             IF (excluded_band(n)) CYCLE !ivo
-            counter = counter+1
+            counter = counter + 1
             !
-            cdum1 = zdotc(npw,evc(1,n),1,evc(npwx+1,m),1)
-            cdum2 = zdotc(npw,evc(npwx+1,n),1,evc(1,m),1)
+            cdum1 = dot_product(evc(1:npw, n), evc(npwx+1:npwx+npw, m))
+            cdum2 = dot_product(evc(npwx+1:npwx+npw, n), evc(1:npw, m))
             sigma_x = cdum1 + cdum2
-            sigma_y = cmplx_i*(cdum2-cdum1)
-            sigma_z = zdotc(npw,evc(1,n),1,evc(1,m),1) &
-                    - zdotc(npw,evc(npwx+1,n),1,evc(npwx+1,m),1)
+            sigma_y = cmplx_i * (cdum2 - cdum1)
+            sigma_z = dot_product(evc(1:npw, n), evc(1:npw, m)) &
+                    - dot_product(evc(npwx+1:npwx+npw, n), evc(npwx+1:npwx+npw, m))
             spn(1, counter) = sigma_x
             spn(2, counter) = sigma_y
             spn(3, counter) = sigma_z
