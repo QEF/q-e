@@ -5,8 +5,8 @@ set(src_upflib
     init_us_0.f90
     init_us_b0.f90
     init_us_1.f90
-    init_at_1.f90
-    interp_at_wfc.f90
+    init_tab_atwfc.f90
+    interp_atwfc.f90
     init_us_2_base.f90
     gth.f90 
     paw_variables.f90
@@ -44,7 +44,7 @@ set(src_upflib
     ylmr2.f90
     # GPU
     init_us_2_base_gpu.f90
-    interp_at_wfc_gpu.f90
+    interp_atwfc_gpu.f90
     qvan2_gpu.f90
     sph_bes_gpu.f90 
     ylmr2_gpu.f90

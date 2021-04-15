@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-SUBROUTINE interp_at_wfc ( npw, qg, nwfcm, chiq )
+SUBROUTINE interp_atwfc ( npw, qg, nwfcm, chiq )
   !-----------------------------------------------------------------------
   !
   ! computes chiq: radial fourier transform of atomic orbitals chi
@@ -42,10 +42,10 @@ SUBROUTINE interp_at_wfc ( npw, qg, nwfcm, chiq )
      ENDDO
   ENDDO
 
-END SUBROUTINE interp_at_wfc
+END SUBROUTINE interp_atwfc
 
 !-----------------------------------------------------------------------
-SUBROUTINE interp_at_dwfc ( npw, qg, nwfcm, dchiq )
+SUBROUTINE interp_atdwfc ( npw, qg, nwfcm, dchiq )
   !-----------------------------------------------------------------------
   !
   ! computes dchi/dq
@@ -87,4 +87,4 @@ SUBROUTINE interp_at_dwfc ( npw, qg, nwfcm, dchiq )
      ENDDO
   ENDDO
 
-END SUBROUTINE interp_at_dwfc
+END SUBROUTINE interp_atdwfc

@@ -15,9 +15,9 @@ gth.o \
 init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
-init_at_1.o \
+init_tab_atwfc.o \
 init_us_2_base.o \
-interp_at_wfc.o \
+interp_atwfc.o \
 paw_variables.o \
 pseudo_types.o \
 qvan2.o \
@@ -55,7 +55,7 @@ ylmr2.o
 # GPU versions of routines
 OBJS += \
   init_us_2_base_gpu.o \
-  interp_at_wfc_gpu.o \
+  interp_atwfc_gpu.o \
   qvan2_gpu.o \
   simpsn_gpu.o \
   sph_bes_gpu.o \
