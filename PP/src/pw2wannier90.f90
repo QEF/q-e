@@ -348,6 +348,197 @@ module wannier
    END SUBROUTINE utility_compute_u_kb
    !----------------------------------------------------------------------------
    !
+   !----------------------------------------------------------------------------
+   SUBROUTINE utility_compute_u_kb_exclude(ik, i_b, evc_kb, evc_kb_m, becp_kb)
+      !-------------------------------------------------------------------------
+      !!
+      !! For a given k point ik and b vector i_b, compute |u_{n, k+b}>.
+      !! Optionally compute becp for k+b (for USPP case).
+      !! Do not calculate the excluded bands, using the variable excluded_band.
+      !!
+      !! Uses pre-computed information about b vector: kpb, zerophase, and ig_.
+      !!
+      !! TODO: Better name for evc_b
+      !!
+      !-------------------------------------------------------------------------
+      !
+      USE kinds,           ONLY : DP
+      USE fft_base,        ONLY : dffts
+      USE fft_interfaces,  ONLY : fwfft, invfft
+      USE mp_pools,        ONLY : my_pool_id
+      USE io_files,        ONLY : nwordwfc, iunwfc
+      USE control_flags,   ONLY : gamma_only
+      USE gvect,           ONLY : gstart, g, ngm
+      USE gvecw,           ONLY : gcutw
+      USE wvfct,           ONLY : nbnd, npwx
+      USE wavefunctions,   ONLY : psic
+      USE klist,           ONLY : xk, ngk, igk_k, nkstot
+      USE noncollin_module,ONLY : npol
+      USE becmod,          ONLY : bec_type, calbec
+      USE uspp,            ONLY : vkb
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: ik
+      !! Local index of the k point
+      INTEGER, INTENT(IN) :: i_b
+      !! Index of the b vector
+      COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, num_bands)
+      !! Wavefunction u_{n,k+b}(G), with the G-vector ordering at k.
+      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: evc_kb_m(npwx, num_bands)
+      !! Optional. For Gamma-only case. Complex conjugate of u_{n,k+b}(-G).
+      TYPE(bec_type), OPTIONAL, INTENT(INOUT) :: becp_kb
+      !! Optional. Product of beta functions with |psi_k+b>
+      !
+      LOGICAL :: zerophase_kb
+      !! zerophase at (k, b)
+      INTEGER :: ig_kb
+      !! G vector index ig_ for (k, b)
+      INTEGER :: ik_g_w90
+      !! Global index of k+b. For lsda with spin down, subtract nkstot/2 to
+      !! start from 1.
+      INTEGER :: ikp_b
+      !! Index of k+b
+      INTEGER :: npw
+      !! Number of plane waves at k
+      INTEGER :: npw_b
+      !! Number of plane waves at k+b
+      INTEGER :: istart
+      !! Starting G vector index
+      INTEGER :: iend
+      !! Ending G vector index
+      INTEGER :: ipol
+      !! Polarization index
+      INTEGER :: n
+      !! Band index
+      INTEGER :: n_incl
+      !! Band index after exclusion
+      INTEGER :: ipool_b
+      !! Pool index where ikp_b belongs to
+      INTEGER :: ik_b_local
+      !! Local k index of ikp_b in ipool_b
+      INTEGER :: igk_kb(npwx)
+      !! G vector index at k+b
+      REAL(DP) :: g2kin_(npwx)
+      !! Dummy g2kin_ to call gk_sort
+      !
+      COMPLEX(DP), ALLOCATABLE :: phase(:)
+      !! Temporary storage for phase e&{i * G_kpb * r}
+      COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
+      !! Temporary storage for wavefunction at k+b
+      !
+      INTEGER, EXTERNAL :: global_kpoint_index
+      !
+      IF (PRESENT(evc_kb_m) .AND. (.NOT. gamma_only)) CALL errore("utility_compute_u_kb", &
+         "evc_kb_m can be used only in the Gamma-only case", 1)
+      !
+      CALL start_clock("compute_u_kb")
+      !
+      ALLOCATE(phase(dffts%nnr))
+      ALLOCATE(evc_b(npol*npwx, nbnd))
+      !
+      evc_kb = (0.0_DP, 0.0_DP)
+      !
+      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
+      !
+      npw = ngk(ik)
+      !
+      ikp_b = kpb(ik_g_w90, i_b) + ikstart - 1
+      ig_kb = ig_(ik_g_w90, i_b)
+      zerophase_kb = zerophase(ik_g_w90, i_b)
+      !
+      ! For a global k point index, find the pool and local k point index.
+      CALL pool_and_local_kpoint_index(nkstot, ikp_b, ipool_b, ik_b_local)
+      !
+      ! Read wavefunction from file
+      !
+      CALL utility_read_wfc_from_pool(ipool_b, ik_b_local, evc_b)
+      !
+      ! Exclude the excluded bands.
+      !
+      n_incl = 0
+      DO n = 1, nbnd
+         IF (excluded_band(n)) CYCLE
+         n_incl = n_incl + 1
+         evc_b(:, n_incl) = evc_b(:, n)
+      ENDDO
+      !
+      ! Set igk_kb, the G vector ordering at k+b.
+      IF (ipool_b == my_pool_id) THEN
+         ! Use local G vector ordering
+         npw_b = ngk(ik_b_local)
+         igk_kb = igk_k(:, ik_b_local)
+      ELSE
+         ! k point from different pool. Calculate G vector ordering.
+         CALL gk_sort(xk_all(1, ikp_b), ngm, g, gcutw, npw_b, igk_kb, g2kin_)
+      ENDIF
+      !
+      ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
+      ! Computed phase is used inside the loop over bands.
+      !
+      IF (.NOT. zerophase_kb) THEN
+         phase(:) = (0.0_DP, 0.0_DP)
+         IF (ig_kb > 0) phase( dffts%nl(ig_kb) ) = (1.0_DP, 0.0_DP)
+         CALL invfft('Wave', phase, dffts)
+      ENDIF
+      !
+      ! Loop over bands
+      !
+      DO n = 1, num_bands
+         !
+         DO ipol = 1, npol
+            psic = (0.0_DP, 0.0_DP)
+            !
+            ! Copy evc_b to psic using the G-vector ordering at k+b.
+            !
+            istart = 1 + (ipol-1) * npwx
+            iend = istart + npw_b - 1
+            psic(dffts%nl( igk_kb(1:npw_b) )) = evc_b(istart:iend, n)
+            !
+            IF (gamma_only) psic(dffts%nlm( igk_kb(1:npw_b) )) = CONJG(evc_b(istart:iend, n))
+            !
+            ! Multiply e^{i * g_kpb * r} phase if necessary.
+            ! TODO: Add explanation on the phase factor
+            !
+            IF (.NOT. zerophase_kb) THEN
+               CALL invfft('Wave', psic, dffts)
+               psic(1:dffts%nnr) = psic(1:dffts%nnr) * CONJG(phase(1:dffts%nnr))
+               CALL fwfft('Wave', psic, dffts)
+            ENDIF
+            !
+            ! Save |u_{n, k+b}> in evc_kb using the G-vector ordering at k.
+            !
+            istart = 1 + (ipol-1) * npwx
+            iend = istart + npw - 1
+            evc_kb(istart:iend, n) = psic(dffts%nl( igk_k(1:npw, ik) ))
+            !
+            IF (gamma_only) THEN
+               IF (gstart == 2) psic(dffts%nlm(1)) = (0.0_DP, 0.0_DP)
+               evc_kb_m(1:npw, n) = CONJG(psic(dffts%nlm( igk_k(1:npw, ik) )))
+            ENDIF
+            !
+         ENDDO ! npol
+         !
+      ENDDO ! nbnd
+      !
+      IF (PRESENT(becp_kb)) THEN
+         !
+         ! Compute the product of beta functions with |psi_k+b>
+         !
+         CALL init_us_2(npw_b, igk_kb, xk_all(1, ikp_b), vkb)
+         CALL calbec(npw_b, vkb, evc_b, becp_kb, num_bands)
+         !
+      ENDIF
+      !
+      DEALLOCATE(phase)
+      DEALLOCATE(evc_b)
+      !
+      CALL stop_clock("compute_u_kb")
+      !
+   !----------------------------------------------------------------------------
+   END SUBROUTINE utility_compute_u_kb_exclude
+   !----------------------------------------------------------------------------
+   !
 end module wannier
 !
 
@@ -2294,6 +2485,8 @@ SUBROUTINE compute_mmn
    INTEGER :: ikevc, ikpevcq, s, counter, ik_g_w90
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), evc_kb_m(:,:), evc_kb(:,:), &
                                Mkb(:,:), aux_nc(:,:)
+   COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
+   !! Wavefunction at k. Contains only the included bands.
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
    real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
@@ -2308,21 +2501,23 @@ SUBROUTINE compute_mmn
    INTEGER, EXTERNAL :: global_kpoint_index
    !
    CALL start_clock( 'compute_mmn' )
-
+   !
    any_uspp = any(upf(1:ntyp)%tvanp)
-
-   ALLOCATE( phase(dffts%nnr) )
-   ALLOCATE( evc_kb(npol*npwx,nbnd) )
-
+   !
+   ALLOCATE(phase(dffts%nnr))
+   ALLOCATE(evc_kb(npol*npwx, num_bands))
+   ALLOCATE(evc_k(npol*npwx, num_bands))
+   ALLOCATE(Mkb(num_bands, num_bands))
+   !
    IF(noncolin) THEN
       ALLOCATE( aux_nc(npwx,npol) )
    ELSE
       ALLOCATE( aux(npwx) )
    ENDIF
 
-   IF (gamma_only) ALLOCATE(evc_kb_m(npwx, nbnd))
+   IF (gamma_only) ALLOCATE(evc_kb_m(npwx, num_bands))
 
-   IF (wan_mode=='library') ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
+   IF (wan_mode=='library') ALLOCATE(m_mat(num_bands, num_bands, nnb, iknum))
 
    IF (wan_mode=='standalone') THEN
       CALL utility_open_output_file("mmn", .TRUE., iun_mmn)
@@ -2334,8 +2529,8 @@ SUBROUTINE compute_mmn
    !
    !
    IF(any_uspp) THEN
-      CALL allocate_bec_type ( nkb, nbnd, becp )
-      CALL allocate_bec_type ( nkb, nbnd, becp2 )
+      CALL allocate_bec_type(nkb, num_bands, becp)
+      CALL allocate_bec_type(nkb, num_bands, becp2)
       !
       !     qb is  FT of Q(r)
       !
@@ -2382,10 +2577,8 @@ SUBROUTINE compute_mmn
       DEALLOCATE (qg, qgm, ylm )
       !
    ENDIF
-
-   WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
-   ALLOCATE( Mkb(nbnd,nbnd) )
+   WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
    ind = 0
    DO ik = 1, nks
@@ -2397,9 +2590,18 @@ SUBROUTINE compute_mmn
       FLUSH(stdout)
       !
       ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
-      !
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       npw = ngk(ik)
+      !
+      ! Read wavefunctions at k, exclude the excluded bands
+      !
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1 )
+      !
+      ibnd_m = 0
+      DO m = 1, nbnd
+         IF (excluded_band(m)) CYCLE
+         ibnd_m = ibnd_m + 1
+         evc_k(:, ibnd_m) = evc(:, m)
+      ENDDO
       !
       !  USPP
       !
@@ -2407,7 +2609,7 @@ SUBROUTINE compute_mmn
          !
          ! Compute the product of beta functions with |psi_k>
          CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-         CALL calbec (npw, vkb, evc, becp)
+         CALL calbec (npw, vkb, evc_k, becp, num_bands)
          !
       ENDIF
       !
@@ -2422,15 +2624,15 @@ SUBROUTINE compute_mmn
          !
          IF (any_uspp) THEN
             IF (gamma_only) THEN
-               CALL utility_compute_u_kb(ik, ib, evc_kb, becp_kb=becp2, evc_kb_m=evc_kb_m)
+               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb, becp_kb=becp2, evc_kb_m=evc_kb_m)
             ELSE
-               CALL utility_compute_u_kb(ik, ib, evc_kb, becp_kb=becp2)
+               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb, becp_kb=becp2)
             ENDIF
          ELSE
             IF (gamma_only) THEN
-               CALL utility_compute_u_kb(ik, ib, evc_kb, evc_kb_m=evc_kb_m)
+               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb, evc_kb_m=evc_kb_m)
             ELSE
-               CALL utility_compute_u_kb(ik, ib, evc_kb)
+               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb)
             ENDIF
          ENDIF
          !
@@ -2446,33 +2648,29 @@ SUBROUTINE compute_mmn
                ik_g_w90, kpb(ik_g_w90, ib), (g_kpb(ipol, ik_g_w90, ib), ipol=1,3)
          ENDIF
          !
-         DO m=1,nbnd
-            IF (excluded_band(m)) CYCLE
+         DO m = 1, num_bands
             !
             !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
             !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
             !
             IF (gamma_only) THEN
-               DO n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
-                  IF (excluded_band(n)) CYCLE
-                  mmn = zdotc (npw, evc(1,m),1,evc_kb(1,n),1) &
-                       + conjg(zdotc(npw,evc(1,m),1,evc_kb_m(1,n),1))
+               DO n = 1, m ! Mkb(m,n) is symmetric in m and n for gamma_only case
+                  mmn = zdotc (npw, evc_k(1,m),1,evc_kb(1,n),1) &
+                       + conjg(zdotc(npw,evc_k(1,m),1,evc_kb_m(1,n),1))
                   Mkb(m,n) = mmn + Mkb(m,n)
                   IF (m/=n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
                ENDDO
             ELSEIF(noncolin) THEN
-               DO n=1,nbnd
-                  IF (excluded_band(n)) CYCLE
-                  mmn=(0.d0, 0.d0)
-                  mmn = mmn + zdotc (npw, evc(1,m),1,evc_kb(1,n),1) &
-                       + zdotc (npw, evc(npwx+1,m),1,evc_kb(npwx+1,n),1)
+               DO n = 1, num_bands
+                  mmn = (0.d0, 0.d0)
+                  mmn = mmn + zdotc (npw, evc_k(1,m),1,evc_kb(1,n),1) &
+                       + zdotc (npw, evc_k(npwx+1,m),1,evc_kb(npwx+1,n),1)
 !                  end do
                   Mkb(m,n) = mmn + Mkb(m,n)
                ENDDO
             ELSE
-               DO n=1,nbnd
-                  IF (excluded_band(n)) CYCLE
-                  mmn = zdotc (npw, evc(1,m),1,evc_kb(1,n),1)
+               DO n = 1, num_bands
+                  mmn = zdotc (npw, evc_k(1,m),1,evc_kb(1,n),1)
                   Mkb(m,n) = mmn + Mkb(m,n)
                ENDDO
             ENDIF
@@ -2480,10 +2678,7 @@ SUBROUTINE compute_mmn
          !
          ! updating of the elements of the matrix Mkb
          !
-         DO n=1,nbnd
-            IF (excluded_band(n)) CYCLE
-            CALL mp_sum(Mkb(:,n), intra_pool_comm)
-         ENDDO
+         CALL mp_sum(Mkb, intra_pool_comm)
          !
          IF (any_uspp) THEN
             ijkb0 = 0
@@ -2508,18 +2703,15 @@ SUBROUTINE compute_mmn
                      DO ih = 1, nh(nt)
                         ikb = ijkb0 + ih
                         !
-                        DO m = 1, nbnd
-                           IF (excluded_band(m)) CYCLE
+                        DO m = 1, num_bands
                            IF (gamma_only) THEN
                               DO n = 1, m ! Mkb(m,n) is symmetric in m and n for gamma_only case
-                                 IF (excluded_band(n)) CYCLE
                                  Mkb(m,n) = Mkb(m,n) + &
                                       phase1 * qb(ih,jh,nt,ind) * &
                                       becp%r(ikb,m) * becp2%r(jkb,n)
                               ENDDO
                            ELSEIF (noncolin) then
-                              DO n = 1, nbnd
-                                 IF (excluded_band(n)) CYCLE
+                              DO n = 1, num_bands
                                  IF (lspinorb) THEN
                                     Mkb(m,n) = Mkb(m,n) + &
                                       phase1 * ( &
@@ -2536,8 +2728,7 @@ SUBROUTINE compute_mmn
                                  ENDIF
                               ENDDO
                            ELSE
-                              DO n = 1, nbnd
-                                 IF (excluded_band(n)) CYCLE
+                              DO n = 1, num_bands
                                  Mkb(m,n) = Mkb(m,n) + &
                                       phase1 * qb(ih,jh,nt,ind) * &
                                       conjg( becp%k(ikb,m) ) * becp2%k(jkb,n)
@@ -2552,23 +2743,17 @@ SUBROUTINE compute_mmn
             ENDDO !ntyp
          ENDIF ! any_uspp
          !
-         ibnd_n = 0
-         DO n=1,nbnd
-            IF (excluded_band(n)) CYCLE
-            ibnd_n = ibnd_n + 1
-            ibnd_m = 0
-            DO m=1,nbnd
-               IF (excluded_band(m)) CYCLE
-               ibnd_m = ibnd_m + 1
-               IF (wan_mode=='standalone') THEN
+         IF (wan_mode=='standalone') THEN
+            DO n = 1, num_bands
+               DO m = 1, num_bands
                   IF (me_pool == root_pool) WRITE (iun_mmn,'(2f18.12)') Mkb(m,n)
-               ELSEIF (wan_mode=='library') THEN
-                  m_mat(ibnd_m,ibnd_n,ib,ik_g_w90)=Mkb(m,n)
-               ELSE
-                  CALL errore('compute_mmn',' value of wan_mode not recognised',1)
-               ENDIF
+               ENDDO
             ENDDO
-         ENDDO
+         ELSEIF (wan_mode=='library') THEN
+            m_mat(:, :, ib, ik_g_w90) = Mkb(:, :)
+         ELSE
+            CALL errore('compute_mmn',' value of wan_mode not recognised',1)
+         ENDIF
          !
       ENDDO !ib
    ENDDO  !ik
@@ -2580,23 +2765,25 @@ SUBROUTINE compute_mmn
    ! If using pool parallelization, concatenate files written by other nodes
    ! to the main output.
    !
-   CALL utility_merge_files("mmn", .TRUE., 0)
+   CALL utility_merge_files("mmn", .TRUE., -1)
    !
    IF (gamma_only) DEALLOCATE(evc_kb_m)
-   DEALLOCATE (Mkb, phase)
-   IF (any_uspp) DEALLOCATE (dxk)
-   IF(noncolin) THEN
+   DEALLOCATE(Mkb)
+   DEALLOCATE(phase)
+   DEALLOCATE(evc_k)
+   DEALLOCATE(evc_kb)
+   IF (any_uspp) DEALLOCATE(dxk)
+   IF (noncolin) THEN
       DEALLOCATE(aux_nc)
    ELSE
       DEALLOCATE(aux)
    ENDIF
-   DEALLOCATE(evc_kb)
    !
    IF(any_uspp) THEN
-      DEALLOCATE (  qb)
-      DEALLOCATE (qq_so)
-      CALL deallocate_bec_type (becp)
-      CALL deallocate_bec_type (becp2)
+      DEALLOCATE(qb)
+      DEALLOCATE(qq_so)
+      CALL deallocate_bec_type(becp)
+      CALL deallocate_bec_type(becp2)
     ENDIF
    !
    WRITE(stdout,'(/)')
