@@ -109,7 +109,7 @@ SUBROUTINE hp_readin()
   ! Read various data produced by PWscf.
   ! In particular, read the unperturbed occupation matrices
   ! via calling the routine read_rho.
-  ! read_file calls init_at_1 which initializes tab_at.
+  ! read_file calls init_tab_atwfc which initializes tab_atwfc.
   !
   CALL read_file()
   !

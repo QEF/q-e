@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-SUBROUTINE interp_at_wfc_gpu ( npw, qg_d, nwfcm, chiq_d )
+SUBROUTINE interp_atwfc_gpu ( npw, qg_d, nwfcm, chiq_d )
   !-----------------------------------------------------------------------
   !
   ! computes chiq: radial fourier transform of atomic orbitals chi
@@ -48,4 +48,4 @@ SUBROUTINE interp_at_wfc_gpu ( npw, qg_d, nwfcm, chiq_d )
      END DO
   END DO
 
-END SUBROUTINE interp_at_wfc_gpu
+END SUBROUTINE interp_atwfc_gpu
