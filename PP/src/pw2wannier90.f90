@@ -2957,7 +2957,6 @@ SUBROUTINE compute_orb
    LOGICAL                  :: any_uspp
    INTEGER                  :: ik, npw, m, n
    INTEGER                  :: i_b, i_b1, i_b2
-   COMPLEX(DP)              :: mmn, zdotc
    COMPLEX(DP), ALLOCATABLE :: evc_b(:, :, :)
    !! Wavefunction at k+b for all b vectors
    COMPLEX(DP), ALLOCATABLE :: evc_b1(:,:)
@@ -2970,6 +2969,8 @@ SUBROUTINE compute_orb
    !! Computed uHu matrix
    COMPLEX(DP), ALLOCATABLE :: uIu(:, :)
    !! Computed uIu matrix
+   COMPLEX(DP), ALLOCATABLE :: arr(:, :)
+   !! Temporary storage
    !
    INTEGER, EXTERNAL :: global_kpoint_index
    !
@@ -3000,6 +3001,7 @@ SUBROUTINE compute_orb
    ALLOCATE(evc_b(npol*npwx, num_bands, nnb))
    ALLOCATE(evc_b1(npol*npwx, num_bands))
    ALLOCATE(evc_b2(npol*npwx, num_bands))
+   ALLOCATE(arr(num_bands, num_bands))
    !
    IF (write_uHu) THEN
       ALLOCATE(H_evc_b2(npol*npwx, num_bands))
@@ -3046,6 +3048,8 @@ SUBROUTINE compute_orb
    CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
    CALL allocate_bec_type(nkb, num_bands, becp)
    !
+   ! JML TODO: Compute only half and use <k+b1|k_b2> = <k+b2|k_b1>*.
+   !
    WRITE(stdout,'(a,i8)') ' iknum = ',iknum
    DO ik = 1, nks ! loop over k points
       !
@@ -3085,39 +3089,42 @@ SUBROUTINE compute_orb
             ! Copy |u_{n,k+b1}> from evc_b
             evc_b1 = evc_b(:, :, i_b1)
             !
-            DO m = 1, num_bands
-               !
-               IF (write_uHu) THEN
-                  DO n = 1, num_bands
-                     IF (noncolin) THEN
-                        mmn = zdotc (npw, evc_b1(1,m),1,H_evc_b2(1,n),1) + &
-                              zdotc (npw, evc_b1(1+npwx,m),1,H_evc_b2(1+npwx,n),1)
-                     ELSE
-                        mmn = zdotc (npw, evc_b1(1, m),1,H_evc_b2(1,n),1)
-                     ENDIF
-                     uHu(n, m) = mmn
-                     !
-                  ENDDO !n
-               ENDIF ! write_uHu
-               !
-               IF (write_uIu) then !ivo
-                  do n = 1, num_bands
-                     IF (noncolin) THEN
-                        mmn = zdotc (npw, evc_b1(1,m),1,evc_b2(1,n),1) + &
-                              zdotc (npw, evc_b1(1+npwx,m),1,evc_b2(1+npwx,n),1)
-                     ELSE
-                        mmn = zdotc (npw, evc_b1(1, m),1,evc_b2(1,n),1)
-                     ENDIF ! noncolin
-                     uIu(n, m) = mmn
-                     !
-                  ENDDO ! n
-               ENDIF ! write_uIu
-               !
-            ENDDO ! m
+            ! To be consistent with previous versions, we compute
+            ! uHu(n, m) = <evc_b1(m)|H_evc_b2(n)>
+            ! uIu(n, m) = <evc_b1(m)|evc_b2(n)>
             !
-            IF (write_uHu) uHu = uHu * rytoev ! because wannier90 works in eV
-            IF (write_uHu) CALL mp_sum(uHu, intra_pool_comm)
-            IF (write_uIu) CALL mp_sum(uIu, intra_pool_comm)
+            IF (write_uHu) THEN
+               IF (noncolin) THEN
+                  CALL ZGEMM('C', 'N', num_bands, num_bands, npwx*npol, &
+                     (1.d0, 0.d0), evc_b1, npwx*npol, H_evc_b2, npwx*npol, &
+                     (0.d0, 0.d0), arr, num_bands)
+               ELSE
+                  CALL ZGEMM('C', 'N', num_bands, num_bands, npw, &
+                     (1.d0, 0.d0), evc_b1, npwx, H_evc_b2, npwx, &
+                     (0.d0, 0.d0), arr, num_bands)
+               ENDIF
+               !
+               uHu = TRANSPOSE(arr) ! see comment above
+               uHu = uHu * rytoev ! because wannier90 works in eV
+               CALL mp_sum(uHu, intra_pool_comm)
+               !
+            ENDIF
+            !
+            IF (write_uIu) THEN
+               IF (noncolin) THEN
+                  CALL ZGEMM('C', 'N', num_bands, num_bands, npwx*npol, &
+                     (1.d0, 0.d0), evc_b1, npwx*npol, evc_b2, npwx*npol, &
+                     (0.d0, 0.d0), arr, num_bands)
+               ELSE
+                  CALL ZGEMM('C', 'N', num_bands, num_bands, npw, &
+                     (1.d0, 0.d0), evc_b1, npwx, evc_b2, npwx, &
+                     (0.d0, 0.d0), arr, num_bands)
+               ENDIF
+               !
+               uIu = TRANSPOSE(arr) ! see comment above
+               CALL mp_sum(uIu, intra_pool_comm)
+               !
+            ENDIF
             !
             ! write the files out to disk
             !
