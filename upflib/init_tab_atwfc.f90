@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE init_at_1( omega, intra_bgrp_comm)
+SUBROUTINE init_tab_atwfc( omega, intra_bgrp_comm)
   !-----------------------------------------------------------------------
   !! This routine computes a table with the radial Fourier transform 
   !! of the atomic wavefunctions.
@@ -28,8 +28,6 @@ SUBROUTINE init_at_1( omega, intra_bgrp_comm)
   !
   REAL(DP), ALLOCATABLE :: aux(:), vchi(:)
   REAL(DP) :: vqint, pref, q
-  !
-  CALL start_clock( 'init_at_1' )
   !
   ndm = MAXVAL(msh(1:nsp))
   ALLOCATE( aux(ndm), vchi(ndm) )
@@ -73,9 +71,7 @@ SUBROUTINE init_at_1( omega, intra_bgrp_comm)
   !
   DEALLOCATE( aux, vchi )
   !
-  CALL stop_clock ( 'init_at_1' )
-  !
   RETURN
   !
-END SUBROUTINE init_at_1
+END SUBROUTINE init_tab_atwfc
 
