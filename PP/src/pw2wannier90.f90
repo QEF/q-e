@@ -172,188 +172,6 @@ module wannier
       !!
       !! For a given k point ik and b vector i_b, compute |u_{n, k+b}>.
       !! Optionally compute becp for k+b (for USPP case).
-      !!
-      !! Uses pre-computed information about b vector: kpb, zerophase, and ig_.
-      !!
-      !! TODO: Better name for evc_b
-      !!
-      !-------------------------------------------------------------------------
-      !
-      USE kinds,           ONLY : DP
-      USE fft_base,        ONLY : dffts
-      USE fft_interfaces,  ONLY : fwfft, invfft
-      USE mp_pools,        ONLY : my_pool_id
-      USE io_files,        ONLY : nwordwfc, iunwfc
-      USE control_flags,   ONLY : gamma_only
-      USE gvect,           ONLY : gstart, g, ngm
-      USE gvecw,           ONLY : gcutw
-      USE wvfct,           ONLY : nbnd, npwx
-      USE wavefunctions,   ONLY : psic
-      USE klist,           ONLY : xk, ngk, igk_k, nkstot
-      USE noncollin_module,ONLY : npol
-      USE becmod,          ONLY : bec_type, calbec
-      USE uspp,            ONLY : vkb
-      !
-      IMPLICIT NONE
-      !
-      INTEGER, INTENT(IN) :: ik
-      !! Local index of the k point
-      INTEGER, INTENT(IN) :: i_b
-      !! Index of the b vector
-      COMPLEX(DP), INTENT(OUT) :: evc_kb(npol*npwx, nbnd)
-      !! Wavefunction u_{n,k+b}(G), with the G-vector ordering at k.
-      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: evc_kb_m(npwx, nbnd)
-      !! Optional. For Gamma-only case. Complex conjugate of u_{n,k+b}(-G).
-      TYPE(bec_type), OPTIONAL, INTENT(INOUT) :: becp_kb
-      !! Optional. Product of beta functions with |psi_k+b>
-      !
-      LOGICAL :: zerophase_kb
-      !! zerophase at (k, b)
-      INTEGER :: ig_kb
-      !! G vector index ig_ for (k, b)
-      INTEGER :: ik_g_w90
-      !! Global index of k+b. For lsda with spin down, subtract nkstot/2 to
-      !! start from 1.
-      INTEGER :: ikp_b
-      !! Index of k+b
-      INTEGER :: npw
-      !! Number of plane waves at k
-      INTEGER :: npw_b
-      !! Number of plane waves at k+b
-      INTEGER :: istart
-      !! Starting G vector index
-      INTEGER :: iend
-      !! Ending G vector index
-      INTEGER :: ipol
-      !! Polarization index
-      INTEGER :: n
-      !! Band index
-      INTEGER :: ipool_b
-      !! Pool index where ikp_b belongs to
-      INTEGER :: ik_b_local
-      !! Local k index of ikp_b in ipool_b
-      INTEGER :: igk_kb(npwx)
-      !! G vector index at k+b
-      REAL(DP) :: g2kin_(npwx)
-      !! Dummy g2kin_ to call gk_sort
-      !
-      COMPLEX(DP), ALLOCATABLE :: phase(:)
-      !! Temporary storage for phase e&{i * G_kpb * r}
-      COMPLEX(DP), ALLOCATABLE :: evc_b(:, :)
-      !! Temporary storage for wavefunction at k+b
-      !
-      INTEGER, EXTERNAL :: global_kpoint_index
-      !
-      IF (PRESENT(evc_kb_m) .AND. (.NOT. gamma_only)) CALL errore("utility_compute_u_kb", &
-         "evc_kb_m can be used only in the Gamma-only case", 1)
-      !
-      CALL start_clock("compute_u_kb")
-      !
-      ALLOCATE(phase(dffts%nnr))
-      ALLOCATE(evc_b(npol*npwx, nbnd))
-      !
-      evc_kb = (0.0_DP, 0.0_DP)
-      !
-      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
-      !
-      npw = ngk(ik)
-      !
-      ikp_b = kpb(ik_g_w90, i_b) + ikstart - 1
-      ig_kb = ig_(ik_g_w90, i_b)
-      zerophase_kb = zerophase(ik_g_w90, i_b)
-! print*, "ikp_b", my_pool_id, nkstot, ik, ik_g, ikp_b
-      !
-      ! For a global k point index, find the pool and local k point index.
-      CALL pool_and_local_kpoint_index(nkstot, ikp_b, ipool_b, ik_b_local)
-! print*, "POOL_AND_LOCAL", my_pool_id, nkstot, ikp_b, ipool_b, ik_b_local
-      !
-      ! Read wavefunction from file
-      !
-      CALL utility_read_wfc_from_pool(ipool_b, ik_b_local, evc_b)
-      !
-      ! Set igk_kb, the G vector ordering at k+b.
-      IF (ipool_b == my_pool_id) THEN
-         ! Use local G vector ordering
-         npw_b = ngk(ik_b_local)
-         igk_kb = igk_k(:, ik_b_local)
-      ELSE
-         ! k point from different pool. Calculate G vector ordering.
-         CALL gk_sort(xk_all(1, ikp_b), ngm, g, gcutw, npw_b, igk_kb, g2kin_)
-      ENDIF
-      !
-      ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
-      ! Computed phase is used inside the loop over bands.
-      !
-      IF (.NOT. zerophase_kb) THEN
-         phase(:) = (0.0_DP, 0.0_DP)
-         IF (ig_kb > 0) phase( dffts%nl(ig_kb) ) = (1.0_DP, 0.0_DP)
-         CALL invfft('Wave', phase, dffts)
-      ENDIF
-      !
-      ! Loop over bands
-      !
-      DO n = 1, nbnd
-         IF (excluded_band(n)) CYCLE
-         !
-         DO ipol = 1, npol
-            psic = (0.0_DP, 0.0_DP)
-            !
-            ! Copy evc_b to psic using the G-vector ordering at k+b.
-            !
-            istart = 1 + (ipol-1) * npwx
-            iend = istart + npw_b - 1
-            psic(dffts%nl( igk_kb(1:npw_b) )) = evc_b(istart:iend, n)
-            !
-            IF (gamma_only) psic(dffts%nlm( igk_kb(1:npw_b) )) = CONJG(evc_b(istart:iend, n))
-            !
-            ! Multiply e^{i * g_kpb * r} phase if necessary.
-            ! TODO: Add explanation on the phase factor
-            !
-            IF (.NOT. zerophase_kb) THEN
-               CALL invfft('Wave', psic, dffts)
-               psic(1:dffts%nnr) = psic(1:dffts%nnr) * CONJG(phase(1:dffts%nnr))
-               CALL fwfft('Wave', psic, dffts)
-            ENDIF
-            !
-            ! Save |u_{n, k+b}> in evc_kb using the G-vector ordering at k.
-            !
-            istart = 1 + (ipol-1) * npwx
-            iend = istart + npw - 1
-            evc_kb(istart:iend, n) = psic(dffts%nl( igk_k(1:npw, ik) ))
-            !
-            IF (gamma_only) THEN
-               IF (gstart == 2) psic(dffts%nlm(1)) = (0.0_DP, 0.0_DP)
-               evc_kb_m(1:npw, n) = CONJG(psic(dffts%nlm( igk_k(1:npw, ik) )))
-            ENDIF
-            !
-         ENDDO ! npol
-         !
-      ENDDO ! nbnd
-      !
-      IF (PRESENT(becp_kb)) THEN
-         !
-         ! Compute the product of beta functions with |psi_k+b>
-         !
-         CALL init_us_2(npw_b, igk_kb, xk_all(1, ikp_b), vkb)
-         CALL calbec(npw_b, vkb, evc_b, becp_kb)
-         !
-      ENDIF
-      !
-      DEALLOCATE(phase)
-      DEALLOCATE(evc_b)
-      !
-      CALL stop_clock("compute_u_kb")
-      !
-   !----------------------------------------------------------------------------
-   END SUBROUTINE utility_compute_u_kb
-   !----------------------------------------------------------------------------
-   !
-   !----------------------------------------------------------------------------
-   SUBROUTINE utility_compute_u_kb_exclude(ik, i_b, evc_kb, evc_kb_m, becp_kb)
-      !-------------------------------------------------------------------------
-      !!
-      !! For a given k point ik and b vector i_b, compute |u_{n, k+b}>.
-      !! Optionally compute becp for k+b (for USPP case).
       !! Do not calculate the excluded bands, using the variable excluded_band.
       !!
       !! Uses pre-computed information about b vector: kpb, zerophase, and ig_.
@@ -449,10 +267,12 @@ module wannier
       !
       ! For a global k point index, find the pool and local k point index.
       CALL pool_and_local_kpoint_index(nkstot, ikp_b, ipool_b, ik_b_local)
+! print*, "ikp_b", my_pool_id, nkstot, ik, ik_g, ikp_b
       !
       ! Read wavefunction from file
       !
       CALL utility_read_wfc_from_pool(ipool_b, ik_b_local, evc_b)
+! print*, "POOL_AND_LOCAL", my_pool_id, nkstot, ikp_b, ipool_b, ik_b_local
       !
       ! Exclude the excluded bands.
       !
@@ -536,7 +356,7 @@ module wannier
       CALL stop_clock("compute_u_kb")
       !
    !----------------------------------------------------------------------------
-   END SUBROUTINE utility_compute_u_kb_exclude
+   END SUBROUTINE utility_compute_u_kb
    !----------------------------------------------------------------------------
    !
 end module wannier
@@ -2624,15 +2444,15 @@ SUBROUTINE compute_mmn
          !
          IF (any_uspp) THEN
             IF (gamma_only) THEN
-               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb, becp_kb=becp2, evc_kb_m=evc_kb_m)
+               CALL utility_compute_u_kb(ik, ib, evc_kb, becp_kb=becp2, evc_kb_m=evc_kb_m)
             ELSE
-               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb, becp_kb=becp2)
+               CALL utility_compute_u_kb(ik, ib, evc_kb, becp_kb=becp2)
             ENDIF
          ELSE
             IF (gamma_only) THEN
-               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb, evc_kb_m=evc_kb_m)
+               CALL utility_compute_u_kb(ik, ib, evc_kb, evc_kb_m=evc_kb_m)
             ELSE
-               CALL utility_compute_u_kb_exclude(ik, ib, evc_kb)
+               CALL utility_compute_u_kb(ik, ib, evc_kb)
             ENDIF
          ENDIF
          !
@@ -3246,7 +3066,7 @@ SUBROUTINE compute_orb
       !
       DO i_b = 1, nnb
          !
-         CALL utility_compute_u_kb_exclude(ik, i_b, evc_b(:, :, i_b))
+         CALL utility_compute_u_kb(ik, i_b, evc_b(:, :, i_b))
          !
       ENDDO ! nnb
       !
@@ -3488,7 +3308,7 @@ SUBROUTINE compute_shc
          !
          ! compute  |u_{n,k+b2}> and H(k) * |u_{n,k+b2}>
          !
-         CALL utility_compute_u_kb_exclude(ik, i_b2, evc_kb)
+         CALL utility_compute_u_kb(ik, i_b2, evc_kb)
          !
          IF (write_sHu) CALL h_psi(npwx, npw, num_bands, evc_kb, H_evc)
          !
