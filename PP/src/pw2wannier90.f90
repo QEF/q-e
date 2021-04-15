@@ -2309,7 +2309,7 @@ SUBROUTINE compute_mmn
    !! Wavefunction at k. Contains only the included bands.
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
    real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
-   COMPLEX(DP)              :: mmn, zdotc, phase1
+   COMPLEX(DP)              :: mmn, phase1
    real(DP)                 :: arg, g_(3)
    LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
@@ -2468,33 +2468,27 @@ SUBROUTINE compute_mmn
                ik_g_w90, kpb(ik_g_w90, ib), (g_kpb(ipol, ik_g_w90, ib), ipol=1,3)
          ENDIF
          !
-         DO m = 1, num_bands
-            !
-            !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
-            !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
-            !
-            IF (gamma_only) THEN
+         !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
+         !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
+         !
+         IF (gamma_only) THEN
+            DO m = 1, num_bands
                DO n = 1, m ! Mkb(m,n) is symmetric in m and n for gamma_only case
-                  mmn = zdotc (npw, evc_k(1,m),1,evc_kb(1,n),1) &
-                       + conjg(zdotc(npw,evc_k(1,m),1,evc_kb_m(1,n),1))
+                  mmn = dot_product(evc_k(1:npw,m), evc_kb(1:npw, n)) &
+                      + CONJG(dot_product(evc_k(1:npw, m), evc_kb_m(1:npw, n)))
                   Mkb(m,n) = mmn + Mkb(m,n)
                   IF (m/=n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
                ENDDO
-            ELSEIF(noncolin) THEN
-               DO n = 1, num_bands
-                  mmn = (0.d0, 0.d0)
-                  mmn = mmn + zdotc (npw, evc_k(1,m),1,evc_kb(1,n),1) &
-                       + zdotc (npw, evc_k(npwx+1,m),1,evc_kb(npwx+1,n),1)
-!                  end do
-                  Mkb(m,n) = mmn + Mkb(m,n)
-               ENDDO
-            ELSE
-               DO n = 1, num_bands
-                  mmn = zdotc (npw, evc_k(1,m),1,evc_kb(1,n),1)
-                  Mkb(m,n) = mmn + Mkb(m,n)
-               ENDDO
-            ENDIF
-         ENDDO   ! m
+            ENDDO
+         ELSEIF(noncolin) THEN
+            CALL ZGEMM('C', 'N', num_bands, num_bands, npwx*npol, &
+               (1.d0, 0.d0), evc_k, npwx*npol, evc_kb, npwx*npol, &
+               (0.d0, 0.d0), Mkb, num_bands)
+         ELSE
+            CALL ZGEMM('C', 'N', num_bands, num_bands, npw, &
+               (1.d0, 0.d0), evc_k, npwx, evc_kb, npwx, &
+               (0.d0, 0.d0), Mkb, num_bands)
+         ENDIF
          !
          ! updating of the elements of the matrix Mkb
          !
