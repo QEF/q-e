@@ -2958,9 +2958,9 @@ SUBROUTINE compute_orb
    !! Wavefunction at k+b2
    COMPLEX(DP), ALLOCATABLE :: H_evc_b2(:, :)
    !! H times Wavefunction at k+b2
-   COMPLEX(DP), ALLOCATABLE :: uHu(:, :)
+   COMPLEX(DP), ALLOCATABLE :: uHu(:, :, :, :)
    !! Computed uHu matrix
-   COMPLEX(DP), ALLOCATABLE :: uIu(:, :)
+   COMPLEX(DP), ALLOCATABLE :: uIu(:, :, :, :)
    !! Computed uIu matrix
    COMPLEX(DP), ALLOCATABLE :: arr(:, :)
    !! Temporary storage
@@ -2998,11 +2998,13 @@ SUBROUTINE compute_orb
    !
    IF (write_uHu) THEN
       ALLOCATE(H_evc_b2(npol*npwx, num_bands))
-      ALLOCATE(uHu(num_bands, num_bands))
+      ALLOCATE(uHu(num_bands, num_bands, nnb, nnb))
+      uHu = (0.d0, 0.d0)
    ENDIF
    !
    IF (write_uIu) THEN
-      ALLOCATE(uIu(num_bands, num_bands))
+      ALLOCATE(uIu(num_bands, num_bands, nnb, nnb))
+      uIu = (0.d0, 0.d0)
    ENDIF
    !
    !====================================================================
@@ -3041,8 +3043,6 @@ SUBROUTINE compute_orb
    CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
    CALL allocate_bec_type(nkb, num_bands, becp)
    !
-   ! JML TODO: Compute only half and use <k+b1|k_b2> = <k+b2|k_b1>*.
-   !
    WRITE(stdout,'(a,i8)') ' iknum = ',iknum
    DO ik = 1, nks ! loop over k points
       !
@@ -3077,7 +3077,10 @@ SUBROUTINE compute_orb
          ! Compute H(k) * |u_{n,k+b2}>
          IF (write_uHu) CALL h_psi(npwx, npw, num_bands, evc_b2, H_evc_b2)
          !
-         DO i_b1 = 1, nnb
+         ! Compute uHu and uIu only if i_b1 >= i_b2. For the other cases, use
+         ! <u_{m,k+b1}|u_{n,k+b2}> = [<u_{n,k+b2}|u_{m,k+b1}>]*
+         !
+         DO i_b1 = i_b2, nnb
             !
             ! Copy |u_{n,k+b1}> from evc_b
             evc_b1 = evc_b(:, :, i_b1)
@@ -3097,9 +3100,11 @@ SUBROUTINE compute_orb
                      (0.d0, 0.d0), arr, num_bands)
                ENDIF
                !
-               uHu = TRANSPOSE(arr) ! see comment above
-               uHu = uHu * rytoev ! because wannier90 works in eV
-               CALL mp_sum(uHu, intra_pool_comm)
+               ! we need uHu(n,m) = <evc_b1(m)|H_evc_b2(n)>.
+               uHu(:, :, i_b1, i_b2) = TRANSPOSE(arr)
+               !
+               ! Fill in the case i_b1 < i_b2
+               IF (i_b1 > i_b2) uHu(:, :, i_b2, i_b1) = CONJG(arr)
                !
             ENDIF
             !
@@ -3114,22 +3119,33 @@ SUBROUTINE compute_orb
                      (0.d0, 0.d0), arr, num_bands)
                ENDIF
                !
-               uIu = TRANSPOSE(arr) ! see comment above
-               CALL mp_sum(uIu, intra_pool_comm)
+               ! we need uIu(n, m) = <evc_b1(m)|evc_b2(n)>.
+               uIu(:, :, i_b1, i_b2) = TRANSPOSE(arr)
+               !
+               ! Fill in the case i_b1 < i_b2
+               IF (i_b1 > i_b2) uIu(:, :, i_b2, i_b1) = CONJG(arr)
                !
             ENDIF
             !
-            ! write the files out to disk
-            !
+         ENDDO ! i_b1
+      ENDDO ! i_b2
+      !
+      IF (write_uHu) uHu = uHu * rytoev ! because wannier90 works in eV
+      IF (write_uHu) CALL mp_sum(uHu, intra_pool_comm)
+      IF (write_uIu) CALL mp_sum(uIu, intra_pool_comm)
+      !
+      ! write the files out to disk
+      !
+      DO i_b2 = 1, nnb
+         DO i_b1 = 1, nnb
             IF (me_pool == root_pool) THEN
                IF (write_uHu) THEN
-                  CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, num_bands, uHu)
+                  CALL utility_write_array(iun_uHu, uHu_formatted, num_bands, num_bands, uHu(:, :, i_b1, i_b2))
                ENDIF
                IF (write_uIu) THEN
-                  CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, num_bands, uIu)
+                  CALL utility_write_array(iun_uIu, uIu_formatted, num_bands, num_bands, uIu(:, :, i_b1, i_b2))
                ENDIF
             ENDIF ! root_pool
-            !
          ENDDO ! i_b1
       ENDDO ! i_b2
    ENDDO ! ik
