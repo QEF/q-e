@@ -2398,16 +2398,16 @@ SUBROUTINE compute_mmn
       !
    ENDIF
    !
-   WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
+   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
    ind = 0
    DO ik = 1, nks
       !
-      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
-      !
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
       npw = ngk(ik)
@@ -2775,13 +2775,16 @@ SUBROUTINE compute_spin
       ENDIF
    ENDIF
    !
-   WRITE(stdout,'(a,i8)') ' iknum = ', iknum
+   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
    DO ik = 1, nks
       !
+      WRITE (stdout,'(i8)',advance='no') ik
+      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
+      FLUSH(stdout)
+      !
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
-      WRITE (stdout,'(i8)') ik
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       npw = ngk(ik)
       !
@@ -2912,7 +2915,7 @@ SUBROUTINE compute_spin
       CALL deallocate_bec_type(becp)
    ENDIF
    !
-   WRITE(stdout,*)
+   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' SPIN calculated'
    !
    CALL stop_clock("compute_spin")
@@ -3052,12 +3055,15 @@ SUBROUTINE compute_orb
    CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
    CALL allocate_bec_type(nkb, num_bands, becp)
    !
-   WRITE(stdout,'(a,i8)') ' iknum = ',iknum
+   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   !
    DO ik = 1, nks ! loop over k points
       !
-      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+      WRITE (stdout,'(i8)',advance='no') ik
+      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
+      FLUSH(stdout)
       !
-      WRITE(stdout,'(i8)') ik
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       npw = ngk(ik)
       !
@@ -3188,7 +3194,7 @@ SUBROUTINE compute_orb
       DEALLOCATE(uIu)
    ENDIF ! write_uIu
    !
-   WRITE(stdout,*)
+   WRITE(stdout,'(/)')
    IF (write_uHu) WRITE(stdout, *) ' uHu calculated'
    IF (write_uIu) WRITE(stdout, *) ' uIu calculated'
    !
@@ -3303,15 +3309,15 @@ SUBROUTINE compute_shc
    CALL allocate_bec_type(nkb, num_bands, becp)
    !
    WRITE(stdout, *)
-   WRITE(stdout, '(a,i8)') ' iknum = ', iknum
+   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
    DO ik = 1, nks ! loop over k points
-      !
-      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       WRITE(stdout, '(i8)', advance='no') ik
       IF (MOD(ik, 10) == 0) WRITE (stdout, *)
       FLUSH(stdout)
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       npw = ngk(ik)
       !
@@ -3419,7 +3425,7 @@ SUBROUTINE compute_shc
    ENDIF
    IF (write_sIu) DEALLOCATE(sIu)
    !
-   WRITE(stdout,*)
+   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' shc calculated'
    !
    CALL stop_clock('compute_shc')
@@ -3591,19 +3597,17 @@ SUBROUTINE compute_amn
       IF (ionode) WRITE(iun_amn, *) num_bands, iknum, n_proj
    ENDIF
    !
-   WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
+   IF (any_uspp) CALL allocate_bec_type(nkb, n_proj, becp)
    !
-   IF (any_uspp) THEN
-      CALL allocate_bec_type(nkb, n_proj, becp)
-   ENDIF
+   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
    DO ik = 1, nks
-      !
-      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
       !
