@@ -117,13 +117,10 @@ chdens_module.o : ../../Modules/wavefunctions.o
 chdens_module.o : ../../PW/src/pwcom.o
 chdens_module.o : ../../UtilXlib/mp.o
 compute_ppsi.o : ../../Modules/becmod.o
-compute_ppsi.o : ../../Modules/cell_base.o
 compute_ppsi.o : ../../Modules/io_global.o
 compute_ppsi.o : ../../Modules/ions_base.o
 compute_ppsi.o : ../../Modules/kind.o
 compute_ppsi.o : ../../Modules/noncol.o
-compute_ppsi.o : ../../Modules/recvec.o
-compute_ppsi.o : ../../Modules/wavefunctions.o
 compute_ppsi.o : ../../PW/src/pwcom.o
 compute_ppsi.o : ../../upflib/uspp.o
 compute_sigma_avg.o : ../../FFTXlib/fft_interfaces.o

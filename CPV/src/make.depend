@@ -983,7 +983,6 @@ qqberry.o : ../../Modules/recvec.o
 qqberry.o : ../../UtilXlib/mp.o
 qqberry.o : ../../upflib/atom.o
 qqberry.o : ../../upflib/uspp.o
-qqberry.o : cp_interfaces.o
 qqberry.o : modules.o
 restart.o : ../../Modules/autopilot.o
 restart.o : ../../Modules/cell_base.o
