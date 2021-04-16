@@ -2919,8 +2919,17 @@ SUBROUTINE compute_spin
    !
 END SUBROUTINE compute_spin
 
-!-----------------------------------------------------------------------
+!--------------------------------------------------------------------------
 SUBROUTINE compute_orb
+   !-----------------------------------------------------------------------
+   !!
+   !! Calculate and write uHu and uIu matrix, which are defined as follows.
+   !! uHu(n, m, ib1, ib2, ik) = <u_{m,k+b1}|H(k)|u_{n,k+b2}>
+   !! uIu(n, m, ib1, ib2, ik) = <u_{m,k+b1}|u_{n,k+b2}>
+   !!
+   !! Note that index n, not m, is the fastest index. This non-natural
+   !! indexing is used just to be consistent with the previous versions.
+   !!
    !-----------------------------------------------------------------------
    !
    USE kinds,           ONLY : DP
@@ -2983,7 +2992,7 @@ SUBROUTINE compute_orb
    IF(gamma_only) CALL errore('pw2wannier90',&
         'write_uHu and write_uIu not yet implemented for gamma_only case',1) !ivo
    IF(any_uspp) CALL errore('pw2wannier90',&
-        'write_uHu and write_uIu not yet implemented with USP',1) !ivo
+        'write_uHu and write_uIu not yet implemented with USPP',1) !ivo
 !ivo
 ! not sure this is really needed
    if((write_uhu.or.write_uIu).and.wan_mode=='library')&
@@ -3187,8 +3196,17 @@ SUBROUTINE compute_orb
    !
 END SUBROUTINE compute_orb
 !
-!-----------------------------------------------------------------------
+!-------------------------------------------------------------------------
 SUBROUTINE compute_shc
+   !-----------------------------------------------------------------------
+   !!
+   !! Calculate and write uHu and uIu matrix, which are defined as follows.
+   !! sHu(n, m, ispol, ib, ik) = <u_{m,k}|S(ispol) H(k)|u_{n,k+b}>
+   !! sIu(n, m, ispol, ib, ik) = <u_{m,k}|S(ispol)|u_{n,k+b}>
+   !!
+   !! Note that index n, not m, is the fastest index. This non-natural
+   !! indexing is used just to be consistent with the previous versions.
+   !!
    !-----------------------------------------------------------------------
    !
    USE kinds,           ONLY : DP
@@ -3217,13 +3235,10 @@ SUBROUTINE compute_shc
    !
    COMPLEX(DP), parameter :: cmplx_i = (0.0_DP, 1.0_DP)
    !
-   LOGICAL :: any_uspp
-   INTEGER :: ik, ipol, npw, m, n, ibnd_m
-   INTEGER :: istart, iend
-   INTEGER :: ispol, npw_b2, i_b2, ikp_b2
+   INTEGER :: ik, npw, m, n, ibnd_m, ispol, i_b
    COMPLEX(DP) :: sigma_x, sigma_y, sigma_z, cdum1, cdum2
    !
-   COMPLEX(DP), ALLOCATABLE :: evc_kb(:, :), H_evc(:, :)
+   COMPLEX(DP), ALLOCATABLE :: evc_kb(:, :), H_evc_kb(:, :)
    COMPLEX(DP), ALLOCATABLE :: sHu(:, : ,:), sIu(:, :, :)
    COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
    !! Wavefunction at k. Contains only the included bands.
@@ -3241,17 +3256,13 @@ SUBROUTINE compute_shc
    !
    CALL start_clock('compute_shc')
    !
-   !ivo
-   ! not sure this is really needed
    IF (wan_mode == 'library') CALL errore('pw2wannier90', &
-      'write_sHu, and write_sIu not meant to work library mode', 1)
-   !endivo
-   !
-   IF (gamma_only) CALL errore('pw2wannier90',&
+      'write_sHu and write_sIu not meant to work with library mode', 1)
+   IF (gamma_only) CALL errore('pw2wannier90', &
       'write_sHu and write_sIu not yet implemented for gamma_only case', 1)
-   IF (okvan) CALL errore('pw2wannier90',&
+   IF (okvan) CALL errore('pw2wannier90', &
       'write_sHu and write_sIu not yet implemented with USPP', 1)
-   IF (.NOT. noncolin) CALL errore('pw2wannier90',&
+   IF (.NOT. noncolin) CALL errore('pw2wannier90', &
       'write_sHu and write_sIu only works with noncolin == .true.', 1)
    !
    ALLOCATE(evc_k(npol*npwx, num_bands))
@@ -3259,7 +3270,7 @@ SUBROUTINE compute_shc
    !
    IF (write_sHu) THEN
       ALLOCATE(sHu(num_bands, num_bands, 3))
-      ALLOCATE(H_evc(npol*npwx, num_bands))
+      ALLOCATE(H_evc_kb(npol*npwx, num_bands))
    ENDIF
    IF (write_sIu) ALLOCATE(sIu(num_bands, num_bands, 3))
    !
@@ -3320,13 +3331,13 @@ SUBROUTINE compute_shc
       CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
       CALL g2_kin(ik)
       !
-      DO i_b2 = 1, nnb ! nnb = # of nearest neighbors
+      DO i_b = 1, nnb ! nnb = # of nearest neighbors
          !
          ! compute  |u_{n,k+b2}> and H(k) * |u_{n,k+b2}>
          !
-         CALL utility_compute_u_kb(ik, i_b2, evc_kb)
+         CALL utility_compute_u_kb(ik, i_b, evc_kb)
          !
-         IF (write_sHu) CALL h_psi(npwx, npw, num_bands, evc_kb, H_evc)
+         IF (write_sHu) CALL h_psi(npwx, npw, num_bands, evc_kb, H_evc_kb)
          !
          sHu = (0.D0, 0.D0)
          sIu = (0.D0, 0.D0)
@@ -3341,12 +3352,12 @@ SUBROUTINE compute_shc
                ! <a|sz|b> = (a1, b1) - (a2, b2)
                !
                IF (write_sHu) THEN !ivo
-                  cdum1 = dot_product(evc_k(1:npw, m), H_evc(npwx+1:npwx+npw, n))
-                  cdum2 = dot_product(evc_k(npwx+1:npwx+npw, m), H_evc(1:npw, n))
+                  cdum1 = dot_product(evc_k(1:npw, m), H_evc_kb(npwx+1:npwx+npw, n))
+                  cdum2 = dot_product(evc_k(npwx+1:npwx+npw, m), H_evc_kb(1:npw, n))
                   sigma_x = cdum1 + cdum2
                   sigma_y = cmplx_i * (cdum2 - cdum1)
-                  sigma_z = dot_product(evc_k(1:npw, m), H_evc(1:npw, n)) &
-                          - dot_product(evc_k(npwx+1:npwx+npw, m), H_evc(npwx+1:npwx+npw, n))
+                  sigma_z = dot_product(evc_k(1:npw, m), H_evc_kb(1:npw, n)) &
+                          - dot_product(evc_k(npwx+1:npwx+npw, m), H_evc_kb(npwx+1:npwx+npw, n))
                   !
                   sHu(n, m, 1) = sigma_x
                   sHu(n, m, 2) = sigma_y
@@ -3384,7 +3395,7 @@ SUBROUTINE compute_shc
             ENDDO
          ENDIF ! end of io
          !
-      ENDDO ! i_b2
+      ENDDO ! i_b
    ENDDO ! ik
    !
    IF (me_pool == root_pool) THEN
@@ -3403,7 +3414,7 @@ SUBROUTINE compute_shc
    DEALLOCATE(evc_k)
    DEALLOCATE(evc_kb)
    IF (write_sHu) THEN
-      DEALLOCATE(H_evc)
+      DEALLOCATE(H_evc_kb)
       DEALLOCATE(sHu)
    ENDIF
    IF (write_sIu) DEALLOCATE(sIu)
