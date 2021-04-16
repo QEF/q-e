@@ -1602,7 +1602,7 @@ SUBROUTINE compute_dmn
    USE cell_base,       ONLY : omega, alat, tpiba, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi, bohr => BOHR_RADIUS_ANGS
-   USE uspp,            ONLY : nkb, vkb
+   USE uspp,            ONLY : nkb, vkb, okvan
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
@@ -1673,7 +1673,6 @@ SUBROUTINE compute_dmn
    real(DP)                 :: arg, g_(3),v1(3),v2(3),v3(3),v4(3),v5(3),err,ermx,dvec(3,32),dwgt(32),dvec2(3,32),dmat(3,3)
    CHARACTER (len=9)        :: cdate,ctime
    CHARACTER (len=60)       :: header
-   LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
@@ -1755,8 +1754,6 @@ SUBROUTINE compute_dmn
    end do
 
    CALL pw2wan_set_symm ( nsym, sr, tvec )
-
-   any_uspp = any(upf(1:ntyp)%tvanp)
 
    ALLOCATE( phase(dffts%nnr) )
    ALLOCATE( evcq(npol*npwx,nbnd) )
@@ -2007,7 +2004,7 @@ SUBROUTINE compute_dmn
    !   USPP
    !
    !
-   IF(any_uspp) THEN
+   IF(okvan) THEN
       CALL allocate_bec_type ( nkb, nbnd, becp )
       IF (gamma_only) THEN
          call errore("compute_dmn", "gamma-only mode not implemented", 1)
@@ -2040,7 +2037,7 @@ SUBROUTINE compute_dmn
    !
    !  USPP
    !
-   IF(any_uspp) THEN
+   IF(okvan) THEN
 
       ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
       ALLOCATE( qb (nhm, nhm, ntyp, nbt) )
@@ -2085,7 +2082,7 @@ SUBROUTINE compute_dmn
       !
       !  USPP
       !
-      IF(any_uspp) THEN
+      IF(okvan) THEN
          CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi>
          CALL calbec (npw, vkb, evc, becp)
@@ -2139,7 +2136,7 @@ SUBROUTINE compute_dmn
          !
          !  USPP
          !
-         IF(any_uspp) THEN
+         IF(okvan) THEN
             CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
             ! below we compute the product of beta functions with |psi>
             IF (gamma_only) THEN
@@ -2152,7 +2149,7 @@ SUBROUTINE compute_dmn
          !
          Mkb(:,:) = (0.0d0,0.0d0)
          !
-         IF (any_uspp) THEN
+         IF (okvan) THEN
             ijkb0 = 0
             DO nt = 1, ntyp
                IF ( upf(nt)%tvanp ) THEN
@@ -2191,7 +2188,7 @@ SUBROUTINE compute_dmn
                   ENDDO
                ENDIF !tvanp
             ENDDO !ntyp
-         ENDIF ! any_uspp
+         ENDIF ! okvan
          !
          !
          ! loops on bands
@@ -2251,8 +2248,8 @@ SUBROUTINE compute_dmn
    DEALLOCATE(aux)
    DEALLOCATE(evcq)
 
-   IF(any_uspp) THEN
-      DEALLOCATE (  qb)
+   IF(okvan) THEN
+      DEALLOCATE (qb)
       CALL deallocate_bec_type (becp)
       IF (gamma_only) THEN
          CALL errore('compute_dmn','gamma-only not implemented',1)
@@ -2284,7 +2281,7 @@ SUBROUTINE compute_mmn
    USE cell_base,       ONLY : omega, alat, tpiba, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
-   USE uspp,            ONLY : nkb, vkb
+   USE uspp,            ONLY : nkb, vkb, okvan
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
@@ -2311,7 +2308,6 @@ SUBROUTINE compute_mmn
    real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
    COMPLEX(DP)              :: mmn, phase1
    real(DP)                 :: arg, g_(3)
-   LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
@@ -2321,8 +2317,6 @@ SUBROUTINE compute_mmn
    INTEGER, EXTERNAL :: global_kpoint_index
    !
    CALL start_clock( 'compute_mmn' )
-   !
-   any_uspp = any(upf(1:ntyp)%tvanp)
    !
    ALLOCATE(phase(dffts%nnr))
    ALLOCATE(evc_kb(npol*npwx, num_bands))
@@ -2348,7 +2342,7 @@ SUBROUTINE compute_mmn
    !   USPP
    !
    !
-   IF(any_uspp) THEN
+   IF(okvan) THEN
       CALL allocate_bec_type(nkb, num_bands, becp)
       CALL allocate_bec_type(nkb, num_bands, becp2)
       !
@@ -2425,7 +2419,7 @@ SUBROUTINE compute_mmn
       !
       !  USPP
       !
-      IF(any_uspp) THEN
+      IF(okvan) THEN
          !
          ! Compute the product of beta functions with |psi_k>
          CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
@@ -2439,10 +2433,10 @@ SUBROUTINE compute_mmn
          !
          ind = ind + 1
          !
-         ! Read wavefunction at k+b. If any_uspp, also compute the product
+         ! Read wavefunction at k+b. If okvan, also compute the product
          ! of beta functions with the wavefunctions.
          !
-         IF (any_uspp) THEN
+         IF (okvan) THEN
             IF (gamma_only) THEN
                CALL utility_compute_u_kb(ik, ib, evc_kb, becp_kb=becp2, evc_kb_m=evc_kb_m)
             ELSE
@@ -2456,7 +2450,7 @@ SUBROUTINE compute_mmn
             ENDIF
          ENDIF
          !
-         IF(any_uspp .AND. lspinorb) CALL transform_qq_so(qb(:,:,:,ind), qq_so)
+         IF(okvan .AND. lspinorb) CALL transform_qq_so(qb(:,:,:,ind), qq_so)
          !
          !
          Mkb(:,:) = (0.0d0,0.0d0)
@@ -2494,7 +2488,7 @@ SUBROUTINE compute_mmn
          !
          CALL mp_sum(Mkb, intra_pool_comm)
          !
-         IF (any_uspp) THEN
+         IF (okvan) THEN
             ijkb0 = 0
             DO nt = 1, ntyp
                !
@@ -2555,7 +2549,7 @@ SUBROUTINE compute_mmn
                   !
                ENDDO  !nat
             ENDDO !ntyp
-         ENDIF ! any_uspp
+         ENDIF ! okvan
          !
          IF (wan_mode=='standalone') THEN
             DO n = 1, num_bands
@@ -2586,14 +2580,14 @@ SUBROUTINE compute_mmn
    DEALLOCATE(phase)
    DEALLOCATE(evc_k)
    DEALLOCATE(evc_kb)
-   IF (any_uspp) DEALLOCATE(dxk)
    IF (noncolin) THEN
       DEALLOCATE(aux_nc)
    ELSE
       DEALLOCATE(aux)
    ENDIF
    !
-   IF(any_uspp) THEN
+   IF(okvan) THEN
+      DEALLOCATE(dxk)
       DEALLOCATE(qb)
       DEALLOCATE(qq_so)
       CALL deallocate_bec_type(becp)
@@ -2701,7 +2695,7 @@ SUBROUTINE compute_spin
    USE cell_base,       ONLY : alat, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
-   USE uspp,            ONLY : nkb, vkb
+   USE uspp,            ONLY : nkb, vkb, okvan
    USE uspp_param,      ONLY : upf, nh, lmaxq
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
@@ -2725,7 +2719,6 @@ SUBROUTINE compute_spin
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, nbt
    INTEGER :: ikevc, s, counter
    real(DP)                 :: arg, g_(3)
-   LOGICAL                  :: any_uspp
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
@@ -2748,16 +2741,14 @@ SUBROUTINE compute_spin
    !
    CALL start_clock("compute_spin")
    !
-   any_uspp = any(upf(1:ntyp)%tvanp)
-   !
-   IF (any_uspp) THEN
+   IF (okvan) THEN
       CALL allocate_bec_type ( nkb, nbnd, becp )
       ALLOCATE(be_n(nhm,2))
       ALLOCATE(be_m(nhm,2))
+      ALLOCATE(spn_aug(3, (num_bands*(num_bands+1))/2))
    ENDIF
    !
    ALLOCATE(spn(3, (num_bands*(num_bands+1))/2))
-   IF (any_uspp) ALLOCATE(spn_aug(3, (num_bands*(num_bands+1))/2))
    !
    !ivo
    ! not sure this is really needed
@@ -2790,7 +2781,7 @@ SUBROUTINE compute_spin
       !
       !  USPP
       !
-      IF(any_uspp) THEN
+      IF(okvan) THEN
          CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi>
          CALL calbec (npw, vkb, evc, becp)
@@ -2813,7 +2804,7 @@ SUBROUTINE compute_spin
             spn(2, counter) = sigma_y
             spn(3, counter) = sigma_z
             !
-            IF (any_uspp) THEN
+            IF (okvan) THEN
                !
                sigma_x_aug = (0.0d0, 0.0d0)
                sigma_y_aug = (0.0d0, 0.0d0)
@@ -2884,12 +2875,12 @@ SUBROUTINE compute_spin
                spn_aug(1, counter) = sigma_x_aug
                spn_aug(2, counter) = sigma_y_aug
                spn_aug(3, counter) = sigma_z_aug
-            ENDIF ! any_uspp
+            ENDIF ! okvan
          ENDDO ! n
       ENDDO ! m
       !
       CALL mp_sum(spn, intra_pool_comm)
-      IF (any_uspp) spn = spn + spn_aug
+      IF (okvan) spn = spn + spn_aug
       !
       ! Write to file
       !
@@ -2909,7 +2900,7 @@ SUBROUTINE compute_spin
    CALL utility_merge_files("spn", spn_formatted, 3*((num_bands*(num_bands+1))/2))
    !
    DEALLOCATE(spn)
-   IF (any_uspp) THEN
+   IF (okvan) THEN
       DEALLOCATE(spn_aug)
       DEALLOCATE(be_n, be_m)
       CALL deallocate_bec_type(becp)
@@ -2946,7 +2937,7 @@ SUBROUTINE compute_orb
    USE klist,           ONLY : xk, ngk, igk_k, nks
    USE gvect,           ONLY : g, gstart
    USE ions_base,       ONLY : ntyp => nsp
-   USE uspp,            ONLY : nkb, vkb
+   USE uspp,            ONLY : nkb, vkb, okvan
    USE uspp_param,      ONLY : upf
    USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type
    USE noncollin_module,ONLY : noncolin, npol
@@ -2959,7 +2950,6 @@ SUBROUTINE compute_orb
    !
    IMPLICIT NONE
    !
-   LOGICAL                  :: any_uspp
    INTEGER                  :: ik, npw, m, n
    INTEGER                  :: i_b, i_b1, i_b2
    COMPLEX(DP), ALLOCATABLE :: evc_b(:, :, :)
@@ -2990,11 +2980,9 @@ SUBROUTINE compute_orb
    !
    CALL start_clock('compute_orb')
    !
-   any_uspp = any(upf(1:ntyp)%tvanp)
-   !
    IF(gamma_only) CALL errore('pw2wannier90',&
         'write_uHu and write_uIu not yet implemented for gamma_only case',1) !ivo
-   IF(any_uspp) CALL errore('pw2wannier90',&
+   IF(okvan) CALL errore('pw2wannier90',&
         'write_uHu and write_uIu not yet implemented with USPP',1) !ivo
 !ivo
 ! not sure this is really needed
@@ -3559,7 +3547,7 @@ SUBROUTINE compute_amn
    USE wavefunctions,   ONLY : evc
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
-   USE uspp,            ONLY : nkb, vkb
+   USE uspp,            ONLY : nkb, vkb, okvan
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -3576,14 +3564,12 @@ SUBROUTINE compute_amn
    COMPLEX(DP), ALLOCATABLE :: amn(:, :)
    COMPLEX(DP), ALLOCATABLE :: sgf(:,:)
    INTEGER :: ik, npw, ibnd, ibnd1, iw, i, nt, ipol, ik_g_w90
-   LOGICAL            :: any_uspp, opnd, exst,spin_z_pos, spin_z_neg
+   LOGICAL            :: opnd, exst,spin_z_pos, spin_z_neg
    INTEGER            :: istart
    !
    INTEGER, EXTERNAL :: global_kpoint_index
    !
    CALL start_clock( 'compute_amn' )
-   !
-   any_uspp = ANY(upf(1:ntyp)%tvanp)
    !
    ALLOCATE(amn(num_bands, n_proj))
    ALLOCATE(sgf(npwx,n_proj))
@@ -3597,7 +3583,7 @@ SUBROUTINE compute_amn
       IF (ionode) WRITE(iun_amn, *) num_bands, iknum, n_proj
    ENDIF
    !
-   IF (any_uspp) CALL allocate_bec_type(nkb, n_proj, becp)
+   IF (okvan) CALL allocate_bec_type(nkb, n_proj, becp)
    !
    WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
@@ -3622,7 +3608,7 @@ SUBROUTINE compute_amn
       !
       !  USPP
       !
-      IF (any_uspp) THEN
+      IF (okvan) THEN
          CALL init_us_2 (npw, igk_k(1, ik), xk(1, ik), vkb)
          !
          ! below we compute the product of beta functions with trial func.
@@ -3674,7 +3660,7 @@ SUBROUTINE compute_amn
                   IF (excluded_band(ibnd)) CYCLE
                   ibnd1 = ibnd1+1
                   !
-                  IF (any_uspp) THEN
+                  IF (okvan) THEN
                      amn_tmp = zdotc(npw, evc(1, ibnd), 1, sgf_spinor(1, iw), 1)
                      amn_tmp = amn_tmp + zdotc(npw, evc(npwx+1, ibnd), 1, sgf_spinor(npwx+1, iw), 1)
                   ELSE
@@ -3701,7 +3687,7 @@ SUBROUTINE compute_amn
                   !
                   DO ipol = 1, npol
                      istart = (ipol-1)*npwx + 1
-                     IF (any_uspp) THEN
+                     IF (okvan) THEN
                         amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf_spinor(istart,iw),1)
                         amn(ibnd1, iw) = amn(ibnd1, iw) + amn_tmp
                      ELSE
@@ -3766,7 +3752,7 @@ SUBROUTINE compute_amn
    DEALLOCATE(gf_spinor)
    DEALLOCATE(amn)
    !
-   IF(any_uspp) THEN
+   IF(okvan) THEN
      CALL deallocate_bec_type (becp)
    ENDIF
    !
@@ -3801,7 +3787,7 @@ SUBROUTINE compute_amn_with_scdm
    USE mp_pools,        ONLY : intra_pool_comm
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
-   USE uspp_param,      ONLY : upf
+   USE uspp,            ONLY : okvan
 
    IMPLICIT NONE
 
@@ -3819,7 +3805,7 @@ SUBROUTINE compute_amn_with_scdm
               ig, ig_local ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
-   LOGICAL            :: any_uspp, found_gamma
+   LOGICAL            :: found_gamma
 
 #if defined(__MPI)
    INTEGER :: nxxs
@@ -3839,10 +3825,8 @@ SUBROUTINE compute_amn_with_scdm
 
    CALL start_clock( 'compute_amn' )
 
-   any_uspp =any (upf(1:ntyp)%tvanp)
-
    ! vv: Error for using SCDM with Ultrasoft pseudopotentials
-   !IF (any_uspp) THEN
+   !IF (okvan) THEN
    !   call errore('pw2wannier90','The SCDM method does not work with Ultrasoft pseudopotential yet.',1)
    !ENDIF
 
@@ -4158,7 +4142,7 @@ SUBROUTINE compute_amn_with_scdm_spinor
    USE mp_pools,        ONLY : intra_pool_comm
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
-   USE uspp_param,      ONLY : upf
+   USE uspp,            ONLY : okvan
 
    IMPLICIT NONE
 
@@ -4177,7 +4161,7 @@ SUBROUTINE compute_amn_with_scdm_spinor
               ig, ig_local, count_piv_spin, ispin ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
-   LOGICAL            :: any_uspp, found_gamma
+   LOGICAL            :: found_gamma
 
 #if defined(__MPI)
    INTEGER :: nxxs
@@ -4197,10 +4181,8 @@ SUBROUTINE compute_amn_with_scdm_spinor
 
    CALL start_clock( 'compute_amn' )
 
-   any_uspp =any (upf(1:ntyp)%tvanp)
-
    ! vv: Error for using SCDM with Ultrasoft pseudopotentials
-   !IF (any_uspp) THEN
+   !IF (okvan) THEN
    !   call errore('pw2wannier90','The SCDM method does not work with Ultrasoft pseudopotential yet.',1)
    !ENDIF
 
