@@ -3559,15 +3559,17 @@ SUBROUTINE compute_amn
    !
    IMPLICIT NONE
    !
-   COMPLEX(DP) :: zdotc,amn_tmp,fac(2)
-   real(DP):: ddot
+   COMPLEX(DP) :: amn_tmp, fac(2)
    COMPLEX(DP), ALLOCATABLE :: amn(:, :)
    COMPLEX(DP), ALLOCATABLE :: sgf(:,:)
+   COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
+   !! Wavefunction at k. Contains only the included bands.
    INTEGER :: ik, npw, ibnd, ibnd1, iw, i, nt, ipol, ik_g_w90
    LOGICAL            :: opnd, exst,spin_z_pos, spin_z_neg
    INTEGER            :: istart
    !
    INTEGER, EXTERNAL :: global_kpoint_index
+   REAL(DP), EXTERNAL :: ddot
    !
    CALL start_clock( 'compute_amn' )
    !
@@ -3575,6 +3577,7 @@ SUBROUTINE compute_amn
    ALLOCATE(sgf(npwx,n_proj))
    ALLOCATE(gf_spinor(2*npwx, n_proj))
    ALLOCATE(sgf_spinor(2*npwx, n_proj))
+   ALLOCATE(evc_k(npol*npwx, num_bands))
    !
    IF (wan_mode=='library') ALLOCATE(a_mat(num_bands, n_wannier, iknum))
    !
@@ -3596,9 +3599,19 @@ SUBROUTINE compute_amn
       IF (lsda .AND. isk(ik) /= ispinw) CYCLE
       !
       ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
-      !
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1)
       npw = ngk(ik)
+      !
+      ! Read wavefunctions at k, exclude the excluded bands
+      !
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1 )
+      !
+      ibnd1 = 0
+      DO ibnd = 1, nbnd
+         IF (excluded_band(ibnd)) CYCLE
+         ibnd1 = ibnd1 + 1
+         evc_k(:, ibnd1) = evc(:, ibnd)
+      ENDDO
+      !
       CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
       !
       IF (noncolin) THEN
@@ -3630,9 +3643,9 @@ SUBROUTINE compute_amn
          sgf(:,:) = gf(:,:)
       ENDIF
       !
-      amn = (0.0_dp,0.0_dp)
+      amn = (0.0_dp, 0.0_dp)
       !
-      IF(noncolin) THEN
+      IF (noncolin) THEN
          DO iw = 1, n_proj
             spin_z_pos = .FALSE.
             spin_z_neg = .FALSE.
@@ -3655,19 +3668,15 @@ SUBROUTINE compute_amn
                ENDIF
                istart = (ipol-1)*npwx + 1
                !
-               ibnd1 = 0
-               DO ibnd = 1, nbnd
-                  IF (excluded_band(ibnd)) CYCLE
-                  ibnd1 = ibnd1+1
-                  !
-                  IF (okvan) THEN
-                     amn_tmp = zdotc(npw, evc(1, ibnd), 1, sgf_spinor(1, iw), 1)
-                     amn_tmp = amn_tmp + zdotc(npw, evc(npwx+1, ibnd), 1, sgf_spinor(npwx+1, iw), 1)
-                  ELSE
-                     amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-                  ENDIF
-                  amn(ibnd1, iw) = amn_tmp
-               ENDDO ! ibnd
+               IF (okvan) THEN
+                  CALL ZGEMV('C', npw, num_bands, (1.d0, 0.d0), evc_k, &
+                     npol*npwx, sgf_spinor(1, iw), 1, (0.d0, 0.d0), amn(1, iw), 1)
+                  CALL ZGEMV('C', npw, num_bands, (1.d0, 0.d0), evc_k(npwx+1, 1), &
+                     npol*npwx, sgf_spinor(npwx+1, iw), 1, (1.d0, 0.d0), amn(1, iw), 1)
+               ELSE
+                  CALL ZGEMV('C', npw, num_bands, (1.d0, 0.d0), evc_k(istart, 1), &
+                     npol*npwx, sgf(1, iw), 1, (0.d0, 0.d0), amn(1, iw), 1)
+               ENDIF
             ELSE ! .NOT. (spin_z_pos .OR. spin_z_neg)
                ! general routine
                ! for quantisation axis (a,b,c)
@@ -3680,40 +3689,33 @@ SUBROUTINE compute_amn
                   fac(1)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*(spin_qaxis(3,iw)-1)*cmplx(1.0d0,0.0d0,dp)
                   fac(2)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
                ENDIF
-               ibnd1 = 0
-               DO ibnd = 1, nbnd
-                  IF (excluded_band(ibnd)) CYCLE
-                  ibnd1 = ibnd1+1
-                  !
-                  DO ipol = 1, npol
-                     istart = (ipol-1)*npwx + 1
-                     IF (okvan) THEN
-                        amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf_spinor(istart,iw),1)
-                        amn(ibnd1, iw) = amn(ibnd1, iw) + amn_tmp
-                     ELSE
-                        amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-                        amn(ibnd1, iw) = amn(ibnd1, iw) + amn_tmp * fac(ipol)
-                     ENDIF
-                  ENDDO
-               ENDDO ! ibnd
+               !
+               DO ipol = 1, npol
+                  istart = (ipol-1)*npwx + 1
+                  IF (okvan) THEN
+                     CALL ZGEMV('C', npw, num_bands, (1.d0, 0.d0), evc_k(istart, 1), &
+                        npol*npwx, sgf_spinor(istart, iw), 1, (1.d0, 0.d0), amn(1, iw), 1)
+                  ELSE
+                     CALL ZGEMV('C', npw, num_bands, fac(ipol), evc_k(istart, 1), &
+                        npol*npwx, sgf(1, iw), 1, (1.d0, 0.d0), amn(1, iw), 1)
+                  ENDIF
+               ENDDO
             ENDIF ! spin_z_pos .OR. spin_z_neg
          ENDDO ! iw
       ELSE ! .NOT. noncolin
-         DO iw = 1,n_proj
-            ibnd1 = 0
-            DO ibnd = 1,nbnd
-               IF (excluded_band(ibnd)) CYCLE
-               ibnd1 = ibnd1 + 1
-               !
-               IF (gamma_only) THEN
-                  amn_tmp = 2.0_dp*ddot(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
-                  IF (gstart==2) amn_tmp = amn_tmp - real(conjg(evc(1,ibnd))*sgf(1,iw))
-               ELSE
-                  amn_tmp = zdotc(npw,evc(1,ibnd),1,sgf(1,iw),1)
-               ENDIF
-               amn(ibnd1, iw) = amn_tmp
-            ENDDO ! ibnd
-         ENDDO ! iw
+         IF (gamma_only) THEN
+            DO iw = 1, n_proj
+               DO ibnd = 1, num_bands
+                  amn_tmp = 2.0_dp*ddot(2*npw,evc_k(1,ibnd),1,sgf(1,iw),1)
+                  IF (gstart==2) amn_tmp = amn_tmp - real(conjg(evc_k(1,ibnd))*sgf(1,iw))
+                  amn(ibnd, iw) = amn_tmp
+               ENDDO ! ibnd
+            ENDDO ! iw
+         ELSE
+            CALL ZGEMM('C', 'N', num_bands, n_proj, npw, &
+               (1.d0, 0.d0), evc_k, npwx, sgf, npwx, &
+               (0.d0, 0.d0), amn, num_bands)
+         ENDIF ! gamma_only
       ENDIF ! noncolin
       !
       CALL mp_sum(amn, intra_pool_comm)
