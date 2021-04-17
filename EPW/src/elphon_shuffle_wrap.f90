@@ -244,7 +244,7 @@
         !
         qrad(:, :, :, :) = zero
         ! RM - need to call init_us_1 to re-calculate qrad
-        ! PG - maybe it would be preferable to call compute_qrad?
+        ! PG - maybe it would be sufficient to call init_tab_qrad?
         CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       ENDIF
     ENDIF

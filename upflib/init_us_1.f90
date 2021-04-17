@@ -238,7 +238,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !
-  IF ( lmaxq > 0 ) CALL compute_qrad(omega, intra_bgrp_comm)
+  IF ( lmaxq > 0 ) CALL init_tab_qrad(omega, intra_bgrp_comm)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   The qq are the g=0 components of Q
@@ -308,11 +308,11 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
   ! fill interpolation table tab (and tab_d2y for spline interpolation)
   !
-  CALL compute_beta ( omega, intra_bgrp_comm )
+  CALL init_tab_beta ( omega, intra_bgrp_comm )
   !
 #if defined __CUDA
   !
-  ! update GPU memory (taking care of zero-dim allocations)ù
+  ! update GPU memory (taking care of zero-dim allocations)
   !
   if (nhm>0) then
      indv_d=indv
@@ -338,184 +338,3 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   return
   !
 end subroutine init_us_1
-!
-!----------------------------------------------------------------------
-SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
-  !----------------------------------------------------------------------
-  !
-  ! Compute interpolation table qrad(i,nm,l+1,nt) = Q^{(L)}_{nm,nt}(q_i)
-  ! of angular momentum L, for atom of type nt, on grid q_i, where
-  ! nm = combined (n,m) index; n,m = 1,...,nbeta (number of beta functions)
-  !
-  USE upf_kinds,    ONLY : dp
-  USE upf_const,    ONLY : fpi
-  USE atom,         ONLY : rgrid
-  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
-  USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
-  USE mp,           ONLY : mp_sum
-  !
-  IMPLICIT NONE
-  !
-  real(DP), intent(in) :: omega
-  integer,  intent(in) :: intra_bgrp_comm
-  !
-  INTEGER :: ndm, startq, lastq, nt, l, nb, mb, ijv, iq, ir
-  ! various indices
-  REAL(dp) :: prefr
-  ! the prefactor of the Q functions
-  REAL(dp) :: q
-  REAL(dp), ALLOCATABLE :: aux (:), besr (:)
-  ! various work space
-  !
-  prefr = fpi / omega
-  ndm = MAXVAL ( upf(:)%kkbeta )
-  ALLOCATE (aux ( ndm))
-  ALLOCATE (besr( ndm))
-  !
-  CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
-  !
-  qrad(:,:,:,:)= 0.d0
-  DO nt = 1, nsp
-     if ( upf(nt)%tvanp ) then
-        DO l = 0, upf(nt)%nqlc -1
-           !
-           !     l is the true (combined) angular momentum
-           !     Note that the index of array qfuncl runs from 0 to l,
-           !     while the same index for qrad runs from 1 to l+1
-           !     FIXME: qrad has "holes" if USPP/PAW do not precede NCPP
-           !
-           DO iq = startq, lastq
-              !
-              q = (iq - 1) * dq
-              !
-              !     here we compute the spherical bessel function for each q_i
-              !
-              CALL sph_bes ( upf(nt)%kkbeta, rgrid(nt)%r, q, l, besr)
-              !
-              DO nb = 1, upf(nt)%nbeta
-                 !
-                 !    the Q are symmetric with respect to nb,nm indices
-                 !
-                 DO mb = nb, upf(nt)%nbeta
-                    ijv = mb * (mb - 1) / 2 + nb
-                    IF ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .AND. &
-                         ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .AND. &
-                         (mod(l+upf(nt)%lll(nb)+upf(nt)%lll(mb),2)==0) ) THEN
-                       DO ir = 1, upf(nt)%kkbeta
-                          aux  (ir) = besr (ir) * upf(nt)%qfuncl(ir,ijv,l)
-                       ENDDO
-                       !
-                       !   and then we integrate with all the Q functions
-                       !
-                       CALL simpson ( upf(nt)%kkbeta, aux, rgrid(nt)%rab, &
-                                     qrad(iq,ijv,l+1, nt) )
-                    ENDIF
-                 ENDDO
-              ENDDO
-              ! igl
-           ENDDO
-           ! l
-        ENDDO
-        qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
-        CALL mp_sum ( qrad (:, :, :, nt), intra_bgrp_comm )
-     ENDIF
-     ! nsp
-  ENDDO
-  !
-  DEALLOCATE (besr)
-  DEALLOCATE (aux)
-  !
-  ! update GPU memory (taking care of zero-dim allocations)
-  !
-#if defined __CUDA
-  if ( nbetam > 0 .and. lmaxq > 0 ) qrad_d=qrad
-#endif
-  !
-END SUBROUTINE compute_qrad
-
-!----------------------------------------------------------------------
-SUBROUTINE compute_beta ( omega, intra_bgrp_comm ) 
-  !----------------------------------------------------------------------
-  !
-  ! Compute interpolation table for beta(G) radial functions
-  !
-  USE upf_kinds,    ONLY : dp
-  USE upf_const,    ONLY : fpi
-  USE atom,         ONLY : rgrid
-  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
-  USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps, tab_d, tab_d2y_d
-  USE mp,           ONLY : mp_sum
-  USE splinelib,    ONLY : spline
-  !
-  IMPLICIT NONE
-  !
-  real(DP), intent(in) :: omega
-  integer,  intent(in) :: intra_bgrp_comm
-  !
-  INTEGER :: ndm, startq, lastq, nt, l, nb, iq, ir
-  REAL(dp) :: qi
-  ! q-point grid for interpolation
-  REAL(dp) :: pref
-  ! the prefactor of the Q functions
-  real(DP) ::  vqint, d1
-  !
-  real(DP), allocatable :: xdata(:)
-  ! work space for spline
-  REAL(dp), allocatable :: aux (:)
-  ! work space
-  REAL(dp), allocatable :: besr(:)
-  ! work space
-  !
-  ndm = MAXVAL ( upf(:)%kkbeta )
-  allocate( aux (ndm) )
-  allocate (besr( ndm))
-  pref = fpi / sqrt (omega)
-  call divide (intra_bgrp_comm, nqx, startq, lastq)
-  tab (:,:,:) = 0.d0
-  do nt = 1, nsp
-     if ( upf(nt)%is_gth ) cycle
-     do nb = 1, upf(nt)%nbeta
-        l = upf(nt)%lll (nb)
-        do iq = startq, lastq
-           qi = (iq - 1) * dq
-           call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
-           do ir = 1, upf(nt)%kkbeta
-              aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
-           enddo
-           call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-           tab (iq, nb, nt) = vqint * pref
-        enddo
-     enddo
-  enddo
-  deallocate (besr)
-  deallocate (aux)
-  !
-  call mp_sum(  tab, intra_bgrp_comm )
-  !
-  ! initialize spline interpolation
-  !
-  if (spline_ps) then
-     allocate( xdata(nqx) )
-     do iq = 1, nqx
-        xdata(iq) = (iq - 1) * dq
-     enddo
-     do nt = 1, nsp
-        do nb = 1, upf(nt)%nbeta 
-           d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
-           call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
-        enddo
-     enddo
-     deallocate(xdata)
-     !
-  endif
-  !
-  ! update GPU memory (taking care of zero-dim allocations)
-  !
-#if defined __CUDA
-  if ( nbetam > 0 ) then
-     tab_d=tab
-     if (spline_ps) tab_d2y_d=tab_d2y
-  endif
-#endif
-  !
-END SUBROUTINE compute_beta
