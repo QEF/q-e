@@ -180,7 +180,7 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
            ENDDO
            !
            ! 2) compute the fourier transform of the Qs and their integrated power spectum in
-           !    reciprocal space - FIXME: use routine compute_qrad in init_us_1
+           !    reciprocal space - FIXME: use routine init_tab_qrad
            !
            DO iq = startq, lastq
               !

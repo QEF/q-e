@@ -6,6 +6,8 @@ set(src_upflib
     init_us_b0.f90
     init_us_1.f90
     init_tab_atwfc.f90
+    init_tab_beta.f90
+    init_tab_qrad.f90
     interp_atwfc.f90
     init_us_2_base.f90
     gth.f90 
