@@ -12,4 +12,8 @@ if(QE_ENABLE_CUDA)
 
     set(QE_CUDA_COMPILE_OPTIONS ${CUDA_FLAG})
     set(QE_CUDA_LINK_OPTIONS ${CUDA_FLAG})
+
+    # CMake default CMAKE_Fortran_FLAGS_RELEASE as -fast -O3
+    # -O3 makes the CUDA runs fail at stres_us_gpu.f90, thus override
+    set(CMAKE_Fortran_FLAGS_RELEASE "-fast")
 endif()
