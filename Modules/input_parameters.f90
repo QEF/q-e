@@ -590,11 +590,13 @@ MODULE input_parameters
         !! number of z-grid points for polynomial fitting at cell edge
 
         LOGICAL :: esm_debug = .FALSE.
-        !! used to enable debug mode (output v_hartree and v_local)
+        !! used to enable debug mode (output \(\text{v_hartree}\) and
+        !! \(\text{v_local}\))
 
         INTEGER :: esm_debug_gpmax = 0
-        !! if esm_debug is .TRUE., calculate v_hartree and v_local
-        !! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
+        !! if esm_debug is TRUE, calculate \(\text{v_hartree}\) and \(\text{v_local}\)
+        !! for \(\text{abs}(gp)\leq\text{esm_debug_gpmax}\) (gp is integer and has 
+        !! \(\text{tpiba}\) unit)
 
         LOGICAL :: lgcscf = .FALSE.
         !! if TRUE, GC-SCF is used
@@ -1503,86 +1505,6 @@ MODULE input_parameters
 
 !  END manual
 ! ----------------------------------------------------------------------
-
-!
-!=----------------------------------------------------------------------------=!
-!  FCP Namelist Input Parameters
-!=----------------------------------------------------------------------------=!
-!
-        REAL(DP) :: fcp_mu = 0.0_DP
-          ! target Fermi energy (in eV)
-
-        CHARACTER(LEN=16) :: fcp_dynamics = 'none'
-          ! 'none':            Not specified
-          ! 'lm':              Line-Minimization
-          ! 'newton':          Newton-Raphson algorithm (with DIIS)
-          ! 'bfgs':            BFGS algorithm (coupling with ions)
-          ! 'damp':            Damped dynamics (quick-min Verlet)
-          ! 'verlet':          Verlet dynamics
-          ! 'velocity-verlet': Velocity-Verlet dynamics
-
-        CHARACTER(LEN=16) :: fcp_dynamics_allowed(7)
-        DATA fcp_dynamics_allowed / 'none', 'lm', 'newton', 'bfgs', &
-                                    'damp', 'verlet', 'velocity-verlet' /
-
-        REAL(DP) :: fcp_conv_thr = 1.0E-2_DP
-          ! convergence threshold for FCP relaxation (in eV)
-
-        INTEGER :: fcp_ndiis = 4
-          ! size of DIIS for Newton-Raphson algorithm
-
-        REAL(DP) :: fcp_rdiis = 1.0_DP
-          ! step of DIIS for Newton-Raphson algorithm
-
-        REAL(DP) :: fcp_mass = -1.0_DP
-          ! mass for the FCP
-
-        REAL(DP) :: fcp_velocity = 0.0_DP
-          ! initial velocity for the FCP
-
-        CHARACTER(LEN=80) :: fcp_temperature = 'not_controlled'
-          ! fcp_temperature = 'rescaling' | 'rescale-v' | 'rescale-T' | 'reduce-T' |
-          !                   'berendsen' | 'andersen' | 'initial' | 'not_controlled'*
-          !
-          ! 'rescaling'      control FCP's temperature via velocity rescaling
-          !                  see parameters "fcp_tempw" and "fcp_tolp"
-          ! 'rescale-v'      control FCP's temperature via velocity rescaling
-          !                  see parameters "fcp_tempw" and "fcp_nraise"
-          ! 'rescale-T'      control FCP's temperature via velocity rescaling
-          !                  see parameter "fcp_delta_t"
-          ! 'reduce-T'       reduce FCP's temperature
-          !                  see parameters "fcp_nraise", "fcp_delta_t"
-          ! 'berendsen'      control FCP's temperature using "soft" velocity
-          !                  rescaling - see parameters "fcp_tempw" and "fcp_nraise"
-          ! 'andersen'       control FCP's temperature using Andersen thermostat
-          !                  see parameters "fcp_tempw" and "fcp_nraise"
-          ! 'initial'        initialize ion velocities to temperature fcp_tempw
-          !                  and leave uncontrolled further on
-          ! 'not_controlled' FCP's temperature is not controlled
-
-        REAL(DP) :: fcp_tempw = 300.0_DP
-          ! meaningful only with "fcp_temperature /= 'not_controlled' "
-          ! value of the FCP's temperature (in Kelvin) forced
-          ! by the temperature control
-
-        REAL(DP) :: fcp_tolp = 100.0_DP
-          ! parameter to control temperature
-
-        REAL(DP) :: fcp_delta_t = 1.0_DP
-          ! parameter to control temperature
-
-        INTEGER :: fcp_nraise = 1
-          ! parameter to control temperature
-
-        LOGICAL :: freeze_all_atoms = .FALSE.
-          ! freeze (or fix) all atoms.
-          ! to perform relaxation or dynamics only with FCP.
-
-        NAMELIST / fcp / fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis, &
-                         fcp_mass, fcp_velocity, fcp_temperature, &
-                         fcp_tempw, fcp_tolp, fcp_delta_t, fcp_nraise, &
-                         freeze_all_atoms
-
 !
 !=----------------------------------------------------------------------------=!
 !  RISM Namelist Input Parameters

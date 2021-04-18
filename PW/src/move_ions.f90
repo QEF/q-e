@@ -50,6 +50,7 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
                                      fire_alpha_init, fire_falpha, fire_dtmax
   USE klist,                  ONLY : nelec, tot_charge
+  USE dfunct,                 only : newd
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
                                      fcp_verlet, fcp_terminate, output_fcp
   USE rism_module,            ONLY : lrism, rism_new_conv_thr

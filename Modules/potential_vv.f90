@@ -64,8 +64,6 @@ SUBROUTINE potential_vv(rismt, ierr)
   REAL(DP) :: ulc_g
   REAL(DP) :: erf0
   !
-  REAL(DP), EXTERNAL :: qe_erf
-  !
   ! ... number of sites in solvents
   nv = get_nsite_in_solVs()
   !
@@ -132,7 +130,7 @@ SUBROUTINE potential_vv(rismt, ierr)
         sr12 = sr6 * sr6
         ulj_r = 4.0_DP * e12 * (sr12 - sr6)
         utc_r = ele2 * q12 / r
-        erf0  = qe_erf(r / tau)
+        erf0  = erf(r / tau)
         usc_r = utc_r * (1.0_DP - erf0)
         ulc_r = utc_r * erf0
         rismt%usr(ir, ivv) = ulj_r + usc_r

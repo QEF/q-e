@@ -50,9 +50,9 @@ SUBROUTINE stress( sigma )
               sigmaxc(3,3),   sigmaxcc(3,3), sigmaewa(3,3), sigmanlc(3,3), &
               sigmabare(3,3), sigmah(3,3),   sigmael(3,3),  sigmaion(3,3), &
               sigmad23(3,3),  sigmaxdm(3,3), sigma_ts(3,3), sigma_mbd(3,3),&
-              sigma_nonloc_dft(3,3), sigmaexx(3,3), &
-              sigmasol(3,3), ! for RISM stress
+              sigma_nonloc_dft(3,3), sigmaexx(3,3)
   REAL(DP) :: sigmaloclong(3,3)  ! for ESM stress
+  REAL(DP) :: sigmasol(3,3)      ! for RISM stress
   INTEGER  :: l, m
   !
   ! Auxiliary variables for Grimme-D3
@@ -203,7 +203,7 @@ SUBROUTINE stress( sigma )
                sigmaxc(:,:)  + sigmaxcc(:,:) + sigmaewa(:,:) +  &
                sigmanlc(:,:) + sigmah(:,:)   + sigmael(:,:)  +  &
                sigmaion(:,:) + sigmad23(:,:) + sigmaxdm(:,:) + &
-               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mb d(:,:) + &
+               sigma_nonloc_dft(:,:) + sigma_ts(:,:) + sigma_mbd(:,:) + &
                sigmasol(:,:)
   !
   IF (xclib_dft_is('hybrid')) THEN

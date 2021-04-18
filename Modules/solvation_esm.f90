@@ -420,9 +420,6 @@ SUBROUTINE solvation_esm_force(rismt, alpha, force, ierr)
   !
   COMPLEX(DP), PARAMETER   :: C_ZERO = CMPLX(0.0_DP, 0.0_DP, kind=DP)
   !
-  REAL(DP), EXTERNAL :: qe_erf
-  REAL(DP), EXTERNAL :: qe_erfc
-  !
   ! ... check data type
   IF (rismt%itype /= ITYPE_LAUERISM) THEN
     ierr = IERR_RISM_INCORRECT_DATA_TYPE
@@ -509,8 +506,8 @@ SUBROUTINE solvation_esm_force(rismt, alpha, force, ierr)
         ! ... NOTE: to avoid overflows,
         ! ...       exp(var1)*erfc(var2) = exp(var1 + log(erfc(var2))) .
         !
-        rterm1 = EXP( tpi * gxy * (z - za) + LOG(qe_erfc(0.5_DP * tpi * gxy * alpha + (z - za) / alpha)))
-        rterm2 = EXP(-tpi * gxy * (z - za) + LOG(qe_erfc(0.5_DP * tpi * gxy * alpha - (z - za) / alpha)))
+        rterm1 = EXP( tpi * gxy * (z - za) + LOG(erfc(0.5_DP * tpi * gxy * alpha + (z - za) / alpha)))
+        rterm2 = EXP(-tpi * gxy * (z - za) + LOG(erfc(0.5_DP * tpi * gxy * alpha - (z - za) / alpha)))
         !
         ! ... derive by X
         !
@@ -611,7 +608,7 @@ SUBROUTINE solvation_esm_force(rismt, alpha, force, ierr)
         !
         dvloc(1, iz) = C_ZERO
         dvloc(2, iz) = C_ZERO
-        dvloc(3, iz) = CMPLX((-qa * e2 * tpi) * qe_erf((z - za) / alpha), 0.0_DP, kind=DP)
+        dvloc(3, iz) = CMPLX((-qa * e2 * tpi) * erf((z - za) / alpha), 0.0_DP, kind=DP)
       END DO
 !$omp end parallel do
       !
@@ -723,9 +720,6 @@ SUBROUTINE solvation_esm_stress(rismt, alpha, sigma, ierr)
   COMPLEX(DP), ALLOCATABLE :: rhogz(:)
   !
   COMPLEX(DP), PARAMETER   :: C_ZERO = CMPLX(0.0_DP, 0.0_DP, kind=DP)
-  !
-  REAL(DP), EXTERNAL :: qe_erf
-  REAL(DP), EXTERNAL :: qe_erfc
   !
   ! ... check data type
   IF (rismt%itype /= ITYPE_LAUERISM) THEN

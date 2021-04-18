@@ -1380,12 +1380,6 @@ SUBROUTINE iosys()
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
-  IF ( lfcp .OR. trism ) THEN
-     ignore_wolfe_ = .TRUE.
-  ELSE
-     ignore_wolfe_ = ignore_wolfe
-  END IF
-  !
   !  VdW CORRECTIONS (SEMI-EMPIRICAL)
   !
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, mbd_vdw_, lxdm)

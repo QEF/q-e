@@ -533,7 +533,6 @@ MODULE read_namelists_module
        trust_radius_ini = 0.5_DP   ! bohr
        w_1              = 0.01_DP
        w_2              = 0.50_DP
-       ignore_wolfe     = .FALSE.
        !
        ! FIRE minimization defaults 
        !
@@ -1249,7 +1248,6 @@ MODULE read_namelists_module
        CALL mp_bcast( trust_radius_ini, ionode_id, intra_image_comm )
        CALL mp_bcast( w_1,              ionode_id, intra_image_comm )
        CALL mp_bcast( w_2,              ionode_id, intra_image_comm )
-       CALL mp_bcast( ignore_wolfe,     ionode_id, intra_image_comm )
        !
        RETURN
        !
@@ -1402,6 +1400,36 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE fcp_bcast()
+       !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist FCP
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp, ONLY: mp_bcast
+       USE mp_images, ONLY : intra_image_comm
+       !
+       IMPLICIT NONE
+       !
+       CALL mp_bcast( fcp_mu,           ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_dynamics,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_conv_thr,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_ndiis,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_rdiis,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_mass,         ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_velocity,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_temperature,  ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_tempw,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_tolp,         ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_delta_t,      ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_nraise,       ionode_id, intra_image_comm )
+       CALL mp_bcast( freeze_all_atoms, ionode_id, intra_image_comm )
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
      !=----------------------------------------------------------------------=!
      !
      !  Broadcast variables values for Namelist RISM
@@ -1470,38 +1498,6 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE fcp_bcast()
-       !-----------------------------------------------------------------------
-       !! Broadcast variables values for Namelist FCP
-       !
-       USE io_global, ONLY: ionode_id
-       USE mp, ONLY: mp_bcast
-       USE mp_images, ONLY : intra_image_comm
-       !
-       IMPLICIT NONE
-       !
-       CALL mp_bcast( fcp_mu,           ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_dynamics,     ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_conv_thr,     ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_ndiis,        ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_rdiis,        ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_mass,         ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_velocity,     ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_temperature,  ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_tempw,        ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_tolp,         ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_delta_t,      ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_nraise,       ionode_id, intra_image_comm )
-       CALL mp_bcast( freeze_all_atoms, ionode_id, intra_image_comm )
-       !
-       RETURN
-       !
-     END SUBROUTINE
-     !
-     !
-     !-----------------------------------------------------------------------
      SUBROUTINE control_checkin( prog )
        !-----------------------------------------------------------------------
        !! Check input values for Namelist CONTROL.

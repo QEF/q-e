@@ -74,6 +74,7 @@ SUBROUTINE add_qexsd_step(i_step)
      degauss_ptr => degauss_tgt
      demet_ptr    => demet_tgt
   END IF
+  !
   IF ( lfcp ) THEN
      potstat_contr_tgt = fcp_mu * tot_charge / e2
      potstat_contr_ptr => potstat_contr_tgt

@@ -50,6 +50,7 @@ set(src_pw
    src/divide_et_impera.f90 
    src/drhoc.f90 
    src/rotate_wfc.f90 
+   src/rotate_xpsi.f90 
    src/run_driver.f90 
    src/dvloc_of_g.f90 
    src/dynamics_module.f90 
@@ -87,10 +88,10 @@ set(src_pw
    src/force_lc.f90 
    src/force_us.f90 
    src/forces.f90 
-   src/gcscf_input.f90 
-   src/gcscf_module.f90 
    src/g_psi.f90 
    src/g_psi_mod.f90 
+   src/gcscf_input.f90 
+   src/gcscf_module.f90 
    src/gen_at_dj.f90 
    src/gen_at_dy.f90 
    src/gen_us_dj.f90 
@@ -98,6 +99,7 @@ set(src_pw
    src/get_locals.f90 
    src/gk_sort.f90 
    src/gradcorr.f90 
+   src/gram_schmidt.f90
    src/gweights.f90 
    src/g2_kin.f90 
    src/hs_psi.f90 
@@ -183,6 +185,7 @@ set(src_pw
    src/report_mag.f90 
    src/restart_in_electrons.f90 
    src/rho2zeta.f90 
+   src/rism_module.f90 
    src/ruotaijk.f90 
    src/run_pwscf.f90 
    src/s_1psi.f90 

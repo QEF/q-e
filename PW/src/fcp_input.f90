@@ -24,7 +24,6 @@ SUBROUTINE iosys_fcp()
   USE ions_base,             ONLY : if_pos
   USE kinds,                 ONLY : DP
   USE read_namelists_module, ONLY : fcp_not_set
-  USE force_mod,             ONLY : force
   USE rism_module,           ONLY : lrism
   !
   ! ... CONTROL namelist
@@ -182,7 +181,6 @@ SUBROUTINE iosys_fcp()
   IF (freeze_all_atoms) THEN
      !
      if_pos(:, :) = 0
-     force (:, :) = 0.0_DP
      !
   END IF
   !

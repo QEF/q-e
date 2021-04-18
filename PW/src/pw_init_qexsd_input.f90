@@ -49,7 +49,7 @@
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
                                 ip_use_all_frac=>use_all_frac, assume_isolated, esm_bc, esm_w, esm_nfit, esm_efield,  & 
-                                ip_lfcp => lfcp, ip_fcp_mu => fcp_mu,                                           &
+                                ip_lfcp => lfcp, ip_fcp_mu => fcp_mu,                                                 &
                                 ecfixed, qcutz, q2sigma,                                                              &    
                                 tforces, rd_for,                                                                      &
                                 rd_if_pos,                                                                               &
@@ -487,8 +487,8 @@
      obj%boundary_conditions_ispresent=.FALSE.
   ELSE 
      obj%boundary_conditions_ispresent = .TRUE.
-     IF ( TRIM ( assume_isolated) .EQ. "esm") THEN 
-        SELECT CASE (TRIM(esm_bc)) 
+     IF ( TRIM ( assume_isolated) .EQ. "esm") THEN
+        SELECT CASE (TRIM(esm_bc))
           CASE ('pbc' )
              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
                                                  ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
@@ -505,10 +505,10 @@
              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
                                                  ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
                                                  FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
-        END SELECT 
-     ELSE 
-        CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated) 
-     END IF 
+        END SELECT
+     ELSE
+        CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated)
+     END IF
   END IF
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                              EKIN FUNCTIONAL 

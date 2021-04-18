@@ -2164,7 +2164,6 @@ rism_module.o : ../../Modules/check_stop.o
 rism_module.o : ../../Modules/constants.o
 rism_module.o : ../../Modules/control_flags.o
 rism_module.o : ../../Modules/fft_base.o
-rism_module.o : ../../Modules/funct.o
 rism_module.o : ../../Modules/io_global.o
 rism_module.o : ../../Modules/ions_base.o
 rism_module.o : ../../Modules/kind.o
@@ -2176,6 +2175,7 @@ rism_module.o : ../../Modules/rism3d_facade.o
 rism_module.o : ../../Modules/solute.o
 rism_module.o : ../../Modules/solvmol.o
 rism_module.o : ../../UtilXlib/mp.o
+rism_module.o : ../../XClib/xc_lib.o
 rism_module.o : esm.o
 rism_module.o : exx_base.o
 rism_module.o : pwcom.o

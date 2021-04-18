@@ -337,7 +337,7 @@ MODULE qexsd_input
                                      refold_pos,pot_extrapolation,wfc_extrapolation,&
                                       ion_temperature,tempw,tolp,delta_t,nraise,dt,&
                                       bfgs_ndim,trust_radius_min,trust_radius_max,&
-                                      trust_radius_init,w_1,w_2,ignore_wolfe)
+                                      trust_radius_init,w_1,w_2)
    !--------------------------------------------------------------------------------------------------
    !
    IMPLICIT NONE
@@ -347,7 +347,6 @@ MODULE qexsd_input
                                               ion_temperature
    REAL(DP),OPTIONAL,INTENT(IN)            :: upscale, tempw,tolp,delta_t,trust_radius_min,trust_radius_max,&
                                               trust_radius_init,w_1,w_2
-   LOGICAL,INTENT(IN)                      :: ignore_wolfe
    INTEGER,INTENT(IN)                      :: nraise,bfgs_ndim
    REAL(DP),INTENT(IN)                     :: dt
    LOGICAL,OPTIONAL,INTENT(IN)             :: remove_rigid_rot,refold_pos
@@ -363,7 +362,7 @@ MODULE qexsd_input
       ALLOCATE (bfgs_obj) 
       CALL qes_init (bfgs_obj,"bfgs",ndim=bfgs_ndim,trust_radius_min=trust_radius_min,&
                          trust_radius_max=trust_radius_max,trust_radius_init=trust_radius_init,&
-                         w1=w_1,w2=w_2,ignore_wolfe=ignore_wolfe)
+                         w1=w_1,w2=w_2)
    ELSE IF(TRIM(ion_dynamics)=="verlet" .OR. TRIM(ion_dynamics)=="langevin" .OR. &
            TRIM(ion_dynamics) == "langevin-smc" ) THEN
       ALLOCATE(md_obj) 
@@ -470,7 +469,7 @@ MODULE qexsd_input
    esm_ispresent = .FALSE.
    !
    IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
-      esm_ispresent = .TRUE. 
+      esm_ispresent = .TRUE.
       ALLOCATE(esm_obj)
       CALL qes_init (esm_obj, "esm", BC=TRIM(esm_bc), NFIT=esm_nfit, W=esm_w, EFIELD=esm_efield)
    END IF 

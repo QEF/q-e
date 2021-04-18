@@ -126,18 +126,6 @@ MODULE path_base
          CALL errore( 'initialize_path', &
                     & 'cannot use GC-SCF and FCP simultaneously', 1 )
       !
-      ! ... set variables of GC-SCF
-      !
-      lgcscf   = lgcscf_
-      gcscf_mu = gcscf_mu_ / e2
-      CALL mp_bcast( lgcscf,   meta_ionode_id, world_comm )
-      CALL mp_bcast( gcscf_mu, meta_ionode_id, world_comm )
-      !
-      IF ( lgcscf .AND. lfcp ) &
-         CALL errore( 'initialize_path', &
-                    & 'cannot use GC-SCF and FCP simultaneously', 1 )
-      !
-      !
       IF ( nimage > 1 ) THEN
          !
          ! ... the automatic tuning of the load balance in
@@ -370,8 +358,6 @@ MODULE path_base
             !
             image_spacing(i) = norm( dr(:,i) )
             tooclose = tooclose .OR. ( image_spacing(i) < 0.01d0 )
-            !
-            IF ( lfcp ) delec(i) = ( fcp_nelec(i+1) - fcp_nelec(i) )
             !
             IF ( lfcp ) delec(i) = ( fcp_nelec(i+1) - fcp_nelec(i) )
             !

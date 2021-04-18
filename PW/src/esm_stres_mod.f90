@@ -1429,7 +1429,6 @@ CONTAINS
           ! dexperfcp_dgp = +(zb - za)*exp_erfc(+gp*(zb - za), gp/2.d0/salp + salp*(zb - za)) &
           !                 - EXP(+gp*(zb - za))*qe_gauss(gp/2.d0/salp + salp*(zb - za))/2.d0/salp
           !
-
           exph1 = (cosh(gp*(zb - za))*EXP(-2*gp*z1) - cosh(gp*(zb + za)))/sinh(2*gp*z1)
           exph2 = ((zb - za)*sinh(gp*(zb - za))*EXP(-2*gp*z1) &
                   - 2*z1*cosh(gp*(zb - za))*EXP(-2*gp*z1) &
@@ -1612,7 +1611,6 @@ CONTAINS
           !                 - EXP(+gp*(zb - za))*qe_gauss(gp/2.d0/salp + salp*(zb - za))/2.d0/salp
           ! expm = EXP(-gp*(-zb + 2*z1 - za))
           !
-
           !! BC1 terms
           dE_deps(:, :) = dE_deps(:, :) &
                           + gp*dinvgp_deps(:, :)*pi/gp*Qb*Qa/S*cosgpr*experfcm &

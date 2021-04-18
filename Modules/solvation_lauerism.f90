@@ -79,8 +79,6 @@ SUBROUTINE solvation_lauerism(rismt, charge, ireference, ierr)
   REAL(DP),    PARAMETER   :: WEI_THR   = 1.0E-32_DP
   COMPLEX(DP), PARAMETER   :: C_ZERO = CMPLX(0.0_DP, 0.0_DP, kind=DP)
   !
-  REAL(DP),    EXTERNAL    :: qe_erfc
-  !
   ! ... number of sites in solvents
   nq = get_nuniq_in_solVs()
   !
@@ -298,7 +296,7 @@ SUBROUTINE solvation_lauerism(rismt, charge, ireference, ierr)
   !
 !$omp parallel do default(shared) private(irz)
   DO irz = 1, rismt%lfft%izleft_gedge
-    wei(irz) = 0.5_DP * qe_erfc(DBLE(izleft_tail - irz ) * dz / RHO_SMEAR)
+    wei(irz) = 0.5_DP * erfc(DBLE(izleft_tail - irz ) * dz / RHO_SMEAR)
     IF (wei(irz) < WEI_THR) THEN
       wei(irz) = 0.0_DP
     END IF
@@ -307,7 +305,7 @@ SUBROUTINE solvation_lauerism(rismt, charge, ireference, ierr)
   !
 !$omp parallel do default(shared) private(irz)
   DO irz = rismt%lfft%izright_gedge, rismt%lfft%nrz
-    wei(irz) = 0.5_DP * qe_erfc(DBLE(irz - izright_tail) * dz / RHO_SMEAR)
+    wei(irz) = 0.5_DP * erfc(DBLE(irz - izright_tail) * dz / RHO_SMEAR)
     IF (wei(irz) < WEI_THR) THEN
       wei(irz) = 0.0_DP
     END IF

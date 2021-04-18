@@ -496,9 +496,6 @@ SUBROUTINE potential_esm_local(rismt, alpha, vlaue, vright, vleft, ierr)
   COMPLEX(DP) :: ccoeff
   COMPLEX(DP) :: strf_xy
   !
-  REAL(DP), EXTERNAL :: qe_erf
-  REAL(DP), EXTERNAL :: qe_erfc
-  !
   ! ... check data type
   IF (rismt%itype /= ITYPE_LAUERISM) THEN
     ierr = IERR_RISM_INCORRECT_DATA_TYPE
@@ -569,8 +566,8 @@ SUBROUTINE potential_esm_local(rismt, alpha, vlaue, vright, vleft, ierr)
       DO iz = 1, rismt%lfft%nrz
         z = zstart + dz * DBLE(iz - 1)
         vlaue(iz + jgxy) = vlaue(iz + jgxy) + ccoeff * ( &
-        &   EXP( tpi * gxy * (z - za) + LOG(qe_erfc(0.5_DP * tpi * gxy * alpha + (z - za) / alpha))) &
-        & + EXP(-tpi * gxy * (z - za) + LOG(qe_erfc(0.5_DP * tpi * gxy * alpha - (z - za) / alpha))) )
+        &   EXP( tpi * gxy * (z - za) + LOG(erfc(0.5_DP * tpi * gxy * alpha + (z - za) / alpha))) &
+        & + EXP(-tpi * gxy * (z - za) + LOG(erfc(0.5_DP * tpi * gxy * alpha - (z - za) / alpha))) )
       END DO
 !$omp end parallel do
       !
@@ -615,7 +612,7 @@ SUBROUTINE potential_esm_local(rismt, alpha, vlaue, vright, vleft, ierr)
         z = zstart + dz * DBLE(iz - 1)
         vlaue(iz + jgxy) = vlaue(iz + jgxy) + ccoeff * ( &
         & - (alpha / sqrtpi) * EXP(-(z - za) * (z - za) / alpha / alpha) &
-        & - (z - za) * qe_erf((z - za) / alpha)                          )
+        & - (z - za) * erf((z - za) / alpha)                           )
       END DO
 !$omp end parallel do
       !

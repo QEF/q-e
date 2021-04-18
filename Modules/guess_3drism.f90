@@ -44,8 +44,6 @@ SUBROUTINE guess_3drism(rismt, ierr)
   REAL(DP) :: csmax
   REAL(DP) :: erf0
   !
-  REAL(DP), EXTERNAL  :: qe_erf
-  !
   REAL(DP), PARAMETER :: VLJ_MAX  = eps4 ! Ry
   REAL(DP), PARAMETER :: CS_SCALE = 0.1_DP
   !
@@ -127,7 +125,7 @@ SUBROUTINE guess_3drism(rismt, ierr)
       !
       IF (csmax > 0.0_DP) THEN
         cs0  = rismt%csr(ir, iiq)
-        erf0 = qe_erf(ABS(cs0) / (CS_SCALE * csmax))
+        erf0 = erf(ABS(cs0) / (CS_SCALE * csmax))
         rismt%csr(ir, iiq) = cs0 * erf0 * erf0
       END IF
       !
@@ -197,12 +195,12 @@ CONTAINS
       z = rismt%lfft%zleft + rismt%lfft%zoffset + rismt%lfft%zstep * DBLE(iz - 1)
       !
       IF (rismt%lfft%xright) THEN
-        erf0 = qe_erf(alat * (z0 - z) / Z_SCALE)
+        erf0 = erf(alat * (z0 - z) / Z_SCALE)
         rismt%csr(ir, :) = rismt%csr(ir, :) * (erf0 * erf0)
       END IF
       !
       IF (rismt%lfft%xleft) THEN
-        erf0 = qe_erf(alat * (z + z0) / Z_SCALE)
+        erf0 = erf(alat * (z + z0) / Z_SCALE)
         rismt%csr(ir, :) = rismt%csr(ir, :) * (erf0 * erf0)
       END IF
       !

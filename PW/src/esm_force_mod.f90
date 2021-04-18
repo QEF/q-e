@@ -1300,7 +1300,7 @@ CONTAINS
           cc2 = -0.5d0*(z/z1)
           vg_f_r(iz, 1) = tt*(cc1 + cc2)
         ENDDO
-        call cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
+        CALL cft_1z(vg_f_r(:, 1), 1, dfftp%nr3, dfftp%nr3, -1, vg_f(:, 1))
         DO iz = 1, dfftp%nr3
           r1 = dble(rhog3(iz, ng_2d))
           r2 = aimag(rhog3(iz, ng_2d))

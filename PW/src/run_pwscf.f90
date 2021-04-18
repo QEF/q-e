@@ -184,19 +184,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... force calculation
      !
-     IF ( lforce ) THEN
-        !
-        IF ( ANY( if_pos(:,:) == 1 ) ) THEN
-           !
-           CALL forces()
-           !
-        ELSE
-           !
-           force(:,:) = 0.0_DP
-           !
-        END IF
-        !
-     END IF
+     IF ( lforce ) CALL forces()
      !
      ! ... stress calculation
      !

@@ -433,7 +433,7 @@ MODULE path_opt_routines
           mask(I_in:I_fin) = 1.0_DP
        END DO
        !
-       ! copy current positions, gradients and 0-th Jacobian in local arrays
+       ! copy current positions and gradients in local arrays
        !
        DO i = 1, nim
           I_in  = ( i - 1 )*dim2 + 1

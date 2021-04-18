@@ -564,7 +564,7 @@ CONTAINS
       pos(:) = pos(:) + trust_radius * step(:)
       !
 1000  stop_bfgs = conv_bfgs
-      ! ... input ions+cell+FCP variables
+      ! ... input ions+cell variables
       pos_in = pos(1:n-NADD)
       IF ( lmovecell ) FORALL( i=1:3, j=1:3) h(i,j) = pos( n-NADD + j+3*(i-1) )
       IF ( lfcp ) nelec = pos( n )
@@ -698,7 +698,7 @@ CONTAINS
       !! \(\text{inv_hess}\) in re-initialized to the initial guess 
       !! defined as the inverse metric.
       !
-      INTEGER, INTENT(IN) :: n
+      INTEGER,  INTENT(IN) :: n
       LOGICAL,  INTENT(IN) :: lfcp
       REAL(DP), INTENT(IN) :: fcp_hess
       !
@@ -733,7 +733,6 @@ CONTAINS
       !
       INTEGER            :: iunbfgs
       LOGICAL            :: file_exists
-      REAL(DP)           :: helec
       !
       !
       INQUIRE( FILE = bfgs_file, EXIST = file_exists )

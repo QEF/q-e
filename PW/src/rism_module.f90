@@ -32,7 +32,7 @@ MODULE rism_module
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : invfft
   USE force_mod,        ONLY : lstres
-  USE funct,            ONLY : exx_is_active
+  USE xc_lib,           ONLY : exx_is_active
   USE gvect,            ONLY : ngm, gstart
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE ions_base,        ONLY : nat, ityp, zv, tau

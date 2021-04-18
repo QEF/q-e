@@ -618,7 +618,7 @@ MODULE pw_restart_new
             temp(itemp) = etotefield/e2
             efield_corr => temp(itemp) 
          END IF
-         IF (lfcp ) THEN
+         IF ( lfcp ) THEN
             itemp = itemp +1
             temp(itemp) = fcp_mu * tot_charge / e2
             potstat_corr => temp(itemp)

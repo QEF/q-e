@@ -89,7 +89,6 @@ SUBROUTINE normalize_lauerism(rismt, charge, lboth, expand, ierr)
   REAL(DP),   PARAMETER :: HZ_SMEAR = 2.0_DP  ! in bohr
   REAL(DP),   PARAMETER :: HW_THR   = 1.0E-8_DP
   !
-  REAL(DP),   EXTERNAL  :: qe_erfc
 #if defined (__DEBUG_RISM)
   !
   CALL start_clock('3DRISM_norm')
@@ -206,7 +205,7 @@ SUBROUTINE normalize_lauerism(rismt, charge, lboth, expand, ierr)
     !
 !$omp parallel do default(shared) private(irz)
     DO irz = 1, rismt%lfft%izleft_gedge
-      hwei(irz, iiq) = 0.5_DP * qe_erfc(DBLE(izleft_tail(iiq) - irz ) * dz / HZ_SMEAR)
+      hwei(irz, iiq) = 0.5_DP * erfc(DBLE(izleft_tail(iiq) - irz ) * dz / HZ_SMEAR)
       IF (hwei(irz, iiq) < HW_THR) THEN
         hwei(irz, iiq) = 0.0_DP
       END IF
@@ -215,7 +214,7 @@ SUBROUTINE normalize_lauerism(rismt, charge, lboth, expand, ierr)
     !
 !$omp parallel do default(shared) private(irz)
     DO irz = rismt%lfft%izright_gedge, rismt%lfft%nrz
-      hwei(irz, iiq) = 0.5_DP * qe_erfc(DBLE(irz - izright_tail(iiq)) * dz / HZ_SMEAR)
+      hwei(irz, iiq) = 0.5_DP * erfc(DBLE(irz - izright_tail(iiq)) * dz / HZ_SMEAR)
       IF (hwei(irz, iiq) < HW_THR) THEN
         hwei(irz, iiq) = 0.0_DP
       END IF
