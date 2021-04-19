@@ -71,7 +71,7 @@ PROGRAM scan_ibrav
     par(8) = 0._dp
     par(9) = 0._dp
     WRITE(*,'(2/,"Scanning ibrav ",i3)') ibrav
-    CALL lmdif(optimize_this_s, nfnc, npar, par, vchisq, 1.d-8, info)
+    CALL lmdif0(optimize_this_s, nfnc, npar, par, vchisq, 1.d-8, info)
     
     IF(info>0 .and. info<5) THEN
        !PRINT*, "Minimization succeeded"
