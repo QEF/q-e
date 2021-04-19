@@ -23,7 +23,7 @@ PROGRAM scan_ibrav
   INTEGER :: ibrav, ios, ii, i, info
   REAL(DP) :: celldm(6), angle(3), alat, chisq, chisq_aux
   !
-  REAL(DP) :: at(3,3), at_new(3,3), omega, R(3,3), par(npar), par_aux(npar), vchisq(npar)
+  REAL(DP) :: at(3,3), at_new(3,3), omega, R(3,3), par(npar), par_aux(npar), celldiff(nfnc)
   REAL(DP),PARAMETER :: grad_to_rad = pi/180
 !  REAL(DP) :: xi(npar,npar)
   INTEGER :: lwa, iwa(npar)
@@ -71,7 +71,7 @@ PROGRAM scan_ibrav
     par(8) = 0._dp
     par(9) = 0._dp
     WRITE(*,'(2/,"Scanning ibrav ",i3)') ibrav
-    CALL lmdif0(optimize_this_s, nfnc, npar, par, vchisq, 1.d-8, info)
+    CALL lmdif0(optimize_this_s, nfnc, npar, par, celldiff, 1.d-8, info)
     
     IF(info>0 .and. info<5) THEN
        !PRINT*, "Minimization succeeded"
@@ -81,7 +81,7 @@ PROGRAM scan_ibrav
       WRITE(*,'(a,i6)') "Minimization error", info
       !STOP
     ENDIF
-    chisq = SUM(vchisq**2)
+    chisq = SUM(celldiff**2)
       
     IF(chisq<1.d-3) THEN
       WRITE(*,'("Minimization succeeded  (chisq=",g7.1,")")') chisq
@@ -90,8 +90,8 @@ PROGRAM scan_ibrav
         par_aux = par
         par_aux(i) = par_aux(i) * .5_dp
         !chisq_aux = optimize_this(par_aux)
-        CALL optimize_this_s(nfnc, npar, par_aux, vchisq, info)
-        chisq_aux = SUM(vchisq**2)
+        CALL optimize_this_s(nfnc, npar, par_aux, celldiff, info)
+        chisq_aux = SUM(celldiff**2)
         IF(chisq_aux/=chisq)THEN 
           WRITE(*, '("    celldm(",i2,") = ", f14.9)') i,par(i)
         ENDIF
