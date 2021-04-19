@@ -28,13 +28,11 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
-  USE uspp_data,    ONLY : nqxq, dq, nqx, spline_ps, tab, tab_d2y, qrad, &
-                           tab_d, tab_d2y_d, qrad_d
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv, &
                            ap, aainit, qq_so, dvan_so, okvan, ofsbeta, &
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, qq_at_d, &
                            qq_nt_d, indv_d, qq_so_d, dvan_so_d, ofsbeta_d
-  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nbetam, nsp
+  USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
   USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
@@ -314,13 +312,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   !
 #if defined __CUDA
   !
-  ! update GPU memory (taking care of zero-dim allocations)
-  !
-  if (nbetam>0) then
-      if (lmaxq>0) qrad_d=qrad
-      tab_d=tab
-      if (spline_ps) tab_d2y_d=tab_d2y
-  endif
+  ! update GPU memory (taking care of zero-dim allocations)ù
   !
   if (nhm>0) then
      indv_d=indv
@@ -346,7 +338,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   return
   !
 end subroutine init_us_1
-
+!
 !----------------------------------------------------------------------
 SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
   !----------------------------------------------------------------------
@@ -359,7 +351,7 @@ SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
-  USE uspp_data,    ONLY : nqxq, dq, qrad
+  USE uspp_data,    ONLY : nqxq, dq, qrad, qrad_d
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -433,6 +425,12 @@ SUBROUTINE compute_qrad (omega, intra_bgrp_comm)
   DEALLOCATE (besr)
   DEALLOCATE (aux)
   !
+  ! update GPU memory (taking care of zero-dim allocations)
+  !
+#if defined __CUDA
+  if ( nbetam > 0 .and. lmaxq > 0 ) qrad_d=qrad
+#endif
+  !
 END SUBROUTINE compute_qrad
 
 !----------------------------------------------------------------------
@@ -445,7 +443,7 @@ SUBROUTINE compute_beta ( omega, intra_bgrp_comm )
   USE upf_const,    ONLY : fpi
   USE atom,         ONLY : rgrid
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nsp
-  USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps
+  USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps, tab_d, tab_d2y_d
   USE mp,           ONLY : mp_sum
   USE splinelib,    ONLY : spline
   !
@@ -510,5 +508,14 @@ SUBROUTINE compute_beta ( omega, intra_bgrp_comm )
      deallocate(xdata)
      !
   endif
+  !
+  ! update GPU memory (taking care of zero-dim allocations)
+  !
+#if defined __CUDA
+  if ( nbetam > 0 ) then
+     tab_d=tab
+     if (spline_ps) tab_d2y_d=tab_d2y
+  endif
+#endif
   !
 END SUBROUTINE compute_beta
