@@ -370,7 +370,7 @@ PROGRAM ev
       ! This subroutine is passed to LMDIF to be minimized
       ! LMDIF takes as input the difference between f_fit and f_real
       !       and computes the chi^2 internally.
-      SUBROUTINE SCHISQ2(m_, n_, par_, f_, i_)
+      SUBROUTINE EOSDIFF(m_, n_, par_, f_, i_)
        IMPLICIT NONE
          INTEGER,INTENT(in)  :: m_, n_
          INTEGER,INTENT(inout)   :: i_
@@ -400,7 +400,7 @@ PROGRAM ev
       par(3) = 5.0d0
       par(4) = -0.01d0 ! unused for some eos
       !      
-      CALL lmdif0(SCHISQ2, npt, npar, par, ediff, 1.d-12, i)
+      CALL lmdif0(EOSDIFF, npt, npar, par, ediff, 1.d-12, i)
       !
       IF(i>0 .and. i<5) THEN
          PRINT*, "Minimization succeeded"
@@ -410,7 +410,6 @@ PROGRAM ev
         PRINT*, "Minimization error"
         STOP
       ENDIF
-      !chisq = vchisq(1)
       !
       CALL eqstate(npar,par,chisq)
 
