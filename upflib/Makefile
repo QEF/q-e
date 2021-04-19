@@ -16,6 +16,8 @@ init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
 init_tab_atwfc.o \
+init_tab_beta.o \
+init_tab_qrad.o \
 init_us_2_base.o \
 interp_atwfc.o \
 paw_variables.o \
