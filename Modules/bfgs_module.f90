@@ -224,9 +224,9 @@ CONTAINS
       LOGICAL,          INTENT(OUT)   :: step_accepted
       !! .TRUE. if a new BFGS step is done
       LOGICAL,          INTENT(OUT)   :: stop_bfgs
-      !! .TRUE. if BFGS failed
-      LOGICAL,          INTENT(OUT)   :: failed
       !! .TRUE. if BFGS convergence has been achieved
+      LOGICAL,          INTENT(OUT)   :: failed
+      !! .TRUE. if BFGS failed
       INTEGER,          INTENT(OUT)   :: istep
       !
       ! ... local variables
