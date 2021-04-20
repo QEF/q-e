@@ -94,31 +94,31 @@
 </blockquote>
    <p><a href="#idm537">ATOMIC_VELOCITIES</a></p>
 <blockquote>
-<a href="#idm545">V</a> | <a href="#idm549">vx</a> | <a href="#idm550">vy</a> | <a href="#idm551">vz</a>
+<a href="#idm545">V</a> | <a href="#idm553">vx</a> | <a href="#idm554">vy</a> | <a href="#idm555">vz</a>
 </blockquote>
-   <p><a href="#idm552">CELL_PARAMETERS</a></p>
+   <p><a href="#idm556">CELL_PARAMETERS</a></p>
 <blockquote>
-<a href="#idm562">v1</a> | <a href="#idm563">v2</a> | <a href="#idm564">v3</a>
+<a href="#idm566">v1</a> | <a href="#idm567">v2</a> | <a href="#idm568">v3</a>
 </blockquote>
-   <p><a href="#idm565">REF_CELL_PARAMETERS</a></p>
+   <p><a href="#idm569">REF_CELL_PARAMETERS</a></p>
 <blockquote>
-<a href="#idm575">v1</a> | <a href="#idm576">v2</a> | <a href="#idm577">v3</a>
+<a href="#idm579">v1</a> | <a href="#idm580">v2</a> | <a href="#idm581">v3</a>
 </blockquote>
-   <p><a href="#idm578">CONSTRAINTS</a></p>
+   <p><a href="#idm582">CONSTRAINTS</a></p>
 <blockquote>
-<a href="#idm583">nconstr</a> | <a href="#idm586">constr_tol</a> | <a href="#idm590">constr_type</a> | <a href="#idm593">constr(1)</a> | <a href="#idm594">constr(2)</a> | <a href="#idm596">constr(3)</a> | <a href="#idm597">constr(4)</a> | <a href="#idm600">constr_target</a>
+<a href="#idm587">nconstr</a> | <a href="#idm590">constr_tol</a> | <a href="#idm594">constr_type</a> | <a href="#idm597">constr(1)</a> | <a href="#idm598">constr(2)</a> | <a href="#idm600">constr(3)</a> | <a href="#idm601">constr(4)</a> | <a href="#idm604">constr_target</a>
 </blockquote>
-   <p><a href="#idm602">OCCUPATIONS</a></p>
+   <p><a href="#idm606">OCCUPATIONS</a></p>
 <blockquote>
-<a href="#idm607">f_inp1</a> | <a href="#idm610">f_inp2</a>
+<a href="#idm611">f_inp1</a> | <a href="#idm614">f_inp2</a>
 </blockquote>
-   <p><a href="#idm612">ATOMIC_FORCES</a></p>
+   <p><a href="#idm616">ATOMIC_FORCES</a></p>
 <blockquote>
-<a href="#idm617">X</a> | <a href="#idm621">fx</a> | <a href="#idm622">fy</a> | <a href="#idm623">fz</a>
+<a href="#idm621">X</a> | <a href="#idm625">fx</a> | <a href="#idm626">fy</a> | <a href="#idm627">fz</a>
 </blockquote>
-   <p><a href="#idm624">PLOT_WANNIER</a></p>
-<blockquote><a href="#idm629">iwf</a></blockquote>
-   <p><a href="#idm631">AUTOPILOT</a></p>
+   <p><a href="#idm628">PLOT_WANNIER</a></p>
+<blockquote><a href="#idm633">iwf</a></blockquote>
+   <p><a href="#idm635">AUTOPILOT</a></p>
 <blockquote></blockquote>
 </blockquote>
 </blockquote>
@@ -3348,42 +3348,41 @@ structural optimization run.
 </table>
    <a name="idm537"></a><a name="ATOMIC_VELOCITIES"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
-	    Card: <span class="card">ATOMIC_VELOCITIES</span> { <span class="flag">a.u</span> } </h2></th></tr>
+	    Card: <span class="card">ATOMIC_VELOCITIES</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
 <tr><td>
 <p><b>
 Optional card, reads velocities from standard input
       </b></p>
 <p><pre>
-when starting with ion_velocities="from_input" it is convenient
+when starting with <a href="#ion_velocities">ion_velocities</a> = "from_input" it is convenient
 to perform a few steps (~5-10) with a small time step (0.5 a.u.).
 The velocities must be expressed using the same length units
-indicated in the card ATOMIC_POSITIONS, divided by time
+indicated in the card <a href="#ATOMIC_POSITIONS">ATOMIC_POSITIONS</a>, divided by time
 in atomic units.
       </pre></p>
 <h3>Syntax:</h3>
 <blockquote>
-<b style="white-space: nowrap;">ATOMIC_VELOCITIES {  a.u
-          } </b><br><div class="syntax">
+<b style="white-space: nowrap;">ATOMIC_VELOCITIES </b><br><div class="syntax">
 <a name="idm543"></a><table>
 <tr>
 <td style="white-space:nowrap"> <i><a href="#idm545">V(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm549">vx(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm550">vy(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm551">vz(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm553">vx(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm554">vy(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm555">vz(1)</a></i> </td>
 </tr>
 <tr>
 <td style="white-space:nowrap"> <i><a href="#idm545">V(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm549">vx(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm550">vy(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm551">vz(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm553">vx(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm554">vy(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm555">vz(2)</a></i> </td>
 </tr>
 <tr><td colspan="2"> . . .</td></tr>
 <tr>
 <td style="white-space:nowrap"> <i><a href="#idm545">V(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm549">vx(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm550">vy(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm551">vz(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm553">vx(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm554">vy(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm555">vz(nat)</a></i> </td>
 </tr>
 </table>
 </div>
@@ -3397,18 +3396,18 @@ in atomic units.
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="V"><a name="idm545">V</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
 </tr>
-<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> label of the atom as specified in ATOMIC_SPECIES
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> label of the atom as specified in <a href="#ATOMIC_SPECIES">ATOMIC_SPECIES</a>
                   </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="vx"><a name="idm549">vx</a></a>, <a name="vy"><a name="idm550">vy</a></a>, <a name="vz"><a name="idm551">vz</a></a>
+<a name="vx"><a name="idm553">vx</a></a>, <a name="vy"><a name="idm554">vy</a></a>, <a name="vz"><a name="idm555">vz</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
-<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> atomic velocities along x y and z direction
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> atomic velocities along <i>x,</i> <i>y</i> and <i>z</i> direction
                   </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -3416,7 +3415,7 @@ in atomic units.
 </td></tr>
 </tbody></table></td></tr>
 </table>
-   <a name="idm552"></a><a name="CELL_PARAMETERS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+   <a name="idm556"></a><a name="CELL_PARAMETERS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">CELL_PARAMETERS</span> { <span class="flag">bohr</span> | <span class="flag">angstrom</span> | <span class="flag">alat</span> } </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -3428,26 +3427,26 @@ Optional card, needed only if ibrav = 0 is specified, ignored otherwise !
 <blockquote>
 <b style="white-space: nowrap;">CELL_PARAMETERS {  bohr | angstrom | alat
           } </b><br><div class="syntax">
-<a name="idm558"></a><table>
+<a name="idm562"></a><table>
 <tr>
 <td align="right" style="white-space:nowrap"></td>
-<td> <i><a href="#idm562">v1(1)</a></i> </td>
-<td> <i><a href="#idm562">v1(2)</a></i> </td>
-<td> <i><a href="#idm562">v1(3)</a></i> </td>
+<td> <i><a href="#idm566">v1(1)</a></i> </td>
+<td> <i><a href="#idm566">v1(2)</a></i> </td>
+<td> <i><a href="#idm566">v1(3)</a></i> </td>
 <td align="left" style="white-space:nowrap"></td>
 </tr>
 <tr>
 <td align="right" style="white-space:nowrap"></td>
-<td> <i><a href="#idm563">v2(1)</a></i> </td>
-<td> <i><a href="#idm563">v2(2)</a></i> </td>
-<td> <i><a href="#idm563">v2(3)</a></i> </td>
+<td> <i><a href="#idm567">v2(1)</a></i> </td>
+<td> <i><a href="#idm567">v2(2)</a></i> </td>
+<td> <i><a href="#idm567">v2(3)</a></i> </td>
 <td align="left" style="white-space:nowrap"></td>
 </tr>
 <tr>
 <td align="right" style="white-space:nowrap"></td>
-<td> <i><a href="#idm564">v3(1)</a></i> </td>
-<td> <i><a href="#idm564">v3(2)</a></i> </td>
-<td> <i><a href="#idm564">v3(3)</a></i> </td>
+<td> <i><a href="#idm568">v3(1)</a></i> </td>
+<td> <i><a href="#idm568">v3(2)</a></i> </td>
+<td> <i><a href="#idm568">v3(3)</a></i> </td>
 <td align="left" style="white-space:nowrap"></td>
 </tr>
 </table>
@@ -3457,7 +3456,7 @@ Optional card, needed only if ibrav = 0 is specified, ignored otherwise !
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm553"></a><a name="lattice_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm557"></a><a name="lattice_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "><i>Card's options:</i></th>
 <th style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">
@@ -3477,7 +3476,7 @@ If nothing specified and no lattice parameter specified,
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="v1"><a name="idm562">v1</a></a>, <a name="v2"><a name="idm563">v2</a></a>, <a name="v3"><a name="idm564">v3</a></a>
+<a name="v1"><a name="idm566">v1</a></a>, <a name="v2"><a name="idm567">v2</a></a>, <a name="v3"><a name="idm568">v3</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -3493,7 +3492,7 @@ Crystal lattice vectors:
 </td></tr>
 </tbody></table></td></tr>
 </table>
-   <a name="idm565"></a><a name="REF_CELL_PARAMETERS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+   <a name="idm569"></a><a name="REF_CELL_PARAMETERS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">REF_CELL_PARAMETERS</span> { <span class="flag">bohr</span> | <span class="flag">angstrom</span> } </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -3506,26 +3505,26 @@ The reference cell generates additional buffer planewaves.
 <blockquote>
 <b style="white-space: nowrap;">REF_CELL_PARAMETERS {  bohr | angstrom
           } </b><br><div class="syntax">
-<a name="idm571"></a><table>
+<a name="idm575"></a><table>
 <tr>
 <td align="right" style="white-space:nowrap"></td>
-<td> <i><a href="#idm575">v1(1)</a></i> </td>
-<td> <i><a href="#idm575">v1(2)</a></i> </td>
-<td> <i><a href="#idm575">v1(3)</a></i> </td>
+<td> <i><a href="#idm579">v1(1)</a></i> </td>
+<td> <i><a href="#idm579">v1(2)</a></i> </td>
+<td> <i><a href="#idm579">v1(3)</a></i> </td>
 <td align="left" style="white-space:nowrap"></td>
 </tr>
 <tr>
 <td align="right" style="white-space:nowrap"></td>
-<td> <i><a href="#idm576">v2(1)</a></i> </td>
-<td> <i><a href="#idm576">v2(2)</a></i> </td>
-<td> <i><a href="#idm576">v2(3)</a></i> </td>
+<td> <i><a href="#idm580">v2(1)</a></i> </td>
+<td> <i><a href="#idm580">v2(2)</a></i> </td>
+<td> <i><a href="#idm580">v2(3)</a></i> </td>
 <td align="left" style="white-space:nowrap"></td>
 </tr>
 <tr>
 <td align="right" style="white-space:nowrap"></td>
-<td> <i><a href="#idm577">v3(1)</a></i> </td>
-<td> <i><a href="#idm577">v3(2)</a></i> </td>
-<td> <i><a href="#idm577">v3(3)</a></i> </td>
+<td> <i><a href="#idm581">v3(1)</a></i> </td>
+<td> <i><a href="#idm581">v3(2)</a></i> </td>
+<td> <i><a href="#idm581">v3(3)</a></i> </td>
 <td align="left" style="white-space:nowrap"></td>
 </tr>
 </table>
@@ -3535,7 +3534,7 @@ The reference cell generates additional buffer planewaves.
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm566"></a><a name="lattice_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm570"></a><a name="lattice_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "><i>Card's options:</i></th>
 <th style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">
@@ -3570,7 +3569,7 @@ choice of reference cell parameters.
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="v1"><a name="idm575">v1</a></a>, <a name="v2"><a name="idm576">v2</a></a>, <a name="v3"><a name="idm577">v3</a></a>
+<a name="v1"><a name="idm579">v1</a></a>, <a name="v2"><a name="idm580">v2</a></a>, <a name="v3"><a name="idm581">v3</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -3586,7 +3585,7 @@ v3(1)  v3(2)  v3(3)    ... 3rd reference lattice vector
 </td></tr>
 </tbody></table></td></tr>
 </table>
-   <a name="idm578"></a><a name="CONSTRAINTS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+   <a name="idm582"></a><a name="CONSTRAINTS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">CONSTRAINTS</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -3600,11 +3599,11 @@ When this card is present the SHAKE algorithm is automatically used.
 <h3>Syntax:</h3>
 <blockquote>
 <b style="white-space: nowrap;">CONSTRAINTS </b><br><div class="syntax">
-<i><a href="#idm583">nconstr</a></i>   { <i><a href="#idm586">constr_tol</a></i>   } <br><a name="idm588"></a><table>
+<i><a href="#idm587">nconstr</a></i>   { <i><a href="#idm590">constr_tol</a></i>   } <br><a name="idm592"></a><table>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm590">constr_type(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm593">constr(1)(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm594">constr(2)(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm594">constr_type(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm597">constr(1)(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm598">constr(2)(1)</a></i> </td>
 <td> [ </td>
 <td style="white-space:nowrap"> <i>constr(3)(1)
 	  </i> </td>
@@ -3612,13 +3611,13 @@ When this card is present the SHAKE algorithm is automatically used.
 	  </i> </td>
 <td> ] </td>
 <td> { </td>
-<td style="white-space:nowrap"> <i><a href="#idm600">constr_target(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm604">constr_target(1)</a></i> </td>
 <td> } </td>
 </tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm590">constr_type(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm593">constr(1)(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm594">constr(2)(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm594">constr_type(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm597">constr(1)(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm598">constr(2)(2)</a></i> </td>
 <td> [ </td>
 <td style="white-space:nowrap"> <i>constr(3)(2)
 	  </i> </td>
@@ -3626,14 +3625,14 @@ When this card is present the SHAKE algorithm is automatically used.
 	  </i> </td>
 <td> ] </td>
 <td> { </td>
-<td style="white-space:nowrap"> <i><a href="#idm600">constr_target(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm604">constr_target(2)</a></i> </td>
 <td> } </td>
 </tr>
 <tr><td colspan="2"> . . .</td></tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm590">constr_type(nconstr)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm593">constr(1)(nconstr)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm594">constr(2)(nconstr)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm594">constr_type(nconstr)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm597">constr(1)(nconstr)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm598">constr(2)(nconstr)</a></i> </td>
 <td> [ </td>
 <td style="white-space:nowrap"> <i>constr(3)(nconstr)
 	  </i> </td>
@@ -3641,7 +3640,7 @@ When this card is present the SHAKE algorithm is automatically used.
 	  </i> </td>
 <td> ] </td>
 <td> { </td>
-<td style="white-space:nowrap"> <i><a href="#idm600">constr_target(nconstr)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm604">constr_target(nconstr)</a></i> </td>
 <td> } </td>
 </tr>
 </table>
@@ -3651,7 +3650,7 @@ When this card is present the SHAKE algorithm is automatically used.
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm583"></a><a name="nconstr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm587"></a><a name="nconstr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nconstr</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -3660,7 +3659,7 @@ When this card is present the SHAKE algorithm is automatically used.
                </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-<a name="idm586"></a><a name="constr_tol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm590"></a><a name="constr_tol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">constr_tol</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -3671,7 +3670,7 @@ When this card is present the SHAKE algorithm is automatically used.
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="constr_type"><a name="idm590">constr_type</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="constr_type"><a name="idm594">constr_type</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -3710,7 +3709,7 @@ Type of constrain :
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="constr(1)"><a name="idm593">constr(1)</a></a>, <a name="constr(2)"><a name="idm594">constr(2)</a></a>, <a name="constr(3)"><a name="idm596">constr(3)</a></a>, <a name="constr(4)"><a name="idm597">constr(4)</a></a>
+<a name="constr(1)"><a name="idm597">constr(1)</a></a>, <a name="constr(2)"><a name="idm598">constr(2)</a></a>, <a name="constr(3)"><a name="idm600">constr(3)</a></a>, <a name="constr(4)"><a name="idm601">constr(4)</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; "></td>
 </tr>
@@ -3753,7 +3752,7 @@ Type of constrain :
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="constr_target"><a name="idm600">constr_target</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="constr_target"><a name="idm604">constr_target</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -3766,7 +3765,7 @@ This variable is optional.
 </td></tr>
 </tbody></table></td></tr>
 </table>
-   <a name="idm602"></a><a name="OCCUPATIONS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+   <a name="idm606"></a><a name="OCCUPATIONS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">OCCUPATIONS</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -3776,21 +3775,21 @@ This variable is optional.
 <h3>Syntax:</h3>
 <blockquote>
 <b style="white-space: nowrap;">OCCUPATIONS </b><br><div class="syntax">
-<a name="idm605"></a><table>
+<a name="idm609"></a><table>
 <tr>
 <td align="right" style="white-space:nowrap"></td>
-<td> <i><a href="#idm607">f_inp1(1)</a></i> </td>
-<td> <i><a href="#idm607">f_inp1(2)</a></i> </td>
+<td> <i><a href="#idm611">f_inp1(1)</a></i> </td>
+<td> <i><a href="#idm611">f_inp1(2)</a></i> </td>
 <td> . . .</td>
-<td> <i><a href="#idm607">f_inp1(nbnd)</a></i> </td>
+<td> <i><a href="#idm611">f_inp1(nbnd)</a></i> </td>
 <td align="left" style="white-space:nowrap"></td>
 </tr>
 <tr>
 <td align="right" style="white-space:nowrap">[  </td>
-<td> <i><a href="#idm610">f_inp2(1)</a></i> </td>
-<td> <i><a href="#idm610">f_inp2(2)</a></i> </td>
+<td> <i><a href="#idm614">f_inp2(1)</a></i> </td>
+<td> <i><a href="#idm614">f_inp2(2)</a></i> </td>
 <td> . . .</td>
-<td> <i><a href="#idm610">f_inp2(nbnd)</a></i> </td>
+<td> <i><a href="#idm614">f_inp2(nbnd)</a></i> </td>
 <td align="left" style="white-space:nowrap">  ]</td>
 </tr>
 </table>
@@ -3802,7 +3801,7 @@ This variable is optional.
 <blockquote>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="f_inp1"><a name="idm607">f_inp1</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="f_inp1"><a name="idm611">f_inp1</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -3813,7 +3812,7 @@ For spin-polarized calculations, these are majority spin states.
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="f_inp2"><a name="idm610">f_inp2</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="f_inp2"><a name="idm614">f_inp2</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -3826,7 +3825,7 @@ To be specified only for spin-polarized calculations.
 </td></tr>
 </tbody></table></td></tr>
 </table>
-   <a name="idm612"></a><a name="ATOMIC_FORCES"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+   <a name="idm616"></a><a name="ATOMIC_FORCES"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">ATOMIC_FORCES</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -3836,25 +3835,25 @@ To be specified only for spin-polarized calculations.
 <h3>Syntax:</h3>
 <blockquote>
 <b style="white-space: nowrap;">ATOMIC_FORCES </b><br><div class="syntax">
-<a name="idm615"></a><table>
+<a name="idm619"></a><table>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm617">X(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm621">fx(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm622">fy(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm623">fz(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm621">X(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm625">fx(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm626">fy(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm627">fz(1)</a></i> </td>
 </tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm617">X(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm621">fx(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm622">fy(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm623">fz(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm621">X(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm625">fx(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm626">fy(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm627">fz(2)</a></i> </td>
 </tr>
 <tr><td colspan="2"> . . .</td></tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm617">X(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm621">fx(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm622">fy(nat)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm623">fz(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm621">X(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm625">fx(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm626">fy(nat)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm627">fz(nat)</a></i> </td>
 </tr>
 </table>
 </div>
@@ -3865,7 +3864,7 @@ To be specified only for spin-polarized calculations.
 <blockquote>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="X"><a name="idm617">X</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="X"><a name="idm621">X</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> label of the atom as specified in ATOMIC_SPECIES
@@ -3875,7 +3874,7 @@ To be specified only for spin-polarized calculations.
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="fx"><a name="idm621">fx</a></a>, <a name="fy"><a name="idm622">fy</a></a>, <a name="fz"><a name="idm623">fz</a></a>
+<a name="fx"><a name="idm625">fx</a></a>, <a name="fy"><a name="idm626">fy</a></a>, <a name="fz"><a name="idm627">fz</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -3888,7 +3887,7 @@ external force on atom X (cartesian components, Ha/a.u. units)
 </td></tr>
 </tbody></table></td></tr>
 </table>
-   <a name="idm624"></a><a name="PLOT_WANNIER"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+   <a name="idm628"></a><a name="PLOT_WANNIER"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">PLOT_WANNIER</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
@@ -3899,11 +3898,11 @@ Optional card, indices of the states that have to be printed (only for calf=1 an
 <h3>Syntax:</h3>
 <blockquote>
 <b style="white-space: nowrap;">PLOT_WANNIER </b><br><div class="syntax">
-<a name="idm627"></a><table>
-<tr><td style="white-space:nowrap"> <i><a href="#idm629">iwf(1)</a></i> </td></tr>
-<tr><td style="white-space:nowrap"> <i><a href="#idm629">iwf(2)</a></i> </td></tr>
+<a name="idm631"></a><table>
+<tr><td style="white-space:nowrap"> <i><a href="#idm633">iwf(1)</a></i> </td></tr>
+<tr><td style="white-space:nowrap"> <i><a href="#idm633">iwf(2)</a></i> </td></tr>
 <tr><td colspan="2"> . . .</td></tr>
-<tr><td style="white-space:nowrap"> <i><a href="#idm629">iwf(nwf)</a></i> </td></tr>
+<tr><td style="white-space:nowrap"> <i><a href="#idm633">iwf(nwf)</a></i> </td></tr>
 </table>
 </div>
 </blockquote>
@@ -3913,7 +3912,7 @@ Optional card, indices of the states that have to be printed (only for calf=1 an
 <blockquote>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="iwf"><a name="idm629">iwf</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="iwf"><a name="idm633">iwf</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -3928,7 +3927,7 @@ one index in needed.
 </td></tr>
 </tbody></table></td></tr>
 </table>
-   <a name="idm631"></a><a name="AUTOPILOT"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+   <a name="idm635"></a><a name="AUTOPILOT"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
 <tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">AUTOPILOT</h2></th></tr>
 <tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
 <i>Syntax of this supercard is the following:</i><br><pre>AUTOPILOT<br><i>  ... content of the supercard here ...</i><br>ENDRULES</pre>
@@ -3964,7 +3963,7 @@ separate the corresponding change in parameters with a column.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Tue Apr 20 18:32:07 CEST 2021.
+	  This file has been created by helpdoc utility on Tue Apr 20 20:27:07 CEST 2021.
 	</small>
 </body>
 </html>
