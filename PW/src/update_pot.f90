@@ -103,12 +103,12 @@ SUBROUTINE update_neb( )
   USE mp_images, ONLY : intra_image_comm
   USE ions_base, ONLY : nat, tau, nsp, ityp
   USE gvect,     ONLY : ngm, g, eigts1, eigts2, eigts3
+#if defined(__CUDA)
+  USE gvect,     ONLY : eigts1_d, eigts2_d, eigts3_d
+#endif
   USE vlocal,    ONLY : strf
   USE cell_base, ONLY : bg
   USE fft_base,  ONLY : dfftp
-  !
-  USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
-                           using_eigts1_D, using_eigts2_d, using_eigts3_d
   !
   IMPLICIT NONE
   !
@@ -159,8 +159,11 @@ SUBROUTINE update_neb( )
                           dfftp%nr1, dfftp%nr2, dfftp%nr3, strf,     &
                           eigts1, eigts2, eigts3 )
          ! sync duplicated version
-         CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
-         CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+#if defined(__CUDA)
+         eigts1_d = eigts1
+         eigts2_d = eigts2
+         eigts3_d = eigts3
+#endif
          !
       END IF
       !
@@ -387,6 +390,9 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE control_flags,        ONLY : gamma_only
   USE gvect,                ONLY : ngm, g, gg, gstart, eigts1, eigts2, eigts3, &
                                    mill, ig_l2g
+#if defined(__CUDA)
+  USE gvect,                ONLY : eigts1_d, eigts2_d, eigts3_d
+#endif
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
@@ -405,8 +411,6 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE io_base,              ONLY : write_rhog, read_rhog
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
-  USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
-                           using_eigts1_d, using_eigts2_d, using_eigts3_d
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: rho_extr
@@ -430,10 +434,11 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
           dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
-#if defined(__CUDA)
      ! sync duplicated version
-     CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
-     CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+#if defined(__CUDA)
+     eigts1_d = eigts1
+     eigts2_d = eigts2
+     eigts3_d = eigts3
 #endif
      !
      ! ... new charge density from extrapolated wfcs
@@ -574,10 +579,11 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
           dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
-#if defined(__CUDA)
      ! sync duplicated version
-     CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
-     CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+#if defined(__CUDA)
+     eigts1_d = eigts1
+     eigts2_d = eigts2
+     eigts3_d = eigts3
 #endif
      !
      CALL set_rhoc()

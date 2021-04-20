@@ -18,6 +18,9 @@ SUBROUTINE hinit0()
   USE cellmd,           ONLY : omega_old, at_old, lmovecell
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ecutrho, ngm, g, gg, eigts1, eigts2, eigts3
+#if defined (__CUDA)
+  USE gvect,            ONLY : eigts1_d, eigts2_d, eigts3_d
+#endif
   USE gvecw,            ONLY : ecutwfc
   USE vlocal,           ONLY : strf
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
@@ -28,8 +31,6 @@ SUBROUTINE hinit0()
   USE noncollin_module, ONLY : report
   USE mp_bands,         ONLY : intra_bgrp_comm
   !
-  USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
-                           using_eigts1_D, using_eigts2_d, using_eigts3_d
   !
   IMPLICIT NONE
   REAL (dp) :: alat_old
@@ -77,8 +78,9 @@ SUBROUTINE hinit0()
                    strf, eigts1, eigts2, eigts3 )
   ! sync duplicated version
 #if defined(__CUDA)
-  CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
-  CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+  eigts1_d = eigts1
+  eigts2_d = eigts2
+  eigts3_d = eigts3
 #endif
   !
   ! these routines can be used to patch quantities that are dependent

@@ -38,6 +38,7 @@ Fixed in development version:
     because they contained too long lines (noticed by Felix Goudreault, U. Montreal)
   * Variable-cell hybrid DFT fixed: it was broken since v.6.5.
   * Small random errors in some XC spin-polarized functionals in OMP execution
+  * The new fit introduced in v.6.7 of ev.x wasn't always working as expected
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the

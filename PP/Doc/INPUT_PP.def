@@ -133,9 +133,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
         }
 
         choose {
-            when -test "plot_num=0" {
+            when -test "plot_num = 0 or 9" {
                 label {
-                    Options for total charge (plot_num=0): 
+                    Options for total charge (plot_num=0)
+                    or for total minus atomic charge (plot_num=9): 
                 }
                 
                 var spin_component -type INTEGER {
