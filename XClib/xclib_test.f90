@@ -43,9 +43,9 @@ PROGRAM xclib_test
   USE dft_setting_params, ONLY: xc_func, xc_info
 #endif
   !
-  USE dft_setting_params, ONLY: nxc,ncc,ngcx,ngcc,nmeta,
-  USE qe_dft_list,        ONLY: dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
-                                dft_GGAc_name, dft_MGGA_name
+  USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, &
+                         dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
+                         dft_GGAc_name, dft_MGGA_name
   !
   IMPLICIT NONE
   !
@@ -342,7 +342,7 @@ PROGRAM xclib_test
       IF (id<=nxc+1) &
          dft = dft_LDAx_name(id-1)
       IF (id>=nxc+2 .AND. id<=nxc+ncc+2) &
-         dft_LDAc_name = corr(id-nxc-2)
+         dft = dft_LDAc_name(id-nxc-2)
       IF (id>=nxc+ncc+3 .AND. id<=nxc+ncc+ngcx+3) &
          dft = dft_GGAx_name(id-nxc-ncc-3)
       IF (id>=nxc+ncc+ngcx+4 .AND. id<=nxc+ncc+ngcx+ngcc+4) &

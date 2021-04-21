@@ -362,7 +362,7 @@ MODULE qe_dft_list
   !
   DATA dft_name(12)    / 'PBESOL' /
   DATA dft_name2(12)   / 'none' /
-  DATA dft_IDs(12,1:6) / 1,4,10,8,0,0 /
+  DATA dft_IDs(12,1:6) / 1,4,9,7,0,0 /
   DATA dft_descr(12)   / 'PBEsol' /
   !
   DATA dft_name(13)    / 'BLYP' /
@@ -372,12 +372,12 @@ MODULE qe_dft_list
   !
   DATA dft_name(14)    / 'OPTBK88' /
   DATA dft_name2(14)   / 'none' /
-  DATA dft_IDs(14,1:6) / 1,4,23,1,0,0 /
+  DATA dft_IDs(14,1:6) / 1,4,20,1,0,0 /
   DATA dft_descr(14)   / 'optB88' /
   !
   DATA dft_name(15)    / 'OPTB86B' /
   DATA dft_name2(15)   / 'none' /
-  DATA dft_IDs(15,1:6) / 1,4,24,1,0,0 /
+  DATA dft_IDs(15,1:6) / 1,4,21,1,0,0 /
   DATA dft_descr(15)   / 'optB86' /
   !
   DATA dft_name(16)    / 'PBC' /
@@ -397,12 +397,12 @@ MODULE qe_dft_list
   !
   DATA dft_name(19)    / 'WC' /
   DATA dft_name2(19)   / 'none' /
-  DATA dft_IDs(19,1:6) / 1,4,11,4,0,0 /
+  DATA dft_IDs(19,1:6) / 1,4,10,4,0,0 /
   DATA dft_descr(19)   / 'Wu-Cohen' /
   !
   DATA dft_name(20)    / 'PW86PBE' /
   DATA dft_name2(20)   / 'none' /
-  DATA dft_IDs(20,1:6) / 1,4,21,4,0,0 /
+  DATA dft_IDs(20,1:6) / 1,4,19,4,0,0 /
   DATA dft_descr(20)   / 'PW86 exchange + PBE correlation' /
   !
   DATA dft_name(21)    / 'B86BPBE' /
@@ -412,42 +412,42 @@ MODULE qe_dft_list
   !
   DATA dft_name(22)    / 'PBEQ2D' /
   DATA dft_name2(22)   / 'Q2D' /
-  DATA dft_IDs(22,1:6) / 1,4,19,12,0,0 /
+  DATA dft_IDs(22,1:6) / 1,4,16,9,0,0 /
   DATA dft_descr(22)   / 'PBEQ2D' /
   !
   DATA dft_name(23)    / 'SOGGA' /
   DATA dft_name2(23)   / 'none' /
-  DATA dft_IDs(23,1:6) / 1,4,17,4,0,0 /
+  DATA dft_IDs(23,1:6) / 1,4,15,4,0,0 /
   DATA dft_descr(23)   / 'SOGGA' /
   !
   DATA dft_name(24)    / 'EV93' /
   DATA dft_name2(24)   / 'none' /
-  DATA dft_IDs(24,1:6) / 1,4,25,0,0,0 /
+  DATA dft_IDs(24,1:6) / 1,4,22,0,0,0 /
   DATA dft_descr(24)   / 'Engel-Vosko' /
   !
   DATA dft_name(25)    / 'RPBE' /
   DATA dft_name2(25)   / 'none' /
-  DATA dft_IDs(25,1:6) / 1,4,44,4,0,0 /
+  DATA dft_IDs(25,1:6) / 1,4,41,4,0,0 /
   DATA dft_descr(25)   / 'RPBE' /
   !
   DATA dft_name(26)    / 'PBE0' /
   DATA dft_name2(26)   / 'none' /
-  DATA dft_IDs(26,1:6) / 6,4,8,4,0,0 /
+  DATA dft_IDs(26,1:6) / 6,4,7,4,0,0 /
   DATA dft_descr(26)   / 'PBE0 in: Perdew, Ernzerhof, Burke, JCP 105, 9982 (1996)' /
   !
   DATA dft_name(27)    / 'B86BPBEX' /
   DATA dft_name2(27)   / 'none' /
-  DATA dft_IDs(27,1:6) / 6,4,41,4,0,0 /
+  DATA dft_IDs(27,1:6) / 6,4,38,4,0,0 /
   DATA dft_descr(27)   / 'B86bPBE hybrid' /
   !
   DATA dft_name(28)    / 'BHAHLYP' /
   DATA dft_name2(28)   / 'BHANDHLYP' /
-  DATA dft_IDs(28,1:6) / 6,4,42,3,0,0 /
+  DATA dft_IDs(28,1:6) / 6,4,39,3,0,0 /
   DATA dft_descr(28)   / 'Becke half-and-half LYP' /
   !
   DATA dft_name(29)    / 'HSE' /
   DATA dft_name2(29)   / 'none' /
-  DATA dft_IDs(29,1:6) / 1,4,12,4,0,0 /
+  DATA dft_IDs(29,1:6) / 1,4,11,4,0,0 /
   DATA dft_descr(29)   / 'Heyd-Scuseria-Ernzerhof (HSE 06, see references)' /
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06
   ! functional as it is in Gaussian code (that is considered as the reference
@@ -462,27 +462,27 @@ MODULE qe_dft_list
   !----
   DATA dft_name(30)    / 'GAUP' /
   DATA dft_name2(30)   / 'GAUPBE' /
-  DATA dft_IDs(30,1:6) / 1,4,20,4,0,0 /
+  DATA dft_IDs(30,1:6) / 1,4,17,4,0,0 /
   DATA dft_descr(30)   / 'Gau-PBE (also gaup)' /
   !
   DATA dft_name(31)    / 'B3LYP' /
   DATA dft_name2(31)   / 'none' /
-  DATA dft_IDs(31,1:6) / 7,12,9,7,0,0 /
+  DATA dft_IDs(31,1:6) / 7,12,8,6,0,0 /
   DATA dft_descr(31)   / 'B3LYP' /
   !
   DATA dft_name(32)    / 'B3LYP-V1R' /
   DATA dft_name2(32)   / 'none' /
-  DATA dft_IDs(32,1:6) / 7,13,9,7,0,0 /
+  DATA dft_IDs(32,1:6) / 7,13,8,6,0,0 /
   DATA dft_descr(32)   / 'B3LYP-VWN1-RPA' /
   !
   DATA dft_name(33)    / 'X3LYP' /
   DATA dft_name2(33)   / 'none' /
-  DATA dft_IDs(33,1:6) / 9,14,28,13,0,0 /
+  DATA dft_IDs(33,1:6) / 9,14,25,10,0,0 /
   DATA dft_descr(33)   / 'X3LYP' /
   !
   DATA dft_name(34)    / 'TPSS' /
   DATA dft_name2(34)   / 'none' /
-  DATA dft_IDs(34,1:6) / 1,4,7,6,1,0 /
+  DATA dft_IDs(34,1:6) / 1,4,0,0,1,0 /
   DATA dft_descr(34)   / 'TPSS Meta-GGA' /
   !
   DATA dft_name(35)    / 'TPSS-only' /
