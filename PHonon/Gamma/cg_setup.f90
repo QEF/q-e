@@ -20,7 +20,7 @@ SUBROUTINE cg_setup
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
   USE dfunct,     ONLY: newd
   USE fft_base,   ONLY: dfftp
-  USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
+  USE gvect,      ONLY: g, ngm
   USE gvecs,      ONLY: doublegrid
   USE klist,      ONLY: xk, ngk, igk_k
   USE lsda_mod,   ONLY: nspin, current_spin
