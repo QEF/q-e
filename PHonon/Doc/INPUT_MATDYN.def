@@ -154,7 +154,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program matdy
             }
         }
         
-        multidimension  at -start 1,1 -end 3,3 -type real {
+        multidimension  at -indexes i,j -start 1,1 -end 3,3 -type REAL {
             info {
                 supercell lattice vectors - must form a superlattice of the
                 original lattice (default: use original cell)
@@ -165,10 +165,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program matdy
             var l1
             var l2
             var l3
-            see { at }
             info {
                 supercell lattice vectors are original cell vectors times
-                l1, l2, l3 respectively (default: 1, ignored if at specified)
+                l1, l2, l3 respectively (default: 1, ignored if @ref at specified)
             }
         }
         var ntyp -type INTEGER {
@@ -178,7 +177,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program matdy
             }
         }
         
-        dimension amass -start 1 -end ntyp {
+        dimension amass -start 1 -end ntyp -type REAL {
             info {
                 masses of atoms in the supercell (a.m.u.), one per atom type
                 (default: use masses read from file @tt flfrc)
@@ -206,7 +205,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program matdy
         
         var q_in_band_form -type LOGICAL {
             info {
-                if @bb .true. the q points are given in band form:
+                if @b .true. the q points are given in band form:
                 only the first and last point of one or more lines 
                 are given. See below. (default: @tt .false.).
             }
@@ -214,7 +213,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program matdy
         
         var q_in_cryst_coord -type LOGICAL {
             info {
-                if @bb .true. input q points are in crystalline 
+                if @b .true. input q points are in crystalline 
                 coordinates (default: @tt .false.)
             }
         }

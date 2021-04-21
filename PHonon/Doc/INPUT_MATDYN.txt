@@ -170,9 +170,9 @@ NAMELIST: &INPUT
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       at(), ()=(1,1) ... (3,3)
+   Variable:       at(i,j), (i,j)=(1,1) ... (3,3)
    
-   Type:           real
+   Type:           REAL
    Description:    supercell lattice vectors - must form a superlattice of the
                    original lattice (default: use original cell)
    +--------------------------------------------------------------------
@@ -181,9 +181,8 @@ NAMELIST: &INPUT
    Variables:      l1, l2, l3
    
    Type:           INTEGER
-   See:            at
    Description:    supercell lattice vectors are original cell vectors times
-                   l1, l2, l3 respectively (default: 1, ignored if at specified)
+                   l1, l2, l3 respectively (default: 1, ignored if @ref at specified)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -197,6 +196,7 @@ NAMELIST: &INPUT
    +--------------------------------------------------------------------
    Variable:       amass(i), i=1,ntyp
    
+   Type:           REAL
    Description:    masses of atoms in the supercell (a.m.u.), one per atom type
                    (default: use masses read from file flfrc)
    +--------------------------------------------------------------------
@@ -228,7 +228,7 @@ NAMELIST: &INPUT
    Variable:       q_in_band_form
    
    Type:           LOGICAL
-   Description:    if @bb .true. the q points are given in band form:
+   Description:    if .true. the q points are given in band form:
                    only the first and last point of one or more lines
                    are given. See below. (default: .false.).
    +--------------------------------------------------------------------
@@ -237,7 +237,7 @@ NAMELIST: &INPUT
    Variable:       q_in_cryst_coord
    
    Type:           LOGICAL
-   Description:    if @bb .true. input q points are in crystalline
+   Description:    if .true. input q points are in crystalline
                    coordinates (default: .false.)
    +--------------------------------------------------------------------
    
@@ -454,4 +454,4 @@ ________________________________________________________________________
    if you want to have q = 0 results for two different directions
    
 
-This file has been created by helpdoc utility on Tue Apr 20 20:30:52 CEST 2021
+This file has been created by helpdoc utility on Wed Apr 21 10:57:43 CEST 2021
