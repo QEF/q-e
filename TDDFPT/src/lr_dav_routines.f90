@@ -32,10 +32,10 @@ contains
     integer :: ib,ic,iv
     real(dp) :: temp
     
-    allocate(vc_couple(2,nbnd*(nbnd_total-nbnd))) ! 1. v  2. c  
+    allocate(vc_couple(2,p_nbnd_occ*p_nbnd_virt))  
     allocate(energy_dif(p_nbnd_occ*p_nbnd_virt))
     allocate(energy_dif_order(p_nbnd_occ*p_nbnd_virt))
-    
+
     if(.not. if_dft_spectrum) &
       &write(stdout,'(5x,"Calculating the electron-hole pairs for initiating trial vectors ...",/)')
 
@@ -59,8 +59,7 @@ contains
 
     call xc_sort_array_get_order(energy_dif,p_nbnd_occ*p_nbnd_virt,energy_dif_order)
 
-    !do ib=1, p_nbnd_occ*p_nbnd_virt
-    do ib=1, min(2*num_init,p_nbnd_occ*p_nbnd_virt)
+    do ib=1, p_nbnd_occ*p_nbnd_virt
       iv=energy_dif_order(ib)
       vc_couple(1,ib)=((iv-1)/p_nbnd_virt)+1+(nbnd-p_nbnd_occ)
       vc_couple(2,ib)=mod((iv-1),p_nbnd_virt)+nbnd+1
@@ -153,8 +152,16 @@ contains
       IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr)
     endif
 
-    if ( p_nbnd_occ > nbnd ) p_nbnd_occ = nbnd
-    if ( p_nbnd_virt > nbnd_total-nbnd ) p_nbnd_virt = nbnd_total-nbnd
+    if ( p_nbnd_occ > nbnd ) then
+       write(stdout,'(5x,"p_nbnd_occ is larger than the total number of occupied states!")')
+       write(stdout,'(5x,"Reset: p_nbnd_occ = number of all occupied states!")')
+       p_nbnd_occ = nbnd
+    endif
+    if ( p_nbnd_virt > nbnd_total-nbnd ) then
+       write(stdout,'(5x,"p_nbnd_virt is larger than the total number of computed empty states!")')
+       write(stdout,'(5x,"Reset: p_nbnd_virt = all computed empty states!")')
+       p_nbnd_virt = nbnd_total-nbnd
+    endif
 
     if ( p_nbnd_occ*p_nbnd_virt .lt. num_init .and. .not. if_random_init) then
       write(stdout,'(/5X,"Initial vectors are forced to be chosen &

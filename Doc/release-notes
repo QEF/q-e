@@ -38,14 +38,15 @@ Fixed in development version:
     because they contained too long lines (noticed by Felix Goudreault, U. Montreal)
   * Variable-cell hybrid DFT fixed: it was broken since v.6.5.
   * Small random errors in some XC spin-polarized functionals in OMP execution
+  * The new fit introduced in v.6.7 of ev.x wasn't always working as expected
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
     Fermi energy works. Currently, molecular dynamics with FCP does not work.
-  * Exchange-correlation code moved to XClib/
-  * More pseudopotential-related code moved to upflib/
-  * Pseudopotential-related duplicated variable indv_ijkb0 merged into
-    ofsbeta ("offset of beta functions")
+  * Exchange-correlation code (vdW excepted) moved to XClib/
+  * Much more pseudopotential-related code re-organized and moved to upflib/
+    Variables ofsbeta ("offset of beta functions") and indv_ijkb0 merged
+    Now only ofsbeta is used
   * Code computing [H,x] commutator moved from LR_Modules/ to PW/src/ and
     disentangled from linear-response variables - now is used in PP/ as well
 
