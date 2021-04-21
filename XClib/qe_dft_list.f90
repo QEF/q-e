@@ -15,11 +15,12 @@ MODULE qe_dft_list
   !
   ! -- single DFT terms (family-type)
   INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=46, ngcc=13, nmeta=6
-  CHARACTER(LEN=4) :: dft_LDAx_name(0:nxc),   dft_LDAx_ref(0:nxc), &
-                      dft_LDAc_name(0:ncc),   dft_LDAc_ref(0:ncc), &
-                      dft_GGAx_name(0:ngcx),  dft_GGAx_ref(0:ngcx), &
-                      dft_GGAc_name(0:ngcc),  dft_GGAc_ref(0:ngcc), &
-                      dft_MGGAx_name(0:nmeta),dft_MGGAx_ref(0:nmeta)
+  CHARACTER(LEN=4)  :: dft_LDAx_name(0:nxc),  dft_LDAc_name(0:ncc),  &
+                       dft_GGAx_name(0:ngcx), dft_GGAc_name(0:ngcc), &
+                       dft_MGGA_name(0:nmeta) 
+  CHARACTER(LEN=150) :: dft_LDAx_ref(0:nxc),  dft_LDAc_ref(0:ncc),  &
+                       dft_GGAx_ref(0:ngcx), dft_GGAc_ref(0:ngcc), &
+                       dft_MGGA_ref(0:nmeta)
   !
   ! -- total DFTs
   INTEGER, PARAMETER :: n_dft = 41
@@ -157,8 +158,8 @@ MODULE qe_dft_list
   DATA dft_GGAx_name(17) / 'GAUP' /
   DATA dft_GGAx_ref(17)  / 'J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)' /
   !
-  DATA dft_GGAx_ref(18)  / 'PW86' /
-  DATA dft_GGAx_name(18) / 'J.P.Perdew, PRB 33, 8800 (1986)' /
+  DATA dft_GGAx_name(18)  / 'PW86' /
+  DATA dft_GGAx_ref(18) / 'J.P.Perdew, PRB 33, 8800 (1986)' /
   !
   DATA dft_GGAx_name(19) / 'B86B' /
   DATA dft_GGAx_ref(19)  / 'A.D.Becke, J.Chem.Phys. 85, 7184 (1986)' /
@@ -228,7 +229,7 @@ MODULE qe_dft_list
   DATA dft_GGAx_name(40) / 'BEEX' /
   DATA dft_GGAx_ref(40)  / '' /
   !
-  DATA dft_GGAx_name(41) / 'RPBX' /
+  DATA dft_GGAx_name(41) / 'HHNX' /
   DATA dft_GGAx_ref(41)  / '' /
   !
   DATA dft_GGAx_name(42) / 'W31X' /
@@ -372,10 +373,10 @@ MODULE qe_dft_list
   DATA dft_name(14)    / 'OPTBK88' /
   DATA dft_name2(14)   / 'none' /
   DATA dft_IDs(14,1:6) / 1,4,23,1,0,0 /
-  DATA dft_descr(14)   / 'optB88'
+  DATA dft_descr(14)   / 'optB88' /
   !
-  DATA dft_name(15)    / 'OPTB86B'
-  DATA dft_name2(15)   / 'none'
+  DATA dft_name(15)    / 'OPTB86B' /
+  DATA dft_name2(15)   / 'none' /
   DATA dft_IDs(15,1:6) / 1,4,24,1,0,0 /
   DATA dft_descr(15)   / 'optB86' /
   !
@@ -476,7 +477,7 @@ MODULE qe_dft_list
   !
   DATA dft_name(33)    / 'X3LYP' /
   DATA dft_name2(33)   / 'none' /
-  DATA dft_IDs(33,1:6) / (/9,14,28,13,0,0 /
+  DATA dft_IDs(33,1:6) / 9,14,28,13,0,0 /
   DATA dft_descr(33)   / 'X3LYP' /
   !
   DATA dft_name(34)    / 'TPSS' /
@@ -530,7 +531,8 @@ CONTAINS
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    INTEGER, INTENT(OUT) :: IDs(6)
+    INTEGER, INTENT(INOUT) :: IDs(6)
+    INTEGER :: i
     !
     DO i = 1, n_dft
       IF (name==dft_name(i) .OR. name==dft_name2(i)) THEN
@@ -551,7 +553,8 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: IDs(6)
-    CHARACTER(LEN=*), INTENT(OUT) :: name
+    CHARACTER(LEN=*), INTENT(INOUT) :: name
+    INTEGER :: i
     !
     DO i = 1, n_dft
       IF (ALL(IDs(:)==dft_IDs(i,:))) THEN

@@ -49,6 +49,7 @@ CONTAINS
                             discard_input_dft, is_libxc, dft, exc,   &
                             corr, gradx, gradc, meta, nxc, ncc, ngcx,&
                             ngcc, nmeta, scan_exx, notset
+    USE qe_dft_list,  ONLY: get_IDs_from_shortname
     !
     IMPLICIT NONE
     !
@@ -62,9 +63,10 @@ CONTAINS
     LOGICAL :: dft_defined
     LOGICAL :: check_libxc
     CHARACTER(len=1) :: lxc
+    INTEGER :: ID_vec(6)
 #if defined(__LIBXC)
-    INTEGER :: ii, id_vec(6), n_ext_params
-    INTEGER :: flag_v(16), exp2, ftot, ftotx
+    INTEGER :: ii, n_ext_params
+    INTEGER :: flag_v(16), ID_vec(6), exp2, ftot, ftotx
     TYPE(xc_f03_func_t) :: xc_func03
     TYPE(xc_f03_func_info_t) :: xc_info03
 #endif
@@ -102,137 +104,19 @@ CONTAINS
     ! Note: comparison is done via exact matching
     ! ----------------------------------------------
     !
-    SELECT CASE( TRIM(dftout) )
-    ! special cases : PZ  (LDA is equivalent to PZ)
-    CASE( 'PZ', 'LDA' )
-       dft_defined = xclib_set_dft_IDs(1,1,0,0,0,0)
-    ! speciale cases : PW ( LDA with PW correlation )
-    CASE( 'PW' )
-       dft_defined = xclib_set_dft_IDs(1,4,0,0,0,0)
-    ! special cases : VWN-RPA
-    CASE( 'VWN-RPA' )
-       dft_defined = xclib_set_dft_IDs(1,11,0,0,0,0)
-    ! special cases : OEP no GC part (nor LDA...) and no correlation by default
-    CASE( 'OEP' )
-       dft_defined = xclib_set_dft_IDs(4,0,0,0,0,0)
+    CALL get_IDs_from_shortname( dftout, ID_vec(1:6) )
     !
-    CASE( 'KLI' )
-       dft_defined = xclib_set_dft_IDs(10,0,0,0,0,0)
-    ! special cases : HF no GC part (nor LDA...) and no correlation by default
-    CASE( 'HF' )
-       dft_defined = xclib_set_dft_IDs(5,0,0,0,0,0)
-    ! special case : PBE
-    CASE( 'PBE' )
-       dft_defined = xclib_set_dft_IDs(1,4,3,4,0,0)
-    ! special case : B88
-    CASE( 'B88' )
-       dft_defined = xclib_set_dft_IDs(1,1,1,0,0,0)
-    ! special case : BP = B88 + P86
-    CASE( 'BP' )
-       dft_defined = xclib_set_dft_IDs(1,1,1,1,0,0)
-    ! special case : PW91 = GGX + GGC
-    CASE( 'PW91' )
-       dft_defined = xclib_set_dft_IDs(1,4,2,2,0,0)
-    ! special case : revPBE
-    CASE( 'REVPBE' )
-       dft_defined = xclib_set_dft_IDs(1,4,4,4,0,0)
-    ! special case : PBEsol
-    CASE( 'PBESOL' )
-       dft_defined = xclib_set_dft_IDs(1,4,10,8,0,0)
-    ! special cases : BLYP (note, BLYP=>B88)
-    CASE( 'BLYP' )
-       dft_defined = xclib_set_dft_IDs(1,3,1,3,0,0)
-    ! Special case optB88
-    CASE( 'OPTBK88' )
-       dft_defined = xclib_set_dft_IDs(1,4,23,1,0,0)
-    ! Special case optB86b
-    CASE( 'OPTB86B' )
-       dft_defined = xclib_set_dft_IDs(1,4,24,1,0,0)
-    ! special case : PBC  = PW + PBC
-    CASE( 'PBC' )
-       dft_defined = xclib_set_dft_IDs(1,4,0,4,0,0)
-    ! special case : HCTH
-    CASE( 'HCTH' )
-       dft_defined = xclib_set_dft_IDs(0,0,5,5,0,0)
-       CALL xclib_error( 'set_dft_from_name', 'HCTH yields suspicious results', 1 )
-    ! special case : OLYP = OPTX + LYP
-    CASE( 'OLYP' )
-       dft_defined = xclib_set_dft_IDs(0,3,6,3,0,0)
-       CALL xclib_error( 'set_dft_from_name', 'OLYP yields suspicious results', 1 )
-    ! special case : Wu-Cohen
-    CASE( 'WC' )
-       dft_defined = xclib_set_dft_IDs(1,4,11,4,0,0)
-    ! special case : PW86PBE
-    CASE( 'PW86PBE' )
-       dft_defined = xclib_set_dft_IDs(1,4,21,4,0,0)
-    ! special case : B86BPBE
-    CASE( 'B86BPBE' )
-       dft_defined = xclib_set_dft_IDs(1,4,22,4,0,0)
-    ! special case : PBEQ2D
-    CASE( 'PBEQ2D', 'Q2D' )
-       dft_defined = xclib_set_dft_IDs(1,4,19,12,0,0)
-    ! special case : SOGGA = SOX + PBEc
-    CASE( 'SOGGA' )
-       dft_defined = xclib_set_dft_IDs(1,4,17,4,0,0)
-    ! special case : Engel-Vosko
-    CASE( 'EV93' )
-       dft_defined = xclib_set_dft_IDs(1,4,25,0,0,0)
-    ! special case : RPBE
-    CASE( 'RPBE' )
-       dft_defined = xclib_set_dft_IDs(1,4,44,4,0,0)
-    ! special case : PBE0
-    CASE( 'PBE0' )
-       dft_defined = xclib_set_dft_IDs(6,4,8,4,0,0)
-    ! special case : B86BPBEX
-    CASE( 'B86BPBEX' )
-       dft_defined = xclib_set_dft_IDs(6,4,41,4,0,0)
-    !
-    CASE( 'BHAHLYP', 'BHANDHLYP' )
-       dft_defined = xclib_set_dft_IDs(6,4,42,3,0,0)
-    ! special case : HSE
-    CASE( 'HSE' )
-       dft_defined = xclib_set_dft_IDs(1,4,12,4,0,0)
-    ! special case : GAUPBE
-    CASE( 'GAUP', 'GAUPBE' )
-       dft_defined = xclib_set_dft_IDs(1,4,20,4,0,0)
-    ! special case : B3LYP
-    CASE( 'B3LYP' )
-       dft_defined = xclib_set_dft_IDs(7,12,9,7,0,0)
-    ! special case : B3LYP-VWN-1-RPA hybrid
-    CASE( 'B3LYP-V1R' )
-       dft_defined = xclib_set_dft_IDs(7,13,9,7,0,0)
-    ! special case : X3LYP hybrid
-    CASE( 'X3LYP' )
-       dft_defined = xclib_set_dft_IDs(9,14,28,13,0,0)
-    ! special case : TPSS meta-GGA Exc
-    CASE( 'TPSS' )
-       dft_defined = xclib_set_dft_IDs(1,4,7,6,1,0)
-    ! special case : TPSS meta-GGA - mgga term only
-    CASE( 'TPSS-only' )
-       dft_defined = xclib_set_dft_IDs(0,0,0,0,1,0)
-    ! special case : M06L Meta GGA
-    CASE( 'M06L' )
-       dft_defined = xclib_set_dft_IDs(0,0,0,0,2,0)
-    ! special case : TB09 meta-GGA Exc
-    CASE( 'TB09' )
-       dft_defined = xclib_set_dft_IDs(0,0,0,0,3,0)
-    ! special case : SCAN Meta GGA
-    CASE( 'SCAN' )
-       dft_defined = xclib_set_dft_IDs(0,0,0,0,5,0)
-    ! special case : SCAN0
-    CASE( 'SCAN0' )
-       dft_defined = xclib_set_dft_IDs(0,0,0,0,6,0)
-    ! special case : PZ/LDA + null meta-GGA
-    CASE( 'PZ+META', 'LDA+META' )
-       dft_defined = xclib_set_dft_IDs(1,1,0,0,4,0)
-    ! special case : PBE + null meta-GGA
-    CASE( 'PBE+META' )
-       dft_defined = xclib_set_dft_IDs(1,4,3,4,4,0)
-    !
-    CASE DEFAULT
+    IF ( ALL(ID_vec(1:6)/=notset) ) THEN
+       !
+       iexch = ID_vec(1) ;  icorr = ID_vec(2)
+       igcx  = ID_vec(3) ;  igcc  = ID_vec(4)
+       imeta = ID_vec(5) ;  imetac= ID_vec(6)
+       dft_defined = .TRUE.
+       !
+    ELSE
        !
        ! ----------------------------------------------------------------------
-       ! CHECK LIBXC FUNCTIONALS BY INDEX NOTATION, IF PRESENT (USED in PHonon)
+       ! CHECK LIBXC FUNCTIONALS BY INDEX NOTATION, IF PRESENT
        ! ----------------------------------------------------------------------
        !
        IF (dftout(1:3) .EQ. 'XC-') THEN
@@ -270,10 +154,10 @@ CONTAINS
           !
        ENDIF
        !
-    END SELECT
+    ENDIF
     !
     !
-    ! ... A temporary fix to keep the q-e input notation for SCAN-functionals
+    ! ... A workaround to keep the q-e input notation for SCAN-functionals
     !     valid.
 #if defined(__LIBXC)
     IF (imeta==5 .OR. imeta==6) THEN
@@ -316,9 +200,9 @@ CONTAINS
     ! functionals (if present)
     !------------------------------------------------------------------
     !
-    id_vec(1) = iexch  ;  id_vec(2) = icorr
-    id_vec(3) = igcx   ;  id_vec(4) = igcc
-    id_vec(5) = imeta  ;  id_vec(6) = imetac
+    ID_vec(1) = iexch  ;  ID_vec(2) = icorr
+    ID_vec(3) = igcx   ;  ID_vec(4) = igcc
+    ID_vec(5) = imeta  ;  ID_vec(6) = imetac
     !
     n_ext_params = 0
     DO ii = 1, 6
@@ -1411,89 +1295,28 @@ CONTAINS
     !
     USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, corr, &
                            is_libxc, scan_exx, notset
+    USE qe_dft_list, ONLY: dft_LDAc_name, get_shortname_from_IDs
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN=32) :: xclib_get_dft_short
     CHARACTER(LEN=32) :: shortname
+    INTEGER :: ID_vec(6)
     !
     shortname = 'no shortname'
     !
-    IF ( .NOT. xclib_dft_is_libxc('ANY')) THEN
-      !
-      IF ( iexch==1 .AND. igcx==0 .AND. igcc==0) THEN
-         shortname = TRIM(corr(icorr))
-      ELSEIF (iexch==4 .AND. icorr==0  .AND. igcx==0  .AND. igcc== 0) THEN
-         shortname = 'OEP'
-      ELSEIF (iexch==1 .AND. icorr==11 .AND. igcx==0  .AND. igcc== 0) THEN
-         shortname = 'VWN-RPA'
-      ELSEIF (iexch==1 .AND. icorr==3  .AND. igcx==1  .AND. igcc== 3) THEN
-         shortname = 'BLYP'
-      ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1  .AND. igcc== 0) THEN
-         shortname = 'B88'
-      ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1  .AND. igcc== 1) THEN
-         shortname = 'BP'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==2  .AND. igcc== 2) THEN
-         shortname = 'PW91'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==3  .AND. igcc== 4) THEN
-         shortname = 'PBE'
-      ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==8  .AND. igcc== 4) THEN
-         shortname = 'PBE0'
-      ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==41 .AND. igcc== 4) THEN
-         shortname = 'B86BPBEX'
-      ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==42 .AND. igcc== 3) THEN
-         shortname = 'BHANDHLYP'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==4  .AND. igcc== 4) THEN
-         shortname = 'revPBE'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==10 .AND. igcc== 8) THEN
-         shortname = 'PBESOL'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==19 .AND. igcc==12) THEN
-         shortname = 'Q2D'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==12 .AND. igcc== 4) THEN
-         shortname = 'HSE'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==20 .AND. igcc== 4) THEN
-         shortname = 'GAUPBE'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==21 .AND. igcc== 4) THEN
-         shortname = 'PW86PBE'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==22 .AND. igcc== 4) THEN
-         shortname = 'B86BPBE'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==11 .AND. igcc== 4) THEN
-         shortname = 'WC'
-      ELSEIF (iexch==7 .AND. icorr==12 .AND. igcx==9  .AND. igcc== 7) THEN
-         shortname = 'B3LYP'
-      ELSEIF (iexch==7 .AND. icorr==13 .AND. igcx==9  .AND. igcc== 7) THEN
-         shortname = 'B3LYP-V1R'
-      ELSEIF (iexch==9 .AND. icorr==14 .AND. igcx==28 .AND. igcc==13) THEN
-         shortname = 'X3LYP'
-      ELSEIF (iexch==0 .AND. icorr==3  .AND. igcx==6  .AND. igcc== 3) THEN
-         shortname = 'OLYP'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==17 .AND. igcc== 4) THEN
-         shortname = 'SOGGA'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==23 .AND. igcc== 1) THEN
-         shortname = 'OPTBK88'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==24 .AND. igcc== 1) THEN
-         shortname = 'OPTB86B'
-      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==25 .AND. igcc== 0) THEN
-         shortname = 'EV93'
-      ELSEIF (iexch==5 .AND. icorr==0  .AND. igcx==0  .AND. igcc== 0) THEN
-         shortname = 'HF'
-      ENDIF 
-      !
-      IF (imeta==1) THEN
-        shortname = 'TPSS'
-      ELSEIF (imeta == 2) THEN
-        shortname = 'M06L'
-      ELSEIF (imeta == 4) THEN
-        IF ( iexch == 1 .AND. icorr == 1) THEN
-          shortname = 'PZ+META'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
-          shortname = 'PBE+META'
-        ENDIF
-      ENDIF
-      !
-    ENDIF  
+    ID_vec(1) = iexch  ;  ID_vec(2) = icorr
+    ID_vec(3) = igcx   ;  ID_vec(4) = igcc
+    ID_vec(5) = imeta  ;  ID_vec(6) = imetac
     !
-    IF (is_libxc(5) .AND. is_libxc(6)) THEN
+    CALL get_shortname_from_IDs( ID_vec, shortname )
+    !
+    IF ( shortname/='no shortname' .AND. iexch==1 .AND. igcx==0 .AND. igcc==0) THEN
+       shortname = TRIM(dft_LDAc_name(icorr))
+    ENDIF
+    !
+    !
+    IF ( ANY(is_libxc(5:6)) ) THEN
        IF (imeta==263 .AND. imetac==267) THEN
           shortname = 'SCAN'
           IF (scan_exx) shortname = 'SCAN0'

@@ -1,6 +1,7 @@
 dft_mod.o : qe_kind.o
 dft_mod.o : xc_input_params_mod.o
 dft_mod.o : xclib_utils_and_para.o
+dft_mod.o : qe_dft_list.o
 qe_constants.o : qe_kind.o
 qe_drivers_d_gga.o : qe_drivers_gga.o
 qe_drivers_d_gga.o : qe_kind.o

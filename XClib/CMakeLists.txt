@@ -1,6 +1,7 @@
 set(sources_xclib
     dft_mod.f90
     qe_constants.f90
+    qe_dft_list.f90
     qe_drivers_d_gga.f90
     qe_drivers_d_lda_lsda.f90
     qe_drivers_gga.f90
