@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum Espresso (version: 6.6)
+Program: cp.x / CP / Quantum Espresso (version: 6.7GPU)
 ------------------------------------------------------------------------
 
 
@@ -2098,21 +2098,21 @@ CARD: ATOMIC_POSITIONS { alat | bohr | angstrom | crystal }
 
 
 ========================================================================
-CARD: ATOMIC_VELOCITIES { a.u }
+CARD: ATOMIC_VELOCITIES 
 
    OPTIONAL CARD, READS VELOCITIES FROM STANDARD INPUT
    
-   when starting with ion_velocities="from_input" it is convenient
+   when starting with "ion_velocities" = "from_input" it is convenient
    to perform a few steps (~5-10) with a small time step (0.5 a.u.).
    The velocities must be expressed using the same length units
-   indicated in the card ATOMIC_POSITIONS, divided by time
+   indicated in the card "ATOMIC_POSITIONS", divided by time
    in atomic units.
    
    /////////////////////////////////////////
    // Syntax:                             //
    /////////////////////////////////////////
    
-      ATOMIC_VELOCITIES { a.u }
+      ATOMIC_VELOCITIES 
          V(1)    vx(1)    vy(1)    vz(1)    
          V(2)    vx(2)    vy(2)    vz(2)    
          . . . 
@@ -2123,23 +2123,17 @@ CARD: ATOMIC_VELOCITIES { a.u }
    DESCRIPTION OF ITEMS:
    
       +--------------------------------------------------------------------
-      Card's flags:   { a.u }
-      
-      +--------------------------------------------------------------------
-
-
-      +--------------------------------------------------------------------
       Variable:       V
       
       Type:           CHARACTER
-      Description:    label of the atom as specified in ATOMIC_SPECIES
+      Description:    label of the atom as specified in "ATOMIC_SPECIES"
       +--------------------------------------------------------------------
       
       +--------------------------------------------------------------------
       Variables:      vx, vy, vz
       
       Type:           REAL
-      Description:    atomic velocities along x y and z direction
+      Description:    atomic velocities along @i x, @i y and @i z direction
       +--------------------------------------------------------------------
       
 ===END OF CARD==========================================================
@@ -2472,49 +2466,37 @@ CARD: PLOT_WANNIER
 ===END OF CARD==========================================================
 
 
-========================================================================
-CARD: AUTOPILOT 
+########################################################################
+| SUPERCARD: AUTOPILOT/ENDRULES
+| this supercard is enclosed within the keywords:
+|
+| AUTOPILOT
+|    ... content of the supercard here ...
+| ENDRULES
+|
+| The syntax of supercard's content follows below:
 
-   OPTIONAL CARD, CHANGES SOME VARIABLES ON THE FLY OF THE CALCULATION.
+   Optional card, changes some variables on the fly of the calculation.
    
-   NOTICE THAT THE RULES HAS TO BE ORDERED IN WITH TIME STEP AND THE CARD HAS
-   TO BE TERMINATED WITH "ENDRULES"
+   Notice that the rules has to be ordered in with time step and the
+   AUTOPILOT card has to be terminated with the ENDRULES keyword.
    
-   /////////////////////////////////////////
-   // Syntax:                             //
-   /////////////////////////////////////////
+   To set up a rule, one can add the scheduled steps with on_step and
+   separate the corresponding change in parameters with a column.
    
-      AUTOPILOT 
-         pilot_rule(1)       
-         pilot_rule(2)       
-         . . . 
-         pilot_rule(nevent)  
+   A simple example:
    
-   /////////////////////////////////////////
+   AUTOPILOT
+       on_step =  31  : "dt"               = 5.0
+       on_step =  91  : "iprint"           = 100
+       on_step =  91  : "isave"            = 100
+       on_step = 191  : "ion_dynamics"     = 'damp'
+       on_step = 191  : "electron_damping" = 0.00
+       on_step = 691  : "ion_temperature"  = 'nose'
+       on_step = 691  : "tempw"            = 150.0
+   ENDRULES
    
-   DESCRIPTION OF ITEMS:
-   
-      +--------------------------------------------------------------------
-      Variable:       pilot_rule
-      
-      Type:           RULE
-      Description:    To set up a rule, one can add the scheduled steps with on_step and
-                      separate the corresponding change in parameters with a column.
-                      
-                      See a simple example bellow:
-                      
-                      AUTOPILOT
-                          on_step =  31  : dt               = 5.0
-                          on_step =  91  : iprint           = 100
-                          on_step =  91  : isave            = 100
-                          on_step = 191  : ion_dynamics     = 'damp'
-                          on_step = 191  : electron_damping = 0.00
-                          on_step = 691  : ion_temperature  = 'nose'
-                          on_step = 691  : tempw            = 150.0
-                      ENDRULES
-      +--------------------------------------------------------------------
-      
-===END OF CARD==========================================================
+### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Wed Nov 11 12:06:08 EST 2020
+This file has been created by helpdoc utility on Tue Apr 20 20:27:07 CEST 2021

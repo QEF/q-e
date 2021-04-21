@@ -2050,9 +2050,9 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
     # ATOMIC_VELOCITIES
     #
     card ATOMIC_VELOCITIES {
-	flag atomvel_type -use optional {
-	    enum {  a.u }
-	    	}
+	#flag atomvel_type -use optional {
+	#    enum {  a.u }
+        #}
 
 	label { 
 	    Optional card, reads velocities from standard input  
@@ -2060,10 +2060,10 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 
 
         message {
-               when starting with ion_velocities="from_input" it is convenient
+               when starting with @ref ion_velocities = "from_input" it is convenient
                to perform a few steps (~5-10) with a small time step (0.5 a.u.).
                The velocities must be expressed using the same length units
-               indicated in the card ATOMIC_POSITIONS, divided by time
+               indicated in the card @ref ATOMIC_POSITIONS, divided by time
                in atomic units.
 	}
 
@@ -2071,11 +2071,11 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                     table atomic_velocities {
                        rows -start 1 -end nat {
                             col V -type CHARACTER {
-                                info { label of the atom as specified in ATOMIC_SPECIES }
+                                info { label of the atom as specified in @ref ATOMIC_SPECIES }
                             }
 
                             colgroup -type REAL {
-                                info { atomic velocities along x y and z direction}
+                                info { atomic velocities along @i x, @i y and @i z direction}
                                 col vx
                                 col vy
                                 col vz
@@ -2378,40 +2378,31 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
     #
     # AUTOPILOT
     #
-    card AUTOPILOT {
 
-      label {
-        Optional card, changes some variables on the fly of the calculation.
-
-        Notice that the rules has to be ordered in with time step and the Card has
-        to be terminated with "ENDRULES"
-      }
-
-
-      syntax {
-        table state_index {
-          rows -start 1 -end nevent {
-            col pilot_rule -type RULE {
-              info {
-                To set up a rule, one can add the scheduled steps with on_step and
-                separate the corresponding change in parameters with a column.
-
-                See a simple example bellow:
-
-                AUTOPILOT
-                    on_step =  31  : dt               = 5.0
-                    on_step =  91  : iprint           = 100
-                    on_step =  91  : isave            = 100
-                    on_step = 191  : ion_dynamics     = 'damp'
-                    on_step = 191  : electron_damping = 0.00
-                    on_step = 691  : ion_temperature  = 'nose'
-                    on_step = 691  : tempw            = 150.0
-                ENDRULES
-              }
-            }
-          }
+    supercard AUTOPILOT -endtag ENDRULES {
+        message {
+            Optional card, changes some variables on the fly of the calculation.
+            
+            Notice that the rules has to be ordered in with time step and the
+            @b AUTOPILOT card has to be terminated with the @b ENDRULES keyword.
+            
+            To set up a rule, one can add the scheduled steps with @b on_step and
+            separate the corresponding change in parameters with a column.
+            
+            @i {A simple example:}
+            
+            @b AUTOPILOT
+                @b on_step =  31  : @ref dt               = 5.0
+                @b on_step =  91  : @ref iprint           = 100
+                @b on_step =  91  : @ref isave            = 100
+                @b on_step = 191  : @ref ion_dynamics     = 'damp'
+                @b on_step = 191  : @ref electron_damping = 0.00
+                @b on_step = 691  : @ref ion_temperature  = 'nose'
+                @b on_step = 691  : @ref tempw            = 150.0
+            @b ENDRULES
         }
-      }
-
+        # a trick to make "on_step" known to QE-emacs-modes
+        keyword on_step
     }
 }
+
