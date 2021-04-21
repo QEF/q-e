@@ -15,15 +15,15 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !! Wrapper routine. Calls dgcx-driver routines from internal libraries
   !! or from the external libxc, depending on the input choice.
   !
-  USE constants_l,      ONLY: e2
-  USE kind_l,           ONLY: DP
-  USE dft_par_mod,      ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
-                              grho_threshold_gga
+  USE constants_l,        ONLY: e2
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
+                                grho_threshold_gga
   USE qe_drivers_d_gga
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_par_mod,      ONLY: xc_func, xc_info
+  USE dft_setting_params, ONLY: xc_func, xc_info
 #endif
   !
   IMPLICIT NONE

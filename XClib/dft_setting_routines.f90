@@ -6,14 +6,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-MODULE dft_mod
+MODULE dft_setting_routines
   !--------------------------------------------------------------------------
   !! Routines to set and/or recover DFT names, parameters and flags.
   !
   USE xclib_utils_and_para,  ONLY: stdout
 #if defined(__LIBXC)
 #include "xc_version.h"
-    USE xc_f03_lib_m
+  USE xc_f03_lib_m
 #endif  
   !
   SAVE
@@ -45,11 +45,11 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
-    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                            discard_input_dft, is_libxc, dft, exc,   &
-                            corr, gradx, gradc, meta, nxc, ncc, ngcx,&
-                            ngcc, nmeta, scan_exx, notset
-    USE qe_dft_list,  ONLY: get_IDs_from_shortname
+    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                                  discard_input_dft, is_libxc, dft, scan_exx, notset
+    USE qe_dft_list,        ONLY: nxc, ncc, ngcx, ngcc, nmeta, get_IDs_from_shortname, &
+                                  dft_LDAx_name, dft_LDAc_name, dft_GGAx_name,         &
+                                  dft_GGAc_name, dft_MGGA_name
     !
     IMPLICIT NONE
     !
@@ -183,11 +183,11 @@ CONTAINS
        !
        is_libxc(:) = .FALSE.
        !
-       iexch = matching( dftout, nxc,   exc   )
-       icorr = matching( dftout, ncc,   corr  )
-       igcx  = matching( dftout, ngcx,  gradx )
-       igcc  = matching( dftout, ngcc,  gradc )
-       imeta = matching( dftout, nmeta, meta  )
+       iexch = matching( dftout, nxc,   dft_LDAx_name )
+       icorr = matching( dftout, ncc,   dft_LDAc_name )
+       igcx  = matching( dftout, ngcx,  dft_GGAx_name )
+       igcc  = matching( dftout, ngcc,  dft_GGAc_name )
+       imeta = matching( dftout, nmeta, dft_MGGA_name )
        imetac = 0
        !
     ENDIF
@@ -308,7 +308,7 @@ CONTAINS
     !! Set XC functional IDs. It can be easily extended to include libxc functionals
     !! by adding the 'is_libxc_' array as argument. 
     !
-    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac
+    USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac
     !
     IMPLICIT NONE
     !
@@ -339,7 +339,7 @@ CONTAINS
     !! Looks for matches between the names of each single term of the 
     !! xc-functional and the input dft string.
     !
-    USE dft_par_mod,  ONLY: notset
+    USE dft_setting_params,  ONLY: notset
     !
     IMPLICIT NONE
     !
@@ -384,8 +384,8 @@ CONTAINS
     !! string. Then stores the corresponding indices.  
     !! It also makes some compatibility checks.
     !
-    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc, &
-                            exx_fraction
+    USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                                   is_libxc, exx_fraction
     ! 
     IMPLICIT NONE
     !
@@ -515,9 +515,10 @@ CONTAINS
     !! It fixes eventual overlap issues between qe and libxc names when qe and
     !! libxc functionals are used together.
     !
-    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc, &
-                            exc, corr, gradx, gradc, meta, nxc, ncc, ngcx,     &
-                            ngcc, nmeta
+    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc
+    USE qe_dft_list         ONLY: nxc, ncc, ngcx, ngcc, nmeta, dft_LDAx_name,  &
+                                  dft_LDAc_name, dft_GGAx_name, dft_GGAc_name, &
+                                  dft_MGGA_name
     !
     IMPLICIT NONE
     !
@@ -527,26 +528,26 @@ CONTAINS
     CHARACTER(LEN=4) :: qe_name
     CHARACTER(LEN=256) :: lxc_name
     INTEGER :: i, l, ch, qedft, nlxc
-    INTEGER :: id_vec(6)
+    INTEGER :: ID_vec(6)
     !
-    id_vec(1)=iexch ; id_vec(2)=icorr
-    id_vec(3)=igcx  ; id_vec(4)=igcc
-    id_vec(5)=imeta ; id_vec(6)=imetac
+    ID_vec(1)=iexch ; ID_vec(2)=icorr
+    ID_vec(3)=igcx  ; ID_vec(4)=igcc
+    ID_vec(5)=imeta ; ID_vec(6)=imetac
     !
     DO ch = 1, 5
        IF (.NOT.is_libxc(ch)) THEN
           !
           SELECT CASE( ch )
           CASE( 1 )
-             qe_name = exc(iexch)
+             qe_name = dft_LDAx_name(iexch)
           CASE( 2 )
-             qe_name = corr(icorr)
+             qe_name = dft_LDAc_name(icorr)
           CASE( 3 )
-             qe_name = gradx(igcx)
+             qe_name = dft_GGAx_name(igcx)
           CASE( 4 )
-             qe_name = gradc(igcc)
+             qe_name = dft_GGAc_name(igcc)
           CASE( 5 )
-             qe_name = meta(imeta)
+             qe_name = dft_MGGA_name(imeta)
           END SELECT
           !
           qedft = 0
@@ -568,7 +569,7 @@ CONTAINS
           nlxc = 0
           DO i = 1, 6
             IF (is_libxc(i)) THEN
-              lxc_name = xc_f03_functional_get_name( id_vec(i) )
+              lxc_name = xc_f03_functional_get_name( ID_vec(i) )
               DO l = 1, LEN_TRIM(lxc_name)
                  lxc_name(l:l) = capital( lxc_name(l:l) )
               ENDDO
@@ -576,14 +577,14 @@ CONTAINS
             ENDIF
           ENDDO
           !
-          IF (qedft == nlxc) id_vec(ch) = 0  
+          IF (qedft == nlxc) ID_vec(ch) = 0  
           !
        ENDIF
     ENDDO
     !
-    iexch = id_vec(1) ;  icorr  = id_vec(2)
-    igcx  = id_vec(3) ;  igcc   = id_vec(4)
-    imeta = id_vec(5) ;  imetac = id_vec(6)
+    iexch = ID_vec(1) ;  icorr  = ID_vec(2)
+    igcx  = ID_vec(3) ;  igcc   = ID_vec(4)
+    imeta = ID_vec(5) ;  imetac = ID_vec(6)
     !
   END SUBROUTINE
 #endif
@@ -595,11 +596,11 @@ CONTAINS
     !! Set logical flags describing the complexity of the xc functional
     !! define the fraction of exact exchange used by hybrid fuctionals.
     !
-    USE kind_l,       ONLY: DP
-    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                            islda, isgradient, ismeta, exx_fraction, &
-                            screening_parameter, gau_parameter,      & 
-                            ishybrid, has_finite_size_correction, is_libxc
+    USE kind_l,               ONLY: DP
+    USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                                   islda, isgradient, ismeta, exx_fraction, &
+                                   screening_parameter, gau_parameter,      & 
+                                   ishybrid, has_finite_size_correction, is_libxc
     !  
     IMPLICIT NONE
     !
@@ -654,7 +655,7 @@ CONTAINS
 !   SUBROUTINE enforce_dft_exxrpa( )
 !     !---------------------------------------------------------------------
 !     !
-!     USE dft_par_mod
+!     USE dft_setting_params
 !     !
 !     IMPLICIT NONE
 !     !
@@ -679,7 +680,7 @@ CONTAINS
 !   SUBROUTINE init_dft_exxrpa( )
 !     !-----------------------------------------------------------------------
 !     !
-!     USE dft_par_mod
+!     USE dft_setting_params
 !     !
 !     IMPLICIT NONE
 !     !
@@ -697,7 +698,7 @@ CONTAINS
   !
   SUBROUTINE start_exx
     !! Activate exact exchange (exx_started=TRUE)
-    USE dft_par_mod, ONLY: ishybrid, exx_started
+    USE dft_setting_params, ONLY: ishybrid, exx_started
     IMPLICIT NONE
     IF (.NOT. ishybrid) &
        CALL xclib_error( 'start_exx', 'dft is not hybrid, wrong call', 1 )
@@ -706,7 +707,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE stop_exx
     !! Deactivate exact exchange (exx_started=FALSE)
-    USE dft_par_mod, ONLY: ishybrid, exx_started
+    USE dft_setting_params, ONLY: ishybrid, exx_started
     IMPLICIT NONE
     IF (.NOT. ishybrid) &
        CALL xclib_error( 'stop_exx', 'dft is not hybrid, wrong call', 1 )
@@ -715,8 +716,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_set_exx_fraction( exx_fraction_ )
     !! Impose input parameter as exact exchange fraction value
-    USE kind_l,      ONLY: DP
-    USE dft_par_mod, ONLY: exx_fraction
+    USE kind_l,             ONLY: DP
+    USE dft_setting_params, ONLY: exx_fraction
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: exx_fraction_
     !! Imposed value of exact exchange fraction
@@ -727,7 +728,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE dft_force_hybrid( request )
     !! Impose hybrid condition.
-    USE dft_par_mod, ONLY: ishybrid
+    USE dft_setting_params, ONLY: ishybrid
     IMPLICIT NONE
     LOGICAL, OPTIONAL, INTENT(INOUT) :: request
     !! Impose input request as hybrid condition and return output request
@@ -744,7 +745,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION exx_is_active()
      !! TRUE if exact exchange is active.
-     USE dft_par_mod, ONLY: exx_started
+     USE dft_setting_params, ONLY: exx_started
      IMPLICIT NONE
      LOGICAL :: exx_is_active
      exx_is_active = exx_started
@@ -752,8 +753,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION xclib_get_exx_fraction()
      !! Recover exact exchange fraction.
-     USE kind_l,      ONLY: DP
-     USE dft_par_mod, ONLY: exx_fraction
+     USE kind_l,             ONLY: DP
+     USE dft_setting_params, ONLY: exx_fraction
      IMPLICIT NONE
      REAL(DP) :: xclib_get_exx_fraction
      xclib_get_exx_fraction = exx_fraction
@@ -767,8 +768,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE set_screening_parameter( scrparm_ )
     !! Impose input parameter as screening parameter (for pbexsr)
-    USE kind_l,      ONLY: DP
-    USE dft_par_mod, ONLY: screening_parameter
+    USE kind_l,             ONLY: DP
+    USE dft_setting_params, ONLY: screening_parameter
     IMPLICIT NONE
     REAL(DP):: scrparm_
     !! Value to impose as screening parameter
@@ -779,8 +780,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_screening_parameter()
      !! Recover screening parameter (for pbexsr)
-     USE kind_l,      ONLY: DP
-     USE dft_par_mod, ONLY: screening_parameter
+     USE kind_l,             ONLY: DP
+     USE dft_setting_params, ONLY: screening_parameter
      IMPLICIT NONE
      REAL(DP):: get_screening_parameter
      get_screening_parameter = screening_parameter
@@ -789,8 +790,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE set_gau_parameter( gauparm_ )
     !! Impose input parameter as gau parameter (for gau-pbe)
-    USE kind_l,      ONLY: DP
-    USE dft_par_mod, ONLY: gau_parameter
+    USE kind_l,             ONLY: DP
+    USE dft_setting_params, ONLY: gau_parameter
     IMPLICIT NONE
     REAL(DP):: gauparm_
     !! Value to impose as gau parameter
@@ -801,8 +802,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_gau_parameter()
     !! Recover gau parameter (for gau-pbe)
-    USE kind_l,      ONLY: DP
-    USE dft_par_mod, ONLY: gau_parameter
+    USE kind_l,             ONLY: DP
+    USE dft_setting_params, ONLY: gau_parameter
     IMPLICIT NONE
     REAL(DP):: get_gau_parameter
     get_gau_parameter = gau_parameter
@@ -814,15 +815,15 @@ CONTAINS
   !============ DFT NAME & ID SETTING AND RECOVERY =======================
   !
   !-----------------------------------------------------------------------
-  FUNCTION xclib_get_id( family, kindf )
+  FUNCTION xclib_get_ID( family, kindf )
      !--------------------------------------------------------------------
      !! Get functionals index of \(\text{family}\) and \(\text{kind}\).
      !
-     USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac
+     USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac
      !
      IMPLICIT NONE
      !
-     INTEGER :: xclib_get_id
+     INTEGER :: xclib_get_ID
      CHARACTER(len=*), INTENT(IN) :: family
      !! LDA, GGA or MGGA
      CHARACTER(len=*), INTENT(IN) :: kindf
@@ -842,29 +843,30 @@ CONTAINS
      !
      SELECT CASE( cfamily(1:ln) )
      CASE( 'LDA' )
-       IF (ckindf=='EXCH') xclib_get_id = iexch
-       IF (ckindf=='CORR') xclib_get_id = icorr
+       IF (ckindf=='EXCH') xclib_get_ID = iexch
+       IF (ckindf=='CORR') xclib_get_ID = icorr
      CASE( 'GGA' )
-       IF (ckindf=='EXCH') xclib_get_id = igcx
-       IF (ckindf=='CORR') xclib_get_id = igcc
+       IF (ckindf=='EXCH') xclib_get_ID = igcx
+       IF (ckindf=='CORR') xclib_get_ID = igcc
      CASE( 'MGGA' )
-       IF (ckindf=='EXCH') xclib_get_id = imeta
-       IF (ckindf=='CORR') xclib_get_id = imetac
+       IF (ckindf=='EXCH') xclib_get_ID = imeta
+       IF (ckindf=='CORR') xclib_get_ID = imetac
      CASE DEFAULT
        CALL xclib_error( 'xclib_get_id', 'input not recognized', 1 )
      END SELECT
      !
      RETURN
      !
-  END FUNCTION xclib_get_id
+  END FUNCTION xclib_get_ID
   !
   !-------------------------------------------------------------------       
   SUBROUTINE xclib_get_name( family, kindf, name )
      !----------------------------------------------------------------
      !! Gets QE name for 'family'-'kind' term of the XC functional.
      !
-     USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                            exc, corr, gradx, gradc, meta
+     USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac
+     USE qe_dft_list,        ONLY: dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
+                                   dft_GGAc_name, dft_MGGA_name
      !
      IMPLICIT NONE
      !
@@ -888,13 +890,13 @@ CONTAINS
      !
      SELECT CASE( cfamily(1:ln) )
      CASE( 'LDA' )
-       IF (ckindf=='EXCH') name = exc(iexch)
-       IF (ckindf=='CORR') name = corr(icorr)
+       IF (ckindf=='EXCH') name = dft_LDAx_name(iexch)
+       IF (ckindf=='CORR') name = dft_LDAc_name(icorr)
      CASE( 'GGA' )
-       IF (ckindf=='EXCH') name = gradx(igcx)
-       IF (ckindf=='CORR') name = gradc(igcc)
+       IF (ckindf=='EXCH') name = dft_GGAx_name(igcx)
+       IF (ckindf=='CORR') name = dft_GGAc_name(igcc)
      CASE( 'MGGA' )
-       IF (ckindf=='EXCH') name = meta(imeta) 
+       IF (ckindf=='EXCH') name = dft_MGGA_name(imeta) 
      CASE DEFAULT
        CALL xclib_error( 'get_name', 'input not recognized', 1 )
      END SELECT
@@ -908,7 +910,7 @@ CONTAINS
      !-----------------------------------------------------------------
      !! Establish if the XC term family-kind is Libxc or not.
      !
-     USE dft_par_mod,  ONLY: is_libxc
+     USE dft_setting_params,  ONLY: is_libxc
      !
      IMPLICIT NONE
      !
@@ -996,7 +998,7 @@ CONTAINS
   SUBROUTINE xclib_reset_dft()
     !---------------------------------------------------------------------
     !! Unset DFT indexes.
-    USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, notset
+    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, notset
     IMPLICIT NONE
     iexch  = notset ; icorr  = notset
     igcx   = notset ; igcc   = notset
@@ -1007,7 +1009,7 @@ CONTAINS
   FUNCTION get_dft_name()
      !---------------------------------------------------------------------
      !! Get full DFT name
-     USE dft_par_mod, ONLY: dft
+     USE dft_setting_params, ONLY: dft
      IMPLICIT NONE
      CHARACTER(LEN=32) :: get_dft_name
      get_dft_name = dft
@@ -1019,7 +1021,7 @@ CONTAINS
      !---------------------------------------------------------------------
      !! Find if DFT has gradient correction, meta or hybrid.
      !
-     USE dft_par_mod,  ONLY: isgradient, ismeta, ishybrid
+     USE dft_setting_params,  ONLY: isgradient, ismeta, ishybrid
      !
      IMPLICIT NONE
      !
@@ -1074,7 +1076,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION igcc_is_lyp()
      !! Find if correlation GGA is Lee-Yang-Parr.
-     USE dft_par_mod,  ONLY: igcc
+     USE dft_setting_params,  ONLY: igcc
      IMPLICIT NONE
      LOGICAL :: igcc_is_lyp
      igcc_is_lyp = (igcc==3 .OR. igcc==7 .OR. igcc==13)
@@ -1083,7 +1085,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION dft_has_finite_size_correction()
      !! TRUE if finite size correction present
-     USE dft_par_mod, ONLY: has_finite_size_correction
+     USE dft_setting_params, ONLY: has_finite_size_correction
      IMPLICIT NONE
      LOGICAL :: dft_has_finite_size_correction
      dft_has_finite_size_correction = has_finite_size_correction
@@ -1092,8 +1094,9 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_set_finite_size_volume( volume )
      !! Set value for finite size cell volume.
-     USE dft_par_mod, ONLY: has_finite_size_correction, finite_size_cell_volume,&
-                            finite_size_cell_volume_set
+     USE dft_setting_params, ONLY: has_finite_size_correction, &
+                                   finite_size_cell_volume,    &
+                                   finite_size_cell_volume_set
      IMPLICIT NONE
      REAL, INTENT(IN) :: volume
      !! finite size cell volume
@@ -1109,8 +1112,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_get_finite_size_cell_volume( is_present, volume )
      !! Recover value for finite size cell volume.
-     USE kind_l,      ONLY: DP
-     USE dft_par_mod, ONLY: finite_size_cell_volume, finite_size_cell_volume_set
+     USE kind_l,             ONLY: DP
+     USE dft_setting_params, ONLY: finite_size_cell_volume, finite_size_cell_volume_set
      IMPLICIT NONE
      LOGICAL, INTENT(OUT) :: is_present
      !! TRUE if finite size correction present
@@ -1125,10 +1128,10 @@ CONTAINS
   SUBROUTINE xclib_init_libxc( xclib_nspin, domag )
     !------------------------------------------------------------------------
     !! Initialize Libxc functionals, if present.
-    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                            is_libxc, libxc_initialized
+    USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                                   is_libxc, libxc_initialized
 #if defined(__LIBXC)
-    USE dft_par_mod,  ONLY: n_ext_params, xc_func, xc_info, par_list
+    USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
@@ -1191,10 +1194,10 @@ CONTAINS
   SUBROUTINE xclib_finalize_libxc()
     !------------------------------------------------------------------------
     !! Finalize Libxc functionals, if present.
-    USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                            is_libxc
+    USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                                   is_libxc
 #if defined(__LIBXC)
-    USE dft_par_mod,  ONLY: xc_func
+    USE dft_setting_params,  ONLY: xc_func
 #endif
     IMPLICIT NONE
     INTEGER :: iid
@@ -1221,7 +1224,7 @@ CONTAINS
     !! program with input \(\text{test}=\text{'dft-info'}\).
     USE kind_l,       ONLY: DP
 #if defined(__LIBXC)
-    USE dft_par_mod,  ONLY: xc_func, par_list
+    USE dft_setting_params,  ONLY: xc_func, par_list
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: sid
@@ -1248,7 +1251,7 @@ CONTAINS
     !! \(ID = \text{func_id}\)
     USE kind_l,       ONLY: DP
 #if defined(__LIBXC)
-    USE dft_par_mod,  ONLY: par_list
+    USE dft_setting_params,  ONLY: par_list
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: sid
@@ -1293,9 +1296,9 @@ CONTAINS
     !---------------------------------------------------------------------
     !! Get DFT name in short notation.
     !
-    USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, corr, &
-                           is_libxc, scan_exx, notset
-    USE qe_dft_list, ONLY: dft_LDAc_name, get_shortname_from_IDs
+    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
+                                  is_libxc, scan_exx, notset
+    USE qe_dft_list,        ONLY: dft_LDAc_name, get_shortname_from_IDs
     !
     IMPLICIT NONE
     !
@@ -1351,17 +1354,19 @@ CONTAINS
     !---------------------------------------------------------------------
     !! Get DFT name in long notation.
     !
-    USE dft_par_mod, ONLY: iexch, icorr, igcx, igcc, imeta, exc, corr, gradx,&
-                           gradc, meta
+    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta
+    USE qe_dft_list,        ONLY: dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
+                                  dft_GGAc_name, dft_MGGA_name
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN=25) :: xclib_get_dft_long
     CHARACTER(LEN=25) :: longname
     !
-    WRITE(longname,'(4a5)') exc(iexch), corr(icorr), gradx(igcx), gradc(igcc)
+    WRITE(longname,'(4a5)') dft_LDAx_name(iexch), dft_LDAc_name(icorr), &
+                            dft_GGAx_name(igcx),  dft_GGAc_name(igcc)
     !
-    IF ( imeta > 0 )  longname = longname(1:20)//TRIM(meta(imeta))
+    IF ( imeta > 0 )  longname = longname(1:20)//TRIM(dft_MGGA_name(imeta))
     !
     xclib_get_dft_long = longname
     !
@@ -1372,9 +1377,10 @@ CONTAINS
    !--------------------------------------------------------------------------
    !! Set input threshold for \(\text{family}\)-term of XC functional.
    !
-   USE kind_l,      ONLY: DP
-   USE dft_par_mod, ONLY: rho_threshold_lda, rho_threshold_gga, rho_threshold_mgga, &
-                          grho_threshold_gga, grho2_threshold_mgga, tau_threshold_mgga
+   USE kind_l,             ONLY: DP
+   USE dft_setting_params, ONLY: rho_threshold_lda,  rho_threshold_gga,    &
+                                 rho_threshold_mgga, grho2_threshold_mgga, &
+                                 grho_threshold_gga, tau_threshold_mgga
    !
    IMPLICIT NONE
    !
@@ -1472,4 +1478,4 @@ CONTAINS
   END FUNCTION capital
   !
   !
-END MODULE dft_mod
+END MODULE dft_setting_routines

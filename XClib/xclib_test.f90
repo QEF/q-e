@@ -33,17 +33,17 @@ PROGRAM xclib_test
   USE xclib_utils_and_para
   
   !--xml
-  USE xmltools,    ONLY: xml_openfile, xml_closefile,xmlr_readtag,&
-                         xmlw_writetag, xmlw_opentag, xmlw_closetag,&
+  USE xmltools,    ONLY: xml_openfile, xml_closefile,xmlr_readtag,   &
+                         xmlw_writetag, xmlw_opentag, xmlw_closetag, &
                          xmlr_opentag, xmlr_closetag, get_attr, add_attr
   
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_par_mod, ONLY: xc_func, xc_info
+  USE dft_setting_params, ONLY: xc_func, xc_info
 #endif
   !
-  USE dft_par_mod, ONLY: nxc,ncc,ngcx,ngcc,nmeta,exc,corr,gradx,gradc,meta
+  USE dft_setting_params, ONLY: nxc,ncc,ngcx,ngcc,nmeta,exc,corr,gradx,gradc,meta
   
   IMPLICIT NONE
   !

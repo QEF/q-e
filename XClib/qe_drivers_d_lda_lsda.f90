@@ -14,8 +14,8 @@ MODULE qe_drivers_d_lda_lsda
   !-------------------------------------------------------------------------
   !! Contains the routines to compute the derivative of the LDA XC potential.
   !
-  USE kind_l,      ONLY: DP
-  USE dft_par_mod, ONLY: iexch, icorr, is_libxc
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: iexch, icorr, is_libxc
   !
   IMPLICIT NONE
   !

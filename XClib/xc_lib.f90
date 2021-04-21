@@ -10,7 +10,7 @@ MODULE xc_lib
   !----------------------------------------------------
   !! Interface module for \(\texttt{xc_lib}\) library.
   !
-  USE dft_mod
+  USE dft_setting_routines
   !
   IMPLICIT NONE
   !

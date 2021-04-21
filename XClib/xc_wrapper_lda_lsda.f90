@@ -14,12 +14,12 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_par_mod,       ONLY: xc_func, xc_info
+  USE dft_setting_params, ONLY: xc_func, xc_info
 #endif
   !
-  USE kind_l,            ONLY: DP
-  USE dft_par_mod,       ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
-                               finite_size_cell_volume_set
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
+                                finite_size_cell_volume_set
   USE qe_drivers_lda_lsda
   !
   IMPLICIT NONE

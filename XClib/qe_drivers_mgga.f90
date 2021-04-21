@@ -14,9 +14,9 @@ MODULE qe_drivers_mgga
   !------------------------------------------------------------------------
   !! Contains the mGGA drivers of QE that calculate XC energy and potential.
   !
-  USE kind_l,      ONLY: DP
-  USE dft_par_mod, ONLY: imeta, imetac, rho_threshold_mgga, grho2_threshold_mgga,&
-                         tau_threshold_mgga
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: imeta, imetac, rho_threshold_mgga, &
+                                grho2_threshold_mgga, tau_threshold_mgga
   USE metagga
   !
   IMPLICIT NONE

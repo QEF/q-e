@@ -14,7 +14,7 @@ MODULE qe_dft_list
   SAVE
   !
   ! -- single DFT terms (family-type)
-  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=46, ngcc=13, nmeta=6
+  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=43, ngcc=10, nmeta=6
   CHARACTER(LEN=4)  :: dft_LDAx_name(0:nxc),  dft_LDAc_name(0:ncc),  &
                        dft_GGAx_name(0:ngcx), dft_GGAc_name(0:ngcc), &
                        dft_MGGA_name(0:nmeta) 

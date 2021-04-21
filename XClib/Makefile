@@ -9,8 +9,8 @@ xclib_utils_and_para.o \
 xclib_error.o \
 qe_kind.o \
 qe_constants.o \
-xc_input_params_mod.o \
-dft_mod.o \
+dft_setting_params.o \
+dft_setting_routines.o \
 qe_dft_list.o \
 qe_funct_corr_lda_lsda.o \
 qe_funct_exch_lda_lsda.o \

@@ -14,10 +14,11 @@ MODULE qe_drivers_gga
   !----------------------------------------------------------------------
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
-  USE kind_l,       ONLY: DP
-  USE dft_par_mod,  ONLY: igcx, igcc, rho_threshold_gga, grho_threshold_gga,&
-                          exx_started, exx_fraction, screening_parameter,   &
-                          gau_parameter
+  USE kind_l,              ONLY: DP
+  USE dft_setting_params,  ONLY: igcx, igcc, rho_threshold_gga,     &
+                                 grho_threshold_gga, exx_started,   &
+                                 exx_fraction, screening_parameter, &
+                                 gau_parameter
   !
   IMPLICIT NONE
   !

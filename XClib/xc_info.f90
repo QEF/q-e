@@ -13,15 +13,15 @@ PROGRAM xc_info
   !
   ! --- To be run on a single processor ---
   !
-  USE kind_l,      ONLY: DP
-  USE xc_lib,      ONLY: xclib_set_dft_from_name, xclib_get_ID, &
-                         xclib_dft_is_libxc, xclib_init_libxc,  &
-                         xclib_finalize_libxc
+  USE kind_l,               ONLY: DP
+  USE xc_lib,               ONLY: xclib_set_dft_from_name, xclib_get_ID, &
+                                  xclib_dft_is_libxc, xclib_init_libxc,  &
+                                  xclib_finalize_libxc
   USE xclib_utils_and_para, ONLY: stdout
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_par_mod, ONLY: xc_func, xc_info
+  USE dft_setting_params,   ONLY: xc_func, xc_info
 #endif
   !
   IMPLICIT NONE

@@ -15,11 +15,11 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #include "xc_version.h"
   USE xc_f03_lib_m
   USE dft_mod,       ONLY: get_libxc_flags_exc
-  USE dft_par_mod,   ONLY: xc_func, xc_info
+  USE dft_setting_params,   ONLY: xc_func, xc_info
 #endif 
   !
   USE kind_l,        ONLY: DP
-  USE dft_par_mod,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,        &
+  USE dft_setting_params,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,        &
                            grho2_threshold_mgga, tau_threshold_mgga, scan_exx, &
                            exx_started, exx_fraction
   USE qe_drivers_mgga
