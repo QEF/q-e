@@ -3578,21 +3578,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     }
 
 
-                    if @ref fcp_temperature == 'andersen' :
-                           the "collision frequency" parameter is given as nu=1/tau
-                           defined above, so nu*dt = 1/fcp_nraise
-                }
-            }
-        }
-
-        var freeze_all_atoms -type LOGICAL {
-            default { .FALSE. }
-            info {
-                If .TRUE., freeze all atoms
-                to perform relaxation or dynamics only with FCP.
-            }
-        }
-    }
 
     #
     # card ATOMIC_SPECIES
