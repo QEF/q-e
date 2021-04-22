@@ -958,7 +958,7 @@ MODULE exx_band
     USE cell_base,      ONLY : at, bg, tpiba2
     USE cellmd,         ONLY : lmovecell
     USE wvfct,          ONLY : npwx
-    USE gvect,          ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, &
+    USE gvect,          ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, mill_d, &
                                gstart, gvect_init, deallocate_gvect_exx, gshells
     USE gvecs,          ONLY : gcutms, ngms, ngms_g, gvecs_init
     USE gvecw,          ONLY : gkcut, ecutwfc, gcutw
@@ -973,8 +973,7 @@ MODULE exx_band
     !
     USE command_line_options, ONLY : nmany_
     !
-    USE gvect_gpum,     ONLY : using_g, using_gg, using_g_d, using_gg_d, &
-                                 using_mill, using_mill_d
+    USE gvect_gpum,     ONLY : using_g, using_gg, using_g_d, using_gg_d
     !
     IMPLICIT NONE
     !
@@ -1069,7 +1068,7 @@ MODULE exx_band
 #if defined(__CUDA)
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
-       CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+       mill_d = mill
        CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
        CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
                                                  ! This is a trick to avoid checking for sync everywhere.
@@ -1103,7 +1102,7 @@ MODULE exx_band
 #if defined(__CUDA)
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
-       CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+       mill_d = mill
        CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
        CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
                                                  ! This is a trick to avoid checking for sync everywhere.
@@ -1155,7 +1154,7 @@ MODULE exx_band
 #if defined(__CUDA)
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
-       CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+       mill_d = mill
        CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
        CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
                                                  ! This is a trick to avoid checking for sync everywhere.

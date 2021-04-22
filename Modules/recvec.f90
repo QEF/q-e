@@ -116,6 +116,7 @@
        ALLOCATE( igtongl(ngm) )
        !
        IF (use_gpu) THEN
+          ALLOCATE( mill_d(3, ngm) )
           ALLOCATE( igtongl_d(ngm) )
           ALLOCATE( gl_d(ngm) )
        ENDIF

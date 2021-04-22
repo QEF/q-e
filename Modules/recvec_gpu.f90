@@ -30,8 +30,6 @@
      LOGICAL :: gg_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: g_ood = .false.    ! used to flag out of date variables
      LOGICAL :: g_d_ood = .false.    ! used to flag out of date variables
-     LOGICAL :: mill_ood = .false.    ! used to flag out of date variables
-     LOGICAL :: mill_d_ood = .false.    ! used to flag out of date variables
      !
      CONTAINS
      !
@@ -187,87 +185,9 @@
 #endif
      END SUBROUTINE using_g_d
      !
-     SUBROUTINE using_mill(intento, debug_info)
-         !
-         ! intento is used to specify what the variable will  be used for :
-         !  0 -> in , the variable needs to be synchronized but won't be changed
-         !  1 -> inout , the variable needs to be synchronized AND will be changed
-         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
-         !
-         USE gvect, ONLY : mill, mill_d
-         implicit none
-         INTEGER, INTENT(IN) :: intento
-         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA)  || defined(__CUDA_GNU)
-         INTEGER :: intento_
-         intento_ = intento
-         !
-         IF (PRESENT(debug_info) ) print *, "using_mill ", debug_info, mill_ood
-         !
-         IF (mill_ood) THEN
-             IF ((.not. allocated(mill_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_mill_d', 'PANIC: sync of mill from mill_d with unallocated array. Bye!!', 1)
-                stop
-             END IF
-             IF (.not. allocated(mill)) THEN
-                IF (intento_ /= 2) THEN
-                   print *, "WARNING: sync of mill with unallocated array and intento /= 2? Changed to 2!"
-                   intento_ = 2
-                END IF
-                ! IF (intento_ > 0)    mill_d_ood = .true.
-             END IF
-             IF (intento_ < 2) THEN
-                IF ( iverbosity > 0 ) print *, "Really copied mill D->H"
-                mill = mill_d
-             END IF
-             mill_ood = .false.
-         ENDIF
-         IF (intento_ > 0)    mill_d_ood = .true.
-#endif
-     END SUBROUTINE using_mill
-     !
-     SUBROUTINE using_mill_d(intento, debug_info)
-         !
-         USE gvect, ONLY : mill, mill_d
-         implicit none
-         INTEGER, INTENT(IN) :: intento
-         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
-#if defined(__CUDA) || defined(__CUDA_GNU)
-         !
-         IF (PRESENT(debug_info) ) print *, "using_mill_d ", debug_info, mill_d_ood
-         !
-         IF (.not. allocated(mill)) THEN
-             IF (intento /= 2) print *, "WARNING: sync of mill_d with unallocated array and intento /= 2?"
-             IF (allocated(mill_d)) DEALLOCATE(mill_d)
-             mill_d_ood = .false.
-             RETURN
-         END IF
-         ! here we know that mill is allocated, check if size is 0
-         IF ( SIZE(mill) == 0 ) THEN
-             print *, "Refusing to allocate 0 dimensional array mill_d. If used, code will crash."
-             RETURN
-         END IF
-         !
-         IF (mill_d_ood) THEN
-             IF ( allocated(mill_d) .and. (SIZE(mill_d)/=SIZE(mill))) deallocate(mill_d)
-             IF (.not. allocated(mill_d)) ALLOCATE(mill_d(DIMS2D(mill)))  ! MOLD does not work on all compilers
-             IF (intento < 2) THEN
-                IF ( iverbosity > 0 ) print *, "Really copied mill H->D"
-                mill_d = mill
-             END IF
-             mill_d_ood = .false.
-         ENDIF
-         IF (intento > 0)    mill_ood = .true.
-#else
-         CALL errore('using_mill_d', 'Trying to use device data without device compilated code!', 1)
-#endif
-     END SUBROUTINE using_mill_d
-     !
-     !
      SUBROUTINE deallocate_gvect_gpu
        gg_d_ood = .false.
        g_d_ood = .false.
-       mill_d_ood = .false.
      END SUBROUTINE deallocate_gvect_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE gvect_gpum

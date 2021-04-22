@@ -158,8 +158,8 @@ SUBROUTINE post_xml_init (  )
   USE ions_base,            ONLY : nat, nsp, tau, ityp
   USE cell_base,            ONLY : omega
   USE recvec_subs,          ONLY : ggen, ggens
-  USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
-                                   eigts1, eigts2, eigts3, gstart, gshells
+  USE gvect,                ONLY : ecutrho, gg, ngm, g, gcutm, mill, mill_d, &
+          ngm_g, ig_l2g, eigts1, eigts2, eigts3, gstart, gshells
   USE gvecs,                ONLY : ngms, gcutms 
   USE gvecw,                ONLY : ecutwfc
   USE fft_rho,              ONLY : rho_g2r
@@ -215,6 +215,10 @@ SUBROUTINE post_xml_init (  )
   CALL allocate_fft()
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart ) 
+#if defined(__CUDA)
+  ! FIXME: to be moved inside ggen
+  mill_d = mill
+#endif
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
   CALL gshells ( lmovecell ) 
   !
