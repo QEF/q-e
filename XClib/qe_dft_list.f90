@@ -37,19 +37,19 @@ MODULE qe_dft_list
   DATA dft_LDAx_ref(0)   / 'No LDA exchange.' /
   !
   DATA dft_LDAx_name(1)  / 'SLA' /
-  DATA dft_LDAx_ref(1)   / 'Slater exchange' /
+  DATA dft_LDAx_ref(1)   / '[Slater exchange - alpha=2/3]' /
   !
   DATA dft_LDAx_name(2)  / 'SL1' /
-  DATA dft_LDAx_ref(2)   / '' /
+  DATA dft_LDAx_ref(2)   / '[Slater exchange - alpha=1.0]' /
   !
   DATA dft_LDAx_name(3)  / 'RXC' /
-  DATA dft_LDAx_ref(3)   / '' /
+  DATA dft_LDAx_ref(3)   / '[Relativistic Slater]' /
   !
   DATA dft_LDAx_name(4)  / 'OEP' /
-  DATA dft_LDAx_ref(4)   / '' /
+  DATA dft_LDAx_ref(4)   / '[Optimized Effective Potential]' /
   !
   DATA dft_LDAx_name(5)  / 'HF' /
-  DATA dft_LDAx_ref(5)   / '' /
+  DATA dft_LDAx_ref(5)   / '[Hartree-Fock]' /
   !
   DATA dft_LDAx_name(6)  / 'PB0X' /
   DATA dft_LDAx_ref(6)   / 'J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)' /
@@ -121,7 +121,7 @@ MODULE qe_dft_list
   DATA dft_GGAx_ref(5)   / 'Handy et al, JCP 109, 6264 (1998)' /
   !
   DATA dft_GGAx_name(6)  / 'OPTX' /
-  DATA dft_GGAx_ref(6)   / ' ' /
+  DATA dft_GGAx_ref(6)   / 'Handy et al, JCP 116, 5411 (2002)' /
   !
   DATA dft_GGAx_name(7)  / 'PB0X' /
   DATA dft_GGAx_ref(7)   / 'J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)' /
@@ -131,7 +131,7 @@ MODULE qe_dft_list
                            &J.Phys.Chem 98, 11623 (1994)' /
   !
   DATA dft_GGAx_name(9)  / 'PSX' /
-  DATA dft_GGAx_ref(9)   / ' ' /
+  DATA dft_GGAx_ref(9)   / 'J.P. Perdew et al., PRL 100, 136406 (2008)' /
   !
   DATA dft_GGAx_name(10) / 'WCX' /
   DATA dft_GGAx_ref(10)  / 'Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)' /
@@ -150,7 +150,7 @@ MODULE qe_dft_list
   DATA dft_GGAx_ref(14)  / 'V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)' /
   !
   DATA dft_GGAx_name(15) / 'SOX' /
-  DATA dft_GGAx_ref(15)  / ' ' /
+  DATA dft_GGAx_ref(15)  / 'Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)' /
   !
   DATA dft_GGAx_name(16) / 'Q2DX' /
   DATA dft_GGAx_ref(16)  / 'L. Chiodo et al., PRL 108, 126402 (2012)' /
@@ -171,13 +171,13 @@ MODULE qe_dft_list
   DATA dft_GGAx_ref(21)  / 'Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)' /
   !
   DATA dft_GGAx_name(22) / 'EVX' /
-  DATA dft_GGAx_ref(22)  / '' /
+  DATA dft_GGAx_ref(22)  / 'Engel-Vosko, Phys. Rev. B 47, 13164 (1993)' /
   !
   DATA dft_GGAx_name(23) / 'B86R' /
   DATA dft_GGAx_ref(23)  / 'I. Hamada, Phys. Rev. B 89, 121103(R) (2014)' /
   !
   DATA dft_GGAx_name(24) / 'CX13' /
-  DATA dft_GGAx_ref(24)  / '' /
+  DATA dft_GGAx_ref(24)  / 'K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)' /
   !
   DATA dft_GGAx_name(25) / 'X3LP' /
   DATA dft_GGAx_ref(25)  / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
@@ -221,16 +221,16 @@ MODULE qe_dft_list
   DATA dft_GGAx_ref(37)  / '' /
   !
   DATA dft_GGAx_name(38) / 'B86X' /
-  DATA dft_GGAx_ref(38)  / '' /
+  DATA dft_GGAx_ref(38)  / '[B86B exchange * 0.75]' /
   !
   DATA dft_GGAx_name(39) / 'B88X' /
-  DATA dft_GGAx_ref(39)  / '' /
+  DATA dft_GGAx_ref(39)  / '[Becke88 exchange * 0.50]' /
   !
   DATA dft_GGAx_name(40) / 'BEEX' /
   DATA dft_GGAx_ref(40)  / '' /
   !
   DATA dft_GGAx_name(41) / 'HHNX' /
-  DATA dft_GGAx_ref(41)  / '' /
+  DATA dft_GGAx_ref(41)  / 'Hammer-Hansen-Norskov' /
   !
   DATA dft_GGAx_name(42) / 'W31X' /
   DATA dft_GGAx_ref(42)  / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
@@ -265,7 +265,7 @@ MODULE qe_dft_list
                            &J.Phys.Chem 98, 11623 (1994)' /
   !
   DATA dft_GGAc_name(7)  / 'PSC' /
-  DATA dft_GGAc_ref(7)   / '' /
+  DATA dft_GGAc_ref(7)   / 'J.P. Perdew et al., PRL 100, 136406 (2008)' /
   !
   DATA dft_GGAc_name(8)  / 'PBE' /
   DATA dft_GGAc_ref(8)   / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
@@ -323,12 +323,12 @@ MODULE qe_dft_list
   DATA dft_name(4)     / 'OEP' /
   DATA dft_name2(4)    / 'none' /
   DATA dft_IDs(4,1:6)  / 4,0,0,0,0,0 /
-  DATA dft_descr(4)    / 'OEP no GC part (nor LDA...) and no correlation by default' /
+  DATA dft_descr(4)    / 'Optimized Effective Potential. No GC part, no corr. by default' /
   !
   DATA dft_name(5)     / 'KLI' /
   DATA dft_name2(5)    / 'none' /
   DATA dft_IDs(5,1:6)  / 10,0,0,0,0,0 /
-  DATA dft_descr(5)    / 'KLI' /
+  DATA dft_descr(5)    / 'KLI - unavailable' /
   !
   DATA dft_name(6)     / 'HF' /
   DATA dft_name2(6)    / 'none' /
