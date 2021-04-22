@@ -79,6 +79,8 @@ SUBROUTINE run_pwscf( exit_status )
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
   !
+  LOGICAL :: optimizer_failed = .FALSE.
+  !
   INTEGER :: ierr
   ! collect error codes
   !
@@ -198,7 +200,7 @@ SUBROUTINE run_pwscf( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        CALL move_ions ( idone, ions_status )
+        CALL move_ions ( idone, ions_status, optimizer_failed )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
@@ -221,7 +223,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
-     IF ( conv_ions ) EXIT main_loop
+     IF ( conv_ions .OR. optimizer_failed ) EXIT main_loop
      !
      ! ... receive new positions from MM code in QM/MM run
      !
@@ -294,7 +296,7 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL qmmm_shutdown()
   !
-  IF ( .NOT. conv_ions )  exit_status =  3
+  IF ( .NOT. conv_ions .OR. optimizer_failed )  exit_status =  3
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
