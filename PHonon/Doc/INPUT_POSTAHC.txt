@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: postahc.x / PWscf / Quantum Espresso (version: 6.6)
+Program: postahc.x / PHonon / Quantum ESPRESSO (version: 6.7GPU)
 ------------------------------------------------------------------------
 
 
@@ -15,7 +15,7 @@ electron_phonon='ahc' option.
 - Calculate the phonon-induced electron self-energy in the full matrix form
 at a given temperature.
 
-    Structure of the input data:
+Structure of the input data:
 ========================================================================
 
 &INPUT
@@ -150,4 +150,4 @@ NAMELIST: &INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Tue Oct 06 22:11:45 CEST 2020
+This file has been created by helpdoc utility on Thu Apr 22 16:23:23 CEST 2021

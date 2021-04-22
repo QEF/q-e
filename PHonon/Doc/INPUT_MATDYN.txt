@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: matdyn.x / PWscf / Quantum Espresso (version: 6.7GPU)
+Program: matdyn.x / PHonon / Quantum ESPRESSO (version: 6.7GPU)
 ------------------------------------------------------------------------
 
 
@@ -19,12 +19,23 @@ approximation calculation. If supercell data are not specified
 in input, the unit cell, lattice vectors, atom types and positions
 are read from the force constant file.
 
+Input data format: [ ] = it depends
+
 Structure of the input data:
 ========================================================================
 
 &INPUT
    ...specs of the namelist variables...
 /
+
+[ X(1)   Y(1)   Z(1)    ityp(1)
+  ...
+  X(nat) Y(nat) Z(nat)  ityp(nat) ]
+
+[ nq
+  q_x(1)  q_y(1)  q_x(1)   [ nptq(1) ]
+  ...
+  q_x(nq) q_y(nq) q_x(nq)  [ nptq(1) ] ]
 
 
 
@@ -454,4 +465,4 @@ ________________________________________________________________________
    if you want to have q = 0 results for two different directions
    
 
-This file has been created by helpdoc utility on Wed Apr 21 10:57:43 CEST 2021
+This file has been created by helpdoc utility on Thu Apr 22 16:16:32 CEST 2021
