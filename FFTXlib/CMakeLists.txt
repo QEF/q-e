@@ -108,7 +108,7 @@ elseif(QE_FFTW_VENDOR STREQUAL "FFTW3")
     if(FFTW3_FOUND)
         qe_add_global_compile_definitions(__FFTW3)
         set(qe_fft_wrappers fft_scalar.FFTW3.f90)
-        target_link_libraries(qe_fft INTERFACE FFTW)
+        target_link_libraries(qe_fft INTERFACE FFTW3)
         message(STATUS "Found FFTW3 library")
     else()
         message(FATAL_ERROR "Failed to find ${QE_FFTW_VENDOR} library. "
