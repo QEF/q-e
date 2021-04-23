@@ -4074,7 +4074,8 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
             IF (nspin == 4) THEN !FZ: added for spinors
 !#BEGIN_INTERNAL_ONLY
               DO isp=1,nst  !FZ: added for spinors
-                dummy = dummy + conjg (psic_nc2 (ig, isp)) * (hpsinl (ig+npwx*(isp-1), ib) + hpsi_nc (ig, isp) + hpsi_nc_temp(ig, isp))
+                dummy = dummy + conjg (psic_nc2 (ig, isp)) * (hpsinl (ig+npwx*(isp-1), ib) &
+                        + hpsi_nc (ig, isp) + hpsi_nc_temp(ig, isp))
               ENDDO  !FZ: added for spinors
             ELSE !FZ: added for spinors
               dummy = dummy + conjg (psic2 (ig)) * (hpsinl (ig, ib) + hpsi(ig) + hpsi_temp (ig)) 
@@ -4205,8 +4206,8 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
               DO ib2 = offdiag_nmin, offdiag_nmax
                 DO is = 1, nspin  !FZ: change order
                   IF (ib .EQ. ib2) THEN   !FZ: 
-                    WRITE (unit, 103) is, ib2, ib, et(ib, ik + (is - 1) * nkstot / nspin) * CMPLX (rytoev, 0.0D0, KIND=dp) - mtxelo &
-                      (ib2 - offdiag_nmin + 1, ib - offdiag_nmin + 1, &
+                    WRITE (unit, 103) is, ib2, ib, et(ib, ik + (is - 1) * nkstot / nspin) * CMPLX (rytoev, 0.0D0, KIND=dp) & 
+                      - mtxelo(ib2 - offdiag_nmin + 1, ib - offdiag_nmin + 1, &
                       ik + (is - 1) * nkstot / nspin)
                   ELSE        !FZ: 
                      WRITE (unit, 103) is, ib2, ib, - mtxelo &
