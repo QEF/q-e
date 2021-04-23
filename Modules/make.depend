@@ -350,7 +350,6 @@ recvec.o : ../UtilXlib/mp.o
 recvec.o : constants.o
 recvec.o : control_flags.o
 recvec.o : kind.o
-recvec_gpu.o : recvec.o
 recvec_subs.o : ../FFTXlib/fft_ggen.o
 recvec_subs.o : ../FFTXlib/fft_types.o
 recvec_subs.o : ../UtilXlib/mp.o

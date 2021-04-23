@@ -1118,7 +1118,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
-   USE gvect_gpum,           ONLY : g_d
+   USE gvect,                ONLY : g_d
    USE klist,                ONLY : nks, xk, ngk, igk_k_d, igk_k
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU, &
                                     is_hubbard_back, Hubbard_l_back, offsetU_back, &
@@ -1387,7 +1387,7 @@ SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
    !
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : tpiba
-   USE gvect_gpum,       ONLY : g_d
+   USE gvect,            ONLY : g_d
    USE uspp,             ONLY : okvan
    USE klist,            ONLY : xk, ngk, igk_k_d
    USE basis,            ONLY : natomwfc, wfcatom, swfcatom
@@ -1525,7 +1525,7 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    USE uspp_param,           ONLY : nh
    USE klist,                ONLY : igk_k_d, ngk
    USE becmod_subs_gpum,     ONLY : calbec_gpu
-   USE gvect_gpum,           ONLY : g_d
+   USE gvect,                ONLY : g_d
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
    !
@@ -1686,7 +1686,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
-   USE gvect_gpum,           ONLY : g_d
+   USE gvect,                ONLY : g_d
    USE klist,                ONLY : nks, xk, ngk, igk_k_d
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU, &
                                     is_hubbard_back, Hubbard_l_back, offsetU_back, &

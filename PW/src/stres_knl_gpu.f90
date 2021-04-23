@@ -14,7 +14,7 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
   USE kinds,                ONLY: DP
   USE constants,            ONLY: pi, e2
   USE cell_base,            ONLY: omega, alat, at, bg, tpiba
-  USE gvect,                ONLY: g
+  USE gvect,                ONLY: g, g_d
   USE gvecw,                ONLY: qcutz, ecfixed, q2sigma
   USE klist,                ONLY: nks, xk, ngk, igk_k_d
   USE io_files,             ONLY: iunwfc, nwordwfc
@@ -29,7 +29,6 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
   USE mp,                   ONLY: mp_sum
   USE wavefunctions_gpum,   ONLY: using_evc, using_evc_d, evc_d  
   USE device_fbuff_m,             ONLY : dev_buf
-  USE gvect_gpum,           ONLY : g_d
   USE device_memcpy_m,        ONLY : dev_memcpy
  
   !

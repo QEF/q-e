@@ -222,7 +222,7 @@ SUBROUTINE init_wfc_gpu ( ik )
   USE mp,                   ONLY : mp_bcast
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
-  USE gvect_gpum,           ONLY : g_d
+  USE gvect,                ONLY : g_d
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
   USE wvfct_gpum,           ONLY : et_d, using_et_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto

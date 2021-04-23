@@ -49,8 +49,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   USE cell_base,            ONLY : tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
-  USE gvect,                ONLY : ngm, eigts1, eigts2, eigts3, mill
-  USE gvect_gpum,           ONLY : gg_d, g_d, &
+  USE gvect,                ONLY : ngm, gg_d, g_d, &
                                    eigts1_d, eigts2_d, eigts3_d, mill_d
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE uspp,                 ONLY : okvan, becsum_d

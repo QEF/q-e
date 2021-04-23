@@ -261,8 +261,7 @@
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
-      use gvect,      only : gstart
-      use gvect_gpum, only : g_d
+      use gvect,      only : gstart, g_d
       USE device_memcpy_m, ONLY : dev_memcpy
       USE cudafor
       USE cublas

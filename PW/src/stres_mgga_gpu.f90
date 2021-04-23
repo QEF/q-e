@@ -227,7 +227,7 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
   USE fft_base,               ONLY: dffts
   USE fft_interfaces,         ONLY: invfft
   !
-  USE gvect_gpum,             ONLY: g_d
+  USE gvect,                  ONLY: g_d
   USE wavefunctions_gpum,     ONLY: using_evc, using_evc_d, evc_d, &
                                     using_psic, using_psic_d, psic_d
   USE device_fbuff_m,               ONLY: dev_buf

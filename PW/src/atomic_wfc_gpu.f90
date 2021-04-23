@@ -17,8 +17,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE cell_base,        ONLY : omega, tpiba
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,            ONLY : natomwfc
-  !USE gvect,            ONLY : mill, eigts1, eigts2, eigts3, g
-  USE gvect_gpum,       ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE gvect,            ONLY : mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
   USE klist,            ONLY : xk, ngk, igk_k_d !, igk_k
   USE wvfct,            ONLY : npwx
   USE uspp_param,       ONLY : upf, nwfcm

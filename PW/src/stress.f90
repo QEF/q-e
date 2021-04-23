@@ -36,7 +36,7 @@ SUBROUTINE stress( sigma )
   USE libmbd_interface, ONLY : HmbdvdW
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
-  USE gvect_gpum,       ONLY : g_d, gg_d
+  USE gvect,            ONLY : g_d, gg_d
   !
   IMPLICIT NONE
   !

@@ -16,8 +16,8 @@ SUBROUTINE g2_kin_gpu ( ik )
   USE cell_base,            ONLY : tpiba2 
   USE gvecw,                ONLY : ecfixed, qcutz, q2sigma
   USE klist,                ONLY : xk, ngk, igk_k_d
+  USE gvect,                ONLY : g_d
   USE wvfct_gpum,           ONLY : g2kin_d, using_g2kin_d
-  USE gvect_gpum,           ONLY : g_d, using_g_d
   !
   IMPLICIT NONE
   !
@@ -28,9 +28,7 @@ SUBROUTINE g2_kin_gpu ( ik )
   INTEGER :: ig, npw,i
   REAL(DP):: xk1,xk2,xk3
   !
-  CALL using_g_d(0); CALL using_g2kin_d(2)
-  !
-  !
+  CALL using_g2kin_d(2)
   !
   npw = ngk(ik)
   !

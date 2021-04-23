@@ -140,7 +140,6 @@ deviatoric.o
 # GPU versions of modules
 MODULES += \
   wavefunctions_gpu.o \
-  recvec_gpu.o \
   becmod_gpu.o \
   becmod_subs_gpu.o \
   cuda_subroutines.o \

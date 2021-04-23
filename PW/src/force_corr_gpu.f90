@@ -25,14 +25,13 @@ subroutine force_corr_gpu (forcescc)
   USE cell_base,            ONLY : tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, g, ngl, gl_d, igtongl_d
+  USE gvect,                ONLY : ngm, gstart, g, g_d, ngl, gl_d, igtongl_d
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vnew
   USE control_flags,        ONLY : gamma_only
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE device_fbuff_m,             ONLY : dev_buf
-  USE gvect_gpum,           ONLY : g_d
   !
   USE simpsn_gpum,          ONLY : simpsn_gpu_dev
 #if defined(__CUDA)
