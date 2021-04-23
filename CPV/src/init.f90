@@ -394,7 +394,7 @@
       USE cell_base,             ONLY : at, bg, omega, alat, tpiba2, &
                                         cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
-      USE gvect,                 ONLY : g, gg, ngm, mill
+      USE gvect,                 ONLY : g, g_d, gg, ngm, mill
       USE fft_base,              ONLY : dfftp, dfftb
       USE small_box,             ONLY : small_box_set
       USE smallbox_subs,         ONLY : gcalb
@@ -419,14 +419,12 @@
       !
       !  re-calculate G-vectors and kinetic energy
       !
-      CALL using_g(2)
-      !
       do ig = 1, dfftp%ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
       enddo
 #if defined (__CUDA)
-      CALL using_g_d(0)
+      g_d = g
 #endif
       !
       call g2kin_init ( gg, tpiba2 )
