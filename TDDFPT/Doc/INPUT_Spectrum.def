@@ -14,7 +14,7 @@ input_description -distribution {Quantum ESPRESSO} -package turboTDDFPT -program
           fortran code. Comments lines in ``cards'' can be introduced by 
           either a "!" or a "#" character in the first position of a line.
 
-	  @b Structure of the input data:
+          @b {Structure of the input data:}
 	  ===============================================================================
 
 	  &LR_INPUT
