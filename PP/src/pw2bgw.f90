@@ -432,6 +432,12 @@ PROGRAM pw2bgw
     call errore ( 'pw2bgw', 'pw2bgw current do not support metaGGA in spinor calculations.', 10 )
   endif
 
+  ! MW: open access to prefix.hub* (ready to write)
+  CALL openfil()
+  ! MW: hinit0() contains gk_sort(); open access to ./prefix.wfc* files for reading
+  ! set nwordwfc = nbnd * npwx * npol here
+  CALL hinit0()
+
   !IF (dft_is_meta()) then                           !FZ:  for metaGGA change062320
   IF (xclib_dft_is('meta')) then                           !FZ:  for qe6.7
      CALL rho_g2r ( dfftp, rho%kin_g, rho%kin_r )   !FZ:  for metaGGA
@@ -4967,8 +4973,9 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
       ENDIF
     ENDIF
 
-    CALL ZGEMM( 'C', 'N', nbnd, nbnd, kdim, ( 1.D0, 0.D0 ), &
-            evc, kdmx,  hpsi, kdmx, ( 0.D0, 0.D0 ), hc, nbnd )
+    ! MW: Use MATMUL instead of ZGEMM
+    ! CALL ZGEMM( 'C', 'N', nbnd, nbnd, kdim, ( 1.D0, 0.D0 ), evc, kdmx,  hpsi, kdmx, ( 0.D0, 0.D0 ), hc, nbnd )
+    hc = MATMUL(CONJG(TRANSPOSE(evc)), hpsi)
 
     CALL mp_sum(  hc , intra_bgrp_comm )
 
