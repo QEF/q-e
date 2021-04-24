@@ -72,7 +72,7 @@ SUBROUTINE scale_h
 #if defined(__CUDA)
   ! update GPU copies of variables as well
   g_d  = g
-  gg_d = gg_
+  gg_d = gg
 #endif
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
