@@ -558,6 +558,7 @@ punch_plot.o : ../../PW/src/pwcom.o
 punch_plot.o : ../../PW/src/scf_mod.o
 punch_plot.o : paw_postproc.o
 pw2bgw.o : ../../FFTXlib/fft_interfaces.o
+pw2bgw.o : ../../Modules/becmod.o
 pw2bgw.o : ../../Modules/cell_base.o
 pw2bgw.o : ../../Modules/constants.o
 pw2bgw.o : ../../Modules/control_flags.o
