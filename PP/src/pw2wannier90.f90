@@ -3774,36 +3774,37 @@ SUBROUTINE compute_amn_with_scdm
    USE mp_world,        ONLY : world_comm
    USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm, my_pool_id, &
                                me_pool, root_pool
-   USE wvfct,           ONLY : nbnd, et
+   USE wvfct,           ONLY : nbnd, et, npwx
    USE gvecw,           ONLY : gcutw
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions, ONLY : evc, psic
+   USE wavefunctions,   ONLY : evc, psic
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE gvect,           ONLY : g, ngm, mill
-   USE fft_base,        ONLY : dffts !vv: unk for the SCDM-k algorithm
+   USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
-   USE fft_interfaces,  ONLY : invfft !vv: inverse fft transform for computing the unk's on a grid
+   USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin, npol
+   USE fft_types,       ONLY : fft_index_to_3d
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
    USE uspp,            ONLY : okvan
-
+   !
    IMPLICIT NONE
-
-   INTEGER, EXTERNAL :: find_free_unit
+   !
+   LOGICAL :: offrange
    COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc1(:,:), nowfc(:,:), psi_gamma(:,:), &
        qr_tau(:), cwork(:), cwork2(:), Umat(:,:), VTmat(:,:), Amat(:,:) ! vv: complex arrays for the SVD factorization
    COMPLEX(DP), ALLOCATABLE :: phase_g(:,:) ! jml
-   REAL(DP), ALLOCATABLE :: focc(:), rwork(:), rwork2(:), singval(:), rpos(:,:), cpos(:,:) ! vv: Real array for the QR factorization and SVD
+   REAL(DP), ALLOCATABLE :: focc(:), rwork(:), rwork2(:), singval(:), rpos(:,:) ! vv: Real array for the QR factorization and SVD
    INTEGER, ALLOCATABLE :: piv(:) ! vv: Pivot array in the QR factorization
    COMPLEX(DP) :: tmp_cwork(2)
    COMPLEX(DP) :: nowfc_tmp ! jml
-   REAL(DP):: ddot, norm_psi, f_gamma, tpi_r_dot_g, xk_cry(3)
-   INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, ipt, info, lcwork, locibnd, &
-              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, &
-              ig, ig_local, ipool_gamma, ik_gamma_loc ! jml
+   REAL(DP):: norm_psi, f_gamma, arg, tpi_r_dot_g, xk_cry(3)
+   INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, info, lcwork, locibnd, &
+              ib, istart, gamma_idx, minmn, minmn2, maxmn2, &
+              ig, ig_local, ipool_gamma, ik_gamma_loc, i, j, k ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
 
@@ -3855,19 +3856,18 @@ SUBROUTINE compute_amn_with_scdm
    maxmn2 = MAX(num_bands,n_wannier)
    ALLOCATE(rwork2(5*minmn2))
 
-   ALLOCATE(rpos(nrtot,3))
-   ALLOCATE(cpos(n_wannier,3))
+   ALLOCATE(rpos(3, n_wannier))
    ALLOCATE(phase(n_wannier))
    ALLOCATE(singval(n_wannier))
    ALLOCATE(Umat(num_bands,n_wannier))
    ALLOCATE(VTmat(n_wannier,n_wannier))
    ALLOCATE(Amat(num_bands,n_wannier))
+   ALLOCATE(phase_g(npwx, n_wannier))
 
    IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
 
    IF (wan_mode=='standalone') THEN
-      iun_amn = find_free_unit()
-      IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+      IF (ionode) OPEN (NEWUNIT=iun_amn, file=trim(seedname)//".amn",form='formatted')
    ENDIF
 
    WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
@@ -3945,6 +3945,7 @@ SUBROUTINE compute_amn_with_scdm
       CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,tmp_cwork,-1,rwork,info)
       IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
       lcwork = AINT(REAL(tmp_cwork(1)))
+      piv(:) = 0
       ALLOCATE(cwork(lcwork))
       IF(me_pool == root_pool) THEN
          CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,cwork,lcwork,rwork,info)
@@ -3958,23 +3959,17 @@ SUBROUTINE compute_amn_with_scdm
    CALL mp_bcast(piv, ipool_gamma, inter_pool_comm)
    IF (info /= 0) CALL errore('compute_amn', 'Error in computing the QR factorization', 1)
    !
-   ! vv: Compute the points
-   lpt = 0
-   rpos(:,:) = 0.0_DP
-   cpos(:,:) = 0.0_DP
-   DO kpt = 0,dffts%nr3-1
-      DO jpt = 0,dffts%nr2-1
-         DO ipt = 0,dffts%nr1-1
-            lpt = lpt + 1
-            rpos(lpt,1) = REAL(ipt, DP) / REAL(dffts%nr1, DP)
-            rpos(lpt,2) = REAL(jpt, DP) / REAL(dffts%nr2, DP)
-            rpos(lpt,3) = REAL(kpt, DP) / REAL(dffts%nr3, DP)
-         ENDDO
-      ENDDO
-   ENDDO
-   DO iw=1,n_wannier
-      cpos(iw,:) = rpos(piv(iw),:)
-      cpos(iw,:) = cpos(iw,:) - ANINT(cpos(iw,:))
+   ! vv: Compute the points in 3d grid
+   DO iw = 1, n_wannier
+      i = piv(iw) - 1
+      k = i / (dffts%nr1 * dffts%nr2)
+      i = i - (dffts%nr1 * dffts%nr2) * k
+      j = i / dffts%nr1
+      i = i - dffts%nr1 * j
+      rpos(1, iw) = REAL(i, KIND=DP) / REAL(dffts%nr1, KIND=DP)
+      rpos(2, iw) = REAL(j, KIND=DP) / REAL(dffts%nr2, KIND=DP)
+      rpos(3, iw) = REAL(k, KIND=DP) / REAL(dffts%nr3, KIND=DP)
+      rpos(:, iw) = rpos(:, iw) - ANINT(rpos(:, iw))
    ENDDO
    !
    DO ik=1,iknum
@@ -4001,22 +3996,16 @@ SUBROUTINE compute_amn_with_scdm
       xk_cry = xk(:, ik)
       CALL cryst_to_cart(1, xk_cry, at, -1)
       !
-      ALLOCATE(phase_g(npw, n_wannier))
       DO iw = 1, n_wannier
-        phase(iw) = cmplx(COS(2.0_DP*pi*(cpos(iw,1)*xk_cry(1) + &
-                   &cpos(iw,2)*xk_cry(2) + cpos(iw,3)*xk_cry(3))), &    !*ddot(3,cpos(iw,:),1,xk_cry(:),1)),&
-                   &SIN(2.0_DP*pi*(cpos(iw,1)*xk_cry(1) + &
-                   &cpos(iw,2)*xk_cry(2) + cpos(iw,3)*xk_cry(3))),kind=DP) !ddot(3,cpos(iw,:),1,xk_cry(:),1)))
-
-        DO ig_local = 1, npw
-          ig = igk_k(ig_local,ik)
-          tpi_r_dot_g = 2.0_DP * pi * ( cpos(iw,1) * REAL(mill(1,ig), DP) &
-                                    & + cpos(iw,2) * REAL(mill(2,ig), DP) &
-                                    & + cpos(iw,3) * REAL(mill(3,ig), DP) )
-          phase_g(ig_local, iw) = cmplx(COS(tpi_r_dot_g), SIN(tpi_r_dot_g), kind=DP)
-        END DO
-      END DO
-
+         arg = 2.0_DP * pi * SUM(rpos(:, iw) * xk_cry)
+         phase(iw) = CMPLX(COS(arg), SIN(arg), KIND=DP)
+         !
+         DO ig = 1, npw
+            tpi_r_dot_g = 2.0_DP * pi * SUM(rpos(:, iw) * REAL(mill(:, igk_k(ig, ik)), DP))
+            phase_g(ig, iw) = CMPLX(COS(tpi_r_dot_g), SIN(tpi_r_dot_g), KIND=DP)
+         ENDDO
+      ENDDO
+      !
       locibnd = 0
       CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       ! vv: Generate the occupation numbers matrix according to scdm_entanglement
@@ -4046,7 +4035,6 @@ SUBROUTINE compute_amn_with_scdm
 
       ENDDO
       CALL mp_sum(nowfc, intra_pool_comm) ! jml
-      DEALLOCATE(phase_g) ! jml
 
       CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands,&
          singval, Umat, num_bands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
@@ -4081,11 +4069,11 @@ SUBROUTINE compute_amn_with_scdm
    DEALLOCATE(rwork)
    DEALLOCATE(rwork2)
    DEALLOCATE(rpos)
-   DEALLOCATE(cpos)
    DEALLOCATE(Umat)
    DEALLOCATE(VTmat)
    DEALLOCATE(Amat)
    DEALLOCATE(singval)
+   DEALLOCATE(phase_g)
 
 #if defined(__MPI)
    DEALLOCATE( psic_all )
