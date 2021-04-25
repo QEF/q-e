@@ -3768,10 +3768,12 @@ SUBROUTINE compute_amn
 END SUBROUTINE compute_amn
 
 SUBROUTINE compute_amn_with_scdm
-
-
    USE constants,       ONLY : rytoev, pi
    USE io_global,       ONLY : stdout, ionode, ionode_id
+   USE mp,              ONLY : mp_bcast, mp_barrier, mp_sum
+   USE mp_world,        ONLY : world_comm
+   USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm, my_pool_id, &
+                               me_pool, root_pool
    USE wvfct,           ONLY : nbnd, et
    USE gvecw,           ONLY : gcutw
    USE control_flags,   ONLY : gamma_only
@@ -3784,9 +3786,6 @@ SUBROUTINE compute_amn_with_scdm
    USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft !vv: inverse fft transform for computing the unk's on a grid
    USE noncollin_module,ONLY : noncolin, npol
-   USE mp,              ONLY : mp_bcast, mp_barrier, mp_sum
-   USE mp_world,        ONLY : world_comm
-   USE mp_pools,        ONLY : intra_pool_comm
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
    USE uspp,            ONLY : okvan
@@ -3801,13 +3800,12 @@ SUBROUTINE compute_amn_with_scdm
    INTEGER, ALLOCATABLE :: piv(:) ! vv: Pivot array in the QR factorization
    COMPLEX(DP) :: tmp_cwork(2)
    COMPLEX(DP) :: nowfc_tmp ! jml
-   REAL(DP):: ddot, sumk, norm_psi, f_gamma, tpi_r_dot_g
+   REAL(DP):: ddot, norm_psi, f_gamma, tpi_r_dot_g, xk_cry(3)
    INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, ipt, info, lcwork, locibnd, &
               jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, &
-              ig, ig_local ! jml
+              ig, ig_local, ipool_gamma, ik_gamma_loc ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
-   LOGICAL            :: found_gamma
 
 #if defined(__MPI)
    INTEGER :: nxxs
@@ -3849,7 +3847,6 @@ SUBROUTINE compute_amn_with_scdm
    ALLOCATE(rwork(2*nrtot))
    rwork(:) = 0.0_DP
 
-   ALLOCATE(kpt_latt(3,iknum))
    ALLOCATE(nowfc1(n_wannier,num_bands))
    ALLOCATE(nowfc(n_wannier,num_bands))
    ALLOCATE(psi_gamma(nrtot,num_bands))
@@ -3880,80 +3877,86 @@ SUBROUTINE compute_amn_with_scdm
       header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
          WRITE (iun_amn,*) header
-         WRITE (iun_amn,'(3i8,xxx,2f10.6)') num_bands,  iknum, n_wannier, scdm_mu, scdm_sigma
+         WRITE (iun_amn,'(3i8,xxx,2f10.6)') num_bands, iknum, n_wannier, scdm_mu, scdm_sigma
       ENDIF
    ENDIF
-
-   !vv: Find Gamma-point index in the list of k-vectors
-   ik  = 0
-   gamma_idx = 1
-   sumk = -1.0_DP
-   found_gamma = .false.
-   kpt_latt(:,1:iknum)=xk(:,1:iknum)
-   CALL cryst_to_cart(iknum,kpt_latt,at,-1)
-   DO WHILE(sumk/=0.0_DP .and. ik < iknum)
-      ik = ik + 1
-      sumk = ABS(kpt_latt(1,ik)**2 + kpt_latt(2,ik)**2 + kpt_latt(3,ik)**2)
-      IF (sumk==0.0_DP) THEN
-         found_gamma = .true.
-         gamma_idx = ik
-      ENDIF
-   END DO
-   IF (.not. found_gamma) call errore('compute_amn','No Gamma point found.',1)
-
-   f_gamma = 0.0_DP
-   ik = gamma_idx
-   locibnd = 0
-   CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
-   DO ibnd = 1, nbnd
-      IF(excluded_band(ibnd)) CYCLE
-      locibnd = locibnd + 1
-      ! check locibnd <= num_bands
-      IF (locibnd > num_bands) CALL errore('compute_amn', &
-         'Something wrong with the number of bands. Check exclude_bands.', 1)
-      IF(TRIM(scdm_entanglement) == 'isolated') THEN
-         f_gamma = 1.0_DP
-      ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-         f_gamma = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
-      ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-         f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
-      ELSE
-         CALL errore('compute_amn', 'scdm_entanglement value not recognized.', 1)
-      END IF
-      npw = ngk(ik)
-      ! vv: Compute unk's on a real grid (the fft grid)
-      psic(:) = (0.D0,0.D0)
-      psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw,ibnd)
-      CALL invfft ('Wave', psic, dffts)
-#if defined(__MPI)
-      CALL gather_grid(dffts,psic,psic_all)
-      ! vv: Gamma only
-      ! vv: Build Psi_k = Unk * focc
-      norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
-      psic_all(1:nrtot) = psic_all(1:nrtot)/ norm_psi
-      psi_gamma(1:nrtot,locibnd) = psic_all(1:nrtot)
-      psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
-#else
-      norm_psi = sqrt(real(sum(psic(1:nrtot)*conjg(psic(1:nrtot))),kind=DP))
-      psic(1:nrtot) = psic(1:nrtot)/ norm_psi
-      psi_gamma(1:nrtot,locibnd) = psic(1:nrtot)
-      psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
-#endif
-   ENDDO
    !
-   ! vv: Perform QR factorization with pivoting on Psi_Gamma
-   ! vv: Preliminary call to define optimal values for lwork and cwork size
-   CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,tmp_cwork,-1,rwork,info)
-   IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
-   lcwork = AINT(REAL(tmp_cwork(1)))
-   ALLOCATE(cwork(lcwork))
-   IF(ionode) THEN
-      CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,cwork,lcwork,rwork,info)
-   ENDIF
-   CALL mp_bcast(info, ionode_id, world_comm)
-   IF (info/=0) CALL errore('compute_amn', 'Error in computing the QR factorization', 1)
-   CALL mp_bcast(piv, ionode_id, world_comm)
-   DEALLOCATE(cwork)
+   !vv: Find Gamma-point index in the list of k-vectors
+   gamma_idx = -1
+   DO ik = 1, nkstot
+      IF (ALL(xk_all(:, ik) < 1.D-8)) THEN
+         gamma_idx = ik
+         EXIT
+      ENDIF
+   ENDDO
+   IF (gamma_idx < 0) call errore('compute_amn', 'No Gamma point found.',1)
+   !
+   ! Find the place of k=Gamma in the pools
+   CALL pool_and_local_kpoint_index(nkstot, gamma_idx, ipool_gamma, ik_gamma_loc)
+   !
+   ! Calculate the pivot points
+   !
+   IF (my_pool_id == ipool_gamma) THEN
+      !
+      ik = ik_gamma_loc
+      locibnd = 0
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1)
+      !
+      DO ibnd = 1, nbnd
+         IF(excluded_band(ibnd)) CYCLE
+         locibnd = locibnd + 1
+         IF (locibnd > num_bands) CALL errore('compute_amn', &
+            'Something wrong with the number of bands. Check exclude_bands.', 1)
+         !
+         IF(TRIM(scdm_entanglement) == 'isolated') THEN
+            f_gamma = 1.0_DP
+         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
+            f_gamma = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
+         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
+            f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
+         ELSE
+            CALL errore('compute_amn', 'scdm_entanglement value not recognized.', 1)
+         END IF
+         !
+         npw = ngk(ik)
+         ! vv: Compute unk's on a real grid (the fft grid)
+         psic(:) = (0.D0,0.D0)
+         psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw,ibnd)
+         CALL invfft ('Wave', psic, dffts)
+#if defined(__MPI)
+         CALL gather_grid(dffts, psic, psic_all)
+         ! vv: Gamma only
+         ! vv: Build Psi_k = Unk * focc
+         norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
+         psic_all(1:nrtot) = psic_all(1:nrtot)/ norm_psi
+         psi_gamma(1:nrtot,locibnd) = psic_all(1:nrtot)
+         psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
+#else
+         norm_psi = sqrt(real(sum(psic(1:nrtot)*conjg(psic(1:nrtot))),kind=DP))
+         psic(1:nrtot) = psic(1:nrtot)/ norm_psi
+         psi_gamma(1:nrtot,locibnd) = psic(1:nrtot)
+         psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
+#endif
+      ENDDO
+      !
+      ! vv: Perform QR factorization with pivoting on Psi_Gamma
+      ! vv: Preliminary call to define optimal values for lwork and cwork size
+      ! Perform QR factorization only in a single processer
+      CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,tmp_cwork,-1,rwork,info)
+      IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
+      lcwork = AINT(REAL(tmp_cwork(1)))
+      ALLOCATE(cwork(lcwork))
+      IF(me_pool == root_pool) THEN
+         CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,cwork,lcwork,rwork,info)
+      ENDIF
+      DEALLOCATE(cwork)
+      CALL mp_bcast(info, root_pool, intra_pool_comm)
+      CALL mp_bcast(piv, root_pool, intra_pool_comm)
+   ENDIF ! ipool_gamma
+   !
+   CALL mp_bcast(info, ipool_gamma, inter_pool_comm)
+   CALL mp_bcast(piv, ipool_gamma, inter_pool_comm)
+   IF (info /= 0) CALL errore('compute_amn', 'Error in computing the QR factorization', 1)
    !
    ! vv: Compute the points
    lpt = 0
@@ -3973,13 +3976,14 @@ SUBROUTINE compute_amn_with_scdm
       cpos(iw,:) = rpos(piv(iw),:)
       cpos(iw,:) = cpos(iw,:) - ANINT(cpos(iw,:))
    ENDDO
-
+   !
    DO ik=1,iknum
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
       ikevc = ik + ikstart - 1
-
+      npw = ngk(ik)
+      !
       ! vv: SCDM method for generating the Amn matrix
       ! jml: calculate of psi_nk at pivot points using slow FT
       !      This is faster than using invfft because the number of pivot
@@ -3992,15 +3996,17 @@ SUBROUTINE compute_amn_with_scdm
       Amat(:,:) = (0.0_DP,0.0_DP)
       singval(:) = 0.0_DP
       rwork2(:) = 0.0_DP
-
+      !
       ! jml: calculate phase factors before the loop over bands
-      npw = ngk(ik)
+      xk_cry = xk(:, ik)
+      CALL cryst_to_cart(1, xk_cry, at, -1)
+      !
       ALLOCATE(phase_g(npw, n_wannier))
       DO iw = 1, n_wannier
-        phase(iw) = cmplx(COS(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + &
-                   &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))), &    !*ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)),&
-                   &SIN(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + &
-                   &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))),kind=DP) !ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)))
+        phase(iw) = cmplx(COS(2.0_DP*pi*(cpos(iw,1)*xk_cry(1) + &
+                   &cpos(iw,2)*xk_cry(2) + cpos(iw,3)*xk_cry(3))), &    !*ddot(3,cpos(iw,:),1,xk_cry(:),1)),&
+                   &SIN(2.0_DP*pi*(cpos(iw,1)*xk_cry(1) + &
+                   &cpos(iw,2)*xk_cry(2) + cpos(iw,3)*xk_cry(3))),kind=DP) !ddot(3,cpos(iw,:),1,xk_cry(:),1)))
 
         DO ig_local = 1, npw
           ig = igk_k(ig_local,ik)
@@ -4066,7 +4072,6 @@ SUBROUTINE compute_amn_with_scdm
    ENDDO  ! k-points
 
    ! vv: Deallocate all the variables for the SCDM method
-   DEALLOCATE(kpt_latt)
    DEALLOCATE(psi_gamma)
    DEALLOCATE(nowfc)
    DEALLOCATE(nowfc1)
