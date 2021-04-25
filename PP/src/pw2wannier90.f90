@@ -516,7 +516,7 @@ PROGRAM pw2wannier90
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
   !
-  IF (npool > 1 .and. (write_unk .OR. write_dmn .OR. (write_amn .AND. scdm_proj))) &
+  IF (npool > 1 .and. (write_unk .OR. write_dmn)) &
     CALL errore('pw2wannier90', 'pools not implemented for this feature', npool)
   !
   ! Check: bands distribution not implemented
@@ -746,6 +746,7 @@ PROGRAM pw2wannier90
      CALL print_clock('write_parity')
      !
      WRITE(stdout, '(/5x, "Internal routines:")')
+     CALL print_clock('scdm_QRCP')
      CALL print_clock('compute_u_kb')
      CALL print_clock('h_psi')
      !
@@ -3780,7 +3781,7 @@ SUBROUTINE compute_amn_with_scdm
    USE wavefunctions,   ONLY : evc, psic
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE wannier
-   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
    USE gvect,           ONLY : g, ngm, mill
    USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
@@ -3790,25 +3791,25 @@ SUBROUTINE compute_amn_with_scdm
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
    USE uspp,            ONLY : okvan
+   USE lsda_mod,        ONLY : isk, lsda
    !
    IMPLICIT NONE
    !
    LOGICAL :: offrange
-   COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc1(:,:), nowfc(:,:), psi_gamma(:,:), &
+   COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc(:,:), psi_gamma(:,:), &
        qr_tau(:), cwork(:), cwork2(:), Umat(:,:), VTmat(:,:), Amat(:,:) ! vv: complex arrays for the SVD factorization
    COMPLEX(DP), ALLOCATABLE :: phase_g(:,:) ! jml
-   REAL(DP), ALLOCATABLE :: focc(:), rwork(:), rwork2(:), singval(:), rpos(:,:) ! vv: Real array for the QR factorization and SVD
+   REAL(DP), ALLOCATABLE :: rwork(:), rwork2(:), singval(:), rpos(:,:) ! vv: Real array for the QR factorization and SVD
    INTEGER, ALLOCATABLE :: piv(:) ! vv: Pivot array in the QR factorization
    COMPLEX(DP) :: tmp_cwork(2)
    COMPLEX(DP) :: nowfc_tmp ! jml
-   REAL(DP):: norm_psi, f_gamma, arg, tpi_r_dot_g, xk_cry(3)
-   INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, info, lcwork, locibnd, &
-              ib, istart, gamma_idx, minmn, minmn2, maxmn2, &
-              ig, ig_local, ipool_gamma, ik_gamma_loc, i, j, k ! jml
-   CHARACTER (len=9)  :: cdate,ctime
-   CHARACTER (len=60) :: header
-   INTEGER :: nxxs
+   REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3)
+   INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, locibnd, &
+              ib, gamma_idx, minmn, minmn2, maxmn2, &
+              ig, ipool_gamma, ik_gamma_loc, i, j, k, ik_g_w90, nxxs ! jml
    COMPLEX(DP), ALLOCATABLE :: psic_all(:)
+   !
+   INTEGER, EXTERNAL :: global_kpoint_index
    !
    ! vv: Write info about SCDM in output
    IF (TRIM(scdm_entanglement) == 'isolated') THEN
@@ -3844,10 +3845,8 @@ SUBROUTINE compute_amn_with_scdm
    ALLOCATE(rwork(2*nrtot))
    rwork(:) = 0.0_DP
 
-   ALLOCATE(nowfc1(n_wannier,num_bands))
    ALLOCATE(nowfc(n_wannier,num_bands))
    ALLOCATE(psi_gamma(nrtot,num_bands))
-   ALLOCATE(focc(num_bands))
    minmn2 = MIN(num_bands,n_wannier)
    maxmn2 = MAX(num_bands,n_wannier)
    ALLOCATE(rwork2(5*minmn2))
@@ -3860,21 +3859,16 @@ SUBROUTINE compute_amn_with_scdm
    ALLOCATE(VTmat(n_wannier,n_wannier))
    ALLOCATE(Amat(num_bands,n_wannier))
    ALLOCATE(phase_g(npwx, n_wannier))
-
-   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
-
-   IF (wan_mode=='standalone') THEN
-      IF (ionode) OPEN (NEWUNIT=iun_amn, file=trim(seedname)//".amn",form='formatted')
-   ENDIF
-
-   WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
    !
-   IF (wan_mode=='standalone') THEN
-      CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime//' with SCDM '
+   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
+   !
+   IF (wan_mode == 'standalone') THEN
+      ! TODO: append ' with SCDM ' to header
+      CALL utility_open_output_file("amn", .TRUE., iun_amn)
+      ! CALL date_and_tim( cdate, ctime )
+      ! header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
-         WRITE (iun_amn,*) header
-         WRITE (iun_amn,'(3i8,xxx,2f10.6)') num_bands, iknum, n_wannier, scdm_mu, scdm_sigma
+         WRITE (iun_amn, '(3i8,3x,2f10.6)') num_bands, iknum, n_wannier, scdm_mu, scdm_sigma
       ENDIF
    ENDIF
    !
@@ -3893,6 +3887,8 @@ SUBROUTINE compute_amn_with_scdm
    !
    ! Calculate the pivot points
    !
+   CALL start_clock('scdm_QRCP')
+   !
    IF (my_pool_id == ipool_gamma) THEN
       !
       ik = ik_gamma_loc
@@ -3906,11 +3902,11 @@ SUBROUTINE compute_amn_with_scdm
             'Something wrong with the number of bands. Check exclude_bands.', 1)
          !
          IF(TRIM(scdm_entanglement) == 'isolated') THEN
-            f_gamma = 1.0_DP
+            focc = 1.0_DP
          ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            f_gamma = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
+            focc = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
          ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
+            focc = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
          ELSE
             CALL errore('compute_amn', 'scdm_entanglement value not recognized.', 1)
          END IF
@@ -3930,7 +3926,7 @@ SUBROUTINE compute_amn_with_scdm
          ! vv: Gamma only
          ! vv: Build Psi_k = Unk * focc
          norm_psi = SQRT(SUM( ABS(psic_all(1:nrtot))**2 ))
-         psi_gamma(1:nrtot, locibnd) = psic_all(1:nrtot) * (f_gamma / norm_psi)
+         psi_gamma(1:nrtot, locibnd) = psic_all(1:nrtot) * (focc / norm_psi)
       ENDDO
       !
       ! vv: Perform QR factorization with pivoting on Psi_Gamma
@@ -3953,6 +3949,8 @@ SUBROUTINE compute_amn_with_scdm
    CALL mp_bcast(piv, ipool_gamma, inter_pool_comm)
    IF (info /= 0) CALL errore('compute_amn', 'Error in computing the QR factorization', 1)
    !
+   CALL stop_clock('scdm_QRCP')
+   !
    ! vv: Compute the points in 3d grid
    DO iw = 1, n_wannier
       i = piv(iw) - 1
@@ -3966,19 +3964,25 @@ SUBROUTINE compute_amn_with_scdm
       rpos(:, iw) = rpos(:, iw) - ANINT(rpos(:, iw))
    ENDDO
    !
-   DO ik=1,iknum
-      WRITE (stdout,'(i8)',advance='no') ik
+   WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
+   !
+   DO ik = 1, nks
+      WRITE(stdout, '(i8)', advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
-      ikevc = ik + ikstart - 1
+      !
+      IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+      ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
+      !
       npw = ngk(ik)
+      !
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ik, -1)
       !
       ! vv: SCDM method for generating the Amn matrix
       ! jml: calculate of psi_nk at pivot points using slow FT
       !      This is faster than using invfft because the number of pivot
       !      points is much smaller than the number of FFT grid points.
       phase(:) = (0.0_DP,0.0_DP)
-      nowfc1(:,:) = (0.0_DP,0.0_DP)
       nowfc(:,:) = (0.0_DP,0.0_DP)
       Umat(:,:) = (0.0_DP,0.0_DP)
       VTmat(:,:) = (0.0_DP,0.0_DP)
@@ -4001,63 +4005,70 @@ SUBROUTINE compute_amn_with_scdm
       ENDDO
       !
       locibnd = 0
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       ! vv: Generate the occupation numbers matrix according to scdm_entanglement
       DO ibnd = 1, nbnd
          IF (excluded_band(ibnd)) CYCLE
          locibnd = locibnd + 1
          ! vv: Define the occupation numbers matrix according to scdm_entanglement
          IF(TRIM(scdm_entanglement) == 'isolated') THEN
-            focc(locibnd) = 1.0_DP
+            focc = 1.0_DP
          ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            focc(locibnd) = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
+            focc = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
          ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc(locibnd) = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
+            focc = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
          ELSE
-            call errore('compute_amn','scdm_entanglement value not recognized.',1)
+            CALL errore('compute_amn','scdm_entanglement value not recognized.',1)
          END IF
-
-         norm_psi = REAL(SUM( evc(1:npw, ibnd) * CONJG(evc(1:npw, ibnd)) ))
+         !
+         norm_psi = SUM( ABS(evc(1:npw, ibnd))**2 )
          CALL mp_sum(norm_psi, intra_pool_comm)
          norm_psi = SQRT(norm_psi)
-
+         !
          ! jml: nowfc = sum_G (psi(G) * exp(i*G*r)) * focc  * phase(iw) / norm_psi
          DO iw = 1, n_wannier
             nowfc_tmp = SUM( evc(1:npw, ibnd) * phase_g(1:npw, iw) )
-            nowfc(iw,locibnd) = nowfc_tmp * phase(iw) * focc(locibnd) / norm_psi
+            nowfc(iw,locibnd) = nowfc_tmp * phase(iw) * focc / norm_psi
          ENDDO
-
+         !
       ENDDO
       CALL mp_sum(nowfc, intra_pool_comm) ! jml
-
-      CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands,&
-         singval, Umat, num_bands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
-      lcwork = AINT(REAL(tmp_cwork(1)))
-      ALLOCATE(cwork(lcwork))
-      IF(ionode) THEN
+      !
+      IF (me_pool == root_pool) THEN
+         CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands, &
+            singval, Umat, num_bands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
+         lcwork = AINT(REAL(tmp_cwork(1)))
+         ALLOCATE(cwork(lcwork))
          ! vv: SVD to generate orthogonal projections
-         CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands,&
+         CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands, &
             singval, Umat, num_bands, VTmat, n_wannier, cwork, lcwork, rwork2, info)
+         DEALLOCATE(cwork)
       ENDIF
-      CALL mp_bcast(info, ionode_id, world_comm)
-      IF(info/=0) CALL errore('compute_amn','Error in computing the SVD of the PSI matrix in the SCDM method',1)
-      CALL mp_bcast(Umat, ionode_id, world_comm)
-      CALL mp_bcast(VTmat, ionode_id, world_comm)
-      DEALLOCATE(cwork)
-
-      Amat = MATMUL(Umat,VTmat)
-      DO iw = 1,n_wannier
-         DO ibnd = 1, num_bands
-            IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd, iw, ik, REAL(Amat(ibnd,iw)), AIMAG(Amat(ibnd,iw))
+      CALL mp_bcast(info, root_pool, intra_pool_comm)
+      IF (info /= 0) CALL errore('compute_amn', &
+         'Error in computing the SVD of the PSI matrix in the SCDM method', 1)
+      !
+      IF (me_pool == root_pool) THEN
+         Amat = MATMUL(Umat, VTmat)
+         DO iw = 1, n_wannier
+            DO ibnd = 1, num_bands
+               WRITE(iun_amn,'(3i5,2f18.12)') ibnd, iw, ik_g_w90, REAL(Amat(ibnd,iw)), AIMAG(Amat(ibnd,iw))
+            ENDDO
          ENDDO
-      ENDDO
+      ENDIF ! root_pool
    ENDDO  ! k-points
-
+   !
+   IF (me_pool == root_pool) CLOSE(iun_amn, STATUS="KEEP")
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   !
+   CALL utility_merge_files("amn", .TRUE., -1)
+   !
    ! vv: Deallocate all the variables for the SCDM method
    DEALLOCATE(psi_gamma)
    DEALLOCATE(nowfc)
-   DEALLOCATE(nowfc1)
-   DEALLOCATE(focc)
    DEALLOCATE(piv)
    DEALLOCATE(qr_tau)
    DEALLOCATE(rwork)
@@ -4068,17 +4079,12 @@ SUBROUTINE compute_amn_with_scdm
    DEALLOCATE(Amat)
    DEALLOCATE(singval)
    DEALLOCATE(phase_g)
-
-#if defined(__MPI)
-   DEALLOCATE( psic_all )
-#endif
-
-   IF (ionode .and. wan_mode=='standalone') CLOSE (iun_amn)
+   DEALLOCATE(psic_all)
+   !
    WRITE(stdout,'(/)')
    WRITE(stdout,*) ' AMN calculated'
-   CALL stop_clock( 'compute_amn' )
-
-   RETURN
+   CALL stop_clock('compute_amn')
+   !
 END SUBROUTINE compute_amn_with_scdm
 
 
