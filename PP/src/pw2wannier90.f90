@@ -3807,14 +3807,9 @@ SUBROUTINE compute_amn_with_scdm
               ig, ig_local, ipool_gamma, ik_gamma_loc, i, j, k ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
-
-#if defined(__MPI)
    INTEGER :: nxxs
-   COMPLEX(DP),ALLOCATABLE :: psic_all(:)
-   nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
-   ALLOCATE(psic_all(nxxs) )
-#endif
-
+   COMPLEX(DP), ALLOCATABLE :: psic_all(:)
+   !
    ! vv: Write info about SCDM in output
    IF (TRIM(scdm_entanglement) == 'isolated') THEN
       WRITE(stdout,'(1x,a,a/)') 'Case  : ',trim(scdm_entanglement)
@@ -3840,6 +3835,7 @@ SUBROUTINE compute_amn_with_scdm
    !     2)For the unk's on the real grid
    !     3)For the SVD
    nrtot = dffts%nr1*dffts%nr2*dffts%nr3
+   nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
    info = 0
    minmn = MIN(num_bands,nrtot)
    ALLOCATE(qr_tau(2*minmn))
@@ -3856,6 +3852,7 @@ SUBROUTINE compute_amn_with_scdm
    maxmn2 = MAX(num_bands,n_wannier)
    ALLOCATE(rwork2(5*minmn2))
 
+   ALLOCATE(psic_all(nxxs))
    ALLOCATE(rpos(3, n_wannier))
    ALLOCATE(phase(n_wannier))
    ALLOCATE(singval(n_wannier))
@@ -3920,37 +3917,34 @@ SUBROUTINE compute_amn_with_scdm
          !
          npw = ngk(ik)
          ! vv: Compute unk's on a real grid (the fft grid)
-         psic(:) = (0.D0,0.D0)
+         psic(:) = (0.0_DP, 0.0_DP)
          psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw,ibnd)
          CALL invfft ('Wave', psic, dffts)
+         !
+         psic_all(:) = (0.0_DP, 0.0_DP)
 #if defined(__MPI)
          CALL gather_grid(dffts, psic, psic_all)
+#else
+         psic_all(1:nrtot) = psic(1:nrtot)
+#endif
          ! vv: Gamma only
          ! vv: Build Psi_k = Unk * focc
-         norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
-         psic_all(1:nrtot) = psic_all(1:nrtot)/ norm_psi
-         psi_gamma(1:nrtot,locibnd) = psic_all(1:nrtot)
-         psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
-#else
-         norm_psi = sqrt(real(sum(psic(1:nrtot)*conjg(psic(1:nrtot))),kind=DP))
-         psic(1:nrtot) = psic(1:nrtot)/ norm_psi
-         psi_gamma(1:nrtot,locibnd) = psic(1:nrtot)
-         psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
-#endif
+         norm_psi = SQRT(SUM( ABS(psic_all(1:nrtot))**2 ))
+         psi_gamma(1:nrtot, locibnd) = psic_all(1:nrtot) * (f_gamma / norm_psi)
       ENDDO
       !
       ! vv: Perform QR factorization with pivoting on Psi_Gamma
       ! vv: Preliminary call to define optimal values for lwork and cwork size
       ! Perform QR factorization only in a single processer
-      CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,tmp_cwork,-1,rwork,info)
-      IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
-      lcwork = AINT(REAL(tmp_cwork(1)))
-      piv(:) = 0
-      ALLOCATE(cwork(lcwork))
       IF(me_pool == root_pool) THEN
+         CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,tmp_cwork,-1,rwork,info)
+         IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
+         lcwork = AINT(REAL(tmp_cwork(1)))
+         piv(:) = 0
+         ALLOCATE(cwork(lcwork))
          CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,cwork,lcwork,rwork,info)
+         DEALLOCATE(cwork)
       ENDIF
-      DEALLOCATE(cwork)
       CALL mp_bcast(info, root_pool, intra_pool_comm)
       CALL mp_bcast(piv, root_pool, intra_pool_comm)
    ENDIF ! ipool_gamma
