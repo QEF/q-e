@@ -3803,7 +3803,7 @@ SUBROUTINE compute_amn_with_scdm
    COMPLEX(DP) :: nowfc_tmp ! jml
    REAL(DP):: ddot, sumk, norm_psi, f_gamma, tpi_r_dot_g
    INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, ipt, info, lcwork, locibnd, &
-              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, nbtot, &
+              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, &
               ig, ig_local ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
@@ -3841,11 +3841,9 @@ SUBROUTINE compute_amn_with_scdm
    !     2)For the unk's on the real grid
    !     3)For the SVD
    IF(TRIM(scdm_entanglement) == 'isolated') THEN
-      numbands=n_wannier
-      nbtot=n_wannier + nexband
+      numbands = n_wannier
    ELSE
-      numbands=nbnd-nexband
-      nbtot=nbnd
+      numbands = num_bands
    ENDIF
    nrtot = dffts%nr1*dffts%nr2*dffts%nr3
    info = 0
@@ -3912,11 +3910,12 @@ SUBROUTINE compute_amn_with_scdm
    ik = gamma_idx
    locibnd = 0
    CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
-   DO ibnd=1,nbtot
+   DO ibnd = 1, nbnd
       IF(excluded_band(ibnd)) CYCLE
       locibnd = locibnd + 1
       ! check locibnd <= numbands
-      IF (locibnd > numbands) call errore('compute_amn','Something wrong with the number of bands. Check exclude_bands.')
+      IF (locibnd > numbands) CALL errore('compute_amn', &
+         'Something wrong with the number of bands. Check exclude_bands.', 1)
       IF(TRIM(scdm_entanglement) == 'isolated') THEN
          f_gamma = 1.0_DP
       ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
@@ -3924,7 +3923,7 @@ SUBROUTINE compute_amn_with_scdm
       ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
          f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
       ELSE
-         call errore('compute_amn','scdm_entanglement value not recognized.',1)
+         CALL errore('compute_amn', 'scdm_entanglement value not recognized.', 1)
       END IF
       npw = ngk(ik)
       ! vv: Compute unk's on a real grid (the fft grid)
@@ -3946,31 +3945,21 @@ SUBROUTINE compute_amn_with_scdm
       psi_gamma(1:nrtot,locibnd) = psi_gamma(1:nrtot,locibnd) * f_gamma
 #endif
    ENDDO
-
+   !
    ! vv: Perform QR factorization with pivoting on Psi_Gamma
    ! vv: Preliminary call to define optimal values for lwork and cwork size
    CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,tmp_cwork,-1,rwork,info)
-   IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
+   IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
    lcwork = AINT(REAL(tmp_cwork(1)))
-   tmp_cwork(:) = (0.0_DP,0.0_DP)
-   piv(:) = 0
-   rwork(:) = 0.0_DP
    ALLOCATE(cwork(lcwork))
-   cwork(:) = (0.0_DP,0.0_DP)
-#if defined(__MPI)
    IF(ionode) THEN
       CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,cwork,lcwork,rwork,info)
-      IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
    ENDIF
-   CALL mp_bcast(piv,ionode_id,world_comm)
-#else
-   ! vv: Perform QR factorization with pivoting on Psi_Gamma
-   CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,cwork,lcwork,rwork,info)
-   IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
-#endif
+   CALL mp_bcast(info, ionode_id, world_comm)
+   IF (info/=0) CALL errore('compute_amn', 'Error in computing the QR factorization', 1)
+   CALL mp_bcast(piv, ionode_id, world_comm)
    DEALLOCATE(cwork)
-   tmp_cwork(:) = (0.0_DP,0.0_DP)
-
+   !
    ! vv: Compute the points
    lpt = 0
    rpos(:,:) = 0.0_DP
@@ -4030,7 +4019,7 @@ SUBROUTINE compute_amn_with_scdm
       locibnd = 0
       CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       ! vv: Generate the occupation numbers matrix according to scdm_entanglement
-      DO ibnd=1,nbtot
+      DO ibnd = 1, nbnd
          IF (excluded_band(ibnd)) CYCLE
          locibnd = locibnd + 1
          ! vv: Define the occupation numbers matrix according to scdm_entanglement
@@ -4058,35 +4047,25 @@ SUBROUTINE compute_amn_with_scdm
       CALL mp_sum(nowfc, intra_pool_comm) ! jml
       DEALLOCATE(phase_g) ! jml
 
-      CALL ZGESVD('S','S',numbands,n_wannier,TRANSPOSE(CONJG(nowfc)),numbands,&
-           &singval,Umat,numbands,VTmat,n_wannier,tmp_cwork,-1,rwork2,info)
+      CALL ZGESVD('S', 'S', numbands, n_wannier, TRANSPOSE(CONJG(nowfc)), numbands,&
+         singval, Umat, numbands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
       lcwork = AINT(REAL(tmp_cwork(1)))
-      tmp_cwork(:) = (0.0_DP,0.0_DP)
       ALLOCATE(cwork(lcwork))
-#if defined(__MPI)
-     IF(ionode) THEN
-     ! vv: SVD to generate orthogonal projections
-     CALL ZGESVD('S','S',numbands,n_wannier,TRANSPOSE(CONJG(nowfc)),numbands,&
-          &singval,Umat,numbands,VTmat,n_wannier,cwork,lcwork,rwork2,info)
-        IF(info/=0) CALL errore('compute_amn','Error in computing the SVD of the PSI matrix in the SCDM method',1)
-     ENDIF
-     CALL mp_bcast(Umat,ionode_id,world_comm)
-     CALL mp_bcast(VTmat,ionode_id,world_comm)
-#else
-      ! vv: SVD to generate orthogonal projections
-      CALL ZGESVD('S','S',numbands,n_wannier,TRANSPOSE(CONJG(nowfc)),numbands,&
-           &singval,Umat,numbands,VTmat,n_wannier,cwork,lcwork,rwork2,info)
+      IF(ionode) THEN
+         ! vv: SVD to generate orthogonal projections
+         CALL ZGESVD('S', 'S', numbands, n_wannier, TRANSPOSE(CONJG(nowfc)), numbands,&
+            singval, Umat, numbands, VTmat, n_wannier, cwork, lcwork, rwork2, info)
+      ENDIF
+      CALL mp_bcast(info, ionode_id, world_comm)
       IF(info/=0) CALL errore('compute_amn','Error in computing the SVD of the PSI matrix in the SCDM method',1)
-#endif
+      CALL mp_bcast(Umat, ionode_id, world_comm)
+      CALL mp_bcast(VTmat, ionode_id, world_comm)
       DEALLOCATE(cwork)
 
       Amat = MATMUL(Umat,VTmat)
       DO iw = 1,n_wannier
-         locibnd = 0
-         DO ibnd = 1,nbtot
-            IF (excluded_band(ibnd)) CYCLE
-            locibnd = locibnd + 1
-            IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+         DO ibnd = 1, numbands
+            IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd, iw, ik, REAL(Amat(ibnd,iw)), AIMAG(Amat(ibnd,iw))
          ENDDO
       ENDDO
    ENDDO  ! k-points
