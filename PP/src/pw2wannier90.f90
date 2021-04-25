@@ -3803,7 +3803,7 @@ SUBROUTINE compute_amn_with_scdm
    COMPLEX(DP) :: nowfc_tmp ! jml
    REAL(DP):: ddot, sumk, norm_psi, f_gamma, tpi_r_dot_g
    INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, ipt, info, lcwork, locibnd, &
-              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, &
+              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, &
               ig, ig_local ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
@@ -3840,14 +3840,9 @@ SUBROUTINE compute_amn_with_scdm
    !     1)For the QR decomposition
    !     2)For the unk's on the real grid
    !     3)For the SVD
-   IF(TRIM(scdm_entanglement) == 'isolated') THEN
-      numbands = n_wannier
-   ELSE
-      numbands = num_bands
-   ENDIF
    nrtot = dffts%nr1*dffts%nr2*dffts%nr3
    info = 0
-   minmn = MIN(numbands,nrtot)
+   minmn = MIN(num_bands,nrtot)
    ALLOCATE(qr_tau(2*minmn))
    ALLOCATE(piv(nrtot))
    piv(:) = 0
@@ -3855,21 +3850,21 @@ SUBROUTINE compute_amn_with_scdm
    rwork(:) = 0.0_DP
 
    ALLOCATE(kpt_latt(3,iknum))
-   ALLOCATE(nowfc1(n_wannier,numbands))
-   ALLOCATE(nowfc(n_wannier,numbands))
-   ALLOCATE(psi_gamma(nrtot,numbands))
-   ALLOCATE(focc(numbands))
-   minmn2 = MIN(numbands,n_wannier)
-   maxmn2 = MAX(numbands,n_wannier)
+   ALLOCATE(nowfc1(n_wannier,num_bands))
+   ALLOCATE(nowfc(n_wannier,num_bands))
+   ALLOCATE(psi_gamma(nrtot,num_bands))
+   ALLOCATE(focc(num_bands))
+   minmn2 = MIN(num_bands,n_wannier)
+   maxmn2 = MAX(num_bands,n_wannier)
    ALLOCATE(rwork2(5*minmn2))
 
    ALLOCATE(rpos(nrtot,3))
    ALLOCATE(cpos(n_wannier,3))
    ALLOCATE(phase(n_wannier))
    ALLOCATE(singval(n_wannier))
-   ALLOCATE(Umat(numbands,n_wannier))
+   ALLOCATE(Umat(num_bands,n_wannier))
    ALLOCATE(VTmat(n_wannier,n_wannier))
-   ALLOCATE(Amat(numbands,n_wannier))
+   ALLOCATE(Amat(num_bands,n_wannier))
 
    IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
 
@@ -3885,7 +3880,7 @@ SUBROUTINE compute_amn_with_scdm
       header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
          WRITE (iun_amn,*) header
-         WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+         WRITE (iun_amn,'(3i8,xxx,2f10.6)') num_bands,  iknum, n_wannier, scdm_mu, scdm_sigma
       ENDIF
    ENDIF
 
@@ -3913,8 +3908,8 @@ SUBROUTINE compute_amn_with_scdm
    DO ibnd = 1, nbnd
       IF(excluded_band(ibnd)) CYCLE
       locibnd = locibnd + 1
-      ! check locibnd <= numbands
-      IF (locibnd > numbands) CALL errore('compute_amn', &
+      ! check locibnd <= num_bands
+      IF (locibnd > num_bands) CALL errore('compute_amn', &
          'Something wrong with the number of bands. Check exclude_bands.', 1)
       IF(TRIM(scdm_entanglement) == 'isolated') THEN
          f_gamma = 1.0_DP
@@ -3948,12 +3943,12 @@ SUBROUTINE compute_amn_with_scdm
    !
    ! vv: Perform QR factorization with pivoting on Psi_Gamma
    ! vv: Preliminary call to define optimal values for lwork and cwork size
-   CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,tmp_cwork,-1,rwork,info)
+   CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,tmp_cwork,-1,rwork,info)
    IF (info/=0) CALL errore('compute_amn', 'Error in priliminary call for the QR factorization', 1)
    lcwork = AINT(REAL(tmp_cwork(1)))
    ALLOCATE(cwork(lcwork))
    IF(ionode) THEN
-      CALL ZGEQP3(numbands,nrtot,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,cwork,lcwork,rwork,info)
+      CALL ZGEQP3(num_bands,nrtot,TRANSPOSE(CONJG(psi_gamma)),num_bands,piv,qr_tau,cwork,lcwork,rwork,info)
    ENDIF
    CALL mp_bcast(info, ionode_id, world_comm)
    IF (info/=0) CALL errore('compute_amn', 'Error in computing the QR factorization', 1)
@@ -4047,14 +4042,14 @@ SUBROUTINE compute_amn_with_scdm
       CALL mp_sum(nowfc, intra_pool_comm) ! jml
       DEALLOCATE(phase_g) ! jml
 
-      CALL ZGESVD('S', 'S', numbands, n_wannier, TRANSPOSE(CONJG(nowfc)), numbands,&
-         singval, Umat, numbands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
+      CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands,&
+         singval, Umat, num_bands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
       lcwork = AINT(REAL(tmp_cwork(1)))
       ALLOCATE(cwork(lcwork))
       IF(ionode) THEN
          ! vv: SVD to generate orthogonal projections
-         CALL ZGESVD('S', 'S', numbands, n_wannier, TRANSPOSE(CONJG(nowfc)), numbands,&
-            singval, Umat, numbands, VTmat, n_wannier, cwork, lcwork, rwork2, info)
+         CALL ZGESVD('S', 'S', num_bands, n_wannier, TRANSPOSE(CONJG(nowfc)), num_bands,&
+            singval, Umat, num_bands, VTmat, n_wannier, cwork, lcwork, rwork2, info)
       ENDIF
       CALL mp_bcast(info, ionode_id, world_comm)
       IF(info/=0) CALL errore('compute_amn','Error in computing the SVD of the PSI matrix in the SCDM method',1)
@@ -4064,7 +4059,7 @@ SUBROUTINE compute_amn_with_scdm
 
       Amat = MATMUL(Umat,VTmat)
       DO iw = 1,n_wannier
-         DO ibnd = 1, numbands
+         DO ibnd = 1, num_bands
             IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') ibnd, iw, ik, REAL(Amat(ibnd,iw)), AIMAG(Amat(ibnd,iw))
          ENDDO
       ENDDO
