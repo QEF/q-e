@@ -21,7 +21,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   USE cell_base,   ONLY: tpiba, omega
   USE klist,       ONLY: xk, ngk, igk_k_d
   USE wvfct,       ONLY: npwx
-  USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
+  USE uspp,        ONLY: nkb, indv_d, nhtol_d, nhtolm_d
   USE uspp_data,   ONLY: nqx, tab, tab_d2y, tab_d, dq, spline_ps
   USE m_gth,       ONLY: mk_dffnl_gth, mk_dffnl_gth_gpu
   USE splinelib
@@ -43,8 +43,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
               ikb_t, nht, ina, nas(nat), ierr(3)
   REAL(DP) :: px, ux, vx, wx, arg, u_ipol, xk1, xk2, xk3, qt
   COMPLEX(DP) :: pref
-  INTEGER,  ALLOCATABLE :: ityp_d(:), ih_d(:), na_d(:), nas_d(:), &
-                           indv_d(:,:), nhtol_d(:,:), nhtolm_d(:,:)
+  INTEGER,  ALLOCATABLE :: ityp_d(:), ih_d(:), na_d(:), nas_d(:)
   REAL(DP), ALLOCATABLE :: q(:), djl(:,:,:), ylm(:,:)
   REAL(DP), ALLOCATABLE :: xdata(:)
   !
@@ -53,8 +52,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   COMPLEX(DP), ALLOCATABLE :: phase_d(:), sk_d(:,:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: dvkb_d, gk_d, q_d, sk_d, djl_d, &
-                        ylm_d, indv_d, nhtol_d, nhtolm_d, &
+  attributes(DEVICE) :: dvkb_d, gk_d, q_d, sk_d, djl_d, ylm_d, &
                         ityp_d, phase_d, ih_d, na_d, tau_d, nas_d
 #endif
   !
@@ -203,13 +201,6 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
     ikb_t = ikb_t + nht
   ENDDO
   !
-  !
-  ALLOCATE( indv_d(nhm,ntyp), nhtol_d(nhm,ntyp), nhtolm_d(nhm,ntyp) )
-  !
-  indv_d   = indv
-  nhtol_d  = nhtol
-  nhtolm_d = nhtolm
-  !
   !$cuf kernel do (2) <<<*,*>>>
   DO ikb = 1, ikb_t
     DO ig = 1, npw
@@ -235,8 +226,6 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   CALL dev_buf%release_buffer( gk_d, ierr(3) )
   !
   DEALLOCATE( ih_d, na_d, nas_d )
-  DEALLOCATE( indv_d, nhtol_d, nhtolm_d )
-  !
   !
   RETURN
   !

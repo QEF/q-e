@@ -1210,7 +1210,7 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk
       USE noncollin_module,     ONLY : noncolin, npol
       USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
-      USE wvfct,                ONLY : npwx, g2kin, et, wg, nbnd
+      USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE gvect,                ONLY : ig_l2g
       USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm
       USE mp_pools,             ONLY : me_pool, root_pool, &

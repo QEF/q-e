@@ -1100,7 +1100,6 @@ MODULE exx_band
        mill = mill_exx
 #if defined(__CUDA)
        ! Sync duplicated data
-       ! All these variables are actually set by ggen which has intent out
        mill_d = mill
        g_d    = g
        gg_d   = gg
@@ -1151,7 +1150,6 @@ MODULE exx_band
        mill = mill_loc
 #if defined(__CUDA)
        ! Sync duplicated data
-       ! All these variables are actually set by ggen which has intent out
        mill_d = mill
        g_d    = g
        gg_d   = gg
