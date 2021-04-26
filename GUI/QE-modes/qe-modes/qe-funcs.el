@@ -1878,10 +1878,11 @@ nat_todo-list-of-atoms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun pw-ADDITIONAL_K_POINTS ()
- (interactive)
- (insert "ADDITIONAL_K_POINTS")
- (newline 1)
- )
+  (interactive)
+  (let ((flag (read-string "Flags: { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c } ")))
+    (insert "ADDITIONAL_K_POINTS " flag))
+  (newline 1)
+  )
 
 
 (defun pw-ATOMIC_FORCES ()
@@ -3375,11 +3376,10 @@ nat_todo-list-of-atoms
 
 
 (defun cp-ATOMIC_VELOCITIES ()
-  (interactive)
-  (let ((flag (read-string "Flags: { a.u } ")))
-    (insert "ATOMIC_VELOCITIES " flag))
-  (newline 1)
-  )
+ (interactive)
+ (insert "ATOMIC_VELOCITIES")
+ (newline 1)
+ )
 
 
 (defun cp-CELL_PARAMETERS ()
@@ -6401,6 +6401,60 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of q: ")))
     (insert "q = " value))
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; q2r- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun q2r-INPUT ()
+  (interactive)
+  (insert "&INPUT")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; q2r- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun q2r-fildyn ()
+  (interactive)
+  (let ((value (read-string "Value of fildyn: ")))
+    (insert "fildyn = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun q2r-flfrc ()
+  (interactive)
+  (let ((value (read-string "Value of flfrc: ")))
+    (insert "flfrc = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun q2r-loto_2d ()
+  (interactive)
+  (let ((value (read-string "Value of loto_2d: ")))
+    (insert "loto_2d = " value))
+  )
+
+
+(defun q2r-zasr ()
+  (interactive)
+  (let ((value (read-string "Value of zasr: ")))
+    (insert "zasr = '" value "'"))
+  (backward-char 1)
   )
 
 

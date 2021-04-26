@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_davidson.x / turboTDDFPT / Quantum Espresso (version: 6.6)
+Program: turbo_davidson.x / turboTDDFPT / Quantum ESPRESSO (version: 6.7GPU)
 ------------------------------------------------------------------------
 
 
@@ -21,18 +21,18 @@ either a "!" or a "#" character in the first position of a line.
 Structure of the input data:
 ===============================================================================
 
-&lr_input
+&LR_INPUT
   ...
 /
 
-&lr_dav
+&LR_DAV
   ...
 /
 
 
 
 ========================================================================
-NAMELIST: &lr_input
+NAMELIST: &LR_INPUT
 
    THIS NAMELIST IS ALWAYS NEEDED !
    
@@ -110,7 +110,7 @@ NAMELIST: &lr_input
 
 
 ========================================================================
-NAMELIST: &lr_dav
+NAMELIST: &LR_DAV
 
    +--------------------------------------------------------------------
    Variable:       num_eign
@@ -394,4 +394,4 @@ NAMELIST: &lr_dav
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:33 CEST 2020
+This file has been created by helpdoc utility on Fri Apr 23 19:45:01 CEST 2021
