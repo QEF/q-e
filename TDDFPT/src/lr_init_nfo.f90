@@ -21,7 +21,7 @@ SUBROUTINE lr_init_nfo()
   USE klist,                ONLY : nks,xk,ngk,igk_k
   USE wvfct,                ONLY : nbnd
   USE lr_variables,         ONLY : lr_verbosity, eels, size_evc, calculator, &
-                                 & lrdrho, nwordd0psi, iund0psi, iudwf, iu1dwf,&
+                                 & iund0psi, iudwf, iu1dwf,&
                                  & iundvpsi
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : tpi, eps8
@@ -99,11 +99,9 @@ SUBROUTINE lr_init_nfo()
      size_evc = nbnd * npwx * npol * nksq
      nwordwfc = nbnd * npwx * npol
      IF (trim(calculator)=='sternheimer') THEN
-        lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
-        nwordd0psi = nbnd * npwx * npol * nksq
-        CALL open_buffer ( iundvpsi, 'dvpsi.', nwordd0psi, io_level, exst_mem, exst)
-        CALL open_buffer ( iudwf, 'dwf', nwordd0psi, io_level, exst_mem, exst)
-        CALL open_buffer ( iu1dwf, 'mwf', nwordd0psi, io_level, exst_mem, exst)
+        CALL open_buffer ( iundvpsi, 'dvpsi.', nwordwfc, io_level, exst_mem, exst)
+        CALL open_buffer ( iudwf, 'dwf', nwordwfc, io_level, exst_mem, exst)
+        CALL open_buffer ( iu1dwf, 'mwf', nwordwfc, io_level, exst_mem, exst)
         !
      ENDIF
      !

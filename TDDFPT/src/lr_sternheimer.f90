@@ -69,7 +69,7 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     USE mp,                     ONLY : mp_sum
     USE fft_helper_subroutines, ONLY : fftx_ntgrp
     USE lr_variables,           ONLY : fru, fiu, iundvpsi, iudwf, &
-                                       lrdrho, iudrho, n_ipol, lr_verbosity, &
+                                       iudrho, n_ipol, lr_verbosity, &
                                        chirr, chirz, chizr, chizz, epsm1, &
                                        current_w, lr1dwf, iu1dwf, itermax!, &
                                        !intq, intq_nc
