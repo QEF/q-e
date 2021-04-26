@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -87,13 +87,17 @@ PROGRAM lr_calculate_spectrum
                       & epsil, sym_op, verbosity, units, omeg, omegmax,&
                       & delta_omeg, td, eign_file, eels
   !
+  ! Checking for the path to the output directory.
+  !
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
+  IF ( trim( outdir ) == ' ' ) outdir = './'
+  !
   ! Initialization of system variables
   !
   ! degspin is read from file in read_b_g_z_file
   ! degspin = 2.d0
   !
   prefix = 'pwscf'
-  outdir = './'
   itermax = 1000
   itermax0 = 1000
   !itermax_actual=1000
