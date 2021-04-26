@@ -10,6 +10,8 @@ New in development version:
     Hsin-Yu Ko (Cornell), et al.
   * Support for GPU via CUDA Fortran brought to the main repository
   * Calculation of DORI and of ELF for nspin=2 (Dong Yang, Qin Liu, JSG)
+  * Interface for BerkeleyGW extended to hybrid and meta-GGA functionals:
+    Fangzhou Zhao (Berkeley)
 
 Fixed in development version:
   * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
