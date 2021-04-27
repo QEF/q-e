@@ -29,9 +29,8 @@
       use ions_base,            only : nat
       USE recvec_subs,          ONLY : ggen, ggens
       USE gvect,                ONLY : mill_g, eigts1,eigts2,eigts3, g, gg, &
-                                       ecutrho, gcutm, gvect_init, mill, &
+                                       g_d, ecutrho, gcutm, gvect_init, mill,&
                                        ig_l2g, gstart, ngm, ngm_g, gshells
-      USE gvect_gpum,           ONLY : using_g, using_g_d 
       use gvecs,                only : gcutms, gvecs_init, ngms
       use gvecw,                only : gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY : ggenb
@@ -174,31 +173,20 @@
         WRITE( stdout,'(/,3X,"Reference Cell is Used to Initialize Reciprocal Space Mesh")' )
         WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
         !
-        IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
-        ELSE
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart )
-        END IF
+        CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
         CALL ggens( dffts, gamma_only, ref_at, g, gg, mill, gcutms, ngms )
         !
       ELSE
         !
-        IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
-        ELSE
-           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
-                g, gg, mill, ig_l2g, gstart )
-        END IF
+        CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = smallmem )
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
 
-      CALL using_g(2)
 #if defined (__CUDA)
-      CALL using_g_d(0)
+      g_d = g
 #endif
 
       CALL gshells (.TRUE.)
@@ -406,8 +394,7 @@
       USE cell_base,             ONLY : at, bg, omega, alat, tpiba2, &
                                         cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
-      USE gvect,                 ONLY : g, gg, ngm, mill
-      USE gvect_gpum,            ONLY : using_g, using_g_d
+      USE gvect,                 ONLY : g, g_d, gg, ngm, mill
       USE fft_base,              ONLY : dfftp, dfftb
       USE small_box,             ONLY : small_box_set
       USE smallbox_subs,         ONLY : gcalb
@@ -432,14 +419,12 @@
       !
       !  re-calculate G-vectors and kinetic energy
       !
-      CALL using_g(2)
-      !
       do ig = 1, dfftp%ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
       enddo
 #if defined (__CUDA)
-      CALL using_g_d(0)
+      g_d = g
 #endif
       !
       call g2kin_init ( gg, tpiba2 )

@@ -960,6 +960,7 @@ MODULE exx_band
     USE wvfct,          ONLY : npwx
     USE gvect,          ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, mill_d, &
                                gstart, gvect_init, deallocate_gvect_exx, gshells
+    USE gvect,          ONLY : g_d, gg_d
     USE gvecs,          ONLY : gcutms, ngms, ngms_g, gvecs_init
     USE gvecw,          ONLY : gkcut, ecutwfc, gcutw
     USE klist,          ONLY : xk, nks, ngk
@@ -973,7 +974,6 @@ MODULE exx_band
     !
     USE command_line_options, ONLY : nmany_
     !
-    USE gvect_gpum,     ONLY : using_g, using_gg, using_g_d, using_gg_d
     !
     IMPLICIT NONE
     !
@@ -1069,9 +1069,8 @@ MODULE exx_band
        ! Sync duplicated data
        ! All these variables are actually set by ggen which has intent out
        mill_d = mill
-       CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
-       CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
-                                                 ! This is a trick to avoid checking for sync everywhere.
+       g_d    = g
+       gg_d   = gg
 #endif
        !
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
@@ -1101,11 +1100,9 @@ MODULE exx_band
        mill = mill_exx
 #if defined(__CUDA)
        ! Sync duplicated data
-       ! All these variables are actually set by ggen which has intent out
        mill_d = mill
-       CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
-       CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
-                                                 ! This is a trick to avoid checking for sync everywhere.
+       g_d    = g
+       gg_d   = gg
 #endif
        ! workaround: here dfft?%nl* are unallocated
        ! some compilers go on and allocate, some others crash
@@ -1153,11 +1150,9 @@ MODULE exx_band
        mill = mill_loc
 #if defined(__CUDA)
        ! Sync duplicated data
-       ! All these variables are actually set by ggen which has intent out
        mill_d = mill
-       CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
-       CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
-                                                 ! This is a trick to avoid checking for sync everywhere.
+       g_d    = g
+       gg_d   = gg
 #endif
        dfftp%nl = nl_loc
        dffts%nl = nls_loc

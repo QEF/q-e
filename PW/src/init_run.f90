@@ -14,7 +14,8 @@ SUBROUTINE init_run()
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
-                                 mill_d, gshells, gstart ! to be communicated to the Solvers if gamma_only
+                                 g_d, gg_d, mill_d, gshells, &
+                                 gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
   USE cell_base,          ONLY : at, bg, set_h_ainv
   USE cellmd,             ONLY : lmovecell
@@ -39,7 +40,6 @@ SUBROUTINE init_run()
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
-  USE gvect_gpum,         ONLY : using_g, using_gg, using_g_d, using_gg_d
   !
   IMPLICIT NONE
   INTEGER :: ierr
@@ -77,9 +77,8 @@ SUBROUTINE init_run()
 #if defined(__CUDA)
   ! All these variables are actually set by ggen which has intent out
   mill_d = mill
-  CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
-  CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
-                                            ! This is a trick to avoid checking for sync everywhere.
+  g_d    = g
+  gg_d   = gg
 #endif
   !
   IF (do_comp_esm) CALL esm_init()

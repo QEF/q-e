@@ -125,7 +125,6 @@ set(src_modules
     w1gauss.f90
     deviatoric.f90
     # GPU
-    recvec_gpu.f90
     wavefunctions_gpu.f90
     becmod_gpu.f90
     becmod_subs_gpu.f90

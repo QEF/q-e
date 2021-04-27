@@ -268,7 +268,6 @@ dealloc.o : ../../Modules/fft_base.o
 dealloc.o : ../../Modules/gvecw.o
 dealloc.o : ../../Modules/ions_base.o
 dealloc.o : ../../Modules/recvec.o
-dealloc.o : ../../Modules/recvec_gpu.o
 dealloc.o : ../../Modules/wavefunctions.o
 dealloc.o : ../../upflib/uspp.o
 dealloc.o : cg.o
@@ -517,7 +516,6 @@ init.o : ../../Modules/kind.o
 init.o : ../../Modules/mp_bands.o
 init.o : ../../Modules/mp_global.o
 init.o : ../../Modules/recvec.o
-init.o : ../../Modules/recvec_gpu.o
 init.o : ../../Modules/recvec_subs.o
 init.o : ../../upflib/uspp.o
 init.o : cp_interfaces.o
@@ -752,7 +750,6 @@ nl_base.o : ../../Modules/ions_base.o
 nl_base.o : ../../Modules/kind.o
 nl_base.o : ../../Modules/mp_global.o
 nl_base.o : ../../Modules/recvec.o
-nl_base.o : ../../Modules/recvec_gpu.o
 nl_base.o : ../../UtilXlib/mp.o
 nl_base.o : ../../upflib/uspp.o
 nl_base.o : cp_interfaces.o

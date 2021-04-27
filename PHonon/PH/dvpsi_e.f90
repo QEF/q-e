@@ -21,7 +21,7 @@ subroutine dvpsi_e (ik, ipol)
   USE io_global,       ONLY : stdout
   USE klist,           ONLY : xk, ngk, igk_k
   USE gvect,           ONLY : g
-  USE wvfct,           ONLY : npwx, nbnd, g2kin, et
+  USE wvfct,           ONLY : npwx, nbnd, et
   USE wavefunctions, ONLY: evc
   USE buffers,         ONLY : save_buffer, get_buffer
   USE noncollin_module,ONLY : noncolin, npol

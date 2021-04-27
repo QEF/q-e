@@ -31,7 +31,8 @@ SUBROUTINE forces()
   USE cell_base,         ONLY : at, bg, alat, omega  
   USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, atm
   USE fft_base,          ONLY : dfftp
-  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g,  gg, gcutm
+  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g, gg, &
+                                g_d, gcutm
   USE lsda_mod,          ONLY : nspin
   USE symme,             ONLY : symvector
   USE vlocal,            ONLY : strf, vloc
@@ -59,7 +60,6 @@ SUBROUTINE forces()
   !
   USE control_flags,     ONLY : use_gpu
   USE device_fbuff_m,          ONLY : dev_buf
-  USE gvect_gpum,        ONLY : g_d
   USE device_memcpy_m,     ONLY : dev_memcpy
   !
   IMPLICIT NONE

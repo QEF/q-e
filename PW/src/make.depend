@@ -5,7 +5,6 @@ Coul_cut_2D.o : ../../Modules/io_global.o
 Coul_cut_2D.o : ../../Modules/ions_base.o
 Coul_cut_2D.o : ../../Modules/kind.o
 Coul_cut_2D.o : ../../Modules/recvec.o
-Coul_cut_2D.o : ../../Modules/recvec_gpu.o
 Coul_cut_2D.o : ../../upflib/uspp.o
 Coul_cut_2D.o : pwcom.o
 a2fmod.o : ../../Modules/io_files.o
@@ -124,7 +123,6 @@ addusdens_gpu.o : ../../Modules/mp_bands.o
 addusdens_gpu.o : ../../Modules/mp_pools.o
 addusdens_gpu.o : ../../Modules/noncol.o
 addusdens_gpu.o : ../../Modules/recvec.o
-addusdens_gpu.o : ../../Modules/recvec_gpu.o
 addusdens_gpu.o : ../../UtilXlib/mp.o
 addusdens_gpu.o : ../../upflib/uspp.o
 addusdens_gpu.o : realus.o
@@ -152,7 +150,6 @@ addusforce_gpu.o : ../../Modules/mp_bands.o
 addusforce_gpu.o : ../../Modules/mp_pools.o
 addusforce_gpu.o : ../../Modules/noncol.o
 addusforce_gpu.o : ../../Modules/recvec.o
-addusforce_gpu.o : ../../Modules/recvec_gpu.o
 addusforce_gpu.o : ../../UtilXlib/mp.o
 addusforce_gpu.o : ../../upflib/uspp.o
 addusforce_gpu.o : realus.o
@@ -235,7 +232,7 @@ atomic_wfc_gpu.o : ../../Modules/constants.o
 atomic_wfc_gpu.o : ../../Modules/ions_base.o
 atomic_wfc_gpu.o : ../../Modules/kind.o
 atomic_wfc_gpu.o : ../../Modules/noncol.o
-atomic_wfc_gpu.o : ../../Modules/recvec_gpu.o
+atomic_wfc_gpu.o : ../../Modules/recvec.o
 atomic_wfc_gpu.o : ../../upflib/uspp.o
 atomic_wfc_gpu.o : atomic_wfc_mod.o
 atomic_wfc_gpu.o : pwcom.o
@@ -335,7 +332,6 @@ clean_pw.o : ../../Modules/mbdlib.o
 clean_pw.o : ../../Modules/mm_dispersion.o
 clean_pw.o : ../../Modules/noncol.o
 clean_pw.o : ../../Modules/recvec.o
-clean_pw.o : ../../Modules/recvec_gpu.o
 clean_pw.o : ../../Modules/tsvdw.o
 clean_pw.o : ../../Modules/wannier_new.o
 clean_pw.o : ../../Modules/wavefunctions.o
@@ -713,7 +709,6 @@ exx_band.o : ../../Modules/mp_exx.o
 exx_band.o : ../../Modules/mp_pools.o
 exx_band.o : ../../Modules/noncol.o
 exx_band.o : ../../Modules/recvec.o
-exx_band.o : ../../Modules/recvec_gpu.o
 exx_band.o : ../../Modules/recvec_subs.o
 exx_band.o : ../../Modules/wavefunctions.o
 exx_band.o : ../../Modules/wavefunctions_gpu.o
@@ -814,7 +809,6 @@ force_cc_gpu.o : ../../Modules/kind.o
 force_cc_gpu.o : ../../Modules/mp_bands.o
 force_cc_gpu.o : ../../Modules/noncol.o
 force_cc_gpu.o : ../../Modules/recvec.o
-force_cc_gpu.o : ../../Modules/recvec_gpu.o
 force_cc_gpu.o : ../../Modules/wavefunctions.o
 force_cc_gpu.o : ../../UtilXlib/mp.o
 force_cc_gpu.o : ../../upflib/atom.o
@@ -845,7 +839,6 @@ force_corr_gpu.o : ../../Modules/ions_base.o
 force_corr_gpu.o : ../../Modules/kind.o
 force_corr_gpu.o : ../../Modules/mp_bands.o
 force_corr_gpu.o : ../../Modules/recvec.o
-force_corr_gpu.o : ../../Modules/recvec_gpu.o
 force_corr_gpu.o : ../../UtilXlib/mp.o
 force_corr_gpu.o : ../../upflib/atom.o
 force_corr_gpu.o : ../../upflib/simpsn_gpu.o
@@ -890,7 +883,7 @@ force_hub_gpu.o : ../../Modules/kind.o
 force_hub_gpu.o : ../../Modules/mp_bands.o
 force_hub_gpu.o : ../../Modules/mp_pools.o
 force_hub_gpu.o : ../../Modules/noncol.o
-force_hub_gpu.o : ../../Modules/recvec_gpu.o
+force_hub_gpu.o : ../../Modules/recvec.o
 force_hub_gpu.o : ../../Modules/wavefunctions.o
 force_hub_gpu.o : ../../Modules/wavefunctions_gpu.o
 force_hub_gpu.o : ../../UtilXlib/mp.o
@@ -947,7 +940,7 @@ force_us_gpu.o : ../../Modules/kind.o
 force_us_gpu.o : ../../Modules/mp_bands.o
 force_us_gpu.o : ../../Modules/mp_pools.o
 force_us_gpu.o : ../../Modules/noncol.o
-force_us_gpu.o : ../../Modules/recvec_gpu.o
+force_us_gpu.o : ../../Modules/recvec.o
 force_us_gpu.o : ../../Modules/wavefunctions.o
 force_us_gpu.o : ../../Modules/wavefunctions_gpu.o
 force_us_gpu.o : ../../UtilXlib/mp.o
@@ -967,7 +960,6 @@ forces.o : ../../Modules/mm_dispersion.o
 forces.o : ../../Modules/plugin_flags.o
 forces.o : ../../Modules/qmmm.o
 forces.o : ../../Modules/recvec.o
-forces.o : ../../Modules/recvec_gpu.o
 forces.o : ../../Modules/tsvdw.o
 forces.o : ../../dft-d3/api.o
 forces.o : ../../dft-d3/dftd3_qe.o
@@ -1010,7 +1002,7 @@ g2_kin.o : pwcom_gpu.o
 g2_kin_gpu.o : ../../Modules/cell_base.o
 g2_kin_gpu.o : ../../Modules/gvecw.o
 g2_kin_gpu.o : ../../Modules/kind.o
-g2_kin_gpu.o : ../../Modules/recvec_gpu.o
+g2_kin_gpu.o : ../../Modules/recvec.o
 g2_kin_gpu.o : pwcom.o
 g2_kin_gpu.o : pwcom_gpu.o
 g_psi.o : ../../Modules/kind.o
@@ -1211,7 +1203,6 @@ hinit0.o : ../../Modules/kind.o
 hinit0.o : ../../Modules/mp_bands.o
 hinit0.o : ../../Modules/noncol.o
 hinit0.o : ../../Modules/recvec.o
-hinit0.o : ../../Modules/recvec_gpu.o
 hinit0.o : atomic_wfc_mod.o
 hinit0.o : ldaU.o
 hinit0.o : pwcom.o
@@ -1274,7 +1265,6 @@ init_run.o : ../../Modules/fft_base.o
 init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/mbdlib.o
 init_run.o : ../../Modules/recvec.o
-init_run.o : ../../Modules/recvec_gpu.o
 init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/wannier_new.o
@@ -2253,7 +2243,6 @@ scale_h.o : ../../Modules/io_global.o
 scale_h.o : ../../Modules/kind.o
 scale_h.o : ../../Modules/mp_bands.o
 scale_h.o : ../../Modules/recvec.o
-scale_h.o : ../../Modules/recvec_gpu.o
 scale_h.o : ../../UtilXlib/mp.o
 scale_h.o : ../../XClib/xc_lib.o
 scale_h.o : ../../upflib/uspp_data.o
@@ -2385,7 +2374,6 @@ stres_cc_gpu.o : ../../Modules/ions_base.o
 stres_cc_gpu.o : ../../Modules/kind.o
 stres_cc_gpu.o : ../../Modules/mp_bands.o
 stres_cc_gpu.o : ../../Modules/recvec.o
-stres_cc_gpu.o : ../../Modules/recvec_gpu.o
 stres_cc_gpu.o : ../../Modules/wavefunctions.o
 stres_cc_gpu.o : ../../Modules/wavefunctions_gpu.o
 stres_cc_gpu.o : ../../UtilXlib/mp.o
@@ -2431,7 +2419,6 @@ stres_har_gpu.o : ../../Modules/fft_base.o
 stres_har_gpu.o : ../../Modules/kind.o
 stres_har_gpu.o : ../../Modules/mp_bands.o
 stres_har_gpu.o : ../../Modules/recvec.o
-stres_har_gpu.o : ../../Modules/recvec_gpu.o
 stres_har_gpu.o : ../../Modules/wavefunctions.o
 stres_har_gpu.o : ../../Modules/wavefunctions_gpu.o
 stres_har_gpu.o : ../../UtilXlib/mp.o
@@ -2486,7 +2473,6 @@ stres_knl_gpu.o : ../../Modules/mp_bands.o
 stres_knl_gpu.o : ../../Modules/mp_pools.o
 stres_knl_gpu.o : ../../Modules/noncol.o
 stres_knl_gpu.o : ../../Modules/recvec.o
-stres_knl_gpu.o : ../../Modules/recvec_gpu.o
 stres_knl_gpu.o : ../../Modules/wavefunctions.o
 stres_knl_gpu.o : ../../Modules/wavefunctions_gpu.o
 stres_knl_gpu.o : ../../UtilXlib/mp.o
@@ -2517,7 +2503,6 @@ stres_loc_gpu.o : ../../Modules/ions_base.o
 stres_loc_gpu.o : ../../Modules/kind.o
 stres_loc_gpu.o : ../../Modules/mp_bands.o
 stres_loc_gpu.o : ../../Modules/recvec.o
-stres_loc_gpu.o : ../../Modules/recvec_gpu.o
 stres_loc_gpu.o : ../../Modules/wavefunctions.o
 stres_loc_gpu.o : ../../Modules/wavefunctions_gpu.o
 stres_loc_gpu.o : ../../UtilXlib/mp.o
@@ -2554,7 +2539,6 @@ stres_mgga_gpu.o : ../../Modules/mp_bands.o
 stres_mgga_gpu.o : ../../Modules/mp_pools.o
 stres_mgga_gpu.o : ../../Modules/noncol.o
 stres_mgga_gpu.o : ../../Modules/recvec.o
-stres_mgga_gpu.o : ../../Modules/recvec_gpu.o
 stres_mgga_gpu.o : ../../Modules/wavefunctions.o
 stres_mgga_gpu.o : ../../Modules/wavefunctions_gpu.o
 stres_mgga_gpu.o : ../../UtilXlib/mp.o
@@ -2609,7 +2593,6 @@ stress.o : ../../Modules/kind.o
 stress.o : ../../Modules/mbdlib.o
 stress.o : ../../Modules/mm_dispersion.o
 stress.o : ../../Modules/recvec.o
-stress.o : ../../Modules/recvec_gpu.o
 stress.o : ../../Modules/tsvdw.o
 stress.o : ../../XClib/xc_lib.o
 stress.o : ../../dft-d3/api.o
@@ -2774,7 +2757,6 @@ update_pot.o : ../../Modules/mp_images.o
 update_pot.o : ../../Modules/mp_pools.o
 update_pot.o : ../../Modules/noncol.o
 update_pot.o : ../../Modules/recvec.o
-update_pot.o : ../../Modules/recvec_gpu.o
 update_pot.o : ../../Modules/wavefunctions.o
 update_pot.o : ../../Modules/wavefunctions_gpu.o
 update_pot.o : ../../UtilXlib/mp.o
@@ -2988,7 +2970,6 @@ wfcinit_gpu.o : ../../Modules/qes_types_module.o
 wfcinit_gpu.o : ../../Modules/qexsd.o
 wfcinit_gpu.o : ../../Modules/random_numbers_gpu.o
 wfcinit_gpu.o : ../../Modules/recvec.o
-wfcinit_gpu.o : ../../Modules/recvec_gpu.o
 wfcinit_gpu.o : ../../Modules/wannier_new.o
 wfcinit_gpu.o : ../../Modules/wavefunctions.o
 wfcinit_gpu.o : ../../Modules/wavefunctions_gpu.o

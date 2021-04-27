@@ -16,7 +16,7 @@ SUBROUTINE force_us_gpu( forcenl )
   USE cell_base,            ONLY : at, bg, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
-  USE gvect_gpum,           ONLY : g_d
+  USE gvect,                ONLY : g_d
   USE uspp,                 ONLY : nkb, vkb_d, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
                                    using_vkb, using_vkb_d
   USE uspp_param,           ONLY : upf, nh, nhm

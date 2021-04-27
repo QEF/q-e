@@ -70,7 +70,6 @@ SUBROUTINE clean_pw( lflag )
   !
   USE wavefunctions_gpum,   ONLY : deallocate_wavefunctions_gpu
   USE wvfct_gpum,           ONLY : deallocate_wvfct_gpu
-  USE gvect_gpum,           ONLY : deallocate_gvect_gpu
   USE scf_gpum,             ONLY : deallocate_scf_gpu
   !
   IMPLICIT NONE
@@ -121,7 +120,6 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays in gvect module
   !
   CALL deallocate_gvect( lmovecell )
-  CALL deallocate_gvect_gpu()
   !
   CALL sym_rho_deallocate()
   !

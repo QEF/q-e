@@ -34,7 +34,7 @@ subroutine solve_e
   USE fft_base,              ONLY : dfftp, dffts
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
-  USE wvfct,                 ONLY : nbnd, npwx, g2kin, et
+  USE wvfct,                 ONLY : nbnd, npwx, et
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer, save_buffer
   USE wavefunctions,         ONLY : evc
