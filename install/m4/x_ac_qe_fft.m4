@@ -8,7 +8,7 @@ have_fft_include=0
 AC_MSG_CHECKING([FFT])
 
 if test "$fft_libs" = ""; then
-   # if FFT_LIBS is defined, use it without further checking
+   # if FFT_LIBS is not defined, try to autodetect what is available
 
    if test "$have_mkl" -eq 1; then
       # no check needed if MKL libraries have been detected
@@ -178,13 +178,19 @@ end],have_fft_include=1,)
 
 else
 
+   # if FFT_LIBS is defined, use it, but in order to use FFTW3
+   # you will need to set the proper include directory in FFTW_INCLUDE 
+   
    echo "using FFT_LIBS with no testing ... "
+   # I suspect next 3 lines are useless in practice, should be deleted - PG
    if test -n "$FFT_INCLUDE" ; then :
       try_iflags="$try_iflags -I$FFT_INCLUDE"
    fi
    if test -n "$FFTW_INCLUDE" ; then :
       try_dflags="$try_dflags -D__FFTW3"
       try_iflags="$try_iflags -I$FFTW_INCLUDE"
+   else
+      echo "BEWARE: FFT not explicitly selected, verify your DFLAGS= line"
    fi
 
 fi
