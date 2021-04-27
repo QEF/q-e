@@ -7,8 +7,8 @@
 !
 subroutine addcore (mode, drhoc)
   !
-  !    This routine computes the change of the core charge
-  !    when the atoms moves along the given mode
+  !! This routine computes the change of the core charge
+  !! when the atoms moves along the given mode.
   !
   !
 
@@ -29,9 +29,9 @@ subroutine addcore (mode, drhoc)
   !   The dummy variables
   !
   integer, intent (IN) :: mode
-  !  input: the mode
+  !! the mode
   complex(DP), intent(OUT) :: drhoc (dfftp%nnr)
-  ! output: the change of the core charge
+  !! the change of the core charge
   !
   !   Local variables
   !

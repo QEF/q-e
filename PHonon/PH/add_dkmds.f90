@@ -9,10 +9,10 @@
 subroutine add_dkmds(ik, uact, jpol, dvkb)
   !--------=========-------------------------------------------------------
   !
-  ! This subroutine adds to dvpsi the terms which depend on the augmentation
-  ! charge. It assumes that the variable dpqq, has been set. In the noncollinear
-  ! and spin_orbit case the variable dpqq_so must be set.
-  ! NB: I think this routine is called only for q=0; case q/=0 not implemented
+  !! This subroutine adds to dvpsi the terms which depend on the augmentation
+  !! charge. It assumes that the variable dpqq, has been set. In the noncollinear
+  !! and spin_orbit case the variable dpqq_so must be set.  
+  !! NB: I think this routine is called only for \(q=0\); case \(q\div 0\) not implemented.
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : at, tpiba

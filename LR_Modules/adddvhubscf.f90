@@ -10,23 +10,22 @@
 SUBROUTINE adddvhubscf (ipert, ik)
   !--------------------------------------------------------------------------------------
   ! 
-  ! DFPT+U 
-  ! This routine calculates the SCF derivative of the Hubbard potential times psi.
-  ! is  = current_spin
-  ! isi = opposite of the current_spin
+  !! DFPT+U  
+  !! This routine calculates the SCF derivative of the Hubbard potential times psi.
+  !! $$ \|\Delta V_{SCF}(k+q,is) \psi(\text{ibnd},k,is)\rangle = 
+  !!   - \sum_{I,m1,m2} text{Hubbard_U}(I)\cdot \text{dnsscf}(m1,m2,is,I,\text{imode})\cdot 
+  !!  \|S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2)\|\psi(\text{ibnd},k,is)\rangle $$
   !
-  ! |Delta V_SCF_(k+q,is) psi(ibnd,k,is)> = 
-  !           - \sum_(I,m1,m2) Hubbard_U(I) * dnsscf(m1,m2,is,I,imode) * 
-  !                             |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
+  !! Addition of the \(text{J0}\) terms:
   !
-  ! Addition of the J0 terms:
+  !! $$ + \sum_{I,m1,m2} \text{Hubbard_J0}(I)\cdot \text{dnsscf}(m1,m2,\text{isi},I,\text{imode})\cdot 
+  !! \|S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2)\|\psi(\text{ibnd},k,is)\rangle $$
   !
-  ! + \sum_(I,m1,m2) Hubbard_J0(I) * dnsscf(m1,m2,isi,I,imode) * 
-  !         |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
+  !! Where:  
+  !! \(\text{is}\)  = current_spin;  
+  !! \(\text{isi}\) = opposite of the current_spin.
   !
-  !
-  ! Written by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written by A. Floris. Modified by I. Timrov (01.10.2018).
   !
   USE kinds,         ONLY : DP
   USE io_files,      ONLY : nwordwfcU
@@ -48,9 +47,10 @@ SUBROUTINE adddvhubscf (ipert, ik)
   !  
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ik, ipert  
-  ! the k point under consideration
-  ! the index of perturbation
+  INTEGER, INTENT(IN) :: ik
+  !! the k point under consideration
+  INTEGER, INTENT(IN) :: ipert  
+  !! the index of perturbation
   !  
   ! Local variables
   !
