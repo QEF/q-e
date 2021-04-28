@@ -55,9 +55,9 @@ AC_ARG_WITH([cuda-runtime],
    [with_cuda_runtime=10.1])
 
 AC_ARG_ENABLE([cuda-env-check],
-   [AS_HELP_STRING([--enable-cuda-env-check=yes],[The configure script will check CUDA installation and report problems @<:@default=yes@:>@])],
+   [AS_HELP_STRING([--enable-cuda-env-check=yes],[The configure script will check CUDA installation and report problems @<:@default=no@:>@])],
    [],
-   [enable_cuda_env_check=yes])
+   [enable_cuda_env_check=no])
 
 if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
    mMcuda="-cuda -gpu"

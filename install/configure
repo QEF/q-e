@@ -1431,7 +1431,7 @@ Optional Features:
   --enable-shared         use shared libraries if available (default: yes)
   --enable-cuda-env-check=yes
                           The configure script will check CUDA installation
-                          and report problems [default=yes]
+                          and report problems [default=no]
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -4188,7 +4188,7 @@ fi
 if test "${enable_cuda_env_check+set}" = set; then :
   enableval=$enable_cuda_env_check;
 else
-  enable_cuda_env_check=yes
+  enable_cuda_env_check=no
 fi
 
 
