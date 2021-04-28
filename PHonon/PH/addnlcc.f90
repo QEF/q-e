@@ -7,8 +7,8 @@
 !
 subroutine addnlcc (imode0, drhoscf, npe)
   !
-  !     This routine adds a contribution to the dynamical matrix due
-  !     to the NLCC
+  !! This routine adds a contribution to the dynamical matrix due
+  !! to the NLCC.
   !
 
   USE kinds, only : DP
@@ -33,12 +33,12 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   implicit none
 
-  integer :: imode0, npe
-  ! input: the starting mode
-  ! input: the number of perturbations
-  ! input: the change of density due to perturbation
-
+  integer :: imode0
+  !! input: the starting mode
+  integer :: npe
+  !! input: the number of perturbations
   complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  !! input: the change of density due to perturbation
 
   integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points

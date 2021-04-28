@@ -9,21 +9,20 @@
 !----------------------------------------------------------------------
 subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   !----------------------------------------------------------------------
-  !
-  !  This routine adds to the change of the charge and of the
-  !  magnetization densities the part due to the US augmentation.
-  !  It assumes that the array dbecsum has already accumulated the
-  !  change of the becsum term. It calculates Eq. B31 of Ref [1].
-  !  If called from drho (iflag=1), dbecsum and drhoscf contain the
-  !  orthogonalization contribution to the change of the wavefunctions
-  !  and the terms with alphasum and becsum are added. If called
-  !  from solve_* (iflag=0) drhoscf and dbecsum contain the contribution
-  !  of the solution of the linear system and the terms due to alphasum
-  !  and becsum are not added. In this case the change of the charge
-  !  calculated by drho (called \Delta \rho in [1]) is read from file
-  !  and added. The contribution of the change of
-  !  the Fermi energy is not calculated here but added later by ef_shift.
-  !  [1] PRB 64, 235118 (2001).
+  !! This routine adds to the change of the charge and of the
+  !! magnetization densities the part due to the US augmentation.
+  !! It assumes that the array dbecsum has already accumulated the
+  !! change of the becsum term. It calculates Eq. B31 of Ref [1].
+  !! If called from drho (iflag=1), dbecsum and drhoscf contain the
+  !! orthogonalization contribution to the change of the wavefunctions
+  !! and the terms with alphasum and becsum are added. If called
+  !! from solve_* (iflag=0) drhoscf and dbecsum contain the contribution
+  !! of the solution of the linear system and the terms due to alphasum
+  !! and becsum are not added. In this case the change of the charge
+  !! calculated by drho (called \Delta \rho in [1]) is read from file
+  !! and added. The contribution of the change of
+  !! the Fermi energy is not calculated here but added later by ef_shift.
+  !! [1] PRB 64, 235118 (2001).
   !
   !
   USE kinds, only : DP
@@ -50,16 +49,16 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   !   the dummy variables
   !
 
-  integer :: iflag, npe
-  ! input: if zero does not compute drho
-  ! input: the number of perturbations
-
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe), &
-                      dbecsum (nhm*(nhm+1)/2, nat, nspin_mag, npe)
-  ! inp/out: change of the charge density
-  !input: sum over kv of bec
+  integer :: iflag
+  !! input: if zero does not compute drho
+  integer :: npe
+  !! input: the number of perturbations
+  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
+  !! inp/out: change of the charge density
+  complex(DP) :: dbecsum (nhm*(nhm+1)/2, nat, nspin_mag, npe)
+  !! input: sum over kv of bec
   integer ::  mode0
-  ! input:the mode of the representation
+  !! input:the mode of the representation
   !
   !     here the local variables
   !

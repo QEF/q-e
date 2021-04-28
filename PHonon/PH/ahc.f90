@@ -11,41 +11,36 @@ MODULE ahc
 !! In this subroutine, the matrix elements required for AHC temperature-
 !! dependent electronic structure calculation are calculated and written to
 !! file. Three different quantities are computed.
-!!
+!
 !! 1. ahc_gkk(ib, jb, imode)
 !!   = <\psi_ib(k+q)|dV/du_{q,imode}|\psi_jb(k)>
-!!   (Eq.(2) of PHonon/Doc/dfpt_self_energy.pdf)
-!!
+!!   (Eq.(2) of PHonon/Doc/dfpt_self_energy.pdf)  
 !!   1 <= ib <= nbnd, ib_ahc_min <= jb <= ib_ahc_max
 !!   Needed to calculate the static or dynamic Fan term.
-!!
+!
 !! 2. ahc_upfan(ib,jb,imode,jmode)
 !!   = <P_{c,k+q}^+ d\psi_ib(k+q)/du_{q,imode} | dV/du_{q,jmode} | \psi_jb(k)>
-!!   (Eq.(4) of PHonon/Doc/dfpt_self_energy.pdf)
-!!
+!!   (Eq.(4) of PHonon/Doc/dfpt_self_energy.pdf)  
 !!   ib_ahc_min <= ib, jb <= ib_ahc_max
 !!   Here, P_{c,k+q} is the orthogonalization to the nbnd lowest-lying bands
 !!   in the k+q subspace. (nbnd may differ from the number of bands used in
-!!   the SCF and phonon calculations.)
-!!
+!!   the SCF and phonon calculations.) 
 !!   Needed to compute the "upper Fan" term which approximates the contribution
 !!   of high-energy (unoccpied) bands in the Fan term.
 !!   Ref: X. Gonze, P. Boulanger, and M. Cote, Ann. Phys. 523, 168 (2011)
-!!
+!
 !! 3. ahc_dw(ib, jb, imode, jdir)
 !!   = i * <\psi_ib(k)|[dV_{SCF}/du_{Gamma,imode}, p_jdir]|\psi_jb(k)>
-!!   (Eq.(3) of PHonon/Doc/dfpt_self_energy.pdf)
-!!
+!!   (Eq.(3) of PHonon/Doc/dfpt_self_energy.pdf)  
 !!   ib_ahc_min <= ib, jb <= ib_ahc_min+ahc_nbnd-1
 !!   Here, p_jdir = -i * d/dr_jdir is the momentum operator.
-!!   Computed only for q = Gamma.
-!!
+!!   Computed only for q = Gamma.  
 !!   Needed to calculate the Debye-Waller term.
 !!   We use the generalized acoustic sum rule for electron-phonon matrix,
 !!   which gives both the diagonal the off-diagonal matrix elements of the
 !!   Debye-Waller term (in the electron eigenbasis).
 !!   Ref: J.-M. Lihm, and C.-H. Park, Phys. Rev. B, 101, 121102(R) (2020)
-!!
+!
 !! In all cases, the imode index is in the Cartesian basis, so that only one
 !! atom with index iatm is displaced along Cartesian direction idir. In this
 !! case, the mode index is imode = 3 * (iatm - 1) + idir.
