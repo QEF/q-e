@@ -219,7 +219,7 @@ SUBROUTINE post_xml_init (  )
   ! FIXME: to be moved inside ggen
   mill_d = mill
   g_d    = g
-  gg_d   = gg_d
+  gg_d   = gg
 #endif
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
   CALL gshells ( lmovecell ) 
