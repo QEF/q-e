@@ -7,58 +7,62 @@
 !
 !----------------------------------------------------------------------------
 MODULE ahc
-!----------------------------------------------------------------------------
-!! In this subroutine, the matrix elements required for AHC temperature-
-!! dependent electronic structure calculation are calculated and written to
-!! file. Three different quantities are computed.
-!
-!! 1. ahc_gkk(ib, jb, imode)
-!!   = <\psi_ib(k+q)|dV/du_{q,imode}|\psi_jb(k)>
-!!   (Eq.(2) of PHonon/Doc/dfpt_self_energy.pdf)  
-!!   1 <= ib <= nbnd, ib_ahc_min <= jb <= ib_ahc_max
-!!   Needed to calculate the static or dynamic Fan term.
-!
-!! 2. ahc_upfan(ib,jb,imode,jmode)
-!!   = <P_{c,k+q}^+ d\psi_ib(k+q)/du_{q,imode} | dV/du_{q,jmode} | \psi_jb(k)>
-!!   (Eq.(4) of PHonon/Doc/dfpt_self_energy.pdf)  
-!!   ib_ahc_min <= ib, jb <= ib_ahc_max
-!!   Here, P_{c,k+q} is the orthogonalization to the nbnd lowest-lying bands
-!!   in the k+q subspace. (nbnd may differ from the number of bands used in
-!!   the SCF and phonon calculations.) 
-!!   Needed to compute the "upper Fan" term which approximates the contribution
-!!   of high-energy (unoccpied) bands in the Fan term.
-!!   Ref: X. Gonze, P. Boulanger, and M. Cote, Ann. Phys. 523, 168 (2011)
-!
-!! 3. ahc_dw(ib, jb, imode, jdir)
-!!   = i * <\psi_ib(k)|[dV_{SCF}/du_{Gamma,imode}, p_jdir]|\psi_jb(k)>
-!!   (Eq.(3) of PHonon/Doc/dfpt_self_energy.pdf)  
-!!   ib_ahc_min <= ib, jb <= ib_ahc_min+ahc_nbnd-1
-!!   Here, p_jdir = -i * d/dr_jdir is the momentum operator.
-!!   Computed only for q = Gamma.  
-!!   Needed to calculate the Debye-Waller term.
-!!   We use the generalized acoustic sum rule for electron-phonon matrix,
-!!   which gives both the diagonal the off-diagonal matrix elements of the
-!!   Debye-Waller term (in the electron eigenbasis).
-!!   Ref: J.-M. Lihm, and C.-H. Park, Phys. Rev. B, 101, 121102(R) (2020)
-!
-!! In all cases, the imode index is in the Cartesian basis, so that only one
-!! atom with index iatm is displaced along Cartesian direction idir. In this
-!! case, the mode index is imode = 3 * (iatm - 1) + idir.
-!!
-!! ib_ahc_min = ahc_nbndskip + 1
-!! ib_ahc_max = ahc_nbndskip + ahc_nbnd
-!!
-!! Eigenvalues of the ahc_nbnd bands should be well-separated with the nbnd-th
-!! band to avoid problems in solving the Sternheimer equation.
-!!
-!! Not implemented (or not tested) for the following cases:
-!!   - USPP
-!!   - PAW
-!!   - DFPT + U
-!!   - magnetism (both collinear and noncollinear)
-!!   - 2d Coulomb cutoff
-!!
-!----------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
+  !! In this subroutine, the matrix elements required for AHC temperature-
+  !! dependent electronic structure calculation are calculated and written to
+  !! file. Three different quantities are computed.
+  !
+  !! 1. First:
+  !! $$ \text{ahc_gkk}(ib,jb,\text{imode}) = \langle\psi_{ib}(k+q)
+  !!   \|\frac{dV}{du_{q,\text{imode}}}\|\psi_{jb}(k)\rangle $$
+  !! (Eq.(2) of \(\texttt{PHonon/Doc/dfpt_self_energy.pdf}\)) with
+  !! \(1\leq ib\leq\text{nbnd}\), \(ib_{\text{ahc}_{min}} \leq jb 
+  !! \leq ib_{\text{ahc}_{max}}\).  
+  !! Needed to calculate the static or dynamic Fan term.
+  !
+  !! 2. Second:
+  !! $$ \text{ahc_upfan}(ib,jb,\text{imode},\text{jmode}) = \langle P_{c,k+q}^+
+  !!   \frac{d\psi_ib(k+q)}{du_{q,\text{imode}}} \| \frac{dV}{du_{q,\frac{jmode}}}
+  !!   \|\psi_{jb}(k)\rangle $$
+  !! (Eq.(4) of \(\texttt{PHonon/Doc/dfpt_self_energy.pdf}\)) with
+  !! ib_ahc_min <= ib, jb <= ib_ahc_max
+  !! Here, P_{c,k+q} is the orthogonalization to the nbnd lowest-lying bands
+  !! in the k+q subspace. (nbnd may differ from the number of bands used in
+  !! the SCF and phonon calculations.) 
+  !! Needed to compute the "upper Fan" term which approximates the contribution
+  !! of high-energy (unoccpied) bands in the Fan term.
+  !! Ref: X. Gonze, P. Boulanger, and M. Cote, Ann. Phys. 523, 168 (2011)
+  !
+  !! 3. Third:
+  !! $$ \text{ahc_dw}(ib, jb, \text{imode}, \text{jdir}) = i \langle \psi_{ib}(k)
+  !!    \|[\frac{dV_{SCF}}{du_{\text{Gamma,imode}}}, p_{jdir}\]\|\psi_{jb}(k)\rangle $$
+  !! (Eq.(3) of PHonon/Doc/dfpt_self_energy.pdf ) with
+  !! \(ib_{\text{ahc}_min} \leq ib, jb \leq ib_{\text{ahc}_min}+\text{ahc_nbnd}-1 \).  
+  !! Here, \(p_\text{jdir} = -i d/dr_\text{jdir}\) is the momentum operator.  
+  !! Computed only for q = Gamma.  
+  !! Needed to calculate the Debye-Waller term.  
+  !! We use the generalized acoustic sum rule for electron-phonon matrix,
+  !! which gives both the diagonal the off-diagonal matrix elements of the
+  !! Debye-Waller term (in the electron eigenbasis).  
+  !! Ref: J.-M. Lihm, and C.-H. Park, Phys. Rev. B, 101, 121102(R) (2020)
+  !
+  !! In all cases, the imode index is in the Cartesian basis, so that only one
+  !! atom with index iatm is displaced along Cartesian direction idir. In this
+  !! case, the mode index is \(\text{imode} = 3(\text{iatm}-1) + \text{idir}\).
+  !
+  !! ib_ahc_min = ahc_nbndskip + 1
+  !! ib_ahc_max = ahc_nbndskip + ahc_nbnd
+  !
+  !! Eigenvalues of the ahc_nbnd bands should be well-separated with the nbnd-th
+  !! band to avoid problems in solving the Sternheimer equation.
+  !
+  !! Not implemented (or not tested) for the following cases:
+  !! - USPP;  
+  !! - PAW;  
+  !! - DFPT + U;  
+  !! - magnetism (both collinear and noncollinear);  
+  !! - 2d Coulomb cutoff.
+  !
   USE kinds, ONLY :  DP
   !
   IMPLICIT NONE
