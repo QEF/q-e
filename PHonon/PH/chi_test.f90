@@ -8,10 +8,9 @@
 !-----------------------------------------------------------------------
 subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   !-----------------------------------------------------------------------
-  !
-  ! This routine is just a debugging tool. Calculates the scalar product
-  ! between the chi-wavefunction and Pc DH |psi> in two different ways.
-  ! The results of the two procedures should be the same.
+  !! This routine is just a debugging tool. It calculates the scalar product
+  !! between the chi-wavefunction and \(Pc\ DH\ \|\psi\rangle\) in two 
+  !! different ways. The results of the two procedures should be the same.
   !
 
   USE kinds, ONLY : DP
