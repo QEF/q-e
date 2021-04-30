@@ -14,13 +14,18 @@
 #
 # If something isn't found, fails straight away.
 #
-# The following variables are substituted in the makefile:
-# NVCC        : the nvcc compiler command.
-# NVCCFLAGS   : nvcc specific flags
-# CUDA_CFLAGS : CUDA includes
-# CUDA_LDLIBS : CUDA libraries
-#
-# Defines HAVE_CUDA in config.h
+# The following variables (for C) are substituted in the makefile:
+#    NVCC        : the nvcc compiler command.
+#    NVCCFLAGS   : nvcc specific flags
+#    CUDA_CFLAGS : CUDA includes
+#    CUDA_LDLIBS : CUDA libraries
+# For Fortran:
+#    gpu_arch
+#    gpu_runtime
+#    cuda_fflags
+#    cuda_libs
+#    cuda_extlibs
+#    cuda_path
 #
 # LICENCE
 # Public domain
@@ -95,6 +100,7 @@ then
       AC_CHECK_FILE(/usr/local/cuda/lib64,[CUDA_LDLIBS+=" -L/usr/local/cuda/lib64"],[])
    fi
    CUDA_LDLIBS+=" -lcuda -lcudart -lcublas -lcufft"
+
 
 
    # -----------------------------------------
@@ -176,7 +182,6 @@ EOF
    CXXFLAGS=${ax_save_CXXFLAGS}
    LIBS=${ax_save_LIBS}
 
-   AC_DEFINE(HAVE_CUDA,1,[Define if we have CUDA])
    try_dflags="$try_dflags -D__CUDA"
    cuda_extlibs="devxlib"
    cuda_libs="$mMcudalib=cufft,cublas,cusolver \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
