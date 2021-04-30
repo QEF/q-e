@@ -488,10 +488,10 @@ qe_add_executable(qe_pp_rism_exe ${sources})
 set_target_properties(qe_pp_rism_exe PROPERTIES OUTPUT_NAME pprism.x)
 target_link_libraries(qe_pp_rism_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::PP
-        QE::UTILX)
+        qe_pw
+        qe_modules
+        qe_pp
+        qe_xclib)
 
 ###########################################################
 # fermi_int_1.x
