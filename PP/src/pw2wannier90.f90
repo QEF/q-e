@@ -3803,7 +3803,7 @@ SUBROUTINE compute_amn_with_scdm
    INTEGER, ALLOCATABLE :: piv(:) ! vv: Pivot array in the QR factorization
    COMPLEX(DP) :: tmp_cwork(2)
    COMPLEX(DP) :: nowfc_tmp ! jml
-   REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3)
+   REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3), rpos_cart(3)
    INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, locibnd, &
               ib, gamma_idx, minmn, minmn2, maxmn2, &
               ig, ipool_gamma, ik_gamma_loc, i, j, k, ik_g_w90, nxxs ! jml
@@ -3963,6 +3963,15 @@ SUBROUTINE compute_amn_with_scdm
       rpos(3, iw) = REAL(k, KIND=DP) / REAL(dffts%nr3, KIND=DP)
       rpos(:, iw) = rpos(:, iw) - ANINT(rpos(:, iw))
    ENDDO
+   !
+   WRITE(stdout, '(a,i8)') ' Number of pivot points: ', n_wannier
+   WRITE(stdout, '(a)') ' Pivot point positions (alat units):'
+   DO iw = 1, n_wannier
+      rpos_cart(:) = rpos(:, iw)
+      CALL cryst_to_cart(1, rpos_cart, at, +1)
+      WRITE(stdout, '(I8,3F12.6)') iw, rpos_cart
+   ENDDO
+   WRITE(stdout, *)
    !
    WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
