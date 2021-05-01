@@ -1996,7 +1996,7 @@ CONTAINS
                                           dq0_dgradrho_up, dq0_dgradrho_down, &
                                           thetas, sigma)
 
-  USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
+  USE gvect,                 ONLY : ngm, g, gg, gstart
   USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
 
   implicit none
@@ -2137,7 +2137,7 @@ CONTAINS
   SUBROUTINE vdW_DF_stress_gradient (total_rho, grad_rho, q0, &
              dq0_drho, dq0_dgradrho, thetas, sigma)
 
-  USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
+  USE gvect,                 ONLY : ngm, g, gstart
   USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
 
   IMPLICIT NONE

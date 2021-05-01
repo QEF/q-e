@@ -817,7 +817,7 @@ MODULE io_base
       !! from the k case to the gamma-only one.
       !
       USE io_global,     ONLY : stdout
-      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill, igtongl, ngl, gl
+      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill
       USE mp,            ONLY : mp_size,mp_rank
       USE mp_wave,       ONLY : mergewf, mergekg
      
