@@ -3772,18 +3772,16 @@ SUBROUTINE compute_amn_with_scdm
    USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm, my_pool_id, &
                                me_pool, root_pool
    USE wvfct,           ONLY : nbnd, et, npwx
-   USE gvecw,           ONLY : gcutw
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions,   ONLY : evc, psic, psic_nc
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,           ONLY : nkstot, xk, ngk, igk_k, nks
-   USE gvect,           ONLY : g, ngm, mill
+   USE gvect,           ONLY : g, mill
    USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin, npol
-   USE fft_types,       ONLY : fft_index_to_3d
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
    USE uspp,            ONLY : okvan
@@ -3791,23 +3789,25 @@ SUBROUTINE compute_amn_with_scdm
    !
    IMPLICIT NONE
    !
-   LOGICAL :: offrange
-   COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc(:,:), psi_gamma(:,:), &
-       qr_tau(:), cwork(:), cwork2(:), Umat(:,:), VTmat(:,:), Amat(:,:) ! vv: complex arrays for the SVD factorization
-   COMPLEX(DP), ALLOCATABLE :: phase_g(:,:) ! jml
-   REAL(DP), ALLOCATABLE :: rwork(:), rwork2(:), singval(:), rpos(:,:) ! vv: Real array for the QR factorization and SVD
+   INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, locibnd, ib, gamma_idx, &
+              minmn, minmn2, ig, ipool_gamma, ik_gamma_loc, i, j, k, ik_g_w90, &
+              nxxs, count_piv_spin_up
+   REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3), rpos_cart(3)
+   COMPLEX(DP) :: tmp_cwork(2)
+   COMPLEX(DP) :: nowfc_tmp
    INTEGER, ALLOCATABLE :: piv(:)
    !! vv: Pivot array in the QR factorization
    INTEGER, ALLOCATABLE :: piv_pos(:)
    !! Position of the pivot points
    INTEGER, ALLOCATABLE :: piv_spin(:)
    !! Spin index of the pivot points. 1 for spin up, 2 for spin down.
-   COMPLEX(DP) :: tmp_cwork(2)
-   COMPLEX(DP) :: nowfc_tmp ! jml
-   REAL(DP):: norm_psi, focc, arg, tpi_r_dot_g, xk_cry(3), rpos_cart(3)
-   INTEGER :: ik, npw, ibnd, iw, nrtot, info, lcwork, locibnd, &
-              ib, gamma_idx, minmn, minmn2, maxmn2, &
-              ig, ipool_gamma, ik_gamma_loc, i, j, k, ik_g_w90, nxxs, count_piv_spin_up ! jml
+   REAL(DP), ALLOCATABLE :: rwork(:), rwork2(:), singval(:), rpos(:,:)
+   !! vv: Real array for the QR factorization and SVD
+   COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc(:,:), psi_gamma(:,:), &
+       qr_tau(:), cwork(:), Umat(:,:), VTmat(:,:), Amat(:,:)
+   !! vv: complex arrays for the SVD factorization
+   COMPLEX(DP), ALLOCATABLE :: phase_g(:,:)
+   !! exp(iGr) phase for pivot positions. Used for slow Fourier transformation.
    COMPLEX(DP), ALLOCATABLE :: psic_all(:, :)
    !
    INTEGER, EXTERNAL :: global_kpoint_index
@@ -3845,13 +3845,12 @@ SUBROUTINE compute_amn_with_scdm
    ALLOCATE(rwork(2*npol*nrtot))
    piv(:) = 0
    rwork(:) = 0.0_DP
-
+   !
    ALLOCATE(nowfc(n_wannier,num_bands))
    ALLOCATE(psi_gamma(npol*nrtot,num_bands))
    minmn2 = MIN(num_bands,n_wannier)
-   maxmn2 = MAX(num_bands,n_wannier)
    ALLOCATE(rwork2(5*minmn2))
-
+   !
    ALLOCATE(piv_pos(n_wannier))
    ALLOCATE(piv_spin(n_wannier))
    ALLOCATE(rpos(3, n_wannier))
@@ -4105,7 +4104,7 @@ SUBROUTINE compute_amn_with_scdm
                ! spin collinear
                nowfc_tmp = SUM( evc(1:npw, ibnd) * phase_g(1:npw, iw) )
             ENDIF
-            nowfc(iw,locibnd) = nowfc_tmp * phase(iw) * focc / norm_psi
+            nowfc(iw, locibnd) = nowfc_tmp * phase(iw) * focc / norm_psi
          ENDDO
          !
       ENDDO
@@ -4133,7 +4132,7 @@ SUBROUTINE compute_amn_with_scdm
             ENDDO
          ENDDO
       ENDIF ! root_pool
-   ENDDO  ! k-points
+   ENDDO ! k-points
    !
    IF (me_pool == root_pool) CLOSE(iun_amn, STATUS="KEEP")
    !
