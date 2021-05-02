@@ -1,0 +1,4 @@
+&INPUT_NAMELIST
+    test='dft-info'
+    dft1='mgga_x_scan mgga_c_scan'
+/

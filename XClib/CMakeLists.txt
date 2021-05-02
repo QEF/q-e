@@ -63,5 +63,15 @@ if(QE_ENABLE_TEST)
             qe_mpi_fortran
             qe_external_libxc
             qe_xclib)
-    #add_test(NAME test_qe_xclib COMMAND $<TARGET_FILE:qe_xclib_test>)
+
+    find_program(BASH_PROGRAM bash)
+
+    file(GLOB test_input_file_names
+         RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files
+         test_input_files/*.in)
+
+    foreach(test_input_file IN LISTS test_input_file_names)
+      string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
+      add_test(NAME test_qe_xclib_${test_input_file_name_no_extension} COMMAND ${BASH_PROGRAM} -c "$<TARGET_FILE:qe_xclib_test> < ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/${test_input_file}")
+    endforeach()
 endif(QE_ENABLE_TEST)
