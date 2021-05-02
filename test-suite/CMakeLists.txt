@@ -19,6 +19,13 @@ else()
   endfunction()
 endif()
 
+file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
+                 ${CMAKE_CURRENT_BINARY_DIR}/jobconfig SYMBOLIC)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/userconfig.tmp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/userconfig.tmp ${CMAKE_CURRENT_BINARY_DIR}/userconfig)
+string(REPLACE "/" "\\/" qe_SOURCE_DIR_FOR_SED ${qe_SOURCE_DIR})
+execute_process(COMMAND sed -i "s/XXXXXX/${qe_SOURCE_DIR_FOR_SED}/" ${CMAKE_CURRENT_BINARY_DIR}/userconfig)
+
 foreach(test_category IN LISTS qe_test_categories)
   message(STATUS "generating tests in ${test_category} category")
   #EXECUTE_PROCESS( COMMAND pwd ECHO_OUTPUT_VARIABLE)
@@ -40,21 +47,27 @@ foreach(test_category IN LISTS qe_test_categories)
   #message(${category_subfolder_names} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
   foreach(subfolder_name IN LISTS category_subfolder_names)
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-                    ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name} input_and_reference 
-                    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}")
     file(GLOB test_input_file_names
        RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}"
        "${subfolder_name}/*.in")
     #message("${subfolder_name}")
     #message("${test_input_file_names}")
+    set(test_name_prefix "system--${subfolder_name}")
+    set(test_work_dir_prefix "${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}")
+    add_test(NAME ${test_name_prefix}-correctness
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testcode/bin/testcode.py -v -c ${subfolder_name} compare)
+    set_tests_properties(${test_name_prefix}-correctness PROPERTIES
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                         LABELS "system;${subfolder_name}")
     foreach(test_input_file IN LISTS test_input_file_names)
       # skip reference and test run output files which also has filename extension .in
       if (NOT test_input_file MATCHES "^benchmark" AND NOT test_input_file MATCHES "^test")
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/${test_input_file}
+                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${test_input_file} SYMBOLIC)
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
+                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file} SYMBOLIC)
         string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
-        set(test_name_prefix "system--${subfolder_name}")
-        set(test_work_dir_prefix "${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}")
-        set(test_output_file ${test_input_file_name_no_extension}.out)
+        set(test_output_file "../test.out.010121.inp=${test_input_file}")
 
         # handle test series dependency.
         if(test_input_file_name_no_extension MATCHES "-[1-9]$")
@@ -81,7 +94,7 @@ foreach(test_category IN LISTS qe_test_categories)
         set(test_name "${test_name_prefix}--${test_input_file_name_no_extension}")
         # prefer $<TARGET_FILE:qe_${test_category}_exe>) but currently target names don't match test_category
         set(test_binary "${qe_BINARY_DIR}/bin/${test_category}.x")
-        set(test_input_relative "../input_and_reference/${test_input_file}")
+        set(test_input_relative "../${test_input_file}")
         #message("test name : ${test_name}")
         #message("last test name : ${last_test_name}")
         #message("base test name : ${base_test_name}")
@@ -127,15 +140,7 @@ foreach(test_category IN LISTS qe_test_categories)
           set_property(TEST ${test_name} APPEND PROPERTY DEPENDS "${base_test_name};${last_test_name}")
         endif()
 
-        set(test_reference_output "../input_and_reference/benchmark.out.git.inp=${test_input_file}")
-        add_test(NAME ${test_name}-correctness
-                 COMMAND ${BASH_PROGRAM} -c "${CMAKE_CURRENT_SOURCE_DIR}/extract-${test_category}.sh ${test_output_file} > test.dat;
-                                             ${CMAKE_CURRENT_SOURCE_DIR}/extract-${test_category}.sh ${test_reference_output} > ref.dat;
-                                             diff -y test.dat ref.dat")
-        set_tests_properties(${test_name}-correctness PROPERTIES
-                             WORKING_DIRECTORY ${test_work_dir_prefix}/${test_work_dir}
-                             LABELS "system;${subfolder_name}"
-                             DEPENDS ${test_name})
+        set_property(TEST ${test_name_prefix}-correctness APPEND PROPERTY DEPENDS "${test_name}")
       endif()
     endforeach()
   endforeach()
