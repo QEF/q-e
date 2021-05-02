@@ -11,6 +11,7 @@ OBJS= \
 atom.o \
 atomic_number.o \
 dqvan2.o \
+dylmr2.o \
 gth.o \
 init_us_0.o \
 init_us_b0.o \
@@ -56,6 +57,7 @@ ylmr2.o
 
 # GPU versions of routines
 OBJS += \
+  dylmr2_gpu.o \
   init_us_2_base_gpu.o \
   interp_atwfc_gpu.o \
   qvan2_gpu.o \

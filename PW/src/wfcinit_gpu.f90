@@ -238,7 +238,6 @@ SUBROUTINE init_wfc_gpu ( ik )
   REAL(DP), ALLOCATABLE :: etatom_d(:) ! atomic eigenvalues
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom_d(:,:,:) ! atomic wfcs for initialization (device)
-  COMPLEX(DP), ALLOCATABLE :: wfcatom_h(:,:,:) ! atomic wfcs for initialization (host)
   REAL(DP),    ALLOCATABLE :: randy_d(:) ! data for random
   !
   ! Auxiliary variables for CUDA version
@@ -273,14 +272,9 @@ SUBROUTINE init_wfc_gpu ( ik )
   !
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
-     ALLOCATE( wfcatom_h( npwx, npol, n_starting_wfc ) )
      CALL start_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
-     CALL atomic_wfc( ik, wfcatom_h )
+     CALL atomic_wfc_gpu( ik, wfcatom_d )
      CALL stop_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
-     !
-     ! Sync to GPU
-     wfcatom_d = wfcatom_h
-     DEALLOCATE( wfcatom_h )
      !
      IF ( starting_wfc == 'atomic+random' .AND. &
          n_starting_wfc == n_starting_atomic_wfc ) THEN

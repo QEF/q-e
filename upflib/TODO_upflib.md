@@ -27,7 +27,6 @@
   - upf_ions now contains just a function n_atom_wfc: move somewhere else?
   - upf_spinorb contains just two variables: merge into uspp? add to it
     the two functions spinor and sph_ind used only for spin-orbit?
-  - more functions to be moved from Modules/: dylmr2, dqvan2
   - lmaxq should be "the maximum value of L in Q functions", not "... + 1"
     and should be used to dimension arrays where l=0,...,L. The dimension
     of spherical harmonics (2*lmaxkb+1)^2 is something different and should
@@ -39,8 +38,9 @@
     dbetagx             	   dbeta(G)/dG 		compute_betagx
     qradx    qrad    tab_q         Q(G) for  USPP/PAW	init_tab_qrad
     dqradx              	   dQ(G)/dG  		compute_qradx
-                     tab_atwfc     atomic R_nl(G)	init_tab_atwfc
+             tab_at  tab_atwfc     atomic R_nl(G)	init_tab_atwfc
                     (tab_atrho     atomic rho(G)	to be done)
+                    (tab_vloc      local potential	to be done)
 
 * upflib restructuring:
   - shall we keep just one src folder ? or structure it a bit more, such as

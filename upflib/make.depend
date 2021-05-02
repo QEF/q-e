@@ -8,6 +8,8 @@ casino_pp.o : upf_kinds.o
 dqvan2.o : upf_kinds.o
 dqvan2.o : uspp.o
 dqvan2.o : uspp_data.o
+dylmr2.o : upf_kinds.o
+dylmr2_gpu.o : upf_kinds.o
 gth.o : pseudo_types.o
 gth.o : upf_const.o
 gth.o : upf_kinds.o
@@ -159,4 +161,6 @@ write_upf_new.o : xmltools.o
 xmltools.o : upf_kinds.o
 ylmr2.o : upf_const.o
 ylmr2.o : upf_kinds.o
+ylmr2_gpu.o : upf_const.o
+ylmr2_gpu.o : upf_kinds.o
 write_upf_new.o : ../include/qe_version.h
