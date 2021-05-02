@@ -22,6 +22,7 @@ else()
   endfunction()
 endif()
 
+# prepare jobconfig and userconfig for testcode.py
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
                  ${CMAKE_CURRENT_BINARY_DIR}/jobconfig SYMBOLIC)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/userconfig.tmp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -55,6 +56,8 @@ foreach(test_category IN LISTS qe_test_categories)
        "${subfolder_name}/*.in")
     #message("${subfolder_name}")
     #message("${test_input_file_names}")
+
+    # add a correctness check test by leveraging existing testcode.py
     set(test_name_prefix "system--${subfolder_name}")
     set(test_work_dir_prefix "${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}")
     add_test(NAME ${test_name_prefix}-correctness
@@ -62,6 +65,16 @@ foreach(test_category IN LISTS qe_test_categories)
     set_tests_properties(${test_name_prefix}-correctness PROPERTIES
                          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                          LABELS "system;${subfolder_name}")
+
+    # an adhoc fix for matdyn input missing error from testcode.py
+    file(GLOB matdyn_input_file_names
+       RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}"
+       "${subfolder_name}/matdyn.in.*")
+    foreach(matdyn_input IN LISTS matdyn_input_file_names)
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/${matdyn_input}
+                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${matdyn_input} SYMBOLIC)
+    endforeach()
+
     foreach(test_input_file IN LISTS test_input_file_names)
       # skip reference and test run output files which also has filename extension .in
       if (NOT test_input_file MATCHES "^benchmark" AND NOT test_input_file MATCHES "^test")
