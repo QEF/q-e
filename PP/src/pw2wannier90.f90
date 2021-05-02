@@ -4282,9 +4282,9 @@ END SUBROUTINE generate_guiding_functions
 
 SUBROUTINE write_band
    USE io_global,  ONLY : stdout, ionode
-   USE mp,         ONLY : mp_barrier
+   USE mp,         ONLY : mp_barrier, mp_sum
    USE mp_world,   ONLY : world_comm
-   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id
+   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, inter_pool_comm
    USE constants,  ONLY : rytoev
    USE wvfct,      ONLY : nbnd, et
    USE klist,      ONLY : nkstot, nks
@@ -4307,6 +4307,7 @@ SUBROUTINE write_band
       ENDIF
    ELSEIF (wan_mode == 'library') THEN
       ALLOCATE(eigval(num_bands, iknum))
+      eigval = 0.0_DP
    ELSE
       CALL errore('write_band', 'value of wan_mode not recognised', 1)
    ENDIF
@@ -4332,6 +4333,7 @@ SUBROUTINE write_band
    IF (wan_mode == 'standalone') THEN
       IF (me_pool == root_pool) CLOSE(iun_band, STATUS="KEEP")
    ENDIF
+   IF (wan_mode == 'library') CALL mp_sum(eigval, inter_pool_comm)
    !
    CALL mp_barrier(world_comm)
    !
