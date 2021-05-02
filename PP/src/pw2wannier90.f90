@@ -2645,7 +2645,7 @@ SUBROUTINE compute_orb
    USE mp,              ONLY : mp_barrier
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE gvecs,           ONLY : doublegrid
-   USE lsda_mod,        ONLY : nspin
+   USE lsda_mod,        ONLY : lsda, nspin, isk, current_spin
    USE constants,       ONLY : rytoev
 
    IMPLICIT NONE
@@ -2790,7 +2790,8 @@ SUBROUTINE compute_orb
         !
         npw = ngk(ik)
         ! sort the wfc at k and set up stuff for h_psi
-        current_k=ik
+        current_k=ik+ikstart-1
+        IF ( lsda ) current_spin = isk ( current_k )
         CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
         !
         ! compute  " H | u_n,k+b2 > "
