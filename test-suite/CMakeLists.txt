@@ -5,6 +5,9 @@ set(NETWORK_PSEUDO "http://www.quantum-espresso.org/wp-content/uploads/upf_files
 set(TESTCODE_NPROCS 4 CACHE STRING "Number of MPI processes for each test")
 set(TESTCODE_NTHREADS 1 CACHE STRING "Number of OpenMP threads for each test")
 
+message("\n"
+        "Only pw and cp results from ctest are reliable, we are working on making the rest tests work reliably with ctest. "
+        "To run non-pw/cp tests, make a softlink of the bin directory to the root of QE source tree and run tests in the test-suite directory under that root.\n")
 find_program(BASH_PROGRAM bash)
 
 if(QE_ENABLE_MPI)
