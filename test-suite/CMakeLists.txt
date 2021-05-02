@@ -64,6 +64,7 @@ foreach(test_category IN LISTS qe_test_categories)
         file(MAKE_DIRECTORY "${test_work_dir_prefix}/${test_work_dir}")
 
         set(test_name "${test_name_prefix}--${test_input_file_name_no_extension}")
+        # prefer $<TARGET_FILE:qe_${test_category}_exe>) but currently target names don't match test_category
         set(test_binary "${qe_BINARY_DIR}/bin/${test_category}.x")
         set(test_input_relative "../input_and_reference/${test_input_file}")
         #message("test name : ${test_name}")
