@@ -131,7 +131,6 @@ trimcheck.o \
 test_input_file.o \
 date_and_tim.o \
 volume.o \
-dylmr2.o \
 wgauss.o \
 w0gauss.o \
 w1gauss.o \
@@ -143,7 +142,6 @@ MODULES += \
   becmod_gpu.o \
   becmod_subs_gpu.o \
   cuda_subroutines.o \
-  dylmr2_gpu.o \
   random_numbers_gpu.o
 
 TLDEPS= libfox libutil libla libfft librxc

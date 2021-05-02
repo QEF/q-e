@@ -119,7 +119,6 @@ set(src_modules
     test_input_file.f90 
     date_and_tim.f90 
     volume.f90 
-    dylmr2.f90 
     wgauss.f90 
     w0gauss.f90
     w1gauss.f90
@@ -128,7 +127,6 @@ set(src_modules
     wavefunctions_gpu.f90
     becmod_gpu.f90
     becmod_subs_gpu.f90
-    dylmr2_gpu.f90
     random_numbers_gpu.f90
     cuda_subroutines.f90)
 qe_enable_cuda_fortran("${src_modules}")

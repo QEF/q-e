@@ -14,7 +14,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     Numerical recursive algorithm based on the one given in Numerical 
   !     Recipes but avoiding the calculation of factorials that generate 
   !     overflow for lmax > 11
-  !     Heavily re-written by PG on May 1st, 2021
+  !     Last modified May 2nd, 2021, by PG
   !
   USE upf_kinds, ONLY : DP
   USE upf_const, ONLY : pi, fpi
@@ -62,7 +62,8 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
      !
      !  The Q(:,l,m) are defined as sqrt ((l-m)!/(l+m)!) * P(:,l,m),
      !  where P(:,l,m) are the Legendre Polynomials (0 <= m <= l),
-     !  and stored into Ylm(:,lm) where lm = l**2+1+2*m
+     !  and are currently stored into Ylm(:,lm) where lm = l**2+1+2*m
+     !  (one might also store them into an array Q(l,m) for each ig)
      !
      ylm (ig,1) = 1.d0
      ylm (ig,2) = cost

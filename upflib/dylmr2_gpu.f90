@@ -12,7 +12,7 @@ SUBROUTINE dylmr2_gpu( nylm, ngy, g_d, gg_d, dylm_d, ipol )
   !! using simple numerical derivation (SdG).
   !! The spherical harmonics are calculated in ylmr2.
   !
-  USE kinds, ONLY : DP
+  USE upf_kinds, ONLY : DP
   !
   IMPLICIT NONE
   !

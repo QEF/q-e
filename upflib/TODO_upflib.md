@@ -27,7 +27,6 @@
   - upf_ions now contains just a function n_atom_wfc: move somewhere else?
   - upf_spinorb contains just two variables: merge into uspp? add to it
     the two functions spinor and sph_ind used only for spin-orbit?
-  - dylmr2 should be moved from Modules/ into upflib/
   - lmaxq should be "the maximum value of L in Q functions", not "... + 1"
     and should be used to dimension arrays where l=0,...,L. The dimension
     of spherical harmonics (2*lmaxkb+1)^2 is something different and should
