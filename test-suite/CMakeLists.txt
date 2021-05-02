@@ -126,6 +126,16 @@ foreach(test_category IN LISTS qe_test_categories)
         if(in_test_series)
           set_property(TEST ${test_name} APPEND PROPERTY DEPENDS "${base_test_name};${last_test_name}")
         endif()
+
+        set(test_reference_output "../input_and_reference/benchmark.out.git.inp=${test_input_file}")
+        add_test(NAME ${test_name}-correctness
+                 COMMAND ${BASH_PROGRAM} -c "${CMAKE_CURRENT_SOURCE_DIR}/extract-${test_category}.sh ${test_output_file} > test.dat;
+                                             ${CMAKE_CURRENT_SOURCE_DIR}/extract-${test_category}.sh ${test_reference_output} > ref.dat;
+                                             diff -y test.dat ref.dat")
+        set_tests_properties(${test_name}-correctness PROPERTIES
+                             WORKING_DIRECTORY ${test_work_dir_prefix}/${test_work_dir}
+                             LABELS "system;${subfolder_name}"
+                             DEPENDS ${test_name})
       endif()
     endforeach()
   endforeach()
