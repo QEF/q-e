@@ -2791,7 +2791,7 @@ SUBROUTINE compute_orb
         npw = ngk(ik)
         ! sort the wfc at k and set up stuff for h_psi
         current_k=ik+ikstart-1
-        IF ( lsda ) current_spin = isk ( ik+ikstart-1 )
+        IF ( lsda ) current_spin = isk ( current_k )
         CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
         !
         ! compute  " H | u_n,k+b2 > "
