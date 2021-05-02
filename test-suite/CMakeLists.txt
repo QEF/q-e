@@ -80,10 +80,27 @@ foreach(test_category IN LISTS qe_test_categories)
       if (NOT test_input_file MATCHES "^benchmark" AND NOT test_input_file MATCHES "^test")
         file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/${test_input_file}
                          ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/${test_input_file} SYMBOLIC)
-        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
-                         ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file} SYMBOLIC)
+        set(TESTSUITE_ARGS 0)
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file})
+          file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
+                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file} SYMBOLIC)
+        else()
+          while (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} AND TESTSUITE_ARGS LESS 10)
+            math(EXPR TESTSUITE_ARGS "${TESTSUITE_ARGS} + 1")
+          endwhile()
+          if (TESTSUITE_ARGS EQUAL 10)
+            #message("Reference output not found for test ${subfolder_name}/${test_input_file}")
+            continue()
+          endif()
+          file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS}
+                           ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} SYMBOLIC)
+        endif()
         string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
-        set(test_output_file "../test.out.010121.inp=${test_input_file}")
+        if (TESTSUITE_ARGS EQUAL 0)
+          set(test_output_file "../test.out.010121.inp=${test_input_file}")
+        else()
+          set(test_output_file "../test.out.010121.inp=${test_input_file}.args=${TESTSUITE_ARGS}")
+        endif()
 
         # handle test series dependency.
         if(test_input_file_name_no_extension MATCHES "-[1-9]$")
