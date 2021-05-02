@@ -5,6 +5,20 @@ set(NETWORK_PSEUDO "http://www.quantum-espresso.org/wp-content/uploads/upf_files
 set(TESTCODE_NPROCS 4 CACHE STRING "Number of MPI processes for each test")
 set(TESTCODE_NTHREADS 1 CACHE STRING "Number of OpenMP threads for each test")
 
+find_program(BASH_PROGRAM bash)
+
+if(QE_ENABLE_MPI)
+  function(qe_runner test_name test_binary test_input test_output)
+    add_test(NAME ${test_name}
+             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/test_helper_tee.sh ${test_output} ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input})
+  endfunction()
+else()
+  function(qe_runner test_name test_binary test_input test_output)
+    add_test(NAME ${test_name}
+             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/test_helper_tee.sh ${test_output} ${test_binary} -inp ${test_input})
+  endfunction()
+endif()
+
 foreach(test_category IN LISTS qe_test_categories)
   message(STATUS "generating tests in ${test_category} category")
   #EXECUTE_PROCESS( COMMAND pwd ECHO_OUTPUT_VARIABLE)
@@ -40,6 +54,7 @@ foreach(test_category IN LISTS qe_test_categories)
         string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
         set(test_name_prefix "system--${subfolder_name}")
         set(test_work_dir_prefix "${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}")
+        set(test_output_file ${test_input_file_name_no_extension}.out)
 
         # handle test series dependency.
         if(test_input_file_name_no_extension MATCHES "-[1-9]$")
@@ -72,16 +87,12 @@ foreach(test_category IN LISTS qe_test_categories)
         #message("base test name : ${base_test_name}")
         #message("test work dir : ${test_work_dir_prefix}/${test_work_dir}")
 
+        qe_runner(${test_name} ${test_binary} ${test_input_relative} ${test_output_file})
+
         if(QE_ENABLE_MPI)
           set(actual_test_num_procs ${TESTCODE_NPROCS})
-          add_test(NAME ${test_name}
-                   COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input_relative}
-                   WORKING_DIRECTORY ${test_work_dir_prefix}/${test_work_dir})
         else()
           set(actual_test_num_procs 1)
-          add_test(NAME ${test_name}
-                   COMMAND ${test_binary} -inp ${test_input_relative}
-                   WORKING_DIRECTORY ${test_work_dir_prefix}/${test_work_dir})
         endif()
 
         if(QE_ENABLE_OPENMP)
@@ -99,6 +110,7 @@ foreach(test_category IN LISTS qe_test_categories)
         #message("${subfolder_name} on ${TOT_PROCS} processes_x_threads")
 
         set_tests_properties(${test_name} PROPERTIES
+                             WORKING_DIRECTORY ${test_work_dir_prefix}/${test_work_dir}
                              ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};OMP_NUM_THREADS=${TESTCODE_NTHREADS}"
                              PROCESSORS ${TOT_PROCS} PROCESSOR_AFFINITY TRUE
                              REQUIRED_FILES ${test_input_relative}
