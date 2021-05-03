@@ -7,19 +7,22 @@
 !
 !
 !-----------------------------------------------------------------------
-function d2mxc (rho)
+function d2mxc( rho )
   !-----------------------------------------------------------------------
-  !
-  !  second derivative of the xc potential with respect to the local density
-  !  Perdew and Zunger parameterization of the Ceperley-Alder functional
+  !! Second derivative of the xc potential with respect to the local density
+  !! Perdew and Zunger parameterization of the Ceperley-Alder functional.
   !
   USE kinds, ONLY: DP
+  !
   implicit none
   !
-  real (DP) :: rho, d2mxc
-  ! input: the charge density ( positive )
-  ! output: the second derivative of the xc potent
+  real (DP) :: rho
+  !! input: the charge density ( positive )
+  real (DP) :: d2mxc
+  !! output: the second derivative of the xc potent
 
+  ! ... local variables
+  
   real (DP) :: b1, b2, gc, a, b, c, d, pi, thofpi_3, fpioth_3, &
        thopi_3, tm1, tm2, tm3, tm4, tm5, tm6
   ! parameters defining the functionals
