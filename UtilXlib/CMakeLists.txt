@@ -97,7 +97,7 @@ if(QE_ENABLE_TEST)
         set_target_properties(${TGT_NAME} 
             PROPERTIES
                 OUTPUT_NAME ${TGT_NAME}.x 
-                RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
         target_link_libraries(${TGT_NAME}
             PRIVATE
                 qe_utilx
@@ -105,6 +105,6 @@ if(QE_ENABLE_TEST)
                 qe_mpi_fortran
                 qe_modules
                 qe_lapack)
-        add_test(NAME ${TGT_NAME} COMMAND ${QE_TESTS_DIR}/${TGT_NAME}.x)
+        add_test(NAME ${TGT_NAME} COMMAND $<TARGET_FILE:${TGT_NAME}>)
     ENDFOREACH(NAME)
 endif()

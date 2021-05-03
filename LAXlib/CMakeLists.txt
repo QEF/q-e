@@ -89,12 +89,12 @@ if(QE_ENABLE_TEST)
     set_target_properties(qe_lax_test 
         PROPERTIES 
             OUTPUT_NAME qe_lax_test.x 
-            RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
     target_link_libraries(qe_lax_test
         PRIVATE
             qe_mpi_fortran
             qe_lax
             qe_lapack)
     add_test(NAME test_qe_lax 
-        COMMAND ${QE_TESTS_DIR}/qe_lax_test.x)
+        COMMAND $<TARGET_FILE:qe_lax_test>)
 endif(QE_ENABLE_TEST)

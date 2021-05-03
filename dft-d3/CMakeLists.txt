@@ -21,14 +21,14 @@ if(QE_ENABLE_TEST)
     set_target_properties(qe_atomic_test_exe 
         PROPERTIES 
             OUTPUT_NAME qe_dftd3_test_atomic.x 
-            RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
     target_link_libraries(qe_atomic_test_exe
         PRIVATE
             qe_modules
             qe_upflib
             qe_dftd3)
     # FIXME: Does it work?
-    #add_test(NAME test_qe_dftd3_atomic COMMAND ${QE_TESTS_DIR}/qe_dftd3_test_atomic.x)
+    #add_test(NAME test_qe_dftd3_atomic COMMAND $<TARGET_FILE:qe_atomic_test_exe>)
 endif()
 
 qe_install_targets(qe_dftd3)

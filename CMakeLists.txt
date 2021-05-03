@@ -37,7 +37,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/lib
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/bin 
     CACHE 
     PATH "Single output directory for building all executables.")
-set(QE_TESTS_DIR ${qe_BINARY_DIR}/tests/bin)
 
 ###########################################################
 # Build helpers
