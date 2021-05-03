@@ -36,7 +36,7 @@ subroutine deallocate_phq
                            vsgga, segni
   USE qpoint,       ONLY : eigqts, ikks, ikqs, nksq, xk_col
   USE eqv,          ONLY : dmuxc, vlocq, dpsi, dvpsi, evq
-  USE control_lr,   ONLY : lgamma, nbnd_occ, ofsbeta
+  USE control_lr,   ONLY : lgamma, nbnd_occ
   USE ldaU,         ONLY : lda_plus_u
   USE ldaU_ph,      ONLY : dnsbare_all_modes, dnsorth_cart, dnsorth, dnsbare,  &
                            wfcatomk, swfcatomk, dwfcatomk, sdwfcatomk,         &
@@ -169,7 +169,6 @@ subroutine deallocate_phq
      if(allocated(dwfcatomk))         deallocate (dwfcatomk)
      if(allocated(sdwfcatomk))        deallocate (sdwfcatomk)
      if(allocated(dvkb))              deallocate (dvkb)
-     if(allocated(ofsbeta))           deallocate (ofsbeta)
      if(allocated(dnsbare))           deallocate (dnsbare)
      if(allocated(dnsbare_all_modes)) deallocate (dnsbare_all_modes)
      if(allocated(dnsorth))           deallocate (dnsorth)

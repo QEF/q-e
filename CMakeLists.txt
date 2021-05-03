@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # alias targets:
 # https://gitlab.kitware.com/cmake/cmake/merge_requests/2521
 
+# CMake < 3.20 does not support NVHPC compiler id
+# https://cmake.org/cmake/help/latest/release/3.20.html#compilers
+
 # Policy CMP0048: The project() command manages VERSION variables
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
@@ -21,7 +24,7 @@ endif()
 # CMake < v3.18 cannot discover the ARM Performance Library
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
     if(CMAKE_VERSION VERSION_LESS 3.18.0)
-        message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
+        message("-- CMake versions less than 3.18 cannot automatically discover the ARM Performance Library!")
     endif()
 endif()
 
@@ -70,7 +73,6 @@ if(QE_ENABLE_CUDA)
     # OpenMP enable by default if CUDA is enable
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" ON)
-    
 else()
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" OFF)
@@ -95,6 +97,8 @@ option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
 option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
+option(QE_ENABLE_LIBXC
+    "enable LIBXC execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
 option(QE_ENABLE_DOC
@@ -155,7 +159,7 @@ endif()
 if(QE_ENABLE_SCALAPACK AND NOT QE_ENABLE_MPI)
     message(FATAL_ERROR "SCALAPACK requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable SCALAPACK with '-DQE_ENABLE_SCALAPACK=OFF'")
 endif()
-if(QE_ENABLE_CUDA AND NOT CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+if(QE_ENABLE_CUDA AND NOT (CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC"))
     message(FATAL_ERROR "PGI compiler is mandatory when CUDA is enable due QE is based on CUDA Fortran language")
 endif()
 if(QE_ENABLE_LAXLIB_CUSOLVER AND (NOT QE_ENABLE_CUDA))
@@ -170,7 +174,7 @@ endif()
 # language standard requirements
 ###########################################################
 # TODO need to require all compilers using the same one
-if(CMAKE_C_COMPILER_ID MATCHES "PGI")
+if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
     set(CMAKE_C_STANDARD 11)
     set(CMAKE_C_STANDARD_REQUIRED ON)
     set(CMAKE_C_EXTENSIONS OFF)
@@ -181,7 +185,7 @@ endif()
 ############################################################
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
     include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
     include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
@@ -191,13 +195,13 @@ endif()
 # CUDA
 ###########################################################
 if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
-    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
       add_library(CUDA::cufft INTERFACE IMPORTED)
-      set_target_properties(CUDA::cufft PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cufft")
+      set_target_properties(CUDA::cufft PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cufft")
       add_library(CUDA::cublas INTERFACE IMPORTED)
-      set_target_properties(CUDA::cublas PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cublas")
+      set_target_properties(CUDA::cublas PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cublas")
       add_library(CUDA::cusolver INTERFACE IMPORTED)
-      set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "-Mcudalib=cusolver")
+      set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cusolver")
     else()
       find_package(CUDAToolkit REQUIRED)
     endif()
@@ -355,6 +359,36 @@ if(QE_ENABLE_ELPA)
             ${ELPA_INCLUDE_DIRS}
             ${ELPA_INCLUDE_DIRS_DEP})
 endif(QE_ENABLE_ELPA)
+
+###########################################################
+# LIBXC
+## The following targets will be defined:
+add_library(qe_external_libxc INTERFACE)
+qe_install_targets(qe_external_libxc)
+###########################################################
+if(QE_ENABLE_LIBXC)
+    target_compile_definitions(qe_external_libxc INTERFACE "__LIBXC")
+
+    find_package(Libxc 5.1.2 COMPONENTS Fortran)
+    if (NOT Libxc_FOUND)
+        message(STATUS "Libxc searching failed in CMake Module mode, trying Config mode")
+        find_package(Libxc 5.1.2 COMPONENTS Fortran CONFIG)
+    endif()
+
+    if(${Libxc_FOUND})
+        if (${Libxc_VERSION} VERSION_GREATER_EQUAL "5.1.2" )
+            message(STATUS "Libxc version ${Libxc_VERSION} found.")
+        else()
+            message(FATAL_ERROR "Libxc version ${Libxc_VERSION} found. "
+                                "CMake compilation of QE tested for libxc v5.1.2 or later only.")
+        endif()
+        target_link_libraries(qe_external_libxc INTERFACE Libxc::xcf03)
+        target_include_directories(qe_external_libxc INTERFACE ${Libxc_INCLUDE_DIR})
+        target_compile_definitions(qe_external_libxc INTERFACE ${Libxc_DEFINITIONS})
+    else()
+         message(FATAL_ERROR "Failed to find Libxc package (>=5.1.2) with Fortran enabled.")
+    endif()
+endif(QE_ENABLE_LIBXC)
 
 ###########################################################
 # HDF5

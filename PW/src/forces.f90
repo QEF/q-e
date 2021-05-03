@@ -31,7 +31,8 @@ SUBROUTINE forces()
   USE cell_base,         ONLY : at, bg, alat, omega  
   USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, atm
   USE fft_base,          ONLY : dfftp
-  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g,  gg, gcutm
+  USE gvect,             ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g, gg, &
+                                g_d, gcutm
   USE lsda_mod,          ONLY : nspin
   USE symme,             ONLY : symvector
   USE vlocal,            ONLY : strf, vloc
@@ -41,7 +42,7 @@ SUBROUTINE forces()
   USE ldaU,              ONLY : lda_plus_u, U_projection
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
-                                iverbosity, llondon, ldftd3, lxdm, ts_vdw
+                                iverbosity, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw
   USE plugin_flags
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
@@ -53,12 +54,12 @@ SUBROUTINE forces()
 
   USE xdm_module,        ONLY : force_xdm
   USE tsvdw_module,      ONLY : FtsvdW
+  USE libmbd_interface,  ONLY : FmbdvdW
   USE esm,               ONLY : do_comp_esm, esm_bc, esm_force_ew
   USE qmmm,              ONLY : qmmm_mode
   !
   USE control_flags,     ONLY : use_gpu
   USE device_fbuff_m,          ONLY : dev_buf
-  USE gvect_gpum,        ONLY : g_d
   USE device_memcpy_m,     ONLY : dev_memcpy
   !
   IMPLICIT NONE
@@ -260,7 +261,12 @@ SUBROUTINE forces()
         IF ( ldftd3 )   force(ipol,na) = force(ipol,na) + force_d3(ipol,na)
         IF ( lxdm )     force(ipol,na) = force(ipol,na) + force_disp_xdm(ipol,na)
         ! factor 2 converts from Ha to Ry a.u.
-        IF ( ts_vdw )   force(ipol,na) = force(ipol,na) + 2.0_dp*FtsvdW(ipol,na)
+        ! the IF condition is to avoid double counting
+        IF ( mbd_vdw ) THEN
+          force(ipol, na) = force(ipol, na) + 2.0_dp*FmbdvdW(ipol, na)
+        ELSE IF ( ts_vdw ) THEN
+          force(ipol, na) = force(ipol, na) + 2.0_dp*FtsvdW(ipol, na)
+        ENDIF
         IF ( tefield )  force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF ( gate )     force(ipol,na) = force(ipol,na) + forcegate(ipol,na) ! TB
         IF (lelfield)   force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
@@ -373,12 +379,19 @@ SUBROUTINE forces()
         ENDDO
      END IF
      !
-     IF ( ts_vdw) THEN
-        WRITE( stdout, '(/,5x,"TS-VDW contribution to forces:")')
+     ! again, as above, if condition is to avoid redundant printing
+     IF ( mbd_vdw ) THEN
+        WRITE( stdout, '(/,5x, "MBD contribution to forces")')
         DO na = 1, nat
-           WRITE( stdout, 9035) na, ityp(na), (2.0d0*FtsvdW(ipol,na), ipol=1,3)
+           WRITE( stdout, 9035) na, ityp(na), (2.0d0*FmbdvdW(ipol, na), ipol = 1, 3)
         ENDDO
-     END IF
+     ELSE IF ( ts_vdw ) THEN
+        WRITE( stdout, '(/,5x, "TS-VDW contribution to forces")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), (2.0d0*FtsvdW(ipol, na), ipol = 1, 3)
+        ENDDO
+     ENDIF
+
      !
      ! TB gate forces
      IF ( gate ) THEN

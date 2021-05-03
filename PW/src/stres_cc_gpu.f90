@@ -27,7 +27,7 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
-  USE gvect_gpum,           ONLY : g_d, gg_d
+  USE gvect,                ONLY : g_d, gg_d
   USE wavefunctions_gpum,   ONLY : using_psic, using_psic_d, psic_d
   USE device_fbuff_m,             ONLY : dev_buf
   USE device_memcpy_m,        ONLY : dev_memcpy

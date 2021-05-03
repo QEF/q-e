@@ -12,6 +12,7 @@ MODULE additional_kpoints
   USE parameters,   ONLY : npk
   IMPLICIT NONE
   REAL(DP),ALLOCATABLE :: xk_add(:,:) !, wk_add(:)
+  CHARACTER(len=80) :: k_points_add = 'bogus'
   INTEGER :: nkstot_add=0
 
 
@@ -43,12 +44,17 @@ MODULE additional_kpoints
      INTEGER :: k1_old,  k2_old,  k3_old
      INTEGER :: nqtot, i,j,k, iq, jq
      REAL(DP) :: xq(3), rq(3)
+     LOGICAL, EXTERNAL  :: matches
      !
 !     IF(.not.allocated(xk) .or. .not.allocated(wk))&
 !       CALL errore("add_kpoints", "K-points not ready yet",1)
      CALL bcast_additional_kpoints()
      IF(nkstot_add==0) RETURN
 
+     IF(matches("crystal",k_points_add))THEN
+         CALL cryst_to_cart(nkstot_add,xk_add,bg,+1)
+     ENDIF
+     !
      ! Back-up existing points
      nkstot_old = nkstot
      ALLOCATE(xk_old(3,nkstot_old))
@@ -58,37 +64,30 @@ MODULE additional_kpoints
 !     DEALLOCATE(xk,wk)
      nkstot = 0
      !
-     
-     ! Simple case, EXX not used or used with self-exchange only: 
+     ! Simple case: EXX not used or used with self-exchange only: 
      IF( nqx1<=1 .and. nqx2<=1 .and. nqx3<=1 ) THEN
-       print*, "CASE ONE ============================================================", nkstot_old
        nkstot = nkstot_old + nkstot_add
        IF(nkstot>npk) CALL errore("add_kpoint", "Number of k-points exceeded: increase npk in pwcom", 1)
-!       ALLOCATE(xk(3,nkstot))
-!       ALLOCATE(wk(nkstot))
        xk(:,1:nkstot_old) = xk_old
        xk(:,nkstot_old+1:nkstot_old+nkstot_add) = xk_add
        wk(1:nkstot_old) = wk_old
        wk(nkstot_old+1:nkstot_old+nkstot_add) = 0._dp
        nqtot=1
      ELSE
-       print*, "CASE TWO ============================================================"
-     ! Complex case, EXX with a finite grid of q-points. Ideally, we would want to use
-     ! The grid from module EXX, but it may not have been computed at this points.
+     ! Difficult case: EXX with a finite grid of q-points. Ideally, we would want to use
+     ! The grid from module EXX, but it may not have been initialized at this points.
      ! Furthermore, the q-point grid is obtained by opening the k-points one, so this would
      ! be a dog wagging its own tails
        nqtot = nqx1*nqx2*nqx3
        nkstot = nkstot_old + nkstot_add*nqtot
        IF(nkstot>npk) CALL errore("add_kpoint", "Number of k-points exceeded: increase npk in pwcom", 1)
-!       ALLOCATE(xk(3,nkstot))
-!       ALLOCATE(wk(nkstot))
        xk(:,1:nkstot_old) = xk_old
        wk(1:nkstot_old) = wk_old
        
        rq = (/nqx1,nqx2,nqx3/)
        rq = 1._dp / rq
        iq = nqtot
-       ! We do these loops backward, in this way the path is found in the last k-points
+       ! 
        DO  i = 0,nqx1-1
        DO  j = 0,nqx2-1
        DO  k = 0,nqx3-1

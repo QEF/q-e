@@ -20,7 +20,8 @@ SUBROUTINE compute_becsum( iflag )
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE scf,                  ONLY : rho
-  USE uspp,                 ONLY : nkb, vkb, becsum, okvan
+  USE uspp,                 ONLY : nkb, vkb, becsum, becsum_d, okvan, using_vkb
+  USE uspp_param,           ONLY : nhm
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, wg
   USE mp_pools,             ONLY : inter_pool_comm
@@ -30,10 +31,8 @@ SUBROUTINE compute_becsum( iflag )
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
-  !
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE uspp_gpum,                 ONLY : using_vkb, using_becsum
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -52,7 +51,6 @@ SUBROUTINE compute_becsum( iflag )
   !
   IF ( iflag == 1) CALL weights( )
   !
-  CALL using_becsum(2)
   becsum(:,:,:) = 0.D0
   CALL allocate_bec_type( nkb,nbnd, becp,intra_bgrp_comm )
   CALL using_becp_auto(2)
@@ -62,13 +60,11 @@ SUBROUTINE compute_becsum( iflag )
   k_loop: DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
-     IF ( nks > 1 ) &
-        CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+     IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
      IF ( nks > 1 ) CALL using_evc(2)
      !
-     IF ( nkb > 0 ) CALL using_vkb(1)
-     IF ( nkb > 0 ) &
-          CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL using_vkb(2)
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... actual calculation is performed inside routine "sum_bec"
      !
@@ -80,6 +76,12 @@ SUBROUTINE compute_becsum( iflag )
   !
   IF( becp%comm /= mp_get_comm_null() ) &
        CALL mp_sum( becsum, becp%comm )
+  !
+#if defined __CUDA
+  ! GPU-sync (protecting zero-size allocations)
+  if (nhm>0) becsum_d=becsum
+#endif
+
   !
   ! ... Needed for PAW: becsum has to be symmetrized so that they reflect 
   ! ... a real integral in k-space, not only on the irreducible zone. 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2016 Quantum ESPRESSO group
+! Copyright (C) 2007-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -47,7 +47,7 @@ SUBROUTINE memory_report()
   USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
   USE uspp_param,ONLY : lmaxkb, upf, nh, nbetam
-  USE us,        ONLY : dq
+  USE uspp_data, ONLY : dq
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem, tqr, iverbosity
@@ -72,7 +72,7 @@ SUBROUTINE memory_report()
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
-  REAL(dp) :: ram, ram_, ram1, ram2, maxram, totram, add
+  REAL(dp) :: ram, ram_, ram1, ramk, maxram, totram, add
   INTEGER :: np_ortho(2)
   !
   IF ( gamma_only) THEN
@@ -91,6 +91,7 @@ SUBROUTINE memory_report()
   npwx_l = npwx_g/nproc_bgrp
   !
   ! ram   = dynamically (permanently) allocated RAM, per process
+  ! ramk  = dynamically allocated RAM only on pool 0
   ! maxram= "high watermark": max ram needed during a run
   ! totram= max ram needed summed over all processors
   !
@@ -190,6 +191,7 @@ SUBROUTINE memory_report()
        real_size * dfftp%nnr*(2+nspin)
   IF ( xclib_dft_is('meta') ) ram = ram + real_size * dfftp%nnr*nspin
   ! arrays for rho mixing
+  ramk = 0
   IF ( lscf ) THEN
      ! rhoin (electrons.f90:439)
      ram =  ram + scf_type_size
@@ -201,7 +203,7 @@ SUBROUTINE memory_report()
      IF ( io_level < 2 ) THEN
         add = mix_type_size * 2 * nmix
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rho*nmix', add/MB
-        ram = ram + add
+        ramk = ramk + add
      END IF
   END IF
   !=====================================================================
@@ -393,7 +395,7 @@ SUBROUTINE memory_report()
      END IF
   END IF
   !
-  maxram = ram + ram_
+  maxram = ram + ramk + ram_
   !
   ! arrays used for global sorting in ggen:
   !    igsrt, g2l, g2sort_g, total dimensions:
@@ -401,7 +403,7 @@ SUBROUTINE memory_report()
   IF ( .NOT. smallmem ) maxram = MAX ( maxram, &
        int_size * 2 * ngm_g + real_size * ngm_g )
   !
-  totram = maxram * nproc_image
+  totram = (ram + ram_) * nproc_image + ramk * nproc_image / npool
   IF ( iverbosity > 0 ) THEN
      IF ( ram .lt. GB ) WRITE( stdout, 1010 ) ram/MB, ' MB'
      IF ( ram .ge. GB ) WRITE( stdout, 1010 ) ram/GB, ' GB'

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_eels.x / turboEELS / Quantum Espresso (version: 6.6)
+Program: turbo_eels.x / turboEELS / Quantum ESPRESSO (version: 6.7GPU)
 ------------------------------------------------------------------------
 
 
@@ -21,18 +21,18 @@ either a "!" or a "#" character in the first position of a line.
 Structure of the input data:
 ===============================================================================
 
-&lr_input
+&LR_INPUT
   ...
 /
 
-&lr_control
+&LR_CONTROL
   ...
 /
 
 
 
 ========================================================================
-NAMELIST: &lr_input
+NAMELIST: &LR_INPUT
 
    THIS NAMELIST IS ALWAYS NEEDED !
    
@@ -100,7 +100,7 @@ NAMELIST: &lr_input
 
 
 ========================================================================
-NAMELIST: &lr_control
+NAMELIST: &LR_CONTROL
 
    +--------------------------------------------------------------------
    Variable:       approximation
@@ -237,7 +237,18 @@ NAMELIST: &lr_control
                    "increment" is specified in units controlled by "units".
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       ethr_nscf
+   
+   Type:           REAL
+   Default:        1.D-11
+   Description:    Threshold for the convergence of eigenvalues during
+                   the iterative diagonalization of the Hamiltonian in
+                   the non-self-consistent-field (NSCF) calculation at
+                   k and k+q points. Note, this quantity is NOT extensive.
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:33 CEST 2020
+This file has been created by helpdoc utility on Fri Apr 23 19:45:01 CEST 2021

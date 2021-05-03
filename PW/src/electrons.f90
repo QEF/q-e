@@ -754,6 +754,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ELSE
               IF (ALLOCATED(rhoin%ns)) CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
            ENDIF
+           ! DFT+U+V: this variable is not in "mix-type" variable rhoin
+           IF (lda_plus_u_kind.EQ.2) THEN
+              IF (ALLOCATED(nsg) ) CALL mp_bcast ( nsg, root_pool, inter_pool_comm)
+           ENDIF
         ENDIF
         !
         CALL bcast_scf_type( rhoin, root_pool, inter_pool_comm )

@@ -69,6 +69,7 @@ target_link_libraries(qe_pp_exe
         qe_modules
         qe_pp
         qe_fftx
+        qe_upflib
         qe_xclib)
 
 ###########################################################
@@ -196,24 +197,11 @@ qe_add_executable(qe_pp_pmw_exe ${src_pmw_x})
 set_target_properties(qe_pp_pmw_exe PROPERTIES OUTPUT_NAME pmw.x)
 target_link_libraries(qe_pp_pmw_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_modules
         qe_pp
-        qe_upflib)
-
-###########################################################
-# xctest.x
-###########################################################
-set(src_xctest_x src/xctest.f90)
-qe_add_executable(qe_pp_xctest_exe ${src_xctest_x})
-set_target_properties(qe_pp_xctest_exe PROPERTIES OUTPUT_NAME xctest.x)
-target_link_libraries(qe_pp_xctest_exe
-    PRIVATE
-        qe_modules
-        qe_cpv
-        qe_pp
-        qe_xclib)
+        qe_upflib
+        qe_lapack)
 
 ###########################################################
 # projwfc.x
@@ -223,12 +211,12 @@ qe_add_executable(qe_pp_projwfc_exe ${src_projwfc_x})
 set_target_properties(qe_pp_projwfc_exe PROPERTIES OUTPUT_NAME projwfc.x)
 target_link_libraries(qe_pp_projwfc_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_modules
         qe_pp
         qe_lax
-        qe_upflib)
+        qe_upflib
+        qe_lapack)
 
 ###########################################################
 # pw2wannier90.x
@@ -238,13 +226,13 @@ qe_add_executable(qe_pp_pw2wannier90_exe ${src_pw2wannier90_x})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_modules
         qe_pp
         qe_fftx
         qe_upflib
-        qe_xclib)
+        qe_xclib
+        qe_lapack)
 
 ###########################################################
 # pw2critic.x
@@ -256,6 +244,7 @@ target_link_libraries(qe_pp_pw2critic_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -269,6 +258,7 @@ target_link_libraries(qe_pp_wfck2r_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -282,6 +272,7 @@ target_link_libraries(qe_pp_initial_state_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_upflib)
 
@@ -335,6 +326,7 @@ target_link_libraries(qe_pp_wannierham_exe
         qe_clib
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp)
 
 ###########################################################
@@ -347,6 +339,7 @@ target_link_libraries(qe_pp_wannierplot_exe
     PRIVATE
         qe_pw
         qe_modules
+        qe_upflib
         qe_pp
         qe_fftx)
 
@@ -422,13 +415,13 @@ qe_add_executable(qe_pp_ppacf_exe ${src_ppacf_x})
 set_target_properties(qe_pp_ppacf_exe PROPERTIES OUTPUT_NAME ppacf.x)
 target_link_libraries(qe_pp_ppacf_exe
     PRIVATE
-        qe_lapack
         qe_pw
         qe_pp
         qe_modules
         qe_fftx
         qe_upflib
-        qe_xclib)
+        qe_xclib
+        qe_lapack)
 
 ###########################################################
 # ef.x
@@ -441,8 +434,7 @@ qe_add_executable(qe_pp_st_ef_exe ${src_ef_x})
 set_target_properties(qe_pp_st_ef_exe PROPERTIES OUTPUT_NAME ef.x)
 target_link_libraries(qe_pp_st_ef_exe
     PRIVATE
-        qe_openmp_fortran
-        qe_modules)
+        qe_openmp_fortran)
 
 ###########################################################
 # dos_sp.x
@@ -457,8 +449,7 @@ qe_add_executable(qe_pp_st_dos_exe ${src_dos_sp_x})
 set_target_properties(qe_pp_st_dos_exe PROPERTIES OUTPUT_NAME dos_sp.x)
 target_link_libraries(qe_pp_st_dos_exe
     PRIVATE
-        qe_openmp_fortran
-        qe_modules)
+        qe_openmp_fortran)
 
 ###########################################################
 # fermi_int_0.x
@@ -506,7 +497,6 @@ qe_install_targets(
     qe_pp_plotproj_exe
     qe_pp_plotrho_exe
     qe_pp_pmw_exe
-    qe_pp_xctest_exe
     qe_pp_projwfc_exe
     qe_pp_pw2wannier90_exe
     qe_pp_pw2critic_exe

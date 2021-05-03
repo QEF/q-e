@@ -638,7 +638,7 @@ CONTAINS
  !
  !
  !-----------------------------------------------------------------------------------
-FUNCTION rho_ddot( rho1, rho2, gf, g0, mu )
+FUNCTION rho_ddot( rho1, rho2, gf, g0 )
   !----------------------------------------------------------------------------------
   !! Calculates \(4\pi/G^2\ \rho_1(-G)\ \rho_2(G) = V1_\text{Hartree}(-G)\ \rho_2(G)\)
   !! used as an estimate of the self-consistency error on the energy.
@@ -661,9 +661,7 @@ FUNCTION rho_ddot( rho1, rho2, gf, g0, mu )
   INTEGER, INTENT(IN) :: gf
   !! points delimiter
   REAL(DP), OPTIONAL, INTENT(IN) :: g0
-  !! factrized G-vector norm of G=0 used in GC-SCF
-  REAL(DP), OPTIONAL, INTENT(IN) :: mu
-  !! Fermi energy used in GC-SCF calculation
+  !! factorized G-vector norm of G=0 used in GC-SCF
   REAL(DP) :: rho_ddot
   !! output: see function comments
   !

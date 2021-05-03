@@ -81,7 +81,7 @@ function(qe_enable_cuda_fortran SRCS)
 endfunction(qe_enable_cuda_fortran)
 
 function(_qe_add_cuda_link_flags TGT)
-    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
         get_target_property(target_type ${TGT} TYPE)
         if(target_type STREQUAL "EXECUTABLE")
             target_link_options(${TGT}
@@ -98,7 +98,7 @@ function(qe_git_submodule_update PATH)
     # to call one command for each operation:
     execute_process(COMMAND ${GIT_EXECUTABLE} submodule init -- ${PATH}
                     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update -- ${PATH}
+    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --depth 1 -- ${PATH}
                     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endfunction(qe_git_submodule_update)
 

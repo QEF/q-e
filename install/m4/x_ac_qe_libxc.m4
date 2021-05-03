@@ -43,14 +43,13 @@ if test "$with_libxc" -ne 0; then
 lxcf="f03"
 lxcf2="f03"
 if test ! -z "$with_libxc_prefix"; then
-lxc_version=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
-if test "$lxc_version" = 5; then
+lxc_version_major=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
+lxc_version_minor=`grep "XC_MINOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '0-9'`
+if test "$lxc_version_major" = 5; then
+if test "$lxc_version_minor" = 0; then
   lxcf="f90"
   lxcf2="f90"
 fi
-if test "$lxc_version" -gt 5; then
-  lxcf="f90"
-  lxcf2="f03"
 fi
 fi
 

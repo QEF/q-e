@@ -31,7 +31,6 @@ SUBROUTINE ewald_dipole( tens, dipole )
   !! the dipole
   REAL(DP) :: charge, eta, arg, upperbound, temp
   COMPLEX(DP) :: rhon
-  REAL(DP), EXTERNAL :: qe_erfc
   COMPLEX(DP), ALLOCATABLE:: ewaldg(:,:,:), ewaldr(:,:,:)
   INTEGER :: alpha, beta, na, ng, nt, ipol, nb, nrm, nr
   !
@@ -60,7 +59,7 @@ SUBROUTINE ewald_dipole( tens, dipole )
     !
     IF ( eta <= 0.d0 ) CALL errore( 'ewald_dipole', 'optimal eta not found', 1 )
     upperbound = 2.d0 * charge**2 * SQRT(2.d0 * eta / tpi) &
-                      * qe_erfc ( SQRT(tpiba2 * gcutm / 4.d0 / eta) )
+                      * erfc ( SQRT(tpiba2 * gcutm / 4.d0 / eta) )
     IF ( upperbound <= 1.0d-7 ) EXIT
   ENDDO
   !
@@ -117,7 +116,7 @@ SUBROUTINE ewald_dipole( tens, dipole )
           r = r * alat
           DO nr = 1, nrm
              rr = SQRT( r2(nr) ) * alat
-             temp= dipole(ityp(na))  * ( 3.d0 / rr**3 * qe_erfc( SQRT(eta) * rr) &
+             temp= dipole(ityp(na))  * ( 3.d0 / rr**3 * erfc( SQRT(eta) * rr) &
                            + (6.d0 * SQRT(eta/pi) * 1.d0 / rr*2 + 4.d0 * SQRT(eta**3/pi)) &
                                 * EXP(-eta* rr**2))
              DO alpha=1,3

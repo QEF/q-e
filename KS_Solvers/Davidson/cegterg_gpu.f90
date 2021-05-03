@@ -8,6 +8,13 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
+#if ! defined(__CUDA)
+! workaround for some old compilers that don't like CUDA fortran code
+SUBROUTINE cegterg_gpu( )
+end SUBROUTINE cegterg_gpu
+SUBROUTINE pcegterg_gpu( )
+end SUBROUTINE pcegterg_gpu
+#else
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
                     npw, npwx, nvec, nvecx, npol, evc_d, ethr, &
@@ -1789,3 +1796,4 @@ CONTAINS
   END SUBROUTINE set_h_from_e
   !
 END SUBROUTINE pcegterg_gpu
+#endif

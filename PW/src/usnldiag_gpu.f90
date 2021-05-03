@@ -15,19 +15,15 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   !
   !    Routine splitted for improving performance
   !
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE uspp,  ONLY: indv_ijkb0
-  USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh
-  USE spin_orb, ONLY: lspinorb
+  USE kinds,            ONLY: DP
+  USE ions_base,        ONLY: nat, ityp, ntyp => nsp
+  USE wvfct,            ONLY: npwx
+  USE uspp,             ONLY: ofsbeta, deeq_d, vkb_d, qq_at_d, qq_so_d, &
+                              deeq_nc_d, using_vkb_d
+  USE uspp_param,       ONLY: upf, nh
+  USE spin_orb,         ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
-  !
-  USE device_memcpy_m,    ONLY : dev_memset
-  !
-  USE uspp_gpum, ONLY : using_vkb_d, using_indv_ijkb0, using_deeq_d, using_deeq_nc_d, &
-                        using_qq_at_d, using_qq_so_d
+  USE device_memcpy_m,  ONLY: dev_memset
   !
   IMPLICIT NONE
   !
@@ -44,11 +40,6 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   INTEGER :: ig, ipol
   !
   CALL using_vkb_d(0)
-  CALL using_indv_ijkb0(0)
-  CALL using_deeq_d(0)
-  IF (lspinorb .or. noncolin) CALL using_deeq_nc_d(0)
-  IF (.not. lspinorb)         CALL using_qq_at_d(0)
-  IF (lspinorb)               CALL using_qq_so_d(0)
   !
   ! initialise s_diag
   !
@@ -66,7 +57,7 @@ CONTAINS
   
   SUBROUTINE usnldiag_collinear()
      USE lsda_mod, ONLY: current_spin
-     USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d
+     USE uspp,     ONLY: deeq_d, vkb_d, qq_at_d
      
      IMPLICIT NONE
      !
@@ -82,9 +73,9 @@ CONTAINS
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
@@ -110,9 +101,9 @@ CONTAINS
         ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
@@ -136,8 +127,8 @@ CONTAINS
   END SUBROUTINE usnldiag_collinear
   !
   SUBROUTINE usnldiag_noncollinear()
-     USE lsda_mod, ONLY: current_spin
-     USE uspp_gpum,  ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
+     USE lsda_mod,  ONLY: current_spin
+     USE uspp,      ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
      
      IMPLICIT NONE
      !
@@ -153,9 +144,9 @@ CONTAINS
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw   ! change this to 2*npw ?
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
@@ -187,9 +178,9 @@ CONTAINS
         ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
@@ -220,7 +211,7 @@ CONTAINS
   !
   SUBROUTINE usnldiag_spinorb()
      USE lsda_mod, ONLY: current_spin
-     USE uspp_gpum,  ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
+     USE uspp,     ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
 
      IMPLICIT NONE
      !
@@ -236,9 +227,9 @@ CONTAINS
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw   ! change this to 2*npw ?
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
@@ -272,9 +263,9 @@ CONTAINS
         ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
-                   ijkb_start = indv_ijkb0(na)
+                   ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!$cuf kernel do(1) <<<*,*>>>
+                   !$cuf kernel do(1) <<<*,*>>>
                    DO ig = 1, npw 
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0

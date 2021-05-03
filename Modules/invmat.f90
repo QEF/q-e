@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE matrix_inversion
-
+   !! Contains LAPACK based routines for matrix inversion.
+   !
    IMPLICIT NONE
    PRIVATE
    PUBLIC :: invmat
@@ -19,11 +20,12 @@ MODULE matrix_inversion
 
   SUBROUTINE invmat_r (n, a, a_inv, da)
   !-----------------------------------------------------------------------
-  ! computes the inverse of a n*n real matrix "a" using LAPACK routines 
-  ! if "a_inv" is not present, "a" contains the inverse on output
-  ! if "a_inv" is present, it contains the inverse on output, "a" is unchanged
-  ! if "da" is specified and if the matrix is dimensioned 3x3, 
-  ! it also returns the determinant in "da"
+  !! Computes the inverse of a n*n real matrix "a" using LAPACK routines.
+  !
+  !! * if "a_inv" is not present, "a" contains the inverse on output;
+  !! * if "a_inv" is present, it contains the inverse on output, "a" is unchanged;
+  !! * if "da" is specified and if the matrix is dimensioned 3x3;
+  !! * it also returns the determinant in "da".
   !
 #if defined(_OPENMP)
   USE omp_lib
@@ -108,7 +110,8 @@ MODULE matrix_inversion
 
   SUBROUTINE invmat_c (n, a, a_inv, da)
   !-----------------------------------------------------------------------
-  ! as invmat_r, for a complex matrix
+  !! Computes the inverse of a n*n complex matrix "a" using LAPACK routines.
+  !! See \(\texttt{invmat_r}\) for more infos.
   !
 #if defined(_OPENMP)
   USE omp_lib

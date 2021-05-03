@@ -223,7 +223,7 @@ openfil_bse.o : ../../Modules/ions_base.o
 openfil_bse.o : ../../Modules/noncol.o
 openfil_bse.o : ../../PW/src/atomic_wfc_mod.o
 openfil_bse.o : ../../PW/src/pwcom.o
-openfil_bse.o : ../../upflib/uspp.o
+openfil_bse.o : ../../upflib/upf_ions.o
 plot_excwfn.o : ../../GWW/pw4gww/fft_custom.o
 plot_excwfn.o : ../../Modules/cell_base.o
 plot_excwfn.o : ../../Modules/io_files.o

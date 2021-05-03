@@ -71,7 +71,6 @@
 (autoload 'pwtk-mode' "pwtk-mode.elc"
   "Major mode for editing PWTK scripts" t)
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; load specific modes: each knows only its own namelists, cards, etc.

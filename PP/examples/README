@@ -90,7 +90,7 @@ W90_open_grid_example:
 
 exx_scf_bands_example:
    This example shows how to use pw.x to calculate the band structure of Silicon
-   using hybrid HSE functional, inclufing zero-weight dummy k-points. in the scf 
+   using hybrid HSE functional, including zero-weight dummy k-points. in the scf 
    calculation.
 
 

@@ -11,6 +11,8 @@
 #define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE becmod_gpum
+   !! Routines for the device-host cuda memory management of \(\texttt{becmod}\)-
+   !! related quantities.
 !=----------------------------------------------------------------------------=!
 #if defined(__CUDA)
      USE cudafor
@@ -64,7 +66,7 @@
      !
      SUBROUTINE using_becp_r(intento, debug_info)
          !
-         ! intento is used to specify what the variable will  be used for :
+         ! intento is used to specify what the variable will be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten

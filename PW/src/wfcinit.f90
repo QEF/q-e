@@ -25,7 +25,7 @@ SUBROUTINE wfcinit()
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb
+  USE uspp,                 ONLY : nkb, vkb, using_vkb
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, current_k
   USE wannier_new,          ONLY : use_wannier
@@ -35,9 +35,7 @@ SUBROUTINE wfcinit()
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
-  !
   USE wavefunctions_gpum,   ONLY : using_evc
-  USE uspp_gpum,            ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -52,7 +50,7 @@ SUBROUTINE wfcinit()
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
-  IF ( lda_plus_u ) CALL orthoUwfc()
+  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer

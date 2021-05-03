@@ -23,7 +23,7 @@
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
-      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, indv_ijkb0
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, ofsbeta
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
@@ -295,8 +295,8 @@
                   DO iv = 1, nh(is)
                      DO jv = 1, nh(is)
                         dv = dvan(iv,jv,is)
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         IF( i + idx - 1 /= n ) THEN
                            dd = deeq(iv,jv,ia,iss1) + dv
                            af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
@@ -348,7 +348,7 @@
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
-      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, indv_ijkb0
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, ofsbeta
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
@@ -508,7 +508,7 @@
          ALLOCATE( af_d( nhsa, many_fft ), aa_d( nhsa, many_fft ) )
          !
 !$omp parallel do default(none), &
-!$omp shared(many_fft,i,n,tens,f,nat,ityp,nh,dvan,indv_ijkb0,deeq,af,aa,bec,ispin), &
+!$omp shared(many_fft,i,n,tens,f,nat,ityp,nh,dvan,ofsbeta,deeq,af,aa,bec,ispin), &
 !$omp private(idx,igrp,fi,fip,ia,is,iv,jv,inl,jnl,dv,dd,iss1,iss2)
          DO idx = 1, 2*many_fft , 2
 
@@ -537,8 +537,8 @@
                   DO iv = 1, nh(is)
                      DO jv = 1, nh(is)
                         dv = dvan(iv,jv,is)
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         IF( i + idx - 1 /= n ) THEN
                            dd = deeq(iv,jv,ia,iss1) + dv
                            af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)

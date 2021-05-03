@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
 <!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     
-<input_description distribution="Quantum Espresso" package="turboEELS" program="turbo_eels.x" >
+<input_description distribution="Quantum ESPRESSO" package="turboEELS" program="turbo_eels.x" >
    <toc>
    </toc>
    <intro>
@@ -17,18 +17,18 @@ Comment lines in namelists can be introduced by a &quot;!&quot;, exactly as in
 fortran code. Comments lines in ``cards&apos;&apos; can be introduced by
 either a &quot;!&quot; or a &quot;#&quot; character in the first position of a line.
 
-Structure of the input data:
+<b>Structure of the input data:</b>
 ===============================================================================
 
-&amp;lr_input
+&amp;LR_INPUT
   ...
 /
 
-&amp;lr_control
+&amp;LR_CONTROL
   ...
 /
    </intro>
-   <namelist name="lr_input" >
+   <namelist name="LR_INPUT" >
       <label> This namelist is always needed !
       </label>
       <var name="prefix" type="CHARACTER" >
@@ -86,7 +86,7 @@ the &apos;default&apos; mode.
          </info>
       </var>
    </namelist>
-   <namelist name="lr_control" >
+   <namelist name="LR_CONTROL" >
       <var name="approximation" type="CHARACTER" >
          <default> &apos;TDDFT&apos;
          </default>
@@ -219,6 +219,16 @@ This variable is used only when <ref>calculator</ref> = &apos;sternheimer&apos;.
 <ref>increment</ref> is an incremental step used to define the mesh
 of frequencies between <ref>start</ref> and <ref>end</ref>.
 <ref>increment</ref> is specified in units controlled by <ref>units</ref>.
+         </info>
+      </var>
+      <var name="ethr_nscf" type="REAL" >
+         <default> 1.D-11
+         </default>
+         <info>
+Threshold for the convergence of eigenvalues during
+the iterative diagonalization of the Hamiltonian in
+the non-self-consistent-field (NSCF) calculation at
+k and k+q points. Note, this quantity is NOT extensive.
          </info>
       </var>
    </namelist>

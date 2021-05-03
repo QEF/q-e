@@ -357,6 +357,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
   USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
+  USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
 
   IMPLICIT NONE
   !
@@ -365,9 +366,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   ! LOCAL variables
   INTEGER :: npw, npwq, nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
              ipol, ios, ierr, nrec_ahc
-  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
-                               tg_psic(:,:), aux2(:,:)
-  INTEGER :: v_siz, incr
+  COMPLEX(DP) , ALLOCATABLE :: elphmat (:,:,:), aux2(:,:)
   LOGICAL :: exst
   COMPLEX(DP), EXTERNAL :: zdotc
   integer :: ibnd_fst, ibnd_lst
@@ -387,20 +386,12 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !
   IF (.NOT. comp_elph(irr) .OR. done_elph(irr)) RETURN
 
-  ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
-  ALLOCATE( el_ph_mat_rec (nbnd,nbnd,nksq,npe) )
-  el_ph_mat_rec=(0.0_DP,0.0_DP)
+  ALLOCATE (el_ph_mat_rec (nbnd,nbnd,nksq,npe) )
   ALLOCATE (aux2(npwx*npol, nbnd))
-  incr=1
-  IF ( dffts%has_task_groups ) THEN
-     !
-     v_siz =  dffts%nnr_tg
-     ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
-     ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = fftx_ntgrp(dffts)
-     !
-  ENDIF
+  el_ph_mat_rec=(0.0_DP,0.0_DP)
+  aux2(:, :) = (0.0_DP, 0.0_DP)
+  CALL apply_dpot_allocate()
   !
   ! DFPT+U case
   !
@@ -474,31 +465,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-        IF ( dffts%has_task_groups ) THEN
-           IF (noncolin) THEN
-              CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
-              IF (domag) THEN
-                 DO ipol=2,4
-                    CALL tg_cgather( dffts,  dvscfins(:,ipol,ipert), tg_dv(:,ipol))
-                 ENDDO
-              ENDIF
-           ELSE
-              CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), tg_dv(:,1))
-           ENDIF
-        ENDIF
-        aux2=(0.0_DP,0.0_DP)
-        DO ibnd = ibnd_fst, ibnd_lst, incr
-           IF ( dffts%has_task_groups ) THEN
-              CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd )
-              CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
-              CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd)
-           ELSE
-              CALL cft_wave (ik, evc(1, ibnd), aux1, +1)
-              CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
-              CALL cft_wave (ik, aux2(1, ibnd), aux1, -1)
-           ENDIF
-        ENDDO
-        dvpsi=dvpsi+aux2
+        CALL apply_dpot_bands(ik, ibnd_lst - ibnd_fst + 1, dvscfins(:, :, ipert), &
+          evc(:, ibnd_fst), aux2(:, ibnd_fst))
+        dvpsi = dvpsi + aux2
         !
         CALL adddvscf (ipert, ik)
         !
@@ -564,13 +533,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   end if
   DEALLOCATE(el_ph_mat_rec)
   !
+  CALL apply_dpot_deallocate()
   DEALLOCATE (elphmat)
-  DEALLOCATE (aux1)
   DEALLOCATE (aux2)
-  IF ( dffts%has_task_groups ) THEN
-     DEALLOCATE( tg_dv )
-     DEALLOCATE( tg_psic )
-  ENDIF
   !
   IF (lda_plus_u .AND. .NOT.trans) THEN
      DEALLOCATE (dnsscf_all_modes)

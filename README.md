@@ -7,8 +7,8 @@ Optimization)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 ## USAGE
-
-Quick installation instructions for the impatient, using "make":
+Quick installation instructions for the impatient. Go to the directory 
+where this file is. Using "make"
 (`[]` means "optional"):
 ```
 ./configure [options]
@@ -23,10 +23,12 @@ Using "CMake":
 ```
 mkdir ./build
 cd ./build
-cmake [-DCMAKE_INSTALL_PREFIX=/path/to/install] ..
+cmake -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc [-DCMAKE_INSTALL_PREFIX=/path/to/install] ..
 make [-jN]
 [make install]
 ```
+Although CMake has the capability to guess compilers, it is strongly recommended to specify
+the intended compilers or MPI compiler wrappers as `CMAKE_Fortran_COMPILER` and `CMAKE_C_COMPILER`.
 "make" builds all targets. Link to binaries are found in build/bin.
 If `make install` is invoked, directory `CMAKE_INSTALL_PREFIX`
 is prepended onto all install directories.

@@ -24,7 +24,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : pi, tpi
   USE ions_base,                ONLY : nsp, na, nax, nat, ityp
-  USE uspp,                     ONLY : indv_ijkb0, nkbus
+  USE uspp,                     ONLY : ofsbeta, nkbus
   USE uspp_param,               ONLY : upf
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
@@ -319,7 +319,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         is = ityp(ia)
         IF( upf(is)%tvanp ) THEN
            DO iv = 1, nh(is)
-              inl = indv_ijkb0(ia) + iv
+              inl = ofsbeta(ia) + iv
               jv = iv 
               ijv=(jv-1)*jv/2 + iv
               fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
@@ -361,7 +361,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  END DO
               END IF
               DO jv = iv+1, nh(is)
-                 jnl = indv_ijkb0(ia) + jv
+                 jnl = ofsbeta(ia) + jv
                  ijv = (jv-1)*jv/2 + iv
                  fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
                  CALL fft_oned2box( qv, fg1 )

@@ -12,7 +12,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !! and \texttt{s_psi}.
   !
   USE kinds,              ONLY: DP
-  USE uspp,               ONLY: vkb, nkb
+  USE uspp,               ONLY: vkb, nkb, using_vkb
   USE becmod,             ONLY: bec_type, becp, calbec
   USE control_flags,      ONLY: gamma_only 
   USE noncollin_module,   ONLY: noncolin, npol 
@@ -21,8 +21,6 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
                                 s_psir_gamma, invfft_orbital_k,       &
                                 fwfft_orbital_k, calbec_rs_k, s_psir_k
   USE wvfct,              ONLY: nbnd
-  !
-  USE uspp_gpum,          ONLY: using_vkb
   USE becmod_gpum,        ONLY: using_becp_r
   USE becmod_subs_gpum,   ONLY: using_becp_auto
   !

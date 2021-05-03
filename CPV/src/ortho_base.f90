@@ -1166,7 +1166,7 @@ CONTAINS
       USE io_global,      ONLY: stdout
       USE mp_bands,       ONLY: intra_bgrp_comm, inter_bgrp_comm
       USE uspp_param,     ONLY: nh, upf
-      USE uspp,           ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp,           ONLY: nkb, nkbus, qq_nt, ofsbeta
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
@@ -1207,11 +1207,11 @@ CONTAINS
 
          qtemp (:,:) = 0.d0
 !$omp parallel do default(none) &
-!$omp shared(nat,ityp,upf,nh,indv_ijkb0,qq_nt,qtemp,bec_bgrp,nbsp_bgrp) &
+!$omp shared(nat,ityp,upf,nh,ofsbeta,qq_nt,qtemp,bec_bgrp,nbsp_bgrp) &
 !$omp private(ia,is,iv,inl,jv,jnl,qqf,i,indv)
          DO ia = 1, nat
             is = ityp(ia)
-            indv = indv_ijkb0(ia)
+            indv = ofsbeta(ia)
             IF( upf(is)%tvanp ) THEN
                DO iv=1,nh(is)
                   inl = indv + iv 

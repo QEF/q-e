@@ -18,9 +18,9 @@ SUBROUTINE scale_h
   USE cell_base,      ONLY : bg, omega, set_h_ainv, tpiba
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
-  USE gvect,          ONLY : g, gg, ngm
+  USE gvect,          ONLY : g, gg, ngm, g_d, gg_d
   USE klist,          ONLY : xk, wk, nkstot
-  USE us,             ONLY : nqxq, qrad, tab, tab_at, dq
+  USE uspp_data,      ONLY : nqxq, dq, scale_uspp_data
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init
@@ -28,10 +28,6 @@ SUBROUTINE scale_h
   USE xc_lib,         ONLY : xclib_dft_is
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
-  !
-  USE gvect_gpum,     ONLY : using_g, using_g_d, using_gg, using_gg_d
-  USE us_gpum,        ONLY : using_tab, using_tab_at, using_qrad
-  !
   !
   IMPLICIT NONE
   !
@@ -73,12 +69,10 @@ SUBROUTINE scale_h
      gg (ig) = g(1,ig) * g(1,ig) + g(2,ig) * g(2,ig) + g(3,ig) * g(3,ig)
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
-
-  CALL using_g(1); CALL using_gg(1)       ! g and gg are used almost only after
 #if defined(__CUDA)
-  ! the preprocessor directive is needed to avoid touching duplicated data in CPU only sompilations
-  CALL using_g_d(0); CALL using_gg_d(0) ! This is a trick to avoid checking for sync everywhere.
-  !
+  ! update GPU copies of variables as well
+  g_d  = g
+  gg_d = gg
 #endif
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
@@ -89,11 +83,8 @@ SUBROUTINE scale_h
   !
   ! scale the non-local pseudopotential tables
   !
-  CALL using_tab(1); CALL using_tab_at(1); CALL using_qrad(1)
-  !
-  tab(:,:,:) = tab(:,:,:) * SQRT(omega_old/omega)
-  qrad(:,:,:,:) = qrad(:,:,:,:) * omega_old/omega
-  tab_at(:,:,:) = tab_at(:,:,:) * SQRT(omega_old/omega)
+  call scale_uspp_data( omega_old/omega )
+
   !
   ! recalculate the local part of the pseudopotential
   !

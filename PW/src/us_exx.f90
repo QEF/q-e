@@ -176,13 +176,11 @@ MODULE us_exx
     !
     USE constants,           ONLY : tpi
     USE ions_base,           ONLY : nat, ntyp => nsp, ityp, tau
-    USE uspp,                ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
+    USE uspp,                ONLY : nkb, vkb,  okvan, ofsbeta, ijtoh
     USE uspp_param,          ONLY : upf, nh, nhm, lmaxq
     USE gvect,               ONLY : g, eigts1, eigts2, eigts3, mill, gstart
     USE control_flags,       ONLY : gamma_only
     USE fft_types,           ONLY : fft_type_descriptor
-    !
-    USE uspp_gpum,           ONLY : using_indv_ijkb0
     IMPLICIT NONE
     !
     TYPE(fft_type_descriptor), INTENT(IN) :: dfftt 
@@ -216,8 +214,6 @@ MODULE us_exx
     !
     IF (.NOT.okvan) RETURN
     CALL start_clock( 'addusxx' )
-    !
-    CALL using_indv_ijkb0(0)
     !
     ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
@@ -266,7 +262,7 @@ MODULE us_exx
                 !
                 ! ijkb0 points to the manifold of beta functions for atom na
                 !
-                ijkb0 = indv_ijkb0(na) 
+                ijkb0 = ofsbeta(na) 
                 !
                 aux2(:) = (0.0_dp, 0.0_dp)
                 DO ih = 1, nh(nt)
@@ -363,14 +359,12 @@ MODULE us_exx
     ! 
     USE constants,      ONLY : tpi
     USE ions_base,      ONLY : nat, ntyp => nsp, ityp, tau
-    USE uspp,           ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
+    USE uspp,           ONLY : nkb, vkb,  okvan, ofsbeta, ijtoh
     USE uspp_param,     ONLY : upf, nh, nhm, lmaxq
     USE gvect,          ONLY : gg, g, gstart, eigts1, eigts2, eigts3, mill
     USE cell_base,      ONLY : omega
     USE control_flags,  ONLY : gamma_only
     USE fft_types,      ONLY : fft_type_descriptor
-    !
-    USE uspp_gpum,           ONLY : using_indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -399,8 +393,6 @@ MODULE us_exx
     INTEGER :: iblock, numblock, realblocksize, offset
     !
     IF (.NOT.okvan) RETURN
-    !
-    CALL using_indv_ijkb0(0)
     !
     ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
@@ -477,7 +469,7 @@ MODULE us_exx
              !
              ! ijkb0 points to the manifold of beta functions for atom na
              !
-             ijkb0 = indv_ijkb0(na)
+             ijkb0 = ofsbeta(na)
              !
              aux2(1:realblocksize) = CONJG( auxvc(offset+1:offset+realblocksize) ) * eigqts(na) * &
                         eigts1(mill(1,offset+1:offset+realblocksize), na) * &
@@ -531,12 +523,11 @@ MODULE us_exx
     !! \[ H = H+\sum_I |\beta_I\rangle \alpha_{Ii} \]
     ! 
     USE ions_base,           ONLY : nat, ntyp => nsp, ityp
-    USE uspp,                ONLY : nkb, okvan,indv_ijkb0
+    USE uspp,                ONLY : nkb, okvan,ofsbeta
     USE uspp_param,          ONLY : upf, nh
     USE wvfct,               ONLY : nbnd, npwx
     USE control_flags,       ONLY : gamma_only
     !
-    USE uspp_gpum,           ONLY : using_indv_ijkb0
     IMPLICIT NONE
     !
     ! ... In input I get a slice of <beta|left> and <beta|right> only for this
@@ -566,8 +557,6 @@ MODULE us_exx
     !
     IF (.NOT. okvan) RETURN
     !
-    CALL using_indv_ijkb0(0)
-    !
     ! These are beta functions for k-point "xkp" with indices "igkp"
     ! Possibly already available in the calling routines vexx, since
     ! xkp and igkp are the "current" k-point and indices in hpsi
@@ -581,7 +570,7 @@ MODULE us_exx
           DO na = 1, nat
             IF (ityp(na)==np) THEN
               DO ih = 1, nh(np)
-                ikb = indv_ijkb0(na) + ih
+                ikb = ofsbeta(na) + ih
                 !
                 IF (ABS(deexx(ikb)) < eps_occ) CYCLE
                 !
@@ -626,11 +615,9 @@ MODULE us_exx
     !
     USE ions_base,        ONLY : nat, ityp
     USE cell_base,        ONLY : omega
-    USE uspp,             ONLY : okvan, nkb, ijtoh, indv_ijkb0
+    USE uspp,             ONLY : okvan, nkb, ijtoh, ofsbeta
     USE uspp_param,       ONLY : upf, nh
     USE realus,           ONLY : tabxx
-    !
-    USE uspp_gpum,           ONLY : using_indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -650,8 +637,6 @@ MODULE us_exx
     !
     CALL start_clock( 'addusxx' )
     !
-    CALL using_indv_ijkb0(0)
-    !
     DO ia = 1, nat
       !
       mbia = tabxx(ia)%maxbox
@@ -662,8 +647,8 @@ MODULE us_exx
       !
       DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
-          ikb = indv_ijkb0(ia) + ih
-          jkb = indv_ijkb0(ia) + jh
+          ikb = ofsbeta(ia) + ih
+          jkb = ofsbeta(ia) + jh
           DO ir = 1, mbia
             irb = tabxx(ia)%box(ir)
             rho(irb) = rho(irb) + tabxx(ia)%qr(ir,ijtoh(ih,jh,nt)) &
@@ -690,12 +675,10 @@ MODULE us_exx
     USE cell_base,          ONLY : omega
     USE ions_base,          ONLY : nat, ityp
     USE uspp_param,         ONLY : upf, nh, nhm
-    USE uspp,               ONLY : nkb, ijtoh, indv_ijkb0
+    USE uspp,               ONLY : nkb, ijtoh, ofsbeta
     USE noncollin_module,   ONLY : nspin_mag
     USE fft_types,          ONLY : fft_type_descriptor
     USE realus,             ONLY : tabxx
-    !
-    USE uspp_gpum,           ONLY : using_indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -720,8 +703,6 @@ MODULE us_exx
     !
     CALL start_clock( 'newdxx' )
     !
-    CALL using_indv_ijkb0(0)
-    !
     domega = omega/(dfftt%nr1 *dfftt%nr2 *dfftt%nr3)
     !
     DO ia = 1, nat
@@ -734,7 +715,7 @@ MODULE us_exx
       !
       DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
-          ijkb0 = indv_ijkb0(ia)
+          ijkb0 = ofsbeta(ia)
           ikb = ijkb0 + ih
           jkb = ijkb0 + jh
           !
@@ -959,13 +940,11 @@ MODULE us_exx
     USE io_global,    ONLY : stdout
     USE ions_base,    ONLY : tau, nat, ityp
     USE symm_base,    ONLY : irt, d1, d2, d3, s, nsym
-    USE uspp,         ONLY : nkb, indv_ijkb0, nhtolm, nhtol
+    USE uspp,         ONLY : nkb, ofsbeta, nhtolm, nhtol
     USE uspp_param,   ONLY : nh, upf
     USE wvfct,        ONLY : nbnd
     USE becmod,       ONLY : allocate_bec_type, is_allocated_bec_type
     USE cell_base,    ONLY : at, bg
-    !
-    USE uspp_gpum,    ONLY : using_indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -1008,8 +987,6 @@ MODULE us_exx
       ENDIF
       RETURN
     ENDIF
-    !
-    CALL using_indv_ijkb0(0)
     !
     ! d_matrix are now done in setup.f90
     !CALL d_matrix(d1,d2,d3)
@@ -1064,12 +1041,12 @@ MODULE us_exx
           lm_i  = nhtolm(ih,nt)
           l_i   = nhtol(ih,nt)
           m_i   = lm_i - l_i**2
-          ikb = indv_ijkb0(ma) + ih
+          ikb = ofsbeta(ma) + ih
 !           print*, "doing", ikb, ma, l_i, lm_i
           !
           DO m_o = 1, 2*l_i +1
               oh = ih - m_i + m_o
-              okb = indv_ijkb0(ia) + oh
+              okb = ofsbeta(ia) + oh
 !               WRITE(*,'(a,5i4,2f10.3)') "okb", okb, oh, ih, m_i, m_o, &
 !                                               D(l_i)%d(m_o,m_i, isym), &
 !                                               D(l_i)%d(m_i,m_o, isym)

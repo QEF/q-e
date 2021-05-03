@@ -47,7 +47,7 @@
 !     (ldz>nz is used on some architectures to reduce memory conflicts)
 !     input  :  c(ldz*nsl)   (complex)
 !     output : cout(ldz*nsl) (complex - NOTA BENE: transform is not in-place!)
-!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
+!     isign > 0 : backward (f(G)=>f(R)), isign < 0 : forward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nz, nsl, ldz) are stored and re-used if available
 
@@ -166,7 +166,7 @@
 !     2d array: r2d(ldx, ldy) (x first dimension, y second dimension)
 !     (ldx>nx, ldy>ny used on some architectures to reduce memory conflicts)
 !     pl2ix(nx) (optional) is 1 for columns along y to be transformed
-!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
+!     isign > 0 : backward (f(G)=>f(R)), isign < 0 : forward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nx,ny,nzl,ldx) are stored and re-used if available
 

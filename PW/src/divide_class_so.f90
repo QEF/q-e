@@ -63,7 +63,7 @@ COMPLEX(DP) :: d_spin(2,2,48), d_spine(2,2,96), c_spin(2,2)
 INTEGER :: done(96), irot, jrot, krot, iclass, i, other, other1
 INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts, nused, iaxis(4), &
            iax, ibx, icx, aclass, bclass, cclass,  &
-           imax, imbx, imcx, amclass, bmclass, cmclass, ind2(3)  
+           imax, imbx, imcx, amclass, bmclass, cmclass, ind2(3), sumi  
 REAL(DP), PARAMETER :: eps = 1.d-7
 REAL(DP) :: angle_rot, angle_rot_s, ars, ax_save(3,3:5), angle_vectors
 LOGICAL :: compare_mat_so, is_axis, isok, isok1, is_parallel
@@ -248,7 +248,12 @@ ELSEIF (code_group==9) THEN
       IF (ts==1) THEN
          which_irr(iclass)=2
       ELSE IF (ts==4) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),5)
+        sumi = has_e(1,iclass)+has_e(2,iclass)+has_e(3,iclass)
+        IF (sumi > 0) THEN 
+          which_irr(iclass) = 5
+        ELSE 
+          which_irr(iclass) = 6 
+        END IF 
       ELSEIF (ts==3) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),3)
       ELSE
@@ -376,7 +381,12 @@ ELSEIF (code_group==13) THEN
       ELSEIF (ts==3) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),3)
       ELSEIF (ts==5) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),5)
+        sumi = has_e(1,iclass) + has_e(2, iclass) + has_e(3, iclass)
+        IF (sumi > 0 ) THEN 
+          which_irr(iclass)  = 5 
+        ELSE 
+          which_irr(iclass) = 6 
+        END IF 
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
       ENDIF
@@ -796,13 +806,23 @@ ELSEIF (code_group==25) THEN
       ELSEIF (ts==3) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),3)
       ELSE IF (ts==4) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),5)
+        sumi = has_e(1, iclass) + has_e(2, iclass) + has_e(3, iclass)
+        IF (sumi > 0) THEN 
+          which_irr(iclass) = 5
+        ELSE 
+          which_irr(iclass) = 6
+        END IF 
       ELSE IF (ts==2) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),7)
       ELSE IF (ts==6) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),9)
       ELSE IF (ts==5) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),11)
+        sumi = has_e(1, iclass) + has_e(2, iclass) + has_e(3, iclass)
+        IF (sumi > 0 ) THEN 
+          which_irr(iclass) = 11 
+        ELSE 
+          which_irr(iclass) = 12 
+        END IF 
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
       END IF
@@ -3393,7 +3413,7 @@ USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
                                  elem_name
 USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
                                  which_irr_so, char_mat_so, name_rap_so, &
-                                 name_class_so, d_spin, name_class_so1,  &
+                                 name_class_so,d_spin, name_class_so1,  &
                                  elem_name_so
 USE rap_point_group_is,   ONLY : code_group_is, gname_is
 USE spin_orb,             ONLY : domag

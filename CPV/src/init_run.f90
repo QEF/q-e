@@ -16,7 +16,7 @@ SUBROUTINE init_run()
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       force_pairing, use_para_diag
+                                       mbd_vdw, force_pairing, use_para_diag
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -26,8 +26,7 @@ SUBROUTINE init_run()
   USE gvect,                    ONLY : gstart, gg
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
-  USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
-  USE uspp_gpum,                ONLY : vkb_d
+  USE uspp,                     ONLY : nkb, vkb, vkb_d, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
@@ -162,6 +161,12 @@ SUBROUTINE init_run()
   !=======================================================================
   !
   IF (ts_vdw) CALL tsvdw_initialize()
+  ! 
+  !=======================================================================
+  !     MBD is not implemented yet in CP, only in PW
+  !=======================================================================
+  !
+  IF (mbd_vdw) CALL errore('init_run','mbd_vdw not yet supported for CP',1)
   !
   !=======================================================================
   !     Initialization of the exact exchange code (exx_module)

@@ -79,6 +79,7 @@ SUBROUTINE print_clock_pw()
    !
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
+   CALL print_clock( 'init_us_2_gpu' )
    IF ( isolve == 0 ) THEN
       CALL print_clock( 'regterg' )    ; CALL print_clock( 'cegterg' )
    ELSE  IF (isolve == 1) THEN
@@ -245,7 +246,6 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'new_nsg' )
          CALL print_clock( 'alloc_neigh' )
       ENDIF
-      CALL print_clock( 'new_ns' )
       CALL print_clock( 'vhpsi' )
       CALL print_clock( 'force_hub' )
       CALL print_clock( 'stres_hub' )

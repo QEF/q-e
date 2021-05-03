@@ -12,7 +12,7 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   !! and \texttt{s_psi}.
   !
   USE kinds,              ONLY: DP
-  USE uspp,               ONLY: nkb
+  USE uspp,               ONLY: nkb, vkb_d, using_vkb_d
   USE becmod,             ONLY: bec_type, becp, calbec
   USE control_flags,      ONLY: gamma_only 
   USE noncollin_module,   ONLY: noncolin, npol 
@@ -21,11 +21,8 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
                                 s_psir_gamma, invfft_orbital_k,       &
                                 fwfft_orbital_k, calbec_rs_k, s_psir_k
   USE wvfct,              ONLY: nbnd
-  !
-  USE uspp_gpum,          ONLY: vkb_d, using_vkb_d
   USE becmod_gpum,        ONLY: becp_d, using_becp_r
   USE becmod_subs_gpum,   ONLY: using_becp_d_auto, calbec_gpu
-  !
   IMPLICIT NONE
   !
   INTEGER :: npwx

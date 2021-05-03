@@ -18,7 +18,7 @@ MODULE read_pseudo_mod
   !
   USE atom,         ONLY: msh, rgrid
   USE ions_base,    ONLY: zv
-  USE uspp_param,   ONLY: upf, nvb
+  USE uspp_param,   ONLY: upf
   USE uspp,         ONLY: okvan, nlcc_any
   !! global variables modified on output 
   ! 
@@ -36,8 +36,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   !! Reads PP files and puts the result into the "upf" structure of module uspp_param
   !! Sets  DFT to input_dft if present, to the value read in PP files otherwise
-  !! Sets  number of valence electrons Zv, control variables okvan and nlcc_any,
-  !! compatibility variable nvb
+  !! Sets  number of valence electrons Zv, control variables okvan and nlcc_any
   !! Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
   !
   USE kinds,        ONLY: DP
@@ -232,7 +231,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   END IF
   ALLOCATE( rgrid( ntyp ), msh( ntyp ) )
   !
-  nvb = 0
   DO nt = 1, ntyp
      !
      CALL nullify_radial_grid( rgrid( nt ) )
@@ -258,10 +256,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential
      !
      zv(nt) = upf(nt)%zp
-     !
-     ! ... count US species (obsolete?)
-     !
-     IF (upf(nt)%tvanp) nvb=nvb+1
      !
      ! check for zero atomic wfc, 
      ! check that (occupied) atomic wfc are properly normalized
@@ -302,7 +296,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   ! more initializations
   !
-  okvan = ( nvb > 0 )
+  okvan = ANY ( upf(1:ntyp)%tvanp )
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
   !
   ! return cutoff read from PP file, if required

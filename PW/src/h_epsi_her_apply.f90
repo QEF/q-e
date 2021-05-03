@@ -23,7 +23,7 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   USE lsda_mod,             ONLY : current_spin, nspin
   USE scf,                  ONLY : vrs  
   USE gvect
-  USE uspp,                 ONLY : okvan, nkb, vkb, qq_so, qq_at
+  USE uspp,                 ONLY : okvan, nkb, vkb, qq_so, qq_at, using_vkb
   USE uspp_param,           ONLY : nh, nhm, nbetam
   USE bp
   USE klist
@@ -36,8 +36,6 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
                                    deallocate_bec_type
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  !
-  USE uspp_gpum,            ONLY : using_qq_at, using_qq_so, using_vkb
   !
   IMPLICIT NONE
   !
@@ -76,9 +74,6 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   eps = 0.000001d0
   IF (ABS(e_field)<eps) RETURN
   CALL start_clock( 'h_epsi_apply' )
-  !
-  CALL using_qq_at(0)
-  IF (lspinorb) CALL using_qq_so(0)
   !
   ALLOCATE( evct(npwx*npol,nbnd) )
   CALL allocate_bec_type( nkb, nbnd, becp0 )

@@ -18,8 +18,7 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, ngl, gl, igtongl, &
-                                   gl_d, igtongl_d
-  USE gvect_gpum,           ONLY : g_d
+                                   g_d, gl_d, igtongl_d
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
   USE control_flags,        ONLY : gamma_only

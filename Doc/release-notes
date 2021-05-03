@@ -9,6 +9,9 @@ New in development version:
   * Many-Body Dispersion (MBD) correction: Szabolcs Goger (U. Luxembourg),
     Hsin-Yu Ko (Cornell), et al.
   * Support for GPU via CUDA Fortran brought to the main repository
+  * Calculation of DORI and of ELF for nspin=2 (Dong Yang, Qin Liu, JSG)
+  * Interface for BerkeleyGW extended to hybrid and meta-GGA functionals:
+    Fangzhou Zhao (Berkeley)
 
 Fixed in development version:
   * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
@@ -23,6 +26,8 @@ Fixed in development version:
   * Dumb and horrible bug in PAW relativistic calculations (QE 6.7 only):
     a bad tag name was searched for in PP, leading to a small but non
     negligible error. Noticed by Minkyu Park (Univ. of Ulsan, Rep. of Korea).
+    Also fixed a "wrong offset" error that could occur in DFT+U for some
+    relativistic PP files (found in a report by Ignacio Martin Alliati)
   * Solution to the long-standing problem of non-monotonic N(E) in 
     Methfessel-Paxton and Marzari-Vanderbilt smearing, occasionally resulting 
     in an incorrect choice of the Fermi energy (Flaviano José dos Santos, EPFL).
@@ -30,11 +35,24 @@ Fixed in development version:
     either they are the same or are systematically improved wrt previous ones.
   * There was a missing 2pi/a factor in the case of loto_2d = .true.. Found 
     and explained in M. Royo and M. Stengel, https://arxiv.org/abs/2012.07961.
+  * The rho => 0 limit of spin-polarized BEEF XC energy was not correct,
+    leading to funny total energy numbers and problems in structural optimization
+    (fixed by Gabriel S. Gusmão, Georgia Tech)
+  * In some cases the new xml code of v.6.7 wrote UPF files that could not be read
+    because they contained too long lines (noticed by Felix Goudreault, U. Montreal)
+  * Variable-cell hybrid DFT fixed: it was broken since v.6.5.
+  * Small random errors in some XC spin-polarized functionals in OMP execution
+  * The new fit introduced in v.6.7 of ev.x wasn't always working as expected
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
     Fermi energy works. Currently, molecular dynamics with FCP does not work.
-  * Exchange-correlation code moved to XClib/
+  * Exchange-correlation code (vdW excepted) moved to XClib/
+  * Much more pseudopotential-related code re-organized and moved to upflib/
+    Variables ofsbeta ("offset of beta functions") and indv_ijkb0 merged
+    Now only ofsbeta is used
+  * Code computing [H,x] commutator moved from LR_Modules/ to PW/src/ and
+    disentangled from linear-response variables - now is used in PP/ as well
 
 New in 6.7 version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from

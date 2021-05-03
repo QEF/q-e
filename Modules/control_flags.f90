@@ -8,9 +8,7 @@
 !=----------------------------------------------------------------------------=!
 MODULE control_flags
   !=--------------------------------------------------------------------------=!
-  !
-  ! ... this module contains all basic variables that controls the
-  ! ... execution flow
+  !! This module contains all basic variables that controls the execution flow.
   !----------------------------------------------
   !
   USE kinds

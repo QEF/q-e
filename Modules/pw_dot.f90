@@ -7,10 +7,9 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
-!-----------------------------------------------------------------------
-  !
-  !  calculate m dot products c_i = real( a^*_ij b_ji )
-  !  using half G vectors or half PWs
+  !-----------------------------------------------------------------------
+  !! Calculate m dot products \(c_i = \text{real}( a^*_{ij} b_{ji} )\)
+  !! using half G vectors or half PWs.
   !
   USE kinds,    ONLY: DP
   USE gvect,    ONLY: gstart

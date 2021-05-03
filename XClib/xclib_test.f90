@@ -31,8 +31,9 @@ PROGRAM xclib_test
                          xclib_get_ID, xclib_reset_dft, xc_gcx,           &
                          xclib_dft_is_libxc, xclib_init_libxc,            &
                          xclib_finalize_libxc
-  USE xclib_parallel_include
+  USE xclib_utils_and_para
 #if defined(__LIBXC)
+#include "xc_version.h"
   USE xc_f03_lib_m
   USE dft_par_mod, ONLY: xc_func, xc_info
 #endif
@@ -48,6 +49,11 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
   CHARACTER(LEN=120) :: lxc_kind, lxc_family
   INTEGER :: n_ext, id(6)
+#if (XC_MAJOR_VERSION>5)
+  !workaround to keep compatibility with libxc develop version
+  INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
+  INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
+#endif
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -56,7 +62,6 @@ PROGRAM xclib_test
   INTEGER :: nnodes, nlen
   !
   INTEGER, PARAMETER :: stdin  = 5
-  INTEGER, PARAMETER :: stdout = 6
   !
   !-------- Grid dim vars --------------------
   INTEGER, PARAMETER :: npoints = 90000
@@ -734,7 +739,6 @@ PROGRAM xclib_test
       !
       IF ( .NOT. LDA ) THEN
         ex1 = 0.d0  ;  ec1 = 0.d0
-        vx1 = 0.d0  ;  vc1 = 0.d0
       ENDIF
       !
       CALL xc_gcx( nnrt, ns, rho, grho, exg1, ecg1, v1x1, v2x1, v1c1, &
@@ -742,8 +746,10 @@ PROGRAM xclib_test
       !
       ex1 = ex1*rho_tz(:,1) + exg1
       ec1 = ec1*rho_tz(:,1) + ecg1
-      v1x1 = v1x1 + vx1
-      v1c1 = v1c1 + vc1
+      IF ( LDA ) THEN
+        v1x1 = v1x1 + vx1
+        v1c1 = v1c1 + vc1
+      ENDIF
       !
     ELSE
       !
@@ -803,7 +809,6 @@ PROGRAM xclib_test
         !
         IF ( .NOT. LDA ) THEN
           ex2 = 0.d0  ;  ec2 = 0.d0
-          vx2 = 0.d0  ;  vc2 = 0.d0
         ENDIF
         !
         CALL xc_gcx( nnrbt, ns, rho(1:nnrbt,:), grho(:,1:nnrbt,:), exg2, &
@@ -811,8 +816,10 @@ PROGRAM xclib_test
         !
         ex2 = ex2*rho_tz(1:nnrbt,1) + exg2
         ec2 = ec2*rho_tz(1:nnrbt,1) + ecg2
-        v1x2 = v1x2 + vx2
-        v1c2 = v1c2 + vc2
+        IF ( LDA ) THEN
+          v1x2 = v1x2 + vx2
+          v1c2 = v1c2 + vc2
+        ENDIF
         !
       ELSE
         !

@@ -46,6 +46,7 @@ default :
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
 	@echo '  tar          create a tarball of the source tree'
+	@echo '  depend       generate dependencies (make.depend files)'
 	@if test -d GUI/; then \
 		echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'; \
 		echo '  tar-qe-modes create a tarball for QE-modes (Emacs major modes for Quantum ESPRESSO)'; fi
@@ -193,7 +194,7 @@ librxc :
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-libupf : libfox libutil
+libupf : libfox libutil libcuda
 	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :

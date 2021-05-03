@@ -95,24 +95,22 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 #if defined (__CUDA)
   USE cublas
 #endif
-  USE kinds,      ONLY : DP
-  USE becmod_gpum,ONLY : becp_d
-  USE uspp,       ONLY : nkb, okvan, indv_ijkb0
-  USE spin_orb,   ONLY : lspinorb
-  USE uspp_param, ONLY : upf, nh, nhm
-  USE ions_base,  ONLY : nat, nsp, ityp
-  USE control_flags,    ONLY: gamma_only 
-  USE noncollin_module, ONLY: npol, noncolin
-  USE realus,           ONLY: real_space, invfft_orbital_gamma,     &
-                              fwfft_orbital_gamma, calbec_rs_gamma, &
-                              s_psir_gamma, invfft_orbital_k,       &
-                              fwfft_orbital_k, calbec_rs_k, s_psir_k
-  USE wavefunctions,    ONLY: psic
-  USE fft_base,         ONLY: dffts
-  !
-  USE uspp_gpum,  ONLY : vkb_d, using_vkb_d, using_indv_ijkb0
-  USE becmod_gpum, ONLY : using_becp_r_d, using_becp_k_d, using_becp_nc_d
-  USE device_memcpy_m,    ONLY : dev_memcpy
+  USE kinds,            ONLY : DP
+  USE becmod_gpum,      ONLY : becp_d
+  USE uspp,             ONLY : nkb, okvan, ofsbeta, vkb_d, using_vkb_d
+  USE spin_orb,         ONLY : lspinorb
+  USE uspp_param,       ONLY : upf, nh, nhm
+  USE ions_base,        ONLY : nat, nsp, ityp
+  USE control_flags,    ONLY : gamma_only 
+  USE noncollin_module, ONLY : npol, noncolin
+  USE realus,           ONLY : real_space, invfft_orbital_gamma,     &
+                               fwfft_orbital_gamma, calbec_rs_gamma, &
+                               s_psir_gamma, invfft_orbital_k,       &
+                               fwfft_orbital_k, calbec_rs_k, s_psir_k
+  USE wavefunctions,    ONLY : psic
+  USE fft_base,         ONLY : dffts
+  USE becmod_gpum,      ONLY : using_becp_r_d, using_becp_k_d, using_becp_nc_d
+  USE device_memcpy_m,  ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -218,9 +216,9 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !---------------------------------------------------------------------
        !! Gamma version of \(\textrm{s_psi}\) routine.
        !
-       USE mp,            ONLY: mp_get_comm_null, mp_circular_shift_left
-       USE device_fbuff_m,      ONLY : dev_buf
-       USE uspp_gpum,     ONLY : qq_at_d, using_qq_at_d
+       USE mp,             ONLY : mp_get_comm_null, mp_circular_shift_left
+       USE device_fbuff_m, ONLY : dev_buf
+       USE uspp,           ONLY : qq_at_d
        !
        IMPLICIT NONE  
        !
@@ -240,8 +238,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        CALL using_vkb_d(0)
        CALL using_becp_r_d(0)
-       CALL using_qq_at_d(0)
-       CALL using_indv_ijkb0(0)
        !
        IF( becp_d%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -270,7 +266,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ps_d(1:nkb,1:m_max) = 0.D0
        !
        !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-       !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+       !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
        !
        DO nt = 1, nsp
           IF ( upf(nt)%tvanp ) THEN
@@ -282,8 +278,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                    !
                    IF ( m_loc > 0 ) THEN
                       CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                                  qq_at_d(1,1,na), nhm, becp_d%r_d(indv_ijkb0(na)+1,1),&
-                                  nkb, 0.0_dp, ps_d(indv_ijkb0(na)+1,1), nkb )
+                                  qq_at_d(1,1,na), nhm, becp_d%r_d(ofsbeta(na)+1,1),&
+                                  nkb, 0.0_dp, ps_d(ofsbeta(na)+1,1), nkb )
                    END IF
                 END IF
              END DO
@@ -340,8 +336,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !! k-points version of \(\textrm{s_psi}\) routine.
        !
        USE device_fbuff_m,   ONLY : dev_buf
-       USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
-
+       USE uspp,             ONLY : qq_at_d
+       !
        IMPLICIT NONE
        !
        ! ... local variables
@@ -363,7 +359,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! sync vkb if needed
        CALL using_vkb_d(0)
        CALL using_becp_k_d(0)
-       CALL using_qq_at_d(0)
        !
        ps_d(1:nkb,1:m) = ( 0.D0, 0.D0 )
        !
@@ -390,8 +385,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
                    CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                        qqc_d(1,1,na), nhm, becp_d%k_d(indv_ijkb0(na)+1,1), nkb, &
-                        (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1), nkb )
+                        qqc_d(1,1,na), nhm, becp_d%k_d(ofsbeta(na)+1,1), nkb, &
+                        (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1), nkb )
                    !
                 END IF
              END DO
@@ -425,8 +420,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !! k-points noncolinear/spinorbit version of \(\textrm{s_psi}\) routine.
        !
        USE device_fbuff_m,   ONLY : dev_buf
-       USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d, qq_so_d, using_qq_so_d
-
+       USE uspp,             ONLY : qq_at_d, qq_so_d
+       !
        IMPLICIT NONE
        !
        !    here the local variables
@@ -443,10 +438,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! sync if needed
        CALL using_vkb_d(0)
        CALL using_becp_nc_d(0)
-       CALL using_indv_ijkb0(0)
-       IF ( .not. lspinorb ) CALL using_qq_at_d(0)
-       IF ( lspinorb ) CALL using_qq_so_d(0)
-
+       !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, npol, m /), ierr)
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
@@ -477,8 +469,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                    IF ( ityp(na) == nt ) THEN
                       DO ipol=1,npol
                          CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                              qqc_d(1,1, na), nhm, becp_d%nc_d(indv_ijkb0(na)+1,ipol,1), nkb*npol, &
-                              (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,ipol,1), nkb*npol )
+                              qqc_d(1,1, na), nhm, becp_d%nc_d(ofsbeta(na)+1,ipol,1), nkb*npol, &
+                              (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,ipol,1), nkb*npol )
                        END DO
                     END IF
                 END DO
@@ -486,18 +478,18 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                 DO na = 1, nat
                    IF ( ityp(na) == nt ) THEN
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,1,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), nkb*npol, &
-                           (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), nkb*npol )
+                           qq_so_d(1,1,1,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,2,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), nkb*npol, &
-                           (1.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), nkb*npol )
+                           qq_so_d(1,1,2,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,1,1), nkb*npol )
                       !
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,3,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), nkb*npol, &
-                           (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), nkb*npol )
+                           qq_so_d(1,1,3,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,1,1), nkb*npol, &
+                           (0.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
                       CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so_d(1,1,4,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), nkb*npol, &
-                           (1.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), nkb*npol )
+                           qq_so_d(1,1,4,nt), nhm, becp_d%nc_d(ofsbeta(na)+1,2,1), nkb*npol, &
+                           (1.0_dp,0.0_dp), ps_d(ofsbeta(na)+1,2,1), nkb*npol )
                     END IF
                 END DO
              END IF

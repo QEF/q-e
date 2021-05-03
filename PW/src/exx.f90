@@ -361,11 +361,8 @@ MODULE exx
                                      erfc_scrlen, gau_scrlen, exx_divergence
     USE exx_band,             ONLY : change_data_structure, nwordwfc_exx, &
                                      transform_evc_to_exx, igk_exx, evc_exx
-    !
-    USE wavefunctions_gpum,   ONLY : using_evc
-    USE uspp_gpum,            ONLY : using_vkb ! is this needed?
-    USE device_memcpy_m,        ONLY : dev_memset
-    USE device_fbuff_m,             ONLY : dev_buf
+    USE device_memcpy_m,      ONLY : dev_memset
+    USE device_fbuff_m,       ONLY : dev_buf
     !
     IMPLICIT NONE
     !
@@ -2687,12 +2684,9 @@ end associate
     USE mp,                     ONLY : mp_sum
     USE becmod,                 ONLY : bec_type, allocate_bec_type, &
                                        deallocate_bec_type, calbec
-    USE uspp,                   ONLY : okvan,nkb,vkb
+    USE uspp,                   ONLY : okvan,nkb,vkb, using_vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
-    !
     USE wavefunctions_gpum,     ONLY : using_evc
-    USE uspp_gpum,              ONLY : using_vkb 
-    !
     IMPLICIT NONE
     !
     TYPE(bec_type) :: becpsi
@@ -3775,16 +3769,13 @@ end associate
   USE constants,     ONLY : tpi
   USE gvect,         ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,         ONLY : npwx, nbnd
-  USE us,            ONLY : nqx, dq, tab, tab_d2y, spline_ps
+  USE uspp_data,     ONLY : nqx, dq, tab, tab_d2y, spline_ps
   USE m_gth,         ONLY : mk_ffnl_gth
   USE splinelib
   USE uspp,          ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,    ONLY : upf, lmaxkb, nhm, nh
   USE becmod,        ONLY : calbec
   USE mp_exx,        ONLY : ibands, nibands, my_egrp_id
-  !
-  USE us_gpum,       ONLY : using_tab, using_tab_d2y
-  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: npw_
@@ -3818,9 +3809,6 @@ end associate
   iend = ibands(nibands(my_egrp_id+1),my_egrp_id+1)
   !
   IF (lmaxkb < 0) RETURN
-  !
-  CALL using_tab(0)
-  IF (spline_ps) CALL using_tab_d2y(0)
   !
   ALLOCATE( vkb1(npw_,nhm) )
   ALLOCATE( sk(npw_) )    
@@ -3949,21 +3937,19 @@ end associate
     !----------------------------------------------------------------------------
     !! ACE Initialization
     !
-    USE wvfct,            ONLY : nbnd, npwx, current_k
-    USE klist,            ONLY : nks, xk, ngk, igk_k
-    USE uspp,             ONLY : nkb, vkb, okvan
-    USE becmod,           ONLY : allocate_bec_type, deallocate_bec_type, &
-                                 bec_type, calbec
-    USE lsda_mod,         ONLY : current_spin, lsda, isk
-    USE io_files,         ONLY : nwordwfc, iunwfc
-    USE buffers,          ONLY : get_buffer
-    USE mp_pools,         ONLY : inter_pool_comm
-    USE mp_bands,         ONLY : intra_bgrp_comm
-    USE mp,               ONLY : mp_sum
-    USE wavefunctions,    ONLY : evc
-    !
+    USE wvfct,              ONLY : nbnd, npwx, current_k
+    USE klist,              ONLY : nks, xk, ngk, igk_k
+    USE uspp,               ONLY : nkb, vkb, okvan, using_vkb
+    USE becmod,             ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   bec_type, calbec
+    USE lsda_mod,           ONLY : current_spin, lsda, isk
+    USE io_files,           ONLY : nwordwfc, iunwfc
+    USE buffers,            ONLY : get_buffer
+    USE mp_pools,           ONLY : inter_pool_comm
+    USE mp_bands,           ONLY : intra_bgrp_comm
+    USE mp,                 ONLY : mp_sum
+    USE wavefunctions,      ONLY : evc
     USE wavefunctions_gpum, ONLY : using_evc
-    USE uspp_gpum,          ONLY : using_vkb
     !
     IMPLICIT NONE
     !

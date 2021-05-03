@@ -75,8 +75,6 @@ dist.o : constants.o
 dist.o : io_global.o
 dist.o : ions_base.o
 dist.o : kind.o
-dylmr2.o : kind.o
-dylmr2_gpu.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
@@ -91,7 +89,6 @@ environment.o : mp_pools.o
 environment.o : mp_world.o
 environment.o : qeh5_module.o
 environment.o : version.o
-erf.o : kind.o
 expint.o : kind.o
 fd_gradient.o : ../FFTXlib/fft_types.o
 fd_gradient.o : ../FFTXlib/scatter_mod.o
@@ -158,6 +155,7 @@ io_files.o : kind.o
 io_files.o : mp_images.o
 io_files.o : parameters.o
 io_files.o : wrappers.o
+ions_base.o : ../upflib/uspp.o
 ions_base.o : cell_base.o
 ions_base.o : constants.o
 ions_base.o : io_global.o
@@ -169,6 +167,8 @@ latgen.o : io_global.o
 latgen.o : kind.o
 linpack.o : kind.o
 mbdlib.o : cell_base.o
+mbdlib.o : constants.o
+mbdlib.o : control_flags.o
 mbdlib.o : funct.o
 mbdlib.o : input_parameters.o
 mbdlib.o : io_global.o
@@ -219,7 +219,6 @@ parser.o : ../UtilXlib/mp.o
 parser.o : io_global.o
 parser.o : kind.o
 parser.o : mp_images.o
-paw_variables.o : kind.o
 plot_io.o : io_global.o
 plot_io.o : kind.o
 plugin_arguments.o : ../UtilXlib/mp.o
@@ -349,7 +348,6 @@ recvec.o : ../UtilXlib/mp.o
 recvec.o : constants.o
 recvec.o : control_flags.o
 recvec.o : kind.o
-recvec_gpu.o : recvec.o
 recvec_subs.o : ../FFTXlib/fft_ggen.o
 recvec_subs.o : ../FFTXlib/fft_types.o
 recvec_subs.o : ../UtilXlib/mp.o
@@ -372,12 +370,6 @@ set_vdw_corr.o : io_global.o
 setqf.o : kind.o
 sort.o : kind.o
 space_group.o : kind.o
-sph_bes.o : constants.o
-sph_bes.o : kind.o
-sph_bes_gpu.o : constants.o
-sph_bes_gpu.o : kind.o
-sph_dbes.o : constants.o
-sph_dbes.o : kind.o
 timestep.o : kind.o
 tsvdw.o : ../UtilXlib/mp.o
 tsvdw.o : ../UtilXlib/parallel_include.o

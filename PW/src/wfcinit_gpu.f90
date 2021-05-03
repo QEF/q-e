@@ -25,7 +25,7 @@ SUBROUTINE wfcinit_gpu()
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb
+  USE uspp,                 ONLY : nkb, vkb, vkb_d, using_vkb_d
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, current_k
   USE wannier_new,          ONLY : use_wannier
@@ -35,9 +35,7 @@ SUBROUTINE wfcinit_gpu()
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
-  !
   USE wavefunctions_gpum,   ONLY : using_evc_d, using_evc
-  USE uspp_gpum,            ONLY : vkb_d, using_vkb_d
   !
   IMPLICIT NONE
   !
@@ -224,7 +222,7 @@ SUBROUTINE init_wfc_gpu ( ik )
   USE mp,                   ONLY : mp_bcast
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
-  USE gvect_gpum,           ONLY : g_d
+  USE gvect,                ONLY : g_d
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
   USE wvfct_gpum,           ONLY : et_d, using_et_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
@@ -240,7 +238,6 @@ SUBROUTINE init_wfc_gpu ( ik )
   REAL(DP), ALLOCATABLE :: etatom_d(:) ! atomic eigenvalues
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom_d(:,:,:) ! atomic wfcs for initialization (device)
-  COMPLEX(DP), ALLOCATABLE :: wfcatom_h(:,:,:) ! atomic wfcs for initialization (host)
   REAL(DP),    ALLOCATABLE :: randy_d(:) ! data for random
   !
   ! Auxiliary variables for CUDA version
@@ -275,14 +272,9 @@ SUBROUTINE init_wfc_gpu ( ik )
   !
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
-     ALLOCATE( wfcatom_h( npwx, npol, n_starting_wfc ) )
      CALL start_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
-     CALL atomic_wfc( ik, wfcatom_h )
+     CALL atomic_wfc_gpu( ik, wfcatom_d )
      CALL stop_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
-     !
-     ! Sync to GPU
-     wfcatom_d = wfcatom_h
-     DEALLOCATE( wfcatom_h )
      !
      IF ( starting_wfc == 'atomic+random' .AND. &
          n_starting_wfc == n_starting_atomic_wfc ) THEN

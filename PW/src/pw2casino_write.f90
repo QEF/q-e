@@ -25,7 +25,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE wvfct, ONLY: npwx, nbnd, wg, et
    USE gvecw, ONLY: ecutwfc
    USE control_flags, ONLY : gamma_only
-   USE uspp, ONLY: nkb, vkb, dvan
+   USE uspp, ONLY: nkb, vkb, dvan, using_vkb
    USE uspp_param, ONLY: nh
    USE io_global, ONLY: stdout, ionode, ionode_id
    USE io_files, ONLY: nwordwfc, iunwfc, prefix, tmp_dir, seqopn
@@ -33,10 +33,9 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
    USE mp_bands, ONLY: intra_bgrp_comm
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
-   USE buffers,              ONLY : get_buffer
+   USE buffers,            ONLY : get_buffer
    USE wavefunctions_gpum, ONLY : using_evc
-   USE wvfct_gpum,                ONLY : using_et
-   USE uspp_gpum,                 ONLY : using_vkb
+   USE wvfct_gpum,         ONLY : using_et
 
    USE pw2blip
 

@@ -30,8 +30,6 @@ fft_parallel_2d.o : fft_scalar.o
 fft_parallel_2d.o : fft_scatter_2d.o
 fft_parallel_2d.o : fft_scatter_2d_gpu.o
 fft_parallel_2d.o : fft_types.o
-fft_scalar.ARM_LIB.o : fft_param.o
-fft_scalar.ARM_LIB.o : fftw_interfaces.o
 fft_scalar.DFTI.o : fft_param.o
 fft_scalar.ESSL.o : fft_param.o
 fft_scalar.FFTW.o : fft_param.o
@@ -40,7 +38,6 @@ fft_scalar.FFTW3.o : fft_param.o
 fft_scalar.SX6.o : fft_param.o
 fft_scalar.cuFFT.o : fft_param.o
 fft_scalar.o : fft_param.o
-fft_scalar.o : fft_scalar.ARM_LIB.o
 fft_scalar.o : fft_scalar.DFTI.o
 fft_scalar.o : fft_scalar.ESSL.o
 fft_scalar.o : fft_scalar.FFTW.o

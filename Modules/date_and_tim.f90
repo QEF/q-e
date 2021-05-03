@@ -6,9 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine date_and_tim (cdate, ctime)
-  !
-  !     Returns two strings containing the date and the time
-  !     in human-readable format. Uses a standard f90 call.
+  !! Returns two strings containing the date and the time
+  !! in human-readable format. Uses a standard f90 call.
   !
   implicit none
   character (len=9) :: cdate, ctime

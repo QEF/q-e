@@ -33,8 +33,6 @@ newd.o \
 beef.o \
 bp_mod.o \
 bp_c_phase.o \
-bp_calc_btq.o \
-bp_qvan3.o \
 bp_strings.o \
 buffers.o \
 c_bands.o \
@@ -43,6 +41,8 @@ orbm_kubo.o \
 cdiagh.o \
 clean_pw.o \
 close_files.o \
+commutator_Hx_psi.o \
+commutator_Vhubx_psi.o \
 compute_becsum.o \
 compute_deff.o \
 compute_dip.o \
@@ -58,7 +58,6 @@ deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
-dqvan2.o \
 drhoc.o \
 rotate_wfc.o \
 run_driver.o \
@@ -122,11 +121,7 @@ hinit1.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
-init_us_0.o \
-init_us_b0.o \
-init_us_1.o \
 init_us_2.o \
-init_at_1.o \
 init_vloc.o \
 input.o \
 io_rho_xml.o \
@@ -190,7 +185,6 @@ pwcom.o \
 pw2blip.o \
 pw2casino.o \
 pw2casino_write.o \
-qvan2.o \
 rdiagh.o \
 read_conf_from_file.o \
 read_file_new.o \
@@ -217,8 +211,6 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
-spinor.o \
-sph_ind.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \
@@ -278,9 +270,7 @@ PWLIBS += \
   g2_kin_gpu.o \
   scf_mod_gpu.o \
   usnldiag_gpu.o \
-  init_us_2_gpu.o \
   add_vuspsi_gpu.o \
-  qvan2_gpu.o \
   addusdens_gpu.o \
   sum_band_gpu.o \
   newd_gpu.o \

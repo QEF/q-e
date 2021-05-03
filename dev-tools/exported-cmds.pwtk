@@ -1,0 +1,73 @@
+#------------------------------------------------------------------------
+# PURPOSE OF THE SCRIPT:
+#------------------------------------------------------------------------
+# list all PWTK commands that are exported to global namespace and
+# should be highlighted in QE-emacs-modes
+#
+# Run this script as:  pwtk -s exported-cmds.pwtk
+#------------------------------------------------------------------------
+
+#
+# global ::pwtk cmds
+#
+foreach listName {
+    runAndDir_exportList
+    input_exportList
+    output_exportList
+    queue_exportList
+    util_exportList
+} {
+    upvar #0 ::pwtk::$listName listVar
+    append pwtk_cmds $listVar
+}
+
+#
+# specific
+#
+foreach child_ns {
+    input
+    pwi
+    pwo
+    phi
+    nebi
+    ppi
+    pri
+    dmi
+    mdi
+    q2ri
+    hpi
+    di
+    bi
+    mpdi
+    lri
+    davi
+    lani
+    eelsi
+    speci
+    queue
+    slurm
+    ll
+    lsf    
+    sh    
+    eos 
+    difden 
+    flo
+    sbco 
+    xsf
+} {
+    # BEWARE that $namelist_flow_list and $card_flow_list are known in
+    # pwtk-mode already from the *.def files !
+    foreach listName {
+        exportList
+    } {
+        if { [info exists ::pwtk::${child_ns}::$listName] } {
+            upvar #0 ::pwtk::${child_ns}::$listName listVar
+            append pwtk_cmds $listVar
+        }
+    }
+}
+
+foreach cmd $pwtk_cmds {
+    puts -nonewline "$cmd "
+}
+puts ""

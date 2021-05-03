@@ -45,8 +45,6 @@
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
       COMPLEX(DP) :: screen_coul( dfftp%ngm )
 
-      REAL(DP), EXTERNAL :: qe_erf
-
       ! ... Locals
       !
       REAL(DP), ALLOCATABLE :: grr(:,:)
@@ -87,7 +85,7 @@
             IF( rmod < gsmall ) THEN
               grr( ir, 1 ) = fact * 2.0d0 * rc / SQRT( pi )
             ELSE
-              grr( ir, 1 ) = fact * qe_erf( rc * rmod ) / rmod
+              grr( ir, 1 ) = fact * erf( rc * rmod ) / rmod
             END IF
           END DO
         END DO
@@ -427,8 +425,6 @@
       LOGICAL,  INTENT(IN) :: TSTRESS
       REAL(DP), INTENT(in) :: hmat( 3, 3 )
 
-      REAL(DP), EXTERNAL :: qe_erfc
-
       INTEGER, EXTERNAL :: ldim_block, gind_block
 
       
@@ -525,7 +521,7 @@
                   ELSE
                      ESRTZERO=1.D0
                   END IF
-                  ADDESR = ZV2_KJ * qe_erfc(ARG) / RLM
+                  ADDESR = ZV2_KJ * erfc(ARG) / RLM
                   ESR    = ESR + ESRTZERO*ADDESR
                   ADDPRE = FACT_PRE * EXP(-ARG*ARG)
                   REPAND = ESRTZERO*(ADDESR + ADDPRE)/ERRE2

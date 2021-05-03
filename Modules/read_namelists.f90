@@ -13,9 +13,8 @@
 !----------------------------------------------------------------------------
 MODULE read_namelists_module
   !----------------------------------------------------------------------------
-  !
-  !  ... this module handles the reading of input namelists
-  !  ... written by Carlo Cavazzoni, with many additions
+  !! This module handles the reading of input namelists.  
+  !! Written by Carlo Cavazzoni, with many additions.
   !  --------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -50,19 +49,17 @@ MODULE read_namelists_module
   !
   CONTAINS
      !
-     !=-----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist CONTROL
-     !
-     !=-----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE control_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist CONTROL.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) ::    temp_string 
        !
        !
@@ -142,19 +139,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist SYSTEM
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE system_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist SYSTEM.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        ibrav  = -1
@@ -335,19 +329,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist ELECTRONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE electrons_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist ELECTRONS.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        emass = 400.0_DP
@@ -451,17 +442,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist WANNIER_AC
      !
      !----------------------------------------------------------------------
      SUBROUTINE wannier_ac_defaults( prog )
        !----------------------------------------------------------------------
+       !! Variables initialization for Namelist WANNIER_AC.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        plot_wannier = .FALSE.
@@ -475,20 +465,17 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-
-     !=----------------------------------------------------------------------=!
      !
-     !  Variables initialization for Namelist IONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE ions_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist IONS.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'bfgs' | 'beeman' )
        !
@@ -544,19 +531,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist CELL
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE cell_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist CELL.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        cell_parameters = 'default'
@@ -592,18 +576,15 @@ MODULE read_namelists_module
      END SUBROUTINE
      !
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist PRESS_AI
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !----------------------------------------------------------------------
      SUBROUTINE press_ai_defaults( prog )
-     !
+       !---------------------------------------------------------------------
+       !! Variables initialization for Namelist PRESS_AI.
+       !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        abivol = .false.
        abisur = .false.
@@ -633,17 +614,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist WANNIER
      !
      !-----------------------------------------------------------------------
      SUBROUTINE wannier_defaults( prog )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist WANNIER.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2) :: prog
+       !! specify the calling program
        !
        !
        wf_efield = .FALSE.
@@ -695,19 +675,16 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist FCP
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fcp_defaults( prog, ions_are_set )
        !-----------------------------------------------------------------------
+       !! Variables initialization for Namelist FCP.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)    :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)    :: prog
+       !! specify the calling program
        LOGICAL, INTENT(IN) :: ions_are_set
        !
        !
@@ -757,15 +734,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist CONTROL
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE control_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist CONTROL.
        !
        USE io_global, ONLY : ionode_id
        USE mp,        ONLY : mp_bcast
@@ -821,15 +794,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist SYSTEM
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE system_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist SYSTEM.
        !
        USE io_global, ONLY : ionode_id
        USE mp,        ONLY : mp_bcast
@@ -1002,15 +971,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist ELECTRONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE electrons_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist ELECTRONS
        !
        USE io_global, ONLY : ionode_id
        USE mp,        ONLY : mp_bcast
@@ -1124,15 +1089,10 @@ MODULE read_namelists_module
      END SUBROUTINE
      !
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist IONS
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE ions_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist IONS.
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1180,15 +1140,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist CELL
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE cell_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist CELL.
        !
        USE io_global, ONLY: ionode_id
        USE mp, ONLY: mp_bcast
@@ -1216,15 +1172,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist PRESS_AI
-     !
-     !=----------------------------------------------------------------------=!
      !
      !----------------------------------------------------------------------
      SUBROUTINE press_ai_bcast()
        !----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist PRESS_AI
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1259,15 +1211,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist WANNIER
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE wannier_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist WANNIER.
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1314,15 +1262,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist WANNIER_NEW
-     !
-     !=----------------------------------------------------------------------------=!
      !
      !----------------------------------------------------------------------
      SUBROUTINE wannier_ac_bcast()
        !----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist WANNIER_NEW.
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
@@ -1343,15 +1287,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist FCP
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fcp_bcast()
        !-----------------------------------------------------------------------
+       !! Broadcast variables values for Namelist FCP
        !
        USE io_global, ONLY: ionode_id
        USE mp, ONLY: mp_bcast
@@ -1377,15 +1317,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist CONTROL
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE control_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist CONTROL.
        !
        IMPLICIT NONE
        !
@@ -1473,15 +1409,11 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist SYSTEM
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE system_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist SYSTEM.
        !
        IMPLICIT NONE
        !
@@ -1616,19 +1548,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist ELECTRONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE electrons_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist ELECTRONS.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' electrons_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1660,19 +1590,17 @@ MODULE read_namelists_module
        RETURN
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist IONS
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE ions_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist IONS
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' ions_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1702,21 +1630,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist CELL
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE cell_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist CELL
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' cell_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1742,19 +1666,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist WANNIER
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE wannier_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist WANNIER.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = 'wannier_checkin'
        !
        IF ( calwf < 1 .OR. calwf > 5 ) &
@@ -1767,19 +1689,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist WANNIER_NEW
-     !
-     !=----------------------------------------------------------------------=!
      !
      !----------------------------------------------------------------------
      SUBROUTINE wannier_ac_checkin( prog )
        !--------------------------------------------------------------------
+       !! Check input values for Namelist WANNIER_NEW.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = 'wannier_new_checkin'
        !
        !
@@ -1796,19 +1716,17 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Check input values for Namelist FCP
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fcp_checkin( prog )
        !-----------------------------------------------------------------------
+       !! Check input values for Namelist FCP.
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' fcp_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1843,21 +1761,19 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Set values according to the "calculation" variable
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fixval( prog )
        !-----------------------------------------------------------------------
+       !!  Set values according to the "calculation" variable.
        !
        USE constants, ONLY : e2
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog
+       !! specify the calling program
+       !
        CHARACTER(LEN=20) :: sub_name = ' fixval '
        !
        !
@@ -1978,19 +1894,13 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-     !=----------------------------------------------------------------------=!
-     !
-     !  Namelist parsing main routine
-     !
-     !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
      SUBROUTINE read_namelists( prog_, unit )
        !-----------------------------------------------------------------------
-       !
-       !  this routine reads data from standard input and puts them into
-       !  module-scope variables (accessible from other routines by including
-       !  this module, or the one that contains them)
+       !! Namelist parsing main routine. This routine reads data from standard
+       !! input and puts them into module-scope variables (accessible from other
+       !! routines by including this module, or the one that contains them).
        !  ----------------------------------------------
        !
        ! ... declare modules
@@ -2003,10 +1913,11 @@ MODULE read_namelists_module
        !
        ! ... declare variables
        !
-       CHARACTER(LEN=*) :: prog_  ! specifies the calling program, allowed:
-                                  !     prog = 'PW'     pwscf
-                                  !     prog = 'CP'     cp
-                                  !     prog = 'PW+iPi' pwscf + i-Pi
+       CHARACTER(LEN=*) :: prog_
+       !! specifies the calling program, allowed:  
+       !! prog = 'PW'     pwscf  
+       !! prog = 'CP'     cp  
+       !! prog = 'PW+iPi' pwscf + i-Pi
        !
        INTEGER, INTENT(IN), optional :: unit
        !

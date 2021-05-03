@@ -70,7 +70,9 @@ developer_man: developer_man.pdf
 
 
 defs: input_xx.xsl INPUT_PH.txt INPUT_PH.html INPUT_DYNMAT.txt INPUT_DYNMAT.html \
-      INPUT_POSTAHC.txt INPUT_POSTAHC.html link_on_main_doc
+	INPUT_MATDYN.txt INPUT_MATDYN.html \
+	INPUT_Q2R.txt INPUT_Q2R.html \
+	INPUT_POSTAHC.txt INPUT_POSTAHC.html link_on_main_doc
 
 input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
@@ -92,12 +94,35 @@ INPUT_DYNMAT.html: %.html: %.def input_xx.xsl
 INPUT_DYNMAT.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
+INPUT_MATDYN.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_MATDYN.txt: %.txt: %.def input_xx.xsl
+	$(HELPDOC) $<
+
+INPUT_Q2R.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_Q2R.txt: %.txt: %.def input_xx.xsl
+	$(HELPDOC) $<
+
 INPUT_POSTAHC.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 INPUT_POSTAHC.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-( cd ../../Doc ; ln -fs ../PHonon/Doc/INPUT_PH.html . ; \
+	-( cd ../../Doc ; \
+	ln -fs ../PHonon/Doc/INPUT_PH.html . ; \
 	ln -fs ../PHonon/Doc/INPUT_PH.xml . ; \
-	ln -fs ../PHonon/Doc/INPUT_PH.txt . )
+	ln -fs ../PHonon/Doc/INPUT_PH.txt . ; \
+	ln -fs ../PHonon/Doc/INPUT_DYNMAT.html . ; \
+	ln -fs ../PHonon/Doc/INPUT_DYNMAT.xml . ; \
+	ln -fs ../PHonon/Doc/INPUT_DYNMAT.txt . ; \
+	ln -fs ../PHonon/Doc/INPUT_MATDYN.html . ; \
+	ln -fs ../PHonon/Doc/INPUT_MATDYN.xml . ; \
+	ln -fs ../PHonon/Doc/INPUT_MATDYN.txt . ; \
+	ln -fs ../PHonon/Doc/INPUT_Q2R.html . ; \
+	ln -fs ../PHonon/Doc/INPUT_Q2R.xml . ; \
+	ln -fs ../PHonon/Doc/INPUT_Q2R.txt . ; \
+	ln -fs ../PHonon/Doc/INPUT_POSTAHC.html . ; \
+	ln -fs ../PHonon/Doc/INPUT_POSTAHC.xml . ; \
+	ln -fs ../PHonon/Doc/INPUT_POSTAHC.txt . )

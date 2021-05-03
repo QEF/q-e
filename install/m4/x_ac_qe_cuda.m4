@@ -14,13 +14,18 @@
 #
 # If something isn't found, fails straight away.
 #
-# The following variables are substituted in the makefile:
-# NVCC        : the nvcc compiler command.
-# NVCCFLAGS   : nvcc specific flags
-# CUDA_CFLAGS : CUDA includes
-# CUDA_LDLIBS : CUDA libraries
-#
-# Defines HAVE_CUDA in config.h
+# The following variables (for C) are substituted in the makefile:
+#    NVCC        : the nvcc compiler command.
+#    NVCCFLAGS   : nvcc specific flags
+#    CUDA_CFLAGS : CUDA includes
+#    CUDA_LDLIBS : CUDA libraries
+# For Fortran:
+#    gpu_arch
+#    gpu_runtime
+#    cuda_fflags
+#    cuda_libs
+#    cuda_extlibs
+#    cuda_path
 #
 # LICENCE
 # Public domain
@@ -55,10 +60,17 @@ AC_ARG_WITH([cuda-runtime],
    [with_cuda_runtime=10.1])
 
 AC_ARG_ENABLE([cuda-env-check],
-   [AS_HELP_STRING([--enable-cuda-env-check=yes],[The configure script will check CUDA installation and report problems @<:@default=yes@:>@])],
+   [AS_HELP_STRING([--enable-cuda-env-check=yes],[The configure script will check CUDA installation and report problems @<:@default=no@:>@])],
    [],
-   [enable_cuda_env_check=yes])
+   [enable_cuda_env_check=no])
 
+if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
+   mMcuda="-cuda -gpu"
+   mMcudalib="-cudalib"
+else
+   mMcuda="-Mcuda"
+   mMcudalib="-Mcudalib"
+fi
 
 if test "x$with_cuda" != "xno"
 then
@@ -67,7 +79,7 @@ then
    # -----------------------------------------
    AC_LANG_PUSH([Fortran])
    AC_FC_SRCEXT([f90])
-   AX_CHECK_COMPILE_FLAG([-Mcuda=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
+   AX_CHECK_COMPILE_FLAG([$mMcuda=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
    AC_LANG_POP([Fortran])
    if test "x$have_cudafor" != "xyes"
    then
@@ -88,6 +100,7 @@ then
       AC_CHECK_FILE(/usr/local/cuda/lib64,[CUDA_LDLIBS+=" -L/usr/local/cuda/lib64"],[])
    fi
    CUDA_LDLIBS+=" -lcuda -lcudart -lcublas -lcufft"
+
 
 
    # -----------------------------------------
@@ -169,11 +182,10 @@ EOF
    CXXFLAGS=${ax_save_CXXFLAGS}
    LIBS=${ax_save_LIBS}
 
-   AC_DEFINE(HAVE_CUDA,1,[Define if we have CUDA])
    try_dflags="$try_dflags -D__CUDA"
    cuda_extlibs="devxlib"
-   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
-   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_libs="$mMcudalib=cufft,cublas,cusolver \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
+   cuda_fflags="$mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"
    
@@ -185,7 +197,7 @@ EOF
    else
        try_dflags="$try_dflags -D__USE_CUSOLVER"
    fi
-   ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
    cuda_path="$CUDAPATH"

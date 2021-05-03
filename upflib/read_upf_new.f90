@@ -239,11 +239,9 @@ CONTAINS
        continue
 #endif
     else if ( mesh /= upf%mesh ) THEN
-#if defined (__debug)
        call upf_error('read_pp_mesh',&
          'mismatch in mesh size, discarding the one in header',-1)
        upf%mesh = mesh
-#endif
     end if
     CALL get_attr ( 'dx'  , upf%dx   )
     CALL get_attr ( 'xmin', upf%xmin )
@@ -618,11 +616,16 @@ CONTAINS
        CALL get_attr( 'index' , nb )
        ! not-so-strict test: index absent or incorrect in some UPF v.2 files
        IF ( .NOT. v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
-       CALL get_attr( 'els',   upf%els(nw) )
        CALL get_attr( 'nn',    upf%nn(nw) )
-       CALL get_attr( 'lchi',  upf%lchi(nw) )
        CALL get_attr( 'jchi',  upf%jchi(nw) )
-       CALL get_attr( 'oc',    upf%oc(nw) )
+       !
+       ! the following data is already known and was not read in old versions
+       ! of UPF-reading code. upf%oc is actually missing in some UPF files:
+       ! reading it here may spoil the value read earlier and break DFT+U
+       !
+       ! CALL get_attr( 'lchi',  upf%lchi(nw) )
+       ! CALL get_attr( 'els',   upf%els(nw) )
+       ! CALL get_attr( 'oc',    upf%oc(nw) )
     ENDDO
     !
     DO nb = 1,upf%nbeta

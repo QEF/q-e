@@ -9,27 +9,24 @@
 !-----------------------------------------------------------------------
 function w0gauss (x, n)
   !-----------------------------------------------------------------------
+  !! The derivative of wgauss,  an approximation to the delta function:
   !
-  !     the derivative of wgauss:  an approximation to the delta function
-  !
-  ! --> (n>=0) : derivative of the corresponding Methfessel-Paxton wgauss
-  !
-  ! --> (n=-1 ): derivative of cold smearing:
-  !              1/sqrt(pi)*exp(-(x-1/sqrt(2))**2)*(2-sqrt(2)*x)
-  !
-  ! --> (n=-99): derivative of Fermi-Dirac function: 0.5/(1.0+cosh(x))
+  !! * (n>=0): derivative of the corresponding Methfessel-Paxton \(\text{wgauss}\)
+  !! * (n=-1 ): derivative of cold smearing:
+  !!            $$ \frac{1}{\sqrt{\pi}}\text{exp}(-(x-\frac{1}{\sqrt{2}})^2)(2-\sqrt{2}x) $$
+  !! * (n=-99): derivative of Fermi-Dirac function: \(0.5/(1.0+\text{cosh}(x))\)
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : sqrtpm1
   implicit none
-  real(DP) :: w0gauss, x
-  ! output: the value of the function
-  ! input: the point where to compute the function
-
+  real(DP) :: w0gauss
+  !! output: the value of the function
+  real(DP) :: x
+  !! input: the point where to compute the function
   integer :: n
-  ! input: the order of the smearing function
+  !! input: the order of the smearing function
   !
-  !    here the local variables
+  ! ... local variables
   !
   real(DP) :: a, arg, hp, hd
   ! the coefficients a_n
@@ -93,31 +90,30 @@ end function w0gauss
 !-----------------------------------------------------------------------
 function w2gauss (x, n)
   !-----------------------------------------------------------------------
-  !
-  !     the second derivative of wgauss, that is, the first derivative of the delta function
+  !! The second derivative of wgauss, that is, the first derivative of the
+  !! delta function:
   !     
-  ! --> (n>=0) : second derivative of the corresponding Methfessel-Paxton wgauss
-  !              delta' =- sum_{n=0}^N A_n + H_{2n+1} exp(-x^2)
-  !      where      A_n = (-1)^n / (n! 4^n sqrt(pi) ) 
-  !      and    H_{n+1} = 2x H_n(x) - 2n H_{n-1}(x)
-  ! 
-  ! --> (n=-1 ): second derivative of cold smearing:
-  !              delta' = 1/sqrt(pi) * exp( -(x - 1/sqrt(2))^2 ) * (2 sqrt(2) x^2 - 6x + sqrt(2))
-  !
-  ! --> (n=-99): second derivative of Fermi-Dirac function:
-  !              delta' = -2 sinh(x) / (2 + 2 cosh(x))^2
+  !! * (n>=0): second derivative of the corresponding Methfessel-Paxton wgauss:  
+  !!           $$ \delta' =- \sum_{n=0}^N A_n + H_{2n+1} \exp{-x^2} $$
+  !!           where \( A_n = (-1)^n / (n! 4^n \sqrt{\pi} ) \) and
+  !!           \( H_{n+1} = 2x H_n(x) - 2n H_{n-1}(x) \)
+  !! * (n=-1): second derivative of cold smearing:  
+  !!            $$ \delta' = 1/\sqrt{\pi} \exp{ -(x - 1/\sqrt{2})^2 } (2 \sqrt{2}
+  !!               x^2 - 6x + \sqrt(2)) $$
+  !! * (n=-99): second derivative of Fermi-Dirac function:  
+  !!            $$ \delta' = -2 \sinh{x} / (2 + 2 \cosh{x})^2 $$
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : sqrtpm1, sqrt2
   implicit none
-  real(DP) :: w2gauss, x
-  ! output: the value of the function
-  ! input: the point where to compute the function
-
+  real(DP) :: w2gauss
+  !! output: the value of the function
+  real(DP) :: x
+  !! input: the point where to compute the function
   integer :: n
-  ! input: the order of the smearing function
+  !! input: the order of the smearing function
   !
-  !    here the local variables
+  ! ... local variables
   !
   real(DP) :: a, arg, hp, hd
   ! the coefficients a_n

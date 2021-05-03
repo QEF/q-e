@@ -25,7 +25,7 @@ SUBROUTINE stres_har_gpu( sigmahar )
   USE mp,                 ONLY: mp_sum
   USE Coul_cut_2D,        ONLY: do_cutoff_2D, cutoff_stres_sigmahar_gpu
   !
-  USE gvect_gpum,         ONLY: g_d, gg_d
+  USE gvect,              ONLY: g_d, gg_d
   USE wavefunctions_gpum, ONLY: using_psic, using_psic_d, psic_d
   !
   IMPLICIT NONE

@@ -91,7 +91,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE lsda_mod,                ONLY: current_spin
   USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin
-  USE uspp,                    ONLY: vkb, nkb
+  USE uspp,                    ONLY: vkb, nkb, using_vkb
   USE ldaU,                    ONLY: lda_plus_u, U_projection
   USE gvect,                   ONLY: gstart
   USE control_flags,           ONLY: gamma_only
@@ -105,10 +105,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   !
-  USE uspp_gpum,  ONLY : using_vkb
-  USE wvfct_gpum, ONLY : using_g2kin
-  USE scf_gpum,   ONLY : using_vrs
-  USE becmod_subs_gpum, ONLY : using_becp_auto
+  USE wvfct_gpum,              ONLY: using_g2kin
+  USE scf_gpum,                ONLY: using_vrs
+  USE becmod_subs_gpum,        ONLY: using_becp_auto
   !
   IMPLICIT NONE
   !

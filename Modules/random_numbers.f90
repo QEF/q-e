@@ -8,6 +8,7 @@
 !----------------------------------------------------------------------------
 MODULE random_numbers
   !----------------------------------------------------------------------------
+  !! Module for random numbers generation.
   !
   USE kinds, ONLY : DP
   !
@@ -24,11 +25,10 @@ MODULE random_numbers
     !------------------------------------------------------------------------
     FUNCTION randy ( irand )
       !------------------------------------------------------------------------
-      !
-      ! x=randy(n): reseed with initial seed idum=n ( 0 <= n <= ic, see below)
-      !             if randy is not explicitly initialized, it will be
-      !             initialized with seed idum=0 the first time it is called
-      ! x=randy() : generate uniform real(DP) numbers x in [0,1]
+      !! * x=randy(n): reseed with initial seed \(\text{idum}=n\) ( 0 <= n <= ic, see below)
+      !!               if randy is not explicitly initialized, it will be
+      !!               initialized with seed \(\text{idum}=0\) the first time it is called;
+      !! * x=randy() : generate uniform REAL(DP) numbers x in [0,1].
       !
       REAL(DP) :: randy
       INTEGER, optional    :: irand
@@ -73,8 +73,7 @@ MODULE random_numbers
     !------------------------------------------------------------------------
     SUBROUTINE set_random_seed ( )
       !------------------------------------------------------------------------
-      !
-      ! poor-man random seed for randy
+      !! poor-man random seed for \(\texttt{randy}\).
       !
       INTEGER, DIMENSION (8) :: itime
       INTEGER :: iseed, irand
@@ -90,9 +89,8 @@ MODULE random_numbers
     !-----------------------------------------------------------------------
     FUNCTION gauss_dist_scal( mu, sigma )
       !-----------------------------------------------------------------------
-      !
-      ! ... this function generates a number taken from a normal
-      ! ... distribution of mean value \mu and variance \sigma
+      !! This function generates a number taken from a normal distribution of
+      !! mean value \(\text{mu}\) and variance \(\text{sigma}.
       !
       IMPLICIT NONE
       !
@@ -125,9 +123,8 @@ MODULE random_numbers
     !-----------------------------------------------------------------------
     FUNCTION gauss_dist_cmplx( mu, sigma )
       !-----------------------------------------------------------------------
-      !
-      ! ... this function generates a number taken from a normal
-      ! ... distribution of mean value \mu and variance \sigma
+      !! This function generates a number taken from a normal distribution of
+      !! mean value \(\text{mu}\) and variance \(\text{sigma}\).
       !
       IMPLICIT NONE
       !
@@ -160,9 +157,8 @@ MODULE random_numbers
     !-----------------------------------------------------------------------
     FUNCTION gauss_dist_vect( mu, sigma, dim )
       !-----------------------------------------------------------------------
-      !
-      ! ... this function generates an array of numbers taken from a normal
-      ! ... distribution of mean value \mu and variance \sigma
+      !! This function generates an array of numbers taken from a normal
+      !! distribution of mean value \(\text{mu}\) and variance \(\text{sigma}\).
       !
       IMPLICIT NONE
       !
@@ -207,9 +203,8 @@ MODULE random_numbers
     !-----------------------------------------------------------------------
     FUNCTION gamma_dist (ialpha)
       !-----------------------------------------------------------------------
-      !
-      ! gamma-distributed random number, implemented as described in
-      ! Numerical recipes (Press, Teukolsky, Vetterling, Flannery)
+      !! Gamma-distributed random number, implemented as described in
+      !! Numerical recipes (Press, Teukolsky, Vetterling, Flannery).
       !
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ialpha
@@ -262,9 +257,9 @@ MODULE random_numbers
   !-----------------------------------------------------------------------
   FUNCTION sum_of_gaussians2(inum_gaussians)
     !-----------------------------------------------------------------------
-    ! returns the sum of inum independent gaussian noises squared, i.e. the result
-    ! is equivalent to summing the square of the return values of inum calls
-    ! to gauss_dist.
+    !! Returns the sum of inum independent gaussian noises squared, i.e. the result
+    !! is equivalent to summing the square of the return values of inum calls
+    !! to \(\texttt{gauss_dist}\).
     !
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: inum_gaussians

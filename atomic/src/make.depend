@@ -171,7 +171,6 @@ import_upf.o : ../../Modules/kind.o
 import_upf.o : ../../upflib/pseudo_types.o
 import_upf.o : ../../upflib/radial_grids.o
 import_upf.o : ../../upflib/read_upf_new.o
-import_upf.o : ../../upflib/upf.o
 import_upf.o : atomic_paw.o
 import_upf.o : ld1inc.o
 import_upf.o : parameters.o

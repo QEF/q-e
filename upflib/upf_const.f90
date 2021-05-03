@@ -22,6 +22,7 @@ MODULE upf_const
   REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP 
   REAL(DP), PARAMETER :: tpi    = 2.0_DP * pi
   REAL(DP), PARAMETER :: fpi    = 4.0_DP * pi
+  REAL(DP), PARAMETER :: sqrt2  = 1.41421356237309504880_DP
   !
   ! ... zero up to a given accuracy
   !

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.7MaX)
+Program: pw.x / PWscf / Quantum Espresso (version: 6.7GPU)
 ------------------------------------------------------------------------
 
 
@@ -166,21 +166,7 @@ NAMELIST: &CONTROL
    Variable:       wf_collect
    
    Type:           LOGICAL
-   Default:        .TRUE.
-   Description:    This flag controls the way wavefunctions are stored to disk :
-                   
-                   .TRUE.  collect wavefunctions from all processors, store them
-                           into the output data directory "outdir"/"prefix".save
-                           The resulting format is portable to a different number
-                           of processors, or different kind of parallelization
-                   
-                   .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
-                           do not collect wavefunctions, leave them in temporary
-                           local files (one per processor). The resulting format
-                           is readable only on the same number of processors and
-                           with the same kind of parallelization used to write it.
-                   
-                   Note that this flag has no effect on reading, only on writing.
+   Description:    OBSOLETE - NO LONGER IMPLEMENTED
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -191,6 +177,8 @@ NAMELIST: &CONTROL
                    performed in this run. If set to 0, the code performs a quick
                    "dry run", stopping just after initialization. This is useful
                    to check for input correctness and to have the summary printed.
+                   NOTE: in MD calculations, the code will perform "nstep" steps
+                   even if restarting from a previously interrupted calculation.
    Default:        1  if "calculation" == 'scf', 'nscf', 'bands';
                    50 for the other cases
    +--------------------------------------------------------------------
@@ -268,11 +256,7 @@ NAMELIST: &CONTROL
    Variable:       lkpoint_dir
    
    Type:           LOGICAL
-   Default:        .true.
-   Description:    If .false. a subdirectory for each k_point is not opened
-                   in the "prefix".save directory; Kohn-Sham eigenvalues are
-                   stored instead in a single file for all k-points. Currently
-                   doesn't work together with "wf_collect"
+   Description:    OBSOLETE - NO LONGER IMPLEMENTED
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -467,7 +451,6 @@ NAMELIST: &CONTROL
                    - "calculation" must be 'relax' or 'md'.
                    - "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
                      in "SYSTEM" namelist.
-                   - "ignore_wolfe" is always .TRUE., for BFGS.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2881,7 +2864,12 @@ NAMELIST: &CELL
                         all axis and angles are moved
     
                    'ibrav' :
-                        all axis and angles are moved, but the lattice remains consistent with the initial ibrav choice
+                        all axis and angles are moved, but the lattice remains consistent
+                        with the initial ibrav choice. You can use this option in combination
+                        with any other one by specifying "ibrav+option". Please note that some
+                        combinations do not make sense for some crystals and will guarantee that
+                        the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
+                        hexagonal cells, but will never converge for cubic ones.
     
                    'x' :
                         only the x component of axis 1 (v1_x) is moved
@@ -3494,22 +3482,50 @@ CARD: K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpi
 
 
 ========================================================================
-CARD: ADDITIONAL_K_POINTS 
+CARD: ADDITIONAL_K_POINTS { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
 
-   OPTIONAL CARD. ADDS A LIST OF K-POINTS WITH ZERO WEIGHT, AFTER THOSE USED FOR THE SCF CALCULATION.
-                  WHEN DOING AN EXX CALCULATION AND NQ1X, NQ2X OR NQ3X ARE DIFFERENT FROM ONE, ALSO INCLUDE THE
-                  REQUIRED K+Q POINTS. THE MAIN USE OF THIS CARD IS DO BAND PLOTS WITH EXX.
+   Optional card. Adds a list of k-points with zero weight, after those used for
+   the scf calculation. When doing an EXX calculation and "nq1x", "nq2x" or "nq3x" are
+   different from one, also include the required k+q points. The main use of this
+   card is to do band plots with EXX.
    
    /////////////////////////////////////////
    // Syntax:                             //
    /////////////////////////////////////////
    
-      ADDITIONAL_K_POINTS 
-         Same as K_POINTS, but does not accept 'automatic'.
-         
+      ADDITIONAL_K_POINTS tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c 
+         nks_add
+         k_x(1)        k_y(1)        k_z(1)        wk_(1)        
+         k_x(2)        k_y(2)        k_z(2)        wk_(2)        
+         . . . 
+         k_x(nks_add)  k_y(nks_add)  k_z(nks_add)  wk_(nks_add)  
    
    /////////////////////////////////////////
    
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+      
+      Default:        tbipa
+      Description:    for the explanation of the K_POINTS' options, see "K_POINTS"
+      +--------------------------------------------------------------------
+
+
+      +--------------------------------------------------------------------
+      Variable:       nks_add
+      
+      Type:           INTEGER
+      Description:    Number of supplied "additional" k-points.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      k_x, k_y, k_z, wk_
+      
+      Type:           REAL
+      Description:    for the respective explanation, see the @ref xk_x, @ref xk_y, @ref xk_z, @ref wk
+      +--------------------------------------------------------------------
+      
 ===END OF CARD==========================================================
 
 
@@ -3801,4 +3817,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Wed Dec 30 21:42:57 JST 2020
+This file has been created by helpdoc utility on Thu Apr 22 16:39:09 CEST 2021
