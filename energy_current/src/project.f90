@@ -21,7 +21,7 @@ contains
       !
       USE io_files, ONLY: nwordwfc, tmp_dir
       USE kinds, ONLY: DP
-      USE cell_base, ONLY: tpiba2
+      USE cell_base, ONLY: tpiba2, at
       USE io_global, ONLY: stdout, ionode
       USE klist, ONLY: xk
       USE gvect, ONLY: g, gstart
@@ -91,7 +91,7 @@ contains
       call allocate_bec_type(nkb, nbnd, becp0)
       CALL calbec(npw, vkb, evc, becp0)
 
-      call commutator_Hx_psi(ik, nbnd, becp0, becp2, ipol, dpsi, dvpsi)
+      call commutator_Hx_psi(ik, nbnd, at(:,ipol), becp0, becp2, dpsi)
       call deallocate_bec_type(becp0)
       !
       !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
