@@ -10,7 +10,8 @@ contains
    subroutine init_zero(tabr, H_g, &
                         nsp, zv, tpiba2, tpiba, omega, at, alat, &
                         ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
-                        upf, rgrid, nqxq, intra_bgrp_comm)
+                        upf, rgrid, nqxq, intra_bgrp_comm,&
+                        nat, ityp)
 !called once to init stuff that does not depend on the atomic positions
 !tabr and h_g, on output, will be used by all the current_zero calls
       use kinds, only: DP
@@ -22,7 +23,8 @@ contains
       implicit none
 
       real(dp), intent(inout) :: tabr(:, :, :, :), H_g(:, :, :, :)
-      integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl, nqxq,intra_bgrp_comm
+      integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl, nqxq,&
+                             intra_bgrp_comm, nat, ityp(:)
       real(dp), intent(in) :: zv(:), tpiba2, tpiba, omega, at(3, 3), alat, &
                               gg(:), g(:, :), gl(:), dq
       logical, intent(in) :: spline_ps
@@ -34,7 +36,7 @@ contains
       integer :: isp, iun, a, b
       logical :: exst
       call start_clock('init_zero')
-      call init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
+      call init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
       allocate (tablocal_hg(nqxq, nsp, 2))
       call init_us_1a(tabr, tablocal_hg, rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
       call init_reciprocal_parts_tab(H_g, tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &

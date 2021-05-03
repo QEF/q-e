@@ -87,7 +87,7 @@ contains
 
       use wavefunctions, only: evc
       use wvfct, only: et,npw, npwx
-      use ions_base, only: tau
+      use ions_base, only: tau, nat, nsp, ityp
       use dynamics_module, only: vel
       use scf, only : vrs
       use uspp, only : vkb
@@ -96,6 +96,7 @@ contains
       use cell_base, only : omega
       use mp_bands, only : intra_bgrp_comm
       use gvect, only : ngm, gg, g
+
       !use becmod, only : becp
       implicit none
       type(scf_result), intent(in) :: t
@@ -105,7 +106,7 @@ contains
       npw=npwx
       call update_pot()
       call hinit1()
-      call init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
+      call init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
 
       evc = t%evc

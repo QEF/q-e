@@ -175,7 +175,7 @@ program all_currents
    allocate (tabr(nqxq, nbetam, nsp, 3))
    call init_zero(tabr, H_g, nsp, zv, tpiba2, tpiba, omega, at, alat, &
                   ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
-                  upf, rgrid, nqxq, intra_bgrp_comm) ! only once per all trajectory
+                  upf, rgrid, nqxq, intra_bgrp_comm, nat, ityp) ! only once per all trajectory
    call init_ionic(ionic_data, eta, n_max, ngm, gstart, at, alat, omega, gg, g, tpiba2)
    call init_kohn_sham()
    if (save_dvpsi) then ! to use the previous result as initial guess of the solution of the system solved in project.f90
@@ -286,7 +286,7 @@ program all_currents
             call current_zero(j%z_current, tabr, H_g, &
                               nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                               vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                              nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test)
+                              nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test )
             call current_ionic(ionic_data, &
                           j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
                                nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
@@ -302,7 +302,7 @@ program all_currents
                                 dvpsi_save, save_dvpsi, &
                                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
                                 tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test, &
-                                omega, gg, intra_bgrp_comm)
+                                omega, gg, intra_bgrp_comm, nat, ityp)
          call write_results(traj, print_stat, j, ave_cur)
       end do
       !read new velocities and positions and continue, or exit the loop
