@@ -93,6 +93,9 @@ contains
       use uspp, only : vkb
       use extrapolation, only : update_pot
       use klist, only: xk, igk_k
+      use cell_base, only : omega
+      use mp_bands, only : intra_bgrp_comm
+      use gvect, only : ngm, gg, g
       !use becmod, only : becp
       implicit none
       type(scf_result), intent(in) :: t
@@ -102,7 +105,7 @@ contains
       npw=npwx
       call update_pot()
       call hinit1()
-      call init_us_1()
+      call init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
 
       evc = t%evc

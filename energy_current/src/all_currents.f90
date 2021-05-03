@@ -41,7 +41,7 @@ program all_currents
    use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb, deeq
    use uspp_param, ONLY: upf, nh, nbetam
-   use us, only: spline_ps, dq, nqxq
+   use uspp_data, only: spline_ps, dq, nqxq
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
@@ -175,7 +175,7 @@ program all_currents
    allocate (tabr(nqxq, nbetam, nsp, 3))
    call init_zero(tabr, H_g, nsp, zv, tpiba2, tpiba, omega, at, alat, &
                   ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
-                  upf, rgrid, nqxq) ! only once per all trajectory
+                  upf, rgrid, nqxq, intra_bgrp_comm) ! only once per all trajectory
    call init_ionic(ionic_data, eta, n_max, ngm, gstart, at, alat, omega, gg, g, tpiba2)
    call init_kohn_sham()
    if (save_dvpsi) then ! to use the previous result as initial guess of the solution of the system solved in project.f90
@@ -301,7 +301,8 @@ program all_currents
          call current_kohn_sham(j%J_kohn, j%J_kohn_a, j%J_kohn_b, j%J_electron, delta_t, scf_all, &
                                 dvpsi_save, save_dvpsi, &
                                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
-                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test)
+                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test, &
+                                omega, gg, intra_bgrp_comm)
          call write_results(traj, print_stat, j, ave_cur)
       end do
       !read new velocities and positions and continue, or exit the loop

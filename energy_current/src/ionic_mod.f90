@@ -19,7 +19,6 @@ contains
       real(dp), intent(in) :: at(3, 3), alat, eta, omega, gg(:), g(:, :), tpiba2
 
       real(DP) :: n(3), modul, erf_value
-      real(kind=DP), external :: qe_erfc
       real(DP) ::S_B_rec
       integer  ::  a, b, igm, n_x, n_y, n_z
 
@@ -37,7 +36,7 @@ contains
                if ((n_x /= 0) .or. (n_y /= 0) .or. (n_z /= 0)) then
                   n(1:3) = n_x*at(1:3, 1)*alat + n_y*at(1:3, 2)*alat + n_z*at(1:3, 3)*alat
                   modul = modulus(n(:))
-                  erf_value = qe_erfc(sqrt(eta)*modul)
+                  erf_value = erf(sqrt(eta)*modul)
                   init_data%S_B = init_data%S_B + erf_value/modul
                end if
             end do
@@ -103,14 +102,12 @@ contains
 
    real(kind=DP) function h_(x)
       real(kind=DP), intent(in) :: x
-      real(kind=DP), external :: qe_erfc
-      h_ = qe_erfc(x)/x
+      h_ = erf(x)/x
    end function h_
 
    real(kind=DP) function hp_(x)
       real(kind=DP), intent(in) :: x
-      real(kind=DP), external :: qe_erfc
-      hp_ = -(2.d0/sqrt(pi))*(1.d0/x)*exp(-x*x) - 1.d0/(x*x)*qe_erfc(x)
+      hp_ = -(2.d0/sqrt(pi))*(1.d0/x)*exp(-x*x) - 1.d0/(x*x)*erf(x)
    end function hp_
 
    real(kind=DP) function modulus(vector)
@@ -261,7 +258,6 @@ contains
       integer, intent(in) :: n_max
       real(DP) ::modul, n(3), erf_value
       integer  ::n_x, n_y, n_z
-      real(kind=DP), external :: qe_erfc
       integer   :: l_blk, nbegin, nend
       real(DP)  :: value1
 
@@ -277,7 +273,7 @@ contains
             do n_z = -n_max, n_max
                n(1:3) = n_x*at(1:3, 1)*alat + n_y*at(1:3, 2)*alat + n_z*at(1:3, 3)*alat
                modul = modulus(pos(1:3) - n(1:3))
-               erf_value = qe_erfc(sqrt(eta)*modul)
+               erf_value = erf(sqrt(eta)*modul)
                value1 = value1 + erf_value/modul
             end do
          end do
@@ -292,7 +288,7 @@ contains
 !        do n_z=-n_max,n_max   !terzo ciclo   su n
 !           n(1:3) = n_x * at(1:3,1)*alat + n_y * at(1:3,2)*alat + n_z * at(1:3,3)*alat
 !           modul=modulus(pos(1:3)-n(1:3))
-!           erf_value=qe_erfc(sqrt(eta)*modul)
+!           erf_value=erf(sqrt(eta)*modul)
 !           value=value+ erf_value/modul
 !        end do
 !     end do

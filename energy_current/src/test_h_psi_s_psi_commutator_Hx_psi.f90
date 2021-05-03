@@ -5,7 +5,13 @@ use klist, only: xk, igk_k
 USE becmod, ONLY: bec_type, becp, calbec, &
                     allocate_bec_type, deallocate_bec_type
 USE uspp, ONLY: nkb,vkb
+use cell_base, only : omega
+use mp_bands, only : intra_bgrp_comm
+use gvect, only : ngm, gg, g
+
+
 implicit none
+
 
 
 
@@ -35,7 +41,7 @@ subroutine init_test(input_vector)
         spsi=(0.d0,0.d0)
         chxpsi=(0.d0,0.d0)
         npw=npwx
-              call init_us_1()
+              call init_us_1(omega,ngm,g,gg,intra_bgrp_comm)
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
 
       call allocate_bec_type(nkb, nbnd, becp)
