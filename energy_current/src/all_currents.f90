@@ -1,3 +1,12 @@
+!
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!-----------------------------------------------------------------------
 program all_currents
    use kohn_sham_mod, only: init_kohn_sham, current_kohn_sham
    use hartree_xc_mod, only: current_hartree_xc

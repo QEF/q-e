@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 module init_us_3_mod
 contains
    subroutine init_us_3(npw_, xvkb_, tabr, ec_test)
