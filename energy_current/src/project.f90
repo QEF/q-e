@@ -28,7 +28,6 @@ contains
       USE wvfct, ONLY: npw, npwx, nbnd, g2kin, et
       USE klist, ONLY: igk_k
       USE wavefunctions, ONLY: evc
-
       USE noncollin_module, ONLY: noncolin, npol
       USE becmod, ONLY: bec_type, becp, calbec, &
                         allocate_bec_type, deallocate_bec_type
@@ -44,12 +43,10 @@ contains
       use mp, ONLY: mp_sum, mp_min, mp_max
       USE mp_global, ONLY: inter_pool_comm, intra_pool_comm
 !      USE eqv, ONLY: evq
-
       implicit none
       integer, intent(IN) :: ipol
       logical, intent(in) :: save_dvpsi
       complex(dp), intent(inout) :: dvpsi_save(:, :, :)
-      !
       real(DP):: emin, emax
       integer :: ik
       !
@@ -58,7 +55,6 @@ contains
       integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0, &
                  nrec, is, js, ijs, kbnd, ipw
       ! counters
-
       type(bec_type) ::becp0
       real(DP), allocatable  :: h_diag(:, :)
       ! the diagonal part of h_scf
@@ -77,30 +73,20 @@ contains
       !debug
 !      allocate (evq(npwx, nbnd))
 !      evq = evc
-      !
-
       ik = 1
       dpsi = (0.d0, 0.d0)
       dvpsi = (0.d0, 0.d0)
-      !
       call allocate_bec_type(nkb, nbnd, becp2)
-
       ! calculate the commutator [H,x_ipol]  psi > and store it in dpsi
       ! dvpsi used as workspace
-!aggiunto
       call allocate_bec_type(nkb, nbnd, becp0)
       CALL calbec(npw, vkb, evc, becp0)
-
       call commutator_Hx_psi(ik, nbnd, at(:, ipol), becp0, becp2, dpsi)
       call deallocate_bec_type(becp0)
-      !
       !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
       !    Apply -P^+_c
       !    NB it uses dvpsi as workspace
-      !
-      !     l_test = .true.
       ! manual orthogonalization
-      !     if (l_test) then
       emme = 0.d0
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc, 2*npwx, dpsi, 2*npwx, 0.d0, emme, nbnd)
       if (gstart == 2) then
@@ -111,41 +97,28 @@ contains
          end do
       end if
       call mp_sum(emme, intra_pool_comm)
-!     do ibnd=1,nbnd
-!        do jbnd=1,nbnd
-!            dpsi(1:npw,ibnd)=dpsi(1:npw,ibnd)-evc(1:npw,jbnd)*emme(jbnd,ibnd)
-!        end do
-!     end do
       call dgemm('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, 2*npwx, emme, nbnd, 1.d0, dpsi, 2*npwx)
-!      end if
       !dpsi=-dpsi
       !
       !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations
       !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
       !
-
       do ig = 1, npw
-!     g2kin (ig) = SUM((xk(1:3,ik) +g (1:3, igk (ig)) ) **2) *tpiba2
          g2kin(ig) = SUM((g(1:3, igk_k(ig, 1)))**2)*tpiba2
       enddo
-
       allocate (h_diag(npwx*npol, nbnd))
       h_diag = 0.d0
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! preconditioning
       do ibnd = 1, nbnd
          do ig = 1, npw
             h_diag(ig, ibnd) = 1.d0/max(1.0d0, g2kin(ig))
          enddo
       enddo
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! computation of alpha_pv
-
       emin = et(1, 1)
       do ibnd = 1, nbnd
          emin = min(emin, et(ibnd, 1))
       enddo
-
 #ifdef __MPI
       ! find the minimum across pools
       call mp_min(emin, inter_pool_comm)
@@ -159,19 +132,14 @@ contains
       call mp_max(emax, inter_pool_comm)
 #endif
       alpha_pv = 2.d0*(emax - emin)
-
-!
       ! avoid zero value for alpha_pv
       alpha_pv = max(alpha_pv, 1.0d-2)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!! end computation of alpha_pv
-
       if (save_dvpsi) then
          dvpsi = dvpsi_save(:, :, ipol)
       else
          dvpsi(:, :) = (0.d0, 0.d0)
       end if
-
-      !
       eth_rps = 1.D-10
       thresh = eth_rps
       !dvpsi is the initial estimate of the solution
@@ -184,18 +152,13 @@ contains
       if (save_dvpsi) then
          dvpsi_save(:, :, ipol) = dvpsi
       end if
-
-      !
       deallocate (h_diag)
       !
       ! we have now obtained P_c x |psi>.
       !
       IF (nkb > 0) call deallocate_bec_type(becp2)
-
 !      deallocate (evq)
-
       return
-
    end subroutine project
 
 end module

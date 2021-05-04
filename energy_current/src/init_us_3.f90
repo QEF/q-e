@@ -37,8 +37,6 @@ contains
       use atom, ONLY: rgrid
 !
       implicit none
-!
-!
       !TYPE(spline_data) :: spl_beta
       real(DP) :: vint
       integer :: ndm
@@ -52,18 +50,16 @@ contains
       complex(DP) :: add
       integer     :: ir
       !
-      !
       !     Local variables
       !
       integer :: i0, i1, i2, i3, ig, l, lm, na, nb, ih, jkb, igl, in, it, ll, lp
-
       real(DP) :: px, ux, vx, wx, cost, xg
       real(DP), allocatable :: ylm(:, :), betagl(:)
       complex(DP), allocatable ::xvkb1(:, :, :)
       complex(DP), allocatable :: sk(:)
       real(DP), allocatable :: aux(:)
       integer :: ii
-!
+      !
       if (lmaxkb .lt. 0) return
       call start_clock('init_us_3')
       allocate (xvkb1(npw_, nhm, 3))
@@ -144,7 +140,6 @@ contains
                        &tabr(i1, nb, it, ii)*px*vx*wx/2.d0 - &
                        &tabr(i2, nb, it, ii)*px*ux*wx/2.d0 + &
                        &tabr(i3, nb, it, ii)*px*ux*vx/6.d0
-
                   end if
                end do
 !
@@ -157,13 +152,10 @@ contains
                      add = ylm(ig, lm)
                      xvkb1(ig, ih, 1) = xvkb1(ig, ih, 1) - &!ap(lm,lp,3)*ylm(ig,lm)
                                         (cmplx(cost*ap(lm, 3, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
-!
                      xvkb1(ig, ih, 2) = xvkb1(ig, ih, 2) - &!ap(lm,lp,4)*ylm(ig,lm)
                                         (cmplx(cost*ap(lm, 4, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
-!
                      xvkb1(ig, ih, 3) = xvkb1(ig, ih, 3) + &!ap(lm,lp,2)*ylm(ig,lm)
                                         (cmplx(cost*ap(lm, 2, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
-!
                   end do
                end do
             end do
@@ -202,19 +194,15 @@ contains
             endif
          end do
       end do
-
       !!test for xvkb (if needed, only for development)
-
       if (ec_test) then
          call init_us_3_test(npw_, xvkb_)
       end if
-
       deallocate (ylm)
       deallocate (sk)
       deallocate (xvkb1)
       deallocate (betagl)
       deallocate (aux)
-
       call stop_clock('init_us_3')
       return
    end subroutine init_us_3
