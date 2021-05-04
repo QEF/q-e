@@ -71,6 +71,7 @@ PROGRAM matdyn
   !               below, is not specified)
   !     ndos      number of energy steps for DOS calculations
   !               (default: calculated from deltaE if not specified)
+  !     degauss   DOS broadening (in cm^-1). Default 0 - meaning use tetrahedra
   !     fldos     output file for dos (default: 'matdyn.dos')
   !               the dos is in states/cm(-1) plotted vs omega in cm(-1)
   !               and is normalised to 3*nat, i.e. the number of phonons
@@ -169,7 +170,7 @@ PROGRAM matdyn
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:), frc_ifc(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
   REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:), wq(:), &
-          dynq(:,:,:), DOSofE(:)
+          dynq(:,:,:), DOSofE(:), zq(:, :, :)
   INTEGER, ALLOCATABLE:: ityp(:), itau_blk(:)
   REAL(DP) ::     omega,alat, &! cell parameters and volume
                   at_blk(3,3), bg_blk(3,3),  &! original cell
@@ -185,11 +186,11 @@ PROGRAM matdyn
              nrws,                         &! number of nearest neighbor
              code_group_old
 
-  INTEGER :: nspin_mag, nqs, ios
+  INTEGER :: nspin_mag, nqs, ios, ipol
   !
   LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym,  loto_2d 
   !
-  REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, qq
+  REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, qq, degauss
   REAL(DP) :: delta, pathL
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: nqb(:)
@@ -213,11 +214,11 @@ PROGRAM matdyn
   CHARACTER(LEN=10) :: point_label_type
   CHARACTER(len=80) :: k_points = 'tpiba'
   !
-  REAL(DP), external       :: dos_gam
+  REAL(DP), external       :: dos_broad, dos_gam
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
-       &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
+       &           la2F, ndos, DeltaE, degauss, q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, &
        &           nosym, loto_2d, fildyn, fildyn_prefix, el_ph_nsigma, &
        &           loto_disable
@@ -233,6 +234,7 @@ PROGRAM matdyn
      !
      dos = .FALSE.
      deltaE = 1.0d0
+     degauss = 0
      ndos = 1
      nk1 = 0
      nk2 = 0
@@ -274,6 +276,7 @@ PROGRAM matdyn
      CALL mp_bcast(dos,ionode_id, world_comm)
      CALL mp_bcast(deltae,ionode_id, world_comm)
      CALL mp_bcast(ndos,ionode_id, world_comm)
+     CALL mp_bcast(degauss,ionode_id, world_comm)
      CALL mp_bcast(nk1,ionode_id, world_comm)
      CALL mp_bcast(nk2,ionode_id, world_comm)
      CALL mp_bcast(nk3,ionode_id, world_comm)
@@ -544,7 +547,7 @@ PROGRAM matdyn
 
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq), f_of_q(3,3,nat,nat), &
-                dynq(3*nat,nq,nat), DOSofE(nat) )
+                dynq(3*nat,nq,nat), DOSofE(nat), zq(nq, 3*nat, 3*nat) )
      ALLOCATE ( tmp_w2(3*nat), abs_similarity(3*nat,3*nat), mask(3*nat) )
 
      if(la2F.and.ionode) open(unit=300,file='dyna2F',status='unknown')
@@ -555,6 +558,7 @@ PROGRAM matdyn
      num_rap_mode=-1
      high_sym=.TRUE.
 
+     zq(:, :, :) = (0.d0, 0.d0)
      DO n=1, nq
         dyn(:,:,:,:) = (0.d0, 0.d0)
 
@@ -635,6 +639,16 @@ PROGRAM matdyn
         
 
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
+        !
+        ! Convert from displacements to eigenvectors (see rigid.f90 :: dyndiag)
+        do i = 1, 3*nat
+           do na = 1, nat
+              do ipol = 1,3
+                 zq(n, (na-1)*3+ipol,i) = z((na-1)*3+ipol,i) * sqrt(amu_ry * amass(ityp(na)))
+              end do
+          end do
+        end do
+        !
         ! Atom projection of dynamical matrix
         DO i = 1, 3*nat
            DO na = 1, nat
@@ -757,24 +771,38 @@ PROGRAM matdyn
         end if
         IF (ionode) OPEN (unit=2,file=fldos,status='unknown',form='formatted')
         IF (ionode) WRITE (2, *) "# Frequency[cm^-1] DOS PDOS"
-        DO na = 1, nat
-           dynq(1:3*nat,1:nq,na) = dynq(1:3*nat,1:nq,na) * freq(1:3*nat,1:nq)
-        END DO
+        !
+        IF (degauss .EQ. 0) THEN
+           ! Use tetrahedra
+           DO na = 1, nat
+              dynq(1:3*nat,1:nq,na) = dynq(1:3*nat,1:nq,na) * freq(1:3*nat,1:nq)
+           END DO
+        END IF
+        !
         DO n= 1, ndos
            E = Emin + (n - 1) * DeltaE
            DO na = 1, nat
               DOSofE(na) = 0d0
-              DO i = 1, 3*nat
+              !
+              IF (degauss .EQ. 0) THEN
+                 ! Use tetrahedra 
+                 DO i = 1, 3*nat
+                    DOSofE(na) = DOSofE(na) &
+                    & + dos_gam(3*nat, nq, i, dynq(1:3*nat,1:nq,na), freq, E)
+                 END DO
+              ELSE
+                 ! Use broadening
                  DOSofE(na) = DOSofE(na) &
-                 & + dos_gam(3*nat, nq, i, dynq(1:3*nat,1:nq,na), freq, E)
-              END DO
+                 & + dos_broad(na, 3*nat, nq, freq, zq, wq, E, degauss)
+              END IF
+              !
            END DO
            !
            IF (ionode) WRITE (2, '(2ES18.10,1000ES12.4)') E, SUM(DOSofE(1:nat)), DOSofE(1:nat)
         END DO
         IF (ionode) CLOSE(unit=2)
      END IF  !dos
-     DEALLOCATE (z, w2, dyn, dyn_blk)
+     DEALLOCATE (z, zq, w2, dyn, dyn_blk)
      !
      !    for a2F
      !
@@ -2485,6 +2513,52 @@ function dos_gam (nbndx, nq, jbnd, gamma, et, ef)
 
   return
 end function dos_gam
+!
+!
+!------------------------------------------------------------------------------
+function dos_broad(iatom, nbndx, nq, et, zq, wq, Ef, degauss)
+!------------------------------------------------------------------------------
+!
+! Get atom projected ph DOS using Gaussian broadening. Inspired by
+! thermo_pw/src/generalized_phdos.f90 (GPL)
+!
+  USE kinds,            ONLY : DP
+  !
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: iatom, nq, nbndx
+  REAL(DP), INTENT(IN) :: et(nbndx, nq), zq(nq, nbndx, nbndx), wq(nq), Ef, degauss
+  REAL(DP) :: ufact, weight
+  INTEGER :: n, ik, ngauss, ipol, indi, jpol, indj
+  COMPLEX(DP) :: u1, u2
+  REAL(DP), EXTERNAL :: w0gauss
+  REAL(DP) :: dos_broad
+  !
+  dos_broad = 0.0_DP
+  !
+  ngauss = 0
+  !
+  DO ik = 1, nq
+     DO n = 1, nbndx
+        weight = w0gauss ( (Ef - et(n,ik) ) / degauss, ngauss)
+        !
+        DO ipol=1, 3
+           indi = 3 * (iatom - 1) + ipol
+           DO jpol = ipol, 3
+              indj = 3 * (iatom - 1) + jpol
+              u1=zq(ik, indi, n)
+              u2=zq(ik, indj, n)
+              ufact = DBLE(u1*CONJG(u2))
+              dos_broad = dos_broad + wq(ik) * ufact * weight
+           ENDDO
+        ENDDO
+        !
+     ENDDO
+  ENDDO
+  !
+  dos_broad = dos_broad / degauss
+  !
+  RETURN
+end function dos_broad
 !
 !
 !-----------------------------------------------------------------------

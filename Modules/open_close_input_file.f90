@@ -12,6 +12,8 @@
 
 MODULE open_close_input_file
   !
+  !! Input file management.
+  !
   USE io_global,     ONLY : stdin, stdout, qestdin
   !
   CHARACTER(LEN=256), SAVE :: input_file = ' '
@@ -59,29 +61,27 @@ CONTAINS
   !----------------------------------------------------------------------------
   FUNCTION open_input_file ( input_file_, is_xml) RESULT ( ierr )
   !-----------------------------------------------------------------------------
-  !
-  ! ...  Open file for input read, connecting it to unit qestdin.
-  ! ...  If "input_file_" is not present, read it from command line
-  ! ...  If "input_file_" is empty, the standard input is dumped to
-  ! ...  temporary file "input_tmp.in" and this is opened for read
-  ! ...  If optional variable is_xml is present, test if the file is a
-  ! ...  valid xml file.
-  ! ...  In parallel execution, must be called by a single processor
-  ! ...  On exit:
-  ! ...    ierr = -1 if standard input is successfuly dumped to file
-  ! ...    ierr =  0 if input file is successfully opened
-  ! ...    ierr =  1 if there was an error opening file
-  ! ...    If optional variable is_xml is present:
-  ! ...    is_xml=.true. if the file has extension '.xml' or '.XML'
-  ! ...       or if either <xml...> or <?xml...> is found as first token
-  ! ...    Module varliable input_file is set to the file name actually read
-  ! ...  ---------------------------------------------------------------
+  !! Open file for input read, connecting it to unit \(\text{qestdin}\).  
+  !! If optional variable \(\text{is_xml}\) is present, test if the file is a
+  !! valid xml file.  
+  !! In parallel execution, must be called by a single processor.  
+  !! Module varliable input_file is set to the file name actually read.
+  !---------------------------------------------------------------
   !
   IMPLICIT NONE
   !
   CHARACTER (len=*), intent(in), OPTIONAL :: input_file_
+  !! If \(\text{input_file_}\) is not present, read it from command line. 
+  !! If \(\text{input_file_}\) is empty, the standard input is dumped to
+  !! temporary file "input_tmp.in" and this is opened for read
   LOGICAL, intent(out), OPTIONAL :: is_xml
+  !! \(\text{is_xml}=\text{TRUE}\) if the file has extension '.xml' or '.XML'
+  !! or if either <xml...> or <?xml...> is found as first token.
   INTEGER :: ierr
+  !! On exit:  
+  !! \(\text{ierr} = -1\) if standard input is successfuly dumped to file;  
+  !! \(\text{ierr} = 0\)  if input file is successfully opened;  
+  !! \(\text{ierr} = 1\)  if there was an error opening file.
   !
   LOGICAL :: is_xml_, is_tmp
   INTEGER :: length
@@ -169,9 +169,9 @@ END FUNCTION open_input_file
 
 FUNCTION close_input_file ( ) RESULT ( ierr )
   !
-  ! ...  this subroutine closes the input file opened by open_input_file
-  ! ...  also removes temporary file if data was dumped from stdin
-  ! ...  returns -1 if unit is not opened, 0 if no problem, > 0 if problems
+  !! This subroutine closes the input file opened by \(\texttt{open_input_file}\),
+  !! also removes temporary file if data was dumped from \(\text{stdin}\) and
+  !! returns -1 if unit is not opened, 0 if no problem, > 0 if problems.
   !
   IMPLICIT NONE
   !

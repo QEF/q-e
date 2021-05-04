@@ -8,33 +8,31 @@
 !-----------------------------------------------------------------------
 function w1gauss (x, n)
   !-----------------------------------------------------------------------
+  !! It gives:
+  !! $$ \text{w1gauss}(x,n) = \int_{-\infty}^x y\ \text{delta}(y) dy $$
+  !! where \(\text{delta}(x)\) is the current approximation for the delta
+  !! function, as obtained from \(\text{w0gauss}(x,n)\):
   !
-  !    w1gauss(x,n) = \int_{-\infty}^x   y delta(y) dy
-  !    where delta(x) is the current approximation for the delta function,
-  !    as obtained from w0gauss(x,n)
-  !
-  ! --> (n>=0) : Methfessel-Paxton case
-  !
-  ! --> (n=-1): Cold smearing (Marzari-Vanderbilt-DeVita-Payne)
-  !     w1gauss = 1/sqrt(2*pi)*(x-1/sqrt(2))*exp(-(x-1/sqrt(2))**2)
-  !
-  ! --> (n=-99): Fermi-Dirac case. In this case w1gauss corresponds
-  !     to the negative of the electronic entropy.
+  !! * (n>=0): Methfessel-Paxton case;
+  !! * (n=-1): Cold smearing (Marzari-Vanderbilt-DeVita-Payne):
+  !!   $$ \text{w1gauss} = \frac{1}{\sqrt{2\pi}}\frac{x-1}{\sqrt{2}}
+  !!   \text{exp}(-(x-1/\sqrt{2})^2); $$
+  !! * (n=-99): Fermi-Dirac case. In this case w1gauss corresponds
+  !!   to the negative of the electronic entropy.
   !
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
-  real(DP) :: w1gauss, x
-  ! output: the value of the function
-  ! input: the point where to compute the function
-
+  real(DP) :: w1gauss
+  !! output: the value of the function
+  real(DP) :: x
+  !! input: the point where to compute the function
   integer :: n
-  ! input: the order of the smearing function
+  !! input: the order of the smearing function
   !
-  !    here the local variables
+  ! ... local variables
   !
-
   real(DP) :: a, hp, arg, hpm1, hd, f, onemf, xp
   ! the coefficients a_n
   ! the hermite function

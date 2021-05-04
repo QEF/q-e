@@ -90,7 +90,6 @@ SUBROUTINE bpcg_gamma( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, 
   INTEGER  :: npw2, npwx2, i, l, block_size, done, nactive, nnew, newdone
   !
   REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP), EXTERNAL :: ZDOTC
 
   EXTERNAL  hs_psi, g_1psi
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )

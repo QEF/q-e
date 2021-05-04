@@ -19,16 +19,10 @@ contains
    subroutine current_kohn_sham(J, J_a, J_b, J_el, dt, scf_all, &
                                 dvpsi_save, save_dvpsi, &
                                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
-                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test)
+                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test, &
+                                omega, gg, intra_bgrp_comm, &
+                                nat, ityp)
       use kinds, only: DP
-      !use wvfct, only: nbnd, npw, npwx
-      !use wavefunctions, only: psic, evc
-      !use gvect, only: g, ngm, gstart
-      !USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
-      !use ions_base, only: tau
-      !use uspp, ONLY: vkb, nkb
-      !use klist, only: xk, igk_k
-      !use wvfct, ONLY: g2kin, et
       use fft_base, only: fft_type_descriptor !,dffts
       use mp, only: mp_sum
       use io_global, only: ionode
@@ -37,7 +31,6 @@ contains
       use becmod
       USE eqv, ONLY: dpsi, dvpsi !TODO: those variables looks like they can be local variables
       USE mp_pools, ONLY: intra_pool_comm
-      USE funct, ONLY: get_igcx, get_igcc
       use compute_charge_mod, only: compute_charge
       use project_mod, only: project
       use extrapolation, only : update_pot
@@ -51,7 +44,8 @@ contains
       logical, intent(in) :: save_dvpsi, hpsi_test
       complex(dp), intent(inout) :: dvpsi_save(:, :, :)
 
-      INTEGER, intent(in) :: nbnd, npwx
+      INTEGER, intent(in) :: nbnd, npwx, intra_bgrp_comm,&
+                             nat,ityp(:)
       INTEGER, intent(inout) :: npw, igk_k(:, :)
       TYPE(fft_type_descriptor), intent(inout) :: dffts
       COMPLEX(DP), intent(inout) ::  evc(:, :)
@@ -59,7 +53,8 @@ contains
       REAL(DP), intent(inout) :: g2kin(:)
       REAL(DP), intent(out) :: J(3), J_a(3), J_b(3), J_el(3)
       REAL(DP), intent(in) ::  tpiba2, g(:, :), at(:, :), &
-                              xk(:, :), et(:, :), dt
+                              xk(:, :), et(:, :), dt, gg(:),&
+                              omega
       COMPLEX(DP), intent(in) :: vkb(:, :)
 
       !character(LEN=20) :: dft_name
@@ -81,7 +76,7 @@ contains
 ! init potentials needed to evaluate  H|psi>
       call update_pot()
       call hinit1()
-      call init_us_1()
+      call init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call sum_band()
       call allocate_bec_type(nkb, nbnd, becp)

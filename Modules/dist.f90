@@ -7,11 +7,10 @@
 !
 !----------------------------------------------------------------------
 SUBROUTINE run_dist ( exit_status )
-!----------------------------------------------------------------------
-  !
-  ! Find distances, nearest neighbors, angles, taking into account periodicity
-  ! Requires as input: lattice vectors, types and positions of atoms
-  ! Must be run on a single process only. Output in file "dist.out"
+  !----------------------------------------------------------------------
+  !! Find distances, nearest neighbors, angles, taking into account periodicity.  
+  !! Requires as input: lattice vectors, types and positions of atoms
+  !! Must be run on a single process only. Output in file "dist.out".
   !
   USE kinds,     ONLY : dp
   USE constants, ONLY : pi, bohr_radius_angs

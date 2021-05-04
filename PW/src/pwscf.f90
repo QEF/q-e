@@ -39,16 +39,10 @@ PROGRAM pwscf
   !!
   USE environment,          ONLY : environment_start
   USE mp_global,            ONLY : mp_startup
-  USE mp_world,             ONLY : world_comm
-  USE mp_pools,             ONLY : intra_pool_comm
-  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE mp_exx,               ONLY : negrp
   USE read_input,           ONLY : read_input_file
-  USE command_line_options, ONLY : input_file_, command_line, ndiag_, nimage_
+  USE command_line_options, ONLY : input_file_, command_line, nimage_
   !
   IMPLICIT NONE
-  !
-  INCLUDE 'laxlib.fh'
   !
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 
@@ -56,28 +50,13 @@ PROGRAM pwscf
   !! Get the address of the server 
   INTEGER :: exit_status
   !! Status at exit
-  LOGICAL :: use_images, do_diag_in_band_group = .TRUE. ! .FALSE. ! .TRUE.
+  LOGICAL :: use_images
   !! true if running "manypw.x"
   LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
   !
   CALL mp_startup( start_images=.TRUE. )
   !
-  IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
-  !IF( do_diag_in_band_group ) THEN
-     ! used to be the default : one diag group per bgrp
-     ! with strict hierarchy: POOL > BAND > DIAG
-     ! if using exx groups from mp_exx still use this diag method
-     CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-                         do_distr_diag_inside_bgrp_ = .TRUE. )
-  ELSE
-     ! new default: one diag group per pool ( individual k-point level )
-     ! with band group and diag group both being children of POOL comm
-     CALL laxlib_start ( ndiag_, world_comm, intra_pool_comm, &
-                         do_distr_diag_inside_bgrp_ = .FALSE. )
-  END IF
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-                               inter_bgrp_comm )
   !
   CALL environment_start( 'PWSCF' )
   !

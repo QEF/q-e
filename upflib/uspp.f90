@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2011 Quantum ESPRESSO group
+! Copyright (C) 2004-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,115 +9,121 @@ MODULE uspp_param
   !
   ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
   !  
-  USE upf_kinds,    ONLY : DP
-  USE upf_params,   ONLY : npsx
   USE pseudo_types, ONLY : pseudo_upf
-  !
+  IMPLICIT NONE
   SAVE
-  PRIVATE :: randy
   !
+  INTEGER :: nsp = 0 
   TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
-
-  INTEGER :: &
-       nh(npsx),             &! number of beta functions per atomic type
-       nhm,                  &! max number of different beta functions per atom
-       nbetam,               &! max number of beta functions
-       iver(3,npsx)           ! version of the atomic code
-  INTEGER :: &
-       lmaxkb,               &! max angular momentum
-       lmaxq                  ! max angular momentum + 1 for Q functions
-  INTEGER :: &
-       nvb,                  &! number of species with Vanderbilt PPs (CPV)
-       ish(npsx)              ! for each specie the index of the first beta 
-                              ! function: ish(1)=1, ish(i)=1+SUM(nh(1:i-1))
+  !! the upf structure contains all info on atomic pseudopotential parameters
+  INTEGER, ALLOCATABLE :: nh(:)
+  !! number of beta functions, with angular parts, per atomic type 
+  INTEGER :: nhm
+  !! max number of beta functions, including angular parts, across atoms
+  INTEGER :: nbetam
+  !! max number of radial beta functions
+  INTEGER :: nwfcm
+  !! max number of radial atomic wavefunctions across atoms
+  INTEGER :: lmaxkb
+  !! max angular momentum of beta functions
+  INTEGER :: lmaxq
+  !! max angular momentum + 1 for Q functions
+  !
 CONTAINS
   !
-  !----------------------------------------------------------------------------
-  FUNCTION n_atom_wfc( nat, ityp, noncolin )
-  !----------------------------------------------------------------------------
+  SUBROUTINE init_uspp_dims ()
+    !
+    !!     calculates the number of beta functions for each atomic type
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: nt, nb
+    !
+    ! Check is needed, may be called more than once (but it shouldn't be!)
+    ! Maybe nh should be allocated when upf is, when upf is read ?
+    !
+    IF ( .NOT. ALLOCATED(nh) ) ALLOCATE ( nh(nsp) )
+    !
+    lmaxkb = - 1
+    DO nt = 1, nsp
+       !
+       nh (nt) = 0
+       !
+       ! do not add any beta projector if pseudo in 1/r fmt (AF)
+       !
+       IF ( upf(nt)%tcoulombp ) CYCLE 
+       !
+       DO nb = 1, upf(nt)%nbeta
+          nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
+          lmaxkb = MAX (lmaxkb, upf(nt)%lll(nb) )
+       ENDDO
+       !
+    ENDDO
+    lmaxq = 2*lmaxkb+1
+    !
+    ! calculate max numbers of beta functions and of atomic wavefunctions
+    !
+    nhm    = MAXVAL (nh (1:nsp))
+    nbetam = MAXVAL (upf(1:nsp)%nbeta)
+    nwfcm  = MAXVAL (upf(1:nsp)%nwfc)
+    !
+  END SUBROUTINE init_uspp_dims
   !
-  ! ... Find number of starting atomic orbitals
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN)  :: nat, ityp(nat)
-  LOGICAL, INTENT(IN), OPTIONAL  :: noncolin
-  INTEGER  :: n_atom_wfc
-  !
-  INTEGER  :: na, nt, n
-  LOGICAL  :: non_col
-  !
-  !
-  non_col = .FALSE.
-  IF ( PRESENT (noncolin) ) non_col=noncolin
-  n_atom_wfc = 0
-  !
-  DO na = 1, nat
-     !
-     nt = ityp(na)
-     !
-     DO n = 1, upf(nt)%nwfc
-        !
-        IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
-           !
-           IF ( non_col ) THEN
-              !
-              IF ( upf(nt)%has_so ) THEN
-                 !
-                 n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n)
-                 !
-                 IF ( ABS( upf(nt)%jchi(n)-upf(nt)%lchi(n) - 0.5D0 ) < 1.D-6 ) &
-                    n_atom_wfc = n_atom_wfc + 2
-                 !
-              ELSE
-                 !
-                 n_atom_wfc = n_atom_wfc + 2 * ( 2 * upf(nt)%lchi(n) + 1 )
-                 !
-              END IF
-              !
-           ELSE
-              !
-              n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n) + 1
-              !
-           END IF
-        END IF
-     END DO
-  END DO
-  !
-  RETURN
-  !
-  END FUNCTION n_atom_wfc
 END MODULE uspp_param
-
-! <<<<<<<<<<<<<<<~~~~<<<<<<<<<<<<<<<<-----------------
-
+!
+!
 MODULE uspp
   !
   ! Ultrasoft PPs:
   ! - Clebsch-Gordan coefficients "ap", auxiliary variables "lpx", "lpl"
   ! - beta and q functions of the solid
   !
-  USE upf_kinds,  ONLY: DP
-  USE upf_params, ONLY: lmaxx, lqmax
+  USE upf_kinds,   ONLY: DP
+  USE upf_params,  ONLY: lmaxx, lqmax
+  USE upf_spinorb, ONLY: fcoef, fcoef_d 
   IMPLICIT NONE
   PRIVATE
   SAVE
-  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, indv_ijkb0, &
+  !
+  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, ofsbeta, &
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
-            becsum, ebecsum, deallocate_uspp
-       
+            becsum, ebecsum
+  PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, ofsbeta_d, &
+            vkb_d, dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
+            becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
-  PUBLIC :: qq_so, dvan_so, deeq_nc 
+  PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
+  PUBLIC :: qq_so_d, dvan_so_d, deeq_nc_d, fcoef_d 
   PUBLIC :: dbeta
+  !
+  PUBLIC :: allocate_uspp, deallocate_uspp
+  !
+  ! GPU sync
+  !
+  PUBLIC  :: using_vkb, using_vkb_d
+  LOGICAL :: vkb_d_ood = .false.    ! used to flag out of date variables
+  LOGICAL :: vkb_ood   = .false.    ! used to flag out of date variables
+  !
+  ! Vars
+  !
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
+  !
   INTEGER ::             &! for each pair of combined momenta lm(1),lm(2): 
        lpx(nlx,nlx),     &! maximum combined angular momentum LM
        lpl(nlx,nlx,mx)    ! list of combined angular momenta  LM
-  REAL(DP) :: &
-       ap(lqmax*lqmax,nlx,nlx)
-  ! Clebsch-Gordan coefficients for spherical harmonics
+  REAL(DP) :: ap(lqmax*lqmax,nlx,nlx)
+                          ! Clebsch-Gordan coefficients for spherical harmonics
+  ! GPU vars
+  INTEGER, ALLOCATABLE ::  & ! for each pair of combined momenta lm(1),lm(2): 
+       lpx_d(:,:),         & ! maximum combined angular momentum LM
+       lpl_d(:,:,:)          ! list of combined angular momenta  LM
+  REAL(DP), ALLOCATABLE :: ap_d(:,:,:)
+#if defined (__CUDA)
+  attributes(DEVICE) :: lpx_d, lpl_d, ap_d
+#endif
+  !
   !
   INTEGER :: nkb,        &! total number of beta functions, with struct.fact.
              nkbus        ! as above, for US-PP only
@@ -127,8 +133,19 @@ MODULE uspp
        nhtol(:,:),       &! correspondence n <-> angular momentum l
        nhtolm(:,:),      &! correspondence n <-> combined lm index for (l,m)
        ijtoh(:,:,:),     &! correspondence beta indexes ih,jh -> composite index ijh
-       indv_ijkb0(:)      ! first beta (index in the solid) for each atom 
+       ofsbeta(:)      ! first beta (index in the solid) for each atom 
   !
+  ! GPU vars
+  !
+  INTEGER, ALLOCATABLE :: indv_d(:,:)
+  INTEGER, ALLOCATABLE :: nhtol_d(:,:)
+  INTEGER, ALLOCATABLE :: nhtolm_d(:,:)
+  INTEGER, ALLOCATABLE :: ijtoh_d(:,:,:)
+  INTEGER, ALLOCATABLE :: ofsbeta_d(:)
+#if defined (__CUDA)
+  attributes(DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, ofsbeta_d
+#endif
+
   LOGICAL :: &
        okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
        nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
@@ -150,6 +167,25 @@ MODULE uspp
        qq_so(:,:,:,:),           &! Q_{nm}
        dvan_so(:,:,:,:),         &! D_{nm}
        deeq_nc(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
+  !
+  ! GPU vars
+  !
+  COMPLEX(DP), ALLOCATABLE :: vkb_d(:,:)
+  REAL(DP),    ALLOCATABLE :: becsum_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: ebecsum_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: deeq_d(:,:,:,:)
+  REAL(DP),    ALLOCATABLE :: qq_nt_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: qq_at_d(:,:,:)
+  REAL(DP),    ALLOCATABLE :: nhtoj_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: qq_so_d(:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
+#if defined(__CUDA)
+  attributes (DEVICE) :: vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
+                         qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
+#endif
+
   !
   ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
   ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
@@ -239,12 +275,20 @@ CONTAINS
           end do
        end do
     end do
-    
+    ! 
     deallocate(mly)
     deallocate(ylm)
     deallocate(rr)
     deallocate(r)
-    
+    !
+#if defined (__CUDA)
+    IF (ALLOCATED(ap_d)) DEALLOCATE(ap_d)
+    ALLOCATE(ap_d, SOURCE=ap)
+    IF (ALLOCATED(lpx_d)) DEALLOCATE(lpx_d)
+    ALLOCATE(lpx_d, SOURCE=lpx)
+    IF (ALLOCATED(lpl_d)) DEALLOCATE(lpl_d)
+    ALLOCATE(lpl_d, SOURCE=lpl)
+#endif
     return
   end subroutine aainit
   !
@@ -363,14 +407,84 @@ CONTAINS
   end function compute_ap
   !
   !-----------------------------------------------------------------------
+  subroutine allocate_uspp(use_gpu,noncolin,lspinorb,tqr,nhm,nsp,nat,nspin)
+    !-----------------------------------------------------------------------
+    implicit none
+    logical, intent(in) :: use_gpu
+    logical, intent(in) :: noncolin,lspinorb,tqr
+    integer, intent(in) :: nhm,nsp,nat,nspin
+    !
+    !if (nhm_/=nhm) call upf_error("allocate_uspp","invalid nhm",1)
+    !if (nsp_/=nsp) call upf_error("allocate_uspp","invalid nsp",1)
+    !
+    allocate( indv(nhm,nsp)   )
+    allocate( nhtol(nhm,nsp)  )
+    allocate( nhtolm(nhm,nsp) )
+    allocate( nhtoj(nhm,nsp)  )
+    allocate( ijtoh(nhm,nhm,nsp) )
+    allocate( deeq(nhm,nhm,nat,nspin) )
+    if ( noncolin ) then
+       allocate( deeq_nc(nhm,nhm,nat,nspin) )
+    endif
+    allocate( qq_at(nhm,nhm,nat) )
+    allocate( qq_nt(nhm,nhm,nsp) )
+    if ( lspinorb ) then
+       allocate( qq_so(nhm,nhm,4,nsp) )
+       allocate( dvan_so(nhm,nhm,nspin,nsp) )
+       allocate( fcoef(nhm,nhm,2,2,nsp) )
+    else
+       allocate( dvan(nhm,nhm,nsp) )
+    endif
+    allocate(becsum( nhm*(nhm+1)/2, nat, nspin))
+    if (tqr) then
+       allocate(ebecsum( nhm*(nhm+1)/2, nat, nspin))
+    endif
+    allocate( ofsbeta(nat) )
+    !
+    ! GPU-vars (protecting zero-size allocations)
+    !
+    if (use_gpu) then
+      !
+      if (nhm>0) then
+        allocate( indv_d(nhm,nsp)   )
+        allocate( nhtol_d(nhm,nsp)  )
+        allocate( nhtolm_d(nhm,nsp) )
+        allocate( nhtoj_d(nhm,nsp)  )
+        allocate( ijtoh_d(nhm,nhm,nsp) )
+        allocate( deeq_d(nhm,nhm,nat,nspin) )
+        if ( noncolin ) then
+           allocate( deeq_nc_d(nhm,nhm,nat,nspin) )
+        endif
+        allocate( qq_at_d(nhm,nhm,nat) )
+        allocate( qq_nt_d(nhm,nhm,nsp) )
+        if ( lspinorb ) then
+           allocate( qq_so_d(nhm,nhm,4,nsp) )
+           allocate( dvan_so_d(nhm,nhm,nspin,nsp) )
+           allocate( fcoef_d(nhm,nhm,2,2,nsp) )
+        else
+           allocate( dvan_d(nhm,nhm,nsp) )
+        endif
+        allocate(becsum_d( nhm*(nhm+1)/2, nat, nspin))
+        if (tqr) then
+           allocate(ebecsum_d( nhm*(nhm+1)/2, nat, nspin))
+        endif
+        !
+      endif
+      allocate( ofsbeta_d(nat) )
+      !
+    endif
+    !
+  end subroutine allocate_uspp
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE deallocate_uspp()
     !-----------------------------------------------------------------------
-    !
+    IMPLICIT NONE
     IF( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
     IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
     IF( ALLOCATED( nhtolm ) )     DEALLOCATE( nhtolm )
     IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
-    IF( ALLOCATED( indv_ijkb0 ) ) DEALLOCATE( indv_ijkb0 )
+    IF( ALLOCATED( ofsbeta ) ) DEALLOCATE( ofsbeta )
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
     IF( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
@@ -382,10 +496,74 @@ CONTAINS
     IF( ALLOCATED( qq_so ) )      DEALLOCATE( qq_so )
     IF( ALLOCATED( dvan_so ) )    DEALLOCATE( dvan_so )
     IF( ALLOCATED( deeq_nc ) )    DEALLOCATE( deeq_nc )
+    IF( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
     IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
     IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
+    ! GPU variables
+    IF( ALLOCATED( ap_d ) )       DEALLOCATE( ap_d )
+    IF( ALLOCATED( lpx_d ) )      DEALLOCATE( lpx_d )
+    IF( ALLOCATED( lpl_d ) )      DEALLOCATE( lpl_d )
+    IF( ALLOCATED( indv_d ) )     DEALLOCATE( indv_d )
+    IF( ALLOCATED( nhtol_d ) )    DEALLOCATE( nhtol_d )
+    IF( ALLOCATED( nhtolm_d ) )   DEALLOCATE( nhtolm_d )
+    IF( ALLOCATED( ijtoh_d ) )    DEALLOCATE( ijtoh_d )
+    IF( ALLOCATED( ofsbeta_d)) DEALLOCATE( ofsbeta_d )
+    IF( ALLOCATED( vkb_d ) )      DEALLOCATE( vkb_d )
+    IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
+    IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )
+    IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
+    IF( ALLOCATED( deeq_d ) )     DEALLOCATE( deeq_d )
+    IF( ALLOCATED( qq_nt_d ) )    DEALLOCATE( qq_nt_d )
+    IF( ALLOCATED( qq_at_d ) )    DEALLOCATE( qq_at_d )
+    IF( ALLOCATED( nhtoj_d ) )    DEALLOCATE( nhtoj_d )
+    IF( ALLOCATED( qq_so_d ) )    DEALLOCATE( qq_so_d )
+    IF( ALLOCATED( dvan_so_d ) )  DEALLOCATE( dvan_so_d )
+    IF( ALLOCATED( deeq_nc_d ) )  DEALLOCATE( deeq_nc_d )
+    IF( ALLOCATED( fcoef_d ) )    DEALLOCATE( fcoef_d )
+    !
   END SUBROUTINE deallocate_uspp
   !
+  ! In the following, allocations are not checked and assume
+  ! to be dimensioned correctly.
+  !
+  ! intento is used to specify what the variable will  be used for :
+  !  0 -> in , the variable needs to be synchronized but won't be changed
+  !  1 -> inout , the variable needs to be synchronized AND will be changed
+  !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+  ! 
+  SUBROUTINE using_vkb(intento)
+      !
+      !USE uspp, ONLY : vkb, vkb_d
+      implicit none
+      INTEGER, INTENT(IN) :: intento
+      IF (size(vkb)==0) return
+#if defined(__CUDA)  || defined(__CUDA_GNU)
+      IF (vkb_ood) THEN
+          IF (intento < 2) vkb = vkb_d
+          vkb_ood = .false.
+      ENDIF
+      IF (intento > 0)    vkb_d_ood = .true.
+#endif
+  END SUBROUTINE using_vkb
+  !
+  SUBROUTINE using_vkb_d(intento)
+      !
+      !USE uspp, ONLY : vkb, vkb_d
+      implicit none
+      INTEGER, INTENT(IN) :: intento
+      IF (size(vkb)==0) return
+#if defined(__CUDA) || defined(__CUDA_GNU)
+      !
+      IF (vkb_d_ood) THEN
+          IF (intento < 2) vkb_d = vkb
+          vkb_d_ood = .false.
+      ENDIF
+      IF (intento > 0)    vkb_ood = .true.
+#else
+      CALL upf_error('using_vkb_d', 'no GPU support', 1)
+#endif
+  END SUBROUTINE using_vkb_d
+  !   
 END MODULE uspp
 

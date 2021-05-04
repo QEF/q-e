@@ -108,10 +108,22 @@
     IMPLICIT NONE
     !
     ! Local variables
+    CHARACTER(LEN = 255) :: dummy
+    !! Copy of field read for parsing
+    CHARACTER(LEN = 255) :: lvalue
+    !! Parsed logical value
     LOGICAL :: random
     !! Random
+    LOGICAL :: notfound
+    !! If .TRUE., there is no "write_hr".
     INTEGER :: i
     !! Band index
+    INTEGER :: pos
+    !! Position in strings
+    INTEGER :: pos1
+    !! Position in strings
+    INTEGER :: pos2
+    !! Position in strings
     REAL(KIND = DP) :: et_tmp(nbnd, nkstot)
     !! eigenvalues on full coarse k-mesh
     !
@@ -156,10 +168,43 @@
       WRITE(iuwinfil, '("num_iter = ", i7)')         num_iter
       IF (vme) WRITE(iuwinfil, '(a)') "write_bvec = .true."
       !
+      ! HL 11/2020: The code block below is necessary 
+      !             until the bug fix in W90 is merged into its master branch.
+      !
+      IF (vme) THEN
+        notfound = .TRUE.
+        DO i = 1, nwanxx
+          IF (wdata(i) /= ' ') THEN
+            pos = INDEX(TRIM(ADJUSTL(wdata(i))), 'write_hr')
+            IF (pos == 1) THEN
+              dummy = wdata(i) (LEN('write_hr') + 1:)
+              pos1 = INDEX(dummy, '!')
+              pos2 = INDEX(dummy, '#')
+              IF (pos1 == 0 .AND. pos2 == 0) lvalue = dummy
+              IF (pos1 == 0 .AND. pos2 > 0) lvalue = dummy(:pos2 - 1)
+              IF (pos2 == 0 .AND. pos1 > 0) lvalue = dummy(:pos1 - 1)
+              IF (pos1 > 0 .AND. pos2 > 0) lvalue = dummy(:MIN(pos1, pos2) - 1)
+              lvalue = TRIM(ADJUSTL(lvalue))
+              IF (lvalue(1:1) == '=' .OR. lvalue(1:1) == ':') THEN
+                lvalue = lvalue(2:)
+                IF (INDEX(lvalue, 't') > 0) THEN
+                  notfound = .FALSE.
+                ELSEIF (INDEX(lvalue, 'f') > 0) THEN
+                  wdata(i) = "write_hr = .true."
+                  notfound = .FALSE.
+                ENDIF
+              ENDIF
+            ENDIF
+          ENDIF
+        ENDDO
+      ENDIF
+      !
       ! Write any extra parameters to the prefix.win file
       DO i = 1, nwanxx
-        IF (wdata(i) /= ' ') WRITE(iuwinfil, *) wdata(i)
+        IF (wdata(i) /= ' ') WRITE(iuwinfil, *) TRIM(wdata(i))
       ENDDO
+      !
+      IF (vme .AND. notfound) WRITE(iuwinfil, *) "write_hr = .true."
       !
       CLOSE(iuwinfil)
       !

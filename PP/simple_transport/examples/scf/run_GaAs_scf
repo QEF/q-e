@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export ESPRESSO_BIN=../../../../bin 
 export kp=32
 export cut=50
 export NAME=GaAs
@@ -50,7 +51,7 @@ K_POINTS {automatic}
    $kp $kp $kp 0 0 0
 EOF
 
-./pw.x < GaAs.scf.in > GaAs.scf.out
+$ESPRESSO_BIN/pw.x < GaAs.scf.in > GaAs.scf.out
 
 mv GaAs.a2Fsave GaAs.$kp.a2Fsave
 

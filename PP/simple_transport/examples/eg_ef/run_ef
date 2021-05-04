@@ -4,6 +4,7 @@ export kp=32
 
 cp ../scf/GaAs.$kp.a2Fsave .
 cp ../scf/info-q .
+mkdir results
 
 cat > input_ef << EOF
 &input
@@ -25,6 +26,6 @@ cat > input_ef << EOF
 &end
 EOF
 
-./ef.x < input_ef > out.$kp
+../../src/ef.x < input_ef > results/out.$kp
 
 

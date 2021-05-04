@@ -8,9 +8,8 @@
 !---------------------------------------------------------------------------
 MODULE read_cards_module
    !---------------------------------------------------------------------------
-   !
-   ! ...  This module handles the reading of cards from standard input
-   ! ...  Original version written by Carlo Cavazzoni
+   !! This module handles the reading of cards from standard input.  
+   !! Original version written by Carlo Cavazzoni.
    !
    USE kinds,     ONLY : DP
    USE io_global, ONLY : stdout
@@ -211,7 +210,11 @@ CONTAINS
       ELSEIF ( trim(card) == 'WANNIER_AC' .and. ( prog == 'WA' )) THEN
          !
          CALL card_wannier_ac( input_line )
-
+         !
+      ELSEIF ( trim(card) == 'TOTAL_CHARGE' ) THEN
+         !
+         CALL card_total_charge( input_line )
+         !
       ELSE
          !
          IF ( ionode ) &
@@ -876,7 +879,7 @@ CONTAINS
    END SUBROUTINE card_kpoints
 
    SUBROUTINE card_add_kpoints( input_line )
-     USE additional_kpoints, ONLY : nkstot_add, xk_add
+     USE additional_kpoints, ONLY : nkstot_add, xk_add, k_points_add
      IMPLICIT NONE
      CHARACTER(len=*),INTENT(in) :: input_line
      CHARACTER(len=256) :: input_line_aux
@@ -884,6 +887,7 @@ CONTAINS
      INTEGER :: nk1_old, nk2_old, nk3_old, nkstot_old
      INTEGER :: k1_old,  k2_old,  k3_old
      LOGICAL, EXTERNAL  :: matches
+     CHARACTER(len=80) :: k_points_old
      !
      IF(.not.allocated(xk) .or. .not.allocated(wk))&
        CALL errore("add_kpoints", "ADDITIONAL_K_POINTS must appear after K_POINTS",1)
@@ -896,6 +900,7 @@ CONTAINS
      nkstot_old = nkstot
      ALLOCATE(xk_old(3,nkstot_old))
      ALLOCATE(wk_old(nkstot_old))
+     k_points_old = k_points
      xk_old  = xk
      wk_old  = wk
      nk1_old = nk1
@@ -918,12 +923,14 @@ CONTAINS
      IF(nkstot_add==0) CALL errore("add_kpoints", "No new k_points?",1)
      ALLOCATE(xk_add(3,nkstot_add))
      xk_add = xk
+     k_points_add = k_points
 
      ! Put back previous stuff
      DEALLOCATE(xk, wk)
      nkstot = nkstot_old
      ALLOCATE(xk(3,nkstot))
      ALLOCATE(wk(nkstot))
+     k_points = k_points_old
      xk  = xk_old
      wk  = wk_old
      nk1 = nk1_old
@@ -1935,4 +1942,55 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_wannier_ac
+   !
+   !
+   !------------------------------------------------------------------------
+   !    BEGIN manual
+   !----------------------------------------------------------------------
+   !
+   ! TOTAL_CHARGE
+   !
+   !   set the total charge
+   !
+   ! Syntax:
+   !
+   !   TOTAL_CHARGE
+   !      tot_charge
+   !
+   ! Example:
+   !
+   ! TOTAL_CHARGE
+   !   0.1
+   !
+   !----------------------------------------------------------------------
+   !    END manual
+   !------------------------------------------------------------------------
+   !
+   SUBROUTINE card_total_charge( input_line )
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(len=256) :: input_line
+      LOGICAL, EXTERNAL  :: matches
+      INTEGER            :: iv, ip, ierr
+      CHARACTER(len=10)  :: lb_mol
+      CHARACTER(len=256) :: molfile
+      !
+      !
+      IF ( ttotcharge ) THEN
+         CALL errore( ' card_total_charge ', 'two occurrences', 2 )
+      ENDIF
+      !
+      CALL read_line( input_line )
+      READ( input_line, *, iostat=ierr ) tot_charge
+      !
+      CALL errore( ' card_total_charge ', &
+         & 'cannot read total_charge from: '//trim(input_line), abs(ierr))
+      !
+      ttotcharge = .true.
+      !
+      RETURN
+      !
+   END SUBROUTINE card_total_charge
+   !
 END MODULE read_cards_module

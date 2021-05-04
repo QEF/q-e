@@ -11,8 +11,8 @@ END_PATH_INPUT
 BEGIN_ENGINE_INPUT
 &CONTROL
   prefix        = 'Al001+H_bc3'
-  outdir        = '/Users/otani/ESPRESSO/qe-6.1/tempdir/',
-  pseudo_dir    = '/Users/otani/ESPRESSO/qe-6.1/pseudo/',
+  outdir        = '/cluster-001-share/groups/otani-lab/Programs/q-e_g_esm/tempdir/',
+  pseudo_dir    = '/cluster-001-share/groups/otani-lab/Programs/q-e_g_esm/pseudo/',
 /
 &SYSTEM
   ibrav         = 0,

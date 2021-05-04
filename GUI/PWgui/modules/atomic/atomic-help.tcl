@@ -354,7 +354,7 @@ help lsd -helpfmt helpdoc -helptext {
 1 ... spin-polarized calculation
 
 <b>BEWARE:</b>
-not allowed if iswitch=3 (PP generation) or with full
+not allowed if "iswitch"=3 (PP generation) or with full
 relativistic calculation
          </pre></blockquote>
 </ul>      
@@ -525,7 +525,7 @@ help verbosity -helpfmt helpdoc -helptext {
 <blockquote><pre>
 <b>'low'</b> or <b>'high'</b>
 
-if <b>'high'</b> with iswitch=2,3 prints separately core and
+if <b>'high'</b> with "iswitch"=2,3 prints separately core and
 valence contributions to the energies. Print the
 frozen-core energy.
          </pre></blockquote>
@@ -777,12 +777,12 @@ help pseudotype -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 1 ... norm-conserving, single-projector PP
-      IMPORTANT: if pseudotype=1 all calculations are done
+      <b>IMPORTANT:</b> if pseudotype=1 all calculations are done
       using the SEMILOCAL form, not the separable nonlocal form
 
 2 ... norm-conserving PP in separable form (obsolescent)
       All calculations are done using SEPARABLE non-local form
-      IMPORTANT: multiple projectors allowed but not properly
+      <b>IMPORTANT:</b> multiple projectors allowed but not properly
       implemented, use only if you know what you are doing
 
 3 ... ultrasoft PP or PAW
@@ -1423,7 +1423,7 @@ help nconf -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> the number of configurations to be tested. For iswitch = 4 nconf=2
+<blockquote><pre> the number of configurations to be tested. For "iswitch"=4 nconf=2
          </pre></blockquote>
 </ul>      
       
@@ -1438,7 +1438,7 @@ help file_pseudo -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em> ' '
          </li>
-<br><li> <em>Status: </em> ignored if iswitch=3
+<br><li> <em>Status: </em> ignored if "iswitch"=3
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -1453,7 +1453,7 @@ the old RRKJ format is first tried;
 
 * otherwise, the old NC format is read.
 
-IMPORTANT: in the latter case, all calculations are done
+<b>IMPORTANT:</b> in the latter case, all calculations are done
 using the SEMILOCAL form, not the separable nonlocal form.
 Use the UPF format if you want to test the separable form!
          </pre></blockquote>
@@ -1515,9 +1515,10 @@ help configts -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-A string containing the test valence electronic
-configuration nc, nc=1,nconf. Same syntax as for "config".
-If configts(i) is not set, the electron configuration
+A string array containing the test electronic configuration.
+"configts"(nc), nc=1,"nconf", has the same syntax as for "config"
+but only VALENCE states must be included.
+If "configts"(i) is not set, the electron configuration
 is read from the cards following the namelist.
          </pre></blockquote>
 </ul>      
@@ -1581,7 +1582,7 @@ help rcutv -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Cutoff distance (CUT) for the inclusion of LDA-1/2 potential.
-                  Needed (mandatory) only if iswitch = 4
+Needed (mandatory) only if "iswitch" = 4
          </pre></blockquote>
 </ul>      
       

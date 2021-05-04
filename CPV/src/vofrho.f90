@@ -41,8 +41,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
-      USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc,&
-                                  dft_is_hybrid, exx_is_active
+      USE funct,            ONLY: dft_is_nonlocc, nlc, get_inlc
+      USE xc_lib,           ONLY: xclib_dft_is, exx_is_active
       USE vdW_DF,           ONLY: vdW_DF_stress
       use rVV10,            ONLY: rVV10_stress
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
@@ -79,7 +79,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia, inlc
       REAL(DP) :: vtxc, vave, ebac, wz, eh, ehpre, enlc
-      COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
+      COMPLEX(DP)  fp, fm, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), newrhosave(:,:), rhocsave(:) 
@@ -104,6 +104,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       ! ...  dalbe(:) = delta( alpha(:), beta(:) )
       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
+      COMPLEX(DP), PARAMETER :: ci = ( 0.0d0, 1.0d0 )
 
 
       CALL start_clock( 'vofrho' )
@@ -129,8 +130,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         CALL stop_clock( 'ts_vdw' )
         !
       END IF
-      !
-      ci = ( 0.0d0, 1.0d0 )
       !
       !     wz = factor for g.neq.0 because of c*(g)=c(-g)
       !
@@ -267,7 +266,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !$omp parallel default(shared), private(ig,is)
 
       DO is=1,nsp
-!$omp do
+!$omp do 
          DO ig=1,dffts%ngm
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          END DO
@@ -442,12 +441,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       END IF
        
       IF( nspin == 1 ) THEN
-         rhog( 1:dfftp%ngm, 1 ) = rhog( 1:dfftp%ngm, 1 ) + vtemp(1:dfftp%ngm) 
+         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,1), 1)
       ELSE
          isup=1
          isdw=2
-         rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) + vtemp(1:dfftp%ngm) 
-         rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) + vtemp(1:dfftp%ngm) 
+         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isup), 1)
+         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isdw), 1)
          IF( ttsic ) THEN
             rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) - self_vloc(1:dfftp%ngm) 
             rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) - self_vloc(1:dfftp%ngm) 
@@ -507,7 +506,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       CALL rho_g2r ( dffts, rhog, rhos )
 
-      IF( dft_is_meta() ) CALL vofrho_meta( )
+      IF( xclib_dft_is('meta') ) CALL vofrho_meta( )
 
       ebac = 0.0d0
       !
@@ -522,7 +521,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     Add EXX energy to etot here. exx_wf related
       !
-      IF(dft_is_hybrid().AND.exx_is_active()) THEN
+      IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
         !
         etot = etot - exxalfa*exx 
         !
@@ -575,7 +574,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          ! BS / RAD / HK
          ! Adding the stress tensor from exact exchange here. exx_wf related
          !
-         IF(dft_is_hybrid().AND.exx_is_active()) THEN
+         IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
            !
            IF (isotropic .and. (ibrav.eq.1)) THEN
              !

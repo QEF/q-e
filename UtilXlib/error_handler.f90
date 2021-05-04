@@ -43,7 +43,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   IF( ierr <= 0 ) RETURN
   !
-  ! ... the error message is written un the "*" unit
+  ! ... the error message is written on the "*" unit
   !
   WRITE( cerr, FMT = '(I6)' ) ierr
   WRITE( UNIT = *, FMT = '(/,1X,78("%"))' )

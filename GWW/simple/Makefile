@@ -25,7 +25,7 @@ SIMPLEOBJS = \
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 	../../upflib/libupf.a  ../../KS_Solvers/libks_solvers.a \
 	../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
-        ../../dft-d3/libdftd3qe.a
+        ../../dft-d3/libdftd3qe.a ../../XClib/xc_lib.a
 # dft-d3 required by xlf for obscure reasons
 
 PWOBJS = ../../PW/src/libpw.a

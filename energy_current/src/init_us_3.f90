@@ -25,7 +25,7 @@ contains
       USE constants, ONLY: tpi, pi, fpi
       USE gvect, ONLY: eigts1, eigts2, eigts3, mill, g, gg, ngl, igtongl, gl, gstart
       USE wvfct, ONLY: npwx
-      USE us, ONLY: dq, spline_ps
+      use uspp_data, ONLY: dq, spline_ps
       ! USE splinelib
       USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
       USE uspp_param, ONLY: upf, lmaxkb, nhm, nh

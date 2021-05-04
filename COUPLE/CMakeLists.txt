@@ -1,17 +1,16 @@
-set(sources
+set(src_couple
     src/libpwscf.f90
     src/libcpv.f90
     src/libqemod.f90)
+qe_enable_cuda_fortran("${src_couple}")
 
-qe_add_library(qe_couple ${sources})
-add_library(QE::COUPLE ALIAS qe_couple)
+qe_add_library(qe_couple ${src_couple})
 target_link_libraries(qe_couple
     PRIVATE
-        QE::Modules
-        QE::LAX
-	    QE::FFTX
-        QE::UTILX
-        QE::CPV)
+        qe_modules
+        qe_lax
+	    qe_fftx
+        qe_cpv)
 
 ###########################################################
 

@@ -15,8 +15,10 @@ SUBROUTINE hp_close_q ( flag )
   ! or during execution with flag=.FALSE. (does not remove 'recover')
   !
   USE buffers,        ONLY : close_buffer
+  USE io_files,       ONLY : iunhub
   USE units_lr,       ONLY : iuwfc, iuatswfc
   USE ldaU_hp,        ONLY : iudwfc, iudvwfc
+  USE control_lr,     ONLY : lgamma
   !
   IMPLICIT NONE
   !
@@ -34,6 +36,7 @@ SUBROUTINE hp_close_q ( flag )
   ENDIF
   !
   CALL close_buffer(iuatswfc,'delete')
+  IF (lgamma) CALL close_buffer(iunhub,'delete')
   !
   RETURN
   !

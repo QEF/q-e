@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package turboTDDFPT -program turbo_davidson.x {
+input_description -distribution {Quantum ESPRESSO} -package turboTDDFPT -program turbo_davidson.x {
 
     toc {}
 
@@ -14,20 +14,20 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
           fortran code. Comments lines in ``cards'' can be introduced by 
           either a "!" or a "#" character in the first position of a line.
 
-	  Structure of the input data:
+          @b {Structure of the input data:}
 	  ===============================================================================
 
-	  &lr_input
+	  &LR_INPUT
 	    ...
 	  /
 
-	  &lr_dav
+	  &LR_DAV
 	    ...
 	  /	    
 
     }
 
-    namelist lr_input {
+    namelist LR_INPUT {
 
 	label { This namelist is always needed ! }
 
@@ -94,7 +94,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    }
 	}
     }
-    namelist lr_dav {
+    namelist LR_DAV {
 	var num_eign -type INTEGER {
 	    default {1}
 	    info {

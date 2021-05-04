@@ -45,8 +45,6 @@
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
       COMPLEX(DP) :: screen_coul( dfftp%ngm )
 
-      REAL(DP), EXTERNAL :: qe_erf
-
       ! ... Locals
       !
       REAL(DP), ALLOCATABLE :: grr(:,:)
@@ -87,7 +85,7 @@
             IF( rmod < gsmall ) THEN
               grr( ir, 1 ) = fact * 2.0d0 * rc / SQRT( pi )
             ELSE
-              grr( ir, 1 ) = fact * qe_erf( rc * rmod ) / rmod
+              grr( ir, 1 ) = fact * erf( rc * rmod ) / rmod
             END IF
           END DO
         END DO
@@ -351,7 +349,11 @@
       ALLOCATE( ftmp( 3, SIZE( fion, 2 ) ) )
       
       ftmp = 0.0d0
-
+!$omp parallel do reduction(+:ftmp) default(none) &
+!$omp shared( gstart, dffts, sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, mill, g, &
+!$omp          nat, ityp, vps, ei1, ei2, ei3, tscreen ) &
+!$omp private(ig, rp, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
+!$omp          ty, tz, teigr )
       DO ig = gstart, dffts%ngm
 
         RP   = (0.D0,0.D0)
@@ -389,6 +391,8 @@
 
       END DO
       !
+!$omp end parallel do
+      !
       fion = fion + DBLE(ftmp) * 2.D0 * omega * tpiba
 
       DEALLOCATE( ftmp )
@@ -421,8 +425,6 @@
       LOGICAL,  INTENT(IN) :: TSTRESS
       REAL(DP), INTENT(in) :: hmat( 3, 3 )
 
-      REAL(DP), EXTERNAL :: qe_erfc
-
       INTEGER, EXTERNAL :: ldim_block, gind_block
 
       
@@ -443,6 +445,8 @@
 
       INTEGER, DIMENSION(6), PARAMETER :: ALPHA = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: BETA  = (/ 1,1,1,2,2,3 /)
+
+      INTEGER :: omp_get_num_threads
 
 ! ... SUBROUTINE BODY 
 
@@ -474,9 +478,13 @@
       IA_S   = gind_block( 1, nat, nproc_bgrp, me_bgrp )
       IA_E   = IA_S + NA_LOC - 1
 
+!$omp parallel do reduction(+:esr,desr) num_threads(min(max(1,na_loc),omp_get_num_threads())) default(none) &
+!$omp private(ia,ib,k,j,zv2_kj,rckj_m1,fact_pre,xlm,ylm,zlm,tzero,xlm0,ylm0,zlm0,ix,iy,iz,sxlm,tshift, &
+!$omp         rxlm,erre2,rlm,arg,esrtzero,addesr,addpre,repand,i,fxx ) &
+!$omp shared(ia_s,ia_e,nat,ityp,zv2,rc,taus,iesr,hmat,fionloc,tstress,na_loc)
       DO ia = ia_s, ia_e
-        k = ityp(ia)
         DO ib = ia, nat
+          k = ityp(ia)
           j = ityp(ib)
 
           zv2_kj   = zv2(k,j)
@@ -513,7 +521,7 @@
                   ELSE
                      ESRTZERO=1.D0
                   END IF
-                  ADDESR = ZV2_KJ * qe_erfc(ARG) / RLM
+                  ADDESR = ZV2_KJ * erfc(ARG) / RLM
                   ESR    = ESR + ESRTZERO*ADDESR
                   ADDPRE = FACT_PRE * EXP(-ARG*ARG)
                   REPAND = ESRTZERO*(ADDESR + ADDPRE)/ERRE2
@@ -536,15 +544,14 @@
           END DO        ! IX
         END DO
       END DO
+!$omp end parallel do
 
 !
 !     each processor add its own contribution to the array FION
 !
-      DO ia = 1, nat
-        FION(1,ia) = FION(1,ia)+FIONLOC(1,ia)
-        FION(2,ia) = FION(2,ia)+FIONLOC(2,ia)
-        FION(3,ia) = FION(3,ia)+FIONLOC(3,ia)
-      END DO
+      !  FION = FION+FIONLOC
+      !
+      CALL daxpy( 3*nat, 1.0d0, fionloc, 1, fion, 1 )
 
       CALL mp_sum(esr, intra_bgrp_comm)
      

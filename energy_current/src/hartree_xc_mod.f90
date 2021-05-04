@@ -22,7 +22,7 @@ contains
       USE fft_interfaces, ONLY: fwfft, invfft
 !   use becmod
       USE mp_pools, ONLY: intra_pool_comm
-      USE funct, ONLY: get_igcx, get_igcc
+      USE xc_lib, ONLY: xclib_get_id
       use compute_charge_mod, only: compute_charge
       use scf_result_mod, only: scf_result, multiple_scf_result
 
@@ -56,9 +56,9 @@ contains
 
       if (ionode) write (stdout, *) 'BEGIN: HARTREE & KOHN'
 
-      if ((get_igcx() /= 3) .or. (get_igcc() /= 4)) then
+      if ((xclib_get_id('GGA','EXCH') /= 3) .or. (xclib_get_id('GGA','CORR') /= 4)) then
          do_xc_curr = .false.
-         if ((get_igcx() /= 0) .or. (get_igcc() /= 0)) then
+         if ((xclib_get_id('GGA','EXCH') /= 0) .or. (xclib_get_id('GGA','CORR') /= 0)) then
             call errore('ENERGY CURRENT', 'XC NOT PBE OR LDA. ABORT.', 1)
          end if
       else

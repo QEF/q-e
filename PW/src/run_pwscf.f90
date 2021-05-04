@@ -45,6 +45,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : lforce, lstres, sigma, force
+  USE ions_base,            ONLY : if_pos
   USE check_stop,           ONLY : check_stop_init, check_stop_now
   USE mp_images,            ONLY : intra_image_comm
   USE extrapolation,        ONLY : update_file, update_pot
@@ -54,9 +55,11 @@ SUBROUTINE run_pwscf( exit_status )
   USE qmmm,                 ONLY : qmmm_initialization, qmmm_shutdown, &
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
-  USE funct,                ONLY : dft_is_hybrid, stop_exx 
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
+  !
+  USE device_fbuff_m,             ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -75,6 +78,11 @@ SUBROUTINE run_pwscf( exit_status )
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
+  !
+  LOGICAL :: optimizer_failed = .FALSE.
+  !
+  INTEGER :: ierr
+  ! collect error codes
   !
   ions_status = 3
   exit_status = 0
@@ -171,7 +179,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... force calculation
      !
-     IF ( lforce ) CALL forces()
+     IF ( lforce .AND. ANY( if_pos(:,:) == 1 )) CALL forces()
      !
      ! ... stress calculation
      !
@@ -192,11 +200,11 @@ SUBROUTINE run_pwscf( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        CALL move_ions ( idone, ions_status )
+        CALL move_ions ( idone, ions_status, optimizer_failed )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
-        IF (dft_is_hybrid() )  CALL stop_exx()
+        IF ( xclib_dft_is('hybrid') )  CALL stop_exx()
         !
         ! ... save restart information for the new configuration
         !
@@ -215,7 +223,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
-     IF ( conv_ions ) EXIT main_loop
+     IF ( conv_ions .OR. optimizer_failed ) EXIT main_loop
      !
      ! ... receive new positions from MM code in QM/MM run
      !
@@ -275,17 +283,20 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ethr = 1.0D-6
      !
+     CALL dev_buf%reinit( ierr )
+     IF ( ierr .ne. 0 ) CALL errore( 'run_pwscf', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr) )
+     !
   ENDDO main_loop
   !
   ! ... save final data file
   !
   CALL qexsd_set_status( exit_status )
   IF ( lensemb ) CALL beef_energies( )
-  IF ( io_level > -1 ) CALL punch( 'all' )
+  IF ( io_level > -2 ) CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
   !
-  IF ( .NOT. conv_ions )  exit_status =  3
+  IF ( .NOT. conv_ions .OR. optimizer_failed )  exit_status =  3
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
@@ -314,7 +325,7 @@ SUBROUTINE reset_gvectors( )
   USE basis,      ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  USE funct,      ONLY : dft_is_hybrid
+  USE xc_lib,     ONLY : xclib_dft_is
   ! 
   IMPLICIT NONE
   !
@@ -339,7 +350,7 @@ SUBROUTINE reset_gvectors( )
   !
   ! ... re-set and re-initialize EXX-related stuff
   !
-  IF ( dft_is_hybrid() ) CALL reset_exx( )
+  IF ( xclib_dft_is('hybrid') ) CALL reset_exx( )
   !
 END SUBROUTINE reset_gvectors
 !

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script allows to compile FoX with PGI v.19.10 Community Edition
+# on Windows 10 - configure works in general but fails for FoX
+
 set -x
 
 rm -rf FoX

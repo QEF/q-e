@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: neb.x / NEB / Quantum Espresso (version: 6.6)
+Program: neb.x / NEB / Quantum Espresso (version: 6.7MaX)
 ------------------------------------------------------------------------
 
 
@@ -44,10 +44,13 @@ BEGIN
     BEGIN_POSITIONS
       FIRST_IMAGE
       ...pw ATOMIC_POSITIONS card
+      ...pw TOTAL_CHARGE card (only for FCP)
       INTERMEDIATE_IMAGE
       ...pw ATOMIC_POSITIONS card
+      ...pw TOTAL_CHARGE card (only for FCP)
       LAST_IMAGE
       ...pw ATOMIC_POSITIONS card
+      ...pw TOTAL_CHARGE card (only for FCP)
     END_POSITIONS
     ... other pw specific cards
   END_ENGINE_INPUT
@@ -269,7 +272,7 @@ Structure of the NEB-only input data (file neb.dat):
          +--------------------------------------------------------------------
          
          +--------------------------------------------------------------------
-         Variable:       lfcpopt
+         Variable:       lfcp
          
          Type:           LOGICAL
          See:            fcp_mu
@@ -278,42 +281,55 @@ Structure of the NEB-only input data (file neb.dat):
                          calculation with ESM method (assume_isolated = 'esm' and
                          esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
                          "fcp_mu" gives the target Fermi energy.
-                         See the header of PW/src/fcp.f90 for documentation
+                         See the header of PW/src/fcp_module.f90 for documentation
          +--------------------------------------------------------------------
          
          +--------------------------------------------------------------------
          Variable:       fcp_mu
          
          Type:           REAL
-         See:            lfcpopt
+         See:            lfcp
          Default:        0.d0
-         Description:    If "lfcpopt" == .TRUE., gives the target Fermi energy [Ry].
+         Description:    If "lfcp" == .TRUE., gives the target Fermi energy [eV].
                          One can specify the total charge of the system for the first
-                         and last image by giving "fcp_tot_charge_first" and "fcp_tot_charge_last"
+                         and last image by giving "TOTAL_CHARGE" cards
                          so that the Fermi energy of these systems will be the target value,
                          otherwise "first_last_opt" should be .TRUE.
+                         For the initial charge of intermediate images, the "TOTAL_CHARGE"
+                         is linearly interpolated between the initial and the final ones
+                         unless the "TOTAL_CHARGE" is given in the input file.
          +--------------------------------------------------------------------
          
          +--------------------------------------------------------------------
-         Variable:       fcp_tot_charge_first
-         
-         Type:           REAL
-         See:            lfcpopt
-         Default:        0.d0
-         Description:    Total charge of the system ('tot_charge') for the first image.
-                         Initial 'tot_charge' for intermediate images will be given by
-                         linear interpolation of "fcp_tot_charge_first" and "fcp_tot_charge_last"
-         +--------------------------------------------------------------------
-         
-         +--------------------------------------------------------------------
-         Variable:       fcp_tot_charge_last
+         Variable:       fcp_thr
          
          Type:           REAL
-         See:            lfcpopt
-         Default:        0.d0
-         Description:    Total charge of the system ('tot_charge') for the last image.
-                         Initial 'tot_charge' for intermediate images will be given by
-                         linear interpolation of "fcp_tot_charge_first" and "fcp_tot_charge_last"
+         See:            lfcp
+         Default:        0.01D0 V
+         Description:    The simulation stops when the error ( the maximum of the force
+                         acting on the FCP in V ) is less than fcp_thr.
+         +--------------------------------------------------------------------
+         
+         +--------------------------------------------------------------------
+         Variable:       fcp_scheme
+         
+         Type:           CHARACTER
+         See:            lfcp
+         Default:        'lm'
+         Description:   
+                         Specify the type of optimization scheme for FCP:
+          
+                         'lm' :
+                              Line-Minimization method.
+          
+                         'newton' :
+                              Newton-Raphson method with diagonal hessian matrix.
+                              Also, coupling with DIIS.
+          
+                         'coupled' :
+                              Coupled method with ionic positions.
+                              This is available only if "opt_scheme" == 'broyden',
+                              or 'broyden2'.
          +--------------------------------------------------------------------
          
       ===END OF NAMELIST======================================================
@@ -392,6 +408,7 @@ Structure of the NEB-only input data (file neb.dat):
          Atomic positions for all the images are specified within the "BEGIN_POSITIONS" / END_POSITIONS
          supercard, where each instance of "ATOMIC_POSITIONS" card is prefixed either by "FIRST_IMAGE",
          "INTERMEDIATE_IMAGE", or "LAST_IMAGE" keywords.
+         IF "lfcp" == .TRUE., total charges for all images have to be specified with "TOTAL_CHARGE" cards.
          
          Note that intermediate images are optional, i.e., there can be none or any number of
          "INTERMEDIATE_IMAGE" images.
@@ -410,6 +427,33 @@ Structure of the NEB-only input data (file neb.dat):
             
                For the description of ATOMIC_POSITIONS card see file: "" or INPUT_PW.txt
                
+            ===END OF CARD==========================================================
+            
+            
+            ========================================================================
+            CARD: TOTAL_CHARGE 
+            
+               OPTIONAL CARD, NEEDED ONLY IF "LFCP" == .TRUE.
+               
+               /////////////////////////////////////////
+               // Syntax:                             //
+               /////////////////////////////////////////
+               
+                  TOTAL_CHARGE 
+                     tot_charge
+               
+               /////////////////////////////////////////
+               
+               DESCRIPTION OF ITEMS:
+               
+                  +--------------------------------------------------------------------
+                  Variables:      tot_charge
+                  
+                  Type:           REAL
+                  Description:    tot_charge is the total charge of the system.
+                  +--------------------------------------------------------------------
+                  
+                  
             ===END OF CARD==========================================================
             
             
@@ -436,6 +480,33 @@ Structure of the NEB-only input data (file neb.dat):
             ===END OF CARD==========================================================
             
             
+            ========================================================================
+            CARD: TOTAL_CHARGE 
+            
+               OPTIONAL CARD, NEEDED ONLY IF "LFCP" == .TRUE.
+               
+               /////////////////////////////////////////
+               // Syntax:                             //
+               /////////////////////////////////////////
+               
+                  TOTAL_CHARGE 
+                     tot_charge
+               
+               /////////////////////////////////////////
+               
+               DESCRIPTION OF ITEMS:
+               
+                  +--------------------------------------------------------------------
+                  Variables:      tot_charge
+                  
+                  Type:           REAL
+                  Description:    tot_charge is the total charge of the system.
+                  +--------------------------------------------------------------------
+                  
+                  
+            ===END OF CARD==========================================================
+            
+            
          ### END OF SUPERCARD :  INTERMEDIATE_IMAGE #############################
          
          
@@ -456,6 +527,33 @@ Structure of the NEB-only input data (file neb.dat):
             ===END OF CARD==========================================================
             
             
+            ========================================================================
+            CARD: TOTAL_CHARGE 
+            
+               OPTIONAL CARD, NEEDED ONLY IF "LFCP" == .TRUE.
+               
+               /////////////////////////////////////////
+               // Syntax:                             //
+               /////////////////////////////////////////
+               
+                  TOTAL_CHARGE 
+                     tot_charge
+               
+               /////////////////////////////////////////
+               
+               DESCRIPTION OF ITEMS:
+               
+                  +--------------------------------------------------------------------
+                  Variables:      tot_charge
+                  
+                  Type:           REAL
+                  Description:    tot_charge is the total charge of the system.
+                  +--------------------------------------------------------------------
+                  
+                  
+            ===END OF CARD==========================================================
+            
+            
          ### END OF SUPERCARD :  LAST_IMAGE #####################################
          
          
@@ -470,4 +568,4 @@ Structure of the NEB-only input data (file neb.dat):
 ### END OF SUPERCARD :  BEGIN/END ######################################
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:26 CEST 2020
+This file has been created by helpdoc utility on Wed Dec 30 21:41:27 JST 2020

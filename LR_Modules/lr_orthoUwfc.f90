@@ -20,6 +20,9 @@ SUBROUTINE lr_orthoUwfc (lflag)
   ! write S(k)*phi(k) and S(k+q)*phi(k+q) to file with unit iuatswfc
   ! (note that this is not the same unit as iuatwfc).
   !
+  ! If lgamma = .TRUE., write phi(k) and S(k)*phi(k) also to iunhub and
+  ! iunhub_noS. These are needed in commutator_Vhubx_psi.
+  !
   ! In the norm-conserving case, S(k)=1 and S(k+q)=1.
   ! Note: here the array wfcU is used as a workspace.
   ! Inspired by PW/src/orthoatwfc.f90
@@ -27,7 +30,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
   ! Written by I. Timrov (01.10.2018)
   !
   USE kinds,            ONLY : DP
-  USE io_files,         ONLY : nwordwfcU
+  USE io_files,         ONLY : iunhub, iunhub_noS, nwordwfcU
   USE basis,            ONLY : natomwfc
   USE klist,            ONLY : xk, ngk, igk_k
   USE wvfct,            ONLY : npwx
@@ -120,6 +123,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
         wfcU = (0.d0, 0.d0)
         CALL copy_U_wfc (wfcatom, noncolin)
         CALL save_buffer (wfcU, nwordwfcU, iuatwfc, ikk)
+        IF (lgamma) CALL save_buffer (wfcU, nwordwfcU, iunhub_noS, ik)
      ENDIF
      !
      ! Copy the result from (orthonormalized) swfcatom 
@@ -129,6 +133,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
      wfcU = (0.d0, 0.d0)
      CALL copy_U_wfc (swfcatom, noncolin)
      CALL save_buffer (wfcU, nwordwfcU, iuatswfc, ikk)
+     IF (lgamma) CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
      IF (.NOT.lgamma) THEN
         !

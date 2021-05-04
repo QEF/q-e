@@ -1,4 +1,4 @@
-set(sources_ph
+set(src_ph
     PH/acfdtest.f90
     PH/add_dkmds.f90
     PH/add_for_charges.f90
@@ -186,10 +186,10 @@ set(sources_ph
     PH/ahc.f90
     PH/postahc.f90)
 
-set(sources_phaux
+set(src_phaux
     PH/write_eigenvectors.f90)
 
-set(sources_gamma
+set(src_gamma
     Gamma/a_h.f90
     Gamma/cg_readin.f90
     Gamma/cg_setup.f90
@@ -214,211 +214,201 @@ set(sources_gamma
     Gamma/solve_e.f90
     Gamma/solve_ph.f90
     Gamma/writedyn.f90)
+qe_enable_cuda_fortran("${src_gamma}")
 
-set(sources_fd
+set(src_fd
     FD/stop_pp.f90)
-    
 
-qe_add_library(qe_phonon_ph ${sources_ph})
-add_library(QE::PHonon::PH ALIAS qe_phonon_ph)
+qe_add_library(qe_phonon_ph ${src_ph})
 target_link_libraries(qe_phonon_ph
     PRIVATE
-        QE::HDF5_Fortran
-        QE::OpenMP_Fortran
-        QE::PW
-        QE::Modules
-        QE::LR_Modules
-        QE::UTILX
-        QE::UPF
-        QE::FFTX)
+        qe_hdf5_fortran
+        qe_openmp_fortran
+        qe_pw
+        qe_modules
+        qe_lr_modules
+        qe_upflib
+        qe_fftx
+        qe_fox
+        qe_xclib)
 
-qe_add_library(qe_phonon_phaux ${sources_phaux})
-add_library(QE::PHonon::PHAUX ALIAS qe_phonon_phaux)
+qe_add_library(qe_phonon_phaux ${src_phaux})
 target_link_libraries(qe_phonon_phaux
     PRIVATE
-        QE::Modules
-        QE::LR_Modules)
+        qe_modules
+        qe_lr_modules)
 
-qe_add_library(qe_phonon_gamma ${sources_gamma})
-add_library(QE::PHonon::Gamma ALIAS qe_phonon_gamma)
+qe_add_library(qe_phonon_gamma ${src_gamma})
 target_link_libraries(qe_phonon_gamma
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::LR_Modules
-        QE::UPF
-        QE::FFTX
-        QE::UTILX
-        QE::LAX)
+        qe_pw
+        qe_modules
+        qe_lr_modules
+        qe_upflib
+        qe_fftx
+        qe_lax
+        qe_xclib)
 
-qe_add_library(qe_phonon_fd ${sources_fd})
-add_library(QE::PHonon::FD ALIAS qe_phonon_fd)
+qe_add_library(qe_phonon_fd ${src_fd})
 target_link_libraries(qe_phonon_fd
     PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::Modules
-        QE::LR_Modules)
+        qe_pw
+        qe_modules
+        qe_lr_modules)
         
 
 ###########################################################
 # ph.x
 ###########################################################
-set(sources PH/phonon.f90)
-qe_add_executable(qe_phonon_ph_exe ${sources})
+set(src_phonon_x PH/phonon.f90)
+qe_enable_cuda_fortran("${src_phonon_x}")
+qe_add_executable(qe_phonon_ph_exe ${src_phonon_x})
 set_target_properties(qe_phonon_ph_exe PROPERTIES OUTPUT_NAME ph.x)
 target_link_libraries(qe_phonon_ph_exe
     PRIVATE
-        QE::PW
-        QE::LAX
-        QE::Modules
-        QE::PHonon::PH
-        QE::UTILX)
+        qe_pw
+        qe_lax
+        qe_modules
+        qe_phonon_ph)
 
 ###########################################################
 # dynmat.x
 ###########################################################
-set(sources PH/dynmat.f90)
-qe_add_executable(qe_phonon_dynmat_exe ${sources})
+set(src_dynmat_x PH/dynmat.f90)
+qe_add_executable(qe_phonon_dynmat_exe ${src_dynmat_x})
 set_target_properties(qe_phonon_dynmat_exe PROPERTIES OUTPUT_NAME dynmat.x)
 target_link_libraries(qe_phonon_dynmat_exe
     PRIVATE
-        QE::LR_Modules
-        QE::Modules
-        QE::UTILX
-        QE::PHonon::PH
-        QE::PHonon::PHAUX)
+        qe_lr_modules
+        qe_modules
+        qe_phonon_ph
+        qe_phonon_phaux
+        qe_fox)
 
 ###########################################################
 # q2r.x
 ###########################################################
-set(sources PH/q2r.f90)
-qe_add_executable(qe_phonon_q2r_exe ${sources})
+set(src_q2r_x PH/q2r.f90)
+qe_add_executable(qe_phonon_q2r_exe ${src_q2r_x})
 set_target_properties(qe_phonon_q2r_exe PROPERTIES OUTPUT_NAME q2r.x)
 target_link_libraries(qe_phonon_q2r_exe
     PRIVATE
-        QE::Modules
-        QE::UTILX
-        QE::PHonon::PH)
+        qe_modules
+        qe_phonon_ph)
 
 ##################################################################
 # matdyn.x 
 ##################################################################
-set(sources PH/matdyn.f90)
-qe_add_executable(qe_phonon_matdyn_exe ${sources})
+set(src_matdyn_x PH/matdyn.f90)
+qe_add_executable(qe_phonon_matdyn_exe ${src_matdyn_x})
 set_target_properties(qe_phonon_matdyn_exe PROPERTIES OUTPUT_NAME matdyn.x) 
 target_link_libraries(qe_phonon_matdyn_exe
     PRIVATE
-        QE::Modules
-        QE::UTILX
-        QE::PW
-        QE::PHonon::PH
-        QE::PHonon::PHAUX
-        QE::LR_Modules) 
+        qe_modules
+        qe_pw
+        qe_phonon_ph
+        qe_phonon_phaux
+        qe_lr_modules)
 
 ###########################################################
 # q2qstar.x
 ###########################################################
-set(sources PH/q2qstar.f90)
-qe_add_executable(qe_phonon_q2qstar_exe ${sources})
+set(src_q2qstar_x PH/q2qstar.f90)
+qe_add_executable(qe_phonon_q2qstar_exe ${src_q2qstar_x})
 set_target_properties(qe_phonon_q2qstar_exe PROPERTIES OUTPUT_NAME q2qstar.x)
 target_link_libraries(qe_phonon_q2qstar_exe
     PRIVATE
-        QE::PW
-        QE::LR_Modules
-        QE::Modules
-        QE::UTILX
-        QE::PHonon::PH)
+        qe_pw
+        qe_lr_modules
+        qe_modules
+        qe_phonon_ph)
 
 ###########################################################
 # lambda.x
 ###########################################################
-set(sources PH/lambda.f90)
-qe_add_executable(qe_phonon_lambda_exe ${sources})
+set(src_lambda_x PH/lambda.f90)
+qe_add_executable(qe_phonon_lambda_exe ${src_lambda_x})
 set_target_properties(qe_phonon_lambda_exe PROPERTIES OUTPUT_NAME lambda.x)
 target_link_libraries(qe_phonon_lambda_exe
     PRIVATE
-        QE::Modules
-        QE::UTILX
-        QE::PHonon::PH)
+        qe_modules
+        qe_phonon_ph)
 
 ###########################################################
 # alpha2f.x
 ###########################################################
-set(sources PH/alpha2f.f90)
-qe_add_executable(qe_phonon_alpha2f_exe ${sources})
+set(src_alpha2f_x PH/alpha2f.f90)
+qe_add_executable(qe_phonon_alpha2f_exe ${src_alpha2f_x})
 set_target_properties(qe_phonon_alpha2f_exe PROPERTIES OUTPUT_NAME alpha2f.x)
 target_link_libraries(qe_phonon_alpha2f_exe
     PRIVATE
-        QE::PW
-        QE::Modules
-        QE::UTILX
-        QE::PHonon::PH)
+        qe_pw
+        qe_modules
+        qe_phonon_ph)
 
 ###########################################################
 # epa.x
 ###########################################################
-set(sources PH/epa.f90)
-qe_add_executable(qe_phonon_epa_exe ${sources})
+set(src_epa_x PH/epa.f90)
+qe_add_executable(qe_phonon_epa_exe ${src_epa_x})
 set_target_properties(qe_phonon_epa_exe PROPERTIES OUTPUT_NAME epa.x)
 target_link_libraries(qe_phonon_epa_exe
     PRIVATE
-        QE::Modules
-        QE::UTILX
-        QE::PHonon::PH)
+        qe_modules
+        qe_phonon_ph)
 
 ###########################################################
 # fqha.x
 ###########################################################
-set(sources PH/fqha.f90)
-qe_add_executable(qe_phonon_fqha_exe ${sources})
+set(src_fqha_x PH/fqha.f90)
+qe_add_executable(qe_phonon_fqha_exe ${src_fqha_x})
 set_target_properties(qe_phonon_fqha_exe PROPERTIES OUTPUT_NAME fqha.x)
 target_link_libraries(qe_phonon_fqha_exe
     PRIVATE
-        QE::UTILX
-        QE::PHonon::PH)
+        qe_utilx
+        qe_phonon_ph)
 
 ###########################################################
 # fd.x
 ###########################################################
-set(sources FD/fd.f90)
-qe_add_executable(qe_phonon_fd_exe ${sources})
+set(src_fd_x FD/fd.f90)
+qe_add_executable(qe_phonon_fd_exe ${src_fd_x})
 set_target_properties(qe_phonon_fd_exe PROPERTIES OUTPUT_NAME fd.x)
 target_link_libraries(qe_phonon_fd_exe
     PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::Modules
-        QE::PHonon::FD
-        QE::PHonon::PH)
+        qe_pw
+        qe_modules
+        qe_phonon_fd
+        qe_phonon_ph
+        qe_fftx)
 
 ###########################################################
 # fd_ef.x
 ###########################################################
-set(sources FD/fd_ef.f90)
-qe_add_executable(qe_phonon_fdef_exe ${sources})
+set(src_fd_ef_x FD/fd_ef.f90)
+qe_add_executable(qe_phonon_fdef_exe ${src_fd_ef_x})
 set_target_properties(qe_phonon_fdef_exe PROPERTIES OUTPUT_NAME fd_ef.x)
 target_link_libraries(qe_phonon_fdef_exe
     PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::Modules
-        QE::PHonon::FD
-        QE::PHonon::PH)
+        qe_pw
+        qe_modules
+        qe_phonon_fd
+        qe_phonon_ph
+        qe_fftx)
 
 ###########################################################
 # fd_ifc.x
 ###########################################################
-set(sources FD/fd_ifc.f90)
-qe_add_executable(qe_phonon_fdifc_exe ${sources})
+set(src_fd_ifc_x FD/fd_ifc.f90)
+qe_add_executable(qe_phonon_fdifc_exe ${src_fd_ifc_x})
 set_target_properties(qe_phonon_fdifc_exe PROPERTIES OUTPUT_NAME fd_ifc.x)
 target_link_libraries(qe_phonon_fdifc_exe
     PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::Modules
-        QE::PHonon::FD
-        QE::PHonon::PH)
+        qe_pw
+        qe_modules
+        qe_phonon_fd
+        qe_phonon_ph
+        qe_fftx)
 
 ###########################################################
 

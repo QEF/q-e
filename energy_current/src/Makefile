@@ -10,10 +10,10 @@ LDFLAGS+=-fsanitize=address
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LAXlib \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../CPV/src $(MOD_FLAG)../../PHonon/PH \
           $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LR_Modules \
-          $(MOD_FLAG)../../upflib
+          $(MOD_FLAG)../../upflib $(MOD_FLAG)../../XClib
 
 #location of needed libraries
-LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS)
+LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS) ../../XClib/xc_lib.a
 
 ALLCURRENTSOBJS = \
 test_h_psi_s_psi_commutator_Hx_psi.o\

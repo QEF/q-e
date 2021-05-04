@@ -34,7 +34,7 @@
       USE gvecw, ONLY: ngw
       USE gvect, ONLY: gstart
       USE cell_base, ONLY: omega
-      USE uspp, ONLY: nkb, nkbus, qq_nt, indv_ijkb0 
+      USE uspp, ONLY: nkb, nkbus, qq_nt, ofsbeta 
       USE uspp_param, ONLY: nh, upf
       USE ions_base, ONLY: na, nat, ityp
 !
@@ -120,8 +120,8 @@
                   DO iv=1,nh(is)
                      DO jv=1,nh(is)
                         IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
-                           inl = indv_ijkb0(ia) + iv
-                           jnl = indv_ijkb0(ia) + jv
+                           inl = ofsbeta(ia) + iv
+                           jnl = ofsbeta(ia) + jv
                            overlap(i,j) = overlap(i,j) + qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,jj)
                         ENDIF
                      END DO

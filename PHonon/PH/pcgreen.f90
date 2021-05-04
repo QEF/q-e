@@ -16,7 +16,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! previously and is in the common variable dvscfs
   !
   use kinds, only : DP
-  USE wvfct,     ONLY : nbnd, npwx, g2kin
+  USE wvfct,     ONLY : nbnd, npwx
   USE klist,     ONLY : ngk
   USE wavefunctions,  ONLY: evc
   USE mp_bands,  ONLY: intra_bgrp_comm

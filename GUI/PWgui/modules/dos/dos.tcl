@@ -7,7 +7,7 @@ module Dos\#auto -title "PWSCF GUI: module Dos.x" -script {
     namelist dos -name "DOS" {
 	optional {
 	    var prefix {
-		-label    "Prefix of punch file saved by program PW.X (prefix):" 
+		-label    "Prefix of outdir files saved by program PW.X (prefix):" 
 		-fmt      %S -validate string
 	    }
 	    

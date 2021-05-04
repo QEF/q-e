@@ -42,7 +42,7 @@ else
 		    if test "$arch" == "mac686"; then
 		       add_mkl_flag="-openmp"
 		       add_mkl_lib="-lpthread"
-      		       add_mkl_omp="-lpthread"
+		       add_mkl_omp="-lpthread"
 		    fi
 		    ;;
 	       gfortran* )
@@ -50,13 +50,14 @@ else
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
 	       nvfortran* )
+                    # NB: next two can be replaced by flag "-Mmkl"
       		    mkl_lib="mkl_intel_lp64"
-      		    mkl_omp="mkl_intel_thread"
-                    # FIXME: is the following correct?
-      		    add_mkl_flag="-pgf90libs"
+                    mkl_omp="mkl_intel_thread"
+		    # NB: with nvidia hpc sdk 2020, linking to threaded mkl
+		    # v.19.1 update 4 fails due to a missing symbol
 		    ;;
 	       pgf* )
-                    # Detect PGI version - FIXME: WHY? pgf_version is known
+                    # For obsolete PGI versions (superseded by nvfortran)
                     pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
                     # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
                     ompimp=""

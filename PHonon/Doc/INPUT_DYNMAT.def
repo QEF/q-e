@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program dynmat.x {
+input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynmat.x {
 
     toc {}
 

@@ -90,7 +90,7 @@
       use kinds, only: dp
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
       use uspp_param, only: nh, upf
-      use uspp, only :nkb, nkbus, qq_nt, indv_ijkb0
+      use uspp, only : nkb, qq_nt, ofsbeta
       use gvecw, only: ngw
       use ions_base, only: nat, ityp
       USE cp_main_variables, ONLY: idesc
@@ -115,7 +115,7 @@
          nrl      = idesc( LAX_DESC_NRL, iss )
          comm_rot = idesc( LAX_DESC_COMM, iss )
          CALL protate ( c0, bec, c0diag, becdiag, ngw, nss, istart, z0(:,:,iss), nrl, &
-                        ityp, nat, indv_ijkb0, nh, np_rot, me_rot, comm_rot )
+                        ityp, nat, ofsbeta, nh, np_rot, me_rot, comm_rot )
       END DO
 
       CALL stop_clock( 'rotate' )
@@ -172,7 +172,7 @@ subroutine pc2(a,beca,b,becb)
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
       use uspp_param, only: nh, upf
-      use uspp, only :nkb, nkbus, indv_ijkb0
+      use uspp, only :nkb, nkbus, ofsbeta
       use uspp, only :qq_nt
       
                            
@@ -227,8 +227,8 @@ subroutine pc2(a,beca,b,becb)
                IF( upf(is)%tvanp ) THEN
                   do iv=1,nh(is)
                      do jv=1,nh(is)
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         qq_tmp(inl,jnl)=qq_nt(iv,jv,is)
                      enddo
                   enddo
@@ -338,7 +338,7 @@ subroutine pc2(a,beca,b,becb)
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh, upf
-      use uspp, only :nkb,qq_nt,nkbus, indv_ijkb0
+      use uspp, only :nkb,qq_nt, ofsbeta
       use io_global, ONLY: ionode, ionode_id
 
       implicit none
@@ -372,8 +372,8 @@ subroutine pc2(a,beca,b,becb)
          IF( upf(is)%tvanp ) THEN
             do iv=1,nh(is)
                do jv=1,nh(is)
-                    inl = indv_ijkb0(ia) + iv
-                    jnl = indv_ijkb0(ia) + jv
+                    inl = ofsbeta(ia) + iv
+                    jnl = ofsbeta(ia) + jv
                     q_matrix(inl,jnl)= qq_nt(iv,jv,is)
                enddo
             enddo
@@ -391,8 +391,8 @@ subroutine pc2(a,beca,b,becb)
                   js=ityp(ja)
                   IF( upf(js)%tvanp ) THEN
                      do jv=1,nh(js)
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ja) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ja) + jv
                         sca=0.d0
                         if (use_ema) then
                            ! k_minus case
@@ -459,7 +459,7 @@ subroutine pc2(a,beca,b,becb)
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
       use uspp_param, only: nh, upf
-      use uspp, only :nkb, nkbus, qq_nt, indv_ijkb0
+      use uspp, only :nkb, nkbus, qq_nt, ofsbeta
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -490,7 +490,7 @@ subroutine pc2(a,beca,b,becb)
                is=ityp(ia)
                IF( upf(is)%tvanp ) THEN
                   do iv=1,nh(is)
-                     inl = indv_ijkb0(ia) + iv
+                     inl = ofsbeta(ia) + iv
                      do i=1,n
                         becktmp = 0.0d0
                         do ig=1,ngw
@@ -634,7 +634,7 @@ subroutine pc2(a,beca,b,becb)
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
       use uspp_param, only: nh, upf
-      use uspp, only :nkb, nkbus, qq_nt, indv_ijkb0
+      use uspp, only :nkb, nkbus, qq_nt, ofsbeta
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -669,7 +669,7 @@ subroutine pc2(a,beca,b,becb)
                is = ityp(ia) 
                IF( upf(is)%tvanp ) THEN
                   do iv=1,nh(is)
-                     inl = indv_ijkb0(ia) + iv
+                     inl = ofsbeta(ia) + iv
                      do i=1,n
                         becktmp = 0.0d0
                         do ig=1,ngw

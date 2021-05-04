@@ -14,8 +14,8 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
   use kinds, only : DP
   use constants, only: fpi, e2
   use radial_grids, only: ndmx, hartree
-  use funct, only : get_iexch, dft_is_gradient
-  use ld1inc, only : nwf, grid, vx, vxt, lsd, zed, enne, latt, nspin
+  use xc_lib, only: xclib_get_id, xclib_dft_is
+  use ld1inc, only: nwf, grid, vx, vxt, lsd, zed, enne, latt, nspin
   implicit none
   integer, intent(in) :: iflag
   real(DP), intent(in):: rho(ndmx,2), rhoc(ndmx) ! valence and core charges
@@ -34,8 +34,8 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
   real(DP),allocatable:: dchi0(:,:)
 
-  gga=dft_is_gradient()
-  oep=get_iexch().eq.4
+  gga=xclib_dft_is('gradient')
+  oep=xclib_get_id('LDA','EXCH').eq.4
   !
   !   compute hartree potential with the total charge
   !

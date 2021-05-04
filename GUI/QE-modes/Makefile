@@ -1,9 +1,11 @@
 TOPDIR   = $(shell cd ../..; pwd)
-VERSION  = 6.6
+VERSION  = 6.7
 GEN_MODE = $(TOPDIR)/dev-tools/gen-emacs-mode
 LATEX    = pdflatex
 
 ELISP_FILES = *.el *.elc
+
+PWTK_CMDS = $(shell pwtk -s $(TOPDIR)/dev-tools/exported-cmds.pwtk)
 
 # automatic ...
 ALL_DEF_FILES = $(shell find $(TOPDIR) | grep INPUT_ | egrep def$$)
@@ -83,6 +85,7 @@ qe:
 	$(compile) --eval "(byte-compile-file \"qe-mode.el\")"	
 
 pwtk: 
+	$(generate) -mode pwtk -modename PWTK -template pwtk-mode.el.tcl -nmlprefix "" -cmds "$(PWTK_CMDS)" $(ALL_DEF_FILES)
 	$(compile) --eval "(byte-compile-file \"pwtk-mode.el\")"	
 
 # generate other required elisp files ...
@@ -113,7 +116,7 @@ veryclean: clean
 distclean: veryclean
 
 
-tar: all
+tar: doc
 	cd Doc; $(MAKE) clean; # purify the Doc/ directory
 	if test -f QE-modes.tar; then rm -f QE-modes.tar; fi
 	if test -f QE-modes-$(VERSION).tar.gz; then rm -f QE-modes-$(VERSION).tar.gz; fi

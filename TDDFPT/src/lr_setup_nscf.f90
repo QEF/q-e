@@ -33,27 +33,27 @@ SUBROUTINE lr_setup_nscf ()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, use_para_diag, &
                                  & noinv, max_cg_iter
+  USE control_lr,         ONLY : ethr_nscf
   USE mp_pools,           ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE uspp_param,         ONLY : n_atom_wfc
+  USE upf_ions,           ONLY : n_atom_wfc
   USE lr_symm_base,       ONLY : nsymq, minus_q
   USE qpoint,             ONLY : xq
   ! 
   IMPLICIT NONE
   !
   LOGICAL :: magnetic_sym 
-  LOGICAL, EXTERNAL :: check_para_diag
   !
   CALL start_clock( 'lr_setup_nscf' )
   ! 
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
-  ! ... threshold for diagonalization ethr - should be good for all cases
+  ! ... threshold for diagonalization ethr
   !
-  ethr = 1.0D-9 / nelec
+  ethr = ethr_nscf
   !
   ! ... variables for iterative diagonalization (Davidson is assumed)
   !
@@ -63,7 +63,7 @@ SUBROUTINE lr_setup_nscf ()
   max_cg_iter = 20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-  use_para_diag = check_para_diag( nbnd )
+  CALL set_para_diag( nbnd, use_para_diag )
   !
   ! Symmetry section
   !

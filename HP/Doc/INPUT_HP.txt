@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: hp.x / PWscf / Quantum Espresso (version: 6.6)
+Program: hp.x / PWscf / Quantum Espresso (version: 6.7)
 ------------------------------------------------------------------------
 
 
@@ -93,7 +93,8 @@ NAMELIST: &INPUTHP
    See:            find_atpert
    Description:    If .true. determines the number of perturbations
                    (i.e. which atoms will be perturbed) and exits smoothly
-                   without performing any calculation.
+                   without performing any calculation. For DFT+U+V, it also
+                   determines the indices of inter-site couples.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -123,49 +124,50 @@ NAMELIST: &INPUTHP
    Default:        5.D-5
    Description:    Threshold for a comparison of unperturbed occupations
                    which is needed for the selection of atoms which must
-                   be perturbed. Can be used only when find_atpert = 1.
+                   be perturbed. Can be used only when "find_atpert" = 1.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       skip_type
+   Variable:       skip_type(i), i=1,ntyp
    
    Type:           LOGICAL
-   Default:        .false.
+   Default:        skip_type(i) = .false.
    See:            equiv_type
-   Description:    skip_type(i), where i runs over types of atoms.
-                   If skip_type(i)=.true. then no linear-response
+   Description:    "skip_type"(i), where i runs over types of atoms.
+                   If "skip_type"(i)=.true. then no linear-response
                    calculation will be performed for the i-th atomic type:
-                   in this case equiv_type(i) must be specified, otherwise
+                   in this case "equiv_type"(i) must be specified, otherwise
                    the HP code will stop. This option is useful if the
                    system has atoms of the same type but opposite spin
                    pollarizations (anti-ferromagnetic case).
-                   This keyword cannot be used when find_atpert = 1.
+                   This keyword cannot be used when "find_atpert" = 1.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       equiv_type
+   Variable:       equiv_type(i), i=1,ntyp
    
    Type:           INTEGER
-   Default:        0
+   Default:        equiv_type(i) = 0
    See:            skip_type
-   Description:    equiv_type(i), where i runs over types of atoms.
-                   equiv_type(i)=j, will make type i equivalent to type j
+   Description:    "equiv_type"(i), where i runs over types of atoms.
+                   "equiv_type"(i)=j, will make type i equivalent to type j
                    (useful when nspin=2). Such a merging of types is done
                    only at the post-processing stage.
-                   This keyword cannot be used when find_atpert = 1.
+                   This keyword cannot be used when "find_atpert" = 1.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       perturb_only_atom
+   Variable:       perturb_only_atom(i), i=1,ntyp
    
    Type:           LOGICAL
-   Default:        .false.
+   Default:        perturb_only_atom(i) = .false.
    See:            compute_hp
-   Description:    If perturb_only_atom(i)=.true. then only the i-th
+   Description:    If "perturb_only_atom"(i)=.true. then only the i-th
                    atom will be perturbed and considered in the run.
                    This variable is useful when one wants to split
-                   the whole calculation on parts. Note: this variable
-                   has a higher priority than skip_type.
+                   the whole calculation on parts.
+                   
+                   Note: this variable has a higher priority than "skip_type".
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -174,8 +176,9 @@ NAMELIST: &INPUTHP
    Type:           INTEGER
    Default:        1
    See:            last_q, sum_pertq
-   Description:    Computes only the q points from start_q to last_q.
-                   IMPORTANT: start_q must be smaller or equal to
+   Description:    Computes only the q points from "start_q" to "last_q".
+                   
+                   IMPORTANT: "start_q" must be smaller or equal to
                    the total number of q points found.
    +--------------------------------------------------------------------
    
@@ -185,8 +188,9 @@ NAMELIST: &INPUTHP
    Type:           INTEGER
    Default:        number of q points
    See:            start_q, sum_pertq
-   Description:    Computes only the q points from start_q to last_q.
-                   IMPORTANT: last_q must be smaller or equal to
+   Description:    Computes only the q points from "start_q" to "last_q".
+                   
+                   IMPORTANT: "last_q" must be smaller or equal to
                    the total number of q points found.
    +--------------------------------------------------------------------
    
@@ -199,7 +203,7 @@ NAMELIST: &INPUTHP
    Description:    If it is set to .true. then the HP code will collect
                    pieces of the response occupation matrices for all
                    q points. This variable should be used only when
-                   start_q, last_q and perturb_only_atom are used.
+                   "start_q", "last_q" and "perturb_only_atom" are used.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -215,7 +219,7 @@ NAMELIST: &INPUTHP
                    tmp_dir/HP/prefix.chi.i.dat. Note that all files
                    prefix.chi.i.dat (where i runs over all perturbed
                    atoms) must be placed in one folder tmp_dir/HP/.
-                   compute_hp=.true. must be used only when the
+                   "compute_hp"=.true. must be used only when the
                    calculation was parallelized over perturbations.
    +--------------------------------------------------------------------
    
@@ -268,7 +272,7 @@ NAMELIST: &INPUTHP
    Default:        alpha_mix(1)=0.3
    Description:    Mixing parameter (for the i-th iteration) for updating
                    the response SCF potential using the modified Broyden
-                   method: D.D. Johnson, PRB 38, 12807 (1988).
+                   method. See: D.D. Johnson, PRB 38, 12807 (1988).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -277,7 +281,7 @@ NAMELIST: &INPUTHP
    Type:           INTEGER
    Default:        4
    Description:    Number of iterations used in potential mixing
-                   using the modified Broyden method
+                   using the modified Broyden method. See:
                    D.D. Johnson, PRB 38, 12807 (1988).
    +--------------------------------------------------------------------
    
@@ -301,13 +305,13 @@ NAMELIST: &INPUTHP
    Description:    Minimum value of the orbital quantum number of the Hubbard
                    atoms starting from which (and up to the maximum l in the
                    system) Hubbard V will be written to the file parameters.out.
-                   lmin refers to the orbital quantum number of the atom
+                   "lmin" refers to the orbital quantum number of the atom
                    corresponding to the first site-index in Hubbard_V(:,:,:).
                    This keyword is used only when lda_plus_u_kind = 2 and only
-                   in the post-processing stage. Example: lmin=1 corresponds to
+                   in the post-processing stage. Example: "lmin"=1 corresponds to
                    writing to file V between e.g. oxygen (with p states) and its
                    neighbors, and including V between transition metals (with d
-                   states) and their neighbors. Instead, when lmin=2 only the
+                   states) and their neighbors. Instead, when "lmin"=2 only the
                    latter will be written to parameters.out.
    +--------------------------------------------------------------------
    
@@ -325,4 +329,4 @@ NAMELIST: &INPUTHP
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:25 CEST 2020
+This file has been created by helpdoc utility on Sun Nov 29 14:20:03 CET 2020

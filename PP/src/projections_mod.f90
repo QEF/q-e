@@ -21,23 +21,25 @@ MODULE projections
   
   CONTAINS
     !
-    SUBROUTINE fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
+    SUBROUTINE fill_nlmchi ( natomwfc, lmax_wfc )
       !
       USE ions_base, ONLY : ityp, nat
+      USE upf_ions, ONLY : n_atom_wfc
       USE uspp_param, ONLY: upf
       USE spin_orb, ONLY: lspinorb
       USE noncollin_module, ONLY: noncolin
       !
       IMPLICIT NONE
-      INTEGER, INTENT (IN) :: natomwfc
-      INTEGER, INTENT (OUT) :: nwfc, lmax_wfc 
+      INTEGER, INTENT (OUT) :: natomwfc, lmax_wfc
       !
-      INTEGER :: na, nt, n, n1, n2, l, m, ind
+      INTEGER :: nwfc, na, nt, n, n1, n2, l, m, ind
       REAL(dp) :: jj, fact(2)
       REAL(dp), EXTERNAL :: spinor
       CHARACTER(LEN=2) :: label
       CHARACTER(LEN=1) :: spdf(0:3) = ['S','P','D','F']
       INTEGER :: nn(0:3)
+      !
+      natomwfc = n_atom_wfc (nat, ityp, noncolin)
       !
       ALLOCATE (nlmchi(natomwfc))
       nwfc=0

@@ -14,7 +14,7 @@
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
-      use funct,           only : dft_is_gradient, dft_is_meta
+      use xc_lib,          only : xclib_dft_is
       use fft_base,        only : dfftp, dffts
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
@@ -63,10 +63,12 @@
       complex(DP), ALLOCATABLE :: self_rhog( :,: )
       LOGICAL  :: ttsic
       real(DP) :: detmp(3,3)
+
+      CALL start_clock( 'exch_corr' )
       !
       !     filling of gradr with the gradient of rho using fft's
       !
-      if ( dft_is_gradient() ) then
+      if ( xclib_dft_is('gradient') ) then
          !
          allocate( gradr( 3, dfftp%nnr, nspin ) )
          do iss = 1, nspin
@@ -84,7 +86,7 @@
       !
       IF ( ttsic ) THEN
          !
-         IF ( dft_is_meta() ) CALL errore ('exch_corr_h', &
+         IF ( xclib_dft_is('meta') ) CALL errore ('exch_corr_h', &
                                'SIC and meta-GGA not together', 1)
          IF ( tpre ) CALL errore( 'exch_corr_h', 'SIC and stress not implemented', 1)
 
@@ -94,7 +96,7 @@
          ALLOCATE( self_rhog(dfftp%ngm, nspin ) )
 
          self_rho(:, :) = rhor( :, :)
-         IF( dft_is_gradient() ) THEN
+         IF( xclib_dft_is('gradient') ) THEN
             ALLOCATE( self_gradr( 3, dfftp%nnr, nspin ) )
             self_gradr(:, :, :) = gradr(:, :, :)
          ENDIF
@@ -104,7 +106,7 @@
 !
       self_exc = 0.d0
 !
-      if( dft_is_meta() ) then
+      if( xclib_dft_is('meta') ) then
          !
          call tpssmeta( dfftp%nnr, nspin, gradr, rhor, kedtaur, exc )
          !
@@ -174,7 +176,7 @@
          !
       end if
       !
-      if (dft_is_gradient()) then
+      if (xclib_dft_is('gradient')) then
          !
          !  Add second part of the xc-potential to rhor
          !  Compute contribution to the stress dexc
@@ -194,7 +196,7 @@
 
       IF( ttsic ) THEN
 !
-         IF (dft_is_gradient()) then
+         IF (xclib_dft_is('gradient')) then
       
             call gradh( nspin, self_gradr, self_rhog, self_rho, dexc)
           
@@ -245,6 +247,8 @@
       !
 
       IF( ALLOCATED( gradr ) ) DEALLOCATE( gradr )
+
+      CALL stop_clock( 'exch_corr' )
 
 5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
@@ -367,10 +371,8 @@
 !=----------------------------------------------------------------------------=!
 
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
-  use kinds,       only: DP
-  use funct,       only: dft_is_gradient, get_igcc
-  use xc_lda_lsda, only: xc
-  use xc_gga,      only: xc_gcx, change_threshold_gga
+  use kinds,  only: DP
+  use xc_lib, only: xclib_dft_is, xclib_get_id, xclib_set_threshold, xc_gcx
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
@@ -396,13 +398,13 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   logical :: igcc_is_lyp
   !
   allocate( v( nnr, nspin ) )
-  if( dft_is_gradient() ) then
+  if( xclib_dft_is('gradient') ) then
     allocate( h( nnr, nspin, nspin ) )
   else
     allocate( h( 1, 1, 1 ) )
   endif
   !
-  igcc_is_lyp = (get_igcc() == 3)
+  igcc_is_lyp = (xclib_get_id('GGA','CORR') == 3)
   !
   etxc = 0.0d0
   !
@@ -460,9 +462,9 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   !
   ! gradient corrections
   !
-  if ( dft_is_gradient() ) then
+  if ( xclib_dft_is('gradient') ) then
     !
-    call change_threshold_gga( epsr )
+    call xclib_set_threshold( 'gga', epsr )
     !
     allocate ( sx(nnr), sc(nnr), v1x(nnr,nspin), v1c(nnr,nspin), &
                v2x(nnr,nspin), v2c(nnr,nspin) )
@@ -506,36 +508,36 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
     deallocate ( v2c, v2x, v1c, v1x, sc, sx )
   end if
 
-  if( dft_is_gradient() ) then
+  if( xclib_dft_is('gradient') ) then
      !
      if( nspin == 1 ) then
         !
         ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
         !
 !$omp parallel default(none), shared(nnr,grhor,h), private(ipol,k)
+!$omp do collapse(2)
         do ipol = 1, 3
-!$omp do
            do k = 1, nnr
               grhor (ipol, k, 1) = h (k, 1, 1) * grhor (ipol, k, 1)
            enddo
-!$omp end do
         end do
+!$omp end do
 !$omp end parallel
         !
         !
      else
         !
 !$omp parallel default(none), shared(nnr,grhor,h), private(ipol,k,grup,grdw)
+!$omp do collapse(2)
         do ipol = 1, 3
-!$omp do
            do k = 1, nnr
              grup = grhor (ipol, k, 1)
              grdw = grhor (ipol, k, 2)
              grhor (ipol, k, 1) = h (k, 1, 1) * grup + h (k, 1, 2) * grdw
              grhor (ipol, k, 2) = h (k, 2, 2) * grdw + h (k, 2, 1) * grup
            enddo
-!$omp end do
         enddo
+!$omp end do
 !$omp end parallel
         !
      end if

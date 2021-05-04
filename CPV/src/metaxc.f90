@@ -11,9 +11,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
   use kinds,   only: dp
-  use funct,   only: get_meta
-  use xc_mgga, only: xc_metagcx, change_threshold_mgga !, &
-                     !tau_xc_array, tau_xc_array_spin
+  use xc_lib,  only: xclib_set_threshold, xclib_get_id
   !
   IMPLICIT NONE
   !
@@ -30,7 +28,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !
   etxc = 0.d0
   ! calculate the gradient of rho+rho_core in real space
-  imeta = get_meta()
+  imeta = xclib_get_id('MGGA','EXCH')
   !
   call exch_corr_meta() !HK/MCA
   !
@@ -56,7 +54,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
     !
     if (nspin==1) then
       !
-      call change_threshold_mgga( epsr, epsg, epsr )
+      call xclib_set_threshold( 'mgga', epsr, epsg, epsr )
       !
       call xc_metagcx( nnr, 1, np, rho, grho, kedtau, sx, sc, &
                        v1x, v2x, v3x, v1c, v2c, v3c )
@@ -71,7 +69,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       !
     else
       !
-      call change_threshold_mgga( epsr )
+      call xclib_set_threshold( 'mgga', epsr )
       !
       call xc_metagcx( nnr, 2, np, rho, grho, kedtau, sx, sc, &
                        v1x, v2x, v3x, v1c, v2c, v3c )
