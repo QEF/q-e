@@ -91,7 +91,7 @@ contains
 !nb is the beta function input of the UPF providing the radial dependence to the projector
             nb = indv(ih, it)
 ! in-1,...,nhtol+1=l are the angular momenta that contribute to xvkb(:,ikb).
-! These corresponds to the range of L in Eq. 41 where the Clebsch-Gordan coefficients are different from zero. 
+! These corresponds to the range of L in Eq. 41 where the Clebsch-Gordan coefficients are different from zero.
 ! and differ by at max 1 from the angular momentum of the projector.
 ! in,...,nhtol+2=l+1 are the "angular momenta + 1" contributing to xvkb(:,ikb).
             if (l .eq. 1) then
@@ -182,11 +182,11 @@ contains
             end if
          end do
          ! Up to here we initialized xvkb1(npwx,nhm,3) for the type of atom considered.
-         ! We now initialize xvkb(3,npwx,nkb) for all atoms of this type adding the structur factors. 
+         ! We now initialize xvkb(3,npwx,nkb) for all atoms of this type adding the structur factors.
          do na = 1, nat
-         !We first load all projectors for atoms of type 1, than type 2,...
-         !At the end xvkb will be loaded like this:
-         !atoms of type 1 - atoms of type 2 - atoms of type 3 - .....
+            !We first load all projectors for atoms of type 1, than type 2,...
+            !At the end xvkb will be loaded like this:
+            !atoms of type 1 - atoms of type 2 - atoms of type 3 - .....
             if (ityp(na) .eq. it) then
                do ig = 1, npw_
                   sk(ig) = eigts1(mill(1, ig), na)* &

@@ -11,7 +11,7 @@ MODULE kohn_sham_mod
 
    USE kinds, ONLY: DP
    use scf_result_mod, only: scf_result, multiple_scf_result, scf_result_set_global_variables, &
-           scf_result_set_tau_vel_global_variables
+                             scf_result_set_tau_vel_global_variables
 
 contains
 
@@ -42,10 +42,9 @@ contains
       USE mp_pools, ONLY: intra_pool_comm
       use compute_charge_mod, only: compute_charge
       use project_mod, only: project
-      use extrapolation, only : update_pot
+      use extrapolation, only: update_pot
 
-
-      use test_h_psi, only : test
+      use test_h_psi, only: test
 
       implicit none
 
@@ -53,8 +52,8 @@ contains
       logical, intent(in) :: save_dvpsi, hpsi_test
       complex(dp), intent(inout) :: dvpsi_save(:, :, :)
 
-      INTEGER, intent(in) :: nbnd, npwx, intra_bgrp_comm,&
-                             nat,ityp(:)
+      INTEGER, intent(in) :: nbnd, npwx, intra_bgrp_comm, &
+                             nat, ityp(:)
       INTEGER, intent(inout) :: npw, igk_k(:, :)
       TYPE(fft_type_descriptor), intent(inout) :: dffts
       COMPLEX(DP), intent(inout) ::  evc(:, :)
@@ -62,7 +61,7 @@ contains
       REAL(DP), intent(inout) :: g2kin(:)
       REAL(DP), intent(out) :: J(3), J_a(3), J_b(3), J_el(3)
       REAL(DP), intent(in) ::  tpiba2, g(:, :), at(:, :), &
-                              xk(:, :), et(:, :), dt, gg(:),&
+                              xk(:, :), et(:, :), dt, gg(:), &
                               omega
       COMPLEX(DP), intent(in) :: vkb(:, :)
 
@@ -85,13 +84,13 @@ contains
 ! init potentials needed to evaluate  H|psi>
       call update_pot()
       call hinit1()
-      call init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
+      call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call sum_band()
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, evc, becp)
       if (hpsi_test) &
-          call test
+         call test
 ! For preconditioning:
       do ig = 1, npw
          igk_k(ig, 1) = ig

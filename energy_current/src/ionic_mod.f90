@@ -79,7 +79,7 @@ contains
          init_data%S_B_g(1) = -pi/(eta*omega)
       end if
 !
-! S_A_g array contains the addenda in the last term in Eqs. 58 (no sum over G) 
+! S_A_g array contains the addenda in the last term in Eqs. 58 (no sum over G)
       do a = 1, 3
          do b = 1, 3
             if (a >= b) then
@@ -330,8 +330,8 @@ contains
       current_a = 0.d0 !J^{nA} Eq. 52
       current_b = 0.d0 !J^{nB} Eq. 53
       current_c = 0.d0 !J^{nC} Eq. 54
-      !(Eq. 55) J^{nD} = current_d + current_e 
-      current_d = 0.d0  
+      !(Eq. 55) J^{nD} = current_d + current_e
+      current_d = 0.d0
       current_e = 0.d0
 
       call start_clock('calcolo_i')

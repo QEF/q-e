@@ -19,7 +19,7 @@ contains
    subroutine init_zero(tabr, H_g, &
                         nsp, zv, tpiba2, tpiba, omega, at, alat, &
                         ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
-                        upf, rgrid, nqxq, intra_bgrp_comm,&
+                        upf, rgrid, nqxq, intra_bgrp_comm, &
                         nat, ityp)
 !called once to init stuff that does not depend on the atomic positions
 !tabr and h_g, on output, will be used by all the current_zero calls
@@ -32,7 +32,7 @@ contains
       implicit none
 
       real(dp), intent(inout) :: tabr(:, :, :, :), H_g(:, :, :, :)
-      integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl, nqxq,&
+      integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl, nqxq, &
                              intra_bgrp_comm, nat, ityp(:)
       real(dp), intent(in) :: zv(:), tpiba2, tpiba, omega, at(3, 3), alat, &
                               gg(:), g(:, :), gl(:), dq
@@ -45,7 +45,7 @@ contains
       integer :: isp, iun, a, b
       logical :: exst
       call start_clock('init_zero')
-      call init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
+      call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       allocate (tablocal_hg(nqxq, nsp, 2))
       call init_us_1a(tabr, tablocal_hg, rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
       call init_reciprocal_parts_tab(H_g, tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
@@ -172,7 +172,7 @@ contains
 
       call mp_sum(j_zero, intra_pool_comm)
       if (l_non_loc) then
-         ! Add non local part, Eq. 34      
+         ! Add non local part, Eq. 34
          call add_nc_curr(j_zero, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                           g, tpiba, nat, ityp, nsp, xk, igk_k, ec_test_)
       end if
@@ -235,10 +235,10 @@ contains
       allocate (xvkb(npwx, nkb, 3))
       allocate (dvkb(npwx, nkb, 3))
       allocate (xdvkb(npwx, nkb, 3, 3))
-!      
+!
 !  initialization of vkb (just to be sure) and xvkb
-!  - vkb is the Fourier transform of the beta functions, 
-!  - xvkb is the Fourier tranform of xbeta. 
+!  - vkb is the Fourier transform of the beta functions,
+!  - xvkb is the Fourier tranform of xbeta.
 !  Both are needed in Eq. 36
       CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call init_us_3(npw, xvkb, tabr, ec_test_)
@@ -416,9 +416,9 @@ contains
                i1 = i0 + 1
                i2 = i0 + 2
                i3 = i0 + 3
-! tablocal_hg is computed on a 1D in reciprocal space 
+! tablocal_hg is computed on a 1D in reciprocal space
 ! and is initialized in  init_us_1a.f90. It is independent of the cell and depends only on the local pseudo.
-! H_g_rad is the the radial counterpart of H_g and is computed at the desired G values defined by the reciprocal 
+! H_g_rad is the the radial counterpart of H_g and is computed at the desired G values defined by the reciprocal
 ! lattice interpolating tablocal_hg
 !
                H_g_rad(igl, 0) = tablocal_hg(i0, it, 1)*ux*vx*wx/6.d0 + &
@@ -515,11 +515,11 @@ contains
       !
 
 !!!!!!! init_us_1a initializes tabr & tabocal
-! 1. tabr(nqxq,nbetam,nsp,1:3) 
-! Contains the integrals f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r) needed in Eq. 41 
-! - la is the angolar momentum of the beta function (more than one function 
-! with the same l are allowed ) 
-! - lb is the angular moment of bessel function 
+! 1. tabr(nqxq,nbetam,nsp,1:3)
+! Contains the integrals f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r) needed in Eq. 41
+! - la is the angolar momentum of the beta function (more than one function
+! with the same l are allowed )
+! - lb is the angular moment of bessel function
 ! - only lb=la+1, lb=la-1 or lb=la are allowed
 !   these 3 cases are represented by the last index
 !
@@ -543,7 +543,7 @@ contains
 !kkbeta tells where bessel function goes to zero
                call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
                do ir = 1, upf(nt)%kkbeta
-                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir) 
+                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
                   ! upf files contains x times the projector
                   ! that is why  we have only two rgrids r^2)
                enddo

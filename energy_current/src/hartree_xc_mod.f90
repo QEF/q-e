@@ -12,8 +12,7 @@ module hartree_xc_mod
 
 contains
 
-     
-        subroutine current_hartree_xc(three_point_derivative, delta_t, scf_all, &
+   subroutine current_hartree_xc(three_point_derivative, delta_t, scf_all, &
                                  j_hartree, j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
                                  tpiba, omega, tpiba2)
       !use wvfct, only: nbnd, npw, npwx
@@ -65,9 +64,9 @@ contains
 
       if (ionode) write (stdout, *) 'BEGIN: HARTREE & KOHN'
 
-      if ((xclib_get_id('GGA','EXCH') /= 3) .or. (xclib_get_id('GGA','CORR') /= 4)) then
+      if ((xclib_get_id('GGA', 'EXCH') /= 3) .or. (xclib_get_id('GGA', 'CORR') /= 4)) then
          do_xc_curr = .false.
-         if ((xclib_get_id('GGA','EXCH') /= 0) .or. (xclib_get_id('GGA','CORR') /= 0)) then
+         if ((xclib_get_id('GGA', 'EXCH') /= 0) .or. (xclib_get_id('GGA', 'CORR') /= 0)) then
             call errore('ENERGY CURRENT', 'XC NOT PBE OR LDA. ABORT.', 1)
          end if
       else
@@ -95,7 +94,6 @@ contains
 ! wfc and position and velocities of atoms that were used to compute the wfcs.
 ! if only 2 points are used, t_minus == t_zero
 
-
       call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge_plus_or_zero, charge_g_plus_or_zero)
       call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge_minus_or_zero, charge_g_minus_or_zero)
 
@@ -104,14 +102,13 @@ contains
       end if
       !hartree derivative
       if (gstart == 2) then
-              v_point(1)=0.d0
+         v_point(1) = 0.d0
       end if
       do igm = gstart, ngm
          qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
          fac = e2*fpi/(tpiba2*qq_fact*omega)
          v_point(igm) = (charge_g_plus_or_zero(igm) - charge_g_minus_or_zero(igm))*fac/delta_t ! v(t+dt)-v(t-dt)
       end do
-
 
       !we computed all the numerical derivatives: charge_plus_or_zero/minus are not needed anymore, we have to compute stuff
       !in t=0.
@@ -124,7 +121,7 @@ contains
       !charge_g_plus_or_zero is charge(r) at time t
       !charge_plus_or_zero is charge(G) at time t
       if (gstart == 2) then
-              v_mean(1)=0.d0
+         v_mean(1) = 0.d0
       end if
       do igm = gstart, ngm
          qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0

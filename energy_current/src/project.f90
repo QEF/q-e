@@ -91,24 +91,24 @@ contains
       call allocate_bec_type(nkb, nbnd, becp0)
       CALL calbec(npw, vkb, evc, becp0)
 
-      call commutator_Hx_psi(ik, nbnd, at(:,ipol), becp0, becp2, dpsi)
+      call commutator_Hx_psi(ik, nbnd, at(:, ipol), becp0, becp2, dpsi)
       call deallocate_bec_type(becp0)
       !
       !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
       !    Apply -P^+_c
       !    NB it uses dvpsi as workspace
       !
- !     l_test = .true.
+      !     l_test = .true.
       ! manual orthogonalization
- !     if (l_test) then
+      !     if (l_test) then
       emme = 0.d0
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc, 2*npwx, dpsi, 2*npwx, 0.d0, emme, nbnd)
       if (gstart == 2) then
-            do ibnd = 1, nbnd
-               do jbnd = 1, nbnd
-                  emme(ibnd, jbnd) = emme(ibnd, jbnd) - dble(conjg(evc(1, ibnd))*dpsi(1, jbnd))
-               end do
+         do ibnd = 1, nbnd
+            do jbnd = 1, nbnd
+               emme(ibnd, jbnd) = emme(ibnd, jbnd) - dble(conjg(evc(1, ibnd))*dpsi(1, jbnd))
             end do
+         end do
       end if
       call mp_sum(emme, intra_pool_comm)
 !     do ibnd=1,nbnd

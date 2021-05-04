@@ -14,10 +14,10 @@ module scf_result_mod
 
    type scf_result
       complex(kind=dp), allocatable :: evc(:, :)
-      REAL(DP), ALLOCATABLE :: vrs(:,:)
+      REAL(DP), ALLOCATABLE :: vrs(:, :)
       !type(bec_type) :: becp
-      !complex(dp),allocatable :: vkb(:,:) 
-      real(kind=dp), allocatable :: tau(:, :), vel(:, :), et(:,:)
+      !complex(dp),allocatable :: vkb(:,:)
+      real(kind=dp), allocatable :: tau(:, :), vel(:, :), et(:, :)
    end type
    type multiple_scf_result
       type(scf_result) :: t_minus, t_zero, t_plus
@@ -29,11 +29,11 @@ contains
       type(scf_result), intent(inout) :: t
       integer, intent(in) :: npwx, nbnd, natoms, nnr, nspin, nkb, nkstot
       allocate (t%evc(npwx, nbnd))
-      allocate (t%vrs(nnr,nspin))
+      allocate (t%vrs(nnr, nspin))
       allocate (t%tau(3, natoms))
       allocate (t%vel(3, natoms))
       !allocate (t%vkb(npwx, nkb))
-      allocate (t%et(nbnd,nkstot))
+      allocate (t%et(nbnd, nkstot))
       !call allocate_bec_type(nkb, nbnd, t%becp)
    end subroutine
 
@@ -54,7 +54,7 @@ contains
       use wvfct, only: et
       use ions_base, only: tau
       use dynamics_module, only: vel
-      use scf, only : vrs
+      use scf, only: vrs
       !use uspp, only: vkb
       !use becmod, only : becp
       implicit none
@@ -95,16 +95,16 @@ contains
    subroutine scf_result_set_global_variables(t)
 
       use wavefunctions, only: evc
-      use wvfct, only: et,npw, npwx
+      use wvfct, only: et, npw, npwx
       use ions_base, only: tau, nat, nsp, ityp
       use dynamics_module, only: vel
-      use scf, only : vrs
-      use uspp, only : vkb
-      use extrapolation, only : update_pot
+      use scf, only: vrs
+      use uspp, only: vkb
+      use extrapolation, only: update_pot
       use klist, only: xk, igk_k
-      use cell_base, only : omega
-      use mp_bands, only : intra_bgrp_comm
-      use gvect, only : ngm, gg, g
+      use cell_base, only: omega
+      use mp_bands, only: intra_bgrp_comm
+      use gvect, only: ngm, gg, g
 
       !use becmod, only : becp
       implicit none
@@ -112,10 +112,10 @@ contains
 
       tau = t%tau
       vel = t%vel
-      npw=npwx
+      npw = npwx
       call update_pot()
       call hinit1()
-      call init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
+      call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
 
       evc = t%evc
@@ -136,7 +136,7 @@ contains
       !becp%mype =       t%becp%mype
       !becp%nbnd_loc =   t%becp%nbnd_loc
       !becp%ibnd_begin = t%becp%ibnd_begin
-      
+
    end subroutine
 
    subroutine multiple_scf_result_allocate(t, allocate_zero)
@@ -144,8 +144,8 @@ contains
       use ions_base, only: nat
       use fft_base, only: dffts
       use uspp, ONLY: nkb
-      USE lsda_mod, ONLY : nspin
-      use klist, only : nkstot
+      USE lsda_mod, ONLY: nspin
+      use klist, only: nkstot
       implicit none
       type(multiple_scf_result), intent(inout) :: t
       logical, intent(in) :: allocate_zero
@@ -161,7 +161,7 @@ contains
       logical, intent(in) :: allocate_zero
 
       if (allocate_zero) call scf_result_allocate(t%t_zero, npwx, nbnd, natoms, nnr, nspin, nkb, nkstot)
-      call scf_result_allocate(t%t_minus, npwx, nbnd, natoms, nnr, nspin, nkb,nkstot)
+      call scf_result_allocate(t%t_minus, npwx, nbnd, natoms, nnr, nspin, nkb, nkstot)
       call scf_result_allocate(t%t_plus, npwx, nbnd, natoms, nnr, nspin, nkb, nkstot)
 
    end subroutine

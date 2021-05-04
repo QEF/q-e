@@ -8,112 +8,111 @@
 !
 !-----------------------------------------------------------------------
 module test_h_psi
-use kinds, only : dp
-USE wvfct, ONLY: npw, npwx, nbnd
-use klist, only: xk, igk_k
-USE becmod, ONLY: bec_type, becp, calbec, &
-                    allocate_bec_type, deallocate_bec_type
-USE uspp, ONLY: nkb,vkb
-use cell_base, only : omega
-use mp_bands, only : intra_bgrp_comm
-use gvect, only : ngm, gg, g
-USE ions_base,        ONLY : nat, nsp, ityp, tau
+   ! this module is a small benchmark that is activated only id hpsi_test
+   ! is provided in the input namelist (not documented in the user input manual)
+   ! it detects if somwthing is messing up stuff between calls of h_psi, s_psi or
+   ! commutator_Hx_psi, checking that they give the same result when called
+   ! in different parts of the code
+   use kinds, only: dp
+   USE wvfct, ONLY: npw, npwx, nbnd
+   use klist, only: xk, igk_k
+   USE becmod, ONLY: bec_type, becp, calbec, &
+                     allocate_bec_type, deallocate_bec_type
+   USE uspp, ONLY: nkb, vkb
+   use cell_base, only: omega, at
+   use mp_bands, only: intra_bgrp_comm
+   use gvect, only: ngm, gg, g
+   USE ions_base, ONLY: nat, nsp, ityp, tau
 
-implicit none
+   implicit none
 
-
-
-
-complex(dp), allocatable :: hpsi(:,:), spsi(:,:), chxpsi(:,:),& ! reference results
-                            input(:,:) ! input vector
+   complex(dp), allocatable :: hpsi(:, :), spsi(:, :), chxpsi(:, :), & ! reference results
+                               input(:, :) ! input vector
 
 contains
 
-subroutine init_test(input_vector)
+   subroutine init_test(input_vector)
 
-        implicit none
-        complex(dp), intent(in) :: input_vector(:,:)
-        type(bec_type) ::becp2
-        complex(dp), allocatable :: tmp(:,:) ! temporary working vector
+      implicit none
+      complex(dp), intent(in) :: input_vector(:, :)
+      type(bec_type) ::becp2
+      complex(dp), allocatable :: tmp(:, :) ! temporary working vector
 
+      if (.not. allocated(hpsi)) then
+         allocate (hpsi(npwx, nbnd))
+         allocate (spsi(npwx, nbnd))
+         allocate (chxpsi(npwx, nbnd))
+         allocate (input(npwx, nbnd))
+      end if
+      allocate (tmp(npwx, nbnd))
 
-        if (.not. allocated(hpsi)) then
-            allocate(hpsi(npwx,nbnd))
-            allocate(spsi(npwx,nbnd))
-            allocate(chxpsi(npwx,nbnd))
-            allocate(input(npwx,nbnd))
-        end if
-        allocate(tmp(npwx,nbnd))
-
-        input=input_vector
-        hpsi=(0.d0,0.d0)
-        spsi=(0.d0,0.d0)
-        chxpsi=(0.d0,0.d0)
-        npw=npwx
-              call init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
+      input = input_vector
+      hpsi = (0.d0, 0.d0)
+      spsi = (0.d0, 0.d0)
+      chxpsi = (0.d0, 0.d0)
+      npw = npwx
+      call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
 
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, input, becp)
-        call h_psi(npwx, npw, nbnd, input, hpsi)
-        call s_psi(npwx, npw, nbnd, input, spsi)
+      call h_psi(npwx, npw, nbnd, input, hpsi)
+      call s_psi(npwx, npw, nbnd, input, spsi)
 
-        call allocate_bec_type(nkb, nbnd, becp2)
-        call commutator_Hx_psi(1,nbnd,becp, becp2, 1, chxpsi, tmp)
-        call deallocate_bec_type(becp2)
+      call allocate_bec_type(nkb, nbnd, becp2)
+      call commutator_Hx_psi(1, nbnd, at(:,1), becp, becp2, chxpsi)
+      call deallocate_bec_type(becp2)
 
-        call deallocate_bec_type(becp)
-        deallocate(tmp)
-end subroutine
+      call deallocate_bec_type(becp)
+      deallocate (tmp)
+   end subroutine
 
+   subroutine test
 
-subroutine test
+      implicit none
+      type(bec_type) ::becp2
+      complex(dp), allocatable :: tmp(:, :), res(:, :) ! temporary working vector
 
-        implicit none
-        type(bec_type) ::becp2
-        complex(dp), allocatable :: tmp(:,:),res(:,:) ! temporary working vector
+      allocate (res(npwx, nbnd))
+      allocate (tmp(npwx, nbnd))
 
+      npw = npwx
 
-        allocate(res(npwx,nbnd))
-        allocate(tmp(npwx,nbnd))
+      res = (0.d0, 0.d0)
+      call h_psi(npwx, npw, nbnd, input, res)
+      if (.not. test_equal(res, hpsi)) &
+         write (*, *) 'ERROR: test failed for h_psi'
+      res = (0.d0, 0.d0)
+      call s_psi(npwx, npw, nbnd, input, res)
+      if (.not. test_equal(res, spsi)) &
+         write (*, *) 'ERROR: test failed for s_psi'
 
-        npw=npwx
+      call allocate_bec_type(nkb, nbnd, becp2)
+      res = (0.d0, 0.d0)
+      call commutator_Hx_psi(1, nbnd, at(:,1), becp, becp2, res)
+      if (.not. test_equal(res, chxpsi)) &
+         write (*, *) 'ERROR: test failed for commutator_Hx_psi'
+      call deallocate_bec_type(becp2)
 
-        res=(0.d0,0.d0)
-        call h_psi(npwx, npw, nbnd, input, res)
-        if (.not. test_equal(res,hpsi)) &
-            write(*,*) 'ERROR: test failed for h_psi'
-        res=(0.d0,0.d0)
-        call s_psi(npwx, npw, nbnd, input, res)
-        if (.not. test_equal(res,spsi)) &
-            write(*,*) 'ERROR: test failed for s_psi'
+      deallocate (tmp)
+      deallocate (res)
 
-        call allocate_bec_type(nkb, nbnd, becp2)
-        res=(0.d0,0.d0)
-        call commutator_Hx_psi(1,nbnd,becp, becp2, 1, res, tmp)
-        if (.not. test_equal(res,chxpsi)) &
-            write(*,*) 'ERROR: test failed for commutator_Hx_psi'
-        call deallocate_bec_type(becp2)
+   end subroutine
 
-        deallocate(tmp)
-        deallocate(res)
+   function test_equal(a, b) result(res)
+      implicit none
+      logical :: res
+      complex(dp), intent(in) :: a(:, :), b(:, :)
 
-end subroutine
+      complex(dp) :: m, ma, mb
 
-function test_equal(a,b) result(res)
-        implicit none
-        logical :: res
-        complex(dp), intent(in) :: a(:,:),b(:,:)
+      m = cmplx(maxval(real(a - b)), maxval(aimag(a - b)), dp)
+      ma = cmplx(maxval(real(a)), maxval(aimag(a)), dp)
+      mb = cmplx(maxval(real(b)), maxval(aimag(b)), dp)
 
-        complex(dp) :: m,ma,mb
-
-        m= cmplx(maxval(real(a-b)), maxval(aimag(a-b)),dp)
-        ma= cmplx(maxval(real(a)), maxval(aimag(a))   ,dp)
-        mb= cmplx(maxval(real(b)), maxval(aimag(b))   ,dp)
-
-        write (*,*) m,m/ma,m/mb, ma, mb
-        res = .true.
-        if (abs(m)>1e-10) res=.false.
-end function
+      write (*, *) m, m/ma, m/mb, ma, mb
+      res = .true.
+      if (abs(m) > 1e-10) res = .false.
+   end function
 
 end module
