@@ -20,7 +20,7 @@
     celldm(1) = 10.,
     nat=    1,
     ntyp=     1,
-    ecutwfc=  80.0,
+    ecutwfc = 40.d0,
 /
  &ELECTRONS
     conv_thr = 1.D-15,

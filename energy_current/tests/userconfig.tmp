@@ -27,7 +27,7 @@ skip_args = 'not present in this version'
 
 
 [user]
-benchmark = new_velocities_h2o_traj
+benchmark = test_h2o_052021
 date_fmt = %d%m%y
 diff = vimdiff
 
