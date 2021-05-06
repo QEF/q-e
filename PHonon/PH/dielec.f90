@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 subroutine dielec()
   !-----------------------------------------------------------------------
-  !
-  !      calculates the dielectric tensor
+  !! Calculates the dielectric tensor.
   !
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
