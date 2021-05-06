@@ -71,10 +71,20 @@ input_description -distribution {Quantum ESPRESSO} -package turboTDDFPT -program
 	
 	var extrapolation -type CHARACTER {
 	    default {'no'}
-	    info {
-            	 Sets the extrapolation scheme. 'osc'= biconstant extrapolation,
-		 'constant'=constant extrapolation and 'no'=no extrapolation.
-		 }
+            options {
+                info {
+                    Sets the extrapolation scheme.
+                }
+                opt -val 'osc' {
+                    biconstant extrapolation
+                }
+                opt -val 'constant' {
+                    constant extrapolation
+                }
+                opt -val 'no' {
+                    no extrapolation.
+                }
+            }
 	}
 
 	var epsil -type REAL {
