@@ -72,10 +72,20 @@ in between itermax0+1 and itermax will be extrapolated.
       <var name="extrapolation" type="CHARACTER" >
          <default> &apos;no&apos;
          </default>
-         <info>
-    Sets the extrapolation scheme. &apos;osc&apos;= biconstant extrapolation,
-&apos;constant&apos;=constant extrapolation and &apos;no&apos;=no extrapolation.
-         </info>
+         <options>
+            <info>
+Sets the extrapolation scheme.
+            </info>
+            <opt val="'osc'" >
+biconstant extrapolation
+            </opt>
+            <opt val="'constant'" >
+constant extrapolation
+            </opt>
+            <opt val="'no'" >
+no extrapolation.
+            </opt>
+         </options>
       </var>
       <var name="epsil" type="REAL" >
          <default> 0.02

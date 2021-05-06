@@ -74,7 +74,7 @@
 (defvar qe-closed-supercards (list "AUTOPILOT" "BEGIN" "BEGIN_ENGINE_INPUT" "BEGIN_PATH_INPUT" "BEGIN_POSITIONS" "END" "ENDRULES" "END_ENGINE_INPUT" "END_PATH_INPUT" "END_POSITIONS" ))
   
 ;; qe's namelists
-(defvar qe-namelists (list "&BANDS" "&CELL" "&CONTROL" "&DOS" "&ELECTRONS" "&FCP" "&INPUT" "&INPUTCOND" "&INPUTHP" "&INPUTMOPDOS" "&INPUTP" "&INPUTPH" "&INPUTPP" "&INPUT_BGW2PW" "&INPUT_PW2BGW" "&IONS" "&PATH" "&PLOT" "&PPACF" "&PRESS_AI" "&PROJWFC" "&SYSTEM" "&TEST" "&WANNIER" "&lr_control" "&lr_dav" "&lr_input" "&lr_post" ))
+(defvar qe-namelists (list "&BANDS" "&CELL" "&CONTROL" "&DOS" "&ELECTRONS" "&FCP" "&INPUT" "&INPUTCOND" "&INPUTHP" "&INPUTMOPDOS" "&INPUTP" "&INPUTPH" "&INPUTPP" "&INPUT_BGW2PW" "&INPUT_PW2BGW" "&IONS" "&LR_CONTROL" "&LR_DAV" "&LR_INPUT" "&LR_POST" "&PATH" "&PLOT" "&PPACF" "&PRESS_AI" "&PROJWFC" "&SYSTEM" "&TEST" "&WANNIER" ))
 (defvar qe-end-namelist (list "&END" "/"))
 
 ;; qe's variables

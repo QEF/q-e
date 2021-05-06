@@ -84,8 +84,17 @@ NAMELIST: &LR_INPUT
    
    Type:           CHARACTER
    Default:        'no'
-   Description:    Sets the extrapolation scheme. 'osc'= biconstant extrapolation,
-                   'constant'=constant extrapolation and 'no'=no extrapolation.
+   Description:   
+                   Sets the extrapolation scheme.
+    
+                   'osc' :
+                        biconstant extrapolation
+    
+                   'constant' :
+                        constant extrapolation
+    
+                   'no' :
+                        no extrapolation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -180,4 +189,4 @@ NAMELIST: &LR_INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Apr 23 19:45:01 CEST 2021
+This file has been created by helpdoc utility on Wed May 05 14:39:06 CEST 2021
