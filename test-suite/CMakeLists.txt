@@ -10,17 +10,15 @@ message("\n"
         "To run non-pw/cp tests, make a softlink of the bin directory to the root of QE source tree and run tests in the test-suite directory under that root.\n")
 find_program(BASH_PROGRAM bash)
 
-if(QE_ENABLE_MPI)
-  function(qe_runner test_name test_binary test_input test_output)
+function(qe_runner test_name label test_binary test_input test_output)
+  if(QE_ENABLE_MPI)
     add_test(NAME ${test_name}
-             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/test_helper_tee.sh ${test_output} ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input})
-  endfunction()
-else()
-  function(qe_runner test_name test_binary test_input test_output)
+             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/ctest_runner.sh ${label} ${test_output} ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input})
+  else()
     add_test(NAME ${test_name}
-             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/test_helper_tee.sh ${test_output} ${test_binary} -inp ${test_input})
-  endfunction()
-endif()
+             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/ctest_runner.sh ${label} ${test_output} ${test_binary} -inp ${test_input})
+  endif()
+endfunction()
 
 # prepare jobconfig and userconfig for testcode.py
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
@@ -133,7 +131,7 @@ foreach(test_category IN LISTS qe_test_categories)
         #message("base test name : ${base_test_name}")
         #message("test work dir : ${test_work_dir_prefix}/${test_work_dir}")
 
-        qe_runner(${test_name} ${test_binary} ${test_input_relative} ${test_output_file})
+        qe_runner(${test_name} ${test_category} ${test_binary} ${test_input_relative} ${test_output_file})
 
         if(QE_ENABLE_MPI)
           set(actual_test_num_procs ${TESTCODE_NPROCS})
