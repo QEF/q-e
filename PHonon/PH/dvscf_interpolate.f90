@@ -12,9 +12,9 @@ MODULE dvscf_interpolate
   !! Module for Fourier interpolation of phonon potential dvscf.
   !! Uses the output of dvscf_q2r.x program to compute the induced part of
   !! dvscf at each q point.
-  !!
-  !! See header of dvscf_q2r.f90 for details.
-  !!
+  !
+  ! See header of dvscf_q2r.f90 for details.
+  !
   !----------------------------------------------------------------------------
   !
   USE kinds,       ONLY : DP

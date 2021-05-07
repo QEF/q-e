@@ -57,7 +57,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   !! TRUE if \(xq=(0,0,0)\) in a metal
   LOGICAL,  INTENT(IN) :: lflag  
   !! TRUE for phonon calculation, FALSE for electric field calculation
-  INTEGER , INTENT(IN) :: imode0,
+  INTEGER , INTENT(IN) :: imode0
   !! the position of the modes
   INTEGER , INTENT(IN) :: irr
   !! the irreducible representation
