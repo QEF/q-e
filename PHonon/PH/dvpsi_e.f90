@@ -9,12 +9,13 @@
 !----------------------------------------------------------------------
 subroutine dvpsi_e (ik, ipol)
   !----------------------------------------------------------------------
+  !! On output: \(\text{dvpsi}\) contains \(P_c^+ x | \psi_{ik}\rangle\)
+  !! in crystal axis (projected on \(\text{at}(*,\text{ipol})\)).
   !
-  ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis
-  !            (projected on at(*,ipol) )
-  !
-  ! dvpsi is READ from file if this_pcxpsi_is_on_file(ik,ipol)=.true.
-  ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb and evc must be set)
+  !! \(\text{dvpsi}\) is read from file if
+  !! \(\text{this_pcxpsi_is_on_file}(\text{ik},\text{ipol})=\text{TRUE}\),
+  !! otherwise \(\text{dvpsi}\) is COMPUTED and WRITTEN on file 
+  !! (\(\text{vkb}\) and \(\text{evc}\) must be set).
   !
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : tpiba2, at
@@ -44,7 +45,7 @@ subroutine dvpsi_e (ik, ipol)
   !
   integer, intent(IN) :: ipol, ik
   !
-  ! Local variables
+  ! ... Local variables
   !
   integer :: npw
   integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0,  &
