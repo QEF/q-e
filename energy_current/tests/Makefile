@@ -34,6 +34,10 @@ prolog :
 	@sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig
 
 
+pseudo :
+	@./check_pseudo.sh ./
+
+
 run-tests : run-tests-serial
 
 run-tests-serial : run-tests-all_currents-serial
@@ -41,28 +45,28 @@ run-tests-serial : run-tests-all_currents-serial
 run-tests-parallel : run-tests-all_currents-parallel
 
 
-run-tests-all_currents-serial : prolog
+run-tests-all_currents-serial : prolog pseudo 
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
-run-tests-all_currents-parallel : prolog
+run-tests-all_currents-parallel : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 
 run-custom-test : run-custom-test-serial
 
-run-custom-test-serial : prolog
+run-custom-test-serial : prolog pseudo
 	@if test -d $(testdir); then \
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
-run-custom-test-parallel : prolog
+run-custom-test-parallel : prolog pseudo
 	@if test -d $(testdir); then \
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 
 
-create-reference-all_currents : prolog
+create-reference-all_currents : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
 
@@ -70,7 +74,7 @@ create-reference-all_currents : prolog
 
 compare : compare-all_currents
 
-compare-all_currents : prolog
+compare-all_currents : prolog pseudo
 	${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all  --verbose compare 2>&1 | tee out.ALL_CURRENTS.`date +%Y%m%d_%H%M%S`
 
 
@@ -84,3 +88,4 @@ clean:
 # Calling 'purge' means remove all reference outputs... be careful!
 purge: clean
 	@for x in `find energy_current_* -name "benchmark*"`; do rm -rf $$x; done
+.PHONY: pseudo

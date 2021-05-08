@@ -27,8 +27,8 @@ vel_input_units="CP",
     ion_velocities = 'from_input',
 /
  ATOMIC_SPECIES
-   H      1.00000000 H_HSCV_PBE-1.0.upf
-   O     16.00000000 O_HSCV_PBE-1.0.upf
+   H      1.00000000 H.pbe-vbc.UPF
+   O     16.00000000 O.pbe-mt.UPF
 ATOMIC_POSITIONS {bohr}
 H     -0.38060793839043E-03     0.11644696237662E-02    -0.18055220775137E-03
 H      0.14854564679755E-02    -0.65844095250918E-03    -0.37960675829410E-02

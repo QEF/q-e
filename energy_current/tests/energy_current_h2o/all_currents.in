@@ -26,7 +26,7 @@ vel_input_units="CP",
     celldm(1) = 10.,
     nat=    3,
     ntyp=     2,
-    ecutwfc=  40.0,
+    ecutwfc=  100.0,
 /
  &ELECTRONS
     conv_thr = 1.D-17,
@@ -38,7 +38,7 @@ vel_input_units="CP",
 /
  ATOMIC_SPECIES
    H      1.00000000 H_HSCV_PBE-1.0.upf
-   O     16.00000000 O_HSCV_PBE-1.0.upf
+   O     16.00000000 O.pbe-mt.UPF
 ATOMIC_POSITIONS {bohr}
  H     0.57164238	  0.94335166	  0.96565043
  H    -0.24339682	 -0.43501513	 -1.37874473
