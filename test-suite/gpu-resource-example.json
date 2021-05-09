@@ -1,0 +1,25 @@
+{
+  "version": {
+    "major": 1,
+    "minor": 0
+  },
+  "_comment": "A node with 4 GPUs. Only digits are allowed in id which is passed as CUDA_VISIBLE_DEVICES",
+  "local": [
+    {
+      "nvidia_gpus": [
+        {
+          "id": "0"
+        },
+        {
+          "id": "1"
+        },
+        {
+          "id": "2"
+        },
+        {
+          "id": "3"
+        }
+      ]
+    }
+  ]
+}

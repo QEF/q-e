@@ -161,16 +161,23 @@ foreach(test_category IN LISTS qe_test_categories)
                              RESOURCE_LOCK shared_workdir_${test_work_dir}
                              DEPENDS ${check_pseudo_test_name})
 
+        # Each test occupies one GPU regardless of the number of MPI ranks.
+        set_tests_properties(${test_name} PROPERTIES RESOURCE_GROUPS "nvidia_gpus:1")
+
+        # capture non-zero exit code
         if(DEFINED expected_exit_msg)
           set_tests_properties(${test_name} PROPERTIES PASS_REGULAR_EXPRESSION "${expected_exit_msg}")
           unset(expected_exit_msg)
         endif()
 
         set_property(TEST ${test_name} APPEND PROPERTY LABELS "system;${subfolder_name}")
+
+        # add dependency between workflow steps
         if(in_test_series)
           set_property(TEST ${test_name} APPEND PROPERTY DEPENDS "${base_test_name};${last_test_name}")
         endif()
 
+        # make correctness check depend on the test run
         set_property(TEST ${test_name_prefix}-correctness APPEND PROPERTY DEPENDS "${test_name}")
       endif()
     endforeach()

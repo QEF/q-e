@@ -10,6 +10,12 @@ if [ $# -lt 3 ] ; then
   exit 1
 fi
 
+if [ ! -z "$CTEST_RESOURCE_GROUP_0_NVIDIA_GPUS" ] ; then
+  GPU_ID=`echo $CTEST_RESOURCE_GROUP_0_NVIDIA_GPUS | sed "s/id:\(.*\),.*$/\1/"`
+  echo "Assign GPU $GPU_ID to the run"
+  export CUDA_VISIBLE_DEVICES=$GPU_ID
+fi
+
 ARGS=""
 
 for i in `seq 3 $#`
