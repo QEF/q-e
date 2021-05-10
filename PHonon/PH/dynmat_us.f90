@@ -9,10 +9,9 @@
 !----------------------------------------------------------------------
 SUBROUTINE dynmat_us()
   !-----------------------------------------------------------------------
-  !
-  !  This routine calculates the electronic term: <psi|V"-eS"|psi>
-  !  of the dynamical matrix. Eq. B32 of PRB 64, 235118 (2001) is calculated
-  !  here. Eqs. B33 and B34 in addusdynmat.
+  !! This routine calculates the electronic term: \(\langle\psi|V"-eS"|\psi\rangle\)
+  !! of the dynamical matrix. Eq. (B32) of PRB 64, 235118 (2001) is calculated
+  !! here. Eqs. (B33) and (B34) in \(\texttt{addusdynmat}\).
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
@@ -50,6 +49,7 @@ SUBROUTINE dynmat_us()
   USE control_lr,           ONLY : nbnd_occ, lgamma
 
   IMPLICIT NONE
+  
   INTEGER :: icart, jcart, na_icart, na_jcart, na, ng, nt, ik, &
        ig, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk, &
        js,  ijs, npw

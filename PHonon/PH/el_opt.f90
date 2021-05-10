@@ -8,8 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine el_opt
   !-----------------------------------------------------------------------
-  !
-  ! Calculates electro-optic tensor
+  !! Calculates electro-optic tensor.
   !
   use kinds, only : DP
   USE cell_base,  ONLY : omega, at, bg
