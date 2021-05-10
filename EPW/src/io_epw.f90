@@ -553,7 +553,7 @@
       !  ionode = .TRUE.
       !ELSE
       !  ionode = .FALSE.
-      !ENDIF            
+      !ENDIF
       !
       ! pass the 'tempfile' as the '.xml' extension is added in the next routine
       CALL read_dyn_mat_param(tempfile, ntyp_, nat_)
@@ -573,7 +573,7 @@
       IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error deallocating atm', 1)
       !
     ELSE ! is_xml_file
-      IF (mpime == ionode_id) THEN      
+      IF (mpime == ionode_id) THEN
         !
         OPEN(UNIT = iunifc, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
         IF (ios /= 0) call errore ('read_ifc_epw', 'error opening ifc.q2r', iunifc)
@@ -637,7 +637,7 @@
       CALL mp_bcast(tau_, ionode_id, world_comm)
       CALL mp_bcast(ibrav_, ionode_id, world_comm)
     ENDIF ! has_xml
-    ! 
+    !
     WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat)
     !
     CALL set_asr2(asr_typ, nqc1, nqc2, nqc3, ifc, zstar, nat, ibrav_, tau_)

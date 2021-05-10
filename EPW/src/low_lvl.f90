@@ -1121,8 +1121,6 @@
     rmelt = DBLE(imelt) * 4.d0 / 1073741824.d0 ! 4 bytes per number, value in Gb
     IF (vmelt == 2) &
       rmelt = 2.d0 * rmelt ! 8 bytes per number, value in Gb
-    !WRITE(stdout, '(/, 5x, a, a, f9.6, a)') "Memory added/subtracted in mem_size:", &
-    !        " ~= ", rmelt, " Gb"
     rmelt = rmelt + memlt_pool(my_pool_id + 1)
     !
     memlt_pool(:) = zero
@@ -1200,8 +1198,6 @@
       imelt = imelt * nqstep
     ENDIF
     rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
-    !WRITE(stdout, '(/, 5x, a, a, f9.6, a)') "Memory added/subtracted in memlt:", &
-    !        " ~= ", rmelt, " Gb"
     rmelt = rmelt + memlt_pool(my_pool_id + 1)
     !
     memlt_pool(:) = zero
@@ -1236,6 +1232,292 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE memlt_eliashberg
     !-----------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE create_interval(size_v, v, n_intval, val_intval, pos_intval)
+    !--------------------------------------------------------------------------
+    !!
+    !! This routine divide an integer vector "v" of size "size_v" into "n_intval" intervals
+    !! The routine then store the first element of each intervals into "val_intval"
+    !! and store their position in "pos_intval".
+    !!
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: size_v
+    !! Size of vector to bisect
+    INTEGER, INTENT(in) :: v(size_v)
+    !! Vector to bisect
+    INTEGER, INTENT(in) :: n_intval
+    !! Number of intervals
+    INTEGER, INTENT(out) :: val_intval(n_intval)
+    !! Value of the first element of each intervals
+    INTEGER, INTENT(out) :: pos_intval(n_intval)
+    !! Position of the first element of each intervals
+    !
+    !  Local variables
+    INTEGER :: nkl
+    !! Size of each intervals
+    INTEGER :: nkr
+    !! Remaining of the division of the full vector by nkl
+    INTEGER :: i
+    !! Index looping on the invervals
+    !
+    ! Initialize
+    val_intval(:) = 0
+    pos_intval(:) = 0
+    !
+    ! We want to have n_intval indexes, i.e. n_intval-1 intervals
+    nkl = size_v / (n_intval - 1)
+    nkr = size_v - nkl * (n_intval - 1)
+    !
+    ! the reminder goes to the first nkr intervals (0...nkr-1)
+    !
+    DO i = 1, n_intval
+      pos_intval(i) = nkl * (i - 1)
+      IF (i < nkr) pos_intval(i) = pos_intval(i) + i
+      IF (i >= nkr) pos_intval(i) = pos_intval(i) + nkr
+    ENDDO
+    !
+    DO i = 1, n_intval
+      val_intval(i) = v(pos_intval(i))
+    ENDDO
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE create_interval
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE bisection(size_v, v, ind, n_intval, val_intval, pos_intval)
+    !--------------------------------------------------------------------------
+    !!
+    !! The subroutine first perform a pre-serach to determine in which intervals
+    !! the index "ind" lies.
+    !! Then the subroutines find the position of the index "ind" within that interaval.
+    !!
+    USE kinds, ONLY : DP
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: size_v
+    !! Size of vector to bisect
+    INTEGER, INTENT(in) :: v(size_v)
+    !! Vector to bisect
+    INTEGER, INTENT(in) :: n_intval
+    !! Number of intervals for the pre search
+    INTEGER, INTENT(in) :: val_intval(n_intval)
+    !! Value of the first element of each intervals
+    INTEGER, INTENT(in) :: pos_intval(n_intval)
+    !! Position of the first element of each intervals
+    INTEGER, INTENT(inout) :: ind
+    !! In entry, index to find in the vector; on exit, position of the element;
+    !! If 0 on RETURN, the element is not present in the list
+    !
+    ! Local variable
+    INTEGER :: it
+    !! Iteration index
+    INTEGER :: lp
+    !! Left pointer
+    INTEGER :: rp
+    !! Right pointer
+    INTEGER :: cp
+    !! Center pointer
+    INTEGER :: nit
+    !! Number of iterations
+    INTEGER :: prod
+    !! Product to determine on which side of the interval we are
+    INTEGER :: prod_2
+    !! Product
+    INTEGER :: ierr
+    !! Error number
+    INTEGER :: subsize
+    !! Size of the chunk of v we are considering
+    INTEGER :: pre_minloc
+    !! Minimum location of presearch
+    INTEGER :: pre_minval
+    !! Minimum value of presearch
+    INTEGER, ALLOCATABLE :: v_red(:)
+    !! Reduced vector for bisection
+    INTEGER, ALLOCATABLE :: v_sgn(:)
+    !! v - ind
+    !
+    ! 1) Deal with special cases
+    !
+    ! The point is not within the fsthick window ==> return 0
+    IF (ind > v(size_v) .OR. (ind < v(1))) THEN
+      ind = 0
+      RETURN
+    ENDIF
+    !
+    ! Look at the first element of each intervals.
+    pre_minloc = MINLOC(ABS(val_intval(:) - ind), 1)
+    pre_minval = MINVAL(ABS(val_intval(:) - ind), 1)
+    !
+    ! The ind is one of those first element (special case) - we are done
+    IF (pre_minval == 0) THEN
+      ind = pos_intval(pre_minloc)
+      RETURN
+    ENDIF
+    !
+    ! The ind is the second or one before last element (special case treated here because the
+    ! algo below cannot deal with the two extreme cases.
+    ! We compute the lower left bound and upper right bound. The ind is between those two bounds.
+    IF (pre_minloc == 1) THEN
+      lp = pos_intval(1)
+      rp = pos_intval(2)
+    ELSEIF (pre_minloc == n_intval) THEN
+      lp = pos_intval(n_intval - 1)
+      rp = pos_intval(n_intval)
+    ELSE
+      !
+      ! 2) Do a pre-search to deterine in which intervals the index lies.
+      !
+      ! The sign of the product tels us on which side of the interval does the index ind lies.
+      IF ( val_intval(pre_minloc) - ind /= 0 .AND. val_intval(pre_minloc - 1) - ind /= 0) THEN
+        prod = (val_intval(pre_minloc) - ind) / ABS(val_intval(pre_minloc) - ind) &
+             * (val_intval(pre_minloc - 1) - ind) / ABS(val_intval(pre_minloc - 1) - ind)
+      ELSE
+        prod = 0
+      ENDIF
+      !
+      IF (prod < 0) THEN
+        ! Then the correspondence is in between pos_intval(pre_minloc-1) and pos_intval(pre_minloc)
+        lp = pos_intval(pre_minloc - 1)
+        rp = pos_intval(pre_minloc)
+      ELSEIF (prod > 0) THEN
+        ! Then the correspondence is in between pos_intval(pre_minloc) and pos_intval(pre_minloc+1)
+        lp = pos_intval(pre_minloc)
+        rp = pos_intval(pre_minloc + 1)
+      ELSEIF (prod == 0) THEN
+        ! It cannot be that val_intval(pre_minloc)-ind) == 0 because we already checked
+        ind = pos_intval(pre_minloc - 1)
+        RETURN
+      ENDIF
+    ENDIF
+    !
+    subsize = rp - lp + 1
+    ALLOCATE(v_red(subsize), STAT = ierr)
+    IF (ierr /= 0) CALL errore('bisection', 'Error allocating v_red', 1)
+    ALLOCATE(v_sgn(subsize), STAT = ierr)
+    IF (ierr /= 0) CALL errore('bisection', 'Error allocating v_sgn', 1)
+    !
+    !Shift lp to 1 and rp to subsize
+    IF (pre_minloc == 1) THEN
+      v_red(:) = v(pos_intval(1):pos_intval(2))
+      lp = lp - pos_intval(1) + 1
+      rp = rp - pos_intval(1) + 1
+    ELSEIF (pre_minloc == n_intval) THEN
+      v_red(:) = v(pos_intval(n_intval - 1):pos_intval(n_intval))
+      lp = lp - pos_intval(n_intval - 1) + 1
+      rp = rp - pos_intval(n_intval - 1) + 1
+    ELSE
+      IF (prod < 0) THEN
+        v_red(:) = v(pos_intval(pre_minloc - 1):pos_intval(pre_minloc))
+        lp = lp - pos_intval(pre_minloc - 1) + 1
+        rp = rp - pos_intval(pre_minloc - 1) + 1
+      ELSEIF (prod > 0) THEN
+        v_red(:) = v(pos_intval(pre_minloc):pos_intval(pre_minloc + 1))
+        lp = lp - pos_intval(pre_minloc) + 1
+        rp = rp - pos_intval(pre_minloc) + 1
+      ENDIF
+    ENDIF
+    !
+    ! 3) Do a bisection on the interval
+    !
+    v_sgn(:) = v_red(:) - ind
+    !
+    ! Each iteration of the bisection method divide the range by 2 so that the
+    ! maximum number of iteration is log2(subsize). We multiply by 2 for safety.
+    nit = (NINT(LOG(REAL(subsize, KIND = DP)) / LOG(2.0d0)) + 1) * 2 !Safe range
+    ! Add call errore if it == nit
+    !
+    bisec : DO it = 1, nit
+      !
+      IF (it == nit) CALL errore('bisection', 'Maximum number of iteration reached in bisection', 1)
+      !
+      ! Check if we found a correspondence
+      IF (v_sgn(lp) == 0) THEN
+        ind = lp
+        IF (pre_minloc == 1) THEN
+          ind = ind + pos_intval(1) - 1
+          EXIT bisec
+        ELSEIF (pre_minloc == n_intval) THEN
+          ind = ind + pos_intval(n_intval - 1) - 1
+          EXIT bisec
+        ELSE
+          IF (prod < 0) THEN
+            ind = ind + pos_intval(pre_minloc - 1) - 1
+          ELSEIF (prod > 0) THEN
+            ind = ind + pos_intval(pre_minloc) - 1
+          ENDIF
+          EXIT bisec
+        ENDIF
+      ELSEIF (v_sgn(rp) == 0) THEN
+        ind = rp
+        IF (pre_minloc == 1) THEN
+          ind = ind + pos_intval(1) - 1
+          EXIT bisec
+        ELSEIF (pre_minloc == n_intval) THEN
+          ind = ind + pos_intval(n_intval - 1) - 1
+          EXIT bisec
+        ELSE
+          IF (prod < 0) THEN
+            ind = ind + pos_intval(pre_minloc - 1) - 1
+          ELSEIF (prod > 0) THEN
+            ind = ind + pos_intval(pre_minloc) - 1
+          ENDIF
+          EXIT bisec
+        ENDIF
+      ENDIF
+      ! v_sgn(lp) and v_sgn(rp) cannot be 0 at this point
+      prod_2 = (v_sgn(lp) / ABS(v_sgn(lp))) * (v_sgn(rp) / ABS(v_sgn(rp)))
+      !
+      ! If prod not 0 but they are contiguous, ind = 0
+      IF (lp + 1 == rp) THEN
+        ind = 0
+        EXIT bisec
+      ENDIF
+      ! Check for the case prod > 0
+      IF (prod_2 > 0) THEN
+        CALL errore('bisection', 'Error in bisection algorithm', 1)
+      ENDIF
+      ! After the checks, move lp or rp
+      IF (MOD(subsize, 2) == 0) THEN
+        cp = lp + subsize / 2 - 1
+      ELSE
+        cp = lp + (subsize + 1) / 2 - 1
+      ENDIF
+      IF (v_sgn(cp) == 0) THEN
+        ind = cp
+        IF (pre_minloc == 1) THEN
+          ind = ind + pos_intval(1) - 1
+          EXIT bisec
+        ELSEIF (pre_minloc == n_intval) THEN
+          ind = ind + pos_intval(n_intval - 1) - 1
+          EXIT bisec
+        ELSE
+          IF (prod < 0) THEN
+            ind = ind + pos_intval(pre_minloc - 1) - 1
+          ELSEIF (prod > 0) THEN
+            ind = ind + pos_intval(pre_minloc) - 1
+          ENDIF
+          EXIT bisec
+        ENDIF
+      ELSE
+        ! v_sgn(lp) and v_sgn(cp) cannot be 0 at this point
+        prod_2 = (v_sgn(lp) / ABS(v_sgn(lp))) * (v_sgn(cp) / ABS(v_sgn(cp)))
+      ENDIF
+      IF (prod_2 < 0) THEN
+        rp = cp
+      ELSE
+        lp = cp
+      ENDIF
+      subsize = rp - lp + 1
+      IF (rp < lp) CALL errore('bisection', 'Error in bisection algorithm', 1)
+    ENDDO bisec
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE bisection
+    !--------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
     SUBROUTINE s_crystocart(s, sr, at, bg)

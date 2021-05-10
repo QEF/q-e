@@ -201,7 +201,7 @@
   !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
   INTEGER, ALLOCATABLE :: ndegen_q(:, :, :)
   !! Wigner-Seitz weights for the phonon grid that depend on atomic positions $R + \tau(nb) - \tau(na)$
-  INTEGER, ALLOCATABLE :: ndegen_g(:, :, :, :)
+  INTEGER, ALLOCATABLE :: ndegen_g(:, :, :)
   !! Wigner-Seitz weights for the electron-phonon grid that depend on
   !! atomic positions $R - \tau(na)$
   INTEGER, ALLOCATABLE :: selecq(:)
@@ -439,6 +439,7 @@
     ! Open the prefix.epmatwe file
     IF (ionode) THEN
       lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      filint   = TRIM(prefix)//'.epmatwe'
       CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
     ENDIF
     !
@@ -1002,7 +1003,7 @@
         CALL mp_bcast(lrepmatw2_restart, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw5_restart, ionode_id, world_comm)
         IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
-        ! 
+        !
         IF (iterative_bte) THEN
           IF (mpime == ionode_id) THEN
             OPEN(UNIT = iuntau, FORM = 'unformatted', FILE = 'inv_tau_tmp', STATUS = 'old')
@@ -1366,7 +1367,7 @@
           !
           IF (iterative_bte) THEN
             CALL start_clock('print_ibte')
-            CALL print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
+            CALL print_ibte(iqq, iq, totq, xxq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
                             lrepmatw2_restart, lrepmatw5_restart, ctype)
             CALL stop_clock('print_ibte')
             !
