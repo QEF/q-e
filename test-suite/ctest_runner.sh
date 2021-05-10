@@ -36,3 +36,4 @@ fi
 
 echo "Full test run command is $ARGS"
 $ARGS | tee $2
+exit ${PIPESTATUS[0]}
