@@ -285,7 +285,7 @@ the time in ps of this step. Later you found the positions of all the atoms, in 
 same order of the input file (note that this behaviour emerged in v6.6 -- previously 
 atoms were sorted by type). In this example we have 3 atoms.
 The type must be deduced from the input file. After the first 4 lines
-you find the same structure for the second step. The units of the position is Bohr's 
+you find the same structure for the second step. The units of the position are Bohr's 
 radius. Note that the atoms coordinates are unwrapped, so it is possible that they go
 outside the simulation cell.
 
@@ -293,10 +293,11 @@ The velocities are written in a similar file named `prefix.vel`, where `prefix` 
 the input file, that is formatted like the `.pos` file. The units are the usual Hartree
 atomic units (note again that the velocity in the pw code differs by a factor of 2).
 
-The `prefix.for` file is formatted like the previous two and has Hartree atomic units too.
+The `prefix.for` file is formatted like the previous two. Contains the computed forces
+ and has Hartree atomic units too.
 It is written only if `tprnfor = .true.` is set in the input file.
 
-The file `prefix.evp` has one line per step printed and contains some thermodynamic data.
+The file `prefix.evp` has one line per printed step and contains some thermodynamic data.
 The first line of the file names the columns:
 ```
 #   nfi    time(ps)        ekinc        T\_cell(K)     Tion(K)          etot               enthal               econs               econt          Volume        Pressure(GPa
