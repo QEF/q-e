@@ -262,6 +262,54 @@ only because it is computationally convenient in some cases that the two
 sets are not the same. In particular, it is often convenient to have
 `nrx1`=`nr1`+1 to reduce memory conflicts.
 
+
+Output files
+==========
+
+The `cp.x` code produces many output file, that together build up the trajectory.
+
+You have a file for the positions, called `prefix.pos`, where `prefix` is defined in
+the input file, that is formatted like:
+
+           10    0.00157227
+           0.48652245874924E+01     0.38015905345591E+01     0.37361508020082E+01
+           0.40077990926697E+01     0.59541011690914E+01     0.34691399577808E+01
+           0.43874410242643E+01     0.38553718662714E+01     0.59039702898524E+01
+           20    0.00641004
+           0.49677092782926E+01     0.38629427979469E+01     0.37777995137803E+01
+           0.42395189282719E+01     0.55766875434652E+01     0.31291744042209E+01
+           0.45445534106843E+01     0.36049553522533E+01     0.55864387532281E+01
+
+where in the first line there is an header with, in order, the number of the step and
+the time in ps of this step. Later you found the positions of all the atoms, in the
+same order of the input file (note that this behaviour emerged in v6.6 -- previously 
+atoms were sorted by type). In this example we have 3 atoms.
+The type must be deduced from the input file. After the first 4 lines
+you find the same structure for the second step. The units of the position is Bohr's 
+radius. Note that the atoms coordinates are unwrapped, so it is possible that they go
+outside the simulation cell.
+
+The velocities are written in a similar file named `prefix.vel`, where `prefix` is defined in
+the input file, that is formatted like the `.pos` file. The units are the usual Hartree
+atomic units (note again that the velocity in the pw code differs by a factor of 2).
+
+The `prefix.for` file is formatted like the previous two and has Hartree atomic units too.
+It is written only if `tprnfor = .true.` is set in the input file.
+
+The file `prefix.evp` has one line per step printed and contains some thermodynamic data.
+The first line of the file names the columns:
+```
+#   nfi    time(ps)        ekinc        T\_cell(K)     Tion(K)          etot               enthal               econs               econt          Volume        Pressure(GPa
+```
+where:
+   - `ekinc` $`K_{ELECTRONS}`$, the electron's fake kinetic energy
+   - `enthal` $`E_{DFT}+PV`$
+   - `etot` $`E_{DFT}`$ potential energy of the system, the DFT energy
+   - `econs` $`E_{DFT} + K_{NUCLEI}`$ this is something that is a constant of motion in the limit where the electronic fictitious mass is zero. It has a physical meaning.
+   - `econt` $`E_{DFT} + K_{IONS} + K_{ELECTRONS}`$ this is a constant of motion of the lagrangian. If the dt is small enough this will be up to a very good precision a constant. It is not a physical quantity, since $`K_{ELECTRONS}`$ has _nothing_ to do with the quantum kinetic energy of the electrons.
+
+
+
 Using `CP`
 ==========
 
