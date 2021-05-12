@@ -246,17 +246,70 @@ the following relation
 
 holds. This should clarify the relation between 1D and 3D indexing. In
 real space, the `(i,j,k)` point of the FFT grid with dimensions `nr1`
-($\le$`nr1x`), `nr2` ($\le$`nr2x`), , `nr3` ($\le$`nr3x`), is
-$$r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 +
-\frac{k-1}{nr3} \tau_3$$ where the $\tau_i$ are the basis vectors of the
+( $`\le`$ `nr1x`), `nr2` ( $`\le`$ `nr2x`), , `nr3` ( $`\le`$ `nr3x`), is
+
+```math
+ r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 + \frac{k-1}{nr3} \tau_3
+```
+
+where the $`\tau_i`$ are the basis vectors of the
 Bravais lattice. The latter are stored row-wise in the `at` array:
-$\tau_1 =$ `at(:, 1)`, $\tau_2 =$ `at(:, 2)`, $\tau_3 =$ `at(:, 3)`.
+$`\tau_1 =`$ `at(:, 1)`, $`\tau_2 =`$ `at(:, 2)`, $`\tau_3 =`$ `at(:, 3)`.
 
 The distinction between the dimensions of the FFT grid, `(nr1,nr2,nr3)`
 and the physical dimensions of the array, `(nr1x,nr2x,nr3x)` is done
 only because it is computationally convenient in some cases that the two
 sets are not the same. In particular, it is often convenient to have
 `nrx1`=`nr1`+1 to reduce memory conflicts.
+
+
+Output files
+==========
+
+The `cp.x` code produces many output file, that together build up the trajectory.
+
+You have a file for the positions, called `prefix.pos`, where `prefix` is defined in
+the input file, that is formatted like:
+
+           10    0.00157227
+           0.48652245874924E+01     0.38015905345591E+01     0.37361508020082E+01
+           0.40077990926697E+01     0.59541011690914E+01     0.34691399577808E+01
+           0.43874410242643E+01     0.38553718662714E+01     0.59039702898524E+01
+           20    0.00641004
+           0.49677092782926E+01     0.38629427979469E+01     0.37777995137803E+01
+           0.42395189282719E+01     0.55766875434652E+01     0.31291744042209E+01
+           0.45445534106843E+01     0.36049553522533E+01     0.55864387532281E+01
+
+where in the first line there is an header with, in order, the number of the step and
+the time in ps of this step. Later you found the positions of all the atoms, in the
+same order of the input file (note that this behaviour emerged in v6.6 -- previously 
+atoms were sorted by type). In this example we have 3 atoms.
+The type must be deduced from the input file. After the first 4 lines
+you find the same structure for the second step. The units of the position are Bohr's 
+radius. Note that the atoms coordinates are unwrapped, so it is possible that they go
+outside the simulation cell.
+
+The velocities are written in a similar file named `prefix.vel`, where `prefix` is defined in
+the input file, that is formatted like the `.pos` file. The units are the usual Hartree
+atomic units (note again that the velocity in the pw code differs by a factor of 2).
+
+The `prefix.for` file is formatted like the previous two. Contains the computed forces
+ and has Hartree atomic units too.
+It is written only if `tprnfor = .true.` is set in the input file.
+
+The file `prefix.evp` has one line per printed step and contains some thermodynamic data.
+The first line of the file names the columns:
+```
+#   nfi    time(ps)        ekinc        T\_cell(K)     Tion(K)          etot               enthal               econs               econt          Volume        Pressure(GPa
+```
+where:
+   - `ekinc` $`K_{ELECTRONS}`$, the electron's fake kinetic energy
+   - `enthal` $`E_{DFT}+PV`$
+   - `etot` $`E_{DFT}`$ potential energy of the system, the DFT energy
+   - `econs` $`E_{DFT} + K_{NUCLEI}`$ this is something that is a constant of motion in the limit where the electronic fictitious mass is zero. It has a physical meaning.
+   - `econt` $`E_{DFT} + K_{IONS} + K_{ELECTRONS}`$ this is a constant of motion of the lagrangian. If the dt is small enough this will be up to a very good precision a constant. It is not a physical quantity, since $`K_{ELECTRONS}`$ has _nothing_ to do with the quantum kinetic energy of the electrons.
+
+
 
 Using `CP`
 ==========
@@ -371,7 +424,7 @@ thresholds:
 > electrons.
 
 Usually we consider the system on the GS when `ekin_conv_thr`
-$< 10^{-5}$. You could check the value of the fictitious kinetic energy
+$`< 10^{-5}`$. You could check the value of the fictitious kinetic energy
 on the standard output (column EKINC).
 
 Different strategies are available to minimize electrons, but the most
@@ -392,13 +445,13 @@ starting atomic configuration:
 
 1.  if you have set the atomic positions \"by hand\" and/or from a
     classical code, check the forces on atoms, and if they are large
-    ($\sim 0.1 \div 1.0$ atomic units), you should perform an ionic
+    ($`\sim 0.1 \div 1.0`$ atomic units), you should perform an ionic
     minimization, otherwise the system could break up during the
     dynamics.
 
 2.  if you have taken the positions from a previous run or a previous
     ab-initio simulation, check the forces, and if they are too small
-    ($\sim 10^{-4}$ atomic units), this means that atoms are already in
+    ($`\sim 10^{-4}`$ atomic units), this means that atoms are already in
     equilibrium positions and, even if left free, they will not move.
     Then you need to randomize positions a little bit (see below).
 
@@ -422,8 +475,8 @@ in with damped-dynamics or vice versa.
                   H 2.00d0 h.ps
 
     while leaving other input parameters unchanged. *Note* that if the
-    forces are really high ($> 1.0$ atomic units), you should always use
-    steepest descent for the first ($\sim 100$ relaxation steps.
+    forces are really high ($`> 1.0`$ atomic units), you should always use
+    steepest descent for the first ($`\sim 100`$ relaxation steps.
 
 -   As the system approaches the equilibrium positions, the steepest
     descent scheme slows down, so is better to switch to damped
@@ -669,7 +722,7 @@ driven by excess electrons.
 
 Comment 1: Two parameters, `sic_alpha` and `sic_epsilon’`, have been
 introduced following the suggestion of M. Sprik (ICR(05)) to treat the
-radical (OH)-H$_2$O. In any case, a complete ab-initio approach is
+radical (OH)-H$`_2`$O. In any case, a complete ab-initio approach is
 followed using `sic_alpha=1`, `sic_epsilon=1`.
 
 Comment 2: When you apply this SIC scheme to a molecule or to an atom,
@@ -678,7 +731,7 @@ proposed by Landau: in a neutral system, subtracting the
 self-interaction, the unpaired electron feels a charged system, even if
 using a compensating positive background. For a cubic box, the
 correction term due to the Madelung energy is approx. given by
-$1.4186/L_{box} - 1.047/(L_{box})^3$, where $L_{box}$ is the linear
+$`1.4186/L_{box} - 1.047/(L_{box})^3`$, where $`L_{box}`$ is the linear
 dimension of your box (=celldm(1)). The Madelung coefficient is taken
 from I. Dabo et al. PRB 77, 115139 (2007). (info by F. Baletto,
 francesca.baletto\@kcl.ac.uk)
@@ -692,7 +745,7 @@ by Marzari et al.
 The specific subroutines for the eDFT are in `CPV/src/ensemble_dft.f90`
 where you define all the quantities of interest. The subroutine
 `CPV/src/inner_loop_cold.f90` called by `cg_sub.f90`, control the inner
-loop, and so the minimization of the free energy $A$ with respect to the
+loop, and so the minimization of the free energy $`A`$ with respect to the
 occupation matrix.
 
 To select a eDFT calculations, the user has to set:
@@ -718,18 +771,18 @@ Below the new parameters in the electrons list, are listed.
     of the occupation numbers around the Fermi energy.
 
 -   `ninner`: is the number of iterative cycles in the inner loop, done
-    to minimize the free energy $A$ with respect the occupation numbers.
+    to minimize the free energy $`A`$ with respect the occupation numbers.
     The typical range is 2-8.
 
 -   `conv_thr`: is the threshold value to stop the search of the
     'minimum' free energy.
 
 -   `niter_cold_restart`: controls the frequency at which a full
-    iterative inner cycle is done. It is in the range $1\div$`ninner`.
+    iterative inner cycle is done. It is in the range $`1\div`$ `ninner`.
     It is a trick to speed up the calculation.
 
 -   `lambda_cold`: is the length step along the search line for the best
-    value for $A$, when the iterative cycle is not performed. The value
+    value for $`A`$, when the iterative cycle is not performed. The value
     is close to 0.03, smaller for large and complicated metallic
     systems.
 
@@ -830,16 +883,16 @@ The small boxes should be set as small as possible, but large enough to
 contain the core of the largest element in your system. The formula for
 estimating the box size is quite simple:
 
-> `nr1b` = $2 R_c / L_x \times$ `nr1`
+> `nr1b` = $`2 R_c / L_x \times`$ `nr1`
 
-and the like, where $R_{cut}$ is largest cut-off radius among the
-various atom types present in the system, $L_x$ is the physical length
-of your box along the $x$ axis. You have to round your result to the
+and the like, where $`R_{cut}`$ is largest cut-off radius among the
+various atom types present in the system, $`L_x`$ is the physical length
+of your box along the $`x`$ axis. You have to round your result to the
 nearest larger integer. In practice, `nr1b` etc. are often in the region
 of 20-24-28; testing seems again a necessity.
 
 The core charge is in principle finite only at the core region (as
-defined by some $R_{rcut}$ ) and vanishes out side the core. Numerically
+defined by some $`R_{rcut}`$ ) and vanishes out side the core. Numerically
 the charge is represented in a Fourier series which may give rise to
 small charge oscillations outside the core and even to negative charge
 density, but only if the cut-off is too low. Having these small boxes
@@ -871,7 +924,7 @@ states are uniformly distributed over the number of MPI tasks. For a
 system having N electronic states the optimum numbers of MPI tasks
 (nproc) are the following:
 
--   In case of nproc $\leq$ N, the optimum choices are N/m, where m is
+-   In case of nproc $`\leq`$ N, the optimum choices are N/m, where m is
     any positive integer.
 
     -   Robustness: Can be used for odd and even number of electronic
@@ -882,7 +935,7 @@ system having N electronic states the optimum numbers of MPI tasks
     -   Taskgroup: Only the default value of the task group (-ntg 1) is
         allowed.
 
--   In case of nproc $>$ N, the optimum choices are N\*m, where m is any
+-   In case of nproc $`>`$ N, the optimum choices are N\*m, where m is any
     positive integer.
 
     -   Robustness: Can be used for even number of electronic states.
@@ -893,7 +946,7 @@ system having N electronic states the optimum numbers of MPI tasks
 
     -   OpenMP threads: Can be used and highly recommended. We have
         tested number of threads starting from 2 up to 64. More threads
-        are also allowed. For very large calculations (nproc $>$ 1000 )
+        are also allowed. For very large calculations (nproc $`>`$ 1000 )
         efficiency can largely depend on the computer architecture and
         the balance between the MPI tasks and the OpenMP threads. User
         should test for an optimal balance. Reasonably good scaling can
@@ -902,7 +955,7 @@ system having N electronic states the optimum numbers of MPI tasks
     -   Taskgroup: Can be greater than 1 and users should choose the
         largest possible value for ntg. To estimate ntg, find the value
         of nr3x in the output and compute nproc/nr3x and take the
-        integer value. We have tested the value of ntg as $2^m$, where m
+        integer value. We have tested the value of ntg as $`2^m`$, where m
         is any positive integer. Other values of ntg should be used with
         caution.
 
@@ -990,10 +1043,10 @@ processors, and depends upon:
 -   the availability of fast interprocess communications (or lack of
     it).
 
-Ideally one would like to have linear scaling, i.e. $T \sim T_0/N_p$ for
-$N_p$ processors, where $T_0$ is the estimated time for serial
+Ideally one would like to have linear scaling, i.e. $`T \sim T_0/N_p`$ for
+$`N_p`$ processors, where $`T_0`$ is the estimated time for serial
 execution. In addition, one would like to have linear scaling of the RAM
-per processor: $O_N \sim O_0/N_p$, so that large-memory systems fit into
+per processor: $`O_N \sim O_0/N_p`$, so that large-memory systems fit into
 the RAM of each processor.
 
 As a general rule, image parallelization:
@@ -1021,7 +1074,7 @@ Parallelization on k-points:
 Parallelization on PWs:
 
 -   yields good to very good scaling, especially if the number of
-    processors in a pool is a divisor of $N_3$ and $N_{r3}$ (the
+    processors in a pool is a divisor of $`N_3`$ and $`N_{r3}`$ (the
     dimensions along the z-axis of the FFT grids, `nr3` and `nr3s`,
     which coincide for NCPPs);
 
@@ -1041,15 +1094,15 @@ size (making it easier for the machine to keep data in the cache).
 VERY IMPORTANT: For each system there is an optimal range of number of
 processors on which to run the job. A too large number of processors
 will yield performance degradation. If the size of pools is especially
-delicate: $N_p$ should not exceed $N_3$ and $N_{r3}$, and should ideally
-be no larger than $1/2\div1/4 N_3$ and/or $N_{r3}$. In order to increase
+delicate: $`N_p`$ should not exceed $`N_3`$ and $`N_{r3}`$, and should ideally
+be no larger than $`1/2\div1/4 N_3`$ and/or $`N_{r3}`$. In order to increase
 scalability, it is often convenient to further subdivide a pool of
 processors into "task groups". When the number of processors exceeds the
 number of FFT planes, data can be redistributed to \"task groups\" so
 that each group can process several wavefunctions at the same time.
 
 The optimal number of processors for \"linear-algebra\" parallelization,
-taking care of multiplication and diagonalization of $M\times M$
+taking care of multiplication and diagonalization of $`M\times M`$
 matrices, should be determined by observing the performances of
 `cdiagh/rdiagh` (`pw.x`) or `ortho` (`cp.x`) for different numbers of
 processors in the linear-algebra group (must be a square integer).

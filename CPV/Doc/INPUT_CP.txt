@@ -233,7 +233,7 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Default:        50
-   Description:    The restart files are written in the folder
+   Description:    The restart files are read from the folder
                      outdir/prefix_ndr.save/
                    where outdir, prefix and ndr are the input variables described
                    in this document
@@ -244,9 +244,9 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Default:        50
-   Description:    The restart files are read from the folder
-                     outdir/prefix_ndr.save/
-                   where outdir, prefix and ndr are the input variables described
+   Description:    The restart files are write in the folder
+                     outdir/prefix_ndw.save/
+                   where outdir, prefix and ndw are the input variables described
                    in this document
    +--------------------------------------------------------------------
    
@@ -2508,4 +2508,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Fri May 07 14:51:02 CEST 2021
+This file has been created by helpdoc utility on Tue May 11 14:53:31 CEST 2021
