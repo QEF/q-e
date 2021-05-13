@@ -129,6 +129,7 @@ SUBROUTINE stress( sigma )
   IF ( llondon ) THEN
     sigmad23 = stres_london( alat , nat , ityp , at , bg , tau , omega )
   ELSE IF ( ldftd3 ) THEN
+    CALL start_clock('stres_dftd3')
     ALLOCATE( force_d3(3,nat) )
     force_d3( : , : ) = 0.0_DP
     latvecs(:,:) = at(:,:)*alat
@@ -139,6 +140,7 @@ SUBROUTINE stress( sigma )
     sigmad23 = 2.d0*sigmad23
     tau(:,:)=tau(:,:)/alat
     DEALLOCATE( force_d3 )
+    CALL stop_clock('stres_dftd3')
   END IF
   !
   !  kinetic + nonlocal contribuition
