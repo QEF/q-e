@@ -340,6 +340,7 @@ MODULE london_module
     ! dist6         : distance**6
     !
     !
+    CALL start_clock('energy_london')
     energy_london = 0.d0
     !
     ! poor-man parallelization over atoms
@@ -395,6 +396,7 @@ MODULE london_module
     !
     CALL mp_sum ( energy_london , intra_image_comm )
     !
+    CALL stop_clock('energy_london')
     RETURN
     !
    END FUNCTION energy_london
@@ -444,6 +446,7 @@ MODULE london_module
     ! dist7        :  dist**7
     ! ...  and some buffers
     !
+    CALL start_clock('force_london')
     !
     ! parallelization: divide atoms across processors of this image
     ! (different images have different atomic positions)
@@ -512,6 +515,7 @@ MODULE london_module
     !
     CALL mp_sum ( force_london , intra_image_comm )
     !
+    CALL stop_clock('force_london')
     RETURN
     !
    END FUNCTION force_london
@@ -564,6 +568,7 @@ MODULE london_module
     ! dist7        : dist**7
     !       and some buffers
     !
+    CALL start_clock('stres_london')
     !
     ! parallelization: divide atoms across processors of this image
     ! (different images have different atomic positions)
@@ -641,6 +646,7 @@ MODULE london_module
     !
     CALL mp_sum ( stres_london , intra_image_comm )
     !
+    CALL stop_clock('stres_london')
     RETURN
     !
    END FUNCTION stres_london
