@@ -23,7 +23,7 @@ MODULE libmbd_interface
   USE control_flags,    ONLY : conv_elec
   USE constants,        ONLY : ry_kbar
   USE mbd,              ONLY : mbd_input_t, mbd_calc_t
-  USE input_parameters, ONLY : tforces, tstress
+  USE input_parameters, ONLY : tprnfor, tstress
 
   IMPLICIT NONE
 
@@ -55,7 +55,7 @@ MODULE libmbd_interface
   !
   ALLOCATE(inp%atom_types(nat))
   IF(.NOT.ALLOCATED(mbd_gradient)) ALLOCATE(mbd_gradient(3, nat))
-  IF(tforces .OR. tstress .AND. .NOT.ALLOCATED(FmbdvdW)) ALLOCATE(FmbdvdW(3, nat))
+  IF(tprnfor .OR. tstress .AND. .NOT.ALLOCATED(FmbdvdW)) ALLOCATE(FmbdvdW(3, nat))
   ALLOCATE(ratios(nat))
 
   inp%log_level=1
@@ -125,13 +125,13 @@ MODULE libmbd_interface
   ENDIF
 
   CALL calc%evaluate_vdw_method(EmbdvdW)  !MBD energy
-  IF (tforces .OR. tstress) THEN
+  IF ( tprnfor .OR. tstress) THEN
     CALL calc%get_gradients(mbd_gradient)  
     FmbdvdW = -mbd_gradient  ! Ionic forces with correct sign
   ENDIF
   !
 
-  IF(tforces .OR. tstress .AND. .NOT.vdw_isolated ) THEN
+  IF( tprnfor .OR. tstress .AND. .NOT.vdw_isolated ) THEN
     CALL calc%get_lattice_stress(cell_derivs)
     HmbdvdW=MATMUL(cell_derivs, TRANSPOSE(ainv)) 
   ENDIF
