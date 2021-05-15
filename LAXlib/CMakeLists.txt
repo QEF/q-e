@@ -17,6 +17,7 @@ qe_add_library(qe_lax ${src_lax})
 target_link_libraries(qe_lax
     PRIVATE
         qe_elpa
+        qe_lapack
         qe_scalapack
         qe_openmp_fortran
         qe_mpi_fortran
@@ -93,8 +94,7 @@ if(QE_ENABLE_TEST)
     target_link_libraries(qe_lax_test
         PRIVATE
             qe_mpi_fortran
-            qe_lax
-            qe_lapack)
+            qe_lax)
     add_test(NAME test_qe_lax 
         COMMAND $<TARGET_FILE:qe_lax_test>)
 endif(QE_ENABLE_TEST)
