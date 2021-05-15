@@ -94,7 +94,8 @@ if(QE_ENABLE_TEST)
     target_link_libraries(qe_lax_test
         PRIVATE
             qe_mpi_fortran
-            qe_lax)
+            qe_lax
+            qe_lapack)
     add_test(NAME test_qe_lax 
         COMMAND $<TARGET_FILE:qe_lax_test>)
 endif(QE_ENABLE_TEST)
