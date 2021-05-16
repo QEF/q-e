@@ -227,14 +227,15 @@ CONTAINS
      
      IMPLICIT NONE
 
-     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nmany, nyfft, nband, ndiag, pencil_decomposition
+     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nmany, nyfft, nband, ndiag
+     LOGICAL, INTENT(IN), OPTIONAL :: pencil_decomposition
      !
      IF ( PRESENT(nimage) ) nimage_ = nimage
      IF ( PRESENT(npool)  ) npool_  = npool
      IF ( PRESENT(nyfft)  ) nyfft_  = nyfft
      IF ( PRESENT(nband)  ) nband_  = nband
      IF ( PRESENT(ndiag)  ) ndiag_  = ndiag
-     IF ( PRESENT(pencil_decomposition)  ) pencil_decomposition_  = pencil_decomposition
+     IF ( PRESENT(pencil_decomposition)  ) pencil_decomposition_ = pencil_decomposition
      IF ( PRESENT(ntg) .and. PRESENT(nmany) ) THEN
         ! ERROR!!!!
      ELSEIF ( PRESENT(ntg) ) THEN
