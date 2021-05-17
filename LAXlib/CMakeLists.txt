@@ -17,6 +17,7 @@ qe_add_library(qe_lax ${src_lax})
 target_link_libraries(qe_lax
     PRIVATE
         qe_elpa
+        qe_lapack
         qe_scalapack
         qe_openmp_fortran
         qe_mpi_fortran
