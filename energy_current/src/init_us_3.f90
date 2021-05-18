@@ -66,7 +66,7 @@ contains
       allocate (sk(npw_))
       allocate (ylm(npw_, (lmaxkb + 2)**2))
       allocate (betagl(ngl))
-      !
+      ! this can be moved and calculated once per trajectory
       call ylmr2((lmaxkb + 2)**2, npw_, g(1:3, 1:npw_), gg(1:npw_), ylm)
       call aainit(lmaxkb + 2)
       ndm = MAXVAL(upf(:)%kkbeta)
