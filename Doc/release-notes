@@ -1,3 +1,7 @@
+Known problems in development version:
+  * electron-phonon calculation in the non-colinear/spinorbit case is broken
+  * some obscure problem still affects variable-cell with hybrid functionals
+
 New in development version:
   * Grand-Canonical SCF (J. Chem. Phys. 146, 114101 (2017)) for constant-mu
     method is implemented by S. Nishihara and S. Hagiwara. [arXiv:2012.10090]
@@ -40,9 +44,11 @@ Fixed in development version:
     (fixed by Gabriel S. Gusmão, Georgia Tech)
   * In some cases the new xml code of v.6.7 wrote UPF files that could not be read
     because they contained too long lines (noticed by Felix Goudreault, U. Montreal)
-  * Variable-cell hybrid DFT fixed: it was broken since v.6.5.
+  * Bug in variable-cell hybrid DFT fixed: it was broken since v.6.5.
   * Small random errors in some XC spin-polarized functionals in OMP execution
   * The new fit introduced in v.6.7 of ev.x wasn't always working as expected
+  * alpha2f.x wasn't reading the input any longer in v.6.7
+    (noticed by Rico Pratama, Chungbuk Nat.U. Cheongju, Rep. of Korea)
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the

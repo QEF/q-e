@@ -201,7 +201,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var prefix -type CHARACTER { 
 	    default { 'cp' }
 	    info {
-		prepended to input/output filenames:
+		prepended to input/output filenames and restart folders:
 		  prefix.pos : atomic positions
 		  prefix.vel : atomic velocities 
 		  prefix.for : atomic forces 
@@ -214,20 +214,29 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 		  prefix.spr : spread of Wannier orbitals
 		  prefix.wfc : center of Wannier orbitals
 		  prefix.ncg : number of Poisson CG steps (PBE0)
+                  prefix_ndw.save/ : write restart folder
+                  prefix_ndr.save/ : read restart folder
+                where ndr and ndw are the integers number described below
 	    }
 	}
 
 	var ndr -type INTEGER { 
 	    default { 50 }
 	    info {
-               Units for input and output restart file.
+               The restart files are read from the folder
+                 outdir/prefix_ndr.save/
+               where outdir, prefix and ndr are the input variables described
+               in this document
 	    }
 	}
        
 	var ndw -type INTEGER { 
 	    default { 50 }
 	    info {
-               Units for input and output restart file.
+               The restart files are write in the folder
+                 outdir/prefix_ndw.save/
+               where outdir, prefix and ndw are the input variables described
+               in this document
 	    }
 	}
 

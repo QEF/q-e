@@ -1,0 +1,8 @@
+&INPUT_NAMELIST
+   test='dft-comparison',
+   nspin=2,
+   family='LDA',
+   DF_OK=.FALSE.,
+   dft1='sla pz',
+   dft2='lda_x lda_c_pz'
+/

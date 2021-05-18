@@ -422,7 +422,7 @@ If .FALSE. do not save charge density.
          </td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-prepended to input/output filenames:
+prepended to input/output filenames and restart folders:
   prefix.pos : atomic positions
   prefix.vel : atomic velocities
   prefix.for : atomic forces
@@ -435,6 +435,9 @@ prepended to input/output filenames:
   prefix.spr : spread of Wannier orbitals
   prefix.wfc : center of Wannier orbitals
   prefix.ncg : number of Poisson CG steps (PBE0)
+  prefix_ndw.save/ : write restart folder
+  prefix_ndr.save/ : read restart folder
+where ndr and ndw are the integers number described below
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -449,7 +452,10 @@ prepended to input/output filenames:
          </td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-Units for input and output restart file.
+The restart files are read from the folder
+  outdir/prefix_ndr.save/
+where outdir, prefix and ndr are the input variables described
+in this document
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -464,7 +470,10 @@ Units for input and output restart file.
          </td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-Units for input and output restart file.
+The restart files are write in the folder
+  outdir/prefix_ndw.save/
+where outdir, prefix and ndw are the input variables described
+in this document
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -3963,7 +3972,7 @@ separate the corresponding change in parameters with a column.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Tue Apr 20 20:27:07 CEST 2021.
+	  This file has been created by helpdoc utility on Tue May 11 14:53:31 CEST 2021.
 	</small>
 </body>
 </html>

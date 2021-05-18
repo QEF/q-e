@@ -179,6 +179,7 @@ SUBROUTINE forces()
   !
   IF ( ldftd3 ) THEN
     !
+    CALL start_clock('force_dftd3')
     ALLOCATE( force_d3(3, nat) )
     force_d3(:,:) = 0.0_DP
     latvecs(:,:) = at(:,:)*alat
@@ -188,6 +189,7 @@ SUBROUTINE forces()
                           force_d3, stress_dftd3 )
     force_d3 = -2.d0*force_d3
     tau(:,:) = tau(:,:)/alat
+    CALL stop_clock('force_dftd3')
   ENDIF
   !
   !

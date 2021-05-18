@@ -39,7 +39,7 @@ SUBROUTINE wfcinit_gpu()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr, exst_sum 
+  INTEGER :: ik, ierr, exst_sum
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
@@ -49,6 +49,8 @@ SUBROUTINE wfcinit_gpu()
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
+  IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
+       CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc_gpu( use_wannier )
   IF ( lda_plus_u ) CALL orthoUwfc_gpu()
   !
@@ -67,12 +69,12 @@ SUBROUTINE wfcinit_gpu()
      CALL mp_sum (exst_sum, intra_image_comm)
      !
      ! Check whether wavefunctions are collected (info in xml file)
-     dirname = restart_dir ( ) 
+     dirname = restart_dir ( )
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN
         ! xml file is valid
-        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         CALL qes_reset  ( output_obj )
      ELSE
@@ -91,7 +93,7 @@ SUBROUTINE wfcinit_gpu()
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
         IF (exst_file) THEN
-           CALL close_buffer(iunwfc, 'delete') 
+           CALL close_buffer(iunwfc, 'delete')
            CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
         END IF
         starting_wfc = 'atomic+random'
@@ -145,7 +147,7 @@ SUBROUTINE wfcinit_gpu()
   END IF
   !
   ! ... exit here if starting from file or for non-scf calculations.
-  ! ... In the latter case the starting wavefunctions are not 
+  ! ... In the latter case the starting wavefunctions are not
   ! ... calculated here but just before diagonalization (to reduce I/O)
   !
   IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
@@ -270,7 +272,7 @@ SUBROUTINE init_wfc_gpu ( ik )
   ALLOCATE( wfcatom_d( npwx, npol, n_starting_wfc ) )
   ALLOCATE(randy_d(2 * n_starting_wfc * npol * ngk(ik)))
   !
-  IF ( starting_wfc(1:6) == 'atomic' ) THEN
+  IF ( n_starting_atomic_wfc > 0 ) THEN
      !
      CALL start_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      CALL atomic_wfc_gpu( ik, wfcatom_d )
@@ -367,13 +369,13 @@ SUBROUTINE init_wfc_gpu ( ik )
   ! ... by setting lelfield = .false. one prevents the calculation of
   ! ... electric enthalpy in the Hamiltonian (cannot be calculated
   ! ... at this stage: wavefunctions at previous step are missing)
-  ! 
+  !
   lelfield_save = lelfield
   lelfield = .FALSE.
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx() 
+  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx()
   CALL start_clock_gpu( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
   CALL rotate_wfc_gpu ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom_d, npol, okvan, evc_d, etatom_d )

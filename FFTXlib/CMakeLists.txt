@@ -188,16 +188,12 @@ if(QE_ENABLE_TEST)
     set_target_properties(qe_fftx_test 
         PROPERTIES 
             OUTPUT_NAME qe_fftx_test.x 
-            RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
     target_link_libraries(qe_fftx_test
         PRIVATE
             qe_openmp_fortran
             qe_mpi_fortran
             qe_fftx)
-    if(QE_ENABLE_CUDA)
-        set_property(TARGET qe_fftx_test APPEND PROPERTY COMPILE_DEFINITIONS "__FFTX_USE_EXTERNAL_CLOCK")
-        target_link_libraries(qe_fftx_test PRIVATE qe_utilx)
-    endif()
     add_test(NAME test_qe_fftx 
-        COMMAND ${QE_TESTS_DIR}/qe_fftx_test.x)
+        COMMAND $<TARGET_FILE:qe_fftx_test>)
 endif()

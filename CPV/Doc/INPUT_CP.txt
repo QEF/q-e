@@ -210,7 +210,7 @@ NAMELIST: &CONTROL
    
    Type:           CHARACTER
    Default:        'cp'
-   Description:    prepended to input/output filenames:
+   Description:    prepended to input/output filenames and restart folders:
                      prefix.pos : atomic positions
                      prefix.vel : atomic velocities
                      prefix.for : atomic forces
@@ -223,6 +223,9 @@ NAMELIST: &CONTROL
                      prefix.spr : spread of Wannier orbitals
                      prefix.wfc : center of Wannier orbitals
                      prefix.ncg : number of Poisson CG steps (PBE0)
+                     prefix_ndw.save/ : write restart folder
+                     prefix_ndr.save/ : read restart folder
+                   where ndr and ndw are the integers number described below
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -230,7 +233,10 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Default:        50
-   Description:    Units for input and output restart file.
+   Description:    The restart files are read from the folder
+                     outdir/prefix_ndr.save/
+                   where outdir, prefix and ndr are the input variables described
+                   in this document
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -238,7 +244,10 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Default:        50
-   Description:    Units for input and output restart file.
+   Description:    The restart files are write in the folder
+                     outdir/prefix_ndw.save/
+                   where outdir, prefix and ndw are the input variables described
+                   in this document
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2499,4 +2508,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Tue Apr 20 20:27:07 CEST 2021
+This file has been created by helpdoc utility on Tue May 11 14:53:31 CEST 2021

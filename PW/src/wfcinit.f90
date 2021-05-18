@@ -1,4 +1,4 @@
-! 
+!
 ! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -39,7 +39,7 @@ SUBROUTINE wfcinit()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr, exst_sum 
+  INTEGER :: ik, ierr, exst_sum
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
@@ -49,6 +49,8 @@ SUBROUTINE wfcinit()
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
+  IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
+       CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
   IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
   !
@@ -67,12 +69,12 @@ SUBROUTINE wfcinit()
      CALL mp_sum (exst_sum, intra_image_comm)
      !
      ! Check whether wavefunctions are collected (info in xml file)
-     dirname = restart_dir ( ) 
+     dirname = restart_dir ( )
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN
         ! xml file is valid
-        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         CALL qes_reset  ( output_obj )
      ELSE
@@ -91,7 +93,7 @@ SUBROUTINE wfcinit()
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
         IF (exst_file) THEN
-           CALL close_buffer(iunwfc, 'delete') 
+           CALL close_buffer(iunwfc, 'delete')
            CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
         END IF
         starting_wfc = 'atomic+random'
@@ -145,7 +147,7 @@ SUBROUTINE wfcinit()
   END IF
   !
   ! ... exit here if starting from file or for non-scf calculations.
-  ! ... In the latter case the starting wavefunctions are not 
+  ! ... In the latter case the starting wavefunctions are not
   ! ... calculated here but just before diagonalization (to reduce I/O)
   !
   IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
@@ -258,7 +260,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
   !
-  IF ( starting_wfc(1:6) == 'atomic' ) THEN
+  IF ( n_starting_atomic_wfc > 0 ) THEN
      !
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      CALL atomic_wfc( ik, wfcatom )
@@ -280,7 +282,7 @@ SUBROUTINE init_wfc ( ik )
                   arg = tpi * randy()
                   !
                   wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
-                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) ) 
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) )
                   !
                END DO
                !
@@ -298,7 +300,7 @@ SUBROUTINE init_wfc ( ik )
   DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
      !
      DO ipol = 1, npol
-        ! 
+        !
         wfcatom(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
         !
         DO ig = 1, ngk(ik)
@@ -316,7 +318,7 @@ SUBROUTINE init_wfc ( ik )
      END DO
      !
   END DO
-  
+
   ! when band parallelization is active, the first band group distributes
   ! the wfcs to the others making sure all bgrp have the same starting wfc
   ! FIXME: maybe this should be done once evc are computed, not here?
@@ -336,13 +338,13 @@ SUBROUTINE init_wfc ( ik )
   ! ... by setting lelfield = .false. one prevents the calculation of
   ! ... electric enthalpy in the Hamiltonian (cannot be calculated
   ! ... at this stage: wavefunctions at previous step are missing)
-  ! 
+  !
   lelfield_save = lelfield
   lelfield = .FALSE.
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx() 
+  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
   CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)

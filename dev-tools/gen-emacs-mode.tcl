@@ -227,6 +227,15 @@ proc ::helpdoc::qe_mode_generate {module_list} {
     if { $opt(mode) == "pwtk" } {
         set namelists [string toupper $namelists]
         set cards     [string toupper $cards]
+
+        # filter-out cmds that already exists in cards
+        set newL {}
+        foreach cmd $cmds {
+            if { [lsearch -nocase $cards $cmd] < 0 && [lsearch -nocase $namelists $cmd] < 0 } {
+                lappend newL $cmd
+            }
+        }
+        set cmds [quote_list $newL]
     }         
     
     # load the templates
