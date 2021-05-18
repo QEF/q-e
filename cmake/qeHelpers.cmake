@@ -133,15 +133,11 @@ function(qe_git_submodule_update PATH)
             if(EXISTS ${qe_SOURCE_DIR}/${PATH}/.git)
                 message(STATUS "Previous clone found at ${qe_SOURCE_DIR}/${PATH}.")
             else()
+                # get repo URL
                 execute_process(COMMAND ${GIT_EXECUTABLE} config --file .gitmodules --get submodule.${PATH}.URL
                                 OUTPUT_VARIABLE SUBMODULE_URL
                                 WORKING_DIRECTORY ${qe_SOURCE_DIR}
                                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-                message(STATUS "Cloning ${SUBMODULE_URL} into ${qe_SOURCE_DIR}/${PATH}.")
-
-                execute_process(COMMAND ${GIT_EXECUTABLE} clone --no-checkout ${SUBMODULE_URL} ${PATH}
-                                WORKING_DIRECTORY ${qe_SOURCE_DIR})
 
                 # Extract submodule commit hash from saved records
                 execute_process(COMMAND grep ${SUBMODULE_NAME} ${commit_hash_file}
@@ -149,7 +145,15 @@ function(qe_git_submodule_update PATH)
                 string(REPLACE " " ";" RECORD_OUTPUT ${RECORD_STRING})
                 list(GET RECORD_OUTPUT 0 RECORD_HASH)
 
-                execute_process(COMMAND ${GIT_EXECUTABLE} checkout -b recorded_HEAD ${RECORD_HASH}
+                message(STATUS "Cloning ${SUBMODULE_URL} into ${qe_SOURCE_DIR}/${PATH}.")
+
+                execute_process(COMMAND ${GIT_EXECUTABLE} init ${PATH}
+                                WORKING_DIRECTORY ${qe_SOURCE_DIR})
+                execute_process(COMMAND ${GIT_EXECUTABLE} remote add origin ${SUBMODULE_URL}
+                                WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH})
+                execute_process(COMMAND ${GIT_EXECUTABLE} fetch --depth 1 origin ${RECORD_HASH}
+                                WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH})
+                execute_process(COMMAND ${GIT_EXECUTABLE} checkout -b recorded_HEAD FETCH_HEAD
                                 WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH})
             endif()
         else()
