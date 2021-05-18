@@ -92,7 +92,7 @@ function(_qe_add_cuda_link_flags TGT)
 endfunction(_qe_add_cuda_link_flags)
 
 function(qe_git_submodule_update PATH)
-    # validate update_commits against git database
+    # validate submodule_commit_hash_records against git database
     get_filename_component(SUBMODULE_NAME ${PATH} NAME)
     get_filename_component(SUBMODULE_UPPER_DIR ${PATH} DIRECTORY)
     set(commit_hash_file ${qe_SOURCE_DIR}/${SUBMODULE_UPPER_DIR}/submodule_commit_hash_records)
@@ -113,7 +113,7 @@ function(qe_git_submodule_update PATH)
 
         if(NOT DATABASE_HASH STREQUAL RECORD_HASH)
           message(FATAL_ERROR "If you are a user, please file a bug report! "
-                              "If you are a developer, probably submodules '${SUBMODULE_NAME}' is being touched. "
+                              "If you are a developer, probably submodule '${SUBMODULE_NAME}' is being touched. "
                               "Inconsistent submodule commit hashes have been detected.\n"
                               "  ${DATABASE_HASH} from repo data base.\n"
                               "  ${RECORD_HASH} from 'submodule_commit_hash_records' file.\n")
@@ -157,7 +157,7 @@ function(qe_git_submodule_update PATH)
                                 WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH})
             endif()
         else()
-          message(FATAL_ERROR "Failed to handle submodules '${SUBMODULE_NAME}'!")
+          message(FATAL_ERROR "Failed to handle submodule '${SUBMODULE_NAME}'!")
         endif()
     endif()
 endfunction(qe_git_submodule_update)

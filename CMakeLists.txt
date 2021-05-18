@@ -234,7 +234,7 @@ if(QE_ENABLE_MPI)
 endif(QE_ENABLE_MPI)
 
 ###########################################################
-# Lapack
+# Git
 ###########################################################
 find_package(Git 2.13 REQUIRED)
 if(EXISTS ${qe_SOURCE_DIR}/.git)
