@@ -1476,9 +1476,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%esm_ispresent, ionode_id, comm)
     IF (obj%esm_ispresent) &
       CALL qes_bcast_esm(obj%esm, ionode_id, comm)
-    CALL mp_bcast(obj%fcp_opt_ispresent, ionode_id, comm)
-    IF (obj%fcp_opt_ispresent) &
-      CALL mp_bcast(obj%fcp_opt, ionode_id, comm)
+    CALL mp_bcast(obj%fcp_ispresent, ionode_id, comm)
+    IF (obj%fcp_ispresent) &
+      CALL mp_bcast(obj%fcp, ionode_id, comm)
     CALL mp_bcast(obj%fcp_mu_ispresent, ionode_id, comm)
     IF (obj%fcp_mu_ispresent) &
       CALL mp_bcast(obj%fcp_mu, ionode_id, comm)

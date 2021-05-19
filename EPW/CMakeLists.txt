@@ -54,18 +54,17 @@ set(sources
     src/test_tools.f90)
 
 qe_add_library(qe_epw ${sources})
-add_library(QE::EPW ALIAS qe_epw)
 target_link_libraries(qe_epw
     PRIVATE
-        QE::WANNIER90
-        QE::Modules
-        QE::LR_Modules
-        QE::PHonon::PH
-        QE::PW
-        QE::MPI_Fortran
-        QE::UTILX
-        QE::UPF
-        QE::FFTX)
+        qe_wannier90
+        qe_modules
+        qe_lr_modules
+        qe_phonon_ph
+        qe_pw
+        qe_mpi_fortran
+        qe_upflib
+        qe_fftx
+        qe_xclib)
 
 ###########################################################
 # epw.x
@@ -75,12 +74,12 @@ qe_add_executable(qe_epw_exe ${sources})
 set_target_properties(qe_epw_exe PROPERTIES OUTPUT_NAME epw.x)
 target_link_libraries(qe_epw_exe
     PRIVATE
-        QE::Modules
-        QE::PP
-	    QE::PW
-	    QE::FFTX
-        QE::UTILX
-        QE::EPW)
+        qe_modules
+        qe_pp
+	    qe_pw
+	    qe_fftx
+        qe_epw
+        qe_upflib)
 
 ###########################################################
 

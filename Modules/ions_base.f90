@@ -8,9 +8,11 @@
 !------------------------------------------------------------------------------!
   MODULE ions_base
 !------------------------------------------------------------------------------!
-
+      !! Ions configuration management.
+      !
       USE kinds,      ONLY : DP
       USE parameters, ONLY : ntypx
+      USE uspp_param, ONLY : nsp
       !
       IMPLICIT NONE
       SAVE
@@ -19,11 +21,14 @@
       !     na(is)    = number of atoms of species is
       !     nax       = max number of atoms of a given species
       !     nat       = total number of atoms of all species
+ 
+      INTEGER :: nax      = 0
+      INTEGER :: nat      = 0
+      INTEGER :: na(ntypx)= 0
 
-      INTEGER :: nsp     = 0
-      INTEGER :: na(ntypx) = 0
-      INTEGER :: nax     = 0
-      INTEGER :: nat     = 0
+      !     ityp( i ) = the type of i-th atom in stdin
+
+      INTEGER,  ALLOCATABLE :: ityp(:)
 
       !     zv(is)    = (pseudo-)atomic charge
       !     amass(is) = mass of ions, in atomic mass units
@@ -37,7 +42,6 @@
       !     atm( j )  = name of the type of the j-th atomic specie
       !     tau( 1:3, i ) = position of the i-th atom
 
-      INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)     !  initial positions read from stdin (in bohr)
       REAL(DP), ALLOCATABLE :: vel(:,:)     !  initial velocities read from stdin (in bohr)
       CHARACTER(LEN=3)      :: atm( ntypx )
@@ -574,8 +578,8 @@
 
   SUBROUTINE ions_reference_positions( tau )
 
-     !  Calculate the real position of atoms relative to the center of mass (cdm)
-     !  and store them in taui
+     !!  Calculate the real position of atoms relative to the center of mass (cdm)
+     !!  and store them in \(\text{taui}\).
      !    cdmi: initial position of the center of mass (cdm) in cartesian coor.  
 
      IMPLICIT NONE
@@ -598,8 +602,8 @@
 
    SUBROUTINE ions_displacement( dis, tau, nsp, nat, ityp )
 
-      !  Calculate the sum of the quadratic displacements of the atoms in the ref.
-      !    of cdm respect to the initial positions.
+      !!  Calculate the sum of the quadratic displacements of the atoms in the ref.
+      !!  of cdm with respect to the initial positions.
       !    taui: initial positions in real units in the ref. of cdm
 
       !  ----------------------------------------------

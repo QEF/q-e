@@ -15,7 +15,6 @@ set(sources
     qsort.c)
 
 qe_add_library(qe_clib ${sources})
-add_library(QE::CLIB ALIAS qe_clib)
 
 ###########################################################
 

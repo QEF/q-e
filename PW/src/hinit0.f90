@@ -17,7 +17,11 @@ SUBROUTINE hinit0()
   USE cell_base,        ONLY : alat, at, bg, omega
   USE cellmd,           ONLY : omega_old, at_old, lmovecell
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
+  USE gvect,            ONLY : ecutrho, ngm, g, gg, eigts1, eigts2, eigts3
+#if defined (__CUDA)
+  USE gvect,            ONLY : eigts1_d, eigts2_d, eigts3_d
+#endif
+  USE gvecw,            ONLY : ecutwfc
   USE vlocal,           ONLY : strf
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
                                init_realspace_vars, real_space
@@ -25,6 +29,8 @@ SUBROUTINE hinit0()
   USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : report
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  !
   !
   IMPLICIT NONE
   REAL (dp) :: alat_old
@@ -37,11 +43,11 @@ SUBROUTINE hinit0()
   !
   ! ... k-point independent parameters of non-local pseudopotentials
   !
-  IF (tbeta_smoothing) CALL init_us_b0()
-  IF (tq_smoothing) CALL init_us_0()
-  CALL init_us_1()
+  IF (tbeta_smoothing) CALL init_us_b0(ecutwfc,intra_bgrp_comm)
+  IF (tq_smoothing) CALL init_us_0(ecutrho,intra_bgrp_comm)
+  CALL init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
-  CALL init_at_1()
+  CALL init_tab_atwfc (omega, intra_bgrp_comm)
   !
   IF ( restart .AND. startingconfig == 'file' ) THEN
      !
@@ -70,6 +76,12 @@ SUBROUTINE hinit0()
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                    dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                    strf, eigts1, eigts2, eigts3 )
+  ! sync duplicated version
+#if defined(__CUDA)
+  eigts1_d = eigts1
+  eigts2_d = eigts2
+  eigts3_d = eigts3
+#endif
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters

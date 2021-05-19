@@ -21,11 +21,14 @@ SUBROUTINE allocate_wfc()
   USE noncollin_module,    ONLY : npol
   USE wavefunctions,       ONLY : evc
   USE wannier_new,         ONLY : use_wannier
+  USE wavefunctions_gpum,  ONLY : using_evc
   !
   IMPLICIT NONE
   !
   !
   ALLOCATE( evc(npwx*npol,nbnd) )
+  CALL using_evc(2)
+  !
   IF ( one_atom_occupations .OR. use_wannier ) &
      ALLOCATE( swfcatom(npwx*npol,natomwfc) )
   IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
@@ -47,10 +50,11 @@ SUBROUTINE allocate_wfc_k()
   !! Requires that k-points are set up and distributed (if parallelized).
   !
   USE wvfct,            ONLY : npwx, g2kin
-  USE uspp,             ONLY : vkb, nkb
+  USE uspp,             ONLY : vkb, vkb_d, nkb
   USE gvecw,            ONLY : gcutw
   USE gvect,            ONLY : ngm, g
   USE klist,            ONLY : xk, nks, init_igk
+  USE wvfct_gpum,       ONLY : using_g2kin
   !
   IMPLICIT NONE
   !
@@ -70,10 +74,14 @@ SUBROUTINE allocate_wfc_k()
   !   beta functions
   !
   ALLOCATE( vkb(npwx,nkb) )
+#if defined __CUDA
+  IF (nkb>0) ALLOCATE( vkb_d(npwx,nkb) )
+#endif
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE( g2kin(npwx) )
+  CALL using_g2kin(2)
   !
   RETURN
   !

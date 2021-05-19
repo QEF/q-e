@@ -5,15 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------
-! Module to generate functions on the real space dense grid
-! Written by Oliviero Andreussi
-!----------------------------------------------------------------------
-!
 !=----------------------------------------------------------------------=!
 MODULE generate_function
 !=----------------------------------------------------------------------=!
-
+  !! Module to generate functions on the real space dense grid.  
+  !! Written by Oliviero Andreussi.
+  
   USE kinds, ONLY: DP
 
   IMPLICIT NONE
@@ -505,7 +502,6 @@ CONTAINS
       REAL( DP )                :: scale, dist, arg, chargeanalytic, chargelocal
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: rholocal ( : )
-      REAL( DP ), EXTERNAL      :: qe_erfc
       !
       inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
@@ -561,7 +557,7 @@ CONTAINS
          dist = SQRT(SUM( r * r ))
          arg = ( dist * alat - width ) / spread
          !
-         rholocal( ir ) = qe_erfc(arg)
+         rholocal( ir ) = ERFC(arg)
          !
       END DO
       !
@@ -617,7 +613,6 @@ CONTAINS
       REAL( DP )                :: scale, dist, arg, chargeanalytic, chargelocal
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: gradrholocal ( :, : )
-      REAL( DP ), EXTERNAL      :: qe_erfc
       !
       inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
@@ -679,7 +674,7 @@ CONTAINS
          arg = ( dist * alat - width ) / spread
          !
          gradrholocal( :, ir ) = EXP( - arg**2 ) * r(:) / dist
-         chargelocal = chargelocal + qe_erfc(arg)
+         chargelocal = chargelocal + ERFC(arg)
          !
       END DO
       !
@@ -843,7 +838,6 @@ CONTAINS
 
     REAL(DP) :: f1 = 0.0_DP , f2 = 0.0_DP
     REAL(DP) :: t, invt
-    REAL( DP ), EXTERNAL      :: qe_erf
 
     IF ( spread .LT. tol .OR. width .LT. tol ) THEN
        WRITE(stdout,*)'ERROR: wrong parameters of erfc function',spread,width
@@ -851,7 +845,7 @@ CONTAINS
     ENDIF
     t = spread / width
     invt = width / spread
-    f1 = ( 1.D0 + qe_erf(invt) ) / 2.D0 ! f1 is close to one  for t-->0
+    f1 = ( 1.D0 + ERF(invt) ) / 2.D0 ! f1 is close to one  for t-->0
     f2 = exp(-(invt)**2) / 2.D0 / sqrtpi ! f2 is close to zero for t-->0
     SELECT CASE ( dim )
     CASE ( 0 )

@@ -213,7 +213,6 @@ CONTAINS
     LOGICAL :: offrange
     REAL(DP) :: r(3), rws, upperbound, rws2
     COMPLEX (DP), ALLOCATABLE :: aux(:)
-    REAL(DP), EXTERNAL :: qe_erfc
     !
 #ifdef TESTING
     REAL(DP), ALLOCATABLE :: plot(:)
@@ -233,7 +232,7 @@ CONTAINS
        alpha = alpha - 0.1_dp  
        IF (alpha<=0._dp) CALL errore( 'init_wg_corr', 'optimal alpha not found', 1 )
        upperbound = e2 * SQRT(2.d0 * alpha / tpi) * &
-                         qe_erfc( SQRT( ecutrho / 4.d0 / alpha) )
+                         erfc( SQRT( ecutrho / 4.d0 / alpha) )
     ENDDO
     beta = 0.5_dp/alpha ! 1._dp/alpha
     ! write (*,*) " alpha, beta MT = ", alpha, beta
@@ -386,11 +385,10 @@ CONTAINS
     !! Phys. 110, 2810 (1999)].
     !
     REAL(DP), INTENT(IN) :: r
-    REAL(DP), EXTERNAL :: qe_erf
     !
     !  smooth_coulomb_r = SQRT(2._dp*alpha/tpi)**3 * exp(-alpha*r*r) ! to be modified
     IF (r > 1.e-6_dp) THEN
-       smooth_coulomb_r = qe_erf(SQRT(alpha)*r)/r
+       smooth_coulomb_r = erf(SQRT(alpha)*r)/r
     ELSE
        smooth_coulomb_r = 2._dp/SQRT(pi) * SQRT(alpha)
     ENDIF

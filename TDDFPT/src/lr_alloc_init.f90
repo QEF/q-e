@@ -236,7 +236,6 @@ CONTAINS
     IF (nkb > 0) THEN
        !
        IF (.not. allocated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
-       becp%r(:,:) = 0.0d0
        !
        ALLOCATE(becp_1(nkb,nbnd))
        becp_1(:,:) = 0.0d0
@@ -257,7 +256,6 @@ CONTAINS
     IF (nkb > 0) THEN
        !
        IF(.not. allocated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
-       becp%k(:,:) = (0.0d0,0.0d0)
        !
        IF (.NOT.eels) THEN
           ALLOCATE(becp1_c(nkb,nbnd,nks))

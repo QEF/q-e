@@ -67,8 +67,40 @@ MODULE lmdif_module
    PRIVATE
    PUBLIC :: lmdif
    PUBLIC :: lmdif1 ! easy to use interface, scroll down for documentation
+   PUBLIC :: lmdif0 ! easier to use interface
 
    CONTAINS
+
+   SUBROUTINE lmdif0(fcn, m, n, x, fvec, tol, info)
+      INTEGER m, n, info
+      DOUBLEPRECISION tol
+      DOUBLEPRECISION x (n), fvec (m)
+      EXTERNAL fcn
+      ! internal variables
+      INTEGER ipvt(n), maxfev
+      DOUBLEPRECISION qtf(n), fjac(m,n), diag(n)
+      DOUBLEPRECISION wa1 (n), wa2(n), wa3(n), wa4(m)
+      INTEGER iwa (n), nprint, nfev
+      DOUBLEPRECISION factor, epsdiff
+      !
+      IF(n>m)THEN
+            PRINT*, "LMDIF expects n<=m"
+            PRINT*, "Hint: give it f_fit-f_real, it will compute chi^2 internally"
+            STOP 1
+      ENDIF
+      !
+      diag= 1.d0        ! all the variables have the same importance
+      mode = 1          ! set diag automatically
+      factor = 1.d0     ! initial step factor
+      epsdiff = 0d0     ! precision of fcn (used fo finite difference differentiation)
+      nprint = 0
+      maxfev = huge(1)  ! take as many iterations as needed
+
+      CALL lmdif(fcn,m,n,x,fvec,tol,tol,0d0,maxfev,epsdiff, &
+                 diag,mode,factor,0,info,nfev,fjac,  &
+                 m,ipvt,qtf,wa1,wa2,wa3,wa4)
+
+   END SUBROUTINE
 
       DOUBLEPRECISION function dpmpar (i)
       INTEGER i
@@ -1036,7 +1068,7 @@ MODULE lmdif_module
 !
 !     call lmdif.
 !
-      maxfev = 200 * (n + 1)
+      maxfev = 5000 * (n + 1)
       ftol = tol
       xtol = tol
       gtol = zero

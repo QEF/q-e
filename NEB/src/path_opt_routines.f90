@@ -14,12 +14,14 @@ MODULE path_opt_routines
   !
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
-  USE kinds,          ONLY : DP
-  USE constants,      ONLY : eps8, eps16
-  USE path_variables, ONLY : ds, pos, grad
-  USE io_global,      ONLY : meta_ionode, meta_ionode_id
-  USE mp,             ONLY : mp_bcast
-  USE mp_world,       ONLY : world_comm
+  USE kinds,            ONLY : DP
+  USE constants,        ONLY : e2, eps4, eps8, eps16
+  USE path_variables,   ONLY : ds, pos, grad
+  USE fcp_variables,    ONLY : fcp_mu, fcp_nelec, fcp_ef, fcp_dos
+  USE fcp_opt_routines, ONLY : fcp_opt_scale
+  USE io_global,        ONLY : meta_ionode, meta_ionode_id
+  USE mp,               ONLY : mp_bcast
+  USE mp_world,         ONLY : world_comm
   !
   USE basic_algebra_routines
   !
@@ -139,7 +141,7 @@ MODULE path_opt_routines
      ! ... Broyden (rank one) optimisation
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE broyden()
+     SUBROUTINE broyden( lfcp )
        !-----------------------------------------------------------------------
        !
        USE path_variables,  ONLY : lsmd
@@ -148,37 +150,79 @@ MODULE path_opt_routines
        !
        IMPLICIT NONE
        !
-       REAL(DP), ALLOCATABLE :: t(:), g(:), s(:,:)
+       LOGICAL,  INTENT(IN)  :: lfcp
+       !
+       REAL(DP), ALLOCATABLE :: t(:), g(:), J0(:), s(:,:)
        INTEGER               :: k, i, j, I_in, I_fin
        REAL(DP)              :: s_norm, coeff, norm_g
-       REAL(DP)              :: J0
+       REAL(DP)              :: fcp_cap, fcp_hess
+       REAL(DP)              :: xscale
        LOGICAL               :: exists
+       INTEGER               :: dim2
        !
        REAL(DP), PARAMETER   :: step_max = 0.6_DP
        INTEGER,  PARAMETER   :: broyden_ndim = 5
        !
+       ! ... set dimension an image
        !
-       ! ... starting guess for the inverse Jacobian
+       IF ( lfcp ) THEN
+          dim2 = dim1 + 1
+       ELSE
+          dim2 = dim1
+       END IF
        !
-       J0 = ds*ds
+       ! ... scaling factor: #electron -> Bohr
        !
-       ALLOCATE( g( dim1*nim ) )
-       ALLOCATE( s( dim1*nim, broyden_ndim ) )
-       ALLOCATE( t( dim1*nim ) )
+       IF ( lfcp ) THEN
+          xscale = fcp_opt_scale()
+          IF ( xscale < eps8 ) THEN
+             xscale = 1.0_DP
+          END IF
+       END IF
        !
-       g(:) = 0.0_DP
-       t(:) = 0.0_DP
+       ! ... estimated capacitance
+       !
+       IF ( lfcp ) THEN
+          CALL fcp_capacitance( fcp_cap )
+          fcp_cap = e2 * fcp_cap
+       END IF
+       !
+       ALLOCATE( g( dim2*nim ) )
+       ALLOCATE( J0( dim2*nim ) )
+       ALLOCATE( s( dim2*nim, broyden_ndim ) )
+       ALLOCATE( t( dim2*nim ) )
+       !
+       g(:)  = 0.0_DP
+       J0(:) = 0.0_DP
+       t(:)  = 0.0_DP
        !
        DO i = 1, nim
           !
-          I_in  = ( i - 1 )*dim1 + 1
-          I_fin = i * dim1
+          I_in  = ( i - 1 )*dim2 + 1
+          I_fin = ( i - 1 )*dim2 + dim1
           !
           IF ( frozen(i) ) CYCLE
           !
           IF ( lsmd ) t(I_in:I_fin) = tangent(:,i)
           !
           g(I_in:I_fin) = grad(:,i)
+          J0(I_in:I_fin) = ds * ds
+          !
+          IF ( lfcp ) THEN
+             g(I_fin+1) = (fcp_ef(i) - fcp_mu) / xscale
+             !
+             fcp_hess = fcp_dos(i)
+             !
+             IF ( fcp_cap > eps4 ) THEN
+                fcp_hess = MIN( fcp_hess, fcp_cap )
+             END IF
+             !
+             IF ( fcp_hess > eps4 ) THEN
+                J0(I_fin+1) = fcp_hess * xscale * xscale
+             ELSE
+                J0(I_fin+1) = ds * ds
+             END IF
+          END IF
           !
        END DO
        !
@@ -240,7 +284,7 @@ MODULE path_opt_routines
              !
           END IF
           !
-          s(:,k) = - J0 * g(:)
+          s(:,k) = - J0(:) * g(:)
           !
           IF ( k > 1 ) THEN
              !
@@ -271,7 +315,7 @@ MODULE path_opt_routines
              k = 1
              !
              s(:,:) = 0.0_DP
-             s(:,k) = - J0 * g(:)
+             s(:,k) = - J0(:) * g(:)
              !
           END IF
           !
@@ -291,14 +335,30 @@ MODULE path_opt_routines
           !
           ! ... broyden's step
           !
-          pos(:,1:nim) = pos(:,1:nim) + RESHAPE( s(:,k), (/ dim1, nim /) )
+          DO i = 1, nim
+             !
+             I_in  = ( i - 1 )*dim2 + 1
+             I_fin = ( i - 1 )*dim2 + dim1
+             !
+             pos (:,i) = pos (:,i) + s(I_in:I_fin,k)
+             !
+             IF ( lfcp ) THEN
+                fcp_nelec(i) = fcp_nelec(i) + s(I_fin+1,k) / xscale
+             END IF
+             !
+          END DO
           !
        END IF
        !
        CALL mp_bcast( pos, meta_ionode_id, world_comm )
        !
+       IF ( lfcp ) THEN
+          CALL mp_bcast( fcp_nelec, meta_ionode_id, world_comm )
+       END IF
+       !
        DEALLOCATE( t )
        DEALLOCATE( g )
+       DEALLOCATE( J0 )
        DEALLOCATE( s )
        !
        RETURN
@@ -308,7 +368,7 @@ MODULE path_opt_routines
      ! ... Broyden (rank one) optimisation - second attempt
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE broyden2()
+     SUBROUTINE broyden2( lfcp )
        !-----------------------------------------------------------------------
 #define DEBUG
        !
@@ -318,32 +378,57 @@ MODULE path_opt_routines
        !
        IMPLICIT NONE
        !
+       LOGICAL,  INTENT(IN)  :: lfcp
+       !
        REAL(DP), PARAMETER   :: step_max = 0.6_DP
        INTEGER,  PARAMETER   :: broyden_ndim = 5
        !
-       REAL(DP), ALLOCATABLE :: dx(:,:), df(:,:), x(:), f(:)
+       REAL(DP), ALLOCATABLE :: dx(:,:), df(:,:), x(:), f(:), J0(:)
        REAL(DP), ALLOCATABLE :: x_last(:), f_last(:), mask(:)
        REAL(DP), ALLOCATABLE :: b(:,:), c(:), work(:)
        INTEGER, ALLOCATABLE  :: iwork(:)
        !
-       REAL(DP)              :: x_norm, gamma0, J0, d2, d2_estimate
+       REAL(DP)              :: x_norm, gamma0, d2, d2_estimate
+       REAL(DP)              :: fcp_cap, fcp_hess
+       REAL(DP)              :: xscale
        LOGICAL               :: exists
        INTEGER               :: i, I_in, I_fin, info, j, niter
+       INTEGER               :: dim2
        !
-       ! ... starting guess for the inverse Jacobian
+       ! ... set dimension an image
        !
-       J0 = ds*ds
+       IF ( lfcp ) THEN
+          dim2 = dim1 + 1
+       ELSE
+          dim2 = dim1
+       END IF
        !
-       ALLOCATE( dx( dim1*nim, broyden_ndim ), df( dim1*nim, broyden_ndim ) )
-       ALLOCATE( x( dim1*nim ), f( dim1*nim ) )
-       ALLOCATE( x_last( dim1*nim ), f_last( dim1*nim ), mask( dim1*nim ) )
+       ! ... scaling factor: #electron -> Bohr
+       !
+       IF ( lfcp ) THEN
+          xscale = fcp_opt_scale()
+          IF ( xscale < eps8 ) THEN
+             xscale = 1.0_DP
+          END IF
+       END IF
+       !
+       ! ... estimated capacitance
+       !
+       IF ( lfcp ) THEN
+          CALL fcp_capacitance( fcp_cap )
+          fcp_cap = e2 * fcp_cap
+       END IF
+       !
+       ALLOCATE( dx( dim2*nim, broyden_ndim ), df( dim2*nim, broyden_ndim ) )
+       ALLOCATE( x( dim2*nim ), f( dim2*nim ), J0( dim2*nim ) )
+       ALLOCATE( x_last( dim2*nim ), f_last( dim2*nim ), mask( dim2*nim ) )
        !
        ! define mask to skip frozen images 
        !
        mask(:) = 0.0_DP
        DO i = 1, nim
-          I_in  = ( i - 1 )*dim1 + 1
-          I_fin = i * dim1
+          I_in  = ( i - 1 )*dim2 + 1
+          I_fin = i * dim2
           IF ( frozen(i) ) CYCLE
           mask(I_in:I_fin) = 1.0_DP
        END DO
@@ -351,10 +436,29 @@ MODULE path_opt_routines
        ! copy current positions and gradients in local arrays
        !
        DO i = 1, nim
-          I_in  = ( i - 1 )*dim1 + 1
-          I_fin = i * dim1
+          I_in  = ( i - 1 )*dim2 + 1
+          I_fin = ( i - 1 )*dim2 + dim1
+          !
           f(I_in:I_fin) =-grad(:,i)
           x(I_in:I_fin) = pos(:,i)
+          J0(I_in:I_fin) = ds * ds
+          !
+          IF ( lfcp ) THEN
+             f(I_fin+1) = (fcp_mu - fcp_ef(i)) / xscale
+             x(I_fin+1) = fcp_nelec(i) * xscale
+             !
+             fcp_hess = fcp_dos(i)
+             !
+             IF ( fcp_cap > eps4 ) THEN
+                fcp_hess = MIN( fcp_hess, fcp_cap )
+             END IF
+             !
+             IF ( fcp_hess > eps4 ) THEN
+                J0(I_fin+1) = fcp_hess * xscale * xscale
+             ELSE
+                J0(I_fin+1) = ds * ds
+             END IF
+          END IF
        END DO
        !
        ! only meta_ionode execute this part
@@ -453,15 +557,15 @@ MODULE path_opt_routines
              !
              DO i = 1, niter
                gamma0 = DOT_PRODUCT( b(1:niter,i), c(1:niter) )
-               call DAXPY(dim1*nim, -gamma0, dx(:,i),1, x,1)
-               call DAXPY(dim1*nim, -gamma0, df(:,i),1, f,1)
+               call DAXPY(dim2*nim, -gamma0, dx(:,i),1, x,1)
+               call DAXPY(dim2*nim, -gamma0, df(:,i),1, f,1)
              END DO
              !
              DEALLOCATE (b,c,work,iwork)
              !
           END IF
           d2 = DOT_PRODUCT( f(:), mask(:)*f(:) )
-          x(:) =  mask(:) * ( x(:) + J0 * f(:) )
+          x(:) =  mask(:) * ( x(:) + J0(:) * f(:) )
           x_norm = norm(x)
           x(:) = x_last(:) + x(:) * min ( 1.0_DP, step_max/x_norm)
 #ifdef DEBUG
@@ -483,7 +587,16 @@ MODULE path_opt_routines
           !
           ! ... copy broyden's step on the position array ...
           !
-          pos(:,1:nim) =  RESHAPE( x, (/ dim1, nim /) )
+          DO i = 1, nim
+             I_in  = ( i - 1 )*dim2 + 1
+             I_fin = ( i - 1 )*dim2 + dim1
+             !
+             pos(:,i) = x(I_in:I_fin)
+             !
+             IF ( lfcp ) THEN
+                fcp_nelec(i) = x(I_fin+1) / xscale
+             END IF
+          END DO
           !
        END IF
        !
@@ -491,7 +604,11 @@ MODULE path_opt_routines
        !
        CALL mp_bcast( pos, meta_ionode_id, world_comm )
        !
-       DEALLOCATE( df, dx, f, x, f_last, x_last, mask )
+       IF ( lfcp ) THEN
+          CALL mp_bcast( fcp_nelec, meta_ionode_id, world_comm )
+       END IF
+       !
+       DEALLOCATE( df, dx, f, x, J0, f_last, x_last, mask )
        !
        RETURN
        !

@@ -2,7 +2,6 @@
 # FFT
 # The following targets will be defined:
 add_library(qe_fft INTERFACE)
-add_library(QE::FFT ALIAS qe_fft)
 qe_install_targets(qe_fft)
 ###########################################################
 SET(BLA_VENDOR_SAVED ${BLA_VENDOR})
@@ -109,7 +108,7 @@ elseif(QE_FFTW_VENDOR STREQUAL "FFTW3")
     if(FFTW3_FOUND)
         qe_add_global_compile_definitions(__FFTW3)
         set(qe_fft_wrappers fft_scalar.FFTW3.f90)
-        target_link_libraries(qe_fft INTERFACE FFTW)
+        target_link_libraries(qe_fft INTERFACE FFTW3)
         message(STATUS "Found FFTW3 library")
     else()
         message(FATAL_ERROR "Failed to find ${QE_FFTW_VENDOR} library. "
@@ -124,7 +123,7 @@ else()
 endif()
 SET(BLA_VENDOR ${BLA_VENDOR_SAVED})
 
-set(f_sources
+set(f_src_fftx
     fft_scatter.f90
     fft_scatter_2d.f90
     scatter_mod.f90 
@@ -145,29 +144,38 @@ set(f_sources
     tg_gather.f90
     fft_helper_subroutines.f90
     fft_param.f90)
-
 if(QE_ENABLE_CUDA)
-  set(f_sources ${f_sources}
-      fft_scatter_gpu.f90
-      fft_scatter_2d_gpu.f90
-      fft_buffers.f90
-      fft_scalar.cuFFT.f90)
+    set(f_src_fftx
+        ${f_src_fftx}
+        fft_scalar.cuFFT.f90
+        fft_buffers.f90
+        fft_scatter_gpu.f90
+        fft_scatter_2d_gpu.f90)
 endif()
+qe_enable_cuda_fortran("${f_src_fftx}")
 
-set(c_sources
+set(c_src_fftx
     fft_stick.c
     fftw.c
     fftw_sp.c
     fftw_dp.c)
 
-qe_add_library(qe_fftx ${f_sources} ${c_sources} ${qe_fft_wrappers})
-add_library(QE::FFTX ALIAS qe_fftx)
+qe_add_library(qe_fftx 
+    ${f_src_fftx} 
+    ${c_src_fftx} 
+    ${qe_fft_wrappers})
+
 target_link_libraries(qe_fftx
     PRIVATE
-        QE::FFT
-        QE::OpenMP_Fortran
-        QE::MPI_Fortran
-        QE::LAPACK)
+        qe_fft
+        qe_openmp_fortran
+        qe_mpi_fortran)
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_fftx
+        PRIVATE
+            CUDA::cufft)
+endif()
+        
 qe_install_targets(qe_fftx)
 
 ###########################################################
@@ -175,14 +183,17 @@ qe_install_targets(qe_fftx)
 # TODO move all tests to a proper location
 ###########################################################
 if(QE_ENABLE_TEST)
-    set(sources fft_test.f90)
-    qe_add_executable(qe_fftx_test ${sources})
-    set_target_properties(qe_fftx_test PROPERTIES OUTPUT_NAME qe_fftx_test.x RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+    set(src_fftx_test fft_test.f90)
+    qe_add_executable(qe_fftx_test ${src_fftx_test})
+    set_target_properties(qe_fftx_test 
+        PROPERTIES 
+            OUTPUT_NAME qe_fftx_test.x 
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
     target_link_libraries(qe_fftx_test
         PRIVATE
-            QE::OpenMP_Fortran
-            QE::MPI_Fortran
-            QE::LAPACK
-            QE::FFTX)
-    add_test(NAME test_qe_fftx COMMAND ${QE_TESTS_DIR}/qe_fftx_test.x)
+            qe_openmp_fortran
+            qe_mpi_fortran
+            qe_fftx)
+    add_test(NAME test_qe_fftx 
+        COMMAND $<TARGET_FILE:qe_fftx_test>)
 endif()

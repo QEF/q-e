@@ -9,7 +9,6 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE constants,       ONLY : fpi
   USE io_global,       ONLY : stdout     ! Modules/io_global.f90
   USE kinds,           ONLY : DP
-  USE parameters,      ONLY : ntypx
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE wvfct,           ONLY : npwx, nbnd, et, current_k

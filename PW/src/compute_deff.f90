@@ -110,4 +110,3 @@ SUBROUTINE compute_deff_nc( deff, et )
   RETURN
   !
 END SUBROUTINE compute_deff_nc
-

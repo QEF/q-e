@@ -729,7 +729,7 @@ MODULE ph_restart
           CALL xmlr_readtag( "PARTIAL_DYN", dyn_rec(:,:) )
           IF ( zue .AND. irr>0 ) &
                CALL xmlr_readtag( "PARTIAL_ZUE", zstarue0_rec(:,:) )
-          CALL xmlw_closetag( )
+          CALL xmlr_closetag( )
        ENDIF
     ENDIF
     IF (trans) THEN
@@ -1355,10 +1355,19 @@ MODULE ph_restart
          END IF
          !
       END IF
-100   CALL mp_bcast( exst, ionode_id, intra_image_comm )
-      !
-      !     If the file does not exist and we must read from it, we return with
-      !     or if it cannot be opened, we return with an error message.
+100   IF (iflag /= 0) THEN
+         CALL mp_bcast( exst, ionode_id, intra_image_comm )
+!
+!     If the file does not exist and we must read from it, we return with
+!     an error message.
+!
+         IF (.NOT.exst) THEN
+            ierr=100
+            RETURN
+         ENDIF
+      ENDIF
+
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF (.NOT.exst) THEN
          CALL infomsg( 'ph_restart_set_filename ', &

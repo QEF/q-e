@@ -149,12 +149,10 @@ int fft_x_stick_single
 (fftw_plan *p, FFTW_COMPLEX *a, int *nx, int *ny, int *nz, int *ldx, int *ldy )
 {
 
-   int xstride, bigstride;
+   int xstride;
    int xhowmany, xidist;
 
 /* trasform  along x and y */
-   bigstride = (*ldx) * (*ldy);
-
    xhowmany = (*ny);
    xstride  = 1;
    xidist   = (*ldx);

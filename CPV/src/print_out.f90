@@ -42,7 +42,7 @@
       USE tsvdw_module,      ONLY : EtsvdW, VefftsvdW
       USE input_parameters,  ONLY : tcpbo
       USE exx_module,        ONLY : exxalfa
-      USE funct,             ONLY : dft_is_hybrid, exx_is_active
+      USE xc_lib,            ONLY : xclib_dft_is, exx_is_active
       USE wannier_module,    ONLY : wfc
       USE electrons_base,    ONLY : nbsp, nspin, nupdwn, iupdwn
       USE wrappers,          ONLY : memstat
@@ -239,13 +239,13 @@
                 !
                 IF((nfi/iprint).EQ.1) WRITE( 33, 29471 )
                 !
-                IF(dft_is_hybrid().AND.exx_is_active().AND.ts_vdw) THEN
+                IF(xclib_dft_is('hybrid').AND.exx_is_active().AND.ts_vdw) THEN
                   WRITE( 33, 29481 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,(-exx*exxalfa),EtsvdW
                 ELSEIF(ts_vdw) THEN    
                   WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,EtsvdW
-                ELSEIF(dft_is_hybrid().AND.exx_is_active()) THEN
+                ELSEIF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
                   WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,(-exx*exxalfa)
                 ELSE    
@@ -341,7 +341,7 @@
 !======================================================
 !printing with better format
 
-         IF(dft_is_hybrid().AND.exx_is_active()) THEN
+         IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
            IF(ts_vdw)THEN
              IF(tcpbo) THEN
                WRITE( stdout, 19473 )
@@ -380,7 +380,7 @@
 
       IF( .not. tcg ) THEN
          !
-         IF(dft_is_hybrid().AND.exx_is_active()) THEN
+         IF(xclib_dft_is('hybrid').AND.exx_is_active()) THEN
            !
            IF (ts_vdw) THEN
              !

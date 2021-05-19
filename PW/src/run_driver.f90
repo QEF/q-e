@@ -360,7 +360,8 @@ CONTAINS
     !
     USE fft_base,   ONLY : dfftp
     USE fft_base,   ONLY : dffts
-    USE funct,      ONLY : dft_is_hybrid
+    USE xc_lib,     ONLY : xclib_dft_is
+    !
     ! ... get magnetic moments from previous run before charge is deleted
     !
     CALL reset_starting_magnetization()
@@ -381,7 +382,7 @@ CONTAINS
     !
     ! ... re-set and re-initialize EXX-related stuff
     !
-    IF ( dft_is_hybrid() ) CALL reset_exx( )
+    IF ( xclib_dft_is('hybrid') ) CALL reset_exx( )
     !
     CALL mp_bcast( at,        ionode_id, intra_image_comm )
     CALL mp_bcast( at_old,    ionode_id, intra_image_comm )

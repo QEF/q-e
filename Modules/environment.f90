@@ -12,7 +12,7 @@
 !==-----------------------------------------------------------------------==!
 MODULE environment
   !==-----------------------------------------------------------------------==!
-
+  !! Environment management.
   USE kinds, ONLY: DP
   USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
@@ -54,8 +54,9 @@ CONTAINS
     LOGICAL           :: exst, debug = .false.
     CHARACTER(LEN=80) :: code_version, uname
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
-    INTEGER :: ios, crashunit
-    INTEGER, EXTERNAL :: find_free_unit
+    CHARACTER(LEN=3)           :: env_maxdepth
+    INTEGER :: ios, crashunit, max_depth 
+
 
     ! ... The Intel compiler allocates a lot of stack space
     ! ... Stack limit is often small, thus causing SIGSEGV and crash
@@ -67,8 +68,14 @@ CONTAINS
 #endif
     ! ... use ".FALSE." to disable all clocks except the total cpu time clock
     ! ... use ".TRUE."  to enable clocks
-
-    CALL init_clocks( .TRUE. )
+#if defined(__TRACE)
+    CALL get_environment_variable('ESPRESSO_MAX_DEPTH', env_maxdepth)
+    IF (env_maxdepth .NE. ' ') THEN 
+      READ(env_maxdepth,'(I3)',iostat=ios) max_depth
+      IF (ios == 0 ) CALL set_trace_max_depth( max_depth )
+    END IF
+#endif
+    CALL init_clocks(.TRUE.) 
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
@@ -86,8 +93,7 @@ CONTAINS
 
        INQUIRE( FILE=TRIM(crash_file), EXIST=exst )
        IF( exst ) THEN
-          crashunit = find_free_unit()
-          OPEN( UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
+          OPEN( NEWUNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
           IF (ios==0) THEN
              CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=ios )
           ELSE
@@ -174,6 +180,8 @@ CONTAINS
          &    "395502 (2009);", &
          &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 29 ",&
          &    "465901 (2017);", &
+         &/9X,"""P. Giannozzi et al., J. Chem. Phys. 152 ",&
+         &    "154105 (2020);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
          &/5x,"http://www.quantum-espresso.org/quote")' )
@@ -222,10 +230,8 @@ CONTAINS
          &I5," processors")' ) nproc
 #endif
     !
-#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
     WRITE( stdout, '(/5X,"MPI processes distributed on ",&
          &I5," nodes")' ) nnode
-#endif
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I7)' ) nimage
     IF ( npool > 1 ) WRITE( stdout, &

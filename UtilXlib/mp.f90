@@ -118,6 +118,7 @@ MODULE mp
      MODULE PROCEDURE mp_allgatherv_inplace_real_array
 #if defined(__CUDA)
      MODULE PROCEDURE mp_allgatherv_inplace_cplx_array_gpu
+     MODULE PROCEDURE mp_allgatherv_inplace_real_array_gpu
 #endif
    END INTERFACE
    ! 
@@ -6060,6 +6061,49 @@ END SUBROUTINE mp_type_free
 #endif
          ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu
+!..mp_allgatherv_inplace_real_array
+!
+
+      SUBROUTINE mp_allgatherv_inplace_real_array_gpu(alldata_d, my_element_type, recvcount, displs, gid)
+         IMPLICIT NONE
+         REAL(DP), DEVICE :: alldata_d(:,:)
+         INTEGER, INTENT(IN) :: my_element_type
+         INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+         REAL(DP), ALLOCATABLE :: alldata_h(:, :)
+         !
+         ! Avoid unnecessary communications on __MPI
+         IF ( mp_size(gid) == 1 ) THEN
+           ierr = cudaDeviceSynchronize()
+           RETURN
+         END IF
+         !
+         ALLOCATE(alldata_h, source=alldata_d)! This syncs __MPI
+         CALL mp_allgatherv_inplace_real_array(alldata_h, my_element_type, recvcount, displs, gid)
+         alldata_d = alldata_h; DEALLOCATE(alldata_h)
+         ierr = cudaDeviceSynchronize()   ! This syncs in case of small data chunks
+         RETURN
+#else
+         CALL mpi_comm_size( gid, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9131 )
+         CALL mpi_comm_rank( gid, myid, ierr )
+         IF (ierr/=0) CALL mp_stop( 9132 )
+         !
+         IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9133 )
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                              alldata_d, recvcount, displs, my_element_type, gid, ierr )
+         IF (ierr/=0) CALL mp_stop( 9134 )
+         RETURN ! Sync not needed after MPI call
+#endif
+#endif
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_allgatherv_inplace_real_array_gpu
 
       SUBROUTINE mp_type_create_cplx_column_section_gpu(dummy, start, length, stride, mytype)
          IMPLICIT NONE

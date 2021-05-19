@@ -15,6 +15,7 @@ SUBROUTINE g_psi( lda, n, m, npol, psi, e )
   !
   USE kinds
   USE g_psi_mod
+  USE g_psi_mod_gpum, ONLY : using_h_diag, using_s_diag
   !
   IMPLICIT NONE
   !
@@ -46,6 +47,7 @@ SUBROUTINE g_psi( lda, n, m, npol, psi, e )
   INTEGER :: iblock, numblock
   ! chunking parameters
   !
+  CALL using_h_diag(0); call using_s_diag(0)
   CALL start_clock( 'g_psi' )
   !
   ! compute the number of chuncks

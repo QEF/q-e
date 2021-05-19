@@ -24,7 +24,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE scf,                ONLY: vrs  
   USE gvect
   USE fft_base,           ONLY: dfftp
-  USE uspp,               ONLY: okvan, nkb, vkb
+  USE uspp,               ONLY: okvan, nkb, vkb, using_vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
@@ -37,9 +37,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE fixed_occ
   USE mp,                 ONLY: mp_sum
   USE mp_bands,           ONLY: intra_bgrp_comm
-  USE becmod,             ONLY: bec_type, becp, calbec,ALLOCATE_bec_type, &
-                                deALLOCATE_bec_type
-  !
+  USE becmod,             ONLY: bec_type, becp, calbec,allocate_bec_type, &
+                                deallocate_bec_type
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: pdir
@@ -86,6 +85,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
    INTEGER :: ik_stringa!k-point index inside string
    REAL(DP) :: dk(3)
    REAL(DP) :: dkm(3)! -dk
+   REAL(DP) :: dk2
    REAL(DP) :: dkmod
    REAL(DP) :: eps
    REAL(DP) :: fac
@@ -94,7 +94,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
    !REAL(DP) :: gvec
    REAL(DP), ALLOCATABLE :: ln(:,:,:)
    REAL(DP), ALLOCATABLE  :: ln0(:,:,:)!map g-space global to g-space k-point dependent
-   REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    COMPLEX(DP), ALLOCATABLE :: aux(:)
    COMPLEX(DP), ALLOCATABLE  :: aux0(:)
@@ -279,12 +278,12 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !                     electronic polarization: form factor                !
          !-------------------------------------------------------------------------!
 
-         !  --- Calculate Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] ---
-         CALL calc_btq( dkmod, qrad_dk, 0 )
+         !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
+         ! CALL calc_btq( dkmod, qrad_dk, 0 ) no longer needed
          !
          !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-         dkmod = dk(1)**2 + dk(2)**2 + dk(3)**2
-         CALL ylmr2( lmaxq*lmaxq, 1, dk, dkmod, ylm_dk )
+         dk2 = dk(1)**2 + dk(2)**2 + dk(3)**2
+         CALL ylmr2( lmaxq*lmaxq, 1, dk, dk2, ylm_dk )
          !
          !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
          q_dk = (0.d0,0.d0)
@@ -292,7 +291,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             IF ( upf(np)%tvanp ) THEN
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
-                     CALL qvan3( iv, jv, np, pref, ylm_dk, qrad_dk )
+                     CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
                      q_dk(iv,jv,np) = omega*pref
                      q_dk(jv,iv,np) = omega*pref
                   ENDDO
@@ -303,8 +302,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !
          !  --- Calculate the q-space real spherical harmonics at -dk [Y_LM] --- 
          !
-         dkmod = dkm(1)**2 + dkm(2)**2 + dkm(3)**2
-         CALL ylmr2( lmaxq*lmaxq, 1, dkm, dkmod, ylm_dk )
+         dk2 = dkm(1)**2 + dkm(2)**2 + dkm(3)**2
+         CALL ylmr2( lmaxq*lmaxq, 1, dkm, dk2, ylm_dk )
          !
          !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
          !
@@ -313,7 +312,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             IF ( upf(np)%tvanp ) THEN
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
-                     CALL qvan3( iv, jv, np, pref, ylm_dk, qrad_dk )
+                     CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
                      q_dkp(iv,jv,np) = omega*pref
                      q_dkp(jv,iv,np) = omega*pref
                   ENDDO
@@ -343,6 +342,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -363,6 +363,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDDO
          !
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -527,6 +528,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             ENDDO
             !
             ! vkb is relative to the last ik read
+            CALL using_vkb(0) ! this is redundant
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &
                         npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx )
             !
@@ -558,6 +560,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -580,6 +583,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDIF
          !
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -872,6 +876,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
                ENDDO
             ENDDO
             !
+            CALL using_vkb(0) !this is redundant
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, & ! vkb is relative to
                         npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx )             ! the last ik read.
             !
@@ -905,6 +910,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -925,6 +931,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDDO
          !
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -1116,6 +1123,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             ENDDO
             !
             ! vkb is relative to the last ik read
+            CALL using_vkb(0)
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol, nkb, (1.d0, 0.d0), vkb, &
                         npwx, ps, nkb, (1.d0, 0.d0), evct, npwx )
             !        
@@ -1146,6 +1154,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -1168,6 +1177,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDIF
          !
          IF (okvan) THEN
+            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -1439,6 +1449,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             ENDDO
             !
             !vkb is relative to the ik read
+            CALL using_vkb(0)
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0), vkb, &
                         npwx, ps, nkb, (1.d0, 0.d0), evct, npwx )
             !

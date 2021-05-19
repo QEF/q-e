@@ -153,21 +153,27 @@ MODULE fft_types
 
     INTEGER :: grid_id
 #if defined(__CUDA)
+    ! These CUDA streams are used in the 1D+1D+1D GPU implementation
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_many
-    INTEGER                                                   :: nstream_many = 16
-
+    ! These CUDA streams (and events) are used in the 1D+2D FPU implementation
     INTEGER(kind=cuda_stream_kind) :: a2a_comp
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: bstreams
     TYPE(cudaEvent), allocatable, dimension(:) :: bevents
-
+    !
+    ! These variables define the dimension of batches and subbatches in 
+    ! * the 1D+2D GPU implementation:
     INTEGER              :: batchsize = 16    ! how many ffts to batch together
     INTEGER              :: subbatchsize = 4  ! size of subbatch for pipelining
-
+    ! * the 1D+1D+1D implementation:
+    INTEGER              :: nstream_many = 16 ! this should be replace by batchsize
+                                              ! since it has the same meaning.
+    !
 #if defined(__IPC)
     INTEGER :: IPC_PEER(16)          ! This is used for IPC that is not imlpemented yet.
 #endif
-    INTEGER, ALLOCATABLE :: srh(:,:) ! Isend/recv handles by subbatch
+    INTEGER, ALLOCATABLE :: srh(:,:) ! These are non blocking send/recv handles that are used to
+                                     ! overlap computation and communication of FFTs subbatches.
 #endif
     COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: aux
 #if defined(__FFT_OPENMP_TASKS)
@@ -200,10 +206,7 @@ CONTAINS
     INTEGER :: nx, ny, ierr, nzfft, i, nsubbatches
     INTEGER :: mype, root, nproc, iproc, iproc2, iproc3 ! mype starting from 0
     INTEGER :: color, key
-     !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
-
-    IF ( ALLOCATED( desc%nsp ) ) &
-        CALL fftx_error__(' fft_type_allocate ', ' fft arrays already allocated ', 1 )
+    !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
 
     desc%comm = comm
 #if defined(__MPI)
@@ -211,6 +214,10 @@ CONTAINS
        CALL fftx_error__( ' fft_type_allocate ', ' fft communicator is null ', 1 )
     END IF
 #endif
+    !
+    IF ( ALLOCATED( desc%nsp ) ) &
+        CALL fftx_error_uniform__(' fft_type_allocate ', ' fft arrays already allocated ', 1, desc%comm )
+
     !
     root = 0 ; mype = 0 ; nproc = 1
 #if defined(__MPI)
@@ -426,7 +433,13 @@ CONTAINS
     !
     ! SLAB decomposition
     IF ( ALLOCATED( desc%srh ) )   DEALLOCATE( desc%srh )
-    ierr = cudaStreamDestroy( desc%a2a_comp )
+    IF (desc%a2a_comp /= 0) THEN 
+      ierr = cudaStreamDestroy( desc%a2a_comp )
+      CALL fftx_error__("fft_type_deallocate","failed destroying stream a2a_comp", ierr)
+      desc%a2a_comp = 0
+    END IF 
+  
+    
 
     IF ( ALLOCATED(desc%bstreams) ) THEN
         nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
@@ -996,7 +1009,7 @@ CONTAINS
 
      IF ( PRESENT (use_pd) ) dfft%use_pencil_decomposition = use_pd
      IF ( ( .not. dfft%use_pencil_decomposition ) .and. ( nyfft > 1 ) ) &
-        CALL fftx_error__(' fft_type_init ', ' Slab decomposition and task groups not implemented. ', 1 )
+        CALL fftx_error_uniform__(' fft_type_init ', ' Slab decomposition and task groups not implemented. ', 1, dfft%comm )
 
      dfft%lpara = lpara  !  this descriptor can be either a descriptor for a
                          !  parallel FFT or a serial FFT even in parallel build

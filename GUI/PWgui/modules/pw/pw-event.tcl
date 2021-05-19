@@ -560,7 +560,7 @@ tracevar ion_velocities w {
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
-    varset gate        -value {}
+    varset gate            -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
     varset nspin           -value {}

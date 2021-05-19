@@ -87,7 +87,6 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
   !
   COMPLEX(DP), ALLOCATABLE :: aux(:)
   ! auxiliary space
-  REAL(DP), EXTERNAL :: qe_erfc
   !
   forceion(:,:) = 0.0_DP
   tpiba2 = (tpi / alat)**2
@@ -103,7 +102,7 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
 10 alpha = alpha - 0.1_DP
   IF (alpha==0.d0) CALL errore( 'force_ew', 'optimal alpha not found', 1 )
   upperbound = e2 * charge**2 * SQRT(2._DP * alpha / tpi) * &
-               qe_erfc( SQRT(tpiba2 * gcutm / 4.d0 / alpha) )
+               erfc( SQRT(tpiba2 * gcutm / 4.d0 / alpha) )
   IF ( upperbound > 1.0d-6 ) GOTO 10
   !
   ! G-space sum here
@@ -174,7 +173,7 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
         DO n = 1, nrm
            rr = SQRT(r2(n)) * alat
            fact = zv(ityp(na)) * zv(ityp(nb)) * e2 / rr**2 * &
-                  (qe_erfc(SQRT(alpha) * rr) / rr +          &
+                  (erfc(SQRT(alpha) * rr) / rr +          &
                   SQRT(8.0d0 * alpha / tpi) * EXP(- alpha * rr**2) ) * alat
            DO ipol = 1, 3
               forceion(ipol,na) = forceion(ipol,na) - fact * r(ipol,n)

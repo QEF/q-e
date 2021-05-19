@@ -59,46 +59,39 @@
                             ityp     !  the atomi specie for each atom
       use uspp,       only: nkb, &   !
                             nkbus    !
-      use uspp_param, only: ish,    &!
-                            upf,    &!
+      use uspp_param, only: upf,    &!
                             lmaxkb, &!
                             nhm,    &!
-                            nbetam, &!
                             nh,     &!
-                            lmaxq    !
+                            lmaxq,  &!
+                            init_uspp_dims
       use uspp,       only: nhtol,  &!
                             nhtolm, &!
                             indv,   &!
                             ijtoh,  &!
-                            indv_ijkb0 !
+                            ofsbeta !
 
       IMPLICIT NONE
      
       !
       INTEGER :: is, iv, ind, il, lm, ih, jh, ijv, ijkb0, ia
+      !
+      !     find  number of beta functions per species and max l
       !     ------------------------------------------------------------------
-      !     find  number of beta functions per species, max dimensions,
-      !     total number of beta functions (all and Vanderbilt only)
+      CALL init_uspp_dims ()
+      !
+      !     find total number of beta functions (all and Vanderbilt only)
       !     ------------------------------------------------------------------
-      lmaxkb   = -1
       nkb      =  0
       nkbus    =  0
       !
       do is = 1, nsp
-         ind = 0
-         do iv = 1, upf(is)%nbeta
-            lmaxkb = max( lmaxkb, upf(is)%lll( iv ) )
-            ind = ind + 2 * upf(is)%lll( iv ) + 1
-         end do
-         nh(is) = ind
-         ish(is)=nkb
+         ! next variable no longer used or existing
+         ! ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
          if(  upf(is)%tvanp ) nkbus = nkbus + na(is) * nh(is)
       end do
-      nhm    = MAXVAL( nh(1:nsp) )
-      nbetam = MAXVAL( upf(1:nsp)%nbeta )
       if (lmaxkb > lmaxx) call errore(' pseudopotential_indexes ',' l > lmax ',lmaxkb)
-      lmaxq = 2*lmaxkb + 1
       !
       ! the following prevents an out-of-bound error: nqlc(is)=2*lmax+1
       ! but in some versions of the PP files lmax is not set to the maximum
@@ -114,13 +107,13 @@
       if( allocated( indv  ) ) deallocate( indv )
       if( allocated( nhtolm  ) ) deallocate( nhtolm )
       if( allocated( ijtoh  ) ) deallocate( ijtoh )
-      if( allocated( indv_ijkb0  ) ) deallocate( indv_ijkb0 )
+      if( allocated( ofsbeta  ) ) deallocate( ofsbeta )
       !
       allocate(nhtol(nhm,nsp))
       allocate(indv (nhm,nsp))
       allocate(nhtolm(nhm,nsp))
       allocate(ijtoh(nhm,nhm,nsp))
-      allocate(indv_ijkb0(nat))
+      allocate(ofsbeta(nat))
 
       !     ------------------------------------------------------------------
       !     definition of indices nhtol, indv, nhtolm
@@ -157,7 +150,7 @@
          !      atom ia in the global list of beta functions
          do ia = 1,nat
             IF ( ityp(ia) == is ) THEN
-               indv_ijkb0(ia) = ijkb0
+               ofsbeta(ia) = ijkb0
                ijkb0 = ijkb0 + nh(is)
            END IF
         end do
@@ -420,7 +413,7 @@
 !
                if( tpre )then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l, jl, djl)
                   !
                endif
                !
@@ -476,12 +469,11 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, ish
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
       use smallbox_gvec,         only : ngb
-      USE cp_interfaces, ONLY : fill_qrl
       !
       IMPLICIT NONE
       !
@@ -489,7 +481,7 @@
       !
       INTEGER :: is, iv, l, il, ir, jv, ijv, ierr
       INTEGER :: nr
-      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
       REAL(DP) :: xg
 
 
@@ -519,14 +511,10 @@
          !
          nr = upf(is)%kkbeta
          !
-         ALLOCATE( qrl( nr, upf(is)%nbeta*(upf(is)%nbeta+1)/2, upf(is)%nqlc) )
-         !
-         call fill_qrl ( is, qrl )
-         !
          do l = 1, upf(is)%nqlc
             !
 !$omp parallel default(none), private( djl, dfint, fint, jl, il, iv, jv, ijv, xg, ir ), &
-!$omp shared( tpre, nr, mmx, refg, rgrid, l, upf, qrl, qradx, dqradx, is )
+!$omp shared( tpre, nr, mmx, refg, rgrid, l, upf, qradx, dqradx, is )
             IF ( tpre ) THEN
                ALLOCATE( djl  ( nr ) )
                ALLOCATE( dfint( nr ) )
@@ -543,7 +531,7 @@
                !
                if( tpre ) then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l-1, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l-1, jl, djl)
                   !
                endif
                !
@@ -552,17 +540,17 @@
                   do jv = iv, upf(is)%nbeta
                      ijv = jv * ( jv - 1 ) / 2 + iv
                      !
-                     !      note qrl(r)=r^2*q(r)
+                     !      note qfuncl(r)=r^2*q(r)
                      !
                      do ir = 1, nr
-                        fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
+                        fint( ir ) = upf(is)%qfuncl( ir, ijv, l-1 ) * jl( ir )
                      end do
                      call simpson_cp90 &
                              (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
                      !
                      if( tpre ) then
                         do ir = 1, nr
-                           dfint(ir) = qrl(ir,ijv,l) * djl(ir)
+                           dfint(ir) = upf(is)%qfuncl( ir, ijv, l-1 ) * djl(ir)
                         end do
                         call simpson_cp90 &
                                 (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
@@ -587,7 +575,6 @@
          !
          end do
          !
-         DEALLOCATE ( qrl )
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    qqq '
          !
@@ -607,23 +594,22 @@
 
     SUBROUTINE exact_qradb_x( tpre )
       !
-      USE kinds,         ONLY : DP
-      use io_global,  only: stdout
-      USE ions_base,  ONLY: nsp
-      USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
-      use uspp_param, only: lmaxkb, ish
-      USE atom,       ONLY: rgrid
-      USE uspp,       ONLY: indv
-      use uspp,       only: qq_nt, beta
-      USE betax,      only: refg, qradx, mmx, dqradx
+      USE kinds,              ONLY : DP
+      use io_global,          only: stdout
+      USE ions_base,          ONLY: nsp
+      USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
+      USE atom,               ONLY: rgrid
+      USE uspp,               ONLY: indv
+      use uspp,               only: qq_nt, qq_nt_d, beta
+      USE betax,              only: refg, qradx, mmx, dqradx
       use smallbox_gvec,      only: ngb
-      use control_flags, only: iprint, iverbosity
-      use cell_base,  only: ainv
-      use constants,  only: pi, fpi
-      use qgb_mod,    only: qgb, dqgb
+      use control_flags,      only: iprint, iverbosity
+      use cell_base,          only: ainv
+      use constants,          only: pi, fpi
+      use qgb_mod,            only: qgb, dqgb
       use smallbox_gvec,      only: gb, gxb
-      use small_box,  only: omegab, tpibab
-      USE cp_interfaces, ONLY: fill_qrl
+      use small_box,          only: omegab, tpibab
+      USE device_memcpy_m,    ONLY: dev_memcpy
       !
       IMPLICIT NONE
       !
@@ -631,7 +617,7 @@
       !
       INTEGER :: is, iv, l, il, ir, jv, ijv, ierr
       INTEGER :: ig, i,j, jj, nr
-      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
       REAL(DP) :: xg, c, betagl, dbetagl
       REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
@@ -682,10 +668,6 @@
          !
          ALLOCATE( fint( nr ) )
          ALLOCATE( jl  ( nr ) )
-         ALLOCATE( qrl( nr, upf(is)%nbeta*(upf(is)%nbeta+1)/2, upf(is)%nqlc) )
-         !
-         call fill_qrl ( is, qrl )
-         ! qrl = 0.0d0
          !
          do l = 1, upf(is)%nqlc
             !
@@ -697,7 +679,7 @@
                !
                if( tpre ) then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l-1, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l-1, jl, djl)
                   !
                endif
                !
@@ -706,17 +688,17 @@
                   do jv = iv, upf(is)%nbeta
                      ijv = jv * ( jv - 1 ) / 2 + iv
                      !
-                     !      note qrl(r)=r^2*q(r)
+                     !      note qfuncl(r)=r^2*q(r)
                      !
                      do ir = 1, nr
-                        fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
+                        fint( ir ) = upf(is)%qfuncl(ir,ijv,l-1) * jl( ir )
                      end do
                      call simpson_cp90 &
                              (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
                      !
                      if( tpre ) then
                         do ir = 1, nr
-                           dfint(ir) = qrl(ir,ijv,l) * djl(ir)
+                           dfint(ir) = upf(is)%qfuncl(ir,ijv,l-1) * djl(ir)
                         end do
                         call simpson_cp90 &
                                 (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
@@ -730,7 +712,6 @@
          end do
          !
          DEALLOCATE (  jl )
-         DEALLOCATE ( qrl )
          DEALLOCATE ( fint  )
          !
          if ( tpre ) then
@@ -796,6 +777,22 @@
          end do
 
       end do
+
+#if defined (__CUDA)
+      call dev_memcpy(qq_nt_d,qq_nt)
+      !
+      !$cuf kernel do (3)
+      DO is = 1, SIZE(qq_nt_d,3)
+         DO jv=1,SIZE(qq_nt_d,2)
+            DO iv=1,SIZE(qq_nt_d,1)
+               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
+                  qq_nt_d(iv,jv,is) = 0.0d0
+               END IF
+            END DO
+         END DO
+      END DO
+#endif
+!
 !
       if (tpre) then
 !     ---------------------------------------------------------------
@@ -1033,20 +1030,21 @@
       ! interpolate array qradb(ig,iv,is)
       !
       !
-      USE kinds,         ONLY : DP
-      use control_flags, only: iprint, iverbosity
-      use io_global, only: stdout
-      use gvecw, only: ngw
-      use cell_base, only: ainv
-      use uspp, only: qq_nt, nhtolm, beta
-      use constants, only: pi, fpi
-      use ions_base, only: nsp
-      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
-      use qgb_mod, only: qgb, dqgb
-      use smallbox_gvec, only: gb, gxb, ngb
-      use small_box,  only: omegab, tpibab
-      USE betax, ONLY: qradx, dqradx, refg, mmx
-!
+      USE kinds,             ONLY: DP
+      use control_flags,     only: iprint, iverbosity
+      use io_global,         only: stdout
+      use gvecw,             only: ngw
+      use cell_base,         only: ainv
+      use uspp,              only: qq_nt, qq_nt_d, nhtolm, beta
+      use constants,         only: pi, fpi
+      use ions_base,         only: nsp
+      use uspp_param,        only: upf, lmaxq, nbetam, nh
+      use qgb_mod,           only: qgb, dqgb
+      use smallbox_gvec,     only: gb, gxb, ngb
+      use small_box,         only: omegab, tpibab
+      USE betax,             ONLY: qradx, dqradx, refg, mmx
+      USE device_memcpy_m,   ONLY: dev_memcpy
+      !
       implicit none
 
       LOGICAL, INTENT(IN) :: tpre
@@ -1131,6 +1129,21 @@
          end do
 
       end do
+
+#if defined (__CUDA)
+      call dev_memcpy(qq_nt_d,qq_nt)
+      !
+      !$cuf kernel do (3)
+      DO is = 1, SIZE(qq_nt_d,3)
+         DO jv=1,SIZE(qq_nt_d,2)
+            DO iv=1,SIZE(qq_nt_d,1)
+               IF( ABS( qq_nt_d(iv,jv,is) ) <= 1.D-5 ) THEN
+                  qq_nt_d(iv,jv,is) = 0.0d0
+               END IF
+            END DO
+         END DO
+      END DO
+#endif
 !
       if (tpre) then
 !     ---------------------------------------------------------------
@@ -1278,7 +1291,7 @@
                !
                if( tpre )then
                   !
-                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l, jl, djl)
+                  call sph_dbes ( nr, rgrid(is)%r, xg, l, jl, djl)
                   !
                endif
                !
@@ -1374,76 +1387,3 @@
 
       RETURN
     END SUBROUTINE exact_beta_x
-!
-!
-!------------------------------------------------------------------------------!
-!
-!
-   SUBROUTINE fill_qrl_x( is, qrl )
-      !
-      ! fill l-components of Q(r) as in Vanderbilt's approach
-      !
-      USE uspp_param, ONLY: upf
-      USE atom,       ONLY: rgrid
-      USE kinds,      ONLY: DP
-      USE io_global,  ONLY: stdout
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,  INTENT(IN)  :: is
-      REAL(DP), INTENT(OUT) :: qrl( :, :, : )
-      !
-      INTEGER :: iv, jv, ijv, lmin, lmax, l, ir, i
-      INTEGER :: dim1, dim2, dim3
-      !
-      IF( .NOT. ALLOCATED( rgrid ) ) &
-         CALL errore( ' fill_qrl_x ', ' rgrid not allocated ', 1 )
-      IF( .NOT. ALLOCATED( upf ) ) &
-         CALL errore( ' fill_qrl_x ', ' upf not allocated ', 1 )
-
-      dim1 = SIZE( qrl, 1 )
-      dim2 = SIZE( qrl, 2 )
-      dim3 = SIZE( qrl, 3 )
-      !
-      IF ( upf(is)%kkbeta > dim1 ) &
-           CALL errore ('fill_qrl', 'bad 1st dimension for array qrl', 1)
-      !
-      qrl = 0.0d0
-      !
-      do iv = 1,  upf(is)%nbeta
-         !
-         do jv = iv,  upf(is)%nbeta
-            !
-            ijv = (jv-1)*jv/2 + iv
-            !
-            IF ( ijv > dim2) &
-                 CALL errore ('fill_qrl', 'bad 2nd dimension for array qrl', 2)
-
-            ! notice that L runs from 1 to Lmax+1
-
-            lmin = ABS (upf(is)%lll(jv) - upf(is)%lll(iv)) + 1
-            lmax = upf(is)%lll(jv) + upf(is)%lll(iv) + 1
-
-            ! WRITE( stdout, * ) 'QRL is, jv, iv = ', is, jv, iv
-            ! WRITE( stdout, * ) 'QRL lll jv, iv = ', upf(is)%lll(jv), upf(is)%lll(iv)
-            ! WRITE( stdout, * ) 'QRL lmin, lmax = ', lmin, lmax
-            ! WRITE( stdout, * ) '---------------- '
-
-            IF ( lmin < 1 .OR. lmax > dim3) THEN
-                 WRITE( stdout, * ) ' lmin, lmax = ', lmin, lmax
-                 CALL errore ('fill_qrl', 'bad 3rd dimension for array qrl', 3)
-            END IF
-
-
-             do l = lmin, lmax
-               do ir = 1, upf(is)%kkbeta
-                  IF( upf(is)%tvanp ) THEN
-                    ! BEWARE: index l in upf%qfuncl(l) runs from 0 to lmax, not from 1 to lmax+1
-                    qrl(ir,ijv,l)=upf(is)%qfuncl(ir,ijv,l-1)
-                  ENDIF
-               end do
-            end do
-         end do
-      end do
-      RETURN
-   END SUBROUTINE fill_qrl_x

@@ -6,6 +6,29 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
+!
+FUNCTION skip_line(dummy)
+  !
+  ! True if line is empty or starts with # or !
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(len=*), intent(in) :: dummy ! input
+  LOGICAL                      :: skip_line ! output
+  CHARACTER(len=512)           :: tmp
+  !
+  IF (len_trim(dummy) < 1) THEN
+    ! empty line
+    skip_line = .TRUE.
+    RETURN
+  END IF
+  !
+  tmp = trim(ADJUSTL(dummy))
+  ! Comment line (starts with ! or #)
+  skip_line = tmp(:1) .EQ. "!" .OR. tmp(:1) .EQ. "#"
+  !
+END FUNCTION
+!
 SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
   !
   USE mp, ONLY : mp_rank
@@ -26,29 +49,30 @@ SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
   CHARACTER(len=10) :: a_tmp
   INTEGER :: myrank
   INTEGER, EXTERNAL :: find_free_unit
+  LOGICAL :: skip_line
   !
   myrank =  mp_rank(comm)
   parse_unit = find_free_unit()
   OPEN(unit=parse_unit,file=trim(parse_file_name),status="old")
   ! ---------------------------------------------------
   ! NEB INPUT PART
-  ! ---------------------------------------------------  
+  ! ---------------------------------------------------
   i=0
   nimage = 0
   neb_unit = find_free_unit()
   OPEN(unit=neb_unit,file='neb.dat',status="unknown")
   dummy=""
-  DO WHILE (len_trim(dummy)<1)
+  DO WHILE ( skip_line(dummy) )
      READ(parse_unit,fmt='(A512)',END=10) dummy
   ENDDO
-  
+
   IF(trim(ADJUSTL(dummy)) == "BEGIN") THEN
      DO WHILE (trim(ADJUSTL(dummy)) /= "END")
         READ(parse_unit,*) dummy
         IF(trim(ADJUSTL(dummy)) == "BEGIN_PATH_INPUT") THEN
-           
+           !
            READ(parse_unit,'(A512)') dummy
-           
+           !
            DO WHILE (trim(ADJUSTL(dummy)) /= "END_PATH_INPUT")
               IF(myrank==root) WRITE(neb_unit,*) trim(ADJUSTL(dummy))
               READ(parse_unit,'(A512)') dummy
@@ -94,23 +118,23 @@ SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
      OPEN(unit=unit_tmp_i,file=trim(engine_prefix)//trim(a_tmp)//".in")
      REWIND(parse_unit)
      dummy=""
-     DO WHILE (len_trim(dummy)<1)
+     DO WHILE ( skip_line(dummy) )
         READ(parse_unit,fmt='(A512)',END=10) dummy
      ENDDO
-     
+     !
      IF(trim(ADJUSTL(dummy)) == "BEGIN") THEN
         DO WHILE (trim(ADJUSTL(dummy)) /= "END")
            dummy=""
-           DO WHILE (len_trim(dummy)<1)
+           DO WHILE ( skip_line(dummy) )
               READ(parse_unit,fmt='(A512)',END=10) dummy
            ENDDO
-           
+           !
            IF(trim(ADJUSTL(dummy)) == "BEGIN_ENGINE_INPUT") THEN
               dummy=""
-              DO WHILE (len_trim(dummy)<1)
+              DO WHILE ( skip_line(dummy) )
                  READ(parse_unit,fmt='(A512)',END=10) dummy
               ENDDO
-              
+              !
               DO WHILE (trim(ADJUSTL(dummy)) /= "BEGIN_POSITIONS")
                  IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(dummy)
                  READ(parse_unit,'(A512)') dummy
@@ -184,12 +208,12 @@ SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
            ENDIF
         ENDDO
      ENDIF
-     
+     !
      CLOSE(unit_tmp_i)
   ENDDO
-  
+  !
   DEALLOCATE(unit_tmp)
-  
+  !
   CLOSE(parse_unit)
   !
 10 CONTINUE

@@ -39,12 +39,11 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   USE mp, ONLY : mp_sum, mp_barrier
   USE mp_world, ONLY : world_comm
   USE control_flags,        ONLY : gamma_only
-  USE funct,            ONLY : dft_is_meta
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
 
-  USE exx,      ONLY : vexx !Suriano
-  USE funct,    ONLY : exx_is_active,dft_is_hybrid
+  USE exx,    ONLY : vexx !Suriano
+  USE xc_lib, ONLY : exx_is_active, xclib_dft_is
   USE klist, ONLY : igk_k
 
   !
@@ -112,7 +111,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !set exchange and correlation potential
           if(.not.allocated(psic)) write(stdout,*) 'psic not allocated'
       !
-       if (dft_is_meta()) then
+       if (xclib_dft_is('meta')) then
 !         call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
       else
          CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
@@ -323,7 +322,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
 !in case of hybrid functionals and HF we have to calculated also the exact exchange part
 
-          if(dft_is_hybrid()) then
+          if(xclib_dft_is('hybrid')) then
 !NOT_TO_BE_INCLUDED_START
              hpsi(:,:)=(0.d0,0.d0)
              call vexx( npwx, npw, nbnd, psi, hpsi )
@@ -358,7 +357,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        allocate(rho_fake_core(dfftp%nnr))
        rho_fake_core(:)=0.d0
        !
-       if (dft_is_meta()) then
+       if (xclib_dft_is('meta')) then
       !    call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
        else
           CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
@@ -427,7 +426,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          call mp_sum(e_xc(ibnd),world_comm)
 
 !ifrequired add the contribution from exact exchange for hybrids and HF
-         if(dft_is_hybrid()) then
+         if(xclib_dft_is('hybrid')) then
 !NOT_TO_BE_INCLUDED_START
             e_xc(ibnd)=e_xc(ibnd)+exact_x(ibnd)
 !NOT_TO_BE_INCLUDED_END

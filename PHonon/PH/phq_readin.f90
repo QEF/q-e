@@ -25,7 +25,7 @@ SUBROUTINE phq_readin()
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, io_level, &
                             ts_vdw, ldftd3, lxdm, isolve
-  USE funct,         ONLY : dft_is_meta, dft_is_hybrid
+  USE xc_lib,        ONLY : xclib_dft_is
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -793,10 +793,10 @@ SUBROUTINE phq_readin()
   IF (ldftd3) CALL errore('phq_readin',&
      'The phonon code with Grimme''s DFT-D3 is not yet available',1)
 
-  IF ( dft_is_meta() ) CALL errore('phq_readin',&
+  IF ( xclib_dft_is('meta') ) CALL errore('phq_readin',&
      'The phonon code with meta-GGA functionals is not yet available',1)
 
-  IF ( dft_is_hybrid() ) CALL errore('phq_readin',&
+  IF ( xclib_dft_is('hybrid') ) CALL errore('phq_readin',&
      'The phonon code with hybrid functionals is not yet available',1)
 
   IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
@@ -927,9 +927,9 @@ SUBROUTINE phq_readin()
   ENDIF
   nat_todo_input=nat_todo
   !
-  ! end of reading, close unit qestdin, remove tenporary input file if existing
-  !
-  IF (meta_ionode) ios = close_input_file () 
+  ! end of reading, close unit qestdin, remove temporary input file if existing
+  ! FIXME: closing input file here breaks alpha2F.x that reads what follows
+  !!! IF (meta_ionode) ios = close_input_file () 
 
   IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)

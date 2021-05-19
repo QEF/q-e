@@ -87,7 +87,6 @@ SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, 
   INTEGER  :: npw2, npwx2, cg_iter, ibnd
   !
   REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP), EXTERNAL :: ZDOTC
 
   EXTERNAL  hs_1psi, g_1psi
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )

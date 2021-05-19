@@ -1,0 +1,174 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  FCP EXAMPLE
+##
+###############################################################################
+
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "run_example_FCP : starting"
+$ECHO
+$ECHO "This example shows how to use ficticious charge particle (FCP) in NEB."
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="neb.x"
+PSEUDO_LIST="Al.pbe-n-van.UPF H.pbe-van_ak.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+       echo $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+NEB_COMMAND="$PARA_PREFIX $BIN_DIR/neb.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running Born-Oppenheimer NEB as: $NEB_COMMAND"
+$ECHO
+
+# NEB calculation for Al001+H with bc3 (vacuum-slab-metal),
+# target mu = -5.00 eV
+cat > Al001+H_FCP_vm05.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode  = 'from_scratch',
+  string_method = 'neb',
+  nstep_path    = 50,
+  opt_scheme    = 'broyden',
+  num_of_images = 5,
+  !
+  ! FCP
+  !
+  lfcp          = .TRUE.
+  fcp_mu        = -5.00     !eV
+  fcp_scheme    = 'coupled'
+  fcp_thr       = 0.02      !eV
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix        = 'Al001+H_FCP_vm05'
+  outdir        = '$TMP_DIR/',
+  pseudo_dir    = '$PSEUDO_DIR/',
+/
+&SYSTEM
+  ibrav         = 0,
+  nat           = 5,
+  ntyp          = 2,
+  ecutwfc       = 20.0,
+  occupations   = 'smearing',
+  nosym         = .TRUE.
+  smearing      = 'mv',
+  degauss       = 0.02,
+  assume_isolated='esm',
+  esm_bc='bc3',
+/
+&ELECTRONS
+  mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+  H    1.00794    H.pbe-van_ak.UPF
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   0.00000000   0.00000000   3.11055367 0 0 1
+TOTAL_CHARGE
+0.0215
+LAST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   5.41113843   5.41113843   3.11055367 0 0 1
+TOTAL_CHARGE
+0.0215
+END_POSITIONS
+K_POINTS automatic
+6 6 1 1 1 0
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+END_ENGINE_INPUT
+END
+EOF
+$ECHO "  running NEB calculation for Al001+H with ESM+constant-mu"
+$ECHO "  (target mu = -0.5V vs pzc)...\c"
+$NEB_COMMAND -inp Al001+H_FCP_vm05.in > Al001+H_FCP_vm05.out
+check_failure $?
+$ECHO " done"
+# clean current dir & $TMP_DIR
+$ECHO "  cleaning ./ & $TMP_DIR...\c"
+rm -rf neb.dat pw_1.in pw_2.in out.1_0 out.2_0
+rm -rf $TMP_DIR/Al001+H_FCP_vm05.*
+rm -rf $TMP_DIR/Al001+H_FCP_vm05_*/Al001+H_FCP_vm05.save
+rm -rf $TMP_DIR/Al001+H_FCP_vm05_*/Al001+H_FCP_vm05.update
+rm -rf $TMP_DIR/Al001+H_FCP_vm05_*/Al001+H_FCP_vm05.wfc*
+#rm -rf $TMP_DIR/Al001+H_FCP_vm05_*/PW.out
+mv $TMP_DIR/Al001+H_FCP_vm05_* .
+$ECHO " done"
+
+$ECHO
+$ECHO "run_example_FCP: done"
+

@@ -23,7 +23,10 @@ MODULE path_formats
   CHARACTER (LEN=*), PARAMETER :: &  
     quick_min = "(9(2X,F18.12))", &
     energy    = "(2X,F18.10)"
-  !  
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    fcp_restart = "(3(2X,1PE22.12))"
+  !
   CHARACTER (LEN=*), PARAMETER :: &  
     dat_fmt  = "(3(2X,F16.10))",    &
     int_fmt  = "(2(2X,F16.10))",    &
@@ -42,7 +45,19 @@ MODULE path_formats
   !
   CHARACTER (LEN=*), PARAMETER :: &
     run_output = "(5X,I5,4X,F15.7,10X,F10.6,12X,L1)"
-  !    
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    fcp_info = "(/,5X,'image',5X,'Fermi (eV)',4X,'charge (e)',5X,'error (V)',5X,'DOS (e/V)',/)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    fcp_output = "(5X,I5,1X,3F14.6,1PE14.2)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    gcscf_info = "(/,5X,'image',5X,'Fermi (eV)',4X,'charge (e)',5X,'error (V)',/)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    gcscf_output = "(5X,I5,1X,3F14.6)"
+  !
   CHARACTER (LEN=*), PARAMETER :: &
     summary_fmt = "(5X,A,T35,' = ',3X,A)"
   !

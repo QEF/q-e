@@ -5628,7 +5628,6 @@ MODULE qes_read_module
        obj%diago_david_ndim_ispresent = .FALSE.
     END IF
     !
-    !
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_electron_control
@@ -6204,7 +6203,6 @@ MODULE qes_read_module
           CALL errore ("qes_read:bfgsType","error reading w2",10)
        END IF
     END IF
-    !
     !
     obj%lwrite = .TRUE.
     !
@@ -6893,32 +6891,32 @@ MODULE qes_read_module
        obj%esm_ispresent = .FALSE.
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "fcp_opt")
+    tmp_node_list => getElementsByTagname(xml_node, "fcp")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:boundary_conditionsType","fcp_opt: too many occurrences")
+           CALL infomsg("qes_read:boundary_conditionsType","fcp: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:boundary_conditionsType","fcp_opt: too many occurrences",10)
+           CALL errore("qes_read:boundary_conditionsType","fcp: too many occurrences",10)
         END IF
     END IF
     !
     IF (tmp_node_list_size>0) THEN
-      obj%fcp_opt_ispresent = .TRUE.
+      obj%fcp_ispresent = .TRUE.
       tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%fcp_opt , IOSTAT = iostat_)
+      CALL extractDataContent(tmp_node, obj%fcp , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
          IF ( PRESENT (ierr ) ) THEN 
-            CALL infomsg("qes_read:boundary_conditionsType","error reading fcp_opt")
+            CALL infomsg("qes_read:boundary_conditionsType","error reading fcp")
             ierr = ierr + 1
          ELSE 
-            CALL errore ("qes_read:boundary_conditionsType","error reading fcp_opt",10)
+            CALL errore ("qes_read:boundary_conditionsType","error reading fcp",10)
          END IF
       END IF
     ELSE
-       obj%fcp_opt_ispresent = .FALSE.
+       obj%fcp_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "fcp_mu")

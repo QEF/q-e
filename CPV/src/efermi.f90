@@ -167,7 +167,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
 
   
   REAL(kind=DP) :: weight(nkpts), sort(nbands*nkpts)
-  REAL(kind=DP), EXTERNAL :: qe_erfc,FERMID,DELTHM,POSHM,POSHM2, EFERMI_SPLINE
+  REAL(kind=DP), EXTERNAL :: FERMID,DELTHM,POSHM,POSHM2, EFERMI_SPLINE
   INTEGER, PARAMETER :: JMAX =300
   REAL(kind=DP), PARAMETER :: XACC=1.0D-17
 
@@ -387,7 +387,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      DO  J = 1,NBANDS
         X = (XE2 - EIGVAL(J,ISPPT))/DEL
         IF(ISMEAR.EQ.1) THEN
-           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - qe_erfc(X) )/fspin
+           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - erfc(X) )/fspin
         ELSEIF(ISMEAR.EQ.2) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
         ELSEIF(ISMEAR.EQ.3) THEN
@@ -413,7 +413,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      DO J = 1,NBANDS
         X = (XE1 - EIGVAL(J,ISPPT))/DEL
         IF(ISMEAR.EQ.1) THEN
-           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - qe_erfc(X) )/fspin
+           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - erfc(X) )/fspin
         ELSEIF(ISMEAR.EQ.2) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
         ELSEIF(ISMEAR.EQ.3) THEN
@@ -454,7 +454,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
         DO  J2 = 1,NBANDS
            X = (XMID - EIGVAL(J2,ISPPT))/DEL
            IF(ISMEAR.EQ.1) THEN
-              Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - qe_erfc(X) )/fspin
+              Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - erfc(X) )/fspin
            ELSEIF(ISMEAR.EQ.2) THEN
               Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
            ELSEIF(ISMEAR.EQ.3) THEN
@@ -488,7 +488,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      DO J = 1,NBANDS
         X = ( EF-EIGVAL(J,ISPPT))/DEL
         IF(ISMEAR.EQ.1) THEN
-           OCC(J,ISPPT) = 2.d0 - qe_erfc(X)  
+           OCC(J,ISPPT) = 2.d0 - erfc(X)  
         ELSEIF(ISMEAR.EQ.2) THEN
            OCC(J,ISPPT) = FERMID(-X)
         ELSEIF(ISMEAR.EQ.3) THEN
@@ -530,7 +530,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      &    *(2.0d0*x*x-1.d0)*exp(-x*x)/(2.0d0*sqrt(pi))
         ELSEIF(ISMEAR.EQ.4) THEN
            x=abs(x)
-           zeta=eesh*abs(x)*exp(-(x+sq2i)**2)+piesqq*qe_erfc(x+sq2i)
+           zeta=eesh*abs(x)*exp(-(x+sq2i)**2)+piesqq*erfc(x+sq2i)
            delcor=delcor-del*WEIGHT(ISPPT)*zeta
         ELSEIF(ISMEAR.EQ.5) THEN
            a=-0.5634d0
@@ -629,7 +629,6 @@ FUNCTION delthm(xx)
 
   REAL(kind=DP) :: delthm
   REAL(kind=DP), INTENT(in) :: xx
-  REAL(kind=DP), EXTERNAL :: qe_erfc
 
   REAL(kind=DP) :: pi
 
@@ -639,7 +638,7 @@ FUNCTION delthm(xx)
   ELSEIF(XX .LT. -10.D0) THEN
      DELTHM=0.D0
   ELSE
-     DELTHM=(2.D0-qe_erfc(XX))+XX*EXP(-XX*XX)/SQRT(PI)
+     DELTHM=(2.D0-erfc(XX))+XX*EXP(-XX*XX)/SQRT(PI)
   ENDIF
 !
   RETURN
@@ -680,7 +679,6 @@ FUNCTION poshm(x)
 
   REAL(kind=DP) :: poshm
   REAL(kind=DP), INTENT(in) :: x
-  REAL(kind=DP), EXTERNAL :: qe_erfc
 
   REAL(kind=DP) :: pi,a
 
@@ -692,7 +690,7 @@ FUNCTION poshm(x)
   ELSEIF(X .LT. -10.D0) THEN
      POSHM=0.D0
   ELSE
-     POSHM=(2.D0-qe_erfc(X))+(-2.d0*a*x*x+2*x+a)*EXP(-X*X)/SQRT(PI)/2.d0
+     POSHM=(2.D0-erfc(X))+(-2.d0*a*x*x+2*x+a)*EXP(-X*X)/SQRT(PI)/2.d0
   ENDIF
 !
   RETURN
@@ -710,7 +708,6 @@ FUNCTION poshm2(x)
 
   REAL(kind=DP) :: poshm2
   REAL(kind=DP), INTENT(in) :: x
-  REAL(kind=DP), EXTERNAL :: qe_erfc
 
   REAL(kind=DP) :: pi
 
@@ -720,7 +717,7 @@ FUNCTION poshm2(x)
   ELSEIF(X .LT. -10.D0) THEN
      POSHM2=0.D0
   ELSE
-     POSHM2=(2.D0-qe_erfc(X-1.d0/sqrt(2.d0)))+ &
+     POSHM2=(2.D0-erfc(X-1.d0/sqrt(2.d0)))+ &
           &  sqrt(2.d0)*exp(-x*x+sqrt(2.d0)*x-0.5d0)/sqrt(pi)
   ENDIF
 !

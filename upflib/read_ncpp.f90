@@ -24,7 +24,6 @@ subroutine read_ncpp (iunps, np, upf)
   real(DP) :: x, vll
   real(DP), allocatable:: vnl(:,:)
   real(DP), parameter :: rcut = 10.d0, e2 = 2.d0
-  real(DP), external :: upf_erf
   integer :: nlc, nnl, lmax, lloc, ll(1) 
   integer :: nb, i, l, ir, ios=0
   logical :: bhstype,  numeric
@@ -173,7 +172,7 @@ subroutine read_ncpp (iunps, np, upf)
      do i = 1, nlc 
         do ir = 1, upf%kkbeta
            upf%vloc (ir) = upf%vloc (ir) - upf%zp * e2 * cc (i) * &
-               upf_erf ( sqrt (alpc(i)) * upf%r(ir) ) / upf%r(ir)
+               erf ( sqrt (alpc(i)) * upf%r(ir) ) / upf%r(ir)
         end do
      end do
      do l = 0, lmax

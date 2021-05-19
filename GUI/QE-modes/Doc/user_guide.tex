@@ -52,7 +52,7 @@
 \author{}
 \date{}
 
-\def\qeImage{../../../Doc/quantum_espresso.pdf}
+\def\qeImage{../../../Doc/quantum_espresso.png}
 
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
@@ -137,12 +137,12 @@ which will install the package in the \qemodes\ subdirectory of
 
 \subsection{Editing the \texttt{user-init-file} file}
 
-A default \texttt{user-init-file} for \QEmodes\ is provided by the
-\texttt{qe-modes.emacs} file in the \QEmodes\ source package root
+A default \QEmodes\ snippet for \texttt{user-init-file} is provided by
+the \texttt{qe-modes.emacs} file in the \QEmodes\ source package root
 directory. If \QEmodes\ were installed in default
-\verb+$HOME/.emacs.d/qe-modes/+ location, then the
-\texttt{qe-modes.emacs} can be used verbatim; just append its content
-to your \verb+~/.emacs+ file.
+  \verb+$HOME/.emacs.d/qe-modes/+ location, {\bf then the
+  \texttt{qe-modes.emacs} file can be used verbatim; just append its
+  content to your \verb+~/.emacs+ file}.
 
 Here is a the explanation of the simplified \texttt{qe-modes.emacs}
 file.  Emacs is informed about the installed \QEmodes\ by the
@@ -168,8 +168,8 @@ automatically recognize from the filename if it is some variant of the
 Say that we use the \verb+.in+ extension for the \qe\ input files in
 general and more specifically, the \texttt{pw.}, \texttt{scf.},
 \texttt{relax.}, and \texttt{vc-relax.} prefixes for the \pwx\ input files
-and \texttt{neb.}, \texttt{ph.},  and \texttt{pp.} prefixes for the
-\nebx, \phx, and \ppx\ input files. These filename recognitions can be
+and \texttt{neb.}, \texttt{cp.}, \texttt{ph.},  and \texttt{pp.} prefixes for the
+\nebx, \cpx, \phx, and \ppx\ input files. These filename recognitions can be
 achieved by:
 \begin{flushleft}
 {\color{red}
@@ -178,19 +178,22 @@ achieved by:
 {\color{red}
 \verb+   ;; automatically open the pw*.in, scf*.in, relax*in, vc-relax*.in files+\\
 \verb+   ;; with pw.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("pw.*\\.in\\'" . pw-mode))+\\
-\verb+   (add-to-list 'auto-mode-alist  '("scf.*\\.in\\'" . pw-mode))+\\
-\verb+   (add-to-list 'auto-mode-alist  '("relax.*\\.in\\'" . pw-mode))+\\
-\verb+   (add-to-list 'auto-mode-alist  '("vc-relax.*\\.in\\'" . pw-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/pw.*\\.in\\'" . pw-mode))+\\
+\verb+   (add-to-list 'auto-mode-alist  '("/scf.*\\.in\\'" . pw-mode))+\\
+\verb+   (add-to-list 'auto-mode-alist  '("/relax.*\\.in\\'" . pw-mode))+\\
+\verb+   (add-to-list 'auto-mode-alist  '("/vc-relax.*\\.in\\'" . pw-mode))+\\[1em]
 {\color{red}
 \verb+   ;; automatically open the neb*.in files with neb.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("neb.*\\.in\\'" . neb-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/neb.*\\.in\\'" . neb-mode))+\\[1em]
+{\color{red}
+\verb+   ;; automatically open the cp*.in files with cp.x mode+}\\
+\verb+   (add-to-list 'auto-mode-alist  '("/cp.*\\.in\\'" . cp-mode))+\\[1em]
 {\color{red}
 \verb+   ;; automatically open the ph*.in files with ph.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("ph.*\\.in\\'" . ph-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/ph.*\\.in\\'" . ph-mode))+\\[1em]
 {\color{red}
 \verb+   ;; automatically open the pp*.in files with pp.x mode+}\\
-\verb+   (add-to-list 'auto-mode-alist  '("pp.*\\.in\\'" . pp-mode))+\\[1em]
+\verb+   (add-to-list 'auto-mode-alist  '("/pp.*\\.in\\'" . pp-mode))+\\[1em]
 \end{flushleft}
 Beware that the more general \texttt{*.in} pattern for the generic
 \qemode\footnote{Please note the difference between \qemodes\ and
@@ -202,12 +205,20 @@ file.
 
 For those who are fans of regular-expressions, the above four lines
 for \pwmode\ can be expressed by the following one-liner:
-
 {\footnotesize
   \begin{verbatim}
-   (add-to-list 'auto-mode-alist '("\\(pw\\|scf\\|\\(?:vc-\\)?relax\\).*\\.in\\'" . pw-mode))
+   (add-to-list 'auto-mode-alist '("/\\(pw\\|scf\\|\\(?:vc-\\)?relax\\).*\\.in\\'" . pw-mode))
 \end{verbatim}
 }
+% 
+\noindent
+If we want that emacs opens \texttt{*.pwtk} files in the PWTK QE mode,
+we can use:
+\begin{flushleft}
+{\color{red}
+\verb+   ;; automatically open the *.pwtk files with the PWTK mode+}\\
+\verb+   (add-to-list 'auto-mode-alist  '("\\.pwtk\\'" . pwtk-mode))+\\[1em]
+\end{flushleft}
 
 Once the package is installed according to the above instructions, we
 are ready to use it. Let us, for the sake of example, open an existing
@@ -260,9 +271,9 @@ The \QEmodes\ package provides the following commands:
 \item[$\bullet$ \efn{M-x \var{prog}-insert-template}]\hfill\\
   inserts a respective input file template (see Figure 2); this
   command may not be defined for all the \var{prog}s; currently
-  supported \var{prog}s are: \texttt{pw}, \texttt{pp}, \texttt{neb},
-  \texttt{ph}, \texttt{dynmat}, \texttt{ld1}, \texttt{projwfc},
-  \texttt{dos}, and \texttt{bands}.
+  supported \var{prog}s are: \texttt{pw}, \texttt{cp}, \texttt{pp},
+  \texttt{neb}, \texttt{ph}, \texttt{dynmat}, \texttt{ld1},
+  \texttt{projwfc}, \texttt{dos}, and \texttt{bands}.
 
 \item[$\bullet$ \efn{M-x \var{prog-NAMELIST}}]\hfill\\ 
   inserts a blank namelist section named \var{NAMELIST}

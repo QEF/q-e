@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_spectrum.x / turboTDDFPT / Quantum Espresso (version: 6.6)
+Program: turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO (version: 6.7GPU)
 ------------------------------------------------------------------------
 
 
@@ -21,14 +21,14 @@ either a "!" or a "#" character in the first position of a line.
 Structure of the input data:
 ===============================================================================
 
-&lr_input
+&LR_INPUT
   ...
 /
 
 
 
 ========================================================================
-NAMELIST: &lr_input
+NAMELIST: &LR_INPUT
 
    THIS NAMELIST IS ALWAYS NEEDED !
    
@@ -84,8 +84,17 @@ NAMELIST: &lr_input
    
    Type:           CHARACTER
    Default:        'no'
-   Description:    Sets the extrapolation scheme. 'osc'= biconstant extrapolation,
-                   'constant'=constant extrapolation and 'no'=no extrapolation.
+   Description:   
+                   Sets the extrapolation scheme.
+    
+                   'osc' :
+                        biconstant extrapolation
+    
+                   'constant' :
+                        constant extrapolation
+    
+                   'no' :
+                        no extrapolation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -180,4 +189,4 @@ NAMELIST: &lr_input
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:34 CEST 2020
+This file has been created by helpdoc utility on Wed May 05 14:39:06 CEST 2021

@@ -49,7 +49,7 @@
 !     (ldz>nz is used on some architectures to reduce memory conflicts)
 !     input  :  c(ldz*nsl)   (complex)
 !     output : cout(ldz*nsl) (complex - NOTA BENE: transform is not in-place!)
-!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
+!     isign > 0 : backward (f(G)=>f(R)), isign < 0 : forward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nz, nsl, ldz) are stored and re-used if available
 
@@ -194,7 +194,7 @@
 !     2d array: r2d(ldx, ldy) (x first dimension, y second dimension)
 !     (ldx>nx, ldy>ny used on some architectures to reduce memory conflicts)
 !     pl2ix(nx) (optional) is 1 for columns along y to be transformed
-!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
+!     isign > 0 : backward (f(G)=>f(R)), isign < 0 : forward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nx,ny,nzl,ldx) are stored and re-used if available
 
@@ -264,7 +264,7 @@
         tscale = 1.0_DP / ( nx * ny )
         !
         CALL fftw_inplace_drv_2d( fw_plan_2d(ip), nzl, r(1), 1, ldx*ldy )
-        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+        r(1:ldx * ldy * nzl) = r(1:ldx * ldy * nzl) * tscale
         !
      ELSE IF( isign > 0 ) THEN
         !
@@ -367,7 +367,7 @@
        end do
 
        tscale = 1.0_DP / ( nx * ny )
-       CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+       r(1:ldx * ldy * nzl) = r(1:ldx * ldy * nzl) * tscale
 
      ELSE IF( isign > 0 ) THEN
 
@@ -496,7 +496,7 @@
        call FFTW_INPLACE_DRV_3D( fw_plan(ip), 1, f(1), 1, 1 )
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
-       call ZDSCAL( nx * ny * nz, tscale, f(1), 1)
+       f(1:nx * ny * nz) = f(1:nx * ny * nz) * tscale
 
      ELSE IF( isign > 0 ) THEN
 
@@ -678,7 +678,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
               end do
            end do
 
-           call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1+ h*howmany ), 1)
+           f(h*howmany+1:h*howmany+ldx*ldy*nz) = f(h*howmany+1:h*howmany+ldx*ldy*nz) * (1.0_DP/(nx*ny*nz))
         END DO
 
      END IF

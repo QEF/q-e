@@ -17,7 +17,8 @@ $header
 ;;
 (autoload 'qe-mode' "qe-mode.elc"
   "Major mode for editing Quantum ESPRESSO input files" t)
-
+(autoload 'pwtk-mode' "pwtk-mode.elc"
+  "Major mode for editing PWTK scripts" t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

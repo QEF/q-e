@@ -13,6 +13,10 @@
 !=----------------------------------------------------------------------=!
    MODULE fft_base
 !=----------------------------------------------------------------------=!
+        !! FFT data Module. Includes data structure containing all 
+        !! information about FFT data distribution for a given potential 
+        !! grid, and its wave functions sub-grid.  
+        !! Written by Carlo Cavazzoni.
 
         USE parallel_include
 
@@ -20,29 +24,27 @@
         USE fft_smallbox_type, ONLY: fft_box_descriptor
         USE stick_base, ONLY: sticks_map, sticks_map_deallocate
 
-
         IMPLICIT NONE
 
-        ! ... data structure containing all information
-        ! ... about fft data distribution for a given
-        ! ... potential grid, and its wave functions sub-grid.
-
-        TYPE ( fft_type_descriptor ) :: dfftp ! descriptor for dense grid
-             !  Dimensions of the 3D real and reciprocal space FFT grid
-             !  relative to the charge density and potential ("dense" grid)
-        TYPE ( fft_type_descriptor ) :: dffts ! descriptor for smooth grid
-             !  Dimensions of the 3D real and reciprocal space
-             !  FFT grid relative to the smooth part of the charge density
-             !  (may differ from the full charge density grid for USPP )
-        TYPE ( fft_box_descriptor ) :: dfftb ! descriptor for box grids
-             !  Dimensions of the 3D real and reciprocal space
-             !  FFT grid relative to the "small box" computation
-             !  of the atomic augmentation part of the 
-             !  charge density used in USPP (to speed up CPV iterations)
+        TYPE ( fft_type_descriptor ) :: dfftp
+             !! descriptor for dense grid.  
+             !! Dimensions of the 3D real and reciprocal space FFT grid
+             !! relative to the charge density and potential ("dense" grid).
+        TYPE ( fft_type_descriptor ) :: dffts
+             !! descriptor for smooth grid.  
+             !! Dimensions of the 3D real and reciprocal space
+             !! FFT grid relative to the smooth part of the charge density
+             !!  (may differ from the full charge density grid for USPP )
+        TYPE ( fft_box_descriptor ) :: dfftb
+             !! descriptor for box grids.  
+             !! Dimensions of the 3D real and reciprocal space
+             !! FFT grid relative to the "small box" computation
+             !! of the atomic augmentation part of the 
+             !! charge density used in USPP (to speed up CPV iterations)
         TYPE ( fft_type_descriptor ) :: dfft3d
              !
         TYPE (sticks_map) :: smap
-             !  Stick map descriptor
+             !! Stick map descriptor.
 
         SAVE
 
@@ -61,11 +63,9 @@
 
 
       SUBROUTINE fft_base_info( ionode, stdout )
-
+          !! Display fft basic information
           LOGICAL, INTENT(IN) :: ionode
           INTEGER, INTENT(IN) :: stdout
-          !
-          !  Display fft basic information
           !
           IF (ionode) THEN
              WRITE( stdout,*)
@@ -90,6 +90,9 @@
                 sum(dfftp%ngl), sum(dffts%ngl), sum(dffts%nwl)
           ENDIF
 
+          IF(ionode) WRITE( stdout,*)
+          IF ( .not. dffts%use_pencil_decomposition ) WRITE( stdout,'(5X, "Using Slab Decomposition")')
+          IF (       dffts%use_pencil_decomposition ) WRITE( stdout, '(5X, "Using Pencil Decomposition")')
           IF(ionode) WRITE( stdout,*)
 
           RETURN

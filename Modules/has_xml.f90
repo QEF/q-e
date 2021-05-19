@@ -7,8 +7,9 @@
 !
 LOGICAL FUNCTION has_xml(inp_string)
 !
-! This function returns true if the last four characters of inp_string are
-! .xml or .XML. On output the string .xml or .XML is removed from inp_string
+!! This function returns TRUE if the last four characters of inp_string
+!! are .xml or .XML. On output the string .xml or .XML is removed from 
+!! \(\text{inp_string}\).
 !
 IMPLICIT NONE
 

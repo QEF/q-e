@@ -30,12 +30,8 @@ PROGRAM lr_eels_main
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
   USE mp_global,             ONLY : mp_startup
-  USE mp_world,              ONLY : world_comm
-  USE mp_pools,              ONLY : intra_pool_comm
-  USE mp_bands,              ONLY : intra_bgrp_comm, inter_bgrp_comm, &
-                                    ntask_groups
+  USE mp_bands,              ONLY : inter_bgrp_comm, ntask_groups
   USE mp_bands_TDDFPT,       ONLY : ibnd_start, ibnd_end
-  USE command_line_options,  ONLY : ndiag_
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,         ONLY : psic
   USE check_stop,            ONLY : check_stop_now, check_stop_init
@@ -44,6 +40,7 @@ PROGRAM lr_eels_main
   USE wrappers,              ONLY : memstat
   USE lr_sternheimer,        ONLY : one_sternheimer_step
   USE control_lr,            ONLY : flmixdpot
+  USE control_flags,         ONLY : use_para_diag
   USE qpoint,                ONLY : xq
   USE uspp_param,            ONLY : nhm
   USE noncollin_module,      ONLY : noncolin
@@ -51,8 +48,6 @@ PROGRAM lr_eels_main
   USE lrus,                  ONLY : intq, intq_nc
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   ! Local variables
   !
@@ -65,10 +60,6 @@ PROGRAM lr_eels_main
   pol_index = 1
   !
   CALL mp_startup ( )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-       do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   CALL environment_start ( code2 )
   !
@@ -306,7 +297,7 @@ PROGRAM lr_eels_main
   !
   CALL print_clock_lr()
   !
-  CALL laxlib_end()
+  IF ( use_para_diag ) CALL laxlib_end()
   CALL stop_lr( .TRUE. )
   !
   IF (lr_verbosity > 5) THEN

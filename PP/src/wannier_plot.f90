@@ -97,7 +97,7 @@ SUBROUTINE plot_wannier(nc,n0)
   USE wannier_new,   ONLY : nwan,plot_wan_num,plot_wan_spin
   USE klist,         ONLY : nks, xk, wk, ngk, igk_k
   USE lsda_mod,      ONLY : isk, lsda, nspin
-  USE wvfct,         ONLY : nbnd, npwx, g2kin
+  USE wvfct,         ONLY : nbnd, npwx
   USE constants,     ONLY : rytoev , tpi
   USE buffers
   USE symm_base,     ONLY : nsym

@@ -23,28 +23,17 @@ PROGRAM main
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
   USE mp_global,     ONLY : mp_startup
-  USE mp_world,      ONLY : world_comm
   USE mp_images,     ONLY : intra_image_comm
-  USE mp_pools,      ONLY : intra_pool_comm
-  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE read_input,    ONLY : read_input_file
-  USE command_line_options, ONLY : input_file_, ndiag_
+  USE command_line_options, ONLY : input_file_
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
-  !
-  LOGICAL :: diag_in_band_group = .true.
   !
   ! ... program starts here
   !
   ! ... initialize MPI (parallel processing handling)
   !
   CALL mp_startup ( )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-       do_distr_diag_inside_bgrp_ = diag_in_band_group )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
   !
   ! ... start the environment
   !

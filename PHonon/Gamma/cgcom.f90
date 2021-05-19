@@ -106,7 +106,7 @@ MODULE phon
   SAVE
   !
   REAL(DP), ALLOCATABLE:: &
-       dmuxc(:) !  d V_xc / d rho
+       dmuxc(:,:,:) !  d V_xc / d rho
   COMPLEX(DP), ALLOCATABLE:: &
        dvpsi(:,:),      &!
        dpsi(:,:)         !

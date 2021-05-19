@@ -7,7 +7,9 @@
 !
 !
     MODULE mp_wave
-
+      !
+      !! MPI management of wave function related arrays.
+      !
       IMPLICIT NONE
       SAVE
 
@@ -15,9 +17,9 @@
 
       SUBROUTINE mergewf ( pw, pwt, ngwl, ig_l2g, mpime, nproc, root, comm )
 
-! ... This subroutine merges the pieces of a wave functions (pw) splitted across 
-! ... processors into a total wave function (pwt) containing al the components
-! ... in a pre-defined order (the same as if only one processor is used)
+      !! This subroutine merges the pieces of a wave functions (pw) splitted across 
+      !! processors into a total wave function (pwt) containing al the components
+      !! in a pre-defined order (the same as if only one processor is used).
 
       USE kinds
       USE parallel_include
@@ -25,11 +27,17 @@
       IMPLICIT NONE
 
       COMPLEX(DP), intent(in) :: PW(:)
+      !! piece of wave function
       COMPLEX(DP), intent(out) :: PWT(:)
-      INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
-      INTEGER, INTENT(IN) :: nproc     ! number of processors
-      INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
-      INTEGER, INTENT(IN) :: comm    ! communicator
+      !! total wave function
+      INTEGER, INTENT(IN) :: mpime
+      !! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc
+      !! number of processors
+      INTEGER, INTENT(IN) :: root
+      !! root processor ( the one that should receive the data )
+      INTEGER, INTENT(IN) :: comm
+      !! communicator
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngwl
 
@@ -121,8 +129,7 @@
       
       SUBROUTINE mergekg ( mill, millt, ngwl, ig_l2g, mpime, nproc, root, comm )
 
-! ... Same logic as for mergewf, for Miller indices:
-!...  mill = distributed input, millt = collected output
+      !! Same logic as for \(\texttt{mergewf}\), for Miller indices.
 
       USE kinds
       USE parallel_include
@@ -130,11 +137,17 @@
       IMPLICIT NONE
 
       INTEGER, intent(in) :: mill(:,:)
+      !! Miller indices: distributed input
       INTEGER, intent(out):: millt(:,:)
-      INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
-      INTEGER, INTENT(IN) :: nproc     ! number of processors
-      INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
-      INTEGER, INTENT(IN) :: comm    ! communicator
+      !! Miller indices: collected output
+      INTEGER, INTENT(IN) :: mpime
+      !! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc
+      !! number of processors
+      INTEGER, INTENT(IN) :: root
+      !! root processor
+      INTEGER, INTENT(IN) :: comm
+      !! communicator
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngwl
 
@@ -225,18 +238,26 @@
 
       SUBROUTINE splitwf ( pw, pwt, ngwl, ig_l2g, mpime, nproc, root, comm )
 
-! ... This subroutine splits a total wave function (pwt) containing al the components
-! ... in a pre-defined order (the same as if only one processor is used), across 
-! ... processors (pw).
+      !! This subroutine splits a total wave function (PWT) containing al the components
+      !! in a pre-defined order (the same as if only one processor is used), across 
+      !! processors (PW).
 
       USE kinds
       USE parallel_include
       IMPLICIT NONE
 
       COMPLEX(DP), INTENT(OUT) :: PW(:)
+      !! piece of wave function
       COMPLEX(DP), INTENT(IN) :: PWT(:)
-      INTEGER, INTENT(IN) :: mpime, nproc, root
-      INTEGER, INTENT(IN) :: comm    ! communicator
+      !! total wave function
+      INTEGER, INTENT(IN) :: mpime
+      !! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc
+      !! number of processors
+      INTEGER, INTENT(IN) :: root
+      !! root processor
+      INTEGER, INTENT(IN) :: comm
+      !! communicator
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngwl
 
@@ -320,17 +341,24 @@
 
       SUBROUTINE splitkg ( mill, millt, ngwl, ig_l2g, mpime, nproc, root, comm )
 
-! ... Same logic as for splitwf, for Miller indices:
-!...  mill = distributed output, millt = collected input
+      !! Same logic as for \(\texttt{splitwf}\), for Miller indices.
 
       USE kinds
       USE parallel_include
       IMPLICIT NONE
 
       INTEGER, INTENT(OUT):: mill(:,:)
+      !! Miller indices: distributed output
       INTEGER, INTENT(IN) :: millt(:,:)
-      INTEGER, INTENT(IN) :: mpime, nproc, root
-      INTEGER, INTENT(IN) :: comm    ! communicator
+      !! Miller indices: collected input
+      INTEGER, INTENT(IN) :: mpime
+      !! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc
+      !! number of processors
+      INTEGER, INTENT(IN) :: root
+      !! root processor
+      INTEGER, INTENT(IN) :: comm
+      !! communicator
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngwl
 
@@ -412,9 +440,9 @@
 
       SUBROUTINE mergeig(igl, igtot, ngl, mpime, nproc, root, comm)
 
-! ... This subroutine merges the pieces of a vector splitted across 
-! ... processors into a total vector (igtot) containing al the components
-! ... in a pre-defined order (the same as if only one processor is used)
+      !! This subroutine merges the pieces of a vector splitted across 
+      !! processors into a total vector (igtot) containing al the components
+      !! in a pre-defined order (the same as if only one processor is used).
 
       USE kinds
       USE parallel_include
@@ -422,11 +450,17 @@
       IMPLICIT NONE
 
       INTEGER, intent(in)  :: igl(:)
+      !! piece of splitted vector
       INTEGER, intent(out) :: igtot(:)
-      INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
-      INTEGER, INTENT(IN) :: nproc     ! number of processors
-      INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
-      INTEGER, INTENT(IN) :: comm    ! communicator
+      !! total vector
+      INTEGER, INTENT(IN) :: mpime
+      !! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc
+      !! number of processors
+      INTEGER, INTENT(IN) :: root
+      !! root processor
+      INTEGER, INTENT(IN) :: comm
+      !! communicator
       INTEGER, INTENT(IN) :: ngl
 
       INTEGER, ALLOCATABLE :: ig_ip(:)
@@ -505,17 +539,25 @@
 
       SUBROUTINE splitig(igl, igtot, ngl, mpime, nproc, root, comm)
 
-! ... This subroutine splits a replicated vector (igtot) stored on the root proc
-! ... across processors (igl).
+      !! This subroutine splits a replicated vector (\(\text{igtot}\)) stored on
+      !! the \(\text{root}\) proc across processors (\(\text{igl}\)).
 
       USE kinds
       USE parallel_include
       IMPLICIT NONE
 
       INTEGER, INTENT(OUT) :: igl(:)
+      !! vector splitted across procs
       INTEGER, INTENT(IN)  :: igtot(:)
-      INTEGER, INTENT(IN)  :: mpime, nproc, root
-      INTEGER, INTENT(IN) :: comm    ! communicator
+      !! replicated vector on root proc
+      INTEGER, INTENT(IN) :: mpime
+      !! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc
+      !! number of processors
+      INTEGER, INTENT(IN) :: root
+      !! root processor
+      INTEGER, INTENT(IN) :: comm
+      !! communicator
       INTEGER, INTENT(IN) :: ngl
 
       INTEGER ierr, i, ng_ip, ip, ng_lmax, ng_g, gid, igs
@@ -601,14 +643,24 @@
 
       implicit none
 
-      integer :: indi_l(:)     !  list of G-vec index to be exchanged
-      integer :: sour_indi(:)  !  the list of source processors
-      integer :: dest_indi(:)  !  the list of destination processors
-      integer :: n_indi_rcv    !   number of G-vectors to be received
-      integer :: n_indi_snd    !   number of G-vectors to be sent
-      integer :: icntix        !   total number of G-vec to be exchanged
-      INTEGER, INTENT(IN) :: nproc, mpime, group
-
+      integer :: indi_l(:)
+      !! list of G-vec index to be exchanged
+      integer :: sour_indi(:)
+      !! the list of source processors
+      integer :: dest_indi(:)
+      !! the list of destination processors
+      integer :: n_indi_rcv
+      !! number of G-vectors to be received
+      integer :: n_indi_snd
+      !! number of G-vectors to be sent
+      integer :: icntix
+      !! total number of G-vec to be exchanged
+      INTEGER, INTENT(IN) :: mpime
+      !! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc
+      !! number of processors
+      INTEGER, INTENT(IN) :: group
+      
       COMPLEX(DP) :: c(:)
       COMPLEX(DP) :: ctmp(:)
       integer  ::  ngw
@@ -691,9 +743,7 @@
 
 SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    !
-   !  Redistribute wave function.
-   !  c_dist_pw are the wave functions with plane waves distributed over processors 
-   !  c_dist_st are the wave functions with electronic states distributed over processors 
+   !! Redistribute wave function.
    !
    USE kinds
    USE parallel_include
@@ -701,13 +751,19 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    implicit none
 
    COMPLEX(DP) :: c_dist_pw(:,:)
+   !! the wave functions with plane waves distributed over processors 
    COMPLEX(DP) :: c_dist_st(:,:)
-   INTEGER, INTENT(IN) :: npw_p(:)  !  the number of plane wave on each processor
-   INTEGER, INTENT(IN) :: nst_p(:)  !  the number of states on each processor
-   INTEGER, INTENT(IN) :: comm      !  group communicator
-   INTEGER, INTENT(IN) :: idir      !  direction of the redistribution 
-                                    !  idir > 0  c_dist_pw --> c_dist_st
-                                    !  idir < 0  c_dist_pw <-- c_dist_st
+   !! the wave functions with electronic states distributed over processors 
+   INTEGER, INTENT(IN) :: npw_p(:)
+   !! the number of plane wave on each processor
+   INTEGER, INTENT(IN) :: nst_p(:)
+   !! the number of states on each processor
+   INTEGER, INTENT(IN) :: comm
+   !! group communicator
+   INTEGER, INTENT(IN) :: idir
+   !! direction of the redistribution:  
+   !! \(\text{idir}>0\):  \(\text{c_dist_pw}\rightarrow\text{c_dist_st}\)  
+   !! \(\text{idir}<0\):  \(\text{c_dist_pw}\leftarrow\text{c_dist_st}\)
 
    INTEGER :: mpime, nproc, ierr, npw_t, nst_t, proc, i, j, ngpww, ii
    INTEGER, ALLOCATABLE :: rdispls(:),  recvcount(:)
@@ -805,9 +861,7 @@ END SUBROUTINE redistwf
 
 SUBROUTINE redistwfr( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    !
-   !  Redistribute wave function.
-   !  c_dist_pw are the wave functions with plane waves distributed over processors 
-   !  c_dist_st are the wave functions with electronic states distributed over processors 
+   !!  Redistribute wave function.
    !
    USE kinds
    USE parallel_include
@@ -815,13 +869,19 @@ SUBROUTINE redistwfr( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    implicit none
 
    REAL(DP) :: c_dist_pw(:,:)
+   !! the wave functions with plane waves distributed over processors 
    REAL(DP) :: c_dist_st(:,:)
-   INTEGER, INTENT(IN) :: npw_p(:)  !  the number of plane wave on each processor
-   INTEGER, INTENT(IN) :: nst_p(:)  !  the number of states on each processor
-   INTEGER, INTENT(IN) :: comm      !  group communicator
-   INTEGER, INTENT(IN) :: idir      !  direction of the redistribution 
-                                    !  idir > 0  c_dist_pw --> c_dist_st
-                                    !  idir < 0  c_dist_pw <-- c_dist_st
+   !! the wave functions with electronic states distributed over processors 
+   INTEGER, INTENT(IN) :: npw_p(:)
+   !! the number of plane wave on each processor
+   INTEGER, INTENT(IN) :: nst_p(:)
+   !! the number of states on each processor
+   INTEGER, INTENT(IN) :: comm
+   !! group communicator
+   INTEGER, INTENT(IN) :: idir
+   !! direction of the redistribution:  
+   !! \(\text{idir}>0\):  \(\text{c_dist_pw}\rightarrow\text{c_dist_st}\)  
+   !! \(\text{idir}<0\):  \(\text{c_dist_pw}\leftarrow\text{c_dist_st}\)
 
    INTEGER :: mpime, nproc, ierr, npw_t, nst_t, proc, i, j, ngpww
    INTEGER, ALLOCATABLE :: rdispls(:),  recvcount(:)

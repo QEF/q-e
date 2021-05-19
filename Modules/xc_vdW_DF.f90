@@ -9,40 +9,37 @@
 
 MODULE vdW_DF
 
-
-! This module calculates the non-local correlation contribution to the
-! energy and potential according to
+!! This module calculates the non-local correlation contribution to the
+!! energy and potential according to:
 !
-!    M. Dion, H. Rydberg, E. Schroeder, D.C. Langreth, and
-!    B.I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).
+!! M. Dion, H. Rydberg, E. Schroeder, D.C. Langreth, and
+!! B.I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).
 !
-! henceforth referred to as DION. Further information about the
-! functional and its corresponding potential can be found in:
+!! henceforth referred to as DION. Further information about the
+!! functional and its corresponding potential can be found in:
 !
-!    T. Thonhauser, V.R. Cooper, S. Li, A. Puzder, P. Hyldgaard,
-!    and D.C. Langreth, Phys. Rev. B 76, 125112 (2007).
+!! T. Thonhauser, V.R. Cooper, S. Li, A. Puzder, P. Hyldgaard,
+!! and D.C. Langreth, Phys. Rev. B 76, 125112 (2007).
 !
-! The proper spin extension of vdW-DF, i.e. svdW-DF, is derived in
+!! The proper spin extension of vdW-DF, i.e. svdW-DF, is derived in:
 !
-!    T. Thonhauser, S. Zuluaga, C.A. Arter, K. Berland, E. Schroder,
-!    and P. Hyldgaard, Phys. Rev. Lett. 115, 136402 (2015).
+!! T. Thonhauser, S. Zuluaga, C.A. Arter, K. Berland, E. Schroder,
+!! and P. Hyldgaard, Phys. Rev. Lett. 115, 136402 (2015).
 !
-! henceforth referred to as THONHAUSER.
+!! henceforth referred to as THONHAUSER.
 !
+!! Two review articles show many of the vdW-DF applications:
 !
-! Two review articles show many of the vdW-DF applications:
+!! D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009).
 !
-!    D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009).
+!! K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).
 !
-!    K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).
+!! The method implemented is based on the method of G. Roman-Perez and
+!! J.M. Soler described in:
 !
+!! G. Roman-Perez and J.M. Soler, Phys. Rev. Lett. 103, 096102 (2009).
 !
-! The method implemented is based on the method of G. Roman-Perez and
-! J.M. Soler described in:
-!
-!    G. Roman-Perez and J.M. Soler, Phys. Rev. Lett. 103, 096102 (2009).
-!
-! henceforth referred to as SOLER.
+!! henceforth referred to as SOLER.
 !
 !
 ! xc_vdW_DF and xc_vdW_DF_spin are the driver routines for vdW-DF
@@ -61,8 +58,6 @@ USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
-USE corr_lda,          ONLY : pw, pw_spin
-
 
 ! ----------------------------------------------------------------------
 ! No implicit variables
@@ -88,7 +83,7 @@ SAVE
 PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_stress,                   &
            vdW_DF_energy, vdW_DF_potential,                            &
            generate_kernel, interpolate_kernel,                        &
-           initialize_spline_interpolation, spline_interpolation
+           initialize_spline_interpolation, spline_interpolation, pw,pw_spin
 
 
 ! ----------------------------------------------------------------------
@@ -347,7 +342,12 @@ CONTAINS
   !                           |_____________|
 
   SUBROUTINE xc_vdW_DF (rho_valence, rho_core, etxc, vtxc, v)
-
+  !
+  !! Driver routine for vdW-DF calculations, called from Modules/funct.f90.
+  !! The routine here sets up the parallel run (if any) and carry out the 
+  !! calls necessary to calculate the non-local correlation contributions
+  !! to the energy and potential.
+  
   USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
 
@@ -510,11 +510,12 @@ CONTAINS
   !                          |  XC_VDW_DF_spin  |
   !                          |__________________|
   !
-  ! This subroutine is as similar to xc_vdW_DF as possible, but handles
-  ! the collinear nspin=2 case.
-
+  !
   SUBROUTINE xc_vdW_DF_spin (rho_valence, rho_core, etxc, vtxc, v)
-
+  
+  !! This subroutine is as similar to \(\texttt{xc_vdW_DF}\) as possible,
+  !! but handles the collinear \(\text{nspin}=2\) case.
+  
   USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
 
@@ -713,16 +714,18 @@ CONTAINS
   !                       |  GET_Q0_ON_GRID  |
   !                       |__________________|
   !
-  ! This routine first calculates the q value defined in (DION equations
-  ! 11 and 12), then saturates it according to (SOLER equation 5). More
-  ! specifically it calculates the following:
   !
-  !     q0(ir) = q0 as defined above
-  !     dq0_drho(ir) = total_rho * d q0 /d rho
-  !     dq0_dgradrho = total_rho / |grad_rho| * d q0 / d |grad_rho|
-
   SUBROUTINE get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
-
+  !! This routine first calculates the q value defined in (DION equations
+  !! 11 and 12), then saturates it according to (SOLER equation 5). More
+  !! specifically it calculates the following:
+  !
+  !! * \(\text{q0(ir)}\) = saturated value of q;
+  !! * \(\text{dq0_drho(ir)} = \text{total_rho} * d\text{q0} /d\text{rho}\)
+  !! * \(\text{dq0_dgradrho} = \text{total_rho} / |\text{grad_rho}| * d\text{q0}
+  !!   / d |\text{grad_rho}|\)
+  
+  
   IMPLICIT NONE
 
   REAL(DP), INTENT(IN)      :: total_rho(:), grad_rho(:,:)         ! Input variables needed.
@@ -850,11 +853,57 @@ CONTAINS
   END SUBROUTINE get_q0_on_grid
 
 
-
-
-
-
-
+  !-----------------------------------------------------------------------
+  SUBROUTINE pw( rs, iflag, ec, vc )
+    !-----------------------------------------------------------------------
+    ! --A provisional copy of the pw routine in XC lib to avoid external calls--
+    !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
+    !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
+    !
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: rs
+    INTEGER, INTENT(IN)  :: iflag
+    REAL(DP), INTENT(OUT) :: ec, vc
+    !
+    REAL(DP), PARAMETER :: a=0.031091d0, b1=7.5957d0, b2=3.5876d0, c0=a, &
+                           c1=0.046644d0, c2=0.00664d0, c3=0.01043d0, d0=0.4335d0, &
+                           d1=1.4408d0
+    REAL(DP) :: lnrs, rs12, rs32, rs2, om, dom, olog
+    REAL(DP) :: a1(2), b3(2), b4(2)
+    DATA a1 / 0.21370d0, 0.026481d0 /, b3 / 1.6382d0, -0.46647d0 /, &
+         b4 / 0.49294d0, 0.13354d0 /
+    ! high- and low-density formulae implemented but not used in PW case
+    ! (reason: inconsistencies in PBE/PW91 functionals).
+    IF ( rs < 1d0 .AND. iflag == 2 ) THEN
+       ! high density formula
+       lnrs = LOG(rs)
+       ec = c0 * lnrs - c1 + c2 * rs * lnrs - c3 * rs
+       vc = c0 * lnrs - (c1 + c0 / 3.d0) + 2.d0 / 3.d0 * c2 * rs * &
+                 lnrs - (2.d0 * c3 + c2) / 3.d0 * rs
+    ELSEIF ( rs > 100.d0 .AND. iflag == 2 ) THEN
+       ! low density formula
+       ec = - d0 / rs + d1 / rs**1.5d0
+       vc = - 4.d0 / 3.d0 * d0 / rs + 1.5d0 * d1 / rs**1.5d0
+    ELSE
+       ! interpolation formula
+       rs12 = SQRT(rs)
+       rs32 = rs * rs12
+       rs2  = rs**2
+       om   = 2.d0*a*( b1*rs12 + b2*rs + b3(iflag) * rs32 + b4(iflag)*rs2 )
+       dom  = 2.d0*a*( 0.5d0 * b1 * rs12 + b2 * rs + 1.5d0 * b3(iflag) * &
+              rs32 + 2.d0 * b4(iflag) * rs2 )
+       olog = LOG( 1.d0 + 1.0d0 / om )
+       !
+       ec = - 2.d0 * a * (1.d0 + a1(iflag) * rs) * olog
+       vc = - 2.d0 * a * (1.d0 + 2.d0 / 3.d0 * a1(iflag) * rs) &
+                * olog - 2.d0 / 3.d0 * a * (1.d0 + a1(iflag) * rs) * dom / &
+                (om * (om + 1.d0) )
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE pw
+  !---------------------
 
   ! ####################################################################
   !                       |                       |
@@ -864,7 +913,15 @@ CONTAINS
   SUBROUTINE get_q0_on_grid_spin (total_rho, rho_up, rho_down, grad_rho, &
              grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
              dq0_dgradrho_up, dq0_dgradrho_down, thetas)
-
+  
+  !! Find the value of \(\text{q0}\) for all assigned grid points. q is defined in
+  !! equations 11 and 12 of DION and q0 is the saturated version of q
+  !! defined in equation 5 of SOLER. In the spin case, q0 is defined by
+  !! equation 8 (and text above that equation) of THONHAUSER. This
+  !! routine also returns the derivatives of the \(\text{q0}\)s with respect to the
+  !! charge-density and the gradient of the charge-density. These are
+  !! needed for the potential.
+  
   IMPLICIT NONE
 
   REAL(DP),  INTENT(IN)      :: total_rho(:), grad_rho(:,:)              ! Input variables.
@@ -1048,12 +1105,100 @@ CONTAINS
 
   END SUBROUTINE get_q0_on_grid_spin
 
+  
+  !-----------------------------------------------------------------------
+  SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )
+    !-----------------------------------------------------------------------
+    !--A provisional copy of the pw routine in XC lib to avoid external calls--
+    !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: rs
+    !! Wigner-Seitz radius
+    REAL(DP), INTENT(IN) :: zeta
+    !! zeta = (rho_up - rho_dw)/rho_tot
+    REAL(DP), INTENT(OUT) :: ec, vc_up, vc_dw
+    !
+    REAL(DP) :: rs12, rs32, rs2, zeta2, zeta3, zeta4, fz, dfz
+    REAL(DP) :: om, dom, olog, epwc, vpwc
+    REAL(DP) :: omp, domp, ologp, epwcp, vpwcp
+    REAL(DP) :: oma, doma, ologa, alpha, vpwca
+    !
+    ! xc parameters, unpolarised
+    REAL(DP), PARAMETER :: a = 0.031091d0, a1 = 0.21370d0, b1 = 7.5957d0, b2 = &
+             3.5876d0, b3 = 1.6382d0, b4 = 0.49294d0, c0 = a, c1 = 0.046644d0, &
+             c2 = 0.00664d0, c3 = 0.01043d0, d0 = 0.4335d0, d1 = 1.4408d0
+    ! xc parameters, polarised
+    REAL(DP), PARAMETER :: ap = 0.015545d0, a1p = 0.20548d0, b1p = 14.1189d0, b2p &
+                 = 6.1977d0, b3p = 3.3662d0, b4p = 0.62517d0, c0p = ap, c1p =     &
+                0.025599d0, c2p = 0.00319d0, c3p = 0.00384d0, d0p = 0.3287d0, d1p &
+                = 1.7697d0
+    ! xc PARAMETERs, antiferro
+    REAL(DP), PARAMETER :: aa = 0.016887d0, a1a = 0.11125d0, b1a = 10.357d0, b2a = &
+                 3.6231d0, b3a = 0.88026d0, b4a = 0.49671d0, c0a = aa, c1a =       &
+                 0.035475d0, c2a = 0.00188d0, c3a = 0.00521d0, d0a = 0.2240d0, d1a &
+                 = 0.3969d0
+    REAL(DP), PARAMETER :: fz0 = 1.709921d0
+    !
+    !     if (rs < 0.5d0) then
+    ! high density formula (not implemented)
+    !
+    !     elseif (rs > 100.d0) then
+    ! low density formula (not implemented)
+    !
+    !     else
+    ! interpolation formula
+    !
+    zeta2 = zeta * zeta
+    zeta3 = zeta2 * zeta
+    zeta4 = zeta3 * zeta
+    rs12 = SQRT(rs)
+    rs32 = rs * rs12
+    rs2 = rs**2
+    ! unpolarised
+    om = 2.d0 * a * (b1 * rs12 + b2 * rs + b3 * rs32 + b4 * rs2)
+    dom = 2.d0 * a * (0.5d0 * b1 * rs12 + b2 * rs + 1.5d0 * b3 * rs32 &
+         + 2.d0 * b4 * rs2)
+    olog = LOG(1.d0 + 1.0d0 / om)
+    epwc = - 2.d0 * a * (1.d0 + a1 * rs) * olog
+    vpwc = - 2.d0 * a * (1.d0 + 2.d0 / 3.d0 * a1 * rs) * olog - 2.d0 / &
+           3.d0 * a * (1.d0 + a1 * rs) * dom / (om * (om + 1.d0) )
+    ! polarized
+    omp  = 2.d0 * ap * (b1p * rs12 + b2p * rs + b3p * rs32 + b4p * rs2)
+    domp = 2.d0 * ap * (0.5d0 * b1p * rs12 + b2p * rs + 1.5d0 * b3p * &
+           rs32 + 2.d0 * b4p * rs2)
+    ologp = LOG(1.d0 + 1.0d0 / omp)
+    epwcp = - 2.d0 * ap * (1.d0 + a1p * rs) * ologp
+    vpwcp = - 2.d0 * ap * (1.d0 + 2.d0 / 3.d0 * a1p * rs) * ologp - &
+            2.d0 / 3.d0 * ap * (1.d0 + a1p * rs) * domp / (omp * (omp + 1.d0))
+    ! antiferro
+    oma = 2.d0 * aa * (b1a * rs12 + b2a * rs + b3a * rs32 + b4a * rs2)
+    doma = 2.d0 * aa * ( 0.5d0 * b1a * rs12 + b2a * rs + 1.5d0 * b3a * &
+           rs32 + 2.d0 * b4a * rs2 )
+    ologa = LOG( 1.d0 + 1.0d0/oma )
+    alpha = 2.d0 * aa * (1.d0 + a1a*rs) * ologa
+    vpwca = + 2.d0 * aa * (1.d0 + 2.d0/3.d0 * a1a * rs) * ologa + &
+            2.d0 / 3.d0 * aa * (1.d0 + a1a*rs) * doma / (oma * (oma + 1.d0))
+    !
+    fz = ( (1.d0 + zeta)**(4.d0 / 3.d0) + (1.d0 - zeta)**(4.d0 / &
+            3.d0) - 2.d0) / (2.d0** (4.d0 / 3.d0) - 2.d0)
+    dfz = ( (1.d0 + zeta)**(1.d0 / 3.d0) - (1.d0 - zeta)**(1.d0 / &
+            3.d0) ) * 4.d0 / (3.d0 * (2.d0** (4.d0 / 3.d0) - 2.d0) )
+    !
+    ec = epwc + alpha * fz * (1.d0 - zeta4) / fz0 + (epwcp - epwc) &
+                * fz * zeta4
+    vc_up = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+                   * fz * zeta4 + (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
+                   zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
+                   * (1.d0 - zeta)
+    vc_dw = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+                   * fz * zeta4 - (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
+                   zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
+                   * (1.d0 + zeta)
+    RETURN
+    !
+  END SUBROUTINE pw_spin
 
-
-
-
-
-
+  
 
   ! ####################################################################
   !                            |              |
@@ -1061,7 +1206,11 @@ CONTAINS
   !                            |______________|
 
   SUBROUTINE saturate_q (q, q_cutoff, q0, dq0_dq)
-
+  
+  !! Here, we calculate \(\text{q0}\) by saturating \(\text{q}\) according to
+  !! equation 5 of SOLER. Also, we find the derivative \(\text{dq0/dq}\) needed
+  !! for the derivatives \(\text{dq0/drho}\) and \(\text{dq0/dgradrh0}\).
+  
   IMPLICIT NONE
 
   REAL(DP),  INTENT(IN)      :: q             ! Input q.
@@ -1072,14 +1221,7 @@ CONTAINS
   REAL(DP)                   :: e_exp         ! Exponent.
   INTEGER,   PARAMETER       :: m_cut = 12    ! How many terms to include in
                                               ! the sum of SOLER equation 5.
-
-
-
-
   ! --------------------------------------------------------------------
-  ! Here, we calculate q0 by saturating q according to equation 5 of
-  ! SOLER. Also, we find the derivative dq0_dq needed for the
-  ! derivatives dq0_drho and dq0_dgradrh0 discussed below.
 
   e_exp  = 0.0D0
   dq0_dq = 0.0D0
@@ -1106,13 +1248,14 @@ CONTAINS
   !                          | vdW_DF_energy |
   !                          |_______________|
   !
-  ! This routine carries out the integration of equation 8 of SOLER.  It
-  ! returns the non-local exchange-correlation energy and the u_alpha(k)
-  ! arrays used to find the u_alpha(r) arrays via equations 11 and 12 in
-  ! SOLER.
-
+  !
   SUBROUTINE vdW_DF_energy (thetas, vdW_xc_energy)
 
+  !! This routine carries out the integration of equation 8 of SOLER.  It
+  !! returns the non-local exchange-correlation energy and the \(\text{u_alpha(k)}\)
+  !! arrays used to find the \(\text{u_alpha(r)}\) arrays via equations 11 and 12 in
+  !! SOLER.
+  
   USE gvect,           ONLY : gg, ngm, igtongl, gl, ngl, gstart
   USE cell_base,       ONLY : tpiba, omega
 
@@ -1221,18 +1364,18 @@ CONTAINS
   !                        |  vdW_DF_potential |
   !                        |___________________|
   !
-  ! This routine finds the non-local correlation contribution to the
-  ! potential (i.e. the derivative of the non-local piece of the energy
-  ! with respect to density) given in SOLER equation 10. The u_alpha(k)
-  ! functions were found while calculating the energy. They are passed
-  ! in as the matrix u_vdW. Most of the required derivatives were
-  ! calculated in the "get_q0_on_grid" routine, but the derivative of
-  ! the interpolation polynomials, P_alpha(q), (SOLER equation 3) with
-  ! respect to q is interpolated here, along with the polynomials
-  ! themselves.
-
+  !
   SUBROUTINE vdW_DF_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, u_vdW, potential)
 
+  !! This routine finds the non-local correlation contribution to the potential (i.e.
+  !! the derivative of the non-local piece of the energy with respect to density)
+  !! given in SOLER equation 10. The \(\text{u_alpha(k)}\) functions were found 
+  !! while calculating the energy. They are passed in as the matrix \(\text{u_vdW}\).
+  !! Most of the required derivatives were calculated in the \(\texttt{get_q0_on_grid}\)
+  !! routine, but the derivative of the interpolation polynomials, \(P_\alpha(q)\), 
+  !! (SOLER equation 3) with respect to q is interpolated here, along with the polynomials
+  !! themselves.
+  
   USE gvect,               ONLY : g
   USE cell_base,           ONLY : alat, tpiba
 
@@ -1383,12 +1526,13 @@ CONTAINS
   !                       |  SPLINE_INTERPOLATION  |
   !                       |________________________|
   !
-  ! This routine is modeled after an algorithm from NUMERICAL_RECIPES It
-  ! was adapted for Fortran, of course and for the problem at hand, in
-  ! that it finds the bin a particular x value is in and then loops over
-  ! all the P_i functions so we only have to find the bin once.
-
+  !
   SUBROUTINE spline_interpolation (x, evaluation_points, values)
+  
+  !! This routine is modeled after an algorithm from NUMERICAL_RECIPES It
+  !! was adapted for Fortran, of course and for the problem at hand, in
+  !! that it finds the bin a particular x value is in and then loops over
+  !! all the \(P_i\) functions so we only have to find the bin once.
 
   IMPLICIT NONE
 
@@ -1491,10 +1635,11 @@ CONTAINS
   !                  |  INITIALIZE_SPLINE_INTERPOLATION  |
   !                  |___________________________________|
   !
-  ! This routine is modeled after an algorithm from NUMERICAL_RECIPES It
-  ! was adapted for Fortran and for the problem at hand.
-
+  
   SUBROUTINE initialize_spline_interpolation (x, d2y_dx2)
+  
+  !! This routine is modeled after an algorithm from NUMERICAL RECIPES It
+  !! was adapted for Fortran and for the problem at hand.
 
   IMPLICIT NONE
 
@@ -1571,13 +1716,13 @@ CONTAINS
   !                          | INTERPOLATE_KERNEL |
   !                          |____________________|
   !
-  ! This routine is modeled after an algorithm from NUMERICAL_RECIPES
-  ! Adapted for Fortran and the problem at hand. This function is used
-  ! to find the Phi_alpha_beta needed for equations
-  ! 8 and 11 of SOLER.
-
+  
   SUBROUTINE interpolate_kernel (k, kernel_of_k)
 
+  !! This routine is modeled after an algorithm from NUMERICAL RECIPES
+  !! Adapted for Fortran and the problem at hand. This function is used
+  !! to find the Phi-alpha-beta needed for equations 8 and 11 of SOLER.
+  
   IMPLICIT NONE
 
   REAL(DP), INTENT(IN)    :: k                 ! Input value, the magnitude of the g-vector
@@ -1675,7 +1820,9 @@ CONTAINS
   !                         |_________________|
 
   SUBROUTINE vdW_DF_stress (rho_valence, rho_core, nspin, sigma) ! PH adjusted for wrapper spin/nospin
-
+  
+  !! vdW-DF stress calculation.
+  
   use gvect,           ONLY : ngm, g
   USE cell_base,       ONLY : tpiba
 
@@ -1849,7 +1996,7 @@ CONTAINS
                                           dq0_dgradrho_up, dq0_dgradrho_down, &
                                           thetas, sigma)
 
-  USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
+  USE gvect,                 ONLY : ngm, g, gg, gstart
   USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
 
   implicit none
@@ -1990,7 +2137,7 @@ CONTAINS
   SUBROUTINE vdW_DF_stress_gradient (total_rho, grad_rho, q0, &
              dq0_drho, dq0_dgradrho, thetas, sigma)
 
-  USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
+  USE gvect,                 ONLY : ngm, g, gstart
   USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
 
   IMPLICIT NONE
@@ -2714,12 +2861,13 @@ CONTAINS
   !                    |  PREP_GAUSSIAN_QUADRATURE  |
   !                    |____________________________|
   !
-  ! Routine to calculate the points and weights for the
-  ! Gaussian-Legendre integration. This routine is modeled after the
-  ! routine GAULEG from NUMERICAL_RECIPES.
 
   SUBROUTINE prep_gaussian_quadrature( weights )
 
+  !! Routine to calculate the points and weights for the
+  !! Gaussian-Legendre integration. This routine is modeled after the
+  !! routine GAULEG from NUMERICAL RECIPES.
+  
   REAL(DP), INTENT(INOUT) :: weights(:)
   ! The points and weights for the Gaussian-Legendre integration.
 
@@ -2819,11 +2967,12 @@ CONTAINS
   !                            |  PHI_VALUE  |
   !                            |_____________|
   !
-  ! This function returns the value of the kernel calculated via DION
-  ! equation 14.
-
+  
   REAL(DP) FUNCTION phi_value(d1, d2)
 
+  !! This function returns the value of the kernel calculated via DION
+  !! equation 14.
+  
   REAL(DP), INTENT(IN) :: d1, d2
   ! The point at which to evaluate the kernel. d1 = q1*r and d2 = q2*r.
 
@@ -2881,18 +3030,21 @@ CONTAINS
   !                            |  RADIAL_FFT  |
   !                            |______________|
   !
-  ! This subroutine performs a radial Fourier transform on the
-  ! real-space kernel functions. Basically, this is just
-  ! int(4*pi*r^2*phi*sin(k*r)/(k*r))dr integrated from 0 to r_max. That
-  ! is, it is the kernel function phi integrated with the 0^th spherical
+  
+  SUBROUTINE radial_fft(phi)
+  
+  !! This subroutine performs a radial Fourier transform on the
+  !! real-space kernel functions.
+  ! Basically, this is just:
+  !            int(4*pi*r^2*phi*sin(k*r)/(k*r))dr
+  ! integrated from 0 to r_max.
+  ! That is, it is the kernel function phi integrated with the 0^th spherical
   ! Bessel function radially, with a 4*pi assumed from angular
   ! integration since we have spherical symmetry. The spherical symmetry
   ! comes in because the kernel function depends only on the magnitude
   ! of the vector between two points. The integration is done using the
   ! trapezoid rule.
-
-  SUBROUTINE radial_fft(phi)
-
+  
   REAL(DP), INTENT(INOUT) :: phi(0:Nr_points)
   ! On input holds the real-space function phi_q1_q2(r).
   ! On output hold the reciprocal-space function phi_q1_q2(k).
@@ -2958,15 +3110,17 @@ CONTAINS
   !                          |  SET UP SPLINES  |
   !                          |__________________|
   !
-  ! This subroutine accepts a function (phi) and finds at each point the
-  ! second derivative (D2) for use with spline interpolation. This
-  ! function assumes we are using the expansion described in SOLER
-  ! equation 3. That is, the derivatives are those needed to interpolate
+  
+  SUBROUTINE set_up_splines(phi, D2)
+  
+  !! This subroutine accepts a function (phi) and finds at each point the
+  !! second derivative (D2) for use with spline interpolation. This
+  !! function assumes we are using the expansion described in SOLER
+  !! equation 3.
+  ! That is, the derivatives are those needed to interpolate
   ! Kronecker delta functions at each of the q values. Other than some
   ! special modification to speed up the algorithm in our particular
   ! case, this algorithm is taken directly from NUMERICAL_RECIPES.
-
-  SUBROUTINE set_up_splines(phi, D2)
 
   REAL(DP), INTENT(IN)    :: phi(0:Nr_points)
   ! The k-space kernel function for a particular q1 and q2.

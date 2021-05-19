@@ -37,6 +37,7 @@ SUBROUTINE new_ns( ns )
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
+  USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -53,6 +54,8 @@ SUBROUTINE new_ns( ns )
   !    "    "  spins
   REAL(DP), ALLOCATABLE :: nr(:,:,:,:)
   REAL(DP) :: psum
+  !
+  CALL using_evc(0)
   !
   CALL start_clock( 'new_ns' )
   !
@@ -75,6 +78,7 @@ SUBROUTINE new_ns( ns )
      npw = ngk(ik)
      !
      IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+     IF (nks > 1) CALL using_evc(1)
      !
      ! make the projection
      !
@@ -227,14 +231,16 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ions_base,            ONLY : nat, ityp, ntyp => nsp
     USE klist,                ONLY : xk, igk_k, ngk
     USE becmod,               ONLY : becp
-    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
+    USE uspp,                 ONLY : nkb, vkb, ofsbeta, using_vkb
     USE uspp_param,           ONLY : nhm, nh
     USE wvfct,                ONLY : nbnd
     USE wavefunctions,        ONLY : evc
     USE control_flags,        ONLY : gamma_only
     USE ldaU,                 ONLY : is_hubbard, nwfcU
     USE becmod,               ONLY : bec_type, calbec, &
-                                   allocate_bec_type, deallocate_bec_type
+                                     allocate_bec_type, deallocate_bec_type
+    USE wavefunctions_gpum,   ONLY : using_evc
+    USE becmod_subs_gpum,     ONLY : using_becp_auto
     !
     IMPLICIT NONE
     !
@@ -258,7 +264,10 @@ SUBROUTINE compute_pproj( ik, q, p )
     ! Compute <beta|psi>
     !
     CALL allocate_bec_type( nkb, nbnd, becp )
+    CALL using_becp_auto(2)
+    CALL using_vkb(1)
     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+    CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )
     ! does not need mp_sum intra-pool, since it is already done in calbec 
     !
@@ -268,13 +277,14 @@ SUBROUTINE compute_pproj( ik, q, p )
        p%k(:,:) = (0.0_DP,0.0_DP)
     ENDIF
     !
+    CALL using_becp_auto(0)
     DO nt = 1, ntyp
        DO na = 1, nat
           IF ( ityp(na) == nt ) THEN
              IF ( is_hubbard(nt) ) THEN
                 DO ib = 1, nbnd
                    DO ih = 1, nh(nt)
-                      ikb = indv_ijkb0(na) + ih
+                      ikb = ofsbeta(na) + ih
                       DO iw = 1, nwfcU
                          IF ( gamma_only ) THEN
                             p%r(iw,ib) = p%r(iw,ib) + q(iw,ih,na)*becp%r(ikb,ib)
@@ -290,6 +300,7 @@ SUBROUTINE compute_pproj( ik, q, p )
     ENDDO
     !
     CALL deallocate_bec_type( becp )
+    CALL using_becp_auto(2)
     !
     RETURN
     !
@@ -319,7 +330,7 @@ SUBROUTINE new_ns_nc( ns )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
-  !
+  USE wavefunctions_gpum,   ONLY : using_evc
   IMPLICIT NONE
   !
   COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
@@ -346,11 +357,13 @@ SUBROUTINE new_ns_nc( ns )
   !
   !--
   !  loop on k points
+  CALL using_evc(0)
   DO ik = 1, nks
      !
      npw = ngk (ik)
      IF (nks > 1) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+        CALL using_evc(1)
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
      ENDIF
      !
