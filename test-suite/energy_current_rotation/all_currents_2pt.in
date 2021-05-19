@@ -4,11 +4,12 @@ vel_input_units="CP",
     file_output= 'current_hz',
     eta=   0.100,
     n_max=     5,
+    three_point_derivative = .false.
  /
  &CONTROL
     calculation='md',
     restart_mode='from_scratch',
-    pseudo_dir='../pseudo',
+    pseudo_dir='../../pseudo',
     outdir='./save',
     disk_io = 'none',
 /

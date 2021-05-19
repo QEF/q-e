@@ -1,7 +1,7 @@
  &energy_current
 vel_input_units="CP",
     delta_t=   0.650,
-    file_output= 'current_hz',
+    file_output= 'current_hz_2pt',
     eta=   0.100,
     n_max=     5,
     trajdir='traj/cp',
@@ -10,14 +10,14 @@ vel_input_units="CP",
     re_init_wfc_1 = .true. ,
     re_init_wfc_2 = .true. ,
     re_init_wfc_3 = .true. ,
-    three_point_derivative = .true. ,
+    three_point_derivative = .false. ,
     n_repeat_every_step = 2 ,
     ethr_small_step = 1.d-3
  /
  &CONTROL
     calculation='md',
     restart_mode='from_scratch',
-    pseudo_dir='../pseudo',
+    pseudo_dir='../../pseudo',
     outdir='./save',
     disk_io = 'none',
 /
