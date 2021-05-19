@@ -126,6 +126,10 @@ epw: phlibs
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
 
+all_currents:
+	if test -d energy_current ; then \
+	( cd energy_current ; $(MAKE) all || exit 1; ) ; fi
+
 travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
