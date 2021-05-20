@@ -38,7 +38,7 @@ pseudo :
 	@./check_pseudo.sh tddfpt_
 	@./check_pseudo.sh hp_
 	@./check_pseudo.sh ph_
-	@./check_pseudo.sh energy_current_
+	@./check_pseudo.sh QEHeat_
 
 run-tests : run-tests-serial
 
@@ -227,10 +227,10 @@ clean:
 # Cleaning TDDFPT final files
 	@rm -rf tddfpt_*/*.plot_chi.dat tddfpt_*/*.plot_eps.dat tddfpt_*/out/ tddfpt_*/turbo_spectrum.out
 # all_currents files
-	@for x in `find energy_current_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find energy_current_* -name "CRASH"`; do rm -rf $$x; done
-	@rm -rf energy_current_*/save \
-                energy_current_*/current_hz*
+	@for x in `find QEHeat_* -name "test*"`; do rm -rf $$x; done
+	@for x in `find QEHeat_* -name "CRASH"`; do rm -rf $$x; done
+	@rm -rf QEHeat_*/save \
+                QEHeat_*/current_hz*
 	@rm -f userconfig
 
 
@@ -238,4 +238,4 @@ clean:
 purge: clean
 	@for x in `find pw_* -name "benchmark*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "benchmark*"`; do rm -rf $$x; done
-	@for x in `find energy_current_* -name "benchmark*"`; do rm -rf $$x; done
+	@for x in `find QEHeat_* -name "benchmark*"`; do rm -rf $$x; done

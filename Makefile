@@ -127,8 +127,8 @@ epw: phlibs
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
 
 all_currents:
-	if test -d energy_current ; then \
-	( cd energy_current ; $(MAKE) all || exit 1; ) ; fi
+	if test -d QEHeat ; then \
+	( cd QEHeat ; $(MAKE) all || exit 1; ) ; fi
 
 travis : pwall epw
 	if test -d test-suite ; then \

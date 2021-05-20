@@ -230,14 +230,14 @@ program = ZG
 [hp_*/]
 program = HP
 
-[energy_current_rotation/]
-program = h2o_mol
+[QEHeat_rotation/]
+program = QEHeat_h2o_mol
 
-[energy_current_translation/]
-program = translation
+[QEHeat_translation/]
+program = QEHeat_translation
 
-[energy_current_h2o]
-program = h2o_mol_t
+[QEHeat_h2o]
+program = QEHeat_h2o_mol_t
 
 
 
@@ -251,5 +251,5 @@ hp_all = hp_*??
 epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob 
 zg_all = zg_*??
 tddfpt_all = tddfpt_*??
-all_currents_all = energy_current_*
+all_currents_all = QEHeat_*
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*?? hp_*?? all_currents_*??

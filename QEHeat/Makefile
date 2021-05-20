@@ -1,4 +1,4 @@
-# Makefile for energy_current
+# Makefile for QEHeat
 sinclude ../make.inc
 
 default: all
