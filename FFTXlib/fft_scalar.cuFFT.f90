@@ -92,6 +92,7 @@
      END IF
      !
      istat = cufftSetStream(cufft_planz(ip), stream)
+     call fftx_error__(" fft_scalar_cuFFT: cft_1z_gpu ", " failed to set stream ", istat)
 
 #if defined(__FFT_CLOCKS)
      CALL start_clock( 'GPU_cft_1z' )
@@ -99,6 +100,7 @@
 
      IF (isign < 0) THEN
         istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_FORWARD )
+        call fftx_error__(" fft_scalar_cuFFT: cft_1z_gpu ", " cufftExecZ2Z failed ", istat)
         tscale = 1.0_DP / nz
         IF (is_inplace) THEN
 !$cuf kernel do(1) <<<*,*,0,stream>>>
@@ -114,8 +116,10 @@
      ELSE IF (isign > 0) THEN
         IF (is_inplace) THEN
            istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_INVERSE )
+           call fftx_error__(" fft_scalar_cuFFT: cft_1z_gpu ", " cufftExecZ2Z failed ", istat)
         ELSE
            istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), cout_d(1), CUFFT_INVERSE )
+           call fftx_error__(" fft_scalar_cuFFT: cft_1z_gpu ", " cufftExecZ2Z failed ", istat)
         END IF
      END IF
 
@@ -152,12 +156,16 @@
               DIST = ldz
              BATCH = nsl
 
-       IF( cufft_planz( icurrent) /= 0 ) istat = cufftDestroy( cufft_planz( icurrent) )
+       IF( cufft_planz( icurrent) /= 0 ) THEN
+           istat = cufftDestroy( cufft_planz( icurrent) )
+           call fftx_error__(" fft_scalar_cuFFT: cft_1z_gpu ", " cufftDestroy failed ", istat)
+       ENDIF
 
        istat = cufftPlanMany( cufft_planz( icurrent), RANK, FFT_DIM, &
                               DATA_DIM, STRIDE, DIST, &
                               DATA_DIM, STRIDE, DIST, &
                               CUFFT_Z2Z, BATCH )
+       call fftx_error__(" fft_scalar_cuFFT: cft_1z_gpu ", " cufftPlanMany failed ", istat)
 
 #ifdef TRACK_FLOPS
        zflops( icurrent ) = 5.0d0 * REAL( nz ) * log( REAL( nz ) )/log( 2.d0 )
@@ -260,10 +268,14 @@
 
 #if defined(__CUFFT_ALL_XY_PLANES)
      istat = cufftSetStream(cufft_plan_2d(ip), stream)
+     call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " failed to set stream ", istat)
 #else
      istat = cufftSetStream(cufft_plan_x(ip), stream)
+     call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " failed to set stream ", istat)
      istat = cufftSetStream(cufft_plan_y(1,ip), stream)
+     call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " failed to set stream ", istat)
      istat = cufftSetStream(cufft_plan_y(2,ip), stream)
+     call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " failed to set stream ", istat)
 #endif
 
      !
@@ -280,6 +292,7 @@
         !
 #if defined(__CUFFT_ALL_XY_PLANES)
         istat = cufftExecZ2Z( cufft_plan_2d(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_FORWARD )
+        call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftExecZ2Z failed ", istat)
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
         DO k=1, nzl
            DO j=1, ldy
@@ -290,7 +303,8 @@
         END DO
 #else
         istat = cufftExecZ2Z( cufft_plan_x(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_FORWARD )
-        if(istat) print *,"error in fftxy fftx istat = ",istat
+        call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", &
+                          " cufftExecZ2Z failed in fftxy fftx ", istat)
 
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
         DO k=1, nzl
@@ -304,12 +318,14 @@
 
         if(batch_1>0) then
            istat = cufftExecZ2Z( cufft_plan_y(1,ip), temp_d(1,1,1), temp_d(1,1,1), CUFFT_FORWARD )
-           if(istat) print *,"error in fftxy ffty batch_1 istat = ",istat
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", &
+                             " cufftExecZ2Z failed in fftxy ffty batch_1 istat = ", istat)
         end if
 
         if(batch_2>0) then
            istat = cufftExecZ2Z( cufft_plan_y(2,ip), temp_d(1,1,nx-batch_2+1), temp_d(1,1,nx-batch_2+1), CUFFT_FORWARD )
-           if(istat) print *,"error in fftxy ffty batch_2 istat = ",istat
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", &
+                             " cufftExecZ2Z failed in fftxy ffty batch_2 istat = ", istat)
         end if
 
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
@@ -327,6 +343,7 @@
         !print *,"exec cufft INV",nx,ny,ldx,ldy,nzl
 #if defined(__CUFFT_ALL_XY_PLANES)
         istat = cufftExecZ2Z( cufft_plan_2d(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_INVERSE )
+        call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftExecZ2Z failed ", istat)
 #else
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
         DO k=1, nzl
@@ -339,12 +356,12 @@
 
         if(batch_1>0) then
            istat = cufftExecZ2Z( cufft_plan_y(1,ip), temp_d(1,1,1), temp_d(1,1,1), CUFFT_INVERSE )
-           if(istat) print *,"error in fftxy ffty batch_1 istat = ",istat
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " in fftxy ffty batch_1 istat = ", istat)
         end if
 
         if(batch_2>0) then
            istat = cufftExecZ2Z( cufft_plan_y(2,ip), temp_d(1,1,nx-batch_2+1), temp_d(1,1,nx-batch_2+1), CUFFT_INVERSE )
-           if(istat) print *,"error in fftxy ffty batch_2 istat = ",istat
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " in fftxy ffty batch_2 istat = ", istat)
         end if
 
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
@@ -364,7 +381,7 @@
 !        end do
 
         istat = cufftExecZ2Z( cufft_plan_x(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_INVERSE )
-        if(istat) print *,"error in fftxy fftx istat = ",istat
+        call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " in fftxy fftx istat = ", istat)
 
 #endif
         !
@@ -411,12 +428,16 @@
               DIST = ldx*ldy
              BATCH = nzl
 
-       IF( cufft_plan_2d( icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_2d(icurrent) )
+       IF( cufft_plan_2d( icurrent) /= 0 ) THEN
+           istat = cufftDestroy( cufft_plan_2d(icurrent) )
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftDestroy failed ", istat)
+       ENDIF
 
        istat = cufftPlanMany( cufft_plan_2d( icurrent), RANK, FFT_DIM, &
                               DATA_DIM, STRIDE, DIST, &
                               DATA_DIM, STRIDE, DIST, &
                               CUFFT_Z2Z, BATCH )
+       call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftPlanMany failed ", istat)
 
 #else
        INTEGER, PARAMETER :: RANK=1
@@ -437,25 +458,37 @@
             BATCH_Y2 = nzl*BATCH_2
 
 
-       IF( cufft_plan_x( icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_x(icurrent) )
-       IF( cufft_plan_y( 1, icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_y(1,icurrent) )
-       IF( cufft_plan_y( 2, icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_y(2,icurrent) )
+       IF( cufft_plan_x( icurrent) /= 0 ) THEN
+           istat = cufftDestroy( cufft_plan_x(icurrent) )
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftDestroy failed x ", istat)
+       ENDIF
+       IF( cufft_plan_y( 1, icurrent) /= 0 ) THEN
+           istat = cufftDestroy( cufft_plan_y(1,icurrent) )
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftDestroy failed y1 ", istat)
+       ENDIF
+       IF( cufft_plan_y( 2, icurrent) /= 0 ) THEN
+           istat = cufftDestroy( cufft_plan_y(2,icurrent) )
+           call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftDestroy failed y2 ", istat)
+       ENDIF
 
 
        istat = cufftPlanMany( cufft_plan_x( icurrent), RANK, FFT_DIM_X, &
                               DATA_DIM_X, STRIDE_X, DIST_X, &
                               DATA_DIM_X, STRIDE_X, DIST_X, &
                               CUFFT_Z2Z, BATCH_X )
+       call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftPlanMany failed batch_x ", istat)
 
        istat = cufftPlanMany( cufft_plan_y( 1, icurrent), RANK, FFT_DIM_Y, &
                               DATA_DIM_Y, STRIDE_Y, DIST_Y, &
                               DATA_DIM_Y, STRIDE_Y, DIST_Y, &
                               CUFFT_Z2Z, BATCH_Y1 )
+       call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftPlanMany failed batch_y1 ", istat)
 
        istat = cufftPlanMany( cufft_plan_y( 2, icurrent), RANK, FFT_DIM_Y, &
                               DATA_DIM_Y, STRIDE_Y, DIST_Y, &
                               DATA_DIM_Y, STRIDE_Y, DIST_Y, &
                               CUFFT_Z2Z, BATCH_Y2 )
+       call fftx_error__(" fft_scalar_cuFFT: cft_2xy_gpu ", " cufftPlanMany failed batch_y2 ", istat)
 
 
 #endif
@@ -541,9 +574,12 @@
      !   Now perform the 3D FFT using the machine specific driver
      !
      istat = cufftSetStream(cufft_plan_3d(ip), stream)
+     call fftx_error__(" fft_scalar_cuFFT: cfft3d_gpu ", " failed to set stream ", istat)
+
      IF( isign < 0 ) THEN
 
         istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_FORWARD )
+        call fftx_error__(" fft_scalar_cuFFT: cfft3d_gpu ", " cufftExecZ2Z failed ", istat)
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
 !$cuf kernel do(1) <<<*,(16,16,1),0,stream>>>
@@ -554,6 +590,7 @@
      ELSE IF( isign > 0 ) THEN
 
         istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_INVERSE )
+        call fftx_error__(" fft_scalar_cuFFT: cfft3d_gpu ", " cufftExecZ2Z failed ", istat)
 
      END IF
 
@@ -591,12 +628,16 @@
               DIST = ldx*ldy*ldz
              BATCH = howmany
 
-       IF( cufft_plan_3d( icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_3d(icurrent) )
+       IF( cufft_plan_3d( icurrent) /= 0 ) THEN
+           istat = cufftDestroy( cufft_plan_3d(icurrent) )
+           call fftx_error__(" fft_scalar_cuFFT: cfft3d_gpu ", " cufftDestroy failed ", istat)
+       ENDIF
 
        istat = cufftPlanMany( cufft_plan_3d( icurrent), RANK, FFT_DIM, &
                               DATA_DIM, STRIDE, DIST, &
                               DATA_DIM, STRIDE, DIST, &
                               CUFFT_Z2Z, BATCH )
+       call fftx_error__(" fft_scalar_cuFFT: cfft3d_gpu ", " cufftPlanMany failed ", istat)
 
        !IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
        !  call fftx_error__('cfft3','not implemented',1)
@@ -651,192 +692,12 @@
      !TYPE(C_PTR), SAVE :: bw_plan ( 3, ndims ) = C_NULL_PTR
      INTEGER, SAVE :: cufft_plan_1d( 3, ndims ) = 0
      !
-     ! The current version of this function is massively outperformed by
-     !  cfft3d_gpu. Leaving the call to full 3D FFT for the time being.
+     ! cfft3d_gpu outperforms an explicit implementation of cfft3ds_gpu
+     ! which is now buried in the commit history.
      !
      CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign, stream)
      return
-
-     tscale = 1.0_DP
-
-     IF( ny /= ldy ) &
-       CALL fftx_error__(' cfft3ds ', ' wrong dimensions: ny /= ldy ', 1 )
-     IF( howmany < 1 ) &
-       CALL fftx_error__(' cfft3ds ', ' howmany less than one ', 1 )
-     IF( howmany /= 1 ) &
-       CALL fftx_error__(' cfft3ds ', ' howmany different from 1, not yet implemented for cuFFT ', 1 )
-
-     CALL lookup()
-
-     IF( ip == -1 ) THEN
-
-       !   no table exist for these parameters
-       !   initialize a new one
-
-       CALL init_plan()
-
-     END IF
-
-     istat = cufftSetStream(cufft_plan_1d(3, ip), stream)
-     istat = cufftSetStream(cufft_plan_1d(2, ip), stream)
-     istat = cufftSetStream(cufft_plan_1d(1, ip), stream)
-     IF ( isign > 0 ) THEN
-
-        !
-        !  k-direction ...
-        !
-
-        !incx1 = ldx * ldy;  incx2 = 1;  m = 1
-
-        do i =1, nx
-           do j =1, ny
-              ii = i + ldx * (j-1)
-              if ( do_fft_z(ii) > 0) then
-                 ! call dfftw_execute_dft( bw_plan( 3, ip), f_d( ii:), f_d( ii:) )
-                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_INVERSE )
-              end if
-           end do
-        end do
-
-        !
-        !  ... j-direction ...
-        !
-
-        !incx1 = ldx;  incx2 = ldx*ldy;  m = nz
-
-        do i = 1, nx
-           if ( do_fft_y( i ) == 1 ) then
-             !call dfftw_execute_dft( bw_plan( 2, ip), f_d( i: ), f_d( i: ) )
-             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d(i:), f_d( i:), CUFFT_INVERSE )
-           endif
-        enddo
-
-        !
-        !  ... i - direction
-        !
-
-        !incx1 = 1;  incx2 = ldx;  m = ldy*nz
-
-        !call dfftw_execute_dft( bw_plan( 1, ip), f_d( 1: ), f_d( 1: ) )
-        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_INVERSE )
-
-     ELSE
-
-        !
-        !  i - direction ...
-        !
-
-        !incx1 = 1;  incx2 = ldx;  m = ldy*nz
-
-        !call dfftw_execute_dft( fw_plan( 1, ip), f_d( 1: ), f_d( 1: ) )
-        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_FORWARD )
-
-        !
-        !  ... j-direction ...
-        !
-
-        !incx1 = ldx;  incx2 = ldx*ldy;  m = nz
-
-        do i = 1, nx
-           if ( do_fft_y ( i ) == 1 ) then
-             !call dfftw_execute_dft( fw_plan( 2, ip), f_d( i: ), f_d( i: ) )
-             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d( i:), f_d( i:), CUFFT_FORWARD )
-           endif
-        enddo
-
-        !
-        !  ... k-direction
-        !
-
-        !incx1 = ldx * ny;  incx2 = 1;  m = 1
-
-        do i = 1, nx
-           do j = 1, ny
-              ii = i + ldx * (j-1)
-              if ( do_fft_z ( ii) > 0) then
-                 !call dfftw_execute_dft( fw_plan( 3, ip), f_d(ii:), f_d(ii:) )
-                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_FORWARD )
-              end if
-           end do
-        end do
-
-        tscale = 1.0_DP / DBLE( nx * ny * nz )
-        !$cuf kernel do(1) <<<*,*,0,stream>>>
-        DO i=1, nx*ny*nz
-           f_d( i ) = f_d( i ) * tscale
-        END DO
-
-     END IF
-     RETURN
-
-      CONTAINS
-
-        SUBROUTINE lookup()
-        ip = -1
-        DO i = 1, ndims
-          !   first check if there is already a table initialized
-          !   for this combination of parameters
-          IF( ( nx == dims(1,i) ) .and. ( ny == dims(2,i) ) .and. &
-              ( nz == dims(3,i) ) ) THEN
-            ip = i
-            EXIT
-          END IF
-        END DO
-        END SUBROUTINE lookup
-
-        SUBROUTINE init_plan()
-           INTEGER, PARAMETER :: RANK=3
-           INTEGER :: FFT_DIM(RANK), HOW_MANY(RANK), DATA_DIM(RANK)
-           INTEGER :: STRIDE(RANK), DIST(RANK)
-           INTEGER :: i
-
-            FFT_DIM(1) = nx
-            FFT_DIM(2) = ny
-            FFT_DIM(3) = nz
-           HOW_MANY(1) = ny*nz
-           HOW_MANY(2) = nz
-           HOW_MANY(3) = 1
-           DATA_DIM(1) = ldx
-           DATA_DIM(2) = ldy
-           DATA_DIM(3) = ldz
-             STRIDE(1) = 1
-             STRIDE(2) = ldx
-             STRIDE(3) = ldx*ldy
-               DIST(1) = ldx
-               DIST(2) = ldx*ldy
-               DIST(3) = 1
-
-          IF( cufft_plan_1d( 1, icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_1d(1, icurrent) )
-          IF( cufft_plan_1d( 2, icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_1d(2, icurrent) )
-          IF( cufft_plan_1d( 3, icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_1d(3, icurrent) )
-
-
-       !CALL dfftw_plan_many_dft( fw_plan( 1, icurrent), &
-       !     1, nx, ny*nz, f(1:), (/ldx, ldy, ldz/), 1, ldx, &
-       !                   f(1:), (/ldx, ldy, ldz/), 1, ldx, idir, FFTW_ESTIMATE)
-       !CALL dfftw_plan_many_dft( fw_plan( 2, icurrent), &
-       !     1, ny, nz, f(1:), (/ldx, ldy, ldz/), ldx, ldx*ldy, &
-       !                f(1:), (/ldx, ldy, ldz/), ldx, ldx*ldy, idir, FFTW_ESTIMATE)
-       !CALL dfftw_plan_many_dft( fw_plan( 3, icurrent), &
-       !     1, nz, 1, f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, &
-       !               f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
-
-
-          DO i = 1,3
-            istat = cufftPlanMany( cufft_plan_1d( i, icurrent), 1, FFT_DIM(i), &
-                              DATA_DIM(i), STRIDE(i), DIST(i), &
-                              DATA_DIM(i), STRIDE(i), DIST(i), &
-                              CUFFT_Z2Z, HOW_MANY(i) )
-            ! set current dimension as a lookup parameter along the three directions
-            dims(1,icurrent) = FFT_DIM(i)
-          END DO
-          ! dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
-
-          ip = icurrent
-          icurrent = MOD( icurrent, ndims ) + 1
-        END SUBROUTINE init_plan
-
-     END SUBROUTINE cfft3ds_gpu
+   END SUBROUTINE cfft3ds_gpu
 #endif
 !=----------------------------------------------------------------------=!
  END MODULE fft_scalar_cuFFT
