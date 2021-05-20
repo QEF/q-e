@@ -383,7 +383,7 @@ CONTAINS
              ! turn on vdW-DF2 type interactions for BEEF-vdW
              beefvdw = 2
        END SELECT
-       dft_defined = xclib_set_dft_IDs(1,4,43,14,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,40,10,0,0)
        inlc = beefvdw
     ! Special case vdW-DF
     CASE( 'VDW-DF' )
@@ -391,67 +391,67 @@ CONTAINS
        inlc = 1
     ! Special case vdW-DF2
     CASE( 'VDW-DF2' )
-       dft_defined = xclib_set_dft_IDs(1,4,13,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,12,0,0,0)
        inlc = 2
     ! Special case vdW-DF3-opt1
     CASE( 'VDW-DF3-OPT1' )
-       dft_defined = xclib_set_dft_IDs(1,4,45,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,42,0,0,0)
        inlc = 3
     ! Special case vdW-DF3-opt2
     CASE( 'VDW-DF3-OPT2' )
-       dft_defined = xclib_set_dft_IDs(1,4,46,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,43,0,0,0)
        inlc = 4
     ! Special case vdW-DF-C6
     CASE( 'VDW-DF-C6' )
-       dft_defined = xclib_set_dft_IDs(1,4,26,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,23,0,0,0)
        inlc = 5
     ! Special case vdW-DF with C09 exchange
     CASE( 'VDW-DF-C09' )
-       dft_defined = xclib_set_dft_IDs(1,4,16,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,14,0,0,0)
        inlc = 1
     ! Special case vdW-DF2 with C09 exchange
     CASE( 'VDW-DF2-C09' )
-       dft_defined = xclib_set_dft_IDs(1,4,16,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,14,0,0,0)
        inlc = 2
     ! Special case vdW-DF-obk8, or vdW-DF + optB88
     CASE( 'VDW-DF-OBK8' )
-       dft_defined = xclib_set_dft_IDs(1,4,23,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,20,0,0,0)
        inlc = 1
     ! Special case vdW-DF-ob86, or vdW-DF + optB86
     CASE( 'VDW-DF-OB86' )
-       dft_defined = xclib_set_dft_IDs(1,4,24,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,21,0,0,0)
        inlc = 1
     ! Special case vdW-DF2 with B86R
     CASE( 'VDW-DF2-B86R' )
-       dft_defined = xclib_set_dft_IDs(1,4,26,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,23,0,0,0)
        inlc = 2
     ! Special case vdW-DF-CX
     CASE( 'VDW-DF-CX' )
-       dft_defined = xclib_set_dft_IDs(1,4,27,0,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,24,0,0,0)
        inlc = 1
     ! Special case vdW-DF-CX0
     CASE( 'VDW-DF-CX0' )
-       dft_defined = xclib_set_dft_IDs(6,4,29,0,0,0)
+       dft_defined = xclib_set_dft_IDs(6,4,26,0,0,0)
        inlc = 1
     ! Special case vdW-DF-CX0P
     CASE( 'VDW-DF-CX0P' )
-       dft_defined = xclib_set_dft_IDs(6,4,31,0,0,0)
+       dft_defined = xclib_set_dft_IDs(6,4,28,0,0,0)
        inlc = 1
     ! Special case vdW-DF2-0
     CASE( 'VDW-DF2-0' )
-       dft_defined = xclib_set_dft_IDs(6,4,30,0,0,0)
+       dft_defined = xclib_set_dft_IDs(6,4,27,0,0,0)
        inlc = 2
     ! Special case vdW-DF2-BR0
     CASE( 'VDW-DF2-BR0' )
-       dft_defined = xclib_set_dft_IDs(6,4,38,0,0,0)
+       dft_defined = xclib_set_dft_IDs(6,4,35,0,0,0)
        inlc = 2
     ! Special case vdW-DF-C090
     CASE( 'VDW-DF-C090' )
-       dft_defined = xclib_set_dft_IDs(6,4,40,0,0,0)
+       dft_defined = xclib_set_dft_IDs(6,4,37,0,0,0)
        inlc = 1
     ! Special case rVV10
     CASE( 'RVV10' )
-       dft_defined = xclib_set_dft_IDs(1,4,13,4,0,0)
+       dft_defined = xclib_set_dft_IDs(1,4,12,4,0,0)
        inlc = 26
     ! Special case rVV10+scan
     CASE( 'RVV10-SCAN' )
@@ -741,19 +741,19 @@ CONTAINS
         !
         IF (iexch==1 .AND. icorr==4 .AND. igcx==4 .AND. igcc==0) THEN
            shortname = 'VDW-DF'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==27 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-CX'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==29 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-CX0'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==31 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-CX0P'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0) THEN
-           shortname = 'VDW-DF-C09'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==24 .AND. igcc==0) THEN
+           shortname = 'VDW-DF-CX'
+        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==26 .AND. igcc==0) THEN
+           shortname = 'VDW-DF-CX0'
+        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==28 .AND. igcc==0) THEN
+           shortname = 'VDW-DF-CX0P'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==14 .AND. igcc==0) THEN
+           shortname = 'VDW-DF-C09'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==21 .AND. igcc==0) THEN
            shortname = 'VDW-DF-OB86'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==23 .AND. igcc==0) THEN
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==20 .AND. igcc==0) THEN
            shortname = 'VDW-DF-OBK8'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==40 .AND. igcc==0) THEN
+        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==37 .AND. igcc==0) THEN
            shortname = 'VDW-DF-C090'
         ELSE
            shortname = xclib_get_dft_short()
@@ -762,17 +762,17 @@ CONTAINS
         !
       ELSEIF (inlc==2) THEN
         !
-        IF (iexch==1 .AND. icorr==4  .AND. igcx==43 .AND. igcc==14) THEN
+        IF (iexch==1 .AND. icorr==4  .AND. igcx==40 .AND. igcc==10) THEN
            shortname = 'BEEF'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==13 .AND. igcc==0) THEN
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==12 .AND. igcc==0) THEN
            shortname = 'VDW-DF2'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0) THEN
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==14 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-C09'
-        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==26 .AND. igcc==0) THEN
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==23 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-B86R'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==30 .AND. igcc==0) THEN
+        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==27 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-0'
-        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
+        ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==35 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
         ELSE
            shortname = xclib_get_dft_short()
