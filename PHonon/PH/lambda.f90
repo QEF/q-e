@@ -14,11 +14,12 @@
 
 !
 program elph
-
-  ! read files 'filelph' produced by phonon (one for each q-point)
-  ! sum over q-points to produce the electron-phonon coefficients:
-  ! lambda (the one of BCS superconductivity) and alpha^2*F(omega)
-  ! T_c using Allen-Dynes formula
+  !
+  !! Read files 'filelph' produced by \(\texttt{PHonon}\) (one for
+  !! each q-point), sum over q-points to produce the electron-phonon
+  !! coefficients \(\text{lambda}\) (the one of BCS superconductivity)
+  !! and \(\text{alpha}^2 F(\text{omega})\), \(T_c\) using Allen-Dynes
+  !! formula.
 
   implicit none
   integer, parameter:: npk=200, nsigx=50, nmodex=100, nex=200
@@ -188,8 +189,7 @@ end program elph
 !-----------------------------------------------------------------------
 SUBROUTINE remove_comments_from_string( string )  
   !-----------------------------------------------------------------------
-  !
-  ! chop string removing everything after an esclamation mark (!)
+  !! Chop string removing everything after an esclamation mark (!).
   !
   IMPLICIT NONE
   !

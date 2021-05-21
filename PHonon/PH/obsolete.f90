@@ -15,15 +15,15 @@
 subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
      minus_q, gi, gimq)
   !-----------------------------------------------------------------------
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine selects, among the symmetry matrices of the point group
+  !! of a crystal, the symmetry operations which leave q unchanged.
+  !! Furthermore it checks if one of the matrices send q <-> -q+G. In
+  !! this case \(\text{minus_q}\) is set TRUE.
   !
-  ! This routine selects, among the symmetry matrices of the point group
-  ! of a crystal, the symmetry operations which leave q unchanged.
-  ! Furthermore it checks if one of the matrices send q <-> -q+G. In
-  ! this case minus_q is set true.
-  !
-  ! Revised   2 Sept. 1995 by Andrea Dal Corso
-  ! Modified 22 April 1997 by SdG: minus_q is sought also among sym.op.
-  !                such that Sq=q+G (i.e. the case q=-q+G is dealt with).
+  !! Revised   2 Sept. 1995 by Andrea Dal Corso
+  !! Modified 22 April 1997 by SdG: \(\text{minus_q}\) is sought also among
+  !!   sym.op. such that Sq=q+G (i.e. the case \(q=-q+G\) is dealt with).
   !
   !
   !  The dummy variables
@@ -138,24 +138,24 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
                     nirr, gi, gimq, iverbosity, u_from_file, eigen, search_sym,&
                     nspin_mag, t_rev, amass, num_rap_mode, name_rap_mode)
 !---------------------------------------------------------------------
+!! -- OBSOLETE (kept for compatibility) --  
+!! This subroutine computes a basis for all the irreducible
+!! representations of the small group of q, which are contained
+!! in the representation which has as basis the displacement vectors.
+!! This is achieved by building a random hermitean matrix,
+!! symmetrizing it and diagonalizing the result. The eigenvectors
+!! give a basis for the irreducible representations of the
+!! small group of q.
 !
-!     This subroutine computes a basis for all the irreducible
-!     representations of the small group of q, which are contained
-!     in the representation which has as basis the displacement vectors.
-!     This is achieved by building a random hermitean matrix,
-!     symmetrizing it and diagonalizing the result. The eigenvectors
-!     give a basis for the irreducible representations of the
-!     small group of q.
+!! Furthermore it computes:
+!! 1) the small group of q.  
+!! 2) the possible G vectors associated to every symmetry operation.  
+!! 3) the matrices which represent the small group of q on the
+!!    pattern basis.
 !
-!     Furthermore it computes:
-!     1) the small group of q
-!     2) the possible G vectors associated to every symmetry operation
-!     3) the matrices which represent the small group of q on the
-!        pattern basis.
-!
-!     Original routine was from C. Bungaro.
-!     Revised Oct. 1995 by Andrea Dal Corso.
-!     April 1997: parallel stuff added (SdG)
+!! Original routine was from C. Bungaro.  
+!! Revised Oct. 1995 by Andrea Dal Corso.  
+!! April 1997: parallel stuff added (SdG)
 !
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
@@ -469,10 +469,10 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
      irt, irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, &
      npert, nirr, gi, gimq, iverbosity)
   !---------------------------------------------------------------------
-  !
-  !     This routine substitute set_irr when there are no symmetries.
-  !     The irreducible representations are all one dimensional and
-  !     we set them to the displacement of a single atom in one direction
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine substitute set_irr when there are no symmetries.
+  !! The irreducible representations are all one dimensional and
+  !! we set them to the displacement of a single atom in one direction.
   !
   USE kinds, only : DP
   implicit none
@@ -558,10 +558,10 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
      irt, irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, &
      npert, nirr, gi, gimq, iverbosity, modenum)
   !---------------------------------------------------------------------
-  !
-  !    This routine computes the symmetry matrix of the mode defined
-  !    by modenum. It sets also the modes u for all the other
-  !    representation
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine computes the symmetry matrix of the mode defined
+  !! by modenum. It sets also the modes u for all the other
+  !! representation.
   !
   !
   !
@@ -751,12 +751,11 @@ end subroutine set_irr_mode
 !---------------------------------------------------------------------
 subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, npertx )
-!---------------------------------------------------------------------
-!
-!     This subroutine computes: 
-!     1) the matrices which represent the small group of q on the
-!        pattern basis.
-!
+  !---------------------------------------------------------------------
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This subroutine computes the matrices which represent the small 
+  !! group of q on the pattern basis.
+  !
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
 
@@ -933,12 +932,12 @@ end subroutine set_irr_sym
 
 subroutine dynmat0
   !-----------------------------------------------------------------------
-  !
-  !     This routine computes the part of the dynamical matrix which
-  !     does not depend upon the change of the Bloch wavefunctions.
-  !     It is a driver which calls the routines dynmat_## and d2ionq
-  !     for computing respectively the electronic part and
-  !     the ionic part
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine computes the part of the dynamical matrix which
+  !! does not depend upon the change of the Bloch wavefunctions.
+  !! It is a driver which calls the routines dynmat_## and d2ionq
+  !! for computing respectively the electronic part and
+  !! the ionic part.
   !
   !
   !
@@ -1030,9 +1029,9 @@ end subroutine dynmat0
 subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
      bg, nsymq, nat, irotmq, minus_q)
   !-----------------------------------------------------------------------
-  !
-  !    This routine symmetrize the dynamical matrix written in the basis
-  !    of the modes
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine symmetrize the dynamical matrix written in the basis
+  !! of the modes.
   !
   !
   USE kinds, only : DP
@@ -1139,11 +1138,11 @@ end subroutine symdyn_munu
 subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
      nat, irotmq, minus_q)
   !-----------------------------------------------------------------------
-  !
-  !     This routine receives as input an unsymmetrized dynamical
-  !     matrix expressed on the crystal axes and imposes the symmetry
-  !     of the small group of q. Furthermore it imposes also the symmetry
-  !     q -> -q+G if present.
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine receives as input an unsymmetrized dynamical
+  !! matrix expressed on the crystal axes and imposes the symmetry
+  !! of the small group of q. Furthermore it imposes also the symmetry
+  !! \(q \rightarrow -q+G\) if present.
   !
   !
   USE kinds, only : DP
@@ -1301,11 +1300,11 @@ end subroutine symdynph_gq
 !-----------------------------------------------------------------------
 subroutine dynmatrix(iq_)
   !-----------------------------------------------------------------------
-  !
-  ! This routine is a driver which computes the symmetrized dynamical
-  ! matrix at q (and in the star of q) and diagonalizes it.
-  ! It writes the result on a iudyn file and writes the eigenvalues on
-  ! output.
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine is a driver which computes the symmetrized dynamical
+  !! matrix at q (and in the star of q) and diagonalizes it.
+  !! It writes the result on a iudyn file and writes the eigenvalues on
+  !! output.
   !
   !
   USE kinds,         ONLY : DP
@@ -1550,11 +1549,12 @@ end subroutine dynmatrix
 !-----------------------------------------------------------------------
 subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   !-----------------------------------------------------------------------
-  !
-  !     This routine computes the vector rtau which contains for each
-  !     atom and each rotation the vector S\tau_a - \tau_b, where
-  !     b is the rotated a atom, given by the array irt. These rtau are
-  !     non zero only if fractional translations are present.
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This routine computes the vector \(\text{rtau}\) which contains for each
+  !! atom and each rotation the vector \(S\tau_a - \tau_b\), where
+  !! \(b\) is the rotated \(a\) atom, given by the array \(\text{irt}. These 
+  !! \(\text{rtau}\) are non zero only if fractional translations are 
+  !! present.
   !
   USE kinds, ONLY : DP
   implicit none
@@ -1634,9 +1634,9 @@ end subroutine sgam_ph
 subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
      wdyn, lgamma)
   !----------------------------------------------------------------------
-  !
-  !   Create a random hermitian matrix with non zero elements similar to
-  !   the dynamical matrix of the system
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! Create a random hermitian matrix with non zero elements similar to
+  !! the dynamical matrix of the system.
   !
   !
   USE kinds, only : DP
@@ -1720,11 +1720,12 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
      rtau, amass, ntyp, ityp, flag, lri, lmolecule, nspin_mag,        &
      name_rap_mode, num_rap_mode)
   !
-  !   This subroutine finds the irreducible representations which give
-  !   the transformation properties of eigenvectors of the dynamical
-  !   matrix. It does NOT work at zone border in non symmorphic space groups.
-  !   if flag=1 the true displacements are given in input, otherwise the
-  !   eigenvalues of the dynamical matrix are given.
+  !! -- OBSOLETE (kept for compatibility) --  
+  !! This subroutine finds the irreducible representations which give
+  !! the transformation properties of eigenvectors of the dynamical
+  !! matrix. It does NOT work at zone border in non symmorphic space groups.
+  !! if flag=1 the true displacements are given in input, otherwise the
+  !! eigenvalues of the dynamical matrix are given.
   !
   !
   USE io_global,  ONLY : stdout
