@@ -169,6 +169,19 @@ endif()
 #    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
 # endif()
 
+# Add optional sanitizers ASAN, UBSAN, MSAN
+set(VALID_SANITIZERS "none" "asan" "ubsan" "tsan" "msan")
+# Perform sanitizer option check, only works in debug mode
+if(NOT QE_ENABLE_SANITIZER IN_LIST VALID_SANITIZERS)
+  message(FATAL_ERROR "Invalid -DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}, value must be one of ${VALID_SANITIZERS}")
+else()
+  message(STATUS "Enable sanitizer QE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}")
+endif()
+# only GNU works right now
+if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+  message(FATAL_ERROR "-DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER} only works with the GNU compiler")
+endif()
+
 
 ###########################################################
 # language standard requirements
@@ -189,46 +202,6 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATC
     include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
     include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
-endif()
-
-############################################################
-# Sanitizer options
-############################################################
-
-# Add optional sanitizers ASAN, UBSAN, MSAN
-set(VALID_SANITIZERS "none" "asan" "ubsan" "tsan" "msan")
-
-# Perform sanitizer option check, only works in debug mode
-if(NOT QE_ENABLE_SANITIZER IN_LIST VALID_SANITIZERS)
-  message(FATAL_ERROR "Invalid -DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}, value must be one of ${VALID_SANITIZERS}")
-else()
-  message(STATUS "Enable sanitizer QE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}")
-endif()
-
-if(NOT ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-endif()
-
-# Set sanitizers compiler options
-if(NOT QE_ENABLE_SANITIZER STREQUAL "none")
-  if(NOT CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    message(FATAL_ERROR "-DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER} only works with GNU compiler")
-  endif()
-
-  if(QE_ENABLE_SANITIZER STREQUAL "asan" )
-    set(SANITIZER_FLAGS "-fsanitize=address"
-        CACHE STRING "AddressSanitizer Fortran compiler builds." FORCE)
-  elseif( "${ENABLE_SANITIZER}" STREQUAL "ubsan" )
-    set(SANITIZER_FLAGS "-fsanitize=undefined"
-        CACHE STRING "UndefinedBehaviorSanitizer Fortran compiler builds." FORCE)
-  elseif( "${ENABLE_SANITIZER}" STREQUAL "msan" )
-    set(SANITIZER_FLAGS "-fsanitize=memory"
-        CACHE STRING "MemorySanitizer Fortran compiler builds." FORCE)
-  elseif( "${ENABLE_SANITIZER}" STREQUAL "tsan" )
-    set(SANITIZER_FLAGS "-fsanitize=thread"
-        CACHE STRING "ThreadSanitizer Fortran compiler builds." FORCE)
-  endif()
-
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${SANITIZER_FLAGS}")
 endif()
 
 ###########################################################
