@@ -1,11 +1,10 @@
-              Marios Zacharias [1,2] & Feliciano Giustino [3,4], Feb 2020
+              Marios Zacharias [1] & Feliciano Giustino [2,3], May 2021
 
-[1] Fritz-Haber-Institut der Max-Planck-Gesellschaft, Faradayweg 4–6, D-14195 Berlin, Germany
-[2] Department of Mechanical and Materials Science Engineering, Cyprus University of Technology, 
+[1] Department of Mechanical and Materials Science Engineering, Cyprus University of Technology, 
     P.O. Box 50329, 3603 Limassol, Cyprus 
-[3] Oden Institute for Computational Engineering and Sciences, The University of Texas at Austin,
+[2] Oden Institute for Computational Engineering and Sciences, The University of Texas at Austin,
 Austin, Texas 78712, USA 
-[4] Department of Physics, The University of Texas at Austin, Austin, Texas 78712, USA
+[3] Department of Physics, The University of Texas at Austin, Austin, Texas 78712, USA
 ---------------------------------------------------------------------------------------------------
 
 If you use ZG.x please do cite the following work:
@@ -19,14 +18,14 @@ Acknowledgement: We thank Hyungjun Lee, Oden Institute for Computational Enginee
                  for help packaging this release.
 
 ---------------------------------------------------------------------------------------------------
-Instructions for the construction of the "ZG-displacement" (Zacharias-Giustino) following 
+Instructions for the construction of the Zacharias-Giustino "ZG" displacement following 
 Eq. (2) of Phys. Rev. Research 2, 013357, 2020. The approach for generating the ZG-displacement 
 is based on the generalized theory of the special displacement method as in 
 Phys. Rev. Research 2, 013357, (2020). 
 
 STEPS for generating the "ZG-displacement" for the calculation of temperature-dependent properties of solids: 
 
-0.  Compile the version of Quantum Espresso 6.6.0; pw.x and ph.x are required to run ZG.x.
+0.  Compile the version of Quantum Espresso 6.6.0 or later; pw.x and ph.x are required to run ZG.x.
     Go to "/path_to_your_espresso/EPW/ZG_displacement/src" and "make".
     This code exploits some main routines of matdyn.x. In particular, the code
     takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 
@@ -55,7 +54,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     temperature dependent properties. For help, please see the example folder by "tar -xvf example.tar.gz". 
     In file "example/silicon/ZG_displacement_generation/inputs/ZG_444.in" we show the example for 
     constructing a 4x4x4 ZG-configuration. One could potentially generate any supercell size
-    by simply changing "dimx","dimy","dimz", and the list of q-points (optional, see below). 
+    by simply changing "dim1","dim2","dim3", and the list of q-points (optional, see below). 
     "ZG.in" has the standard format as a "matdyn.in" file for Quantum Espresso. 
     Here we use the following input parameters:
     ---------------------------------------------------------------------------------------
@@ -64,8 +63,8 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
        "T"                  : Real number indicating the temperature at which the calculations will be performed. 
                               "T" essentially defines the amplitude of the normal coordinates. 
                               (default 0.00)
-       "dimx","dimy","dimz" : Integers corresponding to the dimensionality of the supercell i.e.:
-                              size of supercell will be [dimx * a(1), dimy * a(2), dimz * a(3)],
+       "dim1","dim2","dim3" : Integers corresponding to the dimensionality of the supercell i.e.:
+                              size of supercell will be [dim1 * a(1), dim2 * a(2), dim3 * a(3)],
                               where a(1), a(2), a(3) are the lattice vectors of the unit cell used
                               to compute the phonons.
                               (default 0, 0, 0)
@@ -73,7 +72,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               (default "Element")
        "synch"              : Logical flag that enables the synchronization of the modes. 
                               (default .false.)
-       "nloops"             : Integer for the number of loops the algorithm needs to 
+       "niters"             : Integer for the number of iterations the algorithm needs to 
                               go through for finding the optimum configuration. The algorithm 
                               generates a set of "+,-,+,-" signs and its possible permutations, 
                               trying to minimize the error coming from the coupling of modes with 
@@ -96,14 +95,14 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               (default 0.05)
        "incl_qA"            : Logical flag, to decide whether to include phonon modes in set A or not. 
                               (default .true.)
-       "single_phonon_displ": Logical flag that allows to displace the nuclei along single phonon modes. 
+       "single_ph_displ"    : Logical flag that allows to displace the nuclei along single phonon modes. 
                               Use output configurations to compute electron-phonon matrix elements with a direct 
                               supercell calculation. Set the displacement to the zero point by "T = 0". 
                               This finite displacement should carry precisely the effect of diagonal elements of [g(q)+g(-q)].
                               Output files: "single_phonon-displacements.dat" and "single_phonon-velocities.dat".
                               (default .false.)
        "q_external"         : Logical flag that allows the use of a q-point list specified by the user in the input file. 
-                              If .false. the q-point list is specified by the supercell dimensions dimx, dimy, and dimz. 
+                              If .false. the q-point list is specified by the supercell dimensions dim1, dim2, and dim3. 
                               If .true. the q-point list must be provided by the user (see "qlist_AB.txt").
                               (default .false.)
        "qlist_AB.txt"       : This file contains the external q-list in crystal coordinates as in the "ZG_444.in" example,
@@ -117,7 +116,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               q_external = .true. for the code to read the list. 
                                           
     ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out".
-         This generates three output files: the "equil_pos.txt", "ZG-configuration.dat" and "ZG-velocities.dat". 
+         This generates three output files: the "equil_pos.dat", "ZG-configuration.dat" and "ZG-velocities.dat". 
          The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear coordinates 
          that define the ZG-displacement for a particular temperature and supercell size. 
          The third one has the ZG-velocities or momenta of the nuclei generated in the same spirit with the ZG displacement. 
