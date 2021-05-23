@@ -20,9 +20,6 @@ if(NOT QE_ENABLE_SANITIZER STREQUAL "none")
   elseif(QE_ENABLE_SANITIZER STREQUAL "ubsan" )
     set(GNU_SANITIZER_OPTIONS "-fsanitize=undefined"
         CACHE STRING "UndefinedBehaviorSanitizer Fortran compiler builds." FORCE)
-  elseif(QE_ENABLE_SANITIZER STREQUAL "msan" )
-    set(GNU_SANITIZER_OPTIONS "-fsanitize=memory"
-        CACHE STRING "MemorySanitizer Fortran compiler builds." FORCE)
   elseif(QE_ENABLE_SANITIZER STREQUAL "tsan" )
     set(GNU_SANITIZER_OPTIONS "-fsanitize=thread"
         CACHE STRING "ThreadSanitizer Fortran compiler builds." FORCE)
