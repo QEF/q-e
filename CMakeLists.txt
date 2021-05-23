@@ -104,6 +104,7 @@ option(QE_ENABLE_DOC
     "enable documentation building" OFF)
 set(QE_FFTW_VENDOR "AUTO" CACHE 
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
+set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -167,6 +168,19 @@ endif()
 # if(QE_ENABLE_HDF5 AND NOT QE_ENABLE_MPI)
 #    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
 # endif()
+
+# Add optional sanitizers ASAN, UBSAN, MSAN
+set(VALID_SANITIZERS "none" "asan" "ubsan" "tsan" "msan")
+# Perform sanitizer option check, only works in debug mode
+if(NOT QE_ENABLE_SANITIZER IN_LIST VALID_SANITIZERS)
+  message(FATAL_ERROR "Invalid -DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}, value must be one of ${VALID_SANITIZERS}")
+else()
+  message(STATUS "Enable sanitizer QE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}")
+endif()
+# only GNU works right now
+if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+  message(FATAL_ERROR "-DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER} only works with the GNU compiler")
+endif()
 
 
 ###########################################################
@@ -232,6 +246,17 @@ if(QE_ENABLE_MPI)
     target_link_libraries(qe_mpi_fortran
         INTERFACE MPI::MPI_Fortran)
 endif(QE_ENABLE_MPI)
+
+###########################################################
+# Git
+###########################################################
+find_package(Git 2.13 REQUIRED)
+if(EXISTS ${qe_SOURCE_DIR}/.git)
+  message("   Source files are cloned from a git repository.")
+  set(IS_GIT_PROJECT 1)
+else()
+  message("   Source files are not cloned from a git repository.")
+endif()
 
 ###########################################################
 # Lapack
