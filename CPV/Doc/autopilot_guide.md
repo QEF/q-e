@@ -1,13 +1,10 @@
-README.AUTOPILOT 
---------------------------------------------------------------------------------
-Copyright (c) Targacept, Inc.
---------------------------------------------------------------------------------
-Targacept, Inc., 
-200 East First Street, 
-Suite 300, 
-Winston-Salem, NC, USA 27101 
-atp@targacept.com
---------------------------------------------------------------------------------
+    Copyright (c) Targacept, Inc.
+
+    Targacept, Inc., 
+    200 East First Street, 
+    Suite 300, 
+    Winston-Salem, NC, USA 27101 
+    atp@targacept.com
 
 This file describes the Autopilot Feature Suite as introduced and used by 
 Targacept, Inc.   This documentation accompanies free software; The software
@@ -20,6 +17,8 @@ This documentation, like the software it accompanies, is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
 warranty of MERCHANTABILITY FOR A PARTICULAR PURPOSE.  
 
+[[_TOC_]]
+
 --------------------------------------------------------------------------------
 AUTOPILOT DOCUMENTATION
 --------------------------------------------------------------------------------
@@ -29,13 +28,13 @@ Car-Parrinello simulations based on CP.X packaged in ESPRESSO.
 
 The following features are incorporated: 
 
-I. Auto Restart Mode 
-II. Autopilot Course Configuration (Dynamic Rules) 
-III. Autopilot Course Correction (Steering) 
+ - Auto Restart Mode 
+ - Autopilot Course Configuration (Dynamic Rules) 
+ - Autopilot Course Correction (Steering) 
 
 
 --------------------------------------------------------------------------------
-I. Auto Restart Mode 
+Auto Restart Mode 
 --------------------------------------------------------------------------------
 
 Auto Restart Mode is an extension of restart_mode declared in the CONTROL section 
@@ -54,26 +53,26 @@ Dynamic Rules capability. When they are used together, only one segment of a
 simulation is necessary, thereby reducing run_script volume and errors, and 
 placing more control with the user. 
 
-restart_mode   CHARACTER ( default = 'restart' )
-       from_scratch = from scratch.  NEB only: the starting path is 
-                         obtained with a linear interpolation between 
-                         the images specified in the ATOMIC_POSITIONS 
-                         card.  Note that in the linear interpolation,
-                         periodic boundary conditions ARE NOT USED.
-       restart  = continue a previous simulation and perform  
-                         "nstep" new steps.
-       reset_counters  = continue a previous simulation, perform  
-                         "nstep" new steps, resetting the counter 
-                         and averages.
-       auto = automatically detect "from_scratch" or "restart"; 
-                         continue any previous simulation, and stop 
-                         when the counter value is equal to "nstep".
+    restart_mode   CHARACTER ( default = 'restart' )
+           from_scratch = from scratch.  NEB only: the starting path is 
+                             obtained with a linear interpolation between 
+                             the images specified in the ATOMIC_POSITIONS 
+                             card.  Note that in the linear interpolation,
+                             periodic boundary conditions ARE NOT USED.
+           restart  = continue a previous simulation and perform  
+                             "nstep" new steps.
+           reset_counters  = continue a previous simulation, perform  
+                             "nstep" new steps, resetting the counter 
+                             and averages.
+           auto = automatically detect "from_scratch" or "restart"; 
+                             continue any previous simulation, and stop 
+                             when the counter value is equal to "nstep".
 
 
 
 
 --------------------------------------------------------------------------------
-II. Autopilot Course Configuration (Dynamic Rules) 
+Autopilot Course Configuration (Dynamic Rules) 
 --------------------------------------------------------------------------------
 
 Autopilot Course Configuration (Dynamic Rules) is a method that allows select 
@@ -100,43 +99,43 @@ A favorable place is as the first card.
 
 Sytnax is as follows: 
 
-CARDS ...
+    CARDS ...
 
-AUTOPILOT
+    AUTOPILOT
 
-  optional card :  read dynamic rules to set parameters on an absolute
-                   timestep (iteration) from either standard input or mailbox 
-                   (pilot.mb)
-  Syntax:
+      optional card :  read dynamic rules to set parameters on an absolute
+                       timestep (iteration) from either standard input or mailbox 
+                       (pilot.mb)
+      Syntax:
 
-AUTOPILOT
-  ON_STEP = ith_event_STEP : varname = value  
-  ON_STEP = jth_event_STEP : varname = value  
-  ON_STEP = jth_event_STEP : varname = value  
+    AUTOPILOT
+      ON_STEP = ith_event_STEP : varname = value  
+      ON_STEP = jth_event_STEP : varname = value  
+      ON_STEP = jth_event_STEP : varname = value  
 
-...
-  ON_STEP = nth_event_STEP : varname = value  
-  ENDRULES
+    ...
+      ON_STEP = nth_event_STEP : varname = value  
+      ENDRULES
 
 Description:
 
-  ON_STEP 	   LABEL, must be in numerical timestep order, otherwise rule 
-                   is ignored
+ - `ON_STEP` 	   LABEL, must be in numerical timestep order, otherwise rule 
+    is ignored
 
-  ith_event_STEP   INTEGER, iteration (NFI) when rule is to be employed
+ - `ith_event_STEP`   INTEGER, iteration (NFI) when rule is to be employed
 
-  varname	   Autopilot variable, currently limited to one of the 
-                   following: isave,iprint,dt,emass, electron_dynamics, 
-                   electron_damping, ion_dynamics, ion_damping, 
-                   ion_temperature, tempw.
+ - `varname`	   Autopilot variable, currently limited to one of the 
+    following: isave,iprint,dt,emass, electron_dynamics, 
+    electron_damping, ion_dynamics, ion_damping, 
+    ion_temperature, tempw.
 
-  value            Must be valid value of variable type 
-                   (for example: isave, iprint must have a value of type 
-                    INTEGER, while dt must have a value of type REAL)
+ - `value`            Must be valid value of variable type 
+    (for example: isave, iprint must have a value of type 
+    INTEGER, while dt must have a value of type REAL)
 
-  ENDRULES         Required only for input (STDIN) if other cards follow.
+ - `ENDRULES`         Required only for input (STDIN) if other cards follow.
 
-The event specification (ON_STEP) should precede the variable assignment. The 
+The event specification (`ON_STEP`) should precede the variable assignment. The 
 colon separator between the event assignment and the variable assignment is 
 required, as are the equal signs. No semi-colon or comma should appear after the
 variable assignment. There can be multiple rules per event but only one variable 
@@ -149,11 +148,11 @@ execution will stop.
 
 Example Syntax: 
 
-  AUTOPILOT
-    ON_STEP = 200 : tempw = 500.0
-    ON_STEP = 200 : dt = 3.0
-    ON_STEP = 250 : ISAVE = 50
-  ENDRULES
+      AUTOPILOT
+        ON_STEP = 200 : tempw = 500.0
+        ON_STEP = 200 : dt = 3.0
+        ON_STEP = 250 : ISAVE = 50
+      ENDRULES
 
 Currently there is a maximum of 32 supported events and 10 supported Autopilot 
 variables. Events that are out of timestep order are ignored. A user may establish 
@@ -171,7 +170,7 @@ runtime error may occur.
 
 
 --------------------------------------------------------------------------------
-III. Autopilot Course Correction (Steering) 
+Autopilot Course Correction (Steering) 
 --------------------------------------------------------------------------------
 
 Autopilot Course Correction (Steering) provides a run-time method of changing 
@@ -191,24 +190,24 @@ parse a command, it issues a warning and goes into PAUSE mode (see below).
 
 The Steering subfeatures, including pilot.mb syntax are described here: 
 
-a) New Course or 'power steering' is implemented with the same syntax as the 
+ - New Course or 'power steering' is implemented with the same syntax as the 
    INPUT file card for Autopilot. Remember that ON_STEP represents an absolute 
    iteration (NFI) step. 
 
    For example: 
 
-     AUTOPILOT                               -required
-     ON_STEP=400 : ISAVE = 50                -events must be ordered by step
-     ON_STEP=400 : DT = 5.0                  -use valid variable types (or die)
-     ON_STEP = 600:IONS_TEMPERATURE='damped' -indention optional     
-     ON_STEP = 600: TEMPW=350.0              -white spaces are ignored
-     ENDRULES                                -optional
+         AUTOPILOT                               -required
+         ON_STEP=400 : ISAVE = 50                -events must be ordered by step
+         ON_STEP=400 : DT = 5.0                  -use valid variable types (or die)
+         ON_STEP = 600:IONS_TEMPERATURE='damped' -indention optional     
+         ON_STEP = 600: TEMPW=350.0              -white spaces are ignored
+         ENDRULES                                -optional
 
    In this example, when NFI reaches 400, the value of ISAVE will be reset to 50 
    and the value of DT to 5.0.  Then, when NFI reaches 600, IONS_TEMPERATURE and 
    TEMPW will be reset to the indicated values.
 
-b) Manual Steering is implemented with a similar syntax except that the card type 
+ - Manual Steering is implemented with a similar syntax except that the card type 
    is PILOT instead of AUTOPILOT and the user specifies a timestep relative to 
    the time the mailbox is read, rather than an absolute timestep. The relative 
    timestep allows the user to set a rule for a near future event without having 
@@ -218,8 +217,8 @@ b) Manual Steering is implemented with a similar syntax except that the card typ
 
    For example, assume mailbox contents are:
 
-     NOW:ISAVE=50
-     NOW+100:TEMPW=600.0.
+         NOW:ISAVE=50
+         NOW+100:TEMPW=600.0
 
    Assume further that the mailbox is saved to the "results" directory and then 
    read when the NFI is 380.  Manual Steering will reset the value of ISAVE on 
@@ -227,8 +226,8 @@ b) Manual Steering is implemented with a similar syntax except that the card typ
    (at 400 and again at 450) before TEMPW is reset to 600.0 on step 480. Compare 
    this with the syntax that specifies an absolute timestep:
 
-     ON_STEP=400:ISAVE=50
-     ON_STEP=500;TEMPW=600.0. 
+         ON_STEP=400:ISAVE=50
+         ON_STEP=500;TEMPW=600.0
 
 
    In this example, if the NFI is less than 400 when the mailbox is read, ISAVE 
@@ -246,12 +245,12 @@ b) Manual Steering is implemented with a similar syntax except that the card typ
 
    Example syntax for a Manual Steering mailbox is as follows: 
 
-     PILOT                                -optional for single line
-       NOW : ISAVE = 50                   -events must be ordered
-       NOW : DT = 5.0                     -use valid variable types (or die)
-       NOW+50 :IONS_TEMPERATURE='damped'  -offsets from NOW are supported  
-       NOW + 150: TEMPW=350.0             -white spaces are ignored
-     ENDRULES                             -optional
+         PILOT                                -optional for single line
+           NOW : ISAVE = 50                   -events must be ordered
+           NOW : DT = 5.0                     -use valid variable types (or die)
+           NOW+50 :IONS_TEMPERATURE='damped'  -offsets from NOW are supported  
+           NOW + 150: TEMPW=350.0             -white spaces are ignored
+         ENDRULES                             -optional
 
   Example format for a quick mailbox change using a single rule is as follows:
 
@@ -265,18 +264,18 @@ create an appropriate mailbox. Steering then resumes as AUTOPILOT or PILOT upon
 receiving another pilot.mb mailbox. The syntax is a single line with one of the 
 following: 
 
-  PAUSE
-  SLEEP
-  HOLD
-  HOVER
-  WAIT
+      PAUSE
+      SLEEP
+      HOLD
+      HOVER
+      WAIT
 
 All of the above perform the same PAUSE mechanism.  The user can issue the command
 quickly through UNIX redirect:
 
   >echo "PAUSE" > results/pilot.mb
 
-Any mailbox not correctly identified with a AUTOPILOT, PILOT, NOW, or a PAUSE 
+Any mailbox not correctly identified with a `AUTOPILOT`, `PILOT`, `NOW`, or a `PAUSE` 
 command, will result in a warning to standard output (STDOUT), and the simulation 
 will pause. 
 
@@ -300,35 +299,35 @@ PGI 5.2 with MPI on Linux-64 with 1, 2 and 4 processors.
 --------------------------------------------------------------------------------
 ADDING AN AUTOPILOT VARIABLE
 --------------------------------------------------------------------------------
-See Autopilot.f90 for examples.  
-	* Select the input parameter from the list in file INPUT_CP 
-	* Identify parameter dependencies, initializations, assignments, etc 
-	* Edit autopilot.f90 to add the following, 
-          where VARNAME is the name of the new Autopilot variable:
-		o VARTYPE :: rule_VARNAME(max_event_step) at module scope 
-		o LOGICAL :: event_VARNAME(max_event_step) at module scope
-	* Remember to add to the PUBLIC block as well
-		o event_VARNAME(:) = .false. to init_autopilot subroutine 
-		o rule_VARNAME(:) = VARDEFAULT to init_autopilot subroutine 
-	* Import VARNAME with USE to employ_rules subroutine
-	* In employ_rules, add conditional clause on event_VARNAME to assign VARNAME: 
-		o ! VARNAME
-		o if (event_VARNAME(event_index)) then
-		o   VARNAME  = rule_VARNAME(event_index)
-		o   CALL init_other_VARNAME_dependent_variables( VARNAME)
-		o   write(*,*) 'RULE EVENT: VARNAME', VARNAME
-		o   endif
-	* Import VARNAME with USE to assign_rule subroutine
-	* In assign_rule, add condition clause matching the VARNAME create rule as so: 
-		o ELSEIF ( matches( "VARNAME", var ) ) THEN
-		o             read(value, *) VARTYPE_value
-		o             rule_VARNAME(event)  = VARTYPE_value
-		o             event_VARNAME(event) = .true.
-	* TEST  
+
+See `autopilot.f90` for examples.
+- Select the input parameter from the list in file INPUT_CP 
+- Identify parameter dependencies, initializations, assignments, etc 
+- Edit autopilot.f90 to add the following, 
+    where VARNAME is the name of the new Autopilot variable:
+        VARTYPE :: rule_VARNAME(max_event_step) at module scope 
+        LOGICAL :: event_VARNAME(max_event_step) at module scope
+* Remember to add to the PUBLIC block as well
+        event_VARNAME(:) = .false. to init_autopilot subroutine 
+        rule_VARNAME(:) = VARDEFAULT to init_autopilot subroutine 
+* Import VARNAME with USE to employ_rules subroutine
+* In employ_rules, add conditional clause on event_VARNAME to assign VARNAME: 
+         ! VARNAME
+         if (event_VARNAME(event_index)) then
+           VARNAME  = rule_VARNAME(event_index)
+           CALL init_other_VARNAME_dependent_variables( VARNAME)
+           write(*,*) 'RULE EVENT: VARNAME', VARNAME
+         endif
+* Import VARNAME with USE to assign_rule subroutine
+* In assign_rule, add condition clause matching the VARNAME create rule as so: 
+         ELSEIF ( matches( "VARNAME", var ) ) THEN
+                     read(value, *) VARTYPE_value
+                     rule_VARNAME(event)  = VARTYPE_value
+                     event_VARNAME(event) = .true.
+* TEST  
 
 WARNING: Some Autopilot variables may create "side-effects".  For example, the 
 inclusion of a rule for TEMPW rules invokes a side-effect call to ions_nose_init.  
 The user is cautioned to be aware of possible side-effects when adding other 
 Autopilot variables. 
 
-Last modified: Tue Aug 09 16:01:00 EDT 2005
