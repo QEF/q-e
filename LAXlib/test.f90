@@ -393,19 +393,20 @@
   !
 #if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+#endif
   tempo(3) = mpi_wall_time()
   !
   do i = 2, 10
      tempo_mio(i) = tempo(i)-tempo(i-1)
   end do
+#if defined(__MPI)
   CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 100, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 100, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 100, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #else
-  tempo(3) = mpi_wall_time()
-  tempo_min = tempo
-  tempo_max = tempo
-  tempo_avg = tempo
+  tempo_min = tempo_mio
+  tempo_max = tempo_mio
+  tempo_avg = tempo_mio
 #endif
 
   tempo_avg = tempo_avg / npes
