@@ -234,6 +234,17 @@ if(QE_ENABLE_MPI)
 endif(QE_ENABLE_MPI)
 
 ###########################################################
+# Git
+###########################################################
+find_package(Git 2.13 REQUIRED)
+if(EXISTS ${qe_SOURCE_DIR}/.git)
+  message("   Source files are cloned from a git repository.")
+  set(IS_GIT_PROJECT 1)
+else()
+  message("   Source files are not cloned from a git repository.")
+endif()
+
+###########################################################
 # Lapack
 # The following targets will be defined:
 add_library(qe_lapack INTERFACE)
