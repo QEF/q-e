@@ -1187,7 +1187,7 @@ SUBROUTINE exx_boundaryv_cube(me_r, ps_r, potme, qlm)
 #ifdef __CUDA
     !$cuf kernel do (3)
 #else
-    !$omp parallel do private(x,y,z,sqrxy,costheta,sintheta,cpot_r) schedule(guided)
+    !$omp parallel do collapse(3) private(x,y,z,sqrxy,costheta,sintheta,cpot_r)
 #endif
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
@@ -1270,7 +1270,7 @@ SUBROUTINE geterho_cube(me_r, ps_r, potme, rhops)
 #ifdef __CUDA
     !$cuf kernel do(3)
 #else
-    !$omp parallel do private(i,j,k,ish) schedule(guided)
+    !$omp parallel do collapse(3) private(i,j,k,ish)
 #endif
     !------------------------------------------------------------------------------
     DO k=ps_r3,ps_r6
@@ -1414,7 +1414,7 @@ SUBROUTINE kernel_lr(me_r, klr_me, omega)
     nb(3) = (me_r(6)-me_r(3)+1)
 
     !--------------------------------------------------------------------
-    !$omp parallel do private(i,j,k,r) schedule(guided)
+    !$omp parallel do collapse(3) private(i,j,k,r)
     !--------------------------------------------------------------------
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
@@ -1454,7 +1454,7 @@ SUBROUTINE gaussian(ps_r, rho_ps, p)
     !--------------------------------------------------------------------
 
     !--------------------------------------------------------------------
-    !$omp parallel do private(i,j,k,r) schedule(guided)
+    !$omp parallel do collapse(3) private(i,j,k,r)
     !--------------------------------------------------------------------
     DO k=ps_r(3),ps_r(6)
       DO j=ps_r(2),ps_r(5)
