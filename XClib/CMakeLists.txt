@@ -66,12 +66,16 @@ if(QE_ENABLE_TEST)
 
     find_program(BASH_PROGRAM bash)
 
-    file(GLOB test_input_file_names
-         RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files
-         test_input_files/*.in)
+    if(NOT BASH_PROGRAM)
+        message(WARNING "bash not found! Tests under ${CMAKE_CURRENT_SOURCE_DIR} not added.")
+    else()
+        file(GLOB test_input_file_names
+             RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files
+             test_input_files/*.in)
 
-    foreach(test_input_file IN LISTS test_input_file_names)
-      string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
-      add_test(NAME test_qe_xclib_${test_input_file_name_no_extension} COMMAND ${BASH_PROGRAM} -c "$<TARGET_FILE:qe_xclib_test> < ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/${test_input_file}")
-    endforeach()
+        foreach(test_input_file IN LISTS test_input_file_names)
+            string(REGEX REPLACE ".in$" "" test_input_file_name_no_extension ${test_input_file})
+            add_unit_test(test_qe_xclib_${test_input_file_name_no_extension} 1 1 ${BASH_PROGRAM} -c "$<TARGET_FILE:qe_xclib_test> < ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/${test_input_file}")
+        endforeach()
+    endif()
 endif(QE_ENABLE_TEST)

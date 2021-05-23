@@ -460,6 +460,7 @@ endif(QE_ENABLE_HDF5)
 # 'add_test()' will be run by the 'test' make target
 ###########################################################
 if(QE_ENABLE_TEST)
+    include(cmake/unit_test.cmake)
     enable_testing()
 endif(QE_ENABLE_TEST)
 
