@@ -115,8 +115,6 @@
   !! if .TRUE. fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian.
   LOGICAL :: lindabs
   !! if .TRUE. perform phonon-assisted absorption calculations
-  LOGICAL :: indabs_fca
-  !! if .TRUE. calculate phonon-assisted free carrier absorption
   LOGICAL :: use_ws
   !! if .TRUE. use Wannier-centers to compute the Wigner-Seitz cell.
   LOGICAL :: epmatkqread
@@ -366,8 +364,6 @@
   !! Photon energy step (in eV)
   REAL(KIND = DP) :: n_r
   !! Refractive index
-  REAL(KIND = DP) :: nc_indabs
-  !! Carrier density used for free carrier absorption
   !
   ! ----------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
