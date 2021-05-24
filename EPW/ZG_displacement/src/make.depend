@@ -53,8 +53,8 @@ bands_unfold.o : ../../../Modules/noncol.o
 bands_unfold.o : ../../../Modules/recvec.o
 bands_unfold.o : ../../../Modules/wavefunctions.o
 bands_unfold.o : ../../../PW/src/pwcom.o
-bands_unfold.o : ../../../UtilXlib/mp.o
 bands_unfold.o : ../../../upflib/uspp.o
+bands_unfold.o : ../../../UtilXlib/mp.o
 epsilon_Gaus.o : ../../../Modules/cell_base.o
 epsilon_Gaus.o : ../../../Modules/constants.o
 epsilon_Gaus.o : ../../../Modules/environment.o

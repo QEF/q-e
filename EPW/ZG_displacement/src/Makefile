@@ -1,4 +1,4 @@
-# Makefile for ZG.x, disca.x, pp_spctrlfn.x
+# Makefile for ZG.x, disca.x, pp_spctrlfn.x, bands_unfold.x, pp_disca.x  
 
 include ../../../make.inc
 
@@ -12,7 +12,7 @@ PHAUXOBJS = ../../../PHonon/PH/libphaux.a
 PHOBJS = ../../../PHonon/PH/libph.a
 PWOBJS = ../../../PW/src/libpw.a
 LRMODS = ../../../LR_Modules/liblrmod.a
-QEMODS = ../../../Modules/libqemod.a ../../../KS_Solvers/libks_solvers.a ../../../upflib/libupf.a \
+QEMODS = ../../../Modules/libqemod.a ../../../KS_Solvers/libks_solvers.a ../../../upflib/libupf.a ../../../XClib/xc_lib.a \
          ../../../FFTXlib/libqefft.a ../../../LAXlib/libqela.a ../../../UtilXlib/libutil.a ../../../dft-d3/libdftd3qe.a
 LIBOBJS = ../../../clib/clib.a 
 
@@ -56,5 +56,6 @@ clean :
 	- /bin/rm -f ../../../bin/bands_unfold.x
 	- /bin/rm -f ../../../bin/pp_spctrlfn.x
 	- /bin/rm -f ../../../bin/epsilon_Gaus.x
+	- /bin/rm -f local/*.x local/*.o
 
 include make.depend

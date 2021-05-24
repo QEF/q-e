@@ -25,7 +25,8 @@ Phys. Rev. Research 2, 013357, (2020).
 
 STEPS for generating the "ZG-displacement" for the calculation of temperature-dependent properties of solids: 
 
-0.  Compile the version of Quantum Espresso 6.6.0 or later; pw.x and ph.x are required to run ZG.x.
+0.  Compile the version of Quantum Espresso 6.6.0 or later; PW, PH, and PP subroutines
+    are required to run all executables, e.g. "make pw ph pp".
     Go to "/path_to_your_espresso/EPW/ZG_displacement/src" and "make".
     This code exploits some main routines of matdyn.x. In particular, the code
     takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 

@@ -3575,7 +3575,7 @@ SUBROUTINE fkbounds( nktot, lower_bnd, upper_bnd )
   nkl = nktot / npool
   nkr = nktot - nkl * npool
   !
-  ! the reminder goes to the first nkr pools (0...nkr-1)
+  ! the reminder goes to the first nkr pools (0... nkr - 1)
   !
   IF (my_pool_id < nkr ) nkl = nkl + 1
   !
