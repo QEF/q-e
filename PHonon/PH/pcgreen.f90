@@ -28,7 +28,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !! input: k-point under consideration
   real(DP) :: avg_iter
   !! in/out: number of diagonalization iterations
-  real(DP) :: thres
+  real(DP) :: thresh
   !! input: convergence threshold
   real(DP) :: et_ (nbnd)
   !! input: eigenvalues of the hamiltonian
