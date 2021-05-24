@@ -56,8 +56,9 @@
                                inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
                                esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                                a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                               nktotf, gtemp, xkq, dos, nbndskip, nbndep, ef0_fca, &
-                               epsilon2_abs, epsilon2_abs_lorenz,                  &
+                               nktotf, gtemp, xkq, dos, nbndskip, nbndep,          &
+                               inv_tau_all_mode, inv_tau_allcb_mode, qrpl, Qmat,   &
+                               ef0_fca, epsilon2_abs, epsilon2_abs_lorenz,         &
                                epsilon2_abs_all, epsilon2_abs_lorenz_all
   USE wan2bloch,        ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                                ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
@@ -69,7 +70,7 @@
   USE io_eliashberg,    ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine,&
                                check_restart_ephwrite
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
-  USE grid,             ONLY : qwindow
+  USE grid,             ONLY : qwindow, loadkmesh_fst, xqf_otf
   USE printing,         ONLY : print_gkk, plot_band, plot_fermisurface
   USE io_epw,           ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,     ONLY : tau_read, iter_open, print_ibte, iter_merge
@@ -146,6 +147,8 @@
   !! Counter on coarse q-point grid
   INTEGER :: iq_restart
   !! Counter on coarse q-point grid
+  INTEGER :: qind
+  !! Index of q-point either on full q-grid or within qwindow
   INTEGER :: ik
   !! Counter on coarse k-point grid
   INTEGER :: ikk
@@ -213,7 +216,7 @@
   !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
   INTEGER, ALLOCATABLE :: ndegen_q(:, :, :)
   !! Wigner-Seitz weights for the phonon grid that depend on atomic positions $R + \tau(nb) - \tau(na)$
-  INTEGER, ALLOCATABLE :: ndegen_g(:, :, :, :)
+  INTEGER, ALLOCATABLE :: ndegen_g(:, :, :)
   !! Wigner-Seitz weights for the electron-phonon grid that depend on
   !! atomic positions $R - \tau(na)$
   INTEGER, ALLOCATABLE :: selecq(:)
@@ -342,6 +345,10 @@
     WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic long-range interaction for polar materials [lpolar]'
     WRITE(stdout, '(5x,a)' )   ' '
   ENDIF
+  IF (.NOT. lpolar .AND. qrpl) THEN
+    WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic quadrupole long-range interaction for non-polar materials [Q1,Q2]'
+    WRITE(stdout, '(5x,a)' )   ' '
+  ENDIF
   !
   ! Determine Wigner-Seitz points
   !
@@ -466,8 +473,9 @@
     ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
     !
     ! Open the prefix.epmatwe file
-    IF ((etf_mem == 1) .AND. ionode) THEN
+    IF ((etf_mem == 1 .OR. etf_mem == 3) .AND. ionode) THEN
       lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      filint   = TRIM(prefix)//'.epmatwe'
       CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
     ENDIF
     !
@@ -498,7 +506,7 @@
         !
       ENDDO
       ! Only the master node writes
-      IF ((etf_mem == 1) .AND. (ionode)) THEN
+      IF ((etf_mem == 1 .OR. etf_mem == 3) .AND. ionode) THEN
         ! direct write of epmatwe for this iq
         CALL rwepmatw(epmatwe_mem, nbndsub, nrr_k, nmodes, iq, iunepmatwe, +1)
         !
@@ -507,7 +515,7 @@
     ENDDO
     WRITE(stdout, '(a)' ) ' '
     !
-    IF (etf_mem == 1 .AND. ionode) CLOSE(iunepmatwe, STATUS = 'keep')
+    IF ((etf_mem == 1 .OR. etf_mem == 3) .AND. ionode) CLOSE(iunepmatwe, STATUS = 'keep')
     !
     ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
     !
@@ -559,17 +567,27 @@
   ! At this point, we will interpolate the Wannier rep to the Bloch rep
   ! for electrons, phonons and the ep-matrix
   !
-  ! Load the fine-grid q and k grids.
-  ! nkqtotf is computed inside
-  CALL loadqmesh_serial
-  CALL loadkmesh_para
+  ! Load the fine-grid q and k grids (nkqtotf is computed inside).
+  ! The k-point mapping between BZ and IBZ is allocated and computed here as well bztoibz and s_bztoibz
+  ! etf_mem == 3 is a special optimization level to deal with ultra dense fine homogeneous grids.
+  IF (etf_mem == 3) THEN
+    ! The fine q-grid is not create (will be generated on the fly later)
+    ! The fine k-grid consists of point within the fsthick window using k-point symmetry
+    CALL loadkmesh_fst(nrr_k, dims, irvec_k, ndegen_k, nelec)
+    nqtotf = nqf1 * nqf2 * nqf3
+    nqf = nqtotf
+  ELSE
+    CALL loadqmesh_serial()
+    CALL loadkmesh_para()
+    ALLOCATE(wf(nmodes, nqtotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wf', 1)
+    wf(:, :) = zero
+  ENDIF
   ! Defines the total number of k-points
   nktotf = nkqtotf / 2
   !
   ALLOCATE(epmatwef(nbndsub, nbndsub, nrr_k, nmodes), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatwef', 1)
-  ALLOCATE(wf(nmodes, nqf), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wf', 1)
   ALLOCATE(etf(nbndsub, nkqf), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf', 1)
   ALLOCATE(etf_ks(nbndsub, nkqf), STAT = ierr)
@@ -589,7 +607,6 @@
   ALLOCATE(isk_dummy(nkqf), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating isk_dummy', 1)
   epmatwef(:, :, :, :) = czero
-  wf(:, :)             = zero
   etf(:, :)            = zero
   etf_ks(:, :)         = zero
   epmatf(:, :, :)      = czero
@@ -601,7 +618,6 @@
   isk_dummy(:)         = 0
   !
   ! Allocate velocity and dipole matrix elements after getting grid size
-  !
   IF (vme) THEN
     ALLOCATE(vmef(3, nbndsub, nbndsub, 2 * nkf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vmef', 1)
@@ -766,6 +782,7 @@
   CALL fkbounds(nktotf, lower_bnd, upper_bnd)
   !
   ! Re-order the k-point according to weather they are in or out of the fshick windows
+  ! In the case of etf_mem == 3, we only have k-points within the fsthick (no need for re-ordering).
   IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k .AND. etf_mem < 3) THEN
     CALL load_rebal
   ENDIF
@@ -790,7 +807,7 @@
   !
   ! Open the ephmatwp file here
 #if defined(__MPI)
-  IF (etf_mem == 1) then
+  IF (etf_mem == 1 .OR. etf_mem == 3) then
     ! Check for directory given by "outdir"
     !
     filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
@@ -799,7 +816,7 @@
   ENDIF
 #else
   lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-  filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
+  filint   = TRIM(prefix)//'.epmatwp'
   INQUIRE(IOLENGTH = direct_io_factor) dummy(1)
   unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
   IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
@@ -833,6 +850,14 @@
     inv_tau_allcb(:, :, :) = zero
     lrepmatw2_restart(:)   = 0
     lrepmatw5_restart(:)   = 0
+    IF (iverbosity == 3) THEN
+      ALLOCATE(inv_tau_all_mode(nmodes, nbndfst, nktotf, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_all_mode', 1)
+      ALLOCATE(inv_tau_allcb_mode(nmodes, nbndfst, nktotf, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_allcb_mode', 1)
+      inv_tau_all_mode(:, :, :, :)   = zero
+      inv_tau_allcb_mode(:, :, :, :) = zero
+    ENDIF
     ! We save matrix elements that are smaller than machine precision (1d-16).
     ! The sum of all the elements must be smaller than that
     ! nkf1 * nkf2 * nkf3 * nqf1 * nqf2 * nqf3 * (nbndfst) * (nbndfst)
@@ -865,6 +890,12 @@
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all', 1)
     DEALLOCATE(inv_tau_allcb, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb', 1)
+    IF (iverbosity == 3) THEN
+      DEALLOCATE(inv_tau_all_mode, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all_mode', 1)
+      DEALLOCATE(inv_tau_allcb_mode, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb_mode', 1)
+    ENDIF
     !
   ELSE ! (iterative_bte .AND. epmatkqread)
     IF (iterative_bte) THEN
@@ -946,6 +977,12 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epf17', 1)
+    ! We allocate the phonon frequency on the q-points within the window
+    IF (etf_mem == 3) THEN
+      ALLOCATE(wf(nmodes, totq), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wf', 1)
+      wf(:, :) = zero
+    ENDIF
     IF (phonselfen) THEN
       ALLOCATE(lambda_all(nmodes, totq, nsmear, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lambda_all', 1)
@@ -1113,7 +1150,7 @@
         CALL mp_bcast(lrepmatw2_restart, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw5_restart, ionode_id, world_comm)
         IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
-        ! 
+        !
         IF (iterative_bte) THEN
           IF (mpime == ionode_id) THEN
             OPEN(UNIT = iuntau, FORM = 'unformatted', FILE = 'inv_tau_tmp', STATUS = 'old')
@@ -1180,6 +1217,11 @@
       !
       iq = selecq(iqq)
       !
+      IF (etf_mem == 3) THEN
+        qind = iqq
+      ELSE
+        qind = iq
+      ENDIF
       !
       ! In case of big calculation, show progression of iq (especially usefull when
       ! elecselfen = true as nothing happen during the calculation otherwise.
@@ -1190,7 +1232,13 @@
         ENDIF
       ENDIF
       !
-      xxq = xqf(:, iq)
+      ! xqf has to be in crystal coordinate
+      IF (etf_mem == 3) THEN
+        ! The q-point coordinate is generate on the fly for each q-point
+        CALL xqf_otf(iq, xxq)
+      ELSE
+        xxq = xqf(:, iq)
+      ENDIF
       !
       ! ------------------------------------------------------
       ! dynamical matrix : Wannier -> Bloch
@@ -1210,9 +1258,9 @@
         ! (omega on fine grid)
         !
         IF (w2(nu) > -eps8) THEN
-          wf(nu, iq) =  DSQRT(ABS(w2(nu)))
+          wf(nu, qind) =  DSQRT(ABS(w2(nu)))
         ELSE
-          wf(nu, iq) = -DSQRT(ABS(w2(nu)))
+          wf(nu, qind) = -DSQRT(ABS(w2(nu)))
         ENDIF
         !
         DO mu = 1, nmodes
@@ -1233,7 +1281,7 @@
       fermicount = 0
       !
       IF (lscreen) THEN
-        IF (scr_typ == 0) CALL rpa_epsilon(xxq, wf(:, iq), nmodes, epsi, eps_rpa)
+        IF (scr_typ == 0) CALL rpa_epsilon(xxq, wf(:, qind), nmodes, epsi, eps_rpa)
         IF (scr_typ == 1) CALL tf_epsilon(xxq, nmodes, epsi, eps_rpa)
       ENDIF
       !
@@ -1242,7 +1290,7 @@
       ! -------------------------------------------------------------
       !
       IF (adapt_smearing) THEN
-        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), wf(:, iq), rws, nrws)
+        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), wf(:, qind), rws, nrws)
       ENDIF
       !
       ! This is a loop over k blocks in the pool (size of the local k-set)
@@ -1347,7 +1395,7 @@
             !
             IF (adapt_smearing) THEN
               ! Return the value of the adaptative broadening eta
-              CALL broadening(ik, ikk, ikq, wf(:, iq), vmefp, eta)
+              CALL broadening(ik, ikk, ikq, wf(:, qind), vmefp, eta)
               !
             ENDIF ! adapt_smearing
             !
@@ -1372,7 +1420,7 @@
               !
             ENDIF
             !
-            IF (lpolar) THEN
+            IF (lpolar .OR. qrpl) THEN
               !
               CALL compute_umn_f(nbndsub, cufkk, cufkq, bmatf)
               !
@@ -1492,7 +1540,7 @@
             ENDDO
           ENDIF
           !
-          IF (.NOT. iterative_bte) THEN
+          IF (.NOT. iterative_bte .AND. etf_mem < 3) THEN
             CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle)
             ! Computes the SERTA mobility
             IF (iqq == totq) CALL transport_coeffs(ef0, efcb)
@@ -1500,7 +1548,7 @@
           !
           IF (iterative_bte) THEN
             CALL start_clock('print_ibte')
-            CALL print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
+            CALL print_ibte(iqq, iq, totq, xxq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
                             lrepmatw2_restart, lrepmatw5_restart, ctype)
             CALL stop_clock('print_ibte')
             !
@@ -1762,7 +1810,7 @@
     !
   ENDIF ! (iterative_bte .AND. epmatkqread)
   !
-  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k) THEN
+  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k .AND. etf_mem < 3) THEN
     DEALLOCATE(map_rebal, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal', 1)
     DEALLOCATE(map_rebal_inv, STAT = ierr)
@@ -1796,8 +1844,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating zstar', 1)
   DEALLOCATE(epmatwef, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwef', 1)
-  DEALLOCATE(wf, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wf', 1)
+  IF (.NOT. epmatkqread) THEN
+    DEALLOCATE(wf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wf', 1)
+  ENDIF
   DEALLOCATE(etf, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf', 1)
   DEALLOCATE(etf_ks, STAT = ierr)
@@ -1853,13 +1903,14 @@
     DEALLOCATE(gtemp, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gtemp', 1)
   ENDIF
-  !
   DEALLOCATE(et_ks, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating et_ks', 1)
   IF (assume_metal) THEN
     DEALLOCATE(dos, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dos', 1)
   ENDIF
+  DEALLOCATE(Qmat, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating Qmat', 1)
   !
   IF (lindabs .AND. (.NOT. scattering)) THEN
     IF (carrier) THEN

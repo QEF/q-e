@@ -531,6 +531,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   ! Grimme-D3 correction to the energy
   !
   IF (ldftd3) THEN
+     CALL start_clock('energy_dftd3')
      latvecs(:,:)=at(:,:)*alat
      tau(:,:)=tau(:,:)*alat
      DO na = 1, nat
@@ -539,6 +540,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,energy_dftd3)
      edftd3=energy_dftd3*2.d0
      tau(:,:)=tau(:,:)/alat
+     CALL stop_clock('energy_dftd3')
   ELSE
      edftd3= 0.0
   ENDIF

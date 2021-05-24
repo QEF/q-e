@@ -279,6 +279,12 @@ if(NOT QE_LAPACK_INTERNAL)
         list(REMOVE_DUPLICATES "${_lapack_libs}")
         message(STATUS "Found LAPACK: ${_lapack_libs}")
         target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
+        set(CMAKE_REQUIRED_LIBRARIES ${_lapack_libs})
+        check_fortran_function_exists(zhpev ZHPEV_FOUND)
+        if(NOT ZHPEV_FOUND)
+          unset(ZHPEV_FOUND CACHE)
+          message(FATAL_ERROR "Incomplete LAPACK! function zhpev not found!")
+        endif()
     else()
         message(FATAL_ERROR "Failed to find a complete set of external BLAS/LAPACK library by FindLAPACK. "
                             "Variables controlling FindLAPACK can be found at CMake online documentation. "

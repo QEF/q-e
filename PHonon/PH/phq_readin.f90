@@ -30,7 +30,7 @@ SUBROUTINE phq_readin()
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
   USE fft_base,      ONLY : dffts
-  USE spin_orb,      ONLY : domag
+  USE spin_orb,      ONLY : domag, lspinorb
   USE cellmd,        ONLY : lmovecell
   USE run_info,      ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
@@ -816,7 +816,9 @@ SUBROUTINE phq_readin()
      'The phonon code with US-PP and raman or elop not yet available',1)
 
   IF (noncolin.and.(lraman.or.elop)) CALL errore('phq_readin', &
-      'lraman, elop, and noncolin not programed',1)
+      'lraman, elop, and noncolin not programmed',1)
+  IF ( (noncolin.or.lspinorb) .and. elph ) CALL errore('phq_readin', &
+      'el-ph coefficient calculation disabled in noncolinear/spinorbit case',1)
 
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)

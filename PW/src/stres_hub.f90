@@ -1383,7 +1383,6 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
-   USE basis,                ONLY : natomwfc
    USE force_mod,            ONLY : at_dy, at_dj, us_dy, us_dj
    USE wavefunctions_gpum,   ONLY : using_evc
    !

@@ -300,7 +300,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE ions_base,     ONLY : amass, tau, nat, ityp
-    USE elph2,         ONLY : rdw, epsi, zstar
+    USE elph2,         ONLY : rdw, epsi, zstar, qrpl
     USE epwcom,        ONLY : lpolar, lphase, use_ws, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
     USE rigid,         ONLY : cdiagh2
@@ -394,7 +394,7 @@
     CALL cryst_to_cart(1, xq, bg, 1)
     !
     !  add the long-range term to D(q)
-    IF (lpolar) THEN
+    IF (lpolar .OR. qrpl) THEN
       ! xq has to be in 2pi/a
       CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
@@ -476,11 +476,12 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg
     USE ions_base, ONLY : amass, tau, nat, ityp
-    USE elph2,     ONLY : ifc, epsi, zstar, wscache
-    USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
+    USE elph2,     ONLY : ifc, epsi, zstar, wscache, qrpl
+    USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3, lphase
     USE io_global, ONLY : stdout
     USE rigid_epw, ONLY : rgd_blk
-    USE constants_epw, ONLY : twopi, czero, zero, one, eps8
+    USE low_lvl,       ONLY : utility_zdotu
+    USE constants_epw, ONLY : twopi, czero, zero, one, eps8, eps12
     !
     IMPLICIT NONE
     !
@@ -650,7 +651,7 @@
       ENDDO
     ENDDO
     !
-    IF (lpolar) THEN
+    IF (lpolar .OR. qrpl) THEN
       ! xq has to be in 2pi/a
       CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
@@ -685,6 +686,26 @@
     CALL zhpevx('V', 'A', 'U', nmodes, champ , zero, zero, &
                 0, 0, -one, neig, w, cz, nmodes, cwork, rwork, iwork, ifail, info)
     !
+    ! clean noise
+    DO jmode = 1,nmodes
+      DO imode = 1,nmodes
+        IF (ABS(cz(imode, jmode)) < eps12) cz(imode, jmode) = czero
+      ENDDO
+    ENDDO
+    !
+    ! DS - Impose phase
+    IF (lphase) THEN
+      DO jmode = 1,nmodes
+        INNER : DO imode = 1,nmodes
+          IF (ABS(cz(imode, jmode)) > eps12) THEN
+            cz(:, jmode) = cz(:, jmode) * CONJG(cz(imode,jmode))
+            cz(:, jmode) = cz(:, jmode) / SQRT(utility_zdotu(CONJG(cz(:, jmode)),cz(:, jmode)))
+            EXIT INNER
+          ENDIF
+        END DO INNER
+      ENDDO
+    ENDIF
+    !
     ! cuf(nmodes, nmodes) is rotation matrix (eigenmodes e_k)
     !
     cuf = cz
@@ -707,7 +728,7 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg
     USE ions_base, ONLY : tau, nat
-    USE elph2,     ONLY : ifc, epsi, zstar, wscache
+    USE elph2,     ONLY : ifc, epsi, zstar, wscache, qrpl
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, czero, zero, eps8
     USE io_global, ONLY : stdout
@@ -840,7 +861,7 @@
       ENDDO
     ENDDO
     !
-    IF (lpolar) THEN
+    IF (lpolar .OR. qrpl) THEN
       ! xq has to be in 2pi/a
       CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
@@ -1723,7 +1744,7 @@
     !! Is equal to the number of Wannier function if use_ws == .TRUE. Is equal to 1 otherwise.
     INTEGER, INTENT(in) :: nat
     !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise
-    INTEGER, INTENT(in) :: ndegen_g(nrr_g, nat, dims, dims)
+    INTEGER, INTENT(in) :: ndegen_g(dims, nrr_g, nat)
     !! Number of degeneracy of WS points
     INTEGER, INTENT(in) :: nbnd
     !! Number of bands
@@ -1774,7 +1795,7 @@
     !! Exponential for the FT
     COMPLEX(KIND = DP) :: eptmp(nbnd, nbnd, nrr_k, nmodes)
     !! Temporary matrix to store el-ph
-    COMPLEX(KIND = DP) :: cfac(nat, nrr_g, dims, dims)
+    COMPLEX(KIND = DP) :: cfac(dims, nat, nrr_g)
     !! Factor for the FT
     COMPLEX(KIND = DP), ALLOCATABLE :: epmatw(:, :, :, :)
     !! El-ph matrix elements
@@ -1812,7 +1833,7 @@
     ENDIF
     !
     eptmp(:, :, :, :) = czero
-    cfac(:, :, :, :) = czero
+    cfac(:, :, :) = czero
     !
     IF (use_ws) THEN
       DO irn = ir_start, ir_stop
@@ -1822,11 +1843,9 @@
         ! note xxq is assumed to be already in cryst coord
         !
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
-        DO iw2 = 1, dims
-          DO iw = 1, dims
-            IF (ndegen_g(ir, na, iw, iw2) > 0) &
-              cfac(na, ir, iw, iw2) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, na, iw, iw2))
-          ENDDO
+        DO iw = 1, dims
+          IF (ndegen_g(iw, ir, na) > 0) &
+            cfac(iw, na, ir) = EXP(ci * rdotk) / DBLE(ndegen_g(iw, ir, na))
         ENDDO
       ENDDO
       !
@@ -1838,7 +1857,7 @@
         !
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         ! Note that ndegen is always > 0 if use_ws == false
-        cfac(1, ir, 1, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1, 1))
+        cfac(1, 1, ir) = EXP(ci * rdotk) / DBLE(ndegen_g(1, ir, 1))
       ENDDO
       !
     ENDIF
@@ -1850,11 +1869,9 @@
           ir = (irn - 1) / nat + 1
           na = MOD(irn - 1, nat) + 1
           !
-          DO iw2 = 1, dims
-            DO iw = 1, dims
-              CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatwp(iw, iw2, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
-                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
-            ENDDO
+          DO iw = 1, dims
+            CALL ZAXPY(nrr_k * 3, cfac(iw, na, ir), epmatwp(iw, iw2, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
+                 eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
           ENDDO
         ENDDO
       ELSE ! use_ws
@@ -1862,7 +1879,7 @@
           ir = (irn - 1) / nmodes + 1
           imode = MOD(irn-1, nmodes) + 1
           !
-          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), epmatwp(:, :, :, imode, ir), 1, eptmp(:, :, :, imode), 1)
+          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, 1, ir), epmatwp(:, :, :, imode, ir), 1, eptmp(:, :, :, imode), 1)
         ENDDO
       ENDIF
         !CALL zgemv( 'n',  nbnd * nbnd * nrr_k * 3, ir_stop - ir_start + 1, cone, &
@@ -1919,20 +1936,16 @@
           IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT', 1)
           IF (add == 1 .AND. irn == ir_stop + add) CYCLE
           !
-          DO iw2 = 1, dims
-            DO iw = 1, dims
-              CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatw(iw, iw2, :, :), 1, &
-                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
-            ENDDO
+          DO iw = 1, dims
+            CALL ZAXPY(nrr_k * 3 * nbnd, cfac(iw, na, ir), epmatw(iw, :, :, :), 1, &
+                 eptmp(iw, :, :, 3 * (na - 1) + 1:3 * na), 1)
           ENDDO
 #else
           CALL rwepmatw(epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
           !
-          DO iw2 = 1, dims
-            DO iw = 1, dims
-              CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatw(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1, &
-                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
-            ENDDO
+          DO iw = 1, dims
+            CALL ZAXPY(nrr_k * 3 * nbnd, cfac(iw, na, ir), epmatw(iw, :, :, 3 * (na - 1) + 1:3 * na), 1, &
+                 eptmp(iw, :, :, 3 * (na - 1) + 1:3 * na), 1)
           ENDDO
 #endif
         ENDDO ! irn
@@ -1976,13 +1989,13 @@
           IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT', 1)
           IF (add == 1 .AND. irn == ir_stop + add) CYCLE
           !
-          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), epmatw(:, :, :, 1), 1, &
+          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, 1, ir), epmatw(:, :, :, 1), 1, &
                      eptmp(:, :, :, imode), 1)
           !
 #else
           CALL rwepmatw(epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
           !
-          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), &
+          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, 1, ir), &
               epmatw(:, :, :, imode), 1, eptmp(:, :, :, imode), 1)
 #endif
         ENDDO ! irn
@@ -2232,7 +2245,7 @@
     !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise.
     INTEGER, INTENT(in) :: irvec_g(3, nrr_g)
     !! Coordinates of WS points
-    INTEGER, INTENT(in) :: ndegen_g(nrr_g, nat, dims, dims)
+    INTEGER, INTENT(in) :: ndegen_g(nrr_g, nat, dims)
     !! Number of degeneracy of WS points
     INTEGER, INTENT(in) :: nbnd
     !! Number of bands
@@ -2276,7 +2289,7 @@
     !
     REAL(KIND = DP) :: rdotk
     !! Exponential for the FT
-    COMPLEX(KIND = DP) :: cfac(nrr_g, dims, dims)
+    COMPLEX(KIND = DP) :: cfac(nat, nrr_g, dims)
     !! Factor for the FT
     COMPLEX(KIND = DP), ALLOCATABLE :: epmatw(:, :, :)
     !! El-ph matrix elements
@@ -2308,11 +2321,9 @@
         ! note xxq is assumed to be already in cryst coord
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         na = (imode - 1) / 3 + 1
-        DO iw2 = 1, dims
-          DO iw = 1, dims
-            IF (ndegen_g(ir, na, iw, iw2) > 0) &
-              cfac(ir, iw, iw2) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, na, iw, iw2))
-          ENDDO
+        DO iw = 1, dims
+          IF (ndegen_g(ir, na, iw) > 0) &
+            cfac(na, ir, iw) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, na, iw))
         ENDDO
       ENDDO
     ELSE
@@ -2320,7 +2331,7 @@
         !
         ! note xxq is assumed to be already in cryst coord
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
-        cfac(ir, 1, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1, 1))
+        cfac(1, ir, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1))
       ENDDO
     ENDIF
     !
@@ -2365,13 +2376,12 @@
 #endif
       !
       IF (use_ws) THEN
-        DO iw2 = 1, dims
-          DO iw = 1, dims
-            CALL ZAXPY(nrr_k, cfac(ir, iw, iw2), epmatw(iw, iw2, :), 1, epmatf(iw, iw2, :), 1)
-          ENDDO
+        na = (imode - 1) / 3 + 1
+        DO iw = 1, dims
+          CALL ZAXPY(nbnd * nrr_k, cfac(na, ir, iw), epmatw(iw, :, :), 1, epmatf(iw, :, :), 1)
         ENDDO
       ELSE
-        CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(ir, 1, 1), epmatw, 1, epmatf, 1)
+        CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1), epmatw, 1, epmatf, 1)
       ENDIF
       !
     ENDDO

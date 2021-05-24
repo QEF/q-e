@@ -18,6 +18,7 @@
   !! @Note:
   !!   SP: Image parallelization added
   !!
+  USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE cell_base,     ONLY : at
   USE mp,            ONLY : mp_bcast
@@ -59,10 +60,11 @@
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot,                           &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,        &
-                            epw_crysym
+                            epw_crysym, bfieldx, bfieldy, bfieldz
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
+  USE constants,     ONLY : electron_si
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
   USE ions_base,     ONLY : amass
@@ -126,25 +128,24 @@
   !! temp vars for saving kgrid info
   INTEGER :: ierr
   !! Error status
+  INTEGER :: unit_loc = 5
+  !! Unit for input file
+  REAL(kind = DP) :: b_abs
+  !! Absolute magnetic field
   !
   NAMELIST / inputepw / &
-       amass, outdir, prefix, iverbosity, fildvscf,                            &
-       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub,                            &
-       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,           &
-       eig_read, wepexst, epexst, vme,                                         &
-       degaussw, fsthick, nsmear, delta_smear,                                 &
-       dvscf_dir, ngaussw, epmatkqread, selecqread,                            &
-       wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
-       num_iter, proj, bands_skipped, wdata, iprint, write_wfn,                &
-       wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen,                    &
-       elecselfen, phonselfen, use_ws, nc,                                     &
-       rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &
-       nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
-       mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           &
-       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep,         &
-       nswfc, nswc, nswi, pwc, wsfc, wscut, system_2d,                         &
-       broyden_beta, broyden_ndim, nstemp, temps,                              &
-       conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
+       amass, outdir, prefix, iverbosity, fildvscf, rand_q, rand_nq, rand_k,   &
+       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub, rand_nk, specfun_pl, nswc, &
+       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps, nswfc,    &
+       eig_read, wepexst, epexst, vme, elecselfen, phonselfen, use_ws, nc,     &
+       degaussw, fsthick, nsmear, delta_smear, nqf1, nqf2, nqf3, nkf1, nkf2,   &
+       dvscf_dir, ngaussw, epmatkqread, selecqread, nkf3, mp_mesh_k, mp_mesh_q,&
+       wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max, nswi, &
+       num_iter, proj, bands_skipped, wdata, iprint, write_wfn, ephwrite,      &
+       wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen, filqf, filkf,      &
+       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep, pwc,    &
+       broyden_beta, broyden_ndim, nstemp, temps, bfieldx, bfieldy, bfieldz,   &
+       conv_thr_raxis, conv_thr_iaxis, conv_thr_racon, wsfc, wscut, system_2d, &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,&
        npade, lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,      &
        lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
@@ -173,14 +174,14 @@
   ! tphases, fildvscf0
   !
   ! amass    : atomic masses
-  ! iverbosity   : verbosity control
+  ! iverbosity : verbosity control
   ! outdir   : directory where input, output, temporary files reside
   ! elph     : if true calculate electron-phonon coefficients
   ! prefix   : the prefix of files produced by pwscf
   ! fildvscf : output file containing deltavsc
   ! fildrho  : output file containing deltarho
   !
-  ! added by @ FG
+  ! added by FG
   !
   ! ngaussw  : smearing type after wann interp
   !            (n >= 0) : Methfessel-Paxton case. See PRB 40, 3616 (1989)
@@ -208,7 +209,7 @@
   ! epwread  : read all quantities in Wannier representation from file epwdata.fmt
   ! epwwrite : write all quantities in Wannier representation to file epwdata.fmt
   !
-  !  added by @jn
+  ! added by jn
   !
   ! wannierize   : if .TRUE. run the wannier90 code to maximally localize the WFs
   ! dis_win_min  : lower bound on wannier90 disentanglement window
@@ -235,7 +236,7 @@
   ! nsmear       : number of smearing values to use for the selfen_phon call
   ! delta_smear  : change in energy for each additional nsmear ( units of eV)
   !
-  ! added by @ RM
+  ! added by RM
   !
   ! ephwrite    : if true write el-phonon matrix elements on the fine mesh to file
   ! eps_acustic : min phonon frequency for e-p and a2f calculations (units of cm-1)
@@ -288,6 +289,7 @@
   ! delta_approx : if .TRUE. the double delta approximation is used to compute the phonon self-energy
   !
   ! added by CV & SP
+  !
   ! lpolar  : if .TRUE. enable the correct Wannier interpolation in the case of polar material.
   ! lifc    : if .TRUE. reads interatomic force constants produced by q2r.x for phonon interpolation
   ! asr_typ : select type of ASR if lifc=.TRUE. (as in matdyn); otherwise it is the usual simple sum rule
@@ -299,7 +301,6 @@
   !              (can be used as independent postprocessing by setting ep_coupling=.FALSE.)
   ! bnd_cum    : band index for which the cumulant calculation is done
   !              (for more than one band, perform multiple calculations and add the results together)
-  !
   !
   ! Added by SP
   !
@@ -340,6 +341,7 @@
   ! epmatkqread     : If .TRUE., restart an IBTE calculation from scattering written to files.
   ! selecqread      : If .TRUE., restart from the selecq.fmt file
   ! nc              : Number of carrier for the Ziman resistivity formula (can be fractional)
+  ! bfieldx, y, z   : Value of the magnetic field in Tesla along x, y, z direction.
   !
   ! Added by Manos Kioupakis
   ! omegamin        : Photon energy minimum
@@ -553,9 +555,9 @@
   lindabs    = .FALSE.
   mob_maxiter= 50
   use_ws     = .FALSE.
-  epmatkqread  = .FALSE.
-  selecqread   = .FALSE.
-  nc           = 4.0d0
+  epmatkqread = .FALSE.
+  selecqread  = .FALSE.
+  nc          = 4.0d0
   assume_metal = .FALSE.  ! default is we deal with an insulator
   fixsym       = .FALSE.
   epw_no_t_rev = .TRUE.
@@ -563,6 +565,9 @@
   epw_nosym    = .FALSE.
   epw_noinv    = .FALSE.
   epw_crysym   = .FALSE.
+  bfieldx      = 0.d0  ! Tesla
+  bfieldy      = 0.d0  ! Tesla
+  bfieldz      = 0.d0  ! Tesla
   !
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -621,8 +626,8 @@
                  ': "'//TRIM(line)//'" (error could be in the previous line)', 1)
     ENDIF
     ios = close_input_file ( )
-  ENDIF ! meta_ionode         
-  ! 
+  ENDIF ! meta_ionode
+  !
   IF (meta_ionode) THEN
     IF (wannier_plot) THEN
       IF (wannier_plot_radius < 0.0d0) &
@@ -746,9 +751,20 @@
   IF (lscreen .AND. etf_mem == 2) CALL errore('epw_readin', 'Error: lscreen not implemented with etf_mem=2', 1)
   IF (ABS(degaussw) < eps16 .AND. etf_mem == 2) CALL errore('epw_readin', &
       'Error: adapt_smearing not implemented with etf_mem=2', 1)
-  ! 
+  IF (etf_mem == 3) THEN
+    IF (.NOT. mp_mesh_k) CALL errore('epw_readin', 'When etf_mem == 3, you have to use mp_mesh_k == .true.', 1)
+    IF (.NOT. efermi_read) CALL errore('epw_readin', 'When etf_mem == 3, you have to use efermi_read == .true.', 1)
+    IF (int_mob) CALL errore('epw_readin', 'When etf_mem == 3, you have to use int_mob == .false.', 1)
+    IF (.NOT. carrier) CALL errore('epw_readin', 'When etf_mem == 3, you have to use carrier == .true.', 1)
+    IF (phonselfen) CALL errore('epw_readin', 'phonselfen is not implemented with etf_mem == 3', 1)
+    IF (filkf /= ' ' .OR. filqf /= ' ' .OR. rand_k .OR. rand_q) THEN
+      CALL errore('epw_readin', 'etf_mem == 3 requires homogeneous grids', 1)
+    ENDIF
+  ENDIF
+  !
+  IF (etf_mem > 3 .OR. etf_mem < 0) CALL errore('epw_readin', 'etf_mem can only be 0, 1, 2 or 3.', 1)
   ! Make sure the files exists
-  ! 
+  !
   IF (meta_ionode) THEN
     IF (filkf /= ' ') THEN
       OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', ERR = 100, IOSTAT = ios)
@@ -778,7 +794,19 @@
     WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
   ENDIF
   !
-  ! Setup temperature array
+  b_abs = ABS(bfieldx) + ABS(bfieldy) + ABS(bfieldz)
+  IF (b_abs > eps20 .AND. (.NOT. mp_mesh_k)) THEN
+    WRITE(stdout,'(5x,a)') 'WARNING: Finite magnetic field is much more stable with k-point symmetry: mp_mesh_k == .true.'
+    CALL errore('epw_readin', 'Error: Finite magnetic field only implemented with k-point symmetry: mp_mesh_k == .true.', 1)
+  ENDIF
+  IF (b_abs > eps20 .AND. (filkf /= ' ')) THEN
+    CALL errore('epw_readin', 'Error: Finite magnetic field only implemented with homogeneous k-grids', 1)
+  ENDIF
+  IF (b_abs > eps20 .AND. (filqf /= ' ')) THEN
+    CALL errore('epw_readin', 'Error: Finite magnetic field only implemented with homogeneous k-grids', 1)
+  ENDIF
+  !
+  ! setup temperature array
   DO itemp = 1, ntempxx
     IF (temps(itemp) > 0.d0) THEN
       nstemp_hold = itemp
@@ -788,12 +816,12 @@
   ! Case of nstemp > 0 but temps(:) = 0 is caught above
   IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
     nstemp = 1
-    temps(1) = 300    
+    temps(1) = 300
     WRITE(stdout, '(/,5x,a)') 'No temperature supplied. Setting temps(:) to 300 K.'
   ELSE IF (nstemp == 0 .OR. nstemp_hold == nstemp) THEN !list mode
     nstemp = nstemp_hold !catches if nstemp not supplied, no effect if it is
     WRITE(stdout, '(/,5x,a)') 'Reading supplied temperature list.'
-  ELSE IF (nstemp_hold < nstemp .AND. nstemp_hold == 2) THEN !even spacing mode 
+  ELSE IF (nstemp_hold < nstemp .AND. nstemp_hold == 2) THEN !even spacing mode
     tempsmin = temps(1)
     tempsmax = temps(2)
     IF (tempsmin >= tempsmax) THEN !bad start and end points
@@ -842,6 +870,11 @@
   IF (efermi_read) THEN
     fermi_energy = fermi_energy / ryd2ev
   ENDIF
+  ! bfield: input in Tesla=[V/(m^2/s)] , convert in [eV/(Ang^2/s)]
+  bfieldx = bfieldx * electron_si * ang2m**(-2)
+  bfieldy = bfieldy * electron_si * ang2m**(-2)
+  bfieldz = bfieldz * electron_si * ang2m**(-2)
+  !
   ! eptemp : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
   ! 1 K in eV = 8.6173423e-5
   ! Out-of bound issue with GCC compiler. Multiple Fermi temp is not used anyway.
