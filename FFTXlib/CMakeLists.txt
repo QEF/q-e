@@ -194,6 +194,8 @@ if(QE_ENABLE_TEST)
             qe_openmp_fortran
             qe_mpi_fortran
             qe_fftx)
-    add_test(NAME test_qe_fftx 
-        COMMAND $<TARGET_FILE:qe_fftx_test>)
+    add_unit_test(test_qe_fftx-r1-t1 1 1 $<TARGET_FILE:qe_fftx_test>)
+    add_unit_test(test_qe_fftx-r1-t3 1 3 $<TARGET_FILE:qe_fftx_test>)
+    add_unit_test(test_qe_fftx-r3-t1 3 1 $<TARGET_FILE:qe_fftx_test>)
+    add_unit_test(test_qe_fftx-r3-t2 3 2 $<TARGET_FILE:qe_fftx_test>)
 endif()

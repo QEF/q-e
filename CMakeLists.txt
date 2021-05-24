@@ -79,7 +79,7 @@ endif()
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
 option(QE_ENABLE_TEST
-    "enable unit tests" ON)
+    "enable unit and system tests" ON)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_PROFILE_NVTX
@@ -245,6 +245,12 @@ if(QE_ENABLE_MPI)
     find_package(MPI REQUIRED Fortran)
     target_link_libraries(qe_mpi_fortran
         INTERFACE MPI::MPI_Fortran)
+    message(STATUS "MPI settings used by CTest")
+    message("     MPIEXEC_EXECUTABLE : ${MPIEXEC_EXECUTABLE}")
+    message("     MPIEXEC_NUMPROC_FLAG : ${MPIEXEC_NUMPROC_FLAG}")
+    message("     MPIEXEC_PREFLAGS : ${MPIEXEC_PREFLAGS}")
+    string(REPLACE ";" " " MPIEXEC_PREFLAGS_PRINT "${MPIEXEC_PREFLAGS}")
+    message("   Tests run as : ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} <NUM_PROCS> ${MPIEXEC_PREFLAGS_PRINT} <EXECUTABLE>")
 endif(QE_ENABLE_MPI)
 
 ###########################################################
@@ -252,10 +258,10 @@ endif(QE_ENABLE_MPI)
 ###########################################################
 find_package(Git 2.13 REQUIRED)
 if(EXISTS ${qe_SOURCE_DIR}/.git)
-  message("   Source files are cloned from a git repository.")
+  message(STATUS "Source files are cloned from a git repository.")
   set(IS_GIT_PROJECT 1)
 else()
-  message("   Source files are not cloned from a git repository.")
+  message(STATUS "Source files are not cloned from a git repository.")
 endif()
 
 ###########################################################
@@ -485,6 +491,7 @@ endif(QE_ENABLE_HDF5)
 # 'add_test()' will be run by the 'test' make target
 ###########################################################
 if(QE_ENABLE_TEST)
+    include(cmake/unit_test.cmake)
     enable_testing()
 endif(QE_ENABLE_TEST)
 
