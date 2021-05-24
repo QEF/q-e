@@ -1584,7 +1584,7 @@ MODULE realus
     if (.not.allocated ( xkphase ) ) call errore ('set_xkphase',' array not allocated yes',1)
     if (ik .eq. current_phase_kpoint ) return
     !
-    !$omp parallel do
+    !$omp parallel do private(arg)
     do box_ir =1, boxtot
        arg = ( xk(1,ik) * xyz_beta(1,box_ir) + &
                xk(2,ik) * xyz_beta(2,box_ir) + &
@@ -2396,7 +2396,7 @@ MODULE realus
            ! two ffts at the same time
 
            IF( add_to_orbital_ ) THEN
-              !$omp parallel do 
+              !$omp parallel do private(fp, fm)
               DO j = 1, ngk(1)
                  fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
@@ -2405,7 +2405,7 @@ MODULE realus
               ENDDO
               !$omp end parallel do
            ELSE
-              !$omp parallel do
+              !$omp parallel do private(fp, fm)
               DO j = 1, ngk(1)
                  fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0

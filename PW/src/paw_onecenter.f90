@@ -755,7 +755,7 @@ MODULE paw_onecenter
 !$omp workshare
     gc_rad = 0.0d0
     h_rad  = 0.0d0
-!$omp end workshare nowait
+!$omp end workshare
     !
     IF (PRESENT(energy)) THEN
 !$omp single
