@@ -38,7 +38,8 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen, epbread,  &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal,   &
-                            cumulant, eliashberg, fermi_plot
+                            cumulant, eliashberg, fermi_plot,                   &
+                            nomega, omegamin, omegamax, omegastep, neta
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &
@@ -59,7 +60,8 @@
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  gtemp, xkq, lower_bnd, upper_bnd, dos,&
-                            nbndep
+                            nbndep, ef0_fca, epsilon2_abs, epsilon2_abs_lorenz, &
+                            epsilon2_abs_all, epsilon2_abs_lorenz_all
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem
@@ -90,7 +92,8 @@
   USE spectral_func, ONLY : spectral_func_el_q, spectral_func_ph_q, a2f_main,   &
                             spectral_func_pl_q
   USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine_mem
-  USE indabs,        ONLY : indabs_main, renorm_eig
+  USE indabs,        ONLY : indabs_main, renorm_eig, fermi_carrier_indabs
+  USE io_indabs,     ONLY : indabs_read
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -239,6 +242,8 @@
   !! Maximum vector: at*nq
   REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
+  REAL(KIND = DP) :: etemp_fca
+  !! Temperature for free carrier absorption
   REAL(KIND = DP) :: ef0(nstemp)
   !! Fermi level for the temperature itemp
   REAL(KIND = DP) :: efcb(nstemp)
@@ -947,6 +952,18 @@
         sigmai_mode(:, :, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
+    IF (lindabs) THEN
+      ! Calculate the number of frequency points
+      nomega = INT((omegamax - omegamin) / omegastep) + 1
+      ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating epsilon2_abs', 1)
+      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating epsilon2_abs_lorenz', 1)
+      ALLOCATE(epsilon2_abs_all(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epsilon2_abs_all', 1)
+      ALLOCATE(epsilon2_abs_lorenz_all(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shiffle', 'Error allocating epsilon2_abs_lorenz_all', 1)
+    ENDIF ! indabs
     !
     ! Restart in SERTA case or self-energy (electron or plasmon) case
     IF (restart) THEN
@@ -964,6 +981,11 @@
           ! Here inv_tau_all gets updated
           CALL tau_read(iq_restart, totq, nktotf, .FALSE.)
         ENDIF
+      ENDIF
+      !
+      ! Potential restart in indirect optics
+      IF (lindabs) THEN
+        CALL indabs_read(iq_restart, totq, epsilon2_abs_all, epsilon2_abs_lorenz_all)
       ENDIF
       !
       ! If you restart from reading a file. This prevent
@@ -1341,7 +1363,17 @@
         ENDIF
         !
         ! Indirect absorption
-        IF (lindabs .AND. .NOT. scattering)  CALL indabs_main(iq)
+        IF (lindabs .AND. .NOT. scattering) THEN
+          IF (carrier .and. (iq == iq_restart)) THEN
+            ALLOCATE(ef0_fca(nstemp), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
+            DO itemp = 1, nstemp
+              etemp_fca = gtemp(itemp)
+              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+            ENDDO
+          ENDIF
+          CALL indabs_main(iq, totq, first_cycle, iq_restart)
+        ENDIF
         !
         ! Conductivity ---------------------------------------------------------
         IF (scattering) THEN
@@ -1659,6 +1691,21 @@
   IF (assume_metal) THEN
     DEALLOCATE(dos, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dos', 1)
+  ENDIF
+  !
+  IF (lindabs .AND. (.NOT. scattering)) THEN
+    IF (carrier) THEN
+      DEALLOCATE(ef0_fca, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ef0_fca', 1)
+    ENDIF
+    DEALLOCATE(epsilon2_abs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs', 1)
+    DEALLOCATE(epsilon2_abs_lorenz, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs_lorenz', 1)
+    DEALLOCATE(epsilon2_abs_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs_all', 1)
+    DEALLOCATE(epsilon2_abs_lorenz_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsilon2_abs_lorenz_all', 1)
   ENDIF
   !
   CALL stop_clock('ephwann')

@@ -352,6 +352,10 @@
   !! smearing for the calculation of the Lindhard function (in eV)
   !
   ! Phonon-assisted absorption
+  INTEGER :: neta = 9
+  !! Number of broadening parameters
+  INTEGER :: nomega
+  !! Number of frequency (photon energy) points 
   REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
   REAL(KIND = DP) :: omegamax

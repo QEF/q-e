@@ -33,7 +33,7 @@
             iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,   &
             iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iuntau, iuntaucb, &
-            iufilesigma_all, epwbib
+            iufilesigma_all, epwbib, iuindabs_all, iudirabs
   PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
             iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb,  &
             iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iufilmu_nk,  &
@@ -163,7 +163,9 @@
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
-  !
+  INTEGER :: iuindabs_all    = 302 ! Indirect absorption read/write
+  INTEGER :: iudirabs        = 303 ! Direct absorption data
+  ! 
   ! Miscellaneous (326-350)
   INTEGER :: epwbib          = 326 ! EPW bibliographic file.
   !
