@@ -245,7 +245,7 @@
   INTEGER :: nsiter
   !! nr. of iterations for self-consistency
   INTEGER :: npade
-  !! percentange of Matsubara points used in Pade continuation 
+  !! percentange of Matsubara points used in Pade continuation
   INTEGER :: broyden_ndim
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
@@ -332,6 +332,12 @@
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
   REAL(KIND = DP) :: nc
   !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
+  REAL(KIND = DP) :: bfieldx
+  !! Magnetic field along the x-direction
+  REAL(KIND = DP) :: bfieldy
+  !! Magnetic field along the y-direction
+  REAL(KIND = DP) :: bfieldz
+  !! Magnetic field along the z-direction
   !
   ! Plasmon
   REAL(KIND = DP) :: nel
