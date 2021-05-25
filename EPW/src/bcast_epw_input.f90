@@ -52,7 +52,8 @@
                             assume_metal, wannier_plot_scale, reduce_unk,     &
                             wannier_plot_supercell, wannier_plot_radius,      &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, &
-                            epw_crysym, bfieldx, bfieldy, bfieldz
+                            epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
+                            tc_linear_solver
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -118,6 +119,8 @@
   CALL mp_bcast(lacon           , meta_ionode_id, world_comm)
   CALL mp_bcast(liso            , meta_ionode_id, world_comm)
   CALL mp_bcast(laniso          , meta_ionode_id, world_comm)
+  CALL mp_bcast(tc_linear       , meta_ionode_id, world_comm)
+  CALL mp_bcast(tc_linear_solver, meta_ionode_id, world_comm)
   CALL mp_bcast(lpolar          , meta_ionode_id, world_comm)
   CALL mp_bcast(lifc            , meta_ionode_id, world_comm)
   CALL mp_bcast(lscreen         , meta_ionode_id, world_comm)

@@ -58,9 +58,9 @@
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
-                            wannier_plot_radius, fermi_plot,                           &
-                            fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,        &
-                            epw_crysym, bfieldx, bfieldy, bfieldz
+                            wannier_plot_radius, fermi_plot, fixsym, epw_no_t_rev,     &
+                            epw_tr, epw_nosym, epw_noinv, epw_crysym,                  &
+                            bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -159,6 +159,7 @@
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
        fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, epw_crysym,         &
+       tc_linear, tc_linear_solver,                                            &
   !---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -507,6 +508,8 @@
   imag_read   = .FALSE.
   eliashberg  = .FALSE.
   ep_coupling = .TRUE.
+  tc_linear   = .FALSE.
+  tc_linear_solver = 'power'
   nswfc    = 0
   nswc     = 0
   nswi     = 0

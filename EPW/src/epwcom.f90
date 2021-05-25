@@ -151,6 +151,10 @@
   !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
   LOGICAL :: eliashberg
   !! if .TRUE. solve the Eliashberg equations
+  LOGICAL :: tc_linear
+  !! if .TRUE.  linearized Eliashberg eqn. for T_c will be solved
+  CHARACTER(LEN = 10) :: tc_linear_solver
+  !! algorithm to solve T_c eigenvalue problem
   !
   ! Conductivity
   LOGICAL :: scattering
