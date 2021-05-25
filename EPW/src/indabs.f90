@@ -1045,7 +1045,7 @@
           elw = ef_tmp
         ENDIF
         IF (MOD(i, 10) == 0) THEN
-          WRITE(stdout, '(5x, a, i, a, f8.3)') 'Iteration #', i, " Fermi level = ", ef_tmp
+          WRITE(stdout, '(5x, a, i5, a, f8.3)') 'Iteration #', i, " Fermi level = ", ef_tmp
         ENDIF
         ef_tmp = (eup + elw) / 2.0d0
       ENDDO ! maxiter
@@ -1084,7 +1084,7 @@
           eup = ef_tmp
         ENDIF
         IF (MOD(i, 10) == 0) THEN
-          WRITE(stdout, '(5x, a, i, a, f8.3)') 'Iteration #', i, " Fermi level = ", ef_tmp
+          WRITE(stdout, '(5x, a, i5, a, f8.3)') 'Iteration #', i, " Fermi level = ", ef_tmp
         ENDIF
         ef_tmp = (eup + elw) / 2.0d0
       ENDDO ! maxiter
