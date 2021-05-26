@@ -546,6 +546,7 @@
     IF (mpime == ionode_id) THEN
       ! read 'selecq.fmt' file
       OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('read_frequencies', 'error opening selecq.fmt', 1)
       READ(iunselecq, *) totq
       ALLOCATE(selecq(totq), STAT = ierr)
       IF (ierr /= 0) CALL errore('read_frequencies', 'Error allocating selecq', 1)
@@ -1297,7 +1298,6 @@
         !WRITE(iufilfreq, '(ES20.10)') wf(imode, iq)
         WRITE(iufilfreq) wf(imode, iq)
       ENDDO
-      CLOSE(iufilfreq)
     ENDIF
     !
     ! Fermi level and corresponding DOS
@@ -1438,7 +1438,6 @@
         WRITE(iufileph) tmp_g2(ifil)
       ENDDO
     ENDIF
-    CLOSE(iufileph)
     !
     IF (my_pool_id == 0) THEN
       ! format is compatible with IBTE
@@ -1457,6 +1456,8 @@
     ENDIF
     !
     IF (iqq == totq) THEN
+      CLOSE(iufilfreq)
+      CLOSE(iufileph)
       DEALLOCATE(ekfs, STAT = ierr)
       IF (ierr /= 0) CALL errore('write_ephmat', 'Error deallocating ekfs', 1)
       DEALLOCATE(wkfs, STAT = ierr)
@@ -1988,6 +1989,7 @@
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
+    USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : fsthick
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : agap, nkfs, nbndfs, ef0, ekfs, w0g
@@ -2032,12 +2034,20 @@
     !! It is therefore an approximation for a delta function
     temp = gtemp(itemp) / kelvin2eV
     !
-    delta_min = 0.9d0 * MINVAL(agap(:,:,itemp))
-    delta_max = 1.1d0 * MAXVAL(agap(:,:,itemp))
-    !nbin = NINT(delta_max / eps5) + 1
-    nbin = NINT((delta_max - delta_min) / eps4) + 1
-    !dbin = delta_max / DBLE(nbin)
-    dbin = (delta_max - delta_min) / DBLE(nbin)
+    delta_min = MINVAL(agap(:, :, itemp))
+    IF (delta_min > zero) THEN
+      delta_min = 0.9d0 * delta_min
+    ELSE
+      WRITE(stdout, '(5x, a, f12.6, a)') 'Min. value of superconducting gap = ', &
+                                          delta_min * 1000.d0, ' meV'
+      delta_min = 1.1d0 * delta_min
+    ENDIF
+    delta_max = 1.1d0 * MAXVAL(agap(:, :, itemp))
+    !nbin = NINT((delta_max - delta_min) / eps4) + 1
+    !dbin = (delta_max - delta_min) / DBLE(nbin)
+    dbin = 3.0d-5 !eV
+    nbin = NINT((delta_max - delta_min) / dbin) + 1
+    !
     ALLOCATE(delta_k_bin(nbin), STAT = ierr)
     IF (ierr /= 0) CALL errore('gap_distribution_FS', 'Error allocating delta_k_bin', 1)
     delta_k_bin(:) = zero
@@ -2045,7 +2055,8 @@
     DO ik = 1, nkfs
       DO ibnd = 1, nbndfs
         IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-          ibin = NINT(agap(ibnd, ik, itemp) / dbin) + 1
+          ibin = NINT((agap(ibnd, ik, itemp) - delta_min) / dbin) + 1
+          !ibin = NINT(agap(ibnd, ik, itemp) / dbin) + 1
           weight = w0g(ibnd, ik)
           delta_k_bin(ibin) = delta_k_bin(ibin) + weight
         ENDIF
@@ -2065,7 +2076,7 @@
     WRITE(iufilgap, '(2a20)') '#     T [K]    ', '\rho(delta_nk) [meV]'    
     DO ibin = 1, nbin
       WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), & 
-                                   dbin * DBLE(ibin) * 1000.d0
+                                   (dbin * DBLE(ibin) + delta_min) * 1000.d0
     ENDDO
     CLOSE(iufilgap)
     !

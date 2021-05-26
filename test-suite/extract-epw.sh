@@ -62,6 +62,7 @@ efm=`grep "at Ef=" $fname | awk '{print $8}'`
 elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
 allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
+max_eigenvalue=`grep -A 47 "Max. eigenvalue close to 1" $fname | grep 35.00 | awk '{print $2}'`
 pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
 mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
@@ -91,6 +92,11 @@ fi
 if test "$bcsgap" != ""; then
         echo bcsgap
         echo $bcsgap
+fi
+
+if test "$max_eigenvalue" != ""; then
+        echo max_eigenvalue
+        echo $max_eigenvalue
 fi
 
 if test "$mobvb" != ""; then
