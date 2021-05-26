@@ -357,6 +357,20 @@ SUBROUTINE export_upf(filename, unit_loc)
       upf%gipaw_wfs_nchannels  = nwfts
       nw = upf%gipaw_wfs_nchannels
 
+      IF (allocated(upf%gipaw_core_orbital_n))   DEALLOCATE(upf%gipaw_core_orbital_n)
+      IF (allocated(upf%gipaw_core_orbital_l))   DEALLOCATE(upf%gipaw_core_orbital_l)
+      IF (allocated(upf%gipaw_core_orbital_el))  DEALLOCATE(upf%gipaw_core_orbital_el)
+      IF (allocated(upf%gipaw_core_orbital))     DEALLOCATE(upf%gipaw_core_orbital)
+      IF (allocated(upf%gipaw_wfs_el))           DEALLOCATE(upf%gipaw_wfs_el)
+      IF (allocated(upf%gipaw_wfs_ll))           DEALLOCATE(upf%gipaw_wfs_ll)
+      IF (allocated(upf%gipaw_wfs_ll))           DEALLOCATE(upf%gipaw_wfs_ll)
+      IF (allocated(upf%gipaw_wfs_rcut))         DEALLOCATE(upf%gipaw_wfs_rcut)
+      IF (allocated(upf%gipaw_wfs_rcutus))       DEALLOCATE(upf%gipaw_wfs_rcutus)
+      IF (allocated(upf%gipaw_wfs_ae))           DEALLOCATE(upf%gipaw_wfs_ae)
+      IF (allocated(upf%gipaw_wfs_ps))           DEALLOCATE(upf%gipaw_wfs_ps)
+      IF (allocated(upf%gipaw_vlocal_ae))        DEALLOCATE(upf%gipaw_vlocal_ae)
+      IF (allocated(upf%gipaw_vlocal_ps))        DEALLOCATE(upf%gipaw_vlocal_ps)
+
       ALLOCATE ( &
          upf%gipaw_core_orbital_n(co), &
          upf%gipaw_core_orbital_l(co), &
