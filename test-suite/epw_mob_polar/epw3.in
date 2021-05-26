@@ -13,7 +13,7 @@
   epbread     = .false.
   epwwrite    = .false.
   epwread     = .true.
- 
+
   scattering  = .true.
   iterative_bte = .true.
   int_mob     = .false.
@@ -21,7 +21,7 @@
   ncarrier    =  1E13
   mp_mesh_k   = .true.
   epmatkqread = .false.
-  mob_maxiter = 200
+  mob_maxiter = 20
   broyden_beta= 1.0
 
   nstemp      = 2
@@ -34,7 +34,7 @@
   lpolar      = .true.
   etf_mem     = 1
   vme         = .true.
-  use_ws      = .true
+  use_ws      = .true.
   lphase      = .true.
 
   lifc        = .false.
@@ -69,7 +69,7 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 0.4 ! eV 
+  fsthick     = 0.4 ! eV
   degaussw    = 0.00 ! eV
 
   efermi_read  = .true
@@ -87,7 +87,7 @@
   nqf1         = 30
   nqf2         = 30
   nqf3         = 30
- 
+
   nk1         = 2
   nk2         = 2
   nk3         = 2
