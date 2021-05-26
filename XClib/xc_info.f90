@@ -17,6 +17,7 @@ PROGRAM xc_info
   USE xc_lib,               ONLY: xclib_set_dft_from_name, xclib_get_ID, &
                                   xclib_dft_is_libxc, xclib_init_libxc,  &
                                   xclib_finalize_libxc
+  USE qe_dft_list
   USE xclib_utils_and_para, ONLY: stdout
 #if defined(__LIBXC)
 #include "xc_version.h"
@@ -26,10 +27,12 @@ PROGRAM xc_info
   !
   IMPLICIT NONE
   !
-#if defined(__LIBXC)
   CHARACTER(LEN=120) :: lxc_kind, lxc_family
+  CHARACTER(LEN=150) :: dft_r
+  CHARACTER(LEN=10) :: dft_n
   INTEGER :: n_ext, id(6)
   INTEGER :: i, ii
+#if defined(__LIBXC)
 #if (XC_MAJOR_VERSION>5)
   !workaround to keep compatibility with libxc develop version
   INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10
@@ -41,7 +44,7 @@ PROGRAM xc_info
   CHARACTER(LEN=80) :: dft
   !
   !---------- DFT infos -------------------------
-  INTEGER :: iexch, icorr, igcx, igcc, imeta, imetac
+  INTEGER :: iexch, icorr, igcx, igcc, imeta, imetac, idx
   LOGICAL :: is_libxc(6)
   !
   dft = 'none'
@@ -77,24 +80,71 @@ PROGRAM xc_info
   WRITE(stdout,121) igcx, is_libxc(3), igcc, is_libxc(4)  
   WRITE(stdout,*) CHAR(10)//"MGGA IDs"  
   WRITE(stdout,121) imeta, is_libxc(5), imetac, is_libxc(6)  
-  !  
-  IF (ANY(.NOT.is_libxc(:))) THEN  
-    WRITE(stdout,*) CHAR(10)//"References for QE functionals are temporarily&  
-                              & listed in Modules/funct.f90"  
-  ENDIF  
+  ! 
+
   !  
 #if defined(__LIBXC)
-  !  
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1 )  
+#endif
   !  
-  WRITE(stdout,*) CHAR(10)//"LIBXC functional infos:"  
+  !WRITE(stdout,*) CHAR(10)//"LIBXC functional infos:"  
   !  
   id(1) = iexch ; id(2) = icorr
   id(3) = igcx  ; id(4) = igcc
   id(5) = imeta ; id(6) = imetac
   !  
+  
   DO i = 1, 6  
-    IF (is_libxc(i)) THEN  
+    idx = id(i)
+    IF (.NOT.is_libxc(i) .AND. idx/=0) THEN
+      WRITE(stdout,*) CHAR(10)//"Functional with ID:", idx
+      !
+      SELECT CASE( i )
+      CASE( 1 ) 
+        WRITE(lxc_kind, '(a)') 'Exchange functional'
+        WRITE(lxc_family,'(a)') "LDA"
+        dft_n = dft_LDAx_name(idx)
+        dft_r = dft_LDAx_ref(idx)
+      CASE( 2 )
+        WRITE(lxc_kind, '(a)') 'Correlation functional'
+        WRITE(lxc_family,'(a)') "LDA"
+        dft_n = dft_LDAc_name(idx)
+        dft_r = dft_LDAc_ref(idx)
+      CASE( 3 )
+        WRITE(lxc_kind, '(a)') 'Exchange functional'
+        WRITE(lxc_family,'(a)') "GGA"
+        dft_n = dft_GGAx_name(idx)
+        dft_r = dft_GGAx_ref(idx)
+      CASE( 4 )
+        WRITE(lxc_kind, '(a)') 'Correlation functional'
+        WRITE(lxc_family,'(a)') "GGA"
+        dft_n = dft_GGAc_name(idx)
+        dft_r = dft_GGAc_ref(idx)
+      CASE( 5 )
+        WRITE(lxc_kind, '(a)') 'Exchange+Correlation functional'
+        WRITE(lxc_family,'(a)') "MGGA"
+        dft_n = dft_MGGA_name(idx)
+        dft_r = dft_MGGA_ref(idx)
+      !CASE( 6 )
+      !  WRITE(lxc_kind, '(a)') 'Correlation functional'
+      !  WRITE(lxc_family,'(a)') "MGGA"
+      !  dft_n = dft_MGGA_name(idx)
+      !  dft_r = dft_MGGA_ref(idx)
+      END SELECT
+      !  
+      WRITE(*,'("The functional ''", a, "'' is a ", a, ", it belongs to &  
+             &the ''", a, "'' family and is defined in the reference(s): &  
+             &")') TRIM(dft_n), TRIM(lxc_kind)&  
+             ,TRIM(lxc_family)  
+      ii = 0  
+      DO WHILE( ii >= 0 )  
+       WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(dft_r)  
+      ENDDO 
+      !
+#if defined(__LIBXC)
+      !
+    ELSEIF (is_libxc(i)) THEN  
+      !
       WRITE(stdout,*) CHAR(10)//"Functional with ID:", id(i)  
       !  
       SELECT CASE( xc_f03_func_info_get_kind(xc_info(i)) )  
@@ -147,13 +197,14 @@ PROGRAM xc_info
           WRITE(stdout,*) 'Default value: ', &  
                  xc_f03_func_info_get_ext_params_default_value(xc_info(i), ii)  
         ENDDO  
-      ENDIF  
-      !  
-    ENDIF  
+      ENDIF
+#endif
+      !
+    ENDIF
   ENDDO  
   !  
+#if defined(__LIBXC)
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_finalize_libxc()  
-  !  
 #endif
   !
   121 FORMAT('Exch: ',I3,' is libxc: ',L1,';  Corr: ',I3,' is libxc: ',L1 )

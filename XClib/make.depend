@@ -66,6 +66,7 @@ xclib_test.o : ../upflib/xmltools.o
 xc_info.o : qe_kind.o
 xc_info.o : dft_setting_params.o
 xc_info.o : xc_lib.o
+xc_info.o : qe_dft_list.o
 xc_info.o : xclib_utils_and_para.o
 beefun.o : beefleg.h
 beefun.o : pbecor.h

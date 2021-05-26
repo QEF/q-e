@@ -53,15 +53,17 @@ qe_install_targets(qe_libbeef)
 ###########################################################
 # xc_info.x
 ###########################################################
-qe_add_executable(qe_xc_info xc_info.f90)
- set_target_properties(qe_xc_info 
-     PROPERTIES 
-         OUTPUT_NAME qe_xc_info.x 
-         RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
- target_link_libraries(qe_xc_info
-     PRIVATE
-         qe_external_libxc
-         qe_xclib)
+if(QE_ENABLE_TEST)
+    qe_add_executable(qe_xc_info xc_info.f90)
+    set_target_properties(qe_xc_info 
+        PROPERTIES 
+        OUTPUT_NAME qe_xc_info.x 
+        RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+    target_link_libraries(qe_xc_info
+        PRIVATE
+            qe_external_libxc
+            qe_xclib)
+endif(QE_ENABLE_TEST)
 
 ###########################################################
 # xclib_test.x
