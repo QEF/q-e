@@ -178,7 +178,8 @@ set(src_pw
    src/read_conf_from_file.f90 
    src/read_file_new.f90 
    src/realus.f90 
-   src/remove_atomic_rho.f90 
+   src/remove_atomic_rho.f90
+   src/report_clocks_pw.f90  
    src/report_mag.f90 
    src/restart_in_electrons.f90 
    src/rho2zeta.f90 
