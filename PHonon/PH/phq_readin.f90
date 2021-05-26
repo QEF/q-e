@@ -9,10 +9,9 @@
 !----------------------------------------------------------------------------
 SUBROUTINE phq_readin()
   !----------------------------------------------------------------------------
-  !
-  !    This routine reads the control variables for the program phononq.
-  !    A second routine, read_file, reads the variables saved to file
-  !    by the self-consistent program.
+  !! This routine reads the control variables for the program \(\texttt{phononq}\).
+  !! A second routine, \(\texttt{read_file}\), reads the variables saved to file
+  !! by the self-consistent program.
   !
   !
   USE kinds,         ONLY : DP
