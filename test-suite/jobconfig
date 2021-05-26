@@ -173,6 +173,10 @@ inputs_args = ('CH4.pw.in', '1'), ('CH4.tddfpt.in', '2'), ('CH4.tddfpt_pp.in', '
 program = TDDFPT
 inputs_args = ('Si.pw.in', '1'), ('Si.tddfpt-eels.in', '5'), ('Si.tddfpt_pp_eels.in', '4')
 
+[tddfpt_magnons_fe/]
+program = TDDFPT
+inputs_args = ('Fe.pw.in', '1'), ('Fe.tddfpt-magnons.in', '6'), ('Fe.tddfpt_pp_magnons.in', '7')
+
 [hp_insulator_us/]
 program = HP
 inputs_args = ('LiCoO2.scf.in', '1'), ('LiCoO2.hp.in', '3'), ('LiCoO2.scf.in', '2'), ('LiCoO2.hp.in', '4')
