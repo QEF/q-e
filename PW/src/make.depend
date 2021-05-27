@@ -2118,6 +2118,16 @@ remove_atomic_rho.o : ../../Modules/mp_pools.o
 remove_atomic_rho.o : ../../Modules/recvec.o
 remove_atomic_rho.o : pwcom.o
 remove_atomic_rho.o : scf_mod.o
+report_clocks_pw.o : ../../Modules/control_flags.o
+report_clocks_pw.o : ../../Modules/io_global.o
+report_clocks_pw.o : ../../Modules/noncol.o
+report_clocks_pw.o : ../../Modules/qexsd.o
+report_clocks_pw.o : ../../XClib/xc_lib.o
+report_clocks_pw.o : ../../upflib/paw_variables.o
+report_clocks_pw.o : ../../upflib/uspp.o
+report_clocks_pw.o : bp_mod.o
+report_clocks_pw.o : ldaU.o
+report_clocks_pw.o : realus.o
 report_mag.o : ../../Modules/constants.o
 report_mag.o : ../../Modules/io_global.o
 report_mag.o : ../../Modules/ions_base.o
