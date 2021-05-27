@@ -200,12 +200,12 @@
               DO ibnd = 1, nbndfst
                 !
                 ! vkk(3,nbnd) - velocity for k
-                vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                 !
                 DO jbnd = 1, nbndfst
                   !
                   ! vkq(3,nbnd) - velocity for k + q
-                  vkq(:, jbnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq))
+                  vkq(:, jbnd) = REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq))
                   !
                   IF (ABS(vkk(1, ibnd)**2 + vkk(2, ibnd)**2 + vkk(3, ibnd)**2 ) > eps4) &
                     vel_factor(ibnd, jbnd) = DDOT(3, vkk(:, ibnd), 1, vkq(:, jbnd), 1) / &
@@ -781,7 +781,7 @@
                   IF (vme) THEN
                     vkk(:, ibnd) = REAL(vmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
-                    vkk(:, ibnd) = 2.0 * REAL(dmef_all (:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                    vkk(:, ibnd) = REAL(dmef_all (:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ENDIF
                   tau = one / inv_tau_all(itemp, ibnd, ik)
                   ekk = etf_all(ibndmin - 1 + ibnd, ik) - ef0(itemp)
@@ -864,7 +864,7 @@
                   IF (vme) THEN
                     vkk(:, ibnd) = REAL(vmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
-                    vkk(:, ibnd) = 2.0 * REAL(dmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                    vkk(:, ibnd) = REAL(dmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ENDIF
                   tau = one / inv_tau_all(itemp, ibnd, ik)
                   ekk = etf_all(ibndmin - 1 + ibnd, ik) -  ef0(itemp)
@@ -998,11 +998,11 @@
                     ! vmef is in units of Ryd * bohr
                     vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
-                    ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                    ! v_(k,i) = 1/m <ki|p|ki> = dmef (:, i,i,k)
                     ! 1/m  = 2 in Rydberg atomic units
-                    ! dmef is in units of 1/a.u. (where a.u. is bohr)
+                    ! dmef is in units of Ryd * bohr
                     ! v_(k,i) is in units of Ryd * a.u.
-                    vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                    vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ENDIF
                   ! Use symmetries on k-point (from Homogeneous grid only)
                   IF (mp_mesh_k) THEN
@@ -1215,11 +1215,11 @@
                       ! vmef is in units of Ryd * bohr
                       vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ELSE
-                      ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                      ! v_(k,i) = 1/m <ki|p|ki> = dmef (:, i,i,k)
                       ! 1/m  = 2 in Rydberg atomic units
-                      ! dmef is in units of 1/a.u. (where a.u. is bohr)
+                      ! dmef is in units of Ryd * bohr
                       ! v_(k,i) is in units of Ryd * a.u.
-                      vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                      vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ENDIF
                     IF (mp_mesh_k) THEN
                       !
@@ -1294,7 +1294,7 @@
                     IF (vme) THEN
                       vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ELSE
-                      vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                      vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ENDIF
                     !
                     IF (mp_mesh_k) THEN

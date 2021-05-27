@@ -242,8 +242,8 @@
             DO ibnd = 1, nbndfst
               DO jbnd = 1, nbndfst
                 ! Dme's already corrected for GW corrections in wan2bloch.f90
-                vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
-                vkq(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
+                vkk(:, ibnd, jbnd) = dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
+                vkq(:, ibnd, jbnd) = dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
               ENDDO
             ENDDO
           ENDIF
@@ -555,7 +555,7 @@
           DO ibnd = 1, nbndsub
             DO jbnd = 1, nbndsub
               ! Dme's already corrected for GW corrections in wan2bloch.f90
-              vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibnd, jbnd, ikk)
+              vkk(:, ibnd, jbnd) = dmef(:, ibnd, jbnd, ikk)
             ENDDO
           ENDDO
         ENDIF
