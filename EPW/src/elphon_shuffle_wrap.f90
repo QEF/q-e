@@ -218,6 +218,7 @@
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
+    IF (.NOT. vme) CALL compute_pmn_para
     !
     ! Regenerate qpoint list
     !
@@ -291,14 +292,6 @@
     CALL fkbounds(nkstot, ik_start, ik_stop)
     et_ks(:, :)  = et_loc(:, :)
     et_loc(:, :) = et_tmp(:, ik_start:ik_stop)
-  ENDIF
-  !
-  ! Do not recompute dipole matrix elements
-  IF (epwread .AND. .NOT. epbread) THEN
-    CONTINUE
-  ELSE
-    ! compute coarse grid dipole matrix elements.  Very fast
-    IF (.NOT. vme) CALL compute_pmn_para
   ENDIF
   !
   !  gather electronic eigenvalues for subsequent shuffle

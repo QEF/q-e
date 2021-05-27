@@ -256,7 +256,7 @@
             IF (vme) THEN
               vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
             ELSE
-              vkk_all(:,ibnd, ik + lower_bnd -1) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+              vkk_all(:,ibnd, ik + lower_bnd -1) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
             ENDIF
             etf_all(ibnd, ik + lower_bnd - 1) = etf(ibndmin - 1 + ibnd, ikk)
           ENDDO
@@ -727,7 +727,7 @@
           IF (vme) THEN
             vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
           ELSE
-            vkk_all(:,ibnd, ik + lower_bnd -1 ) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+            vkk_all(:,ibnd, ik + lower_bnd -1 ) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
           ENDIF
           etf_all(ibnd, ik + lower_bnd - 1) = etf(ibndmin - 1 + ibnd, ikk)
         ENDDO
