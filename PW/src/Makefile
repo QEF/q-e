@@ -190,7 +190,6 @@ read_conf_from_file.o \
 read_file_new.o \
 realus.o \
 remove_atomic_rho.o \
-report_clocks_pw.o \
 report_mag.o \
 restart_in_electrons.o \
 rho2zeta.o \
