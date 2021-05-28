@@ -72,6 +72,7 @@ MODULE qexsd_module
   PUBLIC :: qexsd_set_status
   PUBLIC :: qexsd_allocate_clock_list
   PUBLIC :: qexsd_add_label
+  PUBLIC :: qexsd_add_all_clocks 
   ! 
 CONTAINS
 !
@@ -572,7 +573,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
          END FUNCTION get_cpu_and_wall 
       END INTERFACE
       ! 
-      IF (PRESENT(partial_clocks)) partial_ndim = clock_list_last 
+      IF (PRESENT(partial_clocks)) partial_ndim = clock_list_last
       DO ic = 1, nclock
          IF ( TRIM(total_clock) == clock_label(ic) ) EXIT 
       END DO 
@@ -589,7 +590,6 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
                              called(nc))
             ELSE 
                CALL qes_init (partial_(ipar), "partial", "not_found",  -1.d0, -1.d0, 0)  
-               CALL infomsg("add_xml_clocks_pw: label not found ", TRIM(partial_clocks(ipar))) 
                partial_(ipar)%lwrite=.FALSE. 
             END IF 
             END DO
@@ -621,6 +621,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
      IMPLICIT NONE 
      CHARACTER(*), INTENT(IN) :: prog
      !! name of the program
+     IF (ALLOCATED(clock_list)) DEALLOCATE (clock_list) 
      IF (prog == 'PW') THEN 
       ALLOCATE(character(len=32) :: clock_list(100))
       clock_list_dim = 100 
@@ -629,6 +630,17 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
       clock_list_dim = 100 
      END IF 
    END SUBROUTINE
+
+   SUBROUTINE qexsd_add_all_clocks()
+     !! allocates the list of clock labels copying all active clocks
+     USE mytime,  ONLY: nclock, clock_label
+     IMPLICIT NONE 
+     IF (ALLOCATED(clock_list))  DEALLOCATE (clock_list) 
+     ALLOCATE (clock_list, SOURCE=clock_label(1:nclock)) 
+     clock_list_dim = nclock
+     clock_list_last = nclock
+    
+   END SUBROUTINE  
 
    SUBROUTINE qexsd_add_label (label)
       !! adds a clock label to the clock list that will be reported in the xml file
