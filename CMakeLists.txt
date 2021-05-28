@@ -690,6 +690,7 @@ add_custom_target(tddfpt
         qe_tddfpt_turbodavidson_exe
         qe_tddfpt_turboeels_exe
         qe_tddfpt_calculatespectrum_exe
+        qe_tddfpt_turbomagnons_exe 
     COMMENT
         "time dependent dft code")
 

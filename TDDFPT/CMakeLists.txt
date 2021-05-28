@@ -123,6 +123,22 @@ target_link_libraries(qe_tddfpt_turboeels_exe
         qe_xclib)
 
 ###########################################################
+# turbo_magnons.x
+###########################################################
+set(src_turbomagnons_x src/lr_magnons_main.f90)
+qe_add_executable(qe_tddfpt_turbomagnons_exe ${src_turbomagnons_x})
+set_target_properties(qe_tddfpt_turbomagnons_exe
+    PROPERTIES
+        OUTPUT_NAME turbo_magnons.x)
+target_link_libraries(qe_tddfpt_turbomagnons_exe
+    PRIVATE
+        qe_pw
+        qe_lax
+        qe_modules
+        qe_lr_modules
+        qe_tddfpt)
+
+###########################################################
 # tddfpt_calculate_spectrum.x
 ###########################################################
 set(src_tddfpt_calculate_spectrum_x tools/tddfpt_calculate_spectrum.f90)
@@ -145,4 +161,5 @@ qe_install_targets(
     qe_tddfpt_turbolanczos_exe
     qe_tddfpt_turbodavidson_exe
     qe_tddfpt_turboeels_exe
+    qe_tddfpt_turbomagnons_exe
     qe_tddfpt_calculatespectrum_exe)
