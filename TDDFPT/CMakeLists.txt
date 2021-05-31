@@ -139,14 +139,14 @@ target_link_libraries(qe_tddfpt_turbomagnons_exe
         qe_tddfpt)
 
 ###########################################################
-# tddfpt_calculate_spectrum.x
+# turbo_spectrum.x
 ###########################################################
-set(src_tddfpt_calculate_spectrum_x tools/tddfpt_calculate_spectrum.f90)
-qe_add_executable(qe_tddfpt_calculatespectrum_exe ${src_tddfpt_calculate_spectrum_x})
-set_target_properties(qe_tddfpt_calculatespectrum_exe 
-    PROPERTIES 
-        OUTPUT_NAME tddfpt_calculate_spectrum.x)
-target_link_libraries(qe_tddfpt_calculatespectrum_exe
+set(src_tddfpt_turbospectrum_x tools/tddfpt_calculate_spectrum.f90)
+qe_add_executable(qe_tddfpt_turbospectrum_exe ${src_tddfpt_turbospectrum_x})
+set_target_properties(qe_tddfpt_turbospectrum_exe
+    PROPERTIES
+        OUTPUT_NAME turbo_spectrum.x)
+target_link_libraries(qe_tddfpt_turbospectrum_exe
     PRIVATE
         qe_modules
         qe_xclib
@@ -162,4 +162,4 @@ qe_install_targets(
     qe_tddfpt_turbodavidson_exe
     qe_tddfpt_turboeels_exe
     qe_tddfpt_turbomagnons_exe
-    qe_tddfpt_calculatespectrum_exe)
+    qe_tddfpt_turbospectrum_exe)
