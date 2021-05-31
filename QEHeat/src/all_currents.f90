@@ -124,9 +124,16 @@ program all_currents
                      do_distr_diag_inside_bgrp_=.TRUE.)
    CALL set_mpi_comm_4_solvers(intra_pool_comm, intra_bgrp_comm, &
                                inter_bgrp_comm)
-   CALL environment_start('PWSCF')
+   CALL environment_start('QEHeat')
 
    IF (ionode) THEN
+      write (*,*) 'This code implements Marcolongo, A., Umari, P. and Baroni, S'
+      write (*,*) ' Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509'
+      write (*,*) ''
+      write (*,*) 'The details of the implementation are described in'
+      write (*,*) ' Marcolongo, Bertossa, Tisi, Baroni,'
+      write (*,*) ' https://arxiv.org/abs/2104.06383 (2021)'
+      write (*,*) ''
       CALL input_from_file()
       ! all_currents input
       call read_all_currents_namelists(5, &
