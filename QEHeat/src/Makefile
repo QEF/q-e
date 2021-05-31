@@ -7,21 +7,19 @@
 #
 #
 #-----------------------------------------------------------------------
-# Makefile for all_currents
+# Makefile for QEHeat (all_currents.x)
 
 include ../../make.inc
-# location of include files
-#IFLAGS=-I../../include
-#F90FLAGS+=-fsanitize=address -Wall
-#LDFLAGS+=-fsanitize=address
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LAXlib \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../CPV/src $(MOD_FLAG)../../PHonon/PH \
-          $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LR_Modules \
-          $(MOD_FLAG)../../upflib $(MOD_FLAG)../../XClib
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../PHonon/PH \
+          $(MOD_FLAG)../../LR_Modules
 
-#location of needed libraries
-LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS) ../../XClib/xc_lib.a
+
+
+TEST_CPV_TRAJ_OBJ= \
+traj_object.o \
+cpv_traj.o
 
 ALLCURRENTSOBJS = \
 test_h_psi_s_psi_commutator_Hx_psi.o\
@@ -29,25 +27,21 @@ hartree_xc_mod.o\
 kohn_sham_mod.o\
 zero_mod.o\
 ionic_mod.o\
-all_currents.o \
 project.o\
 init_us_3.o \
 ec_functionals.o \
 compute_charge.o \
 averages.o\
-scf_result.o
-
-TEST_CPV_TRAJ_OBJ= \
-traj_object.o \
-cpv_traj.o
+scf_result.o\
+$(TEST_CPV_TRAJ_OBJ)
 
 
-QEMODS=   ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
-       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
-       ../../upflib/libupf.a
-PWOBJS =  ../../LR_Modules/liblrmod.a  ../../PHonon/PH/libph.a  ../../PW/src/libpw.a ../../CPV/src/libcp.a
+QEMODS=\
+       ../../PHonon/PH/libph.a ../../LR_Modules/liblrmod.a  ../../PW/src/libpw.a \
+       ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
+       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
-TLDEPS= bindir mods libs pw ph cp 
+TLDEPS= pw ph
 
 all : tldeps all_currents.x
 
@@ -56,9 +50,9 @@ cpv-traj-test : cpv-traj-test.x cpv_traj_test.o
 cpv-traj-test.x : $(TEST_CPV_TRAJ_OBJ)
 	$(LD) $(LDFLAGS) -o $@ cpv_traj_test.o $(TEST_CPV_TRAJ_OBJ) $(QEMODS)
 
-all_currents.x : all_currents.o lib_all_currents.a $(ALLCURRENTSOBJS) $(PWOBJS) $(QEMODS)   $(TEST_CPV_TRAJ_OBJ)
+all_currents.x : all_currents.o lib_all_currents.a $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		all_currents.o lib_all_currents.a  $(TEST_CPV_TRAJ_OBJ) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(QEMODS) $(LIBOBJS)
+		all_currents.o lib_all_currents.a $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../QEHeat/src/$@ . )
 
  

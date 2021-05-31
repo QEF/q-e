@@ -17,3 +17,5 @@ doc_clean:
 
 distclean: clean doc_clean
 
+all_currents: all
+

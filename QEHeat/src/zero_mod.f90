@@ -10,7 +10,7 @@
 MODULE zero_mod
 
    USE kinds, ONLY: DP
-   use splines
+   !use splines
    use fft_base
    use becmod
 
@@ -76,7 +76,7 @@ contains
       use mp_pools, only: intra_pool_comm
       use io_global, only: stdout, ionode
       use constants, only: e2, AMU_RY
-      use splines
+      !use splines
       !use hartree_mod
       use compute_charge_mod, only: compute_charge
       USE uspp_param, ONLY: pseudo_upf

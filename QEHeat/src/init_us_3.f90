@@ -33,7 +33,7 @@ contains
 !
 !modules for UT
 !
-      use splines
+      !use splines
       use atom, ONLY: rgrid
 !
       implicit none
@@ -232,7 +232,7 @@ contains
 !
 !modules for UT
 !
-      use splines
+      !use splines
       USE wavefunctions, ONLY: psic
       use fft_interfaces, only: invfft, fwfft
       use fft_base, only: dffts
@@ -243,7 +243,7 @@ contains
 !
       implicit none
 !
-      TYPE(spline_data) :: spl_beta
+      !TYPE(spline_data) :: spl_beta
       INTEGER, INTENT(IN) :: npw_
       COMPLEX(DP), INTENT(inOUT) :: xvkb_(npwx, nkb, 3)
       !

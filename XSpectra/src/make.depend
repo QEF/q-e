@@ -172,7 +172,6 @@ xanes_dipole.o : ../../Modules/mp_pools.o
 xanes_dipole.o : ../../Modules/mp_world.o
 xanes_dipole.o : ../../Modules/recvec.o
 xanes_dipole.o : ../../Modules/wavefunctions.o
-xanes_dipole.o : ../../PW/src/atomic_wfc_mod.o
 xanes_dipole.o : ../../PW/src/ldaU.o
 xanes_dipole.o : ../../PW/src/pwcom.o
 xanes_dipole.o : ../../PW/src/scf_mod.o
