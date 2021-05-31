@@ -31,6 +31,8 @@ and was originally written by Aris Marcolongo in 2014 at SISSA for his PhD thesi
 ( <link>https://iris.sissa.it/handle/20.500.11767/3897</link> )
 The <b>all_current</b> driver program was rewritten from scratch by Riccardo Bertossa at SISSA in 2020.
 Other contributions are from Davide Tisi (SISSA), Loris Ercole (SISSA - EPFL ) and Federico Grasselli (SISSA).
+Details of the implementation are discussed in
+Marcolongo, Bertossa, Tisi, Baroni, <link>https://arxiv.org/abs/2104.06383</link> (2021)
 
 All the namilist but <ref>ENERGY_CURRENT</ref> are the same as the program pw.x
 
