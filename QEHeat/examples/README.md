@@ -32,7 +32,7 @@
 #### after the input file has been prepared.
 ####
 #### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
-####
+#### Pseudopotentials can be downloaded from http://www.quantum-simulation.org/potentials/sg15_oncv/
 #### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 12. 
 #### Example 3 can be easily run on a single core (serial) installation.
 
