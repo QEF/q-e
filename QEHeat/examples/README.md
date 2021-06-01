@@ -33,7 +33,7 @@
 #### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
 #### Pseudopotentials can be downloaded from http://www.quantum-simulation.org/potentials/sg15_oncv/
 #### For the examples, the following pseudos were used:
-#### Ar_ONCV_PBE-1.0.upf  H_HSCV_PBE-1.0.upf  O_HSCV_PBE-1.0.upf  O_ONCV_PBE-1.0.upf  Si_ONCV_PBE-1.1.upf 
+#### H_HSCV_PBE-1.0.upf,  O_HSCV_PBE-1.0.upf,  O_ONCV_PBE-1.0.upf,  Si_ONCV_PBE-1.1.upf 
 #### , which should be present in a folder examples/pseudo
 ####
 #### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 12. 
