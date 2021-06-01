@@ -45,6 +45,7 @@ lr_write_restart.o \
 print_clock_lr.o \
 sd0psi.o \
 lr_set_boxes_density.o \
+lr_magnons_routines.o\
 lr_init_nfo.o \
 lr_exx_kernel.o \
 lr_calc_dens_eels.o \
@@ -66,11 +67,15 @@ lr_dav_debug.o\
 plugin_tddfpt_potential.o\
 linear_solvers.o\
 orthogonalize_omega.o\
-lr_sternheimer.o
+lr_sternheimer.o\
+lr_apply_liouvillian_magnons.o\
+lr_dvpsi_magnons.o\
+lr_Opsi_magnons.o\
+lr_calc_dens_magnons.o
 
 TLDEPS=lrmods
 
-all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
+all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x turbo_magnons.x
 
 libtddfpt.a : $(LROBJS) 
 	$(AR) $(ARFLAGS) $@ $?
@@ -94,12 +99,18 @@ turbo_eels.x : lr_eels_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
+turbo_magnons.x : lr_magnons_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+	        lr_magnons_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
+	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
+
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x *.x *.o *~ *.d *.mod *.i work.pc *.a *_tmp.f90
+	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x ../bin/turbo_magnons.x *.x *.o *~ *.d *.mod *.i work.pc *.a *_tmp.f90
 
 include make.depend
 

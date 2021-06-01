@@ -103,8 +103,15 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (conv_assistant, ionode_id, world_comm )
   CALL mp_bcast (if_dft_spectrum, ionode_id, world_comm )
   CALL mp_bcast (lplot_drho, ionode_id, world_comm )
-  CALL mp_barrier(world_comm)
   
+  ! for Magnons
+  call mp_bcast (magnons, ionode_id, world_comm )
+  call mp_bcast (force_real_gamma, ionode_id, world_comm )
+  call mp_bcast (force_real_alpha, ionode_id, world_comm )
+  call mp_bcast (force_zero_alpha, ionode_id, world_comm )
+  call mp_bcast (b_pol, ionode_id, world_comm )
+  CALL mp_barrier(world_comm)
+
 #endif
   RETURN
 END SUBROUTINE bcast_lr_input

@@ -15,8 +15,10 @@ args=$(echo $fname | awk -F= '{print $NF}')
 scf=$(echo $fname | awk '/pw/{print 1}' )
 turbolancz=$(echo $fname | awk '/tddfpt.in/{print 1}' )
 eels=$(echo $fname | awk '/eels.in/{print 1}' )
+magnons=$(echo $fname | awk '/magnons.in/{print 1}' )
 turbospec=$(echo $fname | awk '/pp.in/{print 1}' )
 turbospeceels=$(echo $fname | awk '/pp_eels.in/{print 1}' )
+turbospecmagnons=$(echo $fname | awk '/pp_magnons.in/{print 1}' )
 
 # SCF
 if [ "$scf" = "1" ]; then
@@ -38,6 +40,11 @@ if [ "$eels" = "1" ]; then
         nblanczos=`grep "Number of Lanczos iterations" $fname | awk '{print $6}'`
 fi
 
+# turbo_magnons.x
+if [ "$magnons" = "1" ]; then
+        nblanczos=`grep "Number of Lanczos iterations" $fname | awk '{print $6}'`
+fi
+
 # turbo_spectrum.x
 if [ "$turbospec" = "1" ]; then
         rechi=`grep "chi_1_1=" $fname | awk '{print $3}'`
@@ -52,6 +59,9 @@ if [ "$turbospeceels" = "1" ]; then
         imeps=`tail -n +2 $fname | awk '{print $5}'`
 fi
 
+if [ "$turbospecmagnons" = "1" ]; then
+       imchi=`grep "chi_2_2=" $fname | awk '{print $4}'`
+fi
 
 if test "$nblanczos" != ""; then
         echo nblanczos

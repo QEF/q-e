@@ -27,7 +27,8 @@ SUBROUTINE lr_solve_e
   USE klist,                ONLY : nks, xk, ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
-                                   & d0psi_rs, eels, lr_exx!, intq, intq_nc
+                                   & d0psi_rs, eels, lr_exx,  magnons, &
+                                   & V0psi, b_pol, O_psi, n_op
   USE lsda_mod,             ONLY : lsda, isk, current_spin,nspin
   USE uspp,                 ONLY : vkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
@@ -35,7 +36,7 @@ SUBROUTINE lr_solve_e
   USE wavefunctions,        ONLY : evc
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_max, mp_min, mp_barrier
-  USE control_lr,           ONLY : alpha_pv
+  USE control_lr,           ONLY : alpha_pv, nbnd_occx
   USE qpoint,               ONLY : nksq
   USE noncollin_module,     ONLY : npol,noncolin
   USE uspp_param,           ONLY : nhm
@@ -53,6 +54,7 @@ SUBROUTINE lr_solve_e
   LOGICAL :: exst
   real (kind=dp) :: anorm
   CHARACTER(len=256) :: tmp_dir_saved
+  INTEGER :: pol_index
   !
   CALL start_clock ('lr_solve_e')
   !
@@ -74,6 +76,33 @@ SUBROUTINE lr_solve_e
         DEALLOCATE (intq)
         IF (noncolin) DEALLOCATE(intq_nc)
      ENDIF
+  ELSE IF (magnons) THEN
+     !
+     ! MAGNONS case
+     !
+     WRITE(stdout,'(5X,"magnon calculation, n_ipol =",1X,i8, "n_op =", 1X,i8)') n_ipol, n_op
+     !
+     V0psi = (0.0d0,0.0d0)
+     O_psi = (0.0d0,0.0d0)
+     !
+     DO ik = 1, nksq
+        !
+        DO ip = 1, n_ipol
+           !
+           IF ( n_ipol == 1 ) THEN
+              pol_index = b_pol 
+           ELSE 
+              pol_index = ip
+           ENDIF
+           !
+           CALL lr_dvpsi_magnons(ik, pol_index, V0psi(:,:,ik,:,ip))
+        ENDDO
+        !
+        DO ip = 1, n_op
+           CALL lr_Opsi_magnons(ik, ip, O_psi(:,:,ik,:,ip))
+        ENDDO
+        !
+     ENDDO
      !
   ELSE
      !
@@ -150,18 +179,49 @@ SUBROUTINE lr_solve_e
   !
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   !
-  DO ip = 1, n_ipol
+  IF (.not. magnons) THEN
      !
-     IF (n_ipol==1) CALL diropn ( iund0psi, 'd0psi.'// &
-                 & trim(int_to_char(LR_polarization)), nwordd0psi, exst)
-     IF (n_ipol==3) CALL diropn ( iund0psi, 'd0psi.'// &
-                 & trim(int_to_char(ip)), nwordd0psi, exst)
+     DO ip = 1, n_ipol
+        !
+        IF (n_ipol==1) CALL diropn ( iund0psi, 'd0psi.'// &
+                    & trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+        IF (n_ipol==3) CALL diropn ( iund0psi, 'd0psi.'// &
+                    & trim(int_to_char(ip)), nwordd0psi, exst)
+        !
+        CALL davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,1)
+        !
+        CLOSE( UNIT = iund0psi)
+        !
+     ENDDO
      !
-     CALL davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,1)
+  ELSE
      !
-     CLOSE( UNIT = iund0psi)
+     ! MAGNONS: Writing of V0psi and O_psi to the files
      !
-  ENDDO
+     nwordd0psi = 4 * nbnd_occx * npwx * npol * nksq
+     !
+     DO ip = 1, n_ipol
+        !
+        IF (n_ipol==1) CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(b_pol)), nwordd0psi, exst)
+        IF (n_ipol==3) CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
+        !
+        CALL davcio(V0psi(:,:,:,:,ip),nwordd0psi,iund0psi,1,1)
+        !
+        CLOSE( UNIT = iund0psi)
+        !
+     ENDDO
+     !
+     DO ip = 1, n_op
+        !
+        CALL diropn ( iund0psi, 'O_psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
+        !
+        CALL davcio(O_psi(:,:,:,:,ip),nwordd0psi,iund0psi,1,1)
+        !
+        CLOSE( UNIT = iund0psi)
+        !
+     ENDDO
+     !
+  ENDIF
   !
   ! EELS: Writing of d0psi2 to the file.
   !

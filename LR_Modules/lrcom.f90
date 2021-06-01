@@ -77,7 +77,7 @@ MODULE control_lr
   REAL(DP) :: tr2_ph  ! threshold for phonon calculation
   REAL(DP) :: alpha_mix(100)  ! the mixing parameter
   INTEGER :: niter_ph         ! maximum number of iterations (read from input)
-
+  INTEGER :: nbnd_occx        ! maximun value of nbnd_occ(:)
   !
 END MODULE control_lr
 !

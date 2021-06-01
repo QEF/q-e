@@ -17,7 +17,6 @@ set(src_ph
     PH/yambo.f90
     PH/bcast_ph_input.f90
     PH/cch_psi_all.f90
-    PH/ccg_psi.f90
     PH/check_if_partial_dyn.f90
     PH/check_initial_status.f90
     PH/check_restart_recover.f90

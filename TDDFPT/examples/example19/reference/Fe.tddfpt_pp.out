@@ -1,0 +1,45 @@
+ Warning: Only a single CPU will be used!
+
+     Program TDDFPT_PP v.6.7GPU starts on 29Jan2021 at 15:50:54 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       1 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                     1
+
+     MPI processes distributed on     1 nodes
+
+     Reading    800 Lanczos steps for direction 1
+        800 steps will be considered
+
+
+     Data ready, starting to calculate observables...
+
+     Broadening =      0.00100000 Ry
+
+     Output file name: Fe.plot_chi.dat     
+
+     Output file name for the oscillator strength S  Fe.plot_S.dat       
+
+     chi_i_j: dipole polarizability tensor  in units of e^2*a_0^2/energy
+
+     Insufficent info for S
+
+     Functions are reported in \hbar.\omega  Energy unit is (eV)
+ 
+     TDDFPT_PP    :      0.06s CPU      0.10s WALL
+
+ 
+   This run was terminated on:  15:50:54  29Jan2021            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
