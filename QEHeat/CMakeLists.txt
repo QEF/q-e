@@ -37,8 +37,8 @@ target_link_libraries(qe_qeheat_exe
     PRIVATE
         qe_pw
         qe_lax
+        qe_lr_modules
         qe_modules
-        qe_phonon_ph
 	qe_qeheat)
 
 qe_install_targets(
