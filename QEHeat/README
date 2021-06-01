@@ -8,8 +8,6 @@ The folders cointain:
 
 `src` : the files used by QEheat.
 
-`tests` : the test utility used mainly for development purposes. It can be used also for testing purposes with the command make run-tests .
-
 
 # INSTALLATION OVERVIEW
 ###
