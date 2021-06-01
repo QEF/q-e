@@ -8,8 +8,6 @@ The folders cointain:
 
 `src` : the files used by QEheat.
 
-`tests` : the test utility used mainly for development purposes. It can be used also for testing purposes with the command make run-tests .
-
 
 # INSTALLATION OVERVIEW
 ###
@@ -18,12 +16,11 @@ The folders cointain:
 ####
 #### > ./configure
 #### 
-#### Enter than the QEHeat folder and compile:
+#### Than from the distribution folder:
 ####
-#### >  cd /energy_current/src
-#### >  make all
+#### >  make all_currents
 ####
-#### This should produce in a single shot the executables pw.x, cp.x and also all_currents.x, the executable for QEHeat, in the respective src and bin folders.
+#### This should produce in a single shot the executables pw.x and all_currents.x, the executable for QEHeat, in the respective src and bin folders.
 ####
 #### TROUBLESHOOT: 
 #### If problems occurs, we suggest to enter the main folder of the distribution and compile only pw.x independently:

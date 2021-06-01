@@ -5,12 +5,11 @@
 ####
 #### > ./configure
 #### 
-#### Enter than the QEHeat folder and compile:
+#### Than from the distribution folder:
 ####
-#### >  cd /energy_current/src
-#### >  make all
+#### >  make all_currents
 ####
-#### This should produce in a single shot the executables pw.x, cp.x and also all_currents.x, the executable for QEHeat, in the respective src and bin folders.
+#### This should produce in a single shot the executables pw.x and all_currents.x, the executable for QEHeat, in the respective src and bin folders.
 ####
 #### TROUBLESHOOT: 
 #### If problems occurs, we suggest to enter the main folder of the distribution and compile only pw.x independently:
@@ -33,8 +32,14 @@
 ####
 #### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
 #### Pseudopotentials can be downloaded from http://www.quantum-simulation.org/potentials/sg15_oncv/
+#### For the examples, the following pseudos were used:
+#### H_HSCV_PBE-1.0.upf,  O_HSCV_PBE-1.0.upf,  O_ONCV_PBE-1.0.upf,  Si_ONCV_PBE-1.1.upf 
+#### , which should be present in a folder examples/pseudo
+####
 #### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 12. 
-#### Example 3 can be easily run on a single core (serial) installation.
+####
+#### Example 3 can be easily run on a single core (serial) installation. Note that Example 3 requires the program cp.x to be installed.
+#### If this is not the case, you can enter the distribution folder and run "make cp"  
 
 
 
@@ -77,7 +82,7 @@ Only file_output.dat needs to be used to evaluate the thermal conductivity coeff
 
 
 Here we evaluate the energy current from a previously computed Car-Parrinello (CP) trajectory, which is provided together with the input file. The trajectory provided 
-comes from a 125 water molecule simulation. 
+comes from a 125 water molecule simulation.
 
 We calculate the energy current for every timestep of the trajectory located in  `${trajdir}.pos` and `${trajdir}.vel` (velocities are in CP units in this example). 
 For this purpose we need to insert some additional keywords in the energy_current namelists :
@@ -114,6 +119,8 @@ evaluate only the first snapshot of the trajectory because 953008 is the first i
 
 This example is very similar to the previous one, but a Car-Parrinello trajectory is computed on-the-fly via the cp.x program of the just installed QE distribution. It produces the  
 trajectory of a single water molecule and therefore the calculation is suited for a serial environment. 
+
+This example requires the program cp.x to be installed. If this is not the case, you can enter the distribution folder and run "make cp".
 
 Note that the trajectory produced by cp.x will be probably different due to the stochasticity inherent in the Car-Parrinello molecular dynamics simulation. For exact comparison 
 with a novel installation one can substitute `trajdir='reference/traj/cp'` and comment in the run_example_water script the call to cp.x. This way the files produced by `file_output`
