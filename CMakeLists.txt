@@ -79,7 +79,7 @@ endif()
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
 option(QE_ENABLE_TEST
-    "enable unit tests" ON)
+    "enable unit and system tests" ON)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_PROFILE_NVTX
@@ -104,6 +104,7 @@ option(QE_ENABLE_DOC
     "enable documentation building" OFF)
 set(QE_FFTW_VENDOR "AUTO" CACHE 
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
+set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -168,6 +169,19 @@ endif()
 #    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
 # endif()
 
+# Add optional sanitizers ASAN, UBSAN, MSAN
+set(VALID_SANITIZERS "none" "asan" "ubsan" "tsan" "msan")
+# Perform sanitizer option check, only works in debug mode
+if(NOT QE_ENABLE_SANITIZER IN_LIST VALID_SANITIZERS)
+  message(FATAL_ERROR "Invalid -DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}, value must be one of ${VALID_SANITIZERS}")
+else()
+  message(STATUS "Enable sanitizer QE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER}")
+endif()
+# only GNU works right now
+if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+  message(FATAL_ERROR "-DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER} only works with the GNU compiler")
+endif()
+
 
 ###########################################################
 # language standard requirements
@@ -231,7 +245,24 @@ if(QE_ENABLE_MPI)
     find_package(MPI REQUIRED Fortran)
     target_link_libraries(qe_mpi_fortran
         INTERFACE MPI::MPI_Fortran)
+    message(STATUS "MPI settings used by CTest")
+    message("     MPIEXEC_EXECUTABLE : ${MPIEXEC_EXECUTABLE}")
+    message("     MPIEXEC_NUMPROC_FLAG : ${MPIEXEC_NUMPROC_FLAG}")
+    message("     MPIEXEC_PREFLAGS : ${MPIEXEC_PREFLAGS}")
+    string(REPLACE ";" " " MPIEXEC_PREFLAGS_PRINT "${MPIEXEC_PREFLAGS}")
+    message("   Tests run as : ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} <NUM_PROCS> ${MPIEXEC_PREFLAGS_PRINT} <EXECUTABLE>")
 endif(QE_ENABLE_MPI)
+
+###########################################################
+# Git
+###########################################################
+find_package(Git 2.13 REQUIRED)
+if(EXISTS ${qe_SOURCE_DIR}/.git)
+  message(STATUS "Source files are cloned from a git repository.")
+  set(IS_GIT_PROJECT 1)
+else()
+  message(STATUS "Source files are not cloned from a git repository.")
+endif()
 
 ###########################################################
 # Lapack
@@ -460,6 +491,7 @@ endif(QE_ENABLE_HDF5)
 # 'add_test()' will be run by the 'test' make target
 ###########################################################
 if(QE_ENABLE_TEST)
+    include(cmake/unit_test.cmake)
     enable_testing()
 endif(QE_ENABLE_TEST)
 
@@ -565,12 +597,17 @@ add_custom_target(ph
         qe_phonon_ph_exe
         qe_phonon_dynmat_exe
         qe_phonon_q2r_exe
+        qe_phonon_dvscf_q2r_exe
         qe_phonon_matdyn_exe
         qe_phonon_q2qstar_exe
         qe_phonon_lambda_exe
         qe_phonon_alpha2f_exe
         qe_phonon_epa_exe
         qe_phonon_fqha_exe
+        qe_phonon_fd_exe
+        qe_phonon_fdef_exe
+        qe_phonon_fdifc_exe
+        qe_phonon_postahc_exe
         qe_plotphon_kforbands_exe
         qe_plotphon_bandstognuplot_exe
         qe_plotphon_eminmax_exe
@@ -653,7 +690,8 @@ add_custom_target(tddfpt
         qe_tddfpt_turbolanczos_exe
         qe_tddfpt_turbodavidson_exe
         qe_tddfpt_turboeels_exe
-        qe_tddfpt_calculatespectrum_exe
+        qe_tddfpt_turbospectrum_exe
+        qe_tddfpt_turbomagnons_exe 
     COMMENT
         "time dependent dft code")
 

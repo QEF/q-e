@@ -105,6 +105,6 @@ if(QE_ENABLE_TEST)
                 qe_mpi_fortran
                 qe_modules
                 qe_lapack)
-        add_test(NAME ${TGT_NAME} COMMAND $<TARGET_FILE:${TGT_NAME}>)
+        add_unit_test(${TGT_NAME} 1 1 $<TARGET_FILE:${TGT_NAME}>)
     ENDFOREACH(NAME)
 endif()

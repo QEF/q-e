@@ -11,7 +11,8 @@ LOGICAL FUNCTION test_restart(test_this)
     ! This function tests whether the restart flag is applicable 
     ! Written by O. B. Malcioglu
     !
-    USE lr_variables,     ONLY : n_ipol,LR_polarization,restart,bgz_suffix,eels
+    USE lr_variables,     ONLY : n_ipol,LR_polarization,restart,bgz_suffix,eels,&
+                                 magnons
     USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr, wfc_dir
     USE mp,               ONLY : mp_bcast, mp_barrier,mp_sum
     USE mp_world,         ONLY : world_comm
@@ -37,7 +38,7 @@ LOGICAL FUNCTION test_restart(test_this)
     !
     test_restart = .true.
     !
-    ! d0psi files
+    ! d0psi files, V0psi for magnons
     !
     IF (test_this == 1) THEN
        !
@@ -49,7 +50,11 @@ LOGICAL FUNCTION test_restart(test_this)
        !
        IF ( n_ipol == 1 ) THEN
           !
-          filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
+          IF (magnons) THEN
+             filename = trim(prefix)//'.V0psi.'//trim(int_to_char(LR_polarization))
+          ELSE
+             filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
+          ENDIF
           tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
           INQUIRE (file = tempfile, exist = exst)
           IF (.not. exst) THEN
@@ -60,7 +65,11 @@ LOGICAL FUNCTION test_restart(test_this)
           !
           DO i = 1, n_ipol
              !
-             filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
+             IF (magnons) THEN
+                filename = trim(prefix)//'.V0psi.'//trim(int_to_char(i))
+             ELSE
+                filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
+             ENDIF
              tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
              INQUIRE (file = tempfile, exist = exst)
              IF (.not. exst) THEN
@@ -79,7 +88,11 @@ LOGICAL FUNCTION test_restart(test_this)
           !
           IF ( n_ipol == 1 ) THEN 
              !
-             filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
+             IF (magnons) THEN
+                filename = trim(prefix)//'.V0psi.'//trim(int_to_char(LR_polarization))
+             ELSE
+                filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
+             ENDIF
              tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
              INQUIRE (file = tempfile, exist = exst)
              IF (exst) THEN
@@ -90,7 +103,11 @@ LOGICAL FUNCTION test_restart(test_this)
              !
              DO i = 1, n_ipol
                 !
-                filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
+                IF (magnons) THEN
+                   filename = trim(prefix)//'.V0psi.'//trim(int_to_char(i))
+                ELSE
+                   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
+                ENDIF
                 tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
                 INQUIRE (file = tempfile, exist = exst)
                 IF (exst) THEN
@@ -128,6 +145,8 @@ LOGICAL FUNCTION test_restart(test_this)
        !
        IF (eels) THEN
           filename = trim(prefix) // trim(bgz_suffix) // trim("dat")
+       ELSEIF (magnons) THEN
+          filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
        ELSE
          IF ( n_ipol == 1 ) THEN
             filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))

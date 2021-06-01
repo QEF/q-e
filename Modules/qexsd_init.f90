@@ -89,6 +89,7 @@ CONTAINS
       call qes_reset (scf_conv)
       IF (ASSOCIATED(opt_conv)) THEN
          CALL qes_reset (opt_conv)
+         DEALLOCATE(opt_conv)
          NULLIFY ( opt_conv) 
       END IF 
       !

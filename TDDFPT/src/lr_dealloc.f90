@@ -94,6 +94,19 @@ SUBROUTINE lr_dealloc()
   IF (allocated(gamma_store)) DEALLOCATE(gamma_store)
   IF (allocated(zeta_store))  DEALLOCATE(zeta_store)
   !
+  ! Magnons variables
+  !
+  IF (allocated(V0psi))               DEALLOCATE(V0psi)  
+  IF (allocated(O_psi))               DEALLOCATE(O_psi)
+  IF (allocated(evc1_rgt_old))        DEALLOCATE(evc1_rgt_old)
+  IF (allocated(evc1_rgt))            DEALLOCATE(evc1_rgt)
+  IF (allocated(evc1_rgt_new))        DEALLOCATE(evc1_rgt_new)
+  IF (allocated(evc1_lft_old))        DEALLOCATE(evc1_lft_old)
+  IF (allocated(evc1_lft))            DEALLOCATE(evc1_lft)
+  IF (allocated(evc1_lft_new))        DEALLOCATE(evc1_lft_new)
+  IF (allocated(alpha_magnons_store)) DEALLOCATE(alpha_magnons_store)
+  IF (allocated(gamma_magnons_store)) DEALLOCATE(gamma_magnons_store)
+  !
   ! Response charge density related
   !
   IF (allocated(w_T_beta_store))  DEALLOCATE(w_T_beta_store)

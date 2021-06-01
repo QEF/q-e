@@ -134,7 +134,7 @@ endif()
 ###########################################################
 # Eigensolver_GPU
 ###########################################################
-if(QE_ENABLE_CUDA)
+if(QE_ENABLE_CUDA AND NOT QE_ENABLE_LAXLIB_CUSOLVER)
     qe_git_submodule_update(external/eigensolver_gpu)
 
     set(src_eigensolver_gpu

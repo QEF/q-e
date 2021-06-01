@@ -27,12 +27,12 @@ SUBROUTINE lr_alloc_init()
                                  & w_T_zeta_store, w_T_npol,chi
   USE realus,               ONLY : tg_psic
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp
   USE lrus,                 ONLY : int3, int3_nc, becp1
   USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
   USE qpoint,               ONLY : nksq, eigqts
-  USE control_lr,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ, nbnd_occx
   !
   IMPLICIT NONE
   !
@@ -44,7 +44,7 @@ SUBROUTINE lr_alloc_init()
   !
   ! Optical case
   !
-  IF (.NOT.eels) THEN
+  IF (.NOT.eels .AND. .NOT. magnons) THEN
      !
      IF (nbnd>nbnd_occ(1)) THEN
         !
@@ -71,16 +71,18 @@ SUBROUTINE lr_alloc_init()
      WRITE(stdout,'("NSPIN_MAG=",I15)') nspin_mag
   ENDIF
   !
-  IF (allocated(evc)) THEN
-     DEALLOCATE(evc)
-     ALLOCATE(evc(npwx*npol,nbnd))
-  ENDIF 
+  IF (.NOT. magnons) THEN
+     IF (allocated(evc)) THEN
+        DEALLOCATE(evc)
+        ALLOCATE(evc(npwx*npol,nbnd))
+     ENDIF 
+  ENDIF
   !
   ! Allocate unperturbed and perturbed orbitals
   !
   ALLOCATE(evc0(npwx*npol,nbnd,nksq))
   !
-  IF (.NOT.eels) THEN
+  IF (.NOT.eels .AND. .NOT. magnons) THEN
      ALLOCATE(sevc0(npwx*npol,nbnd,nks))
      sevc0(:,:,:) = (0.0d0,0.0d0)
   ENDIF
@@ -125,6 +127,28 @@ SUBROUTINE lr_alloc_init()
      ALLOCATE (evq(npwx*npol,nbnd))
      evq(:,:) = (0.0d0, 0.0d0)  
      ! 
+  ELSEIF (magnons) THEN
+     !
+     ! MAGNONS variables
+     !
+     ALLOCATE (V0psi(npwx*npol,nbnd_occx,nksq,2,n_ipol))
+     ALLOCATE (O_psi(npwx*npol,nbnd_occx,nksq,2,n_op))
+     V0psi(:,:,:,:,:) = (0.0d0, 0.0d0)
+     O_psi(:,:,:,:,:) = (0.0d0, 0.0d0)
+     !
+     ALLOCATE (evc1_rgt_old(npwx*npol,nbnd_occx,nksq,2))
+     ALLOCATE (evc1_rgt(npwx*npol,nbnd_occx,nksq,2))
+     ALLOCATE (evc1_rgt_new(npwx*npol,nbnd_occx,nksq,2))
+     ALLOCATE (evc1_lft_old(npwx*npol,nbnd_occx,nksq,2))
+     ALLOCATE (evc1_lft(npwx*npol,nbnd_occx,nksq,2))
+     ALLOCATE (evc1_lft_new(npwx*npol,nbnd_occx,nksq,2))
+     evc1_rgt_old(:,:,:,:) = (0.0d0, 0.0d0)
+     evc1_rgt(:,:,:,:)     = (0.0d0, 0.0d0)
+     evc1_rgt_new(:,:,:,:) = (0.0d0, 0.0d0)
+     evc1_lft_old(:,:,:,:) = (0.0d0, 0.0d0)
+     evc1_lft(:,:,:,:)     = (0.0d0, 0.0d0)
+     evc1_lft_new(:,:,:,:) = (0.0d0, 0.0d0)
+     !
   ELSE
      !
      ! Optical case (q=0) : evq is a pointer to evc
@@ -168,7 +192,7 @@ SUBROUTINE lr_alloc_init()
      !
   ENDIF
   !
-  IF (eels) THEN
+  IF (eels .OR. magnons) THEN
      !
      ALLOCATE (dpsi(npwx*npol,nbnd))
      ALLOCATE (dvpsi(npwx*npol,nbnd))
@@ -220,6 +244,16 @@ SUBROUTINE lr_alloc_init()
   beta_store(:,:)   = 0.0d0
   gamma_store(:,:)  = 0.0d0
   zeta_store(:,:,:) = (0.0d0,0.0d0)
+  !
+  IF (magnons) THEN
+     DEALLOCATE (zeta_store)
+     ALLOCATE(zeta_store(n_ipol,n_op,itermax))
+     ALLOCATE(alpha_magnons_store(n_ipol,itermax))
+     ALLOCATE(gamma_magnons_store(n_ipol,itermax))
+     alpha_magnons_store = (0.0d0, 0.0d0)
+     gamma_magnons_store = (0.0d0, 0.0d0)
+     zeta_store(:,:,:) = (0.0d0,0.0d0)
+  ENDIF
   !
   IF (gamma_only) THEN
      CALL lr_alloc_init_gamma()

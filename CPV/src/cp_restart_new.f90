@@ -93,7 +93,8 @@ MODULE cp_restart_new
                           qexsd_init_outputElectricField, qexsd_init_vdw,     &
                           qexsd_init_hybrid, qexsd_init_dftU 
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
-      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf
+      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf,  &
+                              qexsd_add_all_clocks
       !
       IMPLICIT NONE
       !
@@ -413,6 +414,11 @@ MODULE cp_restart_new
          ! FIXME: may be wrong or incomplete
          IF ( tpre) stress = -MATMUL( detot, ht ) / omega
          CALL qexsd_init_stress(output_obj%stress, stress, tpre )
+!------------------------------------------------------------------------------
+!--- TIMING 
+!------------------------------------------------------------------------------
+        CALL qexsd_add_all_clocks() 
+
 !-------------------------------------------------------------------------------
 ! ... non existent or not implemented fields
 !-------------------------------------------------------------------------------

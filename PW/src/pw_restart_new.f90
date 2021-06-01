@@ -145,6 +145,7 @@ MODULE pw_restart_new
       !
       USE wvfct_gpum,           ONLY : using_et, using_wg
       USE wavefunctions_gpum,   ONLY : using_evc
+      USE qexsd_module,         ONLY : qexsd_add_all_clocks 
       !
       IMPLICIT NONE
       !
@@ -679,6 +680,9 @@ MODULE pw_restart_new
             NULLIFY(dipol_ptr)
          ENDIF
          NULLIFY ( bp_obj_ptr) 
+!-------------------------------------------------------------------------------
+! ... CLOCKS
+         CALL qexsd_add_all_clocks()
 !-------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
