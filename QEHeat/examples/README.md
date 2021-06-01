@@ -78,7 +78,7 @@ Only file_output.dat needs to be used to evaluate the thermal conductivity coeff
 
 
 Here we evaluate the energy current from a previously computed Car-Parrinello (CP) trajectory, which is provided together with the input file. The trajectory provided 
-comes from a 125 water molecule simulation. This example requires the program cp.x to be installed.
+comes from a 125 water molecule simulation.
 
 We calculate the energy current for every timestep of the trajectory located in  `${trajdir}.pos` and `${trajdir}.vel` (velocities are in CP units in this example). 
 For this purpose we need to insert some additional keywords in the energy_current namelists :
@@ -115,6 +115,8 @@ evaluate only the first snapshot of the trajectory because 953008 is the first i
 
 This example is very similar to the previous one, but a Car-Parrinello trajectory is computed on-the-fly via the cp.x program of the just installed QE distribution. It produces the  
 trajectory of a single water molecule and therefore the calculation is suited for a serial environment. 
+
+This example requires the program cp.x to be installed. If this is not the case, you can enter the distribution folder and run "make cp".
 
 Note that the trajectory produced by cp.x will be probably different due to the stochasticity inherent in the Car-Parrinello molecular dynamics simulation. For exact comparison 
 with a novel installation one can substitute `trajdir='reference/traj/cp'` and comment in the run_example_water script the call to cp.x. This way the files produced by `file_output`
