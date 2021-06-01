@@ -88,20 +88,23 @@ subroutine g_1psi_gpu (lda, n, psi_d, e_d)
   !
   USE kinds
   USE noncollin_module,     ONLY : npol
+  USE iso_c_binding
 
   implicit none
 
   integer :: lda, & ! input: the leading dimension of psi
              n      ! input: the real dimension of psi
   complex(DP) :: psi_d (lda, npol) ! inp/out: the psi vector
-  real(DP) :: e_d     ! input: the eigenvectors
+  real(DP), target :: e_d     ! input: the eigenvectors
+  real(DP), dimension(:), pointer :: e_d_vec
 #if defined(__CUDA)
   attributes(device) :: psi_d, e_d
 #endif
   !
   call start_clock ('g_1psi')
 
-  CALL g_psi_gpu (lda, n, 1, npol, psi_d, e_d)
+  call C_F_POINTER(C_LOC(e_d), e_d_vec, [1])
+  CALL g_psi_gpu (lda, n, 1, npol, psi_d, e_d_vec)
 
   call stop_clock ('g_1psi')
 
