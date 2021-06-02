@@ -117,6 +117,7 @@ subroutine g_1psi (lda, n, psi, e)
   !
   call start_clock ('g_1psi')
 
+  ! cast scalar to size 1 vector to exactly match g_psi argument type
   call C_F_POINTER(C_LOC(e), e_vec, [1])
   CALL g_psi (lda, n, 1, npol, psi, e_vec)
 
