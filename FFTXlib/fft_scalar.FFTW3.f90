@@ -36,10 +36,8 @@
 ! ...   Local Parameter
 #if defined(_OPENMP)
        LOGICAL :: threads_initialized = .false.
-#include "fftw3.f03"
-#else
-#include "fftw3.f"
 #endif
+#include "fftw3.f03"
 
 !=----------------------------------------------------------------------=!
    CONTAINS
@@ -58,7 +56,7 @@
             call fftx_error__(" fft_scalar_fftw3::initialize_threads ", &
                               " fftw_init_threads failed ", omp_get_max_threads())
          endif
-         call dfftw_plan_with_nthreads(omp_get_max_threads())
+         call fftw_plan_with_nthreads(omp_get_max_threads())
          threads_initialized = .true.
       endif
 #endif
@@ -132,11 +130,11 @@
 #endif
 
      IF (isign < 0) THEN
-        CALL dfftw_execute_dft( fw_planz( ip), c, cout)
+        CALL fftw_execute_dft( fw_planz( ip), c, cout)
         tscale = 1.0_DP / nz
         cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
-        CALL dfftw_execute_dft( bw_planz( ip), c, cout)
+        CALL fftw_execute_dft( bw_planz( ip), c, cout)
      END IF
 
 #if defined(__FFT_CLOCKS)
@@ -162,13 +160,14 @@
 
      SUBROUTINE init_plan()
        implicit none
-       IF( C_ASSOCIATED(fw_planz( icurrent)) ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
-       IF( C_ASSOCIATED(bw_planz( icurrent)) ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
+
+       IF( C_ASSOCIATED(fw_planz( icurrent)) ) CALL fftw_destroy_plan( fw_planz( icurrent) )
+       IF( C_ASSOCIATED(bw_planz( icurrent)) ) CALL fftw_destroy_plan( bw_planz( icurrent) )
        idir = -1
-       CALL dfftw_plan_many_dft( fw_planz( icurrent), 1, nz, nsl, c, &
+       fw_planz(icurrent) = fftw_plan_many_dft(1, (/nz/), nsl, c, &
             (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
        idir = 1
-       CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
+       bw_planz(icurrent) = fftw_plan_many_dft(1, (/nz/), nsl, c, &
             (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
 
        zdims(1,icurrent) = nz; zdims(2,icurrent) = nsl; zdims(3,icurrent) = ldz;
@@ -251,14 +250,14 @@
      IF ( ldx /= nx .OR. ldy /= ny ) THEN
         IF( isign < 0 ) THEN
            do j = 0, nzl-1
-              CALL dfftw_execute_dft( fw_plan (1, ip), &
+              CALL fftw_execute_dft( fw_plan (1, ip), &
                    r(1+j*ldx*ldy:), r(1+j*ldx*ldy:))
            end do
            do i = 1, nx
               do k = 1, nzl
                  IF( dofft( i ) ) THEN
                     j = i + ldx*ldy * ( k - 1 )
-                    call dfftw_execute_dft( fw_plan ( 2, ip), r(j:), r(j:))
+                    call fftw_execute_dft( fw_plan ( 2, ip), r(j:), r(j:))
                  END IF
               end do
            end do
@@ -269,22 +268,22 @@
               do k = 1, nzl
                  IF( dofft( i ) ) THEN
                     j = i + ldx*ldy * ( k - 1 )
-                    call dfftw_execute_dft( bw_plan ( 2, ip), r(j:), r(j:))
+                    call fftw_execute_dft( bw_plan ( 2, ip), r(j:), r(j:))
                  END IF
               end do
            end do
            do j = 0, nzl-1
-              CALL dfftw_execute_dft( bw_plan( 1, ip), &
+              CALL fftw_execute_dft( bw_plan( 1, ip), &
                    r(1+j*ldx*ldy:), r(1+j*ldx*ldy:))
            end do
         END IF
      ELSE
         IF( isign < 0 ) THEN
-           call dfftw_execute_dft( fw_plan( 1, ip), r(1:), r(1:))
+           call fftw_execute_dft( fw_plan( 1, ip), r(1:), r(1:))
            tscale = 1.0_DP / ( nx * ny )
            r(1:ldx * ldy * nzl) = r(1:ldx * ldy * nzl) * tscale
         ELSE IF( isign > 0 ) THEN
-           call dfftw_execute_dft( bw_plan( 1, ip), r(1:), r(1:))
+           call fftw_execute_dft( bw_plan( 1, ip), r(1:), r(1:))
         END IF
      END IF
 
@@ -312,37 +311,37 @@
        implicit none
 
        IF ( ldx /= nx .OR. ldy /= ny ) THEN
-          IF( C_ASSOCIATED(fw_plan(2,icurrent)) )  CALL dfftw_destroy_plan( fw_plan(2,icurrent) )
-          IF( C_ASSOCIATED(bw_plan(2,icurrent)) )  CALL dfftw_destroy_plan( bw_plan(2,icurrent) )
+          IF( C_ASSOCIATED(fw_plan(2,icurrent)) )  CALL fftw_destroy_plan( fw_plan(2,icurrent) )
+          IF( C_ASSOCIATED(bw_plan(2,icurrent)) )  CALL fftw_destroy_plan( bw_plan(2,icurrent) )
           idir = -1
-          CALL dfftw_plan_many_dft( fw_plan(2,icurrent), 1, ny, 1, r(1:), &
+          fw_plan(2,icurrent) = fftw_plan_many_dft(1, (/ny/), 1, r(1:), &
                (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
                FFTW_ESTIMATE)
           idir =  1
-          CALL dfftw_plan_many_dft( bw_plan(2,icurrent), 1, ny, 1, r(1:), &
+          bw_plan(2,icurrent) = fftw_plan_many_dft(1, (/ny/), 1, r(1:), &
                (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
                FFTW_ESTIMATE)
 
-          IF( C_ASSOCIATED(fw_plan(1,icurrent)) ) CALL dfftw_destroy_plan( fw_plan(1,icurrent) )
-          IF( C_ASSOCIATED(bw_plan(1,icurrent)) ) CALL dfftw_destroy_plan( bw_plan(1,icurrent) )
+          IF( C_ASSOCIATED(fw_plan(1,icurrent)) ) CALL fftw_destroy_plan( fw_plan(1,icurrent) )
+          IF( C_ASSOCIATED(bw_plan(1,icurrent)) ) CALL fftw_destroy_plan( bw_plan(1,icurrent) )
           idir = -1
-          CALL dfftw_plan_many_dft( fw_plan(1,icurrent), 1, nx, ny, r(1:), &
+          fw_plan(1,icurrent) = fftw_plan_many_dft(1, (/nx/), ny, r(1:), &
                (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
                FFTW_ESTIMATE)
           idir =  1
-          CALL dfftw_plan_many_dft( bw_plan(1,icurrent), 1, nx, ny, r(1:), &
+          bw_plan(1,icurrent) = fftw_plan_many_dft(1, (/nx/), ny, r(1:), &
                (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
                FFTW_ESTIMATE)
        ELSE
-          IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
-          IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) CALL dfftw_destroy_plan( bw_plan( 1, icurrent) )
+          IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) CALL fftw_destroy_plan( fw_plan( 1, icurrent) )
+          IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) CALL fftw_destroy_plan( bw_plan( 1, icurrent) )
           idir = -1
-          CALL dfftw_plan_many_dft( fw_plan( 1, icurrent), 2, (/nx, ny/), nzl,&
-               r(1:), (/nx, ny/), 1, nx*ny, r(1:), (/nx, ny/), 1, nx*ny, idir,&
+          fw_plan(1, icurrent) = fftw_plan_many_dft(2, (/ny, nx/), nzl,&
+               r(1:), (/ny, nx/), 1, nx*ny, r(1:), (/ny, nx/), 1, nx*ny, idir,&
                FFTW_ESTIMATE)
           idir = 1
-          CALL dfftw_plan_many_dft( bw_plan( 1, icurrent), 2, (/nx, ny/), nzl,&
-               r(1:), (/nx, ny/), 1, nx*ny, r(1:), (/nx, ny/), 1, nx*ny, idir,&
+          bw_plan(1, icurrent) = fftw_plan_many_dft(2, (/ny, nx/), nzl,&
+               r(1:), (/ny, nx/), 1, nx*ny, r(1:), (/ny, nx/), 1, nx*ny, idir,&
                FFTW_ESTIMATE)
        END IF
 
@@ -420,13 +419,13 @@
      !
 
      IF( isign < 0 ) THEN
-        call dfftw_execute_dft( fw_plan(ip), f(1:), f(1:))
+        call fftw_execute_dft( fw_plan(ip), f(1:), f(1:))
         tscale = 1.0_DP / DBLE( nx * ny * nz )
         f(1:nx * ny * nz) = f(1:nx * ny * nz) * tscale
 
      ELSE IF( isign > 0 ) THEN
 
-        call dfftw_execute_dft( bw_plan(ip), f(1:), f(1:))
+        call fftw_execute_dft( bw_plan(ip), f(1:), f(1:))
 
      END IF
 
@@ -453,14 +452,12 @@
        implicit none
        IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
             call fftx_error__('cfft3','not implemented',3)
-       IF( C_ASSOCIATED(fw_plan(icurrent)) ) CALL dfftw_destroy_plan( fw_plan(icurrent) )
-       IF( C_ASSOCIATED(bw_plan(icurrent)) ) CALL dfftw_destroy_plan( bw_plan(icurrent) )
+       IF( C_ASSOCIATED(fw_plan(icurrent)) ) CALL fftw_destroy_plan( fw_plan(icurrent) )
+       IF( C_ASSOCIATED(bw_plan(icurrent)) ) CALL fftw_destroy_plan( bw_plan(icurrent) )
        idir = -1
-       CALL dfftw_plan_dft_3d ( fw_plan(icurrent), nx, ny, nz, f(1:), &
-            f(1:), idir, FFTW_ESTIMATE)
+       fw_plan(icurrent) = fftw_plan_dft_3d(nz, ny, nx, f(1:), f(1:), idir, FFTW_ESTIMATE)
        idir =  1
-       CALL dfftw_plan_dft_3d ( bw_plan(icurrent), nx, ny, nz, f(1:), &
-            f(1:), idir, FFTW_ESTIMATE)
+       bw_plan(icurrent) = fftw_plan_dft_3d(nz, ny, nx, f(1:), f(1:), idir, FFTW_ESTIMATE)
 
        dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
        ip = icurrent
@@ -548,7 +545,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
            do j =1, ny
               ii = i + ldx * (j-1)
               if ( do_fft_z(ii) > 0) then
-                 call dfftw_execute_dft( bw_plan( 3, ip), f( ii:), f( ii:) )
+                 call fftw_execute_dft( bw_plan( 3, ip), f( ii:), f( ii:) )
               end if
            end do
         end do
@@ -561,7 +558,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
 
         do i = 1, nx
            if ( do_fft_y( i ) == 1 ) then
-             call dfftw_execute_dft( bw_plan( 2, ip), f( i: ), f( i: ) )
+             call fftw_execute_dft( bw_plan( 2, ip), f( i: ), f( i: ) )
            endif
         enddo
 
@@ -571,7 +568,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
 
         incx1 = 1;  incx2 = ldx;  m = ldy*nz
 
-        call dfftw_execute_dft( bw_plan( 1, ip), f( 1: ), f( 1: ) )
+        call fftw_execute_dft( bw_plan( 1, ip), f( 1: ), f( 1: ) )
 
      ELSE
 
@@ -581,7 +578,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
 
         incx1 = 1;  incx2 = ldx;  m = ldy*nz
 
-        call dfftw_execute_dft( fw_plan( 1, ip), f( 1: ), f( 1: ) )
+        call fftw_execute_dft( fw_plan( 1, ip), f( 1: ), f( 1: ) )
 
         !
         !  ... j-direction ...
@@ -591,7 +588,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
 
         do i = 1, nx
            if ( do_fft_y ( i ) == 1 ) then
-             call dfftw_execute_dft( fw_plan( 2, ip), f( i: ), f( i: ) )
+             call fftw_execute_dft( fw_plan( 2, ip), f( i: ), f( i: ) )
            endif
         enddo
 
@@ -605,7 +602,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
            do j = 1, ny
               ii = i + ldx * (j-1)
               if ( do_fft_z ( ii) > 0) then
-                 call dfftw_execute_dft( fw_plan( 3, ip), f(ii:), f(ii:) )
+                 call fftw_execute_dft( fw_plan( 3, ip), f(ii:), f(ii:) )
               end if
            end do
         end do
@@ -635,41 +632,35 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
        implicit none
 
        IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) &
-            CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
+            CALL fftw_destroy_plan( fw_plan( 1, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) &
-            CALL dfftw_destroy_plan( bw_plan( 1, icurrent) )
+            CALL fftw_destroy_plan( bw_plan( 1, icurrent) )
        IF( C_ASSOCIATED(fw_plan( 2, icurrent)) ) &
-            CALL dfftw_destroy_plan( fw_plan( 2, icurrent) )
+            CALL fftw_destroy_plan( fw_plan( 2, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 2, icurrent)) ) &
-            CALL dfftw_destroy_plan( bw_plan( 2, icurrent) )
+            CALL fftw_destroy_plan( bw_plan( 2, icurrent) )
        IF( C_ASSOCIATED(fw_plan( 3, icurrent)) ) &
-            CALL dfftw_destroy_plan( fw_plan( 3, icurrent) )
+            CALL fftw_destroy_plan( fw_plan( 3, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 3, icurrent)) ) &
-            CALL dfftw_destroy_plan( bw_plan( 3, icurrent) )
+            CALL fftw_destroy_plan( bw_plan( 3, icurrent) )
        idir = -1
-       CALL dfftw_plan_many_dft( fw_plan( 1, icurrent), &
-            1, nx, ny*nz, f(1:), (/ldx, ldy, ldz/), 1, ldx, &
-            f(1:), (/ldx, ldy, ldz/), 1, ldx, idir, FFTW_ESTIMATE)
+       fw_plan(1, icurrent) = fftw_plan_many_dft(1, (/nx/), ny*nz, f(1:), (/ldz, ldy, ldx/), 1, ldx, &
+            f(1:), (/ldz, ldy, ldx/), 1, ldx, idir, FFTW_ESTIMATE)
        idir = 1
-       CALL dfftw_plan_many_dft( bw_plan( 1, icurrent), &
-            1, nx, ny*nz, f(1:), (/ldx, ldy, ldz/), 1, ldx, &
-            f(1:), (/ldx, ldy, ldz/), 1, ldx, idir, FFTW_ESTIMATE)
+       bw_plan(1, icurrent) = fftw_plan_many_dft(1, (/nx/), ny*nz, f(1:), (/ldz, ldy, ldx/), 1, ldx, &
+            f(1:), (/ldz, ldy, ldx/), 1, ldx, idir, FFTW_ESTIMATE)
        idir = -1
-       CALL dfftw_plan_many_dft( fw_plan( 2, icurrent), &
-            1, ny, nz, f(1:), (/ldx, ldy, ldz/), ldx, ldx*ldy, &
-            f(1:), (/ldx, ldy, ldz/), ldx, ldx*ldy, idir, FFTW_ESTIMATE)
+       fw_plan(2, icurrent) = fftw_plan_many_dft(1, (/ny/), nz, f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, &
+            f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, idir, FFTW_ESTIMATE)
        idir = 1
-       CALL dfftw_plan_many_dft( bw_plan( 2, icurrent), &
-            1, ny, nz, f(1:), (/ldx, ldy, ldz/), ldx, ldx*ldy, &
-            f(1:), (/ldx, ldy, ldz/), ldx, ldx*ldy, idir, FFTW_ESTIMATE)
+       bw_plan(2, icurrent) = fftw_plan_many_dft(1, (/ny/), nz, f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, &
+            f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, idir, FFTW_ESTIMATE)
        idir = -1
-       CALL dfftw_plan_many_dft( fw_plan( 3, icurrent), &
-            1, nz, 1, f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, &
-            f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
+       fw_plan(3, icurrent) = fftw_plan_many_dft(1, (/nz/), 1, f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, &
+            f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
        idir = 1
-       CALL dfftw_plan_many_dft( bw_plan( 3, icurrent), &
-            1, nz, 1, f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, &
-            f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
+       bw_plan(3, icurrent) = fftw_plan_many_dft(1, (/nz/), 1, f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, &
+            f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
 
        dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
        ip = icurrent
