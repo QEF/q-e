@@ -31,12 +31,11 @@
        USE fft_param
        IMPLICIT NONE
        SAVE
-       PRIVATE
        PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
-
+       PRIVATE
 ! ...   Local Parameter
-
 #if defined(_OPENMP)
+       LOGICAL :: threads_initialized = .false.
 #include "fftw3.f03"
 #else
 #include "fftw3.f"
@@ -45,6 +44,25 @@
 !=----------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------=!
+
+
+   SUBROUTINE initialize_threads()
+      implicit none
+#if defined(_OPENMP)
+      integer :: fftw_return
+      integer, external :: omp_get_max_threads
+      !
+      if (.not. threads_initialized) then
+         fftw_return = fftw_init_threads()
+         if (fftw_return == 0) then
+            call fftx_error__(" fft_scalar_fftw3::initialize_threads ", &
+                              " fftw_init_threads failed ", omp_get_max_threads())
+         endif
+         call dfftw_plan_with_nthreads(omp_get_max_threads())
+         threads_initialized = .true.
+      endif
+#endif
+   END SUBROUTINE initialize_threads
 
 !
 !=----------------------------------------------------------------------=!
@@ -89,6 +107,7 @@
        CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
      END IF
 
+     call initialize_threads()
      !
      !   Here initialize table only if necessary
      !
@@ -129,27 +148,20 @@
    CONTAINS
 
      SUBROUTINE lookup()
-        ! lookup for stored plan
-        DO ip = 1, ndims
-           !   first check if there is already a table initialized
-           !   for this combination of parameters
-           !   The initialization in ESSL and FFTW v.3 depends on all three parameters
-           done = ( nz == zdims(1,ip) )
-           done = done .AND. ( nsl == zdims(2,ip) ) .AND. ( ldz == zdims(3,ip) )
-           IF (done) EXIT
-        END DO
+       implicit none
+       ! lookup for stored plan
+       DO ip = 1, ndims
+          !   first check if there is already a table initialized
+          !   for this combination of parameters
+          !   The initialization in ESSL and FFTW v.3 depends on all three parameters
+          done = ( nz == zdims(1,ip) )
+          done = done .AND. ( nsl == zdims(2,ip) ) .AND. ( ldz == zdims(3,ip) )
+          IF (done) EXIT
+       END DO
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-#if defined(_OPENMP)
-       INTEGER :: void
-       INTEGER, EXTERNAL :: omp_get_max_threads
-       !
-       CALL dfftw_cleanup_threads()
-       void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
-#endif
-
+       implicit none
        IF( C_ASSOCIATED(fw_planz( icurrent)) ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
        IF( C_ASSOCIATED(bw_planz( icurrent)) ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
        idir = -1
@@ -212,6 +224,7 @@
        END DO
      END IF
 
+     call initialize_threads()
      !
      !   Here initialize table only if necessary
      !
@@ -284,6 +297,8 @@
   CONTAINS
 
      SUBROUTINE lookup()
+       implicit none
+
        DO ip = 1, ndims
          !   first check if there is already a table initialized
          !   for this combination of parameters
@@ -294,14 +309,7 @@
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-#if defined(_OPENMP)
-       INTEGER :: void
-       INTEGER, EXTERNAL :: omp_get_max_threads
-       !
-       CALL dfftw_cleanup_threads()
-       void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
-#endif
+       implicit none
 
        IF ( ldx /= nx .OR. ldy /= ny ) THEN
           IF( C_ASSOCIATED(fw_plan(2,icurrent)) )  CALL dfftw_destroy_plan( fw_plan(2,icurrent) )
@@ -392,6 +400,7 @@
      IF( howmany /= 1 ) &
          CALL fftx_error__('cfft3d', ' howmany different from 1, not yet implemented for FFTW3 ', 1 )
 
+     call initialize_threads()
      !
      !   Here initialize table only if necessary
      !
@@ -426,6 +435,7 @@
    CONTAINS
 
      SUBROUTINE lookup()
+       implicit none
      ip = -1
      DO i = 1, ndims
        !   first check if there is already a table initialized
@@ -440,14 +450,7 @@
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-#if defined(_OPENMP)
-       INTEGER :: void
-       INTEGER, EXTERNAL :: omp_get_max_threads
-       !
-       CALL dfftw_cleanup_threads()
-       void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
-#endif
+       implicit none
        IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
             call fftx_error__('cfft3','not implemented',3)
        IF( C_ASSOCIATED(fw_plan(icurrent)) ) CALL dfftw_destroy_plan( fw_plan(icurrent) )
@@ -518,6 +521,10 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      IF( howmany /= 1 ) &
        CALL fftx_error__(' cfft3ds ', ' howmany different from 1, not yet implemented for FFTW3 ', 1 )
 
+     call initialize_threads()
+     !
+     !   Here initialize table only if necessary
+     !
      CALL lookup()
 
      IF( ip == -1 ) THEN
@@ -611,6 +618,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
    CONTAINS
 
      SUBROUTINE lookup()
+       implicit none
      ip = -1
      DO i = 1, ndims
        !   first check if there is already a table initialized
@@ -624,14 +632,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-#if defined(_OPENMP)
-       INTEGER :: void
-       INTEGER, EXTERNAL :: omp_get_max_threads
-       !
-       CALL dfftw_cleanup_threads()
-       void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
-#endif
+       implicit none
+
        IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) &
             CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) &
