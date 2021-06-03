@@ -509,7 +509,8 @@ CONTAINS
     igcc  = xclib_get_id('GGA','CORR')
     imeta = xclib_get_id('MGGA','EXCH')
     !
-    IF (igcx == 6) CALL infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
+    IF (igcx == 6 .AND. .NOT.xclib_dft_is_libxc('GGA','EXCH') ) &
+                CALL infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
     !
     ! check for unrecognized labels
     !

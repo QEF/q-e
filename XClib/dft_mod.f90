@@ -710,45 +710,50 @@ CONTAINS
     USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                             islda, isgradient, ismeta, exx_fraction, &
                             screening_parameter, gau_parameter,      & 
-                            ishybrid, has_finite_size_correction
+                            ishybrid, has_finite_size_correction, is_libxc
     !  
     IMPLICIT NONE
     !
     LOGICAL, INTENT(IN) :: isnonlocc
     !! The non-local part, for now, is not included in xc_lib, but this variable
     !! is needed to establish 'isgradient'.
+    LOGICAL :: is_libxc13
     !
     ismeta    = (imeta+imetac > 0)
     isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta .OR. isnonlocc
     islda     = (iexch> 0) .AND. (icorr > 0) .AND. .NOT. isgradient
+    is_libxc13 = is_libxc(1) .OR. is_libxc(3)
     ! PBE0/DF0
-    IF ( iexch==6 .OR.  igcx == 8 ) exx_fraction = 0.25_DP
+    IF ( iexch==6 .AND. .NOT.is_libxc(1) ) exx_fraction = 0.25_DP
+    IF ( igcx==8  .AND. .NOT.is_libxc(3) ) exx_fraction = 0.25_DP
     ! CX0P
-    IF ( iexch==6 .AND. igcx ==31 ) exx_fraction = 0.20_DP
+    IF ( iexch==6 .AND. igcx==31 .AND. .NOT.is_libxc13 ) exx_fraction = 0.20_DP
     ! B86BPBEX
-    IF ( iexch==6 .AND. igcx ==41 ) exx_fraction = 0.25_DP
+    IF ( iexch==6 .AND. igcx==41 .AND. .NOT.is_libxc13 ) exx_fraction = 0.25_DP
     ! BHANDHLYP
-    IF ( iexch==6 .AND. igcx ==42 ) exx_fraction = 0.50_DP
+    IF ( iexch==6 .AND. igcx==42 .AND. .NOT.is_libxc13 ) exx_fraction = 0.50_DP
     ! HSE
-    IF ( igcx ==12 ) THEN
+    IF ( igcx ==12 .AND. .NOT.is_libxc(3) ) THEN
        exx_fraction = 0.25_DP
        screening_parameter = 0.106_DP
     ENDIF
     ! gau-pbe
-    IF ( igcx ==20 ) THEN
+    IF ( igcx ==20 .AND. .NOT.is_libxc(3) ) THEN
        exx_fraction = 0.24_DP
        gau_parameter = 0.150_DP
     ENDIF
     ! HF or OEP
-    IF ( iexch==4 .OR. iexch==5 ) exx_fraction = 1.0_DP
+    IF ( iexch==4 .AND. .NOT.is_libxc(1)) exx_fraction = 1.0_DP
+    IF ( iexch==5 .AND. .NOT.is_libxc(1)) exx_fraction = 1.0_DP
     ! B3LYP or B3LYP-VWN-1-RPA
-    IF ( iexch == 7 ) exx_fraction = 0.2_DP
+    IF ( iexch == 7 .AND. .NOT.is_libxc(3) ) exx_fraction = 0.2_DP
     ! X3LYP
-    IF ( iexch == 9 ) exx_fraction = 0.218_DP
+    IF ( iexch == 9 .AND. .NOT.is_libxc(3) ) exx_fraction = 0.218_DP
     !
     ishybrid = ( exx_fraction /= 0.0_DP )
     !
-    has_finite_size_correction = ( iexch==8 .OR. icorr==10)
+    has_finite_size_correction = ( (iexch==8 .AND. .NOT.is_libxc(1)) .OR. &
+                                   (icorr==10.AND. .NOT.is_libxc(2)) )
     !
     RETURN
     !
