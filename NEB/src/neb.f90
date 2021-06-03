@@ -36,7 +36,7 @@ PROGRAM neb
   !
   CHARACTER(len=256) :: engine_prefix, parsing_file_name
   INTEGER :: unit_tmp, i, iimage
-  INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
+  INTEGER, EXTERNAL :: input_images_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
@@ -68,11 +68,10 @@ PROGRAM neb
      !
   ENDIF
   !
-  unit_tmp = find_free_unit () 
-  open(unit=unit_tmp,file="neb.dat",status="old")
+  IF (meta_ionode) open(newunit=unit_tmp,file="neb.dat",status="old")
   CALL path_read_namelist(unit_tmp)
   CALL path_read_cards(unit_tmp)
-  close(unit=unit_tmp)
+  IF (meta_ionode) close(unit=unit_tmp)
   !
   do i=1,input_images
     !
