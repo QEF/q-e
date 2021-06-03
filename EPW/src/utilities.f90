@@ -387,7 +387,7 @@
     !! This routine computes the adaptative broadening
     !! It requires electronic and phononic velocities
     !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
-    !! Samuel Ponce & Francesco Macheda
+    !! 2019: Samuel Ponce & Francesco Macheda
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : alat, bg
@@ -471,7 +471,7 @@
         e_2 = etf(ibndmin - 1 + jbnd, ikk)
         IF (ABS(e_2 - e_1) < eps4) THEN
           n_av = n_av + 1
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             vmek_av(:) = vmek_av(:) + REAL(vmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
           ELSE
             vmek_av(:) = vmek_av(:) + REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
@@ -486,7 +486,7 @@
       DO imode = 1, nmodes
         IF (w(imode) > 0) THEN
           vel_diff(:) = vmeq(:, imode) / (2d0 * w(imode)) - vmek(:, ibnd)
-          !IF (vme) THEN
+          !IF (vme == 'wannier') THEN
           !  vel_diff(:) = REAL(vmefp(:, imode, imode) / &
           !                    (2d0 * w(imode)) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
           !ELSE

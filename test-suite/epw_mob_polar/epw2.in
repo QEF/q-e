@@ -9,10 +9,10 @@
 
   elph        = .true.
   kmaps       = .true.
-  epbwrite    = .false.
-  epbread     = .false.
   epwwrite    = .false.
   epwread     = .true.
+  etf_mem     = 1
+  vme         = 'wannier'
 
   scattering  = .true.
   iterative_bte = .true.
@@ -20,7 +20,7 @@
   broyden_beta= 1.0
   int_mob     = .false.
   carrier     = .true.
-  ncarrier    =  -1E13
+  ncarrier    = -1E13
   mp_mesh_k   = .true.
 
   restart      = .true.
@@ -32,8 +32,6 @@
   temps       = 100 300
 
   lpolar      = .true.
-  etf_mem     = 1
-  vme         = .true.
   use_ws      = .true.
   lphase      = .true.
 

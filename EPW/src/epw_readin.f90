@@ -172,8 +172,6 @@
        sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
   ! --------------------------------------------------------------------------------
   !
-  ! tphases, fildvscf0
-  !
   ! amass    : atomic masses
   ! iverbosity : verbosity control
   ! outdir   : directory where input, output, temporary files reside
@@ -182,36 +180,34 @@
   ! fildvscf : output file containing deltavsc
   ! fildrho  : output file containing deltarho
   !
-  ! added by FG
+  ! Added by Feliciano Giustino
+  ! ngaussw    : smearing type after wann interp
+  !              (n >= 0) : Methfessel-Paxton case. See PRB 40, 3616 (1989)
+  !              (n=-1)   : Cold smearing See PRL 82, 3296 (1999)
+  !              (n=-99)  : Fermi-Dirac case: 1.0/(1.0+exp(-x)).
+  !                         If n = -99 you probably want assume_metal == .true. as well.
+  ! degaussw   : corresponding width (units of eV)
+  ! filqf      : file with fine q kmesh for interpolation
+  ! filkf      : file with fine kmesh for interpolation
+  ! filukk     : file with rotation matrix U(k) for interpolation
+  ! tphases    : if true set absolute unitary gauge for eigenvectors
+  ! epstrict   : if true use strict selection rule for phonon linewidht calculation
+  ! fsthick    : the thickness of the Fermi shell for averaging the e-ph matrix elements (units of eV)
+  ! eptemp     : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
+  ! fildvscf0  : file containing deltavscf to be used as fake perturbation to set phases
+  ! nw         : nr. of bins for frequency scan in \delta( e_k - e_k+q - w ) (units of eV)
+  ! wmin       : min frequency for frequency scan in \delta( e_k - e_k+q - w ) (units of eV)
+  ! wmax       : max    "  "  "                                    (units of eV)
+  ! nbndsub    : number of bands in the optimal subspace (when disentanglement is used)
+  ! elecselfen : if .TRUE. calculate imaginary part of electron selfenergy due to e-p interaction
+  ! phonselfen : if .TRUE. calculate imaginary part of phonon selfenergy due to e-p interaction
+  ! dvscf_dir  : the dir containing all the .dvscf and .dyn files
+  ! epbread    : read epmatq array from .epb files
+  ! epbwrite   : write epmatq array to .epb files
+  ! epwread    : read all quantities in Wannier representation from file epwdata.fmt
+  ! epwwrite   : write all quantities in Wannier representation to file epwdata.fmt
   !
-  ! ngaussw  : smearing type after wann interp
-  !            (n >= 0) : Methfessel-Paxton case. See PRB 40, 3616 (1989)
-  !            (n=-1)   : Cold smearing See PRL 82, 3296 (1999)
-  !            (n=-99)  : Fermi-Dirac case: 1.0/(1.0+exp(-x)).
-  !                       If n = -99 you probably want assume_metal == .true. as well.
-  ! degaussw : corresponding width (units of eV)
-  ! filqf    : file with fine q kmesh for interpolation
-  ! filkf    : file with fine kmesh for interpolation
-  ! filukk   : file with rotation matrix U(k) for interpolation
-  ! tphases  : if true set absolute unitary gauge for eigenvectors
-  ! epstrict : if true use strict selection rule for phonon linewidht calculation
-  ! fsthick  : the thickness of the Fermi shell for averaging the e-ph matrix elements (units of eV)
-  ! eptemp   : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
-  ! fildvscf0: file containing deltavscf to be used as fake perturbation to set phases
-  ! nw       : nr. of bins for frequency scan in \delta( e_k - e_k+q - w ) (units of eV)
-  ! wmin     : min frequency for frequency scan in \delta( e_k - e_k+q - w ) (units of eV)
-  ! wmax     : max    "  "  "                                    (units of eV)
-  ! nbndsub  : number of bands in the optimal subspace (when disentanglement is used)
-  ! elecselfen: if .TRUE. calculate imaginary part of electron selfenergy due to e-p interaction
-  ! phonselfen: if .TRUE. calculate imaginary part of phonon selfenergy due to e-p interaction
-  ! dvscf_dir: the dir containing all the .dvscf and .dyn files
-  ! epbread  : read epmatq array from .epb files
-  ! epbwrite : write epmatq array to .epb files
-  ! epwread  : read all quantities in Wannier representation from file epwdata.fmt
-  ! epwwrite : write all quantities in Wannier representation to file epwdata.fmt
-  !
-  ! added by jn
-  !
+  ! Added by jn
   ! wannierize   : if .TRUE. run the wannier90 code to maximally localize the WFs
   ! dis_win_min  : lower bound on wannier90 disentanglement window
   ! dis_win_max  : upper bound on wannier90 disentanglement window
@@ -232,50 +228,48 @@
   ! eig_read     : if .TRUE. then readin a set of electronic eigenvalues in eV to replace the calcualted ones
   ! wepexst      : if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
   ! epexst       : if .TRUE. prefix.epmatwp files are already on disk. don't recalculate  debugging param
-  ! vme          : if .TRUE. calculate velocity matrix elements
-  ! nest_fn      : if true, calculate the nesting function for a given set of q's
+  ! nest_fn      : if .TRUE., calculate the nesting function for a given set of q's
   ! nsmear       : number of smearing values to use for the selfen_phon call
   ! delta_smear  : change in energy for each additional nsmear ( units of eV)
   !
-  ! added by RM
-  !
-  ! ephwrite    : if true write el-phonon matrix elements on the fine mesh to file
+  ! Added by Roxana Margine
+  ! ephwrite    : if .TRUE. write el-phonon matrix elements on the fine mesh to file
   ! eps_acustic : min phonon frequency for e-p and a2f calculations (units of cm-1)
-  ! band_plot   : if true write files to plot band structure and phonon dispersion
-  ! fermi_plot  : if true write files to plot Fermi surface
+  ! band_plot   : if .TRUE. write files to plot band structure and phonon dispersion
+  ! fermi_plot  : if .TRUE. write files to plot Fermi surface
   ! degaussq    : smearing for sum over q in e-ph coupling (units of meV)
   ! delta_qsmear: change in energy for each additional smearing in the a2f (units of meV)
   ! nqsmear     : number of smearings used to calculate a2f
-  ! nqstep   : number of bins for frequency used to calculate a2f
-  ! nswfc    : nr. of grid points between (0,wsfc) in Eliashberg equations
-  ! nswc     : nr. of grid points between (wsfc,wscut)
-  ! pwc      : power used to define nswc for non-uniform grid real-axis calculations
-  ! wsfc     : intermediate freqeuncy used for integration in Eliashberg equations (at least 2-3 times wsphmax)
-  ! wscut    : upper limit for frequency integration in Eliashberg equations (at least 5 times wsphmax) (units of eV)
+  ! nqstep      : number of bins for frequency used to calculate a2f
+  ! nswfc       : nr. of grid points between (0,wsfc) in Eliashberg equations
+  ! nswc        : nr. of grid points between (wsfc,wscut)
+  ! pwc         : power used to define nswc for non-uniform grid real-axis calculations
+  ! wsfc        : intermediate freqeuncy used for integration in Eliashberg equations (at least 2-3 times wsphmax)
+  ! wscut       : upper limit for frequency integration in Eliashberg equations (at least 5 times wsphmax) (units of eV)
   ! broyden_beta : mixing factor for broyden mixing
   ! broyden_ndim : number of iterations used in mixing scheme
-  ! nstemp   : number of temperature points for which the Eliashberg equations are solved
-  ! tempsmin : minimum temperature for which the Eliashberg equations are solved
-  ! tempsmax : maximum temperature " "
+  ! nstemp      : number of temperature points for which the Eliashberg equations are solved
+  ! tempsmin    : minimum temperature for which the Eliashberg equations are solved
+  ! tempsmax    : maximum temperature " "
   ! conv_thr_raxis : convergence threshold for iterative solution of real-axis Eliashberg equations
   ! conv_thr_iaxis : convergence threshold for iterative solution of imag-axis Eliashberg equations
   ! conv_thr_racon : convergence threshold for iterative solution of analytic continuation of
   !                  Eliashberg equations from imag- to real-axis
-  ! gap_edge : initial guess of the superconducting gap (in eV)
-  ! nsiter   : nr of iterations for self-consitency cycle
-  ! npade    : percentage of Matsubara points used in Pade continuation
-  ! muc     : effective Coulomb potential
-  ! lreal   : if .TRUE. solve the real-axis Eliashberg eqautions
-  ! limag   : if .TRUE. solve the imag-axis Eliashberg eqautions
-  ! lpade   : if .TRUE. use pade approximants to continue imag-axis
-  !           Eliashberg equtions to real-axis
-  ! lacon   : if .TRUE. use analytic continuation to continue imag-axis
-  !           Eliashberg equtions to real-axis
-  ! liso    : if .TRUE. solve isotropic case
-  ! laniso  : if .TRUE. solve anisotropic case
-  ! lunif   : if .TRUE. a uniform grid is defined between wsfc and wscut for real-axis calculations
-  ! kerwrite: if .TRUE. write kp and km to files .ker for real-axis calculations
-  ! kerread : if .TRUE. read kp and km from files .ker for real-axis calculations
+  ! gap_edge     : initial guess of the superconducting gap (in eV)
+  ! nsiter       : nr of iterations for self-consitency cycle
+  ! npade        : percentage of Matsubara points used in Pade continuation
+  ! muc          : effective Coulomb potential
+  ! lreal        : if .TRUE. solve the real-axis Eliashberg eqautions
+  ! limag        : if .TRUE. solve the imag-axis Eliashberg eqautions
+  ! lpade        : if .TRUE. use pade approximants to continue imag-axis
+  !                Eliashberg equtions to real-axis
+  ! lacon        : if .TRUE. use analytic continuation to continue imag-axis
+  !                Eliashberg equtions to real-axis
+  ! liso         : if .TRUE. solve isotropic case
+  ! laniso       : if .TRUE. solve anisotropic case
+  ! lunif        : if .TRUE. a uniform grid is defined between wsfc and wscut for real-axis calculations
+  ! kerwrite     : if .TRUE. write kp and km to files .ker for real-axis calculations
+  ! kerread      : if .TRUE. read kp and km from files .ker for real-axis calculations
   ! imag_read    : if .TRUE. read from files Delta and Znorm on the imaginary-axis
   ! eliashberg   : if .TRUE. solve the Eliashberg equations
   ! ep_coupling  : if .TRUE. run e-p coupling calculation
@@ -289,13 +283,12 @@
   ! system_2d    : if .TRUE. two-dimensional system (vaccum is in z-direction)
   ! delta_approx : if .TRUE. the double delta approximation is used to compute the phonon self-energy
   !
-  ! added by CV & SP
-  !
-  ! lpolar  : if .TRUE. enable the correct Wannier interpolation in the case of polar material.
-  ! lifc    : if .TRUE. reads interatomic force constants produced by q2r.x for phonon interpolation
-  ! asr_typ : select type of ASR if lifc=.TRUE. (as in matdyn); otherwise it is the usual simple sum rule
-  ! lscreen : if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
-  ! scr_typ : if 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
+  ! Added by Carla Verdi & Samuel Pon\'e
+  ! lpolar     : if .TRUE. enable the correct Wannier interpolation in the case of polar material.
+  ! lifc       : if .TRUE. reads interatomic force constants produced by q2r.x for phonon interpolation
+  ! asr_typ    : select type of ASR if lifc=.TRUE. (as in matdyn); otherwise it is the usual simple sum rule
+  ! lscreen    : if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
+  ! scr_typ    : if 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
   ! fermi_diff : difference between Fermi energy and band edge (in eV)
   ! smear_rpa  : smearing for the calculation of the Lindhard function (in eV)
   ! cumulant   : if .TRUE. calculates the electron spectral function using the cumulant expansion method
@@ -303,8 +296,7 @@
   ! bnd_cum    : band index for which the cumulant calculation is done
   !              (for more than one band, perform multiple calculations and add the results together)
   !
-  ! Added by SP
-  !
+  ! Added by Samuel Ponc\'e
   ! specfun_el      : if .TRUE. calculate electron spectral function due to e-p interaction
   ! specfun_ph      : if .TRUE. calculate phonon spectral function due to e-p interaction
   ! specfun_pl      : if .TRUE. calculate plason spectral function
@@ -354,13 +346,19 @@
   ! Added by Felix Goudreault
   ! assume_metal     : If .TRUE. => we are dealing with a metal
   !
-  ! Added by HL
+  ! Added by Hyungjun Lee
   ! wannier_plot           : If .TRUE., plot Wannier functions
   ! wannier_plot_list      : Field read for parsing Wannier function list
   ! wannier_plot_supercell : Size of supercell for plotting Wannier functions
   ! wannier_plot_scale     : Scaling parameter for cube files
   ! wannier_plot_radius    : Cut-off radius for plotting Wannier functions
   ! reduce_unk             : If .TRUE., plot Wannier functions on reduced grids
+  !
+  ! Added by Samuel Ponc\'e, Hyungjun Lee and Roxana Margine
+  ! vme : if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
+  !     : if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
+  !     : Note: Before v5.4, vme = .FALSE. was the velocity in the local approximation as <\psi_mk|p|\psi_nk>
+  !             Before v5.4, vme = .TRUE. was = to 'wannier'
   !
   nk1tmp = 0
   nk2tmp = 0
@@ -475,92 +473,91 @@
   nbndsub      = 0
   nsmear       = 1
   delta_smear  = 0.01d0 ! eV
-  modenum = 0 ! Was -1 previously and read from Modules/input_parameters.f90
-              ! INTEGER :: modenum = 0. In QE 5, modenum variable does not exist
-              ! anymore. Change the default EPW value to match the previous QE
-              ! one.
-  vme = .TRUE. ! Was false by default until EPW 5.1
-  ephwrite = .FALSE.
-  band_plot = .FALSE.
-  fermi_plot = .FALSE.
-  nqsmear = 10
-  nqstep = 500
+  modenum      = 0 ! Was -1 previously and read from Modules/input_parameters.f90
+                   ! INTEGER :: modenum = 0. In QE 5, modenum variable does not exist
+                   ! anymore. Change the default EPW value to match the previous QE one.
+  vme          = 'wannier' ! Note: Was .FALSE. by default until EPW v5.1 and then .TRUE. until EPW v5.4
+  ephwrite     = .FALSE.
+  band_plot    = .FALSE.
+  fermi_plot   = .FALSE.
+  nqsmear      = 10
+  nqstep       = 500
   delta_qsmear = 0.05d0 ! meV
-  degaussq = 0.05d0 ! meV
-  lreal   = .FALSE.
-  lunif   = .TRUE.
-  limag   = .FALSE.
-  lpade   = .FALSE.
-  lacon   = .FALSE.
-  liso    = .FALSE.
-  laniso  = .FALSE.
-  lpolar  = .FALSE.
-  lifc    = .FALSE.
-  asr_typ = 'simple'
-  lscreen = .FALSE.
-  scr_typ = 0
-  fermi_diff  = 1.d0
-  smear_rpa   = 0.05d0
-  cumulant    = .FALSE.
-  bnd_cum     = 1
-  kerwrite    = .FALSE.
-  kerread     = .FALSE.
-  imag_read   = .FALSE.
-  eliashberg  = .FALSE.
-  ep_coupling = .TRUE.
-  tc_linear   = .FALSE.
+  degaussq     = 0.05d0 ! meV
+  lreal        = .FALSE.
+  lunif        = .TRUE.
+  limag        = .FALSE.
+  lpade        = .FALSE.
+  lacon        = .FALSE.
+  liso         = .FALSE.
+  laniso       = .FALSE.
+  lpolar       = .FALSE.
+  lifc         = .FALSE.
+  asr_typ      = 'simple'
+  lscreen      = .FALSE.
+  scr_typ      = 0
+  fermi_diff   = 1.d0
+  smear_rpa    = 0.05d0
+  cumulant     = .FALSE.
+  bnd_cum      = 1
+  kerwrite     = .FALSE.
+  kerread      = .FALSE.
+  imag_read    = .FALSE.
+  eliashberg   = .FALSE.
+  ep_coupling  = .TRUE.
+  tc_linear    = .FALSE.
   tc_linear_solver = 'power'
-  nswfc    = 0
-  nswc     = 0
-  nswi     = 0
-  pwc      = 1.d0
-  wscut    = 0.d0
-  wsfc     = 0.5d0 * wscut
+  nswfc        = 0
+  nswc         = 0
+  nswi         = 0
+  pwc          = 1.d0
+  wscut        = 0.d0
+  wsfc         = 0.5d0 * wscut
   broyden_beta = 0.7d0
   broyden_ndim = 8
   conv_thr_raxis = 5.d-04
   conv_thr_iaxis = 1.d-05
   conv_thr_racon = 5.d-04
-  gap_edge = 0.d0
-  nstemp   = 0
-  temps(:) = 0.d0
-  nsiter   = 40
-  npade    = 90
-  muc     = 0.d0
-  fila2f  = ' '
-  max_memlt = 2.85d0
-  efermi_read = .FALSE.
+  gap_edge     = 0.d0
+  nstemp       = 0
+  temps(:)     = 0.d0
+  nsiter       = 40
+  npade        = 90
+  muc          = 0.d0
+  fila2f       = ' '
+  max_memlt    = 2.85d0
+  efermi_read  = .FALSE.
   fermi_energy = 0.d0
   wmin_specfun = 0.d0 ! eV
   wmax_specfun = 0.3d0 ! eV
-  nw_specfun = 100
-  system_2d = .FALSE.
-  scattering = .FALSE.
+  nw_specfun   = 100
+  system_2d    = .FALSE.
+  scattering   = .FALSE.
   scattering_serta = .FALSE.
-  scatread = .FALSE.
+  scatread     = .FALSE.
   scattering_0rta = .FALSE.
-  int_mob    = .FALSE.
+  int_mob      = .FALSE.
   iterative_bte = .FALSE.
-  scissor    = 0.d0 ! eV
-  carrier    = .FALSE.
-  ncarrier   = 0.d0 ! cm^-3
-  longrange  = .FALSE.
-  shortrange = .FALSE.
-  prtgkk     = .FALSE.
-  nel        = 0.0d0
-  meff       = 1.d0
-  epsiheg    = 1.d0
-  lphase     = .FALSE.
-  omegamin   = 0.d0  ! eV
-  omegamax   = 10.d0 ! eV
-  omegastep  = 1.d0  ! eV
-  n_r        = 1.d0
-  lindabs    = .FALSE.
-  mob_maxiter= 50
-  use_ws     = .FALSE.
-  epmatkqread = .FALSE.
-  selecqread  = .FALSE.
-  nc          = 4.0d0
+  scissor      = 0.d0 ! eV
+  carrier      = .FALSE.
+  ncarrier     = 0.d0 ! cm^-3
+  longrange    = .FALSE.
+  shortrange   = .FALSE.
+  prtgkk       = .FALSE.
+  nel          = 0.0d0
+  meff         = 1.d0
+  epsiheg      = 1.d0
+  lphase       = .FALSE.
+  omegamin     = 0.d0  ! eV
+  omegamax     = 10.d0 ! eV
+  omegastep    = 1.d0  ! eV
+  n_r          = 1.d0
+  lindabs      = .FALSE.
+  mob_maxiter  = 50
+  use_ws       = .FALSE.
+  epmatkqread  = .FALSE.
+  selecqread   = .FALSE.
+  nc           = 4.0d0
   assume_metal = .FALSE.  ! default is we deal with an insulator
   fixsym       = .FALSE.
   epw_no_t_rev = .TRUE.
@@ -795,6 +792,14 @@
     WRITE(stdout, '(/,5x,a)') 'WARNING: The specified dis_win_min is ignored.'
     WRITE(stdout, '(5x,a)') "         You should instead use bands_skipped = 'exclude_bands = ...'"
     WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
+  ENDIF
+  !
+  ! 2D interpolation - currently experimental feature
+  IF (system_2d) THEN
+    WRITE(stdout, '(5x,a)') "WARNING - 2D - WARNING - 2D - WARNING - 2D - WARNING - 2D"
+    WRITE(stdout, '(5x,a)') "The use of 2D interpolation is experimental for now"
+    WRITE(stdout, '(5x,a)') "Use with caution"
+    WRITE(stdout, '(5x,a)') "WARNING - 2D - WARNING - 2D - WARNING - 2D - WARNING - 2D"
   ENDIF
   !
   b_abs = ABS(bfieldx) + ABS(bfieldy) + ABS(bfieldz)

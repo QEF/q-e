@@ -8,11 +8,9 @@
   kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
-
   epwwrite    = .true.
   epwread     = .false.
-
-  vme         = .false.
+  vme         = 'dipole'
 
   nbndsub     =  4
   bands_skipped = 'exclude_bands = 1-5'

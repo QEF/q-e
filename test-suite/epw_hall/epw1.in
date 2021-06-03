@@ -14,7 +14,7 @@
   etf_mem     =  1
 
   lpolar      = .true.
-  vme         = .true.
+  vme         = 'wannier'
 
   use_ws      = .false.
 

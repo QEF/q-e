@@ -218,7 +218,7 @@
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
-    IF (.NOT. vme) CALL compute_pmn_para
+    IF (vme == 'dipole') CALL compute_pmn_para
     !
     ! Regenerate qpoint list
     !

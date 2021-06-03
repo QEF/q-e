@@ -36,6 +36,9 @@
   !! ...  title of the simulation
   CHARACTER(LEN = 10)  :: asr_typ
   !! type of ASR if lifc=.TRUE.
+  CHARACTER(LEN = 10) :: vme
+  !! if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
+  !! if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
   !
   LOGICAL :: elecselfen
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
@@ -87,8 +90,6 @@
   !! if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
   LOGICAL :: epexst
   !! if .TRUE. prefix.epmatwp files are already on disk. don't recalculate. debugging param
-  LOGICAL :: vme
-  !! if .TRUE. calculate velocity matrix elements
   LOGICAL :: band_plot
   !! if .TRUE. write files to plot band structure and phonon dispersion
   LOGICAL :: fermi_plot
@@ -359,7 +360,7 @@
   INTEGER :: neta = 9
   !! Number of broadening parameters
   INTEGER :: nomega
-  !! Number of frequency (photon energy) points 
+  !! Number of frequency (photon energy) points
   REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
   REAL(KIND = DP) :: omegamax

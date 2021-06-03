@@ -7,14 +7,12 @@
 
   elph        = .true.
   kmaps       = .true.
-  epbwrite    = .false.
-  epbread     = .false.
   epwwrite    = .false.
   epwread     = .true.
   etf_mem     =  3
 
   lpolar      = .true.
-  vme         = .true.
+  vme         = 'wannier'
   mp_mesh_k   = .true.
 
   use_ws      = .false.

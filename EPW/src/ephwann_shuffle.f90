@@ -421,7 +421,7 @@
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating chw_ks', 1)
     ALLOCATE(rdw(nmodes, nmodes, nrr_q), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating rdw', 1)
-    IF (vme) THEN
+    IF (vme == 'wannier') THEN
       ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cvmew', 1)
       cvmew(:, :, :, :) = czero
@@ -456,7 +456,7 @@
       CALL hambloch2wan(nbnd, nbndsub, nks, nkstot, et_ks, xk_loc, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw_ks)
     ENDIF
     !
-    IF (vme) THEN
+    IF (vme == 'wannier') THEN
       ! Transform of position matrix elements
       ! PRB 74 195118  (2006)
       CALL vmebloch2wan(nbnd, nbndsub, nks, nkstot, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband)
@@ -534,7 +534,7 @@
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatq', 1)
     DEALLOCATE(dynq, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dynq', 1)
-    IF (.NOT. vme) DEALLOCATE(dmec)
+    IF (vme == 'dipole') DEALLOCATE(dmec)
     IF (etf_mem == 0) THEN
       DEALLOCATE(epmatwe, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwe', 1)
@@ -617,7 +617,7 @@
   isk_dummy(:)         = 0
   !
   ! Allocate velocity and dipole matrix elements after getting grid size
-  IF (vme) THEN
+  IF (vme == 'wannier') THEN
     ALLOCATE(vmef(3, nbndsub, nbndsub, 2 * nkf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vmef', 1)
     vmef(:, :, :, :) = czero
@@ -1340,30 +1340,30 @@
         etf(icbm:nbndsub, ikq) = etf(icbm:nbndsub, ikq) + scissor
         !
         IF (.NOT. scattering) THEN
-          IF (vme) THEN
-             !
-             ! ------------------------------------------------------
-             !  velocity: Wannier -> Bloch
-             ! ------------------------------------------------------
-             !
-             IF (eig_read) THEN
-               !
-               ! Renormalize the eigenvalues and vmef with the read eigenvalues
-               CALL renorm_eig(ikk, ikq, nrr_k, dims, ndegen_k, irvec_k, irvec_r, cufkk, cufkq, cfac, cfacq)
-               !
-             ELSE ! eig_read
-               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), chw, cfac, dims)
-               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), etf(:, ikq), etf_ks(:, ikq), chw, cfacq, dims)
-             ENDIF
+          IF (vme == 'wannier') THEN
+            !
+            ! ------------------------------------------------------
+            !  velocity: Wannier -> Bloch
+            ! ------------------------------------------------------
+            !
+            IF (eig_read) THEN
+              !
+              ! Renormalize the eigenvalues and vmef with the read eigenvalues
+              CALL renorm_eig(ikk, ikq, nrr_k, dims, ndegen_k, irvec_k, irvec_r, cufkk, cufkq, cfac, cfacq)
+              !
+            ELSE ! eig_read
+              CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), chw, cfac, dims)
+              CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), etf(:, ikq), etf_ks(:, ikq), chw, cfacq, dims)
+            ENDIF
           ELSE
-             !
-             ! ------------------------------------------------------
-             !  dipole: Wannier -> Bloch
-             ! ------------------------------------------------------
-             !
-             CALL dmewan2bloch(nbndsub, nrr_k, cufkk, dmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), cfac, dims)
-             CALL dmewan2bloch(nbndsub, nrr_k, cufkq, dmef(:, :, :, ikq), etf(:, ikq), etf_ks(:, ikq), cfacq, dims)
-             !
+            !
+            ! ------------------------------------------------------
+            !  dipole: Wannier -> Bloch
+            ! ------------------------------------------------------
+            !
+            CALL dmewan2bloch(nbndsub, nrr_k, cufkk, dmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), cfac, dims)
+            CALL dmewan2bloch(nbndsub, nrr_k, cufkq, dmef(:, :, :, ikq), etf(:, ikq), etf_ks(:, ikq), cfacq, dims)
+            !
           ENDIF
         ENDIF
         !
@@ -1377,7 +1377,7 @@
             ! Compute velocities
             !
             IF (scattering) THEN
-              IF (vme) THEN
+              IF (vme == 'wannier') THEN
                 CALL vmewan2bloch &
                      (nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), chw, cfac, dims)
                 CALL vmewan2bloch &
@@ -1485,11 +1485,11 @@
       IF (prtgkk    ) CALL print_gkk(iq)
       IF (phonselfen) CALL selfen_phon_q(iqq, iq, totq)
       IF (elecselfen) CALL selfen_elec_q(iqq, iq, totq, first_cycle)
-      IF (plselfen .AND. .NOT. vme) CALL selfen_pl_q(iqq, iq, totq, first_cycle)
+      IF (plselfen .AND. vme == 'dipole') CALL selfen_pl_q(iqq, iq, totq, first_cycle)
       IF (nest_fn   ) CALL nesting_fn_q(iqq, iq)
       IF (specfun_el) CALL spectral_func_el_q(iqq, iq, totq, first_cycle)
       IF (specfun_ph) CALL spectral_func_ph_q(iqq, iq, totq)
-      IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
+      IF (specfun_pl .AND. vme == 'dipole') CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
       IF (ephwrite) THEN
         IF (first_cycle .OR. iq == 1) THEN
            CALL kmesh_fine
@@ -1815,7 +1815,7 @@
     DEALLOCATE(map_rebal_inv, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal_inv', 1)
   ENDIF
-  IF (vme) THEN
+  IF (vme == 'wannier') THEN
     DEALLOCATE(vmef, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating vmef', 1)
     DEALLOCATE(cvmew, STAT = ierr)

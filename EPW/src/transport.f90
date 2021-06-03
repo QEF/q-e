@@ -180,7 +180,7 @@
           IF (scattering_0rta) THEN
             !vel_factor = 1 - (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
             vel_factor(:, :) = zero
-            IF (vme) THEN
+            IF (vme == 'wannier') THEN
               DO ibnd = 1, nbndfst
                 !
                 ! vkk(3,nbnd) - velocity for k
@@ -569,11 +569,11 @@
     USE cell_base,        ONLY : alat, at, omega
     USE io_files,         ONLY : prefix
     USE io_var,           ONLY : iufilsigma
-    USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp,              &
-                                 int_mob, ncarrier, scatread, iterative_bte, vme, assume_metal
+    USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp, assume_metal,&
+                                 int_mob, ncarrier, scatread, iterative_bte, vme
     USE pwcom,            ONLY : ef
     USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef, bztoibz,      &
-                                 inv_tau_all, nkqtotf, inv_tau_allcb, gtemp, &
+                                 inv_tau_all, nkqtotf, inv_tau_allcb, gtemp,       &
                                  zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf,   &
                                  s_bztoibz
     USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev, ang2cm, czero,       &
@@ -722,7 +722,7 @@
         !
         ! Lets gather the velocities from all pools
 #if defined(__MPI)
-        IF (vme) THEN
+        IF (vme == 'wannier') THEN
           ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating vmef_all', 1)
           vmef_all(:, :, :, :) = czero
@@ -738,7 +738,7 @@
         wkf_all(:) = zero
         CALL poolgather2(1, nkqtotf, 2 * nkf, wkf, wkf_all)
 #else
-        IF (vme) THEN
+        IF (vme == 'wannier') THEN
           ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating vmef_all', 1)
           vmef_all = vmef
@@ -778,7 +778,7 @@
               DO ibnd = 1, nbndfst
                 ! This selects only valence bands for hole conduction
                 IF (etf_all(ibndmin - 1 + ibnd, ik) < ef0(itemp)) THEN
-                  IF (vme) THEN
+                  IF (vme == 'wannier') THEN
                     vkk(:, ibnd) = REAL(vmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
                     vkk(:, ibnd) = REAL(dmef_all (:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
@@ -861,7 +861,7 @@
               DO ibnd = 1, nbndfst
                 ! This selects only conduction bands for electron conduction
                 IF (etf_all(ibndmin - 1 + ibnd, ik) > ef0(itemp)) THEN
-                  IF (vme) THEN
+                  IF (vme == 'wannier') THEN
                     vkk(:, ibnd) = REAL(vmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
                     vkk(:, ibnd) = REAL(dmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
@@ -923,7 +923,7 @@
           !
         ENDIF ! int_mob .OR. (ncarrier > 1E5)
         !
-        IF (vme) THEN
+        IF (vme == 'wannier') THEN
           DEALLOCATE(vmef_all, STAT = ierr)
           IF (ierr /= 0) CALL errore('transport_coeffs', 'Error deallocating vmef_all', 1)
         ELSE
@@ -994,7 +994,7 @@
                   !
                   ! vkk(3,nbnd) - velocity for k
                   tdf_sigma(:) = zero
-                  IF (vme) THEN
+                  IF (vme == 'wannier') THEN
                     ! vmef is in units of Ryd * bohr
                     vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
@@ -1211,7 +1211,7 @@
                   ! This selects only cond bands for electron conduction
                   IF (etf(ibndmin - 1 + ibnd, ikk) > ef0(itemp)) THEN
                     tdf_sigma(:) = zero
-                    IF (vme) THEN
+                    IF (vme == 'wannier') THEN
                       ! vmef is in units of Ryd * bohr
                       vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ELSE
@@ -1291,7 +1291,7 @@
                     !
                     !  SP - Uncomment to use symmetries on velocities
                     tdf_sigma(:) = zero
-                    IF (vme) THEN
+                    IF (vme == 'wannier') THEN
                       vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ELSE
                       vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))

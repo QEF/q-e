@@ -36,7 +36,7 @@
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
-                              nbndfst, nktotf, ef0_fca, & 
+                              nbndfst, nktotf, ef0_fca, &
                               epsilon2_abs_all, epsilon2_abs_lorenz_all
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
     USE mp,            ONLY : mp_barrier, mp_sum
@@ -199,7 +199,7 @@
       IF (first_cycle .and. itemp == nstemp) THEN
         first_cycle = .false.
       ELSE
-        !        
+        !
         IF (carrier) THEN
           !
           ef0 = ef0_fca(itemp)
@@ -230,7 +230,7 @@
           ENDDO
           !
           ! RM - vme version should be checked
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             DO ibnd = 1, nbndfst
               DO jbnd = 1, nbndfst
                 ! vmef is in units of Ryd * bohr
@@ -397,7 +397,7 @@
             WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_all(:, iw, m, itemp)) / 3.0d0, m = 1, neta)
           ENDDO
           CLOSE(iuindabs)
-          ! 
+          !
           nameF = 'epsilon2_indabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
           OPEN(UNIT = iuindabs, FILE = nameF)
           WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
@@ -419,9 +419,9 @@
     !-----------------------------------------------------------------------
     !!
     !! This routine calculates the direct part of the imaginary dielectric
-    !! function. 
-    !! Only independent particles scheme is implemented, as simple as 
-    !! Eq. (27) in Rohlfing, M and Louie, S. G. PRB 62.8 (2000)    
+    !! function.
+    !! Only independent particles scheme is implemented, as simple as
+    !! Eq. (27) in Rohlfing, M and Louie, S. G. PRB 62.8 (2000)
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout, ionode_id
@@ -434,7 +434,7 @@
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
                               dmef, omegap, epsilon2_abs_dir, epsilon2_abs_lorenz_dir, vmef, &
-                              nbndfst, nktotf, ef0_fca 
+                              nbndfst, nktotf, ef0_fca
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
@@ -544,7 +544,7 @@
       !
       DO ik = 1, nkf
         ikk = 2 * ik - 1
-        IF (vme) THEN
+        IF (vme == 'wannier') THEN
           DO ibnd = 1, nbndsub
             DO jbnd = 1, nbndsub
               ! vmef is in units of Ryd * bohr
@@ -583,7 +583,7 @@
                 DO iw = 1, nomega
                   IF (ABS(ekkj - ekki  - omegap(iw)) > 6.0 * degaussw) CYCLE
                   !
-                  weighta = w0gauss((ekkj - ekki - omegap(iw)) / degaussw, 0) / degaussw 
+                  weighta = w0gauss((ekkj - ekki - omegap(iw)) / degaussw, 0) / degaussw
                   !
                   DO ipol = 1, 3
                     epsilon2_abs_dir(ipol, iw, itemp) = epsilon2_abs_dir(ipol, iw, itemp) + (wkf(ikk) / 2.0) * cfac / &
@@ -600,7 +600,7 @@
       ENDDO !ik
     ENDDO ! itemp
     !
-    ! Sum the k-points across pool 
+    ! Sum the k-points across pool
     !
 #if defined(__MPI)
     !
@@ -610,7 +610,7 @@
     CALL mp_barrier(inter_pool_comm)
     !
 #endif
-    ! 
+    !
     ! Write to stdout
     !
     WRITE(stdout, '(5x,a)')
@@ -638,7 +638,7 @@
                   SUM(epsilon2_abs_dir(:, iw, itemp)) / 3.0d0
         ENDDO
         CLOSE(iudirabs)
-        ! 
+        !
         nameF = 'epsilon2_dirabs_lorenz' // trim(adjustl(tp)) // 'K.dat'
         OPEN(UNIT = iudirabs, FILE = nameF)
         WRITE(iudirabs, '(a)') '# Direct absorption versus energy'

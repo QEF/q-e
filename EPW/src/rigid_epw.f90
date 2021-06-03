@@ -139,8 +139,6 @@
     !! Z * G
     REAL(KIND = DP) :: qag(3)
     !! Q * G
-    REAL(KIND = DP) :: zbg(3)
-    !! Z * G
     REAL(KIND = DP) :: zcg(3)
     !! Z * G
     REAL(KIND = DP) :: qcg(3)
@@ -498,7 +496,7 @@
     !! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
     !!  <q+G| epsil | q+G>
-    REAL(KIND = DP) :: Qval, Qqq
+    REAL(KIND = DP) :: Qqq
     !! In the case of Si, its a single value
     REAL(KIND = DP) :: reff(2, 2)
     !! Effective screening length for 2D materials
@@ -717,7 +715,7 @@
     !! Effective screening length for 2D materials
     REAL(KIND = DP) :: grg
     !! G-vector * reff * G-vector
-    REAL(KIND = DP) :: Qval, Qqq, tmp10
+    REAL(KIND = DP) :: Qqq
     !! In the case of Si, its a single value
     COMPLEX(KIND = DP) :: fac
     !!

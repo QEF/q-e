@@ -768,7 +768,7 @@
           ! we may implement the approximation to the angle between k and k+q
           ! vectors also listed in Grimvall
           !
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             DO ibnd = 1, nbndfst
               DO jbnd = 1, nbndfst
                 !

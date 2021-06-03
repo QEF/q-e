@@ -253,7 +253,7 @@
           ikk = 2 * ik - 1
           wkf_all(ik + lower_bnd -1 ) = wkf(ikk)
           DO ibnd = 1, nbndfst
-            IF (vme) THEN
+            IF (vme == 'wannier') THEN
               vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
             ELSE
               vkk_all(:,ibnd, ik + lower_bnd -1) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
@@ -724,7 +724,7 @@
         wkf_all(ik + lower_bnd -1 ) = wkf(ikk)
         !
         DO ibnd = 1, nbndfst
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
           ELSE
             vkk_all(:,ibnd, ik + lower_bnd -1 ) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))

@@ -289,7 +289,7 @@
     xkf(:, :) = xkf_(:, lower_bnd:upper_bnd)
     !
     ! KMB: set coordinates of displaced vectors for indabs
-    IF (vme .AND. eig_read) THEN
+    IF (vme == 'wannier' .AND. eig_read) THEN
       ALLOCATE(xkfd(3, nkqf, 6), STAT = ierr)
       IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkfd', 1)
       deltaq = 0.001d0
@@ -550,7 +550,7 @@
     CALL mp_bcast(wkf, ionode_id, inter_pool_comm)
     !
     ! KMB: set coordinates of displaced vectors - indabs
-    IF (vme .AND. eig_read) THEN
+    IF (vme == 'wannier' .AND. eig_read) THEN
       ALLOCATE(xkfd(3, nkqf, 6), STAT = ierr)
       IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkfd', 1)
       deltaq = 0.001d0
