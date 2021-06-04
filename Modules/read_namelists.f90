@@ -927,6 +927,8 @@ MODULE read_namelists_module
        CALL mp_bcast( xdm,                       ionode_id, intra_image_comm )
        CALL mp_bcast( xdm_a1,                    ionode_id, intra_image_comm )
        CALL mp_bcast( xdm_a2,                    ionode_id, intra_image_comm )
+       CALL mp_bcast( dftd3_version,             ionode_id, intra_image_comm )
+       CALL mp_bcast( dftd3_threebody,           ionode_id, intra_image_comm )
        !
        CALL mp_bcast( no_t_rev,                  ionode_id, intra_image_comm )
        !
