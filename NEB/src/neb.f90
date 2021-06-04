@@ -54,19 +54,18 @@ PROGRAM neb
   ! ... open input file
   !
   IF ( input_file_ /= ' ') THEN
-     WRITE(iunpath,'(/,5X,"parsing_file_name: ",A)') trim(input_file_)
-     CALL path_gen_inputs ( trim(input_file_), engine_prefix, &
-                            input_images, root, world_comm )
+     WRITE(iunpath,'(/,5X,"Parsing file: ",A)') trim(input_file_)
+     IF ( mpime == root ) &
+          CALL path_gen_inputs ( input_file_, engine_prefix, input_images)
   ELSE
      WRITE(iunpath,'(/,5X,"No input file found, assuming nothing to parse",/,&
     &               5X,"Searching argument -input_images or --input_images")')
      IF ( mpime == root )  input_images = input_images_getarg ( )
-     CALL mp_bcast(input_images,root, world_comm)
-     !
-     IF (input_images == 0) CALL errore('string_methods', &
-        'Neither a file to parse nor input files for each image found',1)
-     !
   ENDIF
+  !
+  CALL mp_bcast(input_images,root, world_comm)
+  IF (input_images == 0) CALL errore('string_methods', &
+       'Neither a file to parse nor input files for each image found',1)
   !
   IF (meta_ionode) open(newunit=unit_tmp,file="neb.dat",status="old")
   CALL path_read_namelist(unit_tmp)

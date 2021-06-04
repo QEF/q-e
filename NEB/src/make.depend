@@ -101,7 +101,6 @@ path_base.o : path_io_units_module.o
 path_base.o : path_opt_routines.o
 path_base.o : path_reparametrisation.o
 path_base.o : path_variables.o
-path_gen_inputs.o : ../../UtilXlib/mp.o
 path_input_parameters_module.o : ../../Modules/kind.o
 path_interpolation.o : ../../Modules/basic_algebra_routines.o
 path_interpolation.o : ../../Modules/cell_base.o

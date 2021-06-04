@@ -7,47 +7,38 @@
 !
 !----------------------------------------------------------------------------
 !
-SUBROUTINE path_gen_inputs (parse_file_name, engine_prefix, nimage, root, comm)
-  !
-  USE mp, ONLY : mp_rank, mp_bcast
+SUBROUTINE path_gen_inputs (parse_file_name, engine_prefix, nimage)
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*), INTENT(in) :: parse_file_name
   CHARACTER(len=*), INTENT(in) :: engine_prefix
   INTEGER, INTENT(out) :: nimage
-  INTEGER, INTENT(in) :: root
-  INTEGER, INTENT(in) :: comm
   !
   CHARACTER(LEN=80)  :: neb_file
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   INTEGER :: iimage
   INTEGER :: parse_unit, neb_unit
   !
-  IF( mp_rank(comm) == root) THEN
-     !
-     OPEN( newunit=parse_unit, file=trim(parse_file_name), status='old')
-     iimage = 0
-     neb_file = 'neb.dat'
-     OPEN( newunit=neb_unit, file=neb_file, status='unknown')
-     CALL parse_and_split (parse_unit, neb_unit, iimage, nimage)
-     CLOSE( neb_unit )
-     !
-     image_loop: DO iimage = 1, nimage
-        !
-        REWIND (parse_unit)
-        neb_file = trim(engine_prefix) // trim(int_to_char(iimage)) //".in"
-        OPEN( newunit=neb_unit, file=neb_file, status='unknown' )
-        CALL parse_and_split (parse_unit, neb_unit, iimage, nimage)
-        CLOSE (neb_unit)
-        !
-     END DO image_loop
-     !
-     CLOSE (parse_unit)
-     !
-  END IF
   !
-  CALL mp_bcast(nimage, root, comm)
+  OPEN( newunit=parse_unit, file=parse_file_name, status='old')
+  iimage = 0
+  neb_file = 'neb.dat'
+  OPEN( newunit=neb_unit, file=neb_file, status='unknown')
+  CALL parse_and_split (parse_unit, neb_unit, iimage, nimage)
+  CLOSE( neb_unit )
+  !
+  image_loop: DO iimage = 1, nimage
+     !
+     REWIND (parse_unit)
+     neb_file = trim(engine_prefix) // trim(int_to_char(iimage)) //".in"
+     OPEN( newunit=neb_unit, file=neb_file, status='unknown' )
+     CALL parse_and_split (parse_unit, neb_unit, iimage, nimage)
+     CLOSE (neb_unit)
+     !
+  END DO image_loop
+  !
+  CLOSE (parse_unit)
   !
 END SUBROUTINE path_gen_inputs
 !
