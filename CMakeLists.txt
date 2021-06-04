@@ -524,6 +524,7 @@ add_subdirectory(PWCOND)
 add_subdirectory(QHA)
 add_subdirectory(TDDFPT)
 add_subdirectory(XSpectra)
+add_subdirectory(QEHeat)
 if(QE_ENABLE_DOC)
     add_subdirectory(Doc)
 endif()
@@ -743,3 +744,8 @@ add_custom_target(epw
         qe_epw_exe
     COMMENT
         "electron-Phonon Coupling with wannier functions")
+add_custom_target(all_currents
+    DEPENDS
+	qe_qeheat_exe
+    COMMENT
+	"QEHeat code to compute energy and electronic density currents")

@@ -1,4 +1,4 @@
-# Copyright (C) 2001 Quantum ESPRESSO
+
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -38,6 +38,7 @@ pseudo :
 	@./check_pseudo.sh tddfpt_
 	@./check_pseudo.sh hp_
 	@./check_pseudo.sh ph_
+	@./check_pseudo.sh QEHeat_
 
 run-tests : run-tests-serial
 
@@ -96,6 +97,15 @@ run-tests-tddfpt-serial : prolog pseudo
 run-tests-tddfpt-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
 
+run-tests-all_currents-serial : prolog pseudo
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
+
+run-tests-all_currents-parallel : prolog pseudo
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
+
+
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
@@ -127,8 +137,13 @@ create-reference-pw : pseudo prolog
 create-reference-epw : pseudo prolog
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
 
+create-reference-all_currents : pseudo prolog
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all make-benchmarks
 
-compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt compare-hp
+
+
+compare : compare-cp compare-pw compare-ph compare-epw compare-tddfpt compare-hp compare-all_currents
 
 compare-cp : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=cp_all  --verbose compare 2>&1 | tee out.CP.`date +%Y%m%d_%H%M%S`
@@ -147,6 +162,10 @@ compare-tddfpt : prolog
 
 compare-hp : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=hp_all  --verbose compare 2>&1 | tee out.HP.`date +%Y%m%d_%H%M%S`
+
+compare-all_currents : prolog pseudo
+	${TESTCODE_DIR}/bin/testcode.py --category=all_currents_all  --verbose compare 2>&1 | tee out.ALL_CURRENTS.`date +%Y%m%d_%H%M%S`
+
 
 clean:
 # output files
@@ -205,12 +224,18 @@ clean:
 # Cleaning ZG final files
 	@rm -f zg_conf/equil_pos.txt zg_conf/ZG-*_0.020.dat
 
-	@rm -f userconfig
-
 # Cleaning TDDFPT final files
 	@rm -rf tddfpt_*/*.plot_chi.dat tddfpt_*/*.plot_eps.dat tddfpt_*/out/ tddfpt_*/turbo_spectrum.out
+# all_currents files
+	@for x in `find QEHeat_* -name "test*"`; do rm -rf $$x; done
+	@for x in `find QEHeat_* -name "CRASH"`; do rm -rf $$x; done
+	@rm -rf QEHeat_*/save \
+                QEHeat_*/current_hz*
+	@rm -f userconfig
+
 
 # Calling 'purge' means remove all reference outputs... be careful!
 purge: clean
 	@for x in `find pw_* -name "benchmark*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "benchmark*"`; do rm -rf $$x; done
+	@for x in `find QEHeat_* -name "benchmark*"`; do rm -rf $$x; done

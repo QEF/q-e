@@ -49,7 +49,8 @@ can be found on [Wiki page on gitlab](https://gitlab.com/QEF/q-e/-/wikis/home).
 - PWCOND: ballistic transport;
 - XSpectra: calculation of X-ray absorption spectra;
 - PWneb: reaction pathways and transition states with the Nudged Elastic Band method;
-- GWL: many-body perturbation theory in the GW approach using ultra-localised Wannier functions and Lanczos chains.
+- GWL: many-body perturbation theory in the GW approach using ultra-localised Wannier functions and Lanczos chains;
+- QEHeat: energy current in insulators for thermal transport calculations in DFT.
 
 ## Modular libraries
 The following libraries have been isolated and partially encapsulated in view of their release for usage in other codes as well:

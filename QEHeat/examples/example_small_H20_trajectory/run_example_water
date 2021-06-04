@@ -1,0 +1,2 @@
+../../../bin/cp.x -in input_cp  > out_cp
+../../../bin/all_currents.x -in input_all_currents > out_all_currents
