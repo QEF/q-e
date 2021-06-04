@@ -125,7 +125,7 @@ program all_currents
    CALL set_mpi_comm_4_solvers(intra_pool_comm, intra_bgrp_comm, &
                                inter_bgrp_comm)
    CALL environment_start('QEHeat')
-
+   call start_clock('all_currents')
    IF (ionode) THEN
       write (*,*) 'This code implements Marcolongo, A., Umari, P. and Baroni, S'
       write (*,*) ' Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509'
@@ -349,6 +349,9 @@ program all_currents
       if (.not. read_next_step(traj, first_step, last_step, step_mul, step_rem)) exit
    end do
 
+   call stop_clock('all_currents')
+   call print_clock('all_currents')
+   call start_clock('PWSCF')
    ! shutdown stuff
 100 call laxlib_end()
    call cpv_trajectory_deallocate(traj)
@@ -651,11 +654,13 @@ contains
       implicit none
       INTEGER, INTENT(OUT) :: exit_status
       exit_status = 0
+      call start_clock('PWSCF')
       IF (.NOT. lscf) THEN
          CALL non_scf()
       ELSE
          CALL electrons()
       END IF
+      call stop_clock('PWSCF')
       IF (check_stop_now() .OR. .NOT. conv_elec) THEN
          IF (check_stop_now()) exit_status = 255
          IF (.NOT. conv_elec) exit_status = 2
