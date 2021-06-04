@@ -17,16 +17,16 @@ set(src_qeheat
 qe_add_library(qe_qeheat ${src_qeheat})
 target_link_libraries(qe_qeheat
     PRIVATE
-       qe_phonon_ph
-       qe_modules
-       qe_pw
-       qe_lr_modules
-       qe_hdf5_fortran
-       qe_openmp_fortran
-       qe_upflib
-       qe_fftx
-       qe_fox
-       qe_xclib
+    qe_phonon_ph
+    qe_modules
+    qe_pw
+    qe_lr_modules
+    qe_hdf5_fortran
+    qe_openmp_fortran
+    qe_upflib
+    qe_fftx
+    qe_fox
+    qe_xclib
 )
 
 set(src_all_currents_x src/all_currents.f90)
@@ -35,12 +35,14 @@ qe_add_executable(qe_qeheat_exe ${src_all_currents_x})
 set_target_properties(qe_qeheat_exe PROPERTIES OUTPUT_NAME all_currents.x)
 target_link_libraries(qe_qeheat_exe
     PRIVATE
-        qe_pw
-        qe_lax
-        qe_lr_modules
-        qe_modules
-	qe_qeheat)
+    qe_pw
+    qe_lax
+    qe_lr_modules
+    qe_modules
+    qe_qeheat
+    qe_fftx
+)
 
 qe_install_targets(
-	qe_qeheat_exe
-	)
+    qe_qeheat_exe
+)
