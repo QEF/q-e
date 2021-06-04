@@ -196,6 +196,8 @@
     !! Difference between starting and ending on master core
     INTEGER :: add
     !! Additional element
+    REAL(KIND = DP):: metric
+    !! (2*pi/a)^2
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: alph
@@ -245,6 +247,7 @@
     Qqq = zero
     Qdq = zero
     Qdd = zero
+    metric = (twopi / alat)**2
     !
     ! alph is the Ewald parameter, geg is an estimate of G^2
     ! such that the G-space sum is convergent for that alph
@@ -319,9 +322,9 @@
       m3 = -nr3x + MOD(1.0d0 * (mm - 1), 1.0d0 * (2 * nr3x + 1))
       !
       ! Special case of q = 0
-      gg(1) = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1,3)
-      gg(2) = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2,3)
-      gg(3) = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3,3)
+      gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1,3)) * (twopi / alat)
+      gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2,3)) * (twopi / alat)
+      gg(3) = (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3,3)) * (twopi / alat)
       !
       IF (system_2d) THEN
         geg = gg(1)**2 + gg(2)**2 + gg(3)**2
@@ -337,12 +340,12 @@
                gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3)))
       ENDIF
       !
-      IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
+      IF (geg > 0.0d0 .AND. geg / (metric * alph * 4.0d0) < gmax) THEN
         !
         IF (system_2d) THEN
-          facgd = fac * (twopi / alat) * EXP(-geg / (alph * 4.0d0)) / SQRT(geg) / (1.0 + grg * SQRT(geg))
+          facgd = fac * EXP(-geg / (metric * alph * 4.0d0)) / SQRT(geg) / (1.0 + grg * SQRT(geg))
         ELSE
-          facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
+          facgd = fac * EXP(-geg / (metric * alph * 4.0d0)) / geg
         ENDIF
         !
         DO na = 1, nat
@@ -365,9 +368,9 @@
           fnat(:) = zero
           qnat(:) = zero
           DO nb = 1, nat
-            arg = 2.d0 * pi * (gg(1) * (tau(1, na) - tau(1, nb)) + &
-                               gg(2) * (tau(2, na) - tau(2, nb)) + &
-                               gg(3) * (tau(3, na) - tau(3, nb)))
+            arg = alat * (gg(1) * (tau(1, na) - tau(1, nb)) + &
+                          gg(2) * (tau(2, na) - tau(2, nb)) + &
+                          gg(3) * (tau(3, na) - tau(3, nb)))
             ! Dipole-dipole
             zcg(:) = zero
             DO j = 1, 3 ! Cartesian direction alpha
@@ -405,9 +408,9 @@
       ENDIF ! geg
       !
       ! Case q =/ 0
-      gg(1) = gg(1) + q(1)
-      gg(2) = gg(2) + q(2)
-      gg(3) = gg(3) + q(3)
+      gg(1) = gg(1) + q(1) * (twopi / alat)
+      gg(2) = gg(2) + q(2) * (twopi / alat)
+      gg(3) = gg(3) + q(3) * (twopi / alat)
       !
       IF (system_2d) THEN
         geg = gg(1)**2 + gg(2)**2 + gg(3)**2
@@ -422,19 +425,19 @@
                gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3)))
       ENDIF
       !
-      IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
+      IF (geg > 0.0d0 .AND. geg / (metric * alph * 4.0d0) < gmax) THEN
         !
         IF (system_2d) THEN
-          facgd = fac * (twopi / alat) * EXP(-geg / (alph * 4.0d0)) / (SQRT(geg) * (1.0 + grg * SQRT(geg)))
+          facgd = fac * EXP(-geg / (metric * alph * 4.0d0)) / (SQRT(geg) * (1.0 + grg * SQRT(geg)))
         ELSE
-          facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
+          facgd = fac * EXP(-geg / (metric * alph * 4.0d0)) / geg
         ENDIF
         !
         DO nb = 1, nat ! kappa
           DO na = 1, nat ! kappa'
-            arg = 2.d0 * pi * (gg(1) * (tau(1, na) - tau(1 ,nb)) + &
-                            gg(2) * (tau(2, na) - tau(2, nb)) + &
-                            gg(3) * (tau(3, na) - tau(3, nb)) )
+            arg = alat * (gg(1) * (tau(1, na) - tau(1 ,nb)) + &
+                          gg(2) * (tau(2, na) - tau(2, nb)) + &
+                          gg(3) * (tau(3, na) - tau(3, nb)) )
             !
             facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
             !
@@ -454,7 +457,7 @@
                   DO jpol = 1, 3
                     DO kpol = 1, 3
                       Qdq = Qdq + 0.5 * (gg(ipol) * zeu(ipol, j, nb) * gg(jpol) * gg(kpol) * Qmat(na, i, jpol, kpol) &
-                                         - gg(ipol) * gg(jpol) * Qmat(nb, j, ipol, jpol) * gg(kpol) * zeu(kpol, i, na))
+                                       - gg(ipol) * gg(jpol) * Qmat(nb, j, ipol, jpol) * gg(kpol) * zeu(kpol, i, na))
                     ENDDO
                   ENDDO
                 ENDDO
@@ -557,6 +560,8 @@
     !! Loop over q-points
     INTEGER :: nr1x, nr2x, nr3x
     !! Minimum supercell size to include all vector such that G^2 < geg
+    REAL(KIND = DP):: metric
+    !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: arg
@@ -609,6 +614,7 @@
     !
     gmax = 14.d0
     alph = 1.0d0
+    metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
     ! Estimate of nr1x,nr2x,nr3x generating all vectors up to G^2 < geg
@@ -633,9 +639,9 @@
     DO m1 = -nr1x, nr1x
       DO m2 = -nr2x, nr2x
         DO m3 = -nr3x, nr3x
-          gg(1) = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
-          gg(2) = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
-          gg(3) = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
+          gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
+          gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
+          gg(3) = (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)) * (twopi / alat)
           !
           IF (system_2d) THEN
             qeq = gg(1)**2 + gg(2)**2 + gg(3)**2
@@ -648,21 +654,19 @@
           ELSE
             qeq = (gg(1) * (epsil(1, 1) * gg(1) + epsil(1, 2) * gg(2) + epsil(1, 3) * gg(3)) + &
                    gg(2) * (epsil(2, 1) * gg(1) + epsil(2, 2) * gg(2) + epsil(2, 3) * gg(3)) + &
-                   gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3))) !*twopi/alat
+                   gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3)))
           ENDIF
-
-          IF (qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax) THEN
-            !
-            qeq = qeq * twopi / alat
+          IF (qeq > 0.0d0 .AND. qeq / (metric * alph * 4.0d0) < gmax) THEN
             !
             IF (system_2d) THEN
-              facqd = fac * (twopi / alat) * EXP(-qeq / (alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              facqd = fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
+              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
+              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
             ENDIF
             !
             DO na = 1, nat
-              arg = - twopi * (gg(1) * tau(1, na) + gg(2) * tau(2, na) + gg(3) * tau(3, na))
+              arg = - alat * (gg(1) * tau(1, na) + gg(2) * tau(2, na) + gg(3) * tau(3, na))
               facq = facqd * CMPLX(COS(arg), SIN(arg), KIND = DP)
               DO ipol = 1, 3
                 zaq = gg(1) * zeu(1, ipol, na) + gg(2) * zeu(2, ipol, na) + gg(3) * zeu(3, ipol, na)
@@ -772,6 +776,8 @@
     !! Mode index
     INTEGER :: nr1x, nr2x, nr3x
     !! Minimum supercell size to include all vector such that G^2 < geg
+    REAL(KIND = DP):: metric
+    !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: arg
@@ -824,6 +830,7 @@
     !
     gmax = 14.d0
     alph = 1.0d0
+    metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
     ! Estimate of nr1x, nr2x, nr3x generating all vectors up to G^2 < geg
@@ -849,9 +856,9 @@
       DO m2 = -nr2x, nr2x
         DO m3 = -nr3x, nr3x
           !
-          gg(1) = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
-          gg(2) = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
-          gg(3) = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
+          gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
+          gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
+          gg(3) = (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)) * (twopi / alat)
           !
           IF (system_2d) THEN
             qeq = gg(1)**2 + gg(2)**2 + gg(3)**2
@@ -865,21 +872,20 @@
             !
             qeq = (gg(1) * (epsil(1, 1) * gg(1) + epsil(1, 2) * gg(2) + epsil(1, 3) * gg(3)) + &
                    gg(2) * (epsil(2, 1) * gg(1) + epsil(2, 2) * gg(2) + epsil(2, 3) * gg(3)) + &
-                   gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3))) !*twopi/alat
+                   gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3)))
           ENDIF
           !
-          IF (qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax) THEN
-            !
-            qeq = qeq * twopi / alat
+          IF (qeq > 0.0d0 .AND. qeq / (metric * alph * 4.0d0) < gmax) THEN
             !
             IF (system_2d) THEN
-              facqd = fac * (twopi / alat) * EXP(-qeq / (alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
             ELSE
-              facqd = fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
+              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
+              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
             ENDIF
             !
             DO na = 1, nat
-              arg = - twopi * (gg(1) * tau(1, na) + gg(2) * tau(2, na) + gg(3) * tau(3, na))
+              arg = - alat * (gg(1) * tau(1, na) + gg(2) * tau(2, na) + gg(3) * tau(3, na))
               facq = facqd * CMPLX(COS(arg), SIN(arg), kind=DP)
               DO ipol = 1, 3
                 zaq = gg(1) * zeu(1, ipol, na) + gg(2) * zeu(2, ipol, na) + gg(3) * zeu(3, ipol, na)
