@@ -1,40 +1,40 @@
-                                                                                      
-                                       ``:oss/                                        
-                           `.+s+.     .+ys--yh+     `./ss+.                           
-                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
-                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
-                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
-               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
-               -yh- ./syyooyo`                          .sys+/oyo--yh/                
-               `yy+    .-:-.                             `-/+/:`  -sh-                
-                /yh.                                              oys                 
-          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
-       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
-       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
-       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
-        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
-         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
-          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
-    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
-   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
-   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
-   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
-   -yh-        ````````````````    `````````              ``        ``          oys   
-   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
-   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
-                                                                                      
-  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
-                                                Comput. Phys. Commun. 209, 116 (2016) 
-                                                                                      
 
-     Program EPW v.5.3.1 starts on  3May2021 at 11:49:15 
+                                       ``:oss/
+                           `.+s+.     .+ys--yh+     `./ss+.
+                          -sh//yy+`   +yy   +yy    -+h+-oyy
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`
+               -yh- ./syyooyo`                          .sys+/oyo--yh/
+               `yy+    .-:-.                             `-/+/:`  -sh-
+                /yh.                                              oys
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh
+   -yh-        ````````````````    `````````              ``        ``          oys
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`
+
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,
+                                                Comput. Phys. Commun. 209, 116 (2016)
+
+
+     Program EPW v.5.4b starts on  4Jun2021 at 18: 8:56
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
          "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
-          URL http://www.quantum-espresso.org", 
+          URL http://www.quantum-espresso.org",
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
@@ -48,15 +48,15 @@
               to control the lower bound of band manifold.
 
      Reading supplied temperature list.
-                      
-     ------------------------------------------------------------------------ 
-                   RESTART - RESTART - RESTART - RESTART                         
-     Restart is done without reading PWSCF save file.                  
-     Be aware that some consistency checks are therefore not done.                  
-     ------------------------------------------------------------------------ 
-                      
 
-     --                                                                         
+     ------------------------------------------------------------------------
+                   RESTART - RESTART - RESTART - RESTART
+     Restart is done without reading PWSCF save file.
+     Be aware that some consistency checks are therefore not done.
+     ------------------------------------------------------------------------
+
+
+     --
 
      bravais-lattice index     =            0
      lattice parameter (a_0)   =       0.0000  a.u.
@@ -73,17 +73,17 @@
      celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
 
      crystal axes: (cart. coord. in units of a_0)
-               a(1) = (  0.0000  0.0000  0.0000 )  
-               a(2) = (  0.0000  0.0000  0.0000 )  
-               a(3) = (  0.0000  0.0000  0.0000 )  
+               a(1) = (  0.0000  0.0000  0.0000 )
+               a(2) = (  0.0000  0.0000  0.0000 )
+               a(3) = (  0.0000  0.0000  0.0000 )
 
      reciprocal axes: (cart. coord. in units 2 pi/a_0)
-               b(1) = (  0.0000  0.0000  0.0000 )  
-               b(2) = (  0.0000  0.0000  0.0000 )  
-               b(3) = (  0.0000  0.0000  0.0000 )  
+               b(1) = (  0.0000  0.0000  0.0000 )
+               b(2) = (  0.0000  0.0000  0.0000 )
+               b(3) = (  0.0000  0.0000  0.0000 )
 
 
-     Atoms inside the unit cell: 
+     Atoms inside the unit cell:
 
    Cartesian axes
 
@@ -104,18 +104,18 @@
      Using bn.ukk from disk
      -------------------------------------------------------------------
 
-     
-     ------------------------------------ 
-     Quadrupole tensor is correctly read: 
-     ------------------------------------ 
+
+     ------------------------------------
+     Quadrupole tensor is correctly read:
+     ------------------------------------
      atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy
-       1        x       0.00000   0.00000   0.00000   3.17968   0.00000   0.00000
-       1        y       0.00000   0.00000   0.00000   0.00000   3.17968   0.00000
-       1        z       0.00000   0.00000   0.00000   0.00000   0.00000   3.17968
-       2        x       0.00000   0.00000   0.00000  -0.57889   0.00000   0.00000
-       2        y       0.00000   0.00000   0.00000   0.00000  -0.57889   0.00000
-       2        z       0.00000   0.00000   0.00000   0.00000   0.00000  -0.57889
-     
+       1        x       0.00000   0.00000   0.00000   3.00000   0.00000   0.00000
+       1        y       0.00000   0.00000   0.00000   0.00000   3.00000   0.00000
+       1        z       0.00000   0.00000   0.00000   0.00000   0.00000   3.00000
+       2        x       0.00000   0.00000   0.00000  -1.00000   0.00000   0.00000
+       2        y       0.00000   0.00000   0.00000   0.00000  -1.00000   0.00000
+       2        z       0.00000   0.00000   0.00000   0.00000   0.00000  -1.00000
+
      Symmetries of Bravais lattice:  48
      Symmetries of crystal:          24
 
@@ -123,13 +123,13 @@
 
 
      Computes the analytic long-range interaction for polar materials [lpolar]
-      
-     Use zone-centred Wigner-Seitz cells 
+
+     Use zone-centred Wigner-Seitz cells
      Number of WS vectors for electrons       19
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
      Maximum number of cores for efficient parallelization      114
-     Results may improve by using use_ws == .TRUE. 
+     Results may improve by using use_ws == .TRUE.
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
 
@@ -137,10 +137,10 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        13Mb
-                   VmPeak =       329Mb
+     Memory usage:  VmHWM =        14Mb
+                   VmPeak =       332Mb
      ===================================================================
-     
+
      Number of k-points inside fsthick * 1.2 in the full BZ:       712
      Size of k point mesh for interpolation:         62
      Max number of k points per pool:               62
@@ -162,12 +162,12 @@
 
 
      Number of ep-matrix elements per pool :         1674 ~=   13.08 Kb (@ 8 bytes/ DP)
-      
-     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+
+     A selecq.fmt file was found but re-created because selecqread == .FALSE.
      Number selected, total           1000           2069
      Number selected, total           2000           7884
      We only need to compute     2102 q-points
-      
+
      Valence band maximum    =  11.767174 eV
 
      Temperature  300.000 K
@@ -185,38 +185,38 @@
      Only states between  10.846840 eV and  11.646840 eV will be included
 
      Save matrix elements larger than threshold:   0.173611111111E-24
-      
+
      Progression iq (fine) =       1000/      2102
-       Adaptative smearing = Min:    37.131619 meV
-                             Max:   202.335453 meV
+       Adaptative smearing = Min:    37.126127 meV
+                             Max:   202.350584 meV
      Progression iq (fine) =       2000/      2102
        Adaptative smearing = Min:     1.414214 meV
-                             Max:   385.317621 meV
+                             Max:   385.306542 meV
       300.000     12.2236       0.999995E+13
-      
+
      epmatkqread automatically changed to .TRUE. as all scattering have been computed.
-      
+
      ===================================================================
-     Memory usage:  VmHWM =        17Mb
-                   VmPeak =       351Mb
+     Memory usage:  VmHWM =        19Mb
+                   VmPeak =       354Mb
      ===================================================================
 
-     Number of elements per core      16863
+     Number of elements per core      16860
      Symmetry mapping finished
-      
+
      =============================================================================================
      BTE in the self-energy relaxation time approximation (SERTA)
      =============================================================================================
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.28241E-26    0.190006E+03    0.142001E-21   -0.476477E-14
-                                                      0.710006E-22    0.190006E+03    0.248502E-21
-                                                      0.476477E-14   -0.355003E-22    0.190006E+03
-      
+      300.000  12.2236   0.99999E+13   0.00000E+00    0.197657E+03   -0.142001E-21    0.476477E-14
+                                                     -0.142001E-21    0.197657E+03    0.710006E-22
+                                                     -0.476477E-14    0.710006E-22    0.197657E+03
+
      =============================================================================================
      Start solving iterative Boltzmann Transport Equation
      =============================================================================================
@@ -224,145 +224,145 @@
      Iteration number:         1
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.83935E-27    0.224743E+03    0.301753E-21   -0.887508E-23
-                                                     -0.710006E-22    0.224743E+03   -0.142001E-21
-                                                     -0.476477E-14   -0.142001E-21    0.224743E+03
+      300.000  12.2236   0.99999E+13   0.41021E-27    0.234871E+03    0.177502E-22   -0.476477E-14
+                                                      0.142001E-21    0.234871E+03   -0.284002E-21
+                                                     -0.476477E-14    0.000000E+00    0.234871E+03
 
-                                                      0.224743E+03    Max error
+                                                      0.234871E+03    Max error
      Iteration number:         2
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.40311E-27    0.238057E+03   -0.142001E-21    0.476477E-14
-                                                     -0.284002E-21    0.238057E+03   -0.213002E-21
-                                                      0.476477E-14   -0.142001E-21    0.238057E+03
+      300.000  12.2236   0.99999E+13  -0.39206E-27    0.248996E+03    0.000000E+00    0.476481E-14
+                                                      0.000000E+00    0.248996E+03    0.000000E+00
+                                                     -0.476477E-14    0.000000E+00    0.248996E+03
 
-                                                      0.133140E+02    Max error
+                                                      0.141249E+02    Max error
      Iteration number:         3
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.40469E-27    0.241243E+03    0.710006E-22   -0.476466E-14
-                                                     -0.284002E-21    0.241243E+03    0.426004E-21
-                                                     -0.476477E-14   -0.142001E-21    0.241243E+03
+      300.000  12.2236   0.99999E+13  -0.36343E-26    0.252491E+03   -0.142001E-21    0.476466E-14
+                                                     -0.284002E-21    0.252491E+03   -0.497004E-21
+                                                     -0.476484E-14    0.142001E-21    0.252491E+03
 
-                                                      0.318573E+01    Max error
+                                                      0.349501E+01    Max error
      Iteration number:         4
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.40390E-27    0.242328E+03    0.710006E-22   -0.729531E-19
-                                                     -0.284002E-21    0.242328E+03    0.426004E-21
-                                                     -0.723851E-19   -0.142001E-21    0.242328E+03
+      300.000  12.2236   0.99999E+13  -0.40263E-26    0.253669E+03    0.000000E+00    0.476466E-14
+                                                      0.000000E+00    0.253669E+03    0.000000E+00
+                                                      0.476470E-14    0.000000E+00    0.253669E+03
 
-                                                      0.108553E+01    Max error
+                                                      0.117783E+01    Max error
      Iteration number:         5
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.00000E+00    0.242610E+03    0.710006E-22   -0.476477E-14
-                                                      0.284002E-21    0.242610E+03    0.426004E-21
-                                                      0.355003E-21   -0.142001E-21    0.242610E+03
+      300.000  12.2236   0.99999E+13  -0.42914E-27    0.253985E+03    0.213002E-21   -0.476477E-14
+                                                     -0.426004E-21    0.253985E+03    0.142001E-21
+                                                     -0.476477E-14    0.426004E-21    0.253985E+03
 
-                                                      0.281773E+00    Max error
+                                                      0.315731E+00    Max error
      Iteration number:         6
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.72512E-26    0.242700E+03    0.497004E-21    0.109696E-18
-                                                      0.284002E-21    0.242700E+03   -0.426004E-21
-                                                      0.733791E-19   -0.426004E-21    0.242700E+03
+      300.000  12.2236   0.99999E+13   0.63109E-29    0.254085E+03    0.000000E+00    0.109128E-18
+                                                      0.000000E+00    0.254085E+03    0.000000E+00
+                                                     -0.476477E-14    0.000000E+00    0.254085E+03
 
-                                                      0.900611E-01    Max error
+                                                      0.100142E+00    Max error
      Iteration number:         7
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.40390E-27    0.242725E+03    0.000000E+00    0.476473E-14
-                                                      0.426004E-21    0.242725E+03   -0.284002E-21
-                                                      0.476484E-14   -0.568005E-21    0.242725E+03
+      300.000  12.2236   0.99999E+13  -0.40469E-27    0.254113E+03    0.142001E-21    0.476473E-14
+                                                      0.568005E-21    0.254113E+03    0.142001E-21
+                                                      0.476477E-14    0.142001E-21    0.254113E+03
 
-                                                      0.245165E-01    Max error
+                                                      0.280368E-01    Max error
      Iteration number:         8
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.36288E-27    0.242732E+03    0.710006E-22    0.720301E-19
-                                                     -0.426004E-21    0.242732E+03    0.142001E-21
-                                                      0.719946E-19   -0.142001E-21    0.242732E+03
+      300.000  12.2236   0.99999E+13  -0.55220E-29    0.254122E+03   -0.568005E-21    0.476481E-14
+                                                      0.142001E-21    0.254122E+03    0.568005E-21
+                                                      0.476477E-14    0.284002E-21    0.254122E+03
 
-                                                      0.754890E-02    Max error
+                                                      0.860632E-02    Max error
      Iteration number:         9
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.42835E-27    0.242734E+03    0.710006E-22   -0.476466E-14
-                                                      0.142001E-21    0.242734E+03   -0.142001E-21
-                                                     -0.476477E-14    0.426004E-21    0.242734E+03
+      300.000  12.2236   0.99999E+13  -0.42835E-27    0.254124E+03    0.000000E+00    0.476484E-14
+                                                      0.426004E-21    0.254124E+03   -0.284002E-21
+                                                      0.476484E-14   -0.284002E-21    0.254124E+03
 
-                                                      0.211380E-02    Max error
+                                                      0.246765E-02    Max error
      Iteration number:        10
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.89110E-26    0.242735E+03    0.142001E-21   -0.142001E-21
-                                                      0.142001E-21    0.242735E+03   -0.142001E-21
-                                                     -0.142001E-21   -0.426004E-21    0.242735E+03
+      300.000  12.2236   0.99999E+13   0.60340E-26    0.254125E+03    0.142001E-21    0.476488E-14
+                                                      0.284002E-21    0.254125E+03    0.284002E-21
+                                                      0.476477E-14    0.284002E-21    0.254125E+03
 
-                                                      0.636705E-03    Max error
+                                                      0.744102E-03    Max error
      Iteration number:        11
      =============================================================================================
      The iteration reached the maximum but did not converge.
      =============================================================================================
 
-      
+
      =============================================================================================
      BTE in the SERTA with B-field
      =============================================================================================
-     Number of contributing elements for the master core     809424
+     Number of contributing elements for the master core     809280
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.21176E-21    0.190006E+03   -0.629483E-03   -0.506257E-14
-                                                      0.629483E-03    0.190006E+03    0.476466E-14
-                                                     -0.506257E-14   -0.476477E-14    0.190006E+03
+      300.000  12.2236   0.99999E+13   0.10588E-21    0.197657E+03   -0.681495E-03   -0.297870E-15
+                                                      0.681495E-03    0.197657E+03   -0.982728E-14
+                                                     -0.506257E-14    0.476477E-14    0.197657E+03
 
-                                                      0.527286E+02    Max error
-      
+                                                      0.564674E+02    Max error
+
      =============================================================================================
      Start solving iterative Boltzmann Transport Equation with B-field
      =============================================================================================
@@ -370,133 +370,133 @@
      Iteration number:         1
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.52940E-21    0.224743E+03   -0.723855E-03    0.476484E-14
-                                                      0.723855E-03    0.224743E+03    0.238234E-14
-                                                      0.714708E-14    0.238239E-14    0.224743E+03
+      300.000  12.2236   0.99999E+13   0.89997E-21    0.234871E+03   -0.787059E-03   -0.774275E-14
+                                                      0.787059E-03    0.234871E+03   -0.543155E-19
+                                                     -0.297813E-14    0.238238E-14    0.234871E+03
 
-                                                      0.347366E+02    Max error
-      
+                                                      0.372139E+02    Max error
+
      Iteration number:         2
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.37060E-21    0.238057E+03   -0.993023E-03    0.416925E-14
-                                                      0.993023E-03    0.238057E+03    0.714716E-14
-                                                      0.238253E-14   -0.238224E-14    0.238057E+03
+      300.000  12.2236   0.99999E+13   0.63528E-21    0.248996E+03   -0.107693E-02    0.190591E-13
+                                                      0.107693E-02    0.248996E+03    0.357349E-14
+                                                      0.952976E-14   -0.145693E-18    0.248996E+03
 
-                                                      0.133140E+02    Max error
-      
+                                                      0.141249E+02    Max error
+
      Iteration number:         3
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.37058E-21    0.241243E+03   -0.105297E-02    0.714712E-14
-                                                      0.105297E-02    0.241243E+03    0.119119E-13
-                                                      0.190591E-13   -0.728466E-19    0.241243E+03
+      300.000  12.2236   0.99999E+13   0.26468E-21    0.252491E+03   -0.114552E-02   -0.833842E-14
+                                                      0.114552E-02    0.252491E+03    0.595594E-14
+                                                      0.476462E-14   -0.476462E-14    0.252491E+03
 
-                                                      0.318573E+01    Max error
-      
+                                                      0.349501E+01    Max error
+
      Iteration number:         4
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.10589E-21    0.242328E+03   -0.108626E-02    0.107208E-13
-                                                      0.108626E-02    0.242328E+03    0.833837E-14
-                                                     -0.119126E-14    0.238264E-14    0.242328E+03
+      300.000  12.2236   0.99999E+13  -0.52918E-22    0.253669E+03   -0.118264E-02    0.178676E-13
+                                                      0.118264E-02    0.253669E+03   -0.952950E-14
+                                                     -0.595582E-14   -0.476492E-14    0.253669E+03
 
-                                                      0.108553E+01    Max error
-      
+                                                      0.117783E+01    Max error
+
      Iteration number:         5
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.21176E-21    0.242610E+03   -0.109601E-02    0.214415E-13
-                                                      0.109601E-02    0.242610E+03   -0.119113E-14
-                                                      0.142942E-13    0.476477E-14    0.242610E+03
+      300.000  12.2236   0.99999E+13   0.20566E-25    0.253985E+03   -0.119393E-02   -0.238227E-14
+                                                      0.119393E-02    0.253985E+03   -0.357363E-14
+                                                      0.250150E-13    0.238217E-14    0.253985E+03
 
-                                                      0.281773E+00    Max error
-      
+                                                      0.315731E+00    Max error
+
      Iteration number:         6
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13   0.42353E-21    0.242700E+03   -0.109975E-02   -0.595593E-14
-                                                      0.109975E-02    0.242700E+03   -0.595607E-14
-                                                     -0.238231E-14    0.238209E-14    0.242700E+03
+      300.000  12.2236   0.99999E+13  -0.52939E-21    0.254085E+03   -0.119823E-02   -0.107206E-13
+                                                      0.119823E-02    0.254085E+03    0.595595E-14
+                                                     -0.142944E-13   -0.476477E-14    0.254085E+03
 
-                                                      0.900611E-01    Max error
-      
+                                                      0.100142E+00    Max error
+
      Iteration number:         7
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.10588E-21    0.242725E+03   -0.110094E-02   -0.476477E-14
-                                                      0.110094E-02    0.242725E+03    0.107207E-13
-                                                     -0.595633E-14   -0.476477E-14    0.242725E+03
+      300.000  12.2236   0.99999E+13  -0.52947E-22    0.254113E+03   -0.119964E-02    0.714737E-14
+                                                      0.119964E-02    0.254113E+03    0.119116E-14
+                                                     -0.357351E-14    0.476462E-14    0.254113E+03
 
-                                                      0.245165E-01    Max error
-      
+                                                      0.280368E-01    Max error
+
      Iteration number:         8
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.68824E-21    0.242732E+03   -0.110134E-02    0.238242E-14
-                                                      0.110134E-02    0.242732E+03   -0.595596E-14
-                                                      0.107207E-13    0.756866E-19    0.242732E+03
+      300.000  12.2236   0.99999E+13   0.68822E-21    0.254122E+03   -0.120012E-02   -0.833849E-14
+                                                      0.120012E-02    0.254122E+03   -0.714714E-14
+                                                      0.119119E-14   -0.722786E-19    0.254122E+03
 
-                                                      0.754890E-02    Max error
-      
+                                                      0.860632E-02    Max error
+
      Iteration number:         9
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.52938E-22    0.242734E+03   -0.110147E-02   -0.119120E-13
-                                                      0.110147E-02    0.242734E+03    0.595596E-14
-                                                      0.714716E-14   -0.714715E-14    0.242734E+03
+      300.000  12.2236   0.99999E+13   0.10587E-21    0.254124E+03   -0.120027E-02    0.214416E-13
+                                                      0.120027E-02    0.254124E+03   -0.357355E-14
+                                                      0.595604E-14    0.238282E-14    0.254124E+03
 
-                                                      0.211380E-02    Max error
-      
+                                                      0.246765E-02    Max error
+
      Iteration number:        10
 
      =============================================================================================
-       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+       Temp     Fermi   Hole density  Population SR                  Hole mobility
         [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
      =============================================================================================
 
-      300.000  12.2236   0.99999E+13  -0.12176E-20    0.242735E+03   -0.110151E-02   -0.166766E-13
-                                                      0.110151E-02    0.242735E+03    0.714719E-14
-                                                     -0.119119E-13    0.119117E-13    0.242735E+03
+      300.000  12.2236   0.99999E+13   0.14826E-20    0.254125E+03   -0.120032E-02    0.131032E-13
+                                                      0.120032E-02    0.254125E+03   -0.357359E-14
+                                                     -0.166768E-13    0.714083E-14    0.254125E+03
 
-                                                      0.636705E-03    Max error
-      
+                                                      0.744102E-03    Max error
+
      Iteration number:        11
      =============================================================================================
      The iteration reached the maximum but did not converge.
@@ -510,65 +510,65 @@
      =============================================================================================
      BTE in the self-energy relaxation time approximation (SERTA)
      =============================================================================================
-      
+
      Temperature:   300.0000 K
      Conductivity tensor without magnetic field | with magnetic field [Siemens/m]
-       0.30442E-01   0.11375E-25   0.76340E-18  |   0.30442E-01   0.10085E-06  -0.81111E-18
-       0.22751E-25   0.30442E-01  -0.56877E-26  |  -0.10085E-06   0.30442E-01  -0.76340E-18
-      -0.76340E-18   0.39814E-25   0.30442E-01  |  -0.81111E-18   0.76338E-18   0.30442E-01
+       0.31668E-01  -0.22751E-25  -0.76340E-18  |   0.31668E-01   0.10919E-06  -0.81111E-18
+      -0.22751E-25   0.31668E-01   0.11375E-25  |  -0.10919E-06   0.31668E-01   0.76340E-18
+       0.76340E-18   0.11375E-25   0.31668E-01  |  -0.47724E-19  -0.15745E-17   0.31668E-01
      Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]
-       0.19001E+03   0.71001E-22   0.47648E-14  |   0.19001E+03   0.62948E-03  -0.50626E-14
-       0.14200E-21   0.19001E+03  -0.35500E-22  |  -0.62948E-03   0.19001E+03  -0.47648E-14
-      -0.47648E-14   0.24850E-21   0.19001E+03  |  -0.50626E-14   0.47647E-14   0.19001E+03
+       0.19766E+03  -0.14200E-21  -0.47648E-14  |   0.19766E+03   0.68150E-03  -0.50626E-14
+      -0.14200E-21   0.19766E+03   0.71001E-22  |  -0.68150E-03   0.19766E+03   0.47648E-14
+       0.47648E-14   0.71001E-22   0.19766E+03  |  -0.29787E-15  -0.98273E-14   0.19766E+03
      Hall factor
-       0.139752E+06    0.462992E+00   -0.107327E-10
-      -0.462992E+00    0.139752E+06   -0.350454E-11
-       0.328551E-11    0.350448E-11    0.139752E+06
+       0.134342E+06    0.463194E+00    0.303608E-11
+      -0.463194E+00    0.134342E+06    0.323849E-11
+      -0.667942E-11   -0.667936E-11    0.134342E+06
 
      =============================================================================================
      BTE
      =============================================================================================
-      
+
      Temperature:   300.0000 K
      Conductivity tensor without magnetic field | with magnetic field [Siemens/m]
-       0.38890E-01   0.22751E-25  -0.22751E-25  |   0.38890E-01   0.17648E-06  -0.19085E-17
-       0.22751E-25   0.38890E-01  -0.68253E-25  |  -0.17648E-06   0.38890E-01   0.19085E-17
-      -0.22751E-25  -0.22751E-25   0.38890E-01  |  -0.26719E-17   0.11451E-17   0.38890E-01
+       0.40715E-01   0.45502E-25   0.76340E-18  |   0.40715E-01   0.19231E-06  -0.26719E-17
+       0.22751E-25   0.40715E-01   0.45502E-25  |  -0.19231E-06   0.40715E-01   0.11441E-17
+       0.76341E-18   0.45502E-25   0.40715E-01  |   0.20993E-17  -0.57255E-18   0.40715E-01
      Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]
-       0.24274E+03   0.14200E-21  -0.14200E-21  |   0.24274E+03   0.11015E-02  -0.11912E-13
-       0.14200E-21   0.24274E+03  -0.42600E-21  |  -0.11015E-02   0.24274E+03   0.11912E-13
-      -0.14200E-21  -0.14200E-21   0.24274E+03  |  -0.16677E-13   0.71472E-14   0.24274E+03
+       0.25412E+03   0.28400E-21   0.47648E-14  |   0.25412E+03   0.12003E-02  -0.16677E-13
+       0.14200E-21   0.25412E+03   0.28400E-21  |  -0.12003E-02   0.25412E+03   0.71408E-14
+       0.47649E-14   0.28400E-21   0.25412E+03  |   0.13103E-13  -0.35736E-14   0.25412E+03
      Hall factor
-       0.109394E+06    0.496422E+00   -0.536838E-11
-      -0.496422E+00    0.109394E+06    0.536828E-11
-      -0.751570E-11    0.322104E-11    0.109394E+06
+       0.104491E+06    0.493549E+00   -0.107755E-10
+      -0.493549E+00    0.104491E+06    0.293617E-11
+       0.146931E-11   -0.146941E-11    0.104491E+06
 
      Unfolding on the coarse grid
      elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
 
-     INITIALIZATION: 
+     INITIALIZATION:
 
 
 
 
      Electron-Phonon interpolation
-     ephwann      :      3.13s CPU      3.46s WALL (       1 calls)
-     ep-interp    :      2.42s CPU      2.74s WALL (    2102 calls)
+     ephwann      :      7.39s CPU      7.67s WALL (       1 calls)
+     ep-interp    :      5.88s CPU      6.14s WALL (    2102 calls)
 
-     DynW2B       :      0.31s CPU      0.35s WALL (    2102 calls)
-     HamW2B       :      0.43s CPU      0.49s WALL (  138448 calls)
-     ephW2Bp      :      0.35s CPU      0.40s WALL (    2102 calls)
+     DynW2B       :      2.26s CPU      2.35s WALL (    2102 calls)
+     HamW2B       :      0.52s CPU      0.55s WALL (  138448 calls)
+     ephW2Bp      :      0.33s CPU      0.34s WALL (    2102 calls)
      ephW2B       :      0.05s CPU      0.05s WALL (   15768 calls)
-     print_ibte   :      0.21s CPU      0.24s WALL (    2102 calls)
-     vmewan2bloch :      0.25s CPU      0.28s WALL (   33638 calls)
-     vmewan2bloch :      0.25s CPU      0.28s WALL (   33638 calls)
+     print_ibte   :      0.45s CPU      0.47s WALL (    2102 calls)
+     vmewan2bloch :      0.63s CPU      0.66s WALL (   33638 calls)
+     vmewan2bloch :      0.63s CPU      0.66s WALL (   33638 calls)
 
 
      Total program execution
-     EPW          :      3.13s CPU      3.47s WALL
+     EPW          :      7.40s CPU      7.67s WALL
 
      ===============================================================================
-     The functionality-dependent EPW.bib file was created with suggested citations. 
-     Please consider citing the papers listed in EPW.bib.                           
+     The functionality-dependent EPW.bib file was created with suggested citations.
+     Please consider citing the papers listed in EPW.bib.
      ===============================================================================
-                                                                                    
+
