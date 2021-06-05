@@ -49,6 +49,7 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
+  USE xc_lib,                   ONLY : xclib_dft_is_libxc, xclib_init_libxc
   USE xc_lib,                   ONLY : xclib_dft_is
   USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
@@ -168,6 +169,10 @@ SUBROUTINE init_run()
   !
   IF (mbd_vdw) CALL errore('init_run','mbd_vdw not yet supported for CP',1)
   !
+  !=======================================================================
+  !     Initialization of the libxc
+  !=======================================================================
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin )
   !=======================================================================
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
