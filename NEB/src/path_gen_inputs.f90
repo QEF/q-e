@@ -103,15 +103,15 @@ SUBROUTINE parse_and_split ( parse_unit, neb_unit, iimage, nimage )
         !
      ELSE IF( status == 1 .AND. iimage == 0 ) THEN
         !
-        WRITE(neb_unit,*) trim(dummy)
+        WRITE(neb_unit,'(A)') trim(dummy)
         !
      ELSE IF( status == 2 .AND. iimage > 0 ) THEN
         !
-        WRITE(neb_unit,*) trim(dummy)
+        WRITE(neb_unit,'(A)') trim(dummy)
         !
      ELSE IF( status == 3 .AND. iimage > 0 .AND. iimage == nimage ) THEN
         !
-        WRITE(neb_unit,*) trim(dummy)
+        WRITE(neb_unit,'(A)') trim(dummy)
         !
      END IF
      !
