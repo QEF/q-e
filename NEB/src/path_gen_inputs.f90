@@ -47,7 +47,7 @@ SUBROUTINE parse_and_split ( parse_unit, neb_unit, iimage, nimage )
   ! Poor man parsing of NEB input file
   ! Data is read from "parse_unit", written to "neb_unit", for image "iimage"
   ! On output, "nimage" is the number of images read from "parse_unit"
-  ! Must be called first with iimage = 0, later with iimage = 1, nimage
+  ! Must be called first with iimage = 0, later with iimage = 1,...,nimage
   ! parse_unit  must connected to the NEB input file
   ! neb_unit    must be connected to the output file, either neb input
   !             for iimage=0 or engine input for iimage > 0
@@ -69,8 +69,8 @@ SUBROUTINE parse_and_split ( parse_unit, neb_unit, iimage, nimage )
   read_loop: DO
      !
      READ(parse_unit,fmt='(A512)',END=10) dummy
-     IF ( skip_line(dummy) ) CYCLE
-     IF( dummy == "END" ) THEN
+     IF( skip_line(dummy) ) CYCLE
+     IF( trim(adjustl(dummy)) == "END" ) THEN
         EXIT read_loop
      ELSE IF( trim(adjustl(dummy)) == "BEGIN" ) THEN
         status=0

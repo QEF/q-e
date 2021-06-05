@@ -1,3 +1,4 @@
+bcast_file.o : ../../UtilXlib/mp.o
 compute_scf.o : ../../Modules/cell_base.o
 compute_scf.o : ../../Modules/constants.o
 compute_scf.o : ../../Modules/control_flags.o
