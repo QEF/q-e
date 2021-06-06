@@ -2295,14 +2295,14 @@ SUBROUTINE compute_mmn
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
-   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
+   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0
    INTEGER :: ikevc, ikpevcq, s, counter, ik_g_w90
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), evc_kb_m(:,:), evc_kb(:,:), &
                                Mkb(:,:), aux_nc(:,:)
    COMPLEX(DP), ALLOCATABLE :: evc_k(:, :)
    !! Wavefunction at k. Contains only the included bands.
-   COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
+   COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:,:), qgm(:), qq_so(:,:,:,:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:,:)
    COMPLEX(DP)              :: mmn, phase1
    real(DP)                 :: arg, g_(3)
    INTEGER                  :: nn,inn,loop,loop2
@@ -2334,10 +2334,8 @@ SUBROUTINE compute_mmn
       CALL utility_open_output_file("mmn", .TRUE., iun_mmn)
       IF (ionode) WRITE(iun_mmn, *) num_bands, iknum, nnb
    ENDIF
-
    !
    !   USPP
-   !
    !
    IF(okvan) THEN
       CALL allocate_bec_type(nkb, num_bands, becp)
@@ -2345,53 +2343,49 @@ SUBROUTINE compute_mmn
       !
       !     qb is  FT of Q(r)
       !
-      nbt = nnb * nks
+      ALLOCATE(qg(nnb))
+      ALLOCATE(dxk(3, nnb, nks))
+      ALLOCATE(ylm(nnb, lmaxq*lmaxq))
+      ALLOCATE(qgm(nnb))
+      ALLOCATE(qb(nhm, nhm, ntyp, nnb, nks))
+      ALLOCATE(qq_so(nhm, nhm, 4, ntyp))
+      qb = (0.0_DP, 0.0_DP)
       !
-      ALLOCATE( qg(nbt) )
-      ALLOCATE (dxk(3,nbt))
-      !
-      ind = 0
       DO ik = 1, nks
          IF (lsda .AND. isk(ik) /= ispinw) CYCLE
          ik_g_w90 = global_kpoint_index(nkstot, ik) - ikstart + 1
          !
          DO ib = 1, nnb
-            ind = ind + 1
             ikp = kpb(ik_g_w90, ib)
             !
             g_(:) = REAL(g_kpb(:, ik_g_w90, ib), KIND=DP)
             CALL cryst_to_cart (1, g_, bg, 1)
-            dxk(:, ind) = xk_all(:, ikp) + g_(:) - xk(:, ik)
-            qg(ind) = SUM(dxk(:,ind) * dxk(:,ind))
+            dxk(:, ib, ik) = xk_all(:, ikp) + g_(:) - xk(:, ik)
+            qg(ib) = SUM(dxk(:, ib, ik) * dxk(:, ib, ik))
          ENDDO
 !         write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
-      ENDDO
-
-      ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-      ALLOCATE( qb (nhm, nhm, ntyp, nbt) )
-      ALLOCATE( qq_so (nhm, nhm, 4, ntyp) )
-      !
-      CALL ylmr2 (lmaxq*lmaxq, nbt, dxk, qg, ylm)
-      qg(:) = sqrt(qg(:)) * tpiba
-      !
-      DO nt = 1, ntyp
-         IF (upf(nt)%tvanp ) THEN
-            DO ih = 1, nh (nt)
-               DO jh = 1, nh (nt)
-                  CALL qvan2 (nbt, ih, jh, nt, qg, qgm, ylm)
-                  qb (ih, jh, nt, 1:nbt) = omega * qgm(1:nbt)
+         !
+         CALL ylmr2 (lmaxq*lmaxq, nnb, dxk(:, :, ik), qg, ylm)
+         qg(:) = sqrt(qg(:)) * tpiba
+         !
+         DO nt = 1, ntyp
+            IF (upf(nt)%tvanp ) THEN
+               DO ih = 1, nh (nt)
+                  DO jh = 1, nh (nt)
+                     CALL qvan2 (nnb, ih, jh, nt, qg, qgm, ylm)
+                     qb(ih, jh, nt, 1:nnb, ik) = omega * qgm(1:nnb)
+                  ENDDO
                ENDDO
-            ENDDO
-         ENDIF
+            ENDIF
+         ENDDO
       ENDDO
       !
-      DEALLOCATE (qg, qgm, ylm )
+      DEALLOCATE(qg, qgm, ylm)
       !
    ENDIF
    !
    WRITE(stdout, '(a,i8)') ' Number of local k points = ', nks
    !
-   ind = 0
    DO ik = 1, nks
       !
       WRITE (stdout,'(i8)',advance='no') ik
@@ -2428,8 +2422,6 @@ SUBROUTINE compute_mmn
       !do ib=1,nnb(ik)
       DO ib=1,nnb
          !
-         ind = ind + 1
-         !
          ! Read wavefunction at k+b. If okvan, also compute the product
          ! of beta functions with the wavefunctions.
          !
@@ -2447,7 +2439,7 @@ SUBROUTINE compute_mmn
             ENDIF
          ENDIF
          !
-         IF(okvan .AND. lspinorb) CALL transform_qq_so(qb(:,:,:,ind), qq_so)
+         IF(okvan .AND. lspinorb) CALL transform_qq_so(qb(:,:,:,ib,ik), qq_so)
          !
          !
          Mkb(:,:) = (0.0d0,0.0d0)
@@ -2500,7 +2492,7 @@ SUBROUTINE compute_mmn
                   !
                   IF ( ityp(na) /= nt ) CYCLE
                   !
-                  arg = dot_product( dxk(:,ind), tau(:,na) ) * tpi
+                  arg = dot_product( dxk(:,ib,ik), tau(:,na) ) * tpi
                   phase1 = cmplx( cos(arg), -sin(arg) ,kind=DP)
                   !
                   DO jh = 1, nh(nt)
@@ -2512,7 +2504,7 @@ SUBROUTINE compute_mmn
                            IF (gamma_only) THEN
                               DO n = 1, m ! Mkb(m,n) is symmetric in m and n for gamma_only case
                                  Mkb(m,n) = Mkb(m,n) + &
-                                      phase1 * qb(ih,jh,nt,ind) * &
+                                      phase1 * qb(ih,jh,nt,ib,ik) * &
                                       becp%r(ikb,m) * becp2%r(jkb,n)
                               ENDDO
                            ELSEIF (noncolin) then
@@ -2527,7 +2519,7 @@ SUBROUTINE compute_mmn
                                        )
                                  ELSE
                                     Mkb(m,n) = Mkb(m,n) + &
-                                      phase1 * qb(ih,jh,nt,ind) * &
+                                      phase1 * qb(ih,jh,nt,ib,ik) * &
                                       (conjg( becp%nc(ikb, 1, m) ) * becp2%nc(jkb, 1, n) &
                                         + conjg( becp%nc(ikb, 2, m) ) * becp2%nc(jkb, 2, n) )
                                  ENDIF
@@ -2535,7 +2527,7 @@ SUBROUTINE compute_mmn
                            ELSE
                               DO n = 1, num_bands
                                  Mkb(m,n) = Mkb(m,n) + &
-                                      phase1 * qb(ih,jh,nt,ind) * &
+                                      phase1 * qb(ih,jh,nt,ib,ik) * &
                                       conjg( becp%k(ikb,m) ) * becp2%k(jkb,n)
                               ENDDO
                            ENDIF
