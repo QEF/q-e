@@ -3494,9 +3494,9 @@ SUBROUTINE utility_open_output_file(postfix, formatted, iun)
       filename = TRIM(seedname) // "." // TRIM(postfix)
       IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
       IF (formatted) THEN
-         OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='formatted')
+         OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='formatted', STATUS="REPLACE")
       ELSE
-         OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='unformatted')
+         OPEN(NEWUNIT=iun, FILE=TRIM(filename), FORM='unformatted', STATUS="REPLACE")
       ENDIF
    ENDIF
    !
@@ -3994,7 +3994,7 @@ SUBROUTINE compute_amn_with_scdm
       WRITE(stdout, '(a,I5)') " Number of pivot points with spin up  : ", count_piv_spin_up
       WRITE(stdout, '(a,I5)') " Number of pivot points with spin down: ", n_wannier - count_piv_spin_up
    ELSE
-      piv_pos(:) = piv(:)
+      piv_pos(1:n_wannier) = piv(1:n_wannier)
       piv_spin(:) = 0
       WRITE(stdout, '(a,i8)') ' Number of pivot points: ', n_wannier
    ENDIF
@@ -4311,7 +4311,7 @@ SUBROUTINE write_band
       IF (me_pool == root_pool) THEN
          filename = TRIM(seedname) // ".eig"
          IF (.NOT. ionode) filename = TRIM(filename) // TRIM(int_to_char(my_pool_id+1))
-         OPEN(NEWUNIT=iun_band, FILE=TRIM(filename), FORM='FORMATTED')
+         OPEN(NEWUNIT=iun_band, FILE=TRIM(filename), FORM='FORMATTED', STATUS='REPLACE')
       ENDIF
    ELSEIF (wan_mode == 'library') THEN
       ALLOCATE(eigval(num_bands, iknum))
