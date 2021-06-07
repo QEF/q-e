@@ -692,7 +692,6 @@
   !
   ! file with rotation matrix U(k) for interpolation
   filukk = TRIM(prefix) // '.ukk'
-  !
   IF (nsmear < 1) CALL errore('epw_readin', 'Wrong number of nsmears', 1)
   IF (iverbosity < 0 .OR. iverbosity > 4) CALL errore('epw_readin', 'Wrong iverbosity', 1)
   IF (epbread .AND. epbwrite) CALL errore('epw_readin', 'epbread cannot be used with epbwrite', 1)
