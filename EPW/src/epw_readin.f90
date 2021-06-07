@@ -68,10 +68,11 @@
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
   USE ions_base,     ONLY : amass
-  USE mp_world,      ONLY : world_comm, mpime
+  USE mp_world,      ONLY : world_comm, mpime, nproc
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY, eps16
-  USE mp_global,     ONLY : my_pool_id, me_pool
+  USE mp_pools,      ONLY : my_pool_id, me_pool, npool
+  USE mp_images,     ONLY : nimage
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, qestdin, stdout
   USE io_var,        ONLY : iunkf, iunqf
   USE noncollin_module, ONLY : npol, noncolin
@@ -102,6 +103,7 @@
   !! Output directory
   CHARACTER(LEN = 512) :: line
   !! Line in input file
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: ios2
@@ -136,7 +138,7 @@
   NAMELIST / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf, rand_q, rand_nq, rand_k,   &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub, rand_nk, specfun_pl, nswc, &
-       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps, nswfc,    &
+       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, nswfc,    &
        eig_read, wepexst, epexst, vme, elecselfen, phonselfen, use_ws, nc,     &
        degaussw, fsthick, nsmear, delta_smear, nqf1, nqf2, nqf3, nkf1, nkf2,   &
        dvscf_dir, ngaussw, epmatkqread, selecqread, nkf3, mp_mesh_k, mp_mesh_q,&
@@ -355,10 +357,18 @@
   ! reduce_unk             : If .TRUE., plot Wannier functions on reduced grids
   !
   ! Added by Samuel Ponc\'e, Hyungjun Lee and Roxana Margine
-  ! vme : if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
+  ! vme : if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p/m+i[V_NL,r]|\psi_nk>
   !     : if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
   !     : Note: Before v5.4, vme = .FALSE. was the velocity in the local approximation as <\psi_mk|p|\psi_nk>
   !             Before v5.4, vme = .TRUE. was = to 'wannier'
+  !
+  !
+  IF ( npool * nimage /= nproc ) THEN
+    CALL errore("epw_readin", "Number of processes must be equal to product "//&
+                "of number of pools and"//new_line('n')//"     number of "//&
+                "images"//new_line('n')//"     Image parallelization can be used "//&
+                "only in calculations on coarse grid.", 1)
+  END IF
   !
   nk1tmp = 0
   nk2tmp = 0
@@ -744,8 +754,6 @@
       'Error: longrange or shortrange can only be true if lpolar is true as well.', 1)
   IF (longrange .AND. shortrange) CALL errore('epw_readin',&
       'Error: longrange and shortrange cannot be both true.', 1)
-  IF (epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_readin', &
-      'Error: kmaps has to be true for a restart run. ', 1)
   IF (.NOT. epwread .AND. .NOT. epwwrite) CALL errore('epw_readin', &
       'Error: Either epwread or epwwrite needs to be true. ', 1)
   IF (lscreen .AND. etf_mem == 2) CALL errore('epw_readin', 'Error: lscreen not implemented with etf_mem=2', 1)
@@ -908,8 +916,8 @@
   !
   xq(:) = zero
   !
-  tmp_dir = TRIM(outdir)
-  dvscf_dir = TRIM(dvscf_dir) // '/'
+  tmp_dir = trimcheck(outdir)
+  dvscf_dir = trimcheck(dvscf_dir)
   !
   CALL bcast_epw_input()
   !

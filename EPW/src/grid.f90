@@ -105,13 +105,14 @@
           !
         ENDDO
         CLOSE(iunkf)
-        IF (imatches("cartesian", coordinate_type)) THEN
-          CALL cryst_to_cart(nkqtotf, xkf_, at, -1)
-        ENDIF
         !
         ! redefine nkqtotf to include the k+q points
         !
         nkqtotf = 2 * nkqtotf
+        !
+        IF (imatches("cartesian", coordinate_type)) THEN
+          CALL cryst_to_cart(nkqtotf, xkf_, at, -1)
+        ENDIF
         !
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
@@ -407,16 +408,14 @@
           !
         ENDDO
         CLOSE(iunkf)
-        IF (imatches("cartesian", coordinate_type)) THEN
-          CALL cryst_to_cart(nkqtotf, xkf, at, -1)
-        ENDIF
         !
         ! redefine nkqtotf to include the k+q points
         !
         nkqtotf = 2 * nkqtotf
         !
-        ! bring xkf in crystal coordinates
-        ! CALL cryst_to_cart(nkqtotf, xkf, at, -1)
+        IF (imatches("cartesian", coordinate_type)) THEN
+          CALL cryst_to_cart(nkqtotf, xkf, at, -1)
+        ENDIF
         !
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN

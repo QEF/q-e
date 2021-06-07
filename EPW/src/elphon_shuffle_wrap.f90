@@ -72,7 +72,7 @@
   USE ph_restart,    ONLY : read_disp_pattern_only
   USE io_epw,        ONLY : read_ifc_epw, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
-  USE rigid_epw,     ONLY : compute_umn_c
+  USE rigid_epw,     ONLY : compute_umn_c !, find_gmin ! Temporarily commented by H. Lee
   USE rotate,        ONLY : rotate_epmat, rotate_eigenm, star_q2, gmap_sym
   USE pw2wan2epw,    ONLY : compute_pmn_para
 #if defined(__NAG)
@@ -626,6 +626,10 @@
         !
         IF (iq == 1) WRITE(stdout, *)
         WRITE(stdout, 5) nqc, xq
+        ! Temporarily commented by H. Lee
+!        aq  = xq
+!        CALL cryst_to_cart(1, aq, at, -1)
+!        CALL find_gmin(aq)
         !
         ! Prepare the kmap for the refolding
         !

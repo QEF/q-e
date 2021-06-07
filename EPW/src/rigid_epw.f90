@@ -13,7 +13,15 @@
   !! This module contains routine linked with the calculation of the rigid-ion
   !! (long-range) term for q.
   !!
+  USE kinds, ONLY: DP
+  !
   IMPLICIT NONE
+  SAVE
+
+  INTEGER :: igmin(3)
+  !!
+  REAL(KIND = DP) :: qqcut
+  !!
   !
   CONTAINS
     !
@@ -42,6 +50,73 @@
     !--------------------------------------------------------------------------
     END FUNCTION H_eps
     !--------------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE find_gmin(q)
+    !-----------------------------------------------------------------------
+    !!
+    !! Find the index of G vectors for the minimum distance and
+    !! the cut-off for the complete first shell.
+    !!
+    USE constants_epw, ONLY : eps8
+    USE cell_base,     ONLY : bg
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: q(3)
+    !! q-vector from the full coarse or fine grid.
+    !
+    ! Local variables
+    INTEGER         :: m1
+    !! Loop over q-points
+    INTEGER         :: m2
+    !! Loop over q-points
+    INTEGER         :: m3
+    !! Loop over q-points
+    REAL(KIND = DP) :: g1
+    !!
+    REAL(KIND = DP) :: g2
+    !!
+    REAL(KIND = DP) :: g3
+    !!
+    REAL(KIND = DP) :: qq
+    !!
+    REAL(KIND = DP) :: qqmin
+    !!
+    REAL(KIND = DP) :: qtmp(3)
+    !!
+    !
+    qtmp(:) = q(:) - INT(q(:))
+    CALL cryst_to_cart(1, qtmp, bg, 1)
+    qqmin = 1E10
+    DO m1 = -2, 2
+      DO m2 = -2, 2
+        DO m3 = -2, 2
+          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) - qtmp(1)
+          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) - qtmp(2)
+          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) - qtmp(3)
+          qq = g1 * g1 + g2 * g2 + g3 * g3
+          IF (qqmin > qq) THEN
+            qqmin = qq
+            igmin(1) = m1 + INT(q(1))
+            igmin(2) = m2 + INT(q(2))
+            igmin(3) = m3 + INT(q(3))
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    qqcut = -1E10
+    DO m1 = 1, 3
+      qqcut = MAX(qqcut, SUM(bg(:, m1)**2))
+    ENDDO
+    qqcut = qqcut + eps8
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE find_gmin
+    !--------------------------------------------------------------------------
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE rgd_blk(nqc1, nqc2, nqc3, nat, dyn, q, tau, epsil, zeu, signe)
     !-----------------------------------------------------------------------

@@ -91,7 +91,8 @@
                             nesting_fn_q
   USE spectral_func, ONLY : spectral_func_el_q, spectral_func_ph_q, a2f_main,   &
                             spectral_func_pl_q
-  USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine_mem
+  USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine_mem !, &
+!                            find_gmin ! Temporarily commented by H. Lee
   USE indabs,        ONLY : indabs_main, renorm_eig, fermi_carrier_indabs
   USE io_indabs,     ONLY : indabs_read
 #if defined(__MPI)
@@ -1104,6 +1105,8 @@
       ENDIF
       !
       xxq = xqf(:, iq)
+      ! Temporarily commented by H. Lee
+!      CALL find_gmin(xxq)
       !
       ! ------------------------------------------------------
       ! dynamical matrix : Wannier -> Bloch
