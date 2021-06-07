@@ -1243,7 +1243,8 @@ CONTAINS
     INTEGER :: id_vec(6)
     !
 #if defined(__LIBXC)
-    call xclib_init_libxc_print_version_info
+    write( stdout, '(3X,"Using LIBXC version       = ",3I4)')&
+      &  XC_MAJOR_VERSION, XC_MINOR_VERSION, XC_MICRO_VERSION
     id_vec(1)=iexch ; id_vec(2)=icorr
     id_vec(3)=igcx  ; id_vec(4)=igcc
     id_vec(5)=imeta ; id_vec(6)=imetac
@@ -1272,25 +1273,6 @@ CONTAINS
 #endif
     RETURN
   END SUBROUTINE xclib_init_libxc
-  !
-  !--------------------------------------------------------------------------
-#if defined(__LIBXC)
-  SUBROUTINE xclib_init_libxc_print_version_info()
-    !------------------------------------------------------------------------
-    IMPLICIT NONE
-    INTERFACE
-      subroutine xc_version(major, minor, micro) bind(c)
-        use iso_c_binding
-        integer(c_int) :: major, minor, micro
-      end subroutine xc_version
-    end interface
-    INTEGER :: libxc_major, libxc_minor, libxc_micro
-    call xc_version(libxc_major, libxc_minor, libxc_micro)
-    write( stdout, '(5X,"Using LIBXC version       = ",3I4)')&
-      &  libxc_major, libxc_minor, libxc_micro
-    RETURN
-  END SUBROUTINE xclib_init_libxc_print_version_info
-#endif
   !
   !--------------------------------------------------------------------------
   SUBROUTINE xclib_finalize_libxc()

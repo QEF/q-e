@@ -1,6 +1,6 @@
  RUNNING ,mpirun -np 4 /home/hyk/Codes/Ab_Initio_package/QE_gitlab_official/test-suite/..//bin/cp.x -nk 1 -nd 1 -nb 1 -nt 1 -input nspin2.in
 
-     Program CP v.6.7GPU starts on  7Jun2021 at 10:40:49 
+     Program CP v.6.7GPU starts on  7Jun2021 at 11:56:23 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -200,6 +200,7 @@
    Specie:     2
 
                         dion 
+   Using LIBXC version       =    4   3   4
 
    Cell parameters from input file are used in electron mass preconditioning
    init_tpiba2=    0.27415568
@@ -1370,22 +1371,22 @@
 
 
      Called by MAIN_LOOP:
-     initialize   :      0.21s CPU      0.23s WALL (       1 calls)
-     main_loop    :     17.59s CPU     18.45s WALL (     138 calls)
-     cpr_total    :     17.60s CPU     18.46s WALL (       1 calls)
+     initialize   :      0.16s CPU      0.16s WALL (       1 calls)
+     main_loop    :     13.00s CPU     13.81s WALL (     138 calls)
+     cpr_total    :     13.01s CPU     13.82s WALL (       1 calls)
 
      Called by INIT_RUN:
 
      Called by CPR:
-     cpr_md       :     17.60s CPU     18.46s WALL (     138 calls)
-     move_electro :     17.46s CPU     18.30s WALL (     138 calls)
+     cpr_md       :     13.01s CPU     13.82s WALL (     138 calls)
+     move_electro :     12.89s CPU     13.69s WALL (     138 calls)
 
      Called by move_electrons:
-     rhoofr       :      4.08s CPU      4.18s WALL (     139 calls)
-     vofrho       :      9.28s CPU      9.99s WALL (     139 calls)
-     dforce       :      4.13s CPU      4.17s WALL (     556 calls)
+     rhoofr       :      2.86s CPU      2.93s WALL (     139 calls)
+     vofrho       :      7.21s CPU      7.92s WALL (     139 calls)
+     dforce       :      2.82s CPU      2.85s WALL (     556 calls)
      calphi       :      0.01s CPU      0.01s WALL (     139 calls)
-     nlfl         :      0.01s CPU      0.01s WALL (     139 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (     139 calls)
 
      Called by ortho:
      ortho_iter   :      0.01s CPU      0.01s WALL (     278 calls)
@@ -1393,7 +1394,7 @@
      rhoset       :      0.01s CPU      0.01s WALL (     278 calls)
      sigset       :      0.01s CPU      0.01s WALL (     278 calls)
      tauset       :      0.01s CPU      0.01s WALL (     278 calls)
-     ortho        :      0.05s CPU      0.05s WALL (     139 calls)
+     ortho        :      0.04s CPU      0.05s WALL (     139 calls)
      updatc       :      0.01s CPU      0.01s WALL (     139 calls)
 
      Small boxes:
@@ -1403,27 +1404,27 @@
      nlfq         :      0.02s CPU      0.02s WALL (     139 calls)
      nlsm1        :      0.00s CPU      0.00s WALL (     140 calls)
      nlsm2        :      0.02s CPU      0.02s WALL (     139 calls)
-     fft          :      3.37s CPU      3.51s WALL (    2086 calls)
-     ffts         :      0.88s CPU      0.89s WALL (     556 calls)
-     fftw         :      5.43s CPU      5.53s WALL (    6672 calls)
-     fft_scatt_xy :      1.74s CPU      1.78s WALL (    9314 calls)
-     fft_scatt_yz :      4.76s CPU      4.87s WALL (    9314 calls)
+     fft          :      2.29s CPU      2.41s WALL (    2086 calls)
+     ffts         :      0.62s CPU      0.63s WALL (     556 calls)
+     fftw         :      3.62s CPU      3.67s WALL (    6672 calls)
+     fft_scatt_xy :      1.25s CPU      1.28s WALL (    9314 calls)
+     fft_scatt_yz :      2.74s CPU      2.81s WALL (    9314 calls)
      betagx       :      0.03s CPU      0.03s WALL (       1 calls)
      qradx        :      0.00s CPU      0.00s WALL (       1 calls)
      gram         :      0.00s CPU      0.00s WALL (       1 calls)
-     nlinit       :      0.08s CPU      0.08s WALL (       1 calls)
+     nlinit       :      0.06s CPU      0.06s WALL (       1 calls)
      init_dim     :      0.01s CPU      0.01s WALL (       1 calls)
-     newnlinit    :      0.02s CPU      0.02s WALL (       1 calls)
-     from_scratch :      0.12s CPU      0.13s WALL (       1 calls)
+     newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
+     from_scratch :      0.09s CPU      0.10s WALL (       1 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
      calbec       :      0.00s CPU      0.00s WALL (     140 calls)
-     exch_corr    :      7.54s CPU      8.17s WALL (     139 calls)
+     exch_corr    :      5.99s CPU      6.64s WALL (     139 calls)
 
 
-     CP           :     17.82s CPU     18.70s WALL
+     CP           :     13.17s CPU     14.00s WALL
 
 
-   This run was terminated on:  10:41: 8   7Jun2021            
+   This run was terminated on:  11:56:37   7Jun2021            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
