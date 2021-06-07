@@ -92,7 +92,7 @@ MODULE path_read_namelists_module
      SUBROUTINE path_bcast()
        !-----------------------------------------------------------------------
        !
-       USE io_global, ONLY: ionode_id
+       USE io_global, ONLY: meta_ionode_id
        USE mp,        ONLY: mp_bcast
        USE mp_world,  ONLY: world_comm
        USE path_input_parameters_module
@@ -101,31 +101,31 @@ MODULE path_read_namelists_module
        !
        ! ... "path" variables broadcast
        !
-       CALL mp_bcast( restart_mode,         ionode_id, world_comm )
-       CALL mp_bcast( string_method,        ionode_id, world_comm ) 
-       CALL mp_bcast( num_of_images,        ionode_id, world_comm )
-       CALL mp_bcast( first_last_opt,       ionode_id, world_comm )
-       CALL mp_bcast( use_masses,           ionode_id, world_comm )
-       CALL mp_bcast( use_freezing,         ionode_id, world_comm )
-       CALL mp_bcast( fixed_tan,            ionode_id, world_comm )
-       CALL mp_bcast( CI_scheme,            ionode_id, world_comm )
-       CALL mp_bcast( opt_scheme,           ionode_id, world_comm )
-       CALL mp_bcast( temp_req,             ionode_id, world_comm )
-       CALL mp_bcast( ds,                   ionode_id, world_comm )
-       CALL mp_bcast( k_max,                ionode_id, world_comm )
-       CALL mp_bcast( k_min,                ionode_id, world_comm )
-       CALL mp_bcast( path_thr,             ionode_id, world_comm )
-       CALL mp_bcast( nstep_path,           ionode_id, world_comm )
+       CALL mp_bcast( restart_mode,    meta_ionode_id, world_comm )
+       CALL mp_bcast( string_method,   meta_ionode_id, world_comm ) 
+       CALL mp_bcast( num_of_images,   meta_ionode_id, world_comm )
+       CALL mp_bcast( first_last_opt,  meta_ionode_id, world_comm )
+       CALL mp_bcast( use_masses,      meta_ionode_id, world_comm )
+       CALL mp_bcast( use_freezing,    meta_ionode_id, world_comm )
+       CALL mp_bcast( fixed_tan,       meta_ionode_id, world_comm )
+       CALL mp_bcast( CI_scheme,       meta_ionode_id, world_comm )
+       CALL mp_bcast( opt_scheme,      meta_ionode_id, world_comm )
+       CALL mp_bcast( temp_req,        meta_ionode_id, world_comm )
+       CALL mp_bcast( ds,              meta_ionode_id, world_comm )
+       CALL mp_bcast( k_max,           meta_ionode_id, world_comm )
+       CALL mp_bcast( k_min,           meta_ionode_id, world_comm )
+       CALL mp_bcast( path_thr,        meta_ionode_id, world_comm )
+       CALL mp_bcast( nstep_path,      meta_ionode_id, world_comm )
        !
        ! ... "FCP" variables broadcast
        !
-       CALL mp_bcast( lfcp,                 ionode_id, world_comm )
-       CALL mp_bcast( fcp_mu,               ionode_id, world_comm )
-       CALL mp_bcast( fcp_thr,              ionode_id, world_comm )
-       CALL mp_bcast( fcp_scheme,           ionode_id, world_comm )
-       CALL mp_bcast( fcp_ndiis,            ionode_id, world_comm )
-       CALL mp_bcast( fcp_rdiis,            ionode_id, world_comm )
-       CALL mp_bcast( fcp_max_volt,         ionode_id, world_comm )
+       CALL mp_bcast( lfcp,            meta_ionode_id, world_comm )
+       CALL mp_bcast( fcp_mu,          meta_ionode_id, world_comm )
+       CALL mp_bcast( fcp_thr,         meta_ionode_id, world_comm )
+       CALL mp_bcast( fcp_scheme,      meta_ionode_id, world_comm )
+       CALL mp_bcast( fcp_ndiis,       meta_ionode_id, world_comm )
+       CALL mp_bcast( fcp_rdiis,       meta_ionode_id, world_comm )
+       CALL mp_bcast( fcp_max_volt,    meta_ionode_id, world_comm )
        !
        RETURN
        !

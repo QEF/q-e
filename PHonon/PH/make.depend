@@ -206,8 +206,6 @@ c_bands_ph.o : ../../PW/src/pwcom.o
 c_bands_ph.o : ../../UtilXlib/mp.o
 c_bands_ph.o : ../../upflib/uspp.o
 c_bands_ph.o : save_ph_input.o
-ccg_psi.o : ../../Modules/kind.o
-ccg_psi.o : ../../Modules/noncol.o
 cch_psi_all.o : ../../LR_Modules/lrcom.o
 cch_psi_all.o : ../../Modules/becmod.o
 cch_psi_all.o : ../../Modules/kind.o

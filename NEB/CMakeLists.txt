@@ -1,4 +1,5 @@
 set(src_neb
+    src/bcast_file.f90
     src/compute_scf.f90
     src/engine_to_path_pos.f90
     src/engine_to_path_alat.f90
