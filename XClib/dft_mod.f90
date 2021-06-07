@@ -1281,7 +1281,7 @@ CONTAINS
     INTERFACE
       subroutine xc_version(major, minor, micro) bind(c)
         use iso_c_binding
-        integer(c_int) :: major, minor, micro 
+        integer(c_int) :: major, minor, micro
       end subroutine xc_version
     end interface
     INTEGER :: libxc_major, libxc_minor, libxc_micro
