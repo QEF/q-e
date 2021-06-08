@@ -1,0 +1,4 @@
+The benchmark results in this folder is generated using libxc-4.3.4.
+It has been observed that version differences between libxc (e.g., libxc-5.1.2) can
+yield small but sizable differences and fail the test due to tight error threshold.
+See `https://gitlab.com/QEF/q-e/-/merge_requests/1446` for additional discussion.
