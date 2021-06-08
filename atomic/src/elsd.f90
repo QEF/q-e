@@ -18,7 +18,7 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   use kinds, only : DP
   use constants, only: fpi
   use radial_grids, only: ndmx, radial_grid_type
-  use xc_lib, only: xclib_get_id, xclib_dft_is
+  use xc_lib, only: xclib_get_id, xclib_dft_is, xclib_dft_is_libxc
   use ld1inc, only: vx, noscf, tau, vtau
   implicit none
   integer, intent(in) :: nwf, nspin
@@ -34,8 +34,8 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   logical:: oep, meta, kli
 
   if (noscf) return
-  oep = xclib_get_id('LDA','EXCH').eq.4
-  kli = xclib_get_id('LDA','EXCH').eq.10
+  oep = xclib_get_id('LDA','EXCH')== 4 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
+  kli = xclib_get_id('LDA','EXCH')==10 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
 
   meta = xclib_dft_is('meta')
 
