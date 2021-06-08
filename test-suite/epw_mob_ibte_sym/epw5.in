@@ -3,11 +3,9 @@
   prefix      = 'si'
   amass(1)    = 28.0855
   outdir      = './'
-
   iverbosity  = 0
 
   elph        = .true.
-  kmaps       = .true.
   epbwrite    = .false.
   epbread     = .false.
   epwwrite    = .false.

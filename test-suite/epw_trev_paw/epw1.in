@@ -5,7 +5,6 @@
   dvscf_dir   = './save'
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
   epwwrite    = .true.

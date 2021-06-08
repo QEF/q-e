@@ -6,7 +6,6 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .true.
   epwwrite    = .false.
   epwread     = .true.
   etf_mem     = 1

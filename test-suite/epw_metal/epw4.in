@@ -5,7 +5,6 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .true.
   epwwrite    = .false.
   epwread     = .true.
   vme         = 'dipole'
