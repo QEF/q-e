@@ -69,6 +69,14 @@ inputs_args = ('vc-relax-scf-1.in' ,'1'), ('vc-relax-scf-2.in' ,'2')
 program = PW
 inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
+[cp_h2o_scan_libxc/]
+program = CP
+tolerance = ( (2.0e-5, 1.0e-5, 'e1'),
+              (4.0e-2, 2.0e-3, 's1'),
+              (3.5e-2, 1.0e-2, 'v1u'),
+              (1.0e-2, 1.0e-2, 'v1d'),
+              (6.0e-3, 1.0e-3, 't1') )
+
 [ph_base/]
 program = PH
 inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX.in', '2'), ('si.scf.in', '1'), ('si.phG.in', '2'), ('si.phX.in', '2'), ('nipaw.scf.in', '1'), ('nipaw.phX.in', '2')
