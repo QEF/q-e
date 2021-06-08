@@ -4,9 +4,7 @@
   amass(1)    = 12.01078
   outdir      = './'
 
-
   elph        = .false.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
   etf_mem     = 1

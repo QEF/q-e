@@ -7,7 +7,6 @@
   iverbosity  = 3
 
   elph        = .true.
-  kmaps       = .true.
   etf_mem     = 0
   vme         = 'dipole'
 

@@ -3,11 +3,9 @@
   prefix      = 'diam'
   amass(1)    = 12.01078
   outdir      = './'
-
   iverbosity  = 1
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
 

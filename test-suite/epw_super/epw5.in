@@ -7,7 +7,6 @@
 
   ep_coupling = .false.
   elph        = .false.
-  kmaps       = .true.
   epwwrite    = .false.
   epwread     = .true.
   etf_mem     = 1

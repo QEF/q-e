@@ -8,7 +8,6 @@
   iverbosity  = 1
 
   elph        = .true.
-  kmaps       = .true.
   epwwrite    = .false.
   epwread     = .true.
   etf_mem     = 1

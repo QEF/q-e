@@ -3,11 +3,9 @@
   prefix      = 'si'
   amass(1)    = 28.0855
   outdir      = './'
-
   iverbosity  = 0
 
   elph        = .true.
-  kmaps       = .true.
   epwwrite    = .false.
   epwread     = .true.
   etf_mem     = 1

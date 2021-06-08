@@ -8,7 +8,6 @@
   iverbosity  = 0
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
   epwwrite    = .true.

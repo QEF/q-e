@@ -7,7 +7,6 @@
 
   ep_coupling = .true.
   elph        = .true.
-  kmaps       = .true.
   epwwrite    = .false.
   epwread     = .true.
   ephwrite    = .true. ! Writes .ephmat files used when Eliasberg = .true.

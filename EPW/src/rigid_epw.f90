@@ -1175,7 +1175,10 @@
     SUBROUTINE rgd_blk_der(nqc1, nqc2, nqc3, nat, dyn_der, q, tau, epsil, zeu, signe)
     !-----------------------------------------------------------------------
     !!
-    !! compute the rigid-ion (long-range) derivative term for q
+    !! Compute the rigid-ion (long-range) derivative term for q
+    !! Note 1: the derivative is only made on the dipole (no quadrupole).
+    !! Note 2: would need to be updated for 2D but not important for now as only used for smearing.
+    !! 2019 - Samuel Ponce & Francesco Macheda
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi, e2, ci, twopi
@@ -1217,30 +1220,32 @@
     !! Cartesian direction 1
     INTEGER :: j
     !! Cartesian direction 1
-    INTEGER :: m1, m2, m3
-    !! Loop over q-points
     INTEGER :: isum
     !! Index to sum the different component of the derivative
+    INTEGER :: m1, m2, m3
+    !! Loop over q-points
+    INTEGER :: nr1x, nr2x, nr3x
+    !! Minimum supercell size to include all vector such that G^2 < geg
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: alph
-    !! Missing definition
+    !! Ewald parameter
     REAL(KIND = DP) :: fac
     !! Missing definition
-    REAL(KIND = DP) :: g1, g2, g3
-    !! Missing definition
+    REAL(KIND = DP) :: gg(3)
+    !! G-vectors
     REAL(KIND = DP) :: facgd
-    !! Missing definition
+    !! fac * EXP(-geg / (alph * 4.0d0)) / geg
     REAL(KIND = DP) :: arg
-    !! Missing definition
+    !! Argument of the exponential
     REAL(KIND = DP) :: gmax
-    !! Missing definition
+    !! Maximum G
     REAL(KIND = DP) :: arg_no_g(3)
     !! Missing definition
     REAL(KIND = DP) :: zag(3)
-    !! Missing definition
+    !! Z * G
     REAL(KIND = DP) :: zbg(3)
-    !! Missing definition
+    !! Z * G
     REAL(KIND = DP) :: zbg_der(3, 3)
     !! Missing definition
     REAL(KIND = DP) :: zag_der(3, 3)
@@ -1264,51 +1269,63 @@
     geg = gmax * alph * 4.0d0
     fac = signe * e2 * fpi / omega
     !
-    DO m1 = -nqc1, nqc1
-      DO m2 = -nqc2, nqc2
-        DO m3 = -nqc3, nqc3
+    IF (nqc1 == 1) THEN
+      nr1x = 0
+    ELSE
+      nr1x = INT(SQRT(geg) / SQRT(bg(1, 1)**2 + bg(2, 1)**2 + bg(3, 1)**2)) + 1
+    ENDIF
+    IF (nqc2 == 1) THEN
+      nr2x = 0
+    ELSE
+      nr2x = INT(SQRT(geg) / SQRT(bg(1, 2)**2 + bg(2, 2)**2 + bg(3, 2)**2)) + 1
+    ENDIF
+    IF (nqc3 == 1) THEN
+      nr3x = 0
+    ELSE
+      nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
+    ENDIF
+    !
+    DO m1 = -nr1x, nr1x
+      DO m2 = -nr2x, nr2x
+        DO m3 = -nr3x, nr3x
           !
-          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3)
-          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3)
-          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3)
+          gg(1) = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
+          gg(2) = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
+          gg(3) = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
           !
-          g1 = g1 + q(1)
-          g2 = g2 + q(2)
-          g3 = g3 + q(3)
-          !
-          geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
-                 g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
-                 g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
+          geg = (gg(1) * (epsil(1, 1) * gg(1) + epsil(1, 2) * gg(2) + epsil(1, 3) * gg(3)) + &
+                 gg(2) * (epsil(2, 1) * gg(1) + epsil(2, 2) * gg(2) + epsil(2, 3) * gg(3)) + &
+                 gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3)))
           !
           IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
             !
             facgd = fac * EXP(-geg / (alph * 4.0d0) ) / geg * (alat / twopi)
             !
             DO nb = 1, nat
-              zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
+              zbg(:) = gg(1) * zeu(1, :, nb) + gg(2) * zeu(2, :, nb) + gg(3) * zeu(3, :, nb)
               zbg_der(:, :) = zeu(:, :, nb)
               DO na = 1, nat
-                zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
+                zag(:) = gg(1) * zeu(1, :, na) + gg(2) * zeu(2, :, na) + gg(3) * zeu(3, :, na)
                 zag_der(:, :) = zeu(:, :, na)
-                arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1, nb)) + &
-                                   g2 * (tau(2, na) - tau(2, nb)) + &
-                                   g3 * (tau(3, na) - tau(3, nb)))
+                arg = 2.d0 * pi * (gg(1) * (tau(1, na) - tau(1, nb)) + &
+                                   gg(2) * (tau(2, na) - tau(2, nb)) + &
+                                   gg(3) * (tau(3, na) - tau(3, nb)))
                 arg_no_g(:) = 2.d0 * pi * (tau(:,na) - tau(:,nb))
                 !
-                facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
+                facg = facgd * CMPLX(COS(arg), SIN(arg), KIND=DP)
                 DO j = 1, 3
                   DO i = 1, 3
                     dyn_der_part(1, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag_der(:, i) * zbg(j)
                     dyn_der_part(2, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag(i) * zbg_der(:, j)
                     dyn_der_part(3, :, (na - 1) * 3 + i,( nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
-                      * (epsil(:, 1) * g1 + epsil(:, 2) * g2 + epsil(:, 3) * g3) / geg
+                      * (epsil(:, 1) * gg(1) + epsil(:, 2) * gg(2) + epsil(:, 3) * gg(3)) / geg
                     dyn_der_part(4, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
-                      * (epsil(1, :) * g1 + epsil(2, :) * g2 + epsil(3, :) * g3) / geg
+                      * (epsil(1, :) * gg(1) + epsil(2, :) * gg(2) + epsil(3, :) * gg(3)) / geg
                     dyn_der_part(5, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag(i) * zbg(j) * ci * arg_no_g(:)
                     dyn_der_part(6, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
-                      * (epsil(1, :) * g1 + epsil(2, :) * g2 + epsil(3, :) * g3) / (4d0 * alph)
+                      * (epsil(1, :) * gg(1) + epsil(2, :) * gg(2) + epsil(3, :) * gg(3)) / (4d0 * alph)
                     dyn_der_part(7, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
-                      * (epsil(:, 1) * g1 + epsil(:, 2) * g2 + epsil(:, 3) * g3) / (4d0 * alph)
+                      * (epsil(:, 1) * gg(1) + epsil(:, 2) * gg(2) + epsil(:, 3) * gg(3)) / (4d0 * alph)
                     DO isum = 1, 7
                       dyn_der(:, (na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn_der(:, (na - 1) * 3 + i, (nb - 1) * 3 + j) &
                         + dyn_der_part(isum, :, (na - 1) * 3 + i, (nb - 1) * 3 + j)
