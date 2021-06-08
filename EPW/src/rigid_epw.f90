@@ -203,7 +203,7 @@
     REAL(KIND = DP) :: alph
     !! Ewald parameter
     REAL(KIND = DP) :: fac
-    !! Missing definition
+    !! General prefactor
     REAL(KIND = DP) :: gg(3)
     !! G-vectors
     REAL(KIND = DP) :: facgd
@@ -237,7 +237,7 @@
     COMPLEX(KIND = DP) :: Qdd
     !! Dipole-dipole term
     COMPLEX(KIND = DP) :: facg
-    !! Missing definition
+    !! Atomic position exponential
     COMPLEX(KIND = DP) :: dyn_tmp(3 * nat, 3 * nat)
     !! Temporary dyn. matrice
     !
@@ -558,7 +558,9 @@
     ! Local variables
     INTEGER :: na
     !! Atom index 1
-    INTEGER :: ipol, jpol, kpol
+    INTEGER :: i
+    !! Cartesian index direction
+    INTEGER :: ipol, jpol
     !! Polarison direction
     INTEGER :: m1, m2, m3
     !! Loop over q-points
@@ -589,11 +591,11 @@
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: fac
-    !! Prefactor
+    !! General prefactor
     COMPLEX(KIND = DP) :: facqd
     !! Exp function
     COMPLEX(KIND = DP) :: facq
-    !! Prefactor
+    !! Atomic position exponential
     COMPLEX(KIND = DP) :: epmatl(nmodes)
     !! Long-range part of the el-ph matrix elements
     !
@@ -676,18 +678,22 @@
             DO na = 1, nat
               arg = - alat * (gg(1) * tau(1, na) + gg(2) * tau(2, na) + gg(3) * tau(3, na))
               facq = facqd * CMPLX(COS(arg), SIN(arg), KIND = DP)
-              DO ipol = 1, 3
-                zaq = gg(1) * zeu(1, ipol, na) + gg(2) * zeu(2, ipol, na) + gg(3) * zeu(3, ipol, na)
+              ! Cartesian direction
+              DO i = 1, 3
+                zaq = zero
+                DO ipol = 1, 3
+                  zaq = zaq + gg(ipol) * zeu(ipol, i, na)
+                ENDDO
                 !
                 Qqq = zero
-                DO jpol = 1, 3
-                  DO kpol = 1, 3
-                    Qqq = Qqq + 0.5 * gg(jpol) * gg(kpol) * Qmat(na, ipol, jpol, kpol)
+                DO ipol = 1, 3
+                  DO jpol = 1, 3
+                    Qqq = Qqq + 0.5 * gg(ipol) * gg(jpol) * Qmat(na, i, ipol, jpol)
                   ENDDO
                 ENDDO
                 !
-                epmat = epmat + facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + ipol, :) * bmat
-                epmatl = epmatl + facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + ipol, :) * bmat
+                epmat = epmat + facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + i, :) * bmat
+                epmatl = epmatl + facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + i, :) * bmat
                 !
               ENDDO !ipol
             ENDDO !nat
@@ -776,7 +782,9 @@
     ! Local variables
     INTEGER :: na
     !! Atom index 1
-    INTEGER :: ipol, jpol, kpol
+    INTEGER :: i
+    !! Cartesian index direction
+    INTEGER :: ipol, jpol
     !! Polarison
     INTEGER :: m1, m2, m3
     !! Loop over q-points
@@ -809,11 +817,11 @@
     REAL(KIND = DP) :: c
     !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: fac
-    !!
+    !! General prefactor
     COMPLEX(KIND = DP) :: facqd
-    !!
+    !! Ewald filtering
     COMPLEX(KIND = DP) :: facq
-    !!
+    !! Atomic position exponential
     COMPLEX(KIND = DP) :: epmatl(nbndsub, nbndsub, nmodes)
     !! Long-range part of the matrix element
     !
@@ -898,21 +906,25 @@
             !
             DO na = 1, nat
               arg = - alat * (gg(1) * tau(1, na) + gg(2) * tau(2, na) + gg(3) * tau(3, na))
-              facq = facqd * CMPLX(COS(arg), SIN(arg), kind=DP)
-              DO ipol = 1, 3
-                zaq = gg(1) * zeu(1, ipol, na) + gg(2) * zeu(2, ipol, na) + gg(3) * zeu(3, ipol, na)
+              facq = facqd * CMPLX(COS(arg), SIN(arg), KIND = DP)
+              ! Cartesian index direction
+              DO i = 1, 3
+                zaq = zero
+                DO ipol = 1, 3
+                  zaq = zaq + gg(ipol) * zeu(ipol, i, na)
+                ENDDO
                 !
                 Qqq = zero
-                DO jpol = 1, 3
-                  DO kpol = 1, 3
-                    Qqq = Qqq + 0.5 * gg(jpol) * gg(kpol) * Qmat(na, ipol, jpol, kpol)
+                DO ipol = 1, 3
+                  DO jpol = 1, 3
+                    Qqq = Qqq + 0.5 * gg(ipol) * gg(jpol) * Qmat(na, i, ipol, jpol)
                   ENDDO
                 ENDDO
                 !
                 DO imode = 1, nmodes
-                  CALL ZAXPY(nbndsub**2, facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + ipol, imode),&
+                  CALL ZAXPY(nbndsub**2, facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + i, imode),&
                               bmat(:, :), 1, epmat(:, :, imode), 1)
-                  CALL ZAXPY(nbndsub**2, facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + ipol, imode), &
+                  CALL ZAXPY(nbndsub**2, facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + i, imode), &
                               bmat(:, :), 1, epmatl(:, :, imode), 1)
                 ENDDO
                 !
@@ -1246,7 +1258,7 @@
     REAL(KIND = DP) :: alph
     !! Ewald parameter
     REAL(KIND = DP) :: fac
-    !! Missing definition
+    !! General prefactor
     REAL(KIND = DP) :: gg(3)
     !! G-vectors
     REAL(KIND = DP) :: facgd
@@ -1256,17 +1268,17 @@
     REAL(KIND = DP) :: gmax
     !! Maximum G
     REAL(KIND = DP) :: arg_no_g(3)
-    !! Missing definition
+    !! Difference of atomic position
     REAL(KIND = DP) :: zag(3)
     !! Z * G
     REAL(KIND = DP) :: zbg(3)
     !! Z * G
     REAL(KIND = DP) :: zbg_der(3, 3)
-    !! Missing definition
+    !! Z derivative
     REAL(KIND = DP) :: zag_der(3, 3)
-    !! Missing definition
+    !! Z derivative
     COMPLEX(KIND = DP) :: facg
-    !! Missing definition
+    !! Atomic position exponential
     !
     ! alph is the Ewald parameter, geg is an estimate of G^2
     ! such that the G-space sum is convergent for that alph
@@ -1387,8 +1399,9 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg, omega, alat
     USE ions_base,     ONLY : tau, nat
-    USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12
-    USE epwcom,        ONLY : shortrange, nbndsub
+    USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12, zero, eps8
+    USE epwcom,        ONLY : shortrange, nbndsub, lpolar, system_2d
+    USE elph2,         ONLY : area, Qmat
     !
     IMPLICIT NONE
     !
@@ -1420,67 +1433,146 @@
     ! Local variables
     INTEGER :: na
     !! Atom index 1
-    INTEGER :: ipol
+    INTEGER :: i
+    !! Cartesian index direction
+    INTEGER :: ipol, jpol
     !! Polarison
     INTEGER :: m1, m2, m3
     !! Loop over q-points
+    INTEGER :: nr1x, nr2x, nr3x
+    !! Minimum supercell size to include all vector such that G^2 < geg
+    REAL(KIND = DP):: metric
+    !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: arg
-    !!
+    !! Argument of the cos,sin for the Euler formula
     REAL(KIND = DP) :: zaq
-    !!
-    REAL(KIND = DP) :: g1, g2, g3
-    !!
+    !! Z^* \cdot (q+g)
+    REAL(KIND = DP) :: gg(3)
+    !! G-vector
     REAL(KIND = DP) :: gmax
-    !!
+    !!  Max G-vector
     REAL(KIND = DP) :: alph
-    !!
+    !! Ewald factor (arbitrary, here chosen to be 1)
     REAL(KIND = DP) :: geg
-    !!
+    !! <G| epsil | G>
+    REAL(KIND = DP) :: reff(2, 2)
+    !! Effective screening length for 2D materials
+    REAL(KIND = DP) :: grg
+    !! G-vector * reff * G-vector
+    REAL(KIND = DP) :: Qqq
+    !! In the case of Si, its a single value
+    REAL(KIND = DP) :: c
+    !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: fac
-    !!
+    !! General prefactor
     COMPLEX(KIND = DP) :: facqd
-    !!
+    !! Ewald filtering
     COMPLEX(KIND = DP) :: facq
-    !!
+    !! Atomic position exponential
     COMPLEX(KIND = DP) :: epmatl(nbndsub, nbndsub)
     !! Long-range part of the matrix element
     !
+    ! Impose zero Born effective charge in case of non-polar materials with quadrupoles
+    IF (.NOT. lpolar) THEN
+      zeu(:, :, :) = zero
+    ENDIF
+    !
     IF (ABS(ABS(signe) - 1.0) > eps12) CALL errore('rgd_blk_epw_fine_mem', ' wrong value for signe ', 1)
+    !
+    IF (system_2d) THEN
+      ! Vacuum size in Bohr unit
+      c = alat / bg(3, 3)
+      ! (e^2 * 2\pi * ci) / Area
+      fac = (signe * e2 * twopi * ci) / area
+      ! Effective screening length
+      ! reff = (epsil - 1) * c/2
+      reff(:, :) = zero
+      reff(:, :) = epsil(1:2, 1:2) * 0.5d0 * c ! eps * c/2 in 2pi/a units
+      reff(1, 1) = reff(1, 1) - 0.5d0 * c ! (-1) * c/2 in 2pi/a units
+      reff(2, 2) = reff(2, 2) - 0.5d0 * c ! (-1) * c/2 in 2pi/a units
+    ELSE
+      ! (e^2 * 4\pi * i) / Volume
+      fac = (signe * e2 * fpi * ci) / omega
+    ENDIF
     !
     gmax = 14.d0
     alph = 1.0d0
+    metric = (twopi / alat)**2
     geg  = gmax * alph * 4.0d0
-    fac  = signe * e2 * fpi / omega * ci
+    !
+    ! Estimate of nr1x, nr2x, nr3x generating all vectors up to G^2 < geg
+    ! Only for dimensions where periodicity is present.
+    IF (nqc1 == 1) THEN
+      nr1x = 0
+    ELSE
+      nr1x = INT(SQRT(geg) / SQRT(bg(1, 1)**2 + bg(2, 1)**2 + bg(3, 1)**2)) + 1
+    ENDIF
+    IF (nqc2 == 1) THEN
+      nr2x = 0
+    ELSE
+      nr2x = INT(SQRT(geg) / SQRT(bg(1, 2)**2 + bg(2, 2)**2 + bg(3, 2)**2)) + 1
+    ENDIF
+    IF (nqc3 == 1) THEN
+      nr3x = 0
+    ELSE
+      nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
+    ENDIF
     !
     epmatl(:, :) = czero
-    !
-    DO m1 = -nqc1, nqc1
-      DO m2 = -nqc2, nqc2
-        DO m3 = -nqc3, nqc3
+    DO m1 = -nr1x, nr1x
+      DO m2 = -nr2x, nr2x
+        DO m3 = -nr3x, nr3x
           !
-          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
-          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
-          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
+          gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
+          gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
+          gg(3) = (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)) * (twopi / alat)
           !
-          qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3 ) + &
-                 g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3 ) + &
-                 g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3 )) !*twopi/alat
-          !
-          IF (qeq > 0.0_DP .AND. qeq / alph / 4.0_DP < gmax) THEN
+          IF (system_2d) THEN
+            qeq = gg(1)**2 + gg(2)**2 + gg(3)**2
+            grg = zero
+            IF (gg(1)**2 + gg(2)**2 > eps8) THEN
+              grg = gg(1) * reff(1, 1) * gg(1) + gg(1) * reff(1, 2) * gg(2) + &
+                    gg(2) * reff(2, 1) * gg(1) + gg(2) * reff(2, 2) * gg(2)
+              grg = grg / (gg(1)**2 + gg(2)**2)
+            ENDIF
+          ELSE
             !
-            qeq = qeq * twopi / alat
-            facqd = fac * EXP(-qeq / alph / 4.0d0) / qeq !/(two*wq)
+            qeq = (gg(1) * (epsil(1, 1) * gg(1) + epsil(1, 2) * gg(2) + epsil(1, 3) * gg(3)) + &
+                   gg(2) * (epsil(2, 1) * gg(1) + epsil(2, 2) * gg(2) + epsil(2, 3) * gg(3)) + &
+                   gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3)))
+          ENDIF
+          !
+          IF (qeq > 0.0d0 .AND. qeq / (metric * alph * 4.0d0) < gmax) THEN
+            !
+            IF (system_2d) THEN
+              facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / (SQRT(qeq) * (1.0 + grg * SQRT(qeq)))
+            ELSE
+              ! facqd = fac * EXP(-qeq / (metric * alph * 4.0d0)) / qeq  <-- this is correct
+              facqd = fac * EXP(-qeq * DSQRT(metric) / (metric * alph * 4.0d0)) / qeq ! <-- this is to keep as previous
+            ENDIF
             !
             DO na = 1, nat
-              arg = -twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
+              arg = - alat * (gg(1) * tau(1, na) + gg(2) * tau(2, na) + gg(3) * tau(3, na))
               facq = facqd * CMPLX(COS(arg), SIN(arg), KIND = DP)
-              DO ipol = 1, 3
-                zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
+              ! Cartesian index direction
+              DO i = 1, 3
+                zaq = zero
+                DO ipol = 1, 3
+                  zaq = zaq + gg(ipol) * zeu(ipol, i, na)
+                ENDDO
                 !
-                CALL ZAXPY(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmat(:, :), 1)
-                CALL ZAXPY(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmatl(:, :), 1)
+                Qqq = zero
+                DO ipol = 1, 3
+                  DO jpol = 1, 3
+                    Qqq = Qqq + 0.5 * gg(ipol) * gg(jpol) * Qmat(na, i, ipol, jpol)
+                  ENDDO
+                ENDDO
+                CALL ZAXPY(nbndsub**2, facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + i, imode), &
+                           bmat(:, :), 1, epmat(:, :), 1)
+                CALL ZAXPY(nbndsub**2, facq * (zaq - ci * Qqq) * uq(3 * (na - 1) + i, imode), &
+                           bmat(:, :), 1, epmatl(:, :), 1)
                 !
               ENDDO !ipol
             ENDDO !nat
