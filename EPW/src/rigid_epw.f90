@@ -220,6 +220,8 @@
     !! Z * G
     REAL(KIND = DP) :: qcg(3)
     !! Q * G
+    REAL(KIND = DP) :: c
+    !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: fnat(3)
     !! Z with \delta_kk' summed
     COMPLEX(KIND = DP) :: qnat(3)
@@ -257,14 +259,16 @@
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk', ' wrong value for signe ', 1)
     !
     IF (system_2d) THEN
+      ! Vacuum size in Bohr unit
+      c = alat / bg(3, 3)
       ! (e^2 * 2\pi) / Area
       fac = (signe * e2 * twopi) / area
       ! Effective screening length
       ! reff = (epsil - 1) * c/2
       reff(:, :) = zero
-      reff(:, :) = epsil(1:2, 1:2) * 0.5d0 * twopi / bg(3, 3) ! (eps)*c/2 in 2pi/a units
-      reff(1, 1) = reff(1, 1) - 0.5d0 * twopi / bg(3, 3) ! (-1)*c/2 in 2pi/a units
-      reff(2, 2) = reff(2, 2) - 0.5d0 * twopi / bg(3, 3) ! (-1)*c/2 in 2pi/a units
+      reff(:, :) = epsil(1:2, 1:2) * 0.5d0 * c ! eps * c/2
+      reff(1, 1) = reff(1, 1) - 0.5d0 * c ! (-1) * c/2
+      reff(2, 2) = reff(2, 2) - 0.5d0 * c ! (-1) * c/2
     ELSE
       ! (e^2 * 4\pi) / Volume
       fac = (signe * e2 * fpi) / omega
@@ -582,6 +586,8 @@
     !! Effective screening length for 2D materials
     REAL(KIND = DP) :: grg
     !! G-vector * reff * G-vector
+    REAL(KIND = DP) :: c
+    !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: fac
     !! Prefactor
     COMPLEX(KIND = DP) :: facqd
@@ -599,14 +605,16 @@
     IF(ABS(ABS(signe) - 1.0) > eps12) CALL errore('rgd_blk_epw', 'Wrong value for signe ', 1)
     !
     IF (system_2d) THEN
+      ! Vacuum size in Bohr unit
+      c = alat / bg(3, 3)
       ! (e^2 * 2\pi * ci) / Area
       fac = (signe * e2 * twopi * ci) / area
       ! Effective screening length
       ! reff = (epsil - 1) * c/2
       reff(:, :) = zero
-      reff(:, :) = epsil(1:2, 1:2) * 0.5d0 * twopi / bg(3, 3) ! (eps)*c/2 in 2pi/a units
-      reff(1, 1) = reff(1, 1) - 0.5d0 * twopi / bg(3, 3) ! (-1)*c/2 in 2pi/a units
-      reff(2, 2) = reff(2, 2) - 0.5d0 * twopi / bg(3, 3) ! (-1)*c/2 in 2pi/a units
+      reff(:, :) = epsil(1:2, 1:2) * 0.5d0 * c ! eps * c/2
+      reff(1, 1) = reff(1, 1) - 0.5d0 * c ! (-1) * c/2
+      reff(2, 2) = reff(2, 2) - 0.5d0 * c ! (-1) * c/2
     ELSE
       ! (e^2 * 4\pi * i) / Volume
       fac = (signe * e2 * fpi * ci) / omega
@@ -798,6 +806,8 @@
     !! G-vector * reff * G-vector
     REAL(KIND = DP) :: Qqq
     !! In the case of Si, its a single value
+    REAL(KIND = DP) :: c
+    !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: fac
     !!
     COMPLEX(KIND = DP) :: facqd
@@ -815,14 +825,16 @@
     IF (ABS(ABS(signe) - 1.0) > eps12) CALL errore ('rgd_blk_epw_fine', 'Wrong value for signe ', 1)
     !
     IF (system_2d) THEN
+      ! Vacuum size in Bohr unit
+      c = alat / bg(3, 3)
       ! (e^2 * 2\pi * ci) / Area
       fac = (signe * e2 * twopi * ci) / area
       ! Effective screening length
       ! reff = (epsil - 1) * c/2
       reff(:, :) = zero
-      reff(:, :) = epsil(1:2, 1:2) * 0.5d0 * twopi / bg(3, 3) ! (eps)*c/2 in 2pi/a units
-      reff(1, 1) = reff(1, 1) - 0.5d0 * twopi / bg(3, 3) ! (-1)*c/2 in 2pi/a units
-      reff(2, 2) = reff(2, 2) - 0.5d0 * twopi / bg(3, 3) ! (-1)*c/2 in 2pi/a units
+      reff(:, :) = epsil(1:2, 1:2) * 0.5d0 * c ! eps * c/2 in 2pi/a units
+      reff(1, 1) = reff(1, 1) - 0.5d0 * c ! (-1) * c/2 in 2pi/a units
+      reff(2, 2) = reff(2, 2) - 0.5d0 * c ! (-1) * c/2 in 2pi/a units
     ELSE
       ! (e^2 * 4\pi * i) / Volume
       fac = (signe * e2 * fpi * ci) / omega
