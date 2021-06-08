@@ -262,7 +262,7 @@ PROGRAM do_ppacf
   IF (ionode) CALL ppacf_info()
   !
   CALL start_clock( 'acf_etxclambda' )
-  ! 
+  !
   ! WRITE(stdout,9093) dcc
   !
   IF (code_num == 1) THEN
@@ -417,7 +417,7 @@ PROGRAM do_ppacf
        ccm4 = ccm3*ccm
        ccm8 = ccm4*ccm4
        !
-       IF (icorr /= 4) THEN
+       IF (icorr /= 4 .OR. is_libxc(2)) THEN
          CALL xc( dfftp%nnr, nspin, nspin, rhoout_tz/ccp3, expp, ecpp, v1x, v1c )
          CALL xc( dfftp%nnr, nspin, nspin, rhoout_tz/ccm3, exm,  ecm,  v1x, v1c )
        ENDIF
@@ -449,7 +449,7 @@ PROGRAM do_ppacf
              !
              IF (cc > 0._DP) THEN
                 !
-                IF (icorr == 4) THEN
+                IF (icorr == 4 .AND. .NOT.is_libxc(2) ) THEN
                    rs = pi34 /arhox**third
                    CALL pwcc( rs, cc, ec_cc, v1c(1,1), ec_l )
                 ELSE
@@ -459,7 +459,7 @@ PROGRAM do_ppacf
                 etcldalambda = etcldalambda + e2*ec_l*rhox
                 !
                 IF(icc == ncc) THEN
-                   IF (icorr /= 4) THEN
+                   IF (icorr /= 4 .OR. is_libxc(2)) THEN
                      tclda%of_r(ir,1) = e2*(ec(ir)-ec_l)*rhox
                      ttclda = ttclda + e2*(ec(ir)-ec_l)*rhox
                    ELSE
@@ -520,7 +520,7 @@ PROGRAM do_ppacf
              !
              IF (cc > 0._DP) THEN
                 !
-                IF (icorr == 4) THEN
+                IF (icorr == 4 .AND. .NOT.is_libxc(2)) THEN
                    CALL pwcc_spin( rs, cc, zeta, ec_cc, v1c(1,1), v1c(1,2), ec_l )
                 ELSE
                    ec_l = (ccp2*ecpp(ir)-ccm2*ecm(ir))/dcc*0.5_DP
@@ -528,7 +528,7 @@ PROGRAM do_ppacf
                 !
                 etcldalambda = etcldalambda+e2*ec_l*rhox
                 IF (icc == ncc) THEN
-                   IF (icorr /= 4) THEN
+                   IF (icorr /= 4 .OR. is_libxc(2) ) THEN
                      tclda%of_r(ir,1) = e2*(ec(ir)-ec_l)*rhox
                      ttclda = ttclda + e2*(ec(ir)-ec_l)*rhox
                    ELSE
@@ -558,7 +558,7 @@ PROGRAM do_ppacf
              etc = etc + e2*sc(ir)
              IF ( icc == ncc ) THEN
                 exgc%of_r(ir,1)=e2*sx(ir)
-                IF(igcc.NE.0) THEN
+                IF(igcc /= 0) THEN
                    ecgc%of_r(ir,1)=e2*sc(ir)
                    tcgc%of_r(ir,1)=e2*(sc(ir)-ecgc_l)
                    ttcgc=ttcgc+e2*(sc(ir)-ecgc_l)
