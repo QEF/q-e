@@ -1179,6 +1179,7 @@
     !! Note 1: the derivative is only made on the dipole (no quadrupole).
     !! Note 2: would need to be updated for 2D but not important for now as only used for smearing.
     !! 2019 - Samuel Ponce & Francesco Macheda
+    !! 2021 - SP: update to add nr1x and (G+q) in unit of 2pi/alat
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi, e2, ci, twopi
@@ -1226,6 +1227,8 @@
     !! Loop over q-points
     INTEGER :: nr1x, nr2x, nr3x
     !! Minimum supercell size to include all vector such that G^2 < geg
+    REAL(KIND = DP):: metric
+    !! (2*pi/a)^2
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: alph
@@ -1260,6 +1263,7 @@
     !
     gmax = 14.d0
     alph = 1.0d0
+    metric = (twopi / alat)**2
     geg = gmax * alph * 4.0d0
     !
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk_der', ' wrong value for signe ', 1)
@@ -1289,17 +1293,17 @@
       DO m2 = -nr2x, nr2x
         DO m3 = -nr3x, nr3x
           !
-          gg(1) = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
-          gg(2) = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
-          gg(3) = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
+          gg(1) = (m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)) * (twopi / alat)
+          gg(2) = (m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)) * (twopi / alat)
+          gg(3) = (m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)) * (twopi / alat)
           !
           geg = (gg(1) * (epsil(1, 1) * gg(1) + epsil(1, 2) * gg(2) + epsil(1, 3) * gg(3)) + &
                  gg(2) * (epsil(2, 1) * gg(1) + epsil(2, 2) * gg(2) + epsil(2, 3) * gg(3)) + &
                  gg(3) * (epsil(3, 1) * gg(1) + epsil(3, 2) * gg(2) + epsil(3, 3) * gg(3)))
           !
-          IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
+          IF (geg > 0.0d0 .AND. geg / (metric * alph * 4.0d0) < gmax) THEN
             !
-            facgd = fac * EXP(-geg / (alph * 4.0d0) ) / geg * (alat / twopi)
+            facgd = fac * EXP(-geg / (metric * alph * 4.0d0)) / geg
             !
             DO nb = 1, nat
               zbg(:) = gg(1) * zeu(1, :, nb) + gg(2) * zeu(2, :, nb) + gg(3) * zeu(3, :, nb)
@@ -1307,10 +1311,9 @@
               DO na = 1, nat
                 zag(:) = gg(1) * zeu(1, :, na) + gg(2) * zeu(2, :, na) + gg(3) * zeu(3, :, na)
                 zag_der(:, :) = zeu(:, :, na)
-                arg = 2.d0 * pi * (gg(1) * (tau(1, na) - tau(1, nb)) + &
-                                   gg(2) * (tau(2, na) - tau(2, nb)) + &
-                                   gg(3) * (tau(3, na) - tau(3, nb)))
-                arg_no_g(:) = 2.d0 * pi * (tau(:,na) - tau(:,nb))
+                arg = alat * (gg(1) * (tau(1, na) - tau(1, nb)) + gg(2) * (tau(2, na) - tau(2, nb)) + &
+                              gg(3) * (tau(3, na) - tau(3, nb)))
+                arg_no_g(:) = alat * (tau(:,na) - tau(:,nb))
                 !
                 facg = facgd * CMPLX(COS(arg), SIN(arg), KIND=DP)
                 DO j = 1, 3
