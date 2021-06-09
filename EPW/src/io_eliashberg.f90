@@ -1401,34 +1401,38 @@
       !
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       !
-      DO imode = 1, nmodes ! phonon modes
-        wq = wf(imode, iq)
-        inv_wq =  1.0 / (two * wq)
-        !
-        DO ibnd = 1, nbndfst
-          IF (ABS(ekfs(ibnd, ixkf(lower_bnd + ik - 1)) - ef0) < fsthick) THEN
-            DO jbnd = 1, nbndfst
-              IF (ABS(ekfs(jbnd, ixkqf(ixkf(lower_bnd + ik - 1), iq)) - ef0) < fsthick) THEN
-                !
-                ! here we take into account the zero-point DSQRT(hbar/2M\omega)
-                ! with hbar = 1 and M already contained in the eigenmodes
-                ! g2 is Ry^2, wkf must already account for the spin factor
-                !
-                IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
-                     .OR. ABS(xqf(3, iq)) > eps8 )) THEN
-                  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
-                  !     number, in which case its square will be a negative number.
-                  g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq)
-                ELSE
-                  g2 = ABS(epf17(jbnd, ibnd, imode, ik))**two * inv_wq
-                ENDIF
-                ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
-                tmp_g2(ind(my_pool_id + 1)) = g2
+      IF (ixkf(lower_bnd + ik - 1) > 0) THEN
+        IF (ixkqf(ixkf(lower_bnd + ik - 1), iq) > 0) THEN
+          DO imode = 1, nmodes ! phonon modes
+            wq = wf(imode, iq)
+            inv_wq =  1.0 / (two * wq)
+            !
+            DO ibnd = 1, nbndfst
+              IF (ABS(ekfs(ibnd, ixkf(lower_bnd + ik - 1)) - ef0) < fsthick) THEN
+                DO jbnd = 1, nbndfst
+                  IF (ABS(ekfs(jbnd, ixkqf(ixkf(lower_bnd + ik - 1), iq)) - ef0) < fsthick) THEN
+                    !
+                    ! here we take into account the zero-point DSQRT(hbar/2M\omega)
+                    ! with hbar = 1 and M already contained in the eigenmodes
+                    ! g2 is Ry^2, wkf must already account for the spin factor
+                    !
+                    IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
+                         .OR. ABS(xqf(3, iq)) > eps8 )) THEN
+                      ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
+                      !     number, in which case its square will be a negative number.
+                      g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq)
+                    ELSE
+                      g2 = ABS(epf17(jbnd, ibnd, imode, ik))**two * inv_wq
+                    ENDIF
+                    ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
+                    tmp_g2(ind(my_pool_id + 1)) = g2
+                  ENDIF
+                ENDDO ! jbnd
               ENDIF
-            ENDDO ! jbnd
-          ENDIF
-        ENDDO ! ibnd
-      ENDDO ! imode
+            ENDDO ! ibnd
+          ENDDO ! imode
+        ENDIF ! ixkqf
+      ENDIF ! ixkf
       !
     ENDDO ! ik's
     !
@@ -2221,7 +2225,7 @@
       DO j = 1, nkf2
         DO k = 1, nkf3
           ik = k + (j - 1) * nkf3 + (i - 1) * nkf2 * nkf3
-          !IF (ixkff(ik) > 0) THEN
+          IF (ixkff(ik) > 0) THEN
             DO ibnd = 1, nbndfs
               ! RM: Everything is in eV here.
               ! SP: Here take a 0.2 eV interval around the FS.
@@ -2234,7 +2238,7 @@
                        ekfs(ibnd, ixkff(ik)) - ef0, agap_tmp(ibnd, ixkff(ik)) * 1000.d0
               ENDIF
             ENDDO ! ibnd
-          !ENDIF
+          ENDIF
         ENDDO  ! k
       ENDDO ! j
     ENDDO ! i

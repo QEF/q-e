@@ -642,30 +642,6 @@
       ENDDO ! i
       CLOSE(iufillambdaFS)
       !
-      name1 = TRIM(prefix) // '.lambda'
-      OPEN(iufillambdaFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('evaluate_a2f_lambda', 'error opening file ' // name1, iufillambdaFS)
-      WRITE(iufillambdaFS,'(a75)') '#               k-point                  Band Enk-Ef [eV]            lambda'
-      DO i = 1, nkf1
-        DO j = 1, nkf2
-          DO k = 1, nkf3
-            ik = k + (j - 1) * nkf3 + (i - 1) * nkf2 * nkf3
-            !IF (ixkff(ik) > 0) THEN
-              DO ibnd = 1, nbndfs
-                !IF (ABS(ekfs(ibnd, ixkff(ik)) - ef0) < fsthick) THEN
-                  x1 = bg(1, 1) * (i - 1) / nkf1 + bg(1, 2) * (j - 1) / nkf2 + bg(1, 3) * (k - 1) / nkf3
-                  x2 = bg(2, 1) * (i - 1) / nkf1 + bg(2, 2) * (j - 1) / nkf2 + bg(2, 3) * (k - 1) / nkf3
-                  x3 = bg(3, 1) * (i - 1) / nkf1 + bg(3, 2) * (j - 1) / nkf2 + bg(3, 3) * (k - 1) / nkf3
-                  WRITE(iufillambdaFS, '(3f12.6, i8, f12.6, f24.15)') x1, x2, x3, ibnd, &
-                                   ekfs(ibnd, ixkff(ik)) - ef0, lambda_k(ixkff(ik), ibnd)
-                !ENDIF
-              ENDDO ! ibnd
-            !ENDIF
-          ENDDO  ! k
-        ENDDO ! j
-      ENDDO ! i
-      CLOSE(iufillambdaFS)
-      !
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
