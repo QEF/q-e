@@ -74,7 +74,7 @@ class Steps:
 
     self.configure_qe_libxc = [ShellCommand(
                    name="configure_qe_libxc",
-                   command=["./configure","--with-libxc=yes --with-libxc-prefix=/home/buildbot/local/libxc-434-gcc102"],
+                   command=["./configure","--with-libxc=yes --with-libxc-prefix=/home/buildbot/local/libxc-512-gcc102"],
                    env=Environ,
                    workdir="build",
                    locks=[build_lock.access('counting')],
