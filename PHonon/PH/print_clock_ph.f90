@@ -8,7 +8,8 @@
 !-----------------------------------------------------------------------
 subroutine print_clock_ph
   !-----------------------------------------------------------------------
-
+  !! Print CPU and WALL time for each routine.
+  !
   USE io_global,         ONLY : stdout
   USE uspp,              ONLY : okvan, nlcc_any
   USE control_ph,        ONLY : trans, zue, epsil

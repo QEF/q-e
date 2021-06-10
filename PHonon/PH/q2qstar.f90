@@ -6,19 +6,19 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! A small utility that reads the first q from a dynamical matrix file (either xml or plain text),
-! recomputes the system symmetry (starting from the lattice) and generates the star of q.
-!
-! Useful for debugging and for producing the star of the wannier-phonon code output.
-!
-! Syntax:
-!   q2qstar.x filein [fileout]
-!
-! fileout default: rot_filein (old format) or rot_filein.xml (new format)
-!
 !----------------------------------------------------------------------------
 PROGRAM Q2QSTAR
   !----------------------------------------------------------------------------
+  !! A small utility that reads the first q from a dynamical matrix file (either
+  !! xml or plain text), recomputes the system symmetry (starting from the lattice)
+  !! and generates the star of q.
+  !
+  !! Useful for debugging and for producing the star of the wannier-phonon code output.
+  !
+  !! Syntax:  
+  !!   \(\texttt{q2qstar.x}\) filein [fileout]
+  !
+  !! fileout default: rot_filein (old format) or rot_filein.xml (new format) 
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : amu_ry
