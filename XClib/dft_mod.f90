@@ -504,7 +504,7 @@ CONTAINS
     !
     CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
-    INTEGER, PARAMETER :: ID_MAX_LIBXC=600
+    INTEGER, PARAMETER :: ID_MAX_LIBXC=999
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
 #if (XC_MAJOR_VERSION>5)
