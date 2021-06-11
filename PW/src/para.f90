@@ -188,7 +188,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   !
   CALL mp_barrier( intra_image_comm )
   !
-  IF ( me_pool == root_pool .AND. my_pool_id > 0 ) THEN
+  IF ( me_pool == root_pool .AND. my_pool_id > 0 .AND. nks > 0 ) THEN
      !
      CALL MPI_SEND( vec, (length*nks), MPI_DOUBLE_PRECISION, 0, 17, &
                     inter_pool_comm, info )
@@ -213,7 +213,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
         !
      ENDIF
      !
-     IF ( me_pool == root_pool .AND. my_pool_id == 0 ) THEN
+     IF ( me_pool == root_pool .AND. my_pool_id == 0 .AND. nbase < nkstot ) THEN
         !
         CALL MPI_RECV( vec(1,nbase+1), (length*fine), MPI_DOUBLE_PRECISION, &
                        (i-1), 17, inter_pool_comm, status, info )
@@ -269,7 +269,7 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
   !
   CALL mp_barrier( intra_image_comm )
   !
-  IF ( me_pool == root_pool .AND. my_pool_id > 0 ) THEN
+  IF ( me_pool == root_pool .AND. my_pool_id > 0 .AND. nks > 0 ) THEN
      !
      CALL MPI_SEND( ivec, (length*nks), MPI_INTEGER, 0, 17, &
                     inter_pool_comm, info )
@@ -294,7 +294,7 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
         !
      ENDIF
      !
-     IF ( me_pool == root_pool .AND. my_pool_id == 0 ) THEN
+     IF ( me_pool == root_pool .AND. my_pool_id == 0 .AND. nbase < nkstot ) THEN
         !
         CALL MPI_RECV( ivec(1,nbase+1), (length*fine), MPI_INTEGER, &
                        (i-1), 17, inter_pool_comm, status, info )
