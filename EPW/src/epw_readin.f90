@@ -810,6 +810,11 @@
     WRITE(stdout, '(5x,a)') "WARNING - 2D - WARNING - 2D - WARNING - 2D - WARNING - 2D"
   ENDIF
   !
+  IF (etf_mem == 3) THEN
+    WRITE(stdout,'(5x,a)') 'WARNING: The use of etf_mem == 3 has been tested and validated for cubic and hexagonal materials.'
+    WRITE(stdout,'(5x,a)') '         For other materials, use with care and possibly use etf_mem == 1.'
+  ENDIF
+  !
   b_abs = ABS(bfieldx) + ABS(bfieldy) + ABS(bfieldz)
   IF (b_abs > eps20 .AND. (.NOT. mp_mesh_k)) THEN
     WRITE(stdout,'(5x,a)') 'WARNING: Finite magnetic field is much more stable with k-point symmetry: mp_mesh_k == .true.'
