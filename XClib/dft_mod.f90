@@ -1514,8 +1514,8 @@ CONTAINS
    !! Set input threshold for \(\text{family}\)-term of XC functional.
    !
    USE kind_l,      ONLY: DP
-   USE dft_par_mod, ONLY: rho_threshold_lda, rho_threshold_gga, grho2_threshold_mgga, &
-                          grho_threshold_gga, tau_threshold_mgga
+   USE dft_par_mod, ONLY: rho_threshold_lda, rho_threshold_gga, rho_threshold_mgga, &
+                          grho_threshold_gga, grho2_threshold_mgga, tau_threshold_mgga
    !
    IMPLICIT NONE
    !
@@ -1544,7 +1544,7 @@ CONTAINS
      rho_threshold_gga = rho_threshold_
      IF ( PRESENT(grho_threshold_) ) grho_threshold_gga = grho_threshold_
    CASE( 'MGGA' )
-     rho_threshold_gga = rho_threshold_
+     rho_threshold_mgga = rho_threshold_
      IF ( PRESENT(grho_threshold_) ) grho2_threshold_mgga = grho_threshold_
      IF ( PRESENT(tau_threshold_)  ) tau_threshold_mgga   = tau_threshold_
    END SELECT

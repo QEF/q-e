@@ -71,7 +71,7 @@ build:cmake-nvhpc:
     - cmake --version
     - mkdir build
     - cd build
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=nvfortran -DCMAKE_C_COMPILER=nvc -DQE_ENABLE_CUDA=ON .. && make pw cp ph
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=nvfortran -DCMAKE_C_COMPILER=nvc -DQE_ENABLE_CUDA=ON .. && make
 
 #build:centos:
 #  image: centos:latest

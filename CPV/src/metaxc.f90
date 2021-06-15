@@ -71,6 +71,8 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       !
       call xclib_set_threshold( 'mgga', epsr )
       !
+call errore('metaxc','meta-gga spin polarization currently broken',1) !HK: gives wrong result...
+! probably need to `CALL rhoz_or_updw( rho, 'only_r', '->updw' )` as done in PW/src/v_of_rho.f90 
       call xc_metagcx( nnr, 2, np, rho, grho, kedtau, sx, sc, &
                        v1x, v2x, v3x, v1c, v2c, v3c )
       !
