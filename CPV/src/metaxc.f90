@@ -65,14 +65,11 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       do ipol = 1, 3  
          grho(ipol,:,1) = (v2x(:,1) + v2c(1,:,1))*grho(ipol,:,1) 
       enddo
-      etxc = SUM( (sx(:) + sc(:)) * SIGN(1.d0,rho(:,1)) )
       !
     else
       !
       call xclib_set_threshold( 'mgga', epsr )
       !
-call errore('metaxc','meta-gga spin polarization currently broken',1) !HK: gives wrong result...
-! probably need to `CALL rhoz_or_updw( rho, 'only_r', '->updw' )` as done in PW/src/v_of_rho.f90 
       call xc_metagcx( nnr, 2, np, rho, grho, kedtau, sx, sc, &
                        v1x, v2x, v3x, v1c, v2c, v3c )
       !
@@ -88,9 +85,9 @@ call errore('metaxc','meta-gga spin polarization currently broken',1) !HK: gives
       !
       kedtau(:,1) = (v3x(:,1) + v3c(:,1)) * 0.5d0
       kedtau(:,2) = (v3x(:,2) + v3c(:,2)) * 0.5d0
-      etxc = etxc + SUM( sx(:) + sc(:) )
       !
     endif
+    etxc = etxc + SUM( sx(:) + sc(:) )
     !
     deallocate( sx, v1x, v2x, v3x )
     deallocate( sc, v1c, v2c, v3c )
