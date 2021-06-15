@@ -1360,6 +1360,7 @@ CONTAINS
 #else
     CALL xclib_infomsg( 'get_libxc_ext_param', 'WARNING: an external parameter&
                          &was sought in Libxc, but Libxc is not active' )
+    get_libxc_ext_param = 0.d0
 #endif
     RETURN
   END FUNCTION

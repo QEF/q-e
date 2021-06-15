@@ -44,6 +44,7 @@ char *readFile( FILE *file )
 
 	char *out;
 	unsigned long fileLen;
+	size_t successfully_read_count;
 
 	if (!file)
 	{
@@ -63,11 +64,16 @@ char *readFile( FILE *file )
 	exit(1);
 	}
 
-	fread(out, fileLen, 1, file);
+	successfully_read_count = fread(out, fileLen, 1, file);
+	if (successfully_read_count != 1)
+	{
+	fprintf(stderr, "Read error!");
+	fclose(file);
+	exit(1);
+	}
 
 	return out; 
-
-} 
+}
 
 
 void get_md5(const char *file, char *md5, int err)

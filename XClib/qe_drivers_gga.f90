@@ -809,6 +809,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !! Implemented: Perdew86, GGA (PW91), PBE
   !
   USE corr_gga
+  USE beef_interface, ONLY: beeflocalcorrspin
   !
   IMPLICIT NONE
   !
