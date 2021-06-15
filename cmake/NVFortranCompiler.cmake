@@ -3,7 +3,7 @@ include(CheckFortranCompilerFlag)
 qe_add_global_compile_definitions(__PGI)
 
 # set optimization specific flags
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mcache_align -Mlarge_arrays")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mcache_align -Mlarge_arrays -Mbackslash")
 
 if(QE_ENABLE_CUDA)
     if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 20.7)
