@@ -68,7 +68,7 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
   !
   IMPLICIT NONE
   !
-  ! Following varibales are temporary
+  ! Following variables are temporary
 
   COMPLEX(DP),INTENT(IN) :: psi0_d(npwx*npol,nbnd)  ! psi0  needed to compute the Pv projection
   COMPLEX(DP),INTENT(IN) :: spsi0_d(npwx*npol,nbnd) ! Spsi0  needed to compute the Pv projection

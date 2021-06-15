@@ -3621,7 +3621,7 @@ IF (cosa < -eps ) u=-u
 !   IF (ax(1)*ax(3) < -eps) u=-u
 !ENDIF
 !
-!   Here compute the 3x3 rotation matrix starting form the axis, angle
+!   Here compute the 3x3 rotation matrix starting from the axis, angle
 !   or from the rotation in spin space for consistency check.
 !
 !angle=angle*2.d0
