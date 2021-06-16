@@ -98,7 +98,7 @@ target_link_libraries(qe_upflib_upfconv_exe
 ###########################################################
 # casino2upf.x
 ###########################################################
-set(src_casino2upf-x 
+set(src_casino2upf_x 
     casino2upf.f90 
     casino_pp.f90 )
 qe_add_executable(qe_upflib_casino2upf_exe ${src_casino2upf_x}) 
