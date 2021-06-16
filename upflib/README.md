@@ -32,10 +32,10 @@ characters from UPF files that hinder their parsing by xml tools.
 
 ## CASINO and QE pseudopotentials
 
-The following notes are kept for reference, but they are partially obsolete.
-Code `upfconv.x -c` replaces code `upf2casino2.x` mentioned below, with no
-warranty it actually works. A copy of the `casino2upf.f90` code is kept for
-reference in upflib/ but it does not currently work. Old notes start here.
+The following notes are kept for reference (they might be obsolete).
+Code `upfconv.x -c` replaces code `upf2casino2.x` mentioned below.
+Code `casino2upf.x` was moved to upflib/ and works (?) again, at least
+for the example provided by Jake Muffi, since v.6.8. Old notes start here:
 
 Two utilities are provided with the Quantum Espresso distribution to 
 enable the PWscf code to be used in conjunction with the CASINO quantum 
