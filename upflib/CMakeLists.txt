@@ -113,4 +113,4 @@ target_link_libraries(qe_upflib_casino2upf_exe
 qe_install_targets(qe_upflib
     qe_upflib_virtual_v2_exe
     qe_upflib_upfconv_exe
-    qe_upflib_casino2upf?exe)
+    qe_upflib_casino2upf_exe)
