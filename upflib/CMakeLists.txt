@@ -95,7 +95,22 @@ target_link_libraries(qe_upflib_upfconv_exe
     PRIVATE
         qe_upflib)
 
+###########################################################
+# casino2upf.x
+###########################################################
+set(src_casino2upf_x 
+    casino2upf.f90 
+    casino_pp.f90 )
+qe_add_executable(qe_upflib_casino2upf_exe ${src_casino2upf_x}) 
+set_target_properties(qe_upflib_casino2upf_exe 
+    PROPERTIES 
+        OUTPUT_NAME casino2upf.x)
+target_link_libraries(qe_upflib_casino2upf_exe
+    PRIVATE
+        qe_upflib)
+
 ############################################################################
 qe_install_targets(qe_upflib
     qe_upflib_virtual_v2_exe
-    qe_upflib_upfconv_exe)
+    qe_upflib_upfconv_exe
+    qe_upflib_casino2upf_exe)

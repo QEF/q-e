@@ -65,7 +65,7 @@ OBJS += \
   sph_bes_gpu.o \
   ylmr2_gpu.o
 
-all : libupf.a virtual_v2.x upfconv.x
+all : libupf.a virtual_v2.x upfconv.x casino2upf.x
 
 libupf.a: $(MODULES) $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?       
@@ -74,6 +74,8 @@ libupf.a: $(MODULES) $(OBJS)
 virtual_v2.x : virtual_v2.o $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ virtual_v2.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)
 
+casino2upf.x : casino2upf.o casino_pp.o $(QEMODS) 
+	$(LD) $(LDFLAGS) -o $@ casino2upf.o casino_pp.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)
 upfconv.x : upfconv.o casino_pp.o $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ upfconv.o casino_pp.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)
 
