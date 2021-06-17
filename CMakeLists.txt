@@ -362,36 +362,28 @@ if(QE_ENABLE_ELPA)
     find_package(ELPA REQUIRED)
 
     # Check if ELPA version is compatible with QE
-    if(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2018.11")
+    if(ELPA_VERSION VERSION_GREATER_EQUAL "2018.11")
         set(QE_ELPA_DEFINITIONS __ELPA)
-    elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2016.11")
+    elseif(ELPA_VERSION VERSION_GREATER_EQUAL "2016.11")
         set(QE_ELPA_DEFINITIONS __ELPA_2016)
-    elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2015")
+    elseif(ELPA_VERSION VERSION_GREATER_EQUAL "2015")
         set(QE_ELPA_DEFINITIONS __ELPA_2015)
     else()
-        message(FATAL_ERROR "ELPA verion ${ELPA_VERSION_STRING} is not supported.")
+        message(FATAL_ERROR "ELPA verion ${ELPA_VERSION} is not supported.")
     endif()
     message(STATUS "Add ELPA flag : ${QE_ELPA_DEFINITIONS}")
     qe_add_global_compile_definitions(${QE_ELPA_DEFINITIONS})
-
-    # Looking for module directory
-    file(GLOB_RECURSE ELPA_MODS_FILES "${ELPA_INCLUDE_DIRS}/*.mod" "${ELPA_INCLUDE_DIRS}/../modules/*.mod")
-    if(ELPA_MODS_FILES)
-        list(GET ELPA_MODS_FILES 0 ELPA_MOD)
-        get_filename_component(ELPA_MOD_DIR "${ELPA_MOD}" PATH)
-        set(ELPA_INCLUDE_DIRS "${ELPA_MOD_DIR};${ELPA_INCLUDE_DIRS}")
-    else()
-        message(FATAL_ERROR "Fortran module directory of ELPA not found!")
-    endif()
 
     # Add link libraries and include directories
     target_link_libraries(qe_elpa
         INTERFACE
             ${ELPA_LIBRARIES}
             ${ELPA_LIBRARIES_DEP}
-            ${ELPA_LINKER_FLAGS})
+            ${ELPA_LINKER_FLAGS}
+            qe_scalapack)
     target_include_directories(qe_elpa
         INTERFACE
+            ${ELPA_Fortran_MODS_DIR}
             ${ELPA_INCLUDE_DIRS}
             ${ELPA_INCLUDE_DIRS_DEP})
 endif(QE_ENABLE_ELPA)
