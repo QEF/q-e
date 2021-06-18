@@ -46,8 +46,6 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
 !  subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
 !  subroutine s_1psi(npwx,npw,psi,spsi)  computes S*psi (if needed)
 
-  CALL set_para_diag( nbnd, use_para_diag )
-
   allocate (h_prec( npwx), btype(nbnd))
   !
   !   various initializations
