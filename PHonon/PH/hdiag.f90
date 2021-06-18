@@ -19,7 +19,6 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   USE noncollin_module,    ONLY: npol
   USE wavefunctions,ONLY: evc
   USE ramanm,    ONLY: eth_ns
-  USE control_flags,   ONLY: use_para_diag
   implicit none
   !
   !     I/O variables:
@@ -46,8 +45,6 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
    external hs_1psi, s_1psi
 !  subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
 !  subroutine s_1psi(npwx,npw,psi,spsi)  computes S*psi (if needed)
-
-  call start_clock ('hdiag')
 
   CALL set_para_diag( nbnd, use_para_diag )
 
