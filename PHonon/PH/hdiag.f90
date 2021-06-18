@@ -19,6 +19,7 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   USE noncollin_module,    ONLY: npol
   USE wavefunctions,ONLY: evc
   USE ramanm,    ONLY: eth_ns
+  USE control_flags,   ONLY: use_para_diag
   implicit none
   !
   !     I/O variables:
@@ -48,6 +49,8 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
 
   call start_clock ('hdiag')
 
+  CALL set_para_diag( nbnd, use_para_diag )
+
   allocate (h_prec( npwx), btype(nbnd))
   !
   !   various initializations
@@ -57,23 +60,23 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   ! Conjugate-Gradient diagonalization
   !
   h_prec=1.0_DP
-  do ig = 1, npw
-     h_prec (ig) = max (1.d0, g2kin (ig) )
-  enddo
-  ntry = 0
-10 continue
-  if (ntry > 0) then
-     call rotate_wfc &
-       ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
-     avg_iter = avg_iter + 1.d0
-  endif
-  CALL ccgdiagg( hs_1psi, s_1psi, h_prec, &
-       npwx, npw, nbnd, npol, evc, et_, btype, eth_ns, &
-       max_iter, .true., notconv, cg_iter)
-  avg_iter = avg_iter + cg_iter
-  ntry = ntry + 1
+  FORALL( ig = 1 : npwx )
+      h_prec(ig) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+  END FORALL
 
-  if (ntry.le.5.and.notconv.gt.0) goto 10
+  DO ntry = 1, 5
+    if (ntry > 1) then
+       call rotate_wfc &
+         ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
+       avg_iter = avg_iter + 1.d0
+    endif
+    CALL ccgdiagg( hs_1psi, s_1psi, h_prec, &
+         npwx, npw, nbnd, npol, evc, et_, btype, eth_ns, &
+         max_iter, .true., notconv, cg_iter)
+    avg_iter = avg_iter + cg_iter
+ 
+    IF(notconv == 0 ) EXIT
+  ENDDO
 
   deallocate (btype, h_prec)
   call stop_clock ('hdiag')
