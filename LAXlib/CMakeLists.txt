@@ -42,7 +42,8 @@ if(QE_ENABLE_CUDA)
         endif()
         target_link_libraries(qe_lax
             PRIVATE
-                CUDA::cusolver)
+                CUDA::cusolver
+                CUDA::cublas)
         set_property(TARGET qe_lax APPEND
             PROPERTY
                 COMPILE_DEFINITIONS __USE_CUSOLVER)

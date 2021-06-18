@@ -148,6 +148,11 @@ target_link_libraries(qe_modules
         qe_fox
         qe_utilx)
 
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::curand)
+endif()
 ###########################################################
 
 qe_install_targets(qe_modules)
