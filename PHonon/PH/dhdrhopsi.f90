@@ -57,6 +57,7 @@ subroutine dhdrhopsi
   USE mp_pools,  ONLY : inter_pool_comm
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+  USE control_flags,   ONLY: use_para_diag
 
   implicit none
 
@@ -115,6 +116,9 @@ subroutine dhdrhopsi
   allocate (ps0       (nbnd)          )
   allocate (ps1       (nbnd,nbnd)     )
   allocate (ps2       (nbnd,nbnd,3)   )
+
+  ! Set-up parallel diagonalization which is used in hdiag
+  CALL set_para_diag( nbnd, use_para_diag )
 
   CALL allocate_bec_type (nkb, nbnd, becp1_sw)
 
