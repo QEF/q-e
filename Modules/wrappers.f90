@@ -19,7 +19,6 @@ MODULE wrappers
   !       directory already exists. We use instead a C wrapper c_mkdir_safe
   !
   USE kinds, ONLY : DP
-  USE io_global, ONLY : stdout
   USE ISO_C_BINDING
   IMPLICIT NONE
   !
