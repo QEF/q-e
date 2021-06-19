@@ -22,7 +22,7 @@ SUBROUTINE c_bands( iter )
   USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
-  USE control_flags,        ONLY : ethr, isolve, restart, use_gpu
+  USE control_flags,        ONLY : ethr, isolve, restart, use_gpu, iverbosity
   USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
@@ -79,6 +79,8 @@ SUBROUTINE c_bands( iter )
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   ENDIF
+  !
+  if (iverbosity > 0) CALL print_mem_usage(stdout, 'c_bands before calling an iterative solver')
   !
   ! ... For each k point diagonalizes the hamiltonian
   !

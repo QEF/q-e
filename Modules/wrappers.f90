@@ -26,7 +26,7 @@ MODULE wrappers
   ! C std library functions fortran wrappers:
   PUBLIC  f_remove, f_rename, f_chdir, f_mkdir, f_rmdir, f_getcwd
   ! more stuff:
-  PUBLIC  f_copy, feval_infix, md5_from_file, f_mkdir_safe, memstat
+  PUBLIC  f_copy, feval_infix, md5_from_file, f_mkdir_safe, memstat, get_mem_usage, get_mem_avail
   !
   ! HELP:
   ! integer f_remove(pathname)
@@ -278,9 +278,43 @@ CONTAINS
        END FUNCTION c_memstat
     END INTERFACE
     !
-    kbytes = c_memstat ( )
+    kbytes = c_memstat()
     !
   END SUBROUTINE memstat
+  !
+  ! Wrapper for C routine "getMemUsage"
+  !
+  FUNCTION get_mem_usage() RESULT(kbytes)
+    IMPLICIT NONE
+    INTEGER(kind=c_size_t) :: kbytes
+    !
+    INTERFACE
+       FUNCTION c_getmemusage() BIND(C, name="c_getMemUsage")
+         USE ISO_C_BINDING
+         INTEGER(kind=c_size_t) :: c_getmemusage
+       END FUNCTION c_getmemusage
+    END INTERFACE
+    !
+    kbytes = c_getmemusage()
+    !
+  END FUNCTION get_mem_usage
+  !
+  ! Wrapper for C routine "getMemAvail"
+  !
+  FUNCTION get_mem_avail() RESULT(kbytes)
+    IMPLICIT NONE
+    INTEGER(kind=c_size_t) :: kbytes
+    !
+    INTERFACE
+       FUNCTION c_getmemavail() BIND(C, name="c_getMemAvail")
+         USE ISO_C_BINDING
+         INTEGER(kind=c_size_t) :: c_getmemavail
+       END FUNCTION c_getmemavail
+    END INTERFACE
+    !
+    kbytes = c_getmemavail();
+    !
+  END FUNCTION get_mem_avail
   !
 END MODULE
 ! ==================================================================== 

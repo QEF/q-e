@@ -31,6 +31,7 @@ set(src_modules
     io_global.f90  
     ions_base.f90 
     kind.f90 
+    lmdif.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -47,7 +48,7 @@ set(src_modules
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
-    lmdif.f90  
+    print_mem.f90
     pw_dot.f90 
     qmmm.f90 
     random_numbers.f90 

@@ -806,6 +806,8 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   END IF
   CALL stop_clock( 'cegterg:init' )
   !
+  CALL print_mem_usage(stdout, 'right after pcegterg:init')
+  !
   IF ( lrot ) THEN
      !
      CALL set_e_from_h()
@@ -1070,6 +1072,8 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      END IF
      !
   END DO iterate
+  !
+  CALL print_mem_usage(stdout, 'Ahead of DEALLOCATE before exiting pcegterg')
   !
   DEALLOCATE( vl, hl, sl )
   !
