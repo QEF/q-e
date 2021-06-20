@@ -3214,8 +3214,8 @@ SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
  WRITE(85,'(A50)') "Displaced positions along phonon modes in set B"
   DO qp = 1, ctrB
     DO j = 1, nat3        
-      WRITE(85,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
-      WRITE(86,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
+      WRITE(85,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
+      WRITE(86,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
       D_tau = 0.0d0
       P_tau = 0.0d0
       DO p = 1, nq_tot
@@ -3249,8 +3249,8 @@ SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
   WRITE(85,'(A50)') "Displaced positions along phonon modes in set A"
   DO qp = 1, ctrA
     DO j = 1, nat3        
-      WRITE(85,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
-      WRITE(86,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
+      WRITE(85,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
+      WRITE(86,'(A25, 3F8.4, A15, I0)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
       D_tau = 0.0d0
       P_tau = 0.0d0
       DO p = 1, nq_tot
