@@ -25,7 +25,6 @@ if(QE_ENABLE_TEST)
     target_link_libraries(qe_atomic_test_exe
         PRIVATE
             qe_modules
-            qe_upflib
             qe_dftd3)
     # FIXME: Does it work?
     #add_test(NAME test_qe_dftd3_atomic COMMAND $<TARGET_FILE:qe_atomic_test_exe>)
