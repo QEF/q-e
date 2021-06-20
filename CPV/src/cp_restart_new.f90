@@ -81,7 +81,7 @@ MODULE cp_restart_new
       USE uspp_param,               ONLY : upf
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
-      USE wrappers,                 ONLY : f_copy
+      USE clib_wrappers,            ONLY : f_copy
       USE uspp,                     ONLY : okvan
       USE input_parameters,         ONLY : vdw_corr, starting_ns_eigenvalue
       USE qexsd_init, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,  & 

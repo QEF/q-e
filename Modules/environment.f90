@@ -24,7 +24,7 @@ MODULE environment
   USE global_version, ONLY: version_number
   USE fox_init_module, ONLY: fox_init
   USE command_line_options, ONLY : nmany_
-  USE wrappers, ONLY : get_mem_avail
+  USE clib_wrappers, ONLY : get_mem_avail
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
 #endif

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-MODULE wrappers
+MODULE clib_wrappers
   !------------------------------------------------------------------------
   !! This module contains fortran wrappers to POSIX system calls.  
   !! The wrappers are used to convert the Fortran CHARACTER array to
@@ -18,7 +18,7 @@ MODULE wrappers
   ! NOTE: the mkdir function is NOT called directly as it returns error if
   !       directory already exists. We use instead a C wrapper c_mkdir_safe
   !
-  USE kinds, ONLY : DP
+  USE util_param, ONLY : DP
   USE ISO_C_BINDING
   IMPLICIT NONE
   !

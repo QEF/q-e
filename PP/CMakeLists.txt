@@ -323,7 +323,6 @@ qe_add_executable(qe_pp_wannierham_exe ${src_wannier_ham_x})
 set_target_properties(qe_pp_wannierham_exe PROPERTIES OUTPUT_NAME wannier_ham.x)
 target_link_libraries(qe_pp_wannierham_exe
     PRIVATE
-        qe_clib
         qe_pw
         qe_modules
         qe_upflib

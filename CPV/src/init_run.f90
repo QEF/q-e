@@ -71,7 +71,7 @@ SUBROUTINE init_run()
   USE ions_base,                ONLY : ions_reference_positions, cdmi
   USE mp_bands,                 ONLY : nbgrp
   USE mp,                       ONLY : mp_barrier
-  USE wrappers
+  USE clib_wrappers
   USE ldaU_cp
   USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
   USE wavefunctions,     ONLY : cv0                 ! exx_wf related

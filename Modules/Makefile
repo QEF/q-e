@@ -58,7 +58,6 @@ parser.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
-print_mem.o\
 pw_dot.o \
 qmmm.o \
 random_numbers.o \
@@ -81,7 +80,6 @@ version.o \
 wannier_gw.o\
 wannier_new.o \
 wavefunctions.o \
-wrappers.o\
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \

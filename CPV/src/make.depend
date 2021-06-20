@@ -144,7 +144,7 @@ cp_restart_new.o : ../../Modules/qexsd_input.o
 cp_restart_new.o : ../../Modules/recvec.o
 cp_restart_new.o : ../../Modules/run_info.o
 cp_restart_new.o : ../../Modules/tsvdw.o
-cp_restart_new.o : ../../Modules/wrappers.o
+cp_restart_new.o : ../../UtilXlib/clib_wrappers.o
 cp_restart_new.o : ../../UtilXlib/mp.o
 cp_restart_new.o : ../../XClib/xc_lib.o
 cp_restart_new.o : ../../upflib/upf_ions.o
@@ -543,7 +543,7 @@ init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/timestep.o
 init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/wavefunctions.o
-init_run.o : ../../Modules/wrappers.o
+init_run.o : ../../UtilXlib/clib_wrappers.o
 init_run.o : ../../UtilXlib/mp.o
 init_run.o : ../../XClib/xc_lib.o
 init_run.o : ../../upflib/uspp.o
@@ -902,7 +902,7 @@ print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
 print_out.o : ../../Modules/tsvdw.o
-print_out.o : ../../Modules/wrappers.o
+print_out.o : ../../UtilXlib/clib_wrappers.o
 print_out.o : ../../XClib/xc_lib.o
 print_out.o : cg.o
 print_out.o : efield.o

@@ -11,8 +11,10 @@ set(src_util
     mp_bands_util.f90
     nvtx_wrapper.f90
     parallel_include.f90
+    print_mem.f90
     util_param.f90
     thread_util.f90
+    clib_wrappers.f90
     export_gstart_2_solvers.f90
     set_mpi_comm_4_solvers.f90
     # GPU
@@ -102,9 +104,7 @@ if(QE_ENABLE_TEST)
             PRIVATE
                 qe_utilx
                 qe_utilx_tests
-                qe_mpi_fortran
-                qe_modules
-                qe_lapack)
+                qe_mpi_fortran)
         add_unit_test(${TGT_NAME} 1 1 $<TARGET_FILE:${TGT_NAME}>)
     ENDFOREACH(NAME)
 endif()

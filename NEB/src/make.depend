@@ -57,8 +57,8 @@ input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mp_world.o
-input.o : ../../Modules/wrappers.o
 input.o : ../../PW/src/fcp_module.o
+input.o : ../../UtilXlib/clib_wrappers.o
 input.o : ../../UtilXlib/mp.o
 input.o : fcp_variables.o
 input.o : path_input_parameters_module.o

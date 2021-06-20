@@ -28,7 +28,7 @@ SUBROUTINE punch( what )
   USE control_flags,        ONLY : io_level, lscf, lxdm
   USE klist,                ONLY : nks
   USE io_files,             ONLY : psfile, pseudo_dir
-  USE wrappers,             ONLY : f_copy
+  USE clib_wrappers,        ONLY : f_copy
   USE spin_orb,             ONLY : lforcet
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin

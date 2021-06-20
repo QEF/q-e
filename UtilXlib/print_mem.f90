@@ -8,7 +8,7 @@
 subroutine print_mem_usage (out_unit, title)
   !! in human-readable format. Uses a standard f90 call.
   !
-  use wrappers, only : memstat, get_mem_usage, get_mem_avail
+  use clib_wrappers, only : memstat, get_mem_usage, get_mem_avail
   implicit none
   integer, intent(in) :: out_unit
   character(len=*), intent(in) :: title
