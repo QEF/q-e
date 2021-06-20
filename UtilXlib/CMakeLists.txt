@@ -18,18 +18,30 @@ set(src_util
     export_gstart_2_solvers.f90
     set_mpi_comm_4_solvers.f90
     # GPU
-    mp_base_gpu.f90
-    device_helper.f90)
+    mp_base_gpu.f90)
 qe_enable_cuda_fortran("${src_util}")
 
 qe_add_library(qe_utilx ${src_util})
 target_link_libraries(qe_utilx
+    PUBLIC
+        qe_clib # cclock is exposed by the mytime module in clocks_handler
     PRIVATE
         qe_openmp_fortran
-        qe_clib
         qe_mpi_fortran)
 
 qe_install_targets(qe_utilx)
+
+set(src_device_lapack
+    device_helper.f90)
+qe_enable_cuda_fortran("${src_device_lapack}")
+qe_add_library(qe_device_lapack ${src_device_lapack})
+target_link_libraries(qe_device_lapack
+    PRIVATE
+        qe_lapack
+        qe_openmp_fortran
+        qe_mpi_fortran)
+
+qe_install_targets(qe_device_lapack)
 
 ###########################################################
 # tests
