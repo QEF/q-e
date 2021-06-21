@@ -102,7 +102,9 @@ program all_currents
    CHARACTER(len=256) :: file_output, trajdir = ''
    type(online_average) :: ave_cur
    real(kind=DP) ::delta_t, ethr_small_step, ethr_big_step
-   integer :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+   integer :: first_step, last_step, step_mul, step_rem, n_workers, worker_id, &
+              n_repeat_every_step, n_digit, &
+              first_s_chunk, last_s_chunk, steps_per_chunk
    logical :: restart ! if true try to read last calculated step from output and set first_step
    logical :: subtract_cm_vel ! if true do velocity renormalization
    logical :: re_init_wfc_1 = .false., re_init_wfc_2 = .false. ! initialize again evc before scf step number 1 or 2
@@ -112,7 +114,7 @@ program all_currents
    ! note: i_current_b is proportional to the ionic velocities. In principle is not needed to calculate the thermal
    ! conductivity since it does not influence the final result. It is implemented only for a cubic cell.
 
-   character(len=256) :: vel_input_units = 'PW'
+   character(len=256) :: vel_input_units = 'PW', worker_id_char, format_string
    logical :: ec_test, hpsi_test ! activates tests for debugging purposes
 
    !from ../PW/src/pwscf.f90
@@ -127,12 +129,12 @@ program all_currents
    CALL environment_start('QEHeat')
    call start_clock('all_currents')
    IF (ionode) THEN
-      write (*,*) 'This code implements Marcolongo, A., Umari, P. and Baroni, S'
-      write (*,*) ' Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509'
+      write (*,*) ' This code implements Marcolongo, A., Umari, P. and Baroni, S'
+      write (*,*) '  Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509'
       write (*,*) ''
-      write (*,*) 'The details of the implementation are described in'
-      write (*,*) ' Marcolongo, Bertossa, Tisi, Baroni,'
-      write (*,*) ' https://arxiv.org/abs/2104.06383 (2021)'
+      write (*,*) ' The details of the implementation are described in'
+      write (*,*) '  Marcolongo, Bertossa, Tisi, Baroni,'
+      write (*,*) '  https://arxiv.org/abs/2104.06383 (2021)'
       write (*,*) ''
       CALL input_from_file()
       ! all_currents input
@@ -145,7 +147,41 @@ program all_currents
                                        step_rem, ec_test, add_i_current_b, &
                                        save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                        re_init_wfc_3, three_point_derivative, &
-                                       n_repeat_every_step, hpsi_test)
+                                       n_repeat_every_step, hpsi_test, &
+                                       n_workers, worker_id)
+     !if the problem is parallelized simply by running many times the code over the same trajectory
+     !with a different starting and ending timestep you can use the n_worker and the worker_id variables
+     !
+     ! if n_workers > 0, append worker_id to file_output
+     ! set first/last step accordingly
+     if (n_workers>0 ) then
+        if (worker_id >= n_workers .or. worker_id<0) then
+           call errore ('all_currents', 'worker_id must be one of 0, 1, ..., n_workers-1')
+        end if
+        n_digit = floor(log10(real(n_workers+1)))
+        write (format_string, '(A2,I1,A1)') "(I",n_digit, ")"
+
+        write (worker_id_char, format_string) worker_id
+        file_output=trim(file_output) // '.'//trim(worker_id_char)
+        ! calculate first step / last step for the chunk
+        steps_per_chunk = (last_step-first_step + 1)/n_workers
+        if (steps_per_chunk < 0) call errore('all_currents', 'last_step must be greater than first_step',1)
+        if (steps_per_chunk == 0 ) then
+           steps_per_chunk = 1
+           write(*,*) 'WARNING: n_workers is too high: some chunks will have no work' 
+        end if
+        first_s_chunk = first_step + steps_per_chunk*worker_id
+        if (worker_id < n_workers - 1 ) then
+           last_s_chunk = first_step + steps_per_chunk*(worker_id+1)
+        else
+           last_s_chunk = last_step
+        end if
+
+        write (*,*) 'This worker has steps from ', first_s_chunk, ' to ', last_s_chunk
+        first_step=first_s_chunk
+        last_s_chunk=last_s_chunk - 1
+
+     end if
 
    endif
    ! PW input
@@ -164,7 +200,8 @@ program all_currents
       step_rem, ec_test, add_i_current_b, &
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
-      n_repeat_every_step, hpsi_test)
+      n_repeat_every_step, hpsi_test, &
+      n_workers, worker_id)
    if (vel_input_units == 'CP') then ! atomic units of cp are different
       vel_factor = 2.0_dp
       if (ionode) &
@@ -476,7 +513,8 @@ contains
                                           step_rem, ec_test, add_i_current_b, &
                                           save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                           re_init_wfc_3, three_point_derivative, &
-                                          n_repeat_every_step, hpsi_test)
+                                          n_repeat_every_step, hpsi_test, &
+                                          n_workers, worker_id)
       use io_global, ONLY: stdout, ionode, ionode_id
       implicit none
       integer, intent(in) :: iunit
@@ -484,7 +522,8 @@ contains
       logical, intent(inout) :: save_dvpsi
       CHARACTER(len=256), intent(inout) :: file_output, trajdir
       real(kind=DP), intent(inout) ::delta_t, ethr_small_step, ethr_big_step
-      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step, &
+                                n_workers, worker_id
       logical, intent(inout) :: restart
       logical, intent(inout) :: subtract_cm_vel
       logical, intent(inout) :: re_init_wfc_1, re_init_wfc_2
@@ -505,7 +544,8 @@ contains
          step_rem, ec_test, add_i_current_b, &
          save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
          re_init_wfc_3, three_point_derivative, &
-         n_repeat_every_step, hpsi_test
+         n_repeat_every_step, hpsi_test, &
+         n_workers, worker_id
       !
       !   set default values for variables in namelist
       !
@@ -532,6 +572,8 @@ contains
       vel_input_units = 'PW'
       n_repeat_every_step = 1
       hpsi_test = .false.
+      n_workers = 0
+      worker_id = 0
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -546,7 +588,8 @@ contains
       step_rem, ec_test, add_i_current_b, &
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
-      n_repeat_every_step, hpsi_test)
+      n_repeat_every_step, hpsi_test, &
+      n_workers, worker_id)
       use io_global, ONLY: stdout, ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
@@ -555,7 +598,8 @@ contains
       logical, intent(inout) :: save_dvpsi
       CHARACTER(len=256), intent(inout) :: file_output, trajdir
       real(kind=DP), intent(inout) ::delta_t, ethr_small_step, ethr_big_step
-      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step, &
+                                n_workers, worker_id
       logical, intent(inout) :: restart
       logical, intent(inout) :: subtract_cm_vel
       logical, intent(inout) :: re_init_wfc_1, re_init_wfc_2
@@ -587,6 +631,8 @@ contains
       CALL mp_bcast(three_point_derivative, ionode_id, world_comm)
       CALL mp_bcast(n_repeat_every_step, ionode_id, world_comm)
       CALL mp_bcast(hpsi_test, ionode_id, world_comm)
+      CALL mp_bcast(n_workers, ionode_id, world_comm)
+      CALL mp_bcast(worker_id, ionode_id, world_comm)
 
    end subroutine
 
