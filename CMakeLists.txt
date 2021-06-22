@@ -78,6 +78,8 @@ else()
 endif()
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
+option(QE_ENABLE_MPI_GPU_AWARE
+    "enable GPU aware MPI operations" OFF)
 option(QE_ENABLE_TEST
     "enable unit and system tests" ON)
 option(QE_ENABLE_TRACE
@@ -138,6 +140,9 @@ endif()
 if(QE_ENABLE_MPI)
     # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
     qe_add_global_compile_definitions(__MPI OMPI_SKIP_MPICXX)
+    if(QE_ENABLE_MPI_GPU_AWARE)
+        qe_add_global_compile_definitions(__GPU_MPI)
+    endif()
 endif()
 if(QE_ENABLE_SCALAPACK)
     qe_add_global_compile_definitions(__SCALAPACK)
@@ -161,6 +166,9 @@ if(QE_ENABLE_SCALAPACK AND NOT QE_ENABLE_MPI)
 endif()
 if(QE_ENABLE_CUDA AND NOT (CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC"))
     message(FATAL_ERROR "PGI compiler is mandatory when CUDA is enable due QE is based on CUDA Fortran language")
+endif()
+if(QE_ENABLE_MPI_GPU_AWARE AND NOT (QE_ENABLE_CUDA AND QE_ENABLE_MPI))
+    message(FATAL_ERROR "GPU aware MPI requires both MPI and CUDA features enabled")
 endif()
 if(QE_ENABLE_LAXLIB_CUSOLVER AND (NOT QE_ENABLE_CUDA))
     message(FATAL_ERROR "CUDA Solver for LAXLib requires CUDA support, enable it with '-DQE_ENABLE_CUDA=ON' or disable CUDA Solver for LAXLib with '-DQE_ENABLE_LAXLIB_CUSOLVER=OFF'")
