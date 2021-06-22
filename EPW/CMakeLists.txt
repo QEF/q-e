@@ -89,3 +89,5 @@ qe_install_targets(
     qe_epw
     # Exacutables
     qe_epw_exe qe_zg_exe)
+
+install(PROGRAMS bin/pp.py TYPE BIN RENAME epw_pp.py)
