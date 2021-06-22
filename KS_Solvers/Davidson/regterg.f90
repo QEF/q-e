@@ -724,7 +724,6 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   END IF
   CALL stop_clock( 'regterg:init' )
   !
-  CALL print_mem_usage(stdout, 'right after pregterg:init')
   !
   IF ( lrot ) THEN
      !
@@ -976,7 +975,6 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
   END DO iterate
   !
-  CALL print_mem_usage(stdout, 'Ahead of DEALLOCATE before exiting pregterg')
   !
   DEALLOCATE( vl, hl, sl )
   !
