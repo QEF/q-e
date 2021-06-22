@@ -203,7 +203,8 @@ program all_currents
    ! PW input
    call read_namelists('PW', 5)
    if (n_workers>0 ) then
-      outdir = trim(outdir) // '.'//trim(worker_id_char)
+      CALL mp_bcast(worker_id_char, ionode_id, world_comm)
+      outdir = trim(outdir) //trim(worker_id_char)
    endif
    
    call read_cards('PW', 5)
@@ -642,6 +643,7 @@ contains
       CALL mp_bcast(hpsi_test, ionode_id, world_comm)
       CALL mp_bcast(n_workers, ionode_id, world_comm)
       CALL mp_bcast(worker_id, ionode_id, world_comm)
+      CALL mp_bcast(vel_input_units, ionode_id, world_comm)
 
    end subroutine
 
