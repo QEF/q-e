@@ -38,9 +38,11 @@ program all_currents
    use wavefunctions, only: evc
    use wvfct, only: nbnd, npwx, npw
    use kinds, only: dp
+
    ! utilities to read the cp.x produced trajectory
    use cpv_traj, only: cpv_trajectory, &
                        cpv_trajectory_initialize, cpv_trajectory_deallocate
+
    use dynamics_module, only: vel
    use ions_base, ONLY: tau, tau_format, nat
    USE control_flags, ONLY: ethr
@@ -55,8 +57,11 @@ program all_currents
    USE read_input, ONLY: read_input_file
    USE command_line_options, ONLY: input_file_, command_line, ndiag_, nimage_
    USE check_stop, ONLY: check_stop_init
+
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
+
+   use input_parameters, only : outdir
    USE read_cards_module, ONLY: read_cards
    use averages, only: online_average, online_average_init
 
@@ -72,7 +77,6 @@ program all_currents
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
    use atom, only: rgrid
-
    ! testing only!!!
    use test_h_psi, only: init_test
 
@@ -154,6 +158,7 @@ program all_currents
      !
      ! if n_workers > 0, append worker_id to file_output
      ! set first/last step accordingly
+     ! append worker_id to outdir
      if (n_workers>0 ) then
         if (worker_id >= n_workers .or. worker_id<0) then
            call errore ('all_currents', 'worker_id must be one of 0, 1, ..., n_workers-1')
@@ -184,13 +189,6 @@ program all_currents
      end if
 
    endif
-   ! PW input
-   call read_namelists('PW', 5)
-   call read_cards('PW', 5)
-
-   call check_input()
-
-   call mp_barrier(intra_pool_comm)
    call bcast_all_current_namelist( &
       delta_t, &
       file_output, trajdir, vel_input_units, &
@@ -202,6 +200,17 @@ program all_currents
       re_init_wfc_3, three_point_derivative, &
       n_repeat_every_step, hpsi_test, &
       n_workers, worker_id)
+   ! PW input
+   call read_namelists('PW', 5)
+   if (n_workers>0 ) then
+      outdir = trim(outdir) // '.'//trim(worker_id_char)
+   endif
+   
+   call read_cards('PW', 5)
+
+   call check_input()
+
+   call mp_barrier(intra_pool_comm)
    if (vel_input_units == 'CP') then ! atomic units of cp are different
       vel_factor = 2.0_dp
       if (ionode) &
