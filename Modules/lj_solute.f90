@@ -823,7 +823,7 @@ SUBROUTINE lj_get_force_x(iq, rismt, force, rsmax, laue)
   END IF
   !
   ! ... calculate potential on each FFT grid
-!$omp parallel default(shared) private(ir, i1, i2, i3, offrange, r1, r2, r3, tau_r, rhog, &
+!$omp parallel default(shared) private(ir, i1, i2, i3, offrange, r1, r2, r3, tau_r, rhog, iz, &
 !$omp          ia, iia, su, suv, rmax, rmin, xuv, yuv, zuv, ruv2, eu, euv, sr2, sr6, sr12, &
 !$omp          fac, fromp)
 #if defined(_OPENMP)
@@ -1074,7 +1074,7 @@ SUBROUTINE lj_get_stress_x(iq, rismt, sigma, rsmax, laue)
   END IF
   !
   ! ... calculate potential on each FFT grid
-!$omp parallel default(shared) private(ir, i1, i2, i3, offrange, r1, r2, r3, tau_r, rhog, &
+!$omp parallel default(shared) private(ir, i1, i2, i3, offrange, r1, r2, r3, tau_r, rhog, iz, &
 !$omp          ia, iia, su, suv, rmax, rmin, xuv, yuv, zuv, ruv2, eu, euv, sr2, sr6, sr12, &
 !$omp          fac, sgomp)
 #if defined(_OPENMP)
