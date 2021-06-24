@@ -10,9 +10,9 @@ fd.o : ../../Modules/kind.o
 fd.o : ../../Modules/mp_global.o
 fd.o : ../../Modules/mp_world.o
 fd.o : ../../Modules/recvec.o
-fd.o : ../../Modules/wrappers.o
 fd.o : ../../PW/src/symm_base.o
 fd.o : ../../PW/src/symme.o
+fd.o : ../../UtilXlib/clib_wrappers.o
 fd.o : ../../UtilXlib/mp.o
 fd_ef.o : ../../Modules/cell_base.o
 fd_ef.o : ../../Modules/constants.o

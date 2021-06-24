@@ -427,7 +427,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_module,           ONLY : lfcp, fcp_mu
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_ignore_mun, gcscf_set_nelec
-  USE wrappers,             ONLY : memstat
+  USE clib_wrappers,        ONLY : memstat
   USE iso_c_binding,        ONLY : c_int
   !
   USE plugin_variables,     ONLY : plugin_etot

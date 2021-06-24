@@ -34,7 +34,6 @@ dnonloccorr.o \
 dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
-compute_intq.o \
 set_intq_nc.o \
 lr_sym_mod.o \
 orthogonalize.o \
@@ -61,8 +60,11 @@ mode_group.o \
 mix_pot.o \
 lrcom.o \
 lr_dot.o \
+lr_dot_magnons.o \
 lanczos_pseudohermitian.o \
-lanczos_nonhermitian.o 
+lanczos_nonhermitian.o \
+lanczos_pseudohermitian_c.o \
+lanczos_nonhermitian_c.o 
 
 TLDEPS=mods pwlibs
 

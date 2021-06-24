@@ -22,7 +22,7 @@ then
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip" 
+	   GWW/simple_bse GWW/simple_ip QEHeat/src" 
           
 elif
     test $1 = "-addson" 
@@ -80,7 +80,7 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
 	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
-        EPW/src )
+        EPW/src | QEHeat/src )
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;; 
 	GWW/head )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	

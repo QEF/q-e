@@ -54,17 +54,17 @@ set(sources
     src/test_tools.f90)
 
 qe_add_library(qe_epw ${sources})
-target_link_libraries(qe_epw
-    PRIVATE
-        qe_wannier90
-        qe_modules
-        qe_lr_modules
-        qe_phonon_ph
-        qe_pw
-        qe_mpi_fortran
-        qe_upflib
-        qe_fftx
-        qe_xclib)
+target_link_libraries(
+    qe_epw
+    PRIVATE qe_wannier90
+            qe_modules
+            qe_lr_modules
+            qe_phonon_ph
+            qe_pw
+            qe_mpi_fortran
+            qe_upflib
+            qe_fftx
+            qe_xclib)
 
 ###########################################################
 # epw.x
@@ -72,14 +72,15 @@ target_link_libraries(qe_epw
 set(sources src/epw.f90)
 qe_add_executable(qe_epw_exe ${sources})
 set_target_properties(qe_epw_exe PROPERTIES OUTPUT_NAME epw.x)
-target_link_libraries(qe_epw_exe
-    PRIVATE
-        qe_modules
-        qe_pp
-	    qe_pw
-	    qe_fftx
-        qe_epw
-        qe_upflib)
+target_link_libraries(qe_epw_exe PRIVATE qe_modules qe_pw qe_fftx qe_epw qe_upflib)
+
+###########################################################
+# ZG.x
+###########################################################
+set(sources ZG_displacement/src/ZG.f90)
+qe_add_executable(qe_zg_exe ${sources})
+set_target_properties(qe_zg_exe PROPERTIES OUTPUT_NAME ZG.x)
+target_link_libraries(qe_zg_exe PRIVATE qe_modules qe_pw qe_phonon_ph qe_lr_modules qe_lapack)
 
 ###########################################################
 
@@ -87,4 +88,6 @@ qe_install_targets(
     # Libraries
     qe_epw
     # Exacutables
-    qe_epw_exe)
+    qe_epw_exe qe_zg_exe)
+
+install(PROGRAMS bin/pp.py TYPE BIN RENAME epw_pp.py)

@@ -679,6 +679,11 @@ the drag."
 Advanced usage
 --------------
 
+### Autopilot features
+
+For changing variables while the simulation is running see
+[the autopilot guide](autopilot_guide.md)
+
 ###  Self-interaction Correction 
 
 The self-interaction correction (SIC) included in the `CP` package is

@@ -65,7 +65,6 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       do ipol = 1, 3  
          grho(ipol,:,1) = (v2x(:,1) + v2c(1,:,1))*grho(ipol,:,1) 
       enddo
-      etxc = SUM( (sx(:) + sc(:)) * SIGN(1.d0,rho(:,1)) )
       !
     else
       !
@@ -86,9 +85,9 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       !
       kedtau(:,1) = (v3x(:,1) + v3c(:,1)) * 0.5d0
       kedtau(:,2) = (v3x(:,2) + v3c(:,2)) * 0.5d0
-      etxc = etxc + SUM( sx(:) + sc(:) )
       !
     endif
+    etxc = etxc + SUM( sx(:) + sc(:) )
     !
     deallocate( sx, v1x, v2x, v3x )
     deallocate( sc, v1c, v2c, v3c )

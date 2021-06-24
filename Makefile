@@ -26,6 +26,7 @@ default :
 	@echo '  pp           postprocessing programs'
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
 	@echo '  cp           CP code: Car-Parrinello molecular dynamics'
+	@echo '  all_currents QEHeat code: energy flux and charge current'
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  gwl          GW with Lanczos chains'
 	@echo '  ld1          utilities for pseudopotential generation'
@@ -125,6 +126,10 @@ epw: phlibs
 	if test -d EPW ; then \
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
+
+all_currents:
+	if test -d QEHeat ; then \
+	( cd QEHeat ; $(MAKE) all || exit 1; ) ; fi
 
 travis : pwall epw
 	if test -d test-suite ; then \
@@ -280,8 +285,9 @@ clean :
 	for dir in \
 		CPV LAXlib FFTXlib XClib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
-		atomic clib LR_Modules pwtools upflib \
+		atomic clib LR_Modules upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
+		QEHeat \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

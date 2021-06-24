@@ -23,8 +23,11 @@ MODULE lr_variables
   INTEGER :: iund0psi   = 20       ! unit for writing/reding of d0psi
   INTEGER :: iundvpsi   = 200
   INTEGER :: iunrestart = 22
+  INTEGER :: iunTwfc = 31          ! unit where time-reversed wfc are stored
+                                   ! (magnetic GS only)
   INTEGER :: nwordd0psi, nwordrestart, n_ipol
-  CHARACTER (len=10), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS'
+  CHARACTER (len=10), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS', &
+                                   & code3 = 'turboMAGNONS'
   INTEGER :: size_evc
   CHARACTER (len=24) :: bgz_suffix
   !
@@ -100,11 +103,54 @@ MODULE lr_variables
                                             ! to conduction  state (second index), for each polarization
                                             ! direction (third index).
 
-
-
-!  COMPLEX (DP), ALLOCATABLE ::      &
-!                  intq(:,:,:),      &! nhm, nhm, nat),        integral of e^iqr Q 
-!                  intq_nc(:,:,:,:)   ! nhm, nhm, nat, nspin), integral of e^iqr Q in the noncollinear case
+  !------------------------------------------------------------------------!
+  ! Variables for Magnons                                                  !
+  !------------------------------------------------------------------------!
+  !
+  LOGICAL :: magnons = .false.
+  !
+  COMPLEX(kind=dp), ALLOCATABLE :: &
+                                !-----------------------------------------
+                                ! Lanczos vectors in magnons case
+                                ! 
+                                ! rgt --> right Krylov space
+                                ! lft --> left Krylov space
+                                !-----------------------------------------
+       evc1_rgt_old(:,:,:,:), &       
+       evc1_lft_old(:,:,:,:), &   
+                                !
+       evc1_rgt(:,:,:,:), &   
+       evc1_lft(:,:,:,:), &   
+                                !
+       evc1_rgt_new(:,:,:,:), &   
+       evc1_lft_new(:,:,:,:), &   
+                                !
+       V0psi(:,:,:,:,:), &      ! magnons equivalent of d0psi, batch
+                                ! representation of the external potential,
+                                ! contains P_C V_ext psi
+                                !
+       O_psi(:,:,:,:,:)         ! batch representation of the observable O whose  
+                                ! linear response we are interested in
+                                !
+                                ! end of magnons case
+                                !-----------------------------------------
+                                !
+  !
+  INTEGER :: n_op = 3
+  INTEGER :: b_pol = 0   ! b polarization: 0 == x,y,z
+                         !                 1 == x
+                         !                 2 == y
+                         !                 3 == z
+  COMPLEX(kind=dp), ALLOCATABLE :: &
+               alpha_magnons_store(:,:), &
+               gamma_magnons_store(:,:)
+  ! debug/stability flags for Lanczos chains
+  LOGICAL :: force_real_gamma, force_real_alpha, force_zero_alpha 
+  ! Lanczos preconditioning
+  LOGICAL :: lan_precondition
+  !
+  !------------------------------------------------------------------------!
+  !
   ! Lanczos Matrix
   !
   !

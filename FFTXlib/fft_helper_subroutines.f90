@@ -314,7 +314,7 @@ CONTAINS
      !
      psi = 0.0d0
      !
-     !  nlm and nl array: hold conversion indices form 3D to
+     !  nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
      !     contigiously
      !  c array: stores the Fourier expansion coefficients
@@ -353,7 +353,7 @@ CONTAINS
      !
      psi = 0.0d0
      !
-     !  nlm and nl array: hold conversion indices form 3D to
+     !  nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
      !     contigiously
      !  c array: stores the Fourier expansion coefficients
@@ -388,7 +388,7 @@ CONTAINS
      ! local variables
      integer :: ig
      !
-     !  nl array: hold conversion indices form 3D to 1-D vectors. 
+     !  nl array: hold conversion indices from 3D to 1-D vectors. 
      !     Columns along the z-direction are stored contigiously
      !  c array: stores the Fourier expansion coefficients of the wave function
      !     Loop for all local g-vectors (npw
@@ -415,7 +415,7 @@ CONTAINS
      !
      psi = 0.0d0
      !
-     !  nlm and nl array: hold conversion indices form 3D to
+     !  nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
      !     contigiously
      !  c array: stores the Fourier expansion coefficients

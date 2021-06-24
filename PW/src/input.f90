@@ -40,7 +40,7 @@ SUBROUTINE iosys()
                             press_       => press, &
                             wmass_       => wmass
   !
-  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
+  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, atm, &
                             ntyp_ => nsp, &
                             nat_  => nat, &
                             amass, tau_format
@@ -1641,7 +1641,8 @@ SUBROUTINE iosys()
       if (dftd3_version==2) dftd3_threebody=.false.
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
-      CALL dftd3_printout(dftd3, dftd3_in)
+      CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, nat, ityp,&
+                  tau, at, alat )
       dft_ = get_dft_short( )
       dft_ = dftd3_xc ( dft_ )
       CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)

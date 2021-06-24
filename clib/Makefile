@@ -13,6 +13,7 @@ fletcher32.o \
 md5.o \
 md5_from_file.o \
 memstat.o \
+memusage.o \
 ptrace.o \
 sockets.o \
 qmmm_aux.o \

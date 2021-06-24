@@ -9,6 +9,10 @@ message("\n"
         "Only pw and cp results from ctest are reliable, we are working on making the rest tests work reliably with ctest. "
         "To run non-pw/cp tests, make a softlink of the bin directory to the root of QE source tree and run tests in the test-suite directory under that root.\n")
 find_program(BASH_PROGRAM bash)
+if(NOT BASH_PROGRAM)
+  message(WARNING "bash not found! Tests under ${CMAKE_CURRENT_SOURCE_DIR} not added.")
+  return()
+endif()
 
 function(qe_runner test_name label test_binary test_input test_output)
   if(QE_ENABLE_MPI)
@@ -19,6 +23,11 @@ function(qe_runner test_name label test_binary test_input test_output)
              COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/ctest_runner.sh ${label} ${test_output} ${test_binary} -inp ${test_input})
   endif()
 endfunction()
+
+# skip checks for disabled features
+if(NOT QE_ENABLE_LIBXC)
+  list(APPEND CHECK_SKIP_MESSAGE "libxc needed for this functional")
+endif()
 
 # prepare jobconfig and userconfig for testcode.py
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
@@ -168,7 +177,10 @@ foreach(test_category IN LISTS qe_test_categories)
         if(DEFINED expected_exit_msg)
           set_tests_properties(${test_name} PROPERTIES PASS_REGULAR_EXPRESSION "${expected_exit_msg}")
           unset(expected_exit_msg)
+        else()
+          set_tests_properties(${test_name} PROPERTIES PASS_REGULAR_EXPRESSION "JOB DONE")
         endif()
+        set_property(TEST ${test_name} APPEND PROPERTY PASS_REGULAR_EXPRESSION "${CHECK_SKIP_MESSAGE}")
 
         set_property(TEST ${test_name} APPEND PROPERTY LABELS "system;${subfolder_name}")
 

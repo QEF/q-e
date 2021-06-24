@@ -1,0 +1,15 @@
+ &lr_input
+   prefix = 'Fe',
+   outdir = './out',
+   magnons = .true.,
+   itermax0 = 400,
+   itermax = 400,
+   extrapolation='no',
+   epsil = 0.001,
+   ipol = 2,
+   units = 1,
+   start = 0.0d0,
+   increment = 0.001d0,
+   end = 1.0d0
+ /
+

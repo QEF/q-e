@@ -145,6 +145,7 @@ MODULE pw_restart_new
       !
       USE wvfct_gpum,           ONLY : using_et, using_wg
       USE wavefunctions_gpum,   ONLY : using_evc
+      USE qexsd_module,         ONLY : qexsd_add_all_clocks 
       !
       IMPLICIT NONE
       !
@@ -680,6 +681,9 @@ MODULE pw_restart_new
          ENDIF
          NULLIFY ( bp_obj_ptr) 
 !-------------------------------------------------------------------------------
+! ... CLOCKS
+         CALL qexsd_add_all_clocks()
+!-------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
  10      CONTINUE
@@ -753,7 +757,7 @@ MODULE pw_restart_new
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : me_bgrp, root_bgrp, intra_bgrp_comm, &
                                        root_bgrp_id, my_bgrp_id
-      USE wrappers,             ONLY : f_mkdir_safe
+      USE clib_wrappers,        ONLY : f_mkdir_safe
       !
       USE wavefunctions_gpum,   ONLY : using_evc
       USE wvfct_gpum,           ONLY : using_et

@@ -15,8 +15,9 @@ MODULE path_read_cards_module
    !
    USE kinds,     ONLY : DP
    USE constants, ONLY : angstrom_au
-   USE parser,    ONLY : parse_unit,field_count, read_line, get_field
-   USE io_global, ONLY : meta_ionode
+   USE io_global, ONLY : meta_ionode, meta_ionode_id
+   USE mp,        ONLY : mp_bcast
+   USE mp_world,  ONLY : world_comm
    !
    USE path_input_parameters_module
    !
@@ -49,45 +50,49 @@ CONTAINS
       INTEGER, INTENT(IN) :: unit
       !
       CHARACTER(len=256)         :: input_line
-      CHARACTER(len=80)          :: card
+      CHARACTER(len=80)          :: climbing_images
       CHARACTER(len=1), EXTERNAL :: capital
-      LOGICAL                    :: tend
       INTEGER                    :: i
       !
+      climbing_images = ' '
       !
-      parse_unit = unit
-      !
-100   CALL read_line( input_line, end_of_file=tend )
-      !
-      IF( tend ) GOTO 120
-      IF( input_line == ' ' .or. input_line(1:1) == '#' ) GOTO 100
-      !
-      READ (input_line, *) card
-      !
-      DO i = 1, len_trim( input_line )
-         input_line( i : i ) = capital( input_line( i : i ) )
-      ENDDO
-      !
-      IF( trim(card) =='CLIMBING_IMAGES' ) THEN
+      IF ( meta_ionode) THEN
          !
-         CALL card_climbing_images( input_line )
+         read_loop:  DO
+            !
+            READ (unit, fmt='(A256)', END=100, ERR=101) input_line
+            !
+            IF( input_line == ' ' .or. input_line(1:1) == '#' ) CYCLE
+            !
+            DO i = 1, len_trim( input_line )
+               input_line( i : i ) = capital( input_line( i : i ) )
+            ENDDO
+            !
+            IF( trim(adjustl(input_line)) == 'CLIMBING_IMAGES' ) THEN
+               !
+               READ (unit, fmt='(A80)', END=101, ERR=101) climbing_images
+               !
+            ELSE
+               !
+               CALL infomsg ('read_cards_module',&
+                    'card '//trim(input_line)//' ignored' )
+               !
+            ENDIF
+            !
+         END DO read_loop
          !
-      ELSE
-         !
-         IF ( meta_ionode ) CALL infomsg ('read_cards_module',&
-            'card '//trim(input_line)//' ignored' )
-         !
-      ENDIF
+      END IF
       !
-      ! ... END OF LOOP ... !
+100   CONTINUE
       !
-      GOTO 100
-      !
-120      CONTINUE
+      CALL mp_bcast(climbing_images, meta_ionode_id, world_comm)
+      CALL card_climbing_images( climbing_images )
       !
       RETURN
       !
-   END SUBROUTINE path_read_cards
+101   CALL errore ('read_cards_module','error reading neb.dat file', 1 )
+      !
+    END SUBROUTINE path_read_cards
 
    !
    ! ... Description of the allowed input CARDS
@@ -114,11 +119,11 @@ CONTAINS
    !    END manual
    !------------------------------------------------------------------------
    !
-   SUBROUTINE card_climbing_images( input_line )
+   SUBROUTINE card_climbing_images( climbing_images )
       !
       IMPLICIT NONE
       !
-      CHARACTER(len=256) :: input_line
+      CHARACTER(len=80)  :: climbing_images
       LOGICAL, SAVE      :: tread = .false.
       LOGICAL, EXTERNAL  :: matches
       !
@@ -139,14 +144,12 @@ CONTAINS
          !
          climbing(:) = .false.
          !
-         CALL read_line( input_line )
-         !
          DO i = 1, num_of_images
             !
             i_char = int_to_char( i )
             !
             IF ( matches( ' ' // trim( i_char ) // ',' , &
-                           ' ' // trim( input_line ) // ',' ) ) &
+                          ' ' // trim( climbing_images ) // ',' ) ) &
                climbing(i) = .true.
             !
          ENDDO

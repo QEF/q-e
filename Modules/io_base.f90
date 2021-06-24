@@ -648,16 +648,7 @@ MODULE io_base
       TYPE ( qeh5_file)       :: h5file
       TYPE ( qeh5_dataset)    :: h5dset_mill, h5dset_rho_g
       CHARACTER(LEN=10)       :: tempchar, datasets(4)
-      !
-      IF (nspin <= 2) THEN 
-         datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
-      ELSE
-         datasets(1)  = "rhotot_g"
-         datasets(2)  = "m_x"
-         datasets(3)  = "m_y"
-         datasets(4)  = "m_z"
-      END IF
-#endif 
+#endif
       !
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (ig_l2g, 1) ) &
@@ -759,18 +750,25 @@ MODULE io_base
          ALLOCATE( rho_g( 1 ) )
       END IF
       ALLOCATE (rhoaux(ngm))
+#if defined(__HDF5)
+      IF (nspin_ <= 2) THEN 
+        datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
+      ELSE
+        datasets(1)  = "rhotot_g"; datasets(2:4) = ["m_x", "m_y", "m_z"] 
+      END IF
+#endif 
       !
       DO ns = 1, nspin_
          !
          IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
-            CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = TRIM(datasets(ns)), ACTION = 'read', ERROR = ierr) 
-            CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
-            CALL qeh5_close ( h5dset_rho_g )  
+           CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = TRIM(datasets(ns)), ACTION = 'read', ERROR = ierr) 
+           CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
+           CALL qeh5_close ( h5dset_rho_g )  
 #else 
-            READ (iun, iostat=ierr) rho_g(1:ngm_g_)
+           READ (iun, iostat=ierr) rho_g(1:ngm_g_)
 #endif
-            IF ( ngm_g > ngm_g_) rho_g(ngm_g_+1:ngm_g) = cmplx(0.d0,0.d0, KIND = DP) 
+           IF ( ngm_g > ngm_g_) rho_g(ngm_g_+1:ngm_g) = cmplx(0.d0,0.d0, KIND = DP) 
          END IF
          CALL mp_bcast( ierr, root_in_group, intra_group_comm )
          IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &

@@ -1243,6 +1243,7 @@ CONTAINS
     INTEGER :: id_vec(6)
     !
 #if defined(__LIBXC)
+    call xclib_init_libxc_print_version_info
     id_vec(1)=iexch ; id_vec(2)=icorr
     id_vec(3)=igcx  ; id_vec(4)=igcc
     id_vec(5)=imeta ; id_vec(6)=imetac
@@ -1271,6 +1272,18 @@ CONTAINS
 #endif
     RETURN
   END SUBROUTINE xclib_init_libxc
+  !
+  !--------------------------------------------------------------------------
+#if defined(__LIBXC)
+  SUBROUTINE xclib_init_libxc_print_version_info()
+    !------------------------------------------------------------------------
+    IMPLICIT NONE
+    INTEGER :: major, minor, micro
+    CALL xc_f03_version(major, minor, micro)
+    WRITE(stdout, '(3X,"Using LIBXC version       = ",3I4)') major, minor, micro
+    RETURN
+  END SUBROUTINE xclib_init_libxc_print_version_info
+#endif
   !
   !--------------------------------------------------------------------------
   SUBROUTINE xclib_finalize_libxc()
@@ -1347,6 +1360,7 @@ CONTAINS
 #else
     CALL xclib_infomsg( 'get_libxc_ext_param', 'WARNING: an external parameter&
                          &was sought in Libxc, but Libxc is not active' )
+    get_libxc_ext_param = 0.d0
 #endif
     RETURN
   END FUNCTION
@@ -1514,8 +1528,8 @@ CONTAINS
    !! Set input threshold for \(\text{family}\)-term of XC functional.
    !
    USE kind_l,      ONLY: DP
-   USE dft_par_mod, ONLY: rho_threshold_lda, rho_threshold_gga, grho2_threshold_mgga, &
-                          grho_threshold_gga, tau_threshold_mgga
+   USE dft_par_mod, ONLY: rho_threshold_lda, rho_threshold_gga, rho_threshold_mgga, &
+                          grho_threshold_gga, grho2_threshold_mgga, tau_threshold_mgga
    !
    IMPLICIT NONE
    !
@@ -1544,7 +1558,7 @@ CONTAINS
      rho_threshold_gga = rho_threshold_
      IF ( PRESENT(grho_threshold_) ) grho_threshold_gga = grho_threshold_
    CASE( 'MGGA' )
-     rho_threshold_gga = rho_threshold_
+     rho_threshold_mgga = rho_threshold_
      IF ( PRESENT(grho_threshold_) ) grho2_threshold_mgga = grho_threshold_
      IF ( PRESENT(tau_threshold_)  ) tau_threshold_mgga   = tau_threshold_
    END SELECT

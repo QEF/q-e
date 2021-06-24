@@ -1,0 +1,43 @@
+&energy_current
+vel_input_units="CP",
+    delta_t=   0.500,
+    file_output= 'current_hz_not_rotated',
+    eta=   0.100,
+    n_max=     5,
+    three_point_derivative = .false.
+ /
+ &CONTROL
+    calculation='md',
+    restart_mode='from_scratch',
+    pseudo_dir='../../pseudo',
+    outdir='./save',
+    disk_io = 'none',
+/
+ &SYSTEM
+    ibrav=1,
+    celldm(1) = 10.,
+    nat=    3,
+    ntyp=     2,
+    ecutwfc = 40.d0,
+/
+ &ELECTRONS
+    conv_thr = 1.D-11,
+    mixing_beta = 0.7,
+/
+ &IONS
+    ion_velocities = 'from_input',
+/
+ ATOMIC_SPECIES
+   H      1.00000000 H.pbe-vbc.UPF
+   O     16.00000000 O.pbe-mt.UPF
+ATOMIC_POSITIONS {bohr}
+H     -0.38060793839043E-03     0.11644696237662E-02    -0.18055220775137E-03
+H      0.14854564679755E-02    -0.65844095250918E-03    -0.37960675829410E-02
+O     -0.69053033099076E-04    -0.31626791953560E-04     0.24853873691829E-03
+
+ATOMIC_VELOCITIES
+H     0.37190570442904E-02     0.11766679437962E-01     0.85904415711711E-02
+H    -0.14890818922093E-03    -0.60431544079074E-02    -0.13297814595263E-01
+O    -0.33004364284418E-02    -0.51252649831284E-02     0.41669698765058E-02
+
+K_POINTS {Gamma}

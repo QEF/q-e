@@ -81,7 +81,7 @@ MODULE cp_restart_new
       USE uspp_param,               ONLY : upf
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
-      USE wrappers,                 ONLY : f_copy
+      USE clib_wrappers,            ONLY : f_copy
       USE uspp,                     ONLY : okvan
       USE input_parameters,         ONLY : vdw_corr, starting_ns_eigenvalue
       USE qexsd_init, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,  & 
@@ -93,7 +93,8 @@ MODULE cp_restart_new
                           qexsd_init_outputElectricField, qexsd_init_vdw,     &
                           qexsd_init_hybrid, qexsd_init_dftU 
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
-      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf
+      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf,  &
+                              qexsd_add_all_clocks
       !
       IMPLICIT NONE
       !
@@ -413,6 +414,11 @@ MODULE cp_restart_new
          ! FIXME: may be wrong or incomplete
          IF ( tpre) stress = -MATMUL( detot, ht ) / omega
          CALL qexsd_init_stress(output_obj%stress, stress, tpre )
+!------------------------------------------------------------------------------
+!--- TIMING 
+!------------------------------------------------------------------------------
+        CALL qexsd_add_all_clocks() 
+
 !-------------------------------------------------------------------------------
 ! ... non existent or not implemented fields
 !-------------------------------------------------------------------------------

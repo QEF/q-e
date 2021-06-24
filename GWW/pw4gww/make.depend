@@ -110,9 +110,9 @@ fake_conduction.o : ../../Modules/noncol.o
 fake_conduction.o : ../../Modules/recvec.o
 fake_conduction.o : ../../Modules/wannier_gw.o
 fake_conduction.o : ../../Modules/wavefunctions.o
-fake_conduction.o : ../../Modules/wrappers.o
 fake_conduction.o : ../../PW/src/g_psi_mod.o
 fake_conduction.o : ../../PW/src/pwcom.o
+fake_conduction.o : ../../UtilXlib/clib_wrappers.o
 fake_conduction.o : ../../UtilXlib/mp.o
 fake_conduction.o : ../../upflib/uspp.o
 fake_conduction.o : fft_custom.o

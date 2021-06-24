@@ -23,7 +23,9 @@ SUBROUTINE lr_restart(iter_restart,rflag)
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F, &
                                    bgz_suffix, beta_store, gamma_store, zeta_store, norm0, &
                                    lr_verbosity, charge_response, LR_polarization, n_ipol, &
-                                   eels, sum_rule
+                                   eels, sum_rule, magnons, evc1_rgt, evc1_lft, & 
+                                   evc1_rgt_old, evc1_lft_old, alpha_magnons_store, &
+                                   gamma_magnons_store
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot,rho_1_tot_im
   USE wvfct,                ONLY : nbnd, npwx
   USE becmod,               ONLY : bec_type, becp, calbec
@@ -34,6 +36,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE fft_base,             ONLY : dfftp
   USE noncollin_module,     ONLY : nspin_mag, npol
   USE qpoint,               ONLY : nksq
+  USE control_lr,           ONLY : nbnd_occx
 
   IMPLICIT NONE
   !
@@ -120,16 +123,35 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   DO i=1,7
      READ(158,*,end=301,err=303)
   ENDDO
-  ! 
-  DO i=1,iter_restart-1
-     READ(158,*,end=301,err=303) beta_store(pol_index,i+1)
-     READ(158,*,end=301,err=303) gamma_store(pol_index,i+1)
-     READ(158,*,end=301,err=303) zeta_store (pol_index,:,i)
-  ENDDO
   !
-  READ(158,*,end=301,err=303) beta_store(pol_index,iter_restart)
-  READ(158,*,end=301,err=303) gamma_store(pol_index,iter_restart)
-  READ(158,*,end=301,err=303) zeta_store (pol_index,:,iter_restart)
+  IF (magnons) THEN
+     !
+     ! read alpha_1
+     READ(158,*,end=301,err=303) alpha_magnons_store(pol_index,1)
+     ! 
+     ! read zeta_1
+     READ(158,*,end=301,err=303) zeta_store (pol_index,:,1)
+     !
+     DO i=1,iter_restart-1
+        READ(158,*,end=301,err=303) alpha_magnons_store(pol_index,i+1)
+        READ(158,*,end=301,err=303) beta_store(pol_index,i+1)
+        READ(158,*,end=301,err=303) gamma_magnons_store(pol_index,i+1)
+        READ(158,*,end=301,err=303) zeta_store (pol_index,:,i+1)
+     ENDDO     
+     !
+  ELSE
+     ! 
+     DO i=1,iter_restart-1
+        READ(158,*,end=301,err=303) beta_store(pol_index,i+1)
+        READ(158,*,end=301,err=303) gamma_store(pol_index,i+1)
+        READ(158,*,end=301,err=303) zeta_store (pol_index,:,i)
+     ENDDO
+     !
+     READ(158,*,end=301,err=303) beta_store(pol_index,iter_restart)
+     READ(158,*,end=301,err=303) gamma_store(pol_index,iter_restart)
+     READ(158,*,end=301,err=303) zeta_store (pol_index,:,iter_restart)
+     !
+  ENDIF
   !
   CLOSE(158)
   !
@@ -140,11 +162,13 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   CALL mp_bcast (beta_store(pol_index,:), ionode_id, world_comm)
   CALL mp_bcast (gamma_store(pol_index,:), ionode_id, world_comm)
   CALL mp_bcast (zeta_store(pol_index,:,:), ionode_id, world_comm)
+  CALL mp_bcast (alpha_magnons_store(pol_index,:), ionode_id, world_comm)
+  CALL mp_bcast (gamma_magnons_store(pol_index,:), ionode_id, world_comm)
 #endif
   !
   ! Optical case: read projection
   !
-  IF (project .and. .not.eels) THEN
+  IF (project .and. .not.eels .and. .not. magnons) THEN
 #if defined(__MPI)
   IF (ionode) THEN
 #endif
@@ -185,20 +209,35 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ! Note: Restart files are always in outdir
   ! Reading Lanczos vectors
   !
-  nwordrestart = 2 * nbnd * npwx * npol * nksq
-  !
-  CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
-  !
-  CALL davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,-1)
-  CALL davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,-1)
-  CALL davcio(evc1_old(:,:,:,1),nwordrestart,iunrestart,3,-1)
-  CALL davcio(evc1_old(:,:,:,2),nwordrestart,iunrestart,4,-1)
-  !
-  CLOSE( unit = iunrestart)
+  IF (magnons) THEN
+     nwordrestart = 2 * 2 * nbnd_occx * npwx * npol * nksq
+     !
+     CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
+     !
+     CALL davcio(evc1_rgt(:,:,:,:),nwordrestart,iunrestart,1,-1)
+     CALL davcio(evc1_lft(:,:,:,:),nwordrestart,iunrestart,2,-1)
+     CALL davcio(evc1_rgt_old(:,:,:,:),nwordrestart,iunrestart,3,-1)
+     CALL davcio(evc1_lft_old(:,:,:,:),nwordrestart,iunrestart,4,-1)
+     !
+     CLOSE( unit = iunrestart)
+     !
+  ELSE
+     nwordrestart = 2 * nbnd * npwx * npol * nksq
+     !
+     CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
+     !
+     CALL davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,-1)
+     CALL davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,-1)
+     CALL davcio(evc1_old(:,:,:,1),nwordrestart,iunrestart,3,-1)
+     CALL davcio(evc1_old(:,:,:,2),nwordrestart,iunrestart,4,-1)
+     !
+     CLOSE( unit = iunrestart)
+     !
+  ENDIF
   !
   ! Optical case: read the response charge density
   !
-  IF (charge_response == 1 .and. .not.eels) THEN
+  IF (charge_response == 1 .and. .not.eels .and. .not. magnons) THEN
      IF (resonance_condition) THEN
          CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr*nspin_mag, exst)
         CALL davcio(rho_1_tot_im(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,-1)

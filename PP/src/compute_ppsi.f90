@@ -73,12 +73,12 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   IF (okvan) THEN
      ppsi_us=(0.d0,0.d0)
      ALLOCATE (dpqq( nhm, nhm, 3, ntyp))
-     CALL compute_qdipol(dpqq,ipol)
+     CALL compute_qdipol(dpqq)
      IF (noncolin) THEN
         ALLOCATE (ps_nc(nbnd_occ,npol))
         IF (lspinorb) THEN
            ALLOCATE (dpqq_so( nhm, nhm, nspin, 3, ntyp))
-           CALL compute_qdipol_so(dpqq, dpqq_so,ipol)
+           CALL compute_qdipol_so(dpqq, dpqq_so)
         ENDIF
      ELSE
         ALLOCATE (ps(nbnd_occ))

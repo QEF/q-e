@@ -17,7 +17,6 @@ set(src_ph
     PH/yambo.f90
     PH/bcast_ph_input.f90
     PH/cch_psi_all.f90
-    PH/ccg_psi.f90
     PH/check_if_partial_dyn.f90
     PH/check_initial_status.f90
     PH/check_restart_recover.f90
@@ -296,6 +295,21 @@ target_link_libraries(qe_phonon_q2r_exe
         qe_modules
         qe_phonon_ph)
 
+###########################################################
+# dvscf_q2r.x
+###########################################################
+set(src_dvscf_q2r_x PH/dvscf_q2r.f90)
+qe_add_executable(qe_phonon_dvscf_q2r_exe ${src_dvscf_q2r_x})
+set_target_properties(qe_phonon_dvscf_q2r_exe PROPERTIES OUTPUT_NAME dvscf_q2r.x)
+target_link_libraries(qe_phonon_dvscf_q2r_exe
+    PRIVATE
+        qe_pw
+        qe_lr_modules
+        qe_modules
+        qe_fftx
+        qe_lapack
+        qe_phonon_ph)
+
 ##################################################################
 # matdyn.x 
 ##################################################################
@@ -411,6 +425,17 @@ target_link_libraries(qe_phonon_fdifc_exe
         qe_fftx)
 
 ###########################################################
+# postahc.x
+###########################################################
+set(src_postahc_x PH/postahc.f90)
+qe_add_executable(qe_phonon_postahc_exe ${src_postahc_x})
+set_target_properties(qe_phonon_postahc_exe PROPERTIES OUTPUT_NAME postahc.x)
+target_link_libraries(qe_phonon_postahc_exe
+    PRIVATE
+        qe_modules
+        qe_phonon_ph)
+
+###########################################################
 
 qe_install_targets(
     # Libraries
@@ -422,6 +447,8 @@ qe_install_targets(
     qe_phonon_ph_exe
     qe_phonon_dynmat_exe
     qe_phonon_q2r_exe
+    qe_phonon_dvscf_q2r_exe
+    qe_phonon_matdyn_exe
     qe_phonon_q2qstar_exe
     qe_phonon_lambda_exe
     qe_phonon_alpha2f_exe
@@ -429,4 +456,5 @@ qe_install_targets(
     qe_phonon_fqha_exe
     qe_phonon_fd_exe
     qe_phonon_fdef_exe
-    qe_phonon_fdifc_exe)
+    qe_phonon_fdifc_exe
+    qe_phonon_postahc_exe)

@@ -50,7 +50,13 @@ set(src_tddfpt
     src/dveqpsi_us.f90
     src/dveqpsi_us_only.f90
     src/orthogonalize_omega.f90
-    src/mix_pot.f90)
+    src/mix_pot.f90
+    src/lr_magnons_routines.f90
+    src/lr_apply_liouvillian_magnons.f90
+    src/lr_dvpsi_magnons.f90
+    src/lr_Opsi_magnons.f90
+    src/lr_calc_dens_magnons.f90)
+
 
 qe_add_library(qe_tddfpt ${src_tddfpt})
 target_link_libraries(qe_tddfpt
@@ -117,14 +123,34 @@ target_link_libraries(qe_tddfpt_turboeels_exe
         qe_xclib)
 
 ###########################################################
-# tddfpt_calculate_spectrum.x
+# turbo_magnons.x
 ###########################################################
-set(src_tddfpt_calculate_spectrum_x tools/tddfpt_calculate_spectrum.f90)
-qe_add_executable(qe_tddfpt_calculatespectrum_exe ${src_tddfpt_calculate_spectrum_x})
-set_target_properties(qe_tddfpt_calculatespectrum_exe 
-    PROPERTIES 
-        OUTPUT_NAME tddfpt_calculate_spectrum.x)
-target_link_libraries(qe_tddfpt_calculatespectrum_exe
+set(src_turbomagnons_x src/lr_magnons_main.f90)
+# Because this main file includes laxlib.fh which is preprocessed with __CUDA definition
+# the main file needs to be compiled with consistent definitions.
+qe_enable_cuda_fortran(src/lr_magnons_main.f90)
+qe_add_executable(qe_tddfpt_turbomagnons_exe ${src_turbomagnons_x})
+set_target_properties(qe_tddfpt_turbomagnons_exe
+    PROPERTIES
+        OUTPUT_NAME turbo_magnons.x)
+target_link_libraries(qe_tddfpt_turbomagnons_exe
+    PRIVATE
+        qe_tddfpt
+        qe_lr_modules
+        qe_pw
+        qe_lax
+        qe_modules
+        qe_fftx)
+
+###########################################################
+# turbo_spectrum.x
+###########################################################
+set(src_tddfpt_turbospectrum_x tools/tddfpt_calculate_spectrum.f90)
+qe_add_executable(qe_tddfpt_turbospectrum_exe ${src_tddfpt_turbospectrum_x})
+set_target_properties(qe_tddfpt_turbospectrum_exe
+    PROPERTIES
+        OUTPUT_NAME turbo_spectrum.x)
+target_link_libraries(qe_tddfpt_turbospectrum_exe
     PRIVATE
         qe_modules
         qe_xclib
@@ -139,4 +165,5 @@ qe_install_targets(
     qe_tddfpt_turbolanczos_exe
     qe_tddfpt_turbodavidson_exe
     qe_tddfpt_turboeels_exe
-    qe_tddfpt_calculatespectrum_exe)
+    qe_tddfpt_turbomagnons_exe
+    qe_tddfpt_turbospectrum_exe)
