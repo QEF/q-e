@@ -252,7 +252,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
         CALL write_ifc(nr1,nr2,nr3,nat,phid)
      ELSE IF (ionode) THEN
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
-     WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
+     WRITE(2,'(i3,i5,i4,6f11.7)') ntyp,nat,ibrav,celldm
      if (ibrav==0) then
         write (2,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
      end if
