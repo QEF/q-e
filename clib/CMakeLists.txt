@@ -9,6 +9,7 @@ set(sources
     md5.c
     md5_from_file.c
     memstat.c
+    memusage.c
     ptrace.c
     sockets.c
     qmmm_aux.c

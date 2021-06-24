@@ -339,8 +339,8 @@ lr_eels_main.o : ../../Modules/mp_global.o
 lr_eels_main.o : ../../Modules/mp_images.o
 lr_eels_main.o : ../../Modules/noncol.o
 lr_eels_main.o : ../../Modules/wavefunctions.o
-lr_eels_main.o : ../../Modules/wrappers.o
 lr_eels_main.o : ../../PW/src/pwcom.o
+lr_eels_main.o : ../../UtilXlib/clib_wrappers.o
 lr_eels_main.o : ../../upflib/uspp.o
 lr_eels_main.o : lr_lanczos.o
 lr_eels_main.o : lr_sternheimer.o
@@ -411,8 +411,8 @@ lr_magnons_main.o : ../../Modules/mp_pools.o
 lr_magnons_main.o : ../../Modules/mp_world.o
 lr_magnons_main.o : ../../Modules/version.o
 lr_magnons_main.o : ../../Modules/wavefunctions.o
-lr_magnons_main.o : ../../Modules/wrappers.o
 lr_magnons_main.o : ../../PW/src/pwcom.o
+lr_magnons_main.o : ../../UtilXlib/clib_wrappers.o
 lr_magnons_main.o : ../../upflib/uspp.o
 lr_magnons_main.o : lr_lanczos.o
 lr_magnons_main.o : lr_variables.o

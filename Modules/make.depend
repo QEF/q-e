@@ -78,6 +78,7 @@ dist.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
+environment.o : ../UtilXlib/clib_wrappers.o
 environment.o : command_line_options.o
 environment.o : fox_init_module.o
 environment.o : io_files.o
@@ -150,12 +151,12 @@ io_base.o : kind.o
 io_base.o : mp_wave.o
 io_base.o : qeh5_module.o
 io_base.o : recvec.o
+io_files.o : ../UtilXlib/clib_wrappers.o
 io_files.o : ../UtilXlib/mp.o
 io_files.o : io_global.o
 io_files.o : kind.o
 io_files.o : mp_images.o
 io_files.o : parameters.o
-io_files.o : wrappers.o
 ions_base.o : ../upflib/uspp.o
 ions_base.o : cell_base.o
 ions_base.o : constants.o
@@ -300,6 +301,7 @@ radial_gradients.o : kind.o
 random_numbers.o : kind.o
 random_numbers_gpu.o : kind.o
 random_numbers_gpu.o : random_numbers.o
+read_cards.o : ../UtilXlib/clib_wrappers.o
 read_cards.o : additional_kpoints.o
 read_cards.o : autopilot.o
 read_cards.o : bz_form.o
@@ -309,7 +311,6 @@ read_cards.o : io_global.o
 read_cards.o : kind.o
 read_cards.o : parser.o
 read_cards.o : wannier_new.o
-read_cards.o : wrappers.o
 read_cards.o : wypos.o
 read_input.o : ../UtilXlib/mp.o
 read_input.o : input_parameters.o
@@ -325,6 +326,7 @@ read_namelists.o : input_parameters.o
 read_namelists.o : io_global.o
 read_namelists.o : kind.o
 read_namelists.o : mp_images.o
+read_pseudo.o : ../UtilXlib/clib_wrappers.o
 read_pseudo.o : ../UtilXlib/mp.o
 read_pseudo.o : ../XClib/xc_lib.o
 read_pseudo.o : ../upflib/atom.o
@@ -343,7 +345,6 @@ read_pseudo.o : io_global.o
 read_pseudo.o : ions_base.o
 read_pseudo.o : kind.o
 read_pseudo.o : mp_images.o
-read_pseudo.o : wrappers.o
 recips.o : kind.o
 recvec.o : ../UtilXlib/mp.o
 recvec.o : constants.o
@@ -398,8 +399,6 @@ wavefunctions.o : kind.o
 wavefunctions_gpu.o : wavefunctions.o
 wgauss.o : constants.o
 wgauss.o : kind.o
-wrappers.o : io_global.o
-wrappers.o : kind.o
 ws_base.o : invmat.o
 ws_base.o : kind.o
 wyckoff.o : kind.o
