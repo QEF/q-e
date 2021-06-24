@@ -97,37 +97,37 @@ SUBROUTINE elphsum2( )
     et2 = et
   ELSE
     IF (found .AND. (me_bgrp == root_bgrp) .AND. (.NOT. ionode)) THEN
-      CALL MPI_SEND(ik1, 1, MPI_INTEGER, root_image, me_image, intra_image_comm, ierr)
-      CALL MPI_SEND(ikk, 1, MPI_INTEGER, root_image, me_image + nproc_image, &
+      CALL MPI_SEND(ik1, 1, MPI_INTEGER, root_image, 0, intra_image_comm, ierr)
+      CALL MPI_SEND(ikk, 1, MPI_INTEGER, root_image, nproc_image, &
                     intra_image_comm, ierr)
-      CALL MPI_SEND(ikq, 1, MPI_INTEGER, root_image, me_image + 2 * nproc_image, &
+      CALL MPI_SEND(ikq, 1, MPI_INTEGER, root_image, 2 * nproc_image, &
                     intra_image_comm, ierr)
-      CALL MPI_SEND(nksq, 1, MPI_INTEGER, root_image, me_image + 3 * nproc_image, &
+      CALL MPI_SEND(nksq, 1, MPI_INTEGER, root_image, 3 * nproc_image, &
                     intra_image_comm, ierr)
       CALL MPI_SEND(el_ph_mat, nbnd * nbnd * nksq * 3 * nat, MPI_DOUBLE_COMPLEX, &
-                    root_image, me_image + 4 * nproc_image, intra_image_comm, ierr)
-      CALL MPI_SEND(SIZE(et, 2), 1, MPI_INTEGER, root_image, me_image + 5 * nproc_image, &
+                    root_image, 4 * nproc_image, intra_image_comm, ierr)
+      CALL MPI_SEND(SIZE(et, 2), 1, MPI_INTEGER, root_image, 5 * nproc_image, &
                     intra_image_comm, ierr)
       CALL MPI_SEND(et, nbnd * SIZE(et, 2), MPI_DOUBLE_PRECISION, root_image, &
-                    me_image + 6 * nproc_image, intra_image_comm, ierr)
+                    6 * nproc_image, intra_image_comm, ierr)
     ELSEIF (ionode) THEN
       IF (.NOT. found) THEN
-        CALL MPI_RECV(ik2, 1, MPI_INTEGER, MPI_ANY_SOURCE, me_image, intra_image_comm, &
+        CALL MPI_RECV(ik2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 0, intra_image_comm, &
                       istatus, ierr )
-        CALL MPI_RECV(ikk2, 1, MPI_INTEGER, MPI_ANY_SOURCE, me_image + nproc_image, &
+        CALL MPI_RECV(ikk2, 1, MPI_INTEGER, MPI_ANY_SOURCE, nproc_image, &
                       intra_image_comm, istatus, ierr )
-        CALL MPI_RECV(ikq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, me_image + 2 * nproc_image, &
+        CALL MPI_RECV(ikq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 2 * nproc_image, &
                       intra_image_comm, istatus, ierr )
-        CALL MPI_RECV(nksq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, me_image + 3 * nproc_image, &
+        CALL MPI_RECV(nksq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 3 * nproc_image, &
                       intra_image_comm, istatus, ierr )
         ALLOCATE(el_ph_mat2(nbnd, nbnd, nksq2, 3 * nat))
         CALL MPI_RECV(el_ph_mat2, nbnd * nbnd * nksq2 * 3 * nat, MPI_DOUBLE_COMPLEX, &
-                      MPI_ANY_SOURCE, me_image + 4 * nproc_image, intra_image_comm, istatus, ierr ) 
-        CALL MPI_RECV(nkq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, me_image + 5 * nproc_image, &
+                      MPI_ANY_SOURCE, 4 * nproc_image, intra_image_comm, istatus, ierr ) 
+        CALL MPI_RECV(nkq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 5 * nproc_image, &
                       intra_image_comm, istatus, ierr )
         ALLOCATE(et2(nbnd, nkq2))
         CALL MPI_RECV(et2, nbnd * nkq2, MPI_DOUBLE_PRECISION, MPI_ANY_SOURCE, &
-                      me_image + 6 * nproc_image, intra_image_comm, istatus, ierr ) 
+                      6 * nproc_image, intra_image_comm, istatus, ierr ) 
       ELSE
         ik2 = ik1
         ikk2 = ikk
