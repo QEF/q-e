@@ -655,10 +655,11 @@ SUBROUTINE print_cuda_info
   TYPE (cudaDeviceProp) :: prop
   !
   IF (use_gpu) THEN
-     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.",/)' )
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
 #if defined(__GPU_MPI)
-     WRITE( stdout, '(/10x,"CUDA-aware MPI enabled")')
+     WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
 #endif
+     WRITE( stdout, '()' )
   ELSE
      WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
   END IF
