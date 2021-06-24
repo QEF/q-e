@@ -116,6 +116,7 @@ target_link_libraries(qe_cpv
         qe_openmp_fortran
         qe_mpi_fortran
         qe_xclib
+        qe_device_lapack
         qe_devxlib)
 
 ###########################################################
@@ -162,7 +163,6 @@ target_link_libraries(qe_cpv_cppp_exe
     PRIVATE
         qe_modules
         qe_cpv
-        qe_clib
         qe_xclib)
 
 ###########################################################

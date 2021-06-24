@@ -70,7 +70,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                                     DEALLOCATE_bec_type
    USE noncollin_module,     ONLY : noncolin, npol
    USE spin_orb,             ONLY : lspinorb
-   USE mytime,               ONLY :
    USE parallel_include
    !
    IMPLICIT NONE

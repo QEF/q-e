@@ -31,6 +31,7 @@ set(src_modules
     io_global.f90  
     ions_base.f90 
     kind.f90 
+    lmdif.f90
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -47,7 +48,6 @@ set(src_modules
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
-    lmdif.f90  
     pw_dot.f90 
     qmmm.f90 
     random_numbers.f90 
@@ -70,7 +70,6 @@ set(src_modules
     wannier_gw.f90
     wannier_new.f90 
     wavefunctions.f90 
-    wrappers.f90
     ws_base.f90 
     xc_vdW_DF.f90 
     xc_rVV10.f90 
@@ -137,7 +136,6 @@ target_link_libraries(qe_modules
         qe_openmp_fortran
         qe_fftx
         qe_lax
-        qe_clib # this is needed only by wrappers.f90
         qe_mpi_fortran
         qe_mbd
         qe_xclib
@@ -148,6 +146,11 @@ target_link_libraries(qe_modules
         qe_fox
         qe_utilx)
 
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_modules
+        PRIVATE
+            CUDA::curand)
+endif()
 ###########################################################
 
 qe_install_targets(qe_modules)

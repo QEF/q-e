@@ -24,6 +24,7 @@ MODULE environment
   USE global_version, ONLY: version_number
   USE fox_init_module, ONLY: fox_init
   USE command_line_options, ONLY : nmany_
+  USE clib_wrappers, ONLY : get_mem_avail
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
 #endif
@@ -134,6 +135,11 @@ CONTAINS
 #if defined(__HDF5)
     CALL initialize_hdf5()
 #endif
+    !
+    WRITE(stdout,'(5x, I0, A, A)') get_mem_avail()/1024, &
+                &" MiB available memory on the printing compute node ", &
+                &"when the environment starts"
+    WRITE(stdout, *)
   END SUBROUTINE environment_start
 
   !==-----------------------------------------------------------------------==!

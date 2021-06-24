@@ -37,7 +37,7 @@ PROGRAM lr_eels_main
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
-  USE wrappers,              ONLY : memstat
+  USE clib_wrappers,         ONLY : memstat
   USE lr_sternheimer,        ONLY : one_sternheimer_step
   USE control_lr,            ONLY : flmixdpot
   USE control_flags,         ONLY : use_para_diag

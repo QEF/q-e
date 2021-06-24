@@ -586,7 +586,7 @@ SUBROUTINE check_initial_status(auxdyn)
    USE control_ph,  ONLY : ldisp, epsil, zue, zeu
    USE klist,       ONLY : lgauss, ltetra
    USE el_phon,     ONLY : elph
-   USE wrappers,  ONLY : f_copy
+   USE clib_wrappers,  ONLY : f_copy
    USE mp,        ONLY : mp_barrier
    USE mp_images, ONLY : my_image_id, nimage, intra_image_comm
    USE io_global, ONLY : stdout, ionode

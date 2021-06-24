@@ -42,7 +42,7 @@ PROGRAM lr_magnons_main
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
-  USE wrappers,              ONLY : memstat
+  USE clib_wrappers,         ONLY : memstat
   USE klist,                 ONLY : igk_k
   !
   IMPLICIT NONE
