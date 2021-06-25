@@ -46,6 +46,8 @@ default :
 	@echo 'where target is one of the following suite operation:'
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
+	@echo '  install      copy all executables to PREFIX/bin/'
+	@echo '               (works with "configure --prefix=PREFIX)"'
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  depend       generate dependencies (make.depend files)'
 	@if test -d GUI/; then \
