@@ -196,3 +196,5 @@ foreach(test_category IN LISTS qe_test_categories)
     endforeach()
   endforeach()
 endforeach()
+
+add_subdirectory(benchmarks)
