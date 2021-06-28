@@ -242,6 +242,8 @@ contains
     real(wp) :: rtmp3(3)
     integer :: rep_cn(3), rep_vdw(3)
 
+    Call start_clock('dftd3')
+
     if (present(grads) .neqv. present(stress)) then
       write(*,*) "!!! Error in dftd3_pbc_dispersion"
       write(*,*) "Either both grads and stress must be present or none of them"
@@ -268,20 +270,22 @@ contains
         & this%rthr, rep_vdw, this%cn_thr, rep_cn)
     disp = -e6 * this%s6 - e8 * this%s18 - e6abc
 
-    if (.not. present(grads)) then
-      return
-    end if
+    if (present(grads)) then
 
-    grads(:,:) = 0.0_wp
-    call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
-        & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
-        & this%noabc, this%numgrad, this%version, grads, disp2, gnorm, &
-        & stress, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr)
-    ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
-    ! on return, so it needs to be converted to obtain the stress tensor.
-    stress(:,:) = -matmul(stress, transpose(latvecs))&
-        & / abs(determinant(latvecs))
+       grads(:,:) = 0.0_wp
+       call pbcgdisp(max_elem, maxc, natom, coords, izp, this%c6ab, this%mxc, &
+           & r2r4, this%r0ab, rcov, s6, s18, rs6, rs8, rs10, alp6, alp8, alp10, &
+           & this%noabc, this%numgrad, this%version, grads, disp2, gnorm, &
+           & stress, latvecs, rep_vdw, rep_cn, this%rthr, .false., this%cn_thr)
+       ! Note, the stress variable in pbcgdisp contains the *lattice derivatives*
+       ! on return, so it needs to be converted to obtain the stress tensor.
+       stress(:,:) = -matmul(stress, transpose(latvecs))&
+           & / abs(determinant(latvecs))
     
+    end if 
+
+    Call stop_clock('dftd3')
+
   end subroutine dftd3_pbc_dispersion
 
 
