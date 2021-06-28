@@ -3,7 +3,7 @@
 include ../make.inc
 
 # location of needed modules
-MODFLAGS= 
+MODFLAGS= $(BASEMOD_FLAGS)
 
 # list of modules
 
@@ -45,4 +45,4 @@ tldeps :
 clean :
 	( /bin/rm -f *.o *.a *.d *.i *.x *~ *_tmp.f90 *.mod *.L ); \
 
-include make.depend.dftd3
+include make.depend
