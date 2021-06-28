@@ -64,6 +64,7 @@ include(GNUInstallDirs)
 ###########################################################
 # Build Options
 ###########################################################
+include(CMakeDependentOption)
 option(QE_ENABLE_CUDA
     "enable CUDA acceleration on NVIDIA GPUs" OFF)
 if(QE_ENABLE_CUDA)
@@ -82,6 +83,8 @@ option(QE_ENABLE_MPI_GPU_AWARE
     "enable GPU aware MPI operations" OFF)
 option(QE_ENABLE_TEST
     "enable unit and system tests" ON)
+cmake_dependent_option(QE_ENABLE_BENCHMARK
+    "enable benchmark tests" OFF "QE_ENABLE_TEST" OFF)
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_PROFILE_NVTX
