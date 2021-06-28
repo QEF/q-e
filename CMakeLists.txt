@@ -535,6 +535,7 @@ endif()
 # Tests
 ###########################################################
 if(QE_ENABLE_TEST)
+  message(STATUS "Enabling tests in test-suite")
   add_subdirectory(test-suite)
 endif()
 
