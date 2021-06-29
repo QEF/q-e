@@ -98,7 +98,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   me = me_bgrp + 1
   !
-  call reset_allocation
+  call reusable_allocation
   ! 
   te = 0.D0
   tagz(:) = 1
@@ -377,59 +377,51 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      ELSE
         !   Spin Polarized case
         !   Up Spin First
-        ALLOCATE(Xsp(nbsp,nupdwn(1)))
-        ALLOCATE(c_psp(ngw,nupdwn(1)))
-        ALLOCATE(c_msp(ngw,nupdwn(1)))
-        Xsp=0.D0
-        c_psp=0.D0 
-        c_msp=0.D0
+        Xsp(:,1:nupdwn(1))=0.D0
+        c_psp(:,1:nupdwn(1))=0.D0 
+        c_msp(:,1:nupdwn(1))=0.D0
         DO i=1,nupdwn(1)
            c_psp(:,i)=c_p(:,i)
            c_msp(:,i)=c_m(:,i)
         END DO
         IF(gstart.EQ.2) THEN
-           c_msp(1,:)=0.D0
+           c_msp(1,1:nupdwn(1))=0.D0
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
 #if defined(__MPI)
-        CALL mp_sum ( Xsp, intra_bgrp_comm )
+        CALL mp_sum ( Xsp(:,1:nupdwn(1)), intra_bgrp_comm )
 #endif
         DO i=1,nupdwn(1)
            DO j=1,nbsp
               X(j,i)=Xsp(j,i)
            END DO
         END DO
-        DEALLOCATE(Xsp,c_psp,c_msp)
         !    Then Down Spin
-        ALLOCATE(Xsp(nbsp,iupdwn(2):nbsp))
-        ALLOCATE(c_psp(ngw,iupdwn(2):nbsp))
-        ALLOCATE(c_msp(ngw,iupdwn(2):nbsp))
-        Xsp=0.D0
-        c_psp=0.D0
-        c_msp=0.D0
+        Xsp(:,iupdwn(2):nbsp)=0.D0
+        c_psp(:,iupdwn(2):nbsp)=0.D0
+        c_msp(:,iupdwn(2):nbsp)=0.D0
         DO i=iupdwn(2),nbsp
            c_psp(:,i)=c_p(:,i)
            c_msp(:,i)=c_m(:,i)
         END DO
         IF(gstart.EQ.2) THEN
-           c_msp(1,:)=0.D0
+           c_msp(1,iupdwn(2):nbsp)=0.D0
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
 #if defined(__MPI)
-        CALL mp_sum ( Xsp, intra_bgrp_comm )
+        CALL mp_sum ( Xsp(:,iupdwn(2):nbsp), intra_bgrp_comm )
 #endif
         DO i=iupdwn(2),nbsp
            DO j=1,nbsp
               X(j,i)=Xsp(j,i)
            END DO
         END DO
-        DEALLOCATE(Xsp,c_psp,c_msp)
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
      END IF
 
@@ -561,8 +553,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ! calculate wannier-function centers
   !
-  !ALLOCATE( wr(nw), W(nw,nw), gr(nw,3), EW(nw,nw), f3(nw), f4(nw), mt0(nw), mt(nw) )
-  !
   DO inw=1, nw
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   END DO
@@ -615,15 +605,13 @@ COMB:   DO k=3**nw-1,0,-1
      !
   END DO
   !
-  !DEALLOCATE( wr, W, gr, EW, f3, f4, mt0, mt )
-  !
   CALL stop_clock('wf_2')
   !
   RETURN
   !
 CONTAINS
 
-  SUBROUTINE  reset_allocation()
+  SUBROUTINE  reusable_allocation()
     IMPLICIT NONE
     IF (.NOT.ALLOCATED(becwf))  ALLOCATE(becwf(nkb,nbsp))
     IF (.NOT.ALLOCATED(U2))     ALLOCATE(U2(nbsp,nbsp))
@@ -693,8 +681,14 @@ CONTAINS
     IF (.NOT.ALLOCATED(f4))        ALLOCATE(f4(nw))
     IF (.NOT.ALLOCATED(mt0))       ALLOCATE(mt0(nw))
     IF (.NOT.ALLOCATED(mt))        ALLOCATE(mt(nw))
+    !
+    IF( nspin /= 1 ) THEN
+      IF (.NOT.ALLOCATED(Xsp))     ALLOCATE(Xsp(nbsp,nbsp))
+      IF (.NOT.ALLOCATED(c_psp))   ALLOCATE(c_psp(ngw,nbsp))
+      IF (.NOT.ALLOCATED(c_msp))   ALLOCATE(c_msp(ngw,nbsp))
+    END IF
     RETURN
-  END SUBROUTINE reset_allocation
+  END SUBROUTINE reusable_allocation
 END SUBROUTINE wf
 !
 !----------------------------------------------------------------------------
