@@ -69,6 +69,8 @@ SUBROUTINE sum_band_gpu()
   CALL start_clock_gpu( 'sum_band' )
   !
   if ( nhm > 0 ) then
+     becsum(:,:,:) = 0.D0
+     if (tqr) ebecsum(:,:,:) = 0.D0
      becsum_d(:,:,:) = 0.D0
      if (tqr) ebecsum_d(:,:,:) = 0.D0
   end if

@@ -771,6 +771,7 @@ enable_shared
 with_cuda
 with_cuda_cc
 with_cuda_runtime
+enable_openacc
 enable_cuda_env_check
 with_libxc
 with_libxc_prefix
@@ -1429,8 +1430,8 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
-  --enable-cuda-env-check=yes
-                          The configure script will check CUDA installation
+  --enable-openacc        Enable compilation with OPENACC [default=no]
+  --enable-cuda-env-check The configure script will check CUDA installation
                           and report problems [default=no]
   --enable-signals        enable signal trapping (default: no)
 
@@ -4184,6 +4185,14 @@ else
 fi
 
 
+# Check whether --enable-openacc was given.
+if test "${enable_openacc+set}" = set; then :
+  enableval=$enable_openacc;
+else
+  enable_openacc=no
+fi
+
+
 # Check whether --enable-cuda-env-check was given.
 if test "${enable_cuda_env_check+set}" = set; then :
   enableval=$enable_cuda_env_check;
@@ -4374,6 +4383,7 @@ fi
 
    fi
    CUDA_LDLIBS+=" -lcuda -lcudart -lcublas -lcufft"
+
 
 
    # -----------------------------------------
@@ -4744,9 +4754,6 @@ fi
    CXXFLAGS=${ax_save_CXXFLAGS}
    LIBS=${ax_save_LIBS}
 
-
-$as_echo "#define HAVE_CUDA 1" >>confdefs.h
-
    try_dflags="$try_dflags -D__CUDA"
    cuda_extlibs="devxlib"
    cuda_libs="$mMcudalib=cufft,cublas,cusolver \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
@@ -4767,6 +4774,11 @@ $as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
    cuda_path="$CUDAPATH"
+   if test "$enable_openacc" == "yes"; then
+      ldflags="$ldflags -acc"
+      cuda_fflags="$cuda_fflags -acc"
+   fi
+
 fi
 
 # Announcing the new variables
