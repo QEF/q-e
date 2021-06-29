@@ -80,7 +80,7 @@ SUBROUTINE lr_solve_e
      !
      ! MAGNONS case
      !
-     WRITE(stdout,'(5X,"magnon calculation, n_ipol =",1X,i8, "n_op =", 1X,i8)') n_ipol, n_op
+     WRITE(stdout,'(5X,"magnon calculation, n_ipol =",1X,i3,1x,"n_op =", 1X,i3)') n_ipol, n_op
      !
      V0psi = (0.0d0,0.0d0)
      O_psi = (0.0d0,0.0d0)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,7 @@ PROGRAM lr_magnons_main
   ! It applys the Lanczos algorithm to the matrix of equations coming from TDDFPT. 
   !
   ! Created by Tommaso Gorni (2018)
-  ! modified by Oscar Baseggio (2019)
+  ! Modified by Oscar Baseggio (2019)
   !
   USE lr_lanczos,            ONLY : one_lanczos_step
   USE io_global,             ONLY : stdout
@@ -243,13 +243,12 @@ SUBROUTINE lr_print_preamble_magnons()
 
     IMPLICIT NONE
 
-    WRITE( stdout, '(/5x,"----------------------------------------")' )
+    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
     WRITE( stdout, '(/5x,"Please cite this project as:")' )
-    WRITE( stdout, '(/5x,"T. Gorni, Iurii Timrov and S. Baroni,", &
-                   & /5x,"Spin dynamics from time-dependent density functional", &
-                   & /5x,"perturbation theory", &
-                   & /5x,"The European Physical Journal B volume 91, Article number: 249 (2018).")')
-    WRITE( stdout, '(/5x,"----------------------------------------")' )
+    WRITE( stdout, '(/5x,"T. Gorni, I. Timrov, and S. Baroni,", &
+                   & /5x,"Spin dynamics from time-dependent density functional perturbation theory,", &
+                   & /5x,"Eur. Phys. J. B 91, 249 (2018).")')
+    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
     !

@@ -1,6 +1,6 @@
  &lr_input
    prefix = 'Fe',
-   outdir = '/marconi/home/userexternal/obaseggi/q-e-magnons/tempdir/',
+   outdir = '/scratch/timrov/QE_gitlab/q-e/tempdir/',
    magnons = .true.,
    itermax0 = 800,
    itermax = 800,

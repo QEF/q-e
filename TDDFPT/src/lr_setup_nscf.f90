@@ -240,7 +240,7 @@ SUBROUTINE lr_setup_nscf ()
         ENDDO
      ENDDO
 
-     if (ionode) write(stdout,*) "nkr =", nkr
+     !if (ionode) write(stdout,*) "nkr =", nkr
 
 
      DO nk=1,nkr
@@ -306,26 +306,28 @@ SUBROUTINE lr_setup_nscf ()
         ENDIF
      ENDDO
 
-     if (ionode) write(stdout,*) "nks =", nks
+     !if (ionode) write(stdout,*) "nks =", nks
 
      !  go to cartesian axis (in units 2pi/a0)
      CALL cryst_to_cart(nks,xk,bg,1)
      !
-     filename = trim(prefix) // '__k_mesh.xyz' 
-     if (ionode) OPEN (159, file = filename, form = 'formatted', status = 'unknown')
-     if (ionode) write(159,*) nks
-     if (ionode) write(159,*) ""
-
      !  normalize weights to one
      DO nk=1,nks
         wk(nk) = wk(nk)/fact
-        if (ionode .and. mod(nk,2) == 0 ) then
-          write(159,'("C",3f16.9)') xk(1,nk-1), xk(2,nk-1), xk(3,nk-1)
-          write(159,'("F",3f16.9)')  xk(1,nk), xk(2,nk), xk(3,nk)
-        endif
      ENDDO
-
-     if (ionode) close(159)
+     !
+     !filename = trim(prefix) // '__k_mesh.xyz' 
+     !if (ionode) OPEN (159, file = filename, form = 'formatted', status = 'unknown')
+     !if (ionode) write(159,*) nks
+     !if (ionode) write(159,*) ""
+     !  normalize weights to one
+     !DO nk=1,nks
+     !   if (ionode .and. mod(nk,2) == 0 ) then
+     !     write(159,'("C",3f16.9)') xk(1,nk-1), xk(2,nk-1), xk(3,nk-1)
+     !     write(159,'("F",3f16.9)')  xk(1,nk), xk(2,nk), xk(3,nk)
+     !   endif
+     !ENDDO
+     !if (ionode) close(159)
 
      DEALLOCATE(equiv)
      DEALLOCATE(xkg)
