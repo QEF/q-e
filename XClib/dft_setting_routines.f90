@@ -66,7 +66,7 @@ CONTAINS
     INTEGER :: ID_vec(6)
 #if defined(__LIBXC)
     INTEGER :: ii, n_ext_params
-    INTEGER :: flag_v(16), ID_vec(6), exp2, ftot, ftotx
+    INTEGER :: flag_v(16), exp2, ftot, ftotx
     TYPE(xc_f03_func_t) :: xc_func03
     TYPE(xc_f03_func_info_t) :: xc_info03
 #endif
@@ -516,7 +516,7 @@ CONTAINS
     !! libxc functionals are used together.
     !
     USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc
-    USE qe_dft_list         ONLY: nxc, ncc, ngcx, ngcc, nmeta, dft_LDAx_name,  &
+    USE qe_dft_list,        ONLY: nxc, ncc, ngcx, ngcc, nmeta, dft_LDAx_name,  &
                                   dft_LDAc_name, dft_GGAx_name, dft_GGAc_name, &
                                   dft_MGGA_name
     !

@@ -11,6 +11,8 @@ MODULE qe_dft_list
   !! Contains the list of functionals available in QE, both single terms (family+type)
   !! and combinations.
   !
+  USE dft_setting_params,  ONLY: notset
+  
   SAVE
   !
   ! -- single DFT terms (family-type)
@@ -533,6 +535,8 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: name
     INTEGER, INTENT(INOUT) :: IDs(6)
     INTEGER :: i
+    !
+    IDs = notset
     !
     DO i = 1, n_dft
       IF (name==dft_name(i) .OR. name==dft_name2(i)) THEN

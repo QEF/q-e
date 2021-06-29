@@ -66,6 +66,21 @@ if(QE_ENABLE_TEST)
 endif(QE_ENABLE_TEST)
 
 ###########################################################
+# xc_infos.x
+###########################################################
+if(QE_ENABLE_TEST)
+    qe_add_executable(qe_xc_info xc_infos.f90)
+    set_target_properties(qe_xc_info 
+        PROPERTIES 
+        OUTPUT_NAME qe_xc_info.x 
+        RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+    target_link_libraries(qe_xc_info
+        PRIVATE
+            qe_external_libxc
+            qe_xclib)
+endif(QE_ENABLE_TEST)
+
+###########################################################
 # xclib_test.x
 ###########################################################
 if(QE_ENABLE_TEST)

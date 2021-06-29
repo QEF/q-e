@@ -7,7 +7,7 @@
 !
 !============================================================================
 !============================================================================
-PROGRAM xc_info
+PROGRAM xc_infos
   !==========================================================================
   !! Provides infos on the input DFTs (both QE and Libxc).
   !
@@ -50,27 +50,27 @@ PROGRAM xc_info
   dft = 'none'
   !
   WRITE (*,'(/,1x,a)', ADVANCE='no') "Insert DFT name:  "
-  READ(*,*) dft
+  READ(*,'(A)') dft
   !
   !==========================================================================
   ! PRINT DFT INFOS
   !==========================================================================
-  !  
-  CALL xclib_set_dft_from_name( dft )  
-  !  
-  iexch = xclib_get_ID('LDA','EXCH')  
-  is_libxc(1) = xclib_dft_is_libxc('LDA','EXCH')  
-  icorr = xclib_get_ID('LDA','CORR')  
-  is_libxc(2) = xclib_dft_is_libxc('LDA','CORR')  
-  igcx = xclib_get_ID('GGA','EXCH')  
-  is_libxc(3) = xclib_dft_is_libxc('GGA','EXCH')  
-  igcc = xclib_get_ID('GGA','CORR')  
-  is_libxc(4) = xclib_dft_is_libxc('GGA','CORR')  
-  imeta = xclib_get_ID('MGGA','EXCH')  
-  is_libxc(5) = xclib_dft_is_libxc('MGGA','EXCH')  
-  imetac = xclib_get_ID('MGGA','CORR')  
-  is_libxc(6) = xclib_dft_is_libxc('MGGA','CORR')  
-  !  
+  !
+  CALL xclib_set_dft_from_name( dft )
+  !
+  iexch = xclib_get_ID('LDA','EXCH')
+  is_libxc(1) = xclib_dft_is_libxc('LDA','EXCH')
+  icorr = xclib_get_ID('LDA','CORR')
+  is_libxc(2) = xclib_dft_is_libxc('LDA','CORR')
+  igcx = xclib_get_ID('GGA','EXCH')
+  is_libxc(3) = xclib_dft_is_libxc('GGA','EXCH')
+  igcc = xclib_get_ID('GGA','CORR')
+  is_libxc(4) = xclib_dft_is_libxc('GGA','CORR')
+  imeta = xclib_get_ID('MGGA','EXCH')
+  is_libxc(5) = xclib_dft_is_libxc('MGGA','EXCH')
+  imetac = xclib_get_ID('MGGA','CORR')
+  is_libxc(6) = xclib_dft_is_libxc('MGGA','CORR')
+  !
   WRITE(stdout,*) " "  
   WRITE(stdout,*) "=================================== "//CHAR(10)//" "  
   WRITE(stdout,*) "XC functional IDs:"  
@@ -79,9 +79,10 @@ PROGRAM xc_info
   WRITE(stdout,*) CHAR(10)//"GGA IDs"  
   WRITE(stdout,121) igcx, is_libxc(3), igcc, is_libxc(4)  
   WRITE(stdout,*) CHAR(10)//"MGGA IDs"  
-  WRITE(stdout,121) imeta, is_libxc(5), imetac, is_libxc(6)  
+  WRITE(stdout,121) imeta, is_libxc(5), imetac, is_libxc(6) 
+  WRITE(stdout,*) " "  
+  WRITE(stdout,*) "============== "//CHAR(10)//" " 
   ! 
-
   !  
 #if defined(__LIBXC)
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1 )  
@@ -136,10 +137,10 @@ PROGRAM xc_info
              &the ''", a, "'' family and is defined in the reference(s): &  
              &")') TRIM(dft_n), TRIM(lxc_kind)&  
              ,TRIM(lxc_family)  
-      ii = 0  
-      DO WHILE( ii >= 0 )  
-       WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(dft_r)  
-      ENDDO 
+      
+      !DO WHILE( ii >= 0 )  
+        WRITE(*,'(a,i1,2a)') '[',1,'] ',TRIM(dft_r)  
+      !ENDDO
       !
 #if defined(__LIBXC)
       !
@@ -211,4 +212,4 @@ PROGRAM xc_info
   !
   STOP
   !
-END PROGRAM xc_info
+END PROGRAM xc_infos

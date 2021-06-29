@@ -57,7 +57,7 @@ PROGRAM xclib_test
   !
 #if defined(__LIBXC)
   CHARACTER(LEN=120) :: lxc_kind, lxc_family
-  INTEGER :: n_ext, id(6)
+  INTEGER :: n_ext
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root

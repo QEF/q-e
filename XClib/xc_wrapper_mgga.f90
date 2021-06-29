@@ -14,7 +14,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_mod,       ONLY: get_libxc_flags_exc
+  USE dft_setting_routines, ONLY: get_libxc_flags_exc
   USE dft_setting_params,   ONLY: xc_func, xc_info
 #endif 
   !
