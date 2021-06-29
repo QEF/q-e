@@ -2459,8 +2459,6 @@ contains
     integer iat,taux,tauy,tauz
     real(wp) dx,dy,dz,r,damp,xn,rr,rco,tau(3)
 
-    call start_clock('dftd3:ncoor')
-
     do i=1,natoms
       xn=0.0d0
       do iat=1,natoms
@@ -2490,8 +2488,6 @@ contains
       end do
       cn(i)=xn
     end do
-
-    call stop_clock('dftd3:ncoor')
 
   end subroutine pbcncoord
 
@@ -2533,8 +2529,6 @@ contains
     real(wp) a1,a2
     real(wp) bj_dmp6,bj_dmp8
     real(wp) tmp1,tmp2
-
-    call start_clock('dftd3:edisp')
 
     e6 =0
     e8 =0
@@ -2839,8 +2833,6 @@ contains
 
     end if 
 
-    call stop_clock('dftd3:edisp')
-
   end subroutine pbcedisp
 
 
@@ -2881,8 +2873,6 @@ contains
     REAL(WP)  :: dumvec11, dumvec12, dumvec13  
     REAL(WP)  :: dumvec21, dumvec22, dumvec23  
     ! REAL(WP) :: time1,time2
-
-    call start_clock('dftd3:three')
 
     counter=0
     eabc=0.0d0
@@ -3215,8 +3205,6 @@ contains
    ENDIF
    CALL mp_sum ( eabc , intra_image_comm )
 
-   Call stop_clock('dftd3:three')
-
   end subroutine pbcthreebody
 
 
@@ -3302,8 +3290,6 @@ contains
     real(wp) :: jkvec1, jkvec2, jkvec3   
     real(wp) :: jtau1, jtau2, jtau3  
     real(wp) :: ktau1, ktau2, ktau3  
-
-    call start_clock('dftd3:gdisp')
 
     ! R^2 cut-off
     rthr=crit_vdw
@@ -4807,8 +4793,6 @@ contains
       gnorm=sum(abs(stress(1:3,1:3)))
       write(*,*)'|G(stress)|=',gnorm
     end if
-
-    call stop_clock('dftd3:gdisp')
 
   end subroutine pbcgdisp
 
