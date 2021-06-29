@@ -1,0 +1,512 @@
+ RUNNING ,mpirun -np 4 /home/hyk/Codes/Ab_Initio_package/QE_gitlab_official/test-suite/..//bin/cp.x -nk 1 -nd 1 -nb 1 -nt 1 -input h2o-nspin1.in
+
+     Program CP v.6.7GPU starts on 29Jun2021 at 12:24: 7 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     6424 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from h2o-nspin1.in
+
+   Job Title:  Water Molecule
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /home/hyk/Codes/Ab_Initio_package/QE_gitlab_official/test-suite/..//pseudo/O.blyp-mt.UPF
+   file type is xml
+
+   Reading pseudopotential for specie #  2 from file :
+   /home/hyk/Codes/Ab_Initio_package/QE_gitlab_official/test-suite/..//pseudo/H.blyp-vbc.UPF
+   file type is xml
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =      -1   from_scratch   
+   Number of MD Steps =      50
+   Print out every           50 MD Steps
+   Reads from unit    =      51
+   Writes to unit     =      51
+   MD Simulation time step            =       5.00
+   Electronic fictitious mass (emass) =     400.00
+   emass cut-off                      =       2.50
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [KBar]
+   wmass (calculated)      =         2493.41 [AU]
+   ibrav =   14
+   alat  =    12.00000000
+   a1    =    12.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   12.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   12.00000000
+
+   b1    =     0.08333333    0.00000000    0.00000000
+   b2    =     0.00000000    0.08333333    0.00000000
+   b3    =     0.00000000    0.00000000    0.08333333
+   omega =    1728.00000000
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   40.0 Ry,      Ecutrho =  160.0 Ry,      Ecuts =  160.0 Ry
+   Gcutwfc =   12.1     ,    Gcutrho =   24.2          Gcuts =   24.2
+   NOTA BENE: refg, mmx =   0.050000  3840
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-08,  max = 300
+   verlet algorithm for electron dynamics
+   with friction frice =  0.2000 , grease =  1.0000
+   Electron dynamics : the temperature is not controlled
+   initial random displacement of el. coordinates with  amplitude=  0.020000
+
+   Electronic states
+   -----------------
+   Number of Electrons=     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+     Exchange-correlation= SLA  LYP  B88  BLYP
+                           (   1   3   1   3   0   0   0)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are not allowed to move
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    1 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
+        0.009900     0.009900     0.000000
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.50 (a.u.)
+        1.832500    -0.224300    -0.000100
+       -0.224300     1.832500     0.000200
+   Ionic position read from input file
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   internal stress tensor calculated
+   Starting cell generated from CELLDM
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iverbosity =  1
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    12.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   12.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   12.0000              0.0000    0.0000    1.0000
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         455     455    112                14719    14719    1811
+     Max         458     458    116                14726    14726    1814
+     Sum        1829    1829    457                58893    58893    7249
+
+     Using Pencil Decomposition
+
+
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    50    50    50      50    50    13       1     1     4
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     50    50    50
+   Local number of cell to store the grid ( nrxx ) =      32500
+   Number of x-y planes for each processors: 
+  |  50,  13  |  50,  13  |  50,  12  |  50,  12  |
+   Using Pencil Decomposition
+
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    50    50    50      50    50    13       1     1     4
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     50    50    50
+   Local number of cell to store the grid ( nrxx ) =      32500
+   Number of x-y planes for each processors: 
+  |  50,  13  |  50,  13  |  50,  12  |  50,  12  |
+   Using Pencil Decomposition
+
+   Reciprocal Space Mesh
+   ---------------------
+   Large Mesh
+     Global(ngm_g)    MinLocal       MaxLocal      Average
+          29447           7360           7363        7361.75
+   Smooth Mesh
+     Global(ngms_g)   MinLocal       MaxLocal      Average
+          29447           7360           7363        7361.75
+   Wave function Mesh
+     Global(ngw_g)    MinLocal       MaxLocal      Average
+           3625            906            907         906.25
+
+
+   System geometry initialization
+   ------------------------------
+   ibrav =   14       cell parameters read from input file
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+
+   Matrix Multiplication Performances
+   ortho mmul, time for parallel driver      =   0.00000 with    1 procs
+
+   Constraints matrixes will be distributed block like on
+   ortho sub-group =    1*   1 procs
+
+
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+
+                        dion 
+   0.2253
+
+   Specie:     2
+
+                        dion 
+ ------------------------DYNAMICS IN THE WANNIER BASIS--------------------------
+                              DYNAMICS PARAMETERS 
+ FICTITIOUS MASS PARAMETER USED FOR SPREAD OPTIMIZATION            =   500.0
+ TIME STEP USED FOR DAMPED DYNAMICS                                =  4.0000000
+ DAMPING COEFFICIENT USED FOR WANNIER FUNCTION SPREAD OPTIMIZATION =  0.3000000
+          20 STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD
+ AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24
+ INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  ./h2o.spr
+ WANNIER CENTERS WRITTEN TO                     ./h2o.wfc
+ SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27
+ -------------------------------------------------------------------------------
+
+ wannier_startup IBRAV SELECTED:          14
+ WANNIER SETUP : check G vectors and weights
+inw = 1:   1   0   0   1.000000
+inw = 2:   0   1   0   1.000000
+inw = 3:   0   0   1   1.000000
+inw = 4:   1   1   0   0.000000
+inw = 5:   0   1   1   0.000000
+inw = 6:   1   0   1   0.000000
+ Translations to be done           6
+ ibrav selected:          14
+ Translation           1 for        3625 G vectors
+ Translation           2 for        3625 G vectors
+ Translation           3 for         907 G vectors
+ Translation           4 for        3625 G vectors
+ Translation           5 for        3625 G vectors
+ Translation           6 for        3625 G vectors
+
+
+   Cell parameters from input file are used in electron mass preconditioning
+   init_tpiba2=    0.27415568
+
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]          - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+
+
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =     4
+    2.00 2.00 2.00 2.00
+
+   formf: eself=    30.31961
+   formf:     vps(g=0)=  -0.0020647     rhops(g=0)=  -0.0034132
+   formf:     vps(g=0)=  -0.0020586     rhops(g=0)=  -0.0033552
+   formf:     vps(g=0)=  -0.0020586     rhops(g=0)=  -0.0033552
+   formf:     vps(g=0)=  -0.0020586     rhops(g=0)=  -0.0033552
+   formf:     vps(g=0)=  -0.0020520     rhops(g=0)=  -0.0032982
+   formf: sum_g vps(g)=  -1.7827723 sum_g rhops(g)=  -4.3110817
+   formf:     vps(g=0)=  -0.0004762     rhops(g=0)=  -0.0005689
+   formf:     vps(g=0)=  -0.0004718     rhops(g=0)=  -0.0005592
+   formf:     vps(g=0)=  -0.0004718     rhops(g=0)=  -0.0005592
+   formf:     vps(g=0)=  -0.0004718     rhops(g=0)=  -0.0005592
+   formf:     vps(g=0)=  -0.0004675     rhops(g=0)=  -0.0005497
+   formf: sum_g vps(g)=  -1.9554603 sum_g rhops(g)=  -0.7185136
+   Delta V(G=0):   0.003636Ry,    0.098943eV
+
+   from rhoofr: total integrated electronic density
+   in g-space =      8.000000   in r-space =     8.000000
+     Total Electronic Pressure (GPa)      133.10200      0
+
+  nfi     ekinc              temph  tempp     etot                 enthal               econs                econt              vnhh    xnhh0   vnhp    xnhp0
+      1    0.771149806724264    0.0    0.00      10.415325296574      10.415325296574      10.415325296574      11.186475103298   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.187E-03  Not Generated
+      2    2.205527727772898    0.0    0.00       8.208564833619       8.208564833619       8.208564833619      10.414092561391   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.564E-03  Not Generated
+      3    4.034967109163395    0.0    0.00       5.168326977516       5.168326977516       5.168326977516       9.203294086680   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.882E-03  Not Generated
+      4    5.644764922325828    0.0    0.00       1.373705946664       1.373705946664       1.373705946664       7.018470868990   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.608E-02  Not Generated
+      5    9.221017013355727    0.0    0.00      -2.959081866479      -2.959081866479      -2.959081866479       6.261935146877   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.069E-02  Not Generated
+      6    9.942218498737738    0.0    0.00      -6.137740392637      -6.137740392637      -6.137740392637       3.804478106101   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.816E-04  Not Generated
+      7    4.599914653575722    0.0    0.00      -7.583616131461      -7.583616131461      -7.583616131461      -2.983701477885   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  9.109E-04  Not Generated
+      8    2.173948927678270    0.0    0.00      -8.430969829009      -8.430969829009      -8.430969829009      -6.257020901331   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.149E-04  Not Generated
+      9    1.380376150116411    0.0    0.00      -9.110653702023      -9.110653702023      -9.110653702023      -7.730277551907   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  8.726E-05  Not Generated
+     10    1.080104631584668    0.0    0.00      -9.761246797566      -9.761246797566      -9.761246797566      -8.681142165981   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  3.494E-04  Not Generated
+     11    0.936450010508944    0.0    0.00     -10.341665161228     -10.341665161228     -10.341665161228      -9.405215150719   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.421E-03  Not Generated
+     12    0.951046194096111    0.0    0.00     -10.830663769745     -10.830663769745     -10.830663769745      -9.879617575649   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.769E-03  Not Generated
+     13    1.401031693923431    0.0    0.00     -11.259905804617     -11.259905804617     -11.259905804617      -9.858874110694   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.620E-03  Not Generated
+     14    2.086940753370509    0.0    0.00     -11.657905055281     -11.657905055281     -11.657905055281      -9.570964301910   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  6.507E-04  Not Generated
+     15    1.485495462911710    0.0    0.00     -12.021508389634     -12.021508389634     -12.021508389634     -10.536012926722   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.403E-04  Not Generated
+     16    0.730330240284499    0.0    0.00     -12.360268083027     -12.360268083027     -12.360268083027     -11.629937842742   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.024E-04  Not Generated
+     17    0.536269536027521    0.0    0.00     -12.694491123647     -12.694491123647     -12.694491123647     -12.158221587619   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.148E-04  Not Generated
+     18    0.501388244333291    0.0    0.00     -13.019160631822     -13.019160631822     -13.019160631822     -12.517772387489   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.150E-04  Not Generated
+     19    0.470197738634660    0.0    0.00     -13.315997346424     -13.315997346424     -13.315997346424     -12.845799607790   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  8.492E-05  Not Generated
+     20    0.426870371579766    0.0    0.00     -13.574017496002     -13.574017496002     -13.574017496002     -13.147147124422   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  6.681E-05  Not Generated
+     21    0.375730449016340    0.0    0.00     -13.794170290935     -13.794170290935     -13.794170290935     -13.418439841919   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  6.220E-05  Not Generated
+     22    0.328396623059206    0.0    0.00     -13.985294170100     -13.985294170100     -13.985294170100     -13.656897547041   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  6.546E-05  Not Generated
+     23    0.293105246541304    0.0    0.00     -14.158551491761     -14.158551491761     -14.158551491761     -13.865446245220   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  7.706E-05  Not Generated
+     24    0.272461783652618    0.0    0.00     -14.323630959912     -14.323630959912     -14.323630959912     -14.051169176259   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.011E-04  Not Generated
+     25    0.265583104640270    0.0    0.00     -14.487295564783     -14.487295564783     -14.487295564783     -14.221712460143   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.428E-04  Not Generated
+     26    0.270459457355088    0.0    0.00     -14.653316716935     -14.653316716935     -14.653316716935     -14.382857259580   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.048E-04  Not Generated
+     27    0.284991535354421    0.0    0.00     -14.822763371624     -14.822763371624     -14.822763371624     -14.537771836270   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.823E-04  Not Generated
+     28    0.306571803609118    0.0    0.00     -14.994264200689     -14.994264200689     -14.994264200689     -14.687692397080   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  3.595E-04  Not Generated
+     29    0.330874803259442    0.0    0.00     -15.164392683175     -15.164392683175     -15.164392683175     -14.833517879916   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.155E-04  Not Generated
+     30    0.351415362348714    0.0    0.00     -15.328438951272     -15.328438951272     -15.328438951272     -14.977023588923   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.432E-04  Not Generated
+     31    0.361787101202523    0.0    0.00     -15.481563808164     -15.481563808164     -15.481563808164     -15.119776706962   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.572E-04  Not Generated
+     32    0.359638845419419    0.0    0.00     -15.619979215761     -15.619979215761     -15.619979215761     -15.260340370342   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.702E-04  Not Generated
+     33    0.347033225096664    0.0    0.00     -15.741700177375     -15.741700177375     -15.741700177375     -15.394666952278   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.659E-04  Not Generated
+     34    0.325348759766784    0.0    0.00     -15.846636515930     -15.846636515930     -15.846636515930     -15.521287756163   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.163E-04  Not Generated
+     35    0.292833246369858    0.0    0.00     -15.936178855076     -15.936178855076     -15.936178855076     -15.643345608706   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  3.254E-04  Not Generated
+     36    0.250288234878184    0.0    0.00     -16.012594134124     -16.012594134124     -16.012594134124     -15.762305899246   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.350E-04  Not Generated
+     37    0.206435523919408    0.0    0.00     -16.078469803125     -16.078469803125     -16.078469803125     -15.872034279205   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.010E-04  Not Generated
+     38    0.176489926211881    0.0    0.00     -16.136298583595     -16.136298583595     -16.136298583595     -15.959808657383   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.962E-04  Not Generated
+     39    0.182942498056427    0.0    0.00     -16.188220974417     -16.188220974417     -16.188220974417     -16.005278476361   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  6.251E-04  Not Generated
+     40    0.266617919151172    0.0    0.00     -16.235922263313     -16.235922263313     -16.235922263313     -15.969304344162   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.161E-03  Not Generated
+     41    0.482248994596593    0.0    0.00     -16.280613818723     -16.280613818723     -16.280613818723     -15.798364824126   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.345E-03  Not Generated
+     42    0.782678973131574    0.0    0.00     -16.322972266212     -16.322972266212     -16.322972266212     -15.540293293081   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  8.688E-04  Not Generated
+     43    0.908791902664804    0.0    0.00     -16.362997182081     -16.362997182081     -16.362997182081     -15.454205279416   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  4.320E-04  Not Generated
+     44    0.765427263476552    0.0    0.00     -16.400450608638     -16.400450608638     -16.400450608638     -15.635023345161   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.077E-04  Not Generated
+     45    0.536026533509021    0.0    0.00     -16.436085236629     -16.436085236629     -16.436085236629     -15.900058703120   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  8.530E-05  Not Generated
+     46    0.332664695845268    0.0    0.00     -16.471602496979     -16.471602496979     -16.471602496979     -16.138937801134   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  5.573E-05  Not Generated
+     47    0.186390285187670    0.0    0.00     -16.508400201686     -16.508400201686     -16.508400201686     -16.322009916498   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  8.043E-05  Not Generated
+     48    0.104639740727801    0.0    0.00     -16.546804656264     -16.546804656264     -16.546804656264     -16.442164915536   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.186E-04  Not Generated
+     49    0.073118223934182    0.0    0.00     -16.586168399720     -16.586168399720     -16.586168399720     -16.513050175785   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.601E-04  Not Generated
+
+ * Physical Quantities at step:    50
+     Pressure of Nuclei (GPa)             0.00000     50
+     Pressure Total (GPa)            -5.07155     50
+
+
+                total energy =      -16.62541795416 Hartree a.u.
+              kinetic energy =       12.18976 Hartree a.u.
+        electrostatic energy =      -23.05781 Hartree a.u.
+                         esr =        0.00155 Hartree a.u.
+                       eself =       30.31961 Hartree a.u.
+      pseudopotential energy =       -3.73267 Hartree a.u.
+  n-l pseudopotential energy =        2.03423 Hartree a.u.
+ exchange-correlation energy =       -4.05894 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -27.65  -15.23  -10.32   -5.58
+
+
+   CELL_PARAMETERS
+   12.00000000    0.00000000    0.00000000
+    0.00000000   12.00000000    0.00000000
+    0.00000000    0.00000000   12.00000000
+
+   System Density [g/cm^3] :              0.1167302083
+
+
+   System Volume [A.U.^3] :           1728.0000000000
+
+
+   Center of mass square displacement (a.u.):   0.000000
+
+   Total stress (GPa)
+       -4.36022251        -3.30918185        -2.02943960
+       -3.30918185        -4.24681206        -0.81070462
+       -2.02943960        -0.81070462        -6.60760727
+   ATOMIC_POSITIONS
+   O       0.99000000000000E-02     0.99000000000000E-02     0.00000000000000E+00
+   H       0.18325000000000E+01    -0.22430000000000E+00    -0.10000000000000E-03
+   H      -0.22430000000000E+00     0.18325000000000E+01     0.20000000000000E-03
+
+   ATOMIC_VELOCITIES
+   O       0.00000000000000E+00     0.00000000000000E+00     0.00000000000000E+00
+   H       0.00000000000000E+00     0.00000000000000E+00     0.00000000000000E+00
+   H       0.00000000000000E+00     0.00000000000000E+00     0.00000000000000E+00
+
+   Forces acting on atoms (au):
+   O      -0.29378187990323E+00    -0.12458229139607E+00     0.60023134898734E-01
+   H      -0.18721484911704E-01    -0.34187355660152E-01    -0.68521907897251E-01
+   H      -0.53957256634047E-01     0.12632141602377E-01    -0.45458142242988E-01
+
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1   0.00E+00     0.0000E+00
+        2   0.00E+00     0.0000E+00
+     50    0.068585229706631    0.0    0.00     -16.625417954163     -16.625417954163     -16.625417954163     -16.556832724457   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  2.124E-04  Not Generated
+
+   writing restart file (with schema): ./h2o_51.save/
+     restart      :      0.00s CPU      0.01s WALL (       1 calls)
+
+
+   Averaged Physical Quantities
+                      accumulated      this run
+   ekinc         :        1.21339       1.21339 (AU)
+   ekin          :        9.26674       9.26674 (AU)
+   epot          :      -24.14509     -24.14509 (AU)
+   total energy  :      -12.18848     -12.18848 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :      -12.18848     -12.18848 (AU)
+   econs         :      -12.18848     -12.18848 (AU)
+   pressure      :       11.84131      11.84131 (Gpa)
+   volume        :     1728.00000    1728.00000 (AU)
+
+
+
+     Called by MAIN_LOOP:
+     initialize   :      0.25s CPU      0.26s WALL (       1 calls)
+     main_loop    :      2.04s CPU      2.11s WALL (      50 calls)
+     cpr_total    :      2.16s CPU      2.23s WALL (       1 calls)
+
+     Called by INIT_RUN:
+
+     Called by CPR:
+     cpr_md       :      2.16s CPU      2.23s WALL (      50 calls)
+     move_electro :      2.00s CPU      2.07s WALL (      50 calls)
+     wf_close_opt :      0.12s CPU      0.12s WALL (      50 calls)
+
+     Called by WANNIER_MODULES:
+     wf_init      :      0.08s CPU      0.08s WALL (       1 calls)
+     wf_close_opt :      0.12s CPU      0.12s WALL (      50 calls)
+     wf_1         :      0.05s CPU      0.05s WALL (      50 calls)
+     wf_2         :      0.07s CPU      0.07s WALL (      50 calls)
+
+     Called by move_electrons:
+     rhoofr       :      0.31s CPU      0.32s WALL (      51 calls)
+     vofrho       :      1.59s CPU      1.65s WALL (      51 calls)
+     dforce       :      0.13s CPU      0.13s WALL (     102 calls)
+     calphi       :      0.00s CPU      0.00s WALL (      51 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (       2 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.00s CPU      0.00s WALL (      51 calls)
+     rsg          :      0.00s CPU      0.00s WALL (      51 calls)
+     rhoset       :      0.00s CPU      0.00s WALL (      51 calls)
+     sigset       :      0.00s CPU      0.00s WALL (      51 calls)
+     tauset       :      0.00s CPU      0.00s WALL (      51 calls)
+     ortho        :      0.01s CPU      0.01s WALL (      51 calls)
+     updatc       :      0.00s CPU      0.00s WALL (      51 calls)
+
+     Small boxes:
+
+     Low-level routines:
+     prefor       :      0.00s CPU      0.00s WALL (      51 calls)
+     nlfq         :      0.00s CPU      0.00s WALL (       2 calls)
+     nlsm1        :      0.00s CPU      0.00s WALL (      52 calls)
+     nlsm2        :      0.00s CPU      0.00s WALL (       2 calls)
+     fft          :      0.50s CPU      0.52s WALL (     409 calls)
+     ffts         :      0.11s CPU      0.11s WALL (     102 calls)
+     fftw         :      0.16s CPU      0.17s WALL (     306 calls)
+     fft_scatt_xy :      0.13s CPU      0.13s WALL (     817 calls)
+     fft_scatt_yz :      0.35s CPU      0.36s WALL (     817 calls)
+     betagx       :      0.06s CPU      0.06s WALL (       1 calls)
+     qradx        :      0.00s CPU      0.00s WALL (       1 calls)
+     gram         :      0.00s CPU      0.00s WALL (       1 calls)
+     nlinit       :      0.13s CPU      0.13s WALL (       1 calls)
+     init_dim     :      0.01s CPU      0.01s WALL (       1 calls)
+     newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
+     from_scratch :      0.04s CPU      0.05s WALL (       1 calls)
+     strucf       :      0.00s CPU      0.00s WALL (       1 calls)
+     calbec       :      0.00s CPU      0.00s WALL (      52 calls)
+     exch_corr    :      1.13s CPU      1.18s WALL (      51 calls)
+
+
+     CP           :      2.43s CPU      2.51s WALL
+
+
+   This run was terminated on:  12:24: 9  29Jun2021            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
