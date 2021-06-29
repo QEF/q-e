@@ -45,7 +45,7 @@
     USE constants,        ONLY : electronvolt_si
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
-    USE symm_base,        ONLY : s, nrot
+    USE symm_base,        ONLY : s, nsym
     USE printing,         ONLY : print_mob, print_mob_sym, print_mob_b, print_hall
     USE io_transport,     ONLY : fin_write, fin_read
     USE io_files,         ONLY : diropn
@@ -110,10 +110,10 @@
     !! Index of the k+q point from the full grid.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
-    INTEGER :: bztoibz_mat(nrot, nktotf)
+    INTEGER :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry.
-    !! nrot is the max number of symmetry
+    !! nsym + TR is the max number of symmetry
     INTEGER :: nb_sp
     !! Number of special points
     INTEGER :: ierr
@@ -196,7 +196,7 @@
       WRITE(stdout, '(5x,a,f12.6)') 'bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
       WRITE(stdout, '(5x,a,f12.6)') 's_bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2
       WRITE(stdout, '(5x,a,f12.6)') 'f_serta : ',  (3 * nbndfst * nktotf * nstemp) * byte2Mb!REAL(8)
-      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nrot * nktotf * byte2Mb / 2 !INTEGER(4)
+      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nsym * nktotf * byte2Mb / 2 !INTEGER(4)
       rws(:, :) = zero
       CALL wsinit(rws, nrwsx, nrws, bg)
     ENDIF
@@ -660,7 +660,7 @@
                                  iunsparsetcb, iunepmatcb
     USE mp,               ONLY : mp_bcast
     USE division,         ONLY : fkbounds2
-    USE symm_base,        ONLY : nrot
+    USE symm_base,        ONLY : nsym
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET, MPI_MODE_RDONLY, MPI_INFO_NULL, &
                                  MPI_SEEK_SET, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
@@ -834,7 +834,7 @@
     CALL mp_bcast(vkk_all, ionode_id, world_comm)
     CALL mp_bcast(wkf_all, ionode_id, world_comm)
     CALL mp_bcast(etf_all, ionode_id, world_comm)
-    CALL mp_bcast(nrot, ionode_id, world_comm)
+    CALL mp_bcast(nsym, ionode_id, world_comm)
     CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
     CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
     !

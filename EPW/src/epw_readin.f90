@@ -808,6 +808,7 @@
     WRITE(stdout, '(5x,a)') "The use of 2D interpolation is experimental for now"
     WRITE(stdout, '(5x,a)') "Use with caution"
     WRITE(stdout, '(5x,a)') "WARNING - 2D - WARNING - 2D - WARNING - 2D - WARNING - 2D"
+    CALL errore('epw_readin', '2D interpolation is under developement.', 1)
   ENDIF
   !
   IF (etf_mem == 3) THEN
