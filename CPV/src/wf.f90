@@ -378,7 +378,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         !   Spin Polarized case
         !   Up Spin First
         Xsp(:,1:nupdwn(1))=0.D0
-        c_psp(:,1:nupdwn(1))=0.D0 
+        c_psp(:,1:nupdwn(1))=0.D0
         c_msp(:,1:nupdwn(1))=0.D0
         DO i=1,nupdwn(1)
            c_psp(:,i)=c_p(:,i)
@@ -389,8 +389,10 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
-        CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,               &
+          &        c_psp(:,1:nupdwn(1)),ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,               &
+          &        c_msp(:,1:nupdwn(1)),ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
 #if defined(__MPI)
         CALL mp_sum ( Xsp(:,1:nupdwn(1)), intra_bgrp_comm )
 #endif
@@ -412,8 +414,10 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
-        CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,                     &
+          &        c_psp(:,iupdwn(2):nbsp),ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,                     &
+          &        c_msp(:,iupdwn(2):nbsp),ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
 #if defined(__MPI)
         CALL mp_sum ( Xsp(:,iupdwn(2):nbsp), intra_bgrp_comm )
 #endif
