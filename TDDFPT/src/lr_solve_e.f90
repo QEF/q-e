@@ -80,7 +80,7 @@ SUBROUTINE lr_solve_e
      !
      ! MAGNONS case
      !
-     WRITE(stdout,'(5X,"magnon calculation, n_ipol =",1X,i8, "n_op =", 1X,i8)') n_ipol, n_op
+     WRITE(stdout,'(5X,"magnon calculation, n_ipol =",1X,i3,1x,"n_op =", 1X,i3)') n_ipol, n_op
      !
      V0psi = (0.0d0,0.0d0)
      O_psi = (0.0d0,0.0d0)
@@ -451,6 +451,8 @@ SUBROUTINE shift_d0psi( r, n_ipol )
   !
   mmin(:) = 2000.d0
   mmax(:)= -2000.d0
+  center(:) = 0.0d0
+  origin(:) = 0.0d0
   !
   do ip = 1, n_ipol
     do iatm = 1, nat
@@ -459,16 +461,16 @@ SUBROUTINE shift_d0psi( r, n_ipol )
     enddo
   enddo
   !
-  center(:)= 0.5d0*(mmin(:)+mmax(:))
   do ip = 1, n_ipol
-    origin(ip)= center(ip)-0.5d0*at(ip,ip)
+    center(ip) = 0.5d0*(mmin(ip)+mmax(ip))
+    origin(ip) = center(ip)-0.5d0*at(ip,ip)
   enddo
   !
   do ir = 1, dfftp%nnr
-    r(ir,:)= r(ir,:) - origin(:)
     do ip = 1, n_ipol
-      if(r(ir,ip) .lt. 0) r(ir,ip)=r(ir,ip)+at(ip,ip)
-      if(r(ir,ip) .gt. at(ip,ip)) r(ir,ip)=r(ir,ip)-at(ip,ip)
+      r(ir,ip)= r(ir,ip) - origin(ip)
+      if (r(ir,ip).lt.0)         r(ir,ip) = r(ir,ip) + at(ip,ip)
+      if (r(ir,ip).gt.at(ip,ip)) r(ir,ip) = r(ir,ip) - at(ip,ip)
     enddo
   enddo
   !
