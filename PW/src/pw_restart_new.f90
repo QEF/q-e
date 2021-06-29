@@ -48,7 +48,7 @@ MODULE pw_restart_new
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
-  PUBLIC :: pw_write_schema, pw_write_binaries
+  PUBLIC :: pw_write_schema, write_collected_wfc
   PUBLIC :: read_xml_file, read_collected_wfc
   !
   CONTAINS
@@ -737,7 +737,7 @@ MODULE pw_restart_new
     END SUBROUTINE pw_write_schema
     !
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_binaries( )
+    SUBROUTINE write_collected_wfc( )
       !------------------------------------------------------------------------
       !
       USE mp,                   ONLY : mp_sum, mp_max
@@ -877,7 +877,7 @@ MODULE pw_restart_new
       !
       RETURN
       !
-    END SUBROUTINE pw_write_binaries
+    END SUBROUTINE write_collected_wfc
     !
     !-----------------------------------------------------------------------
     SUBROUTINE gk_l2gmap_kdip( npw_g, ngk_g, ngk, igk_l2g, igk_l2g_kdip, igwk )
