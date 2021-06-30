@@ -251,19 +251,17 @@ SUBROUTINE lr_readin
         ENDIF
         LR_polarization = 1
         !
-     ELSEIF (magnons .and. (b_pol ==0) ) THEN
-        !
-        n_ipol = 3
-        LR_polarization = 1
-        !
-     ELSEIF (magnons .and. ( (b_pol==1) .or. (b_pol==2) .or. (b_pol==3))) THEN
-        !
-        n_ipol = 1
-        LR_polarization = b_pol
-        !
-     ELSEIF (magnons .and. ((b_pol>3).or.(b_pol<0))) THEN
-        !
-        CALL errore( 'lr_readin', 'b_pol must be 0, 1, 2 or 3',1)
+     ELSEIF (magnons) THEN
+        !     
+        IF (b_pol==4) THEN
+           n_ipol = 3
+           LR_polarization = 1
+        ELSEIF (b_pol==1 .OR. b_pol==2 .OR. b_pol==3) THEN
+           n_ipol = 1
+           LR_polarization = b_pol
+        ELSE
+           CALL errore( 'lr_readin', 'b_pol must be 1, 2, 3, or 4',1)
+        ENDIF
         !
      ELSE
         !
@@ -637,9 +635,12 @@ CONTAINS
     !
     ! MAgnons restrictions
     !
-    IF ( magnons ) THEN
+    IF (magnons) THEN
+       IF (xclib_dft_is('gradient')) &
+          call errore('lr_readin', 'Magnons linear response calculation' // &
+                     & 'does not support GGA', 1 )
        IF ( (.not. noinv) .or. (.not. nosym)) THEN
-          call errore('iosys', 'Magnons linear response calculation' // &
+          call errore('lr_readin', 'Magnons linear response calculation' // &
                      & 'is not implemented with symmetry', 1 )
        ENDIF
     ENDIF

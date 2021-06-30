@@ -16,6 +16,8 @@ New in development version:
   * Calculation of DORI and of ELF for nspin=2 (Dong Yang, Qin Liu, JSG)
   * Interface for BerkeleyGW extended to hybrid and meta-GGA functionals:
     Fangzhou Zhao (Berkeley)
+  * Implementation of the turboMagnon code in TDDFPT [EPJB 91, 249 (2018)]
+    (T. Gorni, O. Baseggio, I. Timrov, P. Delugas, S. Baroni)
 
 Fixed in development version:
   * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
