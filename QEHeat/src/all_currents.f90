@@ -179,7 +179,7 @@ program all_currents
 
         write (*,*) 'This worker has steps from ', first_s_chunk, ' to ', last_s_chunk
         first_step=first_s_chunk
-        last_s_chunk=last_s_chunk - 1
+        last_step=last_s_chunk - 1
 
      end if
 
