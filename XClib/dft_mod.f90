@@ -236,7 +236,6 @@ CONTAINS
        ! ----------------------------------------------------------------------
        !
        IF (dftout(1:3) .EQ. 'XC-') THEN
-#if defined(__LIBXC)
           is_libxc = .FALSE.
           !
           ! ... short notation with libxc DFTs: 'XC-000i-000i-000i-000i-000i-000i'
@@ -261,10 +260,14 @@ CONTAINS
           IF (lxc == 'L') is_libxc(6) = .TRUE.
           !
           dft_defined = .TRUE.
-#else
-          CALL xclib_error( 'set_dft_from_name', 'libxc functionals needed, but &
+          !
+#if !defined(__LIBXC)
+          IF (ANY(is_libxc(:))) THEN
+            CALL xclib_error( 'set_dft_from_name', 'libxc functionals needed, but &
                                             &libxc is not active', 1 )
+          ENDIF
 #endif
+          !
        ENDIF
        !
     END SELECT
