@@ -1476,30 +1476,30 @@ CONTAINS
        ENDIF
     ENDIF
     !
-#if defined(__LIBXC)
-    IF ( ANY(is_libxc(:)) ) THEN
+    IF (is_libxc(5) .AND. is_libxc(6)) THEN
        IF (imeta==263 .AND. imetac==267) THEN
           shortname = 'SCAN'
           IF (scan_exx) shortname = 'SCAN0'
        ELSEIF (imeta == 208 .AND. imetac==231) THEN
           shortname = 'TB09'
-       ELSE
-          shortname = 'XC-000I-000I-000I-000I-000I-000I'
-          WRITE( shortname(4:6),   '(i3.3)' ) iexch
-          IF ( is_libxc(1) ) WRITE( shortname(7:7),   '(a)' ) 'L'
-          WRITE( shortname(9:11),  '(i3.3)' ) icorr
-          IF ( is_libxc(2) ) WRITE( shortname(12:12), '(a)' ) 'L'
-          WRITE( shortname(14:16), '(i3.3)' ) igcx
-          IF ( is_libxc(3) ) WRITE( shortname(17:17), '(a)' ) 'L'
-          WRITE( shortname(19:21), '(i3.3)' ) igcc
-          IF ( is_libxc(4) ) WRITE( shortname(22:22), '(a)' ) 'L'
-          WRITE( shortname(24:26), '(i3.3)' ) imeta
-          IF ( is_libxc(5) ) WRITE( shortname(27:27), '(a)' ) 'L'
-          WRITE( shortname(29:31), '(i3.3)' ) imetac
-          IF ( is_libxc(6) ) WRITE( shortname(32:32), '(a)' ) 'L'
-       ENDIF
+       ENDIF  
     ENDIF
-#endif
+    !
+    IF ( TRIM(shortname)=='no shortname' ) THEN
+       shortname = 'XC-000I-000I-000I-000I-000I-000I'
+       WRITE( shortname(4:6),   '(i3.3)' ) iexch
+       IF ( is_libxc(1) ) WRITE( shortname(7:7),   '(a)' ) 'L'
+       WRITE( shortname(9:11),  '(i3.3)' ) icorr
+       IF ( is_libxc(2) ) WRITE( shortname(12:12), '(a)' ) 'L'
+       WRITE( shortname(14:16), '(i3.3)' ) igcx
+       IF ( is_libxc(3) ) WRITE( shortname(17:17), '(a)' ) 'L'
+       WRITE( shortname(19:21), '(i3.3)' ) igcc
+       IF ( is_libxc(4) ) WRITE( shortname(22:22), '(a)' ) 'L'
+       WRITE( shortname(24:26), '(i3.3)' ) imeta
+       IF ( is_libxc(5) ) WRITE( shortname(27:27), '(a)' ) 'L'
+       WRITE( shortname(29:31), '(i3.3)' ) imetac
+       IF ( is_libxc(6) ) WRITE( shortname(32:32), '(a)' ) 'L'
+    ENDIF
     !
     xclib_get_dft_short = shortname
     !
