@@ -3230,7 +3230,7 @@ contains
     real(wp) a1,a2
     real(wp) bj_dmp6,bj_dmp8
     logical noabc,num,echo
-    ! coversion factors
+    ! conversion factors
 
     integer iat,jat,i,j,kat,my,ny,a,b,idum,tau2
     real(wp) R0,C6,alp,R42,disp,x1,y1,z1,x2,y2,z2,rr,e6abc,fdum
@@ -3260,6 +3260,7 @@ contains
     real(wp) vec(3),vec2(3),dummy
     real(wp) dc6i(n)
     real(wp) :: dc6_(n) 
+    real(wp), allocatable,dimension(:,:,:,:) :: drij_
     real(wp) dc6ij(n,n)
     real(wp) dc6_rest_sum(n*(n+1)/2)
     integer linij,linik,linjk
@@ -3881,6 +3882,8 @@ contains
       rep_v3 = rep_v(3)
 
       dc6_(:)=dc6i(:) ; dc6i(:) = 0.d0
+      allocate(drij_,MOLD=drij); drij_=drij; drij = 0.d0
+
       CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
       IF ( mykey == 0 ) THEN
       na_smax = max(3,na_s)
@@ -4656,6 +4659,8 @@ contains
       end do
 
       END IF
+      CALL mp_sum ( drij , intra_image_comm )
+      drij = drij + drij_
       CALL mp_sum ( dc6i , intra_image_comm )
       dc6i(:) = dc6i(:) + dc6_(:)
       CALL mp_sum ( eabc , intra_image_comm )
@@ -4772,6 +4777,7 @@ contains
 
 
 
+    deallocate(drij_)
     deallocate(drij)
 
 
