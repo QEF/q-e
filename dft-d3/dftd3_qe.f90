@@ -155,7 +155,7 @@ MODULE dftd3_qe
     this%rep_vdw(:) = int(rtmp3) + 1
     CALL set_criteria(this%cn_thr, at_, rtmp3)
     this%rep_cn(:) = int(rtmp3) + 1
-    CALL pbcncoord(nat, rcov, iz, tau_, cn, at, this%rep_cn, this%cn_thr)
+    CALL pbcncoord(nat, rcov, iz, tau_, cn, at_, this%rep_cn, this%cn_thr)
     !    
     x = 0.d0
     do ata = 1, nat
