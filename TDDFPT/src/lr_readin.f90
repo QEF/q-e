@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -63,7 +63,7 @@ SUBROUTINE lr_readin
   CHARACTER(LEN=80) :: disk_io
   ! Specify the amount of I/O activities
   CHARACTER(LEN=6) :: int_to_char
-  INTEGER :: ios, iunout, ierr, ipol
+  INTEGER :: ios, iunout, ierr
   !
   CHARACTER(LEN=80)          :: card
   INTEGER :: i
@@ -75,8 +75,7 @@ SUBROUTINE lr_readin
                         & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, approximation, calculator, alpha_mix, start, &
                         & end, increment, epsil, units, ethr_nscf, force_real_gamma, &
-                        & force_real_alpha, force_zero_alpha, &
-                        & b_pol, lan_precondition 
+                        & force_real_alpha, force_zero_alpha, lan_precondition 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -146,7 +145,6 @@ SUBROUTINE lr_readin
      force_real_gamma = .FALSE.
      force_real_alpha = .FALSE.
      force_zero_alpha = .FALSE.
-     b_pol = 1
      lan_precondition = .FALSE.
      !
      ! For lr_dav (Davidson program)
@@ -251,33 +249,21 @@ SUBROUTINE lr_readin
         ENDIF
         LR_polarization = 1
         !
-     ELSEIF (magnons) THEN
-        !     
-        IF (b_pol==4) THEN
+     ELSE
+        !    
+        ! Set up polarization direction(s) for the electric field (optics)
+        ! or for the magnetic field (magnons)
+        !  
+        IF (ipol==4) THEN
            n_ipol = 3
            LR_polarization = 1
-        ELSEIF (b_pol==1 .OR. b_pol==2 .OR. b_pol==3) THEN
+        ELSEIF (ipol==1 .OR. ipol==2 .OR. ipol==3) THEN
            n_ipol = 1
-           LR_polarization = b_pol
+           LR_polarization = ipol
         ELSE
-           CALL errore( 'lr_readin', 'b_pol must be 1, 2, 3, or 4',1)
+           CALL errore( 'lr_readin', 'ipol must be 1, 2, 3, or 4',1)
         ENDIF
         !
-     ELSE
-        !
-        ! Optics: set up polarization direction(s)
-        !
-        IF ( ipol==4 ) THEN
-           !
-           n_ipol = 3
-           LR_polarization = 1
-           !
-        ELSE
-           !
-           LR_polarization = ipol
-           !
-       ENDIF
-       !
      ENDIF
      !
      IF (itermax_int < itermax) itermax_int = itermax
@@ -637,10 +623,10 @@ CONTAINS
     !
     IF (magnons) THEN
        IF (xclib_dft_is('gradient')) &
-          call errore('lr_readin', 'Magnons linear response calculation' // &
+          call errore('lr_readin', 'Magnons linear response calculation ' // &
                      & 'does not support GGA', 1 )
        IF ( (.not. noinv) .or. (.not. nosym)) THEN
-          call errore('lr_readin', 'Magnons linear response calculation' // &
+          call errore('lr_readin', 'Magnons linear response calculation ' // &
                      & 'is not implemented with symmetry', 1 )
        ENDIF
     ENDIF

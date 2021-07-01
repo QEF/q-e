@@ -23,9 +23,8 @@ PROGRAM lr_magnons_main
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code3, &
-                                  & magnons, approximation, V0psi, &
-                                  & evc1_rgt, evc1_lft, evc1_rgt_old, evc1_lft_old, &
-                                  & b_pol, n_op
+                                  & magnons, approximation, V0psi, ipol, n_op, &
+                                  & evc1_rgt, evc1_lft, evc1_rgt_old, evc1_lft_old
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
@@ -145,7 +144,7 @@ PROGRAM lr_magnons_main
         LR_polarization = ip
         pol_index = LR_polarization
      ELSE
-        LR_polarization = b_pol
+        LR_polarization = ipol
      ENDIF
      !
      ! Read the starting Lanczos vectors V0psi and O_psi for magnons from the file,

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,7 +28,7 @@ SUBROUTINE lr_solve_e
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
                                    & d0psi_rs, eels, lr_exx,  magnons, &
-                                   & V0psi, b_pol, O_psi, n_op
+                                   & V0psi, ipol, O_psi, n_op
   USE lsda_mod,             ONLY : lsda, isk, current_spin,nspin
   USE uspp,                 ONLY : vkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
@@ -90,7 +90,7 @@ SUBROUTINE lr_solve_e
         DO ip = 1, n_ipol
            !
            IF ( n_ipol == 1 ) THEN
-              pol_index = b_pol 
+              pol_index = ipol 
            ELSE 
               pol_index = ip
            ENDIF
@@ -202,7 +202,7 @@ SUBROUTINE lr_solve_e
      !
      DO ip = 1, n_ipol
         !
-        IF (n_ipol==1) CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(b_pol)), nwordd0psi, exst)
+        IF (n_ipol==1) CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(ipol)), nwordd0psi, exst)
         IF (n_ipol==3) CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
         !
         CALL davcio(V0psi(:,:,:,:,ip),nwordd0psi,iund0psi,1,1)
