@@ -467,18 +467,20 @@ CONTAINS
     DO i = n, 0, -1
        IF ( matches(name(i), TRIM(dft_)) ) THEN
           !
-#if defined(__LIBXC)
-          IF ( matching == notset ) matching = i
-#else
-          IF ( matching == notset ) THEN
+          IF (matching==notset .OR. name(i)=='REVX') THEN
              !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
              matching = i
           ELSE
-             WRITE(stdout, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
-                                  matching, TRIM(name(matching))
-             CALL xclib_error( 'set_dft', 'two conflicting matching values', 1 )
-          ENDIF
+#if defined(__LIBXC)
+             IF (name(i)=='B88' .OR. name(i)=='CX0') CYCLE
+#else
+             IF (name(i)/='B88' .AND. name(i)/='CX0') THEN
+                WRITE(stdout, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
+                                     matching, TRIM(name(matching))
+                CALL xclib_error( 'set_dft', 'two conflicting matching values', 1 )
+             ENDIF
 #endif
+          ENDIF
        ENDIF
     ENDDO
     !
