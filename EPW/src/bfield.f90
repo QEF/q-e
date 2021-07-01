@@ -87,17 +87,17 @@
     !-----------------------------------------------------------------------
     USE kinds,       ONLY : DP
     USE epwcom,      ONLY : nstemp, etf_mem, nkf1, nkf2, nkf3
-    USE symm_base,   ONLY : nrot
+    USE symm_base,   ONLY : nsym
     USE elph2,       ONLY : nbndfst, nktotf, nkpt_ibztau, kpt_ibztau2ibz,       &
                             nkpt_bzfst, kpt_bztau2bz, kpt_bz2bztau,&
                             nkpt_bztau_max, kpt_ibztau2bz
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry.
-    !! nrot is the max number of symmetry
+    !! nsym + TR is the max number of symmetry
     !
     ! Local variable
     INTEGER :: ik
@@ -118,7 +118,7 @@
     ! Count the number of k-points with non-zero inv_tau inside the full BZ
     nkpt_bztau(:) = 0
     !
-    ALLOCATE(kpt_ibztau2bz(nrot, MAXVAL(nkpt_ibztau), nstemp), STAT = ierr)
+    ALLOCATE(kpt_ibztau2bz(nsym, MAXVAL(nkpt_ibztau), nstemp), STAT = ierr)
     kpt_ibztau2bz(:,:,:) = 0
     !
     IF (ierr /= 0) CALL errore('unfold_k', 'Error allocating kpt_ibztau2bz', 1)
@@ -136,7 +136,7 @@
     DO itemp = 1, nstemp
       DO ik = 1, nkpt_ibztau(itemp)
         ! Loop on the point equivalent by symmetry in the full BZ
-        DO nb = 1, nrot
+        DO nb = 1, nsym
           IF (bztoibz_mat(nb, kpt_ibztau2ibz(ik, itemp)) > 0) THEN
             nkpt_bztau(itemp) = nkpt_bztau(itemp) + 1
             ikbz = bztoibz_mat(nb, kpt_ibztau2ibz(ik, itemp))
@@ -158,7 +158,7 @@
       counter = 0
       DO ik = 1, nkpt_ibztau(itemp)
         ! Loop on the point equivalent by symmetry in the full BZ
-        DO nb = 1, nrot
+        DO nb = 1, nsym
           IF (bztoibz_mat(nb, kpt_ibztau2ibz(ik, itemp)) > 0) THEN
             counter = counter + 1
             ikbz = bztoibz_mat(nb, kpt_ibztau2ibz(ik, itemp))
@@ -187,7 +187,7 @@
     USE constants_epw,      ONLY : zero
     USE noncollin_module,   ONLY : noncolin
     USE cell_base,          ONLY : at, bg
-    USE symm_base,          ONLY : s, nrot
+    USE symm_base,          ONLY : s, nsym
     USE elph2,              ONLY : s_bztoibz, nbndfst, nktotf, nkqtotf,      &
                                    nkpt_bztau_max, etf_all_b, vkk_all_b, &
                                    wkf_all_b, df_in_b, f_serta_b, f_in_b,    &
@@ -265,7 +265,7 @@
       DO ik_ibz = 1, nkpt_ibztau(itemp)
         ikibz = kpt_ibztau2ibz(ik_ibz, itemp)
         IF(ikibz < 0) CALL errore( 'unfold_all', 'ikibz < 0; it should not happen',1 )
-        DO nb = 1, nrot
+        DO nb = 1, nsym
           ikbz = kpt_ibztau2bz(nb,ik_ibz,itemp)
           IF(ikbz > 0) THEN
             etf_all_b(:, kpt_bz2bztau(ikbz, itemp), itemp) = etf_all(:, ikibz)
@@ -405,7 +405,7 @@
     USE constants_epw,    ONLY : zero, eps160
     USE io_global,        ONLY : stdout
     USE cell_base,        ONLY : at, bg
-    USE symm_base,        ONLY : s, nrot
+    USE symm_base,        ONLY : s, nsym
     USE epwcom,           ONLY : nstemp, etf_mem
     USE elph2,            ONLY : s_bztoibz, nbndfst, nktotf, kpt_bztau2bz, &
                                  xkf_bz,     &
@@ -421,7 +421,7 @@
     !! Total number of special points
     INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
     !! Special points indexes and symmetries
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry.
     INTEGER, INTENT(in) :: sparse_q(nind)
@@ -529,7 +529,7 @@
       ENDDO
       !
       IF (special) THEN
-        DO nb = 1, nrot ! Loops on symmetries.
+        DO nb = 1, nsym ! Loops on symmetries.
           IF (bztoibz_mat(nb, ik) > 0) THEN
             ikbz = bztoibz_mat(nb, ik) ! index on the full BZ corresponding to ik in IBZ
             !
@@ -548,7 +548,7 @@
               CALL cryst_to_cart(1, xq(:), bg, 1)
               !
               ! Do an extra averaging on special k-points liked by symmetry.
-              DO sp = 1, nrot
+              DO sp = 1, nsym
                 IF (xkf_sp(sp + 1, index_sp) > 0) THEN
                   sa(:, :)   = DBLE(s(:, :, s_bztoibz(ikbz)))
                   sa_sp(:, :)= DBLE(s(:, :, xkf_sp(sp + 1, index_sp)))
@@ -577,7 +577,7 @@
           ENDIF ! bztoibz_mat
         ENDDO ! nb
       ELSE ! Not a special point
-        DO nb = 1, nrot ! Loops on symmetries.
+        DO nb = 1, nsym ! Loops on symmetries.
           IF (bztoibz_mat(nb, ik) > 0) THEN
             ikbz = bztoibz_mat(nb, ik) ! index on the full BZ corresponding to ik in IBZ
             !
@@ -622,9 +622,9 @@
     !
     WRITE(stdout, '(5x,a,i10)') 'Number of contributing elements for the master core ', nkpt_max
     !
-    ! Check that nkpt_max < nind * nrot * nrot
-    IF (nkpt_max > nind * nrot * nrot) THEN
-      CALL errore('size_indkq', 'nkpt_max cannot be larger than nind * nrot * nrot', 1)
+    ! Check that nkpt_max < nind * nsym * nsym
+    IF (nkpt_max > nind * nsym * nsym) THEN
+      CALL errore('size_indkq', 'nkpt_max cannot be larger than nind * nsym * nsym', 1)
     ENDIF
     !
     !-----------------------------------------------------------------------
@@ -652,7 +652,7 @@
     USE kinds,            ONLY : DP
     USE constants_epw,    ONLY : zero, eps160
     USE cell_base,        ONLY : at, bg
-    USE symm_base,        ONLY : s, nrot
+    USE symm_base,        ONLY : s, nsym
     USE epwcom,           ONLY : nstemp, etf_mem
     USE elph2,            ONLY : s_bztoibz, nbndfst, nktotf, &
                                  map_fst,      &
@@ -674,7 +674,7 @@
     !! Total number of special points
     INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
     !! Special points indexes and symmetries
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry.
     INTEGER, INTENT(in) :: sparse_q(nind)
@@ -799,7 +799,7 @@
       !
       IF (special) THEN
         isym = 0
-        DO nb = 1, nrot ! Loops on symmetries.
+        DO nb = 1, nsym ! Loops on symmetries.
           IF (bztoibz_mat(nb, ik) > 0) THEN
             ikbz = bztoibz_mat(nb, ik) ! index on the full BZ corresponding to ik in IBZ
             !
@@ -820,7 +820,7 @@
               ! Do an extra averaging on special k-points liked by symmetry.
               counter_average = 0
               jsym = 0
-              DO sp = 1, nrot
+              DO sp = 1, nsym
                 IF (xkf_sp(sp + 1, index_sp) > 0) THEN
                   counter_average = counter_average + 1
                   sa(:, :)   = DBLE(s(:, :, s_bztoibz(ikbz)))
@@ -860,7 +860,7 @@
         ENDDO ! nb
       ELSE ! Not a special point
         isym = 0
-        DO nb = 1, nrot ! Loops on symmetries.
+        DO nb = 1, nsym ! Loops on symmetries.
           IF (bztoibz_mat(nb, ik) > 0) THEN
             ikbz = bztoibz_mat(nb, ik) ! index on the full BZ corresponding to ik in IBZ
             !

@@ -33,7 +33,7 @@
     USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq, &
                           xkf_irr, wkf_irr, bztoibz, s_bztoibz
     USE cell_base, ONLY : at, bg
-    USE symm_base, ONLY : s, t_rev, time_reversal, nrot, nsym
+    USE symm_base, ONLY : s, t_rev, time_reversal, nsym
     USE io_var,    ONLY : iunkf
     USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
@@ -123,7 +123,6 @@
           ! returns the number of irr points nkqtotf
           ! xkf_irr and wkf_irr are allocated inside with dimension nkqtotf
           ! xkf_irr is in crystal coordinate
-          !CALL kpoint_grid_epw(nrot, time_reversal, s, t_rev, nkf1, nkf2, nkf3, nkqtotf)
           CALL kpoint_grid_epw(nsym, time_reversal, s, t_rev, nkf1, nkf2, nkf3, nkqtotf)
           !
           ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
@@ -131,8 +130,6 @@
           ALLOCATE(wkf_(2 * nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
           !
-          ! SP: The variable xkfval is a duplication. However, it allows to avoid some strange
-          !     memory allocation issue. FIXME
           DO ik = 1, nkqtotf
             ikk = 2 * ik - 1
             ikq = ikk + 1
@@ -636,7 +633,7 @@
     USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier
     USE epwcom,           ONLY : nkf1, nkf2, nkf3, iterative_bte
     USE elph2,            ONLY : wkf_fst, xkf_fst, nkqf, xkf, wkf, nkf, nkqtotf
-    USE symm_base,        ONLY : s, t_rev, nrot
+    USE symm_base,        ONLY : s, t_rev, nsym
     USE constants_epw,    ONLY : byte2Mb, eps4, zero
     USE noncollin_module, ONLY : noncolin
     !
@@ -678,7 +675,7 @@
     ! This routine select the k-points with eigenvalues within the fsthick and
     ! then create a bztoibz mapping of those points and their symmetry operation s_bztoibz
     ! xkf_fst and wkf_fst are allocated inside
-    CALL kpoint_grid_fst(nrot, s, t_rev, nrr_k, dims, &
+    CALL kpoint_grid_fst(nsym, s, t_rev, nrr_k, dims, &
                          irvec_k, ndegen_k, nkf1, nkf2, nkf3, nkqtotf, nelec)
     !
     ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
@@ -978,7 +975,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE kpoint_grid_fst(nrot, s, t_rev, nrr_k, dims, &
+    SUBROUTINE kpoint_grid_fst(n_sym, s, t_rev, nrr_k, dims, &
                               irvec_k, ndegen_k, nkf1, nkf2, nkf3, n_irr, nelec)
     !-----------------------------------------------------------------------
     !!
@@ -1008,7 +1005,7 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: nrot
+    INTEGER, INTENT(in) :: n_sym
     !! Number of Bravais symmetry
     INTEGER, INTENT(in) :: nkf1, nkf2, nkf3
     !! Fine k-point grid
@@ -1074,11 +1071,11 @@
     !! Number of full BZ points within the strickt fst
     INTEGER int2type
     !! 2 byte integer type MPI
-    INTEGER :: ks(nrot)
+    INTEGER :: ks(n_sym)
     !! Position of k-point equal by symmetry on the full BZ
-    INTEGER :: ks_in(nrot)
+    INTEGER :: ks_in(n_sym)
     !! Position of k-point equal by symmetry within the fsthick.
-    INTEGER :: val(nrot)
+    INTEGER :: val(n_sym)
     !! Minimal value of the equivalent k-point
     INTEGER, ALLOCATABLE :: equiv(:)
     !! k-point equivalence to find IBZ per core
@@ -1283,7 +1280,7 @@
         ! Position of the k-points equivalent by symmetry to the current kpoint
         ks(:) = 0
         ks_in(:) = 0
-        DO ns = 1, nrot
+        DO ns = 1, n_sym
           DO i = 1, 3
             xkr(i) = s(i, 1, ns) * xkf_in(1, ik + lower_bnd - 1) &
                    + s(i, 2, ns) * xkf_in(2, ik + lower_bnd - 1) &
@@ -1310,10 +1307,10 @@
             val(ns) = ABS(map_fst(pos) - n) ! If val is not 0, this means the point is not within fsthick
             !
           ENDIF ! in_the_list
-        ENDDO ! nrot
+        ENDDO ! n_sym
         !
         low_core = .TRUE.
-        DO ns = 1, nrot
+        DO ns = 1, n_sym
           ! Not the lowest core with that set of equiv. k-points ==> nullify that current k-point position
           ! Note: There is a specific case where we need to keep the point.
           !       If the current k-point has symmetric friend that are outside
@@ -1329,7 +1326,7 @@
         !
         ! If you are the lowest core
         IF (low_core) THEN
-          DO ns = 1, nrot
+          DO ns = 1, n_sym
             IF (ks(ns) > map_fst(ik + lower_bnd - 1) .AND. equiv_loc(ks_in(ns)) == ks_in(ns) .AND. val(ns) == 0) THEN
               equiv_loc(ks_in(ns)) = ik + lower_bnd - 1
               equiv(ks_in(ns)) = ik + lower_bnd - 1
@@ -1461,7 +1458,7 @@
     !
     ! Use symmetries to reconstruct the BZ from IBZ and check that all points were in xkf_in
     DO ik = 1, nkpt
-      DO nb = 1, nrot
+      DO nb = 1, n_sym
         ! Note that s is in crystal
         sa(:, :) = DBLE(s(:, :, nb))
         xkf_rot = MATMUL(sa, xkf_tmp(:, ik + lower_bnd - 1))
@@ -2589,11 +2586,11 @@
     !!
     !! For a given k-point in the IBZ gives the k-point index
     !! of all the k-point in the full BZ that are connected to the current
-    !! one by symmetry. nrot is the max number of symmetry
+    !! one by symmetry. nsym + TR is the max number of symmetry
     !!
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE symm_base,     ONLY : nrot
+    USE symm_base,     ONLY : nsym
     USE elph2,         ONLY : bztoibz, nktotf, ixkqf_tr, s_bztoibz_full, xqf, &
                               nkpt_bzfst, map_fst, s_bztoibz, map_rebal
     USE epwcom,        ONLY : etf_mem, nkf1, nkf2, nkf3, epmatkqread
@@ -2603,7 +2600,7 @@
     !
     INTEGER(KIND = 8), INTENT(in) :: nind
     !! Total number of elements per cpu
-    INTEGER, INTENT(inout) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(inout) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives gives the index of all the kpt in BZ connected by symmetry
     INTEGER, INTENT(in) :: sparse_q(nind)
     !! Q-point mapping index
@@ -2627,7 +2624,7 @@
     !! Number of intervals
     INTEGER :: ierr
     !! Error index
-    INTEGER :: nsym(nktotf)
+    INTEGER :: n_sym(nktotf)
     !! Temporary matrix used to count how many symmetry for that k-point
     INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
@@ -2638,14 +2635,14 @@
     REAL(KIND = DP) :: xxq(3)
     !! Current q-point
     !
-    nsym(:) = 0
+    n_sym(:) = 0
     !
     IF (etf_mem == 3) THEN
       !
       DO ikbz = 1, nkpt_bzfst
         ik = bztoibz(ikbz)
-        nsym(ik) = nsym(ik) + 1
-        bztoibz_mat(nsym(ik), ik) = ikbz
+        n_sym(ik) = n_sym(ik) + 1
+        bztoibz_mat(n_sym(ik), ik) = ikbz
       ENDDO
       !
       ! We divide map_fst into n_intval intervals
@@ -2685,8 +2682,8 @@
       ! Now create the mapping matrix
       DO ikbz = 1, nkf1 * nkf2 * nkf3
         ik = bztoibz(ikbz)
-        nsym(ik) = nsym(ik) + 1
-        bztoibz_mat(nsym(ik), ik) = ikbz
+        n_sym(ik) = n_sym(ik) + 1
+        bztoibz_mat(n_sym(ik), ik) = ikbz
       ENDDO
       !
       DO ind = 1, nind
@@ -2717,7 +2714,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE symm_base,     ONLY : s, nrot
+    USE symm_base,     ONLY : s, nsym
     USE elph2,         ONLY : nkf, nktotf
     USE constants_epw, ONLY : eps6, zero
     USE wigner,        ONLY : backtoWS
@@ -2791,7 +2788,7 @@
     DO ik = 1, nkf
       counter = 0
       ! We could skip nb==1 to avoid identity symmetry
-      DO nb = 1, nrot
+      DO nb = 1, nsym
         sa(:, :) = DBLE(s(:, :, nb))
         sb       = MATMUL(bg, sa)
         sr(:, :) = MATMUL(at, TRANSPOSE(sb))
@@ -2934,7 +2931,7 @@
     USE elph2,         ONLY : nkf, nbndfst, nktotf
     USE cell_base,     ONLY : bg, at
     USE constants_epw, ONLY : eps6, zero
-    USE symm_base,     ONLY : s, nrot
+    USE symm_base,     ONLY : s, nsym
     USE division,      ONLY : fkbounds
     USE mp,            ONLY : mp_sum
     USE mp_global,     ONLY : world_comm
@@ -3012,7 +3009,7 @@
           counter_average = 0
           tmp_vkk = zero
           tmp_f_out = zero
-          DO nb = 1,nrot
+          DO nb = 1, nsym
             IF (index_sp(ik) > 0) THEN
               IF (xkf_sp(nb + 1, index_sp(ik)) > 0) THEN
                 counter_average = counter_average + 1

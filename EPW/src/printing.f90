@@ -266,12 +266,12 @@
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
-    USE symm_base,     ONLY : nrot
+    USE symm_base,     ONLY : nsym
     USE mp,            ONLY : mp_sum
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)
     !! occupations factor produced by SERTA or IBTE
@@ -380,12 +380,12 @@
     USE cell_base,        ONLY : at, bg
     USE epwcom,           ONLY : nkf1, nkf2, nkf3
     USE elph2,            ONLY : s_bztoibz
-    USE symm_base,        ONLY : s, nrot
+    USE symm_base,        ONLY : s, nsym
     USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3)
     !! Occupation function produced by SERTA or IBTE
@@ -429,7 +429,7 @@
     fi_cart = f_out
     !
     ! Loop on the point equivalent by symmetry in the full BZ
-    DO nb = 1, nrot
+    DO nb = 1, nsym
       IF (bztoibz_mat(nb) > 0) THEN
         ikbz = bztoibz_mat(nb)
         !
@@ -687,7 +687,7 @@
     USE cell_base,     ONLY : omega, at, alat, bg
     USE elph2,         ONLY : dos, nkqtotf, s_bztoibz, nbndfst, nktotf
     USE io_var,        ONLY : iufilmu_nk
-    USE symm_base,     ONLY : s, nrot
+    USE symm_base,     ONLY : s, nsym
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, eps10, &
@@ -699,7 +699,7 @@
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf)
     !! occupations factor produced by SERTA or IBTE
@@ -787,7 +787,7 @@
           fi_cart = f_out(:, ibnd, ik)
           xkk_cart = xkf_all(:, ik)
           CALL cryst_to_cart(1, xkk_cart, bg, 1)
-          DO nb = 1, nrot
+          DO nb = 1, nsym
             IF (bztoibz_mat(nb, ik) > 0) THEN
               sigma(:, :) = zero
               mobility_nk(:, :) = zero

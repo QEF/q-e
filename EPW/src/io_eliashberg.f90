@@ -821,7 +821,6 @@
     USE grid,     ONLY : kpmq_map
     USE eliashbergcom, ONLY : ixkf, ixkff, xkff, xkfs, nkfs, ixkqf, ixqfs, nbndfs, nqfs, memlt_pool
     USE constants_epw, ONLY : zero
-    USE symm_base, ONLY : nrot
     USE mp_global, ONLY : inter_pool_comm, npool
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
@@ -1734,7 +1733,6 @@
     USE elph2,     ONLY : nqtotf, nktotf, xqf, map_rebal, bztoibz
     USE eliashbergcom, ONLY : ixkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nqfs
     USE constants_epw, ONLY : eps5, zero
-    USE symm_base, ONLY : nrot
     USE io_global, ONLY : stdout, ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
@@ -1789,7 +1787,7 @@
     ! using index of the k-point within the Fermi shell (ixkf)
     !
     IF (mp_mesh_k) THEN
-      ! SP - July 2020      
+      ! SP - July 2020
       ! We should not recompute bztoibz
       DO ikbz = 1, nkftot
         ixkff(ikbz) = ixkf(bztoibz(ikbz))
@@ -1907,7 +1905,7 @@
     SUBROUTINE check_restart_ephwrite()
     !-----------------------------------------------------------------------
     !!
-    !!   This routine checks the variables in restart while writing ephmat 
+    !!   This routine checks the variables in restart while writing ephmat
     !!   6/28/2020 Hari Paudyal
     !!
     USE io_files,  ONLY : prefix, tmp_dir
@@ -2077,9 +2075,9 @@
     !
     OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
     IF (ios /= 0) CALL errore('gap_distribution_FS', 'error opening file ' // name1, iufilgap)
-    WRITE(iufilgap, '(2a20)') '#     T [K]    ', '\rho(delta_nk) [meV]'    
+    WRITE(iufilgap, '(2a20)') '#     T [K]    ', '\rho(delta_nk) [meV]'
     DO ibin = 1, nbin
-      WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), & 
+      WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), &
                                    (dbin * DBLE(ibin) + delta_min) * 1000.d0
     ENDDO
     CLOSE(iufilgap)
