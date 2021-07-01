@@ -31,6 +31,10 @@ MODULE lr_variables
   INTEGER :: size_evc
   CHARACTER (len=24) :: bgz_suffix
   !
+  INTEGER :: ipol  ! Polarization direction for the electric field (optics)
+                   ! or for the magnetic field (magnons)
+                   ! 1=x, 2=y, 3=z, 4={x,y,z}
+  !
   LOGICAL :: lr_exx
   REAL(kind=dp) :: scissor
   !
@@ -137,8 +141,6 @@ MODULE lr_variables
                                 !
   !
   INTEGER :: n_op = 3
-  INTEGER :: b_pol       ! Magnetic field polarization
-                         ! 1=x, 2=y, 3=z, 4={x,y,z}
   COMPLEX(kind=dp), ALLOCATABLE :: &
                alpha_magnons_store(:,:), &
                gamma_magnons_store(:,:)

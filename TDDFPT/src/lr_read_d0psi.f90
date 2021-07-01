@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE lr_read_d0psi()
   USE io_files,             ONLY : prefix, diropn, tmp_dir, wfc_dir
   USE lr_variables,         ONLY : d0psi, d0psi2, n_ipol, LR_polarization, &
                                    & lr_verbosity, nwordd0psi, iund0psi, eels, &
-                                   & magnons, V0psi, O_psi, b_pol, n_op
+                                   & magnons, V0psi, O_psi, ipol, n_op
   USE wvfct,                ONLY : nbnd, npwx, et
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : nksq
@@ -59,7 +59,7 @@ SUBROUTINE lr_read_d0psi()
         !        
         IF (n_ipol==1) THEN
            !
-           CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(b_pol)), nwordd0psi, exst)
+           CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(ipol)), nwordd0psi, exst)
            !
            IF (.not.exst .and. wfc_dir /= 'undefined') THEN
               !
@@ -67,10 +67,10 @@ SUBROUTINE lr_read_d0psi()
               CLOSE( UNIT = iund0psi)
               tmp_dir = tmp_dir_saved 
               !
-              CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(b_pol)), nwordd0psi, exst)
+              CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(ipol)), nwordd0psi, exst)
               !
               IF (.not.exst) CALL errore('lr_read_d0psi', &
-                     & trim( prefix )//'.V0psi.'//trim(int_to_char(b_pol))//' not found',1)
+                     & trim( prefix )//'.V0psi.'//trim(int_to_char(ipol))//' not found',1)
               !
            ENDIF
            !
