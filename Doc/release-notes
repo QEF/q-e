@@ -52,6 +52,7 @@ Fixed in development version:
   * alpha2f.x wasn't reading the input any longer in v.6.7
     (noticed by Rico Pratama, Chungbuk Nat.U. Cheongju, Rep. of Korea)
   * turboLanczos with hybrids + (d0psi_rs=.true.) + (ipol/=4) was crashing
+  * Restart for DFT+U+V was not working.
 
 Incompatible changes in development version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
