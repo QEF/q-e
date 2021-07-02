@@ -112,25 +112,11 @@ SUBROUTINE export_upf(filename, unit_loc)
   upf%zmesh = grid%zmesh
   upf%rmax  = grid%rmax
   !
-  ! 
-  ! subroutine allocate_radial_grid can be used only for type(radial_grid_type)
-  ! but upf is type(pseudo_upf)
+  allocate( upf%r  (upf%mesh) )
+  allocate( upf%rab(upf%mesh) )
   !
-  allocate(           &
-    upf%r  (upf%mesh),    &
-    upf%rab(upf%mesh) )   ! d r(x) / d x where x is the linear grid
-  !
-  !allocate(           &
-  !  upf%r2 (upf%mesh),  & ! the square of the radial mesh
-  !  upf%sqr(upf%mesh),  & ! the square root of the radial mesh
-  !  upf%rm1(upf%mesh),  & ! 1 / r
-  !  upf%rm2(upf%mesh),  & ! 1 / r**2
-  !  upf%rm3(upf%mesh)   ) ! 1 / r**3
-  !
-  upf%r(1:upf%mesh) = grid%r(1:upf%mesh)
-  upf%rab(1:upf%mesh) = grid%rab(1:upf%mesh)
-  !upf%r2(1:upf%mesh) = upf%r(1:upf%mesh)**2
-  !upf%sqr(1:upf%mesh) = sqrt(upf%r(1:upf%mesh))
+  upf%r     = grid%r
+  upf%rab   = grid%rab
   !
   ! when possible, write semilocal PP's in the UPF file - may be
   ! useful if one wants to use PPs in the UPF format in other codes
