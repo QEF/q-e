@@ -752,6 +752,10 @@ SUBROUTINE phq_readin()
   ! returns .false., leaves the current values, read in read_file, unchanged)
   !
   newgrid = reset_grid (nk1, nk2, nk3, k1, k2, k3) 
+  if(newgrid.and.elph_mat)then
+    WRITE(stdout, '(//5x,"WARNING: Wannier elph do not use explicit new grid: nk1 nk2 nk3 ignored")') 
+    newgrid=.false.
+  end if
   !
   tmp_dir=tmp_dir_save
   !
