@@ -350,6 +350,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE eqv,        ONLY : dvpsi!, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE units_lr,              ONLY : iuwfc, lrwfc
+  USE buffers,               ONLY : get_buffer
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
   USE apply_dpot_mod,   ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
