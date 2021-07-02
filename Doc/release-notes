@@ -52,6 +52,7 @@ Fixed in 6.8 version:
   * alpha2f.x wasn't reading the input any longer in v.6.7
     (noticed by Rico Pratama, Chungbuk Nat.U. Cheongju, Rep. of Korea)
   * turboLanczos with hybrids + (d0psi_rs=.true.) + (ipol/=4) was crashing
+  * Restart for DFT+U+V was not working  
   * Restart for "Force theorem" was not working properly and gave wrong results
   * ld1.x may crash while writing UPF files due to unallocated r and rab arrays
     (noticed and fixed by Hitoshi Mori)
