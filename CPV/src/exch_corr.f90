@@ -372,7 +372,8 @@
 
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds,  only: DP
-  use xc_lib, only: xclib_dft_is, xclib_get_id, xclib_set_threshold, xc_gcx
+  use xc_lib, only: xclib_dft_is, xclib_dft_is_libxc, xclib_get_id, &
+                    xclib_set_threshold, xc_gcx
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
@@ -404,7 +405,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
     allocate( h( 1, 1, 1 ) )
   endif
   !
-  igcc_is_lyp = (xclib_get_id('GGA','CORR') == 3)
+  igcc_is_lyp = (xclib_get_id('GGA','CORR')==3 .AND. .NOT.xclib_dft_is_libxc('GGA','CORR'))
   !
   etxc = 0.0d0
   !

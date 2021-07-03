@@ -25,7 +25,7 @@ SUBROUTINE ld1_setup
                 nwfts,  nnts,  llts,  jjts,  elts,  iswts,  octs, nstoaets, &
                 nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, lpaw
   USE funct, ONLY : dft_is_nonlocc
-  USE xc_lib, ONLY : xclib_get_id, xclib_dft_is, start_exx
+  USE xc_lib, ONLY : xclib_get_id, xclib_dft_is, xclib_dft_is_libxc, start_exx
   !
   IMPLICIT NONE
 
@@ -41,9 +41,9 @@ SUBROUTINE ld1_setup
       CALL errore('ld1_setup','meta-GGA not implemented for LSDA', 2)
   IF ( meta .and. iswitch > 1 ) &
       CALL errore('ld1_setup','meta-GGA implemented only for all-electron case', 3)
-  hf  = xclib_get_id('LDA','EXCH')==5
+  hf  = xclib_get_id('LDA','EXCH')==5 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
   IF (hf)     CALL errore('ld1_setup','HF not implemented yet',1)
-  oep = xclib_get_id('LDA','EXCH')==4
+  oep = xclib_get_id('LDA','EXCH')==4 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
   IF (oep.and.iswitch>1) &
      CALL errore('ld1_setup','OEP is implemented only for all-electron calc.',1)
   IF (oep.and.rel>0) &

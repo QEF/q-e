@@ -236,7 +236,6 @@ CONTAINS
        ! ----------------------------------------------------------------------
        !
        IF (dftout(1:3) .EQ. 'XC-') THEN
-#if defined(__LIBXC)
           is_libxc = .FALSE.
           !
           ! ... short notation with libxc DFTs: 'XC-000i-000i-000i-000i-000i-000i'
@@ -261,10 +260,14 @@ CONTAINS
           IF (lxc == 'L') is_libxc(6) = .TRUE.
           !
           dft_defined = .TRUE.
-#else
-          CALL xclib_error( 'set_dft_from_name', 'libxc functionals needed, but &
+          !
+#if !defined(__LIBXC)
+          IF (ANY(is_libxc(:))) THEN
+            CALL xclib_error( 'set_dft_from_name', 'libxc functionals needed, but &
                                             &libxc is not active', 1 )
+          ENDIF
 #endif
+          !
        ENDIF
        !
     END SELECT
@@ -467,18 +470,20 @@ CONTAINS
     DO i = n, 0, -1
        IF ( matches(name(i), TRIM(dft_)) ) THEN
           !
-#if defined(__LIBXC)
-          IF ( matching == notset ) matching = i
-#else
-          IF ( matching == notset ) THEN
+          IF (matching==notset .OR. name(i)=='REVX') THEN
              !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
              matching = i
           ELSE
-             WRITE(stdout, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
-                                  matching, TRIM(name(matching))
-             CALL xclib_error( 'set_dft', 'two conflicting matching values', 1 )
-          ENDIF
+#if defined(__LIBXC)
+             IF (name(i)=='B88' .OR. name(i)=='CX0') CYCLE
+#else
+             IF (name(i)/='B88' .AND. name(i)/='CX0') THEN
+                WRITE(stdout, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
+                                     matching, TRIM(name(matching))
+                CALL xclib_error( 'set_dft', 'two conflicting matching values', 1 )
+             ENDIF
 #endif
+          ENDIF
        ENDIF
     ENDDO
     !
@@ -504,7 +509,7 @@ CONTAINS
     !
     CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
-    INTEGER, PARAMETER :: ID_MAX_LIBXC=600
+    INTEGER, PARAMETER :: ID_MAX_LIBXC=999
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
 #if (XC_MAJOR_VERSION>5)
@@ -710,45 +715,50 @@ CONTAINS
     USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                             islda, isgradient, ismeta, exx_fraction, &
                             screening_parameter, gau_parameter,      & 
-                            ishybrid, has_finite_size_correction
+                            ishybrid, has_finite_size_correction, is_libxc
     !  
     IMPLICIT NONE
     !
     LOGICAL, INTENT(IN) :: isnonlocc
     !! The non-local part, for now, is not included in xc_lib, but this variable
     !! is needed to establish 'isgradient'.
+    LOGICAL :: is_libxc13
     !
     ismeta    = (imeta+imetac > 0)
     isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta .OR. isnonlocc
     islda     = (iexch> 0) .AND. (icorr > 0) .AND. .NOT. isgradient
+    is_libxc13 = is_libxc(1) .OR. is_libxc(3)
     ! PBE0/DF0
-    IF ( iexch==6 .OR.  igcx == 8 ) exx_fraction = 0.25_DP
+    IF ( iexch==6 .AND. .NOT.is_libxc(1) ) exx_fraction = 0.25_DP
+    IF ( igcx==8  .AND. .NOT.is_libxc(3) ) exx_fraction = 0.25_DP
     ! CX0P
-    IF ( iexch==6 .AND. igcx ==31 ) exx_fraction = 0.20_DP
+    IF ( iexch==6 .AND. igcx==31 .AND. .NOT.is_libxc13 ) exx_fraction = 0.20_DP
     ! B86BPBEX
-    IF ( iexch==6 .AND. igcx ==41 ) exx_fraction = 0.25_DP
+    IF ( iexch==6 .AND. igcx==41 .AND. .NOT.is_libxc13 ) exx_fraction = 0.25_DP
     ! BHANDHLYP
-    IF ( iexch==6 .AND. igcx ==42 ) exx_fraction = 0.50_DP
+    IF ( iexch==6 .AND. igcx==42 .AND. .NOT.is_libxc13 ) exx_fraction = 0.50_DP
     ! HSE
-    IF ( igcx ==12 ) THEN
+    IF ( igcx ==12 .AND. .NOT.is_libxc(3) ) THEN
        exx_fraction = 0.25_DP
        screening_parameter = 0.106_DP
     ENDIF
     ! gau-pbe
-    IF ( igcx ==20 ) THEN
+    IF ( igcx ==20 .AND. .NOT.is_libxc(3) ) THEN
        exx_fraction = 0.24_DP
        gau_parameter = 0.150_DP
     ENDIF
     ! HF or OEP
-    IF ( iexch==4 .OR. iexch==5 ) exx_fraction = 1.0_DP
+    IF ( iexch==4 .AND. .NOT.is_libxc(1)) exx_fraction = 1.0_DP
+    IF ( iexch==5 .AND. .NOT.is_libxc(1)) exx_fraction = 1.0_DP
     ! B3LYP or B3LYP-VWN-1-RPA
-    IF ( iexch == 7 ) exx_fraction = 0.2_DP
+    IF ( iexch == 7 .AND. .NOT.is_libxc(3) ) exx_fraction = 0.2_DP
     ! X3LYP
-    IF ( iexch == 9 ) exx_fraction = 0.218_DP
+    IF ( iexch == 9 .AND. .NOT.is_libxc(3) ) exx_fraction = 0.218_DP
     !
     ishybrid = ( exx_fraction /= 0.0_DP )
     !
-    has_finite_size_correction = ( iexch==8 .OR. icorr==10)
+    has_finite_size_correction = ( (iexch==8 .AND. .NOT.is_libxc(1)) .OR. &
+                                   (icorr==10.AND. .NOT.is_libxc(2)) )
     !
     RETURN
     !
@@ -1239,7 +1249,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
     !! 1: unpolarized case; 2: polarized
-    INTEGER :: iid, ip, p0, pn
+    INTEGER :: iid, ip, p0, pn, ips
     INTEGER :: id_vec(6)
     !
 #if defined(__LIBXC)
@@ -1258,12 +1268,12 @@ CONTAINS
         xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
 #if (XC_MAJOR_VERSION<=5)
-        p0 = 0  ;  pn = n_ext_params(iid)-1
+        p0 = 0 ;  pn = n_ext_params(iid)-1 ;  ips = 1
 #else
-        p0 = 1  ;  pn = n_ext_params(iid)
+        p0 = 1 ;  pn = n_ext_params(iid)   ;  ips = 0
 #endif
         DO ip = p0, pn
-          par_list(iid,ip) = xc_f03_func_info_get_ext_params_default_value( &
+          par_list(iid,ip+ips) = xc_f03_func_info_get_ext_params_default_value( &
                                                            xc_info(iid), ip )
         ENDDO
         libxc_initialized(iid) = .TRUE.
@@ -1471,30 +1481,30 @@ CONTAINS
        ENDIF
     ENDIF
     !
-#if defined(__LIBXC)
-    IF ( ANY(is_libxc(:)) ) THEN
+    IF (is_libxc(5) .AND. is_libxc(6)) THEN
        IF (imeta==263 .AND. imetac==267) THEN
           shortname = 'SCAN'
           IF (scan_exx) shortname = 'SCAN0'
        ELSEIF (imeta == 208 .AND. imetac==231) THEN
           shortname = 'TB09'
-       ELSE
-          shortname = 'XC-000I-000I-000I-000I-000I-000I'
-          WRITE( shortname(4:6),   '(i3.3)' ) iexch
-          IF ( is_libxc(1) ) WRITE( shortname(7:7),   '(a)' ) 'L'
-          WRITE( shortname(9:11),  '(i3.3)' ) icorr
-          IF ( is_libxc(2) ) WRITE( shortname(12:12), '(a)' ) 'L'
-          WRITE( shortname(14:16), '(i3.3)' ) igcx
-          IF ( is_libxc(3) ) WRITE( shortname(17:17), '(a)' ) 'L'
-          WRITE( shortname(19:21), '(i3.3)' ) igcc
-          IF ( is_libxc(4) ) WRITE( shortname(22:22), '(a)' ) 'L'
-          WRITE( shortname(24:26), '(i3.3)' ) imeta
-          IF ( is_libxc(5) ) WRITE( shortname(27:27), '(a)' ) 'L'
-          WRITE( shortname(29:31), '(i3.3)' ) imetac
-          IF ( is_libxc(6) ) WRITE( shortname(32:32), '(a)' ) 'L'
-       ENDIF
+       ENDIF  
     ENDIF
-#endif
+    !
+    IF ( TRIM(shortname)=='no shortname' ) THEN
+       shortname = 'XC-000I-000I-000I-000I-000I-000I'
+       WRITE( shortname(4:6),   '(i3.3)' ) iexch
+       IF ( is_libxc(1) ) WRITE( shortname(7:7),   '(a)' ) 'L'
+       WRITE( shortname(9:11),  '(i3.3)' ) icorr
+       IF ( is_libxc(2) ) WRITE( shortname(12:12), '(a)' ) 'L'
+       WRITE( shortname(14:16), '(i3.3)' ) igcx
+       IF ( is_libxc(3) ) WRITE( shortname(17:17), '(a)' ) 'L'
+       WRITE( shortname(19:21), '(i3.3)' ) igcc
+       IF ( is_libxc(4) ) WRITE( shortname(22:22), '(a)' ) 'L'
+       WRITE( shortname(24:26), '(i3.3)' ) imeta
+       IF ( is_libxc(5) ) WRITE( shortname(27:27), '(a)' ) 'L'
+       WRITE( shortname(29:31), '(i3.3)' ) imetac
+       IF ( is_libxc(6) ) WRITE( shortname(32:32), '(a)' ) 'L'
+    ENDIF
     !
     xclib_get_dft_short = shortname
     !

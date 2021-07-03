@@ -23,7 +23,7 @@ subroutine write_results
                         relpert, evel, edar, eso, noscf, iswitch, rho, &
                         file_charge, max_out_wfc, vx
   use funct,     only : get_dft_name, write_dft_name
-  use xc_lib,    only : xclib_get_id
+  use xc_lib,    only : xclib_get_id, xclib_dft_is_libxc
   
   implicit none
 
@@ -64,8 +64,8 @@ subroutine write_results
 1000 format(/5x, &
           'n l     nl                  e(Ry) ','         e(Ha)          e(eV)')
 
-     oep = xclib_get_id('LDA','EXCH') .eq. 4
-     kli = xclib_get_id('LDA','EXCH') .eq. 10
+     oep = xclib_get_id('LDA','EXCH')== 4 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
+     kli = xclib_get_id('LDA','EXCH')==10 .and. .not.xclib_dft_is_libxc('LDA','EXCH')
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      do n=1,nwf
         if (oc(n)>-eps6) then
