@@ -13,6 +13,9 @@
 !
 ! Copyright (C) 2016, Bálint Aradi
 !
+! MPI parallelization  added by Paolo Giannozzi, June 2021
+! OpenACC acceleration added by Ivan Carnimeo,   June 2021
+!
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation; either version 1, or (at your option)
@@ -3259,8 +3262,6 @@ contains
     real(wp) :: dc6_rest
     real(wp) vec(3),vec2(3),dummy
     real(wp) dc6i(n)
-    real(wp) :: dc6_(n) 
-    real(wp), allocatable,dimension(:,:,:,:) :: drij_
     real(wp) dc6ij(n,n)
     real(wp) dc6_rest_sum(n*(n+1)/2)
     integer linij,linik,linjk
@@ -3475,6 +3476,8 @@ contains
       goto 999
     end if
 
+    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+
     if ((version.eq.3).or.(version.eq.5)) then
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !
@@ -3501,9 +3504,11 @@ contains
       c6save=0.0d0
       kat=0
       dc6i=0.0d0
+      dc6ij=0.0d0
 
+      IF ( mykey == 0 ) THEN
 
-      do iat=1,n
+      do iat=na_s, na_e
         call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
             & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
             & c6,dc6iji,dc6ijj)
@@ -3685,6 +3690,7 @@ contains
         end do
 
       end do
+      END IF
 
     elseif ((version.eq.4).or.(version.eq.6)) then
 
@@ -3711,7 +3717,9 @@ contains
       dc6i(:) = 0.0d0
       kat=0
 
-      do iat=1,n
+      IF ( mykey == 0 ) THEN
+
+      do iat=na_s, na_e
         call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
             & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
             & c6,dc6iji,dc6ijj)
@@ -3855,14 +3863,14 @@ contains
         end do
 
       end do
+      END IF
 
     end if
 
-
-    !
 !!!!!!!!!!!!!!!!!!!!!!!
     !! BEGIN Threebody gradient
 !!!!!!!!!!!!!!!!!!!!!!!
+
     if (.not.noabc) then
 
       ! write(*,*)'!!!!!!!!!! THREEBODY GRADIENT !!!!!!!!!!'
@@ -3881,10 +3889,8 @@ contains
       rep_v2 = rep_v(2)
       rep_v3 = rep_v(3)
 
-      dc6_(:)=dc6i(:) ; dc6i(:) = 0.d0
-      allocate(drij_,MOLD=drij); drij_=drij; drij = 0.d0
-
-      CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+      CALL mp_sum ( c6save , intra_image_comm )
+      CALL mp_sum ( dc6ij  , intra_image_comm )
       IF ( mykey == 0 ) THEN
       na_smax = max(3,na_s)
 
@@ -4454,215 +4460,10 @@ contains
           end do
           !jtaux
         end do
-        !should exclude tabst
-        !get type of string, 0=numb
-        !special case: end of line
-        !cast string on real and get er
-        !handle exceptions
-        !check for integer/real
-        !if integer, add .0 to string; otherwi
-        ! Selective dynamics
-        ! Cartesian or direct
-        !first line must contain Element Info
-        !second line contains global scaling f
-        !the Ang->au conversion is included in
-        ! reading the lattice constants
-        ! write(*,'(3F6.2)')lattice(1,i),lattice(2,i),lattice(3,i)
-        !Ether here are the numbers of each el
-        ! CONTCAR files have additional Element lin
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !i
-        ! Selective dynamics
-        ! Cartesian or direct
-        !first line must contain Element Info
-        !second line contains global scaling f
-        ! reading the lattice constants
-        ! write(*,'(3F6.2)')lattice(1,i),lattice(2,i),lattice(3,i)
-        !Ether here are the numbers of each el
-        ! CONTCAR files have additional Element lin
-        !,r2r4(*)
-        !,crit_vdw,crit_cn
-        !BJ-parameter
-        !taux
-        !tauy
-        !tauz
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !version
-        !reciprocal radii scaling paramete
-        !alpha saved with "-" sign
-        !alp9 is already s
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !jat
-        !iat
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        ! And now kat=jat, but cycling throug all imagecells without jtau=
-        ! But this counts only 1/2
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        !If kat and jat are th
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !j
-        !i
-        !BJ-parameters
-        ! precalculated dampingterms
-        !d(C6ij)/d(r_ij)
-        !d(E)/d(r_ij) der
-        !dCN(iat)/d(r_ij)
-        !dCN(jat)/d(r_ij)
-        !dC6i(iat) saves dE_dsp/dCN(iat)
-        !dC6(iat,jat)/cCN(iat) in dc6ij(i,j) for ABC-
-        !threebody gradient
-        !inverse of 4/3
-        !jat
-        !iat
-        !call edisp...dum1
-        !call edisp...dum2
-        !j
-        !i
-        !b
-        !a
-        !num
-        !my
-        !ny
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        !my
-        !ny
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !b
-        !a
-        !version==2
-        ! d(r^(-6))/d(tau)
-        !d(f_dmp)/d(tau)
-        ! calculate E_disp for sanity check
-        !r2 < 0.1>rthr
-        !tauz
-        !tauy
-        !taux
-        ! d(r^(-6))/d(r_ij)
-        !d(f_dmp)/d(r_ij)
-        ! calculate E_disp for sanity check
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        ! d(1/(r^(6)+R0^6)/d(r)
-        ! calculate E_disp for sanity check
-        !r2 < 0.1>rthr
-        !tauz
-        !tauy
-        !taux
-        ! calculate E_disp for sanity check
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        ! version=3 or 4
-        !alp9 is already sa
-        !ktauz
-        !ktauy
-        !ktauz
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !jat
-        !iat
-        !alp9 is already saved
-        !factor 1/2 for doublecounting
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        ! And now kat=jat, but cycling throug all imagecells without jtau=
-        ! But this counts only 1/2
-        !alp9 is already save
-        !factor 1/2 for doublecounting
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        !if
-        !If kat and jat are th
-        !alp9 is already saved
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-
 
       end do
 
       END IF
-      CALL mp_sum ( drij , intra_image_comm )
-      drij = drij + drij_
-      CALL mp_sum ( dc6i , intra_image_comm )
-      dc6i(:) = dc6i(:) + dc6_(:)
       CALL mp_sum ( eabc , intra_image_comm )
 
       call cpu_time(time2)
@@ -4673,7 +4474,8 @@ contains
       ! write(*,*)'gdisp:',disp
     end if
 
-451 continue
+    CALL mp_sum ( drij , intra_image_comm )
+    CALL mp_sum ( dc6i , intra_image_comm )
 
     sigma_abc=0.0d0
     sigma=0.0d0
@@ -4777,7 +4579,6 @@ contains
 
 
 
-    deallocate(drij_)
     deallocate(drij)
 
 

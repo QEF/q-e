@@ -986,7 +986,6 @@ forces_bp_efield.o : ../../Modules/mp_world.o
 forces_bp_efield.o : ../../Modules/noncol.o
 forces_bp_efield.o : ../../Modules/recvec.o
 forces_bp_efield.o : ../../Modules/wavefunctions.o
-forces_bp_efield.o : ../../UtilXlib/clocks_handler.o
 forces_bp_efield.o : ../../UtilXlib/mp.o
 forces_bp_efield.o : ../../UtilXlib/parallel_include.o
 forces_bp_efield.o : ../../upflib/uspp.o

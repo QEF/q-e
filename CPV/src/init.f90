@@ -47,7 +47,7 @@
       USE input_parameters,     ONLY : ref_cell, ref_alat
       use cell_base,            ONLY : ref_at, ref_bg
       USE exx_module,           ONLY : h_init
-      USE command_line_options, ONLY : nmany_
+      USE command_line_options, ONLY : nmany_, pencil_decomposition_ 
 
       implicit none
 !
@@ -104,16 +104,16 @@
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
-                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+                            gkcut, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_)
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
-                            gcutm, nyfft=nyfft_, nmany=nmany_ )
+                            gcutm, nyfft=nyfft_, nmany=nmany_ ,use_pd=pencil_decomposition_ )
         !
       ELSE
         !
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, &
-                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+                            gkcut, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_ )
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg, &
-                            gcutm, nyfft=nyfft_, nmany=nmany_ )
+                            gcutm, nyfft=nyfft_, nmany=nmany_ , use_pd=pencil_decomposition_ )
         !
       END IF
       ! define the clock labels ( this enables the corresponding fft too ! )

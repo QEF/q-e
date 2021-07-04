@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2021 Quantum ESPRESSO group
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,7 +28,6 @@ MANUAL=" Usage
 
  After configuration, the make.inc file will be created in the
  QE home (current) directory
- NOTE: CUDA Fortran code available only as a separate package
  
  ---------------------------------------------------------------
  Manual from autoconf configure : 

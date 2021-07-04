@@ -112,6 +112,9 @@ SUBROUTINE export_upf(filename, unit_loc)
   upf%zmesh = grid%zmesh
   upf%rmax  = grid%rmax
   !
+  allocate( upf%r  (upf%mesh) )
+  allocate( upf%rab(upf%mesh) )
+  !
   upf%r     = grid%r
   upf%rab   = grid%rab
   !
