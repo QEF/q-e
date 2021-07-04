@@ -39,9 +39,12 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                                        expo, wfsd
   USE wannier_base,             ONLY : becwf, cwf, bec2, bec3, bec2up,         &
     &                                  bec2dw, bec3up, bec3dw, c_m, c_p, c_psp,&
-    &                                  c_msp, tagz, Uspin, X, Xsp, X2, X3, O,  &
+    &                                  c_msp, tagz, Uspin, Xsp, X2, X3, O,  &
     &                                  Ospin, Oa, qv, fg1, gr, mt, mt0, wr, W, &
     &                                  EW, f3, f4, U2
+#if ! defined (__PGI)
+  USE wannier_base,             ONLY : X !HK: somehow lead to NaN (nvhpc/21.3, potentially a compiler bug...)
+#endif
 #if defined (__MPI)
   USE wannier_base,             ONLY : psitot, psitot_pl, psitot_mi, ns
 #endif
@@ -78,6 +81,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   REAL(DP)    :: t1, t2, t3, taup(3)
   REAL(DP)    :: wrsq, wrsqmin
   COMPLEX(DP) :: qvt
+#if defined (__PGI)
+  COMPLEX(DP) :: X(nbsp,nbsp) !HK: workaround for NaN issue (nvhpc/21.3, potentially a compiler bug...)
+#endif
   REAL (DP)   :: temp_vec(3)
   INTEGER           :: adjust,ini, ierr1,nnn, me
   INTEGER           :: igx, igy, igz
@@ -634,7 +640,9 @@ CONTAINS
     ! ... set up matrix O
     !
     IF (.NOT.ALLOCATED(O))  ALLOCATE(O(nw,nbsp,nbsp))
+#if ! defined (__PGI)
     IF (.NOT.ALLOCATED(X))  ALLOCATE(X(nbsp,nbsp))
+#endif
     IF (.NOT.ALLOCATED(Oa)) ALLOCATE(Oa(nw,nbsp,nbsp))
     IF ( nspin == 2 .AND. nkbus > 0 ) THEN
       IF (.NOT.ALLOCATED(X2)) ALLOCATE(X2(nupdwn(1),nupdwn(1)))
