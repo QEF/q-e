@@ -908,7 +908,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !
   INTEGER :: ir
   REAL(DP) :: rho, zeta, grho
-  REAL(DP) :: sc, v1c(2), v2c
+  REAL(DP) :: sc, v1c_up, v1c_dw, v2c
   !REAL(DP), PARAMETER :: small=1.E-10_DP !, epsr=1.E-6_DP
   !
 #if defined(_OPENMP)
@@ -918,12 +918,18 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   ntids = omp_get_num_threads()
 #endif
   !
+#if defined(_OPENACC)
+!$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
+!$acc parallel loop
+#endif
+#if defined(__OPENMP) && !defined(_OPENACC)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, zeta, grho, sc, v1c, v2c ) &
 !$omp shared( igcc, sc_out, v1c_out, v2c_out, &
 !$omp         rho_threshold_gga, zeta_io, length, &
 !$omp         grho_in, rho_in )
 !$omp do
+#endif
   DO ir = 1, length
     !
     rho  = rho_in(ir)
@@ -935,7 +941,8 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
          SQRT(ABS(grho))<=rho_threshold_gga ) THEN
        sc_out(ir) = 0.0_DP
-       v1c_out(ir,:) = 0.0_DP ; v2c_out(ir) = 0.0_DP
+       v1c_out(ir,1) = 0.0_DP ; v2c_out(ir) = 0.0_DP
+       v1c_out(ir,2) = 0.0_DP
        CYCLE
     ENDIF
     !
@@ -943,44 +950,52 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     CASE( 0 )
        !
        sc  = 0.0_DP
-       v1c = 0.0_DP
+       v1c_up = 0.0_DP
+       v1c_dw = 0.0_DP
        v2c = 0.0_DP
        !
     CASE( 1 )
        !
-       CALL perdew86_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
+       CALL perdew86_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
        !
     CASE( 2 )
        !
-       CALL ggac_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
+       CALL ggac_spin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c )
        !
     CASE( 4 )
        !
-       CALL pbec_spin( rho, zeta, grho, 1, sc, v1c(1), v1c(2), v2c )
+       CALL pbec_spin( rho, zeta, grho, 1, sc, v1c_up, v1c_dw, v2c )
        !
     CASE( 8 )
        !
-       CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
+       CALL pbec_spin( rho, zeta, grho, 2, sc, v1c_up, v1c_dw, v2c )
        !
-    CASE( 14 )
-       !
-       call beeflocalcorrspin(rho, zeta, grho, sc, v1c(1), v1c(2), v2c, 0)
+!    CASE( 14 )                                           !*****TEMPORARY OUT -- openACC TEST
+!       !
+!       call beeflocalcorrspin(rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0)
        !
     CASE DEFAULT
        !
        sc = 0.0_DP
-       v1c = 0.0_DP
+       v1c_up = 0.0_DP
+       v1c_dw = 0.0_DP
        v2c = 0.0_DP
        !
     END SELECT
     !
     sc_out(ir)  = sc
-    v1c_out(ir,:) = v1c(:)
+    v1c_out(ir,1) = v1c_up
+    v1c_out(ir,2) = v1c_dw
     v2c_out(ir) = v2c
     !
   ENDDO
+#if defined(_OPENACC)
+!$acc end data
+#endif
+#if defined(__OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
   !
   RETURN
   !
@@ -1025,11 +1040,13 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   ! ... local variables
   !
   INTEGER :: ir
-  REAL(DP) :: rho(2), grho(2)
+  REAL(DP) :: rho_up, rho_dw, grho_up, grho_dw
   REAL(DP) :: grho_ud
 #if defined(_OPENMP)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
+  !
+  ntids = omp_get_num_threads()
 #endif    
   !
   sc  = 0.0_DP
@@ -1037,30 +1054,35 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   v2c = 0.0_DP
   v2c_ud = 0.0_DP
   !
-#if defined(_OPENMP)
-  ntids = omp_get_num_threads()
+#if defined(_OPENACC) 
+!$acc data copyin(rho_in, grho_in, grho_ud_in), copyout(sc, v1c, v2c, v2c_ud)
+!$acc parallel loop
 #endif
-  !
+#if defined(__OPENMP) && !defined(_OPENACC) 
 !$omp parallel if(ntids==1) default(none) &
-!$omp private( rho, grho, grho_ud ) &
+!$omp private( rho_up, rho_dw, grho_up, grho_dw, grho_ud ) &
 !$omp shared( length, rho_in, grho_in, grho_ud_in, &
 !$omp         rho_threshold_gga, sc, exx_started, &
 !$omp         igcc, v1c, v2c, v2c_ud)
 !$omp do
+#endif
   DO ir = 1, length
     !
-    rho(:) = rho_in(ir,:)
-    grho(:) = grho_in(ir,:)
+    rho_up = rho_in(ir,1)
+    rho_dw = rho_in(ir,2)
+    grho_up = grho_in(ir,1)
+    grho_dw = grho_in(ir,2)
     grho_ud = grho_ud_in(ir)
     !
-    IF ( rho(1)+rho(2) < rho_threshold_gga ) THEN
+    IF ( rho_up+rho_dw < rho_threshold_gga ) THEN
        sc(ir) = 0.0_DP
-       v1c(ir,:) = 0.0_DP
-       v2c(ir,:) = 0.0_DP ; v2c_ud(ir) = 0.0_DP
+       v1c(ir,1) = 0.0_DP ; v1c(ir,2) = 0.0_DP
+       v2c(ir,1) = 0.0_DP ; v2c_ud(ir) = 0.0_DP
+       v2c(ir,2) = 0.0_DP
        CYCLE
     ENDIF
     !
-    CALL lsd_glyp( rho(1), rho(2), grho(1), grho(2), grho_ud, &
+    CALL lsd_glyp( rho_up, rho_dw, grho_up, grho_dw, grho_ud, &
                    sc(ir), v1c(ir,1), v1c(ir,2), v2c(ir,1),   &
                    v2c(ir,2), v2c_ud(ir) )
     !
@@ -1073,8 +1095,10 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
        IF ( exx_started ) THEN
           sc(ir) = 0.81_DP * sc(ir)
-          v1c(ir,:) = 0.81_DP * v1c(ir,:)
-          v2c(ir,:) = 0.81_DP * v2c(ir,:)
+          v1c(ir,1) = 0.81_DP * v1c(ir,1)
+          v1c(ir,2) = 0.81_DP * v1c(ir,2)
+          v2c(ir,1) = 0.81_DP * v2c(ir,1)
+          v2c(ir,2) = 0.81_DP * v2c(ir,2)
           v2c_ud(ir) = 0.81_DP * v2c_ud(ir)
        ENDIF
        !
@@ -1082,20 +1106,27 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
        IF ( exx_started ) THEN
           sc(ir) = 0.871_DP * sc(ir)
-          v1c(ir,:) = 0.871_DP * v1c(ir,:)
-          v2c(ir,:) = 0.871_DP * v2c(ir,:)
+          v1c(ir,1) = 0.871_DP * v1c(ir,1)
+          v1c(ir,2) = 0.871_DP * v1c(ir,2)
+          v2c(ir,1) = 0.871_DP * v2c(ir,1)
+          v2c(ir,2) = 0.871_DP * v2c(ir,2)
           v2c_ud(ir) = 0.871_DP * v2c_ud(ir)
        ENDIF
        !
     CASE DEFAULT
        !
-       CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)
+       !CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)  !***acc test
        !
     END SELECT
     !
   ENDDO
+#if defined(_OPENACC)
+!$acc end data
+#endif
+#if defined(__OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
   !
   RETURN
   !
