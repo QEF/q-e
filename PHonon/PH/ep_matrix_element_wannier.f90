@@ -350,6 +350,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE eqv,        ONLY : dvpsi!, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE units_lr,              ONLY : iuwfc, lrwfc
+  USE buffers,               ONLY : get_buffer
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
   USE apply_dpot_mod,   ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
@@ -424,7 +426,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 !     ENDIF
      !
 
-     call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk_k(1,ikk) )
+     call get_buffer (evc, lrwfc, iuwfc, ik)
 
 
      call calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq,xk_gamma, evq, .true.)
@@ -625,6 +627,8 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE noncollin_module,     ONLY : npol, noncolin
   USE el_phon, ONLY:iunwfcwann, lrwfcr
 
+  USE buffers,               ONLY : get_buffer
+  USE units_lr,              ONLY : iuwfc, lrwfc
   IMPLICIT NONE
 
   LOGICAL :: lread
@@ -661,7 +665,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, gcutw, npw_, igk_, gk)
 
   if(lread) then
-     call read_wfc_rspace_and_fwfft( evq , ikqg , lrwfcr , iunwfcwann , npw_ , igk_ )
+     call get_buffer (evq, lrwfc, iuwfc, ikqg)
   endif
 
   call gk_sort (xkqg, ngm, g_scra, gcutw, npwq_refolded, igkq_, gk)
