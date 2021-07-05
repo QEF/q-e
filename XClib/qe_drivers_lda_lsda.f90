@@ -64,11 +64,13 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: ex_out
   !! \(\epsilon_x(rho)\) ( NOT \(E_x(\text{rho})\) )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: vx_out
-  !! \(dE_x(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_x(\text{rho})/d\text{rho}\) )
+  !! \(dE_x(\text{rho})/d\text{rho}\)  ( NOT 
+  !! \(d\epsilon_x(\text{rho})/d\text{rho}\) )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: ec_out
   !! \(\epsilon_c(rho)\) ( NOT \(E_c(\text{rho})\) )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: vc_out
-  !! \(dE_c(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_c(\text{rho})/d\text{rho}\) )
+  !! \(dE_c(\text{rho})/d\text{rho}\)  ( NOT 
+  !! \(d\epsilon_c(\text{rho})/d\text{rho}\) )
   !
   ! ... local variables
   !
@@ -79,20 +81,26 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP, e2 = 2.0_DP
   !                      pi34 = (3/4pi)^(1/3)
-  !
-#if defined(_OPENMP)
+#if defined(__OPENMP)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
   ntids = omp_get_num_threads()
 #endif
   !
+  !
+#if defined(_OPENACC)
+!$acc data copyin(rho_in), copyout(ex_out, vx_out, ec_out, vc_out)
+!$acc parallel loop
+#endif
+#if defined(__OPENMP) && !defined(_OPENACC)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, rs, ex, ec, ec_, vx, vc, vc_ ) &
 !$omp shared( rho_in, length, iexch, icorr, ex_out, ec_out, vx_out, vc_out, &
 !$omp         finite_size_cell_volume, exx_fraction, exx_started, &
 !$omp         rho_threshold_lda )
 !$omp do
+#endif
   DO ir = 1, length
      !
      rho = ABS(rho_in(ir))
@@ -247,8 +255,13 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      vx_out(ir) = vx  ;  vc_out(ir) = vc
      !
   ENDDO
+#if defined(_OPENACC)
+!$acc end data
+#endif
+#if defined(__OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
   !
   !
   RETURN
