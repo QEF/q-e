@@ -80,6 +80,11 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 #endif
   !
   !
+#if defined(_OPENACC)
+!$acc data copyin(rho_in,grho_in), copyout(sx_out,sc_out,v1x_out,v2x_out,v1c_out,v2c_out)
+!$acc parallel loop  
+#endif
+#if defined(__OPENMP) && !defined(_OPENACC)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp          v2x, v2x_, v2xsr, sc, v1c, v2c ) &
@@ -88,6 +93,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 !$omp         screening_parameter, exx_fraction, igcc, v1x_out, v2x_out, &
 !$omp         v1c_out, v2c_out, sx_out, sc_out )
 !$omp do
+#endif
   DO ir = 1, length  
      !
      grho = grho_in(ir)
@@ -294,7 +300,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      CASE( 43 ) ! 'beefx'
         ! last parameter = 0 means do not add LDA (=Slater) exchange
         ! (espresso) will add it itself
-        CALL beefx(rho, grho, sx, v1x, v2x, 0)
+!        CALL beefx(rho, grho, sx, v1x, v2x, 0)
         !
      CASE( 44 ) ! 'RPBE'
         !
@@ -370,7 +376,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      CASE( 14 ) ! 'BEEF'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
-        call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
+!        call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
         !
      CASE DEFAULT
         !
@@ -384,9 +390,14 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      v1x_out(ir) = v1x   ;  v1c_out(ir) = v1c
      v2x_out(ir) = v2x   ;  v2c_out(ir) = v2c
      !
-  ENDDO 
+  ENDDO
+#if defined(_OPENACC)
+!$acc end data
+#endif
+#if defined(__OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
   !
   !
   RETURN
