@@ -251,4 +251,13 @@ MODULE wannier_base
     !
     !
     !
+    SUBROUTINE wannier_base_resize_scratch_only_once(nbsp)
+       !! This routine is needed due to a potential compiler bug in NVHPC (present on 21.5)
+       !! see https://gitlab.com/QEF/q-e/-/issues/346 for more detail
+       INTEGER, INTENT(IN) :: nbsp
+       IF (.NOT.ALLOCATED(X)) ALLOCATE(X(nbsp, nbsp))
+    END SUBROUTINE wannier_base_resize_scratch_only_once
+    !
+    !
+    !
 END MODULE wannier_base

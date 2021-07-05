@@ -39,9 +39,10 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                                        expo, wfsd
   USE wannier_base,             ONLY : becwf, cwf, bec2, bec3, bec2up,         &
     &                                  bec2dw, bec3up, bec3dw, c_m, c_p, c_psp,&
-    &                                  c_msp, tagz, Uspin, X, Xsp, X2, X3, O,  &
+    &                                  c_msp, tagz, Uspin, Xsp, X, X2, X3, O,  &
     &                                  Ospin, Oa, qv, fg1, gr, mt, mt0, wr, W, &
     &                                  EW, f3, f4, U2
+  USE wannier_base,             ONLY : wannier_base_resize_scratch_only_once
 #if defined (__MPI)
   USE wannier_base,             ONLY : psitot, psitot_pl, psitot_mi, ns
 #endif
@@ -634,7 +635,7 @@ CONTAINS
     ! ... set up matrix O
     !
     IF (.NOT.ALLOCATED(O))  ALLOCATE(O(nw,nbsp,nbsp))
-    IF (.NOT.ALLOCATED(X))  ALLOCATE(X(nbsp,nbsp))
+    call wannier_base_resize_scratch_only_once(nbsp)
     IF (.NOT.ALLOCATED(Oa)) ALLOCATE(Oa(nw,nbsp,nbsp))
     IF ( nspin == 2 .AND. nkbus > 0 ) THEN
       IF (.NOT.ALLOCATED(X2)) ALLOCATE(X2(nupdwn(1),nupdwn(1)))
