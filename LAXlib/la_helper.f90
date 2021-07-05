@@ -773,6 +773,14 @@ END SUBROUTINE laxlib_multi_init_desc_x
       DEALLOCATE(work_d)
 #endif
 #else
+      IMPLICIT NONE
+      include 'laxlib_kinds.fh'
+      INTEGER  :: m
+      REAL(DP) :: rhos(:,:)
+      REAL(DP) :: rhod(:)
+      REAL(DP) :: s(:,:)
+      INTEGER  :: info
+      !
       CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' not compiled in this version ', 0 )
 #endif
    END SUBROUTINE
