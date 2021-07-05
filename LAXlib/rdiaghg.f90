@@ -341,10 +341,10 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
          ENDDO
       ENDDO
 
-      IF ( .NOT. cuSolverInitialized ) THEN
 #if defined(_OPENMP)
-         IF (omp_get_num_threads() > 1) CALL lax_error__( ' rdiaghg_gpu ', 'rdiaghg_gpu is not thread-safe',  ABS( info ) )
+      IF (omp_get_num_threads() > 1) CALL lax_error__( ' rdiaghg_gpu ', 'rdiaghg_gpu is not thread-safe',  ABS( info ) )
 #endif
+      IF ( .NOT. cuSolverInitialized ) THEN
          info = cusolverDnCreate(cuSolverHandle)
          IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' rdiaghg_gpu ', ' cusolverDnCreate failed ', ABS( info ) )
          cuSolverInitialized = .TRUE.

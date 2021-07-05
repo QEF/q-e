@@ -320,10 +320,10 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
          ENDDO
       ENDDO
       !
-      IF ( .NOT. cuSolverInitialized ) THEN
 #if defined(_OPENMP)
-         IF (omp_get_num_threads() > 1) CALL lax_error__( ' cdiaghg_gpu ', 'cdiaghg_gpu is not thread-safe',  ABS( info ) )
+      IF (omp_get_num_threads() > 1) CALL lax_error__( ' cdiaghg_gpu ', 'cdiaghg_gpu is not thread-safe',  ABS( info ) )
 #endif
+      IF ( .NOT. cuSolverInitialized ) THEN
          info = cusolverDnCreate(cuSolverHandle)
          IF ( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', 'cusolverDnCreate',  ABS( info ) )
          cuSolverInitialized = .TRUE.
