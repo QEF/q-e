@@ -1219,7 +1219,8 @@ END SUBROUTINE cx13
 ! ===========> SPIN <===========
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )                     !<GPU:DEVICE>
+SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )
+!$acc routine (becke88_spin) seq
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
