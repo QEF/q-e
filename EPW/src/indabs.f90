@@ -507,7 +507,7 @@
     cfac = 16.d0 * pi**2
     !
     WRITE(stdout, '(/5x,a/)') REPEAT('=',67)
-    WRITE(stdout, '(5x,"Direct absorption with indepedent particle approximation")')
+    WRITE(stdout, '(5x,"Direct absorption with independent particle approximation")')
     WRITE(stdout, '(5x,a/)') REPEAT('=',67)
     !
     IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
