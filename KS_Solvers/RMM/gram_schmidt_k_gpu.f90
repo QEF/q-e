@@ -21,6 +21,8 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   USE util_param,     ONLY : DP, eps16
   USE mp,            ONLY : mp_sum, mp_max, mp_bcast
   USE mp_bands_util, ONLY : inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id
+  USE device_fbuff_m,         ONLY : buffer => dev_buf
+  USE device_memcpy_m,        ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -46,15 +48,25 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   INTEGER                  :: ibnd_start, ibnd_end
   INTEGER                  :: jbnd_start, jbnd_end
   INTEGER,     ALLOCATABLE :: owner_bgrp_id(:)
+!edp*************************************************
+  INTEGER                  :: buf_start, buf_end, buf_size
+!edp*************************************************
   !
   ! ... device variables 
   !
-  INTEGER :: ii, jj, kk 
+  INTEGER :: ii, jj, kk, ierr
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:), hphi_d(:,:), sphi_d(:,:)
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d
+#endif
+  !
+!edp*************************************************
+  COMPLEX(DP), POINTER :: sc_buf(:), sc2_buf(:,:)
+#if defined (__CUDA)
+  attributes(device) :: sc_buf, sc2_buf
 #endif 
+!edp*************************************************
   !
   IF ( npol == 1 ) THEN
      !
@@ -144,6 +156,14 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   ! ... Blocking loop
   !
+!edp***********************************************
+  !
+  buf_start = ( nblock - 1 ) * nbsize + 1
+  buf_end   = MIN( nblock * nbsize, nbnd )
+  buf_size  = buf_start - buf_end + 1
+  CALL buffer%lock_buffer( sc_buf, buf_size, ierr)
+  !
+!edp***********************************************
   DO iblock = 1, nblock
      !
      ! ... Orthogonalize diagonal block by standard Gram-Schmidt
@@ -231,15 +251,29 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
+!             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
+!                         spsi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
+             !
+!edp**************************************************************
              CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-                         spsi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
+                         spsi_d(1,ibnd), 1, ZERO, sc_buf(1), 1 )
+!*
              !
           ELSE
              !
+!             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
+!                         psi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
+!edp**************************************************************
              CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-                         psi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
+                         psi_d(1,ibnd), 1, ZERO, sc_buf(1), 1 )
+!*
+             
              !
           END IF
+          !
+!edp**************************************************************
+          sc_d(ibnd_start:ibnd_end)=sc_buf(1:ibnd_start)
+!*
           !
           CALL mp_sum( sc_d, intra_bgrp_comm )
           !
