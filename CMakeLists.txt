@@ -220,16 +220,25 @@ endif()
 ###########################################################
 if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
     if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
-      add_library(CUDA::cufft INTERFACE IMPORTED)
-      set_target_properties(CUDA::cufft PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cufft")
-      add_library(CUDA::cublas INTERFACE IMPORTED)
-      set_target_properties(CUDA::cublas PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cublas")
-      add_library(CUDA::cusolver INTERFACE IMPORTED)
-      set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cusolver")
-      add_library(CUDA::curand INTERFACE IMPORTED)
-      set_target_properties(CUDA::curand PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=curand")
+        add_library(CUDA::cufft INTERFACE IMPORTED)
+        set_target_properties(CUDA::cufft PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cufft")
+        add_library(CUDA::cublas INTERFACE IMPORTED)
+        set_target_properties(CUDA::cublas PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cublas")
+        add_library(CUDA::cusolver INTERFACE IMPORTED)
+        set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=cusolver")
+        add_library(CUDA::curand INTERFACE IMPORTED)
+        set_target_properties(CUDA::curand PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=curand")
+        if(QE_ENABLE_PROFILE_NVTX)
+            add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
+            set_target_properties(CUDA::nvToolsExt PROPERTIES INTERFACE_LINK_LIBRARIES "-cuda;libnvToolsExt.so")
+            set(CMAKE_REQUIRED_LIBRARIES "-cuda;libnvToolsExt.so")
+            check_function_exists(nvtxRangePushEx NVTX_FOUND)
+            if(NOT NVTX_FOUND)
+                message(FATAL_ERROR "Check nvtxRangePushEx in libnvToolsExt.so failed")
+            endif()
+        endif()
     else()
-      find_package(CUDAToolkit REQUIRED)
+        find_package(CUDAToolkit REQUIRED)
     endif()
 endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
 
@@ -652,7 +661,6 @@ add_custom_target(pp
         qe_pp_plotproj_exe
         qe_pp_plotrho_exe
         qe_pp_pmw_exe
-        qe_pp_xctest_exe
         qe_pp_projwfc_exe
         qe_pp_pw2wannier90_exe
         qe_pp_pw2critic_exe

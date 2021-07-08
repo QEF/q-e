@@ -25,6 +25,7 @@ qe_add_library(qe_utilx ${src_util})
 target_link_libraries(qe_utilx
     PUBLIC
         qe_clib # cclock is exposed by the mytime module in clocks_handler
+        qe_ext_prof_tool # to pass link options, PUBLIC is needed.
     PRIVATE
         qe_openmp_fortran
         qe_mpi_fortran)
