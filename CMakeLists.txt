@@ -230,9 +230,8 @@ if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
         set_target_properties(CUDA::curand PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_FLAG}lib=curand")
         if(QE_ENABLE_PROFILE_NVTX)
             add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
-            set_target_properties(CUDA::nvToolsExt PROPERTIES INTERFACE_LINK_LIBRARIES libnvToolsExt.so)
-            set(CMAKE_REQUIRED_LINK_OPTIONS "-cuda")
-            set(CMAKE_REQUIRED_LIBRARIES libnvToolsExt.so)
+            set_target_properties(CUDA::nvToolsExt PROPERTIES INTERFACE_LINK_LIBRARIES "-cuda;libnvToolsExt.so")
+            set(CMAKE_REQUIRED_LIBRARIES "-cuda;libnvToolsExt.so")
             check_function_exists(nvtxRangePushEx NVTX_FOUND)
             if(NOT NVTX_FOUND)
                 message(FATAL_ERROR "Check nvtxRangePushEx in libnvToolsExt.so failed")
@@ -662,7 +661,6 @@ add_custom_target(pp
         qe_pp_plotproj_exe
         qe_pp_plotrho_exe
         qe_pp_pmw_exe
-        qe_pp_xctest_exe
         qe_pp_projwfc_exe
         qe_pp_pw2wannier90_exe
         qe_pp_pw2critic_exe
