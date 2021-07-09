@@ -88,7 +88,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 !$acc data copyin(rho_in,grho_in), copyout(sx_out,sc_out,v1x_out,v2x_out,v1c_out,v2c_out)
 !$acc parallel loop  
 #endif
-#if defined(__OPENMP) && !defined(_OPENACC)
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp          v2x, v2x_, v2xsr, sc, v1c, v2c ) &
@@ -399,12 +399,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      v2x_out(ir) = v2x   ;  v2c_out(ir) = v2c
      !
   ENDDO
-#if defined(_OPENACC)
-!$acc end data
-#endif
-#if defined(__OPENMP) && !defined(_OPENACC)
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
+#if defined(_OPENACC)
+!$acc end data
 #endif
   !
   !
@@ -469,7 +469,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$acc data copyin(rho_in, grho2_in), copyout(sx_tot, v1x_out, v2x_out)
 !$acc parallel loop
 #endif
-#if defined(__OPENMP) && !defined(_OPENACC)
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho2_up, grho2_dw, rnull_up, rnull_dw, &
 !$omp          sx_up, sx_dw, sxsr_up, sxsr_dw, v1xsr_up, v1xsr_dw, &
@@ -878,12 +878,12 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      v2x_out(ir,2) = v2x_dw * rnull_dw
      !
   ENDDO
-#if defined(_OPENACC)
-!$acc end data
-#endif
-#if defined(__OPENMP) && !defined(_OPENACC)
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
+#if defined(_OPENACC)
+!$acc end data
 #endif
   !
   !
@@ -933,14 +933,13 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
   !
 #if defined(_OPENACC)
-  !
   IF (igcc==14) CALL xclib_error( 'gcc_spin', 'BEEF not available with&
                                   & OpenACC enabled', 1 )
   !
 !$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
 !$acc parallel loop
 #endif
-#if defined(__OPENMP) && !defined(_OPENACC)
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c ) &
 !$omp shared( igcc, sc_out, v1c_out, v2c_out, &
@@ -1009,12 +1008,12 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     v2c_out(ir) = v2c
     !
   ENDDO
-#if defined(_OPENACC)
-!$acc end data
-#endif
-#if defined(__OPENMP) && !defined(_OPENACC)
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
+#if defined(_OPENACC)
+!$acc end data
 #endif
   !
   RETURN
@@ -1078,7 +1077,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
 !$acc data copyin(rho_in, grho_in, grho_ud_in), copyout(sc, v1c, v2c, v2c_ud)
 !$acc parallel loop
 #endif
-#if defined(__OPENMP) && !defined(_OPENACC) 
+#if defined(_OPENMP) && !defined(_OPENACC) 
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho_up, grho_dw, grho_ud ) &
 !$omp shared( length, rho_in, grho_in, grho_ud_in, &
@@ -1140,12 +1139,12 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
     END SELECT
     !
   ENDDO
-#if defined(_OPENACC)
-!$acc end data
-#endif
-#if defined(__OPENMP) && !defined(_OPENACC)
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
+#if defined(_OPENACC)
+!$acc end data
 #endif
   !
   RETURN
