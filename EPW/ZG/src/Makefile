@@ -21,32 +21,32 @@ all : ZG.x disca.x pp_disca.x pp_spctrlfn.x bands_unfold.x epsilon_Gaus.x
 ZG.x : ZG.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	ZG.o $(PHAUXOBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
-	- ( cd ../../../bin ; ln -fs ../EPW/ZG_displacement/src/$@ . )
+	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
 disca.x : disca.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	disca.o $(PHAUXOBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
-	- ( cd ../../../bin ; ln -fs ../EPW/ZG_displacement/src/$@ . )
+	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
 pp_disca.x : pp_disca.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	pp_disca.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
-	- ( cd ../../../bin ; ln -fs ../EPW/ZG_displacement/src/$@ . )
+	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
 bands_unfold.x : bands_unfold.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	bands_unfold.o ../../../PP/src/libpp.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../../bin ; ln -fs ../EPW/ZG_displacement/src/$@ . )
+	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
 pp_spctrlfn.x : pp_spctrlfn.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	pp_spctrlfn.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
-	- ( cd ../../../bin ; ln -fs ../EPW/ZG_displacement/src/$@ . )
+	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
 epsilon_Gaus.x : epsilon_Gaus.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	epsilon_Gaus.o ../../../PP/src/libpp.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../../bin ; ln -fs ../EPW/ZG_displacement/src/$@ . )
+	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *.mod

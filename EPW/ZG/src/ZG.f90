@@ -2947,8 +2947,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       !!!!!!!
       IF (ionode) THEN
         WRITE(*,*) 
-        WRITE(*,'(A11, i8)') "Iteration:", kk 
-        WRITE(*,*) "      Minimize error based on threshold"
+        WRITE(*,'(A11, i8)') "Attempt #", kk 
+        WRITE(*,*) "   Searching for optimum configuration..."
       ENDIF
       !
       DO p = 1, combs_all
