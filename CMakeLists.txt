@@ -88,7 +88,7 @@ cmake_dependent_option(QE_ENABLE_BENCHMARK
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_PROFILE_NVTX
-        "enable execution of NVidia profiler plugin" OFF) 
+        "enable execution of NVIDIA NVTX profiler plugin" OFF)
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
 option(QE_ENABLE_MPI_MODULE
@@ -105,6 +105,8 @@ option(QE_ENABLE_LIBXC
     "enable LIBXC execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
+option(QE_ENABLE_STATIC_BUILD
+    "enable fully static build of executables" OFF)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
 set(QE_FFTW_VENDOR "AUTO" CACHE 
@@ -161,6 +163,9 @@ if(HAVE_MALLINFO)
 endif()
 
 # Check options consistency
+if(QE_ENABLE_STATIC_BUILD AND BUILD_SHARED_LIBS)
+    message(FATAL_ERROR "Full static build of QE executables requires static QE internal libraries. QE_ENABLE_STATIC_BUILD and BUILD_SHARED_LIBS cannot be both ON")
+endif()
 if(QE_ENABLE_ELPA AND NOT QE_ENABLE_SCALAPACK)
     message(FATAL_ERROR "ELPA requires SCALAPACK support, enable it with '-DQE_ENABLE_SCALAPACK=ON' or disable ELPA with '-DQE_ENABLE_ELPA=OFF'")
 endif()
@@ -213,6 +218,11 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATC
     include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
     include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
+endif()
+
+if(QE_ENABLE_STATIC_BUILD)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 endif()
 
 ###########################################################
@@ -318,9 +328,15 @@ if(NOT QE_LAPACK_INTERNAL)
         if(NOT LAPACK_FOUND)
             message(STATUS "Trying to find alternative LAPACK libraries")
             SET(BLA_VENDOR All)
+            if(QE_ENABLE_OPENMP)
+                set(CMAKE_REQUIRED_LINK_OPTIONS ${OpenMP_Fortran_FLAGS})
+            endif()
             find_package(LAPACK)
         endif()
     else()
+        if(QE_ENABLE_OPENMP)
+            set(CMAKE_REQUIRED_LINK_OPTIONS ${OpenMP_Fortran_FLAGS})
+        endif()
         find_package(LAPACK)
     endif()
     if(LAPACK_FOUND)
@@ -329,6 +345,9 @@ if(NOT QE_LAPACK_INTERNAL)
             ${BLAS_LINKER_FLAGS}
             ${LAPACK_LIBRARIES}
             ${LAPACK_LINKER_FLAGS})
+        if(QE_ENABLE_OPENMP)
+            list(APPEND _lapack_libs ${OpenMP_Fortran_LIBRARIES})
+        endif()
         list(REMOVE_DUPLICATES "${_lapack_libs}")
         message(STATUS "Found LAPACK: ${_lapack_libs}")
         target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
@@ -446,23 +465,13 @@ endif(QE_ENABLE_LIBXC)
 add_library(qe_hdf5_fortran INTERFACE)
 add_library(qe_hdf5_c INTERFACE)
 qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
-###########################################################
-# PROFILERS LIBRARIES
-# the target for profiler libray will be defined if
-# some profiler is enabled
-add_library(qe_ext_prof_tool INTERFACE)
-qe_install_targets(qe_ext_prof_tool) 
-###########################################################
-# this should work with nvfortran 
-if(QE_ENABLE_PROFILE_NVTX)
-   target_link_libraries(qe_ext_prof_tool
-	INTERFACE
-        CUDA::nvToolsExt)
-endif(QE_ENABLE_PROFILE_NVTX)
 ########################################################### 
 if(QE_ENABLE_HDF5)
     if(QE_ENABLE_MPI)
         option(HDF5_PREFER_PARALLEL "Prefer parallel HDF5" ON)
+    endif()
+    if(QE_ENABLE_STATIC_BUILD)
+        set(HDF5_USE_STATIC_LIBRARIES TRUE)
     endif()
     find_package(HDF5 REQUIRED Fortran C)
     if(NOT HDF5_FOUND)
@@ -508,6 +517,20 @@ if(QE_ENABLE_TEST)
     include(cmake/unit_test.cmake)
     enable_testing()
 endif(QE_ENABLE_TEST)
+
+###########################################################
+# PROFILERS LIBRARIES
+# the target for profiler libray will be defined if
+# some profiler is enabled
+add_library(qe_ext_prof_tool INTERFACE)
+qe_install_targets(qe_ext_prof_tool)
+###########################################################
+# this should work with nvfortran
+if(QE_ENABLE_PROFILE_NVTX)
+   target_link_libraries(qe_ext_prof_tool
+	INTERFACE
+        CUDA::nvToolsExt)
+endif(QE_ENABLE_PROFILE_NVTX)
 
 ###########################################################
 # Components
