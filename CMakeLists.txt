@@ -65,6 +65,8 @@ include(GNUInstallDirs)
 # Build Options
 ###########################################################
 include(CMakeDependentOption)
+option(QE_ENABLE_OPENACC
+    "enable OpenACC acceleration" OFF)
 option(QE_ENABLE_CUDA
     "enable CUDA acceleration on NVIDIA GPUs" OFF)
 if(QE_ENABLE_CUDA)
@@ -173,7 +175,10 @@ if(QE_ENABLE_SCALAPACK AND NOT QE_ENABLE_MPI)
     message(FATAL_ERROR "SCALAPACK requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable SCALAPACK with '-DQE_ENABLE_SCALAPACK=OFF'")
 endif()
 if(QE_ENABLE_CUDA AND NOT (CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC"))
-    message(FATAL_ERROR "PGI compiler is mandatory when CUDA is enable due QE is based on CUDA Fortran language")
+    message(FATAL_ERROR "NVHPC compiler is mandatory when CUDA is enabled due QE is based on CUDA Fortran language")
+endif()
+if(QE_ENABLE_OPENACC AND NOT (CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC"))
+    message(FATAL_ERROR "NVHPC compiler is mandatory when OpenACC is enabled")
 endif()
 if(QE_ENABLE_MPI_GPU_AWARE AND NOT (QE_ENABLE_CUDA AND QE_ENABLE_MPI))
     message(FATAL_ERROR "GPU aware MPI requires both MPI and CUDA features enabled")
