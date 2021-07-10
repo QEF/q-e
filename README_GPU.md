@@ -8,15 +8,18 @@ This repository also contains the GPU-accelerated version of Quantum ESPRESSO.
 Installation
 ============
 
-This version is tested against PGI (now nvfortran) compilers v. >= 17.4. 
-The configure script checks for the presence of a PGI compiler and of a few 
-cuda libraries.For this reason path pointing to cudatoolkit must be present
-in `LD_LIBRARY_PATH`.
+This version requires the nvfortran (previously PGI) compiler from the
+freely available NVidia HPC SDK. You are adviced to use a recent version
+of NVidia software. Any version later than 17.4 should work, but many glitches
+are know to exist in older versions. 
+The configure script checks for the presence of the nvfortran compiler and of 
+a few cuda libraries.For this reason the path pointing to cudatoolkit must be
+present in `LD_LIBRARY_PATH`.
 
 A template for the configure command is:
 
 ```
-./configure --with-cuda=XX --with-cuda-runtime=YY --with-cuda-cc=ZZ --enable-openmp [ --with-scalapack=no ]
+./configure --with-cuda=XX --with-cuda-runtime=YY --with-cuda-cc=ZZ --enable-openmp [--enable-openacc] [ --with-scalapack=no ]
 ```
 
 where `XX` is the location of the CUDA Toolkit (in HPC environments is 
@@ -46,7 +49,7 @@ It is generally a good idea to disable Scalapack when running small test
 cases since the serial GPU eigensolver can outperform the parallel CPU
 eigensolver in many circumstances.
 
-From time to time PGI links to the wrong CUDA libraries anf fails reporting
+From time to time PGI links to the wrong CUDA libraries and fails reporting
 a problem in `cusolver` missing `GOmp` (GNU Openmp). The solution to this
 problem is removing cudatoolkit from the `LD_LIBRARY_PATH` before compiling.
 
