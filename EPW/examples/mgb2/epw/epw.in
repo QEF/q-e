@@ -7,7 +7,6 @@
 
   ep_coupling = .true.
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
 

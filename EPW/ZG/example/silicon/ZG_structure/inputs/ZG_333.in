@@ -1,6 +1,0 @@
-&input
-    asr='simple', amass(1)=28.0855,
-    flfrc='si.10_10_10.fc'
-    ZG_conf = .true., dim1 = 3, dim2= 3, dim3 = 3, atm_zg(1) = 'Si', synch =.true.,
-    error_thresh = 0.05, T = 300.00, incl_qA = .false.
-/

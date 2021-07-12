@@ -18,6 +18,11 @@ New in 6.8 version:
     Fangzhou Zhao (Berkeley)
   * Implementation of the turboMagnon code in TDDFPT [EPJB 91, 249 (2018)]
     (T. Gorni, O. Baseggio, I. Timrov, P. Delugas, S. Baroni)
+  * EPW: 
+    (1) Hall mobility and Hall factor.
+    (2) Isotropic linearized Eliashberg equation to get Tc
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues, 
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
 Fixed in 6.8 version:
   * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
