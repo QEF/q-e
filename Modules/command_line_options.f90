@@ -102,7 +102,7 @@ CONTAINS
               READ ( arg, *, ERR = 15, END = 15) npool_
               narg = narg + 1
 ! FIXME: following comment should be moved to a more visible place
-! special case : task group paralleization and nyfft parallelization, both 
+! special case : task group parallelization and nyfft parallelization, both 
 !                introduced to improve scaling coexist and are in part interchangeable
 !                if TG is available it's faster that NYFFT becouse it communicates larger
 !                data chuncks less times. But sometimes it is not available as for instance
