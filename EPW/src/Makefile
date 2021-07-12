@@ -86,9 +86,9 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../XClib/x
          ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
 LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a
 
-TLDEPS= pw ph
+TLDEPS= pw ph pp
 
-all :   pw ph wannier libepw.a epw.x
+all :   pw ph pp wannier libepw.a epw.x
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -104,6 +104,9 @@ pw :
 
 ph :
 	cd ../../ ; make ph
+
+pp :
+	cd ../../ ; make pp
 
 wannier :
 	cd ../../ ; make w90 ; cd wannier90-3.1.0/ ; make lib

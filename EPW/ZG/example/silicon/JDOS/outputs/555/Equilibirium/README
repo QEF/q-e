@@ -1,0 +1,2 @@
+NOTE: The calculation is equivalent to 7*7*7 k-point mesh, but 
+split in 4 different runs.

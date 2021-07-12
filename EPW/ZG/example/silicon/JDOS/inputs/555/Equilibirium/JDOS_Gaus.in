@@ -1,0 +1,11 @@
+&LIST_NAME
+ prefix = 'data_one_column_all.dat',
+ steps = 700
+ wmin = 0.00
+ wmax = 2.00
+ smearing = 0.042
+ vb = 500
+ cb = 250
+ nkpts = 172
+ OUTPUT_1 = './JDOS_Gaus_equil.dat'
+/

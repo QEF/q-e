@@ -1,0 +1,233 @@
+TACC:  Starting up job 6020834 
+TACC:  Starting parallel tasks... 
+
+     Program PWSCF v.6.5 starts on  9Jul2020 at  8:42:12 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on   192 processors
+
+     MPI processes distributed on     4 nodes
+     K-points division:     npool     =       8
+     R & G space division:  proc/nbgrp/npool/nimage =      24
+     Waiting for input...
+     Reading input from standard input
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
+
+     Atomic positions and unit cell read from directory:
+     ./silicon.save/                                                                                                                                                                                                                                                 
+ 
+               file Si.pz-n-kjpaw_psl.0.1.UPF: wavefunction(s)  3S renormalized
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     one sub-group per band group will be used
+     scalapack distributed-memory algorithm (size of sub-group:  4*  4 procs)
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         215     215     59                10217    10217    1481
+     Max         216     216     60                10220    10220    1485
+     Sum        5173    5173   1417               245225   245225   35557
+ 
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =      30.6136  a.u.
+     unit-cell volume          =    7172.7095 (a.u.)^3
+     number of atoms/cell      =           54
+     number of atomic types    =            1
+     number of electrons       =       216.00
+     number of Kohn-Sham states=          216
+     kinetic-energy cutoff     =      40.0000  Ry
+     charge density cutoff     =     160.0000  Ry
+     Exchange-correlation= SLA PZ NOGX NOGC
+                           (   1   1   0   0   0   0   0)
+
+     celldm(1)=  30.613601  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for Si read from file:
+     /home1/07369/mzach/codes/pseudo/Si.pz-n-kjpaw_psl.0.1.UPF
+     MD5 check sum: 0f64179521154464f50d54a56d9f4e6d
+     Pseudo is Projector augmented-wave + core cor, Zval =  4.0
+     Generated using "atomic" code by A. Dal Corso v.5.0.2 svn rev. 9415
+     Shape of augmentation charge: PSQ
+     Using radial grid of 1141 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Si             4.00    28.08550     Si( 1.00)
+
+     No symmetry found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Si  tau(   1) = (  -0.0036937  -0.0064502  -0.0065234  )
+         2           Si  tau(   2) = (   0.0799445   0.0823967   0.0819857  )
+         3           Si  tau(   3) = (  -0.1674063  -0.0020734   0.1643416  )
+         4           Si  tau(   4) = (  -0.0804495   0.0884060   0.2398386  )
+         5           Si  tau(   5) = (  -0.3408757   0.0013333   0.3316051  )
+         6           Si  tau(   6) = (  -0.2468821   0.0802874   0.4129573  )
+         7           Si  tau(   7) = (   0.0041846   0.1728684   0.1683742  )
+         8           Si  tau(   8) = (   0.0811661   0.2519925   0.2554808  )
+         9           Si  tau(   9) = (  -0.1663929   0.1676530   0.3332287  )
+        10           Si  tau(  10) = (  -0.0929801   0.2460765   0.4259644  )
+        11           Si  tau(  11) = (  -0.3331379   0.1604468   0.4942173  )
+        12           Si  tau(  12) = (  -0.2579163   0.2457556   0.5876334  )
+        13           Si  tau(  13) = (  -0.0096774   0.3264520   0.3385222  )
+        14           Si  tau(  14) = (   0.0780384   0.4153399   0.4117717  )
+        15           Si  tau(  15) = (  -0.1724993   0.3329926   0.5051952  )
+        16           Si  tau(  16) = (  -0.0844868   0.4112425   0.5835276  )
+        17           Si  tau(  17) = (  -0.3321910   0.3299371   0.6778496  )
+        18           Si  tau(  18) = (  -0.2469205   0.4242199   0.7486723  )
+        19           Si  tau(  19) = (  -0.1583183   0.1728087   0.0024424  )
+        20           Si  tau(  20) = (  -0.0745496   0.2635768   0.0815358  )
+        21           Si  tau(  21) = (  -0.3284892   0.1628901   0.1670923  )
+        22           Si  tau(  22) = (  -0.2448781   0.2462230   0.2472843  )
+        23           Si  tau(  23) = (  -0.4984192   0.1720312   0.3351211  )
+        24           Si  tau(  24) = (  -0.4189238   0.2509478   0.4218637  )
+        25           Si  tau(  25) = (  -0.1627782   0.3354163   0.1648090  )
+        26           Si  tau(  26) = (  -0.0849670   0.4171967   0.2529387  )
+        27           Si  tau(  27) = (  -0.3318122   0.3261727   0.3335500  )
+        28           Si  tau(  28) = (  -0.2503070   0.4097172   0.4199070  )
+        29           Si  tau(  29) = (  -0.4938136   0.3432177   0.4949769  )
+        30           Si  tau(  30) = (  -0.4059590   0.4144270   0.5876446  )
+        31           Si  tau(  31) = (  -0.1724506   0.5068217   0.3399213  )
+        32           Si  tau(  32) = (  -0.0772192   0.5878563   0.4153066  )
+        33           Si  tau(  33) = (  -0.3209342   0.5028334   0.4930725  )
+        34           Si  tau(  34) = (  -0.2453763   0.5780896   0.5737765  )
+        35           Si  tau(  35) = (  -0.4992842   0.5006838   0.6609674  )
+        36           Si  tau(  36) = (  -0.4197135   0.5879381   0.7527049  )
+        37           Si  tau(  37) = (  -0.3307185   0.3359622  -0.0060867  )
+        38           Si  tau(  38) = (  -0.2498706   0.4222210   0.0842144  )
+        39           Si  tau(  39) = (  -0.5049942   0.3237375   0.1613495  )
+        40           Si  tau(  40) = (  -0.4180050   0.4069033   0.2457825  )
+        41           Si  tau(  41) = (  -0.6724679   0.3343812   0.3355681  )
+        42           Si  tau(  42) = (  -0.5852903   0.4201681   0.4089409  )
+        43           Si  tau(  43) = (  -0.3368254   0.5008001   0.1709801  )
+        44           Si  tau(  44) = (  -0.2511532   0.5863655   0.2588784  )
+        45           Si  tau(  45) = (  -0.5027970   0.5028915   0.3246278  )
+        46           Si  tau(  46) = (  -0.4201937   0.5779375   0.4137333  )
+        47           Si  tau(  47) = (  -0.6659798   0.5011688   0.5046534  )
+        48           Si  tau(  48) = (  -0.5828583   0.5853396   0.5827855  )
+        49           Si  tau(  49) = (  -0.3326684   0.6668719   0.3381272  )
+        50           Si  tau(  50) = (  -0.2494624   0.7505202   0.4189089  )
+        51           Si  tau(  51) = (  -0.4998171   0.6617468   0.5040215  )
+        52           Si  tau(  52) = (  -0.4121540   0.7440842   0.5851312  )
+        53           Si  tau(  53) = (  -0.6657422   0.6664051   0.6679958  )
+        54           Si  tau(  54) = (  -0.5886325   0.7547712   0.7508314  )
+
+     number of k points=   868
+
+     Number of k-points >= 100: set verbosity='high' to print them.
+
+     Dense  grid:   245225 G-vectors     FFT dimensions: (  90,  90,  90)
+
+     Estimated max dynamical RAM per process >      71.63 MB
+
+     Estimated total dynamical RAM >      13.43 GB
+
+     Check: negative core charge=   -0.000003
+
+     The potential is recalculated from file :
+     ./silicon.save/charge-density
+
+     Starting wfcs are  216 randomized atomic wfcs
+     Checking if some PAW data can be deallocated... 
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     ethr =  2.31E-10,  avg # of iterations = 37.4
+
+     total cpu time spent up to now is     6100.3 secs
+
+     End of band structure calculation
+
+     Number of k-points >= 100: set verbosity='high' to print the bands.
+
+     highest occupied, lowest unoccupied level (ev):     6.2692    6.6136
+
+     Writing output data file ./silicon.save/
+ 
+     init_run     :      1.17s CPU      1.50s WALL (       1 calls)
+     electrons    :   5707.85s CPU   6093.10s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.00s CPU      0.13s WALL (       1 calls)
+     potinit      :      0.24s CPU      0.30s WALL (       1 calls)
+     hinit0       :      0.36s CPU      0.46s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :   5707.82s CPU   6093.06s WALL (       1 calls)
+     v_of_rho     :      0.01s CPU      0.02s WALL (       1 calls)
+     newd         :      0.02s CPU      0.03s WALL (       1 calls)
+     PAW_pot      :      0.10s CPU      0.11s WALL (       1 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.85s CPU      0.86s WALL (     109 calls)
+     cegterg      :   4533.78s CPU   4776.98s WALL (     294 calls)
+
+     Called by sum_band:
+
+     Called by *egterg:
+     h_psi        :   1661.08s CPU   1732.39s WALL (    4960 calls)
+     s_psi        :     83.00s CPU     83.58s WALL (    4960 calls)
+     g_psi        :     12.79s CPU     12.92s WALL (    4557 calls)
+     cdiaghg      :   2201.14s CPU   2312.66s WALL (    4666 calls)
+
+     Called by h_psi:
+     h_psi:calbec :     97.98s CPU    106.85s WALL (    4960 calls)
+     vloc_psi     :   1470.83s CPU   1528.28s WALL (    4960 calls)
+     add_vuspsi   :     89.43s CPU     94.20s WALL (    4960 calls)
+
+     General routines
+     calbec       :     97.85s CPU    106.77s WALL (    4960 calls)
+     fft          :      0.04s CPU      0.12s WALL (       5 calls)
+     fftw         :   1355.27s CPU   1408.37s WALL (  854142 calls)
+     davcio       :      0.09s CPU      4.50s WALL (     218 calls)
+ 
+     Parallel routines
+     fft_scatt_xy :    159.81s CPU    164.59s WALL (  854147 calls)
+     fft_scatt_yz :    617.99s CPU    643.82s WALL (  854147 calls)
+ 
+     PWSCF        :      1h35m CPU      1h43m WALL
+
+ 
+   This run was terminated on:  10:25:28   9Jul2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
+TACC:  Shutdown complete. Exiting. 
