@@ -5,15 +5,11 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .true.
-  epbwrite    = .false.
-  epbread     = .false.
   epwwrite    = .false.
   epwread     = .true.
+  vme         = 'dipole'
 
-  vme         = .false. 
-
-  nbndsub     =  4
+  nbndsub       =  4
   bands_skipped = 'exclude_bands = 1-5'
 
   wannierize  = .false.

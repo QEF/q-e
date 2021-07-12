@@ -310,8 +310,7 @@
     !! SP - Sep. 2019: Cleaning.
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : epmatq, zstar, epsi, bmat, &
-                              nbndep
+    USE elph2,         ONLY : epmatq, zstar, epsi, bmat, nbndep, qrpl
     USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
     USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
@@ -416,7 +415,7 @@
           CALL ZGEMV('t', nmodes, nmodes, cone, cz1, nmodes,  &
                      epmatq_opt(ibnd, jbnd, ik, :), 1, czero, eptmp, 1)
           !
-          IF (lpolar) THEN
+          IF (lpolar .OR. qrpl) THEN
             IF ((ABS(xq(1)) > eps8) .OR. (ABS(xq(2)) > eps8) .OR. (ABS(xq(3)) > eps8)) THEN
               CALL rgd_blk_epw(nqc1, nqc2, nqc3, xq, cz2t, eptmp, &
                        nmodes, epsi, zstar, bmat(ibnd, jbnd, ik, iq), -one)
@@ -529,7 +528,7 @@
                    + bg(i, 3) * raq(3)
       ENDDO
       IF (t_rev(isym) == 1) raq = -raq
-      !  
+      !
       DO iq = 1, nq
         IF (eqvect(raq, saq(1, iq), zero, accep)) THEN
           isq(isym) = iq

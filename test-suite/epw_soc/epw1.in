@@ -5,14 +5,12 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
-
   epwwrite    = .true.
   epwread     = .false.
-
-  vme         = .false.
+  etf_mem     = 1
+  vme         = 'dipole'
   lphase      = .true.
 
   nbndsub     =  8

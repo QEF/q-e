@@ -478,7 +478,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, alat
     USE ions_base,     ONLY : nat, tau
-    USE elph2,         ONLY : rdw, epsi, zstar
+    USE elph2,         ONLY : rdw, epsi, zstar, qrpl
     USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
     USE io_var,        ONLY : iudecaydyn
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
@@ -518,7 +518,7 @@
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
     !
     !  subtract the long-range term from D(q)
-    IF (lpolar) THEN
+    IF (lpolar .OR. qrpl) THEN
       DO ik = 1, nq
         !xk has to be in cart. coord.
         CALL rgd_blk(nqc1, nqc2, nqc3, nat, dynq(:, :, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
@@ -724,19 +724,6 @@
       OPEN(iubvec, FILE = tempfile, ACTION = 'read', IOSTAT = ios)
       IF (ios /= 0) THEN
         !
-        ! HL 11/2020: The part below is commented since it makes sense to stop the calculation
-        ! in case that there is no *.bvec file with vme = .true. .
-        !
-!        !
-!        ! if it doesn't exist, then we just set the bvec and wb to zero
-!        !
-!        nnb = 1
-!        ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
-!        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
-!        ALLOCATE(wb(nnb), STAT = ierr)
-!        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
-!        bvec = zero
-!        wb   = zero
         CALL errore ('vmebloch2wan','You selected vme =.true. but error opening' // tempfile, 1)
       ELSE
         READ(iubvec,*) tempfile
@@ -1189,7 +1176,7 @@
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
     REAL(KIND = DP) :: tmp(nrr_k, nrr_g)
-    !! Max electron-phonon value 
+    !! Max electron-phonon value
     REAL(KIND = DP) :: rvec1(3)
     !! WS vectors
     REAL(KIND = DP) :: rvec2(3)
@@ -1230,27 +1217,27 @@
       ! phonon - electron0 distance
       len2(ir) = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
       DO ire = 1, nrr_k
-        tmp(ire, ir)  = MAXVAL(ABS(epmatwp(:, :, ire, :, ir))) 
+        tmp(ire, ir)  = MAXVAL(ABS(epmatwp(:, :, ire, :, ir)))
       ENDDO
       !
     ENDDO ! ir
-    ! 
+    !
     !  Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
     !  We plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
     !
-    ! electron-electron0 distance        
+    ! electron-electron0 distance
     DO ire = 1, nrr_k
       rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + DBLE(irvec_k(2, ire)) * at(:, 2) + DBLE(irvec_k(3, ire)) * at(:, 3)
       len1(ire) = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
     ENDDO
-    ! 
+    !
     OPEN(UNIT = iuwane, FILE = 'decay.epmate', STATUS = 'unknown')
     WRITE(iuwane, '(a)') '#   R_e [Ang]    max_{m,n,nu} |g(m, n, nu, R_e, :)| [Ry] '
     DO ire = 1, nrr_k
       WRITE(iuwane, '(2f15.10, 1E20.10)') len1(ire) * alat * bohr2ang, MAXVAL(tmp(ire, :))
     ENDDO
     CLOSE(iuwane)
-    !  
+    !
     OPEN(UNIT = iuwanep, FILE = 'decay.epmatp', STATUS = 'unknown')
     WRITE(iuwanep, '(a)') '#   R_p [Ang]    max_{m,n,nu} |g(m, n, nu, :, R_p)| [Ry] '
     DO ir = 1, nrr_g
@@ -1274,7 +1261,7 @@
     !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix
     !!  electron-Wannier representation and phonon-Wannier representation
     !!
-    !!  SP - June 2020 - Update decays printing. 
+    !!  SP - June 2020 - Update decays printing.
     !!  SP - Apr 2020 - MPI-IO parallelization.
     !
     USE kinds,            ONLY : DP
@@ -1351,7 +1338,7 @@
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
     REAL(KIND = DP) :: tmp(nrr_k, nrr_g)
-    !! Max electron-phonon value 
+    !! Max electron-phonon value
     REAL(KIND = DP) :: rvec1(3)
     !! WS vectors
     REAL(KIND = DP) :: rvec2(3)
@@ -1486,31 +1473,31 @@
       ENDDO
       !
     ENDDO ! ir
-    ! 
+    !
     !  Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
     !  We plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
     !
     CALL mp_sum(len2, world_comm)
     CALL mp_sum(tmp, world_comm)
     IF (mpime == ionode_id) THEN
-      ! electron-electron0 distance        
+      ! electron-electron0 distance
       DO ire = 1, nrr_k
         rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + DBLE(irvec_k(2, ire)) * at(:, 2) + DBLE(irvec_k(3, ire)) * at(:, 3)
         len1(ire) = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
-      ENDDO  
-      ! 
+      ENDDO
+      !
       OPEN(UNIT = iuwane, FILE = 'decay.epmate', STATUS = 'unknown')
       WRITE(iuwane, '(a)') '#   R_e [Ang]    max_{m,n,nu} |g(m, n, nu, R_e, :)| [Ry] '
       DO ire = 1, nrr_k
         WRITE(iuwane, '(2f15.10, 1E20.10)') len1(ire) * alat * bohr2ang, MAXVAL(tmp(ire, :))
       ENDDO
       CLOSE(iuwane)
-      !  
+      !
       OPEN(UNIT = iuwanep, FILE = 'decay.epmatp', STATUS = 'unknown')
       WRITE(iuwanep, '(a)') '#   R_p [Ang]    max_{m,n,nu} |g(m, n, nu, :, R_p)| [Ry] '
       DO ir = 1, nrr_g
         WRITE(iuwanep, '(2f15.10, 1E20.10)') len2(ir) * alat * bohr2ang, MAXVAL(tmp(:, ir))
-      ENDDO  
+      ENDDO
       CLOSE(iuwanep)
     ENDIF
     !

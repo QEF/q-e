@@ -30,24 +30,33 @@
     USE io_global,        ONLY : stdout
     USE cell_base,        ONLY : at, bg
     USE epwcom,           ONLY : mob_maxiter, nstemp, broyden_beta,            &
-                                 mp_mesh_k, nkf1, nkf2, nkf3
-    USE elph2,            ONLY : nkqf, wkf, xkf, nkqtotf, nbndfst,             &
-                                 nktotf, map_rebal, xqf, gtemp,          &
-                                 ixkqf_tr, s_bztoibz_full
-    USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,     &
-                                 bohr2ang, ang2cm, hbarJ, eps6, eps8, &
-                                 eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
+                                 mp_mesh_k, nkf1, nkf2, nkf3, bfieldx, bfieldy,&
+                                 bfieldz, etf_mem
+    USE elph2,            ONLY : nkqf, xkf, nkqtotf, nbndfst, &
+                                 nktotf, xqf, gtemp, ixkqf_tr,&
+                                 s_bztoibz_full, f_in_b, f_serta_b, df_in_b,   &
+                                 f_out_b, kpt_bz2bztau, &
+                                 kpt_bztau2bz, vkk_all_b, etf_all_b,     &
+                                 wkf_all_b, inv_tau_b, nkpt_bztau_max,     &
+                                 ind_map, nsym_sp
+    USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10, &
+                                 bohr2ang, ang2cm, hbarJ, eps6, eps8, byte2Mb, &
+                                 eps2, eps4, eps20, eps80, eps160, hbar, cm2m
+    USE constants,        ONLY : electronvolt_si
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
-    USE symm_base,        ONLY : s, nrot
-    USE printing,         ONLY : print_mob, print_mob_sym
+    USE symm_base,        ONLY : s, nsym
+    USE printing,         ONLY : print_mob, print_mob_sym, print_mob_b, print_hall
     USE io_transport,     ONLY : fin_write, fin_read
     USE io_files,         ONLY : diropn
     USE control_flags,    ONLY : iverbosity
     USE wigner,           ONLY : backtoWS
     USE grid,             ONLY : k_avg, special_points, kpoint_grid_epw, symm_mapping, &
-                                 kpmq_map 
+                                 loadkmesh_fullBZ, kpmq_map
     USE poolgathering,    ONLY : poolgather2
+    USE bfield,           ONLY : select_k, unfold_k, unfold_all, create_all,   &
+                                 create_indkq, k_derivative_cart, neighbk,     &
+                                 k_derivative_crys, size_indkq
     !
     IMPLICIT NONE
     !
@@ -77,6 +86,10 @@
     !! inv_tau (either inv_tau_all or inv_tau_allcb)
     !
     ! Local variables
+    LOGICAL :: cart_der
+    !! Can we perform Cartesian derivative
+    LOGICAL :: lsp(nind)
+    !! At exit, is .true. if the k-point corresponding to the index "ind" is a special point
     INTEGER(KIND = 8) :: ind
     !! Index for sparse matrix
     INTEGER :: iter
@@ -97,23 +110,35 @@
     !! Index of the k+q point from the full grid.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
-    INTEGER :: bztoibz_mat(nrot, nktotf)
+    INTEGER :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry.
-    !! nrot is the max number of symmetry
+    !! nsym + TR is the max number of symmetry
     INTEGER :: nb_sp
     !! Number of special points
     INTEGER :: ierr
     !! Error status
     INTEGER :: nrws
     !! Maximum number of WS vectors
+    INTEGER :: ind1
+    !! Index on the IBZ of k
+    INTEGER :: ind2
+    !! Index on the IBZ of k+q
+    INTEGER :: nb
+    !! Symmetry index
+    INTEGER :: nkpt_max
+    !! Maximum nb of kpoint which have non-zero inv_tau on full BZ corresponding to the ind managed by the current cpu.
+    INTEGER :: nsymk(nind)
+    !! For a given k-point corresponding to the index "ind", give the number of equivalent kpt by symmetry
     INTEGER, PARAMETER :: nrwsx = 200
     !! Variable for WS folding
     INTEGER, ALLOCATABLE :: xkf_sp(:, :)
     !! Special k-points
+    INTEGER, ALLOCATABLE :: map_neigh(:, :, :)
+    !! Map of the 6 k-point neighbor for k-derivative by finite difference.
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
-    REAL(KIND = DP) :: carrier_density
+    REAL(KIND = DP) :: carrier_density(nstemp)
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
@@ -139,14 +164,24 @@
     !! K-point index for printing
     REAL(KIND = DP) :: rws(4, nrwsx)
     !! Real WS vectors
+    REAL(KIND = DP) :: b_abs
+    !! Absolute magnetic field (Tesla)
+    REAL(KIND = DP) :: vec_min(3)
+    !! Norm of the smallest vector in the x, y and z direction
+    REAL(KIND = DP) :: vb(3)
+    !! v_nk(i) cross B(j)
     REAL(KIND = DP) :: sigma_serta(3, 3, nstemp)
-    !! SERTA conductivity tensor
+    !! SERTA conductivity tensor without Magnetic field.
     REAL(KIND = DP) :: sigma_bte(3, 3, nstemp)
-    !!  BTE conductivity tensor
+    !! BTE conductivity tensor without Magnetic field.
+    REAL(KIND = DP) :: sigmab_serta(3, 3, nstemp)
+    !! SERTA conductivity tensor with Magnetic field.
+    REAL(KIND = DP) :: sigmab_bte(3, 3, nstemp)
+    !! BTE conductivity tensor with Magnetic field.
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
     !
-    carrier_density = zero
+    carrier_density(:) = zero
     xkf_all(:, :) = zero
 #if defined(__MPI)
     CALL poolgather2(3, nkqtotf, nkqf, xkf, xkf_all)
@@ -161,7 +196,7 @@
       WRITE(stdout, '(5x,a,f12.6)') 'bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
       WRITE(stdout, '(5x,a,f12.6)') 's_bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2
       WRITE(stdout, '(5x,a,f12.6)') 'f_serta : ',  (3 * nbndfst * nktotf * nstemp) * byte2Mb!REAL(8)
-      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nrot * nktotf * byte2Mb / 2 !INTEGER(4)
+      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nsym * nktotf * byte2Mb / 2 !INTEGER(4)
       rws(:, :) = zero
       CALL wsinit(rws, nrwsx, nrws, bg)
     ENDIF
@@ -216,7 +251,7 @@
     WRITE(stdout, '(5x,a)') REPEAT('=',93)
     WRITE(stdout, '(5x,"BTE in the self-energy relaxation time approximation (SERTA)")')
     WRITE(stdout, '(5x,a)') REPEAT('=',93)
-    ! Store conductivity 
+    ! Store conductivity without B-field
     sigma_serta(:, :, :) = zero
     max_mob(:) = zero
     ! K-point symmetry.
@@ -354,7 +389,238 @@
       IF (mp_mesh_k) THEN
         CALL print_mob_sym(f_in, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_bte, max_mob, xkf_all(:, 1:nkqtotf:2))
       ENDIF
-    ENDIF    
+    ENDIF
+    !
+    ! ------------------
+    ! - Magnetic field -
+    ! ------------------
+    ! Possibly add the contribution from an external B-field.
+    ! We need to use the full BZ because the magnetic field breaks some crystal symmetries.
+    ! Therefore we consider no crystal symmetry and reconstruct all.
+    !
+    b_abs = ABS(bfieldx) + ABS(bfieldy) + ABS(bfieldz)
+    IF (b_abs > eps80) THEN
+      !
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a)') REPEAT('=',93)
+      WRITE(stdout, '(5x,"BTE in the SERTA with B-field")')
+      WRITE(stdout, '(5x,a)') REPEAT('=',93)
+      !
+      ! Generate a grid of k-points on the full BZ without symmetries
+      ! The variable xkf_bz gets allocated here
+      IF (etf_mem < 3) CALL loadkmesh_fullBZ()
+      !
+      ! Select the k-point that have non-zero inv_tau scattering rate
+      ! In this routine the nkpt_ibztau and kpt_ibztau2ibz are allocated
+      CALL select_k(inv_tau)
+      !
+      IF (mp_mesh_k) THEN
+        ! Since the external B-field breaks some crystal symmetries, we need to unfold
+        ! every quantities in the full BZ. We cannot use k-point symmetries.
+        ! In this routine the kpt_bz2bztau and kpt_bztau2bz are allocated
+        ! and the nkpt_bztau_max is defined.
+        CALL unfold_k(bztoibz_mat)
+        !
+        ! Unfold the etf, vkk, xkf, inv_tau and f_serta to full BZ composed of non-zero inv_tau points
+        ! This routines allocate etf_all_b, vkk_all_b, wkf_all_b, f_serta_b, f_in_b, f_out_b, inv_tau_b
+        CALL unfold_all(etf_all, vkk_all, inv_tau, f_serta)
+        !
+        ! Precompute the maximum size of the ind1 and ind2 pairs
+        ! This routines computes nkpt_max.
+        CALL size_indkq(nind, nb_sp, xkf_sp, bztoibz_mat, sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, &
+                        inv_tau, nkpt_max)
+        !
+        ! For a given ind, save the index k and k+q (ind1 and ind2) that are related by crystal symmetry.
+        ! In the case of special k-points, count them in nb_sp_map(nkpt_bzfstd) where nkpt_bzfstd is the number of
+        ! k-points with non-zero inv_tau for the ind range consider by this specific core.
+        ! This routines allocates nsym_sp and ind_map.
+        lsp(:) = .FALSE.
+        nsymk(:) = 0
+        CALL create_indkq(nind, nkpt_max, nb_sp, xkf_sp, bztoibz_mat, sparse_q, sparse_k, sparse_i, sparse_j, &
+                          sparse_t, inv_tau, nsymk, lsp)
+        !
+      ELSE ! Homogeneous mesh without k-point symmetry
+        !
+        ! This routines allocate etf_all_b, vkk_all_b, wkf_all_b, f_serta_b, f_in_b, f_out_b, inv_tau_b
+        CALL create_all(etf_all, vkk_all, inv_tau, f_serta)
+        !
+      ENDIF ! mp_mesh_k
+      !
+      ! f_in_b is equal to f_serta_b for the first iteration
+      f_in_b = f_serta_b
+      !
+      iter = 0
+      error(:) = 1000
+      ! The tolerence is more strict for B-field IBTE
+      DO WHILE(MAXVAL(error) > eps20)
+        IF (iter == 1) THEN
+          WRITE(stdout, '(5x,a)') ' '
+          WRITE(stdout, '(5x,a)') REPEAT('=',93)
+          WRITE(stdout, '(5x,"Start solving iterative Boltzmann Transport Equation with B-field")')
+          WRITE(stdout, '(5x,a/)') REPEAT('=',93)
+          WRITE(stdout, '(5x,"Iteration number:", i10)') iter
+        ENDIF
+        IF (iter > 1) THEN
+          WRITE(stdout, '(5x,a)') ' '
+          WRITE(stdout, '(5x,"Iteration number:", i10)') iter
+        ENDIF ! iter >0
+        IF (iter > mob_maxiter) THEN
+          WRITE(stdout, '(5x,a)') REPEAT('=',93)
+          WRITE(stdout, '(5x,"The iteration reached the maximum but did not converge.")')
+          WRITE(stdout, '(5x,a/)') REPEAT('=',93)
+          EXIT
+        ENDIF
+        !
+        f_out_b(:, :, :, :) = zero
+        !
+        ! iter == 0 corresponds to SERTA with B-field
+        IF (iter > 0) THEN
+          ikk = 0
+          DO ind = 1, nind
+            iq    = sparse_q(ind)
+            ik    = sparse_k(ind)
+            ibnd  = sparse_i(ind)
+            jbnd  = sparse_j(ind)
+            itemp = sparse_t(ind)
+            !
+            IF (mp_mesh_k) THEN
+              IF (lsp(ind)) THEN
+                ! The k-point is a special k-point for which some symmetries send it to himself
+                DO nb = 1, nsymk(ind)
+                  ikk = ikk + 1
+                  ind1 = ind_map(1, ikk)
+                  ind2 = ind_map(2, ikk)
+                  f_out_b(:, ibnd, ind1, itemp) = f_out_b(:, ibnd, ind1, itemp)  &
+                      + trans_prob(ind) * f_in_b(:, jbnd, ind2, itemp) / DBLE(nsym_sp(ikk))
+
+                ENDDO ! nb
+              ELSE ! not a special point
+                DO nb = 1, nsymk(ind)
+                  ikk = ikk + 1
+                  ind1 = ind_map(1, ikk)
+                  ind2 = ind_map(2, ikk)
+                  f_out_b(:, ibnd, ind1, itemp) = f_out_b(:, ibnd, ind1, itemp)  &
+                      + trans_prob(ind) * f_in_b(:, jbnd, ind2, itemp)
+
+                ENDDO ! nb
+              ENDIF ! Logical special point
+            ELSE ! mp_mesh_k
+              !
+              CALL kpmq_map(xkf_all(:, 2 * ik - 1), xqf(:, iq), +1, nkq_abs)
+              f_out_b(:, ibnd, ik, itemp) = f_out_b(:, ibnd, ik, itemp)  &
+                        + trans_prob(ind) * f_in_b(:, jbnd, nkq_abs, itemp)
+            ENDIF ! mp_mesh_k
+          ENDDO ! ind
+          CALL mp_sum(F_out_b, world_comm)
+        ENDIF ! iter > 0
+        !
+        ! Multiply with the scattering rate inv_tau_b
+        DO itemp = 1, nstemp
+          DO ik = 1, nkpt_bztau_max
+            DO ibnd = 1, nbndfst
+              IF (ABS(inv_tau_b(ibnd, ik, itemp)) > eps160) THEN
+                f_out_b(:, ibnd, ik, itemp) = f_serta_b(:, ibnd, ik, itemp) + &
+                            f_out_b(:, ibnd, ik, itemp) / (inv_tau_b(ibnd, ik, itemp))
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDDO
+        !
+        IF (iter == 0) THEN
+          ! Computing the derivative of the population takes time. Hence compute the mapping between neighbour k-points
+          ! only once and store it here.
+          ! We also check if we can do the derivative in Cartesian unit (more accurate) or if we have to do in crystal unit.
+          ! In some tilded system with too coarse grids, increment points along the pure Cartesian direction
+          ! (x,0,0), (0,y,0) and (0,0,z) cannot be found and one has to use crystal derivative
+          ALLOCATE(map_neigh(6, nkpt_bztau_max, nstemp), STAT = ierr)
+          IF (ierr /= 0) CALL errore('ibte', 'Error allocating map_neigh', 1)
+          map_neigh(:, :, :) = 0
+          cart_der = .TRUE.
+          CALL neighbk(map_neigh, cart_der, vec_min)
+        ENDIF
+        !
+        ! Computes df_in/dk using finite difference
+        IF (cart_der) THEN
+          CALL k_derivative_cart(map_neigh, f_in_b, vec_min, df_in_b)
+        ELSE
+          CALL k_derivative_crys(map_neigh, f_in_b, df_in_b)
+        ENDIF
+        !
+        ! Now add the finite magnetic field part
+        DO itemp = 1, nstemp
+          etemp = gtemp(itemp)
+          DO ikbz = 1, nkpt_bztau_max
+            DO ibnd = 1, nbndfst
+              IF (ABS(inv_tau_b(ibnd, ikbz, itemp)) > eps160) THEN
+                vb(1) = vkk_all_b(2, ibnd, ikbz, itemp) * bfieldz - vkk_all_b(3, ibnd, ikbz, itemp) * bfieldy
+                vb(2) = vkk_all_b(3, ibnd, ikbz, itemp) * bfieldx - vkk_all_b(1, ibnd, ikbz, itemp) * bfieldz
+                vb(3) = vkk_all_b(1, ibnd, ikbz, itemp) * bfieldy - vkk_all_b(2, ibnd, ikbz, itemp) * bfieldx
+                f_out_b(1, ibnd, ikbz, itemp) =  DOT_PRODUCT(vb(:), df_in_b(:, 1, ibnd, ikbz, itemp)) &
+                                / (inv_tau_b(ibnd, ikbz, itemp)) + f_out_b(1, ibnd, ikbz, itemp)
+                f_out_b(2, ibnd, ikbz, itemp) =  DOT_PRODUCT(vb(:), df_in_b(:, 2, ibnd, ikbz, itemp)) &
+                                / (inv_tau_b(ibnd, ikbz, itemp)) + f_out_b(2, ibnd, ikbz, itemp)
+                f_out_b(3, ibnd, ikbz, itemp) =  DOT_PRODUCT(vb(:), df_in_b(:, 3, ibnd, ikbz, itemp)) &
+                                / (inv_tau_b(ibnd, ikbz, itemp)) + f_out_b(3, ibnd, ikbz, itemp)
+              ENDIF ! inv_tau_b
+            ENDDO ! ibnd
+          ENDDO ! ik
+        ENDDO ! itemp
+        !
+        IF (iter == 0) THEN
+          CALL print_mob_b(f_out_b, vkk_all_b, etf_all_b, wkf_all_b, ef0, &
+                           carrier_density, sigmab_serta, max_mob)
+        ELSE
+          CALL print_mob_b(f_out_b, vkk_all_b, etf_all_b, wkf_all_b, ef0, &
+                           carrier_density, sigmab_bte, max_mob)
+        ENDIF
+        !
+        ! Computes the error
+        DO itemp = 1, nstemp
+          error(itemp) = ABS(max_mob(itemp) - av_mob_old(itemp))
+        ENDDO
+        av_mob_old = max_mob
+        WRITE(stdout, '(a)')
+        WRITE(stdout, '(50x, 1E16.6, a)') MAXVAL(error), '    Max error'
+        !
+        ! Save F_in
+        ! Linear mixing
+        f_in_b = (1.0 - broyden_beta) * f_in_b + broyden_beta * f_out_b
+        f_out_b = zero
+        !
+        iter = iter + 1
+        !
+      ENDDO ! end of while loop
+      !
+      ! Once we are converged print Hall factor
+      WRITE(stdout, '(/5x, a)') REPEAT('=', 93)
+      WRITE(stdout, '(5x, a)') 'Summary and Hall factor'
+      WRITE(stdout, '(5x, a)') REPEAT('=', 93)
+      !
+      CALL print_hall(carrier_density, sigma_serta, sigma_bte, sigmab_serta, sigmab_bte)
+      !
+      IF (mp_mesh_k) THEN
+        DEALLOCATE(kpt_bz2bztau, STAT = ierr)
+        IF (ierr /= 0) CALL errore('ibte', 'Error deallocating kpt_bz2bztau', 1)
+        DEALLOCATE(kpt_bztau2bz, STAT = ierr)
+        IF (ierr /= 0) CALL errore('ibte', 'Error deallocating kpt_bztau2bz', 1)
+      ENDIF ! mp_mesh_k
+      DEALLOCATE(vkk_all_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating vkk_all_b', 1)
+      DEALLOCATE(etf_all_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating etf_all_b', 1)
+      DEALLOCATE(wkf_all_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating wkf_all_b', 1)
+      DEALLOCATE(f_serta_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating f_serta_b', 1)
+      DEALLOCATE(f_in_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating f_in_b', 1)
+      DEALLOCATE(f_out_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating f_out_b', 1)
+      DEALLOCATE(inv_tau_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating inv_tau_b', 1)
+      DEALLOCATE(df_in_b, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating df_in_b', 1)
+    ENDIF ! B_abs
     !
     ! Deallocate
     IF (mp_mesh_k) THEN
@@ -394,7 +660,7 @@
                                  iunsparsetcb, iunepmatcb
     USE mp,               ONLY : mp_bcast
     USE division,         ONLY : fkbounds2
-    USE symm_base,        ONLY : nrot
+    USE symm_base,        ONLY : nsym
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET, MPI_MODE_RDONLY, MPI_INFO_NULL, &
                                  MPI_SEEK_SET, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
@@ -568,7 +834,7 @@
     CALL mp_bcast(vkk_all, ionode_id, world_comm)
     CALL mp_bcast(wkf_all, ionode_id, world_comm)
     CALL mp_bcast(etf_all, ionode_id, world_comm)
-    CALL mp_bcast(nrot, ionode_id, world_comm)
+    CALL mp_bcast(nsym, ionode_id, world_comm)
     CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
     CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
     !

@@ -159,19 +159,19 @@
       !
       WRITE(iuwinfil, '("num_wann = ", i3)') nbndsub
       WRITE(iuwinfil, '("iprint = ", i3)') iprint
-      !  
-      ! The windows should not be printed in case of no disentanglement.  
+      !
+      ! The windows should not be printed in case of no disentanglement.
       IF (dis_win_min  > -9000) WRITE(iuwinfil, '("dis_win_min = ", f18.12)')  dis_win_min
       IF (dis_win_max  <  9000) WRITE(iuwinfil, '("dis_win_max = ", f18.12)')  dis_win_max
       IF (dis_froz_min > -9000) WRITE(iuwinfil, '("dis_froz_min = ", f18.12)') dis_froz_min
-      IF (dis_froz_max <  9000) WRITE(iuwinfil, '("dis_froz_max = ", f18.12)') dis_froz_max      
+      IF (dis_froz_max <  9000) WRITE(iuwinfil, '("dis_froz_max = ", f18.12)') dis_froz_max
       WRITE(iuwinfil, '("num_iter = ", i7)')         num_iter
-      IF (vme) WRITE(iuwinfil, '(a)') "write_bvec = .true."
+      IF (vme == 'wannier') WRITE(iuwinfil, '(a)') "write_bvec = .true."
       !
-      ! HL 11/2020: The code block below is necessary 
+      ! HL 11/2020: The code block below is necessary
       !             until the bug fix in W90 is merged into its master branch.
       !
-      IF (vme) THEN
+      IF (vme == 'wannier') THEN
         notfound = .TRUE.
         DO i = 1, nwanxx
           IF (wdata(i) /= ' ') THEN
@@ -204,7 +204,7 @@
         IF (wdata(i) /= ' ') WRITE(iuwinfil, *) TRIM(wdata(i))
       ENDDO
       !
-      IF (vme .AND. notfound) WRITE(iuwinfil, *) "write_hr = .true."
+      IF (vme == 'wannier' .AND. notfound) WRITE(iuwinfil, *) "write_hr = .true."
       !
       CLOSE(iuwinfil)
       !

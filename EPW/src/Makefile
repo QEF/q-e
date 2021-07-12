@@ -45,12 +45,14 @@ supercond.o \
 supercond_iso.o \
 supercond_aniso.o \
 grid.o \
+bfield.o \
 rotate.o \
 transport.o \
 transport_iter.o \
 pw2wan2epw.o \
 wannierization.o \
 indabs.o \
+io_indabs.o\
 bcast_epw_input.o \
 bloch2wan.o \
 dvqpsi.o \
@@ -77,16 +79,16 @@ EPWOBJS += ephblochkq.o wfc_elec.o test_tools.o
 
 PHOBJS = ../../PHonon/PH/libph.a
 PWOBJS = ../../PW/src/libpw.a
-W90LIB = ../../wannier90-3.1.0/libwannier.a 
+W90LIB = ../../wannier90-3.1.0/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
-PWOBJS = ../../PW/src/libpw.a 
+PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
          ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
 LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a
 
-TLDEPS= pw ph
+TLDEPS= pw ph pp
 
-all :   pw ph wannier libepw.a epw.x 
+all :   pw ph pp wannier libepw.a epw.x
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -94,14 +96,17 @@ libepw.a : $(EPWOBJS)
 
 epw.x : epw.o libepw.a $(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
+	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../bin ; ln -fs ../src/epw.x . )
 
-pw : 
+pw :
 	cd ../../ ; make pw
 
-ph : 
+ph :
 	cd ../../ ; make ph
+
+pp :
+	cd ../../ ; make pp
 
 wannier :
 	cd ../../ ; make w90 ; cd wannier90-3.1.0/ ; make lib

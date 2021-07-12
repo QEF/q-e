@@ -27,11 +27,7 @@ inputs_args = ('metal.in' ,''), ('metal-2.in' ,''), ('metal-fermi_dirac.in' ,'')
 
 [pw_noncolin/]
 program = PW
-inputs_args = ('noncolin.in' ,''), ('noncolin-1.in' ,''), ('noncolin-2.in' ,''), ('noncolin-cg.in' ,''), ('noncolin-constrain_angle.in' ,''), ('noncolin-constrain_atomic.in' ,''), ('noncolin-constrain_total.in' ,''), ('noncolin-hyb.in' ,''), ('noncolin-pbe.in','') 
-
-[pw_electric/]
-program = PW
-inputs_args = ('electric.in' ,''), ('electric-1.in' ,''), ('electric-2.in' ,'') 
+inputs_args = ('noncolin.in' ,''), ('noncolin-1.in' ,''), ('noncolin-2.in' ,''), ('noncolin-cg.in' ,''), ('noncolin-constrain_angle.in' ,''), ('noncolin-constrain_atomic.in' ,''), ('noncolin-constrain_total.in' ,''), ('noncolin-hyb.in' ,''), ('noncolin-pbe.in','')
 
 [pw_pawatom/]
 program = PW
@@ -131,7 +127,7 @@ inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw
 
 [epw_super/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3')
 
 [epw_polar/]
 program = EPW
@@ -156,6 +152,10 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'),
 [epw_mob_polar/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '5')
+
+[epw_hall/]
+program = EPW
+inputs_args = ('scf.in', '0'), ('ph.in', '2'), ('scf.in', '0'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
 
 ####[epw_scdm/]
 ####program = EPW
@@ -246,13 +246,13 @@ program = QEHeat_h2o_mol_t
 
 
 [categories]
-pw_all = pw_*?? 
+pw_all = pw_*??
 cp_all = cp_*??
 ph_all = ph_*??
 pp_all = pp_*??
 epw_all = epw_*??
 hp_all = hp_*??
-epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob 
+epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob epw_hall
 zg_all = zg_*??
 tddfpt_all = tddfpt_*??
 all_currents_all = QEHeat_*

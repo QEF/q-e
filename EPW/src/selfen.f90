@@ -768,7 +768,7 @@
           ! we may implement the approximation to the angle between k and k+q
           ! vectors also listed in Grimvall
           !
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             DO ibnd = 1, nbndfst
               DO jbnd = 1, nbndfst
                 !
@@ -785,11 +785,11 @@
             DO ibnd = 1, nbndfst
               DO jbnd = 1, nbndfst
                 !
-                ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                ! v_(k,i) = 1/m <ki|p|ki> = dmef (:, i,i,k)
                 ! 1/m  = 2 in Rydberg atomic units
                 !
-                vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
-                vkq(:, jbnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq))
+                vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                vkq(:, jbnd) = REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq))
                 IF (ABS(vkk(1, ibnd)**two + vkk(2, ibnd)**two + vkk(3, ibnd)**two) > eps4) &
                   coskkq(ibnd, jbnd) = DDOT(3, vkk(:, ibnd), 1, vkq(:, jbnd), 1)  / &
                                        DDOT(3, vkk(:, ibnd), 1, vkk(:, ibnd), 1)
@@ -1261,8 +1261,9 @@
                     ENDIF
                   ELSE
                     IF (ABS(ekk - ekk1) > eps8) THEN
-                      dipole = REAL(      dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk) *  &
-                                    CONJG(dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk)) / &
+                      ! TODO: Check the expression to confirm that division by 2 is correct.
+                      dipole = REAL(      dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk) / 2.d0 *  &
+                                    CONJG(dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk) / 2.d0) / &
                                     ((ekk1 - ekk)**two + sq_degaussw))
                     ELSE
                       dipole = zero
