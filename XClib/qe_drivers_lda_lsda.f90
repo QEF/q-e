@@ -64,11 +64,13 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: ex_out
   !! \(\epsilon_x(rho)\) ( NOT \(E_x(\text{rho})\) )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: vx_out
-  !! \(dE_x(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_x(\text{rho})/d\text{rho}\) )
+  !! \(dE_x(\text{rho})/d\text{rho}\)  ( NOT 
+  !! \(d\epsilon_x(\text{rho})/d\text{rho}\) )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: ec_out
   !! \(\epsilon_c(rho)\) ( NOT \(E_c(\text{rho})\) )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: vc_out
-  !! \(dE_c(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_c(\text{rho})/d\text{rho}\) )
+  !! \(dE_c(\text{rho})/d\text{rho}\)  ( NOT 
+  !! \(d\epsilon_c(\text{rho})/d\text{rho}\) )
   !
   ! ... local variables
   !
@@ -79,7 +81,6 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP, e2 = 2.0_DP
   !                      pi34 = (3/4pi)^(1/3)
-  !
 #if defined(_OPENMP)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
@@ -87,12 +88,19 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   ntids = omp_get_num_threads()
 #endif
   !
+  !
+#if defined(_OPENACC)
+!$acc data copyin(rho_in), copyout(ex_out, vx_out, ec_out, vc_out)
+!$acc parallel loop
+#endif
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, rs, ex, ec, ec_, vx, vc, vc_ ) &
 !$omp shared( rho_in, length, iexch, icorr, ex_out, ec_out, vx_out, vc_out, &
 !$omp         finite_size_cell_volume, exx_fraction, exx_started, &
 !$omp         rho_threshold_lda )
 !$omp do
+#endif
   DO ir = 1, length
      !
      rho = ABS(rho_in(ir))
@@ -247,8 +255,13 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      vx_out(ir) = vx  ;  vc_out(ir) = vc
      !
   ENDDO
+#if defined(_OPENACC)
+!$acc end data
+#endif
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
   !
   !
   RETURN
@@ -289,7 +302,8 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   INTEGER  :: ir
   REAL(DP) :: rho, rs, zeta
   REAL(DP) :: ex, ec, ec_
-  REAL(DP) :: vx(2), vc(2), vc_(2)
+  REAL(DP) :: vx_up, vc_up, vc_up_
+  REAL(DP) :: vx_dw, vc_dw, vc_dw_
   !
   REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP
@@ -302,12 +316,19 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   ntids = omp_get_num_threads()
 #endif
   !
+#if defined(_OPENACC)  
+!$acc data copyin(rho_in, zeta_in), copyout(ex_out, vx_out, ec_out, vc_out)
+!$acc parallel loop  
+#endif
+#if defined(_OPENMP) && !defined(_OPENACC)  
 !$omp parallel if(ntids==1) default(none) &
-!$omp private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_ ) &
+!$omp private( rho, rs, zeta, ex, ec, ec_, vx_up, vx_dw, vc_up, &
+!$omp          vc_dw, vc_up_, vc_dw_ ) &
 !$omp shared( length, iexch, icorr, exx_fraction, &
 !$omp         vx_out, vc_out, ex_out, ec_out, &
-!$omp         zeta_in, exx_started, rho_in, rho_threshold_lda)
+!$omp         zeta_in, exx_started, rho_in, rho_threshold_lda )
 !$omp do
+#endif
   DO ir = 1, length
      !
      zeta = zeta_in(ir)
@@ -318,8 +339,8 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      IF ( rho > rho_threshold_lda ) THEN
         rs = pi34 / rho**third
      ELSE
-        ex_out(ir) = 0.0_DP  ;  vx_out(ir,:) = 0.0_DP
-        ec_out(ir) = 0.0_DP  ;  vc_out(ir,:) = 0.0_DP
+        ex_out(ir) = 0.0_DP  ;  vx_out(ir,1) = 0.0_DP  ;  vx_out(ir,2) = 0.0_DP
+        ec_out(ir) = 0.0_DP  ;  vc_out(ir,1) = 0.0_DP  ;  vc_out(ir,2) = 0.0_DP
         CYCLE
      ENDIF
      !
@@ -329,53 +350,57 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( iexch )
      CASE( 1 )                                      ! 'sla'
         !
-        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx_up, vx_dw )
         !
      CASE( 2 )                                      ! 'sl1'
         !
-        CALL slater1_spin( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater1_spin( rho, zeta, ex, vx_up, vx_dw )
         !
      CASE( 3 )                                      ! 'rxc'
         !
-        CALL slater_rxc_spin( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_rxc_spin( rho, zeta, ex, vx_up, vx_dw )
         !
      CASE( 4, 5 )                                   ! 'oep','hf'
         !
         IF ( exx_started ) THEN
            ex = 0.0_DP
-           vx = 0.0_DP
+           vx_up = 0.0_DP ; vx_dw = 0.0_DP
         ELSE
-           CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
+           CALL slater_spin( rho, zeta, ex, vx_up, vx_dw )
         ENDIF
         !
      CASE( 6 )                                      ! 'pb0x'
         !
-        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx_up, vx_dw )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
-           vx = (1.0_DP - exx_fraction) * vx
+           vx_up = (1.0_DP - exx_fraction) * vx_up
+           vx_dw = (1.0_DP - exx_fraction) * vx_dw
         ENDIF
         !
      CASE( 7 )                                      ! 'B3LYP'
         !
-        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx_up, vx_dw )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
-           vx = (1.0_DP - exx_fraction) * vx
+           vx_up = (1.0_DP - exx_fraction) * vx_up
+           vx_dw = (1.0_DP - exx_fraction) * vx_dw
         ENDIF
         !
      CASE( 9 )                                      ! 'X3LYP'
         !
-        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx_up, vx_dw )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
-           vx = (1.0_DP - exx_fraction) * vx
+           vx_up = (1.0_DP - exx_fraction) * vx_up
+           vx_dw = (1.0_DP - exx_fraction) * vx_dw
         ENDIF
         !
      CASE DEFAULT
         !
         ex = 0.0_DP
-        vx = 0.0_DP
+        vx_up = 0.0_DP
+        vx_dw = 0.0_DP
         !
      END SELECT
      !
@@ -386,67 +411,79 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      CASE( 0 )
         !
         ec = 0.0_DP
-        vc = 0.0_DP
+        vc_up = 0.0_DP ; vc_dw = 0.0_DP
         !
      CASE( 1 )
         !
-        CALL pz_spin( rs, zeta, ec, vc(1), vc(2) )
+        CALL pz_spin( rs, zeta, ec, vc_up, vc_dw )
         !
      CASE( 2 )
         !
-        CALL vwn_spin( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn_spin( rs, zeta, ec, vc_up, vc_dw )
         !
      CASE( 3 )
         !
-        CALL lsd_lyp( rho, zeta, ec, vc(1), vc(2) )       ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec, vc_up, vc_dw )       ! from CP/FPMD
         !
      CASE( 4 )
         !
-        CALL pw_spin( rs, zeta, ec, vc(1), vc(2) )
+        CALL pw_spin( rs, zeta, ec, vc_up, vc_dw )
         !
      CASE( 12 )                                           ! 'B3LYP'
         !
-        CALL vwn_spin( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn_spin( rs, zeta, ec, vc_up, vc_dw )
         ec = 0.19_DP * ec
-        vc = 0.19_DP * vc
+        vc_up = 0.19_DP * vc_up
+        vc_dw = 0.19_DP * vc_dw
         !
-        CALL lsd_lyp( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec_, vc_up_, vc_dw_ )    ! from CP/FPMD
         ec = ec + 0.81_DP * ec_
-        vc = vc + 0.81_DP * vc_
+        vc_up = vc_up + 0.81_DP * vc_up_
+        vc_dw = vc_dw + 0.81_DP * vc_dw_
         !     
      CASE( 13 )                                           ! 'B3LYP-V1R'
         !
-        CALL vwn1_rpa_spin( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )
         ec = 0.19_DP * ec
-        vc = 0.19_DP * vc
+        vc_up = 0.19_DP * vc_up
+        vc_dw = 0.19_DP * vc_dw
         !
-        CALL lsd_lyp( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec_, vc_up_, vc_dw_ )    ! from CP/FPMD
         ec = ec + 0.81_DP * ec_
-        vc = vc + 0.81_DP * vc_
+        vc_up = vc_up + 0.81_DP * vc_up_
+        vc_dw = vc_dw + 0.81_DP * vc_dw_
         !
      CASE( 14 )                                           ! 'X3LYP
         !
-        CALL vwn1_rpa_spin( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )
         ec = 0.129_DP * ec
-        vc = 0.129_DP * vc
+        vc_up = 0.129_DP * vc_up
+        vc_dw = 0.129_DP * vc_dw
         !
-        CALL lsd_lyp( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec_, vc_up_, vc_dw_ )    ! from CP/FPMD
         ec = ec + 0.871_DP * ec_
-        vc = vc + 0.871_DP * vc_
+        vc_up = vc_up + 0.871_DP * vc_up_
+        vc_dw = vc_dw + 0.871_DP * vc_dw_
         !
      CASE DEFAULT
         !
-        ec = 0.0_DP                           !rrr
-        vc = 0.0_DP
+        ec = 0.0_DP
+        vc_up = 0.0_DP
+        vc_dw = 0.0_DP
         !
      END SELECT
      !
-     ex_out(ir) = ex  ;  vx_out(ir,:) = vx(:)
-     ec_out(ir) = ec  ;  vc_out(ir,:) = vc(:)
+     ex_out(ir) = ex  ;  vx_out(ir,1) = vx_up  ;  vx_out(ir,2) = vx_dw 
+     ec_out(ir) = ec  ;  vc_out(ir,1) = vc_up  ;  vc_out(ir,2) = vc_dw
      !
   ENDDO
+#if defined(_OPENMP) && !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
+#if defined(_OPENACC)
+!$acc end data
+#endif
   !
   !
   RETURN

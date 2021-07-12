@@ -6,14 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------------
-MODULE corr_lda !<GPU:corr_lda=>corr_lda_gpu>
+MODULE corr_lda
 !-------------------------------------------------------------------------
 !! LDA correlation functionals
 !
 CONTAINS
 !
 !-------------------------------------------------------------------------
-SUBROUTINE pz( rs, iflag, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE pz( rs, iflag, ec, vc )
+!$acc routine (pz) seq
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -24,7 +25,7 @@ SUBROUTINE pz( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: iflag                        !<GPU:VALUE>
+  INTEGER, INTENT(IN) :: iflag
   !! see routine comments
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
@@ -72,7 +73,8 @@ END SUBROUTINE pz
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pzKZK( rs, ec, vc, vol )                    !<GPU:DEVICE>
+SUBROUTINE pzKZK( rs, ec, vc, vol )
+!$acc routine (pzKZK) seq
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -89,7 +91,7 @@ SUBROUTINE pzKZK( rs, ec, vc, vol )                    !<GPU:DEVICE>
   !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
-  REAL(DP) :: vol                                        !<GPU:VALUE>
+  REAL(DP) :: vol
   !! volume element
   !
   ! ... local variables
@@ -187,7 +189,8 @@ END SUBROUTINE pzKZK
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vwn( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE vwn( rs, ec, vc )
+!$acc routine (vwn) seq
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
@@ -233,7 +236,8 @@ END SUBROUTINE vwn
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vwn1_rpa( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE vwn1_rpa( rs, ec, vc )
+!$acc routine (vwn1_rpa) seq
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
@@ -278,7 +282,8 @@ END SUBROUTINE vwn1_rpa
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE lyp( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE lyp( rs, ec, vc )
+!$acc routine (lyp) seq
   !-----------------------------------------------------------------------
   !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988).
   !! LDA part only.
@@ -315,7 +320,8 @@ END SUBROUTINE lyp
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pw( rs, iflag, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE pw( rs, iflag, ec, vc )
+!$acc routine (pw) seq
   !-----------------------------------------------------------------------
   !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
@@ -326,7 +332,7 @@ SUBROUTINE pw( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
-  INTEGER, INTENT(IN)  :: iflag                 !<GPU:VALUE>
+  INTEGER, INTENT(IN)  :: iflag
   !! see routine comments
   REAL(DP), INTENT(OUT) :: ec
   !! correlation energy
@@ -385,7 +391,8 @@ END SUBROUTINE pw
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE wignerc( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE wignerc( rs, ec, vc )
+!$acc routine (wignerc) seq
   !-----------------------------------------------------------------------
   !! Wigner correlation.
   !
@@ -418,7 +425,8 @@ END SUBROUTINE wignerc
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE hl( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE hl( rs, ec, vc )
+!$acc routine (hl) seq
   !-----------------------------------------------------------------------
   !! L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971).
   !
@@ -450,7 +458,8 @@ END SUBROUTINE hl
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE gl( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE gl( rs, ec, vc )
+!$acc routine (gl) seq
   !---------------------------------------------------------------------
   !! O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976).
   !
@@ -484,7 +493,8 @@ END SUBROUTINE gl
 ! ... LSDA
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pz_polarized( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE pz_polarized( rs, ec, vc )
+!$acc routine (pz_polarized) seq
   !-----------------------------------------------------------------------
   !! J.P. Perdew and A. Zunger, PRB 23, 5048 (1981).
   !! spin-polarized energy and potential.
@@ -539,7 +549,8 @@ END SUBROUTINE pz_polarized
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )
+!$acc routine (pz_spin) seq
   !-----------------------------------------------------------------------
   !! Perdew and Zunger, PRB 23, 5048 (1981). Spin polarized case.
   !
@@ -563,10 +574,10 @@ SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE
   REAL(DP), PARAMETER :: p43=4.0d0/3.d0, third=1.d0/3.d0
   !
   ! unpolarized part (Perdew-Zunger formula)
-  CALL pz( rs, 1, ecu, vcu )                                        !<GPU:pz=>pz_d>
+  CALL pz( rs, 1, ecu, vcu )
   !
   ! polarization contribution
-  CALL pz_polarized( rs, ecp, vcp )                                 !<GPU:pz_polarized=>pz_polarized_d>
+  CALL pz_polarized( rs, ecp, vcp )
   !
   fz = ( (1.0d0 + zeta)**p43 + (1.d0 - zeta)**p43 - 2.d0) / &
          (2.d0**p43 - 2.d0)
@@ -582,7 +593,8 @@ SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE
 END SUBROUTINE pz_spin
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )
+!$acc routine (vwn_spin) seq
    !------------------------------------------------------------------------------
    !! S.H. Vosko, L. Wilk, and M. Nusair.  Spin polarized case.
    !
@@ -639,9 +651,9 @@ SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVIC
    fz = cfz1 * (trup13*trup + trdw13*trdw - 2.0_DP) ! f(zeta)
    dfz = cfz2 * (trup13 - trdw13)                   ! df / dzeta
    !
-   CALL padefit_ParSet1( sqrtrs, 1, ecP, vcP )              ! ecF = e_c Paramagnetic     !<GPU:padefit_ParSet1=>padefit_ParSet1_d>
-   CALL padefit_ParSet1( sqrtrs, 2, ecF, vcF )              ! ecP = e_c Ferromagnetic    !<GPU:padefit_ParSet1=>padefit_ParSet1_d>
-   CALL padefit_ParSet1( sqrtrs, 3, ac,  dac )              ! ac = "spin stiffness"      !<GPU:padefit_ParSet1=>padefit_ParSet1_d>
+   CALL padefit_ParSet1( sqrtrs, 1, ecP, vcP )              ! ecF = e_c Paramagnetic
+   CALL padefit_ParSet1( sqrtrs, 2, ecF, vcF )              ! ecP = e_c Ferromagnetic
+   CALL padefit_ParSet1( sqrtrs, 3, ac,  dac )              ! ac = "spin stiffness"
    !
    ac = ac * iddfz0
    dac = dac * iddfz0
@@ -659,7 +671,8 @@ END SUBROUTINE vwn_spin
 !
 !
 !----
-SUBROUTINE padefit_ParSet1( x, i, fit, dfit )                           !<GPU:DEVICE>
+SUBROUTINE padefit_ParSet1( x, i, fit, dfit )
+!$acc routine (padefit_ParSet1) seq
    !----
    !! It implements formula [4.4] in:
    !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
@@ -709,7 +722,8 @@ SUBROUTINE padefit_ParSet1( x, i, fit, dfit )                           !<GPU:DE
            bx0fx0(i) * ( 2.0_DP/xx0 - txbfx - 4.0_DP*(b(i)+2.0_DP*x0(i))*itxbQ )  )
    !
 END SUBROUTINE
-SUBROUTINE padefit_ParSet2( x, i, fit, dfit )                           !<GPU:DEVICE>
+SUBROUTINE padefit_ParSet2( x, i, fit, dfit )
+!$acc routine (padefit_ParSet2) seq
    !----
    !! It implements formula [4.4] in:
    !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
@@ -762,7 +776,8 @@ END SUBROUTINE
 !
 !
 !-----------------------------------------------------------------------------------------
-SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )
+!$acc routine (vwn1_rpa_spin) seq
    !---------------------------------------------------------------------------------------
    !
    USE kind_l, ONLY: DP
@@ -817,9 +832,9 @@ SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:
    fz = cfz1 * (trup13*trup + trdw13*trdw - 2.0_DP)     ! f(zeta)
    dfz = cfz2 * (trup13 - trdw13)                       ! df / dzeta
    !
-   CALL padefit_ParSet2( sqrtrs, 1, ecP, vcP ) ! ecF = e_c Paramagnetic    !<GPU:padefit_ParSet2=>padefit_ParSet2_d>
-   CALL padefit_ParSet2( sqrtrs, 2, ecF, vcF ) ! ecP = e_c Ferromagnetic   !<GPU:padefit_ParSet2=>padefit_ParSet2_d>
-   CALL padefit_ParSet2( sqrtrs, 3, ac,  dac ) ! ac = "spin stiffness"     !<GPU:padefit_ParSet2=>padefit_ParSet2_d>
+   CALL padefit_ParSet2( sqrtrs, 1, ecP, vcP ) ! ecF = e_c Paramagnetic
+   CALL padefit_ParSet2( sqrtrs, 2, ecF, vcF ) ! ecP = e_c Ferromagnetic
+   CALL padefit_ParSet2( sqrtrs, 3, ac,  dac ) ! ac = "spin stiffness"
    !
    ac = ac * iddfz0
    dac = dac * iddfz0
@@ -837,7 +852,8 @@ END SUBROUTINE
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )
+!$acc routine (pw_spin) seq
   !-----------------------------------------------------------------------
   !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
   !
@@ -946,7 +962,8 @@ END SUBROUTINE pw_spin
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<GPU:DEVICE>
+SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )
+!$acc routine (lsd_lyp) seq
   !==--------------------------------------------------------------==
   !==  C. LEE, W. YANG, AND R.G. PARR, PRB 37, 785 (1988)          ==
   !==  THIS IS ONLY THE LDA PART                                   ==
