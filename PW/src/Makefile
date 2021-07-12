@@ -258,7 +258,9 @@ wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
 gram_schmidt.o \
-rotate_xpsi.o
+rotate_xpsi.o  \
+rotate_xpsi_gpu.o \
+
 
 # GPU versions of routines
 PWLIBS += \

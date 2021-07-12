@@ -48,6 +48,7 @@ SUBROUTINE c_bands( iter )
   ! ik : counter on k points
   ! ik_: k-point already done in a previous run
   LOGICAL :: exst
+  LOGICAL,EXTERNAL :: rmm_use_davidson, rmm_use_paro
   !
   !
   CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
@@ -77,7 +78,13 @@ SUBROUTINE c_bands( iter )
   ELSEIF ( isolve == 3 ) THEN
      WRITE( stdout, '(5X,"ParO style diagonalization")')
   ELSEIF ( isolve == 4 ) THEN
-     WRITE( stdout, '(5X,"RMM-DIIS diagonalization")')
+     IF (rmm_use_davidson(iter)) THEN 
+       WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
+     ELSE IF (rmm_use_paro(iter)) THEN 
+      WRITE( stdout, '(5X,"ParO style diagonalization")')
+     ELSE 
+       WRITE( stdout, '(5X,"RMM-DIIS diagonalization")')
+     END IF 
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   ENDIF
@@ -258,6 +265,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   EXTERNAL hs_1psi, s_1psi, hs_psi
   EXTERNAL hs_psi_gpu
   EXTERNAL hs_1psi_gpu, s_1psi_gpu
+  LOGICAL, EXTERNAL   :: rmm_use_davidson, rmm_use_paro
   ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
   ! subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
@@ -272,7 +280,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
   external g_1psi
   external g_1psi_gpu
-
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
@@ -337,7 +344,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     INTEGER :: j
     !
-    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3) THEN
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .OR. rmm_use_paro(iter))   THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
@@ -442,7 +449,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           !
        ENDDO CG_loop
        !
-    ELSE IF ( isolve == 4 ) THEN
+    ELSE IF ( isolve == 4 .AND. .NOT. rmm_use_davidson(iter)) THEN
        !
        ! ... RMM-DIIS diagonalization
        !
@@ -700,7 +707,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     ENDIF
     !
     !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG, 3 PARO, 4 RMM)', isolve; FLUSH(6)
-    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 ) THEN
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .or. rmm_use_paro(iter)) THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
@@ -805,7 +812,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           !
        ENDDO CG_loop
        !
-    ELSE IF ( isolve == 4 ) THEN
+    ELSE IF ( isolve == 4 .AND. .NOT. rmm_use_davidson(iter) )  THEN
        !
        ! ... RMM-DIIS diagonalization
        !
@@ -1039,6 +1046,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     LOGICAL :: test_exit_cond
     !
+    
     IF ( lscf .AND. lgcscf ) THEN
        !
        ! ... tight condition for GC-SCF
@@ -1290,3 +1298,19 @@ SUBROUTINE c_bands_nscf( )
 9000 FORMAT( '     total cpu time spent up to now is ',F10.1,' secs' )
   !
 END SUBROUTINE c_bands_nscf
+
+FUNCTION rmm_use_davidson(iter_) RESULT (res)
+  USE command_line_options, ONLY: rmm_with_paro_ 
+  IMPLICIT NONE
+  INTEGER,INTENT(IN) :: iter_ 
+  LOGICAL :: res 
+  res = (.NOT. rmm_with_paro_) .AND. ( iter_ < 3 .OR. MOD(iter_,5) == 0) 
+END FUNCTION rmm_use_davidson
+
+FUNCTION rmm_use_paro(iter_) RESULT (res)
+  USE command_line_options, ONLY: rmm_with_paro_
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: iter_ 
+  LOGICAL  :: res 
+  res = (rmm_with_paro_) .AND.  (MOD(iter_,8) == 0) 
+END FUNCTION rmm_use_paro

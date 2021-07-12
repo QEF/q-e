@@ -70,9 +70,7 @@ SUBROUTINE rotate_xpsi_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nbnd)
 
-!civn 
-write(*,*) '@chk rotate_xpsi_gamma_gpu'
-!
+
   npw2  = 2 * npw
   npwx2 = 2 * npwx
   !

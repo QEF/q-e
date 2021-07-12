@@ -57,9 +57,7 @@ SUBROUTINE rotate_xpsi_gamma( h_psi, s_psi, overlap, &
     ! s_psi(npwx,npw,nbnd,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nbnd)
-!civn 
-write(*,*) '@chk rotate_xpsi_gamma'
-!
+
   npw2  = 2 * npw
   npwx2 = 2 * npwx
   !

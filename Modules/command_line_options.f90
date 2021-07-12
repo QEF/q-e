@@ -22,7 +22,7 @@ MODULE command_line_options
   INTEGER :: nargs = 0
   ! ... QE arguments read from command line
   INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1, nyfft_ = 1, nmany_ = 1
-  LOGICAL :: pencil_decomposition_ = .false.
+  LOGICAL :: pencil_decomposition_ = .false., rmm_with_paro_ = .false. 
   ! ... Indicate if using library init
   LOGICAL :: library_init = .FALSE.
   ! ... input file name read from command line
@@ -152,6 +152,14 @@ CONTAINS
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) nmany_
               narg = narg + 1
+           CASE ( '-rmmparo', '-rmm_with_paro', '-rmm_use_paro' )
+              IF (read_string) THEN
+                 CALL my_getarg ( input_command_line, narg, arg )
+              ELSE
+                 CALL get_command_argument ( narg, arg )
+              ENDIF
+              READ ( arg, *, ERR = 15, END = 15) rmm_with_paro_
+              narg = narg + 1
            CASE DEFAULT
               command_line = TRIM(command_line) // ' ' // TRIM(arg)
         END SELECT
@@ -174,6 +182,7 @@ CONTAINS
      CALL mp_bcast( nband_ , root, world_comm ) 
      CALL mp_bcast( ndiag_ , root, world_comm ) 
      CALL mp_bcast( pencil_decomposition_ , root, world_comm )
+     CALL mp_bcast( rmm_with_paro_, root, world_comm) 
      
   END SUBROUTINE get_command_line
   !
