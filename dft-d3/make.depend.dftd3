@@ -1,8 +1,0 @@
-api.o: common.o core.o sizes.o
-core.o: common.o pars.o sizes.o
-pars.o: common.o sizes.o
-dftd3_qe.o : api.o
-dftd3_qe.o : common.o
-dftd3_qe.o : core.o
-dftd3_qe.o : sizes.o
-test_code.o : api.o

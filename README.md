@@ -63,7 +63,7 @@ The following libraries have been isolated and partially encapsulated in view of
 - upflib: pseudopotential-related code
 
 ## GPU-enabled version
-Since Feb.2021 this repository also works for GPU's (currently only NVidia). See file [README_GPU.md](README_GPU.md).
+Since Feb.2021 this repository also works for GPU's (currently only NVIDIA). See file [README_GPU.md](README_GPU.md).
 
 ## Contributing
 Quantum ESPRESSO is an open project: contributions are welcome.

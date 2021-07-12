@@ -77,7 +77,7 @@ MODULE lmdif_module
       DOUBLEPRECISION x (n), fvec (m)
       EXTERNAL fcn
       ! internal variables
-      INTEGER ipvt(n), maxfev
+      INTEGER ipvt(n), maxfev, mode
       DOUBLEPRECISION qtf(n), fjac(m,n), diag(n)
       DOUBLEPRECISION wa1 (n), wa2(n), wa3(n), wa4(m)
       INTEGER iwa (n), nprint, nfev

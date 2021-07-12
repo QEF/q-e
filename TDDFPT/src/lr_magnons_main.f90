@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,7 @@ PROGRAM lr_magnons_main
   ! It applys the Lanczos algorithm to the matrix of equations coming from TDDFPT. 
   !
   ! Created by Tommaso Gorni (2018)
-  ! modified by Oscar Baseggio (2019)
+  ! Modified by Oscar Baseggio (2019)
   !
   USE lr_lanczos,            ONLY : one_lanczos_step
   USE io_global,             ONLY : stdout
@@ -23,9 +23,8 @@ PROGRAM lr_magnons_main
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code3, &
-                                  & magnons, approximation, V0psi, &
-                                  & evc1_rgt, evc1_lft, evc1_rgt_old, evc1_lft_old, &
-                                  & b_pol, n_op
+                                  & magnons, approximation, V0psi, ipol, n_op, &
+                                  & evc1_rgt, evc1_lft, evc1_rgt_old, evc1_lft_old
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
@@ -145,7 +144,7 @@ PROGRAM lr_magnons_main
         LR_polarization = ip
         pol_index = LR_polarization
      ELSE
-        LR_polarization = b_pol
+        LR_polarization = ipol
      ENDIF
      !
      ! Read the starting Lanczos vectors V0psi and O_psi for magnons from the file,
@@ -243,13 +242,12 @@ SUBROUTINE lr_print_preamble_magnons()
 
     IMPLICIT NONE
 
-    WRITE( stdout, '(/5x,"----------------------------------------")' )
+    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
     WRITE( stdout, '(/5x,"Please cite this project as:")' )
-    WRITE( stdout, '(/5x,"T. Gorni, Iurii Timrov and S. Baroni,", &
-                   & /5x,"Spin dynamics from time-dependent density functional", &
-                   & /5x,"perturbation theory", &
-                   & /5x,"The European Physical Journal B volume 91, Article number: 249 (2018).")')
-    WRITE( stdout, '(/5x,"----------------------------------------")' )
+    WRITE( stdout, '(/5x,"T. Gorni, I. Timrov, and S. Baroni,", &
+                   & /5x,"Spin dynamics from time-dependent density functional perturbation theory,", &
+                   & /5x,"Eur. Phys. J. B 91, 249 (2018).")')
+    WRITE( stdout, '(/5x,"-------------------------------------------------------------------------")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
     !

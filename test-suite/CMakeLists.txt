@@ -14,14 +14,39 @@ if(NOT BASH_PROGRAM)
   return()
 endif()
 
+if(QE_ENABLE_MPI)
+  set(actual_test_num_procs ${TESTCODE_NPROCS})
+else()
+  set(actual_test_num_procs 1)
+endif()
+
+if(QE_ENABLE_OPENMP)
+  set(actual_test_num_threads ${TESTCODE_NTHREADS})
+else()
+  set(actual_test_num_threads 1)
+endif()
+
+math(EXPR TOT_PROCS "${actual_test_num_procs} * ${actual_test_num_threads}")
+message(VERBOSE "Each test runs on ${TOT_PROCS} processes_x_threads")
+
 function(qe_runner test_name label test_binary test_input test_output)
   if(QE_ENABLE_MPI)
     add_test(NAME ${test_name}
-             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/ctest_runner.sh ${label} ${test_output} ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input})
+             COMMAND ${BASH_PROGRAM} ${qe_SOURCE_DIR}/test-suite/ctest_runner.sh ${label} ${test_output} ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${TESTCODE_NPROCS} ${MPIEXEC_PREFLAGS} ${test_binary} -inp ${test_input})
   else()
     add_test(NAME ${test_name}
-             COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/ctest_runner.sh ${label} ${test_output} ${test_binary} -inp ${test_input})
+             COMMAND ${BASH_PROGRAM} ${qe_SOURCE_DIR}/test-suite/ctest_runner.sh ${label} ${test_output} ${test_binary} -inp ${test_input})
   endif()
+endfunction()
+
+function(download_pseudo test_name input_file_dir_prefix work_dir labels)
+  add_test(NAME ${test_name}
+           COMMAND "${qe_SOURCE_DIR}/test-suite/check_pseudo.sh" "${input_file_dir_prefix}"
+           WORKING_DIRECTORY "${work_dir}")
+  set_tests_properties(${test_name} PROPERTIES
+                       ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};NETWORK_PSEUDO=${NETWORK_PSEUDO}"
+                       RESOURCE_LOCK shared_pseudo_folder_lock
+                       LABELS "${labels};pseudo")
 endfunction()
 
 # skip checks for disabled features
@@ -39,17 +64,8 @@ execute_process(COMMAND sed -i "s/XXXXXX/${qe_SOURCE_DIR_FOR_SED}/" ${CMAKE_CURR
 
 foreach(test_category IN LISTS qe_test_categories)
   message(STATUS "generating tests in ${test_category} category")
-  #EXECUTE_PROCESS( COMMAND pwd ECHO_OUTPUT_VARIABLE)
-  #EXECUTE_PROCESS( COMMAND "./check_pseudo.sh" "${test_category}_"
-  #                 WORKING_DIRECTORY "${qe_SOURCE_DIR}/test-suite" ECHO_OUTPUT_VARIABLE)
-  set(check_pseudo_test_name "test-suite_pseudo_${test_category}")
-  add_test(NAME ${check_pseudo_test_name}
-           COMMAND "./check_pseudo.sh" "${test_category}_"
-           WORKING_DIRECTORY "${qe_SOURCE_DIR}/test-suite")
-  set_tests_properties(${check_pseudo_test_name} PROPERTIES
-                       ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};NETWORK_PSEUDO=${NETWORK_PSEUDO}"
-                       RESOURCE_LOCK shared_pseudo_folder_lock
-                       LABELS "system;${test_category}")
+  set(check_pseudo_test_name "system--${test_category}-pseudo")
+  download_pseudo(${check_pseudo_test_name} "${test_category}_" ${CMAKE_CURRENT_SOURCE_DIR} "system--${test_category}")
 
   file(GLOB category_subfolder_names
        LIST_DIRECTORIES TRUE
@@ -71,7 +87,7 @@ foreach(test_category IN LISTS qe_test_categories)
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testcode/bin/testcode.py -v -c ${subfolder_name} compare)
     set_tests_properties(${test_name_prefix}-correctness PROPERTIES
                          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                         LABELS "system;${subfolder_name}")
+                         LABELS "system--${test_category};${subfolder_name}")
 
     # an adhoc fix for matdyn input missing error from testcode.py
     file(GLOB matdyn_input_file_names
@@ -142,29 +158,14 @@ foreach(test_category IN LISTS qe_test_categories)
 
         qe_runner(${test_name} ${test_category} ${test_binary} ${test_input_relative} ${test_output_file})
 
-        if(QE_ENABLE_MPI)
-          set(actual_test_num_procs ${TESTCODE_NPROCS})
-        else()
-          set(actual_test_num_procs 1)
-        endif()
-
-        if(QE_ENABLE_OPENMP)
-          set(actual_test_num_threads ${TESTCODE_NTHREADS})
-        else()
-          set(actual_test_num_threads 1)
-        endif()
-
         set(expected_exit_msg_file "${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/${test_input_file_name_no_extension}.expected_exit_msg")
         if(EXISTS "${expected_exit_msg_file}")
           file(STRINGS "${expected_exit_msg_file}" expected_exit_msg)
         endif()
 
-        math(EXPR TOT_PROCS "${actual_test_num_procs} * ${actual_test_num_threads}")
-        #message("${subfolder_name} on ${TOT_PROCS} processes_x_threads")
-
         set_tests_properties(${test_name} PROPERTIES
                              WORKING_DIRECTORY ${test_work_dir_prefix}/${test_work_dir}
-                             ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};OMP_NUM_THREADS=${TESTCODE_NTHREADS}"
+                             ENVIRONMENT "ESPRESSO_PSEUDO=${ESPRESSO_PSEUDO};OMP_NUM_THREADS=${actual_test_num_threads}"
                              PROCESSORS ${TOT_PROCS} PROCESSOR_AFFINITY TRUE
                              REQUIRED_FILES ${test_input_relative}
                              RESOURCE_LOCK shared_workdir_${test_work_dir}
@@ -182,7 +183,7 @@ foreach(test_category IN LISTS qe_test_categories)
         endif()
         set_property(TEST ${test_name} APPEND PROPERTY PASS_REGULAR_EXPRESSION "${CHECK_SKIP_MESSAGE}")
 
-        set_property(TEST ${test_name} APPEND PROPERTY LABELS "system;${subfolder_name}")
+        set_property(TEST ${test_name} APPEND PROPERTY LABELS "system--${test_category};${subfolder_name}")
 
         # add dependency between workflow steps
         if(in_test_series)
@@ -195,3 +196,7 @@ foreach(test_category IN LISTS qe_test_categories)
     endforeach()
   endforeach()
 endforeach()
+
+if(QE_ENABLE_BENCHMARK)
+  add_subdirectory(benchmarks)
+endif()

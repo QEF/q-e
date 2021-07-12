@@ -3,6 +3,10 @@ qe_add_global_compile_definitions(__PGI)
 # set optimization specific flags
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mcache_align -Mlarge_arrays")
 
+if(QE_ENABLE_OPENACC)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc")
+endif()
+
 if(QE_ENABLE_CUDA)
     if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 20.7)
         set(CUDA_FLAG "-cuda")

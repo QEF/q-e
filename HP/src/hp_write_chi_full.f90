@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum_ESPRESSO group
+! Copyright (C) 2001-2021 Quantum_ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -37,12 +37,12 @@ SUBROUTINE hp_write_chi_full
   !
   WRITE(iunitchi,'(9x,"chi0 :")')
   DO na = 1, nath_sc
-     WRITE(iunitchi,'(1x,5f19.15)') (chi0(na,nb), nb=1,nath) 
+     WRITE(iunitchi,'(1x,5f21.15)') (chi0(na,nb), nb=1,nath) 
   ENDDO
   !
   WRITE(iunitchi,'(/9x,"chi :")')
   DO na = 1, nath_sc
-     WRITE(iunitchi,'(1x,5f19.15)') (chi(na,nb), nb=1,nath) 
+     WRITE(iunitchi,'(1x,5f21.15)') (chi(na,nb), nb=1,nath) 
   ENDDO
   !
   CLOSE(iunitchi)

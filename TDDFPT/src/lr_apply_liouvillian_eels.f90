@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -48,7 +48,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   ! Local variables
   !
   LOGICAL :: interaction1
-  INTEGER :: i,j,ir, ibnd, ig, ia, ios, is, ipol
+  INTEGER :: i,j,ir, ibnd, ig, ia, ios, is
   INTEGER :: ik,  &
              ikk, & ! index of the point k
              ikq, & ! index of the point k+q

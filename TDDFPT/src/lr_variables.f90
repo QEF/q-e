@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,10 +26,14 @@ MODULE lr_variables
   INTEGER :: iunTwfc = 31          ! unit where time-reversed wfc are stored
                                    ! (magnetic GS only)
   INTEGER :: nwordd0psi, nwordrestart, n_ipol
-  CHARACTER (len=10), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS', &
-                                   & code3 = 'turboMAGNONS'
+  CHARACTER (len=12), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS', &
+                                   code3 = 'turboMAGNONS'
   INTEGER :: size_evc
   CHARACTER (len=24) :: bgz_suffix
+  !
+  INTEGER :: ipol  ! Polarization direction for the electric field (optics)
+                   ! or for the magnetic field (magnons)
+                   ! 1=x, 2=y, 3=z, 4={x,y,z}
   !
   LOGICAL :: lr_exx
   REAL(kind=dp) :: scissor
@@ -137,10 +141,6 @@ MODULE lr_variables
                                 !
   !
   INTEGER :: n_op = 3
-  INTEGER :: b_pol = 0   ! b polarization: 0 == x,y,z
-                         !                 1 == x
-                         !                 2 == y
-                         !                 3 == z
   COMPLEX(kind=dp), ALLOCATABLE :: &
                alpha_magnons_store(:,:), &
                gamma_magnons_store(:,:)

@@ -352,7 +352,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
          IF ( upf(np)%tvanp ) THEN
             DO iv = 1, nh(np)
                DO jv = iv, nh(np)
-                  CALL qvan2( 1, iv, jv, np, pref, ylm_dk )
+                  CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
                   q_dk(iv,jv,np) = omega*pref
                   q_dk(jv,iv,np) = omega*pref
                ENDDO

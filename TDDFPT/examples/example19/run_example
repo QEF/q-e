@@ -18,7 +18,7 @@ $ECHO "to calculate magnon dispersion of bulk iron."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x turbo_magnons.x turbo_spectrum.x"
-PSEUDO_LIST="Fe.pbe-nc.UPF"
+PSEUDO_LIST="Fe.lda-pseudoDojo.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -119,7 +119,7 @@ cat > $PREFIX.scf.in << EOF
     electron_maxstep = 200
  /
 ATOMIC_SPECIES
-Fe  55.85   Fe.pbe-nc.UPF
+Fe  55.85   Fe.lda-pseudoDojo.UPF
 ATOMIC_POSITIONS alat
 Fe  0.00000000 0.00000000 0.00000000
 K_POINTS automatic
@@ -139,12 +139,12 @@ cat > $PREFIX.tddfpt.in << EOF
    restart = .false.
  /
 &lr_control
-    itermax          = 800,
+    itermax          = 1600,
     q1               = 0.1d0,
     q2               = 0.1d0,
     q3               = 0.0d0,
     pseudo_hermitian = .true.
-    b_pol = 2
+    ipol             = 2
 /
 EOF
 $ECHO "  Running the TDDFPT calculation for $PREFIX..."
@@ -158,9 +158,9 @@ cat > $PREFIX.tddfpt_pp.in << EOF
    prefix = '$PREFIX',
    outdir = '$TMP_DIR/',
    magnons = .true.,
-   itermax0 = 800,
-   itermax = 800,
-   extrapolation='no',
+   itermax0 = 1600,
+   itermax = 20000,
+   extrapolation='osc',
    epsil = 0.001,
    ipol = 2,
    units = 1,

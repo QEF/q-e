@@ -39,5 +39,8 @@ subroutine print_gpu_mem(out_unit)
   usedMB = (totalMem-freeMem)/(1024*1024);
   write(out_unit,'(5X, "GPU memory used/free/total (MiB): ", I0, A3, I0,A3, I0)') &
               & usedMB, " / ", freeMB, " / ", totalMB
+#else
+  implicit none
+  integer, intent(in) :: out_unit
 #endif
 end subroutine

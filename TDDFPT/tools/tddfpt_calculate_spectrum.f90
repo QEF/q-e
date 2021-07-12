@@ -376,7 +376,7 @@ PROGRAM lr_calculate_spectrum
      !
      IF (magnons) THEN
         !
-        WRITE(17,'("Chi is reported as CHI_(i)_(j) \hbar \omega (eV) &
+        WRITE(17,'("#",2x,"Chi is reported as CHI_(i)_(j) \hbar \omega (eV) &
                      & Re(chi) (e^2*a_0^2/eV) Im(chi) (e^2*a_0^2/eV) ")')
         !
         !

@@ -186,7 +186,7 @@ SUBROUTINE lr_init_nfo()
   !
   IF (magnons) THEN
      !
-     nwordwfc     =  nbnd * npwx * npol
+     nwordwfc = nbnd * npwx * npol
      !
      ! additional 2 for the anti-resonant part
      !
@@ -203,7 +203,7 @@ SUBROUTINE lr_init_nfo()
         CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
      ENDIF
      !
-     ! This  used to be in lr_alloc_init, moved here because I need these variables now
+     ! This used to be in lr_alloc_init, moved here because I need these variables now
      IF (allocated(evc)) THEN
         DEALLOCATE(evc)
         ALLOCATE(evc(npwx*npol,nbnd))
@@ -289,11 +289,11 @@ SUBROUTINE lr_init_nfo()
   !
   if ( allocated(Tevc) ) deallocate( Tevc )
   !
-  IF(magnons) THEN
-   do ik = 1, nks
-     write(stdout,*) mpime, ik, nbnd_occ(ik), nbnd_occx
-   enddo
-  ENDIF
+  !IF (magnons) THEN
+  ! do ik = 1, nks
+  !   write(stdout,*) mpime, ik, nbnd_occ(ik), nbnd_occx
+  ! enddo
+  !ENDIF
   !
   ! 4) Compute alpha_pv
   !
