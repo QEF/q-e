@@ -1,4 +1,8 @@
 xclib_test.x is a testing program for the XClib library.
+------
+This is still a prototype version. The next release will include a simpler 
+and more stable version.
+------
 
 To compile the test program, once you have properly configured QE,
 inside the directory XClib type:
@@ -7,7 +11,8 @@ inside the directory XClib type:
 
 Then you can run tests using commands like:
 
-	./xclib_test.x < input_file > output_file
+	./xclib_test.x < input_file > output_file                [ serial ]
+        mpirun -np=2 xclib_test.x < input_file > output file     [parallel]
 
 Four options available:
 
@@ -21,7 +26,7 @@ Four options available:
                 test='dft-info'
                 dft1='mgga_x_scan mgga_c_scan'
             /
-            
+    
 * gen-benchmark: the program generates a set of data to compare the
                  XC output to.
                  Example of input file content:

@@ -58,7 +58,7 @@ PROGRAM xclib_test
   !
   INTEGER :: mype, npes, comm, ntgs, root
   LOGICAL :: iope
-  INTEGER :: i, ierr, ierrm
+  INTEGER :: i, ierr, ierrm, ios
   INTEGER :: nnodes, nlen
   !
   INTEGER, PARAMETER :: stdin  = 5
@@ -212,11 +212,12 @@ PROGRAM xclib_test
   ! GET INPUT FROM FILE
   !==========================================================================
   !
+  ios=0
   IF (mype==root) THEN
-    READ( stdin, input_namelist )
+    READ( unit=stdin, nml=input_namelist, iostat=ios )
     IF ( test(1:4)=='gen-' ) THEN
       test = 'exe-benchmark'
-      WRITE( stdout, input_namelist )
+      WRITE( unit=stdout, nml=input_namelist, DELIM='QUOTE', iostat=ios )
       test = 'gen-benchmark'
     ENDIF  
   ENDIF
