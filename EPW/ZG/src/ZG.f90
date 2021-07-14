@@ -3066,7 +3066,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         WRITE(*,*) "Print ZG configuration"
         IF (compute_error) THEN
           WRITE(80,'(A, 1F12.6)') "Sum of diagonal terms per q-point:", DBLE(SUM(sum_diag_B) / ctrAB)
-          WRITE(80,'(A, 1F12.6,i)') "Error and niter index:", SUM(ABS(ratio_zg)) / nat3, kk !
+          WRITE(80,'(A, 1F12.6,i8)') "Error and niter index:", SUM(ABS(ratio_zg)) / nat3, kk !
         ENDIF
         !WRITE(80,*) "Sum of error per q-point and loop index:", SUM(sum_error_B)/ctrAB, kk !
         WRITE(80,'(A20, 1F6.2,A2)') 'Temperature is: ' , T ,' K'
