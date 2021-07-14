@@ -6,13 +6,11 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
   epwwrite    = .true.
   epwread     = .false.
-
-  vme         = .false. 
+  vme         = 'dipole'
 
   nbndsub     =  4
 
@@ -21,7 +19,7 @@
   iprint      = 2
   dis_win_max = 12
   dis_froz_max= 7
-  proj(1)     = 'Si:sp3'   
+  proj(1)     = 'Si:sp3'
 
   iverbosity  = 0
 
@@ -35,19 +33,17 @@
 
   dvscf_dir   = './save'
 
-  nkf1        = 6
-  nkf2        = 6
-  nkf3        = 6
+  nkf1 = 6
+  nkf2 = 6
+  nkf3 = 6
+  nqf1 = 6
+  nqf2 = 6
+  nqf3 = 6
 
-  nqf1        = 6
-  nqf2        = 6
-  nqf3        = 6
-
-  nk1         = 3
-  nk2         = 3
-  nk3         = 3
-
-  nq1         = 3
-  nq2         = 3
-  nq3         = 3
+  nk1  = 3
+  nk2  = 3
+  nk3  = 3
+  nq1  = 3
+  nq2  = 3
+  nq3  = 3
  /

@@ -387,7 +387,7 @@
     !! This routine computes the adaptative broadening
     !! It requires electronic and phononic velocities
     !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
-    !! Samuel Ponce & Francesco Macheda
+    !! 2019: Samuel Ponce & Francesco Macheda
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : alat, bg
@@ -471,7 +471,7 @@
         e_2 = etf(ibndmin - 1 + jbnd, ikk)
         IF (ABS(e_2 - e_1) < eps4) THEN
           n_av = n_av + 1
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             vmek_av(:) = vmek_av(:) + REAL(vmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
           ELSE
             vmek_av(:) = vmek_av(:) + REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
@@ -486,7 +486,7 @@
       DO imode = 1, nmodes
         IF (w(imode) > 0) THEN
           vel_diff(:) = vmeq(:, imode) / (2d0 * w(imode)) - vmek(:, ibnd)
-          !IF (vme) THEN
+          !IF (vme == 'wannier') THEN
           !  vel_diff(:) = REAL(vmefp(:, imode, imode) / &
           !                    (2d0 * w(imode)) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
           !ELSE
@@ -634,72 +634,113 @@
     ENDIF
     icbm = ivbm + 1 ! Nb of bands
     !
+    ! If we only Wannierze valence bands.
+    IF (icbm > nbndsub) icbm = 0
+    !
     ! Initialization value. Should be large enough ...
     evbm = -10000d0
     ecbm = 10000d0 ! In Ry
     !
-    DO ik = 1, nkf
-      ikk = 2 * ik - 1
-      DO ibnd = 1, nbndsub
-        IF (ibnd < ivbm + 1) THEN
-          IF (etf(ibnd, ikk) > evbm) THEN
-            evbm = etf (ibnd, ikk)
+    ! We Wannerize both the CB and VB
+    IF (ivbm > 0 .AND. icbm > 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          IF (ibnd < ivbm + 1) THEN
+            IF (etf(ibnd, ikk) > evbm) THEN
+              evbm = etf(ibnd, ikk)
+            ENDIF
           ENDIF
-        ENDIF
-        ! Find cbm index
-        IF (ibnd > ivbm) THEN
+          ! Find cbm index
+          IF (ibnd > ivbm) THEN
+            IF (etf(ibnd, ikk) < ecbm) THEN
+              ecbm = etf(ibnd, ikk)
+            ENDIF
+          ENDIF
+        ENDDO
+      ENDDO
+      ! Find max and min across pools
+      CALL mp_max(evbm, inter_pool_comm)
+      CALL mp_min(ecbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+        WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
+      ENDIF
+    ENDIF ! ivbm > 0 .AND. icbm > 0
+    !
+    ! We only Wannierze the valence bands
+    IF (icbm == 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
+          IF (etf(ibnd, ikk) > evbm) THEN
+            evbm = etf(ibnd, ikk)
+          ENDIF
+        ENDDO
+      ENDDO
+      ! Find max across pools
+      CALL mp_max(evbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+      ENDIF
+    ENDIF ! icbm == 0
+    !
+    ! If we only Wannierized the conduction bands
+    IF (ivbm == 0) THEN
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        DO ibnd = 1, nbndsub
           IF (etf(ibnd, ikk) < ecbm) THEN
             ecbm = etf(ibnd, ikk)
           ENDIF
-        ENDIF
+        ENDDO
       ENDDO
-    ENDDO
-    !
-    ! Find max and min across pools
-    !
-    CALL mp_max(evbm, inter_pool_comm)
-    CALL mp_min(ecbm, inter_pool_comm)
-    !
-    IF (itemp == 1) THEN
-      WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
-      WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
-    ENDIF
+      ! Find min across pools
+      CALL mp_min(ecbm, inter_pool_comm)
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
+      ENDIF
+    ENDIF ! ivbm == 0
     !
     ! Store e^(e_nk/kbT) on each core
-    DO ik = 1, nkf
-      DO ibnd = 1, nbndsub
-        ikk = 2 * ik - 1
-        ! Because the number are so large. It does lead to instabilities
-        ! Therefore we rescale everything to the VBM
-        IF (ABS(etemp) < eps80) THEN
-          CALL errore('fermicarrier', 'etemp cannot be 0', 1)
-        ELSE
-          arg = (etf(ibnd, ikk) - evbm) / etemp
-        ENDIF
-        !
-        IF (arg < - maxarg) THEN
-          ks_exp(ibnd, ik) = zero
-        ELSE
-          ks_exp(ibnd, ik) = EXP(arg)
-        ENDIF
+    IF (ivbm > 0) THEN
+      DO ik = 1, nkf
+        DO ibnd = 1, nbndsub
+          ikk = 2 * ik - 1
+          ! Because the number are so large. It does lead to instabilities
+          ! Therefore we rescale everything to the VBM
+          IF (ABS(etemp) < eps80) THEN
+            CALL errore('fermicarrier', 'etemp cannot be 0', 1)
+          ELSE
+            arg = (etf(ibnd, ikk) - evbm) / etemp
+          ENDIF
+          !
+          IF (arg < - maxarg) THEN
+            ks_exp(ibnd, ik) = zero
+          ELSE
+            ks_exp(ibnd, ik) = EXP(arg)
+          ENDIF
+        ENDDO
       ENDDO
-    ENDDO
+    ENDIF ! ivbm > 0
     !
     ! Store e^(e_nk/kbT) on each core for the electrons (CBM only)
-    DO ik = 1, nkf
-      DO ibnd = 1, nbndsub
-        ikk = 2 * ik - 1
-        ! Because the number are so large. It does lead to instabilities
-        ! Therefore we rescale everything to the CBM
-        arg = (etf(ibnd, ikk) - ecbm) / etemp
-        !
-        IF (arg > maxarg) THEN
-          ks_expcb(ibnd, ik) = 1.0d200
-        ELSE
-          ks_expcb(ibnd, ik) = EXP(arg)
-        ENDIF
+    IF (icbm > 0) THEN
+      DO ik = 1, nkf
+        DO ibnd = 1, nbndsub
+          ikk = 2 * ik - 1
+          ! Because the number are so large. It does lead to instabilities
+          ! Therefore we rescale everything to the CBM
+          arg = (etf(ibnd, ikk) - ecbm) / etemp
+          !
+          IF (arg > maxarg) THEN
+            ks_expcb(ibnd, ik) = 1.0d200
+          ELSE
+            ks_expcb(ibnd, ik) = EXP(arg)
+          ENDIF
+        ENDDO
       ENDDO
-    ENDDO
+    ENDIF ! icbm > 0
     !
     ! Case 1 : Intrinsic mobilities (electron and hole concentration are the same)
     ! Starting bounds energy for the biscection method. The energies are rescaled to the VBM
@@ -769,7 +810,11 @@
     !
     ! Case 2 :
     ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)
-    factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    IF (system_2d) THEN
+      factor = inv_cell * (bohr2ang * ang2cm)**(-2.d0)
+    ELSE
+      factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    ENDIF
     eup = 1d-160 ! e^(-large) = 0.0 (small)
     elw = 1.0d0 ! e^0 = 1
     IF (ncarrier < -1E5 .OR. (int_mob .AND. carrier)) THEN
@@ -992,20 +1037,18 @@
       ENDDO
     ENDDO
     IF (wfcelec) then
-        DO ik = 1, nkqf
-          DO ibnd = 1, nbndsub
-            ebnd = etf(ibnd, ik)
-            !
-            IF (ebnd < fsthick + ef .and. ebnd > ef) THEN
-            !IF (ABS(ebnd - ef) < fsthick) THEN
-              ibndmin = MIN(ibnd, ibndmin)
-              ibndmax = MAX(ibnd, ibndmax)
-              ebndmin = MIN(ebnd, ebndmin)
-              ebndmax = MAX(ebnd, ebndmax)
-            ENDIF
-            !
-          ENDDO
+      DO ik = 1, nkqf
+        DO ibnd = 1, nbndsub
+          ebnd = etf(ibnd, ik)
+          !
+          IF (ebnd < fsthick + ef .AND. ebnd > ef) THEN
+            ibndmin = MIN(ibnd, ibndmin)
+            ibndmax = MAX(ibnd, ibndmax)
+            ebndmin = MIN(ebnd, ebndmin)
+            ebndmax = MAX(ebnd, ebndmax)
+          ENDIF
         ENDDO
+      ENDDO
     ENDIF
     !
     tmp = DBLE(ibndmin)

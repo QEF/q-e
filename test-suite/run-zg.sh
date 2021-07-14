@@ -14,9 +14,14 @@ else
   unset PARA_PREFIX
 fi
 
-echo "Running ZG ..."
-echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3"
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3
+echo $0" "$@
+if [[ "$1" == "0" ]]
+ then
+ echo "Running ZG ..."
+ echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3"
+ ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ZG.x -input $1 > $2 2> $3
+fi
+#
 if [[ -e CRASH ]]
 then
     cat $2

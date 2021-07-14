@@ -266,12 +266,12 @@
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE constants,     ONLY : electron_si
-    USE symm_base,     ONLY : nrot
+    USE symm_base,     ONLY : nsym
     USE mp,            ONLY : mp_sum
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)
     !! occupations factor produced by SERTA or IBTE
@@ -380,12 +380,12 @@
     USE cell_base,        ONLY : at, bg
     USE epwcom,           ONLY : nkf1, nkf2, nkf3
     USE elph2,            ONLY : s_bztoibz
-    USE symm_base,        ONLY : s, nrot
+    USE symm_base,        ONLY : s, nsym
     USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3)
     !! Occupation function produced by SERTA or IBTE
@@ -429,7 +429,7 @@
     fi_cart = f_out
     !
     ! Loop on the point equivalent by symmetry in the full BZ
-    DO nb = 1, nrot
+    DO nb = 1, nsym
       IF (bztoibz_mat(nb) > 0) THEN
         ikbz = bztoibz_mat(nb)
         !
@@ -559,7 +559,8 @@
     SUBROUTINE compute_sigma(f_out, vkk_all, wkf_all, sigma, fi_check)
     !-----------------------------------------------------------------------
     !!
-    !!  Computes the conductivity tensor without using symetries
+    !! Computes the conductivity tensor without using symetries
+    !! With or without B-field
     !!
     !----------------------------------------------------------------------
     USE kinds,            ONLY : DP
@@ -600,7 +601,7 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE compute_sigma
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE prtmob(itemp, sigma, carrier_density, fi_check, ef0, etemp, max_mob)
     !-----------------------------------------------------------------------
@@ -686,7 +687,7 @@
     USE cell_base,     ONLY : omega, at, alat, bg
     USE elph2,         ONLY : dos, nkqtotf, s_bztoibz, nbndfst, nktotf
     USE io_var,        ONLY : iufilmu_nk
-    USE symm_base,     ONLY : s, nrot
+    USE symm_base,     ONLY : s, nsym
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, eps10, &
@@ -698,7 +699,7 @@
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
-    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nsym, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf)
     !! occupations factor produced by SERTA or IBTE
@@ -786,7 +787,7 @@
           fi_cart = f_out(:, ibnd, ik)
           xkk_cart = xkf_all(:, ik)
           CALL cryst_to_cart(1, xkk_cart, bg, 1)
-          DO nb = 1, nrot
+          DO nb = 1, nsym
             IF (bztoibz_mat(nb, ik) > 0) THEN
               sigma(:, :) = zero
               mobility_nk(:, :) = zero
@@ -1281,6 +1282,296 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE plot_fermisurface
     !----------------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE print_mob_b(f_out_b, vkk_all_b, etf_all_b, wkf_all_b, ef0, &
+                           carrier_density, sigma, max_mob)
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine prints the mobility without k-point symmetry with finite B-field
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : ncarrier, nstemp, assume_metal
+    USE elph2,         ONLY : nbndfst, nkpt_bztau_max, gtemp
+    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+                              bohr2ang, ang2cm, hbarJ
+    USE constants,     ONLY : electron_si
+    USE mp,            ONLY : mp_sum
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: f_out_b(3, nbndfst, nkpt_bztau_max, nstemp)
+    !! Occupation function produced by SERTA or IBTE
+    REAL(KIND = DP), INTENT(in) :: vkk_all_b(3, nbndfst, nkpt_bztau_max)
+    !! Velocity
+    REAL(KIND = DP), INTENT(in) :: etf_all_b(nbndfst, nkpt_bztau_max)
+    !! Eigenenergies of k
+    REAL(KIND = DP), INTENT(in) :: wkf_all_b(nkpt_bztau_max)
+    !! Weight of k
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
+    !! The Fermi level
+    REAL(KIND = DP), INTENT(inout) :: carrier_density(nstemp)
+    !! Carrier density [nb of carrier per unit cell]
+    REAL(KIND = DP), INTENT(inout) :: sigma(3, 3, nstemp)
+    !! Conductivity
+    REAL(KIND = DP), INTENT(inout), OPTIONAL :: max_mob(nstemp)
+    !! The maximum mobility computed by thr prtmob routine.
+    !
+    ! Local variables
+    INTEGER :: itemp
+    !! temperature index
+    INTEGER :: ik
+    !! k-point index
+    INTEGER :: ibnd
+    !! band index
+    REAL(KIND = DP) :: etemp
+    !! Temperature in Ry (this includes division by kb)
+    REAL(KIND = DP) :: sigma_tmp(3, 3)
+    !! Electrical conductivity
+    REAL(KIND = DP) :: ekk
+    !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
+    REAL(KIND = DP) :: fnk
+    !! Fermi-Dirac occupation function
+    REAL(KIND = DP) :: Fi_check(3)
+    !! Sum rule on population
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! Compute the approximate theta function. Here computes Fermi-Dirac
+    REAL(KIND = DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss:  an approximation to the delta function
+    !
+    IF (PRESENT(max_mob)) THEN
+      max_mob(:) = zero
+    ENDIF
+    CALL prtheader_mob()
+    DO itemp = 1, nstemp
+      carrier_density(itemp) = 0.0
+      etemp = gtemp(itemp)
+      sigma_tmp(:, :) = zero
+      fi_check(:) = zero
+      DO ik = 1,  nkpt_bztau_max
+        DO ibnd = 1, nbndfst
+          !  energy at k (relative to Ef)
+          ekk = etf_all_b(ibnd, ik) - ef0(itemp)
+          fnk = wgauss(-ekk / etemp, -99)
+          IF (etf_all_b(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma(f_out_b(:, ibnd, ik, itemp), vkk_all_b(:, ibnd, ik), wkf_all_b(ik), sigma_tmp, fi_check)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density(itemp) = carrier_density(itemp) + wkf_all_b(ik) * (1.0d0 - fnk)
+          ELSEIF (etf_all_b(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma(f_out_b(:, ibnd, ik, itemp), vkk_all_b(:, ibnd, ik), wkf_all_b(ik), sigma_tmp, fi_check)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density(itemp) = carrier_density(itemp) + wkf_all_b(ik) * fnk
+          ELSEIF (assume_metal) THEN
+            ! sum on all bands for metals
+            CALL compute_sigma(f_out_b(:, ibnd, ik, itemp), vkk_all_b(:, ibnd, ik), wkf_all_b(ik), sigma_tmp, fi_check)
+            carrier_density(itemp) = carrier_density(itemp) + wkf_all_b(ik) * fnk
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! ik
+      IF (PRESENT(max_mob)) THEN
+        CALL prtmob(itemp, sigma_tmp, carrier_density(itemp), fi_check, ef0(itemp), etemp, max_mob(itemp))
+      ELSE
+        CALL prtmob(itemp, sigma_tmp, carrier_density(itemp), fi_check, ef0(itemp), etemp)
+      ENDIF
+      sigma(:, :, itemp) = sigma_tmp(:, :)
+    ENDDO ! itemp
+    !-----------------------------------------------------------------------
+    END SUBROUTINE print_mob_b
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE print_hall(carrier_density, sigma_serta, sigma_bte, sigmab_serta, sigmab_bte)
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine print the final conductivity, mobility and Hall factor
+    !!
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : system_2d, nstemp, bfieldx, bfieldy, bfieldz
+    USE low_lvl,       ONLY : matinv3
+    USE io_global,     ONLY : stdout
+    USE cell_base,     ONLY : omega, at, alat
+    USE elph2,         ONLY : gtemp
+    USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, cm2m, &
+                              bohr2ang, ang2cm, hbarJ
+    USE constants,     ONLY : electron_si
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: carrier_density(nstemp)
+    !! Carrier density [nb of carrier per unit cell]
+    REAL(KIND = DP), INTENT(in) :: sigma_serta(3, 3, nstemp)
+    !! SERTA conductivity tensor without Magnetic field.
+    REAL(KIND = DP), INTENT(in) :: sigma_bte(3, 3, nstemp)
+    !! BTE conductivity tensor without Magnetic field.
+    REAL(KIND = DP), INTENT(in) :: sigmab_serta(3, 3, nstemp)
+    !! SERTA conductivity tensor with Magnetic field.
+    REAL(KIND = DP), INTENT(in) :: sigmab_bte(3, 3, nstemp)
+    !! BTE conductivity tensor with Magnetic field.
+    !
+    ! Local variables
+    INTEGER :: itemp
+    !! Temperature index
+    REAL(KIND = DP) :: carrier_density_cm(nstemp)
+    !! Carrier density (cm^(-d))
+    REAL(KIND = DP) :: etemp
+    !! Temperature value in Ry
+    REAL(KIND = DP) :: b_norm
+    !! Norm of the B-field
+    REAL(KIND = DP) :: inv_cell
+    !! Inverse of the volume or Area
+    REAL(KIND = DP) :: mob_serta(3, 3, nstemp)
+    !! SERTA mobility tensor without Magnetic field.
+    REAL(KIND = DP) :: mob_bte(3, 3, nstemp)
+    !! BTE mobility tensor without Magnetic field.
+    REAL(KIND = DP) :: mobb_serta(3, 3, nstemp)
+    !! SERTA mobility tensor with Magnetic field.
+    REAL(KIND = DP) :: mobb_bte(3, 3, nstemp)
+    !! BTE mobility tensor with Magnetic field.
+    REAL(KIND = DP) :: sigma_serta_si(3, 3, nstemp)
+    !! SERTA conductivity tensor without Magnetic field in SI unit.
+    REAL(KIND = DP) :: sigma_bte_si(3, 3, nstemp)
+    !! BTE conductivity tensor without Magnetic field in SI unit.
+    REAL(KIND = DP) :: sigmab_serta_si(3, 3, nstemp)
+    !! SERTA conductivity tensor with Magnetic field in SI unit.
+    REAL(KIND = DP) :: sigmab_bte_si(3, 3, nstemp)
+    !! BTE conductivity tensor with Magnetic field in SI unit.
+    REAL(KIND = DP) :: hall_serta(3, 3, nstemp)
+    !! Hall factor
+    REAL(KIND = DP) :: hall(3, 3, nstemp)
+    !! Hall factor
+    REAL(KIND = DP) :: sigma_inv(3, 3, nstemp)
+    !! Inverse conductivity tensor
+    REAL(KIND = DP) :: mob_inv(3, 3, nstemp)
+    !! Inverse mobility tensor
+    !
+    ! Convert carrier number in true carrier density
+    carrier_density_cm(:) = zero
+    DO itemp = 1, nstemp
+      IF (system_2d) THEN
+        inv_cell = (at(3, 3) * alat) / omega
+        carrier_density_cm(itemp) = carrier_density(itemp) * (inv_cell * (bohr2ang * ang2cm)**(-2))
+      ELSE
+        inv_cell = 1.0d0 / omega
+        carrier_density_cm(itemp) = carrier_density(itemp) * (inv_cell * (bohr2ang * ang2cm)**(-3))
+      ENDIF
+      !
+      mob_serta(:, :, itemp)  = (sigma_serta(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
+                              / (carrier_density(itemp) * hbarJ)
+      mob_bte(:, :, itemp)    = (sigma_bte(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
+                              / (carrier_density(itemp) * hbarJ)
+      mobb_serta(:, :, itemp) = (sigmab_serta(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
+                              / (carrier_density(itemp) * hbarJ)
+      mobb_bte(:, :, itemp)   = (sigmab_bte(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
+                              / (carrier_density(itemp) * hbarJ)
+      !
+      ! Convert conductivity tensor in SI units [Siemens m^-1=Coulomb s^-1 V^-1 m^-d ]
+      ! in 3d: cm^2 s^-1 V^-1 * (cm ^-2  cmtom^-1 C) = Coulomb s^-1 V^-1
+      IF (system_2d) THEN
+        sigma_serta_si(:, :, itemp)  = mob_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
+        sigma_bte_si(:, :, itemp)    = mob_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
+        sigmab_serta_si(:, :, itemp) = mobb_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
+        sigmab_bte_si(:, :, itemp)   = mobb_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp))
+      ELSE
+        sigma_serta_si(:, :, itemp)  = mob_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
+        sigma_bte_si(:, :, itemp)    = mob_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
+        sigmab_serta_si(:, :, itemp) = mobb_serta(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
+        sigmab_bte_si(:, :, itemp)   = mobb_bte(:, :, itemp) * (electron_si * carrier_density_cm(itemp) * cm2m**(-1))
+      ENDIF
+    ENDDO ! itemp
+    !
+    b_norm = SQRT(bfieldx**2 + bfieldy**2 + bfieldz**2)
+    WRITE(stdout, '(/5x, a)') REPEAT('=',93)
+    WRITE(stdout, '(5x, a)') 'BTE in the self-energy relaxation time approximation (SERTA)'
+    WRITE(stdout, '(5x, a)') REPEAT('=',93)
+    DO itemp = 1, nstemp
+      etemp = gtemp(itemp)
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d) THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 1, itemp), '  |', sigmab_serta_si(:, 1, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 2, itemp), '  |', sigmab_serta_si(:, 2, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_serta_si(:, 3, itemp), '  |', sigmab_serta_si(:, 3, itemp)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 1, itemp), '  |', mobb_serta(:, 1, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mobb_serta(:, 2, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mobb_serta(:, 3, itemp)
+      !
+      sigma_inv(:, :, itemp) = matinv3(sigma_serta(:, :, itemp))
+      IF (system_2d) THEN ! We suppose vacuum is in the z direction
+        mob_serta(3, 3, :) = 1d0
+        mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
+        mob_inv(3, 3, :) = 0d0
+      ELSE
+        mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
+      ENDIF
+      hall_serta(:, :, itemp) = MATMUL(MATMUL(mobb_serta(:, :, itemp), mob_inv(:, :, itemp)), &
+                          mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !
+      ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
+      ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
+      ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
+      WRITE(stdout, '(5x, a, 1E18.6)') 'Hall factor'
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 1, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 2, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall_serta(:, 3, itemp)
+    ENDDO
+    !
+    WRITE(stdout, '(/5x, a)') REPEAT('=',93)
+    WRITE(stdout, '(5x, a)') 'BTE'
+    WRITE(stdout, '(5x, a)') REPEAT('=',93)
+    DO itemp = 1, nstemp
+      etemp = gtemp(itemp)
+      WRITE(stdout, '(5x,a)') ' '
+      WRITE(stdout, '(5x,a,1f10.4,a)') 'Temperature: ', etemp * ryd2ev / kelvin2eV, ' K'
+      IF (system_2d) THEN
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens]'
+      ELSE
+        WRITE(stdout, '(5x,a,1E18.6)') 'Conductivity tensor without magnetic field | with magnetic field [Siemens/m]'
+      ENDIF
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 1, itemp), '  |', sigmab_bte_si(:, 1, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 2, itemp), '  |', sigmab_bte_si(:, 2, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') sigma_bte_si(:, 3, itemp), '  |', sigmab_bte_si(:, 3, itemp)
+      !
+      WRITE(stdout, '(5x,a)') 'Mobility tensor without magnetic field     | with magnetic field [cm^2/Vs]'
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 1, itemp), '  |', mobb_bte(:, 1, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mobb_bte(:, 2, itemp)
+      WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mobb_bte(:, 3, itemp)
+      !
+      sigma_inv(:, :, itemp) = matinv3(sigma_bte(:, :, itemp))
+      IF (system_2d) THEN ! We suppose vacuum is in the z direction
+        mob_bte(3, 3, :) = 1d0
+        mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
+        mob_inv(3, 3, :) = 0d0
+      ELSE
+        mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
+      ENDIF
+      hall(:, :, itemp) = MATMUL(MATMUL(mobb_bte(:, :, itemp), mob_inv(:, :, itemp)), &
+                          mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
+      !
+      ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
+      ! To convert bfield to the same units of the mobility I do the same conversion as passing from the sigma
+      ! tensor to the mobility: the energy is converted with electron_SI/hbarJ and the lenght**2 with (bohr2ang * ang2cm)**2
+      WRITE(stdout, '(5x, a, 1E18.6)') 'Hall factor'
+      WRITE(stdout, '(3x, 3E16.6)') hall(:, 1, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(:, 2, itemp)
+      WRITE(stdout, '(3x, 3E16.6)') hall(:, 3, itemp)
+    ENDDO
+    !
+    ! SP: To be removed when adding to the main QE repo.
+    !WRITE(stdout, '(5x, a)')'---------------------------------------'
+    !WRITE(stdout, '(5x, a)')' '
+    !WRITE(stdout, '(4x, 2f12.2, 2f12.3)') mob_serta(1, 1, 1), mob_bte(1, 1, 1), hall_serta(1, 2, 1), hall(1, 2, 1)
+    !WRITE(stdout, '(4x, 2f12.2, 2f12.3)') mob_serta(1, 1, 2), mob_bte(1, 1, 2), hall_serta(1, 2, 2), hall(1, 2, 2)
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE print_hall
+    !-----------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE printing
   !-------------------------------------------------------------------------

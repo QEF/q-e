@@ -18,7 +18,7 @@
   CONTAINS
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
+    SUBROUTINE print_ibte(iqq, iq, totq, xxq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
                           lrepmatw2_restart, lrepmatw5_restart, ctype)
     !-----------------------------------------------------------------------
     !!
@@ -26,25 +26,27 @@
     !! Only the elements larger than threshold are saved on file.
     !!
     USE kinds,         ONLY : DP, i4b, i8b
-    USE cell_base,     ONLY : omega
+    USE cell_base,     ONLY : omega, at, alat
     USE io_global,     ONLY : stdout
     USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier, &
-                              assume_metal
+                              assume_metal, etf_mem, nqf1, nqf2, nqf3, system_2d
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             &
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
-                              wkf, dmef, vmef, eta, gtemp, lower_bnd, dos,  &
-                              nbndfst, nktotf
-    USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, &
-                              eps6, eps10, bohr2ang, ang2cm
-    USE constants,     ONLY : pi
+                              wkf, dmef, vmef, eta, gtemp, lower_bnd, dos,        &
+                              nbndfst, nktotf, vkk_all, carrier_density,          &
+                              inv_tau_all_mode, inv_tau_allcb_mode
+    USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, &
+                              eps6, eps20, bohr2ang, ang2cm, hbarJ, eps160
+    USE constants,     ONLY : electronvolt_si
     USE io_files,      ONLY : diropn
+    USE control_flags, ONLY : iverbosity
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : world_comm, my_pool_id, npool
     USE io_global,     ONLY : ionode_id
     USE io_var,        ONLY : iunepmat, iunepmatcb, iufilibtev_sup, iunrestart, iuntau,   &
-                              iunsparseq, iunsparseqcb, iuntaucb
+                              iunsparseq, iunsparseqcb, iuntaucb, iufilmu_q
     USE elph2,         ONLY : lrepmatw2_merge, lrepmatw5_merge, threshold
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, MPI_INTEGER8, &
@@ -79,6 +81,8 @@
 #endif
     INTEGER, INTENT(in) :: ctype
     !! Calculation type: -1 = hole, +1 = electron and 0 = both.
+    REAL(KIND = DP), INTENT(in) :: xxq(3)
+    !! Current q-point in crystal coordinate.
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(in) :: efcb(nstemp)
@@ -111,6 +115,8 @@
     !! Error
     INTEGER :: ipool
     !! Pool index
+    INTEGER :: i,j
+    !! Cartesian index
     INTEGER :: ind(npool)
     !! Nb of Matrix elements that are non-zero
     INTEGER :: indcb(npool)
@@ -172,8 +178,6 @@
     !! Temporary array to store the scattering rates
     REAL(KIND = DP) :: wkf_all(nktotf)
     !! Weights from all the cores
-    REAL(KIND = DP) :: vkk_all(3, nbndfst, nktotf)
-    !! Velocities from all the cores
     REAL(KIND = DP) :: inv_eta(nmodes, nbndfst, nktotf)
     !! Inverse of the eta for speed purposes
     REAL(KIND = DP) :: etf_all(nbndfst, nktotf)
@@ -184,12 +188,18 @@
     !! Temporary electronic energy
     REAL(KIND = DP) :: w_2
     !! Temporary electronic energy
-    REAL(KIND = DP) :: carrier_density
-    !! Carrier concentration
     REAL(KIND = DP) :: fnk
     !! Fermi-Dirac
+    REAL(KIND = DP) :: tmpq(nmodes)
+    !! Temporary file for mode resolved scattering rates
+    REAL(KIND = DP) :: mobilityq(3, 3, nmodes, nstemp)
+    !! Mode-resolved mobility
     REAL(KIND = DP) :: inv_cell
     !! cell volume
+    REAL(KIND = DP) :: mob(3, 3, nmodes)
+    !! Temporary inverse mobility
+    REAL(KIND = DP) :: wqf_loc
+    !! Local q-point weight
     REAL(KIND = DP) :: inv_tau_all_MPI(nbndfst, nktotf, nstemp)
     !! Auxiliary variables
     REAL(KIND = DP) :: inv_tau_allcb_MPI(nbndfst, nktotf, nstemp)
@@ -202,6 +212,15 @@
     !! The derivative of wgauss:  an approximation to the delta function
     !
     inv_cell = 1.0d0 / omega
+    ! for 2d system need to divide by area (vacuum in z-direction)
+    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    !
+    ! Weight of the q-points
+    IF (etf_mem == 3) THEN
+      wqf_loc = 1.0d0 / REAL(nqf1 * nqf2 * nqf3, KIND = DP)
+    ELSE
+      wqf_loc = wqf(iq)
+    ENDIF
     !
     IF (iqq == 1) THEN
       !
@@ -223,7 +242,48 @@
       WRITE(stdout,'(5x,a,1E20.12)') 'Save matrix elements larger than threshold: ', threshold
       WRITE(stdout,'(5x," ")')
       !
-    ENDIF
+      IF (iverbosity == 3) THEN
+        ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('print_ibte', 'Error allocating vkk_all', 1)
+        wkf_all(:) = zero
+        vkk_all(:, :, :) = zero
+        etf_all(:, :) = zero
+        ! Computes the k-velocity
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          wkf_all(ik + lower_bnd -1 ) = wkf(ikk)
+          DO ibnd = 1, nbndfst
+            IF (vme == 'wannier') THEN
+              vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+            ELSE
+              vkk_all(:,ibnd, ik + lower_bnd -1) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+            ENDIF
+            etf_all(ibnd, ik + lower_bnd - 1) = etf(ibndmin - 1 + ibnd, ikk)
+          ENDDO
+        ENDDO
+        CALL mp_sum(vkk_all, world_comm)
+        CALL mp_sum(etf_all, world_comm)
+        CALL mp_sum(wkf_all, world_comm)
+        !
+        IF (.NOT. assume_metal) THEN
+          ALLOCATE(carrier_density(nstemp), STAT = ierr)
+          IF (ierr /= 0) CALL errore('print_ibte', 'Error allocating carrier_density', 1)
+          carrier_density(:) = zero
+          IF (ncarrier < 0.0) THEN ! VB
+            CALL carr_density(carrier_density, etf_all, wkf_all, ef0)
+          ELSE ! CB
+            CALL carr_density(carrier_density, etf_all, wkf_all, efcb)
+          ENDIF ! ncarrier
+        ENDIF ! assume_metal
+        !
+        IF (my_pool_id == 0) THEN
+          OPEN(UNIT = iufilmu_q, FILE = 'mobility_nuq.fmt')
+          WRITE(iufilmu_q, '(a)') '# Mode-resolved contribution in limiting the carrier mobility (Vs/(cm^2))'
+          WRITE(iufilmu_q, '(a)') '#     \mu(alpha,beta) = 1.0 / (sum_{\nu q} T_{\nu q}(alpha,beta))'
+        ENDIF
+      ENDIF ! iverbosity
+    ENDIF ! iqq == 1
+    IF (iverbosity == 3) mobilityq(:, :, :, :) = zero
     !
     ! In the case of a restart do not add the first step
     IF (first_cycle) THEN
@@ -314,7 +374,6 @@
       sparsecb_j(:)    = zero
       sparsecb_t(:)    = zero
       etf_all(:, :)    = zero
-      vkk_all(:, :, :) = zero
       ind(:)           = 0
       indcb(:)         = 0
       ! loop over temperatures
@@ -328,7 +387,11 @@
         ! Treat phonon frequency and Bose occupation
         wq(:) = zero
         DO imode = 1, nmodes
-          wq(imode) = wf(imode, iq)
+          IF (etf_mem == 3) THEN
+            wq(imode) = wf(imode, iqq)
+          ELSE
+            wq(imode) = wf(imode, iq)
+          ENDIF
           IF (wq(imode) > eps_acustic) THEN
             g2_tmp(imode) = 1.0d0
             wgq(imode)    = wgauss(-wq(imode) * inv_etemp, -99)
@@ -383,16 +446,16 @@
                     !
                     ! Transition probability - See Eq. 41 of arXiv:1908.01733 (2019).
                     ! (2 pi/hbar) * (k+q-point weight) * g2 *
-                    ! { [f(E_k+q) + n(w_q)] * delta[E_k - E_k+q + w_q] +
-                    !   [1 - f(E_k+q) + n(w_q)] * delta[E_k - E_k+q - w_q] }
+                    ! { [f(E_k) + n(w_q)] * delta[E_k - E_k+q - w_q] +
+                    !   [1 - f(E_k) + n(w_q)] * delta[E_k - E_k+q + w_q] }
                     !
                     ! This is summed over modes
-                    tmp = tmp + two * pi * wqf(iq) * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
+                    tmp = tmp + two * pi * wqf_loc * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
                     !
                     ! Here we compute the scattering rate - Eq. 64 of arXiv:1908.01733 (2019).
                     ! inv_tau = (2 pi/hbar) * (k+q-point weight) * g2 *
                     ! { [f(E_k+q) + n(w_q)] * delta[E_k - E_k+q + w_q] + [1 - f(E_k+q) + n(w_q)] * delta[E_k - E_k+q - w_q] }
-                    tmp2 = tmp2 + two * pi * wqf(iq) * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                    tmp2 = tmp2 + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
                     !
                   ENDDO !imode
                   inv_tau_all(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_all(ibnd, ik + lower_bnd - 1, itemp) + tmp2
@@ -412,6 +475,41 @@
                   ENDIF
                 ENDDO !jbnd
               ENDDO ! ibnd
+              !
+              ! Compute the mode-resolved scattering
+              IF (iverbosity == 3) THEN
+                DO ibnd = 1, nbndfst
+                  ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0(itemp)
+                  fnk = wgauss(-ekk * inv_etemp, -99)
+                  dfnk = w0gauss(ekk * inv_etemp, -99 ) * inv_etemp
+                  tmpq(:) = zero
+                  DO jbnd = 1, nbndfst
+                    ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0(itemp)
+                    fmkq = wgauss(-ekq * inv_etemp, -99)
+                    DO imode = 1, nmodes
+                      g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
+                      w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
+                      w0g2 = w0gauss((ekk - ekq - wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
+                      tmpq(imode) = tmpq(imode) &
+                          + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                      inv_tau_all_mode(imode, ibnd, ik + lower_bnd - 1, itemp) = &
+                      inv_tau_all_mode(imode, ibnd, ik + lower_bnd - 1, itemp) + &
+                            two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                    ENDDO !imode
+                  ENDDO ! jbnd
+                  DO j = 1, 3
+                    DO i = 1, 3
+                      tmp = dfnk * vkk_all(i, ibnd, ik + lower_bnd - 1) * vkk_all(j, ibnd, ik + lower_bnd - 1)
+                      IF (ABS(tmp) > eps20) THEN
+                        DO imode = 1, nmodes
+                          mobilityq(i, j, imode, itemp) = mobilityq(i, j, imode, itemp) + &
+                                                          wkf_all(ik + lower_bnd - 1) * tmpq(imode) / tmp
+                        ENDDO
+                      ENDIF
+                    ENDDO ! i
+                  ENDDO ! j
+                ENDDO ! ibnd
+              ENDIF ! iverbsoity
             ENDIF ! ctype
             !
             ! In this case we are also computing the scattering rate for another Fermi level position
@@ -440,8 +538,8 @@
                     g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
                     w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
                     w0g2 = w0gauss((ekk - ekq - wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
-                    tmp = tmp  + two * pi * wqf(iq) * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
-                    tmp2 = tmp2 + two * pi * wqf(iq) * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                    tmp = tmp  + two * pi * wqf_loc * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
+                    tmp2 = tmp2 + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
                   ENDDO ! imode
                   inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) + tmp2
                   !
@@ -456,6 +554,40 @@
                   ENDIF
                 ENDDO !jbnd
               ENDDO !ibnd
+              ! Compute the mode-resolved scattering
+              IF (iverbosity == 3) THEN
+                DO ibnd = 1, nbndfst
+                  ekk = etf(ibndmin - 1 + ibnd, ikk) - efcb(itemp)
+                  fnk = wgauss(-ekk * inv_etemp, -99)
+                  dfnk = w0gauss(ekk * inv_etemp, -99 ) * inv_etemp
+                  tmpq(:) = zero
+                  DO jbnd = 1, nbndfst
+                    ekq = etf(ibndmin - 1 + jbnd, ikq) - efcb(itemp)
+                    fmkq = wgauss(-ekq * inv_etemp, -99)
+                    DO imode = 1, nmodes
+                      g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
+                      w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
+                      w0g2 = w0gauss((ekk - ekq - wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
+                      tmpq(imode) = tmpq(imode) &
+                          + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                      inv_tau_allcb_mode(imode, ibnd, ik + lower_bnd - 1, itemp) = &
+                      inv_tau_allcb_mode(imode, ibnd, ik + lower_bnd - 1, itemp) + &
+                            two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                    ENDDO !imode
+                  ENDDO ! jbnd
+                  DO j = 1, 3
+                    DO i = 1, 3
+                      tmp = dfnk * vkk_all(i, ibnd, ik + lower_bnd - 1) * vkk_all(j, ibnd, ik + lower_bnd - 1)
+                      IF (ABS(tmp) > eps20) THEN
+                        DO imode = 1, nmodes
+                          mobilityq(i, j, imode, itemp) = mobilityq(i, j, imode, itemp) &
+                                                          + wkf_all(ik + lower_bnd - 1) * tmpq(imode) / tmp
+                        ENDDO
+                      ENDIF
+                    ENDDO
+                  ENDDO
+                ENDDO ! ibnd
+              ENDIF ! iverbsoity
             ENDIF ! ctype
           ENDIF ! endif fsthick
         ENDDO ! end loop on k
@@ -464,10 +596,37 @@
       CALL mp_sum(ind, world_comm)
       CALL mp_sum(indcb, world_comm)
       !
+      IF (iverbosity == 3) THEN
+        CALL mp_sum(mobilityq, world_comm)
+        IF (my_pool_id == 0) THEN
+          WRITE(iufilmu_q, '(a, 3f12.8)') '# q-point (crystal)', xxq(:)
+          WRITE(iufilmu_q, '(a)') &
+              '#  Temp (K)  Mode   Phonon freq (meV)       T_nuq(alpha, beta) (Vs/cm^2)'
+          mob(:, :, :) = zero
+          DO itemp = 1, nstemp
+            etemp = gtemp(itemp)
+            mob(:, :, :) = mobilityq(:, :, :, itemp) * (hbarJ * carrier_density(itemp)) &
+                           / (electronvolt_si * (bohr2ang * ang2cm) ** 2)
+            DO imode = 1, nmodes
+              WRITE(iufilmu_q, '(1f12.6, i6, 1f14.8, 3E18.8)')  etemp * ryd2ev / kelvin2eV, imode, wq(imode) * ryd2mev, &
+                                                mob(1, 1, imode), mob(1, 2, imode), mob(1, 3, imode)
+              WRITE(iufilmu_q, '(32x, 3E18.8)') mob(2, 1, imode), mob(2, 2, imode), mob(2, 3, imode)
+              WRITE(iufilmu_q, '(32x, 3E18.8)') mob(3, 1, imode), mob(3, 2, imode), mob(3, 3, imode)
+            ENDDO
+          ENDDO
+          IF (iqq == totq) CLOSE(iufilmu_q)
+        ENDIF ! my_pool_id
+        IF (iqq == totq) THEN
+          DEALLOCATE(vkk_all, STAT = ierr)
+          IF (ierr /= 0) CALL errore('ibte', 'Error deallocating vkk_all', 1)
+          DEALLOCATE(carrier_density, STAT = ierr)
+          IF (ierr /= 0) CALL errore('ibte', 'Error deallocating carrier_density', 1)
+        ENDIF  ! iqq
+      ENDIF ! iverbosity
       ! SP - IBTE only with if EPW compiled with MPI
       IF (SUM(ind) > 0) THEN
         !
-        IF (my_pool_id == 0 ) ind_tot = ind_tot + SUM(ind)
+        IF (my_pool_id == 0) ind_tot = ind_tot + SUM(ind)
 #if defined(__MPI)
         CALL MPI_BCAST(ind_tot, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
 #endif
@@ -553,6 +712,9 @@
     ENDIF ! first_cycle
     !
     IF (iqq == totq) THEN
+      ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'Error allocating vkk_all', 1)
+      vkk_all(:, :, :) = zero
       wkf_all(:) = zero
       ! Computes the k-velocity
       DO ik = 1, nkf
@@ -562,10 +724,10 @@
         wkf_all(ik + lower_bnd -1 ) = wkf(ikk)
         !
         DO ibnd = 1, nbndfst
-          IF (vme) THEN
+          IF (vme == 'wannier') THEN
             vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
           ELSE
-            vkk_all(:,ibnd, ik + lower_bnd -1 ) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+            vkk_all(:,ibnd, ik + lower_bnd -1 ) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
           ENDIF
           etf_all(ibnd, ik + lower_bnd - 1) = etf(ibndmin - 1 + ibnd, ikk)
         ENDDO
@@ -575,6 +737,10 @@
       CALL mp_sum(wkf_all, world_comm)
       CALL mp_sum(inv_tau_all, world_comm)
       CALL mp_sum(inv_tau_allcb, world_comm)
+      IF (iverbosity == 3) THEN
+        CALL mp_sum(inv_tau_all_mode, world_comm)
+        CALL mp_sum(inv_tau_allcb_mode, world_comm)
+      ENDIF
       !
       IF (my_pool_id == 0) THEN
         ! Now write total number of q-point inside and k-velocity
@@ -611,6 +777,24 @@
         ENDDO
         CLOSE(iufilibtev_sup)
         !
+        ! Save the mode resolvedinv_tau and inv_tau_all_mode on file (formatted)
+        IF (iverbosity == 3) THEN
+          OPEN(iufilibtev_sup, FILE = 'inv_tau_mode.fmt', FORM = 'formatted')
+          WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+          WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd     imode   energy [Ry]   relaxation time [Ry]'
+          DO itemp = 1, nstemp
+            DO ik = 1, nktotf
+              DO ibnd = 1, nbndfst
+                DO imode = 1, nmodes
+                  WRITE(iufilibtev_sup, '(i5,i8,i6,i6,2E22.12)') itemp, ik, ibnd, imode, etf_all(ibnd, ik), &
+                                                                 inv_tau_all_mode(imode, ibnd, ik, itemp)
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+          CLOSE(iufilibtev_sup)
+        ENDIF
+        !
         ! Save the inv_tau and inv_tau_all on file (formatted)
         OPEN(iufilibtev_sup, FILE = 'inv_taucb.fmt', FORM = 'formatted')
         WRITE(iufilibtev_sup, '(a)') '# Electron relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
@@ -624,54 +808,139 @@
         ENDDO
         CLOSE(iufilibtev_sup)
         !
+        IF (iverbosity == 3) THEN
+          OPEN(iufilibtev_sup, FILE = 'inv_taucb_mode.fmt', FORM = 'formatted')
+          WRITE(iufilibtev_sup, '(a)') '# Electron relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+          WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    imode    energy [Ry]   relaxation time [Ry]'
+          DO itemp = 1, nstemp
+            DO ik = 1, nktotf
+              DO ibnd = 1, nbndfst
+                DO imode = 1, nmodes
+                  WRITE(iufilibtev_sup, '(i5,i8,i6,i6,2E22.12)') itemp, ik, ibnd, imode, etf_all(ibnd, ik), &
+                                                                 inv_tau_allcb_mode(imode, ibnd, ik, itemp)
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+          CLOSE(iufilibtev_sup)
+        ENDIF
+        !
       ENDIF ! master
       !
       ! Now print the carrier density for checking (for non-metals)
       IF (.NOT. assume_metal) THEN
-        DO itemp = 1, nstemp
-          etemp = gtemp(itemp)
-          carrier_density = 0.0
-          !
-          IF (ncarrier < 0.0) THEN ! VB
-            DO ik = 1, nkf
-              DO ibnd = 1, nbndfst
-                ! This selects only valence bands for hole conduction
-                IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
-                  ! Energy at k (relative to Ef)
-                  ekk = etf_all(ibnd, ik + lower_bnd - 1 ) - ef0(itemp)
-                  fnk = wgauss(-ekk / etemp, -99)
-                  ! The wkf(ikk) already include a factor 2
-                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
-                ENDIF
-              ENDDO
-            ENDDO
-            CALL mp_sum(carrier_density, world_comm)
+        ALLOCATE(carrier_density(nstemp), STAT = ierr)
+        IF (ierr /= 0) CALL errore('print_ibte', 'Error allocating carrier_density', 1)
+        carrier_density(:) = zero
+        IF (ncarrier < 0.0) THEN ! VB
+          CALL carr_density(carrier_density, etf_all, wkf_all, ef0)
+          IF (system_2d) THEN
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
+          ELSE
             carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
-          ELSE ! CB
-            DO ik = 1, nkf
-              DO ibnd = 1, nbndfst
-                ! This selects only valence bands for hole conduction
-                IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
-                  !  energy at k (relative to Ef)
-                  ekk = etf_all(ibnd, ik + lower_bnd - 1) - efcb(itemp)
-                  fnk = wgauss(-ekk / etemp, -99)
-                  ! The wkf(ikk) already include a factor 2
-                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
-                ENDIF
-              ENDDO
-            ENDDO
-            CALL mp_sum(carrier_density, world_comm)
+          ENDIF
+          DO itemp = 1, nstemp
+            etemp = gtemp(itemp)
+            WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density(itemp)
+          ENDDO
+        ELSE ! CB
+          CALL carr_density(carrier_density, etf_all, wkf_all, efcb)
+          IF (system_2d) THEN
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
+          ELSE
             carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density
-          ENDIF ! ncarrier
-        ENDDO
-      ENDIF
+          ENDIF
+          DO itemp = 1, nstemp
+            etemp = gtemp(itemp)
+            WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density(itemp)
+          ENDDO
+        ENDIF ! ncarrier
+        DEALLOCATE(carrier_density, STAT = ierr)
+        IF (ierr /= 0) CALL errore('print_ibte', 'Error deallocating carrier_density', 1)
+      ENDIF ! assume_metal
+      DEALLOCATE(vkk_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'Error deallocating vkk_all', 1)
     ENDIF ! iqq
     !
     RETURN
     !-----------------------------------------------------------------------
     END SUBROUTINE print_ibte
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE carr_density(carrier_density, etf_all, wkf_all, ef0)
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine computes the carrier density (in a.u.)
+    !!
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : ncarrier, nstemp
+    USE elph2,         ONLY : nbndfst, gtemp, nktotf, lower_bnd, nkf
+    USE mp,            ONLY : mp_sum
+    USE mp_global,     ONLY : world_comm
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(inout) :: carrier_density(nstemp)
+    !! Carrier density
+    REAL(KIND = DP), INTENT(in) :: etf_all(nbndfst, nktotf)
+    !! Eigen-energies on the fine grid collected from all pools in parallel case
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nktotf)
+    !! Weights from all the cores
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
+    !! Fermi level for the temperature itemp
+    !
+    ! Local variables
+    INTEGER :: itemp
+    !! temperature index
+    INTEGER :: ik
+    !! k-point index
+    INTEGER :: ibnd
+    !! band index
+    REAL(KIND = DP) :: etemp
+    !! Temperature in Ry (this includes division by kb)
+    REAL(KIND = DP) :: ekk
+    !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
+    REAL(KIND = DP) :: fnk
+    !! Fermi-Dirac occupation function
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! Compute the approximate theta function. Here computes Fermi-Dirac
+    !
+    carrier_density(:) = 0.0
+    DO itemp = 1, nstemp
+      etemp = gtemp(itemp)
+      IF (ncarrier < 0.0) THEN ! VB
+        DO ik = 1, nkf
+          DO ibnd = 1, nbndfst
+            ! This selects only valence bands for hole conduction
+            IF (etf_all(ibnd, ik + lower_bnd - 1) < ef0(itemp)) THEN
+              ! Energy at k (relative to Ef)
+              ekk = etf_all(ibnd, ik + lower_bnd - 1) - ef0(itemp)
+              fnk = wgauss(-ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density(itemp) = carrier_density(itemp) + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
+            ENDIF
+          ENDDO
+        ENDDO
+      ELSE ! CB
+        DO ik = 1, nkf
+          DO ibnd = 1, nbndfst
+            ! This selects only valence bands for hole conduction
+            IF (etf_all(ibnd, ik + lower_bnd - 1) > ef0(itemp)) THEN
+              !  energy at k (relative to Ef)
+              ekk = etf_all(ibnd, ik + lower_bnd - 1) - ef0(itemp)
+              fnk = wgauss(-ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density(itemp) = carrier_density(itemp) + wkf_all(ik + lower_bnd - 1) *  fnk
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDIF ! ncarrier
+    ENDDO
+    CALL mp_sum(carrier_density, world_comm)
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE carr_density
     !-----------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
@@ -1282,7 +1551,7 @@
     IF (exst) THEN
       ! Hole (or metals)
       IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
-              .OR. assume_metal) THEN
+           .OR. assume_metal) THEN
         !
         filint = './' // ADJUSTL(TRIM(dirname(1))) // '/'//TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)

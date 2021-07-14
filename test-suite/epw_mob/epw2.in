@@ -3,15 +3,13 @@
   prefix      = 'si'
   amass(1)    = 28.0855
   outdir      = './'
-
   iverbosity  = 0
 
   elph        = .true.
-  kmaps       = .true.
-  epbwrite    = .false.
-  epbread     = .false.
   epwwrite    = .false.
   epwread     = .true.
+  etf_mem     = 1
+  vme         = 'dipole'
 
   scattering  = .true.
   scattering_serta = .true.
@@ -19,8 +17,8 @@
   carrier     = .true.
   ncarrier    = 1E13
 
-  scissor     =  0.7
-  nstemp      =   5
+  scissor     = 0.7
+  nstemp      = 5
   temps       = 300 500
 
   restart    = .true.
@@ -30,9 +28,6 @@
   lifc        = .true.
   asr_typ     = 'crystal'
 
-  etf_mem     = 1
-  vme         = .false.
-
   nbndsub     =  16
 
   wannierize  = .false.
@@ -40,7 +35,7 @@
   iprint      = 2
   dis_win_max = 18
   dis_froz_max= 8.5
-  proj(1)     = 'Si : sp3'   
+  proj(1)     = 'Si : sp3'
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
   wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
@@ -59,18 +54,18 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 2.0 ! eV 
+  fsthick     = 2.0 ! eV
   degaussw    = 0.05 ! eV
 
   dvscf_dir   = './save/'
-  
+
   filkf       = './kpt.txt'
 
   nqf1        = 12
   nqf2        = 12
   nqf3        = 12
 
-  nk1         = 4 
+  nk1         = 4
   nk2         = 4
   nk3         = 4
 

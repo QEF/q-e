@@ -5,6 +5,6 @@
   outdir='./',
   fildyn='si.dyn',
   fildvscf='dvscf'
-  electron_phonon='simple',
+  electron_phonon='epw',
  /
 0.5 0.5 0.5

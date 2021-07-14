@@ -642,30 +642,6 @@
       ENDDO ! i
       CLOSE(iufillambdaFS)
       !
-      name1 = TRIM(prefix) // '.lambda'
-      OPEN(iufillambdaFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('evaluate_a2f_lambda', 'error opening file ' // name1, iufillambdaFS)
-      WRITE(iufillambdaFS,'(a75)') '#               k-point                  Band Enk-Ef [eV]            lambda'
-      DO i = 1, nkf1
-        DO j = 1, nkf2
-          DO k = 1, nkf3
-            ik = k + (j - 1) * nkf3 + (i - 1) * nkf2 * nkf3
-            !IF (ixkff(ik) > 0) THEN
-              DO ibnd = 1, nbndfs
-                !IF (ABS(ekfs(ibnd, ixkff(ik)) - ef0) < fsthick) THEN
-                  x1 = bg(1, 1) * (i - 1) / nkf1 + bg(1, 2) * (j - 1) / nkf2 + bg(1, 3) * (k - 1) / nkf3
-                  x2 = bg(2, 1) * (i - 1) / nkf1 + bg(2, 2) * (j - 1) / nkf2 + bg(2, 3) * (k - 1) / nkf3
-                  x3 = bg(3, 1) * (i - 1) / nkf1 + bg(3, 2) * (j - 1) / nkf2 + bg(3, 3) * (k - 1) / nkf3
-                  WRITE(iufillambdaFS, '(3f12.6, i8, f12.6, f24.15)') x1, x2, x3, ibnd, &
-                                   ekfs(ibnd, ixkff(ik)) - ef0, lambda_k(ixkff(ik), ibnd)
-                !ENDIF
-              ENDDO ! ibnd
-            !ENDIF
-          ENDDO  ! k
-        ENDDO ! j
-      ENDDO ! i
-      CLOSE(iufillambdaFS)
-      !
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
@@ -1150,6 +1126,132 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE free_energy
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE crit_temp_solver(adim, a, eigen, niter)
+    !-----------------------------------------------------------------------
+    !!
+    !! SH: Routine for returning largest eigenvalue of a(adim, adim);
+    !!        being used to solve linearized Eliashberg equation
+    !! HP: updated 5/11/2021
+    !
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : zero, two
+    USE epwcom,        ONLY : tc_linear_solver, nsiter, conv_thr_iaxis
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: adim
+    !! Dimension of input matrix
+    INTEGER, INTENT(out) :: niter
+    !! Number of iterations of solver
+    REAL(KIND = DP), INTENT(in) :: a(adim, adim)
+    !! Matrix for solve
+    REAL(KIND = DP), INTENT(out) :: eigen
+    !! Maximum eigenvalue
+    !
+    ! Local variables
+    CHARACTER(LEN = 10) :: jobvl, jobvr
+    !! Eigenvalue problem-related variables
+    ! 
+    LOGICAL :: conv
+    !! True if calculation is converged
+    !
+    INTEGER :: n
+    !! Dimension of matrix a
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: iter
+    !! Counter on iteration steps
+    INTEGER :: lda, ldvl, ldvr, lwork, ix, iy, ic
+    !! Eigenvalue problem-related variables
+    !
+    REAL(KIND = DP) :: wr(adim), wi(adim), vl(adim, adim), vr(adim, adim)
+    !! Eigenvalue problem-related variables
+    REAL(KIND = DP) :: alpha, x(adim), y(adim), norm
+    !! Eigenvalue problem-related variables
+    REAL(KIND = DP), ALLOCATABLE :: work(:)
+    !! Eigenvalue problem-related variables
+    !
+    IF (tc_linear_solver == 'lapack') THEN
+      n        = adim
+      lwork    = 4 * n
+      lda      = n
+      ldvl     = n
+      ldvr     = n
+      jobvl    = 'n'
+      jobvr    = 'n'
+      wr(:)    = zero
+      wi(:)    = zero
+      vl(:, :) = zero
+      vr(:, :) = zero
+      work(:)  = zero
+      !
+      ! main solver
+      ALLOCATE(work(lwork), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating work', 1)
+      lwork = -1
+      CALL DGEEV(jobvl, jobvr, n, a, lda, wr, wi, vl, ldvl, vr, ldvr, work, lwork, ierr)
+      IF ( ierr /= 0) CALL errore('crit_temp_solver', 'Error eigenvalue solver failed!', 1)
+      lwork = MIN(4 * n, INT(work(1)))
+      DEALLOCATE(work, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error deallocating work', 1)
+      ALLOCATE(work(lwork), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error allocating work', 1)
+      CALL DGEEV(jobvl, jobvr, n, a, lda, wr, wi, vl, ldvl, vr, ldvr, work, lwork, ierr)
+      IF ( ierr /= 0) CALL errore('crit_temp_solver', 'Error eigenvalue solver failed!', 1)
+      DEALLOCATE(work, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_solver', 'Error deallocating work',1)
+      !
+      !! Find the largest eigenvalue
+      eigen = wr(1)
+      DO ic = 2, n
+        IF (eigen < wr(ic))   eigen = wr(ic)
+      ENDDO
+      niter = 1
+    ENDIF
+    !
+    IF (tc_linear_solver == 'power') THEN
+      n    = adim
+      norm = 3.d0 * conv_thr_iaxis
+      y(:) = 1.d0
+      iter = 1
+      ! main solver
+      conv = .FALSE.
+      DO WHILE (.NOT. conv .AND. iter < nsiter)
+        norm = SQRT(SUM(y(1:n) ** two))
+        x    = y / norm
+        y(:) = zero
+        DO ix = 1, n
+          DO iy = 1, n
+            y(ix) = y(ix) + a(ix, iy) * x(iy)
+          ENDDO
+        ENDDO
+        alpha = zero
+        DO ix = 1, n
+          alpha = alpha + x(ix) * y(ix)
+        ENDDO
+        x = y - alpha * x
+        norm  = SQRT(SUM(x(1:n) ** two))
+        iter  = iter + 1
+        IF (norm < conv_thr_iaxis) conv = .TRUE.
+      ENDDO
+      eigen = alpha
+      niter = iter
+    ENDIF
+    !
+    IF (.NOT. conv .AND. iter == nsiter) THEN
+      WRITE(stdout, '(/5x, a, i6)') 'Convergence (tc_linear) was not reached in nsiter = ', iter
+      WRITE(stdout, '(5x, a)') 'Increase nsiter or reduce conv_thr_iaxis'
+      CALL errore('crit_temp_solver', 'Convergence (tc_linear) was not reached', 1)
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE crit_temp_solver
     !-----------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
