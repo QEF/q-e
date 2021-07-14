@@ -2511,7 +2511,8 @@ CALL fkbounds( nq - nq_strft, lower_bnd, upper_bnd )
           DO j = 1,nat3 ! modes \nu
             IF (qlistA(qp) .EQ. 1) THEN
               sigma_DW(k,i,p) = sigma_DW(k,i,p) +  & 
-                            1.0/DBLE(nq_tot)/DBLE(2.0d0*amass(nta))*DBLE(z_zg((k-1)*3+i,j,qp)*CONJG(z_zg((k-1)*3+p,j,qp)))*l_q(j,qp)**2
+                            1.0/DBLE(nq_tot)/DBLE(2.0d0*amass(nta))*DBLE(z_zg((k-1)*3+i,j,qp) &
+                            *CONJG(z_zg((k-1)*3+p,j,qp)))*l_q(j,qp)**2
             ELSE 
               sigma_DW(k,i,p) = sigma_DW(k,i,p) +  & 
                             1.0/DBLE(nq_tot)/DBLE(amass(nta))*DBLE(z_zg((k-1)*3+i,j,qp)*CONJG(z_zg((k-1)*3+p,j,qp)))*l_q(j,qp)**2
