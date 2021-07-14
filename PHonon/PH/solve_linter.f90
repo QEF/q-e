@@ -321,33 +321,45 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      IF (lda_plus_u .AND. (iter /= 1)) &
         CALL dnsq_scf (npe, lmetq0, imode0, irr, .true.)
      !
-     do ik = 1, nksq
+     DO isolv = 1, nsolv
         !
-        ikk = ikks(ik)
-        ikq = ikqs(ik)
-        npw = ngk(ikk)
-        npwq= ngk(ikq)
+        !  change the sign of the magnetic field if required
         !
-        if (lsda) current_spin = isk (ikk)
+        IF (isolv == 2) THEN
+           IF (where_rec =='solve_lint' .OR. iter>1) THEN
+              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
+              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
+           ENDIF
+           vrs(:, 2:4) = -vrs(:, 2:4)
+           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+        ENDIF
         !
-        ! compute beta functions and kinetic energy for k-point ikq
-        ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
-        !
-        CALL init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
-        CALL g2_kin (ikq) 
-        !
-        ! Start the loop on the two linear systems, one at B and one at
-        ! -B
-        !
-        DO isolv=1, nsolv
-           IF (isolv==2) THEN
+        do ik = 1, nksq
+           !
+           ikk = ikks(ik)
+           ikq = ikqs(ik)
+           npw = ngk(ikk)
+           npwq= ngk(ikq)
+           !
+           if (lsda) current_spin = isk (ikk)
+           !
+           ! compute beta functions and kinetic energy for k-point ikq
+           ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
+           !
+           CALL init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
+           CALL g2_kin (ikq)
+           !
+           ! Start the loop on the two linear systems, one at B and one at
+           ! -B
+           !
+           IF (isolv == 1) THEN
+              ikmk = ikk
+              ikmkmq = ikq
+              rsign = 1.0_DP
+           ELSE
               ikmk = ikmks(ik)
               ikmkmq = ikmkmqs(ik)
-              rsign=-1.0_DP
-           ELSE
-              ikmk=ikk
-              ikmkmq=ikq
-              rsign=1.0_DP
+              rsign = -1.0_DP
            ENDIF
            !
            ! read unperturbed wavefunctions psi(k) and psi(k+q)
@@ -367,7 +379,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            !
            do ipert = 1, npe
               mode = imode0 + ipert
-              nrec = (ipert - 1) * nksq + ik + (isolv-1) * npe * nksq
+              nrec = (isolv - 1) * npe * nksq + (ipert - 1) * nksq + ik
               !
               ! dvbare_q*psi_kpoint is read from file
               !
@@ -381,13 +393,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                  ! dvscf_q from previous iteration (mix_potential)
                  !
                  call start_clock ('vpsifft')
-                 !
-                 !  change the sign of the magnetic field if required
-                 !
-                 IF (isolv==2) THEN
-                    dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-                    IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,2)
-                 ENDIF
                  !
                  CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins(:, :, ipert), evc, aux2)
                  dvpsi = dvpsi + aux2
@@ -408,13 +413,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                  ELSE
                     call adddvscf_ph_mag (ipert, ik, becpt)
                  END IF
-                 !
-                 !  reset the original magnetic field if it was changed
-                 !
-                 IF (isolv==2) THEN
-                    dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-                    IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,1)
-                 ENDIF
                  !
               endif
               !
@@ -447,21 +445,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               ! iterative solution of the linear system (H-eS)*dpsi=dvpsi,
               ! dvpsi=-P_c^+ (dvbare+dvscf)*psi , dvscf fixed.
               !
-              IF (isolv==2) THEN
-                 vrs(:,2:4)=-vrs(:,2:4)
-                 IF (okvan) deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
-              ENDIF
               conv_root = .true.
-              
+
               call cgsolve_all (ch_psi_all, cg_psi, et(1,ikmk), dvpsi, dpsi, &
                    h_diag, npwx, npwq, thresh, ik, lter, conv_root, &
                    anorm, nbnd_occ(ikk), npol )
 
-              IF (isolv==2) THEN
-                 vrs(:,2:4)=-vrs(:,2:4)
-                 IF (okvan) deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
-              ENDIF
-              
               ltaver = ltaver + lter
               lintercall = lintercall + 1
               if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4,  &
@@ -476,7 +465,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               ! calculates dvscf, sum over k => dvscf_q_ipert
               !
               weight = wk (ikk)
-              IF (nsolv==2) weight=weight/2.0_DP
               IF (noncolin) THEN
                  call incdrhoscf_nc(drhoscf(1,1,ipert),weight,ik, &
                       dbecsum_nc(1,1,1,1,ipert,isolv), dpsi, rsign)
@@ -484,12 +472,28 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                  call incdrhoscf (drhoscf(1,current_spin,ipert), weight, ik, &
                       dbecsum(1,1,current_spin,ipert), dpsi)
               END IF
-              ! on perturbations
-           enddo
-           ! on isolv
-        END DO
-        ! on k-points
-     enddo
+              !
+           enddo ! ipert
+        enddo ! ik
+        !
+        !  reset the original magnetic field if it was changed
+        !
+        IF (isolv == 2) THEN
+           IF (where_rec =='solve_lint' .OR. iter>1) THEN
+              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
+              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
+           ENDIF
+           vrs(:, 2:4) = -vrs(:, 2:4)
+           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+        ENDIF
+        !
+     END DO ! isolv
+     !
+     IF (nsolv==2) THEN
+        drhoscf = drhoscf / 2.0_DP
+        dbecsum = dbecsum / 2.0_DP
+        dbecsum_nc = dbecsum_nc / 2.0_DP
+     ENDIF
      !
      !  The calculation of dbecsum is distributed across processors (see addusdbec)
      !  Sum over processors the contributions coming from each slice of bands
