@@ -9,7 +9,7 @@
 !------------------------------------------------------------------------------
 MODULE rho_response
 CONTAINS
-SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvscfins, &
+SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvpsi, thresh, dvscfins, &
          avg_iter, drhoout, dbecsum, dbecsum_nc)
    !----------------------------------------------------------------------------
    !! Compute the density response to the perturbation dV = dV_bare + dV_ind by the
@@ -22,8 +22,13 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
    !! For USPPs, adddvscf is called, so relevant arrays must be already calculated.
    !! For DFT+U, adddvhubscf is called, so relevant arrays must be already calculated.
    !!
+   !! Results are added to drhoout, dbecsum, dbecsum_nc, so these output arrays should
+   !! be initialized before calling this subroutine.
+   !!
    !! Input:
    !!    - first_iter: true if the first iteration, where dvscfins = 0
+   !!    - time_reversed: false for ordinary cases, true for time-reversed wave functions
+   !!                     which is need in the noncolliner magnetic case
    !!    - npert: number of perturbations
    !!    - lrdvpsi: record length for the buffer storing dV_bare * psi
    !!    - iudvpsi: unit for the buffer storing dV_bare * psi
@@ -38,11 +43,14 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
    !----------------------------------------------------------------------------
    USE kinds,                 ONLY : DP
    USE io_global,             ONLY : stdout
+   USE mp,                    ONLY : mp_sum
+   USE mp_pools,              ONLY : inter_pool_comm
    USE buffers,               ONLY : get_buffer, save_buffer
    USE fft_base,              ONLY : dfftp
    USE ions_base,             ONLY : nat
    USE klist,                 ONLY : xk, wk, ngk, igk_k
    USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
+   USE spin_orb,              ONLY : domag
    USE wvfct,                 ONLY : nbnd, npwx, et
    USE wavefunctions,         ONLY : evc
    USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
@@ -53,6 +61,7 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
    USE units_lr,              ONLY : iuwfc, lrwfc
    USE control_lr,            ONLY : nbnd_occ, lgamma
    USE qpoint,                ONLY : nksq, ikks, ikqs
+   USE qpoint_aux,            ONLY : ikmks, ikmkmqs, becpt
    USE eqv,                   ONLY : dpsi, dvpsi, evq
    USE apply_dpot_mod,        ONLY : apply_dpot_bands
    !
@@ -60,6 +69,8 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
    !
    LOGICAL, INTENT(IN) :: first_iter
    !! true if the first iteration.
+   LOGICAL, INTENT(IN) :: time_reversed
+   !! true if solving for time reversed wave functions
    INTEGER, INTENT(IN) :: npert
    !! number of perturbations
    INTEGER, INTENT(IN) :: lrdvpsi
@@ -81,7 +92,7 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
    !
    LOGICAL :: conv_root
    !! true if linear system is converged
-   INTEGER :: ikk, ikq, npw, npwq, ipert, num_iter, ik, nrec
+   INTEGER :: ikk, ikq, npw, npwq, ipert, num_iter, ik, nrec, ikmk, ikmkmq
    !! counters
    INTEGER :: tot_num_iter
    !! total number of iterations in cgsolve_all
@@ -89,6 +100,8 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
    !! total number of cgsolve_all calls
    REAL(DP) :: anorm
    !! the norm of the error of the conjugate gradient solution
+   REAL(DP) :: rsign
+   !! sign of the term in the magnetization
    REAL(DP), ALLOCATABLE :: h_diag(:, :)
    !! diagonal part of the Hamiltonian, used for preconditioning
    COMPLEX(DP) , ALLOCATABLE :: aux2(:, :)
@@ -104,9 +117,6 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
    !
    tot_num_iter = 0
    tot_cg_calls = 0
-   drhoout = (0.d0, 0.d0)
-   dbecsum = (0.d0, 0.d0)
-   IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
    !
    DO ik = 1, nksq
       ikk  = ikks(ik)
@@ -114,17 +124,29 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
       npw  = ngk(ikk)
       npwq = ngk(ikq)
       !
+      ! Set time-reversed k and k+q points
+      !
+      IF (time_reversed) THEN
+         ikmk = ikmks(ik)
+         ikmkmq = ikmkmqs(ik)
+         rsign = -1.0_DP
+      ELSE
+         ikmk = ikk
+         ikmkmq = ikq
+         rsign = 1.0_DP
+      ENDIF
+      !
       IF (lsda) current_spin = isk(ikk)
       !
       ! reads unperturbed wavefunctions psi_k in G_space, for all bands
       ! if q=0, evq is a pointer to evc
       !
-      IF (nksq > 1) THEN
+      IF (nksq > 1 .OR. (noncolin .AND. domag)) THEN
          IF (lgamma) THEN
-            CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+            CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
          ELSE
-            CALL get_buffer(evc, lrwfc, iuwfc, ikk)
-            CALL get_buffer(evq, lrwfc, iuwfc, ikq)
+            CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+            CALL get_buffer(evq, lrwfc, iuwfc, ikmkmq)
          ENDIF
       ENDIF
       !
@@ -143,6 +165,8 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
          ! read P_c^+ x psi_kpoint into dvpsi.
          !
          nrec = (ipert - 1) * nksq + ik
+         IF (time_reversed) nrec = nrec + npert * nksq
+         !
          CALL get_buffer(dvpsi, lrdvpsi, iudvpsi, nrec)
          !
          IF (.NOT. first_iter) THEN
@@ -157,7 +181,15 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
             !  selfconsist term which comes from the dependence of D on
             !  V_{eff} on the bare change of the potential
             !
-            CALL adddvscf(ipert, ik)
+            IF (time_reversed) THEN
+               !
+               ! FIXME: adddvscf_ph_mag is almost the same as adddvscf, except that it
+               ! uses becp from input, not from USE lrus. Ideally, one should merge the two.
+               !
+               CALL adddvscf_ph_mag(ipert, ik, becpt)
+            ELSE
+               CALL adddvscf(ipert, ik)
+            ENDIF
             !
             ! DFPT+U: add to dvpsi the scf part of the response
             ! Hubbard potential dV_hub
@@ -168,7 +200,7 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
          !
          ! Orthogonalize dvpsi to valence states
          !
-         CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, .FALSE.)
+         CALL orthogonalize(dvpsi, evq, ikmk, ikmkmq, dpsi, npwq, .FALSE.)
          !
          ! Initial guess for dpsi
          !
@@ -178,9 +210,9 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
             !
             dpsi(:, :) = (0.d0,0.d0)
          ELSE
+            !
             ! starting value for delta_psi is read from iudwf
             !
-            nrec = (ipert - 1) * nksq + ik
             CALL get_buffer(dpsi, lrdwf, iudwf, nrec)
          ENDIF
          !
@@ -189,7 +221,8 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
          !
          conv_root = .TRUE.
          !
-         CALL cgsolve_all(ch_psi_all, cg_psi, et(1, ikk), dvpsi, dpsi, h_diag, &
+         ! TODO: should nbnd_occ(ikk) be nbnd_occ(ikmk)?
+         CALL cgsolve_all(ch_psi_all, cg_psi, et(1, ikmk), dvpsi, dpsi, h_diag, &
             npwx, npwq, thresh, ik, num_iter, conv_root, anorm, nbnd_occ(ikk), npol)
          !
          tot_num_iter = tot_num_iter + num_iter
@@ -200,14 +233,13 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
          !
          ! writes delta_psi on iunit iudwf, k=kpoint,
          !
-         nrec = (ipert - 1) * nksq + ik
          CALL save_buffer(dpsi, lrdwf, iudwf, nrec)
          !
          ! calculates dvscf, sum over k => dvscf_q_ipert
          !
          IF (noncolin) THEN
             CALL incdrhoscf_nc(drhoout(1,1,ipert), wk(ikk), ik, &
-                               dbecsum_nc(1,1,1,1,ipert), dpsi, 1.0d0)
+                               dbecsum_nc(1,1,1,1,ipert), dpsi, rsign)
          ELSE
             CALL incdrhoscf(drhoout(1,current_spin,ipert), wk(ikk), &
                             ik, dbecsum(1,1,current_spin,ipert), dpsi)
@@ -215,6 +247,8 @@ SUBROUTINE nonint_rho_response(first_iter, npert, lrdvpsi, iudvpsi, thresh, dvsc
       ENDDO ! ipert
    ENDDO ! ik
    !
+   CALL mp_sum(tot_num_iter, inter_pool_comm)
+   CALL mp_sum(tot_cg_calls, inter_pool_comm)
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
    !
 !----------------------------------------------------------------------------

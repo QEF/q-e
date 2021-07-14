@@ -174,9 +174,9 @@ subroutine solve_e
      FLUSH( stdout )
      iter = kter + iter0
      !
-     dvscfout(:,:,:)=(0.d0,0.d0)
-     dbecsum(:,:,:,:)=(0.d0,0.d0)
-     IF (noncolin) dbecsum_nc=(0.d0,0.d0)
+     dvscfout = (0.d0,0.d0)
+     dbecsum = (0.d0,0.d0)
+     IF (noncolin) dbecsum_nc = (0.d0,0.d0)
      !
      ! DFPT+U: at each iteration calculate dnsscf,
      ! i.e. the scf variation of the occupation matrix ns.
@@ -194,7 +194,7 @@ subroutine solve_e
      !
      ! Compute dvscfout, the charge density response to the total potential
      !
-     CALL nonint_rho_response(iter==1, 3, lrebar, iuebar, thresh, dvscfins, &
+     CALL nonint_rho_response(iter==1, .FALSE., 3, lrebar, iuebar, thresh, dvscfins, &
                               averlt, dvscfout, dbecsum, dbecsum_nc)
      !
      !  The calculation of dbecsum is distributed across processors
