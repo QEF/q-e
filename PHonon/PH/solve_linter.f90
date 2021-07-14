@@ -244,6 +244,65 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !
   IF (iter0==-1000) iter0=0
   !
+  ! Compute dV_bare * psi before the self-consistency loop
+  !
+  DO ik = 1, nksq
+     !
+     ikk  = ikks(ik)
+     ikq  = ikqs(ik)
+     npw  = ngk(ikk)
+     npwq = ngk(ikq)
+     !
+     IF (lsda) current_spin = isk(ikk)
+     !
+     ! compute beta functions for k-point ikq
+     !
+     CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb)
+     !
+     DO isolv = 1, nsolv
+        IF (isolv == 1) THEN
+           ikmk = ikks(ik)
+        ELSE
+           ikmk = ikmks(ik)
+        ENDIF
+        !
+        ! read unperturbed wavefunctions psi(k) and psi(k+q)
+        !
+        IF (nksq > 1 .OR. nsolv == 2) THEN
+           CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+        ENDIF
+        !
+        DO ipert = 1, npe
+           mode = imode0 + ipert
+           nrec = (isolv-1) * npe * nksq + (ipert - 1) * nksq + ik
+           !
+           IF (isolv==1) THEN
+              CALL dvqpsi_us(ik, u(1, mode), .FAlSE., becp1, alphap)
+              !
+              ! DFPT+U: At the first ph iteration the bare perturbed
+              ! Hubbard potential dvbare_hub_q * psi_kpoint
+              ! is calculated and added to dvpsi.
+              !
+              IF (lda_plus_u) CALL dvqhub_barepsi_us(ik, u(1, mode))
+              !
+           ELSE
+              IF (okvan) THEN
+                 deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+                 int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,2)
+              ENDIF
+              CALL dvqpsi_us(ik, u(1, mode), .FAlSE., becpt, alphapt)
+              IF (okvan) THEN
+                 deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+                 int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,1)
+              ENDIF
+           ENDIF
+           !
+           CALL save_buffer(dvpsi, lrbar, iubar, nrec)
+           !
+        ENDDO ! ipert
+     ENDDO ! isolv
+  ENDDO ! ik
+  !
   !   The outside loop is over the iterations
   !
   do kter = 1, niter_ph
@@ -259,7 +318,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ! DFPT+U: at each ph iteration calculate dnsscf,
      ! i.e. the scf variation of the occupation matrix ns.
      !
-     IF (lda_plus_u .AND. (iter.NE.1)) &
+     IF (lda_plus_u .AND. (iter /= 1)) &
         CALL dnsq_scf (npe, lmetq0, imode0, irr, .true.)
      !
      do ik = 1, nksq
@@ -293,7 +352,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            !
            ! read unperturbed wavefunctions psi(k) and psi(k+q)
            !
-           if (nksq.gt.1.OR.nsolv==2) then
+           if (nksq > 1 .OR. nsolv == 2) then
               if (lgamma) then
                  call get_buffer (evc, lrwfc, iuwfc, ikmk)
               else
@@ -310,13 +369,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               mode = imode0 + ipert
               nrec = (ipert - 1) * nksq + ik + (isolv-1) * npe * nksq
               !
+              ! dvbare_q*psi_kpoint is read from file
+              !
+              call get_buffer (dvpsi, lrbar, iubar, nrec)
+              !
               !  and now adds the contribution of the self consistent term
               !
               if (where_rec =='solve_lint'.or.iter>1) then
-                 !
-                 ! After the first iteration dvbare_q*psi_kpoint is read from file
-                 !
-                 call get_buffer (dvpsi, lrbar, iubar, nrec)
                  !
                  ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
                  ! dvscf_q from previous iteration (mix_potential)
@@ -357,33 +416,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                     IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,1)
                  ENDIF
                  !
-              else
-                 !
-                 ! At the first iteration dvbare_q*psi_kpoint is calculated
-                 ! and written to file.
-                 !
-                 IF (isolv==1) THEN
-                    call dvqpsi_us (ik, u (1, mode),.false., becp1, alphap )
-                    !
-                    ! DFPT+U: At the first ph iteration the bare perturbed 
-                    ! Hubbard potential dvbare_hub_q * psi_kpoint 
-                    ! is calculated and added to dvpsi.
-                    !
-                    if (lda_plus_u) call dvqhub_barepsi_us (ik, u(1,mode))
-                    !
-                 ELSE
-                    IF (okvan) THEN
-                       deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
-                       int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,2)
-                    ENDIF
-                    call dvqpsi_us (ik, u (1, mode),.false., becpt, alphapt)
-                    IF (okvan) THEN
-                       deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
-                       int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,1)
-                    ENDIF
-                 ENDIF
-                 call save_buffer (dvpsi, lrbar, iubar, nrec)
-              !
               endif
               !
               ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
