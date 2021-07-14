@@ -129,7 +129,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
   logical :: conv_root,  & ! true if linear system is converged
              exst,       & ! used to open the recover file
-             lmetq0        ! true if xq=(0,0,0) in a metal
+             lmetq0,     & ! true if xq=(0,0,0) in a metal
+             first_iter    ! true if first iteration where induced rho is not yet calculated
 
   integer :: kter,       & ! counter on iterations
              iter0,      & ! starting iteration
@@ -311,6 +312,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ltaver = 0
      lintercall = 0
      !
+     first_iter = where_rec == 'solve_lint' .OR. iter > 1
+     !
      drhoscf(:,:,:) = (0.d0, 0.d0)
      dbecsum(:,:,:,:) = (0.d0, 0.d0)
      IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
@@ -326,7 +329,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !  change the sign of the magnetic field if required
         !
         IF (isolv == 2) THEN
-           IF (where_rec =='solve_lint' .OR. iter>1) THEN
+           IF (first_iter) THEN
               dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
               IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
            ENDIF
@@ -387,7 +390,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !
               !  and now adds the contribution of the self consistent term
               !
-              if (where_rec =='solve_lint'.or.iter>1) then
+              if (first_iter) then
                  !
                  ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
                  ! dvscf_q from previous iteration (mix_potential)
@@ -421,7 +424,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !
               CALL orthogonalize(dvpsi, evq, ikmk, ikmkmq, dpsi, npwq, .false.)
               !
-              if (where_rec=='solve_lint'.or.iter > 1) then
+              if (first_iter) then
                  !
                  ! starting value for delta_psi is read from iudwf
                  !
@@ -479,7 +482,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !  reset the original magnetic field if it was changed
         !
         IF (isolv == 2) THEN
-           IF (where_rec =='solve_lint' .OR. iter>1) THEN
+           IF (first_iter) THEN
               dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
               IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
            ENDIF
