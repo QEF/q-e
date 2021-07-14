@@ -245,7 +245,7 @@ subroutine ld1_readin( )
 !
   if (iswitch /= 2 ) then
     call set_dft_from_name(dft)
-    if (xclib_dft_is_libxc('ANY')) call xclib_init_libxc( lsd+1 )
+    if (xclib_dft_is_libxc('ANY')) call xclib_init_libxc( lsd+1, .FALSE. )
   endif
   
   if (zed == 0.0_dp .and. atom /= ' ') then
@@ -656,7 +656,7 @@ subroutine ld1_readin( )
              dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
         call check_mesh(grid)
         call set_dft_from_name(dft)
-        if (xclib_dft_is_libxc('ANY')) call xclib_init_libxc( lsd+1 )
+        if (xclib_dft_is_libxc('ANY')) call xclib_init_libxc( lsd+1, .FALSE. )
         !
         do ns=1,lmax+1
            ikk(ns)=grid%mesh

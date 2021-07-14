@@ -1238,7 +1238,7 @@ CONTAINS
   END SUBROUTINE xclib_get_finite_size_cell_volume
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE xclib_init_libxc( xclib_nspin )
+  SUBROUTINE xclib_init_libxc( xclib_nspin, domag )
     !------------------------------------------------------------------------
     !! Initialize Libxc functionals, if present.
     USE dft_par_mod,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
@@ -1248,12 +1248,20 @@ CONTAINS
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
+    LOGICAL, INTENT(IN) :: domag
     !! 1: unpolarized case; 2: polarized
-    INTEGER :: iid, ip, p0, pn, ips
+    INTEGER :: iid, ip, p0, pn, ips, nspin0
     INTEGER :: id_vec(6)
     !
 #if defined(__LIBXC)
     call xclib_init_libxc_print_version_info
+    !
+    nspin0 = xclib_nspin
+    IF ( xclib_nspin==4 ) THEN
+      nspin0 = 1
+      IF ( domag ) nspin0 = 2
+    ENDIF  
+    !
     id_vec(1)=iexch ; id_vec(2)=icorr
     id_vec(3)=igcx  ; id_vec(4)=igcc
     id_vec(5)=imeta ; id_vec(6)=imetac
@@ -1264,7 +1272,7 @@ CONTAINS
         libxc_initialized(iid) = .FALSE.
       ENDIF
       IF (is_libxc(iid)) THEN
-        CALL xc_f03_func_init( xc_func(iid), id_vec(iid), xclib_nspin )
+        CALL xc_f03_func_init( xc_func(iid), id_vec(iid), nspin0 )
         xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
 #if (XC_MAJOR_VERSION<=5)
@@ -1411,75 +1419,79 @@ CONTAINS
     !
     shortname = 'no shortname'
     !
-    IF ( iexch==1 .AND. igcx==0 .AND. igcc==0) THEN
-       shortname = TRIM(corr(icorr))
-    ELSEIF (iexch==4 .AND. icorr==0  .AND. igcx==0  .AND. igcc== 0) THEN
-       shortname = 'OEP'
-    ELSEIF (iexch==1 .AND. icorr==11 .AND. igcx==0  .AND. igcc== 0) THEN
-       shortname = 'VWN-RPA'
-    ELSEIF (iexch==1 .AND. icorr==3  .AND. igcx==1  .AND. igcc== 3) THEN
-       shortname = 'BLYP'
-    ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1  .AND. igcc== 0) THEN
-       shortname = 'B88'
-    ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1  .AND. igcc== 1) THEN
-       shortname = 'BP'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==2  .AND. igcc== 2) THEN
-       shortname = 'PW91'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==3  .AND. igcc== 4) THEN
-       shortname = 'PBE'
-    ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==8  .AND. igcc== 4) THEN
-       shortname = 'PBE0'
-    ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==41 .AND. igcc== 4) THEN
-       shortname = 'B86BPBEX'
-    ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==42 .AND. igcc== 3) THEN
-       shortname = 'BHANDHLYP'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==4  .AND. igcc== 4) THEN
-       shortname = 'revPBE'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==10 .AND. igcc== 8) THEN
-       shortname = 'PBESOL'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==19 .AND. igcc==12) THEN
-       shortname = 'Q2D'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==12 .AND. igcc== 4) THEN
-       shortname = 'HSE'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==20 .AND. igcc== 4) THEN
-       shortname = 'GAUPBE'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==21 .AND. igcc== 4) THEN
-       shortname = 'PW86PBE'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==22 .AND. igcc== 4) THEN
-       shortname = 'B86BPBE'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==11 .AND. igcc== 4) THEN
-       shortname = 'WC'
-    ELSEIF (iexch==7 .AND. icorr==12 .AND. igcx==9  .AND. igcc== 7) THEN
-       shortname = 'B3LYP'
-    ELSEIF (iexch==7 .AND. icorr==13 .AND. igcx==9  .AND. igcc== 7) THEN
-       shortname = 'B3LYP-V1R'
-    ELSEIF (iexch==9 .AND. icorr==14 .AND. igcx==28 .AND. igcc==13) THEN
-       shortname = 'X3LYP'
-    ELSEIF (iexch==0 .AND. icorr==3  .AND. igcx==6  .AND. igcc== 3) THEN
-       shortname = 'OLYP'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==17 .AND. igcc== 4) THEN
-       shortname = 'SOGGA'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==23 .AND. igcc== 1) THEN
-       shortname = 'OPTBK88'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==24 .AND. igcc== 1) THEN
-       shortname = 'OPTB86B'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==25 .AND. igcc== 0) THEN
-       shortname = 'EV93'
-    ELSEIF (iexch==5 .AND. icorr==0  .AND. igcx==0  .AND. igcc== 0) THEN
-       shortname = 'HF'
-    ENDIF
-    !
-    IF (imeta==1) THEN
-       shortname = 'TPSS'
-    ELSEIF (imeta == 2) THEN
-       shortname = 'M06L'
-    ELSEIF (imeta == 4) THEN
-       IF ( iexch == 1 .AND. icorr == 1) THEN
+    IF ( .NOT. xclib_dft_is_libxc('ANY')) THEN
+      !
+      IF ( iexch==1 .AND. igcx==0 .AND. igcc==0) THEN
+         shortname = TRIM(corr(icorr))
+      ELSEIF (iexch==4 .AND. icorr==0  .AND. igcx==0  .AND. igcc== 0) THEN
+         shortname = 'OEP'
+      ELSEIF (iexch==1 .AND. icorr==11 .AND. igcx==0  .AND. igcc== 0) THEN
+         shortname = 'VWN-RPA'
+      ELSEIF (iexch==1 .AND. icorr==3  .AND. igcx==1  .AND. igcc== 3) THEN
+         shortname = 'BLYP'
+      ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1  .AND. igcc== 0) THEN
+         shortname = 'B88'
+      ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1  .AND. igcc== 1) THEN
+         shortname = 'BP'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==2  .AND. igcc== 2) THEN
+         shortname = 'PW91'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==3  .AND. igcc== 4) THEN
+         shortname = 'PBE'
+      ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==8  .AND. igcc== 4) THEN
+         shortname = 'PBE0'
+      ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==41 .AND. igcc== 4) THEN
+         shortname = 'B86BPBEX'
+      ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==42 .AND. igcc== 3) THEN
+         shortname = 'BHANDHLYP'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==4  .AND. igcc== 4) THEN
+         shortname = 'revPBE'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==10 .AND. igcc== 8) THEN
+         shortname = 'PBESOL'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==19 .AND. igcc==12) THEN
+         shortname = 'Q2D'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==12 .AND. igcc== 4) THEN
+         shortname = 'HSE'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==20 .AND. igcc== 4) THEN
+         shortname = 'GAUPBE'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==21 .AND. igcc== 4) THEN
+         shortname = 'PW86PBE'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==22 .AND. igcc== 4) THEN
+         shortname = 'B86BPBE'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==11 .AND. igcc== 4) THEN
+         shortname = 'WC'
+      ELSEIF (iexch==7 .AND. icorr==12 .AND. igcx==9  .AND. igcc== 7) THEN
+         shortname = 'B3LYP'
+      ELSEIF (iexch==7 .AND. icorr==13 .AND. igcx==9  .AND. igcc== 7) THEN
+         shortname = 'B3LYP-V1R'
+      ELSEIF (iexch==9 .AND. icorr==14 .AND. igcx==28 .AND. igcc==13) THEN
+         shortname = 'X3LYP'
+      ELSEIF (iexch==0 .AND. icorr==3  .AND. igcx==6  .AND. igcc== 3) THEN
+         shortname = 'OLYP'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==17 .AND. igcc== 4) THEN
+         shortname = 'SOGGA'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==23 .AND. igcc== 1) THEN
+         shortname = 'OPTBK88'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==24 .AND. igcc== 1) THEN
+         shortname = 'OPTB86B'
+      ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==25 .AND. igcc== 0) THEN
+         shortname = 'EV93'
+      ELSEIF (iexch==5 .AND. icorr==0  .AND. igcx==0  .AND. igcc== 0) THEN
+         shortname = 'HF'
+      ENDIF 
+      !
+      IF (imeta==1) THEN
+        shortname = 'TPSS'
+      ELSEIF (imeta == 2) THEN
+        shortname = 'M06L'
+      ELSEIF (imeta == 4) THEN
+        IF ( iexch == 1 .AND. icorr == 1) THEN
           shortname = 'PZ+META'
-       ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
           shortname = 'PBE+META'
-       ENDIF
-    ENDIF
+        ENDIF
+      ENDIF
+      !
+    ENDIF  
     !
     IF (is_libxc(5) .AND. is_libxc(6)) THEN
        IF (imeta==263 .AND. imetac==267) THEN
