@@ -49,6 +49,8 @@ set(sources
     src/stop_epw.f90
     src/wannierEPW.f90
     src/loadbm.f90
+    src/bfield.f90
+    src/io_indabs.f90
     src/ephblochkq.f90
     src/wfc_elec.f90
     src/test_tools.f90)
