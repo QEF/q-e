@@ -202,6 +202,7 @@ ld1_readin.o : ../../Modules/open_close_input_file.o
 ld1_readin.o : ../../UtilXlib/mp.o
 ld1_readin.o : ../../upflib/radial_grids.o
 ld1_readin.o : ../../upflib/upf_params.o
+ld1_readin.o : ../../XClib/xc_lib.o
 ld1_readin.o : atomic_paw.o
 ld1_readin.o : ld1inc.o
 ld1_readin.o : parameters.o
