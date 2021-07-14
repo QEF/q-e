@@ -46,7 +46,7 @@ subroutine solve_e
   USE paw_onecenter,         ONLY : paw_dpotential
   USE paw_symmetry,          ONLY : paw_desymmetrize
 
-  USE units_ph,              ONLY : lrdwf, iudwf, lrdrho, iudrho
+  USE units_ph,              ONLY : lrdwf, iudwf, lrdrho, iudrho, lrebar, iuebar
   USE units_lr,              ONLY : iuwfc, lrwfc
   USE output,                ONLY : fildrho
   USE control_ph,            ONLY : ext_recover, rec_code, &
@@ -158,6 +158,28 @@ subroutine solve_e
   if ( (lgauss .or. ltetra) .or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
   !
+  ! Compute P_c^+ x psi for all polarization and k points.
+  !
+  DO ik = 1, nksq
+     DO ipol = 1, 3
+        ikk = ikks(ik)
+        npw = ngk(ikk)
+        !
+        ! reads unperturbed wavefunctions psi_k in G_space, for all bands
+        !
+        IF (nksq > 1) THEN
+           CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+        ENDIF
+        !
+        CALL init_us_2(npw, igk_k(1, ikk), xk(1, ikk), vkb)
+        !
+        ! computes P_c^+ x psi_kpoint, written to buffer iuebar.
+        !
+        CALL dvpsi_e(ik, ipol)
+        !
+     ENDDO ! ipol
+  ENDDO ! ik
+  !
   !   The outside loop is over the iterations
   !
   do kter = 1, niter_ph
@@ -188,7 +210,7 @@ subroutine solve_e
         !
         ! reads unperturbed wavefunctions psi_k in G_space, for all bands
         !
-        if (nksq.ge.1) THEN 
+        if (nksq > 1) THEN
            call get_buffer (evc, lrwfc, iuwfc, ikk)
         end if
         !
@@ -204,9 +226,10 @@ subroutine solve_e
         !
         do ipol = 1, 3
            !
-           ! computes/reads P_c^+ x psi_kpoint into dvpsi array
+           ! read P_c^+ x psi_kpoint into dvpsi.
            !
-           call dvpsi_e (ik, ipol)
+           nrec = (ipol - 1) * nksq + ik
+           CALL get_buffer(dvpsi, lrebar, iuebar, nrec)
            !
            if (iter > 1) then
               !
