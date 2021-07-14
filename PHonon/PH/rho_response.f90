@@ -9,8 +9,8 @@
 !------------------------------------------------------------------------------
 MODULE rho_response
 CONTAINS
-SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvpsi, thresh, dvscfins, &
-         avg_iter, drhoout, dbecsum, dbecsum_nc)
+SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvpsi, &
+         thresh, dvscfins, avg_iter, drhoout, dbecsum, dbecsum_nc)
    !----------------------------------------------------------------------------
    !! Compute the density response to the perturbation dV = dV_bare + dV_ind by the
    !! non-interacting susceptibility. Solve Sternheimer equation
@@ -183,7 +183,7 @@ SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvps
             !
             IF (time_reversed) THEN
                !
-               ! FIXME: adddvscf_ph_mag is almost the same as adddvscf, except that it
+               ! TODO: adddvscf_ph_mag is almost the same as adddvscf, except that it
                ! uses becp from input, not from USE lrus. Ideally, one should merge the two.
                !
                CALL adddvscf_ph_mag(ipert, ik, becpt)
