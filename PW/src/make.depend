@@ -1501,7 +1501,6 @@ mix_rho.o : ../../Modules/cell_base.o
 mix_rho.o : ../../Modules/constants.o
 mix_rho.o : ../../Modules/control_flags.o
 mix_rho.o : ../../Modules/fft_base.o
-mix_rho.o : ../../Modules/io_files.o
 mix_rho.o : ../../Modules/io_global.o
 mix_rho.o : ../../Modules/ions_base.o
 mix_rho.o : ../../Modules/kind.o
@@ -1510,6 +1509,7 @@ mix_rho.o : ../../Modules/recvec.o
 mix_rho.o : ../../Modules/wavefunctions.o
 mix_rho.o : ../../UtilXlib/mp.o
 mix_rho.o : ../../upflib/uspp.o
+mix_rho.o : buffers.o
 mix_rho.o : gcscf_module.o
 mix_rho.o : ldaU.o
 mix_rho.o : pwcom.o
