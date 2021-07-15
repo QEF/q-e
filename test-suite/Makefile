@@ -217,7 +217,7 @@ clean:
 		epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_*/*.cube epw_*/EPW.bib \
 		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup.fmt \
 		epw_*/inv_taucb.fmt epw_*/inv_tau.fmt epw_*/restart.fmt epw_*/vmedata.fmt \
-		epw_*/selecq.fmt
+		epw_*/selecq.fmt epw_*/dmedata.fmt
 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \

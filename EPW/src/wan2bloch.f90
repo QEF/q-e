@@ -892,8 +892,7 @@
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : cdmew
     USE epwcom,        ONLY : eig_read, use_ws
-    USE constants_epw, ONLY : cone, czero, eps4, zero, one
-    USE low_lvl,       ONLY : degen_sort
+    USE constants_epw, ONLY : cone, czero, eps4
     !
     IMPLICIT NONE
     !
@@ -916,8 +915,6 @@
     !! Exponential factor
     !
     ! Local variables
-    LOGICAL :: duplicates
-    !! Returns if the bands contains degeneracices for that k-point.
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
@@ -930,44 +927,11 @@
     !! Counter on band index
     INTEGER :: ipol
     !! Counter on polarization
-    INTEGER :: ideg
-    !! Index on degenerations
-    INTEGER :: ibndc
-    !! Index to count degenerate iband
-    INTEGER :: jbndc
-    !! Index to count degenerate jband
-    INTEGER :: ijbndc
-    !! Index to deduce ibndc and jbndc
-    INTEGER :: list_dup(nbnd)
-    !! List of degenerate eigenvalues
-    INTEGER :: neig
-    !! The total number of eigenvalues found
-    INTEGER :: info
-    !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
-    INTEGER :: ierr
-    !! Error status
-    INTEGER, ALLOCATABLE :: ifail(:)
-    !! Contains the indices of the eigenvectors that failed to converge
-    INTEGER, ALLOCATABLE :: iwork(:)
-    !! Integer work array
-    INTEGER, ALLOCATABLE :: deg_dim(:)
-    !! Index that keeps track of degeneracies and their dimensionality
-    REAL(KIND = DP), ALLOCATABLE :: rwork(:)
-    !! Real work array
-    REAL(KIND = DP), ALLOCATABLE :: w(:)
-    !! Eigenvalues
-    COMPLEX(KIND =DP) :: cdmef(3, nbnd, nbnd)
+    !
+    COMPLEX( kind=DP ) :: cdmef(3, nbnd, nbnd)
     !! dipole matrix elements in Bloch basis, fine mesh
-    COMPLEX(KIND = DP) :: cdmef_tmp(nbnd, nbnd)
+    COMPLEX( kind=DP ) :: cdmef_tmp(nbnd, nbnd)
     !! dipole matrix elements in Bloch basis, fine mesh
-    COMPLEX(KIND = DP), ALLOCATABLE :: champ(:)
-    !! Complex Hamiltonian packed in upper triangle
-    COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
-    !! Complex work array
-    COMPLEX(KIND = DP), ALLOCATABLE :: cz(:, :)
-    !! Eigenvectors
-    COMPLEX(KIND = DP), ALLOCATABLE :: dmef_deg(:, :, :)
-    !! interpolated velocity matrix elements in Bloch basis, fine mesh, in the degenerate subspaces
     !
     ! Initialization
     cdmef_tmp(:, :) = czero
@@ -1027,104 +991,6 @@
         ENDDO
       ENDDO
     ENDIF
-    !
-    ! Now find and sort degeneracies
-    !
-    CALL degen_sort(etf, SIZE(etf), duplicates, list_dup)
-    !
-    ! Count degeneracies and their dimensionality
-    IF (duplicates .eqv. .TRUE.) THEN
-      ALLOCATE(deg_dim(MAXVAL(list_dup)), STAT = ierr)
-      IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating deg_dim(MAXVAL', 1)
-      deg_dim = 0
-      DO ideg = 1, SIZE(deg_dim)
-        DO ibnd = 1, nbnd
-          IF (list_dup(ibnd) == ideg) THEN
-            deg_dim(ideg) = deg_dim(ideg) + 1
-          ENDIF
-        ENDDO
-      ENDDO
-      ! Now allocate matrixes for each degenerate subspace
-      DO ideg = 1, SIZE(deg_dim)
-        ALLOCATE(dmef_deg(3, deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating vmef_deg(3, deg_dim(ideg), deg_dim', 1)
-        ALLOCATE(ifail(deg_dim(ideg)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating ifail(deg_dim', 1)
-        ALLOCATE(iwork(5 * deg_dim(ideg)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating iwork(5 * deg_dim', 1)
-        ALLOCATE(w(deg_dim(ideg)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating w(deg_dim', 1)
-        ALLOCATE(rwork(7 * deg_dim(ideg)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating rwork(7 * deg_dim', 1)
-        ALLOCATE(champ(deg_dim(ideg) * (deg_dim(ideg) + 1) / 2), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating champ(deg_dim(ideg) * (deg_dim', 1)
-        ALLOCATE(cwork(2 * deg_dim(ideg)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating cwork(2 * deg_dim', 1)
-        ALLOCATE(cz(deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating cz(deg_dim(ideg), deg_dim', 1)
-        ijbndc = 0
-        DO ibnd = 1, nbnd
-          DO jbnd = 1, nbnd
-            IF ((list_dup(ibnd) == ideg) .AND. (list_dup(jbnd) == ideg)) THEN
-              ijbndc = ijbndc + 1
-              jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
-              ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
-              dmef_deg(:, ibndc, jbndc) = dmef(:, ibnd, jbnd)
-            ENDIF
-          ENDDO
-        ENDDO
-        !
-        DO ipol = 1, 3
-          DO jbndc = 1, deg_dim(ideg)
-            DO ibndc = 1, jbndc
-              champ(ibndc + (jbndc - 1) * jbndc / 2) = &
-                   (dmef_deg(ipol, ibndc, jbndc) + CONJG(dmef_deg(ipol, jbndc, ibndc))) * 0.5d0
-            ENDDO
-          ENDDO
-          !
-          CALL ZHPEVX('V', 'A', 'U', deg_dim(ideg), champ , zero, zero, &
-                    0, 0, -one, neig, w, cz, deg_dim(ideg), cwork, rwork, iwork, ifail, info)
-          !
-          dmef_deg(ipol, :, :) = zero
-          DO ibndc = 1, deg_dim(ideg)
-            dmef_deg(ipol, ibndc, ibndc) = w(ibndc)
-          ENDDO
-        ENDDO !ipol
-        !
-        ! Now store the values back in vmef
-        !
-        ijbndc = 0
-        DO ibnd = 1, nbnd
-          DO jbnd = 1, nbnd
-            IF ((list_dup(ibnd) == ideg) .AND. (list_dup(jbnd) == ideg)) THEN
-              ijbndc = ijbndc + 1
-              jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
-              ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
-              dmef(:, ibnd, jbnd) = dmef_deg(:, ibndc, jbndc)
-            ENDIF
-          ENDDO
-        ENDDO
-        !
-        DEALLOCATE(dmef_deg, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating vmef_deg', 1)
-        DEALLOCATE(ifail, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating ifail', 1)
-        DEALLOCATE(iwork, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating iwork', 1)
-        DEALLOCATE(w, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating w', 1)
-        DEALLOCATE(rwork, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating rwork', 1)
-        DEALLOCATE(champ, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating champ', 1)
-        DEALLOCATE(cwork, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating cwork', 1)
-        DEALLOCATE(cz, STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating cz', 1)
-        !
-      ENDDO !ideg
-      !
-    ENDIF !duplicates
     !--------------------------------------------------------------------------
     END SUBROUTINE dmewan2bloch
     !--------------------------------------------------------------------------
@@ -1175,6 +1041,8 @@
     !! Rotation matrix U^\dagger, fine mesh
     COMPLEX(KIND = DP), INTENT(out) :: vmef(3, nbnd, nbnd)
     !! interpolated velocity matrix elements in Bloch basis, fine mesh
+    COMPLEX(KIND = DP), ALLOCATABLE :: vmef_deg(:, :, :)
+    !! interpolated velocity matrix elements in Bloch basis, fine mesh, in the degenerate subspaces
     !
     ! local variables
     LOGICAL :: duplicates
@@ -1233,8 +1101,6 @@
     !! Complex work array
     COMPLEX(KIND = DP), ALLOCATABLE :: cz(:, :)
     !! Eigenvectors
-    COMPLEX(KIND = DP), ALLOCATABLE :: vmef_deg(:, :, :)
-    !! interpolated velocity matrix elements in Bloch basis, fine mesh, in the degenerate subspaces
     !
     ! Initialization
     !
@@ -1426,6 +1292,7 @@
               ijbndc = ijbndc + 1
               jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
               ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
+!DBSP
               vmef(:, ibnd, jbnd) = vmef_deg(:, ibndc, jbndc)
             ENDIF
           ENDDO
@@ -1450,7 +1317,7 @@
         !
       ENDDO !ideg
       !
-    ENDIF !duplicates
+    ENDIF
     !
     CALL stop_clock('vmewan2bloch')
     !--------------------------------------------------------------------------
