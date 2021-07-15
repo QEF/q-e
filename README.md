@@ -45,7 +45,7 @@ can be found on [Wiki page on gitlab](https://gitlab.com/QEF/q-e/-/wikis/home).
 - PHonon: vibrational and dielectric properties from DFPT (Density-Functional Perturbation Theory);
 - TD-DFPT: spectra from Time-dependent DFPT;
 - HP: calculation of Hubbard parameters from DFPT;
-- EPW: calculation of electron-phonon coefficients in metals;
+- EPW: calculation of electron-phonon coefficients, carrier transport, phonon-limited superconductivity and phonon-assisted optical processes;
 - PWCOND: ballistic transport;
 - XSpectra: calculation of X-ray absorption spectra;
 - PWneb: reaction pathways and transition states with the Nudged Elastic Band method;
