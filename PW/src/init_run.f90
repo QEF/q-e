@@ -35,6 +35,7 @@ SUBROUTINE init_run()
   USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE lsda_mod,           ONLY : nspin
+  USE spin_orb,           ONLY : domag
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   USE control_flags,      ONLY : use_gpu
@@ -127,12 +128,11 @@ SUBROUTINE init_run()
   IF (mbd_vdw) THEN
      CALL init_mbd()
   END IF
-
   !
   CALL allocate_wfc_k()
   CALL openfil()
   !
-  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin )
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
   !
   CALL hinit0()
   !

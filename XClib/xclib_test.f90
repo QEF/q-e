@@ -58,7 +58,7 @@ PROGRAM xclib_test
   !
   INTEGER :: mype, npes, comm, ntgs, root
   LOGICAL :: iope
-  INTEGER :: i, ierr, ierrm
+  INTEGER :: i, ierr, ierrm, ios
   INTEGER :: nnodes, nlen
   !
   INTEGER, PARAMETER :: stdin  = 5
@@ -212,11 +212,12 @@ PROGRAM xclib_test
   ! GET INPUT FROM FILE
   !==========================================================================
   !
+  ios=0
   IF (mype==root) THEN
-    READ( stdin, input_namelist )
+    READ( unit=stdin, nml=input_namelist, iostat=ios )
     IF ( test(1:4)=='gen-' ) THEN
       test = 'exe-benchmark'
-      WRITE( stdout, input_namelist )
+      WRITE( unit=stdout, nml=input_namelist, DELIM='QUOTE', iostat=ios )
       test = 'gen-benchmark'
     ENDIF  
   ENDIF
@@ -324,7 +325,7 @@ PROGRAM xclib_test
     !
 #if defined(__LIBXC)
     !
-    IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1 )
+    IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1, .FALSE. )
     !
     WRITE(stdout,*) CHAR(10)//"LIBXC functional infos:"
     !
@@ -484,7 +485,7 @@ PROGRAM xclib_test
   np = 1
   IF (ns==2) np = 3
   !
-  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns )
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns, .FALSE. )
   !
   !==========================================================================
   ! ALLOCATIONS OF XC I/O ARRAYS
@@ -779,7 +780,7 @@ PROGRAM xclib_test
     IF (test == 'dft-comparison') THEN
       CALL xclib_reset_dft()
       CALL xclib_set_dft_from_name( dft2 )
-      IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns )
+      IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns, .FALSE. )
     ENDIF
     IF (test(1:4)=='gen-') dft2 = dft1
     !

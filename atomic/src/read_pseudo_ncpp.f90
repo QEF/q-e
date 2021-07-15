@@ -46,7 +46,7 @@ subroutine read_pseudo_ncpp (file_pseudo,zed,grid,ndmx,&
 
   character ::   &
        file_pseudo*20, &    ! input: the file with the pseudopotential
-       dft*20              ! output: the type of xc
+       dft*37               ! output: the type of xc
 
   integer :: &
        ios, i, l, k, ir, iunps, nbeta,nlc,nnl   

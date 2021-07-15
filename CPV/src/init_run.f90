@@ -172,7 +172,7 @@ SUBROUTINE init_run()
   !=======================================================================
   !     Initialization of the libxc
   !=======================================================================
-  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin )
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, .FALSE. )
   !=======================================================================
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
