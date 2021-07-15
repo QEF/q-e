@@ -170,6 +170,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (noncolin.AND.domag) nsolv=2
 
   allocate (dvscfin ( dfftp%nnr , nspin_mag , npe))
+  dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins (dffts%nnr , nspin_mag , npe))
   else
