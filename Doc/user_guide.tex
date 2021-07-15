@@ -77,11 +77,12 @@ more specialized calculations:
         Density-Functional Perturbation Theory.
   \item \texttt{GWL}: electronic excitations within the GW approximation
         and with the Bethe-Salpeter Equation
-  \item \texttt{EPW}: calculation of the electron-phonon coefficients
-        and related quantities;
+  \item \texttt{EPW}: calculation of the electron-phonon coefficients,
+        carrier transport, phonon-limited superconductivity and phonon-assisted
+        optical processes;
   \item \texttt{HP}: calculation of Hubbard $U$ parameters using DFPT;
   \item \texttt{QEHeat}: energy current in insulators for thermal
-    transport calculations.
+        transport calculations.
 \end{itemize}
 The following auxiliary packages are included as well:
 \begin{itemize}
@@ -617,7 +618,7 @@ and the following optional packages:\\
 In order to compile the code for GPU's you will need a recent version
 -- the more recent, the better -- of the NVidia HPC software development
 kit (SDK). OpenMP must be enabled, and you may want to use a CUDA-aware MPI
-distribution if running on multiple GPUc in order to optimize the
+distribution if running on multiple GPUs in order to optimize the
 interprocess data transfer. The following \configure\ options are
 available:\\
 \begin{tabular}{ll}
@@ -905,7 +906,7 @@ packages, manually download them into subdirectory
 and try \make\ again. Also see Sec.(\ref{SubSec:Download}).
 
 \subsection{Running tests and examples}
-\label{SubSec:Examples}
+\label{SubSec:TestsExamples}
 
 As a final check that compilation was successful, you may want to run some or
 all of the tests and examples.
@@ -915,7 +916,7 @@ to benchmark parallelism, do not try to run on too many processors.
 
 \subsubsection{Test-suite}
 Automated tests give a "pass/fail" answer. All tests run quickly
-(less than a minute at most), but they are not meant to be realistic,
+(less than a minute each at most), but they are not meant to be realistic,
 just to test a specific case. Many features are tested but only for
 the following codes: \pwx, \cpx, \phx, \epwx, \texttt{hp.x}.
 Instructions for the impatient:
@@ -930,6 +931,7 @@ to edit the \texttt{run-XX.sh} shells, defining variables
 meaning).
 
 \subsubsection{Examples}
+\label{SubSec:Examples}
 There are many examples and reference data for almost every piece of \qe,
 but you have to manually inspect the results.
 

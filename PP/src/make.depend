@@ -147,8 +147,8 @@ d_matrix_nc.o : ../../PW/src/symm_base.o
 d_matrix_so.o : ../../Modules/invmat.o
 d_matrix_so.o : ../../Modules/kind.o
 d_matrix_so.o : ../../Modules/random_numbers.o
-d_matrix_so.o : ../../PW/src/pwcom.o
 d_matrix_so.o : ../../PW/src/symm_base.o
+d_matrix_so.o : ../../upflib/upf_spinorb.o
 do_initial_state.o : ../../Modules/cell_base.o
 do_initial_state.o : ../../Modules/constants.o
 do_initial_state.o : ../../Modules/control_flags.o
