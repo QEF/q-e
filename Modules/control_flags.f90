@@ -208,9 +208,10 @@ MODULE control_flags
     rmm_ndim,         &! max dimension of subspace in RMM-DIIS diagonalization
     gs_nblock          ! blocking size in Gram-Schmidt orthogonalization
   LOGICAL, PUBLIC :: &
-    rmm_conv,               &! if true,  RMM-DIIS is performed up to converge
-    diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
-                             ! accuracy of the occupied ones
+    rmm_conv,                     &! if true,  RMM-DIIS is performed up to converge
+    rmm_with_davidson  = .TRUE.,  &! if true RMM-DIIS  in alternance with davidson 
+    diago_full_acc     = .FALSE.      ! if true,  empty eigenvalues have the same
+                                   ! accuracy of the occupied ones
   !
   ! ... ionic dynamics
   !

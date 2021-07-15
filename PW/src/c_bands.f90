@@ -1300,17 +1300,17 @@ SUBROUTINE c_bands_nscf( )
 END SUBROUTINE c_bands_nscf
 
 FUNCTION rmm_use_davidson(iter_) RESULT (res)
-  USE command_line_options, ONLY: rmm_with_paro_ 
+  USE control_flags, ONLY: rmm_with_davidson
   IMPLICIT NONE
   INTEGER,INTENT(IN) :: iter_ 
   LOGICAL :: res 
-  res = (.NOT. rmm_with_paro_) .AND. ( iter_ < 3 .OR. MOD(iter_,5) == 0) 
+  res = (rmm_with_davidson) .AND. ( iter_ < 3 .OR. MOD(iter_,5) == 0) 
 END FUNCTION rmm_use_davidson
 
 FUNCTION rmm_use_paro(iter_) RESULT (res)
-  USE command_line_options, ONLY: rmm_with_paro_
+  USE control_flags, ONLY: rmm_with_davidson
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iter_ 
   LOGICAL  :: res 
-  res = (rmm_with_paro_) .AND.  (MOD(iter_,8) == 0) 
+  res = (.NOT. rmm_with_davidson) .AND.  (MOD(iter_,5) == 1) 
 END FUNCTION rmm_use_paro

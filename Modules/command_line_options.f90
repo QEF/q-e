@@ -151,15 +151,7 @@ CONTAINS
                  CALL get_command_argument ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) nmany_
-              narg = narg + 1
-           CASE ( '-rmmparo', '-rmm_with_paro', '-rmm_use_paro' )
-              IF (read_string) THEN
-                 CALL my_getarg ( input_command_line, narg, arg )
-              ELSE
-                 CALL get_command_argument ( narg, arg )
-              ENDIF
-              READ ( arg, *, ERR = 15, END = 15) rmm_with_paro_
-              narg = narg + 1
+              narg = narg + 1 
            CASE DEFAULT
               command_line = TRIM(command_line) // ' ' // TRIM(arg)
         END SELECT
@@ -182,7 +174,6 @@ CONTAINS
      CALL mp_bcast( nband_ , root, world_comm ) 
      CALL mp_bcast( ndiag_ , root, world_comm ) 
      CALL mp_bcast( pencil_decomposition_ , root, world_comm )
-     CALL mp_bcast( rmm_with_paro_, root, world_comm) 
      
   END SUBROUTINE get_command_line
   !
