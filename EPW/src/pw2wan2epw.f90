@@ -2455,7 +2455,6 @@
     a0(:, 2) = (/ 0d0, 1d0, 0d0 /)
     a0(:, 3) = (/ 0d0, 0d0, 1d0 /)
     !
-    WRITE(stdout, *) 'debug: npwx, npol, nbnd, nspin, nhm, ntyp=', npwx, npol, nbnd, nspin, nhm, ntyp !!!!! debug
     ALLOCATE(dmec(3, nbndep, nbndep, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating dmec', 1)
     dmec = czero
