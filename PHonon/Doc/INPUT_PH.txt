@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ph.x / PWscf / Quantum Espresso (version: 6.7)
+Program: ph.x / PHonon / Quantum ESPRESSO (version: 6.8)
 ------------------------------------------------------------------------
 
 
@@ -979,4 +979,4 @@ ________________________________________________________________________
    information.
    
 
-This file has been created by helpdoc utility on Sun Nov 29 12:16:13 CET 2020
+This file has been created by helpdoc utility on Fri Jul 16 11:28:32 CEST 2021
