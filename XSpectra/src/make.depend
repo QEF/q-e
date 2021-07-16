@@ -257,3 +257,9 @@ xspectra.o : xspectra_mod.o
 xspectra_mod.o : ../../Modules/ions_base.o
 xspectra_mod.o : ../../Modules/kind.o
 xspectra_mod.o : paw_gipaw.o
+xspectra_utils.o : ../../Modules/constants.o
+xspectra_utils.o : ../../Modules/io_files.o
+xspectra_utils.o : ../../Modules/io_global.o
+xspectra_utils.o : ../../Modules/kind.o
+xspectra_utils.o : ../../Modules/mp_global.o
+xspectra_utils.o : xspectra_mod.o
