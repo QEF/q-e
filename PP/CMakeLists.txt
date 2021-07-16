@@ -41,8 +41,7 @@ set(src_pp
     src/write_proj.f90
     src/write_io_header.f90
     src/write_hamiltonians.f90
-    src/xc_vdW_scale_mod.f90
-    src/projwfc.f90)
+    src/xc_vdW_scale_mod.f90)
 qe_enable_cuda_fortran("${src_pp}")
 
 qe_add_library(qe_pp ${src_pp})
@@ -207,6 +206,7 @@ target_link_libraries(qe_pp_pmw_exe
 # projwfc.x
 ###########################################################
 set(src_projwfc_x src/projwfc.f90)
+qe_enable_cuda_fortran("${src_projwfc_x}")
 qe_add_executable(qe_pp_projwfc_exe ${src_projwfc_x})
 set_target_properties(qe_pp_projwfc_exe PROPERTIES OUTPUT_NAME projwfc.x)
 target_link_libraries(qe_pp_projwfc_exe

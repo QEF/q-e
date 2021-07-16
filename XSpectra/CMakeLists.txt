@@ -1,5 +1,4 @@
 set(src_xspectra
-    src/xspectra.f90
     src/gaunt_mod.f90
     src/xspectra_mod.f90
     src/radin_mod.f90
