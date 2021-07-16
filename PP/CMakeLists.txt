@@ -1,4 +1,5 @@
 set(src_pp
+    src/adduscore.f90
     src/addusdens1d.f90
     src/add_shift_cc.f90
     src/add_shift_lc.f90
