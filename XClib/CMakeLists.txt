@@ -27,6 +27,7 @@ qe_add_library(qe_xclib ${sources_xclib})
 target_link_libraries(qe_xclib
     PRIVATE
         qe_openmp_fortran
+        qe_openacc_fortran
         qe_mpi_fortran
         qe_external_libxc
         qe_libbeef)

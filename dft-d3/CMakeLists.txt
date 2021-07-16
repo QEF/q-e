@@ -9,6 +9,7 @@ set(src_dftd3
 qe_add_library(qe_dftd3 ${src_dftd3})
 target_link_libraries(qe_dftd3
     PRIVATE
+        qe_openacc_fortran
         qe_modules
         qe_upflib)
 

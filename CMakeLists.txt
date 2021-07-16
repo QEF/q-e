@@ -273,6 +273,17 @@ if(QE_ENABLE_OPENMP)
 endif(QE_ENABLE_OPENMP)
 
 ###########################################################
+# OpenACC
+# The following targets will be defined:
+add_library(qe_openacc_fortran INTERFACE)
+qe_install_targets(qe_openacc_fortran)
+###########################################################
+if(QE_ENABLE_OPENACC)
+    target_link_libraries(qe_openacc_fortran
+        INTERFACE OpenACC::OpenACC_Fortran)
+endif(QE_ENABLE_OPENACC)
+
+###########################################################
 # MPI
 # The following targets will be defined:
 add_library(qe_mpi_fortran INTERFACE)
