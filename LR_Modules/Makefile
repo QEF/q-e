@@ -10,6 +10,7 @@ adddvscf.o \
 addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \
+apply_dpot_mod.o \
 addusldos.o \
 adddvepsi_us.o \
 addusddenseq.o \
@@ -20,8 +21,6 @@ cg_psi.o \
 ccg_psi.o \
 ch_psi_all.o \
 ch_psi_all_complex.o \
-commutator_Hx_psi.o \
-commutator_Vhubx_psi.o \
 Coul_cut_2D_ph.o \
 check_q_points_sym.o \
 dfpt_tetra_mod.o \
@@ -35,11 +34,9 @@ dnonloccorr.o \
 dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
-compute_intq.o \
 set_intq_nc.o \
 lr_sym_mod.o \
 orthogonalize.o \
-setup_offset_beta.o \
 setup_nscf.o \
 set_dbecsum_nc.o \
 set_int3_nc.o \
@@ -63,8 +60,11 @@ mode_group.o \
 mix_pot.o \
 lrcom.o \
 lr_dot.o \
+lr_dot_magnons.o \
 lanczos_pseudohermitian.o \
-lanczos_nonhermitian.o 
+lanczos_nonhermitian.o \
+lanczos_pseudohermitian_c.o \
+lanczos_nonhermitian_c.o 
 
 TLDEPS=mods pwlibs
 

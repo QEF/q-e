@@ -187,7 +187,7 @@ xe0		 real(DP)				           DEFAULT=1.d4
                    of the spectrum at an other value than the Fermi energy
                    (for example, for an insulator, in the middle of the gap) 
 
-xniter		 integer					   DEFAULT=2000
+xniter		 integer					   DEFAULT=50
                  maximum number of iterations for Lanczos.
 		 The maximum number of iterations allowed must be lower 
                  than the number of vectors in the Hilbert space

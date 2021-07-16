@@ -2,7 +2,6 @@ subroutine check_basis(numwprod,npw)
 ! checking if the polarizability basis is orthonormal
 
 USE fft_custom_gwl
-!USE io_files,             ONLY : find_free_unit, prefix, diropn
 USE io_files,             ONLY : prefix, diropn
 USE wavefunctions, ONLY :  psic
 USE mp,          ONLY :mp_barrier

@@ -9,9 +9,8 @@
 !=----------------------------------------------------------------------=
 MODULE recvec_subs
   !=----------------------------------------------------------------------=
-
-  !  ... subroutines generating G-vectors and variables nl* needed to map
-  !  ... G-vector components onto the FFT grid(s) in reciprocal space
+  !! Subroutines generating G-vectors and variables nl* needed to map
+  !! G-vector components onto the FFT grid(s) in reciprocal space.
   !
   USE kinds, ONLY : dp
   USE fft_types, ONLY: fft_stick_index, fft_type_descriptor
@@ -30,11 +29,10 @@ CONTAINS
   SUBROUTINE ggen ( dfftp, gamma_only, at, bg,  gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart, no_global_sort )
     !----------------------------------------------------------------------
-    !
-    !     This routine generates all the reciprocal lattice vectors
-    !     contained in the sphere of radius gcutm. Furthermore it
-    !     computes the indices nl which give the correspondence
-    !     between the fft mesh points and the array of g vectors.
+    !! This routine generates all the reciprocal lattice vectors
+    !! contained in the sphere of radius gcutm. Furthermore it
+    !! computes the indices nl which give the correspondence
+    !! between the fft mesh points and the array of g vectors.
     !
     USE mp, ONLY: mp_rank, mp_size, mp_sum
     USE constants, ONLY : eps8
@@ -271,27 +269,24 @@ CONTAINS
   SUBROUTINE ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms, &
        gs, ggs )
     !-----------------------------------------------------------------------
-    !
-    ! Initialize number and indices of  g-vectors for a subgrid,
-    ! for exactly the same ordering as for the original FFT grid
-    !
-    !--------------------------------------------------------------------
+    !! Initialize number and indices of  g-vectors for a subgrid,
+    !! for exactly the same ordering as for the original FFT grid
     !
     IMPLICIT NONE
     !
     LOGICAL, INTENT(IN) :: gamma_only
     TYPE (fft_type_descriptor), INTENT(INOUT) :: dffts
-    ! primitive lattice vectors
+    !! primitive lattice vectors
     REAL(dp), INTENT(IN) :: at(3,3)
-    ! G-vectors in FFT grid
+    !! G-vectors in FFT grid
     REAL(dp), INTENT(IN) :: g(:,:), gg(:)    
-    ! Miller indices for G-vectors of FFT grid
+    !! Miller indices for G-vectors of FFT grid
     INTEGER, INTENT(IN) :: mill(:,:)
-    ! cutoff for subgrid
+    !! cutoff for subgrid
     REAL(DP), INTENT(IN):: gcutms
-    ! Local number of G-vectors in subgrid
+    !! Local number of G-vectors in subgrid
     INTEGER, INTENT(OUT):: ngms
-    ! Optionally: G-vectors and modules
+    !! Optionally: G-vectors and modules
     REAL(DP), INTENT(INOUT), POINTER, OPTIONAL:: gs(:,:), ggs(:)
     !
     INTEGER :: i, ng, ngm

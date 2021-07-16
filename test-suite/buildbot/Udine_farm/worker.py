@@ -72,6 +72,15 @@ class Steps:
                    haltOnFailure = True,descriptionDone=["configure_qe_hdf5"]
                )]    
 
+    self.configure_qe_libxc = [ShellCommand(
+                   name="configure_qe_libxc",
+                   command=["./configure","--with-libxc=yes --with-libxc-prefix=/home/buildbot/local/libxc-512-gcc102"],
+                   env=Environ,
+                   workdir="build",
+                   locks=[build_lock.access('counting')],
+                   haltOnFailure = True,descriptionDone=["configure_qe_libxc"]
+               )]
+
     self.configure_qe_serial = [ShellCommand(
                    name="configure_qe_serial",
                    command=["./configure","--enable-parallel=no"],

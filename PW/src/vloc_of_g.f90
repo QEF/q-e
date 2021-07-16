@@ -57,8 +57,6 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
   ! igl0:first shell with g != 0
   ! ir  :counter on mesh points
   !
-  REAL(DP), EXTERNAL :: qe_erf
-  !
   allocate ( aux(msh), aux1(msh) )
   if (gl (1) < eps8) then
      !
@@ -70,7 +68,7 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
         !
         do ir = 1, msh
            aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2    &
-                      * qe_erf (r (ir) ) )
+                      * erf (r (ir) ) )
         enddo
 !	 TS This is necessary if we want to calculate the G=0 term correctly 
 !     when cutoff.
@@ -79,7 +77,7 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
      ELSE IF (do_cutoff_2D) THEN 
         do ir = 1, msh
             aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2    &
-                       * qe_erf (r (ir) ) )
+                       * erf (r (ir) ) )
         enddo
         IF (r(msh) > lz) THEN 
            call errore('vloc_of_g','2D cutoff is smaller than pseudo cutoff radius: &
@@ -102,7 +100,7 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
   !   function independent of |G| in real space
   !
   do ir = 1, msh
-     aux1 (ir) = r (ir) * vloc_at (ir) + zp * e2 * qe_erf (r (ir) )
+     aux1 (ir) = r (ir) * vloc_at (ir) + zp * e2 * erf (r (ir) )
   enddo
   fac = zp * e2 / tpiba2
   !

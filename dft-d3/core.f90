@@ -13,6 +13,9 @@
 !
 ! Copyright (C) 2016, Bálint Aradi
 !
+! MPI parallelization  added by Paolo Giannozzi, June 2021
+! OpenACC acceleration added by Ivan Carnimeo,   June 2021
+!
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation; either version 1, or (at your option)
@@ -885,7 +888,7 @@ contains
         end do
       end do
 
-      if (noabc)return
+      if (.not.noabc) then 
 
       ! compute non-additive third-order energy using averaged C6
       do iat=1,n
@@ -921,6 +924,8 @@ contains
 
     end if
 
+    end if
+ 
   end subroutine edisp
 
 
@@ -1576,6 +1581,7 @@ contains
 
 
   integer function lin(i1,i2)
+!$acc routine  seq
     integer i1,i2,idum1,idum2
     idum1=max(i1,i2)
     idum2=min(i1,i2)
@@ -2447,13 +2453,14 @@ contains
   subroutine pbcncoord(natoms,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
     integer,intent(in) :: natoms,iz(*)
     real(wp),intent(in) :: rcov(94)
+    real(wp), intent(in):: xyz(3,*),lat(3,3)
+    real(wp), intent(in) :: crit_cn
+    real(wp), intent(out):: cn(*)
 
     integer i,max_elem,rep_cn(3)
-    real(wp) xyz(3,*),cn(*),lat(3,3)
 
     integer iat,taux,tauy,tauz
     real(wp) dx,dy,dz,r,damp,xn,rr,rco,tau(3)
-    real(wp), INTENT(IN) :: crit_cn
 
     do i=1,natoms
       xn=0.0d0
@@ -2496,30 +2503,35 @@ contains
   subroutine pbcedisp(max_elem,maxc,n,xyz,iz,c6ab,mxc,r2r4,r0ab,&
       & rcov,rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,&
       & e6,e8,e10,e12,e63,lat,rthr,rep_vdw,cn_thr,rep_cn)
-    integer max_elem,maxc
-    real(wp) r2r4(max_elem),rcov(max_elem)
-    real(wp) rs6,rs8,rs10,alp6,alp8,alp10
-    real(wp) rthr,cn_thr,crit_cn
-    integer rep_vdw(3),rep_cn(3)
-    integer n,iz(*),version,mxc(max_elem)
+
+    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
+    USE mp,           ONLY : mp_sum
+    integer :: mykey, na_s, na_e
+
+    integer, intent(in) :: max_elem,maxc
+    real(wp), intent(in):: r2r4(max_elem),rcov(max_elem)
+    real(wp), intent(in)::  rs6,rs8,rs10,alp6,alp8,alp10
+    real(wp), intent(in):: rthr,cn_thr
+    integer, intent(in):: rep_vdw(3),rep_cn(3)
+    integer, intent(in):: n,iz(*),version,mxc(max_elem)
     ! integer rep_v(3)=rep_vdw!,rep_cn(3)
-    real(wp) xyz(3,*),r0ab(max_elem,max_elem),lat(3,3)
+    real(wp), intent(in):: xyz(3,*),r0ab(max_elem,max_elem),lat(3,3)
     ! real(wp) rs6,rs8,rs10,alp6,alp8,alp10,rcov(max_elem)
-    real(wp) c6ab(max_elem,max_elem,maxc,maxc,3)
-    real(wp) e6, e8, e10, e12, e63
-    logical noabc
+    real(wp), intent(in):: c6ab(max_elem,max_elem,maxc,maxc,3)
+    real(wp), intent(out) :: e6, e8, e10, e12, e63
+    logical, intent(in):: noabc
 
     integer iat,jat,kat
+    real(wp) :: crit_cn
     real(wp) r,r2,r6,r8,tmp,dx,dy,dz,c6,c8,c10,ang,rav,R0
     real(wp) damp6,damp8,damp10,rr,thr,c9,r42,c12,r10,c14
     real(wp) cn(n),rxyz(3),dxyz(3)
-    real(wp) r2ab(n*n),cc6ab(n*n),dmp(n*n),d2(3),t1,t2,t3,tau(3)
+    real(wp) cc6ab(n*n),dmp(n*n),d2(3),t1,t2,t3,tau(3)
     integer ij,ik,jk
     integer taux,tauy,tauz,counter
     real(wp) a1,a2
     real(wp) bj_dmp6,bj_dmp8
     real(wp) tmp1,tmp2
-
 
     e6 =0
     e8 =0
@@ -2529,17 +2541,21 @@ contains
     tau=(/0.0,0.0,0.0/)
     counter=0
     crit_cn=cn_thr
+    cc6ab(:) = 0.0_wp
     ! Becke-Johnson parameters
     a1=rs6
     a2=rs8
 
+
+    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+    IF ( mykey == 0 ) THEN
 
 
     ! DFT-D2
     if (version.eq.2)then
 
 
-      do iat=1,n-1
+      do iat=na_s,min(na_e,n-1)
         do jat=iat+1,n
           c6=c6ab(iz(jat),iz(iat),1,1,1)
           do taux=-rep_vdw(1),rep_vdw(1)
@@ -2561,7 +2577,7 @@ contains
         end do
       end do
 
-      do iat=1,n
+      do iat=na_s,na_e
         jat=iat
         c6=c6ab(iz(jat),iz(iat),1,1,1)
         do taux=-rep_vdw(1),rep_vdw(1)
@@ -2590,7 +2606,7 @@ contains
 
       call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
 
-      do iat=1,n-1
+      do iat=na_s,min(na_e,n-1)
         do jat=iat+1,n
           ! get C6
           call getc6(maxc,max_elem,c6ab,mxc,iz(iat),iz(jat),&
@@ -2647,7 +2663,7 @@ contains
         end do
       end do
 
-      do iat=1,n
+      do iat=na_s,na_e
         jat=iat
         ! get C6
         call getc6(maxc,max_elem,c6ab,mxc,iz(iat),iz(jat),&
@@ -2712,7 +2728,7 @@ contains
       ! DFT-D3(BJ-damping)
       call pbcncoord(n,rcov,iz,xyz,cn,lat,rep_cn,crit_cn)
 
-      do iat=1,n
+      do iat=na_s,na_e
         do jat=iat+1,n
           ! get C6
           call getc6(maxc,max_elem,c6ab,mxc,iz(iat),iz(jat),&
@@ -2807,17 +2823,29 @@ contains
     end if
 
 
-    if (noabc)return
+    ENDIF
+    CALL mp_sum ( e6 , intra_image_comm )
+    CALL mp_sum ( e8 , intra_image_comm )
+
+    if (.not.noabc) then 
 
     ! compute non-additive third-order energy using averaged C6
+    CALL mp_sum ( cc6ab , intra_image_comm )
     call pbcthreebody(max_elem,xyz,lat,n,iz,rep_cn,crit_cn,&
         & cc6ab,r0ab,e63)
+
+    end if 
 
   end subroutine pbcedisp
 
 
   subroutine pbcthreebody(max_elem,xyz,lat,n,iz,repv,cnthr,cc6ab,&
       & r0ab,eabc)
+
+    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
+    USE mp,           ONLY : mp_sum
+    integer :: mykey, na_s, na_smax, na_e
+
     integer max_elem
     INTEGER :: n,i,j,k,jtaux,jtauy,jtauz,iat,jat,kat
     INTEGER :: ktaux,ktauy,ktauz,counter,ij,ik,jk,idum
@@ -2838,7 +2866,15 @@ contains
     REAL(WP),PARAMETER::sr9=0.75d0
     REAL(WP),PARAMETER::alp9=-16.0d0
     REAL(WP) :: abcthr
-    INTEGER, DIMENSION(3) :: repmin,repmax
+    INTEGER :: repmin1, repmin2, repmin3, repmax1, repmax2, repmax3    
+    INTEGER :: repv1, repv2, repv3 
+    REAL(WP)  :: ijvec1, ijvec2, ijvec3
+    REAL(WP)  :: ikvec1, ikvec2, ikvec3
+    REAL(WP)  :: jkvec1, jkvec2, jkvec3
+    REAL(WP)  :: jtau1, jtau2, jtau3
+    REAL(WP)  :: ktau1, ktau2, ktau3
+    REAL(WP)  :: dumvec11, dumvec12, dumvec13  
+    REAL(WP)  :: dumvec21, dumvec22, dumvec23  
     ! REAL(WP) :: time1,time2
 
     counter=0
@@ -2849,52 +2885,79 @@ contains
 
     ! call cpu_time(time1)
 
-    do iat=3,n
-      do jat=2,iat-1
-        ijvec=xyz(:,jat)-xyz(:,iat)
+    repv1 = repv(1)
+    repv2 = repv(2)
+    repv3 = repv(3)
+
+    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+    IF ( mykey == 0 ) THEN
+    na_smax = max(3,na_s)
+
+!$acc data copyin(xyz(3,n),iz(n),cc6ab(n*n),lat(3,3),r0ab(max_elem,max_elem)) 
+!$acc kernels  vector_length(32)
+!$acc loop collapse(2) gang private(ijvec1,ijvec2,ijvec3, ikvec1,ikvec2,ikvec3, jkvec1,jkvec2,jkvec3, c9, r0ij,r0ik,r0jk, &
+!$acc&                              repmin1,repmin2,repmin3, repmax1,repmax2,repmax3, jtau1,jtau2,jtau3, &
+!$acc&                              dumvec11,dumvec12,dumvec13,rij2,rr0ij)  reduction(+:eabc)
+    do iat=na_smax,na_e
+     do jat = 2, n
+        if(jat.ge.iat) cycle
+        ijvec1=xyz(1,jat)-xyz(1,iat)
+        ijvec2=xyz(2,jat)-xyz(2,iat)
+        ijvec3=xyz(3,jat)-xyz(3,iat)
         ij=lin(iat,jat)
         r0ij=r0ab(iz(iat),iz(jat))
+!$acc loop seq
         do kat=1,jat-1
           ik=lin(iat,kat)
           jk=lin(jat,kat)
-          ikvec=xyz(:,kat)-xyz(:,iat)
-          jkvec=xyz(:,kat)-xyz(:,jat)
+          ikvec1=xyz(1,kat)-xyz(1,iat)
+          ikvec2=xyz(2,kat)-xyz(2,iat)
+          ikvec3=xyz(3,kat)-xyz(3,iat)
+          jkvec1=xyz(1,kat)-xyz(1,jat)
+          jkvec2=xyz(2,kat)-xyz(2,jat)
+          jkvec3=xyz(3,kat)-xyz(3,jat)
           c9=-1.0d0*(cc6ab(ij)*cc6ab(ik)*cc6ab(jk))
 
           r0ik=r0ab(iz(iat),iz(kat))
           r0jk=r0ab(iz(jat),iz(kat))
 
-
-          do jtaux=-repv(1),repv(1)
-            repmin(1)=max(-repv(1),jtaux-repv(1))
-            repmax(1)=min(repv(1),jtaux+repv(1))
-            do jtauy=-repv(2),repv(2)
-              repmin(2)=max(-repv(2),jtauy-repv(2))
-              repmax(2)=min(repv(2),jtauy+repv(2))
-              do jtauz=-repv(3),repv(3)
-                repmin(3)=max(-repv(3),jtauz-repv(3))
-                repmax(3)=min(repv(3),jtauz+repv(3))
-                jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
-                dumvec=ijvec+jtau
-                dumvec=dumvec*dumvec
-                rij2=SUM(dumvec)
+          do jtaux=-repv1,repv1
+            do jtauy=-repv2,repv2
+              do jtauz=-repv3,repv3
+                repmin1=max(-repv1,jtaux-repv1)
+                repmax1=min(repv1,jtaux+repv1)
+                repmin2=max(-repv2,jtauy-repv2)
+                repmax2=min(repv2,jtauy+repv2)
+                repmin3=max(-repv3,jtauz-repv3)
+                repmax3=min(repv3,jtauz+repv3)
+                jtau1=jtaux*lat(1,1)+jtauy*lat(1,2)+jtauz*lat(1,3)
+                jtau2=jtaux*lat(2,1)+jtauy*lat(2,2)+jtauz*lat(2,3)
+                jtau3=jtaux*lat(3,1)+jtauy*lat(3,2)+jtauz*lat(3,3)
+                dumvec11=(ijvec1+jtau1)*(ijvec1+jtau1)
+                dumvec12=(ijvec2+jtau2)*(ijvec2+jtau2)
+                dumvec13=(ijvec3+jtau3)*(ijvec3+jtau3)
+                rij2=dumvec11+dumvec12+dumvec13
                 if (rij2.gt.abcthr)cycle
 
                 rr0ij=DSQRT(rij2)/r0ij
 
-
-                do ktaux=repmin(1),repmax(1)
-                  do ktauy=repmin(2),repmax(2)
-                    do ktauz=repmin(3),repmax(3)
-                      ktau=ktaux*lat(:,1)+ktauy*lat(:,2)+ktauz*lat(:,3)
-                      dumvec=ikvec+ktau
-                      dumvec=dumvec*dumvec
-                      rik2=SUM(dumvec)
+!$acc loop vector collapse(3) private(ktau1,ktau2,ktau3,dumvec21,dumvec22,dumvec23,rik2,rr0ik,rjk2,rr0jk,geomean,fdamp,tmp1,tmp2,tmp3,tmp4,ang) reduction(+:eabc)
+                do ktaux=repmin1,repmax1
+                  do ktauy=repmin2,repmax2
+                    do ktauz=repmin3,repmax3
+                      ktau1=ktaux*lat(1,1)+ktauy*lat(1,2)+ktauz*lat(1,3)
+                      ktau2=ktaux*lat(2,1)+ktauy*lat(2,2)+ktauz*lat(2,3)
+                      ktau3=ktaux*lat(3,1)+ktauy*lat(3,2)+ktauz*lat(3,3)
+                      dumvec21=(ikvec1+ktau1)*(ikvec1+ktau1)
+                      dumvec22=(ikvec2+ktau2)*(ikvec2+ktau2)
+                      dumvec23=(ikvec3+ktau3)*(ikvec3+ktau3)
+                      rik2=dumvec21+dumvec22+dumvec23
                       if (rik2.gt.abcthr)cycle
                       rr0ik=DSQRT(rik2)/r0ik
-
-                      dumvec=jkvec+ktau-jtau
-                      rjk2=SUM(dumvec*dumvec)
+                      dumvec21=jkvec1+ktau1-jtau1
+                      dumvec22=jkvec2+ktau2-jtau2
+                      dumvec23=jkvec3+ktau3-jtau3
+                      rjk2=dumvec21*dumvec21+dumvec22*dumvec22+dumvec23*dumvec23
                       if (rjk2.gt.abcthr)cycle
                       rr0jk=DSQRT(rjk2)/r0jk
 
@@ -2921,8 +2984,10 @@ contains
         end do
       end do
     end do
+!$acc end kernels  
+!$acc end data 
 
-    do iat=2,n
+    do iat=max(2,na_s),na_e
       jat=iat
       ij=lin(iat,jat)
       ijvec=0.0d0
@@ -2936,15 +3001,15 @@ contains
 
         r0ik=r0ab(iz(iat),iz(kat))
         r0jk=r0ab(iz(jat),iz(kat))
-        do jtaux=-repv(1),repv(1)
-          repmin(1)=max(-repv(1),jtaux-repv(1))
-          repmax(1)=min(repv(1),jtaux+repv(1))
-          do jtauy=-repv(2),repv(2)
-            repmin(2)=max(-repv(2),jtauy-repv(2))
-            repmax(2)=min(repv(2),jtauy+repv(2))
-            do jtauz=-repv(3),repv(3)
-              repmin(3)=max(-repv(3),jtauz-repv(3))
-              repmax(3)=min(repv(3),jtauz+repv(3))
+        do jtaux=-repv1,repv1
+          do jtauy=-repv2,repv2
+            do jtauz=-repv3,repv3
+              repmin1=max(-repv1,jtaux-repv1)
+              repmax1=min(repv1,jtaux+repv1)
+              repmin2=max(-repv2,jtauy-repv2)
+              repmax2=min(repv2,jtauy+repv2)
+              repmin3=max(-repv3,jtauz-repv3)
+              repmax3=min(repv3,jtauz+repv3)
               if (jtaux.eq.0 .and. jtauy.eq.0 .and. jtauz.eq.0) cycle
               jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
               dumvec=ijvec+jtau
@@ -2954,9 +3019,9 @@ contains
 
               rr0ij=DSQRT(rij2)/r0ij
 
-              do ktaux=repmin(1),repmax(1)
-                do ktauy=repmin(2),repmax(2)
-                  do ktauz=repmin(3),repmax(3)
+              do ktaux=repmin1,repmax1
+                do ktauy=repmin2,repmax2
+                  do ktauz=repmin3,repmax3
                     ! every result * 0.5
                     ktau=ktaux*lat(:,1)+ktauy*lat(:,2)+ktauz*lat(:,3)
                     dumvec=ikvec+ktau
@@ -2991,7 +3056,7 @@ contains
       end do
     end do
 
-    do iat=2,n
+    do iat=max(2,na_s),na_e
       do jat=1,iat-1
         kat=jat
         ij=lin(iat,jat)
@@ -3006,15 +3071,15 @@ contains
         r0ik=r0ij
         r0jk=r0ab(iz(jat),iz(kat))
 
-        do jtaux=-repv(1),repv(1)
-          repmin(1)=max(-repv(1),jtaux-repv(1))
-          repmax(1)=min(repv(1),jtaux+repv(1))
-          do jtauy=-repv(2),repv(2)
-            repmin(2)=max(-repv(2),jtauy-repv(2))
-            repmax(2)=min(repv(2),jtauy+repv(2))
-            do jtauz=-repv(3),repv(3)
-              repmin(3)=max(-repv(3),jtauz-repv(3))
-              repmax(3)=min(repv(3),jtauz+repv(3))
+        do jtaux=-repv1,repv1
+          do jtauy=-repv2,repv2
+            do jtauz=-repv3,repv3
+              repmin1=max(-repv1,jtaux-repv1)
+              repmax1=min(repv1,jtaux+repv1)
+              repmin2=max(-repv2,jtauy-repv2)
+              repmax2=min(repv2,jtauy+repv2)
+              repmin3=max(-repv3,jtauz-repv3)
+              repmax3=min(repv3,jtauz+repv3)
               jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
               dumvec=ijvec+jtau
               dumvec=dumvec*dumvec
@@ -3023,9 +3088,9 @@ contains
 
               rr0ij=DSQRT(rij2)/r0ij
 
-              do ktaux=repmin(1),repmax(1)
-                do ktauy=repmin(2),repmax(2)
-                  do ktauz=repmin(3),repmax(3)
+              do ktaux=repmin1,repmax1
+                do ktauy=repmin2,repmax2
+                  do ktauz=repmin3,repmax3
                     ! every result * 0.5
                     if (jtaux.eq.ktaux .and. jtauy.eq.ktauy&
                         & .and. jtauz.eq.ktauz) cycle
@@ -3066,7 +3131,7 @@ contains
     ! And finally the self interaction iat=jat=kat all
 
     idum=0
-    do iat=1,n
+    do iat=na_s,na_e
       jat=iat
       kat=iat
       ijvec=0.0d0
@@ -3080,15 +3145,15 @@ contains
       r0ij=r0ab(iz(iat),iz(iat))
       r0ik=r0ij
       r0jk=r0ij
-      do jtaux=-repv(1),repv(1)
-        repmin(1)=max(-repv(1),jtaux-repv(1))
-        repmax(1)=min(repv(1),jtaux+repv(1))
-        do jtauy=-repv(2),repv(2)
-          repmin(2)=max(-repv(2),jtauy-repv(2))
-          repmax(2)=min(repv(2),jtauy+repv(2))
-          do jtauz=-repv(3),repv(3)
-            repmin(3)=max(-repv(3),jtauz-repv(3))
-            repmax(3)=min(repv(3),jtauz+repv(3))
+      do jtaux=-repv1,repv1
+        do jtauy=-repv2,repv2
+          do jtauz=-repv3,repv3
+            repmin1=max(-repv1,jtaux-repv1)
+            repmax1=min(repv1,jtaux+repv1)
+            repmin2=max(-repv2,jtauy-repv2)
+            repmax2=min(repv2,jtauy+repv2)
+            repmin3=max(-repv3,jtauz-repv3)
+            repmax3=min(repv3,jtauz+repv3)
             if (jtaux.eq.0 .and. jtauy.eq.0 .and. jtauz.eq.0) cycle
             jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
             dumvec=jtau
@@ -3097,9 +3162,9 @@ contains
             if (rij2.gt.abcthr)cycle
             rr0ij=DSQRT(rij2)/r0ij
 
-            do ktaux=repmin(1),repmax(1)
-              do ktauy=repmin(2),repmax(2)
-                do ktauz=repmin(3),repmax(3)
+            do ktaux=repmin1,repmax1
+              do ktauy=repmin2,repmax2
+                do ktauz=repmin3,repmax3
                   if ((ktaux.eq.0) .and.( ktauy.eq.0) .and.( ktauz.eq.0))cycle
                   if ((ktaux.eq.jtaux) .and. (ktauy.eq.jtauy)&
                       & .and. (ktauz.eq.jtauz)) cycle
@@ -3138,8 +3203,10 @@ contains
         end do
       end do
 
-
     end do
+
+   ENDIF
+   CALL mp_sum ( eabc , intra_image_comm )
 
   end subroutine pbcthreebody
 
@@ -3153,6 +3220,11 @@ contains
       & version,g,disp,gnorm,stress,lat,rep_v,rep_cn,&
       & crit_vdw,echo,crit_cn)
 
+
+    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
+    USE mp,           ONLY : mp_sum
+    integer :: mykey, na_s, na_smax, na_e
+
     integer n,iz(*),max_elem,maxc,version,mxc(max_elem)
     real(wp) xyz(3,*),r0ab(max_elem,max_elem),r2r4(*)
     real(wp) c6ab(max_elem,max_elem,maxc,maxc,3)
@@ -3161,7 +3233,7 @@ contains
     real(wp) a1,a2
     real(wp) bj_dmp6,bj_dmp8
     logical noabc,num,echo
-    ! coversion factors
+    ! conversion factors
 
     integer iat,jat,i,j,kat,my,ny,a,b,idum,tau2
     real(wp) R0,C6,alp,R42,disp,x1,y1,z1,x2,y2,z2,rr,e6abc,fdum
@@ -3209,7 +3281,17 @@ contains
     real(wp), parameter :: alp9=-16.0d0
     real(wp),DIMENSION(n*(n+1)) ::c6save
     real(wp) abcthr,time1,time2,geomean2,r0av,dc9,dfdmp,dang,ang
-    integer,dimension(3) ::repv,repmin,repmax,repmin2,repmax2
+    integer,dimension(3) ::repv,repmin,repmax
+    integer :: rep_v1, rep_v2, rep_v3  
+    integer :: rep_cn1, rep_cn2, rep_cn3  
+    integer :: repmin1, repmin2, repmin3   
+    integer :: repmax1, repmax2, repmax3   
+    real(wp) :: dumvec1, dumvec2, dumvec3  
+    real(wp) :: ijvec1, ijvec2, ijvec3   
+    real(wp) :: ikvec1, ikvec2, ikvec3   
+    real(wp) :: jkvec1, jkvec2, jkvec3   
+    real(wp) :: jtau1, jtau2, jtau3  
+    real(wp) :: ktau1, ktau2, ktau3  
 
     ! R^2 cut-off
     rthr=crit_vdw
@@ -3394,6 +3476,8 @@ contains
       goto 999
     end if
 
+    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+
     if ((version.eq.3).or.(version.eq.5)) then
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !
@@ -3420,9 +3504,11 @@ contains
       c6save=0.0d0
       kat=0
       dc6i=0.0d0
+      dc6ij=0.0d0
 
+      IF ( mykey == 0 ) THEN
 
-      do iat=1,n
+      do iat=na_s, na_e
         call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
             & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
             & c6,dc6iji,dc6ijj)
@@ -3604,6 +3690,7 @@ contains
         end do
 
       end do
+      END IF
 
     elseif ((version.eq.4).or.(version.eq.6)) then
 
@@ -3630,7 +3717,9 @@ contains
       dc6i(:) = 0.0d0
       kat=0
 
-      do iat=1,n
+      IF ( mykey == 0 ) THEN
+
+      do iat=na_s, na_e
         call get_dC6_dCNij(maxc,max_elem,c6ab,mxc(iz(iat)),&
             & mxc(iz(iat)),cn(iat),cn(iat),iz(iat),iz(iat),iat,iat,&
             & c6,dc6iji,dc6ijj)
@@ -3774,14 +3863,14 @@ contains
         end do
 
       end do
+      END IF
 
     end if
 
-
-    !
 !!!!!!!!!!!!!!!!!!!!!!!
     !! BEGIN Threebody gradient
 !!!!!!!!!!!!!!!!!!!!!!!
+
     if (.not.noabc) then
 
       ! write(*,*)'!!!!!!!!!! THREEBODY GRADIENT !!!!!!!!!!'
@@ -3792,47 +3881,84 @@ contains
       ! write(*,*)'thr:',sqrt(abcthr)
 
       call cpu_time(time1)
-      do iat=3,n
-        do jat=2,iat-1
-          linij=lin(iat,jat)
-          ijvec=xyz(:,jat)-xyz(:,iat)
 
-          c6ij=c6save(linij)
-          do kat=1,jat-1
+      rep_cn1 = rep_cn(1) 
+      rep_cn2 = rep_cn(2) 
+      rep_cn3 = rep_cn(3) 
+      rep_v1 = rep_v(1)
+      rep_v2 = rep_v(2)
+      rep_v3 = rep_v(3)
+
+      CALL mp_sum ( c6save , intra_image_comm )
+      CALL mp_sum ( dc6ij  , intra_image_comm )
+      IF ( mykey == 0 ) THEN
+      na_smax = max(3,na_s)
+
+!$acc data copyin(xyz(1:3,1:n),iz(1:n),lat(1:3,1:3),r0ab(1:max_elem,1:max_elem),c6save(1:n*(n+1)),dc6ij(1:n,1:n)) &
+!$acc&            copy(dc6i(1:n),drij(-rep_v3:rep_v3,-rep_v2:rep_v2,-rep_v1:rep_v1,1:n*(n+1)/2)) 
+!$acc parallel vector_length(32) 
+!$acc loop collapse(3) gang  private(ijvec1,ijvec2,ijvec3, ikvec1,ikvec2,ikvec3, jkvec1,jkvec2,jkvec3, c6ij,c6ik,c6jk,c9, linij,linik,linjk, &
+!$acc&                              jtau1,jtau2,jtau3, rij2,rr0ij, repmin1,repmin2,repmin3,repmax1,repmax2,repmax3 ) &
+!$acc&                       reduction(+:eabc) 
+      do iat=na_smax,na_e
+        do jat=2, n
+          do kat=1, n 
+            if((jat.ge.iat).or.(kat.ge.jat)) cycle    
+            linij=lin(iat,jat)
+            ijvec1=xyz(1,jat)-xyz(1,iat)
+            ijvec2=xyz(2,jat)-xyz(2,iat)
+            ijvec3=xyz(3,jat)-xyz(3,iat)
+
+            c6ij=c6save(linij)
+
             linik=lin(iat,kat)
             linjk=lin(jat,kat)
-            ikvec=xyz(:,kat)-xyz(:,iat)
-            jkvec=xyz(:,kat)-xyz(:,jat)
+            ikvec1=xyz(1,kat)-xyz(1,iat)
+            ikvec2=xyz(2,kat)-xyz(2,iat)
+            ikvec3=xyz(3,kat)-xyz(3,iat)
+            jkvec1=xyz(1,kat)-xyz(1,jat)
+            jkvec2=xyz(2,kat)-xyz(2,jat)
+            jkvec3=xyz(3,kat)-xyz(3,jat)
 
             c6ik=c6save(linik)
             c6jk=c6save(linjk)
             c9=-1.0d0*dsqrt(c6ij*c6ik*c6jk)
-
-            do jtaux=-rep_cn(1),rep_cn(1)
-              repmin(1)=max(-rep_cn(1),jtaux-rep_cn(1))
-              repmax(1)=min(rep_cn(1),jtaux+rep_cn(1))
-              do jtauy=-rep_cn(2),rep_cn(2)
-                repmin(2)=max(-rep_cn(2),jtauy-rep_cn(2))
-                repmax(2)=min(rep_cn(2),jtauy+rep_cn(2))
-                do jtauz=-rep_cn(3),rep_cn(3)
-                  repmin(3)=max(-rep_cn(3),jtauz-rep_cn(3))
-                  repmax(3)=min(rep_cn(3),jtauz+rep_cn(3))
-                  jtau=jtaux*lat(:,1)+jtauy*lat(:,2)+jtauz*lat(:,3)
-                  rij2=SUM((ijvec+jtau)*(ijvec+jtau))
+!$acc loop seq independent
+            do jtaux=-rep_cn1,rep_cn1
+              repmin1=max(-rep_cn1,jtaux-rep_cn1)
+              repmax1=min(rep_cn1,jtaux+rep_cn1)
+!$acc loop seq independent   
+              do jtauy=-rep_cn2,rep_cn2
+                repmin2=max(-rep_cn2,jtauy-rep_cn2)
+                repmax2=min(rep_cn2,jtauy+rep_cn2)
+!$acc loop seq independent 
+                do jtauz=-rep_cn3,rep_cn3
+                  repmin3=max(-rep_cn3,jtauz-rep_cn3)
+                  repmax3=min(rep_cn3,jtauz+rep_cn3)
+                  jtau1=jtaux*lat(1,1)+jtauy*lat(1,2)+jtauz*lat(1,3)
+                  jtau2=jtaux*lat(2,1)+jtauy*lat(2,2)+jtauz*lat(2,3)
+                  jtau3=jtaux*lat(3,1)+jtauy*lat(3,2)+jtauz*lat(3,3)
+                  rij2= (ijvec1+jtau1)*(ijvec1+jtau1) + (ijvec2+jtau2)*(ijvec2+jtau2) + (ijvec3+jtau3)*(ijvec3+jtau3) 
                   if (rij2.gt.abcthr)cycle
 
                   rr0ij=DSQRT(rij2)/r0ab(iz(iat),iz(jat))
 
-
-                  do ktaux=repmin(1),repmax(1)
-                    do ktauy=repmin(2),repmax(2)
-                      do ktauz=repmin(3),repmax(3)
-                        ktau=ktaux*lat(:,1)+ktauy*lat(:,2)+ktauz*lat(:,3)
-                        rik2=SUM((ikvec+ktau)*(ikvec+ktau))
+!$acc loop vector collapse(3) private(ktau1,ktau2,ktau3, dumvec1,dumvec2,dumvec3, rik2,rjk2,rr0ik,rr0jk, &
+!$acc&                                geomean,geomean2,geomean3,r0av,damp9,ang,dc6_rest,dfdmp,r,dang,tmp1,dc9) &
+!$acc&                        reduction(+:eabc) 
+                  do ktaux=repmin1,repmax1
+                    do ktauy=repmin2,repmax2
+                      do ktauz=repmin3,repmax3
+                        ktau1=ktaux*lat(1,1)+ktauy*lat(1,2)+ktauz*lat(1,3)
+                        ktau2=ktaux*lat(2,1)+ktauy*lat(2,2)+ktauz*lat(2,3)
+                        ktau3=ktaux*lat(3,1)+ktauy*lat(3,2)+ktauz*lat(3,3)
+                        rik2=(ikvec1+ktau1)*(ikvec1+ktau1)+(ikvec2+ktau2)*(ikvec2+ktau2)+(ikvec3+ktau3)*(ikvec3+ktau3)
                         if (rik2.gt.abcthr)cycle
 
-                        dumvec=jkvec+ktau-jtau
-                        rjk2=SUM(dumvec*dumvec)
+                        dumvec1=jkvec1+ktau1-jtau1
+                        dumvec2=jkvec2+ktau2-jtau2
+                        dumvec3=jkvec3+ktau3-jtau3
+                        rjk2=dumvec1*dumvec1+dumvec2*dumvec2+dumvec3*dumvec3
                         if (rjk2.gt.abcthr)cycle
                         rr0ik=dsqrt(rik2)/r0ab(iz(iat),iz(kat))
                         rr0jk=dsqrt(rjk2)/r0ab(iz(jat),iz(kat))
@@ -3866,9 +3992,9 @@ contains
                             & /(r*geomean3*geomean2)
 
                         tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
-                        drij(jtauz,jtauy,jtaux,linij)=&
-                            & drij(jtauz,jtauy,jtaux,linij)-tmp1
-
+!$acc atomic update
+                        drij(jtauz,jtauy,jtaux,linij)= drij(jtauz,jtauy,jtaux,linij)-tmp1
+!$acc end atomic 
                         !start calculating the derivatives of each part w.r.t. r_ik
 
                         r=dsqrt(rik2)
@@ -3881,8 +4007,9 @@ contains
 
                         tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
                         ! tmp1=-dc9
-                        drij(ktauz,ktauy,ktaux,linik)=&
-                            & drij(ktauz,ktauy,ktaux,linik)-tmp1
+!$acc atomic update
+                        drij(ktauz,ktauy,ktaux,linik)= drij(ktauz,ktauy,ktaux,linik)-tmp1
+!$acc end atomic
 
                         !
                         !start calculating the derivatives of each part w.r.t. r_jk
@@ -3895,24 +4022,29 @@ contains
                             & /(r*geomean3*geomean2)
 
                         tmp1=-dang*c9*damp9+dfdmp/r*c9*ang
-                        drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)=&
-                            & drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)-tmp1
+!$acc atomic update
+                        drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)= drij(ktauz-jtauz,ktauy-jtauy,ktaux-jtaux,linjk)-tmp1
+!$acc end atomic
 
                         !calculating the CN derivative dE_disp(ijk)/dCN(i)
 
                         dc9=dc6ij(iat,jat)/c6ij+dc6ij(iat,kat)/c6ik
                         dc9=0.5d0*c9*dc9
-                        dc6i(iat)=dc6i(iat)+dc6_rest*dc9
+!$acc atomic update 
+                        dc6i(iat) = dc6i(iat) + dc6_rest*dc9   
+!$acc end atomic
 
                         dc9=dc6ij(jat,iat)/c6ij+dc6ij(jat,kat)/c6jk
                         dc9=0.5d0*c9*dc9
-                        dc6i(jat)=dc6i(jat)+dc6_rest*dc9
+!$acc atomic update 
+                        dc6i(jat) = dc6i(jat) + dc6_rest*dc9  
+!$acc end atomic
 
                         dc9=dc6ij(kat,iat)/c6ik+dc6ij(kat,jat)/c6jk
                         dc9=0.5d0*c9*dc9
-                        dc6i(kat)=dc6i(kat)+dc6_rest*dc9
-
-
+!$acc atomic update 
+                        dc6i(kat) = dc6i(kat) + dc6_rest*dc9   
+!$acc end atomic
                       end do
                     end do
                   end do
@@ -3922,9 +4054,11 @@ contains
           end do
         end do
       end do
+!$acc end parallel 
+!$acc end data 
 
       ! Now the interaction with jat=iat of the triples iat,iat,kat
-      do iat=2,n
+      do iat=max(2,na_s),na_e
         jat=iat
         linij=lin(iat,jat)
         ijvec=0.0d0
@@ -4055,7 +4189,7 @@ contains
         end do
       end do
 
-      do iat=2,n
+      do iat=max(2,na_s),na_e
         do jat=1,iat-1
           kat=jat
           linij=lin(iat,jat)
@@ -4194,7 +4328,7 @@ contains
       ! And finally the self interaction iat=jat=kat all
 
       idum=0
-      do iat=1,n
+      do iat=na_s,na_e
         jat=iat
         kat=iat
         ijvec=0.0d0
@@ -4326,210 +4460,11 @@ contains
           end do
           !jtaux
         end do
-        !should exclude tabst
-        !get type of string, 0=numb
-        !special case: end of line
-        !cast string on real and get er
-        !handle exceptions
-        !check for integer/real
-        !if integer, add .0 to string; otherwi
-        ! Selective dynamics
-        ! Cartesian or direct
-        !first line must contain Element Info
-        !second line contains global scaling f
-        !the Ang->au conversion is included in
-        ! reading the lattice constants
-        ! write(*,'(3F6.2)')lattice(1,i),lattice(2,i),lattice(3,i)
-        !Ether here are the numbers of each el
-        ! CONTCAR files have additional Element lin
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !i
-        ! Selective dynamics
-        ! Cartesian or direct
-        !first line must contain Element Info
-        !second line contains global scaling f
-        ! reading the lattice constants
-        ! write(*,'(3F6.2)')lattice(1,i),lattice(2,i),lattice(3,i)
-        !Ether here are the numbers of each el
-        ! CONTCAR files have additional Element lin
-        !,r2r4(*)
-        !,crit_vdw,crit_cn
-        !BJ-parameter
-        !taux
-        !tauy
-        !tauz
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !version
-        !reciprocal radii scaling paramete
-        !alpha saved with "-" sign
-        !alp9 is already s
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !jat
-        !iat
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        ! And now kat=jat, but cycling throug all imagecells without jtau=
-        ! But this counts only 1/2
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        !If kat and jat are th
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !iat
-        !tauz
-        !tauy
-        !taux
-        !j
-        !i
-        !BJ-parameters
-        ! precalculated dampingterms
-        !d(C6ij)/d(r_ij)
-        !d(E)/d(r_ij) der
-        !dCN(iat)/d(r_ij)
-        !dCN(jat)/d(r_ij)
-        !dC6i(iat) saves dE_dsp/dCN(iat)
-        !dC6(iat,jat)/cCN(iat) in dc6ij(i,j) for ABC-
-        !threebody gradient
-        !inverse of 4/3
-        !jat
-        !iat
-        !call edisp...dum1
-        !call edisp...dum2
-        !j
-        !i
-        !b
-        !a
-        !num
-        !my
-        !ny
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        !my
-        !ny
-        !tauz
-        !tauy
-        !taux
-        !iat
-        !b
-        !a
-        !version==2
-        ! d(r^(-6))/d(tau)
-        !d(f_dmp)/d(tau)
-        ! calculate E_disp for sanity check
-        !r2 < 0.1>rthr
-        !tauz
-        !tauy
-        !taux
-        ! d(r^(-6))/d(r_ij)
-        !d(f_dmp)/d(r_ij)
-        ! calculate E_disp for sanity check
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        ! d(1/(r^(6)+R0^6)/d(r)
-        ! calculate E_disp for sanity check
-        !r2 < 0.1>rthr
-        !tauz
-        !tauy
-        !taux
-        ! calculate E_disp for sanity check
-        !tauz
-        !tauy
-        !taux
-        !jat
-        !iat
-        ! version=3 or 4
-        !alp9 is already sa
-        !ktauz
-        !ktauy
-        !ktauz
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !jat
-        !iat
-        !alp9 is already saved
-        !factor 1/2 for doublecounting
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        ! And now kat=jat, but cycling throug all imagecells without jtau=
-        ! But this counts only 1/2
-        !alp9 is already save
-        !factor 1/2 for doublecounting
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-        !jtaux
-        !kat
-        !iat
-        !if
-        !If kat and jat are th
-        !alp9 is already saved
-        !ktauz
-        !ktauy
-        !ktaux
-        !jtauz
-        !jtauy
-
 
       end do
 
+      END IF
+      CALL mp_sum ( eabc , intra_image_comm )
 
       call cpu_time(time2)
 
@@ -4539,7 +4474,8 @@ contains
       ! write(*,*)'gdisp:',disp
     end if
 
-451 continue
+    CALL mp_sum ( drij , intra_image_comm )
+    CALL mp_sum ( dc6i , intra_image_comm )
 
     sigma_abc=0.0d0
     sigma=0.0d0

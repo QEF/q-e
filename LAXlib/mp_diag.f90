@@ -46,8 +46,11 @@ CONTAINS
     !  
     !  free resources associated to the communicator
     !
-    IF( .not.  lax_is_initialized ) &
-       CALL lax_error__( ' laxlib_end ', ' laxlib was not initialized ', 1 )
+    IF( .not.  lax_is_initialized ) THEN
+    !   CALL lax_error__( ' laxlib_end ', ' laxlib was not initialized ', 1 )
+       WRITE(*,"(' laxlib_end: laxlib was not initialized ')")
+       RETURN
+    END IF
     !
     CALL laxlib_comm_free( ortho_comm )
     IF(  ortho_comm_id > 0  ) THEN

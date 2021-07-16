@@ -17,7 +17,8 @@ SUBROUTINE force_us( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
-  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
+                                   using_vkb
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -32,6 +33,9 @@ SUBROUTINE force_us( forcenl )
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -50,6 +54,7 @@ SUBROUTINE force_us( forcenl )
   forcenl(:,:) = 0.D0
   !
   CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm )   
+  CALL using_becp_auto(2)
   CALL allocate_bec_type( nkb, nbnd, dbecp, intra_bgrp_comm )   
   !
   ALLOCATE( vkb1( npwx, nkb ) )   
@@ -62,6 +67,8 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... the forces are a sum over the K points and over the bands
   !   
+  CALL using_evc(0)
+  !
   DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
@@ -69,9 +76,13 @@ SUBROUTINE force_us( forcenl )
 
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+        CALL using_evc(1)
+        IF ( nkb > 0 ) CALL using_vkb(1)
         IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      ENDIF
      !
+     CALL using_vkb(0); 
+     CALL using_becp_auto(2)
      CALL calbec( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3
@@ -99,6 +110,7 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... if sums over bands are parallelized over the band group
   !
+  CALL using_becp_auto(1)
   IF ( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
   !
   IF (noncolin) THEN
@@ -111,6 +123,7 @@ SUBROUTINE force_us( forcenl )
   !
   CALL deallocate_bec_type( dbecp )
   CALL deallocate_bec_type( becp )
+  CALL using_becp_auto(2)
   !
   ! ... collect contributions across pools from all k-points
   !
@@ -153,30 +166,34 @@ SUBROUTINE force_us( forcenl )
        ! ... 3) the band group is subsequently used to parallelize over bands
        !
        !
+       CALL using_et(0)
+       !
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
           ALLOCATE( aux(nh(nt),becp%nbnd_loc) )
           DO na = 1, nat
              IF ( ityp(na) == nt ) THEN
-                ijkb0 = indv_ijkb0(na)
+                ijkb0 = ofsbeta(na)
                 ! this is \sum_j q_{ij} <beta_j|psi>
                 CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt),        &
                             1.0_dp, qq_at(1,1,na), nhm, becp%r(ijkb0+1,1), &
                             nkb, 0.0_dp, aux, nh(nt) )
                 ! multiply by -\epsilon_n
-!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih)
+                !
+                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih)
                 DO ih = 1, nh(nt)
                    DO ibnd_loc = 1, becp%nbnd_loc
                       ibnd = ibnd_loc + becp%ibnd_begin - 1
                       aux(ih,ibnd_loc) = - et(ibnd,ik) * aux(ih,ibnd_loc)
                    ENDDO
                 ENDDO
-!$omp end parallel do
+                !$omp end parallel do
+                !
                 ! add  \sum_j d_{ij} <beta_j|psi>
                 CALL DGEMM( 'N','N', nh(nt), becp%nbnd_loc, nh(nt), &
                             1.0_dp, deeq(1,1,na,current_spin), nhm, &
                             becp%r(ijkb0+1,1), nkb, 1.0_dp, aux, nh(nt) )
-!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl)
+                !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl)
                 DO ih = 1, nh(nt)
                    DO ibnd_loc = 1, becp%nbnd_loc
                       ibnd = ibnd_loc + becp%ibnd_begin - 1
@@ -185,7 +202,7 @@ SUBROUTINE force_us( forcenl )
                            dbecp%r(ijkb0+ih,ibnd_loc) * wg(ibnd,ik)
                    ENDDO
                 ENDDO
-!$omp end parallel do
+                !$omp end parallel do
                 !
              ENDIF
           ENDDO
@@ -209,6 +226,8 @@ SUBROUTINE force_us( forcenl )
        REAL(DP) :: fac
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
+       CALL using_et(0)
+       !
        DO ibnd = 1, nbnd
           !
           IF (noncolin) THEN
@@ -221,7 +240,7 @@ SUBROUTINE force_us( forcenl )
           !
           DO nt = 1, ntyp
              DO na = 1, nat
-                ijkb0 = indv_ijkb0(na)
+                ijkb0 = ofsbeta(na)
                 IF ( ityp(na) == nt ) THEN
                    DO ih = 1, nh(nt)
                       ikb = ijkb0 + ih

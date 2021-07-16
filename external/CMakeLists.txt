@@ -134,7 +134,7 @@ endif()
 ###########################################################
 # Eigensolver_GPU
 ###########################################################
-if(QE_ENABLE_CUDA)
+if(QE_ENABLE_CUDA AND NOT QE_ENABLE_LAXLIB_CUSOLVER)
     qe_git_submodule_update(external/eigensolver_gpu)
 
     set(src_eigensolver_gpu
@@ -194,12 +194,9 @@ if(QE_ENABLE_CUDA)
 
     target_link_libraries(qe_eigensolver_gpu
         PRIVATE
-            qe_openmp_fortran)
-    if(QE_ENABLE_CUDA)
-        target_link_libraries(qe_eigensolver_gpu
-        PRIVATE 
+            qe_openmp_fortran
+            qe_lapack
             CUDA::cusolver)
-    endif()
 
     qe_install_targets(qe_eigensolver_gpu)
 endif()

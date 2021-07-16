@@ -188,7 +188,7 @@ proc ::helpdoc::qe_mode_generate {module_list} {
     variable defun
     variable opt
     global qe_modes_template_dir
-    # load the variables needed by qe-mode.el.tcl
+    # load the variables needed by $opt(template), e.g., qe-mode.el.tcl
     
     set mode [string tolower $opt(mode)]
     
@@ -216,12 +216,31 @@ proc ::helpdoc::qe_mode_generate {module_list} {
     set cards     [quote_list [lsort -unique $cards_l]]
     
     set flags     [quote_list [lsort -unique [value_of fontlock(flags)]]]
-    set namelists [quote_list [lsort -nocase -unique [value_of fontlock(namelists)]] $opt(nmlprefix)]
-    set vars      [quote_list [lsort -nocase -unique [value_of fontlock(vars)]]]
+    set namelists [quote_list [lsort -unique [value_of fontlock(namelists)]] $opt(nmlprefix)]
+    set vars      [quote_list [lsort -unique [value_of fontlock(vars)]]]
+    set cmds      [quote_list [lsort -unique [value_of opt(cmds)]]]
+    #set namelists [quote_list [lsort -nocase -unique [value_of fontlock(namelists)]] $opt(nmlprefix)]
+    #set vars      [quote_list [lsort -nocase -unique [value_of fontlock(vars)]]]
+    #set cmds      [quote_list [lsort -nocase -unique [value_of opt(cmds)]]]
 
+    # PWTK uses uppercase namelist and card names !!!
+    if { $opt(mode) == "pwtk" } {
+        set namelists [string toupper $namelists]
+        set cards     [string toupper $cards]
+
+        # filter-out cmds that already exists in cards
+        set newL {}
+        foreach cmd $cmds {
+            if { [lsearch -nocase $cards $cmd] < 0 && [lsearch -nocase $namelists $cmd] < 0 } {
+                lappend newL $cmd
+            }
+        }
+        set cmds [quote_list $newL]
+    }         
+    
     # load the templates
     
-    set qe_template  [tclu::readFile [file join $qe_modes_template_dir qe-mode.el.tcl]]
+    set qe_template  [tclu::readFile [file join $qe_modes_template_dir $opt(template)]]; # default for opt(template) = qe-mode.el.tcl
 
     set header_template    [tclu::readFile [file join $qe_modes_template_dir header.el.tcl]] 
     set namelist_template  [tclu::readFile [file join $qe_modes_template_dir namelist.el.tcl]]

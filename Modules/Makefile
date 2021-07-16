@@ -55,7 +55,6 @@ noncol.o \
 open_close_input_file.o \
 parameters.o \
 parser.o \
-paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
@@ -81,7 +80,6 @@ version.o \
 wannier_gw.o\
 wannier_new.o \
 wavefunctions.o \
-wrappers.o\
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
@@ -112,7 +110,6 @@ OBJS = \
 atom_weight.o \
 capital.o \
 cryst_to_car.o \
-erf.o \
 expint.o \
 generate_k_along_lines.o \
 has_xml.o \
@@ -129,17 +126,22 @@ remove_tot_torque.o \
 set_hubbard_l.o \
 set_hubbard_n.o \
 sort.o \
-sph_bes.o \
-sph_dbes.o \
 trimcheck.o \
 test_input_file.o \
 date_and_tim.o \
 volume.o \
-dylmr2.o \
 wgauss.o \
 w0gauss.o \
 w1gauss.o \
 deviatoric.o
+
+# GPU versions of modules
+MODULES += \
+  wavefunctions_gpu.o \
+  becmod_gpu.o \
+  becmod_subs_gpu.o \
+  cuda_subroutines.o \
+  random_numbers_gpu.o
 
 TLDEPS= libfox libutil libla libfft librxc
 

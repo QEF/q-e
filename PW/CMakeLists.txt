@@ -22,8 +22,6 @@ set(src_pw
    src/beef.f90 
    src/bp_mod.f90 
    src/bp_c_phase.f90 
-   src/bp_calc_btq.f90 
-   src/bp_qvan3.f90 
    src/bp_strings.f90 
    src/buffers.f90 
    src/c_bands.f90 
@@ -32,6 +30,8 @@ set(src_pw
    src/cdiagh.f90 
    src/clean_pw.f90 
    src/close_files.f90 
+   src/commutator_Hx_psi.f90
+   src/commutator_Vhubx_psi.f90
    src/compute_becsum.f90 
    src/compute_deff.f90 
    src/compute_dip.f90 
@@ -47,7 +47,6 @@ set(src_pw
    src/divide_class.f90 
    src/divide_class_so.f90 
    src/divide_et_impera.f90 
-   src/dqvan2.f90 
    src/drhoc.f90 
    src/rotate_wfc.f90 
    src/run_driver.f90 
@@ -111,11 +110,7 @@ set(src_pw
    src/init_ns.f90 
    src/init_q_aeps.f90 
    src/init_run.f90 
-   src/init_us_0.f90 
-   src/init_us_b0.f90 
-   src/init_us_1.f90 
    src/init_us_2.f90 
-   src/init_at_1.f90 
    src/init_vloc.f90 
    src/input.f90 
    src/io_rho_xml.f90 
@@ -179,12 +174,11 @@ set(src_pw
    src/pw2blip.f90 
    src/pw2casino.f90 
    src/pw2casino_write.f90 
-   src/qvan2.f90 
    src/rdiagh.f90 
    src/read_conf_from_file.f90 
    src/read_file_new.f90 
    src/realus.f90 
-   src/remove_atomic_rho.f90 
+   src/remove_atomic_rho.f90
    src/report_mag.f90 
    src/restart_in_electrons.f90 
    src/rho2zeta.f90 
@@ -206,8 +200,6 @@ set(src_pw
    src/set_vrs.f90 
    src/setlocal.f90 
    src/setup.f90 
-   src/spinor.f90 
-   src/sph_ind.f90 
    src/stop_run.f90 
    src/stres_cc.f90 
    src/stres_ewa.f90 
@@ -253,7 +245,51 @@ set(src_pw
    src/wannier_init.f90 
    src/wannier_check.f90 
    src/wannier_clean.f90 
-   src/wannier_occ.f90)
+   src/wannier_occ.f90
+   # GPU
+   src/pwcom_gpu.f90
+   src/scf_mod_gpu.f90
+   src/g_psi_mod_gpu.f90
+   src/newd_gpu.f90
+   src/sum_band_gpu.f90
+   src/force_us_gpu.f90
+   src/force_lc_gpu.f90
+   src/force_cc_gpu.f90
+   src/force_hub_gpu.f90
+   src/force_corr_gpu.f90
+   src/orthoatwfc_gpu.f90
+   src/wfcinit_gpu.f90
+   src/stres_loc_gpu.f90
+   src/add_paw_to_deeq_gpu.f90
+   src/addusdens_gpu.f90
+   src/addusforce_gpu.f90
+   src/deriv_drhoc_gpu.f90
+   src/s_psi_gpu.f90
+   src/g2_kin_gpu.f90
+   src/rotate_wfc_gpu.f90
+   src/usnldiag_gpu.f90
+   src/add_vuspsi_gpu.f90
+   src/hs_1psi_gpu.f90
+   src/g_psi_gpu.f90
+   src/stres_mgga_gpu.f90
+   src/atomic_wfc_gpu.f90
+   src/gen_us_dj_gpu.f90
+   src/gen_us_dy_gpu.f90
+   src/dvloc_of_g_gpu.f90
+   src/stres_ewa_gpu.f90
+   src/stres_knl_gpu.f90
+   src/compute_deff_gpu.f90
+   src/add_vhub_to_deeq_gpu.f90
+   src/s_1psi_gpu.f90
+   src/h_psi_gpu.f90
+   src/stres_us_gpu.f90
+   src/stres_cc_gpu.f90
+   src/utils_gpu.f90
+   src/vhpsi_gpu.f90
+   src/drhoc_gpu.f90
+   src/stres_har_gpu.f90
+   src/vloc_psi_gpu.f90
+   src/hs_psi_gpu.f90)
 qe_enable_cuda_fortran("${src_pw}")
     
 qe_add_library(qe_pw ${src_pw})
@@ -273,11 +309,13 @@ target_link_libraries(qe_pw
         qe_dftd3
         qe_openmp_fortran
         qe_mpi_fortran
-        qe_xclib)
+        qe_xclib
+        qe_devxlib
+        qe_mbd)
+
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
         PRIVATE
-            qe_devxlib
             CUDA::cublas)
 endif()
 
@@ -295,7 +333,6 @@ target_link_libraries(qe_pw_exe
         qe_pw
         qe_modules
         qe_lax
-        qe_lapack
         qe_upflib)
 
 ###########################################################
@@ -309,8 +346,7 @@ set_target_properties(qe_pw_tools_ibrav2cell_exe
 target_link_libraries(qe_pw_tools_ibrav2cell_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # cell2ibrav.x
@@ -323,8 +359,7 @@ set_target_properties(qe_pw_tools_cell2ibrav_exe
 target_link_libraries(qe_pw_tools_cell2ibrav_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # ev.x
@@ -337,8 +372,7 @@ set_target_properties(qe_pw_tools_ev_exe
 target_link_libraries(qe_pw_tools_ev_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # kpoints.x
@@ -351,8 +385,7 @@ set_target_properties(qe_pw_tools_kpoints_exe
 target_link_libraries(qe_pw_tools_kpoints_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 # pwi2xsf.x
@@ -365,8 +398,7 @@ set_target_properties(qe_pw_tools_pwi2xsf_exe
 target_link_libraries(qe_pw_tools_pwi2xsf_exe
     PRIVATE
         qe_pw
-        qe_modules
-        qe_lapack)
+        qe_modules)
 
 ###########################################################
 

@@ -1,6 +1,12 @@
 ccgdiagg.o : ../../UtilXlib/mp.o
 ccgdiagg.o : ../../UtilXlib/mp_bands_util.o
 ccgdiagg.o : ../../UtilXlib/util_param.o
+ccgdiagg_gpu.o : ../../UtilXlib/mp.o
+ccgdiagg_gpu.o : ../../UtilXlib/mp_bands_util.o
+ccgdiagg_gpu.o : ../../UtilXlib/util_param.o
 rcgdiagg.o : ../../UtilXlib/mp.o
 rcgdiagg.o : ../../UtilXlib/mp_bands_util.o
 rcgdiagg.o : ../../UtilXlib/util_param.o
+rcgdiagg_gpu.o : ../../UtilXlib/mp.o
+rcgdiagg_gpu.o : ../../UtilXlib/mp_bands_util.o
+rcgdiagg_gpu.o : ../../UtilXlib/util_param.o

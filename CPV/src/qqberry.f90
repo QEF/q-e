@@ -16,7 +16,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
   use kinds,              only: dp
   use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm
-  use uspp,               only: indv, lpx, lpl, ap,nhtolm, nkbus, indv_ijkb0
+  use uspp,               only: indv, lpx, lpl, ap,nhtolm, nkbus, ofsbeta
   use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
@@ -27,7 +27,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use gvect,              only: g, gg
   use mp,                 only: mp_sum
   use mp_global,          only: intra_bgrp_comm
-  use cp_interfaces,      only: fill_qrl
   
   implicit none
 
@@ -41,7 +40,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
   integer :: ndm, ig, is, iv, jv, i, istart, il,l,ir, igi,ia
   real(dp), allocatable:: fint(:),jl(:)
-  real(dp), allocatable:: qrl(:,:,:), qradb2(:,:,:,:) 
+  real(dp), allocatable:: qradb2(:,:,:,:) 
   real(dp) c, xg
   complex(dp) qgbs,sig
   integer :: ivs, jvs, ivl, jvl, lp, ijv
@@ -79,10 +78,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
      IF( upf(is)%tvanp ) THEN
         c=fpi                 !/omegab
         !
-        ALLOCATE ( qrl( upf(is)%kkbeta, upf(is)%nbeta*(upf(is)%nbeta+1)/2, &
-                     upf(is)%nqlc ) )
-        !
-        call fill_qrl ( is, qrl )
         ! now the radial part
         do l=1,upf(is)%nqlc
            xg= gmes !only orthorombic cells
@@ -92,10 +87,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
               do jv=iv,upf(is)%nbeta
                  ijv = (jv-1)*jv/2 + iv
 !     
-!     note qrl(r)=r^2*q(r)
-!
                  do ir=1,upf(is)%kkbeta
-                    fint(ir)=qrl(ir,ijv,l)*jl(ir)
+                    fint(ir)=upf(is)%qfuncl(ir,ijv,l-1)*jl(ir)
                  end do
                  call simpson ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
                                 qradb2(iv,jv,l,is) )
@@ -104,7 +97,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
               end do
            end do
         end do
-        DEALLOCATE ( qrl )    
      END IF
   enddo
 

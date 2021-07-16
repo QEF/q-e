@@ -11,6 +11,7 @@ NEBOBJS = \
 neb.o \
 
 NEBLIBS = \
+bcast_file.o \
 compute_scf.o \
 engine_to_path_pos.o \
 engine_to_path_alat.o \

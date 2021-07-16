@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: projwfc.x / PWscf / Quantum Espresso (version: 6.6)
+Program: projwfc.x / PWscf / Quantum Espresso (version: 6.8)
 ------------------------------------------------------------------------
 
 
@@ -331,4 +331,4 @@ NAMELIST: &PROJWFC
       
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:28 CEST 2020
+This file has been created by helpdoc utility on Fri Jul 16 11:56:11 CEST 2021

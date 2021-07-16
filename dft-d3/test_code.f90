@@ -3,7 +3,6 @@
 
 program test_code
  use dftd3_api
- use cell_base
 
  implicit none
 
@@ -24,8 +23,8 @@ program test_code
     real(wp), allocatable:: grads(:,:)
     real(wp), dimension(3,3) :: stress
     real(wp), parameter :: delta = 0.001
-     real(wp) :: stress_num(3,3)
-
+    real(wp) :: stress_num(3,3)
+    real(wp) :: bg(3,3)
 
 ! ----- need to read: coordinates, atoms, lattice vectors
     read(*,*) a0
@@ -149,7 +148,6 @@ write(*,*) 'omega =',omega0, omega2, omega1
 write(*,*) 'dE / dV =', 1.0 * (Ep-Em)/(omega2-omega1)
 write(*,*)
     CALL recips(latvecs0(1,1),latvecs0(1,2),latvecs0(1,3),bg(1,1),bg(1,2),bg(1,3))
-    bg(:,:)=bg(:,:)
 
     latvecs(:,:)=latvecs0(:,:) * a0
     latvecs(1,1)=latvecs(1,1) + 0.0001

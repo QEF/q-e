@@ -12,10 +12,9 @@ SUBROUTINE hp_openfil_q()
   !
   ! This subroutine opens all necessary files necessary. 
   !
-  USE io_files,         ONLY : tmp_dir, nwordwfcU
+  USE io_files,         ONLY : prefix, tmp_dir, iunhub, nwordwfcU
   USE control_flags,    ONLY : io_level
   USE wvfct,            ONLY : nbnd, npwx
-  USE io_files,         ONLY : prefix
   USE noncollin_module, ONLY : npol
   USE buffers,          ONLY : open_buffer
   USE qpoint,           ONLY : nksq
@@ -68,6 +67,15 @@ SUBROUTINE hp_openfil_q()
   iuatswfc  = 23
   nwordwfcU = npwx * nwfcU * npol
   CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+  !
+  IF (lgamma) THEN
+     !
+     ! If q = Gamma, open unit iunhub which contain S*phi at k.
+     ! Unit iunhub is used in commutator_Vhubx_psi.f90.
+     !
+     CALL open_buffer(iunhub, 'hub', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     !
+  ENDIF
   !
   RETURN
   !

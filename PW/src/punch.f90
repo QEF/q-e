@@ -28,17 +28,19 @@ SUBROUTINE punch( what )
   USE control_flags,        ONLY : io_level, lscf, lxdm
   USE klist,                ONLY : nks
   USE io_files,             ONLY : psfile, pseudo_dir
-  USE wrappers,             ONLY : f_copy
+  USE clib_wrappers,        ONLY : f_copy
   USE spin_orb,             ONLY : lforcet
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin
   USE ions_base,            ONLY : nsp
-  USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
+  USE pw_restart_new,       ONLY : pw_write_schema, write_collected_wfc
   USE qexsd_module,         ONLY : qexsd_reset_steps
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions,        ONLY : evc
   USE xdm_module,           ONLY : write_xdmdat
+  !
+  USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -105,7 +107,7 @@ SUBROUTINE punch( what )
      !
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
-     CALL pw_write_binaries( )
+     CALL write_collected_wfc( )
 
      ! ... if allocated, deallocate variables containing info on ionic steps 
      ! 
@@ -118,6 +120,7 @@ SUBROUTINE punch( what )
      ! ... however there is no buffer: wavefunctions must be saved to file here
      !
      IF (io_level < 1) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     CALL using_evc(0)
      CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
      IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      CALL infomsg('punch','wavefunctions written to file')

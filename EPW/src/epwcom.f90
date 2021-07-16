@@ -36,6 +36,9 @@
   !! ...  title of the simulation
   CHARACTER(LEN = 10)  :: asr_typ
   !! type of ASR if lifc=.TRUE.
+  CHARACTER(LEN = 10) :: vme
+  !! if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
+  !! if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
   !
   LOGICAL :: elecselfen
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
@@ -87,8 +90,6 @@
   !! if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
   LOGICAL :: epexst
   !! if .TRUE. prefix.epmatwp files are already on disk. don't recalculate. debugging param
-  LOGICAL :: vme
-  !! if .TRUE. calculate velocity matrix elements
   LOGICAL :: band_plot
   !! if .TRUE. write files to plot band structure and phonon dispersion
   LOGICAL :: fermi_plot
@@ -151,6 +152,10 @@
   !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
   LOGICAL :: eliashberg
   !! if .TRUE. solve the Eliashberg equations
+  LOGICAL :: tc_linear
+  !! if .TRUE.  linearized Eliashberg eqn. for T_c will be solved
+  CHARACTER(LEN = 10) :: tc_linear_solver
+  !! algorithm to solve T_c eigenvalue problem
   !
   ! Conductivity
   LOGICAL :: scattering
@@ -245,7 +250,7 @@
   INTEGER :: nsiter
   !! nr. of iterations for self-consistency
   INTEGER :: npade
-  !! percentange of Matsubara points used in Pade continuation 
+  !! percentange of Matsubara points used in Pade continuation
   INTEGER :: broyden_ndim
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
@@ -332,6 +337,12 @@
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
   REAL(KIND = DP) :: nc
   !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
+  REAL(KIND = DP) :: bfieldx
+  !! Magnetic field along the x-direction
+  REAL(KIND = DP) :: bfieldy
+  !! Magnetic field along the y-direction
+  REAL(KIND = DP) :: bfieldz
+  !! Magnetic field along the z-direction
   !
   ! Plasmon
   REAL(KIND = DP) :: nel
@@ -346,6 +357,10 @@
   !! smearing for the calculation of the Lindhard function (in eV)
   !
   ! Phonon-assisted absorption
+  INTEGER :: neta = 9
+  !! Number of broadening parameters
+  INTEGER :: nomega
+  !! Number of frequency (photon energy) points
   REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
   REAL(KIND = DP) :: omegamax

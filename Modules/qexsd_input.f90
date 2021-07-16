@@ -8,10 +8,10 @@
 !---------------------------------------------------------
 MODULE qexsd_input
 !--------------------------------------------------------
-  ! This module contains the data structures for the XML input of pw.x
-  ! and the routines neeeded to initialise it
+  !! This module contains the data structures for the XML input of pw.x
+  !! and the routines neeeded to initialise it
   !----------------------------------------------------------------------------
-  ! First version March 2016, modified Aug. 2019
+  !! First version March 2016, modified Aug. 2019
   !----------- ------------- --------------------------------------------------- 
   USE kinds, ONLY : dp
   !
@@ -247,14 +247,14 @@ MODULE qexsd_input
    !
    !
    !-------------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,xk,wk,alat,a1, ibrav_lattice)
+   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,alat,a1, ibrav_lattice,xk,wk)
    ! 
    IMPLICIT NONE
    ! 
    TYPE (k_points_IBZ_type)             :: obj
    CHARACTER(LEN=*),INTENT(IN)          :: k_points,calculation
    INTEGER,INTENT(IN)                   :: nk1,nk2,nk3,s1,s2,s3,nk
-   REAL(DP),INTENT(IN)                  :: xk(:,:),wk(:)
+   REAL(DP),INTENT(IN), OPTIONAL        :: xk(:,:),wk(:)
    REAL(DP),INTENT(IN)                  :: alat,a1(3)
    LOGICAL,INTENT(IN)                   :: ibrav_lattice
    !

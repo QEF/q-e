@@ -33,7 +33,7 @@ SUBROUTINE potinit()
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
-  USE control_flags,        ONLY : lscf, gamma_only
+  USE control_flags,        ONLY : lscf, gamma_only, restart
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE xc_lib,               ONLY : xclib_dft_is
@@ -55,6 +55,8 @@ SUBROUTINE potinit()
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
+  !
+  USE scf_gpum,             ONLY : using_vrs
   !
   IMPLICIT NONE
   !
@@ -86,11 +88,14 @@ SUBROUTINE potinit()
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
+        ! ... (not if restarting! the charge density saved to file in that
+        ! ...  case has already the required magnetization direction)
         ! ... FIXME: why not calling read_scf also in this case?
         !
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
-        CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
+        IF ( .NOT. restart ) &
+           CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
      END IF
      !
      IF ( lscf ) THEN
@@ -237,6 +242,7 @@ SUBROUTINE potinit()
   !
   ! ... define the total local potential (external+scf)
   !
+  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   ! ... write on output the parameters used in the DFT+U(+V) calculation

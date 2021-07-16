@@ -239,11 +239,9 @@ CONTAINS
        continue
 #endif
     else if ( mesh /= upf%mesh ) THEN
-#if defined (__debug)
        call upf_error('read_pp_mesh',&
          'mismatch in mesh size, discarding the one in header',-1)
        upf%mesh = mesh
-#endif
     end if
     CALL get_attr ( 'dx'  , upf%dx   )
     CALL get_attr ( 'xmin', upf%xmin )
@@ -368,9 +366,7 @@ CONTAINS
     !
     ! pp_dij (D_lm matrix)
     !
-    CALL xmlr_opentag( capitalize_if_v2 ('pp_dij') )
-    READ(iun,*) upf%dion(1:upf%nbeta,1:upf%nbeta)
-    CALL xmlr_closetag( ) 
+    CALL xmlr_readtag ( capitalize_if_v2 ('pp_dij'), upf%dion )
     !
     ! pp_augmentation
     !
@@ -401,15 +397,11 @@ CONTAINS
           ENDIF
        ENDIF
        !
-       CALL xmlr_opentag( capitalize_if_v2('pp_q') )
-       READ(iun,*) upf%qqq(1:upf%nbeta,1:upf%nbeta)
-       CALL xmlr_closetag( )
+       CALL xmlr_readtag( capitalize_if_v2('pp_q'), upf%qqq )
        !
        IF ( upf%tpawp ) THEN
-          CALL xmlr_opentag( capitalize_if_v2('pp_multipoles') )
           ALLOCATE ( upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax) )
-          READ(iun,*) upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)
-          CALL xmlr_closetag ()
+          CALL xmlr_readtag( capitalize_if_v2('pp_multipoles'), upf%paw%augmom )
        ENDIF
        !
        ! read polinomial coefficients for Q_ij expansion at small radius
@@ -579,7 +571,7 @@ CONTAINS
           ALLOCATE (upf%paw%aewfc_rel(1:upf%mesh,upf%nbeta) )
           DO nb = 1, upf%nbeta
              IF ( v2 ) THEN
-                tag = 'PP_AEWFC_rel.'//i2c(nb)
+                tag = 'PP_AEWFC_REL.'//i2c(nb)
              ELSE
                 tag = 'pp_aewfc_rel'
              END IF
@@ -624,11 +616,16 @@ CONTAINS
        CALL get_attr( 'index' , nb )
        ! not-so-strict test: index absent or incorrect in some UPF v.2 files
        IF ( .NOT. v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
-       CALL get_attr( 'els',   upf%els(nw) )
        CALL get_attr( 'nn',    upf%nn(nw) )
-       CALL get_attr( 'lchi',  upf%lchi(nw) )
        CALL get_attr( 'jchi',  upf%jchi(nw) )
-       CALL get_attr( 'oc',    upf%oc(nw) )
+       !
+       ! the following data is already known and was not read in old versions
+       ! of UPF-reading code. upf%oc is actually missing in some UPF files:
+       ! reading it here may spoil the value read earlier and break DFT+U
+       !
+       ! CALL get_attr( 'lchi',  upf%lchi(nw) )
+       ! CALL get_attr( 'els',   upf%els(nw) )
+       ! CALL get_attr( 'oc',    upf%oc(nw) )
     ENDDO
     !
     DO nb = 1,upf%nbeta

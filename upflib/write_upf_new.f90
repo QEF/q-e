@@ -528,7 +528,9 @@ CONTAINS
     call add_attr( 'columns',  upf%nbeta )
     call add_attr( 'rows', upf%nbeta )
     CALL xmlw_opentag( capitalize_if_v2 ('pp_dij') )
-    WRITE(iun,*) upf%dion(1:upf%nbeta,1:upf%nbeta)
+    DO nb = 1,upf%nbeta
+       WRITE(iun,*) upf%dion(1:upf%nbeta,nb)
+    END DO
     CALL xmlw_closetag( ) 
     !
     ! pp_augmentation
@@ -564,7 +566,9 @@ CONTAINS
        nb = upf%nbeta*upf%nbeta
        call add_attr( 'size', nb )
        CALL xmlw_opentag( capitalize_if_v2('pp_q') )
-       WRITE(iun,*) upf%qqq(1:upf%nbeta,1:upf%nbeta)
+       DO nb = 1,upf%nbeta
+          WRITE(iun,*) upf%qqq(1:upf%nbeta,nb)
+       END DO
        CALL xmlw_closetag( )
        !
        IF ( upf%tpawp ) THEN
@@ -573,7 +577,11 @@ CONTAINS
           call add_attr( 'nbeta', upf%nbeta )
           call add_attr( 'lmax', upf%lmax )
           CALL xmlw_opentag( capitalize_if_v2('pp_multipoles') )
-          WRITE(iun,*) upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)
+          DO l = 0,2*upf%lmax
+             DO nb = 1,upf%nbeta
+                WRITE(iun,*) upf%paw%augmom(1:upf%nbeta,nb,l)
+             END DO
+          END DO
           CALL xmlw_closetag ()
        ENDIF
        !

@@ -173,7 +173,7 @@
       !
       OPEN(UNIT = epwdata, FILE = 'epwdata.fmt')
       OPEN(UNIT = crystal, FILE = 'crystal.fmt')
-      IF (vme) THEN
+      IF (vme == 'wannier') THEN
         OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt')
       ELSE
         OPEN(UNIT = iundmedata, FILE = 'dmedata.fmt')
@@ -202,7 +202,7 @@
             WRITE (epwdata,*) chw(ibnd, jbnd, irk)
             IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd, jbnd, irk)
             DO ipol = 1, 3
-              IF (vme) THEN
+              IF (vme == 'wannier') THEN
                 WRITE(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
               ELSE
                 WRITE(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
@@ -245,7 +245,7 @@
       !
       CLOSE(epwdata)
       CLOSE(crystal)
-      IF (vme) THEN
+      IF (vme == 'wannier') THEN
         CLOSE(iunvmedata)
       ELSE
         CLOSE(iundmedata)
@@ -333,7 +333,7 @@
       IF (ios /= 0) CALL errore ('epw_read', 'error opening epwdata.fmt', epwdata)
       IF (eig_read) OPEN(UNIT = iunksdata, FILE = 'ksdata.fmt', STATUS = 'old', IOSTAT = ios)
       IF (eig_read .AND. ios /= 0) CALL errore ('epw_read', 'error opening ksdata.fmt', iunksdata)
-      IF (vme) THEN
+      IF (vme == 'wannier') THEN
         OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt', STATUS = 'old', IOSTAT = ios)
         IF (ios /= 0) CALL errore ('epw_read', 'error opening vmedata.fmt', iunvmedata)
       ELSE
@@ -360,7 +360,7 @@
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating chw_ks', 1)
     ALLOCATE(rdw(nmodes, nmodes,  nrr_q), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating rdw', 1)
-    IF (vme) THEN
+    IF (vme == 'wannier') THEN
       ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
       IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cvmew', 1)
     ELSE
@@ -376,7 +376,7 @@
            READ(epwdata,*) chw(ibnd, jbnd, irk)
            IF (eig_read) READ(iunksdata,*) chw_ks(ibnd, jbnd, irk)
            DO ipol = 1,3
-             IF (vme) THEN
+             IF (vme == 'wannier') THEN
                READ(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
              ELSE
                READ(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
@@ -403,7 +403,7 @@
     IF (eig_read) CALL mp_bcast(chw_ks, ionode_id, world_comm)
     IF (.NOT. lifc) CALL mp_bcast(rdw, ionode_id, world_comm)
     !
-    IF (vme) THEN
+    IF (vme == 'wannier') THEN
       CALL mp_bcast(cvmew, ionode_id, world_comm)
     ELSE
       CALL mp_bcast(cdmew, ionode_id, world_comm)
@@ -447,7 +447,7 @@
     !CALL mp_barrier(inter_pool_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(epwdata)
-      IF (vme) THEN
+      IF (vme == 'wannier') THEN
         CLOSE(iunvmedata)
       ELSE
         CLOSE(iundmedata)
@@ -553,7 +553,7 @@
       !  ionode = .TRUE.
       !ELSE
       !  ionode = .FALSE.
-      !ENDIF            
+      !ENDIF
       !
       ! pass the 'tempfile' as the '.xml' extension is added in the next routine
       CALL read_dyn_mat_param(tempfile, ntyp_, nat_)
@@ -573,7 +573,7 @@
       IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error deallocating atm', 1)
       !
     ELSE ! is_xml_file
-      IF (mpime == ionode_id) THEN      
+      IF (mpime == ionode_id) THEN
         !
         OPEN(UNIT = iunifc, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
         IF (ios /= 0) call errore ('read_ifc_epw', 'error opening ifc.q2r', iunifc)
@@ -637,7 +637,7 @@
       CALL mp_bcast(tau_, ionode_id, world_comm)
       CALL mp_bcast(ibrav_, ionode_id, world_comm)
     ENDIF ! has_xml
-    ! 
+    !
     WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat)
     !
     CALL set_asr2(asr_typ, nqc1, nqc2, nqc3, ifc, zstar, nat, ibrav_, tau_)

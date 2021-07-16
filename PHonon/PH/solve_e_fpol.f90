@@ -94,6 +94,7 @@ subroutine solve_e_fpol ( iw )
 
   call start_clock ('solve_e')
   allocate (dvscfin( dfftp%nnr, nspin, 3))
+  dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins( dffts%nnr, nspin, 3))
   else

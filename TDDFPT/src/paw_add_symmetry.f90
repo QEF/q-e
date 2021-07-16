@@ -55,7 +55,7 @@ SUBROUTINE paw_deqsymmetrize(dbecsum)
     INTEGER :: m_o, m_u     ! counters for sums on m
     INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
     INTEGER :: isym         ! counter for symmetry operation
-    INTEGER :: ipol, jpol, kpol
+    INTEGER :: jpol, kpol
     INTEGER :: table(48, 48)
 
     ! The following mess is necessary because the symmetrization operation

@@ -6,14 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------
-MODULE exch_gga !<GPU:exch_gga=>exch_gga_gpu>
+MODULE exch_gga
 !------------------------------------------------------------------------
 !! GGA exchange functionals
 !
 CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke88( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE becke88( rho, grho, sx, v1x, v2x )
+!$acc routine (becke88) seq
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   !! only gradient-corrected part, no Slater term included
@@ -56,7 +57,8 @@ END SUBROUTINE becke88
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ggax( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
+SUBROUTINE ggax( rho, grho, sx, v1x, v2x )
+!$acc routine (ggax) seq
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91), exchange part:
   !! J.P. Perdew et al.,PRB 46, 6671 (1992)
@@ -104,7 +106,8 @@ END SUBROUTINE ggax
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
+!$acc routine (pbex) seq
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
   !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
@@ -121,7 +124,7 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: iflag               !<GPU:VALUE>
+  INTEGER, INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
   ! input: charge and squared gradient
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -326,7 +329,8 @@ END SUBROUTINE pbex
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
+!$acc routine (hcth) seq
   !--------------------------------------------------------------------------
   !! HCTH/120, JCP 109, p. 6264 (1998)
   !! Parameters set-up after N.L. Doltsisnis & M. Sprik (1999)
@@ -401,10 +405,10 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   rab = r3q2*ra
   dra_drho = -0.260530881d0/rho_o34
   drab_drho = r3q2*dra_drho
-  CALL pwcorr( ra, cg1, g, dg )                           !<GPU:pwcorr=>pwcorr_d>
+  CALL pwcorr( ra, cg1, g, dg )
   era1 = g
   dera1_dra = dg
-  CALL pwcorr( rab, cg0, g, dg )                          !<GPU:pwcorr=>pwcorr_d>
+  CALL pwcorr( rab, cg0, g, dg )
   erab0 = g
   derab0_drab = dg
   ex = -0.75d0*r3pi*rho_o34
@@ -452,7 +456,8 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
 END SUBROUTINE hcth
     !
     !-------------------------------------------------------
-    SUBROUTINE pwcorr( r, c, g, dg )                    !<GPU:DEVICE>
+    SUBROUTINE pwcorr( r, c, g, dg )
+!$acc routine (pwcorr) seq
       !-----------------------------------------------------
       !
       USE kind_l,   ONLY: DP
@@ -481,7 +486,8 @@ END SUBROUTINE hcth
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE optx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE optx( rho, grho, sx, v1x, v2x )
+!$acc routine (optx) seq
   !---------------------------------------------------------------------------
   !! OPTX, Handy et al. JCP 116, p. 5411 (2002) and refs. therein
   !! Present release: Mauro Boero, Tsukuba, 10/9/2002
@@ -527,7 +533,8 @@ END SUBROUTINE optx
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE wcx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
+!$acc routine (wcx) seq
   !---------------------------------------------------------------
   !!  Wu-Cohen exchange (without Slater exchange):
   !!  Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
@@ -599,14 +606,15 @@ END SUBROUTINE wcx
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<GPU:DEVICE>
+SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
+!$acc routine (pbexsr) seq
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
   USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: omega                !<GPU:VALUE>
+  REAL(DP), INTENT(IN) :: omega
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sxsr, v1xsr, v2xsr
   !
@@ -635,7 +643,7 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<G
      s = 8.572844D0 - 18.796223D0/s2
   ENDIF
   !
-  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x ) !<GPU:wpbe_analy_erfc_approx_grad=>wpbe_analy_erfc_approx_grad_d>
+  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x )
   !
   sxsr  = ex*fx                        ! - ex
   dsdn  = -4.D0/3.D0*s/rho
@@ -653,7 +661,8 @@ END SUBROUTINE pbexsr
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )
+!$acc routine (rPW86) seq
   !---------------------------------------------------------------------
   !! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009).
   !
@@ -697,7 +706,8 @@ END SUBROUTINE rPW86
 !
 !
 !-----------------------------------------------------------------
-SUBROUTINE c09x( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE c09x( rho, grho, sx, v1x, v2x )
+!$acc routine (c09x) seq
   !---------------------------------------------------------------
   !! Cooper '09 exchange for vdW-DF (without Slater exchange):
   !! V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -768,7 +778,8 @@ END SUBROUTINE c09x
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE sogga( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE sogga( rho, grho, sx, v1x, v2x )
+!$acc routine (sogga) seq
   !-------------------------------------------------------------
   !! SOGGA exchange
   !
@@ -827,14 +838,15 @@ END SUBROUTINE sogga
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                    !<GPU:DEVICE>
+SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )
+!$acc routine (pbexgau) seq
   !-----------------------------------------------------------------------
   !
   USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: alpha_gau              !<GPU:VALUE>
+  REAL(DP), INTENT(IN) :: alpha_gau
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sxsr, v1xsr, v2xsr
   !
@@ -858,7 +870,7 @@ SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                  
   IF (s > 10.D0) THEN
      s = 10.D0
   ENDIF
-  CALL pbe_gauscheme( rho, s, alpha_gau, fx, d1x, d2x )   !<GPU:pbe_gauscheme=>pbe_gauscheme_d>
+  CALL pbe_gauscheme( rho, s, alpha_gau, fx, d1x, d2x )
   sxsr = ex*fx                        ! - EX
   dsdn = -4.D0/3.D0*s/rho
   v1xsr = vx*fx + (dsdn*d2x+d1x)*ex   ! - VX
@@ -874,7 +886,8 @@ SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                  
 END SUBROUTINE pbexgau
     !
     !-----------------------------------------------------------------------
-SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                    !<GPU:DEVICE>
+SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
+!$acc routine (pbe_gauscheme) seq
        !--------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -917,12 +930,12 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                 
        !
        ! cx = exp(-One/Four/bx/bx) - One
        IF (ABS(One/bx/bx) < 1.0D-4) THEN
-          cx = TayExp(-One/bx/bx)                               !<GPU:TayExp=>TayExp_d>
+          cx = TayExp(-One/bx/bx)
        ELSE
           cx = EXP(-One/bx/bx) - One
        ENDIF
        !
-       Nx = bx * Prefac * ( SQRT(PI) * qe_erf(One/bx) + &       !<GPU:qe_erf=>qe_erf_d>
+       Nx = bx * Prefac * ( SQRT(PI) * ERF(One/bx) + & 
         (bx - Two*bx*bx*bx)*cx - Two*bx )
        !
        ! for convergency
@@ -963,12 +976,13 @@ END SUBROUTINE pbe_gauscheme
 !
 !
 !-------------------------------------------------
-FUNCTION TayExp(X)                         !<GPU:DEVICE>
+FUNCTION TayExp(X)
+!$acc routine (TayExp) seq
   !-------------------------------------------
   USE kind_l,   ONLY: DP
   IMPLICIT NONE
   REAL(DP), INTENT(IN) :: X
-  REAL(DP) :: TAYEXP                        !<GPU:TAYEXP=>TAYEXP_d>
+  REAL(DP) :: TAYEXP
   INTEGER :: NTERM,I
   REAL(DP) :: SUMVAL,IVAL,COEF
   PARAMETER (NTERM=16)
@@ -981,7 +995,7 @@ FUNCTION TayExp(X)                         !<GPU:DEVICE>
      IVAL = IVAL * (X / COEF)
      SUMVAL = SUMVAL + IVAL
 10     CONTINUE
-  TAYEXP = SUMVAL                      !<GPU:TAYEXP=>TAYEXP_d>
+  TAYEXP = SUMVAL
   !
   RETURN
   !
@@ -990,7 +1004,8 @@ END FUNCTION TayExp
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE PW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE PW86( rho, grho, sx, v1x, v2x )
+!$acc routine (PW86) seq
   !-----------------------------------------------------------------------
   !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986)
   !
@@ -1034,7 +1049,8 @@ END SUBROUTINE PW86
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )
+!$acc routine (becke86b) seq
   !-----------------------------------------------------------------------
   !! Becke 1986 gradient correction to exchange
   !! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
@@ -1074,7 +1090,8 @@ END SUBROUTINE becke86b
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
+!$acc routine (b86b) seq
   !-------------------------------------------------------------
   !! Becke exchange (without Slater exchange):
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
@@ -1088,7 +1105,7 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   USE kind_l,     ONLY : DP
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: iflag                  !<GPU:VALUE>
+  INTEGER, INTENT(IN) :: iflag
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
   !
@@ -1144,7 +1161,8 @@ END SUBROUTINE b86b
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE cx13( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
+!$acc routine (cx13) seq
   !-----------------------------------------------------------------------
   !! The new exchange partner for a vdW-DF1-cx suggested
   !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014),
@@ -1201,7 +1219,8 @@ END SUBROUTINE cx13
 ! ===========> SPIN <===========
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )                     !<GPU:DEVICE>
+SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )
+!$acc routine (becke88_spin) seq
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
@@ -1261,7 +1280,8 @@ END SUBROUTINE becke88_spin
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )                     !<GPU:DEVICE>
+SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
+!$acc routine (wpbe_analy_erfc_approx_grad) seq
       !-----------------------------------------------------------------------
       !
       !     wPBE Enhancement Factor (erfc approx.,analytical, gradients)
@@ -1544,7 +1564,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
                          Four*B*(DHs2) + Eight*A*(DHs3))    &
                       * (One / (Sixteen * DHs72))           &
                        - f34*pi*SQRT(A) * EXP(f94*H*s2/A) * &
-                         (One - qe_erf(f32*s*SQRT(H/A)))                    !<GPU:qe_erf=>qe_erf_d>
+                         (One - ERF(f32*s*SQRT(H/A)))
         !
         d1sG_a = (One/r32)*srpi *                           &
                  ((r36*(Two*H + d1sH*s) / (A12*SQRT(H/A)))  &
@@ -1553,7 +1573,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
                       -r30*C*d1sDHs*DHs*(One+s2*F)          &
                       +r12*DHs2*(-B*d1sDHs + C*s*(d1sF*s + Two*F)))  &
                   - ((r54*EXP(f94*H*s2/A)*srpi*s*(Two*H+d1sH*s)*     &
-                     qe_erfc(f32*SQRT(H/A)*s))                       &      !<GPU:qe_erfc=>qe_erfc_d>
+                     ERFC(f32*SQRT(H/A)*s))                       &
                      / A12))
         !
         G_b    = (f1516 * srpi * s2) / DHs72
@@ -1651,10 +1671,9 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
       !
       IF (HsbwA94 < expfcutoff) THEN
         !
-        piexperf = pi*EXP(HsbwA94)*qe_erfc(HsbwA9412)                   !<GPU:qe_erfc=>qe_erfc_d>
+        piexperf = pi*EXP(HsbwA94)*ERFC(HsbwA9412)
         ! expei    = Exp(HsbwA94)*Ei(-HsbwA94)
-        expei    = EXP(HsbwA94)*(-expint(1,HsbwA94))                   !<GPU:expint=>expint_d>
-
+        expei    = EXP(HsbwA94)*(-expint(1,HsbwA94))
       ELSE
         !
         ! print *,rho,s," LARGE HsbwA94"
@@ -1859,106 +1878,9 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
 
 END SUBROUTINE wpbe_analy_erfc_approx_grad
 !
-!---------------------------------------------------------------------
-function qe_erf(x)                      !<GPU:DEVICE>
-  !---------------------------------------------------------------------
-  !     Error function - computed from the rational approximations of
-  !     W. J. Cody, Math. Comp. 22 (1969), pages 631-637.
-  !
-  !     for abs(x) le 0.47 erf is calculated directly
-  !     for abs(x) gt 0.47 erf is calculated via erf(x)=1-erfc(x)
-  USE kind_l,   ONLY: DP
-  implicit none
-  REAL(DP), intent(in) :: x
-  REAL(DP) :: x2, p1 (4), q1 (4)
-  REAL(DP) :: qe_erf    !<GPU:qe_erf=>qe_erf_d>
-  data p1 / 2.426679552305318E2, 2.197926161829415E1, &
-            6.996383488619136d0,  -3.560984370181538E-2 /
-  data q1 / 2.150588758698612E2, 9.116490540451490E1, &
-            1.508279763040779E1, 1.000000000000000d0 /
-  !
-  if (abs (x) > 6.0d0) then
-     !
-     !  erf(6)=1-10^(-17) cannot be distinguished from 1
-     !
-     qe_erf = sign (1.0d0, x)                                                  !<GPU:qe_erf=>qe_erf_d>
-  else
-     if (abs (x)  <= 0.47d0) then
-        x2 = x**2
-        qe_erf=x *(p1 (1) + x2 * (p1 (2) + x2 * (p1 (3) + x2 * p1 (4) ) ) ) &  !<GPU:qe_erf=>qe_erf_d>
-                / (q1 (1) + x2 * (q1 (2) + x2 * (q1 (3) + x2 * q1 (4) ) ) )
-     else
-        qe_erf = 1.0d0 - qe_erfc(x)                                            !<GPU:qe_erf=>qe_erf_d,qe_erfc=>qe_erfc_d>
-     endif
-  endif
-  !
-  return
-end function qe_erf
-!
-!---------------------------------------------------------------------
-function qe_erfc(x)                      !<GPU:DEVICE>
-  !---------------------------------------------------------------------
-  !
-  !     erfc(x) = 1-erf(x)  - See comments in erf
-  !
-  USE kind_l,   ONLY: DP
-  implicit none
-  !
-  REAL(DP),intent(in) :: x
-  REAL(DP)            :: qe_erfc                                         !<GPU:qe_erfc=>qe_erfc_d>
-  REAL(DP) :: ax, x2, xm2, p2 (8), q2 (8), p3 (5), q3 (5), pim1
-  !
-  data p2 / 3.004592610201616E2,  4.519189537118719E2, &
-            3.393208167343437E2,  1.529892850469404E2, &
-            4.316222722205674E1,  7.211758250883094d0,   &
-            5.641955174789740E-1,-1.368648573827167E-7 /
-  data q2 / 3.004592609569833E2,  7.909509253278980E2, &
-            9.313540948506096E2,  6.389802644656312E2, &
-            2.775854447439876E2,  7.700015293522947E1, &
-            1.278272731962942E1,  1.000000000000000d0 /
-  data p3 /-2.996107077035422E-3,-4.947309106232507E-2, &
-           -2.269565935396869E-1,-2.786613086096478E-1, &
-           -2.231924597341847E-2 /
-  data q3 / 1.062092305284679E-2, 1.913089261078298E-1, &
-            1.051675107067932d0,    1.987332018171353d0,    &
-            1.000000000000000d0 /
-
-  data pim1 / 0.56418958354775629d0 /
-  !        ( pim1= sqrt(1/pi) )
-  ax = abs (x)
-  if (ax > 26.0d0) then
-     !
-     !  erfc(26.0)=10^(-296); erfc( 9.0)=10^(-37);
-     !
-     qe_erfc = 0.0d0                                                            !<GPU:qe_erfc=>qe_erfc_d>
-  elseif (ax > 4.0d0) then
-     x2 = x**2
-     xm2 = (1.0d0 / ax) **2
-     qe_erfc = (1.0d0 / ax) * exp ( - x2) * (pim1 + xm2 * (p3 (1) &             !<GPU:qe_erfc=>qe_erfc_d>
-          + xm2 * (p3 (2) + xm2 * (p3 (3) + xm2 * (p3 (4) + xm2 * p3 (5) &
-          ) ) ) ) / (q3 (1) + xm2 * (q3 (2) + xm2 * (q3 (3) + xm2 * &
-          (q3 (4) + xm2 * q3 (5) ) ) ) ) )
-  elseif (ax > 0.47d0) then
-     x2 = x**2
-     qe_erfc = exp ( - x2) * (p2 (1) + ax * (p2 (2) + ax * (p2 (3) &            !<GPU:qe_erfc=>qe_erfc_d>
-          + ax * (p2 (4) + ax * (p2 (5) + ax * (p2 (6) + ax * (p2 (7) &
-          + ax * p2 (8) ) ) ) ) ) ) ) / (q2 (1) + ax * (q2 (2) + ax * &
-          (q2 (3) + ax * (q2 (4) + ax * (q2 (5) + ax * (q2 (6) + ax * &
-          (q2 (7) + ax * q2 (8) ) ) ) ) ) ) )
-  else
-     qe_erfc = 1.0d0 - qe_erf(ax)                          !<GPU:qe_erfc=>qe_erfc_d, qe_erf=>qe_erf_d>
-  endif
-  !
-  ! erf(-x)=-erf(x)  =>  erfc(-x) = 2-erfc(x)
-  !
-  if (x < 0.0d0) qe_erfc = 2.0d0 - qe_erfc                                      !<GPU:qe_erfc=>qe_erfc_d>
-  !
-  return
-end function qe_erfc
-!
-
 !------------------------------------------------------------------
-FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
+FUNCTION EXPINT(n, x)
+!$acc routine (expint) seq
 !-----------------------------------------------------------------------
 ! Evaluates the exponential integral E_n(x)
 ! Parameters: maxit is the maximum allowed number of iterations,
@@ -1970,7 +1892,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x
-      REAL(DP) :: expint                             !<GPU:expint=>expint_d>
+      REAL(DP) :: expint
       INTEGER, parameter :: maxit=200
       REAL(DP), parameter :: eps=1E-12, big=huge(x)*eps
       REAL(DP), parameter :: euler = 0.577215664901532860606512d0
@@ -1985,12 +1907,12 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
       END IF
 
       IF (n == 0) THEN
-         expint = exp(-x)/x                                             !<GPU:expint=>expint_d>
+         expint = exp(-x)/x
          RETURN
       END IF
       nm1 = n-1
       IF (x == 0.0d0) THEN
-         expint = 1.0d0/nm1                                             !<GPU:expint=>expint_d>
+         expint = 1.0d0/nm1
       ELSE IF (x > 1.0d0) THEN
          b = x+n
          c = big
@@ -2006,12 +1928,12 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
             IF (ABS(del-1.0d0) <= EPS) EXIT
          END DO
          IF (i > maxit) STOP !CALL xclib_error('expint','continued fraction failed',1)
-         expint = h*EXP(-x)                                             !<GPU:expint=>expint_d>
+         expint = h*EXP(-x)
       ELSE
          IF (nm1 /= 0) THEN
-            expint = 1.0d0/nm1                                          !<GPU:expint=>expint_d>
+            expint = 1.0d0/nm1
          ELSE
-            expint = -LOG(x)-euler                                      !<GPU:expint=>expint_d>
+            expint = -LOG(x)-euler
          END IF
          fact = 1.0d0
          do i=1,maxit
@@ -2028,8 +1950,8 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
                del = fact*(-LOG(x)-euler+iarsum)
 !               del = fact*(-LOG(x)-euler+sum(1.0d0/arth(1,1,nm1)))
             END IF
-            expint = expint + del                                       !<GPU:expint=>expint_d>
-            IF (ABS(del) < ABS(expint)*eps) EXIT                        !<GPU:expint=>expint_d>
+            expint = expint + del
+            IF (ABS(del) < ABS(expint)*eps) EXIT
          END DO
          IF (i > maxit) STOP !CALL xclib_error('expint','series failed',1)
       END IF

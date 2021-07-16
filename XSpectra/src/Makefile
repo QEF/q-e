@@ -10,6 +10,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 XOBJS = \
 ./gaunt_mod.o \
 ./xspectra_mod.o \
+./xspectra_utils.o \
 ./radin_mod.o \
 ./mygetK.o \
 ./ipoolscatter.o \

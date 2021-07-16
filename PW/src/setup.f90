@@ -65,9 +65,10 @@ SUBROUTINE setup()
   USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
                                  lbands, use_para_diag, gamma_only, &
-                                 restart
+                                 restart, use_gpu
   USE cellmd,             ONLY : calc
-  USE uspp_param,         ONLY : upf, n_atom_wfc
+  USE upf_ions,           ONLY : n_atom_wfc
+  USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
@@ -102,6 +103,8 @@ SUBROUTINE setup()
   INTEGER  :: na, is, ierr, ibnd, ik, nrot_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
+  !
+  LOGICAL, EXTERNAL  :: check_gpu_support
   !
   TYPE(output_type)  :: output_obj 
   !  
@@ -215,7 +218,7 @@ SUBROUTINE setup()
   !
   !  Set the different spin indices
   !
-  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+  CALL set_spin_vars( lsda, noncolin, domag, &
          npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
   !
   ! time reversal operation is set up to 0 by default
@@ -422,6 +425,8 @@ SUBROUTINE setup()
   nbndx = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
+  use_gpu       = check_gpu_support( )
+  !
   ! ... Set the units in real and reciprocal space
   !
   tpiba  = 2.D0 * pi / alat
@@ -433,6 +438,10 @@ SUBROUTINE setup()
   IF ( doublegrid .AND. ( .NOT.okvan .AND. .NOT.okpaw .AND. &
                           .NOT. ANY (upf(1:ntyp)%nlcc)      ) ) &
        CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
+  IF ( ecutwfc > 10000.d0 .OR. ecutwfc < 1.d0 ) THEN
+       WRITE(stdout,*) 'ECUTWFC = ', ecutwfc
+       CALL errore ( 'setup', 'meaningless value for ecutwfc', 1)
+  END IF
   gcutm = dual * ecutwfc / tpiba2
   gcutw = ecutwfc / tpiba2
   !
@@ -667,3 +676,36 @@ SUBROUTINE setup()
   RETURN
   !
 END SUBROUTINE setup
+!
+!----------------------------------------------------------------------------
+LOGICAL FUNCTION check_gpu_support( )
+  !
+  USE io_global,        ONLY : stdout, ionode, ionode_id
+  !
+  IMPLICIT NONE
+  !
+  LOGICAL, SAVE :: first = .TRUE.
+  LOGICAL, SAVE :: saved_value = .FALSE.
+  CHARACTER(len=255) :: gpu_env
+  INTEGER :: vlen, istat
+
+#if defined(__CUDA)
+  IF( .NOT. first ) THEN
+      check_gpu_support = saved_value
+      RETURN
+  END IF
+  first = .FALSE.
+  !
+  CALL get_environment_variable("USEGPU", gpu_env, vlen, istat, .true.)
+  IF (istat == 0) THEN
+     check_gpu_support = (gpu_env /= "no")
+  ELSE 
+     check_gpu_support = .TRUE.
+  END IF
+  saved_value = check_gpu_support
+  !
+#else
+  check_gpu_support = .FALSE.
+#endif
+  RETURN
+END FUNCTION check_gpu_support

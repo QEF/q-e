@@ -1299,6 +1299,156 @@
     END SUBROUTINE kernel_raxis
     !-----------------------------------------------------------------------
     !
+    !-----------------------------------------------------------------------
+    SUBROUTINE crit_temp_iso()
+    !-----------------------------------------------------------------------
+    !!
+    !! SH: Routine to find the Tc by solving the linearized Eliashberg
+    !!        (isotropic) equation for the specified range of temperatures
+    !! HP: updated 5/11/2021
+    !
+    USE kinds,             ONLY : DP
+    USE io_global,         ONLY : stdout
+    USE epwcom,            ONLY : limag, nstemp, muc, tc_linear, tc_linear_solver
+    USE elph2,             ONLY : gtemp
+    USE eliashbergcom,     ONLY : nsiw, wsi
+    USE constants_epw,     ONLY : Kelvin2eV, zero, pi
+    USE supercond,         ONLY : gen_freqgrid_iaxis, eliashberg_grid, &
+                                  crit_temp_solver
+    !
+    IMPLICIT NONE
+    !
+    ! Local variables
+    INTEGER :: itemp
+    !! Counter on temperature index
+    INTEGER :: iw, iwp, iws
+    !! Counter for loops
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: N
+    !! Dimension of the main matrix = 2 * nsiw(itemp) - 1
+    INTEGER :: numiter
+    !! Number of iterations
+    !
+    REAL(KIND = DP) :: lambda_eph
+    !! Electron-phonon coupling
+    REAL(KIND = DP), ALLOCATABLE :: S(:, :)
+    !! Main matrix for finding eigenvalues
+    INTEGER, ALLOCATABLE :: freqn(:)
+    !! Index of Matsubara frequencies
+    REAL(KIND = DP), ALLOCATABLE :: freqv(:)
+    !! Value of Matsubara frequencies
+    REAL(KIND = DP), ALLOCATABLE :: freqk(:, :)
+    !! Isotropic lambda for (iw,iwp)
+    REAL(KIND = DP) :: maxeigen
+    !! Maximum eigenvalue for each itemp
+    REAL(KIND = DP) :: selement
+    !! Used for summation of matrix elements
+    !
+    WRITE(stdout, '(/5x, a, a6/)') &
+      'Start: Solving (isotropic) linearized Eliashberg equation with solver = ', tc_linear_solver
+    !
+    CALL eliashberg_grid()
+    !
+    DO itemp = 1, nstemp ! loop over temperature
+      !
+      IF (itemp == 1) THEN
+        WRITE(stdout, '(5x, a, f7.2, a)') 'For the first Temp. ', gtemp(itemp) / Kelvin2eV, '  K'
+        WRITE(stdout, '(7x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
+        WRITE(stdout, '(7x, a, f10.4/)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
+        WRITE(stdout, '(5x, a)') &
+           'Superconducting transition temp. Tc is the one which has Max. eigenvalue close to 1'
+      ENDIF
+      CALL gen_freqgrid_iaxis(itemp)
+      !
+      ! n = dimension of matrix: # of symmetric Matsubara frequencies
+      n = 2 * nsiw(itemp) - 1
+      !
+      ALLOCATE(s(n, n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error allocating s', 1)
+      ALLOCATE(freqn(n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error allocating freqn', 1)
+      ALLOCATE(freqv(n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error allocating freqv', 1)
+      ALLOCATE(freqk(n, n), STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error allocating freqk', 1)
+      !
+      selement    = zero
+      s(:, :)     = zero
+      freqn(:)    = 0
+      freqv(:)    = zero
+      freqk(:, :) = zero
+      !
+      ! Re-construct full range of frequency indices
+      iwp = -nsiw(itemp)
+      DO iw = 1, n
+        freqn(iw) = iwp + iw
+      ENDDO
+      ! Re-construct full range of frequency vlaues
+      DO iw = 1, n
+        freqv(iw) = DBLE(2 * freqn(iw) + 1) * pi * gtemp(itemp)
+      ENDDO
+      !
+      ! Re-construct full isotropic kernel
+      DO iw = 1, n
+        DO iwp = 1, n
+          CALL lambdar_iso(freqv(iw) - freqv(iwp), lambda_eph)
+          freqk(iw, iwp) = lambda_eph
+        ENDDO
+      ENDDO
+      !
+      ! Find the input S matrix components (Allen et al., Eqns. 11.10-11)
+      DO iw = 1, n
+        DO iwp = 1, n
+          selement = freqk(iw, iwp) - muc
+          IF (iw == iwp) THEN
+            DO iws = 1, n
+              selement = selement - (freqk(iw, iws) * (freqv(iw) * freqv(iws)) &
+                / ABS(freqv(iw) * freqv(iws)))
+            ENDDO
+          ENDIF
+          s(iw, iwp) = ABS( 1.d0 / DBLE(2 * freqn(iwp) + 1)) * selement
+        ENDDO
+      ENDDO
+      !
+      ! Main solver
+      CALL crit_temp_solver(n, s, maxeigen, numiter)
+      !
+      ! Print the output: largest eigenvalue
+      IF (itemp == 1) WRITE(stdout, '(6x, a)') REPEAT('-', 65)
+      IF (itemp == 1) WRITE(stdout, 102) 'Temp.', 'Max.', 'nsiw', 'wscut', 'Nr. of iters'
+      IF (itemp == 1) WRITE(stdout, 103) '(K)', 'eigenvalue', '(itemp)', '(eV)', 'to Converge'
+      IF (itemp == 1) WRITE(stdout, '(6x, a)') REPEAT('-', 65)
+      WRITE(stdout, 104) gtemp(itemp) / Kelvin2eV, maxeigen, nsiw(itemp), &
+                         (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp), numiter
+      102 FORMAT (7x, a11, a11, a13, a10, a16)
+      103 FORMAT (7x, a9, a17, a11, a7, a17)
+      104 FORMAT(5x, f12.2, f15.7, i9, f12.4, i9)
+      IF (itemp == nstemp) WRITE(stdout, '(6x, a)') REPEAT('-', 65)
+      !
+      DEALLOCATE(s, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating A', 1)
+      DEALLOCATE(freqn, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating freqn', 1)
+      DEALLOCATE(freqv, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating freqv', 1)
+      DEALLOCATE(freqk, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating freqk', 1)
+      DEALLOCATE(wsi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating wsi', 1)
+      !
+    ENDDO ! itemp
+    !
+    CALL deallocate_iso()
+    !
+    WRITE(stdout, '(5x, a/)') 'Finish: Solving (isotropic) linearized Eliashberg equation'
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE crit_temp_iso
+    !-----------------------------------------------------------------------
+    !
     !----------------------------------------------------------------------
     SUBROUTINE deallocate_iso_iaxis()
     !----------------------------------------------------------------------

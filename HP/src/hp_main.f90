@@ -242,7 +242,8 @@ SUBROUTINE hp_print_preamble()
   !
   WRITE( stdout, '(/5x,"=--------------------------------------------------------------------------=")')
   WRITE( stdout, '(/7x,"Calculation of Hubbard parameters from DFPT; please cite this program as")')
-  WRITE( stdout, '(/7x,"I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 98, 085127 (2018)")')
+  WRITE( stdout, '(/7x,"I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 98,  085127 (2018)")')
+  WRITE( stdout, '(/7x,"I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 103, 045141 (2021)")')
   WRITE( stdout, '(/5x,"=--------------------------------------------------------------------------=")')
   !
   RETURN

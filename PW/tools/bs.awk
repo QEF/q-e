@@ -1,3 +1,7 @@
+# Usage:  awk -f bs.awk < my-pw-file > myfile.bs
+# my-pw-file is the output file (not the data file) of a PWscf run
+# myfile.bs is a file for usage by "xbs", a simple plotting utility:
+#    http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml
 BEGIN {nr=0; nrs=0; nat=0; nstep=0; 
        print "* XBS file created by pawk.bs "; print "";
 

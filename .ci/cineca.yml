@@ -1,104 +1,19 @@
-# ====================
-# UtilXlib UnitTesting
-# ====================
-
-build:cudampiomp:
-  tags: [galileo]
-  only:
-    - /utilxlib/i
-  script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
-    - ./configure --enable-openmp
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -smcn
-
-build:intelmpiomp:
-  tags: [galileo]
-  only:
-    - /utilxlib/i
-  script:
-    - module load profile/advanced intel intelmpi
-    - ./configure --enable-openmp
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -sm
-
-build:cudampi:
-  tags: [galileo]
-  only:
-    - /utilxlib/i
-  script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
-    - ./configure
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -smcn
-
-build:intelmpi:
-  tags: [galileo]
-  only:
-    - /utilxlib/i
-  script:
-    - module load profile/advanced intel intelmpi
-    - ./configure
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -sm
-
 build:pw:
-  image: ubuntu:latest
+  tags: [docker]
+  image: espressofoundation/ubuntu:latest
   script:
-    - apt-get update
-    - apt-get install --yes build-essential gfortran wget python
-    - apt-get install --yes libopenmpi-dev openmpi-bin
-    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
     - make pw
-  #  - export OMP_NUM_THREADS=1
-  #  - cd test-suite
-  #  - mkdir /tmp/save
-  #  - make run-tests-pw-serial
-  #  - rm -r /tmp/save
-
-build:cp:
-  image: ubuntu:latest
-  script:
-    - apt-get update
-    - apt-get install --yes build-essential gfortran wget python
-    - apt-get install --yes libopenmpi-dev openmpi-bin
-    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
-    - ./configure
-    - make cp
-  #  - export OMP_NUM_THREADS=1
-  #  - cd test-suite
-  #  - mkdir /tmp/save
-  #  - make run-tests-cp-serial
-  #  - rm -r /tmp/save
-
-
 
 #### BUILDS ON GALILEO ####
 
-build:intel:
-  tags: [galileo]
+intel parallel:
+  tags: [intel]
   script:
     - module purge
-    - module load intel/pe-xe-2018--binary intelmpi/2018--binary mkl/2018--binary
-    - module list
+    - module load intel/pe-xe-2018--binary intelmpi/2018--binary mkl/2018--binary python
     - ./configure --enable-openmp
-    - make pw cp
-    - export OMP_NUM_THREADS=2
-    - cd test-suite
-    - mkdir -p /tmp/save
-    - make run-tests-pw-parallel
-    - make run-tests-cp-parallel
-    - rm -r /tmp/save
-
-
-pgi cuda mpi:
-  tags: [k80]
-  script:
-    - module purge
-    - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
-    - ./configure --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
     - cd test-suite
@@ -107,3 +22,163 @@ pgi cuda mpi:
     - make run-tests-pw-parallel
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
     - make clean && make run-tests-pw-parallel
+
+pgi parallel k80:
+  tags: [k80]
+  script:
+    - module purge
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary python
+    - ./configure --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=35 --with-cuda=yes --enable-cuda-env-check=no --with-scalapack=no
+    - make -j pw cp
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+    - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
+    - make clean
+    - make run-tests-pw-parallel
+    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
+    - make clean && make run-tests-pw-parallel
+    - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+
+
+pgi parallel v100:
+  tags: [galileo,v100]
+  script:
+    - module purge
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary cuda/10.1 python
+    - ./configure --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=70 --with-cuda=$CUDA_HOME --with-scalapack=no
+    - make -j pw cp
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+    - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
+    - make clean
+    - make run-tests-pw-parallel
+    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
+    - make clean && make run-tests-pw-parallel
+
+pgi serial k80:
+  tags: [k80]
+  script:
+    - module purge
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary python
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=35 --with-cuda=yes --enable-cuda-env-check=no
+    - make -j pw cp
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+    - echo "Using $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-serial
+    - make run-tests-cp-serial
+
+
+pgi serial v100 :
+  tags: [galileo,v100]
+  script:
+    - module purge
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary python
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=70 --with-cuda=yes --enable-cuda-env-check=no
+    - make -j pw cp
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+    - echo "Using $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-serial
+    - make run-tests-cp-serial
+
+pgi207 power v100:
+  tags: [marconi100]
+  script:
+    - module purge
+    - module load profile/global hpc-sdk/2020--binary cuda/10.1 spectrum_mpi/10.3.1--binary python/3.8.2
+    - pwd
+    - cd ..
+    - ./configure CC=pgcc F77=pgf90 FC=pgf90 F90=pgf90 MPIF90=mpipgifort --enable-openmp --with-cuda=$CUDA_ROOT --with-cuda-runtime=10.1 --with-cuda-cc=70
+    - make -j pw cp
+    - salloc --nodes=1 --ntasks-per-node=4 --ntasks-per-socket=2 --cpus-per-task=32 --gres=gpu:4 --mem=230000MB --time 01:00:00 -A $CINECA_QE_ACCOUNT -p m100_usr_prod
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=8; fi
+    - echo "Using $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-parallel
+    - make run-tests-cp-parallel
+    - exit
+
+#pgi cuda9.2 p100 nollvm:
+#  tags: [p100]
+#  script:
+#    - module purge
+#    - module load profile/global pgi/19.10--binary cuda/10.0
+#    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
+#    - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.
+#    - sed -i 's/cuda10.0/cuda10.0,nollvm/' make.inc # this is needed for some reason yet to be clarified.
+#    - make -j pw
+#    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+#    - echo "Using $OMP_NUM_THREADS threads"
+#    - cd test-suite
+#    - make clean
+#    - make run-tests-pw-parallel
+#
+#pgi cuda9.2 p100:
+#  tags: [p100]
+#  script:
+#    - module purge
+#    - module load profile/global pgi/19.10--binary cuda/10.0
+#    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
+#    - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.
+#    - make -j pw
+#    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+#    - echo "Using $OMP_NUM_THREADS threads"
+#    - cd test-suite
+#    - make clean
+#    - make run-tests-pw-parallel
+
+#
+## UtilXlib UnitTesting 
+#build:cudampiomp:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced pgi/17.10 cuda/8.0.61
+#    - ./configure --enable-openmp
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -smcn
+#
+#build:intelmpiomp:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced intel intelmpi
+#    - ./configure --enable-openmp
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -sm
+#
+#build:cudampi:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced pgi/17.10 cuda/8.0.61
+#    - ./configure
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -smcn
+#
+#build:intelmpi:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced intel intelmpi
+#    - ./configure
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -sm
+#
+##### BUILDS ON GALILEO ####
+#
+#build:laxlib-unittest:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced pgi/17.10 cuda/8.0.61
+#    - ./configure && make pw
+#    - cd LAXlib/tests
+#    - make clean && make
+#    - for file in ./*.x; do mpirun -np 4 ./$file; done
+#    - cd ../../
+#    - ./configure --disable-parallel && make clean && make pw
+#    - cd LAXlib/tests
+#    - make clean && make
+#    - for file in ./*.x; do ./$file; done

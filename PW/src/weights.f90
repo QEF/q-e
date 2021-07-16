@@ -27,6 +27,7 @@ SUBROUTINE weights()
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : ionode, ionode_id
   USE gcscf_module,         ONLY : lgcscf, gcscf_mu, gcscf_beta
+  USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
   !
   IMPLICIT NONE
   !
@@ -34,6 +35,9 @@ SUBROUTINE weights()
   !
   INTEGER :: ibnd, ik ! counters: bands, k-points
   REAL(DP) :: demet_up, demet_dw
+  !
+  CALL using_et(0)
+  CALL using_wg(2)
   !
   demet = 0.D0
   !
@@ -166,6 +170,10 @@ SUBROUTINE weights()
      CALL poolrecover( wg, nbnd, nkstot, nks )
      !
   ENDIF
+#if defined(__CUDA)
+  ! Sync here. Shouldn't be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
   !
   RETURN
   !
@@ -193,12 +201,17 @@ SUBROUTINE weights_only()
   USE mp,                   ONLY : mp_sum
   USE io_global,            ONLY : ionode, ionode_id
   !
+  USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
+  !
   IMPLICIT NONE
   !
   ! ... local variables
   !
   INTEGER :: ibnd, ik ! counters: bands, k-points
   REAL(DP) :: demet_up, demet_dw
+  !
+  CALL using_et(0)
+  CALL using_wg(2)
   !
   demet = 0.D0
   !
@@ -307,6 +320,10 @@ SUBROUTINE weights_only()
      CALL poolrecover( wg, nbnd, nkstot, nks )
      !
   ENDIF
+#if defined(__CUDA)
+  ! Sync here. Shouldn't be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
   !
   RETURN
   !

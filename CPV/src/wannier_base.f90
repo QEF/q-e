@@ -61,6 +61,27 @@ MODULE wannier_base
   INTEGER ,    ALLOCATABLE :: gnn(:,:)
   COMPLEX(DP), ALLOCATABLE :: expo(:,:)
   !
+  ! ... reusable scratch buffers to prevent memory fragmentation
+  !
+  REAL(DP),    ALLOCATABLE :: becwf(:,:)
+  COMPLEX(DP), ALLOCATABLE :: cwf(:,:), bec2(:), bec3(:), bec2up(:)
+  COMPLEX(DP), ALLOCATABLE :: bec2dw(:), bec3up(:), bec3dw(:)
+  COMPLEX(DP), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:)
+  COMPLEX(DP), ALLOCATABLE :: c_msp(:,:)
+  INTEGER,     ALLOCATABLE :: tagz(:)
+  REAL(DP),    ALLOCATABLE :: Uspin(:,:)
+  COMPLEX(DP), ALLOCATABLE :: X(:,:), Xsp(:,:), X2(:,:), X3(:,:)
+  COMPLEX(DP), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: qv(:), fg1(:)
+  REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), mt0(:), wr(:), W(:,:), EW(:,:)
+  INTEGER,     ALLOCATABLE :: f3(:), f4(:)
+  COMPLEX(DP), ALLOCATABLE :: U2(:,:)
+#if defined (__MPI)
+  COMPLEX(DP), ALLOCATABLE :: psitot(:,:), psitot_pl(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psitot_mi(:,:)
+  INTEGER,     ALLOCATABLE :: ns(:)
+#endif
+  !
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -188,8 +209,54 @@ MODULE wannier_base
        IF( ALLOCATED( gnx ) ) DEALLOCATE( gnx )
        IF( ALLOCATED( gnn ) ) DEALLOCATE( gnn )
        IF( ALLOCATED( expo ) ) DEALLOCATE( expo )
+       !
+       IF (ALLOCATED(becwf))  DeALLOCATE(becwf)
+       IF (ALLOCATED(U2))     DeALLOCATE(U2)
+       IF (ALLOCATED(cwf))    DeALLOCATE(cwf)
+       IF (ALLOCATED(bec2))   DeALLOCATE(bec2)
+       IF (ALLOCATED(bec3))   DeALLOCATE(bec3)
+       IF (ALLOCATED(bec2up)) DeALLOCATE(bec2up)
+       IF (ALLOCATED(bec3up)) DeALLOCATE(bec3up)
+       IF (ALLOCATED(bec2dw)) DEALLOCATE(bec2dw)
+       IF (ALLOCATED(bec3dw)) DEALLOCATE(bec3dw)
+       IF (ALLOCATED(tagz))   DEALLOCATE(tagz)
+       IF (ALLOCATED(O))      DEALLOCATE(O)
+       IF (ALLOCATED(X))      DEALLOCATE(X)
+       IF (ALLOCATED(Oa))     DEALLOCATE(Oa)
+       IF (ALLOCATED(X2))     DEALLOCATE(X2)
+       IF (ALLOCATED(X3))     DEALLOCATE(X3)
+       IF (ALLOCATED(c_p))    DEALLOCATE(c_p)
+       IF (ALLOCATED(c_m))    DEALLOCATE(c_m)
+       IF (ALLOCATED(qv))     DEALLOCATE(qv)
+       IF (ALLOCATED(fg1))    DEALLOCATE(fg1)
+       IF (ALLOCATED(wr))     DEALLOCATE(wr)
+       IF (ALLOCATED(W))      DEALLOCATE(W)
+       IF (ALLOCATED(gr))     DEALLOCATE(gr)
+       IF (ALLOCATED(EW))     DEALLOCATE(EW)
+       IF (ALLOCATED(f3))     DEALLOCATE(f3)
+       IF (ALLOCATED(f4))     DEALLOCATE(f4)
+       IF (ALLOCATED(mt0))    DEALLOCATE(mt0)
+       IF (ALLOCATED(mt))     DEALLOCATE(mt)
+       IF (ALLOCATED(Xsp))    DEALLOCATE(Xsp)
+       IF (ALLOCATED(c_psp))  DEALLOCATE(c_psp)
+       IF (ALLOCATED(c_msp))  DEALLOCATE(c_msp)
+#if defined (__MPI)
+       IF (ALLOCATED(ns))        DEALLOCATE(ns)
+       IF (ALLOCATED(psitot))    DEALLOCATE(psitot)
+       IF (ALLOCATED(psitot_pl)) DEALLOCATE(psitot_pl)
+       IF (ALLOCATED(psitot_mi)) DEALLOCATE(psitot_mi)
+#endif
        RETURN
     END SUBROUTINE deallocate_wannier_base
+    !
+    !
+    !
+    SUBROUTINE wannier_base_resize_scratch_only_once(nbsp)
+       !! This routine is needed due to a potential compiler bug in NVHPC (present on 21.5)
+       !! see https://gitlab.com/QEF/q-e/-/issues/346 for more detail
+       INTEGER, INTENT(IN) :: nbsp
+       IF (.NOT.ALLOCATED(X)) ALLOCATE(X(nbsp, nbsp))
+    END SUBROUTINE wannier_base_resize_scratch_only_once
     !
     !
     !

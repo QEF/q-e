@@ -5,8 +5,6 @@ MODULE esm_local_mod
                            & mill_2d, imill_2d, ngm_2d, exp_erfc
   IMPLICIT NONE
 
-  REAL(DP), EXTERNAL   :: qe_erf
-
 CONTAINS
   SUBROUTINE esm_local(aux)
     USE kinds,    ONLY: DP
@@ -140,19 +138,19 @@ CONTAINS
           ! bc1
           arg001 = -tmp**2*(z - zp)**2
           arg101 = tmp*(z - zp)
-          cc1 = 0.5d0*(-(z - zp)*qe_erf(arg101) - exp(arg001)/tmp/sqrt(pi))
+          cc1 = 0.5d0*(-(z - zp)*erf(arg101) - exp(arg001)/tmp/sqrt(pi))
           cc2 = (0.d0, 0.d0)
 
           vg_r(iz) = vg_r(iz) + tt*(cc1 + cc2)*e2 ! factor e2: hartree -> Ry.
         ENDDO
         ! smoothing cell edge potential (avoiding unphysical oscillation)
         ! bc1
-        f1 = f1 + tt*0.5d0*(-(z_r - zp)*qe_erf(tmp*(z_r - zp)) &
+        f1 = f1 + tt*0.5d0*(-(z_r - zp)*erf(tmp*(z_r - zp)) &
              - exp(-tmp**2*(z_r - zp)**2)/tmp/sqrt(pi))
-        f2 = f2 + tt*0.5d0*(-(z_l - zp)*qe_erf(tmp*(z_l - zp)) &
+        f2 = f2 + tt*0.5d0*(-(z_l - zp)*erf(tmp*(z_l - zp)) &
              - exp(-tmp**2*(z_l - zp)**2)/tmp/sqrt(pi))
-        f3 = f3 - tt*0.5d0*qe_erf(tmp*(z_r - zp))
-        f4 = f4 - tt*0.5d0*qe_erf(tmp*(z_l - zp))
+        f3 = f3 - tt*0.5d0*erf(tmp*(z_r - zp))
+        f4 = f4 - tt*0.5d0*erf(tmp*(z_l - zp))
       ENDDO
       ! for smoothing
       ! factor e2: hartree -> Ry.
@@ -321,19 +319,19 @@ CONTAINS
           ! bc2
           arg001 = -tmp**2*(z - zp)**2
           arg101 = tmp*(z - zp)
-          cc1 = 0.5d0*(-(z - zp)*qe_erf(arg101) - exp(arg001)/tmp/sqrt(pi))
+          cc1 = 0.5d0*(-(z - zp)*erf(arg101) - exp(arg001)/tmp/sqrt(pi))
           cc2 = 0.5d0*(z1 - z*zp/z1)
 
           vg_r(iz) = vg_r(iz) + tt*(cc1 + cc2)*e2 ! factor e2: hartree -> Ry.
         ENDDO
         ! smoothing cell edge potential (avoiding unphysical oscillation)
         ! bc2
-        f1 = f1 + tt*0.5d0*(-(z_r - zp)*qe_erf(tmp*(z_r - zp)) &
+        f1 = f1 + tt*0.5d0*(-(z_r - zp)*erf(tmp*(z_r - zp)) &
                             - exp(-tmp**2*(z_r - zp)**2)/tmp/sqrt(pi))
-        f2 = f2 + tt*0.5d0*(-(z_l - zp)*qe_erf(tmp*(z_l - zp)) &
+        f2 = f2 + tt*0.5d0*(-(z_l - zp)*erf(tmp*(z_l - zp)) &
                             - exp(-tmp**2*(z_l - zp)**2)/tmp/sqrt(pi))
-        f3 = f3 - tt*0.5d0*qe_erf(tmp*(z_r - zp))
-        f4 = f4 - tt*0.5d0*qe_erf(tmp*(z_l - zp))
+        f3 = f3 - tt*0.5d0*erf(tmp*(z_r - zp))
+        f4 = f4 - tt*0.5d0*erf(tmp*(z_l - zp))
         f1 = f1 + tt*0.5d0*(z1 - z_r*zp/z1)
         f2 = f2 + tt*0.5d0*(z1 - z_l*zp/z1)
         f3 = f3 + tt*(-0.5d0*(zp/z1))
@@ -485,19 +483,19 @@ CONTAINS
           ! bc3
           arg001 = -tmp**2*(z - zp)**2
           arg101 = tmp*(z - zp)
-          cc1 = 0.5d0*(-(z - zp)*qe_erf(arg101) - exp(arg001)/tmp/sqrt(pi))
+          cc1 = 0.5d0*(-(z - zp)*erf(arg101) - exp(arg001)/tmp/sqrt(pi))
           cc2 = 0.5d0*(2.d0*z1 - z - zp)
 
           vg_r(iz) = vg_r(iz) + tt*(cc1 + cc2)*e2 ! factor e2: hartree -> Ry.
         ENDDO
         ! smoothing cell edge potential (avoiding unphysical oscillation)
         ! bc3
-        f1 = f1 + tt*0.5d0*(-(z_r - zp)*qe_erf(tmp*(z_r - zp)) &
+        f1 = f1 + tt*0.5d0*(-(z_r - zp)*erf(tmp*(z_r - zp)) &
              - exp(-tmp**2*(z_r - zp)**2)/tmp/sqrt(pi))
-        f2 = f2 + tt*0.5d0*(-(z_l - zp)*qe_erf(tmp*(z_l - zp)) &
+        f2 = f2 + tt*0.5d0*(-(z_l - zp)*erf(tmp*(z_l - zp)) &
              - exp(-tmp**2*(z_l - zp)**2)/tmp/sqrt(pi))
-        f3 = f3 - tt*0.5d0*qe_erf(tmp*(z_r - zp))
-        f4 = f4 - tt*0.5d0*qe_erf(tmp*(z_l - zp))
+        f3 = f3 - tt*0.5d0*erf(tmp*(z_r - zp))
+        f4 = f4 - tt*0.5d0*erf(tmp*(z_l - zp))
         f1 = f1 + tt*0.5d0*(2.d0*z1 - z_r - zp)
         f2 = f2 + tt*0.5d0*(2.d0*z1 - z_l - zp)
         f3 = f3 - tt*0.5d0
@@ -689,7 +687,7 @@ CONTAINS
           arg104 = aaa/tmp + tmp*(z - zp)
           arg106 = aaa/tmp + tmp*(z1 - zp)
           IF (z < z1) THEN
-            t1 = -(z - zp)*qe_erf(arg101) + (0.5d0/aaa + z1 - zp)*qe_erf(arg102)
+            t1 = -(z - zp)*erf(arg101) + (0.5d0/aaa + z1 - zp)*erf(arg102)
             t2 = 0.5d0/aaa*exp_erfc(arg006, arg106)
             t3 = 0.5d0/aaa - (z - z1) + exp(arg002)/tmp/sqrt(pi) &
                  - exp(arg001)/tmp/sqrt(pi)
@@ -720,17 +718,17 @@ CONTAINS
         t2 = exp_erfc(arg006, arg104)/aaa
         t3 = exp(arg005)/aaa
         f1 = f1 + tt*((t1 + t2)/2.d0 + t3)/2.d0
-        f3 = f3 - tt*0.5d0*exp(arg005)*(1.d0 + qe_erf(arg101))
+        f3 = f3 - tt*0.5d0*exp(arg005)*(1.d0 + erf(arg101))
         !-left only
         arg001 = -tmp**2*(z_l - zp)**2
         arg101 = tmp*(z_l - zp)
         !--
-        t1 = -(z_l - zp)*qe_erf(arg101) + (0.5d0/aaa + z1 - zp)*qe_erf(arg102)
+        t1 = -(z_l - zp)*erf(arg101) + (0.5d0/aaa + z1 - zp)*erf(arg102)
         t2 = 0.5d0/aaa*exp_erfc(arg006, arg106)
         t3 = 0.5d0/aaa - (z_l - z1) + exp(arg002)/tmp/sqrt(pi) &
              - exp(arg001)/tmp/sqrt(pi)
         f2 = f2 + tt*(t1 + t2 + t3)/2.d0
-        f4 = f4 - tt*0.5d0*(1.d0 + qe_erf(arg101))
+        f4 = f4 - tt*0.5d0*(1.d0 + erf(arg101))
       ENDDO
       ! for smoothing
       ! factor e2: hartree -> Ry.

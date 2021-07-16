@@ -1163,7 +1163,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   ! fill structure nlmchi
   !
-  CALL fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
+  CALL fill_nlmchi ( natomwfc, lmax_wfc )
   !
   ALLOCATE( proj (natomwfc, nbnd, nkstot) )
   !

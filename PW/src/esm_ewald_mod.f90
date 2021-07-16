@@ -6,8 +6,6 @@ MODULE esm_ewald_mod
                              qromb, exp_erfc, esm_rgen_2d
   IMPLICIT NONE
 
-  REAL(DP), EXTERNAL   :: qe_erf, qe_erfc
-
 CONTAINS
 
   FUNCTION esm_ewald()
@@ -52,7 +50,7 @@ CONTAINS
       alpha = alpha - 0.1d0
       IF (alpha .le. 0.d0) CALL errore('esm_ewald', 'optimal alpha not found', 1)
       upperbound = 2.d0*charge**2*sqrt(2.d0*alpha/tpi)* &
-                   qe_erfc(sqrt(tpiba2*gcutm/4.d0/alpha))
+                   erfc(sqrt(tpiba2*gcutm/4.d0/alpha))
       IF (upperbound < 1.0d-7) EXIT
     END DO
 
@@ -171,7 +169,7 @@ CONTAINS
         !
         DO nr = 1, nrm
           rr = sqrt(r2(nr))*alat
-          ew = ew + fac*qe_erfc(tmp*rr)/rr
+          ew = ew + fac*erfc(tmp*rr)/rr
         ENDDO
       ENDDO
       ! Here add the other constant term
@@ -299,7 +297,7 @@ CONTAINS
             !
             DO nr = 1, nrm
               rr = sqrt(r2(nr))*alat
-              ew = ew + fac*qe_erfc(tmp*rr)/rr
+              ew = ew + fac*erfc(tmp*rr)/rr
             ENDDO
           ELSEIF (zp < z1) THEN ! z in I, zp in I
             CALL esm_rgen_2d(dtau, rmax, mxr, at, bg, r, r2, nrm)
@@ -444,7 +442,7 @@ CONTAINS
         ! bc1
         arg001 = -tmp**2*(z - zp)**2
         arg101 = tmp*(z - zp)
-        kk1 = 0.5d0*(-(z - zp)*qe_erf(arg101) - EXP(arg001)/tmp/sqrt(pi))
+        kk1 = 0.5d0*(-(z - zp)*erf(arg101) - EXP(arg001)/tmp/sqrt(pi))
         kk2 = 0.d0
 
         cc1 = 0.d0
@@ -529,7 +527,7 @@ CONTAINS
         ! bc2
         arg001 = -tmp**2*(z - zp)**2
         arg101 = tmp*(z - zp)
-        kk1 = 0.5d0*(-(z - zp)*qe_erf(arg101) - EXP(arg001)/tmp/sqrt(pi))
+        kk1 = 0.5d0*(-(z - zp)*erf(arg101) - EXP(arg001)/tmp/sqrt(pi))
         kk2 = 0.5d0*(z1 - z*zp/z1)
 
         cc1 = 0.d0
@@ -612,7 +610,7 @@ CONTAINS
         ! bc3
         arg001 = -tmp**2*(z - zp)**2
         arg101 = tmp*(z - zp)
-        kk1 = 0.5d0*(-(z - zp)*qe_erf(arg101) - EXP(arg001)/tmp/sqrt(pi))
+        kk1 = 0.5d0*(-(z - zp)*erf(arg101) - EXP(arg001)/tmp/sqrt(pi))
         kk2 = 0.5d0*(2.d0*z1 - z - zp)
 
         cc1 = 0.d0
@@ -700,7 +698,7 @@ CONTAINS
         arg104 = aaa/tmp + tmp*(z - zp)
         arg106 = aaa/tmp + tmp*(z1 - zp)
         IF (z < z1) THEN
-          t1 = -(z - zp)*qe_erf(arg101) + (0.5d0/aaa + z1 - zp)*qe_erf(arg102)
+          t1 = -(z - zp)*erf(arg101) + (0.5d0/aaa + z1 - zp)*erf(arg102)
           t2 = 0.5d0/aaa*exp_erfc(arg006, arg106)
           t3 = 0.5d0/aaa - (z - z1) + EXP(arg002)/tmp/sqrt(pi) &
                - EXP(arg001)/tmp/sqrt(pi)

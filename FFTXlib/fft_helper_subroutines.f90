@@ -314,7 +314,7 @@ CONTAINS
      !
      psi = 0.0d0
      !
-     !  nlm and nl array: hold conversion indices form 3D to
+     !  nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
      !     contigiously
      !  c array: stores the Fourier expansion coefficients
@@ -353,7 +353,7 @@ CONTAINS
      !
      psi = 0.0d0
      !
-     !  nlm and nl array: hold conversion indices form 3D to
+     !  nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
      !     contigiously
      !  c array: stores the Fourier expansion coefficients
@@ -388,7 +388,7 @@ CONTAINS
      ! local variables
      integer :: ig
      !
-     !  nl array: hold conversion indices form 3D to 1-D vectors. 
+     !  nl array: hold conversion indices from 3D to 1-D vectors. 
      !     Columns along the z-direction are stored contigiously
      !  c array: stores the Fourier expansion coefficients of the wave function
      !     Loop for all local g-vectors (npw
@@ -415,7 +415,7 @@ CONTAINS
      !
      psi = 0.0d0
      !
-     !  nlm and nl array: hold conversion indices form 3D to
+     !  nlm and nl array: hold conversion indices from 3D to
      !     1-D vectors. Columns along the z-direction are stored
      !     contigiously
      !  c array: stores the Fourier expansion coefficients
@@ -616,6 +616,9 @@ CONTAINS
      WRITE( stdout,*) '  Number of x-y planes for each processors: '
      WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) ( ( desc%nr2p(j), &
              desc%nr3p(i), i = 1, desc%nproc3 ), j=1,desc%nproc2 )
+
+     IF ( .not. desc%use_pencil_decomposition ) WRITE( stdout,*) '  Using Slab Decomposition'
+     IF (       desc%use_pencil_decomposition ) WRITE( stdout,*) '  Using Pencil Decomposition'
 1000  FORMAT(3X, &
          'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
          '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &

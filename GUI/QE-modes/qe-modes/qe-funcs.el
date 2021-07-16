@@ -106,7 +106,7 @@
    !         12 = monoclinic P (axis c),   -12 = monoclinic P (axis b),
    !         13 = monoclinic base-C,   14 = triclinic
    ibrav     = 0
-   celldm(1) = 1
+   celldm(1) = 1.0
    nat       = 1
    ntyp      = 1
    ecutwfc   = 30.0
@@ -132,6 +132,77 @@ ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg }
 
 K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c } 
    ...insert-if-not-gamma...
+"))
+
+
+(defun cp-insert-template ()
+  (interactive)
+  (insert " &CONTROL
+    calculation  = 'cp'
+    dt     = 5.0d0
+    nstep  = 1000
+    iprint = 10
+    isave  = 100
+    ndr    = 50
+    ndw    = 51
+ /
+ &SYSTEM
+    ! ibrav:  0 = free lattice,   1 = PC,   2 = FCC,   3 = BCC
+    !         4 = hex or trigonal P
+    !         5 = trigonal R (axis c),   -5 = trigonal R (axis <111>)
+    !         6 = tetragonal P,   7 = tetragonal I
+    !         8 = orthorombic P,   9 = orthorombic base-C,   -9 = as 9 (alter description)
+    !         10 = orthorombic FC,   11 = orthorombic body-C
+    !         12 = monoclinic P (axis c),   -12 = monoclinic P (axis b)
+    !         13 = monoclinic base-C,   14 = triclinic
+    ibrav     = 0
+    celldm(1) = 1.0
+    nat       = 1
+    ntyp      = 1
+    ecutwfc   = 30.0
+ / 
+ 
+ &ELECTRONS
+    emass        = 50.d0
+    emass_cutoff = 2.5d0
+    
+    ! electron_dynamics = 'none' | 'sd' | 'damp' | 'verlet' | 'cg'
+    electron_dynamics = 'cg'
+ /
+ 
+ &IONS
+    ! ion_dynamics = 'none' | 'sd' | 'damp' | 'verlet' | 'cg'
+    ion_dynamics = 'verlet'
+    
+    ! ion_velocities = 'default' | 'change_step' | 'random' |
+    !                  'from_input' | 'zero'
+    ion_velocities = 'random'
+
+    tempw = 300.d0
+ /
+ 
+ &CELL
+    ! cell_dynamics = 'none' | 'sd' | 'damp-pr' | 'pr'
+    cell_dynamics = 'none'
+ /
+
+CELL_PARAMETERS { alat | bohr | angstrom } 
+   1.00   0.00   0.00
+   0.00   1.00   0.00
+   0.00   0.00   1.00
+   
+   
+ATOMIC_SPECIES
+   atomLabel   atomMass   atomPseudoPotential
+
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal } 
+   atomLabel   0.00   0.00   0.00
+
+AUTOPILOT
+  on_step = 10 : dt = 20.d0
+  on_step = 90 : dt = 5.d0
+  on_step = 100 : electron_dynamics = 'verlet'
+ENDRULES
 "))
 
 
@@ -431,6 +502,15 @@ nat_todo-list-of-atoms
 (defun pw-ELECTRONS ()
   (interactive)
   (insert "&ELECTRONS")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+(defun pw-FCP ()
+  (interactive)
+  (insert "&FCP")
   (newline 2)
   (insert "/")
   (forward-line -1)
@@ -878,10 +958,82 @@ nat_todo-list-of-atoms
   )
 
 
+(defun pw-fcp_conv_thr ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_conv_thr: ")))
+    (insert "fcp_conv_thr = " value))
+  )
+
+
+(defun pw-fcp_delta_t ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_delta_t: ")))
+    (insert "fcp_delta_t = " value))
+  )
+
+
+(defun pw-fcp_dynamics ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_dynamics: ")))
+    (insert "fcp_dynamics = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun pw-fcp_mass ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_mass: ")))
+    (insert "fcp_mass = " value))
+  )
+
+
 (defun pw-fcp_mu ()
   (interactive)
   (let ((value (read-string "Value of fcp_mu: ")))
     (insert "fcp_mu = " value))
+  )
+
+
+(defun pw-fcp_ndiis ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_ndiis: ")))
+    (insert "fcp_ndiis = " value))
+  )
+
+
+(defun pw-fcp_nraise ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_nraise: ")))
+    (insert "fcp_nraise = " value))
+  )
+
+
+(defun pw-fcp_temperature ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_temperature: ")))
+    (insert "fcp_temperature = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun pw-fcp_tempw ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_tempw: ")))
+    (insert "fcp_tempw = " value))
+  )
+
+
+(defun pw-fcp_tolp ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_tolp: ")))
+    (insert "fcp_tolp = " value))
+  )
+
+
+(defun pw-fcp_velocity ()
+  (interactive)
+  (let ((value (read-string "Value of fcp_velocity: ")))
+    (insert "fcp_velocity = " value))
   )
 
 
@@ -906,10 +1058,38 @@ nat_todo-list-of-atoms
   )
 
 
+(defun pw-freeze_all_atoms ()
+  (interactive)
+  (let ((value (read-string "Value of freeze_all_atoms: ")))
+    (insert "freeze_all_atoms = " value))
+  )
+
+
 (defun pw-gate ()
   (interactive)
   (let ((value (read-string "Value of gate: ")))
     (insert "gate = " value))
+  )
+
+
+(defun pw-gcscf_beta ()
+  (interactive)
+  (let ((value (read-string "Value of gcscf_beta: ")))
+    (insert "gcscf_beta = " value))
+  )
+
+
+(defun pw-gcscf_conv_thr ()
+  (interactive)
+  (let ((value (read-string "Value of gcscf_conv_thr: ")))
+    (insert "gcscf_conv_thr = " value))
+  )
+
+
+(defun pw-gcscf_mu ()
+  (interactive)
+  (let ((value (read-string "Value of gcscf_mu: ")))
+    (insert "gcscf_mu = " value))
   )
 
 
@@ -1059,10 +1239,10 @@ nat_todo-list-of-atoms
   )
 
 
-(defun pw-lfcpopt ()
+(defun pw-lfcp ()
   (interactive)
-  (let ((value (read-string "Value of lfcpopt: ")))
-    (insert "lfcpopt = " value))
+  (let ((value (read-string "Value of lfcp: ")))
+    (insert "lfcp = " value))
   )
 
 
@@ -1070,6 +1250,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of lforcet: ")))
     (insert "lforcet = " value))
+  )
+
+
+(defun pw-lgcscf ()
+  (interactive)
+  (let ((value (read-string "Value of lgcscf: ")))
+    (insert "lgcscf = " value))
   )
 
 
@@ -1761,6 +1948,14 @@ nat_todo-list-of-atoms
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun pw-ADDITIONAL_K_POINTS ()
+  (interactive)
+  (let ((flag (read-string "Flags: { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c } ")))
+    (insert "ADDITIONAL_K_POINTS " flag))
+  (newline 1)
+  )
+
+
 (defun pw-ATOMIC_FORCES ()
  (interactive)
  (insert "ATOMIC_FORCES")
@@ -2430,6 +2625,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of exx_ps_rcut_self: ")))
     (insert "exx_ps_rcut_self = " value))
+  )
+
+
+(defun cp-exx_use_cube_domain ()
+  (interactive)
+  (let ((value (read-string "Value of exx_use_cube_domain: ")))
+    (insert "exx_use_cube_domain = " value))
   )
 
 
@@ -3199,6 +3401,22 @@ nat_todo-list-of-atoms
   )
 
 
+	   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; cp- supercards functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun cp-AUTOPILOT ()
+  (interactive)
+  (insert "AUTOPILOT")
+  (newline 2)
+  (insert "ENDRULES")
+  (forward-line -1)
+  )
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3229,16 +3447,8 @@ nat_todo-list-of-atoms
 
 
 (defun cp-ATOMIC_VELOCITIES ()
-  (interactive)
-  (let ((flag (read-string "Flags: { a.u } ")))
-    (insert "ATOMIC_VELOCITIES " flag))
-  (newline 1)
-  )
-
-
-(defun cp-AUTOPILOT ()
  (interactive)
- (insert "AUTOPILOT")
+ (insert "ATOMIC_VELOCITIES")
  (newline 1)
  )
 
@@ -3278,6 +3488,13 @@ nat_todo-list-of-atoms
     (insert "REF_CELL_PARAMETERS " flag))
   (newline 1)
   )
+
+
+(defun cp-ON_STEP ()
+ (interactive)
+ (insert "on_step")
+ (newline 1)
+ )
 
 
 
@@ -3354,14 +3571,6 @@ nat_todo-list-of-atoms
   )
 
 
-(defun ppacf-pseudo_dir ()
-  (interactive)
-  (let ((value (read-directory-name "Value of pseudo_dir: ")))
-    (insert "pseudo_dir = '" value "'"))
-  (backward-char 1)
-  )
-
-
 (defun ppacf-use_ace ()
   (interactive)
   (let ((value (read-string "Value of use_ace: ")))
@@ -3369,11 +3578,10 @@ nat_todo-list-of-atoms
   )
 
 
-(defun ppacf-vdw_table_name ()
+(defun ppacf-vdw_analysis ()
   (interactive)
-  (let ((value (read-string "Value of vdw_table_name: ")))
-    (insert "vdw_table_name = '" value "'"))
-  (backward-char 1)
+  (let ((value (read-string "Value of vdW_analysis: ")))
+    (insert "vdW_analysis = " value))
   )
 
 
@@ -5422,17 +5630,18 @@ nat_todo-list-of-atoms
   )
 
 
-(defun neb-fcp_tot_charge_first ()
+(defun neb-fcp_scheme ()
   (interactive)
-  (let ((value (read-string "Value of fcp_tot_charge_first: ")))
-    (insert "fcp_tot_charge_first = " value))
+  (let ((value (read-string "Value of fcp_scheme: ")))
+    (insert "fcp_scheme = '" value "'"))
+  (backward-char 1)
   )
 
 
-(defun neb-fcp_tot_charge_last ()
+(defun neb-fcp_thr ()
   (interactive)
-  (let ((value (read-string "Value of fcp_tot_charge_last: ")))
-    (insert "fcp_tot_charge_last = " value))
+  (let ((value (read-string "Value of fcp_thr: ")))
+    (insert "fcp_thr = " value))
   )
 
 
@@ -5457,10 +5666,10 @@ nat_todo-list-of-atoms
   )
 
 
-(defun neb-lfcpopt ()
+(defun neb-lfcp ()
   (interactive)
-  (let ((value (read-string "Value of lfcpopt: ")))
-    (insert "lfcpopt = " value))
+  (let ((value (read-string "Value of lfcp: ")))
+    (insert "lfcp = " value))
   )
 
 
@@ -5619,6 +5828,13 @@ nat_todo-list-of-atoms
 (defun neb-CLIMBING_IMAGES ()
  (interactive)
  (insert "CLIMBING_IMAGES")
+ (newline 1)
+ )
+
+
+(defun neb-TOTAL_CHARGE ()
+ (interactive)
+ (insert "TOTAL_CHARGE")
  (newline 1)
  )
 
@@ -6262,6 +6478,308 @@ nat_todo-list-of-atoms
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; q2r- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun q2r-INPUT ()
+  (interactive)
+  (insert "&INPUT")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; q2r- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun q2r-fildyn ()
+  (interactive)
+  (let ((value (read-string "Value of fildyn: ")))
+    (insert "fildyn = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun q2r-flfrc ()
+  (interactive)
+  (let ((value (read-string "Value of flfrc: ")))
+    (insert "flfrc = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun q2r-loto_2d ()
+  (interactive)
+  (let ((value (read-string "Value of loto_2d: ")))
+    (insert "loto_2d = " value))
+  )
+
+
+(defun q2r-zasr ()
+  (interactive)
+  (let ((value (read-string "Value of zasr: ")))
+    (insert "zasr = '" value "'"))
+  (backward-char 1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; matdyn- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun matdyn-INPUT ()
+  (interactive)
+  (insert "&INPUT")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; matdyn- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun matdyn-amass ()
+  (interactive)
+  (let ((value (read-string "Value of amass: ")))
+    (insert "amass = " value))
+  )
+
+
+(defun matdyn-asr ()
+  (interactive)
+  (let ((value (read-string "Value of asr: ")))
+    (insert "asr = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-at ()
+  (interactive)
+  (let ((value (read-string "Value of at: ")))
+    (insert "at = " value))
+  )
+
+
+(defun matdyn-degauss ()
+  (interactive)
+  (let ((value (read-string "Value of degauss: ")))
+    (insert "degauss = " value))
+  )
+
+
+(defun matdyn-deltae ()
+  (interactive)
+  (let ((value (read-string "Value of deltaE: ")))
+    (insert "deltaE = " value))
+  )
+
+
+(defun matdyn-dos ()
+  (interactive)
+  (let ((value (read-string "Value of dos: ")))
+    (insert "dos = " value))
+  )
+
+
+(defun matdyn-eigen_similarity ()
+  (interactive)
+  (let ((value (read-string "Value of eigen_similarity: ")))
+    (insert "eigen_similarity = " value))
+  )
+
+
+(defun matdyn-fd ()
+  (interactive)
+  (let ((value (read-string "Value of fd: ")))
+    (insert "fd = " value))
+  )
+
+
+(defun matdyn-fldos ()
+  (interactive)
+  (let ((value (read-string "Value of fldos: ")))
+    (insert "fldos = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-fldyn ()
+  (interactive)
+  (let ((value (read-string "Value of fldyn: ")))
+    (insert "fldyn = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-fleig ()
+  (interactive)
+  (let ((value (read-string "Value of fleig: ")))
+    (insert "fleig = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-flfrc ()
+  (interactive)
+  (let ((value (read-string "Value of flfrc: ")))
+    (insert "flfrc = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-flfrq ()
+  (interactive)
+  (let ((value (read-string "Value of flfrq: ")))
+    (insert "flfrq = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-fltau ()
+  (interactive)
+  (let ((value (read-string "Value of fltau: ")))
+    (insert "fltau = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-flvec ()
+  (interactive)
+  (let ((value (read-string "Value of flvec: ")))
+    (insert "flvec = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun matdyn-l1 ()
+  (interactive)
+  (let ((value (read-string "Value of l1: ")))
+    (insert "l1 = " value))
+  )
+
+
+(defun matdyn-l2 ()
+  (interactive)
+  (let ((value (read-string "Value of l2: ")))
+    (insert "l2 = " value))
+  )
+
+
+(defun matdyn-l3 ()
+  (interactive)
+  (let ((value (read-string "Value of l3: ")))
+    (insert "l3 = " value))
+  )
+
+
+(defun matdyn-la2f ()
+  (interactive)
+  (let ((value (read-string "Value of la2F: ")))
+    (insert "la2F = " value))
+  )
+
+
+(defun matdyn-loto_2d ()
+  (interactive)
+  (let ((value (read-string "Value of loto_2d: ")))
+    (insert "loto_2d = " value))
+  )
+
+
+(defun matdyn-loto_disable ()
+  (interactive)
+  (let ((value (read-string "Value of loto_disable: ")))
+    (insert "loto_disable = " value))
+  )
+
+
+(defun matdyn-na_ifc ()
+  (interactive)
+  (let ((value (read-string "Value of na_ifc: ")))
+    (insert "na_ifc = " value))
+  )
+
+
+(defun matdyn-ndos ()
+  (interactive)
+  (let ((value (read-string "Value of ndos: ")))
+    (insert "ndos = " value))
+  )
+
+
+(defun matdyn-nk1 ()
+  (interactive)
+  (let ((value (read-string "Value of nk1: ")))
+    (insert "nk1 = " value))
+  )
+
+
+(defun matdyn-nk2 ()
+  (interactive)
+  (let ((value (read-string "Value of nk2: ")))
+    (insert "nk2 = " value))
+  )
+
+
+(defun matdyn-nk3 ()
+  (interactive)
+  (let ((value (read-string "Value of nk3: ")))
+    (insert "nk3 = " value))
+  )
+
+
+(defun matdyn-nosym ()
+  (interactive)
+  (let ((value (read-string "Value of nosym: ")))
+    (insert "nosym = " value))
+  )
+
+
+(defun matdyn-ntyp ()
+  (interactive)
+  (let ((value (read-string "Value of ntyp: ")))
+    (insert "ntyp = " value))
+  )
+
+
+(defun matdyn-q_in_band_form ()
+  (interactive)
+  (let ((value (read-string "Value of q_in_band_form: ")))
+    (insert "q_in_band_form = " value))
+  )
+
+
+(defun matdyn-q_in_cryst_coord ()
+  (interactive)
+  (let ((value (read-string "Value of q_in_cryst_coord: ")))
+    (insert "q_in_cryst_coord = " value))
+  )
+
+
+(defun matdyn-readtau ()
+  (interactive)
+  (let ((value (read-string "Value of readtau: ")))
+    (insert "readtau = " value))
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; postahc- namelists functions ...
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6866,14 +7384,6 @@ nat_todo-list-of-atoms
   )
 
 
-(defun lanczos-title ()
-  (interactive)
-  (let ((value (read-string "Value of title: ")))
-    (insert "title = '" value "'"))
-  (backward-char 1)
-  )
-
-
 (defun lanczos-w_t_npol ()
   (interactive)
   (let ((value (read-string "Value of w_T_npol: ")))
@@ -7349,6 +7859,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of epsil: ")))
     (insert "epsil = " value))
+  )
+
+
+(defun eels-ethr_nscf ()
+  (interactive)
+  (let ((value (read-string "Value of ethr_nscf: ")))
+    (insert "ethr_nscf = " value))
   )
 
 

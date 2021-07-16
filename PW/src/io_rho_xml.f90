@@ -49,7 +49,6 @@ MODULE io_rho_xml
       !
       CHARACTER (LEN=256) :: dirname
       INTEGER :: nspin_, iunocc, iunpaw, ierr
-      INTEGER, EXTERNAL :: find_free_unit
 
       dirname = restart_dir ( )
       CALL create_directory( dirname )
@@ -80,9 +79,8 @@ MODULE io_rho_xml
 
       IF ( lda_plus_u ) THEN
          !
-         iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
+            OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='unknown' )
             IF (lda_plus_u_kind.EQ.0) THEN
                WRITE( iunocc, * , iostat = ierr) rho%ns
@@ -109,9 +107,8 @@ MODULE io_rho_xml
       !
       IF ( okpaw ) THEN
          !
-         iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
+            OPEN ( NEWUNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
                  FORM='formatted', STATUS='unknown' )
             WRITE( iunpaw, * , iostat = ierr) rho%bec
          END IF
@@ -184,9 +181,8 @@ MODULE io_rho_xml
          ! The occupations ns also need to be read in order to build up
          ! the potential
          !
-         iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
+            OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='old', IOSTAT=ierr )
             IF (lda_plus_u_kind.EQ.0) THEN
                READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
@@ -245,9 +241,8 @@ MODULE io_rho_xml
          !
          ! Also the PAW coefficients are needed:
          !
-         iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            OPEN ( UNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
+            OPEN ( NEWUNIT=iunpaw, FILE = TRIM(dirname) // 'paw.txt', &
                  FORM='formatted', STATUS='old', IOSTAT=ierr )
             READ( UNIT = iunpaw, FMT = *, iostat=ierr ) rho%bec
          END IF

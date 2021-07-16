@@ -30,7 +30,7 @@ SUBROUTINE phq_readin()
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
   USE fft_base,      ONLY : dffts
-  USE spin_orb,      ONLY : domag
+  USE spin_orb,      ONLY : domag, lspinorb
   USE cellmd,        ONLY : lmovecell
   USE run_info,      ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
@@ -752,6 +752,10 @@ SUBROUTINE phq_readin()
   ! returns .false., leaves the current values, read in read_file, unchanged)
   !
   newgrid = reset_grid (nk1, nk2, nk3, k1, k2, k3) 
+  if(newgrid.and.elph_mat)then
+    WRITE(stdout, '(//5x,"WARNING: Wannier elph do not use explicit new grid: nk1 nk2 nk3 ignored")') 
+    newgrid=.false.
+  end if
   !
   tmp_dir=tmp_dir_save
   !
@@ -816,7 +820,9 @@ SUBROUTINE phq_readin()
      'The phonon code with US-PP and raman or elop not yet available',1)
 
   IF (noncolin.and.(lraman.or.elop)) CALL errore('phq_readin', &
-      'lraman, elop, and noncolin not programed',1)
+      'lraman, elop, and noncolin not programmed',1)
+  IF ( (noncolin.or.lspinorb) .and. elph ) CALL errore('phq_readin', &
+      'el-ph coefficient calculation disabled in noncolinear/spinorbit case',1)
 
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
@@ -927,9 +933,9 @@ SUBROUTINE phq_readin()
   ENDIF
   nat_todo_input=nat_todo
   !
-  ! end of reading, close unit qestdin, remove tenporary input file if existing
-  !
-  IF (meta_ionode) ios = close_input_file () 
+  ! end of reading, close unit qestdin, remove temporary input file if existing
+  ! FIXME: closing input file here breaks alpha2F.x that reads what follows
+  !!! IF (meta_ionode) ios = close_input_file () 
 
   IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)

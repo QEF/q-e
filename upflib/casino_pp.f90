@@ -383,6 +383,16 @@ CONTAINS
        REAL(dp) :: vll
        INTEGER :: kkbeta, l, iv, ir, i, nb
 
+       !
+       upf_out%nv       = "2.0.1"
+       upf_out%tvanp    = .false.
+       upf_out%tpawp    = .false.
+       upf_out%tcoulombp= .false.
+       upf_out%has_so   = .false.
+       upf_out%has_wfc  = .false.
+       upf_out%has_gipaw= .false.
+       upf_out%paw_as_gipaw = .false.
+       !
        WRITE(upf_out%generated, '("From a Trail & Needs tabulated &
             &PP for CASINO")')
        WRITE(upf_out%author,'("unknown")')

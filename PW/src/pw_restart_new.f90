@@ -48,7 +48,7 @@ MODULE pw_restart_new
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
-  PUBLIC :: pw_write_schema, pw_write_binaries
+  PUBLIC :: pw_write_schema, write_collected_wfc
   PUBLIC :: read_xml_file, read_collected_wfc
   !
   CONTAINS
@@ -143,11 +143,15 @@ MODULE pw_restart_new
       USE martyna_tuckerman,    ONLY : do_comp_mt 
       USE run_info,             ONLY : title
       !
+      USE wvfct_gpum,           ONLY : using_et, using_wg
+      USE wavefunctions_gpum,   ONLY : using_evc
+      USE qexsd_module,         ONLY : qexsd_add_all_clocks 
+      !
       IMPLICIT NONE
       !
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
-      CHARACTER(LEN=32)     :: dft_name
+      CHARACTER(LEN=37)     :: dft_name
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       CHARACTER(LEN=20)     :: occupations
@@ -210,6 +214,10 @@ MODULE pw_restart_new
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
       ! If local PW dimensions are not available, set to 0
+      !
+      CALL using_et(0)
+      CALL using_wg(0)
+      CALL using_evc(0)
       !
       ALLOCATE( ngk_g( nkstot ) )
       ngk_g(:) = 0
@@ -522,10 +530,10 @@ MODULE pw_restart_new
          END IF
          IF (nks_start == 0 .AND. nk1*nk2*nk3 > 0 ) THEN 
             CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, "automatic", calculation, &
-                 nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
+                 nk1, nk2, nk3, k1, k2, k3, nks_start, alat, at(:,1), .TRUE.)
          ELSE
             CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, k_points, calculation, &
-                                nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
+                 nk1, nk2, nk3, k1, k2, k3, nks_start, alat, at(:,1), .TRUE., xk_start, wk_start)
          END IF
          qexsd_start_k_obj%tagname = 'starting_kpoints'
          occupations = schema_occupations( lgauss, ltetra, tetra_type, &
@@ -673,6 +681,9 @@ MODULE pw_restart_new
          ENDIF
          NULLIFY ( bp_obj_ptr) 
 !-------------------------------------------------------------------------------
+! ... CLOCKS
+         CALL qexsd_add_all_clocks()
+!-------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
  10      CONTINUE
@@ -726,7 +737,7 @@ MODULE pw_restart_new
     END SUBROUTINE pw_write_schema
     !
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_binaries( )
+    SUBROUTINE write_collected_wfc( )
       !------------------------------------------------------------------------
       !
       USE mp,                   ONLY : mp_sum, mp_max
@@ -741,13 +752,15 @@ MODULE pw_restart_new
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k
       USE gvect,                ONLY : ngm, g, mill
       USE fft_base,             ONLY : dfftp
-      USE basis,                ONLY : natomwfc
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : me_bgrp, root_bgrp, intra_bgrp_comm, &
                                        root_bgrp_id, my_bgrp_id
-      USE wrappers,             ONLY : f_mkdir_safe
+      USE clib_wrappers,        ONLY : f_mkdir_safe
+      !
+      USE wavefunctions_gpum,   ONLY : using_evc
+      USE wvfct_gpum,           ONLY : using_et
       !
       IMPLICIT NONE
       !
@@ -760,6 +773,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       !
+      CALL using_evc(0); CALL using_et(0) !? Is this needed? et never used!
       dirname = restart_dir ()
       !
       ! ... check that restart_dir exists on all processors that write
@@ -825,6 +839,7 @@ MODULE pw_restart_new
          !
          ! ... read wavefunctions - do not read if already in memory (nsk==1)
          !
+         IF ( nks > 1 ) CALL using_evc(2)
          IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
          !
          IF ( nspin == 2 ) THEN
@@ -846,6 +861,7 @@ MODULE pw_restart_new
          ! ... Only the first band group of each pool writes
          ! ... No warranty it works for more than one band group
          !
+         IF ( my_bgrp_id == root_bgrp_id ) CALL using_evc(0)
          IF ( my_bgrp_id == root_bgrp_id ) CALL write_wfc( iunpun, &
               filename, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
               ispin, nspin, evc, npw_g, gamma_only, nbnd, &
@@ -861,7 +877,7 @@ MODULE pw_restart_new
       !
       RETURN
       !
-    END SUBROUTINE pw_write_binaries
+    END SUBROUTINE write_collected_wfc
     !
     !-----------------------------------------------------------------------
     SUBROUTINE gk_l2gmap_kdip( npw_g, ngk_g, ngk, igk_l2g, igk_l2g_kdip, igwk )
@@ -1020,7 +1036,7 @@ MODULE pw_restart_new
       !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
       LOGICAL  :: magnetic_sym, lvalid_input, lfixed
-      CHARACTER(LEN=32) :: dft_name
+      CHARACTER(LEN=37) :: dft_name
       CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
@@ -1128,7 +1144,7 @@ MODULE pw_restart_new
            lspinorb, domag, tot_magnetization )
       !
       bfield = 0.d0
-      CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+      CALL set_spin_vars( lsda, noncolin, domag, &
            npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
       !! Information for generating k-points and occupations
       CALL qexsd_copy_kpoints( output_obj%band_structure, &
@@ -1197,7 +1213,7 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk
       USE noncollin_module,     ONLY : noncolin, npol
       USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
-      USE wvfct,                ONLY : npwx, g2kin, et, wg, nbnd
+      USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE gvect,                ONLY : ig_l2g
       USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm
       USE mp_pools,             ONLY : me_pool, root_pool, &

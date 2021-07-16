@@ -14,7 +14,7 @@
 
 MODULE fake_cond_mod
  USE kinds, ONLY : DP
- USE wrappers, ONLY : memstat
+ USE clib_wrappers, ONLY : memstat
  IMPLICIT NONE
  SAVE
 

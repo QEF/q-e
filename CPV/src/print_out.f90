@@ -45,7 +45,7 @@
       USE xc_lib,            ONLY : xclib_dft_is, exx_is_active
       USE wannier_module,    ONLY : wfc
       USE electrons_base,    ONLY : nbsp, nspin, nupdwn, iupdwn
-      USE wrappers,          ONLY : memstat
+      USE clib_wrappers,     ONLY : memstat
       !
       IMPLICIT NONE
       !

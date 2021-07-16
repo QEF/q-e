@@ -332,9 +332,10 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,      ONLY : nbnd, npwx
-  USE uspp,       ONLY : vkb
+  USE uspp,       ONLY : okvan, vkb, deeq_nc
   USE el_phon,    ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
-                         comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
+                         comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max, &
+                         el_ph_mat_nc_mag
   USE modes,      ONLY : u, nmodes
   USE units_ph,   ONLY : iubar, lrbar, iundnsscf, iudvpsi, lrdvpsi
   USE units_lr,   ONLY : iuwfc, lrwfc
@@ -354,20 +355,22 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
   USE io_global,  ONLY : ionode, ionode_id
   USE io_files,   ONLY : seqopn
-  USE lrus,       ONLY : becp1
-  USE phus,       ONLY : alphap
+  USE lrus,       ONLY : becp1, int3_nc
+  USE phus,       ONLY : alphap, int1_nc
   USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
+  USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
+  USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
+  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save, int3_save
 
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: irr, npe, imode0
-  COMPLEX(DP), INTENT(IN) :: dvscfins (dffts%nnr, nspin_mag, npe)
+  COMPLEX(DP), INTENT(INOUT) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
   INTEGER :: npw, npwq, nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
              ipol, ios, ierr, nrec_ahc
-  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
-                               tg_psic(:,:), aux2(:,:)
-  INTEGER :: v_siz, incr
+  INTEGER :: isolv, nsolv, ikmk, ikmq
+  COMPLEX(DP) , ALLOCATABLE :: elphmat (:,:,:), aux2(:,:)
   LOGICAL :: exst
   COMPLEX(DP), EXTERNAL :: zdotc
   integer :: ibnd_fst, ibnd_lst
@@ -387,20 +390,12 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !
   IF (.NOT. comp_elph(irr) .OR. done_elph(irr)) RETURN
 
-  ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
-  ALLOCATE( el_ph_mat_rec (nbnd,nbnd,nksq,npe) )
-  el_ph_mat_rec=(0.0_DP,0.0_DP)
+  ALLOCATE (el_ph_mat_rec (nbnd,nbnd,nksq,npe) )
   ALLOCATE (aux2(npwx*npol, nbnd))
-  incr=1
-  IF ( dffts%has_task_groups ) THEN
-     !
-     v_siz =  dffts%nnr_tg
-     ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
-     ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = fftx_ntgrp(dffts)
-     !
-  ENDIF
+  el_ph_mat_rec=(0.0_DP,0.0_DP)
+  aux2(:, :) = (0.0_DP, 0.0_DP)
+  CALL apply_dpot_allocate()
   !
   ! DFPT+U case
   !
@@ -426,6 +421,14 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      !
   ENDIF
   !
+  !  Noncollinear magnetism
+  !
+  IF(noncolin .AND. domag) THEN
+     nsolv = 2
+  ELSE
+     nsolv = 1
+  ENDIF
+  !
   !  Start the loops over the k-points
   !
   DO ik = 1, nksq
@@ -443,113 +446,150 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      !
      CALL init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
      !
-     ! read unperturbed wavefuctions psi(k) and psi(k+q)
+     ! Start the loop on the two linear systems, one at B and one at -B
      !
-     IF (nksq.GT.1) THEN
-        IF (lgamma) THEN
-           CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+     DO isolv=1, nsolv
+        IF (isolv==2) THEN
+           ikmk = ikmks(ik)
+           ikmq = ikmkmqs(ik)
         ELSE
-           CALL get_buffer (evc, lrwfc, iuwfc, ikk)
-           CALL get_buffer (evq, lrwfc, iuwfc, ikq)
-        ENDIF
-     ENDIF
-     !
-     DO ipert = 1, npe
-        nrec = (ipert - 1) * nksq + ik
-        !
-        !  dvbare_q*psi_kpoint is read from file (if available) or recalculated
-        !
-        IF (trans) THEN
-           CALL get_buffer (dvpsi, lrbar, iubar, nrec)
-        ELSE
-           mode = imode0 + ipert
-           ! FIXME: .false. or .true. ???
-           CALL dvqpsi_us (ik, u (1, mode), .FALSE., becp1, alphap)
-           !
-           ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
-           !
-           IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(1,mode)) 
-           !
+           ikmk = ikk
+           ikmq = ikq
         ENDIF
         !
-        ! calculate dvscf_q*psi_k
+        ! read unperturbed wavefuctions psi(k) and psi(k+q)
         !
-        IF ( dffts%has_task_groups ) THEN
-           IF (noncolin) THEN
-              CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
-              IF (domag) THEN
-                 DO ipol=2,4
-                    CALL tg_cgather( dffts,  dvscfins(:,ipol,ipert), tg_dv(:,ipol))
-                 ENDDO
+        IF (nksq.GT.1 .OR. nsolv==2) THEN
+           IF (lgamma) THEN
+              CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+           ELSE
+              CALL get_buffer (evc, lrwfc, iuwfc, ikmk)
+              CALL get_buffer (evq, lrwfc, iuwfc, ikmq)
+           ENDIF
+        ENDIF
+        !
+        DO ipert = 1, npe
+           nrec = (ipert - 1) * nksq + ik + (isolv-1) * npe * nksq
+           !
+           !  dvbare_q*psi_kpoint is read from file (if available) or recalculated
+           !
+           IF (trans) THEN
+              CALL get_buffer (dvpsi, lrbar, iubar, nrec)
+           ELSE
+              mode = imode0 + ipert
+              IF (isolv==1) THEN
+                 ! FIXME: .false. or .true. ???
+                 CALL dvqpsi_us (ik, u (1, mode), .FALSE., becp1, alphap)
+                 !
+                 ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
+                 !
+                 IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(1,mode)) 
+                 !
+              ELSE
+                 IF (okvan) THEN
+                    deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
+                    int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,2)
+                 ENDIF
+                 call dvqpsi_us (ik, u (1, mode),.false., becpt, alphapt)
+                 IF (okvan) THEN
+                    deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+                    int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,1)
+                 ENDIF
+              ENDIF
+           ENDIF
+           !
+           ! calculates dvscf_q*psi_k
+           !
+           call start_clock ('vpsifft')
+           !
+           !  change the sign of the magnetic field if required
+           !
+           IF (isolv==2) THEN
+              dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,2)
+           ENDIF
+           !
+           CALL apply_dpot_bands(ik, ibnd_lst - ibnd_fst + 1, dvscfins(:, :, ipert), &
+             evc(:, ibnd_fst), aux2(:, ibnd_fst))
+           !
+           dvpsi = dvpsi + aux2
+           !
+           call stop_clock ('vpsifft')
+           !
+           !  In the case of US pseudopotentials there is an additional
+           !  selfconsist term which comes from the dependence of D on
+           !  V_{eff} on the bare change of the potential
+           !
+           IF (isolv==1) THEN
+              call adddvscf_ph_mag (ipert, ik, becp1)
+              !
+              ! DFPT+U: add to dvpsi the scf part of the response
+              ! Hubbard potential dV_hub
+              !
+              IF (lda_plus_u) THEN
+                 IF (.NOT.trans) dnsscf(:,:,:,:,ipert) = dnsscf_all_modes(:,:,:,:,mode)
+                 call adddvhubscf (ipert, ik)
               ENDIF
            ELSE
-              CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), tg_dv(:,1))
-           ENDIF
-        ENDIF
-        aux2=(0.0_DP,0.0_DP)
-        DO ibnd = ibnd_fst, ibnd_lst, incr
-           IF ( dffts%has_task_groups ) THEN
-              CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd )
-              CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
-              CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd)
-           ELSE
-              CALL cft_wave (ik, evc(1, ibnd), aux1, +1)
-              CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
-              CALL cft_wave (ik, aux2(1, ibnd), aux1, -1)
-           ENDIF
-        ENDDO
-        dvpsi=dvpsi+aux2
-        !
-        CALL adddvscf (ipert, ik)
-        !
-        ! DFPT+U: add to dvpsi the scf part of the perturbed Hubbard potential 
-        !
-        IF (lda_plus_u) THEN
-           IF (.NOT.trans) dnsscf(:,:,:,:,ipert) = dnsscf_all_modes(:,:,:,:,mode)
-           CALL adddvhubscf (ipert, ik)
-        ENDIF
-        !
-        ! If doing Allen-Heine-Cardona (AHC) calculation, we need dvpsi
-        ! later. So, write to buffer.
-        !
-        IF (elph_ahc) THEN
-           nrec_ahc = (ik - 1) * nmodes + ipert + imode0
-           CALL save_buffer(dvpsi(1, ibnd_fst), lrdvpsi, iudvpsi, nrec_ahc)
+              call adddvscf_ph_mag (ipert, ik, becpt)
+           END IF
            !
-           ! If elph_ahc, the matrix elements are computed in ahc.f90
-           CYCLE
+           !  reset the original magnetic field if it was changed
            !
-        ENDIF
-        !
-        ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
-        !
-        DO ibnd = ibnd_fst, ibnd_lst
-           DO jbnd = ibnd_fst, ibnd_lst
-              elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
-                   dvpsi (1, ibnd), 1)
-              IF (noncolin) &
-                 elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
-                   zdotc (npwq, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
-           ENDDO
-        ENDDO
-     ENDDO
-     !
-     ! If elph_ahc, the matrix elements are computed in ahc.f90
-     IF (elph_ahc) CYCLE
-     !
-     CALL mp_sum (elphmat, intra_bgrp_comm)
-     !
-     !  save all e-ph matrix elements into el_ph_mat
-     !
-     DO ipert = 1, npe
-        DO jbnd = ibnd_fst, ibnd_lst
+           IF (isolv==2) THEN
+              dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
+              IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,1)
+           ENDIF
+           !
+           ! If doing Allen-Heine-Cardona (AHC) calculation, we need dvpsi
+           ! later. So, write to buffer.
+           !
+           IF (elph_ahc) THEN
+              nrec_ahc = (ik - 1) * nmodes + ipert + imode0
+              CALL save_buffer(dvpsi(1, ibnd_fst), lrdvpsi, iudvpsi, nrec_ahc)
+              !
+              ! If elph_ahc, the matrix elements are computed in ahc.f90
+              CYCLE
+              !
+           ENDIF
+           !
+           ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
+           !
            DO ibnd = ibnd_fst, ibnd_lst
-              el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, ipert)
-              el_ph_mat_rec (ibnd, jbnd, ik, ipert ) = elphmat (ibnd, jbnd, ipert)
+              DO jbnd = ibnd_fst, ibnd_lst
+                 elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
+                      dvpsi (1, ibnd), 1)
+                 IF (noncolin) &
+                    elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
+                      zdotc (npwq, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
+              ENDDO
+           ENDDO
+        ENDDO ! ipert
+        !
+        ! If elph_ahc, the matrix elements are computed in ahc.f90
+        IF (elph_ahc) EXIT
+        !
+        CALL mp_sum (elphmat, intra_bgrp_comm)
+        !
+        !  save all e-ph matrix elements into el_ph_mat
+        !
+        IF (isolv==1) THEN
+        DO ipert = 1, npe
+           DO jbnd = ibnd_fst, ibnd_lst
+              DO ibnd = ibnd_fst, ibnd_lst
+                 el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, ipert)
+                 el_ph_mat_rec (ibnd, jbnd, ik, ipert ) = elphmat (ibnd, jbnd, ipert)
+              ENDDO
            ENDDO
         ENDDO
-     ENDDO
-  ENDDO
+        ELSEIF (isolv==2) THEN
+           DO ipert = 1, npe
+              el_ph_mat_nc_mag (:,:,ik,ipert+imode0) = elphmat (:,:,ipert)
+           ENDDO
+        ENDIF
+        !
+     ENDDO ! isolv
+  ENDDO ! ik
   !
   done_elph(irr)=.TRUE.
   if(elph_tetra == 0 .AND. .NOT. elph_ahc) then
@@ -564,13 +604,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   end if
   DEALLOCATE(el_ph_mat_rec)
   !
+  CALL apply_dpot_deallocate()
   DEALLOCATE (elphmat)
-  DEALLOCATE (aux1)
   DEALLOCATE (aux2)
-  IF ( dffts%has_task_groups ) THEN
-     DEALLOCATE( tg_dv )
-     DEALLOCATE( tg_psic )
-  ENDIF
   !
   IF (lda_plus_u .AND. .NOT.trans) THEN
      DEALLOCATE (dnsscf_all_modes)

@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
 FUNCTION capital( in_char )  
   !-----------------------------------------------------------------------
-  !
-  ! ... converts character to capital if lowercase
-  ! ... copy character to output in all other cases
+  !! Converts character to capital if lowercase.
+  !! Copy character to output in all other cases.
   !
   IMPLICIT NONE  
   !
@@ -42,9 +41,8 @@ END FUNCTION capital
 !-----------------------------------------------------------------------
 FUNCTION lowercase( in_char )  
   !-----------------------------------------------------------------------
-  !
-  ! ... converts character to lowercase if capital
-  ! ... copy character to output in all other cases
+  !! Converts character to lowercase if capital.
+  !! Copy character to output in all other cases.
   !
   IMPLICIT NONE  
   !

@@ -3306,11 +3306,41 @@ hexagonal cells, but will never converge for cubic ones.  }
     # card ADDITIONAL_K_POINTS
     #
     card ADDITIONAL_K_POINTS {
-        label { Optional card. Adds a list of k-points with zero weight, after those used for the scf calculation.
-                When doing an EXX calculation and nq1x, nq2x or nq3x are different from one, also include the 
-                required k+q points. The main use of this card is do band plots with EXX. }
-        syntax { message { Same as K_POINTS, but does not accept 'automatic'. } } 
+        message {
+            Optional card. Adds a list of k-points with zero weight, after those used for
+            the scf calculation. When doing an EXX calculation and @ref nq1x, @ref nq2x or @ref nq3x are
+            different from one, also include the required @b k+q points. The main use of this
+            card is to do band plots with EXX.
         }
+        flag additional_kpoints_type -use optional {
+            enum { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+            default { tbipa }
+            info {
+                for the explanation of the K_POINTS' options, see @ref K_POINTS
+            }
+        }
+
+        syntax -flag {tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c } {
+            line { 
+                var nks_add -type INTEGER {
+                    info {Number of supplied "additional" k-points.}
+                }
+            }
+            table kpoints {
+                rows -start 1 -end nks_add {
+                    colgroup -type REAL {
+                        col k_x 
+                        col k_y
+                        col k_z
+                        col wk_
+                        info {
+                            for the respective explanation, see the @ref xk_x, @ref xk_y, @ref xk_z, @ref wk
+                        }
+                    }
+                }               
+            }
+        }
+    }
  
 
     #

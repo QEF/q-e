@@ -14,14 +14,15 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !! It requires the products of psi with all beta functions
   !! in array becp(nkb,m) (calculated by calbec).
   !
-  USE kinds,           ONLY: DP
-  USE ions_base,       ONLY: nat, ntyp => nsp, ityp
-  USE lsda_mod,        ONLY: current_spin
-  USE control_flags,   ONLY: gamma_only
+  USE kinds,            ONLY: DP
+  USE ions_base,        ONLY: nat, ntyp => nsp, ityp
+  USE lsda_mod,         ONLY: current_spin
+  USE control_flags,    ONLY: gamma_only
   USE noncollin_module
-  USE uspp,            ONLY: vkb, nkb, deeq, deeq_nc, indv_ijkb0
-  USE uspp_param,      ONLY: nh, nhm
-  USE becmod,          ONLY: bec_type, becp
+  USE uspp,             ONLY: vkb, nkb, deeq, deeq_nc, ofsbeta, using_vkb
+  USE uspp_param,       ONLY: nh, nhm
+  USE becmod,           ONLY: bec_type, becp
+  USE becmod_subs_gpum, ONLY: using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -43,6 +44,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !
   !
   CALL start_clock( 'add_vuspsi' )  
+  CALL using_becp_auto(0)
   !
   IF ( gamma_only ) THEN
      !
@@ -80,6 +82,8 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
+       CALL using_vkb(0)
+       !
        IF ( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
           mype    = 0
@@ -106,7 +110,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        ps(:,:) = 0.D0
        !
        !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
-       !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+       !   run from index i=ofsbeta(na)+1 to i=ofsbeta(na)+nh(nt)
        !
        DO nt = 1, ntyp
           !
@@ -121,8 +125,8 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 IF ( m_loc > 0 ) THEN
                   CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
                            deeq(1,1,na,current_spin), nhm, &
-                           becp%r(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
-                               ps(indv_ijkb0(na)+1,1), nkb )
+                           becp%r(ofsbeta(na)+1,1), nkb, 0.0_dp, &
+                               ps(ofsbeta(na)+1,1), nkb )
                 ENDIF
                 !
              ENDIF
@@ -184,6 +188,8 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
+       CALL using_vkb(0)
+       !
        ALLOCATE( ps(nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
@@ -202,8 +208,8 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 deeaux(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
                                     0.0_dp, KIND=dp )
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeaux, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
-                          (0.0_dp, 0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
+                           deeaux, nh(nt), becp%k(ofsbeta(na)+1,1), nkb, &
+                          (0.0_dp, 0.0_dp), ps(ofsbeta(na)+1,1), nkb )
                 !
              ENDIF
              !
@@ -233,6 +239,8 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
+       CALL using_vkb(0)
+       !
        ALLOCATE( ps(  nkb,npol, m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_nc ', ' error allocating ps ', ABS( ierr ) )
@@ -250,11 +258,11 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                    !
                    DO jh = 1, nh(nt)
                       !
-                      jkb = indv_ijkb0(na) + jh
+                      jkb = ofsbeta(na) + jh
                       !
                       DO ih = 1, nh(nt)
                          !
-                         ikb = indv_ijkb0(na) + ih
+                         ikb = ofsbeta(na) + ih
                          !
                          ps(ikb,1,ibnd) = ps(ikb,1,ibnd) +    & 
                               deeq_nc(ih,jh,na,1)*becp%nc(jkb,1,ibnd)+ & 

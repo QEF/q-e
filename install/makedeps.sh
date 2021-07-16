@@ -16,13 +16,14 @@ then
 # externally maintained should not go into this list
 
     dirs=" LAXlib FFTXlib UtilXlib clib \
+           dft-d3 \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
 	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  \
            upflib XClib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip" 
+	   GWW/simple_bse GWW/simple_ip QEHeat/src " 
           
 elif
     test $1 = "-addson" 
@@ -62,8 +63,12 @@ for dir in $dirs; do
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
     case $DIR in 
+        upflib )
+             DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib" ;;
         Modules )
              DEPENDS="$DEPEND1" ;;
+        dft-d3 )
+             DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib $LEVEL1/Modules" ;;
         LR_Modules )
              DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
 	ACFDT/src ) 
@@ -78,7 +83,7 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
 	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
-        EPW/src )
+        EPW/src | QEHeat/src )
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;; 
 	GWW/head )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
@@ -96,7 +101,23 @@ for dir in $dirs; do
 
     esac
 
+    # list of all system modules
+    sysdeps="iso_c_binding iso_fortran_env f90_unix_io f90_unix_env \
+             f90_unix_proc ifcore ifport"
+
+    # list of all external library modules or include files
+    libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \
+             xc_version.h xc_f03_lib_m elpa elpa1 \
+             mbd w90_io fox_dom fox_wxml m_common_io \
+             device_fbuff_m device_memcpy_m device_auxfunc_m"
+
+    # list of all cuda-related modules
+    cudadeps="cublas cudafor curand cufft flops_tracker cusolverdn \
+              zhegvdx_gpu dsyevd_gpu dsygvdx_gpu eigsolve_vars     \
+              nvtx_inters"
+
     # generate dependencies file (only for directories that are present)
+
     if test -d $TOPDIR/../$DIR
     then
 	cd $TOPDIR/../$DIR
@@ -104,67 +125,12 @@ for dir in $dirs; do
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
-        # handle special cases: modules for C-fortran binding,
-        #   	                hdf5, MPI, FoX, libxc
-        sed '/@iso_c_binding@/d' make.depend > tmp; mv tmp make.depend
-        sed '/@hdf5@/d' make.depend > tmp; mv tmp make.depend
-        sed '/@mpi@/d'  make.depend > tmp; mv tmp make.depend
-        sed '/@fox_dom@/d;/@fox_wxml@/d;/@m_common_io@/d' make.depend > tmp; mv tmp make.depend
-        sed '/@xc_version.h@/d;/@xc_f03_lib_m@/d' make.depend > tmp; mv tmp make.depend
-
-        if test "$DIR" = "FFTXlib"
-        then
-            # more special cases: modules for FFTs, GPU, OpenMP
-            sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@mkl_dfti/d' make.depend > tmp; mv tmp make.depend
-            sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend > tmp; mv tmp make.depend
-            sed '/@cudafor@/d;/@cufft@/d;/@flops_tracker@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "LAXlib"
-        then
-            # more special cases: modules for ELPA, GPUs
-            sed '/@elpa1@/d;/@elpa@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend > tmp ; mv tmp make.depend
-            sed '/@device_fbuff_m@/d' make.depend > tmp ; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "UtilXlib"
-        then
-            sed '/@ifcore@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@cudafor@/d' make.depend> tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "Modules"
-        then
-            sed '/@mbd@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "XClib"
-        then
-            sed '/@xc_f90_lib_m@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
-        then
-            sed '/@environ_/d;/@solvent_tddfpt@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "CPV/src"
-        then
-            sed '/@f90_unix_proc@/d' make.depend > tmp; mv tmp make.depend
-        fi
-
-        if test "$DIR" = "EPW/src"
-        then
-            sed '/@f90_unix_io@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@f90_unix_env@/d' make.depend> tmp; mv tmp make.depend
-            sed '/@w90_io@/d' make.depend > tmp; mv tmp make.depend
-            sed '/@ifport@/d' make.depend > tmp; mv tmp make.depend
-        fi
+        # remove unwanted dependency upon system and library modules
+	for no_dep in $sysdeps $libdeps $cudadeps; do
+            echo "/@$no_dep@/d" >> removedeps.tmp
+	done
+        sed -f removedeps.tmp make.depend  > tmp; mv tmp make.depend
+	/bin/rm removedeps.tmp
 
         # check for missing dependencies 
         if grep @ make.depend

@@ -29,6 +29,7 @@
     mixing_beta = 0.7
     startingpot = 'file'
     startingwfc = 'file'
+    diago_david_ndim=4
  /
 ATOMIC_SPECIES
  Ni1  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF

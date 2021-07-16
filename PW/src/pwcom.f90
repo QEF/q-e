@@ -43,6 +43,14 @@ MODULE klist
   !! index of G corresponding to a given index of k+G
   INTEGER, ALLOCATABLE :: ngk(:)
   !! number of plane waves for each k point
+  INTEGER, ALLOCATABLE :: igk_k_d(:,:)
+  !! device copy of igk
+  INTEGER, ALLOCATABLE :: ngk_d(:)
+  !! device copy of ngk
+#if defined (__CUDA)
+  attributes(DEVICE) :: igk_k_d, ngk_d
+  attributes(PINNED) :: igk_k
+#endif
   !
   INTEGER :: nks
   !! number of k points in this pool
@@ -91,14 +99,22 @@ CONTAINS
     ENDDO
     !
     DEALLOCATE( gk )
+#if defined (__CUDA)
+    IF(ALLOCATED(igk_k_d)) DEALLOCATE(igk_k_d)
+    IF (nks > 0) ALLOCATE ( igk_k_d, source=igk_k)
+    IF(ALLOCATED(ngk_d)) DEALLOCATE(ngk_d)
+    IF (nks > 0) ALLOCATE ( ngk_d, source=ngk)
+#endif
     !
   END SUBROUTINE init_igk
-  !
   !
   SUBROUTINE deallocate_igk( ) 
     !
     IF (ALLOCATED(ngk))     DEALLOCATE( ngk )
     IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
+    !
+    IF (ALLOCATED(igk_k_d)) DEALLOCATE( igk_k_d )
+    IF (ALLOCATED(ngk_d))   DEALLOCATE( ngk_d )
     !
   END SUBROUTINE deallocate_igk
   !
@@ -277,6 +293,9 @@ MODULE wvfct
   INTEGER, ALLOCATABLE :: btype(:,:) 
   !! one if the corresponding state has to be
   !! converged to full accuracy, zero otherwise
+#if defined(__CUDA)
+  attributes(pinned) :: g2kin, et, wg
+#endif
   !
 END MODULE wvfct
 !
@@ -418,35 +437,6 @@ MODULE cellmd
 END MODULE cellmd
 !
 !
-!
-MODULE us
-  !
-  !! These parameters are needed with the US pseudopotentials.
-  !
-  USE kinds,      ONLY : DP
-  !
-  SAVE
-  !
-  INTEGER :: nqxq
-  !! size of interpolation table
-  INTEGER :: nqx
-  !! number of interpolation points
-  REAL(DP), PARAMETER:: dq = 0.01D0
-  !! space between points in the pseudopotential tab.
-  REAL(DP), ALLOCATABLE :: qrad(:,:,:,:)
-  !! radial FT of Q functions
-  REAL(DP), ALLOCATABLE :: tab(:,:,:)
-  !! interpolation table for PPs
-  REAL(DP), ALLOCATABLE :: tab_at(:,:,:)
-  !! interpolation table for atomic wfc
-  LOGICAL :: spline_ps = .FALSE.
-  REAL(DP), ALLOCATABLE :: tab_d2y(:,:,:)
-  !! for cubic splines
-  !
-END MODULE us
-!
-!
-!
 MODULE fixed_occ
   !
   !! The quantities needed in calculations with fixed occupations.
@@ -472,24 +462,15 @@ MODULE spin_orb
   !
   !! Variables needed for calculations with spin-orbit
   !
-  USE kinds,       ONLY : DP
-  USE upf_params,  ONLY : lmaxx, lqmax
-  !! FIXME: rot_ylm could be dynamically allocated
+  USE upf_spinorb, ONLY : lspinorb, rot_ylm, fcoef, lmaxx
   !
   SAVE
-  !
-  LOGICAL :: lspinorb
-  !! if .TRUE. this is a spin-orbit calculation
   LOGICAL :: lforcet
   !! if .TRUE. apply Force Theorem to calculate MAE 
   LOGICAL :: starting_spin_angle
   !! if .TRUE. the initial wavefunctions are spin-angle functions. 
   LOGICAL :: domag
   !! if .TRUE. magnetization is computed
-  COMPLEX (DP) :: rot_ylm(lqmax,lqmax)
-  !! transform real spherical harmonics into complex ones
-  COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
-  !! function needed to account for spinors.
   !
 END MODULE spin_orb
 !

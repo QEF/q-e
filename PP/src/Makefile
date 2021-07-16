@@ -126,11 +126,6 @@ pmw.x : poormanwannier.o libpp.a $(MODULES) $(LIBOBJS)
 		$(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-xctest.x : xctest.o libpp.a $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		xctest.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
 pp.x : postproc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		postproc.o libpp.a $(MODULES) \

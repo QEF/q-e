@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
 <!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     
-<input_description distribution="Quantum Espresso" package="turboTDDFPT" program="turbo_davidson.x" >
+<input_description distribution="Quantum ESPRESSO" package="turboTDDFPT" program="turbo_davidson.x" >
    <toc>
    </toc>
    <intro>
@@ -17,18 +17,18 @@ Comment lines in namelists can be introduced by a &quot;!&quot;, exactly as in
 fortran code. Comments lines in ``cards&apos;&apos; can be introduced by
 either a &quot;!&quot; or a &quot;#&quot; character in the first position of a line.
 
-Structure of the input data:
+<b>Structure of the input data:</b>
 ===============================================================================
 
-&amp;lr_input
+&amp;LR_INPUT
   ...
 /
 
-&amp;lr_dav
+&amp;LR_DAV
   ...
 /
    </intro>
-   <namelist name="lr_input" >
+   <namelist name="LR_INPUT" >
       <label> This namelist is always needed !
       </label>
       <var name="prefix" type="CHARACTER" >
@@ -95,7 +95,7 @@ the &apos;default&apos; mode.
          </info>
       </var>
    </namelist>
-   <namelist name="lr_dav" >
+   <namelist name="LR_DAV" >
       <var name="num_eign" type="INTEGER" >
          <default> 1
          </default>

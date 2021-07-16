@@ -60,7 +60,6 @@ MODULE control_lr
   SAVE
   !
   INTEGER, ALLOCATABLE :: nbnd_occ(:)  ! occupied bands in metals
-  INTEGER, ALLOCATABLE :: ofsbeta(:)   ! for each atom gives the offset of beta functions 
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   LOGICAL  :: lgamma         ! if .TRUE. this is a q=0 computation
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
@@ -78,7 +77,7 @@ MODULE control_lr
   REAL(DP) :: tr2_ph  ! threshold for phonon calculation
   REAL(DP) :: alpha_mix(100)  ! the mixing parameter
   INTEGER :: niter_ph         ! maximum number of iterations (read from input)
-
+  INTEGER :: nbnd_occx        ! maximun value of nbnd_occ(:)
   !
 END MODULE control_lr
 !

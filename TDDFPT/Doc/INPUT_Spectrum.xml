@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
 <!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     
-<input_description distribution="Quantum Espresso" package="turboTDDFPT" program="turbo_spectrum.x" >
+<input_description distribution="Quantum ESPRESSO" package="turboTDDFPT" program="turbo_spectrum.x" >
    <toc>
    </toc>
    <intro>
@@ -17,14 +17,14 @@ Comment lines in namelists can be introduced by a &quot;!&quot;, exactly as in
 fortran code. Comments lines in ``cards&apos;&apos; can be introduced by
 either a &quot;!&quot; or a &quot;#&quot; character in the first position of a line.
 
-Structure of the input data:
+<b>Structure of the input data:</b>
 ===============================================================================
 
-&amp;lr_input
+&amp;LR_INPUT
   ...
 /
    </intro>
-   <namelist name="lr_input" >
+   <namelist name="LR_INPUT" >
       <label> This namelist is always needed !
       </label>
       <var name="prefix" type="CHARACTER" >
@@ -72,10 +72,20 @@ in between itermax0+1 and itermax will be extrapolated.
       <var name="extrapolation" type="CHARACTER" >
          <default> &apos;no&apos;
          </default>
-         <info>
-    Sets the extrapolation scheme. &apos;osc&apos;= biconstant extrapolation,
-&apos;constant&apos;=constant extrapolation and &apos;no&apos;=no extrapolation.
-         </info>
+         <options>
+            <info>
+Sets the extrapolation scheme.
+            </info>
+            <opt val="'osc'" >
+biconstant extrapolation
+            </opt>
+            <opt val="'constant'" >
+constant extrapolation
+            </opt>
+            <opt val="'no'" >
+no extrapolation.
+            </opt>
+         </options>
       </var>
       <var name="epsil" type="REAL" >
          <default> 0.02

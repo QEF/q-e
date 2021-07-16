@@ -1,5 +1,4 @@
-\documentclass[12pt,a4paper]{article}
-\def\version{6.6}
+\documentclass[12pt,a4paper]{article} \def\version{6.8}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -30,7 +29,6 @@
   \includegraphics[width=5cm]{\qeImage} \\
   % title
   \Huge \PHonon\ User's Guide (v. \version)
-  \\ \Large (only partially updated)
 }
 
 \maketitle
@@ -39,68 +37,23 @@
 
 \section{Introduction}
 
-This guide covers the usage of the \PHonon\ package, a
-part of the \qe\ distribution. 
-Further documentation, beyond what is provided 
-in this guide, can be found in the directory
-\texttt{PHonon/Doc/}, containing a copy of this guide.
+This guide covers the usage of the \PHonon\ package for
+linear-response calculations.
 
-{\em Important notice: due to the lack of time and of manpower, this
-manual is only partially updated and may contain outdated information.}
-
-This guide assumes that you know the contents of 
-the general User's Guide for \qe\ and of the User's 
-Guide for \PWscf. It also assumes that you have
-already installed \qe\ (\PHonon\ is not a stand-alone
-package: it requires \PWscf\ to be compiled and used).
-If not, please locate the general User's Guide in directory 
-\texttt{Doc/} two levels above the one containing this guide,
-and the User's Guide for \PWscf\ in \texttt{PW/Doc/};
-or consult the web site:\\
-\texttt{http://www.quantum-espresso.org}.
 It is also assumed that you know the physics behind \qe,
 the methods it implements, and in particular the physics
 and the methods of \PHonon.
+It also assumes that you have already installed,
+or know how to install, \qe. If not, please read
+the general User's Guide for \qe, found in 
+subdirectory \texttt{Doc/} of the main \qe\ directory,
+or consult the web site \texttt{http://www.quantum-espresso.org}.
 
-% People who want to modify or contribute to \PHonon\ should read 
-% the Developer Manual: \texttt{Doc/developer\_man.pdf}.
-
-\PHonon\ has the following directory structure,
-contained in a subdirectory \texttt{PHonon/}
-of the main \qe\ tree:
-
-\begin{tabular}{ll}
-\texttt{Doc/} & : contains the user\_guide and input data description \\
-\texttt{examples/} & : some running examples \\
-\texttt{PH/}      & : source files for phonon calculations 
-                   and analysis\\
-\texttt{Gamma/}  & : source files for Gamma-only phonon calculation\\
-\end{tabular}\\
-{\em Important Notice:} since v.5.4, many modules and routines that were
-common to all linear-response \qe\ codes are moved into the new 
-\texttt{LR\_Modules} subdirectory of the main tree. Since v.6.0, the
-\texttt{D3} code for anharmonic force constant calculations has been 
-superseded by the \texttt{D3Q} code, available on
-\texttt{https://sourceforge.net/projects/d3q/} and automatically
-downloadable from \qe.
-
-The codes available in the \PHonon\ package can perform the following 
-types of calculations:
-\begin{itemize}
-  \item phonon frequencies and eigenvectors at a generic wave vector,
-  using Density-Functional Perturbation Theory;
-  \item effective charges and dielectric tensors;
-  \item electron-phonon interaction coefficients for metals;
-  \item interatomic force constants in real space;
-  \item Infrared and Raman (nonresonant) cross section.
-\end{itemize}
-
-Phonons can be plotted using the \texttt{PlotPhon} package.
-Calculations of the vibrational free energy in the Quasi-Harmonic 
-approximations can be performed using the \texttt{QHA}  package.
-{\em Note:} since v.5.4, these two packages are separately distributed
-and no longer bundled with \PHonon. Their latest version can be 
-found in the tarballs of \PHonon\ v.5.3.
+Further documentation, beyond what is provided 
+in this guide, can be found in the directory
+\texttt{PHonon/Doc/}, containing a copy of this guide.
+People who want to contribute to \qe\ should read the
+Wiki pages on GitLab: \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
 
 \section{People}
 The \PHonon\ package
@@ -111,19 +64,16 @@ We quote in particular:
 \begin{itemize}
   \item Michele Lazzeri (Univ.Paris VI) for the 2n+1 code and Raman 
   cross section calculation with 2nd-order response;
- \item Andrea Dal Corso for the implementation of Ultrasoft, PAW,
-  noncolinear, spin-orbit extensions to \PHonon;
+  \item Andrea Dal Corso for the implementation of Ultrasoft, PAW,
+        noncolinear, spin-orbit extensions to \PHonon;
   \item Mitsuaki Kawamura (U.Tokyo) for implementation of the optimized
-  tetrahedron method in phonon and electron-phonon calculations;
+        tetrahedron method in phonon and electron-phonon calculations;
   \item Thibault Sohier, Matteo Calandra, Francesco Mauri, for 
 	phonons in two-dimensional systems;
   \item Andrea Floris, Iurii Timrov, Burak Himmetoglu, Nicola Marzari, 
         Stefano de Gironcoli, and Matteo Cococcioni, for phonons using 
         Hubbard-corrected DFPT (DFPT+$U$).
 \end{itemize}
-
-The \texttt{PlotPhon} and \texttt{QHA} packages were contribute by the
-late Prof. Eyvaz Isaev.
 
 Other contributors include: Lorenzo Paulatto (Univ. Paris VI) for
 PAW, 2n+1 code; William Parker (Argonne) for phonon terms in dielectric
@@ -147,6 +97,45 @@ Once \qe\ is correctly configured, \PHonon\ can be automatically
 downloaded, unpacked and compiled by
 just typing \texttt{make ph}, from the main \qe\ directory.
 
+\subsection{Structure of the \PHonon\ package}
+
+\PHonon\ has the following directory structure,
+contained in a subdirectory \texttt{PHonon/}
+of the main \qe\ tree:
+
+\begin{tabular}{ll}
+\texttt{Doc/} & : contains the user\_guide and input data description \\
+\texttt{examples/} & : some running examples \\
+\texttt{PH/}      & : source files for phonon calculations 
+                   and analysis\\
+\texttt{Gamma/}   & : source files for Gamma-only phonon calculation\\
+\texttt{FD/}      & : source files for FInite-Difference calculations\\
+\end{tabular}\\
+{\em Important Notice:} since v.5.4, many modules and routines that were
+common to all linear-response \qe\ codes are moved into the new 
+\texttt{LR\_Modules} subdirectory of the main tree. Since v.6.0, the
+\texttt{D3} code for anharmonic force constant calculations has been 
+superseded by the \texttt{D3Q} code, available on
+\texttt{https://sourceforge.net/projects/d3q/} and automatically
+downloadable from \qe.
+
+The codes available in the \PHonon\ package can perform the following 
+types of calculations:
+\begin{itemize}
+  \item phonon frequencies and eigenvectors at a generic wave vector,
+  using Density-Functional Perturbation Theory;
+  \item effective charges and dielectric tensors;
+  \item electron-phonon interaction coefficients for metals;
+  \item interatomic force constants in real space;
+  \item Infrared and Raman (nonresonant) cross section.
+\end{itemize}
+
+{\em Note:} since v.5.4, packages \texttt{PlotPhon} (for phonon
+plotting) and \texttt{QHA} (vibrational free energy in the
+Quasi-Harmonic approximations), contribute by the late Prof.
+Eyvaz Isaev, are no longer bundled with \PHonon. Their latest
+version can be found in the tarballs of v.5.3 of QE.
+
 \subsection{Compilation}
 
 Typing \texttt{make ph} from the root \qe\ directory, or \texttt{make} 
@@ -161,14 +150,14 @@ from the \PHonon\ directory, produces the following codes:
   \item \texttt{PH/q2r.x}: calculates Interatomic Force Constants (IFC) in real space
     from dynamical matrices produced by \phx\ on a regular {\bf q}-grid 
  \item \texttt{PH/matdyn.x}: produces phonon frequencies at a generic wave vector
-    using the IFC file calculated by \texttt{q2r.x}; may also calculate phonon DOS, 
-    the electron-phonon coefficient $\lambda$, the function $\alpha^2F(\omega)$
+   using the IFC file calculated by \texttt{q2r.x}; may also calculate phonon
+   DOS, the electron-phonon coefficient $\lambda$, the function
+   $\alpha^2F(\omega)$
 \item \texttt{PH/lambda.x}: also calculates $\lambda$ and $\alpha^2F(\omega)$,
    plus $T_c$ for  superconductivity using the McMillan formula
 \item \texttt{PH/alpha2f.x}: also calculates $\lambda$ and $\alpha^2F(\omega)$.
-  It is used together with the optimized tetrahedron method
-  (\verb|occupations="tetrahedra_opt"| in \pwx) and shifted {\it q}-grid
-  (\verb|lshiftq=.true.| in \phx).
+  It is used together with the optimized tetrahedron method and shifted
+  {\it q}-grid
 \item \texttt{PH/fqha.x}: a simple code to calculate vibrational entropy with
    the quasi-harmonic approximation
 \item \texttt{PH/dvscf\_q2r.x}: performs inverse Fourier transformation of phonon

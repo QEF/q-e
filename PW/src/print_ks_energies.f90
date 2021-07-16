@@ -59,6 +59,8 @@ SUBROUTINE print_ks_only( )
   USE mp,                   ONLY : mp_sum, mp_bcast
   USE mp_pools,             ONLY : inter_pool_comm 
   !
+  USE wvfct_gpum,           ONLY : using_et
+  !
   IMPLICIT NONE
   !
   ! ... a few local variables
@@ -69,6 +71,8 @@ SUBROUTINE print_ks_only( )
       i,            &! counter on polarization
       ik,           &! counter on k points
       ibnd           ! counter on bands
+  !
+  CALL using_et(0)
   !
   IF (nkstot >= 100 .and. iverbosity <= 0 ) THEN
      WRITE( stdout, '(/,5x,a)') &
@@ -217,6 +221,8 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
   USE wvfct,                ONLY : nbnd, et, wg
   USE io_global,            ONLY : ionode
   !
+  USE wvfct_gpum,           ONLY : using_et
+  !
   IMPLICIT NONE
   !
   REAL(dp), PARAMETER :: eps = 0.001_dp ! threshold for zero occupancy
@@ -226,6 +232,8 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
   INTEGER :: &
       kbnd,         &! possible position of HOMO
       ibnd, ik       ! counters on bands and k-points
+  !
+  CALL using_et(0)
   !
   ehomo=-1D+6
   elumo=+1D+6

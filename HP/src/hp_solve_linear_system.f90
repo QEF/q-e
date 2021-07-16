@@ -51,6 +51,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE ldaU_hp,              ONLY : thresh_init, dnsscf, dns0, trace_dns_tot_old,  & 
                                    conv_thr_chi_best, iter_best, niter_max, nmix, &
                                    alpha_mix, iudwfc, lrdwfc, code
+  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
+                                   apply_dpot_bands
   !
   IMPLICIT NONE
   !
@@ -85,7 +87,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ldos (:,:),             & ! local density of states at Ef
      ldoss (:,:),            & ! as above, without augmentation charges
      dbecsum (:,:,:,:),      & ! the derivative of becsum
-     aux1 (:,:), aux2 (:,:), & ! auxiliary arrays
+     aux2 (:,:),             & ! auxiliary arrays
      mixin(:), mixout(:),    & ! auxiliary arrays for mixing of the response potential
      tg_dv(:,:),             & ! Task groups: auxiliary array for potential * wfct
      tg_psic(:,:)              ! Task groups: auxiliary array for wavefunctions
@@ -164,7 +166,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
   ENDIF
   !
-  ALLOCATE (aux1(dffts%nnr, npol))
+  CALL apply_dpot_allocate()
   ALLOCATE (aux2(npwx*npol, nbnd))
   ALLOCATE (h_diag(npwx*npol, nbnd))
   ALLOCATE (trace_dns_tot_old(nat))
@@ -257,20 +259,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            ! dvscf_q from previous iteration (mix_potential)
            !
            CALL start_clock ('hp_vpsifft')
-           IF ( dffts%has_task_groups ) &
-                 & CALL tg_cgather( dffts, dvscfins(:,current_spin), tg_dv(:,1))
-           aux2 = (0.0_DP, 0.0_DP)
-           DO ibnd = 1, nbnd_occ(ikk), incr
-              IF ( dffts%has_task_groups ) THEN
-                 CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
-                 CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
-                 CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd_occ(ikk))
-              ELSE
-                 CALL cft_wave (ik, evc(:,ibnd), aux1, +1)
-                 CALL apply_dpot(dffts%nnr, aux1, dvscfins, current_spin)
-                 CALL cft_wave (ik, aux2(:,ibnd), aux1, -1)
-              ENDIF
-           ENDDO
+           CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins, evc, aux2)
            dvpsi = dvpsi + aux2
            CALL stop_clock ('hp_vpsifft')
            !
@@ -523,8 +512,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
 155 CONTINUE
   !
+  CALL apply_dpot_deallocate()
   DEALLOCATE (h_diag)
-  DEALLOCATE (aux1)
   DEALLOCATE (aux2)
   DEALLOCATE (dbecsum)
   DEALLOCATE (drhoscf)

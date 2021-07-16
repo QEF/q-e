@@ -12,8 +12,7 @@ MODULE upf_params
   SAVE
 
   INTEGER, PARAMETER :: &
-       npsx   = 10,     &! max number of different PPs
-       lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
+       lmaxx  = 4,      &! max non local angular momentum (l=0 to lmaxx)      
        lqmax= 2*lmaxx+1  ! max number of angular momenta of Q
 
 END MODULE upf_params

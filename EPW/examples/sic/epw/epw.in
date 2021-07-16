@@ -6,7 +6,6 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
 

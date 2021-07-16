@@ -12,16 +12,17 @@ SUBROUTINE openfilq()
   ! ... This subroutine opens all the files necessary for the phononq
   ! ... calculation.
   !
-  USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : io_level, modenum
-  USE units_ph,         ONLY : iudwf, iubar, iucom, iudvkb3, &
+  USE kinds,           ONLY : DP
+  USE control_flags,   ONLY : io_level, modenum
+  USE units_ph,        ONLY : iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrdwf, lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
                               iundnsscf, iudvpsi, lrdvpsi, iugauge
-  USE units_lr,         ONLY : iuwfc, lrwfc
-  USE io_files,         ONLY : tmp_dir, diropn, seqopn, nwordwfcU
-  USE control_ph,       ONLY : epsil, zue, ext_recover, trans, &
+  USE units_lr,        ONLY : iuwfc, lrwfc
+  USE io_files,        ONLY : prefix, tmp_dir, diropn, seqopn, iunhub, &
+                              iunhub_noS, nwordwfcU
+  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
                               all_done, newgrid
   USE save_ph,         ONLY : tmp_dir_save
@@ -33,7 +34,6 @@ SUBROUTINE openfilq()
   USE lsda_mod,        ONLY : nspin, lsda
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
-  USE io_files,        ONLY : prefix
   USE noncollin_module,ONLY : npol, nspin_mag, noncolin
   USE paw_variables,   ONLY : okpaw
   USE mp_bands,        ONLY : me_bgrp
@@ -252,14 +252,23 @@ SUBROUTINE openfilq()
      nwordwfcU = npwx * nwfcU * npol
      !
      ! The unit iuatwfc contains atomic wfcs at k and k+q
-     !    
+     !
      iuatwfc = 34
      CALL open_buffer (iuatwfc, 'atwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
      !
      ! The unit iuatswfc contains atomic wfcs * S at k and k+q
-     !    
+     !
      iuatswfc = 35
      CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     !
+     IF (lgamma) THEN
+        !
+        ! If q = Gamma, open units iunhub and iunhub_noS which are needed in
+        ! commutator_Vhubx_psi.f90. They contain atomic wfcs phi and S * phi at k.
+        !
+        CALL open_buffer(iunhub, 'hub', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+        CALL open_buffer(iunhub_noS, 'hubnoS', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     ENDIF
      !
      ! Open a file to write dnsscf_all_modes
      !

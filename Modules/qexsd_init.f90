@@ -7,11 +7,10 @@
 !----------------------------------------------------------------------------
 MODULE qexsd_init
   !----------------------------------------------------------------------------
+  !! This module contains some common subroutines used to copy data used by
+  !! the Quantum ESPRESSO package into XML format.
   !
-  ! This module contains some common subroutines used to copy data used by
-  ! the Quantum ESPRESSO package into XML format
-  !
-  ! Written by Paolo Giannozzi, building upon pre-existing code qexsd.f90
+  !! Written by Paolo Giannozzi, building upon pre-existing code qexsd.f90.
   !
   !
   USE kinds,            ONLY : DP
@@ -90,6 +89,7 @@ CONTAINS
       call qes_reset (scf_conv)
       IF (ASSOCIATED(opt_conv)) THEN
          CALL qes_reset (opt_conv)
+         DEALLOCATE(opt_conv)
          NULLIFY ( opt_conv) 
       END IF 
       !

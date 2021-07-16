@@ -70,6 +70,7 @@ chargedensity.o : ../../Modules/io_global.o
 chargedensity.o : ../../Modules/ions_base.o
 chargedensity.o : ../../Modules/kind.o
 chargedensity.o : ../../Modules/mp_global.o
+chargedensity.o : ../../Modules/mp_world.o
 chargedensity.o : ../../Modules/recvec.o
 chargedensity.o : ../../UtilXlib/mp.o
 chargedensity.o : ../../UtilXlib/parallel_include.o
@@ -143,9 +144,10 @@ cp_restart_new.o : ../../Modules/qexsd_input.o
 cp_restart_new.o : ../../Modules/recvec.o
 cp_restart_new.o : ../../Modules/run_info.o
 cp_restart_new.o : ../../Modules/tsvdw.o
-cp_restart_new.o : ../../Modules/wrappers.o
+cp_restart_new.o : ../../UtilXlib/clib_wrappers.o
 cp_restart_new.o : ../../UtilXlib/mp.o
 cp_restart_new.o : ../../XClib/xc_lib.o
+cp_restart_new.o : ../../upflib/upf_ions.o
 cp_restart_new.o : ../../upflib/uspp.o
 cp_restart_new.o : energies.o
 cp_restart_new.o : ldaU_cp.o
@@ -456,6 +458,7 @@ fromscra.o : ../../Modules/io_global.o
 fromscra.o : ../../Modules/ions_base.o
 fromscra.o : ../../Modules/kind.o
 fromscra.o : ../../Modules/mp_global.o
+fromscra.o : ../../Modules/mp_world.o
 fromscra.o : ../../Modules/recvec.o
 fromscra.o : ../../Modules/timestep.o
 fromscra.o : ../../Modules/wavefunctions.o
@@ -482,6 +485,7 @@ gram.o : ../../Modules/gvecw.o
 gram.o : ../../Modules/ions_base.o
 gram.o : ../../Modules/kind.o
 gram.o : ../../Modules/mp_global.o
+gram.o : ../../Modules/mp_world.o
 gram.o : ../../Modules/recvec.o
 gram.o : ../../UtilXlib/mp.o
 gram.o : ../../upflib/uspp.o
@@ -539,7 +543,7 @@ init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/timestep.o
 init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/wavefunctions.o
-init_run.o : ../../Modules/wrappers.o
+init_run.o : ../../UtilXlib/clib_wrappers.o
 init_run.o : ../../UtilXlib/mp.o
 init_run.o : ../../XClib/xc_lib.o
 init_run.o : ../../upflib/uspp.o
@@ -732,6 +736,7 @@ newd.o : ../../Modules/kind.o
 newd.o : ../../Modules/mp_bands.o
 newd.o : ../../UtilXlib/mp.o
 newd.o : ../../upflib/uspp.o
+newd.o : mainvar.o
 newd.o : modules.o
 newd.o : smallbox.o
 newd.o : smallbox_gvec.o
@@ -762,6 +767,7 @@ nlcc.o : ../../Modules/recvec.o
 nlcc.o : ../../UtilXlib/mp.o
 nlcc.o : ../../upflib/atom.o
 nlcc.o : ../../upflib/uspp.o
+nlcc.o : mainvar.o
 nlcc.o : modules.o
 nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o
@@ -776,6 +782,7 @@ ortho.o : ../../Modules/io_global.o
 ortho.o : ../../Modules/ions_base.o
 ortho.o : ../../Modules/kind.o
 ortho.o : ../../Modules/mp_global.o
+ortho.o : ../../Modules/mp_world.o
 ortho.o : ../../UtilXlib/mp.o
 ortho.o : ../../upflib/uspp.o
 ortho.o : cp_interfaces.o
@@ -895,7 +902,7 @@ print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
 print_out.o : ../../Modules/tsvdw.o
-print_out.o : ../../Modules/wrappers.o
+print_out.o : ../../UtilXlib/clib_wrappers.o
 print_out.o : ../../XClib/xc_lib.o
 print_out.o : cg.o
 print_out.o : efield.o
@@ -973,7 +980,6 @@ qqberry.o : ../../Modules/recvec.o
 qqberry.o : ../../UtilXlib/mp.o
 qqberry.o : ../../upflib/atom.o
 qqberry.o : ../../upflib/uspp.o
-qqberry.o : cp_interfaces.o
 qqberry.o : modules.o
 restart.o : ../../Modules/autopilot.o
 restart.o : ../../Modules/cell_base.o
@@ -1045,6 +1051,7 @@ smallbox_lib.o : ../../Modules/io_global.o
 smallbox_lib.o : ../../Modules/ions_base.o
 smallbox_lib.o : ../../Modules/kind.o
 smallbox_lib.o : ../../Modules/mp_global.o
+smallbox_lib.o : ../../upflib/uspp.o
 smallbox_lib.o : cp_interfaces.o
 smallbox_lib.o : smallbox.o
 smallbox_lib.o : smallbox_gvec.o

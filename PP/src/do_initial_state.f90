@@ -24,7 +24,7 @@ SUBROUTINE do_initial_state (excite)
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg, alat, omega
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau, zv
-  USE gvect,      ONLY : ngm, gstart, ngl, igtongl, g, gg, gcutm, eigts1, eigts2, eigts3
+  USE gvect,      ONLY : ngm, gstart, ngl, igtongl, g, gg, gcutm
   USE fft_base,   ONLY : dfftp
   USE lsda_mod,   ONLY : nspin
   USE symme,      ONLY : symscalar

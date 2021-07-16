@@ -1,0 +1,66 @@
+ &CONTROL
+    calculation  = 'cp'
+    dt     = 5.0d0
+    nstep  = 1000
+    iprint = 10
+    isave  = 100
+    ndr    = 50
+    ndw    = 51
+ /
+ &SYSTEM
+    ! ibrav:  0 = free lattice,   1 = PC,   2 = FCC,   3 = BCC
+    !         4 = hex or trigonal P
+    !         5 = trigonal R (axis c),   -5 = trigonal R (axis <111>)
+    !         6 = tetragonal P,   7 = tetragonal I
+    !         8 = orthorombic P,   9 = orthorombic base-C,   -9 = as 9 (alter description)
+    !         10 = orthorombic FC,   11 = orthorombic body-C
+    !         12 = monoclinic P (axis c),   -12 = monoclinic P (axis b)
+    !         13 = monoclinic base-C,   14 = triclinic
+    ibrav     = 0
+    celldm(1) = 1.0
+    nat       = 1
+    ntyp      = 1
+    ecutwfc   = 30.0
+ / 
+ 
+ &ELECTRONS
+    emass        = 50.d0
+    emass_cutoff = 2.5d0
+    
+    ! electron_dynamics = 'none' | 'sd' | 'damp' | 'verlet' | 'cg'
+    electron_dynamics = 'cg'
+ /
+ 
+ &IONS
+    ! ion_dynamics = 'none' | 'sd' | 'damp' | 'verlet' | 'cg'
+    ion_dynamics = 'verlet'
+    
+    ! ion_velocities = 'default' | 'change_step' | 'random' |
+    !                  'from_input' | 'zero'
+    ion_velocities = 'random'
+
+    tempw = 300.d0
+ /
+ 
+ &CELL
+    ! cell_dynamics = 'none' | 'sd' | 'damp-pr' | 'pr'
+    cell_dynamics = 'none'
+ /
+
+CELL_PARAMETERS { alat | bohr | angstrom } 
+   1.00   0.00   0.00
+   0.00   1.00   0.00
+   0.00   0.00   1.00
+   
+   
+ATOMIC_SPECIES
+   atomLabel   atomMass   atomPseudoPotential
+
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal } 
+   atomLabel   0.00   0.00   0.00
+
+AUTOPILOT
+  on_step = 10 : dt = 20.d0
+  on_step = 90 : dt = 5.d0
+  on_step = 100 : electron_dynamics = 'verlet'
+ENDRULES

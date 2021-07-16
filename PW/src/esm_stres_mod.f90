@@ -5,8 +5,6 @@ MODULE esm_stres_mod
                              mill_2d, imill_2d, ngm_2d, exp_erfc
   IMPLICIT NONE
 
-  REAL(DP), EXTERNAL   :: qe_erf, qe_erfc
-
 CONTAINS
 
   !-----------------------------------------------------------------------
@@ -73,7 +71,7 @@ CONTAINS
       alpha = alpha - 0.1d0
       IF (alpha .le. 0.d0) CALL errore('esm_stres_ewa', 'optimal alpha not found', 1)
       upperbound = 2.d0*charge**2*sqrt(2.d0*alpha/tpi)* &
-                   qe_erfc(sqrt(tpiba2*gcutm/4.d0/alpha))
+                   erfc(sqrt(tpiba2*gcutm/4.d0/alpha))
       IF (upperbound < 1.0d-7) EXIT
     END DO
 
@@ -1126,7 +1124,7 @@ CONTAINS
             r(:, nr) = r(:, nr)*alat
 
             fac = Qb*Qa/rr**3 &
-                  *(qe_erfc(salp*rr) &
+                  *(erfc(salp*rr) &
                   + rr*2.0d0*salp*sqrtpm1*EXP(-alpha*rr**2))
             DO la = 1, 3
               DO mu = 1, 3
@@ -1308,7 +1306,7 @@ CONTAINS
           END IF
 
           Vr = Vr - tpi*Qa/S &
-               *((zb - za)*qe_erf(salp*(zb - za)) &
+               *((zb - za)*erf(salp*(zb - za)) &
                  + EXP(-alpha*(zb - za)**2)*sqrtpm1/salp)
         END DO ! ia
 
@@ -1487,7 +1485,7 @@ CONTAINS
 
           !! BC1 terms
           Vr = Vr - tpi*Qa/S &
-               *((zb - za)*qe_erf(salp*(zb - za)) &
+               *((zb - za)*erf(salp*(zb - za)) &
                  + EXP(-alpha*(zb - za)**2)*sqrtpm1/salp)
 
           !! BC2 terms
@@ -1661,7 +1659,7 @@ CONTAINS
 
           !! BC1 terms
           Vr = Vr - tpi*Qa/S &
-               *((zb - za)*qe_erf(salp*(zb - za)) &
+               *((zb - za)*erf(salp*(zb - za)) &
                + EXP(-alpha*(zb - za)**2)*sqrtpm1/salp)
 
           !! BC3 terms
@@ -1882,20 +1880,20 @@ CONTAINS
           z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
           Vr(iz) = Vr(iz) - tpi*Qa/S &
-                   *((z - za)*qe_erf(salp*(z - za)) &
+                   *((z - za)*erf(salp*(z - za)) &
                      + EXP(-alpha*(z - za)**2)*sqrtpm1/salp)
         END DO ! iz
 
         f1 = f1 - tpi*Qa/S &
-             *((z_r - za)*qe_erf(salp*(z_r - za)) &
+             *((z_r - za)*erf(salp*(z_r - za)) &
                + EXP(-alpha*(z_r - za)**2)*sqrtpm1/salp)
         f2 = f2 - tpi*Qa/S &
-             *((z_l - za)*qe_erf(salp*(z_l - za)) &
+             *((z_l - za)*erf(salp*(z_l - za)) &
                + EXP(-alpha*(z_l - za)**2)*sqrtpm1/salp)
         f3 = f3 - tpi*Qa/S &
-             *qe_erf(salp*(z_r - za))
+             *erf(salp*(z_r - za))
         f4 = f4 - tpi*Qa/S &
-             *qe_erf(salp*(z_l - za))
+             *erf(salp*(z_l - za))
       END DO ! ia
 
       a0 = (f1*z_l**2*(z_l - 3.d0*z_r) + z_r*(f3*z_l**2*(-z_l + z_r) &
@@ -2176,7 +2174,7 @@ CONTAINS
 
           !! BC1 terms
           Vr(iz) = Vr(iz) - tpi*Qa/S &
-                   *((z - za)*qe_erf(salp*(z - za)) &
+                   *((z - za)*erf(salp*(z - za)) &
                      + EXP(-alpha*(z - za)**2)*sqrtpm1/salp)
 
           !! BC2 terms
@@ -2184,21 +2182,21 @@ CONTAINS
         END DO ! iz
 
         f1 = f1 - tpi*Qa/S &
-             *((z_r - za)*qe_erf(salp*(z_r - za)) &
+             *((z_r - za)*erf(salp*(z_r - za)) &
                + EXP(-alpha*(z_r - za)**2)*sqrtpm1/salp)
         f1 = f1 + tpi*Qa/S*(-z_r*za + z1*z1)/z1
 
         f2 = f2 - tpi*Qa/S &
-             *((z_l - za)*qe_erf(salp*(z_l - za)) &
+             *((z_l - za)*erf(salp*(z_l - za)) &
                + EXP(-alpha*(z_l - za)**2)*sqrtpm1/salp)
         f2 = f2 + tpi*Qa/S*(-z_l*za + z1*z1)/z1
 
         f3 = f3 - tpi*Qa/S &
-             *qe_erf(salp*(z_r - za))
+             *erf(salp*(z_r - za))
         f3 = f3 + tpi*Qa/S*(-za)/z1
 
         f4 = f4 - tpi*Qa/S &
-             *qe_erf(salp*(z_l - za))
+             *erf(salp*(z_l - za))
         f4 = f4 + tpi*Qa/S*(-za)/z1
 
       END DO ! ia
@@ -2479,7 +2477,7 @@ CONTAINS
 
           !! BC1 terms
           Vr(iz) = Vr(iz) - tpi*Qa/S &
-                   *((z - za)*qe_erf(salp*(z - za)) &
+                   *((z - za)*erf(salp*(z - za)) &
                    + EXP(-alpha*(z - za)**2)*sqrtpm1/salp)
 
           !! BC3 terms
@@ -2487,21 +2485,21 @@ CONTAINS
         END DO ! iz
 
         f1 = f1 - tpi*Qa/S &
-             *((z_r - za)*qe_erf(salp*(z_r - za)) &
+             *((z_r - za)*erf(salp*(z_r - za)) &
              + EXP(-alpha*(z_r - za)**2)*sqrtpm1/salp)
         f1 = f1 + tpi*Qa/S*(-z_r + 2*z1 - za)
 
         f2 = f2 - tpi*Qa/S &
-             *((z_l - za)*qe_erf(salp*(z_l - za)) &
+             *((z_l - za)*erf(salp*(z_l - za)) &
              + EXP(-alpha*(z_l - za)**2)*sqrtpm1/salp)
         f2 = f2 + tpi*Qa/S*(-z_l + 2*z1 - za)
 
         f3 = f3 - tpi*Qa/S &
-             *qe_erf(salp*(z_r - za))
+             *erf(salp*(z_r - za))
         f3 = f3 + tpi*Qa/S*(-1.0d0)
 
         f4 = f4 - tpi*Qa/S &
-             *qe_erf(salp*(z_l - za))
+             *erf(salp*(z_l - za))
         f4 = f4 + tpi*Qa/S*(-1.0d0)
       END DO ! ia
 

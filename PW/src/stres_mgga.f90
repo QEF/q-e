@@ -30,6 +30,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE mp,                     ONLY : mp_sum
   USE mp_pools,               ONLY : inter_pool_comm
   USE mp_bands,               ONLY : intra_bgrp_comm
+  USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -82,6 +83,7 @@ SUBROUTINE stres_mgga( sigmaxc )
     IF ( nks > 1 ) THEN
        !
        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+       CALL using_evc(2)
        !
     END IF
     !
@@ -188,6 +190,7 @@ SUBROUTINE wfc_gradient ( ibnd, ik, npw, gradpsi )
   USE gvect,                  ONLY : g
   USE fft_base,               ONLY : dffts
   USE fft_interfaces,         ONLY : invfft
+  USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE 
   !
@@ -198,6 +201,8 @@ SUBROUTINE wfc_gradient ( ibnd, ik, npw, gradpsi )
   !
   REAL(DP)               :: kplusg(npwx)
   INTEGER                :: ipol
+  !
+  CALL using_evc(0)
   !
   ! Compute the gradient of the wavefunction in reciprocal space
   !

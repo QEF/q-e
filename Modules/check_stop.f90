@@ -6,22 +6,16 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! ... This module contains functions and variables used to check whether the 
-! ... code should be smoothly stopped. In order to use this module, function
-! ... "check_stop_init" must be called (only once) at the beginning of the 
-! ... calculation, optionally setting "max_seconds"
-! ... Function "check_stop_now" returns .TRUE. if either the user has created
-! ... an "exit" file, or if the elapsed wall time is larger than "max_seconds",
-! ... or if these conditions have been met in a previous call of check_stop_now.
-! ... Moreover, function check_stop_now removes the exit file and sets variable
-! ... stopped_by_user to .true..
-!
-! ... Uses routine f_wall defined in module mytime, returning time in seconds
-! ... since the Epoch ( 00:00:00 1/1/1970 ).
-!
 !------------------------------------------------------------------------------!
 MODULE check_stop
-!------------------------------------------------------------------------------!
+  !------------------------------------------------------------------------------!
+  !! This module contains functions and variables used to check whether the 
+  !! code should be smoothly stopped. In order to use this module, function
+  !! "check_stop_init" must be called (only once) at the beginning of the 
+  !! calculation, optionally setting "max_seconds".
+  !
+  !! Uses routine \(\texttt{f_wall}\) defined in module mytime, returning time
+  !! in seconds since the Epoch ( 00:00:00 1/1/1970 ).
   !
   USE kinds
   USE mytime, ONLY: f_wall
@@ -45,6 +39,8 @@ MODULE check_stop
      !-----------------------------------------------------------------------
      SUBROUTINE check_stop_init( max_seconds_ )
        !-----------------------------------------------------------------------
+       !! See module \(\texttt{check_stop}\). Must be called (only once) at the
+       !! beginning of the calculation, optionally setting \(\text{max_seconds}\).
        !
        USE io_global,        ONLY : stdout
        USE io_files,         ONLY : prefix, exit_file
@@ -85,6 +81,11 @@ MODULE check_stop
      !-----------------------------------------------------------------------
      FUNCTION check_stop_now( inunit )
        !-----------------------------------------------------------------------
+       !! Returns TRUE if either the user has created an 'exit' file, or if 
+       !! the elapsed wall time is larger than 'max\_seconds', or if these 
+       !! conditions have been met in a previous call.
+       !! Moreover, this function removes the exit file and sets variable
+       !! \(\text{stopped_by_user}\) to TRUE.
        !
        USE mp,         ONLY : mp_bcast
        USE mp_images,  ONLY : intra_image_comm

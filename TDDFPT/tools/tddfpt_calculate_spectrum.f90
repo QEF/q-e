@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -43,10 +43,11 @@ PROGRAM lr_calculate_spectrum
                       & eign_file, tmp_dir_lr
   INTEGER :: units
   LOGICAL :: eels
+  LOGICAL :: magnons
   !
   ! General use variables & counters
   !
-  INTEGER :: n_ipol, i,j, info, ip, ip2, counter, ios
+  INTEGER :: n_ipol, i,j, info, ip, ip2, counter, ios, n_op
   REAL(dp) :: norm0(3), factor_eels, volume, &
             & alat, q1, q2, q3, modulus_q, nelec, &
             & average(3), av_amplitude(3), epsil, &
@@ -54,12 +55,16 @@ PROGRAM lr_calculate_spectrum
             & omeg, z1,z2, degspin, integration_function, start_save
   COMPLEX(kind=dp) :: omeg_c
   REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: beta_store, gamma_store
+  COMPLEX(dp), ALLOCATABLE, DIMENSION(:,:) :: alpha_store
+  COMPLEX(dp), ALLOCATABLE, DIMENSION(:,:) :: gamma_magnons_store
   COMPLEX(dp), ALLOCATABLE, DIMENSION(:,:,:) :: zeta_store
   COMPLEX(kind=dp) :: green(3,3), &  ! susceptibility chi
                       eps(3,3),   &  ! dielectric function
                       epsm1(3,3)     ! inverse dielectric function
   COMPLEX(kind=dp), ALLOCATABLE :: a(:), b(:), c(:), r(:,:)
   LOGICAL :: skip, exst
+  !
+  COMPLEX(dp) :: a_av(3), c_av(3), a_ampli(3), c_ampli(3)
   !
   ! For perceived color analysis
   !
@@ -85,7 +90,12 @@ PROGRAM lr_calculate_spectrum
   NAMELIST / lr_input / itermax, itermax0, itermax_actual, extrapolation,&
                       & end, increment, start, ipol, outdir, prefix,&
                       & epsil, sym_op, verbosity, units, omeg, omegmax,&
-                      & delta_omeg, td, eign_file, eels
+                      & delta_omeg, td, eign_file, eels, magnons
+  !
+  ! Checking for the path to the output directory.
+  !
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
+  IF ( trim( outdir ) == ' ' ) outdir = './'
   !
   ! Initialization of system variables
   !
@@ -93,7 +103,6 @@ PROGRAM lr_calculate_spectrum
   ! degspin = 2.d0
   !
   prefix = 'pwscf'
-  outdir = './'
   itermax = 1000
   itermax0 = 1000
   !itermax_actual=1000
@@ -113,6 +122,7 @@ PROGRAM lr_calculate_spectrum
   eels = .false.
   f_sum = 0.0d0
   eign_file = 'pwscf.eigen' 
+  magnons = .false.
   !
 #if defined(__MPI)
   CALL mp_startup ( )
@@ -169,6 +179,11 @@ PROGRAM lr_calculate_spectrum
         tmp_dir_lr = TRIM (tmp_dir) // 'tmp_eels/'
         tmp_dir = tmp_dir_lr
         !
+     ELSEIF (magnons) THEN
+        !
+        tmp_dir_lr = TRIM (tmp_dir) // 'tmp_magnons/'
+        tmp_dir = tmp_dir_lr
+        !
      ENDIF   
      !
      IF (eels) THEN
@@ -182,6 +197,8 @@ PROGRAM lr_calculate_spectrum
           ipol = 1
         ENDIF
      ENDIF
+     !
+     IF (magnons) n_op = 3
      !
      ! Polarization symmetry
      !
@@ -233,7 +250,13 @@ PROGRAM lr_calculate_spectrum
      !
      ALLOCATE(beta_store(n_ipol,itermax))
      ALLOCATE(gamma_store(n_ipol,itermax))
-     ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
+     IF (magnons) THEN
+        ALLOCATE(zeta_store(n_ipol,n_op,itermax))
+        ALLOCATE(alpha_store(n_ipol,itermax))
+        ALLOCATE(gamma_magnons_store(n_ipol, itermax))
+     ELSE
+        ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
+     ENDIF
      !
      !beta_store=0.d0
      !gamma_store=0.d0
@@ -313,7 +336,7 @@ PROGRAM lr_calculate_spectrum
      !
      IF (verbosity>0) THEN
         !
-        IF (eels) THEN
+        IF (eels .or. magnons) THEN
           WRITE (stdout,'(/,5x,"Static charge-density susceptibility:")')
         ELSE
           WRITE (stdout,'(/,5x,"Static dipole polarizability tensor:")')
@@ -322,15 +345,27 @@ PROGRAM lr_calculate_spectrum
         CALL calc_chi(0.0d0,epsil,green(:,:))
         !
         DO ip=1,n_ipol
-           DO ip2=1,n_ipol
-              !
-              IF (n_ipol == 3) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
-                                          & ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
-              !
-              IF (n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
-                                          & ipol, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
-              !
-           ENDDO
+           IF (magnons) THEN
+              DO ip2=1,n_op
+                 !
+                 IF (n_ipol == 3) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                                             & ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 !
+                 IF (n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                                             & ip2, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                !
+              ENDDO           
+           ELSE
+              DO ip2=1,n_ipol
+                 !
+                 IF (n_ipol == 3) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                                             & ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 !
+                 IF (n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                                             & ipol, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                !
+              ENDDO
+           ENDIF
         ENDDO
         !
      ENDIF
@@ -339,7 +374,18 @@ PROGRAM lr_calculate_spectrum
      !
      OPEN(17,file=filename,status="unknown")
      !
-     IF (eels .and. units==1) THEN
+     IF (magnons) THEN
+        !
+        WRITE(17,'("#",2x,"Chi is reported as CHI_(i)_(j) \hbar \omega (eV) &
+                     & Re(chi) (e^2*a_0^2/eV) Im(chi) (e^2*a_0^2/eV) ")')
+        !
+        !
+        IF (n_ipol==3) THEN
+           OPEN(18,file=filename1,status="unknown")
+           WRITE(18,'("#",8x,"Frequency (eV)",11x, "S(q,omega)",12x)')
+        ENDIF
+        !
+     ELSEIF (eels .and. units==1) THEN
         !
         ! TODO: Make an implementation also for units=0.
         ! 
@@ -459,17 +505,31 @@ PROGRAM lr_calculate_spectrum
         ENDIF
         !
         DO ip=1,n_ipol
-           DO ip2=1,n_ipol
-              !
-              !eps(ip,ip2) = (1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-              !
-              WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                  ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+           IF (magnons) THEN 
+              DO ip2=1,n_op
+                 !
+                 !eps(ip,ip2) = (1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+                 !
+                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                     ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
 
-              ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-              ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-              !
-           ENDDO
+                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
+                 !
+              ENDDO
+           ELSE
+              DO ip2=1,n_ipol
+                 !
+                 !eps(ip,ip2) = (1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+                 !
+                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                     ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+
+                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
+                 !
+              ENDDO
+           ENDIF
         ENDDO
         !
         alpha_temp(3) = omega(3) * aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0)
@@ -522,20 +582,36 @@ PROGRAM lr_calculate_spectrum
         ! Writing of chi
         !
         DO ip=1,n_ipol
-           DO ip2=1,n_ipol
-              !
-              !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-              !
-              IF (n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                           & ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-              IF (n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                           & ipol, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-              !
-              ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-              ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-              !
-           ENDDO
-      ENDDO
+           IF (magnons) THEN
+              DO ip2=1,n_op
+                 !
+                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+                 !
+                 IF (n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                               & ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 IF (n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                               & ip2, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 !
+                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
+                 !
+              ENDDO
+           ELSE
+              DO ip2=1,n_ipol
+                 !
+                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+                 !
+                 IF (n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                               & ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 IF (n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                               & ipol, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 !
+                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
+                 !
+              ENDDO
+           ENDIF
+        ENDDO
       !
       ! EELS: writing of 1/eps(q)
       !
@@ -651,17 +727,31 @@ PROGRAM lr_calculate_spectrum
         ENDIF
         !
         DO ip=1,n_ipol
-           DO ip2=1,n_ipol
-              !
-              !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-              !
-              WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                  ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
-              !
-              ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-              ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
-              !
-           ENDDO
+           IF (magnons) THEN
+              DO ip2=1,n_op
+                 !
+                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+                 !
+                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                      ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 !
+                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
+                 !
+              ENDDO
+           ELSE
+              DO ip2=1,n_ipol
+                 !
+                 !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+                 !
+                 WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                      ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                 !
+                 ! write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                 ! ip2, ip, ry*omeg, dble(eps), aimag(eps)
+                 !
+              ENDDO
+           ENDIF
         ENDDO
         !
         ! Absorption coefficient
@@ -804,6 +894,9 @@ PROGRAM lr_calculate_spectrum
      IF (allocated(beta_store)) DEALLOCATE(beta_store)
      IF (allocated(gamma_store)) DEALLOCATE(gamma_store)
      IF (allocated(zeta_store)) DEALLOCATE(zeta_store)
+     !
+     IF (allocated(alpha_store)) DEALLOCATE(alpha_store)
+     IF (allocated(gamma_magnons_store)) DEALLOCATE(gamma_magnons_store)
      !
      DEALLOCATE(a)
      DEALLOCATE(b)
@@ -1008,19 +1101,47 @@ SUBROUTINE read_b_g_z_file()
         !
         ! Read the coefficients
         !
-        DO i = 1, itermax0
-           !
-           READ(158,*) beta_store(ip,i)
-           READ(158,*) gamma_store(ip,i)
-           READ(158,*) zeta_store (ip,:,i)
-           !
-        ENDDO
         !
-        CLOSE(158)
-        !
-        beta_store(ip,itermax0+1:) = 0.d0
-        gamma_store(ip,itermax0+1:) = 0.d0
-        zeta_store(ip,:,itermax0+1:) = (0.d0,0.d0)
+        IF (magnons) THEN
+           !
+           READ(158,*) alpha_store(ip,1)
+           READ(158,*) zeta_store(ip,:,1)
+           !
+           DO i = 2, itermax0
+              !
+              READ(158,*) alpha_store(ip,i)
+              READ(158,*) beta_store(ip,i)
+              READ(158,*) gamma_magnons_store(ip,i)
+              READ(158,*) zeta_store (ip,:,i)
+              !
+           ENDDO
+           !
+           CLOSE(158)
+           !
+           IF (itermax > itermax0) THEN
+              alpha_store(ip,itermax0+1:)         = (0.0d0, 0.0d0)
+              beta_store(ip,itermax0+1:)          =  0.0d0
+              gamma_magnons_store(ip,itermax0+1:) = (0.0d0, 0.0d0)
+              zeta_store(ip,:,itermax0+1:)        = (0.0d0, 0.0d0)
+           ENDIF
+           !
+        ELSE
+           !
+           DO i = 1, itermax0
+              !
+              READ(158,*) beta_store(ip,i)
+              READ(158,*) gamma_store(ip,i)
+              READ(158,*) zeta_store (ip,:,i)
+              !
+           ENDDO
+           !
+           CLOSE(158)
+           !
+           beta_store(ip,itermax0+1:) = 0.d0
+           gamma_store(ip,itermax0+1:) = 0.d0
+           zeta_store(ip,:,itermax0+1:) = (0.d0,0.d0)
+           !
+        ENDIF
         !
      ENDDO
      !
@@ -1119,6 +1240,13 @@ SUBROUTINE extrapolate()
    average = 0.d0
    av_amplitude = 0.d0
    !
+   IF (magnons) THEN
+      a_av    = (0.0d0, 0.0d0)
+      c_av    = (0.0d0, 0.0d0)
+      a_ampli = (0.0d0, 0.0d0)
+      c_ampli = (0.0d0, 0.0d0)
+   ENDIF
+   !
    DO ip=1,n_ipol
      !
      IF (.not.eels) WRITE(stdout,'(/5x,"Polarization direction:",I1)') ip
@@ -1142,6 +1270,14 @@ SUBROUTINE extrapolate()
               !
               average(ip)=average(ip)+beta_store(ip,i)
               av_amplitude(ip)=av_amplitude(ip)+beta_store(ip,i)
+              !
+              IF (magnons) THEN
+                 a_av(ip) = a_av(ip) + alpha_store(ip,i)
+                 c_av(ip) = c_av(ip) + gamma_magnons_store(ip,i)
+                 a_ampli(ip) = a_ampli(ip) + alpha_store(ip,i)
+                 c_ampli(ip) = c_ampli(ip) + gamma_magnons_store(ip,i)
+              ENDIF
+              !
               counter=counter+1
               !print *, "t1 ipol",ip,"av_amp",av_amplitude(ip)
               !
@@ -1158,6 +1294,14 @@ SUBROUTINE extrapolate()
               !
               average(ip)=average(ip)+beta_store(ip,i)
               av_amplitude(ip)=av_amplitude(ip)-beta_store(ip,i)
+              !
+              IF (magnons) THEN
+                 a_av(ip) = a_av(ip) + alpha_store(ip,i)
+                 c_av(ip) = c_av(ip) + gamma_magnons_store(ip,i)
+                 a_ampli(ip) = a_ampli(ip) - alpha_store(ip,i)
+                 c_ampli(ip) = c_ampli(ip) - gamma_magnons_store(ip,i)
+              ENDIF
+              !
               counter=counter+1
               !print *, "t2 ipol",ip,"av_amp",av_amplitude(ip)
               !
@@ -1169,36 +1313,106 @@ SUBROUTINE extrapolate()
      !
      average(ip)=average(ip)/counter
      av_amplitude(ip)=av_amplitude(ip)/counter
+     !
+     IF (magnons) THEN
+        a_av(ip) = a_av(ip)/counter
+        c_av(ip) = c_av(ip)/counter
+        a_ampli(ip) = a_ampli(ip)/counter
+        c_ampli(ip) = c_ampli(ip)/counter
+     ENDIF
+     !
      !print *, "t3 ipol",ip,"av_amp",av_amplitude(ip)
      !
      WRITE(stdout,'(5x,"Lanczos coefficients:")')
      WRITE(stdout,'(5x,"Average =",3F15.8)') average(ip)
      WRITE(stdout,'(5x,"Average oscillation amplitude =",F15.8)') av_amplitude(ip)
-   ENDDO
-   !
-   IF (trim(extrapolation)=="constant") av_amplitude=0
-   !
-   !
-   DO ip=1,n_ipol
      !
-     DO i=itermax0,itermax
-        !
-        IF (mod(i,2)==1) THEN
-           !
-           beta_store(ip,i)=average(ip)+av_amplitude(ip)
-           gamma_store(ip,i)=average(ip)+av_amplitude(ip)
-           !
-        ELSE
-           !
-           beta_store(ip,i)=average(ip)-av_amplitude(ip)
-           gamma_store(ip,i)=average(ip)-av_amplitude(ip)
-           !
-        ENDIF
-        !
-     ENDDO
+     IF (magnons) THEN
+        WRITE(stdout,'(5x,"Average alpha =",2F15.8)') a_av(ip)
+        WRITE(stdout,'(5x,"Average alpha oscillation amplitude =",2F15.8)') a_ampli(ip)
+        WRITE(stdout,'(5x,"Average gamma =",2F15.8)') c_av(ip)
+        WRITE(stdout,'(5x,"Average gamma oscillation amplitude =",2F15.8)') c_ampli(ip)
+     ENDIF
      !
    ENDDO
    !
+
+   IF (magnons) THEN
+      !
+      IF (trim(extrapolation)=="constant") THEN  
+         av_amplitude=0.0d0
+         a_ampli =(0.0d0, 0.0d0)
+         c_ampli =(0.0d0, 0.0d0)
+      ELSEIF (trim(extrapolation)=="osc") THEN
+         c_av    = cmplx(average,0.0d0,dp)
+         c_ampli = cmplx(av_amplitude,0.0d0,dp)
+         a_av    = (0.0d0, 0.0d0)
+         a_ampli = (0.0d0, 0.0d0)
+      ENDIF
+      !
+      WRITE(stdout,'(5x,"Extrapolation = ",A24)') trim(extrapolation)
+      DO ip = 1, n_ipol
+         WRITE(stdout,'(5x," ip = ",I3)') ip
+         WRITE(stdout,'(5x,"Average beta =",F15.8)') average(ip)
+         WRITE(stdout,'(5x,"Average beta oscillation amplitude =",F15.8)') av_amplitude(ip)
+         WRITE(stdout,'(5x,"Average alpha =",2F15.8)') a_av(ip)
+         WRITE(stdout,'(5x,"Average alpha oscillation amplitude =",2F15.8)') a_ampli(ip)
+         WRITE(stdout,'(5x,"Average gamma =",2F15.8)') c_av(ip)
+         WRITE(stdout,'(5x,"Average gamma oscillation amplitude =",2F15.8)') c_ampli(ip)
+      ENDDO
+      !
+   ELSEIF (trim(extrapolation)=="constant") THEN
+      av_amplitude=0
+   ENDIF
+   !
+   !
+   IF (magnons) THEN
+      !
+      DO ip=1,n_ipol
+         !
+         DO i=itermax0+1,itermax
+            !
+            IF (mod(i,2)==1) THEN
+               !
+               alpha_store(ip,i) = a_av(ip)         + a_ampli(ip)
+               beta_store(ip,i)  = average(ip)      + av_amplitude(ip)
+               gamma_magnons_store(ip,i) = c_av(ip) + c_ampli(ip)
+               !
+            ELSE
+               !
+               alpha_store(ip,i) = a_av(ip)         - a_ampli(ip)
+               beta_store(ip,i)  = average(ip)      - av_amplitude(ip)
+               gamma_magnons_store(ip,i) = c_av(ip) - c_ampli(ip)
+               !
+            ENDIF
+            !
+         ENDDO
+         !
+      ENDDO
+      !
+   ELSE
+      !
+      DO ip=1,n_ipol
+         !
+         DO i=itermax0,itermax
+            !
+            IF (mod(i,2)==1) THEN
+               !
+               beta_store(ip,i)=average(ip)+av_amplitude(ip)
+               gamma_store(ip,i)=average(ip)+av_amplitude(ip)
+               !
+            ELSE
+               !
+               beta_store(ip,i)=average(ip)-av_amplitude(ip)
+               gamma_store(ip,i)=average(ip)-av_amplitude(ip)
+               !
+            ENDIF
+            !
+         ENDDO
+         !
+      ENDDO
+      !
+   ENDIF
   ENDIF
   !
   !IF (verbosity > -1) THEN
@@ -1218,25 +1432,65 @@ SUBROUTINE extrapolate()
          !
          OPEN (17, file = filename, status = 'unknown')
          !
-         !DO i = 1,itermax 
-         !   WRITE(17,'(i5,2x,e21.15)') i,beta_store(ip,i)
-         !ENDDO
-         !
-         ! Write even iterations
-         !
-         DO i = 1, itermax0
-            IF (mod(i,2)==0) WRITE(17,'(i5,2x,e21.15)') i, beta_store(ip,i)
-         ENDDO
-         !
-         WRITE(17,*) '  '
-         !
-         ! Write odd iterations
-         !
-         DO i = 1, itermax0
-            IF (mod(i,2)==1) WRITE(17,'(i5,2x,e21.15)') i, beta_store(ip,i)
-         ENDDO
+         IF (magnons) THEN
+            !
+            DO i = 1,itermax 
+               WRITE(17,'(i5,2x,e21.15)') i,beta_store(ip,i)
+            ENDDO
+            !
+         ELSE
+            !
+            ! Write even iterations
+            !
+            DO i = 1, itermax0
+               IF (mod(i,2)==0) WRITE(17,'(i5,2x,e21.15)') i, beta_store(ip,i)
+            ENDDO
+            !
+            WRITE(17,*) '  '
+            !
+            ! Write odd iterations
+            !
+            DO i = 1, itermax0
+               IF (mod(i,2)==1) WRITE(17,'(i5,2x,e21.15)') i, beta_store(ip,i)
+            ENDDO
+            !
+         ENDIF
          !
          CLOSE(17)
+         !
+         IF (magnons) THEN
+            !
+            ! alpha coefficients
+            !
+            IF (n_ipol==3) filename = trim(prefix) // ".alpha_term." // trim(int_to_char(ip))
+            IF (n_ipol==1) filename = trim(prefix) // ".alpha_term." // trim(int_to_char(ipol))
+            !
+            filename = trim(tmp_dir) // trim(filename)
+            !
+            OPEN (17, file = filename, status = 'unknown')
+            !
+            DO i = 1,itermax
+               WRITE(17,'(i5,2x,e21.15,2x,e21.15)') i, dble(alpha_store(ip,i)), aimag(alpha_store(ip,i))
+            ENDDO
+            !
+            CLOSE(17)
+            !
+            ! gamma coefficients
+            !
+            IF (n_ipol==3) filename = trim(prefix) // ".gamma_term." // trim(int_to_char(ip))
+            IF (n_ipol==1) filename = trim(prefix) // ".gamma_term." // trim(int_to_char(ipol))
+            !
+            filename = trim(tmp_dir) // trim(filename)
+            !
+            OPEN (17, file = filename, status = 'unknown')
+            !
+            DO i = 1,itermax
+               WRITE(17,'(i5,2x,e21.15,2x,e21.15)') i, dble(gamma_magnons_store(ip,i)), aimag(gamma_magnons_store(ip,i))
+            ENDDO
+            !
+            CLOSE(17)
+            !
+         ENDIF
          !
       ENDDO
       !
@@ -1261,14 +1515,26 @@ SUBROUTINE calc_chi(freq,broad,chi)
   !
   DO ip =1, n_ipol
      !
-     a(:) = omeg_c
-     !
-     DO i = 1,itermax-1
+     IF (magnons) THEN
+        a(1) = omeg_c - alpha_store(ip,1)
         !
-        b(i) = cmplx(-beta_store(ip,i),0.0d0,dp)
-        c(i) = cmplx(-gamma_store(ip,i),0.0d0,dp)
+        DO i = 1,itermax-1
+           !
+           a(i+1) = omeg_c - alpha_store(ip,i+1)
+           b(i) = cmplx(-beta_store(ip,i+1),0.0d0,dp)
+           c(i) = -gamma_magnons_store(ip,i+1)
+           !
+        ENDDO
+     ELSE
+        a(:) = omeg_c
         !
-     ENDDO
+        DO i = 1,itermax-1
+           !
+           b(i) = cmplx(-beta_store(ip,i),0.0d0,dp)
+           c(i) = cmplx(-gamma_store(ip,i),0.0d0,dp)
+           !
+        ENDDO
+     ENDIF
      !
      r(ip,:) = (0.0d0,0.0d0)
      r(ip,1) = (1.0d0,0.0d0)
@@ -1286,29 +1552,51 @@ SUBROUTINE calc_chi(freq,broad,chi)
      ! Notice that brodening has a positive sign, 
      ! thus the abs. coefficient is Im(tr(chi)) not -Im(Tr(chi)) as usual
      ! 
-     DO ip2 = 1,n_ipol
-         !
-         chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
-         !
-         ! Multiplication with a norm
-         !
-         chi(ip,ip2) = chi(ip,ip2) * cmplx(norm0(ip),0.0d0,dp)
-         !
-         ! The response charge density is defined as 2*evc0*q, see Eq. (43) in
-         ! JCP 128, 154105 (2008). 
-         ! Therefore, the dipole is given by 2*degspin* zeta^T *
-         ! (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.
-         ! Optics: The minus sign accounts for the negative electron charge
-         ! (perturbation is -e E x, rather than E x)
-         !
-         ! 
-         IF (eels) THEN
-            chi(ip,ip2) = chi(ip,ip2) * cmplx( 2.d0*degspin, 0.d0, dp)
-         ELSE
-            chi(ip,ip2) = chi(ip,ip2) * cmplx(-2.d0*degspin, 0.d0, dp)
-         ENDIF
-         !
-     ENDDO
+     IF (magnons) THEN
+        DO ip2 = 1,n_op
+           !
+           chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
+           !
+           ! Multiplication with a norm
+           !
+           chi(ip,ip2) = chi(ip,ip2) * cmplx(norm0(ip),0.0d0,dp)
+           !
+           ! The response charge density is defined as 2*evc0*q, see Eq. (43) in
+           ! JCP 128, 154105 (2008).
+           ! Therefore, the dipole is given by 2*degspin* zeta^T *
+           ! (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.
+           ! Optics: The minus sign accounts for the negative electron charge
+           ! (perturbation is -e E x, rather than E x)
+           !
+           !
+           chi(ip,ip2) = chi(ip,ip2) * cmplx(degspin, 0.d0, dp)
+           !
+        ENDDO
+     ELSE
+        DO ip2 = 1,n_ipol
+           !
+           chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
+           !
+           ! Multiplication with a norm
+           !
+           chi(ip,ip2) = chi(ip,ip2) * cmplx(norm0(ip),0.0d0,dp)
+           !
+           ! The response charge density is defined as 2*evc0*q, see Eq. (43) in
+           ! JCP 128, 154105 (2008). 
+           ! Therefore, the dipole is given by 2*degspin* zeta^T *
+           ! (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.
+           ! Optics: The minus sign accounts for the negative electron charge
+           ! (perturbation is -e E x, rather than E x)
+           !
+           ! 
+           IF (eels) THEN
+              chi(ip,ip2) = chi(ip,ip2) * cmplx( 2.d0*degspin, 0.d0, dp)
+           ELSE
+              chi(ip,ip2) = chi(ip,ip2) * cmplx(-2.d0*degspin, 0.d0, dp)
+           ENDIF
+           !
+        ENDDO
+     ENDIF 
      !
   ENDDO
   !

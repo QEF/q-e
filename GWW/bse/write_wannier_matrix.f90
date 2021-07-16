@@ -7,7 +7,6 @@
 !  USE wannier_gw, ONLY : u_trans, num_nbndv
   USE wvfct,    ONLY : et,nbnd
   USE io_global, ONLY : stdout,ionode,ionode_id
-!  USE io_files, ONLY : find_free_unit, prefix
   USE io_files, ONLY : prefix, tmp_dir
   USE mp, ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm

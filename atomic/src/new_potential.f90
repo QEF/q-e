@@ -16,7 +16,7 @@ subroutine new_potential &
   use constants, only: fpi, e2
   use radial_grids, only: radial_grid_type, hartree
   use kinds, only : DP
-  use xc_lib, only: xclib_get_id, xclib_dft_is
+  use xc_lib, only: xclib_get_id, xclib_dft_is, xclib_dft_is_libxc
   use ld1inc, only : nwf, vx, vxc, exc, excgga, tau, vtau
   use kli, only : compute_kli_potential
   implicit none
@@ -37,8 +37,8 @@ subroutine new_potential &
   gga  = xclib_dft_is('gradient')
   meta = xclib_dft_is('meta')
 
-  oep = xclib_get_id('LDA','EXCH').eq.4
-  kli_= xclib_get_id('LDA','EXCH').eq.10
+  oep = xclib_get_id('LDA','EXCH')== 4 .and. (.not.xclib_dft_is_libxc('LDA','EXCH'))
+  kli_= xclib_get_id('LDA','EXCH')==10 .and. (.not.xclib_dft_is_libxc('LDA','EXCH'))
 
   nspin = 1
   if (lsd.eq.1) nspin = 2

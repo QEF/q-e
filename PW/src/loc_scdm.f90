@@ -66,6 +66,8 @@ SUBROUTINE localize_orbitals()
   USE buffers,              ONLY : get_buffer
   USE control_flags,        ONLY : lmd
   USE xc_lib,               ONLY : xclib_dft_is
+  !
+  USE wavefunctions_gpum,   ONLY : using_evc
   !   
   implicit none
   integer :: NGrid, ikq, NBands, npw
@@ -81,6 +83,8 @@ SUBROUTINE localize_orbitals()
          Call errore('localize_orbitals','MD+exx+nscdm NYI',1)
 
   QRCP = iscdm.eq.0.or.(mod(iscdm,n_scdm).eq.0) ! if .false. localize with SVD
+
+  CALL using_evc(0)
 
   write(stdout,'(A,I10,A)') 'QRCP every ',n_scdm, ' steps.'
   write(stdout,'(A,I6,A,L1)')  'localize_orbitals: iscdm=',iscdm,' QRCP=',QRCP
@@ -103,6 +107,7 @@ SUBROUTINE localize_orbitals()
     NBands = int(sum(x_occupation(:,ikq)))
     allocate( MatQ(NBands,NBands), MatC(NBands,NBands), evcbuff(npwx*npol, nbnd)   )
     IF ( lsda ) current_spin = isk(ikq) 
+    IF ( nks > 1 ) CALL using_evc(2)
     IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ikq)
     locmat(:,:,ikq) = One
     CALL measure_localization(HowTo,NBands,ikq)  ! compute: 

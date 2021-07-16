@@ -33,9 +33,9 @@ SUBROUTINE dnsq_bare
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             dnsbare, dnsbare_all_modes, proj1, proj2, read_dns_bare
   USE wvfct,         ONLY : npwx, wg, nbnd 
-  USE uspp,          ONLY : vkb, nkb 
+  USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatwfc, iuatswfc
   USE uspp_param,    ONLY : nh, nhm 
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk

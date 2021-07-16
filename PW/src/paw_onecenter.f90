@@ -307,6 +307,7 @@ MODULE paw_onecenter
     REAL(DP) :: integral  ! workspace
     TYPE(paw_info) :: i
     !
+    CALL errore('PAW_ddot','Please check that it is called by all procs in the image',1)
     CALL start_clock( 'PAW_ddot' )
     ! initialize 
     PAW_ddot = 0._DP
@@ -754,7 +755,7 @@ MODULE paw_onecenter
 !$omp workshare
     gc_rad = 0.0d0
     h_rad  = 0.0d0
-!$omp end workshare nowait
+!$omp end workshare
     !
     IF (PRESENT(energy)) THEN
 !$omp single

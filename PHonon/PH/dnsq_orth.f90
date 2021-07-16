@@ -36,13 +36,13 @@ SUBROUTINE dnsq_orth()
   USE klist,         ONLY : xk, wk,  ngk, igk_k
   USE wvfct,         ONLY : npwx, wg, nbnd 
   USE qpoint,        ONLY : nksq, ikks, ikqs
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatswfc
   USE uspp_param,    ONLY : nh
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions, ONLY : evc
   USE eqv,           ONLY : evq
-  USE uspp,          ONLY : okvan, nkb, vkb
+  USE uspp,          ONLY : okvan, nkb, vkb, ofsbeta
   USE control_flags, ONLY : iverbosity
   USE mp,            ONLY : mp_sum, mp_bcast 
   USE mp_pools,      ONLY : intra_pool_comm, inter_pool_comm

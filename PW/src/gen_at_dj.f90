@@ -22,8 +22,7 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    USE klist,       ONLY: xk, ngk, igk_k
    USE gvect,       ONLY: mill, eigts1, eigts2, eigts3, g
    USE wvfct,       ONLY: npwx
-   USE us,          ONLY: tab_at, dq
-   USE uspp_param,  ONLY: upf
+   USE uspp_param,  ONLY: upf, nwfcm
    USE basis,       ONLY: natomwfc
    !
    IMPLICIT NONE
@@ -35,15 +34,13 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    !
    ! ... local variables
    !
-   INTEGER :: l, na, nt, nb, iatw, iig, ig, i0, i1, i2 ,i3, m, lm, &
-              nwfcm, lmax_wfc, npw
-   REAL(DP) :: qt, arg, px, ux, vx, wx
+   INTEGER :: l, na, nt, nb, iatw, iig, ig, m, lm, lmax_wfc, npw
+   REAL(DP) :: arg
    COMPLEX(DP) :: phase, pref
    REAL(DP),    ALLOCATABLE :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
    ! 
    npw = ngk(ik)
-   nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
    ! calculate max angular momentum required in wavefunctions
    lmax_wfc = 0
    do nt = 1, ntyp
@@ -65,30 +62,9 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    !
    CALL ylmr2( (lmax_wfc+1)**2, npw, gk, q, ylm )
    !
-   q(:) = DSQRT(q(:))
+   q(:) = SQRT(q(:))*tpiba
+   CALL interp_atdwfc ( npw, q, nwfcm, djl )
    !
-   DO nt=1,ntyp
-      DO nb=1,upf(nt)%nwfc
-         IF (upf(nt)%oc(nb) >= 0.d0) THEN
-            DO ig = 1, npw
-               qt=q(ig)*tpiba
-               px = qt / dq - INT(qt/dq)
-               ux = 1.d0 - px
-               vx = 2.d0 - px
-               wx = 3.d0 - px
-               i0 = qt / dq + 1
-               i1 = i0 + 1
-               i2 = i0 + 2
-               i3 = i0 + 3
-               djl(ig,nb,nt) = &
-                     ( tab_at (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                       tab_at (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                       tab_at (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                       tab_at (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
-            ENDDO
-         ENDIF
-      ENDDO
-   ENDDO
    DEALLOCATE( q, gk )
    !
    ALLOCATE( sk(npw) )

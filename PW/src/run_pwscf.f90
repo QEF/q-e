@@ -59,6 +59,8 @@ SUBROUTINE run_pwscf( exit_status )
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
   !
+  USE device_fbuff_m,             ONLY : dev_buf
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(OUT) :: exit_status
@@ -76,6 +78,11 @@ SUBROUTINE run_pwscf( exit_status )
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
+  !
+  LOGICAL :: optimizer_failed = .FALSE.
+  !
+  INTEGER :: ierr
+  ! collect error codes
   !
   ions_status = 3
   exit_status = 0
@@ -193,7 +200,7 @@ SUBROUTINE run_pwscf( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        CALL move_ions ( idone, ions_status )
+        CALL move_ions ( idone, ions_status, optimizer_failed )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
@@ -216,7 +223,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
-     IF ( conv_ions ) EXIT main_loop
+     IF ( conv_ions .OR. optimizer_failed ) EXIT main_loop
      !
      ! ... receive new positions from MM code in QM/MM run
      !
@@ -276,17 +283,20 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ethr = 1.0D-6
      !
+     CALL dev_buf%reinit( ierr )
+     IF ( ierr .ne. 0 ) CALL errore( 'run_pwscf', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr) )
+     !
   ENDDO main_loop
   !
   ! ... save final data file
   !
   CALL qexsd_set_status( exit_status )
   IF ( lensemb ) CALL beef_energies( )
-  IF ( io_level > -1 ) CALL punch( 'all' )
+  IF ( io_level > -2 ) CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
   !
-  IF ( .NOT. conv_ions )  exit_status =  3
+  IF ( .NOT. conv_ions .OR. optimizer_failed )  exit_status =  3
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &

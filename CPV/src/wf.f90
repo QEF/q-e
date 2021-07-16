@@ -24,7 +24,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : pi, tpi
   USE ions_base,                ONLY : nsp, na, nax, nat, ityp
-  USE uspp,                     ONLY : indv_ijkb0, nkbus
+  USE uspp,                     ONLY : ofsbeta, nkbus
   USE uspp_param,               ONLY : upf
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
@@ -37,6 +37,15 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE wannier_base,             ONLY : wfg, nw, weight, indexplus, indexplusz, &
                                        indexminus, indexminusz, tag, tagp,     &
                                        expo, wfsd
+  USE wannier_base,             ONLY : becwf, cwf, bec2, bec3, bec2up,         &
+    &                                  bec2dw, bec3up, bec3dw, c_m, c_p, c_psp,&
+    &                                  c_msp, tagz, Uspin, Xsp, X, X2, X3, O,  &
+    &                                  Ospin, Oa, qv, fg1, gr, mt, mt0, wr, W, &
+    &                                  EW, f3, f4, U2
+  USE wannier_base,             ONLY : wannier_base_resize_scratch_only_once
+#if defined (__MPI)
+  USE wannier_base,             ONLY : psitot, psitot_pl, psitot_mi, ns
+#endif
   USE uspp_param,               ONLY : nh, nhm
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
@@ -63,20 +72,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   LOGICAL,     INTENT(IN)    :: what1
   REAL(DP),    INTENT(OUT)   :: wfc(3,nbsp)
   !
-  REAL(DP),    ALLOCATABLE :: becwf(:,:), temp3(:,:)
-  COMPLEX(DP), ALLOCATABLE :: cwf(:,:), bec2(:), bec3(:), bec2up(:)
-  COMPLEX(DP), ALLOCATABLE :: bec2dw(:), bec3up(:), bec3dw(:)
-  COMPLEX(DP), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:)
-  COMPLEX(DP), ALLOCATABLE :: c_msp(:,:)
-  INTEGER,     ALLOCATABLE :: tagz(:)
-  REAL(DP),    ALLOCATABLE :: Uspin(:,:)
-  COMPLEX(DP), ALLOCATABLE :: X(:,:), Xsp(:,:), X2(:,:), X3(:,:)
-  COMPLEX(DP), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: qv(:), fg1(:)
-  REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), mt0(:), wr(:), W(:,:), EW(:,:)
-  INTEGER,     ALLOCATABLE :: f3(:), f4(:)
-  COMPLEX(DP), ALLOCATABLE :: U2(:,:)
-  !
   INTEGER           :: inl, jnl, iss, is, ia, ijv, i, j, k, l, ig, &
                        ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, &
                        ibig3, ir1, ir2, ir3, ir, m,  &
@@ -98,73 +93,19 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   INTEGER :: nmin(3), nmax(3), n1,n2,nzx,nz,nz_
   INTEGER :: nmin1(3), nmax1(3)
   !
-  COMPLEX(DP), ALLOCATABLE :: psitot(:,:), psitot_pl(:,:)
-  COMPLEX(DP), ALLOCATABLE :: psitot_mi(:,:)
-  INTEGER,     ALLOCATABLE :: ns(:)
-  !
 #endif
   !
   CALL start_clock('wf_1')
   !
   me = me_bgrp + 1
   !
-  ALLOCATE( becwf(nkb,nbsp), temp3(nkb,nbsp), U2(nbsp,nbsp) )
-  ALLOCATE( cwf(ngw,nbspx), bec2(nbsp), bec3(nbsp), bec2up(nupdwn(1)) )
-  ALLOCATE( bec3up( nupdwn(1) ) )
-  IF( nspin == 2 ) THEN
-     ALLOCATE( bec2dw( nupdwn(2) ), bec3dw( nupdwn(2) ) )
-  ENDIF
+  call reusable_allocation
   ! 
   te = 0.D0
-  !
-  ALLOCATE( tagz( nw ))
-  !
   tagz(:) = 1
   tagz(3) = 0
   !
-  ! ... set up matrix O
-  !
-  ALLOCATE( O( nw, nbsp, nbsp ), X( nbsp, nbsp ), Oa( nw, nbsp, nbsp ) )
-  !
-  IF ( nspin == 2 .AND. nkbus > 0 ) THEN
-     !
-     ALLOCATE( X2( nupdwn(1), nupdwn(1) ) )
-     ALLOCATE( X3( nupdwn(2), nupdwn(2) ) )
-     !
-  END IF
-  !
 #if defined (__MPI)
-  !
-  ! Compute the number of states to each processor
-  !
-  ALLOCATE( ns( nproc_bgrp ) )
-  ns = nbsp / nproc_bgrp
-  DO j = 1, nbsp
-     IF( (j-1) < MOD( nbsp, nproc_bgrp ) ) ns( j ) = ns( j ) + 1 
-  END DO
-  IF( iverbosity > 2) THEN
-     DO j=1,nproc_bgrp
-        WRITE( stdout, * ) ns(j)
-     END DO
-  END IF
-  !
-  nstat = ns( me )
-
-  total = 0   
-  DO proc=1,nproc_bgrp
-     ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
-     total=total+ngpwpp(proc)
-     IF( iverbosity > 2) THEN
-        WRITE( stdout, * ) "I am proceessor", proc, "and i have ",ns(me)," states."
-     END IF
-  END DO
-  !
-  ALLOCATE(psitot(total,nstat))
-  ALLOCATE(psitot_pl(total,nstat))
-  ALLOCATE(psitot_mi(total,nstat))
-
-  ALLOCATE(c_p(ngw,nbspx))
-  ALLOCATE(c_m(ngw,nbspx))
   IF( iverbosity > 2) THEN
      WRITE( stdout, * ) "All allocations done"
   END IF
@@ -261,8 +202,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
     !
 #else
     !
-  ALLOCATE(c_p(ngw,nbspx))
-  ALLOCATE(c_m(ngw,nbspx))
   DO inw=1,nw
      IF(tagz(inw).EQ.0) THEN
         DO i=1,nbsp
@@ -310,16 +249,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
      ! ... Augmentation Part first
      !
-     ALLOCATE( qv( dfftb%nnr ) )
-     ALLOCATE( fg1( ngb ) )
-     !
      X = ZERO
      !
      DO ia =1, nat
         is = ityp(ia)
         IF( upf(is)%tvanp ) THEN
            DO iv = 1, nh(is)
-              inl = indv_ijkb0(ia) + iv
+              inl = ofsbeta(ia) + iv
               jv = iv 
               ijv=(jv-1)*jv/2 + iv
               fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
@@ -361,7 +297,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  END DO
               END IF
               DO jv = iv+1, nh(is)
-                 jnl = indv_ijkb0(ia) + jv
+                 jnl = ofsbeta(ia) + jv
                  ijv = (jv-1)*jv/2 + iv
                  fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
                  CALL fft_oned2box( qv, fg1 )
@@ -419,10 +355,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         WRITE( stdout, * ) "Augmentation Part Done"
      END IF
 
-     DEALLOCATE( qv )
-     DEALLOCATE( fg1 )
-
-
      !   Then Soft Part
      IF( nspin == 1 ) THEN
         !   Spin Unpolarized calculation
@@ -446,75 +378,62 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      ELSE
         !   Spin Polarized case
         !   Up Spin First
-        ALLOCATE(Xsp(nbsp,nupdwn(1)))
-        ALLOCATE(c_psp(ngw,nupdwn(1)))
-        ALLOCATE(c_msp(ngw,nupdwn(1)))
-        Xsp=0.D0
-        c_psp=0.D0 
-        c_msp=0.D0
+        Xsp(:,1:nupdwn(1))=0.D0
+        c_psp(:,1:nupdwn(1))=0.D0
+        c_msp(:,1:nupdwn(1))=0.D0
         DO i=1,nupdwn(1)
            c_psp(:,i)=c_p(:,i)
            c_msp(:,i)=c_m(:,i)
         END DO
         IF(gstart.EQ.2) THEN
-           c_msp(1,:)=0.D0
+           c_msp(1,1:nupdwn(1))=0.D0
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,               &
+          &        c_psp(:,1:nupdwn(1)),ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,               &
+          &        c_msp(:,1:nupdwn(1)),ngw,ONE,Xsp(:,1:nupdwn(1)),nbsp)
 #if defined(__MPI)
-        CALL mp_sum ( Xsp, intra_bgrp_comm )
+        CALL mp_sum ( Xsp(:,1:nupdwn(1)), intra_bgrp_comm )
 #endif
         DO i=1,nupdwn(1)
            DO j=1,nbsp
               X(j,i)=Xsp(j,i)
            END DO
         END DO
-        DEALLOCATE(Xsp,c_psp,c_msp)
         !    Then Down Spin
-        ALLOCATE(Xsp(nbsp,iupdwn(2):nbsp))
-        ALLOCATE(c_psp(ngw,iupdwn(2):nbsp))
-        ALLOCATE(c_msp(ngw,iupdwn(2):nbsp))
-        Xsp=0.D0
-        c_psp=0.D0
-        c_msp=0.D0
+        Xsp(:,iupdwn(2):nbsp)=0.D0
+        c_psp(:,iupdwn(2):nbsp)=0.D0
+        c_msp(:,iupdwn(2):nbsp)=0.D0
         DO i=iupdwn(2),nbsp
            c_psp(:,i)=c_p(:,i)
            c_msp(:,i)=c_m(:,i)
         END DO
         IF(gstart.EQ.2) THEN
-           c_msp(1,:)=0.D0
+           c_msp(1,iupdwn(2):nbsp)=0.D0
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,                     &
+          &        c_psp(:,iupdwn(2):nbsp),ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,                     &
+          &        c_msp(:,iupdwn(2):nbsp),ngw,ONE,Xsp(:,iupdwn(2):nbsp),nbsp)
 #if defined(__MPI)
-        CALL mp_sum ( Xsp, intra_bgrp_comm )
+        CALL mp_sum ( Xsp(:,iupdwn(2):nbsp), intra_bgrp_comm )
 #endif
         DO i=iupdwn(2),nbsp
            DO j=1,nbsp
               X(j,i)=Xsp(j,i)
            END DO
         END DO
-        DEALLOCATE(Xsp,c_psp,c_msp)
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
      END IF
 
 
   END DO
 
-#if defined(__MPI)
-  DEALLOCATE(ns)
-#endif
-
   CALL stop_clock('wf_1')
-
-  DEALLOCATE( X )
-  IF ( ALLOCATED( X2 ) )  DEALLOCATE( X2 )
-  IF ( ALLOCATED( X3 ) )  DEALLOCATE( X3 )
-  !
 
   CALL start_clock('wf_2')
 
@@ -639,8 +558,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ! calculate wannier-function centers
   !
-  ALLOCATE( wr(nw), W(nw,nw), gr(nw,3), EW(nw,nw), f3(nw), f4(nw), mt0(nw), mt(nw) )
-  !
   DO inw=1, nw
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   END DO
@@ -693,30 +610,90 @@ COMB:   DO k=3**nw-1,0,-1
      !
   END DO
   !
-  DEALLOCATE( wr, W, gr, EW, f3, f4, mt0, mt )
-  !
-#if defined (__MPI)
-  !
-  DEALLOCATE( psitot )
-  DEALLOCATE( psitot_pl )
-  DEALLOCATE( psitot_mi )
-  !
-#endif
-  !
-  DEALLOCATE( c_p, c_m )
-  !
-  DEALLOCATE( O )
-  DEALLOCATE( Oa )
-  DEALLOCATE( tagz )
-  DEALLOCATE( becwf, temp3, U2 )
-  DEALLOCATE( cwf, bec2, bec3, bec2up, bec3up )
-  IF( ALLOCATED( bec2dw ) ) DEALLOCATE( bec2dw )
-  IF( ALLOCATED( bec3dw ) ) DEALLOCATE( bec3dw )
-
   CALL stop_clock('wf_2')
   !
   RETURN
   !
+CONTAINS
+
+  SUBROUTINE  reusable_allocation()
+    IMPLICIT NONE
+    IF (.NOT.ALLOCATED(becwf))  ALLOCATE(becwf(nkb,nbsp))
+    IF (.NOT.ALLOCATED(U2))     ALLOCATE(U2(nbsp,nbsp))
+    IF (.NOT.ALLOCATED(cwf))    ALLOCATE(cwf(ngw,nbspx))
+    IF (.NOT.ALLOCATED(bec2))   ALLOCATE(bec2(nbsp))
+    IF (.NOT.ALLOCATED(bec3))   ALLOCATE(bec3(nbsp))
+    IF (.NOT.ALLOCATED(bec2up)) ALLOCATE(bec2up(nupdwn(1)))
+    IF (.NOT.ALLOCATED(bec3up)) ALLOCATE(bec3up(nupdwn(1)))
+    IF( nspin == 2 ) THEN
+      IF (.NOT.ALLOCATED(bec2dw)) ALLOCATE(bec2dw(nupdwn(2)))
+      IF (.NOT.ALLOCATED(bec3dw)) ALLOCATE(bec3dw(nupdwn(2)))
+    ENDIF
+    IF (.NOT.ALLOCATED(tagz)) ALLOCATE(tagz(nw))
+    !
+    !
+    ! ... set up matrix O
+    !
+    IF (.NOT.ALLOCATED(O))  ALLOCATE(O(nw,nbsp,nbsp))
+    call wannier_base_resize_scratch_only_once(nbsp)
+    IF (.NOT.ALLOCATED(Oa)) ALLOCATE(Oa(nw,nbsp,nbsp))
+    IF ( nspin == 2 .AND. nkbus > 0 ) THEN
+      IF (.NOT.ALLOCATED(X2)) ALLOCATE(X2(nupdwn(1),nupdwn(1)))
+      IF (.NOT.ALLOCATED(X3)) ALLOCATE(X3(nupdwn(2),nupdwn(2)))
+    END IF
+    !
+#if defined (__MPI)
+    !
+    ! Compute the number of states to each processor
+    !
+    IF (.NOT.ALLOCATED(ns)) ALLOCATE( ns( nproc_bgrp ) )
+    ns = nbsp / nproc_bgrp
+    DO j = 1, nbsp
+      IF( (j-1) < MOD( nbsp, nproc_bgrp ) ) ns( j ) = ns( j ) + 1 
+    END DO
+    IF( iverbosity > 2) THEN
+      DO j=1,nproc_bgrp
+        WRITE( stdout, * ) ns(j)
+      END DO
+    END IF
+    !
+    nstat = ns( me )
+
+    total = 0   
+    DO proc=1,nproc_bgrp
+      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
+      total=total+ngpwpp(proc)
+      IF( iverbosity > 2) THEN
+        WRITE( stdout, * ) "I am proceessor", proc, "and i have ",ns(me)," states."
+      END IF
+    END DO
+    !
+    IF (.NOT.ALLOCATED(psitot))    ALLOCATE(psitot(total,nstat))
+    IF (.NOT.ALLOCATED(psitot_pl)) ALLOCATE(psitot_pl(total,nstat))
+    IF (.NOT.ALLOCATED(psitot_mi)) ALLOCATE(psitot_mi(total,nstat))
+#endif
+    IF (.NOT.ALLOCATED(c_p))       ALLOCATE(c_p(ngw,nbspx))
+    IF (.NOT.ALLOCATED(c_m))       ALLOCATE(c_m(ngw,nbspx))
+    !
+    IF (.NOT.ALLOCATED(qv))        ALLOCATE( qv( dfftb%nnr ) )
+    IF (.NOT.ALLOCATED(fg1))       ALLOCATE( fg1( ngb ) )
+    !
+    IF (.NOT.ALLOCATED(wr))        ALLOCATE(wr(nw))
+    IF (.NOT.ALLOCATED(W))         ALLOCATE(W(nw,nw))
+    IF (.NOT.ALLOCATED(gr))        ALLOCATE(gr(nw,3))
+    IF (.NOT.ALLOCATED(EW))        ALLOCATE(EW(nw,nw))
+    IF (.NOT.ALLOCATED(f3))        ALLOCATE(f3(nw))
+    IF (.NOT.ALLOCATED(f4))        ALLOCATE(f4(nw))
+    IF (.NOT.ALLOCATED(mt0))       ALLOCATE(mt0(nw))
+    IF (.NOT.ALLOCATED(mt))        ALLOCATE(mt(nw))
+    !
+    IF( nspin /= 1 ) THEN
+      IF (.NOT.ALLOCATED(Xsp))     ALLOCATE(Xsp(nbsp,nbsp))
+      IF (.NOT.ALLOCATED(c_psp))   ALLOCATE(c_psp(ngw,nbsp))
+      IF (.NOT.ALLOCATED(c_msp))   ALLOCATE(c_msp(ngw,nbsp))
+    END IF
+    RETURN
+  END SUBROUTINE reusable_allocation
 END SUBROUTINE wf
 !
 !----------------------------------------------------------------------------

@@ -194,6 +194,7 @@ MODULE paw_init
     IF ( starting_wfc=='random')        noise = 0.10_DP
     !
     becsum = 0.0_DP
+    !
     na_loop: DO na = 1, nat
        nt = ityp(na)
        is_paw: IF (upf(nt)%tpawp) THEN

@@ -41,7 +41,7 @@ MODULE funct
   ! XC non local index
   PRIVATE :: inlc
   !
-  CHARACTER(LEN=32) :: dft = 'not set'
+  CHARACTER(LEN=37) :: dft = 'not set'
   !
   ! ------------------------------------------------------------------------
   ! "dft" is the exchange-correlation functional label, as set by the user,
@@ -55,7 +55,8 @@ MODULE funct
   !              "pw91"  = "sla+pw+ggx+ggc"    = PW91 (aka GGA)
   !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
   !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
-  !              "revpbe"= "sla+pw+rpb+pbc"    = revPBE (Zhang-Yang)
+  !              "revpbe"= "sla+pw+revx+pbc"   = revPBE (Zhang-Yang)
+  !              "rpbe"  = "sla+pw+hhnx+pbc"   = RPBE (Hammer-Hansen-Norskov)
   !              "pw86pbe" = "sla+pw+pw86+pbc" = PW86 exchange + PBE correlation
   !              "b86bpbe" = "sla+pw+b86b+pbc" = B86b exchange + PBE correlation
   !              "pbesol"= "sla+pw+psx+psc"    = PBEsol
@@ -79,7 +80,7 @@ MODULE funct
   !              "x3lyp"                        = X3LYP
   !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
-  !              "vdw-df"       ="sla+pw+rpb +vdw1"      = vdW-DF1
+  !              "vdw-df"       ="sla+pw+revx+vdw1"      = vdW-DF1
   !              "vdw-df2"      ="sla+pw+rw86+vdw2"      = vdW-DF2
   !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"      = vdW-DF-C09
   !              "vdw-df2-c09"  ="sla+pw+c09x+vdw2"      = vdW-DF2-C09
@@ -132,7 +133,7 @@ MODULE funct
   !              "b88"    Becke88 (beta=0.0042)          igcx =1
   !              "ggx"    Perdew-Wang 91                 igcx =2
   !              "pbx"    Perdew-Burke-Ernzenhof exch    igcx =3
-  !              "rpb"    revised PBE by Zhang-Yang      igcx =4
+  !              "revx"   revised PBE by Zhang-Yang      igcx =4
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
   !              "optx"   Handy's exchange functional    igcx =6
   !              "pb0x"   PBE0 (PBE exchange*0.75)       igcx =8
@@ -170,7 +171,7 @@ MODULE funct
   !              "b86x"   B86b exchange * 0.75           igcx =41
   !              "b88x"   B88 exchange * 0.50            igcx =42
   !              "beex"   BEE exchange                   igcx =43 
-  !              "rpbe"   Hammer-Hansen-Norskov          igcx =44
+  !              "hhnx"   Hammer-Hansen-Norskov          igcx =44
   !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
   !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
   !
@@ -508,7 +509,8 @@ CONTAINS
     igcc  = xclib_get_id('GGA','CORR')
     imeta = xclib_get_id('MGGA','EXCH')
     !
-    IF (igcx == 6) CALL infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
+    IF (igcx == 6 .AND. .NOT.xclib_dft_is_libxc('GGA','EXCH') ) &
+                CALL infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
     !
     ! check for unrecognized labels
     !
@@ -632,7 +634,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_dft_name()
     !! Get the string with the full dft name.
-    CHARACTER(LEN=32) :: get_dft_name
+    CHARACTER(LEN=37) :: get_dft_name
     get_dft_name = dft
     RETURN
   END FUNCTION get_dft_name
@@ -720,8 +722,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=32) :: get_dft_short
-    CHARACTER(LEN=32) :: shortname
+    CHARACTER(LEN=37) :: get_dft_short
+    CHARACTER(LEN=37) :: shortname
     INTEGER :: iexch, icorr, igcx, igcc, imeta, imetac
     !
     shortname = 'no shortname'
@@ -753,6 +755,9 @@ CONTAINS
            shortname = 'VDW-DF-OBK8'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==40 .AND. igcc==0) THEN
            shortname = 'VDW-DF-C090'
+        ELSE
+           shortname = xclib_get_dft_short()
+           shortname = TRIM(shortname)//'-'//TRIM(nonlocc(1))
         ENDIF
         !
       ELSEIF (inlc==2) THEN
@@ -769,6 +774,9 @@ CONTAINS
            shortname = 'VDW-DF2-0'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
+        ELSE
+           shortname = xclib_get_dft_short()
+           shortname = TRIM(shortname)//'-'//TRIM(nonlocc(2))
         ENDIF
         !
       ELSEIF (inlc==3) THEN
@@ -803,8 +811,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=32) :: get_dft_long
-    CHARACTER(LEN=32) :: longname
+    CHARACTER(LEN=37) :: get_dft_long
+    CHARACTER(LEN=37) :: longname
     !
     !WRITE(longname,'(4a5)') exc(iexch), corr(icorr), gradx(igcx), gradc(igcc)
     !

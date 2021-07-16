@@ -2,15 +2,22 @@
 # Library of pseudopotential code
 
 This directory contains a library of pseudopotential-related code,
-extracted from the Quantum ESPRESSO distribution. This library is
-almost stand-alone, except for the usage of FoX modules and routines,
-for some calls to LAPACK routines, and for the need to include a
-suitable `../make.inc` file in Makefile. Other than this, it can be
-independently compiled.
+extracted from the Quantum ESPRESSO distribution. This library depends only
+upon module mp.f90 of UtilXlib and upon a few modules and routines of devXlib;
+upon a few LAPACK routines; requires a suitable `../make.inc` file in Makefile. 
+Other than this, it can be independently compiled.
 
-Currently, it includes basic definitions of the UPF (Unified Pseudopotential
-File) format and I/O operations on them. UPF specifications are here:
+Currently, it includes
+- basic definitions of the UPF (Unified Pseudopotential File) format
+- basic I/O operations on UPF files
+- setup of the interpolation tables and of other basic variables 
+- interpolation of pseudopotentials
+- generation of various pseudopotentials matrix elements
+- utilities: spherical harmonics and Bessel functions, integration routines
+Old UPF specifications can be found here:
 http://www.quantum-espresso.org/pseudopotentials/unified-pseudopotential-format
+The xml schema for the newer UPF definition can be found here:
+http://www.quantum-espresso.org/ns/qes/qe_pp-1.0.xsd
 
 In addition to the `libupf.a` library, two executable utilities are produced:
 
@@ -25,9 +32,10 @@ characters from UPF files that hinder their parsing by xml tools.
 
 ## CASINO and QE pseudopotentials
 
-The following notes are kept for reference. `upfconv.x -c` replaces
-code `upf2casino2.x` mentioned below. Code `casino2upf.f90` is still
-present in the distribution but needs some work.
+The following notes are kept for reference (they might be obsolete).
+Code `upfconv.x -c` should replace code `upf2casino2.x` mentioned below.
+Code `casino2upf.x` was moved to upflib/ and works (?) again, at least
+for the example provided by Jake Muff, since v.6.8. Old notes start here:
 
 Two utilities are provided with the Quantum Espresso distribution to 
 enable the PWscf code to be used in conjunction with the CASINO quantum 

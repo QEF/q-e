@@ -196,9 +196,9 @@ SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
          END IF
          !
          IF( nrsnd( ipr_old ) /= ire - irb + 1 ) &
-            CALL lax_error__( " dsqmred ", " somthing wrong with row 1 ", nrsnd( ipr_old ) )
+            CALL lax_error__( " dsqmred ", " something wrong with row 1 ", nrsnd( ipr_old ) )
          IF( nrsnd( ipr_old ) /= ire_new( ipr_old ) - irb_new( ipr_old ) + 1 ) &
-            CALL lax_error__( " dsqmred ", " somthing wrong with row 2 ", nrsnd( ipr_old ) )
+            CALL lax_error__( " dsqmred ", " something wrong with row 2 ", nrsnd( ipr_old ) )
          !
          nrsnd( ipr_old ) = nrsnd( ipr_old ) * desca%nc
          !
@@ -215,7 +215,7 @@ SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
                   IF( ierr /= 0 ) &
                      CALL lax_error__( " dsqmred ", " in mpi_get_count ", ABS( ierr ) )
                   IF( ib /= nrsnd(ipr_old) ) &
-                     CALL lax_error__( " dsqmred ", " somthing wrong with row 3 ", ib )
+                     CALL lax_error__( " dsqmred ", " something wrong with row 3 ", ib )
                   ib = 0
                   DO j = 1, desca%nc
                      DO i = irb_new( ipr_old ), ire_new( ipr_old )
@@ -308,9 +308,9 @@ SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
          END IF
 
          IF( ncsnd( ipc_old ) /= ice-icb+1 ) &
-            CALL lax_error__( " dsqmred ", " somthing wrong with col 1 ", ncsnd( ipc_old ) )
+            CALL lax_error__( " dsqmred ", " something wrong with col 1 ", ncsnd( ipc_old ) )
          IF( ncsnd( ipc_old ) /= ice_new( ipc_old ) - icb_new( ipc_old ) + 1 ) &
-            CALL lax_error__( " dsqmred ", " somthing wrong with col 2 ", ncsnd( ipc_old ) )
+            CALL lax_error__( " dsqmred ", " something wrong with col 2 ", ncsnd( ipc_old ) )
          !
          ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb%nrcx
          !
@@ -328,7 +328,7 @@ SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
                   IF( ierr /= 0 ) &
                      CALL lax_error__( " dsqmred ", " in MPI_GET_COUNT 2 ", ABS( ierr ) )
                   IF( ib /= ncsnd(ipc_old) ) &
-                     CALL lax_error__( " dsqmred ", " somthing wrong with col 3 ", ib )
+                     CALL lax_error__( " dsqmred ", " something wrong with col 3 ", ib )
                END IF
             END IF
          END DO
@@ -575,9 +575,9 @@ SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
          END IF
          !
          IF( nrsnd( ipr_old ) /= ire - irb + 1 ) &
-            CALL lax_error__( " zsqmred ", " somthing wrong with row 1 ", nrsnd( ipr_old ) )
+            CALL lax_error__( " zsqmred ", " something wrong with row 1 ", nrsnd( ipr_old ) )
          IF( nrsnd( ipr_old ) /= ire_new( ipr_old ) - irb_new( ipr_old ) + 1 ) &
-            CALL lax_error__( " zsqmred ", " somthing wrong with row 2 ", nrsnd( ipr_old ) )
+            CALL lax_error__( " zsqmred ", " something wrong with row 2 ", nrsnd( ipr_old ) )
          !
          nrsnd( ipr_old ) = nrsnd( ipr_old ) * desca%nc
          !
@@ -594,7 +594,7 @@ SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
                   IF( ierr /= 0 ) &
                      CALL lax_error__( " zsqmred ", " in MPI_GET_COUNT 1 ", ABS( ierr ) )
                   IF( ib /= nrsnd(ipr_old) ) &
-                     CALL lax_error__( " zsqmred ", " somthing wrong with row 3 ", ib )
+                     CALL lax_error__( " zsqmred ", " something wrong with row 3 ", ib )
                   ib = 0
                   DO j = 1, desca%nc
                      DO i = irb_new( ipr_old ), ire_new( ipr_old )
@@ -679,9 +679,9 @@ SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
          END IF
 
          IF( ncsnd( ipc_old ) /= ice-icb+1 ) &
-            CALL lax_error__( " zsqmred ", " somthing wrong with col 1 ", ncsnd( ipc_old ) )
+            CALL lax_error__( " zsqmred ", " something wrong with col 1 ", ncsnd( ipc_old ) )
          IF( ncsnd( ipc_old ) /= ice_new( ipc_old ) - icb_new( ipc_old ) + 1 ) &
-            CALL lax_error__( " zsqmred ", " somthing wrong with col 2 ", ncsnd( ipc_old ) )
+            CALL lax_error__( " zsqmred ", " something wrong with col 2 ", ncsnd( ipc_old ) )
          !
          ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb%nrcx
          !
@@ -699,7 +699,7 @@ SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
                   IF( ierr /= 0 ) &
                      CALL lax_error__( " zsqmred ", " in MPI_GET_COUNT 2 ", ABS( ierr ) )
                   IF( ib /= ncsnd(ipc_old) ) &
-                     CALL lax_error__( " zsqmred ", " somthing wrong with col 3 ", ib )
+                     CALL lax_error__( " zsqmred ", " something wrong with col 3 ", ib )
                END IF
             END IF
          END DO
@@ -3719,13 +3719,10 @@ SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP), DEVICE    :: a(:,:)
-   REAL(DP)            :: b(:,:)
+   REAL(DP), DEVICE    :: b(:,:)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
-   REAL(DP), ALLOCATABLE :: wrk(:,:)
-#if defined(__GPU_MPI)
-   ATTRIBUTES(DEVICE) :: wrk
-#endif
+   REAL(DP), ALLOCATABLE :: a_h(:,:), b_h(:,:)
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
    INTEGER :: comm
@@ -3778,30 +3775,30 @@ SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
       CALL lax_error__( " redist_row2col_gpu ", " in MPI_BARRIER ", ABS( ierr ) )
    !
 #if defined(__GPU_MPI)
-   ALLOCATE( wrk(SIZE(b,1),SIZE(b,2)), STAT=ierr )
    IF( ierr /= 0 ) &
       CALL lax_error__( " redist_row2col_gpu ", " allocating wrk ", ABS( ierr ) )
    !
    ierr = cudaDeviceSynchronize()
    CALL MPI_SENDRECV(a, ldx*nx, MPI_DOUBLE_PRECISION, idest, np+np+1, &
-                     wrk, ldx*nx, MPI_DOUBLE_PRECISION, isour, np+np+1, comm, istatus, ierr)
-   IF( ierr /= 0 ) &
-      CALL lax_error__( " redist_row2col_gpu ", " in MPI_SENDRECV ", ABS( ierr ) )
-
-   b = wrk
-   !
-   DEALLOCATE( wrk )
-#else
-   ALLOCATE( wrk, SOURCE=a, STAT=ierr )
-   IF( ierr /= 0 ) &
-      CALL lax_error__( " redist_row2col_gpu ", " allocating wrk ", ABS( ierr ) )
-   !
-   CALL MPI_SENDRECV(wrk, ldx*nx, MPI_DOUBLE_PRECISION, idest, np+np+1, &
                      b, ldx*nx, MPI_DOUBLE_PRECISION, isour, np+np+1, comm, istatus, ierr)
    IF( ierr /= 0 ) &
       CALL lax_error__( " redist_row2col_gpu ", " in MPI_SENDRECV ", ABS( ierr ) )
+#else
+   ALLOCATE( a_h, SOURCE=a, STAT=ierr )
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " redist_row2col_gpu ", " allocating a_h ", ABS( ierr ) )
+   ALLOCATE( b_h, MOLD=b, STAT=ierr )
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " redist_row2col_gpu ", " allocating b_h ", ABS( ierr ) )
    !
-   DEALLOCATE( wrk )
+   CALL MPI_SENDRECV(a_h, ldx*nx, MPI_DOUBLE_PRECISION, idest, np+np+1, &
+                     b_h, ldx*nx, MPI_DOUBLE_PRECISION, isour, np+np+1, comm, istatus, ierr)
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " redist_row2col_gpu ", " in MPI_SENDRECV ", ABS( ierr ) )
+   !
+   b = b_h
+   !
+   DEALLOCATE( a_h, b_h )
 #endif
    !
 #else

@@ -23,7 +23,7 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   USE lsda_mod,             ONLY : current_spin, nspin
   USE scf,                  ONLY : vrs  
   USE gvect
-  USE uspp,                 ONLY : okvan, nkb, vkb, qq_so, qq_at
+  USE uspp,                 ONLY : okvan, nkb, vkb, qq_so, qq_at, using_vkb
   USE uspp_param,           ONLY : nh, nhm, nbetam
   USE bp
   USE klist
@@ -92,6 +92,7 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
             ENDIF
          ENDDO
       ENDDO
+      CALL using_vkb(0)
       CALL calbec( npw, vkb, psi, becp0, nbande )
   ENDIF
   !
@@ -237,6 +238,7 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
      !
      CALL stop_clock( 'h_eps_van2' )
      !
+     CALL using_vkb(0)
      CALL ZGEMM( 'N', 'N', npw, nbnd*npol, nkb, (1.d0, 0.d0), vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0), evct, npwx )
      !

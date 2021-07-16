@@ -7,8 +7,8 @@ SUBROUTINE openfil_bse()
   USE noncollin_module, ONLY : npol
   USE basis,            ONLY : natomwfc
   USE ions_base,        ONLY : nat, ityp
-  USE noncollin_module,   ONLY : noncolin
-  USE uspp_param,         ONLY : n_atom_wfc
+  USE noncollin_module, ONLY : noncolin
+  USE upf_ions,         ONLY : n_atom_wfc
 
 
 

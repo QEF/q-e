@@ -108,7 +108,7 @@ elseif(QE_FFTW_VENDOR STREQUAL "FFTW3")
     if(FFTW3_FOUND)
         qe_add_global_compile_definitions(__FFTW3)
         set(qe_fft_wrappers fft_scalar.FFTW3.f90)
-        target_link_libraries(qe_fft INTERFACE FFTW)
+        target_link_libraries(qe_fft INTERFACE FFTW3)
         message(STATUS "Found FFTW3 library")
     else()
         message(FATAL_ERROR "Failed to find ${QE_FFTW_VENDOR} library. "
@@ -169,8 +169,7 @@ target_link_libraries(qe_fftx
     PRIVATE
         qe_fft
         qe_openmp_fortran
-        qe_mpi_fortran
-        qe_utilx)
+        qe_mpi_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_fftx
         PRIVATE
@@ -189,12 +188,14 @@ if(QE_ENABLE_TEST)
     set_target_properties(qe_fftx_test 
         PROPERTIES 
             OUTPUT_NAME qe_fftx_test.x 
-            RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
     target_link_libraries(qe_fftx_test
         PRIVATE
             qe_openmp_fortran
             qe_mpi_fortran
             qe_fftx)
-    add_test(NAME test_qe_fftx 
-        COMMAND ${QE_TESTS_DIR}/qe_fftx_test.x)
+    add_unit_test(test_qe_fftx-r1-t1 1 1 $<TARGET_FILE:qe_fftx_test>)
+    add_unit_test(test_qe_fftx-r1-t3 1 3 $<TARGET_FILE:qe_fftx_test>)
+    add_unit_test(test_qe_fftx-r3-t1 3 1 $<TARGET_FILE:qe_fftx_test>)
+    add_unit_test(test_qe_fftx-r3-t2 3 2 $<TARGET_FILE:qe_fftx_test>)
 endif()

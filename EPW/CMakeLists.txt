@@ -49,22 +49,24 @@ set(sources
     src/stop_epw.f90
     src/wannierEPW.f90
     src/loadbm.f90
+    src/bfield.f90
+    src/io_indabs.f90
     src/ephblochkq.f90
     src/wfc_elec.f90
     src/test_tools.f90)
 
 qe_add_library(qe_epw ${sources})
-target_link_libraries(qe_epw
-    PRIVATE
-        qe_wannier90
-        qe_modules
-        qe_lr_modules
-        qe_phonon_ph
-        qe_pw
-        qe_mpi_fortran
-        qe_upflib
-        qe_fftx
-        qe_xclib)
+target_link_libraries(
+    qe_epw
+    PRIVATE qe_wannier90
+            qe_modules
+            qe_lr_modules
+            qe_phonon_ph
+            qe_pw
+            qe_mpi_fortran
+            qe_upflib
+            qe_fftx
+            qe_xclib)
 
 ###########################################################
 # epw.x
@@ -72,14 +74,55 @@ target_link_libraries(qe_epw
 set(sources src/epw.f90)
 qe_add_executable(qe_epw_exe ${sources})
 set_target_properties(qe_epw_exe PROPERTIES OUTPUT_NAME epw.x)
-target_link_libraries(qe_epw_exe
-    PRIVATE
-        qe_modules
-        qe_pp
-	    qe_pw
-	    qe_fftx
-        qe_epw
-        qe_upflib)
+target_link_libraries(qe_epw_exe PRIVATE qe_modules qe_pw qe_fftx qe_epw qe_upflib)
+
+###########################################################
+# ZG.x
+###########################################################
+set(sources ZG/src/ZG.f90)
+qe_add_executable(qe_zg_exe ${sources})
+set_target_properties(qe_zg_exe PROPERTIES OUTPUT_NAME ZG.x)
+target_link_libraries(qe_zg_exe PRIVATE qe_modules qe_pw qe_phonon_ph qe_lr_modules qe_lapack)
+
+###########################################################
+# disca.x
+###########################################################
+set(sources ZG/src/disca.f90)
+qe_add_executable(qe_zg_disca_exe ${sources})
+set_target_properties(qe_zg_disca_exe PROPERTIES OUTPUT_NAME disca.x)
+target_link_libraries(qe_zg_disca_exe PRIVATE qe_modules qe_pw qe_phonon_ph qe_lr_modules qe_lapack)
+
+###########################################################
+# pp_disca.x
+###########################################################
+set(sources ZG/src/pp_disca.f90)
+qe_add_executable(qe_zg_pp_disca_exe ${sources})
+set_target_properties(qe_zg_pp_disca_exe PROPERTIES OUTPUT_NAME pp_disca.x)
+target_link_libraries(qe_zg_pp_disca_exe PRIVATE qe_modules qe_lr_modules qe_lapack)
+
+###########################################################
+# bands_unfold.x
+###########################################################
+set(src_bands_unfold_x ZG/src/bands_unfold.f90)
+qe_add_executable(qe_zg_bands_unfold_exe ${sources})
+set_target_properties(qe_zg_bands_unfold_exe PROPERTIES OUTPUT_NAME bands_unfold.x)
+target_link_libraries(qe_zg_bands_unfold_exe PRIVATE qe_pw qe_modules qe_pp qe_upflib)
+
+###########################################################
+# pp_spctrlfn.x
+###########################################################
+set(sources ZG/src/pp_spctrlfn.f90)
+qe_add_executable(qe_zg_pp_spctrlfn_exe ${sources})
+set_target_properties(qe_zg_pp_spctrlfn_exe PROPERTIES OUTPUT_NAME pp_spctrlfn.x)
+target_link_libraries(qe_zg_pp_spctrlfn_exe PRIVATE qe_modules qe_lr_modules qe_lapack)
+
+###########################################################
+# epsilon_Gaus.x
+###########################################################
+set(src_epsilon_Gaus_x ZG/src/epsilon_Gaus.f90)
+qe_add_executable(qe_zg_epsilon_Gaus_exe ${sources})
+set_target_properties(qe_zg_epsilon_Gaus_exe PROPERTIES OUTPUT_NAME epsilon_Gaus.x)
+target_link_libraries(qe_zg_epsilon_Gaus_exe PRIVATE qe_pw qe_modules qe_pp qe_upflib)
 
 ###########################################################
 
@@ -87,4 +130,6 @@ qe_install_targets(
     # Libraries
     qe_epw
     # Exacutables
-    qe_epw_exe)
+    qe_epw_exe qe_zg_exe qe_zg_disca_exe qe_zg_pp_disca_exe qe_zg_bands_unfold_exe qe_zg_pp_spctrlfn_exe qe_zg_epsilon_Gaus_exe)
+
+install(PROGRAMS bin/pp.py TYPE BIN RENAME epw_pp.py)

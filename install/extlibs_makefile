@@ -97,7 +97,6 @@ libcuda_devxlib :
     tar xzf devxlib.tar.gz --strip-components=1 -C . ; \
     rm devxlib.tar.gz ; \
     fi; \
-    if test ! -f make.inc; then \
     touch make.inc; \
     $(MAKE) clean; \
     export F90FLAGS="$(FOX_FLAGS)"; \
@@ -107,7 +106,6 @@ libcuda_devxlib :
                 --with-cuda-runtime=$(CUDA_RUNTIME) \
                 --disable-parallel \
                 --enable-cuda-env-check=no; \
-    fi; \
     make all
 	touch ../install/libcuda_devxlib # do not download and configure again
 
