@@ -256,7 +256,7 @@ SUBROUTINE US_make_ae_charge(rho,withcore)
          !
     WRITE(stdout,*) 'Number of points: ',irt,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
     WRITE(stdout,*) 'volume: ',fpi*sqrt(rcsq)**3/3.0_dp,dvol*volc*irt
-    WRITE(stdout,'(a,i,a,f10.5)') 'Core: ',ia,' Number of electrons: ',sum2*dvol
+    WRITE(stdout,'(a,i3,a,f10.5)') 'Core: ',ia,' Number of electrons: ',sum2*dvol
    ENDDO atoms
    !
  ENDIF ifUS
@@ -462,11 +462,11 @@ SUBROUTINE init_cores(ntyp,nspin,rho_atc,rcsq,dr,maxR)
   Zc=Z-Zv
   Zsc=Zcmax(i)-Zc
   isc=Zsc/2
-  WRITE(stdout,'(a,i,f4.0,f4.0,f4.0,i4,i4,i4)') &
+  WRITE(stdout,'(a,i4,f4.0,f4.0,f4.0,i4,i4,i4)') &
    "INIT_CORE: core in pseudo ",&
    ia,Z,Zv,Zc,isc,iSTO(i),nSTO(i)
   DO nlm=iSTO(i)+isc+1,iSTO(i)+nSTO(i)
-   WRITE(stdout,'(a,i4,i4,f10.3,e,f10.3,f10.3)') &
+   WRITE(stdout,'(a,i4,i4,f10.3,e10.4,f10.3,f10.3)') &
     "INIT_CORE: Slater parameters (type,...) ",&
     i,nlm,occ(nlm),normc(nlm),nstar(nlm),zeta(nlm)
   ENDDO
@@ -505,7 +505,7 @@ SUBROUTINE init_cores(ntyp,nspin,rho_atc,rcsq,dr,maxR)
  ! write(stdout,'(a,f,f,f)') "INIT ",r,(rho_atc(ir,1,i),i=1,ntyp)
   r=r+dr
  ENDDO
- write(stdout,'(a,f)') 'Sum(rho_atc)= ',sum1*fpi
+ write(stdout,'(a,f10.4)') 'Sum(rho_atc)= ',sum1*fpi
 
  RETURN
 
