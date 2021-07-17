@@ -74,8 +74,6 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
             anorm = cscnorm( bec_bgrp, cp_bgrp, ibgrp_i, nbspx_bgrp )
             cp_bgrp(:,ibgrp_i) = cp_bgrp(:,ibgrp_i) / anorm
             bec_bgrp(:,ibgrp_i) = bec_bgrp(:,ibgrp_i) / anorm
-            !CALL dscal( 2*ngw, 1.0d0/anorm, cp_bgrp(1,ibgrp_i), 1 )
-            !CALL dscal( nkbx, 1.0d0/anorm, bec_bgrp(1,ibgrp_i), 1 )
          END IF
       END DO
       END DO
@@ -208,16 +206,11 @@ CONTAINS
       IF(  ibgrp_i > 0 ) THEN
          DO ia = 1, nat
             is = ityp(ia)
-            IF( upf(is)%tvanp ) THEN
-               DO iv=1,nh(is)
-                  inl=ofsbeta(ia)+iv
-                  bec_tmp(inl) = 2.d0 * DDOT( 2*ngw, cp_bgrp(1,ibgrp_i), 1, betae(1,inl), 1) &
-                                 - g0 * DBLE(cp_bgrp(1,ibgrp_i) * CONJG(betae(1,inl)))
-               END DO
-            ELSE
-               inl= ofsbeta(ia)
-               bec_tmp( inl + 1: inl + nh(is) ) = 0.0d0
-            END IF
+            DO iv=1,nh(is)
+               inl=ofsbeta(ia)+iv
+               bec_tmp(inl) = 2.d0 * DDOT( 2*ngw, cp_bgrp(1,ibgrp_i), 1, betae(1,inl), 1) &
+                              - g0 * DBLE(cp_bgrp(1,ibgrp_i) * CONJG(betae(1,inl)))
+            END DO
          END DO
          CALL mp_sum( bec_tmp, intra_bgrp_comm )  ! parallel sum over G vectors within a band group
          bec_bgrp( : , ibgrp_i ) = bec_tmp( : )

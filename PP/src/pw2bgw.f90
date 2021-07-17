@@ -4891,7 +4891,6 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
   complex (DP), allocatable :: hc(:,:)
   integer :: nspin_
   integer :: kdim, kdmx
-  COMPLEX (DP) :: zdotc
   integer :: ldim, is1, ibnd, i, na, m1, nt
   character(LEN=20) :: ik_string, ib_string, is_string
 

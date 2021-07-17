@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #define __PGI_1910_WORKAROUND
-! use the CUDA Kernel version insetad of the simple  CUF version
+! use the CUDA Kernel version instead of the simple  CUF version
 ! that for some obscure reason crashes on (obsolescent) PGI v.19.10
 
 module ylmr2_gpum
