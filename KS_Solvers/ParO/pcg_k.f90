@@ -87,7 +87,6 @@ SUBROUTINE pcg_k( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, psi, ethr
   INTEGER  :: kdim, kdmx, cg_iter, ibnd
   !
   REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP), EXTERNAL :: ZDOTC
 
   EXTERNAL  hs_1psi, g_1psi
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )
@@ -115,7 +114,7 @@ SUBROUTINE pcg_k( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, psi, ethr
   CALL stop_clock( 'pcg:ortho' )
 !-
 
-  g0 = ZDOTC( kdim, z ,1 ,r ,1)
+  g0 = DDOT( 2*kdim, z ,1 ,r ,1)
   CALL mp_sum( g0, intra_bgrp_comm )         ! g0 = < initial z | initial r >
 
   ff = 0.d0 ; ff0 = ff
@@ -143,13 +142,13 @@ SUBROUTINE pcg_k( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, psi, ethr
      CALL stop_clock( 'pcg:hs_1psi' )
      w = w - e* sp 
 
-     gamma = ZDOTC( kdim, p ,1 ,w ,1) 
+     gamma = DDOT( 2*kdim, p ,1 ,w ,1) 
      CALL mp_sum( gamma, intra_bgrp_comm )
      alpha = g0/gamma
 
      psi(:) = psi(:) + alpha * p(:)          ! updated solution
      r(:) = r(:) - alpha * w(:)              ! updated gradient
-     g2 = ZDOTC( kdim, z ,1 ,r ,1)
+     g2 = DDOT ( 2*kdim, z ,1 ,r ,1)
      CALL mp_sum( g2, intra_bgrp_comm )      ! g2 = < old z | new r >
      z(:) = r(:) ; call g_1psi(npwx,npw,z,e) ! updated preconditioned gradient
 !- project on conduction bands
@@ -159,10 +158,10 @@ SUBROUTINE pcg_k( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, psi, ethr
   CALL ZGEMV( 'N', kdim, nbnd, (-1.D0,0.D0), psi0, kdmx, spsi0vec, 1, ONE,       z, 1 )
   CALL stop_clock( 'pcg:ortho' )
 !-
-     g1 =  ZDOTC( kdim, z, 1, r ,1)
+     g1 = DDOT ( 2*kdim, z, 1, r ,1)
      CALL mp_sum( g1, intra_bgrp_comm )      ! g1 = < new z | new r >
 ! evaluate the function
-     ff = - 0.5_DP * (ZDOTC( kdim, psi, 1, r ,1) + ZDOTC( kdim, psi, 1, b ,1) ) 
+     ff = - 0.5_DP * (DDOT(2*kdim, psi, 1, r ,1) + DDOT(2*kdim, psi, 1, b ,1) ) 
      CALL mp_sum( ff, intra_bgrp_comm )
      !write (6,*) cg_iter, g1, ff,  gamma
      if ( ff > ff0 .AND. ff0 < 0.d0 ) psi(:) = psi(:) - alpha * p(:) ! fallback solution if last iteration failed to improve the function... exit and hope next time it'll be better
