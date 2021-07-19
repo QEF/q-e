@@ -64,8 +64,6 @@ contains
       ! the desired convergence of linter
       logical :: conv_root
       ! true if convergence has been achieved
-      COMPLEX(DP), EXTERNAL :: zdotc
-      real(DP), EXTERNAL ::ddot
       real(DP) ::emme(nbnd, nbnd)
 !     logical ::l_test, exst
 
