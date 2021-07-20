@@ -120,7 +120,7 @@ program all_currents
 
    character(len=256) :: vel_input_units = 'PW', worker_id_char, format_string
    logical :: ec_test, hpsi_test ! activates tests for debugging purposes
-
+   logical :: continue_not_converged ! don't stop the calculation if a step does not converge
    !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
@@ -152,7 +152,8 @@ program all_currents
                                        save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                        re_init_wfc_3, three_point_derivative, &
                                        n_repeat_every_step, hpsi_test, &
-                                       n_workers, worker_id)
+                                       n_workers, worker_id, &
+                                       continue_not_converged)
      !if the problem is parallelized simply by running many times the code over the same trajectory
      !with a different starting and ending timestep you can use the n_worker and the worker_id variables
      !
@@ -199,7 +200,8 @@ program all_currents
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
       n_repeat_every_step, hpsi_test, &
-      n_workers, worker_id)
+      n_workers, worker_id, &
+      continue_not_converged)
    ! PW input
    call read_namelists('PW', 5)
    if (n_workers>0 ) then
@@ -321,8 +323,12 @@ program all_currents
             call sum_band()
          end if
          ethr = ethr_big_step
-         call run_pwscf(exit_status)
-         if (exit_status /= 0) goto 100 !shutdown everything and exit
+         call run_pwscf(exit_status, continue_not_converged)
+         if (exit_status == 2 .and. continue_not_converged) then 
+              continue
+         else if (exit_status /= 0) then
+             goto 100 !shutdown everything and exit
+         end if
          !save evc, tau and vel for t-dt
          call scf_result_set_from_global_variables(scf_all%t_minus)
          if (three_point_derivative) then
@@ -332,9 +338,13 @@ program all_currents
                call sum_band()
             end if
             ethr = ethr_small_step
-            call run_pwscf(exit_status)
+            call run_pwscf(exit_status, continue_not_converged)
             !evc_due = evc
-            if (exit_status /= 0) goto 100 !shutdown everything and exit
+            if (exit_status == 2 .and. continue_not_converged) then 
+               continue
+            else if (exit_status /= 0) then
+               goto 100 !shutdown everything and exit
+            end if
             !save evc, tau and vel for t
             call scf_result_set_from_global_variables(scf_all%t_zero)
             if (hpsi_test) &
@@ -358,8 +368,12 @@ program all_currents
             call sum_band()
          end if
          ethr = ethr_small_step
-         call run_pwscf(exit_status)
-         if (exit_status /= 0) goto 100 !shutdown everything and exit
+         call run_pwscf(exit_status, continue_not_converged)
+         if (exit_status == 2 .and. continue_not_converged) then 
+              continue
+         else if (exit_status /= 0) then 
+              goto 100 !shutdown everything and exit
+         end if
          !save evc, tau and vel for t+dt
          call scf_result_set_from_global_variables(scf_all%t_plus)
 
@@ -524,7 +538,8 @@ contains
                                           save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                           re_init_wfc_3, three_point_derivative, &
                                           n_repeat_every_step, hpsi_test, &
-                                          n_workers, worker_id)
+                                          n_workers, worker_id, &
+                                          continue_not_converged)
       use io_global, ONLY: stdout, ionode, ionode_id
       implicit none
       integer, intent(in) :: iunit
@@ -543,7 +558,7 @@ contains
       character(len=256), intent(inout) :: vel_input_units
       logical, intent(inout) :: ec_test, hpsi_test ! activates tests for debugging purposes
       integer, intent(out) :: n_max
-
+      logical, intent(inout) :: continue_not_converged
       integer :: ios
 
       NAMELIST /energy_current/ delta_t, &
@@ -555,7 +570,7 @@ contains
          save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
          re_init_wfc_3, three_point_derivative, &
          n_repeat_every_step, hpsi_test, &
-         n_workers, worker_id
+         n_workers, worker_id, continue_not_converged
       !
       !   set default values for variables in namelist
       !
@@ -584,6 +599,7 @@ contains
       hpsi_test = .false.
       n_workers = 0
       worker_id = 0
+      continue_not_converged = .false.
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -599,7 +615,8 @@ contains
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
       n_repeat_every_step, hpsi_test, &
-      n_workers, worker_id)
+      n_workers, worker_id, &
+      continue_not_converged)
       use io_global, ONLY: stdout, ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
@@ -619,6 +636,7 @@ contains
       character(len=256), intent(inout) :: vel_input_units
       logical, intent(inout) :: ec_test, hpsi_test
       integer, intent(out) :: n_max
+      logical, intent(inout) :: continue_not_converged
       CALL mp_bcast(trajdir, ionode_id, world_comm)
       CALL mp_bcast(delta_t, ionode_id, world_comm)
       CALL mp_bcast(eta, ionode_id, world_comm)
@@ -644,7 +662,7 @@ contains
       CALL mp_bcast(n_workers, ionode_id, world_comm)
       CALL mp_bcast(worker_id, ionode_id, world_comm)
       CALL mp_bcast(vel_input_units, ionode_id, world_comm)
-
+      CALL mp_bcast(continue_not_converged, ionode_id, world_comm)
    end subroutine
 
    subroutine set_first_step_restart(restart, file_output, first_step)
@@ -704,12 +722,13 @@ contains
       end if
    end subroutine
 
-   subroutine run_pwscf(exit_status)
+   subroutine run_pwscf(exit_status, continue_not_converged)
       USE control_flags, ONLY: conv_elec, gamma_only, ethr, lscf, treinit_gvecs
       USE check_stop, ONLY: check_stop_init, check_stop_now
       USE qexsd_module, ONLY: qexsd_set_status
       implicit none
       INTEGER, INTENT(OUT) :: exit_status
+      logical, intent(in) :: continue_not_converged
       exit_status = 0
       call start_clock('PWSCF')
       IF (.NOT. lscf) THEN
@@ -718,9 +737,10 @@ contains
          CALL electrons()
       END IF
       call stop_clock('PWSCF')
-      IF (check_stop_now() .OR. .NOT. conv_elec) THEN
+      IF (.NOT. conv_elec) exit_status = 2
+      IF (check_stop_now() .OR. & 
+             ( (.NOT. conv_elec ) .and. ( .not. continue_not_converged)) ) THEN
          IF (check_stop_now()) exit_status = 255
-         IF (.NOT. conv_elec) exit_status = 2
          CALL qexsd_set_status(exit_status)
          CALL punch('config')
          RETURN
