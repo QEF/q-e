@@ -32,10 +32,10 @@ endif()
 # Define the paths for static libraries and executables
 ##########################################################
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/lib 
-    CACHE 
+    CACHE
     PATH "Single output directory for building all libraries.")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/bin 
-    CACHE 
+    CACHE
     PATH "Single output directory for building all executables.")
 
 ###########################################################
@@ -111,7 +111,7 @@ option(QE_ENABLE_STATIC_BUILD
     "enable fully static build of executables" OFF)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
-set(QE_FFTW_VENDOR "AUTO" CACHE 
+set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 
@@ -215,7 +215,28 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES 
 endif()
 
 ############################################################
-## Compiler vendor specific options
+# C preprocessor
+# Note: reply on the compiler preprocessor whenever possible
+############################################################
+if(DEFINED ENV{CPP})
+    set(QE_CPP_DEFAULT $ENV{CPP})
+else()
+    set(QE_CPP_DEFAULT cpp)
+endif()
+# QE_CPP_DEFAULT is only effective when cached QE_CPP doesn't exist.
+set(QE_CPP ${QE_CPP_DEFAULT} CACHE
+    STRING "C preprocessor for qe_preprocess_source in qeHelpers.cmake")
+find_program(QE_CPP_FULL_PATH NAMES ${QE_CPP} DOC "C preprocessor full path")
+if(QE_CPP_FULL_PATH)
+    message(STATUS "C preprocessor used by qe_preprocess_source in qeHelpers.cmake: ${QE_CPP_FULL_PATH}")
+else()
+    set(QE_CPP_SAVED ${QE_CPP})
+    unset(QE_CPP CACHE)
+    message(FATAL_ERROR "C preprocessor ${QE_CPP_SAVED} not found. Pass a working one to CMake via QE_CPP!")
+endif()
+
+############################################################
+# Compiler vendor specific options
 ############################################################
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
