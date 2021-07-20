@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 6.7.1
+    VERSION 6.8
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -660,9 +660,6 @@ add_custom_target(ph
         qe_phonon_fdef_exe
         qe_phonon_fdifc_exe
         qe_phonon_postahc_exe
-        qe_plotphon_kforbands_exe
-        qe_plotphon_bandstognuplot_exe
-        qe_plotphon_eminmax_exe
     COMMENT
         "phonon code, Gamma-only and third-order derivatives")
 
