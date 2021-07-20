@@ -76,10 +76,12 @@ SUBROUTINE init_run()
   END IF
 
 #if defined(__CUDA)
-  ! All these variables are actually set by ggen which has intent out
-  mill_d = mill
-  g_d    = g
-  gg_d   = gg
+  IF ( use_gpu) THEN
+     ! All these variables are actually set by ggen which has intent out
+     mill_d = mill
+     g_d    = g
+     gg_d   = gg
+  END IF
 #endif
   !
   IF (do_comp_esm) CALL esm_init()
