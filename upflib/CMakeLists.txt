@@ -1,6 +1,6 @@
 set(src_upflib
-    atom.f90 
-    atomic_number.f90 
+    atom.f90
+    atomic_number.f90
     dqvan2.f90
     init_us_0.f90
     init_us_b0.f90
@@ -10,38 +10,38 @@ set(src_upflib
     init_tab_qrad.f90
     interp_atwfc.f90
     init_us_2_base.f90
-    gth.f90 
+    gth.f90
     paw_variables.f90
-    pseudo_types.f90 
+    pseudo_types.f90
     qvan2.f90
-    radial_grids.f90 
-    read_cpmd.f90 
-    read_fhi.f90 
-    read_ncpp.f90 
-    read_ps.f90 
-    read_upf_new.f90 
-    read_upf_v1.f90 
-    read_uspp.f90 
-    spinor.f90 
-    sph_ind.f90 
-    sph_bes.f90 
-    splinelib.f90 
-    simpsn.f90 
-    upf_auxtools.f90 
-    upf_const.f90 
-    upf_error.f90 
-    upf_invmat.f90 
-    upf_io.f90 
-    upf_ions.f90 
-    upf_kinds.f90 
+    radial_grids.f90
+    read_cpmd.f90
+    read_fhi.f90
+    read_ncpp.f90
+    read_ps.f90
+    read_upf_new.f90
+    read_upf_v1.f90
+    read_uspp.f90
+    spinor.f90
+    sph_ind.f90
+    sph_bes.f90
+    splinelib.f90
+    simpsn.f90
+    upf_auxtools.f90
+    upf_const.f90
+    upf_error.f90
+    upf_invmat.f90
+    upf_io.f90
+    upf_ions.f90
+    upf_kinds.f90
     upf_spinorb.f90
-    upf_params.f90 
-    upf_parallel_include.f90 
-    upf_to_internal.f90 
-    upf_utils.f90 
-    uspp.f90 
-    uspp_data.f90 
-    write_upf_new.f90 
+    upf_params.f90
+    upf_parallel_include.f90
+    upf_to_internal.f90
+    upf_utils.f90
+    uspp.f90
+    uspp_data.f90
+    write_upf_new.f90
     xmltools.f90
     ylmr2.f90
     dylmr2.f90
@@ -49,7 +49,7 @@ set(src_upflib
     init_us_2_base_gpu.f90
     interp_atwfc_gpu.f90
     qvan2_gpu.f90
-    sph_bes_gpu.f90 
+    sph_bes_gpu.f90
     ylmr2_gpu.f90
     dylmr2_gpu.f90
     simpsn_gpu.f90)
@@ -70,26 +70,26 @@ target_link_libraries(qe_upflib
 #endif()
 
 ##############################################################
-# virtual_v2.x 
+# virtual_v2.x
 ##############################################################
-set(src_virtual_v2_x virtual_v2.f90) 
-qe_add_executable(qe_upflib_virtual_v2_exe ${src_virtual_v2_x}) 
-set_target_properties(qe_upflib_virtual_v2_exe 
-    PROPERTIES 
+set(src_virtual_v2_x virtual_v2.f90)
+qe_add_executable(qe_upflib_virtual_v2_exe ${src_virtual_v2_x})
+set_target_properties(qe_upflib_virtual_v2_exe
+    PROPERTIES
         OUTPUT_NAME virtual_v2.x)
-target_link_libraries(qe_upflib_virtual_v2_exe 
-    PRIVATE 
+target_link_libraries(qe_upflib_virtual_v2_exe
+    PRIVATE
         qe_upflib)
 
 ###########################################################
 # upfconv.x
 ###########################################################
-set(src_upfconv_x 
-    upfconv.f90 
+set(src_upfconv_x
+    upfconv.f90
     casino_pp.f90 )
-qe_add_executable(qe_upflib_upfconv_exe ${src_upfconv_x}) 
-set_target_properties(qe_upflib_upfconv_exe 
-    PROPERTIES 
+qe_add_executable(qe_upflib_upfconv_exe ${src_upfconv_x})
+set_target_properties(qe_upflib_upfconv_exe
+    PROPERTIES
         OUTPUT_NAME upfconv.x)
 target_link_libraries(qe_upflib_upfconv_exe
     PRIVATE
@@ -98,19 +98,28 @@ target_link_libraries(qe_upflib_upfconv_exe
 ###########################################################
 # casino2upf.x
 ###########################################################
-set(src_casino2upf_x 
-    casino2upf.f90 
+set(src_casino2upf_x
+    casino2upf.f90
     casino_pp.f90 )
-qe_add_executable(qe_upflib_casino2upf_exe ${src_casino2upf_x}) 
-set_target_properties(qe_upflib_casino2upf_exe 
-    PROPERTIES 
+qe_add_executable(qe_upflib_casino2upf_exe ${src_casino2upf_x})
+set_target_properties(qe_upflib_casino2upf_exe
+    PROPERTIES
         OUTPUT_NAME casino2upf.x)
 target_link_libraries(qe_upflib_casino2upf_exe
     PRIVATE
         qe_upflib)
 
+###########################################################
+# hgh2qe.x
+###########################################################
+qe_add_executable(qe_upflib_hgh2qe_exe hgh2qe.f90)
+set_target_properties(qe_upflib_hgh2qe_exe
+    PROPERTIES
+        OUTPUT_NAME hgh2qe.x)
+
 ############################################################################
 qe_install_targets(qe_upflib
     qe_upflib_virtual_v2_exe
     qe_upflib_upfconv_exe
-    qe_upflib_casino2upf_exe)
+    qe_upflib_casino2upf_exe
+    qe_upflib_hgh2qe_exe)

@@ -29,6 +29,9 @@ target_link_libraries(qe_qeheat
     qe_xclib
 )
 
+###########################################################
+# all_currents.x
+###########################################################
 set(src_all_currents_x src/all_currents.f90)
 qe_enable_cuda_fortran("${src_all_currents_x}")
 qe_add_executable(qe_qeheat_exe ${src_all_currents_x})
