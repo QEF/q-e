@@ -315,7 +315,7 @@ set(src_gww_fit_x gww/gww_fit.f90)
 qe_add_executable(qe_gww_gww_fit_exe  ${src_gww_fit_x})
 set_target_properties(qe_gww_gww_fit_exe
     PROPERTIES
-        OUTPUT_NAME gww.x)
+        OUTPUT_NAME gww_fit.x)
 target_link_libraries(qe_gww_gww_fit_exe
     PRIVATE
        qe_gww
