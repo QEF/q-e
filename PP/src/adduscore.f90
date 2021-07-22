@@ -13,7 +13,7 @@ MODULE adduscore
  INTEGER, PARAMETER :: maxZ=86
  !maxSTO is the cumulative maximum number of core STO for the
  ! first 84 elements after He (Li-Rn, H and He have no core).
- !This number is in the minimial (-n-) assumption of pseudization
+ !This number is in the minimal (-n-) assumption of pseudization
  ! (maximal number of core orbitals), i.e.
  ! with (n-2)f,(n-1)d,n(s,p) in valence.
  ! e.g. Pt val=4f,5d,6s
@@ -32,7 +32,7 @@ MODULE adduscore
 
 ! This is paw_postproc.f90 modified by Giovanni La Penna
 ! (HPC-Europa, Cork (IE), 28/01/2019).
-! Reconstruct the all-electron (withcore=.true.) density 
+! Reconstruct the all-electron density 
 ! using the effective Slater approximation for atomic cores.
 ! It assumes a core electron density associated to the isolated atom
 ! (frozen core) and described with effective Slater orbitals.
@@ -44,31 +44,32 @@ MODULE adduscore
 ! In practice: this creates on-the-fly what is passed as 
 !  upf(i%t)%paw%ae_rho_atc(ir) / nspin * (2._DP * sqrtpi)
 ! in the original paw_postproc.f90
-
 ! for atoms, with the information in the UPF file.
-SUBROUTINE US_make_ae_charge(rho,withcore)
-   USE constants,         ONLY : sqrtpi
+
+SUBROUTINE US_make_ae_charge(rho)
+   !
    USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau
    USE lsda_mod,          ONLY : nspin
    USE uspp,              ONLY : okvan
    USE uspp_param,        ONLY : nh, nhm, upf
    USE scf,               ONLY : scf_type
    USE fft_base,          ONLY : dfftp
+   USE fft_types,         ONLY : fft_index_to_3d
    USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
    USE cell_base,         ONLY : at, bg, alat, omega
    USE io_global,         ONLY : stdout, ionode
-   USE constants,         ONLY : fpi
 
    TYPE(scf_type), INTENT(inout) :: rho
-   LOGICAL, INTENT(IN) :: withcore
+   !
    INTEGER, PARAMETER      :: Nc=16
    INTEGER                 :: ipol             ! counter on x,y,z
    INTEGER                 :: ir               ! counter on grid point
    INTEGER                 :: ir1,ir2          ! counters on atomic core mesh
    INTEGER                 :: is               ! counter on spin component
-   INTEGER                 :: j,k,l, idx, idx0
-   INTEGER                 :: i,ia
+   INTEGER                 :: j,k,l
+   INTEGER                 :: i, ia
+   LOGICAL                 :: offrange
    REAL(DP)                :: posi0(3),posi1(3),posi2(3),posi3(3),posi4(3),&
                               posi5(3),posi6(3),posi7(3)
    REAL(DP)                :: inv_nr1, inv_nr2, inv_nr3, &
@@ -112,18 +113,12 @@ SUBROUTINE US_make_ae_charge(rho,withcore)
          ir2=0
          rsp_point : DO ir = 1, dfftp%nr1x * dfftp%my_nr2p * dfftp%my_nr3p
             !
-            ! three dimensional indices (i,j,k)
-            idx   = ir - 1
-            k     = idx / (dfftp%nr1x*dfftp%my_nr2p)
-            idx   = idx - (dfftp%nr1x*dfftp%my_nr2p) * k
-            k     = k + dfftp%my_i0r3p
-            j     = idx /  dfftp%nr1x
-            idx   = idx -  dfftp%nr1x*j
-            j     = j + dfftp%my_i0r2p
-            l     = idx
+            ! three dimensional indices (l,j,k)
+            !
+            CALL fft_index_to_3d (ir, dfftp, l,j,k, offrange)
             !
             ! ... do not include points outside the physical range!
-            IF ( l >=  dfftp%nr1 .or. j >=  dfftp%nr2 .or. k >=  dfftp%nr3 ) CYCLE rsp_point
+            IF ( offrange ) CYCLE rsp_point
             !
             ! using the 8 vertices to find when the grid element
             !  is out of atomic core
@@ -274,7 +269,7 @@ SUBROUTINE init_cores(ntyp,rcsq)
  USE uspp_param,     ONLY : upf
  USE io_global,      ONLY : stdout, ionode
  USE ions_base,      ONLY : atom_label => atm
- USE constants,      ONLY : pi,tpi,fpi
+ USE constants,      ONLY : pi
 
  IMPLICIT NONE
  INTEGER, INTENT(IN) :: ntyp
@@ -497,7 +492,6 @@ SUBROUTINE init_cores(ntyp,rcsq)
  USE uspp_param,     ONLY : upf
  USE io_global,      ONLY : stdout, ionode
  USE ions_base,      ONLY : atom_label => atm
- USE constants,      ONLY : pi,tpi,fpi
 
  IMPLICIT NONE
  INTEGER, INTENT(IN) :: i
