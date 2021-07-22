@@ -293,7 +293,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron charge."
      ! code partially duplicate from plot_num=21 (so 0)
-     CALL init_us_1()
      CALL US_make_ae_charge(rho)
      raux(:) = rho%of_r(:, 1)
      IF ( lsda ) THEN
