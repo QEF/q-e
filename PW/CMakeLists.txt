@@ -401,6 +401,19 @@ target_link_libraries(qe_pw_tools_pwi2xsf_exe
         qe_modules)
 
 ###########################################################
+# scan_ibrav.x
+###########################################################
+set(src_scan_ibrav_x tools/scan_ibrav.f90)
+qe_add_executable(qe_pw_tools_scan_ibrav_exe ${src_scan_ibrav_x})
+set_target_properties(qe_pw_tools_scan_ibrav_exe
+    PROPERTIES
+        OUTPUT_NAME scan_ibrav.x)
+target_link_libraries(qe_pw_tools_scan_ibrav_exe
+    PRIVATE
+        qe_pw
+        qe_modules)
+
+###########################################################
 
 qe_install_targets(
     # Libraries
@@ -411,4 +424,5 @@ qe_install_targets(
     qe_pw_tools_cell2ibrav_exe
     qe_pw_tools_ev_exe
     qe_pw_tools_kpoints_exe
-    qe_pw_tools_pwi2xsf_exe)
+    qe_pw_tools_pwi2xsf_exe
+    qe_pw_tools_scan_ibrav_exe)
