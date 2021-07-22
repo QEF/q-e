@@ -95,7 +95,7 @@ CONTAINS
        DO ibnd = 1, nbnd_occ(imk)
           !
           lr_dot_magnons = lr_dot_magnons + wk(imk) * &
-                  dot_product(x(:,ibnd,ik,1),y(:,ibnd,ik,2))
+                  dot_product(x(:,ibnd,ik,2),y(:,ibnd,ik,2))
           !
        ENDDO
        !
