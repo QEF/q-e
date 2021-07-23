@@ -41,11 +41,6 @@ PROGRAM compute_self_hartree
   CHARACTER (LEN=256) :: outdir
   LOGICAL, EXTERNAL  :: imatches
   CHARACTER(LEN=6)   :: int_to_char
-  !
-  CHARACTER(LEN=18) :: code='KC_PP_Self-Hartree'
-  !
-  CALL mp_startup ( )
-  CALL environment_start ( code )
   ! 
   NAMELIST / KC_PP /    outdir, prefix, mp1, mp2, mp3, num_wann, seedname, kc_iverbosity, &
                         l_vcut, assume_isolated
@@ -55,6 +50,11 @@ PROGRAM compute_self_hartree
   ! num_wann     : number of occupied wannier
   ! the interpolation
   ! 
+  CHARACTER(LEN=18) :: code='KC_PP_Self-Hartree'
+  !
+  CALL mp_startup ( )
+  CALL environment_start ( code )
+  !
   IF (ionode) THEN
      CALL input_from_file ( )
      READ( 5, '(A)', IOSTAT = ios ) title

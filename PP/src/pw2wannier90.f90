@@ -5513,7 +5513,7 @@ SUBROUTINE get_wannier_to_plot
     !
     IF ( SCAN( c_wlist, c_range ) == 1 ) THEN
       i_digit = SCAN( c_wlist, c_digit )
-      IF ( SCAN( ADJUSTL( c_wlist(2:i_digit) ), c_punc_nospace ) ) &
+      IF ( SCAN( ADJUSTL( c_wlist(2:i_digit) ), c_punc_nospace ) /= 0 ) &
         CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 3 )
       c_wlist = ADJUSTL( c_wlist(i_digit:) )
       i_punc = SCAN( c_wlist, c_punc )

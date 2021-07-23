@@ -207,7 +207,8 @@ SUBROUTINE full_ham (ik)
         ! 
         !
         delta_eig(ibnd) = (-sh+(etxc-etxc_minus1-etmp)) 
-        WRITE(stdout, '("NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, etxc, etxc_minus1, etmp 
+        WRITE(stdout, '("NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, &
+            etxc, etxc_minus1, etmp 
         IF (lrpa) delta_eig(ibnd) = (-sh)  !! hartree only for debug
         !
         vpsi_r(:) = (0.D0, 0.D0)
@@ -239,7 +240,8 @@ SUBROUTINE full_ham (ik)
         !
         ! Scalar-term correction for Diagonal elements only
         delta_eig(ibnd) = -sh + (etxc_minus1 - etxc - etmp1)
-        WRITE(stdout, '("NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, etxc, etxc_minus1, etmp 
+        WRITE(stdout, '("NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, &
+            etxc, etxc_minus1, etmp 
         IF (lrpa) delta_eig(ibnd) = (-sh)  !! hartree only for debug
 !        delta_eig(ibnd) = -sh
 !        WRITE(stdout,'("const_term_empty_hartree", i5, 3F15.8)') ibnd, -sh
@@ -251,7 +253,8 @@ SUBROUTINE full_ham (ik)
         vpsi_r(:) = (0.D0, 0.D0)
         etmp2 = (0.D0, 0.D0)
         DO ir = 1, dffts%nnr
-           vpsi_r (ir) = CMPLX( ( v(ir,current_spin) + vxc_minus1(ir,current_spin) - vxc(ir,current_spin) + delta_eig(ibnd)),0.D0) * psic_1(ir)
+           vpsi_r (ir) = CMPLX( ( v(ir,current_spin) + vxc_minus1(ir,current_spin) - vxc(ir,current_spin) + &
+                                  delta_eig(ibnd)),0.D0) * psic_1(ir)
            IF(lrpa) vpsi_r (ir) = CMPLX( ( v(ir,current_spin) + delta_eig(ibnd)),0.D0) * psic_1(ir)
            etmp2 = etmp2 + CONJG(psic_1(ir))*vpsi_r(ir)
         ENDDO 
@@ -292,7 +295,8 @@ SUBROUTINE full_ham (ik)
         etmp1 = sum ( vxc_minus1(1:dfftp%nnr,current_spin) * n_r(1:dfftp%nnr) )
         etmp1= etmp1/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
         CALL mp_sum (etmp1, intra_bgrp_comm)
-        WRITE(stdout , '("NICOLA PZ corr const term, sh[n_i], Exc[n_i], int{v_xc[n_i] n_i}, int{v_xc[n_i] n_i}", 4F15.8)'), sh, etxc_minus1, etmp1, vtxc_minus1
+        WRITE(stdout , '("NICOLA PZ corr const term, sh[n_i], Exc[n_i], int{v_xc[n_i] n_i}, int{v_xc[n_i] n_i}", 4F15.8)'), &
+            sh, etxc_minus1, etmp1, vtxc_minus1
         etmp1 = + sh - etxc_minus1 + etmp1
         !
         vpsi_r(:) = (0.D0, 0.D0)
@@ -317,19 +321,22 @@ SUBROUTINE full_ham (ik)
      ENDIF
      !
      IF (alpha_final_full(ibnd) .gt. 1.02 ) THEN 
-        WRITE(stdout,'("WARNING: alpha for orbital", i5, i3, "  bigger than 1.02.", F15.8, "Set it to 1.00",/)') ibnd, ik, alpha_final_full(ibnd)
+         WRITE(stdout,'("WARNING: alpha for orbital", i5, i3, "  bigger than 1.02.", F15.8, "Set it to 1.00",/)') ibnd, &
+             ik, alpha_final_full(ibnd)
          alpha_final_full(ibnd) = 1.D0
      ENDIF 
      !
      IF (alpha_final_full(ibnd) .lt. 0.00 ) THEN 
-        WRITE(stdout,'("WARNING: alpha for orbital", i5, i3, "  smaller than 0.00.", F15.8, "Set it to 1.00",/)') ibnd, ik, alpha_final_full(ibnd)
+         WRITE(stdout,'("WARNING: alpha for orbital", i5, i3, "  smaller than 0.00.", F15.8, "Set it to 1.00",/)') ibnd, &
+             ik, alpha_final_full(ibnd)
          alpha_final_full(ibnd) = 1.D0
      ENDIF 
      !
      v_ki(:,ibnd) = v_ki(:,ibnd) * alpha_final_full(ibnd)
      !
-     WRITE(stdout,'(3x, "orbital", i3, 3x, "spin", i3, 5x, "uKI_diag", F15.8 ," Ry", 3x, "rKI_diag", F15.8, " Ry", 3x, "alpha=", F15.8, 3x )') &
-                           ibnd, current_spin, delta_eig(ibnd), delta_eig(ibnd)*alpha_final_full(ibnd), alpha_final_full(ibnd)
+     WRITE(stdout,'(3x, "orbital", i3, 3x, "spin", i3, 5x, "uKI_diag", F15.8 ," Ry", 3x, "rKI_diag", F15.8, " Ry", 3x, &
+         &"alpha=", F15.8, 3x )') ibnd, current_spin, delta_eig(ibnd), delta_eig(ibnd)*alpha_final_full(ibnd), &
+         alpha_final_full(ibnd)
      !
   ENDDO orb_loop
   !

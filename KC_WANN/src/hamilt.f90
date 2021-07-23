@@ -342,7 +342,8 @@ SUBROUTINE ham_koopmans_k (ik)
   IF (ionode) THEN 
     WRITE(stdout, '("Self Hartree, Bare Pi, Relaxed Pi")')
     DO iwann = 1, num_wann
-      WRITE(stdout, '(i6, 2f12.8, 3x, 2f12.8,3x, 2f12.8)') iwann, sh(iwann), ABS(deltaH(iwann,iwann))*2.D0/alpha_(iwann), ABS(deltaH(iwann,iwann))*2.D0
+      WRITE(stdout, '(i6, 2f12.8, 3x, 2f12.8,3x, 2f12.8)') iwann, sh(iwann), ABS(deltaH(iwann,iwann))*2.D0/alpha_(iwann), &
+                                                           ABS(deltaH(iwann,iwann))*2.D0
     ENDDO
   ENDIF 
   !

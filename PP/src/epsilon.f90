@@ -1416,13 +1416,15 @@ SUBROUTINE photoemission_spectr_pw ( intersmear,intrasmear,nbndmin,nbndmax, &
             !
               IF (wfc_real) THEN  
                 !
-                srphotospec(current_spin, iw) = srphotospec(current_spin, iw) + 2.0D0 * module_k* intersmear * dipole_2(iband1, ig) * delta_ecut_G &
-                            / ( PI * ( (etrans - w )**2 + (intersmear)**2 )  ) 
+                srphotospec(current_spin, iw) = srphotospec(current_spin, iw) + 2.0D0 * module_k* intersmear &
+                                                * dipole_2(iband1, ig) * delta_ecut_G &
+                                                / ( PI * ( (etrans - w )**2 + (intersmear)**2 )  ) 
                 !
               ELSE
                 !
-                srphotospec(current_spin, iw) = srphotospec(current_spin, iw) + module_k * intersmear * dipole_2(iband1, ig) * delta_ecut_G &
-                           / ( PI * ( (etrans - w )**2 + (intersmear)**2 )  ) 
+                srphotospec(current_spin, iw) = srphotospec(current_spin, iw) + module_k * intersmear &
+                                                * dipole_2(iband1, ig) * delta_ecut_G &
+                                                / ( PI * ( (etrans - w )**2 + (intersmear)**2 )  ) 
                 !
               ENDIF
               !

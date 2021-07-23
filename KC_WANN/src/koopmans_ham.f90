@@ -277,7 +277,8 @@ SUBROUTINE koopmans_ham ()
          !! The periodic part of the perturbation DeltaV_q(G)
          ! 
          sh(iwann) = sh(iwann) + 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:)                )*weight(iq)*omega
-         deltah_scal(iwann, iwann) = deltah_scal(iwann,iwann) - 0.5D0 * sum (CONJG(rhog (:)) * delta_vg(:,spin_component))*weight(iq)*omega
+         deltah_scal(iwann, iwann) = deltah_scal(iwann,iwann) - 0.5D0 * sum (CONJG(rhog (:)) * delta_vg(:,spin_component)) &
+                                     * weight(iq) * omega
          !
       ENDDO
       ! 
@@ -341,7 +342,8 @@ SUBROUTINE koopmans_ham ()
     INTEGER :: iwann, jwann, lrrho, lrwfc
     ! Band counters, leght of the rho record
     !
-    COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), sh(num_wann), delta_vr_(dffts%nnr,nspin)
+    COMPLEX(DP) :: rhowann(dffts%nnr, num_wann), rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), sh(num_wann), &
+                   delta_vr_(dffts%nnr,nspin)
     ! The periodic part of the wannier orbital density in r space
     ! The perturbig potential in real space
     ! The self-hartree 
