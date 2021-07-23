@@ -63,7 +63,7 @@ MODULE control_kc_wann
   !! The Hamiltonian
   LOGICAL :: on_site_only               ! On-site only: only R=0 and i=j
   REAL(DP), ALLOCATABLE :: rvect(:,:)   ! The R vector in the (virtual) supercell
-  INTEGER(DP), ALLOCATABLE :: irvect(:,:)   ! The R vector in the (virtual) supercell
+  INTEGER, ALLOCATABLE :: irvect(:,:)   ! The R vector in the (virtual) supercell
   INTEGER :: mp1, mp2, mp3              ! the MP grid 
   !
   COMPLEX(DP), ALLOCATABLE :: Hamlt(:,:,:)   ! the KC hamiltonian 
