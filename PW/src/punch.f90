@@ -54,7 +54,7 @@ SUBROUTINE punch( what )
   INTEGER            :: cp_status, nt
   !
   !
-  WRITE( stdout, '(/,5X,"Writing ",A," to output data dir ",A)")' ) &
+  WRITE( stdout, '(/,5X,"Writing ",A," to output data dir ",A)' ) &
          TRIM ( what ), TRIM ( restart_dir ( ) )
   iunpun = 4
   !

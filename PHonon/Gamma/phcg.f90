@@ -380,7 +380,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !
      !   impose asr on the dynamical matrix
      !
-     IF (asr) CALL set_asr(nat,nasr,dyn)
+     IF (asr) CALL set_asr_r(nat,nasr,dyn)
      !
      ! diagonalize the dynamical matrix
      !

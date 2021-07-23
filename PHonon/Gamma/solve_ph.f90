@@ -144,7 +144,7 @@ SUBROUTINE solve_ph ( )
 END SUBROUTINE solve_ph
 !
 !---------------------------------------------------------------------------
-SUBROUTINE set_asr(nat,nasr,dyn)
+SUBROUTINE set_asr_r(nat,nasr,dyn)
   !---------------------------------------------------------------------------
   !
   ! Impose Acoustic Sum Rule on the dynamical matrix
@@ -172,4 +172,4 @@ SUBROUTINE set_asr(nat,nasr,dyn)
   ENDDO
 
   RETURN
-END SUBROUTINE set_asr
+END SUBROUTINE set_asr_r
