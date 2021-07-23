@@ -463,11 +463,11 @@ CONTAINS
       WRITE(stdout,*) "Mismatch in nr3x", dfft1%nr3x, dfft2%nr3x
     ENDIF
     !
-    IF ( dfft1%lpara .ne. dfft2%lpara ) THEN
+    IF ( dfft1%lpara .neqv. dfft2%lpara ) THEN
       WRITE(stdout,*) "Mismatch in lpara", dfft1%lpara, dfft2%lpara 
     ENDIF
     !
-    IF ( dfft1%lgamma .ne. dfft2%lgamma ) THEN
+    IF ( dfft1%lgamma .neqv. dfft2%lgamma ) THEN
       WRITE(stdout,*) "Mismatch in lgamma", dfft1%lgamma, dfft2%lgamma
     ENDIF
     !
@@ -695,7 +695,7 @@ CONTAINS
       WRITE(stdout,*) "Mismatch in tg_rdsp", dfft1%tg_rdsp, dfft2%tg_rdsp
     ENDIF
     !
-    IF ( dfft1%has_task_groups .ne. dfft2%has_task_groups ) THEN
+    IF ( dfft1%has_task_groups .neqv. dfft2%has_task_groups ) THEN
       WRITE(stdout,*) "Mismatch in has_task_groups", dfft1%has_task_groups, dfft2%has_task_groups
     ENDIF
     !

@@ -30,7 +30,7 @@
       !
       WRITE( stdout, '(/,8x, "KC interpolated eigenvalues at k=", 3f12.4,2x,/)' ) xk_bands(:,ik)
       !
-      CALL FT_ham( Hamlt_R, num_wann, ham_int, ik, -1 )
+      CALL FT_ham( Hamlt_R, num_wann, ham_int, ik, -1)
       !
       CALL cdiagh( num_wann, ham_int, num_wann, eigvl(:,ik), eigvc )
       !

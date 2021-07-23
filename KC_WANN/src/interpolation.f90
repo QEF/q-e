@@ -104,7 +104,7 @@ CONTAINS
     !
     COMPLEX(DP) :: ham_aux(num_wann,num_wann)
     INTEGER :: ir
-    INTEGER(DP) :: k_to_R
+    INTEGER :: k_to_R
     !
     !
     k_to_R = +1

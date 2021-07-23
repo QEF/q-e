@@ -146,10 +146,13 @@ SUBROUTINE kc_readin()
   call mp_bcast ( title, ionode_id, intra_image_comm )
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
-  IF( imatches("&control", title)) THEN
-    WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
-    title='default'
-    REWIND(5, iostat=ios)
+  IF( imatches("&control", title) ) THEN
+    IF ( ionode ) THEN
+      WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
+      title='default'
+      REWIND(5, iostat=ios)
+    ENDIF
+    CALL mp_bcast(ios, ionode_id, intra_image_comm)
     CALL errore('KC_readin', 'Title line missing from input.', abs(ios))
   ENDIF
   !
