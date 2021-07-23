@@ -56,7 +56,7 @@ CONTAINS
     COMPLEX(DP) :: eigvc(num_wann,num_wann)
     REAL(DP)    :: eigvl(num_wann,nks_bands)
     INTEGER     :: ik
-    INTEGER(DP) :: k_to_R     ! FT type: (+1) from k- to R-space, (-1) from R- to k-space
+    INTEGER     :: k_to_R     ! FT type: (+1) from k- to R-space, (-1) from R- to k-space
     !
     !
     ALLOCATE( Hamlt_R(nkstot/nspin,num_wann,num_wann) )
@@ -140,7 +140,7 @@ CONTAINS
     !
     INTEGER, INTENT(IN)      :: h_dim
     INTEGER, INTENT(IN)      :: ir         ! k-point (or R-point) index
-    INTEGER(DP), INTENT(IN)  :: k_to_R     ! FT type: (+1) from k- to R-space, (-1) from R- to k-space
+    INTEGER, INTENT(IN)      :: k_to_R     ! FT type: (+1) from k- to R-space, (-1) from R- to k-space
     COMPLEX(DP), INTENT(IN)  :: ham(nkstot/nspin,h_dim,h_dim)
     !
     COMPLEX(DP), INTENT(OUT) :: ham_t(h_dim,h_dim)
@@ -229,7 +229,7 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    INTEGER(DP), INTENT(IN) :: Rvec(3)
+    INTEGER, INTENT(IN) :: Rvec(3)
     REAL(DP), INTENT(IN) :: qvec(3)
     REAL(DP), INTENT(IN) :: wf_dist(3)
     !
@@ -237,7 +237,7 @@ CONTAINS
     !
     INTEGER :: i, j, k
     INTEGER :: counter           ! counts the equidistant R-vectors
-    INTEGER(DP) :: Tvec(3)       ! primitive lattice vector of the supercell
+    INTEGER :: Tvec(3)       ! primitive lattice vector of the supercell
     REAL(DP) :: eff_dist(3), eff_dist_aux(3)
     REAL(DP) :: dist_min, dist
     !
