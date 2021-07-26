@@ -526,6 +526,16 @@ CONTAINS
          IF ( tv0rd ) THEN ! initial velocities available from input file
             !
             vel(:,:) = vel(:,:) / alat
+            ekin = 0.D0
+            DO na = 1, nat
+               !
+               ekin  = ekin + 0.5D0 * mass(na) * &
+                              ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
+            !
+            ENDDO
+            ekin = ekin*alat**2
+            temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
+            vel_defined = .TRUE.
             !
          ELSEIF ( control_temp ) THEN
             !
