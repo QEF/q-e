@@ -8,10 +8,9 @@
 !---------------------------------------------------------------------
 subroutine set_irr_nosym_new (u, npert, nirr)
   !---------------------------------------------------------------------
-  !
-  !     This routine substitutes set_irr when there are no symmetries.
-  !     The irreducible representations are all one dimensional and
-  !     we set them to the displacement of a single atom in one direction
+  !! This routine substitutes set_irr when there are no symmetries.
+  !! The irreducible representations are all one dimensional and
+  !! we set them to the displacement of a single atom in one direction.
   !
   USE kinds, only : DP
   USE ions_base, ONLY : nat
@@ -19,10 +18,13 @@ subroutine set_irr_nosym_new (u, npert, nirr)
   USE control_ph, ONLY : search_sym
   IMPLICIT NONE
   !
-  INTEGER, INTENT(OUT) ::  npert (3 * nat), nirr
-  ! output: the dimension of each representation
-  ! output: the number of representation
-  COMPLEX(DP), INTENT(OUT) :: u( 3 * nat, 3 * nat )
+  INTEGER, INTENT(OUT) ::  npert(3*nat)
+  !! output: the dimension of each representation
+  INTEGER, INTENT(OUT) :: nirr
+  !! output: the number of representation
+  COMPLEX(DP), INTENT(OUT) :: u(3*nat,3*nat)
+  !
+  ! ... local variables
   !
   integer :: imode, irr
   ! counter on modes

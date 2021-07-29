@@ -7,17 +7,17 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine solve_e_fpol ( iw )
+subroutine solve_e_fpol( iw )
   !-----------------------------------------------------------------------
-  !
-  !    This routine is a driver for the solution of the linear system which
-  !    defines the change of the wavefunction due to an electric field.
-  !    It performs the following tasks:
-  !     a) computes the bare potential term  x | psi >
-  !     b) adds to it the screening term Delta V_{SCF} | psi >
-  !     c) applies P_c^+ (orthogonalization to valence states)
-  !     d) calls gmressolve_all to solve the linear system
-  !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
+  !! This routine is a driver for the solution of the linear system which
+  !! defines the change of the wavefunction due to an electric field.  
+  !! It performs the following tasks:  
+  !! a) computes the bare potential term  times \(|\psi\rangle \);  
+  !! b) adds to it the screening term \(\Delta V_\text{SCF}|psi\rangle\);  
+  !! c) applies \(P_c^+\) (orthogonalization to valence states);  
+  !! d) calls \(\text{gmressolve_all}\) to solve the linear system;  
+  !! e) computes \(\Delta\text{rho}\), \(\Delta V_\text{SCF}\) and 
+  !!    symmetrizes them.
   !
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
@@ -53,7 +53,12 @@ subroutine solve_e_fpol ( iw )
   USE dv_of_drho_lr
 
   implicit none
-
+  
+  real(DP) :: iw
+  !! frequency
+  
+  ! ... local variables
+  !
   real(DP) ::  thresh, anorm, averlt, dr2
   ! thresh: convergence threshold
   ! anorm : the norm of the error
@@ -85,7 +90,6 @@ subroutine solve_e_fpol ( iw )
 
   real(DP) :: tcpu
   real(DP) :: eprec1 ! 1.35<ek>, for preconditioning
-  real(DP) :: iw     !frequency
   real(dp), external :: ddot, get_clock
 
   external cch_psi_all, ccg_psi
