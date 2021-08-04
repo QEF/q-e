@@ -1,28 +1,28 @@
 MODULE tsvdw_module
 !
-!----------------------------------------------------------------------------------------------------------------
-! TS-vdW Code Version 14.0 (RAD/BS, Princeton University, February 2013)
-!----------------------------------------------------------------------------------------------------------------
-! All quantities necessary for the evaluation of the TS-vdW energy and forces are computed on the real-space
-! mesh using linear interpolation of the atomic pseudo-densities and their first derivatives which have been
-! mapped onto linear equispaced atomic grids from their original form computed on radial atomic grids via the
-! ATOMIC code.
-!----------------------------------------------------------------------------------------------------------------
-! SYNOPSIS: radial form of rhoA & drhoA mapped onto linear grid;
-!           atrho & rhosad on real-space mesh via linear interpolation;
-!           integration on spherical atomic domains (subsets of real-space mesh);
-!           quadratic veff derivatives computed linearly using sparse domain intersection algorithm.
-!----------------------------------------------------------------------------------------------------------------
+!! TS-vdW Code Version 14.0 (RAD/BS, Princeton University, February 2013).
+!
+!! SYNOPSIS:
+!
+!! * radial form of rhoA & drhoA mapped onto linear grid;
+!! * atrho & rhosad on real-space mesh via linear interpolation;
+!! * integration on spherical atomic domains (subsets of real-space mesh);
+!! * quadratic veff derivatives computed linearly using sparse domain intersection algorithm.
+!
+!! All quantities necessary for the evaluation of the TS-vdW energy and forces are computed on the real-space
+!! mesh using linear interpolation of the atomic pseudo-densities and their first derivatives which have been
+!! mapped onto linear equispaced atomic grids from their original form computed on radial atomic grids via the
+!! ATOMIC code.
 !
 USE cell_base,          ONLY: h                  !h matrix for converting between r and s coordinates via r = h s
 USE cell_base,          ONLY: ainv               !h^-1 matrix for converting between r and s coordinates via s = h^-1 r)
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
-USE funct,              ONLY: get_iexch          !retrieves type of exchange utilized in functional
-USE funct,              ONLY: get_icorr          !retrieves type of correlation utilized in functional
-USE funct,              ONLY: get_igcx           !retrieves type of gradient correction to exchange utilized in functional
-USE funct,              ONLY: get_igcc           !retrieves type of gradient correction to correlation utilized in functional
+USE xc_lib,             ONLY: xclib_get_id, &
+                              xclib_dft_is_libxc
+
+!correction to correlation utilized in functional
 USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
 USE ions_base,          ONLY: nat                !number of total atoms (all atomic species)
 USE ions_base,          ONLY: nsp                !number of unique atomic species
@@ -48,13 +48,20 @@ SAVE
 !
 ! PUBLIC variables 
 !
-LOGICAL, PUBLIC :: vdw_isolated    ! isolated system control
-REAL(DP), PUBLIC:: vdw_econv_thr   ! energy convergence threshold for periodic systems
-REAL(DP), PUBLIC :: EtsvdW                                   !the TS-vdW energy
-REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: UtsvdW        !the TS-vdW wavefunction forces (dispersion potential)
-REAL(DP), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: FtsvdW      !the TS-vdW ionic forces (-dE/dR)
-REAL(DP), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: HtsvdW      !the TS-vdW cell forces (dE/dh)
-REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: VefftsvdW     !the TS-vdW effective Hirshfeld volume
+LOGICAL, PUBLIC :: vdw_isolated
+!! isolated system control
+REAL(DP), PUBLIC:: vdw_econv_thr
+!! energy convergence threshold for periodic systems
+REAL(DP), PUBLIC :: EtsvdW
+!! the TS-vdW energy
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: UtsvdW
+!! the TS-vdW wavefunction forces (dispersion potential)
+REAL(DP), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: FtsvdW
+!! the TS-vdW ionic forces (-dE/dR)
+REAL(DP), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: HtsvdW
+!! the TS-vdW cell forces (dE/dh)
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: VefftsvdW
+!! the TS-vdW effective Hirshfeld volume
 !
 ! PRIVATE variables 
 !
@@ -83,10 +90,14 @@ INTEGER, DIMENSION(:,:,:), ALLOCATABLE, PRIVATE :: somegaAr  !reduced spherical 
 INTEGER, DIMENSION(:,:,:), ALLOCATABLE, PRIVATE :: gomegaAr  !reduced spherical atomic integration domain (intersection bit array)
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE:: predveffAdn   !atomic dispersion potential prefactor
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: vfree        !free atomic volumes for each atomic species
+!GSz
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: vfree_pub        !free atomic volumes for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: dpfree       !free atomic static dipole polarizability for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: R0free       !free atomic vdW radius for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: C6AAfree     !free atomic homonuclear C6 coefficient for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: veff         !effective atomic volumes for each atom in the simulation cell
+!GSz
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: veff_pub         !effective atomic volumes for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: dpeff        !effective atomic static dipole polarizability for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: R0eff        !effective atomic vdW radius for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: C6AAeff      !effective atomic homonuclear C6 coefficient for each atom in the simulation cell
@@ -137,6 +148,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_initialize()
   !--------------------------------------------------------------------------------------------------------------
+  !! TS-vdW initialization.
   !
   IMPLICIT NONE
   !
@@ -144,6 +156,7 @@ PRIVATE :: GetVdWParam
   !
   LOGICAL :: uniform_grid=.FALSE.
   INTEGER :: ip,iq,ir,is,it,NrgpA,NrgpintA,icutrA,Ndim
+  INTEGER :: iexch, icorr, igcx, igcc
   REAL(DP) :: dxA,gfctrA,vref,eref,verr,d,dk1,dk2,dk3,num,den,drab,f1,f2,f3,L1,L2,L3
   REAL(DP), DIMENSION(:), ALLOCATABLE :: atgrdr,atgrdrab,atrhor,datrhor,d2atrhor,CSA,CSB,CSC,CSD
   !
@@ -185,17 +198,26 @@ PRIVATE :: GetVdWParam
   !
   ! Set sR damping function parameter (functional dependent and currently only available for PBE & PBE0)...
   !
-  IF (get_iexch().EQ.1.AND.get_icorr().EQ.4.AND.get_igcx().EQ.3.AND.get_igcc().EQ.4) THEN
+  iexch = xclib_get_id('LDA','EXCH')
+  icorr = xclib_get_id('LDA','CORR')
+  igcx  = xclib_get_id('GGA','EXCH')
+  igcc  = xclib_get_id('GGA','CORR')
+  !
+  IF ( xclib_dft_is_libxc('LDA','EXCH') .OR. xclib_dft_is_libxc('LDA','CORR') .OR.&
+       xclib_dft_is_libxc('GGA','EXCH') .OR. xclib_dft_is_libxc('GGA','CORR') )   &
+       CALL errore( 'tsvdw','TS-vdW sR parameter not available for libxc functionals', 1 )
+  !
+  IF( iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
     !
     sR=0.94_DP !PBE=sla+pw+pbx+pbc
     !
-  ELSE IF (get_iexch().EQ.6.AND.get_icorr().EQ.4.AND.get_igcx().EQ.8.AND.get_igcc().EQ.4) THEN
+  ELSEIF( iexch==6 .AND. icorr==4 .AND. igcx==8 .AND. igcc==4) THEN
     !
     sR=0.96_DP !PBE0=pb0x+pw+pb0x+pbc !RAD/BS: This line will not work in CP unless PBE0 code update funct.f90...
     !
   ELSE 
     !
-    CALL errore('tsvdw','TS-vdW sR parameter only available for PBE and PBE0 functionals...',1)
+    CALL errore( 'tsvdw','TS-vdW sR parameter only available for PBE and PBE0 functionals...', 2 )
     !
   END IF
   !
@@ -204,6 +226,7 @@ PRIVATE :: GetVdWParam
   ! Allocate and initialize species-specific quantities...
   !
   ALLOCATE(vfree(nsp)); vfree=0.0_DP
+  IF(.NOT. ALLOCATED(vfree_pub)) ALLOCATE(vfree_pub(nsp)); vfree=0.0_DP
   ALLOCATE(dpfree(nsp)); dpfree=0.0_DP
   ALLOCATE(R0free(nsp)); R0free=0.0_DP
   ALLOCATE(C6AAfree(nsp)); C6AAfree=0.0_DP
@@ -583,6 +606,7 @@ PRIVATE :: GetVdWParam
     END DO
     !
   END DO
+  vfree_pub=vfree
   !
   RETURN
   !
@@ -593,6 +617,8 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_calculate(tauin, rhor)
   !--------------------------------------------------------------------------------------------------------------
+  !! Manages entire calculation of TS-vdW energy, wavefunction forces, and ion forces.
+  !
   ! TS-vdW Management Code: Manages entire calculation of TS-vdW energy, wavefunction forces, and ion forces via
   ! calls to PRIVATE subroutines below (called in each MD step). The calls to tsvdw_initialize and tsvdw_finalize
   ! are done once at the beginning (init_run) and the end (terminate_run). 
@@ -661,6 +687,7 @@ PRIVATE :: GetVdWParam
   !-------------------------------------------------------------------------------------------------------------- 
   SUBROUTINE tsvdw_para_init()
   !-------------------------------------------------------------------------------------------------------------- 
+  !! TS-vdW, parallel initialization
   !
   IMPLICIT NONE
   !
@@ -714,6 +741,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_pbc(tauin)
   !--------------------------------------------------------------------------------------------------------------
+  !! Move all atoms into simulation cell by adjusting Cartesian coordinates according to PBCs.
   !
   IMPLICIT NONE
   !
@@ -761,6 +789,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_unique_pair()
   !--------------------------------------------------------------------------------------------------------------
+  !! Compute unique atom pair list.
   !
   IMPLICIT NONE
   !
@@ -971,6 +1000,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_rhotot( rhor )
   !--------------------------------------------------------------------------------------------------------------
+  !! Obtain molecular charge density given on the real-space mesh.
   !
   IMPLICIT NONE
   !
@@ -1034,6 +1064,9 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_screen()
   !--------------------------------------------------------------------------------------------------------------
+  !! Determine spherical atomic integration domains and atom overlap (bit array)...  
+  !! Compute molecular pro-density (superposition of atomic densities) on the real-space mesh...  
+  !! Compute functional derivative of vdW energy wrt charge density (numerator only).
   !
   IMPLICIT NONE
   !
@@ -1284,6 +1317,8 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_veff()
   !--------------------------------------------------------------------------------------------------------------
+  !! Compute effective volume for each atom in the simulation cell.  
+  !! Complete functional derivative of vdW energy wrt charge density.
   !
   IMPLICIT NONE
   !
@@ -1297,6 +1332,7 @@ PRIVATE :: GetVdWParam
   ! Initialization of effective volume...
   !
   ALLOCATE(veff(nat)); veff=0.0_DP
+  IF(.NOT. ALLOCATED(veff_pub)) ALLOCATE(veff_pub(nat)); veff=0.0_DP
   !
   ! Normalization factor for veff integral...
   !
@@ -1346,6 +1382,7 @@ PRIVATE :: GetVdWParam
   CALL mp_sum(veff,intra_image_comm)
   !
   VefftsvdW = veff
+  veff_pub=veff
   !
   CALL stop_clock('tsvdw_veff')
   !
@@ -1358,6 +1395,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_dveff()
   !--------------------------------------------------------------------------------------------------------------
+  !! Calculate first derivative of veff wrt nuclear and cell displacements.
   !
   IMPLICIT NONE
   !
@@ -1710,6 +1748,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_effqnts()
   !--------------------------------------------------------------------------------------------------------------
+  !! Calculate effective quantities for each atom in the simulation cell.
   !
   IMPLICIT NONE
   !
@@ -1780,6 +1819,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_energy()
   !--------------------------------------------------------------------------------------------------------------
+  !! Calculate total TS-vdW energy, dispersion potential prefactor, ionic forces, and cell forces.
   !
   IMPLICIT NONE
   !
@@ -2151,6 +2191,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_wfforce()
   !--------------------------------------------------------------------------------------------------------------
+  !! Calculate total TS-vdW wavefunction forces (dispersion potential).
   !
   IMPLICIT NONE
   !
@@ -2219,6 +2260,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_cleanup()
   !--------------------------------------------------------------------------------------------------------------
+  !! Deallocate all arrays specific to \texttt{tsvdw\_calculate}.
   !
   IMPLICIT NONE
   !
@@ -2259,10 +2301,9 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE tsvdw_finalize()
   !--------------------------------------------------------------------------------------------------------------
+  !! Deallocate module-specific arrays.
   !
   IMPLICIT NONE
-  !
-  ! Deallocate module-specific arrays...
   !
   IF (ALLOCATED(UtsvdW))   DEALLOCATE(UtsvdW)
   IF (ALLOCATED(FtsvdW))   DEALLOCATE(FtsvdW)
@@ -2291,6 +2332,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE Num1stDer(r,f,N,h,df)
   !--------------------------------------------------------------------------------------------------------------
+  !! Compute first derivative on linear mesh and then transform back to radial/exponential grid.
   !
   IMPLICIT NONE
   !
@@ -2371,6 +2413,11 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE CubSplCoeff(r,f,N,df,d2f)
   !--------------------------------------------------------------------------------------------------------------
+  !! Compute second derivatives at each of the atomic radial grid points using the cubic spline methodology (i.e., smooth &
+  !! continuous piecewise first and second derivatives). These second derivatives will be utilized during cubic spline interpolation 
+  !! as a higher accuracy alternative to linear interpolation during the construction of the linear atomic grids. The two-parameter
+  !! boundary conditions that will be utilized below are known as a clamped cubic spline in that the first derivative at both the 
+  !! first and last grid point were computed numerically and provided as input.
   !
   IMPLICIT NONE
   !
@@ -2385,13 +2432,6 @@ PRIVATE :: GetVdWParam
   REAL(DP) :: dy1,dyn,p,q,un,qn
   REAL(DP), DIMENSION(:), ALLOCATABLE :: work
   !
-  ! ----------------------------------------------------------------------------------------------------------------------------------
-  ! SYNOPSIS: Compute second derivatives at each of the atomic radial grid points using the cubic spline methodology (i.e., smooth &
-  ! continuous piecewise first and second derivatives). These second derivatives will be utilized during cubic spline interpolation 
-  ! as a higher accuracy alternative to linear interpolation during the construction of the linear atomic grids. The two-parameter
-  ! boundary conditions that will be utilized below are known as a clamped cubic spline in that the first derivative at both the 
-  ! first and last grid point were computed numerically and provided as input...
-  ! ----------------------------------------------------------------------------------------------------------------------------------
   !
   ALLOCATE(work(N)); work=0.0_DP
   !
@@ -2439,6 +2479,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE GetVdWParam(atom,C6,alpha,R0)
   !--------------------------------------------------------------------------------------------------------------
+  !! Get VdW parameters for each atom.
   !
   IMPLICIT NONE
   !

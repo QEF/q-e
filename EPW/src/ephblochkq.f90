@@ -21,7 +21,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -57,7 +58,7 @@ CONTAINS
         !
         INTEGER, INTENT (IN) :: iq, nrr_k, nrr_q, nrr_g
         INTEGER, INTENT (IN) :: irvec_q(:,:), irvec_g(:,:)
-        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:,:)
+        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:)
         REAL(KIND=dp), INTENT (INOUT) :: w2(3*nat)
         COMPLEX(KIND=dp), INTENT (INOUT) :: uf ( nmodes, nmodes), epmatwef( nbndsub, nbndsub, nrr_k, nmodes)
         REAL(KIND=dp), INTENT (IN) :: irvec_r(3,nrr_k)
@@ -131,7 +132,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen,&
             etf_mem, scr_typ,&
@@ -301,7 +303,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, atm, ntyp => nsp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -467,7 +470,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, atm, ntyp => nsp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -634,7 +638,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, atm, ntyp => nsp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -670,7 +675,7 @@ CONTAINS
         !
         INTEGER, INTENT (IN) :: iq, nrr_k, nrr_q, nrr_g
         INTEGER, INTENT (IN) :: irvec_q(:,:), irvec_g(:,:)
-        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:,:)
+        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:)
         REAL(KIND=dp), INTENT (INOUT) :: w2(3*nat)
         COMPLEX(KIND=dp), INTENT (INOUT) :: uf ( nmodes, nmodes), epmatwef( nbndsub, nbndsub, nrr_k, nmodes)
         REAL(KIND=dp), INTENT (IN) :: irvec_r(3,nrr_k)
@@ -899,9 +904,9 @@ CONTAINS
         USE kinds,         ONLY : dp
         use test_tools, only : para_write
         USE io_global,     ONLY : stdout,ionode_id, meta_ionode_id
-        USE phcom,         ONLY : nmodes
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, shortrange, restart_polaron,&
-            fsthick, eptemp, ngaussw, degaussw,spherical_cutoff,&
+            fsthick, ngaussw, degaussw,spherical_cutoff,&
             eps_acustic, efermi_read, fermi_energy, lscreen, &
             model_vertex, nkf1, nkf2, nkf3, conv_thr_polaron, &
             r01, r02, r03, num_cbands, start_mode, cb_shift, &
@@ -932,7 +937,7 @@ CONTAINS
         REAL(KIND=dp), INTENT (INOUT) :: w2(3*nat)
         INTEGER, INTENT (IN) :: irvec_q(:,:), irvec_g(:,:)
         REAL(KIND=dp), ALLOCATABLE :: irvec_r(:,:)
-        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:,:)
+        INTEGER, INTENT (IN) :: ndegen_k(:,:,:), ndegen_q(:,:,:), ndegen_g(:,:,:)
         COMPLEX(KIND=dp), INTENT (INOUT) :: uf ( nmodes, nmodes), epmatwef( nbndsub, nbndsub, nrr_k, nmodes)
         INTEGER, INTENT (IN) :: dims
         !! Dims is either nbndsub if use_ws or 1 if not

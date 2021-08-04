@@ -10,7 +10,7 @@
 #if defined(__MPI)
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #else
-  INTEGER :: MPI_MAX_PROCESSOR_NAME=64
+#define MPI_MAX_PROCESSOR_NAME 64
 #endif
   INTEGER :: mype, npes, comm, ntgs, root
   LOGICAL :: iope
@@ -40,7 +40,6 @@
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   INTEGER, ALLOCATABLE :: irc_ip( : )
   INTEGER, ALLOCATABLE :: nrc_ip( : )
-  INTEGER, ALLOCATABLE :: idesc_ip(:,:,:)
   !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
@@ -70,7 +69,8 @@
   INTEGER :: idesc(LAX_DESC_SIZE)
   INTEGER :: i, ir, ic, nx, n, nr, nc  ! size of the matrix
   INTEGER :: n_in, nlen, dest, sour, tag, ii
-  INTEGER :: nnodes
+  INTEGER :: n_diag ! number of MPI processes participated in diagonalization
+  INTEGER :: nnodes ! number of nodes by hostname
   !
   integer :: nargs
   CHARACTER(LEN=80) :: arg
@@ -89,7 +89,7 @@
   !
   !   default parameter 
   !
-  n_in = 1024
+  n_in = 512
   !
   nargs = command_argument_count()
   do i = 1, nargs - 1
@@ -131,7 +131,7 @@
 #endif
 
 
-  OPEN ( unit = 6, file = TRIM('test.out'), status='unknown' )
+  !OPEN ( unit = 6, file = TRIM('test.out'), status='unknown' )
 
   !
   !write(6,*) 'mype = ', mype, ' npes = ', npes
@@ -225,17 +225,13 @@
   s = 1.0d0
   c = 1.0d0
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
-#if defined(__MPI)
-  tempo(1) = MPI_WTIME()
-#endif
+  tempo(1) = mpi_wall_time()
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
-#if defined(__MPI)
-  tempo(2) = MPI_WTIME()
-#endif
+  tempo(2) = mpi_wall_time()
   DEALLOCATE( s )
   DEALLOCATE( a )
   DEALLOCATE( c )
@@ -270,7 +266,7 @@
 #if defined(__MPI)
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
      if( ( mype == sour ) .or. ( mype == dest ) ) THEN
-        tempo(1) = MPI_WTIME()
+        tempo(1) = mpi_wall_time()
         if( mype == dest ) then
            CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG, MPI_COMM_WORLD, ierr)
            CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG+NPES*NPES, MPI_COMM_WORLD, status, ierr)
@@ -278,14 +274,14 @@
            CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG, MPI_COMM_WORLD, status, ierr)
            CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG+NPES*NPES, MPI_COMM_WORLD, ierr)
         endif
-        tempo(2) = MPI_WTIME()
+        tempo(2) = mpi_wall_time()
         perf_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) = perf_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) + &
            2.0d0*DBLE(nx*nx)*8.0d0/(tempo(2)-tempo(1))/1.0D+9
         perf_count( proc2node( ii+1 ), proc2node( i+1 ) ) = perf_count( proc2node( ii+1 ), proc2node( i+1 ) ) + 1
      END IF
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
      if( ( mype == sour ) .or. ( mype == dest ) ) THEN
-        tempo(1) = MPI_WTIME()
+        tempo(1) = mpi_wall_time()
         if( mype == dest ) then
            CALL MPI_SEND(ii, 1, MPI_BYTE, sour, TAG, MPI_COMM_WORLD, ierr)
            CALL MPI_RECV(ii, 1, MPI_BYTE, sour, TAG+NPES, MPI_COMM_WORLD, status, ierr)
@@ -293,7 +289,7 @@
            CALL MPI_RECV(ii, 1, MPI_BYTE, dest, TAG, MPI_COMM_WORLD, status, ierr)
            CALL MPI_SEND(ii, 1, MPI_BYTE, dest, TAG+NPES, MPI_COMM_WORLD, ierr)
         endif
-        tempo(2) = MPI_WTIME()
+        tempo(2) = mpi_wall_time()
         latency_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) = latency_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) + &
            (tempo(2)-tempo(1))
      END IF
@@ -341,7 +337,8 @@
   DEALLOCATE( tempo_tutti )
   !
   !
-  CALL laxlib_start(n, mpi_comm_world, mpi_comm_world, do_distr_diag_inside_bgrp)
+  n_diag = n
+  CALL laxlib_start(n_diag, mpi_comm_world, mpi_comm_world, do_distr_diag_inside_bgrp)
   CALL laxlib_getval( np_ortho = np_ortho, ortho_comm = ortho_comm, &
     do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
   !
@@ -377,35 +374,39 @@
   tempo_max = 0.0d0
   tempo_avg = 0.0d0
 
+
   CALL set_a()
   !
 #if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  tempo(1) = MPI_WTIME()
 #endif
+  tempo(1) = mpi_wall_time()
   !
   CALL diagonalize_parallel_x( n, a, d, s, idesc )
   !
 #if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  tempo(2) = MPI_WTIME()
 #endif
+  tempo(2) = mpi_wall_time()
   !
   CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nx, s, nx, 0.0d0, c, nr, idesc)
   !
 #if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  tempo(3) = MPI_WTIME()
+#endif
+  tempo(3) = mpi_wall_time()
   !
   do i = 2, 10
      tempo_mio(i) = tempo(i)-tempo(i-1)
   end do
+#if defined(__MPI)
   CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 100, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 100, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 100, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #else
-  tempo_min = tempo
-  tempo_max = tempo
+  tempo_min = tempo_mio
+  tempo_max = tempo_mio
+  tempo_avg = tempo_mio
 #endif
 
   tempo_avg = tempo_avg / npes
@@ -458,8 +459,10 @@
   deallocate( node_name )
   deallocate( proc2node )
   deallocate( perf_matrix )
+  deallocate( latency_matrix )
   deallocate( perf_count )
-
+  deallocate( a, s, d, c )
+  deallocate( rank_ip, irc_ip, nrc_ip )
 
 #if defined(__MPI)
   CALL mpi_finalize(ierr)
@@ -485,12 +488,19 @@ contains
       RETURN
    END SUBROUTINE set_a
 
-#if !defined(__MPI)
-
-   real*8 function MPI_WTIME()
-     mpi_wtime = 0
-   endfunction
-
+  function mpi_wall_time ()
+    real*8 :: mpi_wall_time
+#if defined(__MPI)
+    mpi_wall_time = MPI_WTIME()
+#else
+    ! standard way to get the wall time, sometimes with very low precision
+    integer :: cr, nc
+    real*8, save :: t0 = -1.0
+    !
+    call system_clock(count_rate=cr)
+    call system_clock(count=nc)
+    if ( t0 < 0.0 ) t0 = dble(nc)/cr
+    mpi_wall_time = dble(nc)/cr - t0
 #endif
-
+  end function mpi_wall_time
 end program lax_test

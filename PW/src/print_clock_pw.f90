@@ -13,13 +13,14 @@ SUBROUTINE print_clock_pw()
    ! ... it tries to construct the calling tree of the program.
    !
    USE io_global,          ONLY : stdout
-   USE control_flags,      ONLY : isolve, iverbosity, gamma_only, lxdm
+   USE control_flags,      ONLY : isolve, iverbosity, gamma_only, lxdm, &
+        ts_vdw, ldftd3, llondon
    USE paw_variables,      ONLY : okpaw
    USE uspp,               ONLY : okvan
    USE realus,             ONLY : real_space
    USE noncollin_module,   ONLY : noncolin
    USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
-   USE funct,              ONLY : dft_is_hybrid
+   USE xc_lib,             ONLY : xclib_dft_is
    USE bp,                 ONLY : lelfield
    !
    IMPLICIT NONE
@@ -31,7 +32,11 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'electrons' )
    CALL print_clock( 'update_pot' )
    CALL print_clock( 'forces' )
+   IF (ldftd3)  CALL print_clock('force_dftd3')
+   IF (llondon) CALL print_clock('force_london')
    CALL print_clock( 'stress' )
+   IF (ldftd3)  CALL print_clock('stres_dftd3')
+   IF (llondon) CALL print_clock('stres_london')
    !
    WRITE( stdout, '(/5x,"Called by init_run:")' )
    CALL print_clock( 'wfcinit' )
@@ -47,9 +52,8 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'realus:tabp' )
    END IF
    CALL print_clock( 'hinit0' )
-   IF (lxdm) THEN
-      CALL print_clock('init_xdm')
-   ENDIF
+   IF (lxdm)   CALL print_clock('init_xdm')
+   IF (ts_vdw) CALL print_clock('tsvdw_pair')
    !
    WRITE( stdout, '(/5x,"Called by electrons:")' )
    CALL print_clock( 'c_bands' )
@@ -74,11 +78,21 @@ SUBROUTINE print_clock_pw()
       CALL print_clock('exdm:environ')
       CALL print_clock('exdm:paw_charge')
       CALL print_clock('exdm:rho')
+   ELSE IF (ts_vdw) THEN
+      CALL print_clock('tsvdw_rhotot')
+      CALL print_clock('tsvdw_screen')
+      CALL print_clock('tsvdw_veff')
+      CALL print_clock('tsvdw_dveff')
+      CALL print_clock('tsvdw_energy')
+   ELSE IF (ldftd3) THEN
+      CALL print_clock('energy_dftd3')
+   ELSE IF (llondon) THEN
+      CALL print_clock('energy_london')
    END IF
-
    !
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
+   CALL print_clock( 'init_us_2_gpu' )
    IF ( isolve == 0 ) THEN
       CALL print_clock( 'regterg' )    ; CALL print_clock( 'cegterg' )
    ELSE  IF (isolve == 1) THEN
@@ -245,13 +259,12 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'new_nsg' )
          CALL print_clock( 'alloc_neigh' )
       ENDIF
-      CALL print_clock( 'new_ns' )
       CALL print_clock( 'vhpsi' )
       CALL print_clock( 'force_hub' )
       CALL print_clock( 'stres_hub' )
    ENDIF
    !
-   IF ( dft_is_hybrid() ) THEN
+   IF ( xclib_dft_is('hybrid') ) THEN
       WRITE( stdout, '(/,5X,"EXX routines")' )
       CALL print_clock( 'exx_grid' )
       CALL print_clock( 'exxinit' )

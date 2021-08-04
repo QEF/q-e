@@ -61,7 +61,7 @@ SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, 
   !
   IMPLICIT NONE
   !
-  ! Following varibales are temporary
+  ! Following variables are temporary
 
   COMPLEX(DP),INTENT(IN) :: psi0(npwx,nbnd)  ! psi0  needed to compute the Pv projection
   COMPLEX(DP),INTENT(IN) :: spsi0(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
@@ -87,7 +87,6 @@ SUBROUTINE pcg_gamma( hs_1psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, psi, ethr, 
   INTEGER  :: npw2, npwx2, cg_iter, ibnd
   !
   REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP), EXTERNAL :: ZDOTC
 
   EXTERNAL  hs_1psi, g_1psi
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )

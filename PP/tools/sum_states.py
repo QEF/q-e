@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 
 ######  SUM STATES #######
 # Python script for summing and ploting the data from the Density Of States
@@ -31,17 +31,17 @@
 # ni.pdos_atm#1\(Ni\)_wfc#2\(d\) -t "Example PP/02" -xr -6 2
 #
 #
-# The procedure for obtaining the DOS files is explained 
+# The procedure for obtaining the DOS files is explained
 # i.e. in (espresso-dir)/PP/examples/example02/
-# 
+#
 # Author: Dr. Julen Larrucea
 #         University of Bremen,
 #         Bremen Centre for Computational Materials Science, HMI Group
 #         julenl [at] gmail.com  or larrucea [at] hmi.uni-bremen.de
 #
-#  This file is distributed under the terms of the GNU General Public 
+#  This file is distributed under the terms of the GNU General Public
 #  License. See the file `License'
-#  in the root directory of the present distribution, 
+#  in the root directory of the present distribution,
 #  or http://www.gnu.org/copyleft/gpl.txt .
 #######################
 
@@ -60,7 +60,7 @@ min_y,max_y="",""
 output_file_name="sum_dos.out"
 prt="no"
 
-print " #### sum_states.py version "+str(version)+" #### "  
+print(" #### sum_states.py version {} #### ".format(version))
 
 
 # Check if X11, mathplotlib and gnuplot are available
@@ -89,14 +89,14 @@ if len(sys.argv)>1:
    if option=="t":
     graphtitle= sys.argv[sys.argv.index('-t')+1]
    if option=="xr":
-    min_x,max_x= float(sys.argv[sys.argv.index('-xr')+1]),float(sys.argv[sys.argv.index('-xr')+2]) 
+    min_x,max_x= float(sys.argv[sys.argv.index('-xr')+1]),float(sys.argv[sys.argv.index('-xr')+2])
    if option=="yr":
-    min_y,max_y= float(sys.argv[sys.argv.index('-yr')+1]),float(sys.argv[sys.argv.index('-yr')+2]) 
+    min_y,max_y= float(sys.argv[sys.argv.index('-yr')+1]),float(sys.argv[sys.argv.index('-yr')+2])
    if option=="v":
-    print "sum_dos.py version: "+version
+    print("sum_dos.py version:", version)
     sys.exit()
    if option=="h":
-    print '''
+    print('''
     -o QE output file name (for grepping Fermi E)
     -s Selection of atoms for summing the DOSes. "*" for all, *1*Fe*d* for first Fe atom " (def. "*")
     -p Print output to a file and aditionaly provide an output name (def. no output and "sum_dos.out")
@@ -105,8 +105,8 @@ if len(sys.argv)>1:
     -yr set min and max y value for the axes in the graph
     -h print this help
     -v print version
-       Example: sum_states.py --s sys.pdos_atm#4\(Fe2\)_wfc#2\(d\) -t "Wustite LDA+U single Fe" -xr -9 4 
-   '''
+       Example: sum_states.py --s sys.pdos_atm#4\(Fe2\)_wfc#2\(d\) -t "Wustite LDA+U single Fe" -xr -9 4
+   ''')
     sys.exit()
 
 
@@ -116,13 +116,13 @@ if len(os.popen('echo $DISPLAY').read()) > 1:
   try:
    from pylab import *
    mplplot="yes"
-   print "pylab imported"
+   print("pylab imported")
   except:
-   print "There is no mathplotlib installed. Using gnuplot."
+   print("There is no mathplotlib installed. Using gnuplot.")
    mplplot="no"
    prt="yes"
 else:
-  print "No X11. Trying to plot on terminal"
+  print("No X11. Trying to plot on terminal")
   graphic_plot="no"
   if prog_gnuplot=="no":
    prt="yes"
@@ -132,7 +132,7 @@ else:
 if pwout == "":
  for filen in filter(os.path.isfile, os.listdir('.')):
   if "Program PWSCF" in linecache.getline(filen, 2):
-   print "Using " + filen + " as pw.x output. You can specify another one with the -o option."
+   print("Using " + filen + " as pw.x output. You can specify another one with the -o option.")
    pwout=filen
 
 # Parse Fermi energy from the pw.x output
@@ -140,35 +140,32 @@ if pwout!="":
  try:
   os.popen("grep -a 'the Fermi energy is' "+pwout ).read()
   fermi=float(os.popen("grep -a 'the Fermi energy is' "+pwout ).read().split()[4])
-  print "Fermi energy = ", fermi, "a.u."
+  print("Fermi energy = ", fermi, "a.u.")
  except:
-  print "WARNING: No Fermi energy found. Using 0 e.V. instead"
+  print("WARNING: No Fermi energy found. Using 0 e.V. instead")
   fermi=0
 else:
- print "WARNING: No pw.x output found. Using E Fermi = 0 e.V."
+ print("WARNING: No pw.x output found. Using E Fermi = 0 e.V.")
  fermi=0
 
-# List of all DOS files to add 
+# List of all DOS files to add
 dosfiles=[]
 for dfile in os.listdir('.'):
    if fnmatch.fnmatch(dfile, selat):
-     dosfiles.append(dfile) 
+     dosfiles.append(dfile)
 if len(dosfiles)==0:
- print "ERROR: Provide a (list of) valid DOS file(s)"
+ print("ERROR: Provide a (list of) valid DOS file(s)")
  sys.exit()
 
-print "dosfiles list: ",
-for dosfile in dosfiles:
-  print dosfile,
-print ""
+print("dosfiles list:", " ".join(dosfiles))
 
 # Check wetter we have k-solved DOS
 if open(dosfiles[0],'r').readline().split()[1]=="E":
   ksolved="no"
-  print "no ksolved"
+  print("no ksolved")
 elif open(dosfiles[0],'r').readline().split()[1]=="ik":
   ksolved="yes"
-  print "ksolved"
+  print("ksolved")
 
 # Sum over all k-points and files
 mat=[]  # matrix with total sum of ldos
@@ -191,28 +188,28 @@ for i in range(len(dosfiles)):
       elif ik == k and k > 1:
          oldmat.append([float(line.split()[1]),float(line.split()[2]),float(line.split()[3])])
       elif len(line) < 5 and k > 1:  #if blank line, sum k-frame to the total
-       for j in range(len(oldmat)):  
+       for j in range(len(oldmat)):
          mati[j]=[mati[j][0],mati[j][1]+oldmat[j][1],mati[j][2]+oldmat[j][2]]
 
  if mat == []: # if it is the first dos file, copy total matrix (mat) = the first dos files's data
     mat=mati[:]
  else:
     for j in range(len(mati)): # if it is not the first file, sum values
-        mat[j]=[mat[j][0],mat[j][1]+mati[j][1],mat[j][2]+mati[j][2]]  
+        mat[j]=[mat[j][0],mat[j][1]+mati[j][1],mat[j][2]+mati[j][2]]
 
 
-print "...ploting..."
+print("...ploting...")
 
 
 if prt=="yes":
  out=open(output_file_name,"w")
-x,y1,y2=[],[],[]    
+x,y1,y2=[],[],[]
 for i in mat:
  x.append(i[0]-fermi)
  y1.append(i[1])
  y2.append(-i[2])
  if prt=="yes":  # print to a file
-  print>>out, i[0]-fermi, i[1], i[2]
+  print(i[0] - fermi, i[1], i[2], file=out)
 if prt=="yes":
  out.close()
 
@@ -222,7 +219,7 @@ if graphic_plot=="yes":
   if mplplot=="yes":
     plot(x,y1,linewidth=1.0)
     plot(x,y2,linewidth=1.0)
-    print min(y2),max(y1)
+    print(min(y2), max(y1))
     plt.title(graphtitle)
     plt.xlabel('E (eV)')
     plt.ylabel('States')
@@ -231,15 +228,13 @@ if graphic_plot=="yes":
     plt.fill(x,y1,color='0.8')
     plt.fill(x,y2,color='0.9')
     if min_x and max_x:
-     fromx,tox=min_x,max_x 
+      fromx, tox = min_x, max_x
     plt.axis([fromx, tox, min(y2), max(y1)])
-    show()   
+    show()
   elif mplplot=="no" and prog_gnuplot=="yes":  # If no mathplotlib available, use gnuplot
-     os.system("echo \"plot '"+ output_file_name + "' using ($1-"+str(fermi)+"):2 w l, '' u ($1"+str(fermi)+"):3 w l\" | gnuplot -persist")  
+    os.system("""echo "plot '{0}' using ($1-{1}):2 w l, '' u ($1-{1}):3 w l" | gnuplot -persist""".format(
+        output_file_name, fermi))
 elif graphic_plot=="no":  # If no X forwarding available, show graph in terminal
   if prog_gnuplot=="yes":
-     os.system("echo \"set terminal dumb; plot '"+ output_file_name + "' using ($1-"+str(fermi)+"):2 w l, '' u ($1-"+str(fermi)+"):3 w l\" | gnuplot -persist")
-
-
-
-
+    os.system("""echo "set terminal dumb; plot '{0}' using ($1-{1}):2 w l, '' u ($1-{1}):3 w l" | gnuplot -persist""".format(
+        output_file_name, fermi))

@@ -62,7 +62,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE becmod,               ONLY : bec_type, becp, calbec
   USE lr_exx_kernel
   USE dv_of_drho_lr
-  USE funct,                ONLY : start_exx, stop_exx
+  USE xc_lib,               ONLY : start_exx, stop_exx
   !
   IMPLICIT NONE
   !

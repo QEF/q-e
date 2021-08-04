@@ -28,7 +28,7 @@ subroutine import_upf ( )
   !
   use pseudo_types, only : pseudo_upf, pseudo_config, deallocate_pseudo_upf
   use paw_type
-  use upf_module, only : read_upf_new
+  use read_upf_new_module, only : read_upf_new
   !
   implicit none
   !

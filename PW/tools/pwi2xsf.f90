@@ -138,7 +138,7 @@
 !     CELL_PARAMETERS
 !     
       if ( line(1:15) .eq. 'CELL_PARAMETERS' ) then
-         line = line(16:len)
+         line(1:15) = ' '
          len  = string_length(line)
          cell_f = 1d0 ! default unit for CELL_PARAMETERS is asumed in units of celldm(1)
          !
@@ -166,7 +166,7 @@
 !
       elseif ( line(1:16) .eq. 'ATOMIC_POSITIONS' ) then
 !     find out the length-unit
-         line = line(17:len)
+         line(1:16) = ' '
          len  = string_length(line)
          atomic_posunit = ALAT_UNIT         
          if (len.gt.0 ) then
@@ -227,7 +227,7 @@
 !
                   if ( line(1:16) .eq. 'ATOMIC_POSITIONS' ) then
 !                    find out the length-unit
-                     line = line(17:len)
+                     line(1:16) = ' '
                      len  = string_length(line)
 !                    default is leave unchanged
                      if (len.gt.0 ) then

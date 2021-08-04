@@ -68,7 +68,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! ikk: record position for wfc at k
 
   complex(DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
-       wdyn (3 * nat, 3 * nat), zdotc
+       wdyn (3 * nat, 3 * nat)
   complex(DP), allocatable ::  aux (:,:)
   ! work space
 

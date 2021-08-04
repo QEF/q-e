@@ -13,7 +13,7 @@ SUBROUTINE close_files( lflag )
   USE ldaU,          ONLY: lda_plus_u, U_projection
   USE control_flags, ONLY: io_level
   USE fixed_occ,     ONLY: one_atom_occupations
-  USE io_files,      ONLY: prefix, iunwfc, iunsat, iunhub2, &
+  USE io_files,      ONLY: prefix, iunwfc, iunsat, &
                            iunhub, iunefield, iunefieldm, iunefieldp, &
                            iunwfc_exx
   USE buffers,       ONLY: close_buffer
@@ -43,15 +43,12 @@ SUBROUTINE close_files( lflag )
   !
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   ! ... iunhub  as above, only for wfcs * S having an associated Hubbard U
-  ! ... iunhub2 as above, only for wfcs     having an associated Hubbard U
   !
   IF ( lda_plus_u .AND. (U_projection /= 'pseudo') ) THEN
      IF ( io_level < 0 ) THEN
         CALL close_buffer( iunhub, 'DELETE' )
-        CALL close_buffer( iunhub2,'DELETE' )
      ELSE
         CALL close_buffer( iunhub, 'KEEP' )
-        CALL close_buffer( iunhub2,'KEEP' )
      END IF
   END IF
   !

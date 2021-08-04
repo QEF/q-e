@@ -47,6 +47,7 @@ MODULE cp_restart_new
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
                                            tksw, do_makov_payne, smallmem,   &
+                                           mbd_vdw,                           &
                                            llondon, lxdm, ts_vdw, tfor, tpre
       USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf, lwf ! Lingzhu Kong
       USE constants,                ONLY : e2
@@ -66,9 +67,9 @@ MODULE cp_restart_new
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ityp 
-      USE funct,                    ONLY : get_dft_name, &
-           dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
-           dft_is_nonlocc, get_nonlocc_name
+      USE funct,                    ONLY : get_dft_name, dft_is_nonlocc, get_nonlocc_name
+      USE xc_lib,                   ONLY : xclib_dft_is, xclib_get_exx_fraction, &
+                                           get_screening_parameter
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
                                            Hubbard_lmax, Hubbard_U
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
@@ -76,10 +77,11 @@ MODULE cp_restart_new
       USE mp,                       ONLY : mp_sum, mp_barrier
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
       USE fft_rho,                  ONLY : rho_r2g
-      USE uspp_param,               ONLY : n_atom_wfc, upf
+      USE upf_ions,                 ONLY : n_atom_wfc
+      USE uspp_param,               ONLY : upf
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
-      USE wrappers,                 ONLY : f_copy
+      USE clib_wrappers,            ONLY : f_copy
       USE uspp,                     ONLY : okvan
       USE input_parameters,         ONLY : vdw_corr, starting_ns_eigenvalue
       USE qexsd_init, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,  & 
@@ -91,7 +93,8 @@ MODULE cp_restart_new
                           qexsd_init_outputElectricField, qexsd_init_vdw,     &
                           qexsd_init_hybrid, qexsd_init_dftU 
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
-      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf
+      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf,  &
+                              qexsd_add_all_clocks
       !
       IMPLICIT NONE
       !
@@ -153,6 +156,7 @@ MODULE cp_restart_new
       REAL(DP), ALLOCATABLE :: tau(:,:)
       COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
+      REAL(DP)              :: stress(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
       REAL(DP)              :: wk_(2), nelec
@@ -298,10 +302,10 @@ MODULE cp_restart_new
                                 U_PROJECTION_TYPE = 'atomic', U = Hubbard_U, STARTING_NS = starting_ns_eigenvalue) 
         END IF
         !
-        IF (dft_is_hybrid())  THEN 
+        IF (xclib_dft_is('hybrid'))  THEN 
            ALLOCATE (hybrid_) 
            CALL qexsd_init_hybrid(OBJ = hybrid_, DFT_IS_HYBRID = .TRUE. , ECUTFOCK = ecutwfc, &
-                                 EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = get_screening_parameter(),&
+                                 EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = get_screening_parameter(),&
                                  EXXDIV_TREATMENT = 'none',  X_GAMMA_EXTRAPOLATION = .FALSE.) 
         END IF 
         empirical_vdW = ( TRIM(vdw_corr) /= 'none' )  
@@ -377,7 +381,7 @@ MODULE cp_restart_new
             wk_ = 2.0_dp
          END IF
          CALL qexsd_init_k_points_ibz( k_points_ibz, 'Gamma', &
-              'CP',1,1,1,0,0,0,1,xk,wk_,alat,a1,.false.) 
+              'CP',1,1,1,0,0,0,1,alat,a1,.false.,xk,wk_) 
          bands_occu%tagname="occupations_kind"
          bands_occu%lread=.false.
          bands_occu%lwrite=.true.
@@ -408,8 +412,13 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
          output_obj%stress_ispresent=tpre
          ! FIXME: may be wrong or incomplete
-         IF ( tpre) h = -MATMUL( detot, ht ) / omega
-         CALL qexsd_init_stress(output_obj%stress, h, tpre ) 
+         IF ( tpre) stress = -MATMUL( detot, ht ) / omega
+         CALL qexsd_init_stress(output_obj%stress, stress, tpre )
+!------------------------------------------------------------------------------
+!--- TIMING 
+!------------------------------------------------------------------------------
+        CALL qexsd_add_all_clocks() 
+
 !-------------------------------------------------------------------------------
 ! ... non existent or not implemented fields
 !-------------------------------------------------------------------------------
@@ -549,7 +558,7 @@ MODULE cp_restart_new
       USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
-                                           ts_vdw, lxdm, iverbosity, lwf
+                                           ts_vdw, mbd_vdw, lxdm, iverbosity, lwf
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
@@ -774,7 +783,7 @@ MODULE cp_restart_new
            Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            Hubbard_dum, &
            vdw_corr, scal6, lon_rcut, vdw_isolated)
-      CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+      CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !
       lsda_ = output_obj%magnetization%lsda

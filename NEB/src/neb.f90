@@ -11,16 +11,15 @@ PROGRAM neb
   !
   ! ... Nudged Elastic Band / Strings Method algorithm
   !
-  USE io_global,         ONLY : meta_ionode, meta_ionode_id
+  USE io_global,         ONLY : meta_ionode, meta_ionode_id, ionode
   USE environment,       ONLY : environment_start, environment_end
   USE check_stop,        ONLY : check_stop_init
   USE mp,                ONLY : mp_bcast
   USE mp_global,         ONLY : mp_startup
   USE mp_world,          ONLY : world_comm, mpime, root
-  USE mp_pools,          ONLY : intra_pool_comm
-  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_images,         ONLY : nimage, inter_image_comm
   USE read_input,        ONLY : read_input_file
-  USE command_line_options,  ONLY : input_file_, ndiag_
+  USE command_line_options,  ONLY : input_file_
   !
   USE path_variables,    ONLY : conv_path
   USE path_base,         ONLY : initialize_path, search_mep
@@ -35,19 +34,14 @@ PROGRAM neb
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
-  !
   CHARACTER(len=256) :: engine_prefix, parsing_file_name
-  INTEGER :: unit_tmp, i, iimage
-  INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
+  INTEGER :: unit_tmp, i, ios
+  INTEGER, EXTERNAL :: input_images_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
   CALL mp_startup ( start_images=.true. )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-       do_distr_diag_inside_bgrp_ = .true. )
-  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
+  !
   CALL environment_start ( 'NEB' )
   !
   ! INPUT RELATED
@@ -60,30 +54,35 @@ PROGRAM neb
   ! ... open input file
   !
   IF ( input_file_ /= ' ') THEN
-     WRITE(iunpath,'(/,5X,"parsing_file_name: ",A)') trim(input_file_)
-     CALL path_gen_inputs ( trim(input_file_), engine_prefix, &
-                            input_images, root, world_comm )
+     WRITE(iunpath,'(/,5X,"Parsing file: ",A)') trim(input_file_)
+     IF ( mpime == root ) &
+          CALL path_gen_inputs ( input_file_, engine_prefix, input_images)
   ELSE
      WRITE(iunpath,'(/,5X,"No input file found, assuming nothing to parse",/,&
     &               5X,"Searching argument -input_images or --input_images")')
      IF ( mpime == root )  input_images = input_images_getarg ( )
-     CALL mp_bcast(input_images,root, world_comm)
-     !
-     IF (input_images == 0) CALL errore('string_methods', &
-        'Neither a file to parse nor input files for each image found',1)
-     !
   ENDIF
   !
-  unit_tmp = find_free_unit () 
-  open(unit=unit_tmp,file="neb.dat",status="old")
+  CALL mp_bcast(input_images,root, world_comm)
+  IF (input_images == 0) CALL errore('string_methods', &
+       'Neither a file to parse nor input files for each image found',1)
+  !
+  IF (meta_ionode) open(newunit=unit_tmp,file="neb.dat",status="old")
   CALL path_read_namelist(unit_tmp)
   CALL path_read_cards(unit_tmp)
-  close(unit=unit_tmp)
+  IF (meta_ionode) close(unit=unit_tmp)
   !
   do i=1,input_images
     !
     IF ( i > 1 ) CALL clean_pw(.true.)
     parsing_file_name = trim(engine_prefix)//trim(int_to_char(i))//".in"
+    !
+    ! With image parallelization, check that all images can see the input
+    ! data files pw_1, ..., pw_N; if not, copy them from "meta_ionode_id" 
+    ! (each image of the engine reads its own data file from "ionode_id")
+    !
+    IF ( ionode .AND. nimage > 1 ) CALL bcast_file ( parsing_file_name, &
+                                    meta_ionode_id, inter_image_comm, ios )
     !
     CALL read_input_file ( 'PW', parsing_file_name )
     CALL iosys()
@@ -95,6 +94,7 @@ PROGRAM neb
     END IF
     CALL engine_to_path_pos(i)
     IF ( i == 1 ) CALL engine_to_path_fix_atom_pos()
+    CALL engine_to_path_tot_charge(i)
     !
   enddo
   !

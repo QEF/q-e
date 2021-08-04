@@ -9,7 +9,8 @@ INPUT_FILES_HTML = \
         INPUT_PROJWFC.html \
         INPUT_BANDS.html \
         INPUT_DOS.html \
-        INPUT_LD1.html
+        INPUT_LD1.html \
+        INPUT_HP.html
 
 INPUT_FILES_TXT = $(INPUT_FILES_HTML:.html=.txt)
 LINK_FILES      = $(INPUT_FILES_TXT) 
@@ -39,6 +40,7 @@ input_html: links
 	./htmlise.sh INPUT_BANDS.txt   > INPUT_BANDS.html
 	./htmlise.sh INPUT_DOS.txt     > INPUT_DOS.html
 	./htmlise.sh INPUT_LD1.txt     > INPUT_LD1.html
+	./htmlise.sh INPUT_HP.txt      > INPUT_HP.html
 
 make_user_guide: links
 	rm -rf user_guide/

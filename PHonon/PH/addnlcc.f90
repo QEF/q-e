@@ -13,7 +13,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat
-  use funct, only : dft_is_gradient, dft_is_nonlocc
+  USE funct,  only : dft_is_nonlocc
+  USE xc_lib, only : xclib_dft_is
   USE cell_base, ONLY : omega
   use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm
@@ -55,9 +56,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   real(DP) :: fac
   ! auxiliary factor
-  complex(DP), external :: zdotc
-  ! the scalar product function
-
 
   if (.not.nlcc_any) return
 
@@ -96,7 +94,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-     if ( dft_is_gradient() ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
+     if ( xclib_dft_is('gradient') ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
                           dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1, 1, ipert), &
                           nspin_mag, nspin_gga, g, dvaux)
      !
@@ -112,7 +110,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
            call addcore (mode1, drhoc)
            do is = 1, nspin_lsda
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
-                   zdotc (dfftp%nnr, dvaux (1, is), 1, drhoc, 1) * &
+                   dot_product (dvaux (:,is), drhoc) * &
                    omega * fac / DBLE (nrtot)
            enddo
         enddo

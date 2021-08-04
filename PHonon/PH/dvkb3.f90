@@ -21,30 +21,32 @@ subroutine dvkb3(ik,dvkb)
   USE wavefunctions,    ONLY : evc
   USE uspp,      ONLY: nkb
   USE uspp_param,ONLY: nh
+  USE qpoint,    ONLY : ikks
   USE units_ph,  ONLY: this_dvkb3_is_on_file, lrdvkb3, iudvkb3
   implicit none
 
   integer, intent(in) :: ik
   complex(DP), intent(out) :: dvkb (npwx,nkb,3)
 
-  integer :: npw, jpol,  nt, na, ikb, jkb, ig
+  integer :: npw, jpol,  nt, na, ikb, jkb, ig, ikk
 
   real(DP), allocatable  :: gk (:,:), g2kin(:)
 
   complex(DP), allocatable :: work (:,:)
 
+  ikk=ikks(ik)
   if (this_dvkb3_is_on_file(ik)) then
      call davcio (dvkb, lrdvkb3, iudvkb3, ik, -1)
   else
-     npw = ngk(ik)
+     npw = ngk(ikk)
      allocate (work(npwx,nkb))
      allocate (gk(3, npw))
      allocate (g2kin(npw))
      !
      do ig = 1, npw
-        gk (1, ig) = (xk (1, ik) + g (1, igk_k (ig,ik) ) ) * tpiba
-        gk (2, ig) = (xk (2, ik) + g (2, igk_k (ig,ik) ) ) * tpiba
-        gk (3, ig) = (xk (3, ik) + g (3, igk_k (ig,ik) ) ) * tpiba
+        gk (1, ig) = (xk (1, ikk) + g (1, igk_k (ig,ikk) ) ) * tpiba
+        gk (2, ig) = (xk (2, ikk) + g (2, igk_k (ig,ikk) ) ) * tpiba
+        gk (3, ig) = (xk (3, ikk) + g (3, igk_k (ig,ikk) ) ) * tpiba
         g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
         if (g2kin (ig) .lt.1.0d-10) then
            gk (1, ig) = 0.d0
@@ -57,11 +59,11 @@ subroutine dvkb3(ik,dvkb)
         endif
      enddo
 
-     if (lsda) current_spin = isk (ik)
+     if (lsda) current_spin = isk (ikk)
      do jpol=1,3
-        call gen_us_dy (ik, at (1, jpol), dvkb(1,1,jpol))
+        call gen_us_dy (ikk, at (1, jpol), dvkb(1,1,jpol))
      end do
-     call gen_us_dj (ik, work)
+     call gen_us_dj (ikk, work)
 
      jkb = 0
      do nt = 1, ntyp

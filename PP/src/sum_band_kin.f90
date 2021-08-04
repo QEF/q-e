@@ -34,7 +34,7 @@ SUBROUTINE sum_band_kin(kin_r)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
   USE mp,                   ONLY : mp_sum
-  USE funct,                ONLY : dft_is_meta
+  USE xc_lib,               ONLY : xclib_dft_is
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -124,7 +124,7 @@ SUBROUTINE sum_band_kin(kin_r)
   ! ... kin_r: sum over bands, k-points, bring to G-space, symmetrize,
   ! ... synchronize with kin_g
   !
-!  IF ( dft_is_meta() .OR. lxdm) THEN
+!  IF ( xclib_dft_is('meta') .OR. lxdm) THEN
      !
      CALL mp_sum( kin_r, inter_pool_comm )
      CALL mp_sum( kin_r, inter_bgrp_comm )
@@ -201,7 +201,7 @@ SUBROUTINE sum_band_kin(kin_r)
           DO ibnd = ibnd_start, ibnd_end, incr
              !
              !
-          !   IF (dft_is_meta() .OR. lxdm) THEN
+          !   IF (xclib_dft_is('meta') .OR. lxdm) THEN
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
                    !
@@ -306,7 +306,7 @@ SUBROUTINE sum_band_kin(kin_r)
              !
              IF (.NOT. noncolin) THEN
                 !
-!                IF (dft_is_meta() .OR. lxdm) THEN
+!                IF (xclib_dft_is('meta') .OR. lxdm) THEN
                    DO j=1,3
                       psic(:) = ( 0.D0, 0.D0 )
                       !

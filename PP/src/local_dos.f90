@@ -379,7 +379,10 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   END DO
   !
   !    Here we add the US contribution to the charge
+  !    BEWARE: addusdens assumes that input rho is summed over pools,
+  !            bec_sum is not, and the result is summed over pools
   !
+  CALL mp_sum( rho%of_g(:,:), inter_pool_comm )
   CALL addusdens(rho%of_g(:,:))
   !
   !    Now select the desired component, bring it to real space
@@ -406,9 +409,6 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      dos(:) = dos(:) * segno(:)
      DEALLOCATE(segno)
   ENDIF
-#if defined(__MPI)
-  CALL mp_sum( dos, inter_pool_comm )
-#endif
   !
   IF (iflag == 0 .or. gamma_only) RETURN
   !

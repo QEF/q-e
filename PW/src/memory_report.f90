@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2016 Quantum ESPRESSO group
+! Copyright (C) 2007-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -41,13 +41,13 @@ SUBROUTINE memory_report()
   USE cellmd,    ONLY : cell_factor
   USE uspp,      ONLY : nkb, okvan
   USE atom,      ONLY : rgrid
-  USE funct,     ONLY : dft_is_meta, dft_is_hybrid
+  USE xc_lib,    ONLY : xclib_dft_is
   USE ldaU,      ONLY : lda_plus_u, U_projection, nwfcU
   USE fixed_occ, ONLY : one_atom_occupations
   USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
   USE uspp_param,ONLY : lmaxkb, upf, nh, nbetam
-  USE us,        ONLY : dq
+  USE uspp_data, ONLY : dq
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem, tqr, iverbosity
@@ -59,7 +59,7 @@ SUBROUTINE memory_report()
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
   !
   INTEGER, PARAMETER :: MB=1024*1024
   INTEGER, PARAMETER :: GB=1024*MB
@@ -72,7 +72,7 @@ SUBROUTINE memory_report()
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
-  REAL(dp) :: ram, ram_, ram1, ram2, maxram, totram, add
+  REAL(dp) :: ram, ram_, ram1, ramk, maxram, totram, add
   INTEGER :: np_ortho(2)
   !
   IF ( gamma_only) THEN
@@ -91,6 +91,7 @@ SUBROUTINE memory_report()
   npwx_l = npwx_g/nproc_bgrp
   !
   ! ram   = dynamically (permanently) allocated RAM, per process
+  ! ramk  = dynamically allocated RAM only on pool 0
   ! maxram= "high watermark": max ram needed during a run
   ! totram= max ram needed summed over all processors
   !
@@ -123,7 +124,7 @@ SUBROUTINE memory_report()
   END IF
   !
   ! hybrid functionals
-  IF ( dft_is_hybrid () ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      ! ngxx_g = estimated global number of G-vectors used in V_x\psi products
      ! nexx_g = estimated global size of the FFT grid used in V_x\psi products
      ! nexx_l = estimated local size of the FFT grid used in V_x\psi products
@@ -179,7 +180,7 @@ SUBROUTINE memory_report()
   ! Charge density and potentials - see scf_type in scf_mod
   !=====================================================================
   scf_type_size =  (complex_size * ngm + real_size * dfftp%nnr ) * nspin ! scf_mod.f90:94-95
-  IF ( dft_is_meta() .or. lxdm ) scf_type_size =  2 * scf_type_size
+  IF ( xclib_dft_is('meta') .or. lxdm ) scf_type_size =  2 * scf_type_size
   ! rho, v, vnew (allocate_fft.f90:56) 
   add = 3 * scf_type_size
   IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rho,v,vnew', add/MB
@@ -188,20 +189,21 @@ SUBROUTINE memory_report()
   ! vltot, vrs, rho_core, rhog_core, psic, strf, kedtau if needed
   ram =  ram + complex_size * ( dfftp%nnr + ngm *( 1 + ntyp ) ) + &
        real_size * dfftp%nnr*(2+nspin)
-  IF ( dft_is_meta() ) ram = ram + real_size * dfftp%nnr*nspin
+  IF ( xclib_dft_is('meta') ) ram = ram + real_size * dfftp%nnr*nspin
   ! arrays for rho mixing
+  ramk = 0
   IF ( lscf ) THEN
      ! rhoin (electrons.f90:439)
      ram =  ram + scf_type_size
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rhoin', DBLE(scf_type_size)/MB
      ! see mix_type in scf_mod
      mix_type_size =  complex_size * ngm * nspin
-     IF ( dft_is_meta() .or. lxdm ) mix_type_size =  2 * mix_type_size
+     IF ( xclib_dft_is('meta') .or. lxdm ) mix_type_size =  2 * mix_type_size
      ! df, dv (if kept in memory)
      IF ( io_level < 2 ) THEN
         add = mix_type_size * 2 * nmix
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'rho*nmix', add/MB
-        ram = ram + add
+        ramk = ramk + add
      END IF
   END IF
   !=====================================================================
@@ -393,7 +395,7 @@ SUBROUTINE memory_report()
      END IF
   END IF
   !
-  maxram = ram + ram_
+  maxram = ram + ramk + ram_
   !
   ! arrays used for global sorting in ggen:
   !    igsrt, g2l, g2sort_g, total dimensions:
@@ -401,7 +403,7 @@ SUBROUTINE memory_report()
   IF ( .NOT. smallmem ) maxram = MAX ( maxram, &
        int_size * 2 * ngm_g + real_size * ngm_g )
   !
-  totram = maxram * nproc_image
+  totram = (ram + ram_) * nproc_image + ramk * nproc_image / npool
   IF ( iverbosity > 0 ) THEN
      IF ( ram .lt. GB ) WRITE( stdout, 1010 ) ram/MB, ' MB'
      IF ( ram .ge. GB ) WRITE( stdout, 1010 ) ram/GB, ' GB'
@@ -414,6 +416,10 @@ SUBROUTINE memory_report()
      IF ( totram .lt. GB ) WRITE( stdout, 1012 ) totram/MB, ' MB'
      IF ( totram .ge. GB ) WRITE( stdout, 1012 ) totram/GB, ' GB'
   END IF
+  !
+  ! check: more bands than plane waves? not good
+  !
+  IF ( npwx_g < nbndx ) CALL errore('memory_report','more bands than PWs!',1)
   !
  1010 format (/5x,'Estimated static dynamical RAM per process > ', F10.2, A3)
  1011 format (/5x,'Estimated max dynamical RAM per process > ', F10.2, A3)

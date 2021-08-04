@@ -108,8 +108,6 @@ SUBROUTINE lr_summary
        &                              ") = (",3f11.5,"  )")')  &
        &(na, atm (ityp (na) ) , amass (ityp (na) ), na,  &
        &(tau (ipol, na) , ipol = 1, 3) , na = 1, nat)
-  WRITE( stdout, '(/,5x,"Linear response calculation for ")')
-  WRITE( stdout, '(20x,"q = (",3f12.7," )")') (xq (ipol) , ipol = 1, 3)
   !
   ! Description of symmetries
   !
@@ -161,16 +159,16 @@ SUBROUTINE lr_summary
            !
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x)," )  f =( ",f10.7," )")') &
                  isymq,  (s (1, ipol, isym) , ipol = 1, 3) , ft (1, isym) 
-           WRITE( stdout, '(17x," (",3(i6,5x), " )     ( ",f10.7," )")')  &
+           WRITE( stdout, '(17x," (",3(i6,5x)," )     ( ",f10.7," )")')  &
                          (s (2, ipol, isym) , ipol = 1, 3) , ft (2, isym)
-           WRITE( stdout, '(17x," (",3(i6,5x)," )       ( ",f10.7," )"/)') &
+           WRITE( stdout, '(17x," (",3(i6,5x)," )     ( ",f10.7," )"/)') &
                          (s (3, ipol, isym) , ipol = 1, 3) , ft (3, isym)
            !
            WRITE( stdout, '(1x,"cart.",4x,"s(",i2,") = (",3f11.7, " )  f =( ",f10.7," )")') &
                  isymq, (sr (1, ipol,isym) , ipol = 1, 3) , ft1
-           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
+           WRITE( stdout, '(17x," (",3f11.7, " )     ( ",f10.7," )")') &
                         (sr (2, ipol,isym) , ipol = 1, 3) , ft2
-           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
+           WRITE( stdout, '(17x," (",3f11.7, " )     ( ",f10.7," )"/)') &
                         (sr (3, ipol,isym) , ipol = 1, 3) , ft3
         ELSE
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x)," )")') &

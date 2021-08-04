@@ -18,8 +18,9 @@ SUBROUTINE lr_transform_intq_so(intq,na)
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : npol
   USE spin_orb,             ONLY : fcoef
-  USE lr_variables,         ONLY : intq_nc
-  
+!  USE lr_variables,         ONLY : intq_nc
+  USE lrus,                 ONLY : intq_nc
+ 
   IMPLICIT NONE
   INTEGER :: na
   COMPLEX(DP) :: intq(nhm,nhm,nat)

@@ -4,12 +4,12 @@ a_h.o : ../../Modules/becmod.o
 a_h.o : ../../Modules/cell_base.o
 a_h.o : ../../Modules/constants.o
 a_h.o : ../../Modules/fft_base.o
-a_h.o : ../../Modules/funct.o
 a_h.o : ../../Modules/kind.o
 a_h.o : ../../Modules/recvec.o
 a_h.o : ../../Modules/wavefunctions.o
 a_h.o : ../../PW/src/pwcom.o
 a_h.o : ../../PW/src/scf_mod.o
+a_h.o : ../../XClib/xc_lib.o
 a_h.o : ../../upflib/uspp.o
 a_h.o : cgcom.o
 cg_readin.o : ../../Modules/control_flags.o
@@ -30,7 +30,6 @@ cg_readin.o : cgcom.o
 cg_setup.o : ../../LR_Modules/lrcom.o
 cg_setup.o : ../../Modules/cell_base.o
 cg_setup.o : ../../Modules/fft_base.o
-cg_setup.o : ../../Modules/funct.o
 cg_setup.o : ../../Modules/gvecw.o
 cg_setup.o : ../../Modules/io_files.o
 cg_setup.o : ../../Modules/ions_base.o
@@ -40,6 +39,7 @@ cg_setup.o : ../../Modules/wavefunctions.o
 cg_setup.o : ../../PW/src/newd.o
 cg_setup.o : ../../PW/src/pwcom.o
 cg_setup.o : ../../PW/src/scf_mod.o
+cg_setup.o : ../../XClib/xc_lib.o
 cg_setup.o : ../../upflib/uspp.o
 cg_setup.o : cgcom.o
 cgcom.o : ../../Modules/kind.o
@@ -147,6 +147,7 @@ phcg.o : ../../PW/src/scf_mod.o
 phcg.o : ../../PW/src/symm_base.o
 phcg.o : ../../PW/src/update_pot.o
 phcg.o : ../../UtilXlib/mp.o
+phcg.o : ../../XClib/xc_lib.o
 phcg.o : cgcom.o
 rhod2vkb.o : ../../FFTXlib/fft_interfaces.o
 rhod2vkb.o : ../../Modules/becmod.o

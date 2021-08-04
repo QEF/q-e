@@ -1,9 +1,11 @@
 TOPDIR   = $(shell cd ../..; pwd)
-VERSION  = 6.4
+VERSION  = 6.7
 GEN_MODE = $(TOPDIR)/dev-tools/gen-emacs-mode
 LATEX    = pdflatex
 
 ELISP_FILES = *.el *.elc
+
+PWTK_CMDS = $(shell pwtk -s $(TOPDIR)/dev-tools/exported-cmds.pwtk)
 
 # automatic ...
 ALL_DEF_FILES = $(shell find $(TOPDIR) | grep INPUT_ | egrep def$$)
@@ -20,7 +22,6 @@ ALL_DEF_FILES = $(shell find $(TOPDIR) | grep INPUT_ | egrep def$$)
 #	$(TOPDIR)/PP/Doc/INPUT_PP.def \
 #	$(TOPDIR)/PP/Doc/INPUT_molecularpdos.def \
 #	$(TOPDIR)/PP/Doc/INPUT_DOS.def \
-#	$(TOPDIR)/PP/Doc/INPUT_pw_export.def \
 #	$(TOPDIR)/PHonon/Doc/INPUT_PH.def \
 #	$(TOPDIR)/PHonon/Doc/INPUT_D3.def \
 #	$(TOPDIR)/atomic/Doc/INPUT_LD1.def \
@@ -46,7 +47,7 @@ compile  = cd qe-modes; emacs --batch --eval "(add-to-list 'load-path \".\")"
 
 all: modes doc
 modes: make-modes make-master
-make-modes: qe pw neb ph pp ld1 cp
+make-modes: qe pw neb ph pp ld1 cp pwtk
 
 
 # generate specific modes ...
@@ -83,6 +84,10 @@ qe:
 	$(compile) --eval "(byte-compile-file \"qe-funcs.el\")"	
 	$(compile) --eval "(byte-compile-file \"qe-mode.el\")"	
 
+pwtk: 
+	$(generate) -mode pwtk -modename PWTK -template pwtk-mode.el.tcl -nmlprefix "" -cmds "$(PWTK_CMDS)" $(ALL_DEF_FILES)
+	$(compile) --eval "(byte-compile-file \"pwtk-mode.el\")"	
+
 # generate other required elisp files ...
 
 qe-funcs:
@@ -102,7 +107,6 @@ clean:
 
 veryclean: clean
 	- rm *~ */*~ */*.bak
-	- rm -rf qe-modes
 	- rm -rf QE-modes-$(VERSION)
 	- rm *.tar
 	- rm *tar.gz
@@ -112,7 +116,7 @@ veryclean: clean
 distclean: veryclean
 
 
-tar: all
+tar: doc
 	cd Doc; $(MAKE) clean; # purify the Doc/ directory
 	if test -f QE-modes.tar; then rm -f QE-modes.tar; fi
 	if test -f QE-modes-$(VERSION).tar.gz; then rm -f QE-modes-$(VERSION).tar.gz; fi

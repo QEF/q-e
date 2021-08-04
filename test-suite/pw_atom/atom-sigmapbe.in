@@ -16,6 +16,7 @@
  &electrons
    mixing_beta=0.25,
    conv_thr=1.0e-8
+   diago_david_ndim=4
  /
 ATOMIC_SPECIES
 O     15.99994   O.pbe-rrkjus.UPF

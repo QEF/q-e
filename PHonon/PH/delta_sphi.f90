@@ -38,14 +38,13 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : nh, nhm
   USE ions_base,  ONLY : nat, ityp
-  USE uspp,       ONLY : nkb, qq_nt, okvan
+  USE uspp,       ONLY : nkb, qq_nt, okvan, ofsbeta
   USE ldaU,       ONLY : nwfcU
   USE wvfct,      ONLY : npwx
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum 
   USE klist,      ONLY : ngk
   USE io_global,  ONLY : stdout
-  USE control_lr, ONLY : ofsbeta 
   !  
   IMPLICIT NONE
   !

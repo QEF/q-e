@@ -28,7 +28,7 @@ SUBROUTINE export_upf(filename, unit_loc)
   !
   use pseudo_types, only : pseudo_upf, pseudo_config, &
        deallocate_pseudo_upf, deallocate_pseudo_config
-  use write_upf_module, only: write_upf
+  use write_upf_new, only: write_upf
   !
   implicit none
   !
@@ -111,6 +111,9 @@ SUBROUTINE export_upf(filename, unit_loc)
   upf%xmin  = grid%xmin
   upf%zmesh = grid%zmesh
   upf%rmax  = grid%rmax
+  !
+  allocate( upf%r  (upf%mesh) )
+  allocate( upf%rab(upf%mesh) )
   !
   upf%r     = grid%r
   upf%rab   = grid%rab
@@ -356,6 +359,20 @@ SUBROUTINE export_upf(filename, unit_loc)
       co = upf%gipaw_ncore_orbitals
       upf%gipaw_wfs_nchannels  = nwfts
       nw = upf%gipaw_wfs_nchannels
+
+      IF (allocated(upf%gipaw_core_orbital_n))   DEALLOCATE(upf%gipaw_core_orbital_n)
+      IF (allocated(upf%gipaw_core_orbital_l))   DEALLOCATE(upf%gipaw_core_orbital_l)
+      IF (allocated(upf%gipaw_core_orbital_el))  DEALLOCATE(upf%gipaw_core_orbital_el)
+      IF (allocated(upf%gipaw_core_orbital))     DEALLOCATE(upf%gipaw_core_orbital)
+      IF (allocated(upf%gipaw_wfs_el))           DEALLOCATE(upf%gipaw_wfs_el)
+      IF (allocated(upf%gipaw_wfs_ll))           DEALLOCATE(upf%gipaw_wfs_ll)
+      IF (allocated(upf%gipaw_wfs_ll))           DEALLOCATE(upf%gipaw_wfs_ll)
+      IF (allocated(upf%gipaw_wfs_rcut))         DEALLOCATE(upf%gipaw_wfs_rcut)
+      IF (allocated(upf%gipaw_wfs_rcutus))       DEALLOCATE(upf%gipaw_wfs_rcutus)
+      IF (allocated(upf%gipaw_wfs_ae))           DEALLOCATE(upf%gipaw_wfs_ae)
+      IF (allocated(upf%gipaw_wfs_ps))           DEALLOCATE(upf%gipaw_wfs_ps)
+      IF (allocated(upf%gipaw_vlocal_ae))        DEALLOCATE(upf%gipaw_vlocal_ae)
+      IF (allocated(upf%gipaw_vlocal_ps))        DEALLOCATE(upf%gipaw_vlocal_ps)
 
       ALLOCATE ( &
          upf%gipaw_core_orbital_n(co), &

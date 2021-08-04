@@ -78,6 +78,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
         call get_buffer (drhous,  lrdrhous, iudrhous, nu_j)
         do mu = 1, npert (irr)
            nu_i = imode0 + mu
+           ! FIXME : use zgemm instead of zdotc
            dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
                    zdotc (dfftp%nnr*nspin_mag,dvscfin(1,1,mu),1,drhous, 1) &
                    * omega / DBLE (nrtot)

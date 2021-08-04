@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.1.0 starts on 25Mar2019 at 11:28:13 
+     Program EPW v.5.2.0 starts on  9Jul2020 at 18:54: 7 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -37,24 +37,29 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     Fft bands division:     nmany     =       1
 
-     Reading data from directory:
+     Reading xml data from directory:
+
      ./si.save/
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         151     151     61                 1139     1139     331
-
+ 
+     Reading collected, re-writing distributed wavefunctions
 
      --                                                                         
 
@@ -65,7 +70,8 @@
      number of atomic types    =            1
      kinetic-energy cut-off    =      10.0000  Ry
      charge density cut-off    =      40.0000  Ry
-     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
 
 
      celldm(1)=   10.26200  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -89,7 +95,7 @@
      site n.  atom      mass           positions (a_0 units)
         1        Si  28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
         2        Si  28.0855   tau( 2) = (    0.25000    0.25000    0.25000  )
-
+ 
      49 Sym.Ops. (with q -> -q+G )
 
 
@@ -325,22 +331,21 @@
                 l(4) =   1
                 l(5) =   2
                 l(6) =   2
-     EPW          :      0.24s CPU      0.25s WALL
+     EPW          :      0.24s CPU      0.37s WALL
 
-     EPW          :      0.31s CPU      0.32s WALL
+     EPW          :      0.25s CPU      0.38s WALL
 
-     No wavefunction gauge setting applied
      -------------------------------------------------------------------
      Wannierization on  6 x  6 x  6 electronic grid
      -------------------------------------------------------------------
-
+ 
      Spin CASE ( default = unpolarized )
-
+ 
      Initializing Wannier90
-
-
+ 
+ 
      Initial Wannier projections
-
+ 
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   3
@@ -355,483 +360,159 @@
       - Number of excluded bands is (  0)
       - Number of wannier functions is (  8)
       - All guiding functions are given 
-
+ 
   Reading data about k-point neighbours 
-
+ 
       - All neighbours are found 
-
+ 
      AMN
-      k points =   216 in    1 pools
-            1 of  216 on ionode
-            2 of  216 on ionode
-            3 of  216 on ionode
-            4 of  216 on ionode
-            5 of  216 on ionode
-            6 of  216 on ionode
-            7 of  216 on ionode
-            8 of  216 on ionode
-            9 of  216 on ionode
-           10 of  216 on ionode
-           11 of  216 on ionode
-           12 of  216 on ionode
-           13 of  216 on ionode
-           14 of  216 on ionode
-           15 of  216 on ionode
-           16 of  216 on ionode
-           17 of  216 on ionode
-           18 of  216 on ionode
-           19 of  216 on ionode
-           20 of  216 on ionode
-           21 of  216 on ionode
-           22 of  216 on ionode
-           23 of  216 on ionode
-           24 of  216 on ionode
-           25 of  216 on ionode
-           26 of  216 on ionode
-           27 of  216 on ionode
-           28 of  216 on ionode
-           29 of  216 on ionode
-           30 of  216 on ionode
-           31 of  216 on ionode
-           32 of  216 on ionode
-           33 of  216 on ionode
-           34 of  216 on ionode
-           35 of  216 on ionode
-           36 of  216 on ionode
-           37 of  216 on ionode
-           38 of  216 on ionode
-           39 of  216 on ionode
-           40 of  216 on ionode
-           41 of  216 on ionode
-           42 of  216 on ionode
-           43 of  216 on ionode
-           44 of  216 on ionode
-           45 of  216 on ionode
-           46 of  216 on ionode
-           47 of  216 on ionode
-           48 of  216 on ionode
-           49 of  216 on ionode
-           50 of  216 on ionode
-           51 of  216 on ionode
-           52 of  216 on ionode
-           53 of  216 on ionode
-           54 of  216 on ionode
-           55 of  216 on ionode
-           56 of  216 on ionode
-           57 of  216 on ionode
-           58 of  216 on ionode
-           59 of  216 on ionode
-           60 of  216 on ionode
-           61 of  216 on ionode
-           62 of  216 on ionode
-           63 of  216 on ionode
-           64 of  216 on ionode
-           65 of  216 on ionode
-           66 of  216 on ionode
-           67 of  216 on ionode
-           68 of  216 on ionode
-           69 of  216 on ionode
-           70 of  216 on ionode
-           71 of  216 on ionode
-           72 of  216 on ionode
-           73 of  216 on ionode
-           74 of  216 on ionode
-           75 of  216 on ionode
-           76 of  216 on ionode
-           77 of  216 on ionode
-           78 of  216 on ionode
-           79 of  216 on ionode
-           80 of  216 on ionode
-           81 of  216 on ionode
-           82 of  216 on ionode
-           83 of  216 on ionode
-           84 of  216 on ionode
-           85 of  216 on ionode
-           86 of  216 on ionode
-           87 of  216 on ionode
-           88 of  216 on ionode
-           89 of  216 on ionode
-           90 of  216 on ionode
-           91 of  216 on ionode
-           92 of  216 on ionode
-           93 of  216 on ionode
-           94 of  216 on ionode
-           95 of  216 on ionode
-           96 of  216 on ionode
-           97 of  216 on ionode
-           98 of  216 on ionode
-           99 of  216 on ionode
-          100 of  216 on ionode
-          101 of  216 on ionode
-          102 of  216 on ionode
-          103 of  216 on ionode
-          104 of  216 on ionode
-          105 of  216 on ionode
-          106 of  216 on ionode
-          107 of  216 on ionode
-          108 of  216 on ionode
-          109 of  216 on ionode
-          110 of  216 on ionode
-          111 of  216 on ionode
-          112 of  216 on ionode
-          113 of  216 on ionode
-          114 of  216 on ionode
-          115 of  216 on ionode
-          116 of  216 on ionode
-          117 of  216 on ionode
-          118 of  216 on ionode
-          119 of  216 on ionode
-          120 of  216 on ionode
-          121 of  216 on ionode
-          122 of  216 on ionode
-          123 of  216 on ionode
-          124 of  216 on ionode
-          125 of  216 on ionode
-          126 of  216 on ionode
-          127 of  216 on ionode
-          128 of  216 on ionode
-          129 of  216 on ionode
-          130 of  216 on ionode
-          131 of  216 on ionode
-          132 of  216 on ionode
-          133 of  216 on ionode
-          134 of  216 on ionode
-          135 of  216 on ionode
-          136 of  216 on ionode
-          137 of  216 on ionode
-          138 of  216 on ionode
-          139 of  216 on ionode
-          140 of  216 on ionode
-          141 of  216 on ionode
-          142 of  216 on ionode
-          143 of  216 on ionode
-          144 of  216 on ionode
-          145 of  216 on ionode
-          146 of  216 on ionode
-          147 of  216 on ionode
-          148 of  216 on ionode
-          149 of  216 on ionode
-          150 of  216 on ionode
-          151 of  216 on ionode
-          152 of  216 on ionode
-          153 of  216 on ionode
-          154 of  216 on ionode
-          155 of  216 on ionode
-          156 of  216 on ionode
-          157 of  216 on ionode
-          158 of  216 on ionode
-          159 of  216 on ionode
-          160 of  216 on ionode
-          161 of  216 on ionode
-          162 of  216 on ionode
-          163 of  216 on ionode
-          164 of  216 on ionode
-          165 of  216 on ionode
-          166 of  216 on ionode
-          167 of  216 on ionode
-          168 of  216 on ionode
-          169 of  216 on ionode
-          170 of  216 on ionode
-          171 of  216 on ionode
-          172 of  216 on ionode
-          173 of  216 on ionode
-          174 of  216 on ionode
-          175 of  216 on ionode
-          176 of  216 on ionode
-          177 of  216 on ionode
-          178 of  216 on ionode
-          179 of  216 on ionode
-          180 of  216 on ionode
-          181 of  216 on ionode
-          182 of  216 on ionode
-          183 of  216 on ionode
-          184 of  216 on ionode
-          185 of  216 on ionode
-          186 of  216 on ionode
-          187 of  216 on ionode
-          188 of  216 on ionode
-          189 of  216 on ionode
-          190 of  216 on ionode
-          191 of  216 on ionode
-          192 of  216 on ionode
-          193 of  216 on ionode
-          194 of  216 on ionode
-          195 of  216 on ionode
-          196 of  216 on ionode
-          197 of  216 on ionode
-          198 of  216 on ionode
-          199 of  216 on ionode
-          200 of  216 on ionode
-          201 of  216 on ionode
-          202 of  216 on ionode
-          203 of  216 on ionode
-          204 of  216 on ionode
-          205 of  216 on ionode
-          206 of  216 on ionode
-          207 of  216 on ionode
-          208 of  216 on ionode
-          209 of  216 on ionode
-          210 of  216 on ionode
-          211 of  216 on ionode
-          212 of  216 on ionode
-          213 of  216 on ionode
-          214 of  216 on ionode
-          215 of  216 on ionode
-          216 of  216 on ionode
-
+      k points =   216 in    4 pools
+            1 of   54 on ionode
+            2 of   54 on ionode
+            3 of   54 on ionode
+            4 of   54 on ionode
+            5 of   54 on ionode
+            6 of   54 on ionode
+            7 of   54 on ionode
+            8 of   54 on ionode
+            9 of   54 on ionode
+           10 of   54 on ionode
+           11 of   54 on ionode
+           12 of   54 on ionode
+           13 of   54 on ionode
+           14 of   54 on ionode
+           15 of   54 on ionode
+           16 of   54 on ionode
+           17 of   54 on ionode
+           18 of   54 on ionode
+           19 of   54 on ionode
+           20 of   54 on ionode
+           21 of   54 on ionode
+           22 of   54 on ionode
+           23 of   54 on ionode
+           24 of   54 on ionode
+           25 of   54 on ionode
+           26 of   54 on ionode
+           27 of   54 on ionode
+           28 of   54 on ionode
+           29 of   54 on ionode
+           30 of   54 on ionode
+           31 of   54 on ionode
+           32 of   54 on ionode
+           33 of   54 on ionode
+           34 of   54 on ionode
+           35 of   54 on ionode
+           36 of   54 on ionode
+           37 of   54 on ionode
+           38 of   54 on ionode
+           39 of   54 on ionode
+           40 of   54 on ionode
+           41 of   54 on ionode
+           42 of   54 on ionode
+           43 of   54 on ionode
+           44 of   54 on ionode
+           45 of   54 on ionode
+           46 of   54 on ionode
+           47 of   54 on ionode
+           48 of   54 on ionode
+           49 of   54 on ionode
+           50 of   54 on ionode
+           51 of   54 on ionode
+           52 of   54 on ionode
+           53 of   54 on ionode
+           54 of   54 on ionode
+ 
      AMN calculated
-
+ 
      MMN
-      k points =   216 in    1 pools
-            1 of  216 on ionode
-            2 of  216 on ionode
-            3 of  216 on ionode
-            4 of  216 on ionode
-            5 of  216 on ionode
-            6 of  216 on ionode
-            7 of  216 on ionode
-            8 of  216 on ionode
-            9 of  216 on ionode
-           10 of  216 on ionode
-           11 of  216 on ionode
-           12 of  216 on ionode
-           13 of  216 on ionode
-           14 of  216 on ionode
-           15 of  216 on ionode
-           16 of  216 on ionode
-           17 of  216 on ionode
-           18 of  216 on ionode
-           19 of  216 on ionode
-           20 of  216 on ionode
-           21 of  216 on ionode
-           22 of  216 on ionode
-           23 of  216 on ionode
-           24 of  216 on ionode
-           25 of  216 on ionode
-           26 of  216 on ionode
-           27 of  216 on ionode
-           28 of  216 on ionode
-           29 of  216 on ionode
-           30 of  216 on ionode
-           31 of  216 on ionode
-           32 of  216 on ionode
-           33 of  216 on ionode
-           34 of  216 on ionode
-           35 of  216 on ionode
-           36 of  216 on ionode
-           37 of  216 on ionode
-           38 of  216 on ionode
-           39 of  216 on ionode
-           40 of  216 on ionode
-           41 of  216 on ionode
-           42 of  216 on ionode
-           43 of  216 on ionode
-           44 of  216 on ionode
-           45 of  216 on ionode
-           46 of  216 on ionode
-           47 of  216 on ionode
-           48 of  216 on ionode
-           49 of  216 on ionode
-           50 of  216 on ionode
-           51 of  216 on ionode
-           52 of  216 on ionode
-           53 of  216 on ionode
-           54 of  216 on ionode
-           55 of  216 on ionode
-           56 of  216 on ionode
-           57 of  216 on ionode
-           58 of  216 on ionode
-           59 of  216 on ionode
-           60 of  216 on ionode
-           61 of  216 on ionode
-           62 of  216 on ionode
-           63 of  216 on ionode
-           64 of  216 on ionode
-           65 of  216 on ionode
-           66 of  216 on ionode
-           67 of  216 on ionode
-           68 of  216 on ionode
-           69 of  216 on ionode
-           70 of  216 on ionode
-           71 of  216 on ionode
-           72 of  216 on ionode
-           73 of  216 on ionode
-           74 of  216 on ionode
-           75 of  216 on ionode
-           76 of  216 on ionode
-           77 of  216 on ionode
-           78 of  216 on ionode
-           79 of  216 on ionode
-           80 of  216 on ionode
-           81 of  216 on ionode
-           82 of  216 on ionode
-           83 of  216 on ionode
-           84 of  216 on ionode
-           85 of  216 on ionode
-           86 of  216 on ionode
-           87 of  216 on ionode
-           88 of  216 on ionode
-           89 of  216 on ionode
-           90 of  216 on ionode
-           91 of  216 on ionode
-           92 of  216 on ionode
-           93 of  216 on ionode
-           94 of  216 on ionode
-           95 of  216 on ionode
-           96 of  216 on ionode
-           97 of  216 on ionode
-           98 of  216 on ionode
-           99 of  216 on ionode
-          100 of  216 on ionode
-          101 of  216 on ionode
-          102 of  216 on ionode
-          103 of  216 on ionode
-          104 of  216 on ionode
-          105 of  216 on ionode
-          106 of  216 on ionode
-          107 of  216 on ionode
-          108 of  216 on ionode
-          109 of  216 on ionode
-          110 of  216 on ionode
-          111 of  216 on ionode
-          112 of  216 on ionode
-          113 of  216 on ionode
-          114 of  216 on ionode
-          115 of  216 on ionode
-          116 of  216 on ionode
-          117 of  216 on ionode
-          118 of  216 on ionode
-          119 of  216 on ionode
-          120 of  216 on ionode
-          121 of  216 on ionode
-          122 of  216 on ionode
-          123 of  216 on ionode
-          124 of  216 on ionode
-          125 of  216 on ionode
-          126 of  216 on ionode
-          127 of  216 on ionode
-          128 of  216 on ionode
-          129 of  216 on ionode
-          130 of  216 on ionode
-          131 of  216 on ionode
-          132 of  216 on ionode
-          133 of  216 on ionode
-          134 of  216 on ionode
-          135 of  216 on ionode
-          136 of  216 on ionode
-          137 of  216 on ionode
-          138 of  216 on ionode
-          139 of  216 on ionode
-          140 of  216 on ionode
-          141 of  216 on ionode
-          142 of  216 on ionode
-          143 of  216 on ionode
-          144 of  216 on ionode
-          145 of  216 on ionode
-          146 of  216 on ionode
-          147 of  216 on ionode
-          148 of  216 on ionode
-          149 of  216 on ionode
-          150 of  216 on ionode
-          151 of  216 on ionode
-          152 of  216 on ionode
-          153 of  216 on ionode
-          154 of  216 on ionode
-          155 of  216 on ionode
-          156 of  216 on ionode
-          157 of  216 on ionode
-          158 of  216 on ionode
-          159 of  216 on ionode
-          160 of  216 on ionode
-          161 of  216 on ionode
-          162 of  216 on ionode
-          163 of  216 on ionode
-          164 of  216 on ionode
-          165 of  216 on ionode
-          166 of  216 on ionode
-          167 of  216 on ionode
-          168 of  216 on ionode
-          169 of  216 on ionode
-          170 of  216 on ionode
-          171 of  216 on ionode
-          172 of  216 on ionode
-          173 of  216 on ionode
-          174 of  216 on ionode
-          175 of  216 on ionode
-          176 of  216 on ionode
-          177 of  216 on ionode
-          178 of  216 on ionode
-          179 of  216 on ionode
-          180 of  216 on ionode
-          181 of  216 on ionode
-          182 of  216 on ionode
-          183 of  216 on ionode
-          184 of  216 on ionode
-          185 of  216 on ionode
-          186 of  216 on ionode
-          187 of  216 on ionode
-          188 of  216 on ionode
-          189 of  216 on ionode
-          190 of  216 on ionode
-          191 of  216 on ionode
-          192 of  216 on ionode
-          193 of  216 on ionode
-          194 of  216 on ionode
-          195 of  216 on ionode
-          196 of  216 on ionode
-          197 of  216 on ionode
-          198 of  216 on ionode
-          199 of  216 on ionode
-          200 of  216 on ionode
-          201 of  216 on ionode
-          202 of  216 on ionode
-          203 of  216 on ionode
-          204 of  216 on ionode
-          205 of  216 on ionode
-          206 of  216 on ionode
-          207 of  216 on ionode
-          208 of  216 on ionode
-          209 of  216 on ionode
-          210 of  216 on ionode
-          211 of  216 on ionode
-          212 of  216 on ionode
-          213 of  216 on ionode
-          214 of  216 on ionode
-          215 of  216 on ionode
-          216 of  216 on ionode
+      k points =   216 in    4 pools
+            1 of   54 on ionode
+            2 of   54 on ionode
+            3 of   54 on ionode
+            4 of   54 on ionode
+            5 of   54 on ionode
+            6 of   54 on ionode
+            7 of   54 on ionode
+            8 of   54 on ionode
+            9 of   54 on ionode
+           10 of   54 on ionode
+           11 of   54 on ionode
+           12 of   54 on ionode
+           13 of   54 on ionode
+           14 of   54 on ionode
+           15 of   54 on ionode
+           16 of   54 on ionode
+           17 of   54 on ionode
+           18 of   54 on ionode
+           19 of   54 on ionode
+           20 of   54 on ionode
+           21 of   54 on ionode
+           22 of   54 on ionode
+           23 of   54 on ionode
+           24 of   54 on ionode
+           25 of   54 on ionode
+           26 of   54 on ionode
+           27 of   54 on ionode
+           28 of   54 on ionode
+           29 of   54 on ionode
+           30 of   54 on ionode
+           31 of   54 on ionode
+           32 of   54 on ionode
+           33 of   54 on ionode
+           34 of   54 on ionode
+           35 of   54 on ionode
+           36 of   54 on ionode
+           37 of   54 on ionode
+           38 of   54 on ionode
+           39 of   54 on ionode
+           40 of   54 on ionode
+           41 of   54 on ionode
+           42 of   54 on ionode
+           43 of   54 on ionode
+           44 of   54 on ionode
+           45 of   54 on ionode
+           46 of   54 on ionode
+           47 of   54 on ionode
+           48 of   54 on ionode
+           49 of   54 on ionode
+           50 of   54 on ionode
+           51 of   54 on ionode
+           52 of   54 on ionode
+           53 of   54 on ionode
+           54 of   54 on ionode
      MMN calculated
-
+ 
      Running Wannier90
-
+ 
      Wannier Function centers (cartesian, alat) and spreads (ang):
-
-     (   0.04064   0.04064   0.04064) :   2.52567
-     (   0.04064  -0.04064  -0.04064) :   2.52567
-     (  -0.04064   0.04064  -0.04064) :   2.52567
-     (  -0.04064  -0.04064   0.04064) :   2.52567
-     (   0.33426   0.33426   0.33426) :   2.12918
-     (   0.33426   0.16574   0.16574) :   2.12918
-     (   0.16574   0.33426   0.16574) :   2.12918
-     (   0.16574   0.16574   0.33426) :   2.12918
-
+ 
+     (   0.04064   0.04064   0.04064) :   2.52564
+     (   0.04064  -0.04064  -0.04064) :   2.52564
+     (  -0.04064   0.04064  -0.04064) :   2.52564
+     (  -0.04064  -0.04064   0.04064) :   2.52564
+     (   0.33426   0.33426   0.33426) :   2.12921
+     (   0.33426   0.16574   0.16574) :   2.12921
+     (   0.16574   0.33426   0.16574) :   2.12921
+     (   0.16574   0.16574   0.33426) :   2.12921
+ 
      -------------------------------------------------------------------
-     WANNIER      :     11.12s CPU     11.18s WALL (       1 calls)
+     WANNIER      :      2.31s CPU      4.39s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
-
+ 
 
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.05s CPU      0.05s WALL (       1 calls)
+     kmaps        :      0.00s CPU      0.03s WALL (       1 calls)
 
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026119
+     IFC last   -0.0026124
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000020
+     Norm of the difference between old and new force-constants:    0.0000073
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -846,14 +527,14 @@
 
      Symmetries of small group of q: 48
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
      Imposing acoustic sum rule on the dynamical matrix
      Read dielectric tensor and effective charges
      Dyn mat calculated from ifcs
-
+ 
         q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
 
 
@@ -863,7 +544,7 @@
 
      Symmetries of small group of q: 12
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    4
      List of q in the star:
           1   0.500000000  -0.500000000   0.500000000
@@ -871,7 +552,7 @@
           3  -0.500000000  -0.500000000  -0.500000000
           4   0.500000000  -0.500000000  -0.500000000
      Dyn mat calculated from ifcs
-
+ 
         q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
         q(    3 ) = (   0.5000000   0.5000000  -0.5000000 )
         q(    4 ) = (  -0.5000000  -0.5000000  -0.5000000 )
@@ -884,14 +565,14 @@
 
      Symmetries of small group of q: 16
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    3
      List of q in the star:
           1   0.000000000  -1.000000000   0.000000000
           2  -1.000000000   0.000000000   0.000000000
           3   0.000000000   0.000000000   1.000000000
      Dyn mat calculated from ifcs
-
+ 
         q(    6 ) = (   0.0000000  -1.0000000   0.0000000 )
         q(    7 ) = (  -1.0000000   0.0000000   0.0000000 )
         q(    8 ) = (   0.0000000   0.0000000   1.0000000 )
@@ -902,45 +583,43 @@
      The .epb files have been correctly written
 
 
-     Band disentanglement is used:  nbndsub =    8
+     Band disentanglement is used: nbndsub =    8
      Use zone-centred Wigner-Seitz cells 
      Number of WS vectors for electrons      279
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
      Maximum number of cores for efficient parallelization      114
-     Results may improve by using use_ws == .true. 
+     Results may improve by using use_ws == .TRUE. 
+ 
+     Bloch2wane:          1 /          8
+     Bloch2wane:          2 /          8
+     Bloch2wane:          3 /          8
+     Bloch2wane:          4 /          8
+     Bloch2wane:          5 /          8
+     Bloch2wane:          6 /          8
+     Bloch2wane:          7 /          8
+     Bloch2wane:          8 /          8
+ 
+     Bloch2wanp:          1 /          5
+     Bloch2wanp:          2 /          5
+     Bloch2wanp:          3 /          5
+     Bloch2wanp:          4 /          5
+     Bloch2wanp:          5 /          5
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
-
-     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
-
-
-     Reading interatomic force constants
-
-     Read Z* and epsilon
-     IFC last   -0.0026119
-     Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000020
-     Imposed crystal ASR
-
-     Finished reading ifcs
-
-
-     Finished reading Wann rep data from file
-
      ===================================================================
-     Memory usage:  VmHWM =        64Mb
-                   VmPeak =       332Mb
+     Memory usage:  VmHWM =       111Mb
+                   VmPeak =       453Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
      Size of q point mesh for interpolation:        100
      Using k-mesh file: ./LGX.txt
      Size of k point mesh for interpolation:        200
-     Max number of k points per pool:              200
+     Max number of k points per pool:               50
 
-     Fermi energy coarse grid =   0.000000 eV
+     Fermi energy coarse grid =   6.255484 eV
 
      ===================================================================
 
@@ -948,52 +627,50 @@
 
      ===================================================================
 
-              ibndmin =     1  ebndmin =    -0.137
-              ibndmax =     2  ebndmax =     0.147
+              ibndmin =     2  ebndmin =     0.313
+              ibndmax =     6  ebndmax =     0.606
 
 
-     Number of ep-matrix elements per pool :         2400 ~=   18.75 Kb (@ 8 bytes/ DP)
-     Number selected, total     100     100
+     Number of ep-matrix elements per pool :         3750 ~=   29.30 Kb (@ 8 bytes/ DP)
+     Number selected, total         100         100
      We only need to compute      100 q-points
       
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        64Mb
-                   VmPeak =       332Mb
+     Memory usage:  VmHWM =       111Mb
+                   VmPeak =       453Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     14.24s CPU     14.66s WALL (       1 calls)
+     elphon_wrap  :      5.42s CPU      8.01s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      0.17s CPU      0.17s WALL (       9 calls)
+     set_drhoc    :      0.04s CPU      0.04s WALL (       9 calls)
      init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       2 calls)
+
 
 
      Electron-Phonon interpolation
-     ephwann      :      2.46s CPU      2.89s WALL (       1 calls)
-     ep-interp    :      1.42s CPU      1.79s WALL (     100 calls)
+     ephwann      :      1.23s CPU      2.00s WALL (       1 calls)
+     ep-interp    :      0.77s CPU      0.97s WALL (     100 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
-     Ham: step 2  :      0.03s CPU      0.03s WALL (       1 calls)
-     ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
-     ep: step 2   :      0.46s CPU      0.47s WALL (      48 calls)
+     Ham: step 2  :      0.00s CPU      0.01s WALL (       1 calls)
+     ep: step 1   :      0.00s CPU      0.01s WALL (      48 calls)
+     ep: step 2   :      1.10s CPU      1.86s WALL (       1 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      0.42s CPU      0.44s WALL (   20791 calls)
-     ephW2Bp      :      0.20s CPU      0.52s WALL (     100 calls)
+     HamW2B       :      0.12s CPU      0.12s WALL (    5175 calls)
+     ephW2Bp      :      0.28s CPU      0.45s WALL (     100 calls)
+     ephW2B       :      0.18s CPU      0.19s WALL (    2500 calls)
 
 
      Total program execution
-     EPW          :     28.14s CPU     29.04s WALL
+     EPW          :      9.21s CPU     14.78s WALL
 
                                                                                           
  Please consider citing:                                                                  
  S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
                                                                                           
- In addition, if you used anisotropic Eliashberg superconductivity please cite:           
-              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
-              if you used transport properties (scattering rates, mobility) please cite:  
-              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     

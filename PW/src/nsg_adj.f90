@@ -15,23 +15,17 @@ SUBROUTINE nsg_adj
    !
    USE kinds,            ONLY : DP
    USE ions_base,        ONLY : nat, ntyp => nsp, ityp
-   USE ldaU,             ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, starting_ns, &
-                                Hubbard_l_back, Hubbard_U_back, starting_ns_back, ldim_u, &
-                                nsg, nsgnew
-   USE scf,              ONLY : rho
+   USE ldaU,             ONLY : Hubbard_lmax, Hubbard_l, starting_ns, &
+                                nsgnew, neighood, is_hubbard
    USE lsda_mod,         ONLY : nspin
-   USE noncollin_module, ONLY : noncolin, npol
    USE io_global,        ONLY : stdout
  
    IMPLICIT NONE
    !
    INTEGER, PARAMETER :: ldmx = 7
-   INTEGER :: na, nt, is, m1, m2, majs, mins, adjs, mol(ldmx), &
-              nel, i, j, l, index(ldmx), viz, ldim
-   REAL(DP) :: totoc, delta,lambda(ldmx)
+   INTEGER :: na, na1, nt, is, m1, m2, i, viz, ldim
+   REAL(DP) :: lambda(ldmx)
    COMPLEX(DP) :: vet(ldmx,ldmx), f(ldmx,ldmx), temp
-   LOGICAL :: adjust
-   INTEGER, EXTERNAL :: find_viz
    !
    IF (ALL(starting_ns == -1.d0)) RETURN
    !
@@ -43,19 +37,26 @@ SUBROUTINE nsg_adj
       !
       nt = ityp(na)
       !
-      ldim = 2*Hubbard_l(nt) + 1
-      !
-      viz = find_viz(na,na)
-      !
-      IF (ldim_u(nt).GT.0) THEN
+      IF (is_hubbard(nt)) THEN
+         !
+         ldim = 2*Hubbard_l(nt) + 1
          !
          DO is = 1, nspin
             !
-            DO m1 = 1, ldim
-               DO m2 = 1, ldim
-                 f(m1,m2) = nsgnew(na,m1,viz,m2,is)
-               ENDDO
+            DO viz = 1, neighood(na)%num_neigh
+               na1 = neighood(na)%neigh(viz)
+               IF (na1.EQ.na) THEN
+                  f(:,:) = (0.d0, 0.d0)
+                  DO m1 = 1, ldim
+                     DO m2 = 1, ldim
+                        f(m1,m2) = nsgnew(m2,m1,viz,na,is)
+                     ENDDO
+                  ENDDO
+                  GO TO 7
+               ENDIF
             ENDDO
+            !
+7           CONTINUE
             !
             CALL cdiagh(ldim, f, ldmx, lambda, vet)
             !
@@ -69,8 +70,8 @@ SUBROUTINE nsg_adj
                   DO i = 1,ldim
                      temp = temp + CONJG(vet(m1,i))*lambda(i)*vet(m2,i)
                   ENDDO
-                  nsgnew(na,m1,viz,m2,is) = DBLE(temp)
-                  nsgnew(na,m2,viz,m1,is) = nsgnew(na,m1,viz,m2,is)
+                  nsgnew(m2,m1,viz,na,is) = DBLE(temp)
+                  nsgnew(m1,m2,viz,na,is) = nsgnew(m2,m1,viz,na,is)
                ENDDO
             ENDDO
             !
@@ -79,6 +80,9 @@ SUBROUTINE nsg_adj
       ENDIF
       !
    ENDDO
+   !
+   ! Uncomment the line below if needed (useful for debugging purposes)
+   !CALL write_nsg
    !
    RETURN
    !

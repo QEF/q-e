@@ -20,7 +20,7 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, mill
   USE paw_gipaw,  ONLY : paw_nkb, paw_recon, paw_lmaxkb
-  USE us,         ONLY : nqx, dq, spline_ps
+  USE uspp_data,  ONLY : nqx, dq, spline_ps
   USE splinelib
   !
   implicit none

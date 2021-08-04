@@ -26,7 +26,7 @@
  /
  &electrons
     startingwfc = 'atomic'
-    conv_thr =  1.d-14
+    conv_thr =  1.d-13
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES

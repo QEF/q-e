@@ -18,14 +18,14 @@ SUBROUTINE scale_h
   USE cell_base,      ONLY : bg, omega, set_h_ainv, tpiba
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
-  USE gvect,          ONLY : g, gg, ngm
+  USE gvect,          ONLY : g, gg, ngm, g_d, gg_d
   USE klist,          ONLY : xk, wk, nkstot
-  USE us,             ONLY : nqxq, qrad, tab, tab_at, dq
+  USE uspp_data,      ONLY : nqxq, dq, scale_uspp_data
   USE control_flags,  ONLY : iverbosity
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init
   USE exx,            ONLY : exx_gvec_reinit
-  USE funct,          ONLY : dft_is_hybrid
+  USE xc_lib,         ONLY : xclib_dft_is
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
   !
@@ -64,11 +64,16 @@ SUBROUTINE scale_h
   CALL cryst_to_cart( ngm, g, at_old, - 1 )
   CALL cryst_to_cart( ngm, g, bg, + 1 )
   gg_max = 0.0_dp
+  !
   DO ig = 1, ngm
      gg (ig) = g(1,ig) * g(1,ig) + g(2,ig) * g(2,ig) + g(3,ig) * g(3,ig)
      gg_max = MAX(gg(ig), gg_max)
   ENDDO
-  !
+#if defined(__CUDA)
+  ! update GPU copies of variables as well
+  g_d  = g
+  gg_d = gg
+#endif
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
   IF (nqxq < INT(SQRT(gg_max)*tpiba/dq)+4) THEN
@@ -78,9 +83,8 @@ SUBROUTINE scale_h
   !
   ! scale the non-local pseudopotential tables
   !
-  tab(:,:,:) = tab(:,:,:) * SQRT(omega_old/omega)
-  qrad(:,:,:,:) = qrad(:,:,:,:) * omega_old/omega
-  tab_at(:,:,:) = tab_at(:,:,:) * SQRT(omega_old/omega)
+  call scale_uspp_data( omega_old/omega )
+
   !
   ! recalculate the local part of the pseudopotential
   !
@@ -88,7 +92,7 @@ SUBROUTINE scale_h
   !
   ! for hybrid functionals
   !
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      CALL exx_grid_init( reinit=.TRUE. )
      ! not sure next line is needed
      CALL exx_mp_init( )

@@ -15,6 +15,7 @@ SUBROUTINE g_psi( lda, n, m, npol, psi, e )
   !
   USE kinds
   USE g_psi_mod
+  USE g_psi_mod_gpum, ONLY : using_h_diag, using_s_diag
   !
   IMPLICIT NONE
   !
@@ -46,6 +47,7 @@ SUBROUTINE g_psi( lda, n, m, npol, psi, e )
   INTEGER :: iblock, numblock
   ! chunking parameters
   !
+  CALL using_h_diag(0); call using_s_diag(0)
   CALL start_clock( 'g_psi' )
   !
   ! compute the number of chuncks
@@ -103,17 +105,21 @@ subroutine g_1psi (lda, n, psi, e)
   !
   USE kinds
   USE noncollin_module,     ONLY : npol
+  USE iso_c_binding
 
   implicit none
 
   integer :: lda, & ! input: the leading dimension of psi
              n      ! input: the real dimension of psi
   complex(DP) :: psi (lda, npol) ! inp/out: the psi vector
-  real(DP) :: e     ! input: the eigenvectors
+  real(DP), target :: e     ! input: the eigenvectors
+  real(DP), dimension(:), pointer :: e_vec
   !
   call start_clock ('g_1psi')
 
-  CALL g_psi (lda, n, 1, npol, psi, e)
+  ! cast scalar to size 1 vector to exactly match g_psi argument type
+  call C_F_POINTER(C_LOC(e), e_vec, [1])
+  CALL g_psi (lda, n, 1, npol, psi, e_vec)
 
   call stop_clock ('g_1psi')
 

@@ -209,6 +209,7 @@ tracevar nat w {
     set nat [varvalue nat]
     widgetconfigure atomic_coordinates  -rows $nat
     widgetconfigure atomic_forces       -rows $nat
+    widgetconfigure atomic_velocities   -rows $nat    
     varset specify_atomic_forces -value [varvalue specify_atomic_forces]
 }
 
@@ -546,13 +547,20 @@ tracevar specify_atomic_forces w {
 	groupwidget atomic_forces_specs disable
     }
 }
+tracevar ion_velocities w {
+    if { [varvalue ion_velocities] == "'from_input'" } {
+	groupwidget atomic_velocities_group enable
+    } else {
+	groupwidget atomic_velocities_group disable
+    }
+}
 
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
-    varset gate        -value {}
+    varset gate            -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
     varset nspin           -value {}

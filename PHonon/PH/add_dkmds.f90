@@ -43,7 +43,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
 
   real(DP), parameter :: eps = 1.d-12
 
-  integer :: npw, npwq, ipol, ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ig, igg, mu, ikq
+  integer :: npw, npwq, ipol, ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, nbnd_eff, ig, igg, mu, ikq, ikk
 
   logical :: ok
 
@@ -60,18 +60,20 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   call start_clock('add_dkmds')
   call start_clock('add_dkmds2')
 #endif
+  ikk=ikks(ik)
+  nbnd_eff=nbnd_occ(ikk)
   allocate(aux(npwx))
-  allocate(aux1(npwx*npol,nbnd))
+  allocate(aux1(npwx*npol,nbnd_eff))
   if (nkb.gt.0) then
      if (noncolin) then
-        allocate (ps1_nc(nkb,npol,nbnd))
-        allocate (ps2_nc(nkb,npol,3,nbnd))
-        allocate (alphadk_nc(nkb,npol,nbnd,3))
+        allocate (ps1_nc(nkb,npol,nbnd_eff))
+        allocate (ps2_nc(nkb,npol,3,nbnd_eff))
+        allocate (alphadk_nc(nkb,npol,nbnd_eff,3))
         allocate (becp2_nc(nkb,npol,nbnd))
      else
-        allocate (ps1(nkb,nbnd))
-        allocate (ps2(nkb,3,nbnd))
-        allocate (alphadk(nkb,nbnd,3))
+        allocate (ps1(nkb,nbnd_eff))
+        allocate (ps2(nkb,3,nbnd_eff))
+        allocate (alphadk(nkb,nbnd_eff,3))
         allocate (becp2(nkb,nbnd))
      end if
   end if
@@ -87,10 +89,10 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   !   First we calculate the alphadk = <d/dk d/du beta|psi>
   !   and becp2 = < d/dk beta | psi>
   !
-  if (lsda) current_spin = isk (ik)
-  npw = ngk(ik)
-  ikq = ik
-  npwq= ngk(ik)
+  if (lsda) current_spin = isk (ikk)
+  npw = ngk(ikk)
+  ikq = ikk
+  npwq= ngk(ikk)
   if (noncolin) then
      call calbec (npw, dvkb(:,:,jpol), evc, becp2_nc)
   else
@@ -103,15 +105,15 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
 #endif
 
   do ipol = 1, 3
-     do ibnd = 1, nbnd
+     do ibnd = 1, nbnd_eff
         do ig = 1, npw
            aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * &
-                ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+                ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
         enddo
         if (noncolin) then
            do ig = 1, npw
               aux1 (ig+npwx, ibnd) = evc(ig+npwx,ibnd)*tpiba*(0.d0,1.d0) * &
-                ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+                ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
            enddo
         endif
      enddo
@@ -125,7 +127,6 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   call stop_clock('add_dkmds3')
   call start_clock('add_dkmds4')
 #endif
-
   ijkb0 = 0
   do nt = 1, ntyp
      do na = 1, nat
@@ -139,7 +140,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
                  do jh = 1, nh (nt)
                     jkb = ijkb0 + jh
                     do ipol = 1, 3
-                       do ibnd=1, nbnd_occ(ik)
+                       do ibnd=1, nbnd_eff
                           !
                           ! first we calculate the part coming from the
                           ! overlapp matrix S
@@ -276,7 +277,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   do ikb = 1, nkb
      do ipol = 1, 3
         ok = .false.
-        do ibnd = 1, nbnd
+        do ibnd = 1, nbnd_eff
            if (noncolin) then
               ok = ok .or. (abs(ps2_nc(ikb,1,ipol,ibnd)).gt.eps )  &
                       .or. (abs(ps2_nc(ikb,2,ipol,ibnd)).gt.eps )
@@ -287,9 +288,9 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
         if (ok) then
            do ig = 1, npw
               igg = igk_k (ig,ikq)
-              aux (ig) =  vkb(ig, ikb) * (xk(ipol, ik) + g(ipol, igg) )
+              aux (ig) =  vkb(ig, ikb) * (xk(ipol, ikk) + g(ipol, igg) )
            enddo
-           do ibnd = 1, nbnd
+           do ibnd = 1, nbnd_eff
               if (noncolin) then
                  dvpsi(1:npw,ibnd) = ps2_nc(ikb,1,ipol,ibnd) * aux(1:npw) +    &
                                    dvpsi(1:npw,ibnd)

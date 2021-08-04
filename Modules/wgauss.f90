@@ -9,30 +9,29 @@
 !-----------------------------------------------------------------------
 function wgauss (x, n)
   !-----------------------------------------------------------------------
+  !! This function computes the approximate theta function for the
+  !! given order n, at the point x:
   !
-  !     this function computes the approximate theta function for the
-  !     given order n, at the point x.
-  !
-  ! --> (n>=0) : Methfessel-Paxton case. See PRB 40, 3616 (1989).
-  !
-  ! --> (n=-1 ): Cold smearing (Marzari-Vanderbilt-DeVita-Payne).
-  !              See PRL 82, 3296 (1999)
-  !       1/2*erf(x-1/sqrt(2)) + 1/sqrt(2*pi)*exp(-(x-1/sqrt(2))**2) + 1/2
-  !
-  ! --> (n=-99): Fermi-Dirac case: 1.0/(1.0+exp(-x)).
+  !! * \( n \geq 0 \): Methfessel-Paxton case. See PRB 40, 3616 (1989).
+  !! * \( n=-1 \): cold smearing (Marzari-Vanderbilt-DeVita-Payne,
+  !!   see PRL 82, 3296 (1999)):
+  !!   $$ \frac{1}{2} \text{erf}\(x-\frac{1}{\sqrt(2)}\) + \frac{1}{\sqrt{2\pi}} \exp
+  !!   {-\(x-\frac{1}{sqrt{2}}\)^2} + 1/2 $$
+  !! * \( n=-99 \): Fermi-Dirac case:
+  !!   $$ \frac{1.0}{1.0+\exp{-x}} $$
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
-  real(DP) :: wgauss, x
-  ! output: the value of the function
-  ! input: the argument of the function
+  real(DP) :: wgauss
+  !! output: the value of the function
+  real(DP) :: x
+  !! input: the argument of the function
   integer :: n
-  ! input: the order of the function
+  !! input: the order of the function
   !
-  !    the local variables
+  ! ... local variables
   !
-
   real(DP) :: a, hp, arg, hd, xp
   ! the coefficient a_n
   ! the hermitean function
@@ -42,10 +41,11 @@ function wgauss (x, n)
   integer :: i, ni
   ! counter on the n indices
   ! counter on 2n
-  real(DP), external :: gauss_freq, qe_erf
   real(DP), parameter :: maxarg = 200.d0
   ! maximum value for the argument of the exponential
-
+  real(DP), parameter :: c =  0.7071067811865475_DP
+  ! c = sqrt(1/2)
+  
   ! Fermi-Dirac smearing
   if (n.eq. - 99) then
      if (x.lt. - maxarg) then
@@ -62,13 +62,14 @@ function wgauss (x, n)
   if (n.eq. - 1) then
      xp = x - 1.0d0 / sqrt (2.0d0)
      arg = min (maxarg, xp**2)
-     wgauss = 0.5d0 * qe_erf (xp) + 1.0d0 / sqrt (2.0d0 * pi) * exp ( - &
+     wgauss = 0.5d0 * erf(xp) + 1.0d0 / sqrt (2.0d0 * pi) * exp ( - &
           arg) + 0.5d0
      return
 
   endif
   ! Methfessel-Paxton
-  wgauss = gauss_freq (x * sqrt (2.0d0) )
+  !gauss_freq(x) = 0.5_DP * ERFC( - x * c)
+  wgauss = 0.5_DP * ERFC( - x * sqrt (2.0d0) * c)
   if (n.eq.0) return
   hd = 0.d0
   arg = min (maxarg, x**2)

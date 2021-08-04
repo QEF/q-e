@@ -85,16 +85,7 @@ SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
         end do
         !$omp end parallel do
         !
-#if defined (__ESSL)
-        !
-        ! ... there is a name conflict between essl and lapack ...
-        !
-        CALL DSYGV( 1, v, ldh, s, ldh, e, v, ldh, n, work, lwork )
-        !
-        info = 0
-#else
         CALL DSYGV( 1, 'V', 'U', n, v, ldh, s, ldh, e, work, lwork, info )
-#endif
         !
      ELSE
         !
@@ -189,7 +180,9 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
   !
-
+#if defined(_OPENMP)
+  USE omp_lib
+#endif
   USE laxlib_parallel_include
 #if defined(__CUDA)
   USE cudafor
@@ -200,9 +193,12 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #endif
 #endif
   !
-!define __USE_GLOBAL_BUFFER
-#if defined(__USE_GLOBAL_BUFFER)
-  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+  ! NB: the flag below can be used to decouple LAXlib from devXlib.
+  !     This will make devXlib an optional dependency of LAXlib when
+  !     the library will be decoupled from QuantumESPRESSO.
+#define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER) && defined(__CUDA)
+  USE device_fbuff_m,        ONLY : dev=>dev_buf, pin=>pin_buf
 #define VARTYPE POINTER
 #else
 #define VARTYPE ALLOCATABLE
@@ -257,11 +253,12 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #endif
   !
 #if defined(__USE_CUSOLVER)
-  INTEGER :: devInfo_d, h_meig
-  ATTRIBUTES( DEVICE )   :: devInfo_d
-  TYPE(cusolverDnHandle) :: cuSolverHandle
-  REAL(DP), VARTYPE      :: h_bkp_d(:,:), s_bkp_d(:,:)
-  ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
+  INTEGER                      :: devInfo_d, h_meig
+  ATTRIBUTES( DEVICE )         :: devInfo_d
+  TYPE(cusolverDnHandle), SAVE :: cuSolverHandle
+  LOGICAL, SAVE                :: cuSolverInitialized = .FALSE.
+  REAL(DP), VARTYPE            :: h_bkp_d(:,:), s_bkp_d(:,:)
+  ATTRIBUTES( DEVICE )         :: h_bkp_d, s_bkp_d
 #endif
 #undef VARTYPE
   !
@@ -290,6 +287,7 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
      ALLOCATE(work_d(1*lwork_d), STAT = info)
 #else
      CALL dev%lock_buffer( work_d,  lwork_d, info )
+     IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
 #endif
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
      !
@@ -330,7 +328,9 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )
 #else
       CALL dev%lock_buffer( h_bkp_d,  (/ n, n /), info )
+      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate h_bkp_d ', ABS( info ) )
       CALL dev%lock_buffer( s_bkp_d,  (/ n, n /), info )
+      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate s_bkp_d ', ABS( info ) )
 #endif
 
 !$cuf kernel do(2)
@@ -341,9 +341,14 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
          ENDDO
       ENDDO
 
-      info = cusolverDnCreate(cuSolverHandle)
-      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' rdiaghg_gpu ', ' cusolverDnCreate failed ', ABS( info ) )
-
+#if defined(_OPENMP)
+      IF (omp_get_num_threads() > 1) CALL lax_error__( ' rdiaghg_gpu ', 'rdiaghg_gpu is not thread-safe',  ABS( info ) )
+#endif
+      IF ( .NOT. cuSolverInitialized ) THEN
+         info = cusolverDnCreate(cuSolverHandle)
+         IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' rdiaghg_gpu ', ' cusolverDnCreate failed ', ABS( info ) )
+         cuSolverInitialized = .TRUE.
+      ENDIF
       info = cusolverDnDsygvdx_bufferSize(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, &
                                                          CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
                                                n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, lwork_d)
@@ -354,6 +359,7 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
 #else
       CALL dev%lock_buffer( work_d,  lwork_d, info )
+      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
 #endif
       info = cusolverDnDsygvdx(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, &
                                                CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
@@ -369,8 +375,11 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
          ENDDO
       ENDDO
       !
-      info = cusolverDnDestroy(cuSolverHandle)
-      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' rdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
+      !
+      ! Do not destroy the handle to save the (re)creation time on each call.
+      !
+      ! info = cusolverDnDestroy(cuSolverHandle)
+      ! IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' rdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
       !
 #if ! defined(__USE_GLOBAL_BUFFER)
       DEALLOCATE(work_d)

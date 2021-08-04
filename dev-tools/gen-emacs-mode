@@ -53,6 +53,10 @@ Usage:
 
        If this option is specified then the function \$mode-funcs.el file is generated.
 
+   -cmds list-of-commands
+
+      Add the specified commands as a function names to the major-mode definition.
+
    -masteronly
 
        If this option is specified then only the master \$mode-modes.el file is generated.
@@ -76,6 +80,8 @@ set options {
     {mode.arg       {} "short name of mode; the corresponding mode file will be named $mode-mode.el"}
     {modename.arg   {} "textual name of mode"}
     {nmlprefix.arg  &  "symbol used for fortran namelist prefix"}
+    {cmds.arg       {} "extra commands to be added to the major-mode"}
+    {template.arg   {qe-mode.el.tcl} "template for generating the $mode-mode.el file"}
 }
 
 set argv_orig $argv

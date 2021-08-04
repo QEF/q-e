@@ -19,6 +19,7 @@ SUBROUTINE lr_setup_nscf ()
   ! Created by Iurii Timrov (2013)
   !
   USE kinds,              ONLY : DP
+  USE lr_variables,       ONLY : magnons
   USE constants,          ONLY : eps8
   USE parameters,         ONLY : npk
   USE constants,          ONLY : pi, degspin
@@ -33,27 +34,30 @@ SUBROUTINE lr_setup_nscf ()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, use_para_diag, &
                                  & noinv, max_cg_iter
+  USE control_lr,         ONLY : ethr_nscf
   USE mp_pools,           ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE uspp_param,         ONLY : n_atom_wfc
+  USE upf_ions,           ONLY : n_atom_wfc
   USE lr_symm_base,       ONLY : nsymq, minus_q
   USE qpoint,             ONLY : xq
+  !
+  USE io_global,          ONLY : ionode
+  USE io_files,           ONLY : prefix
   ! 
   IMPLICIT NONE
   !
   LOGICAL :: magnetic_sym 
-  LOGICAL, EXTERNAL :: check_para_diag
   !
   CALL start_clock( 'lr_setup_nscf' )
   ! 
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
-  ! ... threshold for diagonalization ethr - should be good for all cases
+  ! ... threshold for diagonalization ethr
   !
-  ethr = 1.0D-9 / nelec
+  ethr = ethr_nscf
   !
   ! ... variables for iterative diagonalization (Davidson is assumed)
   !
@@ -63,7 +67,7 @@ SUBROUTINE lr_setup_nscf ()
   max_cg_iter = 20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-  use_para_diag = check_para_diag( nbnd )
+  CALL set_para_diag( nbnd, use_para_diag )
   !
   ! Symmetry section
   !
@@ -82,32 +86,49 @@ SUBROUTINE lr_setup_nscf ()
   ! Input k-points are assumed to be given in the IBZ of the Bravais
   ! lattice, with the full point symmetry of the lattice.
   !
-  IF ( nks_start > 0 ) THEN
+  IF ( magnons ) THEN
      !
-     ! In this case keep the same points of the charge-density calculation
+     ! Generate a new set of k-points for magnons
      !
-     nkstot = nks_start
-     xk(:,1:nkstot) = xk_start(:,1:nkstot)
-     wk(1:nkstot)   = wk_start(1:nkstot)
+     ! In case of magnetic response we need to couple +k and -k
+     !
+     CALL kpoint_grid_no_t_rev (bg, npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+     !
+     ! Add k+Q and k-Q to the list of k-points 
+     ! need irreducible_BZ???
+     ! 
+     CALL set_kplusq_kminusq( xk, wk, xq, nkstot, npk )
      !
   ELSE
      !
-     ! Generate a new set of k-points
+     IF ( nks_start > 0 ) THEN
+        !
+        ! In this case keep the same points of the charge-density calculation
+        !
+        nkstot = nks_start
+        xk(:,1:nkstot) = xk_start(:,1:nkstot)
+        wk(1:nkstot)   = wk_start(1:nkstot)
+        !
+     ELSE
+        !
+        ! Generate a new set of k-points
+        !
+        CALL kpoint_grid ( nrot, time_reversal,.false., s, t_rev, &
+                         bg, nk1*nk2*nk3, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+        !
+     ENDIF
      !
-     CALL kpoint_grid ( nrot, time_reversal,.false., s, t_rev, &
-                      bg, nk1*nk2*nk3, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+     ! If some symmetries of the lattice are missing in the crystal,
+     ! "irreducible_BZ" computes the missing k-points.
+     !
+     CALL irreducible_BZ (nrot, s, nsymq, minus_q, magnetic_sym, &
+                          at, bg, npk, nkstot, xk, wk, t_rev)
+     !
+     ! Add k+q to the list of k
+     !
+     CALL set_kplusq( xk, wk, xq, nkstot, npk )
      !
   ENDIF
-  !
-  ! If some symmetries of the lattice are missing in the crystal,
-  ! "irreducible_BZ" computes the missing k-points.
-  !
-  CALL irreducible_BZ (nrot, s, nsymq, minus_q, magnetic_sym, &
-                       at, bg, npk, nkstot, xk, wk, t_rev)
-  !
-  ! Add k+q to the list of k
-  !
-  CALL set_kplusq( xk, wk, xq, nkstot, npk )
   !
   IF ( lsda ) THEN
      !
@@ -151,6 +172,17 @@ SUBROUTINE lr_setup_nscf ()
      !
      kunit = 1
      !
+  ELSEIF (magnons) THEN
+     !
+     ! In the magnons case we need
+     !
+     !  k,  k+Q,  k-Q
+     ! -k, -k+Q, -k-Q
+     !
+     ! in the same pool, therefore kunit=6
+     !
+     kunit = 6
+     !
   ELSE
      !
      kunit = 2
@@ -164,5 +196,198 @@ SUBROUTINE lr_setup_nscf ()
   CALL stop_clock( 'lr_setup_nscf' )
   !
   RETURN
+  CONTAINS
+   !
+   SUBROUTINE kpoint_grid_no_t_rev ( bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
+     !
+     USE kinds, ONLY: DP
+     USE io_global,  ONLY : stdout  
+     !
+     IMPLICIT NONE
+     !
+     INTEGER, INTENT(in):: npk, k1, k2, k3, nk1, nk2, nk3
+     real(DP), INTENT(in):: bg(3,3)
+     !
+     INTEGER, INTENT(out) :: nks
+     real(DP), INTENT(out):: xk(3,npk)
+     real(DP), INTENT(out):: wk(npk)
+     ! LOCAL:
+     real(DP), PARAMETER :: eps=1.0d-5
+     real(DP) :: xkr(3), fact, xx, yy, zz
+     real(DP), ALLOCATABLE:: xkg(:,:), wkk(:)
+     INTEGER :: nkr, i,j,k, ns, n, nk
+     INTEGER, ALLOCATABLE :: equiv(:)
+     LOGICAL :: in_the_list
+     LOGICAL :: is_gamma
+
+     CHARACTER(len=256) :: filename
+
+     !
+     nkr=nk1*nk2*nk3
+     ALLOCATE (xkg( 3,nkr))
+     ALLOCATE (equiv( nkr))
+     !
+     DO i=1,nk1
+        DO j=1,nk2
+           DO k=1,nk3
+              !  this is nothing but consecutive ordering
+              n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+              !  xkg are the components of the complete grid in crystal axis
+              xkg(1,n) = dble(i-1)/nk1 + dble(k1)/2/nk1
+              xkg(2,n) = dble(j-1)/nk2 + dble(k2)/2/nk2
+              xkg(3,n) = dble(k-1)/nk3 + dble(k3)/2/nk3
+           ENDDO
+        ENDDO
+     ENDDO
+
+     !if (ionode) write(stdout,*) "nkr =", nkr
+
+
+     DO nk=1,nkr
+        equiv(nk)=nk
+     ENDDO
+
+     DO nk=1,nkr
+     !  check if this k-point has already been found to be minus another
+       IF (equiv(nk) == nk) THEN
+         !  check if there are equivalent k-point to this in the list
+         !  (excepted those previously found to be equivalent to another)
+         !  check both k and -k
+         DO i = 1, 3
+           xkr(i) = -xkg(i,nk) + nint( xkg(i,nk) )
+         ENDDO
+         !
+         xx = xkr(1)*nk1 - 0.5d0*k1
+         yy = xkr(2)*nk2 - 0.5d0*k2
+         zz = xkr(3)*nk3 - 0.5d0*k3
+         in_the_list = abs(xx-nint(xx))<=eps .and. &
+                       abs(yy-nint(yy))<=eps .and. &
+                       abs(zz-nint(zz))<=eps
+         IF (in_the_list) THEN
+            i = mod ( nint ( xkr(1)*nk1 - 0.5d0*k1 + 2*nk1), nk1 ) + 1
+            j = mod ( nint ( xkr(2)*nk2 - 0.5d0*k2 + 2*nk2), nk2 ) + 1
+            k = mod ( nint ( xkr(3)*nk3 - 0.5d0*k3 + 2*nk3), nk3 ) + 1
+            n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+            IF (n>nk .and. equiv(n)==n) THEN
+               equiv(n) = nk
+            ELSE
+               IF (equiv(n)/=nk .or. n<nk ) CALL errore('kpoint_grid', &
+                  'something wrong in the checking algorithm',1)
+            ENDIF
+         ENDIF
+       ENDIF
+     ENDDO
+
+     !  count irreducible points and order them
+
+     nks=0
+     fact=0.0d0
+     DO nk=1,nkr
+        IF (equiv(nk)==nk) THEN
+           nks=nks+2
+           is_gamma = abs(xkg(1,nk)-nint(xkg(1,nk)))<=eps .and. &
+                      abs(xkg(2,nk)-nint(xkg(2,nk)))<=eps .and. &
+                      abs(xkg(3,nk)-nint(xkg(3,nk)))<=eps
+           IF (is_gamma) THEN
+             wk(nks-1) = 0.5
+             wk(nks) = 0.5
+           ELSE
+             wk(nks-1) = 1.0
+             wk(nks) = 1.0 
+           ENDIF
+           fact = fact+wk(nks-1)+wk(nks)
+           !
+           !IF (nks>npk) CALL errore('kpoint_grid','too many k-points',1)
+           !  bring back into to the first BZ
+           DO i=1,3
+              xk(i,nks-1) = xkg(i,nk)-nint(xkg(i,nk))
+              xk(i,nks) = -xk(i,nks-1) 
+           ENDDO
+        ENDIF
+     ENDDO
+
+     !if (ionode) write(stdout,*) "nks =", nks
+
+     !  go to cartesian axis (in units 2pi/a0)
+     CALL cryst_to_cart(nks,xk,bg,1)
+     !
+     !  normalize weights to one
+     DO nk=1,nks
+        wk(nk) = wk(nk)/fact
+     ENDDO
+     !
+     !filename = trim(prefix) // '__k_mesh.xyz' 
+     !if (ionode) OPEN (159, file = filename, form = 'formatted', status = 'unknown')
+     !if (ionode) write(159,*) nks
+     !if (ionode) write(159,*) ""
+     !  normalize weights to one
+     !DO nk=1,nks
+     !   if (ionode .and. mod(nk,2) == 0 ) then
+     !     write(159,'("C",3f16.9)') xk(1,nk-1), xk(2,nk-1), xk(3,nk-1)
+     !     write(159,'("F",3f16.9)')  xk(1,nk), xk(2,nk), xk(3,nk)
+     !   endif
+     !ENDDO
+     !if (ionode) close(159)
+
+     DEALLOCATE(equiv)
+     DEALLOCATE(xkg)
+
+     RETURN
+   END SUBROUTINE kpoint_grid_no_t_rev
+   !
+   !
+   SUBROUTINE set_kplusq_kminusq (xk, wk, xq, nks, npk)
+     !
+     USE kinds, only : DP
+     implicit none
+     !
+     !    First the dummy variables
+     !
+   
+     integer :: npk, nks
+     ! input-output: maximum allowed number of k
+     ! input-output: starting and ending number of
+     real(DP) :: xk (3, npk), wk (npk), eps, xq (3)
+     ! input-output: coordinates of k points
+     ! input-output: weights of k points
+     ! the smallest xq
+     ! input: coordinates of a q-point
+     !
+     !    And then the local variables
+     !
+   
+     logical :: lgamma
+     ! true if xq is the gamma point
+     integer :: ik, j
+     ! counter on k
+     ! counter
+     !
+     eps = 1.d-12
+     !
+     !
+     lgamma = abs (xq (1) ) .lt.eps.and.abs (xq (2) ) .lt.eps.and.abs ( &
+          xq (3) ) .lt.eps
+   
+     if (.not.lgamma) then
+        !!
+        !! in magnons the limit npk should maybe be increased
+        !!
+        if (3 * nks.gt. npk) call errore ('set_kplusq', 'too many k points', &
+             & nks)
+        do ik = nks, 1, - 1
+           do j = 1, 3
+              xk (j, 3 * ik - 2) = xk (j, ik)
+              xk (j, 3 * ik - 1) = xk (j, ik) + xq (j)
+              xk (j, 3 * ik) = xk (j, ik) - xq (j)
+           enddo
+           wk (3 * ik - 2) = wk (ik)
+           wk (3 * ik - 1) = 0.0d0
+           wk (3 * ik) = 0.d0
+        enddo
+        nks = 3 * nks
+   
+     endif
+     return
+   END SUBROUTINE set_kplusq_kminusq
   !
 END SUBROUTINE lr_setup_nscf

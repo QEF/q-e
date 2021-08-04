@@ -19,7 +19,7 @@ SUBROUTINE openfil()
   USE wvfct,            ONLY : nbnd, npwx
   USE fixed_occ,        ONLY : one_atom_occupations
   USE ldaU,             ONLY : lda_plus_U, U_projection, nwfcU
-  USE io_files,         ONLY : prefix, iunpun, iunsat, iunhub2, &
+  USE io_files,         ONLY : prefix, iunpun, iunsat, &
                                iunhub, nwordwfcU, nwordwfc, nwordatwfc, &
                                iunefield, iunefieldm, iunefieldp, seqopn
   USE noncollin_module, ONLY : npol
@@ -36,7 +36,6 @@ SUBROUTINE openfil()
   ! ... Files needed for DFT+U(+V)
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   ! ... iunhub  as above, only wfcs * S with a U correction
-  ! ... iunhub2 as above, only wfcs     with a U correction
   !
   ! ... nwordwfc is the record length (IN COMPLEX WORDS)
   ! ... for the direct-access file containing wavefunctions
@@ -48,7 +47,6 @@ SUBROUTINE openfil()
   !
   IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) THEN
      CALL open_buffer( iunhub,  'hub',  nwordwfcU, io_level, exst )
-     CALL open_buffer( iunhub2, 'hub2', nwordwfcU, io_level, exst )
   ENDIF
   IF ( use_wannier .OR. one_atom_occupations ) &
      CALL open_buffer( iunsat, 'satwfc', nwordatwfc, io_level, exst )

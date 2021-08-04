@@ -114,7 +114,7 @@ program epa
   write(s4, '(i8)') ivmin
   write(s5, '(i8)') ivmax
   write(6, '("    edgev = ", a, " eV  stepv = ", a, " eV  nbinv = ", &
-      a, "  ivmin = ", a, "  ivmax = ", a)') trim(adjustl(s1)), &
+      & a, "  ivmin = ", a, "  ivmax = ", a)') trim(adjustl(s1)), &
       trim(adjustl(s2)), trim(adjustl(s3)), trim(adjustl(s4)), &
       trim(adjustl(s5))
   write(s1, '(f16.8)') edgec
@@ -123,14 +123,14 @@ program epa
   write(s4, '(i8)') icmin
   write(s5, '(i8)') icmax
   write(6, '("    edgec = ", a, " eV  stepc = ", a, " eV  nbinc = ", &
-      a, "  icmin = ", a, "  icmax = ", a)') trim(adjustl(s1)), &
+      & a, "  icmin = ", a, "  icmax = ", a)') trim(adjustl(s1)), &
       trim(adjustl(s2)), trim(adjustl(s3)), trim(adjustl(s4)), &
       trim(adjustl(s5))
   write(s1, '(f16.8)') stepg
   write(s2, '(i8)') nbing
   write(s3, '(i8)') ngmax
   write(6, '("    stepg = ", a, " eV^2  nbing = ", a, "  ngmax = ", &
-      a)') trim(adjustl(s1)), trim(adjustl(s2)), trim(adjustl(s3))
+      & a)') trim(adjustl(s1)), trim(adjustl(s2)), trim(adjustl(s3))
 
   if (trim(job) .eq. 'bpair') then
     ijob = 1
@@ -155,7 +155,7 @@ program epa
   write(s3, '(i8)') nspin
   write(s4, '(i8)') nmodes
   write(6, '("    nqs = ", a, " nbnd = ", a, " nspin = ", a, &
-      " nmodes = ", a)') trim(adjustl(s1)), trim(adjustl(s2)), &
+      & " nmodes = ", a)') trim(adjustl(s1)), trim(adjustl(s2)), &
       trim(adjustl(s3)), trim(adjustl(s4))
 
   if (nspin .eq. 1) then
@@ -478,8 +478,8 @@ program epa
 
   if (ijob .eq. 2) then
     write(fmt, '("(", i0, "(5x, ""e"", a, "" (eV)"", 4x, ""e"", a, ""''", &
-        " (eV)"", 3x, ""<|g"", a, ""|^2> (eV^2)"", 2x, ""count"", a, 5x,", &
-        " ""weight"", a))")') ngrid
+        & " (eV)"", 3x, ""<|g"", a, ""|^2> (eV^2)"", 2x, ""count"", a, 5x,", &
+        & " ""weight"", a))")') ngrid
     write(6, fmt) ('v', ll = 1, 5), ('c', ll = 1, 5)
     write(fmt, '("(", i0, "(2f12.6, e18.8, i8, f12.6))")') ngrid
     do jj = 1, nbinmax

@@ -32,7 +32,7 @@ SUBROUTINE lr_run_nscf( )
   !
   CALL start_clock( 'lr_run_nscf' )
   !
-  WRITE( stdout, '(/,5X,"------------ Nscf calculation ---------------")')
+  WRITE( stdout, '(/5x,28("-")," NSCF calculation ",28("-"))')
   !   
   CALL clean_pw(.FALSE.)
   !   

@@ -48,10 +48,7 @@ SUBROUTINE latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
   INTEGER :: i,j,k,l,iperm,ir
   real(DP) :: term, cbya, s, term1, term2, singam, sen
   !
-  ! pre-set everything to zero, in case we quit because of error
-  a1=0._dp
-  a2=0._dp
-  a3=0._dp
+  ! pre-set to zero, in case we quit because of error
   Omega = 0._dp
   ierr = 0
   errormsg = ''
@@ -333,7 +330,6 @@ SUBROUTINE latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
      a3(3) =-a1(3)
   ELSEIF (ibrav == -13) THEN
      errormsg='BEWARE: axis for ibrav=-13 changed, see documentation!'
-     !CALL infomsg('latgen','BEWARE: axis for ibrav=-13 changed, see documentation!')
      !
      !     One face centered monoclinic lattice unique axis b
      !
@@ -371,7 +367,7 @@ SUBROUTINE latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
      a3(2)=celldm(1)*celldm(3)*(celldm(4)-celldm(5)*celldm(6))/singam
      a3(3)=celldm(1)*celldm(3)*term
      !
-  ELSE
+  ELSE IF (ibrav /= 0) THEN
      !
      errormsg='nonexistent bravais lattice'
      ierr=ABS(ibrav)
@@ -501,7 +497,6 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   REAL(dp) :: v1, v2, v3, cosab, cosac, cosbc
   !
   INTEGER :: ibrav
-  ibrav =0
   !
   v1 = sqrt( dot_product( a1,a1 ) )
   v2 = sqrt( dot_product( a2,a2 ) )
@@ -510,6 +505,9 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   cosac = dot_product(a1,a3)/v1/v3
   cosab = dot_product(a1,a2)/v1/v2
   !
+  ! Assume triclinic if nothing suitable found
+  !
+  ibrav = 14
   IF ( eqq(v1,v2) .and. eqq(v1,v3) ) THEN
      ! Case: a=b=c
      IF (eqq(cosab,cosac) .and. eqq(cosab,cosbc)) THEN
@@ -570,7 +568,7 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
         ELSEIF ( eqq(a1(1),-a2(1)) .and. eqq(a1(2),a2(2))) THEN
            ibrav = 9
         ENDIF
-     ELSE
+     ELSEIF ( eqq(cosac,-cosbc) ) THEN
         ! bco (unique axis b)
         ibrav =-13
      ENDIF
@@ -735,19 +733,21 @@ SUBROUTINE celldm2abc ( ibrav, celldm, a,b,c,cosab,cosac,cosbc )
   !
 END SUBROUTINE celldm2abc
 
-SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
+SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3, new_alat)
   USE kinds, ONLY : DP
   USE io_global, ONLY : stdout
   IMPLICIT NONE
   INTEGER,INTENT(in) :: ibrav
-  REAL(DP),INTENT(inout) :: alat, a1(3),a2(3),a3(3)
+  REAL(DP),INTENT(in)  :: alat
+  REAL(DP),INTENT(out) :: new_alat
+  REAL(DP),INTENT(inout) :: a1(3),a2(3),a3(3)
   REAL(DP) :: e1(3), e2(3), e3(3)
   REAL(DP) :: celldm_internal(6), lat_internal, omega
   ! Better not to do the following, or it may cause problems with ibrav=0 from input
 !  ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
   ! Instead, let's print a warning and do nothing:
   IF(ibrav==0)THEN
-    WRITE(stdout,'(a)') "WARNING! With ibrav=0, cell_dofree='ibrav' does not have any effect. "
+    WRITE(stdout,'(a)') "WARNING! With ibrav=0, cell_dofree='ibrav' has no effect. "
     RETURN
   ENDIF
   !
@@ -784,7 +784,7 @@ SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
   a2=a2/alat
   a3=a3/alat
   WRITE(*,'("Discrepancy in bohr = ", 3f12.6)') DSQRT(SUM((a1-e1)**2)), DSQRT(SUM((a2-e2)**2)), DSQRT(SUM((a3-e3)**2))
-
+  new_alat = celldm_internal(1)
 
 END SUBROUTINE
 
@@ -798,7 +798,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
   real(DP), INTENT(inout) :: a1(3), a2(3), a3(3)
   real(DP), INTENT(out) :: omega
   !
-  character(len=32) :: errormsg
+  character(len=54) :: errormsg
   integer :: ierr
 
   CALL latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)

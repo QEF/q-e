@@ -454,7 +454,6 @@ END MODULE nc_mag_aux
 !END MODULE qpoint_aux
 
 MODULE phcom
-  USE modes
   USE dynmat
   USE eqv
   USE efield_mod

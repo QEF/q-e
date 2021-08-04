@@ -34,7 +34,7 @@ subroutine solve_e
   USE fft_base,              ONLY : dfftp, dffts
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
-  USE wvfct,                 ONLY : nbnd, npwx, g2kin, et
+  USE wvfct,                 ONLY : nbnd, npwx, et
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer, save_buffer
   USE wavefunctions,         ONLY : evc
@@ -58,13 +58,15 @@ subroutine solve_e
   USE mp_bands,              ONLY : intra_bgrp_comm, ntask_groups
   USE mp,                    ONLY : mp_sum
   USE lrus,                  ONLY : int3_paw
-  USE qpoint,                ONLY : nksq
+  USE qpoint,                ONLY : nksq, ikks, ikqs
   USE eqv,                   ONLY : dpsi, dvpsi
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
   USE fft_helper_subroutines
   USE fft_interfaces,        ONLY : fft_interpolate
   USE ldaU,                  ONLY : lda_plus_u
+  USE apply_dpot_mod,        ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
+                                    apply_dpot_bands
 
   implicit none
 
@@ -85,11 +87,8 @@ subroutine solve_e
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    dbecsum_nc(:,:,:,:,:), & ! the becsum with dpsi
                    mixin(:), mixout(:), &  ! auxiliary for paw mixing
-                   aux1 (:,:),  ps (:,:), &
-                   tg_dv(:,:), &
-                   tg_psic(:,:), aux2(:,:)
-
-  complex(DP), EXTERNAL :: zdotc      ! the scalar product function
+                   ps (:,:), &
+                   aux2(:,:)
 
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
@@ -97,7 +96,8 @@ subroutine solve_e
   integer :: npw, npwq
   integer :: kter, iter0, ipol, ibnd, iter, lter, ik, ig, is, nrec, ndim, ios
   ! counters
-  integer :: ltaver, lintercall, incr, jpol, v_siz
+  integer :: ltaver, lintercall
+  integer :: ikk, ikq
 
   real(DP) :: tcpu, get_clock
   ! timing variables
@@ -109,6 +109,7 @@ subroutine solve_e
   !  This routine is task group aware
   !
   allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
+  dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins(dffts%nnr, nspin_mag, 3))
   else
@@ -121,10 +122,10 @@ subroutine solve_e
   ENDIF
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
-  allocate (aux1(dffts%nnr,npol))
   allocate (h_diag(npwx*npol, nbnd))
   allocate (aux2(npwx*npol, nbnd))
   IF (okpaw) mixin=(0.0_DP,0.0_DP)
+  CALL apply_dpot_allocate()
 
   if (rec_code_read == -20.AND.ext_recover) then
      ! restarting in Electric field calculation
@@ -142,15 +143,6 @@ subroutine solve_e
      convt = .false.
      iter0 = 0
   endif
-  incr=1
-  IF ( dffts%has_task_groups ) THEN
-     !
-     v_siz =  dffts%nnr_tg
-     ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
-     ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = fftx_ntgrp(dffts)
-     !
-  ENDIF
   !
   IF ( ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
@@ -186,21 +178,25 @@ subroutine solve_e
         CALL dnsq_scf (3, .false., 0, 1, .false.)
      !
      do ik = 1, nksq
+        ikk=ikks(ik)
+        ikq=ikqs(ik)
         !
-        npw = ngk(ik)
+        npw = ngk(ikk)
         npwq= npw     ! q=0 always in this routine
         !
-        if (lsda) current_spin = isk (ik)
+        if (lsda) current_spin = isk (ikk)
         !
         ! reads unperturbed wavefunctions psi_k in G_space, for all bands
         !
-        if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
+        if (nksq.ge.1) THEN 
+           call get_buffer (evc, lrwfc, iuwfc, ikk)
+        end if
         !
         ! compute beta functions and kinetic energy for k-point ik
         ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
         !
-        CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-        CALL g2_kin(ik)
+        CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
+        CALL g2_kin(ikk)
         !
         ! compute preconditioning matrix h_diag used by cgsolve_all
         !
@@ -217,31 +213,8 @@ subroutine solve_e
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
               !
-              IF( dffts%has_task_groups ) THEN
-                 IF (noncolin) THEN
-                    CALL tg_cgather( dffts, dvscfins(:,1,ipol), tg_dv(:,1))
-                    IF (domag) THEN
-                       DO jpol=2,4
-                          CALL tg_cgather( dffts, dvscfins(:,jpol,ipol), tg_dv(:,jpol))
-                       ENDDO
-                    ENDIF
-                 ELSE
-                    CALL tg_cgather( dffts, dvscfins(:,current_spin,ipol), tg_dv(:,1))
-                 ENDIF
-              ENDIF
-              aux2=(0.0_DP,0.0_DP)
-              do ibnd = 1, nbnd_occ (ik), incr
-                 IF ( dffts%has_task_groups ) THEN
-                    call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ (ik) )
-                    call apply_dpot(v_siz, tg_psic, tg_dv, 1)
-                    call cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd_occ (ik))
-                 ELSE
-                    call cft_wave (ik, evc (1, ibnd), aux1, +1)
-                    call apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipol), current_spin)
-                    call cft_wave (ik, aux2 (1, ibnd), aux1, -1)
-                 ENDIF
-              enddo
-              dvpsi=dvpsi+aux2
+              CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins(:, :, ipol), evc, aux2)
+              dvpsi = dvpsi + aux2
               !
               !  In the case of US pseudopotentials there is an additional
               !  selfconsist term which comes from the dependence of D on
@@ -258,7 +231,7 @@ subroutine solve_e
            !
            ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
            !
-           CALL orthogonalize(dvpsi, evc, ik, ik, dpsi, npwq, .false.)
+           CALL orthogonalize(dvpsi, evc, ikk, ikk, dpsi, npwq, .false.)
            !
            if (iter == 1) then
               !
@@ -289,8 +262,8 @@ subroutine solve_e
 
            conv_root = .true.
 
-           call cgsolve_all (ch_psi_all,cg_psi,et(1,ik),dvpsi,dpsi, &
-              h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik),npol)
+           call cgsolve_all (ch_psi_all,cg_psi,et(1,ikk),dvpsi,dpsi, &
+              h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ikk),npol)
 
            ltaver = ltaver + lter
            lintercall = lintercall + 1
@@ -306,10 +279,10 @@ subroutine solve_e
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
            IF (noncolin) THEN
-              call incdrhoscf_nc(dvscfout(1,1,ipol),wk(ik),ik, &
-                                 dbecsum_nc(1,1,1,1,ipol), dpsi, 1)
+              call incdrhoscf_nc(dvscfout(1,1,ipol),wk(ikk),ik, &
+                                 dbecsum_nc(1,1,1,1,ipol), dpsi, 1.0d0)
            ELSE
-              call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
+              call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ikk), &
                             ik, dbecsum(1,1,current_spin,ipol), dpsi)
            ENDIF
         enddo   ! on polarizations
@@ -429,8 +402,8 @@ subroutine solve_e
   enddo
 155 continue
   !
+  CALL apply_dpot_deallocate()
   deallocate (h_diag)
-  deallocate (aux1)
   deallocate (dbecsum)
   deallocate (dvscfout)
   IF (okpaw) THEN
@@ -441,12 +414,6 @@ subroutine solve_e
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
   deallocate(aux2)
-  IF ( dffts%has_task_groups ) THEN
-     !
-     DEALLOCATE( tg_dv  )
-     DEALLOCATE( tg_psic)
-     !
-  ENDIF
 
   call stop_clock ('solve_e')
   return

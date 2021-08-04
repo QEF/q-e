@@ -1,0 +1,50 @@
+{
+    "auxvars": [
+        {
+            "name": "comm",
+            "type": "INTEGER"
+        },
+        {
+            "name": "nbnd",
+            "type": "INTEGER"
+        },
+        {
+            "name": "nproc",
+            "type": "INTEGER"
+        },
+        {
+            "name": "mype",
+            "type": "INTEGER"
+        },
+        {
+            "name": "nbnd_loc",
+            "type": "INTEGER"
+        },
+        {
+            "name": "ibnd_begin",
+            "type": "INTEGER"
+        }
+    ],
+    "module_name": "becmod",
+    "type": {
+        "name": "bec_type",
+        "var": "becp"
+    },
+    "vars": [
+        {
+            "dim": "2",
+            "name": "r",
+            "type": "REAL(DP)"
+        },
+        {
+            "dim": "2",
+            "name": "k",
+            "type": "COMPLEX(DP)"
+        },
+        {
+            "dim": "3",
+            "name": "nc",
+            "type": "COMPLEX(DP)"
+        }
+    ]
+}

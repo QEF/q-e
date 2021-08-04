@@ -13,7 +13,9 @@
   Obsolete AIX case and F77-C binding removed by P. Giannozzi (2017)
 */
 
+#if !defined(QE_NO_CONFIG_H)
 #include "qe_cdefs.h"
+#endif
 
 #if defined (__SVR4) && defined (__sun)
 #define SUN_MALLINFO
@@ -24,7 +26,7 @@
 #include <malloc.h>
 int c_memstat( )
 {
-  struct mallinfo info;  
+  struct mallinfo info;
   info = mallinfo();
   return (info.arena + info.hblkhd) / 1024 ;
 #else

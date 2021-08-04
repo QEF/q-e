@@ -6,8 +6,11 @@ include ../../make.inc
 MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
 PPCG = \
+generic_cublas.o \
 ppcg_gamma.o \
-ppcg_k.o
+ppcg_gamma_gpu.o \
+ppcg_k.o \
+ppcg_k_gpu.o \
 
 all : libppcg.a
 

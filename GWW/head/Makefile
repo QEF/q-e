@@ -20,7 +20,7 @@ phq_readin.o \
 solve_head.o 
 
 QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a \
-         ../../KS_Solvers/libks_solvers.a \
+         ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
 	 ../../dft-d3/libdftd3qe.a
 LIBPWPH =  ../../PHonon/PH/libph.a ../..//LR_Modules/liblrmod.a ../../PW/src/libpw.a

@@ -1,0 +1,8 @@
+phonons of Ni at X/2
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='ni_so',
+  fildyn='nix.dyn',
+  outdir='../../tempdir'
+ /
+0.0 0.0 0.5

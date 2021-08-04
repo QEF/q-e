@@ -464,9 +464,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
            WRITE (4,'("#")', advance="NO")
         ENDIF
         IF (nspin0 == 1) THEN
-           WRITE (4,'(" E(eV)   ldos(E)   ")', advance="NO")
+           WRITE (4,'(" E (eV)   ldos(E)   ")', advance="NO")
         ELSE
-           WRITE (4,'(" E(eV)  ldosup(E)  ldosdw(E)")', advance="NO")
+           WRITE (4,'(" E (eV)  ldosup(E)  ldosdw(E)")', advance="NO")
         ENDIF
         IF (lspinorb) THEN
            ind = 0

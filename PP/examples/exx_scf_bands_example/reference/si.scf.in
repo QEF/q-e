@@ -1,0 +1,34 @@
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='silicon',
+    pseudo_dir = '/home/paulatto/espresso/pseudo/',
+    outdir='/home/paulatto/espresso/tempdir/'
+    verbosity='high'
+ /
+ &system
+    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc =18.0,
+    input_dft='HSE'
+    nqx1=2, nqx2=2, nqx3=2
+    nbnd=8 
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS alat
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+K_POINTS automatic
+ 2 2 2 1 1 1
+ADDITIONAL_K_POINTS tpiba_b
+  5
+   L 20
+   gG 20
+X 0
+   1.0 1.0 0.0 30
+   gG  1

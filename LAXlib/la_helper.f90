@@ -163,7 +163,7 @@ SUBROUTINE laxlib_start_drv( ndiag_, my_world_comm, parent_comm, do_distr_diag_i
     ELSE 
        ! no command-line argument -ndiag N or -northo N is present
        ! insert here custom architecture specific default definitions
-#if defined __SCALAPACK
+#if defined(__SCALAPACK) && !defined(__CUDA)
        nproc_ortho_try = MAX( parent_nproc, 1 )
 #else
        nproc_ortho_try = 1
@@ -773,6 +773,14 @@ END SUBROUTINE laxlib_multi_init_desc_x
       DEALLOCATE(work_d)
 #endif
 #else
+      IMPLICIT NONE
+      include 'laxlib_kinds.fh'
+      INTEGER  :: m
+      REAL(DP) :: rhos(:,:)
+      REAL(DP) :: rhod(:)
+      REAL(DP) :: s(:,:)
+      INTEGER  :: info
+      !
       CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' not compiled in this version ', 0 )
 #endif
    END SUBROUTINE

@@ -23,7 +23,7 @@ subroutine elsdps
        etots, pseudotype, phits, ikk, nbeta, betas, bmat, &
        nwfts, rel, jjts, llts, octs, enlts, jjs, lls, &
        vxc, exc, excgga
-  use funct, only : dft_is_gradient
+  use xc_lib, only: xclib_dft_is
   implicit none
   real(DP) :: &
        excc, vxcc(2), &   ! exch-corr energy from core charge
@@ -70,7 +70,7 @@ subroutine elsdps
         call vxc_t(lsd,rh0,rhc,excc,vxcc)
         exccc(i) = excc*rhoc(i) 
      enddo
-     if (dft_is_gradient()) then
+     if (xclib_dft_is('gradient')) then
         allocate(rho_aux(ndmx,2), stat=ierr)
         allocate(vgc(ndmx,2),stat=ierr)
         allocate(egc(ndmx),stat=ierr)

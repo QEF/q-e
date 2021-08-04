@@ -1,4 +1,4 @@
-! 
+!
 ! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -25,7 +25,7 @@ SUBROUTINE wfcinit()
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb
+  USE uspp,                 ONLY : nkb, vkb, using_vkb
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, current_k
   USE wannier_new,          ONLY : use_wannier
@@ -35,21 +35,24 @@ SUBROUTINE wfcinit()
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
+  USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr, exst_sum 
+  INTEGER :: ik, ierr, exst_sum
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
   !
-  !
   CALL start_clock( 'wfcinit' )
+  CALL using_evc(0) ! this may be removed
   !
   ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
+  IF ( (use_wannier .OR. one_atom_occupations ) .AND. lda_plus_u ) &
+       CALL errore ( 'wfcinit', 'currently incompatible options', 1 )
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
-  IF ( lda_plus_u ) CALL orthoUwfc()
+  IF ( lda_plus_u ) CALL orthoUwfc(.FALSE.)
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer
@@ -66,12 +69,12 @@ SUBROUTINE wfcinit()
      CALL mp_sum (exst_sum, intra_image_comm)
      !
      ! Check whether wavefunctions are collected (info in xml file)
-     dirname = restart_dir ( ) 
+     dirname = restart_dir ( )
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN
         ! xml file is valid
-        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         CALL qes_reset  ( output_obj )
      ELSE
@@ -90,7 +93,7 @@ SUBROUTINE wfcinit()
         !
         WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
         IF (exst_file) THEN
-           CALL close_buffer(iunwfc, 'delete') 
+           CALL close_buffer(iunwfc, 'delete')
            CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
         END IF
         starting_wfc = 'atomic+random'
@@ -105,6 +108,7 @@ SUBROUTINE wfcinit()
         IF ( nks == 1 ) THEN
            INQUIRE (unit = iunwfc, opened = opnd_file)
            IF ( .NOT.opnd_file ) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+           CALL using_evc(2)
            CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
            IF ( .NOT.opnd_file ) CLOSE ( UNIT=iunwfc, STATUS='keep' )
         END IF
@@ -143,7 +147,7 @@ SUBROUTINE wfcinit()
   END IF
   !
   ! ... exit here if starting from file or for non-scf calculations.
-  ! ... In the latter case the starting wavefunctions are not 
+  ! ... In the latter case the starting wavefunctions are not
   ! ... calculated here but just before diagonalization (to reduce I/O)
   !
   IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
@@ -165,6 +169,7 @@ SUBROUTINE wfcinit()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
+     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for DFT+U
@@ -182,6 +187,7 @@ SUBROUTINE wfcinit()
      !
      ! ... write  starting wavefunctions to file
      !
+     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) CALL using_evc(0)
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
@@ -209,12 +215,16 @@ SUBROUTINE init_wfc ( ik )
   USE wvfct,                ONLY : nbnd, npwx, et
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE random_numbers,       ONLY : randy
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
-  USE funct,                ONLY : dft_is_hybrid, stop_exx
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
+  !
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -250,7 +260,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
   !
-  IF ( starting_wfc(1:6) == 'atomic' ) THEN
+  IF ( n_starting_atomic_wfc > 0 ) THEN
      !
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      CALL atomic_wfc( ik, wfcatom )
@@ -272,7 +282,7 @@ SUBROUTINE init_wfc ( ik )
                   arg = tpi * randy()
                   !
                   wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
-                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) ) 
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) )
                   !
                END DO
                !
@@ -290,7 +300,7 @@ SUBROUTINE init_wfc ( ik )
   DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
      !
      DO ipol = 1, npol
-        ! 
+        !
         wfcatom(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
         !
         DO ig = 1, ngk(ik)
@@ -308,7 +318,7 @@ SUBROUTINE init_wfc ( ik )
      END DO
      !
   END DO
-  
+
   ! when band parallelization is active, the first band group distributes
   ! the wfcs to the others making sure all bgrp have the same starting wfc
   ! FIXME: maybe this should be done once evc are computed, not here?
@@ -322,20 +332,22 @@ SUBROUTINE init_wfc ( ik )
   ! ... Allocate space for <beta|psi>
   !
   CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
+  CALL using_becp_auto (2)
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
   ! ... electric enthalpy in the Hamiltonian (cannot be calculated
   ! ... at this stage: wavefunctions at previous step are missing)
-  ! 
+  !
   lelfield_save = lelfield
   lelfield = .FALSE.
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( dft_is_hybrid()  ) CALL stop_exx() 
+  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
+  CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
   CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
   lelfield = lelfield_save
@@ -343,9 +355,11 @@ SUBROUTINE init_wfc ( ik )
   ! ... copy the first nbnd eigenvalues
   ! ... eigenvectors are already copied inside routine rotate_wfc
   !
+  CALL using_et(1)
   et(1:nbnd,ik) = etatom(1:nbnd)
   !
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto (2)
   DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
   !

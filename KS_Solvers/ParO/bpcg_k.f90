@@ -63,7 +63,7 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
   !
   IMPLICIT NONE
   !
-  ! Following varibales are temporary
+  ! Following variables are temporary
 
   COMPLEX(DP),INTENT(IN) :: psi0(npwx*npol,nbnd)  ! psi0  needed to compute the Pv projection
   COMPLEX(DP),INTENT(IN) :: spsi0(npwx*npol,nbnd) ! Spsi0  needed to compute the Pv projection
@@ -90,7 +90,6 @@ SUBROUTINE bpcg_k( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, npol, nvec, psi
   INTEGER  :: kdim, kdmx, i, l, block_size, done, nactive, nnew, newdone
   !
   REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP), EXTERNAL :: ZDOTC
 
   EXTERNAL  hs_psi, g_1psi
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )

@@ -31,7 +31,6 @@ dvscf_interpolate.o \
 bcast_ph_input.o \
 c_bands_ph.o \
 cch_psi_all.o \
-ccg_psi.o \
 check_if_partial_dyn.o \
 check_initial_status.o \
 check_restart_recover.o \
@@ -200,11 +199,11 @@ write_eigenvectors.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 TLDEPS= phlibs
 
-all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x \
+all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x q2qstar.x \
 	alpha2f.x epa.x dvscf_q2r.x postahc.x
 
 libs-ph : libph.a libphaux.a
@@ -229,16 +228,6 @@ q2r.x : q2r.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-
-q2trans.x : q2trans.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ q2trans.o libphaux.a libph.a \
-		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
-
-q2trans_fd.x : q2trans_fd.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ q2trans_fd.o libphaux.a libph.a \
-		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 q2qstar.x : q2qstar.o libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2qstar.o libph.a \

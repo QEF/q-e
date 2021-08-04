@@ -8,10 +8,10 @@
 !---------------------------------------------------------
 MODULE qexsd_input
 !--------------------------------------------------------
-  ! This module contains the data structures for the XML input of pw.x
-  ! and the routines neeeded to initialise it
+  !! This module contains the data structures for the XML input of pw.x
+  !! and the routines neeeded to initialise it
   !----------------------------------------------------------------------------
-  ! First version March 2016, modified Aug. 2019
+  !! First version March 2016, modified Aug. 2019
   !----------- ------------- --------------------------------------------------- 
   USE kinds, ONLY : dp
   !
@@ -247,14 +247,14 @@ MODULE qexsd_input
    !
    !
    !-------------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,xk,wk,alat,a1, ibrav_lattice)
+   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,alat,a1, ibrav_lattice,xk,wk)
    ! 
    IMPLICIT NONE
    ! 
    TYPE (k_points_IBZ_type)             :: obj
    CHARACTER(LEN=*),INTENT(IN)          :: k_points,calculation
    INTEGER,INTENT(IN)                   :: nk1,nk2,nk3,s1,s2,s3,nk
-   REAL(DP),INTENT(IN)                  :: xk(:,:),wk(:)
+   REAL(DP),INTENT(IN), OPTIONAL        :: xk(:,:),wk(:)
    REAL(DP),INTENT(IN)                  :: alat,a1(3)
    LOGICAL,INTENT(IN)                   :: ibrav_lattice
    !
@@ -443,7 +443,7 @@ MODULE qexsd_input
    !
    ! 
    !--------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_boundary_conditions(obj,assume_isolated,esm_bc, fcp_opt, fcp_mu, esm_nfit,esm_w, esm_efield)
+   SUBROUTINE qexsd_init_boundary_conditions(obj, assume_isolated, esm_bc, esm_nfit, esm_w, esm_efield, fcp, fcp_mu)
    !--------------------------------------------------------------------------------------------
    ! 
    IMPLICIT NONE
@@ -451,7 +451,7 @@ MODULE qexsd_input
    TYPE (boundary_conditions_type)              :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
    CHARACTER(LEN=*),OPTIONAL,INTENT(IN)         :: esm_bc
-   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp_opt
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp
    REAL(DP),OPTIONAL,INTENT(IN)                 :: fcp_mu
    INTEGER,OPTIONAL,INTENT(IN)                  :: esm_nfit
    REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
@@ -460,16 +460,29 @@ MODULE qexsd_input
    LOGICAL                                      :: esm_ispresent = .FALSE.
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
+   esm_ispresent = .FALSE.
+   !
    IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
       esm_ispresent = .TRUE. 
-      ALLOCATE(esm_obj) 
-      CALL qes_init (esm_obj,"esm",bc=TRIM(esm_bc),nfit=esm_nfit,w=esm_w,efield=esm_efield)
+      ALLOCATE(esm_obj)
+      CALL qes_init (esm_obj, "esm", BC=TRIM(esm_bc), NFIT=esm_nfit, W=esm_w, EFIELD=esm_efield)
    END IF 
-   CALL qes_init (obj,TAGNAME,ASSUME_ISOLATED =assume_isolated, FCP_OPT= fcp_opt, FCP_MU = fcp_mu, ESM = esm_obj)
-   IF ( esm_ispresent ) THEN
+   !
+   IF (esm_ispresent) THEN
+      IF (PRESENT(fcp)) THEN
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP=fcp, FCP_MU=fcp_mu)
+      ELSE
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj)
+      END IF
+   ELSE
+      CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated)
+   END IF
+   !
+   IF (esm_ispresent) THEN
       CALL qes_reset (esm_obj)
-      DEALLOCATE(esm_obj) 
-   END IF 
+      DEALLOCATE(esm_obj)
+   END IF
+   !
    END SUBROUTINE qexsd_init_boundary_conditions
    ! 
    !

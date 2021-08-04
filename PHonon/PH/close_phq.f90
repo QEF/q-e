@@ -16,6 +16,7 @@ SUBROUTINE close_phq( flag )
   USE mp_pools,      ONLY : me_pool, root_pool
   USE paw_variables, ONLY : okpaw
   USE io_global,     ONLY : ionode, stdout
+  USE io_files,      ONLY : iunhub, iunhub_noS
   USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iudwf, iubar, iudrhous, iuebar, iudrho, &
@@ -28,6 +29,7 @@ SUBROUTINE close_phq( flag )
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
   USE el_phon,       ONLY : elph_mat,iunwfcwann
   USE ldaU,          ONLY : lda_plus_u
+  USE control_lr,    ONLY : lgamma
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_close
   USE ahc,           ONLY : elph_ahc
   !
@@ -107,9 +109,13 @@ SUBROUTINE close_phq( flag )
   !
   ! DFPT+U
   IF (lda_plus_u) THEN
-     CALL close_buffer(iuatwfc,'delete')
-     CALL close_buffer(iuatswfc,'delete')
+     CALL close_buffer(iuatwfc, 'delete')
+     CALL close_buffer(iuatswfc, 'delete')
      CLOSE( UNIT = iundnsscf, STATUS = 'KEEP' )
+     IF (lgamma) THEN
+        CALL close_buffer(iunhub, 'delete')
+        CALL close_buffer(iunhub_noS, 'delete')
+     ENDIF
   ENDIF
   !
   ! dVscf Fourier interpolation

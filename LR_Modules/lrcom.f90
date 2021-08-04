@@ -60,12 +60,24 @@ MODULE control_lr
   SAVE
   !
   INTEGER, ALLOCATABLE :: nbnd_occ(:)  ! occupied bands in metals
-  INTEGER, ALLOCATABLE :: ofsbeta(:)   ! for each atom gives the offset of beta functions 
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   LOGICAL  :: lgamma         ! if .TRUE. this is a q=0 computation
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
   REAL(DP) :: ethr_nscf      ! convergence threshol for KS eigenvalues in the
                              ! NSCF calculation
+  ! Sternheimer case 
+  LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
+             convt,       &! if .TRUE. the phonon has converged
+             ext_recover, &! if .TRUE. there is a recover file
+             lnoloc        ! if .TRUE. calculates the dielectric constant
+                           ! neglecting local field effects
+  INTEGER :: rec_code=-1000,    & ! code for recover
+             rec_code_read=-1000  ! code for recover. Not changed during the run
+  CHARACTER(LEN=256) :: flmixdpot
+  REAL(DP) :: tr2_ph  ! threshold for phonon calculation
+  REAL(DP) :: alpha_mix(100)  ! the mixing parameter
+  INTEGER :: niter_ph         ! maximum number of iterations (read from input)
+  INTEGER :: nbnd_occx        ! maximun value of nbnd_occ(:)
   !
 END MODULE control_lr
 !
@@ -149,10 +161,14 @@ MODULE lrus
   COMPLEX (DP), ALLOCATABLE :: &
        int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert)
        int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert)
-       int3_nc(:,:,:,:,:)    ! nhm, nhm, nat, nspin, npert)
+       int3_nc(:,:,:,:,:),  &! nhm, nhm, nat, nspin, npert)
+       intq(:,:,:),         &! nhm, nhm, nat)
+       intq_nc(:,:,:,:)      ! nhm, nhm, nat, nspin)
   ! int3 -> \int (Delta V_Hxc) Q d^3r
   ! similarly for int_nc while
   ! int3_paw contains Delta (D^1-\tilde D^1)
+  ! intq integral of e^iqr Q
+  ! intq_nc integral of e^iqr Q in the noncollinear case
   !
   REAL (DP), ALLOCATABLE ::    dpqq(:,:,:,:)       ! nhm, nhm, 3, ntyp)
   COMPLEX (DP), ALLOCATABLE :: dpqq_so(:,:,:,:,:)  ! nhm, nhm, nspin, 3, ntyp)

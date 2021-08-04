@@ -26,7 +26,7 @@ subroutine sym_dmage (dvsym)
   complex(DP) ::  dmags(3,3), mag(3), magrot(3)
   ! the potential to symmetrize
   ! auxiliary quantity
-  integer :: ftau(3,48)
+  integer :: ftau(3,nsym), s_scaled(3,3,nsym)
   integer :: is, ri, rj, rk, i, j, k, irot, ipol, jpol, kpol
   ! counter on spin polarization
   ! the rotated points
@@ -51,17 +51,16 @@ subroutine sym_dmage (dvsym)
   !
   !  symmmetrize
   !
-  ftau(1,1:nsym) = NINT ( ft(1,1:nsym)*dfftp%nr1 ) 
-  ftau(2,1:nsym) = NINT ( ft(2,1:nsym)*dfftp%nr2 ) 
-  ftau(3,1:nsym) = NINT ( ft(3,1:nsym)*dfftp%nr3 ) 
+  CALL scale_sym_ops( nsym, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+       s_scaled, ftau )
   do k = 1, dfftp%nr3
      do j = 1, dfftp%nr2
         do i = 1, dfftp%nr1
            do irot = 1, nsym
-              call ruotaijk (s(1,1,irot), ftau(1,irot), i, j, k, &
-                             dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+              call rotate_grid_point (s_scaled(1,1,irot), ftau(1,irot), &
+                   i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               !
-              !    ruotaijk find the rotated of i,j,k with the inverse of S
+              !   rotate_grid_point finds the rotated of i,j,k with S^-1
               !
               dmags=(0.d0,0.d0)
               do ipol = 1, 3

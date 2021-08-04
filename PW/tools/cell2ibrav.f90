@@ -9,7 +9,7 @@
 PROGRAM cell2ibrav
 !----------------------------------------------------------------------
   !
-  USE Kinds, ONLY : DP
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   INTEGER :: ibrav, ios

@@ -8,18 +8,17 @@
 #
 # SP: This can lead to issue if you reach the OS pipe buffer
 #     You can increase the buffer in /proc/sys/fs/pipe-max-size
-  
+
 fname=$1
 args=$(echo $fname | awk -F= '{print $NF}')
 
-##echo $fname > /home/sponce/program/espresso/test-suite/tmp.txt 
+##echo $fname > /home/sponce/program/espresso/test-suite/tmp.txt
 ###    echo $args >> /home/sponce/program/espresso/test-suite/tmp.txt
 
 ### if [[ "$args" == "1" ]]
 ##  then
 # SCF
 e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
-n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 ### fi
@@ -45,8 +44,8 @@ qdir=`grep " q= " $fname | awk '{print $2; print $3; print $4}'`
 q1=`grep "   q(" $fname | awk '{print $6; print $7; print $8}'`
 dos1=`grep "DOS =" $fname | awk '{print $3}'`
 e2=`grep " E(" $fname | awk '{print $4}'`
-rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'` 
-isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'` 
+rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'`
+isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'`
 rpi=`grep "Re\[Pi\]=" $fname | awk '{print $7}'`
 ipi=`grep "Im\[Pi\]=" $fname | awk '{print $10}'`
 z1=`grep " Z=" $fname | awk '{print $13}'`
@@ -60,37 +59,26 @@ lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
 logavg=`grep " logavg =" $fname | awk '{print $3}'`
 l_a2f=`grep "l_a2f =" $fname | awk '{print $6}'`
 efm=`grep "at Ef=" $fname | awk '{print $8}'`
-lam_max=`grep "lambda_max =" $fname | awk '{print $3}'`
-lam_kmax=`grep "lambda_k_max =" $fname | awk '{print $6}'`
 elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
 allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
+max_eigenvalue=`grep -A 47 "Max. eigenvalue close to 1" $fname | grep 35.00 | awk '{print $2}'`
 pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
 mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
 density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
-indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'` 
+indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'`
 mobnewx=`sed -n -e "/       Temp    / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
 mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $2}'`
 mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $3}'`
 ratmax=`grep "Maximum Im/Re Ratio =" $fname | awk '{print $9}'`
+hall=`sed -n -e "/     Hall factor/ {n;p}" $fname | awk '{print $2}'`
 
 if test "$efm" != ""; then
         echo efm
         for x in $efm; do echo $x; done
 fi
-
-if test "$lam_max" != ""; then
-        echo lam_max
-        echo $lam_max
-fi
-
-if test "$lam_kmax" != ""; then
-        echo lam_kmax
-        echo $lam_kmax
-fi
-
 
 if test "$elph" != ""; then
         echo elph
@@ -105,6 +93,11 @@ fi
 if test "$bcsgap" != ""; then
         echo bcsgap
         echo $bcsgap
+fi
+
+if test "$max_eigenvalue" != ""; then
+        echo max_eigenvalue
+        echo $max_eigenvalue
 fi
 
 if test "$mobvb" != ""; then
@@ -130,6 +123,11 @@ fi
 if test "$mobnewz" != ""; then
         echo mobnewz
         for x in $mobnewz; do echo $x; done
+fi
+
+if test "$hall" != ""; then
+        echo hall
+        for x in $hall; do echo $x; done
 fi
 
 if test "$density" != ""; then
@@ -241,11 +239,6 @@ fi
 if test "$e1" != ""; then
 	echo e1
 	echo $e1
-fi
-
-if test "$n1" != ""; then
-	echo n1
-	echo $n1
 fi
 
 if test "$f1" != ""; then

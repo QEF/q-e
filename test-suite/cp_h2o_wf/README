@@ -1,0 +1,4 @@
+Electron minimization of CP-WF is protocol-dependent. In this test, `nstep` is
+intentionally chosen to be too small to reach full convergence to the ground state.
+Doing so increases the sensitivity of the test on the protocol-dependence, which
+could be useful in probing inconsistent changes in the MLWF routines.

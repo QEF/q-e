@@ -22,16 +22,17 @@
 !SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-!Contains both the functions that transmit data to the socket and read the data
-!back out again once finished, and the function which opens the socket initially.
-
-!Functions:
-!   open_socket: Opens a socket with the required host server, socket type and
-!      port number.
-!   write_buffer: Writes a string to the socket.
-!   read_buffer: Reads data from the socket.
 
    MODULE F90SOCKETS
+   !! Contains both the functions that transmit data to the socket and read the data
+   !! back out again once finished, and the function which opens the socket initially.
+   !! Functions:
+   !
+   !! * \(\texttt{open_socket}\): Opens a socket with the required host server, socket 
+   !!   type and port number;
+   !! * \(\texttt{write_buffer}\): Writes a string to the socket;
+   !! * \(\texttt{read_buffer}\): Reads data from the socket.
+
    USE ISO_C_BINDING
    
    IMPLICIT NONE

@@ -32,6 +32,7 @@ subroutine psidspsi (ik, uact, pdsp)
 
   USE lrus,       ONLY : becp1
   USE control_lr, ONLY : lgamma
+  USE qpoint,    ONLY : ikks
 
   implicit none
   !
@@ -88,9 +89,9 @@ subroutine psidspsi (ik, uact, pdsp)
   allocate (aux ( npwx*npol ))
 
   if (lgamma) then
-     ikk = ik
-     ikq = ik
-     npw = ngk(ik)
+     ikk = ikks(ik)
+     ikq = ikk
+     npw = ngk(ikk)
   else
      call infomsg ('psidspsi', 'called for lgamma .eq. false')
   endif

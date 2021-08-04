@@ -28,7 +28,7 @@ subroutine v_product
 
   
   INTEGER, EXTERNAL :: find_free_unit
-  INTEGER :: ig,ii,iun,jj,kk
+  INTEGER :: ig,ii,iun,jj,kk, ii_eff, jj_eff, kk_eff
   REAL(kind=DP), ALLOCATABLE :: fac(:)
   REAL(kind=DP) :: qq
   COMPLEX(kind=DP), ALLOCATABLE :: prod_g(:,:)
@@ -43,11 +43,11 @@ subroutine v_product
   COMPLEX(kind=DP), ALLOCATABLE :: p_basis(:,:)
   TYPE(polaw) :: pw
   INTEGER :: ix,iy,iz,ipol,iw
-  INTEGER, PARAMETER :: n_int=20
+  INTEGER, PARAMETER :: n_int=10
   REAL(kind=DP) :: qx(3),qy(3),qz(3),qt(3),qq_fact
   COMPLEX(kind=DP), ALLOCATABLE :: amat(:,:),tmp_mat(:,:),p_mat(:,:)
   REAL(kind=DP), ALLOCATABLE :: facg(:)
-  INTEGER, parameter :: n_int_loc = 20*50
+  INTEGER, parameter :: n_int_loc = 500
   REAL(kind=DP) :: model
   INTEGER :: n_trovato
 
@@ -73,7 +73,7 @@ subroutine v_product
          endif
       enddo
    endif
-   fac=fac/omega/nks
+   fac=fac/omega/nks/(n_shrink**3.)
    if(npol>1) fac(npw_max+1:npw_max*npol)=fac(1:npw_max)
 
    allocate(prod_g(npw_max*npol,nprod_e))
@@ -106,11 +106,9 @@ subroutine v_product
       do jk=1,nks!k
          qk(1:3)=xk(1:3,ik)-xk(1:3,jk)
          do ii=1,3
-            sca=qk(1)*at(1,ii)+qk(2)*at(2,ii)+qk(3)*at(3,ii)
+            sca=qk(1)*at(1,ii)*n_shrink+qk(2)*at(2,ii)*n_shrink+qk(3)*at(3,ii)*n_shrink
             sca=sca*nkpoints(ii)
             ijk(ii)=nint(sca)
-            if(ijk(ii)<0) ijk(ii)=ijk(ii)+nkpoints(ii)
-            if(ijk(ii)>= nkpoints(ii)) ijk(ii)=ijk(ii)-nkpoints(ii)
          enddo
          
          if(ionode) write(iun) ijk(1:3)
@@ -121,12 +119,17 @@ subroutine v_product
 !loop on i,j,k  
    
     n_trovato=0
-   do ii=0,nkpoints(1)-1
-      do jj=0,nkpoints(2)-1
-         do kk=0,nkpoints(3)-1
-            qk(1:3)=bg(1:3,1)*real(ii)/real(nkpoints(1))+bg(1:3,2)*real(jj)/real(nkpoints(2))+&
-                 &  bg(1:3,3)*real(kk)/real(nkpoints(3))
-
+   do ii=-nkpoints(1)+1,nkpoints(1)-1
+      do jj=-nkpoints(2)+1,nkpoints(2)-1
+         do kk=-nkpoints(3)+1,nkpoints(3)-1
+            ii_eff=ii
+            jj_eff=jj
+            kk_eff=kk
+                  
+            qk(1:3)=bg(1:3,1)/dble(n_shrink)*real(ii_eff)/real(nkpoints(1)) +&
+                 bg(1:3,2)/dble(n_shrink)*real(jj_eff)/real(nkpoints(2))+&
+                   bg(1:3,3)/dble(n_shrink)*real(kk_eff)/real(nkpoints(3))
+            
             qk=-qk!(-) dovrebbe esser giusto da analisi G,k
             do ig=1,npw_max
                gk(1:3) = qk(1:3) + g(1:3,ig)
@@ -138,9 +141,9 @@ subroutine v_product
                      do iy=-n_int+1,n_int
                         do iz=-n_int+1,n_int
 
-                           qx(:)=0.5d0*(1.d0/dble(n_int*nkpoints(1))*(dble(ix-1))+0.5d0/dble(n_int*nkpoints(1)))*bg(:,1)
-                           qy(:)=0.5d0*(1.d0/dble(n_int*nkpoints(2))*(dble(iy-1))+0.5d0/dble(n_int*nkpoints(2)))*bg(:,2)
-                           qz(:)=0.5d0*(1.d0/dble(n_int*nkpoints(3))*(dble(iz-1))+0.5d0/dble(n_int*nkpoints(3)))*bg(:,3)
+                           qx(:)=0.5d0*(1.d0/dble(n_int*nkpoints(1))*(dble(ix-1))+0.5d0/dble(n_int*nkpoints(1)))*bg(:,1)/n_shrink
+                           qy(:)=0.5d0*(1.d0/dble(n_int*nkpoints(2))*(dble(iy-1))+0.5d0/dble(n_int*nkpoints(2)))*bg(:,2)/n_shrink
+                           qz(:)=0.5d0*(1.d0/dble(n_int*nkpoints(3))*(dble(iz-1))+0.5d0/dble(n_int*nkpoints(3)))*bg(:,3)/n_shrink
 
 
                            qt(1:3)=qx(1:3)+qy(1:3)+qz(1:3)+gk(1:3)
@@ -162,9 +165,12 @@ subroutine v_product
                      do iy=-n_int_loc+1,n_int_loc
                         do iz=-n_int_loc+1,n_int_loc
 
-                           qx(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(1))*(dble(ix-1))+0.5d0/dble(n_int_loc*nkpoints(1)))*bg(:,1)
-                           qy(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(2))*(dble(iy-1))+0.5d0/dble(n_int_loc*nkpoints(2)))*bg(:,2)
-                           qz(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(3))*(dble(iz-1))+0.5d0/dble(n_int_loc*nkpoints(3)))*bg(:,3)
+                           qx(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(1))*(dble(ix-1))+0.5d0/ & 
+    & dble(n_int_loc*nkpoints(1)))*bg(:,1)/dble(n_shrink)
+                           qy(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(2))*(dble(iy-1))+0.5d0/ & 
+    & dble(n_int_loc*nkpoints(2)))*bg(:,2)/dble(n_shrink)
+                           qz(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(3))*(dble(iz-1))+0.5d0/ & 
+    & dble(n_int_loc*nkpoints(3)))*bg(:,3)/dble(n_shrink)
                     
 
                            qt(1:3)=qx(1:3)+qy(1:3)+qz(1:3)+qk(1:3)+g(1:3,ig)
@@ -182,7 +188,7 @@ subroutine v_product
             enddo
             
 
-            fac=fac/omega/nks
+            fac=fac/omega/nks/(n_shrink**3.)
             
             if(npol>1) fac(npw_max+1:npw_max*npol)=fac(1:npw_max)
 
@@ -207,11 +213,19 @@ subroutine v_product
    !write(stdout,*) 'MPI TROVATO', n_trovato
 
    if(w_type==1) then
-      do ii=0,nkpoints(1)-1
-         do jj=0,nkpoints(2)-1
-            do kk=0,nkpoints(3)-1
-               qk(1:3)=bg(1:3,1)*real(ii)/real(nkpoints(1))+bg(1:3,2)*real(jj)/real(nkpoints(2))+&
-                    &  bg(1:3,3)*real(kk)/real(nkpoints(3))
+     
+      
+      do ii=-nkpoints(1)+1,nkpoints(1)-1
+         do jj=-nkpoints(2)+1,nkpoints(2)-1
+            do kk=-nkpoints(3)+1,nkpoints(3)-1
+
+               ii_eff=ii
+               jj_eff=jj
+               kk_eff=kk
+               
+               qk(1:3)=bg(1:3,1)/dble(n_shrink)*real(ii_eff)/real(nkpoints(1))+&
+                    bg(1:3,2)/dble(n_shrink)*real(jj_eff)/real(nkpoints(2))+&
+                      bg(1:3,3)/dble(n_shrink)*real(kk_eff)/real(nkpoints(3))
 
                qk=-qk!era -
                do ig=1,npw_max
@@ -220,6 +234,7 @@ subroutine v_product
 !HERE
                   qq=qq*tpiba2/0.529**2.d0
                   model=(1.d0/epsm-1.d0)*exp(-3.1415926d0*qq/2.d0/lambdam**2.d0)
+                  qq = gk(1)**2.d0 + gk(2)**2.d0 + gk(3)**2.d0
                   if (qq > 1.d-8) then
 
                   fac(ig)=0.d0
@@ -227,9 +242,12 @@ subroutine v_product
                      do iy=-n_int+1,n_int
                         do iz=-n_int+1,n_int
 
-                           qx(:)=0.5d0*(1.d0/dble(n_int*nkpoints(1))*(dble(ix-1))+0.5d0/dble(n_int*nkpoints(1)))*bg(:,1)
-                           qy(:)=0.5d0*(1.d0/dble(n_int*nkpoints(2))*(dble(iy-1))+0.5d0/dble(n_int*nkpoints(2)))*bg(:,2)
-                           qz(:)=0.5d0*(1.d0/dble(n_int*nkpoints(3))*(dble(iz-1))+0.5d0/dble(n_int*nkpoints(3)))*bg(:,3)
+                           qx(:)=0.5d0*(1.d0/dble(n_int*nkpoints(1))*(dble(ix-1))+0.5d0/ &
+    & dble(n_int*nkpoints(1)))*bg(:,1)/dble(n_shrink)
+                           qy(:)=0.5d0*(1.d0/dble(n_int*nkpoints(2))*(dble(iy-1))+0.5d0/ & 
+    & dble(n_int*nkpoints(2)))*bg(:,2)/dble(n_shrink)
+                           qz(:)=0.5d0*(1.d0/dble(n_int*nkpoints(3))*(dble(iz-1))+0.5d0/ & 
+    &  dble(n_int*nkpoints(3)))*bg(:,3)/dble(n_shrink)
 
 
                            qt(1:3)=qx(1:3)+qy(1:3)+qz(1:3)+gk(1:3)
@@ -239,8 +257,8 @@ subroutine v_product
                         enddo
                      enddo
                   enddo
-                  fac(ig)=fac(ig)*e2*fpi/(8.d0*(dble(n_int))**3.d0)/tpiba
                   fac(ig)=fac(ig)*model
+                  fac(ig)=fac(ig)*e2*fpi/(8.d0*(dble(n_int))**3.d0)/tpiba2 
                else
                   fac(ig)=0.d0
 
@@ -248,9 +266,12 @@ subroutine v_product
                      do iy=-n_int_loc+1,n_int_loc
                         do iz=-n_int_loc+1,n_int_loc
 
-                           qx(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(1))*(dble(ix-1))+0.5d0/dble(n_int_loc*nkpoints(1)))*bg(:,1)
-                           qy(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(2))*(dble(iy-1))+0.5d0/dble(n_int_loc*nkpoints(2)))*bg(:,2)
-                           qz(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(3))*(dble(iz-1))+0.5d0/dble(n_int_loc*nkpoints(3)))*bg(:,3)
+                           qx(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(1))*(dble(ix-1))+0.5d0/ & 
+     &    dble(n_int_loc*nkpoints(1)))*bg(:,1)/dble(n_shrink)
+                           qy(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(2))*(dble(iy-1))+0.5d0/ &
+     &    dble(n_int_loc*nkpoints(2)))*bg(:,2)/dble(n_shrink)
+                           qz(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(3))*(dble(iz-1))+0.5d0/ &
+     &    dble(n_int_loc*nkpoints(3)))*bg(:,3)/dble(n_shrink)
 
 
                            qt(1:3)=qx(1:3)+qy(1:3)+qz(1:3)+qk(1:3)+g(1:3,ig)
@@ -264,12 +285,12 @@ subroutine v_product
                   enddo
 
                   fac(ig)=fac(ig)*e2*fpi/(8.d0*(dble(n_int_loc))**3.d0)/tpiba2
-                  fac(ig)=fac(ig)*model
+                  fac(ig)=fac(ig)*model 
                endif
             enddo
 
 
-            fac=fac/omega/nks
+            fac=fac/omega/nks/(n_shrink**3.d0)
 
             if(npol>1) fac(npw_max+1:npw_max*npol)=fac(1:npw_max)
 
@@ -335,9 +356,9 @@ subroutine v_product
                do iy=-n_int+1,n_int
                   do iz=-n_int+1,n_int
                      
-                     qx(:)=0.5d0*(1.d0/dble(n_int)*(dble(ix-1))+0.5d0/dble(n_int))*bg(:,1)
-                     qy(:)=0.5d0*(1.d0/dble(n_int)*(dble(iy-1))+0.5d0/dble(n_int))*bg(:,2)
-                     qz(:)=0.5d0*(1.d0/dble(n_int)*(dble(iz-1))+0.5d0/dble(n_int))*bg(:,3)
+                     qx(:)=0.5d0*(1.d0/dble(n_int)*(dble(ix-1))+0.5d0/dble(n_int))*bg(:,1)/dble(n_shrink)
+                     qy(:)=0.5d0*(1.d0/dble(n_int)*(dble(iy-1))+0.5d0/dble(n_int))*bg(:,2)/dble(n_shrink)
+                     qz(:)=0.5d0*(1.d0/dble(n_int)*(dble(iz-1))+0.5d0/dble(n_int))*bg(:,3)/dble(n_shrink)
                   
                      qt(:)=qx(1:3)+qy(1:3)+qz(1:3)+g(1:3,ig)
 
@@ -355,9 +376,9 @@ subroutine v_product
                do iy=-n_int_loc+1,n_int_loc
                   do iz=-n_int_loc+1,n_int_loc
                      
-                     qx(:)=0.5d0*(1.d0/dble(n_int_loc)*(dble(ix-1))+0.5d0/dble(n_int_loc))*bg(:,1)
-                     qy(:)=0.5d0*(1.d0/dble(n_int_loc)*(dble(iy-1))+0.5d0/dble(n_int_loc))*bg(:,2)
-                     qz(:)=0.5d0*(1.d0/dble(n_int_loc)*(dble(iz-1))+0.5d0/dble(n_int_loc))*bg(:,3)
+                     qx(:)=0.5d0*(1.d0/dble(n_int_loc)*(dble(ix-1))+0.5d0/dble(n_int_loc))*bg(:,1)/dble(n_shrink)
+                     qy(:)=0.5d0*(1.d0/dble(n_int_loc)*(dble(iy-1))+0.5d0/dble(n_int_loc))*bg(:,2)/dble(n_shrink)
+                     qz(:)=0.5d0*(1.d0/dble(n_int_loc)*(dble(iz-1))+0.5d0/dble(n_int_loc))*bg(:,3)/dble(n_shrink)
                   
                      qt(:)=qx(1:3)+qy(1:3)+qz(1:3)+g(1:3,ig)
 
@@ -373,15 +394,23 @@ subroutine v_product
       enddo
       if(npol>1) facg(1+(npol-1)*npw_max:npol*npw_max)=facg(1:npw_max)
 
-      facg=facg/omega
+      facg=facg/omega/(dble(n_shrink)**3.d0)
 !loop on q
 !calculate fac terms and in case do integrate
-      do ii=0,nkpoints(1)-1
-         do jj=0,nkpoints(2)-1
-            do kk=0,nkpoints(3)-1
-               qk(1:3)=bg(1:3,1)*real(ii)/real(nkpoints(1))+bg(1:3,2)*real(jj)/real(nkpoints(2))+&
-                    &  bg(1:3,3)*real(kk)/real(nkpoints(3))
+
+      do ii=-nkpoints(1)+1,nkpoints(1)-1
+         do jj=-nkpoints(2)+1,nkpoints(2)-1
+            do kk=-nkpoints(3)+1,nkpoints(3)-1
                
+               ii_eff=ii
+               jj_eff=jj
+               kk_eff=kk
+               
+               qk(1:3)=bg(1:3,1)/dble(n_shrink)*real(ii_eff)/real(nkpoints(1))+&
+                    bg(1:3,2)/dble(n_shrink)*real(jj_eff)/real(nkpoints(2))+&
+                    bg(1:3,3)/dble(n_shrink)*real(kk_eff)/real(nkpoints(3))
+              
+
             
                qk=-qk!!- dovrebbe esser giusto da analisi G,k       
                do ig=1,npw_max
@@ -394,9 +423,12 @@ subroutine v_product
                         do iy=-n_int+1,n_int
                            do iz=-n_int+1,n_int
 
-                              qx(:)=0.5d0*(1.d0/dble(n_int*nkpoints(1))*(dble(ix-1))+0.5d0/dble(n_int*nkpoints(1)))*bg(:,1)
-                              qy(:)=0.5d0*(1.d0/dble(n_int*nkpoints(2))*(dble(iy-1))+0.5d0/dble(n_int*nkpoints(2)))*bg(:,2)
-                              qz(:)=0.5d0*(1.d0/dble(n_int*nkpoints(3))*(dble(iz-1))+0.5d0/dble(n_int*nkpoints(3)))*bg(:,3)
+                              qx(:)=0.5d0*(1.d0/dble(n_int*nkpoints(1))*(dble(ix-1))+0.5d0/ & 
+     &  dble(n_int*nkpoints(1)))*bg(:,1)/dble(n_shrink)
+                              qy(:)=0.5d0*(1.d0/dble(n_int*nkpoints(2))*(dble(iy-1))+0.5d0/ & 
+     &  dble(n_int*nkpoints(2)))*bg(:,2)/dble(n_shrink)
+                              qz(:)=0.5d0*(1.d0/dble(n_int*nkpoints(3))*(dble(iz-1))+0.5d0/ & 
+     &   dble(n_int*nkpoints(3)))*bg(:,3)/dble(n_shrink)
 
                               qt(:)=qx(1:3)+qy(1:3)+qz(1:3)+gk(1:3)
 
@@ -421,9 +453,12 @@ subroutine v_product
                         do iy=-n_int_loc+1,n_int_loc
                            do iz=-n_int_loc+1,n_int_loc
                               
-                              qx(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(1))*(dble(ix-1))+0.5d0/dble(n_int_loc*nkpoints(1)))*bg(:,1)
-                              qy(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(2))*(dble(iy-1))+0.5d0/dble(n_int_loc*nkpoints(2)))*bg(:,2)
-                              qz(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(3))*(dble(iz-1))+0.5d0/dble(n_int_loc*nkpoints(3)))*bg(:,3)
+                              qx(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(1))*(dble(ix-1))+0.5d0/ & 
+     &  dble(n_int_loc*nkpoints(1)))*bg(:,1)/dble(n_shrink)
+                              qy(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(2))*(dble(iy-1))+0.5d0/ & 
+     &  dble(n_int_loc*nkpoints(2)))*bg(:,2)/dble(n_shrink)
+                              qz(:)=0.5d0*(1.d0/dble(n_int_loc*nkpoints(3))*(dble(iz-1))+0.5d0/ & 
+    &  dble(n_int_loc*nkpoints(3)))*bg(:,3)/dble(n_shrink)
 
                               qt(:)=qx(1:3)+qy(1:3)+qz(1:3)+qk(1:3)+g(1:3,ig)
 
@@ -439,7 +474,7 @@ subroutine v_product
                   endif
                enddo
 
-               fac=fac/omega/nks
+               fac=fac/omega/nks/(n_shrink**3.d0)
 
                fac=fac*sqrt(facg)/sqrt(fac)
             

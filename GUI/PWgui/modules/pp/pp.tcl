@@ -52,8 +52,9 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "reduced density gradient"
 		    "product of density and 2nd-eigenvalue of density Hessian matrix"
 		    "all-electron charge density (valence+core, for PAW)"
+                    "kinetic energy density (for meta-GGA and XDM only)"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 21 }
+		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 21 22 }
 		-fmt %d
 	    }
 	    dimension spin_component {

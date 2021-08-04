@@ -307,7 +307,7 @@
     ! Rotate evc --> axu5 and evq --> aux4 by SU2^{dagger}
     !------------------------------------------------------------
     IF (noncolin) THEN
-      DO ibnd = 1, nbnd
+      DO ibnd = ibndstart, ibndend
         DO ig = 1, npw
           aux5(ig, ibnd) = su2(1, 1) * evc(ig, ibnd) + su2(1, 2) * evc(ig + npwx, ibnd)
           aux5(ig + npwx, ibnd) = su2(2, 1) * evc(ig, ibnd) + su2(2, 2) * evc(ig + npwx, ibnd)
@@ -345,7 +345,7 @@
     !  Translate by G_0 the G-sphere where evq is defined,
     !  none of the G-points are lost.
     !
-    IF (ANY( g0vec_all_r(:, shift(ik + ik0)) /= 0 )) THEN
+    IF (ANY( ABS(g0vec_all_r(:, shift(ik + ik0))) > eps8 )) THEN
       DO ig = 1, npwq
         imap = ng0vec * (igkq(ig) - 1) + shift(ik + ik0)
         igkq_tmp(ig) = gmap(imap)

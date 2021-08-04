@@ -26,6 +26,7 @@ subroutine add_for_charges (ik, uact)
   USE uspp_param, only: nh
   USE eqv, ONLY : dvpsi, dpsi
   USE control_lr, ONLY : lgamma
+  USE qpoint,  ONLY : ikks
   implicit none
   !
   !   The dummy variables
@@ -84,9 +85,9 @@ subroutine add_for_charges (ik, uact)
      allocate (ps2 ( nkb , nbnd , 3))
   ENDIF
   if (lgamma) then
-     ikk = ik
-     ikq = ik
-     npw =ngk(ik)
+     ikk = ikks(ik)
+     ikq = ikk
+     npw =ngk(ikk)
   else
      call infomsg ('add_for_charges', 'called for lgamma .eq. false')
   endif

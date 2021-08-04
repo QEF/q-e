@@ -380,7 +380,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !
      !   impose asr on the dynamical matrix
      !
-     IF (asr) CALL set_asr(nat,nasr,dyn)
+     IF (asr) CALL set_asr_r(nat,nasr,dyn)
      !
      ! diagonalize the dynamical matrix
      !
@@ -421,21 +421,23 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
+  USE xc_lib,    ONLY : xclib_set_threshold
   USE cgcom
   !
   IMPLICIT NONE
   !
   INTEGER :: i, j
   REAL(DP), DIMENSION(3,3) :: chi(3,3)
-  REAL(DP), DIMENSION(dfftp%nnr) ::  rhotot, sign_r
+  REAL(DP), DIMENSION(dfftp%nnr,1) ::  rhotot, sign_r
   !
   CALL newscf
   !
   !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  rhotot(:) = rho%of_r(:,1) + rho_core(:)
+  rhotot(:,1) = rho%of_r(:,1) + rho_core(:)
   !
-  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
+  CALL xclib_set_threshold( 'lda', 1.E-10_DP )
+  CALL dmxc( dfftp%nnr, 1, rhotot, dmuxc )
   !
   !
   !  re-initialize data needed for gradient corrections
@@ -482,7 +484,7 @@ SUBROUTINE newscf
   USE wvfct, ONLY: nbnd, nbndx
   USE noncollin_module, ONLY: report
   USE symm_base,     ONLY : nsym
-  USE io_files,      ONLY : iunwfc, input_drho, output_drho, prefix, tmp_dir, postfix
+  USE io_files,      ONLY : iunwfc, prefix, tmp_dir, postfix
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, iprint, &
                             david, max_cg_iter, &
@@ -505,8 +507,6 @@ SUBROUTINE newscf
   doublegrid=.false.
   lmovecell=.false.
   iprint=10000
-  input_drho=' '
-  output_drho=' '
   starting_wfc='file'
   report=1
   if ( .not. allocated (btype) ) then

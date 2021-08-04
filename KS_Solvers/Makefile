@@ -1,7 +1,7 @@
 # Makefile for  KS_Solvers
 sinclude ../make.inc
 
-# the following directive prevents execution of this makefiile in parallel
+# the following directive prevents execution of this makefile in parallel
 # Problem is, libks_solvers.a depends upon all libdavid libcg etc, but if
 # those dependencies are added explicitly to libks_solvers.a, the library
 # is relinked every time, forcing relinking of many executables; if not, 
@@ -32,7 +32,26 @@ DENSE/rotate_HSpsi_gamma.o \
 DENSE/rotate_HSpsi_k.o \
 DENSE/rotate_wfc_gamma.o \
 DENSE/rotate_wfc_k.o 
-# add here other objects, e.g. NewSolver/*.o
+
+# GPU-related objects
+ALLOBJS += \
+Davidson/cegterg_gpu.o \
+Davidson/regterg_gpu.o \
+DENSE/rotate_wfc_k_gpu.o \
+DENSE/rotate_wfc_gamma_gpu.o \
+CG/rcgdiagg_gpu.o \
+CG/ccgdiagg_gpu.o \
+PPCG/generic_cublas.o \
+PPCG/ppcg_gamma_gpu.o \
+PPCG/ppcg_k_gpu.o \
+ParO/bpcg_gamma_gpu.o \
+ParO/bpcg_k_gpu.o \
+ParO/paro_gamma_new_gpu.o \
+ParO/paro_k_new_gpu.o \
+DENSE/rotate_HSpsi_gamma_gpu.o \
+DENSE/rotate_HSpsi_k_gpu.o
+
+# add here other objects, e.g. ParO/*.o NewSolver/*.o
 
 libks_solvers.a: $(ALLOBJS)
 	$(AR) $(ARFLAGS) $@ $?

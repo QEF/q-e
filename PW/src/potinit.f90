@@ -33,10 +33,10 @@ SUBROUTINE potinit()
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
-  USE control_flags,        ONLY : lscf, gamma_only
+  USE control_flags,        ONLY : lscf, gamma_only, restart
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
-  USE funct,                ONLY : dft_is_meta
+  USE xc_lib,               ONLY : xclib_dft_is
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
@@ -56,14 +56,17 @@ SUBROUTINE potinit()
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
   !
+  USE scf_gpum,             ONLY : using_vrs
+  !
   IMPLICIT NONE
   !
-  REAL(DP)              :: charge           ! the starting charge
-  REAL(DP)              :: etotefield       !
-  REAL(DP)              :: fact
-  INTEGER               :: is
-  LOGICAL               :: exst 
-  CHARACTER(LEN=320)    :: filename
+  REAL(DP)                  :: charge           ! the starting charge
+  REAL(DP)                  :: etotefield       !
+  REAL(DP)                  :: fact
+  INTEGER                   :: is
+  LOGICAL                   :: exst 
+  CHARACTER(LEN=320)        :: filename
+  COMPLEX (DP), ALLOCATABLE :: work(:,:)
   !
   CALL start_clock('potinit')
   !
@@ -85,11 +88,14 @@ SUBROUTINE potinit()
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
+        ! ... (not if restarting! the charge density saved to file in that
+        ! ...  case has already the required magnetization direction)
         ! ... FIXME: why not calling read_scf also in this case?
         !
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
-        CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
+        IF ( .NOT. restart ) &
+           CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
      END IF
      !
      IF ( lscf ) THEN
@@ -103,6 +109,23 @@ SUBROUTINE potinit()
         WRITE( stdout, '(/5X, &
              & "The potential is recalculated from file :"/5X,A,/)' ) &
             TRIM( filename )
+        !
+     END IF
+     !
+     IF ( input_drho /= ' ' ) THEN
+        !
+        filename = TRIM( restart_dir( )) // input_drho
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
+             ig_l2g, nspin, v%of_g, gamma_only )
+        ! 
+        WRITE( UNIT = stdout, &
+               FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
+            TRIM( filename )
+        !
+        ALLOCATE( work( dfftp%ngm, nspin ) )
+        CALL atomic_rho_g( work, nspin )
+        rho%of_g(:,1) = work(:,1) + v%of_g(:,1)
+        DEALLOCATE(work)
         !
      END IF
      !
@@ -141,9 +164,6 @@ SUBROUTINE potinit()
      IF ( okpaw )      CALL PAW_atomic_becsum()
      !
      IF ( input_drho /= ' ' ) THEN
-        !
-        IF ( nspin > 1 ) CALL errore &
-             ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
         filename = TRIM( restart_dir( )) // input_drho
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
@@ -189,7 +209,7 @@ SUBROUTINE potinit()
   !
   CALL rho_g2r (dfftp, rho%of_g, rho%of_r)
   !
-  IF  ( dft_is_meta() ) THEN
+  IF  ( xclib_dft_is('meta') ) THEN
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
         ! ... to be verified for LSDA: rho is (tot,magn), rho_kin is (up,down)
@@ -222,6 +242,7 @@ SUBROUTINE potinit()
   !
   ! ... define the total local potential (external+scf)
   !
+  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   ! ... write on output the parameters used in the DFT+U(+V) calculation

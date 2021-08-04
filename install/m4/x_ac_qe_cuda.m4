@@ -14,13 +14,18 @@
 #
 # If something isn't found, fails straight away.
 #
-# The following variables are substituted in the makefile:
-# NVCC        : the nvcc compiler command.
-# NVCCFLAGS   : nvcc specific flags
-# CUDA_CFLAGS : CUDA includes
-# CUDA_LDLIBS : CUDA libraries
-#
-# Defines HAVE_CUDA in config.h
+# The following variables (for C) are substituted in the makefile:
+#    NVCC        : the nvcc compiler command.
+#    NVCCFLAGS   : nvcc specific flags
+#    CUDA_CFLAGS : CUDA includes
+#    CUDA_LDLIBS : CUDA libraries
+# For Fortran:
+#    gpu_arch
+#    gpu_runtime
+#    cuda_fflags
+#    cuda_libs
+#    cuda_extlibs
+#    cuda_path
 #
 # LICENCE
 # Public domain
@@ -33,6 +38,7 @@ AC_DEFUN([X_AC_QE_CUDA], [
 NVCC=no
 CUDA_CFLAGS=
 CUDA_LDLIBS=
+cuda_path=
 cuda_fflags=
 cuda_libs=
 cuda_extlibs=
@@ -49,11 +55,27 @@ AC_ARG_WITH([cuda-cc],
    [with_cuda_cc=35])
    
 AC_ARG_WITH([cuda-runtime],
-   [AS_HELP_STRING([--with-cuda-runtime=VAL],[CUDA runtime (Pascal: 8.0, Volta: 9.0) @<:@default=8.0@:>@])],
+   [AS_HELP_STRING([--with-cuda-runtime=VAL],[CUDA runtime (Pascal: 8+, Volta: 9+) @<:@default=10.1@:>@])],
    [],
-   [with_cuda_runtime=8.0])
+   [with_cuda_runtime=10.1])
 
+AC_ARG_ENABLE([openacc],
+   [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=no@:>@])],
+   [],
+   [enable_openacc=no])
 
+AC_ARG_ENABLE([cuda-env-check],
+   [AS_HELP_STRING([--enable-cuda-env-check],[The configure script will check CUDA installation and report problems @<:@default=no@:>@])],
+   [],
+   [enable_cuda_env_check=no])
+
+if test "$f90_major_version" -gt 20 || (test "$f90_major_version" -eq 20 && test "$f90_minor_version" -ge 7); then
+   mMcuda="-cuda -gpu"
+   mMcudalib="-cudalib"
+else
+   mMcuda="-Mcuda"
+   mMcudalib="-Mcudalib"
+fi
 
 if test "x$with_cuda" != "xno"
 then
@@ -62,7 +84,7 @@ then
    # -----------------------------------------
    AC_LANG_PUSH([Fortran])
    AC_FC_SRCEXT([f90])
-   AX_CHECK_COMPILE_FLAG([-Mcuda], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
+   AX_CHECK_COMPILE_FLAG([$mMcuda=cuda$with_cuda_runtime], [have_cudafor=yes], [have_cudafor=no], [], [MODULE test; use cudafor; END MODULE])
    AC_LANG_POP([Fortran])
    if test "x$have_cudafor" != "xyes"
    then
@@ -85,13 +107,14 @@ then
    CUDA_LDLIBS+=" -lcuda -lcudart -lcublas -lcufft"
 
 
+
    # -----------------------------------------
    # Checking for nvcc
    # -----------------------------------------
    AC_PATH_PROG([NVCC],[nvcc],[no],[$PATH:$CUDAPATH/bin])
-   if test "x$NVCC" = "xno"
+   if test "x$NVCC" = "xno" && test "x$enable_cuda_env_check" = "xyes"
    then
-      AC_MSG_ERROR([Cannot find nvcc compiler. To enable CUDA, please add path to
+      AC_MSG_WARN([Cannot find nvcc compiler. To enable CUDA, please add path to
                     nvcc in the PATH environment variable and/or specify the path
                     where CUDA is installed using: --with-cuda=PATH])
    fi
@@ -122,16 +145,19 @@ then
    }
 EOF
 
-   if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+   if test "x$NVCC" != "xno"
    then
-      ac_compile_nvcc=yes
+      if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+      then
+         ac_compile_nvcc=yes
+      fi
    fi
    rm -f conftest.cu conftest.o
    AC_MSG_RESULT([$ac_compile_nvcc])
 
-   if test "x$ac_compile_nvcc" = "xno"
+   if test "x$ac_compile_nvcc" = "xno" && test "x$enable_cuda_env_check" = "xyes"
    then
-      AC_MSG_ERROR([CUDA compiler has problems.])
+      AC_MSG_WARN([CUDA compiler has problems.])
    fi
 
 
@@ -146,23 +172,45 @@ EOF
    LIBS="$CUDA_LDLIBS $LIBS"
 
    # And the header and the lib
-   AC_CHECK_LIB([cuda], [cuInit], [], AC_MSG_FAILURE([Couldn't find libcuda]))
-   AC_CHECK_LIB([cudart], [cudaMalloc], [], AC_MSG_FAILURE([Couldn't find libcudart]))
-   AC_CHECK_LIB([cublas], [cublasInit], [], AC_MSG_FAILURE([Couldn't find libcublas]))
-   AC_CHECK_LIB([cufft], [cufftPlanMany], [], AC_MSG_FAILURE([Couldn't find libcufft]))
+   if test "x$enable_cuda_env_check" = "xyes"
+   then
+      AC_CHECK_LIB([cuda], [cuInit], [], AC_MSG_FAILURE([Couldn't find libcuda]))
+      AC_CHECK_LIB([cudart], [cudaMalloc], [], AC_MSG_FAILURE([Couldn't find libcudart]))
+      AC_CHECK_LIB([cublas], [cublasInit], [], AC_MSG_FAILURE([Couldn't find libcublas]))
+      AC_CHECK_LIB([cufft], [cufftPlanMany], [], AC_MSG_FAILURE([Couldn't find libcufft]))
+   fi
+
+   new_cusolver="yes"
+   AC_CHECK_LIB([cusolver], [cusolverDnZhegvdx_bufferSize], [], new_cusolver="no")
    
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
    LIBS=${ax_save_LIBS}
 
-   AC_DEFINE(HAVE_CUDA,1,[Define if we have CUDA])
    try_dflags="$try_dflags -D__CUDA"
-   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
-   ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_extlibs="devxlib"
+   cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
+   cuda_fflags="$mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
+   cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"
+   
+   if test ${new_cusolver} != yes; then
+       cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
+       cuda_extlibs="$cuda_extlibs eigensolver"
+       cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+       AC_MSG_WARN([Using legacy custom solver.])
+   else
+       try_dflags="$try_dflags -D__USE_CUSOLVER"
+   fi
+   ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-   cuda_extlibs="eigensolver"
+   cuda_path="$CUDAPATH"
+   if test "$enable_openacc" == "yes"; then
+      ldflags="$ldflags -acc"
+      cuda_fflags="$cuda_fflags -acc"
+   fi
+
 fi
 
 # Announcing the new variables
@@ -177,4 +225,5 @@ AC_SUBST(gpu_runtime)
 AC_SUBST(cuda_fflags)
 AC_SUBST(cuda_libs)
 AC_SUBST(cuda_extlibs)
+AC_SUBST(cuda_path)
 ])

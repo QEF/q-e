@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE fft_param
-
+  use iso_fortran_env, only : stderr=>ERROR_UNIT, stdout=>OUTPUT_UNIT
 #if defined(__MPI)
 #if defined(__MPI_MODULE)
   USE mpi
@@ -15,7 +15,9 @@ MODULE fft_param
   INCLUDE 'mpif.h'
 #endif
 #else
-  INTEGER, PARAMETER :: MPI_COMM_NULL=0
+  INTEGER, PARAMETER :: MPI_COMM_WORLD =  0
+  INTEGER, PARAMETER :: MPI_COMM_NULL  = -1
+  INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
   
   INTEGER, PARAMETER :: ndims = 10
@@ -26,7 +28,6 @@ MODULE fft_param
   !!Max allowed fft dimension
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-  INTEGER, PARAMETER :: stdout = 6    ! unit connected to standard output
 
   REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
 

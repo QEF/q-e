@@ -11,9 +11,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
   use kinds,   only: dp
-  use funct,   only: get_meta
-  use xc_mgga, only: xc_metagcx, change_threshold_mgga !, &
-                     !tau_xc_array, tau_xc_array_spin
+  use xc_lib,  only: xclib_set_threshold
   !
   IMPLICIT NONE
   !
@@ -26,11 +24,9 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   REAL(dp) :: zeta, rh, grh2
   INTEGER :: k, ipol, is
   REAL(dp), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
-  INTEGER :: imeta
   !
   etxc = 0.d0
   ! calculate the gradient of rho+rho_core in real space
-  imeta = get_meta()
   !
   call exch_corr_meta() !HK/MCA
   !
@@ -56,7 +52,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
     !
     if (nspin==1) then
       !
-      call change_threshold_mgga( epsr, epsg, epsr )
+      call xclib_set_threshold( 'mgga', epsr, epsg, epsr )
       !
       call xc_metagcx( nnr, 1, np, rho, grho, kedtau, sx, sc, &
                        v1x, v2x, v3x, v1c, v2c, v3c )
@@ -67,11 +63,10 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       do ipol = 1, 3  
          grho(ipol,:,1) = (v2x(:,1) + v2c(1,:,1))*grho(ipol,:,1) 
       enddo
-      etxc = SUM( (sx(:) + sc(:)) * SIGN(1.d0,rho(:,1)) )
       !
     else
       !
-      call change_threshold_mgga( epsr )
+      call xclib_set_threshold( 'mgga', epsr )
       !
       call xc_metagcx( nnr, 2, np, rho, grho, kedtau, sx, sc, &
                        v1x, v2x, v3x, v1c, v2c, v3c )
@@ -88,9 +83,9 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
       !
       kedtau(:,1) = (v3x(:,1) + v3c(:,1)) * 0.5d0
       kedtau(:,2) = (v3x(:,2) + v3c(:,2)) * 0.5d0
-      etxc = etxc + SUM( sx(:) + sc(:) )
       !
     endif
+    etxc = etxc + SUM( sx(:) + sc(:) )
     !
     deallocate( sx, v1x, v2x, v3x )
     deallocate( sc, v1c, v2c, v3c )

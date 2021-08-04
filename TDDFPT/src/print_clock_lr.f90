@@ -15,8 +15,8 @@ SUBROUTINE print_clock_lr()
    USE io_global,        ONLY : stdout
    USE mp_world,         ONLY : mpime, root
    USE realus,           ONLY : real_space
-   USE lr_variables,     ONLY : davidson, eels
-   USE funct,            ONLY : dft_is_hybrid
+   USE lr_variables,     ONLY : davidson, eels, magnons
+   USE xc_lib,           ONLY : xclib_dft_is
    !
    IMPLICIT NONE
    !
@@ -24,6 +24,8 @@ SUBROUTINE print_clock_lr()
    !
    IF (eels) THEN
       CALL print_clock( 'lr_eels_main' )
+   ELSEIF (magnons) THEN
+      CALL print_clock( 'lr_magnons_main' )
    ELSEIF (davidson) THEN
       CALL print_clock( 'lr_dav_main' )
    ELSE
@@ -119,7 +121,7 @@ SUBROUTINE print_clock_lr()
    !
    CALL plugin_clock()
    !
-   IF (dft_is_hybrid()) THEN
+   IF (xclib_dft_is('hybrid')) THEN
     !
     WRITE( stdout, '(5X,"EXX routines")' )
     CALL print_clock( 'exx_grid' )

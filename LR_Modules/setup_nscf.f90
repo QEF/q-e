@@ -41,7 +41,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE uspp_param,         ONLY : n_atom_wfc
+  USE upf_ions,           ONLY : n_atom_wfc
   USE ktetra,             ONLY : tetra, tetra_type, opt_tetra_init
   USE lr_symm_base,       ONLY : nsymq, invsymq, minus_q
   USE control_lr,         ONLY : lgamma, ethr_nscf
@@ -56,7 +56,6 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   INTEGER  :: t_rev_eff(48), ik
   LOGICAL  :: magnetic_sym, sym(48)
   LOGICAL  :: skip_equivalence
-  LOGICAL, EXTERNAL  :: check_para_diag
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
@@ -77,7 +76,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   max_cg_iter=20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-  use_para_diag = check_para_diag( nbnd )
+  CALL set_para_diag( nbnd, use_para_diag )
   !
   ! ... Symmetry and k-point section
   !

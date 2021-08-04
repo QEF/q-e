@@ -86,24 +86,24 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   DO is = 1, nspin_mag
      !
      IF ( (nspin_mag == 4 .AND. is /= 1) .OR. skip_vltot ) THEN 
-!$omp parallel do default(shared) private(ig)
+        !$omp parallel do default(shared) private(ig)
         DO ig = 1, dfftp%nnr
            psic(ig) = vr(ig,is)
         ENDDO
-!$omp end parallel do
+        !$omp end parallel do
      ELSE
-!$omp parallel do default(shared) private(ig)
+        !$omp parallel do default(shared) private(ig)
         DO ig = 1, dfftp%nnr
            psic(ig) = vltot(ig) + vr(ig,is)
         ENDDO
-!$omp end parallel do
+        !$omp end parallel do
      ENDIF
      CALL fwfft( 'Rho', psic, dfftp )
-!$omp parallel do default(shared) private(ig)
-        DO ig = 1, ngm_l
-           vaux(ig,is) = psic(dfftp%nl(ngm_s+ig-1))
-        ENDDO
-!$omp end parallel do
+     !$omp parallel do default(shared) private(ig)
+     DO ig = 1, ngm_l
+        vaux(ig,is) = psic(dfftp%nl(ngm_s+ig-1))
+     ENDDO
+     !$omp end parallel do
      !
   ENDDO
   !
@@ -142,14 +142,14 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
            DO na = 1, nat
               IF ( ityp(na) == nt ) THEN
                  nb = nb + 1
-!$omp parallel do default(shared) private(ig)
+                 !$omp parallel do default(shared) private(ig)
                  DO ig = 1, ngm_l
                     aux(ig, nb) = vaux(ig,is) * CONJG( &
                       eigts1(mill(1,ngm_s+ig-1),na) * &
                       eigts2(mill(2,ngm_s+ig-1),na) * &
                       eigts3(mill(3,ngm_s+ig-1),na) )
                  ENDDO
-!$omp end parallel do
+                 !$omp end parallel do
               ENDIF
            ENDDO
            !
@@ -199,7 +199,7 @@ SUBROUTINE newd( )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
+  USE uspp,                 ONLY : deeq, deeq_d, dvan, deeq_nc, deeq_nc_d, dvan_so, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : noncolin, nspin_mag
@@ -215,6 +215,7 @@ SUBROUTINE newd( )
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
   !
+  ! Note: lspinorb implies noncolin. 
   !
   IF ( .NOT. okvan ) THEN
      !
@@ -238,15 +239,23 @@ SUBROUTINE newd( )
            !
         ELSE
            !
-           DO is = 1, nspin
-              !
-              deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
-              !
-           ENDDO
+           if ( nht > 0 ) THEN
+              DO is = 1, nspin
+                 deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
+              ENDDO
+           end if
            !
         ENDIF
         !
      ENDDO
+     !
+#if defined __CUDA
+     if (noncolin) then
+        if (nhm>0) deeq_nc_d=deeq_nc
+     else
+        if (nhm>0) deeq_d=deeq
+     endif
+#endif
      !
      ! ... early return
      !
@@ -301,6 +310,15 @@ SUBROUTINE newd( )
   IF (.NOT.noncolin) CALL add_paw_to_deeq( deeq )
   !
   IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq( deeq )
+  !
+  ! sync with GPUs
+#if defined __CUDA
+  if (noncolin) then
+     if (nhm>0) deeq_nc_d=deeq_nc
+  else
+     if (nhm>0) deeq_d=deeq
+  endif
+#endif
   !
   CALL stop_clock( 'newd' )
   !

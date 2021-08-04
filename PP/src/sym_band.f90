@@ -368,7 +368,7 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
        iclass,    &
        shift,     &
        na, i, j, ig, dimen, nrxx, npw
-  INTEGER ::  ftau(3)
+  INTEGER :: s_scaled(3,3,nsym), ftau(3,nsym)
 
   REAL(DP), ALLOCATABLE ::  w1(:)
   COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), trace(:,:), psic(:,:)
@@ -404,6 +404,10 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
      CALL invfft ('Rho', psic(:,ibnd), dfftp)
   ENDDO
   !
+  !  scale sym.ops. and fractional translations with FFT grids
+  !
+  CALL scale_sym_ops (nsym, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, s_scaled, ftau)
+  !
   !  Find the character of one symmetry operation per class
   !
   DO iclass=1,nclass
@@ -417,11 +421,8 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
      IF (irot==1) THEN
         evcr=evc
      ELSE
-        ftau(1) = NINT(ft(1,invs(irot))*dfftp%nr1)
-        ftau(2) = NINT(ft(2,invs(irot))*dfftp%nr2)
-        ftau(3) = NINT(ft(3,invs(irot))*dfftp%nr3)
-        CALL rotate_all_psi(ik,psic,evcr,s(1,1,invs(irot)), &
-                               ftau,gk(1,invs(irot)))
+        CALL rotate_all_psi(ik, psic, evcr, s_scaled(1,1,invs(irot)), &
+                               ftau(1,invs(irot)), gk(1,invs(irot)))
      ENDIF
      !
      !   and apply S if necessary
@@ -592,7 +593,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
         DO k = 1, nr3
           DO j = 1, nr2
              DO i = 1, nr1
-              CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+              CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
               ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
               rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
               arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
@@ -606,7 +607,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
         DO k = 1, nr3
            DO j = 1, nr2
               DO i = 1, nr1
-                 CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                 CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
                  ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
                  rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                  psir_collect(ir)=psic_collect(rir, ibnd)
@@ -635,7 +636,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
         DO k = 1, nr3
            DO j = 1, nr2
               DO i = 1, nr1
-                 CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                 CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
                  ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
                  rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                  arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
@@ -649,7 +650,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
         DO k = 1, nr3
            DO j = 1, nr2
               DO i = 1, nr1
-                 CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                 CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
                  ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
                  rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                  psir(ir)=psic(rir,ibnd)
@@ -723,7 +724,7 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
 
   REAL(DP), PARAMETER :: eps=1.d-5
 
-  INTEGER :: ftau(3)
+  INTEGER :: s_scaled(3,3,nsym), ftau(3,nsym)
   INTEGER ::         &
        ibnd,      &
        igroup,    &
@@ -761,6 +762,10 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
      ENDIF
   ENDDO
   istart(ngroup+1)=nbnd+1
+  !
+  !  scale sym.ops. and fractional translations with FFT grid
+  !
+  CALL scale_sym_ops (nsym, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, s_scaled, ftau)
 
   trace=(0.d0,0.d0)
   DO iclass=1,nclass
@@ -770,11 +775,8 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
      !   NB: rotate_psi assumes that s is in the small group of k. It does not
      !       rotate the k point.
      !
-     ftau(1) = NINT(ft(1,invs(irot))*dfftp%nr1)
-     ftau(2) = NINT(ft(2,invs(irot))*dfftp%nr2)
-     ftau(3) = NINT(ft(3,invs(irot))*dfftp%nr3)
-     CALL rotate_all_psi_so(ik,evc,evcr,s(1,1,invs(irot)),        &
-           ftau,d_spin(1,1,irot),has_e(1,iclass),gk(1,invs(irot)))
+     CALL rotate_all_psi_so(ik, evc, evcr, s_scaled(1,1,invs(irot)),        &
+           ftau(1,invs(irot)),d_spin(1,1,irot),has_e(1,iclass),gk(1,invs(irot)))
      !
      !   and apply S in the US case.
      !
@@ -967,7 +969,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
            DO k = 1, nr3
               DO j = 1, nr2
                  DO i = 1, nr1
-                    CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                    CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
                     ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
                     rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                     arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
@@ -981,7 +983,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
            DO k = 1, nr3
               DO j = 1, nr2
                  DO i = 1, nr1
-                    CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                    CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
                     ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
                     rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                     psir_collect(ir)=psic_collect(rir,ibnd)
@@ -1006,7 +1008,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
            DO k = 1, nr3
               DO j = 1, nr2
                  DO i = 1, nr1
-                    CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                    CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
                     ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
                     rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                     arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
@@ -1020,7 +1022,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
            DO k = 1, nr3
               DO j = 1, nr2
                  DO i = 1, nr1
-                    CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                    CALL rotate_grid_point (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
                     ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
                     rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                     psir(ir)=psic(rir,ibnd)

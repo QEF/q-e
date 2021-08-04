@@ -38,7 +38,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   ! counter on the i modes
   ! counter on the j modes
 
-  complex(DP) :: zdotc, dynwrk (3 * nat, 3 * nat)
+  complex(DP) :: dynwrk (3 * nat, 3 * nat)
   complex(DP), allocatable :: dvloc (:)
   ! d Vloc / dtau
 
@@ -52,8 +52,9 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
      do ipert = 1, npe
         nu_i = nu_i0 + ipert
         do is = 1, nspin_lsda
+        ! FIXME : use zgemm instead of dot_product
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
-                zdotc (dffts%nnr, drhoscf (1, is, ipert), 1, dvloc, 1) * &
+                dot_product(drhoscf (1:dffts%nnr, is, ipert), dvloc) * &
                   omega / (dffts%nr1 * dffts%nr2 * dffts%nr3)
         enddo
      enddo

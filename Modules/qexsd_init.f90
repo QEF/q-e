@@ -7,15 +7,13 @@
 !----------------------------------------------------------------------------
 MODULE qexsd_init
   !----------------------------------------------------------------------------
+  !! This module contains some common subroutines used to copy data used by
+  !! the Quantum ESPRESSO package into XML format.
   !
-  ! This module contains some common subroutines used to copy data used by
-  ! the Quantum ESPRESSO package into XML format
-  !
-  ! Written by Paolo Giannozzi, building upon pre-existing code qexsd.f90
+  !! Written by Paolo Giannozzi, building upon pre-existing code qexsd.f90.
   !
   !
   USE kinds,            ONLY : DP
-  USE parameters,       ONLY : natx 
   ! 
   USE qes_types_module
   USE qes_reset_module, ONLY:  qes_reset 
@@ -91,6 +89,7 @@ CONTAINS
       call qes_reset (scf_conv)
       IF (ASSOCIATED(opt_conv)) THEN
          CALL qes_reset (opt_conv)
+         DEALLOCATE(opt_conv)
          NULLIFY ( opt_conv) 
       END IF 
       !
@@ -246,8 +245,8 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_symmetries(obj, nsym, nrot, space_group, s, ft, sname, t_rev, nat, irt, &
-                                     class_names, verbosity, noncolin)
+    SUBROUTINE qexsd_init_symmetries(obj, space_group, nsym, nrot, s, ft, &
+         sname, t_rev, nat, irt, class_names, verbosity, noncolin)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -781,7 +780,7 @@ CONTAINS
       LOGICAL,         INTENT(IN) :: lsda, noncolin, spinorbit
       REAL(DP),        INTENT(IN) :: total_mag, absolute_mag
       REAL(DP),        INTENT(IN) :: total_mag_nc(3)
-      LOGICAL,         INTENT(IN) :: do_magnetization
+      LOGICAL,OPTIONAL,INTENT(IN) :: do_magnetization
       !
       CALL qes_init(obj, "magnetization", lsda, noncolin, spinorbit, total_mag, absolute_mag, &
                                  do_magnetization)

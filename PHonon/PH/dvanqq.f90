@@ -61,7 +61,7 @@ subroutine dvanqq
   ! the  q+G vectors
   ! the spherical harmonics
 
-  complex(DP) :: fact, fact1, zdotc
+  complex(DP) :: fact, fact1
   complex(DP), allocatable :: aux1 (:), aux2 (:),&
        aux3 (:), aux5 (:), veff (:,:), sk(:)
   ! work space
@@ -175,12 +175,14 @@ subroutine dvanqq
                            enddo
                        ENDIF
                        ! 
+                       ! FIXME: replace dot_products with zgemm
+                       !
                        do ipol = 1, 3
                           do ig=1, ngm
                             aux5(ig)= sk(ig) * (g (ipol, ig) + xq (ipol) )
                           enddo
                           int2 (ih, jh, ipol, na, nb) = fact * fact1 * &
-                                zdotc (ngm, aux1, 1, aux5, 1)
+                                dot_product (aux1, aux5)
                           do jpol = 1, 3
                              if (jpol >= ipol) then
                                 do ig = 1, ngm
@@ -189,7 +191,7 @@ subroutine dvanqq
                                 enddo
                                 int5 (ijh, ipol, jpol, na, nb) = &
                                      CONJG(fact) * tpiba2 * omega * &
-                                     zdotc (ngm, aux3, 1, aux1, 1)
+                                     dot_product (aux3, aux1)
                              else
                                 int5 (ijh, ipol, jpol, na, nb) = &
                                      int5 (ijh, jpol, ipol, na, nb)
@@ -210,14 +212,14 @@ subroutine dvanqq
                              aux2 (ig) = veff (dfftp%nl (ig), is) * g (ipol, ig)
                           enddo
                           int1 (ih, jh, ipol, nb, is) = - fact1 * &
-                               zdotc (ngm, aux1, 1, aux2, 1)
+                               dot_product (aux1, aux2)
                           do jpol = 1, 3
                              if (jpol >= ipol) then
                                 do ig = 1, ngm
                                    aux3 (ig) = aux2 (ig) * g (jpol, ig)
                                 enddo
                                 int4 (ijh, ipol, jpol, nb, is) = - tpiba2 * &
-                                     omega * zdotc (ngm, aux3, 1, aux1, 1)
+                                     omega * dot_product (aux3, aux1)
                              else
                                 int4 (ijh, ipol, jpol, nb, is) = &
                                      int4 (ijh, jpol, ipol, nb, is)

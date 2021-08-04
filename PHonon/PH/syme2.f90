@@ -26,7 +26,7 @@ subroutine syme2 (dvsym)
   complex(DP), allocatable :: aux (:,:,:,:)
   ! the function to symmetrize
   ! auxiliary space
-  integer :: ftau(3,48)
+  integer :: ftau(3,nsym), s_scaled(3,3,nsym)
   integer :: ix, jx, kx, ri, rj, rk, irot, ip, jp, lp, mp
   ! define a real-space point on the grid
   ! the rotated points
@@ -44,17 +44,14 @@ subroutine syme2 (dvsym)
   !
   !  symmmetrize
   !
-  ftau(1,1:nsym) = NINT ( ft(1,1:nsym)*dfftp%nr1 ) 
-  ftau(2,1:nsym) = NINT ( ft(2,1:nsym)*dfftp%nr2 ) 
-  ftau(3,1:nsym) = NINT ( ft(3,1:nsym)*dfftp%nr3 ) 
+  CALL scale_sym_ops( nsym, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+       s_scaled, ftau )
   do kx = 1, dfftp%nr3
   do jx = 1, dfftp%nr2
   do ix = 1, dfftp%nr1
      do irot = 1, nsym
-        call ruotaijk(s (1, 1, irot), ftau (1, irot), ix, jx, kx, &
-                      dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
-        !
-        ! ruotaijk finds the rotated of ix,jx,kx with the inverse of S
+        CALL rotate_grid_point(s_scaled(1,1,irot), ftau(1,irot), &
+             ix, jx, kx, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
         !
         do ip = 1, 3
         do jp = 1, ip

@@ -1,6 +1,14 @@
+generic_cublas.o : ../../UtilXlib/mp_bands_util.o
+generic_cublas.o : ../../UtilXlib/util_param.o
 ppcg_gamma.o : ../../UtilXlib/mp.o
 ppcg_gamma.o : ../../UtilXlib/mp_bands_util.o
 ppcg_gamma.o : ../../UtilXlib/util_param.o
+ppcg_gamma_gpu.o : ../../UtilXlib/mp.o
+ppcg_gamma_gpu.o : ../../UtilXlib/mp_bands_util.o
+ppcg_gamma_gpu.o : ../../UtilXlib/util_param.o
 ppcg_k.o : ../../UtilXlib/mp.o
 ppcg_k.o : ../../UtilXlib/mp_bands_util.o
 ppcg_k.o : ../../UtilXlib/util_param.o
+ppcg_k_gpu.o : ../../UtilXlib/mp.o
+ppcg_k_gpu.o : ../../UtilXlib/mp_bands_util.o
+ppcg_k_gpu.o : ../../UtilXlib/util_param.o

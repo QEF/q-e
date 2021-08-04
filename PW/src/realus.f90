@@ -110,7 +110,7 @@ MODULE realus
     SUBROUTINE generate_qpointlist
       !------------------------------------------------------------------------
       USE fft_base,     ONLY : dfftp  !, dffts
-      USE funct,        ONLY : dft_is_hybrid
+      !USE xc_lib,       ONLY : xclib_dft_is
       !USE gvecs,        ONLY : doublegrid
       !USE exx,  ONLY : exx_fft
       IMPLICIT NONE
@@ -123,7 +123,7 @@ MODULE realus
       !       now uses its own custom grid. In case this is re-introduced, please
       !       also modify exx_fft_create to recycle this grid when ecutfock = ecutwfc
 !       ! 2. initialize smooth grid (only for EXX at this moment)
-!       IF ( dft_is_hybrid() ) THEN
+!       IF ( xclib_dft_is('hybrid') ) THEN
 !         IF(doublegrid)THEN
 !           WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for SMOOTH grid"
 !           CALL qpointlist(dffts, tabs)
@@ -228,7 +228,7 @@ MODULE realus
       USE constants,  ONLY : pi, fpi, eps16, eps6
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, alat
-      USE uspp,       ONLY : okvan, qq_at, qq_nt, nhtol
+      USE uspp,       ONLY : okvan, qq_at, qq_at_d, qq_nt, nhtol
       USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_type_descriptor
@@ -399,9 +399,18 @@ MODULE realus
          CALL real_space_q( nt, ia, mbia, tabp )
          !
       ENDDO
+      !
       ! collect the result of the qq_at matrix across processors 
+      ! and sync on GPUs
+      !
       CALL mp_sum( qq_at, intra_bgrp_comm )
-      ! and test that they don't differ too much from the result computed on the atomic grid
+#if defined __CUDA
+      qq_at_d=qq_at
+#endif
+      !
+      ! and test that they don't differ too much 
+      ! from the result computed on the atomic grid
+      !
       ALLOCATE (diff(nsp))
       diff(:)=0.0_dp
       do ia=1,nat
@@ -442,9 +451,11 @@ MODULE realus
       !! First we compute the radial \(Q(r)\) (\(\text{qtot}\)) for each \(l\),
       !! then we interpolate it in our mesh (contained in \(\text{tabp}\)), finally
       !! we multiply by the spherical harmonics and store it into \(\text{tab}\).
+      !!
+      !! Sync with GPU memory is performed outside
       !
       USE constants,  ONLY : eps16, eps6
-      USE uspp,       ONLY : indv, nhtolm, ap, qq_at
+      USE uspp,       ONLY : indv, nhtolm, ap, qq_at, qq_at_d
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint
@@ -575,7 +586,10 @@ MODULE realus
             ENDDO
          ENDDO
       ENDDO
+      !
+      ! sync to GPUs is performed outside
       ! compute qq_at interating qr in the sphere 
+      !
       ijh = 0
       DO ih = 1, nh(nt)
          DO jh = ih, nh(nt)
@@ -585,7 +599,6 @@ MODULE realus
          END DO
       END DO
       qq_at(:,:,ia) = qq_at(:,:,ia) * omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-
       !
       DEALLOCATE( qtot, dqtot )
       DEALLOCATE( wsp, xsp )
@@ -1493,8 +1506,6 @@ MODULE realus
       USE scf,        ONLY : v, vltot
       USE uspp,       ONLY : becsum, ebecsum, okvan
       USE uspp_param, ONLY : upf,  nh
-!      USE mp_bands,   ONLY : intra_bgrp_comm
-!      USE mp,         ONLY : mp_sum
       !
       IMPLICIT NONE
       !
@@ -1573,7 +1584,7 @@ MODULE realus
     if (.not.allocated ( xkphase ) ) call errore ('set_xkphase',' array not allocated yes',1)
     if (ik .eq. current_phase_kpoint ) return
     !
-    !$omp parallel do
+    !$omp parallel do private(arg)
     do box_ir =1, boxtot
        arg = ( xk(1,ik) * xyz_beta(1,box_ir) + &
                xk(2,ik) * xyz_beta(2,box_ir) + &
@@ -1620,7 +1631,7 @@ MODULE realus
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
-    USE uspp,                  ONLY : indv_ijkb0
+    USE uspp,                  ONLY : ofsbeta
     !
     IMPLICIT NONE
     !
@@ -1669,7 +1680,7 @@ MODULE realus
              !
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
-             ijkb0 = indv_ijkb0(ia)
+             ijkb0 = ofsbeta(ia)
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do 
              DO ir =1, mbia
@@ -1738,7 +1749,8 @@ MODULE realus
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
-    USE uspp,                  ONLY : indv_ijkb0
+    USE uspp,                  ONLY : ofsbeta
+    USE becmod_gpum,           ONLY : using_becp_k
     !
     IMPLICIT NONE
     !
@@ -1752,6 +1764,7 @@ MODULE realus
     REAL(DP), EXTERNAL :: ddot
     !
     CALL start_clock( 'calbec_rs' )
+    CALL using_becp_k(1) ! intento=2?
     !
     IF( dffts%has_task_groups ) CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
@@ -1783,7 +1796,7 @@ MODULE realus
              !
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
-             ijkb0 = indv_ijkb0(ia)
+             ijkb0 = ofsbeta(ia)
              !
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do
@@ -1834,9 +1847,10 @@ MODULE realus
       USE cell_base,              ONLY : omega
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE uspp,                   ONLY : qq_at, indv_ijkb0
+      USE uspp,                   ONLY : qq_at, ofsbeta
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
+      USE becmod_gpum,            ONLY : using_becp_r
       !
       IMPLICIT NONE
       !
@@ -1850,7 +1864,11 @@ MODULE realus
 
       IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
-      ALLOCATE( w1(nhm), w2(nhm) ) ; if ( ibnd+1 > last) w2 = 0.D0
+      ! Sync
+      CALL using_becp_r(0)
+
+      ALLOCATE( w1(nhm), w2(nhm) )
+      IF ( ibnd+1 > last) w2 = 0.D0
       !
       fac = sqrt(omega)
       !
@@ -1863,7 +1881,7 @@ MODULE realus
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
                !print *, "mbia=",mbia
                !
-               ijkb0 = indv_ijkb0(ia)
+               ijkb0 = ofsbeta(ia)
                !
                !$omp parallel
                !$omp do
@@ -1909,9 +1927,10 @@ MODULE realus
       USE cell_base,              ONLY : omega
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE uspp,                   ONLY : qq_at, indv_ijkb0
+      USE uspp,                   ONLY : qq_at, ofsbeta
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
+      USE becmod_gpum,            ONLY : using_becp_k
       !
       IMPLICIT NONE
       !
@@ -1928,6 +1947,9 @@ MODULE realus
    
       IF( dffts%has_task_groups ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
 
+      ! Sync
+      CALL using_becp_k(0)
+
       call set_xkphase(current_k)
       !
       fac = sqrt(omega)
@@ -1942,7 +1964,7 @@ MODULE realus
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
                !print *, "mbia=",mbia
                !
-               ijkb0 = indv_ijkb0(ia)
+               ijkb0 = ofsbeta(ia)
                !
                !$omp parallel
                !$omp do
@@ -1991,9 +2013,10 @@ MODULE realus
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq, indv_ijkb0
+  USE uspp,                   ONLY : deeq, ofsbeta
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
+  USE becmod_gpum,            ONLY : using_becp_r
   !
   IMPLICIT NONE
   !
@@ -2006,10 +2029,14 @@ MODULE realus
   CALL start_clock( 'add_vuspsir' )
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
+
+  ! Sync
+  CALL using_becp_r(0)
   !
   fac = sqrt(omega)
   !
-  ALLOCATE( w1(nhm), w2(nhm) ) ; IF ( ibnd+1 > last) w2 = 0.D0
+  ALLOCATE( w1(nhm), w2(nhm) )
+  IF ( ibnd+1 > last) w2 = 0.D0
   DO nt = 1, nsp
      !
      DO ia = 1, nat
@@ -2018,7 +2045,7 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
            !
-           ijkb0 = indv_ijkb0(ia)
+           ijkb0 = ofsbeta(ia)
            !
            !$omp parallel
            !$omp do
@@ -2069,9 +2096,10 @@ MODULE realus
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq, indv_ijkb0
+  USE uspp,                   ONLY : deeq, ofsbeta
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
+  USE becmod_gpum,            ONLY : using_becp_k
   !
   IMPLICIT NONE
   !
@@ -2086,6 +2114,8 @@ MODULE realus
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
   !
+  CALL using_becp_k(0)
+  !
   call set_xkphase(current_k)
   !
   fac = sqrt(omega)
@@ -2099,7 +2129,7 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
 
-           ijkb0 = indv_ijkb0(ia)
+           ijkb0 = ofsbeta(ia)
 
            !$omp parallel
            !$omp do
@@ -2196,14 +2226,12 @@ MODULE realus
     !
     IF( dffts%has_task_groups ) THEN
         !
-
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         CALL tg_get_recip_inc( dffts, right_inc )
         ntgrp = fftx_ntgrp(dffts)
         !
         DO idx = 1, 2*ntgrp, 2
-
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
                  tg_psic(dffts%nl (igk_k(j,1))+ioff) =      orbital(j,idx+ibnd-1) +&
@@ -2217,11 +2245,8 @@ MODULE realus
                  tg_psic(dffts%nlm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1))
               ENDDO
            ENDIF
-
            ioff = ioff + right_inc
-
         ENDDO
-        !
         !
         CALL invfft ('tgWave', tg_psic, dffts)
         !
@@ -2371,7 +2396,7 @@ MODULE realus
            ! two ffts at the same time
 
            IF( add_to_orbital_ ) THEN
-              !$omp parallel do 
+              !$omp parallel do private(fp, fm)
               DO j = 1, ngk(1)
                  fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
@@ -2380,7 +2405,7 @@ MODULE realus
               ENDDO
               !$omp end parallel do
            ELSE
-              !$omp parallel do
+              !$omp parallel do private(fp, fm)
               DO j = 1, ngk(1)
                  fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
@@ -2426,7 +2451,7 @@ MODULE realus
     !! OBM 110908
     !
     USE kinds,                    ONLY : DP
-    USE wavefunctions,     ONLY : psic
+    USE wavefunctions,            ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
     USE fft_base,                 ONLY : dffts
@@ -2624,6 +2649,7 @@ MODULE realus
     USE fft_base,      ONLY : dffts
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
+    USE scf_gpum,      ONLY : using_vrs
     !
     IMPLICIT NONE
     !
@@ -2638,6 +2664,8 @@ MODULE realus
     REAL(DP), ALLOCATABLE :: tg_v(:)
     !
     CALL start_clock( 'v_loc_psir' )
+
+    CALL using_vrs(0) ! tg_gather (intent: in)
 
     IF( dffts%has_task_groups ) THEN
         IF (ibnd == 1 ) THEN
@@ -2680,6 +2708,7 @@ MODULE realus
     USE fft_base,      ONLY : dffts
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
+    USE scf_gpum,      ONLY : using_vrs
     !
     IMPLICIT NONE
     !
@@ -2694,6 +2723,8 @@ MODULE realus
     REAL(DP), ALLOCATABLE :: tg_v(:)
     !
     CALL start_clock( 'v_loc_psir' )
+
+    CALL using_vrs(0) ! tg_gather (intent: in)
 
     IF( dffts%has_task_groups ) THEN
         IF (ibnd == 1 ) THEN

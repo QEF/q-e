@@ -16,26 +16,21 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   USE lsda_mod,         ONLY : nspin
   USE ener,             ONLY : ef
   USE wvfct,            ONLY : et, nbnd
-  USE FoX_wxml,         ONLY : xmlf_t, xml_openfile, xml_close, &
-       xml_newElement, xml_addAttribute, xml_addCharacters, xml_endElement
+  USE xmltools,         ONLY : xml_openfile, xml_closefile, xmlw_writetag,&
+                               xmlw_opentag, xmlw_closetag, add_attr
   IMPLICIT NONE
 
   CHARACTER(*),  INTENT(IN) :: filename
   COMPLEX(DP),   INTENT(IN) :: projs(natomwfc,nbnd,nkstot)
+  COMPLEX(DP),   INTENT(IN) :: ovps(natomwfc,natomwfc,nkstot)
   LOGICAL,       INTENT(IN) :: lwrite_ovp
-  REAL(DP),      INTENT(IN) :: ovps(2*natomwfc,natomwfc,nkstot)
-  ! slightly dirty trick to make ovps a real array
   !
-  INTEGER :: ik, ik_eff, is, nwfc, ibnd, ierr, nspin_lsda, num_k_points
-  REAL(DP):: proj_tmp(2*nbnd) 
-  TYPE(xmlf_t) :: xf
+  COMPLEX(DP) :: proj(nbnd)
+  INTEGER :: ik, ik_eff, is, nwfc, ibnd, nspin_lsda, num_k_points
   !
   !
-  CALL xml_openfile(FILENAME = TRIM( restart_dir() )//TRIM(filename), XF = xf, &
-       UNIT = iunpun, PRETTY_PRINT = .TRUE., REPLACE  = .TRUE., &
-       NAMESPACE = .FALSE., IOSTAT = ierr ) 
-  !
-  IF ( ierr /= 0 ) RETURN
+  iunpun = xml_openfile ( TRIM( restart_dir() )//TRIM(filename) )
+  IF ( iunpun == -1 ) RETURN
   !
   nspin_lsda = 1
   IF ( nspin == 2 ) nspin_lsda = 2
@@ -43,77 +38,67 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   !
   ! <PROJECTIONS>
   !
-  CALL xml_newElement (xf, "PROJECTIONS")
+  CALL xmlw_opentag ("PROJECTIONS")
   !
   ! <HEADER>
   !
-  CALL xml_newElement (xf, "HEADER")
-  CALL xml_addAttribute (xf, "NUMBER_OF_BANDS", nbnd)
-  CALL xml_addAttribute (xf, "NUMBER_OF_K-POINTS", num_k_points)
-  CALL xml_addAttribute (xf, "NUMBER_OF_SPIN_COMPONENTS", nspin_lsda)
-  CALL xml_addAttribute (xf, "NUMBER_OF_ATOMIC_WFC", natomwfc)
-  CALL xml_addAttribute (xf, "NUMBER_OF_ELECTRONS", nelec)
-  CALL xml_addAttribute (xf, "FERMI_ENERGY", ef)
-  CALL xml_endElement (xf, "HEADER")
+  CALL add_attr ("NUMBER_OF_BANDS", nbnd)
+  CALL add_attr ("NUMBER_OF_K-POINTS", num_k_points)
+  CALL add_attr ("NUMBER_OF_SPIN_COMPONENTS", nspin_lsda)
+  CALL add_attr ("NUMBER_OF_ATOMIC_WFC", natomwfc)
+  CALL add_attr ("NUMBER_OF_ELECTRONS", nelec)
+  CALL add_attr ("FERMI_ENERGY", ef)
+  CALL xmlw_writetag ("HEADER", "")
   !
-  ! </HEADER>
   ! <EIGENSTATES>
   !
-  CALL xml_newElement (xf, "EIGENSTATES")
+  CALL xmlw_opentag ("EIGENSTATES")
   DO is = 1, nspin_lsda
      DO ik = 1, num_k_points
         ik_eff = ik + (is-1)*num_k_points
-        CALL xml_newElement(xf, "K-POINT")
-        CALL xml_addAttribute (xf, "Weight", wk(ik_eff) )
-        CALL xml_addCharacters (xf, xk(:,ik_eff) )
-        CALL xml_endElement(xf, "K-POINT")
+        CALL add_attr ( "Weight", wk(ik_eff) )
+        CALL xmlw_writetag("K-POINT", xk(:,ik_eff) )
         !
-        CALL xml_newElement (xf, "E")
-        CALL xml_addCharacters (xf, et(:,ik_eff) )
-        CALL xml_endElement (xf, "E" )
+        CALL xmlw_writetag ( "E", et(:,ik_eff) )
         !
-        CALL xml_newElement (xf, "PROJS")
+        CALL xmlw_opentag ("PROJS")
         DO nwfc = 1, natomwfc
-           CALL xml_newElement (xf, "ATOMIC_WFC")
-           CALL xml_addAttribute (xf, "index", nwfc )
-           CALL xml_addAttribute (xf, "spin", is )
-           ! not-so-smart way of copying complex into double
-           DO ibnd = 1, nbnd
-              proj_tmp(2*ibnd-1) = DBLE( projs(nwfc,ibnd,ik_eff) )
-              proj_tmp(2*ibnd  ) =AIMAG( projs(nwfc,ibnd,ik_eff) )
-           END DO
-           CALL xml_addCharacters (xf, proj_tmp )
-           CALL xml_endElement (xf, "ATOMIC_WFC" )
+           CALL add_attr ( "index", nwfc )
+           CALL add_attr ( "spin", is )
+           ! NOTE: the complex to real conversion done inside xmlw_writetag
+           !       using C pointer does not work  on intel compilers
+           !       with an array section (non-contiguous memory)
+           ! CALL xmlw_writetag ("ATOMIC_WFC", projs(nwfc,:,ik_eff) )
+           proj(:) =  projs(nwfc,:,ik_eff)
+           CALL xmlw_writetag ("ATOMIC_WFC", proj )
         ENDDO
-        CALL xml_endElement (xf, "PROJS" )
+        CALL xmlw_closetag ( )
         !
      END DO
      !
   ENDDO
-  CALL xml_endElement (xf, "EIGENSTATES")
+  CALL xmlw_closetag ( )
   !
   ! </EIGENSTATE>
   ! <OVERLAPS> if required
   IF ( lwrite_ovp ) THEN
-     CALL xml_newElement (xf, "OVERLAPS" )
+     CALL xmlw_opentag("OVERLAPS" )
      DO ik = 1, num_k_points
         DO is = 1, nspin_lsda
            ik_eff = ik + (is-1)*num_k_points
-           CALL xml_newElement (xf, "OVPS")
-           CALL xml_addAttribute (xf, "dim", natomwfc )
-           CALL xml_addAttribute (xf, "spin", is )
-           CALL xml_addCharacters (xf, ovps(:,:,ik_eff) )
-           CALL xml_endElement (xf, "OVPS" )
+           CALL add_attr ("dim", natomwfc )
+           CALL add_attr ("spin", is )
+           CALL xmlw_writetag ("OVPS", ovps(:,:,ik_eff) )
         END DO
      END DO
-     CALL xml_endElement (xf, "OVERLAPS" )
+     CALL xmlw_closetag ( )
   END IF
   !
-  CALL xml_endElement (xf, "PROJECTIONS")
+  CALL xmlw_closetag ( )
   !
   ! </PROJECTIONS>
   !
-  CALL xml_close ( xf)
+  CALL xml_closefile ( )
   !
 END SUBROUTINE write_xml_proj
 !

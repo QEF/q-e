@@ -84,7 +84,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
      ENDDO
      CALL invfft ('Rho', dvb_cc, dfftp)
      DO ir = 1,dfftp%nnr
-        dv(ir) = dv(ir) +  dble(dvb_cc(ir)) * dmuxc(ir)
+        dv(ir) = dv(ir) +  dble(dvb_cc(ir)) * dmuxc(ir,1,1)
      ENDDO
   ENDIF
   !

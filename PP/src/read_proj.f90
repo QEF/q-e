@@ -9,157 +9,107 @@ MODULE read_proj
   !-----------------------------------------------------------------------
 CONTAINS
   !
-  SUBROUTINE read_xml_proj ( filename, ierr, natomwfc, nbnd, num_k_points, &
+  SUBROUTINE read_xml_proj ( filename, ierr, natomwfc, nbnd, nkstot, &
      nspin, nelec, ef, xk, wk, et, projs, ovps )
   !-----------------------------------------------------------------------
   USE kinds,    ONLY : dp
-  USE FoX_dom
+  USE xmltools, ONLY : xml_openfile, xml_closefile, xmlr_readtag,&
+                       xmlr_opentag, xmlr_closetag, get_attr
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(in) :: filename
-  INTEGER, INTENT(OUT) :: ierr, natomwfc, nbnd, num_k_points, nspin
+  INTEGER, INTENT(OUT) :: ierr, natomwfc, nbnd, nkstot, nspin
   REAL(dp), INTENT(OUT) :: nelec, ef
   REAL(dp), INTENT(OUT), ALLOCATABLE :: et(:,:), xk(:,:), wk(:) 
   COMPLEX(dp), INTENT(OUT), ALLOCATABLE :: projs(:,:,:)
   COMPLEX(dp), INTENT(OUT), OPTIONAL, ALLOCATABLE :: ovps(:,:,:)
   !
-  TYPE (Node), POINTER :: root
-  TYPE (Node), POINTER :: node1
-  TYPE (Node), POINTER :: node2
-  TYPE (Node), POINTER :: node3
-  TYPE (Node), POINTER :: node4
-  TYPE (NodeList), POINTER :: node3list, node4list
-  !
-  INTEGER :: nw, nwfc, ik, is, nks
+  COMPLEX(dp), ALLOCATABLE :: proj(:)
+  INTEGER :: num_k_points
+  INTEGER :: iun, nw, nw_, ik, ik_eff, is, is_
   LOGICAL :: found
+  CHARACTER(len=1) :: dummy
   !
   !
   INQUIRE ( FILE = filename, exist=found )
-  IF (.NOT. found ) &
-       CALL errore ('read_xml_proj', 'xml data file not found', 1)
+  IF (.NOT. found ) THEN
+     ierr = 1
+     CALL infomsg ('read_xml_proj', 'xml data file not found')
+  END IF
   !
-  ! read XML file into "root" object
+  iun = xml_openfile (filename)
+  IF ( iun == -1 ) THEN
+     ierr = 2
+     CALL infomsg ('read_xml_proj', 'xml data file not readable')
+  END IF
   !
-  root => parseFile ( filename )
+  CALL xmlr_opentag ("PROJECTIONS")
   !
-  ierr = 1
-  node1 => item( getElementsByTagname( root, "PROJECTIONS"), 0)
-  IF ( .NOT.ASSOCIATED( node1)) RETURN
+  CALL xmlr_readtag ("HEADER", dummy)
+  CALL get_attr ("NUMBER_OF_BANDS", nbnd)
+  CALL get_attr ("NUMBER_OF_K-POINTS", num_k_points)
+  CALL get_attr ("NUMBER_OF_SPIN_COMPONENTS", nspin)
+  CALL get_attr ("NUMBER_OF_ATOMIC_WFC", natomwfc)
+  CALL get_attr ("NUMBER_OF_ELECTRONS", nelec)
+  CALL get_attr ("FERMI_ENERGY", ef)
   !
-  ierr = 10
-  node2 => item( getElementsByTagname( node1, "HEADER"), 0)
-  IF ( .NOT.ASSOCIATED( node2)) RETURN
+  CALL xmlr_opentag ("EIGENSTATES")
   !
-  IF ( .NOT. hasAttribute( node2, "NUMBER_OF_BANDS") ) RETURN
-  CALL extractDataAttribute( node2, "NUMBER_OF_BANDS", nbnd)
+  nkstot = num_k_points
+  IF ( nspin == 2 ) nkstot = 2*nkstot
+  ALLOCATE ( xk(3,nkstot) , wk(nkstot) )
+  ALLOCATE ( et(nbnd, nkstot) )
+  ALLOCATE ( projs(natomwfc, nbnd, nkstot) )
+  ALLOCATE ( proj(nbnd) )
   !
-  IF ( .NOT. hasAttribute( node2, "NUMBER_OF_K-POINTS") ) RETURN
-  CALL extractDataAttribute( node2, "NUMBER_OF_K-POINTS", num_k_points)
-  !
-  IF ( .NOT. hasAttribute( node2, "NUMBER_OF_SPIN_COMPONENTS") ) RETURN
-  CALL extractDataAttribute( node2, "NUMBER_OF_SPIN_COMPONENTS", nspin)
-  !
-  IF ( .NOT. hasAttribute( node2, "NUMBER_OF_ATOMIC_WFC") ) RETURN
-  CALL extractDataAttribute( node2, "NUMBER_OF_ATOMIC_WFC", natomwfc)
-  !
-  IF ( .NOT. hasAttribute( node2, "NUMBER_OF_ELECTRONS") ) RETURN
-  CALL extractDataAttribute( node2, "NUMBER_OF_ELECTRONS", nelec)
-  !
-  IF ( .NOT. hasAttribute( node2, "FERMI_ENERGY") ) RETURN
-  CALL extractDataAttribute( node2, "FERMI_ENERGY", ef)
-  !
-  ierr = 2
-  node2 => item( getElementsByTagname( node1, "EIGENSTATES"), 0)
-  IF ( .NOT. ASSOCIATED( node2) ) RETURN
-  !
-  IF ( nspin == 2 ) num_k_Points = num_k_points*nspin
-  ALLOCATE ( xk(3,num_k_points) , wk(num_k_points) )
-  ALLOCATE ( et(nbnd, num_k_points) )
-  ALLOCATE ( projs(natomwfc, nbnd, num_k_points) )
-  !
-  node3list => getElementsByTagname( node2, "K-POINT")
-  IF ( getLength (node3list) /= num_k_points  ) RETURN
-  !
-  DO ik=1,num_k_points
-     !
-     ierr = 20+ik
-     node3 => item( node3list, ik-1)
-     IF ( .NOT. ASSOCIATED( node3) ) RETURN
-     CALL extractDataContent( node3, xk(:,ik))
-     IF ( .NOT. hasAttribute( node3, "Weight") ) RETURN
-     !
-     CALL extractDataAttribute( node3, "Weight", wk(ik))
-     !
-  END DO
-  !
-  node3list => getElementsByTagname( node2, "E")
-  IF ( getLength (node3list) /= num_k_points  ) RETURN
-  !
-  DO ik=1,num_k_points
-     !
-     ierr = 20+ik
-     node3 => item( node3list, ik-1)
-     IF ( .NOT. ASSOCIATED( node3) ) RETURN
-     !
-     CALL extractDataContent( node3, et(:,ik))
-     !
-  END DO
-  !
-  node3list => getElementsByTagname( node2, "PROJS")
-  IF ( getLength (node3list) /= num_k_points ) RETURN
-  !
-  DO ik=1,num_k_points
-     !
-     node3 => item( node3list, ik-1)
-     IF ( .NOT. ASSOCIATED( node3) ) RETURN
-     node4list => getElementsByTagname( node3, "ATOMIC_WFC")
-     IF ( getLength (node4list) /= natomwfc ) RETURN
-     !
-     DO nw = 1, natomwfc
-        node4 => item( node4list, nw-1)
-        IF ( .NOT. hasAttribute( node4, "index") ) RETURN
-        CALL extractDataAttribute( node4, "index", nwfc)
-        IF ( .NOT. hasAttribute( node4, "spin") ) RETURN
-        CALL extractDataAttribute( node4, "spin", is)
-        IF ( nwfc /= nw ) RETURN
-        CALL extractDataContent( node4, projs(nw,:,ik))
+  DO is = 1, nspin
+     DO ik = 1, num_k_points
+        ik_eff = ik + (is-1)*num_k_points
+        CALL xmlr_readtag("K-POINT", xk(:,ik_eff) )
+        CALL get_attr ( "Weight", wk(ik_eff) )
+        CALL xmlr_readtag ( "E", et(:,ik_eff) )
+        !
+        CALL xmlr_opentag ("PROJS")
+        DO nw = 1, natomwfc
+           ! see comment in write_proj when writing this tag
+           ! CALL xmlr_readtag ("ATOMIC_WFC", projs(nw,:,ik_eff) )
+           CALL xmlr_readtag ("ATOMIC_WFC", proj)
+           projs(nw,:,ik_eff) = proj(:)
+           CALL get_attr ( "index", nw_ )
+           CALL get_attr ( "spin", is_ )
+        ENDDO
+        CALL xmlr_closetag ( )
+        !
      END DO
      !
-  END DO
+  ENDDO
+  CALL xmlr_closetag ( )
+  DEALLOCATE (proj)
+  !
+  ! </EIGENSTATES>
   !
   IF ( PRESENT(ovps) ) THEN
-     !
-     node2 => item( getElementsByTagname( node1, "OVERLAPS"), 0)
-     IF ( ASSOCIATED( node2) ) THEN
-        !
-        ALLOCATE ( ovps(natomwfc,natomwfc,num_k_points) )
-        !
-        ierr = 3
-        node3list => getElementsByTagname( node2, "OVPS")
-        IF ( getLength (node3list) /= num_k_points ) RETURN
-        !
-        DO ik=1,num_k_points
-           !
-           node3 => item( node3list, ik-1)
-           IF ( .NOT. ASSOCIATED( node3) ) RETURN
-           !
-           IF ( .NOT. hasAttribute( node3, "dim") ) RETURN
-           CALL extractDataAttribute( node3, "dim", nwfc)
-           IF ( nwfc /= natomwfc ) RETURN
-           !
-           IF ( .NOT. hasAttribute( node3, "spin") ) RETURN
-           CALL extractDataAttribute( node3, "spin", is)
-           !
-           CALL extractDataContent( node3, ovps(:,:,ik))
-           !
+     ALLOCATE ( ovps(natomwfc,natomwfc,nkstot) )
+     CALL xmlr_opentag("OVERLAPS" )
+     DO ik = 1, num_k_points
+        DO is = 1, nspin
+           ik_eff = ik + (is-1)*num_k_points
+           CALL xmlr_readtag ("OVPS", ovps(:,:,ik_eff) )
+           CALL get_attr ("dim", nw_ )
+           CALL get_attr ("spin",is_ )
         END DO
-        !
-     END IF
-     !
+     END DO
+     CALL xmlr_closetag ( )
   END IF
-  ierr = 0 
-  CALL destroy (root) 
+  !
+  CALL xmlr_closetag ( )
+  !
+  ! </PROJECTIONS>
+  !
+  CALL xml_closefile ( )
+  !
+  ierr = 0
   !
 END subroutine read_xml_proj
 

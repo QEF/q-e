@@ -36,6 +36,9 @@
   !! ...  title of the simulation
   CHARACTER(LEN = 10)  :: asr_typ
   !! type of ASR if lifc=.TRUE.
+  CHARACTER(LEN = 10) :: vme
+  !! if 'dipole' then computes the velocity as dipole+commutator = <\psi_mk|p+i[V_NL,r]|\psi_nk>
+  !! if 'wannier' then computes the velocity as dH_nmk/dk - i(e_nk-e_mk)A_nmk where A is the Berry connection
   !
   LOGICAL :: elecselfen
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
@@ -87,10 +90,10 @@
   !! if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
   LOGICAL :: epexst
   !! if .TRUE. prefix.epmatwp files are already on disk. don't recalculate. debugging param
-  LOGICAL :: vme
-  !! if .TRUE. calculate velocity matrix elements
   LOGICAL :: band_plot
   !! if .TRUE. write files to plot band structure and phonon dispersion
+  LOGICAL :: fermi_plot
+  !! if .TRUE. write files to plot Fermi surface
   LOGICAL :: lpolar
   !! if .TRUE. enable the correct Wannier interpolation in the case of polar material.
   LOGICAL :: lscreen
@@ -149,6 +152,10 @@
   !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
   LOGICAL :: eliashberg
   !! if .TRUE. solve the Eliashberg equations
+  LOGICAL :: tc_linear
+  !! if .TRUE.  linearized Eliashberg eqn. for T_c will be solved
+  CHARACTER(LEN = 10) :: tc_linear_solver
+  !! algorithm to solve T_c eigenvalue problem
   !
   ! Conductivity
   LOGICAL :: scattering
@@ -169,6 +176,18 @@
   !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
   LOGICAL :: shortrange
   !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
+  LOGICAL :: fixsym
+  !! if .TRUE. try to fix the symmetry-related issues
+  LOGICAL :: epw_no_t_rev
+  !! if .TRUE. set t_rev = 0
+  LOGICAL :: epw_tr
+  !! set time_reversal to epw_tr
+  LOGICAL :: epw_nosym
+  !! If .TRUE. set nsym=1 (nrot=1) and invsym=.FALSE.
+  LOGICAL :: epw_noinv
+  !! If .TRUE. set imq to non-zero value
+  LOGICAL :: epw_crysym
+  !! If .TRUE. calculate the symmetry of the crystal
   !
   INTEGER :: ngaussw
   !! smearing type for Fermi surface average in e-ph coupling after wann. interp.
@@ -202,8 +221,8 @@
   !! Switch for symmetry operations
   INTEGER :: nwanxx = 200
   !! parameter used in writing prefix.win file.
-  INTEGER :: ntempxx = 25
-  !! Maximum number of wannier functions
+  INTEGER :: ntempxx = 50
+  !! Maximum number of temperatures
   INTEGER :: etf_mem
   !! If 0, all in memory. If 1, less is stored in memory (read files).
   INTEGER :: scr_typ
@@ -212,6 +231,14 @@
   !! band index for which the cumulant calculation is done
   INTEGER :: mob_maxiter
   !! Maximum number of iteration for the IBTE
+  INTEGER :: nstemp
+  !! nr. of temperature points for temperature dependent caclulations
+  REAL(KIND = DP) :: tempsmin
+  !! min. temperature in Eliashberg equations - deprecated as an input parameter
+  REAL(KIND = DP) :: tempsmax
+  !! max. temperature - deprecated as an input parameter
+  REAL(KIND = DP) :: temps(50)
+  !! input temperature array (units of Kelvin)
   !
   ! Superconductivity
   INTEGER :: nswfc
@@ -220,10 +247,10 @@
   !! nr. of grid points between (wsfc,wscut)
   INTEGER :: nswi
   !! nr. of grid points for Eliashberg equations of imaginary axis
-  INTEGER :: nstemp
-  !! nr. of temperature points for Eliashberg equations
   INTEGER :: nsiter
   !! nr. of iterations for self-consistency
+  INTEGER :: npade
+  !! percentange of Matsubara points used in Pade continuation
   INTEGER :: broyden_ndim
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
@@ -235,8 +262,6 @@
   !! smearing width for Fermi surface average in e-ph coupling after wann interp
   REAL(KIND = DP) :: fsthick
   !! thickness of the Fermi shell for averaging the e-ph matrix element
-  REAL(KIND = DP) :: eptemp
-  ! temperature for the electronic Fermi occupations in the e-p calculation
   REAL(KIND = DP) :: wmin
   !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
   REAL(KIND = DP) :: wmax
@@ -285,10 +310,6 @@
   !! power used to define a non-uniform grid between wsfc and wscut
   REAL(KIND = DP) :: wscut
   !! upper limit cutoff frequency in Eliashberg equations (at least 5 times wsphmax)
-  REAL(KIND = DP) :: tempsmin
-  !! min. temperature in Eliashberg equations
-  REAL(KIND = DP) :: tempsmax
-  !! max. temperature
   REAL(KIND = DP) :: broyden_beta
   !! mixing factor for broyden mixing
   REAL(KIND = DP) :: conv_thr_raxis
@@ -308,8 +329,6 @@
   !! min frequency in electron spectral function due to e-p interaction
   REAL(KIND = DP) :: wmax_specfun
   !! max frequency in electron spectral function due to e-p `interaction
-  REAL(KIND = DP) :: temps(50)
-  !! temperature entering in the Eliashberg equtions (units of Kelvin)
   !
   ! Conductivity
   REAL(KIND = DP) :: scissor
@@ -318,6 +337,12 @@
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
   REAL(KIND = DP) :: nc
   !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
+  REAL(KIND = DP) :: bfieldx
+  !! Magnetic field along the x-direction
+  REAL(KIND = DP) :: bfieldy
+  !! Magnetic field along the y-direction
+  REAL(KIND = DP) :: bfieldz
+  !! Magnetic field along the z-direction
   !
   ! Plasmon
   REAL(KIND = DP) :: nel
@@ -332,6 +357,10 @@
   !! smearing for the calculation of the Lindhard function (in eV)
   !
   ! Phonon-assisted absorption
+  INTEGER :: neta = 9
+  !! Number of broadening parameters
+  INTEGER :: nomega
+  !! Number of frequency (photon energy) points
   REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
   REAL(KIND = DP) :: omegamax

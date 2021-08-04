@@ -15,6 +15,7 @@
  /
  &electrons
     diagonalization = 'david'
+    diago_david_ndim= 4
     mixing_beta     = 0.7
     conv_thr        = 1.0d-10
  /

@@ -97,24 +97,36 @@ MODULE dftd3_qe
   end subroutine dftd3_pbc_gdisp
 
 
-  subroutine dftd3_printout(this, input_dftd3)
+  subroutine dftd3_printout(this, input_dftd3, stdout, nsp, atm, nat, ityp,&
+                  tau, at, alat )
     !
     ! Added subroutine to original interface, which computes things for printout. 
     ! Could also be done in subroutine dftd3_init.
     !
-    USE io_global, ONLY : stdout
-    USE ions_base, ONLY : nsp,atm,nat,ityp,tau
-    USE cell_base, ONLY : at,alat
-
     type(dftd3_calc), intent(inout) :: this
     type(dftd3_input), intent(in) :: input_dftd3
+    integer, intent(in) :: stdout
+    integer, intent(in) :: nsp
+    integer, intent(in) :: nat
+    character(len=*), intent(in) :: atm(nsp)
+    integer, intent(in) :: ityp(nat)
+    real*8, intent(in) :: tau(3,nat)
+    real*8, intent(in) :: at(3,3)
+    real*8, intent(in) :: alat
+
     integer :: i,j,ata,z,iz(nat)
     real*8  :: cn(nat),rtmp3(3),c6,c8,dum,x
+    real*8 :: tau_(3,nat)
+    real*8 :: at_(3,3)
     !
     !
-    write(stdout,'( /, 5X, "--------------------------------------------" , &
-                  & /, 5X, "Parameters for DFT-D3 Dispersion Correction:" , &
-                  & /, 5X, "--------------------------------------------" , &
+    write(stdout,'( /, 5X, "--------------------------------------------" )' )
+    if ( input_dftd3%threebody ) then
+       write(stdout,'(    5X, "DFT-D3 Dispersion Correction (3-body terms):")')
+    else
+       write(stdout,'(    5X, "DFT-D3 Dispersion Correction (no 3-body):")')
+    end if
+    write(stdout,'(    5X, "--------------------------------------------" , &
                   & /, 5X, "  Reference C6 values for interpolation: ",/, &
                   & /, 5X, "    atom   Coordination number   C6" )')
     !
@@ -137,15 +149,13 @@ MODULE dftd3_qe
         iz(ata)=get_atomic_number(trim(atm(ityp(ata))))
     end do
     !
-    tau(:,:) = tau(:,:) * alat
-    at(:,:) = at(:,:) * alat
-    CALL set_criteria(this%rthr, at, rtmp3)
+    tau_(:,:) = tau(:,:) * alat
+    at_(:,:) = at(:,:) * alat
+    CALL set_criteria(this%rthr, at_, rtmp3)
     this%rep_vdw(:) = int(rtmp3) + 1
-    CALL set_criteria(this%cn_thr, at, rtmp3)
+    CALL set_criteria(this%cn_thr, at_, rtmp3)
     this%rep_cn(:) = int(rtmp3) + 1
-    CALL pbcncoord(nat, rcov, iz, tau, cn, at, this%rep_cn, this%cn_thr)
-    tau(:,:) = tau(:,:) / alat
-    at(:,:) = at(:,:) / alat
+    CALL pbcncoord(nat, rcov, iz, tau_, cn, at_, this%rep_cn, this%cn_thr)
     !    
     x = 0.d0
     do ata = 1, nat

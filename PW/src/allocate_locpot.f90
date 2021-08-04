@@ -15,6 +15,9 @@ SUBROUTINE allocate_locpot
   USE ions_base, ONLY : nat, ntyp => nsp
   USE vlocal,    ONLY : vloc, strf
   USE gvect,     ONLY : eigts1, eigts2, eigts3, ngm, ngl
+#if defined (__CUDA)
+  USE gvect,     ONLY : eigts1_d, eigts2_d, eigts3_d
+#endif
   USE fft_base , ONLY : dfftp
   !
   IMPLICIT NONE
@@ -25,6 +28,11 @@ SUBROUTINE allocate_locpot
   ALLOCATE( eigts1(-dfftp%nr1:dfftp%nr1,nat) )
   ALLOCATE( eigts2(-dfftp%nr2:dfftp%nr2,nat) )
   ALLOCATE( eigts3(-dfftp%nr3:dfftp%nr3,nat) )
+#if defined __CUDA  
+  ALLOCATE( eigts1_d(-dfftp%nr1:dfftp%nr1,nat) )
+  ALLOCATE( eigts2_d(-dfftp%nr2:dfftp%nr2,nat) )
+  ALLOCATE( eigts3_d(-dfftp%nr3:dfftp%nr3,nat) )
+#endif
   !
   RETURN
   !

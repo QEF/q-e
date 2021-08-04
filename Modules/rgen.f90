@@ -8,26 +8,31 @@
 !-----------------------------------------------------------------------
 SUBROUTINE rgen ( dtau, rmax, mxr, at, bg, r, r2, nrm)
   !-----------------------------------------------------------------------
-  !
-  !   generates neighbours shells (cartesian, in units of lattice parameter)
-  !   with length < rmax,and returns them in order of increasing length:
-  !      r(:) = i*a1(:) + j*a2(:) + k*a3(:) - dtau(:),   r2 = r^2
-  !   where a1, a2, a3 are primitive lattice vectors. Other input variables:
-  !     mxr = maximum number of vectors
-  !     at  = lattice vectors ( a1=at(:,1), a2=at(:,2), a3=at(:,3) )
-  !     bg  = reciprocal lattice vectors ( b1=bg(:,1), b2=bg(:,2), b3=bg(:,3) )
-  !   Other output variables:
-  !     nrm = the number of vectors with r^2 < rmax^2
+  !! Generates neighbours shells (cartesian, in units of lattice parameter)
+  !! with length < rmax, and returns them in order of increasing length.
   !
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   INTEGER, INTENT(in) :: mxr
-  INTEGER, INTENT(out):: nrm
-  REAL(DP), INTENT(in) :: at(3,3), bg(3,3), dtau(3), rmax
-  REAL(DP), INTENT(out):: r(3,mxr), r2(mxr)
+  !! maximum number of vectors
+  INTEGER, INTENT(out) :: nrm
+  !! the number of vectors with r^2 < rmax^2
+  REAL(DP), INTENT(in) :: at(3,3)
+  !! lattice vectors: \(a_1=at(:,1)\), \(a_2=at(:,2)\), \(a_3=at(:,3)\)
+  REAL(DP), INTENT(in) :: bg(3,3)
+  !! the reciprocal lattice vectors
+  REAL(DP), INTENT(in) :: dtau(3)
+  !! the difference of the atomic postions: tau\_s - tau\_s'
+  REAL(DP), INTENT(in) :: rmax
+  !! the maximum radius to consider
+  REAL(DP), INTENT(out) :: r(3,mxr)
+  !! \(r(:) = i*a_1(:) + j*a_2(:) + k*a_3(:)-\text{dtau}(:)\) where \(a_1\),
+  !! \(a_2\), \(a_3\) are primitive lattice vectors.
+  REAL(DP), INTENT(out) :: r2(mxr)
+  !! r2 = r^2
   !
-  !    and here the local variables
+  ! ... local variables
   !
   INTEGER, ALLOCATABLE :: irr (:)
   INTEGER ::  nm1, nm2, nm3, i, j, k, ipol, ir, indsw, iswap

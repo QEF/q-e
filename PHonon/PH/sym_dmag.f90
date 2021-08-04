@@ -36,7 +36,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   complex(DP) :: dmagtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
   ! the magnetization to symmetrize (only 2:4 components)
 
-  integer :: ftau(3,48)
+  integer :: ftau(3,nsymq), s_scaled(3,3,nsymq)
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
        irot, kpol
   !  counter on spin polarizations
@@ -75,9 +75,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   in2 = tpi / DBLE (dfftp%nr2)
   in3 = tpi / DBLE (dfftp%nr3)
 
-  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 ) 
-  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 ) 
-  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 ) 
+  CALL scale_sym_ops( nsymq, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+       s_scaled, ftau )
+  
   if (minus_q) then
      g1 (1) = 0.d0
      g2 (1) = 0.d0
@@ -94,9 +94,8 @@ subroutine sym_dmag (nper, irr, dmagtosym)
      do k = 1, dfftp%nr3
         do j = 1, dfftp%nr2
            do i = 1, dfftp%nr1
-              CALL ruotaijk (s(1,1,irotmq), ftau(1,irotmq), i, j, k, &
-                 dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
-
+              CALL rotate_grid_point(s_scaled(1,1,irotmq), ftau(1,irotmq), &
+                   i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               do ipert = 1, nper
                  aux2 = (0.d0, 0.d0)
                  do jpert = 1, nper
@@ -167,8 +166,8 @@ subroutine sym_dmag (nper, irr, dmagtosym)
         do i = 1, dfftp%nr1
            do isym = 1, nsymq
               irot = isym
-              CALL ruotaijk (s(1,1,irot), ftau(1,irot), i, j, k, &
-                 dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+              CALL rotate_grid_point(s_scaled(1,1,irot), ftau(1,irot), &
+                   i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               dmags=(0.d0,0.d0)
               do ipert = 1, nper
                  do jpert = 1, nper

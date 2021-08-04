@@ -8,6 +8,8 @@
 !----------------------------------------------------------------------------
 MODULE mp_exx
   !----------------------------------------------------------------------------
+  !! Band groups (processors within a pool of bands).
+  !! Subdivision of pool group, used for parallelization over bands.
   !
   USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank, mp_comm_split
   USE mp_bands, ONLY : nbgrp, nproc_bgrp, me_bgrp, root_bgrp, my_bgrp_id, &
@@ -17,48 +19,68 @@ MODULE mp_exx
   IMPLICIT NONE 
   SAVE
   !
-  ! ... Band groups (processors within a pool of bands)
-  ! ... Subdivision of pool group, used for parallelization over bands
-  !
-  INTEGER :: negrp       = 1  ! number of band groups
-  INTEGER :: nproc_egrp  = 1  ! number of processors within a band group
-  INTEGER :: me_egrp     = 0  ! index of the processor within a band group
-  INTEGER :: root_egrp   = 0  ! index of the root processor within a band group
-  INTEGER :: my_egrp_id  = 0  ! index of my band group
-  INTEGER :: inter_egrp_comm  = 0  ! inter band group communicator
-  INTEGER :: intra_egrp_comm  = 0  ! intra band group communicator  
+  INTEGER :: negrp       = 1
+  !! number of band groups
+  INTEGER :: nproc_egrp  = 1
+  !! number of processors within a band group
+  INTEGER :: me_egrp     = 0
+  !! index of the processor within a band group
+  INTEGER :: root_egrp   = 0
+  !! index of the root processor within a band group
+  INTEGER :: my_egrp_id  = 0
+  !! index of my band group
+  INTEGER :: inter_egrp_comm  = 0
+  !! inter band group communicator
+  INTEGER :: intra_egrp_comm  = 0
+  !! intra band group communicator  
   !
   ! ... "task" groups (for band parallelization of FFT)
   !
-  INTEGER :: ntask_groups = 1  ! number of proc. in an orbital "task group"
-  !
-  ! should the old band parallelization method be used?
+  INTEGER :: ntask_groups = 1
+  !! number of proc. in an orbital "task group"
   !
   LOGICAL :: use_old_exx = .FALSE.
+  !! should the old band parallelization method be used?
   !
   ! variables for the pair parallelization
   !
-  INTEGER :: max_pairs ! maximum pairs per band group
-  INTEGER, ALLOCATABLE :: egrp_pairs(:,:,:) ! pairs for each band group
-  INTEGER, ALLOCATABLE :: band_roots(:) ! root for each band
-  LOGICAL, ALLOCATABLE :: contributed_bands(:,:) ! bands for which the bgroup has a pair
-  INTEGER, ALLOCATABLE :: nibands(:) ! number of bands for which the bgroup has a pair
-  INTEGER, ALLOCATABLE :: ibands(:,:) ! bands for which the bgroup has a pair
-  INTEGER :: iexx_start = 0              ! starting band index used in bgrp parallelization
-  INTEGER :: iexx_end = 0                ! ending band index used in bgrp parallelization
-  INTEGER, ALLOCATABLE :: iexx_istart(:) ! starting band index for the outer loop
-  INTEGER, ALLOCATABLE :: iexx_iend(:)   ! ending band index used in the outer loop
-  INTEGER, ALLOCATABLE :: all_start(:)   ! starting band inded for the inner loop
-  INTEGER, ALLOCATABLE :: all_end(:)     ! ending band index used in the inner loop
+  INTEGER :: max_pairs
+  !! maximum pairs per band group
+  INTEGER, ALLOCATABLE :: egrp_pairs(:,:,:)
+  !! pairs for each band group
+  INTEGER, ALLOCATABLE :: band_roots(:)
+  !! root for each band
+  LOGICAL, ALLOCATABLE :: contributed_bands(:,:)
+  !! bands for which the bgroup has a pair
+  INTEGER, ALLOCATABLE :: nibands(:)
+  !! number of bands for which the bgroup has a pair
+  INTEGER, ALLOCATABLE :: ibands(:,:)
+  !! bands for which the bgroup has a pair
+  INTEGER :: iexx_start = 0
+  !! starting band index used in bgrp parallelization
+  INTEGER :: iexx_end = 0
+  !! ending band index used in bgrp parallelization
+  INTEGER, ALLOCATABLE :: iexx_istart(:)
+  !! starting band index for the outer loop
+  INTEGER, ALLOCATABLE :: iexx_iend(:)
+  !! ending band index used in the outer loop
+  INTEGER, ALLOCATABLE :: all_start(:)
+  !! starting band inded for the inner loop
+  INTEGER, ALLOCATABLE :: all_end(:)
+  !! ending band index used in the inner loop
+  !
+  INTEGER, ALLOCATABLE :: iexx_istart_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: iexx_istart_d
+#endif
+  !
   INTEGER :: max_contributors
   !
-  ! flag for whether the exx part of the calculation is in progress
-  !
   INTEGER :: exx_mode = 0
-  !
-  ! maximum number of bands for psi
+  !! flag for whether the exx part of the calculation is in progress
   !
   INTEGER :: max_ibands
+  !! maximum number of bands for psi
   !
   INTEGER :: jblock
   !
@@ -67,15 +89,16 @@ CONTAINS
   !----------------------------------------------------------------------------
   SUBROUTINE mp_start_exx( nband_, ntg_, parent_comm )
     !---------------------------------------------------------------------------
-    !
-    ! ... Divide processors (of the "parent_comm" group) into nband_ pools
-    ! ... Requires: nband_, read from command line
-    ! ...           parent_comm, typically processors of a k-point pool
-    ! ...           (intra_pool_comm)
+    !! Divide processors (of the "parent_comm" group) into \(\text{nband}\_\) 
+    !! pools.
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: nband_, parent_comm
+    INTEGER, INTENT(IN) :: nband_
+    !! it must have been previously read from command line argument
+    !! by a call to routine \(\texttt{get\_command\_line}\).
+    INTEGER, INTENT(IN) :: parent_comm
+    !! typically processors of a k-point pool (\(\text{intra\_pool\_comm}\))
     INTEGER, INTENT(IN), OPTIONAL :: ntg_
     !
     INTEGER :: parent_nproc = 1, parent_mype = 0
@@ -141,8 +164,10 @@ CONTAINS
   END SUBROUTINE mp_start_exx
   !
   SUBROUTINE init_index_over_band(comm,nbnd,m)
+    !! Initialize indexes of band loops.
     !
     USE io_global, ONLY : stdout
+    USE control_flags, ONLY : use_gpu
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: comm, nbnd
     INTEGER, INTENT(IN) :: m
@@ -159,6 +184,7 @@ CONTAINS
     IF (ALLOCATED(all_start)) THEN
        DEALLOCATE( all_start, all_end )
        DEALLOCATE( iexx_istart, iexx_iend )
+       IF(use_gpu) DEALLOCATE(iexx_istart_d)
     END IF
     ALLOCATE( all_start(negrp) )
     ALLOCATE( all_end(negrp) )
@@ -219,6 +245,9 @@ CONTAINS
     END DO
     max_pairs = CEILING(REAL(nbnd*m)/REAL(negrp))
     n_underloaded = MODULO(max_pairs*negrp-nbnd*m,negrp)
+    !
+    !allocate and upload
+    IF(use_gpu) ALLOCATE(iexx_istart_d, source=iexx_istart)
     !
     ! allocate arrays
     !

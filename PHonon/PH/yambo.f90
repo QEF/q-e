@@ -30,7 +30,8 @@ SUBROUTINE debye_waller(y_grad_at_gamma,y_pol_vec,ibnd,jbnd,ik,mu)
   USE ions_base,  ONLY:nat
   USE control_lr, ONLY:lgamma
   USE el_phon,    ONLY:el_ph_mat
-  USE phcom,      ONLY:u,dyn
+  USE phcom,      ONLY:dyn
+  USE modes,      ONLY:u
   !
   IMPLICIT NONE
   INTEGER     :: ibnd,jbnd,ik,mu

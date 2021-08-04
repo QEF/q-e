@@ -1,8 +1,9 @@
+from __future__ import print_function
 import numpy as np
 
 #1) Run dev-tools/mem_counter inside EPW/src
 #2) compile UtilXlib/mem_counter.f90  with -D__DEBUG flag
-#3) Run EPW 
+#3) Run EPW
 #4) grep ' allocating' epw1.out > alloc.txt
 #5) grep 'deallocating' epw1.out > dealloc.txt
 #6) Run this script after having changed the correct allocation lengths
@@ -37,18 +38,18 @@ with open('dealloc.txt','r') as R:
 deall_found = [ False ] * dealloc_len
 
 for ii in np.arange(alloc_len):
-  print ii,' / ',alloc_len
+  print(ii, ' / ', alloc_len)
   name = alloc_name[ii]
-  
+
   found = False
   for jj in np.arange(dealloc_len):
     if name == dealloc_name[jj]:
-      if (alloc_size[ii] == dealloc_size[jj] and deall_found[jj]==False ) :
+      if alloc_size[ii] == dealloc_size[jj] and not deall_found[jj]:
         # We found the corresponding all/deall pair
         deall_found[jj] = True
         found = True
         break
-  if (found == False):   
+  if not found:
     with open('mem_analyse.out','a') as O:
       O.write('We did not find a maching pair in '+str(alloc_sub[ii])+'\n')
       O.write('Allocate:   '+str(name)+' '+str(alloc_size[ii])+'\n')
@@ -56,6 +57,3 @@ for ii in np.arange(alloc_len):
 #    print 'We did not find a maching pair in ', alloc_sub[ii]
 #    print 'Allocate:   ',name,' ',alloc_size[ii]
 #    print 'Deallocate: ',dealloc_name[jj],' ',dealloc_size[jj]
-
-
-

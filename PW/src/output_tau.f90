@@ -118,3 +118,34 @@ SUBROUTINE output_tau( print_lattice, print_final )
   RETURN
   !
 END SUBROUTINE output_tau
+
+
+SUBROUTINE output_tau_rescaled(rescale)
+  USE io_global,   ONLY : stdout
+  USE kinds,       ONLY : DP
+  USE ions_base,   ONLY : nat, tau, ityp, atm, if_pos, tau_format
+  IMPLICIT NONE
+  REAL(DP),INTENT(in) :: rescale
+  INTEGER :: na
+ 
+  IF(rescale==1._dp) RETURN
+  IF(tau_format/="alat") RETURN
+
+  WRITE( stdout, '(/"Atomic positions rescaled with new alat:")' )
+
+  DO na = 1, nat
+     !
+     IF ( ALLOCATED( if_pos ) ) THEN
+        IF ( ANY( if_pos(:,na) == 0 ) ) THEN
+           WRITE( stdout,'(A3,3X,3F20.10,1X,3i4)') &
+                        atm(ityp(na)), tau(:,na)*rescale, if_pos(:,na)
+        ELSE
+           WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
+        END IF
+     ELSE
+        WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau(:,na)*rescale
+     ENDIF
+     !
+  ENDDO
+
+END SUBROUTINE

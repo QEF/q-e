@@ -8,8 +8,7 @@
 !-----------------------------------------------------------------------
 FUNCTION matches( string1, string2 )  
   !-----------------------------------------------------------------------
-  !
-  ! ... .TRUE. if string1 is contained in string2, .FALSE. otherwise
+  !! TRUE if string1 is contained in string2, FALSE otherwise.
   !
   IMPLICIT NONE
   !
@@ -42,9 +41,8 @@ END FUNCTION matches
 !-----------------------------------------------------------------------
 FUNCTION imatches( string1, string2 )
   !-----------------------------------------------------------------------
-  !
-  ! ... .TRUE. if string1 is contained in string2, .FALSE. otherwise
-  !   *** case insensitive ***
+  !! TRUE if string1 is contained in string2, FALSE otherwise.  
+  !! NB: case insensitive.
   !
   IMPLICIT NONE
   !

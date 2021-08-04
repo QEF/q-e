@@ -10,6 +10,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 XOBJS = \
 ./gaunt_mod.o \
 ./xspectra_mod.o \
+./xspectra_utils.o \
 ./radin_mod.o \
 ./mygetK.o \
 ./ipoolscatter.o \
@@ -39,7 +40,7 @@ GIPAWOBJS=./paw_gipaw.o \
 MANIP_XS_OBJ=./gaunt_mod.o 
              
 QEMODS = ../../Modules/libqemod.a  ../../upflib/libupf.a \
-         ../../FFTXlib/libqefft.a ../../KS_Solvers/libks_solvers.a \
+         ../../FFTXlib/libqefft.a ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
 	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS = ../../PW/src/libpw.a 
 
