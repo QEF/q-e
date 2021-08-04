@@ -829,10 +829,6 @@ MODULE us_exx
       RETURN
     ENDIF
     !
-    IF (.not. ALLOCATED(becxx)) THEN
-      WRITE(stdout, *) "WARNING becx not stored, SKIPPING!"
-      RETURN
-    ENDIF
     !
     CALL start_clock( 'becxx' )
     !
