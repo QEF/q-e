@@ -3,7 +3,7 @@
 ###########################################################
 if(MBD_ROOT)
     add_library(qe_mbd INTERFACE)
-    qe_install_targets(qe_mbd) 
+    qe_install_targets(qe_mbd)
     target_link_libraries(qe_mbd INTERFACE "-L${MBD_ROOT}/lib;-lmbd")
     target_include_directories(qe_mbd INTERFACE ${MBD_ROOT}/include)
 else()

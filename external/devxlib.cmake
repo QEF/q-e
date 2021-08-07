@@ -4,7 +4,8 @@
 if(DEVXLIB_ROOT)
     add_library(qe_devxlib INTERFACE)
     # "src" in PATH_SUFFIXES is needed until devxlib supports make install
-    find_library(DEVXLIB_LIB
+    find_library(
+        DEVXLIB_LIB
         NAMES devXlib
         HINTS ${DEVXLIB_ROOT}
         PATH_SUFFIXES "lib" "src")
@@ -13,7 +14,8 @@ if(DEVXLIB_ROOT)
         message(FATAL_ERROR "Failed in locating devXlib library file at <DEVXLIB_ROOT>/lib")
     endif()
 
-    find_path(DEVXLIB_MOD_PATH
+    find_path(
+        DEVXLIB_MOD_PATH
         NAMES device_fbuff_m.mod
         HINTS ${DEVXLIB_ROOT}
         PATH_SUFFIXES "include" "mod" "src")
@@ -36,14 +38,12 @@ else()
         devxlib/src/device_fbuff.f90
         devxlib/src/device_fbuff_mod.f90
         devxlib/src/timer_mod.f90
-    devxlib/src/timer.c)
+        devxlib/src/timer.c)
     qe_enable_cuda_fortran("${src_devxlib}")
 
     qe_add_library(qe_devxlib ${src_devxlib})
 
-    target_include_directories(qe_devxlib
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/src")
-    target_include_directories(qe_devxlib
-        PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/include")
+    target_include_directories(qe_devxlib PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/src")
+    target_include_directories(qe_devxlib PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/include")
 endif()
 qe_install_targets(qe_devxlib)

@@ -43,25 +43,14 @@ set_source_files_properties(
     eigensolver_gpu/lib_eigsolve/zhegst_gpu.F90
     eigensolver_gpu/lib_eigsolve/zhegvdx_gpu.F90
     eigensolver_gpu/lib_eigsolve/zhetrd_gpu.F90
-    PROPERTIES
-        COMPILE_OPTIONS "${FLAGS}")
-set_source_files_properties(
-    eigensolver_gpu/lib_eigsolve/zhetd2_gpu.F90
-    eigensolver_gpu/lib_eigsolve/dsymv_gpu.F90
-    PROPERTIES
-        COMPILE_OPTIONS "${FLAGS2}")
-set_source_files_properties(
-    eigensolver_gpu/lib_eigsolve/zhemv_gpu.F90
-    PROPERTIES
-        COMPILE_OPTIONS "${FLAGS3}")
+    PROPERTIES COMPILE_OPTIONS "${FLAGS}")
+set_source_files_properties(eigensolver_gpu/lib_eigsolve/zhetd2_gpu.F90 eigensolver_gpu/lib_eigsolve/dsymv_gpu.F90
+                            PROPERTIES COMPILE_OPTIONS "${FLAGS2}")
+set_source_files_properties(eigensolver_gpu/lib_eigsolve/zhemv_gpu.F90 PROPERTIES COMPILE_OPTIONS "${FLAGS3}")
 
 add_library(qe_eigensolver_gpu ${src_eigensolver_gpu})
 qe_fix_fortran_modules(qe_eigensolver_gpu)
 
-target_link_libraries(qe_eigensolver_gpu
-    PRIVATE
-        qe_openmp_fortran
-        qe_lapack
-        CUDA::cusolver)
+target_link_libraries(qe_eigensolver_gpu PRIVATE qe_openmp_fortran qe_lapack CUDA::cusolver)
 
 qe_install_targets(qe_eigensolver_gpu)
