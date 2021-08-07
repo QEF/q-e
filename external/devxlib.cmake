@@ -8,15 +8,22 @@ if(DEVXLIB_ROOT)
         NAMES devXlib
         HINTS ${DEVXLIB_ROOT}
         PATH_SUFFIXES "lib" "src")
+
+    if(NOT DEVXLIB_LIB)
+        message(FATAL_ERROR "Failed in locating devXlib library file at <DEVXLIB_ROOT>/lib")
+    endif()
+
     find_path(DEVXLIB_MOD_PATH
         NAMES device_fbuff_m.mod
         HINTS ${DEVXLIB_ROOT}
         PATH_SUFFIXES "include" "mod" "src")
+
+    if(NOT DEVXLIB_MOD_PATH)
+        message(FATAL_ERROR "Failed in locating device_fbuff_m.mod file at <DEVXLIB_ROOT>/(include.mod,src)")
+    endif()
+
     target_link_libraries(qe_devxlib INTERFACE ${DEVXLIB_LIB})
     target_include_directories(qe_devxlib INTERFACE ${DEVXLIB_MOD_PATH})
-
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args("DeviceXlib" REQUIRED_VARS DEVXLIB_LIB DEVXLIB_MOD_PATH)
 else()
     qe_git_submodule_update(external/devxlib)
 
