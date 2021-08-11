@@ -8,8 +8,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stop_ph( flag )
   !----------------------------------------------------------------------------
-  !
-  ! ... Synchronize processes before stopping.
+  !! Synchronize processes before stopping.
   !
   USE kinds,      ONLY : DP
   USE mp_global,  ONLY : mp_global_end
