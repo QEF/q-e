@@ -187,7 +187,7 @@ CONTAINS
     INTEGER                  :: ibnd
     COMPLEX(DP), ALLOCATABLE :: sc(:)
     REAL(DP)                 :: norm
-    COMPLEX(DP), EXTERNAL    :: ZDOTC
+    REAL(DP), EXTERNAL       :: DDOT
     !
     ALLOCATE( sc( ibnd_start:ibnd_end ) )
     !
@@ -230,11 +230,11 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          norm = DBLE( ZDOTC( kdim, phi(1,ibnd), 1, sphi(1,ibnd), 1 ) )
+          norm = DDOT( 2*kdim, phi(1,ibnd), 1, sphi(1,ibnd), 1 )
           !
        ELSE
           !
-          norm = DBLE( ZDOTC( kdim, phi(1,ibnd), 1, phi(1,ibnd), 1 ) )
+          norm = DDOT ( 2*kdim, phi(1,ibnd), 1, phi(1,ibnd), 1 ) 
           !
        END IF
        !
@@ -320,7 +320,7 @@ CONTAINS
     !
     INTEGER :: ibnd, ibnd_start, ibnd_end
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC
+    REAL(DP), EXTERNAL :: DDOT
     !
     ! ... <psi_i| H |psi_i>
     !
@@ -330,7 +330,7 @@ CONTAINS
     !
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) )
+       e(ibnd) = DDOT( 2*kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) 
        !
     END DO
     !

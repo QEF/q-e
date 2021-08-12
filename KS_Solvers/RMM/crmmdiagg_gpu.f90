@@ -664,7 +664,7 @@ CONTAINS
     COMPLEX(DP), ALLOCATABLE :: work(:)
     REAL(DP),    ALLOCATABLE :: rwork(:)
     !
-    COMPLEX(DP), EXTERNAL    :: ZDOTC
+    REAL(DP), EXTERNAL    :: DDOT
     !
     ndim  = idiis
     nwork = 3 * ndim
@@ -745,7 +745,7 @@ CONTAINS
     !
     CALL ZGEMV( 'N', ndim, ndim, ONE, s1, ndim, vc, 1, ZERO, u1, 1 )
     !
-    vnrm = SQRT( DBLE( ZDOTC( ndim, vc, 1, u1, 1 ) ) )
+    vnrm = SQRT( DDOT( 2*ndim, vc, 1, u1, 1 ) )
     !
     vc = vc / vnrm
     !

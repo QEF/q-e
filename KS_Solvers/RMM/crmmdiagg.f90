@@ -254,7 +254,7 @@ CONTAINS
     !
     INTEGER :: ibnd
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC
+    REAL(DP), EXTERNAL :: DDOT
     !
     ! ... Operate the Hamiltonian : H |psi>
     !
@@ -276,7 +276,7 @@ CONTAINS
     !
     DO ibnd = ibnd_start, ibnd_end
        !
-       hw(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) )
+       hw(ibnd) = DDOT( 2*kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
        !
     END DO
     !
@@ -288,11 +288,11 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          sw(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, spsi(1,ibnd), 1 ) )
+          sw(ibnd) = DDOT( 2*kdim, psi(1,ibnd), 1, spsi(1,ibnd), 1 )
           !
        ELSE
           !
-          sw(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, psi(1,ibnd), 1 ) )
+          sw(ibnd) = DDOT( 2*kdim, psi(1,ibnd), 1, psi(1,ibnd), 1 )
           !
        END IF
        !
@@ -578,7 +578,7 @@ CONTAINS
     COMPLEX(DP), ALLOCATABLE :: work(:)
     REAL(DP),    ALLOCATABLE :: rwork(:)
     !
-    COMPLEX(DP), EXTERNAL    :: ZDOTC
+    REAL(DP), EXTERNAL    :: DDOT
     !
     ndim  = idiis
     nwork = 3 * ndim
@@ -659,7 +659,7 @@ CONTAINS
     !
     CALL ZGEMV( 'N', ndim, ndim, ONE, s1, ndim, vc, 1, ZERO, u1, 1 )
     !
-    vnrm = SQRT( DBLE( ZDOTC( ndim, vc, 1, u1, 1 ) ) )
+    vnrm = SQRT( DDOT( 2*ndim, vc, 1, u1, 1 ) ) 
     !
     vc = vc / vnrm
     !
@@ -700,7 +700,7 @@ CONTAINS
     COMPLEX(DP)           :: z1, z2
     REAL(DP), ALLOCATABLE :: coef(:,:)
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC
+    REAL(DP), EXTERNAL :: DDOT
     !
     IF ( motconv > 0 ) THEN
        !
@@ -825,21 +825,21 @@ CONTAINS
        jbnd = jbnd_index(ibnd)
        kbnd = ibnd_index(ibnd)
        !
-       php = DBLE( ZDOTC( kdim, psi (1,ibnd), 1, hpsi (1,ibnd), 1 ) )
-       khp = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 ) )
-       khk = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 ) )
+       php = DDOT( 2*kdim, psi (1,ibnd), 1, hpsi (1,ibnd), 1 ) 
+       khp = DDOT( 2*kdim, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 ) 
+       khk = DDOT( 2*kdim, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 ) 
        !
        IF ( uspp ) THEN
           !
-          psp = DBLE( ZDOTC( kdim, psi (1,ibnd), 1, spsi (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 ) )
-          ksk = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 ) )
+          psp = DDOT(2*kdim, psi (1,ibnd), 1, spsi (1,ibnd), 1 ) 
+          ksp = DDOT(2*kdim, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 ) 
+          ksk = DDOT(2*kdim, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 ) 
           !
        ELSE
           !
-          psp = DBLE( ZDOTC( kdim, psi (1,ibnd), 1, psi (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, psi (1,ibnd), 1 ) )
-          ksk = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 ) )
+          psp = DDOT( 2*kdim, psi (1,ibnd), 1, psi (1,ibnd), 1 ) 
+          ksp = DDOT( 2*kdim, kpsi(1,kbnd), 1, psi (1,ibnd), 1 ) 
+          ksk = DDOT( 2*kdim, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 ) 
           !
        END IF
        !
