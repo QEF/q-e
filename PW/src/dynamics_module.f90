@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -336,19 +336,24 @@ CONTAINS
          !
       ENDIF
       !
-      ! ... the linear momentum and the kinetic energy are computed here
+      ! ... kinetic energy and new temperature are computed here
       !
       vel = ( tau_new - tau_old ) / ( 2.D0*dt ) * DBLE( if_pos )
       !
+      CALL compute_ekin( ekin, temp_new )
+      !
+      ! ... update average temperature
+      !
+      temp_av = temp_av + temp_new
+      !
+      ! ... linear momentum and kinetic stress
+      !
       ml   = 0.D0
-      ekin = 0.D0
       kstress = 0.d0
       !
       DO na = 1, nat
          !
          ml(:) = ml(:) + vel(:,na) * mass(na)
-         ekin  = ekin + 0.5D0 * mass(na) * &
-                        ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
          DO i = 1, 3
              DO j = 1, 3
                  kstress(i,j) = kstress(i,j) + mass(na)*vel(i,na)*vel(j,na)
@@ -357,14 +362,7 @@ CONTAINS
          !
       ENDDO
       !
-      ekin = ekin*alat**2
       kstress = kstress * alat**2 / omega
-      !
-      ! ... find the new temperature and update the average
-      !
-      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
-      !
-      temp_av = temp_av + temp_new
       !
 #if defined (__NPT)
       !
@@ -523,9 +521,14 @@ CONTAINS
             !
          ENDDO
          !
-         IF ( tv0rd ) THEN ! initial velocities available from input file
+         IF ( tv0rd ) THEN
+            !
+            ! ... initial velocities available from input file
             !
             vel(:,:) = vel(:,:) / alat
+            vel_defined = .true.
+            !
+            CALL compute_ekin ( ekin, temp_new )
             !
          ELSEIF ( control_temp ) THEN
             !
@@ -789,6 +792,24 @@ CONTAINS
       !
    END SUBROUTINE verlet
    !
+   !------------------------------------------------------------------------
+   SUBROUTINE compute_ekin ( ekin, temp_new )
+     !------------------------------------------------------------------------
+     USE cell_base,      ONLY : alat
+     USE ions_base,      ONLY : nat
+     IMPLICIT NONE
+     REAL (dp), INTENT (out) :: ekin, temp_new
+     INTEGER :: na
+     !
+     ekin = 0.0_dp
+     DO na = 1, nat
+        ekin  = ekin + 0.5_dp * mass(na) * &
+             ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
+     ENDDO
+     ekin = ekin*alat**2
+     temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
+     !
+   END SUBROUTINE compute_ekin
    !
    !------------------------------------------------------------------------
    SUBROUTINE terminate_verlet
