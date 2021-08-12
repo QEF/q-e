@@ -726,7 +726,7 @@ CONTAINS
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
     !
-    INTEGER :: nb, mb
+    INTEGER :: nb, mb, ierr
     CHARACTER(LEN=24) :: tag
     !
     IF (.NOT. upf%has_gipaw) RETURN
@@ -734,7 +734,8 @@ CONTAINS
     CALL xmlr_opentag( capitalize_if_v2('pp_gipaw') )
     CALL get_attr ('gipaw_data_format', upf%gipaw_data_format ) 
     IF ( v2 ) THEN
-       CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS')
+       CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS', IERR=ierr )
+       ! ierr=-2 keeps track of case <PP_GIPAW_CORE_ORBITALS ... />
        CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
     ELSE
        CALL xmlr_readtag ('number_of_core_orbitals', upf%gipaw_ncore_orbitals) 
@@ -758,7 +759,8 @@ CONTAINS
        CALL get_attr ('n', upf%gipaw_core_orbital_n(nb) )
        CALL get_attr ('l', upf%gipaw_core_orbital_l(nb) )
     END DO
-    IF ( v2 ) CALL xmlr_closetag ( )
+    ! close only for case <PP_GIPAW_CORE_ORBITALS> ... </PP_GIPAW_CORE_ORBITALS>
+    IF ( v2 .AND. ierr == 0  ) CALL xmlr_closetag ( )
     !
     IF ( upf%paw_as_gipaw) THEN
        !
@@ -803,8 +805,6 @@ CONTAINS
        ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
        ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
        ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
-       ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
-       ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
        DO nb = 1,upf%gipaw_wfs_nchannels
           IF ( v2 ) THEN
              tag = "PP_GIPAW_ORBITAL."//i2c(nb)
@@ -828,6 +828,8 @@ CONTAINS
        !
        ! Read all-electron and pseudo local potentials
        !
+       ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+       ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
        CALL xmlr_opentag( capitalize_if_v2('pp_gipaw_vlocal') )
        CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ae'), &
             upf%gipaw_vlocal_ae(1:upf%mesh) )
