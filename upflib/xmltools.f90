@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2020 Quantum ESPRESSO group
+! Copyright (C) 2020-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@ MODULE xmltools
   !--------------------------------------------------------
   !
   ! Poor-man set of tools for reading and writing xml files
-  ! Similar to iotk but much simpler - Paolo Giannozzi, June 2020 
+  ! Similar to iotk but much simpler - Paolo Giannozzi, June 2020
   ! Limitations: too many to be listed in detail. Main ones:
   ! * works on a single opened file at the time. Exception:
   !   while a file is opened, one can open, R/W, close another file,
@@ -24,6 +24,8 @@ MODULE xmltools
   !   tag is found only above the current position, and nowhere else
   ! * only single values (e.g. no vectors) in attributes
   ! * attributes should not contain commas or strange characters
+  ! * xml comments (<!-- ...  -->) or <![CDATA[ ... ]]> cannot be mixed
+  !   with numerical fields
   !
   USE upf_kinds, ONLY : dp
   IMPLICIT NONE
@@ -990,14 +992,15 @@ CONTAINS
     integer, intent(out), optional :: ierr
     ! 0: tag found and read
     !-1: tag not found
+    !-2: tag with no value (e.g. <tag attr="val"/>) found
     ! 1: error parsing file
     ! 2: line too long
     ! 3: too many levels of tags
     !
     integer :: stat, ntry, ll, lt, i, j, j0
+    ! stat=-1: in comment (not actually used)
     ! stat= 0: begin
-    ! stat=-1: in comment
-    ! stat=1 : tag found
+    ! stat= 1: tag found
     !
     character(len=1) :: quote
     !
@@ -1023,20 +1026,20 @@ CONTAINS
        j0 = 1
        parse: do while ( j <= ll )
           !
-          if ( stat ==-1 ) then
-             !
-             ! scanning a comment
-             i = index(line(j:),'-->')
-             if ( i == 0 ) then
-                ! no end of comment found on this line
-                exit parse
-             else
-                ! end of comment found
-                stat = 0
-                j = j+i+3
-             end if
-             !
-          else if ( stat == 0 ) then
+          ! following case is never set and unnecessary:
+          !if ( stat ==-1 ) then
+          !   ! scanning a comment
+          !   i = index(line(j:),'-->')
+          !   if ( i == 0 ) then
+          !      ! no end of comment found on this line
+          !      exit parse
+          !   else
+          !      ! end of comment found
+          !      stat = 0
+          !      j = j+i+3
+          !   end if
+          !else if ( stat == 0 ) then
+          if ( stat == 0 ) then
              !
              ! searching for tag
              !
@@ -1067,7 +1070,7 @@ CONTAINS
                 j0= j
              else if ( line(j:j+1) == '/>' ) then
                 ! <tag ... /> found : return
-                if (present(ierr)) ierr = 0
+                if (present(ierr)) ierr =-2
                 ! eot = 0: tag with no value found
                 eot = 0
                 !
@@ -1155,7 +1158,7 @@ CONTAINS
     ! 2: error parsing file
     !
     integer :: stat, ll, lt, i, j
-    ! stat=-1: in comment
+    ! stat=-1: in comment (not actually used)
     ! stat= 0: begin
     ! stat= 1: end
     !
@@ -1182,20 +1185,20 @@ CONTAINS
        j = 1
        parse: do while ( j <= ll )
           !
-          if ( stat ==-1 ) then
-             !
-             ! scanning a comment
-             i = index(line(j:),'-->')
-             if ( i == 0 ) then
-                ! no end of comment found on this line
-                exit parse
-             else
-                ! end of comment found
-                stat = 0
-                j = j+i+3
-             end if
-             !
-          else if ( stat == 0 ) then
+          ! following case is never set and unnecessary:
+          !if ( stat ==-1 ) then
+          ! scanning a comment
+          !   i = index(line(j:),'-->')
+          !   if ( i == 0 ) then
+          ! no end of comment found on this line
+          !      exit parse
+          !   else
+          ! end of comment found
+          !      stat = 0
+          !      j = j+i+3
+          !   end if
+          !else if ( stat == 0 ) then
+          if ( stat == 0 ) then
              !
              ! searching for closing tag
              !
