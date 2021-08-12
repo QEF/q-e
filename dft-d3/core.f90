@@ -3714,8 +3714,10 @@ contains
       drij=0.0d0
       dc6_rest=0.0d0
       dc6_rest_sum=0.0d0
-      dc6i(:) = 0.0d0
+      c6save=0.0d0
       kat=0
+      dc6i=0.0d0
+      dc6ij=0.0d0
 
       IF ( mykey == 0 ) THEN
 
