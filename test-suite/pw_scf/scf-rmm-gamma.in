@@ -10,7 +10,7 @@
  /
  &electrons
   diagonalization='rmm-davidson',
-  conv_thr    = 1.D-15,
+  conv_thr    = 1.D-12,
  /
 ATOMIC_SPECIES
  H 1.007825035 H.pbe-hgh.UPF
