@@ -634,7 +634,7 @@ CONTAINS
        ! existing PP files may have pp_relbeta first, pp_relwfc later,
        ! but also the other way round - check that everything was right
        !
-       if ( ierr /= 0 ) then
+       if ( ierr == -1 .or. ierr > 0 ) then
           ierr = -81
           return
        end if
