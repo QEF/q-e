@@ -45,7 +45,7 @@ CONTAINS
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
-    else if ( ierr == -1 ) then
+    else if ( ierr == 1 ) then
        rewind (iun) 
        call xmlr_opentag ( 'UPF', IERR = ierr )
        if ( ierr == 0 ) then
@@ -634,7 +634,7 @@ CONTAINS
        ! existing PP files may have pp_relbeta first, pp_relwfc later,
        ! but also the other way round - check that everything was right
        !
-       if ( ierr /= 0 ) then
+       if ( ierr > 0 ) then
           ierr = -81
           return
        end if
@@ -735,7 +735,8 @@ CONTAINS
     CALL get_attr ('gipaw_data_format', upf%gipaw_data_format ) 
     IF ( v2 ) THEN
        CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS', IERR=ierr )
-       ! ierr=-2 keeps track of case <PP_GIPAW_CORE_ORBITALS ... />
+       ! ierr= 0 for case <PP_GIPAW_CORE_ORBITALS>...</PP_GIPAW_CORE_ORBITALS>
+       ! ierr=-1 for case <PP_GIPAW_CORE_ORBITALS ... />
        CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
     ELSE
        CALL xmlr_readtag ('number_of_core_orbitals', upf%gipaw_ncore_orbitals) 
