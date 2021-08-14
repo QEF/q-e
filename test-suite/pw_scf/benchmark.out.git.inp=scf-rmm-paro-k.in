@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.8 starts on 12Aug2021 at 19:51:17 
+     Program PWSCF v.6.7GPU starts on 15Jul2021 at 20:16:32 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -16,7 +16,7 @@
 
      MPI processes distributed on     1 nodes
      R & G space division:  proc/nbgrp/npool/nimage =       4
-     4017 MiB available memory on the printing compute node when the environment starts
+     3539 MiB available memory on the printing compute node when the environment starts
  
      Reading input from scf-rmm-paro-k.in
 
@@ -33,7 +33,8 @@
 
 
      Subspace diagonalization in iterative solution of the eigenvalue problem:
-     a serial algorithm will be used
+     one sub-group per band group will be used
+     scalapack distributed-memory algorithm (size of sub-group:  2*  2 procs)
 
  
      Parallelization info
@@ -56,7 +57,7 @@
      number of Kohn-Sham states=            4
      kinetic-energy cutoff     =      60.0000  Ry
      charge density cutoff     =     240.0000  Ry
-     scf convergence threshold =      1.0E-12
+     scf convergence threshold =      1.0E-15
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
      Exchange-correlation= PBE
@@ -108,7 +109,7 @@
 
      Estimated max dynamical RAM per process >       3.27 MB
 
-     Estimated total dynamical RAM >      13.08 MB
+     Estimated total dynamical RAM >      13.07 MB
 
      Initial potential from superposition of free atoms
 
@@ -129,7 +130,7 @@
      ParO style diagonalization
      ethr =  8.14E-04,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.1 secs
 
      total energy              =     -15.72557968 Ry
      estimated scf accuracy    <       0.06566297 Ry
@@ -165,7 +166,7 @@
      RMM-DIIS diagonalization
      ethr =  9.90E-09,  avg # of iterations =  4.6
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      total energy              =     -15.72857541 Ry
      estimated scf accuracy    <       0.00000007 Ry
@@ -174,7 +175,7 @@
      ParO style diagonalization
      ethr =  8.59E-10,  avg # of iterations =  5.2
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      total energy              =     -15.72857544 Ry
      estimated scf accuracy    <          6.0E-09 Ry
@@ -194,6 +195,33 @@
 
      total cpu time spent up to now is        0.3 secs
 
+     total energy              =     -15.72857544 Ry
+     estimated scf accuracy    <          3.2E-13 Ry
+
+     iteration #  9     ecut=    60.00 Ry     beta= 0.70
+     RMM-DIIS diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  4.1
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -15.72857544 Ry
+     estimated scf accuracy    <          1.6E-13 Ry
+
+     iteration # 10     ecut=    60.00 Ry     beta= 0.70
+     RMM-DIIS diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  2.5
+
+     total cpu time spent up to now is        0.3 secs
+
+     total energy              =     -15.72857544 Ry
+     estimated scf accuracy    <          3.1E-14 Ry
+
+     iteration # 11     ecut=    60.00 Ry     beta= 0.70
+     ParO style diagonalization
+     ethr =  1.00E-13,  avg # of iterations =  3.0
+
+     total cpu time spent up to now is        0.3 secs
+
      End of self-consistent calculation
 
           k = 0.2500 0.2500 0.2500 (  2067 PWs)   bands (ev):
@@ -207,67 +235,67 @@
      highest occupied level (ev):     5.6832
 
 !    total energy              =     -15.72857544 Ry
-     estimated scf accuracy    <          3.2E-13 Ry
+     estimated scf accuracy    <          3.7E-16 Ry
 
      The total energy is the sum of the following terms:
-     one-electron contribution =       4.91392406 Ry
-     hartree contribution      =       1.09856003 Ry
-     xc contribution           =      -4.84130096 Ry
+     one-electron contribution =       4.91392443 Ry
+     hartree contribution      =       1.09855933 Ry
+     xc contribution           =      -4.84130063 Ry
      ewald contribution        =     -16.89975857 Ry
 
-     convergence has been achieved in   8 iterations
+     convergence has been achieved in  11 iterations
 
      Forces acting on atoms (cartesian axes, Ry/au):
 
-     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    1 type  1   force =    -0.00000000   -0.00000000    0.00000000
+     atom    2 type  1   force =     0.00000000    0.00000000   -0.00000000
 
      Total force =     0.000000     Total SCF correction =     0.000000
 
-     Writing all to output data dir ./pwscf.save/
+     Writing output data file ./pwscf.save/
  
-     init_run     :      0.07s CPU      0.08s WALL (       1 calls)
-     electrons    :      0.21s CPU      0.22s WALL (       1 calls)
+     init_run     :      0.07s CPU      0.09s WALL (       1 calls)
+     electrons    :      0.21s CPU      0.23s WALL (       1 calls)
      forces       :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
-     hinit0       :      0.04s CPU      0.05s WALL (       1 calls)
+     hinit0       :      0.03s CPU      0.05s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.11s CPU      0.11s WALL (       9 calls)
-     sum_band     :      0.03s CPU      0.03s WALL (       9 calls)
-     v_of_rho     :      0.06s CPU      0.07s WALL (       9 calls)
-     mix_rho      :      0.02s CPU      0.02s WALL (       9 calls)
+     c_bands      :      0.09s CPU      0.10s WALL (      12 calls)
+     sum_band     :      0.02s CPU      0.03s WALL (      12 calls)
+     v_of_rho     :      0.07s CPU      0.08s WALL (      12 calls)
+     mix_rho      :      0.02s CPU      0.02s WALL (      12 calls)
 
      Called by c_bands:
-     init_us_2    :      0.00s CPU      0.00s WALL (      40 calls)
-     crmmdiagg    :      0.04s CPU      0.04s WALL (      12 calls)
-     wfcrot       :      0.02s CPU      0.03s WALL (      14 calls)
-     gsorth       :      0.00s CPU      0.00s WALL (      12 calls)
+     init_us_2    :      0.00s CPU      0.00s WALL (      52 calls)
+     crmmdiagg    :      0.03s CPU      0.03s WALL (      16 calls)
+     wfcrot       :      0.03s CPU      0.03s WALL (      18 calls)
+     gsorth       :      0.00s CPU      0.00s WALL (      16 calls)
 
      Called by *rmmdiagg:
-     h_psi        :      0.09s CPU      0.10s WALL (      70 calls)
-     g_psi        :      0.00s CPU      0.00s WALL (     113 calls)
+     h_psi        :      0.06s CPU      0.07s WALL (      90 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     137 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.00s CPU      0.00s WALL (      70 calls)
-     vloc_psi     :      0.09s CPU      0.09s WALL (      70 calls)
-     add_vuspsi   :      0.00s CPU      0.00s WALL (      70 calls)
+     h_psi:calbec :      0.00s CPU      0.00s WALL (      90 calls)
+     vloc_psi     :      0.06s CPU      0.06s WALL (      90 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (      90 calls)
 
      General routines
-     calbec       :      0.00s CPU      0.00s WALL (      78 calls)
-     fft          :      0.04s CPU      0.04s WALL (      92 calls)
-     ffts         :      0.00s CPU      0.00s WALL (       9 calls)
-     fftw         :      0.09s CPU      0.09s WALL (     584 calls)
+     calbec       :      0.00s CPU      0.00s WALL (      98 calls)
+     fft          :      0.03s CPU      0.05s WALL (     122 calls)
+     ffts         :      0.00s CPU      0.00s WALL (      12 calls)
+     fftw         :      0.06s CPU      0.06s WALL (     746 calls)
  
      Parallel routines
  
-     PWSCF        :      0.32s CPU      0.39s WALL
+     PWSCF        :      0.31s CPU      0.39s WALL
 
  
-   This run was terminated on:  19:51:18  12Aug2021            
+   This run was terminated on:  20:16:32  15Jul2021            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

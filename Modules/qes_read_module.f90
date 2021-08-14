@@ -5628,6 +5628,91 @@ MODULE qes_read_module
        obj%diago_david_ndim_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_rmm_ndim")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","diago_rmm_ndim: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","diago_rmm_ndim: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_rmm_ndim_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_rmm_ndim, IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading diago_rmm_ndim")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading diago_rmm_ndim",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_rmm_ndim_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_rmm_conv")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","diago_rmm_conv: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","diago_rmm_conv: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_rmm_conv_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_rmm_conv, IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading diago_rmm_conv")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading diago_rmm_conv",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_rmm_conv_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_gs_nblock")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN
+           CALL infomsg("qes_read:electron_controlType","diago_gs_nblock: too many occurrences")
+           ierr = ierr + 1
+        ELSE
+           CALL errore("qes_read:electron_controlType","diago_gs_nblock: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_gs_nblock_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_gs_nblock, IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN
+            CALL infomsg("qes_read:electron_controlType","error reading diago_gs_nblock")
+            ierr = ierr + 1
+         ELSE
+            CALL errore ("qes_read:electron_controlType","error reading diago_gs_nblock",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_gs_nblock_ispresent = .FALSE.
+    END IF
+    !
+    !
     obj%lwrite = .TRUE.
     !
   END SUBROUTINE qes_read_electron_control

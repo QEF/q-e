@@ -1318,6 +1318,21 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%diago_david_ndim)
         CALL xml_EndElement(xp, "diago_david_ndim")
      END IF
+     IF (obj%diago_rmm_ndim_ispresent) THEN
+        CALL xml_NewElement(xp, "diago_rmm_ndim")
+           CALL xml_addCharacters(xp, obj%diago_rmm_ndim)
+        CALL xml_EndElement(xp, "diago_rmm_ndim")
+     END IF
+     IF (obj%diago_rmm_conv_ispresent) THEN
+        CALL xml_NewElement(xp, "diago_rmm_conv")
+           CALL xml_addCharacters(xp, obj%diago_rmm_conv)
+        CALL xml_EndElement(xp, "diago_rmm_conv")
+     END IF
+     IF (obj%diago_gs_nblock_ispresent) THEN
+        CALL xml_NewElement(xp, "diago_gs_nblock")
+           CALL xml_addCharacters(xp, obj%diago_gs_nblock)
+        CALL xml_EndElement(xp, "diago_gs_nblock")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_electron_control
 
