@@ -45,7 +45,7 @@ contains
       use compute_charge_mod, only: compute_charge
       use project_mod, only: project
       use extrapolation, only: update_pot
-      use wave_parallel, only: compute_dot_evc_parallel
+      use wave_gauge, only: compute_dot_evc_parallel_gauge
 
       use test_h_psi, only: test
 
@@ -103,7 +103,7 @@ contains
       end do
 
 
-      call compute_dot_evc_parallel(scf_all%t_minus%evc, scf_all%t_zero%evc, scf_all%t_plus%evc,&
+      call compute_dot_evc_parallel_gauge(scf_all%t_minus%evc, scf_all%t_zero%evc, scf_all%t_plus%evc,&
                                     evp, nbnd, npw, npwx, gstart)
 
       evp(:, :) = evp(:, :)/dt

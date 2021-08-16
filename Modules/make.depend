@@ -394,9 +394,9 @@ wannier_gw.o : io_global.o
 wannier_gw.o : kind.o
 wannier_gw.o : recvec.o
 wannier_new.o : kind.o
-wave_parallel.o : ../UtilXlib/mp.o
-wave_parallel.o : kind.o
-wave_parallel.o : mp_pools.o
+wave_gauge.o : ../UtilXlib/mp.o
+wave_gauge.o : kind.o
+wave_gauge.o : mp_pools.o
 wavefunctions.o : kind.o
 wavefunctions_gpu.o : wavefunctions.o
 wgauss.o : constants.o
