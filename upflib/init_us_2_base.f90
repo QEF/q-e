@@ -67,6 +67,9 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
   INTEGER, PARAMETER :: blocksize = 256
   INTEGER     :: iblock, numblock, realblocksize
   !
+!civn 
+write(*,*) "using init_us_2_base"  
+!
   IF (lmaxkb < 0) RETURN
   !
   ! setting cache blocking size

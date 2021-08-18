@@ -33,9 +33,21 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   !
   CALL start_clock( 'init_us_2' )
   !
+!civn 
+#if defined(__CUDA)
+!$acc data copyin(igk_(npw_), eigts1(:,:), eigts2(:,:), eigts3(:,:), mill(:,:), g(:,:)) copy(vkb_(npwx,nkb))
+!$acc host_data use_device(eigts1, eigts2, eigts3, mill, g, igk_, vkb_)
+  CALL init_us_2_base_gpu(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega,&
+    dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&
+    vkb_ )
+!$acc end host_data
+!$acc end data
+#else
   CALL init_us_2_base(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
           dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&
           vkb_ )
+#endif
+!
   !
   CALL stop_clock( 'init_us_2' )
   !
