@@ -940,49 +940,10 @@
 !if required project c0 on previous manifold of occupied states                                                                                    
 !NOT IMPLEMENTED YET FOR ENSEMBLE DFT AND NSPIN==2
 !NOT IMPLEMENTED FOR US PSEUDOPOTENTIALS
-            call project_parallel_gauge_2(c0old, c0, gi, &
+            cm(:,:)=c0(:,:)
+            call project_parallel_gauge_2(c0old, cm, c0, &
                                           nss, ngw, ngw,gstart) 
 
-
-           lambda_repl=0.d0
-            do i = 1, nss
-               do j = 1, nss
-                  ii = i + istart - 1
-                  jj = j + istart - 1
-                  do ig = 1, ngw
-                     lambda_repl( i, j ) = lambda_repl( i, j ) + &
-                          2.d0 * DBLE( CONJG( c0old( ig, ii ) ) * c0( ig, jj) )
-                  enddo
-                  if( gstart == 2 ) then
-                     lambda_repl( i, j ) = lambda_repl( i, j ) - &
-                          DBLE( CONJG( c0old( 1, ii ) ) * c0( 1, jj ) )
-                  endif
-               enddo
-            enddo
-            CALL mp_sum( lambda_repl, intra_bgrp_comm )
-
-
-            cm(:,:)=c0(:,:)
-            c0=(0.d0,0.d0)
-            do i=1,nss
-               do j=1,nss
-                  c0(1:ngw,i)=c0(1:ngw,i)+lambda_repl(i,j)*cm(1:ngw,j)
-               enddo
-            enddo
-            if (ionode) &
-                write (*,*) 'CHECKING CORRECTNESS OF compute_parallel_gauge_2'
-            x=0.0_dp
-            do i =1,nss
-               do ig = 1, ngw
-                  if (abs( aimag(c0(ig,i))-aimag(gi(ig,i))) > x) &
-                      x=abs( aimag(c0(ig,i))-aimag(gi(ig,i)))
-                  if (abs( real(c0(ig,i))-real(gi(ig,i))) > x) &
-                      x=abs( real(c0(ig,i))-real(gi(ig,i)))
-               enddo
-            enddo
-            call mp_sum(x,intra_bgrp_comm)
-            if (ionode) &
-               write (*,*) 'MAX DIFFERENCE OF REAL AND IMAG PART OF the 2 c0', x 
 
             call calbec (nbsp,betae,c0,bec)
             CALL gram_bgrp( betae, bec, nkb, c0, ngw )
