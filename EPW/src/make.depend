@@ -8,6 +8,17 @@ bcast_epw_input.o : ../../PHonon/PH/phcom.o
 bcast_epw_input.o : ../../UtilXlib/mp.o
 bcast_epw_input.o : elph2.o
 bcast_epw_input.o : epwcom.o
+bfield.o : ../../Modules/cell_base.o
+bfield.o : ../../Modules/control_flags.o
+bfield.o : ../../Modules/io_global.o
+bfield.o : ../../Modules/kind.o
+bfield.o : ../../Modules/noncol.o
+bfield.o : ../../PW/src/symm_base.o
+bfield.o : constants_epw.o
+bfield.o : elph2.o
+bfield.o : epwcom.o
+bfield.o : grid.o
+bfield.o : low_lvl.o
 bloch2wan.o : ../../Modules/cell_base.o
 bloch2wan.o : ../../Modules/io_files.o
 bloch2wan.o : ../../Modules/io_global.o
@@ -225,6 +236,7 @@ ephwann_shuffle.o : grid.o
 ephwann_shuffle.o : indabs.o
 ephwann_shuffle.o : io_eliashberg.o
 ephwann_shuffle.o : io_epw.o
+ephwann_shuffle.o : io_indabs.o
 ephwann_shuffle.o : io_selfen.o
 ephwann_shuffle.o : io_transport.o
 ephwann_shuffle.o : io_var.o
@@ -262,6 +274,7 @@ ephwann_shuffle_mem.o : grid.o
 ephwann_shuffle_mem.o : indabs.o
 ephwann_shuffle_mem.o : io_eliashberg.o
 ephwann_shuffle_mem.o : io_epw.o
+ephwann_shuffle_mem.o : io_indabs.o
 ephwann_shuffle_mem.o : io_selfen.o
 ephwann_shuffle_mem.o : io_transport.o
 ephwann_shuffle_mem.o : io_var.o
@@ -322,7 +335,9 @@ epw_readin.o : ../../Modules/control_flags.o
 epw_readin.o : ../../Modules/io_files.o
 epw_readin.o : ../../Modules/io_global.o
 epw_readin.o : ../../Modules/ions_base.o
-epw_readin.o : ../../Modules/mp_global.o
+epw_readin.o : ../../Modules/kind.o
+epw_readin.o : ../../Modules/mp_images.o
+epw_readin.o : ../../Modules/mp_pools.o
 epw_readin.o : ../../Modules/mp_world.o
 epw_readin.o : ../../Modules/noncol.o
 epw_readin.o : ../../Modules/open_close_input_file.o
@@ -395,11 +410,15 @@ indabs.o : ../../Modules/cell_base.o
 indabs.o : ../../Modules/io_global.o
 indabs.o : ../../Modules/kind.o
 indabs.o : ../../Modules/mp_global.o
+indabs.o : ../../Modules/mp_world.o
+indabs.o : ../../Modules/noncol.o
 indabs.o : ../../PHonon/PH/phcom.o
+indabs.o : ../../PW/src/pwcom.o
 indabs.o : ../../UtilXlib/mp.o
 indabs.o : constants_epw.o
 indabs.o : elph2.o
 indabs.o : epwcom.o
+indabs.o : io_indabs.o
 indabs.o : io_var.o
 indabs.o : wan2bloch.o
 io_eliashberg.o : ../../Modules/cell_base.o
@@ -443,6 +462,14 @@ io_epw.o : elph2.o
 io_epw.o : epwcom.o
 io_epw.o : io_var.o
 io_epw.o : low_lvl.o
+io_indabs.o : ../../Modules/io_files.o
+io_indabs.o : ../../Modules/io_global.o
+io_indabs.o : ../../Modules/kind.o
+io_indabs.o : ../../Modules/mp_world.o
+io_indabs.o : ../../UtilXlib/mp.o
+io_indabs.o : constants_epw.o
+io_indabs.o : epwcom.o
+io_indabs.o : io_var.o
 io_selfen.o : ../../Modules/io_files.o
 io_selfen.o : ../../Modules/io_global.o
 io_selfen.o : ../../Modules/kind.o
@@ -454,6 +481,7 @@ io_selfen.o : epwcom.o
 io_selfen.o : io_var.o
 io_transport.o : ../../Modules/cell_base.o
 io_transport.o : ../../Modules/constants.o
+io_transport.o : ../../Modules/control_flags.o
 io_transport.o : ../../Modules/io_files.o
 io_transport.o : ../../Modules/io_global.o
 io_transport.o : ../../Modules/kind.o
@@ -539,6 +567,7 @@ printing.o : eliashbergcom.o
 printing.o : elph2.o
 printing.o : epwcom.o
 printing.o : io_var.o
+printing.o : low_lvl.o
 printing.o : poolgathering.o
 pw2wan2epw.o : ../../FFTXlib/fft_interfaces.o
 pw2wan2epw.o : ../../FFTXlib/scatter_mod.o
@@ -583,6 +612,7 @@ rigid_epw.o : ../../Modules/mp_world.o
 rigid_epw.o : ../../UtilXlib/mp.o
 rigid_epw.o : constants_epw.o
 rigid_epw.o : division.o
+rigid_epw.o : elph2.o
 rigid_epw.o : epwcom.o
 rotate.o : ../../Modules/cell_base.o
 rotate.o : ../../Modules/control_flags.o
@@ -710,6 +740,7 @@ transport.o : io_transport.o
 transport.o : io_var.o
 transport.o : poolgathering.o
 transport_iter.o : ../../Modules/cell_base.o
+transport_iter.o : ../../Modules/constants.o
 transport_iter.o : ../../Modules/control_flags.o
 transport_iter.o : ../../Modules/io_files.o
 transport_iter.o : ../../Modules/io_global.o
@@ -719,6 +750,7 @@ transport_iter.o : ../../Modules/mp_world.o
 transport_iter.o : ../../PW/src/symm_base.o
 transport_iter.o : ../../UtilXlib/mp.o
 transport_iter.o : ../../UtilXlib/parallel_include.o
+transport_iter.o : bfield.o
 transport_iter.o : constants_epw.o
 transport_iter.o : division.o
 transport_iter.o : elph2.o

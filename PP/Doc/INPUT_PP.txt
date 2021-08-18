@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pp.x / PWscf / Quantum Espresso (version: 6.6)
+Program: pp.x / PWscf / Quantum Espresso (version: 6.8)
 ------------------------------------------------------------------------
 
 
@@ -135,12 +135,16 @@ NAMELIST: &INPUTPP
                            For PAW calculations only; requires a very dense real-space grid.
                    
                       22 = kinetic energy density (for meta-GGA and XDM only)
+                   
+                     123 = DORI: density overlap regions indicator
+                           (doi: 10.1021/ct500490b) Implemented by D. Yang & Q.Liu
    +--------------------------------------------------------------------
    
    ________________________________________________________________________
-   * IF plot_num=0 : 
+   * IF plot_num = 0 or 9 : 
    
-      OPTIONS FOR TOTAL CHARGE (PLOT_NUM=0):
+      OPTIONS FOR TOTAL CHARGE (PLOT_NUM=0)
+      OR FOR TOTAL MINUS ATOMIC CHARGE (PLOT_NUM=9):
       
       +--------------------------------------------------------------------
       Variable:       spin_component
@@ -604,4 +608,4 @@ NAMELIST: &PLOT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:28 CEST 2020
+This file has been created by helpdoc utility on Fri Jul 16 11:56:11 CEST 2021

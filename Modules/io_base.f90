@@ -648,8 +648,7 @@ MODULE io_base
       TYPE ( qeh5_file)       :: h5file
       TYPE ( qeh5_dataset)    :: h5dset_mill, h5dset_rho_g
       CHARACTER(LEN=10)       :: tempchar, datasets(4)
-#endif      !
-
+#endif
       !
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (ig_l2g, 1) ) &

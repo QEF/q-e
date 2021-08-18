@@ -41,7 +41,7 @@ MODULE funct
   ! XC non local index
   PRIVATE :: inlc
   !
-  CHARACTER(LEN=32) :: dft = 'not set'
+  CHARACTER(LEN=37) :: dft = 'not set'
   !
   ! ------------------------------------------------------------------------
   ! "dft" is the exchange-correlation functional label, as set by the user,
@@ -509,7 +509,8 @@ CONTAINS
     igcc  = xclib_get_id('GGA','CORR')
     imeta = xclib_get_id('MGGA','EXCH')
     !
-    IF (igcx == 6) CALL infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
+    IF (igcx == 6 .AND. .NOT.xclib_dft_is_libxc('GGA','EXCH') ) &
+                CALL infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
     !
     ! check for unrecognized labels
     !
@@ -633,7 +634,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_dft_name()
     !! Get the string with the full dft name.
-    CHARACTER(LEN=32) :: get_dft_name
+    CHARACTER(LEN=37) :: get_dft_name
     get_dft_name = dft
     RETURN
   END FUNCTION get_dft_name
@@ -721,8 +722,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=32) :: get_dft_short
-    CHARACTER(LEN=32) :: shortname
+    CHARACTER(LEN=37) :: get_dft_short
+    CHARACTER(LEN=37) :: shortname
     INTEGER :: iexch, icorr, igcx, igcc, imeta, imetac
     !
     shortname = 'no shortname'
@@ -754,6 +755,9 @@ CONTAINS
            shortname = 'VDW-DF-OBK8'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==40 .AND. igcc==0) THEN
            shortname = 'VDW-DF-C090'
+        ELSE
+           shortname = xclib_get_dft_short()
+           shortname = TRIM(shortname)//'-'//TRIM(nonlocc(1))
         ENDIF
         !
       ELSEIF (inlc==2) THEN
@@ -770,6 +774,9 @@ CONTAINS
            shortname = 'VDW-DF2-0'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
+        ELSE
+           shortname = xclib_get_dft_short()
+           shortname = TRIM(shortname)//'-'//TRIM(nonlocc(2))
         ENDIF
         !
       ELSEIF (inlc==3) THEN
@@ -804,8 +811,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=32) :: get_dft_long
-    CHARACTER(LEN=32) :: longname
+    CHARACTER(LEN=37) :: get_dft_long
+    CHARACTER(LEN=37) :: longname
     !
     !WRITE(longname,'(4a5)') exc(iexch), corr(icorr), gradx(igcx), gradc(igcc)
     !

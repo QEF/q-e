@@ -17,7 +17,6 @@ MODULE parser
   PRIVATE
   !
   PUBLIC :: parse_unit, field_count, read_line, get_field
-  PUBLIC :: version_parse, version_compare
   !
   INTEGER :: parse_unit = 5 ! normally 5, but can be set otherwise
   !

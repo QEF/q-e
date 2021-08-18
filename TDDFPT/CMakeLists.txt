@@ -145,7 +145,7 @@ target_link_libraries(qe_tddfpt_turbomagnons_exe
 ###########################################################
 # turbo_spectrum.x
 ###########################################################
-set(src_tddfpt_turbospectrum_x tools/tddfpt_calculate_spectrum.f90)
+set(src_tddfpt_turbospectrum_x src/turbo_spectrum.f90)
 qe_add_executable(qe_tddfpt_turbospectrum_exe ${src_tddfpt_turbospectrum_x})
 set_target_properties(qe_tddfpt_turbospectrum_exe
     PROPERTIES

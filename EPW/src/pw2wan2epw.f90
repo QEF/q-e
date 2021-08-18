@@ -2392,145 +2392,178 @@
     !-----------------------------------------------------------------------
     !
     !!
-    !!  Computes dipole matrix elements.
-    !!  This can be used to compute the velocity in the local approximation.
-    !!  The commutator with the non-local pseudopotetial is neglected.
+    !!  Computes i[H, \vec{r}] (in Rydberg atomic units) with the non-local
+    !!  pseudopotential term and additional terms from USPP or PAW considered.
     !!
-    !!  06/2010  Jesse Noffsinger: adapted from compute_amn_para
-    !!  08/2016  Samuel Ponce: adapted to work with SOC
+    !!  Based on PP/src/compute_ppsi.f90
     !!
     !
-    USE kinds,           ONLY : DP
-    USE io_global,       ONLY : stdout
-    USE mp,              ONLY : mp_sum
-    USE mp_global,       ONLY : my_pool_id
-    USE klist,           ONLY : nks, igk_k
-    USE klist_epw,       ONLY : xk_loc
-    USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
-    USE gvecw,           ONLY : gcutw
-    USE wavefunctions,   ONLY : evc
-    USE gvect,           ONLY : g, ngm
-    USE cell_base,       ONLY : tpiba
-    USE noncollin_module,ONLY : noncolin
-    USE elph2,           ONLY : dmec, ibndstart, ibndend, nbndep
-    USE constants_epw,   ONLY : czero
-    USE uspp_param,      ONLY : upf
-    USE becmod,          ONLY : becp, deallocate_bec_type, allocate_bec_type
-    USE uspp,            ONLY : nkb
-    USE wannierEPW,      ONLY : n_wannier
-    USE kfold,           ONLY : ktokpmq
-    USE io_epw,          ONLY : readwfc
+    USE kinds,                ONLY : DP
+    USE wvfct,                ONLY : nbnd, npwx, et
+    USE wavefunctions,        ONLY : evc
+    USE noncollin_module,     ONLY : noncolin, npol
+    USE uspp,                 ONLY : vkb, nkb, okvan
+    USE becmod,               ONLY : bec_type, calbec, allocate_bec_type, &
+                                     deallocate_bec_type
+    USE klist,                ONLY : ngk, igk_k, nks
+    USE mp_pools,             ONLY : my_pool_id
+    USE elph2,                ONLY : dmec, ibndstart, ibndend, nbndep
+    USE klist_epw,            ONLY : xk_loc
+    USE constants_epw,        ONLY : czero, ci
+    USE io_epw,               ONLY : readwfc
+    USE control_lr,           ONLY : nbnd_occ
+    USE ions_base,            ONLY : ntyp => nsp
+    USE lsda_mod,             ONLY : nspin
+    USE uspp_param,           ONLY : nhm
+    USE spin_orb,             ONLY : lspinorb
+    USE lrus,                 ONLY : dpqq, dpqq_so
+    USE io_global,            ONLY : stdout
     !
     IMPLICIT NONE
     !
-    LOGICAL :: any_uspp
-    !! Check if USPP is present
+    TYPE(bec_type) :: becp2, becp3
+    !! the scalar products between wavefunctions and projectors
     !
-    INTEGER :: ik
-    !! Counter on k-point
-    INTEGER :: ibnd, jbnd
+    INTEGER :: ibnd
     !! Counter on bands
-    INTEGER :: ig
-    !! Counter on G vector
+    INTEGER :: jbnd
+    !! Counter on bands
+    INTEGER :: ipol
+    !! Counter on polarizations
+    INTEGER :: npw
+    !! Number of plane waves
+    INTEGER :: ik
+    !! Counter on k-points
     INTEGER :: ierr
     !! Error status
+    INTEGER :: nbnd_occ_save(nks)
+    !! Temporary copy of nbnd_occ
     !
-    COMPLEX(KIND = DP) :: dipole_aux(3, nbnd, nbnd)
+    REAL(KIND = DP)                 :: a0(3, 3)
+    !! Cartesian unit vectors
+    !
+    COMPLEX(KIND = DP), EXTERNAL    :: ZDOTC
+    !!
+    COMPLEX(KIND = DP)              :: dipole_aux(3, nbnd, nbnd)
     !! Auxilary dipole
-    COMPLEX(KIND = DP) :: caux
-    !! Wavefunction squared
+    COMPLEX(KIND = DP), ALLOCATABLE :: dpsi(:, :)
+    !! i * [H, r] | psi_nk >
+    COMPLEX(KIND = DP), ALLOCATABLE :: dvpsi(:, :)
+    !! Commutator term due to the augmentation part
     !
-    any_uspp = ANY(upf(:)%tvanp)
-    !
-    IF (any_uspp) CALL errore('pw2wan90epw', &
-      'dipole matrix calculation not implimented with USPP - set vme=.TRUE.',1)
+    a0(:, 1) = (/ 1d0, 0d0, 0d0 /)
+    a0(:, 2) = (/ 0d0, 1d0, 0d0 /)
+    a0(:, 3) = (/ 0d0, 0d0, 1d0 /)
     !
     ALLOCATE(dmec(3, nbndep, nbndep, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating dmec', 1)
+    dmec = czero
     !
-    ! initialize
-    dmec(:, :, :, :) = czero
-    dipole_aux(:, :, :) = czero
+    ALLOCATE(dpsi(npwx * npol, nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating dpsi', 1)
     !
-    IF (any_uspp) THEN
-      CALL allocate_bec_type(nkb, n_wannier, becp)
+    IF (okvan) THEN
+      !
+      ALLOCATE(dvpsi(npwx * npol, nbnd), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating dvpsi', 1)
+      !
+      ! Compute the dipole of the augmentation charge.
+      !
+      ALLOCATE(dpqq(nhm, nhm, 3, ntyp))
+      CALL compute_qdipol(dpqq)
+      IF (lspinorb) THEN
+        ALLOCATE(dpqq_so(nhm, nhm, nspin, 3, ntyp))
+        CALL compute_qdipol_so(dpqq, dpqq_so)
+      ENDIF
+      !
     ENDIF
     !
-    ! computes velocity dmec = v_mn(\alpha,k) in the local approximation
-    ! acording to [Eqn. 60 of Comp. Phys. Commun. 209, 116 (2016)]
-    ! v_mn(\alpha,k) = k \delta_mn + \sum_G * CONJG(c_mk(G)) * c_nk(G) * G
+    CALL allocate_bec_type(nkb, nbnd, becp2)
+    CALL allocate_bec_type(nkb, nbnd, becp3)
+    !
+    IF (okvan) THEN
+      nbnd_occ_save = nbnd_occ
+      nbnd_occ = nbnd
+    ENDIF
     !
     DO ik = 1, nks
       !
-      ! read wfc for the given kpt
       CALL readwfc(my_pool_id + 1, ik, evc)
       !
-      ! sorts k+G vectors in order of increasing magnitude, up to ecut
-      CALL gk_sort(xk_loc(:, ik), ngm, g, gcutw, npw, igk_k(:, ik), g2kin)
+      npw = ngk(ik)
+      !
+      CALL init_us_2(npw, igk_k(1, ik), xk_loc(1, ik), vkb)
+      !
+      CALL calbec(npw, vkb, evc, becp2)
       !
       dipole_aux = czero
-      DO jbnd = ibndstart, ibndend
+      !
+      DO ipol = 1, 3 
+        !
+        CALL commutator_Hx_psi(ik, nbnd, a0(:, ipol), becp2, becp3, dpsi)
+        dpsi = ci * dpsi
+        !
+        IF (okvan) THEN
+          dvpsi = czero
+          CALL adddvepsi_us(becp2, becp3, ipol, ik, dvpsi)
+          dvpsi = ci * dvpsi
+        ENDIF
+        !
         DO ibnd = ibndstart, ibndend
-          !
-          IF (ibnd == jbnd) CYCLE
-          !
-          ! taken from PP/epsilon.f90 subroutine dipole_calc
-          DO ig = 1, npw
-            IF (igk_k(ig, ik) > SIZE(g, 2) .OR. igk_k(ig, ik) < 1) CYCLE
+          DO jbnd = ibndstart, ibndend
             !
-            caux = CONJG(evc(ig, ibnd)) * evc(ig, jbnd)
-            !
+            dipole_aux(ipol, jbnd, ibnd) = ZDOTC(npw, evc(1, jbnd), 1, dpsi(1, ibnd), 1)
             IF (noncolin) THEN
-              !
-              caux = caux + CONJG(evc(ig + npwx, ibnd)) * evc(ig + npwx, jbnd)
-              !
+              dipole_aux(ipol, jbnd, ibnd) = dipole_aux(ipol, jbnd, ibnd) + &
+                ZDOTC(npw, evc(1 + npwx, jbnd), 1, dpsi(1 + npwx, ibnd), 1)
             ENDIF
             !
-            dipole_aux(:, ibnd, jbnd) = dipole_aux(:, ibnd, jbnd) + &
-                                        (g(:, igk_k(ig, ik))) * caux
+            IF (okvan) THEN
+              dipole_aux(ipol, jbnd, ibnd) = dipole_aux(ipol, jbnd, ibnd) + &
+                (et(jbnd, ik) - et(ibnd, ik)) * &
+                ZDOTC(npw, evc(1, jbnd), 1, dvpsi(1, ibnd), 1)
+              IF (noncolin) &
+                dipole_aux(ipol, jbnd, ibnd) = dipole_aux(ipol, jbnd, ibnd) +  &
+                  (et(jbnd, ik) - et(ibnd, ik)) * &
+                  ZDOTC(npw, evc(1+npwx, jbnd), 1, dvpsi(1 + npwx, ibnd), 1)
+            ENDIF
             !
           ENDDO
-          !
-        ENDDO !bands i
-      ENDDO ! bands j
+        ENDDO
+      ENDDO
       !
-      ! metal diagonal part
       DO ibnd = ibndstart, ibndend
-        DO ig = 1, npw
-          IF (igk_k(ig, ik) > SIZE(g, 2) .OR. igk_k(ig, ik) < 1) CYCLE
-          !
-          caux = CONJG(evc(ig, ibnd)) * evc(ig, ibnd)
-          !
-          IF (noncolin) THEN
-            !
-            caux = caux + CONJG(evc(ig + npwx, ibnd)) * evc(ig + npwx, ibnd)
-            !
-          ENDIF
-          !
-          dipole_aux(:, ibnd, ibnd) = dipole_aux(:, ibnd, ibnd) + &
-                                      (g(:, igk_k(ig, ik)) + xk_loc(:, ik)) * caux
-          !
-        ENDDO
-      ENDDO
-      ! need to divide by 2pi/a to fix the units
-      DO jbnd = ibndstart, ibndend
-        DO ibnd = ibndstart, ibndend
-          dmec(:, ibnd-ibndstart+1, jbnd-ibndstart+1, ik) = dipole_aux(:, ibnd, jbnd) * tpiba
+        DO jbnd = ibndstart, ibndend
+          dmec(:, jbnd-ibndstart+1, ibnd-ibndstart+1, ik) = dipole_aux(:, jbnd, ibnd)
         ENDDO
       ENDDO
       !
-    ENDDO  ! k-points
+    ENDDO ! ik
     !
-    IF (any_uspp) CALL deallocate_bec_type(becp)
+    IF (okvan) nbnd_occ = nbnd_occ_save
+    !
+    CALL deallocate_bec_type(becp2)
+    CALL deallocate_bec_type(becp3)
+    !
+    DEALLOCATE(dpsi, STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error deallocating dpsi', 1)
+    !
+    IF (okvan) THEN
+      !
+      DEALLOCATE(dvpsi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error deallocating dvpsi', 1)
+      !
+      DEALLOCATE(dpqq, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error deallocating dpqq', 1)
+      IF (lspinorb) THEN
+        DEALLOCATE(dpqq_so, STAT = ierr)
+        IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error deallocating dpqq_so', 1)
+      ENDIF
+      !
+    ENDIF
     !
     WRITE(stdout, '(/5x, a)') 'Dipole matrix elements calculated'
     WRITE(stdout, *)
-    !DBSP
-    !WRITE(stdout, *) 'dmec ', SUM(dmec)
-    !IF (meta_ionode) THEN
-    !   WRITE(stdout, *) 'dmec(:, :, :, 1) ',sum(dmec(:, :, :, 1))
-    !   WRITE(stdout, *) 'dmec(:, :, :, 2) ',sum(dmec(:, :, :, 2))
-    !ENDIF
     !
     RETURN
     !

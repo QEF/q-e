@@ -34,7 +34,7 @@ streamdata = compilation.communicate()[0]
 if compilation.returncode != 0:
     print("\nDetails acquisition failed.")
 else:
-    yaml_data = StringIO(streamdata)
+    yaml_data = StringIO(streamdata.decode())
     conf_cc=""; conf_rt=""
     if have_yaml:
         data = yaml.load(yaml_data)
@@ -66,4 +66,4 @@ else:
                 minor = ""; major = ""; devnum += 1
 
     print("\n If all compute capabilities match, configure QE with:")
-    print("./configure --with-cuda=$CUDA_HOME --with-cuda-cc={} --with-cuda-runtime={}\n".format(conf_cc, conf_rt))
+    print("./configure --with-cuda=yes --with-cuda-cc={} --with-cuda-runtime={}\n".format(conf_cc, conf_rt))

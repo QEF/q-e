@@ -26,7 +26,7 @@
 #include <malloc.h>
 int c_memstat( )
 {
-  struct mallinfo info;  
+  struct mallinfo info;
   info = mallinfo();
   return (info.arena + info.hblkhd) / 1024 ;
 #else

@@ -18,7 +18,8 @@
   !
   LOGICAL ::                 &!
     elph,                    &!  Perform electron-phonon interpolation
-    adapt_smearing            !  Adaptative smearing
+    adapt_smearing,          &!  Adaptative smearing
+    qrpl                      !  If true use quadrupole during interpolation
   LOGICAL, ALLOCATABLE ::    &!
     lwin(:, :),              &!  identify bands within outer energy windows (when disentanglement is used)
     lwinq(:, :),             &!  Excluded bands
@@ -51,7 +52,9 @@
     ig_s,                    &!  First G index within each core in case of G parallelization
     ig_e,                    &!  Last G index within each core in case of G parallelization
     num_wannier_plot,        &!  Number of Wannier functions to plot
-    ng0vec                    ! number of inequivalent such translations (125)
+    ng0vec,                  &!  Number of inequivalent such translations (125)
+    nkpt_bzfst,              &!  Number of full BZ points within the extended fsthick * 1.2
+    nkpt_bztau_max            !  In the case of B-field, max nb of kpt with non-zero inv_tau in full BZ for all temperature
   INTEGER, ALLOCATABLE ::    &!
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
@@ -66,6 +69,16 @@
     mapg(:,:,:),             &!  Map between FFT grid and G-vector index
     wanplotlist(:),          &!  List of Wannier functions to plot
     bztoibz(:),              &!  BZ to IBZ map
+    map_fst(:),              &!  Maps the k-point number from the full BZ with the k-point number of the subset within the fsthick.
+    nkpt_ibztau(:),          &!  In case of B-field, number of kpoints with non-zero inv_tau
+    kpt_ibztau2ibz(:, :),    &!  In case of B-field, mapping index of the kpoints with non-zero inv_ta
+    kpt_bztau2bz(:, :),      &!  In case of B-field, inverse mapping between BZ index and reordered BZ index with non-zero inv_tau
+    kpt_ibztau2bz(:, :, :),  &!  In case of B-field, inverse mapping between BZ index and reordered BZ index with non-zero inv_tau;
+                              !  the shape here is different: take as input a IBZ index and the id of asymmetry operation
+    kpt_bz2bztau(:, :),      &!  In case of B-field, mapping between BZ index and reordered BZ index with non-zero inv_tau
+    nsym_sp(:),              &!  In case of B-field, for the special points among the non-zero inv_tau points, give the number of
+                              !  points which leaves the k-point unchanged by symmetry.
+    ind_map(:, :),           &!  In case of B-field, for non-zero inv_tau points, give the k and k+q mapping.
     s_bztoibz(:)              !  Symmetry operation map for BZ to IBZ. This could be a INTEGER(KIND = 2) but does not work on all compilers
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason
@@ -100,15 +113,17 @@
     sigmai_all(:, :, :),        &!  Imaginary part of the electron-phonon self-energy
     sigmai_mode(:, :, :, :),    &!  Mode resolved imaginary electron self-energy
     zi_all(:, :, :),            &!  Z renormalization factor
-    eta(:, :, :),            &!  Adaptative smearing
-    esigmar_all(:, :, :, :), &!  energy of the real self-energy
-    esigmai_all(:, :, :, :), &!  energy of the imaginary self-energy
-    jdos(:),                 &!  j-DOS
-    spectra(:, :, :, :, :, :), &!  dipole absorption spectra, polarizations, nomega, nsmear, dme/vme, absorption/emission
-    zstar(:, :, :),          &!  Born effective charges
-    epsi(:, :),              &!  dielectric tensor
-    inv_tau_all(:, :, :),    &!  scattering rate
-    inv_tau_allcb(:, :, :),  &!  Second scattering rate (for both)
+    eta(:, :, :),               &!  Adaptative smearing
+    esigmar_all(:, :, :, :),    &!  energy of the real self-energy
+    esigmai_all(:, :, :, :),    &!  energy of the imaginary self-energy
+    jdos(:),                    &!  j-DOS
+    spectra(:, :, :, :, :, :),  &!  dipole absorption spectra, polarizations, nomega, nsmear, dme/vme, absorption/emission
+    zstar(:, :, :),             &!  Born effective charges
+    epsi(:, :),                 &!  dielectric tensor
+    inv_tau_all(:, :, :),       &!  scattering rate
+    inv_tau_allcb(:, :, :),     &!  Conduction band scattering rate
+    inv_tau_all_mode(:, :, :, :),    &!  mode resolved scattering rate
+    inv_tau_allcb_mode(:, :, :, :),  &!  mode resolved conduction band scattering rate
     zi_allvb(:, :, :),       &!  Z-factor in scattering rate
     zi_allcb(:, :, :),       &!  Second Z-factor in scattering rate (for both VB and CB calculations)
     ifc(:,:,:,:,:,:,:),      &!  Interatomic force constant in real space
@@ -116,10 +131,28 @@
     epsilon2_abs(:, :, :, :),   &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     wscache(:, :, :, :, :),  &!  Use as cache when doing IFC when lifc = .TRUE.
     epsilon2_abs_lorenz(:, :, :, :), &! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
+    epsilon2_abs_all(:, :, :, :),   &!  For restart: Summed imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
+    epsilon2_abs_lorenz_all(:, :, :, :), &! For restart: Summed imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
+    epsilon2_abs_dir(:,:,:),    &! Imaginary part of dielectric function for direct absorption vs polarization, omega, temp
+    epsilon2_abs_lorenz_dir(:,:,:),  &! Imaginary part of dielectric function for direct absorption vs polarization, omega, temp Lorentz
+    ef0_fca(:),               &!  Fermi level for free carrier absorption
     gtemp(:),                &!  Temperature used globally (units of Ry)
     mobilityh_save(:),       &!  Error in the hole mobility
     mobilityel_save(:),      &!  Error in the electron mobility
-    xkf_bz(:, :)              !  Homogeneous k-point list on the full 
+    xkf_fst(:, :),           &!  Coordinate of the k-points on the IBZ within the fsthick
+    wkf_fst(:),              &!  Weights of the k-points on the IBZ within the fsthick
+    vkk_all(:, :, :),        &!  Velocity among all cores
+    carrier_density(:),      &!  Carrier density for each temperature
+    etf_all_b(:, :, :),      &!  In case of B-field, eigenenergies for non-zero inv_tau k-points on full BZ
+    vkk_all_b(:, :, :, :),   &!  In case of B-field, velocities for non-zero inv_tau k-points on full BZ
+    wkf_all_b(:),            &!  In case of B-field, k-point weights for non-zero inv_tau k-points on full BZ
+    f_serta_b(:, :, :, :),   &!  In case of B-field, SERTA population for non-zero inv_tau k-points on full BZ
+    f_in_b(:, :, :, :),      &!  In case of B-field, in population for IBTE for non-zero inv_tau k-points on full BZ
+    f_out_b(:, :, :, :),     &!  In case of B-field, out population for IBTE for non-zero inv_tau k-points on full BZ
+    inv_tau_b(:, :, :),      &!  In case of B-field, scattering rate for non-zero inv_tau k-points on full BZ
+    df_in_b(:, :, :, :, :),  &!  In case of B-field, derivative of f wrt k for non-zero inv_tau k-points on full BZ
+    xkf_bz(:, :),            &!  In case of B-field, homogeneous k-point list on the full BZ for etf_mem /= 3
+    Qmat(:, :, :, :)          !  Quadrupole tensor
   COMPLEX(KIND = DP), ALLOCATABLE :: &
     el_ph_mat(:, :, :, :),    &!  e-p matrix  (nbnd, nbnd, nks, 3*nat)
     cu(:, :, :),              &!  rot matrix for wannier interpolation of k point, coarse mesh (nbnd*nbnd*nkstot)

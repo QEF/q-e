@@ -1,4 +1,5 @@
-VERSION = git
+VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../include/qe_version.h )
+#VERSION = git
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
@@ -66,6 +67,6 @@ INPUT_ALL_CURRENTS.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-@( cd ../../Doc ; ln -fs ../PW/Doc/INPUT_ALL_CURRENTS.html . ; \
-	ln -fs ../PW/Doc/INPUT_ALL_CURRENTS.xml . ; \
-	ln -fs ../PW/Doc/INPUT_ALL_CURRENTS.txt .) 
+	-@( cd ../../Doc ; ln -fs ../QEHEAT/Doc/INPUT_ALL_CURRENTS.html . ; \
+	ln -fs ../QEHEAT/Doc/INPUT_ALL_CURRENTS.xml . ; \
+	ln -fs ../QEHEAT/Doc/INPUT_ALL_CURRENTS.txt .) 

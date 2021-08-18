@@ -182,8 +182,7 @@ set(src_ph
     PH/apply_trev.f90
     PH/c_bands_ph.f90
     PH/dvscf_interpolate.f90
-    PH/ahc.f90
-    PH/postahc.f90)
+    PH/ahc.f90)
 
 set(src_phaux
     PH/write_eigenvectors.f90)
@@ -383,6 +382,33 @@ target_link_libraries(qe_phonon_fqha_exe
         qe_phonon_ph)
 
 ###########################################################
+# postahc.x
+###########################################################
+set(src_postahc_x PH/postahc.f90)
+qe_add_executable(qe_phonon_postahc_exe ${src_postahc_x})
+set_target_properties(qe_phonon_postahc_exe PROPERTIES OUTPUT_NAME postahc.x)
+target_link_libraries(qe_phonon_postahc_exe
+    PRIVATE
+        qe_modules
+        qe_phonon_ph)
+
+###########################################################
+# phcg.x
+###########################################################
+set(src_phonon_phcg_x Gamma/phcg.f90)
+qe_enable_cuda_fortran("${src_phonon_phcg_x}")
+qe_add_executable(qe_phonon_phcg_exe ${src_phonon_phcg_x})
+set_target_properties(qe_phonon_phcg_exe PROPERTIES OUTPUT_NAME phcg.x)
+target_link_libraries(qe_phonon_phcg_exe
+    PRIVATE
+        qe_pw
+        qe_fftx
+        qe_xclib
+        qe_lr_modules
+        qe_phonon_gamma
+        qe_modules)
+
+###########################################################
 # fd.x
 ###########################################################
 set(src_fd_x FD/fd.f90)
@@ -425,17 +451,6 @@ target_link_libraries(qe_phonon_fdifc_exe
         qe_fftx)
 
 ###########################################################
-# postahc.x
-###########################################################
-set(src_postahc_x PH/postahc.f90)
-qe_add_executable(qe_phonon_postahc_exe ${src_postahc_x})
-set_target_properties(qe_phonon_postahc_exe PROPERTIES OUTPUT_NAME postahc.x)
-target_link_libraries(qe_phonon_postahc_exe
-    PRIVATE
-        qe_modules
-        qe_phonon_ph)
-
-###########################################################
 
 qe_install_targets(
     # Libraries
@@ -445,6 +460,7 @@ qe_install_targets(
     qe_phonon_fd
     # Executables
     qe_phonon_ph_exe
+    qe_phonon_phcg_exe
     qe_phonon_dynmat_exe
     qe_phonon_q2r_exe
     qe_phonon_dvscf_q2r_exe

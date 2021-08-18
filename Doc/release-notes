@@ -1,8 +1,14 @@
-Known problems in development version:
+Fixed in development version:
+  * Some build problems occurring under special circumstances
+  * Some PP files were not correctly read since v.6.7
+  * DFT-D3 with dftd3_version=4 or 6 could produce NaN's in parallel runs
+    due to missing zero initialization of some work arrays
+
+Known problems in 6.8 version:
   * electron-phonon calculation in the non-colinear/spinorbit case is broken
   * some obscure problem still affects variable-cell with hybrid functionals
 
-New in development version:
+New in 6.8 version:
   * Grand-Canonical SCF (J. Chem. Phys. 146, 114101 (2017)) for constant-mu
     method is implemented by S. Nishihara and S. Hagiwara. [arXiv:2012.10090]
   * Calculation of spin-current matrix elements (Phys. Rev. B 99, 235113) 
@@ -16,8 +22,15 @@ New in development version:
   * Calculation of DORI and of ELF for nspin=2 (Dong Yang, Qin Liu, JSG)
   * Interface for BerkeleyGW extended to hybrid and meta-GGA functionals:
     Fangzhou Zhao (Berkeley)
+  * Implementation of the turboMagnon code in TDDFPT [EPJB 91, 249 (2018)]
+    (T. Gorni, O. Baseggio, I. Timrov, P. Delugas, S. Baroni)
+  * EPW: 
+    (1) Hall mobility and Hall factor.
+    (2) Isotropic linearized Eliashberg equation to get Tc
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues, 
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
-Fixed in development version:
+Fixed in 6.8 version:
   * Fictitious charge particle (FCP) works again. [arXiv:2012.10090]
   * Bugfix in HP: the hp.x calculation was not stopping smoothly when
     "perturb_only_atom" was used (this bug is not present in earlier 
@@ -49,8 +62,13 @@ Fixed in development version:
   * The new fit introduced in v.6.7 of ev.x wasn't always working as expected
   * alpha2f.x wasn't reading the input any longer in v.6.7
     (noticed by Rico Pratama, Chungbuk Nat.U. Cheongju, Rep. of Korea)
+  * turboLanczos with hybrids + (d0psi_rs=.true.) + (ipol/=4) was crashing
+  * Restart for DFT+U+V was not working  
+  * Restart for "Force theorem" was not working properly and gave wrong results
+  * ld1.x may crash while writing UPF files due to unallocated r and rab arrays
+    (noticed and fixed by Hitoshi Mori)
 
-Incompatible changes in development version:
+Incompatible changes in 6.8 version:
   * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of the
     Fermi energy works. Currently, molecular dynamics with FCP does not work.
   * Exchange-correlation code (vdW excepted) moved to XClib/

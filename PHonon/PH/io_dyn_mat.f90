@@ -380,7 +380,7 @@ MODULE io_dyn_mat
       !
       IF (PRESENT(epsil)) THEN
         CALL xmlr_opentag("DIELECTRIC_PROPERTIES", ierr)
-        IF (ierr == -1) THEN
+        IF (ierr == 1) THEN
           IF (PRESENT(lrigid))  lrigid = .false.
           IF (PRESENT(lraman))  lraman = .false.
           epsil = 0.0_dp

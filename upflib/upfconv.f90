@@ -48,8 +48,9 @@ PROGRAM upfconv
   IF ( conversion == "-h" ) THEN
      WRITE(*,*) 'Converts a pseudopotential file to either upf v.2, xml or CASINO formats.'
      WRITE(*,*) 'Usage: upfconv -c|-u|-x|-e "pseudopotential file"'
-     WRITE(*,*) 'Options: -c     convert to CASINO format. Make sure that the local channel'
-     WRITE(*,*) '                chosen in the CASINO pp file is what you expect'
+     WRITE(*,*) 'Options: -c     convert to CASINO format. MAY OR MAY NOT WORK (LIKELY IT DOES NOT)'
+     WRITE(*,*) 'Options: -c     Make sure that the local channel chosen in the CASINO pp file'
+     WRITE(*,*) '                is what you expect'
      WRITE(*,*) '         -u     convert to upf v.2 format'
      WRITE(*,*) '         -x     convert to xml format'
      WRITE(*,*) '         -e     extract GIPAW core wavefunctions if available,'

@@ -109,6 +109,7 @@ subroutine solve_e
   !  This routine is task group aware
   !
   allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
+  dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins(dffts%nnr, nspin_mag, 3))
   else

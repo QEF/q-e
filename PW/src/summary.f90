@@ -643,7 +643,7 @@ SUBROUTINE print_cuda_info
   !
   USE io_global,       ONLY : stdout
   USE control_flags,   ONLY : use_gpu, iverbosity
-  USE mp_world,        ONLY : nnode, world_comm
+  USE mp_world,        ONLY : nnode, nproc
   USE mp,              ONLY : mp_sum, mp_max
 #if defined(__CUDA)
   USE cudafor
@@ -651,14 +651,14 @@ SUBROUTINE print_cuda_info
   IMPLICIT NONE
   !
   INTEGER :: idev, ndev, ierr
-  INTEGER, ALLOCATABLE :: dev_association(:)
   TYPE (cudaDeviceProp) :: prop
   !
   IF (use_gpu) THEN
-     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.",/)' )
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
 #if defined(__GPU_MPI)
-     WRITE( stdout, '(/10x,"CUDA-aware MPI enabled")')
+     WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
 #endif
+     WRITE( stdout, '()' )
   ELSE
      WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
   END IF
@@ -671,20 +671,9 @@ SUBROUTINE print_cuda_info
   ! User friendly, approximated warning.
   ! In order to get this done right, one needs an intra_node communicator
   !
-  CALL mp_max(ndev, world_comm)
-  !
-  ALLOCATE(dev_association(ndev))
-  !
-  dev_association(:) = 0
-  dev_association(idev+1) = 1
-  !
-  CALL mp_sum(dev_association, world_comm)
-  !
-  IF (ANY(dev_association > nnode*2)) &
+  IF (nproc > ndev * nnode * 2) &
      CALL infomsg('print_cuda_info', &
       'High GPU oversubscription detected. Are you sure this is what you want?')
-  !
-  DEALLOCATE(dev_association)
   !
   ! Verbose information for advanced users
   IF (iverbosity > 0) THEN

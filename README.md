@@ -45,7 +45,7 @@ can be found on [Wiki page on gitlab](https://gitlab.com/QEF/q-e/-/wikis/home).
 - PHonon: vibrational and dielectric properties from DFPT (Density-Functional Perturbation Theory);
 - TD-DFPT: spectra from Time-dependent DFPT;
 - HP: calculation of Hubbard parameters from DFPT;
-- EPW: calculation of electron-phonon coefficients in metals;
+- EPW: calculation of electron-phonon coefficients, carrier transport, phonon-limited superconductivity and phonon-assisted optical processes;
 - PWCOND: ballistic transport;
 - XSpectra: calculation of X-ray absorption spectra;
 - PWneb: reaction pathways and transition states with the Nudged Elastic Band method;
@@ -58,12 +58,12 @@ The following libraries have been isolated and partially encapsulated in view of
 - UtilXlib: performing basic MPI handling, error handling, timing handling.
 - FFTXlib: parallel (MPI and OpenMP) distributed three-dimensional FFTs, performing also load-balanced distribution of data (plane waves, G-vectors and real-space grids) across processors.
 - LAXlib: parallel distributed dense-matrix diagonalization, using ELPA, SCALapack, or a custom algorithm.
-- KS Solver: parallel iterative diagonalization for the Kohn-Sham Hamiltonian (represented as an operator),using block Davidson and band-by-band or block Conjugate-Gradient algorithms.
+- KS Solvers: parallel iterative diagonalization for the Kohn-Sham Hamiltonian (represented as an operator),using block Davidson and band-by-band or block Conjugate-Gradient algorithms.
 - LRlib: performs a variety of tasks connected with (time-dependent) DFPT, to be used also in connection with Many-Body Perturbation Theory.
-- upflib: pseudopotential-related code
+- upflib: pseudopotential-related code.
 
 ## GPU-enabled version
-Since Feb.2021 this repository also works for GPU's (currently only NVidia). See file [README_GPU.md](README_GPU.md).
+Since Feb.2021 this repository also works for GPU's (currently only NVIDIA). See file [README_GPU.md](README_GPU.md).
 
 ## Contributing
 Quantum ESPRESSO is an open project: contributions are welcome.

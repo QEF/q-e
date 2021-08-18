@@ -536,7 +536,7 @@ electrons.o : ../../Modules/recvec.o
 electrons.o : ../../Modules/tsvdw.o
 electrons.o : ../../Modules/wavefunctions.o
 electrons.o : ../../Modules/wavefunctions_gpu.o
-electrons.o : ../../Modules/wrappers.o
+electrons.o : ../../UtilXlib/clib_wrappers.o
 electrons.o : ../../UtilXlib/mp.o
 electrons.o : ../../XClib/xc_lib.o
 electrons.o : ../../dft-d3/api.o
@@ -986,7 +986,6 @@ forces_bp_efield.o : ../../Modules/mp_world.o
 forces_bp_efield.o : ../../Modules/noncol.o
 forces_bp_efield.o : ../../Modules/recvec.o
 forces_bp_efield.o : ../../Modules/wavefunctions.o
-forces_bp_efield.o : ../../UtilXlib/clocks_handler.o
 forces_bp_efield.o : ../../UtilXlib/mp.o
 forces_bp_efield.o : ../../UtilXlib/parallel_include.o
 forces_bp_efield.o : ../../upflib/uspp.o
@@ -1111,6 +1110,8 @@ gradcorr.o : ../../Modules/kind.o
 gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../XClib/xc_lib.o
 gradcorr.o : pwcom.o
+gram_schmidt.o : ../../Modules/control_flags.o
+gram_schmidt.o : ../../Modules/kind.o
 gweights.o : ../../Modules/kind.o
 h_epsi_her_apply.o : ../../Modules/becmod.o
 h_epsi_her_apply.o : ../../Modules/cell_base.o
@@ -1502,7 +1503,6 @@ mix_rho.o : ../../Modules/cell_base.o
 mix_rho.o : ../../Modules/constants.o
 mix_rho.o : ../../Modules/control_flags.o
 mix_rho.o : ../../Modules/fft_base.o
-mix_rho.o : ../../Modules/io_files.o
 mix_rho.o : ../../Modules/io_global.o
 mix_rho.o : ../../Modules/ions_base.o
 mix_rho.o : ../../Modules/kind.o
@@ -1511,6 +1511,7 @@ mix_rho.o : ../../Modules/recvec.o
 mix_rho.o : ../../Modules/wavefunctions.o
 mix_rho.o : ../../UtilXlib/mp.o
 mix_rho.o : ../../upflib/uspp.o
+mix_rho.o : buffers.o
 mix_rho.o : gcscf_module.o
 mix_rho.o : ldaU.o
 mix_rho.o : pwcom.o
@@ -1902,7 +1903,7 @@ punch.o : ../../Modules/ions_base.o
 punch.o : ../../Modules/qexsd.o
 punch.o : ../../Modules/wavefunctions.o
 punch.o : ../../Modules/wavefunctions_gpu.o
-punch.o : ../../Modules/wrappers.o
+punch.o : ../../UtilXlib/clib_wrappers.o
 punch.o : a2fmod.o
 punch.o : io_rho_xml.o
 punch.o : pw_restart_new.o
@@ -2003,7 +2004,7 @@ pw_restart_new.o : ../../Modules/run_info.o
 pw_restart_new.o : ../../Modules/tsvdw.o
 pw_restart_new.o : ../../Modules/wavefunctions.o
 pw_restart_new.o : ../../Modules/wavefunctions_gpu.o
-pw_restart_new.o : ../../Modules/wrappers.o
+pw_restart_new.o : ../../UtilXlib/clib_wrappers.o
 pw_restart_new.o : ../../UtilXlib/mp.o
 pw_restart_new.o : ../../XClib/xc_lib.o
 pw_restart_new.o : ../../upflib/paw_variables.o
@@ -2136,6 +2137,10 @@ rotate_wfc.o : ../../Modules/control_flags.o
 rotate_wfc.o : ../../Modules/kind.o
 rotate_wfc_gpu.o : ../../Modules/control_flags.o
 rotate_wfc_gpu.o : ../../Modules/kind.o
+rotate_xpsi.o : ../../Modules/control_flags.o
+rotate_xpsi.o : ../../Modules/kind.o
+rotate_xpsi_gpu.o : ../../Modules/control_flags.o
+rotate_xpsi_gpu.o : ../../Modules/kind.o
 run_driver.o : ../../Modules/cell_base.o
 run_driver.o : ../../Modules/check_stop.o
 run_driver.o : ../../Modules/command_line_options.o

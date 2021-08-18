@@ -15,7 +15,7 @@ default :
 	@echo ' '
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests                   : run-tests-serial (default)'
-	@echo ' run-tests-serial            : run all tests in SERIAL' 
+	@echo ' run-tests-serial            : run all tests in SERIAL'
 	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp,tddfpt} only, as above'
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
 	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp,tddfpt} only, as above'
@@ -48,11 +48,11 @@ run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-pa
 
 
 run-tests-cp-serial : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-cp-parallel : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw-serial : prolog pseudo
@@ -128,7 +128,7 @@ run-tests-xsd-pw-serial : prolog pseudo
     done ; cd ..
 
 create-reference-cp : pseudo prolog
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
 create-reference-pw : pseudo prolog
@@ -199,7 +199,7 @@ clean:
 		hp_*/*HubbardV* hp_*/*mix* hp_*/*parameters.out
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
-		epw_*/*.qdos_* epw_*/*.P epw_*/*.wout epw_*/*.fmt epw_*/*.pade* \
+		epw_*/*.qdos_* epw_*/*.P epw_*/*.wout epw_*/crystal.fmt epw_*/*.pade* \
 		epw_*/*.epmat_wanep epw_*/*.kgmap epw_*/*.nnkp epw_*/*.epmatwp* \
 		epw_*/*.acon_iso_* epw_*/*.a2f* epw_*/*.phdos* epw_*/*.lambda \
 		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso* \
@@ -214,8 +214,11 @@ clean:
 		epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
 		epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
 		epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse epw_*/Fsparsecb \
-		epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_*/*.cube epw_*/EPW.bib
- 
+		epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_*/*.cube epw_*/EPW.bib \
+		epw_*/*_hr.dat epw_*/*_wsvec.dat epw_*/epwdata.fmt epw_*/IBTEvel_sup.fmt \
+		epw_*/inv_taucb.fmt epw_*/inv_tau.fmt epw_*/restart.fmt epw_*/vmedata.fmt \
+		epw_*/selecq.fmt epw_*/dmedata.fmt
+
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
                 epw_trev/save epw_trev_uspp/save epw_trev_paw/save \

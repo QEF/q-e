@@ -117,3 +117,8 @@ example18:
     This example shows how to calculate the electron energy loss spectrum
     of bulk aluminium using the Sternheimer algorithm with a norm-conserving 
     pseudopotential, LDA functional, and using pw.x and turbo_eels.x.
+
+example19:
+    This example shows how to calculate the magnetic spectrum (magnons)
+    of bulk iron using the Lanczos algorithm with a norm-conserving
+    pseudopotential, LDA functional, and using pw.x and turbo_magnons.x.

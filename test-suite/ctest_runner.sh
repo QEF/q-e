@@ -4,7 +4,7 @@
 if [ $# -lt 3 ] ; then
   echo "Need at least 3 arguments"
   echo "ctest_runner.sh label outfile exe [args...]"
-  echo "  label   : enter pw for pw.x. The label is converted to upper cases and read environment variable, for example PW_OPTIONS"
+  echo "  label   : enter pw for pw.x. The label is converted to upper cases and used for read environment variable, for example CTEST_PW_OPTIONS"
   echo "  outfile : name of the file which repeats the standard output"
   echo "  exe     : excutable, full path preferred. It may not be a qe executable but an MPI runner"
   exit 1

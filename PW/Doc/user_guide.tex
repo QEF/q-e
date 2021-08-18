@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.6}
+\def\version{6.8}
 \def\PWscf{\texttt{PWscf}}
 \def\qe{{\sc Quantum ESPRESSO}}
 
@@ -17,7 +17,6 @@
 
 \def\pwx{\texttt{pw.x}}
 \def\cpx{\texttt{cp.x}}
-\def\phx{\texttt{ph.x}}
 \def\configure{\texttt{configure}}
 
 \def\PHonon{\texttt{PHonon}}
@@ -35,13 +34,13 @@
   \includegraphics[width=5cm]{\qeImage} \\
   % title
   \Huge \PWscf\ User's Guide (v.\version) 
-  \\ \Large (only partially updated)
 }
 
 \maketitle
 
 \tableofcontents
 
+\newpage 
 \section{Introduction}
 
 This guide covers the usage of the \PWscf\ 
@@ -49,24 +48,20 @@ This guide covers the usage of the \PWscf\
 a core component of the \qe\ distribution.
 Further documentation, beyond what is provided 
 in this guide, can be found in the directory
-\texttt{PW/Doc/}
-{\em (note: all directories are relative to the installation
-directory)}, containing a copy of this guide.
-
-{\em Important notice: due to the lack of time and of manpower, this
-manual is only partially updated and may contain outdated information.}
+\texttt{PW/Doc/}, containing a copy of this guide
+({\em note: all directories are relative to the root
+directory of \qe}).
 
 This guide assumes that you know the physics 
 that \PWscf\ describes and the methods it implements.
 It also assumes  that you have already installed,
 or know how to install, \qe. If not, please read
-the general User's Guide for \qe, found in 
-directory \texttt{Doc/}; or consult the web site:\\
-\texttt{http://www.quantum-espresso.org}.
+the general User's Guide in directory \texttt{Doc/};
+or consult the web site: \texttt{http://www.quantum-espresso.org}.
 
 People who want to modify or contribute to 
-\PWscf\ should read the Developer Manual: 
-\texttt{Doc/developer\_man.pdf}.
+\PWscf\ should read the Wiki pages on GitLab:
+\texttt{https://gitlab.com/QEF/q-e/-/wikis}.
 
 \subsection{What can \PWscf\ do}
 
@@ -80,15 +75,15 @@ In particular:
         atomic forces, stresses;
   \item structural optimization, also with variable cell;
   \item molecular dynamics on the Born-Oppenheimer surface, also with variable cell;
-  \item macroscopic polarization and finite electric fields via 
-  the modern theory of polarization (Berry Phases);
-  \item modern theory of orbital magnetization;
-  \item free-energy surface calculation at fixed cell through meta-dynamics, if patched with PLUMED.
-  \item Effective Screening Medium (ESM) method
+  \item macroscopic polarization (and orbital magnetization) via 
+    Berry Phases;
+  \item various forms of finite electric fields, with a sawtooth potential
+    or with the modern theory of polarization;
+  \item Effective Screening Medium (ESM) method;
   \item self-consistent continuum solvation (SCCS) model, if patched with
-    ENVIRON (\texttt{http://www.quantum-environment.org/}),
+    ENVIRON (\texttt{http://www.quantum-environment.org/}).
 \end{itemize}
-All of the above works for both insulators and metals, 
+\PWscf\ works for both insulators and metals, 
 in any crystal structure, for many exchange-correlation (XC) functionals
 (including spin polarization, DFT+U, meta-GGA, nonlocal and hybrid 
 functionals), for
@@ -96,8 +91,7 @@ norm-conserving (Hamann-Schluter-Chiang) PPs (NCPPs) in
 separable form or Ultrasoft (Vanderbilt) PPs (USPPs)
 or Projector Augmented Waves (PAW) method.
 Noncollinear magnetism and spin-orbit interactions 
-are also implemented.  An implementation of finite electric 
-fields with a sawtooth potential in a supercell is also available.
+are also implemented.
 
 Please note that NEB calculations are no longer performed by \pwx,
 but are instead carried out by \texttt{neb.x} (see main user guide), 
@@ -132,6 +126,8 @@ and many others. We quote in particular:
 \end{itemize}
 and the more recent contributors:
 \begin{itemize}
+  \item Elena de Paoli (IOM-CNR) for porting to GPU of the RMM-DIIS
+        algorithm by Satomichi Nisihara;
   \item Gabriel S. Gusmão (Georgia Tech) and Johannes Voss (ANL)
     for BEEF support;
   \item Miha Gunde for interface with Grimme's DFT-D3 code, as
@@ -187,8 +183,8 @@ or the file License in the distribution).
 \input ../../Doc/quote.tex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-References for all exchange-correlation functionals can be found in the header
-of file \texttt{Modules/funct.f90}.
+References for all exchange-correlation functionals can be found inside
+file \texttt{Modules/funct.f90}.
 
 \section{Compilation}
 
@@ -205,12 +201,18 @@ in \texttt{PW/src}:
 \begin{itemize}
 \item  \texttt{dist.x} symbolic link to \pwx: reads input data for \PWscf,
 calculates distances and angles between atoms in a cell,
-taking into account periodicity
+taking into account periodicity,
 \end{itemize}
 and in \texttt{PW/tools}:
 \begin{itemize}
 \item  \texttt{ev.x} fits energy-vs-volume data to an equation of state
 \item  \texttt{kpoints.x} produces lists of k-points
+\item  \texttt{ibrav2cell.x} and \texttt{cell2ibrav.x} convert from
+  variables used in \qe\ to specify the unit cell to primitive
+  lattice translations, and vice versa\
+\item  \texttt{scan\_ibrav.x} works as \texttt{cell2ibrav.x} but tries
+  to figure out whether the axis are rotated with respect to those
+  assumed by \qe
 \item  \texttt{pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively 
   input and output files (not data files!) for \pwx\ and \texttt{neb.x} 
   (the latter, courtesy of Pietro Bonf\`a) and produce an XSF-formatted file
@@ -219,21 +221,12 @@ and in \texttt{PW/tools}:
   molecular structure visualization program.
   BEWARE: the  \texttt{pwi2xsf.sh} shell script requires the
   \texttt{pwi2xsf.x} executables to be located somewhere in your PATH. 
-\item (obsolescent) \texttt{bs.awk},  \texttt{mv.awk} are scripts that
-  process the output of \pwx\ (not data files!). Usage: 
-\begin{verbatim}
-         awk -f bs.awk < my-pw-file > myfile.bs
-         awk -f mv.awk < my-pw-file > myfile.mv
-\end{verbatim}
-The files so produced are suitable for use with  \texttt{xbs}, a very simple
-X-windows utility to display molecules, available at:\\
- \texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
 \item  \texttt{cif2qe.sh}: script converting from CIF 
-(Crystallographic Information File) to a format suitable for \qe.
-Courtesy of Carlo Nervi (Univ. Torino, Italy).
+  (Crystallographic Information File) to a format suitable for \qe.
+  Courtesy of Carlo Nervi (Univ. Torino, Italy).
 \end{itemize}
-Documentation for most auxiliary codes can be found in the codes
-themselves, e.g. in the header of source files.
+The other auxiliary codes contain their own documentation in the source
+files.
 
 \newpage\section{Using \PWscf}
 
@@ -294,7 +287,7 @@ Detailed explanations of the meaning of all variables are found in files
 values, which may or may not fit your needs.
 
 Comment lines in namelists can be introduced by a "!", exactly as in fortran 
-code.
+code. 
     
 After the namelists, you have several fields (``cards'')
 introduced by keywords with self-explanatory names:
@@ -330,7 +323,8 @@ to all file names, whose default value is \texttt{prefix='pwscf'}).
 \texttt{ESPRESSO\_TMPDIR}. The usage of variable \texttt{outdir} is
 still possible but {\em deprecated}. The \texttt{FoX} library is used
 to write a ``head'' data file in a XML format. This file has a ``schema''
-that can be found on \texttt{http://www.quantum-espresso.org/ns/qes/qes-1.0}.
+that can be found on \texttt{https://github.com/QEF/qeschemas}.
+% http://www.quantum-espresso.org/ns/qes/qes-1.0
 
 In case of multi-step calculations such as: {\ttfamily \ttquote md\ttquote, \ttquote relax\ttquote, 
 \ttquote vc-md \ttquote, \ttquote vc-relax\ttquote} the XML files contains also elements reporting the intermediate 
@@ -380,12 +374,13 @@ For DOS calculations you should choose \texttt{occupations='tetrahedra'},
 together with an automatically generated uniform k-point grid 
 (card K\_POINTS with option ``automatic'').
 Specify \texttt{nosym=.true.} to avoid generation of additional k-points in
-low symmetry cases. Variables \texttt{prefix} and \texttt{outdir}, which
+low-symmetry cases. Variables \texttt{prefix} and \texttt{outdir}, which
 determine
 the names of input or output files, should be the same in the two runs.
 See examples 1, 6, 7.
 
-NOTA BENE: atomic positions are read from the data file of the scf step.
+NOTA BENE: in non-scf calculations, the atomic positions are read by
+default from the data file of the scf step, not from input.
 
 \paragraph{Noncollinear magnetization, spin-orbit interactions}
 
@@ -493,20 +488,20 @@ Remember: this is MD on the electronic ground state, not
 Car-Parrinello MD.
 See example 3.
 
-\paragraph{Free-energy surface calculations}
+% \paragraph{Free-energy surface calculations}
 
-Once \PWscf\ is patched with the \texttt{PLUMED} plug-in
-(only v.1.3), it is possible to 
-use most PLUMED functionalities by running \PWscf\ as: 
-\texttt{./pw.x -plumed} plus the other usual \PWscf\ arguments.
-The input file for \texttt{PLUMED} must be found in the specified 
-\texttt{outdir} with fixed name \texttt{plumed.dat}.
+% Once \PWscf\ is patched with the \texttt{PLUMED} plug-in
+% (only v.1.3), it is possible to 
+% use most PLUMED functionalities by running \PWscf\ as: 
+% \texttt{./pw.x -plumed} plus the other usual \PWscf\ arguments.
+% The input file for \texttt{PLUMED} must be found in the specified 
+% \texttt{outdir} with fixed name \texttt{plumed.dat}.
 
 \paragraph{Variable-cell optimization}
 
 Variable-cell calculations (both optimization and dynamics) are performed
 with plane waves and G-vectors {\em calculated for the starting cell}.
-Inly the last step, after convergence has been achieved, is performed
+Only the last step, after convergence has been achieved, is performed
 for the converged structure, with plane waves and G-vectors
 {\em calculated for the final cell}. Small differences between the
 two last steps are thus to be expected and give an estimate of the
@@ -870,8 +865,8 @@ Parallelization on k-points:
 is a multiple of the number of pools;
 \item requires little communications (suitable for ethernet communications);
 \item reduces the required memory per processor by distributing wavefunctions
-(but not other quantities like the charge density), unless you set 
-\texttt{disk\_io='high'}.
+(but not other quantities like the charge density). Does not hold if you set 
+  \texttt{disk\_io='high'}.
 \end{itemize}
 Parallelization on PWs:
 \begin{itemize}
@@ -1170,6 +1165,8 @@ Here are some more subtle sources of trouble:
   that at a first glance may look the same as the ASCII
   character). Typically, this happens with files coming from Windows
   or produced with "smart" editors.  
+\item The input file ends at the last character (there is no end-of-line
+  character).
 \end{itemize}
 Both may cause the code to crash with rather mysterious error messages.
 If none of the above applies and the code stops at the first namelist
@@ -1205,16 +1202,15 @@ typically fall into one of the following cases:
   are
   very robust and extensively tested. Still, it may seldom happen that
   such algorithms fail. Try to use conjugate-gradient diagonalization
-  (\texttt{diagonalization='cg'}), a slower but very robust algorithm, and see
-  what happens. 
+  (\texttt{diagonalization='cg'}), a slower but very robust algorithm,
+  and see what happens; or, newer diagonalization 'paro'.
 \item buggy libraries. Machine-optimized mathematical libraries are
   very fast but sometimes not so robust from a numerical point of
   view.  Suspicious behavior: you get an error that is not
   reproducible on other architectures or that disappears if the
   calculation is repeated with even minimal changes in
-  parameters. Known cases: HP-Compaq alphas with cxml libraries, Mac
-  OS-X with system BLAS/LAPACK. Try to use compiled BLAS and LAPACK
-  (or better, ATLAS) instead of machine-optimized libraries. 
+  parameters. Try to use compiled BLAS and LAPACK (or better, ATLAS)
+  instead of machine-optimized libraries. 
 \end{itemize}
 
 \paragraph{pw.x crashes with no error message at all}
@@ -1234,7 +1230,7 @@ Possible reasons:
   that they are designed for your hardware.
 \item If you are using aggressive optimization in compilation, verify
 that you are using the appropriate options for your machine
-\item The executable was not properly compiled, or was compiled on
+\item the executable was not properly compiled, or was compiled on
 a different and incompatible environment.
 \item buggy compiler or libraries: this is the default explanation if you
 have problems with the provided tests and examples.
@@ -1326,7 +1322,7 @@ Possible reasons:
 \item serious error in data, such as bad number of electrons,
   insufficient number of bands, absurd value of broadening; 
 \item the Fermi energy is found by bisection assuming that the
-  integrated DOS N(E ) is an increasing function of the energy. This
+  integrated DOS $N(E)$ is an increasing function of the energy. This
   is not guaranteed for Methfessel-Paxton smearing of order 1 and can
   give problems when very few k-points are used. Use some other
   smearing function: simple Gaussian broadening or, better,
@@ -1373,7 +1369,7 @@ with dimensions that factors into products of small numbers (2, 3, 5 typically,
 sometimes 7 and 11). Different FFT libraries follow different rules and thus
 different dimensions can result for the same system on different machines (or
 even on the same machine, with a different FFT). See function allowed in
-\texttt{Modules/fft\_scalar.f90}.
+\texttt{FFTXlib/fft\_support.f90}.
 
 As a consequence, the energy may be slightly different on different machines. 
 The only piece that explicitly depends on the grid parameters is
@@ -1434,19 +1430,19 @@ you may not find all the symmetries you expect because:
   term. 
 \end{itemize}
 
-\paragraph{{\em Warning: symmetry operation \# N not allowed}}
-This is not an error.  If a symmetry operation contains a fractional
-translation that is incompatible with the FFT grid, it is discarded in
-order to prevent problems with symmetrization. Typical fractional 
-translations are 1/2 or 1/3 of a lattice vector. If the FFT grid
-dimension along that direction is not divisible respectively by 2 or
-by 3, the symmetry operation will not transform the FFT grid into
-itself. Solution: you can either force your FFT grid to be
-commensurate with fractional translation (set variables 
-\texttt{nr1}, \texttt{nr2}, \texttt{nr3} to suitable values), or
-set variable \texttt{use\_all\_frac} to \texttt{.true.}, in namelist
-\&SYSTEM. Note however that the latter is incompatible with
-hybrid functionals and with phonon calculations.
+% \paragraph{{\em Warning: symmetry operation \# N not allowed}}
+% This is not an error.  If a symmetry operation contains a fractional
+% translation that is incompatible with the FFT grid, it is discarded in
+% order to prevent problems with symmetrization. Typical fractional 
+% translations are 1/2 or 1/3 of a lattice vector. If the FFT grid
+% dimension along that direction is not divisible respectively by 2 or
+% by 3, the symmetry operation will not transform the FFT grid into
+% itself. Solution: you can either force your FFT grid to be
+% commensurate with fractional translation (set variables 
+% \texttt{nr1}, \texttt{nr2}, \texttt{nr3} to suitable values), or
+% set variable \texttt{use\_all\_frac} to \texttt{.true.}, in namelist
+% \&SYSTEM. Note however that the latter is incompatible with
+% hybrid functionals and with phonon calculations.
 
 \paragraph{Self-consistency is slow or does not converge at all}
 
@@ -1568,45 +1564,5 @@ no longer be suitable. Possible solutions:
 \item use a symmetry-conserving algorithm: the Wentzcovitch algorithm
   (\texttt{cell dynamics='damp-w'}) should not break the symmetry. 
 \end{itemize}
-
-\subsection{Compilation problems with \texttt{PLUMED}}
-
-\paragraph{xlc compiler}
-If you get an error message like:
-\begin{verbatim}
-Operation between types "char**" and "int" is not allowed.
-\end{verbatim}
-change in file \texttt{clib/metadyn.h}
-\begin{verbatim}
-#define snew(ptr,nelem) (ptr)= (nelem==0 ? NULL : (typeof(ptr)) calloc(nelem, sizeof(*(ptr))))
-#define srenew(ptr,nelem) (ptr)= (typeof(ptr)) realloc(ptr,(nelem)*sizeof(*(ptr)))
-\end{verbatim}
-with
-\begin{verbatim}
-#define snew(ptr,nelem) (ptr)= (nelem==0 ? NULL : (void*) calloc(nelem, sizeof(*(ptr))))
-#define srenew(ptr,nelem) (ptr)= (void*) realloc(ptr,(nelem)*sizeof(*(ptr)))
-\end{verbatim}
-
-\paragraph{Calling C from fortran}
-PLUMED assumes that fortran compilers add a single \texttt{\_} at the end of C routines. You
-may get an error message as :
-\begin{verbatim}
-ERROR: Undefined symbol: .init_metadyn
-ERROR: Undefined symbol: .meta_force_calculation
-\end{verbatim}
-eliminate the \texttt{\_} from the definition of init\_metadyn and meta\_force\_calculation, i. e.
-change at line 529
-\begin{verbatim}
-void meta_force_calculation_(real *cell, int *istep, real *xxx, real *yyy, real *zzz, 
-\end{verbatim}
-with
-\begin{verbatim}
-void meta_force_calculation(real *cell, int *istep, real *xxx, real *yyy, real *zzz,    
-\end{verbatim},
-and at line 961
-\begin{verbatim}
-  void init_metadyn_(int *atoms, real *ddt, real *mass, 
-  void init_metadyn_(int *atoms, real *ddt, real *mass, 
-\end{verbatim}
 
 \end{document}

@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='Fe'
-    pseudo_dir = '/marconi/home/userexternal/obaseggi/q-e-magnons/pseudo/'
-    outdir='/marconi/home/userexternal/obaseggi/q-e-magnons/tempdir/'
+    pseudo_dir = '/scratch/timrov/QE_gitlab/magnons/q-e/pseudo/'
+    outdir='/scratch/timrov/QE_gitlab/magnons/q-e/tempdir/'
  /
  &system
     nosym           = .true.
@@ -28,7 +28,7 @@
     electron_maxstep = 200
  /
 ATOMIC_SPECIES
-Fe  55.85   Fe.pbe-nc.UPF
+Fe  55.85   Fe.lda-pseudoDojo.UPF
 ATOMIC_POSITIONS alat
 Fe  0.00000000 0.00000000 0.00000000
 K_POINTS automatic

@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.6.7GPU starts on 29Jan2021 at 15:50:54 
+     Program TDDFPT_PP v.6.7GPU starts on  1Jul2021 at 13: 1:12 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -11,15 +11,33 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI & OpenMP), running on       1 processor cores
-     Number of MPI processes:                 1
-     Threads/MPI process:                     1
+     Parallel version (MPI), running on     8 processors
 
      MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+     28937 MiB available memory on the printing compute node when the environment starts
+ 
 
-     Reading    800 Lanczos steps for direction 1
-        800 steps will be considered
+     Reading   1600 Lanczos steps for direction 1
+       1600 steps will be considered
 
+
+     Polarization direction:1
+     Lanczos coefficients:
+     Average =    13.88229229
+     Average oscillation amplitude =    -0.01933565
+     Average alpha =    -0.00027223     0.00000000
+     Average alpha oscillation amplitude =    -0.00070543     0.00000000
+     Average gamma =    13.88229229    -0.00000000
+     Average gamma oscillation amplitude =    -0.01933565    -0.00000000
+     Extrapolation =                      osc
+      ip =   1
+     Average beta =    13.88229229
+     Average beta oscillation amplitude =    -0.01933565
+     Average alpha =     0.00000000     0.00000000
+     Average alpha oscillation amplitude =     0.00000000     0.00000000
+     Average gamma =    13.88229229     0.00000000
+     Average gamma oscillation amplitude =    -0.01933565     0.00000000
 
      Data ready, starting to calculate observables...
 
@@ -35,10 +53,10 @@
 
      Functions are reported in \hbar.\omega  Energy unit is (eV)
  
-     TDDFPT_PP    :      0.06s CPU      0.10s WALL
+     TDDFPT_PP    :      1.39s CPU      1.50s WALL
 
  
-   This run was terminated on:  15:50:54  29Jan2021            
+   This run was terminated on:  13: 1:14   1Jul2021            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

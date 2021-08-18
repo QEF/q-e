@@ -84,6 +84,7 @@ subroutine solve_e2
 
   call start_clock('solve_e2')
   allocate (dvscfin( dfftp%nnr, nspin, 6))
+  dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins(dffts%nnr, nspin, 6))
   else

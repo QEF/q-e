@@ -237,7 +237,7 @@ END SUBROUTINE ioneb
 SUBROUTINE verify_neb_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
-  USE wrappers,         ONLY : f_mkdir
+  USE clib_wrappers,    ONLY : f_mkdir
   USE path_input_parameters_module, ONLY : restart_mode
   USE io_files,         ONLY : prefix, check_tempdir, delete_if_present
   USE path_variables,   ONLY : num_of_images

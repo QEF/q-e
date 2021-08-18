@@ -46,6 +46,8 @@ default :
 	@echo 'where target is one of the following suite operation:'
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
+	@echo '  install      copy all executables to PREFIX/bin/'
+	@echo '               (works with "configure --prefix=PREFIX)"'
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  depend       generate dependencies (make.depend files)'
 	@if test -d GUI/; then \
@@ -199,7 +201,7 @@ librxc :
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-libupf : libfox libutil libcuda
+libupf : libutil libcuda
 	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :
@@ -285,7 +287,7 @@ clean :
 	for dir in \
 		CPV LAXlib FFTXlib XClib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
-		atomic clib LR_Modules pwtools upflib \
+		atomic clib LR_Modules upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
 		QEHeat \
 	; do \
@@ -353,10 +355,10 @@ tar-qe-modes :
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi
+	( cd Doc ; $(MAKE) TLDEPS= all ) ; fi
 	for dir in */Doc; do \
 	( if test -f $$dir/Makefile ; then \
-	( cd $$dir; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi ) ;  done
+	( cd $$dir; $(MAKE) TLDEPS= all ) ; fi ) ;  done
 
 doc_clean :
 	if test -d Doc ; then \

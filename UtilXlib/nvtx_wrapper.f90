@@ -80,7 +80,7 @@ contains
     integer, optional:: id
 #ifdef __PROFILE_NVTX
     type(nvtxEventAttributes):: event
-#ifdef __CUDA && __SYNC_NVPROF 
+#if defined(__CUDA) && defined(__SYNC_NVPROF)
     integer :: istat
     istat = cudaDeviceSynchronize()
 #endif
@@ -118,7 +118,7 @@ contains
 
   subroutine nvtxEndRange
 #ifdef __PROFILE_NVTX
-#ifdef __CUDA && __SYNC_NVPROF 
+#if defined(__CUDA) && defined(__SYNC_NVPROF)
     integer :: istat
     istat = cudaDeviceSynchronize()
 #endif

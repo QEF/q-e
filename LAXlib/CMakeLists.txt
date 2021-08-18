@@ -42,7 +42,8 @@ if(QE_ENABLE_CUDA)
         endif()
         target_link_libraries(qe_lax
             PRIVATE
-                CUDA::cusolver)
+                CUDA::cusolver
+                CUDA::cublas)
         set_property(TARGET qe_lax APPEND
             PROPERTY
                 COMPILE_DEFINITIONS __USE_CUSOLVER)
@@ -106,4 +107,6 @@ if(QE_ENABLE_TEST)
     add_unit_test(test_qe_lax-r1-t3 1 3 $<TARGET_FILE:qe_lax_test>)
     add_unit_test(test_qe_lax-r4-t1 4 1 $<TARGET_FILE:qe_lax_test>)
     add_unit_test(test_qe_lax-r9-t2 9 2 $<TARGET_FILE:qe_lax_test>)
+
+    add_subdirectory(tests)
 endif(QE_ENABLE_TEST)

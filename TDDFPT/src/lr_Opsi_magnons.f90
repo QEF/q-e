@@ -60,7 +60,6 @@ SUBROUTINE lr_Opsi_magnons (ik, ip, dOpsi)
   COMPLEX(DP) :: Tevc(npol*npwx,nbnd)       ! T-rev op. applied to u_{-k}
   COMPLEX(DP) :: Tevq(npol*npwx,nbnd)       ! T-rev op. applied to u_{-k-Q}
   !
-  COMPLEX(DP), EXTERNAL :: zdotc
   INTEGER :: ibnd1, ibnd2 
   !
   CALL start_clock ('lr_Opsi_magnons') 

@@ -546,6 +546,7 @@
     IF (mpime == ionode_id) THEN
       ! read 'selecq.fmt' file
       OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('read_frequencies', 'error opening selecq.fmt', 1)
       READ(iunselecq, *) totq
       ALLOCATE(selecq(totq), STAT = ierr)
       IF (ierr /= 0) CALL errore('read_frequencies', 'Error allocating selecq', 1)
@@ -820,7 +821,6 @@
     USE grid,     ONLY : kpmq_map
     USE eliashbergcom, ONLY : ixkf, ixkff, xkff, xkfs, nkfs, ixkqf, ixqfs, nbndfs, nqfs, memlt_pool
     USE constants_epw, ONLY : zero
-    USE symm_base, ONLY : nrot
     USE mp_global, ONLY : inter_pool_comm, npool
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
@@ -1297,7 +1297,6 @@
         !WRITE(iufilfreq, '(ES20.10)') wf(imode, iq)
         WRITE(iufilfreq) wf(imode, iq)
       ENDDO
-      CLOSE(iufilfreq)
     ENDIF
     !
     ! Fermi level and corresponding DOS
@@ -1401,34 +1400,38 @@
       !
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       !
-      DO imode = 1, nmodes ! phonon modes
-        wq = wf(imode, iq)
-        inv_wq =  1.0 / (two * wq)
-        !
-        DO ibnd = 1, nbndfst
-          IF (ABS(ekfs(ibnd, ixkf(lower_bnd + ik - 1)) - ef0) < fsthick) THEN
-            DO jbnd = 1, nbndfst
-              IF (ABS(ekfs(jbnd, ixkqf(ixkf(lower_bnd + ik - 1), iq)) - ef0) < fsthick) THEN
-                !
-                ! here we take into account the zero-point DSQRT(hbar/2M\omega)
-                ! with hbar = 1 and M already contained in the eigenmodes
-                ! g2 is Ry^2, wkf must already account for the spin factor
-                !
-                IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
-                     .OR. ABS(xqf(3, iq)) > eps8 )) THEN
-                  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
-                  !     number, in which case its square will be a negative number.
-                  g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq)
-                ELSE
-                  g2 = ABS(epf17(jbnd, ibnd, imode, ik))**two * inv_wq
-                ENDIF
-                ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
-                tmp_g2(ind(my_pool_id + 1)) = g2
+      IF (ixkf(lower_bnd + ik - 1) > 0) THEN
+        IF (ixkqf(ixkf(lower_bnd + ik - 1), iq) > 0) THEN
+          DO imode = 1, nmodes ! phonon modes
+            wq = wf(imode, iq)
+            inv_wq =  1.0 / (two * wq)
+            !
+            DO ibnd = 1, nbndfst
+              IF (ABS(ekfs(ibnd, ixkf(lower_bnd + ik - 1)) - ef0) < fsthick) THEN
+                DO jbnd = 1, nbndfst
+                  IF (ABS(ekfs(jbnd, ixkqf(ixkf(lower_bnd + ik - 1), iq)) - ef0) < fsthick) THEN
+                    !
+                    ! here we take into account the zero-point DSQRT(hbar/2M\omega)
+                    ! with hbar = 1 and M already contained in the eigenmodes
+                    ! g2 is Ry^2, wkf must already account for the spin factor
+                    !
+                    IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
+                         .OR. ABS(xqf(3, iq)) > eps8 )) THEN
+                      ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
+                      !     number, in which case its square will be a negative number.
+                      g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq)
+                    ELSE
+                      g2 = ABS(epf17(jbnd, ibnd, imode, ik))**two * inv_wq
+                    ENDIF
+                    ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
+                    tmp_g2(ind(my_pool_id + 1)) = g2
+                  ENDIF
+                ENDDO ! jbnd
               ENDIF
-            ENDDO ! jbnd
-          ENDIF
-        ENDDO ! ibnd
-      ENDDO ! imode
+            ENDDO ! ibnd
+          ENDDO ! imode
+        ENDIF ! ixkqf
+      ENDIF ! ixkf
       !
     ENDDO ! ik's
     !
@@ -1438,7 +1441,6 @@
         WRITE(iufileph) tmp_g2(ifil)
       ENDDO
     ENDIF
-    CLOSE(iufileph)
     !
     IF (my_pool_id == 0) THEN
       ! format is compatible with IBTE
@@ -1457,6 +1459,8 @@
     ENDIF
     !
     IF (iqq == totq) THEN
+      CLOSE(iufilfreq)
+      CLOSE(iufileph)
       DEALLOCATE(ekfs, STAT = ierr)
       IF (ierr /= 0) CALL errore('write_ephmat', 'Error deallocating ekfs', 1)
       DEALLOCATE(wkfs, STAT = ierr)
@@ -1729,7 +1733,6 @@
     USE elph2,     ONLY : nqtotf, nktotf, xqf, map_rebal, bztoibz
     USE eliashbergcom, ONLY : ixkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nqfs
     USE constants_epw, ONLY : eps5, zero
-    USE symm_base, ONLY : nrot
     USE io_global, ONLY : stdout, ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
@@ -1784,7 +1787,7 @@
     ! using index of the k-point within the Fermi shell (ixkf)
     !
     IF (mp_mesh_k) THEN
-      ! SP - July 2020      
+      ! SP - July 2020
       ! We should not recompute bztoibz
       DO ikbz = 1, nkftot
         ixkff(ikbz) = ixkf(bztoibz(ikbz))
@@ -1902,7 +1905,7 @@
     SUBROUTINE check_restart_ephwrite()
     !-----------------------------------------------------------------------
     !!
-    !!   This routine checks the variables in restart while writing ephmat 
+    !!   This routine checks the variables in restart while writing ephmat
     !!   6/28/2020 Hari Paudyal
     !!
     USE io_files,  ONLY : prefix, tmp_dir
@@ -1988,6 +1991,7 @@
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
+    USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : fsthick
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : agap, nkfs, nbndfs, ef0, ekfs, w0g
@@ -2032,12 +2036,20 @@
     !! It is therefore an approximation for a delta function
     temp = gtemp(itemp) / kelvin2eV
     !
-    delta_min = 0.9d0 * MINVAL(agap(:,:,itemp))
-    delta_max = 1.1d0 * MAXVAL(agap(:,:,itemp))
-    !nbin = NINT(delta_max / eps5) + 1
-    nbin = NINT((delta_max - delta_min) / eps4) + 1
-    !dbin = delta_max / DBLE(nbin)
-    dbin = (delta_max - delta_min) / DBLE(nbin)
+    delta_min = MINVAL(agap(:, :, itemp))
+    IF (delta_min > zero) THEN
+      delta_min = 0.9d0 * delta_min
+    ELSE
+      WRITE(stdout, '(5x, a, f12.6, a)') 'Min. value of superconducting gap = ', &
+                                          delta_min * 1000.d0, ' meV'
+      delta_min = 1.1d0 * delta_min
+    ENDIF
+    delta_max = 1.1d0 * MAXVAL(agap(:, :, itemp))
+    !nbin = NINT((delta_max - delta_min) / eps4) + 1
+    !dbin = (delta_max - delta_min) / DBLE(nbin)
+    dbin = 3.0d-5 !eV
+    nbin = NINT((delta_max - delta_min) / dbin) + 1
+    !
     ALLOCATE(delta_k_bin(nbin), STAT = ierr)
     IF (ierr /= 0) CALL errore('gap_distribution_FS', 'Error allocating delta_k_bin', 1)
     delta_k_bin(:) = zero
@@ -2045,7 +2057,8 @@
     DO ik = 1, nkfs
       DO ibnd = 1, nbndfs
         IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-          ibin = NINT(agap(ibnd, ik, itemp) / dbin) + 1
+          ibin = NINT((agap(ibnd, ik, itemp) - delta_min) / dbin) + 1
+          !ibin = NINT(agap(ibnd, ik, itemp) / dbin) + 1
           weight = w0g(ibnd, ik)
           delta_k_bin(ibin) = delta_k_bin(ibin) + weight
         ENDIF
@@ -2062,10 +2075,10 @@
     !
     OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
     IF (ios /= 0) CALL errore('gap_distribution_FS', 'error opening file ' // name1, iufilgap)
-    WRITE(iufilgap, '(2a20)') '#     T [K]    ', '\rho(delta_nk) [meV]'    
+    WRITE(iufilgap, '(2a20)') '#     T [K]    ', '\rho(delta_nk) [meV]'
     DO ibin = 1, nbin
-      WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), & 
-                                   dbin * DBLE(ibin) * 1000.d0
+      WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), &
+                                   (dbin * DBLE(ibin) + delta_min) * 1000.d0
     ENDDO
     CLOSE(iufilgap)
     !
@@ -2210,7 +2223,7 @@
       DO j = 1, nkf2
         DO k = 1, nkf3
           ik = k + (j - 1) * nkf3 + (i - 1) * nkf2 * nkf3
-          !IF (ixkff(ik) > 0) THEN
+          IF (ixkff(ik) > 0) THEN
             DO ibnd = 1, nbndfs
               ! RM: Everything is in eV here.
               ! SP: Here take a 0.2 eV interval around the FS.
@@ -2223,7 +2236,7 @@
                        ekfs(ibnd, ixkff(ik)) - ef0, agap_tmp(ibnd, ixkff(ik)) * 1000.d0
               ENDIF
             ENDDO ! ibnd
-          !ENDIF
+          ENDIF
         ENDDO  ! k
       ENDDO ! j
     ENDDO ! i

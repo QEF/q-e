@@ -106,7 +106,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE noncollin_module, ONLY : nspin_mag
   USE mp_images,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast, mp_barrier
-  USE wrappers,         ONLY : f_mkdir_safe
+  USE clib_wrappers,    ONLY : f_mkdir_safe
   USE control_ph, ONLY : search_sym
 
   USE lr_symm_base, ONLY : rtau

@@ -18,7 +18,16 @@ else
 fi
 
 echo $0" "$@
-if [[ "$1" == "1" ]]
+if [[ "$1" == "0" ]]
+then
+  echo "Running PW ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x -input $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x -input $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
@@ -26,22 +35,22 @@ then
   if [[ -e CRASH ]]
   then
     cat $3
-  fi  
+  fi
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x -input $2 > $3 2> $4"  
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
   fi
-  echo "Gather results in save" 
+  echo "Gather results in save"
   python3 ../../EPW/bin/pp.py < pp.in
 elif [[ "$1" == "3" ]]
 then
   echo "Running EPW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"  
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -50,13 +59,13 @@ then
 elif [[ "$1" == "4" ]]
 then
   echo "Running Q2R ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x -input $2 > $3 2> $4"  
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
   fi
-  echo "Gather results in save" 
+  echo "Gather results in save"
   python3 ../../EPW/bin/pp.py < pp.in
 elif [[ "$1" == "5" ]]
 then
@@ -64,7 +73,7 @@ then
   echo "Running EPW ..."
 ######  rm *.Fin_restart1 *.Fin_restartcb1 restart.fmt
   rm restart.fmt
-  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"  
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then

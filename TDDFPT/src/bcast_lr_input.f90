@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -57,6 +57,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (lshift_d0psi, ionode_id,world_comm )
   CALL mp_bcast (tddfpt, ionode_id, world_comm )
   CALL mp_bcast (ethr_nscf, ionode_id, world_comm )
+  call mp_bcast (ipol, ionode_id, world_comm )
   CALL plugin_arguments_bcast(ionode_id, world_comm)
 
   ! for EELS
@@ -109,7 +110,6 @@ SUBROUTINE bcast_lr_input
   call mp_bcast (force_real_gamma, ionode_id, world_comm )
   call mp_bcast (force_real_alpha, ionode_id, world_comm )
   call mp_bcast (force_zero_alpha, ionode_id, world_comm )
-  call mp_bcast (b_pol, ionode_id, world_comm )
   CALL mp_barrier(world_comm)
 
 #endif

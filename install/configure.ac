@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2018 Quantum ESPRESSO group
+# Copyright (C) 2001-2021 Quantum ESPRESSO group
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 6.6, , espresso)
+AC_INIT(ESPRESSO, 6.8, , espresso)
 
 AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])

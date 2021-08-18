@@ -14,7 +14,7 @@ subroutine which_cpmd_dft &
   !-----------------------------------------------------------------------
   !
   use funct,  only : set_dft_from_name
-  use xc_lib, only : xclib_get_id
+  use xc_lib, only : xclib_get_id, xclib_dft_is_libxc
   
   implicit none
   character(len=*), intent(IN) :: dft
@@ -27,12 +27,14 @@ subroutine which_cpmd_dft &
   mgcc  = xclib_get_id('GGA','CORR')
 
 ! in CPMD PW91 and LYP are swapped.
-  if (mgcc.eq.3) then
-     mgcc=2
-  else if (mgcc.eq.2) then
-     mgcc=3
-  end if
-
+  if (.not.xclib_dft_is_libxc('GGA','CORR')) then
+    if (mgcc.eq.3) then
+      mgcc=2
+    else if (mgcc.eq.2) then
+      mgcc=3
+    end if
+  endif
+  
   return
 end subroutine which_cpmd_dft
 !

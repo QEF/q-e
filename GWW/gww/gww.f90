@@ -44,7 +44,7 @@
    REAL(kind=DP) :: energy
 
 #if defined(_OPENMP)
-   INTEGER :: omp_get_num_threads, omp_get_max_threads, ntids
+   INTEGER :: omp_get_num_threads, omp_get_max_threads
    EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads
 #endif
 

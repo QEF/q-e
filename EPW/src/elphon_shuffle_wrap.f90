@@ -17,6 +17,8 @@
   !! on the coarse mesh and then passes the data off to [[ephwann_shuffle]]
   !! to perform the interpolation.
   !!
+  !! SP - Apr 2021 - Addition of quadrupoles
+  !!
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
@@ -36,7 +38,7 @@
   USE eqv,           ONLY : vlocq, dmuxc
   USE ions_base,     ONLY : nat, nsp, tau, ityp, amass
   USE control_flags, ONLY : iverbosity
-  USE io_var,        ONLY : iuepb, iuqpeig, crystal, iunpattern
+  USE io_var,        ONLY : iuepb, iuqpeig, crystal, iunpattern, iuquad
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
@@ -48,12 +50,12 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
-                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d, &
-                            fixsym, epw_noinv
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar,         &
+                            fixsym, epw_noinv, system_2d
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
                             ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
-                            gmap, g0vec_all_r
+                            gmap, g0vec_all_r, Qmat, qrpl
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -70,7 +72,7 @@
   USE ph_restart,    ONLY : read_disp_pattern_only
   USE io_epw,        ONLY : read_ifc_epw, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
-  USE rigid_epw,     ONLY : compute_umn_c
+  USE rigid_epw,     ONLY : compute_umn_c !, find_gmin ! Temporarily commented by H. Lee
   USE rotate,        ONLY : rotate_epmat, rotate_eigenm, star_q2, gmap_sym
   USE pw2wan2epw,    ONLY : compute_pmn_para
 #if defined(__NAG)
@@ -87,6 +89,8 @@
   !! Name of the directory
   CHARACTER(LEN = 256) :: filename
   !! Name of the file
+  CHARACTER(LEN = 256) :: dummy
+  !! Dummy character reading
   CHARACTER(LEN = 4) :: filelab
   !! Append the number of the core that works on that file
   CHARACTER(LEN = 80)   :: line
@@ -158,6 +162,10 @@
   !! Polarization index
   INTEGER :: ierr
   !! Error index when reading/writing a file
+  INTEGER :: na
+  !! Atom index
+  INTEGER :: idir
+  !! Cartesian direction
   !INTEGER :: iunpun
   !! Unit of the file
   INTEGER, ALLOCATABLE :: gmapsym(:, :)
@@ -186,6 +194,8 @@
   !! Absolute value of xqc_irr
   REAL(KIND = DP) :: sumr(2, 3, nat, 3)
   !! Sum to impose the ASR
+  REAL(KIND = DP) :: Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+  !! Specific quadrupole value read from file.
   REAL(KIND = DP), ALLOCATABLE :: xqc_irr(:, :)
   !! The qpoints in the irr wedge
   REAL(KIND = DP), ALLOCATABLE :: xqc(:, :)
@@ -208,6 +218,7 @@
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
+    IF (vme == 'dipole') CALL compute_pmn_para
     !
     ! Regenerate qpoint list
     !
@@ -281,14 +292,6 @@
     CALL fkbounds(nkstot, ik_start, ik_stop)
     et_ks(:, :)  = et_loc(:, :)
     et_loc(:, :) = et_tmp(:, ik_start:ik_stop)
-  ENDIF
-  !
-  ! Do not recompute dipole matrix elements
-  IF (epwread .AND. .NOT. epbread) THEN
-    CONTINUE
-  ELSE
-    ! compute coarse grid dipole matrix elements.  Very fast
-    IF (.NOT. vme) CALL compute_pmn_para
   ENDIF
   !
   !  gather electronic eigenvalues for subsequent shuffle
@@ -374,17 +377,64 @@
     ENDIF
   ENDIF ! epwread
   !
-  IF (system_2d) area = omega * alat / bg(3, 3)
+  ! If quadrupole file exist, read it
+  IF (mpime == ionode_id) THEN
+    INQUIRE(FILE = 'quadrupole.fmt', EXIST = exst)
+  ENDIF
+  CALL mp_bcast(exst, ionode_id, world_comm)
+  !
+  qrpl = .FALSE.
+  ALLOCATE(Qmat(nat, 3, 3, 3), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating Qmat', 1)
+  Qmat(:, :, :, :) = zero
+  IF (exst) THEN
+    qrpl = .TRUE.
+    IF (mpime == ionode_id) THEN
+      OPEN(UNIT = iuquad, FILE = 'quadrupole.fmt', STATUS = 'old', IOSTAT = ios)
+      READ(iuquad, *) dummy
+      DO i = 1, 3 * nat
+        READ(iuquad, *) na, idir, Qxx, Qyy, Qzz, Qyz, Qxz, Qxy
+        Qmat(na, idir, 1, 1) = Qxx
+        Qmat(na, idir, 2, 2) = Qyy
+        Qmat(na, idir, 3, 3) = Qzz
+        Qmat(na, idir, 2, 3) = Qyz
+        Qmat(na, idir, 3, 2) = Qyz
+        Qmat(na, idir, 1, 3) = Qxz
+        Qmat(na, idir, 3, 1) = Qxz
+        Qmat(na, idir, 1, 2) = Qxy
+        Qmat(na, idir, 2, 1) = Qxy
+      ENDDO
+      CLOSE(iuquad)
+    ENDIF ! mpime == ionode_id
+    CALL mp_bcast(Qmat, ionode_id, world_comm)
+    WRITE(stdout, '(a)') '     '
+    WRITE(stdout, '(a)') '     ------------------------------------ '
+    WRITE(stdout, '(a)') '     Quadrupole tensor is correctly read: '
+    WRITE(stdout, '(a)') '     ------------------------------------ '
+    WRITE(stdout, '(a)') '     atom   dir        Qxx       Qyy      Qzz        Qyz       Qxz       Qxy'
+    DO na = 1, nat
+      WRITE(stdout, '(i8, a,6f10.5)' ) na, '        x    ', Qmat(na, 1, 1, 1), Qmat(na, 1, 2, 2), Qmat(na, 1, 3, 3), &
+                                                            Qmat(na, 1, 2, 3), Qmat(na, 1, 1, 3), Qmat(na, 1, 1, 2)
+      WRITE(stdout, '(i8, a,6f10.5)' ) na, '        y    ', Qmat(na, 2, 1, 1), Qmat(na, 2, 2, 2), Qmat(na, 2, 3, 3), &
+                                                            Qmat(na, 2, 2, 3), Qmat(na, 2, 1, 3), Qmat(na, 2, 1, 2)
+      WRITE(stdout, '(i8, a,6f10.5)' ) na, '        z    ', Qmat(na, 3, 1, 1), Qmat(na, 3, 2, 2), Qmat(na, 3, 3, 3), &
+                                                            Qmat(na, 3, 2, 3), Qmat(na, 3, 1, 3), Qmat(na, 3, 1, 2)
+    ENDDO
+    WRITE(stdout, '(a)') '     '
+  ENDIF ! exst
+  !
+  IF (system_2d) area = omega * bg(3, 3) / alat
+  IF (system_2d) WRITE(stdout, * ) '  Area is [Bohr^2] ', area
   !
   IF (lifc) THEN
     ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
     ifc(:, :, :, :, :, :, :) = zero
   ENDIF
-  ! 
+  !
   ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
   !     same as in the .dyn files produced by QE.
-  ! 
+  !
   ! Initialize symmetries and create the s matrix
   s(:, :, :) = 0 ! Symmetry in crystal axis with dim: 3,3,48
   CALL set_sym_bl()
@@ -396,7 +446,7 @@
   CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
   IF (fixsym) CALL fix_sym(.FALSE.)
   WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
-  ! 
+  !
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
@@ -436,7 +486,7 @@
     IF (lifc) THEN
       CALL read_ifc_epw
     ENDIF
-    ! 
+    !
     ! The following loop is required to propertly set up the symmetry matrix s.
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
     DO iq_irr = 1, nqc_irr
@@ -576,6 +626,10 @@
         !
         IF (iq == 1) WRITE(stdout, *)
         WRITE(stdout, 5) nqc, xq
+        ! Temporarily commented by H. Lee
+!        aq  = xq
+!        CALL cryst_to_cart(1, aq, at, -1)
+!        CALL find_gmin(aq)
         !
         ! Prepare the kmap for the refolding
         !
@@ -706,7 +760,7 @@
         CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
         !
         ! Calculate overlap U_k+q U_k^\dagger
-        IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
+        IF (lpolar .OR. qrpl) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
         !
         !   calculate the sandwiches
         !
@@ -756,7 +810,7 @@
           CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
           !
           ! Calculate overlap U_k+q U_k^\dagger
-          IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
+          IF (lpolar .OR. qrpl) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
           !
           xq0 = -xq0
           !

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.7GPU)
+Program: pw.x / PWscf / Quantum Espresso (version: 6.8)
 ------------------------------------------------------------------------
 
 
@@ -3817,4 +3817,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Thu Apr 22 16:39:09 CEST 2021
+This file has been created by helpdoc utility on Fri Jul 16 11:28:04 CEST 2021

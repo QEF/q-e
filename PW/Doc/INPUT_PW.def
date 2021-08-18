@@ -2137,6 +2137,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 opt -val {'paro', 'ParO'} {
                     ParO iterative diagonalization
                 }
+               
+                opt-val {'rmm-davidson', 'rmm-paro'} {
+                    RMM-DIIS iterative diagonalization.  
+                    To stabilize the SCF loop 
+                    RMM-DIIS is alternated with calls to Davidson or
+                    ParO  solvers depending on the string used. 
+                    Other variables that can be used to tune the behavior of 
+                    RMM-DIIS are:  @ref diago_rmm_ndim and @ref diago_rmm_conv
+                }
             }
         }
 
@@ -2184,7 +2193,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 total energy, forces, and other ground-state properties).
             }
         }
-
+        
+        var diago_rmm_ndim -type INTEGER {
+           default {4}
+           info {
+               Max dimension  of the iterative subspace for RMM-DIIS diagonalization 
+           }
+        }
+       
+       var diago_rmm_conv -type LOGICAL {
+          default { .FALSE. }
+          info {
+             If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands 
+             are converged or up to a max of 8 times. 
+          }
+       }
         var efield -type REAL {
             default { 0.D0 }
             info {

@@ -133,7 +133,7 @@ CONTAINS
   SUBROUTINE create_directory( dirname )
     !------------------------------------------------------------------------
     !
-    USE wrappers,  ONLY : f_mkdir_safe
+    USE clib_wrappers, ONLY : f_mkdir_safe
     !
     CHARACTER(LEN=*), INTENT(IN) :: dirname
     !
@@ -177,7 +177,7 @@ CONTAINS
     !-----------------------------------------------------------------------
     !! Verify if \(\text{tmp_dir}\) exists, creates it if not.
     !
-    USE wrappers,      ONLY : f_mkdir_safe
+    USE clib_wrappers, ONLY : f_mkdir_safe
     !
     IMPLICIT NONE
     !

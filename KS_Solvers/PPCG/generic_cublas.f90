@@ -82,6 +82,172 @@ implicit none
   return
 end subroutine gpu_DTRSM
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DOUBLE COMPLEX function ZDOTC_gpu(n, zx, incx, zy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  ZDOTC_gpu = cublasZDOTC(n, zx, incx, zy, incy)  
+#endif
+  return
+end function ZDOTC_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZSWAP_gpu(n, zx, incx, zy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZSWAP(n, zx, incx, zy, incy)  
+#endif
+  return
+END SUBROUTINE ZSWAP_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZCOPY_gpu(n, zx, incx, zy, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx, incy
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZCOPY(n, zx, incx, zy, incy)  
+#endif
+  RETURN
+END SUBROUTINE ZCOPY_gpu 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZAXPY_gpu(n, za, zx, incx, zy, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx, incy
+  DOUBLE COMPLEX :: za  
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZAXPY(n, za, zx, incx, zy, incy)  
+#endif
+  RETURN
+END SUBROUTINE ZAXPY_gpu 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZGEMV_gpu(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  CHARACTER :: trans
+  INTEGER :: lda, m, n, incx, incy
+  DOUBLE COMPLEX :: alpha, beta
+  DOUBLE COMPLEX, dimension(lda, *) :: a
+  DOUBLE COMPLEX, dimension(*) :: x, y
+#if defined(__CUDA)
+  attributes(device) :: a, x, y 
+  CALL cublasZGEMV(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
+#endif
+  RETURN
+END SUBROUTINE ZGEMV_gpu  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZDSCAL_gpu(n, da, zx, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx
+  DOUBLE PRECISION :: da
+  DOUBLE COMPLEX, dimension(*) :: zx
+#if defined(__CUDA)
+  attributes(device) :: zx
+  CALL cublasZDSCAL(n, da, zx, incx)
+#endif
+  RETURN
+END SUBROUTINE ZDSCAL_gpu  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZSCAL_gpu(n, za, zx, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx
+  DOUBLE COMPLEX :: za
+  DOUBLE COMPLEX, dimension(*) :: zx
+#if defined(__CUDA)
+  attributes(device) :: zx
+  CALL cublasZSCAL(n, za, zx, incx)
+#endif
+  RETURN
+END SUBROUTINE ZSCAL_gpu  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE DGEMV_gpu(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#if defined(__CUDA)
+use cublas
+#endif
+IMPLICIT NONE
+  DOUBLE PRECISION :: ALPHA,BETA
+  INTEGER :: INCX,INCY,LDA,M,N
+  CHARACTER :: TRANS
+  DOUBLE PRECISION :: A(LDA,*),X(*),Y(*)
+#if defined(__CUDA)
+  attributes(device) :: A, X, Y
+  call cublasDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#endif
+  RETURN
+END SUBROUTINE DGEMV_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE DCOPY_gpu(n, x, incx, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  INTEGER :: n, incx, incy
+  DOUBLE PRECISION, INTENT(IN)   :: x(*)
+  DOUBLE PRECISION, INTENT(OUT)  :: y(*)
+#if defined(__CUDA)
+  attributes(device) :: x, y
+  call cublasDCOPY(n, x, incx, y, incy)
+#endif
+  RETURN
+END SUBROUTINE DCOPY_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE DAXPY_gpu(n, a, x, incx, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  INTEGER :: n, incx, incy
+  DOUBLE PRECISION, INTENT(IN)  :: a
+  DOUBLE PRECISION, INTENT(IN)  :: x(*) 
+  DOUBLE PRECISION, INTENT(OUT) :: y(*) 
+#if defined(__CUDA)
+  attributes(device) :: x, y
+  call cublasDAXPY( n, a, x, incx, y, incy)
+#endif
+  RETURN
+END SUBROUTINE DAXPY_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE DSCAL_gpu(n, a, x, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  integer :: n, incx
+  DOUBLE PRECISION :: a
+  DOUBLE PRECISION, dimension(*)  :: x
+#if defined(__CUDA)
+  attributes(device) :: x
+  call cublasDSCAL(n, a, x, incx)
+#endif
+  RETURN
+END SUBROUTINE DSCAL_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE gpu_threaded_memset(array, val, length)
   !
 #if defined(__CUDA)
@@ -218,4 +384,18 @@ SUBROUTINE gpu_threaded_backassign(array_out, idx, array_in, kdimx, nact, use_a2
   END IF
   !
 END SUBROUTINE gpu_threaded_backassign
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE DSWAP_gpu(n, dx, incx, dy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  REAL(8), dimension(*) :: dx, dy
+#if defined(__CUDA)
+  attributes(device) :: dx, dy 
+  CALL cublasDSWAP(n, dx, incx, dy, incy)  
+#endif
+  return
+END SUBROUTINE DSWAP_gpu
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

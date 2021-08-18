@@ -203,6 +203,10 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   ! ... On output both matrix are unchanged
   !
   !
+#if defined(_OPENMP)
+  USE omp_lib
+#endif
+  !
 #if defined(__CUDA)
   USE cudafor
   !
@@ -273,9 +277,10 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #endif
   INTEGER :: i, j
 #if defined( __USE_CUSOLVER )
-  INTEGER                :: devInfo_d, h_meig
-  ATTRIBUTES( DEVICE )   :: devInfo_d
-  TYPE(cusolverDnHandle) :: cuSolverHandle
+  INTEGER                      :: devInfo_d, h_meig
+  ATTRIBUTES( DEVICE )         :: devInfo_d
+  TYPE(cusolverDnHandle), SAVE :: cuSolverHandle
+  LOGICAL, SAVE                :: cuSolverInitialized = .FALSE.
   !
   COMPLEX(DP), VARTYPE   :: h_bkp_d(:,:), s_bkp_d(:,:)
   ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
@@ -315,8 +320,14 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
          ENDDO
       ENDDO
       !
-      info = cusolverDnCreate(cuSolverHandle)
-      IF ( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', 'cusolverDnCreate',  ABS( info ) )
+#if defined(_OPENMP)
+      IF (omp_get_num_threads() > 1) CALL lax_error__( ' cdiaghg_gpu ', 'cdiaghg_gpu is not thread-safe',  ABS( info ) )
+#endif
+      IF ( .NOT. cuSolverInitialized ) THEN
+         info = cusolverDnCreate(cuSolverHandle)
+         IF ( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', 'cusolverDnCreate',  ABS( info ) )
+         cuSolverInitialized = .TRUE.
+      ENDIF
       !
       info = cusolverDnZhegvdx_bufferSize(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
                                                n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, lwork_d)
@@ -342,8 +353,11 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
          ENDDO
       ENDDO
       !
-      info = cusolverDnDestroy(cuSolverHandle)
-      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
+      !
+      ! Do not destroy the handle to save the (re)creation time on each call.
+      !
+      !info = cusolverDnDestroy(cuSolverHandle)
+      !IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
       !
 #if ! defined(__USE_GLOBAL_BUFFER)
       DEALLOCATE(work_d)

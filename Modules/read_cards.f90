@@ -350,7 +350,7 @@ CONTAINS
    !
    SUBROUTINE card_atomic_positions( input_line, prog )
       !
-      USE wrappers, ONLY: feval_infix
+      USE clib_wrappers, ONLY: feval_infix
       !
       IMPLICIT NONE
       !
@@ -991,7 +991,7 @@ CONTAINS
    !
    SUBROUTINE card_occupations( input_line )
       !
-      USE wrappers, ONLY: feval_infix
+      USE clib_wrappers, ONLY: feval_infix
       !
       IMPLICIT NONE
       !

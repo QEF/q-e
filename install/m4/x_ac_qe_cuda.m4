@@ -59,8 +59,13 @@ AC_ARG_WITH([cuda-runtime],
    [],
    [with_cuda_runtime=10.1])
 
+AC_ARG_ENABLE([openacc],
+   [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=no@:>@])],
+   [],
+   [enable_openacc=no])
+
 AC_ARG_ENABLE([cuda-env-check],
-   [AS_HELP_STRING([--enable-cuda-env-check=yes],[The configure script will check CUDA installation and report problems @<:@default=no@:>@])],
+   [AS_HELP_STRING([--enable-cuda-env-check],[The configure script will check CUDA installation and report problems @<:@default=no@:>@])],
    [],
    [enable_cuda_env_check=no])
 
@@ -184,7 +189,7 @@ EOF
 
    try_dflags="$try_dflags -D__CUDA"
    cuda_extlibs="devxlib"
-   cuda_libs="$mMcudalib=cufft,cublas,cusolver \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
+   cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
    cuda_fflags="$mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"
@@ -201,6 +206,11 @@ EOF
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
    cuda_path="$CUDAPATH"
+   if test "$enable_openacc" == "yes"; then
+      ldflags="$ldflags -acc"
+      cuda_fflags="$cuda_fflags -acc"
+   fi
+
 fi
 
 # Announcing the new variables

@@ -385,10 +385,7 @@ PROGRAM pw2bgw
   if (gamma_only) call errore ( 'pw2bgw', 'BGW cannot use gamma-only run.', 5 )
   ! ZL: change to a if statement for internal version test
   !if (nspin == 4) call errore ( 'pw2bgw', 'BGW cannot use spinors.', 6 )
-  allow_spinors = .false.
-!#BEGIN_INTERNAL_ONLY
   allow_spinors = .true.
-!#END_INTERNAL_ONLY
   if (nspin == 4) then
     if (.not. allow_spinors) then
       call errore ( 'pw2bgw', 'BGW cannot use spinors.', 6 )
@@ -548,6 +545,10 @@ PROGRAM pw2bgw
     output_file_name = TRIM ( tmp_dir ) // TRIM ( kih_file )
     output_file_name2 = TRIM ( tmp_dir ) // TRIM ( vxc_hybrid_file )
       IF ( ionode ) WRITE ( 6, '(5x,"call write_kih")' )
+      IF ( ionode ) WRITE ( 6, '(5x,A)') &
+           "If you use pw2bgw to output matrix elements of the KIH energy, please cite " 
+           WRITE ( 6, '(5x,A)')  & 
+           "F. Zhao and S. G. Louie, U. C. Berkeley PhD dissertation (2021)."    
       CALL start_clock ( 'write_kih' )
       CALL write_kih ( output_file_name, output_file_name2, &
         kih_diag_nmin, kih_diag_nmax, &
@@ -592,6 +593,8 @@ PROGRAM pw2bgw
   IF (lda_plus_u .and. vhub_flag) THEN
     output_file_name = TRIM ( outdir ) // '/' // TRIM ( vhub_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vhub")' )
+    IF ( ionode ) WRITE ( 6, '(5x,A)') &
+         "If you use pw2bgw to output matrix elements of the Hubbard potential, please cite Nat. Commun. 10, 2371 (2019)."
     CALL start_clock ( 'write_vhub' )
     CALL write_vhub_g ( output_file_name, vhub_diag_nmin, vhub_diag_nmax, vhub_offdiag_nmin, vhub_offdiag_nmax)
     CALL stop_clock ( 'write_vhub' )
@@ -698,10 +701,8 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   real (DP), allocatable :: wg_g ( :, : )
   real (DP), allocatable :: energy ( :, : )
   complex (DP), allocatable :: wfng ( : )
-!#BEGIN_INTERNAL_ONLY
   ! ZL: full-spinor two-component wavefunctions, for non-collinear spin case
   complex (DP), allocatable :: wfng_nc ( :, : )
-!#END_INTERNAL_ONLY
   complex (DP), allocatable :: wfng_buf ( :, : )
   complex (DP), allocatable :: wfng_dist ( :, :, : )
 
@@ -1121,9 +1122,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
     IF (nspin .NE. 4) THEN
       ALLOCATE ( wfng ( MAX ( 1, igwx ) ) )
     ELSE
-!#BEGIN_INTERNAL_ONLY
       ALLOCATE ( wfng_nc ( MAX ( 1, igwx ), nst ) )
-!#END_INTERNAL_ONLY
     ENDIF
 
     DO ib = 1, nb
@@ -1133,11 +1132,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
         IF (nspin .NE. 4) THEN
           wfng ( j ) = ( 0.0D0, 0.0D0 )
         ELSE
-!#BEGIN_INTERNAL_ONLY
           DO isp = 1, nst
             wfng_nc ( j ,isp) = ( 0.0D0, 0.0D0 )
           ENDDO
-!#END_INTERNAL_ONLY
         ENDIF
       ENDDO
       IF ( npool .GT. 1 ) THEN
@@ -1147,12 +1144,10 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
             CALL mergewf ( evc ( :, ib ), wfng, local_pw, igwf_l2g, &
               me_pool, nproc_pool, root_pool, intra_pool_comm )
           ELSE
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst
               CALL mergewf ( evc ( 1+npwx*(isp-1):npwx*isp, ib ), wfng_nc(:,isp), local_pw, igwf_l2g, &
                 me_pool, nproc_pool, root_pool, intra_pool_comm )
             ENDDO
-!#END_INTERNAL_ONLY
           ENDIF
         ENDIF
         IF ( ipsour .NE. ionode_id ) THEN
@@ -1161,12 +1156,10 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
             CALL mp_get ( wfng, wfng, mpime, ionode_id, ipsour, ib, &
               world_comm )
           ELSE
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst
               CALL mp_get ( wfng_nc(:,isp), wfng_nc(:,isp), mpime, ionode_id, ipsour, ib, &
                 world_comm )
             ENDDO
-!#END_INTERNAL_ONLY
           ENDIF
         ENDIF
       ELSE
@@ -1175,12 +1168,10 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
           CALL mergewf ( evc ( :, ib ), wfng, local_pw, igwf_l2g, &
             mpime, nproc, ionode_id, world_comm )
         ELSE
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst
             CALL mergewf ( evc ( 1 + (isp-1)*npwx : isp*npwx, ib ), wfng_nc(:,isp), &
               local_pw, igwf_l2g, mpime, nproc, ionode_id, world_comm )
           ENDDO
-!#END_INTERNAL_ONLY
         ENDIF
       ENDIF
 
@@ -1190,22 +1181,18 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
           IF ( nspin .NE. 4) THEN
             wfng_buf ( ig, is ) = wfng ( ig )
           ELSE
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst
               wfng_buf ( ig, isp ) = wfng_nc ( ig ,isp)
             ENDDO
-!#END_INTERNAL_ONLY
           ENDIF
         ENDDO
         DO ig = igwx + 1, ngkdist_g
           IF ( nspin .NE. 4) THEN
             wfng_buf ( ig, is ) = ( 0.0D0, 0.0D0 )
           ELSE
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst
               wfng_buf ( ig, isp ) = ( 0.0D0, 0.0D0 )
             ENDDO
-!#END_INTERNAL_ONLY
           ENDIF
         ENDDO
 #if defined(__MPI)
@@ -1216,13 +1203,11 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
           wfng_dist ( :, ib, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
           ionode_id, world_comm, ierr )
         ELSE
-!#BEGIN_INTERNAL_ONLY
           DO isp = 1, nst
             CALL MPI_Scatter ( wfng_buf ( :, isp ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
             wfng_dist ( :, ib, isp ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
             ionode_id, world_comm, ierr )
           ENDDO
-!#END_INTERNAL_ONLY
         ENDIF
         IF ( ierr .GT. 0 ) &
           CALL errore ( 'write_wfng', 'mpi_scatter', ierr )
@@ -1232,11 +1217,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
           IF (nspin .NE. 4) THEN
             wfng_dist ( ig, ib, is ) = wfng_buf ( ig, is )
           ELSE
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst
               wfng_dist ( ig, ib, isp ) = wfng_buf ( ig, isp )
             ENDDO
-!#END_INTERNAL_ONLY
           ENDIF
         ENDDO
 #endif
@@ -1248,9 +1231,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
           IF (nspin.NE.4) THEN
             WRITE ( unit ) ( wfng ( ig ), ig = 1, igwx )
           ELSE
-!#BEGIN_INTERNAL_ONLY
             WRITE ( unit ) (( wfng_nc ( ig, isp ), ig = 1, igwx), isp = 1, nst )
-!#END_INTERNAL_ONLY
           ENDIF
         ENDIF
       ENDIF
@@ -1261,9 +1242,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
     IF (nspin .NE. 4) THEN
       DEALLOCATE ( wfng )
     ELSE
-!#BEGIN_INTERNAL_ONLY
       DEALLOCATE ( wfng_nc )
-!#END_INTERNAL_ONLY
     ENDIF
     DEALLOCATE ( igwf_l2g )
 
@@ -1810,40 +1789,32 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     DO ib = rhog_nvmin, rhog_nvmax
       psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
       psic_nc (:,:) = (0.0D0, 0.0D0)
-!#END_INTERNAL_ONLY
       DO ig = 1, npw
         ! ZL: add for spinors
         IF (nspin == 4) THEN
-!#BEGIN_INTERNAL_ONLY
           DO isp =1,nst
             psic_nc (dfftp%nl (igk_k (ig, ik-iks+1)), isp) = evc (ig+npwx*(isp-1), ib)
           ENDDO
-!#END_INTERNAL_ONLY
         ELSE
           psic (dfftp%nl (igk_k (ig, ik-iks+1))) = evc (ig, ib)
         ENDIF
       ENDDO
       ! ZL: add for spinors
       IF (nspin == 4) THEN
-!#BEGIN_INTERNAL_ONLY
         DO isp=1,nst
           CALL invfft ('Rho', psic_nc(:,isp), dfftp)
         ENDDO
-!#END_INTERNAL_ONLY
       ELSE
         CALL invfft ('Rho', psic, dfftp)
       ENDIF
       DO ir = 1, dfftp%nnr
         ! ZL: add for spinors
         IF (nspin == 4) THEN
-!#BEGIN_INTERNAL_ONLY
           DO isp=1,nst
             rho%of_r (ir, is) = rho%of_r (ir, is) + wg (ib, ik) / omega &
               * (dble (psic_nc (ir,isp)) **2 + aimag (psic_nc (ir,isp)) **2)
           ENDDO
-!#END_INTERNAL_ONLY
         ELSE
           rho%of_r (ir, is) = rho%of_r (ir, is) + wg (ib, ik) / omega &
             * (dble (psic (ir)) **2 + aimag (psic (ir)) **2)
@@ -2631,38 +2602,30 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (dfftp%nl (igk_k (ig, ik-iks+1)), isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic (dfftp%nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
           ENDIF
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL invfft ('Rho', psic_nc(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL invfft ('Rho', psic, dfftp)
         ENDIF  !FZ: added for spinors
         dummyr = 0.0D0
         DO ir = 1, dfftp%nnr
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1,nst  !FZ: added for spinors
               dummyr = dummyr + vxcr (ir, 1) &   !FZ: added for spinors
                 * (dble (psic_nc (ir, isp)) **2 + aimag (psic_nc (ir,isp)) **2)   !FZ: added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE !FZ: added for spinors
             dummyr = dummyr + vxcr (ir, isk (ik)) &
               * (dble (psic (ir)) **2 + aimag (psic (ir)) **2)
@@ -2676,63 +2639,49 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     IF (noffdiag .GT. 0) THEN
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (dfftp%nl (igk_k (ig, ik-iks+1)), isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE   !FZ: added for spinors
             psic (dfftp%nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL invfft ('Rho', psic_nc(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL invfft ('Rho', psic, dfftp)
         ENDIF  !FZ: added for spinors
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
           psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
               DO isp = 1, nst !FZ: added for spinors
                 psic_nc2 (dfftp%nl (igk_k (ig, ik-iks+1)), isp) = evc(ig+npwx*(isp-1), ib2)  !FZ: added for spinors
               ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
             ELSE   !FZ: added for spinors
               psic2 (dfftp%nl (igk_k (ig,ik-iks+1))) = evc (ig, ib2)
             ENDIF  !FZ: added for spinors
           ENDDO
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst  !FZ: added for spinors
               CALL invfft ('Rho', psic_nc2(:,isp),dfftp)  !FZ: added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             CALL invfft ('Rho', psic2, dfftp)
           ENDIF  !FZ: added for spinors
           dummyc = (0.0D0, 0.0D0)
           DO ir = 1, dfftp%nnr
             IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
               DO isp=1,nst  !FZ: added for spinors
                 dummyc = dummyc + CMPLX (vxcr (ir, 1), 0.0D0, KIND=dp) & !FZ: added for spinors
                   * conjg (psic_nc2 (ir, isp)) * psic_nc (ir, isp)   !FZ: added for spinors
               ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
             ELSE !FZ: added for spinors
               dummyc = dummyc + CMPLX (vxcr (ir, isk (ik)), 0.0D0, KIND=dp) &
                 * conjg (psic2 (ir)) * psic (ir)
@@ -3131,75 +3080,57 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (dfftp%nl (igk_k (ig, ikk)), isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic (dfftp%nl (igk_k(ig,ikk))) = evc (ig, ib)
           ENDIF
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL invfft ('Rho', psic_nc(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL invfft ('Rho', psic, dfftp)
         ENDIF  !FZ: added for spinors
         DO ir = 1, dfftp%nnr
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1,nst  !FZ: added for spinors
               psic_nc (ir, isp) = psic_nc (ir, isp) * vxcr (ir, 1)  !FZ: addedfor spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             psic (ir) = psic (ir) * vxcr (ir, isk (ik))
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL fwfft ('Rho', psic_nc(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL fwfft ('Rho', psic, dfftp)
         ENDIF  !FZ: added for spinors
         hpsi (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         hpsi_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst  !FZ: added for spinors
               hpsi_nc (ig, isp) = psic_nc (dfftp%nl (igk_k(ig,ikk)), isp) !FZ:added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             hpsi (ig) = psic (dfftp%nl (igk_k(ig,ikk)))
           ENDIF
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (ig, isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE   !FZ: added for spinors
             psic (ig) = evc (ig, ib)
           ENDIF  !FZ: added for spinors
@@ -3209,11 +3140,9 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         dummy = (0.0D0, 0.0D0)
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               dummy = dummy + conjg (psic_nc (ig, isp)) * hpsi_nc (ig, isp) !FZ: added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE   !FZ: added for spinors
             dummy = dummy + conjg (psic (ig)) * hpsi (ig)
           ENDIF  !FZ: added for spinors
@@ -3226,75 +3155,57 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     IF (noffdiag .GT. 0) THEN
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (dfftp%nl (igk_k(ig,ikk)), isp) = evc (ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE !FZ: added for spinors
             psic (dfftp%nl (igk_k(ig,ikk))) = evc (ig, ib)
           ENDIF !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL invfft ('Rho', psic_nc(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL invfft ('Rho', psic, dfftp)
         ENDIF !FZ: added for spinors
         DO ir = 1, dfftp%nnr
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1,nst  !FZ: added for spinors
               psic_nc (ir, isp) = psic_nc (ir, isp) * vxcr (ir, 1)  !FZ: addedfor spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             psic (ir) = psic (ir) * vxcr (ir, isk (ik))
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL fwfft ('Rho', psic_nc(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL fwfft ('Rho', psic, dfftp)
         ENDIF  !FZ: added for spinors
         hpsi (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         hpsi_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst  !FZ: added for spinors
               hpsi_nc (ig, isp) = psic_nc (dfftp%nl (igk_k(ig,ikk)), isp) !FZ:added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             hpsi (ig) = psic (dfftp%nl (igk_k (ig,ikk)))
           ENDIF
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (ig, isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE   !FZ: added for spinors
             psic (ig) = evc (ig, ib)
           ENDIF  !FZ: added for spinors
@@ -3303,16 +3214,12 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         !   CALL vexx (npwx, npw, 1, psic, hpsi)
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
           psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
               DO isp = 1, nst !FZ: added for spinors
                 psic_nc2 (ig, isp) = evc(ig+npwx*(isp-1), ib2)  !FZ: added for spinors
               ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
             ELSE   !FZ: added for spinors
               psic2 (ig) = evc (ig, ib2)
             ENDIF  !FZ: added for spinors
@@ -3320,7 +3227,6 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
           dummy = (0.0D0, 0.0D0)
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
               DO isp=1,nst  !FZ: added for spinors
                 dummy = dummy + conjg (psic_nc2 (ig, isp)) * hpsi_nc (ig, isp)
               ENDDO  !FZ: added for spinors
@@ -3838,99 +3744,79 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
         hpsi (:) = (0.0D0, 0.0D0)  
         psic_temp (:) = (0.0D0, 0.0D0)
         hpsi_temp (:) = (0.0D0, 0.0D0)  
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         psic_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (igk_k (ig, ikk), isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic (igk_k(ig,ikk)) = evc (ig, ib)     
           ENDIF
         ENDDO
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc_temp (dfftp%nl (igk_k (ig, ikk)), isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic_temp (dfftp%nl (igk_k(ig,ikk))) = evc (ig, ib)  
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL invfft ('Rho', psic_nc_temp(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL invfft ('Rho', psic_temp, dfftp)
         ENDIF  !FZ: added for spinors
         DO ir = 1, dfftp%nnr
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             temp_psic_nc1 = psic_nc_temp (ir, 1)
             temp_psic_nc2 = psic_nc_temp (ir, 2)
             psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) + vxcr_2 (ir, 4))  &  !FZ: added for spinors
                         + temp_psic_nc2 * ( (vxcr_2 (ir, 2) ) - (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
             psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) - vxcr_2 (ir, 4))  &  !FZ: added for spinors
                         + temp_psic_nc1 * ( (vxcr_2 (ir, 2)) + (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)) + vxcr_2 (ir, isk (ik)) - vxcr (ir, isk (ik)))   
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL fwfft ('Rho', psic_nc_temp(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL fwfft ('Rho', psic_temp, dfftp)
         ENDIF  !FZ: added for spinors
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst  !FZ: added for spinors
               hpsi_nc_temp (ig, isp) = psic_nc_temp (dfftp%nl (igk_k(ig,ikk)), isp) !FZ:added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             hpsi_temp (ig) = psic_temp (dfftp%nl (igk_k(ig,ikk)))
           ENDIF  !FZ: added for spinors
         ENDDO
         DO ig = 1, npw                                
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst  !FZ: added for spinors
               hpsi_nc (ig, isp) = g2kin(ig) * psic_nc (igk_k(ig,ikk), isp) !FZ:added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             hpsi (ig) = g2kin(ig) * psic (igk_k(ig,ikk)) 
           ENDIF  !FZ: added for spinors
         ENDDO                                           
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (ig, isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic (ig) = evc (ig, ib)     
           ENDIF  !FZ: added for spinors
@@ -3940,11 +3826,9 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
         dummy = (0.0D0, 0.0D0)
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               dummy = dummy + conjg (psic_nc(ig, isp)) * (hpsinl(ig+npwx*(isp-1), ib) + hpsi_nc(ig, isp) + hpsi_nc_temp(ig, isp))   !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             dummy = dummy + conjg (psic (ig)) * (hpsinl (ig, ib) + hpsi(ig) + hpsi_temp (ig))    
           ENDIF  !FZ: added for spinors
@@ -3958,19 +3842,15 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
         hpsi (:) = (0.0D0, 0.0D0)  
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         psic_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
         hpsi_nc_temp (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (ig, isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic (ig) = evc (ig, ib)  
           ENDIF
@@ -3978,81 +3858,65 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
         psic_temp (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc_temp (dfftp%nl (igk_k (ig, ikk)), isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic_temp (dfftp%nl (igk_k(ig,ikk))) = evc (ig, ib)
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL invfft ('Rho', psic_nc_temp(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL invfft ('Rho', psic_temp, dfftp)
         ENDIF  !FZ: added for spinors
         DO ir = 1, dfftp%nnr
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             temp_psic_nc1 = psic_nc_temp (ir, 1)
             temp_psic_nc2 = psic_nc_temp (ir, 2)
             psic_nc_temp (ir, 1) = temp_psic_nc1 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) + vxcr_2 (ir, 4))  &  !FZ: added for spinors
                         + temp_psic_nc2 * ( (vxcr_2 (ir, 2) ) - (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
             psic_nc_temp (ir, 2) = temp_psic_nc2 * (vltot (ir) + v_har (ir, 1) + vxcr_2 (ir, 1) - vxcr (ir, 1) - vxcr_2 (ir, 4))  &  !FZ: added for spinors
                         + temp_psic_nc1 * ( (vxcr_2 (ir, 2)) + (0.d0,1.d0) * (vxcr_2 (ir, 3)) ) 
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             psic_temp (ir) = psic_temp (ir) * (vltot (ir) + v_har (ir, isk (ik)) + vxcr_2 (ir, isk (ik)) - vxcr (ir, isk (ik)))
           ENDIF  !FZ: added for spinors
         ENDDO
         IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
           DO isp=1, nst  !FZ: added for spinors
             CALL fwfft ('Rho', psic_nc_temp(:,isp),dfftp)  !FZ: added for spinors
           ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
         ELSE  !FZ: added for spinors
           CALL fwfft ('Rho', psic_temp, dfftp)
         ENDIF  !FZ: added for spinors
         hpsi_temp (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst  !FZ: added for spinors
               hpsi_nc_temp (ig, isp) = psic_nc_temp (dfftp%nl (igk_k(ig,ikk)), isp) !FZ:added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             hpsi_temp (ig) = psic_temp (dfftp%nl (igk_k (ig,ikk)))
           ENDIF  !FZ: added for spinors
         ENDDO
         DO ig = 1, npw                        
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp=1, nst  !FZ: added for spinors
               hpsi_nc (ig, isp) = g2kin(ig) * psic_nc (ig, isp) !FZ:added for spinors
             ENDDO  !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE  !FZ: added for spinors
             hpsi (ig) = g2kin(ig) * psic (ig)   
           ENDIF  !FZ: added for spinors
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
         psic_nc (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
         DO ig = 1, npw
           IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
             DO isp = 1, nst !FZ: added for spinors
               psic_nc (ig, isp) = evc(ig+npwx*(isp-1), ib)  !FZ: added for spinors
             ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
           ELSE
             psic (ig) = evc (ig, ib)
           ENDIF  !FZ: added for spinors
@@ -4061,16 +3925,12 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
         !   CALL vexx (npwx, npw, 1, psic, hpsi)
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
-!#BEGIN_INTERNAL_ONLY
           psic_nc2 (:,:) = (0.0D0, 0.0D0)! FZ: added for spinors
-!#END_INTERNAL_ONLY
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
               DO isp = 1, nst !FZ: added for spinors
                 psic_nc2 (ig, isp) = evc(ig+npwx*(isp-1), ib2)  !FZ: added for spinors
               ENDDO    !FZ: added for spinors
-!#END_INTERNAL_ONLY
             ELSE   !FZ: added for spinors
               psic2 (ig) = evc (ig, ib2)
             ENDIF  !FZ: added for spinors
@@ -4078,7 +3938,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
           dummy = (0.0D0, 0.0D0)
           DO ig = 1, npw
             IF (nspin == 4) THEN !FZ: added for spinors
-!#BEGIN_INTERNAL_ONLY
               DO isp=1,nst  !FZ: added for spinors
                 dummy = dummy + conjg (psic_nc2 (ig, isp)) * (hpsinl (ig+npwx*(isp-1), ib) &
                         + hpsi_nc (ig, isp) + hpsi_nc_temp(ig, isp))
@@ -4891,7 +4750,6 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
   complex (DP), allocatable :: hc(:,:)
   integer :: nspin_
   integer :: kdim, kdmx
-  COMPLEX (DP) :: zdotc
   integer :: ldim, is1, ibnd, i, na, m1, nt
   character(LEN=20) :: ik_string, ib_string, is_string
 
@@ -5144,12 +5002,10 @@ subroutine set_spin(ns, nst, nsf, nspin)
   integer, intent(in) :: nspin
 
   IF ( nspin == 4 ) THEN
-!#BEGIN_INTERNAL_ONLY
     ! ZL: here spinors check has already been performed
     ns = 1
     nst = 2
     nsf = 4
-!#END_INTERNAL_ONLY
   ELSE
     ns = nspin
     nst = nspin

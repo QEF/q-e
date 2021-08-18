@@ -3,7 +3,7 @@ include ../make.inc
 
 default: all
 
-all: bindir tddfpt tddfptools
+all: bindir tddfpt
 
 bindir:
 	if [ ! -d bin ] ; then mkdir bin; fi;
@@ -11,12 +11,8 @@ bindir:
 tddfpt:
 	( cd src ; $(MAKE) all || exit 1 ) 
 
-tddfptools:
-	( cd tools ; $(MAKE) all || exit  1 )
-
 clean :
 	( cd src ; $(MAKE) clean ; )
-	( cd tools ; $(MAKE) clean ; )
 
 doc:
 	if test -d Doc ; then \

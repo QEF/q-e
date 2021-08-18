@@ -5,16 +5,9 @@
   outdir      = './'
 
   iverbosity  = 0
-
-  band_plot   = .true.
-
   elph        = .true.
-  kmaps       = .true.
-  epbwrite    = .false.
-  epbread     = .false.
-
   etf_mem     = 0
-  vme         = .false.
+  vme         = 'dipole'
 
   epwwrite    = .false.
   epwread     = .true.
@@ -26,18 +19,19 @@
   iprint      = 2
   dis_win_max = 12
   dis_froz_max= 7
-  proj(1)     = 'f=0,0,0:l=-3'   
+  proj(1)     = 'f=0,0,0:l=-3'
 
   elecselfen  = .true.
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 15 ! eV 
+  fsthick     = 15 ! eV
   temps       = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
 
+  band_plot   = .true.
   filkf       = 'path.dat'
   filqf       = 'path.dat'
 

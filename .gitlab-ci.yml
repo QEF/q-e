@@ -49,6 +49,7 @@ build:cmake-gnu:
     - mkdir build
     - cd build
     - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_C_COMPILER=gcc .. && make
+    - make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
 
 build:pgi:
   tags: [docker]
@@ -71,7 +72,8 @@ build:cmake-nvhpc:
     - cmake --version
     - mkdir build
     - cd build
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=nvfortran -DCMAKE_C_COMPILER=nvc -DQE_ENABLE_CUDA=ON .. && make
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON .. && make
 
 #build:centos:
 #  image: centos:latest
