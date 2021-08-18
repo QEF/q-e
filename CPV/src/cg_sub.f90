@@ -56,7 +56,7 @@
       USE cp_main_variables,        ONLY : idesc, drhor, drhog
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
-
+      use wave_gauge, only: project_parallel_gauge_2 
 
 !
       implicit none
@@ -940,6 +940,9 @@
 !if required project c0 on previous manifold of occupied states                                                                                    
 !NOT IMPLEMENTED YET FOR ENSEMBLE DFT AND NSPIN==2
 !NOT IMPLEMENTED FOR US PSEUDOPOTENTIALS
+            call project_parallel_gauge_2(c0old, c0, gi, &
+                                          nss, ngw, ngw,gstart) 
+
 
            lambda_repl=0.d0
             do i = 1, nss
@@ -966,7 +969,21 @@
                   c0(1:ngw,i)=c0(1:ngw,i)+lambda_repl(i,j)*cm(1:ngw,j)
                enddo
             enddo
-          
+            if (ionode) &
+                write (*,*) 'CHECKING CORRECTNESS OF compute_parallel_gauge_2'
+            x=0.0_dp
+            do i =1,nss
+               do ig = 1, ngw
+                  if (abs( aimag(c0(ig,i))-aimag(gi(ig,i))) > x) &
+                      x=abs( aimag(c0(ig,i))-aimag(gi(ig,i)))
+                  if (abs( real(c0(ig,i))-real(gi(ig,i))) > x) &
+                      x=abs( real(c0(ig,i))-real(gi(ig,i)))
+               enddo
+            enddo
+            call mp_sum(x,intra_bgrp_comm)
+            if (ionode) &
+               write (*,*) 'MAX DIFFERENCE OF REAL AND IMAG PART OF the 2 c0', x 
+
             call calbec (nbsp,betae,c0,bec)
             CALL gram_bgrp( betae, bec, nkb, c0, ngw )
             call calbec(nbsp, betae,c0,bec)
