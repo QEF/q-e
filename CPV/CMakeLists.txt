@@ -117,7 +117,9 @@ target_link_libraries(qe_cpv
         qe_mpi_fortran
         qe_xclib
         qe_device_lapack
-        qe_devxlib)
+        qe_devxlib
+     PUBLIC 
+        qe_openacc_fortran)
 
 ###########################################################
 # cp.x
