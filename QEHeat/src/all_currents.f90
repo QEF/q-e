@@ -13,8 +13,9 @@
 ! implements Marcolongo, Umari, and Baroni, Nat. Phys. 12, 80 (2016)
 ! details of the original implementation are described in
 !
-! Marcolongo, Bertossa, Tisi and Baroni
-! https://arxiv.org/abs/2104.06383 (2021)
+! Marcolongo, Bertossa, Tisi and Baroni, Computer Physics Communications, 269, 108090 (2021)
+! https://doi.org/10.1016/j.cpc.2021.108090
+! https://arxiv.org/abs/2104.06383
 !-----------------------------------------------------------------------
 
 program all_currents
@@ -133,12 +134,19 @@ program all_currents
    CALL environment_start('QEHeat')
    call start_clock('all_currents')
    IF (ionode) THEN
+      write (*,*) ''
+      write (*,*) '============================================================'
+      write (*,*) '============================================================'
       write (*,*) ' This code implements Marcolongo, A., Umari, P. and Baroni, S'
       write (*,*) '  Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509'
       write (*,*) ''
       write (*,*) ' The details of the implementation are described in'
-      write (*,*) '  Marcolongo, Bertossa, Tisi, Baroni,'
-      write (*,*) '  https://arxiv.org/abs/2104.06383 (2021)'
+      write (*,*) '  Marcolongo, Bertossa, Tisi and Baroni'
+      write (*,*) '  Computer Physics Communications, 269, 108090 (2021)'
+      write (*,*) '  https://doi.org/10.1016/j.cpc.2021.108090'
+      write (*,*) '  https://arxiv.org/abs/2104.06383'
+      write (*,*) '============================================================'
+      write (*,*) '============================================================'
       write (*,*) ''
       CALL input_from_file()
       ! all_currents input
@@ -323,7 +331,7 @@ program all_currents
             call sum_band()
          end if
          ethr = ethr_big_step
-         call run_pwscf(exit_status, continue_not_converged)
+         call run_electrons(exit_status, continue_not_converged)
          if (exit_status == 2 .and. continue_not_converged) then 
               continue
          else if (exit_status /= 0) then
@@ -338,7 +346,7 @@ program all_currents
                call sum_band()
             end if
             ethr = ethr_small_step
-            call run_pwscf(exit_status, continue_not_converged)
+            call run_electrons(exit_status, continue_not_converged)
             !evc_due = evc
             if (exit_status == 2 .and. continue_not_converged) then 
                continue
@@ -368,7 +376,7 @@ program all_currents
             call sum_band()
          end if
          ethr = ethr_small_step
-         call run_pwscf(exit_status, continue_not_converged)
+         call run_electrons(exit_status, continue_not_converged)
          if (exit_status == 2 .and. continue_not_converged) then 
               continue
          else if (exit_status /= 0) then 
@@ -722,7 +730,7 @@ contains
       end if
    end subroutine
 
-   subroutine run_pwscf(exit_status, continue_not_converged)
+   subroutine run_electrons(exit_status, continue_not_converged)
       USE control_flags, ONLY: conv_elec, gamma_only, ethr, lscf, treinit_gvecs
       USE check_stop, ONLY: check_stop_init, check_stop_now
       USE qexsd_module, ONLY: qexsd_set_status

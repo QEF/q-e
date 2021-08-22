@@ -12,7 +12,8 @@
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
       lambdap, lambda, nlam, vpot, c0, cm, phi, dbec,l_cprestart  )
 
-!! please see https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045
+!! please see https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.79.1337 (ensemble DFT)
+!! and        https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045 (conjugate gradient)
 
       use kinds, only: dp
       use control_flags, only: tpre, iverbosity, tfor, tprnfor
