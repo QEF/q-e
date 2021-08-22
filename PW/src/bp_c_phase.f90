@@ -484,7 +484,7 @@ SUBROUTINE c_phase
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if (okvan) then
                   CALL using_vkb(1)
-                  CALL init_us_2(npw0,igk0,xk(1,kpoint-1),vkb)
+                  CALL init_us_2(npw0,igk0,xk(1,kpoint-1),vkb, .false.)
                   CALL calbec(npw0, vkb, psi, becp0)
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
@@ -495,7 +495,7 @@ SUBROUTINE c_phase
                   CALL using_evc(1)
                   if (okvan) then
                      CALL using_vkb(1)
-                     CALL init_us_2(npw1,igk1,xk(1,kpoint),vkb)
+                     CALL init_us_2(npw1,igk1,xk(1,kpoint),vkb, .false.)
                      CALL calbec(npw1, vkb, evc, becp_bp)
                   endif
                ELSE
@@ -506,7 +506,7 @@ SUBROUTINE c_phase
                   CALL using_evc(1)
                   if (okvan) then
                      CALL using_vkb(1)
-                     CALL init_us_2(npw1,igk1,xk(1,kstart),vkb)
+                     CALL init_us_2(npw1,igk1,xk(1,kstart),vkb, .false.)
                      CALL calbec(npw1, vkb, evc, becp_bp)
                   endif
                ENDIF

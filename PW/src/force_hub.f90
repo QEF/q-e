@@ -135,7 +135,7 @@ SUBROUTINE force_hub( forceh )
       !
       CALL using_vkb(2)
       !
-      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL using_becp_auto(2)

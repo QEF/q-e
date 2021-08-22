@@ -170,7 +170,7 @@ SUBROUTINE wfcinit()
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
      IF ( nkb > 0 ) CALL using_vkb(1)
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .false.)
      !
      ! ... Needed for DFT+U
      !

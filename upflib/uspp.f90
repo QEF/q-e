@@ -486,6 +486,9 @@ CONTAINS
     IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
     IF( ALLOCATED( ofsbeta ) ) DEALLOCATE( ofsbeta )
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
+!civn 
+!$acc exit data delete(vkb ) 
+!
     IF( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
     IF( ALLOCATED( ebecsum ) )    DEALLOCATE( ebecsum )

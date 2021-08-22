@@ -55,7 +55,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
   IF ( nks > 1 ) CALL using_vkb(1)
-  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
   

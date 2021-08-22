@@ -2718,7 +2718,7 @@ end associate
        IF (okvan) THEN
           CALL using_vkb(1)
           ! prepare the |beta> function at k+q
-          CALL init_us_2( npw, igk_exx(1,ik), xk(:,ik), vkb )
+          CALL init_us_2( npw, igk_exx(1,ik), xk(:,ik), vkb , .false.)
           ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
           CALL calbec( npw, vkb, psi, becpsi, nbnd )
        ENDIF
@@ -2870,7 +2870,7 @@ end associate
        IF ( nks > 1 ) CALL get_buffer( evc_exx, nwordwfc_exx, iunwfc_exx, ikk )
        !
        ! ... prepare the |beta> function at k+q
-       CALL init_us_2( npw, igk_exx(:,ikk), xkp, vkb_exx )
+       CALL init_us_2( npw, igk_exx(:,ikk), xkp, vkb_exx , .false.)
        !
        ! ... compute <beta_I|psi_j> at this k+q point, for all band and all projectors
        calbec_start = ibands(1,my_egrp_id+1)
@@ -3986,7 +3986,7 @@ end associate
        IF ( nks > 1 ) CALL using_evc(2)
        IF ( okvan ) THEN
           CALL using_vkb(1)
-          CALL init_us_2( npw, igk_k(1,ik), xk(:,ik), vkb )
+          CALL init_us_2( npw, igk_k(1,ik), xk(:,ik), vkb , .false.)
           CALL calbec( npw, vkb, evc, becpsi, nbnd )
        ENDIF
        IF (gamma_only) THEN

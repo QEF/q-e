@@ -404,7 +404,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                CALL get_buffer( psi,nwordwfc,iunwfc,nx_el(kpoint-1,pdir) )
                IF (okvan) THEN
                   CALL using_vkb(1)
-                  CALL init_us_2( npw0,igk0,xk(1,nx_el(kpoint-1,pdir)),vkb )
+                  CALL init_us_2( npw0,igk0,xk(1,nx_el(kpoint-1,pdir)),vkb , .false.)
                   CALL calbec( npw0, vkb, psi, becp0)
                ENDIF
                !
@@ -417,7 +417,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                   CALL get_buffer( psi1,nwordwfc,iunwfc,nx_el(kpoint,pdir) )
                   IF (okvan) THEN
                      CALL using_vkb(1)
-                     CALL init_us_2( npw1,igk1,xk(1,nx_el(kpoint,pdir)),vkb )
+                     CALL init_us_2( npw1,igk1,xk(1,nx_el(kpoint,pdir)),vkb , .false.)
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                   ENDIF
                ELSE
@@ -428,7 +428,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                   CALL get_buffer( psi1,nwordwfc,iunwfc,nx_el(kstart,pdir) )
                   IF (okvan) THEN
                      CALL using_vkb(1)
-                     CALL init_us_2( npw1,igk1,xk(1,nx_el(kstart,pdir)),vkb )
+                     CALL init_us_2( npw1,igk1,xk(1,nx_el(kstart,pdir)),vkb , .false.)
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                   ENDIF
                ENDIF

@@ -75,6 +75,7 @@ SUBROUTINE allocate_wfc_k()
   !
   ALLOCATE( vkb(npwx,nkb) )
 #if defined __CUDA
+!$acc enter data create(vkb(npwx,nkb) )
   IF (nkb>0) ALLOCATE( vkb_d(npwx,nkb) )
 #endif
   !

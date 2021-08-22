@@ -145,7 +145,7 @@ SUBROUTINE stres_hub ( sigmah )
       IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       IF (nks > 1) CALL using_evc(2)
       !
-      CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
+      CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb, .false.)
       CALL using_vkb(2)
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)

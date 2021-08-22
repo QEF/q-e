@@ -111,19 +111,10 @@ SUBROUTINE c_bands( iter )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-!civn 
-!    IF ( use_gpu ) THEN
-!       IF ( nkb > 0 ) CALL using_vkb_d(2)
-!       IF ( nkb > 0 ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
-!    ELSE
-!       IF ( nkb > 0 ) CALL using_vkb(2)
-!       IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
-!    END IF
      IF ( nkb > 0 ) THEN
        CALL using_vkb(2)
-       CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+       CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .true. )
      END IF
-!
      !
      ! ... read in wavefunctions from the previous iteration
      !
@@ -1221,7 +1212,7 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( nkb > 0 ) THEN
         IF (.not. use_gpu ) CALL using_vkb(1)
-        IF (.not. use_gpu ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+        IF (.not. use_gpu ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .false.)
         IF (      use_gpu ) CALL using_vkb_d(1)
         IF (      use_gpu ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
      ENDIF

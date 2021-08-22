@@ -562,7 +562,7 @@ MODULE us_exx
     ! xkp and igkp are the "current" k-point and indices in hpsi
     !
     ALLOCATE( vkbp(npwx,nkb) )
-    CALL init_us_2( npwp, igkp, xkp, vkbp )
+    CALL init_us_2( npwp, igkp, xkp, vkbp , .false.)
     !
     DO np = 1, ntyp
       ONLY_FOR_USPP : &
@@ -1138,7 +1138,7 @@ MODULE us_exx
       ! prepare the g-vectors mapping
       CALL gk_sort( xkq_collect(:,ikq), ngm, g, gcutw, ngkq(ikq), igkq, gk )
       ! prepare the |beta> function at k+q
-      CALL init_us_2( ngkq(ikq), igkq, xkq_collect(:,ikq), vkbq )
+      CALL init_us_2( ngkq(ikq), igkq, xkq_collect(:,ikq), vkbq , .false.)
       !
       ! take rotated phi to G space
       IF (gamma_only) THEN

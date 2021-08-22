@@ -170,7 +170,7 @@ SUBROUTINE orbm_kubo()
         npw_k = ngk(n)
         current_k = n
         CALL using_vkb(1)
-        CALL init_us_2( npw_k, igk_k(1,n), xk(1,n), vkb )
+        CALL init_us_2( npw_k, igk_k(1,n), xk(1,n), vkb , .false.)
         CALL g2_kin( n )
         !
         evcpm = (0.0d0,0.0d0)

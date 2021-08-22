@@ -266,7 +266,7 @@ SUBROUTINE compute_pproj( ik, q, p )
     CALL allocate_bec_type( nkb, nbnd, becp )
     CALL using_becp_auto(2)
     CALL using_vkb(1)
-    CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+    CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
     CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )
     ! does not need mp_sum intra-pool, since it is already done in calbec 

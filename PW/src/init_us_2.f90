@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
+SUBROUTINE init_us_2( npw_, igk_, q_, vkb_, run_on_gpu)
   !----------------------------------------------------------------------
   !! wrapper to call init_us_2_base
   !! Calculates beta functions (Kleinman-Bylander projectors), with
@@ -19,6 +19,7 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   USE wvfct,        ONLY : npwx
   USE uspp,         ONLY : nkb
   USE fft_base ,    ONLY : dfftp
+  USE control_flags, ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -30,24 +31,25 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   !! q vector (2pi/a units)
   COMPLEX(DP), INTENT(OUT) :: vkb_(npwx,nkb)
   !! beta functions (npw_ <= npwx)
+  LOGICAL, INTENT(IN) :: run_on_gpu
+  !! whether you wish to run on gpu in case use_gpu is true
   !
   CALL start_clock( 'init_us_2' )
   !
-!civn 
-#if defined(__CUDA)
-!$acc data copyin(igk_(npw_), eigts1(:,:), eigts2(:,:), eigts3(:,:), mill(:,:), g(:,:)) copy(vkb_(npwx,nkb))
+  if(use_gpu.and.run_on_gpu) then 
+!$acc data copyin(igk_(npw_), eigts1(:,:), eigts2(:,:), eigts3(:,:), mill(:,:), g(:,:)) present(vkb_(npwx,nkb))
 !$acc host_data use_device(eigts1, eigts2, eigts3, mill, g, igk_, vkb_)
-  CALL init_us_2_base_gpu(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega,&
-    dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&
-    vkb_ )
+    CALL init_us_2_base_gpu(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega,&
+      dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&
+      vkb_ )
 !$acc end host_data
+!$acc update self(vkb_)
 !$acc end data
-#else
-  CALL init_us_2_base(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
-          dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&
-          vkb_ )
-#endif
-!
+  else
+    CALL init_us_2_base(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega, &
+            dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&
+            vkb_ )
+  end if 
   !
   CALL stop_clock( 'init_us_2' )
   !
