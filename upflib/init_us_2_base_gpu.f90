@@ -82,9 +82,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
 #endif
   !
   !
-!civn 
-write(*,*) "using init_us_2_base_gpu"  
-!
   if (lmaxkb<0) return
   
   ! JR Eventually replace with smarter allocation/deallocation of GPU temp arrays

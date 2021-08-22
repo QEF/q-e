@@ -1211,10 +1211,8 @@ SUBROUTINE c_bands_nscf( )
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
      IF ( nkb > 0 ) THEN
-        IF (.not. use_gpu ) CALL using_vkb(1)
-        IF (.not. use_gpu ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .false.)
-        IF (      use_gpu ) CALL using_vkb_d(1)
-        IF (      use_gpu ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
+       CALL using_vkb(1) 
+       CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .true.)
      ENDIF
      !
      ! ... Needed for LDA+U
