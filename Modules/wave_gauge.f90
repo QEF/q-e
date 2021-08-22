@@ -9,6 +9,9 @@
 !-----------------------------------------------------------------------
 
 MODULE wave_gauge
+! this module contains routines that are used to compute the numerical
+! derivative of the wavefunctions fixing a particular gauge
+
    USE kinds, ONLY: DP
    implicit none
 
@@ -16,6 +19,9 @@ MODULE wave_gauge
    contains
 
    subroutine compute_dot_evc_parallel_gauge(t_minus, t_zero, t_plus, dot_evc, nbnd, npw, npwx, gstart)
+      ! compute the numerical derivative using the wavefunctions computed at t-dt/2, t, t+dt/2 
+      ! in the parallel transport gauge
+
       integer, intent(in) :: nbnd, npw, npwx, gstart
       COMPLEX(DP), intent(inout) ::  dot_evc(:, :)
       complex(dp), intent(in) :: t_minus(:,:), t_zero(:,:), t_plus(:,:)
@@ -27,8 +33,9 @@ MODULE wave_gauge
    end subroutine
 
    subroutine project_parallel_gauge_2(t_minus, t_zero, t_zero_proj , nbnd, npw, npwx, gstart)
-      ! project t_zero over the manifold of t_minus. Do not project over the
-      ! not occupied state
+      ! project t_zero over the manifold of t_minus in the parallel transport gauge.
+      ! Do not project over the not occupied manifold
+
       integer, intent(in) :: nbnd, npw, npwx, gstart
       COMPLEX(DP), intent(inout) ::   t_zero_proj(:,:)
       complex(dp), intent(in) :: t_minus(:, :),  t_zero(:,:)
@@ -42,6 +49,7 @@ MODULE wave_gauge
 
    subroutine project_parallel_gauge(t_minus, t_zero, t_plus, dot_evc, nbnd, npw, npwx, gstart, &
                                      factor, use_t_plus, project_conduction)
+      !! implemented only in the plain dft norm conserving pseudopotential case 
       !! let P be the projector over the occupied manifold space:
       !! P = \sum_v |c_v><c_v|
       !! then (no surprise)
@@ -49,7 +57,7 @@ MODULE wave_gauge
       !! doing a time derivative:
       !! \dot |c> = \dot P |c> + P \dot |c>
       !! the parallel transport gauge fixes P \dot |c> to zero (the derivative
-      !! has no components over the occupied space). \dot P can be computed
+      !! has no components over the occupied space). \dot P can be computed numerically
       !! using wavefunctions that possibly have different gauges.
       !! Then, to make sure that there are no components over the occupied space,
       !! a projector over the conduction band is added if project_conduction is .true.:
@@ -58,15 +66,12 @@ MODULE wave_gauge
       !! 
       !! t_minus, t_zero, t_plus are the wavefunctions. t_minus and t_plus are separated by a time dt
       !! t_zero is computed in the middle. The gauge of the result is the same of t_zero.
-      !! This works also if you put t_zero = t_minus or t_zero = t_plus (be careful to the gauge!)
-      !! add \dot |c>*dt*factor (the derivative multiplied by dt multiplied by the specified factor)
-      !! to the output array dot_evc with
-      !! the gauge of t_zero. Gauges of t_minus and t_plus should not enter the
-      !! result and can be arbitrary
-      !! if use_t_plus is false, t_plus = t_zero is assumed and some cpu time
-      !! is saved
-      !! project_conduction uses an additional matrix-matrix product with
-      !! dimensions nbnd x nbnd
+      !! This works also if you put t_zero = t_minus or t_zero = t_plus (be careful to the gauge!).
+      !! This routine adds \dot |c>*dt*factor (the derivative multiplied by dt multiplied by the specified factor)
+      !! to the output array dot_evc with the gauge of t_zero. Gauges of t_minus and t_plus should not enter the
+      !! result and can be arbitrary. If use_t_plus is false, t_plus = t_zero is assumed and some cpu time
+      !! is saved. If project_conduction is true the (1-P) projector is computed, and this involves an additional
+      !! matrix-matrix product with dimensions nbnd x nbnd
       use mp, only: mp_sum
       USE mp_pools, ONLY: intra_pool_comm
 
