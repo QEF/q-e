@@ -29,6 +29,7 @@ cg_sub.o : ../../Modules/ions_base.o
 cg_sub.o : ../../Modules/kind.o
 cg_sub.o : ../../Modules/mp_global.o
 cg_sub.o : ../../Modules/recvec.o
+cg_sub.o : ../../Modules/wave_gauge.o
 cg_sub.o : ../../UtilXlib/mp.o
 cg_sub.o : ../../upflib/uspp.o
 cg_sub.o : cg.o

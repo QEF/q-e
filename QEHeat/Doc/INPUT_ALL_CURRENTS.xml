@@ -314,5 +314,31 @@ is written with some statistics. Note that if you don&apos;t specify at least <r
 You may want to specify startingwfc = &apos;random&apos; in the ELECTRONS namelist.
          </info>
       </var>
+      <var name="n_workers" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+The calculation over all the trajectory is splitted in <ref>n_workers</ref> chunks. Then to run the code over all
+the trajectory you must run <ref>n_workers</ref> input files each one with a different <ref>worker_id</ref>,
+from 0 to <ref>n_workers</ref> - 1 . Those inputs can run at the same time in the same folder. The <ref>worker_id</ref>
+will be appended to the outdir folder and to the <ref>file_output</ref> input variables, so you can safely run all
+the inputs in the same directory at the same time.
+         </info>
+      </var>
+      <var name="worker_id" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+See <ref>n_workers</ref> variable
+         </info>
+      </var>
+      <var name="continue_not_converged" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If it is not possible to find a ground state for a given frame of the trajectory, go to the next one.
+You will not find this step in the output file(s).
+         </info>
+      </var>
    </namelist>
 </input_description>

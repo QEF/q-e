@@ -102,7 +102,8 @@ fox_init_module.o \
 xsf.o \
 wyckoff.o \
 wypos.o \
-zvscal.o 
+zvscal.o \
+wave_gauge.o
 
 # list of subroutines and functions (not modules) previously found in flib/
 
