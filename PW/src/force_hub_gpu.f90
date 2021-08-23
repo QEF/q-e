@@ -152,8 +152,6 @@ SUBROUTINE force_hub_gpu( forceh )
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       CALL using_evc_d(0)
       !
-!civn 
-write(*,*) '@@@ yes I am in force_hub_gpu @@@'
       CALL using_vkb(2)
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
       ! Compute spsi = S * psi

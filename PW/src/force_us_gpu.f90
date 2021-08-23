@@ -50,10 +50,9 @@ SUBROUTINE force_us_gpu( forcenl )
   !
   ! ... local variables
   !
-  COMPLEX(DP), POINTER     :: vkb1_d(:,:)   ! contains g*|beta>
-#if defined(__CUDA)
-  attributes(DEVICE) :: vkb1_d
-#endif
+  COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! contains g*|beta>
+!$acc declare device_resident(vkb1)  
+  !
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
   REAL(DP), ALLOCATABLE :: deff(:,:,:)
   TYPE(bec_type)           :: dbecp                 ! contains <dbeta|psi>
@@ -62,8 +61,6 @@ SUBROUTINE force_us_gpu( forcenl )
   INTEGER    :: ierr
   !
   forcenl(:,:) = 0.D0
-!civn 
-write(*,*) '@@@ yes I am in force_us_gpu @@@'
   !
   call start_clock_gpu('fus_allbec') 
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
@@ -71,7 +68,8 @@ write(*,*) '@@@ yes I am in force_us_gpu @@@'
   CALL allocate_bec_type ( nkb, nbnd, dbecp, intra_bgrp_comm )
   CALL allocate_bec_type_gpu ( nkb, nbnd, dbecp_d, intra_bgrp_comm )
   !
-  CALL dev_buf%lock_buffer( vkb1_d, (/ npwx, nkb /), ierr )
+  ALLOCATE( vkb1(npwx, nkb) )
+  !
   IF (noncolin) THEN
      ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
   ELSEIF (.NOT. gamma_only ) THEN
@@ -108,18 +106,18 @@ write(*,*) '@@@ yes I am in force_us_gpu @@@'
      !
      CALL using_evc_d(0)
      DO ipol = 1, 3
-!$acc data present(vkb(:,:)) deviceptr(vkb1_d(npwx, nkb), g_d(:,:)) copyin(igk_k(:,:))
-!$acc host_data use_device(vkb, igk_k)
+!$acc data present(vkb(:,:), vkb1(npwx,nkb)) deviceptr(g_d(:,:)) copyin(igk_k(:,:))
+!$acc host_data use_device(vkb, vkb1, igk_k)
 !$acc parallel loop collapse(2) 
         DO jkb = 1, nkb
            DO ig = 1, npw
-              vkb1_d(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k(ig,ik))
+              vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k(ig,ik))
            ENDDO
         ENDDO
+        !
+        CALL calbec_gpu ( npw, vkb1, evc_d, dbecp_d )
 !$acc end host_data 
 !$acc end data
-        !
-        CALL calbec_gpu ( npw, vkb1_d, evc_d, dbecp_d )
         CALL synchronize_bec_type_gpu(dbecp_d, dbecp, 'h')
         !
         IF ( gamma_only ) THEN
@@ -144,7 +142,9 @@ write(*,*) '@@@ yes I am in force_us_gpu @@@'
   ELSEIF ( .NOT. GAMMA_ONLY) THEN
      DEALLOCATE( deff )
   ENDIF
-  CALL dev_buf%release_buffer( vkb1_d, ierr )
+  !
+  DEALLOCATE( vkb1 )
+  !
   CALL deallocate_bec_type ( dbecp ) 
   CALL deallocate_bec_type ( becp )
   CALL using_becp_auto(2)
