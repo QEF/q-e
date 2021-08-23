@@ -19,7 +19,7 @@ SUBROUTINE c_bands( iter )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE klist,                ONLY : nkstot, nks, ngk, igk_k, igk_k_d, xk
-  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
+  USE uspp,                 ONLY : vkb, nkb, using_vkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart, use_gpu, iverbosity
@@ -1138,7 +1138,7 @@ SUBROUTINE c_bands_nscf( )
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE basis,                ONLY : starting_wfc
   USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k, igk_k_d
-  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
+  USE uspp,                 ONLY : vkb, nkb, using_vkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
