@@ -18,8 +18,8 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nat, ityp, ntyp => nsp
   USE wvfct,            ONLY: npwx
-  USE uspp,             ONLY: ofsbeta, deeq_d, vkb_d, qq_at_d, qq_so_d, &
-                              deeq_nc_d, using_vkb_d
+  USE uspp,             ONLY: ofsbeta, deeq_d, qq_at_d, qq_so_d, &
+                              deeq_nc_d
   USE uspp_param,       ONLY: upf, nh
   USE spin_orb,         ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
@@ -38,8 +38,6 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
 #endif
   !
   INTEGER :: ig, ipol
-  !
-  CALL using_vkb_d(0)
   !
   ! initialise s_diag
   !
@@ -69,17 +67,12 @@ CONTAINS
      !
      !    multiply on projectors
      !
-!civn 
-write(*,*) '@@@ usnldiag_collinear 3 @@@'
-!
      DO nt = 1, ntyp
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!civn 
-                   !!!!cuf kernel do(1) <<<*,*>>>
                    !$acc data present(vkb(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h,sum_s)
@@ -113,8 +106,6 @@ write(*,*) '@@@ usnldiag_collinear 3 @@@'
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!civn 
-                   !!!cuf kernel do(1) <<<*,*>>>
                    !$acc data present(vkb(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h,sum_s)
@@ -157,17 +148,12 @@ write(*,*) '@@@ usnldiag_collinear 3 @@@'
      !
      !    multiply on projectors
      !
-!civn 
-write(*,*) '@@@ usnldiag_noncollinear @@@'
-!
      DO nt = 1, ntyp
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!civn 
-                   !!!cuf kernel do(1) <<<*,*>>>
                    !$acc data present(vkb(:,:))
                    !$acc parallel vector_length(32) 
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
@@ -212,8 +198,6 @@ write(*,*) '@@@ usnldiag_noncollinear @@@'
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!civn 
-                   !!!cuf kernel do(1) <<<*,*>>>
                    !$acc data present(vkb(:,:))
                    !$acc parallel vector_length(32) 
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
@@ -224,7 +208,7 @@ write(*,*) '@@@ usnldiag_noncollinear @@@'
                       !$acc loop vector private(ikb,ar) reduction(+:sum_h1,sum_h4,sum_s)
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
-                         ar = vkb_d (ig, ikb)*conjg(vkb_d (ig, ikb))
+                         ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
                          sum_h1 = sum_h1 + dble(deeq_nc_d (ih, ih, na, 1) * ar)
                          sum_h4 = sum_h4 + dble(deeq_nc_d (ih, ih, na, 4) * ar)
                          sum_s = sum_s + dble(qq_at_d (ih, ih, na) * ar)
@@ -255,7 +239,7 @@ write(*,*) '@@@ usnldiag_noncollinear @@@'
   !
   SUBROUTINE usnldiag_spinorb()
      USE lsda_mod, ONLY: current_spin
-     USE uspp,     ONLY: vkb, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
+     USE uspp,     ONLY: vkb, qq_at_d, qq_so_d, deeq_nc_d
 
      IMPLICIT NONE
      !
@@ -267,17 +251,12 @@ write(*,*) '@@@ usnldiag_noncollinear @@@'
      !
      !    multiply on projectors
      !
-!civn 
-write(*,*) '@@@ usnldiag_spinorb @@@'
-!
      DO nt = 1, ntyp
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!civn
-                   !!!cuf kernel do(1) <<<*,*>>>
                    !$acc data present(vkb(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
@@ -324,8 +303,6 @@ write(*,*) '@@@ usnldiag_spinorb @@@'
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-!civn 
-                   !!!cuf kernel do(1) <<<*,*>>>
                    !$acc data present(vkb(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
