@@ -1,3 +1,6 @@
+New in development version:
+  * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
+
 Fixed in development version:
   * Some build problems occurring under special circumstances
   * Some PP files were not correctly read since v.6.7
