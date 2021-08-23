@@ -15,10 +15,10 @@ SUBROUTINE force_us_gpu( forcenl )
   USE control_flags,        ONLY : gamma_only
   USE cell_base,            ONLY : at, bg, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g_d
-  USE uspp,                 ONLY : nkb, vkb_d, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
-                                   using_vkb, using_vkb_d
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
+                                   using_vkb
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -62,6 +62,8 @@ SUBROUTINE force_us_gpu( forcenl )
   INTEGER    :: ierr
   !
   forcenl(:,:) = 0.D0
+!civn 
+write(*,*) '@@@ yes I am in force_us_gpu @@@'
   !
   call start_clock_gpu('fus_allbec') 
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
@@ -89,22 +91,33 @@ SUBROUTINE force_us_gpu( forcenl )
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
-        IF ( nkb > 0 ) CALL using_vkb_d(1)
-        IF ( nkb > 0 ) CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+        IF ( nkb > 0 ) THEN 
+          CALL using_vkb(1)
+          CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+        END IF 
      ENDIF
      !
-     CALL using_evc_d(0); CALL using_vkb_d(0); 
+     CALL using_evc_d(0)
+     CALL using_vkb(0); 
      CALL using_becp_d_auto(2)
-     CALL calbec_gpu ( npw, vkb_d, evc_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu ( npw, vkb, evc_d, becp_d )
+!$acc end host_data
+!$acc end data
      !
      CALL using_evc_d(0)
      DO ipol = 1, 3
-!$cuf kernel do(2) <<<*,*>>>
+!$acc data present(vkb(:,:)) deviceptr(vkb1_d(npwx, nkb), g_d(:,:)) copyin(igk_k(:,:))
+!$acc host_data use_device(vkb, igk_k)
+!$acc parallel loop collapse(2) 
         DO jkb = 1, nkb
            DO ig = 1, npw
-              vkb1_d(ig,jkb) = vkb_d(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k_d(ig,ik))
+              vkb1_d(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k(ig,ik))
            ENDDO
         ENDDO
+!$acc end host_data 
+!$acc end data
         !
         CALL calbec_gpu ( npw, vkb1_d, evc_d, dbecp_d )
         CALL synchronize_bec_type_gpu(dbecp_d, dbecp, 'h')

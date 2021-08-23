@@ -38,10 +38,10 @@ SUBROUTINE force_hub_gpu( forceh )
    USE mp,                   ONLY : mp_sum
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
                                     deallocate_bec_type
-   USE uspp,                 ONLY : nkb, vkb, vkb_d, ofsbeta, using_vkb_d
+   USE uspp,                 ONLY : nkb, vkb, ofsbeta, using_vkb
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
-   USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
@@ -152,13 +152,20 @@ SUBROUTINE force_hub_gpu( forceh )
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       CALL using_evc_d(0)
       !
-      CALL using_vkb_d(2)
-      CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+!civn 
+write(*,*) '@@@ yes I am in force_hub_gpu @@@'
+      CALL using_vkb(2)
+      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL using_becp_auto(2) ; CALL using_becp_d_auto(2)
-      CALL using_vkb_d(0)
-      CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
+      CALL using_vkb(0)
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+      CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+!$acc end host_data
+!$acc end data
+      !
       CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi_d )
       CALL deallocate_bec_type (becp) 
       CALL using_becp_auto(2); CALL using_becp_d_auto(2)
