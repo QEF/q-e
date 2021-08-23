@@ -43,9 +43,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
 #endif
   !
   !
-!civn 
-write(*,*) '@@@ add_vuspsi_gpu @@@'
-!
   CALL start_clock_gpu( 'add_vuspsi' )  
   !
   IF ( gamma_only ) THEN

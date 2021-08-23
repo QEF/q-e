@@ -57,7 +57,7 @@ CONTAINS
   
   SUBROUTINE usnldiag_collinear()
      USE lsda_mod, ONLY: current_spin
-     USE uspp,     ONLY: deeq_d, vkb_d, qq_at_d
+     USE uspp,     ONLY: deeq_d, vkb_d, qq_at_d, vkb
      
      IMPLICIT NONE
      !
@@ -69,33 +69,43 @@ CONTAINS
      !
      !    multiply on projectors
      !
+!civn 
+write(*,*) '@@@ usnldiag_collinear 2 @@@'
+!
      DO nt = 1, ntyp
         IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+!civn 
+                   !!!!cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:))
+                   !$acc parallel vector_length(32)
+                   !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
-                      
+                      !$acc loop vector collapse(2) private(ikb,cv,jkb,ar) reduction(+:sum_h,sum_s)
                       DO ih = 1, nh_
-                         ikb = ijkb_start + ih
-                         cv = vkb_d (ig, ikb)
                          DO jh = 1, nh_
+                            ikb = ijkb_start + ih
+                            cv = vkb (ig, ikb)
                             jkb = ijkb_start + jh
-                            
-                            ar = cv*conjg(vkb_d (ig, jkb))
-                            
+                            ar = cv*conjg(vkb (ig, jkb))
                             sum_h = sum_h + dble(deeq_d (ih, jh, na, current_spin) * ar)
                             sum_s = sum_s + dble(qq_at_d (ih, jh, na) * ar)
                          END DO
                       END DO
-                       
+                      !$acc atomic update 
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h
+                      !$acc end atomic 
+                      !$acc atomic update 
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data
               END IF
            END DO
         ELSE
@@ -103,23 +113,30 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+!civn 
+                   !!!cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:))
+                   !$acc parallel vector_length(32)
+                   !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
-                      
+                      !$acc loop vector private(ikb,ar) reduction(+:sum_h,sum_s)
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
-                         
                          ar = vkb_d (ig, ikb)*conjg(vkb_d (ig, ikb))
-                         
                          sum_h = sum_h + dble(deeq_d (ih, ih, na, current_spin) * ar)
                          sum_s = sum_s + dble(qq_at_d (ih, ih, na) * ar)
                       END DO
-                       
+                      !$acc atomic update
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data
               END IF
            END DO
         END IF
