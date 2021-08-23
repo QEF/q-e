@@ -32,7 +32,7 @@ SUBROUTINE orthoUwfc_gpu
   USE klist,      ONLY : nks, xk, ngk, igk_k
   USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb, using_vkb
+  USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
@@ -113,7 +113,6 @@ SUBROUTINE orthoUwfc_gpu
      !
      npw = ngk(ik)
      !
-     CALL using_vkb(2)
      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      CALL using_becp_d_auto(2)
@@ -168,7 +167,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb, using_vkb
+  USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
@@ -212,7 +211,6 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
      !
      npw = ngk(ik)
      !
-     CALL using_vkb(2)
      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      CALL using_becp_auto(2)

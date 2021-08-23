@@ -17,8 +17,7 @@ SUBROUTINE force_us( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
-  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
-                                   using_vkb
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -77,11 +76,9 @@ SUBROUTINE force_us( forcenl )
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
-        IF ( nkb > 0 ) CALL using_vkb(1)
         IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
      ENDIF
      !
-     CALL using_vkb(0); 
      CALL using_becp_auto(2)
      CALL calbec( npw, vkb, evc, becp )
      !

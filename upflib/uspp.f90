@@ -89,7 +89,7 @@ MODULE uspp
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
   PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, ofsbeta_d, &
-            vkb_d, dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
+            dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
             becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
@@ -97,12 +97,6 @@ MODULE uspp
   PUBLIC :: dbeta
   !
   PUBLIC :: allocate_uspp, deallocate_uspp
-  !
-  ! GPU sync
-  !
-  PUBLIC  :: using_vkb, using_vkb_d
-  LOGICAL :: vkb_d_ood = .false.    ! used to flag out of date variables
-  LOGICAL :: vkb_ood   = .false.    ! used to flag out of date variables
   !
   ! Vars
   !
@@ -170,7 +164,6 @@ MODULE uspp
   !
   ! GPU vars
   !
-  COMPLEX(DP), ALLOCATABLE :: vkb_d(:,:)
   REAL(DP),    ALLOCATABLE :: becsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: ebecsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
@@ -182,7 +175,7 @@ MODULE uspp
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
 #if defined(__CUDA)
-  attributes (DEVICE) :: vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
+  attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
                          qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
 #endif
 
@@ -486,10 +479,10 @@ CONTAINS
     IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
     IF( ALLOCATED( ofsbeta ) ) DEALLOCATE( ofsbeta )
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
-!civn 
+    IF( ALLOCATED( vkb ) ) THEN
 !$acc exit data delete(vkb ) 
-!
-    IF( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
+        DEALLOCATE( vkb )
+    END IF 
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
     IF( ALLOCATED( ebecsum ) )    DEALLOCATE( ebecsum )
     IF( ALLOCATED( qq_at ) )      DEALLOCATE( qq_at )
@@ -512,7 +505,6 @@ CONTAINS
     IF( ALLOCATED( nhtolm_d ) )   DEALLOCATE( nhtolm_d )
     IF( ALLOCATED( ijtoh_d ) )    DEALLOCATE( ijtoh_d )
     IF( ALLOCATED( ofsbeta_d)) DEALLOCATE( ofsbeta_d )
-    IF( ALLOCATED( vkb_d ) )      DEALLOCATE( vkb_d )
     IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
     IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )
     IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
@@ -535,38 +527,5 @@ CONTAINS
   !  1 -> inout , the variable needs to be synchronized AND will be changed
   !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
   ! 
-  SUBROUTINE using_vkb(intento)
-      !
-      !USE uspp, ONLY : vkb, vkb_d
-      implicit none
-      INTEGER, INTENT(IN) :: intento
-      IF (size(vkb)==0) return
-#if defined(__CUDA)  || defined(__CUDA_GNU)
-      IF (vkb_ood) THEN
-          IF (intento < 2) vkb = vkb_d
-          vkb_ood = .false.
-      ENDIF
-      IF (intento > 0)    vkb_d_ood = .true.
-#endif
-  END SUBROUTINE using_vkb
-  !
-  SUBROUTINE using_vkb_d(intento)
-      !
-      !USE uspp, ONLY : vkb, vkb_d
-      implicit none
-      INTEGER, INTENT(IN) :: intento
-      IF (size(vkb)==0) return
-#if defined(__CUDA) || defined(__CUDA_GNU)
-      !
-      IF (vkb_d_ood) THEN
-          IF (intento < 2) vkb_d = vkb
-          vkb_d_ood = .false.
-      ENDIF
-      IF (intento > 0)    vkb_ood = .true.
-#else
-      CALL upf_error('using_vkb_d', 'no GPU support', 1)
-#endif
-  END SUBROUTINE using_vkb_d
-  !   
 END MODULE uspp
 

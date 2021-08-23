@@ -20,7 +20,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, using_vkb, deeq_d
+  USE uspp,                 ONLY : nkb, vkb, deeq_d
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
@@ -71,16 +71,12 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
-  IF ( nks > 1 ) THEN
-    CALL using_vkb(1)
-    CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
-  ENDIF
+  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
   !
   CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm ) 
   CALL using_becp_auto(2)
   !
   CALL using_evc_d(0)
-  CALL using_vkb(0)
   CALL using_becp_d_auto(2)
   !
 !$acc data present(vkb(:,:))

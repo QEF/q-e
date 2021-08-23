@@ -17,8 +17,7 @@ SUBROUTINE force_us_gpu( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g_d
-  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
-                                   using_vkb
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -89,14 +88,10 @@ SUBROUTINE force_us_gpu( forcenl )
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
-        IF ( nkb > 0 ) THEN 
-          CALL using_vkb(1)
-          CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
-        END IF 
+        IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      ENDIF
      !
      CALL using_evc_d(0)
-     CALL using_vkb(0); 
      CALL using_becp_d_auto(2)
 !$acc data present(vkb(:,:))
 !$acc host_data use_device(vkb)

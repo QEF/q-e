@@ -20,7 +20,7 @@ SUBROUTINE compute_becsum( iflag )
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE scf,                  ONLY : rho
-  USE uspp,                 ONLY : nkb, vkb, becsum, becsum_d, okvan, using_vkb
+  USE uspp,                 ONLY : nkb, vkb, becsum, becsum_d, okvan
   USE uspp_param,           ONLY : nhm
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, wg
@@ -63,7 +63,6 @@ SUBROUTINE compute_becsum( iflag )
      IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
      IF ( nks > 1 ) CALL using_evc(2)
      !
-     IF ( nkb > 0 ) CALL using_vkb(2)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .false.)
      !
      ! ... actual calculation is performed inside routine "sum_bec"
