@@ -15,12 +15,12 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE constants,            ONLY : eps8
-  USE klist,                ONLY : nks, xk, ngk, igk_k_d
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb_d, using_vkb, using_vkb_d, deeq_d
+  USE uspp,                 ONLY : nkb, vkb, using_vkb, deeq_d
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
@@ -72,8 +72,8 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
   IF ( nks > 1 ) THEN
-    CALL using_vkb_d(1)
-    CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+    CALL using_vkb(1)
+    CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
   ENDIF
   !
   CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm ) 
@@ -81,10 +81,13 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   !
   CALL using_evc_d(0)
   CALL using_vkb(0)
-  CALL using_vkb_d(0)
   CALL using_becp_d_auto(2)
   !
-  CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+  CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+!$acc end host_data
+!$acc end data
   !
   CALL dev_buf%lock_buffer( qm1_d, npwx, ierr )
   !$cuf kernel do (1) <<<*,*>>>
