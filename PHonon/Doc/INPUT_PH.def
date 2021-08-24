@@ -166,9 +166,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
         var trans  -type LOGICAL { 
             default { .true. }
             info {
-                If .true. the phonons are computed.
-                If @ref trans .and. @ref epsil are .true. effective charges are 
-                calculated.
+                If .false. the phonons are not computed.
+                If @ref trans .and. @ref epsil are both .true.,
+		the effective charges are calculated.
+		If @ref ldisp is .true., trans=.false. is overridden
+                (except for the case of electron-phonon calculations)
             }      
         }
         

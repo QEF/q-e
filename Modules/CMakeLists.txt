@@ -93,7 +93,7 @@ set(src_modules
     wyckoff.f90 
     wypos.f90 
     zvscal.f90 
-    wave_parallel.f90
+    wave_gauge.f90
     # list of subroutines and functions (not modules) previously found in flib/
     atom_weight.f90 
     capital.f90 
