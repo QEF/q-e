@@ -315,7 +315,7 @@ MODULE ph_restart
               END DO
               CALL xmlw_closetag( )
            ENDDO
-           CALL xmlw_closetag( )
+           ! Note: Root tag closed by routine ph_writefile
         RETURN
         END SUBROUTINE write_el_phon
 
