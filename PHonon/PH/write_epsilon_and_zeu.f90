@@ -20,9 +20,9 @@ subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   !! input: unit number
   integer :: nat
   !! input: number of atom in the unit cell
-  real(DP) :: zstareu (3,3,nat)
+  real(DP) :: zstareu(3,3,nat)
   !! the effective charges
-  epsilon (3,3)
+  real(DP) :: epsilon(3,3)
   !! the dielectric tensor
   !
   ! ... local variables
