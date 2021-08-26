@@ -9,12 +9,12 @@
 !---------------------------------------------------------------------
 subroutine symdvscf (nper, irr, dvtosym)
   !---------------------------------------------------------------------
-  ! symmetrize the self-consistent potential of the perturbations
-  ! belonging to an irreducible representation. 
-  ! The routine is generalized to include, in the noncollinear 
-  ! magnetic case, also the symmetry operations that require the 
-  ! time-reversal operator (meaning that TS is a symmetry of the 
-  ! crystal).  
+  !! Symmetrize the self-consistent potential of the perturbations
+  !! belonging to an irreducible representation.  
+  !! The routine is generalized to include, in the noncollinear 
+  !! magnetic case, also the symmetry operations that require the 
+  !! time-reversal operator (meaning that TS is a symmetry of the 
+  !! crystal).  
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
@@ -23,19 +23,20 @@ subroutine symdvscf (nper, irr, dvtosym)
   USE symm_base, ONLY : s, ft, t_rev
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE modes,   ONLY : t, tmq
-
   USE lr_symm_base, ONLY : minus_q, irotmq, nsymq, gi, gimq 
-
+  !
   implicit none
-
-  integer :: nper, irr
-  ! the number of perturbations
-  ! the representation under conside
+  !
+  integer :: nper
+  !! the number of perturbations
+  integer :: irr
+  !! the representation under conside
+  complex(DP) :: dvtosym(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x,nspin_mag,nper)
+  !! the potential to be symmetrized
+  !
+  ! ... local variables
+  !
   integer :: ftau(3,nsymq), s_scaled(3,3,nsymq)
-
-  complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
-  ! the potential to be symmetrized
-
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
        irot
   !  counters
