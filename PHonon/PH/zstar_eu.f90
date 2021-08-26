@@ -8,11 +8,9 @@
 !-----------------------------------------------------------------------
 subroutine zstar_eu
   !-----------------------------------------------------------------------
-  !
-  ! Calculate the effective charges Z(E,Us) (E=scf,Us=bare)
-  !
-  ! epsil =.true. is needed for this calculation to be meaningful
-  !
+  !! Calculate the effective charges Z(E,Us) (E=scf,Us=bare).  
+  !! NOTE: \(\text{epsil}=\text{TRUE}\) is needed for this calculation to
+  !! be meaningful.
   !
   USE kinds,            ONLY : DP
   USE cell_base,        ONLY : bg
