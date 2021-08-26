@@ -6,6 +6,7 @@ Fixed in development version:
   * Some PP files were not correctly read since v.6.7
   * DFT-D3 with dftd3_version=4 or 6 could produce NaN's in parallel runs
     due to missing zero initialization of some work arrays
+  * Ensemble-DFT in CP ("cg") wasn't working any longer for norm-conserving PPs
 
 Known problems in 6.8 version:
   * electron-phonon calculation in the non-colinear/spinorbit case is broken
