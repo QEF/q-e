@@ -96,8 +96,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
   ! output: the change of the scf charge
 
-  real(DP) , allocatable :: h_diag (:,:)
-  ! h_diag: diagonal part of the Hamiltonian
   real(DP) :: thresh, averlt, dr2
   ! thresh: convergence threshold
   ! averlt: average number of iterations
@@ -131,14 +129,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
              iter0,      & ! starting iteration
              ipert,      & ! counter on perturbations
              iter,       & ! counter on iterations
-             ltaver,     & ! average counter
-             lintercall, & ! average number of calls to cgsolve_all
              ik, ikk,    & ! counter on k points
              ikq,        & ! counter on k+q points
              ndim,       &
              is,         & ! counter on spin polarizations
              nrec,       & ! the record number for dvpsi and dpsi
-             mode,       &  ! mode index
+             mode,       & ! mode index
              isolv,      & ! counter on linear systems
              nsolv,      & ! number of linear systems
              ikmk          ! index of mk
@@ -175,7 +171,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ALLOCATE(mixin(1))
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe, nsolv))
-  allocate (h_diag ( npwx*npol, nbnd))
   allocate (aux2(npwx*npol, nbnd))
   allocate (drhoc(dfftp%nnr))
   IF (noncolin.AND.domag.AND.okvan) THEN
@@ -296,8 +291,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   do kter = 1, niter_ph
      !
      iter = kter + iter0
-     ltaver = 0
-     lintercall = 0
      !
      first_iter = .NOT. (where_rec == 'solve_lint' .OR. iter > 1)
      !
@@ -584,7 +577,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   CALL apply_dpot_deallocate()
   if (allocated(ldoss)) deallocate (ldoss)
   if (allocated(ldos)) deallocate (ldos)
-  deallocate (h_diag)
   deallocate (dbecsum)
   IF (okpaw) THEN
      if (allocated(becsum1)) deallocate (becsum1)
