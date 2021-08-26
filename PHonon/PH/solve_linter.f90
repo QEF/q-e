@@ -30,6 +30,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !        isolv = 2 needs the time-reversed wave functions). For the
   !        theoretical background, please refer to Phys. Rev. B 100,
   !        045115 (2019)
+  !    Step b, c, d are done inside nonint_rho_response.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat

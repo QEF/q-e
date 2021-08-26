@@ -16,6 +16,15 @@ SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvps
    !! non-interacting susceptibility. Solve Sternheimer equation
    !! (H - e) * dpsi = dvpsi = -P_c+ * (dV_bare + dV_ind) * psi.
    !!
+   !! Perfoms the following tasks:
+   !!  a) reads the bare potential term Delta V | psi > from buffer iudvpsi.
+   !!  b) adds to it the screening term Delta V_{SCF} | psi >.
+   !!     If lda_plus_u=.true. compute also the SCF part
+   !!     of the response Hubbard potential.
+   !!  c) applies P_c^+ (orthogonalization to valence states).
+   !!  d) calls cgsolve_all to solve the linear system.
+   !!  e) returns the Delta rho, and if lda_plus_u=.true. also return dbecsum
+   !!
    !! dV_bare * psi is read from buffer iudvpsi, so they must be already calculated.
    !! dV_ind is given by input dvscfins, and dV_ind * psi is calculated in apply_dpot_bands.
    !!
