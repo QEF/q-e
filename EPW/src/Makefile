@@ -78,13 +78,10 @@ EPWOBJS += ephblochkq.o wfc_elec.o test_tools.o
 
 
 PHOBJS = ../../PHonon/PH/libph.a
-PWOBJS = ../../PW/src/libpw.a
 W90LIB = ../../wannier90-3.1.0/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
-PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
-         ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
-LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
+QEMODS = $(BASEMODS)
 
 TLDEPS= pw ph pp
 

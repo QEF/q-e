@@ -114,7 +114,7 @@ makov_payne.o
 LOBJS = \
 entropy.o 
 
-QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../XClib/xc_lib.a
+QEMODS=$(BASEMODS)
 
 TLDEPS= bindir libs mods
 

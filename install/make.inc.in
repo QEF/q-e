@@ -55,8 +55,9 @@ IFLAGS         = @iflags@
 MOD_FLAG      = @imod@
 
 # BASEMOD_FLAGS points to directories containing basic modules,
-# while BASEMODS points to the corresponding module libraries
-# Each Makefile can add directories to MODFLAGS and libraries to QEMODS
+# while BASEMODS points to the corresponding module libraries.
+# More package-specific directories can be added in each Makefile
+# and stored into MODFLAGS, and the same for module libraries in QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/XClib \
@@ -66,6 +67,13 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
 	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
+
+BASEMODS= $(TOPDIR)/Modules/libqemod.a \
+          $(TOPDIR)/upflib/libupf.a \
+          $(TOPDIR)/XClib/xc_lib.a \
+          $(TOPDIR)/FFTXlib/libqefft.a \
+          $(TOPDIR)/LAXlib/libqela.a \
+          $(TOPDIR)/UtilXlib/libutil.a
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90

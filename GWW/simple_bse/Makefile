@@ -19,9 +19,7 @@ spectrum.o \
 lanczos.o \
 build_eemat.o
 
-QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a \
-	../../KS_Solvers/libks_solvers.a \
-        ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+QEMODS = $(BASEMODS)
 
 TLDEPS=bindir libs mods gwwlib
 

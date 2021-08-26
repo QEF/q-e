@@ -308,8 +308,7 @@ PWLIBS += \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
-       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 
 TLDEPS= bindir libs mods libks_solvers dftd3
 

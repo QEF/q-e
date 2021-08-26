@@ -16,10 +16,8 @@ diagonalization.o \
 dielectric.o  
 
 
-QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a \
-        ../../KS_Solvers/libks_solvers.a \
-	../../LAXlib/libqela.a ../../UtilXlib/libutil.a
-PWOBJS = ../../PW/src/libpw.a
+QEMODS = $(BASEMODS)
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a
 
 LIBMIN= 
 

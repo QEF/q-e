@@ -45,10 +45,8 @@ qpcorrections.o
 #zvscal_test.o\
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-	 ../../upflib/libupf.a  ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../XClib/xc_lib.a
-PWOBJS = ../../PW/src/libpw.a
+QEMODS = $(BASEMODS)
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a
 

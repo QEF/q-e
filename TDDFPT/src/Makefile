@@ -8,10 +8,8 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-	 ../../upflib/libupf.a    ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
-PWOBJS = ../../PW/src/libpw.a
+QEMODS = $(BASEMODS)
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 LRMODS = ../../LR_Modules/liblrmod.a
 
 LROBJS= \

@@ -5,11 +5,8 @@ include ../../make.inc
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../src
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
-         ../../UtilXlib/libutil.a ../../LAXlib/libqela.a
-# libqela required by xlf for obscure reasons
-PWOBJS = ../src/libpw.a
+QEMODS = $(BASEMODS)
+PWOBJS = ../src/libpw.a ../../KS_Solvers/libks_solvers.a
 
 TLDEPS= pwlibs
 

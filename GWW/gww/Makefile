@@ -43,9 +43,7 @@ times_gw.o \
 vcprim.o 
 
 
-QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+QEMODS = ../../KS_Solvers/libks_solvers.a $(BASEMODS)
 
 LIBMIN= ../minpack/minpacklib.a
 
