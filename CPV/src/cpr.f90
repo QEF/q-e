@@ -601,7 +601,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
 #endif
          !
          IF ( tpre ) THEN
+#if defined (__CUDA)
+           CALL caldbec_bgrp( eigr, cm_d, dbec, idesc )
+#else
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
+#endif
          END IF
          !
          IF ( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp_bgrp )

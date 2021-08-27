@@ -1029,6 +1029,16 @@
          REAL(DP),    INTENT(OUT) ::  dbec( :, :, :, : )
          INTEGER, INTENT(IN) :: idesc( :, : )
       END SUBROUTINE caldbec_bgrp_x
+#if defined (__CUDA)
+      SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN) ::  eigr( :, : )
+         COMPLEX(DP), INTENT(IN), DEVICE  ::  c_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) ::  dbec( :, :, :, : )
+         INTEGER, INTENT(IN) :: idesc( :, : )
+      END SUBROUTINE caldbec_bgrp_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE dennl
@@ -1083,6 +1093,14 @@
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
          COMPLEX(DP), INTENT(OUT) :: dbeigr( :, :, :, :)
       END SUBROUTINE dbeta_eigr_x
+#if defined (__CUDA)
+      SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(OUT), DEVICE :: dbeigr( :, :, :, :)
+      END SUBROUTINE dbeta_eigr_gpu_x
+#endif
    END INTERFACE
 
 !=----------------------------------------------------------------------------=!
