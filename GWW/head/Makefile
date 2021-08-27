@@ -19,11 +19,10 @@ openfilq.o \
 phq_readin.o \
 solve_head.o 
 
-QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a \
-         ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
-	 ../../dft-d3/libdftd3qe.a
-LIBPWPH =  ../../PHonon/PH/libph.a ../..//LR_Modules/liblrmod.a ../../PW/src/libpw.a
+QEMODS = $(BASEMODS)
+LIBPWPH =  ../../PHonon/PH/libph.a ../../LR_Modules/liblrmod.a \
+	   ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
+
 
 LIBMIN= ../minpack/minpacklib.a
 
@@ -31,9 +30,9 @@ TLDEPS= phlibs
 
 all : tldeps head.x  
 
-head.x : head.o $(LIBOBJS) $(HEADOBJS) $(LIBPWPH) $(LIBMIN)
+head.x : head.o $(HEADOBJS) $(LIBPWPH) $(LIBMIN)
 	$(LD) $(LDFLAGS) -o head.x head.o \
-		 $(HEADOBJS) $(LIBPWPH)  $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
+		 $(HEADOBJS) $(LIBPWPH)  $(QEMODS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../GWW/head/head.x . )
 
 tldeps :
