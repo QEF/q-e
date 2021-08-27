@@ -44,14 +44,14 @@ TLDEPS=pwlibs
 
 all : tldeps neb.x path_interpolation.x
 
-neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
+neb.x : $(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../NEB/src/$@ . )
 
-path_interpolation.x : path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+path_interpolation.x : path_interpolation.o libneb.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../NEB/src/$@ . )
 
 libneb.a : $(NEBLIBS)

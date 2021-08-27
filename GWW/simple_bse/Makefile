@@ -25,9 +25,9 @@ TLDEPS=bindir libs mods gwwlib
 
 all : tldeps simple_bse.x  libsimple_exc.a
 
-simple_bse.x : simple_bse.o $(EXCOBJS) $(LIBOBJS) $(QEMODS)  
+simple_bse.x : simple_bse.o $(EXCOBJS) $(QEMODS)  
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		simple_bse.o $(EXCOBJS) $(QEMODS) $(LIBOBJS)  $(QELIBS)
+		simple_bse.o $(EXCOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/simple_bse/$@ . )
 
 

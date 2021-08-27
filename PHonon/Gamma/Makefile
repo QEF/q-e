@@ -41,9 +41,9 @@ TLDEPS= pwlibs
 
 all : tldeps phcg.x
 
-phcg.x : phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+phcg.x : phcg.o libphcg.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-		phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

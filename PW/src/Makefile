@@ -314,9 +314,9 @@ TLDEPS= bindir libs mods libks_solvers dftd3
 
 all : tldeps pw.x
 
-pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
+pw.x : $(PWOBJS) libpw.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(QELIBS)
+	   $(PWOBJS) libpw.a $(QEMODS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . ; \
                ln -fs ../PW/src/$@ dist.x ; ln -fs ../PW/src/$@ manypw.x ; )
 # dist.x and manypw.x link the same executable pw.x

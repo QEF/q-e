@@ -49,9 +49,9 @@ cpv-traj-test : cpv-traj-test.x cpv_traj_test.o
 cpv-traj-test.x : $(TEST_CPV_TRAJ_OBJ)
 	$(LD) $(LDFLAGS) -o $@ cpv_traj_test.o $(TEST_CPV_TRAJ_OBJ) $(QEMODS)
 
-all_currents.x : all_currents.o lib_all_currents.a $(QEMODS) $(LIBOBJS)
+all_currents.x : all_currents.o lib_all_currents.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-		all_currents.o lib_all_currents.a $(QEMODS) $(LIBOBJS) $(QELIBS)
+		all_currents.o lib_all_currents.a $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../QEHeat/src/$@ . )
 
 

@@ -30,9 +30,9 @@ TLDEPS= phlibs
 
 all : tldeps head.x  
 
-head.x : head.o $(LIBOBJS) $(HEADOBJS) $(LIBPWPH) $(LIBMIN)
+head.x : head.o $(HEADOBJS) $(LIBPWPH) $(LIBMIN)
 	$(LD) $(LDFLAGS) -o head.x head.o \
-		 $(HEADOBJS) $(LIBPWPH)  $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
+		 $(HEADOBJS) $(LIBPWPH)  $(QEMODS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../GWW/head/head.x . )
 
 tldeps :

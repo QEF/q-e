@@ -53,9 +53,9 @@ TLDEPS= pwlibs
 
 all : tldeps pwcond.x
 
-pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o pwcond.x $(PWCONDOBJS) \
-		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		$(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PWCOND/src/pwcond.x . )
 
 tldeps :
