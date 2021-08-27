@@ -945,6 +945,17 @@
          REAL(DP),    INTENT(OUT) :: becp( :, : )
          INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE nlsm1_x 
+#if defined (__CUDA)
+      SUBROUTINE nlsm1_gpu_x ( n, betae, c, becp, pptype_ )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n
+         COMPLEX(DP), INTENT(IN), DEVICE  :: c( :, : )
+         COMPLEX(DP), INTENT(INOUT), DEVICE  :: betae( :, : )
+         REAL(DP),    INTENT(OUT), DEVICE :: becp( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      END SUBROUTINE nlsm1_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE nlsm2_bgrp
@@ -997,6 +1008,17 @@
          COMPLEX(DP), INTENT(INOUT) :: betae( :, : )
          INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_x
+#if defined (__CUDA)
+      SUBROUTINE calbec_gpu_x( n, betae, c, bec, pptype_ )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)    :: n
+         REAL(DP),    INTENT(OUT), DEVICE   :: bec( :, : )
+         COMPLEX(DP), INTENT(IN), DEVICE    :: c( :, : )
+         COMPLEX(DP), INTENT(INOUT), DEVICE :: betae( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      END SUBROUTINE calbec_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE caldbec_bgrp

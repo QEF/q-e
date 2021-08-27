@@ -575,7 +575,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( tortho ) THEN
 #if defined (__CUDA)
             CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, cm_d, idesc )
-            CALL dev_memcpy( bec_bgrp, bec_d )
             CALL dev_memcpy( cm_bgrp, cm_d )
 #else
             CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
@@ -587,11 +586,19 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            cm_bgrp(:,iupdwn(2):nbsp)   =     cm_bgrp(:,1:nupdwn(2))
            !phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
            CALL dev_memcpy(phi(:,iupdwn(2):), phi, [1, ubound(phi)], 1, [1, nbsp])
+           CALL dev_memcpy(cm_d(:,iupdwn(2):), cm_d, [1, ubound(cm_d)], 1, [1, nbsp])
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !
          ! the following compute only on NC pseudo components
+#if defined (__CUDA)
+         !CALL dev_memcpy( cm_d, cm_bgrp )
+         CALL calbec( nbsp_bgrp, vkb_d, cm_d, bec_d, 1 )
+         CALL dev_memcpy( vkb, vkb_d )
+         CALL dev_memcpy( bec_bgrp, bec_d )
+#else
          CALL calbec( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 1 ) 
+#endif
          !
          IF ( tpre ) THEN
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
@@ -1127,6 +1134,7 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'new_ns' )
   CALL print_clock( 'strucf' )
   CALL print_clock( 'calbec' )
+  CALL print_clock( 'caldbec_bgrp' )
   CALL print_clock( 'exch_corr' )
 !==============================================================
   IF (ts_vdw) THEN
