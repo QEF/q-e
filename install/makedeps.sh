@@ -15,7 +15,7 @@ then
 # upon include files *.h or *.fh or modules. Note that libraries that are 
 # externally maintained should not go into this list
 
-    dirs=" LAXlib FFTXlib UtilXlib clib \
+    dirs=" LAXlib FFTXlib UtilXlib \
            dft-d3 \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
 	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
