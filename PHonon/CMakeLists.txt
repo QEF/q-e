@@ -10,7 +10,6 @@ set(src_ph
     PH/addusddens.f90
     PH/addusddense.f90
     PH/addusdynmat.f90
-    PH/adddvhubscf.f90
     PH/allocate_part.f90
     PH/allocate_pert.f90
     PH/allocate_phq.f90
@@ -178,7 +177,6 @@ set(src_ph
     PH/dhdrhopsi.f90
     PH/set_dvscf.f90
     PH/non_scf_ph.f90
-    PH/adddvscf_ph_mag.f90
     PH/apply_trev.f90
     PH/c_bands_ph.f90
     PH/dvscf_interpolate.f90
