@@ -30,7 +30,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !        isolv = 2 needs the time-reversed wave functions). For the
   !        theoretical background, please refer to Phys. Rev. B 100,
   !        045115 (2019)
-  !    Step b, c, d are done inside nonint_rho_response.
+  !    Step b, c, d are done inside sternheimer_kernel.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat
@@ -85,7 +85,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE ldaU,                 ONLY : lda_plus_u
   USE nc_mag_aux,           ONLY : int1_nc_save, deeq_nc_save, int3_save
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
-  USE rho_response,         ONLY : nonint_rho_response
+  USE response_kernels,     ONLY : sternheimer_kernel
 
   implicit none
 
@@ -329,7 +329,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         ! Compute drhoscf, the charge density response to the total potential
         !
-        CALL nonint_rho_response(first_iter, isolv==2, npe, lrbar, iubar, &
+        CALL sternheimer_kernel(first_iter, isolv==2, npe, lrbar, iubar, &
             thresh, dvscfins, averlt, drhoscf, dbecsum, dbecsum_nc(:,:,:,:,:,isolv))
         !
         !  reset the original magnetic field if it was changed

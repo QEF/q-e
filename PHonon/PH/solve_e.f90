@@ -22,7 +22,7 @@ subroutine solve_e
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !     f) If lda_plus_u=.true. compute also the response occupation
   !        matrices dnsscf
-  !   Step b, c, d are done in nonint_rho_response.
+  !   Step b, c, d are done in sternheimer_kernel.
   !
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
@@ -63,7 +63,7 @@ subroutine solve_e
   USE fft_interfaces,        ONLY : fft_interpolate
   USE ldaU,                  ONLY : lda_plus_u
   USE apply_dpot_mod,        ONLY : apply_dpot_allocate, apply_dpot_deallocate
-  USE rho_response,          ONLY : nonint_rho_response
+  USE response_kernels,      ONLY : sternheimer_kernel
   !
   IMPLICIT NONE
   !
@@ -194,7 +194,7 @@ subroutine solve_e
      !
      ! Compute dvscfout, the charge density response to the total potential
      !
-     CALL nonint_rho_response(iter==1, .FALSE., 3, lrebar, iuebar, thresh, dvscfins, &
+     CALL sternheimer_kernel(iter==1, .FALSE., 3, lrebar, iuebar, thresh, dvscfins, &
                               averlt, dvscfout, dbecsum, dbecsum_nc)
      !
      !  The calculation of dbecsum is distributed across processors

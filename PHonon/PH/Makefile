@@ -8,7 +8,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
 PHOBJS = \
-rho_response.o \
+response_kernels.o \
 acfdtest.o \
 add_dkmds.o \
 add_for_charges.o \

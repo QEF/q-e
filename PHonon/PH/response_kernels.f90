@@ -7,9 +7,9 @@
 !
 !
 !------------------------------------------------------------------------------
-MODULE rho_response
+MODULE response_kernels
 CONTAINS
-SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvpsi, &
+SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi, &
          thresh, dvscfins, avg_iter, drhoout, dbecsum, dbecsum_nc)
    !----------------------------------------------------------------------------
    !! Compute the density response to the perturbation dV = dV_bare + dV_ind by the
@@ -260,7 +260,7 @@ SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvps
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
    !
 !----------------------------------------------------------------------------
-END SUBROUTINE nonint_rho_response
+END SUBROUTINE sternheimer_kernel
 !------------------------------------------------------------------------------
-END MODULE rho_response
+END MODULE response_kernels
 !------------------------------------------------------------------------------
