@@ -20,13 +20,13 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE io_global,            ONLY : stdout
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions,        ONLY : evc
-  USE klist,                ONLY : lgauss, ltetra, xk, wk, nelec, ngk, igk_k
+  USE klist,                ONLY : lgauss, ltetra, nelec, ngk
   USE gvecs,                ONLY : doublegrid
   USE scf,                  ONLY : rho
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE wvfct,                ONLY : nbnd, npwx, et
-  USE uspp,                 ONLY : okvan, vkb, nkb
+  USE wvfct,                ONLY : nbnd, npwx
+  USE uspp,                 ONLY : okvan, nkb
   USE uspp_param,           ONLY : nhm
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, becp
   USE buffers,              ONLY : save_buffer, get_buffer
@@ -37,10 +37,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
   USE hp_efermi_shift,      ONLY : hp_ef_shift, def
-  USE eqv,                  ONLY : dvpsi, dpsi, evq
   USE qpoint,               ONLY : nksq, ikks, xq
-  USE control_lr,           ONLY : lgamma, nbnd_occ
-  USE units_lr,             ONLY : iuwfc, lrwfc, iudwf, lrdwf
+  USE control_lr,           ONLY : lgamma
+  USE units_lr,             ONLY : iuwfc, lrwfc
   USE lrus,                 ONLY : int3, int3_paw
   USE dv_of_drho_lr,        ONLY : dv_of_drho
   USE fft_helper_subroutines
@@ -61,13 +60,11 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   REAL(DP),  ALLOCATABLE :: h_diag (:,:) ! diagonal part of the Hamiltonian
   !
   REAL(DP) :: thresh, & ! convergence threshold
-              anorm,  & ! the norm of the error
               averlt, & ! average number of iterations
               dr2       ! self-consistency error
   !
-  REAL(DP) :: dos_ef, &  ! density of states at the Fermi level
-              weight, &  ! Misc variables for metals
-              aux_avg(2) ! Misc variables for metals
+  REAL(DP) :: dos_ef
+  !! density of states at the Fermi level
   !
   REAL(DP), ALLOCATABLE :: becsum1(:,:,:)
   ! 
@@ -92,8 +89,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   COMPLEX(DP), ALLOCATABLE :: t(:,:,:,:), tmq(:,:,:)
   ! PAW: auxiliary arrays
  
-  LOGICAL :: conv_root,  & ! true if linear system is converged
-             lmetq0,     & ! true if xq=(0,0,0) in a metal
+  LOGICAL :: lmetq0,     & ! true if xq=(0,0,0) in a metal
              convt,      & ! not needed for HP 
              convt_chi     ! used instead of convt to control the convergence
 
