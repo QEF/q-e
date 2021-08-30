@@ -121,11 +121,12 @@
       COMPLEX(DP),  INTENT(IN)  :: sfac(:,:)
       REAL(DP),     INTENT(IN)  :: epseu
 
-      INTEGER     :: ig,k,is, ispin
+      INTEGER     :: ig,k,is, ispin, s_ngm_ 
       COMPLEX(DP) :: dsvp, svp, depst(6), depst1,depst2,depst3,depst4,depst5,depst6
       REAL(DP)    :: wz
       !
       CALL start_clock("stress_local") 
+      s_ngm_ = dffts%ngm
 DEV_ACC data present(rhoe, drhoe,sfac) copyin(gagb,vps,dvps) 
 DEV_ACC update self(drhoe(1,1:6), sfac(1,1:nsp)) 
       depst  = (0.d0,0.d0)
@@ -137,7 +138,7 @@ DEV_ACC update self(drhoe(1,1:6), sfac(1,1:nsp))
       depst6 = (0.d0,0.d0) 
       wz = 2.0d0
 DEV_ACC parallel loop private(svp) reduction(+:depst1,depst2,depst3,depst4,depst5,depst6) 
-      DO ig = gstart, dffts%ngm
+      DO ig = gstart, s_ngm_
          svp = 0.0d0
 DEV_ACC loop seq 
          DO is = 1, nsp
@@ -169,7 +170,7 @@ DEV_ACC loop seq
       END IF 
       !
 DEV_ACC parallel loop private(dsvp) reduction(+:depst1,depst2,depst3,depst4,depst5,depst6) 
-      DO ig = gstart, dffts%ngm
+      DO ig = gstart, s_ngm_
          dsvp = 0.0d0
 DEV_ACC loop seq 
          DO is = 1, nsp
@@ -421,28 +422,29 @@ DEV_ACC end data
       REAL(DP), ALLOCATABLE :: hgm1( : )
       REAL(DP)    :: wz
 
-      INTEGER       ig, is, k, iss
+      INTEGER       ig, is, k, iss, p_ngm_
 
       DEHC  = (0.D0,0.D0)
       DEHT  = 0.D0
+      p_ngm_ = dfftp%ngm
 
       wz = 2.0d0
 
-      ALLOCATE( hgm1( dfftp%ngm ) )
+      ALLOCATE( hgm1( p_ngm_ ) )
       ! 
 DEV_ACC data present(sfac,rhot,drhot) copyin(gagb,gg) create(hgm1)
       !
 DEV_ACC kernels  
       hgm1( 1 ) = 0.0d0
 DEV_ACC loop 
-      DO ig = gstart, dfftp%ngm
+      DO ig = gstart, p_ngm_
          hgm1( ig ) = 1.D0 / gg(ig) / tpiba2
       END DO
 DEV_ACC end kernels
 
       ! Add term  rho_t * CONJG( rho_t ) / G^2 * G_alpha * G_beta / G^2
 DEV_ACC parallel loop private(cfact) reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,dehc6) 
-      DO ig = gstart, dfftp%ngm
+      DO ig = gstart, p_ngm_
          cfact = rhot( ig ) * CONJG( rhot( ig ) ) * hgm1( ig ) ** 2 
          dehc1 = dehc1 + cfact * gagb(1,ig)
          dehc2 = dehc2 + cfact * gagb(2,ig)
@@ -454,7 +456,7 @@ DEV_ACC parallel loop private(cfact) reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,d
 
       ! Add term  2 * Re{ CONJG( rho_t ) * drho_t / G^2 }
 DEV_ACC parallel loop reduction(+:dehc1,dehc2,dehc3,dehc4,dehc5,dehc6) 
-      DO ig = gstart, dfftp%ngm
+      DO ig = gstart, p_ngm_
          dehc1 = dehc1  +  rhot( ig ) * CONJG( drhot( ig, 1 ) ) * hgm1( ig )
          dehc2 = dehc2  +  rhot( ig ) * CONJG( drhot( ig, 2 ) ) * hgm1( ig )
          dehc3 = dehc3  +  rhot( ig ) * CONJG( drhot( ig, 3 ) ) * hgm1( ig )

@@ -8,7 +8,7 @@
 !
 #if defined (_OPENACC) 
  #ifndef __OPENACC 
-  # define __OPENACC 
+  #define __OPENACC 
  #endif
 #endif 
 
@@ -21,7 +21,7 @@
  #define DEV_ACC !!!
  #define DEV_OMP !$omp 
  #define START_WSHARE DEV_OMP workshare
- #define END_WSHARE   DEV_OMP workshare
+ #define END_WSHARE   DEV_OMP end workshare
 #endif 
 
 !-----------------------------------------------------------------------
@@ -82,6 +82,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE fft_helper_subroutines
       
       USE plugin_variables, ONLY: plugin_etot
+#if defined(__OPENACC)
+      USE cublas
+#endif  
 
       IMPLICIT NONE
 !
@@ -124,17 +127,21 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
       COMPLEX(DP), PARAMETER :: ci = ( 0.0d0, 1.0d0 )
-
+      INTEGER  :: p_ngm_, s_ngm_, p_nnr_, s_nnr_
 
       CALL start_clock( 'vofrho' )
-
+      p_ngm_ = dfftp%ngm 
+      s_ngm_ = dffts%ngm
+      p_nnr_ = dfftp%nnr
+      s_nnr_ = dffts%nnr
+      
       !
       !     TS-vdW calculation (RAD)
       !
       IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
-        ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
+        ALLOCATE (stmp(3,nat), rhocsave(p_nnr_) )
         stmp(:,:) = tau0(:,:)
         !
         IF ( nspin==2 ) THEN
@@ -155,14 +162,15 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       wz = 2.0d0
       !
       ht = TRANSPOSE( h )
+      
       !
-      ALLOCATE( vtemp( dfftp%ngm ) )
-      ALLOCATE( rhotmp( dfftp%ngm ) )
+      ALLOCATE( vtemp( p_ngm_ ) )
+      ALLOCATE( rhotmp( p_ngm_ ) )
       !
       IF ( tpre ) THEN
-         ALLOCATE( drhot( dfftp%ngm, 6 ) )
-         ALLOCATE( gagb( 6, dfftp%ngm ) )
-         CALL compute_gagb( gagb, g, dfftp%ngm, tpiba2 )
+         ALLOCATE( drhot( p_ngm_, 6 ) )
+         ALLOCATE( gagb( 6, p_ngm_ ) )
+         CALL compute_gagb( gagb, g, p_ngm_, tpiba2 )
       END IF
 !
 !     ab-initio pressure and surface tension contributions to the potential
@@ -181,7 +189,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
-      IF( ttsic ) ALLOCATE( self_vloc( dfftp%ngm ) )
+      IF( ttsic ) ALLOCATE( self_vloc( p_ngm_ ) )
       !
       !     first routine in which fion is calculated: annihilation
       !
@@ -209,11 +217,11 @@ DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg) copyout(vtemp) create(drhot,rhot
 DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
 
  START_WSHARE 
-      rhotmp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
+      rhotmp( 1:p_ngm_ ) = rhog( 1:p_ngm_, 1 )
  END_WSHARE
       IF( nspin == 2 ) THEN
  START_WSHARE
-         rhotmp( 1:dfftp%ngm ) = rhotmp( 1:dfftp%ngm ) + rhog( 1:dfftp%ngm, 2 )
+         rhotmp( 1:p_ngm_ ) = rhotmp( 1:p_ngm_ ) + rhog( 1:p_ngm_, 2 )
  END_WSHARE
       END IF
       !
@@ -260,14 +268,14 @@ DEV_ACC parallel loop
       DO is=1,nsp
 DEV_OMP do
 DEV_ACC parallel loop 
-         DO ig=1,dffts%ngm
+         DO ig=1,s_ngm_
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
 
 DEV_OMP do reduction(+:zpseu)
 DEV_ACC parallel loop reduction(+:zpseu) 
-      DO ig=1,dffts%ngm
+      DO ig=1,s_ngm_
          zpseu = zpseu + vtemp(ig)
       END DO
 DEV_OMP end parallel
@@ -301,7 +309,7 @@ DEV_OMP parallel default(shared), private(ig,is)
 DEV_ACC kernels 
       DO is=1,nsp
 DEV_OMP do 
-         DO ig=1,dffts%ngm
+         DO ig=1,s_ngm_
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          END DO
       END DO
@@ -309,13 +317,13 @@ DEV_ACC end kernels
       !
 DEV_OMP do
 DEV_ACC parallel loop 
-      DO ig = gstart, dfftp%ngm
+      DO ig = gstart, p_ngm_
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
 DEV_OMP do reduction(+:zh)
 DEV_ACC parallel loop reduction(+:zh) 
-      DO ig = gstart, dfftp%ngm
+      DO ig = gstart, p_ngm_
          zh = zh + vtemp(ig)
       END DO
 
@@ -351,11 +359,11 @@ DEV_OMP end parallel
       !
       IF( tprnfor .OR. tfor .OR. tpre) THEN
 START_WSHARE
-          vtemp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
+          vtemp( 1:p_ngm_ ) = rhog( 1:p_ngm_, 1 )
 END_WSHARE
           IF( nspin == 2 ) THEN
 START_WSHARE
-             vtemp( 1:dfftp%ngm ) = vtemp(1:dfftp%ngm) + rhog( 1:dfftp%ngm, 2 )
+             vtemp( 1:p_ngm_ ) = vtemp(1:p_ngm_) + rhog( 1:p_ngm_, 2 )
 END_WSHARE
           END IF
           CALL start_clock("force_loc") 
@@ -376,13 +384,13 @@ DEV_ACC parallel loop
 !
 DEV_OMP parallel default(shared), private(ig,is)
 DEV_OMP do
-      DO ig=gstart,dfftp%ngm
+      DO ig=gstart,p_ngm_
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
       !
 DEV_ACC parallel loop 
 DEV_OMP do
-      DO ig=1,dffts%ngm
+      DO ig=1,s_ngm_
 DEV_ACC loop seq 
          DO is=1,nsp
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
@@ -390,7 +398,6 @@ DEV_ACC loop seq
       END DO
 DEV_OMP end parallel
 
-DEV_ACC end data
       DEALLOCATE (rhotmp)
 
 !
@@ -405,10 +412,10 @@ DEV_ACC end data
       ! ... We also need an allocated rhoc array even in absence of core charge
       !
       IF ( dft_is_nonlocc() ) THEN
-         ALLOCATE ( rhosave(dfftp%nnr,nspin),  rhocsave(dfftp%nnr) )
-         ALLOCATE ( newrhosave(dfftp%nnr,nspin) )
+         ALLOCATE ( rhosave(p_nnr_,nspin),  rhocsave(p_nnr_) )
+         ALLOCATE ( newrhosave(p_nnr_,nspin) )
          rhosave(:,:) = rhor(:,:)
-         IF ( SIZE(rhoc) == dfftp%nnr ) THEN
+         IF ( SIZE(rhoc) == p_nnr_ ) THEN
             rhocsave(:)= rhoc(:)
          ELSE
             rhocsave(:)= 0.0_dp
@@ -492,20 +499,23 @@ DEV_ACC end data
       ELSE
          CALL rho_r2g ( dfftp, rhor, rhog )
       END IF
-       
+DEV_ACC update device (rhog) 
       IF( nspin == 1 ) THEN
-         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,1), 1)
+         CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,1), 1)
       ELSE
          isup=1
          isdw=2
-         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isup), 1)
-         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isdw), 1)
+DEV_ACC host_data use_device(vtemp,rhog) 
+         CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isup), 1)
+         CALL zaxpy(p_ngm_, (1.0d0,0.0d0) , vtemp, 1, rhog(:,isdw), 1)
+DEV_ACC end host_data  
          IF( ttsic ) THEN
-            rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) - self_vloc(1:dfftp%ngm) 
-            rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) - self_vloc(1:dfftp%ngm) 
+            rhog( 1:p_ngm_, isup ) = rhog( 1:p_ngm_, isup ) - self_vloc(1:p_ngm_) 
+            rhog( 1:p_ngm_, isdw ) = rhog( 1:p_ngm_, isdw ) - self_vloc(1:p_ngm_)
          END IF
       END IF
-
+DEV_ACC update self(rhog) 
+DEV_ACC end data  
       DEALLOCATE (vtemp)
       IF( ttsic ) DEALLOCATE( self_vloc )
 !
