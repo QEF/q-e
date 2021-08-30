@@ -205,3 +205,22 @@ MODULE units_lr
              lrdwf      ! length of D psi record
   !
 END MODULE units_lr
+
+MODULE ldaU_lr
+  !
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : ntypx
+  !
+  REAL(DP) :: effU(ntypx)
+  ! effective Hubbard parameter: effU = Hubbard_U - Hubbard_J0
+  ! TODO: Can be moved to PW/ldaU
+  !
+  COMPLEX(DP), ALLOCATABLE :: dnsscf(:,:,:,:,:)
+  !! SCF derivative of ns
+  !
+  COMPLEX(DP), ALLOCATABLE, TARGET :: swfcatomk(:,:)
+  !! S * atomic wfc at k
+  COMPLEX(DP), POINTER :: swfcatomkpq(:,:)
+  !! S * atomic wfc at k+q
+  !
+END MODULE ldaU_lr

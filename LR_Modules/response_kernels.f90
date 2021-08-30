@@ -237,7 +237,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
          tot_cg_calls = tot_cg_calls + 1
          !
          IF (.NOT. conv_root) WRITE( stdout, "(5x, 'kpoint', i4, &
-                & ' solve_e: root not converged ', es10.3)") ik, anorm
+                & ' solve_e: root not converged, thresh < ', es10.3)") ik, anorm
          !
          ! writes delta_psi on iunit iudwf, k=kpoint,
          !

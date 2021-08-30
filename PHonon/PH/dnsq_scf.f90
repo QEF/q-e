@@ -28,7 +28,8 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   USE units_lr,      ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
-  USE ldaU_ph,       ONLY : swfcatomk, swfcatomkpq, proj1, proj2, dnsscf, dnsorth
+  USE ldaU_ph,       ONLY : proj1, proj2, dnsorth
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, dnsscf
   USE klist,         ONLY : xk, wk, degauss, ngauss, ngk
   USE wvfct,         ONLY : npwx, wg, nbnd, et 
   USE qpoint,        ONLY : nksq, ikks, ikqs

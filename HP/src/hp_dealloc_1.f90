@@ -14,7 +14,8 @@ SUBROUTINE hp_dealloc_1()
   !
   USE lr_symm_base,   ONLY : rtau
   USE start_k,        ONLY : xk_start, wk_start
-  USE ldaU_hp,        ONLY : Rvect, dnsscf, dns0, dnsscf_tot, dns0_tot, &
+  USE ldaU_lr,        ONLY : dnsscf
+  USE ldaU_hp,        ONLY : Rvect, dns0, dnsscf_tot, dns0_tot, &
                              x_q, comp_iq
   !
   IMPLICIT NONE

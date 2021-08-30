@@ -44,7 +44,7 @@ subroutine phq_summary
   USE qpoint,        ONLY : xq
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq
   USE constants,     ONLY : rytoev
-  USE ldaU_ph,       ONLY : effU
+  USE ldaU_lr,       ONLY : effU
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0, &
                             lda_plus_u_kind, is_hubbard
  

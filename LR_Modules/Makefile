@@ -7,6 +7,8 @@ MODFLAGS=$(BASEMOD_FLAGS) $(MOD_FLAG)$(TOPDIR)/PW/src
 
 LR_MODULES = \
 adddvscf.o \
+adddvscf_ph_mag.o \
+adddvhubscf.o \
 addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \

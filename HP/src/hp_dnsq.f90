@@ -42,8 +42,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   USE lr_symm_base,         ONLY : nsymq
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
   USE ldaU_hp,              ONLY : conv_thr_chi, trace_dns_tot_old, &
-                                   conv_thr_chi_best, iter_best, iudwfc, lrdwfc, &
-                                   swfcatomk, swfcatomkpq
+                                   conv_thr_chi_best, iter_best, iudwfc, lrdwfc
+  USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   USE hp_efermi_shift,      ONLY : def
   !
   IMPLICIT NONE

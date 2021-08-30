@@ -28,7 +28,8 @@ SUBROUTINE phescf()
   USE lrus,            ONLY : int3, int3_nc, int3_paw
   USE control_lr,      ONLY : lrpa
   USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax
-  USE ldaU_ph,         ONLY : dnsscf, dnsscf_all_modes
+  USE ldaU_lr,         ONLY : dnsscf
+  USE ldaU_ph,         ONLY : dnsscf_all_modes
   USE control_flags,   ONLY : iverbosity
   USE write_hub
   !

@@ -26,8 +26,8 @@ subroutine hp_allocate_q
   USE eqv,                  ONLY : dpsi, evq, dmuxc, dvpsi
   USE control_lr,           ONLY : lgamma
   USE ldaU,                 ONLY : Hubbard_lmax, nwfcU
-  USE ldaU_hp,              ONLY : this_pert_is_on_file, &
-                                   swfcatomk, swfcatomkpq
+  USE ldaU_hp,              ONLY : this_pert_is_on_file
+  USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   !
   IMPLICIT NONE
   INTEGER :: ik

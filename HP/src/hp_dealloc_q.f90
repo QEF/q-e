@@ -22,8 +22,8 @@ SUBROUTINE hp_dealloc_q()
                                   & dvxc_s, vsgga, segni
   USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq
   USE control_lr,          ONLY : lgamma, nbnd_occ
-  USE ldaU_hp,             ONLY : this_pert_is_on_file, &
-                                  swfcatomk, swfcatomkpq
+  USE ldaU_hp,             ONLY : this_pert_is_on_file
+  USE ldaU_lr,             ONLY : swfcatomk, swfcatomkpq
   !
   IMPLICIT NONE
   INTEGER :: ik

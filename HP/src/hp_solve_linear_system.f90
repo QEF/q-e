@@ -46,7 +46,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
   USE lr_symm_base,         ONLY : irotmq, minus_q, nsymq, rtau
-  USE ldaU_hp,              ONLY : thresh_init, dnsscf, dns0, trace_dns_tot_old,  & 
+  USE ldaU_lr,              ONLY : dnsscf
+  USE ldaU_hp,              ONLY : thresh_init, dns0, trace_dns_tot_old,  &
                                    conv_thr_chi_best, iter_best, niter_max, nmix, &
                                    alpha_mix, iudwfc, lrdwfc, code
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &

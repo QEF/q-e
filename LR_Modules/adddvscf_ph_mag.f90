@@ -25,7 +25,6 @@ subroutine adddvscf_ph_mag (ipert, ik, becp1)
   USE klist,      ONLY : ngk
   USE noncollin_module, ONLY : noncolin, npol
   USE becmod,     ONLY : bec_type
-! modules from phcom
   USE lrus,       ONLY : int3, int3_nc
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE eqv,        ONLY : dvpsi

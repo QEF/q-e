@@ -43,8 +43,8 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_l, is_hubbard, Hubbard_J0
-  USE ldaU_ph,       ONLY : dnsbare, dnsbare_all_modes, dnsscf, &
-                            dnsorth_cart, effU
+  USE ldaU_lr,       ONLY : dnsscf, effU
+  USE ldaU_ph,       ONLY : dnsbare, dnsbare_all_modes, dnsorth_cart
   USE lsda_mod,      ONLY : lsda, current_spin, isk, nspin
   USE modes,         ONLY : u, nmodes
   USE dynmat,        ONLY : dyn, dyn_rec, dyn_hub_scf

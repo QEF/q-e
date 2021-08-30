@@ -116,7 +116,6 @@ MODULE ldaU_hp
   !
   COMPLEX(DP), ALLOCATABLE :: dns0(:,:,:,:,:),         & ! Bare response occupation matrix 
                                                          ! (from 1st iteration)
-                              dnsscf(:,:,:,:,:),       & ! SCF response occupation matrix 
                               dns0_tot(:,:,:,:,:),     & ! Total bare response occupation matrix 
                                                          ! (summed over q)
                               dnsscf_tot(:,:,:,:,:),   & ! Total SCF  response occupation matrix 
@@ -125,8 +124,5 @@ MODULE ldaU_hp
                                                          ! (for a convergence test) 
   !
   INTEGER, ALLOCATABLE :: ityp_new(:)       ! Types of atoms
-  !
-  COMPLEX(DP), ALLOCATABLE, TARGET :: swfcatomk(:,:)  ! S * atomic wfc at k
-  COMPLEX(DP), POINTER :: swfcatomkpq(:,:)            ! S * atomic wfc at k+q
   !
 END MODULE ldaU_hp

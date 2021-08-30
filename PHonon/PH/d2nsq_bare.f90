@@ -1078,8 +1078,9 @@ SUBROUTINE d2nsq_bare_k (ik, icart, jcart, na, nap, nah, &
     USE units_lr,      ONLY : iuwfc, lrwfc
     USE ions_base,     ONLY : nat, ityp, ntyp => nsp
     USE klist,         ONLY : xk, ngk, igk_k
-    USE ldaU_ph,       ONLY : wfcatomk, swfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
+    USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
                               dvkb, vkbkpq, dvkbkpq, proj1, d2ns_type
+    USE ldaU_lr,       ONLY : swfcatomk
     USE wvfct,         ONLY : npwx, nbnd, wg
     USE uspp,          ONLY : vkb, nkb
     USE qpoint,        ONLY : nksq, ikks, ikqs
@@ -1258,8 +1259,9 @@ SUBROUTINE d2nsq_bare_k_diag (ik, icart, jcart, na, nap, nah, &
     USE units_lr,        ONLY : iuwfc, lrwfc
     USE ions_base,       ONLY : nat, ityp, ntyp => nsp
     USE klist,           ONLY : xk, ngk, igk_k
-    USE ldaU_ph,         ONLY : wfcatomk, swfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
+    USE ldaU_ph,         ONLY : wfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
                                 dvkb, vkbkpq, dvkbkpq, proj1, d2ns_type
+    USE ldaU_lr,         ONLY : swfcatomk
     USE wvfct,           ONLY : npwx, nbnd, wg
     USE uspp,            ONLY : vkb, nkb
     USE qpoint,          ONLY : nksq, ikks, ikqs

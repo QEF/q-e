@@ -39,7 +39,8 @@ subroutine hp_dvpsi_pert (ik)
   USE control_lr,           ONLY : lgamma
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, offsetU, nwfcU
   USE ldaU_hp,              ONLY : nqsh, perturbed_atom, this_pert_is_on_file, &
-                                   iudvwfc, lrdvwfc, swfcatomk, swfcatomkpq
+                                   iudvwfc, lrdvwfc
+  USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   !
   IMPLICIT NONE
   !
