@@ -49,7 +49,6 @@ MODULE ldaU_hp
   LOGICAL, ALLOCATABLE :: todo_atom(:),              & ! Which atoms must be perturbed
                           perturbed_atom(:),         & ! Controls which atom is perturbed in the HP
                                                        ! calculation
-                          this_pert_is_on_file(:),   & ! The perturbation is written on file or not
                           comp_iq(:)                   ! If .true. this q point has to be calculated
   !
   INTEGER :: nath,            &             ! Number of (real) atoms in the primitive cell
