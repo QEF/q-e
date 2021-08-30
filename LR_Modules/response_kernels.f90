@@ -10,7 +10,8 @@
 MODULE response_kernels
 CONTAINS
 SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi, &
-         thresh, dvscfins, avg_iter, drhoout, dbecsum, dbecsum_nc, exclude_hubbard)
+         thresh, dvscfins, all_conv, avg_iter, drhoout, dbecsum, dbecsum_nc, &
+         exclude_hubbard)
    !----------------------------------------------------------------------------
    !! Compute the density response to the perturbation dV = dV_bare + dV_ind by the
    !! non-interacting susceptibility. Solve Sternheimer equation
@@ -93,6 +94,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !! unit for the buffer storing dV_bare * psi
    REAL(DP), INTENT(IN) :: thresh
    !! threshold for solving the linear equation
+   LOGICAL, INTENT(OUT) :: all_conv
+   !! True if converged at all k points and perturbations
    REAL(DP), INTENT(OUT) :: avg_iter
    !! average number of iterations for the linear equation solver
    COMPLEX(DP), POINTER, INTENT(IN) :: dvscfins(:, :, :)
@@ -126,14 +129,15 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    EXTERNAL ch_psi_all, cg_psi
    !! functions passed to cgsolve_all
    !
+   ! Initialization
+   !
    exclude_hubbard_ = .FALSE.
    IF (PRESENT(exclude_hubbard)) exclude_hubbard_ = exclude_hubbard
-   !
-   ! Initialization
    !
    ALLOCATE(h_diag(npwx*npol, nbnd))
    ALLOCATE(aux2(npwx*npol, nbnd))
    !
+   all_conv = .TRUE.
    tot_num_iter = 0
    tot_cg_calls = 0
    !
@@ -247,8 +251,11 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
          tot_num_iter = tot_num_iter + num_iter
          tot_cg_calls = tot_cg_calls + 1
          !
-         IF (.NOT. conv_root) WRITE( stdout, "(5x, 'kpoint', i4, &
-                & ' solve_e: root not converged, thresh < ', es10.3)") ik, anorm
+         IF (.NOT. conv_root) THEN
+            all_conv = .FALSE.
+            WRITE( stdout, "(5x, 'kpoint', i4, ' sternheimer_kernel: &
+               &root not converged, thresh < ', es10.3)") ik, anorm
+         ENDIF
          !
          ! writes delta_psi on iunit iudwf, k=kpoint,
          !

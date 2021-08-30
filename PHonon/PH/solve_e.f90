@@ -69,6 +69,8 @@ subroutine solve_e
   !
   LOGICAL :: exst
   !!
+  LOGICAL :: all_conv
+  !! True if sternheimer_kernel is converged at all k points and perturbations
   INTEGER :: ikk, npw, kter, iter0, ipol, iter, ik, is, ndim
   !! counters
   REAL(DP) :: thresh
@@ -195,7 +197,7 @@ subroutine solve_e
      ! Compute dvscfout, the charge density response to the total potential
      !
      CALL sternheimer_kernel(iter==1, .FALSE., 3, lrebar, iuebar, thresh, dvscfins, &
-                              averlt, dvscfout, dbecsum, dbecsum_nc)
+                             all_conv, averlt, dvscfout, dbecsum, dbecsum_nc)
      !
      !  The calculation of dbecsum is distributed across processors
      !  (see addusdbec) - we sum over processors the contributions

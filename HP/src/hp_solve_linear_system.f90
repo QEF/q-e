@@ -89,6 +89,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   COMPLEX(DP), ALLOCATABLE :: t(:,:,:,:), tmq(:,:,:)
   ! PAW: auxiliary arrays
  
+  LOGICAL :: all_conv
+  !! True if sternheimer_kernel is converged at all k points
   LOGICAL :: lmetq0,     & ! true if xq=(0,0,0) in a metal
              convt,      & ! not needed for HP 
              convt_chi     ! used instead of convt to control the convergence
@@ -215,7 +217,11 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ! Compute drhoscf, the charge density response to the total potential
      !
      CALL sternheimer_kernel(iter==1, .FALSE., 1, lrdvwfc, iudvwfc, &
-         thresh, dvscfins, averlt, drhoscf, dbecsum, exclude_hubbard=.TRUE.)
+         thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, exclude_hubbard=.TRUE.)
+     !
+     IF ((.NOT. all_conv) .AND. (iter == 1)) THEN
+        WRITE(stdout, '(6x, "sternheimer_kernel not converged. Try to increase thresh_init.")')
+     ENDIF
      !
      ! USPP: The calculation of dbecsum is distributed across processors (see addusdbec)
      ! Sum over processors the contributions coming from each slice of bands

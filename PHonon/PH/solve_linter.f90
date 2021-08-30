@@ -122,6 +122,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ! drhoc: response core charge density
   REAL(DP), allocatable :: becsum1(:,:,:)
 
+  LOGICAL :: all_conv
+  !! True if sternheimer_kernel is converged at all k points and perturbations
   logical :: exst,       & ! used to open the recover file
              lmetq0,     & ! true if xq=(0,0,0) in a metal
              first_iter    ! true if first iteration where induced rho is not yet calculated
@@ -330,7 +332,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         ! Compute drhoscf, the charge density response to the total potential
         !
         CALL sternheimer_kernel(first_iter, isolv==2, npe, lrbar, iubar, &
-            thresh, dvscfins, averlt, drhoscf, dbecsum, dbecsum_nc(:,:,:,:,:,isolv))
+            thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
+            dbecsum_nc(:,:,:,:,:,isolv))
         !
         !  reset the original magnetic field if it was changed
         !
