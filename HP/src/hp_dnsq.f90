@@ -38,11 +38,11 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   USE control_flags,        ONLY : iverbosity
   USE qpoint,               ONLY : nksq, ikks, ikqs
   USE control_lr,           ONLY : lgamma, nbnd_occ
-  USE units_lr,             ONLY : iuwfc, lrwfc, iuatswfc
+  USE units_lr,             ONLY : iuwfc, lrwfc, iuatswfc, iudwf, lrdwf
   USE lr_symm_base,         ONLY : nsymq
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
   USE ldaU_hp,              ONLY : conv_thr_chi, trace_dns_tot_old, &
-                                   conv_thr_chi_best, iter_best, iudwfc, lrdwfc
+                                   conv_thr_chi_best, iter_best
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   USE hp_efermi_shift,      ONLY : def
   !
@@ -120,7 +120,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      !
      ! At each SCF iteration for each ik read dpsi from file
      !
-     CALL get_buffer (dpsi, lrdwfc, iudwfc, ik)
+     CALL get_buffer (dpsi, lrdwf, iudwf, ik)
      ! 
      ! Loop on Hubbard atoms
      !

@@ -10,7 +10,7 @@
 MODULE response_kernels
 CONTAINS
 SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi, &
-         thresh, dvscfins, avg_iter, drhoout, dbecsum, dbecsum_nc)
+         thresh, dvscfins, avg_iter, drhoout, dbecsum, dbecsum_nc, exclude_hubbard)
    !----------------------------------------------------------------------------
    !! Compute the density response to the perturbation dV = dV_bare + dV_ind by the
    !! non-interacting susceptibility. Solve Sternheimer equation
@@ -43,12 +43,16 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !!    - iudvpsi: unit for the buffer storing dV_bare * psi
    !!    - thresh: threshold for solving Sternheimer equation
    !!    - dvscfins: dV_ind calculated in the previous iteration
+   !!    - exclude_hubbard: If TRUE, do not add the response of the Hubbard potential.
+   !!                       Used in hp.x (Default: FALSE)
    !!
    !! Output:
    !!    - avg_iter: average number of iterations for the linear equation solver
    !!    - drhoout: induced charge density
    !!    - dbecsum: becsum with dpsi
    !!    - dbecsum_nc: becsum with dpsi. Optional, used if noncolin is true.
+   !!
+   !! FIXME: Only 1:dffts%nnr is used for drhoout, but it is allocated as 1:dfftp%nnr.
    !----------------------------------------------------------------------------
    USE kinds,                 ONLY : DP
    USE io_global,             ONLY : stdout
@@ -79,6 +83,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !! true if the first iteration.
    LOGICAL, INTENT(IN) :: time_reversed
    !! true if solving for time reversed wave functions
+   LOGICAL, INTENT(IN), OPTIONAL :: exclude_hubbard
+   !! true if ignoring the Hubbard response term
    INTEGER, INTENT(IN) :: npert
    !! number of perturbations
    INTEGER, INTENT(IN) :: lrdvpsi
@@ -100,6 +106,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !
    LOGICAL :: conv_root
    !! true if linear system is converged
+   LOGICAL :: exclude_hubbard_
+   !! Local variable to set the default of exclude_hubbard to false
    INTEGER :: ikk, ikq, npw, npwq, ipert, num_iter, ik, nrec, ikmk, ikmkmq
    !! counters
    INTEGER :: tot_num_iter
@@ -117,6 +125,9 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !
    EXTERNAL ch_psi_all, cg_psi
    !! functions passed to cgsolve_all
+   !
+   exclude_hubbard_ = .FALSE.
+   IF (PRESENT(exclude_hubbard)) exclude_hubbard_ = exclude_hubbard
    !
    ! Initialization
    !
@@ -202,7 +213,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
             ! DFPT+U: add to dvpsi the scf part of the response
             ! Hubbard potential dV_hub
             !
-            IF (lda_plus_u) CALL adddvhubscf(ipert, ik)
+            IF (lda_plus_u .AND. (.NOT. exclude_hubbard_)) CALL adddvhubscf(ipert, ik)
             !
          ENDIF
          !

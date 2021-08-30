@@ -38,20 +38,20 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE mp,                   ONLY : mp_sum
   USE hp_efermi_shift,      ONLY : hp_ef_shift, def
   USE eqv,                  ONLY : dvpsi, dpsi, evq
-  USE qpoint,               ONLY : nksq, ikks, ikqs, xq
+  USE qpoint,               ONLY : nksq, ikks, xq
   USE control_lr,           ONLY : lgamma, nbnd_occ
-  USE units_lr,             ONLY : iuwfc, lrwfc
+  USE units_lr,             ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE lrus,                 ONLY : int3, int3_paw
   USE dv_of_drho_lr,        ONLY : dv_of_drho
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
   USE lr_symm_base,         ONLY : irotmq, minus_q, nsymq, rtau
   USE ldaU_lr,              ONLY : dnsscf
-  USE ldaU_hp,              ONLY : thresh_init, dns0, trace_dns_tot_old,  &
+  USE ldaU_hp,              ONLY : thresh_init, dns0, trace_dns_tot_old, &
                                    conv_thr_chi_best, iter_best, niter_max, nmix, &
-                                   alpha_mix, iudwfc, lrdwfc, code
-  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
-                                   apply_dpot_bands
+                                   alpha_mix, code, lrdvwfc, iudvwfc
+  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
+  USE response_kernels,     ONLY : sternheimer_kernel
   !
   IMPLICIT NONE
   !
@@ -74,7 +74,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   COMPLEX(DP), ALLOCATABLE, TARGET :: dvscfin(:,:)
   ! change of the scf potential (input)
   !
-  COMPLEX(DP), POINTER :: dvscfins(:,:)
+  COMPLEX(DP), POINTER :: dvscfins(:,:,:)
   ! change of the scf potential (smooth part only)
   !
   COMPLEX(DP), ALLOCATABLE :: drhoscf  (:,:), &
@@ -100,19 +100,13 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   REAL(DP), PARAMETER :: tr2 = 1.D-30 ! threshold parameter
 
   INTEGER :: iter,       & ! counter on iterations
-             lter,       & ! counter on iterations of linear system
-             ltaver,     & ! average counter
-             lintercall, & ! average number of calls to cgsolve_all
              ik, ikk,    & ! counter on k points
-             ikq,        & ! counter on k+q points
              ndim,       &
              is,         & ! counter on spin polarizations
-             npw,        & ! number of plane waves at k 
-             npwq          ! number of plane waves at k+q 
+             npw           ! number of plane waves at k
 
   REAL(DP) :: tcpu, get_clock ! timing variables
   CHARACTER(LEN=256) :: flmixdpot = 'mixd'
-  EXTERNAL ch_psi_all, cg_psi
   !
   CALL start_clock ('hp_solve_linear_system')
   !
@@ -122,15 +116,16 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   ! Allocate arrays for the SCF density/potential
   !
-  ALLOCATE (drhoscf (dffts%nnr, nspin_mag)) 
+  ALLOCATE (drhoscf (dfftp%nnr, nspin_mag))
   ALLOCATE (drhoscfh(dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfin (dfftp%nnr, nspin_mag))
   ALLOCATE (dvscfout(dfftp%nnr, nspin_mag))
   !
+  dvscfin = (0.0_DP, 0.0_DP)
   IF (doublegrid) THEN
-     ALLOCATE (dvscfins(dffts%nnr, nspin_mag))
+     ALLOCATE (dvscfins(dffts%nnr, nspin_mag, 1))
   ELSE
-     dvscfins => dvscfin
+     dvscfins(1:dffts%nnr, 1:nspin_mag, 1:1) => dvscfin
   ENDIF
   !
   ! USPP-specific allocations
@@ -176,157 +171,60 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      IF (.NOT.okpaw) DEALLOCATE (becsum1)
   ENDIF
   !
+  ! Compute dV_bare * psi and write to buffer iubar
+  !
+  DO ik = 1, nksq
+     !
+     ikk  = ikks(ik)
+     npw  = ngk(ikk)
+     !
+     IF (lsda) current_spin = isk(ikk)
+     !
+     ! Read unperturbed KS wavefuctions psi(k) and psi(k+q)
+     !
+     IF (nksq > 1) THEN
+        CALL get_buffer(evc, lrwfc, iuwfc, ikk)
+     ENDIF
+     !
+     ! Computes (iter=1) or reads (iter>1) the action of the perturbing
+     ! potential on the unperturbed KS wavefunctions: |dvpsi> = dV_pert * |evc>
+     ! See Eq. (46) in Ref. [1]
+     !
+     CALL hp_dvpsi_pert(ik)
+     !
+  ENDDO ! ik
+  !
   ! The loop of the linear-response calculation
   !
   DO iter = 1, niter_max
      !
      WRITE(stdout,'(/6x,"atom #",i3,3x,"q point #",i4,3x,"iter # ",i3)') na, iq, iter
      !
-     ltaver = 0
-     lintercall = 0
-     !
      drhoscf(:,:)     = (0.d0, 0.d0)
      dvscfout(:,:)    = (0.d0, 0.d0)
      dbecsum(:,:,:,:) = (0.d0, 0.d0)
      !
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     !!!!!!!!!!!!!!!!!!!   START OF THE K LOOP   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     IF ( iter == 1 ) THEN
+        ! Starting threshold for iterative solution of the linear system.
+        ! A strickt threshold for the first iteration is needed,
+        ! because we need dns0 to very high precision.
+        thresh = thresh_init * nelec
+     ELSE
+        ! Threshold for iterative solution of the linear system.
+        ! We start with not a strict threshold for iter=2, and then
+        ! it decreases with iterations.
+        thresh = MIN (1.D-1 * SQRT(dr2), 1.D-2)
+     ENDIF
      !
-     DO ik = 1, nksq
-        !
-        ikk  = ikks(ik)
-        ikq  = ikqs(ik)
-        npw  = ngk(ikk)
-        npwq = ngk(ikq)
-        !
-        IF (lsda) current_spin = isk(ikk)
-        !
-        ! Read unperturbed KS wavefuctions psi(k) and psi(k+q)
-        !
-        IF (nksq.gt.1) THEN
-           IF (lgamma) THEN
-              CALL get_buffer (evc, lrwfc, iuwfc, ikk)
-           ELSE
-              CALL get_buffer (evc, lrwfc, iuwfc, ikk)
-              CALL get_buffer (evq, lrwfc, iuwfc, ikq)
-           ENDIF
-        ENDIF
-        !
-        ! USPP: Compute the projectors vkb at k+q
-        !
-        CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
-        !
-        ! Compute the kinetic energy at k+q
-        !
-        CALL g2_kin (ikq)
-        !
-        ! Compute preconditioning matrix h_diag used by cgsolve_all
-        !
-        CALL h_prec (ik, evq, h_diag)
-        !
-        ! Computes (iter=1) or reads (iter>1) the action of the perturbing
-        ! potential on the unperturbed KS wavefunctions: |dvpsi> = dV_pert * |evc>
-        ! See Eq. (46) in Ref. [1] 
-        !
-        CALL hp_dvpsi_pert(ik)
-        !
-        IF ( iter > 1 ) THEN
-           !
-           ! Add the contribution of the self consistent term.
-           ! Calculates dvscf_q*psi(k) in G-space, for all bands, k=ik
-           ! dvscf_q from previous iteration (mix_potential)
-           !
-           CALL start_clock ('hp_vpsifft')
-           CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins, evc, aux2)
-           dvpsi = dvpsi + aux2
-           CALL stop_clock ('hp_vpsifft')
-           !
-           ! USPP: there is an additional self-consistent term proportional to int3
-           ! |dvpsi> = |dvpsi> + dV_HXC*|evc> + int3 * |beta><beta|evc>
-           !
-           IF (okvan) CALL adddvscf(1, ik)
-           !
-        ENDIF
-        !
-        ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
-        ! Apply -P_c^+. See Eq. (A21) in Ref. [1]
-        !
-        CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, .FALSE.)
-        !
-        IF ( iter == 1 ) THEN
-           !
-           ! At the first iteration dpsi and dvscfin are set to zero
-           !
-           dpsi(:,:)    = (0.d0, 0.d0)
-           dvscfin(:,:) = (0.d0, 0.d0)
-           !
-           ! Starting threshold for iterative solution of the linear system.
-           ! A strickt threshold for the first iteration is needed, 
-           ! because we need dns0 to very high precision.
-           !
-           thresh = thresh_init * nelec
-           !
-        ELSE
-           !
-           ! Starting value for dpsi is read from file
-           !
-           CALL get_buffer( dpsi, lrdwfc, iudwfc, ik)
-           !
-           ! Threshold for iterative solution of the linear system.
-           ! We start with not a strict threshold for iter=2, and then
-           ! it decreases with iterations.
-           !
-           thresh = MIN (1.D-1 * SQRT(dr2), 1.D-2)
-           !
-        ENDIF
-        !
-        ! Iterative solution of the linear system:
-        ! (H + Q - eS) * |dpsi> = |dvpsi>,
-        ! where |dvpsi> = - P_c^+ (dV_HXC + dV_pert) * |evc>
-        ! See Eq. (43) in Ref. [1]
-        !
-        CALL cgsolve_all (ch_psi_all, cg_psi, et(1,ikk), dvpsi, dpsi, h_diag, &
-              & npwx, npwq, thresh, ik, lter, conv_root, anorm, nbnd_occ(ikk), npol )
-        !
-        ltaver = ltaver + lter
-        !
-        lintercall = lintercall + 1
-        !
-        IF (.NOT.conv_root) THEN
-           WRITE( stdout, '(6x,"kpoint",i4,  &
-             & " hp_solve_linear_system: root not converged, thresh < ",e10.3)') ik , anorm
-           IF (iter == 1) WRITE( stdout, '(6x,"Try to increase thresh_init...")')
-        ENDIF
-        !
-        ! Writes dpsi on file for a given k
-        !
-        CALL save_buffer (dpsi, lrdwfc, iudwfc, ik)
-        !
-        ! Setup the weight at point k (normalized by the number of k points)
-        !
-        weight = wk(ikk)
-        !
-        ! Calculates the response charge density (sum over k)
-        ! See Eq. (48) in Ref. [1]
-        ! 
-        CALL incdrhoscf (drhoscf(:,current_spin), weight, ik, &
-                           & dbecsum(:,:,current_spin,1), dpsi)
-        !
-     ENDDO ! k points 
+     ! Compute drhoscf, the charge density response to the total potential
      !
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     !!!!!!!!!!!!!!!!!!!!!   END OF THE K LOOP   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     !
-#if defined (__MPI)
+     CALL sternheimer_kernel(iter==1, .FALSE., 1, lrdvwfc, iudvwfc, &
+         thresh, dvscfins, averlt, drhoscf, dbecsum, exclude_hubbard=.TRUE.)
      !
      ! USPP: The calculation of dbecsum is distributed across processors (see addusdbec)
      ! Sum over processors the contributions coming from each slice of bands
      !
      CALL mp_sum ( dbecsum, intra_pool_comm )
-     !
-#endif
      !
      ! Copy/interpolate the response density drhoscf -> drhoscfh
      !
@@ -342,10 +240,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
      IF (okvan) CALL lr_addusddens (drhoscfh, dbecsum)
      !
-#if defined (__MPI)
+     call mp_sum ( drhoscf, inter_pool_comm )
      CALL mp_sum ( drhoscfh, inter_pool_comm ) 
      IF (okpaw) CALL mp_sum ( dbecsum, inter_pool_comm )
-#endif
      !
      ! PAW: the factor of 2 is due to the presence of the CC term
      ! (see first two terms in Eq.(9) in PRB 81, 075123 (2010))
@@ -430,7 +327,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
      IF (doublegrid) THEN
         DO is = 1, nspin_mag
-           CALL fft_interpolate (dfftp, dvscfin(:,is), dffts, dvscfins(:,is))
+           CALL fft_interpolate (dfftp, dvscfin(:,is), dffts, dvscfins(:,is,1))
         ENDDO
      ENDIF
      !
@@ -457,16 +354,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
      IF ( iter == 1 ) dns0(:,:,:,:,iq) = dnsscf(:,:,:,:,iq)
      !
-     ! Compute the average number of iterations 
-     ! 
-#if defined (__MPI)
-     aux_avg(1) = DBLE(ltaver)
-     aux_avg(2) = DBLE(lintercall)
-     CALL mp_sum ( aux_avg, inter_pool_comm )
-     averlt = aux_avg(1) / aux_avg(2)
-#else
-     averlt = DBLE(ltaver) / DBLE(lintercall)
-#endif
+     ! Print the average number of iterations
      !
      tcpu = get_clock(code)
      !
@@ -485,11 +373,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         CALL hp_stop_smoothly (.TRUE.) 
      ENDIF
      !
-     IF (convt_chi) goto 155
+     IF (convt_chi) EXIT
      !
   ENDDO  ! loop over the iterations iter
-  !
-155 CONTINUE
   !
   CALL apply_dpot_deallocate()
   DEALLOCATE (h_diag)

@@ -77,8 +77,6 @@ MODULE ldaU_hp
              nq1, nq2, nq3,   &             ! Number of q points in each direction
              nqs,             &             ! Number of q points to be calculated
              start_q, last_q, &             ! Initial and final q in the list
-             iudwfc,          &             ! Unit for response wavefunctions  
-             lrdwfc,          &             ! Length of the record for response wavefunctions
              iudvwfc,         &             ! Unit for the perturbing potential * wavefunctions
              lrdvwfc                        ! Length of the record for the perturbing potential * wavefunctions
   !
