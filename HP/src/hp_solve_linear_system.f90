@@ -20,14 +20,12 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE io_global,            ONLY : stdout
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions,        ONLY : evc
-  USE cell_base,            ONLY : tpiba2
   USE klist,                ONLY : lgauss, ltetra, xk, wk, nelec, ngk, igk_k
-  USE gvect,                ONLY : g
   USE gvecs,                ONLY : doublegrid
   USE scf,                  ONLY : rho
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE wvfct,                ONLY : nbnd, npwx, g2kin, et
+  USE wvfct,                ONLY : nbnd, npwx, et
   USE uspp,                 ONLY : okvan, vkb, nkb
   USE uspp_param,           ONLY : nhm
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, becp
@@ -88,41 +86,31 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ldoss (:,:),            & ! as above, without augmentation charges
      dbecsum (:,:,:,:),      & ! the derivative of becsum
      aux2 (:,:),             & ! auxiliary arrays
-     mixin(:), mixout(:),    & ! auxiliary arrays for mixing of the response potential
-     tg_dv(:,:),             & ! Task groups: auxiliary array for potential * wfct
-     tg_psic(:,:)              ! Task groups: auxiliary array for wavefunctions
+     mixin(:), mixout(:)       ! auxiliary arrays for mixing of the response potential
  
   COMPLEX(DP), ALLOCATABLE :: t(:,:,:,:), tmq(:,:,:)
   ! PAW: auxiliary arrays
  
   LOGICAL :: conv_root,  & ! true if linear system is converged
-             exst,       & ! used to open the recover file
              lmetq0,     & ! true if xq=(0,0,0) in a metal
              convt,      & ! not needed for HP 
              convt_chi     ! used instead of convt to control the convergence
 
   REAL(DP), PARAMETER :: tr2 = 1.D-30 ! threshold parameter
 
-  INTEGER :: ibnd,       & ! counter on bands
-             iter,       & ! counter on iterations
+  INTEGER :: iter,       & ! counter on iterations
              lter,       & ! counter on iterations of linear system
              ltaver,     & ! average counter
              lintercall, & ! average number of calls to cgsolve_all
              ik, ikk,    & ! counter on k points
              ikq,        & ! counter on k+q points
-             ig,         & ! counter on G vectors
              ndim,       &
              is,         & ! counter on spin polarizations
-             nt,         & ! counter on types
-             ios,        & ! integer variable for I/O control
-             incr,       & ! used for task groups
-             v_siz,      & ! size of the potential
              npw,        & ! number of plane waves at k 
              npwq          ! number of plane waves at k+q 
 
   REAL(DP) :: tcpu, get_clock ! timing variables
-  CHARACTER(LEN=256) :: filename, &
-                        flmixdpot = 'mixd'
+  CHARACTER(LEN=256) :: flmixdpot = 'mixd'
   EXTERNAL ch_psi_all, cg_psi
   !
   CALL start_clock ('hp_solve_linear_system')
@@ -174,16 +162,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   convt     = .FALSE.
   convt_chi = .FALSE.
-  !
-  incr = 1
-  IF ( dffts%has_task_groups ) THEN
-     !
-     v_siz =  dffts%nnr_tg
-     ALLOCATE( tg_dv  ( v_siz, nspin_mag ) )
-     ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = fftx_ntgrp(dffts)
-     !
-  ENDIF
   !
   ! If q=0 for a metal: allocate and compute local DOS and DOS at Ef
   !
@@ -533,10 +511,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      DEALLOCATE (tmq)
   ENDIF
   CALL deallocate_bec_type (becp)
-  IF ( dffts%has_task_groups ) THEN
-     DEALLOCATE( tg_dv )
-     DEALLOCATE( tg_psic )
-  ENDIF
   !
   WRITE( stdout,*) "     "
   WRITE( stdout,*) "     =--------------------------------------------="
