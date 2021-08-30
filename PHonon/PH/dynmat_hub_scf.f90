@@ -53,8 +53,7 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   USE wvfct,         ONLY : npwx, nbnd
   USE control_lr,    ONLY : lgamma
   USE control_ph,    ONLY : rec_code_read
-  USE units_ph,      ONLY : iudwf, lrdwf
-  USE units_lr,      ONLY : iuwfc, lrwfc
+  USE units_lr,      ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE wavefunctions, ONLY : evc
   USE klist,         ONLY : wk, lgauss, ltetra, ngk, igk_k
   USE uspp,          ONLY : okvan

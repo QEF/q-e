@@ -25,8 +25,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   !
   USE kinds,         ONLY : DP
   USE io_files,      ONLY : nwordwfcU
-  USE units_ph,      ONLY : lrdwf, iudwf
-  USE units_lr,      ONLY : iuwfc, lrwfc
+  USE units_lr,      ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
   USE ldaU_ph,       ONLY : swfcatomk, swfcatomkpq, proj1, proj2, dnsscf, dnsorth

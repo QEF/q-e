@@ -66,8 +66,7 @@ SUBROUTINE nonint_rho_response(first_iter, time_reversed, npert, lrdvpsi, iudvps
    USE uspp,                  ONLY : vkb
    USE uspp_param,            ONLY : nhm
    USE ldaU,                  ONLY : lda_plus_u
-   USE units_ph,              ONLY : lrdwf, iudwf
-   USE units_lr,              ONLY : iuwfc, lrwfc
+   USE units_lr,              ONLY : iuwfc, lrwfc, lrdwf, iudwf
    USE control_lr,            ONLY : nbnd_occ, lgamma
    USE qpoint,                ONLY : nksq, ikks, ikqs
    USE qpoint_aux,            ONLY : ikmks, ikmkmqs, becpt

@@ -200,6 +200,8 @@ MODULE units_lr
   INTEGER :: iuwfc,   & ! unit for wavefunctions
              lrwfc,   & ! the length of wavefunction record
              iuatwfc, & ! unit for atomic wavefunctions
-             iuatswfc   ! unit for atomic wavefunctions * S
+             iuatswfc,& ! unit for atomic wavefunctions * S
+             iudwf,   & ! unit with D psi
+             lrdwf      ! length of D psi record
   !
 END MODULE units_lr

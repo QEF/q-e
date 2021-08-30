@@ -22,7 +22,8 @@ subroutine dielec()
   USE buffers, ONLY : get_buffer
   USE noncollin_module, ONLY : npol
   USE efield_mod, ONLY : epsilon
-  USE units_ph, ONLY : lrdwf, iudwf, lrebar, iuebar
+  USE units_ph, ONLY : lrebar, iuebar
+  USE units_lr, ONLY : lrdwf, iudwf
   USE eqv, ONLY : dpsi, dvpsi
   USE qpoint, ONLY : nksq, ikks
   USE ph_restart, ONLY : ph_writefile
