@@ -139,7 +139,7 @@ subroutine phq_setup
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
-!!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+!************************ ACFDT TEST ***********************
 !  write(*,*) " acfdt_is_active ",acfdt_is_active, " acfdt_num_der ", acfdt_num_der
   IF (acfdt_is_active) THEN
      ! discard set_vrs for numerical derivatives
@@ -149,7 +149,7 @@ subroutine phq_setup
   ELSE
      call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
   ENDIF
-!!!!!!!!!!!!!!!!!!!!!!!!END OF  ACFDT TEST !!!!!!!!!!!!!!!!
+!************************END OF  ACFDT TEST ******************
   !
   ! Set non linear core correction stuff
   !
