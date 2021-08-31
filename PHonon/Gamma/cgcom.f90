@@ -144,8 +144,12 @@ MODULE diffs
   !
 END MODULE diffs
 !
-!
+!------------------------------------------------
 MODULE cgcom
+  !---------------------------------------------
+  !! Contains PHONON-specific modules (Conjugate 
+  !! Gradient version).
+  !
   USE cgconv
   USE phunits
   USE flags
@@ -155,4 +159,5 @@ MODULE cgcom
   USE diffs
   USE symmetry
   USE dielectric
+  !
 END MODULE cgcom
