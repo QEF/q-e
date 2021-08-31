@@ -20,7 +20,8 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
+  !
   INTEGER :: nmodes, nat3, nat,ityp(nat)
   real(DP):: dyn(nat3,nmodes), u(nat3,nmodes), amass(*)
   real(DP):: dynout(nat3,nmodes), w2(nat3)

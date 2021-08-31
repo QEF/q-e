@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------
 subroutine add_for_charges (ik, uact)
   !----------===============-----------------------------------------------
-  !! This subroutine calculates \(\frac{dS}{du} P_c [x, H-eS] \|\psi\rangle\)
+  !! This subroutine calculates: \(\frac{dS}{du} P_c [x, H-eS] |\psi\rangle\)
   !
 
   USE kinds, only : DP

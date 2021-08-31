@@ -8,10 +8,12 @@
 !-----------------------------------------------------------------------
 subroutine add_zstar_ue (imode0, npe)
   !-----------------------------------------------------------------------
-  !! Add the contribution of the modes \( \text{imode0}+1 \rigtharrow 
-  !! \text{imode}+\text{npe}\) to the effective charges \(Z(Us,E)\) (Us=scf,E=bare)
+  !! Add the contribution of the modes \( \text{imode0}+1 \rightarrow 
+  !! \text{imode}+\text{npe}\) to the effective charges \(Z(\text{Us},E)\) 
+  !! (Us=scf,E=bare).
   !
-  !! \(\text{trans} =\text{.true.}\) is needed for this calculation to be meaningful.
+  !! \(\text{trans} =\text{TRUE}\) is needed for this calculation to be 
+  !! meaningful.
   !
   USE kinds, only : DP
   USE klist, ONLY : xk, wk, ngk, igk_k

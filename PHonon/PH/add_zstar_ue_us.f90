@@ -8,13 +8,13 @@
 !--------------------------------------------------------
 subroutine add_zstar_ue_us(imode0,npe)
   !----------===============-------------------------------
-  !! Add the contribution of the modes \( \text{imode0}+1 \rigtharrow 
-  !! \text{imode}+\text{npe}\) to the effective charges \(Z(Us,E)\)
+  !! Add the contribution of the modes \( \text{imode0}+1 \rightarrow 
+  !! \text{imode}+\text{npe}\) to the effective charges \(Z(\text{Us},E)\)
   !! (Us=scf,E=bare).
   !
   !! This subroutine is just for the USPP case.
   !
-  !! \(\text{trans} =\text{.true.}\) is needed for this calculation to
+  !! \(\text{trans} =\text{TRUE}\) is needed for this calculation to
   !! be meaningful.
   !
 

@@ -53,9 +53,10 @@ END SUBROUTINE dwfc
 SUBROUTINE d2wfc (npw_ , igk_ , ik_ , icart_ , jcart_, func, d2func)
   !----------------------------------------------------------------------
   !! This routine calculates the second derivative of a wave function 
-  !! w.r.t. the position operator r_icart and r_jcart:
+  !! with respect to the position operator \(r_\text{icart}\) and 
+  !! \(r_\text{jcart}\):
   !! $$ d^2 \psi/d\text{icart}d\text{jcart} = \sum_G [-(k+G)_\text{icart}
-  !! \cdot -(k+G)_\text{gcart}] \psi(G) $$
+  !! \cdot (-(k+G)_\text{gcart})] \psi(G) $$
   !
   USE kinds,      ONLY : DP
   USE wvfct,      ONLY : npwx
