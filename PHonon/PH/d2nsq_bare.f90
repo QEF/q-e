@@ -15,7 +15,7 @@ CONTAINS
 SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq) 
    !--------------------------------------------------------------------------------
    !! This routine calculates for all \(\text{ibnd}\): 
-   !! $$ dpqq(ibnd) = \sum{l_1 l_2}
+   !! $$ \text{dpqq}(\text{ibnd}) = \sum{l_1 l_2}
    !!   \langle \text{vec1}(\text{ibnd})|\text{vec2}(na,l_1)\rangle\cdot
    !!   \text{qq}(na,l_1,l_2)\cdot\langle \text{vec3}(na,l_2)|\text{vec4}\rangle $$
    ! 
