@@ -1394,12 +1394,16 @@ SUBROUTINE projwave( filproj, filowdin, lsym, lwrite_ovp )
      !
      IF (TRIM(filowdin) /= ' ') THEN
         lowdin_unit = find_free_unit()
-        OPEN(unit=lowdin_unit, file=trim(filowdin), status='unknown', form='formatted')
+        OPEN(unit=lowdin_unit, file=trim(filowdin), status='unknown', &
+             form='formatted')
      ELSE
         lowdin_unit = stdout
      END IF
      !
      CALL print_proj( lmax_wfc, proj, lowdin_unit )
+     !
+     IF (TRIM(filowdin) /= ' ') CLOSE( unit=lowdin_unit )
+     !
      CALL write_proj_file ( filproj, proj )
      !
   END IF
