@@ -50,7 +50,7 @@ SUBROUTINE force_us_gpu( forcenl )
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! contains g*|beta>
-!$acc declare device_resident(vkb1)  
+  !$acc declare device_resident(vkb1)  
   !
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
   REAL(DP), ALLOCATABLE :: deff(:,:,:)
@@ -93,26 +93,31 @@ SUBROUTINE force_us_gpu( forcenl )
      !
      CALL using_evc_d(0)
      CALL using_becp_d_auto(2)
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
+     !
+     !$acc data present(vkb(:,:))
+     !$acc host_data use_device(vkb)
      CALL calbec_gpu ( npw, vkb, evc_d, becp_d )
-!$acc end host_data
-!$acc end data
+     !$acc end host_data
+     !$acc end data
      !
      CALL using_evc_d(0)
      DO ipol = 1, 3
-!$acc data present(vkb(:,:), vkb1(npwx,nkb)) deviceptr(g_d(:,:)) copyin(igk_k(:,:))
-!$acc host_data use_device(vkb, vkb1, igk_k)
-!$acc parallel loop collapse(2) 
+       !
+       !$acc data present(vkb(:,:), vkb1(npwx,nkb)) copyin(igk_k(:,:))
+       !$acc parallel loop collapse(2) 
         DO jkb = 1, nkb
            DO ig = 1, npw
               vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k(ig,ik))
            ENDDO
         ENDDO
+        !$acc end data
         !
+        !$acc data present(vkb1(npwx,nkb)) 
+        !$acc host_data use_device(vkb1)
         CALL calbec_gpu ( npw, vkb1, evc_d, dbecp_d )
-!$acc end host_data 
-!$acc end data
+        !$acc end host_data 
+        !$acc end data
+        !
         CALL synchronize_bec_type_gpu(dbecp_d, dbecp, 'h')
         !
         IF ( gamma_only ) THEN

@@ -153,14 +153,17 @@ SUBROUTINE force_hub_gpu( forceh )
       CALL using_evc_d(0)
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+      !$acc update self(vkb)
+      !
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL using_becp_auto(2) ; CALL using_becp_d_auto(2)
-!$acc data present(vkb(:,:))
-!$acc host_data use_device(vkb)
+      !
+      !$acc data present(vkb(:,:))
+      !$acc host_data use_device(vkb)
       CALL calbec_gpu( npw, vkb, evc_d, becp_d )
-!$acc end host_data
-!$acc end data
+      !$acc end host_data
+      !$acc end data
       !
       CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi_d )
       CALL deallocate_bec_type (becp) 

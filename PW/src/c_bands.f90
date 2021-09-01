@@ -354,6 +354,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           FORALL( ig = 1 : npw )
              h_diag(ig, 1) = g2kin(ig) + v_of_0
           END FORALL
+          !
+          !$acc update self(vkb)
           CALL usnldiag( npw, h_diag, s_diag )
        END IF
        !
@@ -693,6 +695,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           !
           CALL allocate_bec_type( nkb, nbnd, bec_evcel )
           !
+          !$acc update self(vkb)
           CALL calbec( npw, vkb, evcel, bec_evcel )
           !
        ENDIF
@@ -719,6 +722,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           FORALL( ig = 1 : npwx )
              h_diag(ig, :) = g2kin(ig) + v_of_0
           END FORALL
+          !
+          !$acc update self(vkb)
           CALL usnldiag( npw, h_diag, s_diag )
        ENDIF
        !
