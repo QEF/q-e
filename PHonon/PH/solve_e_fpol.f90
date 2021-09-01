@@ -16,7 +16,7 @@ subroutine solve_e_fpol ( iw )
   !     a) computes the bare potential term  x | psi >
   !     b) adds to it the screening term Delta V_{SCF} | psi >
   !     c) applies P_c^+ (orthogonalization to valence states)
-  !     d) calls cgsolve_all to solve the linear system
+  !     d) calls gmressolve_all to solve the linear system
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
   USE kinds,                 ONLY : DP
@@ -42,8 +42,8 @@ subroutine solve_e_fpol ( iw )
                                     rec_code, flmixdpot
   USE output,                ONLY : fildrho
   USE qpoint,                ONLY : nksq
-  USE units_ph,              ONLY : lrdwf, iudwf, iudrho, lrdrho
-  USE units_lr,              ONLY : iuwfc, lrwfc
+  USE units_ph,              ONLY : iudrho, lrdrho
+  USE units_lr,              ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE mp_pools,              ONLY : inter_pool_comm
   USE mp_bands,              ONLY : intra_bgrp_comm
   USE mp,                    ONLY : mp_sum

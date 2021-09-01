@@ -21,7 +21,8 @@ subroutine polariz ( iw, iu )
   USE wvfct,        ONLY : npwx
   USE kinds,        ONLY : DP
   USE control_lr,   ONLY : nbnd_occ
-  USE units_ph,     ONLY : lrdwf, iudwf, lrebar, iuebar
+  USE units_ph,     ONLY : lrebar, iuebar
+  USE units_lr,     ONLY : iudwf, lrdwf
   USE buffers,      ONLY : get_buffer
   USE freq_ph,      ONLY : polar, done_iu, comp_iu
   USE eqv,          ONLY : dpsi, dvpsi

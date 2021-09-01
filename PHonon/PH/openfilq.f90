@@ -14,9 +14,9 @@ SUBROUTINE openfilq()
   !
   USE kinds,           ONLY : DP
   USE control_flags,   ONLY : io_level, modenum
-  USE units_ph,        ONLY : iudwf, iubar, iucom, iudvkb3, &
+  USE units_ph,        ONLY : iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
-                              lrdwf, lrbar, lrcom, lrdvkb3, &
+                              lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
                               iundnsscf, iudvpsi, lrdvpsi, iugauge
   USE units_lr,        ONLY : iuwfc, lrwfc
@@ -47,7 +47,7 @@ SUBROUTINE openfilq()
   USE dfile_autoname,  ONLY : dfile_name
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
-  USE units_lr,        ONLY : iuatwfc, iuatswfc
+  USE units_lr,        ONLY : iuatwfc, iuatswfc, iudwf, lrdwf
   USE modes,           ONLY : nmodes
   USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,         ONLY : dnsscf_all_modes

@@ -14,13 +14,11 @@ add_for_charges.o \
 add_zstar_ue.o \
 add_zstar_ue_us.o \
 addcore.o \
-adddvscf_ph_mag.o \
 addnlcc.o \
 addnlcc_zstar_eu_us.o \
 addusddens.o \
 addusddense.o \
 addusdynmat.o \
-adddvhubscf.o \
 allocate_part.o \
 allocate_pert.o \
 allocate_phq.o \

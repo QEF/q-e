@@ -25,29 +25,29 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !     f) If lda_plus_u=.true. compute also the response occupation
   !        matrices dnsscf
-  !     g) (Introduced in February 2020) If noncolin=.true. and domag=.true. 
-  !        the linear system is solved twice (nsolv = 2, the case 
-  !        isolv = 2 needs the time-reversed wave functions). For the 
-  !        theoretical background, please refer to Phys. Rev. B 100, 
+  !     g) (Introduced in February 2020) If noncolin=.true. and domag=.true.
+  !        the linear system is solved twice (nsolv = 2, the case
+  !        isolv = 2 needs the time-reversed wave functions). For the
+  !        theoretical background, please refer to Phys. Rev. B 100,
   !        045115 (2019)
+  !    Step b, c, d are done inside sternheimer_kernel.
   !
   USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE ions_base,            ONLY : nat
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : prefix, diropn
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions,        ONLY : evc
   USE cell_base,            ONLY : at
-  USE klist,                ONLY : ltetra, lgauss, xk, wk, ngk, igk_k
-  USE gvect,                ONLY : g
+  USE klist,                ONLY : ltetra, lgauss, xk, ngk, igk_k
   USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
-  USE wvfct,                ONLY : nbnd, npwx, et
+  USE wvfct,                ONLY : nbnd, npwx
   USE scf,                  ONLY : rho, vrs
   USE uspp,                 ONLY : okvan, vkb, deeq_nc
-  USE uspp_param,           ONLY : upf, nhm
+  USE uspp_param,           ONLY : nhm
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
@@ -59,12 +59,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                                    where_rec, flmixdpot, ext_recover
   USE el_phon,              ONLY : elph
   USE uspp,                 ONLY : nlcc_any
-  USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
+  USE units_ph,             ONLY : iudrho, lrdrho, iubar, lrbar, &
                                    iudvscf, iuint3paw, lint3paw
   USE units_lr,             ONLY : iuwfc, lrwfc
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : becsumort, alphap, int1_nc
-  USE modes,                ONLY : npertx, npert, u, t, tmq
+  USE modes,                ONLY : npertx, u, t, tmq
   USE recover_mod,          ONLY : read_rec, write_rec
   ! used to write fildrho:
   USE dfile_autoname,       ONLY : dfile_name
@@ -76,17 +76,16 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE efermi_shift,         ONLY : ef_shift, ef_shift_paw,  def
   USE lrus,                 ONLY : int3_paw, becp1, int3_nc
   USE lr_symm_base,         ONLY : irotmq, minus_q, nsymq, rtau
-  USE eqv,                  ONLY : dvpsi, dpsi, evq
+  USE eqv,                  ONLY : dvpsi
   USE qpoint,               ONLY : xq, nksq, ikks, ikqs
-  USE qpoint_aux,           ONLY : ikmks, ikmkmqs, becpt, alphapt
-  USE control_lr,           ONLY : nbnd_occ, lgamma
+  USE qpoint_aux,           ONLY : ikmks, becpt, alphapt
+  USE control_lr,           ONLY : lgamma
   USE dv_of_drho_lr,        ONLY : dv_of_drho
-  USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
   USE ldaU,                 ONLY : lda_plus_u
   USE nc_mag_aux,           ONLY : int1_nc_save, deeq_nc_save, int3_save
-  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
-                                   apply_dpot_bands
+  USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
+  USE response_kernels,     ONLY : sternheimer_kernel
 
   implicit none
 
@@ -98,15 +97,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
   ! output: the change of the scf charge
 
-  real(DP) , allocatable :: h_diag (:,:)
-  ! h_diag: diagonal part of the Hamiltonian
-  real(DP) :: thresh, anorm, averlt, dr2, rsign
+  real(DP) :: thresh, averlt, dr2
   ! thresh: convergence threshold
-  ! anorm : the norm of the error
   ! averlt: average number of iterations
   ! dr2   : self-consistency error
-  ! rsign : sign or the term in the magnetization
-  real(DP) :: dos_ef, weight, aux_avg (2)
+  real(DP) :: dos_ef
   ! Misc variables for metals
   ! dos_ef: density of states at Ef
 
@@ -127,38 +122,30 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ! drhoc: response core charge density
   REAL(DP), allocatable :: becsum1(:,:,:)
 
-  logical :: conv_root,  & ! true if linear system is converged
-             exst,       & ! used to open the recover file
-             lmetq0        ! true if xq=(0,0,0) in a metal
+  LOGICAL :: all_conv
+  !! True if sternheimer_kernel is converged at all k points and perturbations
+  logical :: exst,       & ! used to open the recover file
+             lmetq0,     & ! true if xq=(0,0,0) in a metal
+             first_iter    ! true if first iteration where induced rho is not yet calculated
 
   integer :: kter,       & ! counter on iterations
              iter0,      & ! starting iteration
              ipert,      & ! counter on perturbations
-             ibnd,       & ! counter on bands
              iter,       & ! counter on iterations
-             lter,       & ! counter on iterations of linear system
-             ltaver,     & ! average counter
-             lintercall, & ! average number of calls to cgsolve_all
              ik, ikk,    & ! counter on k points
              ikq,        & ! counter on k+q points
-             ig,         & ! counter on G vectors
              ndim,       &
              is,         & ! counter on spin polarizations
              nrec,       & ! the record number for dvpsi and dpsi
-             ios,        & ! integer variable for I/O control
-             ipol,       & ! counter on polarization
-             mode,       &  ! mode index
+             mode,       & ! mode index
              isolv,      & ! counter on linear systems
              nsolv,      & ! number of linear systems
-             ikmk,       & ! index of mk
-             ikmkmq        ! index of mk-mq
+             ikmk          ! index of mk
 
   integer  :: npw, npwq
   integer  :: iq_dummy
   real(DP) :: tcpu, get_clock ! timing variables
   character(len=256) :: filename
-
-  external ch_psi_all, cg_psi
   !
   IF (rec_code_read > 20 ) RETURN
 
@@ -187,7 +174,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ALLOCATE(mixin(1))
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe, nsolv))
-  allocate (h_diag ( npwx*npol, nbnd))
   allocate (aux2(npwx*npol, nbnd))
   allocate (drhoc(dfftp%nnr))
   IF (noncolin.AND.domag.AND.okvan) THEN
@@ -244,220 +230,129 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !
   IF (iter0==-1000) iter0=0
   !
+  ! Compute dV_bare * psi and write to buffer iubar
+  !
+  DO ik = 1, nksq
+     !
+     ikk  = ikks(ik)
+     ikq  = ikqs(ik)
+     npw  = ngk(ikk)
+     npwq = ngk(ikq)
+     !
+     IF (lsda) current_spin = isk(ikk)
+     !
+     ! compute beta functions for k-point ikq
+     !
+     CALL init_us_2(npwq, igk_k(1, ikq), xk(1, ikq), vkb)
+     !
+     DO isolv = 1, nsolv
+        IF (isolv == 1) THEN
+           ikmk = ikks(ik)
+        ELSE
+           ikmk = ikmks(ik)
+        ENDIF
+        !
+        ! read unperturbed wavefunctions psi(k) and psi(k+q)
+        !
+        IF (nksq > 1 .OR. nsolv == 2) THEN
+           CALL get_buffer(evc, lrwfc, iuwfc, ikmk)
+        ENDIF
+        !
+        DO ipert = 1, npe
+           mode = imode0 + ipert
+           nrec = (isolv-1) * npe * nksq + (ipert - 1) * nksq + ik
+           !
+           IF (isolv==1) THEN
+              CALL dvqpsi_us(ik, u(1, mode), .FAlSE., becp1, alphap)
+              !
+              ! DFPT+U: At the first ph iteration the bare perturbed
+              ! Hubbard potential dvbare_hub_q * psi_kpoint
+              ! is calculated and added to dvpsi.
+              !
+              IF (lda_plus_u) CALL dvqhub_barepsi_us(ik, u(1, mode))
+              !
+           ELSE
+              IF (okvan) THEN
+                 deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+                 int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,2)
+              ENDIF
+              CALL dvqpsi_us(ik, u(1, mode), .FAlSE., becpt, alphapt)
+              IF (okvan) THEN
+                 deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+                 int1_nc(:,:,:,:,:) = int1_nc_save(:,:,:,:,:,1)
+              ENDIF
+           ENDIF
+           !
+           CALL save_buffer(dvpsi, lrbar, iubar, nrec)
+           !
+        ENDDO ! ipert
+     ENDDO ! isolv
+  ENDDO ! ik
+  !
   !   The outside loop is over the iterations
   !
   do kter = 1, niter_ph
      !
      iter = kter + iter0
-     ltaver = 0
-     lintercall = 0
      !
-     drhoscf(:,:,:) = (0.d0, 0.d0)
-     dbecsum(:,:,:,:) = (0.d0, 0.d0)
+     first_iter = .NOT. (where_rec == 'solve_lint' .OR. iter > 1)
+     !
+     drhoscf = (0.d0, 0.d0)
+     dbecsum = (0.d0, 0.d0)
      IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
      !
      ! DFPT+U: at each ph iteration calculate dnsscf,
      ! i.e. the scf variation of the occupation matrix ns.
      !
-     IF (lda_plus_u .AND. (iter.NE.1)) &
-        CALL dnsq_scf (npe, lmetq0, imode0, irr, .true.)
+     IF (lda_plus_u .AND. (iter /= 1)) CALL dnsq_scf(npe, lmetq0, imode0, irr, .true.)
      !
-     do ik = 1, nksq
+     ! Start the loop on the two linear systems, one at B and one at -B
+     !
+     DO isolv = 1, nsolv
         !
-        ikk = ikks(ik)
-        ikq = ikqs(ik)
-        npw = ngk(ikk)
-        npwq= ngk(ikq)
+        !  change the sign of the magnetic field if required
         !
-        if (lsda) current_spin = isk (ikk)
-        !
-        ! compute beta functions and kinetic energy for k-point ikq
-        ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
-        !
-        CALL init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
-        CALL g2_kin (ikq) 
-        !
-        ! Start the loop on the two linear systems, one at B and one at
-        ! -B
-        !
-        DO isolv=1, nsolv
-           IF (isolv==2) THEN
-              ikmk = ikmks(ik)
-              ikmkmq = ikmkmqs(ik)
-              rsign=-1.0_DP
-           ELSE
-              ikmk=ikk
-              ikmkmq=ikq
-              rsign=1.0_DP
+        IF (isolv == 2) THEN
+           IF (.NOT. first_iter) THEN
+              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
+              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,2)
            ENDIF
-           !
-           ! read unperturbed wavefunctions psi(k) and psi(k+q)
-           !
-           if (nksq.gt.1.OR.nsolv==2) then
-              if (lgamma) then
-                 call get_buffer (evc, lrwfc, iuwfc, ikmk)
-              else
-                 call get_buffer (evc, lrwfc, iuwfc, ikmk)
-                 call get_buffer (evq, lrwfc, iuwfc, ikmkmq)
-              end if
-           endif
-           !
-           ! compute preconditioning matrix h_diag used by cgsolve_all
-           !
-           CALL h_prec (ik, evq, h_diag)
-           !
-           do ipert = 1, npe
-              mode = imode0 + ipert
-              nrec = (ipert - 1) * nksq + ik + (isolv-1) * npe * nksq
-              !
-              !  and now adds the contribution of the self consistent term
-              !
-              if (where_rec =='solve_lint'.or.iter>1) then
-                 !
-                 ! After the first iteration dvbare_q*psi_kpoint is read from file
-                 !
-                 call get_buffer (dvpsi, lrbar, iubar, nrec)
-                 !
-                 ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
-                 ! dvscf_q from previous iteration (mix_potential)
-                 !
-                 call start_clock ('vpsifft')
-                 !
-                 !  change the sign of the magnetic field if required
-                 !
-                 IF (isolv==2) THEN
-                    dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-                    IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,2)
-                 ENDIF
-                 !
-                 CALL apply_dpot_bands(ik, nbnd_occ(ikk), dvscfins(:, :, ipert), evc, aux2)
-                 dvpsi = dvpsi + aux2
-                 !
-                 call stop_clock ('vpsifft')
-                 !
-                 !  In the case of US pseudopotentials there is an additional
-                 !  selfconsist term which comes from the dependence of D on
-                 !  V_{eff} on the bare change of the potential
-                 !
-                 IF (isolv==1) THEN
-                    call adddvscf_ph_mag (ipert, ik, becp1)
-                    !
-                    ! DFPT+U: add to dvpsi the scf part of the response
-                    ! Hubbard potential dV_hub
-                    !
-                    if (lda_plus_u) call adddvhubscf (ipert, ik)
-                 ELSE
-                    call adddvscf_ph_mag (ipert, ik, becpt)
-                 END IF
-                 !
-                 !  reset the original magnetic field if it was changed
-                 !
-                 IF (isolv==2) THEN
-                    dvscfins(:,2:4,ipert)=-dvscfins(:,2:4,ipert)
-                    IF (okvan) int3_nc(:,:,:,:,ipert)=int3_save(:,:,:,:,ipert,1)
-                 ENDIF
-                 !
-              else
-                 !
-                 ! At the first iteration dvbare_q*psi_kpoint is calculated
-                 ! and written to file.
-                 !
-                 IF (isolv==1) THEN
-                    call dvqpsi_us (ik, u (1, mode),.false., becp1, alphap )
-                    !
-                    ! DFPT+U: At the first ph iteration the bare perturbed 
-                    ! Hubbard potential dvbare_hub_q * psi_kpoint 
-                    ! is calculated and added to dvpsi.
-                    !
-                    if (lda_plus_u) call dvqhub_barepsi_us (ik, u(1,mode))
-                    !
-                 ELSE
-                    IF (okvan) THEN
-                       deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
-                       int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,2)
-                    ENDIF
-                    call dvqpsi_us (ik, u (1, mode),.false., becpt, alphapt)
-                    IF (okvan) THEN
-                       deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
-                       int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,1)
-                    ENDIF
-                 ENDIF
-                 call save_buffer (dvpsi, lrbar, iubar, nrec)
-              !
-              endif
-              !
-              ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
-              ! Apply -P_c^+.
-              !
-              CALL orthogonalize(dvpsi, evq, ikmk, ikmkmq, dpsi, npwq, .false.)
-              !
-              if (where_rec=='solve_lint'.or.iter > 1) then
-                 !
-                 ! starting value for delta_psi is read from iudwf
-                 !
-                 call get_buffer( dpsi, lrdwf, iudwf, nrec)
-                 !
-                 ! threshold for iterative solution of the linear system
-                 !
-                 thresh = min (1.d-1 * sqrt (dr2), 1.d-2)
-              else
-                 !
-                 !  At the first iteration dpsi and dvscfin are set to zero
-                 !
-                 dpsi(:,:) = (0.d0, 0.d0)
-                 dvscfin (:, :, ipert) = (0.d0, 0.d0)
-                 !
-                 ! starting threshold for iterative solution of the linear system
-                 !
-                 thresh = 1.0d-2
-              endif
-              !
-              ! iterative solution of the linear system (H-eS)*dpsi=dvpsi,
-              ! dvpsi=-P_c^+ (dvbare+dvscf)*psi , dvscf fixed.
-              !
-              IF (isolv==2) THEN
-                 vrs(:,2:4)=-vrs(:,2:4)
-                 IF (okvan) deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
-              ENDIF
-              conv_root = .true.
-              
-              call cgsolve_all (ch_psi_all, cg_psi, et(1,ikmk), dvpsi, dpsi, &
-                   h_diag, npwx, npwq, thresh, ik, lter, conv_root, &
-                   anorm, nbnd_occ(ikk), npol )
-
-              IF (isolv==2) THEN
-                 vrs(:,2:4)=-vrs(:,2:4)
-                 IF (okvan) deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
-              ENDIF
-              
-              ltaver = ltaver + lter
-              lintercall = lintercall + 1
-              if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4,  &
-                   &              " solve_linter: root not converged ",es10.3)') &
-                   &              ik , ibnd, anorm
-              !
-              ! writes delta_psi on iunit iudwf, k=kpoint,
-              !
-              !               if (nksq.gt.1 .or. npert(irr).gt.1)
-              call save_buffer (dpsi, lrdwf, iudwf, nrec)
-              !
-              ! calculates dvscf, sum over k => dvscf_q_ipert
-              !
-              weight = wk (ikk)
-              IF (nsolv==2) weight=weight/2.0_DP
-              IF (noncolin) THEN
-                 call incdrhoscf_nc(drhoscf(1,1,ipert),weight,ik, &
-                      dbecsum_nc(1,1,1,1,ipert,isolv), dpsi, rsign)
-              ELSE
-                 call incdrhoscf (drhoscf(1,current_spin,ipert), weight, ik, &
-                      dbecsum(1,1,current_spin,ipert), dpsi)
-              END IF
-              ! on perturbations
-           enddo
-           ! on isolv
-        END DO
-        ! on k-points
-     enddo
+           vrs(:, 2:4) = -vrs(:, 2:4)
+           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,2)
+        ENDIF
+        !
+        ! set threshold for iterative solution of the linear system
+        !
+        IF (first_iter) THEN
+           thresh = 1.0d-2
+        ELSE
+           thresh = min (1.d-1 * sqrt (dr2), 1.d-2)
+        ENDIF
+        !
+        ! Compute drhoscf, the charge density response to the total potential
+        !
+        CALL sternheimer_kernel(first_iter, isolv==2, npe, lrbar, iubar, &
+            thresh, dvscfins, all_conv, averlt, drhoscf, dbecsum, &
+            dbecsum_nc(:,:,:,:,:,isolv))
+        !
+        !  reset the original magnetic field if it was changed
+        !
+        IF (isolv == 2) THEN
+           IF (.NOT. first_iter) THEN
+              dvscfins(:, 2:4, :) = -dvscfins(:, 2:4, :)
+              IF (okvan) int3_nc(:,:,:,:,:) = int3_save(:,:,:,:,:,1)
+           ENDIF
+           vrs(:, 2:4) = -vrs(:, 2:4)
+           IF (okvan) deeq_nc(:,:,:,:) = deeq_nc_save(:,:,:,:,1)
+        ENDIF
+        !
+     END DO ! isolv
+     !
+     IF (nsolv==2) THEN
+        drhoscf = drhoscf / 2.0_DP
+        dbecsum = dbecsum / 2.0_DP
+        dbecsum_nc = dbecsum_nc / 2.0_DP
+     ENDIF
      !
      !  The calculation of dbecsum is distributed across processors (see addusdbec)
      !  Sum over processors the contributions coming from each slice of bands
@@ -634,14 +529,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            int3_nc(:,:,:,:,:)=int3_save(:,:,:,:,:,1)
         ENDIF
      END IF
-#if defined(__MPI)
-     aux_avg (1) = DBLE (ltaver)
-     aux_avg (2) = DBLE (lintercall)
-     call mp_sum ( aux_avg, inter_pool_comm )
-     averlt = aux_avg (1) / aux_avg (2)
-#else
-     averlt = DBLE (ltaver) / lintercall
-#endif
+     !
      tcpu = get_clock ('PHONON')
 
      WRITE( stdout, '(/,5x," iter # ",i3," total cpu time :",f8.1, &
@@ -693,7 +581,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   CALL apply_dpot_deallocate()
   if (allocated(ldoss)) deallocate (ldoss)
   if (allocated(ldos)) deallocate (ldos)
-  deallocate (h_diag)
   deallocate (dbecsum)
   IF (okpaw) THEN
      if (allocated(becsum1)) deallocate (becsum1)

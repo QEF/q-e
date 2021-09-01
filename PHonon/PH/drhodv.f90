@@ -39,7 +39,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   USE dynmat,   ONLY : dyn, dyn_rec
   USE modes,    ONLY : u
-  USE units_ph, ONLY : lrdwf, iudwf
+  USE units_lr, ONLY : lrdwf, iudwf
 
   USE eqv,      ONLY : dpsi
   USE qpoint,   ONLY : nksq, ikks, ikqs

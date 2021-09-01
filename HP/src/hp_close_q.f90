@@ -16,8 +16,8 @@ SUBROUTINE hp_close_q ( flag )
   !
   USE buffers,        ONLY : close_buffer
   USE io_files,       ONLY : iunhub
-  USE units_lr,       ONLY : iuwfc, iuatswfc
-  USE ldaU_hp,        ONLY : iudwfc, iudvwfc
+  USE units_lr,       ONLY : iuwfc, iuatswfc, iudwf
+  USE ldaU_hp,        ONLY : iudvwfc
   USE control_lr,     ONLY : lgamma
   !
   IMPLICIT NONE
@@ -28,10 +28,10 @@ SUBROUTINE hp_close_q ( flag )
   CALL close_buffer(iuwfc,'delete')
   !
   IF (flag) THEN
-     CALL close_buffer(iudwfc,'delete')
+     CALL close_buffer(iudwf,'delete')
      CALL close_buffer(iudvwfc,'delete')
   ELSE
-     CALL close_buffer(iudwfc,'keep')
+     CALL close_buffer(iudwf,'keep')
      CALL close_buffer(iudvwfc,'keep')
   ENDIF
   !

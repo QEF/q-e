@@ -26,8 +26,7 @@ subroutine raman_mat
   USE wvfct,    ONLY : npwx, nbnd
   USE wavefunctions,  ONLY: evc
   USE phus,     ONLY : alphap
-  USE units_ph, ONLY : lrdwf, iudwf
-  USE units_lr, ONLY : iuwfc, lrwfc
+  USE units_lr, ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
 
   USE lrus,     ONLY : becp1

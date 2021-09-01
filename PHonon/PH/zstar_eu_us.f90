@@ -33,9 +33,9 @@ subroutine zstar_eu_us
   USE efield_mod,       ONLY : zstareu0
   USE phus,             ONLY : becsumort
   USE modes,            ONLY : u, npert, nirr
-  USE units_ph,         ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, &
-                               lrdrhous, iudrhous, iudwf
-  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE units_ph,         ONLY : iucom, lrcom, lrebar, iuebar, &
+                               lrdrhous, iudrhous
+  USE units_lr,         ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE mp_pools,         ONLY : nproc_pool, npool
   USE control_lr,       ONLY : nbnd_occ
   USE lrus,             ONLY : int3, int3_paw

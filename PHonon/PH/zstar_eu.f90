@@ -28,8 +28,7 @@ subroutine zstar_eu
   USE qpoint,           ONLY : npwq, nksq, ikks
   USE eqv,              ONLY : dvpsi, dpsi
   USE efield_mod,       ONLY : zstareu0, zstareu
-  USE units_ph,         ONLY : iudwf, lrdwf
-  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE units_lr,         ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE control_lr,       ONLY : nbnd_occ
   USE control_ph,       ONLY : done_zeu
   USE ph_restart,       ONLY : ph_writefile
