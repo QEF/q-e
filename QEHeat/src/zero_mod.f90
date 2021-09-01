@@ -192,6 +192,7 @@ contains
       use becmod
       USE uspp_param, ONLY: pseudo_upf
       use init_us_3_mod, only: init_us_3
+      USE uspp_init,            ONLY : init_us_2
 
       implicit none
 

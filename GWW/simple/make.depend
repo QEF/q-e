@@ -60,6 +60,7 @@ khamiltonian.o : ../../Modules/noncol.o
 khamiltonian.o : ../../Modules/recvec.o
 khamiltonian.o : ../../Modules/wannier_gw.o
 khamiltonian.o : ../../Modules/wavefunctions.o
+khamiltonian.o : ../../PW/src/init_us_2.o
 khamiltonian.o : ../../PW/src/pwcom.o
 khamiltonian.o : ../../PW/src/scf_mod.o
 khamiltonian.o : ../../UtilXlib/mp.o
@@ -100,6 +101,7 @@ read_export.o : ../../Modules/mp_pools.o
 read_export.o : ../../Modules/mp_world.o
 read_export.o : ../../Modules/recvec.o
 read_export.o : ../../Modules/wavefunctions.o
+read_export.o : ../../PW/src/init_us_2.o
 read_export.o : ../../PW/src/ldaU.o
 read_export.o : ../../PW/src/pwcom.o
 read_export.o : ../../UtilXlib/mp.o

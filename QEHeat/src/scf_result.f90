@@ -105,6 +105,7 @@ contains
       use cell_base, only: omega
       use mp_bands, only: intra_bgrp_comm
       use gvect, only: ngm, gg, g
+      USE uspp_init,            ONLY : init_us_2
 
       !use becmod, only : becp
       implicit none

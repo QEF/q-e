@@ -70,6 +70,7 @@ SUBROUTINE phq_init()
   USE eqv,                  ONLY : vlocq, evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

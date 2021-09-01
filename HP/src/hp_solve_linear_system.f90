@@ -53,6 +53,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
                                    alpha_mix, iudwfc, lrdwfc, code
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
                                    apply_dpot_bands
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

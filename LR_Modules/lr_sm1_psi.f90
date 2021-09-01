@@ -130,6 +130,7 @@ CONTAINS
     ! outside of this routine.
     !
     USE lrus,      ONLY : bbk
+    USE uspp_init,        ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -201,6 +202,7 @@ SUBROUTINE sm1_psi_nc()
     USE uspp,       ONLY : qq_so
     USE lrus,       ONLY : bbnc
     USE spin_orb,   ONLY : lspinorb
+    USE uspp_init,        ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -286,6 +288,7 @@ USE mp_global,        ONLY : intra_bgrp_comm
 USE noncollin_module, ONLY : noncolin, npol
 USE matrix_inversion, ONLY : invmat
 USE spin_orb,         ONLY : lspinorb
+USE uspp_init,        ONLY : init_us_2
 
 IMPLICIT NONE
 !

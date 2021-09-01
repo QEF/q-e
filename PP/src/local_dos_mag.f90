@@ -34,6 +34,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE mp_pools,             ONLY : my_pool_id, npool, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE pw_restart_new,       ONLY : read_collected_wfc
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

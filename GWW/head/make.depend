@@ -38,6 +38,7 @@ lanczos_k.o : ../../Modules/recvec.o
 lanczos_k.o : ../../Modules/wannier_gw.o
 lanczos_k.o : ../../Modules/wavefunctions.o
 lanczos_k.o : ../../PW/src/g_psi_mod.o
+lanczos_k.o : ../../PW/src/init_us_2.o
 lanczos_k.o : ../../PW/src/pwcom.o
 lanczos_k.o : ../../UtilXlib/mp.o
 lanczos_k.o : ../../upflib/uspp.o
@@ -106,6 +107,7 @@ solve_head.o : ../../Modules/wannier_gw.o
 solve_head.o : ../../Modules/wavefunctions.o
 solve_head.o : ../../PHonon/PH/phcom.o
 solve_head.o : ../../PW/src/buffers.o
+solve_head.o : ../../PW/src/init_us_2.o
 solve_head.o : ../../PW/src/pwcom.o
 solve_head.o : ../../PW/src/symme.o
 solve_head.o : ../../UtilXlib/mp.o

@@ -43,6 +43,7 @@ subroutine zstar_eu_us
   USE qpoint,           ONLY : nksq, ikks
   USE ldaU,             ONLY : lda_plus_u
   USE dv_of_drho_lr
+  USE uspp_init,        ONLY : init_us_2
   !
   implicit none
   integer :: npw, ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode

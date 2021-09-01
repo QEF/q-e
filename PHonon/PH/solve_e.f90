@@ -67,6 +67,7 @@ subroutine solve_e
   USE ldaU,                  ONLY : lda_plus_u
   USE apply_dpot_mod,        ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
                                     apply_dpot_bands
+  USE uspp_init,             ONLY : init_us_2
 
   implicit none
 

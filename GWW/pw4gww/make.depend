@@ -75,6 +75,7 @@ energies_xc.o : ../../Modules/recvec.o
 energies_xc.o : ../../Modules/wannier_gw.o
 energies_xc.o : ../../Modules/wavefunctions.o
 energies_xc.o : ../../PW/src/exx.o
+energies_xc.o : ../../PW/src/init_us_2.o
 energies_xc.o : ../../PW/src/ldaU.o
 energies_xc.o : ../../PW/src/pwcom.o
 energies_xc.o : ../../PW/src/scf_mod.o
@@ -183,6 +184,7 @@ o_1psi.o : ../../Modules/recvec.o
 o_1psi.o : ../../Modules/wannier_gw.o
 o_1psi.o : ../../Modules/wavefunctions.o
 o_1psi.o : ../../PW/src/g_psi_mod.o
+o_1psi.o : ../../PW/src/init_us_2.o
 o_1psi.o : ../../PW/src/pwcom.o
 o_1psi.o : ../../UtilXlib/mp.o
 o_1psi.o : ../../upflib/uspp.o
@@ -269,6 +271,7 @@ pola_lanczos.o : ../../Modules/recvec.o
 pola_lanczos.o : ../../Modules/wannier_gw.o
 pola_lanczos.o : ../../Modules/wavefunctions.o
 pola_lanczos.o : ../../PW/src/g_psi_mod.o
+pola_lanczos.o : ../../PW/src/init_us_2.o
 pola_lanczos.o : ../../PW/src/pwcom.o
 pola_lanczos.o : ../../UtilXlib/mp.o
 pola_lanczos.o : ../../upflib/uspp.o
@@ -326,6 +329,7 @@ pw4gww.o : ../../Modules/recvec.o
 pw4gww.o : ../../Modules/wannier_gw.o
 pw4gww.o : ../../Modules/wavefunctions.o
 pw4gww.o : ../../PW/src/atomic_wfc_mod.o
+pw4gww.o : ../../PW/src/init_us_2.o
 pw4gww.o : ../../PW/src/ldaU.o
 pw4gww.o : ../../PW/src/pwcom.o
 pw4gww.o : ../../PW/src/scf_mod.o
@@ -465,6 +469,7 @@ wfc_real.o : ../../Modules/kind.o
 wfc_real.o : ../../Modules/recvec.o
 wfc_real.o : ../../Modules/wannier_gw.o
 wfc_real.o : ../../Modules/wavefunctions.o
+wfc_real.o : ../../PW/src/init_us_2.o
 wfc_real.o : ../../PW/src/pwcom.o
 wfc_real.o : ../../UtilXlib/mp.o
 wfc_real.o : ../../upflib/uspp.o

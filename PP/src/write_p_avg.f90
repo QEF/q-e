@@ -30,6 +30,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_world,             ONLY : world_comm
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

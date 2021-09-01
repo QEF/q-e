@@ -87,6 +87,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE nc_mag_aux,           ONLY : int1_nc_save, deeq_nc_save, int3_save
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
                                    apply_dpot_bands
+  USE uspp_init,            ONLY : init_us_2
 
   implicit none
 

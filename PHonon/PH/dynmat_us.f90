@@ -48,6 +48,7 @@ SUBROUTINE dynmat_us()
   USE lrus,                 ONLY : becp1
   USE qpoint,               ONLY : nksq, ikks
   USE control_lr,           ONLY : nbnd_occ, lgamma
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   INTEGER :: icart, jcart, na_icart, na_jcart, na, ng, nt, ik, &

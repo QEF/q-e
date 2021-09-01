@@ -23,6 +23,7 @@ module test_h_psi
    use mp_bands, only: intra_bgrp_comm
    use gvect, only: ngm, gg, g
    USE ions_base, ONLY: nat, nsp, ityp, tau
+   USE uspp_init,            ONLY : init_us_2
 
    implicit none
 

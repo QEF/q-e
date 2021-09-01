@@ -130,6 +130,7 @@ hp_init_q.o : ../../Modules/ions_base.o
 hp_init_q.o : ../../Modules/kind.o
 hp_init_q.o : ../../Modules/wavefunctions.o
 hp_init_q.o : ../../PW/src/buffers.o
+hp_init_q.o : ../../PW/src/init_us_2.o
 hp_init_q.o : ../../PW/src/pwcom.o
 hp_init_q.o : ../../upflib/uspp.o
 hp_load_q.o : ../../LR_Modules/lrcom.o
@@ -272,6 +273,7 @@ hp_solve_linear_system.o : ../../Modules/noncol.o
 hp_solve_linear_system.o : ../../Modules/recvec.o
 hp_solve_linear_system.o : ../../Modules/wavefunctions.o
 hp_solve_linear_system.o : ../../PW/src/buffers.o
+hp_solve_linear_system.o : ../../PW/src/init_us_2.o
 hp_solve_linear_system.o : ../../PW/src/paw_onecenter.o
 hp_solve_linear_system.o : ../../PW/src/paw_symmetry.o
 hp_solve_linear_system.o : ../../PW/src/pwcom.o

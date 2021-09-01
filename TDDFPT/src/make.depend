@@ -74,6 +74,7 @@ lr_apply_liouvillian.o : ../../Modules/mp_global.o
 lr_apply_liouvillian.o : ../../Modules/noncol.o
 lr_apply_liouvillian.o : ../../Modules/recvec.o
 lr_apply_liouvillian.o : ../../Modules/wavefunctions.o
+lr_apply_liouvillian.o : ../../PW/src/init_us_2.o
 lr_apply_liouvillian.o : ../../PW/src/newd.o
 lr_apply_liouvillian.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian.o : ../../PW/src/realus.o
@@ -94,6 +95,7 @@ lr_apply_liouvillian_eels.o : ../../Modules/mp_bands.o
 lr_apply_liouvillian_eels.o : ../../Modules/noncol.o
 lr_apply_liouvillian_eels.o : ../../Modules/wavefunctions.o
 lr_apply_liouvillian_eels.o : ../../PW/src/buffers.o
+lr_apply_liouvillian_eels.o : ../../PW/src/init_us_2.o
 lr_apply_liouvillian_eels.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian_eels.o : ../../upflib/uspp.o
 lr_apply_liouvillian_eels.o : lr_variables.o
@@ -109,6 +111,7 @@ lr_apply_liouvillian_magnons.o : ../../Modules/mp_bands.o
 lr_apply_liouvillian_magnons.o : ../../Modules/noncol.o
 lr_apply_liouvillian_magnons.o : ../../Modules/wavefunctions.o
 lr_apply_liouvillian_magnons.o : ../../PW/src/buffers.o
+lr_apply_liouvillian_magnons.o : ../../PW/src/init_us_2.o
 lr_apply_liouvillian_magnons.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian_magnons.o : ../../PW/src/scf_mod.o
 lr_apply_liouvillian_magnons.o : ../../upflib/uspp.o
@@ -128,6 +131,7 @@ lr_calc_dens.o : ../../Modules/mp_global.o
 lr_calc_dens.o : ../../Modules/noncol.o
 lr_calc_dens.o : ../../Modules/recvec.o
 lr_calc_dens.o : ../../Modules/wavefunctions.o
+lr_calc_dens.o : ../../PW/src/init_us_2.o
 lr_calc_dens.o : ../../PW/src/pwcom.o
 lr_calc_dens.o : ../../PW/src/realus.o
 lr_calc_dens.o : ../../UtilXlib/mp.o
@@ -146,6 +150,7 @@ lr_calc_dens_eels.o : ../../Modules/mp_global.o
 lr_calc_dens_eels.o : ../../Modules/recvec.o
 lr_calc_dens_eels.o : ../../Modules/wavefunctions.o
 lr_calc_dens_eels.o : ../../PW/src/buffers.o
+lr_calc_dens_eels.o : ../../PW/src/init_us_2.o
 lr_calc_dens_eels.o : ../../PW/src/pwcom.o
 lr_calc_dens_eels.o : ../../UtilXlib/mp.o
 lr_calc_dens_eels.o : ../../upflib/uspp.o
@@ -161,6 +166,7 @@ lr_calc_dens_eels_nc.o : ../../Modules/noncol.o
 lr_calc_dens_eels_nc.o : ../../Modules/recvec.o
 lr_calc_dens_eels_nc.o : ../../Modules/wavefunctions.o
 lr_calc_dens_eels_nc.o : ../../PW/src/buffers.o
+lr_calc_dens_eels_nc.o : ../../PW/src/init_us_2.o
 lr_calc_dens_eels_nc.o : ../../PW/src/pwcom.o
 lr_calc_dens_eels_nc.o : ../../UtilXlib/mp.o
 lr_calc_dens_eels_nc.o : ../../upflib/uspp.o
@@ -305,6 +311,7 @@ lr_dvpsi_eels.o : ../../Modules/noncol.o
 lr_dvpsi_eels.o : ../../Modules/recvec.o
 lr_dvpsi_eels.o : ../../Modules/wavefunctions.o
 lr_dvpsi_eels.o : ../../PW/src/buffers.o
+lr_dvpsi_eels.o : ../../PW/src/init_us_2.o
 lr_dvpsi_eels.o : ../../PW/src/pwcom.o
 lr_dvpsi_eels.o : ../../upflib/uspp.o
 lr_dvpsi_eels.o : lr_variables.o
@@ -380,6 +387,7 @@ lr_init_nfo.o : ../../Modules/noncol.o
 lr_init_nfo.o : ../../Modules/recvec.o
 lr_init_nfo.o : ../../Modules/wavefunctions.o
 lr_init_nfo.o : ../../PW/src/buffers.o
+lr_init_nfo.o : ../../PW/src/init_us_2.o
 lr_init_nfo.o : ../../PW/src/pwcom.o
 lr_init_nfo.o : ../../UtilXlib/mp.o
 lr_init_nfo.o : ../../upflib/uspp.o
@@ -449,6 +457,7 @@ lr_normalise.o : ../../Modules/io_global.o
 lr_normalise.o : ../../Modules/kind.o
 lr_normalise.o : ../../Modules/noncol.o
 lr_normalise.o : ../../Modules/recvec.o
+lr_normalise.o : ../../PW/src/init_us_2.o
 lr_normalise.o : ../../PW/src/pwcom.o
 lr_normalise.o : ../../PW/src/realus.o
 lr_normalise.o : ../../upflib/uspp.o
@@ -491,6 +500,7 @@ lr_read_wf.o : ../../Modules/noncol.o
 lr_read_wf.o : ../../Modules/recvec.o
 lr_read_wf.o : ../../Modules/wavefunctions.o
 lr_read_wf.o : ../../PW/src/buffers.o
+lr_read_wf.o : ../../PW/src/init_us_2.o
 lr_read_wf.o : ../../PW/src/pwcom.o
 lr_read_wf.o : ../../PW/src/realus.o
 lr_read_wf.o : ../../PW/src/symm_base.o
@@ -535,6 +545,7 @@ lr_restart.o : ../../Modules/io_global.o
 lr_restart.o : ../../Modules/kind.o
 lr_restart.o : ../../Modules/mp_world.o
 lr_restart.o : ../../Modules/noncol.o
+lr_restart.o : ../../PW/src/init_us_2.o
 lr_restart.o : ../../PW/src/pwcom.o
 lr_restart.o : ../../UtilXlib/mp.o
 lr_restart.o : ../../upflib/uspp.o
@@ -596,6 +607,7 @@ lr_solve_e.o : ../../Modules/mp_global.o
 lr_solve_e.o : ../../Modules/noncol.o
 lr_solve_e.o : ../../Modules/recvec.o
 lr_solve_e.o : ../../Modules/wavefunctions.o
+lr_solve_e.o : ../../PW/src/init_us_2.o
 lr_solve_e.o : ../../PW/src/pwcom.o
 lr_solve_e.o : ../../PW/src/realus.o
 lr_solve_e.o : ../../UtilXlib/mp.o
@@ -622,6 +634,7 @@ lr_sternheimer.o : ../../Modules/noncol.o
 lr_sternheimer.o : ../../Modules/recvec.o
 lr_sternheimer.o : ../../Modules/wavefunctions.o
 lr_sternheimer.o : ../../PW/src/buffers.o
+lr_sternheimer.o : ../../PW/src/init_us_2.o
 lr_sternheimer.o : ../../PW/src/paw_onecenter.o
 lr_sternheimer.o : ../../PW/src/pwcom.o
 lr_sternheimer.o : ../../PW/src/scf_mod.o
@@ -673,6 +686,7 @@ lr_us.o : ../../Modules/control_flags.o
 lr_us.o : ../../Modules/io_global.o
 lr_us.o : ../../Modules/kind.o
 lr_us.o : ../../Modules/noncol.o
+lr_us.o : ../../PW/src/init_us_2.o
 lr_us.o : ../../PW/src/pwcom.o
 lr_us.o : ../../PW/src/realus.o
 lr_us.o : ../../upflib/uspp.o
@@ -730,6 +744,7 @@ sd0psi.o : ../../LR_Modules/lrcom.o
 sd0psi.o : ../../Modules/becmod.o
 sd0psi.o : ../../Modules/control_flags.o
 sd0psi.o : ../../Modules/io_global.o
+sd0psi.o : ../../PW/src/init_us_2.o
 sd0psi.o : ../../PW/src/pwcom.o
 sd0psi.o : ../../PW/src/realus.o
 sd0psi.o : ../../upflib/uspp.o

@@ -38,6 +38,7 @@ SUBROUTINE c_bands_nscf_ph( )
   USE spin_orb,             ONLY : domag
   USE save_ph,              ONLY : tmp_dir_save
   USE io_files,             ONLY : tmp_dir, prefix
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

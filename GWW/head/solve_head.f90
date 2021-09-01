@@ -45,6 +45,7 @@ subroutine solve_head
 
   use qpoint,                ONLY : npwq, nksq
   use control_lr,            ONLY : nbnd_occ, lgamma
+  use uspp_init,             ONLY : init_us_2
 
   implicit none
 

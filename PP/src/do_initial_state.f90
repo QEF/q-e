@@ -41,6 +41,7 @@ SUBROUTINE do_initial_state (excite)
   USE control_flags, ONLY: gamma_only
   USE DFUNCT,     ONLY : newd
   USE constants,  ONLY : rytoev
+  USE uspp_init,  ONLY : init_us_2
   !
   IMPLICIT NONE
   !

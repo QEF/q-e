@@ -28,6 +28,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE klist,                ONLY : xk,igk_k, ngk
   USE noncollin_module,     ONLY : noncolin, npol
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

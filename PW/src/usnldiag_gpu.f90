@@ -73,7 +73,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:))
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
@@ -106,7 +106,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:))
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
@@ -154,7 +154,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:))
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32) 
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
                    DO ig = 1, npw   ! change this to 2*npw ?
@@ -198,7 +198,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:))
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32) 
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
                    DO ig = 1, npw 
@@ -257,7 +257,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:))
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
                    DO ig = 1, npw   ! change this to 2*npw ?
@@ -303,7 +303,7 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$acc data present(vkb(:,:))
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
                    !$acc parallel vector_length(32)
                    !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
                    DO ig = 1, npw 

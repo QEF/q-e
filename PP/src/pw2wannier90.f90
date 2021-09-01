@@ -1326,6 +1326,7 @@ SUBROUTINE compute_dmn
    USE symm_base,       ONLY : nsymin=>nsym,srin=>sr,ftin=>ft,invsin=>invs
    USE fft_base,        ONLY : dffts
    USE scatter_mod, ONLY : gather_grid, scatter_grid
+   USE uspp_init,            ONLY : init_us_2
    IMPLICIT NONE
    !
    INTEGER, EXTERNAL :: find_free_unit
@@ -2004,6 +2005,7 @@ SUBROUTINE compute_mmn
    USE spin_orb,             ONLY : lspinorb
    USE gvecw,           ONLY : gcutw
    USE wannier
+   USE uspp_init,            ONLY : init_us_2
 
    IMPLICIT NONE
    !
@@ -2410,6 +2412,7 @@ SUBROUTINE compute_spin
    USE uspp_param,           ONLY : upf, nh, nhm
    USE uspp,                 ONLY: qq_nt, nhtol,nhtoj, indv
    USE spin_orb,             ONLY : fcoef
+   USE uspp_init,            ONLY : init_us_2
 
    IMPLICIT NONE
    !
@@ -2647,6 +2650,7 @@ SUBROUTINE compute_orb
    USE gvecs,           ONLY : doublegrid
    USE lsda_mod,        ONLY : lsda, nspin, isk, current_spin
    USE constants,       ONLY : rytoev
+   USE uspp_init,            ONLY : init_us_2
 
    IMPLICIT NONE
    !
@@ -3082,6 +3086,7 @@ SUBROUTINE compute_shc
    USE lsda_mod,        ONLY : nspin
    USE scf,             ONLY : vrs, vltot, v, kedtau
    USE wannier
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -3366,6 +3371,7 @@ SUBROUTINE compute_amn
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
    USE constants,       ONLY : eps6
+   USE uspp_init,            ONLY : init_us_2
 
    IMPLICIT NONE
    !

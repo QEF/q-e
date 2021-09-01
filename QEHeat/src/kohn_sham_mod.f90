@@ -45,6 +45,7 @@ contains
       use extrapolation, only: update_pot
 
       use test_h_psi, only: test
+      USE uspp_init,            ONLY : init_us_2
 
       implicit none
 

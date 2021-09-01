@@ -90,6 +90,7 @@ kohn_sham_mod.o : ../../Modules/fft_base.o
 kohn_sham_mod.o : ../../Modules/io_global.o
 kohn_sham_mod.o : ../../Modules/kind.o
 kohn_sham_mod.o : ../../Modules/mp_pools.o
+kohn_sham_mod.o : ../../PW/src/init_us_2.o
 kohn_sham_mod.o : ../../PW/src/pwcom.o
 kohn_sham_mod.o : ../../PW/src/update_pot.o
 kohn_sham_mod.o : ../../UtilXlib/mp.o
@@ -120,6 +121,7 @@ scf_result.o : ../../Modules/mp_bands.o
 scf_result.o : ../../Modules/recvec.o
 scf_result.o : ../../Modules/wavefunctions.o
 scf_result.o : ../../PW/src/dynamics_module.o
+scf_result.o : ../../PW/src/init_us_2.o
 scf_result.o : ../../PW/src/pwcom.o
 scf_result.o : ../../PW/src/scf_mod.o
 scf_result.o : ../../PW/src/update_pot.o
@@ -130,6 +132,7 @@ test_h_psi_s_psi_commutator_Hx_psi.o : ../../Modules/ions_base.o
 test_h_psi_s_psi_commutator_Hx_psi.o : ../../Modules/kind.o
 test_h_psi_s_psi_commutator_Hx_psi.o : ../../Modules/mp_bands.o
 test_h_psi_s_psi_commutator_Hx_psi.o : ../../Modules/recvec.o
+test_h_psi_s_psi_commutator_Hx_psi.o : ../../PW/src/init_us_2.o
 test_h_psi_s_psi_commutator_Hx_psi.o : ../../PW/src/pwcom.o
 test_h_psi_s_psi_commutator_Hx_psi.o : ../../upflib/uspp.o
 traj_object.o : ../../Modules/kind.o
@@ -142,6 +145,7 @@ zero_mod.o : ../../Modules/kind.o
 zero_mod.o : ../../Modules/mp_global.o
 zero_mod.o : ../../Modules/mp_pools.o
 zero_mod.o : ../../Modules/recvec.o
+zero_mod.o : ../../PW/src/init_us_2.o
 zero_mod.o : ../../UtilXlib/mp.o
 zero_mod.o : ../../upflib/radial_grids.o
 zero_mod.o : ../../upflib/splinelib.o

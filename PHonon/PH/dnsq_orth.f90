@@ -50,6 +50,7 @@ SUBROUTINE dnsq_orth()
   USE io_files,      ONLY : seqopn 
   USE buffers,       ONLY : get_buffer
   USE doubleprojqq_module
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

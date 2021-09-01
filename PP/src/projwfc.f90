@@ -981,6 +981,7 @@ SUBROUTINE projwave_paw( )
   USE wavefunctions, ONLY: evc
   !
   USE projections
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -1114,6 +1115,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   USE io_files,  ONLY: nd_nmbr
   USE mp,        ONLY: mp_bcast
   USE mp_pools,  ONLY: me_pool, root_pool, intra_pool_comm
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
