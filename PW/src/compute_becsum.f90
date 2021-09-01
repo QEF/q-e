@@ -33,6 +33,7 @@ SUBROUTINE compute_becsum( iflag )
                                    bec_type, becp
   USE wavefunctions_gpum,   ONLY : using_evc
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

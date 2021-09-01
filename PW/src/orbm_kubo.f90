@@ -49,6 +49,8 @@ SUBROUTINE orbm_kubo()
   USE mp_world,             ONLY : world_comm
   USE scf_gpum,             ONLY : using_vrs
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), ALLOCATABLE :: evc_k(:,:)  !for wavefunctios at k

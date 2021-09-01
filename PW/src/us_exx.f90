@@ -527,6 +527,7 @@ MODULE us_exx
     USE uspp_param,          ONLY : upf, nh
     USE wvfct,               ONLY : nbnd, npwx
     USE control_flags,       ONLY : gamma_only
+    USE uspp_init,           ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -1094,6 +1095,7 @@ MODULE us_exx
     USE control_flags,        ONLY : gamma_only
     USE fft_interfaces,       ONLY : fwfft, invfft
     USE us_exx,               ONLY : becxx
+    USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
     !

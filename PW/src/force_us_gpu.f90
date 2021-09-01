@@ -41,6 +41,7 @@ SUBROUTINE force_us_gpu( forcenl )
                                    synchronize_bec_type_gpu
   USE device_fbuff_m,       ONLY : dev_buf
   USE control_flags,        ONLY : use_gpu
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

@@ -34,6 +34,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_bands,         ONLY : use_bgrp_in_hpsi
   USE becmod_subs_gpum, ONLY : using_becp_auto
+  USE uspp_init,        ONLY : init_us_2
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: save_wfcatom
@@ -254,6 +255,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
+  USE uspp_init,        ONLY : init_us_2
   IMPLICIT NONE
   !
   LOGICAL, INTENT(in) :: orthogonalize_wfc

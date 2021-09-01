@@ -39,6 +39,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE mp_bands,           ONLY: intra_bgrp_comm
   USE becmod,             ONLY: bec_type, becp, calbec,allocate_bec_type, &
                                 deallocate_bec_type
+  USE uspp_init,         ONLY : init_us_2
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: pdir

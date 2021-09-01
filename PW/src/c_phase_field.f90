@@ -42,6 +42,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE mp_pools,             ONLY: intra_pool_comm
    USE becmod,               ONLY: calbec,bec_type,allocate_bec_type,deallocate_bec_type
    USE spin_orb,             ONLY: lspinorb
+   USE uspp_init,            ONLY : init_us_2
    IMPLICIT NONE
    !
    REAL(DP), INTENT(OUT) :: el_pola

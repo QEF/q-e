@@ -36,6 +36,7 @@ SUBROUTINE wfcinit_gpu()
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   USE wavefunctions_gpum,   ONLY : using_evc_d, using_evc
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

@@ -42,6 +42,7 @@ SUBROUTINE orthoUwfc_gpu
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
+  USE uspp_init,        ONLY : init_us_2
   ! 
   IMPLICIT NONE
   !
@@ -175,6 +176,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
+  USE uspp_init,        ONLY : init_us_2
   ! 
   IMPLICIT NONE
   !

@@ -275,6 +275,7 @@ SUBROUTINE sum_band()
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
                           tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
+       USE uspp_init,     ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -523,6 +524,7 @@ SUBROUTINE sum_band()
        USE mp,           ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
                           tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
+       USE uspp_init,    ONLY : init_us_2
        !
        IMPLICIT NONE
        !

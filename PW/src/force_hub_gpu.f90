@@ -53,6 +53,7 @@ SUBROUTINE force_hub_gpu( forceh )
                                     allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !

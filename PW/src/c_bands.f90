@@ -31,9 +31,9 @@ SUBROUTINE c_bands( iter )
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   USE gcscf_module,         ONLY : lgcscf
-
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -1151,6 +1151,7 @@ SUBROUTINE c_bands_nscf( )
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
+  USE uspp_init,            ONLY : init_us_2
   IMPLICIT NONE
   !
   ! ... local variables

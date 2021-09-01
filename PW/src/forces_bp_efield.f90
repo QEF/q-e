@@ -71,6 +71,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE noncollin_module,     ONLY : noncolin, npol
    USE spin_orb,             ONLY : lspinorb
    USE parallel_include
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !

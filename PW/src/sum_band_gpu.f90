@@ -281,6 +281,7 @@ SUBROUTINE sum_band_gpu()
        USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines
+       USE uspp_init,     ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -569,6 +570,7 @@ SUBROUTINE sum_band_gpu()
        USE mp,                 ONLY : mp_sum, mp_get_comm_null
        USE control_flags,      ONLY : many_fft
        USE fft_helper_subroutines
+       USE uspp_init,          ONLY : init_us_2
        !
        IMPLICIT NONE
        !

@@ -37,6 +37,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
                                    calbec_gpu
   USE device_fbuff_m,       ONLY : dev_buf
   USE device_memcpy_m,      ONLY : dev_memcpy
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

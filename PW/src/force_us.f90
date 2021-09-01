@@ -35,6 +35,7 @@ SUBROUTINE force_us( forcenl )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

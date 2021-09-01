@@ -49,6 +49,7 @@ SUBROUTINE force_hub( forceh )
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
    USE wavefunctions_gpum,   ONLY : using_evc
    USE becmod_subs_gpum,     ONLY : using_becp_auto
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !

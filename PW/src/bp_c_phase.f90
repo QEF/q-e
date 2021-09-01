@@ -182,6 +182,7 @@ SUBROUTINE c_phase
    USE qes_libs_module,      ONLY : qes_reset
    USE qexsd_init,           ONLY : qexsd_init_berryPhaseOutput,  qexsd_bp_obj
    USE wavefunctions_gpum,   ONLY : using_evc
+   USE uspp_init,            ONLY : init_us_2 
 
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE

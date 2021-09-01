@@ -332,6 +332,7 @@ CONTAINS
       USE xc_lib, ONLY : xclib_dft_is
       !
       USE becmod_subs_gpum, ONLY : using_becp_auto
+      USE uspp_init,        ONLY : init_us_2
       !
       IMPLICIT NONE
 

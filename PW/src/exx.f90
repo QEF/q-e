@@ -2687,6 +2687,7 @@ end associate
     USE uspp,                   ONLY : okvan,nkb,vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
     USE wavefunctions_gpum,     ONLY : using_evc
+    USE uspp_init,              ONLY : init_us_2
     IMPLICIT NONE
     !
     TYPE(bec_type) :: becpsi
@@ -2812,6 +2813,7 @@ end associate
     USE exx_band,                ONLY : igk_exx, change_data_structure, &
                                         transform_evc_to_exx, nwordwfc_exx, &
                                         evc_exx
+    USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -3949,6 +3951,7 @@ end associate
     USE mp,                 ONLY : mp_sum
     USE wavefunctions,      ONLY : evc
     USE wavefunctions_gpum, ONLY : using_evc
+    USE uspp_init,          ONLY : init_us_2
     !
     IMPLICIT NONE
     !
