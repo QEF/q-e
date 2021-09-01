@@ -1430,7 +1430,7 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
-  --enable-openacc        Enable compilation with OPENACC [default=no]
+  --enable-openacc        Enable compilation with OPENACC [default=yes]
   --enable-cuda-env-check The configure script will check CUDA installation
                           and report problems [default=no]
   --enable-signals        enable signal trapping (default: no)
@@ -4189,7 +4189,7 @@ fi
 if test "${enable_openacc+set}" = set; then :
   enableval=$enable_openacc;
 else
-  enable_openacc=no
+  enable_openacc=yes
 fi
 
 
