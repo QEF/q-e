@@ -829,13 +829,13 @@ SUBROUTINE print_proj ( lmax_wfc, proj, lowdin_unit )
         DO nwfc = 1, natomwfc
            na= nlmchi(nwfc)%na
            l = nlmchi(nwfc)%l
-      IF ( noncolin .AND. .NOT. lspinorb ) THEN
-         IF (nlmchi(nwfc)%ind<=(2*l+1)) THEN
-            current_spin = 1
+           IF ( noncolin .AND. .NOT. lspinorb ) THEN
+              IF (nlmchi(nwfc)%ind<=(2*l+1)) THEN
+                 current_spin = 1
               ELSE
-            current_spin = 2
+                 current_spin = 2
               ENDIF
-      END IF
+           END IF
            charges(na,l,current_spin) = charges(na,l,current_spin) + &
                 wg (ibnd,ik) * proj (nwfc, ibnd, ik)
            IF ( nspin /= 4 ) THEN
