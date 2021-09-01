@@ -343,7 +343,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          IF (okvan) THEN
-            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-1,pdir)), vkb , .false.)
+            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
          !
@@ -363,7 +363,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDDO
          !
          IF (okvan) THEN
-            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb , .false.)
+            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
          ! --- Matrix elements calculation ---
@@ -558,7 +558,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
-            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)), vkb , .false.)
+            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
          ! --- Dot wavefunctions and betas for CURRENT k-point ---
@@ -580,7 +580,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDIF
          !
          IF (okvan) THEN
-            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb , .false.)
+            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
          !
@@ -905,7 +905,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
-            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+1,pdir)), vkb , .false.)
+            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
          ! --- Dot wavefunctions and betas for CURRENT k-point ---
@@ -925,7 +925,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDDO
          !
          IF (okvan) THEN
-            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb , .false.)
+            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
          !
@@ -1146,7 +1146,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
-            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)), vkb , .false.)
+            CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
          ! --- Dot wavefunctions and betas for CURRENT k-point ---
@@ -1168,7 +1168,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDIF
          !
          IF (okvan) THEN
-            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb , .false.)
+            CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
          ! --- Matrix elements calculation ---

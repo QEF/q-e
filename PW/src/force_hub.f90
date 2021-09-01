@@ -134,7 +134,7 @@ SUBROUTINE force_hub( forceh )
       IF (nks > 1) &
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       !
-      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
+      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL using_becp_auto(2)

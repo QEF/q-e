@@ -64,7 +64,7 @@ SUBROUTINE compute_becsum( iflag )
      IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
      IF ( nks > 1 ) CALL using_evc(2)
      !
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .false.)
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... actual calculation is performed inside routine "sum_bec"
      !

@@ -77,7 +77,7 @@ SUBROUTINE force_us( forcenl )
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
-        IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
+        IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      ENDIF
      !
      CALL using_becp_auto(2)

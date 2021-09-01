@@ -9,7 +9,7 @@ MODULE uspp_init
 !
 CONTAINS
   !----------------------------------------------------------------------
-  SUBROUTINE init_us_2( npw_, igk_, q_, vkb_, run_on_gpu)
+  SUBROUTINE init_us_2( npw_, igk_, q_, vkb_, run_on_gpu_)
     !----------------------------------------------------------------------
     !! wrapper to call init_us_2_base
     !! Calculates beta functions (Kleinman-Bylander projectors), with
@@ -34,10 +34,15 @@ CONTAINS
     !! q vector (2pi/a units)
     COMPLEX(DP), INTENT(OUT) :: vkb_(npwx,nkb)
     !! beta functions (npw_ <= npwx)
-    LOGICAL, INTENT(IN) :: run_on_gpu
-    !! whether you wish to run on gpu in case use_gpu is true
+    LOGICAL, OPTIONAL, INTENT(IN) :: run_on_gpu_
+    !! whether you wish to run on gpu in case use_gpu is true 
+    !!
+    LOGICAL :: run_on_gpu 
     !
     CALL start_clock( 'init_us_2' )
+    !
+    run_on_gpu = .false.
+    if(present(run_on_gpu_)) run_on_gpu = run_on_gpu_
     !
     if(use_gpu.and.run_on_gpu) then   
       !

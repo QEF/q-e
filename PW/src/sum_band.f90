@@ -327,7 +327,7 @@ SUBROUTINE sum_band()
           CALL start_clock( 'sum_band:init_us_2' )
           !
           IF ( nkb > 0 ) &
-             CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
+             CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           CALL stop_clock( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
@@ -592,7 +592,7 @@ SUBROUTINE sum_band()
           !
           CALL start_clock( 'sum_band:init_us_2' )
           !
-          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb , .false.)
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
           CALL stop_clock( 'sum_band:init_us_2' )
           !

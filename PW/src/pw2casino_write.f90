@@ -378,7 +378,7 @@ CONTAINS
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
             IF( nks > 1 ) CALL using_evc(2)
             !
-            CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb, .false.)
+            CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
             CALL calbec ( npw, vkb, evc, becp )
             !
             ! -TS term for metals (if any)
