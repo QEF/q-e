@@ -1,5 +1,6 @@
 New in development version:
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
+  * DFT-D3: MPI parallelization and GPU acceleration with OPenACC
 
 Fixed in development version:
   * Some build problems occurring under special circumstances

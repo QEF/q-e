@@ -11,10 +11,10 @@ Installation
 This version requires the nvfortran (previously PGI) compiler from the
 freely available NVidia HPC SDK. You are adviced to use a recent version
 of NVidia software. Any version later than 17.4 should work, but many glitches
-are know to exist in older versions. 
-The configure script checks for the presence of the nvfortran compiler and of 
-a few cuda libraries.For this reason the path pointing to cudatoolkit must be
-present in `LD_LIBRARY_PATH`.
+are known to exist in older versions. 
+The `configure` script checks for the presence of the nvfortran compiler and 
+of a few cuda libraries. For this reason the path pointing to the cuda toolkit
+must be present in `LD_LIBRARY_PATH`.
 
 A template for the configure command is:
 
@@ -26,7 +26,8 @@ where `XX` is the location of the CUDA Toolkit (in HPC environments is
 generally `$CUDA_HOME`), `YY` is the version of the cuda toolkit and `ZZ`
 is the compute capability of the card. 
 If you have no idea what these numbers are you may give a try to the
-automatic tool `get_device_props.py`. An example using Slurm is:
+automatic tool `get_device_props.py`. Go to directory `dev-tools/` and
+run `python get_device_props.py`. An example using Slurm:
 
 ```
 $ module load cuda
@@ -46,12 +47,12 @@ Compute capabilities for dev 3: 6.0
 ```
 
 It is generally a good idea to disable Scalapack when running small test
-cases since the serial GPU eigensolver can outperform the parallel CPU
+cases since the serial GPU eigensolver outperforms the parallel CPU
 eigensolver in many circumstances.
 
-From time to time PGI links to the wrong CUDA libraries and fails reporting
-a problem in `cusolver` missing `GOmp` (GNU Openmp). The solution to this
-problem is removing cudatoolkit from the `LD_LIBRARY_PATH` before compiling.
+From time to time PGI links to the wrong CUDA libraries and fails reporting a 
+problem in `cusolver` missing `GOmp` (GNU Openmp). This problem can be solved
+by removing the cuda toolkit from the `LD_LIBRARY_PATH` before compiling.
 
 Serial compilation is also supported.
 
