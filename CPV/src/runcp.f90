@@ -38,7 +38,8 @@
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde, many_fft
-      use uspp,                only : deeq, vkb, vkb_d
+      use pseudo_base,         only : vkb_d
+      use uspp,                only : deeq, vkb
       use gvect,               only : gstart
       use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, nupdwn_bgrp, iupdwn_bgrp
       use wannier_subroutines, only : ef_potential

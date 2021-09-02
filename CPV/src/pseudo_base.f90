@@ -24,6 +24,16 @@
       PUBLIC :: compute_rhops, formfn, formfa
       PUBLIC :: compute_eself, compute_rhocg
 
+      PUBLIC :: vkb_d
+
+      COMPLEX(DP), ALLOCATABLE :: vkb_d(:,:)
+
+#if defined(__CUDA)
+      attributes (DEVICE) :: vkb_d
+#endif
+
+      
+
 
 
 !=----------------------------------------------------------------------------=!
