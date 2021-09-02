@@ -31,7 +31,7 @@ subroutine kc_setup
   USE scf,               ONLY : v, vrs, vltot,  kedtau
   USE fft_base,          ONLY : dfftp, dffts
   USE gvect,             ONLY : ngm
-  USE gvecs,             ONLY : doublegrid
+  USE gvecs,             ONLY : doublegrid, ngms
   USE uspp_param,        ONLY : upf
   USE spin_orb,          ONLY : domag
   USE noncollin_module,  ONLY : noncolin, m_loc, angle1, angle2, ux!, nspin_mag, npol
@@ -50,7 +50,7 @@ subroutine kc_setup
                                 num_wann, num_wann_occ, occ_mat, tmp_dir_kc, tmp_dir_kcq!, wq, nqstot
   USE io_global,         ONLY : stdout
   USE klist,             ONLY : nkstot, xk
-  USE cell_base,         ONLY : at !, bg
+  USE cell_base,         ONLY : at, omega!, bg
   USE fft_base,          ONLY : dffts
   USE disp,              ONLY : x_q, lgamma_iq
   !
@@ -63,10 +63,11 @@ subroutine kc_setup
   USE io_files,         ONLY : create_directory
   USE io_rho_xml,       ONLY : write_scf
   !
-  USE mp_bands,         ONLY : inter_bgrp_comm
-  USE io_kcwann,    ONLY : write_rhowann
+  USE mp_bands,         ONLY : inter_bgrp_comm, intra_bgrp_comm
+  USE io_kcwann,        ONLY : write_rhowann
   !
   USE mp,               ONLY : mp_sum
+  USE control_lr,       ONLY : lrpa
   !
   implicit none
 
@@ -84,6 +85,17 @@ subroutine kc_setup
   INTEGER :: &
        igk_k_all(npwx,nkstot),&    ! index of G corresponding to a given index of k+G
        ngk_all(nkstot)             ! number of plane waves for each k point
+  !
+  ! Auxiliary variables for SH calculation
+  COMPLEX(DP), ALLOCATABLE  :: rhog(:), delta_vg(:,:), vh_rhog(:), delta_vg_(:,:), sh(:)
+  ! The periodic part of the wannier orbital density
+  COMPLEX(DP) :: rhor(dffts%nnr), delta_vr(dffts%nnr,nspin), delta_vr_(dffts%nnr,nspin)
+  !
+  ! The weight of each q point
+  REAL(DP), ALLOCATABLE :: weight(:)
+  LOGICAL :: lrpa_save
+  !
+  ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin), vh_rhog(ngms), delta_vg_(ngms,nspin) )
   !
   call start_clock ('kc_setup')
   !
@@ -148,6 +160,8 @@ subroutine kc_setup
   ALLOCATE (rhowann ( dffts%nnr, num_wann), rhowann_aux(dffts%nnr) )
   ALLOCATE ( evc0(npwx, num_wann) )
   ALLOCATE ( occ_mat (num_wann, num_wann, nkstot) )
+  ALLOCATE ( sh(num_wann) )
+  sh(:) = CMPLX(0.D0,0.D0,kind=DP)
   occ_mat = 0.D0
   !
   ! ... Open a new buffer to store the KS states in the WANNIER gauge
@@ -194,6 +208,7 @@ subroutine kc_setup
   !
   nqs = nkstot/nspin
   ALLOCATE (x_q (3, nqs), isq(nqs) )
+  ALLOCATE (weight(nqs) )
   iq=1
   IF (ionode) THEN 
      WRITE(iun_qlist,'(i5)') nkstot/nspin 
@@ -242,6 +257,27 @@ subroutine kc_setup
     !
     WRITE( stdout, '(8X,"INFO: rho_q(r) DONE ",/)')
     !
+    ! Compute the Self Hartree
+    weight(iq) = 1.D0/nqs ! No SYMM 
+    lrpa_save=lrpa
+    lrpa = .true.
+    DO i = 1, num_wann
+      !
+      rhog(:)         = CMPLX(0.D0,0.D0,kind=DP)
+      delta_vg(:,:)   = CMPLX(0.D0,0.D0,kind=DP)
+      vh_rhog(:)      = CMPLX(0.D0,0.D0,kind=DP)
+      rhor(:)         = CMPLX(0.D0,0.D0,kind=DP)
+      !
+      rhor(:) = rhowann(:,i) 
+      !! The periodic part of the orbital desity in real space
+      !
+      CALL bare_pot ( rhor, rhog, vh_rhog, delta_vr, delta_vg, iq, delta_vr_, delta_vg_ )
+      !! The periodic part of the perturbation DeltaV_q(G)
+      ! 
+      sh(i) = sh(i) + 0.5D0 * sum (CONJG(rhog (:)) * vh_rhog(:) )*weight(iq)*omega
+      !
+    ENDDO
+    lrpa=lrpa_save
     !
     ! ... each q /= gamma is saved on a different directory
     lgamma = lgamma_iq(iq)
@@ -266,7 +302,15 @@ subroutine kc_setup
     !
   ENDDO
   !
-  WRITE( stdout, '(5X,"INFO: PREPARING THE KCWANN CALCULATION ... DONE")')
+  ! Print on output the self-Hatree
+  CALL mp_sum (sh, intra_bgrp_comm)
+  
+  WRITE(stdout,'(5X, "INFO: Orbital Self-Hartree (SH)")') 
+  DO i = 1, num_wann
+    WRITE(stdout,'(5X, "orb ", 1i5, 5X, "SH ", 1F10.6)') i, REAL(sh(i))
+  ENDDO
+  !
+  WRITE( stdout, '(/,5X,"INFO: PREPARING THE KCWANN CALCULATION ... DONE")')
   WRITE(stdout,'(/)')
   !
   CALL close_buffer  ( iuwfc, 'KEEP' )
@@ -274,6 +318,8 @@ subroutine kc_setup
   CALL stop_clock ('kc_setup')
   !
   DEALLOCATE (rhowann, rhowann_aux )
+  DEALLOCATE ( rhog , delta_vg, vh_rhog, delta_vg_ )
+  !
   ! 
   RETURN
   !
