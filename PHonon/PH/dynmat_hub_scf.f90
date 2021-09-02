@@ -13,9 +13,10 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   !! It adds the scf derivative of the Hubbard energy (terms 1 and 2). Moreover,
   !! it adds 3 terms due to the orthogonality constraints in the USPP formalism (terms 3,4,5). 
   !! Note, the orthogonality terms 4 and 5 DO NOT follow simply from the 2nd derivative of 
-  !! the Hubbard energy \(\text{E_U}\); they stem from the coupling of the \(-\epsilon\dS\d\lambda\) in 
-  !! the USPP forces with the part of d\psi\d\mu projected onto the occupied manifold 
-  !! (the variable dpsi stems from the scf linear system and lives in the unoccupied manifold).   
+  !! the Hubbard energy \(\text{E_U}\); they stem from the coupling of the \(-\epsilon\ dS\ d\lambda\) in 
+  !! the USPP forces with the part of \(d\psi\ d\mu\) projected onto the occupied manifold 
+  !! (the variable dpsi stems from the scf linear system and lives in the unoccupied manifold).  
+  !! See comments in the source code for other details on the implemented terms.
   !
   ! Terms implemented:
   !   dyn_hub_scf (ipert, imode)  

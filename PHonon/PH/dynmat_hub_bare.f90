@@ -9,19 +9,23 @@
 SUBROUTINE dynmat_hub_bare
   !---------------------------------------------------------------------
   !! DFPT+U: This routine does two tasks:  
-  !! 1) Computes d2ns_bare (very slow) or reads it;  
+  !! 1) Computes \(\text{d2ns_bare}\) (very slow) or reads it;  
   !! 2) Adds to the dynamical matrix the bare part due the Hubbard term:
-  !!  $$ \sum_\text{nah} \text{Hubbard_U}(\text{nah}) \sum_{is, m1, m2} [ 
-  !!      (0.5\delta_{m1m2} - \text{ns}(m1,m2,is,\text{nah})) \cdot \text{d2ns_bare}
-  !!      - \text{conjg}(\text{dnsbare}( m1, m2, is, \text{nah}, \text{icart},na)) 
-  !!            \cdot \text{dnsbare}( m1, m2, is, nah, jcart,nap) ] $$
+  !! \begin{equation}\notag
+  !! \begin{split}
+  !!  \sum_\text{nah} \text{Hubbard_U}&(\text{nah}) \sum_{is, m1, m2} [ 
+  !!      (0.5\delta_{m1m2} - \text{ns}(m1,m2,is,\text{nah})) \cdot \text{d2ns_bare}\\
+  !!      &- \text{conjg}(\text{dnsbare}( m1, m2, is, \text{nah}, \text{icart},\text{na})) 
+  !!            \cdot \text{dnsbare}( m1, m2, is, \text{nah}, \text{jcart},\text{nap}) ]
+  !! \end{split}
+  !! \end{equation}
   !
   !!  Addition of the J0 term:
   !!  $$ \sum_\text{nah} \text{Hubbard_J0}(\text{nah}) \sum_{is, m1, m2} [ 
   !!      \text{ns}(m1,m2,-is,\text{nah}) \cdot \text{d2ns_bare}(m1, m2, is,
   !!      \text{nah}, \text{nap_jcart}, \text{na_icart})  
-  !!      + \text{conjg}(\text{dnsbare}( m1, m2, is, \text{nah}, \text{icart},na))\cdot
-  !!              \text{dnsbare}( m1, m2, -is, nah, jcart,nap) ] $$
+  !!      + \text{conjg}(\text{dnsbare}(m1,m2,is,\text{nah}, \text{icart},\text{na}))\cdot
+  !!          \text{dnsbare}(m1,m2,-is, \text{nah}, \text{jcart},\text{nap}) ] $$
   !
   !! Written  by A. Floris.  
   !! Modified by I. Timrov (01.10.2018).

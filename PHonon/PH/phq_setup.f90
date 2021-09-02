@@ -11,26 +11,26 @@ subroutine phq_setup
   !! This subroutine prepares several variables which are needed in the
   !! \(\texttt{phonon}\) program:  
   !! 1) computes the total local potential (external+scf) on the smooth
-  !!    grid to be used in h_psi and similia;  
+  !!    grid to be used in \(\texttt{h_psi}\) and similia;  
   !! 2) computes the local magnetization (if necessary);  
   !! 3) computes dmuxc (with GC if needed);  
   !! 4) set the inverse of every matrix invs;  
   !! 5) for metals sets the occupied bands;  
-  !! 6) computes alpha_pv;  
+  !! 6) computes \(\text{alpha_pv}\);  
   !! 7) computes the variables needed to pass to the pattern representation:  
   !!    \(\text{u}\):       the patterns;  
   !!    \(\text{t}\):       the matrices of the small group of q on the pattern basis;  
-  !!    \(\text{tmq}\):     the matrix of the symmetry which sends \(q\rightarrow-q+G}\);  
+  !!    \(\text{tmq}\):     the matrix of the symmetry which sends \(q\rightarrow -q+G\);  
   !!    \(\text{gi}\):      the G associated to each symmetry operation;  
-  !!    \(\text{gimq}\):    the G of the \(q\rigtharrow-q+G}\) symmetry;  
-  !!    \(\text{nsymq}\):   the order of the small group of q;  
-  !!    \(\text{irotmq}\):  the index of the \(q\rightarrow-q+G}\) symmetry;  
+  !!    \(\text{gimq}\):    the G of the \(q\rightarrow -q+G\) symmetry;  
+  !!    \(\text{nsymq}\):   the order of the small group of \(q\);  
+  !!    \(\text{irotmq}\):  the index of the \(q\rightarrow -q+G\) symmetry;  
   !!    \(\text{nirr}\):    the number of irreducible representation;  
   !!    \(\text{npert}\):   the dimension of each irreducible representation;  
   !!    \(\text{nmodes}\):  the number of modes;  
-  !!    \(\text{minus_q}\): true if there is a symmetry sending \(q\rightarrow-q+G}\);  
-  !! 8) for testing purposes it sets ubar;  
-  !! 9) set the variables needed to deal with nlcc;  
+  !!    \(\text{minus_q}\): true if there is a symmetry sending \(q\rightarrow -q+G\);  
+  !! 8) for testing purposes it sets \(\text{ubar}\);  
+  !! 9) set the variables needed to deal with \(\text{nlcc}\);  
   !! 10) set the variables needed for the partial computation
   !      of the dynamical matrix.
   !

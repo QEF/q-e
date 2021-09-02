@@ -11,7 +11,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      ndmx, ndim, ethr, ik, kter, conv_root, anorm, nbnd, m)
   !----------------------------------------------------------------------
   !! Iterative solution of the linear system by GMRES(m) method:
-  !! $$ (h - e + Q) \cdot \(\text{dpsi} = \(\text{d0psi}\)\ \ (1) $$
+  !! $$ (h - e + Q) \cdot \text{dpsi} = \text{d0psi}\ \ (1) $$
   !! where \(h\) is a complex hermitian matrix, \(e\) is a 
   !! complex scalar and \(\text{dpsi}\) and \(\text{d0psi}\) are
   !! complex vectors.

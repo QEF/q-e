@@ -12,14 +12,18 @@ SUBROUTINE adddvhubscf (ipert, ik)
   ! 
   !! DFPT+U  
   !! This routine calculates the SCF derivative of the Hubbard potential times \(\psi\):
-  !! $$ |\Delta V_{SCF}(k+q,is) \psi(\text{ibnd},k,is)\rangle = 
-  !!   - \sum_{I,m1,m2} \text{Hubbard}_U(I)\cdot \text{dnsscf}(m1,m2,is,I,\text{imode})\cdot 
-  !!  |S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2|\psi(\text{ibnd},k,is)\rangle $$
+  !! \begin{equation}\notag
+  !! \begin{split}
+  !!   |\Delta V_{SCF}(k+q,is) \psi(\text{ibnd},k,is)\rangle = 
+  !!   - &\sum_{I,m1,m2} \text{Hubbard_U}(I)\cdot\text{dnsscf}(m1,m2,is,I,\text{imode})\cdot \\
+  !!     &|S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2|\psi(\text{ibnd},k,is)\rangle
+  !! \end{split}
+  !! \end{equation}
   !
-  !! Addition of the \(text{J0}\) terms:
+  !! Addition of the \(\text{J0}\) terms:
   !
   !! $$ + \sum_{I,m1,m2} \text{Hubbard_J0}(I)\cdot \text{dnsscf}(m1,m2,\text{isi},I,\text{imode})\cdot 
-  !! \|S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2)\|\psi(\text{ibnd},k,is)\rangle $$
+  !! |S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2)|\psi(\text{ibnd},k,is)\rangle $$
   !
   !! Where:  
   !! \(\text{is}\)  = current_spin;  

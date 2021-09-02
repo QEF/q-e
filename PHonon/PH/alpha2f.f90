@@ -140,7 +140,7 @@ END SUBROUTINE read_polarization
 !--------------------------------------------------------------------
 SUBROUTINE read_lam()
   !------------------------------------------------------------------
-  !! This routine reads \(\text{lambda}_{q nu}\) & \(\text{omega}_{q nu}\)
+  !! This routine reads \(\text{lambda}_\text{q nu}\) & \(\text{omega}_\text{q nu}\)
   !! from lambda*.dat
   !
   USE kinds,     ONLY : DP
@@ -296,7 +296,7 @@ END SUBROUTINE compute_a2F
 !-----------------------------------------------------------------
 SUBROUTINE compute_lambda()
   !---------------------------------------------------------------
-  !! This routine computes \(\text{omega_ln}\) & \(\text{lambda}\).
+  !! This routine computes \(\text{omega_{ln}}\) & \(\text{lambda}\).
   !
   USE kinds,     ONLY : DP
   USE modes,     ONLY : nmodes  

@@ -113,8 +113,8 @@ subroutine initialize_grid_variables()
   !----------------------------------------------------------------------
   !! This subroutine initializes the grid variables by reading the
   !! modes from file. It uses the routine check_if_partial_dyn to 
-  !! set the modes to compute according to \(\text{start_irr}, 
-  !! \(\text{last_irr} or \(\text{modenum}\) and \(\text{ifat}\) flags.
+  !! set the modes to compute according to \(\text{start_irr}\), 
+  !! \(\text{last_irr}\) or \(\text{modenum}\) and \(\text{ifat}\) flags.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat

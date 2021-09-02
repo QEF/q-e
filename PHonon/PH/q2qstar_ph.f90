@@ -11,7 +11,7 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   !-----------------------------------------------------------------------
   !! Generates the dynamical matrices for the star of q and writes them on
   !! disk for later use.  
-  !! If there is a symmetry operation such that \(q \rigtharrow -q+G \) then
+  !! If there is a symmetry operation such that \(q \rightarrow -q+G \) then
   !! imposes on dynamical matrix those conditions related to time reversal 
   !! symmetry.
   !

@@ -9,8 +9,9 @@
 !----------------------------------------------------------------------
 subroutine dvqpsi_us_only (ik, uact, becp1, alphap)
   !----------------------------------------------------------------------
-  !! This routine calculates dV_bare/dtau * psi for one perturbation
-  !! with a given q. The displacements are described by a vector uact.
+  !! This routine calculates \(\text{dV_bare}/\text{dtau}\cdot\text{psi}\)
+  !! for one perturbation with a given q.  
+  !! The displacements are described by a vector uact.  
   !! The result is stored in \(\text{dvpsi}\). The routine is called for
   !! each k-point and for each pattern u. It computes simultaneously all
   !! the bands.  
