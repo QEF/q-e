@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -41,7 +41,7 @@ PROGRAM do_projwfc
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  CHARACTER (len=256) :: filpdos, filproj, outdir
+  CHARACTER (len=256) :: filpdos, filproj, filowdin, outdir
   REAL (DP), allocatable :: xk_collect(:,:)
   REAL (DP) :: Emin, Emax, DeltaE, degauss1, ef_0
   INTEGER :: nks2, ngauss1, ios
@@ -52,7 +52,7 @@ PROGRAM do_projwfc
   LOGICAL :: lgww  !if .true. use GW QP energies from file bands.dat
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
-             Emin, Emax, DeltaE, filpdos, filproj, lgww, &
+             Emin, Emax, DeltaE, filpdos, filproj, filowdin, lgww, &
              kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes, &
              lwrite_overlaps, lbinary_data, pawproj, lforcet, ef_0
   !
@@ -69,6 +69,7 @@ PROGRAM do_projwfc
   IF ( trim( outdir ) == ' ' ) outdir = './'
   filproj= ' '
   filpdos= ' '
+  filowdin= ' '
   Emin   =-1000000.d0
   Emax   =+1000000.d0
   DeltaE = 0.01d0
@@ -111,6 +112,7 @@ PROGRAM do_projwfc
   CALL mp_bcast( tmp_dir,   ionode_id, intra_image_comm )
   CALL mp_bcast( prefix,    ionode_id, intra_image_comm )
   CALL mp_bcast( filproj,   ionode_id, intra_image_comm )
+  CALL mp_bcast( filowdin,  ionode_id, intra_image_comm )
   CALL mp_bcast( ngauss1,   ionode_id, intra_image_comm )
   CALL mp_bcast( degauss1,  ionode_id, intra_image_comm )
   CALL mp_bcast( DeltaE,    ionode_id, intra_image_comm )
@@ -208,7 +210,7 @@ PROGRAM do_projwfc
   ELSE IF ( pawproj ) THEN
      CALL projwave_paw ( )
   ELSE
-     CALL projwave(filproj, lsym, lwrite_overlaps )
+     CALL projwave(filproj, filowdin, lsym, lwrite_overlaps)
      IF ( lforcet ) CALL force_theorem ( ef_0, filproj )
   ENDIF
   !
@@ -267,7 +269,7 @@ SUBROUTINE get_et_from_gww ( nbnd, et )
   ENDIF
 END SUBROUTINE get_et_from_gww
 !
-SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
+SUBROUTINE print_lowdin ( unit, nat, lmax_wfc, nspin, charges, charges_lm )
   !
   USE kinds, ONLY : dp
   USE io_global, ONLY : stdout, ionode
@@ -275,7 +277,7 @@ SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+  INTEGER, INTENT(IN) :: unit, nat, lmax_wfc, nspin
   REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
   REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
   !
@@ -288,7 +290,7 @@ SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
     'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
   !
   IF ( ionode ) THEN
-     WRITE( stdout, '(/"Lowdin Charges: "/)')
+     WRITE( unit, '(/"Lowdin Charges: "/)')
      !
      DO na = 1, nat
         DO is = 1, nspin
@@ -296,45 +298,45 @@ SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
         ENDDO
         IF ( nspin == 1) THEN
            DO l = 0, lmax_wfc
-              WRITE(stdout, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
+              WRITE(unit, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
-              WRITE(stdout,*)
+              WRITE(unit,*)
            ENDDO
         ELSEIF ( nspin == 2) THEN
-           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
+           WRITE( unit, 2000) na, totcharge(1) + totcharge(2), &
                 ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
            DO l = 0, lmax_wfc
-              WRITE(stdout,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
+              WRITE(unit,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
-              WRITE(stdout,*)
+              WRITE(unit,*)
            ENDDO
            DO l = 0, lmax_wfc
-              WRITE(stdout,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
+              WRITE(unit,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
                  ENDDO
               ENDIF
-              WRITE(stdout,*)
+              WRITE(unit,*)
            ENDDO
-           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
+           WRITE( unit, 2003) totcharge(1) - totcharge(2), &
                 ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
         ENDIF
      ENDDO
      !
      psum = SUM(charges(:,:,:)) / nelec
-     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
+     WRITE( unit, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
      ! The spilling parameter measures the ability of the basis provided by
@@ -695,7 +697,7 @@ SUBROUTINE sym_proj_nc ( proj0, proj_out  )
   !
 END SUBROUTINE sym_proj_nc
 !-----------------------------------------------------------------------
-SUBROUTINE print_proj ( lmax_wfc, proj )
+SUBROUTINE print_proj ( lmax_wfc, proj, lowdin_unit )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -711,7 +713,7 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
   USE projections,ONLY : nlmchi
   !
   IMPLICIT NONE
-  INTEGER, INTENT(in) :: lmax_wfc
+  INTEGER, INTENT(in) :: lmax_wfc, lowdin_unit
   REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
   !
   INTEGER :: nspin0, nwfc, ibnd, i, j, ik, na, l, m
@@ -722,10 +724,10 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
   REAL (DP), EXTERNAL :: compute_mj
   CHARACTER (len=1) :: plus
   !
-  INTERFACE 
-     SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
+  INTERFACE
+     SUBROUTINE print_lowdin ( unit, nat, lmax_wfc, nspin, charges, charges_lm )
        IMPORT  :: DP
-       INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+       INTEGER, INTENT(IN) :: unit, nat, lmax_wfc, nspin
        REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
        REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
      END SUBROUTINE print_lowdin
@@ -827,13 +829,13 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
         DO nwfc = 1, natomwfc
            na= nlmchi(nwfc)%na
            l = nlmchi(nwfc)%l
-	   IF ( noncolin .AND. .NOT. lspinorb ) THEN
-	      IF (nlmchi(nwfc)%ind<=(2*l+1)) THEN
-	         current_spin = 1
+           IF ( noncolin .AND. .NOT. lspinorb ) THEN
+              IF (nlmchi(nwfc)%ind<=(2*l+1)) THEN
+                 current_spin = 1
               ELSE
-	         current_spin = 2
+                 current_spin = 2
               ENDIF
-	   END IF
+           END IF
            charges(na,l,current_spin) = charges(na,l,current_spin) + &
                 wg (ibnd,ik) * proj (nwfc, ibnd, ik)
            IF ( nspin /= 4 ) THEN
@@ -846,10 +848,10 @@ SUBROUTINE print_proj ( lmax_wfc, proj )
   ENDDO
   !
   IF ( nspin /= 4 ) THEN
-     CALL print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
+     CALL print_lowdin ( lowdin_unit, nat, lmax_wfc, nspin, charges, charges_lm )
      DEALLOCATE (charges_lm)
   ELSE
-     CALL print_lowdin ( nat, lmax_wfc, nspin0, charges )
+     CALL print_lowdin ( lowdin_unit, nat, lmax_wfc, nspin0, charges )
   END IF
   DEALLOCATE (charges)
   !
@@ -1090,7 +1092,7 @@ END FUNCTION compute_mj
 !  projwave with distributed matrixes
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
+SUBROUTINE projwave( filproj, filowdin, lsym, lwrite_ovp )
   !-----------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -1119,7 +1121,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   include 'laxlib.fh'
   !
-  CHARACTER (len=*), INTENT(IN) :: filproj
+  CHARACTER (len=*), INTENT(IN) :: filproj, filowdin
   LOGICAL, INTENT(IN)    :: lsym
   LOGICAL, INTENT(INOUT) :: lwrite_ovp
   !
@@ -1137,7 +1139,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   INTEGER  :: nksinit, nkslast
   LOGICAL :: freeswfcatom
   !
-  INTEGER :: iunaux
+  INTEGER :: iunaux, lowdin_unit
   INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(len=256) :: auxname
   !
@@ -1390,7 +1392,18 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   IF (ionode) THEN
      !
-     CALL print_proj( lmax_wfc, proj )
+     IF (TRIM(filowdin) /= ' ') THEN
+        lowdin_unit = find_free_unit()
+        OPEN(unit=lowdin_unit, file=trim(filowdin), status='unknown', &
+             form='formatted')
+     ELSE
+        lowdin_unit = stdout
+     END IF
+     !
+     CALL print_proj( lmax_wfc, proj, lowdin_unit )
+     !
+     IF (TRIM(filowdin) /= ' ') CLOSE( unit=lowdin_unit )
+     !
      CALL write_proj_file ( filproj, proj )
      !
   END IF
