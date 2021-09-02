@@ -70,7 +70,7 @@ set(src_pw4gww
     pw4gww/wannier_bse.f90
     pw4gww/hpsi_pw4gww.f90
     pw4gww/cgsolve_all_gamma.f90
-    pw4gww/realus.f90
+    pw4gww/gww_realus.f90
     pw4gww/operator_1_vp.f90)
 qe_enable_cuda_fortran("${src_pw4gww}")
 

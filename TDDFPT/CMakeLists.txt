@@ -50,7 +50,7 @@ set(src_tddfpt
     src/dveqpsi_us.f90
     src/dveqpsi_us_only.f90
     src/orthogonalize_omega.f90
-    src/mix_pot.f90
+    src/lr_mix_pot.f90
     src/lr_magnons_routines.f90
     src/lr_apply_liouvillian_magnons.f90
     src/lr_dvpsi_magnons.f90

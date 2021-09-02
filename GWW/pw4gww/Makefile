@@ -45,7 +45,7 @@ mp_wave_parallel.o \
 wannier_bse.o\
 hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
-realus.o \
+gww_realus.o \
 operator_1_vp.o \
 operator_debug.o 
 

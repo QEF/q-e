@@ -449,6 +449,12 @@ lr_main.o : ../../upflib/uspp.o
 lr_main.o : lr_charg_resp.o
 lr_main.o : lr_lanczos.o
 lr_main.o : lr_variables.o
+lr_mix_pot.o : ../../Modules/io_files.o
+lr_mix_pot.o : ../../Modules/io_global.o
+lr_mix_pot.o : ../../Modules/kind.o
+lr_mix_pot.o : ../../Modules/mp_bands.o
+lr_mix_pot.o : ../../Modules/mp_images.o
+lr_mix_pot.o : ../../UtilXlib/mp.o
 lr_normalise.o : ../../LR_Modules/lrcom.o
 lr_normalise.o : ../../Modules/becmod.o
 lr_normalise.o : ../../Modules/cell_base.o
@@ -703,12 +709,6 @@ lr_write_restart.o : ../../Modules/noncol.o
 lr_write_restart.o : ../../PW/src/pwcom.o
 lr_write_restart.o : lr_charg_resp.o
 lr_write_restart.o : lr_variables.o
-mix_pot.o : ../../Modules/io_files.o
-mix_pot.o : ../../Modules/io_global.o
-mix_pot.o : ../../Modules/kind.o
-mix_pot.o : ../../Modules/mp_bands.o
-mix_pot.o : ../../Modules/mp_images.o
-mix_pot.o : ../../UtilXlib/mp.o
 orthogonalize_omega.o : ../../LR_Modules/lrcom.o
 orthogonalize_omega.o : ../../Modules/becmod.o
 orthogonalize_omega.o : ../../Modules/control_flags.o
