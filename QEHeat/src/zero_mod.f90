@@ -93,7 +93,7 @@ contains
                               tpiba, omega, tpiba2, alat, at(:, :), &
                               g(:, :), gg(:), bg(:, :)
       COMPLEX(DP), intent(inout) :: psic(:), evc(:, :)
-      COMPLEX(DP), intent(in):: vkb(:, :)
+      COMPLEX(DP), intent(inout):: vkb(:, :)
       real(dp), intent(in) :: deeq(:, :, :, :), xk(:, :)
       type(pseudo_upf), intent(in) :: upf(:)
       logical, intent(in) :: ec_test_
@@ -199,7 +199,8 @@ contains
       real(DP), intent(inout) :: current(3)
       integer, intent(in) :: nkb, nh(:), nbnd, npw, npwx, nat, ityp(:), &
                              nsp, igk_k(:, :)
-      complex(DP), intent(in) :: vkb(:, :), evc(:, :)
+      complex(DP), intent(in) :: evc(:, :)
+      complex(DP), intent(inout) :: vkb(:, :)
       real(dp), intent(in) :: deeq(:, :, :, :), vel(:, :), g(:, :), tpiba, xk(:, :), tabr(:, :, :, :)
       type(pseudo_upf), intent(in) :: upf(:)
       logical, intent(in) :: ec_test_
@@ -241,7 +242,7 @@ contains
 !  - vkb is the Fourier transform of the beta functions,
 !  - xvkb is the Fourier tranform of xbeta.
 !  Both are needed in Eq. 36
-      CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
+      CALL init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
       call init_us_3(npw, xvkb, tabr, ec_test_)
 !
 ! initialization of dvkb and xdvkb
