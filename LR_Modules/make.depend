@@ -383,6 +383,7 @@ response_kernels.o : ../Modules/mp_pools.o
 response_kernels.o : ../Modules/noncol.o
 response_kernels.o : ../Modules/wavefunctions.o
 response_kernels.o : ../PW/src/buffers.o
+response_kernels.o : ../PW/src/init_us_2.o
 response_kernels.o : ../PW/src/ldaU.o
 response_kernels.o : ../PW/src/pwcom.o
 response_kernels.o : ../UtilXlib/mp.o
