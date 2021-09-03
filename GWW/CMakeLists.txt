@@ -111,11 +111,11 @@ set(src_bse
     bse/qpcorrections.f90)
 
 set(src_head
-    head/bcast_ph_input.f90
-    head/close_phq.f90
+    head/bcast_gwl_input.f90
+    head/close_gwl.f90
     head/lanczos_k.f90
-    head/openfilq.f90
-    head/phq_readin.f90
+    head/openfilq_gwl.f90
+    head/gwl_readin.f90
     head/solve_head.f90)
 
 set(src_minpack

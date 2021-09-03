@@ -18,7 +18,7 @@ dielectric.o
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
         ../../KS_Solvers/libks_solvers.a \
-	../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+	../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../upflib/libupf.a
 PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= 
