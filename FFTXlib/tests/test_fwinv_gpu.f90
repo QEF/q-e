@@ -1,10 +1,13 @@
 #if defined(__CUDA)
 program test_fwinv_gpu
-#if defined(__MPI)
+#if defined(__MPI) && defined(__MPI_MODULE)
     USE mpi
 #endif
     USE tester
     IMPLICIT NONE
+#if defined(__MPI) && ! defined(__MPI_MODULE)
+    INCLUDE 'mpif.h'
+#endif
     ! MPI type
     type mpi_t
     integer :: me, n, root, comm
