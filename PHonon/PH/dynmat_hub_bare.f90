@@ -33,8 +33,8 @@ SUBROUTINE dynmat_hub_bare
   USE ldaU,          ONLY : Hubbard_l, is_hubbard, Hubbard_J0, &
                             Hubbard_lmax, offsetU, nwfcU
   USE ldaU_ph,       ONLY : dnsbare, wfcatomk, wfcatomkpq, dvkb, vkbkpq, &
-                            dvkbkpq, proj1, projpb, projpdb, swfcatomk, &
-                            effU, read_dns_bare, d2ns_type
+                            dvkbkpq, proj1, projpb, projpdb, read_dns_bare, d2ns_type
+  USE ldaU_lr,       ONLY : effU, swfcatomk
   USE wavefunctions, ONLY : evc
   USE units_lr,      ONLY : iuwfc, lrwfc, iuatwfc, iuatswfc
   USE uspp,          ONLY : vkb, nkb, ofsbeta

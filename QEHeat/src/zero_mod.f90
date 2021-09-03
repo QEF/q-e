@@ -124,7 +124,6 @@ contains
 !auxiliary variables
       integer ::err, ir, ieta
       real(DP) ::R
-      real(DP), allocatable :: values(:)
       real(DP), allocatable   :: charge(:)
       complex(DP), allocatable   :: u_g(:, :) !ngm,a
       complex(DP), allocatable ::charge_g(:)

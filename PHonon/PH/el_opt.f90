@@ -21,7 +21,8 @@ subroutine el_opt
   USE symme,      ONLY : symmatrix3
   USE qpoint,     ONLY : nksq
   USE wvfct,      ONLY : nbnd, npwx
-  USE units_ph,   ONLY : iudrho, lrdrho, lrdwf, iudwf
+  USE units_ph,   ONLY : iudrho, lrdrho
+  USE units_lr,   ONLY : lrdwf, iudwf
   USE control_lr, ONLY : nbnd_occ
   USE buffers,    ONLY : get_buffer
   USE ph_restart, ONLY : ph_writefile

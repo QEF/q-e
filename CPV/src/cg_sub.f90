@@ -12,7 +12,8 @@
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
       lambdap, lambda, nlam, vpot, c0, cm, phi, dbec,l_cprestart  )
 
-!! please see https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045
+!! please see https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.79.1337 (ensemble DFT)
+!! and        https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045 (conjugate gradient)
 
       use kinds, only: dp
       use control_flags, only: tpre, iverbosity, tfor, tprnfor
@@ -56,7 +57,7 @@
       USE cp_main_variables,        ONLY : idesc, drhor, drhog
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
-
+      use wave_gauge, only: project_parallel_gauge_2 
 
 !
       implicit none
@@ -940,33 +941,11 @@
 !if required project c0 on previous manifold of occupied states                                                                                    
 !NOT IMPLEMENTED YET FOR ENSEMBLE DFT AND NSPIN==2
 !NOT IMPLEMENTED FOR US PSEUDOPOTENTIALS
-
-           lambda_repl=0.d0
-            do i = 1, nss
-               do j = 1, nss
-                  ii = i + istart - 1
-                  jj = j + istart - 1
-                  do ig = 1, ngw
-                     lambda_repl( i, j ) = lambda_repl( i, j ) + &
-                          2.d0 * DBLE( CONJG( c0old( ig, ii ) ) * c0( ig, jj) )
-                  enddo
-                  if( gstart == 2 ) then
-                     lambda_repl( i, j ) = lambda_repl( i, j ) - &
-                          DBLE( CONJG( c0old( 1, ii ) ) * c0( 1, jj ) )
-                  endif
-               enddo
-            enddo
-            CALL mp_sum( lambda_repl, intra_bgrp_comm )
-
-
             cm(:,:)=c0(:,:)
-            c0=(0.d0,0.d0)
-            do i=1,nss
-               do j=1,nss
-                  c0(1:ngw,i)=c0(1:ngw,i)+lambda_repl(i,j)*cm(1:ngw,j)
-               enddo
-            enddo
-          
+            call project_parallel_gauge_2(c0old, cm, c0, &
+                                          nss, ngw, ngw,gstart) 
+
+
             call calbec (nbsp,betae,c0,bec)
             CALL gram_bgrp( betae, bec, nkb, c0, ngw )
             call calbec(nbsp, betae,c0,bec)

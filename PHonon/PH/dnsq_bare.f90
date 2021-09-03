@@ -29,9 +29,10 @@ SUBROUTINE dnsq_bare
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE klist,         ONLY : xk, ngk, igk_k
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, offsetU, is_hubbard, nwfcU
-  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, swfcatomk, swfcatomkpq, dwfcatomkpq, &
+  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq, &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             dnsbare, dnsbare_all_modes, proj1, proj2, read_dns_bare
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE wvfct,         ONLY : npwx, wg, nbnd 
   USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs

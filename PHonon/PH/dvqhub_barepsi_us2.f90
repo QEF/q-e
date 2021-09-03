@@ -24,9 +24,10 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE klist,         ONLY : xk, ngk, igk_k
   USE ldaU,          ONLY : U_projection, Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
-  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, swfcatomk, swfcatomkpq, dwfcatomkpq,  &
+  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq,  &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
-                            proj1, proj2, effU 
+                            proj1, proj2
+  USE ldaU_lr,       ONLY : effU, swfcatomk, swfcatomkpq
   USE wvfct,         ONLY : npwx, nbnd
   USE uspp,          ONLY : vkb, nkb, okvan, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs

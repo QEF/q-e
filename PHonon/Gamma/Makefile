@@ -34,17 +34,16 @@ solve_e.o \
 solve_ph.o \
 writedyn.o 
 
-PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a ../../LR_Modules/liblrmod.a
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
+QEMODS = ../../LR_Modules/liblrmod.a $(BASEMODS) 
 
 TLDEPS= pwlibs
 
 all : tldeps phcg.x
 
-phcg.x : phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+phcg.x : phcg.o libphcg.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-		phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

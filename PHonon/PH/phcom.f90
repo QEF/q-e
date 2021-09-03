@@ -303,9 +303,7 @@ MODULE units_ph
        lrbar,     & ! length of the DV_{bare}
        iuebar,    & ! unit with the part DV_{bare} for the electric field
        lrebar,    & ! length of the DV_{bare} fro the electric field
-       iudwf,     & ! unit with D psi
        iupsir,    & ! unit with evc in real space
-       lrdwf,     & ! length of D psi record
        iudrhous, lrdrhous, &
        iudyn,     & ! the unit for the dynamical matrix
        iupdyn,    & ! the unit for the partial dynamical matrix
@@ -390,12 +388,10 @@ MODULE ldaU_ph
   !
   ! atomic wfc's at k
   COMPLEX(DP), ALLOCATABLE, TARGET :: wfcatomk(:,:),      & ! atomic wfc at k
-                                      swfcatomk(:,:),     & ! S * atomic wfc at k
                                       dwfcatomk(:,:,:),   & ! derivative of atomic wfc at k
                                       sdwfcatomk(:,:)       ! S * derivative of atomic wfc at k
   ! atomic wfc's at k+q
   COMPLEX(DP), POINTER ::             wfcatomkpq(:,:),    & ! atomic wfc at k+q
-                                      swfcatomkpq(:,:),   & ! S * atomic wfc at k+q
                                       dwfcatomkpq(:,:,:), & ! derivative of atomic wfc at k+q
                                       sdwfcatomkpq(:,:)     ! S * derivative of atomic wfc at k+q
   ! 
@@ -406,7 +402,6 @@ MODULE ldaU_ph
   ! Various arrays for the response occupation matrix
   COMPLEX(DP), ALLOCATABLE :: dnsbare(:,:,:,:,:,:),         & ! bare derivative of ns
                               dnsbare_all_modes(:,:,:,:,:), & ! bare derivative of ns for all modes
-                              dnsscf(:,:,:,:,:),            & ! SCF  derivative of ns
                               dnsscf_all_modes(:,:,:,:,:),  & ! SCF  derivative of ns for all modes
                               dnsorth(:,:,:,:,:),           & ! valence component of dns
                               dnsorth_cart(:,:,:,:,:,:)       ! same as above, but in cart. coordinates
@@ -420,8 +415,6 @@ MODULE ldaU_ph
   ! projpdb = <psi|dbeta>
   !
   !
-  REAL(DP) :: effU(ntypx)
-  ! effective Hubbard parameter: effU = Hubbard_U - Hubbard_J0
   LOGICAL  :: read_dns_bare
   ! if .true. read the first bare derivative of ns from file
   CHARACTER(LEN=4) :: d2ns_type

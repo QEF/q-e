@@ -52,10 +52,8 @@ write_io_header.o \
 write_hamiltonians.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
-PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
-         ../../dft-d3/libdftd3qe.a ../../XClib/xc_lib.a
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
+QEMODS = $(BASEMODS)
 
 MODULES = $(PWOBJS) $(QEMODS)
 
@@ -73,153 +71,153 @@ libpp.a : $(PPOBJS)
 	$(RANLIB) $@
 
 qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) 
 
-open_grid.x : open_grid.o libpp.a $(MODULES) $(LIBOBJS)
+open_grid.x : open_grid.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		open_grid.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		open_grid.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-average.x : average.o libpp.a $(MODULES) $(LIBOBJS)
+average.x : average.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		average.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		average.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-bands.x : bands.o libpp.a $(MODULES) $(LIBOBJS)
+bands.x : bands.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		bands.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		bands.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-dos.x : dos.o libpp.a $(MODULES) $(LIBOBJS)
+dos.x : dos.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		dos.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		dos.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pawplot.x : pawplot.o libpp.a libpp.a $(MODULES) $(LIBOBJS)
+pawplot.x : pawplot.o libpp.a libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pawplot.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		pawplot.o libpp.a $(MODULES) $(QELIBS)
 
-plan_avg.x : plan_avg.o libpp.a $(MODULES) $(LIBOBJS)
+plan_avg.x : plan_avg.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		plan_avg.o libpp.a $(MODULES) \
-		$(LIBOBJS) $(QELIBS)
+		$(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-plotband.x : plotband.o libpp.a $(MODULES) $(LIBOBJS)
+plotband.x : plotband.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		plotband.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		plotband.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-plotproj.x : plotproj.o libpp.a $(MODULES) $(LIBOBJS)
+plotproj.x : plotproj.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		plotproj.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		plotproj.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-plotrho.x : plotrho.o libpp.a $(MODULES) $(LIBOBJS)
+plotrho.x : plotrho.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		plotrho.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		plotrho.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pmw.x : poormanwannier.o libpp.a $(MODULES) $(LIBOBJS)
+pmw.x : poormanwannier.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		poormanwannier.o libpp.a $(MODULES) \
-		$(LIBOBJS) $(QELIBS)
+		$(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pp.x : postproc.o libpp.a $(MODULES) $(LIBOBJS)
+pp.x : postproc.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		postproc.o libpp.a $(MODULES) \
-		$(LIBOBJS) $(QELIBS)
+		$(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-projwfc.x : projwfc.o libpp.a $(MODULES) $(LIBOBJS)
+projwfc.x : projwfc.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		projwfc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		projwfc.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS)
+pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		pw2wannier90.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2critic.x : pw2critic.o libpp.a $(MODULES) $(LIBOBJS)
+pw2critic.x : pw2critic.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2critic.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		pw2critic.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-wfck2r.x : wfck2r.o libpp.a $(MODULES) $(LIBOBJS) 
+wfck2r.x : wfck2r.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		wfck2r.o libpp.a $(MODULES) $(LIBOBJS)  $(QELIBS)
+		wfck2r.o libpp.a $(MODULES)  $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-initial_state.x : initial_state.o libpp.a $(MODULES) $(LIBOBJS)
+initial_state.x : initial_state.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		initial_state.o libpp.a $(MODULES) \
-		$(LIBOBJS) $(QELIBS)
+		$(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2gw.x : pw2gw.o libpp.a $(MODULES) $(LIBOBJS)
+pw2gw.x : pw2gw.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2gw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		pw2gw.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 sumpdos.x : sumpdos.o 
-	$(LD) $(LDFLAGS) -o $@ sumpdos.o $(MODULES) $(LIBOBJS) $(QELIBS)
+	$(LD) $(LDFLAGS) -o $@ sumpdos.o $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-epsilon.x : epsilon.o libpp.a $(MODULES) $(LIBOBJS)
+epsilon.x : epsilon.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ epsilon.o libpp.a $(MODULES) \
-	$(LIBOBJS) $(QELIBS)
+	$(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-wannier_ham.x : wannier_ham.o libpp.a $(MODULES) $(LIBOBJS)
+wannier_ham.x : wannier_ham.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-	wannier_ham.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	wannier_ham.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-wannier_plot.x : wannier_plot.o libpp.a $(MODULES) $(LIBOBJS)
+wannier_plot.x : wannier_plot.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-	wannier_plot.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	wannier_plot.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-molecularpdos.x : molecularpdos.o libpp.a $(MODULES) $(LIBOBJS)
+molecularpdos.x : molecularpdos.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		molecularpdos.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		molecularpdos.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2bgw.x : pw2bgw.o libpp.a $(MODULES) $(LIBOBJS)
+pw2bgw.x : pw2bgw.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2bgw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		pw2bgw.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-#bgw2pw.x : bgw2pw.o libpp.a $(MODULES) $(LIBOBJS)
+#bgw2pw.x : bgw2pw.o libpp.a $(MODULES) 
 #	$(LD) $(LDFLAGS) -o $@ \
-#		bgw2pw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+#		bgw2pw.o libpp.a $(MODULES) $(QELIBS)
 #	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-fs.x : fermisurface.o libpp.a $(MODULES) $(LIBOBJS)
+fs.x : fermisurface.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		fermisurface.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		fermisurface.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
-fermi_velocity.x : fermi_velocity.o libpp.a $(MODULES) $(LIBOBJS)
+fermi_velocity.x : fermi_velocity.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		fermi_velocity.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		fermi_velocity.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-fermi_proj.x : fermi_proj.o libpp.a $(MODULES) $(LIBOBJS)
+fermi_proj.x : fermi_proj.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		fermi_proj.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		fermi_proj.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 # Added by Yang Jiao
-ppacf.x : ppacf.o libpp.a $(MODULES) $(LIBOBJS)
+ppacf.x : ppacf.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
-		ppacf.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		ppacf.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 clean :

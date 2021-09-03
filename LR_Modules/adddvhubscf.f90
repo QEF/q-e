@@ -33,7 +33,7 @@ SUBROUTINE adddvhubscf (ipert, ik)
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, offsetU, is_hubbard, &
                             Hubbard_J0, nwfcU
-  USE ldaU_ph,       ONLY : dnsscf, swfcatomk, swfcatomkpq, proj1, effU
+  USE ldaU_lr,       ONLY : effU, swfcatomk, swfcatomkpq, dnsscf
   USE wvfct,         ONLY : npwx, nbnd 
   USE control_lr,    ONLY : lgamma, nbnd_occ
   USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
@@ -57,7 +57,7 @@ SUBROUTINE adddvhubscf (ipert, ik)
   INTEGER :: npw, npwq, ikk, ikq, op_spin
   INTEGER ::  i, j, k, nt, l, ih, n, ig, ihubst, ihubst1, ihubst2, &
               nah, m, m1, m2, ibnd, ldim
-  COMPLEX(DP), ALLOCATABLE :: dvhubscf(:,:), dvqi(:,:)  
+  COMPLEX(DP), ALLOCATABLE :: dvhubscf(:,:), dvqi(:,:), proj1(:, :)
   COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   CALL start_clock ( 'adddvhubscf' )

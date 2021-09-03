@@ -99,7 +99,7 @@ subroutine phq_setup
   USE nc_mag_aux,    ONLY : deeq_nc_save
   USE control_lr,    ONLY : lgamma
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
-  USE ldaU_ph,       ONLY : effU
+  USE ldaU_lr,       ONLY : effU
   USE constants,     ONLY : rytoev
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_setup
   USE ahc,           ONLY : elph_ahc, elph_ahc_setup

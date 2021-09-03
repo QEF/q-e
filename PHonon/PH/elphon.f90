@@ -352,7 +352,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE control_lr, ONLY : lgamma
   USE fft_helper_subroutines
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
-  USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
+  USE ldaU_lr,    ONLY : dnsscf
+  USE ldaU_ph,    ONLY : dnsscf_all_modes
   USE io_global,  ONLY : ionode, ionode_id
   USE io_files,   ONLY : seqopn
   USE lrus,       ONLY : becp1, int3_nc
