@@ -24,16 +24,18 @@ MODULE efermi_shift
   CONTAINS
 
 !-----------------------------------------------------------------------
-subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
+subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, dbecsum, becsum1, sym_def)
   !-----------------------------------------------------------------------
-  !    This routine takes care of the effects of a shift of Ef, due to the
-  !    perturbation, that can take place in a metal at q=0
+  !! This routine takes care of the effects of a shift of Ef, due to the
+  !! perturbation, that can take place in a metal at q=0
+  !! Optionally, update dbecsum using becsum1.
   !
 
   USE kinds,                ONLY : DP
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE io_global,            ONLY : stdout
+  USE ions_base,            ONLY : nat
   USE wavefunctions,        ONLY : evc
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp, dffts
@@ -41,6 +43,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
   USE gvect,                ONLY : gg
   USE buffers,              ONLY : get_buffer, save_buffer
   USE lsda_mod,             ONLY : nspin
+  USE uspp_param,           ONLY : nhm
   USE wvfct,                ONLY : npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk, ltetra
   USE ener,                 ONLY : ef
@@ -50,8 +53,6 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
   USE units_lr,             ONLY : iuwfc, lrwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE dfpt_tetra_mod,       ONLY : dfpt_tetra_delta
-! modules from phcom
-  USE modes,                ONLY : npert
 
   implicit none
   !
@@ -71,6 +72,12 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
   ! inp: index of the current irr. rep.
   LOGICAL, INTENT(IN) :: flag
   ! inp: if true the eigenfunctions are updated
+  COMPLEX(DP), OPTIONAL :: dbecsum ((nhm*(nhm+1))/2, nat, nspin_mag, npe)
+  ! input:  dbecsum = 2 <psi|beta> <beta|dpsi>
+  ! output: dbecsum = 2 <psi|beta> <beta|dpsi> + def * becsum1
+  REAL(DP), OPTIONAL :: becsum1 ((nhm*(nhm+1))/2, nat, nspin_mag)
+  ! input: becsum1 = wdelta * <psi|beta> <beta|psi>
+  !        (where wdelta is a Dirac-delta-like function)
   PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
   !! Symmetrization routine for the fermi energy change
   !
@@ -99,7 +106,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
   call start_clock ('ef_shift')
   if (.not.flag) then
      WRITE( stdout, * )
-     do ipert = 1, npert (irr)
+     do ipert = 1, npe
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
            CALL fwfft ('Rho', drhoscf(:,is,ipert), dfftp)
@@ -118,13 +125,23 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
      !
      IF (present(sym_def)) CALL sym_def(def, irr)
      WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
-          (ipert, def (ipert) , ipert = 1, npert (irr) )
+          (ipert, def (ipert) , ipert = 1, npe )
      !
      ! corrects the density response accordingly...
      !
-     do ipert = 1, npert (irr)
+     do ipert = 1, npe
         call zaxpy (dfftp%nnr*nspin_mag, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
      enddo
+     !
+     ! In the PAW case there is also a metallic term
+     !
+     IF (PRESENT(dbecsum) .AND. PRESENT(becsum1)) THEN
+        DO ipert = 1, npe
+           dbecsum(:,:,:,ipert) = dbecsum(:,:,:,ipert) &
+              + def(ipert) * CMPLX(becsum1(:,:,:)*0.5_DP, 0.0_DP, KIND=DP)
+        ENDDO
+     ENDIF
+     !
   else
      !
      ! does the same for perturbed wfc
@@ -139,10 +156,9 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
         !
         ! reads delta_psi from iunit iudwf, k=kpoint
         !
-        do ipert = 1, npert (irr)
+        do ipert = 1, npe
            nrec = (ipert - 1) * nksq + ik
-           if (nksq.gt.1.or.npert(irr).gt.1) &
-                call get_buffer(dpsi, lrdwf, iudwf, nrec)
+           IF (nksq > 1 .OR. npe > 1) CALL get_buffer(dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ (ik)
               !
               if(ltetra) then
@@ -160,11 +176,10 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
            !
            ! writes corrected delta_psi to iunit iudwf, k=kpoint,
            !
-           if (nksq.gt.1.or.npert(irr).gt.1) &
-                call save_buffer (dpsi, lrdwf, iudwf, nrec)
+           IF (nksq > 1 .OR. npe > 1) CALL save_buffer(dpsi, lrdwf, iudwf, nrec)
         enddo
      enddo
-     do ipert = 1, npert (irr)
+     do ipert = 1, npe
         do is = 1, nspin_mag
            call zaxpy (dffts%nnr, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
@@ -173,160 +188,5 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
   call stop_clock ('ef_shift')
   return
 end subroutine ef_shift
-
-!-----------------------------------------------------------------------
-subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
-                         dos_ef, irr, npe, flag, sym_def)
-  !-----------------------------------------------------------------------
-  !    This routine takes care of the effects of a shift of Ef, due to the
-  !    perturbation, that can take place in a metal at q=0
-  !    This routine updates also dbecsum
-  !
-
-  USE kinds,                ONLY : DP
-  USE io_global,            ONLY : stdout
-  USE ions_base,            ONLY : nat
-  USE wavefunctions, ONLY : evc
-  USE cell_base,            ONLY : omega
-  USE buffers,              ONLY : get_buffer, save_buffer
-  USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : gg
-  USE lsda_mod,             ONLY : nspin
-  USE uspp_param,           ONLY : nhm
-  USE wvfct,                ONLY : npwx, et
-  USE klist,                ONLY : degauss, ngauss, ngk, ltetra
-  USE ener,                 ONLY : ef
-  USE qpoint,               ONLY : nksq
-  USE control_lr,           ONLY : nbnd_occ
-  USE control_ph,           ONLY : lgamma_gamma
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag
-  USE units_lr,             ONLY : iuwfc, lrwfc, iudwf, lrdwf
-  USE eqv,                  ONLY : dpsi
-  USE modes,                ONLY : npert
-  USE mp_bands,             ONLY : intra_bgrp_comm
-  USE mp,                   ONLY : mp_sum
-  USE dfpt_tetra_mod,       ONLY : dfpt_tetra_delta
-
-  implicit none
-  !
-  ! input/output variables
-  !
-  integer :: npe
-  ! input: the number of perturbation
-
-  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe), &
-       ldos(dfftp%nnr,nspin_mag), ldoss(dffts%nnr,nspin_mag), &
-       dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag, npe)
-  ! inp/out:the change of the charge
-  ! inp: local DOS at Ef
-  ! inp: local DOS at Ef without augme
-  real(DP) :: becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag)
-  !
-  real(DP) :: dos_ef
-  ! inp: density of states at Ef
-  integer :: irr
-  ! inp: index of the current irr. rep.
-  logical :: flag
-  ! inp: if true the eigenfunctions are updated
-  PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
-  !! Symmetrization routine for the fermi energy change
-  !
-  ! local variables
-  !
-  !--> these quantities may be complex since perturbation may be
-
-  complex(DP) :: delta_n, wfshift
-  ! the change in electron number
-  ! the shift coefficient for the wavefunction
-
-  real(DP), external :: w0gauss
-  ! the smeared delta function
-
-  integer :: npw, ibnd, ik, is, ipert, nrec, ikrec
-  ! counter on occupied bands
-  ! counter on k-point
-  ! counter on spin polarizations
-  ! counter on perturbations
-  ! record number
-  ! record position of wfc at k
-  !
-  ! determines Fermi energy shift (such that each pertubation is neutral)
-  !
-  call start_clock ('ef_shift')
-  if (.not.flag) then
-     WRITE( stdout, * )
-     do ipert = 1, npert (irr)
-        delta_n = (0.d0, 0.d0)
-        do is = 1, nspin_lsda
-           CALL fwfft ('Rho', drhoscf(:,is,ipert), dfftp)
-           if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(dfftp%nl(1),is,ipert)
-           CALL invfft ('Rho', drhoscf(:,is,ipert), dfftp)
-        enddo
-        call mp_sum ( delta_n, intra_bgrp_comm )
-        def (ipert) = - delta_n / dos_ef
-     enddo
-     !
-     ! symmetrizes the Fermi energy shift
-     !
-     IF (present(sym_def)) CALL sym_def(def, irr)
-     WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2es15.4)')&
-          (ipert, def (ipert) , ipert = 1, npert (irr) )
-     !
-     ! corrects the density response accordingly...
-     !
-     do ipert = 1, npert (irr)
-         drhoscf(:,:,ipert)=drhoscf(:,:,ipert)+def(ipert)*ldos(:,:)
-         dbecsum(:,:,:,ipert)=dbecsum(:,:,:,ipert)+def(ipert)*&
-                                          CMPLX(becsum1(:,:,:)*0.5_DP,0.0_DP,kind=DP)
-     enddo
-  else
-     !
-     ! does the same for perturbed wfc
-     !
-     do ik = 1, nksq
-        npw = ngk (ik)
-        !
-        ! reads unperturbed wavefuctions psi_k in G_space, for all bands
-        !
-        ikrec = ik
-        if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikrec)
-        !
-        ! reads delta_psi from iunit iudwf, k=kpoint
-        !
-        do ipert = 1, npert (irr)
-           nrec = (ipert - 1) * nksq + ik
-           if (nksq.gt.1.or.npert(irr).gt.1) &
-                call get_buffer(dpsi, lrdwf, iudwf, nrec)
-           do ibnd = 1, nbnd_occ (ik)
-              !
-              if(ltetra) then
-                 wfshift = 0.5d0 * def(ipert) * dfpt_tetra_delta(ibnd,ik)
-              else
-                 wfshift = 0.5d0 * def(ipert) * w0gauss( (ef-et(ibnd,ik))/degauss, ngauss) / degauss
-              end if
-              !
-              IF (noncolin) THEN
-                 call zaxpy (npwx*npol,wfshift,evc(1,ibnd),1,dpsi(1,ibnd),1)
-              ELSE
-                 call zaxpy (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
-              ENDIF
-           enddo
-           !
-           ! writes corrected delta_psi to iunit iudwf, k=kpoint,
-           !
-           if (nksq.gt.1.or.npert(irr).gt.1) &
-                call save_buffer(dpsi, lrdwf, iudwf, nrec)
-        enddo
-     enddo
-     do ipert = 1, npert (irr)
-        do is = 1, nspin_mag
-           call zaxpy (dffts%nnr, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
-        enddo
-     enddo
-  endif
-  call stop_clock ('ef_shift')
-  return
-end subroutine ef_shift_paw
 
 END MODULE efermi_shift
