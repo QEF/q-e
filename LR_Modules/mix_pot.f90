@@ -20,10 +20,10 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    tr2       threshold for selfconsistency
   !    iter      current iteration number
   !    n_iter    number of iterations used in the mixing
-  !    file_extension  if present save previous iterations on 
+  !    file_extension  if present save previous iterations on
   !                    file 'prefix'.'file_extension'
   !                    otherwise keep everything in memory
-  ! 
+  !
   ! On output:
   !    dr2       [(vout-vin)/ndim]^2
   !    vin       mixed potential
@@ -102,12 +102,12 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         call infomsg ('mix_potential', 'file not found, restarting')
         iter = 1
      endif
-     allocate (df( ndim , n_iter))    
-     allocate (dv( ndim , n_iter))    
+     allocate (df( ndim , n_iter))
+     allocate (dv( ndim , n_iter))
   else
      if (iter == 1) then
-        allocate (df( ndim , n_iter))    
-        allocate (dv( ndim , n_iter))    
+        allocate (df( ndim , n_iter))
+        allocate (dv( ndim , n_iter))
      endif
      if (conv) then
         deallocate (dv)
@@ -115,7 +115,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         call stop_clock ('mix_pot')
         return
      endif
-     allocate (vinsave( ndim))    
+     allocate (vinsave( ndim))
   endif
   !
   ! iter_used = iter-1  if iter <= n_iter
