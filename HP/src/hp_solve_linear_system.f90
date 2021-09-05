@@ -166,6 +166,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ALLOCATE (ldoss(dffts%nnr, nspin_mag))
      ALLOCATE (becsum1 ( (nhm * (nhm + 1))/2, nat, nspin_mag))
      CALL localdos (ldos, ldoss, becsum1, dos_ef)
+     becsum1 = becsum1 * 2 ! because ef_shift adds 0.5 * becsum1 to dbecsum
      IF (.NOT.okpaw) DEALLOCATE (becsum1)
   ENDIF
   !
