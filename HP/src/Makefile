@@ -22,7 +22,6 @@ hp_dealloc_q.o \
 hp_dealloc_1.o \
 hp_dealloc_2.o \
 hp_dvpsi_pert.o \
-hp_efermi_shift.o \
 hp_find_inequiv_sites.o \
 hp_generate_grids.o \
 hp_init.o \

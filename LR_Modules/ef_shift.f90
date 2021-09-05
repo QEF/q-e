@@ -101,10 +101,12 @@ SUBROUTINE ef_shift (update_wfc, npert, dos_ef, ldos, ldoss, drhoscf, &
   ! record position of wfc at k
   ! auxiliary for spin
   !
-  ! determines Fermi energy shift (such that each pertubation is neutral)
-  !
   call start_clock ('ef_shift')
+  !
+  IF (npert > 3) CALL errore("ef_shift", "npert exceeds 3", 1)
+  !
   if (.not.update_wfc) then
+     ! determines Fermi energy shift (such that each pertubation is neutral)
      WRITE( stdout, * )
      do ipert = 1, npert
         delta_n = (0.d0, 0.d0)
