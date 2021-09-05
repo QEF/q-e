@@ -11,18 +11,30 @@ MODULE efermi_shift
   ! the change of the Fermi energy for each pert.
   ! NB: def(3) should be def (npertx), but it is used only at Gamma
   !     where the dimension of irreps never exceeds 3
+
+  ! Define an abstract interface to use a callback
+  ABSTRACT INTERFACE
+     SUBROUTINE def_symmetrization(def, irr)
+        USE kinds, ONLY : DP
+        INTEGER :: irr
+        COMPLEX(DP) :: def(3)
+     END SUBROUTINE
+  END INTERFACE
+
   CONTAINS
 
 !-----------------------------------------------------------------------
-subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
+subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, sym_def)
   !-----------------------------------------------------------------------
   !    This routine takes care of the effects of a shift of Ef, due to the
   !    perturbation, that can take place in a metal at q=0
   !
 
   USE kinds,                ONLY : DP
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp,                   ONLY : mp_sum
   USE io_global,            ONLY : stdout
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
@@ -33,16 +45,13 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE klist,                ONLY : degauss, ngauss, ngk, ltetra
   USE ener,                 ONLY : ef
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, nspin_lsda
-! modules from phcom
   USE qpoint,               ONLY : nksq
   USE control_lr,           ONLY : nbnd_occ
-  USE control_ph,           ONLY : lgamma_gamma
   USE units_lr,             ONLY : iuwfc, lrwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
-  USE modes,                ONLY : npert
-  USE mp_bands,             ONLY : intra_bgrp_comm
-  USE mp,                   ONLY : mp_sum
   USE dfpt_tetra_mod,       ONLY : dfpt_tetra_delta
+! modules from phcom
+  USE modes,                ONLY : npert
 
   implicit none
   !
@@ -60,8 +69,10 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   ! inp: density of states at Ef
   integer :: irr
   ! inp: index of the current irr. rep.
-  logical :: flag
+  LOGICAL, INTENT(IN) :: flag
   ! inp: if true the eigenfunctions are updated
+  PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
+  !! Symmetrization routine for the fermi energy change
   !
   ! local variables
   !
@@ -105,7 +116,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      !
      ! symmetrizes the Fermi energy shift
      !
-     if (.not.lgamma_gamma) call sym_def (def, irr)
+     IF (present(sym_def)) CALL sym_def(def, irr)
      WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
           (ipert, def (ipert) , ipert = 1, npert (irr) )
      !
@@ -165,7 +176,7 @@ end subroutine ef_shift
 
 !-----------------------------------------------------------------------
 subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
-                         dos_ef, irr, npe, flag)
+                         dos_ef, irr, npe, flag, sym_def)
   !-----------------------------------------------------------------------
   !    This routine takes care of the effects of a shift of Ef, due to the
   !    perturbation, that can take place in a metal at q=0
@@ -218,6 +229,8 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   ! inp: index of the current irr. rep.
   logical :: flag
   ! inp: if true the eigenfunctions are updated
+  PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
+  !! Symmetrization routine for the fermi energy change
   !
   ! local variables
   !
@@ -256,7 +269,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      !
      ! symmetrizes the Fermi energy shift
      !
-     if (.not.lgamma_gamma) call sym_def (def, irr)
+     IF (present(sym_def)) CALL sym_def(def, irr)
      WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2es15.4)')&
           (ipert, def (ipert) , ipert = 1, npert (irr) )
      !

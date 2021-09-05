@@ -86,6 +86,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE nc_mag_aux,           ONLY : int1_nc_save, deeq_nc_save, int3_save
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE response_kernels,     ONLY : sternheimer_kernel
+  USE sym_def_module,       ONLY : sym_def
 
   implicit none
 
@@ -402,13 +403,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      IF (okpaw) THEN
         IF (lmetq0) &
            call ef_shift_paw (drhoscfh, dbecsum, ldos, ldoss, becsum1, &
-                                                  dos_ef, irr, npe, .false.)
+                                                  dos_ef, irr, npe, .false.,sym_def)
         DO ipert=1,npe
            dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
                                +becsumort(:,:,:,imode0+ipert)
         ENDDO
      ELSE
-        IF (lmetq0) call ef_shift(drhoscfh,ldos,ldoss,dos_ef,irr,npe,.false.)
+        IF (lmetq0) call ef_shift(drhoscfh,ldos,ldoss,dos_ef,irr,npe,.false.,sym_def)
      ENDIF
      !
      !   After the loop over the perturbations we have the linear change
@@ -464,13 +465,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                        mixin, dvscfin, dbecsum, ndim, 1 )
         if (lmetq0.and.convt) &
            call ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
-                                                  dos_ef, irr, npe, .true.)
+                                                  dos_ef, irr, npe, .true., sym_def)
      ELSE
         call mix_potential (2*npe*dfftp%nnr*nspin_mag, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
         if (lmetq0.and.convt) &
-            call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
+            call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true., sym_def)
      ENDIF
      ! check that convergent have been reached on ALL processors in this image
      CALL check_all_convt(convt)
