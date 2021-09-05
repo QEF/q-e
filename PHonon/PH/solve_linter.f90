@@ -463,13 +463,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                          nmix_ph, flmixdpot, convt)
         call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
-        IF (lmetq0 .AND. convt) CALL ef_shift(.TRUE., npe, dos_ef, ldos, ldoss, drhoscfh, &
+        IF (lmetq0 .AND. convt) CALL ef_shift(.TRUE., npe, dos_ef, ldos, ldoss, drhoscf, &
                                               dbecsum, becsum1, irr, sym_def)
      ELSE
         call mix_potential (2*npe*dfftp%nnr*nspin_mag, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
-        IF (lmetq0 .AND. convt) CALL ef_shift(.TRUE., npe, dos_ef, ldos, ldoss, drhoscfh, &
+        IF (lmetq0 .AND. convt) CALL ef_shift(.TRUE., npe, dos_ef, ldos, ldoss, drhoscf, &
                                               irr=irr, sym_def=sym_def)
      ENDIF
      ! check that convergent have been reached on ALL processors in this image
