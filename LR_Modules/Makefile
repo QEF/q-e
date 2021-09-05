@@ -67,7 +67,8 @@ lanczos_pseudohermitian.o \
 lanczos_nonhermitian.o \
 lanczos_pseudohermitian_c.o \
 lanczos_nonhermitian_c.o \
-response_kernels.o
+response_kernels.o \
+ef_shift.o \
 
 TLDEPS=mods pwlibs
 

@@ -80,7 +80,6 @@ dvqhub_barepsi_us.o \
 dvqhub_barepsi_us2.o \
 delta_sphi.o \
 dpsi_orth.o \
-ef_shift.o \
 ep_matrix_element_wannier.o \
 elph.o \
 el_ph_collect.o \
