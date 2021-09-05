@@ -24,13 +24,13 @@ MODULE efermi_shift
   CONTAINS
 
 !-----------------------------------------------------------------------
-subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, dbecsum, becsum1, sym_def)
+SUBROUTINE ef_shift (update_wfc, npert, dos_ef, ldos, ldoss, drhoscf, &
+                     dbecsum, becsum1, irr, sym_def)
   !-----------------------------------------------------------------------
   !! This routine takes care of the effects of a shift of Ef, due to the
   !! perturbation, that can take place in a metal at q=0
   !! Optionally, update dbecsum using becsum1.
   !
-
   USE kinds,                ONLY : DP
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -53,31 +53,31 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, dbecsum, becs
   USE units_lr,             ONLY : iuwfc, lrwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE dfpt_tetra_mod,       ONLY : dfpt_tetra_delta
-
-  implicit none
+  !
+  IMPLICIT NONE
   !
   ! input/output variables
   !
-  integer :: npe
-  ! input: the number of perturbation
-
-  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe), &
-       ldos(dfftp%nnr,nspin_mag), ldoss(dffts%nnr,nspin_mag)
-  ! inp/out:the change of the charge
-  ! inp: local DOS at Ef
-  ! inp: local DOS at Ef without augme
-  real(DP) :: dos_ef
-  ! inp: density of states at Ef
-  integer :: irr
-  ! inp: index of the current irr. rep.
-  LOGICAL, INTENT(IN) :: flag
-  ! inp: if true the eigenfunctions are updated
-  COMPLEX(DP), OPTIONAL :: dbecsum ((nhm*(nhm+1))/2, nat, nspin_mag, npe)
-  ! input:  dbecsum = 2 <psi|beta> <beta|dpsi>
-  ! output: dbecsum = 2 <psi|beta> <beta|dpsi> + def * becsum1
-  REAL(DP), OPTIONAL :: becsum1 ((nhm*(nhm+1))/2, nat, nspin_mag)
-  ! input: becsum1 = wdelta * <psi|beta> <beta|psi>
-  !        (where wdelta is a Dirac-delta-like function)
+  LOGICAL, INTENT(IN) :: update_wfc
+  !! if true the eigenfunctions are updated
+  INTEGER, INTENT(IN) :: npert
+  !! the number of perturbation
+  REAL(DP), INTENT(IN) :: dos_ef
+  !! density of states at Ef
+  COMPLEX(DP), INTENT(IN) :: ldos(dfftp%nnr, nspin_mag)
+  !! local DOS at Ef (with augmentation)
+  COMPLEX(DP), INTENT(IN) :: ldoss(dffts%nnr, nspin_mag)
+  !! local DOS at Ef without augmentation
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf(dfftp%nnr, nspin_mag, npert)
+  !! the change of the charge (with augmentation)
+  COMPLEX(DP), INTENT(INOUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2, nat, nspin_mag, npert)
+  !! input:  dbecsum = 2 <psi|beta> <beta|dpsi>
+  !! output: dbecsum = 2 <psi|beta> <beta|dpsi> + def * becsum1
+  REAL(DP), INTENT(IN), OPTIONAL :: becsum1((nhm*(nhm+1))/2, nat, nspin_mag)
+  !! becsum1 = wdelta * <psi|beta> <beta|psi>
+  !! (where wdelta is a Dirac-delta-like function)
+  INTEGER, INTENT(IN), OPTIONAL :: irr
+  !! index of the current irr. rep. Used only in sym_def.
   PROCEDURE(def_symmetrization), OPTIONAL :: sym_def
   !! Symmetrization routine for the fermi energy change
   !
@@ -104,13 +104,13 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, dbecsum, becs
   ! determines Fermi energy shift (such that each pertubation is neutral)
   !
   call start_clock ('ef_shift')
-  if (.not.flag) then
+  if (.not.update_wfc) then
      WRITE( stdout, * )
-     do ipert = 1, npe
+     do ipert = 1, npert
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
            CALL fwfft ('Rho', drhoscf(:,is,ipert), dfftp)
-           if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(dfftp%nl(1),is,ipert)
+           if (gg(1) < 1.0d-8) delta_n = delta_n + omega*drhoscf(dfftp%nl(1),is,ipert)
            CALL invfft ('Rho', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_bgrp_comm )
@@ -125,18 +125,18 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, dbecsum, becs
      !
      IF (present(sym_def)) CALL sym_def(def, irr)
      WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
-          (ipert, def (ipert) , ipert = 1, npe )
+          (ipert, def (ipert) , ipert = 1, npert )
      !
      ! corrects the density response accordingly...
      !
-     do ipert = 1, npe
+     do ipert = 1, npert
         call zaxpy (dfftp%nnr*nspin_mag, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
      enddo
      !
      ! In the PAW case there is also a metallic term
      !
      IF (PRESENT(dbecsum) .AND. PRESENT(becsum1)) THEN
-        DO ipert = 1, npe
+        DO ipert = 1, npert
            dbecsum(:,:,:,ipert) = dbecsum(:,:,:,ipert) &
               + def(ipert) * CMPLX(becsum1(:,:,:)*0.5_DP, 0.0_DP, KIND=DP)
         ENDDO
@@ -152,13 +152,13 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, dbecsum, becs
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
         ikrec = ik
-        if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikrec)
+        if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ikrec)
         !
         ! reads delta_psi from iunit iudwf, k=kpoint
         !
-        do ipert = 1, npe
+        do ipert = 1, npert
            nrec = (ipert - 1) * nksq + ik
-           IF (nksq > 1 .OR. npe > 1) CALL get_buffer(dpsi, lrdwf, iudwf, nrec)
+           IF (nksq > 1 .OR. npert > 1) CALL get_buffer(dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ (ik)
               !
               if(ltetra) then
@@ -176,17 +176,18 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag, dbecsum, becs
            !
            ! writes corrected delta_psi to iunit iudwf, k=kpoint,
            !
-           IF (nksq > 1 .OR. npe > 1) CALL save_buffer(dpsi, lrdwf, iudwf, nrec)
+           IF (nksq > 1 .OR. npert > 1) CALL save_buffer(dpsi, lrdwf, iudwf, nrec)
         enddo
      enddo
-     do ipert = 1, npe
+     do ipert = 1, npert
         do is = 1, nspin_mag
            call zaxpy (dffts%nnr, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo
   endif
-  call stop_clock ('ef_shift')
-  return
-end subroutine ef_shift
+  !
+  CALL stop_clock ('ef_shift')
+  !
+END SUBROUTINE ef_shift
 
 END MODULE efermi_shift

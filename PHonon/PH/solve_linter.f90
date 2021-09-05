@@ -401,14 +401,15 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
 
      IF (okpaw) THEN
-        IF (lmetq0) CALL ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .FALSE., &
-                                  dbecsum, becsum1, sym_def)
+        IF (lmetq0) CALL ef_shift(.FALSE., npe, dos_ef, ldos, ldoss, drhoscfh, &
+                                  dbecsum, becsum1, irr, sym_def)
         DO ipert=1,npe
            dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
                                +becsumort(:,:,:,imode0+ipert)
         ENDDO
      ELSE
-        IF (lmetq0) CALL ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .FALSE., sym_def=sym_def)
+        IF (lmetq0) CALL ef_shift(.FALSE., npe, dos_ef, ldos, ldoss, drhoscfh, &
+                                  irr=irr, sym_def=sym_def)
      ENDIF
      !
      !   After the loop over the perturbations we have the linear change
@@ -462,13 +463,14 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                          nmix_ph, flmixdpot, convt)
         call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
-        IF (lmetq0 .AND. convt) CALL ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, &
-                                              .TRUE., dbecsum, becsum1, sym_def)
+        IF (lmetq0 .AND. convt) CALL ef_shift(.TRUE., npe, dos_ef, ldos, ldoss, drhoscfh, &
+                                              dbecsum, becsum1, irr, sym_def)
      ELSE
         call mix_potential (2*npe*dfftp%nnr*nspin_mag, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
-        IF (lmetq0 .AND. convt) CALL ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .TRUE., sym_def=sym_def)
+        IF (lmetq0 .AND. convt) CALL ef_shift(.TRUE., npe, dos_ef, ldos, ldoss, drhoscfh, &
+                                              irr=irr, sym_def=sym_def)
      ENDIF
      ! check that convergent have been reached on ALL processors in this image
      CALL check_all_convt(convt)
