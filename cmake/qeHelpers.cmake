@@ -75,7 +75,7 @@ function(qe_enable_cuda_fortran SRCS)
         foreach(src IN LISTS SRCS)
             set_source_files_properties(${src} 
                 PROPERTIES
-                    COMPILE_OPTIONS ${QE_CUDA_COMPILE_OPTIONS})
+                    COMPILE_OPTIONS "${QE_CUDA_COMPILE_OPTIONS}")
         endforeach()
     endif()
 endfunction(qe_enable_cuda_fortran)
