@@ -144,6 +144,7 @@ target_link_libraries(qe_modules
     PRIVATE
         qe_modules_c
         qe_openmp_fortran
+        qe_openacc_fortran
         qe_fftx
         qe_lax
         qe_mpi_fortran

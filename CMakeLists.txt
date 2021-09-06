@@ -64,17 +64,17 @@ include(GNUInstallDirs)
 # Build Options
 ###########################################################
 include(CMakeDependentOption)
-option(QE_ENABLE_OPENACC
-    "enable OpenACC acceleration" OFF)
 option(QE_ENABLE_CUDA
     "enable CUDA acceleration on NVIDIA GPUs" OFF)
 if(QE_ENABLE_CUDA)
+    option(QE_ENABLE_OPENACC "enable OpenACC acceleration" ON)
     option(QE_ENABLE_LAXLIB_CUSOLVER
         "enable CUDA solver acceleration for LAXLib on NVIDIA GPUs" ON)
-    # OpenMP enable by default if CUDA is enable
+    # OpenMP enabled by default if CUDA is enable
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" ON)
 else()
+    option(QE_ENABLE_OPENACC "enable OpenACC acceleration" OFF)
     option(QE_ENABLE_OPENMP
         "enable distributed execution support via OpenMP" OFF)
 endif()
