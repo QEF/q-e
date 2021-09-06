@@ -60,7 +60,7 @@ set(sources
     ch_psi_all_complex.f90
     addusddenseq.f90
     response_kernels.f90
-    ef_shift.f90)
+    efermi_shift.f90)
 
 qe_add_library(qe_lr_modules ${sources})
 target_link_libraries(qe_lr_modules

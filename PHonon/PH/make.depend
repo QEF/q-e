@@ -471,7 +471,7 @@ dnsq_orth.o : ../../UtilXlib/mp.o
 dnsq_orth.o : ../../upflib/uspp.o
 dnsq_orth.o : d2nsq_bare.o
 dnsq_orth.o : phcom.o
-dnsq_scf.o : ../../LR_Modules/ef_shift.o
+dnsq_scf.o : ../../LR_Modules/efermi_shift.o
 dnsq_scf.o : ../../LR_Modules/lrcom.o
 dnsq_scf.o : ../../Modules/control_flags.o
 dnsq_scf.o : ../../Modules/io_files.o
@@ -1654,7 +1654,7 @@ solve_e_nscf.o : phcom.o
 solve_linter.o : ../../FFTXlib/fft_interfaces.o
 solve_linter.o : ../../LR_Modules/apply_dpot_mod.o
 solve_linter.o : ../../LR_Modules/dv_of_drho.o
-solve_linter.o : ../../LR_Modules/ef_shift.o
+solve_linter.o : ../../LR_Modules/efermi_shift.o
 solve_linter.o : ../../LR_Modules/lrcom.o
 solve_linter.o : ../../LR_Modules/response_kernels.o
 solve_linter.o : ../../Modules/cell_base.o

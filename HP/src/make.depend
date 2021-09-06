@@ -48,7 +48,7 @@ hp_dealloc_q.o : ../../LR_Modules/lrcom.o
 hp_dealloc_q.o : ../../Modules/becmod.o
 hp_dealloc_q.o : ../../Modules/noncol.o
 hp_dealloc_q.o : ../../upflib/uspp.o
-hp_dnsq.o : ../../LR_Modules/ef_shift.o
+hp_dnsq.o : ../../LR_Modules/efermi_shift.o
 hp_dnsq.o : ../../LR_Modules/lrcom.o
 hp_dnsq.o : ../../Modules/constants.o
 hp_dnsq.o : ../../Modules/control_flags.o
@@ -244,7 +244,7 @@ hp_solve_linear_system.o : ../../FFTXlib/fft_helper_subroutines.o
 hp_solve_linear_system.o : ../../FFTXlib/fft_interfaces.o
 hp_solve_linear_system.o : ../../LR_Modules/apply_dpot_mod.o
 hp_solve_linear_system.o : ../../LR_Modules/dv_of_drho.o
-hp_solve_linear_system.o : ../../LR_Modules/ef_shift.o
+hp_solve_linear_system.o : ../../LR_Modules/efermi_shift.o
 hp_solve_linear_system.o : ../../LR_Modules/lrcom.o
 hp_solve_linear_system.o : ../../LR_Modules/response_kernels.o
 hp_solve_linear_system.o : ../../Modules/becmod.o
