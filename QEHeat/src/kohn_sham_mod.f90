@@ -89,7 +89,7 @@ contains
       call update_pot()
       call hinit1()
       call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-      call init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
+      call init_us_2(npw, igk_k(:, 1), xk(:, 1), vkb)
       call sum_band()
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, evc, becp)

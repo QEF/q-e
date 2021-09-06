@@ -241,7 +241,7 @@ contains
 !  - vkb is the Fourier transform of the beta functions,
 !  - xvkb is the Fourier tranform of xbeta.
 !  Both are needed in Eq. 36
-      CALL init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
+      CALL init_us_2(npw, igk_k(:, 1), xk(:, 1), vkb)
       call init_us_3(npw, xvkb, tabr, ec_test_)
 !
 ! initialization of dvkb and xdvkb
