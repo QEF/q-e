@@ -162,6 +162,13 @@ if(QE_ENABLE_CUDA)
         PRIVATE
             CUDA::curand)
 endif()
+
+if(QE_ENABLE_OPENACC)
+    target_link_libraries(qe_modules
+        PRIVATE
+            qe_openacc_fortran)
+endif()
+
 ###########################################################
 
 qe_install_targets(qe_modules qe_modules_c)
