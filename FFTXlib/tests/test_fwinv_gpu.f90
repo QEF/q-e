@@ -140,7 +140,7 @@ program test_fwinv_gpu
     !
     ALLOCATE (rnd_aux(2*n))
     CALL RANDOM_NUMBER(rnd_aux)
-    c = CMPLX(rnd_aux(1:n), rnd_aux(n:2*n))
+    c(1:n) = CMPLX(rnd_aux(1:n), rnd_aux(n+1:2*n))
     c_d = c
     DEALLOCATE(rnd_aux)
   END SUBROUTINE fill_random
@@ -163,8 +163,11 @@ program test_fwinv_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: data_in_d(:)
-    INTEGER :: i
+    INTEGER :: i, ii, j
     !
+    ! task groups not implemented in 2D decomposition. Need to check the other case
+    IF ( ny .gt. 1 ) return
+
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
     dfft%rho_clock_label='bla' ; dfft%wave_clock_label='bla'
@@ -182,7 +185,16 @@ program test_fwinv_gpu
     ELSE
       ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
       ALLOCATE(data_in_d(dfft%nnr))
-      CALL fill_random(data_in, data_in_d, dfft%nnr)
+!      CALL fill_random(data_in, data_in_d, dfft%nnr)
+      data_in(:) = (0.d0, 0.d0)
+      do i =1, dfft%nr1
+        do j =1, dfft%nr2
+           ii = i + dfft%nr1x * (j-1)
+           data_in( ii) = (1.d0,2.d0)
+        enddo
+      enddo
+      data_in_d(:)=data_in(:)
+ 
       !
       CALL fwfft( 'Wave' , data_in, dfft, 1 )
       CALL fwfft( 'Wave' , data_in_d, dfft, 1 )    
@@ -227,7 +239,12 @@ program test_fwinv_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: data_in_d(:)
+    integer :: i, j, ii
     !
+
+    ! task groups not implemented in 2D decomposition. Need to check the other case
+    IF ( ny .gt. 1 ) return
+
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
     dfft%rho_clock_label='bla' ; dfft%wave_clock_label='bla'
@@ -247,10 +264,18 @@ program test_fwinv_gpu
       ! Allocate variables
       ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
       ALLOCATE(data_in_d(dfft%nnr))
-      CALL fill_random(data_in, data_in_d, dfft%nnr)
-      !
+      !CALL fill_random(data_in, data_in_d, dfft%nnr)
+      ! Cannot fill random, must generate a reasonable input for 1D case
+      data_in(:) = (0.d0, 0.d0)
+      do i =1, dfft%nr1
+        do j =1, dfft%nr2
+           ii = i + dfft%nr1x * (j-1)
+           if ( dfft%isind(ii) > 0) data_in( ii) = (1.d0,2.d0)
+        enddo
+      enddo
+      data_in_d(:)=data_in(:)
       CALL invfft( 'Wave' , data_in, dfft, 1 )
-      CALL invfft( 'Wave' , data_in_d, dfft, 1 )    
+      CALL invfft( 'Wave' , data_in_d, dfft, 1 )   
     ENDIF
     aux = data_in_d
     ! Check
@@ -293,7 +318,7 @@ program test_fwinv_gpu
     COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: data_in_d(:)
     integer, parameter :: howmany=4
-    INTEGER :: i, start
+    INTEGER :: i, j, ii, start
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
@@ -307,7 +332,19 @@ program test_fwinv_gpu
     ELSE
       ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr*howmany))
       ALLOCATE(data_in_d(dfft%nnr*howmany))
-      CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
+!      CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
+      data_in(:) = (0.d0, 0.d0)
+      do i =1, dfft%nr3
+        do j =1, dfft%nr2
+           ii = i + dfft%nr1x * (j-1)
+           data_in( ii) = (1.d0,2.d0)
+        enddo
+      enddo
+      do i = 0, howmany-1
+          data_in(i*dfft%nnr+1: (i+1)*dfft%nnr) = data_in(1:dfft%nnr)
+      enddo
+      data_in_d(:)=data_in(:)
+ 
       !
       CALL fwfft( 'Wave' , data_in_d, dfft, howmany=howmany)
       !
@@ -363,7 +400,7 @@ program test_fwinv_gpu
     COMPLEX(DP), ALLOCATABLE, DEVICE :: data_in_d(:)
     INTEGER(kind = cuda_stream_kind) :: strm = 0
     integer, parameter :: howmany=4
-    integer :: start, i
+    integer :: start, i, ii, j
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
@@ -379,7 +416,19 @@ program test_fwinv_gpu
       ! Allocate variables
       ALLOCATE(data_in(howmany*dfft%nnr), aux(howmany*dfft%nnr))
       ALLOCATE(data_in_d(howmany*dfft%nnr))
-      CALL fill_random(data_in, data_in_d, howmany*dfft%nnr)
+!      CALL fill_random(data_in, data_in_d, howmany*dfft%nnr)
+      data_in(:) = (0.d0, 0.d0)
+      do i =1, dfft%nr1
+        do j =1, dfft%nr2
+           ii = i + dfft%nr1x * (j-1)
+           if ( dfft%isind(ii) > 0) data_in( ii) = (1.d0,2.d0)
+        enddo
+      enddo
+      do i = 0, howmany-1
+          data_in(i*dfft%nnr+1:(i+1)*dfft%nnr) = data_in(1:dfft%nnr)
+      enddo
+      data_in_d(:)=data_in(:)
+ 
       !
       !CALL invfft( 'Wave' , data_in, dfft, 1 )
       CALL invfft( 'Wave' , data_in_d, dfft, howmany=howmany, stream=strm )
