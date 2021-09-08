@@ -179,7 +179,7 @@ SUBROUTINE ef_shift_wfc(npert, ldoss, drhoscf)
   !
   call start_clock ('ef_shift_wfc')
   !
-  IF (npert > 3) CALL errore("ef_shift", "npert exceeds 3", 1)
+  IF (npert > 3) CALL errore("ef_shift_wfc", "npert exceeds 3", 1)
   !
   ! Update the perturbed wavefunctions according to the Fermi energy shift
   !
