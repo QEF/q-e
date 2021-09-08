@@ -135,7 +135,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
      !
-     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
+     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
      !
      DO k = 1, length
         sgn(1) = SIGN(1._DP, rho(k,1))
