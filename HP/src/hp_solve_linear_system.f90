@@ -260,9 +260,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      IF (lmetq0) THEN
         ! 
         IF (okpaw) THEN
-           CALL ef_shift(.FALSE., 1, dos_ef, ldos, ldoss, drhoscfh, dbecsum=dbecsum, becsum1=becsum1)
+           CALL ef_shift(1, dos_ef, ldos, drhoscfh, dbecsum=dbecsum, becsum1=becsum1)
         ELSE
-           CALL ef_shift(.FALSE., 1, dos_ef, ldos, ldoss, drhoscfh)
+           CALL ef_shift(1, dos_ef, ldos, drhoscfh)
         ENDIF
         !
         ! Check that def is not too large (it is in Ry). 
