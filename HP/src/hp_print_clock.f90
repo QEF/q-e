@@ -37,7 +37,7 @@ SUBROUTINE hp_print_clock
   CALL print_clock ('hp_calc_chi')
   CALL print_clock ('hp_postproc')
   CALL print_clock ('hp_vpsifft')
-  CALL print_clock ('hp_ef_shift')
+  CALL print_clock ('ef_shift')
   CALL print_clock ('hp_run_nscf')
   CALL print_clock ('hp_postproc')
   !

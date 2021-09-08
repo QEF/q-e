@@ -36,7 +36,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
   USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
-  USE hp_efermi_shift,      ONLY : hp_ef_shift, def
   USE qpoint,               ONLY : nksq, ikks, xq
   USE control_lr,           ONLY : lgamma
   USE units_lr,             ONLY : iuwfc, lrwfc
@@ -50,6 +49,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
                                    conv_thr_chi_best, iter_best, niter_max, nmix, &
                                    alpha_mix, code, lrdvwfc, iudvwfc
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
+  USE efermi_shift,         ONLY : ef_shift, def
   USE response_kernels,     ONLY : sternheimer_kernel
   !
   IMPLICIT NONE
@@ -166,6 +166,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      ALLOCATE (ldoss(dffts%nnr, nspin_mag))
      ALLOCATE (becsum1 ( (nhm * (nhm + 1))/2, nat, nspin_mag))
      CALL localdos (ldos, ldoss, becsum1, dos_ef)
+     becsum1 = becsum1 * 2 ! because ef_shift adds 0.5 * becsum1 to dbecsum
      IF (.NOT.okpaw) DEALLOCATE (becsum1)
   ENDIF
   !
@@ -259,14 +260,14 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      IF (lmetq0) THEN
         ! 
         IF (okpaw) THEN
-           CALL hp_ef_shift (drhoscfh, ldos, ldoss, dos_ef, dbecsum, becsum1)
+           CALL ef_shift(1, dos_ef, ldos, drhoscfh, dbecsum=dbecsum, becsum1=becsum1)
         ELSE
-           CALL hp_ef_shift (drhoscfh, ldos, ldoss, dos_ef)
+           CALL ef_shift(1, dos_ef, ldos, drhoscfh)
         ENDIF
         !
         ! Check that def is not too large (it is in Ry). 
         !
-        IF ( ABS(DBLE(def)) > 5.0d0 ) THEN
+        IF ( ABS(DBLE(def(1))) > 5.0d0 ) THEN
            !
            WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift is too big!")')
            WRITE( stdout, '(6x, "This may happen in two cases:")')

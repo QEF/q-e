@@ -8,6 +8,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
 PHOBJS = \
+sym_def.o \
 acfdtest.o \
 add_dkmds.o \
 add_for_charges.o \
@@ -79,7 +80,6 @@ dvqhub_barepsi_us.o \
 dvqhub_barepsi_us2.o \
 delta_sphi.o \
 dpsi_orth.o \
-ef_shift.o \
 ep_matrix_element_wannier.o \
 elph.o \
 el_ph_collect.o \
@@ -145,7 +145,6 @@ solve_linter.o \
 stop_ph.o \
 summarize.o \
 sym_and_write_zue.o \
-sym_def.o \
 sym_dmag.o \
 sym_dmage.o \
 symdvscf.o \

@@ -108,6 +108,7 @@ subroutine print_clock_ph
   call print_clock ('dv_of_drho')
   call print_clock ('mix_pot')
   call print_clock ('ef_shift')
+  call print_clock ('ef_shift_wfc')
   call print_clock ('localdos')
 #if defined(__MPI)
   call print_clock ('psymdvscf')

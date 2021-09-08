@@ -20,10 +20,10 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    tr2       threshold for selfconsistency
   !    iter      current iteration number
   !    n_iter    number of iterations used in the mixing
-  !    file_extension  if present save previous iterations on 
+  !    file_extension  if present save previous iterations on
   !                    file 'prefix'.'file_extension'
   !                    otherwise keep everything in memory
-  ! 
+  !
   ! On output:
   !    dr2       [(vout-vin)/ndim]^2
   !    vin       mixed potential
@@ -46,11 +46,10 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   !   Here the local variables
   !
-  ! max number of iterations used in mixing: n_iter must be .le. maxter
-  integer :: maxter
-  parameter (maxter = 8)
+  ! max number of iterations used in mixing: n_iter < maxter must hold.
+  integer, parameter :: maxter = 8
   !
-  integer :: iunit, iunmix, n, i, j, iwork (maxter), info, iter_used, &
+  integer :: iunmix, n, i, j, iwork (maxter), info, iter_used, &
        ipos, inext, ndimtot
   ! work space containing info from previous iterations:
   ! must be kept in memory and saved between calls if file_extension=' '
@@ -58,19 +57,22 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   real(DP), allocatable :: vinsave (:)
   real(DP) :: beta (maxter, maxter), gamma, work (maxter), norm
-  logical :: saveonfile, opnd, exst
-  real(DP), external :: ddot, dnrm2
-  ! adjustable parameters as suggested in the original paper
-  real(DP) w (maxter), w0
-  data w0 / 0.01d0 /, w / maxter * 1.d0 /
+  logical :: saveonfile, exst
+  !
+  real(DP) :: w(maxter) = 1.d0
+  real(DP) :: w0 = 0.01d0
+  !! adjustable parameters as suggested in the original paper
+  !
+  INTEGER, EXTERNAL :: find_free_unit
+  REAL(DP), EXTERNAL :: ddot, dnrm2
   !
   call start_clock ('mix_pot')
   !
-  if (iter.lt.1) call errore ('mix_potential', 'iter is wrong', 1)
-  if (n_iter.gt.maxter) call errore ('mix_potential', 'n_iter too big', 1)
-  if (ndim.le.0) call errore ('mix_potential', 'ndim .le. 0', 3)
+  if (iter < 1) call errore ('mix_potential', 'iter must be positive', 1)
+  if (n_iter > maxter) call errore ('mix_potential', 'n_iter too big', 1)
+  if (ndim < 1) call errore ('mix_potential', 'ndim must be positive', 3)
   !
-  saveonfile = file_extension.ne.' '
+  saveonfile = file_extension /= ' '
   !
   do n = 1, ndim
      vout (n) = vout (n) - vin (n)
@@ -84,16 +86,10 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   dr2 = (sqrt (dr2) / ndimtot) **2
   !
-  conv = dr2.lt.tr2
+  conv = dr2 < tr2
   !
   if (saveonfile) then
-     do iunit = 99, 1, - 1
-        inquire (unit = iunit, opened = opnd)
-        iunmix = iunit
-        if (.not.opnd) goto 10
-     enddo
-     call errore ('mix_potential', 'free unit not found?!?', 1)
-10   continue
+     iunmix = find_free_unit()
      if (conv) then
         ! remove temporary file (open and close it)
         call diropn (iunmix, file_extension, ndim, exst)
@@ -102,16 +98,16 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         return
      endif
      call diropn (iunmix, file_extension, ndim, exst)
-     if (iter.gt.1.and..not.exst) then
+     if (iter > 1 .AND. .NOT. exst) then
         call infomsg ('mix_potential', 'file not found, restarting')
         iter = 1
      endif
-     allocate (df( ndim , n_iter))    
-     allocate (dv( ndim , n_iter))    
+     allocate (df( ndim , n_iter))
+     allocate (dv( ndim , n_iter))
   else
-     if (iter.eq.1) then
-        allocate (df( ndim , n_iter))    
-        allocate (dv( ndim , n_iter))    
+     if (iter == 1) then
+        allocate (df( ndim , n_iter))
+        allocate (dv( ndim , n_iter))
      endif
      if (conv) then
         deallocate (dv)
@@ -119,7 +115,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         call stop_clock ('mix_pot')
         return
      endif
-     allocate (vinsave( ndim))    
+     allocate (vinsave( ndim))
   endif
   !
   ! iter_used = iter-1  if iter <= n_iter
@@ -132,7 +128,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   ipos = iter - 1 - ( (iter - 2) / n_iter) * n_iter
   !
-  if (iter.gt.1) then
+  if (iter > 1) then
      if (saveonfile) then
         call davcio (df (1, ipos), ndim, iunmix, 1, - 1)
         call davcio (dv (1, ipos), ndim, iunmix, 2, - 1)
@@ -150,14 +146,14 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   if (saveonfile) then
      do i = 1, iter_used
-        if (i.ne.ipos) then
+        if (i /= ipos) then
            call davcio (df (1, i), ndim, iunmix, 2 * i + 1, - 1)
            call davcio (dv (1, i), ndim, iunmix, 2 * i + 2, - 1)
         endif
      enddo
      call davcio (vout, ndim, iunmix, 1, 1)
      call davcio (vin, ndim, iunmix, 2, 1)
-     if (iter.gt.1) then
+     if (iter > 1) then
         call davcio (df (1, ipos), ndim, iunmix, 2 * ipos + 1, 1)
         call davcio (dv (1, ipos), ndim, iunmix, 2 * ipos + 2, 1)
      endif
