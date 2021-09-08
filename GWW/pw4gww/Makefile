@@ -47,7 +47,10 @@ hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
 realus.o \
 operator_1_vp.o \
-operator_debug.o 
+operator_debug.o \
+lanczos_chains.o \
+convergence.o \
+easy_gw.o
 
 QEMODS = $(BASEMODS)
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
