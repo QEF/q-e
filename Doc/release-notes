@@ -9,6 +9,10 @@ Fixed in development version:
     due to missing zero initialization of some work arrays
   * Ensemble-DFT in CP ("cg") wasn't working any longer for norm-conserving PPs
 
+Incompatible changes in develoment version:
+  * Changes to Makefiles and to file "make.inc"
+  * clib/ deleted, files clib/*.c moved to UtilXlib/ or to Modules/
+
 Known problems in 6.8 version:
   * electron-phonon calculation in the non-colinear/spinorbit case is broken
   * some obscure problem still affects variable-cell with hybrid functionals
