@@ -116,7 +116,7 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
         aux (ir) = aux1 (ir) * sin (gx * r (ir) ) / gx
      enddo
      call simpson (msh, aux, rab, vlcp)
-     IF ( .not. ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) .and. &
+     IF ( .not. ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) .and. &
           .not. do_cutoff_2D ) THEN
         !
         !   here we re-add the analytic fourier transform of the erf function
