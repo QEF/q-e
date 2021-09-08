@@ -10,5 +10,5 @@
     q2               = 0.1d0,
     q3               = 0.0d0,
     pseudo_hermitian = .true.
-    b_pol = 2
+    ipol = 2
 /
