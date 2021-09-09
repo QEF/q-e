@@ -137,6 +137,7 @@ if test "$fft_libs" = ""; then
                                fft_libs="$try_loption $LIBS", , -lm)
                     if test "$have_fft" -eq 0
                     then
+		      unset ac_cv_search_dfftw_execute_dft
                       AC_SEARCH_LIBS(dfftw_execute_dft, fftw3_omp, have_fft=1
                                  fft_libs="$try_loption $LIBS -lfftw3", , -lfftw3 -lm)
                     fi 
@@ -182,10 +183,6 @@ else
    # you will need to set the proper include directory in FFTW_INCLUDE 
    
    echo "using FFT_LIBS with no testing ... "
-   # I suspect next 3 lines are useless in practice, should be deleted - PG
-   if test -n "$FFT_INCLUDE" ; then :
-      try_iflags="$try_iflags -I$FFT_INCLUDE"
-   fi
    if test -n "$FFTW_INCLUDE" ; then :
       try_dflags="$try_dflags -D__FFTW3"
       try_iflags="$try_iflags -I$FFTW_INCLUDE"
