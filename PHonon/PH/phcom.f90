@@ -481,22 +481,9 @@ MODULE ldaU_ph
   USE parameters, ONLY : ntypx
   !
   SAVE
-  !
-<<<<<<< HEAD
-  ! atomic wfc's at k
-  COMPLEX(DP), ALLOCATABLE, TARGET :: wfcatomk(:,:),      & ! atomic wfc at k
-                                      dwfcatomk(:,:,:),   & ! derivative of atomic wfc at k
-                                      sdwfcatomk(:,:)       ! S * derivative of atomic wfc at k
-  ! atomic wfc's at k+q
-  COMPLEX(DP), POINTER ::             wfcatomkpq(:,:),    & ! atomic wfc at k+q
-                                      dwfcatomkpq(:,:,:), & ! derivative of atomic wfc at k+q
-                                      sdwfcatomkpq(:,:)     ! S * derivative of atomic wfc at k+q
-=======
   ! ... atomic wfc's at k
   COMPLEX(DP), ALLOCATABLE, TARGET :: wfcatomk(:,:)
   !! atomic wfc at k
-  COMPLEX(DP), ALLOCATABLE, TARGET :: swfcatomk(:,:)
-  !! S * atomic wfc at k
   COMPLEX(DP), ALLOCATABLE, TARGET :: dwfcatomk(:,:,:)
   !! derivative of atomic wfc at k
   COMPLEX(DP), ALLOCATABLE, TARGET :: sdwfcatomk(:,:)
@@ -505,13 +492,10 @@ MODULE ldaU_ph
   ! ... atomic wfc's at k+q
   COMPLEX(DP), POINTER :: wfcatomkpq(:,:)
   !! atomic wfc at k+q
-  COMPLEX(DP), POINTER :: swfcatomkpq(:,:)
-  !! S * atomic wfc at k+q
   COMPLEX(DP), POINTER :: dwfcatomkpq(:,:,:)
   !! derivative of atomic wfc at k+q
   COMPLEX(DP), POINTER :: sdwfcatomkpq(:,:)
   !! S * derivative of atomic wfc at k+q
->>>>>>> Ford-PHonon - part 13
   ! 
   COMPLEX(DP), ALLOCATABLE, TARGET :: dvkb(:,:,:)
   !! derivative of beta funtions at k  
@@ -521,26 +505,16 @@ MODULE ldaU_ph
   !! derivative of beta funtions at k+q
   !
   ! Various arrays for the response occupation matrix
-<<<<<<< HEAD
-  COMPLEX(DP), ALLOCATABLE :: dnsbare(:,:,:,:,:,:),         & ! bare derivative of ns
-                              dnsbare_all_modes(:,:,:,:,:), & ! bare derivative of ns for all modes
-                              dnsscf_all_modes(:,:,:,:,:),  & ! SCF  derivative of ns for all modes
-                              dnsorth(:,:,:,:,:),           & ! valence component of dns
-                              dnsorth_cart(:,:,:,:,:,:)       ! same as above, but in cart. coordinates
-=======
   COMPLEX(DP), ALLOCATABLE :: dnsbare(:,:,:,:,:,:)
   !! bare derivative of ns
   COMPLEX(DP), ALLOCATABLE :: dnsbare_all_modes(:,:,:,:,:)
   !! bare derivative of ns for all modes
-  COMPLEX(DP), ALLOCATABLE :: dnsscf(:,:,:,:,:)
-  !! SCF  derivative of ns
   COMPLEX(DP), ALLOCATABLE :: dnsscf_all_modes(:,:,:,:,:)
   !! SCF  derivative of ns for all modes
   COMPLEX(DP), ALLOCATABLE :: dnsorth(:,:,:,:,:)
   !! valence component of dns
   COMPLEX(DP), ALLOCATABLE :: dnsorth_cart(:,:,:,:,:,:)
   !! same as above, but in cart. coordinates
->>>>>>> Ford-PHonon - part 13
   !
   COMPLEX (DP), ALLOCATABLE :: proj1(:,:),    &
                                proj2(:,:),    &
@@ -551,11 +525,6 @@ MODULE ldaU_ph
   ! projpdb = <psi|dbeta>
   !
   !
-<<<<<<< HEAD
-=======
-  REAL(DP) :: effU(ntypx)
-  !! effective Hubbard parameter: effU = Hubbard_U - Hubbard_J0
->>>>>>> Ford-PHonon - part 13
   LOGICAL  :: read_dns_bare
   !! if TRUE read the first bare derivative of ns from file
   CHARACTER(LEN=4) :: d2ns_type

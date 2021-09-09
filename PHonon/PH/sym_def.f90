@@ -25,22 +25,14 @@ subroutine sym_def (def, irr)
   implicit none
 
   integer :: irr
-<<<<<<< HEAD
-  ! input: the representation under consideration
-
-  complex(DP) :: def(3)
-  ! inp/out: the fermi energy changes
-  ! NB: def(3) should be def(npertx), but it is used only at Gamma
-  !     where the dimension of irreps never exceeds 3
-
-=======
   !! input: the representation under consideration
-  complex(DP) :: def (npertx)
-  !! inp/out: the fermi energy changes
+  complex(DP) :: def(3)
+  !! inp/out: the fermi energy changes.  
+  !! NB: def(3) should be def(npertx), but it is used only at Gamma
+  !!     where the dimension of irreps never exceeds 3.
   !
   ! ... local variables
   !
->>>>>>> Ford-PHonon - part 20
   integer :: ipert, jpert, isym, irot
   ! counter on perturbations
   ! counter on perturbations
