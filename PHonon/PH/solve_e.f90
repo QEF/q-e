@@ -9,20 +9,20 @@
 !-----------------------------------------------------------------------
 subroutine solve_e
   !-----------------------------------------------------------------------
-  !
-  !    This routine is a driver for the solution of the linear system which
-  !    defines the change of the wavefunction due to an electric field.
-  !    It performs the following tasks:
-  !     a) computes the bare potential term  x | psi >
-  !     b) adds to it the screening term Delta V_{SCF} | psi >
-  !        If lda_plus_u=.true. compute also the SCF part
-  !        of the response Hubbard potential.
-  !     c) applies P_c^+ (orthogonalization to valence states)
-  !     d) calls cgsolve_all to solve the linear system
-  !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
-  !     f) If lda_plus_u=.true. compute also the response occupation
-  !        matrices dnsscf
-  !   Step b, c, d are done in sternheimer_kernel.
+  !! This routine is a driver for the solution of the linear system which
+  !! defines the change of the wavefunction due to an electric field.
+  !! It performs the following tasks:  
+  !! a) computes the bare potential term times \(|\psi\rangle \);  
+  !! b) adds to it the screening term \(\Delta V_\text{SCF}|psi\rangle\).
+  !!    If \(\text{lda_plus_u}=\text{TRUE}\) compute also the SCF part
+  !!    of the response Hubbard potential;  
+  !! c) applies \(P_c^+\) (orthogonalization to valence states);  
+  !! d) calls \(\texttt{cgsolve_all}\) to solve the linear system;  
+  !! e) computes \(\Delta \rho\), \(\Delta V_\text{SCF}|psi\rangle\) and
+  !!    symmetrizes them;  
+  !! f) if \(\text{lda_plus_u}=\text{TRUE}\) compute also the response
+  !!    occupation matrices dnsscf.  
+  !! Step b, c, d are done in \(\text{sternheimer_kernel}\).
   !
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat

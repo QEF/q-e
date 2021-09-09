@@ -9,9 +9,8 @@
 !---------------------------------------------------------------
 subroutine deallocate_phq
 !----------------------------------------------------------------
-!
-!  deallocates the variables allocated by allocate_phq
-!
+  !! Deallocates the variables allocated by \(\texttt{allocate_phq}\).
+  !
   USE noncollin_module, ONLY : m_loc
   USE becmod,           ONLY: bec_type, becp, deallocate_bec_type
   USE wavefunctions,    ONLY: evc

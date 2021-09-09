@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine allocate_pert()
   !-----------------------------------------------------------------------
-  !
-  ! dynamical allocation of arrays: quantities depending on the
-  ! maximum number of perturbations npertx
+  !! Dynamical allocation of arrays: quantities depending on the
+  !! maximum number of perturbations npertx.
   !
   USE ions_base, ONLY : nat
 
@@ -31,9 +30,8 @@ END SUBROUTINE allocate_pert
 !-----------------------------------------------------------------------
 subroutine deallocate_pert()
   !-----------------------------------------------------------------------
-  !
-  ! dynamical allocation of arrays: quantities depending on the
-  ! maximum number of perturbations npertx
+  !! Dynamical allocation of arrays: quantities depending on the
+  !! maximum number of perturbations npertx.
   !
   USE modes, ONLY : t, tmq
 

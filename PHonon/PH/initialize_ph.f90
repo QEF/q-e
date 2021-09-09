@@ -8,8 +8,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE initialize_ph()
   !-----------------------------------------------------------------------
-  !
-  ! This is a driver to the phonon initialization routines.
+  !! This is a driver to the phonon initialization routines.
   !
   USE klist,  ONLY : nks, nkstot
   !

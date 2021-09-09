@@ -8,11 +8,10 @@
 !----------------------------------------------------------------------
 subroutine dvpsi_e2
   !-----------------------------------------------------------------------
-  !
-  ! This routine shold be called before the self-consistent cycle used to
-  ! compute the second derivative of the wavefunctions with respect to
-  ! electric-fields. It computes that part of the potential that remains
-  ! constant during the cycle.
+  !! This routine shold be called before the self-consistent cycle used to
+  !! compute the second derivative of the wavefunctions with respect to
+  !! electric-fields. It computes that part of the potential that remains
+  !! constant during the cycle.
   !
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : omega

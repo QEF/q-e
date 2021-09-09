@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE dielec(do_zstar)
   !-----------------------------------------------------------------------
-  !
-  !      calculates the dielectric tensor and effective charges
+  !! Calculates the dielectric tensor and effective charges.
   !
   USE constants, ONLY : fpi
   USE cell_base, ONLY : omega
@@ -19,13 +18,16 @@ SUBROUTINE dielec(do_zstar)
   USE mp,        ONLY : mp_sum
   USE io_files,  ONLY : seqopn
   USE klist,     ONLY : wk, ngk
-  USE wvfct,     ONLY: nbnd, npwx
+  USE wvfct,     ONLY : nbnd, npwx
   USE cgcom
-
+  !
   IMPLICIT NONE
+  !
   LOGICAL :: do_zstar
   !
-  INTEGER :: npw,ibnd,ipol,jpol,na,nu,ik
+  ! ... local variables
+  !
+  INTEGER :: npw, ibnd, ipol,jpol,na,nu,ik
   CHARACTER(len=7) :: filbar, fildwf
   real(DP) ::  w, weight
   real(DP), ALLOCATABLE ::  work(:,:)

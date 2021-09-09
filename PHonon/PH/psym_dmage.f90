@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE psym_dmage (dvtosym)
   !-----------------------------------------------------------------------
-  !
-  ! ...  p-symmetrize the magnetization change due to an electric field.
+  !! p-symmetrize the magnetization change due to an electric field.
   !
   USE kinds,     ONLY : DP
   USE lsda_mod,   ONLY : nspin
@@ -20,9 +19,10 @@ SUBROUTINE psym_dmage (dvtosym)
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: dvtosym (dfftp%nnr, nspin, 3)
-    ! the potential to symmetrize
-    !-local variable
+  COMPLEX(DP) :: dvtosym(dfftp%nnr,nspin,3)
+  !! the potential to symmetrize
+  !
+  ! ... local variables
   !
 #if defined (__MPI)
   !

@@ -13,8 +13,7 @@
 !---------------------------------------------------------------------
 MODULE alpha2f_vals
   !-------------------------------------------------------------------
-  !
-  ! This MODULE contains global variables for alpha2f.x 
+  !! This module contains global variables for alpha2f.x 
   ! 
   USE kinds, ONLY : DP
   !
@@ -32,8 +31,7 @@ END MODULE alpha2f_vals
 !----------------------------------------------------------------
 MODULE alpha2f_routines
   !--------------------------------------------------------------
-  !
-  ! This module contains SUBROUTINEs for alpha2f.x
+  !! This module contains subroutines for alpha2f.x
   !
   IMPLICIT NONE
   !
@@ -42,9 +40,8 @@ CONTAINS
 !-------------------------------------------------------------------------
 SUBROUTINE read_polarization()
   !-----------------------------------------------------------------------
-  !
-  ! This routine read the polarization vectors 
-  ! from [prefix].dyn* & lambda*.dat
+  !! This routine read the polarization vectors 
+  !! from [prefix].dyn* & lambda*.dat
   !
   USE kinds,      ONLY : DP
   USE disp,       ONLY : nqs
@@ -143,8 +140,8 @@ END SUBROUTINE read_polarization
 !--------------------------------------------------------------------
 SUBROUTINE read_lam()
   !------------------------------------------------------------------
-  !  
-  ! This routine reads lambad_{q nu} & omega_{q nu} from lambda*.dat
+  !! This routine reads \(\text{lambda}_\text{q nu}\) & \(\text{omega}_\text{q nu}\)
+  !! from lambda*.dat
   !
   USE kinds,     ONLY : DP
   USE disp,      ONLY : nqs, x_q
@@ -204,8 +201,7 @@ END SUBROUTINE read_lam
 !-------------------------------------------------------------------
 SUBROUTINE compute_a2F()
   !-----------------------------------------------------------------
-  !
-  ! This routine writes a2F and phonon DOS to file (a2F.dat).
+  !! This routine writes a2F and phonon DOS to file (a2F.dat).
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
@@ -300,8 +296,7 @@ END SUBROUTINE compute_a2F
 !-----------------------------------------------------------------
 SUBROUTINE compute_lambda()
   !---------------------------------------------------------------
-  !
-  ! This routine computes omega_ln & lambda
+  !! This routine computes \(\text{omega_{ln}}\) & \(\text{lambda}\).
   !
   USE kinds,     ONLY : DP
   USE modes,     ONLY : nmodes  
@@ -373,9 +368,8 @@ END MODULE alpha2f_routines
 !--------------------------------------------------------------------------------
 PROGRAM alpha2f
   !------------------------------------------------------------------------------
-  !
-  ! This routine reads lambda*.dat and compute a^2F, phonon DOS, lambda,
-  ! & omega_ln 
+  !! This routine reads lambda*.dat and compute a^2F, phonon DOS, lambda,
+  !! & omega_ln.
   !
   USE mp_global,      ONLY : mp_startup, mp_global_end
   USE environment,    ONLY : environment_start, environment_end

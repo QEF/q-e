@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE ep_matrix_element_wannier()
   !-----------------------------------------------------------------------
-  !
-  ! Electron-phonon calculation from data saved in fildvscf
+  !! Electron-phonon calculation from data saved in \(\texttt{fildvscf}\).
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : celldm, omega, ibrav
@@ -153,11 +152,11 @@ END SUBROUTINE ep_matrix_element_wannier
 !-----------------------------------------------------------------------
 SUBROUTINE elphsum_wannier(q_index)
   !-----------------------------------------------------------------------
+  !! Sum over BZ of the electron-phonon matrix elements \(\text{el_ph_mat}\).
   !
-  !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
-  !      Original routine written by Francesco Mauri
-  !      Adapted to wannier functions by Matteo Calandra
-  !            Dev. Comment: missing calc_sigma_yet
+  !! Original routine written by Francesco Mauri.  
+  !! Adapted to wannier functions by Matteo Calandra.  
+  !! Dev. Comment: missing calc_sigma_yet
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
@@ -321,10 +320,10 @@ END SUBROUTINE ELPHSUM_WANNIER
 !-----------------------------------------------------------------------
 SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   !-----------------------------------------------------------------------
+  !! Calculation of the electron-phonon matrix elements \(\text{el_ph_mat}\):
+  !! $$ \langle \psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)\rangle $$
   !
-  !      Calculation of the electron-phonon matrix elements el_ph_mat
-  !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
-  !      Original routine written by Francesco Mauri
+  !! Original routine written by Francesco Mauri.
   !
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
@@ -488,18 +487,16 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 END SUBROUTINE elphel_refolded
 !
 subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
-    !==================================================================!
-    !                                                                  !
-    !  Set up the k+q shell for electron-phonon coupling               ! 
-    !                                                                  !
-    !  This routine finds the G vectors such that                      !
-    !  k+q+G=k'  with k and k' belonging to nksq                       !
-    !  for each k, the G vector is stored in g_kpq                     !
-    !  k'=kpq(ik)                                                      !
-    !  and finally igqg(ik) is the index that allows to find           !
-    !  the g vector g_kpq in the list of all the G vectors             !
-    !                                                                  !
-    !       Matteo Calandra                                            !
+    !==================================================================
+    !! Set up the \(k+q\) shell for electron-phonon coupling
+    !
+    !! This routine finds the G vectors such that \(k+q+G=k'\)  with 
+    !! \(k\) and \(k'\) belonging to \(\text{nksq}\) for each \(k\),
+    !! the G vector is stored in \(\text{g_kpq}\) and \(k'=\text{kpq}(ik)\)
+    !! and finally \(\text{igqg}(ik)\) is the index that allows to find
+    !! the g-vector \(\text{g_kpq}\) in the list of all the G-vectors.
+    !
+    !! Matteo Calandra
     !===================================================================  
   USE kinds, ONLY : DP
   USE io_global, ONLY : stdout

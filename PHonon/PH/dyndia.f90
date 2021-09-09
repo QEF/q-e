@@ -8,36 +8,39 @@
 !-----------------------------------------------------------------------
 subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   !-----------------------------------------------------------------------
-  !
-  !   This routine diagonalizes the dynamical matrix and returns
-  !   displacement patterns in "dyn". The frequencies are written
-  !   on output from this routine.
+  !! This routine diagonalizes the dynamical matrix and returns
+  !! displacement patterns in "dyn". The frequencies are written
+  !! on output from this routine.
   !
   !
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
-  USE constants, ONLY : amu_ry, RY_TO_THZ, RY_TO_CMM1
+  USE constants,  ONLY : amu_ry, RY_TO_THZ, RY_TO_CMM1
   USE io_dyn_mat, ONLY : write_dyn_mat_tail
   USE control_ph, ONLY : xmldyn
+  !
   implicit none
   !
-  !   first the dummy variables
-  !
-  integer :: nmodes, nat, ntyp, ityp (nat), iudyn
-  ! input: the total number of modes
-  ! input: the number of atoms
-  ! input: the number of types
-  ! input: the types of atoms
-  ! input: the unit with the dynamical matrix
-
-  real(DP) :: xq (3), amass (ntyp), w2 (3 * nat)
-  ! input: q vector
-  ! input: the masses
-  ! output: the frequencies squared
+  integer :: nmodes
+  !! input: the total number of modes
+  integer :: nat
+  !! input: the number of atoms
+  integer :: ntyp
+  !! input: the number of types
+  integer :: ityp(nat)
+  !! input: the types of atoms
+  integer :: iudyn
+  !! input: the unit with the dynamical matrix
+  real(DP) :: xq (3)
+  !! input: q vector
+  real(DP) :: amass (ntyp)
+  !! input: the masses
+  real(DP) :: w2(3*nat)
+  !! output: the frequencies squared
   complex(DP) :: dyn (3 * nat, nmodes)
-  ! input: the dynamical matrix
+  !! input: the dynamical matrix
   !
-  !   here the local variables
+  ! ... local variables
   !
   integer :: nta, ntb, nu_i, nu_j, mu, na, nb, i
   ! counters

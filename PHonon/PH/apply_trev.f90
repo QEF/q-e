@@ -8,9 +8,9 @@
 !
 SUBROUTINE apply_trev(evc, ikk_evc, ikk_tevc)
 !
-!  This routine applies the time reversal operator to the wavefunctions
-!  evc at the k point ikk_evc and puts the output in evc with the order
-!  of G vectors of ikk_tevc
+!! This routine applies the time reversal operator to the wavefunctions
+!! \(\text{evc}\) at the k point \(\text{ikk_evc}\) and puts the output
+!! in \(\text{evc}\) with the order of G vectors of \(\text{ikk_tevc}\).
 !
 USE kinds,     ONLY : DP
 USE wvfct,     ONLY : nbnd, npwx

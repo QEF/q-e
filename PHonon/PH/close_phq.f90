@@ -8,10 +8,9 @@
 !----------------------------------------------------------------------------
 SUBROUTINE close_phq( flag )
   !----------------------------------------------------------------------------
-  !
-  ! ... Close all files.
-  ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
-  ! ... or during execution with flag=.FALSE. (does not remove 'recover')
+  !! Close all files.  
+  !! Called at the end of the run with \(\text{flag}\)=TRUE (removes 'recover')
+  !! or during execution with \(\text{flag}\)=FALSE (does not remove 'recover').
   !
   USE mp_pools,      ONLY : me_pool, root_pool
   USE paw_variables, ONLY : okpaw

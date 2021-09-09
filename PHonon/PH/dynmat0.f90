@@ -8,12 +8,11 @@
 !-----------------------------------------------------------------------
 subroutine dynmat0_new
   !-----------------------------------------------------------------------
-  !
-  !     This routine computes the part of the dynamical matrix which
-  !     does not depend upon the change of the Bloch wavefunctions.
-  !     It is a driver which calls the routines dynmat_## and d2ionq
-  !     for computing respectively the electronic part and
-  !     the ionic part
+  !! This routine computes the part of the dynamical matrix which
+  !! does not depend upon the change of the Bloch wavefunctions.
+  !! It is a driver which calls the routines \(\texttt{dynmat_##}\) and
+  !! \(\texttt{d2ionq}\) to compute the electronic part and
+  !! the ionic part respectively.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat,ntyp => nsp, ityp, zv, tau

@@ -10,16 +10,17 @@
 SUBROUTINE d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      at,bg,g,gg,ngm,nmodes,u,has_equivalent,dyn)
   !-----------------------------------------------------------------------
-  !
-  !      calculate the ionic contribution to the dynamical matrix
-  !      (both real- and reciprocal-space contributions are present)
+  !! Calculate the ionic contribution to the dynamical matrix
+  !! (both real- and reciprocal-space contributions are present).
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi, fpi, e2
   USE io_global,  ONLY : stdout
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
+  !
   IMPLICIT NONE
+  !
   INTEGER :: nat, ntyp, ngm, ityp(nat), nmodes, has_equivalent(nat)
   real(DP)::  tau(3,nat), g(3,ngm), gg(ngm), zv(ntyp), &
        u(3*nat,nmodes), dyn(3*nat,nmodes), at(3,3), bg(3,3), omega, alat

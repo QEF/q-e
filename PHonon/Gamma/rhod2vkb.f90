@@ -7,13 +7,13 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE rhod2vkb(dyn0)
+SUBROUTINE rhod2vkb( dyn0 )
   !----------------------------------------------------------------------
+  !! Calculate the electronic term: \(\langle\psi|V''|\psi\rangle\) 
+  !! of the dynamical matrix.  
+  !! NOTE: not implemented for LSDA.
   !
-  !  calculate the electronic term: <psi|V''|psi>  of the dynamical matrix
-  !  NOT IMPLEMENTED FOR LSDA
-  !
-  USE kinds, ONLY: dp
+  USE kinds, ONLY: DP
   USE constants, ONLY: tpi
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba2, tpiba, omega
@@ -34,14 +34,17 @@ SUBROUTINE rhod2vkb(dyn0)
   USE fft_interfaces, ONLY : fwfft, invfft
   !
   IMPLICIT NONE
+  !
   real(DP) :: dyn0(3*nat,3*nat)
+  !
+  ! ... local variables
   !
   INTEGER :: npw, i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, ik, &
        ipol, jpol, ijpol
   real(DP) :: weight, fac, gtau
   real(DP), ALLOCATABLE :: dynloc(:,:), dynkb(:,:)
   COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
-  real (DP), ALLOCATABLE :: becp(:,:), becp1(:,:,:), becp2(:,:,:)
+  real(DP), ALLOCATABLE :: becp(:,:), becp1(:,:,:), becp2(:,:,:)
   !
   CALL start_clock('rhod2vkb')
   !

@@ -8,11 +8,10 @@
 !---------------------------------------------------------------------
 subroutine compute_becalp (becq, alpq)
   !---------------------------------------------------------------------
-  !
-  !     This routine is used only at finite q and in this case
-  !     computes the scalar product of vkb and psi_{k+q}, and of
-  !     the derivative of vkb and psi_{k+q}. Eq. B8 and B10 (at k+q)
-  !     of PRB 64 235118 (2001).
+  !! This routine is used only at finite q and in this case computes
+  !! the scalar product of \(\text{vkb}\) and \(\text{psi}_{k+q}\),
+  !! and of their derivatives.  
+  !! Eq.(B8) and (B10) (at k+q) of PRB 64 235118 (2001).
   !
 
   USE kinds, only : DP
@@ -34,9 +33,10 @@ subroutine compute_becalp (becq, alpq)
 
   implicit none
 
-  type (bec_type) :: becq(nksq), alpq(3,nksq)
-  ! the becp with psi_{k+q}
-  ! the alphap with psi_{k+q}
+  type (bec_type) :: becq(nksq)
+  !! the becp with \(\text{psi}_{k+q}\)
+  type (bec_type) :: alpq(3,nksq)
+  !! the alphap with \(\text{psi}_{k+q}\)
 
   integer :: ik, ikq, ipol, ibnd, ig, ios, npwq
   ! counter on k points

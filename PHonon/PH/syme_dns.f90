@@ -9,13 +9,12 @@
 !-----------------------------------------------------------------------
 SUBROUTINE syme_dns (ldim, npe, dns)
   !-----------------------------------------------------------------------
+  !! DFPT+U: This routine symmetrizes the first order variation of 
+  !! the occupation matrices dns due to the perturbation with the 
+  !! electric field.
   !
-  ! DFPT+U: This routine symmetrizes the first order variation of 
-  ! the occupation matrices dns due to the perturbation with the 
-  ! electric field.
-  !
-  ! Written  by S. de Gironcoli and A. Floris
-  ! Modified by I. Timrov (01.10.2018) 
+  !! Written  by S. de Gironcoli and A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,             ONLY : DP
   USE constants,         ONLY : tpi
@@ -31,7 +30,7 @@ SUBROUTINE syme_dns (ldim, npe, dns)
   INTEGER, INTENT(IN) :: ldim, npe
   COMPLEX(DP), INTENT(INOUT) :: dns(ldim,ldim,nspin,nat,npe)
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER :: nt, n, counter, l, ip, jp, na, nb, is, m1, m2, &
              m0, m00, isym, irot

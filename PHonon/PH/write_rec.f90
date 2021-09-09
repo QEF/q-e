@@ -6,7 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE recover_mod
-
+  !
+  !! Module for phonon recovery.
+  !
   IMPLICIT NONE
   !
   SAVE
@@ -20,11 +22,10 @@ MODULE recover_mod
 CONTAINS
 
   !-----------------------------------------------------------------------
-  SUBROUTINE write_rec(where, irr, dr2, iter, convt, npe, dvscfin, &
-       drhoscfh, dbecsum)
+  SUBROUTINE write_rec( where, irr, dr2, iter, convt, npe, dvscfin, &
+                        drhoscfh, dbecsum )
     !-----------------------------------------------------------------------
-    !
-    !  This routine saves the information needed to recover the phonon
+    !! This routine saves the information needed to recover the phonon.
     !
     USE kinds, ONLY : DP
     USE ions_base, ONLY : nat
@@ -83,10 +84,11 @@ CONTAINS
 
     RETURN
   END SUBROUTINE write_rec
-
-  SUBROUTINE read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum)
-    !
-    !  General restart reading routine
+  
+  !-----------------------------------------------------------------------------------
+  SUBROUTINE read_rec( dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum )
+    !--------------------------------------------------------------------------------
+    !! General restart reading routine.
     !
     USE kinds, ONLY : DP
     USE ions_base, ONLY : nat

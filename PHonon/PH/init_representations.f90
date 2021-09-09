@@ -8,12 +8,11 @@
 !-----------------------------------------------------------------------
 subroutine init_representations()
   !-----------------------------------------------------------------------
-  !
-  !  This subroutine initializes the modes of all irreducible representations
-  !  for all q points. It writes the files patterns.#q.xml in the outdir 
-  !  directory. It is used by unrecovered  phonon runs. The small group of 
-  !  q must be calculated for each q. Note that all images receives the 
-  !  same modes calculated by the root processor and save them on file. 
+  !! This subroutine initializes the modes of all irreducible representations
+  !! for all q points. It writes the files patterns.#q.xml in the outdir 
+  !! directory. It is used by unrecovered  phonon runs. The small group of 
+  !! q must be calculated for each q. Note that all images receives the 
+  !! same modes calculated by the root processor and save them on file. 
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat
@@ -111,12 +110,11 @@ END SUBROUTINE init_representations
 
 !-----------------------------------------------------------------------
 subroutine initialize_grid_variables()
-  !-----------------------------------------------------------------------
-  !
-  !  This subroutine initializes the grid variables by reading the
-  !  modes from file. It uses the routine check_if_partial_dyn to 
-  !  set the modes to compute according to start_irr, last_irr or
-  !  modenum and ifat flags.
+  !----------------------------------------------------------------------
+  !! This subroutine initializes the grid variables by reading the
+  !! modes from file. It uses the routine check_if_partial_dyn to 
+  !! set the modes to compute according to \(\text{start_irr}\), 
+  !! \(\text{last_irr}\) or \(\text{modenum}\) and \(\text{ifat}\) flags.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat

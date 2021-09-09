@@ -8,13 +8,11 @@
 !
 !----------------------------------------------------------------------
 subroutine psidspsi (ik, uact, pdsp)
-!----------========----------------------------------------------------
-  !
-  ! This routine calculates <psi_v'|ds/du|psi_v>
-  ! at q=0. The displacements are described by a vector uact.
-  ! The result is stored in pdsp. The routine is called for each k point
-  ! and for each pattern u. It computes simultaneously all the bands.
-  !
+  !----------========----------------------------------------------------
+  !! This routine calculates \(\langle \psi_v'|ds/du|\psi_v\rangle\)
+  !! at \(q=0\). The displacements are described by the vector \(\text{uact}\).  
+  !! The result is stored in \(\text{pdsp}\). The routine is called for each
+  !! k-point and for each pattern u. It computes simultaneously all the bands.
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba
@@ -36,18 +34,15 @@ subroutine psidspsi (ik, uact, pdsp)
 
   implicit none
   !
-  !   The dummy variables
-  !
-
   integer, intent(in) :: ik
-  ! input: the k point
-  complex(DP) :: uact (3 * nat), pdsp(nbnd,nbnd)
-  ! input: the pattern of displacements
-  ! output: <psi|ds/du|psi>
+  !! input: the k point
+  complex(DP) :: uact (3*nat)
+  !! input: the pattern of displacements
+  complex(DP) :: pdsp(nbnd,nbnd)
+  !! output: \(\langle \psi_v'|ds/du|\psi_v\rangle\)
   !
-  !   And the local variables
+  ! ... local variables
   !
-
   integer :: na, nb, mu, nu, ikk, ikq, ig, igg, nt, ibnd, jbnd, ijkb0, &
        ikb, jkb, ih, jh, ipol, is, npw
   ! counter on atoms

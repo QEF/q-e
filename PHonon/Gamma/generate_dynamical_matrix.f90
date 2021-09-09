@@ -11,16 +11,20 @@ SUBROUTINE generate_dynamical_matrix   &
      (nat, nsym, s, invs, irt, at, bg, n_diff_sites, equiv_atoms, &
      has_equivalent, dyn)
   !-----------------------------------------------------------------------
-  !
-  !  generate the complete dynamical matrix from independent modes only
-  !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
+  !! Generate the complete dynamical matrix from independent modes only.  
+  !! Input  \(\text{dyn}\): irreducible dynamical matrix;  
+  !! Output \(\text{dyn}\): complete dynamical matrix.
   !
   USE kinds, ONLY : DP
   USE symme, ONLY : crys_to_cart, cart_to_crys
+  !
   IMPLICIT NONE
+  !
   INTEGER :: nat, nsym, n_diff_sites, irt(48,nat), invs(48), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
   real(DP) :: dyn(3*nat,3*nat), at(3,3), bg(3,3)
+  !
+  ! ... local variables
   !
   INTEGER :: isym, na, nb, ni, nj, sni, snj, smu_i, smu_j,  &
        i, j, k, l, mu_k, mu_l

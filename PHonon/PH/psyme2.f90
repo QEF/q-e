@@ -9,19 +9,19 @@
 !-----------------------------------------------------------------------
 subroutine psyme2 (dvtosym)
   !-----------------------------------------------------------------------
-  !  p-symmetrize the second derivative of charge density.
+  !! p-symmetrize the second derivative of charge density.
   !
-
   use kinds, only : DP
   USE mp_bands, ONLY: me_bgrp
   USE fft_base,  ONLY: dfftp
   USE scatter_mod,  ONLY: cgather_sym
   implicit none
-
+  !
   complex(DP) :: dvtosym (dfftp%nnr, 6)
-  ! the potential to symmetrize
-  !-local variable
-
+  !! the potential to symmetrize
+  !
+  ! ... local variable
+  !
 #if defined(__MPI)
   integer :: i, iper, ir3, ioff, ioff_tg, nxyp
 
