@@ -20,9 +20,9 @@ program test_fft_scatter_mod_gpu
     !
 #if defined(__MPI)
 #if defined(_OPENMP)
-  CALL MPI_Init_thread(MPI_THREAD_FUNNELED,level, ierr)
+    CALL MPI_Init_thread(MPI_THREAD_FUNNELED,level, ierr)
 #else
-  CALL MPI_Init(ierr)
+    CALL MPI_Init(ierr)
 #endif
 #endif
     !
@@ -32,24 +32,27 @@ program test_fft_scatter_mod_gpu
     !
     test%tolerance64 = 1.d-14
     !
-    CALL save_random_seed("test_fft_scatter_mod_gpu", mp%me)
-    !
-    DO i = 1, mp%n
-      IF (MOD(mp%n,i) == 0 ) THEN
-        ! gamma case
-        CALL test_fft_scatter_xy_gpu_1(mp, test, .true., i)
-        ! k case
-        CALL test_fft_scatter_xy_gpu_1(mp, test, .false., i)
-        !
-        ! gamma case
-        CALL test_fft_scatter_yz_gpu_1(mp, test, .true., i)
-        ! k case
-        CALL test_fft_scatter_yz_gpu_1(mp, test, .false., i)
-      END IF
-    END DO
-    CALL test_fft_scatter_many_yz_gpu_1(mp, test, .true., 1)
-    CALL test_fft_scatter_many_yz_gpu_1(mp, test, .false., 1)
-
+    IF (mp%n > 1) THEN
+      !
+      CALL save_random_seed("test_fft_scatter_mod_gpu", mp%me)
+      !
+      DO i = 1, mp%n
+        IF (MOD(mp%n,i) == 0 ) THEN
+          ! gamma case
+          CALL test_fft_scatter_xy_gpu_1(mp, test, .true., i)
+          ! k case
+          CALL test_fft_scatter_xy_gpu_1(mp, test, .false., i)
+          !
+          ! gamma case
+          CALL test_fft_scatter_yz_gpu_1(mp, test, .true., i)
+          ! k case
+          CALL test_fft_scatter_yz_gpu_1(mp, test, .false., i)
+        END IF
+      END DO
+      CALL test_fft_scatter_many_yz_gpu_1(mp, test, .true., 1)
+      CALL test_fft_scatter_many_yz_gpu_1(mp, test, .false., 1)
+      !
+    ENDIF
     !
     CALL collect_results(test)
     !
