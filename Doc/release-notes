@@ -8,6 +8,9 @@ Fixed in development version:
   * DFT-D3 with dftd3_version=4 or 6 could produce NaN's in parallel runs
     due to missing zero initialization of some work arrays
   * Ensemble-DFT in CP ("cg") wasn't working any longer for norm-conserving PPs
+  * In DFT+U (lda_plus_u_kind = 0 and 1) the pw.x code was printing the squared 
+    eigenvectors instead of simply eigenvectors. Now it prints the
+    eigenvectors (consistent with lda_plus_u_kind = 2).
 
 Incompatible changes in develoment version:
   * Changes to Makefiles and to file "make.inc"
