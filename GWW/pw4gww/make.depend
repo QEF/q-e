@@ -49,6 +49,7 @@ convergence.o : ../../Modules/recvec.o
 convergence.o : ../../Modules/wannier_gw.o
 convergence.o : ../../Modules/wavefunctions.o
 convergence.o : ../../PW/src/g_psi_mod.o
+convergence.o : ../../PW/src/init_us_2.o
 convergence.o : ../../PW/src/ldaU.o
 convergence.o : ../../PW/src/pwcom.o
 convergence.o : ../../PW/src/scf_mod.o

@@ -51,7 +51,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE efermi_shift,         ONLY : ef_shift, def
   USE response_kernels,     ONLY : sternheimer_kernel
-  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

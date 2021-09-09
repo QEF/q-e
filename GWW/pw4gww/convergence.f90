@@ -1246,6 +1246,7 @@ MODULE   convergence_gw
     USE becmod,           ONLY : becp,allocate_bec_type,deallocate_bec_type
     USE uspp,                 ONLY : vkb, nkb, okvan
     USE g_psi_mod,            ONLY : h_diag, s_diag
+    USE uspp_init,            ONLY : init_us_2
 
     IMPLICIT NONE
     TYPE(gzero) :: g0!green's function to be created and initialised
@@ -1332,6 +1333,7 @@ MODULE   convergence_gw
     USE g_psi_mod,            ONLY : h_diag, s_diag
     USE lanczos 
     USE lsda_mod,             ONLY : nspin, current_spin
+    USE uspp_init,            ONLY : init_us_2
     
     IMPLICIT NONE
 
@@ -1520,6 +1522,7 @@ MODULE   convergence_gw
     USE lsda_mod,    ONLY : nspin,  current_spin
     USE io_files,             ONLY :  prefix, diropn
     USE gvecw,     ONLY : ecutwfc
+    USE uspp_init, ONLY : init_us_2
 
 
     IMPLICIT NONE
@@ -2249,6 +2252,7 @@ SUBROUTINE calculate_hks(h0,r,nr,v_states)
     USE g_psi_mod,            ONLY : h_diag, s_diag
     USE scf,       ONLY : rho, vltot, vrs, rho_core,rhog_core, scf_type
     USE lsda_mod,             ONLY : nspin
+    USE uspp_init,            ONLY : init_us_2
 
     IMPLICIT NONE
     TYPE(hks) :: h0!Hamiltonian function to be created and initialised

@@ -259,7 +259,6 @@ hp_solve_linear_system.o : ../../Modules/noncol.o
 hp_solve_linear_system.o : ../../Modules/recvec.o
 hp_solve_linear_system.o : ../../Modules/wavefunctions.o
 hp_solve_linear_system.o : ../../PW/src/buffers.o
-hp_solve_linear_system.o : ../../PW/src/init_us_2.o
 hp_solve_linear_system.o : ../../PW/src/paw_onecenter.o
 hp_solve_linear_system.o : ../../PW/src/paw_symmetry.o
 hp_solve_linear_system.o : ../../PW/src/pwcom.o
