@@ -13,7 +13,7 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
   !! This routine computes the Fourier transform of the local
   !! part of an atomic pseudopotential, given in numerical form.
   !! A term erf(r)/r is subtracted in real space (thus making the
-  !! function short-ramged) and added again in G space (for G<>0)
+  !! function short-ranged) and added again in G space (for G<>0)
   !! The G=0 term contains \int (V_loc(r)+ Ze^2/r) 4pi r^2 dr.
   !! This is the "alpha" in the so-called "alpha Z" term of the energy.
   !! Atomic Ry units everywhere.
@@ -70,11 +70,11 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
            aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2    &
                       * erf (r (ir) ) )
         enddo
-!	 TS This is necessary if we want to calculate the G=0 term correctly 
-!     when cutoff.
-! ==============================================
-
      ELSE IF (do_cutoff_2D) THEN 
+        !
+        !  TS This is necessary to correctly calculate the G=0 term 
+        !     when a 2D cutoff is applied
+        !
         do ir = 1, msh
             aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2    &
                        * erf (r (ir) ) )
@@ -83,8 +83,8 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
            call errore('vloc_of_g','2D cutoff is smaller than pseudo cutoff radius: &
           & increase interlayer distance (or see Modules/read_pseudo.f90)',1)
         END IF
-! ==============================================
      ELSE
+        ! Normal case
         do ir = 1, msh
            aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2)
         enddo
@@ -93,6 +93,9 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
      vloc (1) = vlcp        
      igl0 = 2
   else
+     !
+     ! no G=0 term on this processor
+     !
      igl0 = 1
   endif
   !
@@ -113,14 +116,13 @@ SUBROUTINE vloc_of_g( mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
         aux (ir) = aux1 (ir) * sin (gx * r (ir) ) / gx
      enddo
      call simpson (msh, aux, rab, vlcp)
-     ! if 2D cutoff calculation, do not re-add the FT of erf function
-     IF ( ( .not. do_comp_esm ) .or. ( esm_bc .eq. 'pbc' ) ) THEN
+     IF ( .not. ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) .and. &
+          .not. do_cutoff_2D ) THEN
         !
         !   here we re-add the analytic fourier transform of the erf function
+        !   (except when a 2D cutoff is used)
         !
-        IF (.not. do_cutoff_2D) THEN
-           vlcp = vlcp - fac * exp ( - gl (igl) * tpiba2 * 0.25d0) / gl (igl)
-        ENDIF
+        vlcp = vlcp - fac * exp ( - gl (igl) * tpiba2 * 0.25d0) / gl (igl)
      END IF
      vloc (igl) = vlcp
   enddo

@@ -1,9 +1,12 @@
 SUBROUTINE collect_results(test)
-#if defined(__MPI)
+#if defined(__MPI) && defined(__MPI_MODULE)
     USE mpi
 #endif
     USE tester
     IMPLICIT NONE
+#if defined(__MPI) && ! defined(__MPI_MODULE)
+    INCLUDE 'mpif.h'
+#endif
     !
     TYPE(tester_t) :: test
     INTEGER :: itottests, itoterr, ierr, me
@@ -75,11 +78,14 @@ END SUBROUTINE save_random_seed
 
 
 SUBROUTINE no_test
-#if defined(__MPI)
+#if defined(__MPI) && defined(__MPI_MODULE)
     USE mpi
 #endif
     USE tester
     IMPLICIT NONE
+#if defined(__MPI) && ! defined(__MPI_MODULE)
+    INCLUDE 'mpif.h'
+#endif
     !TYPE(tester_t) :: test
     INTEGER :: ierr
     !    

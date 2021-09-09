@@ -73,7 +73,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp
   USE mp,                   ONLY : mp_sum
-  USE efermi_shift,         ONLY : ef_shift, ef_shift_paw,  def
+  USE efermi_shift,         ONLY : ef_shift, ef_shift_wfc, def
   USE lrus,                 ONLY : int3_paw, becp1, int3_nc
   USE lr_symm_base,         ONLY : irotmq, minus_q, nsymq, rtau
   USE eqv,                  ONLY : dvpsi
@@ -87,6 +87,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE response_kernels,     ONLY : sternheimer_kernel
   USE uspp_init,            ONLY : init_us_2
+  USE sym_def_module,       ONLY : sym_def
 
   implicit none
 
@@ -401,15 +402,15 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
 
      IF (okpaw) THEN
-        IF (lmetq0) &
-           call ef_shift_paw (drhoscfh, dbecsum, ldos, ldoss, becsum1, &
-                                                  dos_ef, irr, npe, .false.)
+        IF (lmetq0) CALL ef_shift(npe, dos_ef, ldos, drhoscfh, &
+                                  dbecsum, becsum1, irr, sym_def)
         DO ipert=1,npe
            dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
                                +becsumort(:,:,:,imode0+ipert)
         ENDDO
      ELSE
-        IF (lmetq0) call ef_shift(drhoscfh,ldos,ldoss,dos_ef,irr,npe,.false.)
+        IF (lmetq0) CALL ef_shift(npe, dos_ef, ldos, drhoscfh, &
+                                  irr=irr, sym_def=sym_def)
      ENDIF
      !
      !   After the loop over the perturbations we have the linear change
@@ -453,9 +454,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !   And we mix with the old potential
      !
      IF (okpaw) THEN
-     !
-     !  In this case we mix also dbecsum
-     !
+        !
+        !  In this case we mix also dbecsum
+        !
         call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                     mixout, dvscfout, dbecsum, ndim, -1 )
         call mix_potential (2*npe*dfftp%nnr*nspin_mag+2*ndim, mixout, mixin, &
@@ -463,16 +464,14 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                          nmix_ph, flmixdpot, convt)
         call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
-        if (lmetq0.and.convt) &
-           call ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
-                                                  dos_ef, irr, npe, .true.)
      ELSE
         call mix_potential (2*npe*dfftp%nnr*nspin_mag, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
-        if (lmetq0.and.convt) &
-            call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
      ENDIF
+     !
+     IF (lmetq0 .AND. convt) CALL ef_shift_wfc(npe, ldoss, drhoscf)
+     !
      ! check that convergent have been reached on ALL processors in this image
      CALL check_all_convt(convt)
 

@@ -44,7 +44,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   USE ldaU_hp,              ONLY : conv_thr_chi, trace_dns_tot_old, &
                                    conv_thr_chi_best, iter_best
   USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
-  USE hp_efermi_shift,      ONLY : def
+  USE efermi_shift,         ONLY : def
   !
   IMPLICIT NONE
   !
@@ -149,10 +149,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
         !
      ENDDO
      !
-#if defined (__MPI)
      CALL mp_sum(proj1, intra_pool_comm)  
      CALL mp_sum(proj2, intra_pool_comm)
-#endif
      ! 
      DO na = 1, nat
         !
@@ -185,7 +183,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                        w1 = weight * wdelta
                        !
                        dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +  &
-                          w1 * def * CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                          w1 * def(1) * CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
                        !
                     ENDIF
                     ! 

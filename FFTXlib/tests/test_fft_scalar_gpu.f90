@@ -271,3 +271,20 @@ end program test_fft_scalar_gpu
 program test_fft_scalar_gpu
 end program test_fft_scalar_gpu
 #endif
+!
+! Dummy
+SUBROUTINE stop_clock(label)
+CHARACTER(*) :: label
+END SUBROUTINE stop_clock
+!
+SUBROUTINE start_clock(label)
+CHARACTER(*) :: label
+END SUBROUTINE start_clock
+!
+SUBROUTINE stop_clock_gpu(label)
+CHARACTER(*) :: label
+END SUBROUTINE stop_clock_gpu
+!
+SUBROUTINE start_clock_gpu(label)
+CHARACTER(*) :: label
+END SUBROUTINE start_clock_gpu

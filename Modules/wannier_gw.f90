@@ -328,6 +328,44 @@ MODULE wannier_gw
   REAL(KIND=DP) :: no_GW_cg_threshold ! Convergence threshold for conj. grad. calculation of (1-vP) operator
   COMPLEX(KIND=DP), ALLOCATABLE :: ewvc(:,:,:)
 ! JDE  
+  LOGICAL :: l_easy
+  !!if true calculate GW with the EASY strategy , default: false
+  LOGICAL :: l_easy_lanczos_g
+  !if true useus Lanczos for EASY strategy instead of DFPT for G, default: true
+  INTEGER :: easy_grid_type
+  !!0= maximum point,1= equally spaced points
+  INTEGER :: easy_grid_param(5)
+  !!only for easy_grid_type==1:
+  !![1-3], offset along x,y,z,
+  !![4] spacing separation
+  !!default: [0,0,0,4]
+  INTEGER :: easy_average_type
+  !!method used
+  !!0 weighted sums, 1 simple sums
+  REAL(kind=DP) :: easy_psi_thrs
+  !!threshold on absolute values of the wavefunction for easy_grid_type==1 (default 0.)
+  LOGICAL :: l_easy_update_basis_w
+  !!if .true. the Lanczos basis for W is updated at each iterative step for W, default: .false. 
+  LOGICAL :: l_easy_dielectric_constant
+  !!if .true. calculte the dielectric constan, default: .false.
+  REAL(kind=DP) :: easy_w_update_alpha
+  !!factor for decremeting force in SD algorithm, default: 0.1
+  REAL(kind=DP) :: easy_w_update_lanczos
+  !!threshold for updating lanczos chain in W, default: 0.5
+  REAL(kind=DP) :: easy_w_thrs
+  !!threshold for W convergenze, default 1d-20
+  INTEGER :: easy_split_calc_n
+  !!number of concurrent easy calcuation, default 1
+  INTEGER :: easy_split_calc_i
+  !!progressive number of actual concurrent easy calcuation, default 1
+  LOGICAL :: l_easy_w_disk
+  !!if true read w from disk 
+  INTEGER :: s_first_spin
+  !!if different from 0, first KS spin state for calculatin s vectors
+  !!otherwise 1
+  INTEGER :: s_last_spin
+  !!if different from 0, last KS spin state for calculatin s vectors
+  !!otherwise nspin
 
   INTERFACE free_memory
 
