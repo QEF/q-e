@@ -93,7 +93,7 @@ SUBROUTINE write_ns
      !
      IF (is_hubbard(nt)) THEN
         !
-        ldim = ldim_u(nt)
+        ldim = 2 * Hubbard_l(nt) + 1
         !
         ! Compute the trace of the occupation matrix and the magnetization
         !
