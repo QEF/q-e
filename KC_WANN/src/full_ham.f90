@@ -493,7 +493,7 @@ SUBROUTINE full_ham (ik)
   IF (ALLOCATED(ham_aux)) DEALLOCATE (ham_aux)
   !
   !
-  write(*,*) n_orb
+  ! write(*,*) n_orb
   WRITE( stdout, '("KI Full ",8F9.4)' ) (et(ibnd,ik)*rytoev, ibnd=1,n_orb) 
   IF (kc_at_ks ) WRITE( stdout, '("KI Pert ",8F9.4)' ) (et_aux(ibnd,ik)*rytoev, ibnd=1,n_orb)
   !
