@@ -81,6 +81,7 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, irr, sym_de
   !
   call start_clock ('ef_shift')
   !
+  ! This routine is used only at q=Gamma where the dimension of irrep never exceeds 3
   IF (npert > 3) CALL errore("ef_shift", "npert exceeds 3", 1)
   !
   ! determines Fermi energy shift (such that each pertubation is neutral)
@@ -118,7 +119,7 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, irr, sym_de
   IF (PRESENT(dbecsum) .AND. PRESENT(becsum1)) THEN
      DO ipert = 1, npert
         dbecsum(:,:,:,ipert) = dbecsum(:,:,:,ipert) &
-           + def(ipert) * CMPLX(becsum1(:,:,:)*0.5_DP, 0.0_DP, KIND=DP)
+           + def(ipert) * CMPLX(becsum1(:,:,:), 0.0_DP, KIND=DP)
      ENDDO
   ENDIF
   !
@@ -179,6 +180,7 @@ SUBROUTINE ef_shift_wfc(npert, ldoss, drhoscf)
   !
   call start_clock ('ef_shift_wfc')
   !
+  ! This routine is used only at q=Gamma where the dimension of irrep never exceeds 3
   IF (npert > 3) CALL errore("ef_shift_wfc", "npert exceeds 3", 1)
   !
   ! Update the perturbed wavefunctions according to the Fermi energy shift
