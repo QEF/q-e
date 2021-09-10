@@ -1,0 +1,12 @@
+&KC_PP
+  outdir              = './out'
+  prefix              = 'Si'
+  seedname            = 'Si'
+  num_wann            = 8
+  mp1                 = 2
+  mp2                 = 2
+  mp3                 = 2
+  kc_iverbosity       = 0
+  l_vcut              = .false.
+  assume_isolated     = "none" 
+/

@@ -42,6 +42,7 @@ SUBROUTINE kc_readin()
   USE martyna_tuckerman,    ONLY : do_comp_mt
   USE input_parameters,      ONLY : assume_isolated
   USE martyna_tuckerman, ONLY: do_comp_mt
+  USE exx_base,         ONLY : x_gamma_extrapolation
   !USE mp_pools,      ONLY : npool
   !
   IMPLICIT NONE
@@ -193,6 +194,7 @@ SUBROUTINE kc_readin()
   write_hr            = .TRUE.
   eps_inf             = 1.D0
   l_vcut              = .FALSE.
+  x_gamma_extrapolation = .FALSE.
   assume_isolated     = 'none'
   l_alpha_corr        = .FALSE. 
   l_unique_manifold   = .FALSE.

@@ -36,6 +36,7 @@ subroutine bcast_kc_pp_input ( )
   call mp_bcast ( mp2,                 ionode_id, intra_image_comm )
   call mp_bcast ( mp3,                 ionode_id, intra_image_comm )
   call mp_bcast ( use_ws_distance,     ionode_id, intra_image_comm )
+  call mp_bcast ( have_empty     ,     ionode_id, intra_image_comm )
    !
 #endif
   !

@@ -108,6 +108,8 @@ PROGRAM compute_self_hartree
   tmp_dir = trimcheck (outdir)
   !
   tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
+  !
+  tmp_dir_kc= TRIM (tmp_dir) // 'kcwann' //'/'
   ! 
   WRITE( stdout, '(5X,"INFO: Reading pwscf data")')
   CALL read_file ( )

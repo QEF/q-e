@@ -23,7 +23,7 @@ subroutine sh_setup
   USE io_files,          ONLY : prefix
   USE buffers,           ONLY : open_buffer, save_buffer, close_buffer
   USE control_kc_wann,   ONLY : iurho_wann, kc_iverbosity, &
-                                num_wann, nqstot, occ_mat
+                                num_wann, nqstot, occ_mat, tmp_dir_kc, tmp_dir_kcq
   USE io_global,         ONLY : stdout
   USE klist,             ONLY : xk, nkstot
   USE cell_base,         ONLY : at !, bg
@@ -79,7 +79,7 @@ subroutine sh_setup
   WRITE( stdout, '(/, 5X,"INFO: READING Wannier-orbital Densities ...")') 
   !
   iun_qlist = 127
-  OPEN (iun_qlist, file = TRIM(tmp_dir)//TRIM(prefix)//'.qlist')
+  OPEN (iun_qlist, file = TRIM(tmp_dir_kc)//'qlist.txt')
   !
   READ(iun_qlist,'(i5)') nqs
   nqstot = nqs
@@ -104,11 +104,11 @@ subroutine sh_setup
       WRITE( stdout, '( 8X, 78("="),/)')
     ENDIF
     ! 
-    tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '_q' &
+    tmp_dir_kcq= TRIM (tmp_dir_kc) // 'q' &
                 & // TRIM(int_to_char(iq))//'/'
     !
     DO i = 1, num_wann
-      file_base=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/rhowann_iwann_'//TRIM(int_to_char(i))
+      file_base=TRIM(tmp_dir_kcq)//'rhowann_iwann_'//TRIM(int_to_char(i))
       CALL read_rhowann( file_base, dffts, rhowann_aux )
       rhowann(:,i) = rhowann_aux(:)
     ENDDO

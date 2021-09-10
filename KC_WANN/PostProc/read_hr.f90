@@ -39,7 +39,7 @@ SUBROUTINE read_hr()
   IF ( ionode ) THEN
     !
     INQUIRE( file=TRIM(prefix)//'.kc_hr.dat', exist=exst )
-    WRITE(*,*) "HERE", exst
+    !WRITE(*,*) "HERE", exst
     IF ( .NOT. exst ) call errore('read_hr', 'File H(R) not FOUND', 1 )
     
     OPEN( 100, file=TRIM(prefix)//'.kc_hr.dat', status='unknown', IOSTAT=ierr )
