@@ -395,21 +395,22 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      call mp_sum ( drhoscf, inter_pool_comm )
      call mp_sum ( drhoscfh, inter_pool_comm )
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
-
      !
-     ! q=0 in metallic case deserve special care (e_Fermi can shift)
-     !
-
      IF (okpaw) THEN
-        IF (lmetq0) CALL ef_shift(npe, dos_ef, ldos, drhoscfh, &
-                                  dbecsum, becsum1, irr, sym_def)
         DO ipert=1,npe
            dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
                                +becsumort(:,:,:,imode0+ipert)
         ENDDO
-     ELSE
-        IF (lmetq0) CALL ef_shift(npe, dos_ef, ldos, drhoscfh, &
-                                  irr=irr, sym_def=sym_def)
+     ENDIF
+     !
+     ! q=0 in metallic case deserve special care (e_Fermi can shift)
+     !
+     IF (lmetq0) THEN
+        IF (okpaw) THEN
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, irr, sym_def)
+        ELSE
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, irr=irr, sym_def=sym_def)
+        ENDIF
      ENDIF
      !
      !   After the loop over the perturbations we have the linear change

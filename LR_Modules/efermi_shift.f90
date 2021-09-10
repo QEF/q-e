@@ -119,7 +119,7 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1, irr, sym_de
   IF (PRESENT(dbecsum) .AND. PRESENT(becsum1)) THEN
      DO ipert = 1, npert
         dbecsum(:,:,:,ipert) = dbecsum(:,:,:,ipert) &
-           + def(ipert) * CMPLX(becsum1(:,:,:)*0.5_DP, 0.0_DP, KIND=DP)
+           + def(ipert) * CMPLX(becsum1(:,:,:), 0.0_DP, KIND=DP)
      ENDDO
   ENDIF
   !
