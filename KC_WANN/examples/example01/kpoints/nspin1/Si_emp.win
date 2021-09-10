@@ -7,7 +7,7 @@ use_ws_distance   = .true.
 !restart = plot
 conv_window = 5 
 conv_tol = 1D-10
-conv_noise_amp = 10000
+conv_noise_amp = 100
 conv_noise_num = 5
 
 write_hr = .true.
@@ -24,7 +24,7 @@ dis_froz_max      = 8.0
 dis_win_max       = 20
 !dis_win_max = 16.5
 !dis_froz_max = 11.0
-!dis_num_iter = 500
+dis_num_iter = 500
 
 wannier_plot = .false.
 wannier_plot_list = 1

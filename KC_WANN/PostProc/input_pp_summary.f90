@@ -34,6 +34,7 @@ subroutine input_pp_summary ( )
     WRITE(stdout, 45)  "# num_wann            =", num_wann
     WRITE(stdout, 47)  "# MP grid             =", mp1, mp2, mp3
     WRITE(stdout, 43)  "# use_ws_distance     =", use_ws_distance
+    WRITE(stdout, 43)  "# have_empty          =", have_empty
     WRITE(stdout,'(5X, 42("="),/)')
     !
   ENDIF

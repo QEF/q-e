@@ -120,6 +120,7 @@ SUBROUTINE kc_pp_readin()
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
   !
+  IF (num_wann_emp .gt. 0) have_empty = .true.
   ! ... broadcasting all input variables to other nodes
   !
   CALL input_pp_summary ()
@@ -148,6 +149,7 @@ SUBROUTINE kc_pp_readin()
   WRITE( stdout, '(5X,"INFO: Reading pwscf data")')
   CALL read_file ( )
   !
+  WRITE( stdout, '(/,5X,"INFO: Reading Hamiltonian",/)')
   CALL read_hr ( )
   !
   IF (okpaw.or.okvan) CALL errore('kc_readin',&
@@ -155,9 +157,6 @@ SUBROUTINE kc_pp_readin()
 
   IF (noncolin) CALL errore('kc_readin',&
    'The kc_wann code with non colliner spin is not available yet',1)
-
-  IF (nrot .gt. 1 .AND. nkstot/nspin .gt. 1) &
-    CALL errore('kc_readin','kc_wann requires nosym to be true ',nrot)
   !
   RETURN
   !

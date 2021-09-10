@@ -1,0 +1,382 @@
+
+     Program KC_WANN v.6.7MaX starts on 10Sep2021 at  8:45:43 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+
+     KCWANN INPUT SUMMARY 
+     ==========================================
+     # title               =            KI H2O
+     # out_dir             =            ./out/
+     # prefix              =               h2o
+     # seedname            =               h2o
+     # kc_iverbosity       =                 2
+     # kc_at_ks            =                 T
+     # homo_only           =                 F
+     # read_unitary_matrix =                 F
+     # check_ks            =                 F
+     # num_wann_occ        =                 0
+     # have_empty          =                 F
+     # has_disentangle     =                 F
+     # spin_component      =                 1
+     # l_unique_manifold   =                 F
+     # lrpa                =                 F
+     # fix_orb             =                 F
+     # tr2_ph              =          0.10E-13
+     # niter_ph            =               100
+     # nmix_ph             =                 4
+     # check_spread        =                 F
+     # qp_symm             =                 F
+     # kipz_corr           =                 F
+     # compute_hf          =                 F
+     # MP grid             =     1     1     1
+     # do_bands            =                 F
+     # use_ws_distance     =                 F
+     # write_hr            =                 T
+     # l_vcut              =                 F
+     # l_alpha_corr        =                 T
+     # assume_isolated     =                mt
+     # eps_inf             =          0.10E+01
+     ==========================================
+
+     INFO: Reading pwscf data
+
+     Reading xml data from directory:
+
+     ./out/h2o.save/
+     Message from routine read_pp_mesh:
+     mesh size missing, using the one in header
+     Message from routine read_pp_mesh:
+     mesh size missing, using the one in header
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         975     975    244                44983    44983    5620
+     Max         977     977    245                44984    44984    5623
+     Sum        3905    3905    979               179933   179933   22489
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     INFO: total number of primitive cell    1
+
+     READING SCREENING PARAMETERS
+
+     WARNING: File file_alpharef.txt NOT FOUND.
+     WARNING: Going to set all the Screening param to 1
+
+     INFO: Buffer for KS wfcs, OPENED
+
+     INFO: Buffer for WFs, OPENED
+
+     INFO: Buffer for WF rho, OPENED
+
+     INFO: MLWF read from file: Reading collected, re-writing distributed wavefunctions
+
+     INFO: Coulomb cut-off  180.00000000
+     EXX: q-point mesh:     1    1    1
+     EXX: grid of k+q points same as grid of k-points
+
+     INFO: Divergence            none    
+     INFO: Gamma Extrapolation       F
+     INFO: Coulomb G0                0.00000E+00
+
+     INFO: READING Wannier-orbital Densities ...
+
+        ==============================================================================
+        iq =     1
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cart ]
+        The  Wannier density at  q =    0.0000000   0.0000000   0.0000000  [Cryst]
+        ==============================================================================
+
+     INFO: total number of wannier to compute    8 from     1 to     8
+     INFO: PREPARING THE KCWANN CALCULATION ... DONE
+
+
+
+
+     INFO: KC HAMILTONIAN CALCULATION ...
+        INFO: rhowan_q(r) RETRIEVED
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+
+     The diagonal H(R=0)
+     iwann   alpha       Real(H)       Im(H)
+       1     1.0000    -0.70309254  0.00000000
+       2     1.0000    -0.59051854  0.00000000
+       3     1.0000    -0.62824386  0.00000000
+       4     1.0000    -0.62917896  0.00000000
+       5     1.0000    -0.61902132  0.00000000
+       6     1.0000    -1.69919667 -0.00000000
+       7     1.0000   -12.12629402  0.00000000
+       8     1.0000    -7.90104257  0.00000000
+     INFO: HAM CALCULATION ... DONE
+
+     INFO: KC SCALAR TERM CALCULATION ... START
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+
+     INFO: KC SCALAR TERM CALCULATION ... END
+
+     INFO: Correction beyond 2nd order ...
+
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    1     -8.415597372105     -1.462660849967     -0.130428989658     -7.026360034301     -0.008209017333
+     INFO: iwann, LR-alpha, FD-alpha, alpha  1  1.00000000  1.00000000  0.98832441
+     INFO: alpha RE-DEFINED ...    1  0.98832441
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    2     -8.415597372105     -1.314349420828     -0.153267787898     -7.201339317964     -0.023457472738
+     INFO: iwann, LR-alpha, FD-alpha, alpha  2  1.00000000  1.00000000  0.96027648
+     INFO: alpha RE-DEFINED ...    2  0.96027648
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    3     -8.415597372105     -1.332831555566     -0.173044497921     -7.202166594224     -0.032878528724
+     INFO: iwann, LR-alpha, FD-alpha, alpha  3  1.00000000  1.00000000  0.94766598
+     INFO: alpha RE-DEFINED ...    3  0.94766598
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    4     -8.415597372105     -1.344676890816     -0.171485120610     -7.187421039244     -0.030757997649
+     INFO: iwann, LR-alpha, FD-alpha, alpha  4  1.00000000  1.00000000  0.95111407
+     INFO: alpha RE-DEFINED ...    4  0.95111407
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    5     -8.415597372105     -0.249162479092     -1.613899470750     -8.724999144540      0.746710442032
+     INFO: iwann, LR-alpha, FD-alpha, alpha  5  1.00000000  1.00000000 -0.20627581
+     INFO: alpha RE-DEFINED ...    5 -0.20627581
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    6     -8.415597372105     -0.200163287102     -3.750398446084     -8.706841117993      1.784118764256
+     INFO: iwann, LR-alpha, FD-alpha, alpha  6  1.00000000  1.00000000 -0.04997779
+     INFO: alpha RE-DEFINED ...    6 -0.04997779
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    7     -8.415597372105     -0.156606225338    -24.565409104332     -8.673753105475     12.181155044135
+     INFO: iwann, LR-alpha, FD-alpha, alpha  7  1.00000000  1.00000000 -0.00452414
+     INFO: alpha RE-DEFINED ...    7 -0.00452414
+     INFO: iwann , e(N), de/df, d2e/df2, e(N-1), delta    8     -8.415597372105     -0.089355284188    -16.117433263128     -8.619243415458      7.944425872399
+     INFO: iwann, LR-alpha, FD-alpha, alpha  8  1.00000000  1.00000000 -0.00549083
+     INFO: alpha RE-DEFINED ...    8 -0.00549083
+
+
+     INFO: KC HAMILTONIAN CALCULATION ik=    1 ...
+
+        The map (iq,ik) --> ip + G      (  1  1  )        1        +  0.0000  0.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+      ADDING Martyna-Tuckerman correction
+
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+          KS   -25.6700 -13.2882  -9.3857  -7.2493  -1.1031   0.7109   0.7933   1.4578
+          KI   -35.1243 -21.0035 -17.4861 -15.3913   0.3808   1.7110   1.8663   2.1302
+
+  #########   STARTING KI corrections calcualtion   ##########
+
+        INFO: u_k(g) RETRIEVED
+
+        The map (iq,ik) --> ip + G      (  1  1  )        1        +  0.0000  0.0000  0.0000 [Cryst]
+ 
+        INFO: Map k+q -> p in 1BZ DONE  
+
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    1    1    -0.76830703
+  orbital=  1  Self-Hartree   0.7683070271   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.76830703   -8.41559737   -7.02636003   -1.46266085
+   orbital  1   spin  1     uKI_diag    -0.69488351 Ry   rKI_diag    -0.69488351 Ry   alpha=     1.00000000
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    2    1    -0.66715242
+  orbital=  2  Self-Hartree   0.6671524230   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.66715242   -8.41559737   -7.20133932   -1.31434942
+   orbital  2   spin  1     uKI_diag    -0.56706106 Ry   rKI_diag    -0.56706106 Ry   alpha=     1.00000000
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    3    1    -0.71476610
+  orbital=  3  Self-Hartree   0.7147660996   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.71476610   -8.41559737   -7.20216659   -1.33283156
+   orbital  3   spin  1     uKI_diag    -0.59536532 Ry   rKI_diag    -0.59536532 Ry   alpha=     1.00000000
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    4    1    -0.71492151
+  orbital=  4  Self-Hartree   0.7149215106   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i}     0.71492151   -8.41559737   -7.18742104   -1.34467689
+   orbital  4   spin  1     uKI_diag    -0.59842095 Ry   rKI_diag    -0.59842095 Ry   alpha=     1.00000000
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    5    1    -0.18792841
+  orbital=  5  Self-Hartree   0.1879284146   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i}     0.18792841   -8.41559737   -8.72499914   -0.24916248
+   orbital  5   spin  1     uKI_diag     0.12768912 Ry   rKI_diag     0.12768912 Ry   alpha=     1.00000000
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    6    1    -0.17600255
+  orbital=  6  Self-Hartree   0.1760025527   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i}     0.17600255   -8.41559737   -8.70684112   -0.20016329
+   orbital  6   spin  1     uKI_diag     0.08492209 Ry   rKI_diag     0.08492209 Ry   alpha=     1.00000000
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    7    1    -0.15641053
+  orbital=  7  Self-Hartree   0.1564105336   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i}     0.15641053   -8.41559737   -8.67375311   -0.15660623
+   orbital  7   spin  1     uKI_diag     0.05486103 Ry   rKI_diag     0.05486103 Ry   alpha=     1.00000000
+  orbital charge    1.000000000000
+  spin-up charge    8.000000000000
+self_hatree, EXX    8    1    -0.15767406
+  orbital=  8  Self-Hartree   0.1576740574   Ry
+
+  orbital charge from v_h 1.000000000000
+
+NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i}     0.15767406   -8.41559737   -8.61924342   -0.08935528
+   orbital  8   spin  1     uKI_diag     0.04338330 Ry   rKI_diag     0.04338330 Ry   alpha=     1.00000000
+
+   ###  KI HAMILTONIAN EMPTY ###
+   0.127689121303048   0.000000000000000   0.000013474856891  -0.000011795051176   0.001563857311452   0.047027099104170  -0.005734660792171  -0.013797440496835
+   0.000013474856891   0.000011795051176   0.084922093915264   0.000000000000000   0.000016945832885   0.000011657116695   0.000023975922631  -0.000003640885735
+   0.001563857311452  -0.047027099104170   0.000016945832885  -0.000011657116695   0.054861025589250  -0.000000000000000  -0.007662390828133  -0.000486089640922
+  -0.005734660792171   0.013797440496835   0.000023975922631   0.000003640885735  -0.007662390828133   0.000486089640922   0.043383298271073  -0.000000000000000
+ 
+
+
+  #########   END KI corrections calcualtion   ##########
+
+
+   ###  KI HAMILTONIAN ###
+  -2.5815915   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000  -0.0000001  -0.0000001   0.0000000  -0.0000000   0.0000001  -0.0000001  -0.0000000   0.0000000
+   0.0000000  -0.0000000  -1.5437291   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000  -0.0000000  -0.0000000  -0.0000001   0.0000000  -0.0000000   0.0000000   0.0000000  -0.0000000
+   0.0000000  -0.0000000   0.0000000  -0.0000000  -1.2852033   0.0000000  -0.0000000   0.0000000  -0.0000000   0.0000000   0.0000000  -0.0000000  -0.0000000  -0.0000001   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000  -0.0000000  -0.0000000  -0.0000000  -1.1312382  -0.0000000  -0.0000000  -0.0000000   0.0000000  -0.0000000  -0.0000000  -0.0000000   0.0000000   0.0000000
+  -0.0000001   0.0000001  -0.0000000   0.0000000  -0.0000000  -0.0000000  -0.0000000   0.0000000   0.0466133   0.0000000   0.0000134  -0.0000117   0.0015638   0.0470266  -0.0057348  -0.0137976
+   0.0000000   0.0000000  -0.0000001  -0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000134   0.0000117   0.1371702  -0.0000000   0.0000170   0.0000116   0.0000236  -0.0000033
+   0.0000001   0.0000001  -0.0000000  -0.0000000  -0.0000000   0.0000001  -0.0000000   0.0000000   0.0015638  -0.0470266   0.0000170  -0.0000116   0.1131659   0.0000000  -0.0076628  -0.0004860
+  -0.0000000  -0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000  -0.0000000  -0.0057348   0.0137976   0.0000236   0.0000033  -0.0076628   0.0004860   0.1505327  -0.0000000
+ 
+
+   ###  KI HAMILTONIAN EMPTY ###
+   0.0466133   0.0000000   0.0000134  -0.0000117   0.0015638   0.0470266  -0.0057348  -0.0137976
+   0.0000134   0.0000117   0.1371702  -0.0000000   0.0000170   0.0000116   0.0000236  -0.0000033
+   0.0015638  -0.0470266   0.0000170  -0.0000116   0.1131659   0.0000000  -0.0076628  -0.0004860
+  -0.0057348   0.0137976   0.0000236   0.0000033  -0.0076628   0.0004860   0.1505327  -0.0000000
+ 
+
+   ###  Empty states spectrum ###
+  1    0.6342
+  2    0.6342    1.8663
+  3    0.3029    1.8663    1.8711
+  4    0.2918    1.7607    1.8663    2.1694
+           8
+KI Full  -35.1243 -21.0035 -17.4861 -15.3913   0.2918   1.7607   1.8663   2.1694
+KI Pert  -35.1243 -21.0035 -17.4861 -15.3913   0.6342   1.8663   1.5397   2.0481
+           8
+           8
+           8
+ 
+     KC_WANN      :      9.55s CPU     10.81s WALL
+
+     INITIALIZATION: 
+     map          :      0.00s CPU      0.00s WALL (       2 calls)
+ 
+     init_vloc    :      0.21s CPU      0.22s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+ 
+ 
+ 
+     h_psi        :      0.09s CPU      0.10s WALL (       2 calls)
+ 
+     h_psi        :      0.09s CPU      0.10s WALL (       2 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (       2 calls)
+ 
+ 
+ 
+      General routines
+     calbec       :      0.00s CPU      0.00s WALL (       2 calls)
+     fft          :      3.50s CPU      3.79s WALL (     499 calls)
+     ffts         :      1.38s CPU      1.47s WALL (     216 calls)
+     fftw         :      0.17s CPU      0.18s WALL (      70 calls)
+     davcio       :      0.03s CPU      0.17s WALL (      34 calls)
+ 
+ 
+     KC_WANN      :      9.55s CPU     10.81s WALL
+
+ 
+   This run was terminated on:   8:45:54  10Sep2021            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

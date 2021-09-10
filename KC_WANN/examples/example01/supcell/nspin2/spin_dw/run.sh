@@ -1,7 +1,7 @@
 #!/bin/bash/
 
 qepath="../../../../../../bin"
-wannpath="../../../../../../wannier90-2.1.0/"
+wannpath="../../../../../../bin"
 
 #sh clean.sh
 
@@ -24,22 +24,22 @@ echo " PW2WANN EMP DONE"
 $wannpath/wannier90.x  Si_emp.win
 echo " WANN EMP DONE"
 
-mpirun -np 4 $qepath/wann_to_kc.x < Si.kc_screen_occ.in > Si.wann_to_kc.out
+mpirun -np 4 $qepath/wann2kc.x < Si.kc_screen_occ.in > Si.wann2kc.out
 echo " Wann90 to KC DONE"
 
-#mpirun -np 4 $qepath/kc_screen.x < Si.kc_screen_occ.in > Si.kc_screen_occ.out
-#echo " ALPHA OCC DONE"
-#
-#printf "\n Relevant info \n"
-#grep relaxed Si.kc_screen_occ.out
-#echo " "
+mpirun -np 4 $qepath/kc_screen.x < Si.kc_screen_occ.in > Si.kc_screen_occ.out
+echo " ALPHA OCC DONE"
 
-#mpirun -np 4 $qepath/kc_screen.x < Si.kc_screen_emp.in > Si.kc_screen_emp.out
-#echo " ALPHA EMP DONE"
-#
-#printf "\n Relevant info \n"
-#grep relaxed Si.kc_screen_emp.out
-#echo " "
+printf "\n Relevant info \n"
+grep relaxed Si.kc_screen_occ.out
+echo " "
+
+mpirun -np 4 $qepath/kc_screen.x < Si.kc_screen_emp.in > Si.kc_screen_emp.out
+echo " ALPHA EMP DONE"
+
+printf "\n Relevant info \n"
+grep relaxed Si.kc_screen_emp.out
+echo " "
 
 
 
