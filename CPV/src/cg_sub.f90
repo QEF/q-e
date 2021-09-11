@@ -101,6 +101,11 @@
       complex(dp), allocatable :: c3(:)
       real(dp) :: gamma, entmp, sta
       complex(dp),allocatable :: hpsi(:,:), hpsi0(:,:), gi(:,:), hi(:,:)
+#if defined(__CUDA)
+      complex(dp), allocatable, DEVICE :: hpsi_dummy(:,:), c0_dummy(:,:), gi_dummy(:,:)
+#else
+      complex(dp), allocatable         :: hpsi_dummy(:,:), c0_dummy(:,:), gi_dummy(:,:)
+#endif
       real(DP), allocatable::               s_minus1(:,:)!factors for inverting US S matrix
       real(DP), allocatable::               k_minus1(:,:)!factors for inverting US preconditioning matrix 
       real(DP), allocatable :: lambda_repl(:,:) ! replicated copy of lambda
@@ -309,10 +314,10 @@
         call newd(vpot,rhovan,fion,.true.)
 
 
-        call prefor(eigr,betae)!ATTENZIONE
+        call prefor(eigr,betae)
         ! this puts the gradient inside the array hpsi
-        call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, c0, c0, hpsi, hpsi,&
-.false., .false., .true.)
+        call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, &
+                c0, c0_dummy, hpsi, hpsi_dummy, .false., .false., .true.)
 
         if(pre_state) call ave_kin(c0,SIZE(c0,1),nbsp,ave_ene)
 
@@ -842,8 +847,8 @@
   
         call prefor(eigr,betae)
         ! this puts the gradient inside the array gi
-        call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, c0, c0, gi, gi,&
-.false., .false., .true.)
+        call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, &
+                c0, c0_dummy, gi, gi_dummy, .false., .false., .true.)
         ALLOCATE( lambda_repl( nudx, nudx ) )
         !
         do is = 1, nspin
@@ -889,8 +894,8 @@
             call calbec(nbsp, betae,c0,bec)
           
 
-            call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, c0, c0, gi, gi,&
-    .false., .false., .true.)
+            call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, &
+                    c0, c0_dummy, gi, gi_dummy, .false., .false., .true.)
 
          
             lambda_repl = 0.d0
