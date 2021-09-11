@@ -336,10 +336,10 @@
       END SUBROUTINE writefile_x
    END INTERFACE
  
-
+!
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
+         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart, compute_only_gradient )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
          integer, intent(in) :: nfi
@@ -350,7 +350,7 @@
          complex(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
          complex(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
          logical, optional, intent(in) :: fromscra
-         logical, optional, intent(in) :: restart
+         logical, optional, intent(in) :: restart, compute_only_gradient
       END SUBROUTINE
    END INTERFACE
 
