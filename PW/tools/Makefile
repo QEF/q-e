@@ -4,8 +4,9 @@ include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../src
-QEMODS = $(BASEMODS)
+          $(MOD_FLAG)../src \
+          $(MOD_FLAG)../../dft-d3/
+QEMODS = ../../dft-d3/libdftd3qe.a $(BASEMODS)
 PWOBJS = ../src/libpw.a ../../KS_Solvers/libks_solvers.a
 
 TLDEPS= pwlibs
