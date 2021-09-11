@@ -489,6 +489,7 @@ set_target_properties(qe_pp_rism_exe PROPERTIES OUTPUT_NAME pprism.x)
 target_link_libraries(qe_pp_rism_exe
     PRIVATE
         qe_pw
+        qe_fftx
         qe_modules
         qe_pp
         qe_xclib)
