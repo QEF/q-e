@@ -546,20 +546,24 @@ CONTAINS
          SUBROUTINE init_starting_ns(objs, labs )
             IMPLICIT NONE
             TYPE(starting_ns_type), ALLOCATABLE   :: objs(:)
+            REAL(DP), ALLOCATABLE                 :: dati(:)  
             CHARACTER(len=*)                      :: labs(nsp)
             INTEGER                               :: i, is, ind, llmax, nspin
             !  
             IF ( .NOT. PRESENT(starting_ns)) RETURN
             
             IF (noncolin_) THEN
-               llmax = SIZE(starting_ns,1)
+               llmax = SIZE(starting_ns,1) 
                nspin = 1
                ALLOCATE(objs(nsp))
                DO i = 1, nsp
-                  IF (.NOT. ANY(starting_ns(1:2*llmax,1,i)>0.d0)) CYCLE
+                  IF (.NOT. ANY(starting_ns(1:llmax,1:2,i)>0.d0)) CYCLE
                   ind = ind + 1 
-                  CALL qes_init(objs(ind),"starting_ns", TRIM(species(i)), TRIM(labs(i)), 1, &
-                                MAX(starting_ns(1:2*llmax,1,i),0._DP)) 
+                  ALLOCATE (dati(2*llmax)) 
+                  dati(1:llmax) =         MAX(starting_ns(1:llmax,1,i),0._DP)  
+                  dati(llmax+1:2*llmax) = MAX(starting_ns(1:llmax,2,i),0._DP)  
+                  CALL qes_init(objs(ind),"starting_ns", TRIM(species(i)), TRIM(labs(i)), 1, dati) 
+                  DEALLOCATE(dati) 
                END DO 
                RETURN 
             ELSE
