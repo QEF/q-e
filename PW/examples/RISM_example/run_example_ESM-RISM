@@ -123,6 +123,7 @@ cat > Li-EtOH.in << EOF
     esm_bc          = 'bc1'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.4
  /
  &rism
@@ -211,6 +212,7 @@ cat > Al-NaCl_aq.in << EOF
     esm_bc          = 'bc1'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.2
  /
  &ions
@@ -283,6 +285,7 @@ cat > Cl-_NaCl_aq.in << EOF
     esm_bc          = 'bc1'
  /
  &electrons
+    diagonalization = 'rmm-davidson'
     mixing_beta = 0.2
  /
  &ions

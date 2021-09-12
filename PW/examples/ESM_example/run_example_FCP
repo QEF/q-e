@@ -100,6 +100,7 @@ cat > Al001_bc2_FCP_v00.in << EOF
   assume_isolated='esm', esm_bc='bc2'
 /
 &electrons
+  diagonalization = 'rmm-davidson'
   mixing_beta = 0.3
 /
 &ions
@@ -152,6 +153,7 @@ cat > Al001_bc2_FCP_vp05.in << EOF
   assume_isolated='esm', esm_bc='bc2'
 /
 &electrons
+  diagonalization = 'rmm-davidson'
   mixing_beta = 0.3
 /
 &ions
@@ -204,6 +206,7 @@ cat > Al001_bc2_FCP_vm05.in << EOF
   assume_isolated='esm', esm_bc='bc2'
 /
 &electrons
+  diagonalization = 'rmm-davidson'
   mixing_beta = 0.3
 /
 &ions
@@ -256,6 +259,7 @@ cat > Al001_bc3_FCP_v00.in << EOF
   assume_isolated='esm', esm_bc='bc3'
 /
 &electrons
+  diagonalization = 'rmm-davidson'
   mixing_beta = 0.3
 /
 &ions
@@ -308,6 +312,7 @@ cat > Al001_bc3_FCP_vp05.in << EOF
   assume_isolated='esm', esm_bc='bc3'
 /
 &electrons
+  diagonalization = 'rmm-davidson'
   mixing_beta = 0.3
 /
 &ions
@@ -360,6 +365,7 @@ cat > Al001_bc3_FCP_vm05.in << EOF
   assume_isolated='esm', esm_bc='bc3'
 /
 &electrons
+  diagonalization = 'rmm-davidson'
   mixing_beta = 0.3
 /
 &ions
