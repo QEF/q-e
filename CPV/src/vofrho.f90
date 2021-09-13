@@ -103,6 +103,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       REAL(DP) :: vtxc, vave, ebac, wz, eh, ehpre, enlc
       COMPLEX(DP)  fp, fm, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
+      COMPLEX(DP) :: x_tmp ! (same as rhotmp)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), newrhosave(:,:), rhocsave(:) 
       !
@@ -166,9 +167,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       ALLOCATE( vtemp( p_ngm_ ) )
       ALLOCATE( rhotmp( p_ngm_ ) )
+DEV_ACC enter data create(rhotmp( 1:p_ngm_ ) )
       !
       IF ( tpre ) THEN
          ALLOCATE( drhot( p_ngm_, 6 ) )
+DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
          ALLOCATE( gagb( 6, p_ngm_ ) )
          CALL compute_gagb( gagb, g, p_ngm_, tpiba2 )
       END IF
@@ -210,19 +213,28 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          DEALLOCATE( stmp )
          !
       END IF
-!
-zpseu = 0.0_DP 
-!
-DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg) copyout(vtemp) create(drhot,rhotmp) 
-DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
-
- START_WSHARE 
-      rhotmp( 1:p_ngm_ ) = rhog( 1:p_ngm_, 1 )
- END_WSHARE
+      !
+      zpseu = 0.0_DP 
+      !
+      DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg,rhops) copyout(vtemp) 
+      DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
+      !
+      DEV_OMP workshare
+      DEV_ACC parallel loop present(rhotmp, rhog)
+      DO ig = 1, p_ngm_
+        rhotmp( ig ) = rhog( ig, 1 )
+      END DO 
+      DEV_OMP end workshare
+      !
       IF( nspin == 2 ) THEN
- START_WSHARE
-         rhotmp( 1:p_ngm_ ) = rhotmp( 1:p_ngm_ ) + rhog( 1:p_ngm_, 2 )
- END_WSHARE
+        !
+        DEV_OMP workshare
+        DEV_ACC parallel loop present(rhotmp, rhog)
+        DO ig = 1, p_ngm_
+           rhotmp( ig ) = rhotmp( ig ) + rhog( ig, 2 )
+        END DO 
+        DEV_OMP end workshare
+        !
       END IF
       !
 
@@ -231,13 +243,19 @@ DEV_OMP do
          DO ij = 1, 6
             i = alpha( ij )
             j = beta( ij )
-DEV_ACC kernels 
-            drhot( :, ij ) = 0.0d0
-DEV_ACC end kernels 
+            !
+DEV_ACC parallel loop present(drhot) 
+            DO ig = 1, p_ngm_
+              drhot( ig, ij ) = 0.0d0
+            END DO 
+            !
             DO k = 1, 3
-DEV_ACC kernels async 
-               drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 1, i, k ) * ht( k, j )
-DEV_ACC end kernels
+               !
+DEV_ACC parallel loop present(drhot, drhog, ht) 
+               DO ig = 1, p_ngm_
+                 drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 1, i, k ) * ht( k, j )
+               END DO 
+               !
             END DO
          END DO
 DEV_OMP end do
@@ -247,9 +265,12 @@ DEV_OMP do
                i = alpha( ij )
                j = beta( ij ) 
                DO k = 1, 3
-DEV_ACC kernels async 
-                  drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 2, i, k ) * ht( k, j )
-DEV_ACC end kernels
+                  !
+DEV_ACC parallel loop present(drhot, drhog, ht)
+                  DO ig = 1, p_ngm_
+                    drhot( ig, ij ) = drhot( ig, ij ) +  drhog( ig, 2, i, k ) * ht( k, j )
+                  END DO  
+                  !
                END DO
             END DO
 DEV_OMP end do
@@ -267,7 +288,7 @@ DEV_ACC parallel loop
       END DO
       DO is=1,nsp
 DEV_OMP do
-DEV_ACC parallel loop 
+DEV_ACC parallel loop present(rhotmp)
          DO ig=1,s_ngm_
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
@@ -306,17 +327,21 @@ DEV_ACC update self(vtemp(1))
       zh = 0.0d0
 
 DEV_OMP parallel default(shared), private(ig,is)
-DEV_ACC kernels 
-      DO is=1,nsp
+DEV_ACC parallel present(rhotmp) 
+DEV_ACC loop gang private(x_tmp)
+      DO ig=1,s_ngm_
 DEV_OMP do 
-         DO ig=1,s_ngm_
-            rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
+         x_tmp = rhotmp(ig)
+DEV_ACC loop vector reduction(+:x_tmp) 
+         DO is=1,nsp
+            x_tmp=x_tmp+sfac(ig,is)*rhops(ig,is)
          END DO
+         rhotmp(ig)=x_tmp 
       END DO
-DEV_ACC end kernels 
+DEV_ACC end parallel
       !
 DEV_OMP do
-DEV_ACC parallel loop 
+DEV_ACC parallel loop present(rhotmp)
       DO ig = gstart, p_ngm_
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
@@ -347,6 +372,7 @@ DEV_OMP end parallel
          CALL stress_hartree(dh6, eh*omega, sfac, rhotmp, drhot, gagb, omega )
          !
          DEALLOCATE( gagb )
+DEV_ACC exit data delete(drhot)
          DEALLOCATE( drhot )
          !
       END IF
@@ -380,7 +406,7 @@ DEV_ACC kernels
 DEV_ACC end kernels 
 
 !
-DEV_ACC parallel loop 
+DEV_ACC parallel loop present(rhotmp)
 !
 DEV_OMP parallel default(shared), private(ig,is)
 DEV_OMP do
@@ -397,7 +423,7 @@ DEV_ACC loop seq
          END DO
       END DO
 DEV_OMP end parallel
-
+DEV_ACC exit data delete(rhotmp)
       DEALLOCATE (rhotmp)
 
 !

@@ -382,7 +382,7 @@
 !
 #if defined (__NEW)
 
-DEV_ACC data present(rhoeg) copy(fion)  create(rp(s_ngm_)) copyin(rhops, sfac, screen_coul, g, gg, mill, vps, ityp,ei1, ei2, ei3)
+DEV_ACC data present(rhoeg, rhops) copy(fion)  create(rp(s_ngm_)) copyin(sfac, screen_coul, g, gg, mill, vps, ityp,ei1, ei2, ei3)
 !
 DEV_OMP parallel default(none) &
 DEV_OMP shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
