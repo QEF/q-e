@@ -251,8 +251,8 @@ CONTAINS
     !
     ! Back compatibility - TO BE REMOVED
     !
-    IF (igcx == 14) igcx = 3 ! PBE -> PBX
-    IF (igcc ==  9) igcc = 4 ! PBE -> PBC
+    IF (igcx == 13) igcx = 3 ! PBE -> PBX
+    IF (igcc ==  8) igcc = 4 ! PBE -> PBC
     !
     IF (igcx == 6) CALL xclib_infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
     !
