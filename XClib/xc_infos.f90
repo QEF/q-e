@@ -34,7 +34,7 @@ PROGRAM xc_infos
   CHARACTER(LEN=120) :: lxc_kind, lxc_family
   CHARACTER(LEN=150) :: dft_r
   CHARACTER(LEN=10)  :: dft_n
-  INTEGER :: n_ext, id(6)
+  INTEGER :: n_ext, id(6), idfull
   INTEGER :: i, ii
 #if defined(__LIBXC)
 #if (XC_MAJOR_VERSION>5)
@@ -50,6 +50,7 @@ PROGRAM xc_infos
   !---------- DFT infos -------------------------
   INTEGER :: iexch, icorr, igcx, igcc, imeta, imetac, idx
   LOGICAL :: is_libxc(6)
+  CHARACTER(LEN=80) :: name_check
   !
   dft = 'none'
   !
@@ -75,8 +76,20 @@ PROGRAM xc_infos
   imetac = xclib_get_ID('MGGA','CORR')
   is_libxc(6) = xclib_dft_is_libxc('MGGA','CORR')
   !
+  id(1) = iexch ; id(2) = icorr
+  id(3) = igcx  ; id(4) = igcc
+  id(5) = imeta ; id(6) = imetac
+  !
+  name_check = 'noshortname'
+  CALL get_shortname_from_IDs( id, name_check, idfull )
+  !
   WRITE(stdout,*) " "
   WRITE(stdout,*) "=================================== "//CHAR(10)//" "
+  !
+  IF (TRIM(name_check)/='noshortname') THEN
+    WRITE(stdout,*) dft_full_descr(idfull)
+    WRITE(stdout,*) CHAR(10)
+  ENDIF
   !
   WRITE(stdout,*) "The inserted XC functional is a composition of the &
                   &following terms:"  
@@ -95,10 +108,6 @@ PROGRAM xc_infos
 #if defined(__LIBXC)
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1, .FALSE. )  
 #endif
-  !
-  id(1) = iexch ; id(2) = icorr
-  id(3) = igcx  ; id(4) = igcc
-  id(5) = imeta ; id(6) = imetac
   !
   CALL xclib_set_auxiliary_flags( .FALSE. )
   !

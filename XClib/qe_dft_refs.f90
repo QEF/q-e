@@ -19,7 +19,7 @@ MODULE qe_dft_refs
                         dft_GGAx_ref(0:ngcx), dft_GGAc_ref(0:ngcc), &
                         dft_MGGA_ref(0:nmeta)
   ! -- total DFTs
-  CHARACTER(LEN=100)  :: dft_descr(n_dft)
+  CHARACTER(LEN=100) :: dft_full_descr(n_dft)
   !
   ! ---- LDA exchange ----
   !
@@ -240,87 +240,87 @@ MODULE qe_dft_refs
   ! ---- Full DFTs ----
   !
   ! PZ / LDA
-  DATA dft_descr(1)  / 'Perdew-Zunger LDA' /
+  DATA dft_full_descr(1)  / 'Perdew-Zunger LDA' /
   ! PW
-  DATA dft_descr(2)  / 'LDA with PW correlation' /
+  DATA dft_full_descr(2)  / 'LDA with PW correlation' /
   ! VWN-RPA
-  DATA dft_descr(3)  / 'VWN LDA using vwn1-rpa parametrization' /
+  DATA dft_full_descr(3)  / 'VWN LDA using vwn1-rpa parametrization' /
   ! OEP
-  DATA dft_descr(4)  / 'Optimized Effective Potential. No GC part, no corr. by default' /
+  DATA dft_full_descr(4)  / 'Optimized Effective Potential. No GC part, no corr. by default' /
   ! KLI
-  DATA dft_descr(5)  / 'KLI - currently not implemented' /
+  DATA dft_full_descr(5)  / 'KLI - currently not implemented' /
   ! HF
-  DATA dft_descr(6)  / 'HF no GC part (nor LDA...) and no correlation by default' /
+  DATA dft_full_descr(6)  / 'HF no GC part (nor LDA...) and no correlation by default' /
   ! PBE
-  DATA dft_descr(7)  / 'Perdew-Burke-Ernzerhof GGA' /
+  DATA dft_full_descr(7)  / 'Perdew-Burke-Ernzerhof GGA' /
   ! B88
-  DATA dft_descr(8)  / 'Becke88 (beta=0.0042)' /
+  DATA dft_full_descr(8)  / 'Becke88 (beta=0.0042)' /
   ! BP
-  DATA dft_descr(9)  / 'Becke-Perdew grad.corr.' /
+  DATA dft_full_descr(9)  / 'Becke-Perdew grad.corr.' /
   ! PW91
-  DATA dft_descr(10) / 'PW91 (aka GGA)' /
+  DATA dft_full_descr(10) / 'PW91 (aka GGA)' /
   ! REVPBE
-  DATA dft_descr(11) / 'revPBE (Zhang-Yang)' /
+  DATA dft_full_descr(11) / 'revPBE (Zhang-Yang)' /
   ! PBESOL
-  DATA dft_descr(12) / 'PBEsol' /
+  DATA dft_full_descr(12) / 'PBEsol' /
   ! BLYP
-  DATA dft_descr(13) / 'Becke-Lee-Yang-Parr LDA+GGA' /
+  DATA dft_full_descr(13) / 'Becke-Lee-Yang-Parr LDA+GGA' /
   ! OPTBK88
-  DATA dft_descr(14) / 'optB88' /
+  DATA dft_full_descr(14) / 'optB88' /
   ! OPTB86B
-  DATA dft_descr(15) / 'optB86' /
+  DATA dft_full_descr(15) / 'optB86' /
   ! PBC
-  DATA dft_descr(16) / 'PBC = PW + PBC' /
+  DATA dft_full_descr(16) / 'PBC = PW + PBC' /
   ! HCTH
-  DATA dft_descr(17) / 'HCTH/120' /
+  DATA dft_full_descr(17) / 'HCTH/120' /
   ! OLYP
-  DATA dft_descr(18) / 'OLYP = OPTX + LYP' /
+  DATA dft_full_descr(18) / 'OLYP = OPTX + LYP' /
   ! WC
-  DATA dft_descr(19) / 'Wu-Cohen' /
+  DATA dft_full_descr(19) / 'Wu-Cohen' /
   ! PW86PBE
-  DATA dft_descr(20) / 'PW86 exchange + PBE correlation' /
+  DATA dft_full_descr(20) / 'PW86 exchange + PBE correlation' /
   ! B86BPBE
-  DATA dft_descr(21) / 'B86b exchange + PBE correlation' /
+  DATA dft_full_descr(21) / 'B86b exchange + PBE correlation' /
   ! PBEQ2D
-  DATA dft_descr(22) / 'PBEQ2D' /
+  DATA dft_full_descr(22) / 'PBEQ2D' /
   ! SOGGA
-  DATA dft_descr(23) / 'SOGGA' /
+  DATA dft_full_descr(23) / 'SOGGA' /
   ! EV93
-  DATA dft_descr(24) / 'Engel-Vosko' /
+  DATA dft_full_descr(24) / 'Engel-Vosko' /
   ! RPBE
-  DATA dft_descr(25) / 'RPBE' /
+  DATA dft_full_descr(25) / 'RPBE' /
   ! PBE0
-  DATA dft_descr(26) / 'PBE0 in: Perdew, Ernzerhof, Burke, JCP 105, 9982 (1996)' /
+  DATA dft_full_descr(26) / 'PBE0 in: Perdew, Ernzerhof, Burke, JCP 105, 9982 (1996)' /
   ! B86BPBEX
-  DATA dft_descr(27) / 'B86bPBE hybrid' /
+  DATA dft_full_descr(27) / 'B86bPBE hybrid' /
   ! BHAHLYP
-  DATA dft_descr(28) / 'Becke half-and-half LYP' /
+  DATA dft_full_descr(28) / 'Becke half-and-half LYP' /
   ! HSE
-  DATA dft_descr(29) / 'Heyd-Scuseria-Ernzerhof (HSE 06, see references)' /
+  DATA dft_full_descr(29) / 'Heyd-Scuseria-Ernzerhof (HSE 06, see references)' /
   ! GAUP / GAUPBE
-  DATA dft_descr(30) / 'Gau-PBE (also gaup)' /
+  DATA dft_full_descr(30) / 'Gau-PBE (also gaup)' /
   ! B3LYP
-  DATA dft_descr(31) / 'B3LYP' /
+  DATA dft_full_descr(31) / 'B3LYP' /
   ! B3LYP-V1R
-  DATA dft_descr(32) / 'B3LYP-VWN1-RPA' /
+  DATA dft_full_descr(32) / 'B3LYP-VWN1-RPA' /
   ! X3LYP
-  DATA dft_descr(33) / 'X3LYP' /
+  DATA dft_full_descr(33) / 'X3LYP' /
   ! TPSS
-  DATA dft_descr(34) / 'TPSS Meta-GGA' /
+  DATA dft_full_descr(34) / 'TPSS Meta-GGA' /
   ! TPSS-only
-  DATA dft_descr(35) / 'TPSS Meta-GGA' /
+  DATA dft_full_descr(35) / 'TPSS Meta-GGA' /
   ! M06L
-  DATA dft_descr(36) / 'M06L Meta-GGA' /
+  DATA dft_full_descr(36) / 'M06L Meta-GGA' /
   ! TB09
-  DATA dft_descr(37) / 'TB09 Meta-GGA - needs Libxc' /
+  DATA dft_full_descr(37) / 'TB09 Meta-GGA - needs Libxc' /
   ! SCAN
-  DATA dft_descr(38) / 'SCAN Meta-GGA - needs Libxc.' /
+  DATA dft_full_descr(38) / 'SCAN Meta-GGA - needs Libxc.' /
   ! SCAN0
-  DATA dft_descr(39) / 'SCAN Meta-GGA - needs Libxc.' /
+  DATA dft_full_descr(39) / 'SCAN Meta-GGA - needs Libxc.' /
   ! PZ+META
-  DATA dft_descr(40) / 'PZ/LDA + null meta-GGA' /
+  DATA dft_full_descr(40) / 'PZ/LDA + null meta-GGA' /
   ! PBE+META
-  DATA dft_descr(41) / 'PBE + null meta-GGA' /
+  DATA dft_full_descr(41) / 'PBE + null meta-GGA' /
   !
 END MODULE qe_dft_refs
 
