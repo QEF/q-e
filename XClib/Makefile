@@ -40,9 +40,9 @@ xc_lib.a: $(XCL) $(BEEF)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-xc_infos.x : xc_infos.o qe_dft_list.o xc_lib.a
+xc_infos.x : xc_infos.o qe_dft_refs.o qe_dft_list.o xc_lib.a
 	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		xc_infos.o qe_dft_list.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
+		xc_infos.o qe_dft_refs.o qe_dft_list.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 xclib_test.x : xclib_test.o xc_lib.a

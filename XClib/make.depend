@@ -67,6 +67,7 @@ xc_infos.o : qe_kind.o
 xc_infos.o : dft_setting_params.o
 xc_infos.o : xc_lib.o
 xc_infos.o : qe_dft_list.o
+xc_infos.o : qe_dft_refs.o
 xc_infos.o : xclib_utils_and_para.o
 beefun.o : beefleg.h
 beefun.o : pbecor.h

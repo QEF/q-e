@@ -2,11 +2,14 @@
 ===================== XC_INFO =====================================
 
 xc_info.x is a small serial program that provides infos on XC 
-functionals. If the functionals are from libxc the external parameters,
-when present, are listed with a brief description and their default 
-value. Run command:
+functionals, both the ones from internal QE library and the ones from
+Libxc. Just run the command:
 
 	./xc_info.x
+
+then insert the functional name (or any allowed combination). It
+shows a brief description, the list of the external parameters, 
+if present, and the references.
 
 ===================== XCLIB_TEST ==================================
 

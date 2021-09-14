@@ -956,44 +956,6 @@ CONTAINS
      !
   END FUNCTION
   !
-  ! ... previous format:
-  !
-!   FUNCTION get_iexch()
-!      INTEGER get_iexch
-!      get_iexch = iexch
-!      RETURN
-!   END FUNCTION get_iexch
-!   !-----------------------------------------------------------------------
-!   FUNCTION get_icorr()
-!      INTEGER get_icorr
-!      get_icorr = icorr
-!      RETURN
-!   END FUNCTION get_icorr
-!   !-----------------------------------------------------------------------
-!   FUNCTION get_igcx()
-!      INTEGER get_igcx
-!      get_igcx = igcx
-!      RETURN
-!   END FUNCTION get_igcx
-!   !-----------------------------------------------------------------------
-!   FUNCTION get_igcc()
-!      INTEGER get_igcc
-!      get_igcc = igcc
-!      RETURN
-!   END FUNCTION get_igcc
-!   !-----------------------------------------------------------------------
-!   FUNCTION get_meta()
-!      INTEGER get_meta
-!      get_meta = imeta
-!      RETURN
-!   END FUNCTION get_meta
-!   !
-!   FUNCTION get_metac()
-!     INTEGER get_metac
-!     get_metac = imetac
-!     RETURN
-!   END FUNCTION get_metac
-  !
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_reset_dft()
     !---------------------------------------------------------------------
@@ -1052,26 +1014,6 @@ CONTAINS
      RETURN
      !
   END FUNCTION xclib_dft_is
-  !
-  ! ... previous format:
-  !
-!   FUNCTION dft_is_gradient()
-!      LOGICAL :: dft_is_gradient
-!      dft_is_gradient = isgradient
-!      RETURN
-!   END FUNCTION dft_is_gradient
-!   !-----------------------------------------------------------------------
-!   FUNCTION dft_is_meta()
-!      LOGICAL :: dft_is_meta
-!      dft_is_meta = ismeta
-!      RETURN
-!   END FUNCTION dft_is_meta
-!   !-----------------------------------------------------------------------
-!   FUNCTION dft_is_hybrid()
-!      LOGICAL :: dft_is_hybrid
-!      dft_is_hybrid = ishybrid
-!      RETURN
-!   END FUNCTION dft_is_hybrid
   !
   !-----------------------------------------------------------------------
   FUNCTION igcc_is_lyp()

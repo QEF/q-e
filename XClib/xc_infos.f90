@@ -18,6 +18,7 @@ PROGRAM xc_infos
                                   xclib_dft_is_libxc, xclib_init_libxc,  &
                                   xclib_finalize_libxc
   USE qe_dft_list
+  USE qe_dft_refs
   USE dft_setting_params,   ONLY: ishybrid, exx_fraction, screening_parameter, &
                                   gau_parameter
   USE dft_setting_routines, ONLY: xclib_set_auxiliary_flags
@@ -76,6 +77,7 @@ PROGRAM xc_infos
   !
   WRITE(stdout,*) " "
   WRITE(stdout,*) "=================================== "//CHAR(10)//" "
+  !
   WRITE(stdout,*) "The inserted XC functional is a composition of the &
                   &following terms:"  
   WRITE(stdout,*) CHAR(10)//"LDA"
