@@ -9,19 +9,20 @@
 !-----------------------------------------------------------------------
 SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag) 
   !-----------------------------------------------------------------------
-  ! 
-  ! DFPT+U: This routine calculates, for each SCF iteration, 
-  ! the SCF variation of the occupation matrix ns, for npe perturbations.
-  ! The result is stored in the variable dnsscf:
+  !! DFPT+U: This routine calculates, for each SCF iteration, 
+  !! the SCF variation of the occupation matrix ns, for npe perturbations.
+  !! The result is stored in the variable dnsscf:
   !
-  ! dnsscf(m1,m2,ispin,I,ipert) = 
-  !  = \sum_{k,n} [  <psi(n,k,ispin)| S_{k}\phi_(k,I,m1)>  
-  !                * < S_{k+q}\phi_(k+q,I,m2)| dpsi(ipert,n,k+q,ispin)> 
-  !                + <psi(n,k,ispin)| S_{k}\phi_(k,I,m2)>  
-  !                * < S_{k+q}\phi_(k+q,I,m1)| dpsi(ipert,n,k+q,ispin)> ]
+  !! $$ \text{dnsscf}(m1,m2,\text{ispin},I,\text{ipert}) = 
+  !!   \sum_{k,n} [ \langle \psi(n,k,\text{ispin})| S_{k}\phi(k,I,m1)\rangle  
+  !!                \cdot \langle S_{k+q}\phi(k+q,I,m2)|
+  !!                       d\psi(\text{ipert},n,k+q,\text{ispin})\rangle
+  !!                + \langle\psi(n,k,\text{ispin})| S_{k}\phi(k,I,m2)\rangle  
+  !!                \cdot \langle S_{k+q}\phi(k+q,I,m1)|
+  !!                 d\psi(\text{ipert},n,k+q,\text{ispin})\rangle ] $$
   !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,         ONLY : DP
   USE io_files,      ONLY : nwordwfcU
@@ -51,15 +52,17 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: npe 
-  ! the number of perturbations
-  LOGICAL,  INTENT(IN) :: lmetq0, lflag  
-  ! .true. if xq=(0,0,0) in a metal
-  ! .true. for phonon calculation, .false. for electric field calculation
-  INTEGER , INTENT(IN) :: imode0, irr
-  ! the position of the modes
-  ! the irreducible representation
+  !! the number of perturbations
+  LOGICAL,  INTENT(IN) :: lmetq0
+  !! TRUE if \(xq=(0,0,0)\) in a metal
+  LOGICAL,  INTENT(IN) :: lflag  
+  !! TRUE for phonon calculation, FALSE for electric field calculation
+  INTEGER , INTENT(IN) :: imode0
+  !! the position of the modes
+  INTEGER , INTENT(IN) :: irr
+  !! the irreducible representation
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER  :: i, j, k, icar, nt, na, l, ina, ih, n,               &
               ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, is, &

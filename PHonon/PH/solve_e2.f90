@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine solve_e2
   !-----------------------------------------------------------------------
-  !
-  !   Self consistent cycle to compute the second order derivatives
-  !   of the wavefunctions with respect to electric fields
+  !! Self consistent cycle to compute the second order derivatives
+  !! of the wavefunctions with respect to electric fields.
   !
   USe kinds,                 ONLY : DP
   USE io_global,             ONLY : stdout

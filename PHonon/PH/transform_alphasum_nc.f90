@@ -9,10 +9,9 @@
 !----------------------------------------------------------------------------
 SUBROUTINE transform_alphasum_nc(alphasum_nc,na)
 !----------------------------------------------------------------------------
-!
-! This routine multiply alphasum_nc by the identity and the Pauli
-! matrices and saves it in alphasum to use it in the calculation of
-! the change of the charge and of the magnetization.
+!! This routine multiply alphasum_nc by the identity and the Pauli
+!! matrices and saves it in alphasum to use it in the calculation of
+!! the change of the charge and of the magnetization.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp

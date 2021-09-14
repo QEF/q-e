@@ -9,11 +9,12 @@
 !----------------------------------------------------------------------
 subroutine compute_dvloc (mode, dvlocin)
   !----------------------------------------------------------------------
-  !
-  ! This routine calculates dV_bare/dtau * psi for one perturbation
-  ! with a given q. The displacements are described by a vector u.
-  ! The result is stored in dvpsi. The routine is called for each k point
-  ! and for each pattern u. It computes simultaneously all the bands.
+  !! This routine calculates \(dV_\text{bare}/\text{dtau}\cdot\text{psi}\)
+  !! for one perturbation with a given q. The displacements are described 
+  !! by a vector u.  
+  !! The result is stored in \(\text{dvpsi}\). The routine is called for
+  !! each k point and for each pattern u. It computes simultaneously all
+  !! the bands.
   !
   !
   USE kinds,     ONLY : DP
@@ -30,16 +31,13 @@ subroutine compute_dvloc (mode, dvlocin)
   USE Coul_cut_2D_ph, ONLY: cutoff_localq 
   implicit none
   !
-  !   The dummy variables
-  !
 
   integer :: mode
-  ! input: the actual perturbation
-
-  complex(DP) :: dvlocin (dffts%nnr)
-  ! output: the change of the local potential
+  !! input: the actual perturbation
+  complex(DP) :: dvlocin(dffts%nnr)
+  !! output: the change of the local potential
   !
-  !   And the local variables
+  ! ... local variables
   !
   integer :: na, nt, mu, ig
   ! counters

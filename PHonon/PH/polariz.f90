@@ -9,10 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine polariz ( iw, iu )
   !-----------------------------------------------------------------------
+  !! Calculates the frequency dependent polarizability.
   !
-  !      calculates the frequency dependent polarizability
-  !
-
   USE io_global,    ONLY : stdout
   USE constants,    ONLY : fpi
   USE cell_base,    ONLY : at, bg, omega
@@ -122,9 +120,9 @@ subroutine polariz ( iw, iu )
 end subroutine polariz
 
   SUBROUTINE write_polariz(iu)
-!
-!  This routine write on output the
-!
+  !
+  !! This routine write on output the polarizability. 
+  !
   USE io_global, ONLY : stdout
   USE constants,    ONLY : BOHR_RADIUS_ANGS
   USE freq_ph, ONLY : fiu, polar

@@ -9,14 +9,13 @@
 !------------------------------------------------------------------------------
 SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   !----------------------------------------------------------------------------
-  !
-  ! DFPT+U: This routine calculates several terms entering the 
-  !         Hubbard dynamical matrix calculated in dynmat_hub_scf.f90   
-  !         These terms are in the cartesian coordinates.
-  !         See the header in the routine dvqhub_barepsi_us.f90.
+  !! DFPT+U: This routine calculates several terms entering the 
+  !! Hubbard dynamical matrix calculated in \(\texttt{dynmat_hub_scf.f90}\).  
+  !! These terms are in cartesian coordinates.
+  !! See the header in the routine \(\text{dvqhub_barepsi_us.f90}\).
   ! 
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout, ionode

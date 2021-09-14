@@ -11,8 +11,7 @@
 !--------------------------------------------------------------------
 subroutine stop_pp
   !--------------------------------------------------------------------
-  !
-  ! Synchronize processes before stopping.
+  !! Synchronize processes before stopping.
   !
   use io_files, only: iunwfc
   use mp_global, only: mp_global_end

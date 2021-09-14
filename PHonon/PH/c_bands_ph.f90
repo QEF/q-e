@@ -13,9 +13,8 @@
 !
 SUBROUTINE c_bands_nscf_ph( )
   !----------------------------------------------------------------------------
-  !
-  ! ... Driver routine for Hamiltonian diagonalization routines
-  ! ... specialized to non-self-consistent calculations (no electric field)
+  !! Driver routine for Hamiltonian diagonalization routines
+  !! specialized to non-self-consistent calculations (no electric field).
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout

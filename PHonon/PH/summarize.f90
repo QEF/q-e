@@ -8,10 +8,8 @@
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_epsilon()
   !-----------------------------------------------------------------------
+  !! Write the dielectric tensor on output.
   !
-  !      write the dielectric tensor on output
-  !
-
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   USE constants, ONLY: fpi, bohr_radius_angs
@@ -67,8 +65,7 @@ END SUBROUTINE summarize_epsilon
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_zeu()
   !-----------------------------------------------------------------------
-  !
-  !  write the zue effective charges on output
+  !! Write the zue effective charges on output
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ityp, atm
@@ -101,10 +98,9 @@ END SUBROUTINE summarize_zeu
 
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_zue
-!-----------------------------------------------------------------------
-!
-!  Write the zue effective charges on output
-!
+  !-----------------------------------------------------------------------
+  !! Write the zue effective charges on output.
+  !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, atm, ityp
   USE io_global,  ONLY : stdout
@@ -137,8 +133,7 @@ END SUBROUTINE summarize_zue
 !-----------------------------------------------------------------------
 SUBROUTINE summarize_elopt()
   !-----------------------------------------------------------------------
-  !
-  ! write the electro-optic tensor on output
+  !! Write the electro-optic tensor on output.
   !
   USE io_global,  ONLY : stdout
   USE ramanm,     ONLY : eloptns, done_elop

@@ -8,19 +8,21 @@
 !-----------------------------------------------------------------------
 SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !-----------------------------------------------------------------------
+  !! This routine prepares a few variables that are needed to control
+  !! the phonon run after the q point has been decided, but before
+  !! doing the band calculation.  
+  !! In particular if \(\text{ldisp}=\text{TRUE}\) it sets:  
+  !! - \(\text{xq}\): the q point for the phonon calculation;  
+  !! - \(\text{fildyn}\): the name of the dynamical matrix;  
+  !! - \(\text{lgamma}\): if this is a gamma point calculation;  
+  !! - \(\text{epsil}\) and \(\text{zue}\): if \(\text{epsil}\)
+  !!   and \(\text{zue}\) need to be calculated.
   !
-  !  This routine prepares a few variables that are needed to control
-  !  the phonon run after the q point has been decided, but before
-  !  doing the band calculation. In particular if ldisp=true it sets:
-  !  xq : the q point for the phonon calculation
-  !  fildyn : the name of the dynamical matrix
-  !  lgamma : if this is a gamma point calculation
-  !  epsil and zue : if epsil and zue need to be calculated
-  !  In all cases it sets:
-  !  current_iq : the current q point
-  !  do_iq : if .true. q point has to be calculated
-  !  setup_pw : if .true. the pw_setup has to be run
-  !  do_band : if .true. the bands need to be calculated before phonon
+  !! In all cases it sets:  
+  !! - \(\text{current_iq}\): the current q point;  
+  !! - \(\text{do_iq}\): if TRUE q point has to be calculated;  
+  !! - \(\text{setup_pw}\): if TRUE the pw_setup has to be run;  
+  !! - \(\text{do_band}\): if TRUE the bands need to be calculated before phonon.
   !
   USE control_flags,   ONLY : modenum
   USE io_global,       ONLY : stdout, ionode

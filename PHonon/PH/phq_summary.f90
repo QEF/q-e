@@ -9,12 +9,10 @@
 !-----------------------------------------------------------------------
 subroutine phq_summary
   !-----------------------------------------------------------------------
-  !
-  !    This routine writes on output the quantities which have been read
-  !    from the punch file, and the quantities computed in the phq_setup
-  !    file.
-  !
-  !    if iverbosity = 0 only a partial summary is done.
+  !! This routine writes on output the quantities which have been read
+  !! from the punch file, and the quantities computed in the 
+  !! \(\texttt{phq_setup}\) file.  
+  !! If \(\text{iverbosity}=0\) only a partial summary is done.
   !
   !
   USE kinds,         ONLY : DP

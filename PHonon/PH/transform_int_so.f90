@@ -9,10 +9,9 @@
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int1_so(int1,na,iflag)
 !----------------------------------------------------------------------------
-!
-! This routine multiply int1 by the identity and the Pauli
-! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in int1_nc.
+!! This routine multiply \(\text{int1}\) by the identity and the Pauli
+!! matrices, rotate it as appropriate for the spin-orbit case and saves
+!! it in \(\text{int1_nc}\).
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
@@ -92,9 +91,8 @@ END SUBROUTINE transform_int1_so
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int2_so(int2,nb,iflag)
 !----------------------------------------------------------------------------
-!
-! This routine rotates int2 as appropriate for the spin-orbit case
-! and saves it in int2_so.
+!! This routine rotates \(\text{int2}\) as appropriate for the spin-orbit case
+!! and saves it in \(\text{int2_so}\).
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
@@ -154,10 +152,9 @@ END SUBROUTINE transform_int2_so
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int4_so(int4,na)
 !----------------------------------------------------------------------------
-!
-! This routine multiply int4 by the identity and the Pauli
-! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in int4_nc.
+!! This routine multiply \(\text{int4}\) by the identity and the Pauli
+!! matrices, rotate it as appropriate for the spin-orbit case
+!! and saves it in \(\text{int4_nc}\).
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
@@ -228,9 +225,8 @@ END SUBROUTINE transform_int4_so
 !----------------------------------------------------------------------------
 SUBROUTINE transform_int5_so(int5,nb)
 !----------------------------------------------------------------------------
-!
-! This routine rotates int5 as appropriate for the spin-orbit case
-! and saves it in int5_so.
+!! This routine rotates \(\text{int5}\) as appropriate for the spin-orbit case
+!! and saves it in \(\text{int5_so}\).
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp

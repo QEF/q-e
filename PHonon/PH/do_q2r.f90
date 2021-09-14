@@ -8,8 +8,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
   !-----------------------------------------------------------------------
-  !
-  ! ... This is the main driver of the q2r code.
+  !! This is the main driver of the \(\texttt{q2r}\) code.
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast

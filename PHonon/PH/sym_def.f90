@@ -10,11 +10,11 @@ MODULE sym_def_module
 CONTAINS
 subroutine sym_def (def, irr)
   !---------------------------------------------------------------------
-  ! Symmetrizes the first order changes of the Fermi energies of an
-  ! irreducible representation. These objects are defined complex because
-  ! perturbations may be complex
+  !! Symmetrizes the first order changes of the Fermi energies of an
+  !! irreducible representation. These objects are defined complex because
+  !! perturbations may be complex.
   !
-  ! Used in the q=0 metallic case only.
+  !! Used in the q=0 metallic case only.
   !
   USE kinds, only : DP
   USE modes,   ONLY : npert, t, tmq
@@ -25,13 +25,14 @@ subroutine sym_def (def, irr)
   implicit none
 
   integer :: irr
-  ! input: the representation under consideration
-
+  !! input: the representation under consideration
   complex(DP) :: def(3)
-  ! inp/out: the fermi energy changes
-  ! NB: def(3) should be def(npertx), but it is used only at Gamma
-  !     where the dimension of irreps never exceeds 3
-
+  !! inp/out: the fermi energy changes.  
+  !! NB: def(3) should be def(npertx), but it is used only at Gamma
+  !!     where the dimension of irreps never exceeds 3.
+  !
+  ! ... local variables
+  !
   integer :: ipert, jpert, isym, irot
   ! counter on perturbations
   ! counter on perturbations

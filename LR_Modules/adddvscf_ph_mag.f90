@@ -9,11 +9,10 @@
 !----------------------------------------------------------------------
 subroutine adddvscf_ph_mag (ipert, ik, becp1)
   !----------------------------------------------------------------------
-  !
-  !     This routine computes the contribution of the selfconsistent
-  !     change of the potential to the known part of the linear
-  !     system and adds it to dvpsi.
-  !     It implements the second term in Eq. B30 of PRB 64, 235118 (2001).
+  !! This routine computes the contribution of the self-consistent
+  !! change of the potential to the known part of the linear
+  !! system and adds it to dvpsi.  
+  !! It implements the second term in Eq. B30 of PRB 64, 235118 (2001).
   !
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : upf, nh
@@ -33,12 +32,14 @@ subroutine adddvscf_ph_mag (ipert, ik, becp1)
   !
   !   The dummy variables
   !
-  integer :: ik, ipert
-  ! input: the k point
-  ! input: the perturbation
-  !
+  integer :: ik
+  !! input: the k point
+  integer :: ipert
+  !! input: the perturbation
   TYPE(bec_type) :: becp1(nksq)
-  !   And the local variables
+  !! see routine comment
+  !
+  ! And the local variables
   !
   integer :: na, nt, ibnd, ih, jh, ijkb0, ikb, jkb, is, js, ijs
   ! counter on atoms

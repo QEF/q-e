@@ -8,13 +8,21 @@
 !-----------------------------------------------------------------------
 subroutine write_matrix (alpha, wdyn, nat)
   !-----------------------------------------------------------------------
+  !! Write out \(\text{wdyn}\) matrix.
+  !
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  !
   implicit none
-  integer :: i, j, na, nb, nat
-  complex(DP) :: wdyn (3, 3, nat, nat)
-
+  !
   character (len=*) :: alpha
+  complex(DP) :: wdyn(3,3,nat,nat)
+  integer :: nat
+  !
+  ! ... local variables
+  !
+  integer :: i, j, na, nb
+  !
   WRITE( stdout, '(a)') alpha
   do na = 1, nat
      do nb = 1, nat

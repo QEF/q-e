@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE psyme (dvtosym)
   !-----------------------------------------------------------------------
-  !
-  ! ...  p-symmetrize the charge density.
+  !! p-symmetrize the charge density.
   !
   USE kinds,     ONLY : DP
   USE fft_base, ONLY : dfftp
@@ -22,8 +21,9 @@ SUBROUTINE psyme (dvtosym)
   IMPLICIT NONE
   !
   COMPLEX(DP) :: dvtosym (dfftp%nnr, nspin_mag, 3)
-    ! the potential to symmetrize
-    !-local variable
+  !! the potential to symmetrize
+  !
+  ! ... local variables
   !
 #if defined (__MPI)
   !

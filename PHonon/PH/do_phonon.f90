@@ -8,26 +8,24 @@
 !-----------------------------------------------------------------------
 SUBROUTINE do_phonon(auxdyn)
   !-----------------------------------------------------------------------
-  !
-  ! ... This is the main driver of the phonon code.
-  ! ... It assumes that the preparatory stuff has been already done.
-  ! ... When the code calls this routine it has already read input
-  ! ... decided which irreducible representations have to be calculated
-  ! ... and it has set the variables that decide which work this routine
-  ! ... will do. The parallel stuff has been already setup by the calling
-  ! ... codes. This routine makes the two loops over
-  ! ... the q points and the irreps and does only the calculations
-  ! ... that have been decided by the driver routine.
-  ! ... At a generic q, if necessary it recalculates the band structure 
-  ! ... calling pwscf again.
-  ! ... Then it can calculate the response to an atomic displacement,
-  ! ... the dynamical matrix at that q, and the electron-phonon
-  ! ... interaction at that q. At q=0 it can calculate the linear response
-  ! ... to an electric field perturbation and hence the dielectric
-  ! ... constant, the Born effective charges and the polarizability
-  ! ... at imaginary frequencies.
-  ! ... At q=0, from the second order response to an electric field,
-  ! ... it can calculate also the electro-optic and the raman tensors.
+  !! This is the main driver of the phonon code. It assumes that the 
+  !! preparatory stuff has been already done.  
+  !! When the code calls this routine it has already read input
+  !! decided which irreducible representations have to be calculated
+  !! and it has set the variables that decide which work this routine
+  !! will do. The parallel stuff has been already setup by the calling
+  !! codes. This routine makes the two loops over
+  !! the q-points and the irreps and does only the calculations
+  !! that have been decided by the driver routine.  
+  !! At a generic q-point, if necessary, it recalculates the band structure 
+  !! calling pwscf again. Then it can calculate the response to an atomic
+  !! displacement, the dynamical matrix at that q-point, and the 
+  !! electron-phonon interaction at that q. At q=0 it can calculate 
+  !! the linear response to an electric field perturbation and hence the
+  !! dielectric constant, the Born effective charges and the polarizability
+  !! at imaginary frequencies.  
+  !! At q=0, from the second order response to an electric field,
+  !! it can calculate also the electro-optic and the raman tensors.
   !
 
   USE disp,            ONLY : nqs

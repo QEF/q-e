@@ -9,28 +9,28 @@
 !-----------------------------------------------------------------------
 SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !-----------------------------------------------------------------------
-  !
-  !    Driver routine for the solution of the linear system which
-  !    defines the change of the wavefunction due to a lattice distorsion
-  !    It performs the following tasks:
-  !     a) computes the bare potential term Delta V | psi >
-  !        and an additional term in the case of US pseudopotentials.
-  !        If lda_plus_u=.true. compute also the bare potential
-  !        term Delta V_hub | psi >.
-  !     b) adds to it the screening term Delta V_{SCF} | psi >.
-  !        If lda_plus_u=.true. compute also the SCF part
-  !        of the response Hubbard potential.
-  !     c) applies P_c^+ (orthogonalization to valence states)
-  !     d) calls cgsolve_all to solve the linear system
-  !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
-  !     f) If lda_plus_u=.true. compute also the response occupation
-  !        matrices dnsscf
-  !     g) (Introduced in February 2020) If noncolin=.true. and domag=.true.
-  !        the linear system is solved twice (nsolv = 2, the case
-  !        isolv = 2 needs the time-reversed wave functions). For the
-  !        theoretical background, please refer to Phys. Rev. B 100,
-  !        045115 (2019)
-  !    Step b, c, d are done inside sternheimer_kernel.
+  !! Driver routine for the solution of the linear system that
+  !! defines the change of the wavefunction due to a lattice distorsion.
+  !! It performs the following tasks:  
+  !! a) computes the bare potential term \(\Delta V | \psi \rangle\)
+  !!    and an additional term in the case of US pseudopotentials.
+  !!    If \(\text{lda_plus_u}=\text{TRUE}\) compute also the bare 
+  !!    potential term Delta \(V_\text{hub} | \psi \rangle\);  
+  !! b) adds to it the screening term \(\Delta V_\text{SCF} | \psi \rangle\). 
+  !!    If \(\text{lda_plus_u}=\text{TRUE}\) computes also the SCF part
+  !!    of the response Hubbard potential;  
+  !! c) applies \(P_c^+\) (orthogonalization to valence states);  
+  !! d) calls \(\text{cgsolve_all}\) to solve the linear system;  
+  !! e) computes \(\Delta\rho\), \(\Delta V_\text{SCF}\) and symmetrizes
+  !!    them;  
+  !! f) If \(\text{lda_plus_u}=\text{TRUE}\) compute also the response 
+  !!    occupation matrices \(\text{dnsscf}\);  
+  !! g) --Introduced in February 2020-- If \(\text{noncolin}=\text{TRUE}\)
+  !!    and \(\text{domag}=\text{TRUE}\), the linear system is solved twice
+  !!    (\(\text{nsolv}=2\), the case \(\text{isolv}=2\) needs the time-reversed
+  !!    wave functions). For the theoretical background, please refer to:
+  !!    Phys. Rev. B 100, 045115 (2019).
+  !! Step b, c, d are done inside sternheimer_kernel.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat
@@ -91,14 +91,17 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
   implicit none
 
-  integer :: irr, npe, imode0
-  ! input: the irreducible representation
-  ! input: the number of perturbation
-  ! input: the position of the modes
-
-  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
-  ! output: the change of the scf charge
-
+  integer :: irr
+  !! input: the irreducible representation
+  integer :: npe
+  !! input: the number of perturbation
+  integer :: imode0
+  !! input: the position of the modes
+  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe)
+  !! output: the change of the scf charge
+  !
+  ! ... local variables
+  !
   real(DP) :: thresh, averlt, dr2
   ! thresh: convergence threshold
   ! averlt: average number of iterations
@@ -396,21 +399,22 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      call mp_sum ( drhoscf, inter_pool_comm )
      call mp_sum ( drhoscfh, inter_pool_comm )
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
-
      !
-     ! q=0 in metallic case deserve special care (e_Fermi can shift)
-     !
-
      IF (okpaw) THEN
-        IF (lmetq0) CALL ef_shift(npe, dos_ef, ldos, drhoscfh, &
-                                  dbecsum, becsum1, irr, sym_def)
         DO ipert=1,npe
            dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
                                +becsumort(:,:,:,imode0+ipert)
         ENDDO
-     ELSE
-        IF (lmetq0) CALL ef_shift(npe, dos_ef, ldos, drhoscfh, &
-                                  irr=irr, sym_def=sym_def)
+     ENDIF
+     !
+     ! q=0 in metallic case deserve special care (e_Fermi can shift)
+     !
+     IF (lmetq0) THEN
+        IF (okpaw) THEN
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, dbecsum, becsum1, irr, sym_def)
+        ELSE
+           CALL ef_shift(npe, dos_ef, ldos, drhoscfh, irr=irr, sym_def=sym_def)
+        ENDIF
      ENDIF
      !
      !   After the loop over the perturbations we have the linear change
@@ -605,16 +609,20 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
 END SUBROUTINE solve_linter
 
-SUBROUTINE check_all_convt(convt)
+!------------------------------------------------------------------
+SUBROUTINE check_all_convt( convt )
+  !---------------------------------------------------------------
+  !! Work out how many processes have converged.
+  !
   USE mp,        ONLY : mp_sum
   USE mp_images, ONLY : nproc_image, me_image, intra_image_comm
+  !
   IMPLICIT NONE
+  !
   LOGICAL,INTENT(in) :: convt
   INTEGER            :: tot_conv
   !
   IF(nproc_image==1) RETURN
-  !
-  ! Work out how many processes have converged
   !
   tot_conv = 0
   IF(convt) tot_conv = 1

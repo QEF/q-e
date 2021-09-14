@@ -1,11 +1,12 @@
 !
-! This routine reads a wavefunction in real space and transform it in Fourier space
-!
-! Not tested for the non-collinear case.
-!
-!     Matteo Calandra
 !
 subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
+  !! This routine reads a wavefunction in real space and transform it in
+  !! Fourier space.  
+  !! Not tested for the non-collinear case.
+  !
+  ! Matteo Calandra
+  !
   use kinds,           ONLY : DP
   use wvfct,       ONLY : npwx, nbnd
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
@@ -17,13 +18,22 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
   USE mp,                   ONLY : mp_bcast
   
   IMPLICIT NONE
-  INTEGER, INTENT (IN)      :: ik                    ! k-point to read
-  INTEGER, INTENT (IN)      :: lrec                  ! length of the record
-  INTEGER, INTENT (IN)      :: npw                   ! number of plane waves
-  INTEGER, INTENT (IN)      :: iunit                 ! input iunit from where to read
-  INTEGER, INTENT (IN)      :: igmap(npwx)           ! index for the mapping of the g
-  COMPLEX(DP), INTENT (OUT) :: evc(npol*npwx,nbnd)   ! wavefunction in g space
-! internal
+  
+  INTEGER, INTENT(IN) :: ik
+  !! k-point to read
+  INTEGER, INTENT(IN) :: lrec
+  !! length of the record
+  INTEGER, INTENT(IN) :: npw
+  !! number of plane waves
+  INTEGER, INTENT(IN) :: iunit
+  !! input iunit from where to read
+  INTEGER, INTENT(IN) :: igmap(npwx)
+  !! index for the mapping of the g
+  COMPLEX(DP), INTENT(OUT) :: evc(npol*npwx,nbnd)
+  !! wavefunction in g space
+  !
+  ! ... local variables
+  !
   INTEGER                   :: ibnd, ig, is
   COMPLEX(DP), ALLOCATABLE  :: evc_r(:,:), dist_evc_r(:,:)
 

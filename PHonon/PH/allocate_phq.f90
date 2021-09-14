@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine allocate_phq
   !-----------------------------------------------------------------------
-  !
-  ! Dynamical allocation of arrays: quantities needed for the linear
-  ! response problem
+  !! Dynamical allocation of arrays: quantities needed for the linear
+  !! response problem.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp

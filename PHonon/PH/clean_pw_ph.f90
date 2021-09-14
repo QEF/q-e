@@ -8,11 +8,10 @@
 !-----------------------------------------------------------------------
 SUBROUTINE clean_pw_ph(iq)
   !-----------------------------------------------------------------------
-  !
-  ! This routine deallocate all the variables of pwscf and of the
-  ! phonon code, and reset the same variables as after reading input in
-  ! phq_readin, so that it is possible to start a calculation at
-  ! a new q.
+  !! This routine deallocate all the variables of pwscf and of the
+  !! phonon code, and reset the same variables as after reading input in
+  !! \(\texttt{phq_readin}\), so that it is possible to start a calculation
+  !! at a new q.
   !
   USE kinds,           ONLY : DP
   USE modes,           ONLY : nirr
