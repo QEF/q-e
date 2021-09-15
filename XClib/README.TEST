@@ -27,7 +27,7 @@ inside the directory XClib type:
 Then you can run tests using commands like:
 
 	./xclib_test.x < input_file > output_file                [ serial ]
-        mpirun -np=2 xclib_test.x < input_file > output file     [parallel]
+        mpirun -np 2 xclib_test.x < input_file > output     [parallel]
 
 Three options available:
             

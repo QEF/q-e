@@ -64,39 +64,39 @@ MODULE qe_dft_list
   !
   ! ---- Full DFTs ----
   !
-  DATA dft_full(1)%name      / 'PZ' /
+  DATA dft_full(1)%name      / 'PZ'  /
   DATA dft_full(1)%name2     / 'LDA' /
   DATA dft_full(1)%IDs(1:6)  / 1,1,0,0,0,0 /    ! sla+pz
   !
-  DATA dft_full(2)%name      / 'PW' /
+  DATA dft_full(2)%name      / 'PW'   /
   DATA dft_full(2)%name2     / 'none' /
   DATA dft_full(2)%IDs(1:6)  / 1,4,0,0,0,0 /    ! sla+pw
   !
   DATA dft_full(3)%name      / 'VWN-RPA' /
-  DATA dft_full(3)%name2     / 'none' /
+  DATA dft_full(3)%name2     / 'none'    /
   DATA dft_full(3)%IDs(1:6)  / 1,11,0,0,0,0 /   ! sla+xxxx[vwn1_rpa]
   !
-  DATA dft_full(4)%name      / 'OEP' /
+  DATA dft_full(4)%name      / 'OEP'  /
   DATA dft_full(4)%name2     / 'none' /
   DATA dft_full(4)%IDs(1:6)  / 4,0,0,0,0,0 /    ! oep
   !
-  DATA dft_full(5)%name      / 'KLI' /
+  DATA dft_full(5)%name      / 'KLI'  /
   DATA dft_full(5)%name2     / 'none' /
   DATA dft_full(5)%IDs(1:6)  / 10,0,0,0,0,0 /   ! kli
   !
-  DATA dft_full(6)%name      / 'HF' /
+  DATA dft_full(6)%name      / 'HF'   /
   DATA dft_full(6)%name2     / 'none' /
   DATA dft_full(6)%IDs(1:6)  / 5,0,0,0,0,0 /    ! hf
   !
-  DATA dft_full(7)%name      / 'PBE' /
+  DATA dft_full(7)%name      / 'PBE'  /
   DATA dft_full(7)%name2     / 'none' /
   DATA dft_full(7)%IDs(1:6)  / 1,4,3,4,0,0 /    ! sla+pw+pbx+pbc
   !
-  DATA dft_full(8)%name      / 'B88' /
+  DATA dft_full(8)%name      / 'B88'  /
   DATA dft_full(8)%name2     / 'none' /
   DATA dft_full(8)%IDs(1:6)  / 1,1,1,0,0,0 /    ! sla+pz+b88
   !
-  DATA dft_full(9)%name      / 'BP' /
+  DATA dft_full(9)%name      / 'BP'   /
   DATA dft_full(9)%name2     / 'none' /
   DATA dft_full(9)%IDs(1:6)  / 1,1,1,1,0,0 /    ! sla+pz+b88+p86
   !----
@@ -105,11 +105,11 @@ MODULE qe_dft_list
   DATA dft_full(10)%IDs(1:6) / 1,4,2,2,0,0 /    ! sla+pw+ggx+ggc
   !
   DATA dft_full(11)%name     / 'REVPBE' /
-  DATA dft_full(11)%name2    / 'none' /
+  DATA dft_full(11)%name2    / 'none'   /
   DATA dft_full(11)%IDs(1:6) / 1,4,4,4,0,0 /    ! sla+pw+revx+pbc
   !
   DATA dft_full(12)%name     / 'PBESOL' /
-  DATA dft_full(12)%name2    / 'none' /
+  DATA dft_full(12)%name2    / 'none'   /
   DATA dft_full(12)%IDs(1:6) / 1,4,10,8,0,0 /   ! sla+pw+psx+psc
   !
   DATA dft_full(13)%name     / 'BLYP' /
@@ -117,14 +117,14 @@ MODULE qe_dft_list
   DATA dft_full(13)%IDs(1:6) / 1,3,1,3,0,0 /    ! sla+lyp+b88+blyp
   !
   DATA dft_full(14)%name     / 'OPTBK88' /
-  DATA dft_full(14)%name2    / 'none' /
+  DATA dft_full(14)%name2    / 'none'    /
   DATA dft_full(14)%IDs(1:6) / 1,4,23,1,0,0 /   ! sla+pw+obk8+p86
   !
   DATA dft_full(15)%name     / 'OPTB86B' /
-  DATA dft_full(15)%name2    / 'none' /
+  DATA dft_full(15)%name2    / 'none'    /
   DATA dft_full(15)%IDs(1:6) / 1,4,24,1,0,0 /   ! sla+pw+ob86+p86
   !
-  DATA dft_full(16)%name     / 'PBC' /
+  DATA dft_full(16)%name     / 'PBC'  /
   DATA dft_full(16)%name2    / 'none' /
   DATA dft_full(16)%IDs(1:6) / 1,4,0,4,0,0 /    ! sla+pw+pbc
   !
@@ -136,24 +136,24 @@ MODULE qe_dft_list
   DATA dft_full(18)%name2    / 'none' /
   DATA dft_full(18)%IDs(1:6) / 0,3,6,3,0,0 /    ! nox+lyp+optx+blyp
   !
-  DATA dft_full(19)%name     / 'WC' /
+  DATA dft_full(19)%name     / 'WC'   /
   DATA dft_full(19)%name2    / 'none' /
   DATA dft_full(19)%IDs(1:6) / 1,4,11,4,0,0 /   ! sla+pw+wcx+pbc
   !
   DATA dft_full(20)%name     / 'PW86PBE' /
-  DATA dft_full(20)%name2    / 'none' /
+  DATA dft_full(20)%name2    / 'none'    /
   DATA dft_full(20)%IDs(1:6) / 1,4,21,4,0,0 /   ! sla+pw+pw86+pbc
   !
   DATA dft_full(21)%name     / 'B86BPBE' /
-  DATA dft_full(21)%name2    / 'none' /
+  DATA dft_full(21)%name2    / 'none'    /
   DATA dft_full(21)%IDs(1:6) / 1,4,22,4,0,0 /   ! sla+pw+b86b+pbc
   !
   DATA dft_full(22)%name     / 'PBEQ2D' /
-  DATA dft_full(22)%name2    / 'Q2D' /
+  DATA dft_full(22)%name2    / 'Q2D'    /
   DATA dft_full(22)%IDs(1:6) / 1,4,19,12,0,0 /  ! sla+pw+q2dx+q2dc
   !
   DATA dft_full(23)%name     / 'SOGGA' /
-  DATA dft_full(23)%name2    / 'none' /
+  DATA dft_full(23)%name2    / 'none'  /
   DATA dft_full(23)%IDs(1:6) / 1,4,17,4,0,0 /   ! sla+pw+sox+pbec
   !
   DATA dft_full(24)%name     / 'EV93' /
@@ -169,14 +169,14 @@ MODULE qe_dft_list
   DATA dft_full(26)%IDs(1:6) / 6,4,8,4,0,0 /    ! pb0x+pw+pb0x+pbc
   !
   DATA dft_full(27)%name     / 'B86BPBEX' /
-  DATA dft_full(27)%name2    / 'none' /
+  DATA dft_full(27)%name2    / 'none'     /
   DATA dft_full(27)%IDs(1:6) / 6,4,41,4,0,0 /   ! sla+pw+b86x+pbc
   !
-  DATA dft_full(28)%name     / 'BHAHLYP' /
+  DATA dft_full(28)%name     / 'BHAHLYP'   /
   DATA dft_full(28)%name2    / 'BHANDHLYP' /
   DATA dft_full(28)%IDs(1:6) / 6,4,42,3,0,0 /   ! pb0x+pw+b88x+blyp
   !
-  DATA dft_full(29)%name     / 'HSE' /
+  DATA dft_full(29)%name     / 'HSE'  /
   DATA dft_full(29)%name2    / 'none' /
   DATA dft_full(29)%IDs(1:6) / 1,4,12,4,0,0 /   ! sla+pw+hse+pbc
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06
@@ -190,20 +190,20 @@ MODULE qe_dft_list
   ! These two modifications accounts only for a 1e-5 Ha difference for a
   ! single He atom. Info by Fabien Bruneval.
   !----
-  DATA dft_full(30)%name     / 'GAUP' /
+  DATA dft_full(30)%name     / 'GAUP'   /
   DATA dft_full(30)%name2    / 'GAUPBE' /
   DATA dft_full(30)%IDs(1:6) / 1,4,20,4,0,0 /   ! sla+pw+gaup+pbc
   !
   DATA dft_full(31)%name     / 'B3LYP' /
-  DATA dft_full(31)%name2    / 'none' /
+  DATA dft_full(31)%name2    / 'none'  /
   DATA dft_full(31)%IDs(1:6) / 7,12,9,7,0,0 /   ! b3lp+b3lp+b3lp+b3lp
   !
   DATA dft_full(32)%name     / 'B3LYP-V1R' /
-  DATA dft_full(32)%name2    / 'none' /
+  DATA dft_full(32)%name2    / 'none'      /
   DATA dft_full(32)%IDs(1:6) / 7,13,9,7,0,0 /   ! b3lp+xxxx[b3lyp_v1r]+b3lp+b3lp
   !
   DATA dft_full(33)%name     / 'X3LYP' /
-  DATA dft_full(33)%name2    / 'none' /
+  DATA dft_full(33)%name2    / 'none'  /
   DATA dft_full(33)%IDs(1:6) / 9,14,28,13,0,0 / ! xxxx[x3lyp_ldax]+xxxx[x3lyp_ldac]+x3lp+x3lc
   !
   DATA dft_full(34)%name     / 'TPSS' /
@@ -211,7 +211,7 @@ MODULE qe_dft_list
   DATA dft_full(34)%IDs(1:6) / 1,4,7,6,1,0 /
   !
   DATA dft_full(35)%name     / 'TPSS-only' /
-  DATA dft_full(35)%name2    / 'none' /
+  DATA dft_full(35)%name2    / 'none'      /
   DATA dft_full(35)%IDs(1:6) / 0,0,0,0,1,0 /
   !
   DATA dft_full(36)%name     / 'M06L' /
@@ -227,16 +227,16 @@ MODULE qe_dft_list
   DATA dft_full(38)%IDs(1:6) / 0,0,0,0,5,0 /    ! scan[calls Libxc SCAN]
   !
   DATA dft_full(39)%name     / 'SCAN0' /
-  DATA dft_full(39)%name2    / 'none' /
+  DATA dft_full(39)%name2    / 'none'  /
   DATA dft_full(39)%IDs(1:6) / 0,0,0,0,6,0 /
   !
-  DATA dft_full(40)%name     / 'PZ+META' /
+  DATA dft_full(40)%name     / 'PZ+META'  /
   DATA dft_full(40)%name2    / 'LDA+META' /
   DATA dft_full(40)%IDs(1:6) / 1,1,0,0,4,0 /
   !
   ! +meta activates MGGA even without MGGA-XC
   DATA dft_full(41)%name     / 'PBE+META' /
-  DATA dft_full(41)%name2    / 'none' /
+  DATA dft_full(41)%name2    / 'none'     /
   DATA dft_full(41)%IDs(1:6) / 1,4,3,4,4,0 /
   !
   !

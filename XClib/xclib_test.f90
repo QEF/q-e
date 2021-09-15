@@ -23,6 +23,21 @@ PROGRAM xclib_test
   !! * derivative of GGA (dgcxc);
   !! * metaGGA.
   !
+  
+  
+  
+  
+  !- sistema funzionali e guarda che funzioni tutto  -- testa anche singoli
+  !- stesso input per n  cpu   FATTO
+  
+  !- analogo per libxc 
+  !- [dopo merge Vxc_gpu: versione gpu]
+  
+  
+  
+  
+  
+  
   USE kind_l,      ONLY: DP
   USE constants_l, ONLY: pi
   USE xc_lib,      ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
@@ -73,7 +88,7 @@ PROGRAM xclib_test
   INTEGER :: nnrit, nnrbit, nskip
   !
   !-------- Input vars -----------------------
-  CHARACTER(LEN=30) :: test, family, fam_init
+  CHARACTER(LEN=30) :: test, family, fam_init, xc_kind
   CHARACTER(LEN=30) :: dft, dft_init
   INTEGER :: nspin
   LOGICAL :: DF_OK
@@ -160,6 +175,11 @@ PROGRAM xclib_test
   CHARACTER(LEN=30) :: xc_data="XC_DATA00", dxc_data="dXC_DATA00"
   INTEGER :: iunpun, iun
   LOGICAL :: found
+  
+  CHARACTER(LEN=10), PARAMETER :: failed='**FAILED**'
+  CHARACTER(LEN=10), PARAMETER :: passed='passed'
+  
+  CHARACTER(LEN=70) :: test_output
   !
   
   INTEGER :: id, n_qe_func
@@ -325,7 +345,6 @@ PROGRAM xclib_test
   IF (nr==1) nrpe = mype*nnr
   IF (nr==0) nrpe = npoints-(npoints/npes)*(npes-mype-1)
   !
-  !
   ns = nspin
   fam_init=family
   dft_init=dft
@@ -339,49 +358,55 @@ PROGRAM xclib_test
     CALL xclib_reset_dft()
     !    
     IF (dft_init=='all') THEN
-      IF (id<=nxc+1) &
+      IF (id<=nxc+1) THEN
          dft = dft_LDAx_name(id-1)
-      IF (id>=nxc+2 .AND. id<=nxc+ncc+2) &
+         xc_kind = 'exchange'
+      ELSEIF (id>=nxc+2 .AND. id<=nxc+ncc+2) THEN
          dft = dft_LDAc_name(id-nxc-2)
-      IF (id>=nxc+ncc+3 .AND. id<=nxc+ncc+ngcx+3) &
+         xc_kind = 'correlation'
+      ELSEIF (id>=nxc+ncc+3 .AND. id<=nxc+ncc+ngcx+3) THEN
          dft = dft_GGAx_name(id-nxc-ncc-3)
-      IF (id>=nxc+ncc+ngcx+4 .AND. id<=nxc+ncc+ngcx+ngcc+4) &
+         xc_kind = 'exchange'
+      ELSEIF (id>=nxc+ncc+ngcx+4 .AND. id<=nxc+ncc+ngcx+ngcc+4) THEN
          dft = dft_GGAc_name(id-nxc-ncc-ngcx-4)
-      IF (id>=nxc+ncc+ngcx+ngcc+5 .AND. id<=nxc+ncc+ngcx+ngcc+nmeta+5) &
+         xc_kind = 'correlation'
+      ELSEIF (id>=nxc+ncc+ngcx+ngcc+5 .AND. id<=nxc+ncc+ngcx+ngcc+nmeta+5) THEN
          dft = dft_MGGA_name(id-nxc-ncc-ngcx-ngcc-5)
-    ENDIF  
+         xc_kind = 'exchange+correlation'
+      ENDIF
+    ENDIF
     !
     ! ... initialization of averages
     !
-    ex_aver  = 0._DP ; ec_aver  = 0._DP
-    vx_aver  = 0._DP ; vc_aver  = 0._DP
-    v1x_aver = 0._DP ; v2x_aver = 0._DP
-    v3x_aver = 0._DP ; v1c_aver = 0._DP
-    v2c_aver = 0._DP ; v3c_aver = 0._DP
-    dv_aver  = 0._DP
-    dvrr_aver = 0._DP
-    dvsr_aver = 0._DP
-    dvss_aver = 0._DP
+    ex_aver   = 0._DP  ; ec_aver   = 0._DP
+    vx_aver   = 0._DP  ; vc_aver   = 0._DP
+    v1x_aver  = 0._DP  ; v2x_aver  = 0._DP
+    v3x_aver  = 0._DP  ; v1c_aver  = 0._DP
+    v2c_aver  = 0._DP  ; v3c_aver  = 0._DP
+    dv_aver   = 0._DP  ; dvrr_aver = 0._DP
+    dvsr_aver = 0._DP  ; dvss_aver = 0._DP
     !
     ! ... initialize first DFT
     !
     !print *, id, dft
     !============================== PROVISIONAL=====
-    IF (TRIM(dft)=='HCTH') cycle
+    !IF (TRIM(dft)=='HCTH') cycle
     IF (TRIM(dft)=='xxxx') cycle
     IF (TRIM(dft)=='NONE') cycle
     IF (TRIM(dft)=='TB09') cycle
     IF (TRIM(dft)=='META') cycle
-    IF (TRIM(dft)=='SCAN') cycle ! libxc only
+#if !defined(__LIBXC)
+    IF (TRIM(dft)=='SCAN') cycle
+#endif
     IF (TRIM(dft)=='SCA0') cycle
     
-    IF (TRIM(dft)=='CX0P') cycle               !.......   fix overlap with CX0
-    IF (TRIM(dft)=='B88X') cycle               !.......    "     "      "   "
-    IF (TRIM(dft)=='RPBX') cycle               !.......    "     "      "   "
+    !IF (TRIM(dft)=='CX0P') cycle               !.......   fix overlap with CX0
+    !IF (TRIM(dft)=='B88X') cycle               !.......    "     "      "   "
+    !IF (TRIM(dft)=='RPBX') cycle               !.......    "     "      "   "
     
-    IF (TRIM(dft)=='TPSS') cycle               !......FIX!!!!
+    IF (TRIM(dft)=='TPSS') CYCLE                !......FIX!!!!
     
-    IF (TRIM(dft)=='B86X' .and. df_ok) cycle   !.WHAT'S WRONG HERE???
+    !IF (TRIM(dft)=='B86X' .and. df_ok) cycle   !.WHAT'S WRONG HERE???
     !============================================
     
     
@@ -404,18 +429,18 @@ PROGRAM xclib_test
     IF (imeta1+imetac1/=0) MGGA = .TRUE.
     
     
-    if (fam_init=='all' .and. lda)  family='LDA'
-    if (fam_init=='all' .and. gga)  family='GGA'
-    if (fam_init=='all' .and. mgga) family='MGGA'
+    IF (fam_init=='all' .AND. lda)  family='LDA'
+    IF (fam_init=='all' .AND. gga)  family='GGA'
+    IF (fam_init=='all' .AND. mgga) family='MGGA'
     
-    if (iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0) cycle
+    IF (iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0) CYCLE
     !print *, id, dft, igcx1, igcc1, gga, family
     
-    
+    IF (fam_init=='all' .AND. GGA .AND. id<=nxc+ncc+2) CYCLE
     
     !
     
-    IF ( MGGA .AND. DF_OK ) cycle
+    IF ( MGGA .AND. DF_OK ) CYCLE
     !IF ( MGGA .AND. DF_OK ) THEN
     !  WRITE(stdout,*) " "
     !  WRITE(stdout,*) "ERROR: derivative not available with MGGA."
@@ -1061,11 +1086,20 @@ PROGRAM xclib_test
            ENDIF  
            ! 
          ENDDO 
-      ENDIF   
+      ENDIF
       !
+      test_output = ''
+      WRITE( test_output(1:3),  '(i3)' ) id
+      WRITE( test_output(5:8),   '(a)' ) TRIM(family)
+      WRITE( test_output(10:30), '(a)' ) TRIM(xc_kind)
+      WRITE( test_output(34:38), '(a)' ) TRIM(dft)
+      IF (iout/=0) WRITE( test_output(40:50), '(a)' ) TRIM(failed)
+      IF (iout==0) WRITE( test_output(50:60), '(a)' ) TRIM(passed)
       
-      IF (iout/=0) print *,id, TRIM(family),'  ', TRIM(dft), '  **FAILED**'
-      IF (iout==0) print *,id, TRIM(family),'  ', TRIM(dft), '  PASSED'
+      !IF (iout/=0) print *,id, TRIM(family), TRIM(xc_kind),'  ', TRIM(dft), '  **FAILED**'
+      !IF (iout==0) print *,id, TRIM(family),'  ', TRIM(dft), '  passed'
+      
+      PRINT *, test_output
       
     ENDIF
 
@@ -1145,10 +1179,12 @@ PROGRAM xclib_test
   
   ENDDO    ! indice funzionali -----------------
   
-  IF (test(1:4)=='exe-') CALL xmlr_closetag()
-  IF (test(1:4)=='gen-') CALL xmlw_closetag()
-  
-  CALL xml_closefile( )
+  IF (mype==root) THEN
+    IF (test(1:4)=='exe-') CALL xmlr_closetag()
+    IF (test(1:4)=='gen-') CALL xmlw_closetag()
+    !
+    CALL xml_closefile( )
+  ENDIF
   !
     401 FORMAT('rho: ',F17.14)
     402 FORMAT('rho(up,down): ',F17.14,4x,F17.14)
