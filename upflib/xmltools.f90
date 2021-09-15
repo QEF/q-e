@@ -60,7 +60,7 @@ MODULE xmltools
   !
   PRIVATE
   ! general subroutines
-  PUBLIC :: xml_openfile, xml_closefile
+  PUBLIC :: xml_open_file, xml_closefile
   ! subroutines for writing
   PUBLIC :: add_attr
   PUBLIC :: xmlw_writetag, xmlw_opentag, xmlw_closetag
@@ -262,7 +262,7 @@ CONTAINS
     !
   END SUBROUTINE add_c_attr
   !
-  FUNCTION xml_openfile ( filexml ) RESULT (iun)
+  FUNCTION xml_open_file ( filexml ) RESULT (iun)
     !
     ! returns on output the opened unit number if opened successfully
     ! returns -1 otherwise
@@ -289,7 +289,7 @@ CONTAINS
     print "('file ',a,' opened with unit ',i5)",trim(filexml),iun
 #endif
     !
-  END FUNCTION xml_openfile
+  END FUNCTION xml_open_file
   !
   SUBROUTINE xml_closefile ( )
     !
