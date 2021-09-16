@@ -16,7 +16,7 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   USE lsda_mod,         ONLY : nspin
   USE ener,             ONLY : ef
   USE wvfct,            ONLY : et, nbnd
-  USE xmltools,         ONLY : xml_openfile, xml_closefile, xmlw_writetag,&
+  USE xmltools,         ONLY : xml_open_file, xml_closefile, xmlw_writetag,&
                                xmlw_opentag, xmlw_closetag, add_attr
   IMPLICIT NONE
 
@@ -29,7 +29,7 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   INTEGER :: ik, ik_eff, is, nwfc, ibnd, nspin_lsda, num_k_points
   !
   !
-  iunpun = xml_openfile ( TRIM( restart_dir() )//TRIM(filename) )
+  iunpun = xml_open_file ( TRIM( restart_dir() )//TRIM(filename) )
   IF ( iunpun == -1 ) RETURN
   !
   nspin_lsda = 1
