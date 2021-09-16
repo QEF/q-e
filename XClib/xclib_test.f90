@@ -26,14 +26,10 @@ PROGRAM xclib_test
   
   
   
-  
   !- sistema funzionali e guarda che funzioni tutto  -- testa anche singoli
   
   !- analogo per libxc 
   !- [dopo merge Vxc_gpu: versione gpu]
-  
-  
-  ! aggiungi anche i dft full
   
   
   
@@ -57,9 +53,9 @@ PROGRAM xclib_test
   USE dft_setting_params, ONLY: xc_func, xc_info
 #endif
   !
-  USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, &
+  USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft, &
                          dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
-                         dft_GGAc_name, dft_MGGA_name
+                         dft_GGAc_name, dft_MGGA_name, dft_full
   !
   IMPLICIT NONE
   !
@@ -115,7 +111,7 @@ PROGRAM xclib_test
   REAL(DP) :: fact, exx_frctn
   !
   !---------- Indexes ---------------------------
-  INTEGER :: ii, ns, np, ipol, ithr, nthr, iip, iout
+  INTEGER :: ii, ns, np, ipol, ithr, nthr, iip, iout, iaverout
   !
   !---------- XClib input vars ------------------
   REAL(DP), ALLOCATABLE :: rho(:,:), rho_tz(:,:)
@@ -349,14 +345,15 @@ PROGRAM xclib_test
   dft_init=dft
   !
   n_qe_func = 1
-  IF (dft=='all') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
+  IF (dft=='all_terms') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
+  IF (dft=='all_short') n_qe_func = n_dft
   !
   !
   DO id = 1, n_qe_func
     !
     CALL xclib_reset_dft()
     !    
-    IF (dft_init=='all') THEN
+    IF (dft_init=='all_terms') THEN
       IF (id<=nxc+1) THEN
          dft = dft_LDAx_name(id-1)
          xc_kind = 'exchange'
@@ -373,6 +370,8 @@ PROGRAM xclib_test
          dft = dft_MGGA_name(id-nxc-ncc-ngcx-ngcc-5)
          xc_kind = 'exchange+correlation'
       ENDIF
+    ELSEIF (dft_init=='all_short') THEN
+      dft = dft_full(id)%name
     ENDIF
     !
     ! ... initialization of averages
@@ -387,6 +386,9 @@ PROGRAM xclib_test
     !
     ! ... initialize first DFT
     !
+    xc_data="XC_DATA__________"
+    dxc_data="dXC_DATA___________"
+    
     !print *, id, dft
     !============================== PROVISIONAL=====
     !IF (TRIM(dft)=='HCTH') cycle
@@ -407,7 +409,10 @@ PROGRAM xclib_test
     
     !IF (TRIM(dft)=='B86X' .and. df_ok) cycle   !.WHAT'S WRONG HERE???
     !============================================
-    
+    IF (TRIM(dft)=='SCAN0') cycle
+    IF (TRIM(dft)=='PZ+META') cycle
+    IF (TRIM(dft)=='PBE+META') cycle
+    !============================================
     
     CALL xclib_set_dft_from_name( dft )
     
@@ -428,9 +433,13 @@ PROGRAM xclib_test
     IF (imeta1+imetac1/=0) MGGA = .TRUE.
     !
     
-    IF (fam_init=='all' .AND. lda)  family='LDA'
-    IF (fam_init=='all' .AND. gga)  family='GGA'
-    IF (fam_init=='all' .AND. mgga) family='MGGA'
+    IF ( fam_init=='all_terms' .AND. LDA  )  family='LDA'
+    IF ( fam_init=='all_terms' .AND. GGA  )  family='GGA'
+    IF ( fam_init=='all_terms' .AND. MGGA )  family='MGGA'
+    !
+    IF ( fam_init=='all_short' .AND. LDA  )  family='LDA'
+    IF ( fam_init=='all_short' .AND. GGA  )  family='GGA'
+    IF ( fam_init=='all_short' .AND. MGGA )  family='MGGA'
     
     IF (iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0) CYCLE
     !print *, id, dft, igcx1, igcc1, gga, family
@@ -441,14 +450,14 @@ PROGRAM xclib_test
     !print *, id, dft
     
     
-    IF (fam_init=='all' .AND. LDA .AND. GGA ) THEN
-       IF ( id<=nxc+ncc+2) then
+    IF ( fam_init=='all_terms' .AND. LDA .AND. GGA ) THEN
+       IF ( id<=nxc+ncc+2 ) THEN
           GGA=.FALSE.
-          if (iexch1/=0 .and. icorr1/=0 .and. TRIM(xc_kind)=='correlation') cycle
+          IF (iexch1/=0 .AND. icorr1/=0 .AND. TRIM(xc_kind)=='correlation') CYCLE
           family='LDA'
        ELSE 
           LDA=.FALSE.
-          if (igcx1/=0 .and. igcc1/=0 .and. TRIM(xc_kind)=='correlation') cycle
+          IF (igcx1/=0 .AND. igcc1/=0 .AND. TRIM(xc_kind)=='correlation') CYCLE
        ENDIF
     ENDIF
     !
@@ -591,13 +600,21 @@ PROGRAM xclib_test
     IF (.NOT. DF_OK) THEN
       !IF (id< 10) WRITE(xc_data(9:9),'(i1)') id
       !IF (id>=10) WRITE(xc_data(8:9),'(i2)') id
-      WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-      WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
+      IF ( fam_init=='all_terms') THEN
+        WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+        WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
+      ELSEIF ( fam_init=='all_short') THEN
+        WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+      ENDIF
     ELSE
       !IF (id< 10) WRITE(dxc_data(10:10),'(i1)') id
       !IF (id>=10) WRITE(dxc_data(9:10), '(i2)') id
-      WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
-      WRITE(xc_data(16:15+nlen1),'(a)') family(1:nlen2)
+      IF ( fam_init=='all_terms') THEN
+        WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
+        WRITE(dxc_data(16:15+nlen2),'(a)') family(1:nlen2)
+      ELSEIF ( fam_init=='all_short') THEN
+        WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
+      ENDIF
     ENDIF
     !
     IF (test=='exe-benchmark' .AND. mype==root) THEN
@@ -778,7 +795,7 @@ PROGRAM xclib_test
        IF (.NOT. DF_OK ) CALL xc( nnr, ns, ns, rho_tz, ex1, ec1, vx1, vc1 )
        IF ( DF_OK ) CALL dmxc( nnr, ns, rho, dmuxc1 )
        !
-    ENDIF   
+    ENDIF
     !
     IF ( GGA ) THEN
       !
@@ -822,6 +839,8 @@ PROGRAM xclib_test
     !==========================================================================
     ! COMPUTE AND PRINT TEST RESULTS
     !==========================================================================
+    !
+    iaverout = 0
     !
     IF ( .NOT. DF_OK ) THEN
       CALL evxc_stats( 'Ex', ex1, ex_aver )
@@ -1097,23 +1116,19 @@ PROGRAM xclib_test
               IF (v3x_is_out) CALL print_diff( 'V3x',v3x1(ii,:), v3x2(ii,:) )  
               IF (v3c_is_out) CALL print_diff( 'V3c',v3c1(ii,:), v3c2(ii,:) )  
               !   
-           ENDIF  
-           ! 
-         ENDDO 
+           ENDIF
+           !
+         ENDDO
       ENDIF
       !
       test_output = ''
       WRITE( test_output(1:3),  '(i3)' ) id
       WRITE( test_output(5:8),   '(a)' ) TRIM(family)
-      WRITE( test_output(10:30), '(a)' ) TRIM(xc_kind)
-      WRITE( test_output(34:38), '(a)' ) TRIM(dft)
-      IF (iout/=0) WRITE( test_output(40:50), '(a)' ) TRIM(failed)
-      IF (iout==0) WRITE( test_output(50:60), '(a)' ) TRIM(passed)
-      
-      !IF (iout/=0) print *,id, TRIM(family), TRIM(xc_kind),'  ', TRIM(dft), '  **FAILED**'
-      !IF (iout==0) print *,id, TRIM(family),'  ', TRIM(dft), '  passed'
-      
-      PRINT *, test_output
+      IF (fam_init=='all_terms') WRITE( test_output(10:30), '(a)' ) TRIM(xc_kind)
+      WRITE( test_output(34:), '(a)' ) TRIM(dft)
+      IF (iout+iaverout/=0) WRITE( test_output(50:60), '(a)' ) TRIM(failed)
+      IF (iout+iaverout==0) WRITE( test_output(50:60), '(a)' ) TRIM(passed)
+      WRITE(stdout,*) test_output
       
     ENDIF
 
@@ -1246,6 +1261,7 @@ PROGRAM xclib_test
     WRITE(stdout,*) "AVR test: ", vaver(1)
     WRITE(stdout,*) "AVR ref : ", averref
     WRITE(stdout,*) "diff    : ", vaver(1)-averref
+    iaverout=iaverout+1
   ENDIF  
   !
  END SUBROUTINE print_stat
@@ -1334,8 +1350,6 @@ PROGRAM xclib_test
  !-------------------------------------------------------------------------
  SUBROUTINE evxc_stats( what, xc_1, aver )
   !------------------------------------------------------------------------
-  !! If test=dft-comparison calculates average, max and min difference 
-  !! between output arrays of dft1 and dft2.  
   !! If test=exe-benchmark calculates difference between total energy
   !! and potential calculated over npoints k-points and values taken from
   !! benchmark data file.  
