@@ -28,13 +28,12 @@ PROGRAM xclib_test
   
   
   !- sistema funzionali e guarda che funzioni tutto  -- testa anche singoli
-  !- stesso input per n  cpu   FATTO
   
   !- analogo per libxc 
   !- [dopo merge Vxc_gpu: versione gpu]
   
   
-  
+  ! aggiungi anche i dft full
   
   
   
@@ -172,8 +171,8 @@ PROGRAM xclib_test
   ! ... xml
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=30) :: xc_data="XC_DATA00", dxc_data="dXC_DATA00"
-  INTEGER :: iunpun, iun
+  CHARACTER(LEN=19) :: xc_data="XC_DATA__________", dxc_data="dXC_DATA___________"
+  INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found
   
   CHARACTER(LEN=10), PARAMETER :: failed='**FAILED**'
@@ -325,7 +324,7 @@ PROGRAM xclib_test
     WRITE(stdout,*) ; WRITE(stdout,*) ' --- XC_LIB TESTING PROGRAM --- '
     WRITE(stdout,*)
     WRITE(stdout,*) 'Node list:'
-    WRITE(stdout,*) 
+    WRITE(stdout,*)
     DO ii = 1, nnodes
        WRITE(stdout,310)  ii, node_name(ii)
     ENDDO
@@ -404,7 +403,7 @@ PROGRAM xclib_test
     !IF (TRIM(dft)=='B88X') cycle               !.......    "     "      "   "
     !IF (TRIM(dft)=='RPBX') cycle               !.......    "     "      "   "
     
-    IF (TRIM(dft)=='TPSS') CYCLE                !......FIX!!!!
+    IF (TRIM(dft)=='TPSS') cycle                !......FIX!!!!
     
     !IF (TRIM(dft)=='B86X' .and. df_ok) cycle   !.WHAT'S WRONG HERE???
     !============================================
@@ -427,7 +426,7 @@ PROGRAM xclib_test
     imeta1  = xclib_get_ID('MGGA','EXCH')
     imetac1 = xclib_get_ID('MGGA','CORR')
     IF (imeta1+imetac1/=0) MGGA = .TRUE.
-    
+    !
     
     IF (fam_init=='all' .AND. lda)  family='LDA'
     IF (fam_init=='all' .AND. gga)  family='GGA'
@@ -436,24 +435,33 @@ PROGRAM xclib_test
     IF (iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0) CYCLE
     !print *, id, dft, igcx1, igcc1, gga, family
     
-    IF (fam_init=='all' .AND. GGA .AND. id<=nxc+ncc+2) CYCLE
-    
+    !IF (fam_init=='all' .AND. GGA .AND. id<=nxc+ncc+2) CYCLE
     !
     
+    !print *, id, dft
+    
+    
+    IF (fam_init=='all' .AND. LDA .AND. GGA ) THEN
+       IF ( id<=nxc+ncc+2) then
+          GGA=.FALSE.
+          if (iexch1/=0 .and. icorr1/=0 .and. TRIM(xc_kind)=='correlation') cycle
+          family='LDA'
+       ELSE 
+          LDA=.FALSE.
+          if (igcx1/=0 .and. igcc1/=0 .and. TRIM(xc_kind)=='correlation') cycle
+       ENDIF
+    ENDIF
+    !
+    
+    
+    
     IF ( MGGA .AND. DF_OK ) CYCLE
-    !IF ( MGGA .AND. DF_OK ) THEN
-    !  WRITE(stdout,*) " "
-    !  WRITE(stdout,*) "ERROR: derivative not available with MGGA."
-    !  GO TO 10
-    !ENDIF
     !
     IF (ns == 2 .AND. icorr1/=0 .AND. icorr1/=1 .AND. icorr1/=2 .AND. &
                       icorr1/=4 .AND. icorr1/=8 .AND. icorr1/=3 .AND. &
-                      icorr1/=7 .AND. icorr1/=13) THEN
+                      icorr1/=7 .AND. icorr1/=13) CYCLE
        !WRITE(stdout,*) CHAR(10)//" ERROR: icorr1 not available at these &
        !                          &conditions"//CHAR(10)
-       CYCLE
-    ENDIF
     !
     !
     ! ... index stuff
@@ -578,12 +586,18 @@ PROGRAM xclib_test
     ! READ BENCHMARK DATA FROM FILE
     !==========================================================================
     !
+    nlen1 = LEN(TRIM(dft))
+    nlen2 = LEN(TRIM(family))
     IF (.NOT. DF_OK) THEN
-      IF (id< 10) WRITE(xc_data(9:9),'(i1)') id
-      IF (id>=10) WRITE(xc_data(8:9),'(i2)') id
+      !IF (id< 10) WRITE(xc_data(9:9),'(i1)') id
+      !IF (id>=10) WRITE(xc_data(8:9),'(i2)') id
+      WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+      WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
     ELSE
-      IF (id< 10) WRITE(dxc_data(10:10),'(i1)') id
-      IF (id>=10) WRITE(dxc_data(9:10), '(i2)') id
+      !IF (id< 10) WRITE(dxc_data(10:10),'(i1)') id
+      !IF (id>=10) WRITE(dxc_data(9:10), '(i2)') id
+      WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
+      WRITE(xc_data(16:15+nlen1),'(a)') family(1:nlen2)
     ENDIF
     !
     IF (test=='exe-benchmark' .AND. mype==root) THEN
@@ -760,7 +774,7 @@ PROGRAM xclib_test
     IF ( LDA ) THEN
        !
        IF (iexch1==8 .OR. icorr1==10) CALL xclib_set_finite_size_volume( volume )
-       
+       !
        IF (.NOT. DF_OK ) CALL xc( nnr, ns, ns, rho_tz, ex1, ec1, vx1, vc1 )
        IF ( DF_OK ) CALL dmxc( nnr, ns, rho, dmuxc1 )
        !

@@ -38,28 +38,28 @@ MODULE qe_dft_list
   !
   !
   ! LDA exchange terms
-  DATA dft_LDAx_name / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', &
-                       'B3LP', 'KZK', 'xxxx', 'xxxx' /
+  DATA dft_LDAx_name / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', & ! 0 to  6
+                       'B3LP', 'KZK', 'xxxx', 'xxxx' /                    ! 7 "  10
   ! LDA correlation terms
-  DATA dft_LDAc_name / 'NOC', 'PZ', 'VWN', 'LYP', 'PW',   'WIG', 'HL',  &
-                       'OBZ', 'OBW', 'GL', 'KZK', 'xxxx', 'B3LP','xxxx',&
-                       'xxxx' /
+  DATA dft_LDAc_name / 'NOC', 'PZ', 'VWN', 'LYP', 'PW',   'WIG', 'HL',  & ! 0 to  6
+                       'OBZ', 'OBW', 'GL', 'KZK', 'xxxx', 'B3LP','xxxx',& ! 7 "  13
+                       'xxxx' /                                           !14
   ! GGA exchange terms
-  DATA dft_GGAx_name / 'NOGX', 'B88',  'GGX',  'PBX',  'REVX', 'HCTH',  &
-                       'OPTX', 'xxxx', 'PB0X', 'B3LP', 'PSX',  'WCX',   &
-                       'HSE',  'RW86', 'PBE',  'xxxx', 'C09X', 'SOX',   &
-                       'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', 'OBK8',  &
-                       'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', 'CX0',   &
-                       'R860', 'CX0P', 'AHCX', 'AHF2', 'AHPB', 'AHPS',  &
-                       'CX14', 'CX15', 'BR0',  'CX16', 'C090', 'B86X',  &
-                       'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X' /
+  DATA dft_GGAx_name / 'NOGX', 'B88',  'GGX',  'PBX',  'REVX', 'HCTH',  & ! 0 to  5
+                       'OPTX', 'xxxx', 'PB0X', 'B3LP', 'PSX',  'WCX',   & ! 6 "  11
+                       'HSE',  'RW86', 'PBE',  'xxxx', 'C09X', 'SOX',   & !12 "  17 
+                       'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', 'OBK8',  & !18 "  23
+                       'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', 'CX0',   & !24 "  29
+                       'R860', 'CX0P', 'AHCX', 'AHF2', 'AHPB', 'AHPS',  & !30 "  35
+                       'CX14', 'CX15', 'BR0',  'CX16', 'C090', 'B86X',  & !36 "  41
+                       'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X' /           !42 "  46 
   ! GGA correlation terms
-  DATA dft_GGAc_name / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH',     &
-                       'NONE', 'B3LP','PSC', 'PBE',  'xxxx','xxxx',     &
-                       'Q2DC', 'xxxx','BEEC' /
+  DATA dft_GGAc_name / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH',     & ! 0 to  5
+                       'NONE', 'B3LP','PSC', 'PBE',  'xxxx','xxxx',     & ! 6 "  11
+                       'Q2DC', 'xxxx','BEEC' /                            !12 "  14
   ! MGGA exchange+correlation terms
-  DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN',  &
-                       'SCA0' /
+  DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN',  & ! 0 to  5
+                       'SCA0' /                                           ! 6
   !
   !
   ! ---- Full DFTs ----
@@ -224,7 +224,7 @@ MODULE qe_dft_list
   !
   DATA dft_full(38)%name     / 'SCAN' /
   DATA dft_full(38)%name2    / 'none' /
-  DATA dft_full(38)%IDs(1:6) / 0,0,0,0,5,0 /    ! scan[calls Libxc SCAN]
+  DATA dft_full(38)%IDs(1:6) / 0,0,0,0,5,0 /    ! scan[wrapper to Libxc SCAN]
   !
   DATA dft_full(39)%name     / 'SCAN0' /
   DATA dft_full(39)%name2    / 'none'  /
