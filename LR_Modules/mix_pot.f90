@@ -47,7 +47,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !   Here the local variables
   !
   ! max number of iterations used in mixing: n_iter < maxter must hold.
-  integer, parameter :: maxter = 8
+  integer, parameter :: maxter = 50
   !
   integer :: iunmix, n, i, j, iwork (maxter), info, iter_used, &
        ipos, inext, ndimtot

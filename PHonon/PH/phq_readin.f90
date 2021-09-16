@@ -404,8 +404,6 @@ SUBROUTINE phq_readin()
   ENDDO
   IF (niter_ph.LT.1.OR.niter_ph.GT.maxter) CALL errore ('phq_readin', &
        ' Wrong niter_ph ', 1)
-  IF (nmix_ph.LT.1.OR.nmix_ph.GT.5) CALL errore ('phq_readin', ' Wrong &
-       &nmix_ph ', 1)
   IF (iverbosity.NE.0.AND.iverbosity.NE.1) CALL errore ('phq_readin', &
        &' Wrong  iverbosity ', 1)
   IF (fildyn.EQ.' ') CALL errore ('phq_readin', ' Wrong fildyn ', 1)
