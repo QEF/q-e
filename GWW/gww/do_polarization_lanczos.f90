@@ -376,8 +376,8 @@ subroutine do_polarization_lanczos(tf,options,ispin)
          call read_compact_q_lanczos(cql, 1)!just for obtaining numpw,numt...poor man solution
          allocate(cql_save(1,1,1))
       endif
-         
-    
+      allocate(vtl_save(1,1,1))
+     allocate(ttl_save(1,1,1))
 
    else
 !put all matrices vtl and ttl in memory, distributed according to valence state
@@ -581,9 +581,9 @@ subroutine do_polarization_lanczos(tf,options,ispin)
    if(options%l_t_wannier) then
       deallocate(cql_save)
       call free_memory_compact_q_lanczos(cql)
-   else
-      deallocate(vtl_save,ttl_save)
    endif
+   deallocate(vtl_save,ttl_save)
+  
 
   ! deallocate(e_mat)
    deallocate(af,occ)

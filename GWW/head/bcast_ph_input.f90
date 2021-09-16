@@ -36,7 +36,8 @@ subroutine bcast_ph_input ( )
   USE io_global, ONLY : ionode_id
   USE run_info, ONLY : title
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type, nsteps_lanczos,&
-                             &second_grid_n,second_grid_i,l_scissor,scissor,len_head_block_freq,len_head_block_wfc
+                             &second_grid_n,second_grid_i,l_scissor,scissor,len_head_block_freq,&
+                             l_easy,len_head_block_wfc
 
   USE control_lr, ONLY : lgamma, lrpa
 
@@ -106,6 +107,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast(scissor, ionode_id, world_comm)
   call mp_bcast(len_head_block_freq, ionode_id, world_comm)
   call mp_bcast(len_head_block_wfc, ionode_id,world_comm)
+  call mp_bcast(l_easy , ionode_id,world_comm)
 
 #endif
   return
