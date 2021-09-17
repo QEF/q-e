@@ -87,7 +87,10 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 
         var nmix_ph   -type INTEGER { 
             default { 4 }
-            info { Number of iterations used in potential mixing. }
+            info {
+                Number of iterations used in potential mixing. Using a larger value (8~20)
+                can significantly speed up convergence, at the cost of using more memory.
+            }
         }
 
         var verbosity -type CHARACTER { 
