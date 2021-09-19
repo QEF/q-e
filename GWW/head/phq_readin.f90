@@ -79,7 +79,7 @@ SUBROUTINE phq_readin()
   USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
       skip_upperfan
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type, nsteps_lanczos,second_grid_n,second_grid_i,&
-  &l_scissor,scissor, len_head_block_freq, len_head_block_wfc
+  &l_scissor,scissor, len_head_block_freq, len_head_block_wfc, l_easy
   !
   IMPLICIT NONE
   !
@@ -128,7 +128,7 @@ SUBROUTINE phq_readin()
                        wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
                        skip_upperfan, &
                        l_head, omega_gauss, n_gauss, grid_type,nsteps_lanczos,l_scissor,scissor,&
-                       second_grid_n,second_grid_i,len_head_block_wfc,len_head_block_freq
+                       second_grid_n,second_grid_i,len_head_block_wfc,len_head_block_freq, l_easy
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -348,6 +348,8 @@ SUBROUTINE phq_readin()
   d2ns_type = 'full'
   len_head_block_freq=0
   len_head_block_wfc=0
+
+  l_easy=.false.
   !
   ! ...  reading the namelist inputph
   !
