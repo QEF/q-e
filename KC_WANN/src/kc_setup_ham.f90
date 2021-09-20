@@ -297,7 +297,7 @@ subroutine kc_setup_ham
   ALLOCATE (done_iq(nqs) )
   done_iq = .FALSE.
   !
-  CALL close_buffer  ( iuwfc, 'KEEP' )
+  !CALL close_buffer  ( iuwfc, 'KEEP' )
   !
   CALL stop_clock ('kc_setup')
   !

@@ -458,13 +458,13 @@ MODULE io_kcwann
            !
            ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
            ispin = isk(ik)
-           filename = TRIM(dirname) // 'mlwfc' // updw(ispin) // &
+           filename = TRIM(dirname) // 'wfc_wann_' // updw(ispin) // '_ik' //&
                 & TRIM(int_to_char(ik_g))
            !
         ELSE
            !
            ispin = 1
-           filename = TRIM(dirname) // 'mlwfc' // TRIM(int_to_char(ik_g))
+           filename = TRIM(dirname) // 'wfc_wann_ik' // TRIM(int_to_char(ik_g))
            !
         ENDIF
         !
@@ -654,12 +654,12 @@ MODULE io_kcwann
         !
         ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
         ispin = isk(ik)
-        filename = TRIM(dirname) // 'mlwfc' // updw(ispin) // &
+        filename = TRIM(dirname) // 'wfc_wann_' // updw(ispin) // '_ik' // &
              & TRIM(int_to_char(ik_g))
         !
      ELSE
         !
-        filename = TRIM(dirname) // 'mlwfc' // TRIM(int_to_char(ik_g))
+        filename = TRIM(dirname) // 'wfc_wann_ik' // TRIM(int_to_char(ik_g))
         !
      ENDIF
      !

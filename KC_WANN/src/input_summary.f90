@@ -63,6 +63,7 @@ subroutine input_summary ( )
     WRITE(stdout, 43)  "# l_alpha_corr        =", l_alpha_corr
     WRITE(stdout, 42)  "# assume_isolated     =", TRIM(assume_isolated)
     WRITE(stdout, 46)  "# eps_inf             =", eps_inf
+    WRITE(stdout, 43)  "# on_site_only        =", on_site_only
     WRITE(stdout,'(5X, 42("="),/)')
     !
   ENDIF

@@ -55,7 +55,7 @@ subroutine read_alpha ( )
     DO j = 1, dim
       !
       READ(1001,*) dum, alpha_final(j), dum
-      WRITE(stdout,'("iwann = ", 1I5, 3x, "alpha = ", 1F15.8)') j, alpha_final(j)
+      WRITE(stdout,'(5X, "iwann = ", 1I5, 3x, "alpha = ", 1F15.8)') j, alpha_final(j)
       !
     ENDDO
     !

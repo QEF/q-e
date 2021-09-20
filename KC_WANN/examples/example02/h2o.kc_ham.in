@@ -2,7 +2,7 @@ KI H2O
 &control
   prefix='h2o'
   outdir='./out'
-  kc_iverbosity = 2
+  kc_iverbosity = 1
   kc_at_ks=.true.
   homo_only = .false.
   read_unitary_matrix = .false.

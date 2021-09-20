@@ -38,7 +38,7 @@ a=`grep high Si.nscf.out | awk '{print $8}'`
 a_ref=`grep high reference/Si.nscf.ref | awk '{print $8}'`
 err=`echo $a $a_ref | awk '{printf "%20.15f \n", sqrt(($1-$2)*($1-$2))}'`
 if (( $(echo "$err > $tol_eig" |bc -l) )); then
- echo -e "${RED}PWNSCF WARNING: ${NC} CBM does not match: $a $a_ref $err"
+ echo -e "${RED}  PWNSCF WARNING: ${NC} CBM does not match: $a $a_ref $err"
  check=0
 fi
 if (( $check )); then echo -e "  ${GREEN}PWNSCF      OK!${NC}"; fi

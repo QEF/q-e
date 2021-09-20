@@ -22,6 +22,12 @@ PROGRAM kc_ham
   USE control_kc_wann,       ONLY : calculation, do_bands, write_hr
   USE interpolation,         ONLY : interpolate_ham, dealloc_interpolation
   !
+  USE io_rho_xml,            ONLY : write_scf
+  USE io_files,              ONLY : prefix, iunwfc
+  USE scf,                   ONLY : rho
+  USE lsda_mod,              ONLY : nspin
+  USE units_lr,              ONLY : iuwfc
+  !
   !
   IMPLICIT NONE
   !
@@ -43,7 +49,7 @@ PROGRAM kc_ham
   !
   ! 4) Build up the Hamiltonian
   ! 4a) Diagonal term only to 2nd order
-  !     OBSOLETE: inside koopmans_ham this is triggered by on_site_only: FIXME
+  !     OBSOLETE: inside koopmans_ham this is triggered by "on_site_only": FIXME
   CALL ham_R0_2nd ( )
   ! 4b) Full Hamiltonian to 2nd order 
   CALL koopmans_ham ( )
@@ -56,6 +62,13 @@ PROGRAM kc_ham
   !
   IF (do_bands) CALL dealloc_interpolation( )
   ! 
+  ! WRITE data file
+  iunwfc = iuwfc
+  prefix = TRIM(prefix)//"_kcwann"
+  CALL write_scf(rho, nspin)
+  !CALL punch('config-only')
+  CALL punch ('all')
+  !
   CALL clean_pw( .TRUE. )
   CALL close_kc ( ) 
   !

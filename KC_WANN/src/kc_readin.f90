@@ -19,7 +19,7 @@ SUBROUTINE kc_readin()
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : ionode_id, stdout
   USE mp,            ONLY : mp_bcast
-  USE klist,         ONLY : xk, nks, nkstot 
+  USE klist,         ONLY : xk, nks, nkstot, lgauss, ltetra
   USE control_flags, ONLY : gamma_only !, lecrpa
   USE lsda_mod,      ONLY : nspin
   USE run_info,      ONLY : title
@@ -294,6 +294,9 @@ SUBROUTINE kc_readin()
   !
   WRITE( stdout, '(5X,"INFO: Reading pwscf data")')
   CALL read_file ( )
+  !
+  IF ( lgauss .OR. ltetra ) CALL errore( 'kc_readin', &
+      'KC corrections only for insulators!', 1 )
   !
   IF (calculation /= 'wann2kc' .AND. (mp1*mp2*mp3 /= nkstot/nspin) ) &
      CALL errore('kc_readin', ' WRONG number of k points from input, check mp1, mp2, mp3', 1)
