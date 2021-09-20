@@ -334,7 +334,7 @@ program test_fwinv_gpu
       ALLOCATE(data_in_d(dfft%nnr*howmany))
 !      CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
       data_in(:) = (0.d0, 0.d0)
-      do i =1, dfft%nr3
+      do i =1, dfft%nr1
         do j =1, dfft%nr2
            ii = i + dfft%nr1x * (j-1)
            data_in( ii) = (1.d0,2.d0)
