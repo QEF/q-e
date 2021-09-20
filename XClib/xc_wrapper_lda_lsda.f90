@@ -121,7 +121,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( sr_d )
      CASE( 1 )
         !
-        IF (iexch==8 .OR. icorr==10) THEN
+        IF ((iexch==8 .AND. .NOT.is_libxc(1)) .OR. (icorr==10 .AND. &
+            .NOT. is_libxc(2))) THEN
           IF (.NOT. finite_size_cell_volume_set) CALL xclib_error( 'XC',&
               'finite size corrected exchange used w/o initialization', 1 )
         ENDIF
@@ -182,7 +183,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   SELECT CASE( sr_d )
   CASE( 1 )
      !
-     IF (iexch==8 .OR. icorr==10) THEN
+     IF ((iexch==8 .AND. .NOT.is_libxc(1)) .OR. (icorr==10 .AND. &
+            .NOT. is_libxc(2))) THEN
        IF (.NOT. finite_size_cell_volume_set) CALL xclib_error( 'XC',&
            'finite size corrected exchange used w/o initialization', 1 )
      ENDIF

@@ -27,9 +27,10 @@ PROGRAM xclib_test
   !- sistema funzionali e guarda che funzioni tutto  -- testa anche singoli
   
   !- analogo per libxc - 
+  !
+  !- aggiungi messaggio con 'stored' o 'skipped' nel gen-bench
   
   !- [dopo merge Vxc_gpu: versione gpu]
-  
   
   
   USE kind_l,      ONLY: DP
@@ -49,7 +50,7 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params, ONLY: xc_func, xc_info
+  USE dft_setting_params, ONLY: xc_func, xc_info, is_libxc, libxc_dft_not_usable
 #endif
   !
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft, &
@@ -58,6 +59,8 @@ PROGRAM xclib_test
   !
   IMPLICIT NONE
   !
+#include "qe_version.h"  
+  
 #if defined(__MPI)
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #else
@@ -65,7 +68,7 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  INTEGER :: n_ext
+  INTEGER :: fkind, n_ext
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -88,7 +91,7 @@ PROGRAM xclib_test
   !
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
-  LOGICAL :: LDA, GGA, MGGA, POLARIZED, is_libxc(6)
+  LOGICAL :: LDA, GGA, MGGA, POLARIZED
   CHARACTER(LEN=120) :: name1, name2
   !
   !-------- Various params -------------------
@@ -108,7 +111,7 @@ PROGRAM xclib_test
   REAL(DP) :: fact, exx_frctn
   !
   !---------- Indexes ---------------------------
-  INTEGER :: ii, ns, np, ipol, ithr, nthr, iip, iout, iaverout
+  INTEGER :: ii, ns, np, ipol, ithr, nthr, iip, iout, iaverout, l
   !
   !---------- XClib input vars ------------------
   REAL(DP), ALLOCATABLE :: rho(:,:), rho_tz(:,:)
@@ -164,17 +167,18 @@ PROGRAM xclib_test
   ! ... xml
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=19) :: xc_data="XC_DATA__________", dxc_data="dXC_DATA___________"
+  CHARACTER(LEN=40) :: xc_data="XC_DATA__________", dxc_data="dXC_DATA___________"
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
   
-  CHARACTER(LEN=10), PARAMETER :: failed='**FAILED**'
-  CHARACTER(LEN=10), PARAMETER :: passed='passed'
+  CHARACTER(LEN=10), PARAMETER :: failed='**NO MATCH**'
+  CHARACTER(LEN=10), PARAMETER :: passed='match'
+  CHARACTER (LEN=6) :: gen_version = ''
   
   CHARACTER(LEN=70) :: test_output
   !
   
-  INTEGER :: id, n_qe_func
+  INTEGER :: id, n_qe_func, id_vec(6)
   real(DP) :: aver_thresh = 10.E-8   !^^--- da sistemare
   
   
@@ -344,7 +348,28 @@ PROGRAM xclib_test
   n_qe_func = 1
   IF (dft=='all_terms') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
   IF (dft=='all_short') n_qe_func = n_dft
+  IF (dft=='all_libxc') n_qe_func = 999
   !
+  
+  
+  IF ( mype==root) THEN
+    
+    IF (test=='gen-benchmark' ) THEN
+      CALL xmlw_opentag( "QE_VERSION_TEST" )
+      CALL xmlw_writetag( "QE_version", version_number )
+      CALL xmlw_closetag()
+    ENDIF
+    IF (test=='exe-benchmark' ) THEN
+      CALL xmlr_opentag( "QE_VERSION_TEST" )
+      CALL xmlr_readtag( "QE_version", gen_version )
+      CALL xmlr_closetag()
+      WRITE(stdout,*) 'Benchmark data from QE version : ', gen_version
+      WRITE(stdout,*) 'Test calculations by QE version: ', version_number
+      WRITE(stdout,*) ''
+    ENDIF
+  ENDIF
+  
+  
   !
   DO id = 1, n_qe_func
     !
@@ -370,6 +395,12 @@ PROGRAM xclib_test
     ELSEIF (dft_init=='all_short') THEN
       dft = dft_full(id)%name
     ENDIF
+     
+     
+     
+    if (id==576) cycle      !segfault --- WHY?????
+    
+    
     !
     ! ... initialization of averages
     !
@@ -411,10 +442,18 @@ PROGRAM xclib_test
     IF (TRIM(dft)=='PBE+META') cycle
     !============================================
     
+#if defined(__LIBXC)
+    IF (dft_init=='all_libxc') THEN
+      dft = xc_f03_functional_get_name( id )
+      IF ( TRIM(dft) == '' ) CYCLE
+    ENDIF
+#endif
+    
+    
     CALL xclib_set_dft_from_name( dft )
     
-    CALL xclib_set_auxiliary_flags( .FALSE. )
     !
+
     LDA = .FALSE.
     GGA = .FALSE.
     MGGA= .FALSE.
@@ -428,7 +467,43 @@ PROGRAM xclib_test
     imeta1  = xclib_get_ID('MGGA','EXCH')
     imetac1 = xclib_get_ID('MGGA','CORR')
     IF (imeta1+imetac1/=0) MGGA = .TRUE.
+    
+    id_vec(1) = iexch1  ;  id_vec(2) = icorr1
+    id_vec(3) = igcx1   ;  id_vec(4) = igcc1
+    id_vec(5) = imeta1  ;  id_vec(6) = imetac1
+    
+    
+    IF (dft_init=='all_libxc') THEN
+#if defined(__LIBXC)
+       IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns, .FALSE. )
+       
+       IF (ANY(libxc_dft_not_usable(:))) THEN
+         CALL xclib_finalize_libxc()
+         CYCLE
+       ENDIF  
+       DO l = 1, 6
+         IF (id_vec(l)/=0) fkind = xc_f03_func_info_get_kind( xc_info(l) )
+       ENDDO
+       !family = xc_f03_func_info_get_family( xc_info )
+       IF (fkind==XC_EXCHANGE) THEN
+         xc_kind = 'exchange'
+       ELSEIF (fkind==XC_CORRELATION) THEN
+         xc_kind = 'correlation'
+       ELSEIF (fkind==XC_EXCHANGE_CORRELATION) THEN
+         xc_kind = 'correlation'
+       ELSE
+         CALL xclib_finalize_libxc()
+         CYCLE
+       ENDIF
+#else
+       WRITE(stdout,*) 'ERROR: Libxc library not linked.'
+       STOP
+#endif
+    ENDIF
+    
     !
+    CALL xclib_set_auxiliary_flags( .FALSE. )
+    
     
     IF ( fam_init=='all_terms' .AND. LDA  )  family='LDA'
     IF ( fam_init=='all_terms' .AND. GGA  )  family='GGA'
@@ -438,8 +513,14 @@ PROGRAM xclib_test
     IF ( fam_init=='all_short' .AND. GGA  )  family='GGA'
     IF ( fam_init=='all_short' .AND. MGGA )  family='MGGA'
     
+    IF ( fam_init=='all_libxc' .AND. LDA  )  family='LDA'
+    IF ( fam_init=='all_libxc' .AND. GGA  )  family='GGA'
+    IF ( fam_init=='all_libxc' .AND. MGGA )  family='MGGA'
+    
     IF (iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0) CYCLE
-    !print *, id, dft, igcx1, igcc1, gga, family
+    
+    
+    print *, id, dft, mgga, imeta1, imetac1, family, is_libxc(5),is_libxc(6), libxc_dft_not_usable(5)
     
     !IF (fam_init=='all' .AND. GGA .AND. id<=nxc+ncc+2) CYCLE
     !
@@ -469,7 +550,7 @@ PROGRAM xclib_test
       cor_term = xc_kind/='exchange'
     ELSE
       exc_term = (iexch1+igcx1+imeta1)/=0 
-      cor_term = (icorr1+igcc1+imeta1+imetac1)/=0   !...sisteam con libxc
+      cor_term = (icorr1+igcc1+imetac1)/=0   !...sisteam con libxc
     ENDIF 
     
     !
@@ -509,7 +590,6 @@ PROGRAM xclib_test
     np = 1
     IF (ns==2) np = 3
     !
-    IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns, .FALSE. )
     !
     !==========================================================================
     ! ALLOCATIONS OF XC I/O ARRAYS
@@ -615,6 +695,8 @@ PROGRAM xclib_test
         WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
       ELSEIF ( fam_init=='all_short') THEN
         WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+      ELSEIF ( fam_init=='all_libxc') THEN
+        WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       ENDIF
     ELSE
       IF ( fam_init=='all_terms') THEN
@@ -622,11 +704,12 @@ PROGRAM xclib_test
         WRITE(dxc_data(16:15+nlen2),'(a)') family(1:nlen2)
       ELSEIF ( fam_init=='all_short') THEN
         WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
+      ELSEIF ( fam_init=='all_libxc') THEN
+        WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
       ENDIF
     ENDIF
     !
     
-
     
     IF (test=='exe-benchmark' .AND. mype==root) THEN
       IF (.NOT. DF_OK) THEN
@@ -809,7 +892,8 @@ PROGRAM xclib_test
     !
     IF ( LDA ) THEN
        !
-       IF (iexch1==8 .OR. icorr1==10) CALL xclib_set_finite_size_volume( volume )
+       IF ((iexch1==8 .AND. .NOT.is_libxc(1)) .OR. (icorr1==10 .AND. &
+            .NOT. is_libxc(2))) CALL xclib_set_finite_size_volume( volume )
        !
        IF (.NOT. DF_OK ) CALL xc( nnr, ns, ns, rho_tz, ex1, ec1, vx1, vc1 )
        IF ( DF_OK ) CALL dmxc( nnr, ns, rho, dmuxc1 )
@@ -1170,7 +1254,6 @@ PROGRAM xclib_test
     IF (xclib_dft_is_libxc('ANY')) CALL xclib_finalize_libxc()
     !
     
-    
     DEALLOCATE( rho, rho_tz )
     !
     IF ( GGA .OR. MGGA ) DEALLOCATE( grho )
@@ -1229,9 +1312,6 @@ PROGRAM xclib_test
       ENDIF
     ENDIF
     !
-
-    !
-    
   
   ENDDO    ! indice funzionali -----------------
   

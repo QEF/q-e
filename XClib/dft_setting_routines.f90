@@ -46,7 +46,8 @@ CONTAINS
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
     USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                  discard_input_dft, is_libxc, dft, scan_exx, notset
+                                  discard_input_dft, is_libxc, dft, scan_exx, notset, &
+                                  libxc_dft_not_usable
     USE qe_dft_list,        ONLY: nxc, ncc, ngcx, ngcc, nmeta, get_IDs_from_shortname, &
                                   dft_LDAx_name, dft_LDAc_name, dft_GGAx_name,         &
                                   dft_GGAc_name, dft_MGGA_name
@@ -223,17 +224,19 @@ CONTAINS
         ENDDO
         !
         IF ( n_ext_params /= 0 ) THEN       
-          WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends",&
-                        &/5X," on external parameters: check the user_guide of",&
-                        &/5X," QE if you need to modify them or to check their", &
-                        &/5x," default values.")' ) id_vec(ii)
+!          WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends",&
+!                        &/5X," on external parameters: check the user_guide of",&
+!                        &/5X," QE if you need to modify them or to check their", &
+!                        &/5x," default values.")' ) id_vec(ii)
         ENDIF
         IF ( flag_v(1) == 0 ) THEN
+          libxc_dft_not_usable(ii) = .TRUE.
           WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
                         &/5X,"provide Exc: its correct operation in QE is not ",&
                         &/5X,"guaranteed.")' ) id_vec(ii)
         ENDIF
         IF ( flag_v(2) == 0 ) THEN
+          libxc_dft_not_usable(ii) = .TRUE.
           WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
                         &/5X,"provide Vxc: its correct operation in QE is not ",&
                         &/5X,"guaranteed.")' ) id_vec(ii)
@@ -607,12 +610,13 @@ CONTAINS
     LOGICAL, INTENT(IN) :: isnonlocc
     !! The non-local part, for now, is not included in xc_lib, but this variable
     !! is needed to establish 'isgradient'.
-    LOGICAL :: is_libxc13
+    LOGICAL :: is_libxc13, is_libxc12
     !
     ismeta    = (imeta+imetac > 0)
     isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta .OR. isnonlocc
     islda     = (iexch> 0) .AND. (icorr > 0) .AND. .NOT. isgradient
     is_libxc13 = is_libxc(1) .OR. is_libxc(3)
+    
     ! PBE0/DF0
     IF ( iexch==6 .AND. .NOT.is_libxc(1) ) exx_fraction = 0.25_DP
     IF ( igcx==8  .AND. .NOT.is_libxc(3) ) exx_fraction = 0.25_DP
@@ -1083,7 +1087,7 @@ CONTAINS
     INTEGER :: id_vec(6)
     !
 #if defined(__LIBXC)
-    call xclib_init_libxc_print_version_info
+    !call xclib_init_libxc_print_version_info
     !
     nspin0 = xclib_nspin
     IF ( xclib_nspin==4 ) THEN
@@ -1137,9 +1141,9 @@ CONTAINS
     !------------------------------------------------------------------------
     !! Finalize Libxc functionals, if present.
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                   is_libxc
+                                   is_libxc, libxc_initialized
 #if defined(__LIBXC)
-    USE dft_setting_params,  ONLY: xc_func
+    USE dft_setting_params,  ONLY: xc_func, libxc_dft_not_usable
 #endif
     IMPLICIT NONE
     INTEGER :: iid
@@ -1151,7 +1155,12 @@ CONTAINS
     id_vec(5)=imeta ; id_vec(6)=imetac
     !
     DO iid = 1, 6
-      IF (is_libxc(iid)) CALL xc_f03_func_end( xc_func(iid) )
+      IF (is_libxc(iid)) THEN
+        CALL xc_f03_func_end( xc_func(iid) )
+        libxc_initialized(iid) = .FALSE.
+        is_libxc(iid) = .FALSE.
+        libxc_dft_not_usable(iid) = .FALSE.
+      ENDIF  
     ENDDO
 #endif
     RETURN
