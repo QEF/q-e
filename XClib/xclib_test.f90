@@ -23,12 +23,11 @@ PROGRAM xclib_test
   !! * derivative of GGA (dgcxc);
   !! * metaGGA.
   !
-  
-  
-  
+
   !- sistema funzionali e guarda che funzioni tutto  -- testa anche singoli
   
-  !- analogo per libxc 
+  !- analogo per libxc - 
+  
   !- [dopo merge Vxc_gpu: versione gpu]
   
   
@@ -66,7 +65,6 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  CHARACTER(LEN=120) :: lxc_kind, lxc_family
   INTEGER :: n_ext
 #endif
   !
@@ -90,7 +88,6 @@ PROGRAM xclib_test
   !
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
-  INTEGER :: iexch2, icorr2, igcx2, igcc2, imeta2, imetac2
   LOGICAL :: LDA, GGA, MGGA, POLARIZED, is_libxc(6)
   CHARACTER(LEN=120) :: name1, name2
   !
@@ -169,7 +166,7 @@ PROGRAM xclib_test
   CHARACTER(LEN=30) :: filename_xml=""
   CHARACTER(LEN=19) :: xc_data="XC_DATA__________", dxc_data="dXC_DATA___________"
   INTEGER :: iunpun, iun, nlen1, nlen2
-  LOGICAL :: found
+  LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
   
   CHARACTER(LEN=10), PARAMETER :: failed='**FAILED**'
   CHARACTER(LEN=10), PARAMETER :: passed='passed'
@@ -447,21 +444,36 @@ PROGRAM xclib_test
     !IF (fam_init=='all' .AND. GGA .AND. id<=nxc+ncc+2) CYCLE
     !
     
-    !print *, id, dft
+    
     
     
     IF ( fam_init=='all_terms' .AND. LDA .AND. GGA ) THEN
        IF ( id<=nxc+ncc+2 ) THEN
           GGA=.FALSE.
-          IF (iexch1/=0 .AND. icorr1/=0 .AND. TRIM(xc_kind)=='correlation') CYCLE
+          IF (iexch1/=0 .AND. icorr1/=0 ) THEN
+            IF ( TRIM(xc_kind)=='correlation') CYCLE
+            IF ( TRIM(xc_kind)=='exchange') xc_kind = 'exchange+correlation'
+          ENDIF
           family='LDA'
        ELSE 
           LDA=.FALSE.
-          IF (igcx1/=0 .AND. igcc1/=0 .AND. TRIM(xc_kind)=='correlation') CYCLE
+          IF (igcx1/=0 .AND. igcc1/=0 ) THEN
+            IF ( TRIM(xc_kind)=='correlation') CYCLE
+            IF ( TRIM(xc_kind)=='exchange') xc_kind = 'exchange+correlation'
+          ENDIF  
        ENDIF
     ENDIF
-    !
     
+    IF (fam_init=='all_terms') then
+      exc_term = xc_kind/='correlation'
+      cor_term = xc_kind/='exchange'
+    ELSE
+      exc_term = (iexch1+igcx1+imeta1)/=0 
+      cor_term = (icorr1+igcc1+imeta1+imetac1)/=0   !...sisteam con libxc
+    ENDIF 
+    
+    !
+    !print *, id, dft, family, xc_kind
     
     
     IF ( MGGA .AND. DF_OK ) CYCLE
@@ -598,8 +610,6 @@ PROGRAM xclib_test
     nlen1 = LEN(TRIM(dft))
     nlen2 = LEN(TRIM(family))
     IF (.NOT. DF_OK) THEN
-      !IF (id< 10) WRITE(xc_data(9:9),'(i1)') id
-      !IF (id>=10) WRITE(xc_data(8:9),'(i2)') id
       IF ( fam_init=='all_terms') THEN
         WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
         WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
@@ -607,8 +617,6 @@ PROGRAM xclib_test
         WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       ENDIF
     ELSE
-      !IF (id< 10) WRITE(dxc_data(10:10),'(i1)') id
-      !IF (id>=10) WRITE(dxc_data(9:10), '(i2)') id
       IF ( fam_init=='all_terms') THEN
         WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
         WRITE(dxc_data(16:15+nlen2),'(a)') family(1:nlen2)
@@ -617,36 +625,47 @@ PROGRAM xclib_test
       ENDIF
     ENDIF
     !
+    
+
+    
     IF (test=='exe-benchmark' .AND. mype==root) THEN
       IF (.NOT. DF_OK) THEN
         CALL xmlr_opentag( TRIM(xc_data) )
-        CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
-        CALL xmlr_readtag( "EC_AVER", ec_aver(:) )
+        IF ( exc_term ) CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
+        IF ( cor_term ) CALL xmlr_readtag( "EC_AVER", ec_aver(:) )
         IF ( family=='LDA' ) THEN
-          CALL xmlr_readtag( "VX_AVER", vx_aver(:,:) )
-          CALL xmlr_readtag( "VC_AVER", vc_aver(:,:) )
+          IF ( exc_term ) CALL xmlr_readtag( "VX_AVER", vx_aver(:,:) )
+          IF ( cor_term ) CALL xmlr_readtag( "VC_AVER", vc_aver(:,:) )
         ELSE
-          CALL xmlr_readtag( "V1X_AVER", v1x_aver(:,:) )
-          CALL xmlr_readtag( "V1C_AVER", v1c_aver(:,:) )
-          CALL xmlr_readtag( "V2X_AVER", v2x_aver(:,:) )
-          CALL xmlr_readtag( "V2C_AVER", v2c_aver(:,:) )
-          IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
+          IF ( exc_term ) THEN
+            CALL xmlr_readtag( "V1X_AVER", v1x_aver(:,:) )
+            CALL xmlr_readtag( "V2X_AVER", v2x_aver(:,:) )
+          ENDIF
+          IF ( cor_term ) THEN
+            CALL xmlr_readtag( "V1C_AVER", v1c_aver(:,:) )
+            CALL xmlr_readtag( "V2C_AVER", v2c_aver(:,:) )
+            IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
+          ENDIF
           IF ( family=='MGGA' ) THEN
             CALL xmlr_readtag( "V3X_AVER", v3x_aver(:,:) )
             CALL xmlr_readtag( "V3C_AVER", v3c_aver(:,:) )
           ENDIF
         ENDIF
-        CALL xmlr_readtag( "EX", ex2(:) )
-        CALL xmlr_readtag( "EC", ec2(:) )
+        IF ( exc_term ) CALL xmlr_readtag( "EX", ex2(:) )
+        IF ( cor_term )    CALL xmlr_readtag( "EC", ec2(:) )
         IF ( family=='LDA' ) THEN
-          CALL xmlr_readtag( "VX", vx2(:,:) )
-          CALL xmlr_readtag( "VC", vc2(:,:) )        
+          IF ( exc_term ) CALL xmlr_readtag( "VX", vx2(:,:) )
+          IF ( cor_term ) CALL xmlr_readtag( "VC", vc2(:,:) )        
         ELSE
-          CALL xmlr_readtag( "V1X", v1x2(:,:) )
-          CALL xmlr_readtag( "V1C", v1c2(:,:) )
-          CALL xmlr_readtag( "V2X", v2x2(:,:) )
-          CALL xmlr_readtag( "V2C", v2c2(:,:) )
-          IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
+          IF ( exc_term ) THEN
+            CALL xmlr_readtag( "V1X", v1x2(:,:) )
+            CALL xmlr_readtag( "V2X", v2x2(:,:) )
+          ENDIF
+          IF ( cor_term ) THEN
+            CALL xmlr_readtag( "V1C", v1c2(:,:) )
+            CALL xmlr_readtag( "V2C", v2c2(:,:) )
+            IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
+          ENDIF  
           IF ( family=='MGGA' ) THEN
             CALL xmlr_readtag( "V3X", v3x2(:,:) )
             CALL xmlr_readtag( "V3C", v3c2(:,:) )
@@ -843,23 +862,23 @@ PROGRAM xclib_test
     iaverout = 0
     !
     IF ( .NOT. DF_OK ) THEN
-      CALL evxc_stats( 'Ex', ex1, ex_aver )
-      CALL evxc_stats( 'Ec', ec1, ec_aver )
+      IF (exc_term) CALL evxc_stats( 'Ex', ex1, ex_aver )
+      IF (cor_term) CALL evxc_stats( 'Ec', ec1, ec_aver )
     ENDIF
     !
     IF ( LDA .AND. .NOT. GGA ) THEN
        IF ( .NOT. DF_OK ) THEN
-         CALL evxc_stats( 'Vx', vx1, vx_aver(1,:) )
-         CALL evxc_stats( 'Vc', vc1, vc_aver(1,:) )
+         IF (exc_term) CALL evxc_stats( 'Vx', vx1, vx_aver(1,:) )
+         IF (cor_term) CALL evxc_stats( 'Vc', vc1, vc_aver(1,:) )
        ELSE
          CALL derivxc_stats( 'dmuxc', dmuxc1, dv_aver )
        ENDIF
     ELSEIF ( GGA ) THEN
        IF ( .NOT. DF_OK ) THEN
-         CALL evxc_stats( 'V1x', v1x1, v1x_aver )
-         CALL evxc_stats( 'V2x', v2x1, v2x_aver )
-         CALL evxc_stats( 'V1c', v1c1, v1c_aver )
-         CALL evxc_stats( 'V2c', v2c1, v2c_aver ) 
+         IF (exc_term) CALL evxc_stats( 'V1x', v1x1, v1x_aver )
+         IF (exc_term) CALL evxc_stats( 'V2x', v2x1, v2x_aver )
+         IF (cor_term) CALL evxc_stats( 'V1c', v1c1, v1c_aver )
+         IF (cor_term) CALL evxc_stats( 'V2c', v2c1, v2c_aver ) 
        ELSE
          CALL derivxc_stats( 'dvxcrr', dvxcrr1, dvrr_aver )
          CALL derivxc_stats( 'dvxcsr', dvxcsr1, dvsr_aver )
@@ -879,33 +898,41 @@ PROGRAM xclib_test
     IF (test=='gen-benchmark' .AND. mype==root) THEN
       IF (.NOT. DF_OK) THEN
         CALL xmlw_opentag( xc_data )
-        CALL xmlw_writetag( "EX_AVER", ex_aver(:) )
-        CALL xmlw_writetag( "EC_AVER", ec_aver(:) )
+        IF ( exc_term ) CALL xmlw_writetag( "EX_AVER", ex_aver(:) )
+        IF ( cor_term ) CALL xmlw_writetag( "EC_AVER", ec_aver(:) )
         IF ( family=='LDA' ) THEN
-          CALL xmlw_writetag( "VX_AVER", vx_aver(:,:) )
-          CALL xmlw_writetag( "VC_AVER", vc_aver(:,:) )
+          IF ( exc_term ) CALL xmlw_writetag( "VX_AVER", vx_aver(:,:) )
+          IF ( cor_term ) CALL xmlw_writetag( "VC_AVER", vc_aver(:,:) )
         ELSE
-          CALL xmlw_writetag( "V1X_AVER", v1x_aver(:,:) )
-          CALL xmlw_writetag( "V1C_AVER", v1c_aver(:,:) )
-          CALL xmlw_writetag( "V2X_AVER", v2x_aver(:,:) )
-          CALL xmlw_writetag( "V2C_AVER", v2c_aver(:,:) )
-          IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
+          IF ( exc_term ) THEN
+            CALL xmlw_writetag( "V1X_AVER", v1x_aver(:,:) )
+            CALL xmlw_writetag( "V2X_AVER", v2x_aver(:,:) )
+          ENDIF
+          IF ( cor_term ) THEN
+            CALL xmlw_writetag( "V1C_AVER", v1c_aver(:,:) )
+            CALL xmlw_writetag( "V2C_AVER", v2c_aver(:,:) )
+            IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
+          ENDIF
           IF ( family=='MGGA' ) THEN
             CALL xmlw_writetag( "V3X_AVER", v3x_aver(:,:) )
             CALL xmlw_writetag( "V3C_AVER", v3c_aver(:,:) )
           ENDIF
         ENDIF
-        CALL xmlw_writetag( "EX", ex1(1:nnrbt) )
-        CALL xmlw_writetag( "EC", ec1(1:nnrbt) )
+        IF ( exc_term ) CALL xmlw_writetag( "EX", ex1(1:nnrbt) )
+        IF ( cor_term ) CALL xmlw_writetag( "EC", ec1(1:nnrbt) )
         IF ( family=='LDA' ) THEN
-          CALL xmlw_writetag( "VX", vx1(1:nnrbt,:) )
-          CALL xmlw_writetag( "VC", vc1(1:nnrbt,:) )        
+          IF ( exc_term ) CALL xmlw_writetag( "VX", vx1(1:nnrbt,:) )
+          IF ( cor_term ) CALL xmlw_writetag( "VC", vc1(1:nnrbt,:) )        
         ELSE
-          CALL xmlw_writetag( "V1X", v1x1(1:nnrbt,:) )
-          CALL xmlw_writetag( "V1C", v1c1(1:nnrbt,:) )
-          CALL xmlw_writetag( "V2X", v2x1(1:nnrbt,:) )
-          CALL xmlw_writetag( "V2C", v2c1(1:nnrbt,:) )
-          IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud", v2c_ud1(1:nnrbt) )
+          IF ( exc_term ) THEN
+            CALL xmlw_writetag( "V1X", v1x1(1:nnrbt,:) )
+            CALL xmlw_writetag( "V2X", v2x1(1:nnrbt,:) )
+          ENDIF
+          IF ( cor_term ) THEN
+            CALL xmlw_writetag( "V1C", v1c1(1:nnrbt,:) )
+            CALL xmlw_writetag( "V2C", v2c1(1:nnrbt,:) )
+            IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud", v2c_ud1(1:nnrbt) )
+          ENDIF  
           IF ( family=='MGGA' ) THEN
             CALL xmlw_writetag( "V3X", v3x1(1:nnrbt,:) )
             CALL xmlw_writetag( "V3C", v3c1(1:nnrbt,:) )
@@ -939,10 +966,10 @@ PROGRAM xclib_test
          DO ii = 1, nnrbt
             !
             IF ( .NOT. DF_OK ) THEN
-              ex_is_out = is_it_out( diff_thr_e_lda, 1, ex1(ii:ii), ex2(ii:ii) )
-              ec_is_out = is_it_out( diff_thr_e_lda, 1, ec1(ii:ii), ec2(ii:ii) )
-              vx_is_out = is_it_out( diff_thr_v_lda,ns, vx1(ii,:), vx2(ii,:) )
-              vc_is_out = is_it_out( diff_thr_v_lda,ns, vc1(ii,:), vc2(ii,:) )
+              ex_is_out = exc_term .AND. is_it_out( diff_thr_e_lda, 1, ex1(ii:ii), ex2(ii:ii) )
+              ec_is_out = cor_term .AND. is_it_out( diff_thr_e_lda, 1, ec1(ii:ii), ec2(ii:ii) )
+              vx_is_out = exc_term .AND. is_it_out( diff_thr_v_lda,ns, vx1(ii,:), vx2(ii,:) )
+              vc_is_out = cor_term .AND. is_it_out( diff_thr_v_lda,ns, vc1(ii,:), vc2(ii,:) )
               something_out = ANY((/ex_is_out, ec_is_out, vx_is_out, vc_is_out/))
             ELSE
               dmuxc_is_out = is_dit_out( diff_thr_dmuxc, dmuxc1(ii,:,:), &
@@ -967,10 +994,10 @@ PROGRAM xclib_test
               WRITE(stdout,*) " "
               !
               IF (.NOT. DF_OK) THEN
-                IF ( ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
-                IF ( ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
-                IF ( vx_is_out ) CALL print_diff( 'Vx', vx1(ii,:),  vx2(ii,:)  )
-                IF ( vc_is_out ) CALL print_diff( 'Vc', vc1(ii,:),  vc2(ii,:)  )
+                IF ( exc_term .AND. ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
+                IF ( cor_term .AND. ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
+                IF ( exc_term .AND. vx_is_out ) CALL print_diff( 'Vx', vx1(ii,:),  vx2(ii,:)  )
+                IF ( cor_term .AND. vc_is_out ) CALL print_diff( 'Vc', vc1(ii,:),  vc2(ii,:)  )
               ELSE  
                 CALL print_diff2( 'dmuxc', dmuxc1(ii,:,:), dmuxc2(ii,:,:) )
               ENDIF !df_ok
@@ -986,12 +1013,12 @@ PROGRAM xclib_test
          DO ii = 1, nnrbt
            !
            IF ( .NOT. DF_OK ) THEN
-             ex_is_out = is_it_out( diff_thr_e_gga, 1, ex1(ii:ii), ex2(ii:ii) )
-             ec_is_out = is_it_out( diff_thr_e_gga, 1, ec1(ii:ii), ec2(ii:ii) )
-             v1x_is_out= is_it_out( diff_thr_vgga,ns, v1x1(ii,:),v1x2(ii,:) )
-             v2x_is_out= is_it_out( diff_thr_vgga,ns, v2x1(ii,:),v2x2(ii,:) )
-             v1c_is_out= is_it_out( diff_thr_vgga,ns, v1c1(ii,:),v1c2(ii,:) )
-             v2c_is_out= is_it_out( diff_thr_vgga,ns, v2c1(ii,:),v2c2(ii,:), &
+             ex_is_out = exc_term .AND. is_it_out( diff_thr_e_gga, 1, ex1(ii:ii), ex2(ii:ii) )
+             ec_is_out = cor_term .AND. is_it_out( diff_thr_e_gga, 1, ec1(ii:ii), ec2(ii:ii) )
+             v1x_is_out= exc_term .AND. is_it_out( diff_thr_vgga,ns, v1x1(ii,:),v1x2(ii,:) )
+             v2x_is_out= exc_term .AND. is_it_out( diff_thr_vgga,ns, v2x1(ii,:),v2x2(ii,:) )
+             v1c_is_out= cor_term .AND. is_it_out( diff_thr_vgga,ns, v1c1(ii,:),v1c2(ii,:) )
+             v2c_is_out= cor_term .AND. is_it_out( diff_thr_vgga,ns, v2c1(ii,:),v2c2(ii,:), &
                                                    v2c_ud1(ii), v2c_ud2(ii) )
              something_out=ANY((/ex_is_out, ec_is_out, v1x_is_out, v2x_is_out, &
                                  v1c_is_out, v2c_is_out/) )                
@@ -1032,23 +1059,23 @@ PROGRAM xclib_test
              ! 
              IF (.NOT. DF_OK) THEN 
                ! 
-               IF (ex_is_out)  CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) ) 
-               IF (ec_is_out)  CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) ) 
-               IF (v1x_is_out) CALL print_diff( 'V1x',v1x1(ii,:), v1x2(ii,:) ) 
-               IF (v2x_is_out) CALL print_diff( 'V2x',v2x1(ii,:), v2x2(ii,:) ) 
-               IF (v1c_is_out) CALL print_diff( 'V1c',v1c1(ii,:), v1c2(ii,:) ) 
-               IF (v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:), & 
+               IF (exc_term .AND. ex_is_out)  CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
+               IF (cor_term .AND. ec_is_out)  CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
+               IF (exc_term .AND. v1x_is_out) CALL print_diff( 'V1x',v1x1(ii,:), v1x2(ii,:) )
+               IF (exc_term .AND. v2x_is_out) CALL print_diff( 'V2x',v2x1(ii,:), v2x2(ii,:) )
+               IF (cor_term .AND. v1c_is_out) CALL print_diff( 'V1c',v1c1(ii,:), v1c2(ii,:) )
+               IF (cor_term .AND. v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:), &
                                                  v2c_ud1(ii), v2c_ud2(ii) )
              ELSE
                ! 
                !WRITE(stdout,*) " " 
                ! 
                IF (dvxcrr_is_out) CALL print_diff2( 'dvxcrr',dvxcrr1(ii,:,:), &
-                                                             dvxcrr2(ii,:,:) ) 
+                                                             dvxcrr2(ii,:,:) )
                IF (dvxcsr_is_out) CALL print_diff2( 'dvxcsr',dvxcsr1(ii,:,:), &
-                                                             dvxcsr2(ii,:,:) ) 
+                                                             dvxcsr2(ii,:,:) )
                IF (dvxcss_is_out) CALL print_diff2( 'dvxcss',dvxcss1(ii,:,:), &
-                                                             dvxcss2(ii,:,:) ) 
+                                                             dvxcss2(ii,:,:) )
              ENDIF
              !
            ENDIF  
@@ -1365,6 +1392,7 @@ PROGRAM xclib_test
   REAL(DP) :: xc_aver(2,2)
   REAL(DP) :: thr, aver_snd(1), aver_rec(1)
   INTEGER :: ierr2
+  !
   !
   IF (LDA .AND. .NOT.GGA) THEN
     IF (what(1:1)=='E') thr = diff_thr_e_lda
