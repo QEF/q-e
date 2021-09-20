@@ -95,8 +95,7 @@ SUBROUTINE ham_R0_2nd ()
   deltaHq = ZERO
   deltaHR = ZERO
   !
-  WRITE(stdout,'(/)')
-  WRITE( stdout, '(5X,"INFO: KC HAMILTONIAN CALCULATION ...")')
+  WRITE( stdout, '(5X,"INFO: KI[2nd, (R=0,i=j)] CALCULATION ...")')
   !
   DO iq = 1, nqs
     !! For each q in the mesh 
@@ -107,7 +106,7 @@ SUBROUTINE ham_R0_2nd ()
     lrrho=num_wann*dffts%nnr
     CALL get_buffer (rhowann, lrrho, iurho_wann, iq)
     !! Retrive the rho_wann_q(r) from buffer in REAL space
-    IF (kc_iverbosity .gt. 0 ) WRITE(stdout,'(8X, "INFO: rhowan_q(r) RETRIEVED")') 
+    IF (kc_iverbosity .gt. 1 ) WRITE(stdout,'(8X, "INFO: rhowan_q(r) RETRIEVED")') 
     !
     ALLOCATE ( rhog (ngms) , delta_vg(ngms,nspin), vh_rhog(ngms), drhog_scf (ngms, nspin), delta_vg_(ngms,nspin) )
     !
@@ -219,7 +218,7 @@ SUBROUTINE ham_R0_2nd ()
                                                     REAL(deltaHR(iwann,iwann,1)), AIMAG(deltaHR(iwann,iwann,1))
   ENDDO
   !
-  WRITE( stdout, '(5X,"INFO: HAM CALCULATION ... DONE")')
+  WRITE( stdout, '(5X,"INFO: KI[2nd, (R=0,i=j)] CALCULATION ... DONE")')
   !
 END subroutine 
 

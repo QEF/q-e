@@ -1,5 +1,5 @@
 
-     Program PW2WANNIER v.6.2 starts on 26Feb2020 at 11: 0:39 
+     Program PW2WANNIER v.6.7MaX starts on 15Sep2021 at 15:27:33 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -16,11 +16,17 @@
  
   Reading nscf_save data
 
-     Reading data from directory:
-     ./out/Si.save
+     Reading xml data from directory:
+
+     ./out/Si.save/
+     Message from routine read_pp_mesh:
+     mesh size missing, using the one in header
+     Message from routine read_pp_mesh:
+     mesh size missing, using the one in header
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
@@ -32,6 +38,7 @@
      Max          74      74     23                  823      823     153
      Sum         295     295     91                 3287     3287     609
  
+     Reading collected, re-writing distributed wavefunctions
  
   Spin CASE ( default = unpolarized )
  
@@ -62,9 +69,9 @@
   Opening pp-files 
  
  
-  ---------------
-  *** Compute  A 
-  ---------------
+  --------------------------
+  *** Compute  A projections
+  --------------------------
  
   AMN: iknum =        8
        1       2       3       4       5       6       7       8
@@ -102,14 +109,14 @@
   ------------
  
  
-     init_pw2wan  :      0.14s CPU      0.14s WALL (       1 calls)
-     compute_amn  :      0.05s CPU      0.05s WALL (       1 calls)
-     compute_mmn  :      0.02s CPU      0.02s WALL (       1 calls)
+     init_pw2wan  :      0.07s CPU      0.07s WALL (       1 calls)
+     compute_amn  :      0.04s CPU      0.04s WALL (       1 calls)
+     compute_mmn  :      0.01s CPU      0.01s WALL (       1 calls)
  
-     PW2WANNIER   :     0.19s CPU         0.20s WALL
+     PW2WANNIER   :      0.12s CPU      0.13s WALL
 
  
-   This run was terminated on:  11: 0:39  26Feb2020            
+   This run was terminated on:  15:27:33  15Sep2021            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

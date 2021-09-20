@@ -1,5 +1,5 @@
 
-     Program PW2WANNIER v.6.6 starts on 30Oct2020 at 10:59: 5 
+     Program PW2WANNIER v.6.7MaX starts on 16Sep2021 at 11:45:39 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,13 +13,16 @@
 
      MPI processes distributed on     1 nodes
      R & G space division:  proc/nbgrp/npool/nimage =       4
-     Fft bands division:     nmany     =       1
  
   Reading nscf_save data
 
      Reading xml data from directory:
 
      ./out/Si.save/
+     Message from routine read_pp_mesh:
+     mesh size missing, using the one in header
+     Message from routine read_pp_mesh:
+     mesh size missing, using the one in header
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation= PBE
@@ -112,15 +115,15 @@
   ------------
  
  
-     init_pw2wan  :      0.17s CPU      0.19s WALL (       1 calls)
-     compute_amn  :      0.13s CPU      0.14s WALL (       1 calls)
-     compute_mmn  :      0.28s CPU      0.43s WALL (       1 calls)
-     write_unk    :      0.40s CPU      0.54s WALL (       1 calls)
+     init_pw2wan  :      0.12s CPU      0.37s WALL (       1 calls)
+     compute_amn  :      0.12s CPU      0.44s WALL (       1 calls)
+     compute_mmn  :      0.56s CPU      0.90s WALL (       1 calls)
+     write_unk    :      0.32s CPU      0.49s WALL (       1 calls)
  
-     PW2WANNIER   :      0.98s CPU      1.30s WALL
+     PW2WANNIER   :      1.13s CPU      2.22s WALL
 
  
-   This run was terminated on:  10:59: 6  30Oct2020            
+   This run was terminated on:  11:45:41  16Sep2021            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

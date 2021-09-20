@@ -24,7 +24,7 @@ subroutine apply_u_matrix(evc_ks, evc_var, occ_mat, ik_eff, n_orb)
   USE wvfct,                ONLY : npwx, nbnd
   USE noncollin_module,     ONLY : npol
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  !USE mp_bands,             ONLY : intra_bgrp_comm
   !
   USE wvfct,                 ONLY : wg
   USE klist,                 ONLY : wk, xk
@@ -47,8 +47,8 @@ subroutine apply_u_matrix(evc_ks, evc_var, occ_mat, ik_eff, n_orb)
   !
   COMPLEX(DP), ALLOCATABLE :: evc_opt(:,:) 
   ! ... The optimal set of rotate wfc after disentanglement
-  INTEGER :: iwann, jwann
-  COMPLEX (DP) :: u_vi, udag_vj
+  INTEGER :: iwann!, jwann
+  !COMPLEX (DP) :: u_vi, udag_vj
   REAL(DP) :: trace
   COMPLEX(DP) :: eigvc(num_wann,num_wann)
   REAL(DP) :: eigvl(num_wann)

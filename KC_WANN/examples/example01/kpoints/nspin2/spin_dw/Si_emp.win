@@ -17,8 +17,12 @@ write_xyz = .true.
 bands_plot              = .true.
 bands_num_points        = 20
 begin kpoint_path
- G 0.000 0.000 0.000  X 0.500 0.000 0.000
- X 0.500 0.000 0.000  G 0.000 0.000 0.000
+G 0.000 0.000 0.000  X 0.500 0.000 0.500
+X 0.500 0.000 0.500  U 0.625 0.250 0.625
+K 0.375 0.375 0.750  G 0.000 0.000 0.000
+G 0.000 0.000 0.000  L 0.500 0.500 0.500
+L 0.500 0.500 0.500  W 0.500 0.250 0.750
+W 0.500 0.250 0.750  U 0.500 0.000 0.500
 end kpoint_path
 
 dis_froz_max      = 8.0
@@ -27,8 +31,8 @@ dis_win_max       = 20
 !dis_froz_max = 11.0
 !dis_num_iter = 500
 
-wannier_plot = .false.
-wannier_plot_list = 1
+wannier_plot = .true.
+wannier_plot_list = 1-4
 
 num_iter          = 5000
 num_print_cycles  = 10

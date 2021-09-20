@@ -4,6 +4,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !#define DEBUG
+#define ZERO ( 0.D0, 0.D0 )
+#define ONE  ( 1.D0, 0.D0 )
 !-----------------------------------------------------------------------
 SUBROUTINE koopmans_ham ()
   !---------------------------------------------------------------------
@@ -12,10 +14,13 @@ SUBROUTINE koopmans_ham ()
   USE kinds,                 ONLY : DP
   USE klist,                 ONLY : nkstot, xk
   USE lsda_mod,              ONLY : nspin
-  USE control_kc_wann,       ONLY : num_wann, Hamlt, nqstot, l_alpha_corr,&
-                                    alpha_final, num_wann_occ, on_site_only
+  USE control_kc_wann,       ONLY : num_wann, Hamlt, nqstot, l_alpha_corr, evc0, &
+                                    alpha_final, num_wann_occ, on_site_only, iuwfc_wann
   USE constants,             ONLY : rytoev
-  USE wvfct,                 ONLY : npwx
+  USE wvfct,                 ONLY : npwx, npw, et, nbnd
+  USE units_lr,              ONLY : lrwfc, iuwfc
+  USE wavefunctions,         ONLY : evc
+  USE buffers,               ONLY : get_buffer, save_buffer
   !
   IMPLICIT NONE
   !
@@ -38,6 +43,10 @@ SUBROUTINE koopmans_ham ()
   REAL(DP) :: ddH(num_wann)
   !
   INTEGER :: i, iwann, jwann
+  ! 
+  REAL(DP) :: ehomo, elumo
+  REAL(DP) :: ehomo_ks, elumo_ks
+  INTEGER  :: lrwannfc
   !
   !
   IF (on_site_only) WRITE(stdout, '(/,5X, "INFO: Skipping off-diag: only R=0 and i=j")') 
@@ -66,6 +75,11 @@ SUBROUTINE koopmans_ham ()
   ENDDO
   ! DEBUG
 #endif
+  !
+  ehomo=-1D+6
+  elumo=+1D+6
+  ehomo_ks=-1D+6
+  elumo_ks=+1D+6
   !
   DO ik = 1, nkstot/nspin
     !
@@ -127,18 +141,53 @@ SUBROUTINE koopmans_ham ()
     WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
     WRITE( stdout, '(10x, "KS  ",8F9.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
     !
+    ehomo_ks = MAX ( ehomo_ks, eigvl(num_wann_occ ) )
+    elumo_ks = MIN ( elumo_ks, eigvl(num_wann_occ+1 ) )
+    !
     ham(:,:) = Hamlt(ik,:,:) 
     CALL cdiagh( num_wann, ham, num_wann, eigvl, eigvc )
     WRITE( stdout, '(10x, "KI  ",8F9.4)' ) (eigvl(iwann)*rytoev, iwann=1,num_wann)
     !
+    ! Canonical wfc at each k point (overwrite the evc from DFT)
+    lrwannfc = num_wann*npwx
+    !write (*,'("NICOLA lrwannfc", i20)') lrwannfc, iuwfc_wann
+    CALL get_buffer ( evc0, lrwannfc, iuwfc_wann, ik )
+    ! Retrive the ks function at k (in the Wannier Gauge)
+    CALL ZGEMM( 'N','N', npw, num_wann, num_wann, ONE, evc0, npwx, eigvc, num_wann, &
+                 ZERO, evc, npwx )
+    lrwfc = nbnd * npwx
+    !write (*,'("NICOLA lrwfc", i20)') lrwfc, iuwfc, nbnd, SIZE(evc)
+    CALL save_buffer ( evc, lrwfc, iuwfc, ik )
+    !
+    nbnd = num_wann
+    DO iwann = 1, nbnd
+      et(iwann,ik) = eigvl(iwann)
+    ENDDO
+    !
+    ehomo = MAX ( ehomo, eigvl(num_wann_occ ) )
+    elumo = MIN ( elumo, eigvl(num_wann_occ+1 ) )
+    !
   ENDDO
   !
+  IF ( elumo < 1d+6) THEN
+     WRITE( stdout, 9042 ) ehomo_ks*rytoev, elumo_ks*rytoev
+     WRITE( stdout, 9044 ) ehomo*rytoev, elumo*rytoev
+  ELSE
+     WRITE( stdout, 9043 ) ehomo_ks*rytoev
+     WRITE( stdout, 9045 ) ehomo*rytoev
+  END IF
+  ! 
   ! For an isolated molecule the full Hamiltonian is also available
   ik=1
   IF (nkstot/nspin == 1) CALL full_ham ( ik )
+  ! ... formats
   !
+9043 FORMAT(/,8x,'KS       highest occupied level (ev): ',F10.4 )
+9042 FORMAT(/,8x, 'KS       highest occupied, lowest unoccupied level (ev): ',2F10.4 )
+9045 FORMAT(  8x, 'KI[2nd]  highest occupied level (ev): ',F10.4 )
+9044 FORMAT(  8x, 'KI[2nd]  highest occupied, lowest unoccupied level (ev): ',2F10.4 )
+9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
   !
-  9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
   RETURN
   !
   CONTAINS 
@@ -377,7 +426,7 @@ SUBROUTINE koopmans_ham ()
     LOGICAL :: off_diag = .TRUE.
     ! compute Off-diagonal elements. NsC: not sure off_diag=.false. here makes sense: DO NOT CHANGE!!!!
     !
-    WRITE( stdout, '(/,/,5X,"INFO: KC HAMILTONIAN CALCULATION ik= ", i4, " ...", /)') ik
+    WRITE( stdout, '(/,/,5X,"INFO: KI[2nd] HAMILTONIAN CALCULATION ik= ", i4, " ...", /)') ik
     !
     nqs = nqstot
     !

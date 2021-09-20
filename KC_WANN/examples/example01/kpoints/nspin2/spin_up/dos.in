@@ -1,0 +1,5 @@
+&dos
+ prefix = "Si_kcwann"
+ outdir = "./out"
+ degauss = 0.05
+/

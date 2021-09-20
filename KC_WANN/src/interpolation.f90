@@ -145,7 +145,7 @@ CONTAINS
     !
     COMPLEX(DP), INTENT(OUT) :: ham_t(h_dim,h_dim)
     !
-    INTEGER :: iband, jband, ik
+    INTEGER :: iband, jband, ik, ik_eff
     COMPLEX(DP) :: corr_phase
     REAL(DP) :: xq(3)
     REAL(DP) :: dist_ij(3)       ! distance between WFs |0i> and |0j>
@@ -160,12 +160,13 @@ CONTAINS
           DO ik = 1, nks
             !
             IF ( lsda .AND. isk(ik) /= spin_component) CYCLE
+            ik_eff = ik - (spin_component -1)*nkstot/nspin
             !
             xq = xk(:,ik)
             CALL cryst_to_cart( 1, xq, at, -1 )
             !
             ham_t(iband,jband) = ham_t(iband,jband) + &
-               EXP( - imag * tpi * DOT_PRODUCT( xq, irvect(:,ir) ) ) * ham(ik,iband,jband)
+               EXP( - imag * tpi * DOT_PRODUCT( xq, irvect(:,ir) ) ) * ham(ik_eff,iband,jband)
             !
           ENDDO
           !

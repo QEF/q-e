@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !#include "f_defs.h"
-#define DEBUG
+!#define DEBUG
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
@@ -68,13 +68,15 @@ SUBROUTINE full_ham (ik)
   REAL(DP), ALLOCATABLE :: eigvl_ki(:), et_aux(:,:)
   !
   LOGICAL :: off_diag = .TRUE.
+  REAL(DP) :: ehomo, elumo
+  REAL(DP) :: ehomo_p, elumo_p
   !
   !
   ALLOCATE (psic_1( dfftp%nnr), vpsi_r(dffts%nnr), vpsi(npwx), v_ki(npwx,nbnd))
   ALLOCATE (et_aux(nbnd,nks))
   !
   !
-  WRITE(stdout,'(/,2x,"#########",3x, "STARTING KI corrections calcualtion", 3x, "##########",/ )')
+  WRITE(stdout,'(/,5x,"INFO: KI calcualtion: Full Hamiltonian ... ",/ )')
   !
   ! ... Loop over k_point: actually it's a loop over the spin ik=1 ==> spin_up; ik=2 ==> spin_dw ...
   !
@@ -90,7 +92,7 @@ SUBROUTINE full_ham (ik)
   lrwfc = num_wann*npwx
   CALL get_buffer ( evc0, lrwfc, iuwfc_wann, ik )
   ! Retrive the ks function at k 
-  IF (kc_iverbosity .gt. 0 ) WRITE(stdout,'(8X, "INFO: u_k(g) RETRIEVED"/)')
+  IF (kc_iverbosity .gt. 1 ) WRITE(stdout,'(8X, "INFO: u_k(g) RETRIEVED"/)')
   !
   CALL compute_map_ikq_single (ik)
   ! find tha map k+q --> k'+G and store the res 
@@ -143,8 +145,8 @@ SUBROUTINE full_ham (ik)
 #ifdef DEBUG
      CALL mp_sum (num1, intra_bgrp_comm) 
      CALL mp_sum (num2, intra_bgrp_comm) 
-     WRITE(stdout,'(2x, "orbital charge", 2F18.12)') num1/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
-     WRITE(stdout,'(2x, "spin-up charge", 2F18.12)') num2/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
+     WRITE(stdout,'(8x, "orbital charge", 2F18.12)') num1/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
+     WRITE(stdout,'(8x, "spin-up charge", 2F18.12)') num2/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
 #endif
      !
      ! ... orbital density in reciprocal space ...
@@ -163,11 +165,11 @@ SUBROUTINE full_ham (ik)
      sh = ehart
      !
 !     WRITE(stdout,'("v_hatree", 2i5, 3F15.8)') ibnd, current_spin ,REAL(v(1:3,1))
-     WRITE(stdout,'("self_hatree, EXX", 2i5, 1F15.8)') ibnd, current_spin, -sh
+     WRITE(stdout,'(8x, "self_hatree", 2i5, 1F15.8)') ibnd, current_spin, -sh
      !
 #ifdef DEBUG
-     WRITE(stdout,'(2x, "orbital=", i3, 2x, "Self-Hartree", F15.10, 3x, "Ry",/)') ibnd, sh
-     WRITE(stdout,'(2x,"orbital charge from v_h",F15.12,/)') charge
+     WRITE(stdout,'(8x, "orbital=", i3, 2x, "Self-Hartree", F15.10, 3x, "Ry",/)') ibnd, sh
+     WRITE(stdout,'(8x,"orbital charge from v_h",F15.12,/)') charge
 #endif
      !
      ! .. Add the xc contribution ...
@@ -207,7 +209,7 @@ SUBROUTINE full_ham (ik)
         ! 
         !
         delta_eig(ibnd) = (-sh+(etxc-etxc_minus1-etmp)) 
-        WRITE(stdout, '("NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, &
+        WRITE(stdout, '(8x, "KI corr const term, sh[n_i], Exc[n], Exc[n-n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, &
             etxc, etxc_minus1, etmp 
         IF (lrpa) delta_eig(ibnd) = (-sh)  !! hartree only for debug
         !
@@ -240,7 +242,7 @@ SUBROUTINE full_ham (ik)
         !
         ! Scalar-term correction for Diagonal elements only
         delta_eig(ibnd) = -sh + (etxc_minus1 - etxc - etmp1)
-        WRITE(stdout, '("NICOLA KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, &
+        WRITE(stdout, '(8x, "KI corr const term, sh[n_i], Exc[n], Exc[n+n_i], int{v_xc[n] n_i} ", 4F14.8)') sh, &
             etxc, etxc_minus1, etmp 
         IF (lrpa) delta_eig(ibnd) = (-sh)  !! hartree only for debug
 !        delta_eig(ibnd) = -sh
@@ -295,7 +297,7 @@ SUBROUTINE full_ham (ik)
         etmp1 = sum ( vxc_minus1(1:dfftp%nnr,current_spin) * n_r(1:dfftp%nnr) )
         etmp1= etmp1/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )*omega
         CALL mp_sum (etmp1, intra_bgrp_comm)
-        WRITE(stdout , '("NICOLA PZ corr const term, sh[n_i], Exc[n_i], int{v_xc[n_i] n_i}, int{v_xc[n_i] n_i}", 4F15.8)'), &
+        WRITE(stdout , '(8x, "PZ corr const term, sh[n_i], Exc[n_i], int{v_xc[n_i] n_i}, int{v_xc[n_i] n_i}", 4F15.8)'), &
             sh, etxc_minus1, etmp1, vtxc_minus1
         etmp1 = + sh - etxc_minus1 + etmp1
         !
@@ -310,7 +312,7 @@ SUBROUTINE full_ham (ik)
         etmp2=etmp2/( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
         CALL mp_sum (etmp2, intra_bgrp_comm)
         delta_eig(ibnd) = delta_eig(ibnd) + REAL(etmp2)
-        WRITE(stdout,*) "NICOLA Delta KIPZ",  REAL(etmp2)
+        WRITE(stdout,*) "8x, Delta KIPZ",  REAL(etmp2)
         !
         ! 1) GO to G-space and store the kipz gradient 
         CALL fwfft ('Wave', vpsi_r, dffts)
@@ -327,15 +329,15 @@ SUBROUTINE full_ham (ik)
      ENDIF 
      !
      IF (alpha_final_full(ibnd) .lt. 0.00 ) THEN 
-         WRITE(stdout,'("WARNING: alpha for orbital", i5, i3, "  smaller than 0.00.", F15.8, "Set it to 1.00",/)') ibnd, &
+         WRITE(stdout,'(8x, "WARNING: alpha for orbital", i5, i3, "  smaller than 0.00.", F15.8, "Set it to 1.00",/)') ibnd, &
              ik, alpha_final_full(ibnd)
          alpha_final_full(ibnd) = 1.D0
      ENDIF 
      !
      v_ki(:,ibnd) = v_ki(:,ibnd) * alpha_final_full(ibnd)
      !
-     WRITE(stdout,'(3x, "orbital", i3, 3x, "spin", i3, 5x, "uKI_diag", F15.8 ," Ry", 3x, "rKI_diag", F15.8, " Ry", 3x, &
-         &"alpha=", F15.8, 3x )') ibnd, current_spin, delta_eig(ibnd), delta_eig(ibnd)*alpha_final_full(ibnd), &
+     WRITE(stdout,'(8x, "orbital", i3, 3x, "spin", i3, 5x, "uKI_diag", F15.8 ," Ry", 3x, "rKI_diag", F15.8, " Ry", 3x, &
+         &"alpha=", F15.8, 3x,/ )') ibnd, current_spin, delta_eig(ibnd), delta_eig(ibnd)*alpha_final_full(ibnd), &
          alpha_final_full(ibnd)
      !
   ENDDO orb_loop
@@ -404,11 +406,13 @@ SUBROUTINE full_ham (ik)
   ENDIF
 !!!!!!!!!!
   !
-  WRITE(stdout,'(/,3x, "###  KI HAMILTONIAN EMPTY ###")')
+#ifdef DEBUG
+  WRITE(stdout,'(5x, "###  KI HAMILTONIAN EMPTY ###")')
   DO k = num_wann_occ+1, num_wann_occ+4
-     WRITE(stdout,'(16F20.15)') ham_up(num_wann_occ+1:num_wann_occ+4,k)
+     WRITE(stdout,'(5x, 16F20.15)') ham_up(num_wann_occ+1:num_wann_occ+4,k)
   ENDDO
   WRITE(stdout,*) 
+#endif
   !
   OPEN(987,FILE='hamiltonian_emp.dat',FORM='formatted',status='UNKNOWN')
   DO k = num_wann_occ+1, num_wann
@@ -418,8 +422,6 @@ SUBROUTINE full_ham (ik)
   !
   ham=(0.D0,0.D0)
   !
-
-  !
   ! The KS hamiltonian in the Wannier Gauge (just to check)
   ham(:,:) = Hamlt(ik,:,:)+ham_up(:,:)
   IF (qp_symm)  ham(:,:) = Hamlt(ik,:,:)+0.5D0*(ham_up(:,:)+ham_dw(:,:))
@@ -428,19 +430,19 @@ SUBROUTINE full_ham (ik)
   ! Store the res in the global variable
   Hamlt(ik,:,:) = ham(:,:)
   !
-  WRITE(stdout,'(/,/,2x,"#########",3x, "END KI corrections calcualtion", 3x, "##########",/ )')
+  WRITE(stdout,'(5x,"INFO: KI calcualtion: Full Hamiltonian ... DONE",/ )')
   ! 
 #ifdef DEBUG
-  WRITE(stdout,'(/,3x, "###  KI HAMILTONIAN ###")')
+  WRITE(stdout,'(3x, "###  KI HAMILTONIAN ###")')
   i_end = MIN(8,n_orb)
   DO k = 1, i_end
      WRITE(stdout,'(16F12.7)') ham(1:i_end,k)
   ENDDO
   WRITE(stdout,*) 
   !
-  WRITE(stdout,'(/,3x, "###  KI HAMILTONIAN EMPTY ###")')
-  DO k = num_wann_occ+1, num_wann_occ+4
-     WRITE(stdout,'(16F12.7)') ham(num_wann_occ+1:num_wann_occ+4,k)
+  WRITE(stdout,'(5x, "DATA: KI HAMILTONIAN EMPTY")')
+  DO k = num_wann_occ+1, n_orb
+     WRITE(stdout,'(16F12.7)') ham(num_wann_occ+1:n_orb,k)
   ENDDO
   WRITE(stdout,*) 
 #endif
@@ -450,40 +452,55 @@ SUBROUTINE full_ham (ik)
   DO ibnd = 1, n_orb
      et_aux(ibnd,ik) = DBLE(ham(ibnd,ibnd))
   ENDDO
+  IF (kc_at_ks) THEN 
+    ehomo_p=-1D+6
+    elumo_p=+1D+6
+    ehomo_p = MAX ( ehomo_p, et_aux(num_wann_occ,ik ) )
+    elumo_p = MIN ( elumo_p, et_aux(num_wann_occ+1,ik ) )
+  ENDIF
   !
   ! Here diagonalize ham for empty states with 
   ! different dimension of the hilbert space
+  ! This makes sense only when kc_at_ks. 
   !
-  WRITE(stdout,'(/,3x, "###  Empty states spectrum ###")')
-!  DO k = 1, dim_ham
-  DO k = 1, dim_ham-num_wann_occ
-     !
-     i_start = num_wann_occ+1
-     i_end = num_wann_occ+k
-     !
-     ALLOCATE (ham_aux(k,k), eigvl_ki(k), eigvc_ki(k,k))
-     !ham_aux(1:k,1:k) = ham(1:k,1:k)
-     ham_aux(1:k,1:k) = ham(i_start:i_end,i_start:i_end)
-     !
-     CALL cdiagh( k, ham_aux, k, eigvl_ki, eigvc_ki )
-     !
-     IF (k.le.10) THEN 
-        WRITE(stdout,'(I3, 10F10.4)') k, eigvl_ki(1:k)*rytoev  ! First 10 eigenvalues
-     ELSE
-        WRITE(stdout,'(I3, 10F10.4)') k, eigvl_ki(1:10)*rytoev  ! First 10 eigenvalues
-     ENDIF
-     !
-     DEALLOCATE (ham_aux)
-     DEALLOCATE (eigvl_ki, eigvc_ki)
-     !
-  ENDDO
-  ! 
+  IF (kc_at_ks) THEN
+    !
+    WRITE(stdout,'(8x, "DATA: Empty states spectrum as a function of the # of orbitals")')
+    !
+    DO k = 1, dim_ham-num_wann_occ
+       !
+       i_start = num_wann_occ+1
+       i_end = num_wann_occ+k
+       !
+       ALLOCATE (ham_aux(k,k), eigvl_ki(k), eigvc_ki(k,k))
+       !ham_aux(1:k,1:k) = ham(1:k,1:k)
+       ham_aux(1:k,1:k) = ham(i_start:i_end,i_start:i_end)
+       !
+       CALL cdiagh( k, ham_aux, k, eigvl_ki, eigvc_ki )
+       !
+       IF (k.le.10) THEN 
+          WRITE(stdout,'(8x, I3, 10F10.4)') k, eigvl_ki(1:k)*rytoev  ! First 10 eigenvalues
+       ELSE
+          WRITE(stdout,'(8x, I3, 10F10.4)') k, eigvl_ki(1:10)*rytoev  ! First 10 eigenvalues
+       ENDIF
+       !
+       DEALLOCATE (ham_aux)
+       DEALLOCATE (eigvl_ki, eigvc_ki)
+       !
+    ENDDO
+    ! 
+  ENDIF
+  !
   ALLOCATE (ham_aux(n_orb,n_orb), eigvl_ki(n_orb), eigvc_ki(n_orb,n_orb))
   ham_aux(1:n_orb,1:n_orb) = ham(1:n_orb,1:n_orb)
   CALL cdiagh( n_orb, ham_aux, n_orb, eigvl_ki, eigvc_ki )
   DO ibnd = 1, n_orb
      et(ibnd,ik) = eigvl_ki(ibnd)
   ENDDO
+  ehomo=-1D+6
+  elumo=+1D+6
+  ehomo = MAX ( ehomo, eigvl_ki(num_wann_occ ) )
+  elumo = MIN ( elumo, eigvl_ki(num_wann_occ+1 ) )
   !
   DEALLOCATE (ham) 
   DEALLOCATE (ham_up) 
@@ -492,12 +509,26 @@ SUBROUTINE full_ham (ik)
   IF (ALLOCATED(eigvc_ki)) DEALLOCATE (eigvc_ki)
   IF (ALLOCATED(ham_aux)) DEALLOCATE (ham_aux)
   !
+  WRITE( stdout, '' )
+  WRITE( stdout, '(10x, "KI[Full] ",8F9.4)' ) (et(ibnd,ik)*rytoev, ibnd=1,n_orb) 
+  IF (kc_at_ks ) WRITE( stdout, '' )
+  IF (kc_at_ks ) WRITE( stdout, '(10x, "KI[Pert] ",8F9.4)' ) (et_aux(ibnd,ik)*rytoev, ibnd=1,n_orb)
   !
-  ! write(*,*) n_orb
-  WRITE( stdout, '("KI Full ",8F9.4)' ) (et(ibnd,ik)*rytoev, ibnd=1,n_orb) 
-  IF (kc_at_ks ) WRITE( stdout, '("KI Pert ",8F9.4)' ) (et_aux(ibnd,ik)*rytoev, ibnd=1,n_orb)
+  WRITE( stdout, '' )
+  IF ( elumo < 1d+6) THEN
+     IF (kc_at_ks) WRITE( stdout, 9043 ) ehomo_p*rytoev, elumo_p*rytoev
+     WRITE( stdout, 9044 ) ehomo*rytoev, elumo*rytoev
+  ELSE
+     IF (kc_at_ks) WRITE( stdout, 9046 ) ehomo_p*rytoev
+     WRITE( stdout, 9045 ) ehomo*rytoev
+  END IF
   !
   DEALLOCATE (psic_1, vpsi_r, vpsi, v_ki) 
   DEALLOCATE (et_aux)
+  !
+9046 FORMAT(8x, 'KI[pert] highest occupied level (ev): ',F10.4 )
+9045 FORMAT(8x, 'KI[full] highest occupied level (ev): ',F10.4 )
+9044 FORMAT(8x, 'KI[full] highest occupied, lowest unoccupied level (ev): ',2F10.4 )
+9043 FORMAT(8x, 'KI[pert] highest occupied, lowest unoccupied level (ev): ',2F10.4 )
   !
 END subroutine full_ham
