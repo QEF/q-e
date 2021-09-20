@@ -14,6 +14,7 @@ MODULE cg_module
   SAVE
 
       logical      :: tcg        = .false.   ! if true do conjugate gradient minimization for electrons
+      logical      :: pre_state = .false. ! if true do preconditioning band by band
       integer      :: nfi_firstcg = 0        ! number of the step of the first conjugate gradient step (the algoritm has to do different things)
       integer      :: maxiter    = 100      ! maximum number of iterations
       real(DP) :: conv_thr    = 1.d-5   !energy treshold 
@@ -49,9 +50,10 @@ MODULE cg_module
 CONTAINS
 
 
-  SUBROUTINE cg_init( tcg_ , maxiter_ , conv_thr_ , passop_ ,niter_cg_restart_)
+  SUBROUTINE cg_init( tcg_ , maxiter_ , conv_thr_ , passop_ ,niter_cg_restart_,&
+pre_state_)
     USE kinds, ONLY: DP
-    LOGICAL, INTENT(IN) :: tcg_
+    LOGICAL, INTENT(IN) :: tcg_, pre_state_
     INTEGER, INTENT(IN) :: maxiter_
     REAL(DP), INTENT(IN) :: conv_thr_ , passop_
     INTEGER :: niter_cg_restart_
@@ -60,6 +62,7 @@ CONTAINS
     conv_thr=conv_thr_
     passop=passop_
     niter_cg_restart=niter_cg_restart_
+    pre_state = pre_state_
     IF (tcg) CALL cg_info()
     RETURN
   END SUBROUTINE cg_init
@@ -67,15 +70,16 @@ CONTAINS
   SUBROUTINE cg_info()
     USE io_global, ONLY: stdout 
     if(tcg) then
-       write (stdout,400) maxiter,conv_thr,passop,niter_cg_restart                        
+       write (stdout,400) maxiter,conv_thr,passop,niter_cg_restart,pre_state
     endif
-400 format (/4x,'========================================'                          &
-   &        /4x,'|  CONJUGATE GRADIENT                  |'                          &
-   &        /4x,'========================================'                          &
-   &        /4x,'| iterations   =',i14,'         |'                             &
-   &        /4x,'| conv_thr     =',f14.11,' a.u.    |'                           &
-   &        /4x,'| passop       =',f14.5,' a.u.    |'                           &
-   &        /4x,'| niter_cg_restart =',i4,'      |'                           &
+400 format (/4x,'========================================' &
+   &        /4x,'|  CONJUGATE GRADIENT                  |' &
+   &        /4x,'========================================' &
+   &        /4x,'| iterations   =',i14,'         |'        &
+   &        /4x,'| conv_thr     =',f14.11,' a.u.    |'     &
+   &        /4x,'| passop       =',f14.5,' a.u.    |'      &
+   &        /4x,'| niter_cg_restart =',i14,'     |'        &
+   &        /4x,'| band precoditioning (pre_state) =',l2,'  |' &
    &        /4x,'========================================')
     RETURN
   END SUBROUTINE cg_info

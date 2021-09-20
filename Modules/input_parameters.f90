@@ -949,6 +949,10 @@ MODULE input_parameters
         LOGICAL :: tcg = .true.
         !! if TRUE perform in cpv conjugate gradient minimization of electron energy
 
+        LOGICAL :: pre_state = .false.
+        !! if TRUE, in CP's conjugate gradient routine, precondition each band
+        !! with its kinetic energy (see CPV/src/cg_sub.f90)
+
         INTEGER :: maxiter = 100
         !! max number of conjugate gradient iterations
 
@@ -1041,7 +1045,7 @@ MODULE input_parameters
           occupation_constraints, niter_cg_restart,                    &
           niter_cold_restart, lambda_cold, efield_cart, real_space,    &
           tcpbo,emass_emin, emass_cutoff_emin, electron_damping_emin,  &
-          dt_emin, efield_phase
+          dt_emin, efield_phase, pre_state
 
 !
 !=----------------------------------------------------------------------------=!

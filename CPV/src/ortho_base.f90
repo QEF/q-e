@@ -1160,7 +1160,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
-   SUBROUTINE calphi_bgrp( c0_bgrp, ngwx, bec_bgrp, nkbx, betae, phi_bgrp, nbspx_bgrp, ema0bg )
+   SUBROUTINE calphi_bgrp( c0_bgrp, ngwx, bec_bgrp, nkbx, betae, phi_bgrp, nbspx_bgrp, &
+                           ema0bg, m_minus1)
 !-----------------------------------------------------------------------
 !     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
 !     computes the matrix phi (with the old positions)
@@ -1188,12 +1189,13 @@ CONTAINS
       COMPLEX(DP)         :: c0_bgrp( :, : ), phi_bgrp( :, : )
       COMPLEX(DP)         :: betae( :, : )
       REAL(DP)            :: bec_bgrp( :, : ), emtot
-      REAL(DP), OPTIONAL  :: ema0bg( : )
+      REAL(DP), OPTIONAL  :: ema0bg( : ), m_minus1(nkb,nkb)
 
       ! local variables
       !
       INTEGER  :: is, iv, jv, ia, inl, jnl, i, j, indv
-      REAL(DP), ALLOCATABLE :: qtemp( : , : )
+      REAL(DP), ALLOCATABLE :: qtemp( : , : ) 
+      REAL(DP), ALLOCATABLE :: qtemp2( : , : ) 
       REAL(DP), ALLOCATABLE :: qtemp_d( : , : )
       REAL(DP), ALLOCATABLE :: ema0bg_d( : )
       REAL(DP) :: qqf
@@ -1234,6 +1236,15 @@ CONTAINS
             END IF
          END DO
 !$omp end parallel do
+
+         IF (PRESENT( m_minus1 ) ) THEN
+            !multiply the qtemp matrix with the matrix m_minus1
+            allocate(qtemp2(nkb, nbspx_bgrp ))
+            call dgemm( 'N', 'N', nkb, nbsp_bgrp, nkb, 1.0d0, m_minus1,nkb ,    &
+                    qtemp, nkb, 0.0d0, qtemp2,nkb )
+            qtemp=qtemp2
+            deallocate(qtemp2)
+         END IF
 !
          IF( ngw > 0 ) THEN
 #if defined (__CUDA)
