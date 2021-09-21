@@ -42,7 +42,7 @@ PROGRAM plotband
 
   real :: emin = 1.e10, emax =-1.e10, etic, eref, deltaE, Ef
 
-  INTEGER, PARAMETER :: max_lines=99
+  INTEGER, PARAMETER :: max_lines=999
   real :: mine, dxmod, dxmod_save
   INTEGER :: point(max_lines+1), nrap(max_lines)
   INTEGER :: ilines, irap, ibnd, ipoint, jnow
