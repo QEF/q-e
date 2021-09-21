@@ -131,7 +131,7 @@ SUBROUTINE write_ns
            !
            CALL cdiagh( ldim, f, ldim, lambda, vet )
            !
-           IF (nspin /= 1) WRITE( stdout,'(5x"SPIN ",i2)') is
+           IF (nspin /= 1) WRITE( stdout,'(5x,"SPIN ",i2)') is
            WRITE( stdout,'(5x,"eigenvalues:")')
            WRITE( stdout,'(5x,7f7.3)') (lambda(m1), m1=1, ldim)
            !
@@ -191,7 +191,7 @@ SUBROUTINE write_ns
            !
            CALL cdiagh(ldim, f, ldim, lambda, vet)
            !
-           IF (nspin /= 1) WRITE( stdout,'(5x"SPIN ",i2)') is
+           IF (nspin /= 1) WRITE( stdout,'(5x,"SPIN ",i2)') is
            WRITE( stdout,'(5x,"eigenvalues:")')
            WRITE( stdout,'(5x,7f7.3)') (lambda(m1), m1=1, ldim)
            !
@@ -584,7 +584,7 @@ SUBROUTINE write_nsg
               !
               CALL cdiagh(ldim1, f, ldim1, lambda, vet)
               !
-              IF (nspin /= 1) WRITE( stdout,'(5x"SPIN ",i2)') is
+              IF (nspin /= 1) WRITE( stdout,'(5x,"SPIN ",i2)') is
               WRITE( stdout,'(5x,"eigenvalues:")')
               WRITE( stdout,'(5x,7f7.3)') (lambda(m1), m1=1, ldim1)
               !
