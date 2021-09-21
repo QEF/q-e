@@ -13,6 +13,7 @@ Fixed in development version:
     eigenvectors (consistent with lda_plus_u_kind = 2).
   * plotband.x wasn't correctly plotting the bands, under some not-so-special
     circumstances
+  * CP with DFT+U could crash when writing the xml file (since v.6.6)
 
 Incompatible changes in develoment version:
   * Changes to Makefiles and to file "make.inc"
