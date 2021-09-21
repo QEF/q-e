@@ -141,7 +141,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   dvxc_sr = 0._DP
   dvxc_ss = 0._DP
   !
-  IF ( ((.NOT.is_libxc(3)) .OR. (.NOT.is_libxc(4))) &
+  IF ( ((.NOT.is_libxc(3).AND.igcx/=0) .OR. (.NOT.is_libxc(4).AND.igcc/=0)) &
         .AND. fkind/=XC_EXCHANGE_CORRELATION ) THEN
     !
     ALLOCATE( vrrx(length,sp), vsrx(length,sp), vssx(length,sp) )
@@ -169,7 +169,8 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   IF ( sp == 1 ) THEN
     !
-    IF ( ((.NOT.is_libxc(3)) .OR. (.NOT.is_libxc(4))) ) THEN
+    IF ( ((.NOT.is_libxc(3).AND.igcx/=0) .OR. (.NOT.is_libxc(4).AND.igcc/=0)) &
+        .AND. fkind/=XC_EXCHANGE_CORRELATION ) THEN
       dvxc_rr(:,1,1) = e2 * (vrrx(:,1) + vrrc(:,1))
       dvxc_sr(:,1,1) = e2 * (vsrx(:,1) + vsrc(:,1))
       dvxc_ss(:,1,1) = e2 * (vssx(:,1) + vssc(:)  )
@@ -193,7 +194,9 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
   ELSEIF ( sp == 2 ) THEN
     !
-    IF ( ((.NOT.is_libxc(3)) .OR. (.NOT.is_libxc(4))) ) THEN
+    !IF ( ((.NOT.is_libxc(3)) .OR. (.NOT.is_libxc(4))) ) THEN
+    IF ( ((.NOT.is_libxc(3).AND.igcx/=0) .OR. (.NOT.is_libxc(4).AND.igcc/=0)) &
+        .AND. fkind/=XC_EXCHANGE_CORRELATION ) THEN
       !
       DO k = 1, length
         rht = r_in(k,1) + r_in(k,2)

@@ -9,26 +9,26 @@
 !============================================================================
 PROGRAM xclib_test
   !==========================================================================
-  !! Testing program for xc\_lib library in QE. Different options:
+  !! Testing program for xc\_lib library in QE:
   !
-  !! * xc-benchmark: difference with respect to a given set of benchmark data
-  !!   (on file);
-  !! * gen-benchmark: generates set of benchmark data on file;
+  !! * gen-benchmark: stores a set of dft benchmark data on xml file;
+  !! * exe-benchmark: runs XClib to calculate data and compare them 
+  !!                  to benchamrk data in xml file.
   !
-  !! Available cases:
+  !! Choices:
   !
-  !! * LDA;
-  !! * derivative of LDA (dmxc);
-  !! * GGA;
-  !! * derivative of GGA (dgcxc);
-  !! * metaGGA.
+  !! * all_terms: run test over all available terms for each family
+  !!              and kind;
+  !! * all_short: run test over all available full dfts in QE internal
+  !!              dft list;
+  !! * all_libxc: run test over all Libxc dfts usable in QE.
   !
-
-  !- sistema funzionali e guarda che funzioni tutto  -- testa anche singoli
-  
-  !- analogo per libxc - 
+  !! Other specific options:
   !
-  !- aggiungi messaggio con 'stored' o 'skipped' nel gen-bench
+  !! * family (LDA, GGA, MGGA);
+  !! * polarization;
+  !! * derivative of xc potential.
+  !
   
   !- [dopo merge Vxc_gpu: versione gpu]
   
@@ -68,7 +68,7 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  INTEGER :: fkind, n_ext
+  INTEGER :: major, minor, micro, fkind, n_ext
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -91,8 +91,8 @@ PROGRAM xclib_test
   !
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
+  INTEGER :: id_vec(6), n_qe_func
   LOGICAL :: LDA, GGA, MGGA, POLARIZED
-  CHARACTER(LEN=120) :: name1, name2
   !
   !-------- Various params -------------------
   REAL, PARAMETER :: volume=0.1d0
@@ -109,9 +109,11 @@ PROGRAM xclib_test
                          diff_thr_dmuxc  = 1.0E-6_DP,  &
                          diff_thr_dv     = 1.0E-10_DP
   REAL(DP) :: fact, exx_frctn
+  REAL(DP) :: aver_thresh = 10.E-8        !^^--- to optimize
   !
   !---------- Indexes ---------------------------
-  INTEGER :: ii, ns, np, ipol, ithr, nthr, iip, iout, iaverout, l
+  INTEGER :: id, ii, ns, np, ipol, ithr, nthr, iip, iout, &
+             iaverout, l
   !
   !---------- XClib input vars ------------------
   REAL(DP), ALLOCATABLE :: rho(:,:), rho_tz(:,:)
@@ -142,13 +144,12 @@ PROGRAM xclib_test
   REAL(DP), ALLOCATABLE :: v1c2(:,:), v2c2(:,:), v2c_ud2(:)
   REAL(DP), ALLOCATABLE :: v2cm1(:,:,:), v2cm2(:,:,:), v3c2(:,:)
   !
-  !----------diff vars ---------------------------
+  !----------match vars ---------------------------
   LOGICAL :: ex_is_out, ec_is_out, vx_is_out, vc_is_out, &
              something_out, dmuxc_is_out
   LOGICAL :: v1x_is_out, v2x_is_out, v1c_is_out, v2c_is_out, &
              v3x_is_out, v3c_is_out, &
              dvxcrr_is_out, dvxcsr_is_out, dvxcss_is_out, dvgga_is_out
-  LOGICAL :: test_passed = .TRUE.
   ! ... LDA aver
   REAL(DP) :: ex_aver(2),   ec_aver(2),   &
               vx_aver(1,2), vc_aver(1,2), &
@@ -161,27 +162,22 @@ PROGRAM xclib_test
               dvss_aver(1,3)
   ! ... MGGA aver
   REAL(DP) :: v3x_aver(1,2), v3c_aver(1,2)
+  REAL(DP) :: aver_sndu, aver_recu, vaver(2)
   !
-  REAL(DP) :: aver_sndu, aver_recu
-  REAL(DP) :: vaver(2)
   ! ... xml
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=40) :: xc_data="XC_DATA__________", dxc_data="dXC_DATA___________"
+  CHARACTER(LEN=40) :: xc_data="XC_DATA__________", &
+                       dxc_data="dXC_DATA___________"
+  ! ... output
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
-  
-  CHARACTER(LEN=10), PARAMETER :: failed='**NO MATCH**'
-  CHARACTER(LEN=10), PARAMETER :: passed='match'
-  CHARACTER (LEN=6) :: gen_version = ''
-  
-  CHARACTER(LEN=70) :: test_output
+  CHARACTER(LEN=12), PARAMETER :: failed='**NO MATCH**', skipped='**skipped**'
+  CHARACTER(LEN=10), PARAMETER :: passed='match', stored='stored'
+  CHARACTER(LEN=6) :: gen_version = ''
+  CHARACTER(LEN=5) :: libxc_version='none', libxc_gen_version = ''
   !
-  
-  INTEGER :: id, n_qe_func, id_vec(6)
-  real(DP) :: aver_thresh = 10.E-8   !^^--- da sistemare
-  
-  
+  ! ... MPI/OpenMP stuff
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: proc_name(:)
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: node_name(:)
   INTEGER, ALLOCATABLE :: proc2node(:)
@@ -330,7 +326,7 @@ PROGRAM xclib_test
   ENDIF
   !
 #if defined(__MPI)
-  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr )
 #endif
   !
   ! ... point distribution over CPUs
@@ -342,40 +338,51 @@ PROGRAM xclib_test
   IF (nr==0) nrpe = npoints-(npoints/npes)*(npes-mype-1)
   !
   ns = nspin
-  fam_init=family
-  dft_init=dft
+  fam_init = family
+  dft_init = dft
   !
   n_qe_func = 1
   IF (dft=='all_terms') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
   IF (dft=='all_short') n_qe_func = n_dft
   IF (dft=='all_libxc') n_qe_func = 999
   !
-  
-  
-  IF ( mype==root) THEN
-    
-    IF (test=='gen-benchmark' ) THEN
-      CALL xmlw_opentag( "QE_VERSION_TEST" )
+  ! ... check QE and Libxc versions used for storing and the current ones
+  !
+  IF ( mype==root ) THEN
+#if defined(__LIBXC)
+    CALL xc_f03_version( major, minor, micro )
+    libxc_version = ' . . '
+    WRITE(libxc_version(1:1), '(i1)') major
+    WRITE(libxc_version(3:3), '(i1)') minor
+    WRITE(libxc_version(5:5), '(i1)') micro
+#endif
+    IF ( test=='gen-benchmark' ) THEN
+      CALL xmlw_opentag( "QE_Libxc_VERSION_TEST" )
       CALL xmlw_writetag( "QE_version", version_number )
+      CALL xmlw_writetag( "Libxc_version", libxc_version )
       CALL xmlw_closetag()
-    ENDIF
-    IF (test=='exe-benchmark' ) THEN
-      CALL xmlr_opentag( "QE_VERSION_TEST" )
+    ELSEIF ( test=='exe-benchmark' ) THEN
+      CALL xmlr_opentag( "QE_Libxc_VERSION_TEST" )
       CALL xmlr_readtag( "QE_version", gen_version )
+      CALL xmlr_readtag( "Libxc_version", libxc_gen_version )
       CALL xmlr_closetag()
-      WRITE(stdout,*) 'Benchmark data from QE version : ', gen_version
-      WRITE(stdout,*) 'Test calculations by QE version: ', version_number
+      !
+      WRITE(stdout,*) 'QE version active during data storing: ', gen_version
+      WRITE(stdout,*) 'QE version currently active: ', version_number
+      WRITE(stdout,*) ''
+      WRITE(stdout,*) 'Libxc version active during data storing: ', libxc_gen_version
+      WRITE(stdout,*) 'Libxc version currently active: ', libxc_version
       WRITE(stdout,*) ''
     ENDIF
   ENDIF
-  
-  
+  !
+  ! ... main loop over functionals to test
   !
   DO id = 1, n_qe_func
     !
     CALL xclib_reset_dft()
-    !    
-    IF (dft_init=='all_terms') THEN
+    !
+    IF ( dft_init=='all_terms' ) THEN
       IF (id<=nxc+1) THEN
          dft = dft_LDAx_name(id-1)
          xc_kind = 'exchange'
@@ -392,15 +399,9 @@ PROGRAM xclib_test
          dft = dft_MGGA_name(id-nxc-ncc-ngcx-ngcc-5)
          xc_kind = 'exchange+correlation'
       ENDIF
-    ELSEIF (dft_init=='all_short') THEN
+    ELSEIF ( dft_init=='all_short' ) THEN
       dft = dft_full(id)%name
     ENDIF
-     
-     
-     
-    if (id==576) cycle      !segfault --- WHY?????
-    
-    
     !
     ! ... initialization of averages
     !
@@ -416,47 +417,33 @@ PROGRAM xclib_test
     !
     xc_data="XC_DATA__________"
     dxc_data="dXC_DATA___________"
-    
-    !print *, id, dft
-    !============================== PROVISIONAL=====
-    !IF (TRIM(dft)=='HCTH') cycle
-    IF (TRIM(dft)=='xxxx') cycle
-    IF (TRIM(dft)=='NONE') cycle
-    IF (TRIM(dft)=='TB09') cycle
-    IF (TRIM(dft)=='META') cycle
+    !
+    ! ... skipped cases (need further checks)
+    !
+    IF ( TRIM(dft)=='xxxx' .OR.TRIM(dft)=='NONE'   .OR. &
+         TRIM(dft)=='TB09' .OR.TRIM(dft)=='META'   .OR. &
+         TRIM(dft)=='SCA0' .OR.TRIM(dft)=='TPSS'   .OR. &
+         TRIM(dft)=='SCAN0'.OR.TRIM(dft)=='PZ+META'.OR. &
+         TRIM(dft)=='PBE+META' ) THEN
+      IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
+      IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
+    ENDIF
 #if !defined(__LIBXC)
-    IF (TRIM(dft)=='SCAN') cycle
-#endif
-    IF (TRIM(dft)=='SCA0') cycle
-    
-    !IF (TRIM(dft)=='CX0P') cycle               !.......   fix overlap with CX0
-    !IF (TRIM(dft)=='B88X') cycle               !.......    "     "      "   "
-    !IF (TRIM(dft)=='RPBX') cycle               !.......    "     "      "   "
-    
-    IF (TRIM(dft)=='TPSS') cycle                !......FIX!!!!
-    
-    !IF (TRIM(dft)=='B86X' .and. df_ok) cycle   !.WHAT'S WRONG HERE???
-    !============================================
-    IF (TRIM(dft)=='SCAN0') cycle
-    IF (TRIM(dft)=='PZ+META') cycle
-    IF (TRIM(dft)=='PBE+META') cycle
-    !============================================
-    
-#if defined(__LIBXC)
+    ! libxc id=576 segfault.. Why??
+    IF ((dft_init=='all_libxc'.AND.id==576) .OR. TRIM(dft)=='SCAN') THEN
+      IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
+      IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
+      CYCLE
+    ENDIF
     IF (dft_init=='all_libxc') THEN
       dft = xc_f03_functional_get_name( id )
       IF ( TRIM(dft) == '' ) CYCLE
     ENDIF
 #endif
-    
-    
-    CALL xclib_set_dft_from_name( dft )
-    
     !
-
-    LDA = .FALSE.
-    GGA = .FALSE.
-    MGGA= .FALSE.
+    CALL xclib_set_dft_from_name( dft )
+    !
+    LDA = .FALSE. ; GGA = .FALSE. ; MGGA= .FALSE.
     !
     iexch1 = xclib_get_ID('LDA','EXCH')
     icorr1 = xclib_get_ID('LDA','CORR')
@@ -467,24 +454,26 @@ PROGRAM xclib_test
     imeta1  = xclib_get_ID('MGGA','EXCH')
     imetac1 = xclib_get_ID('MGGA','CORR')
     IF (imeta1+imetac1/=0) MGGA = .TRUE.
-    
+    !
     id_vec(1) = iexch1  ;  id_vec(2) = icorr1
     id_vec(3) = igcx1   ;  id_vec(4) = igcc1
     id_vec(5) = imeta1  ;  id_vec(6) = imetac1
-    
-    
+    !
     IF (dft_init=='all_libxc') THEN
 #if defined(__LIBXC)
        IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns, .FALSE. )
-       
+       !
        IF (ANY(libxc_dft_not_usable(:))) THEN
+         IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
+         IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
          CALL xclib_finalize_libxc()
          CYCLE
-       ENDIF  
+       ENDIF
+       !
        DO l = 1, 6
          IF (id_vec(l)/=0) fkind = xc_f03_func_info_get_kind( xc_info(l) )
        ENDDO
-       !family = xc_f03_func_info_get_family( xc_info )
+       !
        IF (fkind==XC_EXCHANGE) THEN
          xc_kind = 'exchange'
        ELSEIF (fkind==XC_CORRELATION) THEN
@@ -492,6 +481,8 @@ PROGRAM xclib_test
        ELSEIF (fkind==XC_EXCHANGE_CORRELATION) THEN
          xc_kind = 'correlation'
        ELSE
+         IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
+         IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
          CALL xclib_finalize_libxc()
          CYCLE
        ENDIF
@@ -500,71 +491,53 @@ PROGRAM xclib_test
        STOP
 #endif
     ENDIF
-    
     !
     CALL xclib_set_auxiliary_flags( .FALSE. )
-    
-    
-    IF ( fam_init=='all_terms' .AND. LDA  )  family='LDA'
-    IF ( fam_init=='all_terms' .AND. GGA  )  family='GGA'
-    IF ( fam_init=='all_terms' .AND. MGGA )  family='MGGA'
     !
-    IF ( fam_init=='all_short' .AND. LDA  )  family='LDA'
-    IF ( fam_init=='all_short' .AND. GGA  )  family='GGA'
-    IF ( fam_init=='all_short' .AND. MGGA )  family='MGGA'
-    
-    IF ( fam_init=='all_libxc' .AND. LDA  )  family='LDA'
-    IF ( fam_init=='all_libxc' .AND. GGA  )  family='GGA'
-    IF ( fam_init=='all_libxc' .AND. MGGA )  family='MGGA'
-    
-    IF (iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0) CYCLE
-    
-    
-    print *, id, dft, mgga, imeta1, imetac1, family, is_libxc(5),is_libxc(6), libxc_dft_not_usable(5)
-    
-    !IF (fam_init=='all' .AND. GGA .AND. id<=nxc+ncc+2) CYCLE
+    IF ( fam_init(1:4)=='all_' .AND. LDA  )  family='LDA'
+    IF ( fam_init(1:4)=='all_' .AND. GGA  )  family='GGA'
+    IF ( fam_init(1:4)=='all_' .AND. MGGA )  family='MGGA'
     !
-    
-    
-    
-    
-    IF ( fam_init=='all_terms' .AND. LDA .AND. GGA ) THEN
-       IF ( id<=nxc+ncc+2 ) THEN
+    IF ( iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0 ) CYCLE
+    !
+    IF ( fam_init=='all_terms' ) THEN
+      IF ( LDA .AND. GGA ) THEN
+        IF ( id<=nxc+ncc+2 ) THEN
           GGA=.FALSE.
           IF (iexch1/=0 .AND. icorr1/=0 ) THEN
             IF ( TRIM(xc_kind)=='correlation') CYCLE
             IF ( TRIM(xc_kind)=='exchange') xc_kind = 'exchange+correlation'
           ENDIF
           family='LDA'
-       ELSE 
+        ELSE
           LDA=.FALSE.
           IF (igcx1/=0 .AND. igcc1/=0 ) THEN
             IF ( TRIM(xc_kind)=='correlation') CYCLE
             IF ( TRIM(xc_kind)=='exchange') xc_kind = 'exchange+correlation'
-          ENDIF  
-       ENDIF
-    ENDIF
-    
-    IF (fam_init=='all_terms') then
+          ENDIF
+        ENDIF
+      ENDIF
       exc_term = xc_kind/='correlation'
       cor_term = xc_kind/='exchange'
     ELSE
-      exc_term = (iexch1+igcx1+imeta1)/=0 
-      cor_term = (icorr1+igcc1+imetac1)/=0   !...sisteam con libxc
-    ENDIF 
-    
+      exc_term = (iexch1+igcx1+imeta1)  /= 0 
+      cor_term = (icorr1+igcc1+imetac1) /= 0
+    ENDIF
     !
-    !print *, id, dft, family, xc_kind
-    
-    
-    IF ( MGGA .AND. DF_OK ) CYCLE
+    IF (MGGA) THEN
+      IF (.NOT. DF_OK ) THEN
+        exc_term = .TRUE.
+        cor_term = .TRUE.
+      ELSE
+        CALL xclib_finalize_libxc()
+        CYCLE
+      ENDIF
+    ENDIF
     !
-    IF (ns == 2 .AND. icorr1/=0 .AND. icorr1/=1 .AND. icorr1/=2 .AND. &
-                      icorr1/=4 .AND. icorr1/=8 .AND. icorr1/=3 .AND. &
-                      icorr1/=7 .AND. icorr1/=13) CYCLE
-       !WRITE(stdout,*) CHAR(10)//" ERROR: icorr1 not available at these &
-       !                          &conditions"//CHAR(10)
-    !
+    IF (ns == 2 .AND. (.NOT.is_libxc(2)) .AND. icorr1/=0 .AND. &
+               icorr1/=1 .AND. icorr1/=2 .AND. icorr1/=4 .AND. &
+               icorr1/=8 .AND. icorr1/=3 .AND. icorr1/=7 .AND. &
+               icorr1/=13) CYCLE
     !
     ! ... index stuff
     !
@@ -709,8 +682,7 @@ PROGRAM xclib_test
       ENDIF
     ENDIF
     !
-    
-    
+    !
     IF (test=='exe-benchmark' .AND. mype==root) THEN
       IF (.NOT. DF_OK) THEN
         CALL xmlr_opentag( TRIM(xc_data) )
@@ -1037,6 +1009,9 @@ PROGRAM xclib_test
         ENDIF
       ENDIF
       CALL xmlw_closetag()
+      !
+      CALL print_test_status( 'gen', stored  )
+      !
       GO TO 10
     ENDIF 
     !
@@ -1232,15 +1207,9 @@ PROGRAM xclib_test
          ENDDO
       ENDIF
       !
-      test_output = ''
-      WRITE( test_output(1:3),  '(i3)' ) id
-      WRITE( test_output(5:8),   '(a)' ) TRIM(family)
-      IF (fam_init=='all_terms') WRITE( test_output(10:30), '(a)' ) TRIM(xc_kind)
-      WRITE( test_output(34:), '(a)' ) TRIM(dft)
-      IF (iout+iaverout/=0) WRITE( test_output(50:60), '(a)' ) TRIM(failed)
-      IF (iout+iaverout==0) WRITE( test_output(50:60), '(a)' ) TRIM(passed)
-      WRITE(stdout,*) test_output
-      
+      IF (iout+iaverout/=0) CALL print_test_status( 'exe', failed )
+      IF (iout+iaverout==0) CALL print_test_status( 'exe', passed )
+      !
     ENDIF
 
     !
@@ -1312,9 +1281,8 @@ PROGRAM xclib_test
       ENDIF
     ENDIF
     !
-  
-  ENDDO    ! indice funzionali -----------------
-  
+  ENDDO ! end of main loop over dfts
+  !
   IF (mype==root) THEN
     IF (test(1:4)=='exe-') CALL xmlr_closetag()
     IF (test(1:4)=='gen-') CALL xmlw_closetag()
@@ -1335,10 +1303,10 @@ PROGRAM xclib_test
     909 FORMAT('grid-point: ',I5,' of ',I5)
     910 FORMAT('threshold-point: ',I4,' of ',I4)
     911 FORMAT(' TOTAL VALUES OVER ',I5,' POINTS')
-    
-    DEALLOCATE( proc_name )
-    DEALLOCATE( node_name )
-    DEALLOCATE( proc2node )
+  !   
+  DEALLOCATE( proc_name )
+  DEALLOCATE( node_name )
+  DEALLOCATE( proc2node )
 #if defined(__MPI)
   CALL mpi_finalize( ierr )
 #endif
@@ -1657,5 +1625,32 @@ PROGRAM xclib_test
   !
  END FUNCTION
  !
+ !--------------------------------------------------------------------------
+ SUBROUTINE print_test_status( test_type, status )
+  !------------------------------------------------------------------------
+  !! Print test status on screen.
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=*), INTENT(IN) :: test_type, status
+  CHARACTER(LEN=80) :: test_output
+  !
+  test_output = ''
+  WRITE(test_output(1:3), '(i3)') id
+  IF (TRIM(test_type)=='gen') THEN
+    WRITE(test_output(5:30), '(a)') TRIM(dft)
+    WRITE(test_output(60:80),'(a)') TRIM(status)
+    WRITE(stdout,*) test_output
+  ELSEIF (TRIM(test_type)=='exe') THEN
+    WRITE( test_output(5:8),   '(a)' ) TRIM(family)
+    IF (fam_init=='all_terms') WRITE(test_output(10:30),'(a)') TRIM(xc_kind)
+    WRITE( test_output(34:),   '(a)' ) TRIM(dft)
+    WRITE( test_output(60:80), '(a)' ) TRIM(status)
+    WRITE(stdout,*) test_output
+  ENDIF
+  !
+  RETURN
+  !
+ END SUBROUTINE  
  !
 END PROGRAM xclib_test

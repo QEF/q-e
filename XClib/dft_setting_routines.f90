@@ -495,7 +495,7 @@ CONTAINS
                            &functional has been found together with an exchange&
                            & one (GGA)' )
     !
-    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
+    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) &
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an LDA functional has bee&
                            &n found, but libxc GGA functionals already include t&
                            &he LDA part' )
@@ -530,7 +530,7 @@ CONTAINS
     !
     CHARACTER(LEN=4) :: qe_name
     CHARACTER(LEN=256) :: lxc_name
-    INTEGER :: i, l, ch, qedft, nlxc
+    INTEGER :: i, ii, l, ch, qedft, nlxc
     INTEGER :: ID_vec(6)
     !
     ID_vec(1)=iexch ; ID_vec(2)=icorr
@@ -576,7 +576,21 @@ CONTAINS
               DO l = 1, LEN_TRIM(lxc_name)
                  lxc_name(l:l) = capital( lxc_name(l:l) )
               ENDDO
-              IF (matches( TRIM(qe_name), TRIM(lxc_name))) nlxc = nlxc + 1
+              nlxc = 0
+              ii = 0
+              DO WHILE ( ii < LEN_TRIM(lxc_name) )
+                ii = ii + 1
+                IF ( matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+1)) ) ) THEN
+                  nlxc = nlxc + 1
+                  ii = ii + 1
+                ELSEIF (matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+2)) ) ) THEN
+                  nlxc = nlxc + 1
+                  ii = ii + 2
+                ELSEIF (matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+3)) ) ) THEN
+                  nlxc = nlxc + 1
+                  ii = ii + 3
+                ENDIF
+              ENDDO
             ENDIF
           ENDDO
           !
