@@ -46,8 +46,10 @@ CONTAINS
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
     USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                  discard_input_dft, is_libxc, dft, scan_exx, notset, &
-                                  libxc_dft_not_usable
+                                  discard_input_dft, is_libxc, dft, scan_exx, notset
+#if defined(__LIBXC)
+    USE dft_setting_params, ONLY: libxc_dft_not_usable
+#endif
     USE qe_dft_list,        ONLY: nxc, ncc, ngcx, ngcc, nmeta, get_IDs_from_shortname, &
                                   dft_LDAx_name, dft_LDAc_name, dft_GGAx_name,         &
                                   dft_GGAc_name, dft_MGGA_name
