@@ -40,7 +40,7 @@ CONTAINS
     !! ierr=0  : xml schema, ierr=-2: UPF v.2
     !! ierr=-81: error reading PP file
     !
-    iun = xml_openfile ( filename )
+    iun = xml_open_file ( filename )
     IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then

@@ -11,6 +11,9 @@ Fixed in development version:
   * In DFT+U (lda_plus_u_kind = 0 and 1) the pw.x code was printing the squared 
     eigenvectors instead of simply eigenvectors. Now it prints the
     eigenvectors (consistent with lda_plus_u_kind = 2).
+  * plotband.x wasn't correctly plotting the bands, under some not-so-special
+    circumstances
+  * CP with DFT+U could crash when writing the xml file (since v.6.6)
 
 Incompatible changes in develoment version:
   * Changes to Makefiles and to file "make.inc"

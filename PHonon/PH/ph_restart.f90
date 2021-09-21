@@ -833,7 +833,7 @@ MODULE ph_restart
     !! Error code
     INTEGER :: iun
     !
-    iun =  xml_openfile (filename)
+    iun =  xml_open_file (filename)
     IF ( iun == -1 ) then
        ierr = 1
        return
@@ -1072,7 +1072,7 @@ MODULE ph_restart
                  filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
                  INQUIRE(FILE=TRIM(filename1), EXIST=exst)
                  IF (.NOT.exst) CYCLE
-                 iunout = xml_openfile( filename1 )
+                 iunout = xml_open_file( filename1 )
                  IF (iunout == -1 ) THEN
                     ierr = 1
                     GOTO 100
@@ -1097,7 +1097,7 @@ MODULE ph_restart
                     filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
                     INQUIRE(FILE=TRIM(filename1), EXIST=exst)
                     IF (.NOT.exst) CYCLE
-                    iunout = xml_openfile( filename1 ) 
+                    iunout = xml_open_file( filename1 ) 
                     IF (iunout == -1 ) THEN
                        ierr = 1
                        GOTO 100
@@ -1359,7 +1359,7 @@ MODULE ph_restart
             IF (.NOT.exst) GOTO 100
          ENDIF
 
-         iunpun = xml_openfile( filename )
+         iunpun = xml_open_file( filename )
          !
          exst = (iunpun /= -1)
          IF (.NOT.exst) GOTO 100

@@ -453,11 +453,13 @@ CONTAINS
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))      CALL init_Hubbard_ns(Hubbard_ns_ , label)
          IF (PRESENT(Hub_ns_nc))   CALL init_Hubbard_ns(Hubbard_ns_nc_ , label)
-         IF (ANY(is_hubbard_back) .AND.  PRESENT(hubb_l_back)) &
+         IF (PRESENT(is_hubbard_back)) THEN
+            IF (ANY(is_hubbard_back) .AND.  PRESENT(hubb_l_back)) &
               CALL init_Hubbard_back(is_hubbard_back, Hub_back_, hubb_l_back, backall, hubb_l1_back) 
-         IF (ANY(is_hubbard_back) .AND. .NOT. PRESENT (hubb_l_back)) &
+            IF (ANY(is_hubbard_back) .AND. .NOT. PRESENT (hubb_l_back)) &
             CALL errore('qexsd_init_dft:',&
                         'internal error background is set to true but hubb_l_back is not present',1)  
+         END IF
          !
          CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_, J_, starting_ns_, Hubbard_ns_, &
                         U_projection_type, Hub_back_, U_back_, alpha_back_, Hubbard_ns_nc_)

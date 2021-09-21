@@ -65,7 +65,7 @@ MODULE io_dyn_mat
        !
        ! ... open XML descriptor
        !
-       iunout = xml_openfile (TRIM( fildyn ) // '.xml' )
+       iunout = xml_open_file (TRIM( fildyn ) // '.xml' )
        !
     ENDIF
     CALL mp_bcast( iunout, ionode_id, intra_image_comm )
@@ -260,7 +260,7 @@ MODULE io_dyn_mat
     !
     ! Open XML descriptor
     !
-    IF (ionode) iunout = xml_openfile( TRIM(fildyn) // '.xml')
+    IF (ionode) iunout = xml_open_file( TRIM(fildyn) // '.xml')
     !
     CALL mp_bcast(iunout, ionode_id, intra_image_comm)
     IF ( iunout == -1 ) &
