@@ -51,30 +51,15 @@ target_link_libraries(qe_libbeef
 qe_install_targets(qe_libbeef)
 
 ###########################################################
-# xc_info.x
-###########################################################
-if(QE_ENABLE_TEST)
-    qe_add_executable(qe_xc_info xc_info.f90)
-    set_target_properties(qe_xc_info 
-        PROPERTIES 
-        OUTPUT_NAME qe_xc_info.x 
-        RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
-    target_link_libraries(qe_xc_info
-        PRIVATE
-            qe_external_libxc
-            qe_xclib)
-endif(QE_ENABLE_TEST)
-
-###########################################################
 # xc_infos.x
 ###########################################################
 if(QE_ENABLE_TEST)
-    qe_add_executable(qe_xc_info xc_infos.f90)
-    set_target_properties(qe_xc_info 
+    qe_add_executable(qe_xc_infos xc_infos.f90)
+    set_target_properties(qe_xc_infos 
         PROPERTIES 
-        OUTPUT_NAME qe_xc_info.x 
-        RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
-    target_link_libraries(qe_xc_info
+        OUTPUT_NAME qe_xc_infos.x 
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+    target_link_libraries(qe_xc_infos
         PRIVATE
             qe_external_libxc
             qe_xclib)

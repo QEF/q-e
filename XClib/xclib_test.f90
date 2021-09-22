@@ -46,12 +46,12 @@ PROGRAM xclib_test
   USE xmltools,    ONLY: xml_openfile, xml_closefile,xmlr_readtag,   &
                          xmlw_writetag, xmlw_opentag, xmlw_closetag, &
                          xmlr_opentag, xmlr_closetag, get_attr, add_attr
-  
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params, ONLY: xc_func, xc_info, is_libxc, libxc_dft_not_usable
+  USE dft_setting_params, ONLY: xc_func, xc_info, libxc_dft_not_usable
 #endif
+  USE dft_setting_params, ONLY: is_libxc
   !
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft, &
                          dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
@@ -60,7 +60,7 @@ PROGRAM xclib_test
   IMPLICIT NONE
   !
 #include "qe_version.h"  
-  
+  !
 #if defined(__MPI)
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #else
@@ -165,14 +165,16 @@ PROGRAM xclib_test
   REAL(DP) :: aver_sndu, aver_recu, vaver(2)
   !
   ! ... xml
+  INTEGER :: tag_err
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=40) :: xc_data="XC_DATA__________", &
-                       dxc_data="dXC_DATA___________"
+  CHARACTER(LEN=40) :: xc_data="XC_DATA__________"
   ! ... output
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
-  CHARACTER(LEN=12), PARAMETER :: failed='**NO MATCH**', skipped='**skipped**'
+  CHARACTER(LEN=30), PARAMETER :: failed='**NO MATCH**', &
+                                  skipped='**skipped - by default**', &
+                                  skipped2='**skipped - not found in xml**'
   CHARACTER(LEN=10), PARAMETER :: passed='match', stored='stored'
   CHARACTER(LEN=6) :: gen_version = ''
   CHARACTER(LEN=5) :: libxc_version='none', libxc_gen_version = ''
@@ -355,6 +357,11 @@ PROGRAM xclib_test
     WRITE(libxc_version(1:1), '(i1)') major
     WRITE(libxc_version(3:3), '(i1)') minor
     WRITE(libxc_version(5:5), '(i1)') micro
+#else
+    IF (dft=='all_libxc') THEN
+      WRITE(stdout,*) 'ERROR: Libxc library not linked.'
+      STOP
+    ENDIF
 #endif
     IF ( test=='gen-benchmark' ) THEN
       CALL xmlw_opentag( "QE_Libxc_VERSION_TEST" )
@@ -416,7 +423,6 @@ PROGRAM xclib_test
     ! ... initialize first DFT
     !
     xc_data="XC_DATA__________"
-    dxc_data="dXC_DATA___________"
     !
     ! ... skipped cases (need further checks)
     !
@@ -425,21 +431,26 @@ PROGRAM xclib_test
          TRIM(dft)=='SCA0' .OR.TRIM(dft)=='TPSS'   .OR. &
          TRIM(dft)=='SCAN0'.OR.TRIM(dft)=='PZ+META'.OR. &
          TRIM(dft)=='PBE+META' ) THEN
-      IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
-      IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
+         CALL print_test_status( skipped )
+         CYCLE
     ENDIF
 #if !defined(__LIBXC)
-    ! libxc id=576 segfault.. Why??
-    IF ((dft_init=='all_libxc'.AND.id==576) .OR. TRIM(dft)=='SCAN') THEN
-      IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
-      IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
+    IF ( TRIM(dft)=='SCAN' ) THEN
+      CALL print_test_status( skipped )
       CYCLE
     ENDIF
-    IF (dft_init=='all_libxc') THEN
+#endif
+    ! libxc id=576 segfault.. Why??
+    IF ( dft_init=='all_libxc' .AND. id==576 ) THEN
+      CALL print_test_status( skipped )
+      CYCLE
+    ENDIF
+    IF ( dft_init=='all_libxc' ) THEN
+#if defined(__LIBXC)
       dft = xc_f03_functional_get_name( id )
       IF ( TRIM(dft) == '' ) CYCLE
-    ENDIF
 #endif
+    ENDIF
     !
     CALL xclib_set_dft_from_name( dft )
     !
@@ -464,8 +475,7 @@ PROGRAM xclib_test
        IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns, .FALSE. )
        !
        IF (ANY(libxc_dft_not_usable(:))) THEN
-         IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
-         IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
+         CALL print_test_status( skipped )
          CALL xclib_finalize_libxc()
          CYCLE
        ENDIF
@@ -481,14 +491,10 @@ PROGRAM xclib_test
        ELSEIF (fkind==XC_EXCHANGE_CORRELATION) THEN
          xc_kind = 'correlation'
        ELSE
-         IF (test=='gen-benchmark') CALL print_test_status( 'gen', skipped )
-         IF (test=='exe-benchmark') CALL print_test_status( 'exe', skipped )
+         CALL print_test_status( skipped )
          CALL xclib_finalize_libxc()
          CYCLE
        ENDIF
-#else
-       WRITE(stdout,*) 'ERROR: Libxc library not linked.'
-       STOP
 #endif
     ENDIF
     !
@@ -673,74 +679,79 @@ PROGRAM xclib_test
       ENDIF
     ELSE
       IF ( fam_init=='all_terms') THEN
-        WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
-        WRITE(dxc_data(16:15+nlen2),'(a)') family(1:nlen2)
+        WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
+        WRITE(xc_data(16:15+nlen2),'(a)') family(1:nlen2)
       ELSEIF ( fam_init=='all_short') THEN
-        WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
+        WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
       ELSEIF ( fam_init=='all_libxc') THEN
-        WRITE(dxc_data(10:9+nlen1),'(a)') dft(1:nlen1)
+        WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
       ENDIF
     ENDIF
     !
     !
     IF (test=='exe-benchmark' .AND. mype==root) THEN
-      IF (.NOT. DF_OK) THEN
-        CALL xmlr_opentag( TRIM(xc_data) )
-        IF ( exc_term ) CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
-        IF ( cor_term ) CALL xmlr_readtag( "EC_AVER", ec_aver(:) )
-        IF ( family=='LDA' ) THEN
-          IF ( exc_term ) CALL xmlr_readtag( "VX_AVER", vx_aver(:,:) )
-          IF ( cor_term ) CALL xmlr_readtag( "VC_AVER", vc_aver(:,:) )
-        ELSE
-          IF ( exc_term ) THEN
-            CALL xmlr_readtag( "V1X_AVER", v1x_aver(:,:) )
-            CALL xmlr_readtag( "V2X_AVER", v2x_aver(:,:) )
+      CALL xmlr_opentag( TRIM(xc_data), tag_err )
+      IF (tag_err==0) THEN
+        IF (.NOT. DF_OK) THEN
+          IF ( exc_term ) CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
+          IF ( cor_term ) CALL xmlr_readtag( "EC_AVER", ec_aver(:) )
+          IF ( family=='LDA' ) THEN
+            IF ( exc_term ) CALL xmlr_readtag( "VX_AVER", vx_aver(:,:) )
+            IF ( cor_term ) CALL xmlr_readtag( "VC_AVER", vc_aver(:,:) )
+          ELSE
+            IF ( exc_term ) THEN
+              CALL xmlr_readtag( "V1X_AVER", v1x_aver(:,:) )
+              CALL xmlr_readtag( "V2X_AVER", v2x_aver(:,:) )
+            ENDIF
+            IF ( cor_term ) THEN
+              CALL xmlr_readtag( "V1C_AVER", v1c_aver(:,:) )
+              CALL xmlr_readtag( "V2C_AVER", v2c_aver(:,:) )
+              IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
+            ENDIF
+            IF ( family=='MGGA' ) THEN
+              CALL xmlr_readtag( "V3X_AVER", v3x_aver(:,:) )
+              CALL xmlr_readtag( "V3C_AVER", v3c_aver(:,:) )
+            ENDIF
           ENDIF
-          IF ( cor_term ) THEN
-            CALL xmlr_readtag( "V1C_AVER", v1c_aver(:,:) )
-            CALL xmlr_readtag( "V2C_AVER", v2c_aver(:,:) )
-            IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
+          IF ( exc_term ) CALL xmlr_readtag( "EX", ex2(:) )
+          IF ( cor_term )    CALL xmlr_readtag( "EC", ec2(:) )
+          IF ( family=='LDA' ) THEN
+            IF ( exc_term ) CALL xmlr_readtag( "VX", vx2(:,:) )
+            IF ( cor_term ) CALL xmlr_readtag( "VC", vc2(:,:) )        
+          ELSE
+            IF ( exc_term ) THEN
+              CALL xmlr_readtag( "V1X", v1x2(:,:) )
+              CALL xmlr_readtag( "V2X", v2x2(:,:) )
+            ENDIF
+            IF ( cor_term ) THEN
+              CALL xmlr_readtag( "V1C", v1c2(:,:) )
+              CALL xmlr_readtag( "V2C", v2c2(:,:) )
+              IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
+            ENDIF  
+            IF ( family=='MGGA' ) THEN
+              CALL xmlr_readtag( "V3X", v3x2(:,:) )
+              CALL xmlr_readtag( "V3C", v3c2(:,:) )
+            ENDIF  
           ENDIF
-          IF ( family=='MGGA' ) THEN
-            CALL xmlr_readtag( "V3X_AVER", v3x_aver(:,:) )
-            CALL xmlr_readtag( "V3C_AVER", v3c_aver(:,:) )
+        ELSE !DF_OK
+          CALL xmlr_opentag( TRIM(xc_data) )
+          IF (family=='LDA') THEN 
+            CALL xmlr_readtag( "dV_AVER", dv_aver(:) )
+            CALL xmlr_readtag( "dV", dmuxc2(:,:,:) )
+          ELSE
+            CALL xmlr_readtag( "dVrr_AVER", dvrr_aver(:,:) )
+            CALL xmlr_readtag( "dVsr_AVER", dvsr_aver(:,:) )
+            CALL xmlr_readtag( "dVss_AVER", dvss_aver(:,:) )
+            CALL xmlr_readtag( "dVXCrr", dvxcrr2(:,:,:) )
+            CALL xmlr_readtag( "dVXCsr", dvxcsr2(:,:,:) )
+            CALL xmlr_readtag( "dVXCss", dvxcss2(:,:,:) )
           ENDIF
         ENDIF
-        IF ( exc_term ) CALL xmlr_readtag( "EX", ex2(:) )
-        IF ( cor_term )    CALL xmlr_readtag( "EC", ec2(:) )
-        IF ( family=='LDA' ) THEN
-          IF ( exc_term ) CALL xmlr_readtag( "VX", vx2(:,:) )
-          IF ( cor_term ) CALL xmlr_readtag( "VC", vc2(:,:) )        
-        ELSE
-          IF ( exc_term ) THEN
-            CALL xmlr_readtag( "V1X", v1x2(:,:) )
-            CALL xmlr_readtag( "V2X", v2x2(:,:) )
-          ENDIF
-          IF ( cor_term ) THEN
-            CALL xmlr_readtag( "V1C", v1c2(:,:) )
-            CALL xmlr_readtag( "V2C", v2c2(:,:) )
-            IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
-          ENDIF  
-          IF ( family=='MGGA' ) THEN
-            CALL xmlr_readtag( "V3X", v3x2(:,:) )
-            CALL xmlr_readtag( "V3C", v3c2(:,:) )
-          ENDIF  
-        ENDIF
-      ELSE !DF_OK
-        CALL xmlr_opentag( TRIM(dxc_data) )
-        IF (family=='LDA') THEN 
-          CALL xmlr_readtag( "dV_AVER", dv_aver(:) )
-          CALL xmlr_readtag( "dV", dmuxc2(:,:,:) )
-        ELSE
-          CALL xmlr_readtag( "dVrr_AVER", dvrr_aver(:,:) )
-          CALL xmlr_readtag( "dVsr_AVER", dvsr_aver(:,:) )
-          CALL xmlr_readtag( "dVss_AVER", dvss_aver(:,:) )
-          CALL xmlr_readtag( "dVXCrr", dvxcrr2(:,:,:) )
-          CALL xmlr_readtag( "dVXCsr", dvxcsr2(:,:,:) )
-          CALL xmlr_readtag( "dVXCss", dvxcss2(:,:,:) )
-        ENDIF
-      ENDIF
-      CALL xmlr_closetag()
+        CALL xmlr_closetag()
+      ELSE
+        CALL print_test_status( skipped2 )
+        GOTO 10
+      ENDIF  
     ENDIF
     !
     !==========================================================================
@@ -954,6 +965,7 @@ PROGRAM xclib_test
     IF (test=='gen-benchmark' .AND. mype==root) THEN
       IF (.NOT. DF_OK) THEN
         CALL xmlw_opentag( xc_data )
+        CALL xmlw_writetag( "NAME", dft )
         IF ( exc_term ) CALL xmlw_writetag( "EX_AVER", ex_aver(:) )
         IF ( cor_term ) CALL xmlw_writetag( "EC_AVER", ec_aver(:) )
         IF ( family=='LDA' ) THEN
@@ -995,7 +1007,8 @@ PROGRAM xclib_test
           ENDIF  
         ENDIF
       ELSE !DF_OK
-        CALL xmlw_opentag( dxc_data )
+        CALL xmlw_opentag( xc_data )
+        CALL xmlw_writetag( "NAME", dft )
         IF (family=='LDA') THEN 
           CALL xmlw_writetag( "dV_AVER", dv_aver(:) )
           CALL xmlw_writetag( "dV", dmuxc1(1:nnrbt,:,:) )
@@ -1009,10 +1022,8 @@ PROGRAM xclib_test
         ENDIF
       ENDIF
       CALL xmlw_closetag()
-      !
-      CALL print_test_status( 'gen', stored  )
-      !
-      GO TO 10
+      CALL print_test_status( stored  )
+      GOTO 10
     ENDIF 
     !
     !
@@ -1207,11 +1218,12 @@ PROGRAM xclib_test
          ENDDO
       ENDIF
       !
-      IF (iout+iaverout/=0) CALL print_test_status( 'exe', failed )
-      IF (iout+iaverout==0) CALL print_test_status( 'exe', passed )
+      IF ( test(1:4)=='exe-' ) THEN
+        IF (iout+iaverout/=0) CALL print_test_status( failed )
+        IF (iout+iaverout==0) CALL print_test_status( passed )
+      ENDIF  
       !
     ENDIF
-
     !
     !
     !==========================================================================
@@ -1219,10 +1231,9 @@ PROGRAM xclib_test
     !==========================================================================
     !
     10 CONTINUE
-    
+    !
     IF (xclib_dft_is_libxc('ANY')) CALL xclib_finalize_libxc()
     !
-    
     DEALLOCATE( rho, rho_tz )
     !
     IF ( GGA .OR. MGGA ) DEALLOCATE( grho )
@@ -1290,19 +1301,19 @@ PROGRAM xclib_test
     CALL xml_closefile( )
   ENDIF
   !
-    401 FORMAT('rho: ',F17.14)
-    402 FORMAT('rho(up,down): ',F17.14,4x,F17.14)
-    !
-    501 FORMAT('grho2: ',F17.14)
-    502 FORMAT('grho2(uu,dd): ',F17.14,4x,F17.14)
-    503 FORMAT('grho2(uu,ud,dd): ',F17.14,4x,F17.14,4x,F17.14)
-    !
-    601 FORMAT('tau: ',F17.14)
-    602 FORMAT('tau(up,down): ',F17.14,4x,F17.14)
-    !
-    909 FORMAT('grid-point: ',I5,' of ',I5)
-    910 FORMAT('threshold-point: ',I4,' of ',I4)
-    911 FORMAT(' TOTAL VALUES OVER ',I5,' POINTS')
+  401 FORMAT('rho: ',F17.14)
+  402 FORMAT('rho(up,down): ',F17.14,4x,F17.14)
+  !
+  501 FORMAT('grho2: ',F17.14)
+  502 FORMAT('grho2(uu,dd): ',F17.14,4x,F17.14)
+  503 FORMAT('grho2(uu,ud,dd): ',F17.14,4x,F17.14,4x,F17.14)
+  !
+  601 FORMAT('tau: ',F17.14)
+  602 FORMAT('tau(up,down): ',F17.14,4x,F17.14)
+  !
+  909 FORMAT('grid-point: ',I5,' of ',I5)
+  910 FORMAT('threshold-point: ',I4,' of ',I4)
+  911 FORMAT(' TOTAL VALUES OVER ',I5,' POINTS')
   !   
   DEALLOCATE( proc_name )
   DEALLOCATE( node_name )
@@ -1626,26 +1637,26 @@ PROGRAM xclib_test
  END FUNCTION
  !
  !--------------------------------------------------------------------------
- SUBROUTINE print_test_status( test_type, status )
+ SUBROUTINE print_test_status( status )
   !------------------------------------------------------------------------
   !! Print test status on screen.
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=*), INTENT(IN) :: test_type, status
-  CHARACTER(LEN=80) :: test_output
+  CHARACTER(LEN=*), INTENT(IN) :: status
+  CHARACTER(LEN=100) :: test_output
   !
   test_output = ''
   WRITE(test_output(1:3), '(i3)') id
-  IF (TRIM(test_type)=='gen') THEN
+  IF (test=='gen-benchmark') THEN
     WRITE(test_output(5:30), '(a)') TRIM(dft)
-    WRITE(test_output(60:80),'(a)') TRIM(status)
+    WRITE(test_output(60:),'(a)') TRIM(status)
     WRITE(stdout,*) test_output
-  ELSEIF (TRIM(test_type)=='exe') THEN
+  ELSEIF (test=='exe-benchmark') THEN
     WRITE( test_output(5:8),   '(a)' ) TRIM(family)
     IF (fam_init=='all_terms') WRITE(test_output(10:30),'(a)') TRIM(xc_kind)
     WRITE( test_output(34:),   '(a)' ) TRIM(dft)
-    WRITE( test_output(60:80), '(a)' ) TRIM(status)
+    WRITE( test_output(60:), '(a)' ) TRIM(status)
     WRITE(stdout,*) test_output
   ENDIF
   !
