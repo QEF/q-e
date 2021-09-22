@@ -48,25 +48,21 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   INTEGER                  :: ibnd_start, ibnd_end
   INTEGER                  :: jbnd_start, jbnd_end
   INTEGER,     ALLOCATABLE :: owner_bgrp_id(:)
-!edp*************************************************
   INTEGER                  :: buf_start, buf_end, buf_size
-!edp*************************************************
   !
   ! ... device variables 
   !
-  INTEGER :: ii, jj, kk, ierr
+  INTEGER :: ii, jj, kk, info
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:), hphi_d(:,:), sphi_d(:,:)
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d
 #endif
   !
-!edp*************************************************
-  COMPLEX(DP), POINTER :: sc_buf(:), sc2_buf(:,:)
+  COMPLEX(DP), POINTER :: sc_d(:), sc2_d(:,:)
 #if defined (__CUDA)
-  attributes(device) :: sc_buf, sc2_buf
+  attributes(device) :: sc_d, sc2_d
 #endif 
-!edp*************************************************
   !
   IF ( npol == 1 ) THEN
      !
@@ -154,16 +150,19 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   IF ( uspp ) &
   CALL ZCOPY_gpu( kdmx * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
   !
-  ! ... Blocking loop
   !
-!edp***********************************************
+  ! ... Buffer lock
   !
   buf_start = ( nblock - 1 ) * nbsize + 1
-  buf_end   = MIN( nblock * nbsize, nbnd )
-  buf_size  = buf_start - buf_end + 1
-  CALL buffer%lock_buffer( sc_buf, buf_size, ierr)
+  buf_end   = nbnd
+  buf_size  = buf_start - buf_end
+  CALL buffer%lock_buffer( sc_d, buf_size, info)
   !
-!edp***********************************************
+  CALL buffer%lock_buffer( sc2_d, (/buf_size, buf_size/), info)
+  !
+  !
+  ! ... Blocking loop
+  !
   DO iblock = 1, nblock
      !
      ! ... Orthogonalize diagonal block by standard Gram-Schmidt
@@ -172,7 +171,10 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
      ibnd_end   = MIN( iblock * nbsize, nbnd )
      !
      IF ( owner_bgrp_id(iblock) == my_bgrp_id ) &
+     !
+     !
      CALL gram_schmidt_diag( ibnd_start, ibnd_end )
+     !
      !
      ! ... Bcast diagonal block
      !
@@ -193,9 +195,18 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
      jbnd_end   = MIN( jblock_end * nbsize, nbnd )
      !
      IF ( jblock_start <= jblock_end .AND. jbnd_start <= jbnd_end ) &
+     !
+     !
      CALL project_offdiag_gpu( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
      !
+     !
   END DO
+  !
+  ! ... Buffer Realese
+  !
+  CALL buffer%release_buffer(sc_d, info)
+  CALL buffer%release_buffer(sc2_d, info)
+  !
   !
   ! ... Copy psi <- phi
   !
@@ -234,14 +245,9 @@ CONTAINS
     INTEGER, INTENT(IN)  :: ibnd_start, ibnd_end
     !
     INTEGER                  :: ibnd
-    COMPLEX(DP), ALLOCATABLE :: sc_d(:)
     REAL(DP)                 :: norm
     COMPLEX(DP), EXTERNAL    :: ZDOTC_gpu
-#if defined (__CUDA)
-    attributes(device) :: sc_d
-#endif   
     !
-    ALLOCATE( sc_d( ibnd_start:ibnd_end ) )
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -251,44 +257,32 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-!             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-!                         spsi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
-             !
-!edp**************************************************************
              CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-                         spsi_d(1,ibnd), 1, ZERO, sc_buf(1), 1 )
-!*
+                         spsi_d(1,ibnd), 1, ZERO, sc_d(1), 1 )
              !
           ELSE
              !
-!             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-!                         psi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
-!edp**************************************************************
              CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
-                         psi_d(1,ibnd), 1, ZERO, sc_buf(1), 1 )
-!*
-             
+                         psi_d(1,ibnd), 1, ZERO, sc_d(1), 1 )
              !
           END IF
           !
-!edp**************************************************************
-          sc_d(ibnd_start:ibnd_end)=sc_buf(1:ibnd_start)
-!*
           !
           CALL mp_sum( sc_d, intra_bgrp_comm )
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
           CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, phi_d(1,ibnd_start), kdmx, &
-                      sc_d(ibnd_start), 1, ONE, phi_d(1,ibnd), 1 )
+                      sc_d(1), 1, ONE, phi_d(1,ibnd), 1 )
+          !
           !
           IF ( eigen_ ) &
           CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, hphi_d(1,ibnd_start), kdmx, &
-                      sc_d(ibnd_start), 1, ONE, hphi_d(1,ibnd), 1 )
+                      sc_d(1), 1, ONE, hphi_d(1,ibnd), 1 )
           !
           IF ( uspp ) &
           CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, sphi_d(1,ibnd_start), kdmx, &
-                      sc_d(ibnd_start), 1, ONE, sphi_d(1,ibnd), 1 )
+                      sc_d(1), 1, ONE, sphi_d(1,ibnd), 1 )
           !
        END IF
        !
@@ -321,7 +315,6 @@ CONTAINS
        !
     END DO
     !
-    DEALLOCATE( sc_d )
     !
     RETURN
     !
@@ -337,46 +330,38 @@ CONTAINS
     !
     INTEGER                  :: ibnd_size
     INTEGER                  :: jbnd_size
-    COMPLEX(DP), ALLOCATABLE :: sc_d(:,:)
-#if defined(__CUDA)
-    ATTRIBUTES(DEVICE)       :: sc_d
-#endif 
     !
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1
-    !
-    ALLOCATE( sc_d( ibnd_start:ibnd_end, jbnd_start:jbnd_end ) )
     !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
        CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
-                   spsi_d(1,jbnd_start), kdmx, ZERO, sc_d(ibnd_start,jbnd_start), ibnd_size )
+                   spsi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), ibnd_size )
        !
     ELSE
        !
        CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
-                   psi_d(1,jbnd_start), kdmx, ZERO, sc_d(ibnd_start,jbnd_start), ibnd_size )
+                   psi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), ibnd_size )
        !
     END IF
     !
-    CALL mp_sum( sc_d, intra_bgrp_comm )
+    CALL mp_sum( sc2_d, intra_bgrp_comm )
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
     CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi_d(1,ibnd_start), kdmx, &
-                sc_d(ibnd_start,jbnd_start), ibnd_size, ONE, phi_d(1,jbnd_start), kdmx )
+                sc2_d(1,1), ibnd_size, ONE, phi_d(1,jbnd_start), kdmx )
     !
     IF ( eigen_ ) &
     CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi_d(1,ibnd_start), kdmx, &
-                sc_d(ibnd_start,jbnd_start), ibnd_size, ONE, hphi_d(1,jbnd_start), kdmx )
+                sc2_d(1,1), ibnd_size, ONE, hphi_d(1,jbnd_start), kdmx )
     !
     IF ( uspp ) &
     CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi_d(1,ibnd_start), kdmx, &
-                sc_d(ibnd_start,jbnd_start), ibnd_size, ONE, sphi_d(1,jbnd_start), kdmx )
-    !
-    DEALLOCATE( sc_d )
+                sc2_d(1,1), ibnd_size, ONE, sphi_d(1,jbnd_start), kdmx )
     !
     RETURN
     !

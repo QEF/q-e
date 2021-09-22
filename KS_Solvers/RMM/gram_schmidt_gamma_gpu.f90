@@ -19,6 +19,8 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   USE util_param,     ONLY : DP, eps16
   USE mp,            ONLY : mp_sum, mp_max, mp_bcast
   USE mp_bands_util, ONLY : gstart, inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id
+  USE device_fbuff_m,         ONLY : buffer => dev_buf
+  USE device_memcpy_m,        ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -48,7 +50,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   ! ... device variables
   !
-  INTEGER     :: ii
+  INTEGER     :: ii, buf_start, buf_end, buf_size, info
   COMPLEX(DP) :: psi_d (npwx,nbnd)
   COMPLEX(DP) :: hpsi_d(npwx,nbnd)
   COMPLEX(DP) :: spsi_d(npwx,nbnd)
@@ -57,6 +59,11 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d
+#endif 
+  !
+  COMPLEX(DP), POINTER :: sr_d(:), sr2_d(:,:)
+#if defined (__CUDA)
+  attributes(device) :: sr_d, sr2_d
 #endif 
   !
   !
@@ -161,6 +168,15 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
      !
   END IF
   !
+  ! ... Buffer lock
+  !
+  buf_start = ( nblock - 1 ) * nbsize + 1
+  buf_end   = nbnd
+  buf_size  = buf_start - buf_end
+  !
+  CALL buffer%lock_buffer( sr_d, buf_size, info)
+  CALL buffer%lock_buffer( sr2_d, (/buf_size, buf_size/), info)
+  !
   ! ... Blocking loop
   !
   DO iblock = 1, nblock
@@ -195,6 +211,12 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
      CALL project_offdiag_gpu( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
      !
   END DO
+  !
+  ! ... Buffer Realese
+  !
+  CALL buffer%release_buffer(sr_d, info)
+  CALL buffer%release_buffer(sr2_d, info)
+  !
   !
   ! ... Copy psi <- phi
   !
@@ -239,15 +261,9 @@ CONTAINS
     INTEGER, INTENT(IN)  :: ibnd_start, ibnd_end
     !
     INTEGER               :: ibnd
-    REAL(DP), ALLOCATABLE :: sr_d(:)
     REAL(DP)              :: norm
     REAL(DP)              :: psi_ibnd
     REAL(DP), EXTERNAL    :: gpu_DDOT
-#if defined (__CUDA)
-    attributes(device) :: sr_d
-#endif   
-   ! 
-   ALLOCATE( sr_d( ibnd_start:ibnd_end ) )
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -258,24 +274,24 @@ CONTAINS
           IF ( uspp ) THEN
              !
              CALL DGEMV_gpu( 'T', npw2, ibnd - ibnd_start, 2._DP, phi_d(1,ibnd_start), npwx2, &
-                         spsi_d(1,ibnd), 1, 0._DP, sr_d(ibnd_start), 1 )
+                         spsi_d(1,ibnd), 1, 0._DP, sr_d(1), 1 )
              !
              IF ( gstart == 2 ) THEN
                 psi_ibnd = -spsi_d(1,ibnd)
                 CALL DAXPY_gpu( ibnd - ibnd_start, psi_ibnd , phi_d(1,ibnd_start), npwx2, &
-                         sr_d(ibnd_start), 1 )
+                         sr_d(1), 1 )
              END IF
              !
           ELSE
              !
              CALL DGEMV_gpu( 'T', npw2, ibnd - ibnd_start, 2._DP, phi_d(1,ibnd_start), npwx2, &
-                         psi_d(1,ibnd), 1, 0._DP, sr_d(ibnd_start), 1 )
+                         psi_d(1,ibnd), 1, 0._DP, sr_d(1), 1 )
              !
              IF ( gstart == 2 ) THEN
 
                 psi_ibnd = -psi_d(1,ibnd)
                 CALL DAXPY_gpu( ibnd - ibnd_start, psi_ibnd, phi_d(1,ibnd_start), npwx2, &
-                            sr_d(ibnd_start), 1 )
+                            sr_d(1), 1 )
              END IF
              !
           END IF
@@ -285,7 +301,7 @@ CONTAINS
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
           CALL DGEMV_gpu( 'N', npw2, ibnd - ibnd_start, -1._DP, phi_d(1,ibnd_start), npwx2, &
-                      sr_d(ibnd_start), 1, 1._DP, phi_d(1,ibnd), 1 )
+                      sr_d(1), 1, 1._DP, phi_d(1,ibnd), 1 )
           !
           ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
           IF ( gstart == 2 ) THEN
@@ -298,7 +314,7 @@ CONTAINS
           IF ( eigen_ ) THEN
              !
              CALL DGEMV_gpu( 'N', npw2, ibnd - ibnd_start, -1._DP, hphi_d(1,ibnd_start), npwx2, &
-                         sr_d(ibnd_start), 1, 1._DP, hphi_d(1,ibnd), 1 )
+                         sr_d(1), 1, 1._DP, hphi_d(1,ibnd), 1 )
              !
              ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
              IF ( gstart == 2 ) THEN                
@@ -313,7 +329,7 @@ CONTAINS
           IF ( uspp ) THEN
              !
              CALL DGEMV_gpu( 'N', npw2, ibnd - ibnd_start, -1._DP, sphi_d(1,ibnd_start), npwx2, &
-                         sr_d(ibnd_start), 1, 1._DP, sphi_d(1,ibnd), 1 )
+                         sr_d(1), 1, 1._DP, sphi_d(1,ibnd), 1 )
              !
              ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
              IF ( gstart == 2 ) THEN
@@ -400,8 +416,6 @@ CONTAINS
        !
     END DO
     !
-    DEALLOCATE( sr_d )
-    !
     RETURN
     !
   END SUBROUTINE gram_schmidt_diag_gpu
@@ -417,44 +431,38 @@ CONTAINS
     INTEGER               :: ibnd_size
     INTEGER               :: jbnd_size
     !
-    REAL(DP), ALLOCATABLE :: sr_d(:,:)
-#if defined (__CUDA)
-    attributes(device) :: sr_d
-#endif   
     !
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1
-    !
-    ALLOCATE( sr_d( ibnd_start:ibnd_end, jbnd_start:jbnd_end ) )
     !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
        CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
-                   spsi_d(1,jbnd_start), npwx2, 0._DP, sr_d(ibnd_start,jbnd_start), ibnd_size )
+                   spsi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), ibnd_size )
        !
        IF ( gstart == 2 ) &
        CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
-                  spsi_d(1,jbnd_start), npwx2, sr_d(ibnd_start,jbnd_start), ibnd_size )
+                  spsi_d(1,jbnd_start), npwx2, sr2_d(1,1), ibnd_size )
        !
     ELSE
        !
        CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
-                   psi_d(1,jbnd_start), npwx2, 0._DP, sr_d(ibnd_start,jbnd_start), ibnd_size )
+                   psi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), ibnd_size )
        !
        IF ( gstart == 2 ) &
        CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
-                  psi_d(1,jbnd_start), npwx2, sr_d(ibnd_start,jbnd_start), ibnd_size )
+                  psi_d(1,jbnd_start), npwx2, sr2_d(1,1), ibnd_size )
        !
     END IF
     !
-    CALL mp_sum( sr_d, intra_bgrp_comm )
+    CALL mp_sum( sr2_d, intra_bgrp_comm )
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
     CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, phi_d(1,ibnd_start), npwx2, &
-                sr_d(ibnd_start,jbnd_start), ibnd_size, 1._DP, phi_d(1,jbnd_start), npwx2 )
+                sr2_d(1,1), ibnd_size, 1._DP, phi_d(1,jbnd_start), npwx2 )
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
     IF ( gstart == 2 ) THEN
@@ -468,7 +476,7 @@ CONTAINS
     IF ( eigen_ ) THEN
        !
        CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, hphi_d(1,ibnd_start), npwx2, &
-                   sr_d(ibnd_start,jbnd_start), ibnd_size, 1._DP, hphi_d(1,jbnd_start), npwx2 )
+                   sr2_d(1,1), ibnd_size, 1._DP, hphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN 
@@ -484,7 +492,7 @@ CONTAINS
     IF ( uspp ) THEN
        !
        CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, sphi_d(1,ibnd_start), npwx2, &
-                   sr_d(ibnd_start,jbnd_start), ibnd_size, 1._DP, sphi_d(1,jbnd_start), npwx2 )
+                   sr2_d(1,1), ibnd_size, 1._DP, sphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN 
@@ -496,8 +504,6 @@ CONTAINS
        END IF
        !
     END IF
-    !
-    DEALLOCATE( sr_d )
     !
     RETURN
     !

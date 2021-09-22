@@ -125,6 +125,7 @@ target_link_libraries(qe_kssolver_rmmdiis
     PRIVATE
 	qe_lax
         qe_utilx
+	qe_devxlib
         qe_mpi_fortran )  
 
 ###########################################################
