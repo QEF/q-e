@@ -1829,11 +1829,12 @@ SUBROUTINE rotate_basis (iuwfc, lrotated)
                               transformation_matrix(:,:,:,:,:), wfcatom(:,:)
   REAL(DP), ALLOCATABLE :: ns(:,:,:,:,:), nr(:,:,:,:,:), lambda(:)
   INTEGER, ALLOCATABLE :: n_max(:), orbital_quantum_number(:,:)
+  LOGICAL, ALLOCATABLE :: diagonalize(:,:)
   INTEGER, PARAMETER :: nmax = 10, &  ! max number of shells per atom
                         mmax = 7      ! max number of m's per shell
   REAL(DP) :: psum
   !
-  lrotated = .true.
+  lrotated = .TRUE.
   !
   ALLOCATE (n_max(nat))
   ALLOCATE (orbital_quantum_number(nat,nmax))
@@ -1841,6 +1842,7 @@ SUBROUTINE rotate_basis (iuwfc, lrotated)
   ALLOCATE (nr(nat,nmax,mmax,mmax,nspin))
   ALLOCATE (proj(natomwfc,nbnd))
   ALLOCATE (wfcatom(npwx,natomwfc))
+  ALLOCATE (diagonalize(nat,nmax))
   nr = 0.0d0
   !
   DO ik = 1, nks
@@ -1977,9 +1979,10 @@ SUBROUTINE rotate_basis (iuwfc, lrotated)
   ENDDO
   !
   ! Before diagonalizng the occupation matrix we need to check 
-  ! if there are non-zero off-diagonal matrix elements. If the
-  ! matrix is already diagonal, then we do nothing and exit.
+  ! whether there are non-zero off-diagonal matrix elements. If the
+  ! matrix is already diagonal, then we do not diagonalize it.
   !
+  diagonalize(:,:) = .FALSE.
   DO na = 1, nat
      DO n = 1, n_max(na)
         l = orbital_quantum_number(na,n)
@@ -1989,18 +1992,17 @@ SUBROUTINE rotate_basis (iuwfc, lrotated)
               DO m1 = 1, ldim-1
                  DO m2 = m1+1, ldim
                     ! If any off-diagonal element is non-zero then proceed
-                    IF (ABS(ns(na,n,m1,m2,is)) > 1.d-4) GO TO 10
+                    IF (ABS(ns(na,n,m1,m2,is)) > 1.d-3) THEN
+                       diagonalize(na,n) = .TRUE.
+                       GO TO 10
+                    ENDIF
                  ENDDO
               ENDDO
            ENDDO
         ENDIF
+10   CONTINUE
      ENDDO
   ENDDO
-  WRITE( stdout,'(/5x,"Occupation matrices are already diagonal. No rotation will be performed!")') 
-  lrotated = .false.
-  GO TO 11
-  !
-10 CONTINUE
   !
   ! Diagonalization of the occupation matrix ns
   !
@@ -2019,26 +2021,44 @@ SUBROUTINE rotate_basis (iuwfc, lrotated)
                  f(m1,m2) = ns(na,n,m1,m2,is)
               ENDDO
            ENDDO
-           CALL cdiagh( ldim, f, ldim, lambda, vet )
+           WRITE( stdout,'(5x,"occupation matrix ns (before diag.):")')
            DO m1 = 1, ldim
-              DO m2 = 1, ldim
-                 transformation_matrix(na,n,m1,m2,is) = vet(m1,m2)
-              ENDDO
+              WRITE( stdout,'(5x,7f7.3)') ( DBLE(ns(na,n,m1,m2,is)), m2=1, ldim )
            ENDDO
+           IF (diagonalize(na,n)) THEN
+              ! Diagonalize ns
+              CALL cdiagh( ldim, f, ldim, lambda, vet )
+              DO m1 = 1, ldim
+                 DO m2 = 1, ldim
+                    transformation_matrix(na,n,m1,m2,is) = vet(m1,m2)
+                 ENDDO
+              ENDDO
+           ELSE
+              ! Do not diagonalize ns
+              DO m1 = 1, ldim
+                 lambda(m1) = f(m1,m1)
+              ENDDO
+              transformation_matrix(na,n,:,:,is) = (0.0d0, 0.0d0)
+              DO m1 = 1, ldim
+                 transformation_matrix(na,n,m1,m1,is) = (1.0d0, 0.d0)
+              ENDDO
+           ENDIF
            WRITE( stdout,'(5x,"eigenvalues:")')
            WRITE( stdout,'(5x,7f7.3)') (lambda(m1), m1=1, ldim)
            WRITE( stdout,'(5x,"eigenvectors (columns):")')
            DO m1 = 1, ldim
               WRITE( stdout,'(5x,7f7.3)') ( DBLE(transformation_matrix(na,n,m1,m2,is)), m2=1, ldim )
            ENDDO
-           WRITE( stdout,'(5x,"occupation matrix ns (before diag.):")')
-           DO m1 = 1, ldim
-              WRITE( stdout,'(5x,7f7.3)') ( DBLE(ns(na,n,m1,m2,is)), m2=1, ldim )
-           ENDDO
         ENDDO
         DEALLOCATE (f, vet, lambda)
      ENDDO 
   ENDDO     
+  !
+  IF (.NOT. ANY(diagonalize(:,:))) THEN
+     WRITE( stdout,'(/5x,"All occupation matrices are already diagonal. No rotation will be performed!")')
+     lrotated = .FALSE.
+     GO TO 11
+  ENDIF
   !
   WRITE( stdout,'(/5x,"Rotating the orbitals to the diagonal representation of ns...")')
   !
@@ -2108,15 +2128,16 @@ SUBROUTINE rotate_basis (iuwfc, lrotated)
      !
   ENDDO
   !
-  DEALLOCATE (transformation_matrix)
   DEALLOCATE (wfcatom_aux)
   !
 11 CONTINUE
   !
+  DEALLOCATE (transformation_matrix)
   DEALLOCATE (n_max)
   DEALLOCATE (orbital_quantum_number)
   DEALLOCATE (ns)
   DEALLOCATE (wfcatom)
+  DEALLOCATE (diagonalize)
   !
   RETURN
   !
