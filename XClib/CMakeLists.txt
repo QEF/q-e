@@ -23,7 +23,7 @@ set(sources_xclib
     xc_wrapper_gga.f90
     xc_wrapper_lda_lsda.f90
     xc_wrapper_mgga.f90)
-
+    
 qe_add_library(qe_xclib ${sources_xclib})
 target_link_libraries(qe_xclib
     PRIVATE
@@ -54,6 +54,7 @@ qe_install_targets(qe_libbeef)
 # xc_infos.x
 ###########################################################
 if(QE_ENABLE_TEST)
+    set(sources_xc_infos qe_dft_refs.f90)
     qe_add_executable(qe_xc_infos xc_infos.f90)
     set_target_properties(qe_xc_infos 
         PROPERTIES 

@@ -29,6 +29,7 @@ PROGRAM xclib_test
   !! * polarization;
   !! * derivative of xc potential.
   !
+  !! See README.TEST file for more details.
   
   !- [dopo merge Vxc_gpu: versione gpu]
   
@@ -526,7 +527,7 @@ PROGRAM xclib_test
       exc_term = xc_kind/='correlation'
       cor_term = xc_kind/='exchange'
     ELSE
-      exc_term = (iexch1+igcx1+imeta1)  /= 0 
+      exc_term = (iexch1+igcx1+imeta1)  /= 0
       cor_term = (icorr1+igcc1+imetac1) /= 0
     ENDIF
     !
@@ -672,66 +673,57 @@ PROGRAM xclib_test
       IF ( fam_init=='all_terms') THEN
         WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
         WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
-      ELSEIF ( fam_init=='all_short') THEN
-        WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-      ELSEIF ( fam_init=='all_libxc') THEN
+      ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
         WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       ENDIF
     ELSE
-      IF ( fam_init=='all_terms') THEN
+      IF ( fam_init=='all_terms' ) THEN
         WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
         WRITE(xc_data(16:15+nlen2),'(a)') family(1:nlen2)
-      ELSEIF ( fam_init=='all_short') THEN
-        WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
-      ELSEIF ( fam_init=='all_libxc') THEN
+      ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
         WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
       ENDIF
     ENDIF
     !
+    ! ... read data set from xml file
     !
     IF (test=='exe-benchmark' .AND. mype==root) THEN
       CALL xmlr_opentag( TRIM(xc_data), tag_err )
       IF (tag_err==0) THEN
         IF (.NOT. DF_OK) THEN
-          IF ( exc_term ) CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
-          IF ( cor_term ) CALL xmlr_readtag( "EC_AVER", ec_aver(:) )
-          IF ( family=='LDA' ) THEN
-            IF ( exc_term ) CALL xmlr_readtag( "VX_AVER", vx_aver(:,:) )
-            IF ( cor_term ) CALL xmlr_readtag( "VC_AVER", vc_aver(:,:) )
-          ELSE
-            IF ( exc_term ) THEN
+          IF ( exc_term ) THEN
+            CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
+            CALL xmlr_readtag( "EX", ex2(:) )
+            IF ( family=='LDA' ) THEN
+              CALL xmlr_readtag( "VX_AVER", vx_aver(:,:) )
+              CALL xmlr_readtag( "VX", vx2(:,:) )
+            ELSE
               CALL xmlr_readtag( "V1X_AVER", v1x_aver(:,:) )
               CALL xmlr_readtag( "V2X_AVER", v2x_aver(:,:) )
-            ENDIF
-            IF ( cor_term ) THEN
-              CALL xmlr_readtag( "V1C_AVER", v1c_aver(:,:) )
-              CALL xmlr_readtag( "V2C_AVER", v2c_aver(:,:) )
-              IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
-            ENDIF
-            IF ( family=='MGGA' ) THEN
-              CALL xmlr_readtag( "V3X_AVER", v3x_aver(:,:) )
-              CALL xmlr_readtag( "V3C_AVER", v3c_aver(:,:) )
-            ENDIF
-          ENDIF
-          IF ( exc_term ) CALL xmlr_readtag( "EX", ex2(:) )
-          IF ( cor_term )    CALL xmlr_readtag( "EC", ec2(:) )
-          IF ( family=='LDA' ) THEN
-            IF ( exc_term ) CALL xmlr_readtag( "VX", vx2(:,:) )
-            IF ( cor_term ) CALL xmlr_readtag( "VC", vc2(:,:) )        
-          ELSE
-            IF ( exc_term ) THEN
               CALL xmlr_readtag( "V1X", v1x2(:,:) )
               CALL xmlr_readtag( "V2X", v2x2(:,:) )
+              IF ( family=='MGGA' ) THEN
+                CALL xmlr_readtag( "V3X_AVER", v3x_aver(:,:) )
+                CALL xmlr_readtag( "V3X", v3x2(:,:) )
+              ENDIF
             ENDIF
-            IF ( cor_term ) THEN
+          ENDIF
+          IF ( cor_term ) THEN
+            CALL xmlr_readtag( "EC_AVER", ec_aver(:) )
+            CALL xmlr_readtag( "EC", ec2(:) )
+            IF ( family=='LDA' ) THEN
+              CALL xmlr_readtag( "VC_AVER", vc_aver(:,:) )
+              CALL xmlr_readtag( "VC", vc2(:,:) )
+            ELSE
+              CALL xmlr_readtag( "V1C_AVER", v1c_aver(:,:) )
+              CALL xmlr_readtag( "V2C_AVER", v2c_aver(:,:) )
+              IF ( family=='GGA'  ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
+              IF ( family=='MGGA' ) CALL xmlr_readtag( "V3C_AVER", v3c_aver(:,:) )
               CALL xmlr_readtag( "V1C", v1c2(:,:) )
               CALL xmlr_readtag( "V2C", v2c2(:,:) )
-              IF ( family=='GGA' ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
-            ENDIF  
-            IF ( family=='MGGA' ) THEN
-              CALL xmlr_readtag( "V3X", v3x2(:,:) )
-              CALL xmlr_readtag( "V3C", v3c2(:,:) )
-            ENDIF  
+              IF ( family=='GGA'  ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
+              IF ( family=='MGGA' ) CALL xmlr_readtag( "V3C", v3c2(:,:) )
+            ENDIF
           ENDIF
         ELSE !DF_OK
           CALL xmlr_opentag( TRIM(xc_data) )
@@ -960,55 +952,47 @@ PROGRAM xclib_test
        CALL evxc_stats( 'V3c', v3c1, v3c_aver(1,:) )
     ENDIF
     !
-    !=============================================================================
+    ! ... store data set in xml file
     !
     IF (test=='gen-benchmark' .AND. mype==root) THEN
+      CALL xmlw_opentag( TRIM(xc_data) )
       IF (.NOT. DF_OK) THEN
-        CALL xmlw_opentag( xc_data )
-        CALL xmlw_writetag( "NAME", dft )
-        IF ( exc_term ) CALL xmlw_writetag( "EX_AVER", ex_aver(:) )
-        IF ( cor_term ) CALL xmlw_writetag( "EC_AVER", ec_aver(:) )
-        IF ( family=='LDA' ) THEN
-          IF ( exc_term ) CALL xmlw_writetag( "VX_AVER", vx_aver(:,:) )
-          IF ( cor_term ) CALL xmlw_writetag( "VC_AVER", vc_aver(:,:) )
-        ELSE
-          IF ( exc_term ) THEN
+        IF ( exc_term ) THEN
+          CALL xmlw_writetag( "EX_AVER", ex_aver(:) )
+          CALL xmlw_writetag( "EX", ex1(1:nnrbt) )
+          IF ( family=='LDA' ) THEN
+            CALL xmlw_writetag( "VX_AVER", vx_aver(:,:) )
+            CALL xmlw_writetag( "VX", vx1(1:nnrbt,:) )
+          ELSE
             CALL xmlw_writetag( "V1X_AVER", v1x_aver(:,:) )
             CALL xmlw_writetag( "V2X_AVER", v2x_aver(:,:) )
-          ENDIF
-          IF ( cor_term ) THEN
-            CALL xmlw_writetag( "V1C_AVER", v1c_aver(:,:) )
-            CALL xmlw_writetag( "V2C_AVER", v2c_aver(:,:) )
-            IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
-          ENDIF
-          IF ( family=='MGGA' ) THEN
-            CALL xmlw_writetag( "V3X_AVER", v3x_aver(:,:) )
-            CALL xmlw_writetag( "V3C_AVER", v3c_aver(:,:) )
-          ENDIF
-        ENDIF
-        IF ( exc_term ) CALL xmlw_writetag( "EX", ex1(1:nnrbt) )
-        IF ( cor_term ) CALL xmlw_writetag( "EC", ec1(1:nnrbt) )
-        IF ( family=='LDA' ) THEN
-          IF ( exc_term ) CALL xmlw_writetag( "VX", vx1(1:nnrbt,:) )
-          IF ( cor_term ) CALL xmlw_writetag( "VC", vc1(1:nnrbt,:) )        
-        ELSE
-          IF ( exc_term ) THEN
             CALL xmlw_writetag( "V1X", v1x1(1:nnrbt,:) )
             CALL xmlw_writetag( "V2X", v2x1(1:nnrbt,:) )
+            IF ( family=='MGGA' ) THEN
+              CALL xmlw_writetag( "V3X_AVER", v3x_aver(:,:) )
+              CALL xmlw_writetag( "V3X", v3x1(1:nnrbt,:) )
+            ENDIF
           ENDIF
-          IF ( cor_term ) THEN
+        ENDIF
+        IF ( cor_term ) THEN
+          CALL xmlw_writetag( "EC_AVER", ec_aver(:) )
+          CALL xmlw_writetag( "EC", ec1(1:nnrbt) )
+          IF ( family=='LDA' ) THEN
+            CALL xmlw_writetag( "VC_AVER", vc_aver(:,:) )
+            CALL xmlw_writetag( "VC", vc1(1:nnrbt,:) )
+          ELSE
+            CALL xmlw_writetag( "V1C_AVER", v1c_aver(:,:) )
+            CALL xmlw_writetag( "V2C_AVER", v2c_aver(:,:) )
+            IF ( family=='GGA'  ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
+            IF ( family=='MGGA' ) CALL xmlw_writetag( "V3C_AVER", v3c_aver(:,:) )
             CALL xmlw_writetag( "V1C", v1c1(1:nnrbt,:) )
             CALL xmlw_writetag( "V2C", v2c1(1:nnrbt,:) )
-            IF ( family=='GGA' ) CALL xmlw_writetag( "V2Cud", v2c_ud1(1:nnrbt) )
-          ENDIF  
-          IF ( family=='MGGA' ) THEN
-            CALL xmlw_writetag( "V3X", v3x1(1:nnrbt,:) )
-            CALL xmlw_writetag( "V3C", v3c1(1:nnrbt,:) )
-          ENDIF  
+            IF ( family=='GGA'  ) CALL xmlw_writetag( "V2Cud", v2c_ud1(1:nnrbt) )
+            IF ( family=='MGGA' ) CALL xmlw_writetag( "V3C", v3c1(1:nnrbt,:) )
+          ENDIF
         ENDIF
       ELSE !DF_OK
-        CALL xmlw_opentag( xc_data )
-        CALL xmlw_writetag( "NAME", dft )
+        CALL xmlw_opentag( TRIM(xc_data) )
         IF (family=='LDA') THEN 
           CALL xmlw_writetag( "dV_AVER", dv_aver(:) )
           CALL xmlw_writetag( "dV", dmuxc1(1:nnrbt,:,:) )
@@ -1022,9 +1006,9 @@ PROGRAM xclib_test
         ENDIF
       ENDIF
       CALL xmlw_closetag()
-      CALL print_test_status( stored  )
+      CALL print_test_status( stored )
       GOTO 10
-    ENDIF 
+    ENDIF
     !
     !
     IF (mype == root) THEN
