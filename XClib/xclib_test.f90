@@ -44,7 +44,7 @@ PROGRAM xclib_test
   USE xclib_utils_and_para
   
   !--xml
-  USE xmltools,    ONLY: xml_openfile, xml_closefile,xmlr_readtag,   &
+  USE xmltools,    ONLY: xml_open_file, xml_closefile,xmlr_readtag,   &
                          xmlw_writetag, xmlw_opentag, xmlw_closetag, &
                          xmlr_opentag, xmlr_closetag, get_attr, add_attr
 #if defined(__LIBXC)
@@ -236,7 +236,7 @@ PROGRAM xclib_test
     !
     IF ( test(1:4)=='gen-' ) THEN
       !
-      iunpun = xml_openfile( "./"//TRIM(filename_xml) )
+      iunpun = xml_open_file( "./"//TRIM(filename_xml) )
       IF ( iunpun == -1 ) RETURN
       !
       CALL xmlw_opentag( "XCTEST-DATA-SET" )
@@ -254,7 +254,7 @@ PROGRAM xclib_test
         CALL xclib_infomsg( 'xclib_test', 'xml data file not found' )
       ENDIF
       !
-      iun = xml_openfile( filename_xml )
+      iun = xml_open_file( filename_xml )
       IF ( iun==-1 ) THEN
         ierr=2
         CALL xclib_infomsg( 'xclib_test', 'xml data file not readable' )
