@@ -33,6 +33,7 @@ DENSE/rotate_HSpsi_gamma.o \
 DENSE/rotate_HSpsi_k.o \
 DENSE/rotate_wfc_gamma.o \
 DENSE/rotate_wfc_k.o \
+DENSE/rotate_xpsi.o \
 RMM/crmmdiagg.o \
 RMM/crmmdiagg_gpu.o \
 RMM/rrmmdiagg.o \
@@ -52,6 +53,7 @@ Davidson/cegterg_gpu.o \
 Davidson/regterg_gpu.o \
 DENSE/rotate_wfc_k_gpu.o \
 DENSE/rotate_wfc_gamma_gpu.o \
+DENSE/rotate_xpsi_gpu.o \
 CG/rcgdiagg_gpu.o \
 CG/ccgdiagg_gpu.o \
 PPCG/generic_cublas.o \

@@ -22,3 +22,7 @@ rotate_wfc_k.o : ../../UtilXlib/util_param.o
 rotate_wfc_k_gpu.o : ../../UtilXlib/mp.o
 rotate_wfc_k_gpu.o : ../../UtilXlib/mp_bands_util.o
 rotate_wfc_k_gpu.o : ../../UtilXlib/util_param.o
+rotate_xpsi.o : ../../Modules/control_flags.o
+rotate_xpsi.o : ../../Modules/kind.o
+rotate_xpsi_gpu.o : ../../Modules/control_flags.o
+rotate_xpsi_gpu.o : ../../Modules/kind.o
