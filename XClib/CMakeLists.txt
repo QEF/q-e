@@ -54,8 +54,10 @@ qe_install_targets(qe_libbeef)
 # xc_infos.x
 ###########################################################
 if(QE_ENABLE_TEST)
-    set(sources_xc_infos qe_dft_refs.f90)
-    qe_add_executable(qe_xc_infos xc_infos.f90)
+    set(sources_xc_infos
+    qe_dft_refs.f90
+    xc_infos.f90)
+    qe_add_executable(qe_xc_infos ${sources_xc_infos})
     set_target_properties(qe_xc_infos 
         PROPERTIES 
         OUTPUT_NAME qe_xc_infos.x 
