@@ -158,7 +158,7 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
   IF ( mykey > 0 ) GOTO 100
   rmax = 5.d0 / (SQRT(alpha) * alat)
   !
-  ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
+  ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-12)
   !
 !$omp parallel do default(none) shared(na_s, na_e, nat, at, bg, ityp, zv, alpha, forceion, alat, rmax, tau)&
 !$omp                           &private(nb, dtau, nrm, r, r2, rr, fact)

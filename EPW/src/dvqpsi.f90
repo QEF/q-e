@@ -606,7 +606,6 @@
     !
     USE kinds,            ONLY : DP
     USE ions_base,        ONLY : nat, ityp, ntyp => nsp
-    USE spin_orb,         ONLY : lspinorb
     USE cell_base,        ONLY : tpiba2, omega, tpiba
     USE gvect,            ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
     USE scf,              ONLY : v, vltot
