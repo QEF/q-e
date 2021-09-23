@@ -2137,10 +2137,6 @@ rotate_wfc.o : ../../Modules/control_flags.o
 rotate_wfc.o : ../../Modules/kind.o
 rotate_wfc_gpu.o : ../../Modules/control_flags.o
 rotate_wfc_gpu.o : ../../Modules/kind.o
-rotate_xpsi.o : ../../Modules/control_flags.o
-rotate_xpsi.o : ../../Modules/kind.o
-rotate_xpsi_gpu.o : ../../Modules/control_flags.o
-rotate_xpsi_gpu.o : ../../Modules/kind.o
 run_driver.o : ../../Modules/cell_base.o
 run_driver.o : ../../Modules/check_stop.o
 run_driver.o : ../../Modules/command_line_options.o
