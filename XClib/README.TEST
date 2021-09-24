@@ -74,7 +74,7 @@ The following options have to be set:
          with a notice.
 
 - family: the dft family (needed in order to distinguish those few cases
-          where LDA terms have the same name of the GGA ones, e.g. PBE).
+          where LDA terms have the same name of the GGA ones, e.g. B3LP).
           If dft='all_something' then you can put family='all_something'
           too in order to span all the functionals regardless their family.
           

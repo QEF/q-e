@@ -137,8 +137,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      !
      CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
      !
-     IF ( igcx==43 .OR. igcc==14 ) CALL gcxc_beef( length, ABS(rho(:,1)), grho2(:,1), ex, ec, &
-                                                       v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     IF ( (igcx==43.AND..NOT.is_libxc(3)) .OR. (igcc==14.AND..NOT.is_libxc(4)) ) &
+       CALL gcxc_beef( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), &
+                       v1c(:,1), v2c(:,1) )
      !
      DO k = 1, length
         sgn(1) = SIGN(1._DP, rho(k,1))

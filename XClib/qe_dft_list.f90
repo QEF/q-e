@@ -55,7 +55,7 @@ MODULE qe_dft_list
                        'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X' /           !42 "  46 
   ! GGA correlation terms
   DATA dft_GGAc_name / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH',     & ! 0 to  5
-                       'NONE', 'B3LP','PSC', 'PBE',  'xxxx','xxxx',     & ! 6 "  11
+                       'NONE', 'B3LP','PSC', 'PBE' , 'xxxx','xxxx',     & ! 6 "  11
                        'Q2DC', 'xxxx','BEEC' /                            !12 "  14
   ! MGGA exchange+correlation terms
   DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN',  & ! 0 to  5

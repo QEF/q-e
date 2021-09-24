@@ -77,10 +77,10 @@ PROGRAM xclib_test
   INTEGER :: i, ierr, ierrm
   INTEGER :: nnodes, nlen
   !
-  INTEGER, PARAMETER :: stdin  = 5
+  INTEGER, PARAMETER :: stdin=5
   !
   !-------- Grid dim vars --------------------
-  INTEGER, PARAMETER :: npoints = 90000
+  INTEGER, PARAMETER :: npoints=90000
   INTEGER :: nr, nnr, nrpe, nnr_b, nnr_int, nnrbt
   INTEGER :: nnrit, nnrbit, nskip
   !
@@ -175,7 +175,9 @@ PROGRAM xclib_test
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
   CHARACTER(LEN=30), PARAMETER :: failed='**NO MATCH**', &
                                   skipped='**skipped - by default**', &
-                                  skipped2='**skipped - not found in xml**'
+                                  skipped2='**skipped - not found in xml**',&
+                                  skipped3='**skipped - needs Libxc**',&
+                                  skipped4='**skipped - Libxc dft not usable in QE**'
   CHARACTER(LEN=10), PARAMETER :: passed='match', stored='stored'
   CHARACTER(LEN=6) :: gen_version = ''
   CHARACTER(LEN=5) :: libxc_version='none', libxc_gen_version = ''
@@ -263,10 +265,10 @@ PROGRAM xclib_test
       CALL xmlr_opentag( "XCTEST-DATA-SET" )
       !
       CALL xmlr_readtag( "HEADER", dummy )
-      CALL get_attr( "DFT", dft )
-      CALL get_attr( "FAMILY", family )
-      CALL get_attr( "VXC_DERIVATIVE", xc_derivative )
-      CALL get_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
+      !CALL get_attr( "DFT", dft )
+      !CALL get_attr( "FAMILY", family )
+      !CALL get_attr( "VXC_DERIVATIVE", xc_derivative )
+      !CALL get_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
       !
     ENDIF
   ENDIF
@@ -302,7 +304,7 @@ PROGRAM xclib_test
 !      IF( mype == root ) THEN
 !        write(6,310)  i, proc_name(i)
 !      ENDIF
-310 FORMAT(' pe = ',I5,' name = ', A20) 
+310 FORMAT(' pe = ',I5,' name = ', A20)
     DO ii = 1, nnodes
        IF ( proc_name(i) == node_name(ii) ) THEN
           EXIT
@@ -471,33 +473,36 @@ PROGRAM xclib_test
     id_vec(3) = igcx1   ;  id_vec(4) = igcc1
     id_vec(5) = imeta1  ;  id_vec(6) = imetac1
     !
-    IF (dft_init=='all_libxc') THEN
 #if defined(__LIBXC)
-       IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( ns, .FALSE. )
-       !
-       IF (ANY(libxc_dft_not_usable(:))) THEN
-         CALL print_test_status( skipped )
-         CALL xclib_finalize_libxc()
-         CYCLE
-       ENDIF
-       !
-       DO l = 1, 6
-         IF (id_vec(l)/=0) fkind = xc_f03_func_info_get_kind( xc_info(l) )
-       ENDDO
-       !
-       IF (fkind==XC_EXCHANGE) THEN
-         xc_kind = 'exchange'
-       ELSEIF (fkind==XC_CORRELATION) THEN
-         xc_kind = 'correlation'
-       ELSEIF (fkind==XC_EXCHANGE_CORRELATION) THEN
-         xc_kind = 'correlation'
-       ELSE
-         CALL print_test_status( skipped )
-         CALL xclib_finalize_libxc()
-         CYCLE
-       ENDIF
-#endif
+    IF (xclib_dft_is_libxc( 'ANY' )) THEN
+      CALL xclib_init_libxc( ns, .FALSE. )
+      !
+      IF (ANY(libxc_dft_not_usable(:))) THEN
+        CALL print_test_status( skipped4 )
+        CALL xclib_finalize_libxc()
+        CYCLE
+      ENDIF
     ENDIF
+    !
+    IF (dft_init=='all_libxc') THEN
+      DO l = 1, 6
+        IF (id_vec(l)/=0.AND.is_libxc(l)) fkind=xc_f03_func_info_get_kind(xc_info(l))
+      ENDDO
+      !
+      IF (fkind==XC_EXCHANGE) THEN
+        xc_kind = 'exchange'
+      ELSEIF (fkind==XC_CORRELATION) THEN
+        xc_kind = 'correlation'
+      ELSEIF (fkind==XC_EXCHANGE_CORRELATION) THEN
+        xc_kind = 'correlation'
+      ENDIF
+    ENDIF   
+#else
+    IF (xclib_dft_is_libxc('ANY')) THEN
+      CALL print_test_status( skipped3 )
+      CYCLE
+    ENDIF
+#endif
     !
     CALL xclib_set_auxiliary_flags( .FALSE. )
     !
@@ -513,22 +518,22 @@ PROGRAM xclib_test
           GGA=.FALSE.
           IF (iexch1/=0 .AND. icorr1/=0 ) THEN
             IF ( TRIM(xc_kind)=='correlation') CYCLE
-            IF ( TRIM(xc_kind)=='exchange') xc_kind = 'exchange+correlation'
+            IF ( TRIM(xc_kind)=='exchange') xc_kind='exchange+correlation'
           ENDIF
           family='LDA'
         ELSE
           LDA=.FALSE.
           IF (igcx1/=0 .AND. igcc1/=0 ) THEN
             IF ( TRIM(xc_kind)=='correlation') CYCLE
-            IF ( TRIM(xc_kind)=='exchange') xc_kind = 'exchange+correlation'
+            IF ( TRIM(xc_kind)=='exchange') xc_kind='exchange+correlation'
           ENDIF
         ENDIF
       ENDIF
       exc_term = xc_kind/='correlation'
       cor_term = xc_kind/='exchange'
     ELSE
-      exc_term = (iexch1+igcx1+imeta1)  /= 0
-      cor_term = (icorr1+igcc1+imetac1) /= 0
+      exc_term = (iexch1+igcx1+imeta1  /= 0)
+      cor_term = (icorr1+igcc1+imetac1 /= 0)
     ENDIF
     !
     IF (MGGA) THEN
@@ -669,20 +674,11 @@ PROGRAM xclib_test
     !
     nlen1 = LEN(TRIM(dft))
     nlen2 = LEN(TRIM(family))
-    IF (.NOT. xc_derivative) THEN
-      IF ( fam_init=='all_terms') THEN
-        WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-        WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
-      ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
-        WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-      ENDIF
-    ELSE
-      IF ( fam_init=='all_terms' ) THEN
-        WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
-        WRITE(xc_data(16:15+nlen2),'(a)') family(1:nlen2)
-      ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
-        WRITE(xc_data(10:9+nlen1),'(a)') dft(1:nlen1)
-      ENDIF
+    IF ( fam_init=='all_terms') THEN
+      WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+      WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
+    ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
+      WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
     ENDIF
     !
     ! ... read data set from xml file
@@ -726,7 +722,6 @@ PROGRAM xclib_test
             ENDIF
           ENDIF
         ELSE !xc_derivative
-          CALL xmlr_opentag( TRIM(xc_data) )
           IF (family=='LDA') THEN 
             CALL xmlr_readtag( "dV_AVER", dv_aver(:) )
             CALL xmlr_readtag( "dV", dmuxc2(:,:,:) )
@@ -992,7 +987,6 @@ PROGRAM xclib_test
           ENDIF
         ENDIF
       ELSE !xc_derivative
-        CALL xmlw_opentag( TRIM(xc_data) )
         IF (family=='LDA') THEN 
           CALL xmlw_writetag( "dV_AVER", dv_aver(:) )
           CALL xmlw_writetag( "dV", dmuxc1(1:nnrbt,:,:) )
