@@ -15,7 +15,7 @@ MODULE qe_dft_list
   !
   ! NOTE: when a dft term slot is filled with 'xxxx' it means that the term
   ! is included in one of the full dft combinations available, but it cannot
-  ! be used by itself.
+  ! be called by itself.
   !
   USE dft_setting_params,  ONLY: notset
   !

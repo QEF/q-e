@@ -1,80 +1,91 @@
+                 --------------------------
+                 - XClib TESTING PROGRAMS -
+                 --------------------------
 
-===================== XC_INFO =====================================
+To compile the following side programs, once you have properly 
+configured QE, just type:
+
+	make test
+	
+in the XClib directory. With CMake they will be compiled automati-
+cally if 'QE_ENABLE_TEST' is set to true (default).
+
+
+---------------------- XC_INFO -----------------------------------
 
 xc_info.x is a small serial program that provides infos on XC 
-functionals, both the ones from internal QE library and the ones from
-Libxc. Just run the command:
+functionals, both the ones from internal QE library and the ones
+from Libxc. Just run the command:
 
 	./xc_info.x
 
-then insert the functional name (or any allowed combination). It
-shows a brief description, the list of the external parameters, 
-if present, and the references.
+then type the functional name (or any allowed combination). It
+will show a brief description, the list of the external parameters, 
+and all the available references. For Libxc functionals it will also
+tell if they are currently usable in QE or not.
 
-===================== XCLIB_TEST ==================================
 
-xclib_test.x is a testing program for the XClib library.
-------
-This is still a prototype version. The next release will include a simpler 
-and more stable version.
-------
+--------------------- XCLIB_TEST ---------------------------------
 
-To compile the test program, once you have properly configured QE,
-inside the directory XClib type:
+xclib_test.x is a testing program for the XClib library routines.
+Due to the high number of available dfts (including those from
+the external library Libxc) and the different parallelization 
+schemes available already or in experimental phase, this program
+is intended to be a tool that helps developers to maintain and
+develop XClib by keeping an overview on the available options
+in order not to neglect any of them (which is hard to do
+by working with test-suite only).
+The program generates an xml file with a set of output data produced
+according to the test input options.
+You can run the program by using commands like:
 
-	make test
+	./xclib_test.x < input_file                [ serial ]
+        mpirun -np XX xclib_test.x < input_file    [parallel]
 
-Then you can run tests using commands like:
+Different options are available and the program can be used for
+different purposes.
+An example of input file content is the following:
 
-	./xclib_test.x < input_file > output_file                [ serial ]
-        mpirun -np 2 xclib_test.x < input_file > output     [parallel]
+        &INPUT_NAMELIST
+                 test='gen-benchmark'
+                 filename_xml='xctest_data.xml'
+                 dft='pbe'
+                 family='GGA'
+                 nspin=1
+                 xc_derivative=.FALSE.
+        /
 
-Three options available:
-            
-* gen-benchmark: the program generates an xml file with a set of data
-                 to compare the XC output to. No need to add the 
-                 '> output_file' to the submission.
-                 Example of input file content:
-                 
-                 &INPUT_NAMELIST
-                    test='gen-benchmark'
-                    filename_xml='test_gga.xml'
-                    family='GGA'
-                    dft1='PBE'
-                    nspin=1
-                    DF_OK=.FALSE.
-                 /
+The following options have to be set:
 
-* exe-benchmark: the program reads the xml data file generated
-                 previously with the 'gen-benchmark' option and
-                 compares the output of the XC routines.
-                 Example of input file:
-                 
-                 &INPUT_NAMELIST
-                    test='exe-benchmark'
-                    filename_xml='test_gga.xml'
-                    dft2='PBE'
-                 /
+- test: 'gen-benchmark' generates the xml file with the benchmark set
+        of XClib output data. 'exe-benchmark' calculates a set of
+        XClib output data and compares it with the one in the xml file.
 
-* dft-comparison: the program compares two different DFTs on a large 
-                  grid of points. Max, min and average percentage 
-                  difference between the two dft outputs (energy and
-                  potential) are provided and the points of the grid
-                  where the two output differ are shown. This option
-                  can be used, for example, to find differences between
-                  internal QE functionals and the libxc ones.
-                  Example of input file content:
+- filename_xml: the name of the xml file.
 
-                  &INPUT_NAMELIST
-                     test='dft-comparison',
-                     nspin=2,
-                     family='LDA',
-                     DF_OK=.FALSE.,
-                     dft1='sla pz',
-                     dft2='lda_x lda_c_pz'
-                  /
+- dft: the input functional. Besides the specific functionals, three
+       other options are available:
+       - 'all_terms' spans all the available single term functionals
+         of QE (e.g. LDA exchange, LDA correlation, GGA exchange, ...);
+       - 'all_short' spans all the full dfts (identified by the 'shortnames')
+         available in XClib, e.g. LDA, PBESOL, PW86PBE, etc.
+       - 'all_libxc' spans all the available Libxc functionals. Those
+         that are not usable in the current QE version will be skipped
+         with a notice.
 
-The testing program is available for LDA, GGA and MGGA functionals. It 
-also tests the potential derivatives for LDA (dmxc) and GGA (dgcxc) when
-the DF_OK variable is set to TRUE.
+- family: the dft family (needed in order to distinguish those few cases
+          where LDA terms have the same name of the GGA ones, e.g. PBE).
+          If dft='all_something' then you can put family='all_something'
+          too in order to span all the functionals regardless their family.
+          
+- nspin: unpolarized (=1) or polarized (=2).
+
+- xc_derivative: if .TRUE. calculates the derivative terms (needed,
+                 for example, by linear response code) instead of
+                 the ordinary energy+potential output.
+
+Obviously the program can be used to compare QE and Libxc functionals,
+to check differences from one version to another or to check differences
+in the output by changing external parameters or other stuff.
+          
 

@@ -26,7 +26,7 @@ PROGRAM xc_infos
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params,   ONLY: xc_func, xc_info
+  USE dft_setting_params,   ONLY: xc_func, xc_info, libxc_dft_not_usable
 #endif
   !
   IMPLICIT NONE
@@ -106,7 +106,7 @@ PROGRAM xc_infos
   WRITE(stdout,*) "============== "
   !  
 #if defined(__LIBXC)
-  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1, .FALSE. )  
+  IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( 1, .FALSE. )
 #endif
   !
   CALL xclib_set_auxiliary_flags( .FALSE. )
@@ -117,7 +117,7 @@ PROGRAM xc_infos
     IF (.NOT.is_libxc(i) .AND. idx/=0) THEN
       !
       SELECT CASE( i )
-      CASE( 1 ) 
+      CASE( 1 )
         WRITE(lxc_kind, '(a)') 'EXCHANGE'
         WRITE(lxc_family,'(a)') "LDA"
         dft_n = dft_LDAx_name(idx)
@@ -199,9 +199,11 @@ PROGRAM xc_infos
       !
       WRITE(stdout,*) CHAR(10)
       WRITE(*,'(i1,". Functional with ID: ", i3 )') i, idx
+      IF ( libxc_dft_not_usable(i) ) WRITE(stdout,*) 'This functional is currently not&
+                                                     & usable in QE'
       WRITE(stdout, '(" - Name:   ",a)') TRIM(xc_f03_func_info_get_name(xc_info(i)))
       WRITE(stdout, '(" - Family: ",a)') TRIM(lxc_family)
-      WRITE(stdout, '(" - Kind:   ",a)') TRIM(lxc_kind)  
+      WRITE(stdout, '(" - Kind:   ",a)') TRIM(lxc_kind)
       n_ext = xc_f03_func_info_get_n_ext_params( xc_info(i) )
       IF ( n_ext/=0 ) THEN 
         WRITE(stdout, '(" - External parameters: ",i3)') n_ext

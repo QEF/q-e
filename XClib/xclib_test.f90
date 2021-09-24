@@ -88,7 +88,7 @@ PROGRAM xclib_test
   CHARACTER(LEN=30) :: test, family, fam_init, xc_kind
   CHARACTER(LEN=30) :: dft, dft_init
   INTEGER :: nspin
-  LOGICAL :: DF_OK
+  LOGICAL :: xc_derivative
   !
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
@@ -192,7 +192,7 @@ PROGRAM xclib_test
   INTEGER :: PROVIDED
 #endif
   !
-  NAMELIST/input_namelist/ test, filename_xml, nspin, family, DF_OK, dft
+  NAMELIST/input_namelist/ test, filename_xml, nspin, family, xc_derivative, dft
   !
 #if defined(__MPI)
   !
@@ -223,7 +223,7 @@ PROGRAM xclib_test
   ! ... init
   test = 'none'
   dft = 'none'
-  DF_OK = .FALSE.
+  xc_derivative = .FALSE.
   nspin = 1
   !
   !==========================================================================
@@ -242,7 +242,7 @@ PROGRAM xclib_test
       CALL xmlw_opentag( "XCTEST-DATA-SET" )
       CALL add_attr( "DFT", dft )
       CALL add_attr( "FAMILY", family )
-      CALL add_attr( "VXC_DERIVATIVE", DF_OK )
+      CALL add_attr( "VXC_DERIVATIVE", xc_derivative )
       CALL add_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
       CALL xmlw_writetag( "HEADER", "" )
       !
@@ -265,7 +265,7 @@ PROGRAM xclib_test
       CALL xmlr_readtag( "HEADER", dummy )
       CALL get_attr( "DFT", dft )
       CALL get_attr( "FAMILY", family )
-      CALL get_attr( "VXC_DERIVATIVE", DF_OK )
+      CALL get_attr( "VXC_DERIVATIVE", xc_derivative )
       CALL get_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
       !
     ENDIF
@@ -280,7 +280,7 @@ PROGRAM xclib_test
   CALL MPI_BCAST( family, 30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST( dft,    30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST( nspin,   1, MPI_INT,       0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST( DF_OK,   1, MPI_LOGICAL,   0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST( xc_derivative,   1, MPI_LOGICAL,   0, MPI_COMM_WORLD, ierr )
 #endif
   !
   ALLOCATE( proc_name( npes ) )
@@ -532,7 +532,7 @@ PROGRAM xclib_test
     ENDIF
     !
     IF (MGGA) THEN
-      IF (.NOT. DF_OK ) THEN
+      IF (.NOT. xc_derivative ) THEN
         exc_term = .TRUE.
         cor_term = .TRUE.
       ELSE
@@ -583,16 +583,16 @@ PROGRAM xclib_test
     !
     ! ... dft1 output arrays
     !
-    IF (.NOT. DF_OK) ALLOCATE( ex1(nnr), ec1(nnr) )
+    IF (.NOT. xc_derivative) ALLOCATE( ex1(nnr), ec1(nnr) )
     !
     IF ( LDA .OR. GGA ) THEN
        IF ( LDA ) THEN
-         IF ( .NOT. DF_OK ) ALLOCATE( vx1(nnr,ns), vc1(nnr,ns) )
-         IF ( DF_OK ) ALLOCATE( dmuxc1(nnr,ns,ns) )
+         IF ( .NOT. xc_derivative ) ALLOCATE( vx1(nnr,ns), vc1(nnr,ns) )
+         IF ( xc_derivative ) ALLOCATE( dmuxc1(nnr,ns,ns) )
        ENDIF
        !
        IF ( GGA ) THEN
-         IF ( .NOT. DF_OK ) THEN
+         IF ( .NOT. xc_derivative ) THEN
            ALLOCATE( exg1(nnr), ecg1(nnr) )
            ALLOCATE( v1x1(nnr,ns), v2x1(nnr,ns) )
            ALLOCATE( v1c1(nnr,ns), v2c1(nnr,ns), v2c_ud1(nnr) )
@@ -611,16 +611,16 @@ PROGRAM xclib_test
     ! ... dft2 output / benchmark data arrays
     !
     IF ( test == 'exe-benchmark' ) THEN
-      IF (.NOT. DF_OK) ALLOCATE( ex2(nnrbt), ec2(nnrbt) )
+      IF (.NOT. xc_derivative) ALLOCATE( ex2(nnrbt), ec2(nnrbt) )
       !
       IF ( LDA .OR. GGA ) THEN
          IF ( LDA ) THEN
-           IF ( .NOT. DF_OK ) ALLOCATE( vx2(nnrbt,ns), vc2(nnrbt,ns) )
-           IF ( DF_OK ) ALLOCATE( dmuxc2(nnrbt,ns,ns) )
+           IF ( .NOT. xc_derivative ) ALLOCATE( vx2(nnrbt,ns), vc2(nnrbt,ns) )
+           IF ( xc_derivative ) ALLOCATE( dmuxc2(nnrbt,ns,ns) )
          ENDIF
          !
          IF ( GGA ) THEN
-           IF ( .NOT. DF_OK ) THEN
+           IF ( .NOT. xc_derivative ) THEN
              ALLOCATE( exg2(nnrbt), ecg2(nnrbt) )
              ALLOCATE( v1x2(nnrbt,ns), v2x2(nnrbt,ns) )
              ALLOCATE( v1c2(nnrbt,ns), v2c2(nnrbt,ns), v2c_ud2(nnrbt) )
@@ -669,7 +669,7 @@ PROGRAM xclib_test
     !
     nlen1 = LEN(TRIM(dft))
     nlen2 = LEN(TRIM(family))
-    IF (.NOT. DF_OK) THEN
+    IF (.NOT. xc_derivative) THEN
       IF ( fam_init=='all_terms') THEN
         WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
         WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
@@ -690,7 +690,7 @@ PROGRAM xclib_test
     IF (test=='exe-benchmark' .AND. mype==root) THEN
       CALL xmlr_opentag( TRIM(xc_data), tag_err )
       IF (tag_err==0) THEN
-        IF (.NOT. DF_OK) THEN
+        IF (.NOT. xc_derivative) THEN
           IF ( exc_term ) THEN
             CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
             CALL xmlr_readtag( "EX", ex2(:) )
@@ -725,7 +725,7 @@ PROGRAM xclib_test
               IF ( family=='MGGA' ) CALL xmlr_readtag( "V3C", v3c2(:,:) )
             ENDIF
           ENDIF
-        ELSE !DF_OK
+        ELSE !xc_derivative
           CALL xmlr_opentag( TRIM(xc_data) )
           IF (family=='LDA') THEN 
             CALL xmlr_readtag( "dV_AVER", dv_aver(:) )
@@ -870,14 +870,14 @@ PROGRAM xclib_test
        IF ((iexch1==8 .AND. .NOT.is_libxc(1)) .OR. (icorr1==10 .AND. &
             .NOT. is_libxc(2))) CALL xclib_set_finite_size_volume( volume )
        !
-       IF (.NOT. DF_OK ) CALL xc( nnr, ns, ns, rho_tz, ex1, ec1, vx1, vc1 )
-       IF ( DF_OK ) CALL dmxc( nnr, ns, rho, dmuxc1 )
+       IF (.NOT. xc_derivative ) CALL xc( nnr, ns, ns, rho_tz, ex1, ec1, vx1, vc1 )
+       IF ( xc_derivative ) CALL dmxc( nnr, ns, rho, dmuxc1 )
        !
     ENDIF
     !
     IF ( GGA ) THEN
       !
-      IF ( .NOT. DF_OK ) THEN
+      IF ( .NOT. xc_derivative ) THEN
         !
         IF ( .NOT. LDA ) THEN
           ex1 = 0.d0  ;  ec1 = 0.d0
@@ -920,20 +920,20 @@ PROGRAM xclib_test
     !
     iaverout = 0
     !
-    IF ( .NOT. DF_OK ) THEN
+    IF ( .NOT. xc_derivative ) THEN
       IF (exc_term) CALL evxc_stats( 'Ex', ex1, ex_aver )
       IF (cor_term) CALL evxc_stats( 'Ec', ec1, ec_aver )
     ENDIF
     !
     IF ( LDA .AND. .NOT. GGA ) THEN
-       IF ( .NOT. DF_OK ) THEN
+       IF ( .NOT. xc_derivative ) THEN
          IF (exc_term) CALL evxc_stats( 'Vx', vx1, vx_aver(1,:) )
          IF (cor_term) CALL evxc_stats( 'Vc', vc1, vc_aver(1,:) )
        ELSE
          CALL derivxc_stats( 'dmuxc', dmuxc1, dv_aver )
        ENDIF
     ELSEIF ( GGA ) THEN
-       IF ( .NOT. DF_OK ) THEN
+       IF ( .NOT. xc_derivative ) THEN
          IF (exc_term) CALL evxc_stats( 'V1x', v1x1, v1x_aver )
          IF (exc_term) CALL evxc_stats( 'V2x', v2x1, v2x_aver )
          IF (cor_term) CALL evxc_stats( 'V1c', v1c1, v1c_aver )
@@ -956,7 +956,7 @@ PROGRAM xclib_test
     !
     IF (test=='gen-benchmark' .AND. mype==root) THEN
       CALL xmlw_opentag( TRIM(xc_data) )
-      IF (.NOT. DF_OK) THEN
+      IF (.NOT. xc_derivative) THEN
         IF ( exc_term ) THEN
           CALL xmlw_writetag( "EX_AVER", ex_aver(:) )
           CALL xmlw_writetag( "EX", ex1(1:nnrbt) )
@@ -991,7 +991,7 @@ PROGRAM xclib_test
             IF ( family=='MGGA' ) CALL xmlw_writetag( "V3C", v3c1(1:nnrbt,:) )
           ENDIF
         ENDIF
-      ELSE !DF_OK
+      ELSE !xc_derivative
         CALL xmlw_opentag( TRIM(xc_data) )
         IF (family=='LDA') THEN 
           CALL xmlw_writetag( "dV_AVER", dv_aver(:) )
@@ -1019,7 +1019,7 @@ PROGRAM xclib_test
          !
          DO ii = 1, nnrbt
             !
-            IF ( .NOT. DF_OK ) THEN
+            IF ( .NOT. xc_derivative ) THEN
               ex_is_out = exc_term .AND. is_it_out( diff_thr_e_lda, 1, ex1(ii:ii), ex2(ii:ii) )
               ec_is_out = cor_term .AND. is_it_out( diff_thr_e_lda, 1, ec1(ii:ii), ec2(ii:ii) )
               vx_is_out = exc_term .AND. is_it_out( diff_thr_v_lda,ns, vx1(ii,:), vx2(ii,:) )
@@ -1030,7 +1030,7 @@ PROGRAM xclib_test
                                          dmuxc2(ii,:,:) )
             ENDIF
             !
-            IF ( (.NOT.DF_OK.AND.something_out) .OR. (DF_OK.AND.dmuxc_is_out) ) THEN
+            IF ( (.NOT.xc_derivative.AND.something_out) .OR. (xc_derivative.AND.dmuxc_is_out) ) THEN
               !
               iout = iout + 1
               !
@@ -1047,7 +1047,7 @@ PROGRAM xclib_test
               IF (       POLARIZED ) WRITE(stdout, 402 ) rhoi(1), rhoi(2)
               WRITE(stdout,*) " "
               !
-              IF (.NOT. DF_OK) THEN
+              IF (.NOT. xc_derivative) THEN
                 IF ( exc_term .AND. ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
                 IF ( cor_term .AND. ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
                 IF ( exc_term .AND. vx_is_out ) CALL print_diff( 'Vx', vx1(ii,:),  vx2(ii,:)  )
@@ -1066,7 +1066,7 @@ PROGRAM xclib_test
          !
          DO ii = 1, nnrbt
            !
-           IF ( .NOT. DF_OK ) THEN
+           IF ( .NOT. xc_derivative ) THEN
              ex_is_out = exc_term .AND. is_it_out( diff_thr_e_gga, 1, ex1(ii:ii), ex2(ii:ii) )
              ec_is_out = cor_term .AND. is_it_out( diff_thr_e_gga, 1, ec1(ii:ii), ec2(ii:ii) )
              v1x_is_out= exc_term .AND. is_it_out( diff_thr_vgga,ns, v1x1(ii,:),v1x2(ii,:) )
@@ -1083,7 +1083,7 @@ PROGRAM xclib_test
              dvgga_is_out = ANY((/dvxcrr_is_out, dvxcsr_is_out, dvxcss_is_out/))
            ENDIF
            !
-           IF ( (.NOT.DF_OK.AND.something_out) .OR. (DF_OK.AND.dvgga_is_out) ) THEN
+           IF ( (.NOT.xc_derivative.AND.something_out) .OR. (xc_derivative.AND.dvgga_is_out) ) THEN
              !
              iout = iout + 1
              !
@@ -1111,7 +1111,7 @@ PROGRAM xclib_test
              ENDIF 
              WRITE(stdout,*) " "
              ! 
-             IF (.NOT. DF_OK) THEN 
+             IF (.NOT. xc_derivative) THEN 
                ! 
                IF (exc_term .AND. ex_is_out)  CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
                IF (cor_term .AND. ec_is_out)  CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
@@ -1225,16 +1225,16 @@ PROGRAM xclib_test
     !
     ! ... set1 output arrays
     !
-    IF (.NOT. DF_OK) DEALLOCATE( ex1, ec1 )
+    IF (.NOT. xc_derivative) DEALLOCATE( ex1, ec1 )
     !
     IF ( LDA .OR. GGA ) THEN
        IF ( LDA ) THEN
-         IF ( .NOT. DF_OK ) DEALLOCATE( vx1, vc1 )
-         IF ( DF_OK ) DEALLOCATE( dmuxc1 )
+         IF ( .NOT. xc_derivative ) DEALLOCATE( vx1, vc1 )
+         IF ( xc_derivative ) DEALLOCATE( dmuxc1 )
        ENDIF
        !
        IF ( GGA ) THEN
-         IF ( .NOT. DF_OK ) THEN
+         IF ( .NOT. xc_derivative ) THEN
            DEALLOCATE( exg1, ecg1 )
            DEALLOCATE( v1x1, v2x1 )
            DEALLOCATE( v1c1, v2c1, v2c_ud1 )
@@ -1252,16 +1252,16 @@ PROGRAM xclib_test
     ! ... set2 output / benchmark data arrays
     !
     IF ( test == 'exe-benchmark' ) THEN
-      IF (.NOT. DF_OK) DEALLOCATE( ex2, ec2 )
+      IF (.NOT. xc_derivative) DEALLOCATE( ex2, ec2 )
       !
       IF ( LDA .OR. GGA ) THEN
          IF ( LDA ) THEN
-           IF ( .NOT. DF_OK ) DEALLOCATE( vx2, vc2 )
-           IF ( DF_OK ) DEALLOCATE( dmuxc2 )
+           IF ( .NOT. xc_derivative ) DEALLOCATE( vx2, vc2 )
+           IF ( xc_derivative ) DEALLOCATE( dmuxc2 )
          ENDIF
          !
          IF ( GGA ) THEN
-           IF ( .NOT. DF_OK ) THEN
+           IF ( .NOT. xc_derivative ) THEN
              DEALLOCATE( exg2, ecg2 )
              DEALLOCATE( v1x2, v2x2 )
              DEALLOCATE( v1c2, v2c2, v2c_ud2 )
