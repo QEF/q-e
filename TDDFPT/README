@@ -85,7 +85,3 @@ src      : The source files
 Doc      : The manual
 Examples : Examples and tests. Each example has its own seperate Makefile. 
            Refer to the README under this subdirectory for further information. 
-tools    : Various tools:
-           1) The postprocessing code for calculating absorption spectrum and EELS.
-           2) A script to recover reduced liouvillian in a format comprehensible to postprocessing
-              code from the stdout. 

@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !-----------------------------------------------------------------------
-  !
-  !    This routine computes the part of the change of the charge density
-  !    which is due to the orthogonalization constraint on wavefunctions
+  !! This routine computes the part of the change of the charge density
+  !! which is due to the orthogonalization constraint on wavefunctions.
   !
   !
   USE kinds,      ONLY : DP
@@ -37,17 +36,16 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !     the dummy variables
   !
 
-  complex(DP) :: dbecsum (nhm * (nhm + 1) / 2, nat, nspin, 3 * nat) &
-       , drhous (dfftp%nnr, nspin, 3 * nat)
-  !output:the derivative of becsum
-  ! output: add the orthogonality term
-  type (bec_type) :: becq(nksq), & ! (nkb, nbnd)
-                     alpq (3, nksq)
-  ! input: the becp with psi_{k+q}
-  ! input: the alphap with psi_{k+q}
-
+  complex(DP) :: dbecsum (nhm * (nhm + 1) / 2, nat, nspin, 3 * nat)
+  !! output:the derivative of becsum
+  complex(DP) :: drhous (dfftp%nnr, nspin, 3 * nat)
+  !! output: add the orthogonality term
+  type (bec_type) :: becq(nksq)  ! (nkb, nbnd)
+  !! input: the becp with \(\text{psi}_{k+q}\)
+  type (bec_type) :: alpq (3, nksq)
+  !! input: the alphap with \(\text{psi}_{k+q}\)
   real(DP) :: wgg (nbnd, nbnd, nksq)
-  ! input: the weights
+  !! input: the weights
 
   integer :: npw, npwq, ik, ikq, ikk, ig, nu_i, ibnd, ios
   ! counter on k points

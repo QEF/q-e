@@ -200,7 +200,6 @@ SUBROUTINE sm1_psi_nc()
     !
     USE uspp,       ONLY : qq_so
     USE lrus,       ONLY : bbnc
-    USE spin_orb,   ONLY : lspinorb
     !
     IMPLICIT NONE
     !

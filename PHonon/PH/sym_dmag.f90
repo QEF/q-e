@@ -9,13 +9,13 @@
 !---------------------------------------------------------------------
 subroutine sym_dmag (nper, irr, dmagtosym)
   !---------------------------------------------------------------------
-  ! symmetrize the change of the magnetization density
-  ! belonging to an irreducible representation.
-  ! The routine is generalized to include also the 
-  ! symmetry operations that require the time-reversal 
-  ! operator (meaning that TS is a symmetry of the crystal).
-  ! For a more complete explanation, please see: 
-  ! Phys. Rev. B 100, 045115 (2019).
+  !! Symmetrize the change of the magnetization density belonging to
+  !! an irreducible representation.  
+  !! The routine is generalized to include also the symmetry operations
+  !! that require the time-reversal operator (meaning that TS is a 
+  !! symmetry of the crystal).  
+  !! For a more complete explanation, please see: 
+  !! Phys. Rev. B 100, 045115 (2019).
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
@@ -29,13 +29,15 @@ subroutine sym_dmag (nper, irr, dmagtosym)
 
   implicit none
 
-  integer :: nper, irr
-  ! the number of perturbations
-  ! the representation under conside
-
-  complex(DP) :: dmagtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
-  ! the magnetization to symmetrize (only 2:4 components)
-
+  integer :: nper
+  !! the number of perturbations
+  integer :: irr
+  !! the representation under conside
+  complex(DP) :: dmagtosym(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x,nspin_mag,nper)
+  !! the magnetization to symmetrize (only 2:4 components)
+  !
+  ! ... local variables
+  !
   integer :: ftau(3,nsymq), s_scaled(3,3,nsymq)
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
        irot, kpol

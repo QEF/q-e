@@ -8,63 +8,59 @@
 !-----------------------------------------------------------------------
 SUBROUTINE check_initial_status(auxdyn)
   !-----------------------------------------------------------------------
-  !
-  ! This routine checks the initial status of the phonon run and sets
-  ! the variables that control the run, dealing with the image
-  ! and GRID parallelization features of the phonon code.
+  !! This routine checks the initial status of the phonon run and sets
+  !! the variables that control the run, dealing with the image
+  !! and GRID parallelization features of the phonon code.
   ! 
-  ! The size of the grid is determined by the following variables:
-  ! nqs : the number of q points
-  ! x_q : the coordinates of the q points
+  !! The size of the grid is determined by the following variables:  
+  !! - \(\text{nqs}\): the number of q points;  
+  !! - \(\text{x_q}\): the coordinates of the q points.
   !
-  ! nfs : the number of imaginary frequencies
-  ! fiu : which frequencies 
+  ! - nfs: the number of imaginary frequencies;  
+  ! - fiu: which frequencies.
+  ! The flags that control which tensors to calculate.
   !
-  ! The flags that control which tensors to calculate
+  !! In a recover calculation the q grid variables are already known, 
+  !! read from file in \(\texttt{phq_readin}\). In a calculation starting
+  !! from scratch this routine sets them. The frequencies variables and
+  !! the tensors flags are read from input.  
+  !! The amount of work to do for each representation of each q
+  !! point depends on the size of the representation and the 
+  !! order of the small group of q. In a recover calculation
+  !! these information are on file, when recover=.false. this
+  !! routine writes the modes and their degeneration on files 
+  !! and calculates the order of the small group of q.  
+  !! The following variables are set:
+  !! - \(\text{irr_iq}\): for each q point how many irreducible representations;  
+  !! - \(\text{npert_irr_iq}\): how many perturbation per representation and per q;  
+  !! - \(\text{nsymq_iq}\): the order of the small group of q for each q.
   !
-  ! In a recover calculation the q grid variables are already known, 
-  ! read from file in phq_readin. In a calculation starting from
-  ! scratch this routine sets them. The frequencies variables and the
-  ! tensors flags are read from input. 
-  ! The amount of work to do for each representation of each q
-  ! point depends on the size of the representation and the 
-  ! order of the small group of q. In a recover calculation
-  ! these information are on file, when recover=.false. this
-  ! routine writes the modes and their degeneration on files 
-  ! and calculates the order of the small group of q. The following
-  ! variables are set
-  !
-  ! irr_iq : for each q point how many irreducible representations
-  ! npert_irr_iq : how many perturbation per representation and per q
-  ! nsymq_iq : the order of the small group of q for each q
-  !
-  ! The following variables are set by this routine on the basis of
-  ! start_irr, last_irr, start_q, last_q, OR of modenum, OR of ifat and 
-  ! atomo:
-  !
-  ! comp_iq : =.TRUE. if the q point is calculated in this run
-  ! comp_irr_iq : =.TRUE. if the representation is calculated in this run
-  ! comp_iu : =.TRUE. if this frequency is calculated in this run
+  !! The following variables are set by this routine on the basis of
+  !! start_irr, last_irr, start_q, last_q, OR of modenum, OR of ifat and 
+  !! atomo:  
+  !! - \(\text{comp_iq}\): TRUE if the q point is calculated in this run;  
+  !! - \(\text{comp_irr_iq}\): TRUE if the representation is calculated in this run;  
+  !! - \(\text{comp_iu}\): TRUE if this frequency is calculated in this run.
   !                   NB: start_iu, last_iu is not yet programmed
   ! 
-  ! After knowing this info the routine divides the total work among
-  ! the images (when nimage > 1) INDEPENDENTLY of what has been already
-  ! calculated and is available on file.
+  !! After knowing this info the routine divides the total work among
+  !! the images (when nimage > 1) INDEPENDENTLY of what has been already
+  !! calculated and is available on file.  
+  !! Then, when \(\text{recover}\)=TRUE, the routine looks on files for pieces
+  !! already calculated and sets the array.
   !
-  ! Then, when recover=.true., the routine looks on files for pieces
-  ! already calculated and sets the array
+  !! - \(\text{done_irr_iq}\): TRUE if the representation has been already calculated;  
+  !! - \(\text{done_iq}\): TRUE if the q point has been already calculated;  
+  !! - \(\text{done_iu}\): TRUE if already calculated;  
+  !! - \(\text{done_bands_iq}\): TRUE if the bands for the q point are on file.
   !
-  ! done_irr_iq : =.TRUE. if the representation has been already calculated
-  ! done_iq : =.TRUE. if the q point has been already calculated
-  ! done_iu : =.TRUE. if already calculated
-  ! done_bands_iq : .TRUE. if the bands for the q point are on file.
+  !! If \(\text{recover}\)=FALSE all these array are initialized to FALSE.
   !
-  ! If recover=.false. all these array are initialized to .false.
-  !
-  ! Finally this routine creates a file fildyn0 and writes the q mesh, if
-  ! this file is not present in the current directory, or if recover=.false..
-  ! It also creates a directory for each q inside outdir/_ph# 
-  ! if this directory does not exist and lqdir=.true.
+  !! Finally this routine creates a file \(\texttt{fildyn0}\) and writes the
+  !! q mesh, if this file is not present in the current directory, or if 
+  !! \(\text{recover}\)=FALSE.  
+  !! It also creates a directory for each q inside outdir/_ph# 
+  !! if this directory does not exist and \(\text{lqdir}\)=TRUE.
   !
   USE io_global,       ONLY : stdout
   USE control_flags,   ONLY : modenum
@@ -272,7 +268,7 @@ SUBROUTINE check_initial_status(auxdyn)
   !
   !  Create a new directory where the ph variables are saved and copy
   !  the charge density there.
-!!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+!********************** ACFDT TEST ***************
   IF (acfdt_is_active) THEN
      ! ACFDT -test always write rho on file
      IF (acfdt_num_der) THEN
@@ -286,7 +282,7 @@ SUBROUTINE check_initial_status(auxdyn)
      IF ( ( ( ldisp.OR..NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
           .OR. newgrid .OR. always_run .OR. (noncolin.AND.domag) ) CALL write_scf( rho, nspin )
   ENDIF
-!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
+!*********************** END OF ACFDT TEST *****************
   !
   !  Write the file fildyn0 with the mesh of q points. This file is used
   !  by postprocessing programs such as q2r.x and we write it again if
@@ -352,19 +348,19 @@ SUBROUTINE check_initial_status(auxdyn)
   END SUBROUTINE check_initial_status
 
   SUBROUTINE image_q_irr(distribute_irrep)
-!
-!  This routine is an example of the load balancing among images.
-!  It decides which image makes which q and which irreducible representation
-!  The algorithm at the moment is straightforward. Possibly better
-!  methods could be found.
-!  It receives as input:
-!  nsym  : the dimension of the point group
-!  nsymq_iq  : the dimension of the small group of q for each q
-!  irr_iq : the number of irreps for each q
-!  npert_irr_iq : for each q and each irrep its dimension
-!  It provides as output the two arrays
-!  comp_iq : if this q has to be calculated by the present image
-!  comp_irr_iq : for each q the array to be copied into comp_irr
+   !
+   !! This routine is an example of the load balancing among images.
+   !! It decides which image makes which q and which irreducible representation.
+   !! The algorithm at the moment is straightforward. Possibly better
+   !! methods could be found.  
+   !! It receives as input:  
+   !! - \(\text{nsym}\): the dimension of the point group;  
+   !! - \(\text{nsymq_iq}\): the dimension of the small group of q for each q;  
+   !! - \(\text{irr_iq}\): the number of irreps for each q;  
+   !! - \(\text{npert_irr_iq}\): for each q and each irrep its dimension.  
+   !! It provides as output the two arrays:  
+   !! - \(\text{comp_iq}\): if this q has to be calculated by the present image;  
+   !! - \(\text{comp_irr_iq}\): for each q the array to be copied into comp_irr.
 
    USE ions_base, ONLY : nat
    USE disp, ONLY : comp_iq, nqs, nq1, nq2, nq3
@@ -377,8 +373,8 @@ SUBROUTINE check_initial_status(auxdyn)
 
    IMPLICIT NONE
    LOGICAL, INTENT(IN) :: distribute_irrep
-   !! If true, distribute both irreps and q-points (default behavior).
-   !! If false, distribute only q-points. Used when writing dvscf file.
+   !! If TRUE, distribute both irreps and q-points (default behavior).  
+   !! If FALSE, distribute only q-points. Used when writing dvscf file.
    !
    INTEGER :: total_work,  &  ! total amount of work to do
               total_nrapp, &  ! total number of representations
@@ -574,9 +570,9 @@ SUBROUTINE check_initial_status(auxdyn)
 
    SUBROUTINE collect_grid_files()
    !
-   !  This subroutine collects all the xml files contained in different
-   !  directories and created by the diffent images in the phsave directory
-   !  of the image 0
+   !!  This subroutine collects all the xml files contained in different
+   !!  directories and created by the diffent images in the phsave directory
+   !!  of the image 0.
    !
    USE io_files,  ONLY : tmp_dir, prefix
    USE control_ph, ONLY : tmp_dir_ph

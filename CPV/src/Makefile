@@ -114,33 +114,33 @@ makov_payne.o
 LOBJS = \
 entropy.o 
 
-QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../XClib/xc_lib.a
+QEMODS=$(BASEMODS)
 
 TLDEPS= bindir libs mods
 
 all : tldeps libcp.a manycp.x cp.x wfdd.x cppp.x
 
-manycp.x : manycp.o libcp.a $(QEMODS) $(LIBOBJS)
+manycp.x : manycp.o libcp.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
-		libcp.a $(QEMODS) $(LIBOBJS) $(QELIBS)
+		libcp.a $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/manycp.x . )
 
-cp.x : cprstart.o libcp.a $(QEMODS) $(LIBOBJS)
+cp.x : cprstart.o libcp.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
-		libcp.a $(QEMODS) $(LIBOBJS) $(QELIBS)
+		libcp.a $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 
 	 $(AR) $(ARFLAGS) $@ $?
 	 $(RANLIB) $@
 
-cppp.x : cppp.o $(QEMODS) $(LIBOBJS)
+cppp.x : cppp.o $(QEMODS)
 	$(LD) $(LDFLAGS) -o cppp.x cppp.o  \
-		$(QEMODS) $(LIBOBJS) $(QELIBS)
+		$(QEMODS) $(QELIBS)
 	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(LIBOBJS) $(QELIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
 tldeps :

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-PROGRAM lr_calculate_spectrum
+PROGRAM turbo_spectrum
   !---------------------------------------------------------------------
   !
   ! Calculates the spectrum by solving tridiagonal problem for each value 
@@ -1730,6 +1730,6 @@ SUBROUTINE spectrum_david()
   !
 END SUBROUTINE spectrum_david
 
-END PROGRAM lr_calculate_spectrum
+END PROGRAM turbo_spectrum
 !-----------------------------------------------------------------------
 

@@ -160,16 +160,22 @@
 
      SUBROUTINE init_plan()
        implicit none
-
+       !
+       COMPLEX(DP), ALLOCATABLE :: c_test(:)
+       !
+       ALLOCATE(c_test, mold=c)
+       !
        IF( C_ASSOCIATED(fw_planz( icurrent)) ) CALL fftw_destroy_plan( fw_planz( icurrent) )
        IF( C_ASSOCIATED(bw_planz( icurrent)) ) CALL fftw_destroy_plan( bw_planz( icurrent) )
        idir = -1
-       fw_planz(icurrent) = fftw_plan_many_dft(1, (/nz/), nsl, c, &
-            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
+       fw_planz(icurrent) = fftw_plan_many_dft(1, (/nz/), nsl, c_test, &
+            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_MEASURE)
        idir = 1
-       bw_planz(icurrent) = fftw_plan_many_dft(1, (/nz/), nsl, c, &
-            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
-
+       bw_planz(icurrent) = fftw_plan_many_dft(1, (/nz/), nsl, c_test, &
+            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_MEASURE)
+       !
+       DEALLOCATE(c_test)
+       !
        zdims(1,icurrent) = nz; zdims(2,icurrent) = nsl; zdims(3,icurrent) = ldz;
        ip = icurrent
        icurrent = MOD( icurrent, ndims ) + 1
@@ -309,42 +315,47 @@
 
      SUBROUTINE init_plan()
        implicit none
-
+       COMPLEX(DP), ALLOCATABLE :: f_test(:)
+       !
+       ALLOCATE(f_test,mold=r)
+       !
        IF ( ldx /= nx .OR. ldy /= ny ) THEN
           IF( C_ASSOCIATED(fw_plan(2,icurrent)) )  CALL fftw_destroy_plan( fw_plan(2,icurrent) )
           IF( C_ASSOCIATED(bw_plan(2,icurrent)) )  CALL fftw_destroy_plan( bw_plan(2,icurrent) )
           idir = -1
-          fw_plan(2,icurrent) = fftw_plan_many_dft(1, (/ny/), 1, r(1:), &
-               (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
-               FFTW_ESTIMATE)
+          fw_plan(2,icurrent) = fftw_plan_many_dft(1, (/ny/), 1, f_test(1:), &
+               (/ldx*ldy/), ldx, 1, f_test(1:), (/ldx*ldy/), ldx, 1, idir, &
+               FFTW_MEASURE)
           idir =  1
-          bw_plan(2,icurrent) = fftw_plan_many_dft(1, (/ny/), 1, r(1:), &
-               (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
-               FFTW_ESTIMATE)
+          bw_plan(2,icurrent) = fftw_plan_many_dft(1, (/ny/), 1, f_test(1:), &
+               (/ldx*ldy/), ldx, 1, f_test(1:), (/ldx*ldy/), ldx, 1, idir, &
+               FFTW_MEASURE)
 
           IF( C_ASSOCIATED(fw_plan(1,icurrent)) ) CALL fftw_destroy_plan( fw_plan(1,icurrent) )
           IF( C_ASSOCIATED(bw_plan(1,icurrent)) ) CALL fftw_destroy_plan( bw_plan(1,icurrent) )
           idir = -1
-          fw_plan(1,icurrent) = fftw_plan_many_dft(1, (/nx/), ny, r(1:), &
-               (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
-               FFTW_ESTIMATE)
+          fw_plan(1,icurrent) = fftw_plan_many_dft(1, (/nx/), ny, f_test(1:), &
+               (/ldx*ldy/), 1, ldx, f_test(1:), (/ldx*ldy/), 1, ldx, idir, &
+               FFTW_MEASURE)
           idir =  1
-          bw_plan(1,icurrent) = fftw_plan_many_dft(1, (/nx/), ny, r(1:), &
-               (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
-               FFTW_ESTIMATE)
+          bw_plan(1,icurrent) = fftw_plan_many_dft(1, (/nx/), ny, f_test(1:), &
+               (/ldx*ldy/), 1, ldx, f_test(1:), (/ldx*ldy/), 1, ldx, idir, &
+               FFTW_MEASURE)
        ELSE
           IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) CALL fftw_destroy_plan( fw_plan( 1, icurrent) )
           IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) CALL fftw_destroy_plan( bw_plan( 1, icurrent) )
           idir = -1
           fw_plan(1, icurrent) = fftw_plan_many_dft(2, (/ny, nx/), nzl,&
-               r(1:), (/ny, nx/), 1, nx*ny, r(1:), (/ny, nx/), 1, nx*ny, idir,&
-               FFTW_ESTIMATE)
+               f_test(1:), (/ldy, ldx/), 1, ldx*ldy, f_test(1:), (/ldy, ldx/), 1, ldx*ldy, idir,&
+               FFTW_MEASURE)
           idir = 1
           bw_plan(1, icurrent) = fftw_plan_many_dft(2, (/ny, nx/), nzl,&
-               r(1:), (/ny, nx/), 1, nx*ny, r(1:), (/ny, nx/), 1, nx*ny, idir,&
-               FFTW_ESTIMATE)
+               f_test(1:), (/ldy, ldx/), 1, ldx*ldy, f_test(1:), (/ldy, ldx/), 1, ldx*ldy, idir,&
+               FFTW_MEASURE)
        END IF
-
+       !
+       DEALLOCATE(f_test)
+       !
        dims(1,icurrent) = ny; dims(2,icurrent) = ldx;
        dims(3,icurrent) = nx; dims(4,icurrent) = nzl;
        ip = icurrent
@@ -450,15 +461,21 @@
 
      SUBROUTINE init_plan()
        implicit none
+       COMPLEX(DP), ALLOCATABLE :: f_test(:)
        IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
             call fftx_error__('cfft3','not implemented',3)
        IF( C_ASSOCIATED(fw_plan(icurrent)) ) CALL fftw_destroy_plan( fw_plan(icurrent) )
        IF( C_ASSOCIATED(bw_plan(icurrent)) ) CALL fftw_destroy_plan( bw_plan(icurrent) )
+       !
+       ALLOCATE(f_test,mold=f)
+       !
        idir = -1
-       fw_plan(icurrent) = fftw_plan_dft_3d(nz, ny, nx, f(1:), f(1:), idir, FFTW_ESTIMATE)
+       fw_plan(icurrent) = fftw_plan_dft_3d(nz, ny, nx, f_test(1:), f_test(1:), idir, FFTW_MEASURE)
        idir =  1
-       bw_plan(icurrent) = fftw_plan_dft_3d(nz, ny, nx, f(1:), f(1:), idir, FFTW_ESTIMATE)
-
+       bw_plan(icurrent) = fftw_plan_dft_3d(nz, ny, nx, f_test(1:), f_test(1:), idir, FFTW_MEASURE)
+       !
+       DEALLOCATE(f_test)
+       !
        dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
        ip = icurrent
        icurrent = MOD( icurrent, ndims ) + 1
@@ -630,7 +647,9 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
 
      SUBROUTINE init_plan()
        implicit none
-
+       !
+       COMPLEX(DP), ALLOCATABLE :: f_test(:)
+       !
        IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) &
             CALL fftw_destroy_plan( fw_plan( 1, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) &
@@ -643,25 +662,30 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
             CALL fftw_destroy_plan( fw_plan( 3, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 3, icurrent)) ) &
             CALL fftw_destroy_plan( bw_plan( 3, icurrent) )
+       !
+       ALLOCATE(f_test, mold=f)
+       !
        idir = -1
-       fw_plan(1, icurrent) = fftw_plan_many_dft(1, (/nx/), ny*nz, f(1:), (/ldz, ldy, ldx/), 1, ldx, &
-            f(1:), (/ldz, ldy, ldx/), 1, ldx, idir, FFTW_ESTIMATE)
+       fw_plan(1, icurrent) = fftw_plan_many_dft(1, (/nx/), ny*nz, f_test(1:), (/ldz, ldy, ldx/), 1, ldx, &
+            f_test(1:), (/ldz, ldy, ldx/), 1, ldx, idir, FFTW_MEASURE)
        idir = 1
-       bw_plan(1, icurrent) = fftw_plan_many_dft(1, (/nx/), ny*nz, f(1:), (/ldz, ldy, ldx/), 1, ldx, &
-            f(1:), (/ldz, ldy, ldx/), 1, ldx, idir, FFTW_ESTIMATE)
+       bw_plan(1, icurrent) = fftw_plan_many_dft(1, (/nx/), ny*nz, f_test(1:), (/ldz, ldy, ldx/), 1, ldx, &
+            f_test(1:), (/ldz, ldy, ldx/), 1, ldx, idir, FFTW_MEASURE)
        idir = -1
-       fw_plan(2, icurrent) = fftw_plan_many_dft(1, (/ny/), nz, f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, &
-            f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, idir, FFTW_ESTIMATE)
+       fw_plan(2, icurrent) = fftw_plan_many_dft(1, (/ny/), nz, f_test(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, &
+            f_test(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, idir, FFTW_MEASURE)
        idir = 1
-       bw_plan(2, icurrent) = fftw_plan_many_dft(1, (/ny/), nz, f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, &
-            f(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, idir, FFTW_ESTIMATE)
+       bw_plan(2, icurrent) = fftw_plan_many_dft(1, (/ny/), nz, f_test(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, &
+            f_test(1:), (/ldz, ldy, ldx/), ldx, ldx*ldy, idir, FFTW_MEASURE)
        idir = -1
-       fw_plan(3, icurrent) = fftw_plan_many_dft(1, (/nz/), 1, f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, &
-            f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
+       fw_plan(3, icurrent) = fftw_plan_many_dft(1, (/nz/), 1, f_test(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, &
+            f_test(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, idir, FFTW_MEASURE)
        idir = 1
-       bw_plan(3, icurrent) = fftw_plan_many_dft(1, (/nz/), 1, f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, &
-            f(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
-
+       bw_plan(3, icurrent) = fftw_plan_many_dft(1, (/nz/), 1, f_test(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, &
+            f_test(1:), (/ldz, ldy, ldx/), ldx*ldy, 1, idir, FFTW_MEASURE)
+       !
+       DEALLOCATE(f_test)
+       !
        dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
        ip = icurrent
        icurrent = MOD( icurrent, ndims ) + 1

@@ -453,11 +453,13 @@ CONTAINS
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))      CALL init_Hubbard_ns(Hubbard_ns_ , label)
          IF (PRESENT(Hub_ns_nc))   CALL init_Hubbard_ns(Hubbard_ns_nc_ , label)
-         IF (ANY(is_hubbard_back) .AND.  PRESENT(hubb_l_back)) &
+         IF (PRESENT(is_hubbard_back)) THEN
+            IF (ANY(is_hubbard_back) .AND.  PRESENT(hubb_l_back)) &
               CALL init_Hubbard_back(is_hubbard_back, Hub_back_, hubb_l_back, backall, hubb_l1_back) 
-         IF (ANY(is_hubbard_back) .AND. .NOT. PRESENT (hubb_l_back)) &
+            IF (ANY(is_hubbard_back) .AND. .NOT. PRESENT (hubb_l_back)) &
             CALL errore('qexsd_init_dft:',&
                         'internal error background is set to true but hubb_l_back is not present',1)  
+         END IF
          !
          CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_, J_, starting_ns_, Hubbard_ns_, &
                         U_projection_type, Hub_back_, U_back_, alpha_back_, Hubbard_ns_nc_)
@@ -546,20 +548,24 @@ CONTAINS
          SUBROUTINE init_starting_ns(objs, labs )
             IMPLICIT NONE
             TYPE(starting_ns_type), ALLOCATABLE   :: objs(:)
+            REAL(DP), ALLOCATABLE                 :: dati(:)  
             CHARACTER(len=*)                      :: labs(nsp)
             INTEGER                               :: i, is, ind, llmax, nspin
             !  
             IF ( .NOT. PRESENT(starting_ns)) RETURN
             
             IF (noncolin_) THEN
-               llmax = SIZE(starting_ns,1)
+               llmax = SIZE(starting_ns,1) 
                nspin = 1
                ALLOCATE(objs(nsp))
                DO i = 1, nsp
-                  IF (.NOT. ANY(starting_ns(1:2*llmax,1,i)>0.d0)) CYCLE
+                  IF (.NOT. ANY(starting_ns(1:llmax,1:2,i)>0.d0)) CYCLE
                   ind = ind + 1 
-                  CALL qes_init(objs(ind),"starting_ns", TRIM(species(i)), TRIM(labs(i)), 1, &
-                                MAX(starting_ns(1:2*llmax,1,i),0._DP)) 
+                  ALLOCATE (dati(2*llmax)) 
+                  dati(1:llmax) =         MAX(starting_ns(1:llmax,1,i),0._DP)  
+                  dati(llmax+1:2*llmax) = MAX(starting_ns(1:llmax,2,i),0._DP)  
+                  CALL qes_init(objs(ind),"starting_ns", TRIM(species(i)), TRIM(labs(i)), 1, dati) 
+                  DEALLOCATE(dati) 
                END DO 
                RETURN 
             ELSE

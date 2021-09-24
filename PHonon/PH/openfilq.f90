@@ -8,15 +8,14 @@
 !----------------------------------------------------------------------------
 SUBROUTINE openfilq()
   !----------------------------------------------------------------------------
-  !
-  ! ... This subroutine opens all the files necessary for the phononq
-  ! ... calculation.
+  !! This subroutine opens all the files necessary for the phononq
+  !! calculation.
   !
   USE kinds,           ONLY : DP
   USE control_flags,   ONLY : io_level, modenum
-  USE units_ph,        ONLY : iudwf, iubar, iucom, iudvkb3, &
+  USE units_ph,        ONLY : iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
-                              lrdwf, lrbar, lrcom, lrdvkb3, &
+                              lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
                               iundnsscf, iudvpsi, lrdvpsi, iugauge
   USE units_lr,        ONLY : iuwfc, lrwfc
@@ -47,7 +46,7 @@ SUBROUTINE openfilq()
   USE dfile_autoname,  ONLY : dfile_name
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
-  USE units_lr,        ONLY : iuatwfc, iuatswfc
+  USE units_lr,        ONLY : iuatwfc, iuatswfc, iudwf, lrdwf
   USE modes,           ONLY : nmodes
   USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,         ONLY : dnsscf_all_modes
@@ -63,11 +62,11 @@ SUBROUTINE openfilq()
   CHARACTER (len=256) :: filint, fildvscf_rot, filwpot
   ! the name of the file
   INTEGER :: ir, irlocal
-  !! Real space unit cell index
+  ! Real space unit cell index
   INTEGER :: unf_lrwpot, direct_io_factor
-  !! record length for opening wpot file
+  ! record length for opening wpot file
   REAL(DP) :: dummy
-  !! dummy variable for calculating direct_io_factor
+  ! dummy variable for calculating direct_io_factor
   LOGICAL :: exst, exst_mem
   ! logical variable to check file exists
   ! logical variable to check file exists in memory
@@ -84,7 +83,7 @@ SUBROUTINE openfilq()
   !     written by pw.x. In the other cases those calculated by ph.x
   !
   tmp_dir=tmp_dir_phq
- !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+ !************************ ACFDT TEST ********************
   IF (acfdt_is_active) THEN
      ! ACFDT -test always the wfc is read/written from/to file in tmp_dir_phq
      IF (.not.acfdt_num_der)  then 
@@ -96,7 +95,7 @@ SUBROUTINE openfilq()
      ! FIXME: why this case?
      IF ( noncolin.AND.domag ) tmp_dir=tmp_dir_phq
   ENDIF
-!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
+!************************* END OF ACFDT TEST *******************
   iuwfc = 20
   lrwfc = nbnd * npwx * npol
   CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)

@@ -18,7 +18,8 @@ SUBROUTINE hp_write_dnsq(iq)
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : prefix, tmp_dir
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard
-  USE ldaU_hp,       ONLY : nah_pert, dns0, dnsscf, x_q
+  USE ldaU_lr,       ONLY : dnsscf
+  USE ldaU_hp,       ONLY : nah_pert, dns0, x_q
   !
   IMPLICIT NONE
   !

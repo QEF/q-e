@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine cch_psi_all (n, h, ah, e, ik, m)
   !-----------------------------------------------------------------------
-  !
-  ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
-  ! to a vector h. The result is given in Ah.
+  !! This routine applies the operator ( \(H-\epsilon S+\alpha_{pv} P_v\))
+  !! to a vector h. The result is given in Ah.
   !
 
   USE kinds, only : DP
@@ -31,17 +30,18 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
 
   implicit none
 
-  integer :: n, m, ik
-  ! input: the dimension of h
-  ! input: the number of bands
-  ! input: the k point
-
+  integer :: n
+  !! input: the dimension of h
+  integer :: m
+  !! input: the number of bands
+  integer :: ik
+  !! input: the k point
   complex(kind=DP) :: e (m)
-  ! input: the eigenvalue + iu
-
-  complex(kind=DP) :: h (npwx*npol, m), ah (npwx*npol, m)
-  ! input: the vector
-  ! output: the operator applied to the vector
+  !! input: the eigenvalue + iu
+  complex(kind=DP) :: h (npwx*npol, m)
+  !! input: the vector
+  complex(kind=DP) :: ah (npwx*npol, m)
+  !! output: the operator applied to the vector
   !
   !   local variables
   !

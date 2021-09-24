@@ -40,7 +40,7 @@ SUBROUTINE c_bands( iter )
   INTEGER, INTENT(IN) :: iter
   !! iteration index
   !
-  ! ... local variables
+  ! ... local variablems
   !
   REAL(DP) :: avg_iter
   ! average number of H*psi products
@@ -48,6 +48,7 @@ SUBROUTINE c_bands( iter )
   ! ik : counter on k points
   ! ik_: k-point already done in a previous run
   LOGICAL :: exst
+  LOGICAL,EXTERNAL :: rmm_use_davidson, rmm_use_paro
   !
   !
   CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
@@ -76,6 +77,14 @@ SUBROUTINE c_bands( iter )
      WRITE( stdout, '(5X,"PPCG style diagonalization")')
   ELSEIF ( isolve == 3 ) THEN
      WRITE( stdout, '(5X,"ParO style diagonalization")')
+  ELSEIF ( isolve == 4 ) THEN
+     IF (rmm_use_davidson(iter)) THEN 
+       WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
+     ELSE IF (rmm_use_paro(iter)) THEN 
+      WRITE( stdout, '(5X,"ParO style diagonalization")')
+     ELSE 
+       WRITE( stdout, '(5X,"RMM-DIIS diagonalization")')
+     END IF 
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   ENDIF
@@ -171,7 +180,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !! * Davidson algorithm (all-band);
   !! * Conjugate Gradient (band-by-band);
   !! * Projected Preconditioned Conjugate Gradient (block);
-  !! * Parallel Orbital update (all-band).
+  !! * Parallel Orbital update (all-band);
+  !! * RMM-DIIS algorithm (all-band).
   !
   !! Internal procedures:
   !
@@ -189,6 +199,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
+                                   rmm_ndim, rmm_conv, gs_nblock, &
                                    gamma_only, use_para_diag, use_gpu
   USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
@@ -220,8 +231,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: cg_iter, ppcg_iter
+  REAL(KIND=DP) :: cg_iter, ppcg_iter, rmm_iter
   ! (weighted) number of iterations in Conjugate-Gradient
+  ! (weighted) number of iterations in RMM-DIIS
   INTEGER :: npw, ig, dav_iter, ntry, notconv, nhpsi
   ! number of iterations in Davidson
   ! number or repeated call to diagonalization in case of non convergence
@@ -234,7 +246,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   INTEGER, PARAMETER :: sbsize = 5, rrstep = 7
   ! block dimensions used in PPCG 
   !
-  ! Davidson diagonalization uses these external routines on groups of nvec bands
+  COMPLEX (DP), POINTER :: hevc_d(:,:), sevc_d(:,:)
+  ! hamiltonian x wavefunctions, only for RMM-DIIS
+  ! overlap x wavefunctions, only for RMM-DIIS 
+#if defined(__CUDA)
+  attributes(DEVICE) :: hevc_d, sevc_d
+#endif
+  COMPLEX (DP), POINTER :: hevc(:,:), sevc(:,:)
+  !
+  ! Davidson and RMM-DIIS diagonalization uses these external routines on groups of nvec bands
   EXTERNAL h_psi, s_psi, g_psi
   EXTERNAL h_psi_gpu, s_psi_gpu, g_psi_gpu
   ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
@@ -245,6 +265,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   EXTERNAL hs_1psi, s_1psi, hs_psi
   EXTERNAL hs_psi_gpu
   EXTERNAL hs_1psi_gpu, s_1psi_gpu
+  LOGICAL, EXTERNAL   :: rmm_use_davidson, rmm_use_paro
   ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
   ! subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
@@ -259,7 +280,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
   external g_1psi
   external g_1psi_gpu
-
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
@@ -324,7 +344,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     INTEGER :: j
     !
-    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3) THEN
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .OR. rmm_use_paro(iter))   THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
@@ -428,6 +448,135 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF ( test_exit_cond() ) EXIT  CG_loop
           !
        ENDDO CG_loop
+       !
+    ELSE IF ( isolve == 4 .AND. .NOT. rmm_use_davidson(iter)) THEN
+       !
+       ! ... RMM-DIIS diagonalization
+       !
+       IF ( .not. use_gpu) THEN
+          ALLOCATE( hevc  ( npwx*npol, nbnd ) )
+          IF ( okvan ) THEN
+             ALLOCATE( sevc( npwx*npol, nbnd ) )
+          ELSE
+             sevc => evc
+          END IF
+       ELSE
+          ALLOCATE( hevc_d( npwx*npol, nbnd ) )
+          IF ( okvan ) THEN
+             ALLOCATE( sevc_d( npwx*npol, nbnd ) )
+          ELSE
+             sevc_d => evc_d !evc_d allocated in wfcinit_gpu
+          END IF
+       END IF
+       !
+       ntry = 0
+       !
+       CALL using_h_diag(2);
+       !
+       RMM_loop : DO
+          !
+          lrot = ( iter == 1 .AND. ntry == 0 )
+          !
+!edp
+!          IF ( .NOT. lrot ) THEN
+          IF (lrot .AND. .NOT. lscf ) THEN
+              !!
+              CALL using_h_diag(2);
+!              CALL using_h_diag(0); CALL using_g2kin(0);
+              FORALL( ig = 1 : npw )
+                 h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+              END FORALL
+              !
+              IF (.not. use_gpu ) THEN
+                CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
+                CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+                !
+              ELSE
+                CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
+                CALL paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                           npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+                !
+              ENDIF  
+               !
+          ELSE IF ( .NOT. lrot ) THEN
+!***
+             !
+             IF (.not. use_gpu) THEN
+                CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                               evc, hevc, sevc, et(1,ik) )
+             ELSE
+                CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
+                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                               evc_d, hevc_d, sevc_d, et_d(1,ik) )
+             END IF
+             !
+             avg_iter = avg_iter + 1.D0
+             !
+          END IF
+          !
+          !
+          IF (.not. use_gpu) THEN
+            CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0); CALL using_g2kin(0) !precontidtion has intent(in)
+            CALL rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
+                         et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
+                         okvan, lrot, exx_is_active(), notconv, rmm_iter )
+          ELSE
+             CALL using_evc_d(1);  CALL using_et(1); CALL using_g2kin_d(0) !precontidtion has intent(in)
+             CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, evc_d, hevc_d, sevc_d, &
+                          et(1,ik), g2kin_d, btype(1,ik), ethr, rmm_ndim, &
+                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
+          END IF
+          !
+          !
+          IF ( lscf .AND. ( .NOT. rmm_conv ) ) notconv = 0
+          !
+          avg_iter = avg_iter + rmm_iter
+          !
+          ntry = ntry + 1
+          !
+          ! ... exit condition
+          !
+          IF ( test_exit_cond() ) EXIT  RMM_loop
+          !
+       END DO RMM_loop
+       !
+       ! ... Gram-Schmidt orthogonalization
+       !
+       IF (.not. use_gpu) THEN
+        CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+        CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+                        okvan, .TRUE., .TRUE., gs_nblock )
+       ELSE
+          CALL using_evc_d(1);  CALL using_et(1); !precontidtion has intent(in)
+          CALL gram_schmidt_gamma_gpu( npwx, npw, nbnd, evc_d, hevc_d, sevc_d, et(1,ik), &
+                          okvan, .TRUE., .TRUE., gs_nblock )
+       END IF
+       !
+       avg_iter = avg_iter + 0.5D0
+       !
+       IF ( .not. use_gpu) THEN 
+          DEALLOCATE( hevc )
+          IF ( okvan ) THEN
+             DEALLOCATE( sevc )
+          ELSE
+             NULLIFY( sevc )
+          END IF
+        ELSE
+          DEALLOCATE( hevc_d )
+          IF ( okvan ) THEN
+             DEALLOCATE( sevc_d )
+          ELSE
+             NULLIFY( sevc_d )
+          END IF
+       END IF
        !
     ELSE
        !
@@ -557,8 +706,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
     ENDIF
     !
-    !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG)', isolve; FLUSH(6)
-    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 ) THEN
+    !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG, 3 PARO, 4 RMM)', isolve; FLUSH(6)
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 .or. rmm_use_paro(iter)) THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
@@ -662,6 +811,134 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF ( test_exit_cond() ) EXIT  CG_loop
           !
        ENDDO CG_loop
+       !
+    ELSE IF ( isolve == 4 .AND. .NOT. rmm_use_davidson(iter) )  THEN
+       !
+       ! ... RMM-DIIS diagonalization
+       !
+       IF ( .not. use_gpu) THEN 
+         ALLOCATE( hevc( npwx*npol, nbnd ) )
+         IF ( okvan ) THEN
+            ALLOCATE( sevc( npwx*npol, nbnd ) )
+         ELSE
+            sevc => evc
+         END IF
+       ELSE
+         ALLOCATE( hevc_d( npwx*npol, nbnd ) )
+         IF ( okvan ) THEN
+            ALLOCATE( sevc_d( npwx*npol, nbnd ) )
+         ELSE
+            sevc_d => evc_d !evc_d allocated in wfcinit_gpu
+         END IF
+       END IF  
+       !
+       ntry = 0
+       !
+       !
+       RMM_loop : DO
+          !
+          lrot = ( iter == 1 .AND. ntry == 0 )
+          !
+!edp
+!          IF ( .NOT. lrot ) THEN
+          IF (lrot .AND. .NOT. lscf ) THEN
+              !
+              CALL using_h_diag(2); CALL using_g2kin(0);
+              h_diag = 1.D0
+              FORALL( ig = 1 : npwx )
+                 h_diag(ig,:) = g2kin(ig) + v_of_0
+              END FORALL
+              CALL usnldiag(npw, h_diag, s_diag )
+              !
+              IF ( .not. use_gpu ) THEN
+                CALL using_evc(1); CALL using_et(1)
+                CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+              ELSE
+                CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
+                CALL paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                         npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+                !
+              END IF
+              !
+          ELSE IF ( .NOT. lrot ) THEN
+!***
+             !
+             IF ( .not. use_gpu ) THEN
+                CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+                                  evc, hevc, sevc, et(1,ik) )
+             ELSE
+                CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
+                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                                  evc_d, hevc_d, sevc_d, et_d(1,ik) )
+             END IF
+             !
+             avg_iter = avg_iter + 1.D0
+             !
+          END IF
+          !
+          IF ( .not. use_gpu ) THEN
+             CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+             CALL crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, evc, hevc, sevc, &
+                             et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
+                             okvan, lrot, exx_is_active(), notconv, rmm_iter )
+          ELSE
+             CALL using_evc_d(1); CALL using_et(1); CALL using_g2kin_d(0)
+             CALL crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, &
+                             et(1,ik), g2kin_d(1), btype(1,ik), ethr, rmm_ndim, &
+                             okvan, lrot, exx_is_active(), notconv, rmm_iter )
+          END IF
+          !
+          IF ( lscf .AND. ( .NOT. rmm_conv ) ) notconv = 0
+          !
+          avg_iter = avg_iter + rmm_iter
+          !
+          ntry = ntry + 1
+          !
+          ! ... exit condition
+          !
+          IF ( test_exit_cond() ) EXIT  RMM_loop
+          !
+       END DO RMM_loop
+       !
+       ! ... Gram-Schmidt orthogonalization
+       !
+       IF ( .not. use_gpu ) THEN
+          CALL using_evc(1); CALL using_et(1);
+          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+                             okvan, .TRUE., .TRUE., gs_nblock )
+       ELSE
+          CALL using_evc_d(1); CALL using_et(1); 
+          CALL gram_schmidt_k_gpu( npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, et(1,ik), &
+                             okvan, .TRUE., .TRUE., gs_nblock )
+
+       END IF
+       !
+       avg_iter = avg_iter + 0.5D0
+       !
+       IF ( .not. use_gpu) THEN 
+         DEALLOCATE( hevc )
+         IF ( okvan ) THEN
+            DEALLOCATE( sevc )
+         ELSE
+            NULLIFY( sevc )
+         END IF
+       ELSE
+         DEALLOCATE( hevc_d )
+         IF ( okvan ) THEN
+            DEALLOCATE( sevc_d )
+         ELSE
+            NULLIFY( sevc_d )
+         END IF
+       END IF 
+       !
        !
     ELSE
        !
@@ -769,6 +1046,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     LOGICAL :: test_exit_cond
     !
+    
     IF ( lscf .AND. lgcscf ) THEN
        !
        ! ... tight condition for GC-SCF
@@ -911,6 +1189,8 @@ SUBROUTINE c_bands_nscf( )
      WRITE( stdout, '(5X,"PPCG style diagonalization")' )
   ELSEIF ( isolve == 3 ) THEN
      WRITE( stdout, '(5X,"ParO style diagonalization")')
+  ELSEIF ( isolve == 4 ) THEN
+     WRITE( stdout, '(5X,"RMM-DIIS diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve )
   ENDIF
@@ -1018,3 +1298,19 @@ SUBROUTINE c_bands_nscf( )
 9000 FORMAT( '     total cpu time spent up to now is ',F10.1,' secs' )
   !
 END SUBROUTINE c_bands_nscf
+
+FUNCTION rmm_use_davidson(iter_) RESULT (res)
+  USE control_flags, ONLY: rmm_with_davidson
+  IMPLICIT NONE
+  INTEGER,INTENT(IN) :: iter_ 
+  LOGICAL :: res 
+  res = (rmm_with_davidson) .AND. ( iter_ < 3 .OR. MOD(iter_,5) == 0) 
+END FUNCTION rmm_use_davidson
+
+FUNCTION rmm_use_paro(iter_) RESULT (res)
+  USE control_flags, ONLY: rmm_with_davidson
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: iter_ 
+  LOGICAL  :: res 
+  res = (.NOT. rmm_with_davidson) .AND.  (MOD(iter_,5) == 1) 
+END FUNCTION rmm_use_paro

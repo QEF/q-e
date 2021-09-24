@@ -7,9 +7,8 @@
 !
 !----------------------------------------------------------------------
 subroutine add_for_charges (ik, uact)
-!----------===============-----------------------------------------------
-  !
-  ! This subroutine calculates dS/du P_c [x, H-eS] |psi>
+  !----------===============-----------------------------------------------
+  !! This subroutine calculates: \(\frac{dS}{du} P_c [x, H-eS] |\psi\rangle\)
   !
 
   USE kinds, only : DP
@@ -32,11 +31,12 @@ subroutine add_for_charges (ik, uact)
   !   The dummy variables
   !
 
-  integer :: ik, mode
-  ! input: the k point
+  integer :: ik
+  !! input: the k point
+  integer :: mode
   ! input: the actual perturbation
   complex(DP) :: uact (3 * nat)
-  ! input: the pattern of displacements
+  !! input: the pattern of displacements
   !
   !   And the local variables
   !

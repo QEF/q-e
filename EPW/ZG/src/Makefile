@@ -10,42 +10,40 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 
 PHAUXOBJS = ../../../PHonon/PH/libphaux.a
 PHOBJS = ../../../PHonon/PH/libph.a
-PWOBJS = ../../../PW/src/libpw.a
+PWOBJS = ../../../PW/src/libpw.a ../../../KS_Solvers/libks_solvers.a ../../../dft-d3/libdftd3qe.a
 LRMODS = ../../../LR_Modules/liblrmod.a
-QEMODS = ../../../Modules/libqemod.a ../../../KS_Solvers/libks_solvers.a ../../../upflib/libupf.a ../../../XClib/xc_lib.a \
-         ../../../FFTXlib/libqefft.a ../../../LAXlib/libqela.a ../../../UtilXlib/libutil.a ../../../dft-d3/libdftd3qe.a
-LIBOBJS = ../../../clib/clib.a 
+QEMODS = $(BASEMODS)
 
 all : ZG.x disca.x pp_disca.x pp_spctrlfn.x bands_unfold.x epsilon_Gaus.x 
 
-ZG.x : ZG.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
+ZG.x : ZG.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	ZG.o $(PHAUXOBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
+	ZG.o $(PHAUXOBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS) 
 	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
-disca.x : disca.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
+disca.x : disca.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	disca.o $(PHAUXOBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
+	disca.o $(PHAUXOBJS) $(PHOBJS) $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS) 
 	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
-pp_disca.x : pp_disca.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+pp_disca.x : pp_disca.o $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	pp_disca.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
+	pp_disca.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(QELIBS) 
 	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
-bands_unfold.x : bands_unfold.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+bands_unfold.x : bands_unfold.o $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	bands_unfold.o ../../../PP/src/libpp.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	bands_unfold.o ../../../PP/src/libpp.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
-pp_spctrlfn.x : pp_spctrlfn.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+pp_spctrlfn.x : pp_spctrlfn.o $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	pp_spctrlfn.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
+	pp_spctrlfn.o $(PHAUXOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(QELIBS) 
 	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
-epsilon_Gaus.x : epsilon_Gaus.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+epsilon_Gaus.x : epsilon_Gaus.o $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	epsilon_Gaus.o ../../../PP/src/libpp.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	epsilon_Gaus.o ../../../PP/src/libpp.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../../bin ; ln -fs ../EPW/ZG/src/$@ . )
 
 clean :

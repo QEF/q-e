@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE elphon()
   !-----------------------------------------------------------------------
-  !
-  ! Electron-phonon calculation from data saved in fildvscf
+  !! Electron-phonon calculation from data saved in \(\texttt{fildvscf}\).
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : amu_ry, RY_TO_THZ, RY_TO_CMM1
@@ -316,11 +315,11 @@ END SUBROUTINE readmat
 !-----------------------------------------------------------------------
 SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !-----------------------------------------------------------------------
+  !! Calculation of the electron-phonon matrix elements:
+  !! $$ \text{el_ph_mat}= \langle\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)\rangle $$
   !
-  !      Calculation of the electron-phonon matrix elements el_ph_mat
-  !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
-  !      Original routine written by Francesco Mauri
-  !      Modified by A. Floris and I. Timrov to include Hubbard U (01.10.2018)
+  !! Original routine written by Francesco Mauri.
+  !! Modified by A. Floris and I. Timrov to include Hubbard U (01.10.2018).
   !
   USE kinds,      ONLY : DP
   USE fft_base,   ONLY : dffts
@@ -352,7 +351,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE control_lr, ONLY : lgamma
   USE fft_helper_subroutines
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
-  USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
+  USE ldaU_lr,    ONLY : dnsscf
+  USE ldaU_ph,    ONLY : dnsscf_all_modes
   USE io_global,  ONLY : ionode, ionode_id
   USE io_files,   ONLY : seqopn
   USE lrus,       ONLY : becp1, int3_nc
@@ -699,10 +699,10 @@ END SUBROUTINE elphel_read_dnsscf_check
 !------------------------------------------------------------------------
 SUBROUTINE elphsum ( )
   !-----------------------------------------------------------------------
+  !! Sum over BZ of the electron-phonon matrix elements \(\text{el_ph_mat}\).
   !
-  !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
-  !      Original routine written by Francesco Mauri, modified by PG
-  !      New version by  Malgorzata Wierzbowska
+  !! Original routine written by Francesco Mauri, modified by PG.
+  !! New version by  Malgorzata Wierzbowska.
   !
   USE kinds,       ONLY : DP
   USE constants,   ONLY : pi, rytoev, ry_to_cmm1, ry_to_ghz, degspin
@@ -1178,10 +1178,10 @@ END SUBROUTINE elphsum
 !-----------------------------------------------------------------------
 SUBROUTINE elphsum_simple
   !-----------------------------------------------------------------------
+  !! Sum over BZ of the electron-phonon matrix elements \(\text{el_ph_mat}\).
   !
-  !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
-  !      Original routine written by Francesco Mauri
-  !      Rewritten by Matteo Calandra
+  !! Original routine written by Francesco Mauri.
+  !! Rewritten by Matteo Calandra.
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
   USE constants, ONLY : pi, ry_to_cmm1, ry_to_ghz, rytoev
@@ -1386,10 +1386,10 @@ END SUBROUTINE elphsum_simple
 !-----------------------------------------------------------------------
 SUBROUTINE elphfil_epa(iq)
   !-----------------------------------------------------------------------
+  !! Writes electron-phonon matrix elements to a file
+  !! which is subsequently processed by the epa code.
   !
-  !      Writes electron-phonon matrix elements to a file
-  !      which is subsequently processed by the epa code
-  !      Original routine written by Georgy Samsonidze
+  !! Original routine written by Georgy Samsonidze.
   !
   !-----------------------------------------------------------------------
   USE cell_base, ONLY : ibrav, alat, omega, tpiba, at, bg
@@ -1581,8 +1581,7 @@ END SUBROUTINE elphfil_epa
 !----------------------------------------------------------------------------
 SUBROUTINE ipoolcollect( length, nks, f_in, nkstot, f_out )
   !----------------------------------------------------------------------------
-  !
-  ! ... as poolcollect, for an integer vector
+  !! As \(\texttt{poolcollect}\), for an integer vector.
   !
   USE mp_pools,  ONLY : my_pool_id, npool, kunit, &
                         inter_pool_comm, intra_pool_comm
@@ -1631,8 +1630,7 @@ END SUBROUTINE ipoolcollect
 !----------------------------------------------------------------------------
 SUBROUTINE jpoolcollect( length, nks, f_in, nkstot, f_out )
   !----------------------------------------------------------------------------
-  !
-  ! ... as ipoolcollect, without kunit and with an index shift
+  !! As \(\texttt{ipoolcollect}\), without kunit and with an index shift.
   !
   USE mp_pools,  ONLY : my_pool_id, npool, kunit, &
                         inter_pool_comm, intra_pool_comm
@@ -1714,8 +1712,7 @@ END FUNCTION dos_ef
 subroutine lint ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
      nk1,nk2,nk3, nks, xk, kunit, nkBZ, eqBZ, sBZ)
   !-----------------------------------------------------------------------
-  !
-  ! Find which k-points of a uniform grid are in the IBZ
+  !! Find which k-points of a uniform grid are in the IBZ.
   !
   use kinds, only : DP
   implicit none

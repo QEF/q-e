@@ -8,9 +8,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE set_int12_nc(iflag)
 !----------------------------------------------------------------------------
-!
-!  This is a driver to call the routines that rotate and multiply
-!  by the Pauli matrices the integrals.
+!! This is a driver to call the routines that rotate and multiply
+!! by the Pauli matrices the integrals.
 !
 USE ions_base, ONLY : nat, ntyp => nsp, ityp
 USE spin_orb, ONLY : lspinorb, domag

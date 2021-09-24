@@ -55,8 +55,9 @@ IFLAGS         = @iflags@
 MOD_FLAG      = @imod@
 
 # BASEMOD_FLAGS points to directories containing basic modules,
-# while BASEMODS points to the corresponding module libraries
-# Each Makefile can add directories to MODFLAGS and libraries to QEMODS
+# while BASEMODS points to the corresponding module libraries.
+# More package-specific directories can be added in each Makefile
+# and stored into MODFLAGS, and the same for module libraries in QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/XClib \
@@ -66,6 +67,16 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
 	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
+
+# If A depends upon B, A should come before B in the list below
+# (most compilers don't care but some don't resolve cross links)
+BASEMODS= $(TOPDIR)/Modules/libqemod.a \
+          $(TOPDIR)/upflib/libupf.a \
+          $(TOPDIR)/XClib/xc_lib.a \
+          $(TOPDIR)/FFTXlib/libqefft.a \
+          $(TOPDIR)/LAXlib/libqela.a \
+          $(TOPDIR)/UtilXlib/libutil.a \
+          $(TOPDIR)/MBD/libmbd.a
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90
@@ -157,10 +168,6 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
-# library for many-body dispersion
-
-MBD_LIBS= $(TOPDIR)/MBD/libmbd.a
-
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
 CUDA_EXTLIBS = devxlib @cuda_extlibs@
@@ -179,9 +186,8 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(MBD_LIBS) $(LIBXC_LIBS) \
+QELIBS         = $(LIBXC_LIBS) \
                  $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
 		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 

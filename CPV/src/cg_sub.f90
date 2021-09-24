@@ -12,7 +12,8 @@
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
       lambdap, lambda, nlam, vpot, c0, cm, phi, dbec,l_cprestart  )
 
-!! please see https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045
+!! please see https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.79.1337 (ensemble DFT)
+!! and        https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045 (conjugate gradient)
 
       use kinds, only: dp
       use control_flags, only: tpre, iverbosity, tfor, tprnfor
@@ -52,11 +53,11 @@
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp, prefor
-      use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp
+      use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp, runcp_uspp
       USE cp_main_variables,        ONLY : idesc, drhor, drhog
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
-
+      use wave_gauge, only: project_parallel_gauge_2 
 
 !
       implicit none
@@ -100,6 +101,11 @@
       complex(dp), allocatable :: c3(:)
       real(dp) :: gamma, entmp, sta
       complex(dp),allocatable :: hpsi(:,:), hpsi0(:,:), gi(:,:), hi(:,:)
+#if defined(__CUDA)
+      complex(dp), allocatable, DEVICE :: hpsi_dummy(:,:), c0_dummy(:,:), gi_dummy(:,:)
+#else
+      complex(dp), allocatable         :: hpsi_dummy(:,:), c0_dummy(:,:), gi_dummy(:,:)
+#endif
       real(DP), allocatable::               s_minus1(:,:)!factors for inverting US S matrix
       real(DP), allocatable::               k_minus1(:,:)!factors for inverting US preconditioning matrix 
       real(DP), allocatable :: lambda_repl(:,:) ! replicated copy of lambda
@@ -308,34 +314,10 @@
         call newd(vpot,rhovan,fion,.true.)
 
 
-        call prefor(eigr,betae)!ATTENZIONE
-
-        do i=1,nbsp,2
-          call dforce( i, bec, betae, c0,c2,c3,rhos, dffts%nnr, ispin,f,nbsp,nspin)
-          if(tefield .and. (evalue.ne.0.d0)) then
-            call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
-            c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
-            call dforceb(c0, i+1, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
-            c3(1:ngw)=c3(1:ngw)+evalue*df(1:ngw)
-          endif
-          if(tefield2 .and. (evalue2.ne.0.d0)) then
-            call dforceb(c0, i, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
-            c2(1:ngw)=c2(1:ngw)+evalue2*df(1:ngw)
-            call dforceb(c0, i+1, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
-            c3(1:ngw)=c3(1:ngw)+evalue2*df(1:ngw)
-          endif
-
-          hpsi(1:ngw,  i)=c2(1:ngw)
-          if(i+1 <= nbsp) then
-            hpsi(1:ngw,i+1)=c3(1:ngw)
-          endif
-          if (gstart==2) then
-            hpsi(1,  i)=CMPLX(DBLE(hpsi(1,  i)), 0.d0,kind=DP)
-            if(i+1 <= nbsp) then
-              hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0,kind=DP)
-            endif
-          end if
-        enddo
+        call prefor(eigr,betae)
+        ! this puts the gradient inside the array hpsi
+        call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, &
+                c0, c0_dummy, hpsi, hpsi_dummy, .false., .false., .true.)
 
         if(pre_state) call ave_kin(c0,SIZE(c0,1),nbsp,ave_ene)
 
@@ -864,47 +846,9 @@
 #endif
   
         call prefor(eigr,betae)
-        do i=1,nbsp,2
-          call dforce(i,bec,betae,c0,c2,c3,rhos,dffts%nnr,ispin,f,nbsp,nspin)
-          if(tefield.and.(evalue .ne. 0.d0)) then
-            call dforceb &
-               (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
-            do ig=1,ngw
-              c2(ig)=c2(ig)+evalue*df(ig)
-            enddo
-            call dforceb &
-               (c0, i+1, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
-            do ig=1,ngw
-              c3(ig)=c3(ig)+evalue*df(ig)
-            enddo
-          endif
-          if(tefield2.and.(evalue2 .ne. 0.d0)) then
-            call dforceb &
-               (c0, i, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
-            do ig=1,ngw
-              c2(ig)=c2(ig)+evalue2*df(ig)
-            enddo
-            call dforceb &
-               (c0, i+1, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
-            do ig=1,ngw
-              c3(ig)=c3(ig)+evalue2*df(ig)
-            enddo
-          endif
-
-          do ig=1,ngw
-            gi(ig,  i)=c2(ig)
-            if(i+1 <= nbsp) then
-              gi(ig,i+1)=c3(ig)
-            endif
-          end do
-          if (gstart==2) then
-            gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0,kind=DP)
-            if(i+1 <= nbsp) then
-              gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0,kind=DP)
-            endif
-          end if
-       enddo
-
+        ! this puts the gradient inside the array gi
+        call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, &
+                c0, c0_dummy, gi, gi_dummy, .false., .false., .true.)
         ALLOCATE( lambda_repl( nudx, nudx ) )
         !
         do is = 1, nspin
@@ -940,55 +884,19 @@
 !if required project c0 on previous manifold of occupied states                                                                                    
 !NOT IMPLEMENTED YET FOR ENSEMBLE DFT AND NSPIN==2
 !NOT IMPLEMENTED FOR US PSEUDOPOTENTIALS
-
-           lambda_repl=0.d0
-            do i = 1, nss
-               do j = 1, nss
-                  ii = i + istart - 1
-                  jj = j + istart - 1
-                  do ig = 1, ngw
-                     lambda_repl( i, j ) = lambda_repl( i, j ) + &
-                          2.d0 * DBLE( CONJG( c0old( ig, ii ) ) * c0( ig, jj) )
-                  enddo
-                  if( gstart == 2 ) then
-                     lambda_repl( i, j ) = lambda_repl( i, j ) - &
-                          DBLE( CONJG( c0old( 1, ii ) ) * c0( 1, jj ) )
-                  endif
-               enddo
-            enddo
-            CALL mp_sum( lambda_repl, intra_bgrp_comm )
-
-
             cm(:,:)=c0(:,:)
-            c0=(0.d0,0.d0)
-            do i=1,nss
-               do j=1,nss
-                  c0(1:ngw,i)=c0(1:ngw,i)+lambda_repl(i,j)*cm(1:ngw,j)
-               enddo
-            enddo
-          
+            call project_parallel_gauge_2(c0old, cm, c0, &
+                                          nss, ngw, ngw,gstart) 
+
+
             call calbec (nbsp,betae,c0,bec)
             CALL gram_bgrp( betae, bec, nkb, c0, ngw )
             call calbec(nbsp, betae,c0,bec)
           
 
+            call runcp_uspp(0,0.d0,0.d0,ema0bg, 0.d0, rhos, bec, &
+                    c0, c0_dummy, gi, gi_dummy, .false., .false., .true.)
 
-            do i=1,nbsp,2
-               call dforce(i,bec,betae,c0,c2,c3,rhos,dffts%nnr,ispin,f,nbsp,nspin)
-               
-               do ig=1,ngw
-                  gi(ig,  i)=c2(ig)
-                  if(i+1 <= nbsp) then
-                     gi(ig,i+1)=c3(ig)
-                  endif
-               end do
-               if (gstart==2) then
-                  gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0,kind=DP)
-                  if(i+1 <= nbsp) then
-                     gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0,kind=DP)
-                  endif
-               end if
-            enddo
          
             lambda_repl = 0.d0
             do i = 1, nss

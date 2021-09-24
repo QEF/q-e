@@ -9,11 +9,10 @@
 
 subroutine drho
   !-----------------------------------------------------------------------
-  !
-  !    Here we compute, for each mode the change of the charge density
-  !    due to the displacement, at fixed wavefunctions. These terms
-  !    are saved on disk. The orthogonality part is included in the
-  !    computed change.
+  !! Here we compute, for each mode the change of the charge density
+  !! due to the displacement, at fixed wavefunctions. These terms
+  !! are saved on disk. The orthogonality part is included in the
+  !! computed change.
   !
   !
   !

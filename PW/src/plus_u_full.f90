@@ -300,8 +300,6 @@ SUBROUTINE atomic_wfc_nc_updown( ik, wfcatom )
   USE wvfct,             ONLY : npwx, nbnd
   USE uspp_param,        ONLY : upf, nwfcm
   USE noncollin_module,  ONLY : noncolin, npol, angle1, angle2
-  USE spin_orb,          ONLY : lspinorb, rot_ylm, fcoef, domag, &
-                                starting_spin_angle
   !
   IMPLICIT NONE
   !

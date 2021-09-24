@@ -20,17 +20,29 @@ set(src_util
     # GPU
     mp_base_gpu.f90)
 qe_enable_cuda_fortran("${src_util}")
-
 qe_add_library(qe_utilx ${src_util})
+
+set(src_util_c
+    cptimer.c
+    copy.c
+    c_mkdir.c
+    eval_infix.c
+    fletcher32.c
+    md5.c
+    md5_from_file.c
+    memstat.c
+    memusage.c
+    ptrace.c)
+qe_add_library(qe_utilx_c ${src_util_c})
 target_link_libraries(qe_utilx
     PUBLIC
-        qe_clib # cclock is exposed by the mytime module in clocks_handler
+        qe_utilx_c # cclock is exposed by the mytime module in clocks_handler
         qe_ext_prof_tool # to pass link options, PUBLIC is needed.
     PRIVATE
         qe_openmp_fortran
         qe_mpi_fortran)
 
-qe_install_targets(qe_utilx)
+qe_install_targets(qe_utilx qe_utilx_c)
 
 set(src_device_lapack
     device_helper.f90)

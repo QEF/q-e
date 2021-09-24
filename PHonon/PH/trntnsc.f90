@@ -9,23 +9,25 @@
 !-----------------------------------------------------------------------
 subroutine trntnsc (phi, at, bg, iflg)
   !-----------------------------------------------------------------------
-  !
-  ! transforms a COMPLEX tensor (like the dynamical matrix)
-  ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
+  !! Transforms a COMPLEX tensor (like the dynamical matrix) from
+  !! crystal to cartesian axis (\(\text{iflg}\geq 1\)) or viceversa
+  !! (\(\text{iflg} \leq -1\)).
   !
   USE kinds, only : DP
+  !
   implicit none
-
+  !
   integer :: iflg
-  ! input: gives the versus of the trans.
-
-  complex(DP) :: phi (3, 3)
-  ! inp/out: the matrix to transform
-
-  real(DP) :: at (3, 3), bg (3, 3)
-  ! input: the direct lattice vectors
-  ! input: the reciprocal lattice
-
+  !! input: gives the versus of the trans
+  complex(DP) :: phi(3,3)
+  !! inp/out: the matrix to transform
+  real(DP) :: at(3,3)
+  !! input: the direct lattice vectors
+  real(DP) :: bg(3,3)
+  !! input: the reciprocal lattice
+  !
+  ! ... local variables
+  !
   integer :: i, j, k, l
   !
   !  counters on polarizations

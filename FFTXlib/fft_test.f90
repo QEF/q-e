@@ -67,7 +67,9 @@ program test
   !!
   !!-ntg      Number of task groups
   !!
-  !!-gamma    Enables gamma point trick. Should be about 2 times faster.
+  !!-gamma    Enables gamma point trick. Should be about 2 times faster
+  !!
+  !!-pd       If .true. uses pencil decomposition, otherwise uses slab decomposition
   !!
   !!-av1  x y z    First lattice vector, in atomic units. N.B.: when using -av1, -alat is ignored!
   !!
@@ -90,7 +92,18 @@ program test
   USE fft_helper_subroutines
   USE fft_interfaces, ONLY:fwfft, invfft
   USE timers
+  !
   IMPLICIT NONE
+  !
+  ENUM, BIND(C)
+    ENUMERATOR :: STAMP_BEGIN = 1
+    ENUMERATOR :: STAMP_PSI = 2
+    ENUMERATOR :: STAMP_INVFFT = 3
+    ENUMERATOR :: STAMP_VLOC = 4
+    ENUMERATOR :: STAMP_FWFFT = 5
+    ENUMERATOR :: STAMP_HPSI = 6
+  END ENUM
+  INTEGER, PARAMETER :: NUM_STAMPS = 6
   !
   TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
   !
@@ -121,17 +134,21 @@ program test
   !! cut-off for the wave-function
   REAL*8  :: tpiba, alat, alat_in
   !! lattice parameters
-  REAL*8  :: time(100)
-  REAL*8  :: my_time(100)
-  REAL*8  :: time_min(100)
-  REAL*8  :: time_max(100)
-  REAL*8  :: time_avg(100)
+  REAL*8  :: time(NUM_STAMPS)
+  REAL*8  :: my_time(NUM_STAMPS)
+  REAL*8  :: time_min(NUM_STAMPS)
+  REAL*8  :: time_max(NUM_STAMPS)
+  REAL*8  :: time_avg(NUM_STAMPS)
   REAL*8  :: wall
   REAL*8  :: wall_avg
   !
   LOGICAL :: gamma_only = .false.
-  LOGICAL :: use_tg
   !! if calculations require only gamma point
+  LOGICAL :: use_tg
+  !! if calculations use task group
+  LOGICAL :: use_pd = .false.
+  !! if calculations use pencil decomposition
+  LOGICAL :: lpara
   REAL*8  :: at(3, 3), bg(3, 3)
   REAL(DP), PARAMETER :: pi = 4.0_DP * atan(1.0_DP)
   !
@@ -247,6 +264,10 @@ program test
       CALL get_command_argument(i + 1, arg)
       READ (arg, *) gamma_only
     END IF
+    IF (TRIM(arg) == '-pd') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) use_pd
+    END IF
     IF ((TRIM(arg) == '-howmany').or.(TRIM(arg) == '-nh')) THEN
       CALL get_command_argument(i + 1, arg)
       READ (arg, *) many_fft
@@ -357,6 +378,7 @@ program test
     write (*, *) 'Num Task Group = ', ntgs
     write (*, *) 'Num Many FFTs  = ', many_fft
     write (*, *) 'Gamma trick    = ', gamma_only
+    write (*, *) 'Pencil decomp  = ', use_pd
   end if
   !
   nx = 2*int(sqrt(gcutm)*sqrt(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)) + 1
@@ -371,12 +393,16 @@ program test
   IF (gamma_only) incr = 2
   dffts%has_task_groups = (ntgs > 1)
   use_tg = dffts%has_task_groups
+  lpara = (npes > 1)
   !
-  dffts%rho_clock_label='ffts' ; dffts%wave_clock_label='fftw'
-
-  CALL fft_type_init(dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut, gcutms/gkcut, nyfft=ntgs, nmany=many_fft)
+  dffts%rho_clock_label='ffts'
+  dffts%wave_clock_label='fftw'
+  !
+  CALL fft_type_init(dffts, smap, "wave", gamma_only, lpara, comm, at, bg, gkcut, gcutms/gkcut, &
+       nyfft=ntgs, nmany=many_fft, use_pd=use_pd)
   dfftp%rho_clock_label='fft'
-  CALL fft_type_init(dfftp, smap, "rho", gamma_only, .true., comm, at, bg, gcutm, 4.d0, nyfft=ntgs, nmany=many_fft)
+  CALL fft_type_init(dfftp, smap, "rho", gamma_only, lpara, comm, at, bg, gcutm, 4.d0, nyfft=ntgs, &
+       nmany=many_fft, use_pd=use_pd)
   !
   CALL fft_base_info(mype == 0, dffts, dfftp)
   if (mype == 0) then
@@ -431,7 +457,7 @@ program test
           g, gg, mill, ig_l2g, gstart, .TRUE. )
   ELSE
      CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
-       g, gg, mill, ig_l2g, gstart, .FALSE.  )
+          g, gg, mill, ig_l2g, gstart, .FALSE. )
   END IF
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
   !
@@ -500,13 +526,13 @@ program test
   IF (use_tg) THEN
     DO ib = 1, nbnd, incr
       !
-      time(1) = mpi_wall_time()
+      time(STAMP_BEGIN) = mpi_wall_time()
       !
       call prepare_psi_tg(ib, nbnd, ngms, psi, tg_psic, dffts, gamma_only)
-      time(2) = mpi_wall_time()
+      time(STAMP_PSI) = mpi_wall_time()
       !
-      CALL invfft('tgWave', tg_psic, dffts);
-      time(3) = mpi_wall_time()
+      CALL invfft('tgWave', tg_psic, dffts)
+      time(STAMP_INVFFT) = mpi_wall_time()
       !
       CALL tg_get_group_nr3(dffts, right_nr3)
       !
@@ -514,13 +540,13 @@ program test
         tg_psic(j) = tg_psic(j)*tg_v(j)
       ENDDO
       !
-      time(4) = mpi_wall_time()
+      time(STAMP_VLOC) = mpi_wall_time()
       !
-      CALL fwfft('tgWave', tg_psic, dffts);
-      time(5) = mpi_wall_time()
+      CALL fwfft('tgWave', tg_psic, dffts)
+      time(STAMP_FWFFT) = mpi_wall_time()
       !
       CALL accumulate_hpsi_tg(ib, nbnd, ngms, hpsi, tg_psic, dffts, gamma_only)
-      time(6) = mpi_wall_time()
+      time(STAMP_HPSI) = mpi_wall_time()
       !
       DO i = 2, 6
         my_time(i) = my_time(i) + (time(i) - time(i - 1))
@@ -532,30 +558,32 @@ program test
   ELSEIF (many_fft > 1) THEN
     DO ib = 1, nbnd, many_fft
       !
+      time(STAMP_BEGIN) = mpi_wall_time()
+      !
       group_size = MIN(many_fft, nbnd - (ib -1))
       !
       DO k=0, group_size - 1
         !call prepare_psi(ib, nbnd, ngms, psi, psic(1+(k-1)*dffts%nnr:), dffts, gamma_only)
         call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
       ENDDO
-      time(2) = mpi_wall_time()
+      time(STAMP_PSI) = mpi_wall_time()
       !
       CALL invfft('Wave', psic, dffts, howmany=group_size)
-      time(3) = mpi_wall_time()
+      time(STAMP_INVFFT) = mpi_wall_time()
       !
       DO j = 1, dffts%nnr
         psic(j) = psic(j)*v(j)
       ENDDO
-      time(4) = mpi_wall_time()
+      time(STAMP_VLOC) = mpi_wall_time()
       !
       CALL fwfft('Wave', psic, dffts, howmany=group_size)
-      time(5) = mpi_wall_time()
+      time(STAMP_FWFFT) = mpi_wall_time()
       !
       DO k=0, group_size - 1
         !CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic(1+(k-1)*dffts%nnr:), dffts, gamma_only)
         CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, dffts, gamma_only)
       ENDDO
-      time(6) = mpi_wall_time()
+      time(STAMP_HPSI) = mpi_wall_time()
       !
       DO i = 2, 6
         my_time(i) = my_time(i) + (time(i) - time(i - 1))
@@ -567,21 +595,24 @@ program test
   ELSE
     DO ib = 1, nbnd, incr
       !
-      call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
-      time(2) = mpi_wall_time()
+      time(STAMP_BEGIN) = mpi_wall_time()
       !
-      CALL invfft('Wave', psic, dffts); time(3) = mpi_wall_time()
+      call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
+      time(STAMP_PSI) = mpi_wall_time()
+      !
+      CALL invfft('Wave', psic, dffts)
+      time(STAMP_INVFFT) = mpi_wall_time()
       !
       DO j = 1, dffts%nnr
         psic(j) = psic(j)*v(j)
       ENDDO
-      time(4) = mpi_wall_time()
+      time(STAMP_VLOC) = mpi_wall_time()
       !
-      CALL fwfft('Wave', psic, dffts);
-      time(5) = mpi_wall_time()
+      CALL fwfft('Wave', psic, dffts)
+      time(STAMP_FWFFT) = mpi_wall_time()
       !
       CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, dffts, gamma_only)
-      time(6) = mpi_wall_time()
+      time(STAMP_HPSI) = mpi_wall_time()
       !
       DO i = 2, 6
       my_time(i) = my_time(i) + (time(i) - time(i - 1))
@@ -639,21 +670,21 @@ program test
     write(*,100)
     write(*,1)
     write(*,100)
-    write(*,2) time_min(2), time_max(2), time_avg(2)
-    write(*,3) time_min(3), time_max(3), time_avg(3)
-    write(*,4) time_min(4), time_max(4), time_avg(4)
-    write(*,5) time_min(5), time_max(5), time_avg(5)
-    write(*,6) time_min(6), time_max(6), time_avg(6)
+    write(*,2) time_min(STAMP_PSI),    time_max(STAMP_PSI),    time_avg(STAMP_PSI)
+    write(*,3) time_min(STAMP_INVFFT), time_max(STAMP_INVFFT), time_avg(STAMP_INVFFT)
+    write(*,4) time_min(STAMP_VLOC),   time_max(STAMP_VLOC),   time_avg(STAMP_VLOC)
+    write(*,5) time_min(STAMP_FWFFT),  time_max(STAMP_FWFFT),  time_avg(STAMP_FWFFT)
+    write(*,6) time_min(STAMP_HPSI),   time_max(STAMP_HPSI),   time_avg(STAMP_HPSI)
     write(*,7) wall
     write(*,100)
 
 100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
 1   FORMAT(' |FFT TEST subroutine |  sec. min      | sec. max        | sec.  avg      |' )
-2   FORMAT(' |prepare_psi         | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,    ' |' )
-3   FORMAT(' |invfft              | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,    ' |' )
-4   FORMAT(' |workload            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,   ' |')
-5   FORMAT(' |fwfft               | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,   ' |')
-6   FORMAT(' |accumulate_hpsi     | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,   ' |')
+2   FORMAT(' |prepare_psi         | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5,    ' |' )
+3   FORMAT(' |invfft              | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5,    ' |' )
+4   FORMAT(' |workload            | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,   ' |')
+5   FORMAT(' |fwfft               | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,   ' |')
+6   FORMAT(' |accumulate_hpsi     | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,   ' |')
 7   FORMAT(' |wall time           | ',    D14.5, ' |')
 
   end if
@@ -1241,27 +1272,27 @@ subroutine print_clock(mype, npes, ncount)
   end if
 10100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
 101   FORMAT(' |FFT subroutine      |  sec. min      | sec. max        | sec.  avg      |' )
-102   FORMAT(' |cft_1z              | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
-103   FORMAT(' |cft_2xy             | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
-104   FORMAT(' |cgather             | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-105   FORMAT(' |cgather_grid        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-106   FORMAT(' |cscatter_grid       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-107   FORMAT(' |cscatter_sym        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-108   FORMAT(' |fft                 | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-109   FORMAT(' |fft_scatt_tg        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1010  FORMAT(' |fft_scatt_xy        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1011  FORMAT(' |fft_scatt_yz        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1012  FORMAT(' |fftb                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1013  FORMAT(' |fftc                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1014  FORMAT(' |fftcw               | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1015  FORMAT(' |ffts                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1016  FORMAT(' |fftw                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1017  FORMAT(' |rgather_grid        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1018  FORMAT(' |rscatter_grid       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1019  FORMAT(' |fft_scatter         | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1020  FORMAT(' |ALLTOALL            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1021  FORMAT(' |fft_scatt_many_yz   | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-1022  FORMAT(' |fft_scatt_many_xy   | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+102   FORMAT(' |cft_1z              | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5,   ' |' )
+103   FORMAT(' |cft_2xy             | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5,   ' |' )
+104   FORMAT(' |cgather             | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+105   FORMAT(' |cgather_grid        | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+106   FORMAT(' |cscatter_grid       | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+107   FORMAT(' |cscatter_sym        | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+108   FORMAT(' |fft                 | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+109   FORMAT(' |fft_scatt_tg        | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1010  FORMAT(' |fft_scatt_xy        | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1011  FORMAT(' |fft_scatt_yz        | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1012  FORMAT(' |fftb                | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1013  FORMAT(' |fftc                | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1014  FORMAT(' |fftcw               | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1015  FORMAT(' |ffts                | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1016  FORMAT(' |fftw                | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1017  FORMAT(' |rgather_grid        | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1018  FORMAT(' |rscatter_grid       | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1019  FORMAT(' |fft_scatter         | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1020  FORMAT(' |ALLTOALL            | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1021  FORMAT(' |fft_scatt_many_yz   | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
+1022  FORMAT(' |fft_scatt_many_xy   | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
 
 end subroutine
 

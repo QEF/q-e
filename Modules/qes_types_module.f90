@@ -657,6 +657,13 @@ MODULE qes_types_module
     LOGICAL  :: diago_david_ndim_ispresent = .FALSE.
     INTEGER :: diago_david_ndim
     !
+    LOGICAL :: diago_rmm_ndim_ispresent = .FALSE.
+    INTEGER :: diago_rmm_ndim
+    LOGICAL :: diago_rmm_conv_ispresent = .FALSE.
+    LOGICAL :: diago_rmm_conv
+    LOGICAL :: diago_gs_nblock_ispresent = .FALSE.
+    INTEGER :: diago_gs_nblock
+    !
   END TYPE electron_control_type
   !
   TYPE :: k_points_IBZ_type

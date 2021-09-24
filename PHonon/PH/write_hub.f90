@@ -9,20 +9,20 @@
 !-----------------------------------------------------------------------
 MODULE write_hub
 !-----------------------------------------------------------------------
+!! Routines for Hubbard related output.
 !
 CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE write_dnsscf_ph
   !---------------------------------------------------------------------
+  !! DFPT+U: This routine transforms \(\text{dnsscf_all_modes}\) 
+  !! (which is the response of occupation matrices due to
+  !! atomic displacements) from the pattern basis \(\text{u}\) to 
+  !! cartesian coordinates and then writes it to the standard output.
   !
-  ! DFPT+U: This routine transforms dnsscf_all_modes 
-  ! (which is the response of occupation matrices due to
-  ! atomic displacements) from the pattern basis u to cartesian 
-  ! coordinates and then writes it to the standard output.
-  !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris  
+  !! Modified by I. Timrov (01.10.2018)
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
@@ -95,14 +95,13 @@ END SUBROUTINE write_dnsscf_ph
 !-----------------------------------------------------------------------
 SUBROUTINE write_dnsscf_e 
   !---------------------------------------------------------------------
-  ! 
-  ! DFPT+U: This routine transforms dnsscf_all_modes 
-  ! (which is the response of occupation matrices due to
-  ! the electric field perturbation) from crystal to cartesian 
-  ! coordinates and then writes it to the standard output.
+  !! DFPT+U: This routine transforms \(\text{dnsscf_all_modes}\) 
+  !! (which is the response of occupation matrices due to
+  !! the electric field perturbation) from crystal to cartesian 
+  !! coordinates and then writes it to the standard output.
   !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
@@ -171,12 +170,11 @@ END SUBROUTINE write_dnsscf_e
 !-----------------------------------------------------------------------
 SUBROUTINE write_dynmat_hub 
   !---------------------------------------------------------------------
-  ! 
-  ! DFPT+U: This routine writes the scf and total hubbard dynamical 
-  ! matrix to the standard output. 
+  !! DFPT+U: This routine writes the scf and total Hubbard dynamical 
+  !! matrix to the standard output.
   !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018)
   ! 
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout, ionode

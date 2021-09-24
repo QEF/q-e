@@ -90,6 +90,7 @@ kohn_sham_mod.o : ../../Modules/fft_base.o
 kohn_sham_mod.o : ../../Modules/io_global.o
 kohn_sham_mod.o : ../../Modules/kind.o
 kohn_sham_mod.o : ../../Modules/mp_pools.o
+kohn_sham_mod.o : ../../Modules/wave_gauge.o
 kohn_sham_mod.o : ../../PW/src/pwcom.o
 kohn_sham_mod.o : ../../PW/src/update_pot.o
 kohn_sham_mod.o : ../../UtilXlib/mp.o

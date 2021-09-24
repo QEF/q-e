@@ -46,18 +46,16 @@ summary_tran.o \
 sunitary.o \
 transmit.o 
 
-PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
-	 ../../dft-d3/libdftd3qe.a ../../XClib/xc_lib.a
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a  ../../dft-d3/libdftd3qe.a
+QEMODS = $(BASEMODS)
 
 TLDEPS= pwlibs
 
 all : tldeps pwcond.x
 
-pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o pwcond.x $(PWCONDOBJS) \
-		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		$(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PWCOND/src/pwcond.x . )
 
 tldeps :

@@ -6,20 +6,26 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-SUBROUTINE dvb_cc (nlcc,npseu,ngm,nrxx,  &
-     nl,igtongl,rho_core,dmuxc,ga,aux,dvb_nlcc)
+SUBROUTINE dvb_cc( nlcc,npseu,ngm,nrxx,  &
+                   nl,igtongl,rho_core,dmuxc,ga,aux,dvb_nlcc )
   !---------------------------------------------------------------------
-  ! calculate the core-correction contribution to Delta V bare
+  !! Calculate the core-correction contribution to \(\Delta V_\text{bare}\).
   !
   USE kinds, ONLY : dp
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
+  !
   IMPLICIT NONE
-  INTEGER:: npseu,ngm,nrxx,np,ng,i
+  !
+  INTEGER :: npseu, ngm, nrxx
   LOGICAL :: nlcc(npseu)
   INTEGER :: nl(ngm), igtongl(ngm)
   real(dp) :: rho_core(*), dmuxc(nrxx)
   COMPLEX(dp) :: ga(ngm), dvb_nlcc(ngm), aux(nrxx)
+  !
+  ! ... local variables
+  !
+  INTEGER :: np, ng, i
   !
   DO np=1,npseu
      IF(nlcc(np)) GOTO 10

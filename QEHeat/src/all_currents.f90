@@ -13,8 +13,9 @@
 ! implements Marcolongo, Umari, and Baroni, Nat. Phys. 12, 80 (2016)
 ! details of the original implementation are described in
 !
-! Marcolongo, Bertossa, Tisi and Baroni
-! https://arxiv.org/abs/2104.06383 (2021)
+! Marcolongo, Bertossa, Tisi and Baroni, Computer Physics Communications, 269, 108090 (2021)
+! https://doi.org/10.1016/j.cpc.2021.108090
+! https://arxiv.org/abs/2104.06383
 !-----------------------------------------------------------------------
 
 program all_currents
@@ -38,9 +39,11 @@ program all_currents
    use wavefunctions, only: evc
    use wvfct, only: nbnd, npwx, npw
    use kinds, only: dp
+
    ! utilities to read the cp.x produced trajectory
    use cpv_traj, only: cpv_trajectory, &
                        cpv_trajectory_initialize, cpv_trajectory_deallocate
+
    use dynamics_module, only: vel
    use ions_base, ONLY: tau, tau_format, nat
    USE control_flags, ONLY: ethr
@@ -55,8 +58,11 @@ program all_currents
    USE read_input, ONLY: read_input_file
    USE command_line_options, ONLY: input_file_, command_line, ndiag_, nimage_
    USE check_stop, ONLY: check_stop_init
+
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
+
+   use input_parameters, only : outdir
    USE read_cards_module, ONLY: read_cards
    use averages, only: online_average, online_average_init
 
@@ -72,7 +78,6 @@ program all_currents
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
    use atom, only: rgrid
-
    ! testing only!!!
    use test_h_psi, only: init_test
 
@@ -102,7 +107,9 @@ program all_currents
    CHARACTER(len=256) :: file_output, trajdir = ''
    type(online_average) :: ave_cur
    real(kind=DP) ::delta_t, ethr_small_step, ethr_big_step
-   integer :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+   integer :: first_step, last_step, step_mul, step_rem, n_workers, worker_id, &
+              n_repeat_every_step, n_digit, &
+              first_s_chunk, last_s_chunk, steps_per_chunk
    logical :: restart ! if true try to read last calculated step from output and set first_step
    logical :: subtract_cm_vel ! if true do velocity renormalization
    logical :: re_init_wfc_1 = .false., re_init_wfc_2 = .false. ! initialize again evc before scf step number 1 or 2
@@ -112,9 +119,9 @@ program all_currents
    ! note: i_current_b is proportional to the ionic velocities. In principle is not needed to calculate the thermal
    ! conductivity since it does not influence the final result. It is implemented only for a cubic cell.
 
-   character(len=256) :: vel_input_units = 'PW'
+   character(len=256) :: vel_input_units = 'PW', worker_id_char, format_string
    logical :: ec_test, hpsi_test ! activates tests for debugging purposes
-
+   logical :: continue_not_converged ! don't stop the calculation if a step does not converge
    !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
@@ -127,12 +134,19 @@ program all_currents
    CALL environment_start('QEHeat')
    call start_clock('all_currents')
    IF (ionode) THEN
-      write (*,*) 'This code implements Marcolongo, A., Umari, P. and Baroni, S'
-      write (*,*) ' Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509'
       write (*,*) ''
-      write (*,*) 'The details of the implementation are described in'
-      write (*,*) ' Marcolongo, Bertossa, Tisi, Baroni,'
-      write (*,*) ' https://arxiv.org/abs/2104.06383 (2021)'
+      write (*,*) '============================================================'
+      write (*,*) '============================================================'
+      write (*,*) ' This code implements Marcolongo, A., Umari, P. and Baroni, S'
+      write (*,*) '  Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509'
+      write (*,*) ''
+      write (*,*) ' The details of the implementation are described in'
+      write (*,*) '  Marcolongo, Bertossa, Tisi and Baroni'
+      write (*,*) '  Computer Physics Communications, 269, 108090 (2021)'
+      write (*,*) '  https://doi.org/10.1016/j.cpc.2021.108090'
+      write (*,*) '  https://arxiv.org/abs/2104.06383'
+      write (*,*) '============================================================'
+      write (*,*) '============================================================'
       write (*,*) ''
       CALL input_from_file()
       ! all_currents input
@@ -145,16 +159,45 @@ program all_currents
                                        step_rem, ec_test, add_i_current_b, &
                                        save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                        re_init_wfc_3, three_point_derivative, &
-                                       n_repeat_every_step, hpsi_test)
+                                       n_repeat_every_step, hpsi_test, &
+                                       n_workers, worker_id, &
+                                       continue_not_converged)
+     !if the problem is parallelized simply by running many times the code over the same trajectory
+     !with a different starting and ending timestep you can use the n_worker and the worker_id variables
+     !
+     ! if n_workers > 0, append worker_id to file_output
+     ! set first/last step accordingly
+     ! append worker_id to outdir
+     if (n_workers>0 ) then
+        if (worker_id >= n_workers .or. worker_id<0) then
+           call errore ('all_currents', 'worker_id must be one of 0, 1, ..., n_workers-1')
+        end if
+        n_digit = floor(log10(real(n_workers+1)))
+        write (format_string, '(A2,I1,A1)') "(I",n_digit, ")"
+
+        write (worker_id_char, format_string) worker_id
+        file_output=trim(file_output) // '.'//trim(worker_id_char)
+        ! calculate first step / last step for the chunk
+        steps_per_chunk = (last_step-first_step + 1)/n_workers
+        if (steps_per_chunk < 0) call errore('all_currents', 'last_step must be greater than first_step',1)
+        if (steps_per_chunk == 0 ) then
+           steps_per_chunk = 1
+           write(*,*) 'WARNING: n_workers is too high: some chunks will have no work' 
+        end if
+        first_s_chunk = first_step + steps_per_chunk*worker_id
+        if (worker_id < n_workers - 1 ) then
+           last_s_chunk = first_step + steps_per_chunk*(worker_id+1)
+        else
+           last_s_chunk = last_step
+        end if
+
+        write (*,*) 'This worker has steps from ', first_s_chunk, ' to ', last_s_chunk
+        first_step=first_s_chunk
+        last_step=last_s_chunk - 1
+
+     end if
 
    endif
-   ! PW input
-   call read_namelists('PW', 5)
-   call read_cards('PW', 5)
-
-   call check_input()
-
-   call mp_barrier(intra_pool_comm)
    call bcast_all_current_namelist( &
       delta_t, &
       file_output, trajdir, vel_input_units, &
@@ -164,7 +207,21 @@ program all_currents
       step_rem, ec_test, add_i_current_b, &
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
-      n_repeat_every_step, hpsi_test)
+      n_repeat_every_step, hpsi_test, &
+      n_workers, worker_id, &
+      continue_not_converged)
+   ! PW input
+   call read_namelists('PW', 5)
+   if (n_workers>0 ) then
+      CALL mp_bcast(worker_id_char, ionode_id, world_comm)
+      outdir = trim(outdir) //trim(worker_id_char)
+   endif
+   
+   call read_cards('PW', 5)
+
+   call check_input()
+
+   call mp_barrier(intra_pool_comm)
    if (vel_input_units == 'CP') then ! atomic units of cp are different
       vel_factor = 2.0_dp
       if (ionode) &
@@ -274,8 +331,12 @@ program all_currents
             call sum_band()
          end if
          ethr = ethr_big_step
-         call run_pwscf(exit_status)
-         if (exit_status /= 0) goto 100 !shutdown everything and exit
+         call run_electrons(exit_status, continue_not_converged)
+         if (exit_status == 2 .and. continue_not_converged) then 
+              continue
+         else if (exit_status /= 0) then
+             goto 100 !shutdown everything and exit
+         end if
          !save evc, tau and vel for t-dt
          call scf_result_set_from_global_variables(scf_all%t_minus)
          if (three_point_derivative) then
@@ -285,9 +346,13 @@ program all_currents
                call sum_band()
             end if
             ethr = ethr_small_step
-            call run_pwscf(exit_status)
+            call run_electrons(exit_status, continue_not_converged)
             !evc_due = evc
-            if (exit_status /= 0) goto 100 !shutdown everything and exit
+            if (exit_status == 2 .and. continue_not_converged) then 
+               continue
+            else if (exit_status /= 0) then
+               goto 100 !shutdown everything and exit
+            end if
             !save evc, tau and vel for t
             call scf_result_set_from_global_variables(scf_all%t_zero)
             if (hpsi_test) &
@@ -311,8 +376,12 @@ program all_currents
             call sum_band()
          end if
          ethr = ethr_small_step
-         call run_pwscf(exit_status)
-         if (exit_status /= 0) goto 100 !shutdown everything and exit
+         call run_electrons(exit_status, continue_not_converged)
+         if (exit_status == 2 .and. continue_not_converged) then 
+              continue
+         else if (exit_status /= 0) then 
+              goto 100 !shutdown everything and exit
+         end if
          !save evc, tau and vel for t+dt
          call scf_result_set_from_global_variables(scf_all%t_plus)
 
@@ -476,7 +545,9 @@ contains
                                           step_rem, ec_test, add_i_current_b, &
                                           save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                           re_init_wfc_3, three_point_derivative, &
-                                          n_repeat_every_step, hpsi_test)
+                                          n_repeat_every_step, hpsi_test, &
+                                          n_workers, worker_id, &
+                                          continue_not_converged)
       use io_global, ONLY: stdout, ionode, ionode_id
       implicit none
       integer, intent(in) :: iunit
@@ -484,7 +555,8 @@ contains
       logical, intent(inout) :: save_dvpsi
       CHARACTER(len=256), intent(inout) :: file_output, trajdir
       real(kind=DP), intent(inout) ::delta_t, ethr_small_step, ethr_big_step
-      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step, &
+                                n_workers, worker_id
       logical, intent(inout) :: restart
       logical, intent(inout) :: subtract_cm_vel
       logical, intent(inout) :: re_init_wfc_1, re_init_wfc_2
@@ -494,7 +566,7 @@ contains
       character(len=256), intent(inout) :: vel_input_units
       logical, intent(inout) :: ec_test, hpsi_test ! activates tests for debugging purposes
       integer, intent(out) :: n_max
-
+      logical, intent(inout) :: continue_not_converged
       integer :: ios
 
       NAMELIST /energy_current/ delta_t, &
@@ -505,7 +577,8 @@ contains
          step_rem, ec_test, add_i_current_b, &
          save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
          re_init_wfc_3, three_point_derivative, &
-         n_repeat_every_step, hpsi_test
+         n_repeat_every_step, hpsi_test, &
+         n_workers, worker_id, continue_not_converged
       !
       !   set default values for variables in namelist
       !
@@ -532,6 +605,9 @@ contains
       vel_input_units = 'PW'
       n_repeat_every_step = 1
       hpsi_test = .false.
+      n_workers = 0
+      worker_id = 0
+      continue_not_converged = .false.
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -546,7 +622,9 @@ contains
       step_rem, ec_test, add_i_current_b, &
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
-      n_repeat_every_step, hpsi_test)
+      n_repeat_every_step, hpsi_test, &
+      n_workers, worker_id, &
+      continue_not_converged)
       use io_global, ONLY: stdout, ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
@@ -555,7 +633,8 @@ contains
       logical, intent(inout) :: save_dvpsi
       CHARACTER(len=256), intent(inout) :: file_output, trajdir
       real(kind=DP), intent(inout) ::delta_t, ethr_small_step, ethr_big_step
-      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+      integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step, &
+                                n_workers, worker_id
       logical, intent(inout) :: restart
       logical, intent(inout) :: subtract_cm_vel
       logical, intent(inout) :: re_init_wfc_1, re_init_wfc_2
@@ -565,6 +644,7 @@ contains
       character(len=256), intent(inout) :: vel_input_units
       logical, intent(inout) :: ec_test, hpsi_test
       integer, intent(out) :: n_max
+      logical, intent(inout) :: continue_not_converged
       CALL mp_bcast(trajdir, ionode_id, world_comm)
       CALL mp_bcast(delta_t, ionode_id, world_comm)
       CALL mp_bcast(eta, ionode_id, world_comm)
@@ -587,7 +667,10 @@ contains
       CALL mp_bcast(three_point_derivative, ionode_id, world_comm)
       CALL mp_bcast(n_repeat_every_step, ionode_id, world_comm)
       CALL mp_bcast(hpsi_test, ionode_id, world_comm)
-
+      CALL mp_bcast(n_workers, ionode_id, world_comm)
+      CALL mp_bcast(worker_id, ionode_id, world_comm)
+      CALL mp_bcast(vel_input_units, ionode_id, world_comm)
+      CALL mp_bcast(continue_not_converged, ionode_id, world_comm)
    end subroutine
 
    subroutine set_first_step_restart(restart, file_output, first_step)
@@ -647,12 +730,13 @@ contains
       end if
    end subroutine
 
-   subroutine run_pwscf(exit_status)
+   subroutine run_electrons(exit_status, continue_not_converged)
       USE control_flags, ONLY: conv_elec, gamma_only, ethr, lscf, treinit_gvecs
       USE check_stop, ONLY: check_stop_init, check_stop_now
       USE qexsd_module, ONLY: qexsd_set_status
       implicit none
       INTEGER, INTENT(OUT) :: exit_status
+      logical, intent(in) :: continue_not_converged
       exit_status = 0
       call start_clock('PWSCF')
       IF (.NOT. lscf) THEN
@@ -661,9 +745,10 @@ contains
          CALL electrons()
       END IF
       call stop_clock('PWSCF')
-      IF (check_stop_now() .OR. .NOT. conv_elec) THEN
+      IF (.NOT. conv_elec) exit_status = 2
+      IF (check_stop_now() .OR. & 
+             ( (.NOT. conv_elec ) .and. ( .not. continue_not_converged)) ) THEN
          IF (check_stop_now()) exit_status = 255
-         IF (.NOT. conv_elec) exit_status = 2
          CALL qexsd_set_status(exit_status)
          CALL punch('config')
          RETURN

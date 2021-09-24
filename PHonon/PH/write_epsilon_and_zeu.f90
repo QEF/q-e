@@ -8,19 +8,25 @@
 !-----------------------------------------------------------------------
 subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   !-----------------------------------------------------------------------
+  !! Write effective charges and dielectric tensor on output.
+  !
   USE kinds, only : DP
   USE control_ph, ONLY : xmldyn
   USE io_global, ONLY : ionode
+  !
   implicit none
-  ! input variables
-  integer :: iudyn, nat
-  ! unit number
-  ! number of atom in the unit cell
-
-  real(DP) :: zstareu (3, 3, nat), epsilon (3, 3)
-  !  the effective charges
-  !  the dielectric tensor
-  ! local variables
+  !
+  integer :: iudyn
+  !! input: unit number
+  integer :: nat
+  !! input: number of atom in the unit cell
+  real(DP) :: zstareu(3,3,nat)
+  !! the effective charges
+  real(DP) :: epsilon(3,3)
+  !! the dielectric tensor
+  !
+  ! ... local variables
+  !
   integer :: na, icar, jcar
   ! counter on atoms
   ! cartesian coordinate counters

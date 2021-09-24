@@ -8,11 +8,10 @@
 !-----------------------------------------------------------------------
 subroutine dynmatrix_new(iq_)
   !-----------------------------------------------------------------------
-  !
-  ! This routine is a driver which computes the symmetrized dynamical
-  ! matrix at q (and in the star of q) and diagonalizes it.
-  ! It writes the result on a iudyn file and writes the eigenvalues on
-  ! output.
+  !! This routine is a driver which computes the symmetrized dynamical
+  !! matrix at q (and in the star of q) and diagonalizes it.  
+  !! It writes the result on a iudyn file and writes the eigenvalues on
+  !! output.
   !
   !
   USE kinds,         ONLY : DP
@@ -48,7 +47,8 @@ subroutine dynmatrix_new(iq_)
 
   implicit none
   INTEGER, INTENT(IN) :: iq_
-  ! local variables
+  !
+  ! ... local variables
   !
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
        ipert, jpert, mu, nu, i, j, nqq

@@ -58,7 +58,7 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm35">&amp;ENERGY_CURRENT</a></p>
 <blockquote>
-<a href="#idm36">delta_t</a> | <a href="#idm39">file_output</a> | <a href="#idm46">trajdir</a> | <a href="#idm52">vel_input_units</a> | <a href="#idm58">eta</a> | <a href="#idm61">n_max</a> | <a href="#idm64">first_step</a> | <a href="#idm68">last_step</a> | <a href="#idm72">step_mul</a> | <a href="#idm77">step_rem</a> | <a href="#idm82">ethr_small_step</a> | <a href="#idm86">ethr_big_step</a> | <a href="#idm89">restart</a> | <a href="#idm94">subtract_cm_vel</a> | <a href="#idm97">add_i_current_b</a> | <a href="#idm100">save_dvpsi</a> | <a href="#idm103">re_init_wfc_1</a> | <a href="#idm106">re_init_wfc_2</a> | <a href="#idm110">re_init_wfc_3</a> | <a href="#idm113">three_point_derivative</a> | <a href="#idm118">n_repeat_every_step</a>
+<a href="#idm36">delta_t</a> | <a href="#idm39">file_output</a> | <a href="#idm46">trajdir</a> | <a href="#idm52">vel_input_units</a> | <a href="#idm58">eta</a> | <a href="#idm61">n_max</a> | <a href="#idm64">first_step</a> | <a href="#idm68">last_step</a> | <a href="#idm72">step_mul</a> | <a href="#idm77">step_rem</a> | <a href="#idm82">ethr_small_step</a> | <a href="#idm86">ethr_big_step</a> | <a href="#idm89">restart</a> | <a href="#idm94">subtract_cm_vel</a> | <a href="#idm97">add_i_current_b</a> | <a href="#idm100">save_dvpsi</a> | <a href="#idm103">re_init_wfc_1</a> | <a href="#idm106">re_init_wfc_2</a> | <a href="#idm110">re_init_wfc_3</a> | <a href="#idm113">three_point_derivative</a> | <a href="#idm118">n_repeat_every_step</a> | <a href="#idm123">n_workers</a> | <a href="#idm132">worker_id</a> | <a href="#idm136">continue_not_converged</a>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -548,6 +548,56 @@ Obviously it needs more computer time, but the derivative should be better.
 Number of repetition of the full current calculation for each step. If &gt; 1, the file <a href="#file_output">file_output</a> + '.stat'
 is written with some statistics. Note that if you don't specify at least <a href="#re_init_wfc_1">re_init_wfc_1</a> ,this may be useless.
 You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm123"></a><a name="n_workers"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">n_workers</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The calculation over all the trajectory is splitted in <a href="#n_workers">n_workers</a> chunks. Then to run the code over all
+the trajectory you must run <a href="#n_workers">n_workers</a> input files each one with a different <a href="#worker_id">worker_id</a>,
+from 0 to <a href="#n_workers">n_workers</a> - 1 . Those inputs can run at the same time in the same folder. The <a href="#worker_id">worker_id</a>
+will be appended to the outdir folder and to the <a href="#file_output">file_output</a> input variables, so you can safely run all
+the inputs in the same directory at the same time.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm132"></a><a name="worker_id"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">worker_id</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+See <a href="#n_workers">n_workers</a> variable
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm136"></a><a name="continue_not_converged"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">continue_not_converged</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If it is not possible to find a ground state for a given frame of the trajectory, go to the next one.
+You will not find this step in the output file(s).
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>

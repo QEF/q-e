@@ -42,7 +42,7 @@ PROGRAM plotband
 
   real :: emin = 1.e10, emax =-1.e10, etic, eref, deltaE, Ef
 
-  INTEGER, PARAMETER :: max_lines=99
+  INTEGER, PARAMETER :: max_lines=999
   real :: mine, dxmod, dxmod_save
   INTEGER :: point(max_lines+1), nrap(max_lines)
   INTEGER :: ilines, irap, ibnd, ipoint, jnow
@@ -75,21 +75,23 @@ PROGRAM plotband
   ENDIF
 
   filename1=trim(filename)//".rap"
-  !!! replace with inquire statement?
-  exist_rap=.true.
-  OPEN(unit=21,file=filename1,form='formatted',status='old',err=100,iostat=ios)
-
-100 IF (ios /= 0) THEN
-     exist_rap=.false.
-  ENDIF
-  !!!
+  !
+  inquire(file=filename1, exist=exist_rap)
   IF (exist_rap) THEN
+     OPEN(unit=21,file=filename1,form='formatted',status='old',iostat=ios)
+     IF ( ios /= 0 ) THEN
+        WRITE(6,'("error opening file with representations")')
+        exist_rap=.false.
+        GO TO 100
+     ENDIF
      READ (21, plot_rap, iostat=ios)
      IF (nks_rap/=nks.or.nbnd_rap/=nbnd.or.ios/=0) THEN
         WRITE(6,'("file with representations not compatible with bands")')
         exist_rap=.false.
      ENDIF
   ENDIF
+  !
+100 CONTINUE
   !
   ALLOCATE (e(nbnd,nks))
   ALLOCATE (k(3,nks), e_in(nks), kx(nks), npoints(nks), high_symmetry(nks))
@@ -105,7 +107,6 @@ PROGRAM plotband
   ENDIF
   !!!
   filename2=trim(filename)//".proj"
-  exist_proj=.false.
   INQUIRE(file=filename2,exist=exist_proj)
   IF (exist_proj) THEN
      OPEN(UNIT=22, FILE=filename2, FORM='formatted', STATUS='old', IOSTAT=ios)
@@ -135,7 +136,6 @@ PROGRAM plotband
      ENDIF
   ENDIF
   !!!
-
 
   high_symmetry=.false.
 
@@ -225,7 +225,7 @@ PROGRAM plotband
      dxmod=sqrt ( (k(1,n)-k(1,n-1))**2 + &
                   (k(2,n)-k(2,n-1))**2 + &
                   (k(3,n)-k(3,n-1))**2 )
-     IF (dxmod > 5*dxmod_save) THEN
+     IF (dxmod >10*dxmod_save) THEN
 !
 !   A big jump in dxmod is a sign that the point k(:,n) and k(:,n-1)
 !   are quite distant and belong to two different lines. We put them on
@@ -238,7 +238,6 @@ PROGRAM plotband
 !  same path.
 !
         kx(n) = kx(n-1) +  dxmod
-        dxmod_save = dxmod
      ELSE
 !
 !  This is the case in which dxmod is almost zero. The two points coincide

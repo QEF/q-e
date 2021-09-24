@@ -9,6 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE solve_ph ( )
   !-----------------------------------------------------------------------
+  !! Solve linear system to calculate linear response.
   !
   USE io_global,             ONLY : stdout, ionode,ionode_id
   USE io_files,              ONLY : iunres, seqopn
@@ -146,10 +147,9 @@ END SUBROUTINE solve_ph
 !---------------------------------------------------------------------------
 SUBROUTINE set_asr_r(nat,nasr,dyn)
   !---------------------------------------------------------------------------
-  !
-  ! Impose Acoustic Sum Rule on the dynamical matrix
-  ! We assume that (3*nat-1) columns have been calculated
-  ! and that the missing column corresponds to atom nasr
+  !! Impose Acoustic Sum Rule on the dynamical matrix.
+  !! We assume that (3*nat-1) columns have been calculated
+  !! and that the missing column corresponds to atom \(\text{nasr}\).
   !
   IMPLICIT NONE
   INTEGER nat, nasr

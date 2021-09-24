@@ -745,9 +745,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   ! Hubbard energy
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
-     WRITE(stdout,*) '--- in v_hubbard ---'
-     WRITE(stdout,'("Hubbard energy ",f9.4)') eth
-     WRITE(stdout,*) '-------'
+     WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
   ENDIF
   !
   RETURN
@@ -826,9 +824,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
   ! Hubbard energy
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
-     WRITE(stdout,*) '--- in v_hubbard_b ---'
-     WRITE(stdout,'(''Hubbard_back energy '',f9.4)') eth
-     WRITE(stdout,*) '-------'
+     WRITE(stdout,'(/5x,"HUBBARD BACKGROUND ENERGY = ",f9.4,1x," (Ry)")') eth
   ENDIF
   !
   RETURN
@@ -963,9 +959,7 @@ SUBROUTINE v_hubbard_full( ns, v_hub, eth )
   ! Hubbard energy
   !
   IF ( iverbosity > 0 ) THEN
-     WRITE(stdout,*) '--- in v_hubbard ---'
-     WRITE(stdout,'("Hubbard energies (dc, U, total) ",3f9.4)') eth_dc, eth_u, eth
-     WRITE(stdout,*) '-------'
+     WRITE(stdout,'(/5x,"HUBBARD ENERGIES (dc, U, total) ",3f9.4,1x," (Ry)")') eth_dc, eth_u, eth
   ENDIF
   !
   DEALLOCATE (u_matrix)
@@ -1335,9 +1329,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   ! Hubbard energy
   !
   IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
-     WRITE(stdout,*) '--- in v_hubbard_extended ---'
-     WRITE(stdout,'("Hubbard energy ",f9.4)') eth
-     WRITE(stdout,*) '-----------------------------'
+     WRITE(stdout,'(/5x,"HUBBARD ENERGY = ",f9.4,1x," (Ry)")') eth
   ENDIF
   !
   RETURN

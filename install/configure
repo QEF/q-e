@@ -6388,6 +6388,7 @@ fi
 
                     if test "$have_fft" -eq 0
                     then
+		      unset ac_cv_search_dfftw_execute_dft
                       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dfftw_execute_dft" >&5
 $as_echo_n "checking for library containing dfftw_execute_dft... " >&6; }
 if ${ac_cv_search_dfftw_execute_dft+:} false; then :
@@ -6523,10 +6524,6 @@ else
    # you will need to set the proper include directory in FFTW_INCLUDE
 
    echo "using FFT_LIBS with no testing ... "
-   # I suspect next 3 lines are useless in practice, should be deleted - PG
-   if test -n "$FFT_INCLUDE" ; then :
-      try_iflags="$try_iflags -I$FFT_INCLUDE"
-   fi
    if test -n "$FFTW_INCLUDE" ; then :
       try_dflags="$try_dflags -D__FFTW3"
       try_iflags="$try_iflags -I$FFTW_INCLUDE"

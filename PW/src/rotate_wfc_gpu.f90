@@ -58,7 +58,7 @@ SUBROUTINE rotate_wfc_gpu &
      !
      ! Allocate arrays to workaround parallel case
      !
-     ALLOCATE (psi_h(npwx*npol,nstart), evc_h(npwx*npol,nbnd), e_h(nbnd))
+     ALLOCATE(psi_h(npwx*npol,nstart), evc_h(npwx*npol,nbnd), e_h(nbnd))
      psi_h(1:npwx*npol,1:nstart) = psi_d(1:npwx*npol,1:nstart)
      evc_h(1:npwx*npol,1:nbnd) = evc_d(1:npwx*npol,1:nbnd)
      !

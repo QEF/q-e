@@ -256,7 +256,11 @@ ortho_wfc.o \
 wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
-wannier_occ.o
+wannier_occ.o \
+gram_schmidt.o \
+rotate_xpsi.o  \
+rotate_xpsi_gpu.o \
+
 
 # GPU versions of routines
 PWLIBS += \
@@ -304,16 +308,15 @@ PWLIBS += \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
-       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 
 TLDEPS= bindir libs mods libks_solvers dftd3
 
 all : tldeps pw.x
 
-pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
+pw.x : $(PWOBJS) libpw.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(QELIBS)
+	   $(PWOBJS) libpw.a $(QEMODS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . ; \
                ln -fs ../PW/src/$@ dist.x ; ln -fs ../PW/src/$@ manypw.x ; )
 # dist.x and manypw.x link the same executable pw.x
