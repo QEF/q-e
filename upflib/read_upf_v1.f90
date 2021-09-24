@@ -523,7 +523,7 @@ subroutine read_pseudo_pswfc (upf, iunps)
   character (len=75) :: dummy  
   integer :: nb, ir
 
-  ALLOCATE( upf%chi( upf%mesh, MAX( upf%nwfc, 1 ) ) )
+  ALLOCATE( upf%chi( upf%mesh, upf%nwfc ) )
   upf%chi = 0.0_DP
   do nb = 1, upf%nwfc  
      read (iunps, *, err=100, end=100) dummy  !Wavefunction labels
