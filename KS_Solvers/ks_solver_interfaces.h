@@ -41,8 +41,8 @@ INTERFACE rotate_xpsi
   !! Produces on output nbnd eigenvectors ( nbnd <= nstart ) in evc.
   !! Calls h_psi, s_psi to calculate H|psi> and S|psi>,
   !! which are saved in hevc and sevc.
-  IMPORT (DP)
-  IMPLICIT NONE
+  IMPORT :: DP
+  IMPLICIT NONE 
   INTEGER, INTENT(IN) :: npw, npwx, nstart, nbnd, npol
   !! dimension of the matrix to be diagonalized
   !! leading dimension of matrix psi, as declared in the calling pgm unit
