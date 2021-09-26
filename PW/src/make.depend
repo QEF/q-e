@@ -1110,8 +1110,6 @@ gradcorr.o : ../../Modules/kind.o
 gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../XClib/xc_lib.o
 gradcorr.o : pwcom.o
-gram_schmidt.o : ../../Modules/control_flags.o
-gram_schmidt.o : ../../Modules/kind.o
 gweights.o : ../../Modules/kind.o
 h_epsi_her_apply.o : ../../Modules/becmod.o
 h_epsi_her_apply.o : ../../Modules/cell_base.o

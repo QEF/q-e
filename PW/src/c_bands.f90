@@ -222,6 +222,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   IMPLICIT NONE
   !
+  INCLUDE 'ks_solver_interfaces.fh' 
+  !  
   INTEGER, INTENT(IN) :: iter
   !! iteration index
   INTEGER, INTENT(IN) :: ik
@@ -510,11 +512,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              IF (.not. use_gpu) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                               evc, hevc, sevc, et(1,ik) )
+                               evc, hevc, sevc, et(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE. )
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
-                               evc_d, hevc_d, sevc_d, et_d(1,ik) )
+                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                               evc_d, hevc_d, sevc_d, et_d(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE.)
              END IF
              !
              avg_iter = avg_iter + 1.D0
@@ -871,11 +873,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              IF ( .not. use_gpu ) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                                  evc, hevc, sevc, et(1,ik) )
+                                  evc, hevc, sevc, et(:,ik), & 
+                                  USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
-                                  evc_d, hevc_d, sevc_d, et_d(1,ik) )
+                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                                  evc_d, hevc_d, sevc_d, et_d(:,ik), &
+                                  USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
              END IF
              !
              avg_iter = avg_iter + 1.D0
