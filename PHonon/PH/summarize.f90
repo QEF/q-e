@@ -39,9 +39,7 @@ SUBROUTINE summarize_epsilon()
 
   WRITE( stdout, '(10x,"(",3f18.9," )")') ((epsilon(ipol,jpol), ipol=1,3), jpol=1,3)
 
-  write(stdout,*)' made it 0'
   IF (lgamma_gamma) THEN
-  write(stdout,*)' made it 0A'
 !
 ! The system is probably a molecule. Try to estimate the polarizability
 !
@@ -83,7 +81,6 @@ SUBROUTINE summarize_zeu()
   !
 
   IF (.NOT. done_zeu) RETURN
-  write(stdout,*)' made it 1'
   zstarsum=0d0
   zstarmeansum=0d0
   DO na = 1, nat  
@@ -95,7 +92,6 @@ SUBROUTINE summarize_zeu()
      zstarmean(na)=(zstareu(1, 1, na)+zstareu(2, 2, na)+zstareu(3, 3, na))/3d0
      zstarmeansum=zstarmeansum+zstarmean(na)
   ENDDO
-  write(stdout,*)' made it 2'
   WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis without acoustic sum rule applied (asr)",/)')
   DO na = 1, nat
      WRITE( stdout, '(10x," atom ",i6, a6,"Mean Z*:",f15.5)') na, atm(ityp(na)),zstarmean(na)
@@ -113,7 +109,6 @@ SUBROUTINE summarize_zeu()
      zstareu(:,:,na)=zstareu(:,:,na)-zstarsum(:,:)/nat
      zstarmean(na)=zstarmean(na)-zstarmeansum/nat
   ENDDO
-  write(stdout,*)' made it 3'
   WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis with asr applied: ")')
   DO na = 1, nat
      WRITE( stdout, '(10x," atom ",i6, a6,"Mean Z*:",f15.5)') na, atm(ityp(na)),zstarmean(na)
