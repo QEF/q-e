@@ -46,7 +46,7 @@ CONTAINS
     !
     if(use_gpu.and.run_on_gpu) then   
       !
-      !$acc data copyin(igk_(npw_), g(:,:)) present(mill(:,:), vkb_(npwx,nkb), eigts1(:,:), eigts2(:,:), eigts3(:,:))
+      !$acc data copyin(igk_(npw_)) present(mill(:,:), g(:,:), vkb_(npwx,nkb), eigts1(:,:), eigts2(:,:), eigts3(:,:))
       !$acc host_data use_device(eigts1, eigts2, eigts3, mill, g, igk_, vkb_)
       CALL init_us_2_base_gpu(npw_, npwx, igk_, q_, nat, tau, ityp, tpiba, omega,&
         dfftp%nr1, dfftp%nr2, dfftp%nr3, eigts1, eigts2, eigts3, mill, g,&

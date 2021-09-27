@@ -83,7 +83,7 @@ SUBROUTINE init_run()
      gg_d   = gg
   END IF
 #endif
-  !$acc update device(mill)
+  !$acc update device(mill, g)
   !
   IF (do_comp_esm) CALL esm_init()
   !

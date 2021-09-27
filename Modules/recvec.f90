@@ -120,7 +120,7 @@
           ALLOCATE( igtongl_d(ngm) )
           ALLOCATE( gl_d(ngm) )
        ENDIF  
-       !$acc enter data create( mill(3, ngm) ) 
+       !$acc enter data create( mill(3, ngm), g(3, ngm) ) 
        !
        RETURN 
        !
@@ -142,6 +142,7 @@
        END IF
        !
        !$acc exit data delete(eigts1,  eigts2,  eigts3)
+       !$acc exit data delete(mill, g)
        !  
        IF( ALLOCATED( gg ) )     DEALLOCATE( gg )
        IF( ALLOCATED( g ) )      DEALLOCATE( g )
@@ -164,7 +165,6 @@
           IF (ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
           IF (ALLOCATED( eigts3_d ) ) DEALLOCATE( eigts3_d )
        ENDIF
-       !$acc exit data delete(mill)
        ! 
      END SUBROUTINE deallocate_gvect
 
