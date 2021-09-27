@@ -86,6 +86,8 @@ CONTAINS
     INTEGER :: ik
     !
     IF (.NOT.ALLOCATED(igk_k)) ALLOCATE( igk_k(npwx,nks) )
+    !$acc enter data create(igk_k(npwx,nks))
+    !
     IF (.NOT.ALLOCATED(ngk))   ALLOCATE( ngk(nks) )
     !
     ALLOCATE ( gk(npwx) )
@@ -97,6 +99,7 @@ CONTAINS
     DO ik = 1, nks
        CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
     ENDDO
+    !$acc update device(igk_k)
     !
     DEALLOCATE( gk )
 #if defined (__CUDA)
@@ -111,9 +114,11 @@ CONTAINS
   SUBROUTINE deallocate_igk( ) 
     !
     IF (ALLOCATED(ngk))     DEALLOCATE( ngk )
-    IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
     !
+    !$acc exit data delete(igk_k)
+    IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
     IF (ALLOCATED(igk_k_d)) DEALLOCATE( igk_k_d )
+    !
     IF (ALLOCATED(ngk_d))   DEALLOCATE( ngk_d )
     !
   END SUBROUTINE deallocate_igk
