@@ -21,6 +21,11 @@ SUBROUTINE allocate_locpot
   USE fft_base , ONLY : dfftp
   !
   IMPLICIT NONE
+    INTEGER :: nr1, nr2, nr3
+  !
+  nr1 = dfftp%nr1
+  nr2 = dfftp%nr2
+  nr3 = dfftp%nr3
   !
   ALLOCATE( vloc( ngl, ntyp) )
   ALLOCATE( strf( ngm, ntyp) )
@@ -33,6 +38,8 @@ SUBROUTINE allocate_locpot
   ALLOCATE( eigts2_d(-dfftp%nr2:dfftp%nr2,nat) )
   ALLOCATE( eigts3_d(-dfftp%nr3:dfftp%nr3,nat) )
 #endif
+  !
+  !$acc enter data create(eigts1(-nr1:nr1,1:nat), eigts2(-nr2:nr2,1:nat), eigts3(-nr3:nr3,1:nat) )
   !
   RETURN
   !

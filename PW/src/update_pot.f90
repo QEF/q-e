@@ -164,6 +164,7 @@ SUBROUTINE update_neb( )
          eigts2_d = eigts2
          eigts3_d = eigts3
 #endif
+         !$acc update device(eigts1, eigts2, eigts3) 
          !
       END IF
       !
@@ -440,6 +441,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      eigts2_d = eigts2
      eigts3_d = eigts3
 #endif
+     !$acc update device(eigts1, eigts2, eigts3) 
      !
      ! ... new charge density from extrapolated wfcs
      !
@@ -585,6 +587,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      eigts2_d = eigts2
      eigts3_d = eigts3
 #endif
+     !$acc update device(eigts1, eigts2, eigts3) 
      !
      CALL set_rhoc()
      !

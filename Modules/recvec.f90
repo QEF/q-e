@@ -140,6 +140,8 @@
           IF ( ASSOCIATED( gl ) ) DEALLOCATE ( gl )
        END IF
        !
+       !$acc exit data delete(eigts1,  eigts2,  eigts3)
+       !  
        IF( ALLOCATED( gg ) )     DEALLOCATE( gg )
        IF( ALLOCATED( g ) )      DEALLOCATE( g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
