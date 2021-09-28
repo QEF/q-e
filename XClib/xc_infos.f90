@@ -65,9 +65,11 @@ PROGRAM xc_infos
   !
   CALL xclib_set_dft_from_name( dft )
   !
-  IF ( xc_kind_error ) WRITE(stdout,*) 'WARNING: This functional includes terms &
-                                       &that are currently not usable in QE (kin&
-                                       &etic) and they will be ignored.'
+#if defined(__LIBXC)
+  IF ( xc_kind_error ) WRITE(stdout,*) 'WARNING: This functional includes Libxc &
+                                        &terms that are currently not usable in &
+                                        &QE (kinetic) and they will be ignored.'
+#endif
   !
   iexch = xclib_get_ID('LDA','EXCH')
   is_libxc(1) = xclib_dft_is_libxc('LDA','EXCH')

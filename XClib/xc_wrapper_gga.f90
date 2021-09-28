@@ -18,6 +18,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #include "xc_version.h"
   USE xc_f03_lib_m
   USE dft_setting_params,   ONLY: xc_func, xc_info 
+  USE dft_setting_routines, ONLY: get_libxc_flags_exc
 #endif
   !
   USE kind_l,               ONLY: DP
@@ -63,7 +64,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
   !
   LOGICAL :: POLARIZED
-  INTEGER :: ildax, ildac, pol_unpol
+  INTEGER :: ildax, ildac, pol_unpol, eflag
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -151,11 +152,18 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   ! ---- GGA CORRELATION
   !
+  IF (is_libxc(4)) fkind_x = xc_f03_func_info_get_kind( xc_info(4) )
+  !
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc (still so? - check)
     !
     CALL xc_f03_func_set_dens_threshold( xc_func(4), rho_threshold_gga )
-    fkind_x  = xc_f03_func_info_get_kind( xc_info(4) )
-    CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    CALL get_libxc_flags_exc( xc_info(4), eflag )
+    IF (eflag==1) THEN
+      CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    ELSE
+      CALL xc_f03_gga_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), vc_rho(1), vc_sigma(1) )
+      ec_lxc = 0.d0
+    ENDIF
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -221,7 +229,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           IF ( igcc/=14 ) CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
           IF ( igcc==14 ) CALL gcc_spin_beef( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
           !
-          v2c(:,2)  = v2c(:,1)
+          v2c(:,2) = v2c(:,1)
           IF ( PRESENT(v2c_ud) ) v2c_ud(:) = v2c(:,1)
           !
           DEALLOCATE( rh, zeta )
@@ -239,7 +247,13 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   IF ( is_libxc(3) ) THEN
     !
     CALL xc_f03_func_set_dens_threshold( xc_func(3), rho_threshold_gga )
-    CALL xc_f03_gga_exc_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    CALL get_libxc_flags_exc( xc_info(3), eflag )
+    IF (eflag==1) THEN
+      CALL xc_f03_gga_exc_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    ELSE
+      CALL xc_f03_gga_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), vx_rho(1), vx_sigma(1) )
+      ex_lxc = 0.d0
+    ENDIF
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length

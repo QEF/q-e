@@ -18,10 +18,10 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   USE dft_setting_params,   ONLY: xc_func, xc_info
 #endif 
   !
-  USE kind_l,        ONLY: DP
-  USE dft_setting_params,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,        &
-                           grho2_threshold_mgga, tau_threshold_mgga, scan_exx, &
-                           exx_started, exx_fraction
+  USE kind_l,               ONLY: DP
+  USE dft_setting_params,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,  &
+                            grho2_threshold_mgga, tau_threshold_mgga, scan_exx, &
+                            exx_started, exx_fraction
   USE qe_drivers_mgga
   !
   IMPLICIT NONE
@@ -155,6 +155,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     ELSE
       CALL xc_f03_mgga_vxc( xc_func(5), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                             vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+      ex_lxc = 0.d0 
     ENDIF
     !
     IF (.NOT. POLARIZED) THEN
@@ -193,8 +194,15 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( is_libxc(6) ) THEN
     !
     CALL xc_f03_func_set_dens_threshold( xc_func(6), rho_threshold_mgga )
-    CALL xc_f03_mgga_exc_vxc( xc_func(6), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+    CALL get_libxc_flags_exc( xc_info(6), eflag )
+    IF (eflag==1) THEN
+      CALL xc_f03_mgga_exc_vxc( xc_func(6), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                               ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
+    ELSE
+      CALL xc_f03_mgga_vxc( xc_func(6), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+                              vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
+      ec_lxc = 0.d0
+    ENDIF
     !
     IF (.NOT. POLARIZED) THEN
        DO k = 1, length

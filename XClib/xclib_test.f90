@@ -390,9 +390,6 @@ PROGRAM xclib_test
   !
   DO id = 1, n_qe_func
     !
-    
-    if (id==160 .or.id==182) cycle
-    
     CALL xclib_reset_dft()
     !
     IF ( dft_init=='all_terms' ) THEN
@@ -445,18 +442,17 @@ PROGRAM xclib_test
       CALL print_test_status( skipped )
       CYCLE
     ENDIF
-#endif
-    ! libxc id=576 segfault.. Libxc5.1.5 bug (same name of id(575))
-    IF ( dft_init=='all_libxc' .AND. id==576 ) THEN
-      CALL print_test_status( skipped )
-      CYCLE
-    ENDIF
+#else
+    ! libxc id=576 -> Libxc5.1.5 bug (same name of id=575)
     IF ( dft_init=='all_libxc' ) THEN
-#if defined(__LIBXC)
+      IF ( id==576 ) THEN
+        CALL print_test_status( skipped )
+        CYCLE
+      ENDIF
       dft = xc_f03_functional_get_name( id )
       IF ( TRIM(dft) == '' ) CYCLE
-#endif
     ENDIF
+#endif
     !
     CALL xclib_set_dft_from_name( dft )
     !
@@ -580,7 +576,7 @@ PROGRAM xclib_test
     IF (.NOT.xc_derivative) THEN
       IF (LDA ) naver = 2
       IF (GGA ) naver = 3
-      IF (MGGA) naver = 4
+      IF (MGGA) naver = 8
     ELSE
       IF (LDA ) naver = 1
       IF (GGA ) naver = 3
