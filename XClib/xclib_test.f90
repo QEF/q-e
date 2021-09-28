@@ -39,7 +39,6 @@ PROGRAM xclib_test
                          xclib_finalize_libxc, xclib_set_finite_size_volume, &
                          xclib_set_auxiliary_flags
   USE xclib_utils_and_para
-  
   !--xml
   USE xmltools,    ONLY: xml_open_file, xml_closefile,xmlr_readtag,   &
                          xmlw_writetag, xmlw_opentag, xmlw_closetag, &
@@ -377,11 +376,11 @@ PROGRAM xclib_test
       CALL xmlr_readtag( "Libxc_version", libxc_gen_version )
       CALL xmlr_closetag()
       !
-      WRITE(stdout,*) 'QE version active during data storing: ', gen_version
-      WRITE(stdout,*) 'QE version currently active: ', version_number
+      WRITE(stdout,*) 'QE version used for data storing: ', gen_version
+      WRITE(stdout,*) 'QE version currently in use: ', version_number
       WRITE(stdout,*) ''
-      WRITE(stdout,*) 'Libxc version active during data storing: ', libxc_gen_version
-      WRITE(stdout,*) 'Libxc version currently active: ', libxc_version
+      WRITE(stdout,*) 'Libxc version used for data storing: ', libxc_gen_version
+      WRITE(stdout,*) 'Libxc version currently in use: ', libxc_version
       WRITE(stdout,*) ''
     ENDIF
   ENDIF
@@ -648,33 +647,6 @@ PROGRAM xclib_test
     ENDIF
     !
     !==========================================================================
-    ! SET (PROVISIONAL) INPUT GRID FOR BENCHMARK TEST:
-    ! =========================================================================
-    ! LDA
-    ! rho unpol (1p): 0.6
-    ! 
-    ! rho pol (2p):   0.6  0.1
-    !                 0.1  0.6
-    ! --------------------------
-    ! GGA
-    ! rho unpol (1p): 0.6       grho: 0.1 0.2 0.3
-    ! 
-    ! rho pol (4p):   0.6  0.1  grho: 0.1 0.2 0.3  0.4 0.3 0.2
-    !                 0.1  0.6        0.1 0.2 0.3  0.4 0.3 0.2 
-    !                 0.6  0.1        0.4 0.3 0.2  0.1 0.2 0.3
-    !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1
-    ! --------------------------
-    ! MGGA
-    ! rho unpol (1p): 0.6       grho: 0.1 0.2 0.3               tau: 0.1
-    ! 
-    ! rho pol (5p):   0.6  0.1  grho: 0.1 0.2 0.3  0.4 0.3 0.2  tau: 0.1  0.2
-    !                 0.1  0.6        0.1 0.2 0.3  0.4 0.3 0.2       0.1  0.2
-    !                 0.6  0.1        0.4 0.3 0.2  0.1 0.2 0.3       0.1  0.2
-    !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1       0.1  0.2
-    !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1       0.2  0.1
-    ! --------------------------  
-    !
-    !==========================================================================
     ! READ BENCHMARK DATA FROM FILE
     !==========================================================================
     !
@@ -748,7 +720,7 @@ PROGRAM xclib_test
     ENDIF
     !
     !==========================================================================
-    ! BUILD ARBITRARY INPUT FOR A npoints GRID
+    ! BUILD ARBITRARY NNR-POINTS LARGE GRID FOR AVERAGES CALCULATIONS
     !==========================================================================
     !
     fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
@@ -789,6 +761,34 @@ PROGRAM xclib_test
        ENDIF
        !
     ENDDO
+    !
+    !==========================================================================
+    ! BUILD A SHORT INPUT GRID FOR DIRECT COMPARISON
+    !==========================================================================
+    !
+    ! LDA
+    ! rho unpol (1p): 0.6
+    ! 
+    ! rho pol (2p):   0.6  0.1
+    !                 0.1  0.6
+    ! --------------------------
+    ! GGA
+    ! rho unpol (1p): 0.6       grho: 0.1 0.2 0.3
+    ! 
+    ! rho pol (4p):   0.6  0.1  grho: 0.1 0.2 0.3  0.4 0.3 0.2
+    !                 0.1  0.6        0.1 0.2 0.3  0.4 0.3 0.2 
+    !                 0.6  0.1        0.4 0.3 0.2  0.1 0.2 0.3
+    !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1
+    ! --------------------------
+    ! MGGA
+    ! rho unpol (1p): 0.6       grho: 0.1 0.2 0.3               tau: 0.1
+    ! 
+    ! rho pol (5p):   0.6  0.1  grho: 0.1 0.2 0.3  0.4 0.3 0.2  tau: 0.1  0.2
+    !                 0.1  0.6        0.1 0.2 0.3  0.4 0.3 0.2       0.1  0.2
+    !                 0.6  0.1        0.4 0.3 0.2  0.1 0.2 0.3       0.1  0.2
+    !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1       0.1  0.2
+    !                 0.1  0.6        0.4 0.3 0.2  0.3 0.2 0.1       0.2  0.1
+    ! --------------------------  
     !
     IF (mype==root) THEN
       IF (nspin == 1) THEN

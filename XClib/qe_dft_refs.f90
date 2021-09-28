@@ -307,20 +307,18 @@ MODULE qe_dft_refs
   DATA dft_full_descr(33) / 'X3LYP' /
   ! TPSS
   DATA dft_full_descr(34) / 'TPSS Meta-GGA' /
-  ! TPSS-only
-  DATA dft_full_descr(35) / 'TPSS Meta-GGA' /
   ! M06L
-  DATA dft_full_descr(36) / 'M06L Meta-GGA' /
+  DATA dft_full_descr(35) / 'M06L Meta-GGA' /
   ! TB09
-  DATA dft_full_descr(37) / 'TB09 Meta-GGA - needs Libxc' /
+  DATA dft_full_descr(36) / 'TB09 Meta-GGA - needs Libxc' /
   ! SCAN
-  DATA dft_full_descr(38) / 'SCAN Meta-GGA - needs Libxc.' /
+  DATA dft_full_descr(37) / 'SCAN Meta-GGA - needs Libxc.' /
   ! SCAN0
-  DATA dft_full_descr(39) / 'SCAN Meta-GGA - needs Libxc.' /
+  DATA dft_full_descr(38) / 'SCAN Meta-GGA - needs Libxc.' /
   ! PZ+META
-  DATA dft_full_descr(40) / 'PZ/LDA + null meta-GGA' /
+  DATA dft_full_descr(39) / 'PZ/LDA + null meta-GGA' /
   ! PBE+META
-  DATA dft_full_descr(41) / 'PBE + null meta-GGA' /
+  DATA dft_full_descr(40) / 'PBE + null meta-GGA' /
   !
 END MODULE qe_dft_refs
 

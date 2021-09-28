@@ -32,7 +32,7 @@ MODULE qe_dft_list
      INTEGER :: IDs(6)
   END TYPE dft_label
   !
-  INTEGER, PARAMETER :: n_dft=41
+  INTEGER, PARAMETER :: n_dft=40
   TYPE(dft_label) :: dft_full(n_dft)
   !
   !
@@ -207,37 +207,33 @@ MODULE qe_dft_list
   DATA dft_full(33)%IDs(1:6) / 9,14,28,13,0,0 / ! xxxx[x3lyp_ldax]+xxxx[x3lyp_ldac]+x3lp+x3lc
   !
   DATA dft_full(34)%name     / 'TPSS' /
-  DATA dft_full(34)%name2    / 'none' /
-  DATA dft_full(34)%IDs(1:6) / 1,4,7,6,1,0 /
+  DATA dft_full(34)%name2    / 'none'      /
+  DATA dft_full(34)%IDs(1:6) / 0,0,0,0,1,0 /
   !
-  DATA dft_full(35)%name     / 'TPSS-only' /
-  DATA dft_full(35)%name2    / 'none'      /
-  DATA dft_full(35)%IDs(1:6) / 0,0,0,0,1,0 /
+  DATA dft_full(35)%name     / 'M06L' /
+  DATA dft_full(35)%name2    / 'none' /
+  DATA dft_full(35)%IDs(1:6) / 0,0,0,0,2,0 /
   !
-  DATA dft_full(36)%name     / 'M06L' /
+  DATA dft_full(36)%name     / 'TB09' /
   DATA dft_full(36)%name2    / 'none' /
-  DATA dft_full(36)%IDs(1:6) / 0,0,0,0,2,0 /
+  DATA dft_full(36)%IDs(1:6) / 0,0,0,0,3,0 /
   !
-  DATA dft_full(37)%name     / 'TB09' /
+  DATA dft_full(37)%name     / 'SCAN' /
   DATA dft_full(37)%name2    / 'none' /
-  DATA dft_full(37)%IDs(1:6) / 0,0,0,0,3,0 /
+  DATA dft_full(37)%IDs(1:6) / 0,0,0,0,5,0 /    ! scan[wrapper to Libxc SCAN]
   !
-  DATA dft_full(38)%name     / 'SCAN' /
-  DATA dft_full(38)%name2    / 'none' /
-  DATA dft_full(38)%IDs(1:6) / 0,0,0,0,5,0 /    ! scan[wrapper to Libxc SCAN]
+  DATA dft_full(38)%name     / 'SCAN0' /
+  DATA dft_full(38)%name2    / 'none'  /
+  DATA dft_full(38)%IDs(1:6) / 0,0,0,0,6,0 /
   !
-  DATA dft_full(39)%name     / 'SCAN0' /
-  DATA dft_full(39)%name2    / 'none'  /
-  DATA dft_full(39)%IDs(1:6) / 0,0,0,0,6,0 /
-  !
-  DATA dft_full(40)%name     / 'PZ+META'  /
-  DATA dft_full(40)%name2    / 'LDA+META' /
-  DATA dft_full(40)%IDs(1:6) / 1,1,0,0,4,0 /
+  DATA dft_full(39)%name     / 'PZ+META'  /
+  DATA dft_full(39)%name2    / 'LDA+META' /
+  DATA dft_full(39)%IDs(1:6) / 1,1,0,0,4,0 /
   !
   ! +meta activates MGGA even without MGGA-XC
-  DATA dft_full(41)%name     / 'PBE+META' /
-  DATA dft_full(41)%name2    / 'none'     /
-  DATA dft_full(41)%IDs(1:6) / 1,4,3,4,4,0 /
+  DATA dft_full(40)%name     / 'PBE+META' /
+  DATA dft_full(40)%name2    / 'none'     /
+  DATA dft_full(40)%IDs(1:6) / 1,4,3,4,4,0 /
   !
   !
 CONTAINS
@@ -247,8 +243,6 @@ CONTAINS
     !---------------------------------------------------------------
     !! Get ID numbers of each family-kind term from the DFT shortname.
     !
-    USE dft_setting_params,  ONLY: is_libxc
-    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
@@ -256,7 +250,6 @@ CONTAINS
     INTEGER :: i
     !
     IDs = notset
-    IF ( ANY(is_libxc(1:6)) ) RETURN
     DO i = 1, n_dft
       IF (name==dft_full(i)%name .OR. name==dft_full(i)%name2) THEN
         IDs(:) = dft_full(i)%IDs(:)
@@ -273,8 +266,6 @@ CONTAINS
     !---------------------------------------------------------------
     !! Get the DFT shortname from ID numbers of each family-kind term.
     !
-    USE dft_setting_params,  ONLY: is_libxc
-    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: IDs(6)
@@ -282,11 +273,10 @@ CONTAINS
     INTEGER, INTENT(OUT), OPTIONAL :: id_full
     INTEGER :: i
     !
-    IF ( ANY(is_libxc(1:6)) ) RETURN
     DO i = 1, n_dft
       IF (ALL( IDs(:)==dft_full(i)%IDs(:) )) THEN
         name = dft_full(i)%name
-        id_full = i
+        IF (PRESENT(id_full)) id_full = i
         EXIT
       ENDIF  
     ENDDO

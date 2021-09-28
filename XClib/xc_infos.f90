@@ -26,7 +26,7 @@ PROGRAM xc_infos
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params,   ONLY: xc_func, xc_info, xc_kind_error
+  USE dft_setting_params,   ONLY: xc_info, xc_kind_error
 #endif
   !
   IMPLICIT NONE

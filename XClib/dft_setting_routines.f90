@@ -124,7 +124,6 @@ CONTAINS
        ! ----------------------------------------------------------------------
        !
        IF (dftout(1:3) .EQ. 'XC-') THEN
-          is_libxc = .FALSE.
           !
           ! ... short notation with libxc DFTs: 'XC-000i-000i-000i-000i-000i-000i'
           !
@@ -160,32 +159,11 @@ CONTAINS
        !
     ENDIF
     !
-    !
-    ! ... A workaround to keep the q-e input notation for SCAN and TB09
-    !     functionals valid.
-#if defined(__LIBXC)
-    IF (imeta==5 .OR. imeta==6) THEN
-       IF (imeta==6) scan_exx = .TRUE.
-       imeta  = 263 
-       imetac = 267
-       is_libxc(5:6) = .TRUE.
-    ELSEIF (imeta==3) THEN
-       imeta  = 208
-       imetac = 231
-       is_libxc(5:6) = .TRUE.
-    ENDIF
-#else
-    IF (imeta==3 .OR. imeta==5 .OR. imeta==6) &
-          CALL xclib_error( 'set_dft_from_name', 'libxc needed for this functional', 2 )
-#endif
-    !
     !----------------------------------------------------------------
     ! If the DFT was not yet defined, check every part of the string
     !----------------------------------------------------------------
     !
     IF (.NOT. dft_defined) THEN
-       !
-       is_libxc(:) = .FALSE.
        !
        iexch = matching( dftout, nxc,   dft_LDAx_name )
        icorr = matching( dftout, ncc,   dft_LDAc_name )
@@ -256,6 +234,35 @@ CONTAINS
     IF (igcc ==  9) igcc = 4 ! PBE -> PBC
     !
     IF (igcx == 6) CALL xclib_infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
+    !
+    ! ... Check for conflicts with MGGA functionals of QE
+    !
+    IF (imeta/=0 .AND. (.NOT.is_libxc(5)) .AND. (iexch+icorr+igcx+igcc)>0 ) THEN
+      WRITE(stdout,'(/5X,"WARNING: the MGGA functional with ID ",I4," has been ",&
+                    &/5X,"read together with other dft terms, but it should ",   &
+                    &/5X,"stand alone in order to work properly. The other ",    &
+                    &/5x,"terms will be ignored.")' ) imeta
+      iexch=0 ; igcx=0
+      icorr=0 ; igcc=0
+    ENDIF
+    !
+    ! ... A workaround to keep the q-e shortname notation for SCAN and TB09
+    !     functionals valid.
+#if defined(__LIBXC)
+    IF (imeta==5 .OR. imeta==6) THEN
+      IF (imeta==6) scan_exx = .TRUE.
+      imeta  = 263 
+      imetac = 267
+      is_libxc(5:6) = .TRUE.
+    ELSEIF (imeta==3) THEN
+      imeta  = 208
+      imetac = 231
+      is_libxc(5:6) = .TRUE.
+    ENDIF
+#else
+    IF (imeta==3 .OR. imeta==5 .OR. imeta==6) &
+      CALL xclib_error( 'set_dft_from_name', 'libxc needed for this functional', 2 )
+#endif
     !
     ! Fill variables and exit
     !
