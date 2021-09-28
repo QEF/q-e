@@ -22,11 +22,11 @@ PROGRAM xc_infos
   USE dft_setting_params,   ONLY: ishybrid, exx_fraction, screening_parameter, &
                                   gau_parameter
   USE dft_setting_routines, ONLY: xclib_set_auxiliary_flags
-  USE xclib_utils_and_para, ONLY: stdout
+  USE xclib_utils_and_para, ONLY: stdout, nowarning
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params,   ONLY: xc_func, xc_info, libxc_dft_not_usable
+  USE dft_setting_params,   ONLY: xc_func, xc_info, xc_kind_error
 #endif
   !
   IMPLICIT NONE
@@ -61,7 +61,13 @@ PROGRAM xc_infos
   ! PRINT DFT INFOS
   !==========================================================================
   !
+  nowarning = .TRUE.
+  !
   CALL xclib_set_dft_from_name( dft )
+  !
+  IF ( xc_kind_error ) WRITE(stdout,*) 'WARNING: This functional includes terms &
+                                       &that are currently not usable in QE (kin&
+                                       &etic) and they will be ignored.'
   !
   iexch = xclib_get_ID('LDA','EXCH')
   is_libxc(1) = xclib_dft_is_libxc('LDA','EXCH')
@@ -199,8 +205,6 @@ PROGRAM xc_infos
       !
       WRITE(stdout,*) CHAR(10)
       WRITE(*,'(i1,". Functional with ID: ", i3 )') i, idx
-      IF ( libxc_dft_not_usable(i) ) WRITE(stdout,*) 'This functional is currently not&
-                                                     & usable in QE'
       WRITE(stdout, '(" - Name:   ",a)') TRIM(xc_f03_func_info_get_name(xc_info(i)))
       WRITE(stdout, '(" - Family: ",a)') TRIM(lxc_family)
       WRITE(stdout, '(" - Kind:   ",a)') TRIM(lxc_kind)

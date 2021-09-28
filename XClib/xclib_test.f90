@@ -30,10 +30,7 @@ PROGRAM xclib_test
   !! * derivative of xc potential.
   !
   !! See README.TEST file for more details.
-  
-  !- [dopo merge Vxc_gpu: versione gpu]
-  
-  
+  !
   USE kind_l,      ONLY: DP
   USE constants_l, ONLY: pi
   USE xc_lib,      ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
@@ -50,7 +47,7 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params, ONLY: xc_func, xc_info, libxc_dft_not_usable
+  USE dft_setting_params, ONLY: xc_func, xc_info, xc_kind_error
 #endif
   USE dft_setting_params, ONLY: is_libxc
   !
@@ -92,7 +89,7 @@ PROGRAM xclib_test
   !
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
-  INTEGER :: id_vec(6), n_qe_func
+  INTEGER :: id_vec(6), n_qe_func, naver
   LOGICAL :: LDA, GGA, MGGA, POLARIZED
   !
   !-------- Various params -------------------
@@ -114,7 +111,7 @@ PROGRAM xclib_test
   !
   !---------- Indexes ---------------------------
   INTEGER :: id, ii, ns, np, ipol, ithr, nthr, iip, iout, &
-             iaverout, l
+             iaverout, iavernull, l
   !
   !---------- XClib input vars ------------------
   REAL(DP), ALLOCATABLE :: rho(:,:), rho_tz(:,:)
@@ -173,12 +170,13 @@ PROGRAM xclib_test
   ! ... output
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
-  CHARACTER(LEN=30), PARAMETER :: failed='**NO MATCH**', &
+  CHARACTER(LEN=40), PARAMETER :: failed='**NO MATCH**', &
                                   skipped='**skipped - by default**', &
                                   skipped2='**skipped - not found in xml**',&
                                   skipped3='**skipped - needs Libxc**',&
                                   skipped4='**skipped - Libxc dft not usable in QE**'
-  CHARACTER(LEN=10), PARAMETER :: passed='match', stored='stored'
+  CHARACTER(LEN=18), PARAMETER :: passed='match', stored='stored', &
+                                  passed0='match (but null!)'
   CHARACTER(LEN=6) :: gen_version = ''
   CHARACTER(LEN=5) :: libxc_version='none', libxc_gen_version = ''
   !
@@ -227,6 +225,8 @@ PROGRAM xclib_test
   dft = 'none'
   xc_derivative = .FALSE.
   nspin = 1
+  !
+  nowarning = .TRUE.
   !
   !==========================================================================
   ! GET INPUT FROM FILE
@@ -390,6 +390,9 @@ PROGRAM xclib_test
   !
   DO id = 1, n_qe_func
     !
+    
+    if (id==160 .or.id==182) cycle
+    
     CALL xclib_reset_dft()
     !
     IF ( dft_init=='all_terms' ) THEN
@@ -427,10 +430,10 @@ PROGRAM xclib_test
     !
     xc_data="XC_DATA__________"
     !
-    ! ... skipped cases (need further checks)
+    ! ... skipped cases (some need further checks)
     !
     IF ( TRIM(dft)=='xxxx' .OR.TRIM(dft)=='NONE'   .OR. &
-         TRIM(dft)=='TB09' .OR.TRIM(dft)=='META'   .OR. &
+         TRIM(dft)=='META'   .OR. & !TRIM(dft)=='TB09' .OR. &
          TRIM(dft)=='SCA0' .OR.TRIM(dft)=='TPSS'   .OR. &
          TRIM(dft)=='SCAN0'.OR.TRIM(dft)=='PZ+META'.OR. &
          TRIM(dft)=='PBE+META' ) THEN
@@ -443,7 +446,7 @@ PROGRAM xclib_test
       CYCLE
     ENDIF
 #endif
-    ! libxc id=576 segfault.. Why??
+    ! libxc id=576 segfault.. Libxc5.1.5 bug (same name of id(575))
     IF ( dft_init=='all_libxc' .AND. id==576 ) THEN
       CALL print_test_status( skipped )
       CYCLE
@@ -474,17 +477,16 @@ PROGRAM xclib_test
     id_vec(5) = imeta1  ;  id_vec(6) = imetac1
     !
 #if defined(__LIBXC)
-    IF (xclib_dft_is_libxc( 'ANY' )) THEN
-      CALL xclib_init_libxc( ns, .FALSE. )
-      !
-      IF (ANY(libxc_dft_not_usable(:))) THEN
-        CALL print_test_status( skipped4 )
-        CALL xclib_finalize_libxc()
-        CYCLE
-      ENDIF
+    IF (xclib_dft_is_libxc( 'ANY' )) CALL xclib_init_libxc( ns, .FALSE. )
+    !
+    IF ( xc_kind_error ) THEN
+      CALL print_test_status( skipped4 )
+      CALL xclib_finalize_libxc()
+      CYCLE
     ENDIF
     !
     IF (dft_init=='all_libxc') THEN
+      fkind=-10
       DO l = 1, 6
         IF (id_vec(l)/=0.AND.is_libxc(l)) fkind=xc_f03_func_info_get_kind(xc_info(l))
       ENDDO
@@ -496,7 +498,7 @@ PROGRAM xclib_test
       ELSEIF (fkind==XC_EXCHANGE_CORRELATION) THEN
         xc_kind = 'correlation'
       ENDIF
-    ENDIF   
+    ENDIF
 #else
     IF (xclib_dft_is_libxc('ANY')) THEN
       CALL print_test_status( skipped3 )
@@ -575,6 +577,14 @@ PROGRAM xclib_test
     np = 1
     IF (ns==2) np = 3
     !
+    IF (.NOT.xc_derivative) THEN
+      IF (LDA ) naver = 2
+      IF (GGA ) naver = 3
+      IF (MGGA) naver = 4
+    ELSE
+      IF (LDA ) naver = 1
+      IF (GGA ) naver = 3
+    ENDIF
     !
     !==========================================================================
     ! ALLOCATIONS OF XC I/O ARRAYS
@@ -914,6 +924,7 @@ PROGRAM xclib_test
     !==========================================================================
     !
     iaverout = 0
+    iavernull = 0
     !
     IF ( .NOT. xc_derivative ) THEN
       IF (exc_term) CALL evxc_stats( 'Ex', ex1, ex_aver )
@@ -1198,7 +1209,10 @@ PROGRAM xclib_test
       !
       IF ( test(1:4)=='exe-' ) THEN
         IF (iout+iaverout/=0) CALL print_test_status( failed )
-        IF (iout+iaverout==0) CALL print_test_status( passed )
+        IF (iout+iaverout==0) THEN
+          IF (iavernull/=naver) CALL print_test_status( passed )
+          IF (iavernull==naver) CALL print_test_status( passed0 )
+        ENDIF
       ENDIF  
       !
     ENDIF
@@ -1309,7 +1323,7 @@ PROGRAM xclib_test
  !
  !
  !--------------------------------------------------------------------
- SUBROUTINE print_stat( what, vaver, averref )
+ SUBROUTINE print_aver( what, vaver, averref )
   !------------------------------------------------------------------
   !! Prints average, max and min differences between XC arrays
   !
@@ -1326,9 +1340,11 @@ PROGRAM xclib_test
     WRITE(stdout,*) "AVR ref : ", averref
     WRITE(stdout,*) "diff    : ", vaver(1)-averref
     iaverout=iaverout+1
-  ENDIF  
+  ENDIF
   !
- END SUBROUTINE print_stat
+  IF (vaver(1)==0.d0 .AND. averref==0.d0) iavernull=iavernull+1
+  !
+ END SUBROUTINE print_aver
  !
  !------------------------------------------------------------------
  SUBROUTINE print_diff( what, x_dft1, x_dft2, x_ud1, x_ud2 )
@@ -1459,7 +1475,7 @@ PROGRAM xclib_test
 #endif
   !
   IF ( .NOT. POLARIZED .OR. what(1:1)=='E' ) THEN
-    IF (mype==root .AND. test(1:4)=='exe-') CALL print_stat( what, xc_aver(:,1), aver(1) )
+    IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, xc_aver(:,1), aver(1) )
   ELSE
     xc_aver(1,2) = SUM(xc_1(1:nnr,2))/npoints
     !
@@ -1480,12 +1496,12 @@ PROGRAM xclib_test
       v2c_ud1_aver(1) = aver_recu
 #endif
       !
-      IF (mype==root .AND. test(1:4)=='exe-') CALL print_stat( 'cross', v2c_ud1_aver, v2c_aver(1,3) )
+      IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( 'cross', v2c_ud1_aver, v2c_aver(1,3) )
     ENDIF
     !
     IF (mype==root .AND. test(1:4)=='exe-') THEN
-      CALL print_stat( 'up',  xc_aver(:,1), aver(1) )
-      CALL print_stat( 'down',xc_aver(:,2), aver(2) )
+      CALL print_aver( 'up',  xc_aver(:,1), aver(1) )
+      CALL print_aver( 'down',xc_aver(:,2), aver(2) )
     ENDIF 
     !
   ENDIF
@@ -1535,7 +1551,7 @@ PROGRAM xclib_test
 #endif
   !
   IF ( .NOT. POLARIZED ) THEN
-    IF (mype==root .AND. test(1:4)=='exe-') CALL print_stat( what, dxc_aver(1:nnr_b,1), aver(1) )
+    IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, dxc_aver(1:nnr_b,1), aver(1) )
   ELSE
     dxc_aver(1,2) = SUM(dxc_qe(1:nnr,1,2))/DBLE(npoints)
     !
@@ -1555,9 +1571,9 @@ PROGRAM xclib_test
 #endif
     !
     IF (mype==root .AND. test(1:4)=='exe-') THEN
-      CALL print_stat( 'up-up',    dxc_aver(:,1), aver(1) )
-      CALL print_stat( 'up-down',  dxc_aver(:,2), aver(2) )
-      CALL print_stat( 'down-down',dxc_aver(:,3), aver(3) )
+      CALL print_aver( 'up-up',    dxc_aver(:,1), aver(1) )
+      CALL print_aver( 'up-down',  dxc_aver(:,2), aver(2) )
+      CALL print_aver( 'down-down',dxc_aver(:,3), aver(3) )
     ENDIF  
     !
   ENDIF

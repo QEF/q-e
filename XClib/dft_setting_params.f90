@@ -40,9 +40,10 @@ MODULE dft_setting_params
     !! number of external parameters for each functional
     REAL(DP) :: par_list(6,50)
     !! list of external parameters
-    LOGICAL  :: libxc_dft_not_usable(6) = .FALSE.
+    LOGICAL :: xc_kind_error = .FALSE.
     !! some Libxc dfts are currently not usable in QE (for example
-    !! kinetic dfts and others)
+    !! kinetic dfts). If one of them is detected this variable is
+    !! set to TRUE.
 #endif
     !
     LOGICAL  :: exx_started = .FALSE.
