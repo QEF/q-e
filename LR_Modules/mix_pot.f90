@@ -46,22 +46,19 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   !   Here the local variables
   !
-  ! max number of iterations used in mixing: n_iter < maxter must hold.
-  integer, parameter :: maxter = 8
-  !
-  integer :: iunmix, n, i, j, iwork (maxter), info, iter_used, &
-       ipos, inext, ndimtot
-  ! work space containing info from previous iterations:
-  ! must be kept in memory and saved between calls if file_extension=' '
-  real(DP), allocatable, save :: df (:,:), dv (:,:)
-  !
-  real(DP), allocatable :: vinsave (:)
-  real(DP) :: beta (maxter, maxter), gamma, work (maxter), norm
   logical :: saveonfile, exst
+  integer :: iunmix, n, i, j, info, iter_used, ipos, inext, ndimtot
+  real(DP) :: gamma, norm
+  real(DP), allocatable, save :: df (:,:), dv (:,:)
+  !! work space containing info from previous iterations:
+  !! must be kept in memory and saved between calls if file_extension=' '
   !
-  real(DP) :: w(maxter) = 1.d0
-  real(DP) :: w0 = 0.01d0
-  !! adjustable parameters as suggested in the original paper
+  integer, allocatable :: iwork(:)
+  real(DP), allocatable :: vinsave(:), beta(:, :), work(:), w(:)
+  !
+  real(DP) :: w0 = 0.01_dp
+  real(DP) :: w1 = 1.0_dp
+  !! adjustable parameters as suggested in the original paper. w(:) is set to w1.
   !
   INTEGER, EXTERNAL :: find_free_unit
   REAL(DP), EXTERNAL :: ddot, dnrm2
@@ -69,7 +66,6 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   call start_clock ('mix_pot')
   !
   if (iter < 1) call errore ('mix_potential', 'iter must be positive', 1)
-  if (n_iter > maxter) call errore ('mix_potential', 'n_iter too big', 1)
   if (ndim < 1) call errore ('mix_potential', 'ndim must be positive', 3)
   !
   saveonfile = file_extension /= ' '
@@ -161,29 +157,41 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      call DCOPY (ndim, vin, 1, vinsave, 1)
   endif
   !
-  do i = 1, iter_used
-     do j = i + 1, iter_used
-        beta (i, j) = w (i) * w (j) * ddot (ndim, df (1, j), 1, df (1, i), 1)
-        call mp_sum ( beta (i, j), intra_bgrp_comm )
+  if ( iter_used > 0 ) then
+     !
+     ALLOCATE(beta(iter_used, iter_used))
+     ALLOCATE(w(iter_used))
+     ALLOCATE(work(iter_used))
+     ALLOCATE(iwork(iter_used))
+     w(:) = w1
+     !
+     beta = 0.0_dp
+     do i = 1, iter_used
+        do j = i + 1, iter_used
+           beta (i, j) = w (i) * w (j) * ddot (ndim, df (1, j), 1, df (1, i), 1)
+           call mp_sum ( beta (i, j), intra_bgrp_comm )
+        enddo
+        beta (i, i) = w0**2 + w (i) **2
      enddo
-     beta (i, i) = w0**2 + w (i) **2
-  enddo
-  !
-  call DSYTRF ('U', iter_used, beta, maxter, iwork, work, maxter, info)
-  call errore ('broyden', 'factorization', info)
-  call DSYTRI ('U', iter_used, beta, maxter, iwork, work, info)
-  call errore ('broyden', 'DSYTRI', info)
-  !
-  do i = 1, iter_used
-     do j = i + 1, iter_used
-        beta (j, i) = beta (i, j)
+     !
+     call DSYTRF ('U', iter_used, beta, iter_used, iwork, work, iter_used, info)
+     call errore ('broyden', 'factorization', info)
+     call DSYTRI ('U', iter_used, beta, iter_used, iwork, work, info)
+     call errore ('broyden', 'DSYTRI', info)
+     deallocate ( iwork )
+     !
+     do i = 1, iter_used
+        do j = i + 1, iter_used
+           beta (j, i) = beta (i, j)
+        enddo
      enddo
-  enddo
-  !
-  do i = 1, iter_used
-     work (i) = ddot (ndim, df (1, i), 1, vout, 1)
-  enddo
-  call mp_sum ( work(1:iter_used), intra_bgrp_comm )
+     !
+     do i = 1, iter_used
+        work (i) = ddot (ndim, df (1, i), 1, vout, 1)
+     enddo
+     call mp_sum ( work, intra_bgrp_comm )
+     !
+  end if
   !
   do n = 1, ndim
      vin (n) = vin (n) + alphamix * vout (n)
@@ -199,6 +207,12 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         vin (n) = vin (n) - w (i) * gamma * (alphamix * df (n, i) + dv (n, i) )
      enddo
   enddo
+  !
+  IF ( iter_used > 0 ) THEN
+     deallocate(beta)
+     deallocate(w)
+     deallocate(work)
+  ENDIF
   !
   if (saveonfile) then
      close (iunmix, status='keep')

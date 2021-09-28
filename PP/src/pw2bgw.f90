@@ -3583,7 +3583,6 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp 
   USE wvfct, ONLY: npwx, current_k !FZ: 
   USE uspp_param, ONLY: upf, nh    !FZ: 
-  USE spin_orb, ONLY: lspinorb  ,domag   !FZ: added domag 
   USE becmod,   ONLY : bec_type, becp, calbec, &  
                          allocate_bec_type, deallocate_bec_type 
   USE fft_base,      ONLY : dffts !FZ: test

@@ -37,7 +37,6 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : psic
   USE wavefunctions_gpum,   ONLY : psic_d
-  USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm

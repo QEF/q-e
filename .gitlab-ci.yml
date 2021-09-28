@@ -72,7 +72,7 @@ build:cmake-nvhpc:
     - cmake --version
     - mkdir build
     - cd build
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
             -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON .. && make
 
 #build:centos:
