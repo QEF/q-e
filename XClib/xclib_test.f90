@@ -74,6 +74,7 @@ PROGRAM xclib_test
   INTEGER :: nnodes, nlen
   !
   INTEGER, PARAMETER :: stdin=5
+  REAL(DP) :: time_tot1, time_tot2, time(6)=0.d0
   !
   !-------- Grid dim vars --------------------
   INTEGER, PARAMETER :: npoints=90000
@@ -389,6 +390,8 @@ PROGRAM xclib_test
   !
   DO id = 1, n_qe_func
     !
+    time = 0.d0
+    !
     CALL xclib_reset_dft()
     !
     IF ( dft_init=='all_terms' ) THEN
@@ -664,6 +667,7 @@ PROGRAM xclib_test
     IF (test=='exe-benchmark' .AND. mype==root) THEN
       CALL xmlr_opentag( TRIM(xc_data), tag_err )
       IF (tag_err==0) THEN
+        CALL xmlr_readtag( "time_tot", time_tot2 )
         IF (.NOT. xc_derivative) THEN
           IF ( exc_term ) THEN
             CALL xmlr_readtag( "EX_AVER", ex_aver(:) )
@@ -871,8 +875,10 @@ PROGRAM xclib_test
        IF ((iexch1==8 .AND. .NOT.is_libxc(1)) .OR. (icorr1==10 .AND. &
             .NOT. is_libxc(2))) CALL xclib_set_finite_size_volume( volume )
        !
+       IF (mype==root) time(1) = get_wall_time()
        IF (.NOT. xc_derivative ) CALL xc( nnr, ns, ns, rho_tz, ex1, ec1, vx1, vc1 )
-       IF ( xc_derivative ) CALL dmxc( nnr, ns, rho, dmuxc1 )
+       IF (      xc_derivative ) CALL dmxc( nnr, ns, rho, dmuxc1 )
+       IF (mype==root) time(2) = get_wall_time()
        !
     ENDIF
     !
@@ -884,8 +890,10 @@ PROGRAM xclib_test
           ex1 = 0.d0  ;  ec1 = 0.d0
         ENDIF
         !
+        IF (mype==root) time(3) = get_wall_time()
         CALL xc_gcx( nnr, ns, rho, grho, exg1, ecg1, v1x1, v2x1, v1c1, &
                      v2c1, v2c_ud1 )
+        IF (mype==root) time(4) = get_wall_time()
         !
         ex1 = ex1*rho_tz(:,1) + exg1
         ec1 = ec1*rho_tz(:,1) + ecg1
@@ -901,7 +909,9 @@ PROGRAM xclib_test
           IF (ns==2) grh(ii,1:3,2) = grho(1:3,ii,2)
         ENDDO
         !
+        IF (mype==root) time(3) = get_wall_time()
         CALL dgcxc( nnr, ns, rho, grh, dvxcrr1, dvxcsr1, dvxcss1 )
+        IF (mype==root) time(4) = get_wall_time()
         !
         IF ( LDA ) dvxcrr1 = dvxcrr1 + dmuxc1
         !
@@ -910,14 +920,18 @@ PROGRAM xclib_test
     ENDIF
     !
     IF ( MGGA ) THEN
+       IF (mype==root) time(5) = get_wall_time()
        CALL xc_metagcx( nnr, ns, np, rho, grho, tau, ex1, ec1, v1x1, &
                         v2x1, v3x1, v1c1, v2cm1, v3c1 )
+       IF (mype==root) time(6) = get_wall_time()
        v2c1 = v2cm1(1,:,:)
     ENDIF
     !
     !==========================================================================
     ! COMPUTE AND PRINT TEST RESULTS
     !==========================================================================
+    !
+    time_tot1 = (time(6)-time(5))+(time(4)-time(3))+(time(2)-time(1))
     !
     iaverout = 0
     iavernull = 0
@@ -958,6 +972,7 @@ PROGRAM xclib_test
     !
     IF (test=='gen-benchmark' .AND. mype==root) THEN
       CALL xmlw_opentag( TRIM(xc_data) )
+      CALL xmlw_writetag( "time_tot", time_tot1 )
       IF (.NOT. xc_derivative) THEN
         IF ( exc_term ) THEN
           CALL xmlw_writetag( "EX_AVER", ex_aver(:) )
@@ -1634,7 +1649,7 @@ PROGRAM xclib_test
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: status
-  CHARACTER(LEN=100) :: test_output
+  CHARACTER(LEN=125) :: test_output
   !
   test_output = ''
   WRITE(test_output(1:3), '(i3)') id
@@ -1646,7 +1661,10 @@ PROGRAM xclib_test
     WRITE( test_output(5:8),   '(a)' ) TRIM(family)
     IF (fam_init=='all_terms') WRITE(test_output(10:30),'(a)') TRIM(xc_kind)
     WRITE( test_output(34:),   '(a)' ) TRIM(dft)
-    WRITE( test_output(60:), '(a)' ) TRIM(status)
+    WRITE( test_output(60:100), '(a)' ) TRIM(status)
+    WRITE( test_output(100:110), '(F6.3)' ) time_tot2
+    WRITE( test_output(110:111), '(a)' ) 's'
+    WRITE( test_output(113:), '(F8.3)' ) time_tot2/time_tot1*100.d0-100.d0
     WRITE(stdout,*) test_output
   ENDIF
   !
@@ -1654,4 +1672,22 @@ PROGRAM xclib_test
   !
  END SUBROUTINE  
  !
+ !---------------------------------------------------------------------------
+ FUNCTION get_wall_time()
+    !------------------------------------------------------------------------
+    !! Get wall time (copied from LAXlib example).
+    REAL(DP) :: get_wall_time
+#if defined(__MPI)
+    get_wall_time = MPI_WTIME()
+#else
+    INTEGER :: cr, nc
+    REAL(DP), SAVE :: t0 = -1.0
+    !
+    CALL system_clock(count_rate=cr)
+    CALL system_clock(count=nc)
+    IF ( t0 < 0.0 ) t0 = DBLE(nc)/cr
+    get_wall_time = DBLE(nc)/cr - t0
+#endif
+  END FUNCTION get_wall_time
+  ! 
 END PROGRAM xclib_test
