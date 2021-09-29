@@ -13,6 +13,7 @@ OBJS_DEP= \
 init_us_0.o \
 init_us_b0.o \
 init_us_1.o \
+init_us_2_base.o \
 init_tab_atwfc.o \
 init_tab_beta.o \
 init_tab_qrad.o
@@ -23,7 +24,6 @@ atomic_number.o \
 dqvan2.o \
 dylmr2.o \
 gth.o \
-init_us_2_base.o \
 interp_atwfc.o \
 paw_variables.o \
 pseudo_types.o \
