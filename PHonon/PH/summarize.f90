@@ -106,18 +106,17 @@ SUBROUTINE summarize_zeu()
   WRITE( stdout, '(6x,3f15.5)')  (zstarsum (:, jpol), &
        jpol = 1, 3)
   DO na = 1, nat
-     zstareu(:,:,na)=zstareu(:,:,na)-zstarsum(:,:)/nat
      zstarmean(na)=zstarmean(na)-zstarmeansum/nat
   ENDDO
   WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis with asr applied: ")')
   DO na = 1, nat
      WRITE( stdout, '(10x," atom ",i6, a6,"Mean Z*:",f15.5)') na, atm(ityp(na)),zstarmean(na)
-     WRITE( stdout, '(6x,"Ex  (",3f15.5," )")')  (zstareu (1, jpol, na), &
-            jpol = 1, 3)
-     WRITE( stdout, '(6x,"Ey  (",3f15.5," )")')  (zstareu (2, jpol, na), &
-            jpol = 1, 3)
-     WRITE( stdout, '(6x,"Ez  (",3f15.5," )")')  (zstareu (3, jpol, na), &
-            jpol = 1, 3)
+     WRITE( stdout, '(6x,"E*x (",3f15.5," )")')  (zstareu (1, jpol, na)- &
+             zstarsum(1, jpol)/nat, jpol = 1, 3)
+     WRITE( stdout, '(6x,"E*y (",3f15.5," )")')  (zstareu (2, jpol, na)- &
+             zstarsum(2, jpol)/nat, jpol = 1, 3)
+     WRITE( stdout, '(6x,"E*z (",3f15.5," )")')  (zstareu (3, jpol, na)- &
+             zstarsum(3, jpol)/nat, jpol = 1, 3)
   ENDDO
 
   RETURN
