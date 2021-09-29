@@ -172,14 +172,14 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ELSE
      IF (is_libxc(1)) THEN
         DO ir = 1, length
-           vx_out(ir,1) = vx_lxc(2*ir-1)
-           vx_out(ir,2) = vx_lxc(2*ir)
+          vx_out(ir,1) = vx_lxc(2*ir-1)
+          vx_out(ir,2) = vx_lxc(2*ir)
         ENDDO
      ENDIF
      IF (is_libxc(2)) THEN
         DO ir = 1, length
-           vc_out(ir,1) = vc_lxc(2*ir-1)
-           vc_out(ir,2) = vc_lxc(2*ir)
+          vc_out(ir,1) = vc_lxc(2*ir-1)
+          vc_out(ir,2) = vc_lxc(2*ir)
         ENDDO
      ENDIF
   ENDIF

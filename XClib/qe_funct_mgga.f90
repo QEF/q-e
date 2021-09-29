@@ -1018,7 +1018,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   REAL(DP) :: xs, xs2, grho, rhom83, rho13, rho43, zs, gh
   REAL(DP) :: hg, dhg_dxs2, dhg_dzs
   REAL(DP) :: dxs2_drho, dxs2_dgrho2, dzs_drho, dzs_dtau
-  REAL(DP) :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98, v2x_vs98_g
+  REAL(DP) :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98
   !
   ! GGA and MGGA variables
   !
@@ -1164,7 +1164,6 @@ SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )       !<GPU:DEVICE>
   !
   ! ... local variables
   !
-  INTEGER :: iflag
   REAL(DP) :: grho, rho43, xs, xs2, dxs2_drho, dxs2_dgrho2
   REAL(DP) :: CX, denom, C1, C2, ex, Fx, dFx_dxs2, dex_drho
   !
@@ -1261,7 +1260,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   REAL(DP), DIMENSION(0:4):: cs, cab
   !
-  REAL(DP) :: ds0, ds1, ds2, ds3, ds4, ds5, CF, alpha, Ds,         &
+  REAL(DP) :: ds0, ds1, ds2, ds3, ds4, ds5, CF,         &
               dab0, dab1, dab2, dab3, dab4, dab5, gama_ab, gama_s, &
               alpha_s, alpha_ab
   !
@@ -1269,7 +1268,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   REAL(DP) :: ec_pw_a, ec_pw_b, ec_pw_ab
   !
-  REAL(DP) :: vv, vc_pw_a, vc_pw_b, vc_pw_ab, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
+  REAL(DP) :: vv, vc_pw_a, vc_pw_b, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
               Ec_UEG_ab, Ec_UEG_aa, Ec_UEG_bb, decab_drhoa, decab_drhob,            &
               v1_ab_up, v1_ab_dw, v2_ab_up, v2_ab_dw, v3_ab_up, v3_ab_dw,           &
               v1_aa_up, v2_aa_up, v3_aa_up, v1_bb_dw, v2_bb_dw, v3_bb_dw

@@ -191,7 +191,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   !REAL(DP) :: dpz, dpz_polarized
   !
-  INTEGER :: ir, is, iflg
+  INTEGER :: ir, iflg
   INTEGER :: i1, i2, i3, i4
   INTEGER :: f1, f2, f3, f4
   INTEGER :: iexch_, icorr_

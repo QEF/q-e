@@ -85,7 +85,7 @@ PROGRAM xclib_test
   CHARACTER(LEN=30) :: test, family, fam_init, xc_kind
   CHARACTER(LEN=30) :: dft, dft_init
   INTEGER :: nspin
-  LOGICAL :: xc_derivative
+  LOGICAL :: xc_derivative, show_time
   !
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
@@ -98,8 +98,8 @@ PROGRAM xclib_test
   REAL(DP), PARAMETER :: thresh_lda  = 0.d0, & !1.E-6_DP, &
                          thresh_gga  = 0.d0, & !1.E-6_DP, &
                          thresh_mgga = 0.d0    !1.E-6_DP
-  REAL(DP), PARAMETER :: diff_thr_e_lda  = 1.0E-6_DP,  &
-                         diff_thr_v_lda  = 1.0E-6_DP,  &
+  REAL(DP), PARAMETER :: diff_thr_e_lda  = 1.0E-8_DP,  &
+                         diff_thr_v_lda  = 1.0E-8_DP,  &
                          diff_thr_e_gga  = 1.0E-10_DP, &
                          diff_thr_vgga   = 1.0E-10_DP, &
                          diff_thr_e_mgga = 1.0E-10_DP, &
@@ -192,7 +192,7 @@ PROGRAM xclib_test
   INTEGER :: PROVIDED
 #endif
   !
-  NAMELIST/input_namelist/ test, filename_xml, nspin, family, xc_derivative, dft
+  NAMELIST/input_namelist/ test, filename_xml, nspin, family, xc_derivative, dft, show_time
   !
 #if defined(__MPI)
   !
@@ -1649,23 +1649,32 @@ PROGRAM xclib_test
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: status
-  CHARACTER(LEN=125) :: test_output
+  CHARACTER(LEN=90) :: test_output_gen
+  CHARACTER(LEN=110) :: test_output_exe
   !
-  test_output = ''
-  WRITE(test_output(1:3), '(i3)') id
   IF (test=='gen-benchmark') THEN
-    WRITE(test_output(5:30), '(a)') TRIM(dft)
-    WRITE(test_output(60:),'(a)') TRIM(status)
-    WRITE(stdout,*) test_output
+    test_output_gen = ''
+    WRITE(test_output_gen(1:3), '(i3)') id
+    WRITE(test_output_gen(5:40), '(a)') TRIM(dft)
+    WRITE(test_output_gen(45:),'(a)') TRIM(status)
+    WRITE(stdout,*) test_output_gen
   ELSEIF (test=='exe-benchmark') THEN
-    WRITE( test_output(5:8),   '(a)' ) TRIM(family)
-    IF (fam_init=='all_terms') WRITE(test_output(10:30),'(a)') TRIM(xc_kind)
-    WRITE( test_output(34:),   '(a)' ) TRIM(dft)
-    WRITE( test_output(60:100), '(a)' ) TRIM(status)
-    WRITE( test_output(100:110), '(F6.3)' ) time_tot2
-    WRITE( test_output(110:111), '(a)' ) 's'
-    WRITE( test_output(113:), '(F8.3)' ) time_tot2/time_tot1*100.d0-100.d0
-    WRITE(stdout,*) test_output
+    test_output_exe = ''
+    WRITE(test_output_exe(1:3), '(i3)') id
+    IF (fam_init=='all_terms') THEN
+      WRITE(test_output_exe(5:8), '(a)') TRIM(family)
+      WRITE(test_output_exe(10:30),'(a)') TRIM(xc_kind)
+    ENDIF
+    WRITE(test_output_exe(32:68), '(a)' ) TRIM(dft)
+    WRITE(test_output_exe(68:108), '(a)' ) TRIM(status)
+    IF (status==passed .AND. show_time) THEN
+      WRITE(test_output_exe(78:83), '(a)' ) 'time:'
+      WRITE(test_output_exe(84:90), '(F6.3)' ) time_tot2
+      WRITE(test_output_exe(91:98), '(a)' ) 's  incr:'
+      WRITE(test_output_exe(99:108), '(F8.3)' ) time_tot2/time_tot1*100.d0-100.d0
+      WRITE(test_output_exe(109:109), '(a)' ) '%'
+    ENDIF
+    WRITE(stdout,*) test_output_exe
   ENDIF
   !
   RETURN

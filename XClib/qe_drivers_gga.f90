@@ -420,7 +420,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER :: ir, is, iflag
+  INTEGER :: ir, iflag
   REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
   REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
   REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
@@ -1180,12 +1180,10 @@ SUBROUTINE gcx_spin_beef( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER  :: ir, is, iflag
+  INTEGER  :: ir
   REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
   REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
   REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
-  REAL(DP) :: sxsr_up, sxsr_dw
-  REAL(DP) :: v1xsr_up, v1xsr_dw, v2xsr_up, v2xsr_dw
   !
   REAL(DP), PARAMETER :: small=1.D-10
   REAL(DP), PARAMETER :: rho_trash=0.5_DP, grho2_trash=0.2_DP

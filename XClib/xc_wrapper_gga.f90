@@ -23,7 +23,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   USE kind_l,               ONLY: DP
   USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
-                                  grho_threshold_gga
+                                  grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_gga
   !
   IMPLICIT NONE
@@ -60,11 +60,10 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:)
   !
   INTEGER :: fkind_x, np
-  REAL(DP) :: rs, rtot, zet, vc_2(2)
   REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
   !
   LOGICAL :: POLARIZED
-  INTEGER :: ildax, ildac, pol_unpol, eflag
+  INTEGER :: pol_unpol, eflag
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -77,6 +76,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   INTEGER :: k, is
   REAL(DP) :: sgn(2)
+  REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
+  REAL(DP) :: xlda_up, xlda_dw, xgga_up, xgga_dw
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
@@ -156,7 +157,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc (still so? - check)
     !
-    CALL xc_f03_func_set_dens_threshold( xc_func(4), rho_threshold_gga )
+    CALL xc_f03_func_set_dens_threshold( xc_func(4), small )!rho_threshold_gga )
     CALL get_libxc_flags_exc( xc_info(4), eflag )
     IF (eflag==1) THEN
       CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
@@ -174,8 +175,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     ELSE
       DO k = 1, length
         sgn(:) = 1.d0
-        IF (rho_lxc(2*k-1)<rho_threshold_gga .OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold_gga) sgn(1)=0.d0
-        IF (rho_lxc(2*k)  <rho_threshold_gga .OR. SQRT(ABS(sigma(3*k)))  <grho_threshold_gga) sgn(2)=0.d0
+        !IF (rho_lxc(2*k-1)<rho_threshold_gga .OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold_gga) sgn(1)=0.d0
+        !IF (rho_lxc(2*k)  <rho_threshold_gga .OR. SQRT(ABS(sigma(3*k)))  <grho_threshold_gga) sgn(2)=0.d0
+        IF (rho_lxc(2*k-1)<rho_threshold_gga) sgn(1)=0.d0
+        !.OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold_gga) sgn(1)=0.d0
+        IF (rho_lxc(2*k)  <rho_threshold_gga) sgn(2)=0.d0
+        !.OR. SQRT(ABS(sigma(3*k)))  <grho_threshold_gga) sgn(2)=0.d0
         ec(k) = ec_lxc(k) * (rho_lxc(2*k-1)*sgn(1)+rho_lxc(2*k)*sgn(2))
         v1c(k,1) = vc_rho(2*k-1) * sgn(1)
         v1c(k,2) = vc_rho(2*k) * sgn(2)
@@ -246,7 +251,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(3) ) THEN
     !
-    CALL xc_f03_func_set_dens_threshold( xc_func(3), rho_threshold_gga )
+    !CALL xc_f03_func_set_dens_threshold( xc_func(3), rho_threshold_gga )
+    CALL xc_f03_func_set_dens_threshold( xc_func(3), small )
     CALL get_libxc_flags_exc( xc_info(3), eflag )
     IF (eflag==1) THEN
       CALL xc_f03_gga_exc_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
@@ -263,11 +269,22 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       ENDDO
     ELSE
       DO k = 1, length
-        ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
-        v1x(k,1) = vx_rho(2*k-1)
-        v1x(k,2) = vx_rho(2*k)
-        v2x(k,1) = vx_sigma(3*k-2)*2.d0
-        v2x(k,2) = vx_sigma(3*k)*2.d0
+        rho_up = rho_lxc(2*k-1)
+        rho_dw = rho_lxc(2*k)
+        grho2_up = sigma(3*k-2)
+        grho2_dw = sigma(3*k)
+        xlda_up = 1.0_DP ; xlda_dw = 1.0_DP
+        xgga_up = 1.0_DP ; xgga_dw = 1.0_DP
+        IF ( rho_up+rho_dw <= small ) CYCLE
+        IF ( rho_up <= rho_threshold_lda ) xlda_up = 0.0_DP
+        IF ( rho_dw <= rho_threshold_lda ) xlda_dw = 0.0_DP
+        IF ( rho_up<=small .OR. SQRT(ABS(grho2_up))<=small ) xgga_up = 0.0_DP
+        IF ( rho_dw<=small .OR. SQRT(ABS(grho2_dw))<=small ) xgga_dw = 0.0_DP
+        ex(k) = ex_lxc(k) * (rho_up*xlda_up+rho_dw*xlda_dw)
+        v1x(k,1) = vx_rho(2*k-1)*xlda_up
+        v1x(k,2) = vx_rho(2*k)*xlda_dw
+        v2x(k,1) = vx_sigma(3*k-2)*2.d0*xgga_up
+        v2x(k,2) = vx_sigma(3*k)*2.d0*xgga_dw
       ENDDO
     ENDIF
     !

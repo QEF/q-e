@@ -56,7 +56,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
 #endif
 #endif
   !
-  INTEGER :: k, ir, length_lxc, length_dlxc
+  INTEGER :: k, length_lxc, length_dlxc
   REAL(DP) :: rht, zeta
   REAL(DP), ALLOCATABLE :: sigma(:)
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP

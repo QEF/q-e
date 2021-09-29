@@ -140,7 +140,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   !
   !  ... local variables
   !
-  INTEGER :: k, ipol
+  INTEGER :: k
   REAL(DP) :: rh, zeta, atau, grho2(2), ggrho2
   REAL(DP) :: v2cup, v2cdw
   !
