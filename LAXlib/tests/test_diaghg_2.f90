@@ -8,6 +8,7 @@ program test_diaghg_2
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
+    INCLUDE 'laxlib_kinds.fh'
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
@@ -33,7 +34,6 @@ program test_diaghg_2
   !
   SUBROUTINE complex_1(test)
     USE LAXlib
-    USE la_param, ONLY : DP
     implicit none
     !
     TYPE(tester_t) :: test
@@ -56,7 +56,7 @@ program test_diaghg_2
     !
     v = (0.d0, 0.d0)
     e = 0.d0
-    CALL diaghg(  m_size, m_size, h, s, m_size, e, v, .false. )
+    CALL diaghg(  m_size, m_size, h, s, m_size, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .false. )
     ! 
     CALL test%assert_close( RESHAPE(h, [m_size*m_size]), RESHAPE(h_save, [m_size*m_size]))
     CALL test%assert_close( RESHAPE(s, [m_size*m_size]), RESHAPE(s_save, [m_size*m_size]))
@@ -66,7 +66,7 @@ program test_diaghg_2
     !
     v = (0.d0, 0.d0)
     e = 0.d0
-    CALL diaghg(  m_size, m_size, h, s, m_size, e, v, .true. )
+    CALL diaghg(  m_size, m_size, h, s, m_size, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .true. )
     !
     CALL test%assert_close( RESHAPE(h, [m_size*m_size]), RESHAPE(h_save, [m_size*m_size]))
     CALL test%assert_close( RESHAPE(s, [m_size*m_size]), RESHAPE(s_save, [m_size*m_size]))
@@ -77,7 +77,6 @@ program test_diaghg_2
   END SUBROUTINE complex_1
   !
   SUBROUTINE hermitian(mSize, M)
-    USE la_param, ONLY : DP
     IMPLICIT NONE
     integer, intent(in) :: msize
     complex(dp), intent(out) :: M(:,:)

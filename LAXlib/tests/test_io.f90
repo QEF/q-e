@@ -1,6 +1,7 @@
 MODULE test_io
     !
     IMPLICIT NONE
+    INCLUDE 'laxlib_kinds.fh'
     !
     INTERFACE read_problem
        MODULE PROCEDURE read_cmplx_problem, read_real_problem
@@ -9,7 +10,6 @@ MODULE test_io
     CONTAINS
     !
     SUBROUTINE read_cmplx_problem(fname, ldh, n, m, h, s, e, v, info)
-        USE la_param, ONLY : DP
         IMPLICIT NONE
         character(len=*), intent(in) :: fname
         integer, intent(out) :: ldh, n, m
@@ -56,7 +56,6 @@ MODULE test_io
     END SUBROUTINE read_cmplx_problem
     !
     SUBROUTINE read_real_problem(fname, ldh, n, m, h, s, e, v, info)
-        USE la_param, ONLY : DP
         IMPLICIT NONE
         character(len=*), intent(in) :: fname
         integer, intent(out) :: ldh, n, m

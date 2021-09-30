@@ -8,6 +8,7 @@ program test_diaghg_3
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
+    INCLUDE 'laxlib_kinds.fh'
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
@@ -37,7 +38,6 @@ program test_diaghg_3
   SUBROUTINE real_1(test)
     USE mp_world, ONLY : mpime
     USE LAXlib
-    USE la_param, ONLY : DP
     USE test_io
     implicit none
     !
@@ -77,13 +77,13 @@ program test_diaghg_3
         !
         v = (0.d0, 0.d0)
         e = 0.d0
-        CALL diaghg(  n, m, h, s, ldh, e, v, .false. )
+        CALL diaghg(  n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .false. )
         !
         test%tolerance64=1.d-6 ! check this
         DO j = 1, m
             CALL test%assert_close( v(1:n, j), v_save(1:n, j))
         END DO
-        test%tolerance64=1.d-8 ! check this
+        test%tolerance64=1.d-6 ! check this
         CALL test%assert_close( e(1:m), e_save(1:m) )
         !
         !
@@ -91,7 +91,7 @@ program test_diaghg_3
         s = s_save
         v = (0.d0, 0.d0)
         e = 0.d0
-        CALL diaghg( n, m, h, s, ldh, e, v, .true. )
+        CALL diaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .true. )
         !
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
@@ -105,7 +105,6 @@ program test_diaghg_3
   SUBROUTINE complex_1(test)
     USE mp_world, ONLY : mpime
     USE LAXlib
-    USE la_param, ONLY : DP
     USE test_io
     implicit none
     !
@@ -148,7 +147,7 @@ program test_diaghg_3
         !
         v = (0.d0, 0.d0)
         e = 0.d0
-        CALL diaghg(  n, m, h, s, ldh, e, v, .false. )
+        CALL diaghg(  n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .false. )
         !
         DO j = 1, m
             CALL test%assert_close( v(1:n, j), v_save(1:n, j))
@@ -160,7 +159,7 @@ program test_diaghg_3
         s = s_save
         v = (0.d0, 0.d0)
         e = 0.d0
-        CALL diaghg( n, m, h, s, ldh, e, v, .true. )
+        CALL diaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .true. )
         !
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
