@@ -103,7 +103,7 @@ SUBROUTINE force_us_gpu( forcenl )
      CALL using_evc_d(0)
      DO ipol = 1, 3
        !
-       !$acc data present(vkb(:,:), vkb1(npwx,nkb)) copyin(igk_k(:,:))
+       !$acc data present(vkb(:,:), vkb1(npwx,nkb), igk_k(:,:))
        !$acc parallel loop collapse(2) 
         DO jkb = 1, nkb
            DO ig = 1, npw
