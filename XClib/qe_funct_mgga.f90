@@ -267,9 +267,7 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )                    !<GPU:
   cf3 = cf3*rho
   v2c = cf2*d2rev + cf3*2.0_DP/grho2
   v3c = cf2*d3rev - cf3/tau
-  !
   ec = rho*ec_rev*(1.0_DP+dd*ec_rev*z2*z)  !-rho*ec_unif(1)
-  !v1c = v1c - vc_unif(1)
   !
   RETURN
   !
@@ -865,8 +863,8 @@ END SUBROUTINE metac_spin
 !
 !           input:  - rho
 !                   - grho2=|\nabla rho|^2
-!                   - tau = the kinetic energy density
-!                           It is defined as summ_i( |nabla phi_i|**2 )
+!                   - tau = the input kinetic energy density
+!                           It is defined as 0.5summ_i( |nabla phi_i|**2 )
 !
 !           definition:  E_x = \int ex dr
 !
@@ -923,18 +921,20 @@ SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )      
   !
   taua = tau * two * 0.5_dp ! Taua, which is Tau_sigma is half Tau
   taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 )
-                              ! in the M06L routine
+                              ! in the following M06L routines
   !
   CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )   !<GPU:m06lx=>m06lx_d>
   !
   ex = two * ex  ! Add the two components up + dw
   !
   v2x = 0.5_dp * v2x
+  v3x = 2.0_dp * v3x
   !
   CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &   !<GPU:m06lc=>m06lc_d>
               v1cb, v2cb, v3cb )
   !
   v2c = 0.5_dp * v2c
+  v3c = 2.0_dp * v3c
   !
 END SUBROUTINE m06lxc
 !
@@ -963,9 +963,13 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &    
   CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )   !<GPU:m06lx=>m06lx_d>
   !
   ex = exup + exdw
+  v3xup = 2.0_dp * v3xup
+  v3xdw = 2.0_dp * v3xdw
   !
   CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &       !<GPU:m06lc=>m06lc_d>
               ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw )
+  v3cup = 2.0_dp * v3cup
+  v3cdw = 2.0_dp * v3cdw
   !
 END SUBROUTINE m06lxc_spin
 ! !

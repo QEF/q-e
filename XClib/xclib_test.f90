@@ -433,7 +433,7 @@ PROGRAM xclib_test
     !
     IF ( TRIM(dft)=='xxxx' .OR.TRIM(dft)=='NONE'   .OR. &
          TRIM(dft)=='META'   .OR. & !TRIM(dft)=='TB09' .OR. &
-         TRIM(dft)=='SCA0' .OR.TRIM(dft)=='TPSS'   .OR. &
+         TRIM(dft)=='SCA0' .OR. & !TRIM(dft)=='TPSS'   .OR. &
          TRIM(dft)=='SCAN0'.OR.TRIM(dft)=='PZ+META'.OR. &
          TRIM(dft)=='PBE+META' ) THEN
          CALL print_test_status( skipped )
@@ -1469,10 +1469,10 @@ PROGRAM xclib_test
     IF (what(1:1)=='V') thr = diff_thr_vmgga
   ENDIF
   !
-  !IF (mype==root .AND. test/='gen-benchmark') THEN
-  !  WRITE(stdout,*) " "
-  !  IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) TRIM(what)
-  !ENDIF
+  IF (mype==root .AND. TRIM(test)=='exe-benchmark') THEN
+    WRITE(stdout,*) " "
+    IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) TRIM(what)
+  ENDIF
   !
   xc_aver=0._DP
   !
@@ -1544,11 +1544,6 @@ PROGRAM xclib_test
   !
   IF (LDA .AND. .NOT.GGA) thr = diff_thr_dmuxc
   IF ( GGA ) thr = diff_thr_dv
-  !
-  !IF (test=='exe-benchmark') THEN
-  !  WRITE(stdout,*) " "
-  !  WRITE(stdout,*) what
-  !ENDIF
   !
   dxc_aver=0._DP
   !

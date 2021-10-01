@@ -174,19 +174,23 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       ENDDO
     ELSE
       DO k = 1, length
-        sgn(:) = 1.d0
-        !IF (rho_lxc(2*k-1)<rho_threshold_gga .OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold_gga) sgn(1)=0.d0
-        !IF (rho_lxc(2*k)  <rho_threshold_gga .OR. SQRT(ABS(sigma(3*k)))  <grho_threshold_gga) sgn(2)=0.d0
-        IF (rho_lxc(2*k-1)<rho_threshold_gga) sgn(1)=0.d0
-        !.OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold_gga) sgn(1)=0.d0
-        IF (rho_lxc(2*k)  <rho_threshold_gga) sgn(2)=0.d0
-        !.OR. SQRT(ABS(sigma(3*k)))  <grho_threshold_gga) sgn(2)=0.d0
-        ec(k) = ec_lxc(k) * (rho_lxc(2*k-1)*sgn(1)+rho_lxc(2*k)*sgn(2))
-        v1c(k,1) = vc_rho(2*k-1) * sgn(1)
-        v1c(k,2) = vc_rho(2*k) * sgn(2)
-        v2c(k,1) = vc_sigma(3*k-2)*2.d0 * sgn(1)
-        v2c_ud(k)= vc_sigma(3*k-1) * sgn(1)*sgn(2)
-        v2c(k,2) = vc_sigma(3*k)*2.d0 * sgn(2)
+        rho_up = rho_lxc(2*k-1)
+        rho_dw = rho_lxc(2*k)
+        grho2_up = sigma(3*k-2)
+        grho2_dw = sigma(3*k)
+        xlda_up = 1.0_DP ; xlda_dw = 1.0_DP
+        xgga_up = 1.0_DP ; xgga_dw = 1.0_DP
+        IF ( rho_up+rho_dw <= rho_threshold_gga ) CYCLE
+        IF ( rho_up <= rho_threshold_lda ) xlda_up = 0.0_DP
+        IF ( rho_dw <= rho_threshold_lda ) xlda_dw = 0.0_DP
+        IF ( rho_up<=small .OR. SQRT(ABS(grho2_up))<=small ) xgga_up = 0.0_DP
+        IF ( rho_dw<=small .OR. SQRT(ABS(grho2_dw))<=small ) xgga_dw = 0.0_DP
+        ec(k) = ec_lxc(k) * (rho_up*xlda_up+rho_dw*xlda_dw)
+        v1c(k,1) = vc_rho(2*k-1)*xlda_up
+        v1c(k,2) = vc_rho(2*k)*xlda_dw
+        v2c(k,1) = vc_sigma(3*k-2)*2.d0*xgga_up
+        v2c_ud(k)= vc_sigma(3*k-1)*xgga_up*xgga_dw
+        v2c(k,2) = vc_sigma(3*k)*2.d0*xgga_dw
       ENDDO
     ENDIF
     !  

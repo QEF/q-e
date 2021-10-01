@@ -19,9 +19,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #endif 
   !
   USE kind_l,               ONLY: DP
-  USE dft_setting_params,   ONLY: imeta, imetac, is_libxc, rho_threshold_mgga,  &
-                            grho2_threshold_mgga, tau_threshold_mgga, scan_exx, &
-                            exx_started, exx_fraction
+  USE dft_setting_params,   ONLY: imetac, is_libxc, rho_threshold_mgga,     &
+                                  grho2_threshold_mgga, tau_threshold_mgga, &
+                                  scan_exx, exx_started, exx_fraction
   USE qe_drivers_mgga
   !
   IMPLICIT NONE
@@ -59,16 +59,18 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   INTEGER :: is
   REAL(DP), ALLOCATABLE :: grho2(:,:)
+  REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
 #if defined(__LIBXC)
   REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:), tau_lxc(:)
   REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_rho(:), vx_sigma(:), vx_tau(:)
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
-  REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in TPSS
+  REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in QE
   !
-  INTEGER :: k, ipol, pol_unpol, eflag
-  LOGICAL :: POLARIZED
+  INTEGER  :: k, ipol, pol_unpol, eflag
+  LOGICAL  :: POLARIZED
+  REAL(DP) :: rh, ggrho2, atau
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -103,6 +105,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
       sigma(k) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
                       grho2_threshold_mgga )
       tau_lxc(k) = MAX( tau(k,1), tau_threshold_mgga )
+      vlapl_rho(k) = 0._DP
     ENDDO
     !
   ELSE
@@ -110,16 +113,16 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     DO k = 1, length
        rho_lxc(2*k-1) = ABS( rho(k,1) )
        rho_lxc(2*k)   = ABS( rho(k,2) )
-       !
        sigma(3*k-2) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
                            grho2_threshold_mgga )
-       sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
+       sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) +&
                       grho(3,k,1) * grho(3,k,2)
        sigma(3*k)   = MAX( grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2, &
                            grho2_threshold_mgga )
-       !
-       tau_lxc(2*k-1) = MAX( tau(k,1), tau_threshold_mgga )
-       tau_lxc(2*k)   = MAX( tau(k,2), tau_threshold_mgga )
+       tau_lxc(2*k-1) = MAX( tau(k,1), small )
+       tau_lxc(2*k)   = MAX( tau(k,2), small )
+       vlapl_rho(2*k-1) = 0._DP
+       vlapl_rho(2*k)   = 0._DP
     ENDDO
     !
   ENDIF
@@ -132,19 +135,17 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
        grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
     ENDDO
     !
-    IF (ns == 1) THEN
-       CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
-                    v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
-    ELSEIF (ns == 2) THEN
-       CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
-                         v2c, v3c )
-    ENDIF
+    IF (ns == 1) CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec,    &
+                              v1x(:,1), v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1),&
+                              v3c(:,1) )
+    IF (ns == 2) CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x,&
+                                   v1c, v2c, v3c )
     !
     DEALLOCATE( grho2 )
     !
   ENDIF
   !
-  ! META EXCHANGE
+  ! ... META EXCHANGE
   !
   IF ( is_libxc(5) ) THEN
     CALL xc_f03_func_set_dens_threshold( xc_func(5), rho_threshold_mgga )
@@ -160,6 +161,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
+        IF ( ABS(rho_lxc(k))<=rho_threshold_mgga .OR. &
+             sigma(k)<=grho2_threshold_mgga      .OR. &
+             ABS(tau_lxc(k))<=rho_threshold_mgga ) CYCLE
         ex(k) = ex_lxc(k) * rho_lxc(k)
         v1x(k,1) = vx_rho(k)
         v2x(k,1) = vx_sigma(k) * 2.0_DP
@@ -167,13 +171,22 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
       ENDDO
     ELSE
       DO k = 1, length
+        IF (rho_lxc(2*k-1)+rho_lxc(2*k) <= rho_threshold_mgga) CYCLE
         ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
-        v1x(k,1) = vx_rho(2*k-1)
-        v1x(k,2) = vx_rho(2*k)
-        v2x(k,1) = vx_sigma(3*k-2)*2.d0
-        v2x(k,2) = vx_sigma(3*k)*2.d0
-        v3x(k,1) = vx_tau(2*k-1)
-        v3x(k,2) = vx_tau(2*k)
+        IF ( ABS(rho_lxc(2*k-1))>rho_threshold_mgga .AND. &
+             sigma(3*k-2)>grho2_threshold_mgga      .AND. &
+             ABS(tau_lxc(2*k-1))>tau_threshold_mgga ) THEN
+          v1x(k,1) = vx_rho(2*k-1)
+          v2x(k,1) = vx_sigma(3*k-2)*2.d0
+          v3x(k,1) = vx_tau(2*k-1)
+        ENDIF
+        IF ( ABS(rho_lxc(2*k))>rho_threshold_mgga .AND. &
+             sigma(3*k)>grho2_threshold_mgga      .AND. &
+             ABS(tau_lxc(2*k))>tau_threshold_mgga ) THEN
+          v1x(k,2) = vx_rho(2*k)
+          v2x(k,2) = vx_sigma(3*k)*2.d0
+          v3x(k,2) = vx_tau(2*k)                                   !m06l: *2 libxc o /2 qe????
+        ENDIF                                                      !-chiarisci il problema del fattore 2
       ENDDO
     ENDIF
     !
@@ -189,7 +202,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
   ENDIF
   !
-  ! META CORRELATION
+  ! ... META CORRELATION
   !
   IF ( is_libxc(6) ) THEN
     !
@@ -206,13 +219,22 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     IF (.NOT. POLARIZED) THEN
        DO k = 1, length
-          ec(k) = ec_lxc(k) * rho_lxc(k) 
-          v1c(k,1) = vc_rho(k)
-          v2c(1,k,1) = vc_sigma(k) * 2.0_DP
-          v3c(k,1) = vc_tau(k)
+         IF ( ABS(rho_lxc(k))<=rho_threshold_mgga    .OR. &
+                     sigma(k)<=grho2_threshold_mgga  .OR. &
+              ABS(tau_lxc(k))<=rho_threshold_mgga  ) CYCLE
+         ec(k) = ec_lxc(k) * rho_lxc(k) 
+         v1c(k,1) = vc_rho(k)
+         v2c(1,k,1) = vc_sigma(k) * 2.0_DP
+         v3c(k,1) = vc_tau(k)
        ENDDO
     ELSE
        DO k = 1, length
+          rh   = rho_lxc(2*k-1) + rho_lxc(2*k)
+          atau = ABS(tau_lxc(2*k-1) + tau_lxc(2*k))
+          ggrho2 = (sigma(3*k-2) + sigma(3*k))*4.0_DP
+          IF ( rh <= rho_threshold_mgga   .OR. &
+           ggrho2 <= grho2_threshold_mgga .OR. &
+             atau <= tau_threshold_mgga  ) CYCLE
           ec(k) = ec_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
           v1c(k,1) = vc_rho(2*k-1)
           v1c(k,2) = vc_rho(2*k)
