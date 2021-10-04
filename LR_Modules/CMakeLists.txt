@@ -1,6 +1,5 @@
 set(sources
     adddvscf.f90
-    adddvscf_ph_mag.f90
     adddvhubscf.f90
     addusdbec.f90
     addusdbec_nc.f90

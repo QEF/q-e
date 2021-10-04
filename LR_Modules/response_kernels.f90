@@ -205,11 +205,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
             !  V_{eff} on the bare change of the potential
             !
             IF (time_reversed) THEN
-               !
-               ! TODO: adddvscf_ph_mag is almost the same as adddvscf, except that it
-               ! uses becp from input, not from USE lrus. Ideally, one should merge the two.
-               !
-               CALL adddvscf_ph_mag(ipert, ik, becpt)
+               CALL adddvscf_ph_mag(ipert, ik)
             ELSE
                CALL adddvscf(ipert, ik)
             ENDIF
