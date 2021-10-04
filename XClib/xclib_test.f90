@@ -744,23 +744,29 @@ PROGRAM xclib_test
          grho(1,ii,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(iip)) )
          grho(2,ii,1) = ABS( 0.05_DP + 0.7_DP*SIN(DBLE(iip)) )
          grho(3,ii,1) = ABS( 0.05_DP + 0.6_DP*SIN(DBLE(iip)) )
-       ENDIF  
+       ENDIF
        !
-       IF ( MGGA ) tau(ii,1) = fact*ABS(rho(ii,1)*ns)**(5._DP/3._DP)/ns
+       IF ( MGGA ) THEN
+          !tau(ii,1) = fact*ABS(rho(ii,1)*ns)**(5._DP/3._DP)/ns
+          tau(ii,1) = SQRT( ABS(SUM(grho(:,ii,1)**2/(rho(ii,1)*3._DP*SIN(DBLE(iip))))) )
+       ENDIF   
        !  
        IF ( POLARIZED ) THEN  
           !  
           rho(ii,2) = (1.0_DP - rho(ii,1))*0.7_DP  
           rho_tz(ii,1) = rho(ii,1) + rho(ii,2)  
           rho_tz(ii,2) = rho(ii,1) - rho(ii,2)  
-          !  
+          !
           IF ( GGA .OR. MGGA ) THEN  
              grho(1,ii,2) = ABS( (1.0_DP - grho(1,ii,1))*0.7_DP )  
              grho(2,ii,2) = ABS( (1.0_DP - grho(2,ii,1))*0.6_DP )
              grho(3,ii,2) = ABS( (1.0_DP - grho(3,ii,1))*0.5_DP )
           ENDIF
           !  
-          IF ( MGGA ) tau(ii,2) = fact*ABS(rho(ii,2)*ns)**(5._DP/3._DP)/ns
+          IF ( MGGA ) THEN
+            !tau(ii,2) = fact*ABS(rho(ii,2)*ns)**(5._DP/3._DP)/ns
+            tau(ii,2) = SQRT( ABS(SUM(grho(:,ii,2)**2/(rho(ii,2)*3._DP*SIN(DBLE(iip))))) )
+          ENDIF  
           !  
        ENDIF
        !

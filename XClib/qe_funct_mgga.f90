@@ -928,13 +928,13 @@ SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )      
   ex = two * ex  ! Add the two components up + dw
   !
   v2x = 0.5_dp * v2x
-  v3x = 2.0_dp * v3x
+  !v3x = 2.0_dp * v3x  !**mismatch with Libxc by a factor of 2
   !
   CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &   !<GPU:m06lc=>m06lc_d>
               v1cb, v2cb, v3cb )
   !
   v2c = 0.5_dp * v2c
-  v3c = 2.0_dp * v3c
+  !v3c = 2.0_dp * v3c  !**
   !
 END SUBROUTINE m06lxc
 !
@@ -963,13 +963,13 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &    
   CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )   !<GPU:m06lx=>m06lx_d>
   !
   ex = exup + exdw
-  v3xup = 2.0_dp * v3xup
-  v3xdw = 2.0_dp * v3xdw
+  !v3xup = 2.0_dp * v3xup  !**mismatch with Libxc by a factor of 2
+  !v3xdw = 2.0_dp * v3xdw  !**
   !
   CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &       !<GPU:m06lc=>m06lc_d>
               ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw )
-  v3cup = 2.0_dp * v3cup
-  v3cdw = 2.0_dp * v3cdw
+  !v3cup = 2.0_dp * v3cup  !**
+  !v3cdw = 2.0_dp * v3cdw  !**
   !
 END SUBROUTINE m06lxc_spin
 ! !
