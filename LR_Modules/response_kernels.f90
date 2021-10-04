@@ -131,6 +131,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !
    ! Initialization
    !
+   CALL start_clock("sth_kernel")
+   !
    exclude_hubbard_ = .FALSE.
    IF (PRESENT(exclude_hubbard)) exclude_hubbard_ = exclude_hubbard
    !
@@ -272,6 +274,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    CALL mp_sum(tot_num_iter, inter_pool_comm)
    CALL mp_sum(tot_cg_calls, inter_pool_comm)
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
+   !
+   CALL stop_clock("sth_kernel")
    !
 !----------------------------------------------------------------------------
 END SUBROUTINE sternheimer_kernel
