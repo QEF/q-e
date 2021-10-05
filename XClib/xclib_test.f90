@@ -37,7 +37,7 @@ PROGRAM xclib_test
                          xclib_get_ID, xclib_reset_dft, xc_gcx,           &
                          xclib_dft_is_libxc, xclib_init_libxc,            &
                          xclib_finalize_libxc, xclib_set_finite_size_volume, &
-                         xclib_set_auxiliary_flags
+                         xclib_set_auxiliary_flags, xclib_dft_is, start_exx
   USE xclib_utils_and_para
   !--xml
   USE xmltools,    ONLY: xml_open_file, xml_closefile,xmlr_readtag,   &
@@ -80,11 +80,12 @@ PROGRAM xclib_test
   INTEGER, PARAMETER :: npoints=90000
   INTEGER :: nr, nnr, nrpe, nnr_b, nnr_int, nnrbt
   INTEGER :: nnrit, nnrbit, nskip
+  INTEGER :: is, is_min, is_max
   !
   !-------- Input vars -----------------------
   CHARACTER(LEN=30) :: test, family, fam_init, xc_kind
   CHARACTER(LEN=30) :: dft, dft_init
-  INTEGER :: nspin
+  CHARACTER(LEN=30) :: polarization
   LOGICAL :: xc_derivative, show_time
   !
   !---------- DFT infos -------------------------
@@ -166,7 +167,7 @@ PROGRAM xclib_test
   INTEGER :: tag_err
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=40) :: xc_data="XC_DATA__________"
+  CHARACTER(LEN=40) :: xc_data="XC_DATA______________"
   ! ... output
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
@@ -192,7 +193,7 @@ PROGRAM xclib_test
   INTEGER :: PROVIDED
 #endif
   !
-  NAMELIST/input_namelist/ test, filename_xml, nspin, family, xc_derivative, dft, show_time
+  NAMELIST/input_namelist/ test, filename_xml, polarization, family, xc_derivative, dft, show_time
   !
 #if defined(__MPI)
   !
@@ -224,7 +225,7 @@ PROGRAM xclib_test
   test = 'none'
   dft = 'none'
   xc_derivative = .FALSE.
-  nspin = 1
+  polarization = 'none'
   !
   nowarning = .TRUE.
   !
@@ -236,6 +237,8 @@ PROGRAM xclib_test
     !
     READ( stdin, input_namelist )
     !
+    IF ( dft(1:4)=='all_' ) family=dft
+    !
     IF ( test(1:4)=='gen-' ) THEN
       !
       iunpun = xml_open_file( "./"//TRIM(filename_xml) )
@@ -245,7 +248,7 @@ PROGRAM xclib_test
       CALL add_attr( "DFT", dft )
       CALL add_attr( "FAMILY", family )
       CALL add_attr( "VXC_DERIVATIVE", xc_derivative )
-      CALL add_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
+      CALL add_attr( "SPIN", polarization )
       CALL xmlw_writetag( "HEADER", "" )
       !
     ELSEIF ( test(1:4)=='exe-' ) THEN
@@ -278,16 +281,16 @@ PROGRAM xclib_test
   !==========================================================================
   !
 #if defined(__MPI)
-  CALL MPI_BCAST( test,   30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST( family, 30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST( dft,    30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST( nspin,   1, MPI_INT,       0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST( xc_derivative,   1, MPI_LOGICAL,   0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST( test,         30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST( family,       30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST( dft,          30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST( polarization, 30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST( xc_derivative, 1, MPI_LOGICAL,   0, MPI_COMM_WORLD, ierr )
 #endif
   !
-  ALLOCATE( proc_name( npes ) )
-  ALLOCATE( node_name( npes ) )
-  ALLOCATE( proc2node( npes ) )
+  ALLOCATE( proc_name(npes) )
+  ALLOCATE( node_name(npes) )
+  ALLOCATE( proc2node(npes) )
   nnodes = 0
   !
   DO i = 1, npes
@@ -342,7 +345,17 @@ PROGRAM xclib_test
   IF (nr==1) nrpe = mype*nnr
   IF (nr==0) nrpe = npoints-(npoints/npes)*(npes-mype-1)
   !
-  ns = nspin
+  IF (TRIM(polarization)=='unpolarized' ) THEN
+    is_min = 1  ;  is_max = 1
+  ELSEIF (TRIM(polarization)=='polarized' ) THEN
+    is_min = 2  ;  is_max = 2
+  ELSEIF (TRIM(polarization)=='both' ) THEN
+    is_min = 1  ;  is_max = 2
+  ELSE
+    WRITE(stdout,*) 'ERROR: unrecognized input polarization.'
+    STOP
+  ENDIF
+  !
   fam_init = family
   dft_init = dft
   !
@@ -389,27 +402,29 @@ PROGRAM xclib_test
   ! ... main loop over functionals to test
   !
   DO id = 1, n_qe_func
+   DO is = is_min, is_max 
     !
     time = 0.d0
+    ns = is
     !
     CALL xclib_reset_dft()
     !
     IF ( dft_init=='all_terms' ) THEN
       IF (id<=nxc+1) THEN
          dft = dft_LDAx_name(id-1)
-         xc_kind = 'exchange'
+         xc_kind = 'X'
       ELSEIF (id>=nxc+2 .AND. id<=nxc+ncc+2) THEN
          dft = dft_LDAc_name(id-nxc-2)
-         xc_kind = 'correlation'
+         xc_kind = 'C'
       ELSEIF (id>=nxc+ncc+3 .AND. id<=nxc+ncc+ngcx+3) THEN
          dft = dft_GGAx_name(id-nxc-ncc-3)
-         xc_kind = 'exchange'
+         xc_kind = 'X'
       ELSEIF (id>=nxc+ncc+ngcx+4 .AND. id<=nxc+ncc+ngcx+ngcc+4) THEN
          dft = dft_GGAc_name(id-nxc-ncc-ngcx-4)
-         xc_kind = 'correlation'
+         xc_kind = 'C'
       ELSEIF (id>=nxc+ncc+ngcx+ngcc+5 .AND. id<=nxc+ncc+ngcx+ngcc+nmeta+5) THEN
          dft = dft_MGGA_name(id-nxc-ncc-ngcx-ngcc-5)
-         xc_kind = 'exchange+correlation'
+         xc_kind = 'XC'
       ENDIF
     ELSEIF ( dft_init=='all_short' ) THEN
       dft = dft_full(id)%name
@@ -422,6 +437,7 @@ PROGRAM xclib_test
     v1x_aver  = 0._DP  ; v2x_aver  = 0._DP
     v3x_aver  = 0._DP  ; v1c_aver  = 0._DP
     v2c_aver  = 0._DP  ; v3c_aver  = 0._DP
+    v2c_ud1_aver = 0.0_DP
     dv_aver   = 0._DP  ; dvrr_aver = 0._DP
     dvsr_aver = 0._DP  ; dvss_aver = 0._DP
     !
@@ -436,19 +452,19 @@ PROGRAM xclib_test
          TRIM(dft)=='SCA0' .OR. & !TRIM(dft)=='TPSS'   .OR. &
          TRIM(dft)=='SCAN0'.OR.TRIM(dft)=='PZ+META'.OR. &
          TRIM(dft)=='PBE+META' ) THEN
-         CALL print_test_status( skipped )
-         CYCLE
+       IF (mype==root) CALL print_test_status( skipped )
+       CYCLE
     ENDIF
 #if !defined(__LIBXC)
     IF ( TRIM(dft)=='SCAN' ) THEN
-      CALL print_test_status( skipped )
+      IF (mype==root) CALL print_test_status( skipped )
       CYCLE
     ENDIF
 #else
     ! libxc id=576 -> Libxc5.1.5 bug (same name of id=575)
     IF ( dft_init=='all_libxc' ) THEN
       IF ( id==576 ) THEN
-        CALL print_test_status( skipped )
+        IF (mype==root) CALL print_test_status( skipped )
         CYCLE
       ENDIF
       dft = xc_f03_functional_get_name( id )
@@ -490,11 +506,11 @@ PROGRAM xclib_test
       ENDDO
       !
       IF (fkind==XC_EXCHANGE) THEN
-        xc_kind = 'exchange'
+        xc_kind = 'X'
       ELSEIF (fkind==XC_CORRELATION) THEN
-        xc_kind = 'correlation'
+        xc_kind = 'C'
       ELSEIF (fkind==XC_EXCHANGE_CORRELATION) THEN
-        xc_kind = 'correlation'
+        xc_kind = 'C'
       ENDIF
     ENDIF
 #else
@@ -505,6 +521,7 @@ PROGRAM xclib_test
 #endif
     !
     CALL xclib_set_auxiliary_flags( .FALSE. )
+    IF ( xclib_dft_is('hybrid') ) CALL start_exx
     !
     IF ( fam_init(1:4)=='all_' .AND. LDA  )  family='LDA'
     IF ( fam_init(1:4)=='all_' .AND. GGA  )  family='GGA'
@@ -517,20 +534,20 @@ PROGRAM xclib_test
         IF ( id<=nxc+ncc+2 ) THEN
           GGA=.FALSE.
           IF (iexch1/=0 .AND. icorr1/=0 ) THEN
-            IF ( TRIM(xc_kind)=='correlation') CYCLE
-            IF ( TRIM(xc_kind)=='exchange') xc_kind='exchange+correlation'
+            IF ( TRIM(xc_kind)=='C') CYCLE
+            IF ( TRIM(xc_kind)=='X') xc_kind='XC'
           ENDIF
           family='LDA'
         ELSE
           LDA=.FALSE.
           IF (igcx1/=0 .AND. igcc1/=0 ) THEN
-            IF ( TRIM(xc_kind)=='correlation') CYCLE
-            IF ( TRIM(xc_kind)=='exchange') xc_kind='exchange+correlation'
+            IF ( TRIM(xc_kind)=='C') CYCLE
+            IF ( TRIM(xc_kind)=='X') xc_kind='XC'
           ENDIF
         ENDIF
       ENDIF
-      exc_term = xc_kind/='correlation'
-      cor_term = xc_kind/='exchange'
+      exc_term = xc_kind/='C'
+      cor_term = xc_kind/='X'
     ELSE
       exc_term = (iexch1+igcx1+imeta1  /= 0)
       cor_term = (icorr1+igcc1+imetac1 /= 0)
@@ -571,17 +588,20 @@ PROGRAM xclib_test
     IF (MGGA) nthr = 3
     !
     nnrbt = nnr_b+nthr
-    ! 
+    !
     np = 1
     IF (ns==2) np = 3
     !
     IF (.NOT.xc_derivative) THEN
-      IF (LDA ) naver = 2
-      IF (GGA ) naver = 3
-      IF (MGGA) naver = 8
+      IF ( LDA ) naver = ns+1
+      IF ( LDA .AND. TRIM(xc_kind)=='XC') naver = 2*ns+2
+      IF ( GGA .AND. TRIM(xc_kind)=='X')  naver = 2*ns+1
+      IF ( GGA .AND. TRIM(xc_kind)=='C')  naver = 3*ns+np
+      IF ( GGA .AND. TRIM(xc_kind)=='XC') naver = 4*ns+np
+      IF ( MGGA ) naver = 8
     ELSE
-      IF (LDA ) naver = 1
-      IF (GGA ) naver = 3
+      IF ( LDA ) naver = np
+      IF ( GGA ) naver = 3*np
     ENDIF
     !
     !==========================================================================
@@ -658,8 +678,12 @@ PROGRAM xclib_test
     IF ( fam_init=='all_terms') THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
+      IF (is==1) WRITE(xc_data(18:30),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(18:30),'(a)') 'POL'
     ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+      IF (is==1) WRITE(xc_data(8+nlen1:30),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(8+nlen1:30),'(a)') 'POL'
     ENDIF
     !
     ! ... read data set from xml file
@@ -695,11 +719,11 @@ PROGRAM xclib_test
             ELSE
               CALL xmlr_readtag( "V1C_AVER", v1c_aver(:,:) )
               CALL xmlr_readtag( "V2C_AVER", v2c_aver(:,:) )
-              IF ( family=='GGA'  ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
+              IF ( family=='GGA' .AND. is==2 ) CALL xmlr_readtag( "V2Cud_AVER", v2c_ud1_aver(:) )
               IF ( family=='MGGA' ) CALL xmlr_readtag( "V3C_AVER", v3c_aver(:,:) )
               CALL xmlr_readtag( "V1C", v1c2(:,:) )
               CALL xmlr_readtag( "V2C", v2c2(:,:) )
-              IF ( family=='GGA'  ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
+              IF ( family=='GGA' .AND. is==2 ) CALL xmlr_readtag( "V2Cud", v2c_ud2(:) )
               IF ( family=='MGGA' ) CALL xmlr_readtag( "V3C", v3c2(:,:) )
             ENDIF
           ENDIF
@@ -801,15 +825,15 @@ PROGRAM xclib_test
     ! --------------------------  
     !
     IF (mype==root) THEN
-      IF (nspin == 1) THEN
+      IF (ns == 1) THEN
         rho(1,1) = 0.6_DP ; rho_tz(1,1) = 0.6_DP
         IF (family/='LDA')  grho(:,1,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
         IF (family=='MGGA') tau(1,1) = 0.1_DP
       ELSE
         DO i = 1, nnr_b
-          IF (MOD(i,2)==0) rho(i,:) = (/ 0.6_DP, 0.1_DP /) 
+          IF (MOD(i,2)==0) rho(i,:) = (/ 0.6_DP, 0.1_DP /)
           IF (MOD(i,2)/=0) rho(i,:) = (/ 0.1_DP, 0.6_DP /)
-          IF (MOD(i,2)==0) rho_tz(i,:) = (/ 0.7_DP, 0.5_DP /) 
+          IF (MOD(i,2)==0) rho_tz(i,:) = (/ 0.7_DP, 0.5_DP /)
           IF (MOD(i,2)/=0) rho_tz(i,:) = (/ 0.7_DP, -0.5_DP /)
           IF ( family/='LDA') THEN
             IF (i<=2) THEN
@@ -828,7 +852,7 @@ PROGRAM xclib_test
           grho(:,5,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
           DO i = 1, 4
             tau(i,:) = (/ 0.1_DP, 0.2_DP/)
-          ENDDO  
+          ENDDO
           tau(5,:) = (/ 0.2_DP, 0.1_DP /)
         ENDIF
       ENDIF
@@ -851,7 +875,7 @@ PROGRAM xclib_test
         rho(nnr_b+2,:) = rho(nnr_b,:)
         IF (.NOT. POLARIZED) rho_tz(nnr_b+2,1) = rho(nnr_b+2,1)
         !
-        grho(:,nnr_b+2,1) = thresh_gga/10
+        grho(:,nnr_b+2,1) = thresh_gga/10._DP
         IF ( POLARIZED ) THEN
           rho_tz(nnr_b+2,1) = rho(nnr_b+2,1) + rho(nnr_b+2,2)
           rho_tz(nnr_b+2,2) = rho(nnr_b+2,1) - rho(nnr_b+2,2)
@@ -863,7 +887,7 @@ PROGRAM xclib_test
           tau(nnr_b+2,:) = tau(nnr_b,:)
           rho(nnr_b+3,:) = rho(nnr_b,:)
           grho(:,nnr_b+3,:) = grho(:,nnr_b,:)
-          tau(nnr_b+3,1) = thresh_mgga/10
+          tau(nnr_b+3,1) = thresh_mgga/10._DP
           IF ( POLARIZED ) tau(nnr_b+3,2) = tau(nnr_b,2)
         ENDIF
         !
@@ -1006,16 +1030,16 @@ PROGRAM xclib_test
           ELSE
             CALL xmlw_writetag( "V1C_AVER", v1c_aver(:,:) )
             CALL xmlw_writetag( "V2C_AVER", v2c_aver(:,:) )
-            IF ( family=='GGA'  ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
+            IF ( family=='GGA' .AND. is==2 ) CALL xmlw_writetag( "V2Cud_AVER", v2c_ud1_aver(:) )
             IF ( family=='MGGA' ) CALL xmlw_writetag( "V3C_AVER", v3c_aver(:,:) )
             CALL xmlw_writetag( "V1C", v1c1(1:nnrbt,:) )
             CALL xmlw_writetag( "V2C", v2c1(1:nnrbt,:) )
-            IF ( family=='GGA'  ) CALL xmlw_writetag( "V2Cud", v2c_ud1(1:nnrbt) )
+            IF ( family=='GGA' .AND. is==2 ) CALL xmlw_writetag( "V2Cud", v2c_ud1(1:nnrbt) )
             IF ( family=='MGGA' ) CALL xmlw_writetag( "V3C", v3c1(1:nnrbt,:) )
           ENDIF
         ENDIF
       ELSE !xc_derivative
-        IF (family=='LDA') THEN 
+        IF (family=='LDA') THEN
           CALL xmlw_writetag( "dV_AVER", dv_aver(:) )
           CALL xmlw_writetag( "dV", dmuxc1(1:nnrbt,:,:) )
         ELSE
@@ -1074,7 +1098,7 @@ PROGRAM xclib_test
                 IF ( cor_term .AND. ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
                 IF ( exc_term .AND. vx_is_out ) CALL print_diff( 'Vx', vx1(ii,:),  vx2(ii,:)  )
                 IF ( cor_term .AND. vc_is_out ) CALL print_diff( 'Vc', vc1(ii,:),  vc2(ii,:)  )
-              ELSE  
+              ELSE
                 CALL print_diff2( 'dmuxc', dmuxc1(ii,:,:), dmuxc2(ii,:,:) )
               ENDIF !df_ok
               !
@@ -1301,6 +1325,7 @@ PROGRAM xclib_test
       ENDIF
     ENDIF
     !
+   ENDDO 
   ENDDO ! end of main loop over dfts
   !
   IF (mype==root) THEN
@@ -1340,19 +1365,24 @@ PROGRAM xclib_test
  !
  !
  !--------------------------------------------------------------------
- SUBROUTINE print_aver( what, vaver, averref )
+ SUBROUTINE print_aver( what, vaver, averref, what2 )
   !------------------------------------------------------------------
   !! Prints average, max and min differences between XC arrays
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*), INTENT(IN) :: what
+  CHARACTER(len=*), INTENT(IN), OPTIONAL :: what2
   REAL(DP), INTENT(IN) :: vaver(2)
   REAL(DP), OPTIONAL :: averref
   !
   IF (ABS(vaver(1)-averref)>aver_thresh) THEN
     WRITE(stdout,*) " "
-    WRITE(stdout,*) " ", TRIM(what)
+    IF (PRESENT(what2)) THEN
+      WRITE(stdout,*) " ", TRIM(what),TRIM(what2)
+    ELSE
+      WRITE(stdout,*) " ", TRIM(what)
+    ENDIF
     WRITE(stdout,*) "AVR test: ", vaver(1)
     WRITE(stdout,*) "AVR ref : ", averref
     WRITE(stdout,*) "diff    : ", vaver(1)-averref
@@ -1475,10 +1505,10 @@ PROGRAM xclib_test
     IF (what(1:1)=='V') thr = diff_thr_vmgga
   ENDIF
   !
-  IF (mype==root .AND. TRIM(test)=='exe-benchmark') THEN
-    WRITE(stdout,*) " "
-    IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) TRIM(what)
-  ENDIF
+  !IF (mype==root .AND. TRIM(test)=='exe-benchmark') THEN
+  !  WRITE(stdout,*) " "
+  !  IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) TRIM(what)
+  !ENDIF
   !
   xc_aver=0._DP
   !
@@ -1513,12 +1543,13 @@ PROGRAM xclib_test
       v2c_ud1_aver(1) = aver_recu
 #endif
       !
-      IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( 'cross', v2c_ud1_aver, v2c_aver(1,3) )
+      IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, &
+                                 v2c_ud1_aver, v2c_aver(1,3), 'cross' )
     ENDIF
     !
     IF (mype==root .AND. test(1:4)=='exe-') THEN
-      CALL print_aver( 'up',  xc_aver(:,1), aver(1) )
-      CALL print_aver( 'down',xc_aver(:,2), aver(2) )
+      CALL print_aver( what, xc_aver(:,1), aver(1), 'up' )
+      CALL print_aver( what, xc_aver(:,2), aver(2), 'down' )
     ENDIF 
     !
   ENDIF
@@ -1563,7 +1594,8 @@ PROGRAM xclib_test
 #endif
   !
   IF ( .NOT. POLARIZED ) THEN
-    IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, dxc_aver(1:nnr_b,1), aver(1) )
+    IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, &
+                                       dxc_aver(1:nnr_b,1), aver(1) )
   ELSE
     dxc_aver(1,2) = SUM(dxc_qe(1:nnr,1,2))/DBLE(npoints)
     !
@@ -1583,9 +1615,9 @@ PROGRAM xclib_test
 #endif
     !
     IF (mype==root .AND. test(1:4)=='exe-') THEN
-      CALL print_aver( 'up-up',    dxc_aver(:,1), aver(1) )
-      CALL print_aver( 'up-down',  dxc_aver(:,2), aver(2) )
-      CALL print_aver( 'down-down',dxc_aver(:,3), aver(3) )
+      CALL print_aver( what, dxc_aver(:,1), aver(1), 'up-up' )
+      CALL print_aver( what, dxc_aver(:,2), aver(2), 'up-down' )
+      CALL print_aver( what, dxc_aver(:,3), aver(3), 'down-down' )
     ENDIF  
     !
   ENDIF
@@ -1609,6 +1641,7 @@ PROGRAM xclib_test
   REAL(DP), INTENT(IN) :: diff_thr, x_dft1(dm), x_dft2(dm)
   REAL(DP), INTENT(IN), OPTIONAL :: x_ud_1, x_ud_2
   LOGICAL :: is_it_out, is_it_out_ud
+  INTEGER :: j
   !
   is_it_out = ANY(ABS(x_dft1(1:dm)-x_dft2(1:dm)) > diff_thr)
   !
@@ -1616,6 +1649,12 @@ PROGRAM xclib_test
     is_it_out_ud =  ABS(x_ud_1-x_ud_2) > diff_thr
     is_it_out = ANY( (/ is_it_out, is_it_out_ud /) )
   ENDIF
+  !
+  ! ... to flush out NaN if any
+  DO j = 1, dm
+    IF ( .NOT.x_dft1(j)>0.111_DP .AND. .NOT.x_dft1(j)<=0.111_DP .OR. &
+        (.NOT.x_dft2(j)>0.111_DP .AND. .NOT.x_dft2(j)<=0.111_DP) ) is_it_out = .TRUE.
+  ENDDO
   !
  END FUNCTION
  !
@@ -1630,6 +1669,7 @@ PROGRAM xclib_test
   REAL(DP), INTENT(IN) :: diff_thr, dx_dft1(ns,ns), dx_dft2(ns,ns)
   REAL(DP) :: dxc_diff(np)
   LOGICAL :: is_dit_out
+  INTEGER :: j
   !
   dxc_diff(1) = ABS(dx_dft1(1,1)-dx_dft2(1,1))
   !
@@ -1639,6 +1679,11 @@ PROGRAM xclib_test
   ENDIF
   !
   is_dit_out = ANY(dxc_diff(1:np) > diff_thr)
+  !
+  ! ... to flush out NaN if any
+  DO j = 1, np
+    IF ( .NOT.dxc_diff(j)>0.111_DP .AND. .NOT.dxc_diff(j)<=0.111_DP ) is_dit_out = .TRUE.
+  ENDDO
   !
  END FUNCTION
  !
@@ -1650,30 +1695,38 @@ PROGRAM xclib_test
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: status
-  CHARACTER(LEN=90) :: test_output_gen
-  CHARACTER(LEN=110) :: test_output_exe
+  CHARACTER(LEN=100) :: test_output_gen
+  CHARACTER(LEN=115) :: test_output_exe
   !
   IF (test=='gen-benchmark') THEN
     test_output_gen = ''
-    WRITE(test_output_gen(1:3), '(i3)') id
-    WRITE(test_output_gen(5:40), '(a)') TRIM(dft)
-    WRITE(test_output_gen(45:),'(a)') TRIM(status)
+    IF (is==is_min) WRITE(test_output_gen(1:3), '(i3)') id
+    IF (fam_init=='all_terms') THEN
+      WRITE(test_output_gen(5:8),  '(a)') TRIM(family)
+      WRITE(test_output_gen(10:11),'(a)') TRIM(xc_kind)
+    ENDIF
+    IF (is==1) WRITE(test_output_gen(13:17), '(a)') 'UNPOL'
+    IF (is==2) WRITE(test_output_gen(13:15), '(a)') 'POL'
+    WRITE(test_output_gen(19:54), '(a)') TRIM(dft)
+    WRITE(test_output_gen(56:),'(a)') TRIM(status)
     WRITE(stdout,*) test_output_gen
   ELSEIF (test=='exe-benchmark') THEN
     test_output_exe = ''
-    WRITE(test_output_exe(1:3), '(i3)') id
+    IF (is==is_min) WRITE(test_output_exe(1:3), '(i3)') id
     IF (fam_init=='all_terms') THEN
       WRITE(test_output_exe(5:8), '(a)') TRIM(family)
-      WRITE(test_output_exe(10:30),'(a)') TRIM(xc_kind)
+      WRITE(test_output_exe(10:11),'(a)') TRIM(xc_kind)
     ENDIF
-    WRITE(test_output_exe(32:68), '(a)' ) TRIM(dft)
-    WRITE(test_output_exe(68:108), '(a)' ) TRIM(status)
+    IF (is==1) WRITE(test_output_exe(13:17), '(a)') 'UNPOL'
+    IF (is==2) WRITE(test_output_exe(13:15), '(a)') 'POL'
+    WRITE(test_output_exe(19:54), '(a)') TRIM(dft)
+    WRITE(test_output_exe(56:96), '(a)') TRIM(status)
     IF (status==passed .AND. show_time) THEN
-      WRITE(test_output_exe(78:83), '(a)' ) 'time:'
-      WRITE(test_output_exe(84:90), '(F6.3)' ) time_tot2
-      WRITE(test_output_exe(91:98), '(a)' ) 's  incr:'
-      WRITE(test_output_exe(99:108), '(F8.3)' ) time_tot2/time_tot1*100.d0-100.d0
-      WRITE(test_output_exe(109:109), '(a)' ) '%'
+      WRITE(test_output_exe(80:85), '(a)') 'time:'
+      WRITE(test_output_exe(86:92), '(F6.3)') time_tot2
+      WRITE(test_output_exe(93:100), '(a)') 's  incr:'
+      WRITE(test_output_exe(101:110), '(F8.3)') time_tot2/time_tot1*100.d0-100.d0
+      WRITE(test_output_exe(111:111), '(a)') '%'
     ENDIF
     WRITE(stdout,*) test_output_exe
   ENDIF

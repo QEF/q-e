@@ -13,9 +13,9 @@ MODULE qe_dft_list
   !! Extra parameters of QE functionals are set in 'xclib_set_auxiliary_flag' and 
   !! subsequent routines 
   !
-  ! NOTE: when a dft term slot is filled with 'xxxx' it means that the term
-  ! is included in one of the full dft combinations available, but it cannot
-  ! be called by itself.
+  ! NOTE: when a dft term slot is filled with 'xxxx' it usually means that the term
+  ! is included in one of the full dft combinations available, but it cannot be
+  ! called by itself.
   !
   USE dft_setting_params,  ONLY: notset
   !

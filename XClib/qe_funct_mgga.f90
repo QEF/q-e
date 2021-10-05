@@ -1334,6 +1334,14 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
     v1_aa_up = zero
     v2_aa_up = zero
     v3_aa_up = zero
+    ec_pw_a = zero
+    vc_pw_a = zero
+    xs2a = zero
+    zsa = zero
+    dxs2a_drhoa   = zero
+    dxs2a_dgrhoa2 = zero
+    dzsa_drhoa    = zero
+    dzsa_dtaua    = zero
     !
   ELSE
     !
@@ -1383,12 +1391,20 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   ! ... Ecbb
   !
-  IF (rhob < small .AND. taub < small) THEN
+  IF (rhob < small .OR. taub < small) THEN
     !
     Ecbb = zero
     v1_bb_dw = zero
     v2_bb_dw = zero
     v3_bb_dw = zero
+    ec_pw_b = zero
+    vc_pw_b = zero
+    xs2b = zero
+    zsb = zero
+    dxs2b_drhob   = zero
+    dxs2b_dgrhob2 = zero
+    dzsb_drhob    = zero
+    dzsb_dtaub    = zero
     !
   ELSE
     !

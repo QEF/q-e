@@ -71,18 +71,21 @@ The following options have to be set:
          available in XClib, e.g. LDA, PBESOL, PW86PBE, etc.
        - 'all_libxc' spans all the available Libxc functionals. Those
          that are not usable in the current QE version will be skipped
-         with a notice.
+         with a notice.  
 
 - family: the dft family (needed in order to distinguish those few cases
           where LDA terms have the same name of the GGA ones, e.g. B3LP).
-          If dft='all_something' then you can put family='all_something'
-          too in order to span all the functionals regardless their family.
+          If dft='all_...' then input family will be ignored.
           
 - nspin: unpolarized (=1) or polarized (=2).
 
 - xc_derivative: if .TRUE. calculates the derivative terms (needed,
                  for example, by linear response code) instead of
                  the ordinary energy+potential output.
+
+- show_time: if .TRUE. stores WALL time spent by xc-routines during
+             'gen-' test and shows increment (in percentage) during
+             'exe-' test.
 
 Obviously the program can be used to compare QE and Libxc functionals,
 to check differences from one version to another or to check differences

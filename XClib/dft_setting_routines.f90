@@ -233,7 +233,8 @@ CONTAINS
     IF (igcx == 14) igcx = 3 ! PBE -> PBX
     IF (igcc ==  9) igcc = 4 ! PBE -> PBC
     !
-    IF (igcx == 6) CALL xclib_infomsg( 'set_dft_from_name', 'OPTX untested! please test' )
+    IF (igcx == 6 .AND. .NOT.nowarning ) CALL xclib_infomsg( 'set_dft_from_name', 'OPTX &
+                                                             &untested! please test' )
     !
     ! ... Check for conflicts with MGGA functionals of QE
     !
