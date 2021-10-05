@@ -33,13 +33,6 @@ adddvscf.o : ../Modules/noncol.o
 adddvscf.o : ../PW/src/pwcom.o
 adddvscf.o : ../upflib/uspp.o
 adddvscf.o : lrcom.o
-adddvscf_ph_mag.o : ../Modules/becmod.o
-adddvscf_ph_mag.o : ../Modules/ions_base.o
-adddvscf_ph_mag.o : ../Modules/kind.o
-adddvscf_ph_mag.o : ../Modules/noncol.o
-adddvscf_ph_mag.o : ../PW/src/pwcom.o
-adddvscf_ph_mag.o : ../upflib/uspp.o
-adddvscf_ph_mag.o : lrcom.o
 addusdbec.o : ../Modules/becmod.o
 addusdbec.o : ../Modules/ions_base.o
 addusdbec.o : ../Modules/kind.o

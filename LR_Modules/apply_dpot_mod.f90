@@ -118,6 +118,8 @@ MODULE apply_dpot_mod
     INTEGER :: tg_v_siz
     !! Task groups: size of the potential.
     !
+    CALL start_clock("apply_dpot_b")
+    !
     IF (.NOT. is_allocated) CALL apply_dpot_allocate()
     !
     incr = 1
@@ -153,6 +155,8 @@ MODULE apply_dpot_mod
         CALL cft_wave(ik, dvpsi(:, ibnd), psi_r, -1)
       ENDIF ! has_task_groups
     ENDDO ! ibnd
+    !
+    CALL stop_clock("apply_dpot_b")
     !
   END SUBROUTINE apply_dpot_bands
   !
