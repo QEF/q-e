@@ -14,6 +14,12 @@
 #define DEVICEATTR 
 #endif
 
+#if defined(__CUDA)
+#define PINMEM ,PINNED
+#else
+#define PINMEM
+#endif
+
 MODULE orthogonalize_base
 
       USE kinds
@@ -956,8 +962,8 @@ CONTAINS
       INTEGER, INTENT(IN) :: idesc( :, : )
       COMPLEX(DP) :: cp_bgrp( :, : ), phi( :, : )
       REAL(DP), INTENT(IN) :: ccc
-      REAL(DP)    :: bec_bgrp( :, : ), x0( :, :, : )
-      REAL(DP)    :: bephi( :, : )
+      REAL(DP) PINMEM :: bec_bgrp( :, : ), x0( :, :, : )
+      REAL(DP) PINMEM :: bephi( :, : )
       REAL(DP)    :: becp_bgrp( :, : )
 
       ! local variables
@@ -966,7 +972,7 @@ CONTAINS
       INTEGER :: ipr, ipc, root, i1, i2, nss, istart
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: xd(:,:)
-      REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
+      REAL(DP),    ALLOCATABLE PINMEM :: bephi_tmp(:,:) 
       INTEGER,     ALLOCATABLE :: indi(:)
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       INTEGER :: idesc_ip(LAX_DESC_SIZE)

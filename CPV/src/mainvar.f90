@@ -5,6 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CUDA)
+#define PINMEM ,PINNED
+#else
+#define PINMEM
+#endif
 !
 !----------------------------------------------------------------------------
 MODULE cp_main_variables
@@ -27,7 +32,7 @@ MODULE cp_main_variables
   ! ...  G = reciprocal lattice vectors
   ! ...  R_I = ionic positions
   !
-  COMPLEX(DP), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
+  COMPLEX(DP), ALLOCATABLE PINMEM :: eigr(:,:)        ! exp (i G   dot R_I)
   !
   ! ... structure factors (summed over atoms of the same kind)
   !
@@ -40,7 +45,7 @@ MODULE cp_main_variables
   ! ... indexes, positions, and structure factors for the box grid
   !
   REAL(DP), ALLOCATABLE :: taub(:,:)
-  COMPLEX(DP), ALLOCATABLE :: eigrb(:,:)
+  COMPLEX(DP), ALLOCATABLE PINMEM :: eigrb(:,:)
   INTEGER,     ALLOCATABLE :: irb(:,:)
   INTEGER,     ALLOCATABLE :: iabox(:)
   INTEGER :: nabox
@@ -54,10 +59,10 @@ MODULE cp_main_variables
   !
   REAL(DP), ALLOCATABLE :: bephi(:,:)      ! distributed (orhto group)
   REAL(DP), ALLOCATABLE :: becp_bgrp(:,:)  ! distributed becp (band group)
-  REAL(DP), ALLOCATABLE :: bec_bgrp(:,:)  ! distributed bec (band group)
+  REAL(DP), ALLOCATABLE PINMEM :: bec_bgrp(:,:)  ! distributed bec (band group)
   REAL(DP), ALLOCATABLE :: bec_d(:,:)  ! distributed bec (band group)
-  REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
-  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
+  REAL(DP), ALLOCATABLE PINMEM :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
+  REAL(DP), ALLOCATABLE PINMEM :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
 #if defined (__CUDA)
   ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, bec_d
 #endif

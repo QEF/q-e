@@ -13,6 +13,12 @@
 #define DEVICEATTR
 #endif
 
+#if defined(__CUDA)
+#define PINMEM ,PINNED
+#else
+#define PINMEM
+#endif
+
 !=----------------------------------------------------------------------------=!
    MODULE cp_interfaces
 !=----------------------------------------------------------------------------=!
@@ -973,7 +979,7 @@
          INTEGER,     INTENT(IN)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
          COMPLEX(DP), INTENT(IN), DEVICE :: betae( :, : )
          COMPLEX(DP), INTENT(IN), DEVICE :: c_bgrp( :, : )
-         REAL(DP),    INTENT(OUT) :: becdr_bgrp( :, :, : )
+         REAL(DP),    INTENT(OUT) PINMEM :: becdr_bgrp( :, :, : )
       END SUBROUTINE nlsm2_bgrp_gpu_x
 #endif
    END INTERFACE
@@ -1033,9 +1039,9 @@
       SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN) ::  eigr( :, : )
-         COMPLEX(DP), INTENT(IN), DEVICE  ::  c_bgrp( :, : )
-         REAL(DP),    INTENT(OUT) ::  dbec( :, :, :, : )
+         COMPLEX(DP), INTENT(IN)  PINMEM ::  eigr( :, : )
+         COMPLEX(DP), INTENT(IN), DEVICE ::  c_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) PINMEM ::  dbec( :, :, :, : )
          INTEGER, INTENT(IN) :: idesc( :, : )
       END SUBROUTINE caldbec_bgrp_gpu_x
 #endif
@@ -1097,7 +1103,7 @@
       SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(IN)   PINMEM :: eigr( :, : )
          COMPLEX(DP), INTENT(OUT), DEVICE :: dbeigr( :, :, :, :)
       END SUBROUTINE dbeta_eigr_gpu_x
 #endif

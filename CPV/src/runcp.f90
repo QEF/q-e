@@ -16,6 +16,12 @@
 #define DEVICEATTR
 #endif
 
+#if defined(__CUDA)
+#define PINMEM ,PINNED
+#else
+#define PINMEM
+#endif
+
 
    SUBROUTINE runcp_uspp_x &
       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart, compute_only_gradient )
@@ -73,7 +79,7 @@
 #endif
      real(DP),    allocatable :: emadt2(:)
      real(DP),    allocatable :: emaver(:)
-     complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
+     complex(DP), allocatable PINMEM :: c2(:), c3(:), c2tmp(:), c3tmp(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:), ftmp(:)
 #if defined (__CUDA)
      REAL(DP),    ALLOCATABLE, DEVICE :: rhos_d(:,:)
@@ -395,7 +401,7 @@
       REAL(DP) ::  verl1, verl2, verl3
       REAL(DP), ALLOCATABLE:: emadt2(:)
       REAL(DP), ALLOCATABLE:: emaver(:)
-      COMPLEX(DP), ALLOCATABLE:: c2(:), c3(:)
+      COMPLEX(DP), ALLOCATABLE PINMEM :: c2(:), c3(:)
       INTEGER :: i
       INTEGER :: iflag
       LOGICAL :: ttsde
@@ -404,7 +410,7 @@
        REAL(DP)    :: ei_unp_mem, ei_unp_wfc
        COMPLEX(DP) :: intermed3
        REAL(DP),    ALLOCATABLE :: occ(:)
-       COMPLEX(DP), ALLOCATABLE :: c4(:), c5(:)
+       COMPLEX(DP), ALLOCATABLE PINMEM :: c4(:), c5(:)
 !
 ! ... Controlling on sic applicability
 !

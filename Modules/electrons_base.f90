@@ -5,6 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CUDA)
+#define PINMEM ,PINNED
+#else
+#define PINMEM
+#endif
+!
 !------------------------------------------------------------------------------!
   MODULE electrons_base
 !------------------------------------------------------------------------------!
@@ -69,7 +75,7 @@
       !! occupation numbers ( at gamma )
       INTEGER, ALLOCATABLE  :: ispin_bgrp(:)
       !! spin of each state
-      INTEGER, ALLOCATABLE :: ibgrp_g2l(:)
+      INTEGER, ALLOCATABLE PINMEM :: ibgrp_g2l(:)
       !! local index of the i-th global band index
 #if defined (__CUDA)
       ATTRIBUTES( DEVICE ) :: f_d

@@ -11,6 +11,11 @@
 #define DEVICEATTR
 #endif
 !
+#if defined(__CUDA)
+#define PINMEM ,PINNED
+#else
+#define PINMEM
+#endif
 !
 !-----------------------------------------------------------------------
    subroutine nlsm1us_x ( n, betae, c, becp )
@@ -409,7 +414,7 @@
       integer,     intent(in)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
       complex(DP), intent(in), DEVICE :: c_bgrp(:,:)
       complex(DP), intent(in), DEVICE :: betae(:,:)
-      real(DP),    intent(out) :: becdr_bgrp(:,:,:)
+      real(DP),    intent(out) PINMEM :: becdr_bgrp(:,:,:)
       !
       complex(DP), allocatable, DEVICE :: wrk2(:,:)
       real(DP), allocatable, DEVICE :: becdr_d(:,:)
@@ -710,7 +715,7 @@ SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
   include 'laxlib.fh'
   !
   complex(DP), device, intent(out) :: dbeigr( :, :, :, : )
-  complex(DP), intent(in)  :: eigr(:,:)
+  complex(DP), intent(in) PINMEM   :: eigr(:,:)
   !
   integer   :: ig, is, iv, ia, l, inl, i, j
   complex(DP) :: cfact(4)
@@ -912,9 +917,9 @@ SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
   !
   include 'laxlib.fh'
   !
-  complex(DP), intent(in), device  :: c_bgrp( :, : )
-  complex(DP), intent(in)  :: eigr(:,:)
-  real(DP),    intent(out) :: dbec( :, :, :, : )
+  complex(DP), intent(in), device :: c_bgrp( :, : )
+  complex(DP), intent(in)  PINMEM :: eigr(:,:)
+  real(DP),    intent(out) PINMEM :: dbec( :, :, :, : )
   integer, intent(in) :: idesc( :, : )
   !
   integer   :: ig, is, iv, ia, l, inl, i, j, ii, iw, iss, nr, ir, istart, nss
