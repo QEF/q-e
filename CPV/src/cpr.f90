@@ -98,6 +98,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        irb, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp_bgrp, nfi, idesc, &
                                        drhor, drhog, bec_bgrp, dbec, bec_d, iabox, nabox
+#if defined (__CUDA)
+USE cp_main_variables,        ONLY : eigr_d
+#endif
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
@@ -592,21 +595,27 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          ! the following compute only on NC pseudo components
 #if defined (__CUDA)
+         CALL dev_memcpy( eigr_d, eigr )
          !CALL dev_memcpy( cm_d, cm_bgrp )
          CALL calbec( nbsp_bgrp, vkb_d, cm_d, bec_d, 1 )
-         CALL dev_memcpy( vkb, vkb_d )
-         CALL dev_memcpy( bec_bgrp, bec_d )
+         !CALL dev_memcpy( vkb, vkb_d )
+         !CALL dev_memcpy( bec_bgrp, bec_d )
 #else
          CALL calbec( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 1 ) 
 #endif
          !
          IF ( tpre ) THEN
 #if defined (__CUDA)
-           CALL caldbec_bgrp( eigr, cm_d, dbec, idesc )
+           CALL caldbec_bgrp( eigr_d, cm_d, dbec, idesc )
 #else
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
 #endif
          END IF
+         !
+#if defined (__CUDA)
+        CALL dev_memcpy( vkb, vkb_d )
+        CALL dev_memcpy( bec_bgrp, bec_d )
+#endif
          !
          IF ( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp_bgrp )
          !

@@ -203,6 +203,7 @@
       USE uspp,       only : nkb, nhtol, beta, ofsbeta
       USE uspp_param, only : nh, upf, nhm
       USE gvect,      ONLY : gstart
+      USE cp_main_variables, ONLY : nlsm1_wrk_d
 !
       implicit none
 
@@ -219,10 +220,6 @@
       integer :: ig, is, iv, ia, l, inl
       integer :: pptype
       integer :: i
-      real(DP), allocatable :: becps( :, : )
-#if defined(__CUDA)
-      attributes(DEVICE) :: becps
-#endif
       LOGICAL :: nothing_to_do
       !
       call start_clock( 'nlsm1' )
@@ -269,8 +266,6 @@
 
       END IF
 
-      allocate( becps( SIZE(becp,1), SIZE(becp,2) ) )
-
       IF( ngw > 0 .AND. nkb > 0 ) THEN
          IF( gstart > 1 ) THEN
 !$cuf kernel do(1) <<<*,*>>>
@@ -278,7 +273,7 @@
                betae( 1, i ) = 0.5d0 * betae( 1, i )
             END DO
          END IF
-         CALL MYDGEMM( 'T', 'N', nkb, n, 2*ngw, 2.0d0, betae, 2*ngw, c, 2*ngw, 0.0d0, becps, nkb )
+         CALL MYDGEMM( 'T', 'N', nkb, n, 2*ngw, 2.0d0, betae, 2*ngw, c, 2*ngw, 0.0d0, nlsm1_wrk_d, nkb )
          IF( gstart > 1 ) THEN
 !$cuf kernel do(1) <<<*,*>>>
             DO i = 1, SIZE(betae,2)
@@ -288,7 +283,7 @@
       END IF
 
       IF( nproc_bgrp > 1 ) THEN
-        CALL mp_sum( becps, intra_bgrp_comm )
+        CALL mp_sum( nlsm1_wrk_d, intra_bgrp_comm )
       END IF
 
       do is = 1, nsp
@@ -300,15 +295,13 @@
 !$cuf kernel do(2) <<<*,*>>>
               do i = 1, SIZE(becp,2)
                 do iv = 1, nh( is )
-                  becp(inl+iv,i) = becps(inl+iv,i)
+                  becp(inl+iv,i) = nlsm1_wrk_d(inl+iv,i)
                 end do
               end do
             END IF
          end do
       end do
               !
-      DEALLOCATE( becps )
-
 100   CONTINUE
 
       call stop_clock( 'nlsm1' )
@@ -715,13 +708,12 @@ SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
   include 'laxlib.fh'
   !
   complex(DP), device, intent(out) :: dbeigr( :, :, :, : )
-  complex(DP), intent(in) PINMEM   :: eigr(:,:)
+  complex(DP), device, intent(in)  :: eigr(:,:)
   !
   integer   :: ig, is, iv, ia, l, inl, i, j
   complex(DP) :: cfact(4)
   !
   complex(DP), device :: cfact_d(4)
-  complex(DP), allocatable, device :: eigr_d(:,:)
   integer, allocatable, device :: nhtol_d(:,:)
   real(DP), allocatable, device :: dbeta_d(:,:,:,:,:)
   !
@@ -741,9 +733,6 @@ SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
 
   call dev_memcpy(cfact_d, cfact)
 
-  allocate(eigr_d, MOLD=eigr)
-  call dev_memcpy(eigr_d, eigr)
-
   allocate(nhtol_d, MOLD=nhtol)
   call dev_memcpy(nhtol_d, nhtol)
 
@@ -759,7 +748,7 @@ SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
            do iv=1,nh(is)
               l=nhtol_d(iv,is)
               ! q = 0   component (with weight 1.0)
-              dbeigr(1,iv+inl,i,j)= cfact_d(l+1)*dbeta_d(1,iv,is,i,j)*eigr_d(1,ia)
+              dbeigr(1,iv+inl,i,j)= cfact_d(l+1)*dbeta_d(1,iv,is,i,j)*eigr(1,ia)
            end do
         end do
      end do
@@ -771,7 +760,7 @@ SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
               ! q > 0   components (with weight 2.0)
               do ig = gstart, ngw
                  l=nhtol_d(iv,is)
-                 dbeigr(ig,iv+inl,i,j) = 2.0d0*cfact_d(l+1)*dbeta_d(ig,iv,is,i,j)*eigr_d(ig,ia)
+                 dbeigr(ig,iv+inl,i,j) = 2.0d0*cfact_d(l+1)*dbeta_d(ig,iv,is,i,j)*eigr(ig,ia)
               end do
            end do
         end do
@@ -779,7 +768,6 @@ SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
 
   end do
   !
-  deallocate(eigr_d)
   deallocate(nhtol_d)
   deallocate(dbeta_d)
   !
@@ -912,13 +900,14 @@ SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
                              ibgrp_g2l, i2gupdwn_bgrp, nbspx, nbsp_bgrp
   use cp_interfaces,  only : dbeta_eigr
   use device_memcpy_m, only : dev_memcpy
+  use cp_main_variables, only : dbec_d, caldbec_wrk_d, caldbec_dwrk_d
   !
   implicit none
   !
   include 'laxlib.fh'
   !
   complex(DP), intent(in), device :: c_bgrp( :, : )
-  complex(DP), intent(in)  PINMEM :: eigr(:,:)
+  complex(DP), intent(in), device :: eigr(:,:)
   real(DP),    intent(out) PINMEM :: dbec( :, :, :, : )
   integer, intent(in) :: idesc( :, : )
   !
@@ -926,38 +915,33 @@ SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
   integer   :: n1, n2, m1, m2, ibgrp_i, nrcx
   complex(DP) :: cfact
   !
-  real(DP), allocatable, device :: dbec_d( :, :, :, : )
-  complex(DP), allocatable, device :: wrk2_d(:,:,:,:)
-  real(DP),    allocatable, device :: dwrk_bgrp_d(:,:)
 
   integer :: ibgrp
   integer, allocatable, device :: ibgrp_g2l_d(:)
   !
   call start_clock( 'caldbec_bgrp' )
   !
-  allocate(dbec_d, MOLD=dbec)
-  !
   dbec_d = 0.0d0
   !
   allocate(ibgrp_g2l_d, MOLD=ibgrp_g2l)
   call dev_memcpy(ibgrp_g2l_d, ibgrp_g2l)
   !
-  allocate( wrk2_d( ngw, nkb, 3, 3 ) )
+  caldbec_wrk_d = (0.D0, 0.D0)
   !
   nrcx = MAXVAL(idesc(LAX_DESC_NRCX,:))
   !
-  allocate( dwrk_bgrp_d( nkb, nbspx_bgrp ) )
+  CALL dbeta_eigr( caldbec_wrk_d, eigr )
   !
-  CALL dbeta_eigr( wrk2_d, eigr )
+  caldbec_dwrk_d = 0.D0
   !
   do j=1,3
      do i=1,3
         IF( ngw > 0 .AND. nkb > 0 ) THEN
-           CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2_d(1,1,i,j), 2*ngw, &
-                             c_bgrp, 2*ngw, 0.0d0, dwrk_bgrp_d(1,1), nkb )
+           CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, caldbec_wrk_d(1,1,i,j), 2*ngw, &
+                             c_bgrp, 2*ngw, 0.0d0, caldbec_dwrk_d(1,1), nkb )
         END IF
         if( nproc_bgrp > 1 ) then
-           call mp_sum( dwrk_bgrp_d, intra_bgrp_comm )
+           call mp_sum( caldbec_dwrk_d, intra_bgrp_comm )
         end if
         do ia = 1, nat
            is = ityp(ia)
@@ -973,7 +957,7 @@ SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
                     do iw = 1, nh(is)
                        ibgrp = ibgrp_g2l_d( ii + ir - 1 + istart - 1 )
                        IF( ibgrp > 0 ) THEN
-                          dbec_d( inl + iw, ii + (iss-1)*nrcx, i, j ) = dwrk_bgrp_d( inl + iw, ibgrp )
+                          dbec_d( inl + iw, ii + (iss-1)*nrcx, i, j ) = caldbec_dwrk_d( inl + iw, ibgrp )
                        END IF
                     end do
                  end do
@@ -983,17 +967,11 @@ SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
      end do
   end do
   !
-  deallocate( dwrk_bgrp_d )
-  !
   CALL dev_memcpy( dbec, dbec_d )
   !
   if( nbgrp > 1 ) then
      CALL mp_sum( dbec, inter_bgrp_comm )
   end if
-  !
-  deallocate( dbec_d )
-  deallocate( wrk2_d )
-  deallocate(ibgrp_g2l_d)
   !
   call stop_clock( 'caldbec_bgrp' )
   !

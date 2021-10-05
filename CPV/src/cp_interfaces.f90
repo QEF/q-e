@@ -1039,7 +1039,7 @@
       SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)  PINMEM ::  eigr( :, : )
+         COMPLEX(DP), INTENT(IN), DEVICE ::  eigr( :, : )
          COMPLEX(DP), INTENT(IN), DEVICE ::  c_bgrp( :, : )
          REAL(DP),    INTENT(OUT) PINMEM ::  dbec( :, :, :, : )
          INTEGER, INTENT(IN) :: idesc( :, : )
@@ -1103,7 +1103,7 @@
       SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)   PINMEM :: eigr( :, : )
+         COMPLEX(DP), INTENT(IN),  DEVICE :: eigr( :, : )
          COMPLEX(DP), INTENT(OUT), DEVICE :: dbeigr( :, :, :, :)
       END SUBROUTINE dbeta_eigr_gpu_x
 #endif
