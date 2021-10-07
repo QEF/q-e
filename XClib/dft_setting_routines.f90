@@ -45,9 +45,6 @@ CONTAINS
     USE xclib_utils_and_para,ONLY: nowarning
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                                    discard_input_dft, is_libxc, dft, scan_exx, notset
-#if defined(__LIBXC)
-    USE dft_setting_params,  ONLY: xc_kind_error
-#endif
     USE qe_dft_list,         ONLY: nxc, ncc, ngcx, ngcc, nmeta, get_IDs_from_shortname, &
                                    dft_LDAx_name, dft_LDAc_name, dft_GGAx_name,         &
                                    dft_GGAc_name, dft_MGGA_name
@@ -65,12 +62,6 @@ CONTAINS
     LOGICAL :: check_libxc
     CHARACTER(len=1) :: lxc
     INTEGER :: ID_vec(6)
-#if defined(__LIBXC)
-    INTEGER :: ii, n_ext_params
-    INTEGER :: flag_v(16), exp2, ftot, ftotx
-    TYPE(xc_f03_func_t) :: xc_func03
-    TYPE(xc_f03_func_info_t) :: xc_info03
-#endif
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
                save_metac
     !
@@ -173,56 +164,6 @@ CONTAINS
     !
 #if defined(__LIBXC)
     IF (.NOT. dft_defined) CALL matching_libxc( dftout )
-    !
-    !------------------------------------------------------------------
-    ! Checks whether external parameters are required by the libxc
-    ! functionals (if present)
-    !------------------------------------------------------------------
-    !
-    ID_vec(1) = iexch  ;  ID_vec(2) = icorr
-    ID_vec(3) = igcx   ;  ID_vec(4) = igcc
-    ID_vec(5) = imeta  ;  ID_vec(6) = imetac
-    !
-    n_ext_params = 0
-    DO ii = 1, 6
-      IF (is_libxc(ii)) THEN
-        CALL xc_f03_func_init( xc_func03, id_vec(ii), 1 )
-        xc_info03 = xc_f03_func_get_info(xc_func03)
-        n_ext_params = xc_f03_func_info_get_n_ext_params(xc_info03)
-        ftot = xc_f03_func_info_get_flags(xc_info03)
-        flag_v(1:16) = 0
-        exp2 = 16
-        DO WHILE (ftot > 0)
-          exp2 = exp2 - 1
-          ftotx = ftot - 2**exp2
-          IF (ftotx >= 0) THEN
-            flag_v(exp2+1) = 1
-            ftot = ftotx
-          ENDIF
-        ENDDO
-        !
-        IF ( is_libxc(ii) .AND. .NOT.nowarning ) THEN
-          IF ( n_ext_params /= 0 ) &
-            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends",&
-                          &/5X," on external parameters: check the user_guide of",&
-                          &/5X," QE if you need to modify them or to check their",&
-                          &/5x," default values.")' ) id_vec(ii)
-          IF ( flag_v(1) == 0 ) &
-            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
-                          &/5X,"provide Exc.")' ) id_vec(ii)
-          IF ( flag_v(2) == 0 ) &
-            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
-                          &/5X,"provide Vxc: its correct operation in QE is not ",  &
-                          &/5X,"guaranteed.")' ) id_vec(ii)
-          IF (dftout(1:3) .EQ. 'XC-' .AND. flag_v(3) == 0 ) &
-            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",    &
-                          &/5X,"provide Vxc derivative: its correct operation in QE is",&
-                          &/5X," not possible when derivative is needed.")' ) id_vec(ii)
-        ENDIF
-        CALL xc_f03_func_end( xc_func03 )
-      ENDIF
-    ENDDO
-    !
 #endif
     !
     ! Back compatibility - TO BE REMOVED
@@ -430,9 +371,6 @@ CONTAINS
           xc_info = xc_f03_func_get_info( xc_func )
           fkind = xc_f03_func_info_get_kind( xc_info )
           family = xc_f03_func_info_get_family( xc_info )
-          IF ( matches('HYB_', TRIM(name)) ) THEN
-            exx_fraction = xc_f03_hyb_exx_coef( xc_func )
-          ENDIF
           CALL xc_f03_func_end( xc_func )
           !   
           SELECT CASE( family )
@@ -1105,14 +1043,16 @@ CONTAINS
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                                    is_libxc, libxc_initialized
 #if defined(__LIBXC)
+    USE xclib_utils_and_para,ONLY: nowarning
     USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list, &
-                                   libxc_flags
+                                   libxc_flags, n_ext_params, exx_fraction,  &
+                                   ishybrid
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
     LOGICAL, INTENT(IN) :: domag
     !! 1: unpolarized case; 2: polarized
-    INTEGER :: iid, ip, p0, pn, ips, nspin0, iflag
+    INTEGER :: iid, ip, p0, pn, ips, nspin0, iflag, family
     INTEGER :: id_vec(6), flags_tot    
     !
 #if defined(__LIBXC)
@@ -1136,14 +1076,20 @@ CONTAINS
       IF (is_libxc(iid)) THEN
         CALL xc_f03_func_init( xc_func(iid), id_vec(iid), nspin0 )
         xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
+        family = xc_f03_func_info_get_family( xc_info(iid) )
         !
         flags_tot = xc_f03_func_info_get_flags( xc_info(iid) )
         DO iflag = 15, 0, -1
           libxc_flags(iid,iflag) = 0
-          IF ( flags_tot-2**iflag<0 ) CYCLE
+          IF ( flags_tot-2**iflag < 0 ) CYCLE
           libxc_flags(iid,iflag) = 1
           flags_tot = flags_tot-2**iflag
         ENDDO
+        !
+        IF ( family==XC_FAMILY_HYB_GGA .OR. family==XC_FAMILY_HYB_MGGA ) THEN
+           exx_fraction = xc_f03_hyb_exx_coef( xc_func(iid) )
+           ishybrid = ( exx_fraction /= 0.d0 )
+        ENDIF   
         !
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
 #if (XC_MAJOR_VERSION<=5)
@@ -1156,8 +1102,31 @@ CONTAINS
                                                            xc_info(iid), ip )
         ENDDO
         libxc_initialized(iid) = .TRUE.
-      ENDIF
+        !
+        IF ( .NOT. nowarning ) THEN
+          IF ( n_ext_params(iid) /= 0 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends",&
+                          &/5X," on external parameters: check the user_guide of",&
+                          &/5X," QE if you need to modify them or to check their",&
+                          &/5x," default values.")' ) id_vec(iid)
+          IF ( libxc_flags(iid,0) == 0 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                          &/5X,"provide Exc.")' ) id_vec(iid)
+          IF ( libxc_flags(iid,1) == 0 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                          &/5X,"provide Vxc: its correct operation in QE is not ",  &
+                          &/5X,"guaranteed.")' ) id_vec(iid)
+          IF ( libxc_flags(iid,2) == 0 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ", &
+                          &/5X,"provide Vxc derivative.")' ) id_vec(iid)
+          IF ( libxc_flags(iid,15) == 1 ) &
+            WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," depends on", &
+                          &/5X," the laplacian of the density, which is currently set",&
+                          &/5X," to zero.")' ) id_vec(iid)
+        ENDIF
+      ENDIF  
     ENDDO
+    !
 #endif
     RETURN
   END SUBROUTINE xclib_init_libxc

@@ -161,7 +161,7 @@ PROGRAM xclib_test
               dvss_aver(1,3)
   ! ... MGGA aver
   REAL(DP) :: v3x_aver(1,2), v3c_aver(1,2)
-  REAL(DP) :: aver_sndu, aver_recu, vaver(2)
+  REAL(DP) :: aver_sndu, aver_recu
   !
   ! ... xml
   INTEGER :: tag_err
@@ -629,6 +629,7 @@ PROGRAM xclib_test
            ALLOCATE( exg1(nnr), ecg1(nnr) )
            ALLOCATE( v1x1(nnr,ns), v2x1(nnr,ns) )
            ALLOCATE( v1c1(nnr,ns), v2c1(nnr,ns), v2c_ud1(nnr) )
+           v2c_ud1 = 0.d0
          ELSE
            ALLOCATE( grh(nnr,3,ns) )
            ALLOCATE( dvxcrr1(nnr,ns,ns), dvxcsr1(nnr,ns,ns), &
@@ -657,6 +658,7 @@ PROGRAM xclib_test
              ALLOCATE( exg2(nnrbt), ecg2(nnrbt) )
              ALLOCATE( v1x2(nnrbt,ns), v2x2(nnrbt,ns) )
              ALLOCATE( v1c2(nnrbt,ns), v2c2(nnrbt,ns), v2c_ud2(nnrbt) )
+             v2c_ud1 = 0.d0
            ELSE
              ALLOCATE( dvxcrr2(nnrbt,ns,ns), dvxcsr2(nnrbt,ns,ns), &
                        dvxcss2(nnrbt,ns,ns) )
@@ -1115,13 +1117,17 @@ PROGRAM xclib_test
            IF ( .NOT. xc_derivative ) THEN
              ex_is_out = exc_term .AND. is_it_out( diff_thr_e_gga, 1, ex1(ii:ii), ex2(ii:ii) )
              ec_is_out = cor_term .AND. is_it_out( diff_thr_e_gga, 1, ec1(ii:ii), ec2(ii:ii) )
-             v1x_is_out= exc_term .AND. is_it_out( diff_thr_vgga,ns, v1x1(ii,:),v1x2(ii,:) )
-             v2x_is_out= exc_term .AND. is_it_out( diff_thr_vgga,ns, v2x1(ii,:),v2x2(ii,:) )
-             v1c_is_out= cor_term .AND. is_it_out( diff_thr_vgga,ns, v1c1(ii,:),v1c2(ii,:) )
-             v2c_is_out= cor_term .AND. is_it_out( diff_thr_vgga,ns, v2c1(ii,:),v2c2(ii,:), &
-                                                   v2c_ud1(ii), v2c_ud2(ii) )
+             v1x_is_out= exc_term .AND. is_it_out( diff_thr_vgga, ns, v1x1(ii,:), v1x2(ii,:) )
+             v2x_is_out= exc_term .AND. is_it_out( diff_thr_vgga, ns, v2x1(ii,:), v2x2(ii,:) )
+             v1c_is_out= cor_term .AND. is_it_out( diff_thr_vgga, ns, v1c1(ii,:), v1c2(ii,:) )
+             IF ( .NOT. POLARIZED ) THEN
+               v2c_is_out= cor_term .AND. is_it_out( diff_thr_vgga, ns, v2c1(ii,:), v2c2(ii,:) )
+             ELSE
+               v2c_is_out= cor_term .AND. is_it_out( diff_thr_vgga, ns, v2c1(ii,:), v2c2(ii,:), &
+                                                     v2c_ud1(ii), v2c_ud2(ii) )
+             ENDIF
              something_out=ANY((/ex_is_out, ec_is_out, v1x_is_out, v2x_is_out, &
-                                 v1c_is_out, v2c_is_out/) )                
+                                 v1c_is_out, v2c_is_out/) )
            ELSE
              dvxcrr_is_out = is_dit_out(diff_thr_dv,dvxcrr1(ii,:,:),dvxcrr2(ii,:,:))
              dvxcsr_is_out = is_dit_out(diff_thr_dv,dvxcsr1(ii,:,:),dvxcsr2(ii,:,:))
@@ -1164,8 +1170,12 @@ PROGRAM xclib_test
                IF (exc_term .AND. v1x_is_out) CALL print_diff( 'V1x',v1x1(ii,:), v1x2(ii,:) )
                IF (exc_term .AND. v2x_is_out) CALL print_diff( 'V2x',v2x1(ii,:), v2x2(ii,:) )
                IF (cor_term .AND. v1c_is_out) CALL print_diff( 'V1c',v1c1(ii,:), v1c2(ii,:) )
-               IF (cor_term .AND. v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:), &
-                                                 v2c_ud1(ii), v2c_ud2(ii) )
+               IF ( .NOT. POLARIZED ) THEN
+                 IF (cor_term .AND. v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:))
+               ELSE
+                 IF (cor_term .AND. v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:),&
+                                                                 v2c_ud1(ii), v2c_ud2(ii) )
+               ENDIF
              ELSE
                ! 
                !WRITE(stdout,*) " " 
@@ -1697,13 +1707,19 @@ PROGRAM xclib_test
   CHARACTER(LEN=*), INTENT(IN) :: status
   CHARACTER(LEN=100) :: test_output_gen
   CHARACTER(LEN=115) :: test_output_exe
+  INTEGER :: j, id_term
   !
   IF (test=='gen-benchmark') THEN
     test_output_gen = ''
-    IF (is==is_min) WRITE(test_output_gen(1:3), '(i3)') id
     IF (fam_init=='all_terms') THEN
+      DO j = 1, 6
+        IF (id_vec(j)/=0) id_term = id_vec(j)
+      ENDDO
+      IF (is==is_min) WRITE(test_output_gen(1:3), '(i3)') id_term
       WRITE(test_output_gen(5:8),  '(a)') TRIM(family)
       WRITE(test_output_gen(10:11),'(a)') TRIM(xc_kind)
+    ELSE
+      IF (is==is_min) WRITE(test_output_gen(1:3), '(i3)') id
     ENDIF
     IF (is==1) WRITE(test_output_gen(13:17), '(a)') 'UNPOL'
     IF (is==2) WRITE(test_output_gen(13:15), '(a)') 'POL'
@@ -1712,10 +1728,15 @@ PROGRAM xclib_test
     WRITE(stdout,*) test_output_gen
   ELSEIF (test=='exe-benchmark') THEN
     test_output_exe = ''
-    IF (is==is_min) WRITE(test_output_exe(1:3), '(i3)') id
     IF (fam_init=='all_terms') THEN
+      DO j = 1, 6
+        IF (id_vec(j)/=0) id_term = id_vec(j)
+      ENDDO
+      IF (is==is_min) WRITE(test_output_exe(1:3), '(i3)') id_term
       WRITE(test_output_exe(5:8), '(a)') TRIM(family)
       WRITE(test_output_exe(10:11),'(a)') TRIM(xc_kind)
+    ELSE
+      IF (is==is_min) WRITE(test_output_exe(1:3), '(i3)') id
     ENDIF
     IF (is==1) WRITE(test_output_exe(13:17), '(a)') 'UNPOL'
     IF (is==2) WRITE(test_output_exe(13:15), '(a)') 'POL'

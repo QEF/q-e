@@ -14,7 +14,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params,   ONLY: xc_func, xc_info, libxc_flags
+  USE dft_setting_params,   ONLY: xc_func, libxc_flags
 #endif 
   !
   USE kind_l,               ONLY: DP
@@ -67,7 +67,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in QE
   !
-  INTEGER  :: k, ipol, pol_unpol, eflag
+  INTEGER  :: k, ipol, pol_unpol
   LOGICAL  :: POLARIZED
   REAL(DP) :: rh, ggrho2, atau
 #if (XC_MAJOR_VERSION > 4)
