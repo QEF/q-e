@@ -66,6 +66,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
+	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers \
 	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
 
 # If A depends upon B, A should come before B in the list below

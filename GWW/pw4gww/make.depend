@@ -361,6 +361,7 @@ produce_wannier_gamma.o : ../../Modules/fft_base.o
 produce_wannier_gamma.o : ../../Modules/gvecw.o
 produce_wannier_gamma.o : ../../Modules/io_files.o
 produce_wannier_gamma.o : ../../Modules/io_global.o
+produce_wannier_gamma.o : ../../Modules/kind.o
 produce_wannier_gamma.o : ../../Modules/mp_world.o
 produce_wannier_gamma.o : ../../Modules/recvec.o
 produce_wannier_gamma.o : ../../Modules/wannier_gw.o
