@@ -748,7 +748,9 @@ MODULE pw_restart_new
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
       USE buffers,              ONLY : get_buffer
-      USE wavefunctions, ONLY : evc
+      USE wavefunctions,        ONLY : evc
+      USE exx,                  ONLY : xi
+      USE xc_lib,               ONLY : exx_is_active
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k
       USE gvect,                ONLY : ngm, g, mill
       USE fft_base,             ONLY : dfftp
@@ -771,7 +773,7 @@ MODULE pw_restart_new
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
-      CHARACTER(LEN=320)    :: filename
+      CHARACTER(LEN=320)    :: filename, filenameace
       !
       CALL using_evc(0); CALL using_et(0) !? Is this needed? et never used!
       dirname = restart_dir ()
@@ -851,10 +853,15 @@ MODULE pw_restart_new
             filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
                  & TRIM(int_to_char(ik_g))
             !
+            if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // updw(ispin) // &
+                 & TRIM(int_to_char(ik_g))
+            !
          ELSE
             !
             ispin = 1
             filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
+            !
+            if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // TRIM(int_to_char(ik_g))
             !
          ENDIF
          !
@@ -867,6 +874,14 @@ MODULE pw_restart_new
               ispin, nspin, evc, npw_g, gamma_only, nbnd, &
               igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
               tpiba*bg(:,3), mill_k, 1.D0 )
+         !
+         IF ( (my_bgrp_id == root_bgrp_id) .and. exx_is_active()) then 
+              CALL write_wfc( iunpun, &
+              filenameace, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
+              ispin, nspin, xi(:,:,ik), npw_g, gamma_only, nbnd, &
+              igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
+              tpiba*bg(:,3), mill_k, 1.D0 )
+         END IF 
          !
       END DO k_points_loop
       !
@@ -1220,6 +1235,8 @@ MODULE pw_restart_new
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
+      USE exx,                  ONLY : xi
+      USE xc_lib,               ONLY : exx_is_active
       !
       IMPLICIT NONE
       !
@@ -1228,7 +1245,7 @@ MODULE pw_restart_new
       COMPLEX(dp), INTENT(OUT) :: evc(:,:)
       !
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
-      CHARACTER(LEN=320)   :: filename, msg
+      CHARACTER(LEN=320)   :: filename, filenameace, msg
       INTEGER              :: i, ik_g, ig, ipol, ik_s
       INTEGER              :: npol_, nbnd_
       INTEGER              :: nupdwn(2), ike, iks, ngk_g, npw_g, ispin
@@ -1287,9 +1304,14 @@ MODULE pw_restart_new
          filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
               & TRIM(int_to_char(ik_g))
          !
+         if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // updw(ispin) // &
+              & TRIM(int_to_char(ik_g))
+         !
       ELSE
          !
          filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
+         !
+         if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // TRIM(int_to_char(ik_g))
          !
       ENDIF
       !
@@ -1302,6 +1324,16 @@ MODULE pw_restart_new
       CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
            ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd_, &
            igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
+      !  
+      IF(exx_is_active()) THEN 
+        !
+        xi(:,:,ik) = (0.0_DP, 0.0_DP)
+        !
+        CALL read_wfc( iunpun, filenameace, root_bgrp, intra_bgrp_comm, &
+             ik_g, xk_, ispin, npol_, xi(:,:,ik), npw_g, gamma_only, nbnd_, &
+             igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
+        !
+      END IF 
       !
       DEALLOCATE ( mill_k )
       DEALLOCATE ( igk_l2g_kdip )
