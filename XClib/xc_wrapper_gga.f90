@@ -17,8 +17,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params,   ONLY: xc_func, xc_info 
-  USE dft_setting_routines, ONLY: get_libxc_flags_exc
+  USE dft_setting_params,   ONLY: xc_func, xc_info, libxc_flags
 #endif
   !
   USE kind_l,               ONLY: DP
@@ -158,8 +157,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc (still so? - check)
     !
     CALL xc_f03_func_set_dens_threshold( xc_func(4), small )!rho_threshold_gga )
-    CALL get_libxc_flags_exc( xc_info(4), eflag )
-    IF (eflag==1) THEN
+    IF (libxc_flags(4,0)==1) THEN
       CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
     ELSE
       CALL xc_f03_gga_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), vc_rho(1), vc_sigma(1) )
@@ -257,8 +255,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     !CALL xc_f03_func_set_dens_threshold( xc_func(3), rho_threshold_gga )
     CALL xc_f03_func_set_dens_threshold( xc_func(3), small )
-    CALL get_libxc_flags_exc( xc_info(3), eflag )
-    IF (eflag==1) THEN
+    IF (libxc_flags(3,0)==1) THEN
       CALL xc_f03_gga_exc_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
     ELSE
       CALL xc_f03_gga_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), vx_rho(1), vx_sigma(1) )

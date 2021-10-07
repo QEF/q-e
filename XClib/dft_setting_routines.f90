@@ -33,9 +33,6 @@ MODULE dft_setting_routines
             exx_is_active, igcc_is_lyp, xclib_reset_dft, dft_force_hybrid, &
             xclib_finalize_libxc
   PUBLIC :: set_libxc_ext_param, get_libxc_ext_param
-#if defined(__LIBXC)
-  PUBLIC :: get_libxc_flags_exc
-#endif
   !
 CONTAINS
   !
@@ -1108,14 +1105,15 @@ CONTAINS
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                                    is_libxc, libxc_initialized
 #if defined(__LIBXC)
-    USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list
+    USE dft_setting_params,  ONLY: n_ext_params, xc_func, xc_info, par_list, &
+                                   libxc_flags
 #endif
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: xclib_nspin
     LOGICAL, INTENT(IN) :: domag
     !! 1: unpolarized case; 2: polarized
-    INTEGER :: iid, ip, p0, pn, ips, nspin0
-    INTEGER :: id_vec(6)
+    INTEGER :: iid, ip, p0, pn, ips, nspin0, iflag
+    INTEGER :: id_vec(6), flags_tot    
     !
 #if defined(__LIBXC)
     !call xclib_init_libxc_print_version_info
@@ -1138,6 +1136,15 @@ CONTAINS
       IF (is_libxc(iid)) THEN
         CALL xc_f03_func_init( xc_func(iid), id_vec(iid), nspin0 )
         xc_info(iid) = xc_f03_func_get_info( xc_func(iid) )
+        !
+        flags_tot = xc_f03_func_info_get_flags( xc_info(iid) )
+        DO iflag = 15, 0, -1
+          libxc_flags(iid,iflag) = 0
+          IF ( flags_tot-2**iflag<0 ) CYCLE
+          libxc_flags(iid,iflag) = 1
+          flags_tot = flags_tot-2**iflag
+        ENDDO
+        !
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
 #if (XC_MAJOR_VERSION<=5)
         p0 = 0 ;  pn = n_ext_params(iid)-1 ;  ips = 1
@@ -1172,9 +1179,10 @@ CONTAINS
     !------------------------------------------------------------------------
     !! Finalize Libxc functionals, if present.
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                   is_libxc, libxc_initialized
+                                   is_libxc, libxc_initialized, notset
 #if defined(__LIBXC)
-    USE dft_setting_params,  ONLY: xc_func, xc_kind_error
+    USE dft_setting_params,  ONLY: xc_func, xc_kind_error, libxc_flags, &
+                                   n_ext_params, par_list
 #endif
     IMPLICIT NONE
     INTEGER :: iid
@@ -1190,6 +1198,9 @@ CONTAINS
         CALL xc_f03_func_end( xc_func(iid) )
         libxc_initialized(iid) = .FALSE.
         is_libxc(iid) = .FALSE.
+        libxc_flags(:,:) = notset
+        n_ext_params(:) = 0
+        par_list(:,:) = 0.d0
       ENDIF  
     ENDDO
     xc_kind_error = .FALSE.
@@ -1246,32 +1257,11 @@ CONTAINS
     get_libxc_ext_param = par_list(sid,i_param)
 #else
     CALL xclib_infomsg( 'get_libxc_ext_param', 'WARNING: an external parameter&
-                         &was sought in Libxc, but Libxc is not active' )
+                         &was sought in Libxc, but Libxc is not linked' )
     get_libxc_ext_param = 0.d0
 #endif
     RETURN
   END FUNCTION
-  !
-#if defined(__LIBXC)
-  !------------------------------------------------------------------------
-  SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
-     !--------------------------------------------------------------------
-     !! Checks whether Exc is present or not in the output of a libxc 
-     !! functional (e.g. TB09 and a few others)
-     IMPLICIT NONE
-     TYPE(xc_f03_func_info_t) :: xc_info
-     INTEGER :: ii, flags_tot
-     INTEGER, INTENT(OUT) :: eflag 
-     flags_tot = xc_f03_func_info_get_flags(xc_info)
-     eflag = 0
-     DO ii = 15, 0, -1
-       IF ( flags_tot-2**ii<0 ) CYCLE
-       flags_tot = flags_tot-2**ii
-       IF ( ii==0 ) eflag = 1
-     ENDDO
-     RETURN
-  END SUBROUTINE
-#endif
   !
   !-------------------------------------------------------------------------
   FUNCTION xclib_get_dft_short()

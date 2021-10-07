@@ -46,7 +46,7 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params, ONLY: xc_func, xc_info, xc_kind_error
+  USE dft_setting_params, ONLY: xc_func, xc_info, xc_kind_error, libxc_flags
 #endif
   USE dft_setting_params, ONLY: is_libxc
   !
@@ -167,11 +167,11 @@ PROGRAM xclib_test
   INTEGER :: tag_err
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=40) :: xc_data="XC_DATA______________"
+  CHARACTER(LEN=45) :: xc_data="XC_DATA______________"
   ! ... output
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
-  CHARACTER(LEN=40), PARAMETER :: failed='**NO MATCH**', &
+  CHARACTER(LEN=40), PARAMETER :: failed='**FAILED**', &
                                   skipped='**skipped - by default**', &
                                   skipped2='**skipped - not found in xml**',&
                                   skipped3='**skipped - needs Libxc**',&
@@ -682,8 +682,8 @@ PROGRAM xclib_test
       IF (is==2) WRITE(xc_data(18:30),'(a)') 'POL'
     ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-      IF (is==1) WRITE(xc_data(8+nlen1:30),'(a)') 'UNP'
-      IF (is==2) WRITE(xc_data(8+nlen1:30),'(a)') 'POL'
+      IF (is==1) WRITE(xc_data(8+nlen1:),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(8+nlen1:),'(a)') 'POL'
     ENDIF
     !
     ! ... read data set from xml file

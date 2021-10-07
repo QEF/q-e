@@ -14,8 +14,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_routines, ONLY: get_libxc_flags_exc
-  USE dft_setting_params,   ONLY: xc_func, xc_info
+  USE dft_setting_params,   ONLY: xc_func, xc_info, libxc_flags
 #endif 
   !
   USE kind_l,               ONLY: DP
@@ -149,8 +148,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   IF ( is_libxc(5) ) THEN
     CALL xc_f03_func_set_dens_threshold( xc_func(5), rho_threshold_mgga )
-    CALL get_libxc_flags_exc( xc_info(5), eflag )
-    IF (eflag==1) THEN
+    IF (libxc_flags(5,0)==1) THEN
       CALL xc_f03_mgga_exc_vxc( xc_func(5), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                 ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
     ELSE
@@ -185,8 +183,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
              ABS(tau_lxc(2*k))>tau_threshold_mgga ) THEN
           v1x(k,2) = vx_rho(2*k)
           v2x(k,2) = vx_sigma(3*k)*2.d0
-          v3x(k,2) = vx_tau(2*k)                                   !m06l: *2 libxc o /2 qe????
-        ENDIF                                                      !-chiarisci il problema del fattore 2
+          v3x(k,2) = vx_tau(2*k)
+        ENDIF
       ENDDO
     ENDIF
     !
@@ -207,8 +205,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( is_libxc(6) ) THEN
     !
     CALL xc_f03_func_set_dens_threshold( xc_func(6), rho_threshold_mgga )
-    CALL get_libxc_flags_exc( xc_info(6), eflag )
-    IF (eflag==1) THEN
+    IF (libxc_flags(6,0)==1) THEN
       CALL xc_f03_mgga_exc_vxc( xc_func(6), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                               ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
     ELSE
