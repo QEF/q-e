@@ -911,7 +911,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
 
         var ortho_max -type INTEGER {
-            default { 20 }
+            default {300 }
             info {
                maximum number of iterations for orthonormalization
                meaningful only if orthogonalization = 'ortho'
