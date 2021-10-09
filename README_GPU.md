@@ -32,7 +32,8 @@ CUDA Driver Version:           11000
 Default Target:                cc70
 ...
 ```
-For the above case, configure QE with:
+The version is returned as (1000 major + 10 minor). For example, CUDA 9.2 
+would be represented by 9020. For the above case, configure QE with:
 ```
 ./configure --with-cuda=$CUDA_HOME --with-cuda-cc=70 --with-cuda-runtime=11.0
 ```
