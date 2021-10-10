@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#if defined(__CUDA)
 !----------------------------------------------------------------------
 SUBROUTINE force_hub_gpu( forceh )
    !----------------------------------------------------------------------
@@ -1947,3 +1948,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    RETURN
    !
 END SUBROUTINE dprojdtau_gamma_gpu
+#else
+SUBROUTINE force_hub_gpu( )
+END
+#endif
