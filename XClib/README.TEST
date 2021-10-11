@@ -77,7 +77,7 @@ The following options have to be set:
           where LDA terms have the same name of the GGA ones, e.g. B3LP).
           If dft='all_...' then input family will be ignored.
           
-- nspin: unpolarized (=1) or polarized (=2).
+- polarization: 'unpolarized', 'polarized', 'both'.
 
 - xc_derivative: if .TRUE. calculates the derivative terms (needed,
                  for example, by linear response code) instead of

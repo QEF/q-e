@@ -17,11 +17,11 @@ PROGRAM xclib_test
   !
   !! Choices:
   !
-  !! * all_terms: run test over all available terms for each family
+  !! * ALL_TERMS: run test over all available terms for each family
   !!              and kind;
-  !! * all_short: run test over all available full dfts in QE internal
+  !! * ALL_SHORT: run test over all available full dfts in QE internal
   !!              dft list;
-  !! * all_libxc: run test over all Libxc dfts usable in QE.
+  !! * ALL_LIBXC: run test over all Libxc dfts usable in QE.
   !
   !! Other specific options:
   !
@@ -48,7 +48,8 @@ PROGRAM xclib_test
   USE xc_f03_lib_m
   USE dft_setting_params, ONLY: xc_func, xc_info, xc_kind_error, libxc_flags
 #endif
-  USE dft_setting_params, ONLY: is_libxc
+  USE dft_setting_params,   ONLY: is_libxc, exx_fraction
+  USE dft_setting_routines, ONLY: capital
   !
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft, &
                          dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
@@ -84,9 +85,10 @@ PROGRAM xclib_test
   !
   !-------- Input vars -----------------------
   CHARACTER(LEN=30) :: test, family, fam_init, xc_kind
-  CHARACTER(LEN=30) :: dft, dft_init
-  CHARACTER(LEN=30) :: polarization
-  LOGICAL :: xc_derivative, show_time
+  CHARACTER(LEN=30) :: dft, dft_init, xmldft, xmlfamily
+  CHARACTER(LEN=30) :: polarization, xmlpolarization
+  CHARACTER(LEN=15) :: input_err=''
+  LOGICAL :: xc_derivative, xmlxc_derivative, show_time
   !
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
@@ -107,7 +109,7 @@ PROGRAM xclib_test
                          diff_thr_vmgga  = 1.0E-10_DP, &
                          diff_thr_dmuxc  = 1.0E-6_DP,  &
                          diff_thr_dv     = 1.0E-10_DP
-  REAL(DP) :: fact, exx_frctn
+  REAL(DP) :: fact
   REAL(DP) :: aver_thresh = 10.E-8        !^^--- to optimize
   !
   !---------- Indexes ---------------------------
@@ -193,7 +195,8 @@ PROGRAM xclib_test
   INTEGER :: PROVIDED
 #endif
   !
-  NAMELIST/input_namelist/ test, filename_xml, polarization, family, xc_derivative, dft, show_time
+  NAMELIST/input_namelist/ test, filename_xml, polarization, family, &
+                           xc_derivative, dft, show_time
   !
 #if defined(__MPI)
   !
@@ -237,7 +240,16 @@ PROGRAM xclib_test
     !
     READ( stdin, input_namelist )
     !
-    IF ( dft(1:4)=='all_' ) family=dft
+    DO i = 1, LEN_TRIM(dft)
+      dft(i:i) = capital( dft(i:i) )
+    ENDDO
+    DO i = 1, LEN_TRIM(family)
+      family(i:i) = capital( family(i:i) )
+    ENDDO
+    DO i = 1, LEN_TRIM(polarization)
+      polarization(i:i) = capital( polarization(i:i) )
+    ENDDO
+    IF ( dft(1:4)=='ALL_' ) family = 'ALL'
     !
     IF ( test(1:4)=='gen-' ) THEN
       !
@@ -268,10 +280,24 @@ PROGRAM xclib_test
       CALL xmlr_opentag( "XCTEST-DATA-SET" )
       !
       CALL xmlr_readtag( "HEADER", dummy )
-      !CALL get_attr( "DFT", dft )
-      !CALL get_attr( "FAMILY", family )
-      !CALL get_attr( "VXC_DERIVATIVE", xc_derivative )
-      !CALL get_attr( "NUMBER_OF_SPIN_COMPONENTS", nspin )
+      CALL get_attr( "DFT", xmldft )
+      CALL get_attr( "FAMILY", xmlfamily )
+      CALL get_attr( "VXC_DERIVATIVE", xmlxc_derivative )
+      CALL get_attr( "SPIN", xmlpolarization )
+      !
+      IF ( dft(1:4)=='all_' .AND. TRIM(dft) /= TRIM(xmldft) ) input_err = 'dft'
+      IF ( xmlxc_derivative .NEQV. xc_derivative ) input_err = 'xc_derivative'
+      IF ( TRIM(xmlpolarization) /= 'BOTH'.AND.polarization /= xmlpolarization ) &
+                                                      input_err = 'polarization'
+      IF ( TRIM(input_err) /= '' ) THEN
+        WRITE(stdout,*) 'ERROR: input mismatch in: ', TRIM(input_err)
+        STOP
+      ENDIF
+      IF ( TRIM(family) /= TRIM(xmlfamily) ) THEN
+        WRITE(stdout,*) 'WARNING: input mismatch in FAMILY. The one in the xml file&
+                        &will be considered only.'
+        family = xmlfamily
+      ENDIF
       !
     ENDIF
   ENDIF
@@ -345,11 +371,11 @@ PROGRAM xclib_test
   IF (nr==1) nrpe = mype*nnr
   IF (nr==0) nrpe = npoints-(npoints/npes)*(npes-mype-1)
   !
-  IF (TRIM(polarization)=='unpolarized' ) THEN
+  IF (TRIM(polarization)=='UNPOLARIZED' ) THEN
     is_min = 1  ;  is_max = 1
-  ELSEIF (TRIM(polarization)=='polarized' ) THEN
+  ELSEIF (TRIM(polarization)=='POLARIZED' ) THEN
     is_min = 2  ;  is_max = 2
-  ELSEIF (TRIM(polarization)=='both' ) THEN
+  ELSEIF (TRIM(polarization)=='BOTH' ) THEN
     is_min = 1  ;  is_max = 2
   ELSE
     WRITE(stdout,*) 'ERROR: unrecognized input polarization.'
@@ -360,9 +386,9 @@ PROGRAM xclib_test
   dft_init = dft
   !
   n_qe_func = 1
-  IF (dft=='all_terms') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
-  IF (dft=='all_short') n_qe_func = n_dft
-  IF (dft=='all_libxc') n_qe_func = 999
+  IF (dft=='ALL_TERMS') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
+  IF (dft=='ALL_SHORT') n_qe_func = n_dft
+  IF (dft=='ALL_LIBXC') n_qe_func = 999
   !
   ! ... check QE and Libxc versions used for storing and the current ones
   !
@@ -374,7 +400,7 @@ PROGRAM xclib_test
     WRITE(libxc_version(3:3), '(i1)') minor
     WRITE(libxc_version(5:5), '(i1)') micro
 #else
-    IF (dft=='all_libxc') THEN
+    IF (dft=='ALL_LIBXC') THEN
       WRITE(stdout,*) 'ERROR: Libxc library not linked.'
       STOP
     ENDIF
@@ -409,7 +435,7 @@ PROGRAM xclib_test
     !
     CALL xclib_reset_dft()
     !
-    IF ( dft_init=='all_terms' ) THEN
+    IF ( dft_init=='ALL_TERMS' ) THEN
       IF (id<=nxc+1) THEN
          dft = dft_LDAx_name(id-1)
          xc_kind = 'X'
@@ -426,7 +452,7 @@ PROGRAM xclib_test
          dft = dft_MGGA_name(id-nxc-ncc-ngcx-ngcc-5)
          xc_kind = 'XC'
       ENDIF
-    ELSEIF ( dft_init=='all_short' ) THEN
+    ELSEIF ( dft_init=='ALL_SHORT' ) THEN
       dft = dft_full(id)%name
     ENDIF
     !
@@ -447,22 +473,22 @@ PROGRAM xclib_test
     !
     ! ... skipped cases (some need further checks)
     !
-    IF ( TRIM(dft)=='xxxx' .OR.TRIM(dft)=='NONE'   .OR. &
-         TRIM(dft)=='META'   .OR. & !TRIM(dft)=='TB09' .OR. &
-         TRIM(dft)=='SCA0' .OR. & !TRIM(dft)=='TPSS'   .OR. &
-         TRIM(dft)=='SCAN0'.OR.TRIM(dft)=='PZ+META'.OR. &
+    IF ( TRIM(dft)=='xxxx'    .OR. &
+         TRIM(dft)=='NONE'    .OR. &
+         TRIM(dft)=='META'    .OR. &
+         TRIM(dft)=='PZ+META' .OR. &
          TRIM(dft)=='PBE+META' ) THEN
-       IF (mype==root) CALL print_test_status( skipped )
-       CYCLE
+      IF (mype==root) CALL print_test_status( skipped )
+      CYCLE
     ENDIF
 #if !defined(__LIBXC)
-    IF ( TRIM(dft)=='SCAN' ) THEN
-      IF (mype==root) CALL print_test_status( skipped )
+    IF ( TRIM(dft)=='SCAN' .OR. TRIM(dft)=='SCAN0' ) THEN
+      IF (mype==root) CALL print_test_status( skipped3 )
       CYCLE
     ENDIF
 #else
     ! libxc id=576 -> Libxc5.1.5 bug (same name of id=575)
-    IF ( dft_init=='all_libxc' ) THEN
+    IF ( dft_init=='ALL_LIBXC' ) THEN
       IF ( id==576 ) THEN
         IF (mype==root) CALL print_test_status( skipped )
         CYCLE
@@ -499,10 +525,10 @@ PROGRAM xclib_test
       CYCLE
     ENDIF
     !
-    IF (dft_init=='all_libxc') THEN
+    IF (dft_init=='ALL_LIBXC') THEN
       fkind=-10
       DO l = 1, 6
-        IF (id_vec(l)/=0.AND.is_libxc(l)) fkind=xc_f03_func_info_get_kind(xc_info(l))
+        IF (id_vec(l)/=0.AND.is_libxc(l)) fkind=xc_f03_func_info_get_kind( xc_info(l) )
       ENDDO
       !
       IF (fkind==XC_EXCHANGE) THEN
@@ -523,13 +549,13 @@ PROGRAM xclib_test
     CALL xclib_set_auxiliary_flags( .FALSE. )
     IF ( xclib_dft_is('hybrid') ) CALL start_exx
     !
-    IF ( fam_init(1:4)=='all_' .AND. LDA  )  family='LDA'
-    IF ( fam_init(1:4)=='all_' .AND. GGA  )  family='GGA'
-    IF ( fam_init(1:4)=='all_' .AND. MGGA )  family='MGGA'
+    IF ( fam_init(1:3)=='ALL' .AND. LDA  )  family='LDA'
+    IF ( fam_init(1:3)=='ALL' .AND. GGA  )  family='GGA'
+    IF ( fam_init(1:3)=='ALL' .AND. MGGA )  family='MGGA'
     !
     IF ( iexch1+icorr1+igcx1+igcc1+imeta1+imetac1==0 ) CYCLE
     !
-    IF ( fam_init=='all_terms' ) THEN
+    IF ( dft_init=='ALL_TERMS' ) THEN
       IF ( LDA .AND. GGA ) THEN
         IF ( id<=nxc+ncc+2 ) THEN
           GGA=.FALSE.
@@ -677,12 +703,12 @@ PROGRAM xclib_test
     !
     nlen1 = LEN(TRIM(dft))
     nlen2 = LEN(TRIM(family))
-    IF ( fam_init=='all_terms') THEN
+    IF ( dft_init=='ALL_TERMS' .OR. dft_init(1:4)/='ALL_') THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
       IF (is==1) WRITE(xc_data(18:30),'(a)') 'UNP'
       IF (is==2) WRITE(xc_data(18:30),'(a)') 'POL'
-    ELSEIF ( fam_init=='all_short'.OR.fam_init=='all_libxc' ) THEN
+    ELSEIF ( dft_init=='ALL_SHORT'.OR.dft_init=='ALL_LIBXC' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       IF (is==1) WRITE(xc_data(8+nlen1:),'(a)') 'UNP'
       IF (is==2) WRITE(xc_data(8+nlen1:),'(a)') 'POL'
@@ -1711,7 +1737,7 @@ PROGRAM xclib_test
   !
   IF (test=='gen-benchmark') THEN
     test_output_gen = ''
-    IF (fam_init=='all_terms') THEN
+    IF (dft_init=='ALL_TERMS') THEN
       DO j = 1, 6
         IF (id_vec(j)/=0) id_term = id_vec(j)
       ENDDO
@@ -1728,7 +1754,7 @@ PROGRAM xclib_test
     WRITE(stdout,*) test_output_gen
   ELSEIF (test=='exe-benchmark') THEN
     test_output_exe = ''
-    IF (fam_init=='all_terms') THEN
+    IF (dft_init=='ALL_TERMS') THEN
       DO j = 1, 6
         IF (id_vec(j)/=0) id_term = id_vec(j)
       ENDDO

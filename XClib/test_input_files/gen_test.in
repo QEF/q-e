@@ -1,0 +1,8 @@
+&INPUT_NAMELIST
+                    test='gen-benchmark'
+                    filename_xml='xctest.xml'
+                    dft='all_terms'
+                    family= ''
+                    polarization= 'both'
+                    xc_derivative=.FALSE.
+                 /

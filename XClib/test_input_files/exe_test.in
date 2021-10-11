@@ -1,0 +1,9 @@
+&INPUT_NAMELIST
+                    test='exe-benchmark'
+                    filename_xml='xctest.xml'
+                    dft='all_terms'
+                    family= ''
+                    polarization='both'
+                    xc_derivative=.FALSE.
+                    show_time=.TRUE.
+                 /

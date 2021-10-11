@@ -33,6 +33,7 @@ MODULE dft_setting_routines
             exx_is_active, igcc_is_lyp, xclib_reset_dft, dft_force_hybrid, &
             xclib_finalize_libxc
   PUBLIC :: set_libxc_ext_param, get_libxc_ext_param
+  PUBLIC :: capital
   !
 CONTAINS
   !
@@ -582,7 +583,7 @@ CONTAINS
     isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta .OR. isnonlocc
     islda     = (iexch> 0) .AND. (icorr > 0) .AND. .NOT. isgradient
     is_libxc13 = is_libxc(1) .OR. is_libxc(3)
-    
+    !
     ! PBE0/DF0
     IF ( iexch==6 .AND. .NOT.is_libxc(1) ) exx_fraction = 0.25_DP
     IF ( igcx==8  .AND. .NOT.is_libxc(3) ) exx_fraction = 0.25_DP
