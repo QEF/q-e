@@ -12,7 +12,7 @@
 #endif
 !
 #if defined(__CUDA)
-#define PINMEM ,PINNED
+#define PINMEM 
 #else
 #define PINMEM
 #endif

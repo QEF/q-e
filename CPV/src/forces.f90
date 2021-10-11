@@ -10,7 +10,7 @@
 ! Task Groups parallelization by C. Bekas (IBM Research Zurich).
 !
 #if defined(__CUDA)
-#define PINMEM ,PINNED
+#define PINMEM 
 #else
 #define PINMEM
 #endif
