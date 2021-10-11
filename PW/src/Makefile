@@ -61,7 +61,6 @@ divide_class_so.o \
 divide_et_impera.o \
 drhoc.o \
 rotate_wfc.o \
-rotate_xpsi.o \
 run_driver.o \
 dvloc_of_g.o \
 dynamics_module.o \
@@ -110,7 +109,6 @@ gen_us_dy.o \
 get_locals.o \
 gk_sort.o \
 gradcorr.o \
-gram_schmidt.o \
 gweights.o \
 g2_kin.o \
 hs_psi.o \

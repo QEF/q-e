@@ -29,12 +29,6 @@ ParO/paro_k.o \
 ParO/pcg_k.o \
 ParO/paro_gamma_new.o \
 ParO/paro_k_new.o \
-RMM/crmmdiagg.o \
-RMM/rrmmdiagg.o \
-RMM/rotate_xpsi_k.o \
-RMM/rotate_xpsi_gamma.o \
-RMM/gram_schmidt_k.o \
-RMM/gram_schmidt_gamma.o \
 DENSE/rotate_HSpsi_gamma.o \
 DENSE/rotate_HSpsi_k.o \
 DENSE/rotate_wfc_gamma.o \
