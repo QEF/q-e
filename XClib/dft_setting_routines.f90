@@ -565,7 +565,7 @@ CONTAINS
     !! Set logical flags describing the complexity of the xc functional
     !! define the fraction of exact exchange used by hybrid fuctionals.
     !
-    USE kind_l,               ONLY: DP
+    USE kind_l,              ONLY: DP
     USE dft_setting_params,  ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                                    islda, isgradient, ismeta, exx_fraction, &
                                    screening_parameter, gau_parameter,      & 
@@ -929,12 +929,29 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE xclib_reset_dft()
     !---------------------------------------------------------------------
-    !! Unset DFT indexes.
-    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, notset
+    !! Unset DFT indexes and main parameters.
+    USE dft_setting_params
     IMPLICIT NONE
+    dft = 'not set'
     iexch  = notset ; icorr  = notset
     igcx   = notset ; igcc   = notset
     imeta  = notset ; imetac = notset
+    exx_fraction = 0.d0
+    is_libxc(:) = .FALSE.
+    exx_started = .FALSE.
+    exx_fraction = 0.0_DP
+    finite_size_cell_volume = -1._DP
+    rho_threshold_lda = 1.E-10_DP
+    rho_threshold_gga = 1.E-6_DP   ; grho_threshold_gga = 1.E-10_DP
+    rho_threshold_mgga = 1.E-12_DP ; grho2_threshold_mgga = 1.E-24_DP
+    tau_threshold_mgga = 1.0E-12_DP
+    islda = .FALSE. ; isgradient  = .FALSE.
+    has_finite_size_correction = .FALSE.
+    finite_size_cell_volume_set = .FALSE.
+    ismeta = .FALSE.
+    ishybrid = .FALSE.
+    scan_exx = .FALSE.
+    beeftype = -1 ; beefvdw = 0
   END SUBROUTINE
   !
   !------------------------------------------------------------------------
@@ -1114,8 +1131,7 @@ CONTAINS
                           &/5X,"provide Exc.")' ) id_vec(iid)
           IF ( libxc_flags(iid,1) == 0 ) &
             WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
-                          &/5X,"provide Vxc: its correct operation in QE is not ",  &
-                          &/5X,"guaranteed.")' ) id_vec(iid)
+                          &/5X,"provide Vxc.")' ) id_vec(iid)
           IF ( libxc_flags(iid,2) == 0 ) &
             WRITE(stdout,'(/5X,"WARNING: libxc functional with ID ",I4," does not ", &
                           &/5X,"provide Vxc derivative.")' ) id_vec(iid)

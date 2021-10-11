@@ -16,17 +16,17 @@ PROGRAM xc_infos
   USE kind_l,               ONLY: DP
   USE xc_lib,               ONLY: xclib_set_dft_from_name, xclib_get_ID, &
                                   xclib_dft_is_libxc, xclib_init_libxc,  &
-                                  xclib_finalize_libxc
+                                  xclib_finalize_libxc, xclib_set_auxiliary_flags
   USE qe_dft_list
   USE qe_dft_refs
   USE dft_setting_params,   ONLY: ishybrid, exx_fraction, screening_parameter, &
                                   gau_parameter
-  USE dft_setting_routines, ONLY: xclib_set_auxiliary_flags
   USE xclib_utils_and_para, ONLY: stdout, nowarning
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params,   ONLY: xc_info, xc_kind_error
+  USE dft_setting_params,   ONLY: xc_info, xc_kind_error, n_ext_params, &
+                                  par_list, libxc_flags
 #endif
   !
   IMPLICIT NONE
@@ -99,7 +99,7 @@ PROGRAM xc_infos
     WRITE(stdout,*) CHAR(10)
   ENDIF
   !
-  WRITE(stdout,*) "The inserted XC functional is a composition of the &
+  WRITE(stdout,*) "The selected XC functional is a composition of the &
                   &following terms:"  
   WRITE(stdout,*) CHAR(10)//"LDA"
   WRITE(stdout,121) iexch, TRIM(xc_library(is_libxc(1),iexch)), &
@@ -137,17 +137,20 @@ PROGRAM xc_infos
         dft_r = dft_LDAc_ref(idx)
       CASE( 3 )
         WRITE(lxc_kind, '(a)') 'EXCHANGE'
-        WRITE(lxc_family,'(a)') "GGA"
+        IF (ishybrid) WRITE(lxc_family,'(a)') "Hybrid GGA"
+        IF (.NOT. ishybrid) WRITE(lxc_family,'(a)') "GGA"
         dft_n = dft_GGAx_name(idx)
         dft_r = dft_GGAx_ref(idx)
       CASE( 4 )
         WRITE(lxc_kind, '(a)') 'CORRELATION'
-        WRITE(lxc_family,'(a)') "GGA"
+        IF (ishybrid) WRITE(lxc_family,'(a)') "Hybrid GGA"
+        IF (.NOT. ishybrid) WRITE(lxc_family,'(a)') "GGA"
         dft_n = dft_GGAc_name(idx)
         dft_r = dft_GGAc_ref(idx)
       CASE( 5 )
         WRITE(lxc_kind, '(a)') 'EXCHANGE+CORRELATION'
-        WRITE(lxc_family,'(a)') "MGGA"
+        IF (ishybrid) WRITE(lxc_family,'(a)') "Hybrid MGGA"
+        IF (.NOT. ishybrid) WRITE(lxc_family,'(a)') "MGGA"
         dft_n = dft_MGGA_name(idx)
         dft_r = dft_MGGA_ref(idx)
       END SELECT
@@ -210,18 +213,36 @@ PROGRAM xc_infos
       WRITE(stdout, '(" - Name:   ",a)') TRIM(xc_f03_func_info_get_name(xc_info(i)))
       WRITE(stdout, '(" - Family: ",a)') TRIM(lxc_family)
       WRITE(stdout, '(" - Kind:   ",a)') TRIM(lxc_kind)
-      n_ext = xc_f03_func_info_get_n_ext_params( xc_info(i) )
-      IF ( n_ext/=0 ) THEN 
-        WRITE(stdout, '(" - External parameters: ",i3)') n_ext
-        DO ii = 0, n_ext-1
+      !
+      IF ( n_ext_params(i)/=0 ) THEN 
+        WRITE(stdout, '(" - External parameters: ",i3)') n_ext_params(i)
+        DO ii = 0, n_ext_params(i)-1
           WRITE(stdout, '("  ",i3,") ",a)') ii,&  
             TRIM(xc_f03_func_info_get_ext_params_description(xc_info(i), ii))  
-          WRITE(stdout,*) '      Default value: ', &  
-                 xc_f03_func_info_get_ext_params_default_value(xc_info(i), ii)  
+          WRITE(stdout,*) '      Default value: ', par_list(i,ii+1)
         ENDDO
       ELSE
         WRITE(stdout, '(" - External parameters: NONE")')
       ENDIF
+      !
+      WRITE(stdout, '(" - Special warnings: ")')
+      IF ( libxc_flags(i,0) == 0 ) THEN
+        WRITE(stdout,'(4X,"[w00] libxc functional with ID ",I4," does not ",&
+                      &/4X,"provide Exc.")' ) idx
+      ELSEIF ( libxc_flags(i,1) == 0 ) THEN
+        WRITE(stdout,'(4X,"[w01] libxc functional with ID ",I4," does not ",&
+                      &/4X,"provide Vxc.")' ) idx
+      ELSEIF ( libxc_flags(i,2) == 0 ) THEN
+        WRITE(stdout,'(4X,"[w02] libxc functional with ID ",I4," does not ", &
+                      &/4X,"provide Vxc derivative.")' ) idx
+      ELSEIF ( libxc_flags(i,15) == 1 ) THEN
+        WRITE(stdout,'(4X,"[w15] libxc functional with ID ",I4," depends on", &
+                      &/4X," the laplacian of the density, which is currently set",&
+                      &/4X," to zero.")' ) idx
+      ELSE
+        WRITE(stdout, '(4X,"NONE")')
+      ENDIF
+      !
       WRITE(stdout, '(" - Reference(s):")') 
       ii = 0  
       DO WHILE( ii >= 0 )  
