@@ -1,6 +1,6 @@
 &INPUT_NAMELIST
-                    test='gen-benchmark'
-                    filename_xml='xctest.xml'
+                    test='generate'
+                    filename_xml='xctest_data.xml'
                     dft='all_terms'
                     family= ''
                     polarization= 'both'

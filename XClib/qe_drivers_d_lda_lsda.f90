@@ -223,19 +223,25 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         !
         IF (rhotot(ir) < small) CYCLE
         zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
-        IF (ABS(zeta_s) > 1.0_DP) CYCLE
+        IF (ABS(zeta_s) >= 1.0_DP) CYCLE
         !
         ! ... exchange
         !
-        rs = ( pi34 / (2.0_DP * rho_in(ir,1)) )**third
-        CALL slater( rs, ex_s, vx_s )
+        IF ( rho_in(ir,1)>small ) THEN
+          rs = ( pi34 / (2.0_DP * rho_in(ir,1)) )**third
+          CALL slater( rs, ex_s, vx_s )
+          dmuxc(ir,1,1) = vx_s / (3.0_DP * rho_in(ir,1))
+        ELSE
+          ex_s=0.d0 ; vx_s=0.d0
+        ENDIF
         !
-        dmuxc(ir,1,1) = vx_s / (3.0_DP * rho_in(ir,1))
-        !
-        rs = ( pi34 / (2.0_DP * rho_in(ir,2)) )**third
-        CALL slater( rs, ex_s, vx_s )
-        !
-        dmuxc(ir,2,2) = vx_s / (3.0_DP * rho_in(ir,2))
+        IF ( rho_in(ir,2)>small ) THEN
+          rs = ( pi34 / (2.0_DP * rho_in(ir,2)) )**third
+          CALL slater( rs, ex_s, vx_s )
+          dmuxc(ir,2,2) = vx_s / (3.0_DP * rho_in(ir,2))
+        ELSE
+          ex_s=0.d0 ; vx_s=0.d0
+        ENDIF
         !
         ! ... correlation
         !
@@ -267,7 +273,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
                                              (zeta_s**2 - 1.0_DP) * cc
         dmuxc(ir,1,2) = dmuxc(ir,2,1)
         dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
-                                             (1.0_DP + zeta_s)**2 * cc
+                                             (1.0_DP + zeta_s)**2 * cc                               
      ENDDO
      !
   ELSE
@@ -289,8 +295,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
      ! ... THRESHOLD STUFF AND dr(:)
      dr(:) = 0.0_DP
-     zeta(:) = 0.0_dp
-     zeta_eff(:) = 0.0_dp
+     zeta(:) = 0.0_DP
+     zeta_eff(:) = 0.0_DP
      DO ir = 1, length
         IF (rhotot(ir) > small) THEN
            zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
@@ -299,8 +305,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
            ! smaller zeta
            zeta_eff(ir) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(ir)) ), zeta_s )
            dr(ir) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(ir) )
-           IF (ABS(zeta_s) > 1.0_DP) THEN  
-             rhotot(ir) = 0.d0 ;  dr(ir) = 0.d0 ! e.g. vx=vc=0.0
+           IF (ABS(zeta_s) >= 1.0_DP) THEN  
+             rhotot(ir) = 0._DP ;  dr(ir) = 0._DP ! e.g. vx=vc=0.0
            ENDIF
         ENDIF
      ENDDO

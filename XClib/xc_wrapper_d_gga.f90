@@ -18,7 +18,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   USE constants_l,        ONLY: e2
   USE kind_l,             ONLY: DP
   USE dft_setting_params, ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
-                                grho_threshold_gga
+                                grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_d_gga
 #if defined(__LIBXC)
 #include "xc_version.h"
@@ -135,8 +135,6 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     ENDIF
   ENDIF
   !
-  IF (ANY(is_libxc(3:4)))  DEALLOCATE( rho_lbxc, sigma )
-  !
   dvxc_rr = 0._DP
   dvxc_sr = 0._DP
   dvxc_ss = 0._DP
@@ -149,13 +147,13 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
     IF ( sp == 1 ) THEN
        !
-       ALLOCATE( sigma(length) )
-       sigma(:) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2
+       IF (.NOT. ALLOCATED(sigma)) THEN
+         ALLOCATE( sigma(length) )
+         sigma(:) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2
+       ENDIF  
        !
        CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), &
                          vrrc(:,1), vsrc(:,1), vssc )
-       !
-       DEALLOCATE( sigma )
        !
     ELSEIF ( sp == 2 ) THEN
        !
@@ -180,17 +178,24 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
       !
     ENDIF  
     !
-    IF ( is_libxc(3) ) THEN
-      dvxc_rr(:,1,1) = dvxc_rr(:,1,1) + e2 * v2rho2_x(:)
-      dvxc_sr(:,1,1) = dvxc_sr(:,1,1) + e2 * v2rhosigma_x(:)*2._DP
-      dvxc_ss(:,1,1) = dvxc_ss(:,1,1) + e2 * v2sigma2_x(:)*4._DP
-    ENDIF
-    !
-    IF ( is_libxc(4) ) THEN
-      dvxc_rr(:,1,1) = dvxc_rr(:,1,1) + e2 * v2rho2_c(:)
-      dvxc_sr(:,1,1) = dvxc_sr(:,1,1) + e2 * v2rhosigma_c(:)*2._DP
-      dvxc_ss(:,1,1) = dvxc_ss(:,1,1) + e2 * v2sigma2_c(:)*4._DP
-    ENDIF
+    DO k = 1, length
+      IF ( rho_lbxc(k) > small .AND. SQRT(ABS(sigma(k))) > small ) THEN
+        IF ( is_libxc(3) ) THEN
+          IF ( rho_lbxc(k)>rho_threshold_lda ) THEN
+            dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(k)
+            dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(k)*2._DP
+          ENDIF  
+          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(k)*4._DP
+        ENDIF
+        IF ( is_libxc(4) ) THEN
+          IF ( rho_lbxc(k)>rho_threshold_lda ) THEN
+            dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(k)
+            dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(k)*2._DP
+          ENDIF  
+          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(k)*4._DP
+        ENDIF
+      ENDIF
+    ENDDO
     !
   ELSEIF ( sp == 2 ) THEN
     !
@@ -270,7 +275,10 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
       !   
       DEALLOCATE( v2rho2_c, v2rhosigma_c, v2sigma2_c )   
       !   
-    ENDIF   
+    ENDIF
+    !
+    IF (ANY(is_libxc(3:4)))  DEALLOCATE( rho_lbxc )
+    IF (ALLOCATED(sigma) )   DEALLOCATE( sigma )
     !   
   ENDIF
   !

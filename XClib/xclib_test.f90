@@ -11,9 +11,9 @@ PROGRAM xclib_test
   !==========================================================================
   !! Testing program for xc\_lib library in QE:
   !
-  !! * gen-benchmark: stores a set of dft benchmark data on xml file;
-  !! * exe-benchmark: runs XClib to calculate data and compare them 
-  !!                  to benchamrk data in xml file.
+  !! * generate: stores a set of dft benchmark data on xml file;
+  !! * execute:  runs XClib to calculate data and compare them 
+  !!             to benchamrk data in xml file.
   !
   !! Choices:
   !
@@ -46,9 +46,9 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_setting_params, ONLY: xc_func, xc_info, xc_kind_error, libxc_flags
+  USE dft_setting_params, ONLY: xc_info, xc_kind_error, libxc_flags
 #endif
-  USE dft_setting_params,   ONLY: is_libxc, exx_fraction
+  USE dft_setting_params,   ONLY: is_libxc
   USE dft_setting_routines, ONLY: capital
   !
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft, &
@@ -66,7 +66,7 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  INTEGER :: major, minor, micro, fkind, n_ext
+  INTEGER :: major, minor, micro, fkind
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -79,15 +79,15 @@ PROGRAM xclib_test
   !
   !-------- Grid dim vars --------------------
   INTEGER, PARAMETER :: npoints=90000
-  INTEGER :: nr, nnr, nrpe, nnr_b, nnr_int, nnrbt
-  INTEGER :: nnrit, nnrbit, nskip
+  INTEGER :: nr, nnr, nrpe, nnr_b, nnrbt
   INTEGER :: is, is_min, is_max
   !
   !-------- Input vars -----------------------
-  CHARACTER(LEN=30) :: test, family, fam_init, xc_kind
-  CHARACTER(LEN=30) :: dft, dft_init, xmldft, xmlfamily
+  CHARACTER(LEN=15) :: test, family, fam_init
+  CHARACTER(LEN=30) :: dft, dft_init, xc_kind, xmldft, xmlfamily
   CHARACTER(LEN=30) :: polarization, xmlpolarization
-  CHARACTER(LEN=15) :: input_err=''
+  CHARACTER(LEN=15) :: input_err_where=''
+  CHARACTER(LEN=40) :: input_err=''
   LOGICAL :: xc_derivative, xmlxc_derivative, show_time
   !
   !---------- DFT infos -------------------------
@@ -112,11 +112,10 @@ PROGRAM xclib_test
   REAL(DP) :: fact
   REAL(DP) :: aver_thresh = 10.E-8        !^^--- to optimize
   !
-  !---------- Indexes ---------------------------
-  INTEGER :: id, ii, ns, np, ipol, ithr, nthr, iip, iout, &
-             iaverout, iavernull, l
+  !---------- Loop indexes ---------------------------
+  INTEGER :: id, ii, ns, np, nthr, iip, iout, iaverout, iavernull, l
   !
-  !---------- XClib input vars ------------------
+  !---------- XC-input vars ------------------
   REAL(DP), ALLOCATABLE :: rho(:,:), rho_tz(:,:)
   REAL(DP), ALLOCATABLE :: grho(:,:,:), grh(:,:,:)
   REAL(DP), ALLOCATABLE :: tau(:,:)
@@ -240,6 +239,9 @@ PROGRAM xclib_test
     !
     READ( stdin, input_namelist )
     !
+    DO i = 1, LEN_TRIM(test)
+      test(i:i) = capital( test(i:i) )
+    ENDDO
     DO i = 1, LEN_TRIM(dft)
       dft(i:i) = capital( dft(i:i) )
     ENDDO
@@ -251,7 +253,7 @@ PROGRAM xclib_test
     ENDDO
     IF ( dft(1:4)=='ALL_' ) family = 'ALL'
     !
-    IF ( test(1:4)=='gen-' ) THEN
+    IF ( test=='GENERATE' ) THEN
       !
       iunpun = xml_open_file( "./"//TRIM(filename_xml) )
       IF ( iunpun == -1 ) RETURN
@@ -263,18 +265,18 @@ PROGRAM xclib_test
       CALL add_attr( "SPIN", polarization )
       CALL xmlw_writetag( "HEADER", "" )
       !
-    ELSEIF ( test(1:4)=='exe-' ) THEN
+    ELSEIF ( TRIM(test)=='EXECUTE' ) THEN
       !
       INQUIRE( FILE = filename_xml, exist=found )
       IF (.NOT. found ) THEN
         ierr=1
-        CALL xclib_infomsg( 'xclib_test', 'xml data file not found' )
+        CALL xclib_error( 'xclib_test', 'xml data file not found' )
       ENDIF
       !
       iun = xml_open_file( filename_xml )
       IF ( iun==-1 ) THEN
         ierr=2
-        CALL xclib_infomsg( 'xclib_test', 'xml data file not readable' )
+        CALL xclib_error( 'xclib_test', 'xml data file not readable' )
       ENDIF
       !
       CALL xmlr_opentag( "XCTEST-DATA-SET" )
@@ -285,19 +287,24 @@ PROGRAM xclib_test
       CALL get_attr( "VXC_DERIVATIVE", xmlxc_derivative )
       CALL get_attr( "SPIN", xmlpolarization )
       !
-      IF ( dft(1:4)=='all_' .AND. TRIM(dft) /= TRIM(xmldft) ) input_err = 'dft'
-      IF ( xmlxc_derivative .NEQV. xc_derivative ) input_err = 'xc_derivative'
-      IF ( TRIM(xmlpolarization) /= 'BOTH'.AND.polarization /= xmlpolarization ) &
-                                                      input_err = 'polarization'
-      IF ( TRIM(input_err) /= '' ) THEN
-        WRITE(stdout,*) 'ERROR: input mismatch in: ', TRIM(input_err)
-        STOP
+      IF ( dft(1:4)=='ALL_' .AND. TRIM(dft)/=TRIM(xmldft) ) input_err_where = 'dft'
+      IF ( TRIM(xmlpolarization)/='BOTH' .AND. polarization/=xmlpolarization ) &
+                                                   input_err_where = 'polarization'
+      IF ( xmlxc_derivative .NEQV. xc_derivative ) input_err_where = 'xc_derivative'
+      IF ( TRIM(input_err_where) /= '' ) THEN
+        input_err = 'Input mismatch in: '
+        WRITE(input_err(20:35), '(a)') input_err_where
+        CALL xclib_error( 'xclib_test', input_err, 1 )
       ENDIF
       IF ( TRIM(family) /= TRIM(xmlfamily) ) THEN
-        WRITE(stdout,*) 'WARNING: input mismatch in FAMILY. The one in the xml file&
-                        &will be considered only.'
+        WRITE(stdout,*) 'WARNING: input mismatch in FAMILY. The one in the xml &
+                        &file will be considered only.'
         family = xmlfamily
       ENDIF
+      !
+    ELSE
+      !
+      CALL xclib_error( 'xclib_test', 'Wrong input test.', 2 )
       !
     ENDIF
   ENDIF
@@ -347,7 +354,7 @@ PROGRAM xclib_test
     proc2node(i) = ii
   ENDDO
   !
-  IF ( mype == root .AND. test/='gen-benchmark' ) THEN
+  IF ( mype == root .AND. test/='GENERATE' ) THEN
     WRITE(stdout,*) ; WRITE(stdout,*) ' --- XC_LIB TESTING PROGRAM --- '
     WRITE(stdout,*)
     WRITE(stdout,*) 'Node list:'
@@ -378,17 +385,16 @@ PROGRAM xclib_test
   ELSEIF (TRIM(polarization)=='BOTH' ) THEN
     is_min = 1  ;  is_max = 2
   ELSE
-    WRITE(stdout,*) 'ERROR: unrecognized input polarization.'
-    STOP
+    CALL xclib_error( 'xclib_test', 'Wrong input polarization.', 3 )
   ENDIF
   !
   fam_init = family
   dft_init = dft
   !
   n_qe_func = 1
-  IF (dft=='ALL_TERMS') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
-  IF (dft=='ALL_SHORT') n_qe_func = n_dft
-  IF (dft=='ALL_LIBXC') n_qe_func = 999
+  IF (TRIM(dft)=='ALL_TERMS') n_qe_func = nxc+ncc+ngcx+ngcc+nmeta+5
+  IF (TRIM(dft)=='ALL_SHORT') n_qe_func = n_dft
+  IF (TRIM(dft)=='ALL_LIBXC') n_qe_func = 999
   !
   ! ... check QE and Libxc versions used for storing and the current ones
   !
@@ -400,17 +406,14 @@ PROGRAM xclib_test
     WRITE(libxc_version(3:3), '(i1)') minor
     WRITE(libxc_version(5:5), '(i1)') micro
 #else
-    IF (dft=='ALL_LIBXC') THEN
-      WRITE(stdout,*) 'ERROR: Libxc library not linked.'
-      STOP
-    ENDIF
+    IF (dft=='ALL_LIBXC') CALL xclib_error( 'xclib_test','Libxc library not linked.',4 )
 #endif
-    IF ( test=='gen-benchmark' ) THEN
+    IF ( TRIM(test)=='GENERATE' ) THEN
       CALL xmlw_opentag( "QE_Libxc_VERSION_TEST" )
       CALL xmlw_writetag( "QE_version", version_number )
       CALL xmlw_writetag( "Libxc_version", libxc_version )
       CALL xmlw_closetag()
-    ELSEIF ( test=='exe-benchmark' ) THEN
+    ELSEIF ( TRIM(test)=='EXECUTE' ) THEN
       CALL xmlr_opentag( "QE_Libxc_VERSION_TEST" )
       CALL xmlr_readtag( "QE_version", gen_version )
       CALL xmlr_readtag( "Libxc_version", libxc_gen_version )
@@ -428,7 +431,7 @@ PROGRAM xclib_test
   ! ... main loop over functionals to test
   !
   DO id = 1, n_qe_func
-   DO is = is_min, is_max 
+   DO is = is_min, is_max
     !
     time = 0.d0
     ns = is
@@ -473,12 +476,14 @@ PROGRAM xclib_test
     !
     ! ... skipped cases (some need further checks)
     !
-    IF ( TRIM(dft)=='xxxx'    .OR. &
-         TRIM(dft)=='NONE'    .OR. &
-         TRIM(dft)=='META'    .OR. &
+    IF ( TRIM(dft)=='xxxx' .OR. TRIM(dft)=='NONE' ) THEN
+      IF (mype==root) CALL print_test_status( skipped )
+      CYCLE
+    ENDIF  
+    IF ( TRIM(dft)=='META'    .OR. &
          TRIM(dft)=='PZ+META' .OR. &
          TRIM(dft)=='PBE+META' ) THEN
-      IF (mype==root) CALL print_test_status( skipped )
+      IF (mype==root .AND. .NOT.xc_derivative) CALL print_test_status( skipped )
       CYCLE
     ENDIF
 #if !defined(__LIBXC)
@@ -500,7 +505,7 @@ PROGRAM xclib_test
     !
     CALL xclib_set_dft_from_name( dft )
     !
-    LDA = .FALSE. ; GGA = .FALSE. ; MGGA= .FALSE.
+    LDA = .FALSE. ; GGA = .FALSE. ; MGGA = .FALSE.
     !
     iexch1 = xclib_get_ID('LDA','EXCH')
     icorr1 = xclib_get_ID('LDA','CORR')
@@ -524,6 +529,11 @@ PROGRAM xclib_test
       CALL xclib_finalize_libxc()
       CYCLE
     ENDIF
+    IF ( xc_derivative .AND. ANY(libxc_flags(:,2)==0) ) THEN
+      CALL print_test_status( skipped )
+      CALL xclib_finalize_libxc()
+      CYCLE
+    ENDIF
     !
     IF (dft_init=='ALL_LIBXC') THEN
       fkind=-10
@@ -540,7 +550,7 @@ PROGRAM xclib_test
       ENDIF
     ENDIF
 #else
-    IF (xclib_dft_is_libxc('ANY')) THEN
+    IF (xclib_dft_is_libxc( 'ANY' )) THEN
       CALL print_test_status( skipped3 )
       CYCLE
     ENDIF
@@ -618,13 +628,14 @@ PROGRAM xclib_test
     np = 1
     IF (ns==2) np = 3
     !
+    ! ... number of averages to calculate
     IF (.NOT.xc_derivative) THEN
       IF ( LDA ) naver = ns+1
       IF ( LDA .AND. TRIM(xc_kind)=='XC') naver = 2*ns+2
-      IF ( GGA .AND. TRIM(xc_kind)=='X')  naver = 2*ns+1
-      IF ( GGA .AND. TRIM(xc_kind)=='C')  naver = 3*ns+np
+      IF ( GGA .AND. TRIM(xc_kind)=='X' ) naver = 2*ns+1
+      IF ( GGA .AND. TRIM(xc_kind)=='C' ) naver = 3*ns+np
       IF ( GGA .AND. TRIM(xc_kind)=='XC') naver = 4*ns+np
-      IF ( MGGA ) naver = 8
+      IF ( MGGA ) naver = 6*ns+2
     ELSE
       IF ( LDA ) naver = np
       IF ( GGA ) naver = 3*np
@@ -670,7 +681,7 @@ PROGRAM xclib_test
     !
     ! ... dft2 output / benchmark data arrays
     !
-    IF ( test == 'exe-benchmark' ) THEN
+    IF ( TRIM(test)=='EXECUTE' ) THEN
       IF (.NOT. xc_derivative) ALLOCATE( ex2(nnrbt), ec2(nnrbt) )
       !
       IF ( LDA .OR. GGA ) THEN
@@ -703,7 +714,7 @@ PROGRAM xclib_test
     !
     nlen1 = LEN(TRIM(dft))
     nlen2 = LEN(TRIM(family))
-    IF ( dft_init=='ALL_TERMS' .OR. dft_init(1:4)/='ALL_') THEN
+    IF ( dft_init=='ALL_TERMS' .OR. dft_init(1:4)/='ALL_' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
       IF (is==1) WRITE(xc_data(18:30),'(a)') 'UNP'
@@ -716,7 +727,7 @@ PROGRAM xclib_test
     !
     ! ... read data set from xml file
     !
-    IF (test=='exe-benchmark' .AND. mype==root) THEN
+    IF (test=='EXECUTE' .AND. mype==root) THEN
       CALL xmlr_opentag( TRIM(xc_data), tag_err )
       IF (tag_err==0) THEN
         CALL xmlr_readtag( "time_tot", time_tot2 )
@@ -888,7 +899,7 @@ PROGRAM xclib_test
     !
     ! --- THRESHOLD POINTS ---
     !
-    IF (mype==root .AND. test(5:13)=='benchmark') THEN
+    IF (mype==root) THEN
       rho(nnr_b+1,1) = thresh_lda/3.0_DP
       IF (.NOT. POLARIZED) rho_tz(nnr_b+1,1) = rho(nnr_b+1,1)
       IF ( POLARIZED ) THEN
@@ -1028,7 +1039,7 @@ PROGRAM xclib_test
     !
     ! ... store data set in xml file
     !
-    IF (test=='gen-benchmark' .AND. mype==root) THEN
+    IF (TRIM(test)=='GENERATE' .AND. mype==root) THEN
       CALL xmlw_opentag( TRIM(xc_data) )
       CALL xmlw_writetag( "time_tot", time_tot1 )
       IF (.NOT. xc_derivative) THEN
@@ -1284,7 +1295,7 @@ PROGRAM xclib_test
          ENDDO
       ENDIF
       !
-      IF ( test(1:4)=='exe-' ) THEN
+      IF ( TRIM(test)=='EXECUTE' ) THEN
         IF (iout+iaverout/=0) CALL print_test_status( failed )
         IF (iout+iaverout==0) THEN
           IF (iavernull/=naver) CALL print_test_status( passed )
@@ -1336,7 +1347,7 @@ PROGRAM xclib_test
     !
     ! ... set2 output / benchmark data arrays
     !
-    IF ( test == 'exe-benchmark' ) THEN
+    IF ( TRIM(test)=='EXECUTE' ) THEN
       IF (.NOT. xc_derivative) DEALLOCATE( ex2, ec2 )
       !
       IF ( LDA .OR. GGA ) THEN
@@ -1365,8 +1376,8 @@ PROGRAM xclib_test
   ENDDO ! end of main loop over dfts
   !
   IF (mype==root) THEN
-    IF (test(1:4)=='exe-') CALL xmlr_closetag()
-    IF (test(1:4)=='gen-') CALL xmlw_closetag()
+    IF (TRIM(test)=='EXECUTE' ) CALL xmlr_closetag()
+    IF (TRIM(test)=='GENERATE') CALL xmlw_closetag()
     !
     CALL xml_closefile( )
   ENDIF
@@ -1375,15 +1386,12 @@ PROGRAM xclib_test
   402 FORMAT('rho(up,down): ',F17.14,4x,F17.14)
   !
   501 FORMAT('grho2: ',F17.14)
-  502 FORMAT('grho2(uu,dd): ',F17.14,4x,F17.14)
   503 FORMAT('grho2(uu,ud,dd): ',F17.14,4x,F17.14,4x,F17.14)
   !
   601 FORMAT('tau: ',F17.14)
   602 FORMAT('tau(up,down): ',F17.14,4x,F17.14)
   !
   909 FORMAT('grid-point: ',I5,' of ',I5)
-  910 FORMAT('threshold-point: ',I4,' of ',I4)
-  911 FORMAT(' TOTAL VALUES OVER ',I5,' POINTS')
   !   
   DEALLOCATE( proc_name )
   DEALLOCATE( node_name )
@@ -1513,10 +1521,10 @@ PROGRAM xclib_test
  !-------------------------------------------------------------------------
  SUBROUTINE evxc_stats( what, xc_1, aver )
   !------------------------------------------------------------------------
-  !! If test=exe-benchmark calculates difference between total energy
+  !! If test=execute calculates difference between total energy
   !! and potential calculated over npoints k-points and values taken from
   !! benchmark data file.  
-  !! If test=gen-benchmark calculates the total energy and potential 
+  !! If test=generate calculates the total energy and potential 
   !! over npoints k-points.
   !
   IMPLICIT NONE
@@ -1541,7 +1549,7 @@ PROGRAM xclib_test
     IF (what(1:1)=='V') thr = diff_thr_vmgga
   ENDIF
   !
-  !IF (mype==root .AND. TRIM(test)=='exe-benchmark') THEN
+  !IF (mype==root .AND. TRIM(test)=='EXECUTE') THEN
   !  WRITE(stdout,*) " "
   !  IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) TRIM(what)
   !ENDIF
@@ -1558,7 +1566,7 @@ PROGRAM xclib_test
 #endif
   !
   IF ( .NOT. POLARIZED .OR. what(1:1)=='E' ) THEN
-    IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, xc_aver(:,1), aver(1) )
+    IF (mype==root .AND. TRIM(test)=='EXECUTE') CALL print_aver( what, xc_aver(:,1), aver(1) )
   ELSE
     xc_aver(1,2) = SUM(xc_1(1:nnr,2))/npoints
     !
@@ -1579,18 +1587,18 @@ PROGRAM xclib_test
       v2c_ud1_aver(1) = aver_recu
 #endif
       !
-      IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, &
+      IF (mype==root .AND. TRIM(test)=='EXECUTE') CALL print_aver( what, &
                                  v2c_ud1_aver, v2c_aver(1,3), 'cross' )
     ENDIF
     !
-    IF (mype==root .AND. test(1:4)=='exe-') THEN
+    IF (mype==root .AND. TRIM(test)=='EXECUTE') THEN
       CALL print_aver( what, xc_aver(:,1), aver(1), 'up' )
       CALL print_aver( what, xc_aver(:,2), aver(2), 'down' )
     ENDIF 
     !
   ENDIF
   !
-  IF (test=='gen-benchmark') THEN
+  IF (TRIM(test)=='GENERATE') THEN
      aver = xc_aver(1,:)
      IF (TRIM(what)=='V2c'.AND.GGA.AND.ns==2) v2c_aver(1,3)=v2c_ud1_aver(1)
   ENDIF
@@ -1630,8 +1638,8 @@ PROGRAM xclib_test
 #endif
   !
   IF ( .NOT. POLARIZED ) THEN
-    IF (mype==root .AND. test(1:4)=='exe-') CALL print_aver( what, &
-                                       dxc_aver(1:nnr_b,1), aver(1) )
+    IF (mype==root .AND. TRIM(test)=='EXECUTE') CALL print_aver( what, &
+                                          dxc_aver(1:nnr_b,1), aver(1) )
   ELSE
     dxc_aver(1,2) = SUM(dxc_qe(1:nnr,1,2))/DBLE(npoints)
     !
@@ -1650,7 +1658,7 @@ PROGRAM xclib_test
     dxc_aver(1:1,3) = aver_rec
 #endif
     !
-    IF (mype==root .AND. test(1:4)=='exe-') THEN
+    IF (mype==root .AND. TRIM(test)=='EXECUTE') THEN
       CALL print_aver( what, dxc_aver(:,1), aver(1), 'up-up' )
       CALL print_aver( what, dxc_aver(:,2), aver(2), 'up-down' )
       CALL print_aver( what, dxc_aver(:,3), aver(3), 'down-down' )
@@ -1658,7 +1666,7 @@ PROGRAM xclib_test
     !
   ENDIF
   !
-  IF (test=='gen-benchmark') aver(1:np) = dxc_aver(1,:)
+  IF (TRIM(test)=='GENERATE') aver(1:np) = dxc_aver(1,:)
   !
   RETURN
   !
@@ -1735,7 +1743,7 @@ PROGRAM xclib_test
   CHARACTER(LEN=115) :: test_output_exe
   INTEGER :: j, id_term
   !
-  IF (test=='gen-benchmark') THEN
+  IF (TRIM(test)=='GENERATE') THEN
     test_output_gen = ''
     IF (dft_init=='ALL_TERMS') THEN
       DO j = 1, 6
@@ -1752,7 +1760,7 @@ PROGRAM xclib_test
     WRITE(test_output_gen(19:54), '(a)') TRIM(dft)
     WRITE(test_output_gen(56:),'(a)') TRIM(status)
     WRITE(stdout,*) test_output_gen
-  ELSEIF (test=='exe-benchmark') THEN
+  ELSEIF (TRIM(test)=='EXECUTE') THEN
     test_output_exe = ''
     IF (dft_init=='ALL_TERMS') THEN
       DO j = 1, 6

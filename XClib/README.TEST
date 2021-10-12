@@ -13,7 +13,7 @@ cally if 'QE_ENABLE_TEST' is set to true (default).
 
 ---------------------- XC_INFO -----------------------------------
 
-xc_info.x is a small serial program that provides infos on XC 
+xc_info is a small serial program that provides infos on XC 
 functionals, both the ones from internal QE library and the ones
 from Libxc. Just run the command:
 
@@ -27,16 +27,26 @@ tell if they are currently usable in QE or not.
 
 --------------------- XCLIB_TEST ---------------------------------
 
-xclib_test.x is a testing program for the XClib library routines.
+xclib_test is a testing program for the XClib library routines.
 Due to the high number of available dfts (including those from
 the external library Libxc) and the different parallelization 
 schemes available already or in experimental phase, this program
 is intended to be a tool that helps developers to maintain and
-develop XClib by keeping an overview on the available options
-in order not to neglect any of them (which is hard to do
-by working with test-suite only).
-The program generates an xml file with a set of output data produced
-according to the test input options.
+develop XClib by keeping an overview on all the available options
+(which cannot be covered by test-suite only).
+The program generates an xml file with a set of XC-output data 
+produced according to the input options and use it for later
+comparison with other differently generated sets of XC-output data.
+It first calculates averages of the XC-output data over a large
+arbitrary grid (the number of points can be modified by changing the
+'npoints' parameter in the code) -this is a 'naive' way to compare
+outputs over a large number of points without storing a large amount
+of data, however more sophisticated estimates than the arithmetic
+averages can be replaced in a second time with minimal effort (and
+the grid itself too). Then the same program calculates the XC output
+data over a selected number of grid points, including threshold 
+points and perform the comparison between xml data and current ones.
+
 You can run the program by using commands like:
 
 	./xclib_test.x < input_file                [ serial ]
@@ -47,45 +57,46 @@ different purposes.
 An example of input file content is the following:
 
         &INPUT_NAMELIST
-                 test='gen-benchmark'
+                 test='generate'
                  filename_xml='xctest_data.xml'
                  dft='pbe'
                  family='GGA'
-                 nspin=1
+                 polarization='unpolarized'
                  xc_derivative=.FALSE.
         /
 
-The following options have to be set:
+The following input options have to be set (capital or lowercase is the same):
 
-- test: 'gen-benchmark' generates the xml file with the benchmark set
-        of XClib output data. 'exe-benchmark' calculates a set of
-        XClib output data and compares it with the one in the xml file.
+- test: The 'GENERATE' option generates the xml file with the benchmark set
+        of XClib output data. The 'EXECUTE' option calculates a set of
+        XClib output data and compares it with the one previously stored
+        in the xml file.
 
 - filename_xml: the name of the xml file.
 
 - dft: the input functional. Besides the specific functionals, three
        other options are available:
-       - 'all_terms' spans all the available single term functionals
+       - 'ALL_TERMS' spans all the available single term functionals
          of QE (e.g. LDA exchange, LDA correlation, GGA exchange, ...);
-       - 'all_short' spans all the full dfts (identified by the 'shortnames')
+       - 'ALL_SHORT' spans all the full dfts (identified by the 'shortnames')
          available in XClib, e.g. LDA, PBESOL, PW86PBE, etc.
-       - 'all_libxc' spans all the available Libxc functionals. Those
+       - 'ALL_LIBXC' spans all the available Libxc functionals. Those
          that are not usable in the current QE version will be skipped
          with a notice.  
 
 - family: the dft family (needed in order to distinguish those few cases
           where LDA terms have the same name of the GGA ones, e.g. B3LP).
-          If dft='all_...' then input family will be ignored.
+          If dft='ALL_...' then input family will be ignored.
           
-- polarization: 'unpolarized', 'polarized', 'both'.
+- polarization: 'UNPOLARIZED', 'POLARIZED', 'BOTH'.
 
 - xc_derivative: if .TRUE. calculates the derivative terms (needed,
                  for example, by linear response code) instead of
-                 the ordinary energy+potential output.
+                 the ordinary energy&potential output.
 
 - show_time: if .TRUE. stores WALL time spent by xc-routines during
-             'gen-' test and shows increment (in percentage) during
-             'exe-' test.
+             'GENERATE' test and shows increment (in percentage) during
+             'EXECUTE' test.
 
 Obviously the program can be used to compare QE and Libxc functionals,
 to check differences from one version to another or to check differences

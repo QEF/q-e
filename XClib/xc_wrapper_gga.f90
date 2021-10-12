@@ -62,7 +62,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
   !
   LOGICAL :: POLARIZED
-  INTEGER :: pol_unpol, eflag
+  INTEGER :: pol_unpol
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -166,9 +166,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
-        ec(k) = ec_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
-        v1c(k,1) = vc_rho(k)
-        v2c(k,1) = vc_sigma(k)*2.d0
+        IF ( rho_lxc(k) > rho_threshold_lda ) THEN
+          ec(k) = ec_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
+          v1c(k,1) = vc_rho(k)
+        ENDIF
+        IF ( rho_lxc(k)>small .AND. SQRT(ABS(sigma(k)))>small ) &
+                                     v2c(k,1) = vc_sigma(k)*2.d0
       ENDDO
     ELSE
       DO k = 1, length
@@ -264,9 +267,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
-        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
-        v1x(k,1) = vx_rho(k)
-        v2x(k,1) = vx_sigma(k)*2.d0
+        xlda_up = 1.0_DP ; xgga_up = 1.0_DP
+        IF ( rho_lxc(k) <= rho_threshold_lda ) xlda_up = 0.0_DP
+        IF ( rho_lxc(k)<=small .OR. SQRT(ABS(sigma(k)))<=small ) xgga_up = 0.0_DP
+        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1)) *xlda_up
+        v1x(k,1) = vx_rho(k)*xlda_up
+        v2x(k,1) = vx_sigma(k)*2.d0*xgga_up
       ENDDO
     ELSE
       DO k = 1, length

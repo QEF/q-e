@@ -1,6 +1,6 @@
 &INPUT_NAMELIST
-                    test='exe-benchmark'
-                    filename_xml='xctest.xml'
+                    test='execute'
+                    filename_xml='xctest_data.xml'
                     dft='all_terms'
                     family= ''
                     polarization='both'

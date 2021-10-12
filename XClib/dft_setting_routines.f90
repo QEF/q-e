@@ -1107,7 +1107,7 @@ CONTAINS
         IF ( family==XC_FAMILY_HYB_GGA .OR. family==XC_FAMILY_HYB_MGGA ) THEN
            exx_fraction = xc_f03_hyb_exx_coef( xc_func(iid) )
            ishybrid = ( exx_fraction /= 0.d0 )
-        ENDIF   
+        ENDIF
         !
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
 #if (XC_MAJOR_VERSION<=5)
