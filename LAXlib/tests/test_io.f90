@@ -19,8 +19,7 @@ MODULE test_io
         complex(dp), allocatable, intent(inout) :: v(:,:)
         integer, intent(out)                    :: info
         !
-        real(dp) :: aux1, aux2
-        integer :: i, j, t
+        integer :: t
         logical :: exist
         !
         character(len=20):: fname_
@@ -65,8 +64,7 @@ MODULE test_io
         real(dp), allocatable, intent(inout) :: v(:,:)
         integer, intent(out)                 :: info
         !
-        real(dp) :: aux1, aux2
-        integer :: i, j, t
+        integer :: t
         logical :: exist
         !
         character(len=20):: fname_    

@@ -4,7 +4,7 @@ program test_diaghg
 #endif
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
-                              root, nproc, world_comm
+                              root, world_comm
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE

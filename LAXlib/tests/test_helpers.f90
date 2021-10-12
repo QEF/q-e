@@ -10,8 +10,7 @@ SUBROUTINE solve_with_zhegvd(n, v, s, ldh, e)
   !
   INTEGER                  :: lwork, lrwork, liwork, info, ldh
   !
-  REAL(DP)                 :: abstol
-  INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
+  INTEGER,     ALLOCATABLE :: iwork(:)
   REAL(DP),    ALLOCATABLE :: rwork(:)
   COMPLEX(DP), ALLOCATABLE :: work(:)
   ! various work space
@@ -48,8 +47,7 @@ SUBROUTINE solve_with_dsygvd(n, v, s, ldh, e)
   !
   INTEGER                  :: lwork, liwork, info, ldh
   !
-  REAL(DP)                 :: abstol
-  INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
+  INTEGER,     ALLOCATABLE :: iwork(:)
   REAL(DP),    ALLOCATABLE :: work(:)
   ! various work space
 

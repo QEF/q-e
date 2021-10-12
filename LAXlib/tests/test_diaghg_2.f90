@@ -4,7 +4,7 @@ program test_diaghg_2
 #endif
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
-                              root, nproc, world_comm
+                              root, world_comm
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
@@ -14,7 +14,7 @@ program test_diaghg_2
     INTEGER :: world_group = 0
     !
     CALL test%init()
-    
+    !
 #if defined(__MPI)    
     world_group = MPI_COMM_WORLD
 #endif
@@ -43,10 +43,11 @@ program test_diaghg_2
     complex(DP) :: h_save(m_size,m_size)
     complex(DP) :: s(m_size,m_size)
     complex(DP) :: s_save(m_size,m_size)
-    real(DP) :: e(m_size)
+    real(DP)    :: e(m_size)
     complex(DP) :: v(m_size,m_size)
-    real(DP) :: e_save(m_size)
+    real(DP)    :: e_save(m_size)
     complex(DP) :: v_save(m_size,m_size)
+    integer :: j
     !
     CALL hermitian(m_size, h)
     CALL hermitian(m_size, s)
@@ -56,10 +57,13 @@ program test_diaghg_2
     !
     v = (0.d0, 0.d0)
     e = 0.d0
+
     CALL diaghg(  m_size, m_size, h, s, m_size, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .false. )
     ! 
-    CALL test%assert_close( RESHAPE(h, [m_size*m_size]), RESHAPE(h_save, [m_size*m_size]))
-    CALL test%assert_close( RESHAPE(s, [m_size*m_size]), RESHAPE(s_save, [m_size*m_size]))
+    DO j = 1, m_size
+       CALL test%assert_close( h(1:m_size, j), h_save(1:m_size, j))
+       CALL test%assert_close( s(1:m_size, j), s_save(1:m_size, j))
+    END DO
     !
     e_save = e
     v_save = v
@@ -68,22 +72,24 @@ program test_diaghg_2
     e = 0.d0
     CALL diaghg(  m_size, m_size, h, s, m_size, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .true. )
     !
-    CALL test%assert_close( RESHAPE(h, [m_size*m_size]), RESHAPE(h_save, [m_size*m_size]))
-    CALL test%assert_close( RESHAPE(s, [m_size*m_size]), RESHAPE(s_save, [m_size*m_size]))
-    test%tolerance32=1.d-5
+    DO j = 1, m_size
+       CALL test%assert_close( h(1:m_size, j), h_save(1:m_size, j))
+       CALL test%assert_close( s(1:m_size, j), s_save(1:m_size, j))
+    END DO
+
+    test%tolerance32=1.e-5
     test%tolerance64=1.d-14
     CALL test%assert_close( e, e_save)
     !
+
   END SUBROUTINE complex_1
   !
   SUBROUTINE hermitian(mSize, M)
     IMPLICIT NONE
-    integer, intent(in) :: msize
-    complex(dp), intent(out) :: M(:,:)
+    integer, intent(in) :: mSize
+    complex(dp), intent(out) :: M(mSize,mSize)
     !       
     real(dp), allocatable :: rnd(:)
-    complex(dp), allocatable :: tmp(:,:)
-
     INTEGER :: h, k, j
     !
     ALLOCATE(rnd(mSize*(mSize+1)))

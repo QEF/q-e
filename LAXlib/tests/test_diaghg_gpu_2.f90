@@ -54,6 +54,7 @@ program test_diaghg_gpu_2
     complex(DP), DEVICE :: v_d(m_size,m_size)
     real(DP) :: e_save(m_size)
     complex(DP) :: v_save(m_size,m_size)
+    integer :: j
     !
     CALL hermitian(m_size, h)
     CALL hermitian(m_size, s)
@@ -75,8 +76,11 @@ program test_diaghg_gpu_2
     ! 2. ... and on the host, this will trigger the same subroutine used above
     CALL diaghg(  m_size, m_size, h, s, m_size, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, .true.)
     !
-    CALL test%assert_close( RESHAPE(h, [m_size*m_size]), RESHAPE(h_save, [m_size*m_size]))
-    CALL test%assert_close( RESHAPE(s, [m_size*m_size]), RESHAPE(s_save, [m_size*m_size]))
+    DO j = 1, m_size
+       CALL test%assert_close( h(1:m_size, j), h_save(1:m_size, j))
+       CALL test%assert_close( s(1:m_size, j), s_save(1:m_size, j))
+    END DO
+
     test%tolerance32=1.d-5
     test%tolerance64=1.d-10
     DO i=1, m_size
