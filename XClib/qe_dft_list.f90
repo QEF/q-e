@@ -17,6 +17,10 @@ MODULE qe_dft_list
   ! is included in one of the full dft combinations available, but it cannot be
   ! called by itself.
   !
+  ! NOTE: The references and descriptions of each dft are stored in a different
+  ! module in file 'qe_dft_refs.f90', which is used by the program 'xc_infos'.
+  ! If you modify something here, please check consistency there too.
+  !
   USE dft_setting_params,  ONLY: notset
   !
   SAVE

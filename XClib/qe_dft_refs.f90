@@ -229,8 +229,8 @@ MODULE qe_dft_refs
   DATA dft_MGGA_ref(2)  / 'Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)' /
   ! TB09
   DATA dft_MGGA_ref(3)  / 'F. Tran and P. Blaha, Phys.Rev.Lett. 102, 226401 (2009) - Libxc needed' /
-  ! META
-  DATA dft_MGGA_ref(4)  / 'activate MGGA even without MGGA-XC' /
+  ! void
+  DATA dft_MGGA_ref(4)  / 'void' /
   ! SCAN
   DATA dft_MGGA_ref(5)  / 'J Sun, A Ruzsinszky and J Perdew, PRL 115, 36402 (2015) - Libxc needed' /
   ! SCA0
@@ -315,10 +315,6 @@ MODULE qe_dft_refs
   DATA dft_full_descr(37) / 'SCAN Meta-GGA - needs Libxc.' /
   ! SCAN0
   DATA dft_full_descr(38) / 'SCAN Meta-GGA - needs Libxc.' /
-  ! PZ+META
-  DATA dft_full_descr(39) / 'PZ/LDA + null meta-GGA' /
-  ! PBE+META
-  DATA dft_full_descr(40) / 'PBE + null meta-GGA' /
   !
 END MODULE qe_dft_refs
 
