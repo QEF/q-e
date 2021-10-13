@@ -75,8 +75,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   INTEGER :: k, is
   REAL(DP) :: sgn(2)
-  REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
-  REAL(DP) :: xlda_up, xlda_dw, xgga_up, xgga_dw
+  REAL(DP) :: rho_up, rho_dw, grho_up, grho_dw
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
@@ -166,32 +165,28 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
-        IF ( rho_lxc(k) > rho_threshold_lda ) THEN
-          ec(k) = ec_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
-          v1c(k,1) = vc_rho(k)
-        ENDIF
-        IF ( rho_lxc(k)>small .AND. SQRT(ABS(sigma(k)))>small ) &
-                                     v2c(k,1) = vc_sigma(k)*2.d0
+        IF ( rho_lxc(k) <= rho_threshold_lda ) CYCLE
+        ec(k) = ec_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
+        v1c(k,1) = vc_rho(k)
+        IF ( rho_lxc(k) <= rho_threshold_gga .OR. &
+             SQRT(ABS(sigma(k))) <= grho_threshold_gga) CYCLE
+        v2c(k,1) = vc_sigma(k)*2.d0
       ENDDO
     ELSE
       DO k = 1, length
         rho_up = rho_lxc(2*k-1)
         rho_dw = rho_lxc(2*k)
-        grho2_up = sigma(3*k-2)
-        grho2_dw = sigma(3*k)
-        xlda_up = 1.0_DP ; xlda_dw = 1.0_DP
-        xgga_up = 1.0_DP ; xgga_dw = 1.0_DP
-        IF ( rho_up+rho_dw <= rho_threshold_gga ) CYCLE
-        IF ( rho_up <= rho_threshold_lda ) xlda_up = 0.0_DP
-        IF ( rho_dw <= rho_threshold_lda ) xlda_dw = 0.0_DP
-        IF ( rho_up<=small .OR. SQRT(ABS(grho2_up))<=small ) xgga_up = 0.0_DP
-        IF ( rho_dw<=small .OR. SQRT(ABS(grho2_dw))<=small ) xgga_dw = 0.0_DP
-        ec(k) = ec_lxc(k) * (rho_up*xlda_up+rho_dw*xlda_dw)
-        v1c(k,1) = vc_rho(2*k-1)*xlda_up
-        v1c(k,2) = vc_rho(2*k)*xlda_dw
-        v2c(k,1) = vc_sigma(3*k-2)*2.d0*xgga_up
-        v2c_ud(k)= vc_sigma(3*k-1)*xgga_up*xgga_dw
-        v2c(k,2) = vc_sigma(3*k)*2.d0*xgga_dw
+        grho_up = SQRT(ABS(sigma(3*k-2)))
+        grho_dw = SQRT(ABS(sigma(3*k)))
+        IF ( rho_up <= rho_threshold_lda .OR. rho_dw <= rho_threshold_lda ) CYCLE
+        ec(k) = ec_lxc(k) * (rho_up+rho_dw)
+        v1c(k,1) = vc_rho(2*k-1)
+        v1c(k,2) = vc_rho(2*k)
+        IF ( rho_up <= rho_threshold_gga .OR. rho_dw <= rho_threshold_gga .OR. &
+             grho_up<=grho_threshold_gga .OR. grho_dw<=grho_threshold_gga ) CYCLE
+        v2c(k,1) = vc_sigma(3*k-2)*2.d0
+        v2c_ud(k)= vc_sigma(3*k-1)
+        v2c(k,2) = vc_sigma(3*k)*2.d0
       ENDDO
     ENDIF
     !  
@@ -256,8 +251,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(3) ) THEN
     !
-    !CALL xc_f03_func_set_dens_threshold( xc_func(3), rho_threshold_gga )
-    CALL xc_f03_func_set_dens_threshold( xc_func(3), small )
+    CALL xc_f03_func_set_dens_threshold( xc_func(3), grho_threshold_gga )
     IF (libxc_flags(3,0)==1) THEN
       CALL xc_f03_gga_exc_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
     ELSE
@@ -267,31 +261,27 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
-        xlda_up = 1.0_DP ; xgga_up = 1.0_DP
-        IF ( rho_lxc(k) <= rho_threshold_lda ) xlda_up = 0.0_DP
-        IF ( rho_lxc(k)<=small .OR. SQRT(ABS(sigma(k)))<=small ) xgga_up = 0.0_DP
-        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1)) *xlda_up
-        v1x(k,1) = vx_rho(k)*xlda_up
-        v2x(k,1) = vx_sigma(k)*2.d0*xgga_up
+        IF ( rho_lxc(k) <= rho_threshold_lda ) CYCLE
+        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
+        v1x(k,1) = vx_rho(k)
+        IF ( rho_lxc(k) <= rho_threshold_gga .OR. &
+             SQRT(ABS(sigma(k))) <= grho_threshold_gga) CYCLE
+        v2x(k,1) = vx_sigma(k)*2.d0
       ENDDO
     ELSE
       DO k = 1, length
         rho_up = rho_lxc(2*k-1)
         rho_dw = rho_lxc(2*k)
-        grho2_up = sigma(3*k-2)
-        grho2_dw = sigma(3*k)
-        xlda_up = 1.0_DP ; xlda_dw = 1.0_DP
-        xgga_up = 1.0_DP ; xgga_dw = 1.0_DP
-        IF ( rho_up+rho_dw <= small ) CYCLE
-        IF ( rho_up <= rho_threshold_lda ) xlda_up = 0.0_DP
-        IF ( rho_dw <= rho_threshold_lda ) xlda_dw = 0.0_DP
-        IF ( rho_up<=small .OR. SQRT(ABS(grho2_up))<=small ) xgga_up = 0.0_DP
-        IF ( rho_dw<=small .OR. SQRT(ABS(grho2_dw))<=small ) xgga_dw = 0.0_DP
-        ex(k) = ex_lxc(k) * (rho_up*xlda_up+rho_dw*xlda_dw)
-        v1x(k,1) = vx_rho(2*k-1)*xlda_up
-        v1x(k,2) = vx_rho(2*k)*xlda_dw
-        v2x(k,1) = vx_sigma(3*k-2)*2.d0*xgga_up
-        v2x(k,2) = vx_sigma(3*k)*2.d0*xgga_dw
+        grho_up = SQRT(ABS(sigma(3*k-2)))
+        grho_dw = SQRT(ABS(sigma(3*k)))
+        IF ( rho_up <= rho_threshold_lda .OR. rho_dw <= rho_threshold_lda ) CYCLE
+        ex(k) = ex_lxc(k) * (rho_up+rho_dw)
+        v1x(k,1) = vx_rho(2*k-1)
+        v1x(k,2) = vx_rho(2*k)
+        IF ( rho_up <= rho_threshold_gga .OR. rho_dw <= rho_threshold_gga .OR. &
+             grho_up<=grho_threshold_gga .OR. grho_dw<=grho_threshold_gga ) CYCLE
+        v2x(k,1) = vx_sigma(3*k-2)*2.d0
+        v2x(k,2) = vx_sigma(3*k)*2.d0
       ENDDO
     ENDIF
     !

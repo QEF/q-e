@@ -58,9 +58,10 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   INTEGER :: k, length_lxc, length_dlxc
   REAL(DP) :: rht, zeta
+  LOGICAL :: thr_dw_cond, thr_up_cond
   REAL(DP), ALLOCATABLE :: sigma(:)
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
-  REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-10
+  REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-6
   !
   IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
     rho_threshold_gga = small ;  grho_threshold_gga = small
@@ -117,7 +118,8 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
               v2sigma2_x(length_dlxc*sp) )
     ! ... DERIVATIVE FOR EXCHANGE
     v2rho2_x = 0._DP ;  v2rhosigma_x = 0._DP ;  v2sigma2_x = 0._DP
-    IF (igcx /= 0) THEN 
+    IF (igcx /= 0) THEN
+      CALL xc_f03_func_set_dens_threshold( xc_func(3), epsr )
       CALL xc_f03_gga_fxc( xc_func(3), lengthxc, rho_lbxc(1), sigma(1), v2rho2_x(1), &
                            v2rhosigma_x(1), v2sigma2_x(1) )
     ENDIF
@@ -130,6 +132,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     v2rho2_c = 0._DP ;  v2rhosigma_c = 0._DP ;  v2sigma2_c = 0._DP
     IF (igcc /= 0) THEN 
       fkind = xc_f03_func_info_get_kind( xc_info(4) )
+      CALL xc_f03_func_set_dens_threshold( xc_func(4), epsr )
       CALL xc_f03_gga_fxc( xc_func(4), lengthxc, rho_lbxc(1), sigma(1), v2rho2_c(1), &
                            v2rhosigma_c(1), v2sigma2_c(1) )
     ENDIF
@@ -199,7 +202,6 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
   ELSEIF ( sp == 2 ) THEN
     !
-    !IF ( ((.NOT.is_libxc(3)) .OR. (.NOT.is_libxc(4))) ) THEN
     IF ( ((.NOT.is_libxc(3).AND.igcx/=0) .OR. (.NOT.is_libxc(4).AND.igcc/=0)) &
         .AND. fkind/=XC_EXCHANGE_CORRELATION ) THEN
       !
@@ -234,35 +236,34 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !   
     IF ( is_libxc(3) ) THEN   
       !   
-      DO k = 1, length   
-        rht = r_in(k,1) + r_in(k,2)   
-        IF (rht > epsr) THEN   
-          dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(3*k-2)   
-          dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_x(3*k-1)   
-          dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_x(3*k-1)   
-          dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_x(3*k)   
-        ENDIF   
-        dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(6*k-5)*2._DP
+      DO k = 1, length
+        thr_up_cond = r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg
+        thr_dw_cond = r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))>epsg
+        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE 
+        dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(3*k-2)
         dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(6*k-5)*4._DP
-        dvxc_sr(k,2,2) = dvxc_sr(k,2,2) + e2 * v2rhosigma_x(6*k)*2._DP  
+        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_x(3*k) 
         dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_x(6*k)*4._DP
-      ENDDO   
-      !   
-      DEALLOCATE( v2rho2_x, v2rhosigma_x, v2sigma2_x )   
-      !   
-    ENDIF   
-    !   
-    !   
-    IF ( is_libxc(4) ) THEN   
-      !   
-      DO k = 1, length   
-        rht = r_in(k,1) + r_in(k,2)   
-        IF (rht > epsr) THEN   
-          dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(3*k-2)   
-          dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_c(3*k-1)   
-          dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_c(3*k-1)   
-          dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_c(3*k)   
-        ENDIF   
+        dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_x(3*k-1)
+        dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(6*k-5)*2._DP
+        dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_x(3*k-1)
+        dvxc_sr(k,2,2) = dvxc_sr(k,2,2) + e2 * v2rhosigma_x(6*k)*2._DP
+      ENDDO
+      !
+      DEALLOCATE( v2rho2_x, v2rhosigma_x, v2sigma2_x )
+      !
+    ENDIF
+    !
+    IF ( is_libxc(4) ) THEN
+      !
+      DO k = 1, length 
+        thr_up_cond = r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg
+        thr_dw_cond = r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))>epsg
+        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE 
+        dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(3*k-2)   
+        dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_c(3*k-1)   
+        dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_c(3*k-1)   
+        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_c(3*k)   
         dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(6*k-5)*2.d0   
         dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(6*k)*4.d0   
         dvxc_sr(k,1,2) = dvxc_sr(k,1,2) + e2 * v2rhosigma_c(6*k-4)   

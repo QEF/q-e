@@ -1592,8 +1592,8 @@ PROGRAM xclib_test
     ENDIF
     !
     IF (mype==root .AND. TRIM(test)=='EXECUTE') THEN
-      CALL print_aver( what, xc_aver(:,1), aver(1), 'up' )
-      CALL print_aver( what, xc_aver(:,2), aver(2), 'down' )
+      CALL print_aver( what, xc_aver(:,1), aver(1), ' up' )
+      CALL print_aver( what, xc_aver(:,2), aver(2), ' down' )
     ENDIF 
     !
   ENDIF
@@ -1659,9 +1659,9 @@ PROGRAM xclib_test
 #endif
     !
     IF (mype==root .AND. TRIM(test)=='EXECUTE') THEN
-      CALL print_aver( what, dxc_aver(:,1), aver(1), 'up-up' )
-      CALL print_aver( what, dxc_aver(:,2), aver(2), 'up-down' )
-      CALL print_aver( what, dxc_aver(:,3), aver(3), 'down-down' )
+      CALL print_aver( what, dxc_aver(:,1), aver(1), ' up-up' )
+      CALL print_aver( what, dxc_aver(:,2), aver(2), ' up-down' )
+      CALL print_aver( what, dxc_aver(:,3), aver(3), ' down-down' )
     ENDIF  
     !
   ENDIF
