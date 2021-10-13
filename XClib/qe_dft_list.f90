@@ -32,7 +32,7 @@ MODULE qe_dft_list
      INTEGER :: IDs(6)
   END TYPE dft_label
   !
-  INTEGER, PARAMETER :: n_dft=40
+  INTEGER, PARAMETER :: n_dft=38
   TYPE(dft_label) :: dft_full(n_dft)
   !
   !
@@ -58,7 +58,7 @@ MODULE qe_dft_list
                        'NONE', 'B3LP','PSC', 'PBE' , 'xxxx','xxxx',     & ! 6 "  11
                        'Q2DC', 'xxxx','BEEC' /                            !12 "  14
   ! MGGA exchange+correlation terms
-  DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN',  & ! 0 to  5
+  DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'NONE', 'SCAN',  & ! 0 to  5
                        'SCA0' /                                           ! 6
   !
   !
@@ -225,15 +225,6 @@ MODULE qe_dft_list
   DATA dft_full(38)%name     / 'SCAN0' /
   DATA dft_full(38)%name2    / 'none'  /
   DATA dft_full(38)%IDs(1:6) / 0,0,0,0,6,0 /
-  !
-  DATA dft_full(39)%name     / 'PZ+META'  /
-  DATA dft_full(39)%name2    / 'LDA+META' /
-  DATA dft_full(39)%IDs(1:6) / 1,1,0,0,4,0 /
-  !
-  ! +meta activates MGGA even without MGGA-XC
-  DATA dft_full(40)%name     / 'PBE+META' /
-  DATA dft_full(40)%name2    / 'none'     /
-  DATA dft_full(40)%IDs(1:6) / 1,4,3,4,4,0 /
   !
   !
 CONTAINS

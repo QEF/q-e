@@ -190,8 +190,11 @@ CONTAINS
     !     functionals valid.
 #if defined(__LIBXC)
     IF (imeta==5 .OR. imeta==6) THEN
-      IF (imeta==6) scan_exx = .TRUE.
-      imeta  = 263 
+      imeta = 263
+      IF (imeta==6) THEN  ! SCAN0
+        scan_exx = .TRUE.
+        imeta = 264
+      ENDIF
       imetac = 267
       is_libxc(5:6) = .TRUE.
     ELSEIF (imeta==3) THEN

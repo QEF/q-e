@@ -479,12 +479,6 @@ PROGRAM xclib_test
     IF ( TRIM(dft)=='xxxx' .OR. TRIM(dft)=='NONE' ) THEN
       IF (mype==root) CALL print_test_status( skipped )
       CYCLE
-    ENDIF  
-    IF ( TRIM(dft)=='META'    .OR. &
-         TRIM(dft)=='PZ+META' .OR. &
-         TRIM(dft)=='PBE+META' ) THEN
-      IF (mype==root .AND. .NOT.xc_derivative) CALL print_test_status( skipped )
-      CYCLE
     ENDIF
 #if !defined(__LIBXC)
     IF ( TRIM(dft)=='SCAN' .OR. TRIM(dft)=='SCAN0' ) THEN
