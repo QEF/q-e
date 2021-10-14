@@ -92,7 +92,7 @@ SUBROUTINE vhpsi_U ()
            ALLOCATE ( rtemp(ldim,mps) )
         ELSE
            ALLOCATE ( ctemp(ldim,mps) )
-           ALLOCATE ( vaux(2*Hubbard_lmax+1,2*Hubbard_lmax+1) )
+           ALLOCATE ( vaux (ldim,ldim) )
         ENDIF
         !
         DO na = 1, nat
@@ -106,11 +106,11 @@ SUBROUTINE vhpsi_U ()
                       1.0_dp, hpsi, 2*ldap)
               ELSE
                  !
-                 vaux(:,:) = v%ns(:,:,current_spin,na)
+                 vaux(:,:) = v%ns(1:ldim,1:ldim,current_spin,na)
                  !
                  CALL ZGEMM ('n','n', ldim, mps, ldim, (1.0_dp,0.0_dp), &
-                      vaux, ldim, proj%k(offsetU(na)+1,1), nwfcU, &
-                      (0.0_dp,0.0_dp), ctemp, ldim)
+                      vaux, ldim, &
+                      proj%k(offsetU(na)+1,1),nwfcU,(0.0_dp,0.0_dp),ctemp,ldim)
                  !
                  CALL ZGEMM ('n','n', np, mps, ldim, (1.0_dp,0.0_dp), &
                       wfcU(1,offsetU(na)+1), ldap, ctemp, ldim, &
