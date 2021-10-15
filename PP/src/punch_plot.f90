@@ -288,6 +288,13 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         raux(:) = rho%kin_r(:,1)
      ENDIF
 
+  ELSEIF (plot_num == 23) THEN
+     !
+     ! plot of the charge density of states between emin & emax
+     !
+     WRITE (title, '("Density for spins between",f8.4, " eV and ",f8.4," eV")') emin*rytoev, emax*rytoev
+     CALL local_dos (4, lsign, kpoint, kband, spin_component, emin, emax, raux)
+
   ELSEIF (plot_num == 123) THEN
      !
      ! Density Overlap Regions Indicator
