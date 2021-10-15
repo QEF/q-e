@@ -19,7 +19,6 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   USE util_param,     ONLY : DP, eps16
   USE mp,            ONLY : mp_sum, mp_max, mp_bcast
   USE mp_bands_util, ONLY : gstart, inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id
-  USE device_fbuff_m,         ONLY : buffer => dev_buf
   USE device_memcpy_m,        ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
@@ -27,9 +26,9 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   ! ... I/O variables
   !
   INTEGER,     INTENT(IN)    :: npw, npwx, nbnd
-!  COMPLEX(DP), INTENT(INOUT) :: psi (npwx,nbnd)
-!  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx,nbnd)
-!  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: psi_d (npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: spsi_d(npwx,nbnd)
   REAL(DP),    INTENT(OUT)   :: e(nbnd)
   LOGICAL,     INTENT(IN)    :: uspp
   LOGICAL,     INTENT(IN)    :: eigen
@@ -51,17 +50,16 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   ! ... device variables
   !
   INTEGER     :: ii, buf_start, buf_end, buf_size, info
-  COMPLEX(DP) :: psi_d (npwx,nbnd)
-  COMPLEX(DP) :: hpsi_d(npwx,nbnd)
-  COMPLEX(DP) :: spsi_d(npwx,nbnd)
-  COMPLEX(DP), ALLOCATABLE   :: phi_d(:,:), hphi_d(:,:), sphi_d(:,:)
+  COMPLEX(DP),ALLOCATABLE  :: phi_d (:,:)
+  COMPLEX(DP),ALLOCATABLE  :: hphi_d(:,:)
+  COMPLEX(DP),ALLOCATABLE  :: sphi_d(:,:)
   !
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d
 #endif 
   !
-  COMPLEX(DP), POINTER :: sr_d(:), sr2_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: sr_d(:), sr2_d(:,:)
 #if defined (__CUDA)
   attributes(device) :: sr_d, sr2_d
 #endif 
@@ -121,8 +119,8 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   IF ( gstart == 2 ) THEN
 !$cuf kernel do(1)
-     DO ii =1,1
-        psi_d(1,1:nbnd) = CMPLX( DBLE( psi_d(1,1:nbnd) ), 0._DP, kind=DP )
+     DO ii =1,nbnd
+        psi_d(1,ii) = CMPLX( DBLE( psi_d(1,ii) ), 0._DP, kind=DP )
      END DO
   END IF
   !
@@ -134,8 +132,8 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   IF ( gstart == 2 ) THEN 
 !$cuf kernel do(1)
-     DO ii =1,1
-        phi_d(1,1:nbnd) = CMPLX( DBLE( phi_d(1,1:nbnd) ), 0._DP, kind=DP )
+     DO ii =1,nbnd
+        phi_d(1,ii) = CMPLX( DBLE( phi_d(1,ii) ), 0._DP, kind=DP )
      END DO
   END IF
   !
@@ -147,8 +145,8 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
      ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
      IF ( gstart == 2 ) THEN
 !$cuf kernel do(1)
-        DO ii =1,1
-           hphi_d(1,1:nbnd) = CMPLX( DBLE( hphi_d(1,1:nbnd) ), 0._DP, kind=DP )
+        DO ii =1,nbnd
+           hphi_d(1,ii) = CMPLX( DBLE( hphi_d(1,ii) ), 0._DP, kind=DP )
         END DO
      END IF
      !
@@ -161,21 +159,19 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
      ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
      IF ( gstart == 2 ) THEN 
 !$cuf kernel do(1)
-        DO ii =1,1
-           sphi_d(1,1:nbnd) = CMPLX( DBLE( sphi_d(1,1:nbnd) ), 0._DP, kind=DP )
+        DO ii =1,nbnd
+           sphi_d(1,ii) = CMPLX( DBLE( sphi_d(1,ii) ), 0._DP, kind=DP )
         END DO
      END IF
      !
   END IF
   !
-  ! ... Buffer lock
+  ! ... Buffer allocation 
   !
-  buf_start = ( nblock - 1 ) * nbsize + 1
-  buf_end   = nbnd
-  buf_size  = buf_start - buf_end
+  buf_size  = nbsize
   !
-  CALL buffer%lock_buffer( sr_d, buf_size, info)
-  CALL buffer%lock_buffer( sr2_d, (/buf_size, buf_size/), info)
+  ALLOCATE( sr_d(buf_size))
+  ALLOCATE( sr2_d(buf_size, buf_size))
   !
   ! ... Blocking loop
   !
@@ -214,8 +210,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   ! ... Buffer Realese
   !
-  CALL buffer%release_buffer(sr_d, info)
-  CALL buffer%release_buffer(sr2_d, info)
+  DEALLOCATE (sr_d, sr2_d) 
   !
   !
   ! ... Copy psi <- phi
@@ -263,7 +258,7 @@ CONTAINS
     INTEGER               :: ibnd
     REAL(DP)              :: norm
     REAL(DP)              :: psi_ibnd
-    REAL(DP), EXTERNAL    :: gpu_DDOT
+    REAL(DP), EXTERNAL    :: gpu_DDOT 
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -306,8 +301,8 @@ CONTAINS
           ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
           IF ( gstart == 2 ) THEN
 !$cuf kernel do(1)
-             DO ii=1,1
-                phi_d(1,ibnd) = CMPLX( DBLE( phi_d(1,ibnd) ), 0._DP, kind=DP )
+            DO ii=1,1
+               phi_d(1,ibnd) = CMPLX( DBLE( phi_d(1,ibnd) ), 0._DP, kind=DP )
              END DO
           END IF
           !
