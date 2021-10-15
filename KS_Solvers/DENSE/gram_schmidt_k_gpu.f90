@@ -59,7 +59,7 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   attributes(device) :: phi_d, hphi_d, sphi_d
 #endif
   !
-  COMPLEX(DP), POINTER :: sc_d(:), sc2_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: sc_d(:), sc2_d(:,:)
 #if defined (__CUDA)
   attributes(device) :: sc_d, sc2_d
 #endif 
@@ -151,14 +151,10 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   CALL ZCOPY_gpu( kdmx * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
   !
   !
-  ! ... Buffer lock
+  ! ... Allocate buffers 
   !
-  buf_start = ( nblock - 1 ) * nbsize + 1
-  buf_end   = nbnd
-  buf_size  = buf_start - buf_end
-  CALL buffer%lock_buffer( sc_d, buf_size, info)
-  !
-  CALL buffer%lock_buffer( sc2_d, (/buf_size, buf_size/), info)
+  buf_size  = nbsize
+  ALLOCATE (sc_d(buf_size), sc2_d(buf_size, buf_size)) 
   !
   !
   ! ... Blocking loop
@@ -204,8 +200,7 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   ! ... Buffer Realese
   !
-  CALL buffer%release_buffer(sc_d, info)
-  CALL buffer%release_buffer(sc2_d, info)
+  DEALLOCATE (sc_d, sc2_d) 
   !
   !
   ! ... Copy psi <- phi
