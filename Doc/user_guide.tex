@@ -865,13 +865,8 @@ A few \libxc\ functional routines provides the energy and some others the potent
 %
 \subsubsection{XC test}
 \label{SubSec:XCtest}
-A testing program, \texttt{xclib\_test.x}, for the \texttt{XClib} library of \qe\ is available. Three options:
-\begin{itemize}
-	\item \texttt{dft-info}: infos on the input dft are provided. If the functionals are from \libxc\ the external parameters, when present, are listed with a brief description and their default value.
-	\item \texttt{exe-benchmark} (\texttt{gen-benchmark}): the program gets a data file generated previously as input (by running the same program with the \texttt{gen-benchmark} option) and compares the output data, namely energy and potential on a selected number of grid points. It also compares total energy and potential summed up on a large grid in order to better span the input domain. This option shoud be used to test modifications in the \texttt{XClib} library or to check the output matching among different parallelization schemes.
-	\item \texttt{dft-comparison}: comparison between two different dfts on a large grid of points. Max, min and average percentage difference between the two dft outputs (energy and potential) are provided and the points of the grid where the two output differ are shown. This option can be used, for example, to find differences between internal \qe\ functionals and the \libxc\ ones.
-\end{itemize}
-The testing program is available for LDA, GGA and MGGA functionals. It also tests the potential derivatives for LDA (\texttt{dmxc}) and GGA (\texttt{dgcxc}).
+A testing program, \texttt{xclib\_test.x}, for the \texttt{XClib} library of \qe\ is available. The program is available for LDA, GGA and MGGA functionals (both QE and Libxc). It also tests the potential derivatives for LDA (\texttt{dmxc}) and GGA (\texttt{dgcxc}).\\
+See XClib/README.TEST file for further details.
 
 \subsection{Compilation}
 \label{SubSec:Compilation}

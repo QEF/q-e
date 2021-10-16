@@ -267,9 +267,7 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )                    !<GPU:
   cf3 = cf3*rho
   v2c = cf2*d2rev + cf3*2.0_DP/grho2
   v3c = cf2*d3rev - cf3/tau
-  !
   ec = rho*ec_rev*(1.0_DP+dd*ec_rev*z2*z)  !-rho*ec_unif(1)
-  !v1c = v1c - vc_unif(1)
   !
   RETURN
   !
@@ -865,8 +863,8 @@ END SUBROUTINE metac_spin
 !
 !           input:  - rho
 !                   - grho2=|\nabla rho|^2
-!                   - tau = the kinetic energy density
-!                           It is defined as summ_i( |nabla phi_i|**2 )
+!                   - tau = the input kinetic energy density
+!                           It is defined as 0.5summ_i( |nabla phi_i|**2 )
 !
 !           definition:  E_x = \int ex dr
 !
@@ -923,18 +921,20 @@ SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )      
   !
   taua = tau * two * 0.5_dp ! Taua, which is Tau_sigma is half Tau
   taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 )
-                              ! in the M06L routine
+                              ! in the following M06L routines
   !
   CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )   !<GPU:m06lx=>m06lx_d>
   !
   ex = two * ex  ! Add the two components up + dw
   !
   v2x = 0.5_dp * v2x
+  !v3x = 2.0_dp * v3x  !**mismatch with Libxc by a factor of 2
   !
   CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &   !<GPU:m06lc=>m06lc_d>
               v1cb, v2cb, v3cb )
   !
   v2c = 0.5_dp * v2c
+  !v3c = 2.0_dp * v3c  !**
   !
 END SUBROUTINE m06lxc
 !
@@ -963,9 +963,13 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &    
   CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )   !<GPU:m06lx=>m06lx_d>
   !
   ex = exup + exdw
+  !v3xup = 2.0_dp * v3xup  !**mismatch with Libxc by a factor of 2
+  !v3xdw = 2.0_dp * v3xdw  !**
   !
   CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &       !<GPU:m06lc=>m06lc_d>
               ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw )
+  !v3cup = 2.0_dp * v3cup  !**
+  !v3cdw = 2.0_dp * v3cdw  !**
   !
 END SUBROUTINE m06lxc_spin
 ! !
@@ -1018,7 +1022,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   REAL(DP) :: xs, xs2, grho, rhom83, rho13, rho43, zs, gh
   REAL(DP) :: hg, dhg_dxs2, dhg_dzs
   REAL(DP) :: dxs2_drho, dxs2_dgrho2, dzs_drho, dzs_dtau
-  REAL(DP) :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98, v2x_vs98_g
+  REAL(DP) :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98
   !
   ! GGA and MGGA variables
   !
@@ -1164,7 +1168,6 @@ SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )       !<GPU:DEVICE>
   !
   ! ... local variables
   !
-  INTEGER :: iflag
   REAL(DP) :: grho, rho43, xs, xs2, dxs2_drho, dxs2_dgrho2
   REAL(DP) :: CX, denom, C1, C2, ex, Fx, dFx_dxs2, dex_drho
   !
@@ -1261,7 +1264,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   REAL(DP), DIMENSION(0:4):: cs, cab
   !
-  REAL(DP) :: ds0, ds1, ds2, ds3, ds4, ds5, CF, alpha, Ds,         &
+  REAL(DP) :: ds0, ds1, ds2, ds3, ds4, ds5, CF,         &
               dab0, dab1, dab2, dab3, dab4, dab5, gama_ab, gama_s, &
               alpha_s, alpha_ab
   !
@@ -1269,7 +1272,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   REAL(DP) :: ec_pw_a, ec_pw_b, ec_pw_ab
   !
-  REAL(DP) :: vv, vc_pw_a, vc_pw_b, vc_pw_ab, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
+  REAL(DP) :: vv, vc_pw_a, vc_pw_b, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
               Ec_UEG_ab, Ec_UEG_aa, Ec_UEG_bb, decab_drhoa, decab_drhob,            &
               v1_ab_up, v1_ab_dw, v2_ab_up, v2_ab_dw, v3_ab_up, v3_ab_dw,           &
               v1_aa_up, v2_aa_up, v3_aa_up, v1_bb_dw, v2_bb_dw, v3_bb_dw
@@ -1331,6 +1334,14 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
     v1_aa_up = zero
     v2_aa_up = zero
     v3_aa_up = zero
+    ec_pw_a = zero
+    vc_pw_a = zero
+    xs2a = zero
+    zsa = zero
+    dxs2a_drhoa   = zero
+    dxs2a_dgrhoa2 = zero
+    dzsa_drhoa    = zero
+    dzsa_dtaua    = zero
     !
   ELSE
     !
@@ -1380,12 +1391,20 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   ! ... Ecbb
   !
-  IF (rhob < small .AND. taub < small) THEN
+  IF (rhob < small .OR. taub < small) THEN
     !
     Ecbb = zero
     v1_bb_dw = zero
     v2_bb_dw = zero
     v3_bb_dw = zero
+    ec_pw_b = zero
+    vc_pw_b = zero
+    xs2b = zero
+    zsb = zero
+    dxs2b_drhob   = zero
+    dxs2b_dgrhob2 = zero
+    dzsb_drhob    = zero
+    dzsb_dtaub    = zero
     !
   ELSE
     !

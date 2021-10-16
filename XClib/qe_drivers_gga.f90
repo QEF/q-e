@@ -14,10 +14,11 @@ MODULE qe_drivers_gga
   !----------------------------------------------------------------------
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
-  USE kind_l,       ONLY: DP
-  USE dft_par_mod,  ONLY: igcx, igcc, rho_threshold_gga, grho_threshold_gga,&
-                          exx_started, exx_fraction, screening_parameter,   &
-                          gau_parameter
+  USE kind_l,              ONLY: DP
+  USE dft_setting_params,  ONLY: igcx, igcc, rho_threshold_gga,     &
+                                 grho_threshold_gga, exx_started,   &
+                                 exx_fraction, screening_parameter, &
+                                 gau_parameter
   !
   IMPLICIT NONE
   !
@@ -40,7 +41,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   USE exch_gga
   USE corr_gga
-  USE beef_interface, ONLY: beefx, beeflocalcorr
   !
   IMPLICIT NONE
   !
@@ -402,7 +402,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Gradient corrections for exchange - Hartree a.u.
   !
   USE exch_gga
-  USE beef_interface, ONLY: beefx
   !
   IMPLICIT NONE
   !
@@ -421,7 +420,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER  :: ir, is, iflag
+  INTEGER :: ir, iflag
   REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
   REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
   REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
@@ -821,7 +820,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF
         !
-        !
         ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
         ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
         ! routine: needs kinetic energy density in addition to rho and grad rho
@@ -860,7 +858,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !! Implemented: Perdew86, GGA (PW91), PBE
   !
   USE corr_gga
-  USE beef_interface, ONLY: beeflocalcorrspin
   !
   IMPLICIT NONE
   !
@@ -1183,12 +1180,10 @@ SUBROUTINE gcx_spin_beef( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER  :: ir, is, iflag
+  INTEGER  :: ir
   REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
   REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
   REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
-  REAL(DP) :: sxsr_up, sxsr_dw
-  REAL(DP) :: v1xsr_up, v1xsr_dw, v2xsr_up, v2xsr_dw
   !
   REAL(DP), PARAMETER :: small=1.D-10
   REAL(DP), PARAMETER :: rho_trash=0.5_DP, grho2_trash=0.2_DP

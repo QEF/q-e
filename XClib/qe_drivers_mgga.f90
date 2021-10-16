@@ -14,9 +14,9 @@ MODULE qe_drivers_mgga
   !------------------------------------------------------------------------
   !! Contains the mGGA drivers of QE that calculate XC energy and potential.
   !
-  USE kind_l,      ONLY: DP
-  USE dft_par_mod, ONLY: imeta, imetac, rho_threshold_mgga, grho2_threshold_mgga,&
-                         tau_threshold_mgga
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: imeta, imetac, rho_threshold_mgga, &
+                                grho2_threshold_mgga, tau_threshold_mgga
   USE metagga
   !
   IMPLICIT NONE
@@ -79,6 +79,9 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
     IF ( (arho<=rho_threshold_mgga).OR.(grho2(k)<=grho2_threshold_mgga).OR. &
          (ABS(tau(k))<=rho_threshold_mgga) ) CYCLE
     !
+    ! ...libxc-like threshold management
+    !grho2(k) = MIN( grho2(k), (8.d0*rho(k)*tau(k))**2 )
+    !
     SELECT CASE( imeta )
     CASE( 1 )
        !
@@ -140,21 +143,22 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   !
   !  ... local variables
   !
-  INTEGER :: k, ipol
+  INTEGER :: k
   REAL(DP) :: rh, zeta, atau, grho2(2), ggrho2
   REAL(DP) :: v2cup, v2cdw
   !
   ex=0.0_DP ; v1x=0.0_DP ; v2x=0.0_DP ; v3x=0.0_DP
   ec=0.0_DP ; v1c=0.0_DP ; v2c=0.0_DP ; v3c=0.0_DP
   !
-  ! FIXME: for SCAN, this will be calculated later
-  !
   DO k = 1, length
      !
      rh   = rho(k,1) + rho(k,2)
      atau = tau(k,1) + tau(k,2)             ! KE-density in Hartree
-     grho2(1) = SUM( grho(:,k,1)**2 )
-     grho2(2) = SUM( grho(:,k,2)**2 )
+     ! ...libxc-like threshold management
+     !grho2(1) = MIN( SUM(grho(:,k,1)**2), (8.d0*rho(k,1)*tau(k,1))**2 )
+     !grho2(2) = MIN( SUM(grho(:,k,2)**2), (8.d0*rho(k,2)*tau(k,2))**2 )
+     grho2(1) = SUM(grho(:,k,1)**2) 
+     grho2(2) = SUM(grho(:,k,2)**2)
      ggrho2 = ( grho2(1) + grho2(2) ) * 4.0_DP
      !
      IF ( (rh <= rho_threshold_mgga).OR.(ggrho2 <= grho2_threshold_mgga).OR.&

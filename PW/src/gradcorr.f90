@@ -33,20 +33,15 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   REAL(DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
   REAL(DP), ALLOCATABLE :: rhoaux(:,:), segni(:), vgg(:,:), vsave(:,:)
-  REAL(DP), ALLOCATABLE :: gmag(:,:,:)
-
   COMPLEX(DP), ALLOCATABLE :: rhogaux(:,:)
   !
-  REAL(DP), ALLOCATABLE :: grho2(:,:), grho_ud(:)
-  REAL(DP), ALLOCATABLE :: rh(:), zeta(:)  
   REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:)
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:), v2c_ud(:)
-  REAL(DP) :: vnull
   REAL(DP) :: sx(dfftp%nnr), sc(dfftp%nnr)
   !
-  REAL(DP) :: sgn(2), etxcgc, vtxcgc, segno, fac, amag 
+  REAL(DP) :: sgn(2), etxcgc, vtxcgc, fac, amag 
   !
-  REAL(DP) :: grup, grdw, seg, gr
+  REAL(DP) :: grup, grdw
   !
   REAL(DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
   !
@@ -64,7 +59,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   ALLOCATE( h(3,dfftp%nnr,nspin0)    )
   ALLOCATE( grho(3,dfftp%nnr,nspin0) )
-  ALLOCATE( grho2(dfftp%nnr,nspin0)  )
   ALLOCATE( rhoaux(dfftp%nnr,nspin0) )
   !
   ALLOCATE( v1x(dfftp%nnr,nspin0), v2x(dfftp%nnr,nspin0) )
@@ -122,7 +116,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      DO k = 1, dfftp%nnr
         !
         ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
-        v(k,1) = v(k,1) + e2 * ( v1x(k,1) + v1c(k,1) ) ! * vnull
+        v(k,1) = v(k,1) + e2 * ( v1x(k,1) + v1c(k,1) )
         !
         ! ... h contains:  D(rho*Exc) / D(|grad rho|) * (grad rho) / |grad rho|
         h(:,k,1) = e2 * ( v2x(k,1) + v2c(k,1) ) * grho(:,k,1)
@@ -217,7 +211,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DEALLOCATE( dh )
   DEALLOCATE( h )
-  DEALLOCATE( grho2 )
   DEALLOCATE( rhoaux )
   IF (nspin==4 .AND. domag) THEN
      DEALLOCATE( vgg )
