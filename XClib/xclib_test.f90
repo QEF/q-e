@@ -256,7 +256,9 @@ PROGRAM xclib_test
     IF ( test=='GENERATE' ) THEN
       !
       iunpun = xml_open_file( "./"//TRIM(filename_xml) )
-      IF ( iunpun == -1 ) RETURN
+      IF ( iunpun == -1 ) THEN
+        CALL xclib_error( 'xclib_test', 'GENERATE test cannot open xml a data file', 1 )
+      ENDIF
       !
       CALL xmlw_opentag( "XCTEST-DATA-SET" )
       CALL add_attr( "DFT", dft )
@@ -269,14 +271,12 @@ PROGRAM xclib_test
       !
       INQUIRE( FILE = filename_xml, exist=found )
       IF (.NOT. found ) THEN
-        ierr=1
-        CALL xclib_error( 'xclib_test', 'xml data file not found' )
+        CALL xclib_error( 'xclib_test', 'xml data file not found', 1 )
       ENDIF
       !
       iun = xml_open_file( filename_xml )
       IF ( iun==-1 ) THEN
-        ierr=2
-        CALL xclib_error( 'xclib_test', 'xml data file not readable' )
+        CALL xclib_error( 'xclib_test', 'xml data file not readable', 2 )
       ENDIF
       !
       CALL xmlr_opentag( "XCTEST-DATA-SET" )
