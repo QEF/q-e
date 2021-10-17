@@ -1,6 +1,8 @@
 set(sources_xclib
-    dft_mod.f90
+    dft_setting_routines.f90
+    dft_setting_params.f90
     qe_constants.f90
+    qe_dft_list.f90
     qe_drivers_d_gga.f90
     qe_drivers_d_lda_lsda.f90
     qe_drivers_gga.f90
@@ -15,14 +17,13 @@ set(sources_xclib
     xclib_error.f90
     xclib_utils_and_para.f90
     xc_beef_interface.f90
-    xc_input_params_mod.f90
     xc_lib.f90
     xc_wrapper_d_gga.f90
     xc_wrapper_d_lda_lsda.f90
     xc_wrapper_gga.f90
     xc_wrapper_lda_lsda.f90
     xc_wrapper_mgga.f90)
-
+    
 qe_add_library(qe_xclib ${sources_xclib})
 target_link_libraries(qe_xclib
     PRIVATE
@@ -50,6 +51,24 @@ target_link_libraries(qe_libbeef
 qe_install_targets(qe_libbeef)
 
 ###########################################################
+# xc_infos.x
+###########################################################
+if(QE_ENABLE_TEST)
+    set(sources_xc_infos
+    qe_dft_refs.f90
+    xc_infos.f90)
+    qe_add_executable(qe_xc_infos ${sources_xc_infos})
+    set_target_properties(qe_xc_infos 
+        PROPERTIES 
+        OUTPUT_NAME qe_xc_infos.x 
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+    target_link_libraries(qe_xc_infos
+        PRIVATE
+            qe_external_libxc
+            qe_xclib)
+endif(QE_ENABLE_TEST)
+
+###########################################################
 # xclib_test.x
 ###########################################################
 if(QE_ENABLE_TEST)
@@ -62,6 +81,7 @@ if(QE_ENABLE_TEST)
         PRIVATE
             qe_openmp_fortran
             qe_mpi_fortran
+            qe_upflib
             qe_external_libxc
             qe_xclib)
 

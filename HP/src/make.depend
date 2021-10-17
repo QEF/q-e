@@ -9,7 +9,6 @@ hp_allocate_q.o : ../../Modules/wavefunctions.o
 hp_allocate_q.o : ../../PW/src/ldaU.o
 hp_allocate_q.o : ../../PW/src/pwcom.o
 hp_allocate_q.o : ../../upflib/uspp.o
-hp_allocate_q.o : hpcom.o
 hp_bcast_input.o : ../../LR_Modules/lrcom.o
 hp_bcast_input.o : ../../Modules/check_stop.o
 hp_bcast_input.o : ../../Modules/control_flags.o
@@ -49,7 +48,7 @@ hp_dealloc_q.o : ../../LR_Modules/lrcom.o
 hp_dealloc_q.o : ../../Modules/becmod.o
 hp_dealloc_q.o : ../../Modules/noncol.o
 hp_dealloc_q.o : ../../upflib/uspp.o
-hp_dealloc_q.o : hpcom.o
+hp_dnsq.o : ../../LR_Modules/efermi_shift.o
 hp_dnsq.o : ../../LR_Modules/lrcom.o
 hp_dnsq.o : ../../Modules/constants.o
 hp_dnsq.o : ../../Modules/control_flags.o
@@ -64,7 +63,6 @@ hp_dnsq.o : ../../PW/src/ldaU.o
 hp_dnsq.o : ../../PW/src/pwcom.o
 hp_dnsq.o : ../../UtilXlib/mp.o
 hp_dnsq.o : ../../upflib/uspp.o
-hp_dnsq.o : hp_efermi_shift.o
 hp_dnsq.o : hpcom.o
 hp_dnstot_sum_q.o : ../../LR_Modules/lrcom.o
 hp_dnstot_sum_q.o : ../../Modules/cell_base.o
@@ -88,20 +86,6 @@ hp_dvpsi_pert.o : ../../PW/src/ldaU.o
 hp_dvpsi_pert.o : ../../PW/src/pwcom.o
 hp_dvpsi_pert.o : ../../UtilXlib/mp.o
 hp_dvpsi_pert.o : hpcom.o
-hp_efermi_shift.o : ../../FFTXlib/fft_interfaces.o
-hp_efermi_shift.o : ../../Modules/cell_base.o
-hp_efermi_shift.o : ../../Modules/fft_base.o
-hp_efermi_shift.o : ../../Modules/io_global.o
-hp_efermi_shift.o : ../../Modules/ions_base.o
-hp_efermi_shift.o : ../../Modules/kind.o
-hp_efermi_shift.o : ../../Modules/mp_bands.o
-hp_efermi_shift.o : ../../Modules/noncol.o
-hp_efermi_shift.o : ../../Modules/recvec.o
-hp_efermi_shift.o : ../../Modules/wavefunctions.o
-hp_efermi_shift.o : ../../PW/src/buffers.o
-hp_efermi_shift.o : ../../PW/src/pwcom.o
-hp_efermi_shift.o : ../../UtilXlib/mp.o
-hp_efermi_shift.o : ../../upflib/uspp.o
 hp_find_inequiv_sites.o : ../../Modules/io_global.o
 hp_find_inequiv_sites.o : ../../Modules/ions_base.o
 hp_find_inequiv_sites.o : ../../Modules/kind.o
@@ -195,6 +179,7 @@ hp_read_chi.o : ../../Modules/io_global.o
 hp_read_chi.o : ../../Modules/ions_base.o
 hp_read_chi.o : ../../Modules/kind.o
 hp_read_chi.o : hpcom.o
+hp_read_dnsq.o : ../../LR_Modules/lrcom.o
 hp_read_dnsq.o : ../../Modules/io_files.o
 hp_read_dnsq.o : ../../Modules/io_global.o
 hp_read_dnsq.o : ../../Modules/ions_base.o
@@ -259,9 +244,10 @@ hp_solve_linear_system.o : ../../FFTXlib/fft_helper_subroutines.o
 hp_solve_linear_system.o : ../../FFTXlib/fft_interfaces.o
 hp_solve_linear_system.o : ../../LR_Modules/apply_dpot_mod.o
 hp_solve_linear_system.o : ../../LR_Modules/dv_of_drho.o
+hp_solve_linear_system.o : ../../LR_Modules/efermi_shift.o
 hp_solve_linear_system.o : ../../LR_Modules/lrcom.o
+hp_solve_linear_system.o : ../../LR_Modules/response_kernels.o
 hp_solve_linear_system.o : ../../Modules/becmod.o
-hp_solve_linear_system.o : ../../Modules/cell_base.o
 hp_solve_linear_system.o : ../../Modules/check_stop.o
 hp_solve_linear_system.o : ../../Modules/fft_base.o
 hp_solve_linear_system.o : ../../Modules/io_global.o
@@ -279,7 +265,6 @@ hp_solve_linear_system.o : ../../PW/src/scf_mod.o
 hp_solve_linear_system.o : ../../UtilXlib/mp.o
 hp_solve_linear_system.o : ../../upflib/paw_variables.o
 hp_solve_linear_system.o : ../../upflib/uspp.o
-hp_solve_linear_system.o : hp_efermi_shift.o
 hp_solve_linear_system.o : hpcom.o
 hp_stop_smoothly.o : ../../Modules/environment.o
 hp_stop_smoothly.o : ../../Modules/mp_global.o
@@ -333,6 +318,7 @@ hp_write_chi.o : hpcom.o
 hp_write_chi_full.o : ../../Modules/io_files.o
 hp_write_chi_full.o : ../../Modules/ions_base.o
 hp_write_chi_full.o : hpcom.o
+hp_write_dnsq.o : ../../LR_Modules/lrcom.o
 hp_write_dnsq.o : ../../Modules/io_files.o
 hp_write_dnsq.o : ../../Modules/io_global.o
 hp_write_dnsq.o : ../../Modules/ions_base.o

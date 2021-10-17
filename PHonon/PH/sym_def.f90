@@ -6,37 +6,45 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
+MODULE sym_def_module
+CONTAINS
 subroutine sym_def (def, irr)
   !---------------------------------------------------------------------
-  ! Symmetrizes the first order changes of the Fermi energies of an
-  ! irreducible representation. These objects are defined complex because
-  ! perturbations may be complex
+  !! Symmetrizes the first order changes of the Fermi energies of an
+  !! irreducible representation. These objects are defined complex because
+  !! perturbations may be complex.
   !
-  ! Used in the q=0 metallic case only.
+  !! Used in the q=0 metallic case only.
   !
   USE kinds, only : DP
-  USE modes,   ONLY : npert, t, tmq, npertx
+  USE modes,   ONLY : npert, t, tmq
+  USE control_ph,           ONLY : lgamma_gamma
 
   USE lr_symm_base, ONLY : minus_q, nsymq
 
   implicit none
 
   integer :: irr
-  ! input: the representation under consideration
-
-  complex(DP) :: def (npertx)
-  ! inp/out: the fermi energy changes
-
+  !! input: the representation under consideration
+  complex(DP) :: def(3)
+  !! inp/out: the fermi energy changes.  
+  !! NB: def(3) should be def(npertx), but it is used only at Gamma
+  !!     where the dimension of irreps never exceeds 3.
+  !
+  ! ... local variables
+  !
   integer :: ipert, jpert, isym, irot
   ! counter on perturbations
   ! counter on perturbations
   ! counter on symmetries
   ! the rotation
 
-  complex(DP) :: w_def (npertx)
+  complex(DP) :: w_def(3)
   ! the fermi energy changes (work array)
 
+  IF (lgamma_gamma) RETURN
   if (nsymq == 1 .and. (.not.minus_q) ) return
+  if (npert(irr) > 3) CALL errore("sym_def", "npert(irr) exceeds 3", 1)
   !
   ! first the symmetrization   S(irotmq)*q = -q + Gi if necessary
   !
@@ -72,3 +80,4 @@ subroutine sym_def (def, irr)
 
   return
 end subroutine sym_def
+END MODULE sym_def_module

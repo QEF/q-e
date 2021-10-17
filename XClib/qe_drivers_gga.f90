@@ -14,10 +14,11 @@ MODULE qe_drivers_gga
   !----------------------------------------------------------------------
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
-  USE kind_l,       ONLY: DP
-  USE dft_par_mod,  ONLY: igcx, igcc, rho_threshold_gga, grho_threshold_gga,&
-                          exx_started, exx_fraction, screening_parameter,   &
-                          gau_parameter
+  USE kind_l,              ONLY: DP
+  USE dft_setting_params,  ONLY: igcx, igcc, rho_threshold_gga,     &
+                                 grho_threshold_gga, exx_started,   &
+                                 exx_fraction, screening_parameter, &
+                                 gau_parameter
   !
   IMPLICIT NONE
   !
@@ -25,21 +26,21 @@ MODULE qe_drivers_gga
   !
   PRIVATE
   !
-  PUBLIC :: gcxc, gcx_spin, gcc_spin, gcc_spin_more
+  PUBLIC :: gcxc, gcx_spin, gcc_spin, gcc_spin_more, gcxc_beef, gcx_spin_beef, &
+            gcc_spin_beef
   !
   !
 CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
-                                          v2x_out, v1c_out, v2c_out )
+                                         v2x_out, v1c_out, v2c_out )
   !---------------------------------------------------------------------
   !! Gradient corrections for exchange and correlation - Hartree a.u. 
   !! See comments at the beginning of module for implemented cases
   !
   USE exch_gga
   USE corr_gga
-  USE beef_interface, ONLY: beefx, beeflocalcorr
   !
   IMPLICIT NONE
   !
@@ -81,10 +82,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   !
 #if defined(_OPENACC)
-  !
-  IF (igcx==43 .OR. igcc==14) CALL xclib_error( 'gcxc', 'BEEF not available with&
-                                               & OpenACC enabled', 1 )
-  !
 !$acc data copyin(rho_in,grho_in), copyout(sx_out,sc_out,v1x_out,v2x_out,v1c_out,v2c_out)
 !$acc parallel loop  
 #endif
@@ -301,13 +298,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
-#if !defined(_OPENACC)
-     CASE( 43 ) ! 'beefx' --- BEEF unavailable with OpenACC-- Will be enabled soon
-        ! last parameter = 0 means do not add LDA (=Slater) exchange
-        ! (espresso) will add it itself
-        CALL beefx(rho, grho, sx, v1x, v2x, 0)
-#endif
-        !
      CASE( 44 ) ! 'RPBE'
         !
         CALL pbex( rho, grho, 8, sx, v1x, v2x )
@@ -379,13 +369,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2c = 0.871_DP * v2c
         ENDIF
         !
-#if !defined(_OPENACC)
-     CASE( 14 ) ! BEEF unavailable with OpenACC-- Will be enabled soon
-        ! last parameter 0 means: do not add lda contributions
-        ! espresso will do that itself
-        call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
-#endif
-        !
      CASE DEFAULT
         !
         sc = 0.0_DP
@@ -399,14 +382,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      v2x_out(ir) = v2x   ;  v2c_out(ir) = v2c
      !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
+#if defined(_OPENACC)
+!$acc end data
+#else
 !$omp end do
 !$omp end parallel
 #endif
-#if defined(_OPENACC)
-!$acc end data
-#endif
-  !
   !
   RETURN
   !
@@ -421,7 +402,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Gradient corrections for exchange - Hartree a.u.
   !
   USE exch_gga
-  USE beef_interface, ONLY: beefx
   !
   IMPLICIT NONE
   !
@@ -440,7 +420,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER  :: ir, is, iflag
+  INTEGER :: ir, iflag
   REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
   REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
   REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
@@ -462,14 +442,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   sx_tot = 0.0_DP
   !
 #if defined(_OPENACC)
-  !
-  IF (igcx==43) CALL xclib_error( 'gcx_spin', 'BEEF not available with&
-                                  & OpenACC enabled', 1 )
-  !
 !$acc data copyin(rho_in, grho2_in), copyout(sx_tot, v1x_out, v2x_out)
 !$acc parallel loop
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC)
+#else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho2_up, grho2_dw, rnull_up, rnull_dw, &
 !$omp          sx_up, sx_dw, sxsr_up, sxsr_dw, v1xsr_up, v1xsr_dw, &
@@ -480,7 +455,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$omp          gau_parameter )
 !$omp do
 #endif
-  !
   DO ir = 1, length  
      !
      rho_up = rho_in(ir,1)
@@ -741,8 +715,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( exx_started ) THEN
            sx_tot(ir) = (1.0_DP - exx_fraction) * sx_tot(ir)
            v1x_up = (1.0_DP - exx_fraction) * v1x_up
-           v1x_up = (1.0_DP - exx_fraction) * v1x_up
-           v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
+           v1x_dw = (1.0_DP - exx_fraction) * v1x_dw
+           v2x_up = (1.0_DP - exx_fraction) * v2x_up
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF
         !
@@ -846,24 +820,10 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF
         !
-#if !defined(_OPENACC)
-     CASE( 43 ) ! 'beefx'  --- BEEF unavailable with OpenACC-- Will be enabled soon
+        ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
+        ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
+        ! routine: needs kinetic energy density in addition to rho and grad rho
         !
-        rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
-        grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
-        !
-        CALL beefx(rho_up, grho2_up, sx_up, v1x_up, v2x_up, 0)
-        CALL beefx(rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw, 0)
-        !
-        sx_tot(ir) = 0.5_DP * (sx_up*rnull_up + sx_dw*rnull_dw)
-        v2x_up = 2.0_DP * v2x_up
-        v2x_dw = 2.0_DP * v2x_dw
-#endif
-     !
-     ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
-     ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
-     ! routine: needs kinetic energy density in addition to rho and grad rho
-     !
      CASE DEFAULT
         !
         sx_tot(ir) = 0.0_DP
@@ -878,12 +838,11 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      v2x_out(ir,2) = v2x_dw * rnull_dw
      !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
 #if defined(_OPENACC)
 !$acc end data
+#else
+!$omp end do
+!$omp end parallel
 #endif
   !
   !
@@ -899,7 +858,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !! Implemented: Perdew86, GGA (PW91), PBE
   !
   USE corr_gga
-  USE beef_interface, ONLY: beeflocalcorrspin
   !
   IMPLICIT NONE
   !
@@ -933,13 +891,9 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
   !
 #if defined(_OPENACC)
-  IF (igcc==14) CALL xclib_error( 'gcc_spin', 'BEEF not available with&
-                                  & OpenACC enabled', 1 )
-  !
 !$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
 !$acc parallel loop
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC)
+#else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c ) &
 !$omp shared( igcc, sc_out, v1c_out, v2c_out, &
@@ -987,12 +941,6 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c_up, v1c_dw, v2c )
        !
-#if !defined(_OPENACC)
-    CASE( 14 )                !*****BEEF unavailable with OpenACC-- Will be enabled soon
-       !
-       call beeflocalcorrspin(rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0)
-#endif
-       !
     CASE DEFAULT
        !
        sc = 0.0_DP
@@ -1008,12 +956,11 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     v2c_out(ir) = v2c
     !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
 #if defined(_OPENACC)
 !$acc end data
+#else
+!$omp end do
+!$omp end parallel
 #endif
   !
   RETURN
@@ -1076,8 +1023,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
 #if defined(_OPENACC) 
 !$acc data copyin(rho_in, grho_in, grho_ud_in), copyout(sc, v1c, v2c, v2c_ud)
 !$acc parallel loop
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC) 
+#else 
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho_up, grho_dw, grho_ud ) &
 !$omp shared( length, rho_in, grho_in, grho_ud_in, &
@@ -1139,17 +1085,226 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
     END SELECT
     !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
+#if defined(_OPENACC)
+!$acc end data
+#else
 !$omp end do
 !$omp end parallel
 #endif
-#if defined(_OPENACC)
-!$acc end data
-#endif
+
   !
   RETURN
   !
 END SUBROUTINE gcc_spin_more
+!
+!
+! ========> BEEF GGA DRIVERS <========================
+!
+!------------------------------------------------------------------------
+SUBROUTINE gcxc_beef( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
+                                             v2x_out, v1c_out, v2c_out )
+  !---------------------------------------------------------------------
+  !! Driver for BEEF gga xc terms. Unpolarized case.
+  !
+  USE beef_interface, ONLY: beefx, beeflocalcorr
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: length
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: grho_in
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out,  sc_out
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v1x_out, v2x_out
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v1c_out, v2c_out
+  !
+  ! ... local variables
+  !
+  INTEGER :: ir
+  REAL(DP) :: rho, grho
+  REAL(DP) :: sx, v1x, v2x
+  REAL(DP) :: sc, v1c, v2c
+  !
+  IF (igcx == 43 .OR. igcc == 14) THEN
+    !
+    DO ir = 1, length
+      grho = grho_in(ir)
+      IF ( rho_in(ir) <= rho_threshold_gga .OR. grho <= grho_threshold_gga ) THEN
+        sx_out(ir)  = 0.0_DP ;   sc_out(ir)  = 0.0_DP
+        v1x_out(ir) = 0.0_DP ;   v1c_out(ir) = 0.0_DP
+        v2x_out(ir) = 0.0_DP ;   v2c_out(ir) = 0.0_DP
+        CYCLE
+      ENDIF
+      !
+      rho  = ABS(rho_in(ir))
+      !
+      IF ( igcx == 43 ) THEN
+        ! last parameter = 0 means do not add LDA (=Slater) exchange
+        ! (espresso) will add it itself
+        CALL beefx( rho, grho, sx, v1x, v2x, 0 )
+        sx_out(ir) = sx
+        v1x_out(ir) = v1x
+        v2x_out(ir) = v2x
+      ENDIF
+      !
+      IF ( igcc == 14 ) THEN
+        ! last parameter 0 means: do not add lda contributions
+        ! espresso will do that itself
+        CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
+        sc_out(ir) = sc
+        v1c_out(ir) = v1c
+        v2c_out(ir) = v2c
+      ENDIF
+    ENDDO
+    !
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE gcxc_beef
+!
+!-----------------------------------------------------------------------------
+SUBROUTINE gcx_spin_beef( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
+  !--------------------------------------------------------------------------
+  !! Driver for BEEF gga exchange term. Polarized case.
+  !
+  USE beef_interface, ONLY: beefx
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: length
+  REAL(DP), INTENT(IN),  DIMENSION(length,2) :: rho_in
+  REAL(DP), INTENT(IN),  DIMENSION(length,2) :: grho2_in
+  REAL(DP), INTENT(OUT), DIMENSION(length)   :: sx_tot
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1x_out
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v2x_out
+  !
+  ! ... local variables
+  !
+  INTEGER  :: ir
+  REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
+  REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
+  REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
+  !
+  REAL(DP), PARAMETER :: small=1.D-10
+  REAL(DP), PARAMETER :: rho_trash=0.5_DP, grho2_trash=0.2_DP
+  
+  ! ... Temporary workaround for BEEF, which does not support GPU.
+  IF ( igcx == 43 ) THEN
+    !
+    DO ir = 1, length  
+      !
+      rho_up = rho_in(ir,1)
+      rho_dw = rho_in(ir,2)
+      grho2_up = grho2_in(ir,1)
+      grho2_dw = grho2_in(ir,2)
+      rnull_up = 1.0_DP
+      rnull_dw = 1.0_DP
+      !
+      IF ( rho_up+rho_dw <= small ) THEN
+        sx_tot(ir) = 0.0_DP
+        v1x_out(ir,1) = 0.0_DP
+        v2x_out(ir,1) = 0.0_DP
+        v1x_out(ir,2) = 0.0_DP
+        v2x_out(ir,2) = 0.0_DP
+        CYCLE
+      ELSE
+        IF ( rho_up<=small .OR. SQRT(ABS(grho2_up))<=small ) THEN
+          rho_up = rho_trash
+          grho2_up = grho2_trash
+          rnull_up = 0.0_DP
+        ENDIF
+        IF ( rho_dw<=small .OR. SQRT(ABS(grho2_dw))<=small ) THEN
+          rho_dw = rho_trash
+          grho2_dw = grho2_trash
+          rnull_dw = 0.0_DP
+        ENDIF
+      ENDIF
+      !
+      rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
+      grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
+      !
+      CALL beefx(rho_up, grho2_up, sx_up, v1x_up, v2x_up, 0)
+      CALL beefx(rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw, 0)
+      !
+      sx_tot(ir) = 0.5_DP * (sx_up*rnull_up + sx_dw*rnull_dw)
+      v2x_up = 2.0_DP * v2x_up
+      v2x_dw = 2.0_DP * v2x_dw
+      !
+      v1x_out(ir,1) = v1x_up * rnull_up
+      v1x_out(ir,2) = v1x_dw * rnull_dw
+      v2x_out(ir,1) = v2x_up * rnull_up
+      v2x_out(ir,2) = v2x_dw * rnull_dw
+      !
+    ENDDO
+    !
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE gcx_spin_beef
+!
+!
+!--------------------------------------------------------------------------------
+SUBROUTINE gcc_spin_beef( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
+  !-------------------------------------------------------------------------------
+  !! BEEF Gradient correction.  
+  !
+  USE beef_interface, ONLY: beeflocalcorrspin
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: length
+  REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
+  REAL(DP), INTENT(INOUT), DIMENSION(length) :: zeta_io
+  REAL(DP), INTENT(IN), DIMENSION(length) :: grho_in
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: sc_out
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c_out
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
+  !
+  ! ... local variables
+  !
+  INTEGER :: ir
+  REAL(DP) :: rho, zeta, grho
+  REAL(DP) :: sc, v1c_up, v1c_dw, v2c
+  !
+  IF ( igcc == 14 ) THEN
+    !
+    DO ir = 1, length
+      !
+      rho  = rho_in(ir)
+      grho = grho_in(ir)
+      IF ( ABS(zeta_io(ir))<=1.0_DP ) zeta_io(ir) = SIGN( MIN(ABS(zeta_io(ir)), &
+                                       (1.0_DP-rho_threshold_gga)), zeta_io(ir) )
+      zeta = zeta_io(ir)
+      !
+      IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
+         SQRT(ABS(grho))<=rho_threshold_gga ) THEN
+        sc_out(ir) = 0.0_DP
+        v1c_out(ir,1) = 0.0_DP ; v2c_out(ir) = 0.0_DP
+        v1c_out(ir,2) = 0.0_DP
+       CYCLE
+      ENDIF
+      rho  = rho_in(ir)
+      grho = grho_in(ir)
+      zeta = zeta_io(ir)
+      ! 
+      IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
+           SQRT(ABS(grho))<=rho_threshold_gga ) CYCLE
+      !
+      CALL beeflocalcorrspin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0 )
+      !
+      sc_out(ir)  = sc
+      v1c_out(ir,1) = v1c_up
+      v1c_out(ir,2) = v1c_dw
+      v2c_out(ir) = v2c
+      !
+    ENDDO
+    !
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE gcc_spin_beef
 !
 !
 END MODULE qe_drivers_gga

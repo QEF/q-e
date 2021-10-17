@@ -341,6 +341,35 @@ NAMELIST: &ENERGY_CURRENT
                    You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       n_workers
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    The calculation over all the trajectory is splitted in "n_workers" chunks. Then to run the code over all
+                   the trajectory you must run "n_workers" input files each one with a different "worker_id",
+                   from 0 to "n_workers" - 1 . Those inputs can run at the same time in the same folder. The "worker_id"
+                   will be appended to the outdir folder and to the "file_output" input variables, so you can safely run all
+                   the inputs in the same directory at the same time.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       worker_id
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    See "n_workers" variable
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       continue_not_converged
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If it is not possible to find a ground state for a given frame of the trajectory, go to the next one.
+                   You will not find this step in the output file(s).
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 

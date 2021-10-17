@@ -54,8 +54,8 @@ SUBROUTINE punch( what )
   INTEGER            :: cp_status, nt
   !
   !
-  WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-      TRIM ( restart_dir ( ) )
+  WRITE( stdout, '(/,5X,"Writing ",A," to output data dir ",A)' ) &
+         TRIM ( what ), TRIM ( restart_dir ( ) )
   iunpun = 4
   !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries

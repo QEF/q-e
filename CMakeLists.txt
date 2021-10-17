@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 6.7.1
+    VERSION 6.8
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -32,16 +32,15 @@ endif()
 # Define the paths for static libraries and executables
 ##########################################################
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/lib 
-    CACHE 
+    CACHE
     PATH "Single output directory for building all libraries.")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/bin 
-    CACHE 
+    CACHE
     PATH "Single output directory for building all executables.")
 
 ###########################################################
 # Build helpers
 ###########################################################
-set(PROJECT_CMAKE ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include(cmake/qeHelpers.cmake)
@@ -111,7 +110,7 @@ option(QE_ENABLE_STATIC_BUILD
     "enable fully static build of executables" OFF)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
-set(QE_FFTW_VENDOR "AUTO" CACHE 
+set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 
@@ -215,14 +214,35 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES 
 endif()
 
 ############################################################
-## Compiler vendor specific options
+# C preprocessor
+# Note: reply on the compiler preprocessor whenever possible
+############################################################
+if(DEFINED ENV{CPP})
+    set(QE_CPP_DEFAULT $ENV{CPP})
+else()
+    set(QE_CPP_DEFAULT cpp)
+endif()
+# QE_CPP_DEFAULT is only effective when cached QE_CPP doesn't exist.
+set(QE_CPP ${QE_CPP_DEFAULT} CACHE
+    STRING "C preprocessor for qe_preprocess_source in qeHelpers.cmake")
+find_program(QE_CPP_FULL_PATH NAMES ${QE_CPP} DOC "C preprocessor full path")
+if(QE_CPP_FULL_PATH)
+    message(STATUS "C preprocessor used by qe_preprocess_source in qeHelpers.cmake: ${QE_CPP_FULL_PATH}")
+else()
+    set(QE_CPP_SAVED ${QE_CPP})
+    unset(QE_CPP CACHE)
+    message(FATAL_ERROR "C preprocessor ${QE_CPP_SAVED} not found. Pass a working one to CMake via QE_CPP!")
+endif()
+
+############################################################
+# Compiler vendor specific options
 ############################################################
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
+    include(GNUFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
-    include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
+    include(NVFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
-    include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
+    include(IBMFortranCompiler)
 endif()
 
 if(QE_ENABLE_STATIC_BUILD)
@@ -248,6 +268,7 @@ if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
             set_target_properties(CUDA::nvToolsExt PROPERTIES INTERFACE_LINK_LIBRARIES "-cuda;libnvToolsExt.so")
             set(CMAKE_REQUIRED_LIBRARIES "-cuda;libnvToolsExt.so")
             check_function_exists(nvtxRangePushEx NVTX_FOUND)
+            unset(CMAKE_REQUIRED_LIBRARIES)
             if(NOT NVTX_FOUND)
                 message(FATAL_ERROR "Check nvtxRangePushEx in libnvToolsExt.so failed")
             endif()
@@ -348,12 +369,14 @@ if(NOT QE_LAPACK_INTERNAL)
                 set(CMAKE_REQUIRED_LINK_OPTIONS ${OpenMP_Fortran_FLAGS})
             endif()
             find_package(LAPACK)
+            unset(CMAKE_REQUIRED_LINK_OPTIONS)
         endif()
     else()
         if(QE_ENABLE_OPENMP)
             set(CMAKE_REQUIRED_LINK_OPTIONS ${OpenMP_Fortran_FLAGS})
         endif()
         find_package(LAPACK)
+        unset(CMAKE_REQUIRED_LINK_OPTIONS)
     endif()
     if(LAPACK_FOUND)
         list(APPEND _lapack_libs
@@ -369,6 +392,7 @@ if(NOT QE_LAPACK_INTERNAL)
         target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
         set(CMAKE_REQUIRED_LIBRARIES ${_lapack_libs})
         check_fortran_function_exists(zhpev ZHPEV_FOUND)
+        unset(CMAKE_REQUIRED_LIBRARIES)
         if(NOT ZHPEV_FOUND)
           unset(ZHPEV_FOUND CACHE)
           message(FATAL_ERROR "Incomplete LAPACK! function zhpev not found!")
@@ -552,7 +576,6 @@ endif(QE_ENABLE_PROFILE_NVTX)
 # Components
 ###########################################################
 add_subdirectory(external)
-add_subdirectory(clib)
 add_subdirectory(FFTXlib)
 add_subdirectory(UtilXlib)
 add_subdirectory(Modules)
@@ -660,9 +683,6 @@ add_custom_target(ph
         qe_phonon_fdef_exe
         qe_phonon_fdifc_exe
         qe_phonon_postahc_exe
-        qe_plotphon_kforbands_exe
-        qe_plotphon_bandstognuplot_exe
-        qe_plotphon_eminmax_exe
     COMMENT
         "phonon code, Gamma-only and third-order derivatives")
 

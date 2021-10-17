@@ -50,7 +50,7 @@ SUBROUTINE memory_report()
   USE uspp_data, ONLY : dq
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
-       lxdm, smallmem, tqr, iverbosity
+       lxdm, smallmem, tqr, iverbosity, rmm_ndim
   USE force_mod, ONLY : lforce, lstres
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
@@ -278,6 +278,7 @@ SUBROUTINE memory_report()
   !
   ! 
   IF ( isolve == 0 ) THEN
+     ! Davidson
      add = complex_size * nbndx * npol * npwx_l              ! hpsi
      ram1 = ram1 + add
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'psi', add/MB
@@ -287,6 +288,34 @@ SUBROUTINE memory_report()
         add = complex_size * nbndx * npol * npwx_l ! spsi
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'spsi', add/MB 
         ram1 = ram1 + add
+     END IF
+  ELSE IF ( isolve == 4 ) THEN
+     ! RMM-DIIS
+     nbnd_l = NINT( DBLE(nbnd) / nbgrp )
+     add = complex_size * nbnd_l * npol * npwx_l * rmm_ndim
+     ram1 = ram1 + add     ! phi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'phi', add/MB
+     ram1 = ram1 + add     ! hphi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'hphi', add/MB
+     IF ( okvan ) THEN
+        ram1 = ram1 + add  ! sphi
+        IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'sphi', add/MB
+     END IF
+
+     add = complex_size * nbnd * npol * npwx_l
+     ram1 = ram1 + add     ! hpsi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'hpsi', add/MB
+     IF ( okvan ) THEN
+        ram1 = ram1 + add  ! spsi
+        IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'spsi', add/MB
+     END IF
+     ram1 = ram1 + add     ! kpsi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'kpsi', add/MB
+     ram1 = ram1 + add     ! hkpsi
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'hkpsi', add/MB
+     IF ( okvan ) THEN
+        ram1 = ram1 + add  ! skpsi
+        IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'skpsi', add/MB
      END IF
   END IF
   ram_ = ram1

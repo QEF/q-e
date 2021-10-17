@@ -8,10 +8,8 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-	 ../../upflib/libupf.a    ../../KS_Solvers/libks_solvers.a ../../XClib/xc_lib.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
-PWOBJS = ../../PW/src/libpw.a
+QEMODS = $(BASEMODS)
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 LRMODS = ../../LR_Modules/liblrmod.a
 
 LROBJS= \
@@ -71,37 +69,44 @@ lr_sternheimer.o\
 lr_apply_liouvillian_magnons.o\
 lr_dvpsi_magnons.o\
 lr_Opsi_magnons.o\
-lr_calc_dens_magnons.o
+lr_calc_dens_magnons.o\
+turbo_spectrum.o
 
 TLDEPS=lrmods
 
-all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x turbo_magnons.x
+all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x turbo_magnons.x turbo_spectrum.x
 
 libtddfpt.a : $(LROBJS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-turbo_lanczos.x : lr_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+turbo_lanczos.x : lr_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-		lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_davidson.x : lr_dav_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+turbo_davidson.x : lr_dav_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-		lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_eels.x : lr_eels_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+turbo_eels.x : lr_eels_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-                lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+                lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_magnons.x : lr_magnons_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+turbo_magnons.x : lr_magnons_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	        lr_magnons_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	        lr_magnons_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
+	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
+
+turbo_spectrum.x : turbo_spectrum.o libtddfpt.a $(PWOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+		turbo_spectrum.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
@@ -110,7 +115,8 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x ../bin/turbo_magnons.x *.x *.o *~ *.d *.mod *.i work.pc *.a *_tmp.f90
+	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x \
+		../bin/turbo_magnons.x ../bin/turbo_spectrum.x *.x *.o *~ *.d *.mod *.i work.pc *.a *_tmp.f90
 
 include make.depend
 

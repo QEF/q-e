@@ -1,45 +1,39 @@
 # INSTALLATION OVERVIEW
-###
-#### Before running the examples, you need to be sure that QEHeat is installed.
-#### To compile, we suggest the following procedure. As usual in a QuantumEspresso installation, enter the distribution folder and run autoconf :
-####
-#### > ./configure
-#### 
-#### Than from the distribution folder:
-####
-#### >  make all_currents
-####
-#### This should produce in a single shot the executables pw.x and all_currents.x, the executable for QEHeat, in the respective src and bin folders.
-####
-#### TROUBLESHOOT: 
-#### If problems occurs, we suggest to enter the main folder of the distribution and compile only pw.x independently:
-####
-#### >  make clean
-#### >  make veryclean
-#### >  ./configure
-#### >  make pw
-####
-#### This way one can recognize if the problem comes from compiling QEHeat or the standard QuantumEspresso distribution.
-####
-~                                          
+
+ Before running the examples, you need to be sure that QEHeat is installed.
+ To compile, we suggest the following procedure. As usual in a QuantumEspresso installation, enter the distribution folder and run autoconf :
+
+```
+ > ./configure
+```
+
+ Than from the distribution folder:
+
+```
+ >  make all_currents
+```
+
+ This will produce the executable `all_currents.x`, the executable for QEHeat, in the respective src and bin folders.
+
 
 # EXAMPLES
-### 
-#### See also ../../Doc/INPUT_ALL_CURRENTS.html for a description of the inputs.
-#### To run an example, enter in the respective trajectory and execute the script run_example.sh. Modify it if necessary.
-#### In general, running a Qeheat calculation just needs the execution of the command: all_currents.x -in input_energycurrent , 
-#### after the input file has been prepared.
-####
-#### Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
-#### Pseudopotentials can be downloaded from http://www.quantum-simulation.org/potentials/sg15_oncv/
-#### For the examples, the following pseudos were used:
-#### H_HSCV_PBE-1.0.upf,  O_HSCV_PBE-1.0.upf,  O_ONCV_PBE-1.0.upf,  Si_ONCV_PBE-1.1.upf 
-#### , which should be present in a folder examples/pseudo
-####
-#### Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 12. 
-####
-#### Example 3 can be easily run on a single core (serial) installation. Note that Example 3 requires the program cp.x to be installed.
-#### If this is not the case, you can enter the distribution folder and run "make cp"  
+
+ See also `../Doc/INPUT_ALL_CURRENTS.html` for a description of the inputs.
+ To run an example, enter in the respective trajectory and execute the script `run_example.sh`. Modify it if necessary.
+ In general, running a Qeheat calculation just needs the execution of the command: 
+  `all_currents.x -in input_energycurrent` , 
+ after the input file has been prepared.
+
+ Each example comes with a reference folder where the output files can be compared with the ones produced by a new installation/run.
+ Pseudopotentials can be downloaded from [http://www.quantum-simulation.org/potentials/sg15_oncv/]()
+ For the examples, the following pseudos were used:
+ H_HSCV_PBE-1.0.upf,  O_HSCV_PBE-1.0.upf,  O_ONCV_PBE-1.0.upf,  Si_ONCV_PBE-1.1.upf 
+ , which should be present in the folder `pseudo`
+
+ Example 1 and 2 need a parallel installation to finish in a reasonable time. Example 1 was run in the reference calculation on 4 cores and Example 2 on 12. 
+
+ Example 3 can be easily run on a single core (serial) installation. Note that Example 3 requires the program `cp.x` to be installed, for example with `make cp`
+ from the main distribution folder.
 
 
 
@@ -73,7 +67,7 @@ Only file_output.dat needs to be used to evaluate the thermal conductivity coeff
 - `file_output` : this reports the total energy current divided in individual components, if a more specific analysis is needed. This file is mainly thought for development purposes.
 
 `file_output.dat` comes with a header specifying the output units. The same units are used in the more detailed current decomposion given in `file_output`.
- See also the description ../../Doc/INPUT_ALL_CURRENTS.html 
+ See also the description ../Doc/INPUT_ALL_CURRENTS.html 
 
 
 
@@ -124,7 +118,7 @@ This example requires the program cp.x to be installed. If this is not the case,
 
 Note that the trajectory produced by cp.x will be probably different due to the stochasticity inherent in the Car-Parrinello molecular dynamics simulation. For exact comparison 
 with a novel installation one can substitute `trajdir='reference/traj/cp'` and comment in the run_example_water script the call to cp.x. This way the files produced by `file_output`
-should be comparable with the reference. 
+should be comparable with the reference, up to numerical noise that is always present in the finite difference derivative with non perfectly converged wavefunctions.
 
 
 

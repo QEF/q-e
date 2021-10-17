@@ -9,11 +9,10 @@
 !-----------------------------------------------------------------------
 subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   !-----------------------------------------------------------------------
-  !
-  !   Solve the linear system which defines the change of the wavefunctions
-  !   due to the electric field for a given k_point in a non self-consistent
-  !   way. The self-consistent variation of the potential has been computed
-  !   previously and is in dvscfs.
+  !! Solve the linear system which defines the change of the wavefunctions
+  !! due to the electric field for a given k-point in a non self-consistent
+  !! way. The self-consistent variation of the potential has been computed
+  !! previously and is in \(\text{dvscfs}\).
   !
   use kinds,                 ONLY : DP
   USE cell_base,             ONLY : tpiba2
@@ -25,28 +24,27 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE wvfct,                 ONLY : et
   USE wavefunctions,  ONLY : evc
   USE eqv,                   ONLY : dpsi, dvpsi
-  USE units_ph,              ONLY : this_pcxpsi_is_on_file, lrdwf, iudwf
+  USE units_ph,              ONLY : this_pcxpsi_is_on_file
   USE qpoint,                ONLY : nksq
+  USE units_lr,              ONLY : lrdwf, iudwf
   USE control_lr,            ONLY : nbnd_occ
+
   implicit none
 
+  integer :: ik
+  !! input: k-point under consideration
+  integer :: ipol
+  !! input: polarization of the electric field
+  real(DP) :: thresh
+  !! input: convergence threshold
+  real(DP) :: avg_iter
+  !! in/out: number of diagonalization iterations
+  complex(DP) :: dvscfs(dffts%nnr,3)
+  !! input: potential on the smooth grid
+  complex(DP) :: auxr(dffts%nnr)
+  !! auxiliary work space
   !
-  !  Input variables
-  !
-  integer :: ik, ipol
-  ! input: k-point under consideration
-  ! input: polarization of the electric field
-
-  real(DP) :: thresh, avg_iter
-  ! input: convergence threshold
-  ! in/out: # of diagonalization iterations
-
-  complex(DP) :: dvscfs (dffts%nnr, 3), auxr(dffts%nnr)
-  ! input: potential on the smooth grid
-  ! auxiliary work space
-
-  !
-  !  Local variables
+  ! ... local variables
   !
   integer :: npw, npwq, ibnd, ir, ig, nrec
   ! counter on bands

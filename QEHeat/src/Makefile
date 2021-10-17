@@ -36,10 +36,9 @@ scf_result.o\
 $(TEST_CPV_TRAJ_OBJ)
 
 
-QEMODS=\
-       ../../PHonon/PH/libph.a ../../LR_Modules/liblrmod.a  ../../PW/src/libpw.a \
-       ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a ../../XClib/xc_lib.a \
-       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+QEMODS=../../PHonon/PH/libph.a ../../LR_Modules/liblrmod.a \
+       ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a \
+      $(BASEMODS)
 
 TLDEPS= pw ph
 
@@ -50,12 +49,12 @@ cpv-traj-test : cpv-traj-test.x cpv_traj_test.o
 cpv-traj-test.x : $(TEST_CPV_TRAJ_OBJ)
 	$(LD) $(LDFLAGS) -o $@ cpv_traj_test.o $(TEST_CPV_TRAJ_OBJ) $(QEMODS)
 
-all_currents.x : all_currents.o lib_all_currents.a $(QEMODS) $(LIBOBJS)
+all_currents.x : all_currents.o lib_all_currents.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-		all_currents.o lib_all_currents.a $(QEMODS) $(LIBOBJS) $(QELIBS)
+		all_currents.o lib_all_currents.a $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../QEHeat/src/$@ . )
 
- 
+
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 

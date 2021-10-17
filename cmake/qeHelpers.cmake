@@ -41,7 +41,7 @@ function(qe_preprocess_source IN OUT)
     endif()
     add_custom_command(
         OUTPUT ${OUT}
-        COMMAND cpp -P ${global_flags} -E ${IN} > ${OUT}
+        COMMAND ${QE_CPP_FULL_PATH} -P ${global_flags} -E ${IN} > ${OUT}
         MAIN_DEPENDENCY ${IN}
         COMMENT "Preprocessing ${IN}"
         VERBATIM)    
@@ -75,7 +75,7 @@ function(qe_enable_cuda_fortran SRCS)
         foreach(src IN LISTS SRCS)
             set_source_files_properties(${src} 
                 PROPERTIES
-                    COMPILE_OPTIONS ${QE_CUDA_COMPILE_OPTIONS})
+                    COMPILE_OPTIONS "${QE_CUDA_COMPILE_OPTIONS}")
         endforeach()
     endif()
 endfunction(qe_enable_cuda_fortran)

@@ -25,7 +25,6 @@ SUBROUTINE force_us( forcenl )
   USE symme,                ONLY : symvector
   USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
-  USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : calbec, becp, bec_type, allocate_bec_type, &

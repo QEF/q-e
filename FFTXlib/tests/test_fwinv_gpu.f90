@@ -1,10 +1,13 @@
 #if defined(__CUDA)
 program test_fwinv_gpu
-#if defined(__MPI)
+#if defined(__MPI) && defined(__MPI_MODULE)
     USE mpi
 #endif
     USE tester
     IMPLICIT NONE
+#if defined(__MPI) && ! defined(__MPI_MODULE)
+    INCLUDE 'mpif.h'
+#endif
     ! MPI type
     type mpi_t
     integer :: me, n, root, comm
@@ -40,6 +43,7 @@ program test_fwinv_gpu
         CALL test_invfft_gpu_1(mp, test, .false., i)
       END IF
     END DO
+    !
     CALL test_fwfft_many_gpu_1(mp, test, .true., 1)
     CALL test_fwfft_many_gpu_1(mp, test, .false., 1)
     !
@@ -108,7 +112,8 @@ program test_fwinv_gpu
     at = RESHAPE((/10.d0, 0.d0, 0.d0, 0.d0, 10.d0, 0.d0, 0.d0, 0.d0, 10.d0/), shape(at))
     CALL calc_bg(at, bg)
     !
-    CALL fft_type_init(dfft, smap, flavor, gamma_only, parallel, comm, at, bg, 12.d0, 6.d0, nyfft=nyfft)
+    CALL fft_type_init(dfft, smap, flavor, gamma_only, parallel, comm, at, bg, 12.d0, 6.d0, &
+    & nyfft=nyfft, nmany=1)
     !
   END SUBROUTINE fft_desc_init
   
@@ -410,15 +415,24 @@ program test_fwinv_gpu
   END SUBROUTINE test_invfft_many_gpu_1
   
 end program test_fwinv_gpu
-! dummy subroutines
-subroutine stop_clock( label )
-character(len=*) :: label
-end subroutine stop_clock
-subroutine start_clock( label )
-character(len=*) :: label
-end subroutine start_clock
-!
 #else
 program test_fwinv_gpu
 end program test_fwinv_gpu
 #endif
+!
+! Dummy
+SUBROUTINE stop_clock(label)
+CHARACTER(*) :: label
+END SUBROUTINE stop_clock
+!
+SUBROUTINE start_clock(label)
+CHARACTER(*) :: label
+END SUBROUTINE start_clock
+!
+SUBROUTINE stop_clock_gpu(label)
+CHARACTER(*) :: label
+END SUBROUTINE stop_clock_gpu
+!
+SUBROUTINE start_clock_gpu(label)
+CHARACTER(*) :: label
+END SUBROUTINE start_clock_gpu

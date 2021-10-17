@@ -9,38 +9,49 @@
 subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
      nq, sxq, isq, imq, iudyn)
   !-----------------------------------------------------------------------
-  ! Generates the dynamical matrices for the star of q and writes them on
-  ! disk for later use.
-  ! If there is a symmetry operation such that q -> -q +G then imposes on
-  ! dynamical matrix those conditions related to time reversal symmetry.
+  !! Generates the dynamical matrices for the star of q and writes them on
+  !! disk for later use.  
+  !! If there is a symmetry operation such that \(q \rightarrow -q+G \) then
+  !! imposes on dynamical matrix those conditions related to time reversal 
+  !! symmetry.
   !
   USE kinds, only : DP
   USE io_dyn_mat, only : write_dyn_mat
   USE control_ph, only : xmldyn
   implicit none
-  ! input variables
-  integer :: nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
-       nq, isq (48), imq, iudyn
-  ! number of atoms in the unit cell
-  ! number of symmetry operations
-  ! the symmetry operations
-  ! index of the inverse operations
-  ! index of the rotated atom
-  ! degeneracy of the star of q
-  ! symmetry op. giving the rotated q
-  ! index of -q in the star (0 if non present)
-  ! unit number
-  complex(DP) :: dyn (3 * nat, 3 * nat)
-  ! the input dynamical matrix. if imq.ne.0 the
-  ! output matrix is symmetrized w.r.t. time-reversal
-
-  real(DP) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
-  ! direct lattice vectors
-  ! reciprocal lattice vectors
-  ! for each atom and rotation gives the R vector involved
-  ! list of q in the star
   !
-  !  local variables
+  integer :: nat
+  !! number of atoms in the unit cell
+  integer :: nsym
+  !! number of symmetry operations
+  integer :: s(3,3,48)
+  !! the symmetry operations
+  integer :: invs(48)
+  !! index of the inverse operations
+  integer :: irt(48,nat)
+  !! index of the rotated atom
+  integer :: nq
+  !! degeneracy of the star of q
+  integer :: isq(48)
+  !! symmetry op. giving the rotated q
+  integer :: imq
+  !! index of -q in the star (0 if non present)
+  integer :: iudyn
+  !! unit number
+  complex(DP) :: dyn(3*nat,3*nat)
+  !! the input dynamical matrix. If \(\text{imq}\) different
+  !! from 0 the output matrix is symmetrized w.r.t. time-reversal
+  real(DP) :: at (3,3)
+  !! direct lattice vectors
+  real(DP) :: bg (3,3)
+  !! reciprocal lattice vectors
+  real(DP) :: rtau (3,48,nat)
+  !! for each atom and rotation gives the R vector involved
+  real(DP) :: sxq (3,48)
+  !! list of q in the star
+  !
+  ! ... local variables
+  !
   integer :: na, nb, iq, nsq, isym, icar, jcar, i, j, counter
   ! counters
   ! nsq: number of sym.op. giving each q in the list

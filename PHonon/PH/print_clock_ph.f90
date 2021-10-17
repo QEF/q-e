@@ -8,7 +8,8 @@
 !-----------------------------------------------------------------------
 subroutine print_clock_ph
   !-----------------------------------------------------------------------
-
+  !! Print CPU and WALL time for each routine.
+  !
   USE io_global,         ONLY : stdout
   USE uspp,              ONLY : okvan, nlcc_any
   USE control_ph,        ONLY : trans, zue, epsil
@@ -31,7 +32,7 @@ subroutine print_clock_ph
   if (nlcc_any) call print_clock ('set_drhoc')
   call print_clock ('init_vloc')
   call print_clock ('init_us_1')
-  !call print_clock ('init_us_2')
+  call print_clock ('init_us_2')
   call print_clock ('newd')
   call print_clock ('dvanqq')
   call print_clock ('drho')
@@ -100,6 +101,8 @@ subroutine print_clock_ph
   WRITE( stdout, * )
   call print_clock ('solve_linter')
   call print_clock ('dvqpsi_us')
+  call print_clock ('sth_kernel')
+  call print_clock ('apply_dpot_b')
   call print_clock ('ortho')
   call print_clock ('cgsolve')
   call print_clock ('incdrhoscf')
@@ -108,6 +111,7 @@ subroutine print_clock_ph
   call print_clock ('dv_of_drho')
   call print_clock ('mix_pot')
   call print_clock ('ef_shift')
+  call print_clock ('ef_shift_wfc')
   call print_clock ('localdos')
 #if defined(__MPI)
   call print_clock ('psymdvscf')

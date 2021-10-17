@@ -14,12 +14,12 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_par_mod,       ONLY: xc_func, xc_info
+  USE dft_setting_params,   ONLY: xc_func, xc_info, libxc_flags
 #endif
   !
-  USE kind_l,            ONLY: DP
-  USE dft_par_mod,       ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
-                               finite_size_cell_volume_set
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: iexch, icorr, is_libxc, rho_threshold_lda, &
+                                finite_size_cell_volume_set
   USE qe_drivers_lda_lsda
   !
   IMPLICIT NONE
@@ -44,7 +44,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  INTEGER :: fkind_x
+  INTEGER :: fkind_x, eflag
   REAL(DP) :: amag
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_lxc(:), vc_lxc(:)
@@ -104,15 +104,23 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   ! ... EXCHANGE
   IF ( is_libxc(1) ) THEN
-     CALL xc_f03_func_set_dens_threshold( xc_func(1), rho_threshold_lda )
-     CALL xc_f03_lda_exc_vxc( xc_func(1), lengthxc, rho_lxc(1), ex_out(1), vx_lxc(1) )
+    CALL xc_f03_func_set_dens_threshold( xc_func(1), rho_threshold_lda )
+    IF (libxc_flags(1,0)==1) THEN
+      CALL xc_f03_lda_exc_vxc( xc_func(1), lengthxc, rho_lxc(1), ex_out(1), vx_lxc(1) )
+    ELSE
+      CALL xc_f03_lda_vxc( xc_func(1), lengthxc, rho_lxc(1), vx_lxc(1) )
+    ENDIF
   ENDIF
   !
   ! ... CORRELATION
   IF ( is_libxc(2) ) THEN
      CALL xc_f03_func_set_dens_threshold( xc_func(2), rho_threshold_lda )
      fkind_x = xc_f03_func_info_get_kind( xc_info(2) )
-     CALL xc_f03_lda_exc_vxc( xc_func(2), lengthxc, rho_lxc(1), ec_out(1), vc_lxc(1) )
+     IF (libxc_flags(2,0)==1) THEN
+       CALL xc_f03_lda_exc_vxc( xc_func(2), lengthxc, rho_lxc(1), ec_out(1), vc_lxc(1) )
+     ELSE
+       CALL xc_f03_lda_vxc( xc_func(2), lengthxc, rho_lxc(1), vc_lxc(1) )
+     ENDIF
   ENDIF
   !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
@@ -121,7 +129,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( sr_d )
      CASE( 1 )
         !
-        IF (iexch==8 .OR. icorr==10) THEN
+        IF ((iexch==8 .AND. .NOT.is_libxc(1)) .OR. (icorr==10 .AND. &
+            .NOT. is_libxc(2))) THEN
           IF (.NOT. finite_size_cell_volume_set) CALL xclib_error( 'XC',&
               'finite size corrected exchange used w/o initialization', 1 )
         ENDIF
@@ -160,14 +169,14 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ELSE
      IF (is_libxc(1)) THEN
         DO ir = 1, length
-           vx_out(ir,1) = vx_lxc(2*ir-1)
-           vx_out(ir,2) = vx_lxc(2*ir)
+          vx_out(ir,1) = vx_lxc(2*ir-1)
+          vx_out(ir,2) = vx_lxc(2*ir)
         ENDDO
      ENDIF
      IF (is_libxc(2)) THEN
         DO ir = 1, length
-           vc_out(ir,1) = vc_lxc(2*ir-1)
-           vc_out(ir,2) = vc_lxc(2*ir)
+          vc_out(ir,1) = vc_lxc(2*ir-1)
+          vc_out(ir,2) = vc_lxc(2*ir)
         ENDDO
      ENDIF
   ENDIF
@@ -182,7 +191,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   SELECT CASE( sr_d )
   CASE( 1 )
      !
-     IF (iexch==8 .OR. icorr==10) THEN
+     IF ((iexch==8 .AND. .NOT.is_libxc(1)) .OR. (icorr==10 .AND. &
+            .NOT. is_libxc(2))) THEN
        IF (.NOT. finite_size_cell_volume_set) CALL xclib_error( 'XC',&
            'finite size corrected exchange used w/o initialization', 1 )
      ENDIF

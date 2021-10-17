@@ -7,15 +7,14 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
-     g, omega, vloc)
+subroutine setlocq( xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
+                    g, omega, vloc )
   !----------------------------------------------------------------------
+  !! This routine computes the Fourier transform of the local
+  !! part of the pseudopotential in the q+G vectors.
   !
-  !    This routine computes the Fourier transform of the local
-  !    part of the pseudopotential in the q+G vectors.
-  !
-  !    The local pseudopotential of the US case is always in
-  !    numerical form, expressed in Ry units.
+  !! The local pseudopotential of the US case is always in
+  !! numerical form, expressed in Ry units.
   !
   USE kinds, only  : DP
   USE constants, ONLY : e2, fpi, pi
@@ -23,26 +22,32 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
   !
   implicit none
   !
-  !    first the dummy variables
+  integer :: ngm
+  !! input: the number of G vectors
+  integer :: mesh
+  !! input: the dimensions of the mesh
+  integer :: msh
+  !! input: mesh points for radial integration
+  real(DP) :: xq(3)
+  !! input: the q point
+  real(DP) :: zp
+  !! input: valence pseudocharge
+  real(DP) :: rab(mesh)
+  !! input: the derivative of mesh points
+  real(DP) :: r(mesh)
+  !! input: the mesh points
+  real(DP) :: vloc_at(mesh)
+  !! input: the pseudo on the radial
+  real(DP) :: tpiba2
+  !! input: 2 pi / alat
+  real(DP) :: omega
+  !! input: the volume of the unit cell
+  real(DP) :: g(3,ngm)
+  !! input: the g vectors coordinates
+  real(DP) :: vloc(ngm)
+  !! output: the fourier transform of the potential
   !
-  integer :: ngm, mesh, msh
-  ! input: the number of G vectors
-  ! input: the dimensions of the mesh
-  ! input: mesh points for radial integration
-
-  real(DP) :: xq (3), zp, rab (mesh), r (mesh), vloc_at(mesh), tpiba2,&
-       omega, g (3, ngm), vloc (ngm)
-  ! input: the q point
-  ! input: valence pseudocharge
-  ! input: the derivative of mesh points
-  ! input: the mesh points
-  ! input: the pseudo on the radial
-  ! input: 2 pi / alat
-  ! input: the volume of the unit cell
-  ! input: the g vectors coordinates
-  ! output: the fourier transform of the potential
-  !
-  !    and the local variables
+  ! ... local variables
   !
   real(DP), parameter :: eps = 1.d-8
   real(DP) :: vlcp, vloc0, fac, g2a, aux (mesh), &
@@ -111,9 +116,8 @@ end subroutine setlocq
 !----------------------------------------------------------------------
 subroutine setlocq_coul (xq, zp, tpiba2, ngm, g, omega, vloc)
  !----------------------------------------------------------------------
- !
- !    Fourier transform of the Coulomb potential - For all-electron
- !    calculations, in specific cases only, for testing purposes
+ !! Fourier transform of the Coulomb potential - For all-electron
+ !! calculations, in specific cases only, for testing purposes.
  !
  USE kinds, ONLY: DP
  USE constants, ONLY : fpi, e2, eps8

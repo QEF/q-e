@@ -291,6 +291,13 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 23) THEN
      !
+     ! plot of the charge density of states between emin & emax
+     !
+     WRITE (title, '("Density for spins between",f8.4, " eV and ",f8.4," eV")') emin*rytoev, emax*rytoev
+     CALL local_dos (4, lsign, kpoint, kband, spin_component, emin, emax, raux)
+
+  ELSEIF (plot_num == 24) THEN
+
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron charge."
      ! code partially duplicate from plot_num=21 (so 0)
      CALL US_make_ae_charge(rho)

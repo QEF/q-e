@@ -26,8 +26,7 @@ subroutine hp_allocate_q
   USE eqv,                  ONLY : dpsi, evq, dmuxc, dvpsi
   USE control_lr,           ONLY : lgamma
   USE ldaU,                 ONLY : Hubbard_lmax, nwfcU
-  USE ldaU_hp,              ONLY : this_pert_is_on_file, &
-                                   swfcatomk, swfcatomkpq
+  USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -43,9 +42,6 @@ subroutine hp_allocate_q
   ALLOCATE (dvpsi(npwx*npol,nbnd))
   ALLOCATE (dpsi(npwx*npol,nbnd))
   ALLOCATE (dmuxc(dfftp%nnr,nspin_mag,nspin_mag))
-  !
-  ALLOCATE (this_pert_is_on_file(nksq))
-  this_pert_is_on_file(:) = .FALSE.
   !
   IF (okvan) THEN
      ALLOCATE (eigqts(nat))

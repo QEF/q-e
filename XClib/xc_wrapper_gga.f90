@@ -17,12 +17,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_par_mod,   ONLY: xc_func, xc_info 
+  USE dft_setting_params,   ONLY: xc_func, xc_info, libxc_flags
 #endif
   !
-  USE kind_l,        ONLY: DP
-  USE dft_par_mod,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
-                           grho_threshold_gga
+  USE kind_l,               ONLY: DP
+  USE dft_setting_params,   ONLY: igcx, igcc, is_libxc, rho_threshold_gga, &
+                                  grho_threshold_gga, rho_threshold_lda
   USE qe_drivers_gga
   !
   IMPLICIT NONE
@@ -59,11 +59,10 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:)
   !
   INTEGER :: fkind_x, np
-  REAL(DP) :: rs, rtot, zet, vc_2(2)
   REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
   !
   LOGICAL :: POLARIZED
-  INTEGER :: ildax, ildac, pol_unpol
+  INTEGER :: pol_unpol
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -76,6 +75,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   INTEGER :: k, is
   REAL(DP) :: sgn(2)
+  REAL(DP) :: rho_up, rho_dw, grho_up, grho_dw
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
@@ -85,7 +85,6 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP
   IF ( PRESENT(v2c_ud) ) v2c_ud = 0.0_DP
-  !
   !
 #if defined(__LIBXC)
   !
@@ -136,7 +135,11 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
      !
-     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
+     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     !
+     IF ( (igcx==43.AND..NOT.is_libxc(3)) .OR. (igcc==14.AND..NOT.is_libxc(4)) ) &
+       CALL gcxc_beef( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), &
+                       v1c(:,1), v2c(:,1) )
      !
      DO k = 1, length
         sgn(1) = SIGN(1._DP, rho(k,1))
@@ -148,29 +151,42 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   ! ---- GGA CORRELATION
   !
+  IF (is_libxc(4)) fkind_x = xc_f03_func_info_get_kind( xc_info(4) )
+  !
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc (still so? - check)
     !
-    CALL xc_f03_func_set_dens_threshold( xc_func(4), rho_threshold_gga )
-    fkind_x  = xc_f03_func_info_get_kind( xc_info(4) )
-    CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    CALL xc_f03_func_set_dens_threshold( xc_func(4), small )!rho_threshold_gga )
+    IF (libxc_flags(4,0)==1) THEN
+      CALL xc_f03_gga_exc_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    ELSE
+      CALL xc_f03_gga_vxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), vc_rho(1), vc_sigma(1) )
+      ec_lxc = 0.d0
+    ENDIF
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
+        IF ( rho_lxc(k) <= rho_threshold_lda ) CYCLE
         ec(k) = ec_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
         v1c(k,1) = vc_rho(k)
+        IF ( rho_lxc(k) <= rho_threshold_gga .OR. &
+             SQRT(ABS(sigma(k))) <= grho_threshold_gga) CYCLE
         v2c(k,1) = vc_sigma(k)*2.d0
       ENDDO
     ELSE
       DO k = 1, length
-        sgn(:) = 1.d0
-        IF (rho_lxc(2*k-1)<rho_threshold_gga .OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold_gga) sgn(1)=0.d0
-        IF (rho_lxc(2*k)  <rho_threshold_gga .OR. SQRT(ABS(sigma(3*k)))  <grho_threshold_gga) sgn(2)=0.d0
-        ec(k) = ec_lxc(k) * (rho_lxc(2*k-1)*sgn(1)+rho_lxc(2*k)*sgn(2))
-        v1c(k,1) = vc_rho(2*k-1) * sgn(1)
-        v1c(k,2) = vc_rho(2*k) * sgn(2)
-        v2c(k,1) = vc_sigma(3*k-2)*2.d0 * sgn(1)
-        v2c_ud(k)= vc_sigma(3*k-1) * sgn(1)*sgn(2)
-        v2c(k,2) = vc_sigma(3*k)*2.d0 * sgn(2)
+        rho_up = rho_lxc(2*k-1)
+        rho_dw = rho_lxc(2*k)
+        grho_up = SQRT(ABS(sigma(3*k-2)))
+        grho_dw = SQRT(ABS(sigma(3*k)))
+        IF ( rho_up <= rho_threshold_lda .OR. rho_dw <= rho_threshold_lda ) CYCLE
+        ec(k) = ec_lxc(k) * (rho_up+rho_dw)
+        v1c(k,1) = vc_rho(2*k-1)
+        v1c(k,2) = vc_rho(2*k)
+        IF ( rho_up <= rho_threshold_gga .OR. rho_dw <= rho_threshold_gga .OR. &
+             grho_up<=grho_threshold_gga .OR. grho_dw<=grho_threshold_gga ) CYCLE
+        v2c(k,1) = vc_sigma(3*k-2)*2.d0
+        v2c_ud(k)= vc_sigma(3*k-1)
+        v2c(k,2) = vc_sigma(3*k)*2.d0
       ENDDO
     ENDIF
     !  
@@ -215,9 +231,10 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
                        ( grho(2,:,1) + grho(2,:,2) )**2 + &
                        ( grho(3,:,1) + grho(3,:,2) )**2
           !
-          CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
+          IF ( igcc/=14 ) CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
+          IF ( igcc==14 ) CALL gcc_spin_beef( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
           !
-          v2c(:,2)  = v2c(:,1)
+          v2c(:,2) = v2c(:,1)
           IF ( PRESENT(v2c_ud) ) v2c_ud(:) = v2c(:,1)
           !
           DEALLOCATE( rh, zeta )
@@ -234,20 +251,35 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(3) ) THEN
     !
-    CALL xc_f03_func_set_dens_threshold( xc_func(3), rho_threshold_gga )
-    CALL xc_f03_gga_exc_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    CALL xc_f03_func_set_dens_threshold( xc_func(3), grho_threshold_gga )
+    IF (libxc_flags(3,0)==1) THEN
+      CALL xc_f03_gga_exc_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    ELSE
+      CALL xc_f03_gga_vxc( xc_func(3), lengthxc, rho_lxc(1), sigma(1), vx_rho(1), vx_sigma(1) )
+      ex_lxc = 0.d0
+    ENDIF
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
+        IF ( rho_lxc(k) <= rho_threshold_lda ) CYCLE
         ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
         v1x(k,1) = vx_rho(k)
+        IF ( rho_lxc(k) <= rho_threshold_gga .OR. &
+             SQRT(ABS(sigma(k))) <= grho_threshold_gga) CYCLE
         v2x(k,1) = vx_sigma(k)*2.d0
       ENDDO
     ELSE
       DO k = 1, length
-        ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
+        rho_up = rho_lxc(2*k-1)
+        rho_dw = rho_lxc(2*k)
+        grho_up = SQRT(ABS(sigma(3*k-2)))
+        grho_dw = SQRT(ABS(sigma(3*k)))
+        IF ( rho_up <= rho_threshold_lda .OR. rho_dw <= rho_threshold_lda ) CYCLE
+        ex(k) = ex_lxc(k) * (rho_up+rho_dw)
         v1x(k,1) = vx_rho(2*k-1)
         v1x(k,2) = vx_rho(2*k)
+        IF ( rho_up <= rho_threshold_gga .OR. rho_dw <= rho_threshold_gga .OR. &
+             grho_up<=grho_threshold_gga .OR. grho_dw<=grho_threshold_gga ) CYCLE
         v2x(k,1) = vx_sigma(3*k-2)*2.d0
         v2x(k,2) = vx_sigma(3*k)*2.d0
       ENDDO
@@ -263,7 +295,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
        ENDDO
        !
-       CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+       IF ( igcx/=43 ) CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+       IF ( igcx==43 ) CALL gcx_spin_beef( length, rho, grho2, ex, v1x, v2x )
        !
     ENDIF
     !
@@ -293,6 +326,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      !
      CALL gcxc( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
      !
+     IF ( igcx==43 .OR. igcc==14 ) CALL gcxc_beef( length, ABS(rho(:,1)), grho2(:,1), ex, ec, &
+                                                       v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     !
      DO k = 1, length
         sgn(1) = SIGN(1._DP, rho(k,1))
         ex(k) = ex(k) * sgn(1)
@@ -305,7 +341,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
      ENDDO
      !
-     CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+     IF ( igcx/=43 ) CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+     IF ( igcx==43 ) CALL gcx_spin_beef( length, rho, grho2, ex, v1x, v2x )
      !
      IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
         !
@@ -333,7 +370,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
                      ( grho(2,:,1) + grho(2,:,2) )**2 + &
                      ( grho(3,:,1) + grho(3,:,2) )**2
         !
-        CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
+        
+        IF ( igcc/=14 ) CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
+        IF ( igcc==14 ) CALL gcc_spin_beef( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
         !
         v2c(:,2)  = v2c(:,1)
         IF ( PRESENT(v2c_ud) ) v2c_ud(:) = v2c(:,1)

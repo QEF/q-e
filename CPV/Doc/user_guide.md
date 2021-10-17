@@ -3,42 +3,36 @@
 Introduction
 ============
 
-This guide covers the usage of the `CP` package, version 6.6, a core
+This guide covers the usage of the `CP` package, version 6.8, a core
 component of the Quantum ESPRESSO distribution. Further documentation,
 beyond what is provided in this guide, can be found in the directory
 `CPV/Doc/`, containing a copy of this guide.
 
-*Important notice: due to the lack of time and of manpower, this manual
-is only partially updated and may contain outdated information.*
-
-This guide assumes that you know the physics that `CP` describes and the
+This guide assumes that you know the physics that `CP` describes and the
 methods it implements. It also assumes that you have already installed,
 or know how to install, Quantum ESPRESSO. If not, please read the
 general User's Guide for Quantum ESPRESSO, found in directory `Doc/` two
-levels above the one containing this guide; or consult the web site:\
+levels above the one containing this guide; or consult the web site:
 `http://www.quantum-espresso.org`.
 
-People who want to modify or contribute to `CP` should read the
-Developer Manual:\
-`Doc/developer_man.pdf`.
+People who want to modify or contribute to `CP` should read the
+Developer Manual: `https://gitlab.com/QEF/q-e/-/wikis/home`.
 
-`CP` can perform Car-Parrinello molecular dynamics, including
-variable-cell dynamics, and free-energy surface calculation at fixed
-cell through meta-dynamics, if patched with PLUMED.
-
-The `CP` package is based on the original code written by Roberto Car
-and Michele Parrinello. `CP` was developed by Alfredo Pasquarello (EPF
+`CP` can perform Car-Parrinello molecular dynamics, including
+variable-cell dynamics. The `CP` package is based on the original code
+written by Roberto Car
+and Michele Parrinello. `CP` was developed by Alfredo Pasquarello (EPF
 Lausanne), Kari Laasonen (Oulu), Andrea Trave, Roberto Car (Princeton),
 Nicola Marzari (EPF Lausanne), Paolo Giannozzi, and others. FPMD, later
-merged with `CP`, was developed by Carlo Cavazzoni, Gerardo Ballabio
-(CINECA), Sandro Scandolo (ICTP), Guido Chiarotti, Paolo Focher, and
-others. We quote in particular:
+merged with `CP`, was developed by Carlo Cavazzoni (Leonardo), Gerardo
+Ballabio (CINECA), Sandro Scandolo (ICTP), Guido Chiarotti, Paolo Focher,
+and others. We quote in particular:
 
 -   Federico Grasselli and Riccardo Bertossa (SISSA) for bug fixes,
     extensions to Autopilot;
 
 -   Biswajit Santra, Hsin-Yu Ko, Marcus Calegari Andrade (Princeton) for
-    SCAN functional;
+    various contribution, notably the SCAN functional;
 
 -   Robert DiStasio (Cornell)), Biswajit Santra, and Hsin-Yu Ko for
     hybrid functionals with MLWF; (maximally localized Wannier
@@ -50,21 +44,21 @@ others. We quote in particular:
 -   Paolo Umari (Univ. Padua) for finite electric fields and conjugate
     gradients;
 
--   Paolo Umari and Ismaila Dabo for ensemble-DFT;
+-   Paolo Umari and Ismaila Dabo (Penn State) for ensemble-DFT;
 
 -   Xiaofei Wang (Princeton) for META-GGA;
 
 -   The Autopilot feature was implemented by Targacept, Inc.
 
-This guide has been mostly writen by Gerardo Ballabio and Carlo
-Cavazzoni.
+The original version of this guide was mostly written by Gerardo Ballabio
+and Carlo Cavazzoni.
 
-`CP` is free software, released under the GNU General Public License.\
+`CP` is free software, released under the GNU General Public License.\
 See `http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt`, or the file
-License in the distribution).
+`License` in the distribution.
 
 We shall greatly appreciate if scientific work done using the Quantum
-ESPRESSO distribution will contain an acknowledgment to the following
+ESPRESSO distribution will contain an acknowledgment to the following
 references:
 
 > P. Giannozzi, S. Baroni, N. Bonini, M. Calandra, R. Car, C. Cavazzoni,
@@ -95,22 +89,22 @@ Users of the GPU-enabled version should also cite the following paper:
 > Ferretti, N. Marzari, I. Timrov, A. Urru, S. Baroni, J. Chem. Phys.
 > 152, 154105 (2020)
 
-Note the form Quantum ESPRESSO for textual citations of the code. Please
-also see package-specific documentation for further recommended
-citations. Pseudopotentials should be cited as (for instance)
+Note the form `Quantum ESPRESSO` (in small caps) for textual citations
+of the code. Please also see other package-specific documentation for
+further recommended citations. Pseudopotentials should be cited as
+(for instance)
 
 > \[ \] We used the pseudopotentials C.pbe-rrjkus.UPF and O.pbe-vbc.UPF
-> from\
-> `http://www.quantum-espresso.org`.
+> from `http://www.quantum-espresso.org`.
 
 Compilation
 ===========
 
-`CP` is included in the core Quantum ESPRESSO distribution. Instruction
+`CP` is included in the core Quantum ESPRESSO distribution. Instruction
 on how to install it can be found in the general documentation (User's
 Guide) for Quantum ESPRESSO.
 
-Typing `make cp` from the main Quantum ESPRESSO directory or `make` from
+Typing `make cp` from the main Quantum ESPRESSO directory or `make` from
 the `CPV/` subdirectory produces the following codes in `CPV/src`:
 
 -   `cp.x`: Car-Parrinello Molecular Dynamics code
@@ -125,52 +119,44 @@ Symlinks to executable programs will be placed in the `bin/`
 subdirectory.
 
 As a final check that compilation was successful, you may want to run
-some or all of the tests and examples. Automated tests for `cp.x` are in
+some or all of the tests and examples. Automated tests for `cp.x` are in
 directory `test-suite/` and can be run via the `Makefile` found there.
 Please see the general User's Guide for their setup.
 
-You may take the tests and examples distributed with `CP` as templates
+You may take the tests and examples distributed with `CP` as templates
 for writing your own input files. Input files for tests are contained in
-subdirectories `test-suite/cp_` with file type `*.in1`, `*.in2`, \... .
+subdirectories `test-suite/cp_*` with file type `*.in1`, `*.in2`, \... .
 Input files for examples are produced, if you run the examples, in the
 `results/` subdirectories, with names ending with `.in`.
 
 For general information on parallelism and how to run in parallel
-execution, please see the general User's Guide. `CP` currently can take
-advantage of both MPI and OpenMP parallelization. The "plane-wave",
-"linear-algebra" and "task-group" parallelization levels are
-implemented.
+execution, please see the general User's Guide. `CP` currently can take
+advantage of both MPI and OpenMP parallelization and on GPU acceleration.
+The "plane-wave", "linear-algebra" and "task-group" parallelization levels
+are implemented.
 
 Input data
 ==========
 
 Input data for `cp.x` is organized into several namelists, followed by
-other fields ("cards") introduced by keywords. The namelists are
+other fields ("cards") introduced by keywords. The namelists are:
 
-  ------------------- ----------------------------------------------------------
-  &CONTROL:           general variables controlling the run
-  &SYSTEM:            structural information on the system under investigation
-  &ELECTRONS:         electronic variables, electron dynamics
-  &IONS :             ionic variables, ionic dynamics
-  &CELL (optional):   variable-cell dynamics
-  ------------------- ----------------------------------------------------------
+>  &CONTROL:           general variables controlling the run\
+>  &SYSTEM:            structural information on the system under investigation\
+>  &ELECTRONS:         electronic variables, electron dynamics\
+>  &IONS :             ionic variables, ionic dynamics\
+>  &CELL (optional):   variable-cell dynamics\
 
-\
 The `&CELL` namelist may be omitted for fixed-cell calculations. This
 depends on the value of variable `calculation` in namelist &CONTROL.
-Most variables in namelists have default values. Only the following
+Most variables in namelists have default values. Only he following
 variables in &SYSTEM must always be specified:
 
-  ----------- --------------------- -----------------------------------------------
-  `ibrav`     (integer)             Bravais-lattice index
-  `celldm`    (real, dimension 6)   crystallographic constants
-  `nat`       (integer)             number of atoms in the unit cell
-  `ntyp`      (integer)             number of types of atoms in the unit cell
-  `ecutwfc`   (real)                kinetic energy cutoff (Ry) for wavefunctions.
-  ----------- --------------------- -----------------------------------------------
-
-\
-).
+>  `ibrav`     (integer)             Bravais-lattice index\
+>  `celldm`    (real, dimension 6)   crystallographic constants\
+>  `nat`       (integer)             number of atoms in the unit cell\
+>  `ntyp`      (integer)             number of types of atoms in the unit cell\
+>  `ecutwfc`   (real)                kinetic energy cutoff (Ry) for wavefunctions
 
 Explanations for the meaning of variables `ibrav` and `celldm`, as well
 as on alternative ways to input structural data, are contained in files
@@ -178,34 +164,31 @@ as on alternative ways to input structural data, are contained in files
 describe a large number of other variables as well. Almost all variables
 have default values, which may or may not fit your needs.
 
-Comment lines in namelists can be introduced by a \"!\", exactly as in
-fortran code.
-
 After the namelists, you have several fields ("cards") introduced by
 keywords with self-explanatory names:
 
 > ATOMIC\_SPECIES\
 > ATOMIC\_POSITIONS\
 > CELL\_PARAMETERS (optional)\
-> OCCUPATIONS (optional)\
+> OCCUPATIONS (optional)
 
 The keywords may be followed on the same line by an option. Unknown
 fields are ignored. See the files mentioned above for details on the
 available "cards".
 
-Comments lines in "cards" can be introduced by either a "!" or a "\#"
-character in the first position of a line.
+Comment lines in namelists can be introduced by a \"!\", exactly as in
+fortran code. Comments lines in "cards" can be introduced by either a "!"
+or a "\#" character in the first position of a line.
 
 Data files
 ----------
 
 The output data files are written in the directory specified by variable
 `outdir`, with names specified by variable `prefix` (a string that is
-prepended to all file names, whose default value is: `prefix=’pwscf’`).
-The `iotk` toolkit is used to write the file in a XML format, whose
-definition can be found in the Developer Manual. In order to use the
-data directory on a different machine, you need to convert the binary
-files to formatted and back, using the `bin/iotk` script.
+prepended to all file names, whose default value is `prefix=’cp_$ndw’`,
+where `ndw` is an integer specified in input).
+In order to use the data on a different machine, you may need to
+compile `CP` with HDF5 enabled.
 
 The execution stops if you create a file `prefix.EXIT` either in the
 working directory (i.e. where the program is executed), or in the
@@ -215,58 +198,13 @@ this procedure is that all files are properly closed, whereas just
 killing the process may leave data and output files in an unusable
 state.
 
-Format of arrays containing charge density, potential, etc.
------------------------------------------------------------
-
-The index of arrays used to store functions defined on 3D meshes is
-actually a shorthand for three indices, following the FORTRAN convention
-(\"leftmost index runs faster\"). An example will explain this better.
-Suppose you have a 3D array `psi(nr1x,nr2x,nr3x)`. FORTRAN compilers
-store this array sequentially in the computer RAM in the following way:
-
-            psi(   1,   1,   1)
-            psi(   2,   1,   1)
-            ...
-            psi(nr1x,   1,   1)
-            psi(   1,   2,   1)
-            psi(   2,   2,   1)
-            ...
-            psi(nr1x,   2,   1)
-            ...
-            ...
-            psi(nr1x,nr2x,   1)
-            ...
-            psi(nr1x,nr2x,nr3x)
-    etc
-
-Let `ind` be the position of the `(i,j,k)` element in the above list:
-the following relation
-
-            ind = i + (j - 1) * nr1x + (k - 1) *  nr2x * nr1x
-
-holds. This should clarify the relation between 1D and 3D indexing. In
-real space, the `(i,j,k)` point of the FFT grid with dimensions `nr1`
-( $`\le`$ `nr1x`), `nr2` ( $`\le`$ `nr2x`), , `nr3` ( $`\le`$ `nr3x`), is
-
-```math
- r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 + \frac{k-1}{nr3} \tau_3
-```
-
-where the $`\tau_i`$ are the basis vectors of the
-Bravais lattice. The latter are stored row-wise in the `at` array:
-$`\tau_1 =`$ `at(:, 1)`, $`\tau_2 =`$ `at(:, 2)`, $`\tau_3 =`$ `at(:, 3)`.
-
-The distinction between the dimensions of the FFT grid, `(nr1,nr2,nr3)`
-and the physical dimensions of the array, `(nr1x,nr2x,nr3x)` is done
-only because it is computationally convenient in some cases that the two
-sets are not the same. In particular, it is often convenient to have
-`nrx1`=`nr1`+1 to reduce memory conflicts.
-
+The format of arrays containing charge density, potential, etc.
+is described in the developer manual.
 
 Output files
 ==========
 
-The `cp.x` code produces many output file, that together build up the trajectory.
+The `cp.x` code produces many output files, that together build up the trajectory.
 
 You have a file for the positions, called `prefix.pos`, where `prefix` is defined in
 the input file, that is formatted like:
@@ -280,35 +218,40 @@ the input file, that is formatted like:
            0.42395189282719E+01     0.55766875434652E+01     0.31291744042209E+01
            0.45445534106843E+01     0.36049553522533E+01     0.55864387532281E+01
 
-where in the first line there is an header with, in order, the number of the step and
-the time in ps of this step. Later you found the positions of all the atoms, in the
-same order of the input file (note that this behaviour emerged in v6.6 -- previously 
-atoms were sorted by type). In this example we have 3 atoms.
-The type must be deduced from the input file. After the first 4 lines
-you find the same structure for the second step. The units of the position are Bohr's 
-radius. Note that the atoms coordinates are unwrapped, so it is possible that they go
-outside the simulation cell.
+where the first line contains the step number and elapsed time, in ps, at this
+step; the following lines contain the positions, in Bohr radii,  of all the
+atoms (3 in this examples), in the same order as in the input file (since v6.6
+-- previously, atoms were sorted by type; the type must be deduced from the
+input file). The same structure is repeated for the second step and so on. 
+The printout is made every `iprint` steps (10 in this case, so at step 10, 20,
+etc.). Note that the atomic coordinates are not wrapped into the simulation
+cell, so it is possible that they lie outside it.
 
-The velocities are written in a similar file named `prefix.vel`, where `prefix` is defined in
-the input file, that is formatted like the `.pos` file. The units are the usual Hartree
-atomic units (note again that the velocity in the pw code differs by a factor of 2).
+The velocities are written in a similar file named `prefix.vel`, where `prefix`
+is defined in the input file, that is formatted like the `.pos` file. The units
+are the usual Hartree atomic units (note that the velocities in the `pw.x` code
+are in _Rydberg_ a.u. and differ by a factor 2).
 
-The `prefix.for` file is formatted like the previous two. Contains the computed forces
- and has Hartree atomic units too.
-It is written only if `tprnfor = .true.` is set in the input file.
+The `prefix.for` file, formatted like the previous two, contains the computed
+forces, in Hartree atomic units as well. It is written only if a molecular
+dynamics calculation is performed, or if `tprnfor = .true.` is set in input.
 
-The file `prefix.evp` has one line per printed step and contains some thermodynamic data.
+The file `prefix.evp` has one line per printed step and contains some
+thermodynamical data.
 The first line of the file names the columns:
 ```
-#   nfi    time(ps)        ekinc        T\_cell(K)     Tion(K)          etot               enthal               econs               econt          Volume        Pressure(GPa
+#   nfi  time(ps)  ekinc  Tcell(K)  Tion(K)  etot  enthal  econs  econt  Volume  Pressure(GPa)
 ```
 where:
-   - `ekinc` $`K_{ELECTRONS}`$, the electron's fake kinetic energy
-   - `enthal` $`E_{DFT}+PV`$
-   - `etot` $`E_{DFT}`$ potential energy of the system, the DFT energy
-   - `econs` $`E_{DFT} + K_{NUCLEI}`$ this is something that is a constant of motion in the limit where the electronic fictitious mass is zero. It has a physical meaning.
-   - `econt` $`E_{DFT} + K_{IONS} + K_{ELECTRONS}`$ this is a constant of motion of the lagrangian. If the dt is small enough this will be up to a very good precision a constant. It is not a physical quantity, since $`K_{ELECTRONS}`$ has _nothing_ to do with the quantum kinetic energy of the electrons.
-
+   - `ekinc` is the electrons fictitious kinetic energy, $`K_{ELECTRONS}`$
+   - `enthal` is the enthalpy, $`E_{DFT}+PV`$
+   - `etot` is the DFT (potential) energy of the system, $`E_{DFT}`$
+   - `econs` is a physically meaningful constant of motion, $`E_{DFT} + K_{NUCLEI}`$,
+   in the limit of zero electronic fictitious mass
+   - `econt` is the constant of motion of the lagrangian$`E_{DFT} + K_{IONS} + K_{ELECTRONS}`$ t.
+   If the time step `dt` is small enough this will be up to a very good precision a constant.
+   It is not a physical quantity, since $`K_{ELECTRONS}`$ has _nothing_ to do with the quantum
+   kinetic energy of the electrons.
 
 
 Using `CP`
@@ -317,7 +260,7 @@ Using `CP`
 It is important to understand that a CP simulation is a sequence of
 different runs, some of them used to \"prepare\" the initial state of
 the system, and other performed to collect statistics, or to modify the
-state of the system itself, i.e. modify the temperature or the pressure.
+state of the system itself, i.e. to modify the temperature or the pressure.
 
 To prepare and run a CP simulation you should first of all define the
 system:
@@ -393,8 +336,7 @@ An example of input file (Benzene Molecule):
               H    -2.2 2.2 0.0
               H     2.2 2.2 0.0
 
-You can find the description of the input variables in file
-`Doc/INPUT_CP.*`.
+You can find the description of the input variables in file `Doc/INPUT_CP.*`.
 
 Reaching the electronic ground state
 ------------------------------------
@@ -403,7 +345,7 @@ The first run, when starting from scratch, is always an electronic
 minimization, with fixed ions and cell, to bring the electronic system
 on the ground state (GS) relative to the starting atomic configuration.
 This step is conceptually very similar to self-consistency in a
-`pw.x` run.
+`pw.x` run.
 
 Sometimes a single run is not enough to reach the GS. In this case, you
 need to re-run the electronic minimization stage. Use the input of the
@@ -428,14 +370,12 @@ $`< 10^{-5}`$. You could check the value of the fictitious kinetic energy
 on the standard output (column EKINC).
 
 Different strategies are available to minimize electrons, but the most
-used ones are:
-
--   steepest descent: `electron_dynamics = ’sd’`
-
--   damped dynamics: `electron_dynamics = ’damp’`, `electron_damping` =
-    a number typically ranging from 0.1 and 0.5
-
+frequently used is _damped dynamics_: `electron_dynamics = ’damp’` and
+`electron_damping` = a number typically ranging from 0.1 and 0.5.
 See the input description to compute the optimal damping factor.
+Steepest descent: `electron_dynamics = ’sd’`, is also available but it
+is typicallyslower than damped dynamics and should be used only to
+start the minimization.
 
 Relax the system
 ----------------
@@ -860,14 +800,6 @@ ranges between 4 and 7.
 All the other parameters have the same meaning in the usual `CP` input,
 and they are discussed above.
 
-### Free-energy surface calculations
-
-Once `CP` is patched with `PLUMED` plug-in, it becomes possible to
-turn-on most of the PLUMED functionalities running `CP` as:
-`./cp.x -plumed` plus the other usual `CP` arguments. The PLUMED input
-file has to be located in the specified `outdir` with the fixed name
-`plumed.dat`.
-
 ### Treatment of USPPs
 
 The cutoff `ecutrho` defines the resolution on the real space FFT mesh
@@ -1030,99 +962,62 @@ An example input is listed as following:
     O 16.0D0 O_HSCV_PBE-1.0.UPF
     H  2.0D0 H_HSCV_PBE-1.0.UPF 
 
-Performances
-============
+Parallel Performances
+=====================
 
 `cp.x` can run in principle on any number of processors. The
 effectiveness of parallelization is ultimately judged by the "scaling",
 i.e. how the time needed to perform a job scales with the number of
-processors, and depends upon:
+processors. Ideally one would like to have linear scaling, i.e.
+$`T \sim T_0/N_p`$ for $`N_p`$ processors, where $`T_0`$ is the estimated
+time for serial execution. In addition, one would like to have linear
+scaling of the RAM per processor: $`O_N \sim O_0/N_p`$, so that large-memory
+systems fit into the RAM of each processor.
 
--   the size and type of the system under study;
+We refer to the "Parallelization" section of the general User's Guide for
+a description of MPI and OpenMP parallelization paradigms, of the various
+MPI parallelization levels, and on how to activate them. 
 
--   the judicious choice of the various levels of parallelization
-    (detailed in
-    Sec.[\[SubSec:para\]](#SubSec:para){reference-type="ref"
-    reference="SubSec:para"});
+A judicious choice of the various levels of parallelization, together
+with the availability of suitable hardware (e.g. fast communications)
+is fundamental to reach good performances._VERY IMPORTANT_: For each
+system there is an optimal range of number of processors on which to
+run the job. A too large number of processors or a bad parallelization
+style will yield performance degradation. 
 
--   the availability of fast interprocess communications (or lack of
-    it).
+For `CP` with hybrid functionals, see the related section above this one. 
+For all other cases, the relevant MPI parallelization levels are:
 
-Ideally one would like to have linear scaling, i.e. $`T \sim T_0/N_p`$ for
-$`N_p`$ processors, where $`T_0`$ is the estimated time for serial
-execution. In addition, one would like to have linear scaling of the RAM
-per processor: $`O_N \sim O_0/N_p`$, so that large-memory systems fit into
-the RAM of each processor.
+- "plane waves" (PW);
+- "tasks" (activated by command-line option `-nt N`);
+- "linear algebra" (`-nd N`);
+- "bands" parallelization (`-nb N`), to be used only in
+special cases;
+- "images" parallelization (`-ni N`), used only in code `manycp.x`
+(see the header of `CPV/src/manycp.f90` for documentation).
 
-As a general rule, image parallelization:
+As a rule of thumb:
+- start with PW parallelization only (e.g. `mpirun -np N cp.x ...` with
+no other parallelization options); the code will scale well unless `N` 
+exceeds the third FFT dimensions `nr3` and/or `nr3s`.
+- To further increase the number of processors, use "task groups",
+typically 4 to 8 (e.g. `mpirun -np N cp.x -nt 8 ...`).
+- Alternatively, or in addition, you may compile with OpenMP:
+`./configure --enable-openmp ...`, then `export OMP_NUM_THREADS=n`
+and run on `n` threads (4 to 8 typically).
+_Beware conflicts between MPI and OpenMP threads_!
+don't do this unless you know what you are doing.
+- Finally, the optimal number of processors for \"linear-algebra\"
+parallelization can be found by observing the performances of `ortho` 
+in the final time report for different numbers of processors in the 
+linear-algebra group (must be a square integer, not larger than the 
+number of processoris for plane-wave parallelization). Linear-algebra
+parallelization distributes `M\times M`$ matrices, with `M` number of
+bands, so it may be useful if memory-constrained.
 
--   may give good scaling, but the slowest image will determine the
-    overall performances ("load balancing" may be a problem);
+Note: optimal serial performances are achieved when the data are as much
+as possible kept into the cache. As a side effect, PW parallelization may
+yield superlinear (better than linear) scaling, thanks to the increase in
+serial speed coming from the reduction of data size (making it easier for
+the machine to keep data in the cache).
 
--   requires very little communications (suitable for ethernet
-    communications);
-
--   does not reduce the required memory per processor (unsuitable for
-    large-memory jobs).
-
-Parallelization on k-points:
-
--   guarantees (almost) linear scaling if the number of k-points is a
-    multiple of the number of pools;
-
--   requires little communications (suitable for ethernet
-    communications);
-
--   does not reduce the required memory per processor (unsuitable for
-    large-memory jobs).
-
-Parallelization on PWs:
-
--   yields good to very good scaling, especially if the number of
-    processors in a pool is a divisor of $`N_3`$ and $`N_{r3}`$ (the
-    dimensions along the z-axis of the FFT grids, `nr3` and `nr3s`,
-    which coincide for NCPPs);
-
--   requires heavy communications (suitable for Gigabit ethernet up to
-    4, 8 CPUs at most, specialized communication hardware needed for 8
-    or more processors );
-
--   yields almost linear reduction of memory per processor with the
-    number of processors in the pool.
-
-A note on scaling: optimal serial performances are achieved when the
-data are as much as possible kept into the cache. As a side effect, PW
-parallelization may yield superlinear (better than linear) scaling,
-thanks to the increase in serial speed coming from the reduction of data
-size (making it easier for the machine to keep data in the cache).
-
-VERY IMPORTANT: For each system there is an optimal range of number of
-processors on which to run the job. A too large number of processors
-will yield performance degradation. If the size of pools is especially
-delicate: $`N_p`$ should not exceed $`N_3`$ and $`N_{r3}`$, and should ideally
-be no larger than $`1/2\div1/4 N_3`$ and/or $`N_{r3}`$. In order to increase
-scalability, it is often convenient to further subdivide a pool of
-processors into "task groups". When the number of processors exceeds the
-number of FFT planes, data can be redistributed to \"task groups\" so
-that each group can process several wavefunctions at the same time.
-
-The optimal number of processors for \"linear-algebra\" parallelization,
-taking care of multiplication and diagonalization of $`M\times M`$
-matrices, should be determined by observing the performances of
-`cdiagh/rdiagh` (`pw.x`) or `ortho` (`cp.x`) for different numbers of
-processors in the linear-algebra group (must be a square integer).
-
-Actual parallel performances will also depend on the available software
-(MPI libraries) and on the available communication hardware. For PC
-clusters, OpenMPI (`http://www.openmpi.org/`) seems to yield better
-performances than other implementations (info by Kostantin Kudin). Note
-however that you need a decent communication hardware (at least Gigabit
-ethernet) in order to have acceptable performances with PW
-parallelization. Do not expect good scaling with cheap hardware: PW
-calculations are by no means an \"embarrassing parallel\" problem.
-
-Also note that multiprocessor motherboards for Intel Pentium CPUs
-typically have just one memory bus for all processors. This dramatically
-slows down any code doing massive access to memory (as most codes in the
-Quantum ESPRESSO distribution do) that runs on processors of the same
-motherboard.

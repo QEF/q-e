@@ -9,11 +9,10 @@
 !---------------------------------------------------------------------
 SUBROUTINE sym_dns_wrapper (ldim, dns_cart, dns_pattern)
   !-------------------------------------------------------------------
+  !! This routine symmetrizes dns_cart. This is done in three steps.
   !
-  ! This routine symmetrizes dns_cart. This is done in three steps.
-  !
-  ! Written by I. Timrov using the code by S. de Gironcoli 
-  ! and A. Floris (01.10.2018)
+  !! Written by I. Timrov using the code by S. de Gironcoli 
+  !! and A. Floris (01.10.2018).
   !  
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat
@@ -23,13 +22,14 @@ SUBROUTINE sym_dns_wrapper (ldim, dns_cart, dns_pattern)
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ldim
-  COMPLEX(DP), INTENT(INOUT) ::  dns_cart(ldim,ldim,nspin,nat,3,nat)
+  !! matrix main dimension
+  COMPLEX(DP), INTENT(INOUT) :: dns_cart(ldim,ldim,nspin,nat,3,nat)
+  !! in/out: dns_cart is the dns matrix in the cartesian coordinates;
+  !! on the input it is unsymmetrized, on the output it is symmetrized
   COMPLEX(DP), INTENT(OUT) :: dns_pattern(ldim,ldim,nspin,nat,3*nat)
-  ! in/out : dns_cart is the dns matrix in the cartesian coordinates;
-  !          on the input it is unsymmetrized, on the output it is symmetrized
-  ! out    : dns_pattern is the symmetrized dns matrix in the pattern basis
+  !! out: dns_pattern is the symmetrized dns matrix in the pattern basis
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER :: imode, imode0, na, icart, na_icart, irr, npe
   COMPLEX(DP), ALLOCATABLE :: dns_aux(:,:,:,:,:)

@@ -745,3 +745,11 @@ stop_lr.o : ../../Modules/noncol.o
 stop_lr.o : ../../PW/src/buffers.o
 stop_lr.o : ../../PW/src/pwcom.o
 stop_lr.o : lr_variables.o
+turbo_spectrum.o : ../../Modules/constants.o
+turbo_spectrum.o : ../../Modules/environment.o
+turbo_spectrum.o : ../../Modules/io_files.o
+turbo_spectrum.o : ../../Modules/io_global.o
+turbo_spectrum.o : ../../Modules/kind.o
+turbo_spectrum.o : ../../Modules/mp_global.o
+turbo_spectrum.o : ../../Modules/mp_world.o
+turbo_spectrum.o : ../../UtilXlib/mp.o

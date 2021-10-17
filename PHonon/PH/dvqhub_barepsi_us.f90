@@ -10,32 +10,34 @@
 SUBROUTINE dvqhub_barepsi_us (ik, uact)
   !-----------------------------------------------------------------------
   !
-  ! DFPT+U 
-  ! This routines calculates the BARE derivative of the Hubbard potential times psi.
+  !! DFPT+U 
+  !! This routines calculates the BARE derivative of the Hubbard potential
+  !! times \(\text{psi}\).
+  !
   ! is  = current_spin
   ! isi = opposite of the current_spin 
   !
-  ! |Delta V_BARE_(k+q,is) psi(ibnd,k,is)> = 
-  !     + \sum_(I,m1,m2) Hubbard_U(I) * [0.5\delta_(m1,m2) - ns(m1,m2,is,I)] *
-  !                         { |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)> + 
-  !                           |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)|psi(ibnd,k,is)> } 
-  !     - \sum_(I,m1,m2) Hubbard_U(I) * dnsbare(m1,m2,is,I,imode) *
-  !                           |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
+  !! $$ |\Delta V_{BARE}(k+q,is) \psi(\text{ibnd},k,is)\rangle = 
+  !!     + \sum_{I,m1,m2} \text{Hubbard_U}(I) \cdot [0.5\delta(m1,m2) - \text{ns}(m1,m2,is,I)]\cdot
+  !!        [ |\text{dqsphi}(imode,I,k+q,m1)\rangle \langle S\phi(I,k,m2)|\psi(\text{ibnd},k,is)\rangle + 
+  !!          |S\phi(I,k+q,m1)\rangle\langle\text{dmqsphi}(\text{imode},I,k,m2)|\psi(\text{ibnd},k,is)\rangle ]
+  !!     - \sum_{I,m1,m2} \text{Hubbard_U}(I) \cdot \text{dnsbare}(m1,m2,is,I,\text{imode}) \cdot
+  !!          |S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2)|\psi(\text{ibnd},k,is)\rangle $$
   !
-  ! Addition of the J0 terms:
+  !! Addition of the J0 terms:
   !
-  !     + \sum_(I,m1,m2) Hubbard_J0(I) * ns(m1,m2,isi,I) *
-  !                         { |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)> + 
-  !                           |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)|psi(ibnd,k,is)> } 
-  !     + \sum_(I,m1,m2) Hubbard_J0(I) * dnsbare(m1,m2,isi,I,imode) *
-  !                           |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
+  !! $$ + \sum_{I,m1,m2} \text{Hubbard_J0}(I)\cdot \text{ns}(m1,m2,isi,I)\cdot
+  !!       [ |\text{dqsphi}(\text{imode},I,k+q,m1)\rangle\langle S\phi(I,k,m2)|\psi(\text{ibnd},k,is)\rangle + 
+  !!         |S\phi(I,k+q,m1)\langle\rangle\text{dmqsphi}(\text{imode},I,k,m2)|\psi(\text{ibnd},k,is)\rangle ]
+  !!    + \sum_{I,m1,m2} \text{Hubbard_J0}(I) \cdot \text{dnsbare}(m1,m2,isi,I,\text{imode}) \cdot
+  !!                          |S\phi(I,k+q,m1)\rangle\langle S\phi(I,k,m2)|\psi(\text{ibnd},k,is)\rangle $$
   !
-  ! Important: in this routine vkb is a beta function at k+q, and vkb_ is beta at k.
-  ! This is done so because vkb is calculated at k+q in solve_linter (i.e. before calling
-  ! this routine), so we keep the same attribution here.
+  !! Important: in this routine \(\text{vkb}\) is a beta function at k+q, and \(\text{vkb_}\) is beta at k.
+  !! This is done so because \(\text{vkb}\) is calculated at k+q in solve_linter (i.e. before calling
+  !! this routine), so we keep the same attribution here.
   ! 
-  ! Written by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !                 
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout, ionode
@@ -43,9 +45,10 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE klist,         ONLY : xk, ngk, igk_k
   USE ldaU,          ONLY : U_projection, Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
-  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, swfcatomk, swfcatomkpq, dwfcatomkpq, &
+  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq, &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
-                            proj1, proj2, dnsbare, effU 
+                            proj1, proj2, dnsbare
+  USE ldaU_lr,       ONLY : effU, swfcatomk, swfcatomkpq
   USE wvfct,         ONLY : npwx, nbnd
   USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs
@@ -63,11 +66,11 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik
-  ! the k point under consideration
+  !! the k point under consideration
   COMPLEX(DP), INTENT(IN) :: uact(3*nat)
-  ! the pattern of displacements
+  !! the pattern of displacements
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER :: i, j, k, icart, counter, na, nt, l, ih, n, mu, ig, &
              ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, op_spin, &

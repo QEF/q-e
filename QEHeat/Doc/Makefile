@@ -67,6 +67,6 @@ INPUT_ALL_CURRENTS.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-@( cd ../../Doc ; ln -fs ../PW/Doc/INPUT_ALL_CURRENTS.html . ; \
-	ln -fs ../PW/Doc/INPUT_ALL_CURRENTS.xml . ; \
-	ln -fs ../PW/Doc/INPUT_ALL_CURRENTS.txt .) 
+	-@( cd ../../Doc ; ln -fs ../QEHEAT/Doc/INPUT_ALL_CURRENTS.html . ; \
+	ln -fs ../QEHEAT/Doc/INPUT_ALL_CURRENTS.xml . ; \
+	ln -fs ../QEHEAT/Doc/INPUT_ALL_CURRENTS.txt .) 

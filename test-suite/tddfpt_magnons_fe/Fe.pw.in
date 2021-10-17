@@ -28,7 +28,7 @@
     electron_maxstep = 200
  /
 ATOMIC_SPECIES
-Fe  55.85   Fe.pbe-nc.UPF
+Fe  55.85   Fe.lda-pseudoDojo.UPF
 ATOMIC_POSITIONS alat
 Fe  0.00000000 0.00000000 0.00000000
 K_POINTS automatic

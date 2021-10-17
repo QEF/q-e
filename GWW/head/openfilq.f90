@@ -17,11 +17,11 @@ SUBROUTINE openfilq()
   !
   USE kinds,          ONLY : DP
   USE control_flags, ONLY : io_level, modenum
-  USE units_ph,       ONLY : iudwf, iubar, iucom, iudvkb3, &
+  USE units_ph,       ONLY : iubar, iucom, iudvkb3, &
                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
-                             lrdwf, lrbar, lrcom, lrdvkb3, &
+                             lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
-  USE units_lr,       ONLY : iuwfc, lrwfc
+  USE units_lr,       ONLY : iuwfc, lrwfc, iudwf, lrdwf
   ! USE io_files,       ONLY : tmp_dir
   USE control_ph,     ONLY : epsil, zue, ext_recover, trans,  &
                              tmp_dir_ph, start_irr, last_irr

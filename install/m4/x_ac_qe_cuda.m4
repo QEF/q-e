@@ -189,7 +189,7 @@ EOF
 
    try_dflags="$try_dflags -D__CUDA"
    cuda_extlibs="devxlib"
-   cuda_libs="$mMcudalib=cufft,cublas,cusolver \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
+   cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
    cuda_fflags="$mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
    cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"

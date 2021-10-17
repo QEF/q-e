@@ -5,13 +5,14 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!----------------------------------------------------------------------
 LOGICAL FUNCTION symmorphic_or_nzb()
-!
-! This function returns .true. if the small group of the current q is symmorphic
-! or if the q point is not at zone border or if all the phase factors
-! e^{i G f} are equal to one. Presently the routine that
-! finds the mode symmetry works only when this function is .true..
-!
+  !---------------------------------------------------------------------
+  !! This function returns TRUE if the small group of the current q is
+  !! symmorphic or if the q point is not at zone border or if all the 
+  !! phase factors \(e^{i G f}\) are equal to one. Presently the routine that
+  !! finds the mode symmetry works only when this function is TRUE.
+  !
   USE kinds,        ONLY : DP
   USE cell_base,    ONLY : at
   USE fft_base,     ONLY : dfftp
@@ -19,6 +20,7 @@ LOGICAL FUNCTION symmorphic_or_nzb()
   USE lr_symm_base, ONLY : gi, nsymq
 
   IMPLICIT NONE
+  
   LOGICAL :: is_symmorphic, result_sym
   INTEGER :: isym, jsym
   REAL(DP) :: ft_(3,nsymq)

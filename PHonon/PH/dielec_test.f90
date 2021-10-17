@@ -8,10 +8,9 @@
 !-----------------------------------------------------------------------
 subroutine dielec_test
   !-----------------------------------------------------------------------
-  !
-  ! Calculates the dielectric tensor using the finite-differences-derivative
-  ! of the wavefunctions. This should be used only for testing purposes
-  ! while doing a raman calculation
+  !! Calculates the dielectric tensor using the finite-differences-derivative
+  !! of the wavefunctions. This should be used only for testing purposes
+  !! while doing a raman calculation.
   !
   USE kinds,    ONLY : DP
   USE constants,ONLY : fpi

@@ -11,14 +11,14 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !! Wrapper routine. Calls internal dmxc-driver routines or the external
   !! ones from Libxc, depending on the input choice.
   !
-  USE kind_l,          ONLY: DP
-  USE dft_par_mod,     ONLY: iexch, icorr, is_libxc, rho_threshold_lda
+  USE kind_l,               ONLY: DP
+  USE dft_setting_params,   ONLY: iexch, icorr, is_libxc, rho_threshold_lda
   USE qe_drivers_d_lda_lsda
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
-  USE dft_par_mod,     ONLY: xc_func, xc_info
+  USE dft_setting_params,   ONLY: xc_func, xc_info
 #endif
   !
   IMPLICIT NONE
@@ -94,7 +94,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     ALLOCATE( dmex_lxc(length_dlxc) )
     ! ... DERIVATIVE FOR EXCHANGE
     dmex_lxc(:) = 0.0_DP
-    IF (iexch /= 0) THEN    
+    IF (iexch /= 0) THEN
+       CALL xc_f03_func_set_dens_threshold( xc_func(1), rho_threshold_lda )
        CALL xc_f03_lda_fxc( xc_func(1), lengthxc, rho_lxc(1), dmex_lxc(1) )
     ENDIF  
   ENDIF
@@ -105,6 +106,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     dmcr_lxc(:) = 0.0_DP
     IF (icorr /= 0) THEN
        fkind_x  = xc_f03_func_info_get_kind( xc_info(2) )
+       CALL xc_f03_func_set_dens_threshold( xc_func(2), rho_threshold_lda )
        CALL xc_f03_lda_fxc( xc_func(2), lengthxc, rho_lxc(1), dmcr_lxc(1) )
     ENDIF
   ENDIF
@@ -127,13 +129,26 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     SELECT CASE( sr_d )
     CASE( 1 )
       !
-      IF ( is_libxc(1) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmex_lxc(:)*2.0_DP
-      IF ( is_libxc(2) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmcr_lxc(:)*2.0_DP
+      IF ( is_libxc(1) ) THEN
+        DO ir = 1, length
+          IF (rho_in(ir,1)<=rho_threshold_lda ) CYCLE
+          dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmex_lxc(ir)*2.0_DP
+        ENDDO
+      ENDIF
+      !
+      IF ( is_libxc(2) ) THEN
+        DO ir = 1, length
+          IF (rho_in(ir,1)<=rho_threshold_lda ) CYCLE
+          dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmcr_lxc(ir)*2.0_DP
+        ENDDO
+      ENDIF
       !
     CASE( 2 )
       !
       IF ( is_libxc(1) ) THEN
         DO ir = 1, length
+          IF (rho_in(ir,1)<=rho_threshold_lda .OR. &
+              rho_in(ir,2)<=rho_threshold_lda) CYCLE
           dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmex_lxc(3*ir-2)*2.0_DP
           dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmex_lxc(3*ir-1)*2.0_DP
           dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmex_lxc(3*ir-1)*2.0_DP
@@ -143,7 +158,9 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
       ENDIF
       !
       IF ( is_libxc(2) ) THEN
-        DO ir = 1, length  
+        DO ir = 1, length
+          IF (rho_in(ir,1)<=rho_threshold_lda .OR. &
+              rho_in(ir,2)<=rho_threshold_lda) CYCLE
           dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmcr_lxc(3*ir-2)*2.0_DP
           dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmcr_lxc(3*ir-1)*2.0_DP
           dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmcr_lxc(3*ir-1)*2.0_DP

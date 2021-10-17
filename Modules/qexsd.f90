@@ -585,6 +585,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
             match = clock_label(1:nclock) == TRIM(partial_clocks(ipar)) 
             IF ( ANY (match))  THEN
                nc = get_index(.TRUE., match)
+               IF (nc == ic) CYCLE
                t = get_cpu_and_wall(nc) 
                CALL qes_init(partial_(ipar), "partial", TRIM(clock_label(nc)), t(1), t(2),&
                              called(nc))
@@ -592,7 +593,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
                CALL qes_init (partial_(ipar), "partial", "not_found",  -1.d0, -1.d0, 0)  
                partial_(ipar)%lwrite=.FALSE. 
             END IF 
-            END DO
+         END DO
       END IF 
       CALL qes_init( timing_, "timing_info", total_, partial_)
       CALL qes_reset ( total_) 

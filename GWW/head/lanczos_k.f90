@@ -28,6 +28,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE klist,                ONLY : xk,igk_k, ngk
   USE noncollin_module,     ONLY : noncolin, npol
+  USE wvfct,                ONLY : current_k
 
   implicit none
 
@@ -59,7 +60,9 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   allocate(alpha(nstates),beta(nstates),gamma(nstates),n_1(nstates),delta(nstates))
   allocate(c(nstates))
   allocate(spsi(npwx,nstates))
- 
+
+  current_k=ik
+
   npw = ngk(ik)
   t_out(:,:,:)=(0.d0,0.d0)
 

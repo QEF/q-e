@@ -9,16 +9,16 @@
 !-----------------------------------------------------------------------
 SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   !---------------------------------------------------------------------
+  !! DFPT+U: This routine adds to the dynamical matrix the scf+orth Hubbard terms.   
+  !! It adds the scf derivative of the Hubbard energy (terms 1 and 2). Moreover,
+  !! it adds 3 terms due to the orthogonality constraints in the USPP formalism (terms 3,4,5). 
+  !! Note, the orthogonality terms 4 and 5 DO NOT follow simply from the 2nd derivative of 
+  !! the Hubbard energy \(\text{E_U}\); they stem from the coupling of the \(-\epsilon\ dS\ d\lambda\) in 
+  !! the USPP forces with the part of \(d\psi\ d\mu\) projected onto the occupied manifold 
+  !! (the variable dpsi stems from the scf linear system and lives in the unoccupied manifold).  
+  !! See comments in the source code for other details on the implemented terms.
   !
-  !  DFPT+U: This routine adds to the dynamical matrix the scf+orth Hubbard terms.   
-  !  It adds the scf derivative of the Hubbard energy (terms 1 and 2). Moreover,
-  !  it adds 3 terms due to the orthogonality constraints in the USPP formalism (terms 3,4,5). 
-  !  Note, the orthogonality terms 4 and 5 DO NOT follow simply from the 2nd derivative of 
-  !  the Hubbard energy E_U; They stem from the coupling of the -\epsilon\dS\dlambda in 
-  !  the USPP forces with the part of d\psi\d\mu projected onto the occupied manifold 
-  !  (the variable dpsi stems from the scf linear system and lives in the unoccupied manifold).   
-  !
-  !  Terms implemented:  
+  ! Terms implemented:
   !   dyn_hub_scf (ipert, imode)  
   !  1) =  +\sum_{I,m1,m2,is} Hubbard_U(I) [0.5\delta_m1m2-ns(m1, m2, is, I)]* 
   !        \sum_{ibnd, k} wg(ibnd,k)[ <dpsi(ipert,ibnd,k+q, is)|dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)| psi(ibnd,k,is> + 
@@ -33,18 +33,18 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   !        \sum_{ibnd, k} wg(ibnd,k)[ <dpsi_orth(imode,ibnd,k+q, is)|dqsphi(ipert,I,k+q,m1)><S\phi(I,k,m2)| psi(ibnd,k,is> + 
   !                                   <dpsi_orth(imode,ibnd,k+q, is)|S\phi(I,k+q,m1)><dmqsphi(ipert,I,k,m2)| psi(ibnd,k,is>]  
   !  5) = -\sum_{I,m1,m2,is} Hubbard_U(I) * [CONJG(dnsscf(m1,m2,is,I,ipert) + CONJG(dnsbare(m2,m1,is,I,ipert))] 
-  !                                       * dnsorth(m1,m2,is,I,imode)  
+  !                                       * dnsorth(m1,m2,is,I,imode) 
   !
   ! Note: dnsscf includes the orthogonality part (dnsorth)
   !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018) 
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_l, is_hubbard, Hubbard_J0
-  USE ldaU_ph,       ONLY : dnsbare, dnsbare_all_modes, dnsscf, &
-                            dnsorth_cart, effU
+  USE ldaU_lr,       ONLY : dnsscf, effU
+  USE ldaU_ph,       ONLY : dnsbare, dnsbare_all_modes, dnsorth_cart
   USE lsda_mod,      ONLY : lsda, current_spin, isk, nspin
   USE modes,         ONLY : u, nmodes
   USE dynmat,        ONLY : dyn, dyn_rec, dyn_hub_scf
@@ -53,8 +53,7 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   USE wvfct,         ONLY : npwx, nbnd
   USE control_lr,    ONLY : lgamma
   USE control_ph,    ONLY : rec_code_read
-  USE units_ph,      ONLY : iudwf, lrdwf
-  USE units_lr,      ONLY : iuwfc, lrwfc
+  USE units_lr,      ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE wavefunctions, ONLY : evc
   USE klist,         ONLY : wk, lgauss, ltetra, ngk, igk_k
   USE uspp,          ONLY : okvan
@@ -67,12 +66,14 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)  :: irr, nu_i0, nper
-  ! the irreducible representation
-  ! the initial position of the mode
-  ! number of perturbations in the current irreducible representation
+  INTEGER, INTENT(IN) :: irr
+  !! the irreducible representation
+  INTEGER, INTENT(IN) :: nu_i0
+  !! the initial position of the mode
+  INTEGER, INTENT(IN) :: nper
+  !! number of perturbations in the current irreducible representation
   !
-  ! Local variables
+  ! ... local variables
   !
   INTEGER :: icar, jcar, na, nap, nah, ihubst1, ihubst2, nt, counter, n, l, is,    & 
              na_icar, nap_jcar, m1, m2, imode, jmode, ik, ikk, ikq, ipert, nrec1,  &

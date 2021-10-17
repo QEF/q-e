@@ -37,7 +37,7 @@
       IMPLICIT NONE
 ! input
       REAL(DP), INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      REAL(DP)  vr(dfftp%nnr,nspin)
+      REAL(DP), INTENT(IN) ::  vr(dfftp%nnr,nspin)
       LOGICAL, INTENT(IN) :: tprint
 ! output
       REAL(DP)  fion(3,nat)

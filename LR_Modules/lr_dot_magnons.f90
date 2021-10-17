@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,13 +9,7 @@
 FUNCTION lr_dot_magnons(x,y)
   !---------------------------------------------------------------------
   !
-  ! This subroutine calculates a dot product of the conjugate 
-  ! of a complex vector x and a complex vector y 
-  ! (sums over the bands and k-points).
-  !
-  ! Brent Walker, ICTP, 2004
-  ! Modified by Osman Baris Malcioglu, SISSA, 2009
-  ! Modified by Iurii Timrov, SISSA, 2013 (extension to EELS)
+  ! Extension of lr_dot.f90 to magnons
   !
   USE kinds,                ONLY : dp
   USE io_global,            ONLY : stdout
@@ -38,8 +32,6 @@ FUNCTION lr_dot_magnons(x,y)
   COMPLEX(kind=dp) :: lr_dot_magnons
   REAL(kind=dp) :: degspin
   INTEGER :: ibnd, ik
-  REAL(kind=dp), EXTERNAL    :: DDOT
-  COMPLEX(kind=dp), EXTERNAL :: ZDOTC
   !
   CALL start_clock ('lr_dot_magnons')
   !
@@ -93,7 +85,8 @@ CONTAINS
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !
-          lr_dot_magnons = lr_dot_magnons + wk(ikk) * ZDOTC(npwx*npol,x(1,ibnd,ik,1),1,y(1,ibnd,ik,1),1)
+          lr_dot_magnons = lr_dot_magnons + wk(ikk) * &
+                  dot_product(x(:,ibnd,ik,1),y(:,ibnd,ik,1))
           !
        ENDDO
        !
@@ -101,7 +94,8 @@ CONTAINS
        !
        DO ibnd = 1, nbnd_occ(imk)
           !
-          lr_dot_magnons = lr_dot_magnons + wk(imk) * ZDOTC(npwx*npol,x(1,ibnd,ik,2),1,y(1,ibnd,ik,2),1)
+          lr_dot_magnons = lr_dot_magnons + wk(imk) * &
+                  dot_product(x(:,ibnd,ik,2),y(:,ibnd,ik,2))
           !
        ENDDO
        !

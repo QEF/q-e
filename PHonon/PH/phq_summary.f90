@@ -9,12 +9,10 @@
 !-----------------------------------------------------------------------
 subroutine phq_summary
   !-----------------------------------------------------------------------
-  !
-  !    This routine writes on output the quantities which have been read
-  !    from the punch file, and the quantities computed in the phq_setup
-  !    file.
-  !
-  !    if iverbosity = 0 only a partial summary is done.
+  !! This routine writes on output the quantities which have been read
+  !! from the punch file, and the quantities computed in the 
+  !! \(\texttt{phq_setup}\) file.  
+  !! If \(\text{iverbosity}=0\) only a partial summary is done.
   !
   !
   USE kinds,         ONLY : DP
@@ -44,7 +42,7 @@ subroutine phq_summary
   USE qpoint,        ONLY : xq
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq
   USE constants,     ONLY : rytoev
-  USE ldaU_ph,       ONLY : effU
+  USE ldaU_lr,       ONLY : effU
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0, &
                             lda_plus_u_kind, is_hubbard
  

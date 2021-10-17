@@ -8,18 +8,16 @@
 !-----------------------------------------------------------------------
 subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   !-----------------------------------------------------------------------
-  !
-  ! This routine is just a debugging tool. Calculates the scalar product
-  ! between the chi-wavefunction and Pc DH |psi> in two different ways.
-  ! The results of the two procedures should be the same.
+  !! This routine is just a debugging tool. It calculates the scalar product
+  !! between the chi-wavefunction and \(Pc\ DH\ \|\psi\rangle\) in two 
+  !! different ways. The results of the two procedures should be the same.
   !
 
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, nbnd
   USE fft_base, ONLY : dffts
   use ramanm,  ONLY : lrd2w, iud2w, jab
-  USE units_ph, ONLY : lrdwf, iudwf
-  USE units_lr, ONLY : iuwfc
+  USE units_lr, ONLY : lrdwf, iudwf
   USE buffers, ONLY : get_buffer
   USE qpoint, ONLY : npwq, nksq
   USE eqv, ONLY : dpsi, dvpsi

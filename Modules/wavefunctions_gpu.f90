@@ -27,7 +27,7 @@
      iverbosity = 1
 #endif
      !
-     COMPLEX(DP), ALLOCATABLE :: evc_d(:, :)
+     COMPLEX(DP), ALLOCATABLE, TARGET :: evc_d(:, :)
      COMPLEX(DP), ALLOCATABLE :: psic_d(:)
      COMPLEX(DP), ALLOCATABLE :: psic_nc_d(:, :)
      !
