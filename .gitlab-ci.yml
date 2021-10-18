@@ -48,8 +48,10 @@ build:cmake-gnu:
     - cmake --version
     - mkdir build
     - cd build
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_C_COMPILER=gcc .. && make
-    - make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+            -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make
+      && make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
+      && ctest -L unit --output-on-failure
 
 build:pgi:
   tags: [docker]
