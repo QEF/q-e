@@ -126,7 +126,7 @@ SUBROUTINE extract (plot_files,plot_num)
      RETURN
   ENDIF
   !
-  IF (plot_num < 0 .or. (plot_num > 23 .and. &
+  IF (plot_num < 0 .or. (plot_num > 24 .and. &
         plot_num /= 119 .and. plot_num /= 123)) CALL errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
