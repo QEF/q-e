@@ -101,8 +101,9 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   IF ( uspp )   sphi_d = ZERO
 !
   !
-  ! ... Set owers of blocks
+  ! ... Set owners of blocks
   !
+  ALLOCATE( owner_bgrp_id(nblock)) 
   owner_bgrp_id = 0
   !
   DO iblock = 1, nblock
@@ -168,10 +169,9 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   ! ... Buffer allocation 
   !
-  buf_size  = nbsize
   !
-  ALLOCATE( sr_d(buf_size))
-  ALLOCATE( sr2_d(buf_size, buf_size))
+  ALLOCATE( sr_d(nbsize))
+  ALLOCATE( sr2_d(nbsize, nbnd - nbsize))
   !
   ! ... Blocking loop
   !
@@ -435,20 +435,20 @@ CONTAINS
     IF ( uspp ) THEN
        !
        CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
-                   spsi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), ibnd_size )
+                   spsi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), nbsize )
        !
        IF ( gstart == 2 ) &
        CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
-                  spsi_d(1,jbnd_start), npwx2, sr2_d(1,1), ibnd_size )
+                  spsi_d(1,jbnd_start), npwx2, sr2_d(1,1), nbsize )
        !
     ELSE
        !
        CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
-                   psi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), ibnd_size )
+                   psi_d(1,jbnd_start), npwx2, 0._DP, sr2_d(1,1), nbsize )
        !
        IF ( gstart == 2 ) &
        CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
-                  psi_d(1,jbnd_start), npwx2, sr2_d(1,1), ibnd_size )
+                  psi_d(1,jbnd_start), npwx2, sr2_d(1,1), nbsize )
        !
     END IF
     !
@@ -457,7 +457,7 @@ CONTAINS
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
     CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, phi_d(1,ibnd_start), npwx2, &
-                sr2_d(1,1), ibnd_size, 1._DP, phi_d(1,jbnd_start), npwx2 )
+                sr2_d(1,1), nbsize, 1._DP, phi_d(1,jbnd_start), npwx2 )
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
     IF ( gstart == 2 ) THEN
@@ -471,7 +471,7 @@ CONTAINS
     IF ( eigen_ ) THEN
        !
        CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, hphi_d(1,ibnd_start), npwx2, &
-                   sr2_d(1,1), ibnd_size, 1._DP, hphi_d(1,jbnd_start), npwx2 )
+                   sr2_d(1,1), nbsize, 1._DP, hphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN 
@@ -487,7 +487,7 @@ CONTAINS
     IF ( uspp ) THEN
        !
        CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, sphi_d(1,ibnd_start), npwx2, &
-                   sr2_d(1,1), ibnd_size, 1._DP, sphi_d(1,jbnd_start), npwx2 )
+                   sr2_d(1,1), nbsize, 1._DP, sphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN 
