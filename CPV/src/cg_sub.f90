@@ -8,9 +8,12 @@
 !
 !=======================================================================
 !
+module cg_sub
+implicit none
+contains
    subroutine runcg_uspp(nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
-                         lambdap, lambda, nlam, vpot, c0, cm, phi, dbec, l_cprestart)
+                         lambdap, lambda, nlam, vpot, c0, c0_d, cm, phi, dbec, l_cprestart)
 
 !! please see https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.79.1337 (ensemble DFT)
 !! and        https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045 (conjugate gradient)
@@ -89,6 +92,7 @@
       real(dp) :: lambdap(nlam, nlam, nspin)
       real(dp) :: lambda(nlam, nlam, nspin)
       complex(dp) :: c0(ngw, nbspx)
+      complex(dp) :: c0_d(:,:)
       complex(dp) :: cm(ngw, nbspx)
       complex(dp) :: phi(ngw, nbspx)
       complex(dp) :: phi_tmp(ngw, nbspx)
@@ -103,10 +107,9 @@
       complex(dp), allocatable :: c3(:)
       real(dp) :: gamma, entmp, sta
       complex(dp), allocatable :: hpsi(:, :), hpsi0(:, :), gi(:, :), hi(:, :)
+      complex(dp), allocatable :: hpsi_d(:, :), gi_d(:, :)
 #if defined(__CUDA)
-      complex(dp), allocatable, DEVICE :: hpsi_dummy(:, :), c0_dummy(:, :), gi_dummy(:, :)
-#else
-      complex(dp), allocatable         :: hpsi_dummy(:, :), c0_dummy(:, :), gi_dummy(:, :)
+      attributes device :: c0_d, hpsi_d, c0_d, gi_d
 #endif
       real(DP), allocatable::               s_minus1(:, :)!factors for inverting US S matrix
       real(DP), allocatable::               k_minus1(:, :)!factors for inverting US preconditioning matrix
@@ -180,16 +183,27 @@
 
       !orthonormalize c0
 
+#if defined (__CUDA)
+!TODO: is this necessary?
+!NOTE (R.B.) : at the moment the array c0_d is used as a buffer. Most of the
+!operation are done on the cpu, in particular for the ensemble dft case
+     c0=c0_d
+#endif
+
       call calbec(nbsp, betae, c0, bec)
       CALL gram_bgrp(betae, bec, nkb, c0, ngw)
 
       !calculates phi for pcdaga
 
+!$acc data copyin(betae) copyout(phi)
+!bec stays on cpu
 #if defined (__CUDA)
-      CALL errore('  runcg_uspp ', ' GPU version not yet implemented', 1)
+      !CALL errore('  runcg_uspp ', ' GPU version not yet implemented', 1)
+      CALL calphi_bgrp(c0_d, SIZE(c0, 1), bec, nkb, betae, phi, nbsp)
 #else
       CALL calphi_bgrp(c0, SIZE(c0, 1), bec, nkb, betae, phi, nbsp)
 #endif
+!$acc end data
 
       !calculates the factors for S and K inversion in US case
       if (nkbus > 0) then
@@ -215,62 +229,12 @@
 
          ENERGY_CHECK: if (.not. ene_ok) then
             call calbec(nbsp, betae, c0, bec)
-            if (.not. tens) then
-               call rhoofr(nfi, c0(:, :), irb, eigrb, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-            else
-
-               if (newscheme .or. firstiter) then
-                  call inner_loop_cold(nfi, tfirst, tlast, eigr, irb, eigrb, &
-                                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, c0, bec, dbec, firstiter, vpot)
-                  firstiter = .false.
-               endif
-               !     calculation of the rotated quantities
-
-               call rotate(nrlx, z0t, c0(:, :), bec, c0diag, becdiag)
-               !     calculation of rho corresponding to the rotated wavefunctions
-               call rhoofr(nfi, c0diag, irb, eigrb, becdiag, dbec, &
-                           rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-            endif
-
-!when cycle is restarted go to diagonal representation
-
-            if (mod(itercg, niter_cg_restart) == 1 .and. itercg >= 2) then
-
-               call rotate(nrlx, z0t, c0(:, :), bec, c0diag, becdiag)
-               c0(:, :) = c0diag(:, :)
-               bec(:, :) = becdiag(:, :)
-               call id_matrix_init(idesc, nspin)
-            endif
-
-            !calculates the potential
-            !
-            !     put core charge (if present) in rhoc(r)
-            !
-            if (nlcc_any) call set_cc(rhoc)
-
-            !
-            !---ensemble-DFT
-
-            vpot = rhor
-
-            call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
-                   &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
+            call compute_energy(c0, bec, ens_goto_diagonal_repr = .true.) !result energy in etot
             if (.not. tens) then
                etotnew = etot
             else
                etotnew = etot + entropy
             end if
-
-            if (tefield) then!just in this case calculates elfield stuff at zeo field-->to be bettered
-
-               call berry_energy(enb, enbi, bec, c0(:, :), fion)
-               etot = etot + enb + enbi
-            endif
-            if (tefield2) then!just in this case calculates elfield stuff at zeo field-->to be bettered
-
-               call berry_energy2(enb, enbi, bec, c0(:, :), fion)
-               etot = etot + enb + enbi
-            endif
 
          else
 
@@ -307,9 +271,16 @@
 
          call prefor(eigr, betae)
          ! this puts the gradient inside the array hpsi
+#if defined(__CUDA)
+         allocate(hpsi_d, mold=hpsi)
+         c0_d=c0
+#endif
          call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
-                         c0, c0_dummy, hpsi, hpsi_dummy, .false., .false., .true.)
-
+                         c0, c0_d, hpsi, hpsi_d, .false., .false., .true.)
+#if defined(__CUDA)
+         hpsi=hpsi_d
+         deallocate(hpsi_d)
+#endif
          if (pre_state) call ave_kin(c0, SIZE(c0, 1), nbsp, ave_ene)
 
          call pcdaga2(c0, phi, hpsi)
@@ -319,8 +290,10 @@
 ! becm = <betae | hpsi >
          call calbec(nbsp, betae, hpsi, becm)
 !        (1+S) |hpsi>
+!$acc data copyin(phi_tmp,betae) copy(hpsi)
          CALL calphi_bgrp(hpsi, SIZE(hpsi, 1), becm, nkb, betae, phi_tmp, nbsp, &
                           m_minus1=s_minus1)
+!$acc end data
 ! becm = <betae| (1+S) |hpsi>
          call calbec(nbsp, betae, hpsi, becm)
 ! project (1+S) |hpsi>
@@ -342,8 +315,10 @@
 ! becm = <betae | precond |gi >
          call calbec(nbsp, betae, gi, becm)
 !        (1+S) | precond |gi>
+!$acc data copyin(phi_tmp,betae) copy(gi)
          CALL calphi_bgrp(gi, SIZE(gi, 1), becm, nkb, betae, phi_tmp, nbsp, &
                           m_minus1=k_minus1)
+!$acc end data
          call calbec(nbsp, betae, gi, becm)
          call pc2(c0, bec, gi, becm)
 
@@ -550,40 +525,7 @@
          CALL gram_bgrp(betae, becm, nkb, cm, ngw)
 
          !calculate energy
-         if (.not. tens) then
-            call rhoofr(nfi, cm(:, :), irb, eigrb, becm, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-         else
-            if (newscheme) then
-               call inner_loop_cold(nfi, tfirst, tlast, eigr, irb, eigrb, &
-                                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, cm, becm, dbec, .false., vpot)
-            endif
-
-            !     calculation of the rotated quantities
-            call rotate(nrlx, z0t, cm(:, :), becm, c0diag, becdiag)
-            !     calculation of rho corresponding to the rotated wavefunctions
-            call rhoofr(nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, rhor, &
-                        drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-         endif
-
-         !calculate potential
-         !
-         !     put core charge (if present) in rhoc(r)
-         !
-         if (nlcc_any) call set_cc(rhoc)
-         !
-         vpot = rhor
-         !
-         call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
-                       &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
-
-         if (tefield) then!to be bettered
-            call berry_energy(enb, enbi, becm, cm(:, :), fion)
-            etot = etot + enb + enbi
-         endif
-         if (tefield2) then!to be bettered
-            call berry_energy2(enb, enbi, becm, cm(:, :), fion)
-            etot = etot + enb + enbi
-         endif
+         call compute_energy(cm, becm, ens_goto_diagonal_repr=.false.) ! result in etot
 
          ene1 = etot
          if (tens .and. newscheme) then
@@ -612,41 +554,7 @@
          CALL gram_bgrp(betae, becm, nkb, cm, ngw)
 
          !test on energy: check the energy has really diminished
-
-         !call calbec(1,nsp,eigr,cm,becm)
-         if (.not. tens) then
-            call rhoofr(nfi, cm(:, :), irb, eigrb, becm, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-         else
-            if (newscheme) then
-               call inner_loop_cold(nfi, tfirst, tlast, eigr, irb, eigrb, &
-                                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, cm, becm, dbec, .false., vpot)
-            endif
-            !     calculation of the rotated quantities
-            call rotate(nrlx, z0t, cm(:, :), becm, c0diag, becdiag)
-            !     calculation of rho corresponding to the rotated wavefunctions
-            call rhoofr(nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, rhor, &
-                        drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-         endif
-
-         !calculates the potential
-         !
-         !     put core charge (if present) in rhoc(r)
-         !
-         if (nlcc_any) call set_cc(rhoc)
-         !
-         vpot = rhor
-         !
-         call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
-                        &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
-
-         if (tefield) then!to be bettered
-            call berry_energy(enb, enbi, becm, cm(:, :), fion)
-            etot = etot + enb + enbi
-         endif
-         if (tefield2) then!to be bettered
-            call berry_energy2(enb, enbi, becm, cm(:, :), fion)
-            etot = etot + enb + enbi
-         endif
+         call compute_energy(cm, becm, ens_goto_diagonal_repr=.false.) ! result in etot
 
          enever = etot
          if (tens .and. newscheme) then
@@ -708,40 +616,7 @@
                call calbec(nbsp, betae, cm, becm)
                CALL gram_bgrp(betae, bec, nkb, cm, ngw)
                call calbec(nbsp, betae, cm, becm)
-               if (.not. tens) then
-                 call rhoofr(nfi, cm(:, :), irb, eigrb, becm, dbec, rhovan, rhor,&
-                             drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-               else
-                  if (newscheme) then
-                     call inner_loop_cold(nfi, tfirst, tlast, eigr, irb, eigrb, &
-                                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, cm, becm, dbec, .false., vpot)
-                  endif
-                  !     calculation of the rotated quantities
-                  call rotate(nrlx, z0t, cm(:, :), becm, c0diag, becdiag)
-                  !     calculation of rho corresponding to the rotated wavefunctions
-                  call rhoofr(nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, rhor, &
-                              drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-               endif
-
-               !calculates the potential
-               !
-               !     put core charge (if present) in rhoc(r)
-               !
-               if (nlcc_any) call set_cc(rhoc)
-               !
-               vpot = rhor
-               !
-               call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
-                           &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
-
-               if (tefield) then !to be bettered
-                  call berry_energy(enb, enbi, becm, cm(:, :), fion)
-                  etot = etot + enb + enbi
-               endif
-               if (tefield2) then !to be bettered
-                  call berry_energy2(enb, enbi, becm, cm(:, :), fion)
-                  etot = etot + enb + enbi
-               endif
+               call compute_energy(cm, becm, ens_goto_diagonal_repr=.false.)
 
                enever = etot
                if (tens .and. newscheme) then
@@ -838,7 +713,7 @@
       call prefor(eigr, betae)
       ! this puts the gradient inside the array gi
       call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
-                      c0, c0_dummy, gi, gi_dummy, .false., .false., .true.)
+                      c0, c0_d, gi, gi_d, .false., .false., .true.)
       ALLOCATE (lambda_repl(nudx, nudx))
       !
       do is = 1, nspin
@@ -883,7 +758,7 @@
          call calbec(nbsp, betae, c0, bec)
 
          call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
-                         c0, c0_dummy, gi, gi_dummy, .false., .false., .true.)
+                         c0, c0_d, gi, gi_d, .false., .false., .true.)
 
          lambda_repl = 0.d0
          do i = 1, nss
@@ -967,4 +842,85 @@
 
       return
 
+      CONTAINS
+
+      SUBROUTINE compute_energy(cx, becx, ens_goto_diagonal_repr)
+
+        COMPLEX(dp), intent(inout) :: cx(:,:) !input wf, it can be resetted to diagonal rep for ens dft
+        REAL(dp), intent(inout) :: becx(:,:) !input bec, it can be resetted to diagonal rep for ens dft
+        logical, intent(in) :: ens_goto_diagonal_repr
+        !note: every declaration of the parent subroutine is valid here
+
+            if (.not. tens) then
+#if defined(__CUDA)
+               c0_d=cx
+               call rhoofr(nfi, c0_d(:, :), irb, eigrb, becx, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+#else
+               call rhoofr(nfi, cx(:, :), irb, eigrb, becx, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+#endif
+            else
+
+               if (newscheme .or. firstiter) then
+                  call inner_loop_cold(nfi, tfirst, tlast, eigr, irb, eigrb, &
+                                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, cx, becx, dbec, firstiter, vpot)
+                  firstiter = .false.
+               endif
+               !     calculation of the rotated quantities
+
+               call rotate(nrlx, z0t, cx(:, :), becx, c0diag, becdiag)
+               !     calculation of rho corresponding to the rotated wavefunctions
+#if defined(__CUDA)
+               c0_d=c0diag
+               call rhoofr(nfi, c0_d, irb, eigrb, becdiag, dbec, &
+                           rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+#else
+               call rhoofr(nfi, c0diag, irb, eigrb, becdiag, dbec, &
+                           rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+#endif
+            endif
+
+!when cycle is restarted go to diagonal representation
+
+            if (ens_goto_diagonal_repr .and. mod(itercg, niter_cg_restart) == 1 .and. itercg >= 2) then
+
+               call rotate(nrlx, z0t, cx(:, :), becx, c0diag, becdiag)
+               cx(:, :) = c0diag(:, :)
+               becx(:, :) = becdiag(:, :)
+               call id_matrix_init(idesc, nspin)
+            endif
+
+            !calculates the potential
+            !
+            !     put core charge (if present) in rhoc(r)
+            !
+            if (nlcc_any) call set_cc(rhoc)
+
+            !
+            !---ensemble-DFT
+
+            vpot = rhor
+
+            call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
+                   &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
+            if (.not. tens) then
+               etotnew = etot
+            else
+               etotnew = etot + entropy
+            end if
+
+            if (tefield) then!just in this case calculates elfield stuff at zeo field-->to be bettered
+
+               call berry_energy(enb, enbi, becx, cx(:, :), fion)
+               etot = etot + enb + enbi
+            endif
+            if (tefield2) then!just in this case calculates elfield stuff at zeo field-->to be bettered
+
+               call berry_energy2(enb, enbi, becx, cx(:, :), fion)
+               etot = etot + enb + enbi
+            endif
+        
+      END SUBROUTINE
+
    END SUBROUTINE runcg_uspp
+
+end module
