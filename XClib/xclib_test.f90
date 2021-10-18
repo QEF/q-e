@@ -481,7 +481,8 @@ PROGRAM xclib_test
       CYCLE
     ENDIF
 #if !defined(__LIBXC)
-    IF ( TRIM(dft)=='SCAN' .OR. TRIM(dft)=='SCAN0' ) THEN
+    IF ( TRIM(dft)=='TB09' .OR. TRIM(dft)=='SCAN' .OR. &
+         TRIM(dft)=='SCAN0'.OR. TRIM(dft)=='SCA0' ) THEN
       IF (mype==root) CALL print_test_status( skipped3 )
       CYCLE
     ENDIF
