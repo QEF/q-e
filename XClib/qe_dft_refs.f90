@@ -43,9 +43,9 @@ MODULE qe_dft_refs
   ! KZK   Finite-size corrections
   DATA dft_LDAx_ref(8)  / 'H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)' /
   ! xxxx [X3LYP_LDA]
-  DATA dft_GGAx_ref(9)  / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
+  DATA dft_LDAx_ref(9)  / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
   ! xxxx [KLI]
-  DATA dft_GGAx_ref(10) / 'KLI aproximation for exx - currently not implemented' /
+  DATA dft_LDAx_ref(10) / 'KLI aproximation for exx - currently not implemented' /
   !
   !
   !  ---- LDA correlation ----
