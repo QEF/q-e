@@ -2,13 +2,16 @@
 
 include ../make.inc
 
+MODFLAGS= $(MOD_FLAG)$(TOPDIR)/upflib
+
 XCL = \
 xclib_utils_and_para.o \
 xclib_error.o \
 qe_kind.o \
 qe_constants.o \
-xc_input_params_mod.o \
-dft_mod.o \
+dft_setting_params.o \
+dft_setting_routines.o \
+qe_dft_list.o \
 qe_funct_corr_lda_lsda.o \
 qe_funct_exch_lda_lsda.o \
 qe_funct_corr_gga.o \
@@ -31,18 +34,32 @@ BEEF = \
 pbecor.o \
 beefun.o
 
+XCT = \
+qe_kind.o \
+qe_constants.o \
+xclib_utils_and_para.o \
+dft_setting_params.o \
+dft_setting_routines.o \
+qe_dft_list.o \
+xc_lib.o
+
 all: xc_lib.a
 
 xc_lib.a: $(XCL) $(BEEF)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-xclib_test.x : xclib_test.o xc_lib.a 
+xc_infos.x : xc_infos.o qe_dft_refs.o qe_dft_list.o xc_lib.a
 	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		xclib_test.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
+		xc_infos.o qe_dft_refs.o qe_dft_list.o xc_lib.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
-test : xclib_test.x
+xclib_test.x : xclib_test.o $(XCT) xc_lib.a
+	$(LD) ../upflib/libupf.a $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
+		xclib_test.o $(XCT) xc_lib.a ../upflib/libupf.a $(BLAS_LIBS) $(LD_LIBS) $(LIBXC_LIBS)
+	- ( cd ../bin ; ln -fs ../XClib/$@ . )
+
+test : xclib_test.x xc_infos.x
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x

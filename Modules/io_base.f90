@@ -830,9 +830,9 @@ MODULE io_base
       COMPLEX(kind=DP), ALLOCATABLE :: rho_aux(:)
       LOGICAL                  :: ionode_in_group
       INTEGER :: nproc_in_group
-      INTEGER, ALLOCATABLE :: mill_g(:,:)
+      INTEGER, ALLOCATABLE :: mill_g(:,:), grid(:,:,:) 
       CHARACTER(len=256)   :: mesg
-      INTEGER :: ig, jg, minus_g_file(3), startjg, old_ig, new_startjg  
+      INTEGER :: ig, jg, nr1b2,nr2b2,nr3b2  
       IF ( .NOT. PRESENT (this_run_is_gamma_only) ) RETURN 
       IF ( this_run_is_gamma_only) THEN 
          call infomsg('read_rhog','Conversion: K charge Gamma charge') 
@@ -870,59 +870,32 @@ MODULE io_base
                IF ( ig .GE. ngm_g ) EXIT  
                END DO
          ELSE ! this run uses full fft mesh 
-            ig = 1 
-            DO jg = 1, ngm_g
-               if (  mill_g (1,jg) == mill_g_file(1,ig) .and. &
-                     mill_g (2,jg) == mill_g_file(2,ig) .and. &
-                     mill_g (3,jg) == mill_g_file(3,ig) )  then 
-                  !
-                  rho_g(jg) = rho_aux(ig) 
-                  ig = ig + 1 
-               end if 
-               if ( ig .GE. ngm_g_file ) EXIT 
+            nr1b2 = MAX(MAXVAL(ABS(mill_g(1,:))),MAXVAL(ABS(mill_g_file(1,:)))) 
+            nr2b2 = MAX(MAXVAL(ABS(mill_g(2,:))),MAXVAL(ABS(mill_g_file(2,:)))) 
+            nr3b2 = MAX(MAXVAL(ABS(mill_g(3,:))),MAXVAL(ABS(mill_g_file(3,:))))   
+            ALLOCATE(grid(-nr1b2-1:nr1b2+1,-nr2b2-1:nr2b2+1,-nr3b2-1:nr3b2+1)) 
+            grid = 10 * ngm_g_file
+            !$omp do   
+            DO ig = 1, ngm_g_file
+               grid ( mill_g_file(1,ig), mill_g_file(2,ig),mill_g_file(3,ig))     = ig
+               grid(-mill_g_file(1,ig),-mill_g_file(2,ig),-mill_g_file(3,ig))     = -ig  
             END DO 
-            WRITE (stdout, *) " Plus vectors done"
-            WRITE (stdout, *) " Search of minus vectors is going to take a while" 
-            ig = 1 
-            minus_g_file = minus_g(ig) 
-            startjg = 1 
-            new_startjg = 1 
-            igloop: DO 
-               old_ig = ig 
-               DO jg = startjg, ngm_g  
-                  if ( mill_g (1,jg) == minus_g_file(1) .and. &
-                       mill_g (2,jg) == minus_g_file(2) .and. &
-                       mill_g (3,jg) == minus_g_file(3)  )  then 
-                       !
-                       rho_g(jg) = dconjg(rho_aux(ig))
-                       ig = ig + 1 
-                       if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
-                       if (jg == new_startjg) new_startjg = new_startjg+1 
-                  end if 
-                  if ( ig .GT. ngm_g_file ) EXIT igloop
-               END DO 
-               startjg =  new_startjg    
-               IF ( ig == old_ig) THEN 
-                  WRITE(mesg,*)  "minus_g for ig = ", old_ig,":" , minus_g_file,  "-->", mill_g_file(:,ig), " not found" 
-                  CALL infomsg("read_rhog:" , TRIM(mesg)) 
-                  ig = ig +1 
-                  minus_g_file = minus_g(ig) 
-                  startjg = 1 
+            !$omp do private(ig) 
+            DO jg =1, ngm_g
+               ig = grid(mill_g(1,jg),mill_g(2,jg),mill_g(3,jg))
+               IF (ig .LE. ngm_g_file) THEN  
+                 IF (ig .GE. 0 ) THEN 
+                   rho_g(jg) = rho_aux(ig) 
+                 ELSE 
+                   rho_g(jg) = CONJG(rho_aux(-ig)) 
+                 END IF 
                END IF
-            END DO igloop 
-         END IF
-      ENDIF
-        
-      deallocate(rho_aux,mill_g)
-      
+            END DO 
+            deallocate(grid) 
+         END IF 
+      END IF
+      deallocate(rho_aux,mill_g)  
       return
-      CONTAINS 
-         function minus_g  (imill) result ( minus_mill) 
-            implicit none
-            integer   :: minus_mill(3)  
-            integer   :: ipol, imill 
-            minus_mill = - mill_g_file(:,imill) 
-         end function minus_g 
  
     END SUBROUTINE charge_k_to_g
     !

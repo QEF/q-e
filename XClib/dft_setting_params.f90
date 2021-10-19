@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-MODULE dft_par_mod
+MODULE dft_setting_params
     !----------------------------------------------------------------
     !! Parameters that define the XC functionals.
     !
@@ -16,6 +16,8 @@ MODULE dft_par_mod
 #endif
     !
     IMPLICIT NONE
+    !
+    SAVE
     !
     CHARACTER(LEN=32) :: dft = 'not set'
     !! Full name of the XC functional
@@ -34,10 +36,17 @@ MODULE dft_par_mod
     !! pointers to libxc functional structs
     TYPE(xc_f03_func_info_t) :: xc_info(6)
     !! pointers to libxc info structs
-    INTEGER  :: n_ext_params(6) = 0
+    INTEGER :: libxc_flags(6,0:15) = notset
+    !! flags related to specific features of libxc functionals 
+    !! (see Libxc doc)
+    INTEGER :: n_ext_params(6) = 0
     !! number of external parameters for each functional
     REAL(DP) :: par_list(6,50)
     !! list of external parameters
+    LOGICAL :: xc_kind_error = .FALSE.
+    !! some Libxc dfts are currently not usable in QE (for example
+    !! kinetic dfts). If one of them is detected this variable is
+    !! set to TRUE.
 #endif
     !
     LOGICAL  :: exx_started = .FALSE.
@@ -101,27 +110,4 @@ MODULE dft_par_mod
     INTEGER :: beefvdw = 0
     !! Index for vdw term of BEEF
     !
-    INTEGER, PARAMETER :: nxc=8, ncc=12, ngcx=46, ngcc=13, nmeta=6
-    CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta
-    DIMENSION :: exc(0:nxc), corr(0:ncc), gradx(0:ngcx), gradc(0:ngcc), &
-                 meta(0:nmeta)
-    !
-    DATA exc  / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP', 'KZK' /
-    DATA corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
-                'OBW', 'GL' , 'KZK', 'xxxx', 'B3LP' /
-    !
-    DATA gradx / 'NOGX', 'B88',  'GGX',  'PBX',  'REVX', 'HCTH', 'OPTX', &
-                 'xxxx', 'PB0X', 'B3LP', 'PSX',  'WCX',  'HSE',  'RW86', 'PBE', &
-                 'xxxx', 'C09X', 'SOX',  'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
-                 'OBK8', 'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', &
-                 'CX0',  'R860', 'CX0P', 'AHCX', 'AHF2', &
-                 'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0',  'CX16', 'C090', &
-                 'B86X', 'B88X', 'BEEX', 'HHNX', 'W31X', 'W32X' /
-    !
-    DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
-                 'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC', 'BEEC' /
-    !
-    DATA meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' /
-    !
-    !
-END MODULE
+END MODULE dft_setting_params

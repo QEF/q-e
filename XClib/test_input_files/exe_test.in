@@ -1,0 +1,9 @@
+&INPUT_NAMELIST
+                    test='execute'
+                    filename_xml='xctest_data.xml'
+                    dft='all_terms'
+                    family= ''
+                    polarization='both'
+                    xc_derivative=.FALSE.
+                    show_time=.TRUE.
+                 /

@@ -27,6 +27,7 @@ adddvhubscf.o : ../PW/src/ldaU.o
 adddvhubscf.o : ../PW/src/pwcom.o
 adddvhubscf.o : ../UtilXlib/mp.o
 adddvhubscf.o : lrcom.o
+adddvscf.o : ../Modules/becmod.o
 adddvscf.o : ../Modules/ions_base.o
 adddvscf.o : ../Modules/kind.o
 adddvscf.o : ../Modules/noncol.o

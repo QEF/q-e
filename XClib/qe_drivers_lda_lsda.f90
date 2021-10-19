@@ -14,9 +14,9 @@ MODULE qe_drivers_lda_lsda
   !-----------------------------------------------------------------------
   !! Contains the LDA drivers of QE that calculate XC energy and potential.
   !
-  USE kind_l,      ONLY: DP
-  USE dft_par_mod, ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
-                         exx_fraction, finite_size_cell_volume
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: iexch, icorr, rho_threshold_lda, exx_started, &
+                                exx_fraction, finite_size_cell_volume
   USE exch_lda
   USE corr_lda
   !

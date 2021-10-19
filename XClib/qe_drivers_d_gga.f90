@@ -15,8 +15,8 @@ MODULE qe_drivers_d_gga
   !! Module with QE driver routines that calculates the derivatives of XC
   !! potential.
   !
-  USE kind_l,       ONLY: DP
-  USE dft_par_mod,  ONLY: igcx, igcc, is_libxc
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: igcx, igcc, is_libxc
   !
   IMPLICIT NONE
   !

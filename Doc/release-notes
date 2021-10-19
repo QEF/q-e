@@ -4,6 +4,7 @@ New in development version:
   * projwfc.x can be used to compute the PDOS in a local basis (I. Timrov)
 
 Fixed in development version:
+  * Possible out-of-bound error (gfortran only) could crash DFT+U
   * incorrect exx factor multiplication in the gga term of polarized cx0 
     functional (v.6.8 only)
   * Some build problems occurring under special circumstances

@@ -80,6 +80,7 @@ MODULE funct
   !              "x3lyp"                        = X3LYP
   !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
+  !
   !              "vdw-df"       ="sla+pw+revx+vdw1"      = vdW-DF1
   !              "vdw-df2"      ="sla+pw+rw86+vdw2"      = vdW-DF2
   !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"      = vdW-DF-C09

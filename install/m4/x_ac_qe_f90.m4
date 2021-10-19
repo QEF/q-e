@@ -24,16 +24,27 @@ AC_ARG_ENABLE(pedantic,
    fi],
    [use_pedantic=0])
 
-# shared library flags are implemented only for a few (untested) cases
+# yet to be implemented
 AC_ARG_ENABLE(shared,
    [AS_HELP_STRING([--enable-shared],
-       [use shared libraries if available (default: yes)])],
+       [produce object files suitable for shared libraries (default: no)])],
    [if   test "$enableval" = "yes" ; then
       use_shared=1
    else
       use_shared=0
    fi],
-   [use_shared=1])
+   [use_shared=0])
+
+# build static executables (implemented only for a few untested cases)
+AC_ARG_ENABLE(static,
+   [AS_HELP_STRING([--enable-static],
+       [build static executables if possible (default: no)])],
+   [if   test "$enableval" = "yes" ; then
+      use_static=1
+   else
+      use_static=0
+   fi],
+   [use_static=0])
 
 # check Fortran compiler flags
 # have_cpp=0: use external C preprocessing for fortran code
@@ -198,7 +209,7 @@ ppc64-bgq:*xlf* )
         try_fflags="-fast"
         try_fflags_openmp="-mp"
         if test "$use_debug" -eq 1; then
-           try_f90flags="-g -C -Mcache_align -Mpreprocess -Mlarge_arrays"
+           try_f90flags="-g -C -Ktrap=fp -Mcache_align -Mpreprocess -Mlarge_arrays"
         else
            try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         fi
@@ -240,7 +251,7 @@ ppc64-bgq:*xlf* )
 
 esac
 
-if test "$use_shared" -eq 0 ; then
+if test "$use_static" -eq 1 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
 # Flags are repeated, need better way to handle this ...

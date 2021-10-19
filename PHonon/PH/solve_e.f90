@@ -34,7 +34,7 @@ subroutine solve_e
   USE klist,                 ONLY : ltetra, lgauss, xk, ngk, igk_k
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
-  USE lsda_mod,              ONLY : nspin
+  USE lsda_mod,              ONLY : nspin, lsda, current_spin, isk
   USE spin_orb,              ONLY : domag
   USE wvfct,                 ONLY : nbnd, npwx
   USE check_stop,            ONLY : check_stop_now
@@ -154,6 +154,7 @@ subroutine solve_e
      DO ipol = 1, 3
         ikk = ikks(ik)
         npw = ngk(ikk)
+        IF (lsda) current_spin = isk(ikk)
         !
         ! reads unperturbed wavefunctions psi_k in G_space, for all bands
         !

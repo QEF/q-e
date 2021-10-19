@@ -38,7 +38,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   COMPLEX(DP), ALLOCATABLE :: rhogaux(:,:)
   !
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
-  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:), rhos(:)
+  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:)
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:), v2c_ud(:)
   !
   REAL(DP), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0
