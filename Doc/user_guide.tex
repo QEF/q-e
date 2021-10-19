@@ -577,15 +577,17 @@ supported since v.5.0; IBM machines with AIX are no longer supported
 since v.6.0; all architectures marked with a * are to be considered
 obsolescent or obsolete.
 
-Finally, \configure\ recognizes the following command-line options:\\
+Finally, \configure\ recognizes the following command-line options.
+Not all of them are implemented for all compilers, though. Default value
+is between bracket:\\
 \begin{tabular}{ll}
-\texttt{--enable-parallel}&     compile for parallel (MPI) execution if possible (default: yes)\\
-\texttt{--enable-openmp}&       compile for OpenMP execution if possible (default: no)\\
-\texttt{--enable-shared}&       use shared libraries if available (default: yes;\\
-                        &       "no" is implemented, untested, in only a few cases)\\
-\texttt{--enable-debug}&        compile with debug flags (only for some compilers; default: no)\\
-\texttt{--enable-pedantic}&     compile with pedantic flags (only for gfortran; default: no)\\
-\texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
+\texttt{--enable-parallel}&     compile for parallel (MPI) execution if possible (yes)\\
+\texttt{--enable-openmp}&       compile for OpenMP execution if possible (no)\\
+\texttt{--enable-static}&       produce static executables, arger but more portable (no)\\
+\texttt{--enable-shared}&       produce objects that are suitable for shared libraries (no)\\
+\texttt{--enable-debug}&        compile with debug flags (no)\\
+\texttt{--enable-pedantic}&     compile with gfortran pedantic flags on (no)\\
+\texttt{--enable-signals}&      enable signal trapping (no)\\
 \end{tabular}\\
 \\
 and the following optional packages:\\
@@ -593,24 +595,22 @@ and the following optional packages:\\
 \texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\
       &Set to \texttt{intel} to use Intel MPI and BLACS (default: use OpenMPI)\\
 \texttt{--with-elpa-include}&   Specify full path of ELPA include and modules
-  headers (default: no)\\
-\texttt{--with-elpa-lib}& Specify full path of the ELPA library
-	                          (default: no)\\
-\texttt{--with-elpa-version}& Specify ELPA API version (2015 for ELPA releases 2015.x\\
+  headers (no)\\
+\texttt{--with-elpa-lib}& Specify full path of the ELPA library (no)\\
+\texttt{--with-elpa-version}& Specify ELPA API version: 2015 for ELPA releases 2015.x\\
                             & and 2016.05; 2016 for ELPA releases 2016.11, 2017.x and\\
-                            & 2018.05; default 2018 for ELPA releases 2018.11 and beyond)\\
+			    & 2018.05; 2018 for ELPA releases 2018.11 and beyond (2018)\\
 \texttt{--with-hdf5}&  (no $|$  yes $|$ \texttt{<path>}) \\
-	                    & Compile HDF5 support (default: no). If ``yes'', configure assumes a \\
+	                    & Compile HDF5 support (no). If ``yes'', configure assumes a \\
                             & valid v. $>=1.8.16$ HDF5 installation with h5cc and h5fc in the \\
                             &  default executable search path. If \texttt{<path>} is specified, it must be the  \\
                             & root folder of a standalone hdf5 installation. \\
 \texttt{--with-hdf5-libs}   & Specify the link options and libraries needed to link HDF5, if configure \\
                             &  fails to detect them. These options are usually composed by many \\
-                            & substrings and must be enclosed into quotes. (default: none specified)   \\
+                            & substrings and must be enclosed into quotes. \\
 \texttt{--with-hdf5-include}& Specify full path the HDF5 include folder containing module and \\
 &  headers files. Use it if configure fails to find the include folder. \\
-                             & (default: no)\\
-\texttt{--with-libxc}        & Enable support for the \libxc\ library (default:no) \\
+\texttt{--with-libxc}        & Enable support for the \libxc\ library (no) \\
 \texttt{--with-libxc-prefix} & directory where \libxc\ is installed \\
 \texttt{--with-libxc-include}& directory where \libxc\ Fortran headers reside\\
 \end{tabular}\\
