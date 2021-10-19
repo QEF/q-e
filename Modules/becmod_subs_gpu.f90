@@ -78,7 +78,9 @@ CONTAINS
     ELSE
         local_nbnd = size ( psi_d, 2)
     ENDIF
-
+#if defined (__DEBUG) 
+    write (*,*) 'calbec local_nbnd:', local_nbnd
+#endif  
     IF ( gamma_only ) THEN
        !
        IF( betapsi_d%comm == mp_get_comm_null() ) THEN
