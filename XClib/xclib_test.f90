@@ -480,6 +480,13 @@ PROGRAM xclib_test
     !
     xc_data="XC_DATA__________"
     !
+    ! ... overlaps between full dfts and shortnames
+    !
+    IF ( dft_init=='ALL_TERMS' ) THEN
+      IF ( TRIM(dft)=='BLYP' ) dft='+BLYP'
+      IF ( TRIM(dft)=='PZ'   ) dft='+PZ'
+    ENDIF 
+    !
     ! ... skipped cases (some need further checks)
     !
     IF ( TRIM(dft)=='xxxx' .OR. TRIM(dft)=='NONE' ) THEN
