@@ -153,8 +153,7 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
   !
   ! ... Allocate buffers 
   !
-  buf_size  = nbsize
-  ALLOCATE (sc_d(buf_size), sc2_d(buf_size, buf_size)) 
+  ALLOCATE (sc_d(nbsize), sc2_d(nbsize, nbnd - nbsize)) 
   !
   !
   ! ... Blocking loop
@@ -167,9 +166,7 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, 
      ibnd_end   = MIN( iblock * nbsize, nbnd )
      !
      IF ( owner_bgrp_id(iblock) == my_bgrp_id ) &
-     !
-     !
-     CALL gram_schmidt_diag( ibnd_start, ibnd_end )
+         CALL gram_schmidt_diag( ibnd_start, ibnd_end )
      !
      !
      ! ... Bcast diagonal block
@@ -324,22 +321,22 @@ CONTAINS
     INTEGER, INTENT(IN)  :: jbnd_start, jbnd_end
     !
     INTEGER                  :: ibnd_size
-    INTEGER                  :: jbnd_size
+    INTEGER                  :: jbnd_size 
     !
     ibnd_size = ibnd_end - ibnd_start + 1
-    jbnd_size = jbnd_end - jbnd_start + 1
+    jbnd_size = jbnd_end - jbnd_start + 1  
     !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
        CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
-                   spsi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), ibnd_size )
+                   spsi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
        !
     ELSE
        !
        CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
-                   psi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), ibnd_size )
+                   psi_d(1,jbnd_start), kdmx, ZERO, sc2_d(1,1), nbsize )
        !
     END IF
     !
@@ -348,15 +345,15 @@ CONTAINS
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
     CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi_d(1,ibnd_start), kdmx, &
-                sc2_d(1,1), ibnd_size, ONE, phi_d(1,jbnd_start), kdmx )
+                sc2_d(1,1), nbsize, ONE, phi_d(1,jbnd_start), kdmx )
     !
     IF ( eigen_ ) &
     CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi_d(1,ibnd_start), kdmx, &
-                sc2_d(1,1), ibnd_size, ONE, hphi_d(1,jbnd_start), kdmx )
+                sc2_d(1,1), nbsize, ONE, hphi_d(1,jbnd_start), kdmx )
     !
     IF ( uspp ) &
     CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi_d(1,ibnd_start), kdmx, &
-                sc2_d(1,1), ibnd_size, ONE, sphi_d(1,jbnd_start), kdmx )
+                sc2_d(1,1), nbsize, ONE, sphi_d(1,jbnd_start), kdmx )
     !
     RETURN
     !
