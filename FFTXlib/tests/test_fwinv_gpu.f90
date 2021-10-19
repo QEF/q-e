@@ -35,7 +35,7 @@ program test_fwinv_gpu
     !
     CALL test%init()
     !
-    test%tolerance64 = 1.d-12
+    test%tolerance64 = 1.d-10
     !
     CALL save_random_seed("test_fwinv_gpu", mp%me)
     !
@@ -457,9 +457,10 @@ program test_fwinv_gpu
     ENDIF
     aux = data_in_d
     ! Check
-    
-    IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(1)), aux(dfft%nlm(1)) )
-    IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(1)), aux(dfft%nl(1)) )
+    DO i=1,dfft%ngw
+      IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(i)), aux(dfft%nlm(i)) )
+      IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(i)), aux(dfft%nl(i)) )
+    ENDDO
     !
     ! Test 2
     !
