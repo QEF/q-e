@@ -21,8 +21,8 @@ SUBROUTINE c_bands_nscf_ph( )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer, open_buffer
   USE basis,                ONLY : starting_wfc
-  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
-  USE uspp,                 ONLY : vkb, nkb
+  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k, igk_k_d
+  USE uspp,                 ONLY : vkb, nkb, vkb_d, using_vkb, using_vkb_d 
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_lr,           ONLY : lgamma
@@ -84,11 +84,8 @@ SUBROUTINE c_bands_nscf_ph( )
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     IF ( use_gpu ) THEN
-        CALL g2_kin_gpu( ik )
-     ELSE
-        CALL g2_kin( ik )
-     END IF
+
+     CALL g2_kin( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
