@@ -172,7 +172,7 @@ program test_fwinv_gpu
     !
     REAL(DP) :: tx(3), ty(3), t(3)
     REAL(DP), ALLOCATABLE :: tt(:)
-    INTEGER :: ngm_save, n1, n2, n3, ngm_offset, ngm_max, ngm_local
+    INTEGER :: ngm_save, n1, n2, n3, ngm_max, ngm_local
     !
     REAL(DP), ALLOCATABLE :: g2sort_g(:)
     ! array containing only g vectors for the current processor
@@ -315,31 +315,7 @@ program test_fwinv_gpu
        CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
     END IF
     DEALLOCATE( g2sort_g, tt )
-
-    IF( .NOT. global_sort ) THEN
-       !
-       ! compute adeguate offsets in order to avoid overlap between
-       ! g vectors once they are gathered on a single (global) array
-       !
-       ngm_offset = 0
-#if defined (__MPI)
-       !mype = mp_rank( dfftp%comm )
-       !npe  = mp_size( dfftp%comm )
-       CALL MPI_COMM_RANK(dfftp%comm, mype, ierr)
-       CALL MPI_COMM_SIZE(dfftp%comm, npe, ierr)
-       ALLOCATE( ngmpe( npe ) )
-       ngmpe = 0
-       ngmpe( mype + 1 ) = ngm
-       !CALL mp_sum( ngmpe, dfftp%comm )
-       CALL MPI_ALLREDUCE( MPI_IN_PLACE, ngmpe, 1, MPI_INTEGER, MPI_SUM, dfftp%comm, ierr )
-       DO ng = 1, mype
-          ngm_offset = ngm_offset + ngmpe( ng )
-       END DO
-       DEALLOCATE( ngmpe )
-#endif
-       !
-    END IF
-
+    !
     ngm = 0
     !
     ngloop: DO ng = 1, ngm_max
