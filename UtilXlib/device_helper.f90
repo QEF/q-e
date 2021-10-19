@@ -49,6 +49,24 @@ SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC
 
 END SUBROUTINE MYDGEMM
 
+SUBROUTINE MYZGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#endif
+    CHARACTER*1, INTENT(IN) ::        TRANSA, TRANSB
+    INTEGER, INTENT(IN) ::            M, N, K, LDA, LDB, LDC
+    COMPLEX*16, INTENT(IN) ::   ALPHA, BETA
+    COMPLEX*16  :: A( LDA, * ), B( LDB, * ), C( LDC, * )
+#if defined(__CUDA)
+    attributes(device) :: A, B, C
+    CALL cublaszgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+    CALL zgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#endif
+
+END SUBROUTINE MYZGEMM
+
 ! In principle this can go away .......
 SUBROUTINE MYDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)

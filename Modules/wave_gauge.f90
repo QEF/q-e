@@ -25,6 +25,7 @@ MODULE wave_gauge
       integer, intent(in) :: nbnd, npw, npwx, gstart
       COMPLEX(DP), intent(inout) ::  dot_evc(:, :)
       complex(dp), intent(in) :: t_minus(:,:), t_zero(:,:), t_plus(:,:)
+      !$acc declare present(t_minus, t_zero, t_plus, dot_evc)
 
       dot_evc=(0.0_dp, 0.0_dp)
       call project_parallel_gauge(t_minus, t_zero, t_plus, dot_evc, nbnd, npw, npwx, gstart, 1.0_dp,&
@@ -40,6 +41,8 @@ MODULE wave_gauge
       COMPLEX(DP), intent(inout) ::   t_zero_proj(:,:)
       complex(dp), intent(in) :: t_minus(:, :),  t_zero(:,:)
       complex(dp), allocatable :: dummy(:,:)
+      !$acc declare device_resident(dummy)
+      !$acc declare present(t_minus, t_zero, t_zero_proj)
 
       t_zero_proj=0.0_dp
       call project_parallel_gauge(t_zero, t_minus, dummy, t_zero_proj,  nbnd, npw, npwx,&
@@ -80,8 +83,10 @@ MODULE wave_gauge
       complex(dp), intent(in) :: t_minus(:,:), t_zero(:,:), t_plus(:,:)
       real(dp), intent(in) :: factor
       logical, intent(in) :: use_t_plus, project_conduction
+      !$acc declare present(t_minus, t_zero, t_plus, dot_evc)
 
       real(DP), allocatable :: sa(:,:), ssa(:,:), sb(:,:), ssb(:,:)
+      !$acc declare device_resident(ssa, ssb)
       complex(dp) :: tmp
       integer :: ibnd, jbnd, ig
 
@@ -92,12 +97,19 @@ MODULE wave_gauge
 ! remove contribution at G=0 due to c(-g)*=c(g), and only half vector is stored
 ! (gamma trick)
 ! sa is the identity if 2 points are used (t_plus==t_zero)
-      if (use_t_plus) then
+      if (use_t_plus) &
          allocate(sa(nbnd, nbnd))
-         call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_plus, 2*npwx, t_zero, 2*npwx, 0.d0, sa, nbnd)
+      !$acc data create(sb, sa)
+      if (use_t_plus) then
+         !$acc host_data use_device(t_plus,t_zero, sa)
+         call mydgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_plus, 2*npwx, t_zero, 2*npwx, 0.d0, sa, nbnd)
+         !$acc end host_data
       end if
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_minus, 2*npwx, t_zero, 2*npwx, 0.d0, sb, nbnd)
+      !$acc host_data use_device(t_minus,t_zero, sb)
+      call mydgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_minus, 2*npwx, t_zero, 2*npwx, 0.d0, sb, nbnd)
+      !$acc end host_data
       if (gstart == 2) then
+         !$acc parallel loop collapse(2) present(sa,sb,t_plus,t_minus,t_zero)
          do ibnd = 1, nbnd
             do jbnd = 1, nbnd
                if (use_t_plus) &
@@ -106,9 +118,14 @@ MODULE wave_gauge
             end do
          end do
       end if
+      !$acc update self(sb)
       call mp_sum(sb, intra_pool_comm)
-      if (use_t_plus) &
+      !$acc update host(sb)
+      if (use_t_plus) then
+         !$acc update self(sa)
          call mp_sum(sa, intra_pool_comm)
+         !$acc update host(sa)
+      end if
 
       ! compute scalar products that appear due to the ( 1 - P ) projector over
       ! the empty bands, that are 
@@ -117,11 +134,16 @@ MODULE wave_gauge
          allocate(ssb(nbnd, nbnd))
          if (use_t_plus) then
              allocate(ssa(nbnd, nbnd))
-             call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
+             !$acc host_data use_device(sa,ssa)
+             call mydgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
+             !$acc end host_data
          end if
-         call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
+         !$acc host_data use_device(sb,ssb)
+         call mydgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
+         !$acc end host_data
       end if
       ! compute final projection
+      !$acc parallel loop collapse(3) present(t_minus,sb,t_plus,sa,t_zero,ssa,ssb,dot_evc) copyin(factor)
       do ibnd = 1, nbnd
          do jbnd = 1, nbnd
             do ig = 1, npw
@@ -140,6 +162,7 @@ MODULE wave_gauge
             end do
          end do
       end do
+      !$acc end data
       if (project_conduction) then
          deallocate(ssb)
          if (use_t_plus)&

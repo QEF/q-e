@@ -91,6 +91,7 @@
      logical :: ttsde, only_gradient
      INTEGER :: omp_get_num_threads
 
+     call start_clock('runcp_uspp')
 #if defined (__CUDA)
      IF( dffts%has_task_groups ) THEN
         CALL errore(' runcp_uspp ', ' task groups not implemented on GPU ',1)
@@ -324,8 +325,8 @@
                        cm_bgrp(1,i+idx  ) = CMPLX(real(cm_bgrp(1,i+idx  )),0.0d0,kind=dp)
                     END IF
                  ELSE
-                    cm_bgrp(:, i+idx-1) = c2(:)
-                    cm_bgrp(:, i+idx) = c3(:)
+                    cm_bgrp(:, i+idx-1) = c2((idx_in-1)*ngw+1:idx_in*ngw)
+                    cm_bgrp(:, i+idx) = c3((idx_in-1)*ngw+1:idx_in*ngw)
                     IF ( gstart == 2 ) THEN
                        cm_bgrp(1, i+idx-1) = CMPLX(dble(cm_bgrp(1, i+idx-1)), 0.0d0, kind=dp) 
                        cm_bgrp(1, i+idx) = CMPLX(dble(cm_bgrp(1, i+idx)), 0.0d0, kind=dp) 
@@ -353,6 +354,7 @@
 #if defined (__CUDA)
      DEALLOCATE( rhos_d )
 #endif
+     call stop_clock('runcp_uspp')
 !
    END SUBROUTINE runcp_uspp_x
 

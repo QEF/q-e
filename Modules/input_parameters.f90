@@ -274,7 +274,11 @@ MODULE input_parameters
         !! \(\text{large}\): QE tries to use (when implemented) algorithms using more memory
         !! to enhance performance.
         DATA memory_allowed / 'small', 'default', 'large' /
-          
+
+        LOGICAL :: debug_checkpoints = .false. !debug flag: saves/reads/compare arrays where the routine is called
+        LOGICAL :: debug_checkpoint_testing = .false. ! if false write files; if true test if the written file is the same of the array in the
+                                     ! memory, and print the difference
+        CHARACTER(len=80) :: debug_checkpoint_file_prefix = 'debug_checkpoint.'       
 
         !
         CHARACTER(len=256) :: input_xml_schema_file = ' '
@@ -287,7 +291,8 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, use_wannier, lecrpa,                  &
           lfcp, tqmmm, vdw_table_name, lorbm, memory, point_label_type,   &
-          input_xml_schema_file, gate
+          input_xml_schema_file, gate, debug_checkpoints,                 &
+          debug_checkpoint_testing, debug_checkpoint_file_prefix
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters

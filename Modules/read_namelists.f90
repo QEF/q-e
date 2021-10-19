@@ -135,6 +135,10 @@ MODULE read_namelists_module
        !
        CALL get_environment_variable( 'QEXML', input_xml_schema_file )
        !
+       debug_checkpoints = .false.
+       debug_checkpoint_testing = .false.
+       debug_checkpoint_file_prefix = 'debug_checkpoint.'
+
        RETURN
        !
      END SUBROUTINE
@@ -795,6 +799,9 @@ MODULE read_namelists_module
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
        CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
+       CALL mp_bcast( debug_checkpoints, ionode_id, intra_image_comm )
+       CALL mp_bcast( debug_checkpoint_testing, ionode_id, intra_image_comm )   
+       CALL mp_bcast( debug_checkpoint_file_prefix, ionode_id, intra_image_comm )   
        !
        RETURN
        !
