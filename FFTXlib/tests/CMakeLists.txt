@@ -1,4 +1,4 @@
-set(test_common_src tester.f90 utils.f90)
+set(test_common_src tester.f90 utils.f90 sort.f90)
 qe_add_library(qe_fftx_test_common ${test_common_src})
 target_link_libraries(qe_fftx_test_common PRIVATE qe_mpi_fortran)
 
