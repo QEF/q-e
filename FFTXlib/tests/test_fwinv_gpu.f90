@@ -103,14 +103,18 @@ program test_fwinv_gpu
     REAL(DP), PARAMETER :: pi=4.D0*DATAN(1.D0)
     !
     at = RESHAPE((/10.d0, 0.d0, 0.d0, 0.d0, 10.d0, 0.d0, 0.d0, 0.d0, 10.d0/), shape(at))
-    
+    !
     alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
     !
+    ! Lattice must be defined in units of alat
     at(:,:) = at(:,:) / alat
     !
     tpiba = 2.0d0*pi/alat
     !
     CALL recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
+    !
+    ! In a FFT of flavor='wave' the dual, here set to 4.0d0, will multiply gcut to obtain
+    ! the cutoff for hosting "charges" i.e. wfc**2.
     !
     CALL fft_type_init(dfft, smap, flavor, gamma_only, parallel, comm, at, bg, gcut, 4.0d0, &
     & nyfft=nyfft, nmany=1)
@@ -129,15 +133,14 @@ program test_fwinv_gpu
     ngm_g = ngm
 #endif
     
-    ! Generate G vectors
+    ! Generate G vectors and map global g vectors to local FFT points.
     CALL ggen(dfft, gamma_only, at, bg, 4.d0*gcut, ngm_g, ngm, g, .false.)
     !
     DEALLOCATE(g)
     !
   END SUBROUTINE fft_desc_init
   !
-  SUBROUTINE ggen ( dfftp, gamma_only, at, bg,  gcutm, ngm_g, ngm, &
-       g, no_global_sort )
+  SUBROUTINE ggen ( dfftp, gamma_only, at, bg,  gcutm, ngm_g, ngm, g, no_global_sort )
     !----------------------------------------------------------------------
     !
     !     This routine generates all the reciprocal lattice vectors
@@ -394,6 +397,20 @@ program test_fwinv_gpu
     DEALLOCATE(rnd_aux)
   END SUBROUTINE fill_random
   !
+  SUBROUTINE fill_random_cpu(c, n)
+    USE fft_param, ONLY : DP
+    implicit none
+    complex(DP)         :: c(:)
+    integer, intent(in) :: n
+    !
+    real(DP), ALLOCATABLE :: rnd_aux(:)
+    !
+    ALLOCATE (rnd_aux(2*n))
+    CALL RANDOM_NUMBER(rnd_aux)
+    c(1:n) = CMPLX(rnd_aux(1:n), rnd_aux(n+1:2*n))
+    DEALLOCATE(rnd_aux)
+  END SUBROUTINE fill_random_cpu
+  !
   SUBROUTINE test_fwfft_gpu_1(mp, test, gamma_only, ny)
     USE fft_param,       ONLY : DP
     USE fft_types,       ONLY : fft_type_descriptor
@@ -480,7 +497,7 @@ program test_fwinv_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
-    integer :: i, j, ii
+    integer :: i
     !
 
     ! task groups not implemented in 2D decomposition. Need to check the other case
@@ -505,7 +522,18 @@ program test_fwinv_gpu
       ! Allocate variables
       ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
       ALLOCATE(data_in_d(dfft%nnr))
-      CALL fill_random(data_in, data_in_d, dfft%nnr)
+      
+      ! Prepare input data, only vectors of wavefunctions
+      data_in = (0.d0, 0.d0)
+      CALL fill_random_cpu(aux, dfft%ngw)
+      DO i=1, dfft%ngw
+        IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
+        IF (.not. gamma_only) data_in(dfft%nl(i)) = aux(i)
+      ENDDO
+      ! copy to gpu and cleanup aux
+      data_in_d = data_in
+      aux = (0.d0, 0.d0)
+      !
       CALL invfft( 'Wave' , data_in, dfft, 1 )
       CALL invfft( 'Wave' , data_in_d, dfft, 1 )   
     ENDIF
@@ -518,7 +546,16 @@ program test_fwinv_gpu
     DEALLOCATE(data_in, data_in_d, aux)
     ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
     ALLOCATE(data_in_d(dfft%nnr))
-    CALL fill_random(data_in, data_in_d, dfft%nnr)
+    ! Prepare input data
+    data_in = (0.d0, 0.d0)
+    CALL fill_random_cpu(aux, dfft%ngm)
+    DO i=1, dfft%ngm
+      IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
+      IF (.not. gamma_only) data_in(dfft%nl(i)) = aux(i)
+    ENDDO
+    ! copy to gpu and cleanup aux
+    data_in_d = data_in
+    aux = (0.d0, 0.d0)
     !
     CALL invfft( 'Rho' , data_in, dfft, 1 )
     CALL invfft( 'Rho' , data_in_d, dfft, 1 )
@@ -642,9 +679,22 @@ program test_fwinv_gpu
       ! Allocate variables
       ALLOCATE(data_in(howmany*dfft%nnr), aux(howmany*dfft%nnr))
       ALLOCATE(data_in_d(howmany*dfft%nnr))
-      CALL fill_random(data_in, data_in_d, howmany*dfft%nnr)
       !
-      !CALL invfft( 'Wave' , data_in, dfft, 1 )
+      data_in = (0.d0, 0.d0)
+      CALL fill_random_cpu(aux, dfft%ngw)
+      DO i=1, dfft%ngw
+        IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
+        IF (.not. gamma_only) data_in(dfft%nl(i)) = aux(i)
+      ENDDO
+      ! copy data to simulate multiple bands
+      DO i=0,howmany-1
+        start = i*dfft%nnr
+        data_in(start+1:start+dfft%nnr) = data_in(1:dfft%nnr)
+      ENDDO
+      ! copy to gpu and cleanup aux
+      data_in_d = data_in
+      aux = (0.d0, 0.d0)
+      !
       CALL invfft( 'Wave' , data_in_d, dfft, howmany=howmany ) !, stream=strm )
       DO i=0,howmany-1
         start = i*dfft%nnr
@@ -660,7 +710,21 @@ program test_fwinv_gpu
     DEALLOCATE(data_in, data_in_d, aux)
     ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr))
     ALLOCATE(data_in_d(dfft%nnr*howmany))
-    CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
+    data_in = (0.d0, 0.d0)
+    CALL fill_random_cpu(aux, dfft%ngm)
+    DO i=1, dfft%ngm
+      IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
+      IF (.not. gamma_only) data_in(dfft%nl(i)) = aux(i)
+    ENDDO
+    ! copy data to simulate multiple bands
+    DO i=0,howmany-1
+        start = i*dfft%nnr
+        data_in(start+1:start+dfft%nnr) = data_in(1:dfft%nnr)
+    ENDDO
+    ! copy to gpu and cleanup aux
+    data_in_d = data_in
+    aux = (0.d0, 0.d0)
+
     !
     CALL invfft( 'Rho' , data_in_d, dfft, howmany )
     !
