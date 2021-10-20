@@ -199,7 +199,7 @@ program test_fwinv_gpu
     !
     REAL(DP) :: tx(3), ty(3), t(3)
     REAL(DP), ALLOCATABLE :: tt(:)
-    INTEGER :: ngm_save, n1, n2, n3, ngm_max, ngm_local
+    INTEGER :: ngm_save, ngm_max, ngm_local
     !
     REAL(DP), ALLOCATABLE :: g2sort_g(:)
     ! array containing only g vectors for the current processor
@@ -209,11 +209,9 @@ program test_fwinv_gpu
     ! only g-vectors for the current processor are stored
     INTEGER, ALLOCATABLE :: igsrt(:), g2l(:)
     !
-    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw, ierr
+    INTEGER :: ni, nj, nk, i, j, k, ng
     INTEGER :: istart, jstart, kstart
-    INTEGER :: mype, npe
     LOGICAL :: global_sort, is_local
-    INTEGER, ALLOCATABLE :: ngmpe(:)
     !
     ! The 'no_global_sort' is not optional in this case.
     ! This differs from the version present in QE distribution.
@@ -395,7 +393,7 @@ program test_fwinv_gpu
     !
     ALLOCATE (rnd_aux(2*n))
     CALL RANDOM_NUMBER(rnd_aux)
-    c(1:n) = CMPLX(rnd_aux(1:n), rnd_aux(n+1:2*n))
+    c(1:n) = CMPLX(rnd_aux(1:n), rnd_aux(n+1:2*n), kind=DP)
     c_d = c
     DEALLOCATE(rnd_aux)
   END SUBROUTINE fill_random
@@ -410,7 +408,7 @@ program test_fwinv_gpu
     !
     ALLOCATE (rnd_aux(2*n))
     CALL RANDOM_NUMBER(rnd_aux)
-    c(1:n) = CMPLX(rnd_aux(1:n), rnd_aux(n+1:2*n))
+    c(1:n) = CMPLX(rnd_aux(1:n), rnd_aux(n+1:2*n), kind=DP)
     DEALLOCATE(rnd_aux)
   END SUBROUTINE fill_random_cpu
   !
@@ -431,7 +429,7 @@ program test_fwinv_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
-    INTEGER :: i, ii, j
+    INTEGER :: i
     !
     ! task groups not implemented in 2D decomposition. Need to check the other case
     IF ( ny .gt. 1 ) return
@@ -606,7 +604,7 @@ program test_fwinv_gpu
     COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
     integer, parameter :: howmany=4
-    INTEGER :: i, j, ii, start
+    INTEGER :: i, ii, start
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
@@ -633,9 +631,11 @@ program test_fwinv_gpu
         start = i*dfft%nnr
         CALL fwfft( 'Wave' , data_in(1+start:), dfft, 1 )
         aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
-        ! Check only gamma
-        IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(1)+start), aux(dfft%nlm(1)) )
-        IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(1)+start), aux(dfft%nl(1)) )
+        ! Check, only the values relevant for a wavefunction FFT are considered
+        DO ii=1,dfft%ngw
+            IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)+start), aux(dfft%nlm(ii)) )
+            IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)+start), aux(dfft%nl(ii)) )
+        ENDDO
         !
       END DO
       !
@@ -651,11 +651,17 @@ program test_fwinv_gpu
     !
     CALL fwfft( 'Rho' , data_in_d, dfft,  howmany)
     DO i=0,howmany-1
+      !
       start = i*dfft%nnr
       CALL fwfft( 'Rho' , data_in(1+start:), dfft, 1 )
       aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
-      ! Check
-      CALL test%assert_close( data_in(start+1:start+dfft%ngm), aux(1:dfft%ngm) )
+      !
+      ! Same check as above
+      DO ii=1,dfft%ngm
+        IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)), aux(dfft%nlm(ii)) )
+        IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)), aux(dfft%nl(ii)) )
+      ENDDO
+      !
     END DO
     !
     CALL fft_desc_finalize(dfft, smap)
@@ -681,7 +687,7 @@ program test_fwinv_gpu
     COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
     COMPLEX(DP), ALLOCATABLE DEVATTR :: data_in_d(:)
     integer, parameter :: howmany=4
-    integer :: start, i, ii, j
+    integer :: start, i
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
