@@ -441,12 +441,12 @@ CONTAINS
                          &usable in QE has been found', 1 )
     !
     ! LDA:
-    IF (iexch/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
+    IF (iexch/=0 .AND. is_libxc(2).AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION &
                            &functional has been found together with an exchange&
                            & one (LDA)' )
     ! GGA:
-    IF (igcx/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
+    IF (igcx/=0 .AND. is_libxc(4).AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION &
                            &functional has been found together with an exchange&
                            & one (GGA)' )
@@ -461,7 +461,7 @@ CONTAINS
        CALL xclib_error( 'matching_libxc', 'Two conflicting metaGGA functionals &
                          &have been found', 2 )
     !
-    IF (imeta/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
+    IF (imeta/=0 .AND. is_libxc(6).AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION f&
                            &unctional has been found together with an exchange o&
                            &ne (mGGA)' )
