@@ -31,10 +31,13 @@ program test_fwinv_gpu
 #endif
 #endif
     !
+    ! Prepare MPI and communicators
     CALL mpi_data_init(mp%me, mp%n, mp%root, mp%comm)
     !
     CALL test%init()
     !
+    ! A rather large threshold is necessary to match the results of all
+    ! possible implementations.
     test%tolerance64 = 1.d-10
     !
     CALL save_random_seed("test_fwinv_gpu", mp%me)
@@ -54,7 +57,8 @@ program test_fwinv_gpu
     END DO
     !
 #if defined(__CUDA)
-    ! the batched FFT is only implemented for GPU
+    ! the batched FFT is only implemented for GPU,
+    ! will segault if called on non-implemented version.
     CALL test_fwfft_many_gpu_1(mp, test, .true., 1)
     CALL test_fwfft_many_gpu_1(mp, test, .false., 1)
     !
@@ -100,8 +104,10 @@ program test_fwinv_gpu
     REAL(DP), ALLOCATABLE :: g(:, :)
     !
     REAL(DP), PARAMETER :: gcut = 80.d0
+    REAL(DP), PARAMETER :: dual = 4.d0
     REAL(DP), PARAMETER :: pi=4.D0*DATAN(1.D0)
     !
+    ! Define a direct lattice
     at = RESHAPE((/10.d0, 0.d0, 0.d0, 0.d0, 10.d0, 0.d0, 0.d0, 0.d0, 10.d0/), shape(at))
     !
     alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
@@ -111,21 +117,42 @@ program test_fwinv_gpu
     !
     tpiba = 2.0d0*pi/alat
     !
+    ! And the related recuprocal space
     CALL recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
     !
     ! In a FFT of flavor='wave' the dual, here set to 4.0d0, will multiply gcut to obtain
     ! the cutoff for hosting "charges" i.e. wfc**2.
     !
-    CALL fft_type_init(dfft, smap, flavor, gamma_only, parallel, comm, at, bg, gcut, 4.0d0, &
+    ! Inputs are:
+    ! dfft       -> the fft type containing all details about the distributed grid
+    ! smap       -> the map of the sticks used to distribute the data in rec. space
+    ! flavor     -> can be be 'wave' or 'rho'
+    ! gamma_only -> setup the complex FFT to perform two real FFTs at a time
+    ! parallel   -> true if more than 1 process will take part in the FFT, false otherwise
+    ! comm       -> the mpi communicator to be used for messages among the processes performing the FFTs,
+    !                basically alltoall communications to perform (partial) transposition of the data
+    ! at         -> the real space lattice, needs to be define in units of alat
+    ! bg         -> the reciprocal lattice
+    ! gcut       -> the cutoff for the plane wave expansion for flavor='wave'
+    ! dual       -> the dimension of the sphere of g vectors (generally meant
+    !                to be large enough to host products of wavefunctions)
+    ! nyfft      -> data are decomposed along Z in real space when parallel=.true.,
+    !                along X in real space when parallel=.false., and as sticks in reciprocal
+    !                space. nyfft describes a second level of division along another dimension in real space
+    !                or, when enabled, as portions of multiple bands. ???
+    ! nmany      -> maximum number of bands to be transformed simultaneously ???
+    !
+    CALL fft_type_init(dfft, smap, flavor, gamma_only, parallel, comm, at, bg, gcut, dual, &
     & nyfft=nyfft, nmany=1)
+    !
+    ! Create a map between g vectors and distributed grid point in the fft.
+    ! We will not he gvectors, but the map, stored in dfft$nl and dfft%nlm (nl minus, for gamma case)
+    ! will be used to check only physically relevant numbers.
     !
     ALLOCATE (g(3, dfft%ngm))
     !
     ! Largest g vector size
     ngm = dfft%ngm
-    !
-    ! WHY NO DIVIDE BY TWO?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!
-    !IF (gamma_only) ngm = (ngm + 1)/2
     !
 #if defined(__MPI)
     CALL MPI_ALLREDUCE(ngm, ngm_g, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
@@ -416,7 +443,7 @@ program test_fwinv_gpu
     ! Test 1
     !
     IF ( ny .gt. 1 ) THEN
-      ! Allocate variables
+      ! Allocate variables and fill realspace data with random numbers
       ALLOCATE(data_in(dfft%nnr_tg), aux(dfft%nnr_tg))
       ALLOCATE(data_in_d(dfft%nnr_tg))
       CALL fill_random(data_in, data_in_d, dfft%nnr_tg)
@@ -424,6 +451,7 @@ program test_fwinv_gpu
       CALL fwfft( 'tgWave' , data_in, dfft, 1 )
       CALL fwfft( 'tgWave' , data_in_d, dfft, 1 )
     ELSE
+      ! Allocate variables and fill realspace data with random numbers
       ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
       ALLOCATE(data_in_d(dfft%nnr))
       CALL fill_random(data_in, data_in_d, dfft%nnr) 
@@ -431,16 +459,22 @@ program test_fwinv_gpu
       CALL fwfft( 'Wave' , data_in, dfft, 1 )
       CALL fwfft( 'Wave' , data_in_d, dfft, 1 )    
     ENDIF
+    ! data from GPU is moved to an auxiliary array to compare the results of the GPU
+    ! and the CPU implementation on the host
     aux = data_in_d
-    ! Check
+    !
+    ! Check, only the values relevant for a wavefunction FFT are considered
     DO i=1,dfft%ngw
       IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(i)), aux(dfft%nlm(i)) )
       IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(i)), aux(dfft%nl(i)) )
     ENDDO
     !
+    DEALLOCATE(data_in, data_in_d, aux)
+    !
+    !
     ! Test 2
     !
-    DEALLOCATE(data_in, data_in_d, aux)
+    ! Same as above
     ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
     ALLOCATE(data_in_d(dfft%nnr))
     CALL fill_random(data_in, data_in_d, dfft%nnr)
@@ -448,8 +482,13 @@ program test_fwinv_gpu
     CALL fwfft( 'Rho' , data_in, dfft, 1 )
     CALL fwfft( 'Rho' , data_in_d, dfft, 1 )
     aux = data_in_d
-    ! Check
-    CALL test%assert_close( data_in(1:dfft%ngm), aux(1:dfft%ngm) )
+    !
+    ! Check, only the values relevant for a product of wavefunctions are considered
+    !
+    DO i=1,dfft%ngm
+      IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(i)), aux(dfft%nlm(i)) )
+      IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(i)), aux(dfft%nl(i)) )
+    ENDDO
     !
     CALL fft_desc_finalize(dfft, smap)
     DEALLOCATE(data_in, data_in_d, aux)
@@ -490,16 +529,19 @@ program test_fwinv_gpu
       ! Allocate variables
       ALLOCATE(data_in(dfft%nnr_tg), aux(dfft%nnr_tg))
       ALLOCATE(data_in_d(dfft%nnr_tg))
+      !
+      ! Data here is not correctly filled, but this test is disabled.
+      ! This is left as TODO!!!
+      !
       CALL fill_random(data_in, data_in_d, dfft%nnr_tg)
       !
       CALL invfft( 'tgWave' , data_in, dfft, 1 )
       CALL invfft( 'tgWave' , data_in_d, dfft, 1 )
     ELSE
       !
-      ! Allocate variables
       ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
       ALLOCATE(data_in_d(dfft%nnr))
-      
+      !
       ! Prepare input data, only vectors of wavefunctions
       data_in = (0.d0, 0.d0)
       CALL fill_random_cpu(aux, dfft%ngw)
@@ -591,8 +633,7 @@ program test_fwinv_gpu
         start = i*dfft%nnr
         CALL fwfft( 'Wave' , data_in(1+start:), dfft, 1 )
         aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
-        ! Check
-        !CALL test%assert_close( data_in(start+1:start+dfft%ngw), aux(start+1:start+dfft%ngw) )
+        ! Check only gamma
         IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(1)+start), aux(dfft%nlm(1)) )
         IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(1)+start), aux(dfft%nl(1)) )
         !
@@ -689,6 +730,10 @@ program test_fwinv_gpu
     ALLOCATE(data_in_d(dfft%nnr*howmany))
     data_in = (0.d0, 0.d0)
     CALL fill_random_cpu(aux, dfft%ngm)
+    !
+    ! Prepare vectors assuming that a product of wfcs in reciprocal space
+    ! is stored in data_in
+    !
     DO i=1, dfft%ngm
       IF (gamma_only)       data_in(dfft%nlm(i)) = aux(i)
       IF (.not. gamma_only) data_in(dfft%nl(i)) = aux(i)
@@ -698,7 +743,7 @@ program test_fwinv_gpu
         start = i*dfft%nnr
         data_in(start+1:start+dfft%nnr) = data_in(1:dfft%nnr)
     ENDDO
-    ! copy to gpu and cleanup aux
+    ! copy to gpu input data and cleanup aux
     data_in_d = data_in
     aux = (0.d0, 0.d0)
 
