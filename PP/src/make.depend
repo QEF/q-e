@@ -33,6 +33,17 @@ add_shift_us.o : ../../PW/src/pwcom.o
 add_shift_us.o : ../../PW/src/symme.o
 add_shift_us.o : ../../UtilXlib/mp.o
 add_shift_us.o : ../../upflib/uspp.o
+adduscore.o : ../../Modules/cell_base.o
+adduscore.o : ../../Modules/constants.o
+adduscore.o : ../../Modules/fft_base.o
+adduscore.o : ../../Modules/io_global.o
+adduscore.o : ../../Modules/ions_base.o
+adduscore.o : ../../Modules/kind.o
+adduscore.o : ../../Modules/mp_global.o
+adduscore.o : ../../PW/src/pwcom.o
+adduscore.o : ../../PW/src/scf_mod.o
+adduscore.o : ../../upflib/splinelib.o
+adduscore.o : ../../upflib/uspp.o
 addusdens1d.o : ../../FFTXlib/fft_scalar.o
 addusdens1d.o : ../../Modules/cell_base.o
 addusdens1d.o : ../../Modules/fft_base.o
