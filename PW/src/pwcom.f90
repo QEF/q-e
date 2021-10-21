@@ -17,6 +17,10 @@ MODULE klist
   !
   SAVE
   !
+  !FIXME !TODO variables as igk_k, mill, g and others persist in the device memory 
+  for the whole duration of the run, their allocation in the device should be 
+  ! done using !$acc declare create () instead of using !$acc enter/exit data create/delete().
+  ! 
   CHARACTER (LEN=32) :: smearing 
   !! smearing type
   REAL(DP) :: xk(3,npk)

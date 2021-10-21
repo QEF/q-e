@@ -155,6 +155,7 @@ SUBROUTINE force_hub_gpu( forceh )
       CALL using_evc_d(0)
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+      !FIXME check if this update is actually needed and in case comment indicating why. 
       !$acc update self(vkb)
       !
       ! Compute spsi = S * psi

@@ -143,7 +143,8 @@ MODULE uspp
   LOGICAL :: &
        okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
        nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
-  !
+  ! 
+  !FIXME use !$acc declare create(vkb) to create and delete it automatically in the device
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        vkb(:,:)                ! all beta functions in reciprocal space
   REAL(DP), ALLOCATABLE :: &
@@ -479,6 +480,7 @@ CONTAINS
     IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
     IF( ALLOCATED( ofsbeta ) ) DEALLOCATE( ofsbeta )
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
+!FIXME in order to be created and deleted automatically by using !$acc declare create(vkb) in 
     IF( ALLOCATED( vkb ) ) THEN
 !$acc exit data delete(vkb ) 
         DEALLOCATE( vkb )

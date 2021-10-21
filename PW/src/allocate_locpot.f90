@@ -30,6 +30,7 @@ SUBROUTINE allocate_locpot
   ALLOCATE( vloc( ngl, ntyp) )
   ALLOCATE( strf( ngm, ntyp) )
   !
+  !FIXME these are persistent device data use !$acc declare create() for eigts[123]  
   ALLOCATE( eigts1(-dfftp%nr1:dfftp%nr1,nat) )
   ALLOCATE( eigts2(-dfftp%nr2:dfftp%nr2,nat) )
   ALLOCATE( eigts3(-dfftp%nr3:dfftp%nr3,nat) )
