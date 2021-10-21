@@ -129,6 +129,7 @@ CONTAINS
     ! Optical case: generalized k-point case
     !
     USE becmod,              ONLY : becp,calbec
+    USE uspp_init,           ONLY : init_us_2
     !
     IMPLICIT NONE
     REAL(kind=dp) :: prod
@@ -167,6 +168,7 @@ CONTAINS
     use becmod,              only : becp, calbec
     use qpoint,              only : ikks, ikqs
     use control_lr,          only : nbnd_occ
+    USE uspp_init,           ONLY : init_us_2
     !
     IMPLICIT NONE
     !

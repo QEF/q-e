@@ -313,7 +313,9 @@ target_link_libraries(qe_pw
         qe_mpi_fortran
         qe_xclib
         qe_devxlib
-        qe_mbd)
+        qe_mbd
+    PUBLIC
+        qe_openacc_fortran)
 
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw

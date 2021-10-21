@@ -34,6 +34,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE mp_bands,   ONLY: intra_bgrp_comm
   USE mp,         ONLY: mp_sum
   USE control_lr, ONLY : nbnd_occ
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

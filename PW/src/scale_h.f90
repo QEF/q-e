@@ -74,6 +74,8 @@ SUBROUTINE scale_h
   g_d  = g
   gg_d = gg
 #endif
+  !$acc update device(g)
+  !
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
   IF (nqxq < INT(SQRT(gg_max)*tpiba/dq)+4) THEN

@@ -39,6 +39,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE scf,                  ONLY : vrs
  
   USE io_global,             ONLY : stdout
+  USE uspp_init,             ONLY : init_us_2
 
   IMPLICIT NONE
   !

@@ -70,6 +70,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
    USE uspp,                  ONLY : vkb
    USE uspp_param,            ONLY : nhm
+   USE uspp_init,             ONLY : init_us_2
    USE ldaU,                  ONLY : lda_plus_u
    USE units_lr,              ONLY : iuwfc, lrwfc, lrdwf, iudwf
    USE control_lr,            ONLY : nbnd_occ, lgamma

@@ -32,6 +32,7 @@ SUBROUTINE hp_init_q()
   USE control_lr,           ONLY : lgamma
   USE units_lr,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

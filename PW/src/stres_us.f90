@@ -20,7 +20,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc, using_vkb
+  USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
   USE wavefunctions,        ONLY : evc
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
@@ -33,6 +33,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -54,12 +55,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
-  IF ( nks > 1 ) CALL using_vkb(1)
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
   
-  CALL using_vkb(0); CALL using_becp_auto(2)
+  CALL using_becp_auto(2)
   CALL calbec( npw, vkb, evc, becp )
   !
   ALLOCATE( qm1( npwx ) )

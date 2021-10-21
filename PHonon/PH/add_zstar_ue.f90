@@ -27,6 +27,7 @@ subroutine add_zstar_ue (imode0, npe)
   USE efield_mod, ONLY: zstarue0_rec
   USE units_lr,   ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE control_lr, ONLY : nbnd_occ
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

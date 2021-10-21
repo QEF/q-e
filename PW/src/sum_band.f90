@@ -29,7 +29,7 @@ SUBROUTINE sum_band()
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
-                                   using_vkb, becsum_d, ebecsum_d
+                                   becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
@@ -275,6 +275,7 @@ SUBROUTINE sum_band()
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
                           tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
+       USE uspp_init,     ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -324,8 +325,6 @@ SUBROUTINE sum_band()
           CALL stop_clock( 'sum_band:buffer' )
           !
           CALL start_clock( 'sum_band:init_us_2' )
-          !
-          IF ( nkb > 0 ) CALL using_vkb(1)
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
@@ -525,6 +524,7 @@ SUBROUTINE sum_band()
        USE mp,           ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
                           tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
+       USE uspp_init,    ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -592,10 +592,8 @@ SUBROUTINE sum_band()
           !
           CALL start_clock( 'sum_band:init_us_2' )
           !
-          IF ( nkb > 0 ) CALL using_vkb(1)
-
-          IF ( nkb > 0 ) &
-             CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+          !
           CALL stop_clock( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
@@ -923,8 +921,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE becmod,             ONLY : becp, calbec, allocate_bec_type
   USE control_flags,      ONLY : gamma_only, tqr
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
-  USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta, &
-                                 using_vkb
+  USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
   USE klist,              ONLY : ngk
@@ -963,7 +960,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(0)
-  CALL using_vkb(0)
   CALL using_becp_auto(2)
   !
   CALL start_clock( 'sum_band:calbec' )

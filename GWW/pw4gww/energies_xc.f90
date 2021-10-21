@@ -217,7 +217,8 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin, v_states )
        USE cell_base,            ONLY : tpiba2
        USE io_global, ONLY : ionode
        USE io_files, ONLY :prefix,tmp_dir
-     USE exx, ONLY : exxalfa
+       USE exx, ONLY : exxalfa
+       USE uspp_init,        ONLY : init_us_2
 
        implicit none
 

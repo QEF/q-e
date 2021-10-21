@@ -36,6 +36,7 @@ subroutine zstar_eu
   USE ldaU,             ONLY : lda_plus_u
   USE lrus,             ONLY : becp1
   USE phus,             ONLY : alphap
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

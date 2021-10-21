@@ -39,10 +39,10 @@ SUBROUTINE force_hub_gpu( forceh )
    USE mp,                   ONLY : mp_sum
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
                                     deallocate_bec_type
-   USE uspp,                 ONLY : nkb, vkb, vkb_d, ofsbeta, using_vkb_d
+   USE uspp,                 ONLY : nkb, vkb, ofsbeta
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
-   USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
@@ -54,6 +54,7 @@ SUBROUTINE force_hub_gpu( forceh )
                                     allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE device_memcpy_m,      ONLY : dev_memcpy, dev_memset
    USE device_fbuff_m,       ONLY : dev_buf
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -153,13 +154,20 @@ SUBROUTINE force_hub_gpu( forceh )
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       CALL using_evc_d(0)
       !
-      CALL using_vkb_d(2)
-      CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+      !FIXME check if this update is actually needed and in case comment indicating why. 
+      !$acc update self(vkb)
+      !
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL using_becp_auto(2) ; CALL using_becp_d_auto(2)
-      CALL using_vkb_d(0)
-      CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
+      !
+      !$acc data present(vkb(:,:))
+      !$acc host_data use_device(vkb)
+      CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+      !$acc end host_data
+      !$acc end data
+      !
       CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi_d )
       CALL deallocate_bec_type (becp) 
       CALL using_becp_auto(2); CALL using_becp_d_auto(2)
@@ -1126,7 +1134,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
                                     offsetU_back1, ldim_u, backall, lda_plus_u_kind, &
                                     U_projection, oatwfc
    USE wvfct,                ONLY : nbnd, npwx, wg
-   USE uspp,                 ONLY : okvan, nkb, vkb_d, qq_at_d
+   USE uspp,                 ONLY : okvan, nkb, qq_at_d
    USE uspp_param,           ONLY : nh
    USE becmod_subs_gpum,     ONLY : calbec_gpu
    USE mp_bands,             ONLY : intra_bgrp_comm
@@ -1522,7 +1530,7 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, okvan, vkb_d, qq_at_d, using_vkb_d
+   USE uspp,                 ONLY : nkb, okvan, vkb, qq_at_d
    USE uspp_param,           ONLY : nh
    USE klist,                ONLY : igk_k_d, ngk
    USE becmod_subs_gpum,     ONLY : calbec_gpu
@@ -1590,17 +1598,18 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    !aux(:,:) = (0.0d0, 0.0d0) ! done below
    !
    !
-   CALL using_vkb_d(0)
    ! Beta function
 !!omp parallel do default(shared) private(ig,ih)
-!$cuf kernel do(2)
+!$acc parallel loop collapse(2) present(vkb(:,:))
    DO ih = 1, nh_nt
-      DO ig = 1, npwx
-         IF (ig <= npw) THEN
-            aux(ig,ih) = vkb_d(ig,ijkb0+ih)
-         ELSE
-            aux(ig,ih) = (0.0d0, 0.0d0)
-         ENDIF
+      DO ig = 1, npw
+         aux(ig,ih) = vkb(ig,ijkb0+ih)
+      ENDDO
+   ENDDO
+!$acc parallel loop collapse(2) 
+   DO ih = 1, nh_nt
+      DO ig = npw+1, npwx
+         aux(ig,ih) = (0.0d0, 0.0d0)
       ENDDO
    ENDDO
 !!omp end parallel do
@@ -1694,7 +1703,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
                                     offsetU_back, offsetU_back1, ldim_u, backall, &
                                     U_projection 
    USE wvfct,                ONLY : nbnd, npwx,  wg
-   USE uspp,                 ONLY : nkb, vkb_d, qq_at_d, using_vkb_d
+   USE uspp,                 ONLY : nkb, vkb, qq_at_d
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod_gpum,          ONLY : bec_type_d, becp_d
@@ -1858,15 +1867,12 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL dev_buf%lock_buffer(dbeta_d,    [npwx,nh(nt)]  , ierr)  ! ALLOCATE( dbeta_d(npwx,nh(nt))      )
    IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
    !
-   CALL using_vkb_d(0)
-   !
-!$cuf kernel do(2)
-   DO ih = 1, nh(nt)
+!$acc parallel loop collapse(2) present(vkb(:,:))
+   DO ih = 1, nh_nt
       DO ig = 1, npw
-         dbeta_d(ig,ih) = vkb_d(ig,ijkb0+ih)
+         dbeta_d(ig,ih) = vkb(ig,ijkb0+ih)
       ENDDO
    ENDDO
-! !omp end parallel do
    !
    CALL calbec_gpu( npw, wfcU_d, dbeta_d, wfatbeta_d ) 
    CALL using_evc_d(0)

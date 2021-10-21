@@ -70,7 +70,7 @@ set(src_pw4gww
     pw4gww/wannier_bse.f90
     pw4gww/hpsi_pw4gww.f90
     pw4gww/cgsolve_all_gamma.f90
-    pw4gww/realus.f90
+    pw4gww/gww_realus.f90
     pw4gww/operator_1_vp.f90
     pw4gww/lanczos_chains.f90
     pw4gww/convergence.f90
@@ -114,11 +114,11 @@ set(src_bse
     bse/qpcorrections.f90)
 
 set(src_head
-    head/bcast_ph_input.f90
-    head/close_phq.f90
+    head/bcast_gwl_input.f90
+    head/close_gwl.f90
     head/lanczos_k.f90
-    head/openfilq.f90
-    head/phq_readin.f90
+    head/openfilq_gwl.f90
+    head/gwl_readin.f90
     head/solve_head.f90)
 
 set(src_minpack

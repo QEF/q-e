@@ -24,10 +24,10 @@ AC_ARG_ENABLE(pedantic,
    fi],
    [use_pedantic=0])
 
-# produce object files suitable for shared libraries (implemented only for a few untested cases)
+# yet to be implemented
 AC_ARG_ENABLE(shared,
    [AS_HELP_STRING([--enable-shared],
-       [use shared libraries if available (default: no)])],
+       [produce object files suitable for shared libraries (default: no)])],
    [if   test "$enableval" = "yes" ; then
       use_shared=1
    else

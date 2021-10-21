@@ -12,7 +12,7 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   !! and \texttt{s_psi}.
   !
   USE kinds,              ONLY: DP
-  USE uspp,               ONLY: nkb, vkb_d, using_vkb_d
+  USE uspp,               ONLY: nkb, vkb
   USE becmod,             ONLY: bec_type, becp, calbec
   USE control_flags,      ONLY: gamma_only 
   USE noncollin_module,   ONLY: noncolin, npol 
@@ -81,8 +81,12 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
      DEALLOCATE(psi_h, spsi_h)
   ELSE
      !
-     CALL using_vkb_d(0); CALL using_becp_d_auto(1)
-     CALL calbec_gpu( n, vkb_d, psi_d, becp_d )
+     CALL using_becp_d_auto(1)
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu( n, vkb, psi_d, becp_d )
+!$acc end host_data 
+!$acc end data 
      CALL s_psi_gpu( npwx, n, 1, psi_d, spsi_d )
      !
   ENDIF

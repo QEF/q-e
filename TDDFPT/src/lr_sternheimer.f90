@@ -78,6 +78,7 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     USE lr_sym_mod,             ONLY : psymeq
     USE apply_dpot_mod,         ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
                                        apply_dpot_bands
+    USE uspp_init,             ONLY : init_us_2
     !
     IMPLICIT NONE
     !

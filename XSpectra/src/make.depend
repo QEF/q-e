@@ -99,6 +99,7 @@ orthoUatwfc_k.o : ../../Modules/ions_base.o
 orthoUatwfc_k.o : ../../Modules/kind.o
 orthoUatwfc_k.o : ../../Modules/noncol.o
 orthoUatwfc_k.o : ../../PW/src/atomic_wfc_mod.o
+orthoUatwfc_k.o : ../../PW/src/init_us_2.o
 orthoUatwfc_k.o : ../../PW/src/ldaU.o
 orthoUatwfc_k.o : ../../PW/src/pwcom.o
 orthoUatwfc_k.o : ../../upflib/uspp.o
@@ -172,6 +173,7 @@ xanes_dipole.o : ../../Modules/mp_pools.o
 xanes_dipole.o : ../../Modules/mp_world.o
 xanes_dipole.o : ../../Modules/recvec.o
 xanes_dipole.o : ../../Modules/wavefunctions.o
+xanes_dipole.o : ../../PW/src/init_us_2.o
 xanes_dipole.o : ../../PW/src/ldaU.o
 xanes_dipole.o : ../../PW/src/pwcom.o
 xanes_dipole.o : ../../PW/src/scf_mod.o
@@ -195,6 +197,7 @@ xanes_dipole_general_edge.o : ../../Modules/mp_images.o
 xanes_dipole_general_edge.o : ../../Modules/mp_pools.o
 xanes_dipole_general_edge.o : ../../Modules/recvec.o
 xanes_dipole_general_edge.o : ../../Modules/wavefunctions.o
+xanes_dipole_general_edge.o : ../../PW/src/init_us_2.o
 xanes_dipole_general_edge.o : ../../PW/src/ldaU.o
 xanes_dipole_general_edge.o : ../../PW/src/pwcom.o
 xanes_dipole_general_edge.o : ../../PW/src/scf_mod.o
@@ -219,6 +222,7 @@ xanes_quadrupole.o : ../../Modules/mp_world.o
 xanes_quadrupole.o : ../../Modules/recvec.o
 xanes_quadrupole.o : ../../Modules/wavefunctions.o
 xanes_quadrupole.o : ../../PW/src/atomic_wfc_mod.o
+xanes_quadrupole.o : ../../PW/src/init_us_2.o
 xanes_quadrupole.o : ../../PW/src/ldaU.o
 xanes_quadrupole.o : ../../PW/src/pwcom.o
 xanes_quadrupole.o : ../../PW/src/scf_mod.o

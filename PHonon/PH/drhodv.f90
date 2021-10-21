@@ -52,6 +52,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

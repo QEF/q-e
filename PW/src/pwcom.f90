@@ -17,7 +17,11 @@ MODULE klist
   !
   SAVE
   !
-  CHARACTER (LEN=32) :: smearing 
+  !FIXME !TODO variables as igk_k, mill, g and others persist in the device memory
+  ! for the whole duration of the run, their allocation in the device should be
+  ! done using !$acc declare create () instead of using !$acc enter/exit data create/delete().
+  !
+  CHARACTER (LEN=32) :: smearing
   !! smearing type
   REAL(DP) :: xk(3,npk)
   !! coordinates of k points
@@ -86,6 +90,8 @@ CONTAINS
     INTEGER :: ik
     !
     IF (.NOT.ALLOCATED(igk_k)) ALLOCATE( igk_k(npwx,nks) )
+    !$acc enter data create(igk_k(npwx,nks))
+    !
     IF (.NOT.ALLOCATED(ngk))   ALLOCATE( ngk(nks) )
     !
     ALLOCATE ( gk(npwx) )
@@ -97,6 +103,7 @@ CONTAINS
     DO ik = 1, nks
        CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
     ENDDO
+    !$acc update device(igk_k)
     !
     DEALLOCATE( gk )
 #if defined (__CUDA)
@@ -108,12 +115,14 @@ CONTAINS
     !
   END SUBROUTINE init_igk
   !
-  SUBROUTINE deallocate_igk( ) 
+  SUBROUTINE deallocate_igk( )
     !
     IF (ALLOCATED(ngk))     DEALLOCATE( ngk )
-    IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
     !
+    !$acc exit data delete(igk_k)
+    IF (ALLOCATED(igk_k))   DEALLOCATE( igk_k )
     IF (ALLOCATED(igk_k_d)) DEALLOCATE( igk_k_d )
+    !
     IF (ALLOCATED(ngk_d))   DEALLOCATE( ngk_d )
     !
   END SUBROUTINE deallocate_igk
@@ -207,7 +216,7 @@ MODULE rap_point_group_so
    COMPLEX(DP) :: d_spin(2,2,48)
    !! the rotation in spin space
    !
-   CHARACTER(len=15) :: name_rap_so(12) 
+   CHARACTER(len=15) :: name_rap_so(12)
    !! the name of the representation
    CHARACTER(len=5) :: name_class_so(24)
    !! the name of the class
@@ -290,7 +299,7 @@ MODULE wvfct
   !! the weight of each k point and band
   REAL(DP), ALLOCATABLE :: g2kin(:)
   !! kinetic energy
-  INTEGER, ALLOCATABLE :: btype(:,:) 
+  INTEGER, ALLOCATABLE :: btype(:,:)
   !! one if the corresponding state has to be
   !! converged to full accuracy, zero otherwise
 #if defined(__CUDA)
@@ -362,7 +371,7 @@ MODULE force_mod
   !! the force on each atom
   REAL(DP) :: sumfor
   !! norm of the gradient (forces)
-  REAL(DP) :: sigma(3,3) 
+  REAL(DP) :: sigma(3,3)
   !! the stress acting on the system
   LOGICAL :: lforce
   !! if .TRUE. compute the forces
@@ -466,9 +475,9 @@ MODULE spin_orb
   !
   SAVE
   LOGICAL :: lforcet
-  !! if .TRUE. apply Force Theorem to calculate MAE 
+  !! if .TRUE. apply Force Theorem to calculate MAE
   LOGICAL :: starting_spin_angle
-  !! if .TRUE. the initial wavefunctions are spin-angle functions. 
+  !! if .TRUE. the initial wavefunctions are spin-angle functions.
   LOGICAL :: domag
   !! if .TRUE. magnetization is computed
   !

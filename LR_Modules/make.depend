@@ -271,6 +271,7 @@ localdos.o : ../Modules/noncol.o
 localdos.o : ../Modules/recvec.o
 localdos.o : ../Modules/wavefunctions.o
 localdos.o : ../PW/src/buffers.o
+localdos.o : ../PW/src/init_us_2.o
 localdos.o : ../PW/src/pwcom.o
 localdos.o : ../UtilXlib/mp.o
 localdos.o : ../upflib/uspp.o
@@ -317,6 +318,7 @@ lr_orthoUwfc.o : ../Modules/mp_pools.o
 lr_orthoUwfc.o : ../Modules/noncol.o
 lr_orthoUwfc.o : ../PW/src/atomic_wfc_mod.o
 lr_orthoUwfc.o : ../PW/src/buffers.o
+lr_orthoUwfc.o : ../PW/src/init_us_2.o
 lr_orthoUwfc.o : ../PW/src/ldaU.o
 lr_orthoUwfc.o : ../PW/src/pwcom.o
 lr_orthoUwfc.o : ../UtilXlib/mp.o
@@ -329,6 +331,7 @@ lr_sm1_psi.o : ../Modules/ions_base.o
 lr_sm1_psi.o : ../Modules/kind.o
 lr_sm1_psi.o : ../Modules/mp_global.o
 lr_sm1_psi.o : ../Modules/noncol.o
+lr_sm1_psi.o : ../PW/src/init_us_2.o
 lr_sm1_psi.o : ../PW/src/pwcom.o
 lr_sm1_psi.o : ../PW/src/realus.o
 lr_sm1_psi.o : ../UtilXlib/mp.o
@@ -390,6 +393,7 @@ response_kernels.o : ../Modules/mp_pools.o
 response_kernels.o : ../Modules/noncol.o
 response_kernels.o : ../Modules/wavefunctions.o
 response_kernels.o : ../PW/src/buffers.o
+response_kernels.o : ../PW/src/init_us_2.o
 response_kernels.o : ../PW/src/ldaU.o
 response_kernels.o : ../PW/src/pwcom.o
 response_kernels.o : ../UtilXlib/mp.o

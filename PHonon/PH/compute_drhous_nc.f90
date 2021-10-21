@@ -25,6 +25,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE wavefunctions,    ONLY : evc
   USE uspp,             ONLY : okvan, nkb, vkb
   USE uspp_param,       ONLY : nhm
+  USE uspp_init,        ONLY : init_us_2
   !
   USE qpoint,           ONLY : nksq, ikks, ikqs
   USE eqv,              ONLY : evq

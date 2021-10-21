@@ -610,6 +610,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use mp_world,       ONLY : world_comm, nproc, mpime
   use ldaU,           ONLY : lda_plus_u
   USE basis,          ONLY : swfcatom
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

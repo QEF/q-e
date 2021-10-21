@@ -25,7 +25,7 @@ SUBROUTINE stres_hub ( sigmah )
                                   wfcU, nwfcU, copy_U_wfc
    USE becmod,             ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
    USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
-   USE uspp,               ONLY : nkb, vkb, okvan, using_vkb
+   USE uspp,               ONLY : nkb, vkb, okvan
    USE klist,              ONLY : nks, xk, ngk, igk_k
    USE basis,              ONLY : natomwfc, wfcatom, swfcatom
    USE io_files,           ONLY : nwordwfc, iunwfc, nwordwfcU
@@ -41,6 +41,7 @@ SUBROUTINE stres_hub ( sigmah )
    USE force_mod,          ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
                                   us_dy, us_dj
    USE wavefunctions_gpum, ONLY : using_evc
+   USE uspp_init,          ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -146,7 +147,7 @@ SUBROUTINE stres_hub ( sigmah )
       IF (nks > 1) CALL using_evc(2)
       !
       CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-      CALL using_vkb(2)
+      !
       ! Compute spsi = S * psi
       CALL allocate_bec_type ( nkb, nbnd, becp)
       CALL calbec (npw, vkb, evc, becp)
@@ -1200,7 +1201,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
@@ -1255,7 +1256,6 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    !
    ijkb0 = 0
    !
-   CALL using_vkb(0)
    DO nt = 1, ntyp
       !
       ALLOCATE ( Adbeta(lA,nh(nt)) )
@@ -1379,7 +1379,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                                     backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
@@ -1498,7 +1498,6 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    ! <\fi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-    CALL using_vkb(0)
     !
     ijkb0 = 0
     !

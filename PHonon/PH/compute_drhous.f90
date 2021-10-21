@@ -30,6 +30,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE control_lr, ONLY : lgamma
   USE units_lr,   ONLY : iuwfc, lrwfc
   USE becmod,     ONLY : bec_type
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
   !

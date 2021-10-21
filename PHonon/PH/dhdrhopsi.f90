@@ -59,6 +59,7 @@ subroutine dhdrhopsi
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE control_flags,   ONLY: use_para_diag
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 
