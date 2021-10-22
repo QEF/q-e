@@ -35,14 +35,13 @@ subroutine solve_e
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
   USE lsda_mod,              ONLY : nspin, lsda, current_spin, isk
-  USE spin_orb,              ONLY : domag
   USE wvfct,                 ONLY : nbnd, npwx
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer
   USE wavefunctions,         ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
-  USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module,      ONLY : noncolin, npol, nspin_mag, domag
   USE scf,                   ONLY : rho
   USE paw_variables,         ONLY : okpaw
   USE paw_onecenter,         ONLY : paw_dpotential
