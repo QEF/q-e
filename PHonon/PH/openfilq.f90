@@ -33,10 +33,9 @@ SUBROUTINE openfilq()
   USE lsda_mod,        ONLY : nspin, lsda
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
-  USE noncollin_module,ONLY : npol, nspin_mag, noncolin
+  USE noncollin_module,ONLY : npol, nspin_mag, noncolin, domag
   USE paw_variables,   ONLY : okpaw
   USE mp_bands,        ONLY : me_bgrp
-  USE spin_orb,        ONLY : domag
   USE io_global,       ONLY : ionode,stdout
   USE buffers,         ONLY : open_buffer, close_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2

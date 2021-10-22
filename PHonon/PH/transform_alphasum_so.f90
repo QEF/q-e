@@ -17,8 +17,8 @@ SUBROUTINE transform_alphasum_so(alphasum_nc,na)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : npol
-USE spin_orb,             ONLY : fcoef, domag
+USE noncollin_module,     ONLY : npol, domag
+USE upf_spinorb,          ONLY : fcoef
 USE uspp,                 ONLY : ijtoh
 USE phus,                 ONLY : alphasum
 !

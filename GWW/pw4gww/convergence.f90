@@ -2478,8 +2478,7 @@ END MODULE convergence_gw
       USE scf,              ONLY : scf_type
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns
-      USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : noncolin, domag
       USE gvect,            ONLY : ig_l2g
       USE io_files,         ONLY : seqopn, prefix, tmp_dir, postfix
       USE io_global,        ONLY : ionode, ionode_id, stdout

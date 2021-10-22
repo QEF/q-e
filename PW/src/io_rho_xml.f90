@@ -27,8 +27,7 @@ MODULE io_rho_xml
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg
       USE xc_lib,           ONLY : xclib_dft_is
-      USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : noncolin, domag
       USE scf,              ONLY : scf_type
       !
       USE cell_base,        ONLY : bg, tpiba
@@ -129,8 +128,7 @@ MODULE io_rho_xml
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns, hub_back, &
                                    lda_plus_u_kind, nsg
-      USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : noncolin, domag
       USE gvect,            ONLY : ig_l2g
       USE xc_lib,           ONLY : xclib_dft_is
       USE io_files,         ONLY : restart_dir

@@ -35,7 +35,7 @@ SUBROUTINE init_run()
   USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE lsda_mod,           ONLY : nspin
-  USE spin_orb,           ONLY : domag
+  USE noncollin_module,   ONLY : domag
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   USE control_flags,      ONLY : use_gpu

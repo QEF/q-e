@@ -38,6 +38,8 @@ MODULE noncollin_module
   !
   LOGICAL :: noncolin
   !! TRUE if noncollinear magnetism is allowed
+  LOGICAL :: domag
+  !! TRUE if total magnetization is present, FALSE for nonmagnetic calculation
   LOGICAL :: lsign=.FALSE.
   !! if TRUE use the sign feature to calculate rhoup and rhodw
   !

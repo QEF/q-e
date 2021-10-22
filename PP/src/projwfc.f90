@@ -1128,8 +1128,8 @@ SUBROUTINE projwave( filproj, filowdin, lsym, diag_basis, lwrite_ovp )
   USE basis,     ONLY : natomwfc, swfcatom
   USE klist,     ONLY : xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod,  ONLY : nspin
-  USE noncollin_module, ONLY: noncolin, npol
-  USE spin_orb,  ONLY : lspinorb, domag, lforcet
+  USE noncollin_module, ONLY: noncolin, domag, npol
+  USE spin_orb,  ONLY : lspinorb, lforcet
   USE wvfct,     ONLY : npwx, nbnd, et
   USE uspp,      ONLY : nkb, vkb
   USE becmod,    ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type

@@ -478,8 +478,6 @@ MODULE spin_orb
   !! if .TRUE. apply Force Theorem to calculate MAE
   LOGICAL :: starting_spin_angle
   !! if .TRUE. the initial wavefunctions are spin-angle functions.
-  LOGICAL :: domag
-  !! if .TRUE. magnetization is computed
   !
 END MODULE spin_orb
 !

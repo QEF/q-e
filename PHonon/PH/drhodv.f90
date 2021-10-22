@@ -35,7 +35,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout
   USE buffers,   ONLY : get_buffer
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag
 
   USE dynmat,   ONLY : dyn, dyn_rec
   USE modes,    ONLY : u
@@ -44,7 +44,6 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE eqv,      ONLY : dpsi
   USE qpoint,   ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
-  USE spin_orb, ONLY : domag
   USE lrus,     ONLY : becp1
   USE phus,     ONLY : alphap, int1_nc
   USE qpoint_aux, ONLY : becpt, alphapt

@@ -27,7 +27,6 @@
                             inverse_s
   USE eqv,           ONLY : dmuxc
   USE uspp_param,    ONLY : upf
-  USE spin_orb,      ONLY : domag
   USE constants_epw, ONLY : zero, eps5, czero, ryd2ev, kelvin2ev
   USE nlcc_ph,       ONLY : drc
   USE uspp,          ONLY : nlcc_any
@@ -43,7 +42,7 @@
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
-  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, m_loc, angle1, angle2, ux, nspin_mag
   ! ---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.

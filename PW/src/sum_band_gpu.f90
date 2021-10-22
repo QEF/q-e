@@ -35,8 +35,7 @@ SUBROUTINE sum_band_gpu()
                                    becsum_d, ebecsum_d
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions,        ONLY : evc, psic
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -1349,8 +1348,7 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
   USE uspp_param,           ONLY : nh, nhm
   USE uspp,                 ONLY : ijtoh_d
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, domag
   !
   IMPLICIT NONE
   !
@@ -1408,8 +1406,7 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
-  USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, domag
   USE uspp,                 ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
   USE upf_spinorb,          ONLY : fcoef_d
   IMPLICIT NONE

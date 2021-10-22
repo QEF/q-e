@@ -2409,10 +2409,11 @@ SUBROUTINE compute_spin
    USE lsda_mod,        ONLY : nspin
    USE constants,       ONLY : rytoev
 
-   USE uspp_param,           ONLY : upf, nh, nhm
-   USE uspp,                 ONLY: qq_nt, nhtol,nhtoj, indv
-   USE spin_orb,             ONLY : fcoef
-   USE uspp_init,            ONLY : init_us_2
+   USE uspp_param,      ONLY : upf, nh, nhm
+   USE uspp,            ONLY: qq_nt, nhtol,nhtoj, indv
+   USE upf_spinorb,     ONLY : fcoef
+   USE spin_orb,        ONLY : fcoef
+   USE uspp_init,       ONLY : init_us_2
 
    IMPLICIT NONE
    !

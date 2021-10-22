@@ -13,7 +13,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
   USE cell_base,            ONLY : alat, at, tpiba, omega
-  USE spin_orb,             ONLY : fcoef
+  USE upf_spinorb,          ONLY : fcoef
   USE uspp,                 ONLY : nkb,qq_nt,vkb,nhtol,nhtoj,nhtolm,indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx
