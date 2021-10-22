@@ -3,6 +3,7 @@
 include ../../make.inc
 
 MODFLAGS = $(MOD_FLAG).. $(MOD_FLAG).
+LDFLAGS += -Mcudalib=cufft
 
 SRCS = test_fft_scalar_gpu.f90 \
        test_fft_scatter_mod_gpu.f90 \
