@@ -1106,6 +1106,8 @@ SUBROUTINE gcxc_beef( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !---------------------------------------------------------------------
   !! Driver for BEEF gga xc terms. Unpolarized case.
   !
+  ! ****note: to compile add -ta=tesla::cc60 to both f90 and cc flags
+  
   USE beef_interface, ONLY: beefx, beeflocalcorr
   !
   IMPLICIT NONE
@@ -1126,6 +1128,10 @@ SUBROUTINE gcxc_beef( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   IF (igcx == 43 .OR. igcc == 14) THEN
     !
+#if defined(_OPENACC)
+    !$acc data copyin(rho_in,grho_in), copyout(sx_out,sc_out,v1x_out,v2x_out,v1c_out,v2c_out)
+    !$acc parallel loop
+#endif
     DO ir = 1, length
       grho = grho_in(ir)
       IF ( rho_in(ir) <= rho_threshold_gga .OR. grho <= grho_threshold_gga ) THEN
@@ -1149,12 +1155,15 @@ SUBROUTINE gcxc_beef( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
       IF ( igcc == 14 ) THEN
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
-        CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
-        sc_out(ir) = sc
-        v1c_out(ir) = v1c
-        v2c_out(ir) = v2c
+!        CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
+!        sc_out(ir) = sc
+!        v1c_out(ir) = v1c
+!        v2c_out(ir) = v2c
       ENDIF
     ENDDO
+#if defined(_OPENACC)
+    !$acc end data
+#endif
     !
   ENDIF
   !

@@ -22,6 +22,7 @@ MODULE beef_interface
     INTERFACE
     !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda ) BIND(C, NAME="beefx_")
+    !$acc routine seq
     USE iso_c_binding
         REAL (C_DOUBLE)            :: r, g, e, dr, dg
         INTEGER(C_INT), INTENT(IN) :: addlda

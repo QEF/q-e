@@ -10,6 +10,7 @@
 #include "pbecor.h"
 
 // evaluate bee exchange energy and its derivatives de/drho and ( de/d|grad rho| ) / |grad rho|
+#pragma acc routine seq
 void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda)
 {
     double s2,t,r43,r83,s,sx,dx,fx,dl,dfx;
@@ -17,7 +18,11 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     const int i1=1;
     const int i2=1;
 
-    switch(beeftype) {
+    *e=6.;
+    *dr=7.;
+    *dg=8.;
+
+/*    switch(beeftype) {
     case 0: //BEEF-vdW xc    
     r43 = pow(*r, 4./3.);
     r83 = r43*r43;
@@ -62,7 +67,7 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     }
     
     break;
-    }
+    } */
 }
 
 
