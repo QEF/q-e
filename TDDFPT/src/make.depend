@@ -283,7 +283,6 @@ lr_dv_setup.o : ../../Modules/ions_base.o
 lr_dv_setup.o : ../../Modules/kind.o
 lr_dv_setup.o : ../../Modules/noncol.o
 lr_dv_setup.o : ../../Modules/wavefunctions.o
-lr_dv_setup.o : ../../PW/src/pwcom.o
 lr_dv_setup.o : ../../XClib/xc_lib.o
 lr_dv_setup.o : ../../upflib/uspp.o
 lr_dv_setup.o : lr_variables.o
@@ -684,7 +683,7 @@ lr_transform_intq_so.o : ../../LR_Modules/lrcom.o
 lr_transform_intq_so.o : ../../Modules/ions_base.o
 lr_transform_intq_so.o : ../../Modules/kind.o
 lr_transform_intq_so.o : ../../Modules/noncol.o
-lr_transform_intq_so.o : ../../PW/src/pwcom.o
+lr_transform_intq_so.o : ../../upflib/upf_spinorb.o
 lr_transform_intq_so.o : ../../upflib/uspp.o
 lr_us.o : ../../LR_Modules/lrcom.o
 lr_us.o : ../../Modules/becmod.o
