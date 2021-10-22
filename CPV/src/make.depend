@@ -248,6 +248,7 @@ cpr.o : mainvar.o
 cpr.o : modules.o
 cpr.o : ortho_base.o
 cpr.o : pres_ai_mod.o
+cpr.o : pseudo_base.o
 cpr.o : smallbox_gvec.o
 cpr.o : wannier.o
 cpr.o : wave_base.o
@@ -480,6 +481,7 @@ fromscra.o : mainvar.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
 fromscra.o : printout_base.o
+fromscra.o : pseudo_base.o
 fromscra.o : wave_base.o
 gram.o : ../../Modules/electrons_base.o
 gram.o : ../../Modules/gvecw.o
@@ -564,6 +566,7 @@ init_run.o : mainvar.o
 init_run.o : modules.o
 init_run.o : ortho_base.o
 init_run.o : printout_base.o
+init_run.o : pseudo_base.o
 init_run.o : smallbox_gvec.o
 init_run.o : wannier.o
 init_run.o : wannier_base.o
@@ -726,6 +729,7 @@ move_electrons.o : ions_positions.o
 move_electrons.o : mainvar.o
 move_electrons.o : modules.o
 move_electrons.o : ortho_base.o
+move_electrons.o : pseudo_base.o
 move_electrons.o : wannier.o
 newd.o : ../../FFTXlib/fft_interfaces.o
 newd.o : ../../Modules/constants.o
@@ -1017,6 +1021,7 @@ restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : printout_base.o
+restart_sub.o : pseudo_base.o
 restart_sub.o : wave_base.o
 runcp.o : ../../FFTXlib/fft_helper_subroutines.o
 runcp.o : ../../Modules/control_flags.o
@@ -1032,6 +1037,7 @@ runcp.o : ../../upflib/uspp.o
 runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : ldaU_cp.o
+runcp.o : pseudo_base.o
 runcp.o : wannier.o
 runcp.o : wave_base.o
 sic.o : ../../Modules/io_global.o

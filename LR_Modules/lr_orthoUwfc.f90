@@ -198,6 +198,7 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   !
   USE kinds,          ONLY : DP
   USE becmod,         ONLY : calbec
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   INTEGER,     INTENT(IN)  :: npw_

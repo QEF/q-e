@@ -29,6 +29,7 @@ subroutine khamiltonian
      USE wvfct, ONLY : npwx
      USE klist, ONLY : nelec
      USE wannier_gw, ONLY : num_nbndv
+     USE uspp_init,        ONLY : init_us_2
      !
      IMPLICIT NONE
      !

@@ -166,7 +166,7 @@ SUBROUTINE c_phase
    USE constants,            ONLY : pi, tpi
    USE gvect,                ONLY : ngm, g, gcutm, ngm_g, ig_l2g
    USE fft_base,             ONLY : dfftp
-   USE uspp,                 ONLY : nkb, vkb, okvan, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
@@ -182,6 +182,7 @@ SUBROUTINE c_phase
    USE qes_libs_module,      ONLY : qes_reset
    USE qexsd_init,           ONLY : qexsd_init_berryPhaseOutput,  qexsd_bp_obj
    USE wavefunctions_gpum,   ONLY : using_evc
+   USE uspp_init,            ONLY : init_us_2 
 
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
@@ -483,7 +484,6 @@ SUBROUTINE c_phase
                igk0(:) = igk_k(:,kpoint-1)
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if (okvan) then
-                  CALL using_vkb(1)
                   CALL init_us_2(npw0,igk0,xk(1,kpoint-1),vkb)
                   CALL calbec(npw0, vkb, psi, becp0)
                endif
@@ -494,7 +494,6 @@ SUBROUTINE c_phase
                   CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
                   CALL using_evc(1)
                   if (okvan) then
-                     CALL using_vkb(1)
                      CALL init_us_2(npw1,igk1,xk(1,kpoint),vkb)
                      CALL calbec(npw1, vkb, evc, becp_bp)
                   endif
@@ -505,7 +504,6 @@ SUBROUTINE c_phase
                   CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
                   CALL using_evc(1)
                   if (okvan) then
-                     CALL using_vkb(1)
                      CALL init_us_2(npw1,igk1,xk(1,kstart),vkb)
                      CALL calbec(npw1, vkb, evc, becp_bp)
                   endif

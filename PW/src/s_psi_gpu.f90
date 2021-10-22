@@ -97,7 +97,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 #endif
   USE kinds,            ONLY : DP
   USE becmod_gpum,      ONLY : becp_d
-  USE uspp,             ONLY : nkb, okvan, ofsbeta, vkb_d, using_vkb_d
+  USE uspp,             ONLY : nkb, okvan, ofsbeta, vkb
   USE spin_orb,         ONLY : lspinorb
   USE uspp_param,       ONLY : upf, nh, nhm
   USE ions_base,        ONLY : nat, nsp, ityp
@@ -236,7 +236,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 #endif
          ! the product vkb and psi
        !
-       CALL using_vkb_d(0)
        CALL using_becp_r_d(0)
        !
        IF( becp_d%comm == mp_get_comm_null() ) THEN
@@ -287,13 +286,17 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        END DO
        !
        IF( becp_d%comm == mp_get_comm_null() ) THEN
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
           IF ( m == 1 ) THEN
-             CALL cudaDGEMV( 'N', 2 * n, nkb, 1.D0, vkb_d, &
+             CALL cudaDGEMV( 'N', 2 * n, nkb, 1.D0, vkb, &
                   2 * lda, ps_d, 1, 1.D0, spsi_d, 1 )
           ELSE
-             CALL cublasDGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb_d, &
+             CALL cublasDGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
                   2 * lda, ps_d, nkb, 1.D0, spsi_d, 2 * lda )
           END IF
+!$acc end host_data
+!$acc end data
        ELSE
           !
           ! parallel block multiplication of vkb and ps
@@ -308,8 +311,12 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
 
              IF( m_loc > 0 ) THEN
-                CALL cublasDGEMM( 'N', 'N', 2 * n, m_loc, nkb, 1.D0, vkb_d, &
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+                CALL cublasDGEMM( 'N', 'N', 2 * n, m_loc, nkb, 1.D0, vkb, &
                             2 * lda, ps_d, nkb, 1.D0, spsi_d( 1, m_begin ), 2 * lda )
+!$acc end host_data
+!$acc end data
              END IF
              !
              ! block rotation
@@ -357,7 +364,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
 
        ! sync vkb if needed
-       CALL using_vkb_d(0)
        CALL using_becp_k_d(0)
        !
        ps_d(1:nkb,1:m) = ( 0.D0, 0.D0 )
@@ -394,17 +400,21 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        END DO
        CALL dev_buf%release_buffer(qqc_d, ierr)
        !
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
        IF ( m == 1 ) THEN
           !
-          CALL ZGEMV( 'N', n, nkb, ( 1.D0, 0.D0 ), vkb_d, &
+          CALL ZGEMV( 'N', n, nkb, ( 1.D0, 0.D0 ), vkb, &
                       lda, ps_d, 1, ( 1.D0, 0.D0 ), spsi_d, 1 )
           !
        ELSE
           !
-          CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ), vkb_d, &
+          CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ), vkb, &
                       lda, ps_d, nkb, ( 1.D0, 0.D0 ), spsi_d, lda )
           !
        END IF
+!$acc end host_data
+!$acc end data
        !
        CALL dev_buf%release_buffer(ps_d, ierr)
        !
@@ -436,7 +446,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! the product vkb and psi
        !
        ! sync if needed
-       CALL using_vkb_d(0)
        CALL using_becp_nc_d(0)
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, npol, m /), ierr)
@@ -497,8 +506,12 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        END DO
        IF ( .NOT. lspinorb ) CALL dev_buf%release_buffer(qqc_d, ierr)
 
-       call ZGEMM ('N', 'N', n, m*npol, nkb, (1.d0, 0.d0) , vkb_d, &
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+       call ZGEMM ('N', 'N', n, m*npol, nkb, (1.d0, 0.d0) , vkb, &
           lda, ps_d, nkb, (1.d0, 0.d0) , spsi_d(1,1), lda)
+!$acc end host_data
+!$acc end data
 
        CALL dev_buf%release_buffer(ps_d, ierr)
 

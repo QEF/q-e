@@ -105,6 +105,7 @@ contains
       use cell_base, only: omega
       use mp_bands, only: intra_bgrp_comm
       use gvect, only: ngm, gg, g
+      USE uspp_init,            ONLY : init_us_2
 
       !use becmod, only : becp
       implicit none
@@ -116,7 +117,7 @@ contains
       call update_pot()
       call hinit1()
       call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-      call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
+      call init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
 
       evc = t%evc
       et = t%et

@@ -52,6 +52,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                                    inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE becmod,               ONLY : calbec
+  USE uspp_init,            ONLY : init_us_2
   IMPLICIT NONE
   !
   ! input variables

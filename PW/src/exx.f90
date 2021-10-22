@@ -2684,9 +2684,10 @@ end associate
     USE mp,                     ONLY : mp_sum
     USE becmod,                 ONLY : bec_type, allocate_bec_type, &
                                        deallocate_bec_type, calbec
-    USE uspp,                   ONLY : okvan,nkb,vkb, using_vkb
+    USE uspp,                   ONLY : okvan,nkb,vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
     USE wavefunctions_gpum,     ONLY : using_evc
+    USE uspp_init,              ONLY : init_us_2
     IMPLICIT NONE
     !
     TYPE(bec_type) :: becpsi
@@ -2716,7 +2717,6 @@ end associate
        ENDIF
        !
        IF (okvan) THEN
-          CALL using_vkb(1)
           ! prepare the |beta> function at k+q
           CALL init_us_2( npw, igk_exx(1,ik), xk(:,ik), vkb )
           ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
@@ -2813,6 +2813,7 @@ end associate
     USE exx_band,                ONLY : igk_exx, change_data_structure, &
                                         transform_evc_to_exx, nwordwfc_exx, &
                                         evc_exx
+    USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -3939,7 +3940,7 @@ end associate
     !
     USE wvfct,              ONLY : nbnd, npwx, current_k
     USE klist,              ONLY : nks, xk, ngk, igk_k
-    USE uspp,               ONLY : nkb, vkb, okvan, using_vkb
+    USE uspp,               ONLY : nkb, vkb, okvan
     USE becmod,             ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, calbec
     USE lsda_mod,           ONLY : current_spin, lsda, isk
@@ -3950,6 +3951,7 @@ end associate
     USE mp,                 ONLY : mp_sum
     USE wavefunctions,      ONLY : evc
     USE wavefunctions_gpum, ONLY : using_evc
+    USE uspp_init,          ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -3985,7 +3987,6 @@ end associate
        IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
        IF ( nks > 1 ) CALL using_evc(2)
        IF ( okvan ) THEN
-          CALL using_vkb(1)
           CALL init_us_2( npw, igk_k(1,ik), xk(:,ik), vkb )
           CALL calbec( npw, vkb, evc, becpsi, nbnd )
        ENDIF

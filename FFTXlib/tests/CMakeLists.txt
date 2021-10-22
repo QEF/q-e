@@ -1,6 +1,6 @@
-set(test_common_src tester.f90 utils.f90)
+set(test_common_src tester.f90 utils.f90 sort.f90 recips.f90)
 qe_add_library(qe_fftx_test_common ${test_common_src})
-target_link_libraries(qe_fftx_test_common PRIVATE qe_mpi_fortran)
+target_link_libraries(qe_fftx_test_common PRIVATE qe_fftx qe_mpi_fortran)
 
 set(source_names fft_scalar_gpu fft_scatter_mod_gpu  fwinv_gpu)
 foreach(NAME ${source_names})

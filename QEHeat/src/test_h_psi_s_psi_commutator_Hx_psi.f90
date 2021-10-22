@@ -23,6 +23,7 @@ module test_h_psi
    use mp_bands, only: intra_bgrp_comm
    use gvect, only: ngm, gg, g
    USE ions_base, ONLY: nat, nsp, ityp, tau
+   USE uspp_init,            ONLY : init_us_2
 
    implicit none
 
@@ -52,7 +53,7 @@ contains
       chxpsi = (0.d0, 0.d0)
       npw = npwx
       call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-      call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
+      call init_us_2(npw, igk_k(:, 1), xk(1, 1), vkb)
 
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, input, becp)

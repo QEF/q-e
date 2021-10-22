@@ -162,6 +162,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE mp_images,            ONLY : intra_image_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, becp
+  USE uspp_init,            ONLY : init_us_2
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband

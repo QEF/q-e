@@ -35,6 +35,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
   USE mp_images,            ONLY : intra_image_comm
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !

@@ -29,10 +29,10 @@ SUBROUTINE orthoUwfc_gpu
   USE io_files,   ONLY : iunhub, nwordwfcU
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
+  USE klist,      ONLY : nks, xk, ngk, igk_k
   USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb, vkb_d, using_vkb_d
+  USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
@@ -42,6 +42,7 @@ SUBROUTINE orthoUwfc_gpu
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
+  USE uspp_init,        ONLY : init_us_2
   ! 
   IMPLICIT NONE
   !
@@ -112,11 +113,15 @@ SUBROUTINE orthoUwfc_gpu
      ENDIF
      !
      npw = ngk(ik)
-     CALL using_vkb_d(2)
-     CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+     !
+     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      CALL using_becp_d_auto(2)
-     CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu( npw, vkb, wfcatom_d, becp_d )
+!$acc end host_data
+!$acc end data
      !
      CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
      !
@@ -163,7 +168,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
   USE wvfct,      ONLY : npwx
-  USE uspp,       ONLY : nkb, vkb, vkb_d, using_vkb_d
+  USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
@@ -171,6 +176,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE becmod_gpum,      ONLY : becp_d
   USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
                                calbec_gpu
+  USE uspp_init,        ONLY : init_us_2
   ! 
   IMPLICIT NONE
   !
@@ -206,12 +212,16 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
      ENDIF
      !
      npw = ngk(ik)
-     CALL using_vkb_d(2)
-     CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+     !
+     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      CALL using_becp_auto(2)
      CALL using_becp_d_auto(2)
-     CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu( npw, vkb, wfcatom_d, becp_d )
+!$acc end host_data
+!$acc end data
      !
      CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
      !

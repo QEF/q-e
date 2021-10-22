@@ -36,6 +36,7 @@ cg_setup.o : ../../Modules/ions_base.o
 cg_setup.o : ../../Modules/kind.o
 cg_setup.o : ../../Modules/recvec.o
 cg_setup.o : ../../Modules/wavefunctions.o
+cg_setup.o : ../../PW/src/init_us_2.o
 cg_setup.o : ../../PW/src/newd.o
 cg_setup.o : ../../PW/src/pwcom.o
 cg_setup.o : ../../PW/src/scf_mod.o

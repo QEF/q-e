@@ -24,6 +24,7 @@ add_zstar_ue.o : ../../Modules/kind.o
 add_zstar_ue.o : ../../Modules/noncol.o
 add_zstar_ue.o : ../../Modules/wavefunctions.o
 add_zstar_ue.o : ../../PW/src/buffers.o
+add_zstar_ue.o : ../../PW/src/init_us_2.o
 add_zstar_ue.o : ../../PW/src/pwcom.o
 add_zstar_ue.o : ../../upflib/uspp.o
 add_zstar_ue.o : phcom.o
@@ -33,6 +34,7 @@ add_zstar_ue_us.o : ../../Modules/mp_bands.o
 add_zstar_ue_us.o : ../../Modules/noncol.o
 add_zstar_ue_us.o : ../../Modules/wavefunctions.o
 add_zstar_ue_us.o : ../../PW/src/buffers.o
+add_zstar_ue_us.o : ../../PW/src/init_us_2.o
 add_zstar_ue_us.o : ../../PW/src/pwcom.o
 add_zstar_ue_us.o : ../../UtilXlib/mp.o
 add_zstar_ue_us.o : ../../upflib/uspp.o
@@ -112,6 +114,7 @@ ahc.o : ../../Modules/noncol.o
 ahc.o : ../../Modules/recvec.o
 ahc.o : ../../Modules/wavefunctions.o
 ahc.o : ../../PW/src/buffers.o
+ahc.o : ../../PW/src/init_us_2.o
 ahc.o : ../../PW/src/pwcom.o
 ahc.o : ../../UtilXlib/mp.o
 ahc.o : ../../upflib/uspp.o
@@ -183,6 +186,7 @@ c_bands_ph.o : ../../Modules/recvec.o
 c_bands_ph.o : ../../Modules/wavefunctions.o
 c_bands_ph.o : ../../PW/src/atomic_wfc_mod.o
 c_bands_ph.o : ../../PW/src/buffers.o
+c_bands_ph.o : ../../PW/src/init_us_2.o
 c_bands_ph.o : ../../PW/src/ldaU.o
 c_bands_ph.o : ../../PW/src/pwcom.o
 c_bands_ph.o : ../../UtilXlib/mp.o
@@ -265,6 +269,7 @@ compute_becalp.o : ../../Modules/kind.o
 compute_becalp.o : ../../Modules/noncol.o
 compute_becalp.o : ../../Modules/recvec.o
 compute_becalp.o : ../../PW/src/buffers.o
+compute_becalp.o : ../../PW/src/init_us_2.o
 compute_becalp.o : ../../PW/src/pwcom.o
 compute_becalp.o : ../../upflib/paw_variables.o
 compute_becalp.o : ../../upflib/uspp.o
@@ -285,6 +290,7 @@ compute_drhous.o : ../../Modules/ions_base.o
 compute_drhous.o : ../../Modules/kind.o
 compute_drhous.o : ../../Modules/wavefunctions.o
 compute_drhous.o : ../../PW/src/buffers.o
+compute_drhous.o : ../../PW/src/init_us_2.o
 compute_drhous.o : ../../PW/src/pwcom.o
 compute_drhous.o : ../../upflib/uspp.o
 compute_drhous_nc.o : ../../FFTXlib/fft_interfaces.o
@@ -296,6 +302,7 @@ compute_drhous_nc.o : ../../Modules/kind.o
 compute_drhous_nc.o : ../../Modules/noncol.o
 compute_drhous_nc.o : ../../Modules/wavefunctions.o
 compute_drhous_nc.o : ../../PW/src/buffers.o
+compute_drhous_nc.o : ../../PW/src/init_us_2.o
 compute_drhous_nc.o : ../../PW/src/pwcom.o
 compute_drhous_nc.o : ../../upflib/uspp.o
 compute_dvloc.o : ../../FFTXlib/fft_interfaces.o
@@ -407,6 +414,7 @@ dhdrhopsi.o : ../../Modules/mp_bands.o
 dhdrhopsi.o : ../../Modules/mp_pools.o
 dhdrhopsi.o : ../../Modules/wavefunctions.o
 dhdrhopsi.o : ../../PW/src/buffers.o
+dhdrhopsi.o : ../../PW/src/init_us_2.o
 dhdrhopsi.o : ../../PW/src/pwcom.o
 dhdrhopsi.o : ../../UtilXlib/mp.o
 dhdrhopsi.o : ../../upflib/uspp.o
@@ -450,6 +458,7 @@ dnsq_bare.o : ../../Modules/mp_pools.o
 dnsq_bare.o : ../../Modules/mp_world.o
 dnsq_bare.o : ../../Modules/wavefunctions.o
 dnsq_bare.o : ../../PW/src/buffers.o
+dnsq_bare.o : ../../PW/src/init_us_2.o
 dnsq_bare.o : ../../PW/src/ldaU.o
 dnsq_bare.o : ../../PW/src/pwcom.o
 dnsq_bare.o : ../../UtilXlib/mp.o
@@ -465,6 +474,7 @@ dnsq_orth.o : ../../Modules/mp_pools.o
 dnsq_orth.o : ../../Modules/mp_world.o
 dnsq_orth.o : ../../Modules/wavefunctions.o
 dnsq_orth.o : ../../PW/src/buffers.o
+dnsq_orth.o : ../../PW/src/init_us_2.o
 dnsq_orth.o : ../../PW/src/ldaU.o
 dnsq_orth.o : ../../PW/src/pwcom.o
 dnsq_orth.o : ../../UtilXlib/mp.o
@@ -546,6 +556,7 @@ drhodv.o : ../../Modules/mp_pools.o
 drhodv.o : ../../Modules/noncol.o
 drhodv.o : ../../Modules/recvec.o
 drhodv.o : ../../PW/src/buffers.o
+drhodv.o : ../../PW/src/init_us_2.o
 drhodv.o : ../../PW/src/pwcom.o
 drhodv.o : ../../UtilXlib/mp.o
 drhodv.o : ../../upflib/uspp.o
@@ -646,6 +657,7 @@ dvqhub_barepsi_us.o : ../../Modules/kind.o
 dvqhub_barepsi_us.o : ../../Modules/mp_bands.o
 dvqhub_barepsi_us.o : ../../Modules/wavefunctions.o
 dvqhub_barepsi_us.o : ../../PW/src/buffers.o
+dvqhub_barepsi_us.o : ../../PW/src/init_us_2.o
 dvqhub_barepsi_us.o : ../../PW/src/ldaU.o
 dvqhub_barepsi_us.o : ../../PW/src/pwcom.o
 dvqhub_barepsi_us.o : ../../PW/src/scf_mod.o
@@ -660,6 +672,7 @@ dvqhub_barepsi_us2.o : ../../Modules/kind.o
 dvqhub_barepsi_us2.o : ../../Modules/mp_bands.o
 dvqhub_barepsi_us2.o : ../../Modules/wavefunctions.o
 dvqhub_barepsi_us2.o : ../../PW/src/buffers.o
+dvqhub_barepsi_us2.o : ../../PW/src/init_us_2.o
 dvqhub_barepsi_us2.o : ../../PW/src/ldaU.o
 dvqhub_barepsi_us2.o : ../../PW/src/pwcom.o
 dvqhub_barepsi_us2.o : ../../PW/src/scf_mod.o
@@ -786,6 +799,7 @@ dynmat_hub_bare.o : ../../Modules/mp_pools.o
 dynmat_hub_bare.o : ../../Modules/mp_world.o
 dynmat_hub_bare.o : ../../Modules/wavefunctions.o
 dynmat_hub_bare.o : ../../PW/src/buffers.o
+dynmat_hub_bare.o : ../../PW/src/init_us_2.o
 dynmat_hub_bare.o : ../../PW/src/ldaU.o
 dynmat_hub_bare.o : ../../PW/src/pwcom.o
 dynmat_hub_bare.o : ../../PW/src/scf_mod.o
@@ -825,6 +839,7 @@ dynmat_us.o : ../../Modules/recvec.o
 dynmat_us.o : ../../Modules/wavefunctions.o
 dynmat_us.o : ../../PW/src/Coul_cut_2D.o
 dynmat_us.o : ../../PW/src/buffers.o
+dynmat_us.o : ../../PW/src/init_us_2.o
 dynmat_us.o : ../../PW/src/pwcom.o
 dynmat_us.o : ../../PW/src/scf_mod.o
 dynmat_us.o : ../../UtilXlib/mp.o
@@ -937,6 +952,7 @@ elphon.o : ../../Modules/parameters.o
 elphon.o : ../../Modules/recvec.o
 elphon.o : ../../Modules/wavefunctions.o
 elphon.o : ../../PW/src/buffers.o
+elphon.o : ../../PW/src/init_us_2.o
 elphon.o : ../../PW/src/ldaU.o
 elphon.o : ../../PW/src/pwcom.o
 elphon.o : ../../PW/src/start_k.o
@@ -971,6 +987,7 @@ ep_matrix_element_wannier.o : ../../Modules/noncol.o
 ep_matrix_element_wannier.o : ../../Modules/recvec.o
 ep_matrix_element_wannier.o : ../../Modules/wavefunctions.o
 ep_matrix_element_wannier.o : ../../PW/src/buffers.o
+ep_matrix_element_wannier.o : ../../PW/src/init_us_2.o
 ep_matrix_element_wannier.o : ../../PW/src/pwcom.o
 ep_matrix_element_wannier.o : ../../PW/src/symm_base.o
 ep_matrix_element_wannier.o : ../../UtilXlib/mp.o
@@ -1203,6 +1220,7 @@ phq_init.o : ../../Modules/wannier_gw.o
 phq_init.o : ../../Modules/wavefunctions.o
 phq_init.o : ../../PW/src/Coul_cut_2D.o
 phq_init.o : ../../PW/src/buffers.o
+phq_init.o : ../../PW/src/init_us_2.o
 phq_init.o : ../../PW/src/ldaU.o
 phq_init.o : ../../PW/src/pwcom.o
 phq_init.o : ../../UtilXlib/mp.o
@@ -1470,6 +1488,7 @@ raman_mat.o : ../../Modules/mp_pools.o
 raman_mat.o : ../../Modules/recvec.o
 raman_mat.o : ../../Modules/wavefunctions.o
 raman_mat.o : ../../PW/src/buffers.o
+raman_mat.o : ../../PW/src/init_us_2.o
 raman_mat.o : ../../PW/src/pwcom.o
 raman_mat.o : ../../PW/src/symme.o
 raman_mat.o : ../../UtilXlib/mp.o
@@ -1591,6 +1610,7 @@ solve_e.o : ../../Modules/noncol.o
 solve_e.o : ../../Modules/recvec.o
 solve_e.o : ../../Modules/wavefunctions.o
 solve_e.o : ../../PW/src/buffers.o
+solve_e.o : ../../PW/src/init_us_2.o
 solve_e.o : ../../PW/src/ldaU.o
 solve_e.o : ../../PW/src/paw_onecenter.o
 solve_e.o : ../../PW/src/paw_symmetry.o
@@ -1615,6 +1635,7 @@ solve_e2.o : ../../Modules/mp_pools.o
 solve_e2.o : ../../Modules/recvec.o
 solve_e2.o : ../../Modules/wavefunctions.o
 solve_e2.o : ../../PW/src/buffers.o
+solve_e2.o : ../../PW/src/init_us_2.o
 solve_e2.o : ../../PW/src/pwcom.o
 solve_e2.o : ../../UtilXlib/mp.o
 solve_e2.o : ../../upflib/uspp.o
@@ -1637,6 +1658,7 @@ solve_e_fpol.o : ../../Modules/mp_pools.o
 solve_e_fpol.o : ../../Modules/recvec.o
 solve_e_fpol.o : ../../Modules/wavefunctions.o
 solve_e_fpol.o : ../../PW/src/buffers.o
+solve_e_fpol.o : ../../PW/src/init_us_2.o
 solve_e_fpol.o : ../../PW/src/pwcom.o
 solve_e_fpol.o : ../../UtilXlib/mp.o
 solve_e_fpol.o : ../../upflib/uspp.o
@@ -1671,6 +1693,7 @@ solve_linter.o : ../../Modules/noncol.o
 solve_linter.o : ../../Modules/recvec.o
 solve_linter.o : ../../Modules/wavefunctions.o
 solve_linter.o : ../../PW/src/buffers.o
+solve_linter.o : ../../PW/src/init_us_2.o
 solve_linter.o : ../../PW/src/ldaU.o
 solve_linter.o : ../../PW/src/paw_onecenter.o
 solve_linter.o : ../../PW/src/paw_symmetry.o
@@ -1867,6 +1890,7 @@ zstar_eu.o : ../../Modules/mp_pools.o
 zstar_eu.o : ../../Modules/noncol.o
 zstar_eu.o : ../../Modules/wavefunctions.o
 zstar_eu.o : ../../PW/src/buffers.o
+zstar_eu.o : ../../PW/src/init_us_2.o
 zstar_eu.o : ../../PW/src/ldaU.o
 zstar_eu.o : ../../PW/src/pwcom.o
 zstar_eu.o : ../../PW/src/symme.o
@@ -1887,6 +1911,7 @@ zstar_eu_us.o : ../../Modules/noncol.o
 zstar_eu_us.o : ../../Modules/recvec.o
 zstar_eu_us.o : ../../Modules/wavefunctions.o
 zstar_eu_us.o : ../../PW/src/buffers.o
+zstar_eu_us.o : ../../PW/src/init_us_2.o
 zstar_eu_us.o : ../../PW/src/ldaU.o
 zstar_eu_us.o : ../../PW/src/pwcom.o
 zstar_eu_us.o : ../../UtilXlib/mp.o

@@ -28,7 +28,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE constants,            ONLY: pi, tpi
    USE fft_base,             ONLY: dfftp
    USE gvect,                ONLY: ngm, g, gcutm, ngm_g
-   USE uspp,                 ONLY: nkb, vkb, okvan, using_vkb
+   USE uspp,                 ONLY: nkb, vkb, okvan
    USE uspp_param,           ONLY: upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY: nspin
    USE klist,                ONLY: nelec, degauss, nks, xk, wk, ngk, igk_k
@@ -42,6 +42,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE mp_pools,             ONLY: intra_pool_comm
    USE becmod,               ONLY: calbec,bec_type,allocate_bec_type,deallocate_bec_type
    USE spin_orb,             ONLY: lspinorb
+   USE uspp_init,            ONLY : init_us_2
    IMPLICIT NONE
    !
    REAL(DP), INTENT(OUT) :: el_pola
@@ -403,7 +404,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                igk0(:)= igk_k(:,ik)
                CALL get_buffer( psi,nwordwfc,iunwfc,nx_el(kpoint-1,pdir) )
                IF (okvan) THEN
-                  CALL using_vkb(1)
                   CALL init_us_2( npw0,igk0,xk(1,nx_el(kpoint-1,pdir)),vkb )
                   CALL calbec( npw0, vkb, psi, becp0)
                ENDIF
@@ -416,7 +416,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                   igk1(:)= igk_k(:,ik)
                   CALL get_buffer( psi1,nwordwfc,iunwfc,nx_el(kpoint,pdir) )
                   IF (okvan) THEN
-                     CALL using_vkb(1)
                      CALL init_us_2( npw1,igk1,xk(1,nx_el(kpoint,pdir)),vkb )
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                   ENDIF
@@ -427,7 +426,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
                   igk1(:)= igk_k(:,ik)
                   CALL get_buffer( psi1,nwordwfc,iunwfc,nx_el(kstart,pdir) )
                   IF (okvan) THEN
-                     CALL using_vkb(1)
                      CALL init_us_2( npw1,igk1,xk(1,nx_el(kstart,pdir)),vkb )
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                   ENDIF

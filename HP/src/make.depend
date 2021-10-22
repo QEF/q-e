@@ -114,6 +114,7 @@ hp_init_q.o : ../../Modules/ions_base.o
 hp_init_q.o : ../../Modules/kind.o
 hp_init_q.o : ../../Modules/wavefunctions.o
 hp_init_q.o : ../../PW/src/buffers.o
+hp_init_q.o : ../../PW/src/init_us_2.o
 hp_init_q.o : ../../PW/src/pwcom.o
 hp_init_q.o : ../../upflib/uspp.o
 hp_load_q.o : ../../LR_Modules/lrcom.o

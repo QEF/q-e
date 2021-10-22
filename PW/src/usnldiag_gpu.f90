@@ -18,8 +18,8 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nat, ityp, ntyp => nsp
   USE wvfct,            ONLY: npwx
-  USE uspp,             ONLY: ofsbeta, deeq_d, vkb_d, qq_at_d, qq_so_d, &
-                              deeq_nc_d, using_vkb_d
+  USE uspp,             ONLY: ofsbeta, deeq_d, qq_at_d, qq_so_d, &
+                              deeq_nc_d
   USE uspp_param,       ONLY: upf, nh
   USE spin_orb,         ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
@@ -39,8 +39,6 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   !
   INTEGER :: ig, ipol
   !
-  CALL using_vkb_d(0)
-  !
   ! initialise s_diag
   !
   CALL dev_memset( s_diag_d, 1.d0 )
@@ -57,7 +55,7 @@ CONTAINS
   
   SUBROUTINE usnldiag_collinear()
      USE lsda_mod, ONLY: current_spin
-     USE uspp,     ONLY: deeq_d, vkb_d, qq_at_d
+     USE uspp,     ONLY: deeq_d, qq_at_d, vkb
      
      IMPLICIT NONE
      !
@@ -75,27 +73,32 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc parallel vector_length(32)
+                   !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
-                      
+                      !$acc loop vector collapse(2) private(ikb,cv,jkb,ar) reduction(+:sum_h,sum_s)
                       DO ih = 1, nh_
-                         ikb = ijkb_start + ih
-                         cv = vkb_d (ig, ikb)
                          DO jh = 1, nh_
+                            ikb = ijkb_start + ih
+                            cv = vkb (ig, ikb)
                             jkb = ijkb_start + jh
-                            
-                            ar = cv*conjg(vkb_d (ig, jkb))
-                            
+                            ar = cv*conjg(vkb (ig, jkb))
                             sum_h = sum_h + dble(deeq_d (ih, jh, na, current_spin) * ar)
                             sum_s = sum_s + dble(qq_at_d (ih, jh, na) * ar)
                          END DO
                       END DO
-                       
+                      !$acc atomic update 
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h
+                      !$acc end atomic 
+                      !$acc atomic update 
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data
               END IF
            END DO
         ELSE
@@ -103,23 +106,28 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc parallel vector_length(32)
+                   !$acc loop gang reduction(+:sum_h,sum_s)
                    DO ig = 1, npw 
                       sum_h = 0.d0
                       sum_s = 0.d0
-                      
+                      !$acc loop vector private(ikb,ar) reduction(+:sum_h,sum_s)
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
-                         
-                         ar = vkb_d (ig, ikb)*conjg(vkb_d (ig, ikb))
-                         
+                         ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
                          sum_h = sum_h + dble(deeq_d (ih, ih, na, current_spin) * ar)
                          sum_s = sum_s + dble(qq_at_d (ih, ih, na) * ar)
                       END DO
-                       
+                      !$acc atomic update
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data
               END IF
            END DO
         END IF
@@ -128,7 +136,7 @@ CONTAINS
   !
   SUBROUTINE usnldiag_noncollinear()
      USE lsda_mod,  ONLY: current_spin
-     USE uspp,      ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
+     USE uspp,      ONLY: vkb, qq_at_d, qq_so_d, deeq_nc_d
      
      IMPLICIT NONE
      !
@@ -146,20 +154,20 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc parallel vector_length(32) 
+                   !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
                    DO ig = 1, npw   ! change this to 2*npw ?
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
                       sum_s = 0.d0
-                      
+                      !$acc loop vector collapse(2) private(ikb,cv,jkb,ar) reduction(+:sum_h1,sum_h4,sum_s)
                       DO ih = 1, nh_
-                         ikb = ijkb_start + ih
-                         cv = vkb_d (ig, ikb)
                          DO jh = 1, nh_
+                            ikb = ijkb_start + ih
+                            cv = vkb (ig, ikb)
                             jkb = ijkb_start + jh
-                            
-                            ar = cv*conjg(vkb_d (ig, jkb))
-                            
+                            ar = cv*conjg(vkb (ig, jkb))
                             sum_h1 = sum_h1 + dble(deeq_nc_d (ih, jh, na, 1) * ar)
                             sum_h4 = sum_h4 + dble(deeq_nc_d (ih, jh, na, 4) * ar)
                             sum_s  = sum_s  + dble(qq_at_d (ih, jh, na) * ar)
@@ -168,11 +176,21 @@ CONTAINS
                       !
                       ! OPTIMIZE HERE : this scattered assign is bad!
                       !
+                      !$acc atomic update
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h1
+                      !$acc end atomic 
+                      !$acc atomic update
                       h_diag_d (ig,2) = h_diag_d (ig,2) + sum_h4
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,2) = s_diag_d (ig,2) + sum_s
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data 
               END IF
            END DO
         ELSE
@@ -180,17 +198,17 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc parallel vector_length(32) 
+                   !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s)
                    DO ig = 1, npw 
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
                       sum_s = 0.d0
-                      
+                      !$acc loop vector private(ikb,ar) reduction(+:sum_h1,sum_h4,sum_s)
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
-                         
-                         ar = vkb_d (ig, ikb)*conjg(vkb_d (ig, ikb))
-                         
+                         ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
                          sum_h1 = sum_h1 + dble(deeq_nc_d (ih, ih, na, 1) * ar)
                          sum_h4 = sum_h4 + dble(deeq_nc_d (ih, ih, na, 4) * ar)
                          sum_s = sum_s + dble(qq_at_d (ih, ih, na) * ar)
@@ -198,11 +216,21 @@ CONTAINS
                       !
                       ! OPTIMIZE HERE : this scattered assign is bad!
                       !
+                      !$acc atomic update
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h1
+                      !$acc end atomic 
+                      !$acc atomic update
                       h_diag_d (ig,2) = h_diag_d (ig,2) + sum_h4
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,2) = s_diag_d (ig,2) + sum_s
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data 
               END IF
            END DO
         END IF
@@ -211,7 +239,7 @@ CONTAINS
   !
   SUBROUTINE usnldiag_spinorb()
      USE lsda_mod, ONLY: current_spin
-     USE uspp,     ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
+     USE uspp,     ONLY: vkb, qq_at_d, qq_so_d, deeq_nc_d
 
      IMPLICIT NONE
      !
@@ -229,21 +257,21 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc parallel vector_length(32)
+                   !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
                    DO ig = 1, npw   ! change this to 2*npw ?
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
                       sum_s1 = 0.d0
                       sum_s4 = 0.d0
-                      
+                      !$acc loop vector collapse(2) private(ikb,cv,jkb,ar) reduction(+:sum_h1,sum_h4,sum_s1,sum_s4) 
                       DO ih = 1, nh_
-                         ikb = ijkb_start + ih
-                         cv = vkb_d (ig, ikb)
                          DO jh = 1, nh_
+                            ikb = ijkb_start + ih
+                            cv = vkb (ig, ikb)
                             jkb = ijkb_start + jh
-                            
-                            ar = cv*conjg(vkb_d (ig, jkb))
-                            
+                            ar = cv*conjg(vkb (ig, jkb))
                             sum_h1 = sum_h1 + dble(deeq_nc_d (ih, jh, na, 1) * ar)
                             sum_h4 = sum_h4 + dble(deeq_nc_d (ih, jh, na, 4) * ar)
                             sum_s1 = sum_s1  + dble(qq_so_d (ih, jh, 1, nt) * ar)
@@ -253,11 +281,21 @@ CONTAINS
                       !
                       ! OPTIMIZE HERE : this scattered assign is bad!
                       !
+                      !$acc atomic update
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h1
+                      !$acc end atomic 
+                      !$acc atomic update
                       h_diag_d (ig,2) = h_diag_d (ig,2) + sum_h4
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s1
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,2) = s_diag_d (ig,2) + sum_s4
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data 
               END IF
            END DO
         ELSE
@@ -265,18 +303,18 @@ CONTAINS
               IF (ityp (na) == nt) THEN
                    ijkb_start = ofsbeta(na)
                    nh_ = nh(nt)
-                   !$cuf kernel do(1) <<<*,*>>>
+                   !$acc data present(vkb(:,:)) deviceptr(h_diag_d(:,:), s_diag_d(:,:))
+                   !$acc parallel vector_length(32)
+                   !$acc loop gang reduction(+:sum_h1,sum_h4,sum_s1,sum_s4)
                    DO ig = 1, npw 
                       sum_h1 = 0.d0
                       sum_h4 = 0.d0
                       sum_s1 = 0.d0
                       sum_s4 = 0.d0
-                      
+                      !$acc loop vector private(ikb,ar) reduction(+:sum_h1,sum_h4,sum_s1,sum_s4) 
                       DO ih = 1, nh_
                          ikb = ijkb_start + ih
-                         
-                         ar = vkb_d (ig, ikb)*conjg(vkb_d (ig, ikb))
-                         
+                         ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
                          sum_h1 = sum_h1 + dble(deeq_nc_d (ih, ih, na, 1) * ar)
                          sum_h4 = sum_h4 + dble(deeq_nc_d (ih, ih, na, 4) * ar)
                          sum_s1 = sum_s1 + dble(qq_so_d (ih, ih, 1, nt) * ar)
@@ -285,11 +323,21 @@ CONTAINS
                       !
                       ! OPTIMIZE HERE : this scattered assign is bad!
                       !
+                      !$acc atomic update
                       h_diag_d (ig,1) = h_diag_d (ig,1) + sum_h1
+                      !$acc end atomic 
+                      !$acc atomic update
                       h_diag_d (ig,2) = h_diag_d (ig,2) + sum_h4
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,1) = s_diag_d (ig,1) + sum_s1
+                      !$acc end atomic 
+                      !$acc atomic update
                       s_diag_d (ig,2) = s_diag_d (ig,2) + sum_s4
+                      !$acc end atomic 
                    ENDDO
+                   !$acc end parallel
+                   !$acc end data 
               END IF
            END DO
         END IF

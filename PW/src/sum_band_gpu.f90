@@ -32,7 +32,7 @@ SUBROUTINE sum_band_gpu()
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
-                                   becsum_d, ebecsum_d, vkb_d, using_vkb, using_vkb_d
+                                   becsum_d, ebecsum_d
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions,        ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
@@ -281,6 +281,7 @@ SUBROUTINE sum_band_gpu()
        USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines
+       USE uspp_init,     ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -345,9 +346,9 @@ SUBROUTINE sum_band_gpu()
           CALL stop_clock_gpu( 'sum_band:buffer' )
           !
           CALL start_clock_gpu( 'sum_band:init_us_2' )
-
-          IF ( nkb > 0 ) CALL using_vkb_d(2)
-          IF ( nkb > 0 ) CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+          !
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+          !
           CALL stop_clock_gpu( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
@@ -569,6 +570,7 @@ SUBROUTINE sum_band_gpu()
        USE mp,                 ONLY : mp_sum, mp_get_comm_null
        USE control_flags,      ONLY : many_fft
        USE fft_helper_subroutines
+       USE uspp_init,          ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -657,9 +659,9 @@ SUBROUTINE sum_band_gpu()
           CALL stop_clock_gpu( 'sum_band:buffer' )
           !
           CALL start_clock_gpu( 'sum_band:init_us_2' )
-          IF ( nkb > 0 ) CALL using_vkb_d(2)
-          IF ( nkb > 0 ) &
-             CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+          !
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
+          !
           CALL stop_clock_gpu( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
@@ -1065,7 +1067,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE control_flags,      ONLY : gamma_only, tqr
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
   USE uspp,               ONLY : nkb, becsum, ebecsum, ofsbeta, &
-                                 vkb_d, becsum_d, ebecsum_d, ofsbeta_d, using_vkb_d
+                                 becsum_d, ebecsum_d, ofsbeta_d, vkb
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
   USE klist,              ONLY : ngk, nkstot
@@ -1110,10 +1112,14 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
      CALL using_evc_d(0) 
-     CALL using_vkb_d(0) 
      CALL using_becp_d_auto(2)
      ! calbec computes becp = <vkb_i|psi_j>
-     CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+!$acc end host_data
+!$acc end data
+     !
   ELSE
      CALL using_evc(0) 
      CALL using_becp_auto(2)

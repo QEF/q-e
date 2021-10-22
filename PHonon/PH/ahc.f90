@@ -157,6 +157,7 @@ SUBROUTINE ahc_do_upperfan(ik)
   USE units_lr,         ONLY : lrwfc, iuwfc
   USE control_ph,       ONLY : tr2_ph
   USE control_lr,       ONLY : lgamma
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

@@ -122,6 +122,7 @@ elphel2_shuffle.o : ../../Modules/noncol.o
 elphel2_shuffle.o : ../../Modules/recvec.o
 elphel2_shuffle.o : ../../Modules/wavefunctions.o
 elphel2_shuffle.o : ../../PHonon/PH/phcom.o
+elphel2_shuffle.o : ../../PW/src/init_us_2.o
 elphel2_shuffle.o : ../../PW/src/pwcom.o
 elphel2_shuffle.o : ../../PW/src/symm_base.o
 elphel2_shuffle.o : ../../UtilXlib/mp.o
@@ -590,6 +591,7 @@ pw2wan2epw.o : ../../Modules/noncol.o
 pw2wan2epw.o : ../../Modules/random_numbers.o
 pw2wan2epw.o : ../../Modules/recvec.o
 pw2wan2epw.o : ../../Modules/wavefunctions.o
+pw2wan2epw.o : ../../PW/src/init_us_2.o
 pw2wan2epw.o : ../../PW/src/pwcom.o
 pw2wan2epw.o : ../../UtilXlib/mp.o
 pw2wan2epw.o : ../../UtilXlib/parallel_include.o

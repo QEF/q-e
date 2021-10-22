@@ -38,7 +38,7 @@ SUBROUTINE force_hub( forceh )
    USE mp,                   ONLY : mp_sum
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
                                     deallocate_bec_type
-   USE uspp,                 ONLY : nkb, vkb, ofsbeta, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, ofsbeta
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE klist,                ONLY : nks, xk, ngk, igk_k
@@ -49,6 +49,7 @@ SUBROUTINE force_hub( forceh )
    USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
    USE wavefunctions_gpum,   ONLY : using_evc
    USE becmod_subs_gpum,     ONLY : using_becp_auto
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -132,8 +133,6 @@ SUBROUTINE force_hub( forceh )
       IF (nks > 1)  CALL using_evc(2)
       IF (nks > 1) &
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-      !
-      CALL using_vkb(2)
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
       ! Compute spsi = S * psi
@@ -1379,7 +1378,7 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
    USE wvfct,                ONLY : npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
    USE uspp_param,           ONLY : nh
    USE klist,                ONLY : igk_k, ngk
    USE wavefunctions,        ONLY : evc
@@ -1429,8 +1428,6 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    ALLOCATE ( aux(npwx,nh(nt)) )
    aux(:,:) = (0.0d0, 0.0d0)
    !
-   !
-   CALL using_vkb(0)
    !
 !!omp parallel do default(shared) private(ig,ih)
    ! Beta function
@@ -1528,7 +1525,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
                                     offsetU_back, offsetU_back1, ldim_u, backall, &
                                     U_projection 
    USE wvfct,                ONLY : nbnd, npwx,  wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, qq_at
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
@@ -1659,8 +1656,6 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ALLOCATE( wfatdbeta(nwfcU,nh(nt)) )
    ALLOCATE( wfatbeta(nwfcU,nh(nt))  )
    ALLOCATE( dbeta(npwx,nh(nt))      )
-   !
-   CALL using_vkb(0)
    !
 ! !omp parallel do default(shared) private(ih,ig)
    DO ih = 1, nh(nt)

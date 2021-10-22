@@ -28,11 +28,23 @@ add_shift_us.o : ../../Modules/kind.o
 add_shift_us.o : ../../Modules/mp_pools.o
 add_shift_us.o : ../../Modules/recvec.o
 add_shift_us.o : ../../Modules/wavefunctions.o
+add_shift_us.o : ../../PW/src/init_us_2.o
 add_shift_us.o : ../../PW/src/pw_restart_new.o
 add_shift_us.o : ../../PW/src/pwcom.o
 add_shift_us.o : ../../PW/src/symme.o
 add_shift_us.o : ../../UtilXlib/mp.o
 add_shift_us.o : ../../upflib/uspp.o
+adduscore.o : ../../Modules/cell_base.o
+adduscore.o : ../../Modules/constants.o
+adduscore.o : ../../Modules/fft_base.o
+adduscore.o : ../../Modules/io_global.o
+adduscore.o : ../../Modules/ions_base.o
+adduscore.o : ../../Modules/kind.o
+adduscore.o : ../../Modules/mp_global.o
+adduscore.o : ../../PW/src/pwcom.o
+adduscore.o : ../../PW/src/scf_mod.o
+adduscore.o : ../../upflib/splinelib.o
+adduscore.o : ../../upflib/uspp.o
 addusdens1d.o : ../../FFTXlib/fft_scalar.o
 addusdens1d.o : ../../Modules/cell_base.o
 addusdens1d.o : ../../Modules/fft_base.o
@@ -87,6 +99,7 @@ bands.o : ../../Modules/noncol.o
 bands.o : ../../Modules/parameters.o
 bands.o : ../../Modules/recvec.o
 bands.o : ../../Modules/wavefunctions.o
+bands.o : ../../PW/src/init_us_2.o
 bands.o : ../../PW/src/pwcom.o
 bands.o : ../../UtilXlib/mp.o
 bands.o : ../../upflib/uspp.o
@@ -159,6 +172,7 @@ do_initial_state.o : ../../Modules/kind.o
 do_initial_state.o : ../../Modules/parameters.o
 do_initial_state.o : ../../Modules/recvec.o
 do_initial_state.o : ../../PW/src/extfield.o
+do_initial_state.o : ../../PW/src/init_us_2.o
 do_initial_state.o : ../../PW/src/ldaU.o
 do_initial_state.o : ../../PW/src/newd.o
 do_initial_state.o : ../../PW/src/pwcom.o
@@ -285,6 +299,7 @@ local_dos.o : ../../Modules/mp_pools.o
 local_dos.o : ../../Modules/noncol.o
 local_dos.o : ../../Modules/recvec.o
 local_dos.o : ../../Modules/wavefunctions.o
+local_dos.o : ../../PW/src/init_us_2.o
 local_dos.o : ../../PW/src/pw_restart_new.o
 local_dos.o : ../../PW/src/pwcom.o
 local_dos.o : ../../PW/src/scf_mod.o
@@ -313,6 +328,7 @@ local_dos_mag.o : ../../Modules/mp_pools.o
 local_dos_mag.o : ../../Modules/noncol.o
 local_dos_mag.o : ../../Modules/recvec.o
 local_dos_mag.o : ../../Modules/wavefunctions.o
+local_dos_mag.o : ../../PW/src/init_us_2.o
 local_dos_mag.o : ../../PW/src/pw_restart_new.o
 local_dos_mag.o : ../../PW/src/pwcom.o
 local_dos_mag.o : ../../PW/src/scf_mod.o
@@ -417,6 +433,7 @@ plan_avg.o : ../../Modules/mp_world.o
 plan_avg.o : ../../Modules/recvec.o
 plan_avg.o : ../../Modules/run_info.o
 plan_avg.o : ../../Modules/wavefunctions.o
+plan_avg.o : ../../PW/src/init_us_2.o
 plan_avg.o : ../../PW/src/pw_restart_new.o
 plan_avg.o : ../../PW/src/pwcom.o
 plan_avg.o : ../../UtilXlib/mp.o
@@ -438,6 +455,7 @@ poormanwannier.o : ../../Modules/noncol.o
 poormanwannier.o : ../../Modules/recvec.o
 poormanwannier.o : ../../Modules/wavefunctions.o
 poormanwannier.o : ../../PW/src/atomic_wfc_mod.o
+poormanwannier.o : ../../PW/src/init_us_2.o
 poormanwannier.o : ../../PW/src/ldaU.o
 poormanwannier.o : ../../PW/src/pw_restart_new.o
 poormanwannier.o : ../../PW/src/pwcom.o
@@ -508,6 +526,7 @@ projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/recvec.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
+projwfc.o : ../../PW/src/init_us_2.o
 projwfc.o : ../../PW/src/buffers.o
 projwfc.o : ../../PW/src/pw_restart_new.o
 projwfc.o : ../../PW/src/pwcom.o
@@ -583,6 +602,7 @@ pw2bgw.o : ../../Modules/wavefunctions.o
 pw2bgw.o : ../../PW/src/buffers.o
 pw2bgw.o : ../../PW/src/exx.o
 pw2bgw.o : ../../PW/src/g_psi_mod.o
+pw2bgw.o : ../../PW/src/init_us_2.o
 pw2bgw.o : ../../PW/src/ldaU.o
 pw2bgw.o : ../../PW/src/pwcom.o
 pw2bgw.o : ../../PW/src/scf_mod.o
@@ -656,6 +676,7 @@ pw2wannier90.o : ../../Modules/noncol.o
 pw2wannier90.o : ../../Modules/random_numbers.o
 pw2wannier90.o : ../../Modules/recvec.o
 pw2wannier90.o : ../../Modules/wavefunctions.o
+pw2wannier90.o : ../../PW/src/init_us_2.o
 pw2wannier90.o : ../../PW/src/pwcom.o
 pw2wannier90.o : ../../PW/src/scf_mod.o
 pw2wannier90.o : ../../PW/src/symm_base.o
@@ -698,6 +719,7 @@ sum_band_kin.o : ../../Modules/noncol.o
 sum_band_kin.o : ../../Modules/recvec.o
 sum_band_kin.o : ../../Modules/wavefunctions.o
 sum_band_kin.o : ../../PW/src/buffers.o
+sum_band_kin.o : ../../PW/src/init_us_2.o
 sum_band_kin.o : ../../PW/src/ldaU.o
 sum_band_kin.o : ../../PW/src/paw_symmetry.o
 sum_band_kin.o : ../../PW/src/pwcom.o
@@ -723,6 +745,7 @@ sym_band.o : ../../Modules/mp_pools.o
 sym_band.o : ../../Modules/noncol.o
 sym_band.o : ../../Modules/recvec.o
 sym_band.o : ../../Modules/wavefunctions.o
+sym_band.o : ../../PW/src/init_us_2.o
 sym_band.o : ../../PW/src/pwcom.o
 sym_band.o : ../../PW/src/symm_base.o
 sym_band.o : ../../UtilXlib/mp.o
@@ -882,6 +905,7 @@ write_p_avg.o : ../../Modules/mp_world.o
 write_p_avg.o : ../../Modules/noncol.o
 write_p_avg.o : ../../Modules/recvec.o
 write_p_avg.o : ../../Modules/wavefunctions.o
+write_p_avg.o : ../../PW/src/init_us_2.o
 write_p_avg.o : ../../PW/src/ldaU.o
 write_p_avg.o : ../../PW/src/pwcom.o
 write_p_avg.o : ../../UtilXlib/mp.o

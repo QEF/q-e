@@ -914,6 +914,7 @@
     USE mp,              ONLY : mp_sum
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
+    USE uspp_init,       ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -1926,6 +1927,7 @@
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
     USE elph2,           ONLY : nbndep
+    USE uspp_init,       ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -2418,6 +2420,7 @@
     USE spin_orb,             ONLY : lspinorb
     USE lrus,                 ONLY : dpqq, dpqq_so
     USE io_global,            ONLY : stdout
+    USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
     !

@@ -8,6 +8,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3/
 
 PPOBJS = \
+adduscore.o \
 addusdens1d.o \
 add_shift_cc.o \
 add_shift_lc.o \

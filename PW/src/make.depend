@@ -273,6 +273,7 @@ bp_c_phase.o : ../../UtilXlib/mp.o
 bp_c_phase.o : ../../upflib/uspp.o
 bp_c_phase.o : bp_mod.o
 bp_c_phase.o : buffers.o
+bp_c_phase.o : init_us_2.o
 bp_c_phase.o : pwcom.o
 bp_mod.o : ../../Modules/becmod.o
 bp_mod.o : ../../Modules/cell_base.o
@@ -307,6 +308,7 @@ c_bands.o : buffers.o
 c_bands.o : g_psi_mod.o
 c_bands.o : g_psi_mod_gpu.o
 c_bands.o : gcscf_module.o
+c_bands.o : init_us_2.o
 c_bands.o : ldaU.o
 c_bands.o : pwcom.o
 c_bands.o : pwcom_gpu.o
@@ -327,6 +329,7 @@ c_phase_field.o : ../../UtilXlib/mp.o
 c_phase_field.o : ../../upflib/uspp.o
 c_phase_field.o : bp_mod.o
 c_phase_field.o : buffers.o
+c_phase_field.o : init_us_2.o
 c_phase_field.o : pwcom.o
 cdiagh.o : ../../Modules/kind.o
 cdiagh.o : ../../Modules/mp_bands.o
@@ -417,6 +420,7 @@ compute_becsum.o : ../../UtilXlib/mp.o
 compute_becsum.o : ../../upflib/paw_variables.o
 compute_becsum.o : ../../upflib/uspp.o
 compute_becsum.o : buffers.o
+compute_becsum.o : init_us_2.o
 compute_becsum.o : paw_symmetry.o
 compute_becsum.o : pwcom.o
 compute_becsum.o : scf_mod.o
@@ -698,6 +702,7 @@ exx.o : ../../upflib/uspp_data.o
 exx.o : buffers.o
 exx.o : exx_band.o
 exx.o : exx_base.o
+exx.o : init_us_2.o
 exx.o : paw_exx.o
 exx.o : pwcom.o
 exx.o : realus.o
@@ -877,6 +882,7 @@ force_hub.o : ../../UtilXlib/mp.o
 force_hub.o : ../../upflib/uspp.o
 force_hub.o : atomic_wfc_mod.o
 force_hub.o : buffers.o
+force_hub.o : init_us_2.o
 force_hub.o : ldaU.o
 force_hub.o : pwcom.o
 force_hub.o : scf_mod.o
@@ -899,6 +905,7 @@ force_hub_gpu.o : ../../UtilXlib/mp.o
 force_hub_gpu.o : ../../upflib/uspp.o
 force_hub_gpu.o : atomic_wfc_mod.o
 force_hub_gpu.o : buffers.o
+force_hub_gpu.o : init_us_2.o
 force_hub_gpu.o : ldaU.o
 force_hub_gpu.o : pwcom.o
 force_hub_gpu.o : scf_mod.o
@@ -935,6 +942,7 @@ force_us.o : ../../Modules/wavefunctions_gpu.o
 force_us.o : ../../UtilXlib/mp.o
 force_us.o : ../../upflib/uspp.o
 force_us.o : buffers.o
+force_us.o : init_us_2.o
 force_us.o : pwcom.o
 force_us.o : pwcom_gpu.o
 force_us.o : symme.o
@@ -955,6 +963,7 @@ force_us_gpu.o : ../../Modules/wavefunctions_gpu.o
 force_us_gpu.o : ../../UtilXlib/mp.o
 force_us_gpu.o : ../../upflib/uspp.o
 force_us_gpu.o : buffers.o
+force_us_gpu.o : init_us_2.o
 force_us_gpu.o : pwcom.o
 force_us_gpu.o : pwcom_gpu.o
 force_us_gpu.o : symme.o
@@ -1000,6 +1009,7 @@ forces_bp_efield.o : ../../UtilXlib/parallel_include.o
 forces_bp_efield.o : ../../upflib/uspp.o
 forces_bp_efield.o : bp_mod.o
 forces_bp_efield.o : buffers.o
+forces_bp_efield.o : init_us_2.o
 forces_bp_efield.o : pwcom.o
 g2_kin.o : ../../Modules/cell_base.o
 g2_kin.o : ../../Modules/gvecw.o
@@ -1149,6 +1159,7 @@ h_epsi_her_set.o : ../../UtilXlib/mp.o
 h_epsi_her_set.o : ../../upflib/uspp.o
 h_epsi_her_set.o : bp_mod.o
 h_epsi_her_set.o : buffers.o
+h_epsi_her_set.o : init_us_2.o
 h_epsi_her_set.o : ldaU.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o
@@ -1290,6 +1301,7 @@ init_run.o : pwcom.o
 init_run.o : pwcom_gpu.o
 init_run.o : symme.o
 init_us_2.o : ../../Modules/cell_base.o
+init_us_2.o : ../../Modules/control_flags.o
 init_us_2.o : ../../Modules/fft_base.o
 init_us_2.o : ../../Modules/ions_base.o
 init_us_2.o : ../../Modules/kind.o
@@ -1558,6 +1570,7 @@ new_ns.o : ../../Modules/wavefunctions_gpu.o
 new_ns.o : ../../UtilXlib/mp.o
 new_ns.o : ../../upflib/uspp.o
 new_ns.o : buffers.o
+new_ns.o : init_us_2.o
 new_ns.o : ldaU.o
 new_ns.o : pwcom.o
 new_ns.o : symm_base.o
@@ -1694,6 +1707,7 @@ orbm_kubo.o : ../../UtilXlib/mp.o
 orbm_kubo.o : ../../upflib/uspp.o
 orbm_kubo.o : bp_mod.o
 orbm_kubo.o : buffers.o
+orbm_kubo.o : init_us_2.o
 orbm_kubo.o : pwcom.o
 orbm_kubo.o : scf_mod.o
 orbm_kubo.o : scf_mod_gpu.o
@@ -1715,6 +1729,7 @@ orthoatwfc.o : ../../UtilXlib/mp.o
 orthoatwfc.o : ../../upflib/uspp.o
 orthoatwfc.o : atomic_wfc_mod.o
 orthoatwfc.o : buffers.o
+orthoatwfc.o : init_us_2.o
 orthoatwfc.o : ldaU.o
 orthoatwfc.o : pwcom.o
 orthoatwfc_gpu.o : ../../Modules/becmod.o
@@ -1731,6 +1746,7 @@ orthoatwfc_gpu.o : ../../UtilXlib/mp.o
 orthoatwfc_gpu.o : ../../upflib/uspp.o
 orthoatwfc_gpu.o : atomic_wfc_mod.o
 orthoatwfc_gpu.o : buffers.o
+orthoatwfc_gpu.o : init_us_2.o
 orthoatwfc_gpu.o : ldaU.o
 orthoatwfc_gpu.o : pwcom.o
 output_tau.o : ../../Modules/cell_base.o
@@ -1960,6 +1976,7 @@ pw2casino_write.o : ../../XClib/xc_lib.o
 pw2casino_write.o : ../../upflib/uspp.o
 pw2casino_write.o : buffers.o
 pw2casino_write.o : exx.o
+pw2casino_write.o : init_us_2.o
 pw2casino_write.o : ldaU.o
 pw2casino_write.o : pw2blip.o
 pw2casino_write.o : pwcom.o
@@ -2457,6 +2474,7 @@ stres_hub.o : ../../UtilXlib/mp.o
 stres_hub.o : ../../upflib/uspp.o
 stres_hub.o : atomic_wfc_mod.o
 stres_hub.o : buffers.o
+stres_hub.o : init_us_2.o
 stres_hub.o : ldaU.o
 stres_hub.o : pwcom.o
 stres_hub.o : scf_mod.o
@@ -2580,6 +2598,7 @@ stres_us.o : ../../Modules/wavefunctions.o
 stres_us.o : ../../Modules/wavefunctions_gpu.o
 stres_us.o : ../../UtilXlib/mp.o
 stres_us.o : ../../upflib/uspp.o
+stres_us.o : init_us_2.o
 stres_us.o : pwcom.o
 stres_us.o : pwcom_gpu.o
 stres_us_gpu.o : ../../Modules/becmod.o
@@ -2595,6 +2614,7 @@ stres_us_gpu.o : ../../Modules/noncol.o
 stres_us_gpu.o : ../../Modules/wavefunctions_gpu.o
 stres_us_gpu.o : ../../UtilXlib/mp.o
 stres_us_gpu.o : ../../upflib/uspp.o
+stres_us_gpu.o : init_us_2.o
 stres_us_gpu.o : pwcom.o
 stres_us_gpu.o : pwcom_gpu.o
 stress.o : ../../Modules/cell_base.o
@@ -2647,6 +2667,7 @@ sum_band.o : ../../upflib/uspp.o
 sum_band.o : add_dmft_occ.o
 sum_band.o : buffers.o
 sum_band.o : gcscf_module.o
+sum_band.o : init_us_2.o
 sum_band.o : ldaU.o
 sum_band.o : paw_symmetry.o
 sum_band.o : pwcom.o
@@ -2679,6 +2700,7 @@ sum_band_gpu.o : ../../upflib/upf_spinorb.o
 sum_band_gpu.o : ../../upflib/uspp.o
 sum_band_gpu.o : buffers.o
 sum_band_gpu.o : gcscf_module.o
+sum_band_gpu.o : init_us_2.o
 sum_band_gpu.o : ldaU.o
 sum_band_gpu.o : paw_symmetry.o
 sum_band_gpu.o : pwcom.o
@@ -2780,6 +2802,7 @@ update_pot.o : ../../upflib/paw_variables.o
 update_pot.o : ../../upflib/uspp.o
 update_pot.o : buffers.o
 update_pot.o : extfield.o
+update_pot.o : init_us_2.o
 update_pot.o : ldaU.o
 update_pot.o : paw_onecenter.o
 update_pot.o : pwcom.o
@@ -2801,6 +2824,7 @@ us_exx.o : ../../Modules/recvec.o
 us_exx.o : ../../UtilXlib/mp.o
 us_exx.o : ../../XClib/xc_lib.o
 us_exx.o : ../../upflib/uspp.o
+us_exx.o : init_us_2.o
 us_exx.o : pwcom.o
 us_exx.o : realus.o
 us_exx.o : symm_base.o
@@ -2967,6 +2991,7 @@ wfcinit.o : ../../upflib/uspp.o
 wfcinit.o : atomic_wfc_mod.o
 wfcinit.o : bp_mod.o
 wfcinit.o : buffers.o
+wfcinit.o : init_us_2.o
 wfcinit.o : ldaU.o
 wfcinit.o : pw_restart_new.o
 wfcinit.o : pwcom.o
@@ -2995,6 +3020,7 @@ wfcinit_gpu.o : ../../upflib/uspp.o
 wfcinit_gpu.o : atomic_wfc_mod.o
 wfcinit_gpu.o : bp_mod.o
 wfcinit_gpu.o : buffers.o
+wfcinit_gpu.o : init_us_2.o
 wfcinit_gpu.o : ldaU.o
 wfcinit_gpu.o : pw_restart_new.o
 wfcinit_gpu.o : pwcom.o

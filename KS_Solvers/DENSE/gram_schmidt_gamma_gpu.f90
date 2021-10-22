@@ -171,7 +171,7 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   !
   ALLOCATE( sr_d(nbsize))
-  ALLOCATE( sr2_d(nbsize, nbnd - nbsize))
+  IF (nbnd .GT. nbsize) ALLOCATE( sr2_d(nbsize, nbnd - nbsize))
   !
   ! ... Blocking loop
   !
@@ -210,7 +210,8 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
   !
   ! ... Buffer Realese
   !
-  DEALLOCATE (sr_d, sr2_d) 
+  DEALLOCATE (sr_d) 
+  IF (nbnd .GT. nbsize) DEALLOCATE(sr2_d) 
   !
   !
   ! ... Copy psi <- phi

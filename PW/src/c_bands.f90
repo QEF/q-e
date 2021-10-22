@@ -19,7 +19,7 @@ SUBROUTINE c_bands( iter )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE klist,                ONLY : nkstot, nks, ngk, igk_k, igk_k_d, xk
-  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
+  USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart, use_gpu, iverbosity
@@ -35,6 +35,7 @@ SUBROUTINE c_bands( iter )
 
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -112,13 +113,7 @@ SUBROUTINE c_bands( iter )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( use_gpu ) THEN
-        IF ( nkb > 0 ) CALL using_vkb_d(2)
-        IF ( nkb > 0 ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
-     ELSE
-        IF ( nkb > 0 ) CALL using_vkb(2)
-        IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
-     END IF
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      ! ... read in wavefunctions from the previous iteration
      !
@@ -199,7 +194,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
-  USE uspp,                 ONLY : vkb, nkb, okvan, using_vkb
+  USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
@@ -366,6 +361,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           FORALL( ig = 1 : npw )
              h_diag(ig, 1) = g2kin(ig) + v_of_0
           END FORALL
+          !
+          !$acc update self(vkb)
           CALL usnldiag( npw, h_diag, s_diag )
        END IF
        !
@@ -703,8 +700,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        IF ( okvan ) THEN
           !
           CALL allocate_bec_type( nkb, nbnd, bec_evcel )
-          CALL using_vkb(0)
           !
+          !$acc update self(vkb)
           CALL calbec( npw, vkb, evcel, bec_evcel )
           !
        ENDIF
@@ -731,6 +728,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           FORALL( ig = 1 : npwx )
              h_diag(ig, :) = g2kin(ig) + v_of_0
           END FORALL
+          !
+          !$acc update self(vkb)
           CALL usnldiag( npw, h_diag, s_diag )
        ENDIF
        !
@@ -1147,7 +1146,7 @@ SUBROUTINE c_bands_nscf( )
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE basis,                ONLY : starting_wfc
   USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k, igk_k_d
-  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
+  USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
@@ -1159,6 +1158,7 @@ SUBROUTINE c_bands_nscf( )
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
+  USE uspp_init,            ONLY : init_us_2
   IMPLICIT NONE
   !
   ! ... local variables
@@ -1219,12 +1219,7 @@ SUBROUTINE c_bands_nscf( )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) THEN
-        IF (.not. use_gpu ) CALL using_vkb(1)
-        IF (.not. use_gpu ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
-        IF (      use_gpu ) CALL using_vkb_d(1)
-        IF (      use_gpu ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
-     ENDIF
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .true.)
      !
      ! ... Needed for LDA+U
      !

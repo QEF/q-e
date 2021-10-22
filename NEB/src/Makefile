@@ -21,7 +21,7 @@ engine_to_path_tot_charge.o \
 fcp_opt_routines.o \
 fcp_variables.o \
 gcscf_variables.o \
-input.o \
+neb_input.o \
 path_base.o \
 path_formats.o \
 path_gen_inputs.o \

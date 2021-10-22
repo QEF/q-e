@@ -113,7 +113,8 @@ PROGRAM xclib_test
   REAL(DP) :: aver_thresh = 10.E-8        !^^--- to optimize
   !
   !---------- Loop indexes ---------------------------
-  INTEGER :: id, ii, ns, np, nthr, iip, iout, iaverout, iavernull, l
+  INTEGER :: id, ii, ns, np, nthr, iip, iout, iaverout, iavernull, &
+             l, idterm
   !
   !---------- XC-input vars ------------------
   REAL(DP), ALLOCATABLE :: rho(:,:), rho_tz(:,:)
@@ -440,19 +441,24 @@ PROGRAM xclib_test
     !
     IF ( dft_init=='ALL_TERMS' ) THEN
       IF (id<=nxc+1) THEN
-         dft = dft_LDAx_name(id-1)
+         idterm = id-1
+         dft = dft_LDAx_name(idterm)
          xc_kind = 'X'
       ELSEIF (id>=nxc+2 .AND. id<=nxc+ncc+2) THEN
-         dft = dft_LDAc_name(id-nxc-2)
+         idterm = id-nxc-2
+         dft = dft_LDAc_name(idterm)
          xc_kind = 'C'
       ELSEIF (id>=nxc+ncc+3 .AND. id<=nxc+ncc+ngcx+3) THEN
-         dft = dft_GGAx_name(id-nxc-ncc-3)
+         idterm = id-nxc-ncc-3
+         dft = dft_GGAx_name(idterm)
          xc_kind = 'X'
       ELSEIF (id>=nxc+ncc+ngcx+4 .AND. id<=nxc+ncc+ngcx+ngcc+4) THEN
-         dft = dft_GGAc_name(id-nxc-ncc-ngcx-4)
+         idterm = id-nxc-ncc-ngcx-4
+         dft = dft_GGAc_name(idterm)
          xc_kind = 'C'
       ELSEIF (id>=nxc+ncc+ngcx+ngcc+5 .AND. id<=nxc+ncc+ngcx+ngcc+nmeta+5) THEN
-         dft = dft_MGGA_name(id-nxc-ncc-ngcx-ngcc-5)
+         idterm = id-nxc-ncc-ngcx-ngcc-5
+         dft = dft_MGGA_name(idterm)
          xc_kind = 'XC'
       ENDIF
     ELSEIF ( dft_init=='ALL_SHORT' ) THEN
@@ -474,15 +480,24 @@ PROGRAM xclib_test
     !
     xc_data="XC_DATA__________"
     !
+    ! ... overlaps between full dfts and shortnames
+    !
+    IF ( dft_init=='ALL_TERMS' ) THEN
+      IF ( TRIM(dft)=='BLYP' ) dft='+BLYP'
+      IF ( TRIM(dft)=='PZ'   ) dft='+PZ'
+    ENDIF 
+    !
     ! ... skipped cases (some need further checks)
     !
     IF ( TRIM(dft)=='xxxx' .OR. TRIM(dft)=='NONE' ) THEN
+      id_vec(6)=idterm
       IF (mype==root) CALL print_test_status( skipped )
       CYCLE
     ENDIF
 #if !defined(__LIBXC)
     IF ( TRIM(dft)=='TB09' .OR. TRIM(dft)=='SCAN' .OR. &
          TRIM(dft)=='SCAN0'.OR. TRIM(dft)=='SCA0' ) THEN
+      id_vec(6)=idterm
       IF (mype==root) CALL print_test_status( skipped3 )
       CYCLE
     ENDIF
@@ -575,6 +590,15 @@ PROGRAM xclib_test
             IF ( TRIM(xc_kind)=='C') CYCLE
             IF ( TRIM(xc_kind)=='X') xc_kind='XC'
           ENDIF
+        ENDIF
+      ENDIF
+      IF ( LDA .AND. .NOT. GGA ) THEN
+        IF ( id<=nxc+ncc+2 ) THEN
+          IF (iexch1/=0 .AND. icorr1/=0 ) THEN
+            IF ( TRIM(xc_kind)=='C') CYCLE
+            IF ( TRIM(xc_kind)=='X') xc_kind='XC'
+          ENDIF
+          family='LDA'
         ENDIF
       ENDIF
       exc_term = xc_kind/='C'

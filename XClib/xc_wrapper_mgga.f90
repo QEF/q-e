@@ -188,15 +188,16 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
       ENDDO
     ENDIF
     !
+    ! **Now this is done directly inside Libxc for SCAN0**
     ! ... only for HK/MCA: SCAN0 (used in CPV)
-    IF ( scan_exx ) THEN
-       IF (exx_started) THEN
-         ex  = (1.0_DP - exx_fraction) * ex
-         v1x = (1.0_DP - exx_fraction) * v1x
-         v2x = (1.0_DP - exx_fraction) * v2x
-         v3x = (1.0_DP - exx_fraction) * v3x
-       ENDIF
-    ENDIF
+    !IF ( scan_exx ) THEN
+    !   IF (exx_started) THEN
+    !     ex  = (1.0_DP - exx_fraction) * ex
+    !     v1x = (1.0_DP - exx_fraction) * v1x
+    !     v2x = (1.0_DP - exx_fraction) * v2x
+    !     v3x = (1.0_DP - exx_fraction) * v3x
+    !   ENDIF
+    !ENDIF
     !
   ENDIF
   !
