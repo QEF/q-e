@@ -619,11 +619,6 @@ program test_fwinv_gpu
       ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr*howmany))
       ALLOCATE(data_in_d(dfft%nnr*howmany))
       CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
-      do i = 0, howmany-1
-          data_in(i*dfft%nnr+1: (i+1)*dfft%nnr) = data_in(1:dfft%nnr)
-      enddo
-      data_in_d(:)=data_in(:)
- 
       !
       CALL fwfft( 'Wave' , data_in_d, dfft, howmany=howmany)
       !
@@ -653,13 +648,15 @@ program test_fwinv_gpu
     DO i=0,howmany-1
       !
       start = i*dfft%nnr
+      !
+      ! This will FFT the content of data_in starting from start+1 and for nnr elements
       CALL fwfft( 'Rho' , data_in(1+start:), dfft, 1 )
       aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
       !
-      ! Same check as above
+      ! Same check as above, but remember that data_in starts from "start"
       DO ii=1,dfft%ngm
-        IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)), aux(dfft%nlm(ii)) )
-        IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)), aux(dfft%nl(ii)) )
+        IF (gamma_only) CALL test%assert_close( data_in(dfft%nlm(ii)+start), aux(dfft%nlm(ii)) )
+        IF (.not. gamma_only) CALL test%assert_close( data_in(dfft%nl(ii)+start), aux(dfft%nl(ii)) )
       ENDDO
       !
     END DO
