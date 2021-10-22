@@ -659,6 +659,6 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
       END IF 
       clock_list(clock_list_last+1) = label
       clock_list_last = clock_list_last + 1 
-   END SUBROUTINE qexsd_add_label (label)
+   END SUBROUTINE qexsd_add_label
    !
 END MODULE qexsd_module
