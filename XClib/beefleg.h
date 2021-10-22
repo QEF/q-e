@@ -8,9 +8,11 @@
 
 #define nmax 30
 
+#pragma acc routine (dgemv_) seq
 extern void dgemv_(const char *, const int *, const int *, const double *,
     double *, const int *, double *, const int *, const double *, double *,
     const int *);
+
 
 extern double ddot_(const int *, double *, const int *, double *, const int *);
 
@@ -47,6 +49,7 @@ static double mi[] = {
 -0.000190491156503997170,
  0.000073843624209823442
 };
+#pragma acc declare create (mi)
 
 //LDA & PBE correlation fractions used in beef-vdw xc
 #define beefldacfrac 0.600166476948828631066
@@ -433,6 +436,7 @@ static double beefmat[] = {
     }
 
 
+
 double L0(double x) {return 1.;}
 double L1(double x) {return x;}
 defL(2)
@@ -588,9 +592,12 @@ static void(*LdLn[])(double,double *,double *) = {
 static int beeforder = -1;
 
 //arrays holding current Legendre polynomials and derivatives
-static __thread double L[nmax] = {1.};
-static __thread double dL[nmax] = {0.,1.};
-
+//static __thread double L[nmax] = {1.};
+//static __thread double dL[nmax] = {0.,1.};
+static double L[nmax] = {1.};
+#pragma acc declare create (L)
+static double dL[nmax] = {0.,1.};
+#pragma acc declare create (dL)
 
 static inline double sq(double x) {return x*x;}
 

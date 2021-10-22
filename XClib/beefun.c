@@ -18,12 +18,8 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     const int i1=1;
     const int i2=1;
 
-    *e=6.;
-    *dr=7.;
-    *dg=8.;
-
 /*    switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc    */
     r43 = pow(*r, 4./3.);
     r83 = r43*r43;
     sx = r2e * r43;
@@ -33,27 +29,40 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     s = sqrt(s2);
     t = 2.*s2/(4.+s2)-1.;
 
-    if(beeforder==-1)
-    {
+/*    if(beeforder==-1)
+    { */
+
 	calclegdleg(t);
 	
-	if(!(*addlda))
-	    fx = ddot_(&n, mi, &i1, L, &i2) - 1.;
-	else
-	    fx = ddot_(&n, mi, &i1, L, &i2);
-	dl = ddot_(&n, mi, &i1, dL, &i2);
+	if(!(*addlda)){
+	    //fx = ddot_(&n, mi, &i1, L, &i2) - 1.;
+	    for (int i = 0; i < n; i++) {
+              fx += mi[i]*L[i];
+            }
+            fx=fx-1.;
+	    }
+	else{
+	    //fx = ddot_(&n, mi, &i1, L, &i2);
+	    for (int i = 0; i < n; i++) {
+              fx += mi[i]*L[i];
+            }
+	   }
+	   
+	//dl = ddot_(&n, mi, &i1, dL, &i2);
+	for (int i = 0; i < n; i++) {
+              dl += mi[i]*dL[i];
+            }
 	
 	dfx = dl*( 4.*s / (4.+s2) - 4.*s2*s/sq(4.+s2) );
 	*dr = dx*fx - 4./3.*s2/(s*(*r))*sx*dfx;
 	*dg = sx*dfx*pix/(s*r83);
 	*e = sx*fx;
 	return;
-    }
+/*    }
     
     if(beeforder>=0)
     {
 	(*LdLn[beeforder])(t, &fx, &dl);
-
 	dfx = dl*( 4.*s / (4.+s2) - 4.*s2*s/sq(4.+s2) );
 	*dr = dx*fx - 4./3.*s2/(s*(*r))*sx*dfx;
 	*dg = sx*dfx*pix/(s*r83);
