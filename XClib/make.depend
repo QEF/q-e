@@ -64,6 +64,7 @@ xc_wrapper_mgga.o : dft_setting_params.o
 xc_wrapper_mgga.o : qe_drivers_mgga.o
 xc_wrapper_mgga.o : qe_kind.o
 xclib_error.o : xclib_utils_and_para.o
+xclib_test.o : ../upflib/xmltools.o
 xclib_test.o : dft_setting_params.o
 xclib_test.o : dft_setting_routines.o
 xclib_test.o : qe_constants.o
