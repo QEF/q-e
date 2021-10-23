@@ -2138,7 +2138,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     ParO iterative diagonalization
                 }
                
-                opt-val {'rmm-davidson', 'rmm-paro'} {
+                opt -val {'rmm-davidson', 'rmm-paro'} {
                     RMM-DIIS iterative diagonalization.  
                     To stabilize the SCF loop 
                     RMM-DIIS is alternated with calls to Davidson or
