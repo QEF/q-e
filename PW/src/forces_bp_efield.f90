@@ -63,7 +63,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE wavefunctions,        ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el, mapg_owner
    USE fixed_occ
-   USE mp,                   ONLY : mp_sum,mp_barrier
+   USE mp,                   ONLY : mp_sum, mp_max, mp_barrier
    USE mp_world,             ONLY : world_comm,mpime,nproc
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE becmod,               ONLY : bec_type, becp, calbec,ALLOCATE_bec_type, &
@@ -576,11 +576,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                            ENDIF
                         ENDDO
                         max_aux_proc=max_aux
-
-#if defined (__MPI)                        
-                        CALL MPI_ALLREDUCE( max_aux_proc, max_aux, 1, MPI_INTEGER, MPI_MAX, &
-                                            intra_bgrp_comm, req, IERR )
-#endif
+                        CALL mp_max(max_aux_proc, intra_bgrp_comm )
                         ALLOCATE( aux_proc(max_aux,nproc), aux_proc_ind(max_aux,nproc) )
                         ALLOCATE( aux_rcv(max_aux,nproc), aux_rcv_ind(max_aux,nproc) )
                         aux_proc = (0.d0,0.d0)
