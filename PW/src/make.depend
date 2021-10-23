@@ -26,6 +26,13 @@ add_bfield.o : ../../Modules/mp_bands.o
 add_bfield.o : ../../Modules/noncol.o
 add_bfield.o : ../../UtilXlib/mp.o
 add_bfield.o : pwcom.o
+add_dmft_occ.o : ../../Modules/control_flags.o
+add_dmft_occ.o : ../../Modules/io_global.o
+add_dmft_occ.o : ../../Modules/kind.o
+add_dmft_occ.o : ../../Modules/mp_images.o
+add_dmft_occ.o : ../../Modules/mp_pools.o
+add_dmft_occ.o : ../../UtilXlib/mp.o
+add_dmft_occ.o : pwcom.o
 add_efield.o : ../../FFTXlib/fft_types.o
 add_efield.o : ../../Modules/cell_base.o
 add_efield.o : ../../Modules/constants.o
@@ -294,6 +301,7 @@ c_bands.o : ../../Modules/wavefunctions_gpu.o
 c_bands.o : ../../UtilXlib/mp.o
 c_bands.o : ../../XClib/xc_lib.o
 c_bands.o : ../../upflib/uspp.o
+c_bands.o : add_dmft_occ.o
 c_bands.o : atomic_wfc_mod.o
 c_bands.o : bp_mod.o
 c_bands.o : buffers.o
@@ -547,6 +555,7 @@ electrons.o : ../../dft-d3/api.o
 electrons.o : ../../dft-d3/dftd3_qe.o
 electrons.o : ../../upflib/paw_variables.o
 electrons.o : ../../upflib/uspp.o
+electrons.o : add_dmft_occ.o
 electrons.o : atomic_wfc_mod.o
 electrons.o : bp_mod.o
 electrons.o : buffers.o
@@ -1341,6 +1350,7 @@ input.o : ../../dft-d3/dftd3_qe.o
 input.o : ../../upflib/uspp_data.o
 input.o : Coul_cut_2D.o
 input.o : a2fmod.o
+input.o : add_dmft_occ.o
 input.o : atomic_wfc_mod.o
 input.o : bp_mod.o
 input.o : dynamics_module.o
@@ -1649,6 +1659,7 @@ non_scf.o : ../../Modules/io_global.o
 non_scf.o : ../../Modules/kind.o
 non_scf.o : ../../Modules/wavefunctions.o
 non_scf.o : ../../Modules/wavefunctions_gpu.o
+non_scf.o : add_dmft_occ.o
 non_scf.o : bp_mod.o
 non_scf.o : buffers.o
 non_scf.o : pwcom.o
@@ -1908,6 +1919,7 @@ print_ks_energies.o : ../../Modules/kind.o
 print_ks_energies.o : ../../Modules/mp_bands.o
 print_ks_energies.o : ../../Modules/mp_pools.o
 print_ks_energies.o : ../../UtilXlib/mp.o
+print_ks_energies.o : add_dmft_occ.o
 print_ks_energies.o : pwcom.o
 print_ks_energies.o : pwcom_gpu.o
 punch.o : ../../Modules/control_flags.o
@@ -2144,6 +2156,7 @@ report_mag.o : scf_mod.o
 restart_in_electrons.o : ../../Modules/io_files.o
 restart_in_electrons.o : ../../Modules/io_global.o
 restart_in_electrons.o : ../../Modules/kind.o
+restart_in_electrons.o : add_dmft_occ.o
 restart_in_electrons.o : pwcom.o
 rho2zeta.o : ../../Modules/constants.o
 rho2zeta.o : ../../Modules/io_global.o
@@ -2187,6 +2200,7 @@ run_pwscf.o : ../../Modules/qmmm.o
 run_pwscf.o : ../../UtilXlib/mp.o
 run_pwscf.o : ../../XClib/xc_lib.o
 run_pwscf.o : ../../upflib/upf_params.o
+run_pwscf.o : add_dmft_occ.o
 run_pwscf.o : atomic_wfc_mod.o
 run_pwscf.o : beef.o
 run_pwscf.o : exx.o
@@ -2251,6 +2265,7 @@ save_in_electrons.o : ../../Modules/control_flags.o
 save_in_electrons.o : ../../Modules/io_files.o
 save_in_electrons.o : ../../Modules/io_global.o
 save_in_electrons.o : ../../Modules/kind.o
+save_in_electrons.o : add_dmft_occ.o
 save_in_electrons.o : pwcom.o
 scale_h.o : ../../Modules/cell_base.o
 scale_h.o : ../../Modules/constants.o
@@ -2636,6 +2651,7 @@ sum_band.o : ../../Modules/cell_base.o
 sum_band.o : ../../Modules/control_flags.o
 sum_band.o : ../../Modules/fft_base.o
 sum_band.o : ../../Modules/io_files.o
+sum_band.o : ../../Modules/io_global.o
 sum_band.o : ../../Modules/ions_base.o
 sum_band.o : ../../Modules/kind.o
 sum_band.o : ../../Modules/mp_bands.o
@@ -2648,6 +2664,7 @@ sum_band.o : ../../UtilXlib/mp.o
 sum_band.o : ../../XClib/xc_lib.o
 sum_band.o : ../../upflib/paw_variables.o
 sum_band.o : ../../upflib/uspp.o
+sum_band.o : add_dmft_occ.o
 sum_band.o : buffers.o
 sum_band.o : gcscf_module.o
 sum_band.o : init_us_2.o

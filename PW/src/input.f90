@@ -114,6 +114,9 @@ SUBROUTINE iosys()
                             l1back_ => l1back, &
                             reserv_back_ => reserv_back
   !
+  USE add_dmft_occ,  ONLY : dmft_ => dmft, &
+                            dmft_prefix_ => dmft_prefix
+  !
   USE martyna_tuckerman, ONLY: do_comp_mt
   !
   USE esm,           ONLY: do_comp_esm, &
@@ -237,7 +240,7 @@ SUBROUTINE iosys()
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
-                               Hubbard_J0, Hubbard_beta,                    &
+                               Hubbard_J0, Hubbard_beta, dmft, dmft_prefix, &
                                Hubbard_alpha, Hubbard_parameters,           &
                                Hubbard_U_back, Hubbard_alpha_back,          &
                                Hubbard_V, hub_pot_fix, reserv, reserv_back, &
@@ -1213,6 +1216,21 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', 'Unknown efield_phase', 1 )
   END SELECT
   !
+  ! DMFT
+  !
+  dmft_             = dmft
+  dmft_prefix_      = dmft_prefix
+  !
+#if defined __HDF5
+  IF ( dmft) THEN
+     IF ( nspin > 1 ) CALL errore( 'iosys', &
+          'DMFT update not implemented with nspin > 1', 1 )
+  ENDIF
+#else
+  IF ( dmft) THEN
+      CALL errore( 'iosys', 'DMFT update not implemented without HDF5 library', 1 )
+  ENDIF
+#endif
   ! Hubbard parameters for DFT+U+V
   !
   IF ( lda_plus_u_kind == 0 .OR. lda_plus_u_kind == 1 ) THEN

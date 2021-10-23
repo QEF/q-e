@@ -1359,6 +1359,31 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }        
 
+        var dmft -type LOGICAL { 
+            default { .FALSE. }
+            status {
+                Requires compilation with hdf5 support
+            }
+            info { 
+                If true, nscf calculation will exit in restart mode, scf calculation
+                will restart from there if DMFT updates are provided as hdf5 archive.
+                Scf calculation should be used only with @ref electron_maxstep = 1.
+                @ref K_POINTS have to be identical and given explicitly with @ref nosym.
+            }
+        }
+
+        var dmft_prefix -type CHARACTER { 
+            default { @ref prefix }
+            info {
+                prepended to hdf5 archive: dmft_prefix.h5
+
+                DMFT update should be provided in group/dataset as:
+                - dft_misc_input/band_window with dimension [1, number of k-points, 2 (real + complex)] 
+                - dft_update/delta_N with dimension [number of k-points, number of correlated orbitals,
+                number of correlated orbitals, 2 (real + complex)]
+            }
+        }
+
         var ensemble_energies -type LOGICAL {
             default { .false. }
             info {

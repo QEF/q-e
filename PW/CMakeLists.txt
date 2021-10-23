@@ -2,6 +2,7 @@ set(src_pw
    src/a2fmod.f90 
    src/add_bfield.f90 
    src/add_efield.f90 
+   src/add_dmft_occ.f90 
    src/add_vuspsi.f90 
    src/add_gatefield.f90 
    src/add_paw_to_deeq.f90 

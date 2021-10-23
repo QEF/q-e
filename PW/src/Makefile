@@ -13,6 +13,7 @@ PWLIBS = \
 a2fmod.o \
 add_bfield.o \
 add_efield.o \
+add_dmft_occ.o \
 add_vuspsi.o \
 add_gatefield.o \
 add_paw_to_deeq.o \

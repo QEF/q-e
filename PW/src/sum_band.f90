@@ -27,7 +27,7 @@ SUBROUTINE sum_band()
   USE scf,                  ONLY : rho, rhoz_or_updw
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE buffers,              ONLY : get_buffer
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
                                    becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
@@ -44,6 +44,8 @@ SUBROUTINE sum_band()
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
+  USE io_global,            ONLY : stdout
+  USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
@@ -79,7 +81,14 @@ SUBROUTINE sum_band()
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
   CALL start_clock( 'sum_band:weights' )
-  CALL weights ( )
+  !
+  ! ... for DMFT skip weights in the first iteration since they were loaded from file
+  ! ... and are manipulated elsewhere
+  !
+  IF (.NOT. ( dmft .AND. .NOT. dmft_updated) ) THEN
+     CALL weights ( )
+  ENDIF
+  !
   CALL stop_clock( 'sum_band:weights' )
   !
   ! ... btype, used in diagonalization, is set here: a band is considered empty
@@ -595,6 +604,19 @@ SUBROUTINE sum_band()
           IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
           CALL stop_clock( 'sum_band:init_us_2' )
+          !
+          ! ... for DMFT the eigenvectors are updated using v_dmft from add_dmft_occ.f90
+          !
+          IF ( dmft .AND. .NOT. dmft_updated) THEN
+             ! 
+             DO j = 1, npw
+                CALL ZGEMM('C', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd)
+             ENDDO
+             !
+             IF ( nks > 1 ) &
+                CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+             !
+          ENDIF
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
