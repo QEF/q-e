@@ -144,7 +144,6 @@ target_link_libraries(qe_modules
     PRIVATE
         qe_modules_c
         qe_openmp_fortran
-        qe_openacc_fortran
         qe_fftx
         qe_lax
         qe_mpi_fortran
@@ -152,6 +151,7 @@ target_link_libraries(qe_modules
         qe_xclib
         qe_devxlib
     PUBLIC
+        qe_openacc_fortran
         qe_hdf5_fortran
         qe_upflib
         qe_fox
@@ -161,12 +161,6 @@ if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE
             CUDA::curand)
-endif()
-
-if(QE_ENABLE_OPENACC)
-    target_link_libraries(qe_modules
-        PRIVATE
-            qe_openacc_fortran)
 endif()
 
 ###########################################################
