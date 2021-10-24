@@ -471,15 +471,13 @@ MODULE spin_orb
   !
   !! Variables needed for calculations with spin-orbit
   !
-  USE upf_spinorb, ONLY : lspinorb, rot_ylm, fcoef, lmaxx
-  !
   SAVE
+  LOGICAL :: lspinorb
+  !! if .TRUE. this calculation uses spin-orbit interactions
   LOGICAL :: lforcet
   !! if .TRUE. apply Force Theorem to calculate MAE
   LOGICAL :: starting_spin_angle
   !! if .TRUE. the initial wavefunctions are spin-angle functions.
-  LOGICAL :: domag
-  !! if .TRUE. magnetization is computed
   !
 END MODULE spin_orb
 !

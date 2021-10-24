@@ -33,8 +33,7 @@ SUBROUTINE c_bands_nscf_ph( )
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : noncolin, npol, domag
   USE save_ph,              ONLY : tmp_dir_save
   USE io_files,             ONLY : tmp_dir, prefix
   USE uspp_init,            ONLY : init_us_2

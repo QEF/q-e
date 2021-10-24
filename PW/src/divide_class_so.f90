@@ -3416,8 +3416,7 @@ USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
                                  name_class_so,d_spin, name_class_so1,  &
                                  elem_name_so
 USE rap_point_group_is,   ONLY : code_group_is, gname_is
-USE spin_orb,             ONLY : domag
-USE noncollin_module,     ONLY : noncolin
+USE noncollin_module,     ONLY : noncolin, domag
 USE io_global,            ONLY : stdout
 !
 IMPLICIT NONE

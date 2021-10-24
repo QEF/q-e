@@ -64,10 +64,9 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    USE ions_base,             ONLY : nat
    USE klist,                 ONLY : xk, wk, ngk, igk_k
    USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
-   USE spin_orb,              ONLY : domag
    USE wvfct,                 ONLY : nbnd, npwx, et
    USE wavefunctions,         ONLY : evc
-   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
+   USE noncollin_module,      ONLY : noncolin, domag, npol, nspin_mag
    USE uspp,                  ONLY : vkb
    USE uspp_param,            ONLY : nhm
    USE uspp_init,             ONLY : init_us_2

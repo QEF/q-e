@@ -592,8 +592,7 @@ SUBROUTINE write_wing ( rho, nspin,ipol,iw)
       !
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u
-      USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : noncolin, domag
       USE scf,              ONLY : scf_type
       !
       USE cell_base,        ONLY : bg, tpiba

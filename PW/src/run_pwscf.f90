@@ -432,8 +432,7 @@ SUBROUTINE reset_starting_magnetization()
   USE ions_base,          ONLY : nsp, ityp, nat
   USE lsda_mod,           ONLY : nspin, starting_magnetization
   USE scf,                ONLY : rho
-  USE spin_orb,           ONLY : domag
-  USE noncollin_module,   ONLY : noncolin, angle1, angle2
+  USE noncollin_module,   ONLY : noncolin, angle1, angle2, domag
   !
   IMPLICIT NONE
   !

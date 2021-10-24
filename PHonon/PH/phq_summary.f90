@@ -25,8 +25,8 @@ subroutine phq_summary
   USE gvecs,         ONLY : doublegrid, dual, gcutms, ngms
   USE fft_base,      ONLY : dffts
   USE symm_base,     ONLY : s, sr, ft, sname, t_rev
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,      ONLY : lspinorb, domag
+  USE noncollin_module, ONLY : noncolin, domag
+  USE spin_orb,      ONLY : lspinorb
   USE funct,         ONLY : write_dft_name
   USE run_info,      ONLY : title
   USE gamma_gamma,   ONLY : with_symmetry, nasr

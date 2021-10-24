@@ -75,7 +75,7 @@ SUBROUTINE read_file_new ( needwf )
   USE gvecw,          ONLY : gcutw
   USE klist,          ONLY : nkstot, nks, xk, wk
   USE lsda_mod,       ONLY : isk, nspin
-  USE spin_orb,       ONLY : domag
+  USE noncollin_module,ONLY: domag
   USE wvfct,          ONLY : nbnd, et, wg
   USE pw_restart_new, ONLY : read_xml_file
   USE xc_lib,         ONLY : xclib_dft_is_libxc, xclib_init_libxc

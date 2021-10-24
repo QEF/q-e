@@ -19,8 +19,8 @@ subroutine incdrhous_nc( drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
   USE lsda_mod,  ONLY : nspin
-  USE spin_orb,  ONLY : lspinorb, domag
-  USE noncollin_module, ONLY : npol, nspin_mag
+  USE spin_orb,  ONLY : lspinorb
+  USE noncollin_module, ONLY : npol, domag, nspin_mag
   USE uspp,      ONLY : nkb, qq_nt, qq_so
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx

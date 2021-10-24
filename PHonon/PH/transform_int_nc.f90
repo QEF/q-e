@@ -15,8 +15,7 @@ SUBROUTINE transform_int1_nc(int1,na,iflag)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE spin_orb,             ONLY : domag
-USE noncollin_module,     ONLY : nspin_mag
+USE noncollin_module,     ONLY : nspin_mag, domag
 USE phus,                 ONLY : int1_nc
 !
 IMPLICIT NONE
@@ -117,8 +116,7 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE uspp,                 ONLY : ijtoh
-USE noncollin_module,     ONLY : nspin_mag
-USE spin_orb,             ONLY : domag
+USE noncollin_module,     ONLY : nspin_mag, domag
 USE phus,                 ONLY : int4_nc
 !
 IMPLICIT NONE

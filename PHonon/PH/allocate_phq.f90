@@ -18,10 +18,10 @@ subroutine allocate_phq
   USE wvfct,         ONLY : nbnd, npwx
   USE gvect,         ONLY : ngm
   USE lsda_mod,      ONLY : nspin
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
-  USE spin_orb,      ONLY : lspinorb, domag
+  USE spin_orb,      ONLY : lspinorb
   USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
   USE becmod,        ONLY : bec_type, becp, allocate_bec_type
   USE uspp,          ONLY : okvan, nkb, vkb

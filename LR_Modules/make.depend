@@ -71,7 +71,6 @@ apply_dpot.o : ../Modules/fft_base.o
 apply_dpot.o : ../Modules/kind.o
 apply_dpot.o : ../Modules/mp_bands.o
 apply_dpot.o : ../Modules/noncol.o
-apply_dpot.o : ../PW/src/pwcom.o
 apply_dpot_mod.o : ../FFTXlib/fft_helper_subroutines.o
 apply_dpot_mod.o : ../Modules/fft_base.o
 apply_dpot_mod.o : ../Modules/kind.o
@@ -141,7 +140,6 @@ compute_vsgga.o : ../Modules/fft_base.o
 compute_vsgga.o : ../Modules/kind.o
 compute_vsgga.o : ../Modules/noncol.o
 compute_vsgga.o : ../Modules/recvec.o
-compute_vsgga.o : ../PW/src/pwcom.o
 compute_vsgga.o : ../XClib/xc_lib.o
 dfpt_tetra_mod.o : ../Modules/cell_base.o
 dfpt_tetra_mod.o : ../Modules/io_global.o
@@ -157,7 +155,6 @@ dfpt_tetra_mod.o : lrcom.o
 dgradcorr.o : ../FFTXlib/fft_types.o
 dgradcorr.o : ../Modules/kind.o
 dgradcorr.o : ../Modules/noncol.o
-dgradcorr.o : ../PW/src/pwcom.o
 dgradcorr.o : lrcom.o
 dnonloccorr.o : ../Modules/fft_base.o
 dnonloccorr.o : ../Modules/funct.o
@@ -343,7 +340,6 @@ lr_sym_mod.o : ../Modules/constants.o
 lr_sym_mod.o : ../Modules/fft_base.o
 lr_sym_mod.o : ../Modules/kind.o
 lr_sym_mod.o : ../Modules/noncol.o
-lr_sym_mod.o : ../PW/src/pwcom.o
 lr_sym_mod.o : ../PW/src/symm_base.o
 lr_sym_mod.o : lrcom.o
 lrcom.o : ../Modules/becmod.o
@@ -404,17 +400,18 @@ set_dbecsum_nc.o : ../Modules/ions_base.o
 set_dbecsum_nc.o : ../Modules/kind.o
 set_dbecsum_nc.o : ../Modules/noncol.o
 set_dbecsum_nc.o : ../PW/src/pwcom.o
+set_dbecsum_nc.o : ../upflib/upf_spinorb.o
 set_dbecsum_nc.o : ../upflib/uspp.o
 set_int3_nc.o : ../Modules/ions_base.o
 set_int3_nc.o : ../Modules/kind.o
 set_int3_nc.o : ../Modules/noncol.o
-set_int3_nc.o : ../PW/src/pwcom.o
+set_int3_nc.o : ../upflib/upf_spinorb.o
 set_int3_nc.o : ../upflib/uspp.o
 set_int3_nc.o : lrcom.o
 set_intq_nc.o : ../Modules/ions_base.o
 set_intq_nc.o : ../Modules/kind.o
 set_intq_nc.o : ../Modules/noncol.o
-set_intq_nc.o : ../PW/src/pwcom.o
+set_intq_nc.o : ../upflib/upf_spinorb.o
 set_intq_nc.o : ../upflib/uspp.o
 set_intq_nc.o : lrcom.o
 set_kplusq_nc.o : ../Modules/kind.o
@@ -440,7 +437,6 @@ setup_dgc.o : ../Modules/kind.o
 setup_dgc.o : ../Modules/noncol.o
 setup_dgc.o : ../Modules/recvec.o
 setup_dgc.o : ../Modules/wavefunctions.o
-setup_dgc.o : ../PW/src/pwcom.o
 setup_dgc.o : ../PW/src/scf_mod.o
 setup_dgc.o : ../XClib/xc_lib.o
 setup_dgc.o : ../upflib/uspp.o

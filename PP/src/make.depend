@@ -34,6 +34,7 @@ add_shift_us.o : ../../PW/src/pwcom.o
 add_shift_us.o : ../../PW/src/symme.o
 add_shift_us.o : ../../UtilXlib/mp.o
 add_shift_us.o : ../../upflib/uspp.o
+adduscore.o : ../../FFTXlib/fft_types.o
 adduscore.o : ../../Modules/cell_base.o
 adduscore.o : ../../Modules/constants.o
 adduscore.o : ../../Modules/fft_base.o
@@ -148,6 +149,7 @@ compute_sigma_avg.o : ../../Modules/wavefunctions.o
 compute_sigma_avg.o : ../../PW/src/pwcom.o
 compute_sigma_avg.o : ../../PW/src/scf_mod.o
 compute_sigma_avg.o : ../../UtilXlib/mp.o
+compute_sigma_avg.o : ../../upflib/upf_spinorb.o
 compute_sigma_avg.o : ../../upflib/uspp.o
 cube.o : ../../Modules/cell_base.o
 cube.o : ../../Modules/io_global.o
@@ -383,6 +385,19 @@ partialdos.o : ../../PW/src/atomic_wfc_mod.o
 partialdos.o : ../../PW/src/pwcom.o
 partialdos.o : ../../PW/src/tetra.o
 partialdos.o : projections_mod.o
+partialdos1.o : ../../Modules/constants.o
+partialdos1.o : ../../Modules/io_global.o
+partialdos1.o : ../../Modules/ions_base.o
+partialdos1.o : ../../PW/src/atomic_wfc_mod.o
+partialdos1.o : ../../PW/src/pwcom.o
+partialdos1.o : ../../PW/src/tetra.o
+partialdos1.o : projections_mod.o
+partialdos2.o : ../../Modules/constants.o
+partialdos2.o : ../../Modules/io_global.o
+partialdos2.o : ../../Modules/ions_base.o
+partialdos2.o : ../../PW/src/pwcom.o
+partialdos2.o : ../../PW/src/tetra.o
+partialdos2.o : projections_mod.o
 paw_postproc.o : ../../FFTXlib/fft_types.o
 paw_postproc.o : ../../Modules/cell_base.o
 paw_postproc.o : ../../Modules/constants.o
@@ -526,8 +541,8 @@ projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/recvec.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
-projwfc.o : ../../PW/src/init_us_2.o
 projwfc.o : ../../PW/src/buffers.o
+projwfc.o : ../../PW/src/init_us_2.o
 projwfc.o : ../../PW/src/pw_restart_new.o
 projwfc.o : ../../PW/src/pwcom.o
 projwfc.o : ../../PW/src/start_k.o
@@ -576,6 +591,7 @@ punch_plot.o : ../../Modules/run_info.o
 punch_plot.o : ../../PW/src/extfield.o
 punch_plot.o : ../../PW/src/pwcom.o
 punch_plot.o : ../../PW/src/scf_mod.o
+punch_plot.o : adduscore.o
 punch_plot.o : paw_postproc.o
 pw2bgw.o : ../../FFTXlib/fft_interfaces.o
 pw2bgw.o : ../../Modules/becmod.o
@@ -681,6 +697,7 @@ pw2wannier90.o : ../../PW/src/pwcom.o
 pw2wannier90.o : ../../PW/src/scf_mod.o
 pw2wannier90.o : ../../PW/src/symm_base.o
 pw2wannier90.o : ../../UtilXlib/mp.o
+pw2wannier90.o : ../../upflib/upf_spinorb.o
 pw2wannier90.o : ../../upflib/uspp.o
 read_proj.o : ../../Modules/kind.o
 read_proj.o : ../../upflib/xmltools.o

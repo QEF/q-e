@@ -39,8 +39,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
   USE control_lr,      ONLY : ethr_nscf
   USE qpoint,          ONLY : xq
-  USE noncollin_module,ONLY : noncolin
-  USE spin_orb,        ONLY : domag
+  USE noncollin_module,ONLY : noncolin, domag
   USE klist,           ONLY : qnorm, nelec
   USE el_phon,         ONLY : elph_mat
   USE ahc,             ONLY : elph_ahc

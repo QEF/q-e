@@ -91,8 +91,7 @@ MODULE apply_dpot_mod
     USE kinds,             ONLY : DP
     USE fft_base,          ONLY : dffts
     USE wvfct,             ONLY : npwx
-    USE noncollin_module,  ONLY : noncolin, npol, nspin_mag
-    USE spin_orb,          ONLY : domag
+    USE noncollin_module,  ONLY : noncolin, domag, npol, nspin_mag
     USE lsda_mod,          ONLY : current_spin
     USE fft_helper_subroutines, ONLY : fftx_ntgrp
     !

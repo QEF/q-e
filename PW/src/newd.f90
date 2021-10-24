@@ -201,8 +201,8 @@ SUBROUTINE newd( )
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : deeq, deeq_d, dvan, deeq_nc, deeq_nc_d, dvan_so, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE spin_orb,             ONLY : lspinorb, domag
-  USE noncollin_module,     ONLY : noncolin, nspin_mag
+  USE spin_orb,             ONLY : lspinorb
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
   USE realus,               ONLY : newq_r
@@ -330,7 +330,7 @@ SUBROUTINE newd( )
     SUBROUTINE newd_so( na )
       !------------------------------------------------------------------------
       !
-      USE spin_orb,      ONLY : fcoef
+      USE upf_spinorb,      ONLY : fcoef
       !
       IMPLICIT NONE
       !

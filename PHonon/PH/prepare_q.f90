@@ -44,8 +44,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
 
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
-  USE spin_orb,        ONLY : domag
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, domag
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,yambo_elph_file_name,dvscf_yambo
   ! YAMBO <

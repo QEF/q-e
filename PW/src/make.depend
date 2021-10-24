@@ -1126,6 +1126,7 @@ gradcorr.o : ../../Modules/constants.o
 gradcorr.o : ../../Modules/fft_base.o
 gradcorr.o : ../../Modules/fft_rho.o
 gradcorr.o : ../../Modules/kind.o
+gradcorr.o : ../../Modules/noncol.o
 gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../XClib/xc_lib.o
 gradcorr.o : pwcom.o
@@ -1283,6 +1284,7 @@ init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
 init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/mbdlib.o
+init_run.o : ../../Modules/noncol.o
 init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/tsvdw.o
@@ -1399,7 +1401,6 @@ io_rho_xml.o : ../../UtilXlib/mp.o
 io_rho_xml.o : ../../XClib/xc_lib.o
 io_rho_xml.o : ../../upflib/paw_variables.o
 io_rho_xml.o : ldaU.o
-io_rho_xml.o : pwcom.o
 io_rho_xml.o : scf_mod.o
 irrek.o : ../../Modules/kind.o
 iweights.o : ../../Modules/kind.o
@@ -1628,6 +1629,7 @@ newd.o : ../../Modules/noncol.o
 newd.o : ../../Modules/recvec.o
 newd.o : ../../Modules/wavefunctions.o
 newd.o : ../../UtilXlib/mp.o
+newd.o : ../../upflib/upf_spinorb.o
 newd.o : ../../upflib/uspp.o
 newd.o : ldaU.o
 newd.o : pwcom.o
@@ -2426,9 +2428,9 @@ stres_gradcorr.o : ../../FFTXlib/fft_types.o
 stres_gradcorr.o : ../../Modules/fft_rho.o
 stres_gradcorr.o : ../../Modules/kind.o
 stres_gradcorr.o : ../../Modules/mp_bands.o
+stres_gradcorr.o : ../../Modules/noncol.o
 stres_gradcorr.o : ../../UtilXlib/mp.o
 stres_gradcorr.o : ../../XClib/xc_lib.o
-stres_gradcorr.o : pwcom.o
 stres_har.o : ../../FFTXlib/fft_interfaces.o
 stres_har.o : ../../Modules/cell_base.o
 stres_har.o : ../../Modules/constants.o
@@ -2663,6 +2665,7 @@ sum_band.o : ../../Modules/wavefunctions_gpu.o
 sum_band.o : ../../UtilXlib/mp.o
 sum_band.o : ../../XClib/xc_lib.o
 sum_band.o : ../../upflib/paw_variables.o
+sum_band.o : ../../upflib/upf_spinorb.o
 sum_band.o : ../../upflib/uspp.o
 sum_band.o : add_dmft_occ.o
 sum_band.o : buffers.o
@@ -2770,6 +2773,7 @@ transform_becsum_nc.o : pwcom.o
 transform_becsum_so.o : ../../Modules/ions_base.o
 transform_becsum_so.o : ../../Modules/kind.o
 transform_becsum_so.o : ../../Modules/noncol.o
+transform_becsum_so.o : ../../upflib/upf_spinorb.o
 transform_becsum_so.o : ../../upflib/uspp.o
 transform_becsum_so.o : pwcom.o
 transform_qq_so.o : ../../Modules/ions_base.o
