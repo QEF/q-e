@@ -135,18 +135,19 @@ for dir in $dirs; do
 	/bin/rm removedeps.tmp
 
         # check for missing dependencies 
-        if grep @ make.depend
+        if grep -q @ make.depend
         then
 	   notfound=1
-	   echo WARNING: dependencies not found in directory $DIR
+	   echo "\nWARNING! dependencies not found in directory $DIR:"
+	   grep @ make.depend
        else
-           echo directory $DIR : ok
+           echo -n "\rdirectory $DIR : ok"
        fi
     else
-       echo directory $DIR : not present in $TOPDIR 
+       echo "\ndirectory $DIR : not present in $TOPDIR" 
     fi
 done
 if test "$notfound" = ""
 then
-    echo all dependencies updated successfully
+    echo "\nall dependencies updated successfully"
 fi
