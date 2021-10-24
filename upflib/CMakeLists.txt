@@ -57,6 +57,8 @@ qe_enable_cuda_fortran("${src_upflib}")
 
 qe_add_library(qe_upflib ${src_upflib})
 target_link_libraries(qe_upflib
+    PUBLIC
+        qe_openacc_fortran
     PRIVATE
         qe_devxlib
         qe_mpi_fortran
