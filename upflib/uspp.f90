@@ -80,7 +80,7 @@ MODULE uspp
   !
   USE upf_kinds,   ONLY: DP
   USE upf_params,  ONLY: lmaxx, lqmax
-  USE upf_spinorb, ONLY: fcoef, fcoef_d 
+  USE upf_spinorb, ONLY: is_spinorbit, fcoef, fcoef_d 
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -408,9 +408,6 @@ CONTAINS
     logical, intent(in) :: noncolin,lspinorb,tqr
     integer, intent(in) :: nhm,nsp,nat,nspin
     !
-    !if (nhm_/=nhm) call upf_error("allocate_uspp","invalid nhm",1)
-    !if (nsp_/=nsp) call upf_error("allocate_uspp","invalid nsp",1)
-    !
     allocate( indv(nhm,nsp)   )
     allocate( nhtol(nhm,nsp)  )
     allocate( nhtolm(nhm,nsp) )
@@ -422,6 +419,8 @@ CONTAINS
     endif
     allocate( qq_at(nhm,nhm,nat) )
     allocate( qq_nt(nhm,nhm,nsp) )
+    ! set the internal spin-orbit flag
+    is_spinorbit = lspinorb
     if ( lspinorb ) then
        allocate( qq_so(nhm,nhm,4,nsp) )
        allocate( dvan_so(nhm,nhm,nspin,nsp) )

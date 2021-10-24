@@ -22,7 +22,8 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   USE wvfct,            ONLY : npwx
   USE uspp_param,       ONLY : upf, nwfcm
   USE noncollin_module, ONLY : noncolin, domag, npol, angle1, angle2
-  USE spin_orb,         ONLY : rot_ylm, lmaxx, starting_spin_angle
+  USE spin_orb,         ONLY : starting_spin_angle
+  USE upf_spinorb,      ONLY : rot_ylm, lmaxx
   !
   IMPLICIT NONE
   !

@@ -45,7 +45,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : lspinorb, fcoef
+  USE spin_orb,             ONLY : lspinorb
+  USE upf_spinorb,          ONLY : fcoef
   USE io_files,             ONLY : restart_dir
   USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp_pools,             ONLY : me_pool, nproc_pool, my_pool_id, npool, &
@@ -101,7 +102,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   ELSE
      IF (noncolin) THEN
         ALLOCATE (becp_nc(nkb,npol,nbnd))
-        IF (lspinorb) THEN
+        IF ( ANY(upf(1:ntyp)%has_so) ) THEN
           ALLOCATE(be1(nhm,2))
           ALLOCATE(be2(nhm,2))
         ENDIF
@@ -362,7 +363,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      DEALLOCATE(rbecp)
   ELSE
      IF (noncolin) THEN
-        IF (lspinorb) THEN
+        IF ( ANY(upf(1:ntyp)%has_so) ) THEN
            DEALLOCATE(be1)
            DEALLOCATE(be2)
         ENDIF
