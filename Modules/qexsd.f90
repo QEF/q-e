@@ -86,7 +86,10 @@ CONTAINS
     !-------------------------------------------------------------------------------------------------
     IMPLICIT NONE
     !
-    INTEGER      :: status_int
+    INTEGER, INTENT(IN)      :: status_int
+    !
+    exit_status = status_int
+    !
     END SUBROUTINE qexsd_set_status
     !
 !
