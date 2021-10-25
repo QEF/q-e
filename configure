@@ -58,8 +58,9 @@ elif [[ (-e make.inc) && (-e Makefile) ]] ; then
 fi
 test -e ./install/make.inc       && rm ./install/make.inc
 
-# compute dependencies (next line prevents bogus errors)
+# compute dependencies (next two lines avoid bogus errors)
 touch ./include/qe_cdefs.h
+touch ./include/configure.h
 ./install/makedeps.sh
 
 # run the autoconf configure with the given conf_flags 
