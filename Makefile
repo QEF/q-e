@@ -307,6 +307,7 @@ veryclean : clean
 	- rm -f espresso.tar.gz
 	- rm -rf make.inc
 	- rm -rf FoX
+	- rm -rf MBD 
 # remove everything not in the original distribution
 distclean : veryclean
 	- cd pseudo; ./clean_ps ; cd -

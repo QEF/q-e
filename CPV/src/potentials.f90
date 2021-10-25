@@ -9,24 +9,7 @@
 !  ----------------------------------------------
 !  Car-Parrinello Parallel Program
 !----------------------------------------------------------------
-#if defined (_OPENACC) 
- #ifndef __OPENACC 
-  # define __OPENACC 
- #endif
-#endif 
-
-#if defined (__OPENACC) 
- #define DEV_ACC !$acc 
- #define DEV_OMP !!! 
- #define START_WSHARE DEV_ACC  kernels 
- #define END_WSHARE   DEV_ACC end  kernels
-#else 
- #define DEV_ACC !!!
- #define DEV_OMP !$omp 
- #define START_WSHARE DEV_OMP workshare
- #define END_WSHARE   DEV_OMP workshare
-#endif 
-#define __NEW
+#include<cpv_device_macros.h> 
 !----------------------------------------------------------------
 
 
@@ -360,12 +343,9 @@
       INTEGER     :: is, ia, ig, ig1, ig2, ig3
       REAL(DP)    :: fpibg
       COMPLEX(DP) :: cxc, rhet, rhog, vp, gxc, gyc, gzc
-#if defined (__NEW) 
       COMPLEX(DP),ALLOCATABLE :: rp(:) 
       INTEGER                 :: ngm_ 
-#else
-      COMPLEX(DP)  :: rp 
-#endif 
+      ! 
       COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz, fx, fy, fz
       COMPLEX(DP), ALLOCATABLE :: ftmp(:,:)
       INTEGER :: s_ngm_ 
@@ -373,20 +353,15 @@
       ! ... Subroutine body ... 
 
       s_ngm_ = dffts%ngm
-#if defined (__NEW)
       ALLOCATE (rp(s_ngm_)) 
-#else  
-      ALLOCATE( ftmp( 3, SIZE( fion, 2 ) ) )
-      ftmp = 0.0d0
-#endif     
+  
 !
-#if defined (__NEW)
 
 DEV_ACC data present(rhoeg, rhops) copy(fion)  create(rp(s_ngm_)) copyin(sfac, screen_coul, g, gg, mill, vps, ityp,ei1, ei2, ei3)
 !
 DEV_OMP parallel default(none) &
 DEV_OMP shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
-DEV_OMP         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega ) &
+DEV_OMP         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega, s_ngm_ ) &
 DEV_OMP private(ig, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
 DEV_OMP          ty, tz, teigr,fx, fy, fz )
  
@@ -440,54 +415,6 @@ DEV_ACC end parallel
 DEV_ACC end data 
 DEV_OMP end parallel 
    DEALLOCATE (rp) 
-#else
-!$omp parallel do reduction(+:ftmp) default(none) &
-!$omp shared( gstart, dffts, sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, mill, g, &
-!$omp          nat, ityp, vps, ei1, ei2, ei3, tscreen ) &
-!$omp private(ig, rp, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
-!$omp          ty, tz, teigr )
-      DO ig = gstart, dffts%ngm
-
-        RP   = (0.D0,0.D0)
-        DO IS = 1, nsp
-          RP = RP + sfac( ig, is ) * rhops( ig, is )
-        END DO
-
-        RHET  = RHOEG( ig )
-        RHOG  = RHET + RP
-
-        IF( tscreen ) THEN
-          FPIBG     = fpi / ( gg(ig) * tpiba2 ) + screen_coul(ig)
-        ELSE
-          FPIBG     = fpi / ( gg(ig) * tpiba2 )
-        END IF
-
-        ig1  = mill(1,IG)
-        ig2  = mill(2,IG)
-        ig3  = mill(3,IG)
-        GXC  = CMPLX(0.D0,g(1,IG),kind=DP)
-        GYC  = CMPLX(0.D0,g(2,IG),kind=DP)
-        GZC  = CMPLX(0.D0,g(3,IG),kind=DP)
-        DO ia = 1, nat
-           is = ityp(ia) 
-           CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)
-           CVN   = VPS(ig, is)  * CONJG(rhet)
-           TX = (CNVG+CVN) * GXC
-           TY = (CNVG+CVN) * GYC
-           TZ = (CNVG+CVN) * GZC
-           TEIGR = ei1(IG1,ia) * ei2(IG2,ia) * ei3(IG3,ia)
-           ftmp(1,ia) = ftmp(1,ia) + TEIGR*TX
-           ftmp(2,ia) = ftmp(2,ia) + TEIGR*TY
-           ftmp(3,ia) = ftmp(3,ia) + TEIGR*TZ
-        END DO
-
-      END DO
-      !
-!$omp end parallel do
-      !
-      fion = fion + DBLE(ftmp) * 2.D0 * omega * tpiba
-      DEALLOCATE( ftmp )       
-#endif 
       RETURN
       END SUBROUTINE force_loc_x
 

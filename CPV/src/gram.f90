@@ -16,10 +16,10 @@
  #define START_WSHARE DEV_ACC  kernels 
  #define END_WSHARE   DEV_ACC end  kernels
 #else 
- #define DEV_ACC !!!
- #define DEV_OMP !$omp 
- #define START_WSHARE DEV_OMP workshare
- #define END_WSHARE   DEV_OMP end workshare
+#define DEV_ACC !!!
+#define DEV_OMP !$omp 
+#define START_WSHARE DEV_OMP workshare
+#define END_WSHARE   DEV_OMP end workshare
 #endif
 !-------------------------------------------------------------------------
 SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )

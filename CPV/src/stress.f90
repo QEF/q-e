@@ -6,23 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------------!
-#if defined (_OPENACC) 
- #ifndef __OPENACC 
-  # define __OPENACC 
- #endif
-#endif 
-
-#if defined (__OPENACC) 
- #define DEV_ACC !$acc 
- #define DEV_OMP !!! 
- #define START_WSHARE DEV_ACC  kernels 
- #define END_WSHARE   DEV_ACC end  kernels
-#else 
- #define DEV_ACC !!!
- #define DEV_OMP !$omp 
- #define START_WSHARE DEV_OMP workshare
- #define END_WSHARE   DEV_OMP workshare
-#endif 
+#include <cpv_device_macros.h>
 !------------------------------------------------------------------------------!
    SUBROUTINE pstress_conv( de3x3, de6, ainv )
 !------------------------------------------------------------------------------!
@@ -425,6 +409,13 @@ DEV_ACC end data
       INTEGER       ig, is, k, iss, p_ngm_
 
       DEHC  = (0.D0,0.D0)
+      dehc1 = cmplx(0.d0,0.d0,kind=dp) 
+      dehc2 = cmplx(0.d0,0.d0,kind=dp) 
+      dehc3 = cmplx(0.d0,0.d0,kind=dp) 
+      dehc4 = cmplx(0.d0,0.d0,kind=dp) 
+      dehc5 = cmplx(0.d0,0.d0,kind=dp) 
+      dehc6 = cmplx(0.d0,0.d0,kind=dp) 
+    
       DEHT  = 0.D0
       p_ngm_ = dfftp%ngm
 

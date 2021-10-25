@@ -153,7 +153,7 @@ MODULE uspp
   ! 
   !FIXME use !$acc declare create(vkb) to create and delete it automatically in the device
   !           be carefull cp still uses  vkb_d for device  
-  COMPLEX(DP), ALLOCATABLE, TARGET PINMEN :: &
+  COMPLEX(DP), ALLOCATABLE, TARGET PINMEM :: &
        vkb(:,:)                ! all beta functions in reciprocal space
   REAL(DP), ALLOCATABLE :: &
        becsum(:,:,:)           ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>

@@ -6,23 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#if defined (_OPENACC) 
- #ifndef __OPENACC 
-  #define __OPENACC 
- #endif
-#endif 
-
-#if defined (__OPENACC) 
- #define DEV_ACC !$acc 
- #define DEV_OMP !!! 
- #define START_WSHARE DEV_ACC  kernels 
- #define END_WSHARE   DEV_ACC end  kernels
-#else 
- #define DEV_ACC !!!
- #define DEV_OMP !$omp 
- #define START_WSHARE DEV_OMP workshare
- #define END_WSHARE   DEV_OMP end workshare
-#endif 
+#include <cpv_device_macros.h> 
 
 !-----------------------------------------------------------------------
 SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
@@ -219,21 +203,21 @@ DEV_ACC enter data create(drhot(1:p_ngm_, 1:6))
       DEV_ACC  data copyin(rhog,drhog,ht,sfac,vps,gg,rhops) copyout(vtemp) 
       DEV_OMP  parallel default(shared), private(ig,is,ij,i,j,k)
       !
-      DEV_OMP workshare
+      DEV_OMP do 
       DEV_ACC parallel loop present(rhotmp, rhog)
       DO ig = 1, p_ngm_
         rhotmp( ig ) = rhog( ig, 1 )
       END DO 
-      DEV_OMP end workshare
+      DEV_OMP end do
       !
       IF( nspin == 2 ) THEN
         !
-        DEV_OMP workshare
+        DEV_OMP do
         DEV_ACC parallel loop present(rhotmp, rhog)
         DO ig = 1, p_ngm_
            rhotmp( ig ) = rhotmp( ig ) + rhog( ig, 2 )
         END DO 
-        DEV_OMP end workshare
+        DEV_OMP end do
         !
       END IF
       !
@@ -326,11 +310,11 @@ DEV_ACC update self(vtemp(1))
 
       zh = 0.0d0
 
-DEV_OMP parallel default(shared), private(ig,is)
+DEV_OMP parallel default(shared), private(ig,is,x_tmp)
 DEV_ACC parallel present(rhotmp) 
 DEV_ACC loop gang private(x_tmp)
-      DO ig=1,s_ngm_
 DEV_OMP do 
+      DO ig=1,s_ngm_
          x_tmp = rhotmp(ig)
 DEV_ACC loop vector reduction(+:x_tmp) 
          DO is=1,nsp
