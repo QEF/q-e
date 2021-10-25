@@ -484,8 +484,9 @@ path, as specified in the PATH environment variable.
 \end{tabular}\\
 In addition, \configure\ generates (since v.7) files \texttt{make.depend},
 containing dependencies upon modules, in the various subdirectories.
-If you add/remove/move modules, run \texttt{./install/makedeps.sh} or type
-\texttt{make depend} to update files \texttt{make.depend}.
+If you add/remove/move/rename modules, or change the list of objects
+in any \texttt{Makefile}, type \texttt{make depend}, or run 
+\texttt{./install/makedeps.sh}, to update files \texttt{make.depend}.
 
 It is convenient to use "parallel make" to speed up compilation:
 \texttt{make -jN} compiles in parallel on N processors. Note that
