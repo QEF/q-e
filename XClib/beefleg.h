@@ -14,10 +14,21 @@ extern void dgemv_(const char *, const int *, const int *, const double *,
     const int *);
 
 
+#pragma acc routine seq
+double ddot1(double v[], double u[], int n)
+{
+    double result = 0.0;
+    for (int i = 0; i < n; i++)
+        result += v[i]*u[i];
+    return result;
+}            
+
+
 extern double ddot_(const int *, double *, const int *, double *, const int *);
 
 //beef exchange enhancement factor legendre polynomial coefficients
-static double mi[] = {
+#pragma acc declare copyin (mi[0:nmax-1])
+static double mi[nmax] = {
  1.516501714304992365356,
  0.441353209874497942611,
 -0.091821352411060291887,
@@ -49,7 +60,6 @@ static double mi[] = {
 -0.000190491156503997170,
  0.000073843624209823442
 };
-#pragma acc declare create (mi)
 
 //LDA & PBE correlation fractions used in beef-vdw xc
 #define beefldacfrac 0.600166476948828631066
@@ -395,7 +405,7 @@ static double beefmat[] = {
     L[1] = x; int i=0;\
     for(i=2;i<nmax;i++) { \
 	L[i] = 2.*(x)*L[i-1] - L[i-2] - ((x)*L[i-1] - L[i-2])/((double) i); \
-	dL[i] = L[i-1]*i + dL[i-1]*(x); \
+	dL[i] = L[i-1]*((double) i) + dL[i-1]*(x); \
     } \
 }
 
@@ -586,24 +596,24 @@ static void(*LdLn[])(double,double *,double *) = {
 #define normrand() \
     ( sqrt(-2.*log(unirandex0())) * cos(M_PI*2.*unirandinc0()) )
 
-
 // beeforder==-1 : calculate beefxc with standard expansion coefficients
 // (is changed by beefsetmode_)
 static int beeforder = -1;
+#pragma acc declare copyin (beeforder)
 
 //arrays holding current Legendre polynomials and derivatives
 //static __thread double L[nmax] = {1.};
 //static __thread double dL[nmax] = {0.,1.};
-static double L[nmax] = {1.};
-#pragma acc declare create (L)
-static double dL[nmax] = {0.,1.};
-#pragma acc declare create (dL)
+
+//static double L[nmax] = {1.};
+//static double dL[nmax] = {0.,1.};
 
 static inline double sq(double x) {return x*x;}
 
 // beeftype is a switch set by beef_set_type
 // which determines which version/type of beef is used
 static int beeftype = 0;
+#pragma acc declare copyin (beeftype)
 
 #define output_spacing "     "
 #define output_marker "**************************************************************************"
