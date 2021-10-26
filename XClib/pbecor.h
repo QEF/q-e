@@ -6,6 +6,7 @@ extern void corpbe(double, double,
 	int, int, double *, double *,
 	double *, double *, double *);
 
+#pragma acc routine seq
 void corpbespin(double, double, double,
 	int, int, double *, double *, double *,
 	double *, double *, double *, double *);

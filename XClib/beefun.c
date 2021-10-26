@@ -134,8 +134,10 @@ void beefxpot_(double *r, double *g, double *e, int *addlda)
     const int n=nmax;
     const int i1=1;
     const int i2=1;
+    
+    double L[nmax]={1.};
 
-/*    switch(beeftype) {
+    switch(beeftype) {
     case 0: //BEEF-vdW xc    
     r43 = pow(*r, 4./3.);
 
@@ -159,7 +161,7 @@ void beefxpot_(double *r, double *g, double *e, int *addlda)
 	*e = 0.;
 
     break;
-    } */
+    }
 }
 
 // evaluate local part of bee correlation - energy only
@@ -167,7 +169,7 @@ void beeflocalcorrpot_(double *r, double *g, double *e, int *addlda)
 {
     double rs, ldac, ldadr, pbec, pbedr, pbed2rho;
     
-/*    if(beeforder>=0)
+    if(beeforder>=0)
     {
 	*e = 0.;
 	return;
@@ -196,17 +198,18 @@ void beeflocalcorrpot_(double *r, double *g, double *e, int *addlda)
 	*e = 0.;
 
     break;
-    } */
+    }
 }
 
 
 
 // evaluate local part of bee correlation for spin polarized system
+#pragma acc routine seq
 void beeflocalcorrspin_(double *r, double *z, double *g, double *e,
     double *drup, double *drdown, double *dg, int *addlda) {
     double rs, ldac, ldadrup, ldadrdown, pbec, pbedrup, pbedrdown, pbed2rho;
     
-/*    if(beeforder>=0)
+    if(beeforder>=0)
     {
 	*e = 0.;
 	*drup = 0.;
@@ -263,7 +266,7 @@ void beeflocalcorrspin_(double *r, double *z, double *g, double *e,
     }
     
     break;
-    } */
+    }
 }
 
 // evaluate local part of bee correlation for spin polarized system - energy only

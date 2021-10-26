@@ -35,8 +35,8 @@ MODULE beef_interface
         INTEGER(C_INT), INTENT(IN) :: addlda
     END SUBROUTINE beeflocalcorr
     !
-    SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda) &
-        BIND(C, NAME="beeflocalcorrspin_")
+    SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda) BIND(C, NAME="beeflocalcorrspin_")
+    !$acc routine seq
     USE iso_c_binding
         REAL (C_DOUBLE), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
         INTEGER(C_INT), INTENT(IN) :: addlda

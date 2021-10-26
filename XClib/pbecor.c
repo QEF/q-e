@@ -167,7 +167,9 @@ void corpbe(double rs, double t, int lgga, int lpot, double *ec, double *vc, dou
 
 /* ###################################################################### */
 /* ---------------------------------------------------------------------- */
-/* Subroutine */ void corpbespin(double rs, double t, double zet,
+/* Subroutine */ 
+#pragma acc routine seq
+void corpbespin(double rs, double t, double zet,
 	int lgga, 
 	int lpot, double *ec, double *vcup, double *vcdown,
 	double *h__, double *dvcup, double *dvcdown, double *dv2rho)

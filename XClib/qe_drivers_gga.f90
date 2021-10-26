@@ -1278,6 +1278,10 @@ SUBROUTINE gcc_spin_beef( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c
   !
   IF ( igcc == 14 ) THEN
     !
+#if defined(_OPENACC)
+    !$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
+    !$acc parallel loop
+#endif
     DO ir = 1, length
       !
       rho  = rho_in(ir)
@@ -1308,6 +1312,9 @@ SUBROUTINE gcc_spin_beef( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c
       v2c_out(ir) = v2c
       !
     ENDDO
+#if defined(_OPENACC)
+    !$acc end data
+#endif
     !
   ENDIF
   !
