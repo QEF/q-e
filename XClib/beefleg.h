@@ -423,7 +423,10 @@ static double beefmat[] = {
     } \
 }
 
+#define PRAGMA_ACC_ROUTINE _Pragma("acc routine seq")
+
 #define defL(n) \
+PRAGMA_ACC_ROUTINE \
     static double L ## n (double x) { \
 	double L[n+1]; \
 	L[0] = 1.; \
@@ -433,6 +436,7 @@ static double beefmat[] = {
     }
 
 #define defLdL(n) \
+PRAGMA_ACC_ROUTINE \
     static void LdL ## n (double x, double *y, double *z) { \
 	double L[n+1]; \
 	double dL[n+1]; \
@@ -446,8 +450,9 @@ static double beefmat[] = {
     }
 
 
-
+#pragma acc routine seq
 double L0(double x) {return 1.;}
+#pragma acc routine seq
 double L1(double x) {return x;}
 defL(2)
 defL(3)
@@ -478,6 +483,7 @@ defL(27)
 defL(28)
 defL(29)
 
+#pragma acc declare copyin(Ln[0:nmax-1])
 static double(*Ln[])(double) = {
     L0,
     L1,
@@ -511,8 +517,9 @@ static double(*Ln[])(double) = {
     L29
 };
 
-
+#pragma acc routine seq
 static void LdL0(double x, double *y, double *z) {*y=1.; *z=0.;}
+#pragma acc routine seq
 static void LdL1(double x, double *y, double *z) {*y=x; *z=1.;}
 defLdL(2)
 defLdL(3)
@@ -543,6 +550,7 @@ defLdL(27)
 defLdL(28)
 defLdL(29)
 
+#pragma acc declare copyin(LdLn[0:nmax-1])
 static void(*LdLn[])(double,double *,double *) = {
     LdL0,
     LdL1,

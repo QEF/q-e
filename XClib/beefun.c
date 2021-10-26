@@ -51,7 +51,8 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     
     if(beeforder>=0)
     {
-	(*LdLn[beeforder])(t, &fx, &dl);
+	//(*LdLn[beeforder])(t, &fx, &dl);
+	LdL0(t, &fx, &dl);
 	dfx = dl*( 4.*s / (4.+s2) - 4.*s2*s/sq(4.+s2) );
 	*dr = dx*fx - 4./3.*s2/(s*(*r))*sx*dfx;
 	*dg = sx*dfx*pix/(s*r83);
@@ -63,7 +64,6 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
 	*dg = 0.;
 	*e = 0.;
     }
-    
     break;
     }
 }
@@ -274,7 +274,7 @@ void beeflocalcorrpotspin_(double *r, double *z, double *g, double *e, int *addl
 {
     double rs, ldac, ldadrup, ldadrdown, pbec, pbedrup, pbedrdown, pbed2rho;
     
- /*   if(beeforder>=0)
+    if(beeforder>=0)
     {
 	*e = 0.;
 	return;
@@ -304,7 +304,7 @@ void beeflocalcorrpotspin_(double *r, double *z, double *g, double *e, int *addl
 	*e = 0.;
 
     break;
-    } */
+    }
 }
 
 
