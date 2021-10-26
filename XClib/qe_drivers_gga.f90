@@ -1155,10 +1155,10 @@ SUBROUTINE gcxc_beef( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
       IF ( igcc == 14 ) THEN
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
-!        CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
-!        sc_out(ir) = sc
-!        v1c_out(ir) = v1c
-!        v2c_out(ir) = v2c
+        CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
+        sc_out(ir) = sc
+        v1c_out(ir) = v1c
+        v2c_out(ir) = v2c
       ENDIF
     ENDDO
 #if defined(_OPENACC)

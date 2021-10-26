@@ -70,11 +70,12 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
 
 
 // evaluate local part of bee correlation and its derivatives de/drho and ( de/d|grad rho| ) / |grad rho|
+#pragma acc routine seq
 void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int *addlda)
 {
     double rs, ldac, ldadr, pbec, pbedr, pbed2rho;
 
- /*   if(beeforder>=0)
+    if(beeforder>=0)
     {
 	*e = 0.;
 	*dr = 0.;
@@ -85,8 +86,7 @@ void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int
     switch(beeftype) {
     case 0: //BEEF-vdW xc    
     rs = invpi075tothird / pow(*r,1./3.);
-    corpbe(rs, 0.5/r2k * sqrt(*g*rs) / (*r),
-	(beeforder>-3), 1, &ldac, &ldadr, &pbec, &pbedr, &pbed2rho);
+    corpbe(rs, 0.5/r2k * sqrt(*g*rs) / (*r),(beeforder>-3), 1, &ldac, &ldadr, &pbec, &pbedr, &pbed2rho);
 
     if(beeforder==-1)
     {
@@ -124,7 +124,7 @@ void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int
     }
     
     break;
-    } */
+    }
 }
 
 // evaluate bee exchange energy only

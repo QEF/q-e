@@ -28,8 +28,8 @@ MODULE beef_interface
         INTEGER(C_INT), INTENT(IN) :: addlda
     END SUBROUTINE beefx
     !
-    SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda) &
-        BIND(C, NAME="beeflocalcorr_")
+    SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda) BIND(C, NAME="beeflocalcorr_")
+    !$acc routine seq
     USE iso_c_binding
         REAL (C_DOUBLE), INTENT(INOUT) :: r, g, e, dr, dg
         INTEGER(C_INT), INTENT(IN) :: addlda
