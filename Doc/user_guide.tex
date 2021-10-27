@@ -482,26 +482,26 @@ path, as specified in the PATH environment variable.
 	(uncomment \verb|#define __HAVE_CONFIG_INFO|
 	 in Modules/environment.f90 to enable its usage)\\
 \end{tabular}\\
-NOTA BENE: if you interrupt \make, depending upon what it was doing
+In addition, \configure\ generates (since v.7) files \texttt{make.depend},
+containing dependencies upon modules, in the various subdirectories.
+If you add/remove/move/rename modules, or change the list of objects
+in any \texttt{Makefile}, type \texttt{make depend}, or run 
+\texttt{./install/makedeps.sh}, to update files \texttt{make.depend}.
+
+It is convenient to use "parallel make" to speed up compilation:
+\texttt{make -jN} compiles in parallel on N processors. Note that
+if you interrupt \make, depending upon what it was doing
 you may run into trouble the next time you type \make (for instance,
 if \make\ is interrupted while unpacking and compiling the FoX library).
-If so, run \texttt{make clean} before running \make\ again.\\
-NOTA BENE 1: it is convenient to use "parallel make" to speed up compilation:
-\texttt{make -jN} compiles in parallel on N processors.\\
-NOTA BENE 2: \configure\ no longer updates files \texttt{make.depend},
-containing dependencies upon modules, in the various subdirectories.
-If you modify the sources, run \texttt{./install/makedeps.sh} or type
-\texttt{make depend} to update files \texttt{make.depend}.\\
-NOTA BENE 3: \texttt{make.inc} used to be called \texttt{make.sys}
-until v.6.0. The change of name is due to frequent problems with mailers
-assuming that whatever ends in \texttt{.sys} is a suspect virus.
+If so, run \texttt{make clean} before running \make\ again.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
 may have to tune \configure\ by specifying appropriate environment variables
 and/or command-line options. Usually the tricky part is to get external
 libraries recognized and used: see Sec.\ref{Sec:Libraries}
-for details and hints.
+for details and hints. In most cases, you may simply edit file
+\texttt{make.inc}. 
 
 Environment variables may be set in any of these ways:
 \begin{verbatim}

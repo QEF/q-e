@@ -124,7 +124,20 @@ for dir in $dirs; do
     then
 	cd $TOPDIR/../$DIR
        
-	$TOPDIR/moduledep.sh $DEPENDS > make.depend
+cat > make.depend << EOF
+#####################################################################
+# Automatically generated file - if you notice lines looking like
+# some_file.o: @some_module@ 
+# figure out why "some_module", referenced in "some_file.o", is not 
+# found: check spelling, presence in one of the DEPEND* directories
+# as defined in file "install/makedeps.sh"; if "some_module" is an 
+# external module, add it to the module lists "sysdeps", "libdeps",
+# "cudadeps" defined in "install/makedeps.sh".
+# Finally, from the top QE directory, run "make depend" to regenerate
+# the files - DO NOT EDIT MANUALLY (unless you know what you are doing)
+####################################################################
+EOF
+	$TOPDIR/moduledep.sh $DEPENDS >> make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
         # remove unwanted dependency upon system and library modules
@@ -135,18 +148,22 @@ for dir in $dirs; do
 	/bin/rm removedeps.tmp
 
         # check for missing dependencies 
-        if grep @ make.depend
+	missing=`grep @ make.depend | grep -v @some_module@`
+        if test "$missing" != "";
         then
 	   notfound=1
-	   echo WARNING: dependencies not found in directory $DIR
+	   echo "\nWARNING! dependencies not found in directory $DIR:"
+	   grep @ make.depend
+	   echo "File $DIR/make.depend is broken"
        else
-           echo directory $DIR : ok
+           echo -n "\rdirectory $DIR : ok"
        fi
     else
-       echo directory $DIR : not present in $TOPDIR 
+       echo "\ndirectory $DIR : not present in $TOPDIR" 
     fi
 done
 if test "$notfound" = ""
 then
-    echo all dependencies updated successfully
+    echo "\nall dependencies updated successfully"
 fi
+
