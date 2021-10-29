@@ -39,6 +39,7 @@ SUBROUTINE print_clock_pw()
    IF (llondon) CALL print_clock('stres_london')
    !
    WRITE( stdout, '(/5x,"Called by init_run:")' )
+   CALL print_clock( 'aceinit0' )
    CALL print_clock( 'wfcinit' )
    IF ( iverbosity > 0 ) THEN
       CALL print_clock( 'wfcinit:atomic' )

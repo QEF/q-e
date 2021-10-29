@@ -749,7 +749,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : noncolin, npol
       USE buffers,              ONLY : get_buffer
       USE wavefunctions,        ONLY : evc
-      USE exx,                  ONLY : xi
+      USE exx,                  ONLY : xi, nbndproj
       USE xc_lib,               ONLY : exx_is_active
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k
       USE gvect,                ONLY : ngm, g, mill
@@ -1218,11 +1218,11 @@ MODULE pw_restart_new
     END SUBROUTINE read_xml_file
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_collected_wfc ( dirname, ik, evc )
+    SUBROUTINE read_collected_wfc ( dirname, ik, arr, label_ )
       !------------------------------------------------------------------------
       !
       ! ... reads from directory "dirname" (new file format) for k-point "ik"
-      ! ... wavefunctions from collected format into distributed array "evc"
+      ! ... wavefunctions from collected format into distributed array "arr"
       !
       USE control_flags,        ONLY : gamma_only
       USE lsda_mod,             ONLY : nspin, isk
@@ -1235,17 +1235,20 @@ MODULE pw_restart_new
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
-      USE exx,                  ONLY : xi
       USE xc_lib,               ONLY : exx_is_active
+      USE exx,                  ONLY : nbndproj
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       INTEGER, INTENT(IN) :: ik
-      COMPLEX(dp), INTENT(OUT) :: evc(:,:)
+      COMPLEX(dp), INTENT(OUT) :: arr(:,:)
+      CHARACTER(LEN=3), OPTIONAL, INTENT(IN) :: label_
+      CHARACTER(LEN=3) :: label 
+      LOGICAL :: read_ace
       !
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
-      CHARACTER(LEN=320)   :: filename, filenameace, msg
+      CHARACTER(LEN=320)   :: filename, msg
       INTEGER              :: i, ik_g, ig, ipol, ik_s
       INTEGER              :: npol_, nbnd_
       INTEGER              :: nupdwn(2), ike, iks, ngk_g, npw_g, ispin
@@ -1254,6 +1257,23 @@ MODULE pw_restart_new
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
       REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
+      !
+      ! ... decide whether to read wfc or ace
+      !
+      if(present(label_)) then 
+        label = label_
+        if(label.eq."ace") then 
+          if(.not.exx_is_active()) CALL errore ('pw_restart - read_collected_wfc', "ace but not exx_is_active", 1 ) 
+          read_ace = .true.
+        elseif(label.eq."wfc") then
+          read_ace = .false.
+        else
+          CALL errore ('pw_restart - read_collected_wfc', "wrong label", 1 )
+        end if  
+      else
+        label = "wfc"
+        read_ace = .false.
+      end if 
       !
       ! ... the root processor of each pool reads
       !
@@ -1301,17 +1321,12 @@ MODULE pw_restart_new
          !
          ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
          ispin = isk(ik)
-         filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
-              & TRIM(int_to_char(ik_g))
-         !
-         if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // updw(ispin) // &
+         filename = TRIM(dirname) // label // updw(ispin) // &
               & TRIM(int_to_char(ik_g))
          !
       ELSE
          !
-         filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
-         !
-         if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // TRIM(int_to_char(ik_g))
+         filename = TRIM(dirname) // label // TRIM(int_to_char(ik_g))
          !
       ENDIF
       !
@@ -1319,21 +1334,12 @@ MODULE pw_restart_new
       !
       ALLOCATE( mill_k ( 3,npwx ) )
       !
-      evc=(0.0_DP, 0.0_DP)
+      arr = (0.0_DP, 0.0_DP)
       !
       CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
-           ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd_, &
+           ik_g, xk_, ispin, npol_, arr, npw_g, gamma_only, nbnd_, &
            igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
-      !  
-      IF(exx_is_active()) THEN 
-        !
-        xi(:,:,ik) = (0.0_DP, 0.0_DP)
-        !
-        CALL read_wfc( iunpun, filenameace, root_bgrp, intra_bgrp_comm, &
-             ik_g, xk_, ispin, npol_, xi(:,:,ik), npw_g, gamma_only, nbnd_, &
-             igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
-        !
-      END IF 
+      !
       !
       DEALLOCATE ( mill_k )
       DEALLOCATE ( igk_l2g_kdip )
@@ -1341,10 +1347,17 @@ MODULE pw_restart_new
       ! ... here one should check for consistency between what is read
       ! ... and what is expected
       !
-      IF ( nbnd_ < nbnd ) THEN
-         WRITE (msg,'("The number of bands for this run is",I6,", but only",&
-              & I6," bands were read from file")')  nbnd, nbnd_  
-         CALL errore ('pw_restart - read_collected_wfc', msg, 1 )
+      IF(read_ace) THEN
+        !
+        write(*,*) 'ACE potential read for ', nbnd_ , 'bands'
+        nbndproj = nbnd_
+        !
+      ELSE IF ( nbnd_ < nbnd .and..not. read_ace) THEN
+        !
+        WRITE (msg,'("The number of bands for this run is",I6,", but only",&
+             & I6," bands were read from file")')  nbnd, nbnd_  
+        CALL errore ('pw_restart - read_collected_wfc', msg, 1 )
+        !
       END IF
       !
       RETURN

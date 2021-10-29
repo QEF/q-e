@@ -36,16 +36,11 @@ SUBROUTINE init_run()
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE lsda_mod,           ONLY : nspin
   USE spin_orb,           ONLY : domag
-  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, xclib_dft_is 
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
-  USE exx,                ONLY : xi
-  USE noncollin_module,   ONLY : npol
-  USE wvfct,              ONLY : npwx
-  USE xc_lib,             ONLY : xclib_dft_is, start_exx
-  USE control_flags,      ONLY : lscf
   !
   IMPLICIT NONE
   INTEGER :: ierr
@@ -139,15 +134,9 @@ SUBROUTINE init_run()
   CALL allocate_wfc_k()
   CALL openfil()
   !
-  IF(.not.lscf.and.xclib_dft_is('hybrid')) then
-    write(*,*) "EXX: allocating ACE in init_run"
-    Call start_exx()
-    IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbnd,nkstot) )
-    xi=(0.0d0, 0.0d0)
-  END IF 
-  !
-  !
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
+  !
+  IF (xclib_dft_is('hybrid')) CALL aceinit0()
   !
   CALL hinit0()
   !
