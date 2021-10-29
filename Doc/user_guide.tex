@@ -1225,6 +1225,28 @@ As a final option, one can use Quantum Mobile:\\
 
 \subsubsection{Mac OS}
 
+"I have had some success compiling pw.x on the newish apple hardware.
+Running run-tests-pw-parallel resulted in all but 3 tests passed (3 unknown).
+QE6.7 works out of the box:
+\begin{itemize}
+\item Install homebrew
+\item Using homebrew install gcc (11.2.0), open-mpi (4.1.1_2), 
+fftw3 (3.3.10), and veclibfort (0.4.2_7)
+\end{itemize}
+To configure QE: 
+\verb|./configure FC=mpif90 CC=mpicc CPP=cpp-11 \
+BLAS_LIBS="-L/opt/homebrew/lib -lveclibfort" LIBDIRS=/opt/homebrew/lib|
+
+Current develop branch needed two changes:
+\begin{enumerate}
+\item The script external/devxlib/config/config.sub is outdated, 
+and needs to be adjusted to correctly parse the machine information. 
+I pulled a more up-to-date version from iains/gcc-darwin-arm64 github repo\\
+\item PW/src/efermig.f90 needed to be compiled without optimization -O0. 
+No idea why at the moment."
+\end{itemize}
+(Info by John Vinson, NIST)
+
 Mac OS-X machines with gfortran or with the Intel compiler ifort
 and MKL libraries should work, but "your mileage may vary", depending
 upon the specific software stack you are using. Parallel compilation
@@ -1640,3 +1662,19 @@ in \qe, but more often than not are a consequence of buggy
 compilers or of buggy or miscompiled MPI libraries.
 
 \end{document}
+I have had some success compiling pw.x on the newish apple hardware. Running run-tests-pw-parallel resulted in all but 3 tests passed (3 unknown). I will attempt to give complete instructions here.
+
+ 
+
+QE6.7 works out of the box.
+
+Install homebrew
+Using homebrew install gcc (11.2.0), open-mpi (4.1.1_2), fftw3 (3.3.10), and veclibfort (0.4.2_7)
+To configure QE: ./configure FC=mpif90 CC=mpicc CPP=cpp-11 BLAS_LIBS="-L/opt/homebrew/lib -lveclibfort" LIBDIRS=/opt/homebrew/lib
+ 
+
+Current develop branch needed two changes.
+
+The script external/devxlib/config/config.sub is outdated, and needs to be adjusted to correctly parse the machine information. I pulled a more up-to-date version from iains/gcc-darwin-arm64 github repo
+PW/src/efermig.f90 needed to be compiled without optimization -O0. No idea why at the moment
+ 
