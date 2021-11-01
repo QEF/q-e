@@ -1,6 +1,6 @@
 New in development version:
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
-  * DFT-D3: MPI parallelization and GPU acceleration with OPenACC
+  * DFT-D3: MPI parallelization and GPU acceleration with OpenACC
   * projwfc.x can be used to compute the PDOS in a local basis (I. Timrov)
   * Charge self-consistent DFT+DMFT calculations with the TRIQS software package
     via Wannier90 (S. Beck, CCQ Flatiron Institute)
@@ -20,9 +20,11 @@ Fixed in development version:
   * plotband.x wasn't correctly plotting the bands, under some not-so-special
     circumstances
   * CP with DFT+U could crash when writing the xml file (since v.6.6)
+  * Restart of electron-phonon calculations was not working due to a missing
+    tag (thanks to Miguel Marques for reporting this)
 
 Incompatible changes in develoment version:
-  * Changes to Makefiles and to file "make.inc"
+  * Changes to Makefiles and to file "make.inc" (they must be regenerated)
   * clib/ deleted, files clib/*.c moved to UtilXlib/ or to Modules/
 
 Known problems in 6.8 version:

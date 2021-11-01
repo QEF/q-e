@@ -494,6 +494,5 @@ MODULE pwcom
   USE relax
   USE cellmd
   USE fixed_occ
-  USE spin_orb
   !
 END MODULE pwcom

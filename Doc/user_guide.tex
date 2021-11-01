@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.8}
+\def\version{7.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -336,15 +336,15 @@ version number.
 % A directory \texttt{qe-X.Y.Z/} will be created.
 
 A few additional packages that are not included in the base distribution
-will be downloaded on demand at compile time, using either \make
-or \texttt{cmake} (see Sec.\ref{SubSec:Compilation}).
+will be downloaded on demand at compile time, using either \make\ or
+\texttt{cmake} (see Sec.\ref{SubSec:Compilation}).
 Note however that this will work only if the computer you are
 installing on is directly connected to the internet and has
 either \texttt{wget} or \texttt{curl} installed and working.
 If you run into trouble, manually download each required package
 into subdirectory \texttt{archive/}, {\em not unpacking or
 uncompressing it}:
-command \make will take care of this during installation.
+command \make\ will take care of this during installation.
 
 % Occasionally, patches for the current version, fixing some errors and bugs,
 % may be distributed as a "diff" file. In order to install a patch (for
@@ -402,7 +402,8 @@ to all linear-response codes.
 To install \qe\ from source, you need first of all a minimal Unix
 environment, that is: a command shell (e.g., bash, sh) and utilities \make,
 \texttt{awk}, \texttt{sed}. For MS-Windows, see Sec.\ref{SubSec:Windows}.
-You will also need a recent working CMake software if you prefer installation 
+You will also need a recent (v.3.19.1 or later) working CMake software 
+if you prefer installation 
 with CMake (supported since v.6.7), otherwise you will need the
 \configure\ command from autoconf (see next subsection).
 
@@ -478,9 +479,9 @@ path, as specified in the PATH environment variable.
 \texttt{install/config.log} & detailed log of the configuration run (useful for debugging)\\
 	\texttt{include/qe\_cdefs.h} &  (previously: \texttt{include/c\_defs.h})
 	a few definitions used by C files\\
-\texttt{include/configure.h} &  optionally: info on compilation flags
-	(uncomment \verb|#define __HAVE_CONFIG_INFO|
-	 in Modules/environment.f90 to enable its usage)\\
+\texttt{include/configure.h} &  optional: info on compilation flags
+	(to enable its usage, \\ & uncomment \verb|#define __HAVE_CONFIG_INFO|
+	 in Modules/environment.f90)\\
 \end{tabular}\\
 In addition, \configure\ generates (since v.7) files \texttt{make.depend},
 containing dependencies upon modules, in the various subdirectories.
@@ -742,8 +743,9 @@ v.1.8.16 or later, can be used to perform binary I/O using the HDF5
 format.
 
 If compiling the HDF5 library from sources, attention must be paid
-to pass options \texttt{--enable-fortran},
-\texttt{--enable-fortran2003}, and \texttt{--enable-parallel} (see below),
+to pass options:\\
+\texttt{--enable-fortran}, \texttt{--enable-fortran2003}, and 
+\texttt{--enable-parallel} (see below),
 to the \configure\ script of \texttt{HDF5} (not of \qe).
 
 To use HDF5 is usually sufficient to specify the path to the fortran
@@ -1224,6 +1226,29 @@ As a final option, one can use Quantum Mobile:\\
 \texttt{https://www.materialscloud.org/work/quantum-mobile}.
 
 \subsubsection{Mac OS}
+
+"I have had some success compiling pw.x on the newish apple hardware.
+Running run-tests-pw-parallel resulted in all but 3 tests passed (3 unknown).
+QE6.7 works out of the box:
+\begin{itemize}
+\item Install homebrew
+\item Using homebrew install gcc (11.2.0), open-mpi (4.1.1\_2), 
+fftw3 (3.3.10), and veclibfort (0.4.2\_7)
+\end{itemize}
+To configure QE: 
+\begin{verbatim}
+./configure FC=mpif90 CC=mpicc CPP=cpp-11 BLAS_LIBS="-L/opt/homebrew/lib
+           -lveclibfort" LIBDIRS=/opt/homebrew/lib
+\end{verbatim}
+Current develop branch needed two changes:
+\begin{enumerate}
+\item The script external/devxlib/config/config.sub is outdated, 
+and needs to be adjusted to correctly parse the machine information. 
+I pulled a more up-to-date version from iains/gcc-darwin-arm64 github repo\\
+\item PW/src/efermig.f90 needed to be compiled without optimization -O0. 
+No idea why at the moment."
+\end{enumerate}
+(Info by John Vinson, NIST)
 
 Mac OS-X machines with gfortran or with the Intel compiler ifort
 and MKL libraries should work, but "your mileage may vary", depending
