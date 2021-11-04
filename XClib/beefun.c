@@ -41,7 +41,6 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
 	   }
 
 	dl = ddot1(mi,dL,n);
-
 	dfx = dl*( 4.*s / (4.+s2) - 4.*s2*s/sq(4.+s2) );
 	*dr = dx*fx - 4./3.*s2/(s*(*r))*sx*dfx;
 	*dg = sx*dfx*pix/(s*r83);
@@ -52,7 +51,7 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     if(beeforder>=0)
     {
 	//(*LdLn[beeforder])(t, &fx, &dl);
-	LdL0(t, &fx, &dl);
+	LdLnACC(t, &fx, &dl, beeforder);
 	dfx = dl*( 4.*s / (4.+s2) - 4.*s2*s/sq(4.+s2) );
 	*dr = dx*fx - 4./3.*s2/(s*(*r))*sx*dfx;
 	*dg = sx*dfx*pix/(s*r83);
@@ -317,6 +316,7 @@ void beeflocalcorrpotspin_(double *r, double *z, double *g, double *e, int *addl
 void beefsetmode_(int *mode)
 {
     beeforder = *mode;
+#pragma acc update device(beeforder)
 }
 
 // initialize pseudo random number generator

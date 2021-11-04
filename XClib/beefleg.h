@@ -423,10 +423,7 @@ static double beefmat[] = {
     } \
 }
 
-#define PRAGMA_ACC_ROUTINE _Pragma("acc routine seq")
-
 #define defL(n) \
-PRAGMA_ACC_ROUTINE \
     static double L ## n (double x) { \
 	double L[n+1]; \
 	L[0] = 1.; \
@@ -434,6 +431,8 @@ PRAGMA_ACC_ROUTINE \
 	calcNleg(n,x); \
 	return L[n]; \
     }
+
+#define PRAGMA_ACC_ROUTINE _Pragma("acc routine seq")
 
 #define defLdL(n) \
 PRAGMA_ACC_ROUTINE \
@@ -450,9 +449,7 @@ PRAGMA_ACC_ROUTINE \
     }
 
 
-#pragma acc routine seq
 double L0(double x) {return 1.;}
-#pragma acc routine seq
 double L1(double x) {return x;}
 defL(2)
 defL(3)
@@ -483,7 +480,6 @@ defL(27)
 defL(28)
 defL(29)
 
-#pragma acc declare copyin(Ln[0:nmax-1])
 static double(*Ln[])(double) = {
     L0,
     L1,
@@ -550,7 +546,6 @@ defLdL(27)
 defLdL(28)
 defLdL(29)
 
-#pragma acc declare copyin(LdLn[0:nmax-1])
 static void(*LdLn[])(double,double *,double *) = {
     LdL0,
     LdL1,
@@ -583,6 +578,42 @@ static void(*LdLn[])(double,double *,double *) = {
     LdL28,
     LdL29
 };
+
+#pragma acc routine seq
+static void LdLnACC(double t,double *fx,double *dl, int bo) {
+    switch(bo) {
+      case  0: LdL0(t  ,fx ,dl ); break;
+      case  1: LdL1(t  ,fx ,dl ); break;
+      case  2: LdL2(t  ,fx ,dl ); break;
+      case  3: LdL3(t  ,fx ,dl ); break;
+      case  4: LdL4(t  ,fx ,dl ); break;
+      case  5: LdL5(t  ,fx ,dl ); break;
+      case  6: LdL6(t  ,fx ,dl ); break;
+      case  7: LdL7(t  ,fx ,dl ); break;
+      case  8: LdL8(t  ,fx ,dl ); break;
+      case  9: LdL9(t  ,fx ,dl ); break;
+      case 10: LdL10(t ,fx ,dl ); break;
+      case 11: LdL11(t ,fx ,dl ); break;
+      case 12: LdL12(t ,fx ,dl ); break;
+      case 13: LdL13(t ,fx ,dl ); break;
+      case 14: LdL14(t ,fx ,dl ); break;
+      case 15: LdL15(t ,fx ,dl ); break;
+      case 16: LdL16(t ,fx ,dl ); break;
+      case 17: LdL17(t ,fx ,dl ); break;
+      case 18: LdL18(t ,fx ,dl ); break;
+      case 19: LdL19(t ,fx ,dl ); break;
+      case 20: LdL20(t ,fx ,dl ); break;
+      case 21: LdL21(t ,fx ,dl ); break;
+      case 22: LdL22(t ,fx ,dl ); break;
+      case 23: LdL23(t ,fx ,dl ); break;
+      case 24: LdL24(t ,fx ,dl ); break;
+      case 25: LdL25(t ,fx ,dl ); break;
+      case 26: LdL26(t ,fx ,dl ); break;
+      case 27: LdL27(t ,fx ,dl ); break;
+      case 28: LdL28(t ,fx ,dl ); break;
+      case 29: LdL29(t ,fx ,dl ); break;
+    }
+}
 
 // LDA and PBEc coefficients
 
