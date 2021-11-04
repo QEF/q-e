@@ -212,7 +212,7 @@
       COMPLEX(DP)  :: sfac0
 
       call start_clock( 'strucf' )
-!$acc data copyout(sfac), copyin(ei1, ei2,ei3,mill, ityp)
+!$acc data copyout(sfac), copyin(ei1, ei2,ei3,ityp,mill) 
 !$acc kernels 
       sfac = (0.d0,0.d0) 
 !$acc end kernels 
