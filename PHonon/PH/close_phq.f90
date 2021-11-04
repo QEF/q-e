@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE close_phq( flag )
   !----------------------------------------------------------------------------
-  !! Close all files.  
+  !! Close all files.
   !! Called at the end of the run with \(\text{flag}\)=TRUE (removes 'recover')
   !! or during execution with \(\text{flag}\)=FALSE (does not remove 'recover').
   !
@@ -56,7 +56,7 @@ SUBROUTINE close_phq( flag )
         CALL close_buffer(iuebar,'delete')
         IF (okvan) THEN
            CALL close_buffer(iucom,'delete')
-           INQUIRE( UNIT=iudvkb3, OPENED=opnd ) 
+           INQUIRE( UNIT=iudvkb3, OPENED=opnd )
            IF (opnd) CLOSE( UNIT = iudvkb3, STATUS = 'DELETE' )
         ENDIF
      ENDIF
@@ -70,40 +70,40 @@ SUBROUTINE close_phq( flag )
         CALL close_buffer(iuebar,'keep')
         IF (okvan) THEN
            CALL close_buffer(iucom,'keep')
-           INQUIRE( UNIT=iudvkb3, OPENED=opnd ) 
+           INQUIRE( UNIT=iudvkb3, OPENED=opnd )
            IF (opnd) CLOSE( UNIT = iudvkb3, STATUS = 'KEEP' )
         ENDIF
      ENDIF
   ENDIF
   !
   IF ( ionode .AND. fildrho /= ' ') THEN
-     INQUIRE( UNIT=iudrho, OPENED=opnd ) 
+     INQUIRE( UNIT=iudrho, OPENED=opnd )
      IF (opnd) CLOSE( UNIT = iudrho, STATUS = 'KEEP' )
   ENDIF
   !
   IF ( flag ) CALL clean_recover()
   !
-  IF ( fildvscf /= ' ' .AND. ionode ) THEN  
-     INQUIRE( UNIT=iudvscf, OPENED=opnd ) 
+  IF ( fildvscf /= ' ' .AND. ionode ) THEN
+     INQUIRE( UNIT=iudvscf, OPENED=opnd )
      IF (opnd) CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
      IF (okpaw) THEN
-        INQUIRE( UNIT=iuint3paw, OPENED=opnd ) 
+        INQUIRE( UNIT=iuint3paw, OPENED=opnd )
         IF (opnd) CLOSE( UNIT = iuint3paw, STATUS = 'KEEP' )
      ENDIF
   ENDIF
   !
   IF (lraman .OR.elop) THEN
-     INQUIRE( UNIT=iuchf, OPENED=opnd ) 
+     INQUIRE( UNIT=iuchf, OPENED=opnd )
      IF (opnd) CLOSE ( UNIT=iuchf, STATUS = 'KEEP' )
-     INQUIRE( UNIT=iud2w, OPENED=opnd ) 
+     INQUIRE( UNIT=iud2w, OPENED=opnd )
      IF (opnd) CLOSE ( UNIT=iud2w, STATUS = 'KEEP' )
-     INQUIRE( UNIT=iuba2, OPENED=opnd ) 
+     INQUIRE( UNIT=iuba2, OPENED=opnd )
      IF (opnd) CLOSE ( UNIT=iuba2, STATUS = 'KEEP' )
   ENDIF
   !
   IF (elph_mat) THEN
-    INQUIRE( UNIT=iunwfcwann, OPENED=opnd ) 
-    IF (opnd) CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' ) 
+    INQUIRE( UNIT=iunwfcwann, OPENED=opnd )
+    IF (opnd) CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' )
   ENDIF
 
   IF (ionode) THEN
