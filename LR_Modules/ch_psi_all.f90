@@ -34,6 +34,11 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE io_files,             ONLY : nwordwfcU
   USE ldaU,                 ONLY : lda_plus_u, wfcU, lda_plus_u_kind
   USE units_lr,             ONLY : iuatswfc
+#if defined(__CUDA)
+  USE uspp,                 ONLY : vkb_d
+  USE becmod_gpum,          ONLY : becp_d
+  USE becmod_subs_gpum,     ONLY : allocate_bec_type_gpu
+#endif
 
   IMPLICIT NONE
 
@@ -89,18 +94,37 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
      IF (lda_plus_u_kind.EQ.2) CALL phase_factor (current_k)
      !
   ENDIF
+
   !
   ! Compute an action of the Hamiltonian and the S operator
   ! on the h vector (i.e. H*h and S*h, respectively).
   !
+#if defined(__CUDA)
+
+  vkb_d = vkb
+
+  !$acc data copyin(h) copyout(hpsi, spsi)
+
+  !$acc host_data use_device(h, hpsi, spsi)
+  CALL h_psi_gpu (npwx, n, m, h, hpsi)
+  CALL s_psi_gpu (npwx, n, m, h, spsi)
+  !$acc end host_data
+
+  !$acc end data
+
+#else
+
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
-  !
+
+#endif
+
   CALL start_clock ('last')
   !
   !   then we compute ( H - \epsilon S ) * h
   !   and put the result in ah
   !
+  CALL start_clock ('Hesh')
   ah=(0.d0,0.d0)
   DO ibnd = 1, m
      DO ig = 1, n
@@ -108,12 +132,16 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
      ENDDO
   ENDDO
   IF (noncolin) THEN
+     CALL start_clock ('Hesh:noncolin')
      DO ibnd = 1, m
         DO ig = 1, n
            ah(ig+npwx, ibnd) = hpsi(ig+npwx, ibnd) - e(ibnd) * spsi(ig+npwx, ibnd)
         ENDDO
      ENDDO
+     CALL stop_clock ('Hesh:noncolin')
   ENDIF
+  CALL stop_clock ('Hesh')
+
   !
   !   lastly we compute alpha_pv * P_v * h (if alpha_pv.NE.0.0d0)
   !   and add it to ah 
@@ -143,6 +171,7 @@ CONTAINS
     
     IMPLICIT NONE
     INTEGER :: m_start, m_end
+    CALL start_clock ('ch_psi_all_k')
     !
     !   Here we compute the projector in the valence band
     !
@@ -192,6 +221,7 @@ CONTAINS
           ENDDO
        ENDDO
     END IF
+    CALL stop_clock ('ch_psi_all_k')
     return
   END SUBROUTINE ch_psi_all_k
 
@@ -206,6 +236,7 @@ CONTAINS
 
     IMPLICIT NONE
     INTEGER :: m_start, m_end
+    CALL start_clock ('ch_psi_all_gamma')
 
     ps (:,:) = 0.d0
     
@@ -259,6 +290,7 @@ CONTAINS
           ENDDO
        ENDDO
     ENDIF
+    CALL stop_clock ('ch_psi_all_gamma')
     return
   END SUBROUTINE ch_psi_all_gamma
  
