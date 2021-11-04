@@ -97,14 +97,18 @@ SUBROUTINE openfilq()
 !************************* END OF ACFDT TEST *******************
   iuwfc = 20
   lrwfc = nbnd * npwx * npol
-  CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
-  IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
-     CALL close_buffer(iuwfc, 'delete') 
-     !FIXME Dirty fix for obscure case
-     tmp_dir = tmp_dir_phq
+  IF (io_level > 0) THEN
      CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
-     IF (.NOT.exst.AND..NOT.exst_mem) CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
-  END IF
+     IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
+        CALL close_buffer(iuwfc, 'delete') 
+        !FIXME Dirty fix for obscure case
+        tmp_dir = tmp_dir_phq
+        CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
+        IF (.NOT.exst.AND..NOT.exst_mem) CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
+     END IF
+  ELSE
+     iuwfc = 10
+  ENDIF
   IF (elph_mat) then
      iunwfcwann=733
      lrwfcr= 2 * dffts%nr1x*dffts%nr2x*dffts%nr3x *npol
@@ -177,7 +181,7 @@ SUBROUTINE openfilq()
   !
 400 IF (trim(fildvscf).NE.' ') THEN
      iudvscf = 27
-     IF ( me_bgrp == 0 ) THEN
+     IF ( ionode ) THEN     
         IF (trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
            fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
                    TRIM(dvscf_star%dir)//prefix, &

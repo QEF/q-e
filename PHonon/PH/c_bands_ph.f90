@@ -42,7 +42,7 @@ SUBROUTINE c_bands_nscf_ph( )
   !
   REAL(DP) :: avg_iter, ethr_
   ! average number of H*psi products
-  INTEGER :: ik_, ik, nkdum, ios, iuawfc, lrawfc
+  INTEGER :: ik_, ik, nkdum, ios
   ! ik_: k-point already done in a previous run
   ! ik : counter on k points
   LOGICAL :: exst, exst_mem
@@ -70,15 +70,6 @@ SUBROUTINE c_bands_nscf_ph( )
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
-  IF (tmp_dir /= tmp_dir_save) THEN
-     iuawfc = 20
-     lrawfc = nbnd * npwx * npol
-     CALL open_buffer (iuawfc, 'wfc', lrawfc, io_level, exst_mem, exst, &
-                                                         tmp_dir_save)
-     IF (.NOT.exst.AND..NOT.exst_mem) THEN
-        CALL errore ('c_bands_ph', 'file '//trim(prefix)//'.wfc not found', 1)
-     END IF
-  ENDIF
   !
   ! ... For each k point (except those already calculated if restarting)
   ! ... diagonalizes the hamiltonian
@@ -164,7 +155,6 @@ SUBROUTINE c_bands_nscf_ph( )
   !
   WRITE( stdout, '(/,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1)' ) &
        ethr, avg_iter
-  IF (tmp_dir /= tmp_dir_save) CALL close_buffer(iuawfc,'keep')
   !
   CALL stop_clock( 'c_bands' )
   !

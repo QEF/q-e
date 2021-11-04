@@ -31,6 +31,7 @@ SUBROUTINE close_phq( flag )
   USE control_lr,    ONLY : lgamma
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_close
   USE ahc,           ONLY : elph_ahc
+  USE control_flags, ONLY : io_level
   !
   IMPLICIT NONE
   !
@@ -39,7 +40,11 @@ SUBROUTINE close_phq( flag )
   !
   IF (only_wfc) RETURN
   !
-  CALL close_buffer(iuwfc,'keep')
+  IF (io_level > 0) THEN
+     CALL close_buffer(iuwfc,'keep')
+  ELSE
+     CALL close_buffer(iuwfc,'delete')
+  ENDIF
   !
   IF (flag) THEN
      CALL close_buffer(iudwf,'delete')
@@ -78,7 +83,7 @@ SUBROUTINE close_phq( flag )
   !
   IF ( flag ) CALL clean_recover()
   !
-  IF ( fildvscf /= ' ' ) THEN
+  IF ( fildvscf /= ' ' .AND. ionode ) THEN  
      INQUIRE( UNIT=iudvscf, OPENED=opnd ) 
      IF (opnd) CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
      IF (okpaw) THEN
