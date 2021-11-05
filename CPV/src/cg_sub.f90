@@ -9,10 +9,10 @@
 !=======================================================================
 !
 module cg_sub
-implicit none
+   implicit none
 contains
-   subroutine runcg_uspp(nfi, tfirst, tlast, eigr, bec, irb, eigrb,rhor, rhog, rhos,&
-                         rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr,lambdap, lambda, &
+   subroutine runcg_uspp(nfi, tfirst, tlast, eigr, bec, irb, eigrb, rhor, rhog, rhos, &
+                         rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, lambdap, lambda, &
                          nlam, vpot, c0, c0_d, cm, phi, dbec, l_cprestart)
 
 !! please see https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.79.1337 (ensemble DFT)
@@ -25,10 +25,10 @@ contains
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &
      &                    atot, entropy, egrand
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
-         nbspx, nbsp, ispin
+                                nbspx, nbsp, ispin
 
       use ensemble_dft, only: tens, ef, z0t, c0diag, &
-         becdiag, fmat0, e0, id_matrix_init
+                              becdiag, fmat0, e0, id_matrix_init
 !---
       use smallbox_gvec, only: ngb
       use gvecw, only: ngw, g2kin
@@ -42,17 +42,16 @@ contains
       use constants, only: pi, au_gpa
       USE io_files, ONLY: tmp_dir, prefix
       use uspp, only: nkb, nkbus, &
-         betae => vkb, rhovan => becsum, &
-         deeq, qq_nt, nlcc_any, ofsbeta, &
-         vkb_d
+                      betae => vkb, rhovan => becsum, &
+                      deeq, qq_nt, nlcc_any, ofsbeta
       use uspp_param, only: nh, upf
       use cg_module, only: ene_ok, maxiter, niter_cg_restart, &
-         conv_thr, passop, enever, itercg, c0old, pre_state
+                           conv_thr, passop, enever, itercg, c0old, pre_state
       use ions_positions, only: tau0
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
-         berry_energy, ctabin, gqq, gqqm, df, pberryel, &
-         tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
-         berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
+                               berry_energy, ctabin, gqq, gqqm, df, pberryel, &
+                               tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
+                               berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
       use mp, only: mp_sum, mp_bcast
       use cp_electronic_mass, ONLY: emass_cutoff
       use orthogonalize_base, ONLY: calphi_bgrp
@@ -65,7 +64,7 @@ contains
       use wave_base, only: print_norm_square_difference ! for debugging
 
 !this defines the macro CHECKPOINT
-use debug_utils, only: checkpoint
+      use debug_utils, only: checkpoint
 #define CHECKPOINT(a) checkpoint(a, __FILE__, __LINE__ )
 !
       implicit none
@@ -96,7 +95,7 @@ use debug_utils, only: checkpoint
       real(dp) :: lambdap(nlam, nlam, nspin)
       real(dp) :: lambda(nlam, nlam, nspin)
       complex(dp) :: c0(ngw, nbspx)
-      complex(dp) :: c0_d(:,:)
+      complex(dp) :: c0_d(:, :)
       complex(dp) :: cm(ngw, nbspx)
       complex(dp) :: phi(ngw, nbspx)
       complex(dp) :: phi_tmp(ngw, nbspx)
@@ -191,13 +190,12 @@ use debug_utils, only: checkpoint
 !TODO: is this necessary?
 !NOTE (R.B.) : at the moment the array c0_d is used as a buffer. Most of the
 !operation are done on the cpu, in particular for the ensemble dft case
-     c0=c0_d
+      c0 = c0_d
 #endif
 
 !$acc data copy(betae, bec, c0)
       call calbec(nbsp, betae, c0, bec)
       CALL gram_bgrp(betae, bec, nkb, c0, ngw)
-
 
       !$acc update self(c0,betae,bec)
       call CHECKPOINT(c0)
@@ -207,7 +205,7 @@ use debug_utils, only: checkpoint
       !calculates phi for pcdaga
 
 !bec stays on cpu
-!$acc update self(bec) 
+!$acc update self(bec)
       CALL calphi_bgrp(c0, SIZE(c0, 1), bec, nkb, betae, phi, nbsp)
 !$acc end data
 
@@ -229,7 +227,6 @@ use debug_utils, only: checkpoint
 !initialize  z0t
       call id_matrix_init(idesc, nspin)
 
-
       allocate (hpsi(ngw, nbspx), hpsi0(ngw, nbspx), gi(ngw, nbspx), hi(ngw, nbspx))
       !loop on cg iterations
       do while (itercg .lt. maxiter .and. (.not. ltresh))
@@ -238,7 +235,7 @@ use debug_utils, only: checkpoint
 !$acc data copy(betae, bec) copyin(c0)
             call calbec(nbsp, betae, c0, bec)
 !$acc end data
-            call compute_energy(c0, bec, ens_goto_diagonal_repr = .true.) !result energy in etot
+            call compute_energy(c0, bec, ens_goto_diagonal_repr=.true.) !result energy in etot
             if (.not. tens) then
                etotnew = etot
             else
@@ -281,8 +278,8 @@ use debug_utils, only: checkpoint
          call prefor(eigr, betae)
          ! this puts the gradient inside the array hpsi
 #if defined (__CUDA)
-         c0_d=c0
-         vkb_d = betae ! runcp uses a global variable!!!
+         c0_d = c0
+         !vkb_d = betae ! runcp uses a global variable!!!
 #endif
          call CHECKPOINT(rhos)
          call CHECKPOINT(bec)
@@ -293,11 +290,11 @@ use debug_utils, only: checkpoint
          call CHECKPOINT(hpsi)
          if (pre_state) call ave_kin(c0, SIZE(c0, 1), nbsp, ave_ene)
 
-         phi_tmp=phi
+         phi_tmp = phi
 !$acc data copy(c0,phi_tmp,hpsi)
          call pcdaga2(c0, phi_tmp, hpsi)
 !$acc end data
-         phi=phi_tmp
+         phi = phi_tmp
          hpsi0 = hpsi
          gi = hpsi
 ! becm = <betae | hpsi >
@@ -327,10 +324,10 @@ use debug_utils, only: checkpoint
                               (27.0_dp + 18.0_dp*x + 12.0_dp*x**2 + 8.0_dp*x**3 + 16.0_dp*x**4)
                end do
             end do
-         !$acc end data
+            !$acc end data
          else
             !$acc data copyin(ema0bg)
-            !$acc parallel loop collapse(2) 
+            !$acc parallel loop collapse(2)
             do i = 1, nbsp
                do ig = 1, ngw
                   gi(ig, i) = gi(ig, i)*ema0bg(ig)
@@ -678,16 +675,16 @@ use debug_utils, only: checkpoint
          if (tens .and. newscheme) enever = enever - entropy
 
          if (.not. ene_ok) then
-             !$acc data copy(bec,betae) copyin(c0)
-             call calbec(nbsp, betae, c0, bec)
-             !$acc end data
+            !$acc data copy(bec,betae) copyin(c0)
+            call calbec(nbsp, betae, c0, bec)
+            !$acc end data
          end if
 
 !$acc data copyin(betae)
 #if defined (__CUDA)
-         c0_d=c0
+         c0_d = c0
          CALL calphi_bgrp(c0_d, SIZE(c0, 1), bec, nkb, betae, phi, nbsp)
-         c0=c0_d
+         c0 = c0_d
 #else
          !calculates phi for pc_daga
          CALL calphi_bgrp(c0, SIZE(c0, 1), bec, nkb, betae, phi, nbsp)
@@ -757,10 +754,10 @@ use debug_utils, only: checkpoint
 !$acc data copy(betae)
 #if defined (__CUDA)
       if (.not. tens) then
-         c0_d=c0
+         c0_d = c0
          if (tfor .or. tprnfor) call nlfq_bgrp(c0_d, betae, bec, becdr, fion)
       else
-         c0_d=c0diag
+         c0_d = c0diag
          if (tfor .or. tprnfor) call nlfq_bgrp(c0_d, betae, becdiag, becdrdiag, fion)
       endif
 #else
@@ -774,8 +771,8 @@ use debug_utils, only: checkpoint
       call prefor(eigr, betae)
       ! this puts the gradient inside the array gi
 #if defined (__CUDA)
-      c0_d=c0
-      vkb_d = betae ! runcp uses a global variable!!!
+      c0_d = c0
+      !vkb_d = betae ! runcp uses a global variable!!!
 #endif
       call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
                       c0, c0_d, gi, gi_d, .false., .false., .true.)
@@ -788,30 +785,31 @@ use debug_utils, only: checkpoint
          !
          nss = nupdwn(is)
          istart = iupdwn(is)
-         !$acc kernels present(lambda_repl(nudx,nudx)) present(lambda_repl(nss,nss),c0(ngw,nss),gi(ngw,nss)) copyin(nss, istart,gstart,ngw)
 
+         !$acc parallel present(lambda_repl)
          lambda_repl = 0.d0
+         !$acc end parallel
          !
          !
-         !$acc loop
-         do jv = 0, nss*(nss+1)/2 -1
-               i = jv/nss + 1
-               j = mod(jv,nss) + 1
-               ii = i + istart - 1
-               jj = j + istart - 1
-               entmp = 0.0_dp
-               !!$acc loop vector reduction(+:entmp)
-               do ig = 1, ngw
-                  entmp = entmp - 2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
-               enddo
-               if (gstart == 2) then
-                  entmp = entmp +  DBLE(CONJG(c0(1, ii))*gi(1, jj))
-               endif
-               lambda_repl(j, i) = entmp
-               lambda_repl(i, j) = entmp
+         !$acc parallel loop private(i,j,ii,jj,entmp) present(c0,gi,lambda_repl) copyin(nss,ngw,istart,gstart)
+         do jv = 0, nss*(nss + 1)/2 - 1
+            i = jv/nss + 1
+            j = mod(jv, nss) + 1
+            ii = i + istart - 1
+            jj = j + istart - 1
+            entmp = 0.0_dp
+            !$acc loop vector reduction(+:entmp)
+            do ig = 1, ngw
+               entmp = entmp - 2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
+            enddo
+            if (gstart == 2) then
+               entmp = entmp + DBLE(CONJG(c0(1, ii))*gi(1, jj))
+            endif
+            lambda_repl(j, i) = entmp
+            lambda_repl(i, j) = entmp
          enddo
-         !$acc end kernels
-         !$acc update host(lambda_repl(nudx,nudx)) 
+         !$acc end parallel
+         !$acc update host(lambda_repl(1:nudx,1:nudx))
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
          call CHECKPOINT(lambda_repl)
          !
@@ -819,14 +817,13 @@ use debug_utils, only: checkpoint
          !
       end do
 
-
       if (l_cprestart .and. .not. tens .and. nspin == 1 .and. nkbus < 1) then
 
 !if required project c0 on previous manifold of occupied states
 !NOT IMPLEMENTED YET FOR ENSEMBLE DFT AND NSPIN==2
 !NOT IMPLEMENTED FOR US PSEUDOPOTENTIALS
          cm(:, :) = c0(:, :)
-         !$acc data copy(cm,c0old)
+         !$acc data copyin(cm,c0old)
          call project_parallel_gauge_2(c0old, cm, c0, &
                                        nss, ngw, ngw, gstart)
          !$acc end data
@@ -834,41 +831,43 @@ use debug_utils, only: checkpoint
          !$acc data copy(betae, bec)
          call calbec(nbsp, betae, c0, bec)
          CALL gram_bgrp(betae, bec, nkb, c0, ngw)
-         !$acc update device(c0)
          call calbec(nbsp, betae, c0, bec)
          !$acc end data
+         !$acc update host(c0)
          call CHECKPOINT(c0)
 #if defined (__CUDA)
-      c0_d = c0
-      vkb_d = betae ! runcp uses a global variable!!!
+         c0_d = c0
+         !vkb_d = betae ! runcp uses a global variable!!!
 #endif
          call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
                          c0, c0_d, gi, gi_d, .false., .false., .true.)
          call CHECKPOINT(c0)
          call CHECKPOINT(gi)
          !$acc update device(gi)
+         !$acc update device(c0)
 
-         !$acc kernels present(lambda_repl)
+         !$acc parallel present(lambda_repl)
          lambda_repl = 0.d0
-         !$acc end kernels
-         !$acc parallel loop present(lambda_repl,c0,gi) copyin(nss, istart,gstart,ngw) private(i,j,ii,jj,ig)
-         do jv = 0, nss*(nss+1)/2 -1
-               i = jv/nss + 1
-               j = mod(jv,nss) + 1
-               ii = i + istart - 1
-               jj = j + istart - 1
-               do ig = 1, ngw
-                  lambda_repl(i, j) = lambda_repl(i, j) - &
-                                      2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
-               enddo
-               if (gstart == 2) then
-                  lambda_repl(i, j) = lambda_repl(i, j) + &
-                                      DBLE(CONJG(c0(1, ii))*gi(1, jj))
-               endif
-               lambda_repl(j, i) = lambda_repl(i, j)
+         !$acc end parallel
+         !$acc parallel loop private(i,j,ii,jj,entmp) present(c0,gi,lambda_repl) copyin(nss,ngw,istart,gstart)
+         do jv = 0, nss*(nss + 1)/2 - 1
+            i = jv/nss + 1
+            j = mod(jv, nss) + 1
+            ii = i + istart - 1
+            jj = j + istart - 1
+            entmp = 0.0_dp
+            !$acc loop vector reduction(+:entmp)
+            do ig = 1, ngw
+               entmp = entmp - 2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
+            enddo
+            if (gstart == 2) then
+               entmp = entmp + DBLE(CONJG(c0(1, ii))*gi(1, jj))
+            endif
+            lambda_repl(j, i) = entmp
+            lambda_repl(i, j) = entmp
          enddo
-
-         !$acc update self(lambda_repl)
+         !$acc end parallel
+         !$acc update host(lambda_repl(1:nudx,1:nudx))
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
          call CHECKPOINT(lambda_repl)
          CALL distribute_lambda(lambda_repl, lambda(:, :, 1), idesc(:, 1))
@@ -886,7 +885,7 @@ use debug_utils, only: checkpoint
 !TODO: is this necessary?
 !NOTE (R.B.) : at the moment the array c0_d is used as a buffer. Most of the
 !operation are done on the cpu, in particular for the ensemble dft case
-     c0_d=c0
+      c0_d = c0
 #endif
 
       if (tens) then
@@ -946,116 +945,115 @@ use debug_utils, only: checkpoint
 
       return
 
-      CONTAINS
+   CONTAINS
 
       SUBROUTINE compute_energy(cx, becx, ens_goto_diagonal_repr)
 
-        COMPLEX(dp), intent(inout) :: cx(:,:) !input wf, it can be resetted to diagonal rep for ens dft
-        REAL(dp), intent(inout) :: becx(:,:) !input bec, it can be resetted to diagonal rep for ens dft
-        logical, intent(in) :: ens_goto_diagonal_repr
-        !note: every declaration of the parent subroutine is valid here
-        call start_clock('compute_energy')
-            if (.not. tens) then
+         COMPLEX(dp), intent(inout) :: cx(:, :) !input wf, it can be resetted to diagonal rep for ens dft
+         REAL(dp), intent(inout) :: becx(:, :) !input bec, it can be resetted to diagonal rep for ens dft
+         logical, intent(in) :: ens_goto_diagonal_repr
+         !note: every declaration of the parent subroutine is valid here
+         call start_clock('compute_energy')
+         if (.not. tens) then
 #if defined(__CUDA)
-               c0_d=cx
+            c0_d = cx
 #endif
-               call rhoofr(nfi, cx, c0_d(:, :), becx, dbec, rhovan, rhor,&
-                          drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-            else
+            call rhoofr(nfi, cx, c0_d(:, :), becx, dbec, rhovan, rhor, &
+                        drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+         else
 
-               if (newscheme .or. firstiter) then
-                  call inner_loop_cold(nfi, tfirst, tlast, eigr, irb, eigrb, &
-                                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, cx, becx, dbec, firstiter, vpot)
-                  firstiter = .false.
-               endif
-               !     calculation of the rotated quantities
-
-               call rotate(nrlx, z0t, cx(:, :), becx, c0diag, becdiag)
-               !     calculation of rho corresponding to the rotated wavefunctions
-#if defined(__CUDA)
-               c0_d=c0diag
-#endif
-               call rhoofr(nfi, cx, c0_d, becdiag, dbec,rhovan, rhor, &
-                           drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
-               call rhoofr(nfi, c0diag, irb, eigrb, becdiag, dbec, &
-                           rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+            if (newscheme .or. firstiter) then
+               call inner_loop_cold(nfi, tfirst, tlast, eigr, irb, eigrb, &
+                                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, cx, becx, dbec, firstiter, vpot)
+               firstiter = .false.
             endif
+            !     calculation of the rotated quantities
+
+            call rotate(nrlx, z0t, cx(:, :), becx, c0diag, becdiag)
+            !     calculation of rho corresponding to the rotated wavefunctions
+#if defined(__CUDA)
+            c0_d = c0diag
+#endif
+            call rhoofr(nfi, cx, c0_d, becdiag, dbec, rhovan, rhor, &
+                        drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+            call rhoofr(nfi, c0diag, irb, eigrb, becdiag, dbec, &
+                        rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
+         endif
 
 !when cycle is restarted go to diagonal representation
 
-            if (ens_goto_diagonal_repr .and. mod(itercg, niter_cg_restart) == 1 .and. itercg >= 2) then
+         if (ens_goto_diagonal_repr .and. mod(itercg, niter_cg_restart) == 1 .and. itercg >= 2) then
 
-               call rotate(nrlx, z0t, cx(:, :), becx, c0diag, becdiag)
-               cx(:, :) = c0diag(:, :)
-               becx(:, :) = becdiag(:, :)
-               call id_matrix_init(idesc, nspin)
-            endif
-            call CHECKPOINT(rhog)
-            !call CHECKPOINT(drhog)
-            !call CHECKPOINT(rhos)
+            call rotate(nrlx, z0t, cx(:, :), becx, c0diag, becdiag)
+            cx(:, :) = c0diag(:, :)
+            becx(:, :) = becdiag(:, :)
+            call id_matrix_init(idesc, nspin)
+         endif
+         call CHECKPOINT(rhog)
+         !call CHECKPOINT(drhog)
+         !call CHECKPOINT(rhos)
 
-            !calculates the potential
-            !
-            !     put core charge (if present) in rhoc(r)
-            !
-            if (nlcc_any) call set_cc(rhoc)
+         !calculates the potential
+         !
+         !     put core charge (if present) in rhoc(r)
+         !
+         if (nlcc_any) call set_cc(rhoc)
 
-            !
-            !---ensemble-DFT
+         !
+         !---ensemble-DFT
 
-            vpot = rhor
+         vpot = rhor
 
-            call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
-                   &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
-            call CHECKPOINT(vpot)
-            if (.not. tens) then
-               etotnew = etot
-            else
-               etotnew = etot + entropy
-            end if
+         call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
+                &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
+         call CHECKPOINT(vpot)
+         if (.not. tens) then
+            etotnew = etot
+         else
+            etotnew = etot + entropy
+         end if
 
-            if (tefield) then!just in this case calculates elfield stuff at zeo field-->to be bettered
+         if (tefield) then!just in this case calculates elfield stuff at zeo field-->to be bettered
 
-               call berry_energy(enb, enbi, becx, cx(:, :), fion)
-               etot = etot + enb + enbi
-            endif
-            if (tefield2) then!just in this case calculates elfield stuff at zeo field-->to be bettered
+            call berry_energy(enb, enbi, becx, cx(:, :), fion)
+            etot = etot + enb + enbi
+         endif
+         if (tefield2) then!just in this case calculates elfield stuff at zeo field-->to be bettered
 
-               call berry_energy2(enb, enbi, becx, cx(:, :), fion)
-               etot = etot + enb + enbi
-            endif
-            call stop_clock('compute_energy')
-        
+            call berry_energy2(enb, enbi, becx, cx(:, :), fion)
+            etot = etot + enb + enbi
+         endif
+         call stop_clock('compute_energy')
+
       END SUBROUTINE
 
    END SUBROUTINE runcg_uspp
 
    !-----------------------------------------------------------------------
-   subroutine calcmt( nrlx, fdiag, zmat, fmat )
+   subroutine calcmt(nrlx, fdiag, zmat, fmat)
 !-----------------------------------------------------------------------
 !
 !  constructs fmat=z0^t.fdiag.z0    zmat = z0^t
 !
-      USE kinds,             ONLY: DP
-      use electrons_base,    ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
+      USE kinds, ONLY: DP
+      use electrons_base, ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
       USE cp_main_variables, ONLY: idesc
-      USE mp,                ONLY: mp_sum, mp_bcast
+      USE mp, ONLY: mp_sum, mp_bcast
 
       implicit none
 
       include 'laxlib.fh'
 
       integer, intent(in)  :: nrlx
-      real(DP) :: zmat( nrlx, nudx, nspin ), fmat( nrlx, nudx, nspin )
+      real(DP) :: zmat(nrlx, nudx, nspin), fmat(nrlx, nudx, nspin)
       !  NOTE: zmat and fmat are distributed by row across processors
-      real(dp) :: fdiag( nx ) !  fdiag is replicated
+      real(dp) :: fdiag(nx) !  fdiag is replicated
 
       integer  :: iss, nss, istart, i, j, k, ii, jj, kk
       integer  :: np_rot, me_rot, nrl, comm_rot, ip, nrl_ip
 
-      real(DP), ALLOCATABLE :: mtmp(:,:)
+      real(DP), ALLOCATABLE :: mtmp(:, :)
       real(DP) :: f_z0t
-
 
       call start_clock('calcmt')
 
@@ -1063,31 +1061,31 @@ use debug_utils, only: checkpoint
 
       DO iss = 1, nspin
 
-         nss      = nupdwn( iss )
-         istart   = iupdwn( iss )
-         np_rot   = idesc( LAX_DESC_NPR, iss ) * idesc( LAX_DESC_NPC, iss )
-         me_rot   = idesc( LAX_DESC_MYPE, iss )
-         nrl      = idesc( LAX_DESC_NRL, iss )
-         comm_rot = idesc( LAX_DESC_COMM, iss )
+         nss = nupdwn(iss)
+         istart = iupdwn(iss)
+         np_rot = idesc(LAX_DESC_NPR, iss)*idesc(LAX_DESC_NPC, iss)
+         me_rot = idesc(LAX_DESC_MYPE, iss)
+         nrl = idesc(LAX_DESC_NRL, iss)
+         comm_rot = idesc(LAX_DESC_COMM, iss)
 
-         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+         IF (idesc(LAX_DESC_ACTIVE_NODE, iss) > 0) THEN
 
-            ALLOCATE( mtmp( MAXVAL(idesc(LAX_DESC_NRLX, :)), nudx ) )
+            ALLOCATE (mtmp(MAXVAL(idesc(LAX_DESC_NRLX, :)), nudx))
 
             DO ip = 1, np_rot
 
-               IF( me_rot == ( ip - 1 ) ) THEN
-                  mtmp = zmat(:,:,iss)
+               IF (me_rot == (ip - 1)) THEN
+                  mtmp = zmat(:, :, iss)
                END IF
-               nrl_ip = ldim_cyclic( nss, np_rot, ip - 1 )
-               CALL mp_bcast( mtmp , ip - 1 , comm_rot )
+               nrl_ip = ldim_cyclic(nss, np_rot, ip - 1)
+               CALL mp_bcast(mtmp, ip - 1, comm_rot)
 
                DO j = 1, nss
                   ii = ip
                   DO i = 1, nrl_ip
-                     f_z0t = fdiag( j + istart - 1 ) * mtmp( i, j )
+                     f_z0t = fdiag(j + istart - 1)*mtmp(i, j)
                      DO k = 1, nrl
-                        fmat( k, ii, iss ) = fmat( k, ii, iss )+ zmat( k, j, iss ) * f_z0t 
+                        fmat(k, ii, iss) = fmat(k, ii, iss) + zmat(k, j, iss)*f_z0t
                      END DO
                      ii = ii + np_rot
                   END DO
@@ -1095,7 +1093,7 @@ use debug_utils, only: checkpoint
 
             END DO
 
-            DEALLOCATE( mtmp )
+            DEALLOCATE (mtmp)
 
          END IF
 
@@ -1104,88 +1102,83 @@ use debug_utils, only: checkpoint
       call stop_clock('calcmt')
 
       RETURN
-      END SUBROUTINE calcmt
-
+   END SUBROUTINE calcmt
 
 !-----------------------------------------------------------------------
-      subroutine rotate( nrlx, z0, c0, bec, c0diag, becdiag )
+   subroutine rotate(nrlx, z0, c0, bec, c0diag, becdiag)
 !-----------------------------------------------------------------------
       use kinds, only: dp
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
       use uspp_param, only: nh, upf
-      use uspp, only : nkb, qq_nt, ofsbeta
+      use uspp, only: nkb, qq_nt, ofsbeta
       use gvecw, only: ngw
       use ions_base, only: nat, ityp
       USE cp_main_variables, ONLY: idesc
-      USE cp_interfaces,     ONLY: protate
+      USE cp_interfaces, ONLY: protate
 
       implicit none
       include 'laxlib.fh'
       integer, intent(in) :: nrlx
-      real(kind=DP)    z0( nrlx, nudx, nspin )
-      real(kind=DP)    bec( nkb, n ), becdiag( nkb, n )
-      complex(kind=DP) c0( ngw, nx ), c0diag( ngw, nx )
+      real(kind=DP) z0(nrlx, nudx, nspin)
+      real(kind=DP) bec(nkb, n), becdiag(nkb, n)
+      complex(kind=DP) c0(ngw, nx), c0diag(ngw, nx)
       integer :: np_rot, me_rot, nrl, comm_rot
       integer iss, nss, istart
-  
-      CALL start_clock( 'rotate' )
+
+      CALL start_clock('rotate')
 
       DO iss = 1, nspin
-         istart   = iupdwn( iss )
-         nss      = nupdwn( iss )
-         np_rot   = idesc( LAX_DESC_NPR, iss ) * idesc( LAX_DESC_NPC, iss )
-         me_rot   = idesc( LAX_DESC_MYPE, iss )
-         nrl      = idesc( LAX_DESC_NRL, iss )
-         comm_rot = idesc( LAX_DESC_COMM, iss )
-         CALL protate ( c0, bec, c0diag, becdiag, ngw, nss, istart, z0(:,:,iss), nrl, &
-                        ityp, nat, ofsbeta, nh, np_rot, me_rot, comm_rot )
+         istart = iupdwn(iss)
+         nss = nupdwn(iss)
+         np_rot = idesc(LAX_DESC_NPR, iss)*idesc(LAX_DESC_NPC, iss)
+         me_rot = idesc(LAX_DESC_MYPE, iss)
+         nrl = idesc(LAX_DESC_NRL, iss)
+         comm_rot = idesc(LAX_DESC_COMM, iss)
+         CALL protate(c0, bec, c0diag, becdiag, ngw, nss, istart, z0(:, :, iss), nrl, &
+                      ityp, nat, ofsbeta, nh, np_rot, me_rot, comm_rot)
       END DO
 
-      CALL stop_clock( 'rotate' )
+      CALL stop_clock('rotate')
       return
-      end subroutine rotate
+   end subroutine rotate
 
-
-    subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
+   subroutine minparabola(ene0, dene0, ene1, passop, passo, stima)
 !this subroutines finds the minimum of a quadratic real function
-      
-      use kinds, only : dp
+
+      use kinds, only: dp
 
       implicit none
-      real(dp) ene0,dene0,ene1,passop,passo,stima
-      real(dp) a,b,c!a*x^2+b*x+c
-      
-      c=ene0
-      b=dene0
-      a=(ene1-b*passop-c)/(passop**2.d0)
-      
+      real(dp) ene0, dene0, ene1, passop, passo, stima
+      real(dp) a, b, c!a*x^2+b*x+c
+
+      c = ene0
+      b = dene0
+      a = (ene1 - b*passop - c)/(passop**2.d0)
+
       passo = -b/(2.d0*a)
-      if( a.lt.0.d0) then
-         if(ene1.lt.ene0) then
-            passo=passop
-         else 
-            passo=0.5d0*passop
+      if (a .lt. 0.d0) then
+         if (ene1 .lt. ene0) then
+            passo = passop
+         else
+            passo = 0.5d0*passop
          endif
       endif
 
-
-      stima=a*passo**2.d0+b*passo+c
-
+      stima = a*passo**2.d0 + b*passo + c
 
       return
-    end subroutine minparabola
+   end subroutine minparabola
 
+   subroutine pc2(a, beca, b, becb)
 
-subroutine pc2(a,beca,b,becb)      
-               
 ! this function applies the operator Pc
-            
+
 !    this subroutine applies the Pc operator
 !    a input :unperturbed wavefunctions
 !    b input :first order wavefunctions
 !    b output:b_i =b_i-a_j><a_j|S|b_i>
-    
-      use kinds, only: dp 
+
+      use kinds, only: dp
       use ions_base, only: na, nsp, nat, ityp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
@@ -1193,101 +1186,99 @@ subroutine pc2(a,beca,b,becb)
       use constants, only: pi, fpi
       use gvect, only: gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
+      use electrons_base, only: n => nbsp, ispin, nupdwn, iupdwn, nspin
       use uspp_param, only: nh, upf
-      use uspp, only :nkb, nkbus, ofsbeta
-      use uspp, only :qq_nt
-      
-                           
-      implicit none        
-                           
-      complex(kind=DP) a(ngw,n), b(ngw,n)
-                     
-      real(kind=DP)    beca(nkb,n),becb(nkb,n)
+      use uspp, only: nkb, nkbus, ofsbeta
+      use uspp, only: qq_nt
+
+      implicit none
+
+      complex(kind=DP) a(ngw, n), b(ngw, n)
+
+      real(kind=DP) beca(nkb, n), becb(nkb, n)
       !$acc declare present(a,b,beca,becb)
 
 ! local variables
-      integer is, iv, jv, ia, inl, jnl, i, j,ig
+      integer is, iv, jv, ia, inl, jnl, i, j, ig
       real(kind=DP) sca
-      real(DP), allocatable :: bectmp(:,:), qq_tmp(:,:), qqb_tmp(:,:)
-      complex(DP), allocatable :: zbectmp(:,:)
+      real(DP), allocatable :: bectmp(:, :), qq_tmp(:, :), qqb_tmp(:, :)
+      complex(DP), allocatable :: zbectmp(:, :)
       integer :: nl_max
-      integer :: nss,iss, istart
+      integer :: nss, iss, istart
 
       !logical :: mat_par=.true.!if true uses parallel routines
 
-      CALL start_clock( 'pc2' )
+      CALL start_clock('pc2')
 
-      do iss= 1, nspin
-         nss= nupdwn( iss )
-         istart= iupdwn( iss )
-         allocate(bectmp(nss,nss))
-         bectmp(:,:)=0.d0
-         allocate(zbectmp(nss,nss))
+      do iss = 1, nspin
+         nss = nupdwn(iss)
+         istart = iupdwn(iss)
+         allocate (bectmp(nss, nss))
+         bectmp(:, :) = 0.d0
+         allocate (zbectmp(nss, nss))
          !$acc data copyin(gstart,zbectmp,bectmp)
          !$acc host_data use_device(a,b,zbectmp)
-         call myzgemm('C','N',nss,nss,ngw,(1.d0,0.d0),a(:,istart),ngw,b(:,istart),ngw,(0.d0,0.d0),zbectmp,nss)
+         call myzgemm('C', 'N', nss, nss, ngw, (1.d0, 0.d0), a(:, istart), ngw, b(:, istart), ngw, (0.d0, 0.d0), zbectmp, nss)
          !$acc end host_data
-         !$acc kernels loop 
-         do j=1,nss
-            do i=1,nss
-               bectmp(i,j)=2.d0*dble(zbectmp(i,j))
-               if(gstart==2) bectmp(i,j)=bectmp(i,j)-DBLE(a(1,j))*DBLE(b(1,i))
-               
+         !$acc kernels loop
+         do j = 1, nss
+            do i = 1, nss
+               bectmp(i, j) = 2.d0*dble(zbectmp(i, j))
+               if (gstart == 2) bectmp(i, j) = bectmp(i, j) - DBLE(a(1, j))*DBLE(b(1, i))
+
             enddo
          enddo
          !$acc update self(bectmp)
-         call mp_sum( bectmp(:,:), intra_bgrp_comm)
+         call mp_sum(bectmp(:, :), intra_bgrp_comm)
          !$acc update host(bectmp)
-         if(nkbus >= 0) then
+         if (nkbus >= 0) then
 
-            nl_max=0
-            do is=1,nsp
-               nl_max=nl_max+nh(is)*na(is)
+            nl_max = 0
+            do is = 1, nsp
+               nl_max = nl_max + nh(is)*na(is)
             enddo
-            allocate (qq_tmp(nl_max,nl_max))
-            allocate (qqb_tmp(nl_max,nss))
-            qq_tmp(:,:)=0.d0
-            do ia=1,nat
-               is = ityp(ia) 
-               IF( upf(is)%tvanp ) THEN
-                  do iv=1,nh(is)
-                     do jv=1,nh(is)
+            allocate (qq_tmp(nl_max, nl_max))
+            allocate (qqb_tmp(nl_max, nss))
+            qq_tmp(:, :) = 0.d0
+            do ia = 1, nat
+               is = ityp(ia)
+               IF (upf(is)%tvanp) THEN
+                  do iv = 1, nh(is)
+                     do jv = 1, nh(is)
                         inl = ofsbeta(ia) + iv
                         jnl = ofsbeta(ia) + jv
-                        qq_tmp(inl,jnl)=qq_nt(iv,jv,is)
+                        qq_tmp(inl, jnl) = qq_nt(iv, jv, is)
                      enddo
                   enddo
                ENDIF
             enddo
             !$acc data copyin(qq_tmp,qqb_tmp)
             !$acc host_data use_device(qq_tmp,qqb_tmp,becb,beca,bectmp)
-               call mydgemm('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nkb,0.d0,qqb_tmp,nl_max)
-               call mydgemm('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nkb,qqb_tmp,nl_max,1.d0,bectmp,nss)
+            call mydgemm('N', 'N', nl_max, nss, nl_max, 1.d0, qq_tmp, nl_max, becb(:, istart), nkb, 0.d0, qqb_tmp, nl_max)
+            call mydgemm('T', 'N', nss, nss, nl_max, 1.d0, beca(:, istart), nkb, qqb_tmp, nl_max, 1.d0, bectmp, nss)
             !$acc end host_data
             !$acc end data
-            deallocate(qq_tmp,qqb_tmp)
+            deallocate (qq_tmp, qqb_tmp)
          endif
          !$acc kernels loop
-         do i=1,nss
-            do j=1,nss
-               zbectmp(i,j)=CMPLX(bectmp(i,j),0.d0,kind=dp)
+         do i = 1, nss
+            do j = 1, nss
+               zbectmp(i, j) = CMPLX(bectmp(i, j), 0.d0, kind=dp)
             enddo
          enddo
          !$acc host_data use_device(a,b,zbectmp,bectmp,beca,becb)
-         call myzgemm('N','N',ngw,nss,nss,(-1.d0,0.d0),a(:,istart),ngw,zbectmp,nss,(1.d0,0.d0),b(:,istart),ngw)
-         call mydgemm('N','N',nkb,nss,nss,1.0d0,beca(:,istart),nkb,bectmp,nss,1.0d0,becb(:,istart),nkb)
+         call myzgemm('N', 'N', ngw, nss, nss, (-1.d0, 0.d0), a(:, istart), ngw, zbectmp, nss, (1.d0, 0.d0), b(:, istart), ngw)
+         call mydgemm('N', 'N', nkb, nss, nss, 1.0d0, beca(:, istart), nkb, bectmp, nss, 1.0d0, becb(:, istart), nkb)
          !$acc end host_data
          !$acc end data
-         deallocate(zbectmp)
-         deallocate(bectmp)
+         deallocate (zbectmp)
+         deallocate (bectmp)
       enddo!on spin
-      CALL stop_clock( 'pc2' )
+      CALL stop_clock('pc2')
       return
-    end subroutine pc2
+   end subroutine pc2
 
-
-    subroutine pcdaga2(a,as ,b )
+   subroutine pcdaga2(a, as, b)
 
 ! this function applies the operator Pc
 
@@ -1307,57 +1298,56 @@ subroutine pc2(a,beca,b,becb)
 
       implicit none
 
-      complex(dp) a(ngw,n), b(ngw,n), as(ngw,n)
+      complex(dp) a(ngw, n), b(ngw, n), as(ngw, n)
       !$acc declare present(a,b,as)
       ! local variables
-      integer is, iv, jv, ia, inl, jnl, i, j,ig
+      integer is, iv, jv, ia, inl, jnl, i, j, ig
       real(dp) sca
       real(DP), allocatable:: scar(:)
       !
       call start_clock('pcdaga2')
-      allocate(scar(n))
+      allocate (scar(n))
       !$acc data copyin(ispin, gstart) create(scar)
-      do j=1,n
+      do j = 1, n
          !$acc kernels loop private(sca)
-         do i=1,n
-            sca=0.0d0
-            if(ispin(i) == ispin(j)) then
-               if (gstart==2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
+         do i = 1, n
+            sca = 0.0d0
+            if (ispin(i) == ispin(j)) then
+               if (gstart == 2) b(1, i) = CMPLX(dble(b(1, i)), 0.0d0, kind=dp)
                !$acc loop vector reduction(+:sca)
-               do  ig=1,ngw           !loop on g vectors
-                  sca=sca+DBLE(CONJG(a(ig,j))*b(ig,i))
+               do ig = 1, ngw           !loop on g vectors
+                  sca = sca + DBLE(CONJG(a(ig, j))*b(ig, i))
                enddo
                sca = sca*2.0d0  !2. for real weavefunctions
-               if (gstart==2) sca = sca - dble(a(1,j))*dble(b(1,i))
+               if (gstart == 2) sca = sca - dble(a(1, j))*dble(b(1, i))
             endif
             scar(i) = sca
          enddo
 
-         
          !$acc update self(scar)
-         call mp_sum( scar, intra_bgrp_comm )
+         call mp_sum(scar, intra_bgrp_comm)
          !$acc update host(scar)
 
          !$acc kernels loop private(sca)
-         do i=1,n
-            if(ispin(i) == ispin(j)) then
+         do i = 1, n
+            if (ispin(i) == ispin(j)) then
                sca = scar(i)
                !$acc loop vector
-               do ig=1,ngw
-                  b(ig,i)=b(ig,i)-sca*as(ig,j)
+               do ig = 1, ngw
+                  b(ig, i) = b(ig, i) - sca*as(ig, j)
                enddo
                ! this to prevent numerical errors
-               if (gstart==2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
+               if (gstart == 2) b(1, i) = CMPLX(dble(b(1, i)), 0.0d0, kind=dp)
             endif
          enddo
       enddo
       !$acc end data
-      deallocate(scar)
+      deallocate (scar)
       call stop_clock('pcdaga2')
       return
-      end subroutine pcdaga2
+   end subroutine pcdaga2
 
-     subroutine set_x_minus1(betae,m_minus1,ema0bg,use_ema)
+   subroutine set_x_minus1(betae, m_minus1, ema0bg, use_ema)
 
 ! this function calculates the factors for the inverse of the US K  matrix
 ! it takes care of the preconditioning
@@ -1372,43 +1362,42 @@ subroutine pc2(a,beca,b,becb)
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh, upf
-      use uspp, only :nkb,qq_nt, ofsbeta
+      use uspp, only: nkb, qq_nt, ofsbeta
       use io_global, ONLY: ionode, ionode_id
 
       implicit none
 
-      complex(DP) :: betae(ngw,nkb)
-      real(DP)    :: m_minus1(nkb,nkb)
+      complex(DP) :: betae(ngw, nkb)
+      real(DP)    :: m_minus1(nkb, nkb)
       real(DP)    :: ema0bg(ngw)
       logical     :: use_ema
 
-
 ! local variables
-      real(DP),allocatable :: q_matrix(:,:), b_matrix(:,:),c_matrix(:,:)
-      integer is, iv, jv, ia, inl, jnl, i, j, k,ig, js, ja
+      real(DP), allocatable :: q_matrix(:, :), b_matrix(:, :), c_matrix(:, :)
+      integer is, iv, jv, ia, inl, jnl, i, j, k, ig, js, ja
       real(DP) sca
       integer info, lwork
       integer, allocatable :: ipiv(:)
-      real(dp),allocatable :: work(:)
+      real(dp), allocatable :: work(:)
 
       call start_clock('set_x_minus1')
-      allocate(ipiv(nkb))
-      allocate(work(nkb))
+      allocate (ipiv(nkb))
+      allocate (work(nkb))
 
-      lwork=nkb
+      lwork = nkb
 
-      allocate(q_matrix(nkb,nkb),c_matrix(nkb,nkb))
+      allocate (q_matrix(nkb, nkb), c_matrix(nkb, nkb))
 !construct q matrix
-      q_matrix(:,:) = 0.d0
+      q_matrix(:, :) = 0.d0
 
-      do ia=1,nat
+      do ia = 1, nat
          is = ityp(ia)
-         IF( upf(is)%tvanp ) THEN
-            do iv=1,nh(is)
-               do jv=1,nh(is)
-                    inl = ofsbeta(ia) + iv
-                    jnl = ofsbeta(ia) + jv
-                    q_matrix(inl,jnl)= qq_nt(iv,jv,is)
+         IF (upf(is)%tvanp) THEN
+            do iv = 1, nh(is)
+               do jv = 1, nh(is)
+                  inl = ofsbeta(ia) + iv
+                  jnl = ofsbeta(ia) + jv
+                  q_matrix(inl, jnl) = qq_nt(iv, jv, is)
                enddo
             enddo
          END IF
@@ -1416,130 +1405,124 @@ subroutine pc2(a,beca,b,becb)
 
 !construct b matrix
 ! m_minus1 used to be b matrix
-      m_minus1(:,:) = 0.d0
-      do ia=1,nat
+      m_minus1(:, :) = 0.d0
+      do ia = 1, nat
          is = ityp(ia)
-         IF( upf(is)%tvanp ) THEN
-            do iv=1,nh(is)
-               do ja=1,nat
-                  js=ityp(ja)
-                  IF( upf(js)%tvanp ) THEN
-                     do jv=1,nh(js)
+         IF (upf(is)%tvanp) THEN
+            do iv = 1, nh(is)
+               do ja = 1, nat
+                  js = ityp(ja)
+                  IF (upf(js)%tvanp) THEN
+                     do jv = 1, nh(js)
                         inl = ofsbeta(ia) + iv
                         jnl = ofsbeta(ja) + jv
-                        sca=0.d0
+                        sca = 0.d0
                         if (use_ema) then
                            ! k_minus case
-                        do  ig=1,ngw           !loop on g vectors
-                           sca=sca+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*betae(ig,jnl))
-                        enddo
-                        sca = sca*2.0d0  !2. for real weavefunctions
-                        if (gstart==2) sca = sca - ema0bg(1)*DBLE(CONJG(betae(1,inl))*betae(1,jnl))
+                           do ig = 1, ngw           !loop on g vectors
+                              sca = sca + ema0bg(ig)*DBLE(CONJG(betae(ig, inl))*betae(ig, jnl))
+                           enddo
+                           sca = sca*2.0d0  !2. for real weavefunctions
+                           if (gstart == 2) sca = sca - ema0bg(1)*DBLE(CONJG(betae(1, inl))*betae(1, jnl))
                         else
                            ! s_minus case
-                        do  ig=1,ngw           !loop on g vectors
-                           sca=sca+DBLE(CONJG(betae(ig,inl))*betae(ig,jnl))
-                        enddo
-                        sca = sca*2.0d0  !2. for real weavefunctions
-                        if (gstart==2) sca = sca - DBLE(CONJG(betae(1,inl))*betae(1,jnl))
+                           do ig = 1, ngw           !loop on g vectors
+                              sca = sca + DBLE(CONJG(betae(ig, inl))*betae(ig, jnl))
+                           enddo
+                           sca = sca*2.0d0  !2. for real weavefunctions
+                           if (gstart == 2) sca = sca - DBLE(CONJG(betae(1, inl))*betae(1, jnl))
                         endif
-                        m_minus1(inl,jnl)=sca
+                        m_minus1(inl, jnl) = sca
                      enddo
                   END IF
                enddo
             enddo
          END IF
       enddo
-      call mp_sum( m_minus1, intra_bgrp_comm )
+      call mp_sum(m_minus1, intra_bgrp_comm)
 
 !calculate -(1+QB)**(-1) * Q
-      CALL dgemm('N','N',nkb,nkb,nkb,1.0d0,q_matrix,nkb,m_minus1,nkb,0.0d0,c_matrix,nkb)
+      CALL dgemm('N', 'N', nkb, nkb, nkb, 1.0d0, q_matrix, nkb, m_minus1, nkb, 0.0d0, c_matrix, nkb)
 
-      do i=1,nkb
-         c_matrix(i,i)=c_matrix(i,i)+1.d0
+      do i = 1, nkb
+         c_matrix(i, i) = c_matrix(i, i) + 1.d0
       enddo
 
-      if(ionode) then
-        call dgetrf(nkb,nkb,c_matrix,nkb,ipiv,info)
-        if(info .ne. 0) write(stdout,*) 'set_k_minus1 Problem with dgetrf :', info
-        call dgetri(nkb,c_matrix,nkb,ipiv,work,lwork,info)
-        if(info .ne. 0) write(stdout,*) 'set_k_minus1 Problem with dgetri :', info
+      if (ionode) then
+         call dgetrf(nkb, nkb, c_matrix, nkb, ipiv, info)
+         if (info .ne. 0) write (stdout, *) 'set_k_minus1 Problem with dgetrf :', info
+         call dgetri(nkb, c_matrix, nkb, ipiv, work, lwork, info)
+         if (info .ne. 0) write (stdout, *) 'set_k_minus1 Problem with dgetri :', info
       endif
-      call mp_bcast( c_matrix, ionode_id, intra_bgrp_comm )
+      call mp_bcast(c_matrix, ionode_id, intra_bgrp_comm)
 
+      CALL dgemm('N', 'N', nkb, nkb, nkb, -1.0d0, c_matrix, nkb, q_matrix, nkb, 0.0d0, m_minus1, nkb)
 
-      CALL dgemm('N','N',nkb,nkb,nkb,-1.0d0,c_matrix,nkb,q_matrix,nkb,0.0d0,m_minus1,nkb)
-
-      deallocate(q_matrix,c_matrix)
-      deallocate(ipiv,work)
+      deallocate (q_matrix, c_matrix)
+      deallocate (ipiv, work)
       call stop_clock('set_x_minus1')
       return
-    end subroutine set_x_minus1
+   end subroutine set_x_minus1
 !
 
-      SUBROUTINE emass_precond_tpa( ema0bg, tpiba2, emaec )
-       use kinds, ONLY : dp
-       use gvecw, ONLY : g2kin,ngw
-       IMPLICIT NONE
-       REAL(DP), INTENT(OUT) :: ema0bg(ngw)
-       REAL(DP), INTENT(IN) ::  tpiba2, emaec
-       INTEGER :: i
+   SUBROUTINE emass_precond_tpa(ema0bg, tpiba2, emaec)
+      use kinds, ONLY: dp
+      use gvecw, ONLY: g2kin, ngw
+      IMPLICIT NONE
+      REAL(DP), INTENT(OUT) :: ema0bg(ngw)
+      REAL(DP), INTENT(IN) ::  tpiba2, emaec
+      INTEGER :: i
 
-       real(DP) :: x
+      real(DP) :: x
 
-       call start_clock('emass_p_tpa')
-       do i = 1, ngw
+      call start_clock('emass_p_tpa')
+      do i = 1, ngw
 
-          x=0.5d0*tpiba2*g2kin(i)/emaec
-          ema0bg(i) = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
-       end do
-       call stop_clock('emass_p_tpa')
+         x = 0.5d0*tpiba2*g2kin(i)/emaec
+         ema0bg(i) = 1.d0/(1.d0 + (16.d0*x**4)/(27.d0 + 18.d0*x + 12.d0*x**2 + 8.d0*x**3))
+      end do
+      call stop_clock('emass_p_tpa')
       RETURN
-      END SUBROUTINE emass_precond_tpa
+   END SUBROUTINE emass_precond_tpa
 
-      subroutine ave_kin( c, ngwx, n, ene_ave )
+   subroutine ave_kin(c, ngwx, n, ene_ave)
 !this subroutine calculates the average kinetic energy of
 !each state , to be used for preconditioning
 
-
-      USE kinds,              ONLY: DP
-      USE constants,          ONLY: pi, fpi
-      USE gvecw,              ONLY: ngw
+      USE kinds, ONLY: DP
+      USE constants, ONLY: pi, fpi
+      USE gvecw, ONLY: ngw
       USE gvect, ONLY: gstart
-      USE gvecw,              ONLY: g2kin
-      USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_bgrp_comm
-      USE cell_base,          ONLY: tpiba2
-                                                                                                                             
+      USE gvecw, ONLY: g2kin
+      USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_bgrp_comm
+      USE cell_base, ONLY: tpiba2
+
       IMPLICIT NONE
-                                                                                                                            
-                                                                                                                             
+
       ! input
-                                                                                                                             
-      INTEGER,     INTENT(IN) :: ngwx, n
-      COMPLEX(kind=DP), INTENT(IN) :: c( ngwx, n )
+
+      INTEGER, INTENT(IN) :: ngwx, n
+      COMPLEX(kind=DP), INTENT(IN) :: c(ngwx, n)
       REAL(kind=DP), INTENT(out) :: ene_ave(n)!average kinetic energy to be calculated
       !
       ! local
-                                                                                                                             
+
       INTEGER  :: ig, i
 
       !
-      DO i=1,n
-         ene_ave(i)=0.d0
-         DO ig=gstart,ngw
-            ene_ave(i)=ene_ave(i)+ DBLE(CONJG(c(ig,i))*c(ig,i))*g2kin(ig)
+      DO i = 1, n
+         ene_ave(i) = 0.d0
+         DO ig = gstart, ngw
+            ene_ave(i) = ene_ave(i) + DBLE(CONJG(c(ig, i))*c(ig, i))*g2kin(ig)
          END DO
       END DO
 
+      CALL mp_sum(ene_ave(1:n), intra_bgrp_comm)
+      ene_ave(:) = ene_ave(:)*tpiba2
 
-      CALL mp_sum( ene_ave(1:n), intra_bgrp_comm )
-      ene_ave(:)=ene_ave(:)*tpiba2
-                                                                                                                             
       RETURN
-    END subroutine ave_kin
-
-
+   END subroutine ave_kin
 
 !
 ! ... some simple routines for parallel linear algebra (the matrices are
@@ -1548,34 +1531,34 @@ subroutine pc2(a,beca,b,becb)
 ! ... written by carlo sbraccia ( 2006 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE para_dgemm( transa, transb, m, n, k, &
-                       alpha, a, lda, b, ldb, beta, c, ldc, comm )
-  !----------------------------------------------------------------------------
-  !
-  ! ... trivial parallelization (splitting matrix B by columns) of dgemm 
-  !
-  USE kinds, ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(LEN=1), INTENT(IN)    :: transa, transb
-  INTEGER,          INTENT(IN)    :: m, n, k
-  REAL(DP),         INTENT(IN)    :: alpha, beta
-  INTEGER,          INTENT(IN)    :: lda, ldb, ldc
-  REAL(DP),         INTENT(INOUT) :: a(lda,*), b(ldb,*), c(ldc,*)
-  INTEGER,          INTENT(IN)    :: comm
-  !
-  ! ... quick return if possible
-  !
-  IF ( m == 0 .OR. n == 0 .OR. &
-       ( ( alpha == 0.0_DP .OR. k == 0 ) .AND. beta == 1.0_DP ) ) RETURN
-  !
+   SUBROUTINE para_dgemm(transa, transb, m, n, k, &
+                         alpha, a, lda, b, ldb, beta, c, ldc, comm)
+      !----------------------------------------------------------------------------
+      !
+      ! ... trivial parallelization (splitting matrix B by columns) of dgemm
+      !
+      USE kinds, ONLY: DP
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=1), INTENT(IN)    :: transa, transb
+      INTEGER, INTENT(IN)    :: m, n, k
+      REAL(DP), INTENT(IN)    :: alpha, beta
+      INTEGER, INTENT(IN)    :: lda, ldb, ldc
+      REAL(DP), INTENT(INOUT) :: a(lda, *), b(ldb, *), c(ldc, *)
+      INTEGER, INTENT(IN)    :: comm
+      !
+      ! ... quick return if possible
+      !
+      IF (m == 0 .OR. n == 0 .OR. &
+          ((alpha == 0.0_DP .OR. k == 0) .AND. beta == 1.0_DP)) RETURN
+      !
 !write(*,*) 'DEBUG: para_dgemm'
-  !
-  CALL rep_matmul_drv( transa, transb, m, n, k, &
-                       alpha, a, lda, b, ldb, beta, c, ldc, comm )
-  RETURN
-  !
-END SUBROUTINE para_dgemm
+      !
+      CALL rep_matmul_drv(transa, transb, m, n, k, &
+                          alpha, a, lda, b, ldb, beta, c, ldc, comm)
+      RETURN
+      !
+   END SUBROUTINE para_dgemm
 
 end module

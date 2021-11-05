@@ -27,7 +27,9 @@ MODULE wave_gauge
       complex(dp), intent(in) :: t_minus(:,:), t_zero(:,:), t_plus(:,:)
       !$acc declare present(t_minus, t_zero, t_plus, dot_evc)
 
+      !$acc parallel
       dot_evc=(0.0_dp, 0.0_dp)
+      !$acc end parallel
       call project_parallel_gauge(t_minus, t_zero, t_plus, dot_evc, nbnd, npw, npwx, gstart, 1.0_dp,&
                                   .true., .true.)
       
@@ -44,7 +46,9 @@ MODULE wave_gauge
       !$acc declare device_resident(dummy)
       !$acc declare present(t_minus, t_zero, t_zero_proj)
 
+      !$acc parallel
       t_zero_proj=0.0_dp
+      !$acc end parallel
       call project_parallel_gauge(t_zero, t_minus, dummy, t_zero_proj,  nbnd, npw, npwx,&
                                   gstart, -1.0_dp, .false., .false. )
 
@@ -87,7 +91,7 @@ MODULE wave_gauge
 
       real(DP), allocatable :: sa(:,:), ssa(:,:), sb(:,:), ssb(:,:)
       !$acc declare device_resident(ssa, ssb)
-      complex(dp) :: tmp
+      complex(dp) :: tmp,tmp2
       integer :: ibnd, jbnd, ig
 
 
@@ -118,13 +122,13 @@ MODULE wave_gauge
             end do
          end do
       end if
-      !$acc update self(sb)
-      call mp_sum(sb, intra_pool_comm)
       !$acc update host(sb)
+      call mp_sum(sb, intra_pool_comm)
+      !$acc update device(sb)
       if (use_t_plus) then
-         !$acc update self(sa)
-         call mp_sum(sa, intra_pool_comm)
          !$acc update host(sa)
+         call mp_sum(sa, intra_pool_comm)
+         !$acc update device(sa)
       end if
 
       ! compute scalar products that appear due to the ( 1 - P ) projector over
@@ -143,7 +147,7 @@ MODULE wave_gauge
          !$acc end host_data
       end if
       ! compute final projection
-      !$acc parallel loop collapse(3) present(t_minus,sb,t_plus,sa,t_zero,ssa,ssb,dot_evc) copyin(factor)
+      !$acc parallel loop present(t_minus,sb,t_plus,sa,t_zero,ssa,ssb,dot_evc) copyin(factor) private(tmp2,tmp)
       do ibnd = 1, nbnd
          do jbnd = 1, nbnd
             do ig = 1, npw
