@@ -154,7 +154,9 @@ subroutine allocate_phq
      ENDDO
   END DO
   CALL allocate_bec_type ( nkb, nbnd, becp )
+#if defined(__CUDA)
   CALL allocate_bec_type_gpu ( nkb, nbnd, becp_d )
+#endif
 
   if (elph) then
     allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))
