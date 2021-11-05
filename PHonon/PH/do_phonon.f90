@@ -30,7 +30,7 @@ SUBROUTINE do_phonon(auxdyn)
 
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
-                              only_wfc, rec_code, where_rec
+                              only_wfc, rec_code, where_rec, reduce_io
   USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa
   !
   ! YAMBO >
@@ -43,12 +43,16 @@ SUBROUTINE do_phonon(auxdyn)
   ! FIXME: see below setup_pw
   USE noncollin_module, ONLY : noncolin, domag
   USE ahc,            ONLY : elph_ahc, elph_do_ahc
+  USE io_files,       ONLY : iunwfc
+  USE buffers,        ONLY : close_buffer
 
   IMPLICIT NONE
   !
   CHARACTER (LEN=256), INTENT(IN) :: auxdyn
-  INTEGER :: iq
+  INTEGER :: iq, qind
   LOGICAL :: do_band, do_iq, setup_pw
+  !
+  qind = 0
   !
   DO iq = 1, nqs
      !
@@ -57,6 +61,7 @@ SUBROUTINE do_phonon(auxdyn)
      !  If this q is not done in this run, cycle
      !
      IF (.NOT.do_iq) CYCLE
+     qind = qind + 1
      !
      !  If necessary the bands are recalculated
      !
@@ -66,7 +71,12 @@ SUBROUTINE do_phonon(auxdyn)
      ! the case SO-MAG).
      !
      setup_pw=setup_pw .OR. (noncolin .AND. domag)
-     IF (setup_pw) CALL run_nscf(do_band, iq)
+     IF (setup_pw) THEN
+        IF (reduce_io .AND. (qind == 1)) THEN
+           CALL close_buffer( iunwfc, 'DELETE' )
+        ENDIF
+        CALL run_nscf(do_band, iq)
+     ENDIF
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
      !
