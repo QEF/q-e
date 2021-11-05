@@ -193,7 +193,6 @@ use debug_utils, only: checkpoint
 !operation are done on the cpu, in particular for the ensemble dft case
      c0=c0_d
 #endif
-      call CHECKPOINT(c0)
 
 !$acc data copy(betae, bec, c0)
       call calbec(nbsp, betae, c0, bec)
@@ -212,7 +211,6 @@ use debug_utils, only: checkpoint
       CALL calphi_bgrp(c0, SIZE(c0, 1), bec, nkb, betae, phi, nbsp)
 !$acc end data
 
-      !call CHECKPOINT(phi)
       !calculates the factors for S and K inversion in US case
       if (nkbus > 0) then
          allocate (s_minus1(nkb, nkb))
@@ -231,7 +229,6 @@ use debug_utils, only: checkpoint
 !initialize  z0t
       call id_matrix_init(idesc, nspin)
 
-      call CHECKPOINT(c0)
 
       allocate (hpsi(ngw, nbspx), hpsi0(ngw, nbspx), gi(ngw, nbspx), hi(ngw, nbspx))
       !loop on cg iterations
@@ -458,6 +455,7 @@ use debug_utils, only: checkpoint
             call mp_sum(gamma, intra_bgrp_comm)
          endif
 
+         call CHECKPOINT(gamma)
          !case of first iteration
 
          if (itercg == 1 .or. (mod(itercg, niter_cg_restart) .eq. 1) .or. restartcg) then
@@ -717,7 +715,9 @@ use debug_utils, only: checkpoint
 !   restore hi
 !        hi(:,:)=gi(:,:)
 
-      end do!on conjugate gradient iterations
+      end do !on conjugate gradiient iterations
+
+      !================================================================
       !calculates atomic forces and lambda
 
       if (tpre) then!if pressure is need the following is written because of caldbec
@@ -779,6 +779,8 @@ use debug_utils, only: checkpoint
 #endif
       call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
                       c0, c0_d, gi, gi_d, .false., .false., .true.)
+      call CHECKPOINT(c0)
+      call CHECKPOINT(gi)
       ALLOCATE (lambda_repl(nudx, nudx))
       !
       !$acc data create(lambda_repl) copy(c0, gi)
@@ -786,34 +788,37 @@ use debug_utils, only: checkpoint
          !
          nss = nupdwn(is)
          istart = iupdwn(is)
-         !$acc kernels
+         !$acc kernels present(lambda_repl(nudx,nudx)) present(lambda_repl(nss,nss),c0(ngw,nss),gi(ngw,nss)) copyin(nss, istart,gstart,ngw)
+
          lambda_repl = 0.d0
-         !$acc end kernels
          !
          !
-         
-         do i = 1, nss
-            do j = i, nss
+         !$acc loop
+         do jv = 0, nss*(nss+1)/2 -1
+               i = jv/nss + 1
+               j = mod(jv,nss) + 1
                ii = i + istart - 1
                jj = j + istart - 1
-               !$acc parallel loop 
+               entmp = 0.0_dp
+               !!$acc loop vector reduction(+:entmp)
                do ig = 1, ngw
-                  lambda_repl(i, j) = lambda_repl(i, j) - &
-                                      2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
+                  entmp = entmp - 2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
                enddo
                if (gstart == 2) then
-                  lambda_repl(i, j) = lambda_repl(i, j) + &
-                                      DBLE(CONJG(c0(1, ii))*gi(1, jj))
+                  entmp = entmp +  DBLE(CONJG(c0(1, ii))*gi(1, jj))
                endif
-               lambda_repl(j, i) = lambda_repl(i, j)
-            enddo
+               lambda_repl(j, i) = entmp
+               lambda_repl(i, j) = entmp
          enddo
-         !$acc update self(lambda_repl) 
+         !$acc end kernels
+         !$acc update host(lambda_repl(nudx,nudx)) 
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
+         call CHECKPOINT(lambda_repl)
          !
          CALL distribute_lambda(lambda_repl, lambda(:, :, is), idesc(:, is))
          !
       end do
+
 
       if (l_cprestart .and. .not. tens .and. nspin == 1 .and. nkbus < 1) then
 
@@ -829,25 +834,29 @@ use debug_utils, only: checkpoint
          !$acc data copy(betae, bec)
          call calbec(nbsp, betae, c0, bec)
          CALL gram_bgrp(betae, bec, nkb, c0, ngw)
+         !$acc update device(c0)
          call calbec(nbsp, betae, c0, bec)
          !$acc end data
-
+         call CHECKPOINT(c0)
 #if defined (__CUDA)
       c0_d = c0
       vkb_d = betae ! runcp uses a global variable!!!
 #endif
          call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
                          c0, c0_d, gi, gi_d, .false., .false., .true.)
-         !$acc update host(gi)
+         call CHECKPOINT(c0)
+         call CHECKPOINT(gi)
+         !$acc update device(gi)
 
-         !$acc kernels
+         !$acc kernels present(lambda_repl)
          lambda_repl = 0.d0
          !$acc end kernels
-         do i = 1, nss
-            do j = i, nss
+         !$acc parallel loop present(lambda_repl,c0,gi) copyin(nss, istart,gstart,ngw) private(i,j,ii,jj,ig)
+         do jv = 0, nss*(nss+1)/2 -1
+               i = jv/nss + 1
+               j = mod(jv,nss) + 1
                ii = i + istart - 1
                jj = j + istart - 1
-               !$acc parallel loop
                do ig = 1, ngw
                   lambda_repl(i, j) = lambda_repl(i, j) - &
                                       2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
@@ -857,11 +866,11 @@ use debug_utils, only: checkpoint
                                       DBLE(CONJG(c0(1, ii))*gi(1, jj))
                endif
                lambda_repl(j, i) = lambda_repl(i, j)
-            enddo
          enddo
 
          !$acc update self(lambda_repl)
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
+         call CHECKPOINT(lambda_repl)
          CALL distribute_lambda(lambda_repl, lambda(:, :, 1), idesc(:, 1))
          cm(:, :) = c0(:, :)
 
