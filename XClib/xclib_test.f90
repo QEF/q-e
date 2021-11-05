@@ -496,7 +496,8 @@ PROGRAM xclib_test
     ENDIF
 #if !defined(__LIBXC)
     IF ( TRIM(dft)=='TB09' .OR. TRIM(dft)=='SCAN' .OR. &
-         TRIM(dft)=='SCAN0'.OR. TRIM(dft)=='SCA0' ) THEN
+         TRIM(dft)=='SCAN0'.OR. TRIM(dft)=='SCA0' .OR. &
+         TRIM(dft)=='R2SCAN') THEN
       id_vec(6)=idterm
       IF (mype==root) CALL print_test_status( skipped3 )
       CYCLE

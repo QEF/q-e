@@ -63,7 +63,7 @@ MODULE qe_dft_list
                        'Q2DC', 'xxxx','BEEC' /                            !12 "  14
   ! MGGA exchange+correlation terms
   DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'NONE', 'SCAN',  & ! 0 to  5
-                       'SCA0', 'R2SCAN' /                                 ! 7
+                       'SCA0', 'xxxx' /                                   ! 6 "   7
   !
   !
   ! ---- Full DFTs ----
