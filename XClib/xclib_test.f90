@@ -979,6 +979,8 @@ PROGRAM xclib_test
           ex1 = 0.d0  ;  ec1 = 0.d0
         ENDIF
         !
+        !CALL beefsetmode(-1)
+        !
         IF (mype==root) time(3) = get_wall_time()
         CALL xc_gcx( nnr, ns, rho, grho, exg1, ecg1, v1x1, v2x1, v1c1, &
                      v2c1, v2c_ud1 )

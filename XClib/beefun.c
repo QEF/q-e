@@ -363,6 +363,7 @@ void beefensemble_(double *beefxc, double *ensemble)
 int beef_set_type_(int *tbeef, int *ionode)
 {
     beeftype = *tbeef;
+#pragma acc update device(beeftype)
     
     if(*ionode)
     {

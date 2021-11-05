@@ -317,9 +317,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
      ENDDO
      !
-     !
      CALL gcxc( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
-     !
      !
      DO k = 1, length
         sgn(1) = SIGN(1._DP, rho(k,1))
@@ -361,7 +359,6 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
                      ( grho(2,:,1) + grho(2,:,2) )**2 + &
                      ( grho(3,:,1) + grho(3,:,2) )**2
         !
-        
         CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
         !
         v2c(:,2)  = v2c(:,1)

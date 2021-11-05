@@ -298,10 +298,9 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
-     CASE( 43 ) ! 'beefx'
-        ! last parameter = 0 means do not add LDA (=Slater) exchange
-        ! (espresso) will add it itself
-        CALL beefx( rho, grho, sx, v1x, v2x, 0 )   
+     CASE( 43 ) ! 'BEEX'
+        !
+        CALL beefx( rho, grho, sx, v1x, v2x, 0 )
         !
      CASE( 44 ) ! 'RPBE'
         !
@@ -374,7 +373,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2c = 0.871_DP * v2c
         ENDIF
         !
-     CASE( 14 )
+     CASE( 14 ) !'BEEC'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
         CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
@@ -835,17 +834,17 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
         ! routine: needs kinetic energy density in addition to rho and grad rho
         !
-     CASE( 43 ) ! 'beefx'
+     CASE( 43 )                ! BEEX
         !
         rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
         grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
         !
-        CALL beefx(rho_up, grho2_up, sx_up, v1x_up, v2x_up, 0)
-        CALL beefx(rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw, 0)
+        CALL beefx( rho_up, grho2_up, sx_up, v1x_up, v2x_up, 0 )
+        CALL beefx( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw, 0 )
         !
         sx_tot(ir) = 0.5_DP * (sx_up*rnull_up + sx_dw*rnull_dw)
         v2x_up = 2.0_DP * v2x_up
-        v2x_dw = 2.0_DP * v2x_dw   
+        v2x_dw = 2.0_DP * v2x_dw
         !
      CASE DEFAULT
         !
@@ -966,8 +965,8 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c_up, v1c_dw, v2c )
        !
     CASE( 14 )
-       !
-       CALL beeflocalcorrspin(rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0)
+       !  
+       CALL beeflocalcorrspin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0 )
        !
     CASE DEFAULT
        !
@@ -1119,11 +1118,80 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
 !$omp end do
 !$omp end parallel
 #endif
-
   !
   RETURN
   !
 END SUBROUTINE gcc_spin_more
+!
+!
+! !--------------------------------------------------------------------------------
+! SUBROUTINE gcc_spin_beef( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
+!   !-------------------------------------------------------------------------------
+!   !! BEEF Gradient correction.  
+!   !
+!   USE beef_interface, ONLY: beeflocalcorrspin
+!   !
+!   IMPLICIT NONE
+!   !
+!   INTEGER, INTENT(IN) :: length
+!   REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
+!   REAL(DP), INTENT(INOUT), DIMENSION(length) :: zeta_io
+!   REAL(DP), INTENT(IN), DIMENSION(length) :: grho_in
+!   REAL(DP), INTENT(OUT), DIMENSION(length) :: sc_out
+!   REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c_out
+!   REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
+!   !
+!   ! ... local variables
+!   !
+!   INTEGER :: ir
+!   REAL(DP) :: rho, zeta, grho
+!   REAL(DP) :: sc, v1c_up, v1c_dw, v2c
+!   !
+!   IF ( igcc == 14 ) THEN
+!     !
+! #if defined(_OPENACC)
+!     !$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
+!     !$acc parallel loop
+! #endif
+!     DO ir = 1, length
+!       !
+!       rho  = rho_in(ir)
+!       grho = grho_in(ir)
+!       IF ( ABS(zeta_io(ir))<=1.0_DP ) zeta_io(ir) = SIGN( MIN(ABS(zeta_io(ir)), &
+!                                        (1.0_DP-rho_threshold_gga)), zeta_io(ir) )
+!       zeta = zeta_io(ir)
+!       !
+!       IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
+!          SQRT(ABS(grho))<=rho_threshold_gga ) THEN
+!         sc_out(ir) = 0.0_DP
+!         v1c_out(ir,1) = 0.0_DP ; v2c_out(ir) = 0.0_DP
+!         v1c_out(ir,2) = 0.0_DP
+!        CYCLE
+!       ENDIF
+!       rho  = rho_in(ir)
+!       grho = grho_in(ir)
+!       zeta = zeta_io(ir)
+!       ! 
+!       IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
+!            SQRT(ABS(grho))<=rho_threshold_gga ) CYCLE
+!       !
+!       CALL beeflocalcorrspin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0 )
+!       !
+!       sc_out(ir)  = sc
+!       v1c_out(ir,1) = v1c_up
+!       v1c_out(ir,2) = v1c_dw
+!       v2c_out(ir) = v2c
+!       !
+!     ENDDO
+! #if defined(_OPENACC)
+!     !$acc end data
+! #endif
+!     !
+!   ENDIF
+!   !
+!   RETURN
+!   !
+! END SUBROUTINE gcc_spin_beef
 !
 !
 END MODULE qe_drivers_gga
