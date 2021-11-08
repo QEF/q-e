@@ -53,8 +53,6 @@ SUBROUTINE aceinit0()
     END DO
     !
     WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
-!civn 
-write(*,*) exx_is_active() 
     !
   END IF 
   !
