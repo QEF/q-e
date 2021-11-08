@@ -10,9 +10,11 @@ SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
   USE klist,              ONLY : nkstot
+  USE start_k,            ONLY : nks_start, nk1, nk2, nk3, k1, k2, k3
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw
+  USE input_parameters,   ONLY : tprnfor, tstress
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
                                  g_d, gg_d, mill_d, gshells, &
                                  gstart ! to be communicated to the Solvers if gamma_only
@@ -129,7 +131,7 @@ SUBROUTINE init_run()
      CALL set_h_ainv()
   END IF
   IF (mbd_vdw) THEN
-     CALL init_mbd()
+     CALL init_mbd( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
   END IF
   !
   CALL allocate_wfc_k()
