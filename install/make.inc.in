@@ -101,6 +101,9 @@ CUDA_RUNTIME=@gpu_runtime@
 # CUDA F90 Flags
 CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 
+# CUDA C Flags
+CUDA_CFLAGS=@CUDA_CFLAGS@
+
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
 # preprocessing flags must include DFLAGS and IFLAGS

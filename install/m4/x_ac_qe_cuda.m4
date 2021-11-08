@@ -209,6 +209,7 @@ EOF
    if test "$enable_openacc" == "yes"; then
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
+      CUDA_CFLAGS="$CUDA_CFLAGS -acc"
    fi
 
 fi
