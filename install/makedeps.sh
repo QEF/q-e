@@ -4,6 +4,8 @@
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
 export LC_ALL
+# ensure that command echo understands escape characters
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
@@ -152,18 +154,18 @@ EOF
         if test "$missing" != "";
         then
 	   notfound=1
-	   echo "\nWARNING! dependencies not found in directory $DIR:"
+	   $ECHO "\nWARNING! dependencies not found in directory $DIR:"
 	   grep @ make.depend
-	   echo "File $DIR/make.depend is broken"
+	   $ECHO "File $DIR/make.depend is broken"
        else
-           echo -n "\rdirectory $DIR : ok"
+           $ECHO -n "\rdirectory $DIR : ok"
        fi
     else
-       echo "\ndirectory $DIR : not present in $TOPDIR" 
+       $ECHO "\ndirectory $DIR : not present in $TOPDIR" 
     fi
 done
 if test "$notfound" = ""
 then
-    echo "\nall dependencies updated successfully"
+    $ECHO "\nall dependencies updated successfully"
 fi
 

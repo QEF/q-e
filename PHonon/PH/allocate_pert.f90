@@ -40,8 +40,8 @@ subroutine deallocate_pert()
   !  allocate space for the quantities with dimensions that depend
   !  on the maximum number of perturbations
   !
-  IF (ASSOCIATED(t)) DEALLOCATE ( t )
-  IF (ASSOCIATED(tmq)) DEALLOCATE ( tmq )
+  IF (ALLOCATED(t  )) DEALLOCATE ( t   )
+  IF (ALLOCATED(tmq)) DEALLOCATE ( tmq )
 
   RETURN
 END SUBROUTINE deallocate_pert

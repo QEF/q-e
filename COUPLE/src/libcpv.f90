@@ -127,7 +127,7 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   CALL cpr_loop( 1 )
   !
   CALL laxlib_end()
-  CALL stop_run()
+  !CALL stop_run()
   retval = 0
   !
 END SUBROUTINE f2libcpv

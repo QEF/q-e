@@ -24,11 +24,11 @@ MODULE modes
   !! the number of perturbations per IR
   INTEGER :: npertx
   !! max number of perturbations per IR
-  COMPLEX (DP), POINTER :: u(:,:)     !(3 * nat, 3 * nat)
+  COMPLEX (DP), ALLOCATABLE :: u(:,:)     !(3 * nat, 3 * nat)
   !! the transformation modes patterns
-  COMPLEX (DP), POINTER :: t(:,:,:,:) !(npertx, npertx, 48,3 * nat),
+  COMPLEX (DP), ALLOCATABLE :: t(:,:,:,:) !(npertx, npertx, 48,3 * nat),
   !! the mode for deltarho
-  COMPLEX (DP), POINTER :: tmq(:,:,:) !(npertx, npertx, 3 * nat)
+  COMPLEX (DP), ALLOCATABLE :: tmq(:,:,:) !(npertx, npertx, 3 * nat)
   !! the symmetry in the base of the pattern
   ! the symmetry q<->-q in the base of the pa
   !

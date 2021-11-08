@@ -68,7 +68,7 @@ subroutine deallocate_phq
   IF(ALLOCATED(ikmkmqs)) DEALLOCATE(ikmkmqs)
   if(allocated(eigqts)) deallocate (eigqts)
   if(allocated(rtau)) deallocate (rtau)
-  if(associated(u)) deallocate (u)
+  if(allocated(u)) deallocate (u)
   if(allocated(name_rap_mode)) deallocate (name_rap_mode)
   if(allocated(num_rap_mode)) deallocate (num_rap_mode)
   if(allocated(dyn)) deallocate (dyn)
