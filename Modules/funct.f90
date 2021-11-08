@@ -197,6 +197,7 @@ MODULE funct
   !              "+meta"  activate MGGA even without MGGA-XC   imeta=4
   !              "scan"   SCAN Meta-GGA                  imeta=5
   !              "sca0"   SCAN0  Meta-GGA                imeta=6
+  !              "r2scan" R2SCAN Meta-GGA                imeta=7
   !
   ! van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
@@ -270,6 +271,8 @@ MODULE funct
   !              tb09    F Tran and P Blaha, Phys.Rev.Lett. 102, 226401 (2009)
   !              scan    J Sun, A Ruzsinszky and J Perdew, PRL 115, 36402 (2015)
   !              scan0   K Hui and J-D. Chai, JCP 144, 44114 (2016)
+  !              r2scan  J. W. Furness, A. D. Kaplan, J. Ning, J. P. Perdew,
+  !                      and J. Sun, JPCL 11, 8208 (2020)
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)

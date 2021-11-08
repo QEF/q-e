@@ -59,8 +59,7 @@ CONTAINS
     !
     INTEGER :: leng, l, i
     CHARACTER(len=150):: dftout
-    LOGICAL :: dft_defined
-    LOGICAL :: check_libxc
+    LOGICAL :: check_libxc, dft_defined, is_meta_dft
     CHARACTER(len=1) :: lxc
     INTEGER :: ID_vec(6)
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
@@ -188,22 +187,37 @@ CONTAINS
     !
     ! ... A workaround to keep the q-e shortname notation for SCAN and TB09
     !     functionals valid.
+    !
+    is_meta_dft = imeta==3 .OR. imeta==5 .OR. imeta==6 .OR. imeta==7
+    !
 #if defined(__LIBXC)
-    IF (imeta==5 .OR. imeta==6) THEN
-      imeta = 263
-      IF (imeta==6) THEN  ! SCAN0
+    IF (is_meta_dft) THEN
+      !
+      is_libxc(5:6) = .TRUE.
+      !
+      SELECT CASE ( imeta )
+      CASE ( 3 )
+        ! TB09
+        imeta  = 208
+        imetac = 231
+      CASE ( 5 )
+        ! SCAN
+        imeta = 263
+        imetac = 267
+      CASE ( 6 )
+        ! SCAN0
         scan_exx = .TRUE.
         imeta = 264
-      ENDIF
-      imetac = 267
-      is_libxc(5:6) = .TRUE.
-    ELSEIF (imeta==3) THEN
-      imeta  = 208
-      imetac = 231
-      is_libxc(5:6) = .TRUE.
-    ENDIF
+        imetac = 267
+      CASE ( 7 )
+        ! R2SCAN
+        imeta = 497
+        imetac = 498
+      END SELECT
+    !
+    END IF
 #else
-    IF (imeta==3 .OR. imeta==5 .OR. imeta==6) &
+    IF (is_meta_dft) &
       CALL xclib_error( 'set_dft_from_name', 'libxc needed for this functional', 2 )
 #endif
     !
@@ -1283,10 +1297,13 @@ CONTAINS
     IF ( ANY(is_libxc(5:6)) ) THEN
        IF (imeta==263 .AND. imetac==267) THEN
           shortname = 'SCAN'
-          IF (scan_exx) shortname = 'SCAN0'
+       ELSEIF (imeta==264 .AND. imetac==267 .AND. scan_exx) THEN
+          shortname = 'SCAN0'
+       ELSEIF (imeta==497 .AND. imetac==498) THEN
+          shortname = 'R2SCAN'
        ELSEIF (imeta == 208 .AND. imetac==231) THEN
           shortname = 'TB09'
-       ENDIF  
+       ENDIF
     ENDIF
     !
     IF ( TRIM(shortname)=='no shortname' ) THEN

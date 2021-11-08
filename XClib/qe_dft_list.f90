@@ -25,7 +25,7 @@ MODULE qe_dft_list
   !
   SAVE
   !
-  INTEGER, PARAMETER :: nxc=10, ncc=14, ngcx=46, ngcc=14, nmeta=6
+  INTEGER, PARAMETER :: nxc=10, ncc=14, ngcx=46, ngcc=14, nmeta=7
   CHARACTER(LEN=4)   :: dft_LDAx_name(0:nxc),  dft_LDAc_name(0:ncc),  &
                         dft_GGAx_name(0:ngcx), dft_GGAc_name(0:ngcc), &
                         dft_MGGA_name(0:nmeta)
@@ -36,7 +36,7 @@ MODULE qe_dft_list
      INTEGER :: IDs(6)
   END TYPE dft_label
   !
-  INTEGER, PARAMETER :: n_dft=38
+  INTEGER, PARAMETER :: n_dft=39
   TYPE(dft_label) :: dft_full(n_dft)
   !
   !
@@ -63,7 +63,7 @@ MODULE qe_dft_list
                        'Q2DC', 'xxxx','BEEC' /                            !12 "  14
   ! MGGA exchange+correlation terms
   DATA dft_MGGA_name / 'NONE', 'TPSS', 'M06L', 'TB09', 'NONE', 'SCAN',  & ! 0 to  5
-                       'SCA0' /                                           ! 6
+                       'SCA0', 'xxxx' /                                   ! 6 "   7
   !
   !
   ! ---- Full DFTs ----
@@ -229,6 +229,10 @@ MODULE qe_dft_list
   DATA dft_full(38)%name     / 'SCAN0' /
   DATA dft_full(38)%name2    / 'none'  /
   DATA dft_full(38)%IDs(1:6) / 0,0,0,0,6,0 /
+  !
+  DATA dft_full(39)%name     / 'R2SCAN' /
+  DATA dft_full(39)%name2    / 'none' /
+  DATA dft_full(39)%IDs(1:6) / 0,0,0,0,7,0 /
   !
   !
 CONTAINS
