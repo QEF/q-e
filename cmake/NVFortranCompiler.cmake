@@ -10,10 +10,6 @@ if(QE_ENABLE_OPENACC)
     set_target_properties(OpenACC::OpenACC_Fortran PROPERTIES
                           INTERFACE_COMPILE_OPTIONS "-acc"
                           INTERFACE_LINK_OPTIONS "-acc")
-    add_library(OpenACC::OpenACC_C INTERFACE IMPORTED)
-    set_target_properties(OpenACC::OpenACC_C PROPERTIES
-                          INTERFACE_COMPILE_OPTIONS "-acc"
-                          INTERFACE_LINK_OPTIONS "-acc")
 endif()
 
 if(QE_ENABLE_CUDA)

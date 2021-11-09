@@ -297,11 +297,15 @@ endif(QE_ENABLE_OPENMP)
 # OpenACC
 # The following targets will be defined:
 add_library(qe_openacc_fortran INTERFACE)
-qe_install_targets(qe_openacc_fortran)
+add_library(qe_openacc_c INTERFACE)
+qe_install_targets(qe_openacc_fortran qe_openacc_c)
 ###########################################################
 if(QE_ENABLE_OPENACC)
+    find_package(OpenACC REQUIRED Fortran C)
     target_link_libraries(qe_openacc_fortran
         INTERFACE OpenACC::OpenACC_Fortran)
+    target_link_libraries(qe_openacc_c
+        INTERFACE OpenACC::OpenACC_C)
 endif(QE_ENABLE_OPENACC)
 
 ###########################################################
