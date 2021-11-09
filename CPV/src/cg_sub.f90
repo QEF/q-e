@@ -153,7 +153,12 @@ contains
 
       if (nbgrp > 1) &
          call errore(' runcg_uspp ', ' parallelization over bands not yet implemented ', 1)
-
+#if defined(__CUDA)
+      if (nkbus > 0 ) &
+         call errore(' runcg_uspp ', ' Ultrasoft case not ported to GPU ', 1)
+      if (tens) &
+         call errore(' runcg_uspp ', ' Ensemble DFT case not ported to GPU ', 1)
+#endif
       newscheme = .false.
       firstiter = .true.
 
