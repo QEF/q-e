@@ -14,7 +14,7 @@ MODULE exx
   !! Implements ACE: Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242.  
   !! Contains code for band parallelization over pairs of bands: see T. Barnes,
   !! T. Kurth, P. Carrier, N. Wichmann, D. Prendergast, P.R.C. Kent, J. Deslippe
-  !! Computer Physics Communications 2017, dx.doi.org/10.1016/j.cpc.2017.01.008.
+  !! Computer Physics Communications 2017, doi.org/10.1016/j.cpc.2017.01.008.
   !
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
