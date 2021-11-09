@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_file( )
+SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
   ! Wrapper routine, for backwards compatibility
