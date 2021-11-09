@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_file( reduce_io_ph )
+SUBROUTINE read_file( )
   !----------------------------------------------------------------------------
   !
   ! Wrapper routine, for backwards compatibility
@@ -27,7 +27,6 @@ SUBROUTINE read_file( reduce_io_ph )
   !
   INTEGER :: ik
   LOGICAL :: exst, wfc_is_collected
-  LOGICAL, OPTIONAL, INTENT(IN) :: reduce_io_ph
   !
   wfc_is_collected = .true.
   CALL read_file_new( wfc_is_collected )
@@ -37,8 +36,7 @@ SUBROUTINE read_file( reduce_io_ph )
   ! ... io_level = 1 so that a real file is opened
   !
   nwordwfc = nbnd*npwx*npol
-  IF ((.NOT. PRESENT(reduce_io_ph)) .OR. &
-      (PRESENT(reduce_io_ph) .AND. (.NOT. reduce_io_ph))) io_level = 1
+  IF ( io_level /= 0 ) io_level = 1
   CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
   !
   ! ... read wavefunctions in collected format, write them to file
@@ -58,8 +56,7 @@ SUBROUTINE read_file( reduce_io_ph )
           'read_file: Wavefunctions in collected format not available'
   END IF
   !
-  IF ((.NOT. PRESENT(reduce_io_ph)) .OR. &
-      (PRESENT(reduce_io_ph) .AND. (.NOT. reduce_io_ph))) CALL close_buffer  ( iunwfc, 'KEEP' )
+  IF ( io_level /= 0 ) CALL close_buffer  ( iunwfc, 'KEEP' )
   !
 END SUBROUTINE read_file
 !

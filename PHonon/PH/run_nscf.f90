@@ -55,7 +55,7 @@ SUBROUTINE run_nscf(do_band, iq)
   CALL start_clock( 'PWSCF' )
   !
   ! FIXME: following section does not belong to this subroutine
-  IF (done_bands(iq)) THEN
+  IF (done_bands(iq) .AND. (.NOT.reduce_io)) THEN
      WRITE (stdout,'(/,5x,"Bands found: reading from ",a)') TRIM(tmp_dir_phq)
      CALL clean_pw( .TRUE. )
      CALL close_files(.true.)

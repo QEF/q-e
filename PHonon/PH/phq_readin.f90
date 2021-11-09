@@ -82,12 +82,6 @@ SUBROUTINE phq_readin()
   !
   IMPLICIT NONE
   !
-  INTERFACE
-     SUBROUTINE read_file ( reduce_io_ph )
-       LOGICAL, OPTIONAL, INTENT(IN) :: reduce_io_ph
-     END SUBROUTINE read_file
-  END INTERFACE
-  !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   INTEGER :: ios, ipol, iter, na, it, ierr, ierr1
@@ -748,7 +742,7 @@ SUBROUTINE phq_readin()
   !
   ! DFPT+U: the occupation matrix ns is read via read_file
   !
-  CALL read_file ( reduce_io_ph = reduce_io )
+  CALL read_file ( )
   !
   magnetic_sym=noncolin .AND. domag
   !
