@@ -170,7 +170,9 @@ SUBROUTINE iosys()
                             lecrpa_           => lecrpa, &
                             scf_must_converge_=> scf_must_converge, & 
                             treinit_gvecs_    => treinit_gvecs, &  
-                            max_xml_steps_    => max_xml_steps 
+                            max_xml_steps_    => max_xml_steps, &
+                            tprnfor_          => tprnfor, &
+                            tstress_          => tstress
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -348,6 +350,8 @@ SUBROUTINE iosys()
   lecrpa_     = lecrpa  
   !
   lforce    = tprnfor
+  tprnfor_  = tprnfor
+  tstress_  = tstress
   !
   SELECT CASE( trim( calculation ) )
   CASE( 'scf' )
