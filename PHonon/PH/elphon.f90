@@ -100,10 +100,7 @@ SUBROUTINE elphon()
         IF (okpaw .AND. ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                              iuint3paw, imode0 + ipert, - 1 )
      END DO
-     IF (okpaw) THEN
-        IF (me_bgrp==0) CALL mp_bcast(int3_paw, ionode_id, inter_pool_comm )
-        CALL mp_bcast(int3_paw, root_bgrp, intra_bgrp_comm)
-     ENDIF
+     IF (okpaw) CALL mp_bcast(int3_paw, ionode_id, intra_image_comm)
      IF (doublegrid) THEN
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
