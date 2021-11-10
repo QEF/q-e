@@ -122,13 +122,13 @@ MODULE wave_gauge
             end do
          end do
       end if
-      !$acc update host(sb)
+      !$acc host_data use_device(sb)
       call mp_sum(sb, intra_pool_comm)
-      !$acc update device(sb)
+      !$acc end host_data
       if (use_t_plus) then
-         !$acc update host(sa)
+         !$acc host_data use_device(sa)
          call mp_sum(sa, intra_pool_comm)
-         !$acc update device(sa)
+         !$acc end host_data
       end if
 
       ! compute scalar products that appear due to the ( 1 - P ) projector over

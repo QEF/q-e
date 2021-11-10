@@ -9,6 +9,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -19,17 +20,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',(abs(arr))
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real((abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -45,6 +54,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -55,17 +65,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -81,6 +99,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -91,17 +110,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -117,6 +144,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -127,17 +155,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -153,6 +189,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -163,17 +200,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -189,6 +234,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -199,17 +245,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -225,6 +279,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -235,17 +290,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -261,6 +324,7 @@ integer :: iun,reclen,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -271,17 +335,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -297,6 +369,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -307,17 +380,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',(abs(arr))
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real((abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -333,6 +414,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -343,17 +425,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -369,6 +459,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -379,17 +470,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -405,6 +504,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -415,17 +515,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -441,6 +549,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -451,17 +560,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -477,6 +594,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -487,17 +605,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -513,6 +639,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -523,17 +650,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -549,6 +684,7 @@ integer :: iun,reclen,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -559,17 +695,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -585,6 +729,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -595,17 +740,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',(abs(arr))
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real((abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -621,6 +774,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -631,17 +785,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -657,6 +819,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -667,17 +830,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -693,6 +864,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -703,17 +875,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -729,6 +909,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -739,17 +920,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -765,6 +954,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -775,17 +965,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -801,6 +999,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -811,17 +1010,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -837,6 +1044,7 @@ integer :: iun,reclen,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -847,17 +1055,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -873,6 +1089,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -883,17 +1100,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',(abs(arr))
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real((abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real((abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -909,6 +1134,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -919,17 +1145,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -945,6 +1179,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -955,17 +1190,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -981,6 +1224,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -991,17 +1235,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1017,6 +1269,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1027,17 +1280,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1053,6 +1314,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1063,17 +1325,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1089,6 +1359,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1099,17 +1370,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1125,6 +1404,7 @@ integer :: iun,reclen,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+real(kind=dp) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1135,17 +1415,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = real(sum(abs(arr_-arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = real(maxval(abs(arr_-arr)),kind=dp)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = real(sum(abs(arr)),kind=dp)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1161,6 +1449,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1171,17 +1460,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',(abs(arr))
+    sumt = int((abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int((abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int((abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1197,6 +1494,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1207,17 +1505,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1233,6 +1539,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1243,17 +1550,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1269,6 +1584,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1279,17 +1595,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1305,6 +1629,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1315,17 +1640,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1341,6 +1674,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1351,17 +1685,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1377,6 +1719,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1387,17 +1730,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1413,6 +1764,7 @@ integer :: iun,reclen,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1423,17 +1775,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1449,6 +1809,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1459,17 +1820,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',(abs(arr))
+    sumt = int((abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int((abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int((abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1485,6 +1854,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1495,17 +1865,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1521,6 +1899,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1531,17 +1910,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1557,6 +1944,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1567,17 +1955,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1593,6 +1989,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1603,17 +2000,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1629,6 +2034,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1639,17 +2045,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1665,6 +2079,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1675,17 +2090,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)
@@ -1701,6 +2124,7 @@ integer :: iun,reclen,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
+integer(kind=i4b) :: sumt
 if ( .not. checkpoint_debug_active) then
     return
 end if
@@ -1711,17 +2135,25 @@ iun = find_free_unit()
 inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
-    WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
     allocate(arr_, mold=arr)
     read (iun, rec=1) arr_
     close(iun)
-    write(*,*) msg_pref,'sum of absolute value of difference = ',sum(abs(arr_-arr))
-    write(*,*) msg_pref,'max of absolute value of difference = ',maxval(abs(arr_-arr))
-    write(*,*) msg_pref,'sum of absolute value of computed array = ',sum(abs(arr))
+    sumt = int(sum(abs(arr_-arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    sumt = int(maxval(abs(arr_-arr)),kind=i4b)
+    call mp_max(sumt,communicator) 
+    write(*,*) msg_pref,'max of absolute value of difference = ',sumt
+    sumt = int(sum(abs(arr)),kind=i4b)
+    call mp_sum(sumt,communicator) 
+    write(*,*) msg_pref,'sum of absolute value of computed array = ',sumt
     deallocate(arr_)
 else ! write the file
-    WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
+    if (ionode) &
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
     open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
     write (iun, rec=1) arr
     close(iun)

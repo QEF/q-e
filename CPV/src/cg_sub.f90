@@ -814,13 +814,15 @@ contains
             lambda_repl(i, j) = entmp
          enddo
          !$acc end parallel
-         !$acc update host(lambda_repl(1:nudx,1:nudx))
+         !$acc host_data use_device(lambda_repl)
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
+         !$acc end host_data
+         !$acc update host(lambda_repl)
          call CHECKPOINT(lambda_repl)
          !
          CALL distribute_lambda(lambda_repl, lambda(:, :, is), idesc(:, is))
          !
-      end do
+      enddo
 
       if (l_cprestart .and. .not. tens .and. nspin == 1 .and. nkbus < 1) then
 
@@ -872,8 +874,10 @@ contains
             lambda_repl(i, j) = entmp
          enddo
          !$acc end parallel
-         !$acc update host(lambda_repl(1:nudx,1:nudx))
+         !$acc host_data use_device(lambda_repl)
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
+         !$acc end host_data
+         !$acc update host(lambda_repl)
          call CHECKPOINT(lambda_repl)
          CALL distribute_lambda(lambda_repl, lambda(:, :, 1), idesc(:, 1))
          cm(:, :) = c0(:, :)

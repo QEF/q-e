@@ -22,7 +22,7 @@ if [ $QE_USE_MPI == 1 ]; then
 #
   export PARA_SUFFIX=" -nk 1 -nd 1 -nb 1 -nt 1 "
 else
-  unset PARA_PREFIX
+  export PARA_PREFIX="mpirun -np 1"
   unset PARA_SUFFIX
 fi
 
