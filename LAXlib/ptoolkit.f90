@@ -1182,6 +1182,7 @@ SUBROUTINE laxlib_dsqmsym_x( n, a, lda, idesc )
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !! laxlib descriptor
    !
+   TYPE(la_descriptor) :: desc
 #if defined __MPI
    INTEGER :: istatus( MPI_STATUS_SIZE )
 #endif
@@ -5023,7 +5024,6 @@ SUBROUTINE laxlib_pdpotrf_x( sll, ldx, n, idesc )
    REAL(DP) :: sll( ldx, ldx )
    !! matrix sll
    REAL(DP) :: one, zero
-   REAL(DP) :: sll( ldx, ldx )
    integer  :: myrow, mycol, ierr
    integer  :: jb, info, ib, kb
    integer  :: jnr, jir, jic, jnc
