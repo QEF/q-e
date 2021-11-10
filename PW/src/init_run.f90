@@ -10,6 +10,7 @@ SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
   USE klist,              ONLY : nkstot
+  USE force_mod,          ONLY : lforce, lstres
   USE start_k,            ONLY : nks_start, nk1, nk2, nk3, k1, k2, k3
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
@@ -39,7 +40,7 @@ SUBROUTINE init_run()
   USE noncollin_module,   ONLY : domag
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
-  USE control_flags,      ONLY : use_gpu, tstress, tprnfor
+  USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
   !
@@ -130,7 +131,7 @@ SUBROUTINE init_run()
      CALL set_h_ainv()
   END IF
   IF (mbd_vdw) THEN
-     CALL init_mbd( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
+     CALL init_mbd( nks_start, nk1, nk2, nk3, k1, k2, k3, lforce, lstres )
   END IF
   !
   CALL allocate_wfc_k()

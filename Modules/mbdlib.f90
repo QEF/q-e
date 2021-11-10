@@ -47,16 +47,16 @@ MODULE libmbd_interface
 !#############################################################
 ! This subroutine sets up the library before the first call
 !#############################################################
-SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
+SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, lforce, lstres )
   !
   INTEGER, INTENT(IN) :: nks_start, nk1, nk2, nk3, k1, k2, k3
-  LOGICAL, INTENT(IN) :: tprnfor, tstress
+  LOGICAL, INTENT(IN) :: lforce, lstres
   !
   ! Allocation of variables that depend on the number of atoms
   !
   ALLOCATE(inp%atom_types(nat))
   !
-  do_gradients = tprnfor .OR. tstress
+  do_gradients = lforce .OR. lstres
   IF ( do_gradients ) THEN
      !
      IF(.NOT.ALLOCATED(mbd_gradient)) ALLOCATE(mbd_gradient(3, nat))
