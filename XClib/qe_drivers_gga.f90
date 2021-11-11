@@ -80,12 +80,11 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ntids = omp_get_num_threads()
 #endif
   !
-  !
 #if defined(_OPENACC)
-!$acc data copyin(rho_in,grho_in), copyout(sx_out,sc_out,v1x_out,v2x_out,v1c_out,v2c_out)
+!$acc data deviceptr( rho_in(length), grho_in(length), sx_out(length), sc_out(length), &
+!$acc&                v1x_out(length), v2x_out(length), v1c_out(length), v2c_out(length) )
 !$acc parallel loop  
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC)
+#else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp          v2x, v2x_, v2xsr, sc, v1c, v2c ) &
@@ -95,6 +94,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 !$omp         v1c_out, v2c_out, sx_out, sc_out )
 !$omp do
 #endif
+
   DO ir = 1, length  
      !
      grho = grho_in(ir)
@@ -452,7 +452,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   sx_tot = 0.0_DP
   !
 #if defined(_OPENACC)
-!$acc data copyin(rho_in, grho2_in), copyout(sx_tot, v1x_out, v2x_out)
+!$acc data deviceptr( rho_in(length,2), grho2_in(length,2), sx_tot(length), &
+!$acc&                v1x_out(length,2), v2x_out(length,2) )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -914,7 +915,8 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
   !
 #if defined(_OPENACC)
-!$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
+!$acc data deviceptr( rho_in(length), zeta_io(length), grho_in(length), &
+!$acc&                sc_out(length), v1c_out(length,2), v2c_out(length) )
 !$acc parallel loop
 #else
 !$omp parallel if(ntids==1) default(none) &
@@ -1042,13 +1044,9 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   ntids = omp_get_num_threads()
 #endif    
   !
-  sc  = 0.0_DP
-  v1c = 0.0_DP
-  v2c = 0.0_DP
-  v2c_ud = 0.0_DP
-  !
 #if defined(_OPENACC) 
-!$acc data copyin(rho_in, grho_in, grho_ud_in), copyout(sc, v1c, v2c, v2c_ud)
+!$acc data deviceptr( rho_in(length,2), grho_in(length,2), grho_ud_in(length), &
+!$acc&                sc(length), v1c(length,2), v2c(length,2), v2c_ud(length) )
 !$acc parallel loop
 #else 
 !$omp parallel if(ntids==1) default(none) &
@@ -1107,7 +1105,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       !CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)  !***acc test
+       !CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)
        !
     END SELECT
     !
@@ -1122,76 +1120,6 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   RETURN
   !
 END SUBROUTINE gcc_spin_more
-!
-!
-! !--------------------------------------------------------------------------------
-! SUBROUTINE gcc_spin_beef( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
-!   !-------------------------------------------------------------------------------
-!   !! BEEF Gradient correction.  
-!   !
-!   USE beef_interface, ONLY: beeflocalcorrspin
-!   !
-!   IMPLICIT NONE
-!   !
-!   INTEGER, INTENT(IN) :: length
-!   REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
-!   REAL(DP), INTENT(INOUT), DIMENSION(length) :: zeta_io
-!   REAL(DP), INTENT(IN), DIMENSION(length) :: grho_in
-!   REAL(DP), INTENT(OUT), DIMENSION(length) :: sc_out
-!   REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c_out
-!   REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
-!   !
-!   ! ... local variables
-!   !
-!   INTEGER :: ir
-!   REAL(DP) :: rho, zeta, grho
-!   REAL(DP) :: sc, v1c_up, v1c_dw, v2c
-!   !
-!   IF ( igcc == 14 ) THEN
-!     !
-! #if defined(_OPENACC)
-!     !$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
-!     !$acc parallel loop
-! #endif
-!     DO ir = 1, length
-!       !
-!       rho  = rho_in(ir)
-!       grho = grho_in(ir)
-!       IF ( ABS(zeta_io(ir))<=1.0_DP ) zeta_io(ir) = SIGN( MIN(ABS(zeta_io(ir)), &
-!                                        (1.0_DP-rho_threshold_gga)), zeta_io(ir) )
-!       zeta = zeta_io(ir)
-!       !
-!       IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
-!          SQRT(ABS(grho))<=rho_threshold_gga ) THEN
-!         sc_out(ir) = 0.0_DP
-!         v1c_out(ir,1) = 0.0_DP ; v2c_out(ir) = 0.0_DP
-!         v1c_out(ir,2) = 0.0_DP
-!        CYCLE
-!       ENDIF
-!       rho  = rho_in(ir)
-!       grho = grho_in(ir)
-!       zeta = zeta_io(ir)
-!       ! 
-!       IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
-!            SQRT(ABS(grho))<=rho_threshold_gga ) CYCLE
-!       !
-!       CALL beeflocalcorrspin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0 )
-!       !
-!       sc_out(ir)  = sc
-!       v1c_out(ir,1) = v1c_up
-!       v1c_out(ir,2) = v1c_dw
-!       v2c_out(ir) = v2c
-!       !
-!     ENDDO
-! #if defined(_OPENACC)
-!     !$acc end data
-! #endif
-!     !
-!   ENDIF
-!   !
-!   RETURN
-!   !
-! END SUBROUTINE gcc_spin_beef
 !
 !
 END MODULE qe_drivers_gga

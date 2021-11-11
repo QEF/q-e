@@ -401,13 +401,14 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   !$acc data copyin( rho_core, rhog_core, rho ) copyout( v )
   !$acc data copyin( rho%of_r(dfftp%nnr,nspin), rho%of_g(ngm,nspin) )
-  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v )
   !
   ALLOCATE( ex(dfftp%nnr), vx(dfftp%nnr,nspin) )
   ALLOCATE( ec(dfftp%nnr), vc(dfftp%nnr,nspin) )
   !$acc data create( ex(dfftp%nnr), ec(dfftp%nnr), vx(dfftp%nnr,nspin), &
   !$acc&             vc(dfftp%nnr,nspin) )
-  !$acc host_data use_device( ex, ec, vx, vc )
+  !
+  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v,&
+  !$acc&                      ex, ec, vx, vc )
   !
   !$acc parallel loop
   DO ir = 1, dfftp%nnr
@@ -499,7 +500,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
-  !$acc end host_data
   !$acc end data
   !$acc end data
   !
