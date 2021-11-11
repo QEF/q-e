@@ -13,7 +13,8 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !  this function returns the XC potential and energy in LDA or
   !  LSDA approximation
   !
-  use kinds, only : DP
+  use kinds,  only : DP
+  use xc_lib, only : xc
   implicit none
   integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
   real(DP), intent(in) :: rho(2), rhoc ! the system density

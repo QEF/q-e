@@ -19,7 +19,7 @@ MODULE xc_lib
   PRIVATE
   !
   !
-  !PUBLIC :: xc, dmxc         !LDA
+  PUBLIC :: xc !, dmxc        !LDA
   !
   PUBLIC :: xc_gcx !, dgcxc   !GGA
   !
@@ -56,6 +56,17 @@ MODULE xc_lib
             xclib_reset_dft,                   &
             dft_force_hybrid
   !
+  INTERFACE xc
+     SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, run_on_gpu_ )
+       USE kind_l, ONLY: DP  
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length, srd, svd
+       REAL(DP), INTENT(IN) :: rho_in(length,srd)
+       REAL(DP), INTENT(OUT) :: ex_out(length), ec_out(length)
+       REAL(DP), INTENT(OUT) :: vx_out(length,svd), vc_out(length,svd)
+       LOGICAL, OPTIONAL, INTENT(IN) :: run_on_gpu_
+     END SUBROUTINE
+  END INTERFACE
   !
   INTERFACE xc_gcx
      SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
