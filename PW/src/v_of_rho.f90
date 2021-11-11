@@ -63,7 +63,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate exchange-correlation potential
   !
-  IF ( xclib_dft_is('meta') ) THEN
+  IF (xclib_dft_is('meta')) THEN
      CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   ELSE
      CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
@@ -337,10 +337,10 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
 END SUBROUTINE v_xc_meta
 !
-!
+!------------------------------------------------------------------------------
 SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
-  !! Exchange-Correlation potential Vxc(r) from n(r)
+  !! Exchange-Correlation potential from charge density.
   !
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
@@ -355,6 +355,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE xc_lib,           ONLY : xc
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
+  USE control_flags,    ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -365,19 +366,17 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
   !! the core charge in reciprocal space
   REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin)
-  !! V_xc potential
+  !! \(V_{xc}\) potential
   REAL(DP), INTENT(OUT) :: vtxc
-  !! integral V_xc * rho
+  !! integral \(V_{xc}\cdot\text{rho}\)
   REAL(DP), INTENT(OUT) :: etxc
-  !! E_xc energy
+  !! \(E_{xc}\) energy
   !
   ! ... local variables
   !
   REAL(DP) :: rhoneg(2), vs
-  !
-  !REAL(DP), ALLOCATABLE :: arhox(:), amag(:), zeta(:)
-  REAL(DP) :: arho, amag
-  REAL(DP) :: rhoup2, rhodw2
+  REAL(DP) :: rhoup2, rhodw2, rhoneg1, rhoneg2
+  REAL(DP) :: arho, amag, vtxc24
   REAL(DP), ALLOCATABLE :: ex(:), ec(:)
   REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
   ! In order:
@@ -391,103 +390,118 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   INTEGER :: ir, ipol
     ! counter on mesh points
     ! counter on nspin
-  !
+    ! number of mesh points (=dfftp%nnr)
   REAL(DP), PARAMETER :: vanishing_charge = 1.D-10, &
                          vanishing_mag    = 1.D-20
   !
-  !
   CALL start_clock( 'v_xc' )
   !
-  ALLOCATE( ex(dfftp%nnr) )
-  ALLOCATE( ec(dfftp%nnr) )
-  ALLOCATE( vx(dfftp%nnr,nspin) )
-  ALLOCATE( vc(dfftp%nnr,nspin) )
+  etxc = 0.D0 ;  rhoneg1 = 0.D0
+  vtxc = 0.D0 ;  rhoneg2 = 0.D0
   !
-  etxc   = 0.D0
-  vtxc   = 0.D0
-  v(:,:) = 0.D0
-  rhoneg = 0.D0
+  !$acc data copyin( rho_core, rhog_core, rho ) copyout( v )
+  !$acc data copyin( rho%of_r(dfftp%nnr,nspin), rho%of_g(ngm,nspin) )
+  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v )
   !
+  ALLOCATE( ex(dfftp%nnr), vx(dfftp%nnr,nspin) )
+  ALLOCATE( ec(dfftp%nnr), vc(dfftp%nnr,nspin) )
+  !$acc data create( ex(dfftp%nnr), ec(dfftp%nnr), vx(dfftp%nnr,nspin), &
+  !$acc&             vc(dfftp%nnr,nspin) )
+  !$acc host_data use_device( ex, ec, vx, vc )
   !
-  rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
+  !$acc parallel loop
+  DO ir = 1, dfftp%nnr
+    rho%of_r(ir,1) = rho%of_r(ir,1) + rho_core(ir)
+  ENDDO
   !
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
      ! ... spin-unpolarized case
      !
-     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc )
+     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, .TRUE. )
      !
+     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
+     !$acc&              present(rho)
      DO ir = 1, dfftp%nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
         etxc = etxc + e2*( ex(ir) + ec(ir) )*rho%of_r(ir,1)
         rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
         vtxc = vtxc + v(ir,1)*rho%of_r(ir,1)
-        IF (rho%of_r(ir,1) < 0.D0) rhoneg(1) = rhoneg(1)-rho%of_r(ir,1)
+        IF (rho%of_r(ir,1) < 0.D0) rhoneg1 = rhoneg1-rho%of_r(ir,1)
      ENDDO
      !
      !
   ELSEIF ( nspin == 2 ) THEN
      ! ... spin-polarized case
      !
-     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc )
+     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc, .TRUE. )
      !
-     DO ir = 1, dfftp%nnr   !OMP ?
-        v(ir,:) = e2*( vx(ir,:) + vc(ir,:) )
+     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
+     !$acc&              reduction(-:rhoneg2) present(rho)
+     DO ir = 1, dfftp%nnr
+        v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
+        v(ir,2) = e2*( vx(ir,2) + vc(ir,2) )
         etxc = etxc + e2*( (ex(ir) + ec(ir))*rho%of_r(ir,1) )
         rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
         vtxc = vtxc + ( ( v(ir,1) + v(ir,2) )*rho%of_r(ir,1) + &
-                        ( v(ir,1) - v(ir,2) )*rho%of_r(ir,2) )
+                        ( v(ir,1) - v(ir,2) )*rho%of_r(ir,2) )*0.5d0
         !
         rhoup2 = rho%of_r(ir,1)+rho%of_r(ir,2)
         rhodw2 = rho%of_r(ir,1)-rho%of_r(ir,2)
-        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) - rhoup2
-        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) - rhodw2
+        IF (rhoup2 < 0.d0) rhoneg1 = rhoneg1 - rhoup2*0.5d0
+        IF (rhodw2 < 0.d0) rhoneg2 = rhoneg2 - rhodw2*0.5d0
      ENDDO
      !
-     vtxc   = 0.5d0 * vtxc
-     rhoneg = 0.5d0 * rhoneg
-     !
-     !
-  ELSE IF ( nspin == 4 ) THEN
-     ! ... noncolinear case
-     !
-     CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc )
-     !
-     DO ir = 1, dfftp%nnr  !OMP ?
-        arho = ABS( rho%of_r(ir,1) )
-        IF ( arho < vanishing_charge ) CYCLE
-        vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
-        v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
-        !
-        amag = SQRT( SUM( rho%of_r(ir,2:4)**2 ) )
-        IF ( amag > vanishing_mag ) THEN
-           v(ir,2:4) = e2 * vs * rho%of_r(ir,2:4) / amag
-           vtxc = vtxc + SUM( v(ir,2:4) * rho%of_r(ir,2:4) )
-        ENDIF
-        etxc = etxc + e2*( ex(ir) + ec(ir) ) * arho
-        !
-        rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
-        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
-        IF ( amag / arho > 1.D0 )  rhoneg(2) = rhoneg(2) + 1.D0/omega
-        vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
-     ENDDO
-     !
-     !
+   ELSEIF ( nspin == 4 ) THEN
+      ! ... noncollinear case
+      !
+      CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, .TRUE. )
+      !
+      !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
+      !$acc&              reduction(-:rhoneg2) present(rho)
+      DO ir = 1, dfftp%nnr
+         arho = ABS( rho%of_r(ir,1) )
+         IF ( arho < vanishing_charge ) CYCLE
+         vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
+         v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
+         !
+         amag = SQRT( SUM( rho%of_r(ir,2:4)**2 ) )
+         IF ( amag > vanishing_mag ) THEN
+            v(ir,2:4) = e2 * vs * rho%of_r(ir,2:4) / amag
+            vtxc24 = SUM( v(ir,2:4) * rho%of_r(ir,2:4) )
+         ELSE
+            vtxc24 = 0.d0
+         ENDIF
+         etxc = etxc + e2*( ex(ir) + ec(ir) ) * arho
+         !
+         rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
+         IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg1 = rhoneg1 - rho%of_r(ir,1)
+         IF (   amag / arho  > 1.D0 )  rhoneg2 = rhoneg2 + 1.D0/omega
+         vtxc = vtxc + vtxc24 + v(ir,1) * rho%of_r(ir,1)
+      ENDDO
+      !
   ENDIF
   !
-  DEALLOCATE( ex, ec )
-  DEALLOCATE( vx, vc )
+  !$acc end host_data
+  !$acc end data
+  DEALLOCATE( ex, vx )
+  DEALLOCATE( ec, vc )
   !
   CALL mp_sum(  rhoneg , intra_bgrp_comm )
   !
-  rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  rhoneg1 = rhoneg1 * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  rhoneg2 = rhoneg2 * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
-  IF ( rhoneg(1) > eps8 .OR. rhoneg(2) > eps8 ) &
-     WRITE( stdout,'(/,5X,"negative rho (up, down): ",2ES10.3)') rhoneg
+  IF ( rhoneg1 > eps8 .OR. rhoneg2 > eps8 ) &
+     WRITE( stdout,'(/,5X,"negative rho (up, down): ",2ES10.3)') rhoneg1, rhoneg2
   !
   ! ... energy terms, local-density contribution
   !
   vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  !
+  !$acc end host_data
+  !$acc end data
+  !$acc end data
   !
   ! ... add gradient corrections (if any)
   !
