@@ -34,7 +34,6 @@ SUBROUTINE elphon()
   USE dfile_star,    ONLY : dvscf_star
   USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,        ONLY : mp_bcast
-  USE mp_pools,  ONLY : inter_pool_comm
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
