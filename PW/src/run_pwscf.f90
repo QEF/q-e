@@ -40,11 +40,12 @@ SUBROUTINE run_pwscf( exit_status )
   USE upf_params,           ONLY : lmaxx
   USE cell_base,            ONLY : fix_volume, fix_area
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
-  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs, lensemb
+  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs,&
+                                   lensemb, lforce=>tprnfor, tstress
   USE control_flags,        ONLY : io_level
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
-  USE force_mod,            ONLY : lforce, lstres, sigma, force
+  USE force_mod,            ONLY : sigma, force
   USE ions_base,            ONLY : if_pos
   USE check_stop,           ONLY : check_stop_init, check_stop_now
   USE mp_images,            ONLY : intra_image_comm
@@ -188,7 +189,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... stress calculation
      !
-     IF ( lstres ) CALL stress( sigma )
+     IF ( tstress ) CALL stress( sigma )
      !
      IF ( lmd .OR. lbfgs ) THEN
         !
