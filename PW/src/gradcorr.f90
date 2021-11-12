@@ -20,7 +20,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE noncollin_module,     ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE fft_rho,              ONLY : rho_r2g
+  USE fft_rho,              ONLY : rho_r2g, rho_r2g_gpu
   USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE
@@ -80,17 +80,17 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   IF ( nspin == 4 .AND. domag ) THEN
      !
      
-     !$acc data copyin(rho) copyout(rhoaux, segni )
-     !$acc host_data use_device( rho, rhoaux, segni )
+     !$acc data copyin(rho) copyout(rhoaux, rhogaux, segni )
+     !$acc host_data use_device( rho, rhoaux, rhogaux, segni )
      IF ( use_gpu ) CALL compute_rho_gpu( rho, rhoaux, segni, dfftp%nnr )
      IF (.NOT. use_gpu) CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
-     !$acc end host_data
-     !$acc end data
-     
      !
      ! ... bring starting rhoaux to G-space
      !
-     CALL rho_r2g ( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+     IF ( use_gpu ) CALL rho_r2g_gpu( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+     IF (.NOT. use_gpu) CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+     !$acc end host_data
+     !$acc end data
      !
   ELSE
      !
