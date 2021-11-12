@@ -81,8 +81,6 @@ SUBROUTINE iosys()
                             pseudo_dir_cur, restart_dir, &
                             check_tempdir, clean_tempdir, nd_nmbr
   !
-  USE force_mod,     ONLY : lforce, lstres
-  !
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
   !
@@ -153,7 +151,8 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
-                            lensemb, &
+                            lensemb, lforce   => tprnfor, &
+                            tstress_          => tstress, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -529,7 +528,7 @@ SUBROUTINE iosys()
   !
   dt_    = dt
   nstep_ = nstep
-  lstres = lmovecell .OR. ( tstress .and. lscf )
+  tstress_ = lmovecell .OR. ( tstress .and. lscf )
   !
   ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
   !
@@ -565,7 +564,7 @@ SUBROUTINE iosys()
   ENDIF
   !
   IF ( (tefield.or.gate) .and. tstress ) THEN
-     lstres = .false.
+     tstress_ = .false.
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field and gates",/)' )
   ENDIF
@@ -623,7 +622,7 @@ SUBROUTINE iosys()
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &
        'BEWARE:  force calculation with tetrahedra (not recommanded)')
-     IF( lstres ) CALL infomsg( 'iosys', &
+     IF( tstress_ ) CALL infomsg( 'iosys', &
        'BEWARE: stress calculation with tetrahedra (not recommanded)')
   END IF
   IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
@@ -1439,8 +1438,8 @@ SUBROUTINE iosys()
       !
   END SELECT
   !
-  IF ( do_comp_mt .AND. lstres ) THEN
-     lstres = .false.
+  IF ( do_comp_mt .AND. tstress_ ) THEN
+     tstress_ = .false.
      WRITE( stdout, &
           '(5x,"Stress calculation not meaningful in isolated systems",/)' )
   END IF
@@ -1633,7 +1632,7 @@ SUBROUTINE iosys()
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
      ecutfock_ = ecutfock
   END IF
-  IF ( lstres .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
+  IF ( tstress_ .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
          'stress for hybrid functionals not available with pools', 1)
   IF ( lmovecell.AND. xclib_dft_is('hybrid') ) CALL infomsg('iosys',&
          'Variable cell and hybrid XC little tested')
