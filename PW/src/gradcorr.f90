@@ -13,14 +13,15 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : ngm, g
+  USE gvect,                ONLY : ngm, g, g_d
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega
   USE xc_lib,               ONLY : igcc_is_lyp, xclib_dft_is, xc_gcx
   USE noncollin_module,     ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE fft_rho,              ONLY: rho_r2g
+  USE fft_rho,              ONLY : rho_r2g
+  USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -78,7 +79,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   IF ( nspin == 4 .AND. domag ) THEN
      !
-     CALL compute_rho( rho, rhoaux, segni, dfftp%nnr ) 
+     CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
      !
      ! ... bring starting rhoaux to G-space
      !
@@ -95,14 +96,32 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
   ENDIF
   !
+  
+  
   DO is = 1, nspin0
-     !
-     rhoaux(:,is)  = fac *  rho_core(:) +  rhoaux(:,is)
-     rhogaux(:,is) = fac * rhog_core(:) + rhogaux(:,is)
-     !
-     CALL fft_gradient_g2r( dfftp, rhogaux(1,is), g, grho(1,1,is) )
-     !
+    DO ir = 1, dfftp%nnr
+      rhoaux(ir,is) = fac * rho_core(ir) + rhoaux(ir,is)
+    ENDDO
   ENDDO
+  
+  DO is = 1, nspin0
+    DO ir = 1, ngm
+      rhogaux(ir,is) = CMPLX(fac,kind=DP) * rhog_core(ir) + rhogaux(ir,is)
+    ENDDO
+  ENDDO
+  !
+  
+  !$acc data copyin( rhogaux ) copyout( grho )
+  !$acc host_data use_device( rhogaux, grho )
+  DO is = 1, nspin0
+    !CALL fft_gradient_g2r( dfftp, rhogaux(1,is), g, grho(1,1,is) )
+    IF ( use_gpu ) CALL fft_gradient_g2r_gpu( dfftp, rhogaux(:,is), g_d, grho(:,:,is) )
+    IF (.NOT. use_gpu) CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
+  ENDDO
+  !$acc end host_data
+  !$acc end data
+  
+  
   !
   DEALLOCATE( rhogaux )
   !
