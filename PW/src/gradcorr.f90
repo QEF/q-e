@@ -79,7 +79,14 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   IF ( nspin == 4 .AND. domag ) THEN
      !
-     CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
+     
+     !$acc data copyin(rho) copyout(rhoaux, segni )
+     !$acc host_data use_device( rho, rhoaux, segni )
+     IF ( use_gpu ) CALL compute_rho_gpu( rho, rhoaux, segni, dfftp%nnr )
+     IF (.NOT. use_gpu) CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
+     !$acc end host_data
+     !$acc end data
+     
      !
      ! ... bring starting rhoaux to G-space
      !
@@ -96,8 +103,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
   ENDIF
   !
-  
-  
+
   DO is = 1, nspin0
     DO ir = 1, dfftp%nnr
       rhoaux(ir,is) = fac * rho_core(ir) + rhoaux(ir,is)
@@ -114,14 +120,12 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !$acc data copyin( rhogaux ) copyout( grho )
   !$acc host_data use_device( rhogaux, grho )
   DO is = 1, nspin0
-    !CALL fft_gradient_g2r( dfftp, rhogaux(1,is), g, grho(1,1,is) )
     IF ( use_gpu ) CALL fft_gradient_g2r_gpu( dfftp, rhogaux(:,is), g_d, grho(:,:,is) )
     IF (.NOT. use_gpu) CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
   ENDDO
   !$acc end host_data
   !$acc end data
-  
-  
+
   !
   DEALLOCATE( rhogaux )
   !

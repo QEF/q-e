@@ -33,9 +33,9 @@ SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, run_on_
   LOGICAL, OPTIONAL, INTENT(IN) :: run_on_gpu_
   !! whether you wish to run on gpu in case use_gpu is true
   !
-  LOGICAL :: run_on_gpu = .FALSE.
+  LOGICAL :: run_on_gpu
   !
-  !
+  run_on_gpu = .FALSE.
   IF ( PRESENT(run_on_gpu_) ) run_on_gpu = run_on_gpu_
   !
   IF ( run_on_gpu ) THEN
