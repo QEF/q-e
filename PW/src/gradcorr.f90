@@ -210,15 +210,22 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
+  
+  !$acc data copyin(rhoaux, h) copy(v) create(dh)
+  !$acc host_data use_device( rhoaux, h, v, dh)
   DO is = 1, nspin0
-     !
-     CALL fft_graddot( dfftp, h(1,1,is), g, dh )
-     !
-     v(:,is) = v(:,is) - dh(:)
-     !
-     vtxcgc = vtxcgc - SUM( dh(:) * rhoaux(:,is) )
-     !
-  END DO
+     IF ( use_gpu )   CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
+     IF ( .NOT. use_gpu ) CALL fft_graddot( dfftp, h(1,1,is), g, dh )
+     !$acc parallel loop reduction(-:vtxcgc)
+     DO k = 1, dfftp%nnr
+       v(k,is) = v(k,is) - dh(k)
+       vtxcgc = vtxcgc - dh(k) * rhoaux(k,is)
+     ENDDO
+  ENDDO
+  !$acc end host_data
+  !$acc end data
+  
+  
   !
   vtxc = vtxc + omega * vtxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
   etxc = etxc + omega * etxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
