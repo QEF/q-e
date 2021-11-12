@@ -56,6 +56,7 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
   !
   ALLOCATE(inp%atom_types(nat))
   !
+  EmbdvdW  = 0.0_dp
   do_gradients = tprnfor .OR. tstress
   IF ( do_gradients ) THEN
      !
@@ -87,7 +88,8 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
       inp%k_grid = [nk1, nk2, nk3]
       !
       IF (k1 .EQ. k2 .AND. k2 .EQ. k3 .AND. k3 .EQ. 0) THEN
-        inp%k_grid_shift = 0.0_DP
+        ! inp%k_grid_shift = 0.0_DP
+        CALL infomsg('mbdlib','k-point shift ignored')
       ELSE
         inp%k_grid_shift = 0.5_DP
       ENDIF
@@ -99,8 +101,8 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
     !
   ENDIF
   !
-  WRITE(msg, '("K-point grid and shift: "3I3" "F4.2)') inp%k_grid, inp%k_grid_shift
-  CALL infomsg('mbdlib', TRIM(msg))
+  WRITE(stdout, '(5x,"mbdlib: K-point grid set to ",3I3,", shift: ",E4.2)') &
+          inp%k_grid, inp%k_grid_shift
   !
   select case (TRIM(get_dft_short()))  ! An empirical factor needs to be set based on the functiona
   CASE ('PBE')
