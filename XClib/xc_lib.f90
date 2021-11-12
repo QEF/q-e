@@ -23,7 +23,7 @@ MODULE xc_lib
   !
   PUBLIC :: xc_gcx !, dgcxc   !GGA
   !
-  !PUBLIC :: xc_metagcx       !MGGA
+  PUBLIC :: xc_metagcx        !MGGA
   !
   PUBLIC :: xclib_set_dft_from_name,           &
             xclib_set_dft_IDs,                 &
@@ -83,6 +83,21 @@ MODULE xc_lib
        LOGICAL,  OPTIONAL, INTENT(IN)  :: run_on_gpu_
      END SUBROUTINE
   END INTERFACE
+  !
+  !
+  INTERFACE xc_metagcx
+     SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
+                            v1c, v2c, v3c, run_on_gpu_ )
+       USE kind_l, ONLY: DP
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: length, ns, np
+       REAL(DP), INTENT(IN) :: rho(length,ns), grho(3,length,ns), tau(length,ns)
+       REAL(DP), INTENT(OUT) :: ex(length), ec(length)
+       REAL(DP), INTENT(OUT) :: v1x(length,ns), v2x(length,ns), v3x(length,ns)
+       REAL(DP), INTENT(OUT) :: v1c(length,ns), v2c(np,length,ns), v3c(length,ns)
+       LOGICAL,  OPTIONAL, INTENT(IN) :: run_on_gpu_
+     END SUBROUTINE
+  END INTERFACE  
   !
   !
 END MODULE xc_lib
