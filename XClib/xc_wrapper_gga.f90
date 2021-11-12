@@ -19,23 +19,23 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, &
   !! length of the I/O arrays
   INTEGER,  INTENT(IN) :: ns
   !! spin dimension for input
-  REAL(DP), INTENT(IN) :: rho(:,:)
+  REAL(DP), INTENT(IN) :: rho(length,ns)
   !! Charge density
-  REAL(DP), INTENT(IN) :: grho(:,:,:)
+  REAL(DP), INTENT(IN) :: grho(3,length,ns)
   !! gradient
-  REAL(DP), INTENT(OUT) :: ex(:)
+  REAL(DP), INTENT(OUT) :: ex(length)
   !! exchange energy
-  REAL(DP), INTENT(OUT) :: ec(:)
+  REAL(DP), INTENT(OUT) :: ec(length)
   !! correlation energy
-  REAL(DP), INTENT(OUT) :: v1x(:,:)
+  REAL(DP), INTENT(OUT) :: v1x(length,ns)
   !! exchange potential (density part)
-  REAL(DP), INTENT(OUT) :: v2x(:,:)
+  REAL(DP), INTENT(OUT) :: v2x(length,ns)
   !! exchange potential (gradient part)
-  REAL(DP), INTENT(OUT) :: v1c(:,:)
+  REAL(DP), INTENT(OUT) :: v1c(length,ns)
   !! correlation potential (density part)
-  REAL(DP), INTENT(OUT) :: v2c(:,:)
+  REAL(DP), INTENT(OUT) :: v2c(length,ns)
   !! correlation potential (gradient part)
-  REAL(DP), INTENT(OUT), OPTIONAL :: v2c_ud(:)
+  REAL(DP), INTENT(OUT), OPTIONAL :: v2c_ud(length)
   !! correlation potential, cross term
   LOGICAL, INTENT(IN), OPTIONAL :: run_on_gpu_
   !! whether you wish to run on gpu in case use_gpu is true
@@ -52,14 +52,17 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, &
   !
   IF ( run_on_gpu ) THEN
     !
-    !$acc data deviceptr( rho(length,ns), grho(3,length,ns), ex(length), ec(length),      &
-    !$acc&                v1x(length,ns), v2x(length,ns), v1c(length,ns), v2c(length,ns), &
-    !$acc&                v2c_ud(length) )
+    !$acc data deviceptr( rho(length,ns), grho(3,length,ns), ex(length), ec(length),    &
+    !$acc&                v1x(length,ns), v2x(length,ns), v1c(length,ns), v2c(length,ns) )
     IF (PRESENT(v2c_ud)) THEN
+      !$acc data deviceptr( v2c_ud(length) )
       CALL xc_gcx_gpu( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
+      !$acc end data
     ELSE
       ALLOCATE( v2c_dummy(length) )
+      !$acc data deviceptr( v2c_dummy(length) )
       CALL xc_gcx_gpu( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_dummy )
+      !$acc end data
       DEALLOCATE( v2c_dummy )
     ENDIF
     !$acc end data
@@ -842,6 +845,7 @@ SUBROUTINE xc_gcx_gpu( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud
      !
   ELSE
      !
+     !$acc host_data use_device( grho2 )
      !$acc parallel loop collapse(2)
      DO is = 1, ns
        DO k = 1, length
@@ -850,6 +854,7 @@ SUBROUTINE xc_gcx_gpu( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud
      ENDDO
      !
      CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+     !$acc end host_data
      !
      IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
         !

@@ -449,7 +449,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   ntids = omp_get_num_threads()
 #endif
   !
-  sx_tot = 0.0_DP
+  !sx_tot = 0.0_DP
   !
 #if defined(_OPENACC)
 !$acc data deviceptr( rho_in(length,2), grho2_in(length,2), sx_tot(length), &

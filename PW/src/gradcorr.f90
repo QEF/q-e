@@ -111,7 +111,14 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... This is the spin-unpolarised case
      !
-     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
+     !
+     !$acc data copyin( rhoaux, grho ) copyout( sx,sc,v1x,v2x,v1c,v2c )
+     !$acc host_data use_device( rhoaux, grho, sx,sc,v1x,v2x,v1c,v2c )
+     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
+                  run_on_gpu_=.TRUE. )
+     !$acc end host_data
+     !$acc end data
+     !
      !
      DO k = 1, dfftp%nnr
         !
@@ -135,7 +142,12 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      ALLOCATE( v2c_ud(dfftp%nnr) )
      !   
      !
-     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
+     !$acc data copyin( rhoaux, grho ) copyout( sx,sc,v1x,v2x,v1c,v2c,v2c_ud )
+     !$acc host_data use_device( rhoaux, grho, sx,sc,v1x,v2x,v1c,v2c,v2c_ud )
+     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
+                  v2c_ud, run_on_gpu_=.TRUE. )
+     !$acc end host_data
+     !$acc end data
      !
      !
      ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|

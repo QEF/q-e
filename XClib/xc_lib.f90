@@ -75,11 +75,11 @@ MODULE xc_lib
        USE kind_l, ONLY: DP  
        IMPLICIT NONE
        INTEGER,  INTENT(IN) :: length, ns
-       REAL(DP), INTENT(IN) :: rho(:,:), grho(:,:,:)
-       REAL(DP), INTENT(OUT) :: ex(:), ec(:)
-       REAL(DP), INTENT(OUT) :: v1x(:,:), v2x(:,:)
-       REAL(DP), INTENT(OUT) :: v1c(:,:), v2c(:,:)
-       REAL(DP), OPTIONAL, INTENT(OUT) :: v2c_ud(:)
+       REAL(DP), INTENT(IN) :: rho(length,ns), grho(3,length,ns)
+       REAL(DP), INTENT(OUT) :: ex(length), ec(length)
+       REAL(DP), INTENT(OUT) :: v1x(length,ns), v2x(length,ns)
+       REAL(DP), INTENT(OUT) :: v1c(length,ns), v2c(length,ns)
+       REAL(DP), OPTIONAL, INTENT(OUT) :: v2c_ud(length)
        LOGICAL,  OPTIONAL, INTENT(IN)  :: run_on_gpu_
      END SUBROUTINE
   END INTERFACE
