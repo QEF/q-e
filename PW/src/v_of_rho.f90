@@ -400,12 +400,11 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   vtxc = 0.D0 ;  rhoneg2 = 0.D0
   !
   !$acc data copyin( rho_core, rhog_core, rho ) copyout( v )
-  !$acc data copyin( rho%of_r(dfftp%nnr,nspin), rho%of_g(ngm,nspin) )
+  !$acc data copyin( rho%of_r, rho%of_g )
   !
   ALLOCATE( ex(dfftp%nnr), vx(dfftp%nnr,nspin) )
   ALLOCATE( ec(dfftp%nnr), vc(dfftp%nnr,nspin) )
-  !$acc data create( ex(dfftp%nnr), ec(dfftp%nnr), vx(dfftp%nnr,nspin), &
-  !$acc&             vc(dfftp%nnr,nspin) )
+  !$acc data create( ex, ec, vx, vc )
   !
   !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v,&
   !$acc&                      ex, ec, vx, vc )
@@ -418,7 +417,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
      ! ... spin-unpolarized case
      !
-     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, .TRUE. )
+     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, run_on_gpu_=.TRUE. )
      !
      !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
      !$acc&              present(rho)
@@ -434,7 +433,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   ELSEIF ( nspin == 2 ) THEN
      ! ... spin-polarized case
      !
-     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc, .TRUE. )
+     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc, run_on_gpu_=.TRUE. )
      !
      !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
      !$acc&              reduction(-:rhoneg2) present(rho)
@@ -455,7 +454,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
    ELSEIF ( nspin == 4 ) THEN
       ! ... noncollinear case
       !
-      CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, .TRUE. )
+      CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, run_on_gpu_=.TRUE. )
       !
       !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
       !$acc&              reduction(-:rhoneg2) present(rho)
@@ -500,12 +499,14 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
-  !$acc end data
-  !$acc end data
-  !
   ! ... add gradient corrections (if any)
   !
+  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v )
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
+  !$acc end host_data
+  !
+  !$acc end data
+  !$acc end data
   !
   ! ... add non local corrections (if any)
   !
