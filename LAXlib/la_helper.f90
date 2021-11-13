@@ -14,7 +14,7 @@ END SUBROUTINE laxlib_end
 
 
 SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_comm, ortho_row_comm, ortho_col_comm, &
-  ortho_comm_id, ortho_parent_comm, me_blacs, np_blacs, ortho_cntx, world_cntx, do_distr_diag_inside_bgrp  )
+  ortho_comm_id, ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp  )
   use laxlib_processors_grid, ONLY : &
     nproc_ortho_ => nproc_ortho, &
     leg_ortho_   => leg_ortho, &
@@ -25,10 +25,7 @@ SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_co
     ortho_col_comm_ => ortho_col_comm, & 
     ortho_comm_id_  => ortho_comm_id, &
     ortho_parent_comm_ => ortho_parent_comm, &
-    me_blacs_    => me_blacs,  &
-    np_blacs_    => np_blacs, &
     ortho_cntx_  => ortho_cntx, &
-    world_cntx_  => world_cntx, &
     do_distr_diag_inside_bgrp_ => do_distr_diag_inside_bgrp
   IMPLICIT NONE
   INTEGER, OPTIONAL, INTENT(OUT) :: nproc_ortho
@@ -40,10 +37,7 @@ SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_co
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_col_comm
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_comm_id
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_parent_comm
-  INTEGER, OPTIONAL, INTENT(OUT) :: me_blacs
-  INTEGER, OPTIONAL, INTENT(OUT) :: np_blacs
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_cntx
-  INTEGER, OPTIONAL, INTENT(OUT) :: world_cntx
   LOGICAL, OPTIONAL, INTENT(OUT) :: do_distr_diag_inside_bgrp
   IF( PRESENT(nproc_ortho) ) nproc_ortho = nproc_ortho_
   IF( PRESENT(leg_ortho) ) leg_ortho = leg_ortho_
@@ -54,10 +48,7 @@ SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_co
   IF( PRESENT(ortho_col_comm) ) ortho_col_comm = ortho_col_comm_
   IF( PRESENT(ortho_comm_id) ) ortho_comm_id = ortho_comm_id_
   IF( PRESENT(ortho_parent_comm) ) ortho_parent_comm = ortho_parent_comm_
-  IF( PRESENT(me_blacs) ) me_blacs = me_blacs_
-  IF( PRESENT(np_blacs) ) np_blacs = np_blacs_
   IF( PRESENT(ortho_cntx) ) ortho_cntx = ortho_cntx_
-  IF( PRESENT(world_cntx) ) world_cntx = world_cntx_
   IF( PRESENT(do_distr_diag_inside_bgrp) ) do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp_
 END SUBROUTINE
 !
@@ -72,10 +63,7 @@ SUBROUTINE laxlib_get_status_x ( lax_status )
     ortho_col_comm_ => ortho_col_comm, & 
     ortho_comm_id_  => ortho_comm_id, &
     ortho_parent_comm_ => ortho_parent_comm, &
-    me_blacs_    => me_blacs,  &
-    np_blacs_    => np_blacs, &
     ortho_cntx_  => ortho_cntx, &
-    world_cntx_  => world_cntx, &
     do_distr_diag_inside_bgrp_ => do_distr_diag_inside_bgrp
   IMPLICIT NONE
   include 'laxlib_param.fh'
@@ -91,10 +79,7 @@ SUBROUTINE laxlib_get_status_x ( lax_status )
   lax_status(LAX_STATUS_COLCOMM)= ortho_col_comm_
   lax_status(LAX_STATUS_COMMID)= ortho_comm_id_
   lax_status(LAX_STATUS_PARENTCOMM)= ortho_parent_comm_
-  lax_status(LAX_STATUS_MEBLACS)= me_blacs_
-  lax_status(LAX_STATUS_NPBLACS)= np_blacs_
   lax_status(LAX_STATUS_ORTHOCNTX)= ortho_cntx_
-  lax_status(LAX_STATUS_WORLDCNTX)= world_cntx_
   IF( do_distr_diag_inside_bgrp_ ) THEN
      lax_status(LAX_STATUS_DISTDIAG)= 1
   ELSE
@@ -126,12 +111,6 @@ SUBROUTINE laxlib_start_drv( ndiag_, parent_comm, do_distr_diag_inside_bgrp_  )
     !
     IF( lax_is_initialized ) &
        CALL laxlib_end_drv ( )
-
-    ! initialize blacs world_cntx
-    call blacs_pinfo(me_blacs, np_blacs)
-    !
-    world_cntx = MPI_COMM_WORLD
-    CALL BLACS_GRIDINIT( world_cntx, 'Row', 1, np_blacs )
 
     parent_nproc = laxlib_size( parent_comm ) ! the number of processors in the current parent communicator
     my_parent_id = laxlib_rank( parent_comm ) ! set the index of the current parent communicator
