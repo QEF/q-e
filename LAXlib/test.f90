@@ -338,7 +338,7 @@
   !
   !
   n_diag = n
-  CALL laxlib_start(n_diag, mpi_comm_world, mpi_comm_world, do_distr_diag_inside_bgrp)
+  CALL laxlib_start(n_diag, mpi_comm_world, do_distr_diag_inside_bgrp)
   CALL laxlib_getval( np_ortho = np_ortho, ortho_comm = ortho_comm, &
     do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
   !
