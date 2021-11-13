@@ -98,11 +98,11 @@ run-tests-tddfpt-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
 
 run-tests-all_currents-serial : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 run-tests-all_currents-parallel : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 
@@ -223,6 +223,10 @@ clean:
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
                 epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
+
+# Cleaning IMAGE final files
+	@rm -rf image_*/_ph0 image_*/*.save image_*/*.xml image_*/*.dyn? image_*/*.dyn??  \
+                image_*/*.wfc*
 
 # Cleaning ZG final files
 	@rm -f zg_conf/equil_pos.txt zg_conf/ZG-*_0.020.dat
