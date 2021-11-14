@@ -243,9 +243,11 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      !
   ENDDO
   !
-  !$acc parallel loop
-  DO k = 1, dfftp%nnr
-    tau(k,:) = rho%kin_r(k,:)/e2
+  !$acc parallel loop collapse(2) present(rho)
+  DO is = 1, nspin
+    DO k = 1, dfftp%nnr
+      tau(k,is) = rho%kin_r(k,is)/e2
+    ENDDO
   ENDDO
   !
   !$acc end data
@@ -268,7 +270,9 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        v(k,1) = (v1x(k,1)+v1c(k,1)) * e2
        !
        ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-       h(:,k,1) = (v2x(k,1)+v2c(1,k,1)) * grho(:,k,1) * e2 
+       DO ipol = 1, 3
+         h(ipol,k,1) = (v2x(k,1)+v2c(1,k,1)) * grho(ipol,k,1) * e2
+       ENDDO
        !
        kedtaur(k,1) = (v3x(k,1)+v3c(k,1)) * 0.5d0 * e2
        !
@@ -307,8 +311,10 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        !
        ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
        !
-       h(:,k,1) = (v2x(k,1) * grho(:,k,1) + v2c(:,k,1)) * e2
-       h(:,k,2) = (v2x(k,2) * grho(:,k,2) + v2c(:,k,2)) * e2
+       DO ipol = 1, 3
+         h(ipol,k,1) = (v2x(k,1) * grho(ipol,k,1) + v2c(ipol,k,1)) * e2
+         h(ipol,k,2) = (v2x(k,2) * grho(ipol,k,2) + v2c(ipol,k,2)) * e2
+       ENDDO
        !
        kedtaur(k,1) = (v3x(k,1) + v3c(k,1)) * 0.5d0 * e2
        kedtaur(k,2) = (v3x(k,2) + v3c(k,2)) * 0.5d0 * e2
