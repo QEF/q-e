@@ -12,7 +12,7 @@ MODULE exx_band
   !! See:  
   !! T. Barnes, T. Kurth, P. Carrier, N. Wichmann, D. Prendergast,
   !! P.R.C. Kent, J. Deslippe, Comp. Phys. Comm. (2017),  
-  !! dx.doi.org/10.1016/j.cpc.2017.01.008
+  !! doi.org/10.1016/j.cpc.2017.01.008
   !
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : npol

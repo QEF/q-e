@@ -20,11 +20,11 @@
 !   Spectra of Planar Molecules
 !   Guido Fratesi, Valeria Lanzilotto, Luca Floreano, and Gian Paolo Brivio
 !   J. Phys. Chem. C 2013, 117, 6632−6638
-!   http://dx.doi.org/10.1021/jp312569q
+!   https://doi.org/10.1021/jp312569q
 !
 ! Further examples are also described in:
 !   Phys. Chem. Chem. Phys., 2014, 16, 14834
-!   http://dx.doi.org/10.1039/c4cp01625d
+!   https://doi.org/10.1039/c4cp01625d
 !
 ! The spectrum for each inequivalent atom of the same species sums up
 ! into a total spectrum, where the contributions from each atom (as
