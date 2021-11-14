@@ -35,7 +35,7 @@ PROGRAM xclib_test
   USE constants_l, ONLY: pi
   USE xc_lib,      ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
                          xclib_get_ID, xclib_reset_dft, xc, xc_gcx,       &
-                         xclib_dft_is_libxc, xclib_init_libxc,            &
+                         xc_metagcx, xclib_dft_is_libxc, xclib_init_libxc,&
                          xclib_finalize_libxc, xclib_set_finite_size_volume, &
                          xclib_set_auxiliary_flags, xclib_dft_is, start_exx
   USE xclib_utils_and_para
