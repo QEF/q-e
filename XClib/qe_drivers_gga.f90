@@ -94,7 +94,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 !$omp         v1c_out, v2c_out, sx_out, sc_out )
 !$omp do
 #endif
-
   DO ir = 1, length  
      !
      grho = grho_in(ir)

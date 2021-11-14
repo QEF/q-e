@@ -159,6 +159,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE cell_base,        ONLY : omega
   USE funct,            ONLY : dft_is_nonlocc, nlc
   USE scf,              ONLY : scf_type, rhoz_or_updw
+  USE xc_lib,           ONLY : xc_metagcx
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
   !

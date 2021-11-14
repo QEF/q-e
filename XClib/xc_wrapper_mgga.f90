@@ -48,7 +48,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !! whether you wish to run on gpu in case use_gpu is true
   !
   LOGICAL :: run_on_gpu
-  REAL(DP), ALLOCATABLE :: v2c_dummy(:)
   !
   run_on_gpu = .FALSE.
   IF ( PRESENT(run_on_gpu_) ) run_on_gpu = run_on_gpu_
@@ -126,8 +125,8 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   ! ... local variables
   !
-  INTEGER :: is
-  REAL(DP), ALLOCATABLE :: grho2(:,:)
+  INTEGER :: is, k, ipol, pol_unpol
+  REAL(DP), ALLOCATABLE :: grho2(:)                 ,v2cc(:)
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
 #if defined(__LIBXC)
@@ -137,7 +136,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in QE
   !
-  INTEGER  :: k, ipol, pol_unpol
   LOGICAL  :: POLARIZED
   REAL(DP) :: rh, ggrho2, atau
 #if (XC_MAJOR_VERSION > 4)
@@ -198,19 +196,30 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   IF ( .NOT.is_libxc(5) .AND. imetac==0 ) THEN
     !
-    ALLOCATE( grho2(length,ns) )
-    !
-    DO is = 1, ns
-       grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
-    ENDDO
-    !
-    IF (ns == 1) CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec,    &
-                              v1x(:,1), v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1),&
-                              v3c(:,1) )
-    IF (ns == 2) CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x,&
-                                   v1c, v2c, v3c )
-    !
-    DEALLOCATE( grho2 )
+    IF (ns == 1) THEN
+      !
+      ALLOCATE( grho2(length) )
+      grho2(:) = grho(1,:,1)**2 + grho(2,:,1)**2 + grho(3,:,1)**2
+      !
+      !$acc data copyin( rho, grho2, tau ), copyout( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+      !$acc host_data use_device( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+      CALL tau_xc( length, rho(:,1), grho2, tau(:,1), ex, ec,    &
+                   v1x(:,1), v2x(:,1), v3x(:,1), v1c(:,1), v2c, v3c(:,1) )
+      !$acc end host_data
+      !$acc end data
+      !             
+      DEALLOCATE( grho2 )  
+      !             
+    ELSEIF (ns == 2) THEN
+      !
+      !$acc data copyin( rho, grho, tau ), copyout( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+      !$acc host_data use_device( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+      CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
+                        v1c, v2c, v3c )
+      !$acc end host_data
+      !$acc end data
+      !  
+    ENDIF
     !
   ENDIF
   !
@@ -313,25 +322,30 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
 #else
   !
-  ALLOCATE( grho2(length,ns) )
-  !
-  DO is = 1, ns
-     grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
-  ENDDO
-  !
   IF (ns == 1) THEN
      !
-     CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
-                  v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
+     ALLOCATE( grho2(length) )
+     grho2(:) = grho(1,:,1)**2 + grho(2,:,1)**2 + grho(3,:,1)**2
+     !
+     !$acc data copyin( rho, grho2, tau ), copyout( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+     !$acc host_data use_device( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+     CALL tau_xc( length, rho(:,1), grho2, tau(:,1), ex, ec, v1x(:,1), &
+                  v2x(:,1), v3x(:,1), v1c(:,1), v2c, v3c(:,1) )
+     !$acc end host_data
+     !$acc end data
+     !
+     DEALLOCATE( grho2 )
      !
   ELSEIF (ns == 2) THEN
      !
+     !$acc data copyin( rho, grho, tau ), copyout( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+     !$acc host_data use_device( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
      CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                        v2c, v3c )
+     !$acc end host_data
+     !$acc end data
      !
   ENDIF
-  !
-  DEALLOCATE( grho2 )
   !
 #endif
   !
@@ -391,7 +405,7 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
   !
   ! ... local variables
   !
-  INTEGER :: is
+  INTEGER :: k, is, ipol, pol_unpol
   REAL(DP), ALLOCATABLE :: grho2(:,:)
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
@@ -402,7 +416,6 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in QE
   !
-  INTEGER  :: k, ipol, pol_unpol
   LOGICAL  :: POLARIZED
   REAL(DP) :: rh, ggrho2, atau
 #if (XC_MAJOR_VERSION > 4)
@@ -410,11 +423,17 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
 #else
   INTEGER :: lengthxc
 #endif
+#endif
   !
+  !$acc data deviceptr( rho(length,ns), grho(3,length,ns), tau(length,ns), ex(length), &
+  !$acc&                ec(length), v1x(length,ns), v2x(length,ns), v3x(length,ns),    &
+  !$acc&                v1c(length,ns), v2c(np,length,ns), v3c(length,ns) )
+  !
+#if defined(__LIBXC)
   lengthxc = length
   !
-  ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
-  ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
+  !ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
+  !ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
   !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN
@@ -425,6 +444,8 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
   !
   ALLOCATE( rho_lxc(length*ns), sigma(length*np), tau_lxc(length*ns) )
   ALLOCATE( lapl_rho(length*ns) )
+  !$acc data copyout( rho_lxc, sigma, tau_lxc, lapl_rho )
+  !$acc host_data use_device( rho_lxc, sigma, tau_lxc, lapl_rho )
   !
   ALLOCATE( ex_lxc(length)    , ec_lxc(length) )
   ALLOCATE( vx_rho(length*ns) , vx_sigma(length*np), vx_tau(length*ns) )
@@ -434,16 +455,18 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
   !
   IF ( ns == 1 ) THEN
     !
+    !$acc parallel loop
     DO k = 1, length
       rho_lxc(k) = ABS( rho(k,1) )
       sigma(k) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
                       grho2_threshold_mgga )
       tau_lxc(k) = MAX( tau(k,1), tau_threshold_mgga )
-      vlapl_rho(k) = 0._DP
+      lapl_rho(k) = 0.d0
     ENDDO
     !
   ELSE
     !
+    !$acc parallel loop
     DO k = 1, length
        rho_lxc(2*k-1) = ABS( rho(k,1) )
        rho_lxc(2*k)   = ABS( rho(k,2) )
@@ -455,11 +478,13 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
                            grho2_threshold_mgga )
        tau_lxc(2*k-1) = MAX( tau(k,1), small )
        tau_lxc(2*k)   = MAX( tau(k,2), small )
-       vlapl_rho(2*k-1) = 0._DP
-       vlapl_rho(2*k)   = 0._DP
+       lapl_rho(2*k-1) = 0.d0
+       lapl_rho(2*k)   = 0.d0
     ENDDO
     !
   ENDIF
+  !
+  vlapl_rho = 0._DP
   !
   IF ( .NOT.is_libxc(5) .AND. imetac==0 ) THEN
     !
@@ -469,8 +494,8 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
        grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
     ENDDO
     !
-    IF (ns == 1) CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec,    &
-                              v1x(:,1), v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1),&
+    IF (ns == 1) CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, &
+                              v1x(:,1), v2x(:,1), v3x(:,1), v1c(:,1), v2c,    &
                               v3c(:,1) )
     IF (ns == 2) CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x,&
                                    v1c, v2c, v3c )
@@ -478,6 +503,9 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
     DEALLOCATE( grho2 )
     !
   ENDIF
+  !
+  !$acc end host_data
+  !$acc end data
   !
   ! ... META EXCHANGE
   !
@@ -522,17 +550,6 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
         ENDIF
       ENDDO
     ENDIF
-    !
-    ! **Now this is done directly inside Libxc for SCAN0**
-    ! ... only for HK/MCA: SCAN0 (used in CPV)
-    !IF ( scan_exx ) THEN
-    !   IF (exx_started) THEN
-    !     ex  = (1.0_DP - exx_fraction) * ex
-    !     v1x = (1.0_DP - exx_fraction) * v1x
-    !     v2x = (1.0_DP - exx_fraction) * v2x
-    !     v3x = (1.0_DP - exx_fraction) * v3x
-    !   ENDIF
-    !ENDIF
     !
   ENDIF
   !
@@ -590,15 +607,20 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
 #else
   !
   ALLOCATE( grho2(length,ns) )
+  !$acc data create( grho2(length,ns) )
+  !$acc host_data use_device( grho2 )
   !
+  !$acc parallel loop collapse(2)
   DO is = 1, ns
-     grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
+    DO k = 1, length
+      grho2(k,is) = grho(1,k,is)**2 + grho(2,k,is)**2 + grho(3,k,is)**2
+    ENDDO  
   ENDDO
   !
   IF (ns == 1) THEN
      !
      CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
-                  v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
+                  v2x(:,1), v3x(:,1), v1c(:,1), v2c, v3c(:,1) )
      !
   ELSEIF (ns == 2) THEN
      !
@@ -607,9 +629,13 @@ SUBROUTINE xc_metagcx_gpu( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x
      !
   ENDIF
   !
+  !$acc end host_data
+  !$acc end data
   DEALLOCATE( grho2 )
   !
 #endif
+  !
+  !$acc end data
   !
   RETURN
   !
