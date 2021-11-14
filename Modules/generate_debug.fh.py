@@ -38,7 +38,7 @@ subroutine checkpoint_{t}_{k}_{r}( arr, file, line)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 {t}(kind={k}), allocatable :: arr_{molds[r]}
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -50,18 +50,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading {t}(kind={k}){molds[r]}', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading {t}(kind={k}){molds[r]}', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = {s_c}({sum_}(abs(arr_-arr)),kind={s_k})
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = {s_c}({maxval_}(abs(arr_-arr)),kind={s_k})
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -71,9 +78,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing {t}(kind={k}){molds[r]}', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing {t}(kind={k}){molds[r]}', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine

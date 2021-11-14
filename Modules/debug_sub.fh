@@ -5,7 +5,7 @@ complex(kind=4), intent(in) :: arr
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -17,18 +17,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -38,9 +45,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -50,7 +57,7 @@ complex(kind=4), intent(in) :: arr(:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -62,18 +69,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -83,9 +97,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -95,7 +109,7 @@ complex(kind=4), intent(in) :: arr(:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -107,18 +121,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -128,9 +149,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -140,7 +161,7 @@ complex(kind=4), intent(in) :: arr(:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -152,18 +173,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -173,9 +201,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -185,7 +213,7 @@ complex(kind=4), intent(in) :: arr(:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -197,18 +225,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -218,9 +253,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -230,7 +265,7 @@ complex(kind=4), intent(in) :: arr(:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -242,18 +277,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -263,9 +305,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -275,7 +317,7 @@ complex(kind=4), intent(in) :: arr(:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -287,18 +329,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -308,9 +357,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -320,7 +369,7 @@ complex(kind=4), intent(in) :: arr(:,:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=4), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -332,18 +381,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -353,9 +409,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=4)(:,:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -365,7 +421,7 @@ complex(kind=8), intent(in) :: arr
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -377,18 +433,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -398,9 +461,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -410,7 +473,7 @@ complex(kind=8), intent(in) :: arr(:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -422,18 +485,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -443,9 +513,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -455,7 +525,7 @@ complex(kind=8), intent(in) :: arr(:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -467,18 +537,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -488,9 +565,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -500,7 +577,7 @@ complex(kind=8), intent(in) :: arr(:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -512,18 +589,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -533,9 +617,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -545,7 +629,7 @@ complex(kind=8), intent(in) :: arr(:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -557,18 +641,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -578,9 +669,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -590,7 +681,7 @@ complex(kind=8), intent(in) :: arr(:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -602,18 +693,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -623,9 +721,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -635,7 +733,7 @@ complex(kind=8), intent(in) :: arr(:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -647,18 +745,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -668,9 +773,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -680,7 +785,7 @@ complex(kind=8), intent(in) :: arr(:,:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 complex(kind=8), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -692,18 +797,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -713,9 +825,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing complex(kind=8)(:,:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -725,7 +837,7 @@ real(kind=4), intent(in) :: arr
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -737,18 +849,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -758,9 +877,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -770,7 +889,7 @@ real(kind=4), intent(in) :: arr(:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -782,18 +901,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -803,9 +929,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -815,7 +941,7 @@ real(kind=4), intent(in) :: arr(:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -827,18 +953,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -848,9 +981,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -860,7 +993,7 @@ real(kind=4), intent(in) :: arr(:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -872,18 +1005,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -893,9 +1033,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -905,7 +1045,7 @@ real(kind=4), intent(in) :: arr(:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -917,18 +1057,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -938,9 +1085,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -950,7 +1097,7 @@ real(kind=4), intent(in) :: arr(:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -962,18 +1109,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -983,9 +1137,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -995,7 +1149,7 @@ real(kind=4), intent(in) :: arr(:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1007,18 +1161,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1028,9 +1189,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1040,7 +1201,7 @@ real(kind=4), intent(in) :: arr(:,:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=4), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1052,18 +1213,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=4)(:,:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1073,9 +1241,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=4)(:,:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1085,7 +1253,7 @@ real(kind=8), intent(in) :: arr
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1097,18 +1265,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real((abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1118,9 +1293,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1130,7 +1305,7 @@ real(kind=8), intent(in) :: arr(:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1142,18 +1317,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1163,9 +1345,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1175,7 +1357,7 @@ real(kind=8), intent(in) :: arr(:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1187,18 +1369,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1208,9 +1397,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1220,7 +1409,7 @@ real(kind=8), intent(in) :: arr(:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1232,18 +1421,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1253,9 +1449,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1265,7 +1461,7 @@ real(kind=8), intent(in) :: arr(:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1277,18 +1473,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1298,9 +1501,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1310,7 +1513,7 @@ real(kind=8), intent(in) :: arr(:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1322,18 +1525,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1343,9 +1553,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1355,7 +1565,7 @@ real(kind=8), intent(in) :: arr(:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1367,18 +1577,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1388,9 +1605,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1400,7 +1617,7 @@ real(kind=8), intent(in) :: arr(:,:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 real(kind=8), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1412,18 +1629,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading real(kind=8)(:,:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = real(sum(abs(arr_-arr)),kind=dp)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = real(maxval(abs(arr_-arr)),kind=dp)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1433,9 +1657,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing real(kind=8)(:,:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1445,7 +1669,7 @@ integer(kind=4), intent(in) :: arr
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1457,18 +1681,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int((abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int((abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1478,9 +1709,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1490,7 +1721,7 @@ integer(kind=4), intent(in) :: arr(:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1502,18 +1733,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)(:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1523,9 +1761,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)(:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1535,7 +1773,7 @@ integer(kind=4), intent(in) :: arr(:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1547,18 +1785,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1568,9 +1813,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1580,7 +1825,7 @@ integer(kind=4), intent(in) :: arr(:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1592,18 +1837,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1613,9 +1865,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1625,7 +1877,7 @@ integer(kind=4), intent(in) :: arr(:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1637,18 +1889,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1658,9 +1917,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1670,7 +1929,7 @@ integer(kind=4), intent(in) :: arr(:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1682,18 +1941,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1703,9 +1969,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1715,7 +1981,7 @@ integer(kind=4), intent(in) :: arr(:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1727,18 +1993,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1748,9 +2021,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1760,7 +2033,7 @@ integer(kind=4), intent(in) :: arr(:,:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=4), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1772,18 +2045,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1793,9 +2073,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=4)(:,:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1805,7 +2085,7 @@ integer(kind=8), intent(in) :: arr
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1817,18 +2097,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int((abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int((abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1838,9 +2125,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1850,7 +2137,7 @@ integer(kind=8), intent(in) :: arr(:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_(:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1862,18 +2149,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)(:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1883,9 +2177,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)(:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1895,7 +2189,7 @@ integer(kind=8), intent(in) :: arr(:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_(:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1907,18 +2201,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1928,9 +2229,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1940,7 +2241,7 @@ integer(kind=8), intent(in) :: arr(:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_(:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1952,18 +2253,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -1973,9 +2281,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -1985,7 +2293,7 @@ integer(kind=8), intent(in) :: arr(:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -1997,18 +2305,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -2018,9 +2333,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -2030,7 +2345,7 @@ integer(kind=8), intent(in) :: arr(:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -2042,18 +2357,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -2063,9 +2385,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -2075,7 +2397,7 @@ integer(kind=8), intent(in) :: arr(:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -2087,18 +2409,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -2108,9 +2437,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine
@@ -2120,7 +2449,7 @@ integer(kind=8), intent(in) :: arr(:,:,:,:,:,:,:)
 character(len=64) :: fname
 character(*) file
 integer line
-integer :: iun,reclen,i,j
+integer :: iun,iun2,i,j
 integer(kind=8), allocatable :: arr_(:,:,:,:,:,:,:)
 CHARACTER(LEN=6), EXTERNAL :: int_to_char
 INTEGER, EXTERNAL :: find_free_unit
@@ -2132,18 +2461,25 @@ end if
 counter = counter + 1
 fname = trim(fname_prefix)// int_to_char(counter)
 iun = find_free_unit()
-inquire(iolength=reclen) arr
 WRITE(*,*) msg_pref, file,':', line
 if (testing) then
     if (ionode) &
-     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' from file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='read')
+     WRITE(*,*) msg_pref,'reading integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), ' from file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='read')
     allocate(arr_, mold=arr)
-    read (iun, rec=1) arr_
+    read (iun) arr_
     close(iun)
     sumt = int(sum(abs(arr_-arr)),kind=i4b)
     call mp_sum(sumt,communicator) 
     write(*,*) msg_pref,'sum of absolute value of difference = ',sumt
+    if (sumt > 1.0e-4) then
+       if (ionode) &
+          WRITE(*,*) msg_pref,'difference is too big: saving the computed data to '//trim(fname)//'.err'
+       iun2 = find_free_unit()
+       open (iun, file=trim(fname)//'.err',form='UNFORMATTED',access='STREAM',action='write')
+       write (iun) arr
+       close(iun)
+    endif
     sumt = int(maxval(abs(arr_-arr)),kind=i4b)
     call mp_max(sumt,communicator) 
     write(*,*) msg_pref,'max of absolute value of difference = ',sumt
@@ -2153,9 +2489,9 @@ if (testing) then
     deallocate(arr_)
 else ! write the file
     if (ionode) &
-     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), reclen, ' on file '//trim(fname)
-    open (iun, file=trim(fname),form='UNFORMATTED',access='DIRECT',recl=reclen,action='write')
-    write (iun, rec=1) arr
+     WRITE(*,*) msg_pref,'writing integer(kind=8)(:,:,:,:,:,:,:)', shape(arr), ' on file '//trim(fname)
+    open (iun, file=trim(fname),form='UNFORMATTED',access='STREAM',action='write')
+    write (iun) arr
     close(iun)
 end if
 end subroutine

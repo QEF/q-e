@@ -116,7 +116,6 @@ contains
 #endif
       real(DP), allocatable::               s_minus1(:, :)!factors for inverting US S matrix
       real(DP), allocatable::               k_minus1(:, :)!factors for inverting US preconditioning matrix
-      real(DP), allocatable :: lambda_repl(:, :) ! replicated copy of lambda
       real(DP), allocatable :: lambda_dist(:, :) ! replicated copy of lambda
       real(dp) :: sca, dumm(1)
       logical  :: newscheme, firstiter, filee
@@ -159,6 +158,8 @@ contains
       if (tens) &
          call errore(' runcg_uspp ', ' Ensemble DFT case not ported to GPU ', 1)
 #endif
+      if (pre_state .and. nkbus > 0) &
+         call errore(' runcg_uspp ', ' preconditioning with kinetic energy not implemented for ultrasoft pseudopotentials')
       newscheme = .false.
       firstiter = .true.
 
@@ -295,19 +296,17 @@ contains
          call CHECKPOINT(hpsi)
          if (pre_state) call ave_kin(c0, SIZE(c0, 1), nbsp, ave_ene)
 
-         phi_tmp = phi
-!$acc data copy(c0,phi_tmp,hpsi)
+         phi_tmp = phi ! cannot use device array as input for openacc according to the compiler
+!$acc data copy(c0,hpsi) copyin(phi_tmp) 
          call pcdaga2(c0, phi_tmp, hpsi)
 !$acc end data
-         phi = phi_tmp
          hpsi0 = hpsi
          gi = hpsi
 ! becm = <betae | hpsi >
          !$acc data copy(betae,hpsi,becm,c0,bec,gi,bec0)
          call calbec(nbsp, betae, hpsi, becm)
 !        (1+S) |hpsi>
-         CALL calphi_bgrp(hpsi, SIZE(hpsi, 1), becm, nkb, betae, phi, nbsp, &
-                          m_minus1=s_minus1)
+         call xminus1(hpsi,betae,dumm,becm,s_minus1,.false., .false., tpiba2, ave_ene)
 ! becm = <betae| (1+S) |hpsi>
          call calbec(nbsp, betae, hpsi, becm)
 ! project (1+S) |hpsi>
@@ -315,36 +314,7 @@ contains
 
          !$acc update self(hpsi)
          call CHECKPOINT(hpsi)
-
-!apply precondition on gi
-         if (pre_state) then
-            !$acc data copyin(g2kin,ave_ene,tpiba2)
-            !$acc parallel loop collapse(2) private(x)
-            do i = 1, nbsp
-               do ig = 1, ngw
-                  ! eq. 5.16 of https://journals.aps.org/rmp/pdf/10.1103/RevModPhys.64.1045
-                  x = tpiba2*g2kin(ig)/ave_ene(i)
-                  gi(ig, i) = gi(ig, i)* &
-                              (27.0_dp + 18.0_dp*x + 12.0_dp*x**2 + 8.0_dp*x**3)/ &
-                              (27.0_dp + 18.0_dp*x + 12.0_dp*x**2 + 8.0_dp*x**3 + 16.0_dp*x**4)
-               end do
-            end do
-            !$acc end data
-         else
-            !$acc data copyin(ema0bg)
-            !$acc parallel loop collapse(2)
-            do i = 1, nbsp
-               do ig = 1, ngw
-                  gi(ig, i) = gi(ig, i)*ema0bg(ig)
-               end do
-            end do
-            !$acc end data
-         end if
-! becm = <betae | precond |gi >
-         call calbec(nbsp, betae, gi, becm)
-!        (1+S) | precond |gi>
-         CALL calphi_bgrp(gi, SIZE(gi, 1), becm, nkb, betae, phi, nbsp, &
-                          m_minus1=k_minus1)
+         call xminus1(gi,betae,ema0bg,becm,k_minus1,.true., pre_state, tpiba2, ave_ene )
          call calbec(nbsp, betae, gi, becm)
          call pc2(c0, bec, gi, becm)
 
@@ -723,7 +693,6 @@ contains
       !calculates atomic forces and lambda
 
       if (tpre) then!if pressure is need the following is written because of caldbec
-         call calbec(nbsp, betae, c0, bec)
          if (.not. tens) then
             call caldbec_bgrp(eigr, c0, dbec, idesc)
             call rhoofr(nfi, c0(:, :), irb, eigrb, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6)
@@ -755,6 +724,7 @@ contains
 
       call calcmt(nrlx, f, z0t, fmat0)
 
+
       call newd(vpot, rhovan, fion, .true.)
 !$acc data copy(betae)
 #if defined (__CUDA)
@@ -783,46 +753,9 @@ contains
                       c0, c0_d, gi, gi_d, .false., .false., .true.)
       call CHECKPOINT(c0)
       call CHECKPOINT(gi)
-      ALLOCATE (lambda_repl(nudx, nudx))
-      !
-      !$acc data create(lambda_repl) copy(c0, gi)
-      do is = 1, nspin
-         !
-         nss = nupdwn(is)
-         istart = iupdwn(is)
 
-         !$acc parallel present(lambda_repl)
-         lambda_repl = 0.d0
-         !$acc end parallel
-         !
-         !
-         !$acc parallel loop private(i,j,ii,jj,entmp) present(c0,gi,lambda_repl) copyin(nss,ngw,istart,gstart)
-         do jv = 0, nss*(nss + 1)/2 - 1
-            i = jv/nss + 1
-            j = mod(jv, nss) + 1
-            ii = i + istart - 1
-            jj = j + istart - 1
-            entmp = 0.0_dp
-            !$acc loop vector reduction(+:entmp)
-            do ig = 1, ngw
-               entmp = entmp - 2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
-            enddo
-            if (gstart == 2) then
-               entmp = entmp + DBLE(CONJG(c0(1, ii))*gi(1, jj))
-            endif
-            lambda_repl(j, i) = entmp
-            lambda_repl(i, j) = entmp
-         enddo
-         !$acc end parallel
-         !$acc host_data use_device(lambda_repl)
-         CALL mp_sum(lambda_repl, intra_bgrp_comm)
-         !$acc end host_data
-         !$acc update host(lambda_repl)
-         call CHECKPOINT(lambda_repl)
-         !
-         CALL distribute_lambda(lambda_repl, lambda(:, :, is), idesc(:, is))
-         !
-      enddo
+      !$acc data copyin(c0, gi)
+      call compute_lambda(c0,gi,lambda,nupdwn, iupdwn, nudx, nspin, ngw, intra_bgrp_comm, gstart)
 
       if (l_cprestart .and. .not. tens .and. nspin == 1 .and. nkbus < 1) then
 
@@ -831,6 +764,7 @@ contains
 !NOT IMPLEMENTED FOR US PSEUDOPOTENTIALS
          cm(:, :) = c0(:, :)
          !$acc data copyin(cm,c0old)
+         nss = nupdwn(1)
          call project_parallel_gauge_2(c0old, cm, c0, &
                                        nss, ngw, ngw, gstart)
          !$acc end data
@@ -853,33 +787,8 @@ contains
          !$acc update device(gi)
          !$acc update device(c0)
 
-         !$acc parallel present(lambda_repl)
-         lambda_repl = 0.d0
-         !$acc end parallel
-         !$acc parallel loop private(i,j,ii,jj,entmp) present(c0,gi,lambda_repl) copyin(nss,ngw,istart,gstart)
-         do jv = 0, nss*(nss + 1)/2 - 1
-            i = jv/nss + 1
-            j = mod(jv, nss) + 1
-            ii = i + istart - 1
-            jj = j + istart - 1
-            entmp = 0.0_dp
-            !$acc loop vector reduction(+:entmp)
-            do ig = 1, ngw
-               entmp = entmp - 2.d0*DBLE(CONJG(c0(ig, ii))*gi(ig, jj))
-            enddo
-            if (gstart == 2) then
-               entmp = entmp + DBLE(CONJG(c0(1, ii))*gi(1, jj))
-            endif
-            lambda_repl(j, i) = entmp
-            lambda_repl(i, j) = entmp
-         enddo
-         !$acc end parallel
-         !$acc host_data use_device(lambda_repl)
-         CALL mp_sum(lambda_repl, intra_bgrp_comm)
-         !$acc end host_data
-         !$acc update host(lambda_repl)
-         call CHECKPOINT(lambda_repl)
-         CALL distribute_lambda(lambda_repl, lambda(:, :, 1), idesc(:, 1))
+         call compute_lambda(c0,gi,lambda,nupdwn, iupdwn, nudx, nspin, ngw, intra_bgrp_comm, gstart)
+
          cm(:, :) = c0(:, :)
 
          !$acc data copy(betae, becm) copyin(cm)
@@ -888,7 +797,6 @@ contains
 
       endif
       !$acc end data
-      DEALLOCATE (lambda_repl)
 
 #if defined (__CUDA)
 !TODO: is this necessary?
@@ -1035,8 +943,70 @@ contains
          call stop_clock('compute_energy')
 
       END SUBROUTINE
+  
 
    END SUBROUTINE runcg_uspp
+
+   subroutine compute_lambda(c0_, gi_, lambda, nupdwn, iupdwn, nudx, nspin, ngw, intra_bgrp_comm, gstart)
+      use debug_utils, only: checkpoint
+      use kinds, only : dp
+      use mp, only : mp_sum
+      USE cp_main_variables, ONLY: idesc
+      implicit none
+      include 'laxlib.fh'
+      complex(kind=dp), intent(in) :: c0_(:,:),gi_(:,:)
+      !!$acc declare present(c0_(1:ngw,1:nbspx),gi_(1:ngw,1:nbspx))
+      real(kind=dp), intent(inout) :: lambda(:,:,:)
+      real(DP), allocatable :: lambda_repl(:, :)
+      integer, intent(in) :: nupdwn(:), iupdwn(:), nudx, ngw, nspin, intra_bgrp_comm,  gstart
+
+      real(kind=dp) ::  entmp
+      integer :: is, nss, istart, i,j, iv, jv,ii,jj,ig
+
+      
+      !$acc data copyin(c0_,gi_)
+
+      ALLOCATE (lambda_repl(nudx, nudx))
+      do is = 1, nspin
+         !
+         nss = nupdwn(is)
+         istart = iupdwn(is)
+
+         !
+         !
+         do jv = 0, nss*(nss + 1)/2 - 1
+            i = jv/nss 
+            j = mod(jv, nss)
+            if (i > j) then
+               j = nss - j - 1
+               i = nss - i
+            end if
+            j = j + 1 ! equivalent to the indexes of a double triangular loop
+            i = i + 1 ! do i = 1, nss do j = i, nss .
+            !Now every cycle of the outer loop (the only one) has the same amount of work
+            
+            ii = i + istart - 1
+            jj = j + istart - 1
+            entmp = 0.0_dp
+            !$acc parallel loop reduction(+:entmp)
+            do ig = 1, ngw
+               entmp = entmp - 2.d0*DBLE(CONJG(c0_(ig, ii))*gi_(ig, jj))
+            enddo
+            if (gstart == 2) then
+               entmp = entmp + DBLE(CONJG(c0_(1, ii))*gi_(1, jj))
+            endif
+            lambda_repl(j, i) = entmp
+            lambda_repl(i, j) = entmp
+         enddo
+         CALL mp_sum(lambda_repl, intra_bgrp_comm)
+         call CHECKPOINT(lambda_repl)
+         !
+         CALL distribute_lambda(lambda_repl, lambda(:, :, is), idesc(:, is))
+         !
+      enddo
+      deallocate(lambda_repl)         
+      !$acc end data
+      end subroutine
 
    !-----------------------------------------------------------------------
    subroutine calcmt(nrlx, fdiag, zmat, fmat)
@@ -1494,6 +1464,134 @@ contains
       RETURN
    END SUBROUTINE emass_precond_tpa
 
+      subroutine xminus1(c0,betae,ema0bg,beck,m_minus1,do_k, pre_state, tpiba2, ave_ene)
+! if (do_k) then
+!-----------------------------------------------------------------------
+!     input: c0 , bec=<c0|beta>, betae=|beta>
+!     computes the matrix phi (with the old positions)
+!       where  |phi> = K^{-1}|c0>
+! else
+!-----------------------------------------------------------------------
+!     input: c0 , bec=<c0|beta>, betae=|beta>
+!     computes the matrix phi (with the old positions)
+!       where  |phi> = s^{-1}|c0> 
+! endif
+      use kinds, only: dp
+      use ions_base, only: nsp, nat, ityp
+      use io_global, only: stdout
+      use mp_global, only: intra_bgrp_comm
+      use uspp_param, only: nh, upf
+      use uspp, only :nkb, nkbus, qq_nt, ofsbeta
+      use electrons_base, only: n => nbsp
+      use gvecw, only: ngw, g2kin
+      use constants, only: pi, fpi
+      use mp, only: mp_sum
+      use gvect, only: gstart
+!
+      implicit none
+      complex(dp) c0(ngw,n), betae(ngw,nkb)
+      real(dp)    beck(nkb,n), ema0bg(ngw), tpiba2 
+      real(DP)    :: m_minus1(nkb,nkb), ave_ene(n)
+      logical :: do_k, pre_state
+! local variables
+      complex(dp), allocatable :: phi(:,:)
+      real(dp) , allocatable   :: qtemp(:,:)
+      integer is, iv, jv, ia, inl, jnl, i, j, js, ja,ig
+      real(dp) becktmp,x
+
+
+      logical :: mat_par=.true.!if true uses parallel routines      
+
+      call start_clock('xminus1')
+
+      if (nkbus.gt.0) then
+!calculates beck
+         if (do_k) then
+            beck(:,:) = 0.d0
+            do ia=1,nat
+               is=ityp(ia)
+               IF( upf(is)%tvanp ) THEN
+                  do iv=1,nh(is)
+                     inl = ofsbeta(ia) + iv
+                     do i=1,n
+                        becktmp = 0.0d0
+                        do ig=1,ngw
+                           becktmp=becktmp+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*c0(ig,i))
+                        enddo
+                        becktmp = becktmp*2.0d0
+                        if (gstart==2) becktmp = becktmp-ema0bg(1)*DBLE(CONJG(betae(1,inl))*c0(1,i))
+                        beck(inl,i) = beck(inl,i) + becktmp
+                     enddo
+                  enddo
+               END IF
+            enddo
+            call mp_sum( beck, intra_bgrp_comm )
+         endif
+!
+!
+      allocate(phi(ngw,n))
+      allocate(qtemp(nkb,n))
+      phi(1:ngw,1:n) = 0.0d0
+      qtemp(:,:) = 0.0d0
+      if(.not.mat_par) then
+         call dgemm( 'N', 'N', nkb, n, nkb, 1.0d0, m_minus1,nkb ,    &
+                    beck, nkb, 0.0d0, qtemp,nkb )
+      else
+         call para_dgemm( 'N', 'N', nkb, n, nkb, 1.0d0, m_minus1,nkb ,    &
+                    beck, nkb, 0.0d0, qtemp,nkb,intra_bgrp_comm )
+      endif
+
+!NB  nkb is the total number of US projectors
+!    it works because the first pseudos are the vanderbilt's ones
+
+         CALL dgemm( 'N', 'N', 2*ngw, n, nkb, 1.0d0, betae, 2*ngw,    &
+                    qtemp, nkb, 0.0d0, phi, 2*ngw )
+         if (do_k) then
+            do j=1,n
+               do ig=1,ngw
+                  c0(ig,j)=(phi(ig,j)+c0(ig,j))*ema0bg(ig)
+               end do
+            end do
+         else
+            do j=1,n
+               do i=1,ngw
+                  c0(i,j)=(phi(i,j)+c0(i,j))
+               end do
+            end do
+         endif
+      deallocate(qtemp,phi)
+
+      else 
+         if (do_k) then
+            if (pre_state) then
+               !$acc data copyin(g2kin,ave_ene,tpiba2) copy(c0)
+               !$acc parallel loop collapse(2) private(x)
+               do i = 1, n
+                  do ig = 1, ngw
+                     ! eq. 5.16 of https://journals.aps.org/rmp/pdf/10.1103/RevModPhys.64.1045
+                     x = tpiba2*g2kin(ig)/ave_ene(i)
+                     c0(ig, i) = c0(ig, i)* &
+                                 (27.0_dp + 18.0_dp*x + 12.0_dp*x**2 + 8.0_dp*x**3)/ &
+                                 (27.0_dp + 18.0_dp*x + 12.0_dp*x**2 + 8.0_dp*x**3 + 16.0_dp*x**4)
+                  end do
+               end do
+               !$acc end data
+            else
+               !$acc parallel loop collapse(2) copyin(ema0bg) copy(c0)
+               do j=1,n
+                  do ig=1,ngw
+                     c0(ig,j)=c0(ig,j)*ema0bg(ig)
+                  end do
+               end do
+            endif
+         endif
+      endif
+      call stop_clock('xminus1')
+      return
+     end subroutine xminus1
+
+
+
    subroutine ave_kin(c, ngwx, n, ene_ave)
 !this subroutine calculates the average kinetic energy of
 !each state , to be used for preconditioning
@@ -1518,13 +1616,17 @@ contains
       ! local
 
       INTEGER  :: ig, i
+      real(kind=dp) :: tmp
 
       !
+      !$acc parallel loop private(tmp) copyin(c,g2kin,gstart,ngw) copyout(ene_ave)
       DO i = 1, n
-         ene_ave(i) = 0.d0
+         tmp = 0.d0
+         !$acc loop vector reduction(+:tmp)
          DO ig = gstart, ngw
-            ene_ave(i) = ene_ave(i) + DBLE(CONJG(c(ig, i))*c(ig, i))*g2kin(ig)
+            tmp = tmp + DBLE(CONJG(c(ig, i))*c(ig, i))*g2kin(ig)
          END DO
+         ene_ave(i) = tmp
       END DO
 
       CALL mp_sum(ene_ave(1:n), intra_bgrp_comm)
