@@ -34,7 +34,7 @@ SUBROUTINE elphon()
   USE dfile_star,    ONLY : dvscf_star
   USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,        ONLY : mp_bcast
-  USE io_global, ONLY: stdout
+  USE io_global, ONLY : stdout, ionode, ionode_id
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_r2q
@@ -96,11 +96,10 @@ SUBROUTINE elphon()
           CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                              imode0 + ipert,  -1 )
         ENDIF
-        IF (okpaw .AND. me_bgrp==0) &
-             CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
-                                          iuint3paw, imode0 + ipert, - 1 )
+        IF (okpaw .AND. ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
+                                             iuint3paw, imode0 + ipert, - 1 )
      END DO
-     IF (okpaw) CALL mp_bcast(int3_paw, root_bgrp, intra_bgrp_comm)
+     IF (okpaw) CALL mp_bcast(int3_paw, ionode_id, intra_image_comm)
      IF (doublegrid) THEN
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag

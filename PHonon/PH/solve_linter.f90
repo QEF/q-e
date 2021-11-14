@@ -11,20 +11,20 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !-----------------------------------------------------------------------
   !! Driver routine for the solution of the linear system that
   !! defines the change of the wavefunction due to a lattice distorsion.
-  !! It performs the following tasks:  
+  !! It performs the following tasks:
   !! a) computes the bare potential term \(\Delta V | \psi \rangle\)
   !!    and an additional term in the case of US pseudopotentials.
-  !!    If \(\text{lda_plus_u}=\text{TRUE}\) compute also the bare 
-  !!    potential term Delta \(V_\text{hub} | \psi \rangle\);  
-  !! b) adds to it the screening term \(\Delta V_\text{SCF} | \psi \rangle\). 
+  !!    If \(\text{lda_plus_u}=\text{TRUE}\) compute also the bare
+  !!    potential term Delta \(V_\text{hub} | \psi \rangle\);
+  !! b) adds to it the screening term \(\Delta V_\text{SCF} | \psi \rangle\).
   !!    If \(\text{lda_plus_u}=\text{TRUE}\) computes also the SCF part
-  !!    of the response Hubbard potential;  
-  !! c) applies \(P_c^+\) (orthogonalization to valence states);  
-  !! d) calls \(\text{cgsolve_all}\) to solve the linear system;  
+  !!    of the response Hubbard potential;
+  !! c) applies \(P_c^+\) (orthogonalization to valence states);
+  !! d) calls \(\text{cgsolve_all}\) to solve the linear system;
   !! e) computes \(\Delta\rho\), \(\Delta V_\text{SCF}\) and symmetrizes
-  !!    them;  
-  !! f) If \(\text{lda_plus_u}=\text{TRUE}\) compute also the response 
-  !!    occupation matrices \(\text{dnsscf}\);  
+  !!    them;
+  !! f) If \(\text{lda_plus_u}=\text{TRUE}\) compute also the response
+  !!    occupation matrices \(\text{dnsscf}\);
   !! g) --Introduced in February 2020-- If \(\text{noncolin}=\text{TRUE}\)
   !!    and \(\text{domag}=\text{TRUE}\), the linear system is solved twice
   !!    (\(\text{nsolv}=2\), the case \(\text{isolv}=2\) needs the time-reversed
@@ -433,11 +433,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !   compute the corresponding change in scf potential
      !
      do ipert = 1, npe
-        if (fildrho.ne.' ') then 
+        if (fildrho.ne.' ') then
            call davcio_drho (drhoscfh(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
 !           close(iudrho)
         endif
-        ! 
+        !
         call zcopy (dfftp%nnr*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
         !
         ! Compute the response of the core charge density
@@ -446,7 +446,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         if (imode0+ipert > 0) then
            call addcore (imode0+ipert, drhoc)
         else
-           drhoc(:) = (0.0_DP,0.0_DP) 
+           drhoc(:) = (0.0_DP,0.0_DP)
         endif
         !
         ! Compute the response HXC potential
@@ -499,7 +499,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         !  In the noncollinear magnetic case computes the int3 coefficients with
         !  the opposite sign of the magnetic field. They are saved in int3_save,
-        !  that must have been allocated by the calling routine 
+        !  that must have been allocated by the calling routine
         !
         IF (noncolin.AND.domag) THEN
            int3_save(:,:,:,:,:,1)=int3_nc(:,:,:,:,:)
@@ -573,8 +573,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                 if (doublegrid) dvscfins(:,:,ipert) = dvscfins(:,:,ipert)-def(ipert)
            endif
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, imode0 + ipert, +1 )
-           IF (okpaw.AND.me_bgrp==0) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
-                                                  iuint3paw, imode0+ipert, + 1 )
+           IF (okpaw.AND.ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
+                                              iuint3paw, imode0+ipert, + 1 )
         end do
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      end if
@@ -604,7 +604,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
   call stop_clock ('solve_linter')
 
-  RETURN  
+  RETURN
 
 END SUBROUTINE solve_linter
 

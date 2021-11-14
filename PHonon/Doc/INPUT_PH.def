@@ -104,7 +104,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 
         var reduce_io -type LOGICAL { 
             default { .false. }
-            info { Reduce I/O to the strict minimum. }
+            info { Reduce I/O to the strict minimum. If the input flag reduce_io=.true. was used, 
+                   it is not allowed to restart from an interrupted run.}
         }
 
         var max_seconds  -type REAL { 

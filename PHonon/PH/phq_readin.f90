@@ -165,12 +165,12 @@ SUBROUTINE phq_readin()
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! lqdir        : if .true. each q writes in its own directory
   ! search_sym   : if .true. analyze symmetry if possible
-  ! nk1,nk2,nk3, k1,k2,k3 : 
+  ! nk1,nk2,nk3, k1,k2,k3 :
   !              when specified in input, the phonon run uses a different
   !              k-point mesh from that used for the charge density.
   !
   ! dvscf_star%open : if .true. write in dvscf_star%dir the dvscf_q
-  !                   'for all q' in the star of q with suffix dvscf_star%ext. 
+  !                   'for all q' in the star of q with suffix dvscf_star%ext.
   !                   The dvscf_q' is written in the basis dvscf_star%basis;
   !                   if dvscf_star%pat is .true. also save a pattern file.
   ! dvscf_star%dir, dvscf_star%ext, dvscf_star%basis : see dvscf_star%open
@@ -179,25 +179,25 @@ SUBROUTINE phq_readin()
    !
   ! elph_nbnd_min,
   ! elph_nbnd_max: if (elph_mat=.true.) it dumps the eph matrix element from elph_nbnd_min
-  !                  to elph_nbnd_max 
+  !                  to elph_nbnd_max
   ! el_ph_ngauss,
-  ! el_ph_nsigma, 
+  ! el_ph_nsigma,
   ! el_ph_sigma  :  if (elph_mat=.true.) it defines the kind and the val-ue of the
   !                 smearing to be used in the eph coupling calculation.
   ! qplot, : if true a list of q points is given in input
-  ! q_in_band_form: if true the input list of q points defines paths 
+  ! q_in_band_form: if true the input list of q points defines paths
   ! q2d, : if .true. the q list define a mesh in a square.
   ! low_directory_check : if .true. only the requested representations
   !                       are searched on file
   !
   ! read_dns_bare : If .true. the code tries to read three files in DFPT+U calculations:
-  !                 dnsorth, dnsbare, d2nsbare 
-  ! d2ns_type     : DFPT+U - the 2nd bare derivative of occupation matrices ns 
+  !                 dnsorth, dnsbare, d2nsbare
+  ! d2ns_type     : DFPT+U - the 2nd bare derivative of occupation matrices ns
   !                 (d2ns_bare matrix). Experimental! This is why it is not documented in Doc.
-  !                 d2ns_type='full': matrix calculated with no approximation. 
-  !                 d2ns_type='fmmp': assume a m <=> m' symmetry. 
+  !                 d2ns_type='full': matrix calculated with no approximation.
+  !                 d2ns_type='fmmp': assume a m <=> m' symmetry.
   !                 d2ns_type='diag': if okvan=.true. the matrix is calculated retaining only
-  !                                     for <\beta_J|\phi_I> products where for J==I.   
+  !                                     for <\beta_J|\phi_I> products where for J==I.
   !                 d2ns_type='dmmp': same as 'diag', but also assuming a m <=> m'.
   ! diagonalization : diagonalization method used in the nscf calc
   ! ldvscf_interpolate: if .true., use Fourier interpolation of phonon potential
@@ -421,7 +421,7 @@ SUBROUTINE phq_readin()
   CASE( 'simple'  )
      elph=.true.
      elph_mat=.false.
-     elph_simple=.true. 
+     elph_simple=.true.
      elph_epa=.false.
   CASE( 'epa' )
      elph=.true.
@@ -550,7 +550,7 @@ SUBROUTINE phq_readin()
   ELSE
      CALL mp_bcast(xq, meta_ionode_id, world_comm  )
   ENDIF
-  
+
   IF (.NOT.ldisp) THEN
      lgamma = xq (1) .EQ.0.D0.AND.xq (2) .EQ.0.D0.AND.xq (3) .EQ.0.D0
      IF ( (epsil.OR.zue.or.lraman.or.elop) .AND..NOT.lgamma) &
@@ -720,7 +720,7 @@ SUBROUTINE phq_readin()
         ALLOCATE(x_q(3,nqs))
         ALLOCATE(wq(nqs))
         wq(:)=wqaux(:)
-        x_q(:,1:nqs)=xqaux(:,1:nqs)  
+        x_q(:,1:nqs)=xqaux(:,1:nqs)
      ENDIF
      DEALLOCATE(xqaux)
      DEALLOCATE(wqaux)
@@ -730,13 +730,15 @@ SUBROUTINE phq_readin()
                        ( ABS(x_q(2,iq)) .LT. 1.0e-10_dp ) .AND. &
                        ( ABS(x_q(3,iq)) .LT. 1.0e-10_dp )
      ENDDO
-     WRITE(stdout, '(//5x,"Dynamical matrices for q-points given in input")') 
+     WRITE(stdout, '(//5x,"Dynamical matrices for q-points given in input")')
      WRITE(stdout, '(5x,"(",i4,"q-points):")') nqs
      WRITE(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3) " )')
      DO iq = 1, nqs
         WRITE(stdout, '(5x,i3, 3f14.9)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
      END DO
   ENDIF
+  !
+  IF (reduce_io) io_level=0
   !
   ! DFPT+U: the occupation matrix ns is read via read_file
   !
@@ -748,9 +750,9 @@ SUBROUTINE phq_readin()
   ! read from input (this happens if nk1*nk2*nk3 > 0; otherwise reset_grid
   ! returns .false., leaves the current values, read in read_file, unchanged)
   !
-  newgrid = reset_grid (nk1, nk2, nk3, k1, k2, k3) 
+  newgrid = reset_grid (nk1, nk2, nk3, k1, k2, k3)
   if(newgrid.and.elph_mat)then
-    WRITE(stdout, '(//5x,"WARNING: Wannier elph do not use explicit new grid: nk1 nk2 nk3 ignored")') 
+    WRITE(stdout, '(//5x,"WARNING: Wannier elph do not use explicit new grid: nk1 nk2 nk3 ignored")')
     newgrid=.false.
   end if
   !
@@ -762,12 +764,12 @@ SUBROUTINE phq_readin()
      'cannot start from pw.x data file using Gamma-point tricks',1)
 
   IF (lda_plus_u) THEN
-     ! 
+     !
      WRITE(stdout,'(/5x,a)') "Phonon calculation with DFPT+U; please cite"
      WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 84, 161102(R) (2011)"
      WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 101, 064305 (2020)"
      WRITE(stdout,'(5x,a)')  "in publications or presentations arising from this work."
-     ! 
+     !
      IF (U_projection.NE."atomic") CALL errore("phq_readin", &
           " The phonon code for this U_projection_type is not implemented",1)
      IF (lda_plus_u_kind.NE.0) CALL errore("phq_readin", &
@@ -790,7 +792,7 @@ SUBROUTINE phq_readin()
 
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
-  
+
   IF (ldftd3) CALL errore('phq_readin',&
      'The phonon code with Grimme''s DFT-D3 is not yet available',1)
 
@@ -803,10 +805,10 @@ SUBROUTINE phq_readin()
   IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with paw and raman or elop is not yet available',1)
 
-  IF (magnetic_sym) THEN 
-     
+  IF (magnetic_sym) THEN
+
      WRITE(stdout,'(/5x,a)') "Phonon calculation in the non-collinear magnetic case;"
-     WRITE(stdout,'(5x,a)')  "please cite A. Urru and A. Dal Corso, Phys. Rev. B 100," 
+     WRITE(stdout,'(5x,a)')  "please cite A. Urru and A. Dal Corso, Phys. Rev. B 100,"
      WRITE(stdout,'(5x,a)')  "045115 (2019) for the theoretical background."
 
      IF (okpaw) CALL errore('phq_readin',&
@@ -824,8 +826,6 @@ SUBROUTINE phq_readin()
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
 
-  IF (reduce_io) io_level=1
-
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
        'el-ph with wannier requires fildvscf',1)
 
@@ -834,7 +834,7 @@ SUBROUTINE phq_readin()
 
   IF(elph.and.nimage>1) call errore('phq_readin',&
        'el-ph with images not implemented',1)
-  
+
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 
   IF(dvscf_star%open.and.nimage>1) CALL errore('phq_readin',&
@@ -932,7 +932,7 @@ SUBROUTINE phq_readin()
   !
   ! end of reading, close unit qestdin, remove temporary input file if existing
   ! FIXME: closing input file here breaks alpha2F.x that reads what follows
-  !!! IF (meta_ionode) ios = close_input_file () 
+  !!! IF (meta_ionode) ios = close_input_file ()
 
   IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
