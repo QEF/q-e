@@ -50,8 +50,7 @@ SUBROUTINE memory_report()
   USE uspp_data, ONLY : dq
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
-       lxdm, smallmem, tqr, iverbosity, rmm_ndim
-  USE force_mod, ONLY : lforce, lstres
+       lxdm, smallmem, tqr, iverbosity, rmm_ndim, lforce=>tprnfor, tstress
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_pools,  ONLY : npool
@@ -404,7 +403,7 @@ SUBROUTINE memory_report()
         !
         ! stress
         !
-        IF (lstres) THEN
+        IF (tstress) THEN
            !                      vg                      ylmk0,dylmk0  qmod
            ram1 = real_size *  (ngm*nspin_mag + ngm_l*( 2*lmaxq*lmaxq + 1 ) )
            !                                    qgm      aux1  aux2

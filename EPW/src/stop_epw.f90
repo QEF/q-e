@@ -62,7 +62,7 @@
     WRITE(epwbib, '(a)') "   Year    = {2016},                                                                     " 
     WRITE(epwbib, '(a)') "   Volume  = {209},                                                                      " 
     WRITE(epwbib, '(a)') "   Pages   = {116 - 133},                                                                "
-    WRITE(epwbib, '(a)') "   Doi     = {http://dx.doi.org/10.1016/j.cpc.2016.07.028}                               "  
+    WRITE(epwbib, '(a)') "   Doi     = {https://doi.org/10.1016/j.cpc.2016.07.028}                                 "
     WRITE(epwbib, '(a)') " }                                                                                       "
     ! 
     ! Specific functionalities

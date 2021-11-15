@@ -33,13 +33,14 @@ SUBROUTINE forces()
   USE lsda_mod,          ONLY : nspin
   USE symme,             ONLY : symvector
   USE vlocal,            ONLY : strf, vloc
-  USE force_mod,         ONLY : force, lforce, sumfor
+  USE force_mod,         ONLY : force, sumfor
   USE scf,               ONLY : rho
   USE ions_base,         ONLY : if_pos
   USE ldaU,              ONLY : lda_plus_u, U_projection
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
-                                iverbosity, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw
+                                iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
+                                mbd_vdw, lforce => tprnfor
   USE plugin_flags
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
@@ -459,6 +460,8 @@ SUBROUTINE forces()
   IF ( ldftd3   ) DEALLOCATE( force_d3         )
   IF ( lxdm     ) DEALLOCATE( force_disp_xdm   ) 
   IF ( lelfield ) DEALLOCATE( forces_bp_efield )
+  !
+  ! FIXME: what is the following line good for?
   !
   lforce = .TRUE.
   !

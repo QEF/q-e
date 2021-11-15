@@ -11,11 +11,10 @@ SUBROUTINE run_nscf(do_band, iq)
   !! This is the main driver of the \(\texttt{pwscf}\) program called from
   !! the \(\texttt{PHonon}\) code.
   !
-  USE control_flags,   ONLY : conv_ions
+  USE control_flags,   ONLY : conv_ions, restart, io_level
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
-  USE control_flags,   ONLY : restart
   USE check_stop,      ONLY : check_stop_now
   USE fft_base,        ONLY : dffts, dfftp
   !!!
@@ -43,6 +42,8 @@ SUBROUTINE run_nscf(do_band, iq)
   USE klist,           ONLY : qnorm, nelec
   USE el_phon,         ONLY : elph_mat
   USE ahc,             ONLY : elph_ahc
+  USE mp_images,       ONLY : intra_image_comm
+  USE mp,              ONLY : mp_barrier
   !
   IMPLICIT NONE
   !
@@ -78,8 +79,6 @@ SUBROUTINE run_nscf(do_band, iq)
   ENDIF
   !
   CALL clean_pw( .FALSE. )
-  !
-  CALL close_files(.true.)
   !
   ! From now on, work only on the _ph virtual directory
   !
@@ -138,7 +137,11 @@ SUBROUTINE run_nscf(do_band, iq)
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
   ext_restart=.FALSE.
   !
-  CALL close_files(.true.)
+  IF (io_level > 0) THEN
+     CALL close_files(.true.)
+  ELSE
+     CALL mp_barrier( intra_image_comm )  
+  ENDIF
   !
 
   bands_computed=.TRUE.

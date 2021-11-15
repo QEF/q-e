@@ -47,16 +47,17 @@ MODULE libmbd_interface
 !#############################################################
 ! This subroutine sets up the library before the first call
 !#############################################################
-SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, lforce, lstres )
+SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
   !
   INTEGER, INTENT(IN) :: nks_start, nk1, nk2, nk3, k1, k2, k3
-  LOGICAL, INTENT(IN) :: lforce, lstres
+  LOGICAL, INTENT(IN) :: tprnfor, tstress
   !
   ! Allocation of variables that depend on the number of atoms
   !
   ALLOCATE(inp%atom_types(nat))
   !
-  do_gradients = lforce .OR. lstres
+  EmbdvdW  = 0.0_dp
+  do_gradients = tprnfor .OR. tstress
   IF ( do_gradients ) THEN
      !
      IF(.NOT.ALLOCATED(mbd_gradient)) ALLOCATE(mbd_gradient(3, nat))
@@ -87,7 +88,8 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, lforce, lstres )
       inp%k_grid = [nk1, nk2, nk3]
       !
       IF (k1 .EQ. k2 .AND. k2 .EQ. k3 .AND. k3 .EQ. 0) THEN
-        inp%k_grid_shift = 0.0_DP
+        ! inp%k_grid_shift = 0.0_DP
+        CALL infomsg('mbdlib','k-point shift ignored')
       ELSE
         inp%k_grid_shift = 0.5_DP
       ENDIF
@@ -99,8 +101,8 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, lforce, lstres )
     !
   ENDIF
   !
-  WRITE(msg, '("K-point grid and shift: "3I3" "F4.2)') inp%k_grid, inp%k_grid_shift
-  CALL infomsg('mbdlib', TRIM(msg))
+  WRITE(stdout, '(5x,"mbdlib: K-point grid set to ",3I3,", shift: ",E4.2)') &
+          inp%k_grid, inp%k_grid_shift
   !
   select case (TRIM(get_dft_short()))  ! An empirical factor needs to be set based on the functiona
   CASE ('PBE')
