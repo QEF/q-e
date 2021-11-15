@@ -44,8 +44,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : lspinorb
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE upf_spinorb,          ONLY : fcoef
   USE io_files,             ONLY : restart_dir
   USE pw_restart_new,       ONLY : read_collected_wfc

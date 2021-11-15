@@ -60,10 +60,9 @@
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
-  USE noncollin_module, ONLY : m_loc, npol, noncolin
+  USE noncollin_module, ONLY : m_loc, npol, noncolin, lspinorb
   USE division,      ONLY : fkbounds
   USE uspp,          ONLY : okvan
-  USE spin_orb,      ONLY : lspinorb
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap

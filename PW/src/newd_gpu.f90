@@ -241,8 +241,7 @@ SUBROUTINE newd_gpu( )
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : deeq, okvan, deeq, deeq_d, deeq_nc, deeq_nc_d, dvan_d, dvan_so_d
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE spin_orb,             ONLY : lspinorb
-  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
   USE realus,               ONLY : newq_r

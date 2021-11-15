@@ -9,7 +9,7 @@
 !
 MODULE noncollin_module
   !
-  !! Variables related to the case of noncollinear magnetism.
+  !! Variables for noncollinear magnetism and spin-orbit interactions
   !
   USE kinds, ONLY : DP
   USE parameters, ONLY : ntypx
@@ -68,6 +68,17 @@ MODULE noncollin_module
   REAL(DP) :: ux(3)
   !! versor for deciding signs in GGA
   !
+  !! Variables needed for calculations with spin-orbit
+  !
+  LOGICAL :: lspinorb
+  !! if .TRUE. this calculation uses spin-orbit interactions
+  LOGICAL :: lforcet
+  !! if .TRUE. apply Force Theorem to calculate MAE
+  LOGICAL :: starting_spin_angle
+  !! if .TRUE. the initial wavefunctions are spin-angle functions.
+  !
+  SAVE
+  !
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -82,3 +93,4 @@ MODULE noncollin_module
     END SUBROUTINE deallocate_noncol
     !
 END MODULE noncollin_module
+

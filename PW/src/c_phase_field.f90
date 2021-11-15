@@ -33,7 +33,7 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE lsda_mod,             ONLY: nspin
    USE klist,                ONLY: nelec, degauss, nks, xk, wk, ngk, igk_k
    USE wvfct,                ONLY: npwx, nbnd
-   USE noncollin_module,     ONLY: noncolin, npol
+   USE noncollin_module,     ONLY: noncolin, npol, lspinorb
    USE bp,                   ONLY: nppstr_3d, mapgm_global, nx_el,phase_control
    USE fixed_occ
    USE gvect,                ONLY: ig_l2g
@@ -41,7 +41,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    USE mp_bands,             ONLY: intra_bgrp_comm
    USE mp_pools,             ONLY: intra_pool_comm
    USE becmod,               ONLY: calbec,bec_type,allocate_bec_type,deallocate_bec_type
-   USE spin_orb,             ONLY: lspinorb
    USE uspp_init,            ONLY : init_us_2
    IMPLICIT NONE
    !

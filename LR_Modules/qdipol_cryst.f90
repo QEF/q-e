@@ -13,10 +13,10 @@ subroutine qdipol_cryst()
 USE kinds,     ONLY : DP
 USE lsda_mod,  ONLY : nspin
 USE uspp_param, ONLY : nh
-USE spin_orb,  ONLY : lspinorb
 USE cell_base, ONLY : at
 USE ions_base, ONLY : nat, ityp, ntyp => nsp
 USE lrus,      ONLY : dpqq, dpqq_so
+USE noncollin_module, ONLY : lspinorb
 
 IMPLICIT NONE
 
