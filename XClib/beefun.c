@@ -83,7 +83,7 @@ void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int
     }
     
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
     corpbe(rs, 0.5/r2k * sqrt(*g*rs) / (*r),(beeforder>-3), 1, &ldac, &ldadr, &pbec, &pbedr, &pbed2rho);
 
@@ -137,7 +137,7 @@ void beefxpot_(double *r, double *g, double *e, int *addlda)
     double L[nmax]={1.};
 
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     r43 = pow(*r, 4./3.);
 
     s2 = *g*pix / (r43*r43);
@@ -175,7 +175,7 @@ void beeflocalcorrpot_(double *r, double *g, double *e, int *addlda)
     }
     
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
     corpbe(rs, 0.5/r2k * sqrt(*g*rs) / (*r),
 	(beeforder>-3), 0, &ldac, &ldadr, &pbec, &pbedr, &pbed2rho);
@@ -218,7 +218,7 @@ void beeflocalcorrspin_(double *r, double *z, double *g, double *e,
     }
     
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
     corpbespin(rs, 0.5/r2k * sqrt(*g*rs) / (*r), *z,
 	(beeforder>-3), 1, &ldac, &ldadrup, &ldadrdown, &pbec,
@@ -280,7 +280,7 @@ void beeflocalcorrpotspin_(double *r, double *z, double *g, double *e, int *addl
     }
 
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
     corpbespin(rs, 0.5/r2k * sqrt(*g*rs) / (*r), *z,
 	(beeforder>-3), 0, &ldac, &ldadrup, &ldadrdown, &pbec,

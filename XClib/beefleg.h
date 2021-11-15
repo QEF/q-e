@@ -13,7 +13,6 @@ extern void dgemv_(const char *, const int *, const int *, const double *,
     double *, const int *, double *, const int *, const double *, double *,
     const int *);
 
-
 #pragma acc routine seq
 double ddot1(double v[], double u[], int n)
 {
@@ -21,8 +20,7 @@ double ddot1(double v[], double u[], int n)
     for (int i = 0; i < n; i++)
         result += v[i]*u[i];
     return result;
-}            
-
+}
 
 extern double ddot_(const int *, double *, const int *, double *, const int *);
 

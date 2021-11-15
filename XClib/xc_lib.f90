@@ -14,8 +14,8 @@ MODULE xc_lib
   !
   IMPLICIT NONE
   !
-  SAVE 
-  ! 
+  SAVE
+  !
   PRIVATE
   !
   !
@@ -58,7 +58,7 @@ MODULE xc_lib
   !
   INTERFACE xc
      SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, gpu_args_ )
-       USE kind_l, ONLY: DP  
+       USE kind_l, ONLY: DP
        IMPLICIT NONE
        INTEGER,  INTENT(IN) :: length, srd, svd
        REAL(DP), INTENT(IN) :: rho_in(length,srd)
@@ -72,7 +72,7 @@ MODULE xc_lib
   INTERFACE xc_gcx
      SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, &
                         gpu_args_ )
-       USE kind_l, ONLY: DP  
+       USE kind_l, ONLY: DP
        IMPLICIT NONE
        INTEGER,  INTENT(IN) :: length, ns
        REAL(DP), INTENT(IN) :: rho(length,ns), grho(3,length,ns)
@@ -97,7 +97,7 @@ MODULE xc_lib
        REAL(DP), INTENT(OUT) :: v1c(length,ns), v2c(np,length,ns), v3c(length,ns)
        LOGICAL,  OPTIONAL, INTENT(IN) :: gpu_args_
      END SUBROUTINE
-  END INTERFACE  
+  END INTERFACE
   !
   !
 END MODULE xc_lib
