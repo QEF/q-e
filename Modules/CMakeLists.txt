@@ -152,7 +152,6 @@ target_link_libraries(qe_modules
         qe_devxlib
     PUBLIC
         qe_openacc_fortran
-        qe_openacc_c
         qe_hdf5_fortran
         qe_upflib
         qe_fox

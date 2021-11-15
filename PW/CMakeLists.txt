@@ -316,8 +316,7 @@ target_link_libraries(qe_pw
         qe_devxlib
         qe_mbd
     PUBLIC
-        qe_openacc_fortran
-        qe_openacc_c)
+        qe_openacc_fortran)
 
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
