@@ -293,7 +293,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
        IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
           !
           ALLOCATE( grho_ud(length) )
-          !$acc data create( grho2(length,ns), grho_ud(length) )
+          !$acc data create( grho2, grho_ud )
           !$acc host_data use_device( grho2, grho_ud )
           !$acc parallel loop
           DO k = 1, length
@@ -310,7 +310,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
        ELSE
           !
           ALLOCATE( rh(length), zeta(length) )
-          !$acc data create( rh(length), zeta(length), grho2(length,ns))
+          !$acc data create( rh, zeta, grho2 )
           !$acc host_data use_device( rh, zeta, grho2 )
           !$acc parallel loop
           DO k = 1, length
@@ -406,7 +406,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     IF ( ns /= 1 ) THEN
       !
       ALLOCATE( grho2(length,ns) )
-      !$acc data create( grho2(length,ns) )
+      !$acc data create( grho2 )
       !$acc host_data use_device( grho2 )
       !$acc parallel loop collapse(2)
       DO is = 1, ns
@@ -431,12 +431,12 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #else
   !
   ALLOCATE( grho2(length,ns) )
-  !$acc data create( grho2(length,ns) )
+  !$acc data create( grho2 )
   !
   IF ( ns == 1 ) THEN
      !
      ALLOCATE( rh(length) )
-     !$acc data create( rh(length) )
+     !$acc data create( rh )
      !$acc host_data use_device( rh, grho2 )
      !$acc parallel loop
      DO k = 1, length
@@ -474,7 +474,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
         !
         ALLOCATE( grho_ud(length) )
-        !$acc data create( grho_ud(length) )
+        !$acc data create( grho_ud )
         !$acc host_data use_device( grho_ud, grho2 )
         !$acc parallel loop
         DO k = 1, length
@@ -491,7 +491,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      ELSE
         !
         ALLOCATE( rh(length), zeta(length) )
-        !$acc data create( rh(length), zeta(length) )
+        !$acc data create( rh, zeta )
         !$acc host_data use_device( rh, zeta, grho2 )
         !$acc parallel loop
         DO k = 1, length

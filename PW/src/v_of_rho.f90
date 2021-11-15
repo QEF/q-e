@@ -514,7 +514,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
       !
       !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
-      !$acc&              reduction(-:rhoneg2) present(rho)
+      !$acc&              reduction(+:rhoneg2) present(rho)
       DO ir = 1, dfftp%nnr
          arho = ABS( rho%of_r(ir,1) )
          IF ( arho < vanishing_charge ) CYCLE

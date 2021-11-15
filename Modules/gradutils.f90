@@ -302,7 +302,7 @@ SUBROUTINE fft_gradient_g2r_gpu( dfft, a_d, g_d, ga_d )
   nlm_d => dfft%nlm_d
   !
   ALLOCATE( gaux_d(dfft%nnr) )
-  !$acc data create( gaux_d(dfft%nnr) )
+  !$acc data create( gaux_d )
   !$acc host_data use_device( gaux_d )
   !
   IF ( dfft%lgamma ) THEN
@@ -557,7 +557,7 @@ SUBROUTINE fft_graddot_gpu( dfft, a_d, g_d, da_d )
   nlm_d => dfft%nlm_d
   !
   ALLOCATE( aux_d(dfft%nnr), gaux_d(dfft%nnr) )
-  !$acc data create( aux_d(dfft%nnr), gaux_d(dfft%nnr) )
+  !$acc data create( aux_d, gaux_d )
   !$acc host_data use_device( aux_d, gaux_d )
   !
   !$acc parallel loop

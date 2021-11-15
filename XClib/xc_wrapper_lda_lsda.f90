@@ -188,7 +188,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
      CASE( 2 )
         !
         ALLOCATE( zeta(length) )
-        !$acc data create( zeta(length) )
+        !$acc data create( zeta )
         !$acc host_data use_device( zeta )
         !$acc parallel loop
         DO ir = 1, length
@@ -203,7 +203,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
      CASE( 4 )
         !
         ALLOCATE( zeta(length) )
-        !$acc data create( zeta(length) )
+        !$acc data create( zeta )
         !$acc host_data use_device( zeta )
         !$acc parallel loop
         DO ir = 1, length
@@ -265,7 +265,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   CASE( 2 )
      !
      ALLOCATE( zeta(length) )
-     !$acc data create( zeta(length) )
+     !$acc data create( zeta )
      !$acc host_data use_device( zeta )
      !$acc parallel loop
      DO ir = 1, length
@@ -280,7 +280,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
    CASE( 4 )
      !
      ALLOCATE( zeta(length) )
-     !$acc data create( zeta(length) )
+     !$acc data create( zeta )
      !$acc host_data use_device( zeta )
      !$acc parallel loop
      DO ir = 1, length

@@ -330,7 +330,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
 #else
   !
   ALLOCATE( grho2(length,ns) )
-  !$acc data create( grho2(length,ns) )
+  !$acc data create( grho2 )
   !$acc host_data use_device( grho2 )
   !
   !$acc parallel loop collapse(2)
