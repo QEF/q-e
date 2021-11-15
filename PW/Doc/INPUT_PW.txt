@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.8)
+Program: pw.x / PWscf / Quantum Espresso
 ------------------------------------------------------------------------
 
 
@@ -1407,6 +1407,31 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       dmft
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Status:         Requires compilation with hdf5 support
+   Description:    If true, nscf calculation will exit in restart mode, scf calculation
+                   will restart from there if DMFT updates are provided as hdf5 archive.
+                   Scf calculation should be used only with "electron_maxstep" = 1.
+                   "K_POINTS" have to be identical and given explicitly with "nosym".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       dmft_prefix
+   
+   Type:           CHARACTER
+   Default:        "prefix"
+   Description:    prepended to hdf5 archive: dmft_prefix.h5
+                   
+                   DMFT update should be provided in group/dataset as:
+                   - dft_misc_input/band_window with dimension [1, number of k-points, 2 (real + complex)]
+                   - dft_update/delta_N with dimension [number of k-points, number of correlated orbitals,
+                   number of correlated orbitals, 2 (real + complex)]
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       ensemble_energies
    
    Type:           LOGICAL
@@ -2227,6 +2252,14 @@ NAMELIST: &ELECTRONS
     
                    'paro', 'ParO' :
                         ParO iterative diagonalization
+    
+                   'rmm-davidson', 'rmm-paro' :
+                        RMM-DIIS iterative diagonalization.
+                        To stabilize the SCF loop
+                        RMM-DIIS is alternated with calls to Davidson or
+                        ParO  solvers depending on the string used.
+                        Other variables that can be used to tune the behavior of
+                        RMM-DIIS are:  "diago_rmm_ndim" and "diago_rmm_conv"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2276,6 +2309,23 @@ NAMELIST: &ELECTRONS
                    of accuracy of the occupied ones. Otherwise the empty states are
                    diagonalized using a larger threshold (this should not affect
                    total energy, forces, and other ground-state properties).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_ndim
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    Max dimension  of the iterative subspace for RMM-DIIS diagonalization
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_conv
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands
+                   are converged or up to a max of 8 times.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2456,6 +2506,16 @@ NAMELIST: &IONS
                    'damp' :
                         use damped (quick-min Verlet)
                         dynamics for structural relaxation
+                        Can be used for constrained
+                        optimisation: see "CONSTRAINTS" card
+    
+                   'fire' :
+                        use the FIRE minimization algorithm employing the
+                        semi-implicit Euler intergration scheme
+                        see:
+                           Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
+                           Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
+                        
                         Can be used for constrained
                         optimisation: see "CONSTRAINTS" card
     
@@ -2763,6 +2823,61 @@ NAMELIST: &IONS
       Default:        0.5D0
       Description:    Parameters used in line search based on the Wolfe conditions.
                       (bfgs only)
+      +--------------------------------------------------------------------
+      
+   \\\---
+   
+   ///---
+      KEYWORDS USED ONLY IN THE FIRE MINIMIZATION ALGORITHM
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_alpha_init
+      
+      Type:           REAL
+      Default:        0.2D0
+      Description:    Initial value of the alpha mixing factor in the FIRE minimization scheme;
+                      recommended values are between 0.1 and 0.3
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_falpha
+      
+      Type:           REAL
+      Default:        0.99D0
+      Description:    Scaling of the alpha mixing parameter for steps with P > 0;
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_nmin
+      
+      Type:           INTEGER
+      Default:        5
+      Description:    Minimum number of steps with P > 0 before increase of "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_f_inc
+      
+      Type:           REAL
+      Default:        1.1D0
+      Description:    Factor for increasing "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_f_dec
+      
+      Type:           REAL
+      Default:        0.5D0
+      Description:    Factor for decreasing "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_dtmax
+      
+      Type:           REAL
+      Default:        10.D0
+      Description:    Determines the maximum value of "dt" in the FIRE minimization;
+                      dtmax = fire_dtmax*"dt"
       +--------------------------------------------------------------------
       
    \\\---
@@ -3817,4 +3932,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 16 11:28:04 CEST 2021
+This file has been created by helpdoc utility on Mon Nov 15 13:00:30 CET 2021
