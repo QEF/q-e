@@ -25,7 +25,7 @@
 #if defined (__DEBUG) 
      INTEGER :: iverbosity = 1
 #else 
-     INTEGER :: iverbosity = 1
+     INTEGER :: iverbosity = 0
 #endif
      !
      COMPLEX(DP), ALLOCATABLE, TARGET :: evc_d(:, :)
