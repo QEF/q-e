@@ -26,7 +26,7 @@
 #if defined(__DEBUG) 
      INTEGER :: iverbosity = 1
 #else 
-     INTEGER :: iverbosity = 1
+     INTEGER :: iverbosity = 0
 #endif
      !
      TYPE bec_type_d
