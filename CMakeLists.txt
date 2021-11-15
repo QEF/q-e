@@ -286,9 +286,6 @@ add_library(qe_openmp_c INTERFACE)
 qe_install_targets(qe_openmp_fortran qe_openmp_c)
 ###########################################################
 if(QE_ENABLE_OPENMP)
-    if(CMAKE_VERSION VERSION_LESS 3.16.0)
-        message(FATAL_ERROR "CMake versions >= 3.16 required for QE_ENABLE_OPENMP=ON!")
-    endif()
     find_package(OpenMP REQUIRED Fortran C)
     target_link_libraries(qe_openmp_fortran
         INTERFACE OpenMP::OpenMP_Fortran)
@@ -304,6 +301,9 @@ add_library(qe_openacc_c INTERFACE)
 qe_install_targets(qe_openacc_fortran qe_openacc_c)
 ###########################################################
 if(QE_ENABLE_OPENACC)
+    if(CMAKE_VERSION VERSION_LESS 3.16.0)
+        message(FATAL_ERROR "CMake versions >= 3.16 required for QE_ENABLE_OPENACC=ON!")
+    endif()
     find_package(OpenACC REQUIRED Fortran C)
     target_link_libraries(qe_openacc_fortran
         INTERFACE OpenACC::OpenACC_Fortran)
