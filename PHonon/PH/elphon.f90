@@ -32,7 +32,7 @@ SUBROUTINE elphon()
                          read_dyn_mat, read_dyn_mat_tail
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf, iuint3paw, lint3paw
   USE dfile_star,    ONLY : dvscf_star
-  USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
+  USE mp_images,  ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE lrus,   ONLY : int3, int3_nc, int3_paw
