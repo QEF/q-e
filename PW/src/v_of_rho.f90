@@ -260,7 +260,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     !$acc host_data use_device( rho%of_r, grho, tau, ex, ec, &
     !$acc&                      v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
-                     v1x, v2x, v3x, v1c, v2c, v3c, run_on_gpu_=.TRUE. )
+                     v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !$acc end host_data
     !
     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
@@ -297,7 +297,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     !$acc host_data use_device( rho_updw, grho, tau, ex, ec, &
     !$acc&                      v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx( dfftp%nnr, 2, np, rho_updw, grho, tau, ex, ec, &
-                     v1x, v2x, v3x, v1c, v2c, v3c, run_on_gpu_=.TRUE. )
+                     v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
     !$acc end host_data
     !
     ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
@@ -474,7 +474,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
      ! ... spin-unpolarized case
      !
-     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, run_on_gpu_=.TRUE. )
+     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
      !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
      !$acc&              present(rho)
@@ -490,7 +490,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   ELSEIF ( nspin == 2 ) THEN
      ! ... spin-polarized case
      !
-     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc, run_on_gpu_=.TRUE. )
+     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
      !
      !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
      !$acc&              reduction(-:rhoneg2) present(rho)
@@ -511,7 +511,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
    ELSEIF ( nspin == 4 ) THEN
       ! ... noncollinear case
       !
-      CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, run_on_gpu_=.TRUE. )
+      CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc, gpu_args_=.TRUE. )
       !
       !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
       !$acc&              reduction(-:rhoneg2) present(rho)

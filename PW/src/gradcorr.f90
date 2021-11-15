@@ -146,7 +146,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      !$acc host_data use_device( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
      CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
-                  run_on_gpu_=.TRUE. )
+                  gpu_args_=.TRUE. )
      !$acc end host_data
      !
      !$acc parallel loop reduction(+:etxcgc) reduction(+:vtxcgc)
@@ -172,7 +172,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      !$acc host_data use_device( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
      CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
-                  v2c_ud, run_on_gpu_=.TRUE. )
+                  v2c_ud, gpu_args_=.TRUE. )
      !$acc end host_data
      !
      ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
