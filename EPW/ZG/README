@@ -55,8 +55,8 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     for a relatively "dense" q-grid to obtain a converged phonon dispersion. 
 
 3.  Run "/path_to_your_espresso/bin/q2r.x <q2r.in> q2r.out".
-    The input "q2r.in" has the standard format of Quantum Espresso for 
-    calculating the interatomic force constant matrix elements to be used to construct the 
+    The input "q2r.in" has the standard format of Quantum Espresso for calculating the 
+    interatomic force constant matrix elements to be used to construct the 
     "ZG-configuration.dat" file. 
 
 4.  Calculate the phonon dispersion with "matdyn.x" and make sure that your phonon dispersion is

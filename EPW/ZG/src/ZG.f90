@@ -612,7 +612,7 @@ PROGRAM ZG
               lo_to_split=.TRUE.
            ENDIF
            !
-           CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
+           IF (lo_to_split) CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
            !
         ENDIF
         !
@@ -2748,13 +2748,14 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ! i.e. [1 1 1 1 1 1] gives same result to [- 1 -1 -1 -1 -1 -1]. 
   ! 
   ALLOCATE(M_mat(2 * pn, nat3), Mx_mat(pn, nat3), Mx_mat_or(pn, nat3), V_mat(2))
+  M_mat = 1 ! initialize M_mat
   V_mat = (/ 1, -1/) ! initialize V_mat whose entries will generate the sign matrices
   DO i = 1, nat3
     ctr = 1
     DO p = 1, 2**(i - 1)
       DO qp = 1, 2
         DO k = 1, 2**(nat3 - i)
-          IF (ctr > 2 * pn) EXIT ! I DO this in case there many branches in the system and 
+          IF (ctr > 2 * pn) EXIT ! in case there many branches in the system and 
                                   ! in that case we DO not need to ALLOCATE more signs              
           M_mat(ctr, i) = V_mat(qp)
           ctr = ctr + 1
@@ -2819,7 +2820,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   DO kk = 1, niters
   ! Allocate original matrices ! half the entries of M_mat
   ! We also make the inherent choice that each column of Mx_mat_or has the same number of positive and negative signs 
-    Mx_mat_or = 0
+    Mx_mat_or = 1
     DO i = 1, 2 * pn / 4, 2
       Mx_mat_or(i, :) = M_mat(i, :)
     ENDDO

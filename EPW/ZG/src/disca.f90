@@ -27,7 +27,7 @@ PROGRAM diff_sca
   !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------
-  !! authors: Marios Zacharias, Pantelis C. Kelires, Feliciano Giustino 
+  !! authors: Marios Zacharias and Feliciano Giustino 
   !! acknowledgement: Hyungjun Lee for help packaging this release
   !! version: v0.1
   !! license: GNU
@@ -200,7 +200,7 @@ PROGRAM diff_sca
   INTEGER                  :: dim1, dim2, dim3, nks1, nks2, nks3, nksf1, nksf2, nksf3
   INTEGER                  :: lower_bnd, upper_bnd
   INTEGER                  :: T, plane_dir
-  REAL(DP)                 :: plane_val
+  REAL(DP)                 :: plane_val, eps2
   CHARACTER(LEN=3)         :: atm_zg(ntypx)
   ! mz_e
   !
@@ -213,12 +213,12 @@ PROGRAM diff_sca
        &           disca, dim1, dim2, dim3, atm_zg, & 
        &           T, q_external, zero_one_phonon, & 
        &           nks1, nks2, nks3, plane_val, plane_dir, qstart, qfinal, atom_resolved, & 
-       &           full_phonon, atmsf_zg_a, atmsf_zg_b, nksf1, nksf2, nksf3
+       &           full_phonon, atmsf_zg_a, atmsf_zg_b, nksf1, nksf2, nksf3, eps2
 ! disca --> if true compute the diffuse_scattering 
 ! mz_e 
   !
   CALL mp_startup()
-  CALL environment_start('MATDYN')
+  CALL environment_start('DISCA')
   !
   IF (ionode) CALL input_from_file ( )
      !
@@ -271,6 +271,7 @@ PROGRAM diff_sca
      nksf3 = 6
      qstart = 1
      qfinal = 2
+     eps2 = 1.0d-15
      ! mz_e 
      !
      !
@@ -320,6 +321,7 @@ PROGRAM diff_sca
      CALL mp_bcast(plane_dir, ionode_id, world_comm)
      CALL mp_bcast(qstart, ionode_id, world_comm)
      CALL mp_bcast(qfinal, ionode_id, world_comm)
+     CALL mp_bcast(eps2, ionode_id, world_comm)
      ! 
      IF (loto_2d .AND. loto_disable) CALL errore('disca', &
          'loto_2d and loto_disable cannot be both true', 1)
@@ -498,6 +500,8 @@ PROGRAM diff_sca
        DO n = nq_super + 1, nq
           q(:, n) = q_strft_part(:, n - nq_super) 
        ENDDO
+       ! 
+       DEALLOCATE(q_strft_part, q_super)
      ELSE
      ! mz_ends
         IF (ionode) READ (5,*) nq
@@ -603,14 +607,6 @@ PROGRAM diff_sca
       z_nq_zg(:,:,:)= (0.d0, 0.d0)
       q_nq_zg(:,:) = 0.d0
      ENDIF
-!      WRITE atomic structure factor from input
-     !IF (ionode) THEN
-     !  DO it = 1, nat 
-     !    na = ityp(it)
-     !    WRITE(*,*) atmsf_zg_a(na,:)
-     !    WRITE(*,*) atmsf_zg_b(na,:)
-     !  ENDDO
-     !ENDIF
      ! mz_e
 
      IF (xmlifc) CALL set_sym(nat, tau, ityp, nspin_mag, m_loc )
@@ -692,21 +688,13 @@ PROGRAM diff_sca
                 lo_to_split=.TRUE.
              ENDIF
              !
-             CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
+             IF (lo_to_split) CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
              !
           ENDIF
         !
         ENDIF
         !
-        
-        !mzzz_comments out --> if(iout_dyn.ne.0) CALL WRITE_dyn_on_file(q(1,n),dyn,nat, iout_dyn)
-        
-
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
-        ! mz_b fill a 3D matrix with all eigenvectors
-        ! mz_e 
-       !!!!! mzzz IF (ionode.and.iout_eig.ne.0) &
-       !!!!mz  & CALL WRITE_eigenvectors(nat,ntyp,amass,ityp,q(1,n),w2(1,n),z,iout_eig)
         !
         ! Cannot use the small group of \Gamma to analize the symmetry
         ! of the mode if there is an electric field.
@@ -755,24 +743,12 @@ PROGRAM diff_sca
      DEALLOCATE (tmp_w2, ABS_similarity, mask)
      IF (eigen_similarity) DEALLOCATE(tmp_z)
      !
-     !
-     !ALLOCATE (freq(3*nat, nq))
-     !DO n= 1,nq
-     !   ! freq(i,n) = frequencies in cm^(-1), with negative sign if omega^2 is negative
-     !   DO i= 1,3*nat
-     !      freq(i,n)= SQRT(ABS(w2(i,n))) * RY_TO_CMM1
-     !      IF (w2(i,n) < 0.0d0) freq(i,n) = -freq(i,n)
-     !   ENDDO
-     !ENDDO
-     !
-     !
-     !
      !mz_b
      !IF (ionode) WRITE(*,*) "step1"
      IF (disca) CALL diffuse_scattering(nq,nq_super,nq_strft, nat, ntyp, amass, ityp, q_nq_zg, w2, z_nq_zg, & 
                                 q_external, zero_one_phonon, full_phonon, atmsf_zg_a, atmsf_zg_b, & 
                                 dim1, dim2, dim3, tau, alat, atm_zg, atom_resolved, & 
-                                ntypx, at, q_in_cryst_coord, T)
+                                ntypx, at, q_in_cryst_coord, T, eps2)
      !mz_e
      ! 
      !
@@ -787,7 +763,7 @@ PROGRAM diff_sca
      DEALLOCATE(high_sym)
   !
 
-  CALL environment_end('MATDYN')
+  CALL environment_end('DISCA')
   !
   CALL mp_global_end()
   !
@@ -924,116 +900,6 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   RETURN
 END SUBROUTINE readfc
-!
-!-----------------------------------------------------------------------
-SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
-  !-----------------------------------------------------------------------
-  ! calculates the dynamical matrix at q from the (short-range part of the)
-  ! force constants
-  !
-  USE kinds,      ONLY : DP
-  USE constants,  ONLY : tpi
-  USE io_global,  ONLY : stdout
-  !
-  IMPLICIT NONE
-  INTEGER nr1, nr2, nr3, nat, n1, n2, n3, nr1_, nr2_, nr3_, &
-          ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws, nax
-  COMPLEX(DP) dyn(3,3,nat,nat), f_of_q(3,3,nat,nat)
-  REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
-               at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
-               total_weight, rws(0:3,nrws), alat
-  REAL(DP), EXTERNAL :: wsweight
-  REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: ttt(:,:,:,:,:), tttx(:,:)
-  LOGICAL,SAVE :: first=.true.
-  LOGICAL :: fd
-  !
-  nr1_=2*nr1
-  nr2_=2*nr2
-  nr3_=2*nr3
-  FIRST_TIME : IF (first) THEN
-    first=.false.
-    ALLOCATE( wscache(-nr3_:nr3_, -nr2_:nr2_, -nr1_:nr1_, nat,nat) )
-    DO na= 1, nat
-       DO nb= 1, nat
-          total_weight=0.0d0
-          !
-          DO n1=-nr1_,nr1_
-             DO n2=-nr2_,nr2_
-                DO n3=-nr3_,nr3_
-                   DO i= 1, 3
-                      r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                      r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
-                      if (fd) r_ws(i) = r(i) + tau(i,nb)-tau(i,na)
-                   ENDDO
-                   wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
-                ENDDO
-             ENDDO
-          ENDDO
-      ENDDO
-    ENDDO
-  ENDIF FIRST_TIME
-  !
-  ALLOCATE(ttt(3,nat,nr1,nr2,nr3))
-  ALLOCATE(tttx(3,nat*nr1*nr2*nr3))
-  ttt(:,:,:,:,:)=0.d0
-
-  DO na= 1, nat
-     DO nb= 1, nat
-        total_weight=0.0d0
-        DO n1=-nr1_,nr1_
-           DO n2=-nr2_,nr2_
-              DO n3=-nr3_,nr3_
-                 !
-                 ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
-                 !
-                 DO i= 1, 3
-                    r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                 ENDDO
-
-                 weight = wscache(n3,n2,n1,nb,na) 
-                 IF (weight .GT. 0.0d0) THEN
-                    !
-                    ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
-                    !
-                    m1 = MOD(n1+1,nr1)
-                    IF(m1.LE.0) m1=m1+nr1
-                    m2 = MOD(n2+1,nr2)
-                    IF(m2.LE.0) m2=m2+nr2
-                    m3 = MOD(n3+1,nr3)
-                    IF(m3.LE.0) m3=m3+nr3
-                 !   WRITE(*,'(6i4)') n1,n2,n3,m1,m2,m3
-                    !
-                    ! FOURIER TRANSFORM
-                    !
-                    DO i= 1,3
-                       ttt(i,na,m1,m2,m3)=tau(i,na)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                       ttt(i,nb,m1,m2,m3)=tau(i,nb)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                    ENDDO
-
-                    arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
-                    DO ipol= 1, 3
-                       DO jpol= 1, 3
-                          dyn(ipol,jpol,na,nb) =                 &
-                               dyn(ipol,jpol,na,nb) +            &
-                               (frc(m1,m2,m3,ipol,jpol,na,nb)+f_of_q(ipol,jpol,na,nb))     &
-                               *CMPLX(COS(arg),-SIN(arg),kind=DP)*weight
-                       ENDDO
-                    ENDDO
-                 ENDIF
-                 total_weight=total_weight + weight
-              ENDDO
-           ENDDO
-        ENDDO
-        IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
-           WRITE(stdout,*) total_weight
-           CALL errore ('frc_blk','wrong total_weight',1)
-        ENDIF
-     ENDDO
-  ENDDO
-  !
-  RETURN
-END SUBROUTINE frc_blk
 !
 !-----------------------------------------------------------------------
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
@@ -1967,53 +1833,6 @@ SUBROUTINE read_tau &
 END SUBROUTINE read_tau
 !
 !-----------------------------------------------------------------------
-SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
-     nqx, nq, q, nosym)
-  !-----------------------------------------------------------------------
-  !
-  USE kinds,      ONLY : DP
-  USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : set_sym_bl, find_sym, s, irt, nsym, &
-                         nrot, t_rev, time_reversal,  sname
-  USE ktetra,     ONLY : tetra_init
-  !
-  IMPLICIT NONE
-  ! input
-  INTEGER :: ibrav, nat, nk1, nk2, nk3, ityp(*)
-  REAL(DP) :: at_(3,3), bg_(3,3), tau(3,nat)
-  LOGICAL :: nosym
-  ! output
-  INTEGER :: nqx, nq
-  REAL(DP) :: q(3,nqx)
-  ! local
-  REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
-  LOGICAL :: magnetic_sym=.FALSE., skip_equivalence=.FALSE.
-  !
-  time_reversal = .true.
-  if (nosym) time_reversal = .false.
-  t_rev(:) = 0
-  xqq (:) =0.d0
-  at = at_
-  bg = bg_
-  CALL set_sym_bl ( )
-  !
-  if (nosym) then
-     nrot = 1
-     nsym = 1
-  ENDIF
-  CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg, nqx, &
-                           0,0,0, nk1,nk2,nk3, nq, q, wk)
-  !
-  CALL find_sym ( nat, tau, ityp, .not.time_reversal, mdum )
-  !
-  CALL irreducible_BZ (nrot, s, nsym, time_reversal, magnetic_sym, &
-                       at, bg, nqx, nq, q, wk, t_rev)
-  !
-  CALL tetra_init (nsym, s, time_reversal, t_rev, at, bg, nqx, 0, 0, 0, &
-       nk1, nk2, nk3, nq, q)
-  !
-  RETURN
-END SUBROUTINE gen_qpoints
 !
 !---------------------------------------------------------------------
 subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
@@ -2090,130 +1909,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
 end subroutine setgam
 !
 !--------------------------------------------------------------------
-function dos_gam (nbndx, nq, jbnd, gamma, et, ef)
-  !--------------------------------------------------------------------
-  ! calculates weights with the tetrahedron method (Bloechl version)
-  ! this subroutine is based on tweights.f90 belonging to PW
-  ! it calculates a2F on the surface of given frequency <=> histogram
-  ! Band index means the frequency mode here
-  ! and "et" means the frequency(mode,q-point)
-  !
-  USE kinds,       ONLY: DP
-  USE parameters
-  USE ktetra, ONLY : ntetra, tetra
-  implicit none
-  !
-  INTEGER :: nq, nbndx, jbnd
-  REAL(DP) :: et(nbndx,nq), gamma(nbndx,nq), func
-
-  REAL(DP) :: ef
-  REAL(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra(4)
-  INTEGER      :: ik, ibnd, nt, nk, ns, i, ik1, ik2, ik3, ik4, itetra(4)
-
-  REAL(DP) ::   f12,f13,f14,f23,f24,f34, f21,f31,f41,f42,f32,f43
-  REAL(DP) ::   P1,P2,P3,P4, G, o13, Y1,Y2,Y3,Y4, eps,vol, Tint
-  REAL(DP) :: dos_gam
-
-  Tint = 0.0d0
-  o13 = 1.0_dp/3.0_dp
-  eps  = 1.0d-14
-  vol  = 1.0d0/ntetra
-  P1 = 0.0_dp
-  P2 = 0.0_dp
-  P3 = 0.0_dp
-  P4 = 0.0_dp
-  DO nt = 1, ntetra
-     ibnd = jbnd
-     !
-     ! etetra are the energies at the vertexes of the nt-th tetrahedron
-     !
-     DO i = 1, 4
-        etetra(i) = et(ibnd, tetra(i,nt))
-     ENDDO
-     itetra(1) = 0
-     CALL hpsort (4,etetra,itetra)
-     !
-     ! ...sort in ascending order: e1 < e2 < e3 < e4
-     !
-     e1 = etetra (1)
-     e2 = etetra (2)
-     e3 = etetra (3)
-     e4 = etetra (4)
-     !
-     ! kp1-kp4 are the irreducible k-points corresponding to e1-e4
-     !
-     ik1 = tetra(itetra(1),nt)
-     ik2 = tetra(itetra(2),nt)
-     ik3 = tetra(itetra(3),nt)
-     ik4 = tetra(itetra(4),nt)
-     Y1  = gamma(ibnd,ik1)/et(ibnd,ik1)
-     Y2  = gamma(ibnd,ik2)/et(ibnd,ik2)
-     Y3  = gamma(ibnd,ik3)/et(ibnd,ik3)
-     Y4  = gamma(ibnd,ik4)/et(ibnd,ik4)
-
-     IF ( e3 < ef .and. ef < e4) THEN
-
-        f14 = (ef-e4)/(e1-e4)
-        f24 = (ef-e4)/(e2-e4)
-        f34 = (ef-e4)/(e3-e4)
-
-        G  =  3.0_dp * f14 * f24 * f34 / (e4-ef)
-        P1 =  f14 * o13
-        P2 =  f24 * o13
-        P3 =  f34 * o13
-        P4 =  (3.0_dp - f14 - f24 - f34 ) * o13
-
-     ELSE IF ( e2 < ef .and. ef < e3 ) THEN
-
-        f13 = (ef-e3)/(e1-e3)
-        f31 = 1.0_dp - f13
-        f14 = (ef-e4)/(e1-e4)
-        f41 = 1.0_dp-f14
-        f23 = (ef-e3)/(e2-e3)
-        f32 = 1.0_dp - f23
-        f24 = (ef-e4)/(e2-e4)
-        f42 = 1.0_dp - f24
-
-        G   =  3.0_dp * (f23*f31 + f32*f24)
-        P1  =  f14 * o13 + f13*f31*f23 / G
-        P2  =  f23 * o13 + f24*f24*f32 / G
-        P3  =  f32 * o13 + f31*f31*f23 / G
-        P4  =  f41 * o13 + f42*f24*f32 / G
-        G   =  G / (e4-e1)
-
-     ELSE IF ( e1 < ef .and. ef < e2 ) THEN
-
-        f12 = (ef-e2)/(e1-e2)
-        f21 = 1.0_dp - f12
-        f13 = (ef-e3)/(e1-e3)
-        f31 = 1.0_dp - f13
-        f14 = (ef-e4)/(e1-e4)
-        f41 = 1.0_dp - f14
-
-        G  =  3.0_dp * f21 * f31 * f41 / (ef-e1)
-        P1 =  o13 * (f12 + f13 + f14)
-        P2 =  o13 * f21
-        P3 =  o13 * f31
-        P4 =  o13 * f41
-
-     ELSE
-
-        G = 0.0_dp
-
-     ENDIF
-
-     Tint = Tint + G * (Y1*P1 + Y2*P2 + Y3*P3 + Y4*P4) * vol
-
-  ENDDO   ! ntetra
-
-
-  dos_gam = Tint  !2 because DOS_ee is per 1 spin
-
-  RETURN
-end function dos_gam
 !
-!
-!-----------------------------------------------------------------------
 subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   !-----------------------------------------------------------------------
   !
@@ -2300,7 +1996,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 !  search the symmetries only if there are no G such that Sq -> q+G
 !
   search_sym=.TRUE.
-  IF ( ANY ( ft(:,1:nsymq) > 1.0d-8 ) ) THEN
+  IF ( ANY ( ABS(ft(:,1:nsymq)) > 1.0d-8 ) ) THEN
      DO isym= 1,nsymq
         search_sym=( search_sym.and.(ABS(gi(1,isym))<1.d-8).and.  &
                                     (ABS(gi(2,isym))<1.d-8).and.  &
@@ -2327,7 +2023,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq_zg, & 
                       q_external, zero_one_phonon, full_phonon, atmsf_zg_a, atmsf_zg_b, & 
                       dim1, dim2, dim3, tau, alat, atm, atom_resolved, &
-                      ntypx,at,q_in_cryst_coord,T) 
+                      ntypx,at,q_in_cryst_coord,T,eps2) 
 ! we start here with the WRITE_eigenvectors.f90 routine
   use kinds, only: dp
   use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
@@ -2343,7 +2039,7 @@ SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq
   LOGICAL, INTENT(in)          :: zero_one_phonon, full_phonon, atom_resolved
   INTEGER, INTENT(in)          :: dim1, dim2, dim3, T 
   INTEGER, INTENT(in)          :: nq, nat, ntyp, ntypx, nq_super, nq_strft
-  REAL(DP), INTENT(in)         :: alat
+  REAL(DP), INTENT(in)         :: alat, eps2
   REAL(DP), INTENT(in)         :: at(3, 3)
   REAL(DP), intent(in)         :: atmsf_zg_a(ntypx, 5), atmsf_zg_b(ntypx, 5)
   REAL(DP), INTENT(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
@@ -2412,6 +2108,15 @@ SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq
   CALL mp_sum(freq, inter_pool_comm)
   CALL mp_sum(z_zg, inter_pool_comm)
   CALL mp_barrier(inter_pool_comm)
+  !
+  IF (ionode) THEN
+   WRITE(*,*) nq, nat3
+   DO i = 1, nat3
+    DO qp =  1, nq
+      IF (w2(i, qp) < 0.0 .AND. ionode) WRITE(*,*) "WARNING: Negative frequencies", w2(i, qp)
+    ENDDO
+   ENDDO
+  ENDIF
   ! Einstein model set polarization vectors to unity
   !
   ! z_zg = (1.d0, 1.d0)/DBLE(SQRT(real(2.d0*nat3))) ! For Einstein model
@@ -2447,7 +2152,7 @@ SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq
   CALL fkbounds( nq, lower_bnd, upper_bnd )
   DO qp =  lower_bnd, upper_bnd ! 1, nq
     DO i = 1, nat3 
-      IF (w2(i, qp) .lt. 0.0d0) THEN
+      IF (w2(i, qp) .lt. 0.0d0 + eps2) THEN
           l_q(i, qp) = 0.d0
           p_q(i, qp) = 0.d0
       ELSE
@@ -2472,6 +2177,7 @@ CALL mp_sum(l_q, inter_pool_comm)
 CALL mp_sum(p_q, inter_pool_comm)
 CALL mp_barrier(inter_pool_comm)
 !IF (ionode) WRITE(*,*) "step2"
+
 ! 
 ! To determine which points belong in set A
 qlistA = 0
@@ -2528,11 +2234,11 @@ CALL mp_sum(sigma_DW, inter_pool_comm)
 CALL mp_barrier(inter_pool_comm)
 !
 IF (ionode) THEN
-  WRITE(*,*) "DW exponent"
+  WRITE(*,*) "Mean-squared displacement (Ang**2)"
   DO k= 1, nat
    WRITE(*,*) "atom:", k
     DO i= 1,3  ! i is for cart directions
-       WRITE(*,'(3F14.8)') (sigma_DW(k,i,p), p = 1, 3)
+       WRITE(*,'(3F14.8)') (2.0d0 * sigma_DW(k,i,p), p = 1, 3)
     ENDDO ! i
   ENDDO ! k
 ENDIF
@@ -3119,9 +2825,6 @@ IMPLICIT NONE
 ! Reciprocal axis, as printed form espresso but transpose
 ! 
 B = (bg)
-!WRITE(*,*) B(1,:) 
-!WRITE(*,*) B(2,:) 
-!WRITE(*,*) B(3,:) 
 !
 ! 
  eps = 1.0E-05
@@ -3364,3 +3067,115 @@ SUBROUTINE  qpoint_gen2(dim1, dim2, dim3, ctrAB, q_AB)
 !
 END SUBROUTINE qpoint_gen2
 
+!
+!-----------------------------------------------------------------------
+SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
+  !-----------------------------------------------------------------------
+  ! calculates the dynamical matrix at q from the (short-range part of the)
+  ! force constants
+  !
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : tpi
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  INTEGER nr1, nr2, nr3, nat, n1, n2, n3, nr1_, nr2_, nr3_, &
+          ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws, nax
+  COMPLEX(DP) dyn(3,3,nat,nat), f_of_q(3,3,nat,nat)
+  REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
+               at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
+               total_weight, rws(0:3,nrws), alat
+  REAL(DP), EXTERNAL :: wsweight
+  REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: ttt(:,:,:,:,:), tttx(:,:)
+  LOGICAL,SAVE :: first=.true.
+  LOGICAL :: fd
+  !
+  nr1_=2*nr1
+  nr2_=2*nr2
+  nr3_=2*nr3
+  FIRST_TIME : IF (first) THEN
+    first=.false.
+    ALLOCATE( wscache(-nr3_:nr3_, -nr2_:nr2_, -nr1_:nr1_, nat,nat) )
+    DO na=1, nat
+       DO nb=1, nat
+          total_weight=0.0d0
+          !
+          ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY VERY SAFE RANGE!
+          !
+          DO n1=-nr1_,nr1_
+             DO n2=-nr2_,nr2_
+                DO n3=-nr3_,nr3_
+                   DO i=1, 3
+                      r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
+                      r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
+                      if (fd) r_ws(i) = r(i) + tau(i,nb)-tau(i,na)
+                   END DO
+                   wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
+                   total_weight=total_weight + wscache(n3,n2,n1,nb,na) 
+                ENDDO
+             ENDDO
+          ENDDO
+          IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
+             WRITE(stdout,*) na,nb,total_weight
+             CALL errore ('frc_blk','wrong total_weight',1)
+          END IF
+      ENDDO
+    ENDDO
+  ENDIF FIRST_TIME
+  !
+  ALLOCATE(ttt(3,nat,nr1,nr2,nr3))
+  ALLOCATE(tttx(3,nat*nr1*nr2*nr3))
+  ttt(:,:,:,:,:)=0.d0
+
+  DO na=1, nat
+     DO nb=1, nat
+        DO n1=-nr1_,nr1_
+           DO n2=-nr2_,nr2_
+              DO n3=-nr3_,nr3_
+                 !
+                 ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
+                 !
+                 DO i=1, 3
+                    r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
+                 END DO
+
+                 weight = wscache(n3,n2,n1,nb,na) 
+                 IF (weight .GT. 0.0d0) THEN
+                    !
+                    ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
+                    !
+                    m1 = MOD(n1+1,nr1)
+                    IF(m1.LE.0) m1=m1+nr1
+                    m2 = MOD(n2+1,nr2)
+                    IF(m2.LE.0) m2=m2+nr2
+                    m3 = MOD(n3+1,nr3)
+                    IF(m3.LE.0) m3=m3+nr3
+                 !   write(*,'(6i4)') n1,n2,n3,m1,m2,m3
+                    !
+                    ! FOURIER TRANSFORM
+                    !
+                    do i=1,3
+                       ttt(i,na,m1,m2,m3)=tau(i,na)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
+                       ttt(i,nb,m1,m2,m3)=tau(i,nb)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
+                    end do
+
+                    arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
+                    DO ipol=1, 3
+                       DO jpol=1, 3
+                          dyn(ipol,jpol,na,nb) = dyn(ipol,jpol,na,nb) +                &
+                               (frc(m1,m2,m3,ipol,jpol,na,nb)+f_of_q(ipol,jpol,na,nb)) &
+                               *CMPLX(COS(arg),-SIN(arg),kind=DP)*weight
+                       END DO
+                    END DO
+
+                 END IF
+              END DO
+           END DO
+        END DO
+     END DO
+  END DO
+  !
+  RETURN
+END SUBROUTINE frc_blk
+!
