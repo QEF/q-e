@@ -155,9 +155,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
 #if defined(__LIBXC)
   lengthxc = length
   !
-  !ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
-  !ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
-  !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN
      POLARIZED = .TRUE.
@@ -167,8 +164,6 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   ALLOCATE( rho_lxc(length*ns), sigma(length*np), tau_lxc(length*ns) )
   ALLOCATE( lapl_rho(length*ns) )
-  !$acc data copyout( rho_lxc, sigma, tau_lxc, lapl_rho )
-  !$acc host_data use_device( rho_lxc, sigma, tau_lxc, lapl_rho )
   !
   ALLOCATE( ex_lxc(length)    , ec_lxc(length) )
   ALLOCATE( vx_rho(length*ns) , vx_sigma(length*np), vx_tau(length*ns) )
@@ -176,6 +171,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   ALLOCATE( vlapl_rho(length*ns) )
   !
   !
+  !$acc data copyout( rho_lxc, sigma, tau_lxc, lapl_rho )
   IF ( ns == 1 ) THEN
     !
     !$acc parallel loop
@@ -206,15 +202,20 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
     ENDDO
     !
   ENDIF
+  !$acc update self( rho_lxc, sigma, tau_lxc, lapl_rho )
   !
-  vlapl_rho = 0._DP
   !
   IF ( .NOT.is_libxc(5) .AND. imetac==0 ) THEN
     !
     ALLOCATE( grho2(length,ns) )
+    !$acc data create( grho2 )
+    !$acc host_data use_device( grho2 )
     !
+    !$acc parallel loop collapse(2)
     DO is = 1, ns
-       grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
+      DO k = 1, length
+        grho2(k,is) = grho(1,k,is)**2 + grho(2,k,is)**2 + grho(3,k,is)**2
+      ENDDO  
     ENDDO
     !
     IF (ns == 1) CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, &
@@ -222,17 +223,16 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
                               v3c(:,1) )
     IF (ns == 2) CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x,&
                                    v1c, v2c, v3c )
-    !
+    !$acc end host_data
+    !$acc end data
     DEALLOCATE( grho2 )
     !
   ENDIF
   !
-  !$acc end host_data
-  !$acc end data
-  !
   ! ... META EXCHANGE
   !
   IF ( is_libxc(5) ) THEN
+    vlapl_rho = 0._DP
     CALL xc_f03_func_set_dens_threshold( xc_func(5), rho_threshold_mgga )
     IF (libxc_flags(5,0)==1) THEN
       CALL xc_f03_mgga_exc_vxc( xc_func(5), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
@@ -243,19 +243,31 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
       ex_lxc = 0.d0 
     ENDIF
     !
+    !$acc data copyin( ex_lxc, vx_rho, vx_sigma, vx_tau )
     IF (.NOT. POLARIZED) THEN
+      !$acc parallel loop
       DO k = 1, length
         IF ( ABS(rho_lxc(k))<=rho_threshold_mgga .OR. &
              sigma(k)<=grho2_threshold_mgga      .OR. &
-             ABS(tau_lxc(k))<=rho_threshold_mgga ) CYCLE
+             ABS(tau_lxc(k))<=rho_threshold_mgga ) THEN
+          ex(k) = 0.d0    ; v1x(k,1) = 0.d0
+          v2x(k,1) = 0.d0 ; v3x(k,1) = 0.d0
+          CYCLE
+        ENDIF  
         ex(k) = ex_lxc(k) * rho_lxc(k)
         v1x(k,1) = vx_rho(k)
         v2x(k,1) = vx_sigma(k) * 2.0_DP
         v3x(k,1) = vx_tau(k)
       ENDDO
     ELSE
+      !$acc parallel loop
       DO k = 1, length
-        IF (rho_lxc(2*k-1)+rho_lxc(2*k) <= rho_threshold_mgga) CYCLE
+        IF (rho_lxc(2*k-1)+rho_lxc(2*k) <= rho_threshold_mgga) THEN
+          ex(k) = 0.d0    
+          v1x(k,1) = 0.d0 ; v2x(k,1) = 0.d0 ; v3x(k,1) = 0.d0
+          v1x(k,2) = 0.d0 ; v2x(k,2) = 0.d0 ; v3x(k,2) = 0.d0
+          CYCLE
+        ENDIF
         ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
         IF ( ABS(rho_lxc(2*k-1))>rho_threshold_mgga .AND. &
              sigma(3*k-2)>grho2_threshold_mgga      .AND. &
@@ -263,6 +275,8 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
           v1x(k,1) = vx_rho(2*k-1)
           v2x(k,1) = vx_sigma(3*k-2)*2.d0
           v3x(k,1) = vx_tau(2*k-1)
+        ELSE
+          v1x(k,1) = 0.d0 ; v2x(k,1) = 0.d0 ; v3x(k,1) = 0.d0
         ENDIF
         IF ( ABS(rho_lxc(2*k))>rho_threshold_mgga .AND. &
              sigma(3*k)>grho2_threshold_mgga      .AND. &
@@ -270,9 +284,12 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
           v1x(k,2) = vx_rho(2*k)
           v2x(k,2) = vx_sigma(3*k)*2.d0
           v3x(k,2) = vx_tau(2*k)
+        ELSE
+          v1x(k,2) = 0.d0 ; v2x(k,2) = 0.d0 ; v3x(k,2) = 0.d0
         ENDIF
       ENDDO
     ENDIF
+    !$acc end data
     !
   ENDIF
   !
@@ -280,6 +297,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   !
   IF ( is_libxc(6) ) THEN
     !
+    vlapl_rho = 0._DP
     CALL xc_f03_func_set_dens_threshold( xc_func(6), rho_threshold_mgga )
     IF (libxc_flags(6,0)==1) THEN
       CALL xc_f03_mgga_exc_vxc( xc_func(6), lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
@@ -290,24 +308,40 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
       ec_lxc = 0.d0
     ENDIF
     !
+    !$acc data copyin( ec_lxc, vc_rho, vc_sigma, vc_tau )
     IF (.NOT. POLARIZED) THEN
+       !$acc parallel loop
        DO k = 1, length
          IF ( ABS(rho_lxc(k))<=rho_threshold_mgga    .OR. &
                      sigma(k)<=grho2_threshold_mgga  .OR. &
-              ABS(tau_lxc(k))<=rho_threshold_mgga  ) CYCLE
+              ABS(tau_lxc(k))<=rho_threshold_mgga  ) THEN
+           ec(k) = 0.d0      ; v1c(k,1) = 0.d0
+           v2c(1,k,1) = 0.d0 ; v3c(k,1) = 0.d0
+           CYCLE
+         ENDIF  
          ec(k) = ec_lxc(k) * rho_lxc(k) 
          v1c(k,1) = vc_rho(k)
          v2c(1,k,1) = vc_sigma(k) * 2.0_DP
          v3c(k,1) = vc_tau(k)
        ENDDO
     ELSE
+       !$acc parallel loop
        DO k = 1, length
           rh   = rho_lxc(2*k-1) + rho_lxc(2*k)
           atau = ABS(tau_lxc(2*k-1) + tau_lxc(2*k))
           ggrho2 = (sigma(3*k-2) + sigma(3*k))*4.0_DP
           IF ( rh <= rho_threshold_mgga   .OR. &
            ggrho2 <= grho2_threshold_mgga .OR. &
-             atau <= tau_threshold_mgga  ) CYCLE
+             atau <= tau_threshold_mgga  ) THEN
+            ex(k) = 0.d0    
+            v1c(k,1) = 0.d0 ; v3c(k,1) = 0.d0
+            v1c(k,2) = 0.d0 ; v3c(k,2) = 0.d0
+            DO ipol = 1, 3
+              v2c(ipol,k,1) = 0.d0
+              v2c(ipol,k,2) = 0.d0
+            ENDDO
+            CYCLE
+          ENDIF   
           ec(k) = ec_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
           v1c(k,1) = vc_rho(2*k-1)
           v1c(k,2) = vc_rho(2*k)
@@ -319,9 +353,11 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
           v3c(k,2) = vc_tau(2*k)
        ENDDO
     ENDIF
+    !$acc end data
     !
   ENDIF
   !
+  !$acc end data
   DEALLOCATE( rho_lxc, sigma, tau_lxc, lapl_rho )
   DEALLOCATE( ex_lxc , ec_lxc )
   DEALLOCATE( vx_rho , vx_sigma, vx_tau )

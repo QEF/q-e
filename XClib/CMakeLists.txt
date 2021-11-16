@@ -89,6 +89,7 @@ if(QE_ENABLE_TEST)
             qe_mpi_fortran
             qe_upflib
             qe_external_libxc
+            qe_libbeef
             qe_xclib)
 
     find_program(BASH_PROGRAM bash)
