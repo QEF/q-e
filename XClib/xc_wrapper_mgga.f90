@@ -171,7 +171,7 @@ SUBROUTINE xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v
   ALLOCATE( vlapl_rho(length*ns) )
   !
   !
-  !$acc data copyout( rho_lxc, sigma, tau_lxc, lapl_rho )
+  !$acc data create( rho_lxc, sigma, tau_lxc, lapl_rho )
   IF ( ns == 1 ) THEN
     !
     !$acc parallel loop

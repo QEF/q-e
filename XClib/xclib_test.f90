@@ -380,6 +380,15 @@ PROGRAM xclib_test
   IF (nr==1) nrpe = mype*nnr
   IF (nr==0) nrpe = npoints-(npoints/npes)*(npes-mype-1)
   !
+  ! ... openacc init (otherwise it offsets the wall time of the first test)
+  !
+#if defined(_OPENACC)
+  !$acc data create( time )
+  !$acc end data
+#endif
+  !
+  ! ... capitalize input vars
+  !
   IF (TRIM(polarization)=='UNPOLARIZED' ) THEN
     is_min = 1  ;  is_max = 1
   ELSEIF (TRIM(polarization)=='POLARIZED' ) THEN

@@ -48,7 +48,7 @@ SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, gpu_arg
   ELSE
     !
     !$acc data copyin( rho_in ), copyout( ex_out, ec_out, vx_out, vc_out )
-    !$acc host_data use_device(rho_in, ex_out, ec_out, vx_out, vc_out )
+    !$acc host_data use_device( rho_in, ex_out, ec_out, vx_out, vc_out )
     CALL xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
     !$acc end host_data
     !$acc end data
@@ -114,50 +114,56 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   fkind_x = -1
   lengthxc = length
   !
-  ALLOCATE( rho_lxc(length*svd) )
-  ALLOCATE( ex_lxc(length), vx_lxc(length*svd) )
-  ALLOCATE( ec_lxc(length), vc_lxc(length*svd) )
-  !$acc data copyout( rho_lxc )
-  !
-  SELECT CASE( srd )  !... set libxc input
-  CASE( 1 )
-     !
-     !$acc parallel loop
-     DO ir = 1, length
-       rho_lxc(ir) = ABS(rho_in(ir,1))
-     ENDDO
-     !
-  CASE( 2 )
-     !
-     !$acc parallel loop
-     DO ir = 1, length
+  IF ( is_libxc(1) .OR. is_libxc(2) ) THEN
+    !
+    ALLOCATE( rho_lxc(length*svd) )
+    ALLOCATE( ex_lxc(length), vx_lxc(length*svd) )
+    ALLOCATE( ec_lxc(length), vc_lxc(length*svd) )
+    !$acc data copyout( rho_lxc )
+    !
+    SELECT CASE( srd )  !... set libxc input
+    CASE( 1 )
+      !
+      !$acc parallel loop
+      DO ir = 1, length
+        rho_lxc(ir) = ABS(rho_in(ir,1))
+      ENDDO
+      !
+    CASE( 2 )
+      !
+      !$acc parallel loop
+      DO ir = 1, length
         rho_lxc(2*ir-1) = (rho_in(ir,1) + rho_in(ir,2)) * 0.5_DP
         rho_lxc(2*ir)   = (rho_in(ir,1) - rho_in(ir,2)) * 0.5_DP
-     ENDDO
-     !
-  CASE( 4 )
-     !
-     !$acc parallel loop
-     DO ir = 1, length
+      ENDDO
+      !
+    CASE( 4 )
+      !
+      !$acc parallel loop
+      DO ir = 1, length
         amag = SQRT( SUM(rho_in(ir,2:4)**2) )
         rho_lxc(2*ir-1) = (rho_in(ir,1) + amag) * 0.5_DP
         rho_lxc(2*ir)   = (rho_in(ir,1) - amag) * 0.5_DP
-     ENDDO
-     !
-  CASE DEFAULT
-     !
-     CALL xclib_error( 'xc_LDA', 'Wrong number of spin dimensions', 1 )
-     !
-  END SELECT
-  !$acc end data
+      ENDDO
+      !
+    CASE DEFAULT
+      !
+      CALL xclib_error( 'xc_LDA', 'Wrong number of spin dimensions', 1 )
+      !
+    END SELECT
+    !
+    !$acc end data
+    !
+  ENDIF
   !
   ! ... EXCHANGE
   IF ( is_libxc(1) ) THEN
     CALL xc_f03_func_set_dens_threshold( xc_func(1), rho_threshold_lda )
     IF (libxc_flags(1,0)==1) THEN
-      CALL xc_f03_lda_exc_vxc( xc_func(1), lengthxc, rho_lxc(1), ex_out(1), vx_lxc(1) )
+      CALL xc_f03_lda_exc_vxc( xc_func(1), lengthxc, rho_lxc(1), ex_lxc(1), vx_lxc(1) )
     ELSE
       CALL xc_f03_lda_vxc( xc_func(1), lengthxc, rho_lxc(1), vx_lxc(1) )
+      ex_lxc = 0.d0
     ENDIF
   ENDIF
   !
@@ -166,12 +172,14 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
     CALL xc_f03_func_set_dens_threshold( xc_func(2), rho_threshold_lda )
     fkind_x = xc_f03_func_info_get_kind( xc_info(2) )
     IF (libxc_flags(2,0)==1) THEN
-      CALL xc_f03_lda_exc_vxc( xc_func(2), lengthxc, rho_lxc(1), ec_out(1), vc_lxc(1) )
+      CALL xc_f03_lda_exc_vxc( xc_func(2), lengthxc, rho_lxc(1), ec_lxc(1), vc_lxc(1) )
     ELSE
       CALL xc_f03_lda_vxc( xc_func(2), lengthxc, rho_lxc(1), vc_lxc(1) )
+      ec_lxc = 0.d0
     ENDIF
   ENDIF
   !
+  IF ( is_libxc(1) .OR. is_libxc(2) ) DEALLOCATE( rho_lxc )
   !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
         .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
@@ -179,7 +187,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( srd )
      CASE( 1 )
         !
-        IF (iexch==8 .OR. icorr==10) THEN
+        IF ((iexch==8 .AND. .NOT.is_libxc1) .OR. (icorr==10 .AND. .NOT.is_libxc2)) THEN
           IF (.NOT. finite_size_cell_volume_set) CALL xclib_error( 'XC',&
               'finite size corrected exchange used w/o initialization', 1 )
         ENDIF
@@ -189,12 +197,12 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
         ALLOCATE( zeta(length) )
         !$acc data create( zeta )
-        !$acc host_data use_device( zeta )
         !$acc parallel loop
         DO ir = 1, length
           arho_ir = ABS(rho_in(ir,1))
           IF (arho_ir > rho_threshold_lda) zeta(ir) = rho_in(ir,2) / arho_ir
         ENDDO
+        !$acc host_data use_device( zeta )
         CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
         !$acc end host_data
         !$acc end data
@@ -204,13 +212,13 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
         ALLOCATE( zeta(length) )
         !$acc data create( zeta )
-        !$acc host_data use_device( zeta )
         !$acc parallel loop
         DO ir = 1, length
           arho_ir = ABS( rho_in(ir,1) )
           IF (arho_ir > rho_threshold_lda) zeta(ir) = SQRT( rho_in(ir,2)**2 + rho_in(ir,3)**2 + &
                                                           rho_in(ir,4)**2 ) / arho_ir ! amag/arho
         ENDDO
+        !$acc host_data use_device( zeta )
         CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
         !$acc end host_data
         !$acc end data
@@ -222,33 +230,64 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      END SELECT
      !
+     IF ( iexch==0 ) THEN
+       IF (srd==1) THEN
+         !$acc parallel loop
+         DO ir = 1, length
+           ex_out(ir)=0.d0 ; vx_out(ir,1)=0.d0
+         ENDDO
+       ELSE
+         !$acc parallel loop
+         DO ir = 1, length
+           ex_out(ir)=0.d0 ; vx_out(ir,1)=0.d0 ; vx_out(ir,2)=0.d0
+         ENDDO
+       ENDIF
+     ENDIF
+     IF ( icorr==0 ) THEN
+       IF (srd==1) THEN
+         !$acc parallel loop
+         DO ir = 1, length
+           ec_out(ir)=0.d0 ; vc_out(ir,1)=0.d0
+         ENDDO
+       ELSE
+         !$acc parallel loop
+         DO ir = 1, length
+           ec_out(ir)=0.d0 ; vc_out(ir,1)=0.d0 ; vc_out(ir,2)=0.d0
+         ENDDO
+       ENDIF
+     ENDIF
+     !
   ENDIF
   !
   !  ... fill output arrays
   !
-  !$acc data copyin( rho_lxc, ex_lxc, ec_lxc, vx_lxc, vc_lxc )
-  !$acc parallel loop
-  DO ir = 1, length
-    IF (is_libxc1) ex_out(ir) = ex_lxc(ir)
-    IF (is_libxc2) ec_out(ir) = ec_lxc(ir)
-    IF (svd == 1) THEN
-       IF (is_libxc1) vx_out(ir,1) = vx_lxc(ir)
-       IF (is_libxc2) vc_out(ir,1) = vc_lxc(ir)
-    ELSE
-       IF (is_libxc1) THEN
-         vx_out(ir,1) = vx_lxc(2*ir-1)
-         vx_out(ir,2) = vx_lxc(2*ir)
-       ENDIF
-       IF (is_libxc2) THEN
-         vc_out(ir,1) = vc_lxc(2*ir-1)
-         vc_out(ir,2) = vc_lxc(2*ir)
-       ENDIF
-    ENDIF
-  ENDDO
-  !$acc end data
-  DEALLOCATE( rho_lxc )
-  DEALLOCATE( ex_lxc, vx_lxc )
-  DEALLOCATE( ec_lxc, vc_lxc )
+  IF ( is_libxc(1) .OR. is_libxc(2) ) THEN
+    !$acc data copyin( ex_lxc, ec_lxc, vx_lxc, vc_lxc )
+    !$acc parallel loop
+    DO ir = 1, length
+      IF (is_libxc1) ex_out(ir) = ex_lxc(ir)
+      IF (is_libxc2) ec_out(ir) = ec_lxc(ir)
+      IF (svd == 1) THEN
+        IF (is_libxc1) vx_out(ir,1) = vx_lxc(ir)
+        IF (is_libxc2) vc_out(ir,1) = vc_lxc(ir)
+      ELSE
+        IF (is_libxc1) THEN
+          vx_out(ir,1) = vx_lxc(2*ir-1)
+          vx_out(ir,2) = vx_lxc(2*ir)
+        ENDIF
+        IF (is_libxc2) THEN
+          vc_out(ir,1) = vc_lxc(2*ir-1)
+          vc_out(ir,2) = vc_lxc(2*ir)
+        ENDIF
+      ENDIF
+    ENDDO
+    !$acc end data
+  ENDIF
+  !
+  IF ( is_libxc(1) .OR. is_libxc(2) ) THEN
+    DEALLOCATE( ex_lxc, vx_lxc )
+    DEALLOCATE( ec_lxc, vc_lxc )
+  ENDIF
   !
 #else
   !
@@ -266,12 +305,12 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
      !
      ALLOCATE( zeta(length) )
      !$acc data create( zeta )
-     !$acc host_data use_device( zeta )
      !$acc parallel loop
      DO ir = 1, length
        arho_ir = ABS(rho_in(ir,1))
        IF (arho_ir > rho_threshold_lda) zeta(ir) = rho_in(ir,2) / arho_ir
      ENDDO
+     !$acc host_data use_device( zeta )
      CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
      !$acc end host_data
      !$acc end data
@@ -281,13 +320,13 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
      !
      ALLOCATE( zeta(length) )
      !$acc data create( zeta )
-     !$acc host_data use_device( zeta )
      !$acc parallel loop
      DO ir = 1, length
        arho_ir = ABS(rho_in(ir,1))
        IF (arho_ir > rho_threshold_lda) zeta(ir) = SQRT( rho_in(ir,2)**2 + rho_in(ir,3)**2 + &
                                                        rho_in(ir,4)**2 ) / arho_ir ! amag/arho
      ENDDO
+     !$acc host_data use_device( zeta )
      CALL xc_lsda( length, rho_in(:,1), zeta, ex_out, ec_out, vx_out, vc_out )
      !$acc end host_data
      !$acc end data
