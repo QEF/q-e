@@ -207,6 +207,29 @@ tolerance = ( (1.0e-2, 1.0e-4 ) )
 skip_program = grep
 skip_args = 'not present in this version'
 
+[IMAGE]
+exe = XXXXXX/test-suite/run-image.sh
+extract_program = XXXXXX/test-suite/extract-image.sh
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
+              (5.0e+0, 5.0e-1, 'n1'),
+              (1.0e-3, 1.0e-5, 'f1'),
+              (1.0e-1, 1.0e-3, 'p1'),
+              (5.0e-2, None,   'band'),
+              (1.0e-2, 1.0e-2, 'ef1'),
+              (1.0e-2, 1.0e-2, 'eh1'),
+              (1.0e-2, 2.0e-2, 'ehl1'),
+              (1.0e-2, 1.0e-2, 'tf1'),
+              (5.0e-2, 5.0e-3, 'diel'),
+              (5.0e-2, 5.0e-3, 'born'),
+              (5.0e-4, 5.0e-4, 'dos'),
+              (5.0e-2, 1.0e-1, 'born_diff'),
+              (1.5e-0,   None, 'lambda'),
+              (3.0e-1, 5.0e-3, 'lambda2'))
+skip_program = grep
+skip_args = 'not present in this version'
+
 [user]
 benchmark = git
 date_fmt = %d%m%y
