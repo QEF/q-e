@@ -766,9 +766,7 @@ MODULE input
      USE input_parameters, ONLY : lda_plus_u, Hubbard_U
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
-                                  ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr, &
-                                  debug_checkpoints, debug_checkpoint_testing,&
-                                  debug_checkpoint_file_prefix
+                                  ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
      !
      USE constants,        ONLY : amu_au, pi
      USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
@@ -881,7 +879,6 @@ MODULE input
      CALL efield_init( epol, efield )
 
      CALL cg_init( tcg, maxiter, conv_thr, passop, niter_cg_restart, pre_state)
-     CALL init_debug_utils( debug_checkpoints, debug_checkpoint_file_prefix, debug_checkpoint_testing )
      !
      IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &
         CALL errore( ' module setup ', ' Stress is not yet implemented with SIC ', 1 )

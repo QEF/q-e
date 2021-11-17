@@ -29,8 +29,6 @@
       USE control_flags,    ONLY: tksw, ndw
       USE gvecw,            ONLY: ngw
       USE wannier_module,   ONLY : wfc ! BS
-      use debug_utils, only: checkpoint
-#define CHECKPOINT(a) checkpoint(a, __FILE__, __LINE__ )
 
 !
       implicit none
@@ -62,10 +60,6 @@
          ! Do not write restart file if the unit number 
          ! is negative, this is used mainly for benchmarks and tests
          !
-         CALL CHECKPOINT(lambda)
-         CALL CHECKPOINT(lambdam)
-         CALL CHECKPOINT(c0)
-         CALL CHECKPOINT(cm)
          return
          !
       end if

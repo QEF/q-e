@@ -94,7 +94,6 @@ set(src_modules
     wypos.f90 
     zvscal.f90 
     wave_gauge.f90
-    debug.f90
     # subroutines and functions (not modules) previously found in flib
     atom_weight.f90 
     capital.f90 

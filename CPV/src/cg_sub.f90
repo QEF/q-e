@@ -63,9 +63,6 @@ contains
       use wave_gauge, only: project_parallel_gauge_2
       use wave_base, only: print_norm_square_difference ! for debugging
 
-!this defines the macro CHECKPOINT
-      use debug_utils, only: checkpoint
-#define CHECKPOINT(a) checkpoint(a, __FILE__, __LINE__ )
 !
       implicit none
 !
@@ -204,9 +201,6 @@ contains
       CALL gram_bgrp(betae, bec, nkb, c0, ngw)
 
       !$acc update self(c0,betae,bec)
-      call CHECKPOINT(c0)
-      call CHECKPOINT(betae)
-      call CHECKPOINT(bec)
 
       !calculates phi for pcdaga
 
@@ -287,13 +281,8 @@ contains
          c0_d = c0
          !vkb_d = betae ! runcp uses a global variable!!!
 #endif
-         call CHECKPOINT(rhos)
-         call CHECKPOINT(bec)
-         call CHECKPOINT(betae)
-         call CHECKPOINT(c0)
          call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
                          c0, c0_d, hpsi, hpsi_d, .false., .false., .true.)
-         call CHECKPOINT(hpsi)
          if (pre_state) call ave_kin(c0, SIZE(c0, 1), nbsp, ave_ene)
 
          phi_tmp = phi ! cannot use device array as input for openacc according to the compiler
@@ -313,7 +302,6 @@ contains
          call pc2(c0, bec, hpsi, becm)
 
          !$acc update self(hpsi)
-         call CHECKPOINT(hpsi)
          call xminus1(gi,betae,ema0bg,becm,k_minus1,.true., pre_state, tpiba2, ave_ene )
          call calbec(nbsp, betae, gi, becm)
          call pc2(c0, bec, gi, becm)
@@ -321,7 +309,6 @@ contains
          if (tens) call calcmt(nrlx, f, z0t, fmat0)
          call calbec(nbsp, betae, hpsi, bec0)
          !$acc end data
-         call CHECKPOINT(gi)
 
 !  calculates gamma
          gamma = 0.d0
@@ -427,7 +414,6 @@ contains
             call mp_sum(gamma, intra_bgrp_comm)
          endif
 
-         call CHECKPOINT(gamma)
          !case of first iteration
 
          if (itercg == 1 .or. (mod(itercg, niter_cg_restart) .eq. 1) .or. restartcg) then
@@ -449,7 +435,6 @@ contains
             hi = gi + gamma*hi
 
          endif
-         call CHECKPOINT(hi)
 !note that hi, is saved  on gi, because we need it before projection on conduction states
 
          !find minimum along direction hi:
@@ -459,7 +444,6 @@ contains
          call calbec(nbsp, betae, hi, bec0)
          call pc2(c0, bec, hi, bec0)
          !$acc end data
-         call CHECKPOINT(hi)
 
          !do quadratic minimization
          !
@@ -535,7 +519,6 @@ contains
 
          !calculate energy
          call compute_energy(cm, becm, ens_goto_diagonal_repr=.false.) ! result in etot
-         call CHECKPOINT(cm)
          ene1 = etot
          if (tens .and. newscheme) then
             ene1 = ene1 + entropy
@@ -751,8 +734,6 @@ contains
 #endif
       call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
                       c0, c0_d, gi, gi_d, .false., .false., .true.)
-      call CHECKPOINT(c0)
-      call CHECKPOINT(gi)
 
       !$acc data copyin(c0, gi)
       call compute_lambda(c0,gi,lambda,nupdwn, iupdwn, nudx, nspin, ngw, intra_bgrp_comm, gstart)
@@ -775,15 +756,12 @@ contains
          call calbec(nbsp, betae, c0, bec)
          !$acc end data
          !$acc update host(c0)
-         call CHECKPOINT(c0)
 #if defined (__CUDA)
          c0_d = c0
          !vkb_d = betae ! runcp uses a global variable!!!
 #endif
          call runcp_uspp(0, 0.d0, 0.d0, ema0bg, 0.d0, rhos, bec, &
                          c0, c0_d, gi, gi_d, .false., .false., .true.)
-         call CHECKPOINT(c0)
-         call CHECKPOINT(gi)
          !$acc update device(gi)
          !$acc update device(c0)
 
@@ -906,9 +884,6 @@ contains
             becx(:, :) = becdiag(:, :)
             call id_matrix_init(idesc, nspin)
          endif
-         call CHECKPOINT(rhog)
-         !call CHECKPOINT(drhog)
-         !call CHECKPOINT(rhos)
 
          !calculates the potential
          !
@@ -923,7 +898,6 @@ contains
 
          call vofrho(nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,             &
                 &        ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion)
-         call CHECKPOINT(vpot)
          if (.not. tens) then
             etotnew = etot
          else
@@ -948,7 +922,6 @@ contains
    END SUBROUTINE runcg_uspp
 
    subroutine compute_lambda(c0_, gi_, lambda, nupdwn, iupdwn, nudx, nspin, ngw, intra_bgrp_comm, gstart)
-      use debug_utils, only: checkpoint
       use kinds, only : dp
       use mp, only : mp_sum
       USE cp_main_variables, ONLY: idesc
@@ -1003,7 +976,6 @@ contains
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
          !$acc end host_data
          !$acc update host(lambda_repl)
-         call CHECKPOINT(lambda_repl)
          !
          CALL distribute_lambda(lambda_repl, lambda(:, :, is), idesc(:, is))
          !
