@@ -955,7 +955,7 @@ contains
       implicit none
       include 'laxlib.fh'
       complex(kind=dp), intent(in) :: c0_(:,:),gi_(:,:)
-      !!$acc declare present(c0_(1:ngw,1:nbspx),gi_(1:ngw,1:nbspx))
+      !$acc declare present(c0_,gi_)
       real(kind=dp), intent(inout) :: lambda(:,:,:)
       real(DP), allocatable :: lambda_repl(:, :)
       integer, intent(in) :: nupdwn(:), iupdwn(:), nudx, ngw, nspin, intra_bgrp_comm,  gstart
@@ -964,16 +964,16 @@ contains
       integer :: is, nss, istart, i,j, iv, jv,ii,jj,ig
 
       
-      !$acc data copyin(c0_,gi_)
 
       ALLOCATE (lambda_repl(nudx, nudx))
+      !$acc data create(lambda_repl)
       do is = 1, nspin
          !
          nss = nupdwn(is)
          istart = iupdwn(is)
 
          !
-         !
+         !$acc parallel loop private(i,j,jj,ii,entmp,ig) present(c0_,gi_,lambda_repl)
          do jv = 0, nss*(nss + 1)/2 - 1
             i = jv/nss 
             j = mod(jv, nss)
@@ -988,7 +988,7 @@ contains
             ii = i + istart - 1
             jj = j + istart - 1
             entmp = 0.0_dp
-            !$acc parallel loop reduction(+:entmp)
+            !$acc loop vector reduction(+:entmp)
             do ig = 1, ngw
                entmp = entmp - 2.d0*DBLE(CONJG(c0_(ig, ii))*gi_(ig, jj))
             enddo
@@ -998,14 +998,18 @@ contains
             lambda_repl(j, i) = entmp
             lambda_repl(i, j) = entmp
          enddo
+         !$acc end parallel
+         !$acc host_data use_device(lambda_repl)
          CALL mp_sum(lambda_repl, intra_bgrp_comm)
+         !$acc end host_data
+         !$acc update host(lambda_repl)
          call CHECKPOINT(lambda_repl)
          !
          CALL distribute_lambda(lambda_repl, lambda(:, :, is), idesc(:, is))
          !
       enddo
-      deallocate(lambda_repl)         
       !$acc end data
+      deallocate(lambda_repl)         
       end subroutine
 
    !-----------------------------------------------------------------------
