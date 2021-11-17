@@ -2207,6 +2207,8 @@
         WRITE(name1, 113) TRIM(prefix), '.', cname, '_aniso_gap0_00', temp, '.frmsf'
       ELSEIF (temp < 100.d0 .AND. temp > 9.9999d0) THEN
         WRITE(name1, 114) TRIM(prefix), '.', cname, '_aniso_gap0_0', temp, '.frmsf'
+      ELSEIF (temp < 1000.d0 .AND. temp > 99.9999d0) THEN
+        WRITE(name1, 115) TRIM(prefix), '.', cname, '_aniso_gap0_', temp, '.frmsf'
       ENDIF
       OPEN(UNIT = iufilgapFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('gap_FS', 'error opening file ' // name1, iufilgapFS)
@@ -2278,6 +2280,7 @@
     112 FORMAT(a, a1, a4, a14, f6.2)
     113 FORMAT(a, a1, a4, a14, f4.2, a6)
     114 FORMAT(a, a1, a4, a13, f5.2, a6)
+    115 FORMAT(a, a1, a4, a12, f6.2, a6)
     !
     RETURN
     !
