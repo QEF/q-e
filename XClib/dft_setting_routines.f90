@@ -59,7 +59,7 @@ CONTAINS
     !
     INTEGER :: leng, l, i
     CHARACTER(len=150):: dftout
-    LOGICAL :: check_libxc, dft_defined, is_meta_dft
+    LOGICAL :: check_libxc, dft_defined, meta_libxc_short
     CHARACTER(len=1) :: lxc
     INTEGER :: ID_vec(6)
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
@@ -115,31 +115,12 @@ CONTAINS
           !
           ! ... short notation with libxc DFTs: 'XC-000i-000i-000i-000i-000i-000i'
           !
-          READ( dftout(4:6), * ) iexch
-          READ( dftout(7:7), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(1) = .TRUE.
-          READ( dftout(9:11), * ) icorr
-          READ( dftout(12:12), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(2) = .TRUE.
-          READ( dftout(14:16), * ) igcx
-          READ( dftout(17:17), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(3) = .TRUE.
-          READ( dftout(19:21), * ) igcc
-          READ( dftout(22:22), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(4) = .TRUE.
-          READ( dftout(24:26), * ) imeta
-          READ( dftout(27:27), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(5) = .TRUE.
-          READ( dftout(29:31), * ) imetac
-          READ( dftout(32:32), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(6) = .TRUE.
-          !
-          dft_defined = .TRUE.
+          CALL matching_libxc( dftout )
           !
 #if !defined(__LIBXC)
           IF (ANY(is_libxc(:))) THEN
-            CALL xclib_error( 'set_dft_from_name', 'libxc functionals needed, but &
-                                            &libxc is not active', 1 )
+            CALL xclib_error( 'set_dft_from_name', 'Libxc functionals needed, but &
+                                            &Libxc is not linked', 1 )
           ENDIF
 #endif
           !
@@ -188,10 +169,10 @@ CONTAINS
     ! ... A workaround to keep the q-e shortname notation for SCAN and TB09
     !     functionals valid.
     !
-    is_meta_dft = imeta==3 .OR. imeta==5 .OR. imeta==6 .OR. imeta==7
+    meta_libxc_short = imeta==3 .OR. imeta==5 .OR. imeta==6 .OR. imeta==7
     !
 #if defined(__LIBXC)
-    IF (is_meta_dft) THEN
+    IF (meta_libxc_short) THEN
       !
       is_libxc(5:6) = .TRUE.
       !
@@ -217,7 +198,7 @@ CONTAINS
     !
     END IF
 #else
-    IF (is_meta_dft) &
+    IF (meta_libxc_short) &
       CALL xclib_error( 'set_dft_from_name', 'libxc needed for this functional', 2 )
 #endif
     !
@@ -342,12 +323,20 @@ CONTAINS
   !
   !
 #if defined(__LIBXC)
+  !
   !--------------------------------------------------------------------------------
   SUBROUTINE matching_libxc( dft_ )
     !------------------------------------------------------------------------------
-    !! It spans the libxc functionals and looks for matches with the input dft
-    !! string. Then stores the corresponding indices.  
-    !! It also makes some compatibility checks.
+    !! It extracts the Libxc dfts from the input name and prints warnings when 
+    !! necessary.  
+    !
+    !! NOTE: the only notation now allowed for input DFTs containing Libxc terms is:  
+    !! XC-000i-000i-000i-000i-000i-000i  
+    !! where you put the functional IDs instead of the zeros and an 'L' instead of
+    !! 'i' if the functional is from Libxc. The order is the usual one:  
+    !! LDAexch - LDAcorr - GGAexch - GGAcorr - MGGAexch - MGGAcorr  
+    !! however QE will automatically adjust it if needed. The exchange+correlation
+    !! functionals can be put in the exch or in the corr slot with no difference.
     !
     USE dft_setting_params,   ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
                                     is_libxc, exx_fraction, xc_kind_error
@@ -360,93 +349,110 @@ CONTAINS
     CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
     INTEGER, PARAMETER :: ID_MAX_LIBXC=999
+    LOGICAL :: wrong_order
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
 #if (XC_MAJOR_VERSION>5)
     !workaround to keep compatibility with libxc develop version
-    INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
-    INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11
 #endif
     !
-    prev_len(:) = 1
+    IF ( matches('_x_', TRIM(dft_)) .OR. matches('_c_', TRIM(dft_)) .OR. &
+         matches('_k_', TRIM(dft_)) .OR. matches('_xc_', TRIM(dft_)) ) THEN
+       CALL xclib_error( 'matching_libxc', 'It looks like one or more Libxc names have been&
+                         &put as input, but now the index notation only is allowed. Please &
+                         &check the QE user guide or this routine comments.', 1 )
+    ENDIF
     !
-    DO i = 1, ID_MAX_LIBXC
-       !
-       name = xc_f03_functional_get_name( i )
-       !
-       DO l = 1, LEN_TRIM(name)
-          name(l:l) = capital( name(l:l) )
-       ENDDO
-       !
-       IF ( TRIM(name) == '' ) CYCLE
-       !
-       IF ( matches(TRIM(name), TRIM(dft_)) ) THEN
-          !
-          !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
-          !
-          fkind=-100 ; family=-100
-          CALL xc_f03_func_init( xc_func, i, 1 )
-          xc_info = xc_f03_func_get_info( xc_func )
-          fkind = xc_f03_func_info_get_kind( xc_info )
-          family = xc_f03_func_info_get_family( xc_info )
-          CALL xc_f03_func_end( xc_func )
-          !   
-          SELECT CASE( family )
-          CASE( XC_FAMILY_LDA )
-             IF (fkind==XC_EXCHANGE) THEN
-                IF ( LEN(TRIM(name)) > prev_len(1) ) iexch = i
-                is_libxc(1) = .TRUE.
-                prev_len(1) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                IF ( LEN(TRIM(name)) > prev_len(2) ) icorr = i
-                is_libxc(2) = .TRUE.
-                prev_len(2) = LEN(TRIM(name))
-                IF (fkind==XC_EXCHANGE_CORRELATION) THEN
-                  iexch = 0
-                  is_libxc(1) = .FALSE.
-                ENDIF
-             ELSE
-                xc_kind_error = .TRUE.
-             ENDIF
-             fkind_v(1) = fkind
-             !
-          CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
-             IF (fkind==XC_EXCHANGE) THEN
-                IF ( LEN(TRIM(name)) > prev_len(3) ) igcx = i
-                is_libxc(3) = .TRUE.
-                prev_len(3) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                IF ( LEN(TRIM(name)) > prev_len(4) ) igcc = i
-                is_libxc(4) = .TRUE.
-                prev_len(4) = LEN(TRIM(name))
-             ELSE
-                xc_kind_error = .TRUE.
-             ENDIF
-             fkind_v(2) = fkind
-             !
-          CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
-             IF (fkind==XC_EXCHANGE) THEN
-                IF ( LEN(TRIM(name)) > prev_len(5) ) imeta = i
-                is_libxc(5) = .TRUE.
-                prev_len(5) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                IF ( LEN(TRIM(name)) > prev_len(6) ) imetac = i
-                is_libxc(6) = .TRUE.
-                prev_len(6) = LEN(TRIM(name))
-             ELSE
-                xc_kind_error = .TRUE.
-             ENDIF
-             fkind_v(3) = fkind
-             !
-          END SELECT
-          !
-       ENDIF
-       !
+    IF ( dft_(1:3) /= 'XC-' ) RETURN
+    !
+    wrong_order = .FALSE.
+    !
+    READ( dft_( 4: 6), * ) ID_vec(1)
+    READ( dft_( 7: 7), '(a)' ) lxc
+    IF (lxc == 'L') is_libxc(1) = .TRUE.
+    IF (lxc == 'i') iexch = ID_vec(1)
+    READ( dft_( 9:11), * ) ID_vec(2)
+    READ( dft_(12:12), '(a)' ) lxc
+    IF (lxc == 'L') is_libxc(2) = .TRUE.
+    IF (lxc == 'i') icorr = ID_vec(2)
+    READ( dft_(14:16), * ) ID_vec(3)
+    READ( dft_(17:17), '(a)' ) lxc
+    IF (lxc == 'L') is_libxc(3) = .TRUE.
+    IF (lxc == 'i') igcx = ID_vec(3)
+    READ( dft_(19:21), * ) ID_vec(4)
+    READ( dft_(22:22), '(a)' ) lxc
+    IF (lxc == 'L') is_libxc(4) = .TRUE.
+    IF (lxc == 'i') igcc = ID_vec(4)
+    READ( dft_(24:26), * ) ID_vec(5)
+    READ( dft_(27:27), '(a)' ) lxc
+    IF (lxc == 'L') is_libxc(5) = .TRUE.
+    IF (lxc == 'i') imeta = ID_vec(5)
+    READ( dft_(29:31), * ) ID_vec(6)
+    READ( dft_(32:32), '(a)' ) lxc
+    IF (lxc == 'L') is_libxc(6) = .TRUE.
+    IF (lxc == 'i') imetac = ID_vec(6)
+    !
+    DO i = 1, 6
+      IF ( is_libxc(i) ) THEN
+        fkind=-100 ; family=-100
+        CALL xc_f03_func_init( xc_func, ID_vec(i), 1 )
+        xc_info = xc_f03_func_get_info( xc_func )
+        fkind = xc_f03_func_info_get_kind( xc_info )
+        family = xc_f03_func_info_get_family( xc_info )
+        CALL xc_f03_func_end( xc_func )
+        !
+        IF ( family==XC_FAMILY_LDA ) THEN
+          IF ( fkind==XC_EXCHANGE ) THEN
+            iexch = ID_vec(i) ; is_libxc(1)=.TRUE.
+            IF ( i/=1 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_CORRELATION ) THEN
+            icorr = ID_vec(i) ; is_libxc(2)=.TRUE.
+            IF ( i/=2 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
+            iexch = 0         ; is_libxc(1)=.FALSE.
+            icorr = ID_vec(i) ; is_libxc(2)=.TRUE.
+            IF ( i/=1 .AND. i/=2 ) wrong_order = .TRUE.
+          ELSE
+            xc_kind_error = .TRUE.
+          ENDIF
+        ELSEIF ( family==XC_FAMILY_GGA .OR. family==XC_FAMILY_HYB_GGA ) THEN
+          IF ( fkind==XC_EXCHANGE ) THEN
+            igcx = ID_vec(i) ; is_libxc(3)=.TRUE.
+            IF ( i/=3 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_CORRELATION ) THEN
+            igcc = ID_vec(i) ; is_libxc(4)=.TRUE.
+            IF ( i/=4 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
+            igcx = 0         ; is_libxc(3)=.FALSE.
+            igcc = ID_vec(i) ; is_libxc(4)=.TRUE.
+            IF ( i/=3 .AND. i/=4 ) wrong_order = .TRUE.
+          ELSE
+            xc_kind_error = .TRUE.
+          ENDIF
+        ELSEIF ( family==XC_FAMILY_MGGA .OR. XC_FAMILY_HYB_MGGA ) THEN
+          IF ( fkind==XC_EXCHANGE ) THEN
+            imeta = ID_vec(i) ; is_libxc(5)=.TRUE.
+            IF ( i/=5 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_CORRELATION ) THEN
+            imetac = ID_vec(i) ; is_libxc(6)=.TRUE.
+            IF ( i/=6 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
+            imeta = 0          ; is_libxc(5)=.FALSE.
+            imetac = ID_vec(i) ; is_libxc(6)=.TRUE.
+            IF ( i/=5 .AND. i/=6 ) wrong_order = .TRUE.
+          ELSE
+            xc_kind_error = .TRUE.
+          ENDIF
+        ENDIF
+      ENDIF
     ENDDO
     !
-    ! ... overlaps check (between qe and libxc names)
-    !
-    IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc(dft_)
+    IF ( wrong_order ) &
+       CALL xclib_error( 'matching_libxc', 'The order of the input functional &
+                         &IDs is not correct. Please follow this one: LDAx-LDAc-&
+                         &GGAx-GGAc-MGGAx-MGGAc', 0 )
     !
     ! ... Compatibility checks
     !
@@ -482,97 +488,6 @@ CONTAINS
     !   
   END SUBROUTINE matching_libxc
   !
-  !--------------------------------------------------------------------------
-  SUBROUTINE check_overlaps_qe_libxc( dft_ )
-    !------------------------------------------------------------------------
-    !! It fixes eventual overlap issues between qe and libxc names when qe and
-    !! libxc functionals are used together.
-    !
-    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc
-    USE qe_dft_list,        ONLY: nxc, ncc, ngcx, ngcc, nmeta, dft_LDAx_name,  &
-                                  dft_LDAc_name, dft_GGAx_name, dft_GGAc_name, &
-                                  dft_MGGA_name
-    !
-    IMPLICIT NONE
-    !
-    CHARACTER(LEN=*), INTENT(IN) :: dft_
-    !! DFT full name
-    !
-    CHARACTER(LEN=4) :: qe_name
-    CHARACTER(LEN=256) :: lxc_name
-    INTEGER :: i, ii, l, ch, qedft, nlxc
-    INTEGER :: ID_vec(6)
-    !
-    ID_vec(1)=iexch ; ID_vec(2)=icorr
-    ID_vec(3)=igcx  ; ID_vec(4)=igcc
-    ID_vec(5)=imeta ; ID_vec(6)=imetac
-    !
-    DO ch = 1, 5
-       IF (.NOT.is_libxc(ch)) THEN
-          !
-          SELECT CASE( ch )
-          CASE( 1 )
-             qe_name = dft_LDAx_name(iexch)
-          CASE( 2 )
-             qe_name = dft_LDAc_name(icorr)
-          CASE( 3 )
-             qe_name = dft_GGAx_name(igcx)
-          CASE( 4 )
-             qe_name = dft_GGAc_name(igcc)
-          CASE( 5 )
-             qe_name = dft_MGGA_name(imeta)
-          END SELECT
-          !
-          qedft = 0
-          i = 0
-          DO WHILE ( i < LEN_TRIM(dft_) )
-            i = i + 1
-            IF ( matches( TRIM(qe_name), TRIM(dft_(i:i+1)) ) ) THEN
-               qedft = qedft + 1
-               i = i + 1
-            ELSEIF (matches( TRIM(qe_name), TRIM(dft_(i:i+2)) ) ) THEN
-               qedft = qedft + 1
-               i = i + 2
-            ELSEIF (matches( TRIM(qe_name), TRIM(dft_(i:i+3)) ) ) THEN
-               qedft = qedft + 1
-               i = i + 3
-            ENDIF
-          ENDDO
-          !
-          nlxc = 0
-          DO i = 1, 6
-            IF (is_libxc(i)) THEN
-              lxc_name = xc_f03_functional_get_name( ID_vec(i) )
-              DO l = 1, LEN_TRIM(lxc_name)
-                 lxc_name(l:l) = capital( lxc_name(l:l) )
-              ENDDO
-              ii = 0
-              DO WHILE ( ii < LEN_TRIM(lxc_name) )
-                ii = ii + 1
-                IF ( matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+1)) ) ) THEN
-                  nlxc = nlxc + 1
-                  ii = ii + 1
-                ELSEIF (matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+2)) ) ) THEN
-                  nlxc = nlxc + 1
-                  ii = ii + 2
-                ELSEIF (matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+3)) ) ) THEN
-                  nlxc = nlxc + 1
-                  ii = ii + 3
-                ENDIF
-              ENDDO
-            ENDIF
-          ENDDO
-          !
-          IF (qedft == nlxc) ID_vec(ch) = 0  
-          !
-       ENDIF
-    ENDDO
-    !
-    iexch = ID_vec(1) ;  icorr  = ID_vec(2)
-    igcx  = ID_vec(3) ;  igcc   = ID_vec(4)
-    imeta = ID_vec(5) ;  imetac = ID_vec(6)
-    !
-  END SUBROUTINE
 #endif
   !
   !
