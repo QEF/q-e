@@ -172,14 +172,17 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      np = 3
   ENDIF
   !
-  ALLOCATE( rho_lxc(length*ns) )
-  ALLOCATE( sigma(length*np) )
-  !
-  ALLOCATE( ex_lxc(length),    ec_lxc(length)      )
-  ALLOCATE( vx_rho(length*ns), vx_sigma(length*np) )
-  ALLOCATE( vc_rho(length*ns), vc_sigma(length*np) )
-  !
+  ALLOCATE( rho_lxc(length*ns), sigma(length*np) )
   !$acc data create( rho_lxc, sigma )
+  !
+  IF ( is_libxc(3) ) THEN
+    ALLOCATE( ex_lxc(length) )
+    ALLOCATE( vx_rho(length*ns), vx_sigma(length*np) )
+  ENDIF
+  IF ( is_libxc(4) ) THEN
+    ALLOCATE( ec_lxc(length) )
+    ALLOCATE( vc_rho(length*ns), vc_sigma(length*np) )
+  ENDIF
   !
   IF ( ns == 1 ) THEN
     !
@@ -279,7 +282,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         v2c(k,2) = vc_sigma(3*k)*2.d0
       ENDDO
     ENDIF
+    !
     !$acc end data
+    DEALLOCATE( ec_lxc, vc_rho, vc_sigma )
     !
   ELSEIF ( (.NOT.is_libxc(4)) .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
     !
@@ -293,10 +298,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           !$acc data create( grho2, grho_ud )
           !$acc parallel loop
           DO k = 1, length
-            grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
-            grho2(k,2) = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
-            grho_ud(k) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
-                         grho(3,k,1) * grho(3,k,2)
+            grho2(k,1) = sigma(3*k-2)
+            grho2(k,2) = sigma(3*k)
+            grho_ud(k) = sigma(3*k-1)
           ENDDO
           !$acc host_data use_device( grho2, grho_ud )
           CALL gcc_spin_more( length, rho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
@@ -397,7 +401,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         v2x(k,2) = vx_sigma(3*k)*2.d0
       ENDDO
     ENDIF
+    !
     !$acc end data
+    DEALLOCATE( ex_lxc, vx_rho, vx_sigma )
     !
   ELSE
     !
@@ -423,9 +429,6 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   !$acc end data
   DEALLOCATE( rho_lxc, sigma )
-  DEALLOCATE( ex_lxc , ec_lxc   )
-  DEALLOCATE( vx_rho , vx_sigma )
-  DEALLOCATE( vc_rho , vc_sigma )
   !
 #else
   !

@@ -114,14 +114,15 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   fkind_x = -1
   lengthxc = length
   !
+  IF ( is_libxc(1) ) ALLOCATE( ex_lxc(length), vx_lxc(length*svd) )
+  IF ( is_libxc(2) ) ALLOCATE( ec_lxc(length), vc_lxc(length*svd) )
+  !
   IF ( is_libxc(1) .OR. is_libxc(2) ) THEN
     !
     ALLOCATE( rho_lxc(length*svd) )
-    ALLOCATE( ex_lxc(length), vx_lxc(length*svd) )
-    ALLOCATE( ec_lxc(length), vc_lxc(length*svd) )
     !$acc data copyout( rho_lxc )
     !
-    SELECT CASE( srd )  !... set libxc input
+    SELECT CASE( srd )
     CASE( 1 )
       !
       !$acc parallel loop
@@ -181,8 +182,7 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   IF ( is_libxc(1) .OR. is_libxc(2) ) DEALLOCATE( rho_lxc )
   !
-  IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
-        .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
+  IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) ) THEN
      !
      SELECT CASE( srd )
      CASE( 1 )
@@ -230,62 +230,39 @@ SUBROUTINE xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      END SELECT
      !
-     IF ( iexch==0 ) THEN
-       IF (srd==1) THEN
-         !$acc parallel loop
-         DO ir = 1, length
-           ex_out(ir)=0.d0 ; vx_out(ir,1)=0.d0
-         ENDDO
-       ELSE
-         !$acc parallel loop
-         DO ir = 1, length
-           ex_out(ir)=0.d0 ; vx_out(ir,1)=0.d0 ; vx_out(ir,2)=0.d0
-         ENDDO
-       ENDIF
-     ENDIF
-     IF ( icorr==0 ) THEN
-       IF (srd==1) THEN
-         !$acc parallel loop
-         DO ir = 1, length
-           ec_out(ir)=0.d0 ; vc_out(ir,1)=0.d0
-         ENDDO
-       ELSE
-         !$acc parallel loop
-         DO ir = 1, length
-           ec_out(ir)=0.d0 ; vc_out(ir,1)=0.d0 ; vc_out(ir,2)=0.d0
-         ENDDO
-       ENDIF
-     ENDIF
-     !
   ENDIF
   !
   !  ... fill output arrays
   !
-  IF ( is_libxc(1) .OR. is_libxc(2) ) THEN
-    !$acc data copyin( ex_lxc, ec_lxc, vx_lxc, vc_lxc )
+  IF ( is_libxc(1) ) THEN
+    !$acc data copyin( ex_lxc, vx_lxc )
     !$acc parallel loop
     DO ir = 1, length
-      IF (is_libxc1) ex_out(ir) = ex_lxc(ir)
-      IF (is_libxc2) ec_out(ir) = ec_lxc(ir)
+      ex_out(ir) = ex_lxc(ir)
       IF (svd == 1) THEN
-        IF (is_libxc1) vx_out(ir,1) = vx_lxc(ir)
-        IF (is_libxc2) vc_out(ir,1) = vc_lxc(ir)
+        vx_out(ir,1) = vx_lxc(ir)
       ELSE
-        IF (is_libxc1) THEN
-          vx_out(ir,1) = vx_lxc(2*ir-1)
-          vx_out(ir,2) = vx_lxc(2*ir)
-        ENDIF
-        IF (is_libxc2) THEN
-          vc_out(ir,1) = vc_lxc(2*ir-1)
-          vc_out(ir,2) = vc_lxc(2*ir)
-        ENDIF
+        vx_out(ir,1) = vx_lxc(2*ir-1)
+        vx_out(ir,2) = vx_lxc(2*ir)
       ENDIF
     ENDDO
     !$acc end data
+    DEALLOCATE( ex_lxc, vx_lxc )
   ENDIF
   !
-  IF ( is_libxc(1) .OR. is_libxc(2) ) THEN
-    DEALLOCATE( ex_lxc, vx_lxc )
+  IF ( is_libxc(2) ) THEN
+    !$acc data copyin( ec_lxc, vc_lxc )
+    !$acc parallel loop
+    DO ir = 1, length
+      ec_out(ir) = ec_lxc(ir)
+      IF (svd == 1) THEN
+        vc_out(ir,1) = vc_lxc(ir)
+      ELSE
+        vc_out(ir,1) = vc_lxc(2*ir-1)
+        vc_out(ir,2) = vc_lxc(2*ir)
+      ENDIF
+    ENDDO
+    !$acc end data
     DEALLOCATE( ec_lxc, vc_lxc )
   ENDIF
   !
