@@ -326,18 +326,13 @@ CONTAINS
     !
     CHARACTER(LEN=256) :: name, dft_lxc
     CHARACTER(LEN=1) :: llxc
-    INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
-    INTEGER :: ID_v(6), wrong_ID
+    INTEGER :: i, l, ln, prev_len(6), fkind, fkind_v(3), family
+    INTEGER :: l0, ID_v(6), wrong_ID
     LOGICAL :: wrong_order, xc_warning
 #if defined(__LIBXC)
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
 #endif
-!#if (XC_MAJOR_VERSION>5)
-    !workaround to keep compatibility with libxc develop version
-    !INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10
-    !INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11
-!#endif
     !
     IF ( matches('_x_', TRIM(dft_)) .OR. matches('_c_', TRIM(dft_)) .OR. &
          matches('_k_', TRIM(dft_)) .OR. matches('_xc_', TRIM(dft_)) ) &
@@ -348,34 +343,29 @@ CONTAINS
     !
     IF ( dft_(1:3) /= 'XC-' ) RETURN
     !
+    ln = LEN_TRIM(dft_)
     wrong_order = .FALSE.
     xc_warning = .FALSE.
     wrong_ID = 0
+    ID_v(:) = 0
     !
-    READ( dft_( 4: 6), * ) ID_v(1)
-    READ( dft_( 7: 7), '(a)' ) llxc
-    IF (llxc == 'L') is_libxc(1) = .TRUE.
-    IF (llxc == 'I') iexch = ID_v(1)
-    READ( dft_( 9:11), * ) ID_v(2)
-    READ( dft_(12:12), '(a)' ) llxc
-    IF (llxc == 'L') is_libxc(2) = .TRUE.
-    IF (llxc == 'I') icorr = ID_v(2)
-    READ( dft_(14:16), * ) ID_v(3)
-    READ( dft_(17:17), '(a)' ) llxc
-    IF (llxc == 'L') is_libxc(3) = .TRUE.
-    IF (llxc == 'I') igcx = ID_v(3)
-    READ( dft_(19:21), * ) ID_v(4)
-    READ( dft_(22:22), '(a)' ) llxc
-    IF (llxc == 'L') is_libxc(4) = .TRUE.
-    IF (llxc == 'I') igcc = ID_v(4)
-    READ( dft_(24:26), * ) ID_v(5)
-    READ( dft_(27:27), '(a)' ) llxc
-    IF (llxc == 'L') is_libxc(5) = .TRUE.
-    IF (llxc == 'I') imeta = ID_v(5)
-    READ( dft_(29:31), * ) ID_v(6)
-    READ( dft_(32:32), '(a)' ) llxc
-    IF (llxc == 'L') is_libxc(6) = .TRUE.
-    IF (llxc == 'I') imetac = ID_v(6)
+    l0 = 3
+    DO i = 1, 6
+      IF ( ln >= l0+4 ) THEN
+        READ( dft_(l0+1:l0+3), * ) ID_v(i)
+        READ( dft_(l0+4:l0+4), '(a)' ) llxc
+        l0 = l0 + 5
+        IF (llxc == 'L') is_libxc(i) = .TRUE.
+        IF (llxc == 'I') is_libxc(i) = .FALSE.
+      ELSE
+        is_libxc(i) = .FALSE.
+      ENDIF
+      IF (ID_v(i)==0) is_libxc(i) = .FALSE.
+    ENDDO
+    !
+    iexch = ID_v(1) ;  icorr = ID_v(2)
+    igcx  = ID_v(3) ;  igcc  = ID_v(4)
+    imeta = ID_v(5) ;  imetac= ID_v(6)
     !
 #if !defined(__LIBXC)
     !
@@ -392,8 +382,7 @@ CONTAINS
         dft_lxc = xc_f03_functional_get_name( ID_v(i) )
         IF ( TRIM(dft_lxc) == '' ) THEN
           wrong_ID = ID_v(i)
-          ID_v(i) = 0 ; is_libxc(i) = .FALSE.
-          CYCLE
+          EXIT
         ENDIF  
         CALL xc_f03_func_init( xc_func, ID_v(i), 1 )
         xc_info = xc_f03_func_get_info( xc_func )
@@ -403,10 +392,8 @@ CONTAINS
         !
         IF ( family==XC_FAMILY_LDA ) THEN
           IF ( fkind==XC_EXCHANGE ) THEN
-            iexch = ID_v(i) ; is_libxc(1)=.TRUE.
             IF ( i/=1 ) wrong_order = .TRUE.
           ELSEIF ( fkind==XC_CORRELATION ) THEN
-            icorr = ID_v(i) ; is_libxc(2)=.TRUE.
             IF ( i/=2 ) wrong_order = .TRUE.
           ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
             iexch = 0       ; is_libxc(1)=.FALSE.
@@ -418,10 +405,8 @@ CONTAINS
           ENDIF
         ELSEIF ( family==XC_FAMILY_GGA .OR. family==XC_FAMILY_HYB_GGA ) THEN
           IF ( fkind==XC_EXCHANGE ) THEN
-            igcx = ID_v(i) ; is_libxc(3)=.TRUE.
             IF ( i/=3 ) wrong_order = .TRUE.
           ELSEIF ( fkind==XC_CORRELATION ) THEN
-            igcc = ID_v(i) ; is_libxc(4)=.TRUE.
             IF ( i/=4 ) wrong_order = .TRUE.
           ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
             igcx = 0       ; is_libxc(3)=.FALSE.
@@ -433,10 +418,8 @@ CONTAINS
           ENDIF
         ELSEIF ( family==XC_FAMILY_MGGA .OR. family==XC_FAMILY_HYB_MGGA ) THEN
           IF ( fkind==XC_EXCHANGE ) THEN
-            imeta = ID_v(i) ; is_libxc(5)=.TRUE.
             IF ( i/=5 ) wrong_order = .TRUE.
           ELSEIF ( fkind==XC_CORRELATION ) THEN
-            imetac = ID_v(i) ; is_libxc(6)=.TRUE.
             IF ( i/=6 ) wrong_order = .TRUE.
           ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
             imeta = 0        ; is_libxc(5)=.FALSE.
