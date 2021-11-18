@@ -796,7 +796,6 @@ MODULE input
      USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
-     USE debug_utils,      ONLY : init_debug_utils
      !
      IMPLICIT NONE
      !

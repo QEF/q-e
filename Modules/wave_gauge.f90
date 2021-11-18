@@ -105,13 +105,21 @@ MODULE wave_gauge
          allocate(sa(nbnd, nbnd))
       !$acc data create(sb, sa)
       if (use_t_plus) then
+#if defined (__CUDA)  
          !$acc host_data use_device(t_plus,t_zero, sa)
          call mydgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_plus, 2*npwx, t_zero, 2*npwx, 0.d0, sa, nbnd)
          !$acc end host_data
+#else
+         call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_plus, 2*npwx, t_zero, 2*npwx, 0.d0, sa, nbnd) 
+#endif 
       end if
+#if defined (__CUDA) 
       !$acc host_data use_device(t_minus,t_zero, sb)
       call mydgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_minus, 2*npwx, t_zero, 2*npwx, 0.d0, sb, nbnd)
       !$acc end host_data
+#else 
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, t_minus, 2*npwx, t_zero, 2*npwx, 0.d0, sb, nbnd)
+#endif 
       if (gstart == 2) then
          !$acc parallel loop collapse(2) present(sa,sb,t_plus,t_minus,t_zero)
          do ibnd = 1, nbnd
@@ -138,13 +146,21 @@ MODULE wave_gauge
          allocate(ssb(nbnd, nbnd))
          if (use_t_plus) then
              allocate(ssa(nbnd, nbnd))
+#if defined (__CUDA) 
              !$acc host_data use_device(sa,ssa)
              call mydgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
              !$acc end host_data
+#else 
+             call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
+#endif 
          end if
+#if defined (__CUDA) 
          !$acc host_data use_device(sb,ssb)
          call mydgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
          !$acc end host_data
+#else 
+         call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
+#endif
       end if
       ! compute final projection
       !$acc parallel loop present(t_minus,sb,t_plus,sa,t_zero,ssa,ssb,dot_evc) copyin(factor) private(tmp2,tmp)

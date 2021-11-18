@@ -25,7 +25,6 @@ constraints_module.o \
 control_flags.o \
 coulomb_vcut.o \
 dist.o \
-debug.o\
 electrons_base.o \
 environment.o \
 fd_gradient.o \
