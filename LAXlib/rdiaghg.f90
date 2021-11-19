@@ -448,7 +448,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   USE laxlib_descriptor, ONLY : la_descriptor, laxlib_intarray_to_desc
   USE laxlib_processors_grid, ONLY : ortho_parent_comm
 #if defined __SCALAPACK
-  USE laxlib_processors_grid, ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE laxlib_processors_grid, ONLY : ortho_cntx, np_ortho, me_ortho, ortho_comm
   USE dspev_module,      ONLY : pdsyevd_drv
 #endif
   !
