@@ -8,7 +8,12 @@
 !----------------------------------------------------------------------------
 SUBROUTINE run_driver ( srvaddress, exit_status ) 
   !!
-  !! Driver for IPI
+  !! Driver for i-PI and i-PI compatible drivers. Q-E will connect to an internet or
+  !! UNIX-domain socket, communicating positions, cell, energy and forces back and forth
+  !! from the driver. For an overview of the philosophy of the driver mode, and a 
+  !! documentation of the communication protocol please see https://ipi-code.org.
+  !! Please do not modify the logic or the communication pattern without coordinating
+  !! with the i-PI developers team. 
   !!
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk
@@ -48,7 +53,13 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   REAL*8, ALLOCATABLE :: combuf(:)
   REAL*8 :: dist_ang(6), dist_ang_reset(6)
   !----------------------------------------------------------------------------
-  !
+  ! "compute everything" defaults, so that Q-E can react to a change in supercell
+  ! and returns everything that could be useful on the driver side
+  lscf      = .true.
+  lforce    = .true.
+  tstress    = .true.
+  lmd       = .true.
+  lmovecell = .true.
   firststep = .true.
   lflags  = -1 
   !
@@ -254,8 +265,18 @@ CONTAINS
        CALL punch( 'all' )
        CALL stop_run( conv_elec )
     ENDIF
-    IF ( lforce ) CALL forces()
-    IF ( tstress ) CALL stress(sigma)
+    IF ( lforce ) THEN
+	CALL forces()
+	combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
+    ELSE
+        combuf = 0.0
+    ENDIF
+    IF ( tstress ) THEN
+	CALL stress(sigma)
+        vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal
+    ELSE
+        vir = 0.0
+    ENDIF
     IF ( lensemb .AND. .NOT. hasensemb ) THEN 
        IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: BEEF-vdw "
        CALL beef_energies( )
@@ -266,13 +287,7 @@ CONTAINS
     ! ... Converts energy & forces to the format expected by i-pi
     ! ... (so go from Ry to Ha)
     !
-    IF ( lforce ) THEN
-       combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
-    ENDIF
     pot=etot * 0.5                                ! potential in a.u.
-    IF ( tstress ) THEN
-       vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal.
-    ENDIF
     !
     ! ... Updates history
     !
@@ -292,13 +307,8 @@ CONTAINS
     !
     IF ( ionode ) CALL writebuffer( socket, pot)
     IF ( ionode ) CALL writebuffer( socket, nat)
-    IF ( ionode .AND. lforce ) CALL writebuffer( socket, combuf, 3 * nat)
-    IF ( ionode .AND. tstress) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
-    IF ( lensemb .AND. ionode ) THEN
-       WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
-       CALL writebuffer( socket, energies, 2000)
-       CALL writebuffer( socket, beefxc, 32)
-    ENDIF
+    IF ( ionode ) CALL writebuffer( socket, combuf, 3 * nat)
+    IF ( ionode ) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
     !
     ! ... Note: i-pi can also receive an arbitrary string, that will be printed
     ! ... out to the "extra" trajectory file. This is useful if you want to
@@ -306,8 +316,22 @@ CONTAINS
     ! ... etc. one must return the number of characters, then the string. Here
     ! .... we just send back zero characters.
     !
-    nat = 0
-    IF ( ionode ) CALL writebuffer( socket, nat )
+    
+    IF ( lensemb) THEN
+       !WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
+       !CALL writebuffer( socket, energies, 2000)
+       !CALL writebuffer( socket, beefxc, 32)    
+       ! TODO: all this info should be stored in a string and returned as a string here
+       nat = 10
+       parbuffer = 'ciao bello'
+       IF ( ionode ) THEN
+           CALL writebuffer( socket, nat )    
+           CALL writebuffer( socket, parbuffer, nat) 
+       ENDIF
+    ELSE
+       nat = 0
+       IF ( ionode ) CALL writebuffer( socket, nat )    
+    ENDIF
     !
     CALL punch( 'config' )
     !
