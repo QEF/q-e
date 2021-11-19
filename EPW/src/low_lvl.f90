@@ -1270,13 +1270,18 @@
     nkl = size_v / (n_intval - 1)
     nkr = size_v - nkl * (n_intval - 1)
     !
-    ! the reminder goes to the first nkr intervals (0...nkr-1)
+    ! The reminder goes to the first nkr intervals (0...nkr-1)
     !
     DO i = 1, n_intval
       pos_intval(i) = nkl * (i - 1)
       IF (i < nkr) pos_intval(i) = pos_intval(i) + i
       IF (i >= nkr) pos_intval(i) = pos_intval(i) + nkr
     ENDDO
+    ! 
+    ! In case the reminder is 0
+    IF (nkr == 0) THEN
+      pos_intval(1) = 1
+    ENDIF        
     !
     DO i = 1, n_intval
       val_intval(i) = v(pos_intval(i))
