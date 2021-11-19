@@ -33,23 +33,26 @@ MODULE wannier2odd
   !
   CONTAINS
   !
-  !--------------------------------------------------------------------------
-  SUBROUTINE wan2odd( seedname, ikstart, plot, split_evc_file, gamma_trick )
-    !------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------------
+  SUBROUTINE wan2odd( ks_only )
+    !---------------------------------------------------------------------------------
     !
     ! ...  This routine:
     !
-    ! ...  1) reads the KS states u_nk(G) from PW and the rotation 
-    ! ...     matrices U(k) from Wannier90
+    ! ...  1) reads the KS states u_nk(G) from PW and (if ks_only==.false.)
+    ! ...     the rotation matrices U(k) from Wannier90
     !
     ! ...  2) Fourier transforms u_nk to real-space and extends them 
     ! ...     to the supercell defined by the k-points sampling
     !
-    ! ...  3) applies the matrices U(k) and realizes the Wannier 
-    ! ...     functions in G-space
+    ! ...  3) (if ks_only==.false.) applies the matrices U(k) and realizes
+    ! ...     the Wannier functions in G-space
     !
-    ! ...  4) Wannier functions are finally written in a CP-readable
+    ! ...  4) Wannier/KS functions are finally written in a CP-readable
     ! ...     file
+    !
+    ! ...  NB: all the variables containing the keyword 'wan' (or similar)
+    ! ...      refer to KS states when ks_only==.true.
     !
     USE io_global,           ONLY : stdout
     USE io_files,            ONLY : nwordwfc, iunwfc, restart_dir
@@ -75,16 +78,14 @@ MODULE wannier2odd
                                     gamma_only_x, npwxcp, ngmcp, mill_cp, ig_l2g_cp, &
                                     iunwann, nwordwann, check_fft
     USE cp_files,            ONLY : write_wannier_cp
+    USE wannier,             ONLY : seedname, ikstart, wannier_plot, split_evc_file, &
+                                    gamma_trick, wan_mode, iknum, mp_grid
     USE read_wannier
     !
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=256), INTENT(IN) :: seedname
-    INTEGER, INTENT(IN) :: ikstart
-    LOGICAL, INTENT(IN) :: plot
-    LOGICAL, INTENT(IN) :: split_evc_file
-    LOGICAL, INTENT(IN) :: gamma_trick
+    LOGICAL, INTENT(IN) :: ks_only
     !
     CHARACTER(LEN=256) :: dirname
     INTEGER :: ik, ikevc, ibnd, iw, ip
@@ -103,22 +104,29 @@ MODULE wannier2odd
     REAL(DP) :: ratio
     !
     !
-    CALL start_clock( 'wannier2odd' )
+    CALL start_clock( TRIM(wan_mode) )
     !
+    IF ( .not. ks_only ) THEN
+      !
+      CALL read_wannier_chk( )
+      !
+      ! ... if all the occupied states are in, we calculate also
+      ! ... the total density
+      !
+      IF ( ANY(excluded_band(1:nelec/2)) ) calc_rho = .false.
+      !
+    ELSE
+      !
+      num_bands = nbnd
+      num_wann = nbnd
+      num_kpts = iknum
+      kgrid(:) = mp_grid(:)
+      !
+    ENDIF
     !
-    ! ... read Wannier90 output and initialize the supercell
-    !
-    CALL read_wannier_chk( seedname )
     gamma_only_x = gamma_trick
     IF ( gamma_trick ) WRITE( stdout, 10 ) 
     CALL setup_scell_fft( )
-    !
-    !
-    ! ... if all the occupied states are in, we calculate also
-    ! ... the total density
-    !
-    IF ( ANY(excluded_band(1:nelec/2)) ) calc_rho = .false.
-    !
     !
     nwordwfcx = num_bands*npwxcp*npol
     nwordwann = num_wann*npwxcp*npol
@@ -141,7 +149,8 @@ MODULE wannier2odd
       !
     ENDIF
     !
-    IF ( have_disentangled ) ALLOCATE( evcx_dis(npwxcp*npol,MAXVAL(ndimwin)) )
+    IF ( .not. ks_only .and. have_disentangled ) &
+      ALLOCATE( evcx_dis(npwxcp*npol,MAXVAL(ndimwin)) )
     !
     !
     ! ... open buffer for direct-access to the extended wavefunctions
@@ -162,7 +171,7 @@ MODULE wannier2odd
       !
       DO ibnd = 1, nbnd
         !
-        IF ( excluded_band(ibnd) ) CYCLE
+        IF ( .not. ks_only .and. excluded_band(ibnd) ) CYCLE
         !
         counter = counter + 1
         !
@@ -217,144 +226,155 @@ MODULE wannier2odd
     ENDIF
     !
     !
-    ! ... here the Wannier functions are realized
-    ! w_Rn(G) = sum_k e^(-ikR) sum_m U_mn(k)*psi_km(G) / Nk^(1/2)
-    !
-    CALL open_buffer( iunwann, 'wann', nwordwann, io_level, exst )
-    !
-    ir = 0
-    !
-    DO i = 1, kgrid(1)
-      DO j = 1, kgrid(2)
-        DO k = 1, kgrid(3)
-          !
-          ir = ir + 1
-          ewan(:,:) = ( 0.D0, 0.D0 )
-          !
-          rvec(:) = (/ i-1, j-1, k-1 /)
-          CALL cryst_to_cart( 1, rvec, at, 1 )
-          !
-          DO iw = 1, num_wann
-            DO ik = 1, num_kpts
-              !
-              ! ... phase factor e^(-ikR)
-              !
-              kvec(:) = xk(:,ik)
-              dot_prod = tpi * SUM( kvec(:) * rvec(:) )
-              phase = CMPLX( COS(dot_prod), -SIN(dot_prod), KIND=DP )
-              !
-              ! ... read the supercell-extended Bloch functions
-              !
-              evcx(:,:) = ( 0.D0, 0.D0 )
-              CALL get_buffer( evcx, nwordwfcx, iunwfcx, ik )
-              !
-              ! ... selecting disentangled bands
-              !
-              IF ( have_disentangled ) THEN
+    IF ( .not. ks_only ) THEN
+      !
+      ! ... here the Wannier functions are realized
+      ! w_Rn(G) = sum_k e^(-ikR) sum_m U_mn(k)*psi_km(G) / Nk^(1/2)
+      !
+      CALL open_buffer( iunwann, 'wann', nwordwann, io_level, exst )
+      !
+      ir = 0
+      !
+      DO i = 1, kgrid(1)
+        DO j = 1, kgrid(2)
+          DO k = 1, kgrid(3)
+            !
+            ir = ir + 1
+            ewan(:,:) = ( 0.D0, 0.D0 )
+            !
+            rvec(:) = (/ i-1, j-1, k-1 /)
+            CALL cryst_to_cart( 1, rvec, at, 1 )
+            !
+            DO iw = 1, num_wann
+              DO ik = 1, num_kpts
                 !
-                num_inc = ndimwin(ik)
-                counter = 0
+                ! ... phase factor e^(-ikR)
                 !
-                DO n = 1, num_bands
-                  IF ( lwindow(n,ik) ) THEN
-                    counter = counter + 1
-                    evcx_dis(:,counter) = evcx(:,n)
+                kvec(:) = xk(:,ik)
+                dot_prod = tpi * SUM( kvec(:) * rvec(:) )
+                phase = CMPLX( COS(dot_prod), -SIN(dot_prod), KIND=DP )
+                !
+                ! ... read the supercell-extended Bloch functions
+                !
+                evcx(:,:) = ( 0.D0, 0.D0 )
+                CALL get_buffer( evcx, nwordwfcx, iunwfcx, ik )
+                !
+                ! ... selecting disentangled bands
+                !
+                IF ( have_disentangled ) THEN
+                  !
+                  num_inc = ndimwin(ik)
+                  counter = 0
+                  !
+                  DO n = 1, num_bands
+                    IF ( lwindow(n,ik) ) THEN
+                      counter = counter + 1
+                      evcx_dis(:,counter) = evcx(:,n)
+                    ENDIF
+                  ENDDO
+                  !
+                  IF ( counter .ne. num_inc ) &
+                    CALL errore( 'wan2odd', 'Wrong number of included bands &
+                                             in disentanglement', counter )
+                  !
+                ENDIF
+                !
+                ! ... calculate the Wannier function (ir,iw)
+                !
+                DO ip = 1, num_wann
+                  !
+                  ! ... applies disentanglement optimal matrix
+                  !
+                  evcw(:) = ( 0.D0, 0.D0 )
+                  IF ( have_disentangled ) THEN
+                    DO n = 1, num_inc
+                      evcw(:) = evcw(:) + u_mat_opt(n,ip,ik) * evcx_dis(:,n)
+                    ENDDO
+                  ELSE
+                    evcw(:) = evcx(:,ip)
                   ENDIF
+                  !
+                  ewan(:,iw) = ewan(:,iw) + phase * u_mat(ip,iw,ik) * evcw(:) / SQRT(DBLE(num_kpts)) 
+                  !
                 ENDDO
                 !
-                IF ( counter .ne. num_inc ) &
-                  CALL errore( 'wan2odd', 'Wrong number of included bands &
-                                           in disentanglement', counter )
+              ENDDO ! ik
+              !
+!              CALL check_complex_wfc( ewan(:,iw), wf_is_cmplx, ratio )
+!              !
+!              ! ... if gamma_only_x=.true. the Wannier functions must be real;
+!              ! ... if one of the realized WFs is found to be complex then the
+!              ! ... code will restart without using the gamma-trick (complex wfc)
+!              ! 
+!              IF ( gamma_only_x .and. wf_is_cmplx ) THEN
+!                !
+!                WRITE( stdout, 20 ) ir, iw
+!                WRITE( stdout, 21 ) ratio
+!                CALL errore( 'wan2odd', 'complex Wannier functions are incompatible with gamma_trick=.true.', 1 )
+!                !
+!              ENDIF
+              !
+              ! ... recalculate the total density from the WFs
+              !
+              IF ( calc_rho ) THEN
+                !
+                psicx(:) = ( 0.D0, 0.D0 )
+                psicx( dfftcp%nl(1:npwxcp) ) = ewan(1:npwxcp,iw)
+                IF( gamma_only_x ) psicx( dfftcp%nlm(1:npwxcp) ) = CONJG(ewan(1:npwxcp,iw))
+                CALL invfft( 'Wave', psicx, dfftcp )
+                rhow(:) = rhow(:) + DBLE( psicx(:) )**2 + AIMAG( psicx(:) )**2
                 !
               ENDIF
               !
-              ! ... calculate the Wannier function (ir,iw)
-              !
-              DO ip = 1, num_wann
-                !
-                ! ... applies disentanglement optimal matrix
-                !
-                evcw(:) = ( 0.D0, 0.D0 )
-                IF ( have_disentangled ) THEN
-                  DO n = 1, num_inc
-                    evcw(:) = evcw(:) + u_mat_opt(n,ip,ik) * evcx_dis(:,n)
-                  ENDDO
-                ELSE
-                  evcw(:) = evcx(:,ip)
-                ENDIF
-                !
-                ewan(:,iw) = ewan(:,iw) + phase * u_mat(ip,iw,ik) * evcw(:) / SQRT(DBLE(num_kpts)) 
-                !
-              ENDDO
-              !
-            ENDDO ! ik
+            ENDDO ! iw
             !
-!            CALL check_complex_wfc( ewan(:,iw), wf_is_cmplx, ratio )
-!            !
-!            ! ... if gamma_only_x=.true. the Wannier functions must be real;
-!            ! ... if one of the realized WFs is found to be complex then the
-!            ! ... code will restart without using the gamma-trick (complex wfc)
-!            ! 
-!            IF ( gamma_only_x .and. wf_is_cmplx ) THEN
-!              !
-!              WRITE( stdout, 20 ) ir, iw
-!              WRITE( stdout, 21 ) ratio
-!              CALL errore( 'wan2odd', 'complex Wannier functions are incompatible with gamma_trick=.true.', 1 )
-!              !
-!            ENDIF
+            CALL save_buffer( ewan, nwordwann, iunwann, ir )
             !
-            ! ... recalculate the total density from the WFs
-            !
-            IF ( calc_rho ) THEN
-              !
-              psicx(:) = ( 0.D0, 0.D0 )
-              psicx( dfftcp%nl(1:npwxcp) ) = ewan(1:npwxcp,iw)
-              IF( gamma_only_x ) psicx( dfftcp%nlm(1:npwxcp) ) = CONJG(ewan(1:npwxcp,iw))
-              CALL invfft( 'Wave', psicx, dfftcp )
-              rhow(:) = rhow(:) + DBLE( psicx(:) )**2 + AIMAG( psicx(:) )**2
-              !
-            ENDIF
-            !
-          ENDDO ! iw
-          !
-          CALL save_buffer( ewan, nwordwann, iunwann, ir )
-          !
+          ENDDO
         ENDDO
       ENDDO
-    ENDDO
-    !
-    !
-    CALL close_buffer( iunwfcx, 'delete' )
-    !
-    ! ... checks the consistency between the Wannier and Bloch
-    ! ... densities and write the G-space density to file
-    !
-    IF ( calc_rho ) THEN
       !
-      rhowg(:,:) = ( 0.D0, 0.D0 )
-      CALL fwfft( 'Rho', rhow, dfftcp )
-      rhowg(1:ngmcp,1) = rhow( dfftcp%nl(1:ngmcp) ) / omega_cp
-      IF ( nspin == 1 ) rhowg(:,1) = rhowg(:,1) * 2    !!! factor 2 for the other spin-component
-      CALL check_rho( rhowg, rhog )
       !
-      dirname = './'
-      IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
-           CALL write_rhog( TRIM(dirname) // "charge-density-x", &
-           root_bgrp, intra_bgrp_comm, &
-           bg_cp(:,1)*tpiba, bg_cp(:,2)*tpiba, bg_cp(:,3)*tpiba, &
-           gamma_only_x, mill_cp, ig_l2g_cp, rhowg(:,:) )
+      CALL close_buffer( iunwfcx, 'delete' )
+      !
+      ! ... checks the consistency between the Wannier and Bloch
+      ! ... densities and write the G-space density to file
+      !
+      IF ( calc_rho ) THEN
+        !
+        rhowg(:,:) = ( 0.D0, 0.D0 )
+        CALL fwfft( 'Rho', rhow, dfftcp )
+        rhowg(1:ngmcp,1) = rhow( dfftcp%nl(1:ngmcp) ) / omega_cp
+        IF ( nspin == 1 ) rhowg(:,1) = rhowg(:,1) * 2    !!! factor 2 for the other spin-component
+        CALL check_rho( rhowg, rhog )
+        !
+        dirname = './'
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-density-x", &
+             root_bgrp, intra_bgrp_comm, &
+             bg_cp(:,1)*tpiba, bg_cp(:,2)*tpiba, bg_cp(:,3)*tpiba, &
+             gamma_only_x, mill_cp, ig_l2g_cp, rhowg(:,:) )
+        !
+      ENDIF
+      !
+      ! ... write the WFs to CP-Koopmans-readable files
+      !
+      CALL write_wannier_cp( iunwann, nwordwann, num_wann, ks_only )
+      !
+      IF ( .not. wannier_plot ) CALL close_buffer( iunwann, 'delete' )
+      !
+    ELSE
+      !
+      ! ... write KS orbitals to CP-Koopmans-readable files
+      !
+      CALL write_wannier_cp( iunwfcx, nwordwfcx, num_wann, ks_only, 'occ' )
+      CALL write_wannier_cp( iunwfcx, nwordwfcx, num_wann, ks_only, 'emp' )
+      !
+      CALL close_buffer( iunwfcx, 'delete' )
       !
     ENDIF
     !
-    !
-    ! ... write the WFs to a CP-Koopmans-readable file
-    !
-    CALL write_wannier_cp( iunwann, nwordwann, npwxcp, num_wann, &
-                           num_kpts, ig_l2g_cp, split_evc_file )
-    !
-    IF ( .not. plot ) CALL close_buffer( iunwann, 'delete' )
-    !
-    CALL stop_clock( 'wannier2odd' )
+    CALL stop_clock( TRIM(wan_mode) )
     !
     !
     10 FORMAT( /, 2X, 'WARNING: gamma_trick=.true. forces the Wannier functions to be real.', /, &

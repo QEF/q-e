@@ -40,7 +40,7 @@ MODULE read_wannier
   CONTAINS
   !
   !---------------------------------------------------------------------
-  SUBROUTINE read_wannier_chk( seedname )
+  SUBROUTINE read_wannier_chk( )
     !-------------------------------------------------------------------
     !
     ! ...  parser for the Wannier90 chk file
@@ -52,11 +52,10 @@ MODULE read_wannier
     USE klist,               ONLY : nkstot
     USE wvfct,               ONLY : nbnd
     USE lsda_mod,            ONLY : nspin
+    USE wannier,             ONLY : seedname
     !
     !
     IMPLICIT NONE
-    !
-    CHARACTER(LEN=256), INTENT(IN) :: seedname
     !
     CHARACTER(LEN=33) :: header
     INTEGER :: i, j, nkp, nn
