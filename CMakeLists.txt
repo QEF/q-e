@@ -306,11 +306,18 @@ endif(QE_ENABLE_OPENMP)
 # OpenACC
 # The following targets will be defined:
 add_library(qe_openacc_fortran INTERFACE)
-qe_install_targets(qe_openacc_fortran)
+add_library(qe_openacc_c INTERFACE)
+qe_install_targets(qe_openacc_fortran qe_openacc_c)
 ###########################################################
 if(QE_ENABLE_OPENACC)
+    if(CMAKE_VERSION VERSION_LESS 3.16.0)
+        message(FATAL_ERROR "CMake versions >= 3.16 required for QE_ENABLE_OPENACC=ON!")
+    endif()
+    find_package(OpenACC REQUIRED Fortran C)
     target_link_libraries(qe_openacc_fortran
         INTERFACE OpenACC::OpenACC_Fortran)
+    target_link_libraries(qe_openacc_c
+        INTERFACE OpenACC::OpenACC_C)
 endif(QE_ENABLE_OPENACC)
 
 ###########################################################

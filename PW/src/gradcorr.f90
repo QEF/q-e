@@ -13,14 +13,15 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : ngm, g
+  USE gvect,                ONLY : ngm, g, g_d
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega
   USE xc_lib,               ONLY : igcc_is_lyp, xclib_dft_is, xc_gcx
   USE noncollin_module,     ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE fft_rho,              ONLY: rho_r2g
+  USE fft_rho,              ONLY : rho_r2g, rho_r2g_gpu
+  USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -39,14 +40,14 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:), v2c_ud(:)
   REAL(DP) :: sx(dfftp%nnr), sc(dfftp%nnr)
   !
-  REAL(DP) :: sgn(2), etxcgc, vtxcgc, fac, amag 
-  !
+  REAL(DP) :: sgn_is, etxcgc, vtxcgc, fac, amag
   REAL(DP) :: grup, grdw
-  !
   REAL(DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
   !
-  !
   IF ( .NOT. xclib_dft_is('gradient') ) RETURN
+  !
+  !$acc data deviceptr( rho(dfftp%nnr,nspin), rho_core(dfftp%nnr), &
+  !$acc&                rhog(ngm,nspin), rhog_core(ngm), v(dfftp%nnr,nspin) )
   !
   etxcgc = 0.0_DP
   vtxcgc = 0.0_DP
@@ -55,77 +56,111 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   IF ( nspin==4 ) nspin0 = 1
   IF ( nspin==4 .AND. domag ) nspin0 = 2
   fac = 1.0_DP / DBLE( nspin0 )
-  sgn(1) = 1._DP ;  sgn(2) = -1._DP
   !
   ALLOCATE( h(3,dfftp%nnr,nspin0)    )
   ALLOCATE( grho(3,dfftp%nnr,nspin0) )
   ALLOCATE( rhoaux(dfftp%nnr,nspin0) )
-  !
   ALLOCATE( v1x(dfftp%nnr,nspin0), v2x(dfftp%nnr,nspin0) )
   ALLOCATE( v1c(dfftp%nnr,nspin0), v2c(dfftp%nnr,nspin0) )
+  !$acc data create( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, h )
   !
-  IF ( nspin==4 .AND. domag ) THEN
-     ALLOCATE( vgg(dfftp%nnr,nspin0)  )
-     ALLOCATE( vsave(dfftp%nnr,nspin) )
-     ALLOCATE( segni(dfftp%nnr) )
-     vsave=v
-     v=0._DP
-  ENDIF
-  !
-  ALLOCATE( rhogaux( ngm, nspin0 ) )
+  ALLOCATE( rhogaux(ngm,nspin0) )
+  !$acc data create( rhogaux )
   !
   ! ... calculate the gradient of rho + rho_core in real space
   !
   IF ( nspin == 4 .AND. domag ) THEN
-     !
-     CALL compute_rho( rho, rhoaux, segni, dfftp%nnr ) 
-     !
-     ! ... bring starting rhoaux to G-space
-     !
-     CALL rho_r2g ( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-     !
+    ALLOCATE( vsave(dfftp%nnr,nspin) )
+    ALLOCATE( segni(dfftp%nnr) )
+    !$acc data copyout( segni, vsave )
+    !
+    !$acc parallel loop collapse(2)
+    DO is = 1, nspin
+      DO ir = 1, dfftp%nnr
+        vsave(ir,is) = v(ir,is)
+        v(ir,is) = 0._DP
+      ENDDO
+    ENDDO
+    !
+    ! ... bring starting rhoaux to G-space
+    IF ( use_gpu ) THEN
+      !$acc host_data use_device( rhoaux, rhogaux, segni )
+      CALL compute_rho_gpu( rho, rhoaux, segni, dfftp%nnr )
+      CALL rho_r2g_gpu( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+      !$acc end host_data
+    ELSE
+      CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
+      CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+    ENDIF
+    !$acc end data
   ELSE
-     !
-     ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA
-     !
-     DO is = 1, nspin0
-       rhoaux(:,is)  = (  rho(:,1) + sgn(is) *  rho(:,nspin0) ) * 0.5_DP
-       rhogaux(:,is) = ( rhog(:,1) + sgn(is) * rhog(:,nspin0) ) * 0.5_DP
-     ENDDO
-     !
+    ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA
+    !
+    !$acc parallel loop collapse(2)
+    DO is = 1, nspin0
+      DO ir = 1, dfftp%nnr
+        sgn_is = DBLE(3-2*is)
+        rhoaux(ir,is) = ( rho(ir,1) + sgn_is * rho(ir,nspin0) ) * 0.5_DP
+      ENDDO
+    ENDDO
+    !$acc parallel loop collapse(2)
+    DO is = 1, nspin0
+      DO ir = 1, ngm
+        sgn_is = DBLE(3-2*is)
+        rhogaux(ir,is) = ( rhog(ir,1) + CMPLX(sgn_is) * rhog(ir,nspin0) ) &
+                         * (0.5_DP,0._DP)
+      ENDDO
+    ENDDO
+    !
   ENDIF
   !
+  !$acc parallel loop collapse(2)
   DO is = 1, nspin0
-     !
-     rhoaux(:,is)  = fac *  rho_core(:) +  rhoaux(:,is)
-     rhogaux(:,is) = fac * rhog_core(:) + rhogaux(:,is)
-     !
-     CALL fft_gradient_g2r( dfftp, rhogaux(1,is), g, grho(1,1,is) )
-     !
+    DO ir = 1, dfftp%nnr
+      rhoaux(ir,is) = fac * rho_core(ir) + rhoaux(ir,is)
+    ENDDO
+  ENDDO
+  !$acc parallel loop collapse(2)
+  DO is = 1, nspin0
+    DO ir = 1, ngm
+      rhogaux(ir,is) = CMPLX(fac,kind=DP) * rhog_core(ir) + rhogaux(ir,is)
+    ENDDO
   ENDDO
   !
-  DEALLOCATE( rhogaux )
+  DO is = 1, nspin0
+    IF ( use_gpu ) THEN
+      !$acc host_data use_device( rhogaux, grho )
+      CALL fft_gradient_g2r_gpu( dfftp, rhogaux(:,is), g_d, grho(:,:,is) )
+      !$acc end host_data
+    ELSE
+      CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
+    ENDIF  
+  ENDDO
   !
+  !$acc end data
+  DEALLOCATE( rhogaux )
   !
   IF ( nspin0 == 1 ) THEN
      !
      ! ... This is the spin-unpolarised case
      !
-     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
+     !$acc host_data use_device( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
+     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
+                  gpu_args_=.TRUE. )
+     !$acc end host_data
      !
+     !$acc parallel loop reduction(+:etxcgc) reduction(+:vtxcgc)
      DO k = 1, dfftp%nnr
-        !
         ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
         v(k,1) = v(k,1) + e2 * ( v1x(k,1) + v1c(k,1) )
-        !
         ! ... h contains:  D(rho*Exc) / D(|grad rho|) * (grad rho) / |grad rho|
-        h(:,k,1) = e2 * ( v2x(k,1) + v2c(k,1) ) * grho(:,k,1)
+        DO ipol = 1, 3
+          h(ipol,k,1) = e2 * ( v2x(k,1) + v2c(k,1) ) * grho(ipol,k,1)
+        ENDDO
         !
         vtxcgc = vtxcgc + e2 * ( v1x(k,1) + v1c(k,1) ) * &
-                               (rhoaux(k,1) - rho_core(k) )
-        !
+                               ( rhoaux(k,1) - rho_core(k) )
         etxcgc = etxcgc + e2 * ( sx(k) + sc(k) )
-        !
      ENDDO
      !
   ELSE
@@ -133,71 +168,84 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      ! ... spin-polarised case
      !
      ALLOCATE( v2c_ud(dfftp%nnr) )
-     !   
+     !$acc data create( v2c_ud )
      !
-     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
-     !
+     !$acc host_data use_device( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
+     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
+                  v2c_ud, gpu_args_=.TRUE. )
+     !$acc end host_data
      !
      ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
      !
+     !$acc parallel loop reduction(+:etxcgc) reduction(+:vtxcgc)
      DO k = 1, dfftp%nnr
-        v(k,1:nspin0) = v(k,1:nspin0) + e2*( v1x(k,1:nspin0) + v1c(k,1:nspin0)) 
+        !
+        DO is = 1, nspin0
+           v(k,is) = v(k,is) + e2*(v1x(k,is) + v1c(k,is))
+        ENDDO
+        !
         DO ipol = 1, 3
-           !
            grup = grho(ipol,k,1)
            grdw = grho(ipol,k,2)
            h(ipol,k,1) = e2*( (v2x(k,1) + v2c(k,1))*grup + v2c_ud(k)*grdw )
            h(ipol,k,2) = e2*( (v2x(k,2) + v2c(k,2))*grdw + v2c_ud(k)*grup )
-           !
         ENDDO
         !
-        vtxcgc = vtxcgc + &
-                e2 * ( v1x(k,1) + v1c(k,1) ) * ( rhoaux(k,1) - rho_core(k) * fac )
-        vtxcgc = vtxcgc + &
-                e2 * ( v1x(k,2) + v1c(k,2) ) * ( rhoaux(k,2) - rho_core(k) * fac )
+        vtxcgc = vtxcgc + e2 * ( &
+                 ( v1x(k,1) + v1c(k,1) ) * ( rhoaux(k,1) - rho_core(k) * fac ) + &
+                 ( v1x(k,2) + v1c(k,2) ) * ( rhoaux(k,2) - rho_core(k) * fac ) )
         etxcgc = etxcgc + e2 * ( sx(k) + sc(k) )
         !
      ENDDO
      !
+     !$acc end data
      DEALLOCATE( v2c_ud )
      !
   ENDIF
   !
-  !
+  !$acc parallel loop collapse(2)
   DO is = 1, nspin0
-     !
-     rhoaux(:,is) = rhoaux(:,is) - fac * rho_core(:)
-     !
-  END DO
+    DO k = 1, dfftp%nnr
+      rhoaux(k,is) = rhoaux(k,is) - fac * rho_core(k)
+    ENDDO
+  ENDDO
   !
-  DEALLOCATE( grho )
-  DEALLOCATE( v1x, v2x )
-  DEALLOCATE( v1c, v2c )
-  !
-  ALLOCATE( dh(dfftp%nnr) )    
+  ALLOCATE( dh(dfftp%nnr) )
+  !$acc data create( dh )
   !
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
+  !$acc host_data use_device( rhoaux, dh, h )
   DO is = 1, nspin0
-     !
-     CALL fft_graddot( dfftp, h(1,1,is), g, dh )
-     !
-     v(:,is) = v(:,is) - dh(:)
-     !
-     vtxcgc = vtxcgc - SUM( dh(:) * rhoaux(:,is) )
-     !
-  END DO
+     IF ( use_gpu )   CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
+     IF ( .NOT. use_gpu ) CALL fft_graddot( dfftp, h(1,1,is), g, dh )
+     !$acc parallel loop
+     DO k = 1, dfftp%nnr
+       v(k,is) = v(k,is) - dh(k)
+       vtxcgc = vtxcgc - dh(k) * rhoaux(k,is)
+     ENDDO
+  ENDDO
+  !$acc end host_data
+  !$acc end data
   !
   vtxc = vtxc + omega * vtxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
   etxc = etxc + omega * etxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
   !
   IF (nspin==4 .AND. domag) THEN
-     DO is = 1, nspin0
-        vgg(:,is) = v(:,is)
+     ALLOCATE( vgg(dfftp%nnr,nspin0)  )
+     !$acc data copyin( segni, vsave ) create( vgg )
+     !$acc host_data use_device( segni, vgg, vsave )
+     !
+     !$acc parallel loop collapse(2)
+     DO is = 1, nspin
+       DO ir = 1, dfftp%nnr
+         IF (is<=nspin0) vgg(ir,is) = v(ir,is)
+         v(ir,is) = vsave(ir,is)
+       ENDDO
      ENDDO
      !
-     v = vsave
+     !$acc parallel loop
      DO k = 1, dfftp%nnr
         v(k,1) = v(k,1) + 0.5d0*(vgg(k,1)+vgg(k,2))
         amag = SQRT(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
@@ -207,17 +255,21 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
            v(k,4) = v(k,4) + segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,4)/amag
         ENDIF
      ENDDO
-  ENDIF
-  !
-  DEALLOCATE( dh )
-  DEALLOCATE( h )
-  DEALLOCATE( rhoaux )
-  IF (nspin==4 .AND. domag) THEN
-     DEALLOCATE( vgg )
-     DEALLOCATE( vsave )
+     !
+     !$acc end host_data
+     !$acc end data
      DEALLOCATE( segni )
+     DEALLOCATE( vgg, vsave )
   ENDIF
   !
+  !$acc end data
+  !
+  DEALLOCATE( rhoaux, grho )
+  DEALLOCATE( v1x, v2x )
+  DEALLOCATE( v1c, v2c )
+  DEALLOCATE( dh, h )
+  !
+  !$acc end data
   !
   RETURN
   !

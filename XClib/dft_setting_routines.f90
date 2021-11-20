@@ -546,7 +546,6 @@ CONTAINS
               DO l = 1, LEN_TRIM(lxc_name)
                  lxc_name(l:l) = capital( lxc_name(l:l) )
               ENDDO
-              nlxc = 0
               ii = 0
               DO WHILE ( ii < LEN_TRIM(lxc_name) )
                 ii = ii + 1

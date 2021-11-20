@@ -44,6 +44,8 @@ set(sources_libbeef
     beefun.c)
 qe_add_library(qe_libbeef ${sources_libbeef})
 target_link_libraries(qe_libbeef 
+    PUBLIC
+        qe_openacc_c
     PRIVATE 
         qe_lapack)
 
@@ -87,6 +89,7 @@ if(QE_ENABLE_TEST)
             qe_mpi_fortran
             qe_upflib
             qe_external_libxc
+            qe_libbeef
             qe_xclib)
 
     find_program(BASH_PROGRAM bash)

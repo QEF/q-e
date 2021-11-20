@@ -6,22 +6,23 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------
-MODULE metagga                       !<GPU:metagga=>metagga_gpu>
+MODULE metagga
 !-------------------------------------------------------------------------
 !! MetaGGA functionals. Available functionals:
 !
 !! * TPSS (Tao, Perdew, Staroverov & Scuseria)
 !! * M06L
 !
-USE exch_lda, ONLY: slater     !<GPU:slater=>slater_d,exch_lda=>exch_lda_gpu>
-USE corr_lda, ONLY: pw, pw_spin   !<GPU:pw=>pw_d,pw_spin=>pw_spin_d,corr_lda=>corr_lda_gpu>    
-USE corr_gga, ONLY: pbec, pbec_spin        !<GPU:pbec=>pbec_d,pbec_spin=>pbec_spin_d,corr_gga=>corr_gga_gpu>
+USE exch_lda, ONLY: slater
+USE corr_lda, ONLY: pw, pw_spin   
+USE corr_gga, ONLY: pbec, pbec_spin
 !
  CONTAINS
 !                             TPSS
 !
 !-------------------------------------------------------------------------
-SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )                    !<GPU:DEVICE>
+SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+!$acc routine seq
   !-----------------------------------------------------------------------
   !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.  
   !! Definition:  \(E_x = \int E_x(\text{rho},\text{grho}) dr\)
@@ -70,9 +71,9 @@ SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )      
   ENDIF
   !
   ! exchange
-  CALL metax( rho, grho, tau, sx, v1x, v2x, v3x )                   !<GPU:metax=>metax_d>
+  CALL metax( rho, grho, tau, sx, v1x, v2x, v3x )
   ! correlation
-  CALL metac( rho, grho, tau, sc, v1c, v2c, v3c )                   !<GPU:metac=>metac_d>
+  CALL metac( rho, grho, tau, sc, v1c, v2c, v3c )
   !
   RETURN
   !
@@ -80,7 +81,8 @@ END SUBROUTINE tpsscxc
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )                    !<GPU:DEVICE>
+SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )
+!$acc routine seq
   !--------------------------------------------------------------------
   !! TPSS meta-GGA exchange potential and energy.
   !
@@ -133,8 +135,8 @@ SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )                    !<GPU:
   ENDIF
   !
   rs = pi34/rho**third
-  CALL slater( rs, ex_unif, vx_unif )                                  !<GPU:slater=>slater_d>
-  CALL metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )                    !<GPU:metaFX=>metaFX_d>
+  CALL slater( rs, ex_unif, vx_unif )
+  CALL metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
   !
   ex = rho*ex_unif
   v1x = vx_unif*fx + ex*f1x
@@ -148,7 +150,8 @@ END SUBROUTINE metax
 !
 !
 !------------------------------------------------------------------
-SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )                    !<GPU:DEVICE>
+SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
+!$acc routine seq
   !--------------------------------------------------------------
   !! TPSS meta-GGA correlation energy and potentials.
   !
@@ -208,11 +211,11 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )                    !<GPU:
   IF (rhoup > small) THEN
      !
      rs = (pi34/rhoup)**third
-     CALL pw_spin( rs, 1.0_DP, ec_unif, vc_unif_s(1), vc_unif_s(2) )                                  !<GPU:pw_spin=>pw_spin_d>
+     CALL pw_spin( rs, 1.0_DP, ec_unif, vc_unif_s(1), vc_unif_s(2) )
      !
      IF (ABS(grhoup) > small) THEN
         ! zeta=1.0_DP-small to avoid pow_e of 0 in pbec_spin
-        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup**2, 1, &           !<GPU:pbec_spin=>pbec_spin_d>
+        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup**2, 1, &
                         ec_sum, v1c_sum(1), v1c_sum(2), v2c_sum )
      ELSE
         ec_sum  = 0.0_DP
@@ -229,13 +232,13 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )                    !<GPU:
   ENDIF
   !
   rs = (pi34/rho)**third
-  CALL pw( rs, 1, ec_unif, vc_unif )                             !<GPU:pw=>pw_d>
+  CALL pw( rs, 1, ec_unif, vc_unif )
   !
   !  ... PBE correlation energy and potential:
   !  ec_pbe=rho*H,  not rho*(epsion_c_uinf + H)
   !  v1c_pbe=D (rho*H) /D rho
   !  v2c_pbe= for rho, 2 for
-  CALL pbec( rho, grho2, 1, ec_pbe, v1c_pbe, v2c_pbe )           !<GPU:pbec=>pbec_d>
+  CALL pbec( rho, grho2, 1, ec_pbe, v1c_pbe, v2c_pbe )
   !
   ec_pbe  = ec_pbe/rho+ec_unif
   v1c_pbe = (v1c_pbe+vc_unif-ec_pbe)/rho
@@ -275,7 +278,8 @@ END SUBROUTINE metac
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )                    !<GPU:DEVICE>
+SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
+!$acc routine seq
   !-------------------------------------------------------------------------
   !
   USE kind_l,           ONLY : DP
@@ -397,8 +401,9 @@ END SUBROUTINE metaFX
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &       !<GPU:DEVICE>
+SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
                         v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw )
+!$acc routine seq
   !-----------------------------------------------------------------------
   !! TPSS metaGGA for exchange - Hartree a.u.
   !
@@ -442,7 +447,7 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &     
   rho = rhoup + rhodw
   IF (rhoup>small .AND. SQRT(ABS(grhoup2))>small &
        .AND. ABS(tauup) > small) THEN
-     CALL metax( 2.0_DP*rhoup, 4.0_DP*grhoup2, &              !<GPU:metax=>metax_d>
+     CALL metax( 2.0_DP*rhoup, 4.0_DP*grhoup2, &
                  2.0_DP*tauup, sxup, v1xup, v2xup, v3xup )
   ELSE
      sxup = 0.0_DP
@@ -453,7 +458,7 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &     
   !
   IF (rhodw > small .AND. SQRT(ABS(grhodw2)) > small &
        .AND. ABS(taudw) > small) THEN
-     CALL metax( 2.0_DP*rhodw, 4.0_DP*grhodw2, &              !<GPU:metax=>metax_d>
+     CALL metax( 2.0_DP*rhodw, 4.0_DP*grhodw2, &
                  2.0_DP*taudw, sxdw, v1xdw, v2xdw, v3xdw )
   ELSE
      sxdw = 0.0_DP
@@ -472,8 +477,9 @@ END SUBROUTINE tpsscx_spin
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
+SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &
                         atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
+!$acc routine seq
   !--------------------------------------------------------------------------
   !! TPSS metaGGA for correlations - Hartree a.u.
   !
@@ -536,7 +542,7 @@ SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
      !
      v3c = 0.0_DP
   ELSE
-     CALL metac_spin( rho, zeta, grhoup, grhodw, &              !<GPU:metac_spin=>metac_spin_d>
+     CALL metac_spin( rho, zeta, grhoup, grhodw, &
                         atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3c )
   ENDIF
   !
@@ -549,8 +555,9 @@ END SUBROUTINE tpsscc_spin
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
+SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
                        tau, sc, v1up, v1dw, v2up, v2dw, v3 )
+!$acc routine seq
   !---------------------------------------------------------------
   USE kind_l,    ONLY : DP
   !
@@ -634,10 +641,10 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
      !
      v2_tmp = 0.0_DP
      rs = (pi34/rho)**third
-     CALL pw_spin( rs, zeta, ec_u, vc_u(1), vc_u(2) )             !<GPU:pw_spin=>pw_spin_d>
+     CALL pw_spin( rs, zeta, ec_u, vc_u(1), vc_u(2) )
      !
      IF ((ABS(grho) > small) .AND. (zeta <= 1.0_DP)) THEN
-        CALL pbec_spin( rho, zeta, grho2, 1, ec_pbe, v1_pbe(1), v1_pbe(2), v2_tmp )             !<GPU:pbec_spin=>pbec_spin_d>
+        CALL pbec_spin( rho, zeta, grho2, 1, ec_pbe, v1_pbe(1), v1_pbe(2), v2_tmp )
         v1up_pbe=v1_pbe(1)
         v1dw_pbe=v1_pbe(2)
      ELSE
@@ -668,10 +675,10 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
      v2_tmp = 0.0_DP
      !
      rs = (pi34/rhoup)**third
-     CALL pw_spin( rs, 1.0_DP, ec_u, vc_u(1), vc_u(2) )     !<GPU:pw_spin=>pw_spin_d>
+     CALL pw_spin( rs, 1.0_DP, ec_u, vc_u(1), vc_u(2) )
      !
      IF (SQRT(grhoup2) > small) THEN
-        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup2, 1, &    !<GPU:pbec_spin=>pbec_spin_d>
+        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup2, 1, &
                         ecup_0, v1_0v(1), v1_0v(2), v2_tmp )
         v1up_0 = v1_0v(1)
         v1dw_0 = v1_0v(2)
@@ -709,11 +716,11 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
      v2_tmp = 0.0_DP
      !
      rs = (pi34/rhodw)**third
-     CALL pw_spin( rs, -1.0_DP, ec_u, vc_u(1), vc_u(2) )     !<GPU:pw_spin=>pw_spin_d>
+     CALL pw_spin( rs, -1.0_DP, ec_u, vc_u(1), vc_u(2) )
      !
      IF (SQRT(grhodw2) > small) THEN
         !
-        CALL pbec_spin( rhodw, -1.0_DP+small, grhodw2, 1, &   !<GPU:pbec_spin=>pbec_spin_d>
+        CALL pbec_spin( rhodw, -1.0_DP+small, grhodw2, 1, &
                         ecdw_0, v1_0v(1), v1_0v(2), v2_tmp )
         !
         v1up_0 = v1_0v(1)
@@ -877,7 +884,8 @@ END SUBROUTINE metac_spin
 !                       ec, v1c, v2c, v3c as above for correlation
 !
 !-------------------------------------------------------------------------
-SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )       !<GPU:DEVICE>
+SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+!$acc routine seq
   !-----------------------------------------------------------------------
   !
   USE kind_l,        ONLY : DP
@@ -923,14 +931,14 @@ SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )      
   taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 )
                               ! in the following M06L routines
   !
-  CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )   !<GPU:m06lx=>m06lx_d>
+  CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )
   !
   ex = two * ex  ! Add the two components up + dw
   !
   v2x = 0.5_dp * v2x
   !v3x = 2.0_dp * v3x  !**mismatch with Libxc by a factor of 2
   !
-  CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &   !<GPU:m06lc=>m06lc_d>
+  CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &
               v1cb, v2cb, v3cb )
   !
   v2c = 0.5_dp * v2c
@@ -940,9 +948,10 @@ END SUBROUTINE m06lxc
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &       !<GPU:DEVICE>
+SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
                         ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
                         v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
+!$acc routine seq
   !-----------------------------------------------------------------------
   !
   USE kind_l,        ONLY : DP
@@ -959,14 +968,14 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &    
   taua = tauup * two       ! Tau is defined as summ_i( |nabla phi_i|**2 )
   taub = taudw * two       ! in the rest of the routine
   !
-  CALL m06lx( rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup )   !<GPU:m06lx=>m06lx_d>
-  CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )   !<GPU:m06lx=>m06lx_d>
+  CALL m06lx( rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup )
+  CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )
   !
   ex = exup + exdw
   !v3xup = 2.0_dp * v3xup  !**mismatch with Libxc by a factor of 2
   !v3xdw = 2.0_dp * v3xdw  !**
   !
-  CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &       !<GPU:m06lc=>m06lc_d>
+  CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &
               ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw )
   !v3cup = 2.0_dp * v3cup  !**
   !v3cdw = 2.0_dp * v3cdw  !**
@@ -977,7 +986,8 @@ END SUBROUTINE m06lxc_spin
 !===============================  M06L exchange ==========================
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
+SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
+!$acc routine seq
   !---------------------------------------------------------------------------
   !! M06L exchange.
   !
@@ -1082,7 +1092,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   gh  = one + alpha * (xs2 + zs)
   !
   IF (gh >= small) THEN
-    CALL gvt4( xs2, zs, d0, d1, d2, d3, d4, d5, alpha, hg, dhg_dxs2, dhg_dzs )   !<GPU:gvt4=>gvt4_d>
+    CALL gvt4( xs2, zs, d0, d1, d2, d3, d4, d5, alpha, hg, dhg_dxs2, dhg_dzs )
   ELSE
     hg = zero
     dhg_dxs2 = zero
@@ -1121,7 +1131,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   dfws_drho = dfws*dws_dts*dts_drho
   dfws_dtau = dfws*dws_dts*dts_dtau
   !
-  CALL pbex_m06l( two*rho, four*grho2, sx_pbe, v1x_pbe, v2x_pbe )   !<GPU:pbex_m06l=>pbex_m06l_d>
+  CALL pbex_m06l( two*rho, four*grho2, sx_pbe, v1x_pbe, v2x_pbe )
   !
   v1x_unif = f43 * CX * rho13
   !
@@ -1143,7 +1153,8 @@ END SUBROUTINE m06lx
 !
 !
 !-------------------------------------------------------------------
-SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )       !<GPU:DEVICE>
+SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )
+!$acc routine seq
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
   !! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
@@ -1211,8 +1222,9 @@ END SUBROUTINE pbex_m06l
 !===============================  M06L correlation ==========================
 !
 !---------------------------------------------------------------------------------
-SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &       !<GPU:DEVICE>
+SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
                   v3c_up, v1c_dw, v2c_dw, v3c_dw )
+!$acc routine seq
   !-------------------------------------------------------------------------------
   !! M06L correlation.
   !
@@ -1366,12 +1378,12 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
     !
     rs   = rsa
     zeta = one
-    CALL pw_spin( rs, zeta, ec_pw_a, vc_v(1), vc_v(2) )    !<GPU:pw_spin=>pw_spin_d>
+    CALL pw_spin( rs, zeta, ec_pw_a, vc_v(1), vc_v(2) )
     vc_pw_a = vc_v(1)
     vv      = vc_v(2)
     !
-    CALL gvt4( xs2a, zsa, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hga, dhga_dxs2a, dhga_dzsa )   !<GPU:gvt4=>gvt4_d>
-    CALL gfunc( cs, gama_s, xs2a, gsa, dgsa_dxs2a )   !<GPU:gfunc=>gfunc_d>
+    CALL gvt4( xs2a, zsa, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hga, dhga_dxs2a, dhga_dzsa )
+    CALL gfunc( cs, gama_s, xs2a, gsa, dgsa_dxs2a )
     !
     Ec_UEG_aa = rhoa*ec_pw_a
     num = (dgsa_dxs2a + dhga_dxs2a)*Dsa + (gsa + hga)*dDsa_dxs2a
@@ -1426,12 +1438,12 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
     !
     zeta = one
     rs   = rsb
-    CALL pw_spin( rs, zeta, ec_pw_b, vc_v(1), vc_v(2) )   !<GPU:pw_spin=>pw_spin_d>
+    CALL pw_spin( rs, zeta, ec_pw_b, vc_v(1), vc_v(2) )
     vc_pw_b = vc_v(1)
     vv      = vc_v(2)
     !
-    CALL gvt4( xs2b, zsb, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hgb, dhgb_dxs2b, dhgb_dzsb )   !<GPU:gvt4=>gvt4_d>
-    CALL gfunc( cs, gama_s, xs2b, gsb, dgsb_dxs2b )   !<GPU:gfunc=>gfunc_d>
+    CALL gvt4( xs2b, zsb, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hgb, dhgb_dxs2b, dhgb_dzsb )
+    CALL gfunc( cs, gama_s, xs2b, gsb, dgsb_dxs2b )
     !
     Ec_UEG_bb = rhob*ec_pw_b
     num = (dgsb_dxs2b + dhgb_dxs2b)*Dsb + (gsb + hgb)*dDsb_dxs2b
@@ -1468,13 +1480,13 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
     zeta  = (rhoa - rhob)/rho
     rs    = (pi34/rho)**f13
     !
-    CALL gvt4( xs2ab, zsab, dab0, dab1, dab2, dab3, dab4, dab5, alpha_ab, hgab, &   !<GPU:gvt4=>gvt4_d>
+    CALL gvt4( xs2ab, zsab, dab0, dab1, dab2, dab3, dab4, dab5, alpha_ab, hgab, &
                dhgab_dxs2ab, dhgab_dzsab )
     !
-    CALL pw_spin( rs, zeta, ec_pw_ab, vc_v(1), vc_v(2) )   !<GPU:pw_spin=>pw_spin_d>
+    CALL pw_spin( rs, zeta, ec_pw_ab, vc_v(1), vc_v(2) )
     vc_pw_up=vc_v(1) ; vc_pw_dw=vc_v(2)
     !
-    CALL gfunc( cab, gama_ab, xs2ab, gsab, dgsab_dxs2ab )   !<GPU:gfunc=>gfunc_d>
+    CALL gfunc( cab, gama_ab, xs2ab, gsab, dgsab_dxs2ab )
     !
     decab_drhoa = vc_pw_up - vc_pw_a
     decab_drhob = vc_pw_dw - vc_pw_b
@@ -1515,7 +1527,8 @@ END SUBROUTINE m06lc
   !
   !
   !-------------------------------------------------------------------
-SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )       !<GPU:DEVICE>
+SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )
+!$acc routine seq
     !-----------------------------------------------------------------
     !
     USE kind_l,   ONLY : DP
@@ -1545,7 +1558,8 @@ SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )       !<GPU:DEVICE>
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )       !<GPU:DEVICE>
+SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )
+!$acc routine seq
   !----------------------------------------------------------------------
   !
   USE kind_l,    ONLY : DP

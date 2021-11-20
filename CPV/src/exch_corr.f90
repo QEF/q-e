@@ -373,7 +373,7 @@
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds,  only: DP
   use xc_lib, only: xclib_dft_is, xclib_dft_is_libxc, xclib_get_id, &
-                    xclib_set_threshold, xc_gcx
+                    xclib_set_threshold, xc, xc_gcx
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin

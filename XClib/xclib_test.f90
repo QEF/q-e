@@ -31,18 +31,19 @@ PROGRAM xclib_test
   !
   !! See README.TEST file for more details.
   !
-  USE kind_l,      ONLY: DP
-  USE constants_l, ONLY: pi
-  USE xc_lib,      ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
-                         xclib_get_ID, xclib_reset_dft, xc_gcx,           &
-                         xclib_dft_is_libxc, xclib_init_libxc,            &
-                         xclib_finalize_libxc, xclib_set_finite_size_volume, &
-                         xclib_set_auxiliary_flags, xclib_dft_is, start_exx
+  USE kind_l,         ONLY: DP
+  USE constants_l,    ONLY: pi
+  USE beef_interface, ONLY: beefsetmode
+  USE xc_lib,         ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
+                            xclib_get_ID, xclib_reset_dft, xc, xc_gcx,       &
+                            xc_metagcx, xclib_dft_is_libxc, xclib_init_libxc,&
+                            xclib_finalize_libxc, xclib_set_finite_size_volume,&
+                            xclib_set_auxiliary_flags, xclib_dft_is, start_exx
   USE xclib_utils_and_para
   !--xml
-  USE xmltools,    ONLY: xml_open_file, xml_closefile,xmlr_readtag,   &
-                         xmlw_writetag, xmlw_opentag, xmlw_closetag, &
-                         xmlr_opentag, xmlr_closetag, get_attr, add_attr
+  USE xmltools,       ONLY: xml_open_file, xml_closefile,xmlr_readtag,  &
+                            xmlw_writetag, xmlw_opentag, xmlw_closetag, &
+                            xmlr_opentag, xmlr_closetag, get_attr, add_attr
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -378,6 +379,15 @@ PROGRAM xclib_test
   nnr = npoints/npes + ABS(nr-1)
   IF (nr==1) nrpe = mype*nnr
   IF (nr==0) nrpe = npoints-(npoints/npes)*(npes-mype-1)
+  !
+  ! ... openacc init (otherwise it offsets the wall time of the first test)
+  !
+#if defined(_OPENACC)
+  !$acc data create( time )
+  !$acc end data
+#endif
+  !
+  ! ... capitalize input vars
   !
   IF (TRIM(polarization)=='UNPOLARIZED' ) THEN
     is_min = 1  ;  is_max = 1
@@ -978,6 +988,9 @@ PROGRAM xclib_test
         IF ( .NOT. LDA ) THEN
           ex1 = 0.d0  ;  ec1 = 0.d0
         ENDIF
+        !
+        IF ( dft(1:3)=='BEE' ) CALL beefsetmode(-1) !** beeforder can be manually 
+        !                                           !   changed here for other checks
         !
         IF (mype==root) time(3) = get_wall_time()
         CALL xc_gcx( nnr, ns, rho, grho, exg1, ecg1, v1x1, v2x1, v1c1, &
@@ -1798,9 +1811,9 @@ PROGRAM xclib_test
     WRITE(test_output_exe(56:96), '(a)') TRIM(status)
     IF (status==passed .AND. show_time) THEN
       WRITE(test_output_exe(80:85), '(a)') 'time:'
-      WRITE(test_output_exe(86:92), '(F6.3)') time_tot2
+      WRITE(test_output_exe(86:92), '(F6.3)') time_tot1
       WRITE(test_output_exe(93:100), '(a)') 's  incr:'
-      WRITE(test_output_exe(101:110), '(F8.3)') time_tot2/time_tot1*100.d0-100.d0
+      WRITE(test_output_exe(101:110), '(F8.3)') time_tot1/time_tot2*100.d0-100.d0
       WRITE(test_output_exe(111:111), '(a)') '%'
     ENDIF
     WRITE(stdout,*) test_output_exe

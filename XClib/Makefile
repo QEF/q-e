@@ -41,6 +41,7 @@ xclib_utils_and_para.o \
 dft_setting_params.o \
 dft_setting_routines.o \
 qe_dft_list.o \
+xc_beef_interface.o \
 xc_lib.o
 
 all: xc_lib.a

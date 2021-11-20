@@ -35,7 +35,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   !! This routine computes the derivative of the exchange and correlation
   !! potentials of GGA family.
   !
-  USE qe_drivers_gga,   ONLY: gcxc, gcxc_beef
+  USE qe_drivers_gga,   ONLY: gcxc
   !
   IMPLICIT NONE
   !
@@ -90,10 +90,11 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   raux(i3:f3) = r_in     ;   s2aux(i3:f3) = (s+ds)**2
   raux(i4:f4) = r_in     ;   s2aux(i4:f4) = (s-ds)**2
   !
+  !$acc data copyin( raux, s2aux ) copyout( sx, sc, v1x, v2x, v1c, v2c )
+  !$acc host_data use_device( raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
   CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
-  !
-  IF ( igcx==43 .OR. igcc==14 ) CALL gcxc_beef( length*4, raux, s2aux, &
-                                            sx, sc, v1x, v2x, v1c, v2c )
+  !$acc end host_data
+  !$acc end data
   !
   ! ... to avoid NaN in the next operations
   WHERE( r_in<=small .OR. s2_in<=small )
@@ -129,7 +130,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !! This routine computes the derivative of the exchange and correlation
   !! potentials in the spin-polarized case.
   !
-  USE qe_drivers_gga,   ONLY: gcx_spin, gcc_spin, gcx_spin_beef, gcc_spin_beef
+  USE qe_drivers_gga,   ONLY: gcx_spin, gcc_spin
   !
   IMPLICIT NONE
   !
@@ -239,8 +240,11 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   raux(i8:f8,:) = r      ;  s2aux(i8:f8,:) = (s-dsdw)**2
   !
   !
-  IF ( igcx/=43 ) CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x )
-  IF ( igcx==43 ) CALL gcx_spin_beef( length*8, raux, s2aux, sx, v1x, v2x )
+  !$acc data copyin( raux, s2aux ) copyout( sx, v1x, v2x )
+  !$acc host_data use_device( raux, s2aux, sx, v1x, v2x )
+  CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x )
+  !$acc end host_data
+  !$acc end data
   !
   ! ... up
   vrrx(:,1) = 0.5_DP  *  (v1x(i1:f1,1) - v1x(i2:f2,1)) / drup(:,1)
@@ -311,8 +315,11 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   rtaux(i5:f5) = rt    ;  s2taux(i5:f5) = s2t        ;  zetaux(i5:f5) = zeta+dz
   rtaux(i6:f6) = rt    ;  s2taux(i6:f6) = s2t        ;  zetaux(i6:f6) = zeta-dz
   !
-  IF ( igcc/=14 ) CALL gcc_spin( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
-  IF ( igcc==14 ) CALL gcc_spin_beef( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
+  !$acc data copyin( rtaux, zetaux, s2taux ) copyout( sc, v1c, v2c )
+  !$acc host_data use_device( rtaux, zetaux, s2taux, sc, v1c, v2c )
+  CALL gcc_spin( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
+  !$acc end host_data
+  !$acc end data
   !
   vrrc(:,1) = 0.5_DP * (v1c(i1:f1,1) - v1c(i2:f2,1)) / dr    * null_v(:,1)
   vrrc(:,2) = 0.5_DP * (v1c(i1:f1,2) - v1c(i2:f2,2)) / dr    * null_v(:,1)
