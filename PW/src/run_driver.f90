@@ -176,6 +176,9 @@ CONTAINS
   !
   !
   SUBROUTINE driver_init()
+    IMPLICIT NONE
+    CHARACTER(256) flag_id, flag_spacer
+    INTEGER flag_val, str_idx
     !
     ! ... Check if the replica id (rid) is the same as in the last run
     !
@@ -203,7 +206,18 @@ CONTAINS
            WRITE(*,*) " @ DRIVER MODE: Receiving parameter string", parbuffer(:nat)
         ENDIF
         CALL mp_bcast( parbuffer, ionode_id, intra_image_comm )
-        ! TODO: parse the string into parameters
+        !parse the string into parameters (a rudimentary and rigid JSON parser)
+        str_idx=1 
+        DO WHILE (SCAN(parbuffer(str_idx:), ',')>0 )
+           READ(parbuffer(str_idx:), *)  flag_id, flag_spacer, flag_val
+           WRITE(*,*) "DRIVER READ ", TRIM(flag_id), flag_val
+           str_idx = str_idx + SCAN(parbuffer(str_idx:), ',')
+           ! TODO: complete the parser case
+           SELECT CASE (TRIM(flag_id))
+              CASE ('lstress')
+                 tstress = flag_val
+           ENDSELECT
+        ENDDO
         ! lscf =  .....
         IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. tstress .OR. lmovecell ))) THEN
             !
