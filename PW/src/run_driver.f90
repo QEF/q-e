@@ -191,9 +191,30 @@ CONTAINS
     END IF
     !
     rid_old = rid
-    ! 
-    CALL update_flags( )
     !
+    ! ... Length of parameter string
+    !
+    IF ( ionode ) CALL readbuffer( socket, nat ) 
+    CALL mp_bcast( nat, ionode_id, intra_image_comm )
+    IF ( nat > 0 ) THEN
+        IF ( ionode) THEN   
+           ! Reads initialization string	
+           CALL readbuffer( socket, parbuffer, nat )
+           WRITE(*,*) " @ DRIVER MODE: Receiving parameter string", parbuffer(:nat)
+        ENDIF
+        CALL mp_bcast( parbuffer, ionode_id, intra_image_comm )
+        ! TODO: parse the string into parameters
+        ! lscf =  .....
+        IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. tstress .OR. lmovecell ))) THEN
+            !
+            ! ... BEEF-vdw ensembles corrupt the wavefunction and, therefore, forces, 
+            !     stresses .Right now the workaround is to run an SCF cycle at the 
+            !     beginning in case  ensembles have been generated.
+            !
+            lscf = .TRUE.
+            hasensemb = .FALSE.
+        ENDIF
+    END IF
     ! ... this is a better place for initialization or 
     !     reinitialization if lflags change
     IF (firststep) CALL init_run( )
@@ -266,21 +287,21 @@ CONTAINS
        CALL stop_run( conv_elec )
     ENDIF
     IF ( lforce ) THEN
-	CALL forces()
-	combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
+        CALL forces()
+        combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
     ELSE
         combuf = 0.0
     ENDIF
     IF ( tstress ) THEN
-	CALL stress(sigma)
+        CALL stress(sigma)
         vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal
     ELSE
         vir = 0.0
     ENDIF
     IF ( lensemb .AND. .NOT. hasensemb ) THEN 
-       IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: BEEF-vdw "
-       CALL beef_energies( )
-       hasensemb = .TRUE.
+        IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: BEEF-vdw "
+        CALL beef_energies( )
+        hasensemb = .TRUE.
     ENDIF
     firststep = .false.
     !
@@ -302,9 +323,8 @@ CONTAINS
     ! ... communicates energy info back to i-pi
     !
     !
-    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress,ensemble "
+    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress "
     IF ( ionode ) CALL writebuffer( socket, "FORCEREADY  ", MSGLEN)         
-    !
     IF ( ionode ) CALL writebuffer( socket, pot)
     IF ( ionode ) CALL writebuffer( socket, nat)
     IF ( ionode ) CALL writebuffer( socket, combuf, 3 * nat)
@@ -341,18 +361,14 @@ CONTAINS
   SUBROUTINE read_and_share()
     ! ... First reads cell and the number of atoms
     !
-    IF ( lmovecell .OR. firststep) THEN
-       IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Reading and sharing cell "
-       IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
-       cellh = RESHAPE(mtxbuffer, (/3,3/))         
-       IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
-       cellih = RESHAPE(mtxbuffer, (/3,3/))
-       !
-       ! ... Share the received data 
-       !
-       CALL mp_bcast( cellh,  ionode_id, intra_image_comm )  
-       CALL mp_bcast( cellih, ionode_id, intra_image_comm )
-    ENDIF
+    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Reading and sharing cell "
+    IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
+    cellh = RESHAPE(mtxbuffer, (/3,3/))         
+    IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
+    cellih = RESHAPE(mtxbuffer, (/3,3/))
+    CALL mp_bcast( cellh,  ionode_id, intra_image_comm )  
+    CALL mp_bcast( cellih, ionode_id, intra_image_comm )
+    
     IF ( ionode ) CALL readbuffer(socket, nat)
     CALL mp_bcast(    nat, ionode_id, intra_image_comm )
     !
@@ -368,13 +384,10 @@ CONTAINS
     !
     ! ... Convert the incoming configuration to the internal pwscf format
     !
-    IF ( lmovecell .OR. firststep ) THEN
-       cellh  = TRANSPOSE(  cellh )                 ! row-major to column-major 
-       cellih = TRANSPOSE( cellih )         
-       at = cellh / alat                            ! and so the cell
-    ENDIF
+    cellh  = TRANSPOSE(  cellh )                 ! row-major to column-major 
+    cellih = TRANSPOSE( cellih )         
     tau = RESHAPE( combuf, (/ 3 , nat /) )/alat  ! internally positions are in alat 
-    !
+    at = cellh / alat                            ! and so the cell
     !
   END SUBROUTINE read_and_share
   !
