@@ -203,16 +203,6 @@ if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MAT
 endif()
 
 
-###########################################################
-# language standard requirements
-###########################################################
-# TODO need to require all compilers using the same one
-if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
-    set(CMAKE_C_STANDARD 11)
-    set(CMAKE_C_STANDARD_REQUIRED ON)
-    set(CMAKE_C_EXTENSIONS OFF)
-endif()
-
 ############################################################
 # C preprocessor
 # Note: reply on the compiler preprocessor whenever possible
@@ -232,6 +222,25 @@ else()
     set(QE_CPP_SAVED ${QE_CPP})
     unset(QE_CPP CACHE)
     message(FATAL_ERROR "C preprocessor ${QE_CPP_SAVED} not found. Pass a working one to CMake via QE_CPP!")
+endif()
+
+###########################################################
+# language standard requirements
+###########################################################
+# TODO need to require all compilers using the same one
+if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
+    set(CMAKE_C_STANDARD 11)
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+    set(CMAKE_C_EXTENSIONS OFF)
+endif()
+
+###########################################################
+# check Fortran compiler -isystem option support
+###########################################################
+include(CheckFortranCompilerFlag)
+check_fortran_compiler_flag("-isystem ." Fortran_ISYSTEM_SUPPORTED)
+if(NOT Fortran_ISYSTEM_SUPPORTED AND NOT DEFINED CMAKE_NO_SYSTEM_FROM_IMPORTED)
+  set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 endif()
 
 ############################################################
