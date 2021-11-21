@@ -4620,6 +4620,7 @@ SUBROUTINE write_parity
    USE gvect,                ONLY : g, ngm
    USE cell_base,            ONLY : at
    USE constants,            ONLY : eps6
+   USE lsda_mod,             ONLY : isk
 
    IMPLICIT NONE
    !
@@ -4639,22 +4640,16 @@ SUBROUTINE write_parity
    ! getting the ik index corresponding to the Gamma point
    ! ... and the spin channel (fix due to N Poilvert, Feb 2011)
    !
-   IF (.not. gamma_only) THEN
+   IF (.NOT. gamma_only) THEN
+      kgamma = -1
       DO ik=ikstart,ikstop
-         IF ( (xk(1,ik)/= 0.d0) .or. (xk(2,ik)/= 0.d0) .or. (xk(3,ik)/= 0.d0) ) THEN
-            IF (ik == ikstop) CALL errore('write_parity',&
-                 ' parity calculation may only be performed at the gamma point.',1)
-            CYCLE
-         ELSE
-            ! NP: spin unpolarized or "up" component of spin
-            IF (ispinw == 0 .or. ispinw == 1) THEN
-               kgamma=ik
-            ELSE ! NP: "down" component
-               kgamma=ik+1
-            ENDIF
-            exit
+         IF (ALL(ABS(xk(:, ik)) < eps6) .AND. (ispinw == 0 .OR. isk(ik) == ispinw)) THEN
+            kgamma = ik
+            EXIT
          ENDIF
       ENDDO
+      IF (kgamma == -1) CALL errore('write_parity',&
+               ' parity calculation may only be performed at the gamma point.',1)
    ELSE
       ! NP: spin unpolarized or "up" component of spin
       IF (ispinw == 0 .or. ispinw == 1) THEN
