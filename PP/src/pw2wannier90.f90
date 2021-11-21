@@ -4617,7 +4617,7 @@ SUBROUTINE write_parity
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,                ONLY : nkstot, xk, igk_k, ngk
-   USE gvect,                ONLY : g, ngm
+   USE gvect,                ONLY : g, ngm, mill
    USE cell_base,            ONLY : at
    USE constants,            ONLY : eps6
    USE lsda_mod,             ONLY : isk
@@ -4626,16 +4626,51 @@ SUBROUTINE write_parity
    !
    INTEGER, EXTERNAL :: find_free_unit
    !
-   INTEGER                      :: npw,ibnd,igv,kgamma,ik,i,ig_idx(32)
+   INTEGER                      :: npw,ibnd,igv,kgamma,ik,i,ig_target,ig_idx(32)
    INTEGER,DIMENSION(nproc)     :: num_G,displ
 
+   INTEGER :: target_g(3, 32)
+   !! List of G vectors to find
    real(kind=dp)                :: g_abc_1D(32),g_abc_gathered(3,32)
-   real(kind=dp),ALLOCATABLE    :: g_abc(:,:),g_abc_pre_gather(:,:,:)
+   real(kind=dp),ALLOCATABLE    :: g_abc_pre_gather(:,:,:)
    COMPLEX(kind=dp),ALLOCATABLE :: evc_sub(:,:,:),evc_sub_gathered(:,:)
    COMPLEX(kind=dp)             :: evc_sub_1D(32)
 
    CALL start_clock( 'write_parity' )
-
+   !
+   ! List of target G vectors
+   target_g(:,  1) = (/  0,  0,  0 /) ! 1
+   target_g(:,  2) = (/  1,  0,  0 /) ! x
+   target_g(:,  3) = (/  0,  1,  0 /) ! y
+   target_g(:,  4) = (/  0,  0,  1 /) ! z
+   target_g(:,  5) = (/  2,  0,  0 /) ! x^2
+   target_g(:,  6) = (/  1,  1,  0 /) ! xy
+   target_g(:,  7) = (/  1, -1,  0 /) ! xy
+   target_g(:,  8) = (/  1,  0,  1 /) ! xz
+   target_g(:,  9) = (/  1,  0, -1 /) ! xz
+   target_g(:, 10) = (/  0,  2,  0 /) ! y^2
+   target_g(:, 11) = (/  0,  1,  1 /) ! yz
+   target_g(:, 12) = (/  0,  1, -1 /) ! yz
+   target_g(:, 13) = (/  0,  0,  2 /) ! z^2
+   target_g(:, 14) = (/  3,  0,  0 /) ! x^3
+   target_g(:, 15) = (/  2,  1,  0 /) ! x^2y
+   target_g(:, 16) = (/  2, -1,  0 /) ! x^2y
+   target_g(:, 17) = (/  2,  0,  1 /) ! x^2z
+   target_g(:, 18) = (/  2,  0, -1 /) ! x^2z
+   target_g(:, 19) = (/  1,  2,  0 /) ! xy^2
+   target_g(:, 20) = (/  1, -2,  0 /) ! xy^2
+   target_g(:, 21) = (/  1,  1,  1 /) ! xyz
+   target_g(:, 22) = (/  1,  1, -1 /) ! xyz
+   target_g(:, 23) = (/  1, -1,  1 /) ! xyz
+   target_g(:, 24) = (/  1, -1, -1 /) ! xyz
+   target_g(:, 25) = (/  1,  0,  2 /) ! xz^2
+   target_g(:, 26) = (/  1,  0, -2 /) ! xz^2
+   target_g(:, 27) = (/  0,  3,  0 /) ! y^3
+   target_g(:, 28) = (/  0,  2,  1 /) ! y^2z
+   target_g(:, 29) = (/  0,  2, -1 /) ! y^2z
+   target_g(:, 30) = (/  0,  1,  2 /) ! yz^2
+   target_g(:, 31) = (/  0,  1, -2 /) ! yz^2
+   target_g(:, 32) = (/  0,  0,  3 /) ! z^3
    !
    ! getting the ik index corresponding to the Gamma point
    ! ... and the spin channel (fix due to N Poilvert, Feb 2011)
@@ -4672,248 +4707,18 @@ SUBROUTINE write_parity
         WRITE(stdout,*)"Finding the 32 unkg's per band required for parity signature."
    ENDIF
    !
-   ! g_abc(:,ipw) are the coordinates of the ipw-th G vector in b1, b2, b3 basis,
-   ! we compute them from g(:,ipw) by multiplying : transpose(at) with g(:,ipw)
-   !
-   ALLOCATE(g_abc(3,npw))
-   DO igv=1,npw
-       g_abc(:,igk_k(igv,kgamma))=matmul(transpose(at),g(:,igk_k(igv,kgamma)))
-   ENDDO
-   !
-   ! Count and identify the G vectors we will be extracting for each
-   ! cpu.
+   ! Count and identify the G vectors we will be extracting for each cpu.
    !
    ig_idx=0
    num_G = 0
    DO igv=1,npw
-       ! 0-th Order
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! 1
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       ! 1st Order
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! z
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       ! 2nd Order
-       IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! yz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! yz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! z^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       ! 3rd Order
-       IF ( (abs(g_abc(1,igv) - 3.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^3
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2y
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2y
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! x^2z
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! x^2z
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) + 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xyz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xyz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xyz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xyz
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! xz^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 2.d0) <= eps6) ) THEN ! xz^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 3.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y^3
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! y^2z
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! y^2z
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! yz^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and.&
-            (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) + 2.d0) <= eps6) ) THEN ! yz^2
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
-       IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv) - 3.d0) <= eps6) ) THEN ! z^3
-           num_G(mpime+1) = num_G(mpime+1) + 1
-           ig_idx(num_G(mpime+1))=igv
-           CYCLE
-       ENDIF
+      DO ig_target = 1, 32
+         IF ( ALL(mill(:, igk_k(igv, kgamma)) == target_g(:, ig_target)) ) THEN
+            num_G(mpime+1) = num_G(mpime+1) + 1
+            ig_idx(num_G(mpime+1)) = igv
+            EXIT
+         ENDIF
+      ENDDO
    ENDDO
    !
    ! Sum laterally across cpus num_G, so it contains
