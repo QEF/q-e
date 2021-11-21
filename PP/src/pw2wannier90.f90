@@ -4605,34 +4605,32 @@ SUBROUTINE write_plot
 END SUBROUTINE write_plot
 
 SUBROUTINE write_parity
-
-   USE mp_pools,             ONLY : intra_pool_comm
-   USE mp_world,             ONLY : mpime, nproc
+   USE mp_pools,             ONLY : intra_pool_comm, me_pool, root_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    USE io_global,            ONLY : stdout, ionode
    USE wvfct,                ONLY : nbnd
-   USE gvecw,                ONLY : gcutw
    USE control_flags,        ONLY : gamma_only
-   USE wavefunctions, ONLY : evc
+   USE wavefunctions,        ONLY : evc
    USE io_files,             ONLY : nwordwfc, iunwfc
-   USE wannier
-   USE klist,                ONLY : nkstot, xk, igk_k, ngk
+   USE klist,                ONLY : nkstot, xk, igk_k, ngk, nks
    USE gvect,                ONLY : g, ngm, mill
    USE cell_base,            ONLY : at
    USE constants,            ONLY : eps6
-   USE lsda_mod,             ONLY : isk
+   USE lsda_mod,             ONLY : lsda, isk
+   USE wannier
    !
    IMPLICIT NONE
    !
-   INTEGER                      :: npw, ibnd, ig, kgamma, ik, i, ig_target
-   INTEGER,DIMENSION(nproc)     :: num_G
+   INTEGER :: npw, ibnd, ig, kgamma, ik, i, ig_target, num_G
    !
    INTEGER :: g_target(3, 32)
    !! List of G vectors to find
    COMPLEX(KIND=DP), ALLOCATABLE :: evc_target(:, :)
    !! evc values at the target G vectors
    !
-   CALL start_clock( 'write_parity' )
+   CALL start_clock('write_parity')
+   !
+   WRITE(stdout, *) "Finding the 32 unkg's per band required for parity signature."
    !
    ! List of target G vectors
    g_target(:,  1) = (/  0,  0,  0 /) ! 1
@@ -4673,14 +4671,13 @@ SUBROUTINE write_parity
    !
    IF (.NOT. gamma_only) THEN
       kgamma = -1
-      DO ik = ikstart, ikstop
-         IF (ALL(ABS(xk(:, ik)) < eps6) .AND. (ispinw == 0 .OR. isk(ik) == ispinw)) THEN
+      DO ik = 1, nks
+         IF (lsda .AND. isk(ik) /= ispinw) CYCLE
+         IF (ALL(ABS(xk(:, ik)) < eps6)) THEN
             kgamma = ik
             EXIT
          ENDIF
       ENDDO
-      IF (kgamma == -1) CALL errore('write_parity',&
-               ' parity calculation may only be performed at the gamma point.',1)
    ELSE
       ! NP: spin unpolarized or "up" component of spin
       IF (ispinw == 0 .OR. ispinw == 1) THEN
@@ -4690,65 +4687,58 @@ SUBROUTINE write_parity
       ENDIF
    ENDIF
    !
-   ALLOCATE(evc_target(32, nbnd))
-   evc_target = (0.d0, 0.d0)
-   !
-   ! building the evc array corresponding to the Gamma point
-   !
-   CALL davcio(evc, 2*nwordwfc, iunwfc, kgamma, -1)
-   npw = ngk(kgamma)
-   !
-   ! Count and identify the G vectors we will be extracting for each cpu.
-   ! Fill evc_target with required fourier component from each cpu dependent evc
-   !
-   WRITE(stdout, *) "Finding the 32 unkg's per band required for parity signature."
-   !
-   num_G(:) = 0
-   DO ig = 1, npw
-      DO ig_target = 1, 32
-         IF ( ALL(mill(:, igk_k(ig, kgamma)) == g_target(:, ig_target)) ) THEN
-            num_G(mpime+1) = num_G(mpime+1) + 1
-            evc_target(ig_target, :) = evc(ig, :)
-            EXIT
-         ENDIF
-      ENDDO
-   ENDDO
-   CALL mp_sum(evc_target, intra_pool_comm)
-   !
-   ! Sum laterally across cpus num_G, so it contains
-   ! the number of g_vectors on each node, and known to all cpus
-   ! Check if all target G vectors are found.
-   !
-   CALL mp_sum(num_G, intra_pool_comm)
-   IF (SUM(num_G) /= 32) CALL errore('write_parity', 'incorrect number of g-vectors extracted',1)
-   !
-   ! Write to file
-   !
-   IF (ionode) THEN
-      WRITE(stdout, *) '     ...done'
-      WRITE(stdout, *) 'G-vector splitting:'
-      DO i = 1, nproc
-         WRITE(stdout, *) ' cpu: ', i-1, ' number g-vectors: ', num_G(i)
-      ENDDO
-      WRITE(stdout, *) ' Writing to file'
+   ! Run calculation only on the pool with k = Gamma.
+   IF (kgamma /= -1) THEN
+      ALLOCATE(evc_target(32, nbnd))
+      evc_target = (0.d0, 0.d0)
       !
-      OPEN(NEWUNIT=iun_parity, FILE=TRIM(seedname)//".unkg", FORM='formatted')
-      WRITE(iun_parity, *) SUM(num_G) ! this value is always 32
-      DO ibnd = 1, nbnd
+      ! building the evc array corresponding to the Gamma point
+      !
+      CALL davcio(evc, 2*nwordwfc, iunwfc, kgamma, -1)
+      npw = ngk(kgamma)
+      !
+      ! Count and identify the G vectors we will be extracting for each cpu.
+      ! Fill evc_target with required fourier component from each cpu dependent evc
+      !
+      num_G = 0
+      DO ig = 1, npw
          DO ig_target = 1, 32
-            WRITE(iun_parity, '(5i5,2f12.7)') ibnd, ig_target, g_target(:, ig_target), &
-                                              REAL(evc_target(ig_target,ibnd)), &
-                                              AIMAG(evc_target(ig_target,ibnd))
+            IF ( ALL(mill(:, igk_k(ig, kgamma)) == g_target(:, ig_target)) ) THEN
+               num_G = num_G + 1
+               evc_target(ig_target, :) = evc(ig, :)
+               EXIT
+            ENDIF
          ENDDO
       ENDDO
-      CLOSE(iun_parity, STATUS="KEEP")
+      CALL mp_sum(evc_target, intra_pool_comm)
       !
-      WRITE(stdout, *) '     ...done'
-   ENDIF
+      ! Sum laterally across cpus num_G, so it contains
+      ! the number of g_vectors on each node, and known to all cpus
+      ! Check if all target G vectors are found.
+      !
+      CALL mp_sum(num_G, intra_pool_comm)
+      IF (num_G /= 32) CALL errore('write_parity', 'incorrect number of g-vectors extracted',1)
+      !
+      ! Write to file
+      !
+      IF (me_pool == root_pool) THEN
+         OPEN(NEWUNIT=iun_parity, FILE=TRIM(seedname)//".unkg", FORM='formatted')
+         WRITE(iun_parity, *) num_G ! this value is always 32
+         DO ibnd = 1, nbnd
+            DO ig_target = 1, 32
+               WRITE(iun_parity, '(5i5,2f12.7)') ibnd, ig_target, g_target(:, ig_target), &
+                                                 REAL(evc_target(ig_target,ibnd)), &
+                                                 AIMAG(evc_target(ig_target,ibnd))
+            ENDDO
+         ENDDO
+         CLOSE(iun_parity, STATUS="KEEP")
+      ENDIF
+      !
+      DEALLOCATE(evc_target)
+      !
+   ENDIF ! kgamma /= -1
    !
-   DEALLOCATE(evc_target)
-   !
-   CALL stop_clock( 'write_parity' )
+   CALL stop_clock('write_parity')
    !
 END SUBROUTINE write_parity
 
