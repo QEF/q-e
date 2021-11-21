@@ -4621,63 +4621,59 @@ SUBROUTINE write_parity
    USE cell_base,            ONLY : at
    USE constants,            ONLY : eps6
    USE lsda_mod,             ONLY : isk
-
+   !
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL :: find_free_unit
+   INTEGER                      :: npw, ibnd, ig, kgamma, ik, i, ig_target
+   INTEGER,DIMENSION(nproc)     :: num_G
    !
-   INTEGER                      :: npw,ibnd,igv,kgamma,ik,i,ig_target,ig_idx(32)
-   INTEGER,DIMENSION(nproc)     :: num_G,displ
-
-   INTEGER :: target_g(3, 32)
+   INTEGER :: g_target(3, 32)
    !! List of G vectors to find
-   real(kind=dp)                :: g_abc_1D(32),g_abc_gathered(3,32)
-   real(kind=dp),ALLOCATABLE    :: g_abc_pre_gather(:,:,:)
-   COMPLEX(kind=dp),ALLOCATABLE :: evc_sub(:,:,:),evc_sub_gathered(:,:)
-   COMPLEX(kind=dp)             :: evc_sub_1D(32)
-
+   COMPLEX(KIND=DP), ALLOCATABLE :: evc_target(:, :)
+   !! evc values at the target G vectors
+   !
    CALL start_clock( 'write_parity' )
    !
    ! List of target G vectors
-   target_g(:,  1) = (/  0,  0,  0 /) ! 1
-   target_g(:,  2) = (/  1,  0,  0 /) ! x
-   target_g(:,  3) = (/  0,  1,  0 /) ! y
-   target_g(:,  4) = (/  0,  0,  1 /) ! z
-   target_g(:,  5) = (/  2,  0,  0 /) ! x^2
-   target_g(:,  6) = (/  1,  1,  0 /) ! xy
-   target_g(:,  7) = (/  1, -1,  0 /) ! xy
-   target_g(:,  8) = (/  1,  0,  1 /) ! xz
-   target_g(:,  9) = (/  1,  0, -1 /) ! xz
-   target_g(:, 10) = (/  0,  2,  0 /) ! y^2
-   target_g(:, 11) = (/  0,  1,  1 /) ! yz
-   target_g(:, 12) = (/  0,  1, -1 /) ! yz
-   target_g(:, 13) = (/  0,  0,  2 /) ! z^2
-   target_g(:, 14) = (/  3,  0,  0 /) ! x^3
-   target_g(:, 15) = (/  2,  1,  0 /) ! x^2y
-   target_g(:, 16) = (/  2, -1,  0 /) ! x^2y
-   target_g(:, 17) = (/  2,  0,  1 /) ! x^2z
-   target_g(:, 18) = (/  2,  0, -1 /) ! x^2z
-   target_g(:, 19) = (/  1,  2,  0 /) ! xy^2
-   target_g(:, 20) = (/  1, -2,  0 /) ! xy^2
-   target_g(:, 21) = (/  1,  1,  1 /) ! xyz
-   target_g(:, 22) = (/  1,  1, -1 /) ! xyz
-   target_g(:, 23) = (/  1, -1,  1 /) ! xyz
-   target_g(:, 24) = (/  1, -1, -1 /) ! xyz
-   target_g(:, 25) = (/  1,  0,  2 /) ! xz^2
-   target_g(:, 26) = (/  1,  0, -2 /) ! xz^2
-   target_g(:, 27) = (/  0,  3,  0 /) ! y^3
-   target_g(:, 28) = (/  0,  2,  1 /) ! y^2z
-   target_g(:, 29) = (/  0,  2, -1 /) ! y^2z
-   target_g(:, 30) = (/  0,  1,  2 /) ! yz^2
-   target_g(:, 31) = (/  0,  1, -2 /) ! yz^2
-   target_g(:, 32) = (/  0,  0,  3 /) ! z^3
+   g_target(:,  1) = (/  0,  0,  0 /) ! 1
+   g_target(:,  2) = (/  1,  0,  0 /) ! x
+   g_target(:,  3) = (/  0,  1,  0 /) ! y
+   g_target(:,  4) = (/  0,  0,  1 /) ! z
+   g_target(:,  5) = (/  2,  0,  0 /) ! x^2
+   g_target(:,  6) = (/  1,  1,  0 /) ! xy
+   g_target(:,  7) = (/  1, -1,  0 /) ! xy
+   g_target(:,  8) = (/  1,  0,  1 /) ! xz
+   g_target(:,  9) = (/  1,  0, -1 /) ! xz
+   g_target(:, 10) = (/  0,  2,  0 /) ! y^2
+   g_target(:, 11) = (/  0,  1,  1 /) ! yz
+   g_target(:, 12) = (/  0,  1, -1 /) ! yz
+   g_target(:, 13) = (/  0,  0,  2 /) ! z^2
+   g_target(:, 14) = (/  3,  0,  0 /) ! x^3
+   g_target(:, 15) = (/  2,  1,  0 /) ! x^2y
+   g_target(:, 16) = (/  2, -1,  0 /) ! x^2y
+   g_target(:, 17) = (/  2,  0,  1 /) ! x^2z
+   g_target(:, 18) = (/  2,  0, -1 /) ! x^2z
+   g_target(:, 19) = (/  1,  2,  0 /) ! xy^2
+   g_target(:, 20) = (/  1, -2,  0 /) ! xy^2
+   g_target(:, 21) = (/  1,  1,  1 /) ! xyz
+   g_target(:, 22) = (/  1,  1, -1 /) ! xyz
+   g_target(:, 23) = (/  1, -1,  1 /) ! xyz
+   g_target(:, 24) = (/  1, -1, -1 /) ! xyz
+   g_target(:, 25) = (/  1,  0,  2 /) ! xz^2
+   g_target(:, 26) = (/  1,  0, -2 /) ! xz^2
+   g_target(:, 27) = (/  0,  3,  0 /) ! y^3
+   g_target(:, 28) = (/  0,  2,  1 /) ! y^2z
+   g_target(:, 29) = (/  0,  2, -1 /) ! y^2z
+   g_target(:, 30) = (/  0,  1,  2 /) ! yz^2
+   g_target(:, 31) = (/  0,  1, -2 /) ! yz^2
+   g_target(:, 32) = (/  0,  0,  3 /) ! z^3
    !
    ! getting the ik index corresponding to the Gamma point
    ! ... and the spin channel (fix due to N Poilvert, Feb 2011)
    !
    IF (.NOT. gamma_only) THEN
       kgamma = -1
-      DO ik=ikstart,ikstop
+      DO ik = ikstart, ikstop
          IF (ALL(ABS(xk(:, ik)) < eps6) .AND. (ispinw == 0 .OR. isk(ik) == ispinw)) THEN
             kgamma = ik
             EXIT
@@ -4687,130 +4683,73 @@ SUBROUTINE write_parity
                ' parity calculation may only be performed at the gamma point.',1)
    ELSE
       ! NP: spin unpolarized or "up" component of spin
-      IF (ispinw == 0 .or. ispinw == 1) THEN
-         kgamma=1
+      IF (ispinw == 0 .OR. ispinw == 1) THEN
+         kgamma = 1
       ELSE ! NP: "down" component
-         kgamma=2
+         kgamma = 2
       ENDIF
    ENDIF
    !
+   ALLOCATE(evc_target(32, nbnd))
+   evc_target = (0.d0, 0.d0)
+   !
    ! building the evc array corresponding to the Gamma point
    !
-   CALL davcio (evc, 2*nwordwfc, iunwfc, kgamma, -1 )
+   CALL davcio(evc, 2*nwordwfc, iunwfc, kgamma, -1)
    npw = ngk(kgamma)
    !
-   ! opening the <seedname>.unkg file
-   !
-   iun_parity = find_free_unit()
-   IF (ionode)  THEN
-        OPEN (unit=iun_parity, file=trim(seedname)//".unkg",form='formatted')
-        WRITE(stdout,*)"Finding the 32 unkg's per band required for parity signature."
-   ENDIF
-   !
    ! Count and identify the G vectors we will be extracting for each cpu.
+   ! Fill evc_target with required fourier component from each cpu dependent evc
    !
-   ig_idx=0
-   num_G = 0
-   DO igv=1,npw
+   WRITE(stdout, *) "Finding the 32 unkg's per band required for parity signature."
+   !
+   num_G(:) = 0
+   DO ig = 1, npw
       DO ig_target = 1, 32
-         IF ( ALL(mill(:, igk_k(igv, kgamma)) == target_g(:, ig_target)) ) THEN
+         IF ( ALL(mill(:, igk_k(ig, kgamma)) == g_target(:, ig_target)) ) THEN
             num_G(mpime+1) = num_G(mpime+1) + 1
-            ig_idx(num_G(mpime+1)) = igv
+            evc_target(ig_target, :) = evc(ig, :)
             EXIT
          ENDIF
       ENDDO
    ENDDO
+   CALL mp_sum(evc_target, intra_pool_comm)
    !
    ! Sum laterally across cpus num_G, so it contains
    ! the number of g_vectors on each node, and known to all cpus
+   ! Check if all target G vectors are found.
    !
    CALL mp_sum(num_G, intra_pool_comm)
-
-   IF (ionode) WRITE(iun_parity,*) sum(num_G)
-   IF (sum(num_G) /= 32) CALL errore('write_parity', 'incorrect number of g-vectors extracted',1)
-   IF (ionode) THEN
-      WRITE(stdout,*)'     ...done'
-      WRITE(stdout,*)'G-vector splitting:'
-      DO i=1,nproc
-         WRITE(stdout,*)' cpu: ',i-1,' number g-vectors: ',num_G(i)
-      ENDDO
-      WRITE(stdout,*)' Collecting g-vectors and writing to file'
-   ENDIF
-
-   !
-   ! Define needed intermediate arrays
-   !
-   ALLOCATE(evc_sub(32,nbnd,nproc))
-   ALLOCATE(evc_sub_gathered(32,nbnd))
-   ALLOCATE(g_abc_pre_gather(3,32,nproc))
-   !
-   ! Initialise
-   !
-   evc_sub=(0.d0,0.d0)
-   evc_sub_1D=(0.d0,0.d0)
-   evc_sub_gathered=(0.d0,0.d0)
-   g_abc_pre_gather=0
-   g_abc_1D=0
-   g_abc_gathered=0
-   !
-   ! Compute displacements needed for filling evc_sub
-   !
-   displ(1)=1
-   IF (nproc > 1) THEN
-       DO i=2,nproc
-           displ(i)=displ(i-1)+num_G(i-1)
-       ENDDO
-   ENDIF
-   !
-   ! Fill evc_sub with required fourier component from each cpu dependent evc
-   !
-   DO i=1,num_G(mpime+1)
-       evc_sub(i+displ(mpime+1)-1,:,mpime+1)=evc(ig_idx(i),:)
-   ENDDO
-   !
-   ! g_abc_pre_gather(:,ipw,icpu) are the coordinates of the ipw-th G vector in b1, b2, b3 basis
-   ! on icpu and stored sequencially, ready for a lateral mp_sum
-   !
-   DO igv=1,num_G(mpime+1)
-       g_abc_pre_gather(:,igv+displ(mpime+1)-1,mpime+1) = &
-            matmul(transpose(at),g(:,ig_idx(igk_k(igv,kgamma))))
-   ENDDO
-   !
-   ! Gather evc_sub and  g_abc_pre_gather into common arrays to each cpu
-   !
-   DO ibnd=1,nbnd
-      evc_sub_1D=evc_sub(:,ibnd,mpime+1)
-      CALL mp_sum(evc_sub_1D, intra_pool_comm)
-      evc_sub_gathered(:,ibnd)=evc_sub_1D
-   ENDDO
-   !
-   DO i=1,3
-       g_abc_1D=g_abc_pre_gather(i,:,mpime+1)
-       CALL mp_sum(g_abc_1D, intra_pool_comm)
-       g_abc_gathered(i,:)=g_abc_1D
-   ENDDO
+   IF (SUM(num_G) /= 32) CALL errore('write_parity', 'incorrect number of g-vectors extracted',1)
    !
    ! Write to file
    !
-   DO ibnd=1,nbnd
-      DO igv=1,32
-         IF (ionode) WRITE(iun_parity,'(5i5,2f12.7)') ibnd, igv, nint(g_abc_gathered(1,igv)),&
-                                                                 nint(g_abc_gathered(2,igv)),&
-                                                                 nint(g_abc_gathered(3,igv)),&
-                                                                 real(evc_sub_gathered(igv,ibnd)),&
-                                                                aimag(evc_sub_gathered(igv,ibnd))
+   IF (ionode) THEN
+      WRITE(stdout, *) '     ...done'
+      WRITE(stdout, *) 'G-vector splitting:'
+      DO i = 1, nproc
+         WRITE(stdout, *) ' cpu: ', i-1, ' number g-vectors: ', num_G(i)
       ENDDO
-   ENDDO
-   WRITE(stdout,*)'     ...done'
+      WRITE(stdout, *) ' Writing to file'
+      !
+      OPEN(NEWUNIT=iun_parity, FILE=TRIM(seedname)//".unkg", FORM='formatted')
+      WRITE(iun_parity, *) SUM(num_G) ! this value is always 32
+      DO ibnd = 1, nbnd
+         DO ig_target = 1, 32
+            WRITE(iun_parity, '(5i5,2f12.7)') ibnd, ig_target, g_target(:, ig_target), &
+                                              REAL(evc_target(ig_target,ibnd)), &
+                                              AIMAG(evc_target(ig_target,ibnd))
+         ENDDO
+      ENDDO
+      CLOSE(iun_parity, STATUS="KEEP")
+      !
+      WRITE(stdout, *) '     ...done'
+   ENDIF
    !
-   IF (ionode) CLOSE(unit=iun_parity)
+   DEALLOCATE(evc_target)
    !
-   DEALLOCATE(evc_sub)
-   DEALLOCATE(evc_sub_gathered)
-   DEALLOCATE(g_abc_pre_gather)
-
    CALL stop_clock( 'write_parity' )
-
+   !
 END SUBROUTINE write_parity
 
 
