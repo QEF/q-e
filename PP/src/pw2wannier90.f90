@@ -4622,7 +4622,7 @@ SUBROUTINE write_parity
    IMPLICIT NONE
    !
    INTEGER :: npw, ibnd, ig, kgamma, ik, i, ig_target, num_G
-   !
+   !!
    INTEGER :: g_target(3, 32)
    !! List of G vectors to find
    COMPLEX(KIND=DP), ALLOCATABLE :: evc_target(:, :)
@@ -4727,8 +4727,8 @@ SUBROUTINE write_parity
          DO ibnd = 1, nbnd
             DO ig_target = 1, 32
                WRITE(iun_parity, '(5i5,2f12.7)') ibnd, ig_target, g_target(:, ig_target), &
-                                                 REAL(evc_target(ig_target,ibnd)), &
-                                                 AIMAG(evc_target(ig_target,ibnd))
+                                                 REAL(evc_target(ig_target, ibnd)), &
+                                                 AIMAG(evc_target(ig_target, ibnd))
             ENDDO
          ENDDO
          CLOSE(iun_parity, STATUS="KEEP")
