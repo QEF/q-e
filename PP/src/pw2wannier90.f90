@@ -1653,14 +1653,16 @@ SUBROUTINE compute_dmn
    real(DP), parameter :: pwg(2)=(/2.976190476190479d-2,3.214285714285711d-2/)
    !
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, isym, npwq, i, m, n, ir, jsym
-   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt, nir
+   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nir
    INTEGER :: ikevc, ikpevcq, s, counter, iun_dmn, iun_sym, ig, igp, ip, jp, np, iw, jw
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), &
                                becp2(:,:), Mkb(:,:), aux_nc(:,:)
    real(DP), ALLOCATABLE    :: rbecp2(:,:),sr(:,:,:)
-   COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), phs(:,:)
-   real(DP), ALLOCATABLE    :: qg(:), workg(:)
-   real(DP), ALLOCATABLE    :: ylm(:,:), dxk(:,:), tvec(:,:), dylm(:,:), wws(:,:,:), vps2t(:,:,:), vaxis(:,:,:)
+   COMPLEX(DP), ALLOCATABLE :: qb(:,:,:), phs(:,:)
+   COMPLEX(DP)              :: qgm
+   REAL(DP)                 :: qg
+   real(DP), ALLOCATABLE    :: workg(:)
+   real(DP), ALLOCATABLE    :: ylm(:), dxk(:), tvec(:,:), dylm(:,:), wws(:,:,:), vps2t(:,:,:), vaxis(:,:,:)
    INTEGER, ALLOCATABLE     :: iks2k(:,:),iks2g(:,:),ik2ir(:),ir2ik(:)
    INTEGER, ALLOCATABLE     :: iw2ip(:),ip2iw(:),ips2p(:,:),invs(:)
    logical, ALLOCATABLE     :: lfound(:)
@@ -1812,8 +1814,8 @@ SUBROUTINE compute_dmn
    IF (COUNT(iks2k <= 0) /= 0) CALL errore("compute_dmn", "inconsistency in iks2k", COUNT(iks2k <= 0))
    !
    ! Setup ik2ir and ir2ik
-   ! ik2ir: Gives irreducible-k points from regular-k points.
-   ! ir2ik: Gives regular-k points from irreducible-k points.
+   ! ik2ir: Gives irreducible-k points from regular-k points. (Global k index)
+   ! ir2ik: Gives regular-k points from irreducible-k points. (Global k index)
    !
    ALLOCATE(ik2ir(iknum))
    ALLOCATE(ir2ik(iknum))
@@ -1977,9 +1979,9 @@ SUBROUTINE compute_dmn
                ip = iw2ip(iw)
                jp = ips2p(ip, invs(isym))
                jw = ip2iw(jp)
-               v1 = xk(:,iks2k(ik,isym)) - MATMUL(sr(:,:,isym), xk(:,ik))
+               v1 = xk(:,iks2k(ik,isym)) - MATMUL(sr(:,:,isym), xk_all(:,ik))
                v2 = MATMUL(v1, sr(:,:,isym))
-               phs(iw,iw) = EXP(CMPLX(0.d0, SUM(vps2t(:,jp,isym)*xk(:,ik))*tpi, KIND=DP)) & ! Phase of T.k with lattice vectors T of above.
+               phs(iw,iw) = EXP(CMPLX(0.d0, SUM(vps2t(:,jp,isym)*xk_all(:,ik))*tpi, KIND=DP)) & ! Phase of T.k with lattice vectors T of above.
                           * EXP(CMPLX(0.d0, SUM(tvec(:,isym)*v2)*tpi, KIND=DP)) ! Phase of t.G with translation vector t(isym).
             ENDDO
             !
@@ -2014,51 +2016,35 @@ SUBROUTINE compute_dmn
    !
    !     qb is  FT of Q(r)
    !
-   nbt = nsym*nir!nnb * iknum
-   !
-   ALLOCATE( qg(nbt) )
-   ALLOCATE (dxk(3,nbt))
-   !
-   ind = 0
-   DO ir=1,nir
-      ik=ir2ik(ir)
-      DO isym = 1, nsym!nnb
-         ind = ind + 1
-         !        ikp = kpb(ik,ib)
-         !
-         !        g_(:) = REAL( g_kpb(:,ik,ib) )
-         !        CALL cryst_to_cart (1, g_, bg, 1)
-         dxk(:,ind) = 0d0!xk(:,ikp) +g_(:) - xk(:,ik)
-         qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
-      ENDDO
-      !      write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
-   ENDDO
-   !
-   !  USPP
-   !
    IF(okvan) THEN
-
-      ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-      ALLOCATE( qb (nhm, nhm, ntyp, nbt) )
+      ALLOCATE(dxk(3))
+      ALLOCATE(ylm(lmaxq*lmaxq) )
+      ALLOCATE(qb(nhm, nhm, ntyp))
       !
-      CALL ylmr2 (lmaxq*lmaxq, nbt, dxk, qg, ylm)
-      qg(:) = sqrt(qg(:)) * tpiba
+      ! Unlike in compute_mmn, here dxk is always 0 because we compute overlap between
+      ! |psi(k)> and S^{-1}*|psi(Sk)>, which both have periodicity exp(ikr).
+      qg = 0.d0
+      dxk(:) = 0.d0
+      CALL ylmr2(lmaxq*lmaxq, 1, dxk, qg, ylm)
+      !
+      qg = SQRT(qg) * tpiba
       !
       DO nt = 1, ntyp
-         IF (upf(nt)%tvanp ) THEN
-            DO ih = 1, nh (nt)
-               DO jh = 1, nh (nt)
-                  CALL qvan2 (nbt, ih, jh, nt, qg, qgm, ylm)
-                  qb (ih, jh, nt, 1:nbt) = omega * qgm(1:nbt)
+         IF (upf(nt)%tvanp) THEN
+            DO ih = 1, nh(nt)
+               DO jh = 1, nh(nt)
+                  CALL qvan2(1, ih, jh, nt, qg, qgm, ylm)
+                  qb(ih, jh, nt) = omega * qgm
                ENDDO
             ENDDO
          ENDIF
       ENDDO
       !
-      DEALLOCATE (qg, qgm, ylm )
+      DEALLOCATE(dxk)
+      DEALLOCATE(ylm)
       !
    ENDIF
-
+   !
    WRITE(stdout,'(/)')
    WRITE(stdout,'(a,i8)') '  DMN(d_matrix_band): nir = ',nir
    !
@@ -2069,7 +2055,6 @@ SUBROUTINE compute_dmn
    nxxs = dffts%nr1x *dffts%nr2x *dffts%nr3x
    ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
    !
-   ind = 0
    DO ir=1,nir
       ik=ir2ik(ir)
       WRITE (stdout,'(i8)',advance='no') ir
@@ -2097,7 +2082,6 @@ SUBROUTINE compute_dmn
       !
       !
       DO isym = 1, nsym
-         ind = ind + 1
          ikp = iks2k(ik,isym)
          npwq = ngk(ikp)
          ! read wfc at S*k
@@ -2113,11 +2097,14 @@ SUBROUTINE compute_dmn
             evc_sk(:, ibnd_m) = evc(:, m)
          ENDDO
          !
-         do n = 1, num_bands
-            do ip=1,npwq        !applying translation vector t.
-               evc_sk(ip,n)=evc_sk(ip,n)*exp(dcmplx(0d0,+sum((MATMUL(g(:,igk_k(ip,ikp)),sr(:,:,isym))+xk(:,ik))*tvec(:,isym))*tpi))
-            end do
-         end do
+         ! apply translation vector t.
+         DO ig = 1, npwq
+            arg = SUM( ( MATMUL(g(:,igk_k(ig,ikp)), sr(:,:,isym)) + xk(:,ik) ) * tvec(:,isym) ) * tpi
+            phase1 = CMPLX(COS(arg), SIN(arg), KIND=DP)
+            DO n = 1, num_bands
+               evc_sk(ig, n) = evc_sk(ig, n) * phase1
+            ENDDO
+         ENDDO
          ! compute the phase
          phase(:) = (0.d0,0.d0)
          ! missing phase G of above is given here and below.
@@ -2183,9 +2170,6 @@ SUBROUTINE compute_dmn
                IF ( upf(nt)%tvanp ) THEN
                   DO na = 1, nat
                      !
-                     arg = dot_product( dxk(:,ind), tau(:,na) ) * tpi
-                     phase1 = cmplx( cos(arg), -sin(arg) ,kind=DP)
-                     !
                      IF ( ityp(na) == nt ) THEN
                         DO jh = 1, nh(nt)
                            jkb = ijkb0 + jh
@@ -2198,8 +2182,7 @@ SUBROUTINE compute_dmn
                                  ELSE
                                     DO n = 1, num_bands
                                        Mkb(m,n) = Mkb(m,n) + &
-                                       phase1 * qb(ih,jh,nt,ind) * &
-                                       conjg( becp%k(ikb,m) ) * becp2(jkb,n)
+                                       qb(ih,jh,nt) * CONJG(becp%k(ikb, m)) * becp2(jkb, n)
                                     ENDDO
                                  ENDIF
                               ENDDO ! m
@@ -2232,7 +2215,7 @@ SUBROUTINE compute_dmn
 
    IF (ionode .AND. wan_mode=='standalone') CLOSE (iun_dmn)
 
-   DEALLOCATE (Mkb, dxk, phase)
+   DEALLOCATE (Mkb, phase)
    DEALLOCATE(temppsic_all, psic_all)
    DEALLOCATE(aux)
    DEALLOCATE(evc_k)
