@@ -1519,10 +1519,10 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
          call errore("pw2wan_set_symm", "use_all_frac = .true. + read_sym = .true. not supported", 1)
       END IF
       DO isym = 1, nsym
-         !st = transpose( matmul(transpose(bg), sr(:,:,isym)) )
-         st = transpose( matmul(transpose(bg), transpose(sr(:,:,isym))) )
-         s_in(:,:,isym) = nint( matmul(transpose(at), st) )
-         v = matmul(transpose(bg), tvec(:,isym))
+         !st = transpose( MATMUL(transpose(bg), sr(:,:,isym)) )
+         st = transpose( MATMUL(transpose(bg), transpose(sr(:,:,isym))) )
+         s_in(:,:,isym) = nint( MATMUL(transpose(at), st) )
+         v = MATMUL(transpose(bg), tvec(:,isym))
          ft_in(1,isym) = v(1)
          ft_in(2,isym) = v(2)
          ft_in(3,isym) = v(3)
@@ -1710,8 +1710,8 @@ SUBROUTINE compute_dmn
       DO isym = 1, nsym
          do jsym=1,nsym
             if(invs(jsym).ge.1) cycle
-            v1=matmul(matmul(tvec(:,isym),sr(:,:,jsym))+tvec(:,jsym),bg)
-            if(sum(abs(matmul(sr(:,:,isym),sr(:,:,jsym))-dmat))+sum(abs(v1-dble(nint(v1))))<1d-3) then
+            v1=MATMUL(MATMUL(tvec(:,isym),sr(:,:,jsym))+tvec(:,jsym),bg)
+            if(sum(abs(MATMUL(sr(:,:,isym),sr(:,:,jsym))-dmat))+sum(abs(v1-dble(nint(v1))))<1d-3) then
                invs(isym)=jsym
                invs(jsym)=isym
             end if
@@ -1726,7 +1726,7 @@ SUBROUTINE compute_dmn
         sr(:,:,isym)=transpose(srin(:,:,isym))
       end do
       invs=invsin(1:nsym)
-      tvec=matmul(at(:,:),ftin(:,1:nsym))
+      tvec=MATMUL(at(:,:),ftin(:,1:nsym))
       if(ionode)then
          open(NEWUNIT=iun_sym, file=trim(seedname)//".sym",form='formatted')
          write(iun_sym,"(i5)") nsym
@@ -1741,7 +1741,7 @@ SUBROUTINE compute_dmn
       IF (invs(isym) <= 0 .OR. invs(isym) >= nsym + 1) THEN
          CALL errore("compute_dmn", "out of range in invs", 1)
       ENDIF
-      v1 = matmul(matmul(tvec(:,isym),sr(:,:,invs(isym)))+tvec(:,invs(isym)),bg)
+      v1 = MATMUL(MATMUL(tvec(:,isym),sr(:,:,invs(isym)))+tvec(:,invs(isym)),bg)
       IF (ANY( ABS(MATMUL(sr(:,:,isym), sr(:,:,invs(isym))) - dmat) > 1.d-3) .OR. &
           ANY( ABS(v1 - REAL(NINT(v1), DP)) > 1.d-3 )) THEN
          CALL errore("compute_dmn", "inconsistent invs", 1)
@@ -1766,10 +1766,6 @@ SUBROUTINE compute_dmn
       ENDIF
    ENDDO
    !
-   ALLOCATE(phase(dffts%nnr))
-   ALLOCATE(evcq(npol*npwx, nbnd))
-   ALLOCATE(aux(npwx))
-   !
    ! Setup iks2k and iks2g, such that symmetry operation isym moves
    ! k(iks2k(ik,isym)) to k(ik) + G(iks2g(ik,isym)).
    !
@@ -1782,11 +1778,11 @@ SUBROUTINE compute_dmn
    DO isym = 1, nsym
       lfound(:) = .FALSE.
       DO ik = 1, iknum
-         v1 = xk(:, ik)
+         v1 = xk_all(:, ik)
          v2 = MATMUL(sr(:,:,isym), v1)
          DO ikp = 1, iknum
             IF (lfound(ikp)) CYCLE
-            v3 = xk(:, ikp)
+            v3 = xk_all(:, ikp)
             v4 = MATMUL(v2-v3, at)
             IF (ALL( ABS( REAL(NINT(v4), DP) - v4 ) < 1.d-5 )) THEN
                iks2k(ik, isym) = ikp
@@ -1800,13 +1796,13 @@ SUBROUTINE compute_dmn
    DO isym = 1, nsym
       DO ik = 1, iknum
          ikp = iks2k(ik, isym)
-         v1 = xk(:, ikp)
+         v1 = xk_all(:, ikp)
          v2 = MATMUL(v1, sr(:,:,isym))
-         v3 = xk(:, ik)
-         DO ig = 1, ngk(ik)
-            v4 = g(:, igk_k(ig, ik))
+         v3 = xk_all(:, ik)
+         DO ig = 1, ngm
+            v4 = g(:, ig)
             IF ( ALL( ABS(v3 + v4 - v2) < 1.d-5) ) THEN
-               iks2g(ik, isym) = igk_k(ig, ik)
+               iks2g(ik, isym) = ig
                EXIT
             ENDIF
          ENDDO
@@ -1871,11 +1867,11 @@ SUBROUTINE compute_dmn
       lfound=.false.
       do ip=1,np
          v1=center_w(:,ip2iw(ip))
-         v2=matmul(sr(:,:,isym),(v1+tvec(:,isym)))
+         v2=MATMUL(sr(:,:,isym),(v1+tvec(:,isym)))
          do jp=1,np
             if(lfound(jp)) cycle
             v3=center_w(:,ip2iw(jp))
-            v4=matmul(v3-v2,bg)
+            v4=MATMUL(v3-v2,bg)
             if(sum(abs(dble(nint(v4))-v4))<1d-2) then
                lfound(jp)=.true.
                ips2p(ip,isym)=jp
@@ -1883,8 +1879,8 @@ SUBROUTINE compute_dmn
             end if                                       !T is given by vps2t(:,ip,isym).
          end do
          if(ips2p(ip,isym) <= 0) then
-            write(stdout,"(a,3f18.10,a,3f18.10,a)")"  Could not find ",v2,"(",matmul(v2,bg),")"
-            write(stdout,"(a,3f18.10,a,3f18.10,a)")"  coming from    ",v1,"(",matmul(v1,bg),")"
+            write(stdout,"(a,3f18.10,a,3f18.10,a)")"  Could not find ",v2,"(",MATMUL(v2,bg),")"
+            write(stdout,"(a,3f18.10,a,3f18.10,a)")"  coming from    ",v1,"(",MATMUL(v1,bg),")"
             write(stdout,"(a,i5,a               )")"  of Wannier site",ip,"."
             call errore("compute_dmn", "Error: missing Wannier sites, see the output.", 1)
          end if
@@ -1896,7 +1892,7 @@ SUBROUTINE compute_dmn
          v1=center_w(:,ip2iw(ip))
          jp=ips2p(ip,isym)
          v2=center_w(:,ip2iw(jp))
-         v3=matmul(v2,sr(:,:,isym))-tvec(:,isym)
+         v3=MATMUL(v2,sr(:,:,isym))-tvec(:,isym)
          vps2t(:,ip,isym)=v3-v1
       end do
    end do
@@ -1919,32 +1915,32 @@ SUBROUTINE compute_dmn
    !end do !Checking spherical integral.
    allocate(wws(n_wannier,n_wannier,nsym))
    wws=0d0
-   do iw=1,n_wannier
+   DO iw = 1, n_wannier
       call set_u_matrix (xaxis(:,iw),zaxis(:,iw),vaxis(:,:,iw))
    end do
    DO isym = 1, nsym
-      do iw=1,n_wannier
+      DO iw = 1, n_wannier
          ip=iw2ip(iw)
          jp=ips2p(ip,isym)
-         CALL ylm_wannier(dylm(1,1),l_w(iw),mr_w(iw),matmul(vaxis(:,:,iw),dvec),32)
+         CALL ylm_wannier(dylm(1,1),l_w(iw),mr_w(iw),MATMUL(vaxis(:,:,iw),dvec),32)
          do jw=1,n_wannier
             if(iw2ip(jw).ne.jp) cycle
             do ir=1,32
-               dvec2(:,ir)=matmul(sr(:,:,isym),dvec(:,ir))
+               dvec2(:,ir)=MATMUL(sr(:,:,isym),dvec(:,ir))
             end do
-            CALL ylm_wannier(dylm(1,2),l_w(jw),mr_w(jw),matmul(vaxis(:,:,jw),dvec2),32)
+            CALL ylm_wannier(dylm(1,2),l_w(jw),mr_w(jw),MATMUL(vaxis(:,:,jw),dvec2),32)
             wws(jw,iw,isym)=sum(dylm(:,1)*dylm(:,2)*dwgt)*2d0*tpi !<Rotated Y(jw)|Not rotated Y(iw)> for sym.op.(isym).
          end do
       end do
    end do
    deallocate(dylm,vaxis)
    DO isym = 1, nsym
-      do iw=1,n_wannier
+      DO iw = 1, n_wannier
          err=abs((sum(wws(:,iw,isym)**2)+sum(wws(iw,:,isym)**2))*.5d0-1d0)
          if(err.gt.1d-3) then
-            write(stdout,"(a,i5,a,i5,a)") "compute_dmn: Symmetry operator (", isym, &
+            write(stdout, '(a,i5,a,i5,a)') "compute_dmn: Symmetry operator (", isym, &
                     ") could not transform Wannier function (", iw, ")."
-            write(stdout,"(a,f15.7,a  )") "compute_dmn: The error is ", err, "."
+            write(stdout, '(a,f15.7,a  )') "compute_dmn: The error is ", err, "."
             call errore("compute_dmn", "Error: missing Wannier functions, see the output.", 1)
          end if
       end do
@@ -1963,34 +1959,44 @@ SUBROUTINE compute_dmn
       ENDDO
    ENDIF ! ionode
    !
-   ALLOCATE(phs(n_wannier, n_wannier))
-   phs=(0d0,0d0)
-   WRITE(stdout,'(/)')
-   WRITE(stdout,'(a,i8)') '  DMN(d_matrix_wann): nir = ',nir
-   DO ir=1,nir
-      ik=ir2ik(ir)
-      WRITE (stdout,'(i8)',advance='no') ir
-      IF( MOD(ir,10) == 0 ) WRITE (stdout,*)
-      FLUSH(stdout)
-      DO isym = 1, nsym
-         do iw=1,n_wannier
-            ip=iw2ip(iw)
-            jp=ips2p(ip,invs(isym))
-            jw=ip2iw(jp)
-            v1 = xk(:,iks2k(ik,isym)) - matmul(sr(:,:,isym),xk(:,ik))
-            v2 = matmul(v1, sr(:,:,isym))
-            phs(iw,iw)=exp(dcmplx(0d0,+sum(vps2t(:,jp,isym)*xk(:,ik))*tpi)) &      !Phase of T.k with lattice vectors T of above.
-            *exp(dcmplx(0d0,+sum(tvec(:,isym)*v2)*tpi)) !Phase of t.G with translation vector t(isym).
-         end do
-         IF (ionode) then
-            WRITE (iun_dmn,*)
-            WRITE (iun_dmn,"(1p,(' (',e18.10,',',e18.10,')'))") matmul(phs,dcmplx(wws(:,:,isym),0d0))
-         end if
-      end do
-   end do
-   if(mod(nir,10) /= 0) WRITE(stdout,*)
-   WRITE(stdout,*) ' DMN(d_matrix_wann) calculated'
-   deallocate(phs)
+   ! Compute and write d matrix for Wannier functions to file
+   !
+   IF (ionode) THEN
+      ALLOCATE(phs(n_wannier, n_wannier))
+      phs = (0.d0, 0.d0)
+      WRITE(stdout,'(/)')
+      WRITE(stdout,'(a,i8)') '  DMN(d_matrix_wann): nir = ', nir
+      DO ir = 1, nir
+         ik = ir2ik(ir)
+         WRITE(stdout,'(i8)', advance='no') ir
+         IF (MOD(ir, 10) == 0) WRITE (stdout,*)
+         FLUSH(stdout)
+         DO isym = 1, nsym
+            DO iw = 1, n_wannier
+               ip = iw2ip(iw)
+               jp = ips2p(ip, invs(isym))
+               jw = ip2iw(jp)
+               v1 = xk(:,iks2k(ik,isym)) - MATMUL(sr(:,:,isym), xk(:,ik))
+               v2 = MATMUL(v1, sr(:,:,isym))
+               phs(iw,iw) = EXP(CMPLX(0.d0, SUM(vps2t(:,jp,isym)*xk(:,ik))*tpi, KIND=DP)) & ! Phase of T.k with lattice vectors T of above.
+                          * EXP(CMPLX(0.d0, SUM(tvec(:,isym)*v2)*tpi, KIND=DP)) ! Phase of t.G with translation vector t(isym).
+            ENDDO
+            !
+            WRITE(iun_dmn, *)
+            WRITE(iun_dmn, '( " (", ES18.10, ",", ES18.10, ")" )') MATMUL(phs, CMPLX(wws(:,:,isym), 0.d0, KIND=DP))
+         ENDDO
+      ENDDO
+      IF (MOD(nir, 10) /= 0) WRITE(stdout, *)
+      WRITE(stdout, *) ' DMN(d_matrix_wann) calculated'
+      DEALLOCATE(phs)
+   ENDIF ! ionode
+   !
+   ! Compute d matrix for Kohn-Sham wavefunctions
+   !
+   ALLOCATE(phase(dffts%nnr))
+   ALLOCATE(evcq(npol*npwx, nbnd))
+   ALLOCATE(aux(npwx))
+   !
    !
    !   USPP
    !
@@ -2093,7 +2099,7 @@ SUBROUTINE compute_dmn
          npwq = ngk(ikp)
          do n=1,nbnd
             do ip=1,npwq        !applying translation vector t.
-               evcq(ip,n)=evcq(ip,n)*exp(dcmplx(0d0,+sum((matmul(g(:,igk_k(ip,ikp)),sr(:,:,isym))+xk(:,ik))*tvec(:,isym))*tpi))
+               evcq(ip,n)=evcq(ip,n)*exp(dcmplx(0d0,+sum((MATMUL(g(:,igk_k(ip,ikp)),sr(:,:,isym))+xk(:,ik))*tvec(:,isym))*tpi))
             end do
          end do
          ! compute the phase
@@ -4779,7 +4785,7 @@ SUBROUTINE wan2sic
      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1)
      npw = ngk(ik)
      WRITE(stdout,*) 'npw ',npw
-     DO iw=1,n_wannier
+     DO iw = 1, n_wannier
         DO j=1,npw
            orbital(j,iw) = (0.0d0,0.0d0)
            DO ibnd=1,n_wannier
@@ -4834,11 +4840,11 @@ SUBROUTINE ylm_expansion
       !- define the u matrix that rotate the reference frame
       CALL set_u_matrix (xaxis(:,iw),zaxis(:,iw),u)
       !- find rotated r-vectors
-      rp(:,:) = matmul ( u(:,:) , r(:,:) )
+      rp(:,:) = MATMUL ( u(:,:) , r(:,:) )
       !- set ylm funtion according to wannier90 (l,mr) indexing in the rotaterd points
       CALL ylm_wannier(ylm_w,l_w(iw),mr_w(iw),rp,lmax2)
 
-      csph(:,iw) = matmul (mly(:,:), ylm_w(:))
+      csph(:,iw) = MATMUL (mly(:,:), ylm_w(:))
 
 !      write (stdout,*)
 !      write (stdout,'(2i4,2(2x,3f6.3))') l_w(iw), mr_w(iw), xaxis(:,iw), zaxis(:,iw)
@@ -4864,7 +4870,7 @@ SUBROUTINE check_inverse(lmax2, ylm, mly)
    INTEGER :: lm
    !
    ALLOCATE (uno(lmax2,lmax2) )
-   uno = matmul(mly, ylm)
+   uno = MATMUL(mly, ylm)
    capel = 0.d0
    DO lm = 1, lmax2
       uno(lm,lm) = uno(lm,lm) - 1.d0
