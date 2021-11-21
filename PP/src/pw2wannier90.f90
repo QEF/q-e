@@ -1614,8 +1614,6 @@ SUBROUTINE compute_dmn
    USE scatter_mod, ONLY : gather_grid, scatter_grid
    IMPLICIT NONE
    !
-   INTEGER, EXTERNAL :: find_free_unit
-   !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
    real(DP), parameter :: p12(3,12)=reshape(                            &
@@ -1656,7 +1654,7 @@ SUBROUTINE compute_dmn
    !
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, isym, npwq, i, m, n, ir, jsym
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt, nir
-   INTEGER :: ikevc, ikpevcq, s, counter, iun_dmn, ig, igp, ip, jp, np, iw, jw
+   INTEGER :: ikevc, ikpevcq, s, counter, iun_dmn, iun_sym, ig, igp, ip, jp, np, iw, jw
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), evcq(:,:), &
                                becp2(:,:), Mkb(:,:), aux_nc(:,:)
    real(DP), ALLOCATABLE    :: rbecp2(:,:),sr(:,:,:)
@@ -1668,20 +1666,19 @@ SUBROUTINE compute_dmn
    logical, ALLOCATABLE     :: lfound(:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3),v1(3),v2(3),v3(3),v4(3),v5(3),err,ermx,dvec(3,32),dwgt(32),dvec2(3,32),dmat(3,3)
-   CHARACTER (len=9)        :: cdate,ctime
-   CHARACTER (len=60)       :: header
    INTEGER                  :: nn,inn,loop,loop2
    LOGICAL                  :: nn_found
    INTEGER                  :: istart,iend
    INTEGER                  :: ibnd_n, ibnd_m,nsym, nxxs
    COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:)
    LOGICAL                  :: have_sym
-
+   !
+   IF (noncolin) CALL errore('compute_dmn', 'Non-collinear not implemented', 1)
+   IF (gamma_only) CALL errore('compute_dmn', 'gamma-only not implemented', 1)
+   IF (wan_mode=='library') CALL errore('compute_dmn', 'library mode not implemented', 1)
+   !
    CALL start_clock( 'compute_dmn' )
-
-   IF (wan_mode=='standalone') THEN
-      iun_dmn = find_free_unit()
-   END IF
+   !
    dmat=0d0
    dmat(1,1)=1d0
    dmat(2,2)=1d0
@@ -1695,26 +1692,26 @@ SUBROUTINE compute_dmn
             call errore( 'pw2wannier90', 'Could not find the file '&
                &//trim(seedname)//'.sym', 1 )
          endif
-         open(unit=iun_dmn, file=trim(seedname)//".sym",form='formatted')
-         read(iun_dmn,*) nsym
+         open(NEWUNIT=iun_sym, file=trim(seedname)//".sym",form='formatted')
+         read(iun_sym,*) nsym
       end if
       call mp_bcast(nsym,ionode_id, world_comm)
       allocate(invs(nsym),sr(3,3,nsym),tvec(3,nsym))
       invs=-999
       if(ionode) then
-         do isym=1,nsym
-            read(iun_dmn,*)
-            read(iun_dmn,*) sr(:,:,isym), tvec(:,isym)
+         DO isym = 1, nsym
+            read(iun_sym,*)
+            read(iun_sym,*) sr(:,:,isym), tvec(:,isym)
          end do
-         close(iun_dmn)
+         close(iun_sym)
       end if
       call mp_bcast(sr, ionode_id, world_comm)
       call mp_bcast(tvec, ionode_id, world_comm)
-      do isym=1,nsym
+      DO isym = 1, nsym
          do jsym=1,nsym
             if(invs(jsym).ge.1) cycle
             v1=matmul(matmul(tvec(:,isym),sr(:,:,jsym))+tvec(:,jsym),bg)
-            if(sum(abs(matmul(sr(:,:,isym),sr(:,:,jsym))-dmat))+sum(abs(v1-dble(nint(v1)))).lt.1d-3) then
+            if(sum(abs(matmul(sr(:,:,isym),sr(:,:,jsym))-dmat))+sum(abs(v1-dble(nint(v1))))<1d-3) then
                invs(isym)=jsym
                invs(jsym)=isym
             end if
@@ -1725,147 +1722,152 @@ SUBROUTINE compute_dmn
       allocate(sr(3,3,nsym),invs(nsym),tvec(3,nsym))
       ! original sr corresponds to transpose(s)
       ! so here we use sr = transpose(original sr)
-      do isym=1,nsym
+      DO isym = 1, nsym
         sr(:,:,isym)=transpose(srin(:,:,isym))
       end do
       invs=invsin(1:nsym)
       tvec=matmul(at(:,:),ftin(:,1:nsym))
       if(ionode)then
-         open(unit=iun_dmn, file=trim(seedname)//".sym",form='formatted')
-         write(iun_dmn,"(i5)") nsym
-         do isym=1,nsym
-            write(iun_dmn,*)
-            write(iun_dmn,"(1p,3e23.15)") sr(:,:,isym), tvec(:,isym)
+         open(NEWUNIT=iun_sym, file=trim(seedname)//".sym",form='formatted')
+         write(iun_sym,"(i5)") nsym
+         DO isym = 1, nsym
+            write(iun_sym,*)
+            write(iun_sym,"(1p,3e23.15)") sr(:,:,isym), tvec(:,isym)
          end do
-         close(iun_dmn)
+         close(iun_sym)
       end if
    end if
-   do isym=1,nsym
-      if(invs(isym).le.0.or.invs(isym).ge.nsym+1) then
-         call errore("compute_dmn", "out of range in invs", invs(isym))
-      end if
-      v1=matmul(matmul(tvec(:,isym),sr(:,:,invs(isym)))+tvec(:,invs(isym)),bg)
-      if(sum(abs(matmul(sr(:,:,isym),sr(:,:,invs(isym)))-dmat))+sum(abs(v1-dble(nint(v1)))).gt.1d-3) then
-         call errore("compute_dmn", "inconsistent invs", 1)
-      end if
-   end do
-
-   CALL pw2wan_set_symm ( nsym, sr, tvec )
-
-   ALLOCATE( phase(dffts%nnr) )
-   ALLOCATE( evcq(npol*npwx,nbnd) )
-
-   IF(noncolin) CALL errore('compute_dmn','Non-collinear not implemented',1)
-   IF (gamma_only) CALL errore('compute_dmn','gamma-only not implemented',1)
-   IF (wan_mode=='library') CALL errore('compute_dmn','library mode not implemented',1)
-
-   ALLOCATE( aux(npwx) )
-
-   allocate(lfound(max(iknum,ngm)))
-   if(.not.allocated(iks2k)) allocate(iks2k(iknum,nsym))
-   iks2k=-999 !Sym.op.(isym) moves k(iks2k(ik,isym)) to k(ik) + G(iks2g(ik,isym)).
-   do isym=1,nsym
-      lfound=.false.
-      do ik=1,iknum
-         v1=xk(:,ik)
-         v2=matmul(sr(:,:,isym),v1)
-         do ikp=1,iknum
-            if(lfound(ikp)) cycle
-            v3=xk(:,ikp)
-            v4=matmul(v2-v3,at)
-            if(sum(abs(nint(v4)-v4)).lt.1d-5) then
-               iks2k(ik,isym)=ikp
-               lfound(ikp)=.true.
-            end if
-            if(iks2k(ik,isym).ge.1) exit
-         end do
-      end do
-   end do
-   deallocate(lfound)
-   !if(count(iks2k.le.0).ne.0) call errore("compute_dmn", "inconsistent in iks2k", count(iks2k.le.0))
-   if(.not.allocated(iks2g)) allocate(iks2g(iknum,nsym))
-   iks2g=-999 !See above.
-   do isym=1,nsym
-      do ik=1,iknum
-         ikp=iks2k(ik,isym)
-         v1=xk(:,ikp)
-         v2=matmul(v1,sr(:,:,isym))
-         v3=xk(:,ik)
-         do ig=1,ngm
-            v4=g(:,ig)
-            if(sum(abs(v3+v4-v2)).lt.1d-5) iks2g(ik,isym)=ig
-            if(iks2g(ik,isym).ge.1) exit
-         end do
-      end do
-   end do
-   !if(count(iks2g.le.0).ne.0) call errore("compute_dmn", "inconsistent in iks2g", count(iks2g.le.0))
+   DO isym = 1, nsym
+      IF (invs(isym) <= 0 .OR. invs(isym) >= nsym + 1) THEN
+         CALL errore("compute_dmn", "out of range in invs", 1)
+      ENDIF
+      v1 = matmul(matmul(tvec(:,isym),sr(:,:,invs(isym)))+tvec(:,invs(isym)),bg)
+      IF (ANY( ABS(MATMUL(sr(:,:,isym), sr(:,:,invs(isym))) - dmat) > 1.d-3) .OR. &
+          ANY( ABS(v1 - REAL(NINT(v1), DP)) > 1.d-3 )) THEN
+         CALL errore("compute_dmn", "inconsistent invs", 1)
+      ENDIF
+   ENDDO
    !
-   if(.not.allocated(ik2ir)) allocate(ik2ir(iknum))
-   ik2ir=-999 !Gives irreducible-k points from regular-k points.
-   if(.not.allocated(ir2ik)) allocate(ir2ik(iknum))
-   ir2ik=-999 !Gives regular-k points from irreducible-k points.
-   allocate(lfound(iknum))
-   lfound=.false.
-   nir=0
-   do ik=1,iknum
-      if(lfound(ik)) cycle
-      lfound(ik)=.true.
-      nir=nir+1
-      ir2ik(nir)=ik
-      ik2ir(ik)=nir
-      do isym=1,nsym
-         ikp=iks2k(ik,isym)
-         if(lfound(ikp)) cycle
-         lfound(ikp)=.true.
-         ik2ir(ikp)=nir
-      end do
-   end do
-   deallocate(lfound)
-   !write(stdout,"(a)") "ik2ir(ir2ik)="
-   !write(stdout,"(10i9)") ik2ir(ir2ik(1:nir))
-   !write(stdout,"(a)") "ir2ik(ik2ir)="
-   !write(stdout,"(10i9)") ir2ik(ik2ir(1:iknum))
-
-   allocate(iw2ip(n_wannier),ip2iw(n_wannier))
-   np=0 !Conversion table between Wannier and position indexes.
-   do iw=1,n_wannier
-      v1=center_w(:,iw)
-      jp=0
-      do ip=1,np
-         if(sum(abs(v1-center_w(:,ip2iw(ip)))).lt.1d-2) then
-            jp=ip
-            exit
-         end if
-      end do
-      if(jp.eq.0) then
-         np=np+1
-         iw2ip(iw)=np
-         ip2iw(np)=iw
-      else
-         iw2ip(iw)=jp
-      end if
-   end do
-   !write(stdout,"(a,10i9)") "iw2ip(ip2iw)="
-   !write(stdout,"(10i9)") iw2ip(ip2iw(1:np))
-   !write(stdout,"(a)") "ip2iw(iw2ip)="
-   !write(stdout,"(10i9)") ip2iw(iw2ip(1:n_wannier))
-   allocate(ips2p(np,nsym),lfound(np))
-   ips2p=-999 !See below.
-   write(stdout,"(a,i5)") "  Number of symmetry operators = ", nsym
-   do isym=1,nsym
-      write(stdout,"(2x,i5,a)") isym, "-th symmetry operators is"
-      write(stdout,"(3f15.7)") sr(:,:,isym), tvec(:,isym) !Writing rotation matrix and translation vector in Cartesian coordinates.
-      if(isym.eq.1) then
-         dmat=sr(:,:,isym)
-         dmat(1,1)=dmat(1,1)-1d0
-         dmat(2,2)=dmat(2,2)-1d0
-         dmat(3,3)=dmat(3,3)-1d0
-         if(sum(abs(dmat))+sum(abs(tvec(:,isym))).gt.1d-5) then
-            call errore("compute_dmn", "Error: 1st-symmetry operator is not identical one.", 1)
-         end if
-      end if
-   end do
-   do isym=1,nsym
+   CALL pw2wan_set_symm ( nsym, sr, tvec )
+   !
+   ! Write rotation matrix and translation vector in Cartesian coordinates.
+   WRITE(stdout, '(a,i5)') "  Number of symmetry operators = ", nsym
+   DO isym = 1, nsym
+      WRITE(stdout, '(2x,i5,a)') isym, "-th symmetry operators is"
+      WRITE(stdout, '(3f15.7)') sr(:,:,isym), tvec(:,isym)
+      IF (isym == 1) THEN
+         dmat = sr(:, :, isym)
+         dmat(1, 1) = dmat(1, 1) - 1.d0
+         dmat(2, 2) = dmat(2, 2) - 1.d0
+         dmat(3, 3) = dmat(3, 3) - 1.d0
+         IF (ANY(ABS(dmat) > 1.d-5) .OR. ANY(ABS(tvec(:, isym)) > 1.d-5)) THEN
+            CALL errore("compute_dmn", "1st-symmetry operator is the identity operation.", 1)
+         ENDIF
+      ENDIF
+   ENDDO
+   !
+   ALLOCATE(phase(dffts%nnr))
+   ALLOCATE(evcq(npol*npwx, nbnd))
+   ALLOCATE(aux(npwx))
+   !
+   ! Setup iks2k and iks2g, such that symmetry operation isym moves
+   ! k(iks2k(ik,isym)) to k(ik) + G(iks2g(ik,isym)).
+   !
+   ALLOCATE(iks2k(iknum, nsym))
+   ALLOCATE(iks2g(iknum, nsym))
+   iks2k(:, :) = -999
+   iks2g(:, :) = -999
+   !
+   ALLOCATE(lfound(MAX(iknum, ngm)))
+   DO isym = 1, nsym
+      lfound(:) = .FALSE.
+      DO ik = 1, iknum
+         v1 = xk(:, ik)
+         v2 = MATMUL(sr(:,:,isym), v1)
+         DO ikp = 1, iknum
+            IF (lfound(ikp)) CYCLE
+            v3 = xk(:, ikp)
+            v4 = MATMUL(v2-v3, at)
+            IF (ALL( ABS( REAL(NINT(v4), DP) - v4 ) < 1.d-5 )) THEN
+               iks2k(ik, isym) = ikp
+               lfound(ikp) = .TRUE.
+            ENDIF
+            IF (iks2k(ik, isym) >= 1) EXIT
+         ENDDO
+      ENDDO
+   ENDDO
+   DEALLOCATE(lfound)
+   DO isym = 1, nsym
+      DO ik = 1, iknum
+         ikp = iks2k(ik, isym)
+         v1 = xk(:, ikp)
+         v2 = MATMUL(v1, sr(:,:,isym))
+         v3 = xk(:, ik)
+         DO ig = 1, ngk(ik)
+            v4 = g(:, igk_k(ig, ik))
+            IF ( ALL( ABS(v3 + v4 - v2) < 1.d-5) ) THEN
+               iks2g(ik, isym) = igk_k(ig, ik)
+               EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+   ENDDO
+   IF (COUNT(iks2k <= 0) /= 0) CALL errore("compute_dmn", "inconsistency in iks2k", COUNT(iks2k <= 0))
+   !
+   ! Setup ik2ir and ir2ik
+   ! ik2ir: Gives irreducible-k points from regular-k points.
+   ! ir2ik: Gives regular-k points from irreducible-k points.
+   !
+   ALLOCATE(ik2ir(iknum))
+   ALLOCATE(ir2ik(iknum))
+   ik2ir(:) = -999
+   ir2ik(:) = -999
+   !
+   nir = 0
+   DO ik = 1, iknum
+      IF (ik2ir(ik) > 0) CYCLE
+      nir = nir + 1
+      ir2ik(nir) = ik
+      ik2ir(ik) = nir
+      DO isym = 1, nsym
+         ikp = iks2k(ik, isym)
+         IF (ik2ir(ikp) > 0) CYCLE
+         ik2ir(ikp) = nir
+      ENDDO
+   ENDDO
+   !
+   ! Setup iw2ip and ip2iw, which are the conversion table between Wannier
+   ! functions and position indexes.
+   ! The position indexes are for the list of non-identical Wannier centers.
+   ! The Wannier center of iw-th Wannier function is equal to that of
+   ! the ip2iw(iw2ip(iw))-th Wannier function.
+   !
+   ALLOCATE(iw2ip(n_wannier))
+   ALLOCATE(ip2iw(n_wannier))
+   !
+   np = 0
+   DO iw = 1, n_wannier
+      v1 = center_w(:, iw)
+      jp = 0
+      DO ip = 1, np
+         IF ( ALL( ABS( v1 - center_w(:, ip2iw(ip)) ) < 1.d-2 ) ) THEN
+            jp = ip
+            EXIT
+         ENDIF
+      ENDDO
+      IF (jp == 0) THEN
+         np = np + 1
+         iw2ip(iw) = np
+         ip2iw(np) = iw
+      ELSE
+         iw2ip(iw) = jp
+      ENDIF
+   ENDDO
+   !
+   ALLOCATE(ips2p(np, nsym))
+   ALLOCATE(lfound(np))
+   ips2p(:, :) = -999
+   DO isym = 1, nsym
       lfound=.false.
       do ip=1,np
          v1=center_w(:,ip2iw(ip))
@@ -1874,13 +1876,13 @@ SUBROUTINE compute_dmn
             if(lfound(jp)) cycle
             v3=center_w(:,ip2iw(jp))
             v4=matmul(v3-v2,bg)
-            if(sum(abs(dble(nint(v4))-v4)).lt.1d-2) then
+            if(sum(abs(dble(nint(v4))-v4))<1d-2) then
                lfound(jp)=.true.
                ips2p(ip,isym)=jp
                exit !Sym.op.(isym) moves position(ips2p(ip,isym)) to position(ip) + T, where
             end if                                       !T is given by vps2t(:,ip,isym).
          end do
-         if(ips2p(ip,isym).le.0) then
+         if(ips2p(ip,isym) <= 0) then
             write(stdout,"(a,3f18.10,a,3f18.10,a)")"  Could not find ",v2,"(",matmul(v2,bg),")"
             write(stdout,"(a,3f18.10,a,3f18.10,a)")"  coming from    ",v1,"(",matmul(v1,bg),")"
             write(stdout,"(a,i5,a               )")"  of Wannier site",ip,"."
@@ -1889,7 +1891,7 @@ SUBROUTINE compute_dmn
       end do
    end do
    allocate(vps2t(3,np,nsym)) !See above.
-   do isym=1,nsym
+   DO isym = 1, nsym
       do ip=1,np
          v1=center_w(:,ip2iw(ip))
          jp=ips2p(ip,isym)
@@ -1920,7 +1922,7 @@ SUBROUTINE compute_dmn
    do iw=1,n_wannier
       call set_u_matrix (xaxis(:,iw),zaxis(:,iw),vaxis(:,:,iw))
    end do
-   do isym=1,nsym
+   DO isym = 1, nsym
       do iw=1,n_wannier
          ip=iw2ip(iw)
          jp=ips2p(ip,isym)
@@ -1936,7 +1938,7 @@ SUBROUTINE compute_dmn
       end do
    end do
    deallocate(dylm,vaxis)
-   do isym=1,nsym
+   DO isym = 1, nsym
       do iw=1,n_wannier
          err=abs((sum(wws(:,iw,isym)**2)+sum(wws(iw,:,isym)**2))*.5d0-1d0)
          if(err.gt.1d-3) then
@@ -1948,28 +1950,20 @@ SUBROUTINE compute_dmn
       end do
    end do
 
-   IF (wan_mode=='standalone') THEN
-      iun_dmn = find_free_unit()
-      CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime
-      IF (ionode) THEN
-         OPEN (unit=iun_dmn, file=trim(seedname)//".dmn",form='formatted')
-         WRITE (iun_dmn,*) header
-         WRITE (iun_dmn,"(4i9)") nbnd-nexband, nsym, nir, iknum
-      ENDIF
-   ENDIF
-
    IF (ionode) THEN
-      WRITE (iun_dmn,*)
-      WRITE (iun_dmn,"(10i9)") ik2ir(1:iknum)
-      WRITE (iun_dmn,*)
-      WRITE (iun_dmn,"(10i9)") ir2ik(1:nir)
-      do ir=1,nir
-         WRITE (iun_dmn,*)
-         WRITE (iun_dmn,"(10i9)") iks2k(ir2ik(ir),:)
-      enddo
-   ENDIF
-   allocate(phs(n_wannier,n_wannier))
+      CALL utility_open_output_file("dmn", .TRUE., iun_dmn)
+      WRITE(iun_dmn, '(4i9)') num_bands, nsym, nir, iknum
+      WRITE(iun_dmn, *)
+      WRITE(iun_dmn, '(10i9)') ik2ir(1:iknum)
+      WRITE(iun_dmn, *)
+      WRITE(iun_dmn, '(10i9)') ir2ik(1:nir)
+      DO ir = 1, nir
+         WRITE(iun_dmn, *)
+         WRITE(iun_dmn, '(10i9)') iks2k(ir2ik(ir), :)
+      ENDDO
+   ENDIF ! ionode
+   !
+   ALLOCATE(phs(n_wannier, n_wannier))
    phs=(0d0,0d0)
    WRITE(stdout,'(/)')
    WRITE(stdout,'(a,i8)') '  DMN(d_matrix_wann): nir = ',nir
@@ -1978,7 +1972,7 @@ SUBROUTINE compute_dmn
       WRITE (stdout,'(i8)',advance='no') ir
       IF( MOD(ir,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
-      do isym=1,nsym
+      DO isym = 1, nsym
          do iw=1,n_wannier
             ip=iw2ip(iw)
             jp=ips2p(ip,invs(isym))
@@ -2020,7 +2014,7 @@ SUBROUTINE compute_dmn
    ind = 0
    DO ir=1,nir
       ik=ir2ik(ir)
-      DO isym=1,nsym!nnb
+      DO isym = 1, nsym!nnb
          ind = ind + 1
          !        ikp = kpb(ik,ib)
          !
@@ -2086,7 +2080,7 @@ SUBROUTINE compute_dmn
       ENDIF
       !
       !
-      DO isym=1,nsym
+      DO isym = 1, nsym
          ind = ind + 1
          ikp = iks2k(ik,isym)
          ! read wfc at k+b
