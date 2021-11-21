@@ -1655,7 +1655,7 @@ SUBROUTINE compute_dmn
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, isym, npwq, i, m, n, ir, jsym
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt, nir
    INTEGER :: ikevc, ikpevcq, s, counter, iun_dmn, iun_sym, ig, igp, ip, jp, np, iw, jw
-   COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), evcq(:,:), &
+   COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), &
                                becp2(:,:), Mkb(:,:), aux_nc(:,:)
    real(DP), ALLOCATABLE    :: rbecp2(:,:),sr(:,:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), phs(:,:)
@@ -1672,6 +1672,7 @@ SUBROUTINE compute_dmn
    INTEGER                  :: ibnd_n, ibnd_m,nsym, nxxs
    COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:)
    LOGICAL                  :: have_sym
+   COMPLEX(DP), ALLOCATABLE :: evc_k(:, :), evc_sk(:, :)
    !
    IF (noncolin) CALL errore('compute_dmn', 'Non-collinear not implemented', 1)
    IF (gamma_only) CALL errore('compute_dmn', 'gamma-only not implemented', 1)
@@ -1994,8 +1995,9 @@ SUBROUTINE compute_dmn
    ! Compute d matrix for Kohn-Sham wavefunctions
    !
    ALLOCATE(phase(dffts%nnr))
-   ALLOCATE(evcq(npol*npwx, nbnd))
    ALLOCATE(aux(npwx))
+   ALLOCATE(evc_k(npol*npwx, num_bands))
+   ALLOCATE(evc_sk(npol*npwx, nbnd))
    !
    !
    !   USPP
@@ -2060,7 +2062,7 @@ SUBROUTINE compute_dmn
    WRITE(stdout,'(/)')
    WRITE(stdout,'(a,i8)') '  DMN(d_matrix_band): nir = ',nir
    !
-   ALLOCATE( Mkb(nbnd,nbnd) )
+   ALLOCATE(Mkb(num_bands, nbnd))
    ALLOCATE( workg(npwx) )
    !
    ! Set up variables and stuff needed to rotate wavefunctions
@@ -2074,32 +2076,46 @@ SUBROUTINE compute_dmn
       IF( MOD(ir,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
       ikevc = ik + ikstart - 1
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       npw = ngk(ik)
+      CALL davcio(evc, 2*nwordwfc, iunwfc, ikevc, -1)
+      !
+      ! Trim excluded bands from evc
+      evc_k(:, :) = (0.d0, 0.d0)
+      ibnd_m = 0
+      DO m = 1, nbnd
+         IF (excluded_band(m)) CYCLE
+         ibnd_m = ibnd_m + 1
+         evc_k(:, ibnd_m) = evc(:, m)
+      ENDDO
       !
       !  USPP
       !
-      IF(okvan) THEN
+      IF (okvan) THEN
          CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-         ! below we compute the product of beta functions with |psi>
-         CALL calbec (npw, vkb, evc, becp)
+         CALL calbec (npw, vkb, evc_k, becp, num_bands)
       ENDIF
       !
       !
       DO isym = 1, nsym
          ind = ind + 1
          ikp = iks2k(ik,isym)
-         ! read wfc at k+b
-         ikpevcq = ikp + ikstart - 1
-         !         if(noncolin) then
-         !            call davcio (evcq_nc, 2*nwordwfc, iunwfc, ikpevcq, -1 )
-         !         else
-         CALL davcio (evcq, 2*nwordwfc, iunwfc, ikpevcq, -1 )
-         !         end if
          npwq = ngk(ikp)
-         do n=1,nbnd
+         ! read wfc at S*k
+         ikpevcq = ikp + ikstart - 1
+         CALL davcio(evc, 2*nwordwfc, iunwfc, ikpevcq, -1 )
+         !
+         ! Trim excluded bands from evc
+         evc_sk(:, :) = (0.d0, 0.d0)
+         ibnd_m = 0
+         DO m = 1, nbnd
+            IF (excluded_band(m)) CYCLE
+            ibnd_m = ibnd_m + 1
+            evc_sk(:, ibnd_m) = evc(:, m)
+         ENDDO
+         !
+         do n = 1, num_bands
             do ip=1,npwq        !applying translation vector t.
-               evcq(ip,n)=evcq(ip,n)*exp(dcmplx(0d0,+sum((MATMUL(g(:,igk_k(ip,ikp)),sr(:,:,isym))+xk(:,ik))*tvec(:,isym))*tpi))
+               evc_sk(ip,n)=evc_sk(ip,n)*exp(dcmplx(0d0,+sum((MATMUL(g(:,igk_k(ip,ikp)),sr(:,:,isym))+xk(:,ik))*tvec(:,isym))*tpi))
             end do
          end do
          ! compute the phase
@@ -2107,10 +2123,9 @@ SUBROUTINE compute_dmn
          ! missing phase G of above is given here and below.
          IF(iks2g(ik,isym) >= 0) phase(dffts%nl(iks2g(ik,isym)))=(1d0,0d0)
          CALL invfft ('Wave', phase, dffts)
-         do n=1,nbnd
-            if(excluded_band(n)) cycle
+         DO n = 1, num_bands
             psic(:) = (0.d0, 0.d0)
-            psic(dffts%nl(igk_k(1:npwq,ikp))) = evcq(1:npwq,n)
+            psic(dffts%nl(igk_k(1:npwq,ikp))) = evc_sk(1:npwq, n)
             ! go to real space
             CALL invfft ('Wave', psic, dffts)
 #if defined(__MPI)
@@ -2128,23 +2143,39 @@ SUBROUTINE compute_dmn
             psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
             ! go back to G space
             CALL fwfft ('Wave', psic, dffts)
-            evcq(1:npw,n)  = psic(dffts%nl (igk_k(1:npw,ik) ) )
-         end do
+            evc_sk(1:npw, n)  = psic(dffts%nl (igk_k(1:npw,ik) ) )
+         ENDDO
          !
          !  USPP
          !
-         IF(okvan) THEN
-            CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-            ! below we compute the product of beta functions with |psi>
+         IF (okvan) THEN
+            CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
             IF (gamma_only) THEN
-               call errore("compute_dmn", "gamma-only mode not implemented", 1)
+               CALL errore("compute_dmn", "gamma-only mode not implemented", 1)
             ELSE
-               CALL calbec ( npw, vkb, evcq, becp2 )
+               CALL calbec(npw, vkb, evc_sk, becp2, num_bands)
             ENDIF
          ENDIF
          !
+         Mkb(:,:) = (0.0d0, 0.0d0)
          !
-         Mkb(:,:) = (0.0d0,0.0d0)
+         ! Compute Mkb
+         ! Mkb(m,n) = < psi_m,k1 | psi_n,k2 >
+         !          + \sum_{ijI} qb_{ij}^I * e^-i(0*tau_I)
+         !            * <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
+         !
+         IF (gamma_only) THEN
+            CALL errore("compute_dmn", "gamma-only mode not implemented", 1)
+         ELSEIF(noncolin) THEN
+            CALL errore("compute_dmn", "Non-collinear not implemented", 1)
+         ELSE
+            CALL ZGEMM('C', 'N', num_bands, num_bands, npw, &
+               (1.d0, 0.d0), evc_k, npwx, evc_sk, npwx, &
+               (0.d0, 0.d0), Mkb, num_bands)
+         ENDIF
+         CALL mp_sum(Mkb, intra_pool_comm)
+         !
+         ! USPP contribution to Mkb
          !
          IF (okvan) THEN
             ijkb0 = 0
@@ -2161,13 +2192,11 @@ SUBROUTINE compute_dmn
                            DO ih = 1, nh(nt)
                               ikb = ijkb0 + ih
                               !
-                              DO m = 1,nbnd
-                                 IF (excluded_band(m)) CYCLE
+                              DO m = 1, num_bands
                                  IF (gamma_only) THEN
-                                    call errore("compute_dmn", "gamma-only mode not implemented", 1)
+                                    CALL errore("compute_dmn", "gamma-only mode not implemented", 1)
                                  ELSE
-                                    DO n=1,nbnd
-                                       IF (excluded_band(n)) CYCLE
+                                    DO n = 1, num_bands
                                        Mkb(m,n) = Mkb(m,n) + &
                                        phase1 * qb(ih,jh,nt,ind) * &
                                        conjg( becp%k(ikb,m) ) * becp2(jkb,n)
@@ -2187,63 +2216,27 @@ SUBROUTINE compute_dmn
             ENDDO !ntyp
          ENDIF ! okvan
          !
+         ! Write Mkb to file
          !
-         ! loops on bands
-         !
-         IF (wan_mode=='standalone') THEN
-            IF (ionode) WRITE (iun_dmn,*)
-         ENDIF
-         !
-         DO m=1,nbnd
-            IF (excluded_band(m)) CYCLE
-            !
-            !
-            !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(0*tau_I)
-            !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
-            !
-            IF (gamma_only) THEN
-               call errore("compute_dmn", "gamma-only mode not implemented", 1)
-               ELSEIF(noncolin) THEN
-               call errore("compute_dmn", "Non-collinear not implemented", 1)
-            ELSE
-               DO n=1,nbnd
-                  IF (excluded_band(n)) CYCLE
-                  mmn = zdotc (npw, evc(1,m),1,evcq(1,n),1)
-                  CALL mp_sum(mmn, intra_pool_comm)
-                  Mkb(m,n) = mmn + Mkb(m,n)
-               ENDDO
-            ENDIF
-         ENDDO   ! m
-
-         ibnd_n = 0
-         DO n=1,nbnd
-            IF (excluded_band(n)) CYCLE
-            ibnd_n = ibnd_n + 1
-            ibnd_m = 0
-            DO m=1,nbnd
-               IF (excluded_band(m)) CYCLE
-               ibnd_m = ibnd_m + 1
-               IF (wan_mode=='standalone') THEN
-                  IF (ionode) WRITE (iun_dmn,"(1p,(' (',e18.10,',',e18.10,')'))")dconjg(Mkb(n,m))
-               ELSEIF (wan_mode=='library') THEN
-                  call errore("compute_dmn", "library mode not implemented", 1)
-               ELSE
-                  CALL errore('compute_dmn',' value of wan_mode not recognised',1)
-               ENDIF
+         IF (ionode) WRITE (iun_dmn,*)
+         DO n = 1, num_bands
+            DO m = 1, num_bands
+               IF (ionode) WRITE (iun_dmn, '( " (", ES18.10, ",", ES18.10, ")" )') CONJG(Mkb(n,m))
             ENDDO
          ENDDO
       ENDDO !isym
    ENDDO  !ik
 
-   if(mod(nir,10) /= 0) WRITE(stdout,*)
-   WRITE(stdout,*) ' DMN(d_matrix_band) calculated'
+   IF (MOD(nir, 10) /= 0) WRITE(stdout, *)
+   WRITE(stdout, *) ' DMN(d_matrix_band) calculated'
 
-   IF (ionode .and. wan_mode=='standalone') CLOSE (iun_dmn)
+   IF (ionode .AND. wan_mode=='standalone') CLOSE (iun_dmn)
 
    DEALLOCATE (Mkb, dxk, phase)
    DEALLOCATE(temppsic_all, psic_all)
    DEALLOCATE(aux)
-   DEALLOCATE(evcq)
+   DEALLOCATE(evc_k)
+   DEALLOCATE(evc_sk)
 
    IF(okvan) THEN
       DEALLOCATE (qb)
