@@ -162,6 +162,7 @@ check_failure $?
 cp -f $TMP_DIR/Li-EtOH.1drism ./
 cp -f $TMP_DIR/Li-EtOH.rism1 ./
 cp -f $TMP_DIR/Li-EtOH.esm1 ./
+cp -f $TMP_DIR/Li-EtOH.xml ./
 $ECHO " done"
 
 # plot solvent distribution
@@ -253,6 +254,7 @@ check_failure $?
 cp -f $TMP_DIR/Al-NaCl_aq.1drism ./
 cp -f $TMP_DIR/Al-NaCl_aq.rism1 ./
 cp -f $TMP_DIR/Al-NaCl_aq.esm1 ./
+cp -f $TMP_DIR/Al-NaCl_aq.xml ./
 $ECHO " done"
 
 # clean TMP_DIR
@@ -264,7 +266,7 @@ $ECHO " done"
 cat > Cl-_NaCl_aq.in << EOF
  &control
     calculation   = 'scf'
-    prefix        = 'Cl-_NaCl_aq.in'
+    prefix        = 'Cl-_NaCl_aq'
     pseudo_dir    = '$PSEUDO_DIR/'
     outdir        = '$TMP_DIR/'
     trism         = .true.
@@ -323,6 +325,7 @@ check_failure $?
 cp -f $TMP_DIR/Cl-_NaCl_aq.1drism ./
 cp -f $TMP_DIR/Cl-_NaCl_aq.rism1 ./
 cp -f $TMP_DIR/Cl-_NaCl_aq.esm1 ./
+cp -f $TMP_DIR/Cl-_NaCl_aq.xml ./
 $ECHO " done"
 
 # clean TMP_DIR

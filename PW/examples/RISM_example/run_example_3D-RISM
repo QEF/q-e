@@ -164,6 +164,7 @@ $ECHO "  running the 3D-RISM calculation for H2O in NaCl(aq)...\c"
 $PW_COMMAND < H2O.NaCl_aq.in > H2O.NaCl_aq.out
 check_failure $?
 cp -f $TMP_DIR/H2O.NaCl_aq.1drism ./
+cp -f $TMP_DIR/H2O.NaCl_aq.xml ./
 $ECHO " done"
 
 # clean TMP_DIR
@@ -222,6 +223,7 @@ $ECHO "  running the 3D-RISM calculation for HCHO in water...\c"
 $PW_COMMAND < HCHO.aq.in > HCHO.aq.out
 check_failure $?
 cp -f $TMP_DIR/HCHO.aq.1drism ./
+cp -f $TMP_DIR/HCHO.aq.xml ./
 $ECHO " done"
 
 # plot solvent distribution
