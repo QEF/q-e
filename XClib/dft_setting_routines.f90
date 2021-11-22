@@ -120,9 +120,9 @@ CONTAINS
        imeta = matching( dftout, nmeta, dft_MGGA_name )
        imetac = 0
        !
+       CALL matching_shortIDs( dftout )
+       !
     ENDIF
-    !
-    IF (.NOT. dft_defined) CALL matching_shortIDs( dftout )
     !
     ! Back compatibility - TO BE REMOVED
     !
@@ -334,12 +334,12 @@ CONTAINS
     TYPE(xc_f03_func_info_t) :: xc_info
 #endif
     !
-    IF ( matches('_x_', TRIM(dft_)) .OR. matches('_c_', TRIM(dft_)) .OR. &
-         matches('_k_', TRIM(dft_)) .OR. matches('_xc_', TRIM(dft_)) ) &
+    IF ( matches('_X_', TRIM(dft_)) .OR. matches('_C_', TRIM(dft_)) .OR. &
+         matches('_K_', TRIM(dft_)) .OR. matches('_XC_', TRIM(dft_)) ) &
       CALL xclib_error( 'matching_shortIDs', 'It looks like one or more Libxc names &
                         &have been put as input, but since v7.0 the index notation only&
                         & is allowed. Check the QE user guide or the comments in this &
-                        &routine.', 0 )
+                        &routine.', 1 )
     !
     IF ( dft_(1:3) /= 'XC-' ) RETURN
     !
@@ -446,10 +446,11 @@ CONTAINS
        CALL xclib_error( 'matching_shortIDs', 'a Libxc functional of a kind not &
                          &usable in QE has been found.', 2 )
     !
-    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) &
-       CALL xclib_infomsg( 'matching_shortIDs', 'WARNING: an LDA functional has bee&
-                           &n found, but Libxc GGA functionals already include t&
-                           &he LDA term.' )
+    IF ( ((is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0)) .OR. &
+         ((is_libxc(5).AND.iexch+igcx/=0) .OR. (is_libxc(6).AND. icorr+igcc/=0)) ) &
+       CALL xclib_infomsg( 'matching_shortIDs', 'WARNING: an LDA/GGA functional has been&
+                           & found, but Libxc GGA/mGGA functionals already include &
+                           &the LDA/GGA terms.' )
     !
 #endif
     !

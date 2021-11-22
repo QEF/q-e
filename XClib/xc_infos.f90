@@ -23,7 +23,6 @@ PROGRAM xc_infos
                                   gau_parameter
   USE xclib_utils_and_para, ONLY: stdout, nowarning
 #if defined(__LIBXC)
-#include "xc_version.h"
   USE xc_f03_lib_m
   USE dft_setting_params,   ONLY: xc_info, xc_kind_error, n_ext_params, &
                                   par_list, libxc_flags
@@ -36,13 +35,6 @@ PROGRAM xc_infos
   CHARACTER(LEN=10)  :: dft_n
   INTEGER :: n_ext, id(6), idfull
   INTEGER :: i, ii
-#if defined(__LIBXC)
-#if (XC_MAJOR_VERSION>5)
-  !workaround to keep compatibility with libxc develop version
-  INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10
-  INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
-#endif
-#endif
   !
   !-------- Input var -----------------------
   CHARACTER(LEN=80) :: dft
