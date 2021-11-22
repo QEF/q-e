@@ -516,7 +516,7 @@ PROGRAM pw2wannier90
   IF (npool > 1 .and. wan_mode == 'library') CALL errore('pw2wannier90', &
       'pools not implemented for library mode', 1)
   !
-  IF (npool > 1 .and. (write_unk .OR. write_dmn)) &
+  IF (npool > 1 .and. (write_unk)) &
     CALL errore('pw2wannier90', 'pools not implemented for this feature', npool)
   !
   ! Check: bands distribution not implemented
@@ -1603,8 +1603,8 @@ SUBROUTINE compute_dmn
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_pools,        ONLY : intra_pool_comm
-   USE mp,              ONLY : mp_sum, mp_bcast
+   USE mp_pools,        ONLY : intra_pool_comm, inter_pool_comm, me_pool, root_pool, my_pool_id
+   USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier
    USE mp_world,        ONLY : world_comm
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
@@ -1655,6 +1655,8 @@ SUBROUTINE compute_dmn
    INTEGER :: npw, mmn_tot, ik, ikp, ipol, isym, npwq, i, m, n, ir, jsym
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nir
    INTEGER :: ikevc, ikpevcq, s, counter, iun_dmn, iun_sym, ig, igp, ip, jp, np, iw, jw
+   INTEGER :: ir_start, ir_end
+   INTEGER :: ik_global, ipool, ik_local
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), &
                                becp2(:,:), Mkb(:,:), aux_nc(:,:)
    real(DP), ALLOCATABLE    :: rbecp2(:,:),sr(:,:,:)
@@ -1675,6 +1677,12 @@ SUBROUTINE compute_dmn
    COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:)
    LOGICAL                  :: have_sym
    COMPLEX(DP), ALLOCATABLE :: evc_k(:, :), evc_sk(:, :)
+   INTEGER :: igk_k_ir(npwx)
+   !! G vector index at irreducible k point
+   INTEGER :: igk_k_sk(npwx)
+   !! G vector index at S*k point
+   REAL(DP) :: g2kin_(npwx)
+   !! Dummy g2kin_ to call gk_sort
    !
    IF (noncolin) CALL errore('compute_dmn', 'Non-collinear not implemented', 1)
    IF (gamma_only) CALL errore('compute_dmn', 'gamma-only not implemented', 1)
@@ -1949,8 +1957,8 @@ SUBROUTINE compute_dmn
       end do
    end do
 
+   CALL utility_open_output_file("dmn", .TRUE., iun_dmn)
    IF (ionode) THEN
-      CALL utility_open_output_file("dmn", .TRUE., iun_dmn)
       WRITE(iun_dmn, '(4i9)') num_bands, nsym, nir, iknum
       WRITE(iun_dmn, *)
       WRITE(iun_dmn, '(10i9)') ik2ir(1:iknum)
@@ -2045,9 +2053,6 @@ SUBROUTINE compute_dmn
       !
    ENDIF
    !
-   WRITE(stdout,'(/)')
-   WRITE(stdout,'(a,i8)') '  DMN(d_matrix_band): nir = ',nir
-   !
    ALLOCATE(Mkb(num_bands, nbnd))
    ALLOCATE( workg(npwx) )
    !
@@ -2055,14 +2060,33 @@ SUBROUTINE compute_dmn
    nxxs = dffts%nr1x *dffts%nr2x *dffts%nr3x
    ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
    !
-   DO ir=1,nir
-      ik=ir2ik(ir)
+   ! Pool parallelization: divide irreducible k points, not regular k points
+   CALL divide(inter_pool_comm, nir, ir_start, ir_end)
+   !
+   WRITE(stdout,'(/)')
+   WRITE(stdout,'(a,i8)') '  DMN(d_matrix_band): nir = ', nir
+   WRITE(stdout,'(a,i8)') '  DMN(d_matrix_band): nir in this pool = ', ir_end - ir_start + 1
+   !
+   DO ir = ir_start, ir_end
+      ik_global = ir2ik(ir) ! global index of the ir-th irreducible k point
       WRITE (stdout,'(i8)',advance='no') ir
       IF( MOD(ir,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
-      ikevc = ik + ikstart - 1
-      npw = ngk(ik)
-      CALL davcio(evc, 2*nwordwfc, iunwfc, ikevc, -1)
+      !
+      ! Read wavefunction at ikevc
+      ikevc = ik_global + ikstart - 1
+      CALL pool_and_local_kpoint_index(nkstot, ikevc, ipool, ik_local)
+      CALL utility_read_wfc_from_pool(ipool, ik_local, evc)
+      !
+      ! Set igk_k_ir, the G vector ordering at ik_global
+      IF (ipool == my_pool_id) THEN
+         ! Use local G vector ordering
+         npw = ngk(ik_local)
+         igk_k_ir = igk_k(:, ik_local)
+      ELSE
+         ! k point from different pool. Calculate G vector ordering.
+         CALL gk_sort(xk_all(1, ik_global), ngm, g, gcutw, npw, igk_k_ir, g2kin_)
+      ENDIF
       !
       ! Trim excluded bands from evc
       evc_k(:, :) = (0.d0, 0.d0)
@@ -2076,17 +2100,28 @@ SUBROUTINE compute_dmn
       !  USPP
       !
       IF (okvan) THEN
-         CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-         CALL calbec (npw, vkb, evc_k, becp, num_bands)
+         CALL init_us_2(npw, igk_k_ir, xk_all(1, ik_global), vkb)
+         CALL calbec(npw, vkb, evc_k, becp, num_bands)
       ENDIF
       !
       !
       DO isym = 1, nsym
-         ikp = iks2k(ik,isym)
-         npwq = ngk(ikp)
-         ! read wfc at S*k
+         ikp = iks2k(ik_global, isym)
+         !
+         ! Read wavefunction at ikpevcq (S*k)
          ikpevcq = ikp + ikstart - 1
-         CALL davcio(evc, 2*nwordwfc, iunwfc, ikpevcq, -1 )
+         CALL pool_and_local_kpoint_index(nkstot, ikpevcq, ipool, ik_local)
+         CALL utility_read_wfc_from_pool(ipool, ik_local, evc)
+         !
+         ! Set igk_k_sk, the G vector ordering at S*k (ikp)
+         IF (ipool == my_pool_id) THEN
+            ! Use local G vector ordering
+            npwq = ngk(ik_local)
+            igk_k_sk = igk_k(:, ik_local)
+         ELSE
+            ! k point from different pool. Calculate G vector ordering.
+            CALL gk_sort(xk_all(1, ikp), ngm, g, gcutw, npwq, igk_k_sk, g2kin_)
+         ENDIF
          !
          ! Trim excluded bands from evc
          evc_sk(:, :) = (0.d0, 0.d0)
@@ -2099,7 +2134,7 @@ SUBROUTINE compute_dmn
          !
          ! apply translation vector t.
          DO ig = 1, npwq
-            arg = SUM( ( MATMUL(g(:,igk_k(ig,ikp)), sr(:,:,isym)) + xk(:,ik) ) * tvec(:,isym) ) * tpi
+            arg = SUM( ( MATMUL(g(:,igk_k_sk(ig)), sr(:,:,isym)) + xk_all(:, ik_global) ) * tvec(:,isym) ) * tpi
             phase1 = CMPLX(COS(arg), SIN(arg), KIND=DP)
             DO n = 1, num_bands
                evc_sk(ig, n) = evc_sk(ig, n) * phase1
@@ -2108,11 +2143,11 @@ SUBROUTINE compute_dmn
          ! compute the phase
          phase(:) = (0.d0,0.d0)
          ! missing phase G of above is given here and below.
-         IF(iks2g(ik,isym) >= 0) phase(dffts%nl(iks2g(ik,isym)))=(1d0,0d0)
+         IF(iks2g(ik_global, isym) >= 0) phase(dffts%nl(iks2g(ik_global, isym)))=(1d0,0d0)
          CALL invfft ('Wave', phase, dffts)
          DO n = 1, num_bands
             psic(:) = (0.d0, 0.d0)
-            psic(dffts%nl(igk_k(1:npwq,ikp))) = evc_sk(1:npwq, n)
+            psic(dffts%nl(igk_k_sk(1:npwq))) = evc_sk(1:npwq, n)
             ! go to real space
             CALL invfft ('Wave', psic, dffts)
 #if defined(__MPI)
@@ -2130,13 +2165,12 @@ SUBROUTINE compute_dmn
             psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
             ! go back to G space
             CALL fwfft ('Wave', psic, dffts)
-            evc_sk(1:npw, n)  = psic(dffts%nl (igk_k(1:npw,ik) ) )
+            evc_sk(1:npw, n)  = psic(dffts%nl (igk_k_ir(1:npw) ) )
          ENDDO
          !
          !  USPP
          !
          IF (okvan) THEN
-            CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
             IF (gamma_only) THEN
                CALL errore("compute_dmn", "gamma-only mode not implemented", 1)
             ELSE
@@ -2201,26 +2235,34 @@ SUBROUTINE compute_dmn
          !
          ! Write Mkb to file
          !
-         IF (ionode) WRITE (iun_dmn,*)
-         DO n = 1, num_bands
-            DO m = 1, num_bands
-               IF (ionode) WRITE (iun_dmn, '( " (", ES18.10, ",", ES18.10, ")" )') CONJG(Mkb(n,m))
+         IF (me_pool == root_pool) THEN
+            WRITE (iun_dmn,*)
+            DO n = 1, num_bands
+               DO m = 1, num_bands
+                  WRITE (iun_dmn, '( " (", ES18.10, ",", ES18.10, ")" )') CONJG(Mkb(n,m))
+               ENDDO
             ENDDO
-         ENDDO
+         ENDIF
       ENDDO !isym
    ENDDO  !ik
-
+   !
    IF (MOD(nir, 10) /= 0) WRITE(stdout, *)
    WRITE(stdout, *) ' DMN(d_matrix_band) calculated'
-
-   IF (ionode .AND. wan_mode=='standalone') CLOSE (iun_dmn)
-
+   !
+   IF (me_pool == root_pool .AND. wan_mode=='standalone') CLOSE (iun_dmn, STATUS="KEEP")
+   !
+   CALL mp_barrier(world_comm)
+   !
+   ! If using pool parallelization, concatenate files written by other nodes
+   ! to the main output.
+   CALL utility_merge_files("dmn", .TRUE., -1)
+   !
    DEALLOCATE (Mkb, phase)
    DEALLOCATE(temppsic_all, psic_all)
    DEALLOCATE(aux)
    DEALLOCATE(evc_k)
    DEALLOCATE(evc_sk)
-
+   !
    IF(okvan) THEN
       DEALLOCATE (qb)
       CALL deallocate_bec_type (becp)
@@ -2232,8 +2274,7 @@ SUBROUTINE compute_dmn
    ENDIF
    !
    CALL stop_clock( 'compute_dmn' )
-
-   RETURN
+   !
 END SUBROUTINE compute_dmn
 !
 !-----------------------------------------------------------------------
