@@ -26,12 +26,11 @@ MODULE rism_module
   USE cellmd,           ONLY : at_old, lmovecell
   USE check_stop,       ONLY : stopped_by_user
   USE constants,        ONLY : eps14
-  USE control_flags,    ONLY : gamma_only, tr2
+  USE control_flags,    ONLY : gamma_only, tr2, tstress
   USE esm,              ONLY : do_comp_esm, esm_bc
   USE exx_base,         ONLY : x_gamma_extrapolation
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : invfft
-  USE force_mod,        ONLY : lstres
   USE xc_lib,           ONLY : exx_is_active
   USE gvect,            ONLY : ngm, gstart
   USE io_global,        ONLY : stdout, ionode, ionode_id
@@ -159,7 +158,7 @@ CONTAINS
       END IF
 #else
       ! ... Laue-RISM does not support storess tensor
-      IF (lstres) THEN
+      IF (tstress) THEN
         CALL errore('rism_check', 'Laue-RISM does not support stress tensor', 1)
       END IF
       !
@@ -172,7 +171,7 @@ CONTAINS
     ELSE
       !
       ! ... 3D-RISM does not support storess tensor
-      IF (lstres) THEN
+      IF (tstress) THEN
         CALL errore('rism_check', '3D-RISM does not support stress tensor', 1)
       END IF
       !
