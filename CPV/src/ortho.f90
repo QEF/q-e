@@ -14,6 +14,12 @@
 #define DEVICEATTR
 #endif
 
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
+
 MODULE ortho_module
    !
 #if defined(__CUDA)
@@ -229,7 +235,7 @@ CONTAINS
 
       INTEGER  :: i, j, info, nr, nc, ir, ic
       INTEGER, SAVE :: icnt = 1
-      REAL(DP), ALLOCATABLE :: rhos_h(:,:), s_h(:,:), rhod_h(:)
+      REAL(DP), ALLOCATABLE PINMEM :: rhos_h(:,:), s_h(:,:), rhod_h(:)
       !
       ! ...   Subroutine body
       !

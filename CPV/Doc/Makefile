@@ -2,8 +2,9 @@ VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../include/qe_versi
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
+PANDOC = pandoc
 
-PDFS = user_guide.pdf
+PDFS =
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
@@ -11,9 +12,8 @@ TOCS = $(PDFS:.pdf=.toc)
 
 
 doc:  all
-all:  pdf html defs
+all:  pdf defs
 pdf: $(PDFS)
-html: user_guide
 
 $(PDFS): %.pdf: %.tex
 	$(LATEX)  $<
@@ -25,26 +25,6 @@ clean:
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml input_xx.xsl
 	- rm -rf ../../Doc/INPUT_CP*.*
 	- rm -rf ../../Doc/input_xx.xsl
-
-user_guide: user_guide.pdf
-	rm -rf user_guide/
-	latex2html \
-                -t "User's Guide for The Quantum ESPRESSO Car-Parrinello Molecular Dynamics" \
-                -html_version 3.2,math \
-                -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
-                -local_icons -image_type png \
-                user_guide.tex
-	cd user_guide; \
-	for file in *.html; do \
-                cp $$file /tmp/$$file; \
-                cat /tmp/$$file | sed 's/HREF="http/NAME="http/g' | sed 's/mathend000#//g' - > $$file; \
-                rm -f /tmp/$$file; \
-        done
-	@echo ""
-	@echo "***"
-	@echo "*** User's Guide created in user_guide/user_guide.html"
-	@echo "***"
-	@echo ""
 
 
 defs: input_xx.xsl INPUT_CP.html INPUT_CP.txt INPUT_CPPP.html INPUT_CPPP.txt link_on_main_doc

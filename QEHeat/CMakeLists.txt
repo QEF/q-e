@@ -27,6 +27,9 @@ target_link_libraries(qe_qeheat
     qe_fftx
     qe_fox
     qe_xclib
+    qe_device_lapack
+    PUBLIC
+    qe_openacc_fortran
 )
 
 ###########################################################

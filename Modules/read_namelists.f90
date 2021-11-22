@@ -420,6 +420,7 @@ MODULE read_namelists_module
        passop  = 0.3_DP
        niter_cg_restart = 20
        etresh  = 1.E-6_DP
+       pre_state = .FALSE.
        !
        epol   = 3
        efield = 0.0_DP
@@ -1068,6 +1069,7 @@ MODULE read_namelists_module
        CALL mp_bcast( etresh,  ionode_id, intra_image_comm )
        CALL mp_bcast( passop,  ionode_id, intra_image_comm )
        CALL mp_bcast( niter_cg_restart, ionode_id, intra_image_comm )
+       CALL mp_bcast( pre_state, ionode_id, intra_image_comm )
        !
        ! ... electric field
        !

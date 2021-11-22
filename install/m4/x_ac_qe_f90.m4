@@ -72,7 +72,7 @@ case "$arch:$f90_flavor" in
             try_fflags_openmp="-openmp"
             try_ldflags_openmp="-openmp"
         fi
-        pre_fdflags="-fpp "
+        pre_fdflags="-fpp -allow nofpp_comments "
         ;;
 arm:armflang )
         try_fflags="-O3 -mcpu=native $try_fflags"

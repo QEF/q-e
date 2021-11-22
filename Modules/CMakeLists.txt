@@ -155,8 +155,8 @@ target_link_libraries(qe_modules
         qe_hdf5_fortran
         qe_upflib
         qe_fox
-        qe_utilx)
-
+        qe_utilx
+        qe_openacc_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE

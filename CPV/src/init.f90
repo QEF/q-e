@@ -184,7 +184,10 @@
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
-
+!NOTE g and mill already allocate in the device they are initialized below. 
+!$acc data present(g, mill) 
+!$acc update device(g,mill) 
+!$acc end data 
 #if defined (__CUDA)
       g_d = g
 #endif

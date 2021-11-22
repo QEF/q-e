@@ -26,7 +26,11 @@ function(qe_get_fortran_cpp_flag OUTVAR)
         set(${OUTVAR} "${Fortran_PREPROCESSOR_FLAGS}" PARENT_SCOPE)
     else()
         # TODO actual flag check
-        set(${OUTVAR} "-cpp" PARENT_SCOPE)
+	if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel") 
+	  set (${OUTVAR} "-fpp;-allow;nofpp_comments" PARENT_SCOPE)
+        else() 
+          set(${OUTVAR} "-cpp" PARENT_SCOPE)
+        endif() 
     endif()
 endfunction(qe_get_fortran_cpp_flag)
 
