@@ -96,9 +96,10 @@ module wannier
    CONTAINS
    !
    !----------------------------------------------------------------------------
-   SUBROUTINE utility_read_wfc_from_pool(ipool, ik_local, evc)
+   SUBROUTINE utility_setup_wfc_and_pw(ik_global, evc, npw, igk_k_ik)
       !-------------------------------------------------------------------------
-      !! Read wavefunction evc from pool ipool, local k index ik_local
+      !! Read wavefunction evc from file for global k point ik_global.
+      !! Setup the plane wave variables npw and igk_k_ik
       !-------------------------------------------------------------------------
       USE kinds,           ONLY : DP
       USE mp_pools,        ONLY : my_pool_id, nproc_pool, me_pool
@@ -106,18 +107,27 @@ module wannier
       USE wvfct,           ONLY : npwx
       USE pwcom,           ONLY : nbnd
       USE noncollin_module,ONLY : npol
+      USE klist,           ONLY : nkstot, igk_k, ngk
+      USE gvect,           ONLY : g, ngm
+      USE gvecw,           ONLY : gcutw
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(IN) :: ipool
-      !! Pool index
-      INTEGER, INTENT(IN) :: ik_local
-      !! Local k point index
+      INTEGER, INTENT(IN) :: ik_global
+      !! Global k point index
       COMPLEX(DP), INTENT(OUT) :: evc(npwx * npol, nbnd)
-      !! wavefunction is read from file
+      !! wavefunction at ik_global, read from file
+      INTEGER, INTENT(OUT) :: npw
+      !! number of plane waves at ik_global
+      INTEGER, INTENT(OUT) :: igk_k_ik(npwx)
+      !! index of G vectors at ik_global
       !
       CHARACTER(LEN = 256) :: wfcfile
       !! Temp file
+      INTEGER :: ipool
+      !! Pool index where ik_global belongs to
+      INTEGER :: ik_local
+      !! Local k index of ik_global in ipool
       INTEGER :: iproc
       !! Processer index, which is the postfix of the filename.
       INTEGER :: iun
@@ -130,9 +140,14 @@ module wannier
       !! Error number
       REAL(KIND = DP) :: dummy
       !! Dummy variable
+      REAL(DP) :: g2kin_(npwx)
+      !! Dummy g2kin_ to call gk_sort
       CHARACTER(len=6), EXTERNAL :: int_to_char
       !
       evc = (0.0_DP, 0.0_DP)
+      !
+      ! For a global k point index, find the pool and local k point index.
+      CALL pool_and_local_kpoint_index(nkstot, ik_global, ipool, ik_local)
       !
       IF (ipool == my_pool_id) THEN
 ! print*, "pool ", my_pool_id, " Reading locally  pool, ik_local ", ipool, ik_local
@@ -156,14 +171,25 @@ module wannier
          !
          OPEN(NEWUNIT = iun, FILE = TRIM(wfcfile), FORM = 'unformatted', &
             ACCESS = 'direct', IOSTAT = ios, RECL = unf_recl)
-         IF (ios /= 0) CALL errore('utility_read_wfc_from_pool', &
+         IF (ios /= 0) CALL errore('utility_setup_wfc_and_pw', &
             'error opening wfc file', 1)
          READ(iun, REC = ik_local) evc
          CLOSE(iun, STATUS = 'KEEP')
       ENDIF
       !
+      ! Setup npw and igk_k_ik, the G vector ordering at ik_global.
+      !
+      IF (ipool == my_pool_id) THEN
+         ! Use local G vector ordering
+         npw = ngk(ik_local)
+         igk_k_ik = igk_k(:, ik_local)
+      ELSE
+         ! k point from different pool. Calculate G vector ordering.
+         CALL gk_sort(xk_all(1, ik_global), ngm, g, gcutw, npw, igk_k_ik, g2kin_)
+      ENDIF
+      !
    !----------------------------------------------------------------------------
-   END SUBROUTINE utility_read_wfc_from_pool
+   END SUBROUTINE utility_setup_wfc_and_pw
    !----------------------------------------------------------------------------
    !
    !----------------------------------------------------------------------------
@@ -265,14 +291,9 @@ module wannier
       ig_kb = ig_(ik_g_w90, i_b)
       zerophase_kb = zerophase(ik_g_w90, i_b)
       !
-      ! For a global k point index, find the pool and local k point index.
-      CALL pool_and_local_kpoint_index(nkstot, ikp_b, ipool_b, ik_b_local)
-! print*, "ikp_b", my_pool_id, nkstot, ik, ik_g, ikp_b
+      ! Read wavefunction and setup ngk, igk_k for ikp_b
       !
-      ! Read wavefunction from file
-      !
-      CALL utility_read_wfc_from_pool(ipool_b, ik_b_local, evc_b)
-! print*, "POOL_AND_LOCAL", my_pool_id, nkstot, ikp_b, ipool_b, ik_b_local
+      CALL utility_setup_wfc_and_pw(ikp_b, evc_b, npw_b, igk_kb)
       !
       ! Exclude the excluded bands.
       !
@@ -282,16 +303,6 @@ module wannier
          n_incl = n_incl + 1
          evc_b(:, n_incl) = evc_b(:, n)
       ENDDO
-      !
-      ! Set igk_kb, the G vector ordering at k+b.
-      IF (ipool_b == my_pool_id) THEN
-         ! Use local G vector ordering
-         npw_b = ngk(ik_b_local)
-         igk_kb = igk_k(:, ik_b_local)
-      ELSE
-         ! k point from different pool. Calculate G vector ordering.
-         CALL gk_sort(xk_all(1, ikp_b), ngm, g, gcutw, npw_b, igk_kb, g2kin_)
-      ENDIF
       !
       ! Compute the phase e^{i * g_kpb * r} if phase is not 1.
       ! Computed phase is used inside the loop over bands.
@@ -1656,7 +1667,7 @@ SUBROUTINE compute_dmn
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nir
    INTEGER :: ikevc, ikpevcq, s, counter, iun_dmn, iun_sym, ig, igp, ip, jp, np, iw, jw
    INTEGER :: ir_start, ir_end
-   INTEGER :: ik_global, ipool, ik_local
+   INTEGER :: ik_global, isk_global, ipool, ik_local
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), &
                                becp2(:,:), Mkb(:,:), aux_nc(:,:)
    real(DP), ALLOCATABLE    :: rbecp2(:,:),sr(:,:,:)
@@ -1677,7 +1688,7 @@ SUBROUTINE compute_dmn
    COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:)
    LOGICAL                  :: have_sym
    COMPLEX(DP), ALLOCATABLE :: evc_k(:, :), evc_sk(:, :)
-   INTEGER :: igk_k_ir(npwx)
+   INTEGER :: igk_k_ik(npwx)
    !! G vector index at irreducible k point
    INTEGER :: igk_k_sk(npwx)
    !! G vector index at S*k point
@@ -2073,20 +2084,9 @@ SUBROUTINE compute_dmn
       IF( MOD(ir,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
       !
-      ! Read wavefunction at ikevc
+      ! Read wavefunction and setup npw and igk_k_ik at k
       ikevc = ik_global + ikstart - 1
-      CALL pool_and_local_kpoint_index(nkstot, ikevc, ipool, ik_local)
-      CALL utility_read_wfc_from_pool(ipool, ik_local, evc)
-      !
-      ! Set igk_k_ir, the G vector ordering at ik_global
-      IF (ipool == my_pool_id) THEN
-         ! Use local G vector ordering
-         npw = ngk(ik_local)
-         igk_k_ir = igk_k(:, ik_local)
-      ELSE
-         ! k point from different pool. Calculate G vector ordering.
-         CALL gk_sort(xk_all(1, ik_global), ngm, g, gcutw, npw, igk_k_ir, g2kin_)
-      ENDIF
+      CALL utility_setup_wfc_and_pw(ikevc, evc, npw, igk_k_ik)
       !
       ! Trim excluded bands from evc
       evc_k(:, :) = (0.d0, 0.d0)
@@ -2100,28 +2100,17 @@ SUBROUTINE compute_dmn
       !  USPP
       !
       IF (okvan) THEN
-         CALL init_us_2(npw, igk_k_ir, xk_all(1, ik_global), vkb)
+         CALL init_us_2(npw, igk_k_ik, xk_all(1, ik_global), vkb)
          CALL calbec(npw, vkb, evc_k, becp, num_bands)
       ENDIF
       !
       !
       DO isym = 1, nsym
-         ikp = iks2k(ik_global, isym)
+         isk_global = iks2k(ik_global, isym)
          !
-         ! Read wavefunction at ikpevcq (S*k)
-         ikpevcq = ikp + ikstart - 1
-         CALL pool_and_local_kpoint_index(nkstot, ikpevcq, ipool, ik_local)
-         CALL utility_read_wfc_from_pool(ipool, ik_local, evc)
-         !
-         ! Set igk_k_sk, the G vector ordering at S*k (ikp)
-         IF (ipool == my_pool_id) THEN
-            ! Use local G vector ordering
-            npwq = ngk(ik_local)
-            igk_k_sk = igk_k(:, ik_local)
-         ELSE
-            ! k point from different pool. Calculate G vector ordering.
-            CALL gk_sort(xk_all(1, ikp), ngm, g, gcutw, npwq, igk_k_sk, g2kin_)
-         ENDIF
+         ! Read wavefunction and setup npw and igk_k_ik at S*k
+         ikpevcq = isk_global + ikstart - 1
+         CALL utility_setup_wfc_and_pw(ikpevcq, evc, npwq, igk_k_sk)
          !
          ! Trim excluded bands from evc
          evc_sk(:, :) = (0.d0, 0.d0)
@@ -2165,7 +2154,7 @@ SUBROUTINE compute_dmn
             psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
             ! go back to G space
             CALL fwfft ('Wave', psic, dffts)
-            evc_sk(1:npw, n)  = psic(dffts%nl (igk_k_ir(1:npw) ) )
+            evc_sk(1:npw, n)  = psic(dffts%nl (igk_k_ik(1:npw) ) )
          ENDDO
          !
          !  USPP
