@@ -172,7 +172,7 @@ CONTAINS
         imeta = 497
         imetac = 498
       END SELECT
-    !
+      !
     END IF
 #else
     IF (meta_libxc_short) &
@@ -181,11 +181,12 @@ CONTAINS
     !
     ! ... warning for MGGA exch and non-MGGA corr or vice versa
     !
-    IF (imeta/=0 .AND. (.NOT.is_libxc(5)) .AND. (iexch+icorr+igcx+igcc)>0 ) &
-      WRITE(stdout,'(/5X,"WARNING: an MGGA functional of one kind has been ",  &
-                    &/5X,"read together with a non-MGGA one for the other ",   &
-                    &/5X,"kind. This is not a standard choice. Make sure this",&
-                    &/5x,"is what you really want.")' )
+    IF ( (imeta==0 .AND. iexch+igcx/=0) .AND. (imetac/=0 .AND. icorr+igcc==0) .OR. &
+         (imeta/=0 .AND. iexch+igcx==0) .AND. (imetac==0 .AND. icorr+igcc/=0) ) &
+      CALL xclib_infomsg( 'matching_shortIDs', 'WARNING: an MGGA functional of one &
+                          &kind has been read together with a non-MGGA one of the &
+                          &other kind. This is not a standard choice and has not &
+                          &been tested outside PW.' )
     !
     ! ... fill variables and exit
     !
@@ -385,13 +386,18 @@ CONTAINS
 #else
     !
     DO i = 1, 6
+      !
+      IF ( i==5 .AND. (ID_v(i)==3 .OR. ID_v(i)==5 .OR. ID_v(i)==6 .OR. ID_v(i)==7) ) &
+         CALL xclib_error( 'matching_shortIDs', 'wrong notation for the dft name. &
+                           &Use the shortname or the Libxc IDs.', 1 )
+      !
       IF ( is_libxc(i) ) THEN
         fkind=-100 ; family=-100
         dft_lxc = xc_f03_functional_get_name( ID_v(i) )
         IF ( TRIM(dft_lxc) == '' ) THEN
           wrong_ID = ID_v(i)
           EXIT
-        ENDIF  
+        ENDIF
         CALL xc_f03_func_init( xc_func, ID_v(i), 1 )
         xc_info = xc_f03_func_get_info( xc_func )
         fkind = xc_f03_func_info_get_kind( xc_info )
