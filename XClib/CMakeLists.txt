@@ -97,14 +97,12 @@ if(QE_ENABLE_TEST)
     if(NOT BASH_PROGRAM)
         message(WARNING "bash not found! Tests under ${CMAKE_CURRENT_SOURCE_DIR} not added.")
     else()
-        set(test_input_file_names_no_extension exe_test gen_test)
+        set(test_input_file_names_no_extension test_all_terms test_all_shorts)
 
         foreach(file_name_no_extension IN LISTS test_input_file_names_no_extension)
             add_unit_test(test_qe_xclib_${file_name_no_extension} 1 1 ${BASH_PROGRAM} -c
                           "$<TARGET_FILE:qe_xclib_test> < ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/${file_name_no_extension}.in")
         endforeach()
 
-        #additional dependency
-        set_tests_properties(test_qe_xclib_exe_test PROPERTIES DEPENDS test_qe_xclib_gen_test)
     endif()
 endif(QE_ENABLE_TEST)

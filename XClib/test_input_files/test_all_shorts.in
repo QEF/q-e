@@ -1,7 +1,7 @@
 &INPUT_NAMELIST
                     test='execute'
-                    filename_xml='xctest_data.xml'
-                    dft='all_terms'
+                    filename_xml='all_shorts.xml'
+                    dft='all_short'
                     family= ''
                     polarization='both'
                     xc_derivative=.FALSE.
