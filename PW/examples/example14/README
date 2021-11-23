@@ -40,10 +40,10 @@ Steps 2-4) are repeated until convergence of the interacting charge density.
 
 REFERENCES:
 
-S.Beck et al.
-Charge self-consistent electronic structure calculations with dynamical mean-field theory using
-QuantumESPRESSO, Wannier90 and TRIQS
-arxiv tba (2021)
+S. Beck et al.
+Charge self-consistent electronic structure calculations with dynamical mean-field
+theory using Quantum ESPRESSO, Wannier90 and TRIQS
+arXiv:2111.10289 (2021)
 
 G. Pizzi et al.
 Wannier90 as a community code: new features and applications

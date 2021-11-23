@@ -8,7 +8,7 @@
 ! --------------------------------------------------------------
 MODULE add_dmft_occ
   ! Written by Sophie D. Beck (2020-2021)
-  ! arxiv tbd (2021)
+  ! arXiv:2111.10289 (2021)
   !
   ! This module contains a subroutine to read DMFT occupation uddaptes
   ! and to change the fermi weights and the wavefunctions accordingly.
@@ -113,6 +113,10 @@ CONTAINS
         !
         f_ptr = c_loc(band_window(1,1,1))
         CALL h5dread_f(d_id, h5t_native_double, f_ptr, ierr)
+        !
+        CALL errore('dmft_update', 'number of bands "nbnd" must be larger or equal than upper limit &
+                     in hdf5 dataset '//TRIM(dmft_prefix)//'.h5/'//TRIM(hdfg_bnd_low)//'/&
+                     &'//TRIM(hdfd_bnd_low)//'' , INT(band_window(2,1,1)) - nbnd)
         !
         ! ... for now assume that all bands have the same band_window, so take data from first k-point
         !
