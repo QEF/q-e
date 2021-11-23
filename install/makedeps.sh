@@ -107,7 +107,7 @@ for dir in $dirs; do
 
     # list of all system modules
     sysdeps="iso_c_binding iso_fortran_env f90_unix_io f90_unix_env \
-             f90_unix_proc ifcore ifport"
+             f90_unix_proc ifcore ifport git-rev.h"
 
     # list of all external library modules or include files
     libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \
