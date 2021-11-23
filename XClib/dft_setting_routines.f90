@@ -179,7 +179,15 @@ CONTAINS
       CALL xclib_error( 'set_dft_from_name', 'libxc needed for this functional', 2 )
 #endif
     !
-    ! Fill variables and exit
+    ! ... warning for MGGA exch and non-MGGA corr or vice versa
+    !
+    IF (imeta/=0 .AND. (.NOT.is_libxc(5)) .AND. (iexch+icorr+igcx+igcc)>0 ) &
+      WRITE(stdout,'(/5X,"WARNING: an MGGA functional of one kind has been ",  &
+                    &/5X,"read together with a non-MGGA one for the other ",   &
+                    &/5X,"kind. This is not a standard choice. Make sure this",&
+                    &/5x,"is what you really want.")' )
+    !
+    ! ... fill variables and exit
     !
     dft = dftout
     !
@@ -194,7 +202,7 @@ CONTAINS
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
     !     &//gradc (igcc) //'-'// nonlocc(inlc)
     !
-    ! check dft has not been previously set differently
+    ! ... check dft has not been previously set differently
     !
     IF (save_iexch /= notset .AND. save_iexch /= iexch) THEN
        WRITE(stdout,*) iexch, save_iexch
