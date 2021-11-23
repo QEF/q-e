@@ -203,7 +203,6 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   etxc = zero
   vtxc = zero
-  v(:,:) = zero
   rhoneg1 = zero ; rhoneg2 = zero
   fac = 1.D0 / DBLE( nspin )
   np = 1
@@ -446,7 +445,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
     ! local correlation potential
   INTEGER :: ir, ipol
     ! counter on mesh points
-    ! counter on nspin
+    ! counter on polarization components
     ! number of mesh points (=dfftp%nnr)
   REAL(DP), PARAMETER :: vanishing_charge = 1.D-10, &
                          vanishing_mag    = 1.D-20
@@ -517,15 +516,23 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       !$acc&              reduction(+:rhoneg2) present(rho)
       DO ir = 1, dfftp%nnr
          arho = ABS( rho%of_r(ir,1) )
-         IF ( arho < vanishing_charge ) CYCLE
+         IF ( arho < vanishing_charge ) THEN
+           v(ir,1) = 0.d0 ;  v(ir,2) = 0.d0
+           v(ir,3) = 0.d0 ;  v(ir,4) = 0.d0
+           CYCLE
+         ENDIF
          vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
          v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
          !
-         amag = SQRT( SUM( rho%of_r(ir,2:4)**2 ) )
+         amag = SQRT( rho%of_r(ir,2)**2 + rho%of_r(ir,3)**2 + rho%of_r(ir,4)**2 )
          IF ( amag > vanishing_mag ) THEN
-            v(ir,2:4) = e2 * vs * rho%of_r(ir,2:4) / amag
-            vtxc24 = SUM( v(ir,2:4) * rho%of_r(ir,2:4) )
+            v(ir,2) = e2 * vs * rho%of_r(ir,2) / amag
+            v(ir,3) = e2 * vs * rho%of_r(ir,3) / amag
+            v(ir,4) = e2 * vs * rho%of_r(ir,4) / amag
+            vtxc24 = v(ir,2) * rho%of_r(ir,2) + v(ir,3) * rho%of_r(ir,3) + &
+                     v(ir,4) * rho%of_r(ir,4)
          ELSE
+            v(ir,2) = 0.d0 ;  v(ir,3) = 0.d0 ;  v(ir,4) = 0.d0
             vtxc24 = 0.d0
          ENDIF
          etxc = etxc + e2*( ex(ir) + ec(ir) ) * arho
