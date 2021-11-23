@@ -236,6 +236,12 @@ The `prefix.for` file, formatted like the previous two, contains the computed
 forces, in Hartree atomic units as well. It is written only if a molecular
 dynamics calculation is performed, or if `tprnfor = .true.` is set in input.
 
+The simulation cell is written in a file named `prefix.cel` with the same header as the previous
+described files, and the cell matrix is then listed. NB: **THE CELL MATRIX IN THE
+OUTPUT IS TRANSPOSED** that means that if you want to reuse it again for a new input file,
+you have to pick the one that you find in `prefix.cel` and write in the input file
+after inverting rows and columns.
+
 The file `prefix.evp` has one line per printed step and contains some
 thermodynamical data.
 The first line of the file names the columns:
