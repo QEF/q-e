@@ -104,7 +104,8 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
        !
     CASE DEFAULT
        !
-       !CALL xclib_error( 'tau_xc', 'This case is not implemented', imeta )
+       v1x(k)=0.d0 ; v2x(k)=0.d0 ; v3x(k)=0.d0 ; ex(k)=0.d0
+       v1c(k)=0.d0 ; v2c(1,k,1)=0.d0 ; v3c(k)=0.d0 ; ec(k)=0.d0
        !
     END SELECT
     !
@@ -212,7 +213,8 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
         !
      CASE DEFAULT
         !
-        !CALL xclib_error( 'tau_xc_spin', 'This case not implemented', imeta )
+        v1x(k,:)=0.d0 ; v2x(k,:)=0.d0   ; v3x(k,:)=0.d0 ; ex(k)=0.d0
+        v1c(k,:)=0.d0 ; v2c(:,k,:)=0.d0 ; v3c(k,:)=0.d0 ; ec(k)=0.d0
         !
      END SELECT
      !
