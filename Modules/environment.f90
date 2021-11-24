@@ -184,8 +184,10 @@ CONTAINS
 #if defined(HAVE_GITREV)
     WRITE( stdout, '(8X, "Git branch: ", A)' ) GIT_BRANCH_RAW
     WRITE( stdout, '(8X, "Last git commit: ", A)' ) GIT_HASH_RAW
-    WRITE( stdout, '(8X, "Last git commit date: ", A)' ) GIT_COMMIT_LAST_CHANGED_RAW
-    WRITE( stdout, '(8X, "Last git commit subject: ", A)' ) GIT_COMMIT_SUBJECT_RAW
+    WRITE( stdout, '(8X, "Last git commit date: ", A)' ) & 
+      GIT_COMMIT_LAST_CHANGED_RAW
+    WRITE( stdout, '(8X, "Last git commit subject: ", A)' ) & 
+      GIT_COMMIT_SUBJECT_RAW
 #endif
     !
     WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
