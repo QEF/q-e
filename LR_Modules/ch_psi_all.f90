@@ -99,17 +99,16 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! Compute an action of the Hamiltonian and the S operator
   ! on the h vector (i.e. H*h and S*h, respectively).
   !
+  !$acc enter data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m), ps(1:nbnd, 1:m))
 #if defined(__CUDA)
 
   vkb_d = vkb
 
-  !$acc data copyin(h) copyout(hpsi, spsi)
-
+  !$acc data copyin(h) present(hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
   CALL s_psi_gpu (npwx, n, m, h, spsi)
   !$acc end host_data
-
   !$acc end data
 
 #else
@@ -125,7 +124,14 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !   and put the result in ah
   !
   CALL start_clock ('Hesh')
+  !$acc enter data create(ah(1:npwx*npol, 1:m))
+  !$acc data copyin(e)
+
+  !$acc kernels present(ah)
   ah=(0.d0,0.d0)
+  !$acc end kernels
+
+  !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)
   DO ibnd = 1, m
      DO ig = 1, n
         ah(ig, ibnd) = hpsi(ig, ibnd) - e(ibnd) * spsi(ig, ibnd)
@@ -133,6 +139,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ENDDO
   IF (noncolin) THEN
      CALL start_clock ('Hesh:noncolin')
+     !$acc parallel loop collapse(2) present(hpsi, spsi, ah, e)
      DO ibnd = 1, m
         DO ig = 1, n
            ah(ig+npwx, ibnd) = hpsi(ig+npwx, ibnd) - e(ibnd) * spsi(ig+npwx, ibnd)
@@ -140,6 +147,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
      ENDDO
      CALL stop_clock ('Hesh:noncolin')
   ENDIF
+  !$acc end data
   CALL stop_clock ('Hesh')
 
   !
@@ -153,7 +161,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
         CALL ch_psi_all_k()
      ENDIF
   ENDIF
-  
+  !$acc exit data copyout(ah) delete(ps)
+  !$acc exit data delete(hpsi, spsi)
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
   DEALLOCATE (ps)
@@ -168,58 +177,88 @@ CONTAINS
     ! K-point part
     !
     USE becmod, ONLY : becp, calbec
+#if defined(_OPENACC)
+    USE cublas
+#endif
     
     IMPLICIT NONE
     INTEGER :: m_start, m_end
+    INTEGER :: k
+    k = nbnd_occ (ikqs(ik))
     CALL start_clock ('ch_psi_all_k')
+    !$acc data copyin(evq) present(ps, hpsi, spsi)
     !
     !   Here we compute the projector in the valence band
     !
+    !$acc kernels present(ps)
     ps (:,:) = (0.d0, 0.d0)
+    !$acc end kernels
     !
     ! ikqs(ik) is the index of the point k+q if q\=0
     !          is the index of the point k   if q=0
     ! 
+    !$acc host_data use_device(hpsi, ps, evq)
     IF (noncolin) THEN
-       CALL zgemm ('C', 'N', nbnd_occ (ikqs(ik)) , m, npwx*npol, (1.d0, 0.d0) , evq, &
+       CALL zgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
             npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
     ELSE
-       CALL zgemm ('C', 'N', nbnd_occ (ikqs(ik)) , m, n, (1.d0, 0.d0) , evq, &
+       CALL zgemm ('C', 'N', k, m, n, (1.d0, 0.d0) , evq, &
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
+    !$acc end host_data
+    !$acc kernels present(ps)
     ps (:,:) = ps(:,:) * alpha_pv
+    !$acc end kernels
     CALL mp_sum ( ps, intra_bgrp_comm )
-    
+    !$acc kernels present(hpsi)
     hpsi (:,:) = (0.d0, 0.d0)
+    !$acc end kernels
+    !$acc host_data use_device(hpsi, ps, evq)
     IF (noncolin) THEN
-       CALL zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikqs(ik)) , (1.d0, 0.d0) , evq, &
+       CALL zgemm ('N', 'N', npwx*npol, m, k, (1.d0, 0.d0) , evq, &
             npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
     ELSE
-       CALL zgemm ('N', 'N', n, m, nbnd_occ (ikqs(ik)) , (1.d0, 0.d0) , evq, &
+       CALL zgemm ('N', 'N', n, m, k, (1.d0, 0.d0) , evq, &
             npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
     END IF
+    !$acc end host_data
+    !$acc kernels present(spsi, hpsi)
     spsi(:,:) = hpsi(:,:)
+    !$acc end kernels
+    !$acc end data
     !
     !    And apply S again
     !
+    !$acc update self(hpsi)
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
        call divide (inter_bgrp_comm, m, m_start, m_end)
        if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
     else
        CALL calbec (n, vkb, hpsi, becp, m)
     end if
+    !$acc update device(spsi(1:npwx*npol, 1:m))
+#if defined(__CUDA)
+    !$acc host_data use_device(hpsi, spsi)
+    CALL s_psi_gpu (npwx, n, m, hpsi, spsi)
+    !$acc end host_data
+#else
     CALL s_psi (npwx, n, m, hpsi, spsi)
+#endif
+    !$acc kernels present(ah, spsi)
     DO ibnd = 1, m
        DO ig = 1, n
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
        ENDDO
     ENDDO
+    !$acc end kernels
     IF (noncolin) THEN
+       !$acc kernels present(ah, spsi)
        DO ibnd = 1, m
           DO ig = 1, n
              ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
           ENDDO
        ENDDO
+       !$acc end kernels
     END IF
     CALL stop_clock ('ch_psi_all_k')
     return
