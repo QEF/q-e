@@ -429,6 +429,7 @@
 #if defined (__CUDA)
       g_d = g
 #endif
+!$acc update device(g) 
       !
       call g2kin_init ( gg, tpiba2 )
       !
