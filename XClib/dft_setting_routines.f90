@@ -181,8 +181,8 @@ CONTAINS
     !
     ! ... warning for MGGA exch and non-MGGA corr or vice versa
     !
-    IF ( (imeta==0 .AND. iexch+igcx/=0) .AND. (imetac/=0 .AND. icorr+igcc==0) .OR. &
-         (imeta/=0 .AND. iexch+igcx==0) .AND. (imetac==0 .AND. icorr+igcc/=0) ) &
+    IF ( ((imeta==0 .AND. iexch+igcx/=0) .AND. (imetac/=0 .AND. icorr+igcc==0)) .OR. &
+         ((imeta/=0 .AND. iexch+igcx==0) .AND. (imetac==0 .AND. icorr+igcc/=0)) )   &
       CALL xclib_infomsg( 'matching_shortIDs', 'WARNING: an MGGA functional of one &
                           &kind has been read together with a non-MGGA one of the &
                           &other kind. This is not a standard choice and has not &

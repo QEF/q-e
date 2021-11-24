@@ -9,7 +9,8 @@
 !============================================================================
 PROGRAM xc_infos
   !==========================================================================
-  !! Provides infos on the input DFTs (both QE and Libxc).
+  !! Provides infos on the input DFTs (both QE and Libxc).  
+  !! Currently does not cover vdW functionals.
   !
   ! --- To be run on a single processor ---
   !
@@ -179,8 +180,8 @@ PROGRAM xc_infos
       CASE( XC_EXCHANGE_CORRELATION )  
         WRITE(lxc_kind, '(a)') 'EXCHANGE+CORRELATION'  
       CASE( XC_KINETIC )  
-        WRITE(lxc_kind, '(a)') 'KINETIC ENERGY FUNCTIONAL - currently not available&  
-                               &in QE.'  
+        WRITE(lxc_kind, '(a)') 'KINETIC ENERGY FUNCTIONAL - currently NOT usable&  
+                               & in QE.'  
       CASE DEFAULT  
         WRITE(lxc_kind, '(a)') 'UNKNOWN'
       END SELECT  
