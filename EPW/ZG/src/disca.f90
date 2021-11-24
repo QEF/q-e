@@ -27,9 +27,9 @@ PROGRAM diff_sca
   !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------
-  !! authors: Marios Zacharias, Pantelis C. Kelires, Feliciano Giustino 
+  !! authors: Marios Zacharias and Feliciano Giustino 
   !! acknowledgement: Hyungjun Lee for help packaging this release
-  !! version: v0.1
+  !! version: v0.2
   !! license: GNU
   !
   !  This program generates diffuse scattering maps for a list of
@@ -145,10 +145,10 @@ PROGRAM diff_sca
   CHARACTER(LEN = 256) :: flfrc, filename
   CHARACTER(LEN = 10)  :: asr
   LOGICAL :: has_zstar, q_in_cryst_coord, eigen_similarity, loto_disable
-  COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:), frc_ifc(:,:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: z(:,:) 
-  REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:), wq(:)
-  REAL(DP), ALLOCATABLE:: q_super(:,:), q_strft(:,:), q_strft_part(:,:)
+  COMPLEX(DP), ALLOCATABLE :: dyn(:, :, :, :), dyn_blk(:, :, :, :)
+  COMPLEX(DP), ALLOCATABLE :: z(:,:), frc_ifc(:, :, :, :)
+  REAL(DP), ALLOCATABLE:: tau(:, :), q(:, :), w2(:, :), freq(:,:), wq(:)
+  REAL(DP), ALLOCATABLE:: q_super(:, :), q_strft(:, :), q_strft_part(:, :)
   INTEGER, ALLOCATABLE:: ityp(:), itau_blk(:)
   REAL(DP) ::     omega,alat, &! cell parameters and volume
                   at_blk(3, 3), bg_blk(3, 3),  &! original cell
@@ -157,7 +157,7 @@ PROGRAM diff_sca
                   amass(ntypx),              &! atomic masses
                   amass_blk(ntypx),          &! original atomic masses
                   atws(3, 3),      &! lattice vector for WS initialization
-                  rws(0:3, nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
+                  rws(0 : 3, nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
   !
   INTEGER :: nat, nat_blk, ntyp, ntyp_blk, &
              l1, l2, l3,                   &! supercell dimensions
@@ -170,17 +170,17 @@ PROGRAM diff_sca
   !
   REAL(DP) :: qhat(3), qh, E, qq
   REAL(DP) :: delta 
-  REAL(DP), ALLOCATABLE :: xqaux(:,:)
+  REAL(DP), ALLOCATABLE :: xqaux(:, :)
   INTEGER, ALLOCATABLE :: nqb(:)
   INTEGER :: n, i, j, it, nq, nq_super, nq_strft, nqx, na, nb, nqtot
   LOGICAL, EXTERNAL :: has_xml
-  INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
+  INTEGER, ALLOCATABLE :: num_rap_mode(:, :)
   LOGICAL, ALLOCATABLE :: high_sym(:)
   LOGICAL :: q_in_band_form
   ! .... variables for band plotting based on similarity of eigenvalues
-  COMPLEX(DP), ALLOCATABLE :: tmp_z(:,:)
-  REAL(DP), ALLOCATABLE :: ABS_similarity(:,:), tmp_w2(:)
-  COMPLEX(DP), ALLOCATABLE :: f_of_q(:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: tmp_z(:, :)
+  REAL(DP), ALLOCATABLE :: ABS_similarity(:, :), tmp_w2(:)
+  COMPLEX(DP), ALLOCATABLE :: f_of_q(:, :, :, :)
   INTEGER :: location(1), isig
   CHARACTER(LEN=6) :: int_to_char
   LOGICAL, ALLOCATABLE :: mask(:)
@@ -193,15 +193,18 @@ PROGRAM diff_sca
   CHARACTER(len=80) :: k_points = 'tpiba'
   ! mz_b
   COMPLEX(DP), ALLOCATABLE :: z_nq_zg(:, :, :) ! nomdes,nmodes,nq
-  REAL(DP),    ALLOCATABLE :: q_nq_zg(:, :), qlist_str_f(:, :), qlist_str_f_cart(:, :) ! 3,nq
-  REAL(DP)                 :: atmsf_zg_a(ntypx, 5), atmsf_zg_b(ntypx, 5)
-  LOGICAL                  :: disca, q_external
-  LOGICAL                  :: zero_one_phonon, atom_resolved, full_phonon
+  REAL(DP),    ALLOCATABLE :: q_nq_zg(:, :), qlist_strf(:, :), qlist_strf_cart(:, :) ! 3,nq
+  REAL(DP)                 :: atmsf_a(ntypx, 5), atmsf_b(ntypx, 5)
+  LOGICAL                  :: disca, q_external, print_raw_data
+  LOGICAL                  :: zero_one_phonon, atom_resolved, mode_resolved, full_phonon
   INTEGER                  :: dim1, dim2, dim3, nks1, nks2, nks3, nksf1, nksf2, nksf3
   INTEGER                  :: lower_bnd, upper_bnd
   INTEGER                  :: T, plane_dir
-  REAL(DP)                 :: plane_val
+  REAL(DP)                 :: plane_val, eps2
   CHARACTER(LEN=3)         :: atm_zg(ntypx)
+  ! inputs for pp_disca, rotate
+  INTEGER                  :: nrots, kres1, kres2, col1, col2, Np
+  REAL(DP)                 :: kmin, kmax
   ! mz_e
   !
   NAMELIST /input/ flfrc, amass, asr, at, &
@@ -209,16 +212,18 @@ PROGRAM diff_sca
        &           q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, na_ifc, fd, point_label_type, nosym, &
        &           loto_2d, loto_disable, &
-! mz_b we add the inputs for diffuse scattering
-       &           disca, dim1, dim2, dim3, atm_zg, & 
-       &           T, q_external, zero_one_phonon, & 
+  ! mz_b we add the inputs for diffuse scattering
+       &           disca, dim1, dim2, dim3, atm_zg, mode_resolved, & 
+       &           T, q_external, zero_one_phonon, print_raw_data, & 
        &           nks1, nks2, nks3, plane_val, plane_dir, qstart, qfinal, atom_resolved, & 
-       &           full_phonon, atmsf_zg_a, atmsf_zg_b, nksf1, nksf2, nksf3
-! disca --> if true compute the diffuse_scattering 
-! mz_e 
+       &           full_phonon, atmsf_a, atmsf_b, nksf1, nksf2, nksf3, eps2
+  ! disca --> if true compute the diffuse_scattering 
+  !we add a new list for the inputs og rotate and pp_disca
+  NAMELIST /pp_disca/ nrots, kres1, kres2, kmin, kmax, col1, col2, Np
+  ! mz_e 
   !
   CALL mp_startup()
-  CALL environment_start('MATDYN')
+  CALL environment_start('DISCA')
   !
   IF (ionode) CALL input_from_file ( )
      !
@@ -245,9 +250,9 @@ PROGRAM diff_sca
      na_ifc = .FALSE.
      fd = .FALSE.
      point_label_type = 'SC'
-     nosym = .false.
-     loto_2d = .false.
-     loto_disable = .false.
+     nosym = .FALSE.
+     loto_2d = .FALSE.
+     loto_disable = .FALSE.
      ! mz_b
      disca = .TRUE.
      T = 0
@@ -255,12 +260,14 @@ PROGRAM diff_sca
      zero_one_phonon = .TRUE.
      full_phonon = .FALSE.
      atom_resolved = .FALSE.
+     mode_resolved = .FALSE.
+     print_raw_data = .FALSE.
      dim1 = 0
      dim2 = 0
      dim3 = 0
      atm_zg = "Element"
-     atmsf_zg_a = 0.d0
-     atmsf_zg_b = 0.d0
+     atmsf_a = 0.d0
+     atmsf_b = 0.d0
      plane_val = 0.d0
      plane_dir = 3
      nks1 = 0
@@ -271,12 +278,25 @@ PROGRAM diff_sca
      nksf3 = 6
      qstart = 1
      qfinal = 2
+     eps2 = 1.0d-15
+     ! 
+     nrots = 1
+     kres1 = 250
+     kres2 = 250
+     kmin = -5
+     kmax = 10
+     col1 = 1
+     col2 = 2
+     Np = 100
      ! mz_e 
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
      CALL mp_bcast(ios, ionode_id, world_comm) 
      CALL errore('disca', 'reading input namelist', ABS(ios))
+     IF (ionode) READ (5,pp_disca,IOSTAT=ios)
+     CALL mp_bcast(ios, ionode_id, world_comm)
+     CALL errore('pp_disca', 'reading pp_disca namelist', ABS(ios))
      CALL mp_bcast(nk1,ionode_id, world_comm)
      CALL mp_bcast(nk2,ionode_id, world_comm)
      CALL mp_bcast(nk3,ionode_id, world_comm)
@@ -304,9 +324,11 @@ PROGRAM diff_sca
      CALL mp_bcast(q_external, ionode_id, world_comm)
      CALL mp_bcast(zero_one_phonon, ionode_id, world_comm)
      CALL mp_bcast(atom_resolved, ionode_id, world_comm)
+     CALL mp_bcast(mode_resolved, ionode_id, world_comm)
+     CALL mp_bcast(print_raw_data, ionode_id, world_comm)
      CALL mp_bcast(full_phonon, ionode_id, world_comm)
-     CALL mp_bcast(atmsf_zg_a, ionode_id, world_comm)
-     CALL mp_bcast(atmsf_zg_b, ionode_id, world_comm)
+     CALL mp_bcast(atmsf_a, ionode_id, world_comm)
+     CALL mp_bcast(atmsf_b, ionode_id, world_comm)
      CALL mp_bcast(dim1, ionode_id, world_comm)
      CALL mp_bcast(dim2, ionode_id, world_comm)
      CALL mp_bcast(dim3, ionode_id, world_comm)
@@ -320,6 +342,16 @@ PROGRAM diff_sca
      CALL mp_bcast(plane_dir, ionode_id, world_comm)
      CALL mp_bcast(qstart, ionode_id, world_comm)
      CALL mp_bcast(qfinal, ionode_id, world_comm)
+     CALL mp_bcast(eps2, ionode_id, world_comm)
+     ! 
+     CALL mp_bcast(nrots, ionode_id, world_comm)
+     CALL mp_bcast(kres1, ionode_id, world_comm)
+     CALL mp_bcast(kres2, ionode_id, world_comm)
+     CALL mp_bcast(kmin, ionode_id, world_comm)
+     CALL mp_bcast(kmax, ionode_id, world_comm)
+     CALL mp_bcast(col1, ionode_id, world_comm)
+     CALL mp_bcast(col2, ionode_id, world_comm)
+     CALL mp_bcast(Np, ionode_id, world_comm)
      ! 
      IF (loto_2d .AND. loto_disable) CALL errore('disca', &
          'loto_2d and loto_disable cannot be both true', 1)
@@ -444,30 +476,28 @@ PROGRAM diff_sca
        !
        CALL qpoint_gen2(dim1, dim2, dim3, nq_super, q_super) 
        !
-       !DO n = 1, nq_super 
-       !    IF (ionode) WRITE(*,*) "q_AB", q_super(:,n)
-       !ENDDO
-       !
        CALL mp_bcast(q_super, ionode_id, world_comm)
        !
        CALL cryst_to_cart(nq_super, q_super, bg, +1) ! convert them to Cartesian
        ! 
        ! we first read nq for structure factor q-points - S
-       ALLOCATE(qlist_str_f(dim1 * dim2 * dim3 * (nksf1 - nks1) * (nksf2 - nks2) * (nksf3 - nks3), 3))
-       ALLOCATE(qlist_str_f_cart(dim1 * dim2 * dim3 * (nksf1 - nks1) * (nksf2 - nks2) * (nksf3 - nks3), 3)) 
+       ALLOCATE(qlist_strf(dim1 * dim2 * dim3 * (nksf1 - nks1) * (nksf2 - nks2) * (nksf3 - nks3), 3))
+       ALLOCATE(qlist_strf_cart(dim1 * dim2 * dim3 * (nksf1 - nks1) * (nksf2 - nks2) * (nksf3 - nks3), 3)) 
        IF (ionode) CALL qpoint_gen_map_1(dim1, dim2, dim3, nks1, nks2, nks3, nksf1, nksf2, nksf3, & 
-                         plane_val, plane_dir, nq_strft, qlist_str_f, qlist_str_f_cart) 
+                         plane_val, plane_dir, nq_strft, qlist_strf, qlist_strf_cart) 
        ! nq_strft is the # of q-points
        CALL mp_bcast(nq_strft, ionode_id, world_comm)
+       !
        IF (ionode) WRITE (*,*) 
        IF (ionode) WRITE (*,*) "Generating", nq_strft, "q-points for the full map ..." 
+       !
        IF (qfinal .GT. nq_strft) CALL errore('disca', 'qfinal larger than full # of q-points', qfinal)
        !
        ALLOCATE (q_strft(3, nq_strft), q_strft_part(3, qfinal - qstart + 1 ))
        !
        IF (ionode) CALL qpoint_gen_map_2(dim1, dim2, dim3, nks1, nks2, nks3, nksf1, nksf2, nksf3, & 
-                                         plane_val, plane_dir, nq_strft, qlist_str_f, qlist_str_f_cart, q_strft) ! q_strft array with q-points
-       DEALLOCATE(qlist_str_f, qlist_str_f_cart)
+                                         plane_val, plane_dir, nq_strft, qlist_strf, qlist_strf_cart, q_strft) ! q_strft array with q-points
+       DEALLOCATE(qlist_strf, qlist_strf_cart)
        !
        CALL mp_bcast(q_strft, ionode_id, world_comm)
        IF (ionode) then
@@ -486,7 +516,6 @@ PROGRAM diff_sca
        ! convert them to Cartesian
        CALL cryst_to_cart(nq_strft, q_strft_part, bg, +1)
        !
-       ! now generate normal q-points in sets AB
        ! Now ALLOCATE and read full q-list containing 
        ! supercell q-points and structure factor q-points 
        nq = nq_super + nq_strft
@@ -498,6 +527,8 @@ PROGRAM diff_sca
        DO n = nq_super + 1, nq
           q(:, n) = q_strft_part(:, n - nq_super) 
        ENDDO
+       ! 
+       DEALLOCATE(q_strft_part, q_super)
      ELSE
      ! mz_ends
         IF (ionode) READ (5,*) nq
@@ -505,10 +536,10 @@ PROGRAM diff_sca
         ALLOCATE ( q(3,nq) )
         IF (.NOT.q_in_band_form) THEN
            DO n = 1,nq
- ! mz_edits
+     ! mz_edits
               IF (ionode) READ (5,*) (q(i,n),i= 1,3)
-!              IF (ionode) READ (5,'(3F10.6)') q(:,n) 
- ! mz_done
+     ! IF (ionode) READ (5,'(3F10.6)') q(:,n) 
+     ! mz_done
            ENDDO
            CALL mp_bcast(q, ionode_id, world_comm)
            !
@@ -599,18 +630,10 @@ PROGRAM diff_sca
      ! mz_b
      w2 = 0.d0
      IF (disca) THEN
-      ALLOCATE ( z_nq_zg(3*nat,3*nat,nq),q_nq_zg(3,nq))
+      ALLOCATE ( z_nq_zg(3 * nat, 3 * nat, nq),q_nq_zg(3, nq))
       z_nq_zg(:,:,:)= (0.d0, 0.d0)
       q_nq_zg(:,:) = 0.d0
      ENDIF
-!      WRITE atomic structure factor from input
-     !IF (ionode) THEN
-     !  DO it = 1, nat 
-     !    na = ityp(it)
-     !    WRITE(*,*) atmsf_zg_a(na,:)
-     !    WRITE(*,*) atmsf_zg_b(na,:)
-     !  ENDDO
-     !ENDIF
      ! mz_e
 
      IF (xmlifc) CALL set_sym(nat, tau, ityp, nspin_mag, m_loc )
@@ -623,7 +646,6 @@ PROGRAM diff_sca
      CALL fkbounds( nq, lower_bnd, upper_bnd )
      !
      DO n= lower_bnd, upper_bnd ! 1, nq
-     !DO n = 1, nq
         dyn(:,:,:,:) = (0.d0, 0.d0)
 
         lo_to_split=.FALSE.
@@ -643,7 +665,7 @@ PROGRAM diff_sca
 
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
-              loto_2d, &
+             loto_2d, &
              epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
 
         IF (.not.loto_2d) THEN 
@@ -692,22 +714,20 @@ PROGRAM diff_sca
                 lo_to_split=.TRUE.
              ENDIF
              !
-             CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
+             IF (lo_to_split) CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
              !
           ENDIF
         !
         ENDIF
         !
-        
-        !mzzz_comments out --> if(iout_dyn.ne.0) CALL WRITE_dyn_on_file(q(1,n),dyn,nat, iout_dyn)
-        
-
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
-        ! mz_b fill a 3D matrix with all eigenvectors
-        ! mz_e 
-       !!!!! mzzz IF (ionode.and.iout_eig.ne.0) &
-       !!!!mz  & CALL WRITE_eigenvectors(nat,ntyp,amass,ityp,q(1,n),w2(1,n),z,iout_eig)
         !
+        ! Fill a 3D matrix with all eigenvectors
+        !
+        IF (disca) THEN
+           z_nq_zg(:,:,n) = z(:,:)               
+           q_nq_zg(:,n) = q(:,n)
+        ENDIF
         ! Cannot use the small group of \Gamma to analize the symmetry
         ! of the mode if there is an electric field.
         !
@@ -739,12 +759,7 @@ PROGRAM diff_sca
            tmp_z(:,:) = z(:,:)
         ENDIF
         !
-        IF (disca) THEN
-           z_nq_zg(:,:,n) = z(:,:)               
-           q_nq_zg(:,n) = q(:,n)
-        ENDIF
         !
-     !!!!!!!!!mz   IF (ionode.and.iout.ne.0) CALL WRITEmodes(nat,q(1,n),w2(1,n),z,iout)
         !
      ENDDO  !nq
      ! 
@@ -755,30 +770,18 @@ PROGRAM diff_sca
      DEALLOCATE (tmp_w2, ABS_similarity, mask)
      IF (eigen_similarity) DEALLOCATE(tmp_z)
      !
-     !
-     !ALLOCATE (freq(3*nat, nq))
-     !DO n= 1,nq
-     !   ! freq(i,n) = frequencies in cm^(-1), with negative sign if omega^2 is negative
-     !   DO i= 1,3*nat
-     !      freq(i,n)= SQRT(ABS(w2(i,n))) * RY_TO_CMM1
-     !      IF (w2(i,n) < 0.0d0) freq(i,n) = -freq(i,n)
-     !   ENDDO
-     !ENDDO
-     !
-     !
-     !
      !mz_b
-     !IF (ionode) WRITE(*,*) "step1"
-     IF (disca) CALL diffuse_scattering(nq,nq_super,nq_strft, nat, ntyp, amass, ityp, q_nq_zg, w2, z_nq_zg, & 
-                                q_external, zero_one_phonon, full_phonon, atmsf_zg_a, atmsf_zg_b, & 
-                                dim1, dim2, dim3, tau, alat, atm_zg, atom_resolved, & 
-                                ntypx, at, q_in_cryst_coord, T)
+     IF (disca) CALL diffuse_scattering(nq, nq_super, nq_strft, nat, ntyp, amass, ityp, q_nq_zg, & 
+                         w2, z_nq_zg, q_external, zero_one_phonon, full_phonon, atmsf_a, atmsf_b, & 
+                         dim1, dim2, dim3, tau, alat, atm_zg, atom_resolved, mode_resolved, & 
+                         ntypx, at, q_in_cryst_coord, T, eps2, print_raw_data, & 
+                         nrots, kres1, kres2, kmin, kmax, col1, col2, Np)
      !mz_e
      ! 
      !
      DEALLOCATE (z, w2, dyn, dyn_blk)
      ! mz_b
-     IF (disca) DEALLOCATE (z_nq_zg,q_nq_zg) 
+     IF (disca) DEALLOCATE (z_nq_zg, q_nq_zg) 
      ! mz_e
      !
      !
@@ -787,7 +790,7 @@ PROGRAM diff_sca
      DEALLOCATE(high_sym)
   !
 
-  CALL environment_end('MATDYN')
+  CALL environment_end('DISCA')
   !
   CALL mp_global_end()
   !
@@ -926,120 +929,10 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
 END SUBROUTINE readfc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
-  !-----------------------------------------------------------------------
-  ! calculates the dynamical matrix at q from the (short-range part of the)
-  ! force constants
-  !
-  USE kinds,      ONLY : DP
-  USE constants,  ONLY : tpi
-  USE io_global,  ONLY : stdout
-  !
-  IMPLICIT NONE
-  INTEGER nr1, nr2, nr3, nat, n1, n2, n3, nr1_, nr2_, nr3_, &
-          ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws, nax
-  COMPLEX(DP) dyn(3,3,nat,nat), f_of_q(3,3,nat,nat)
-  REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
-               at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
-               total_weight, rws(0:3,nrws), alat
-  REAL(DP), EXTERNAL :: wsweight
-  REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: ttt(:,:,:,:,:), tttx(:,:)
-  LOGICAL,SAVE :: first=.true.
-  LOGICAL :: fd
-  !
-  nr1_=2*nr1
-  nr2_=2*nr2
-  nr3_=2*nr3
-  FIRST_TIME : IF (first) THEN
-    first=.false.
-    ALLOCATE( wscache(-nr3_:nr3_, -nr2_:nr2_, -nr1_:nr1_, nat,nat) )
-    DO na= 1, nat
-       DO nb= 1, nat
-          total_weight=0.0d0
-          !
-          DO n1=-nr1_,nr1_
-             DO n2=-nr2_,nr2_
-                DO n3=-nr3_,nr3_
-                   DO i= 1, 3
-                      r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                      r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
-                      if (fd) r_ws(i) = r(i) + tau(i,nb)-tau(i,na)
-                   ENDDO
-                   wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
-                ENDDO
-             ENDDO
-          ENDDO
-      ENDDO
-    ENDDO
-  ENDIF FIRST_TIME
-  !
-  ALLOCATE(ttt(3,nat,nr1,nr2,nr3))
-  ALLOCATE(tttx(3,nat*nr1*nr2*nr3))
-  ttt(:,:,:,:,:)=0.d0
-
-  DO na= 1, nat
-     DO nb= 1, nat
-        total_weight=0.0d0
-        DO n1=-nr1_,nr1_
-           DO n2=-nr2_,nr2_
-              DO n3=-nr3_,nr3_
-                 !
-                 ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
-                 !
-                 DO i= 1, 3
-                    r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                 ENDDO
-
-                 weight = wscache(n3,n2,n1,nb,na) 
-                 IF (weight .GT. 0.0d0) THEN
-                    !
-                    ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
-                    !
-                    m1 = MOD(n1+1,nr1)
-                    IF(m1.LE.0) m1=m1+nr1
-                    m2 = MOD(n2+1,nr2)
-                    IF(m2.LE.0) m2=m2+nr2
-                    m3 = MOD(n3+1,nr3)
-                    IF(m3.LE.0) m3=m3+nr3
-                 !   WRITE(*,'(6i4)') n1,n2,n3,m1,m2,m3
-                    !
-                    ! FOURIER TRANSFORM
-                    !
-                    DO i= 1,3
-                       ttt(i,na,m1,m2,m3)=tau(i,na)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                       ttt(i,nb,m1,m2,m3)=tau(i,nb)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
-                    ENDDO
-
-                    arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
-                    DO ipol= 1, 3
-                       DO jpol= 1, 3
-                          dyn(ipol,jpol,na,nb) =                 &
-                               dyn(ipol,jpol,na,nb) +            &
-                               (frc(m1,m2,m3,ipol,jpol,na,nb)+f_of_q(ipol,jpol,na,nb))     &
-                               *CMPLX(COS(arg),-SIN(arg),kind=DP)*weight
-                       ENDDO
-                    ENDDO
-                 ENDIF
-                 total_weight=total_weight + weight
-              ENDDO
-           ENDDO
-        ENDDO
-        IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
-           WRITE(stdout,*) total_weight
-           CALL errore ('frc_blk','wrong total_weight',1)
-        ENDIF
-     ENDDO
-  ENDDO
-  !
-  RETURN
-END SUBROUTINE frc_blk
-!
-!-----------------------------------------------------------------------
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
      &         loto_2d, & 
-     &                 epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
+     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -1080,7 +973,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      dyn_blk(:,:,:,:) = (0.d0,0.d0)
      CALL frc_blk (dyn_blk,qp,tau_blk,nat_blk,              &
           &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws,f_of_q,fd)
-      IF (has_zstar .and. .not.na_ifc) &
+      IF (has_zstar .and. .not. na_ifc) &
            CALL rgd_blk(nr1,nr2,nr3,nat_blk,dyn_blk,qp,tau_blk,   &
                          epsil,zeu,bg_blk,omega_blk,celldm(1), loto_2d,+1.d0)
            ! LOTO 2D added celldm(1)=alat to passed arguments
@@ -1967,57 +1860,10 @@ SUBROUTINE read_tau &
 END SUBROUTINE read_tau
 !
 !-----------------------------------------------------------------------
-SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
-     nqx, nq, q, nosym)
-  !-----------------------------------------------------------------------
-  !
-  USE kinds,      ONLY : DP
-  USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : set_sym_bl, find_sym, s, irt, nsym, &
-                         nrot, t_rev, time_reversal,  sname
-  USE ktetra,     ONLY : tetra_init
-  !
-  IMPLICIT NONE
-  ! input
-  INTEGER :: ibrav, nat, nk1, nk2, nk3, ityp(*)
-  REAL(DP) :: at_(3,3), bg_(3,3), tau(3,nat)
-  LOGICAL :: nosym
-  ! output
-  INTEGER :: nqx, nq
-  REAL(DP) :: q(3,nqx)
-  ! local
-  REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
-  LOGICAL :: magnetic_sym=.FALSE., skip_equivalence=.FALSE.
-  !
-  time_reversal = .true.
-  if (nosym) time_reversal = .false.
-  t_rev(:) = 0
-  xqq (:) =0.d0
-  at = at_
-  bg = bg_
-  CALL set_sym_bl ( )
-  !
-  if (nosym) then
-     nrot = 1
-     nsym = 1
-  ENDIF
-  CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg, nqx, &
-                           0,0,0, nk1,nk2,nk3, nq, q, wk)
-  !
-  CALL find_sym ( nat, tau, ityp, .not.time_reversal, mdum )
-  !
-  CALL irreducible_BZ (nrot, s, nsym, time_reversal, magnetic_sym, &
-                       at, bg, nqx, nq, q, wk, t_rev)
-  !
-  CALL tetra_init (nsym, s, time_reversal, t_rev, at, bg, nqx, 0, 0, 0, &
-       nk1, nk2, nk3, nq, q)
-  !
-  RETURN
-END SUBROUTINE gen_qpoints
 !
 !---------------------------------------------------------------------
 subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
-     &             gam_blk, nat_blk,    at_blk,bg_blk,tau_blk,omega_blk, &
+     &             gam_blk, nat_blk, at_blk,bg_blk,tau_blk,omega_blk, &
      &             frcg, nr1,nr2,nr3, rws,nrws, fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
@@ -2033,14 +1879,14 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
   REAL(DP)       :: q(3), tau(3,nat), at(3,3), bg(3,3), alat, rws(0:3,nrws)
   REAL(DP)       :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk, &
                     frcg(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
-  COMPLEX(DP)  :: gam_blk(3,3,nat_blk,nat_blk),f_of_q(3,3,nat,nat)
-  COMPLEX(DP) ::  gam(3,3,nat,nat)
-  LOGICAL :: fd
+  COMPLEX(DP)    :: gam_blk(3,3,nat_blk,nat_blk),f_of_q(3,3,nat,nat)
+  COMPLEX(DP)    :: gam(3,3,nat,nat)
+  LOGICAL        :: fd
   !
   ! local variables
   !
   REAL(DP)        :: arg
-  complex(DP)     :: cfac(nat)
+  COMPLEX(DP)     :: cfac(nat)
   INTEGER         :: i,j,k, na,nb, na_blk, nb_blk, iq
   REAL(DP)        :: qp(3), qbid(3,nsc) ! automatic array
   !
@@ -2090,130 +1936,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
 end subroutine setgam
 !
 !--------------------------------------------------------------------
-function dos_gam (nbndx, nq, jbnd, gamma, et, ef)
-  !--------------------------------------------------------------------
-  ! calculates weights with the tetrahedron method (Bloechl version)
-  ! this subroutine is based on tweights.f90 belonging to PW
-  ! it calculates a2F on the surface of given frequency <=> histogram
-  ! Band index means the frequency mode here
-  ! and "et" means the frequency(mode,q-point)
-  !
-  USE kinds,       ONLY: DP
-  USE parameters
-  USE ktetra, ONLY : ntetra, tetra
-  implicit none
-  !
-  INTEGER :: nq, nbndx, jbnd
-  REAL(DP) :: et(nbndx,nq), gamma(nbndx,nq), func
-
-  REAL(DP) :: ef
-  REAL(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra(4)
-  INTEGER      :: ik, ibnd, nt, nk, ns, i, ik1, ik2, ik3, ik4, itetra(4)
-
-  REAL(DP) ::   f12,f13,f14,f23,f24,f34, f21,f31,f41,f42,f32,f43
-  REAL(DP) ::   P1,P2,P3,P4, G, o13, Y1,Y2,Y3,Y4, eps,vol, Tint
-  REAL(DP) :: dos_gam
-
-  Tint = 0.0d0
-  o13 = 1.0_dp/3.0_dp
-  eps  = 1.0d-14
-  vol  = 1.0d0/ntetra
-  P1 = 0.0_dp
-  P2 = 0.0_dp
-  P3 = 0.0_dp
-  P4 = 0.0_dp
-  DO nt = 1, ntetra
-     ibnd = jbnd
-     !
-     ! etetra are the energies at the vertexes of the nt-th tetrahedron
-     !
-     DO i = 1, 4
-        etetra(i) = et(ibnd, tetra(i,nt))
-     ENDDO
-     itetra(1) = 0
-     CALL hpsort (4,etetra,itetra)
-     !
-     ! ...sort in ascending order: e1 < e2 < e3 < e4
-     !
-     e1 = etetra (1)
-     e2 = etetra (2)
-     e3 = etetra (3)
-     e4 = etetra (4)
-     !
-     ! kp1-kp4 are the irreducible k-points corresponding to e1-e4
-     !
-     ik1 = tetra(itetra(1),nt)
-     ik2 = tetra(itetra(2),nt)
-     ik3 = tetra(itetra(3),nt)
-     ik4 = tetra(itetra(4),nt)
-     Y1  = gamma(ibnd,ik1)/et(ibnd,ik1)
-     Y2  = gamma(ibnd,ik2)/et(ibnd,ik2)
-     Y3  = gamma(ibnd,ik3)/et(ibnd,ik3)
-     Y4  = gamma(ibnd,ik4)/et(ibnd,ik4)
-
-     IF ( e3 < ef .and. ef < e4) THEN
-
-        f14 = (ef-e4)/(e1-e4)
-        f24 = (ef-e4)/(e2-e4)
-        f34 = (ef-e4)/(e3-e4)
-
-        G  =  3.0_dp * f14 * f24 * f34 / (e4-ef)
-        P1 =  f14 * o13
-        P2 =  f24 * o13
-        P3 =  f34 * o13
-        P4 =  (3.0_dp - f14 - f24 - f34 ) * o13
-
-     ELSE IF ( e2 < ef .and. ef < e3 ) THEN
-
-        f13 = (ef-e3)/(e1-e3)
-        f31 = 1.0_dp - f13
-        f14 = (ef-e4)/(e1-e4)
-        f41 = 1.0_dp-f14
-        f23 = (ef-e3)/(e2-e3)
-        f32 = 1.0_dp - f23
-        f24 = (ef-e4)/(e2-e4)
-        f42 = 1.0_dp - f24
-
-        G   =  3.0_dp * (f23*f31 + f32*f24)
-        P1  =  f14 * o13 + f13*f31*f23 / G
-        P2  =  f23 * o13 + f24*f24*f32 / G
-        P3  =  f32 * o13 + f31*f31*f23 / G
-        P4  =  f41 * o13 + f42*f24*f32 / G
-        G   =  G / (e4-e1)
-
-     ELSE IF ( e1 < ef .and. ef < e2 ) THEN
-
-        f12 = (ef-e2)/(e1-e2)
-        f21 = 1.0_dp - f12
-        f13 = (ef-e3)/(e1-e3)
-        f31 = 1.0_dp - f13
-        f14 = (ef-e4)/(e1-e4)
-        f41 = 1.0_dp - f14
-
-        G  =  3.0_dp * f21 * f31 * f41 / (ef-e1)
-        P1 =  o13 * (f12 + f13 + f14)
-        P2 =  o13 * f21
-        P3 =  o13 * f31
-        P4 =  o13 * f41
-
-     ELSE
-
-        G = 0.0_dp
-
-     ENDIF
-
-     Tint = Tint + G * (Y1*P1 + Y2*P2 + Y3*P3 + Y4*P4) * vol
-
-  ENDDO   ! ntetra
-
-
-  dos_gam = Tint  !2 because DOS_ee is per 1 spin
-
-  RETURN
-end function dos_gam
 !
-!
-!-----------------------------------------------------------------------
 subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   !-----------------------------------------------------------------------
   !
@@ -2300,7 +2023,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 !  search the symmetries only if there are no G such that Sq -> q+G
 !
   search_sym=.TRUE.
-  IF ( ANY ( ft(:,1:nsymq) > 1.0d-8 ) ) THEN
+  IF ( ANY ( ABS(ft(:,1:nsymq)) > 1.0d-8 ) ) THEN
      DO isym= 1,nsymq
         search_sym=( search_sym.and.(ABS(gi(1,isym))<1.d-8).and.  &
                                     (ABS(gi(2,isym))<1.d-8).and.  &
@@ -2324,64 +2047,67 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   END SUBROUTINE find_representations_mode_q
 
 !mz adds this routine
-SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq_zg, & 
-                      q_external, zero_one_phonon, full_phonon, atmsf_zg_a, atmsf_zg_b, & 
-                      dim1, dim2, dim3, tau, alat, atm, atom_resolved, &
-                      ntypx,at,q_in_cryst_coord,T) 
-! we start here with the WRITE_eigenvectors.f90 routine
-  use kinds, only: dp
-  use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
-                       K_BOLTZMANN_SI, AMU_SI, pi , BOHR_RADIUS_ANGS
+SUBROUTINE diffuse_scattering(nq, nq_super, nq_strft, nat, ntyp, amass, ityp, q, w2, &
+               z_nq_zg, q_external, zero_one_phonon, full_phonon, atmsf_a, atmsf_b, & 
+               dim1, dim2, dim3, tau, alat, atm, atom_resolved, mode_resolved, &
+               ntypx, at, q_in_cryst_coord, T, eps2, print_raw_data, &
+               nrots, kres1, kres2, kmin, kmax, col1, col2, Np) 
+  ! we start here with the WRITE_eigenvectors.f90 routine
+  USE kinds,      ONLY : dp
+  USE constants,  ONLY : amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
+                         K_BOLTZMANN_SI, AMU_SI, pi, BOHR_RADIUS_ANGS
   USE cell_base,  ONLY : bg
   USE io_global,  ONLY : ionode, ionode_id
   USE mp_global,  ONLY : inter_pool_comm
   USE mp,         ONLY : mp_bcast, mp_barrier, mp_sum
   USE mp_world,   ONLY : world_comm
-  implicit none
+  ! 
+  IMPLICIT NONE
   ! input
-  LOGICAL, INTENT(in)          :: q_in_cryst_coord, q_external
-  LOGICAL, INTENT(in)          :: zero_one_phonon, full_phonon, atom_resolved
+  LOGICAL, INTENT(in)          :: q_in_cryst_coord, q_external, print_raw_data
+  LOGICAL, INTENT(in)          :: zero_one_phonon, full_phonon
+  LOGICAL, INTENT(in)          :: atom_resolved, mode_resolved
   INTEGER, INTENT(in)          :: dim1, dim2, dim3, T 
   INTEGER, INTENT(in)          :: nq, nat, ntyp, ntypx, nq_super, nq_strft
-  REAL(DP), INTENT(in)         :: alat
+  INTEGER, INTENT(in)          :: nrots, kres1, kres2, col1, col2, Np
+  REAL(DP), INTENT(in)         :: kmin, kmax
+  REAL(DP), INTENT(in)         :: alat, eps2
   REAL(DP), INTENT(in)         :: at(3, 3)
-  REAL(DP), intent(in)         :: atmsf_zg_a(ntypx, 5), atmsf_zg_b(ntypx, 5)
+  REAL(DP), intent(in)         :: atmsf_a(ntypx, 5), atmsf_b(ntypx, 5)
   REAL(DP), INTENT(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
   ! nq is the number of qpoints in sets A and B
   CHARACTER(LEN=3), INTENT(in) :: atm(ntypx)
   INTEGER ityp(nat)
-  complex(DP), INTENT(in)      :: z_nq_zg(3*nat,3*nat,nq)
+  COMPLEX(DP), INTENT(in)      :: z_nq_zg(3 * nat, 3 * nat, nq)
   !
   ! local
   !
-  INTEGER                  :: nat3, na, nta, ipol, i, j, k, qp, qp2, ii, p, p1, ntap,kp
-  INTEGER                  :: nq_tot 
+  INTEGER                  :: nat3, na, nta, ipol, i, j, ii 
+  INTEGER                  :: nq_tot, qp, qp2, p, p1, ntap, k, kp 
   INTEGER                  :: ctr, ctr2, lower_bnd, upper_bnd, qlistA(nq)
   ! nq_tot total number of q-points (including sets A,B,C)
   REAL(DP)                 :: freq(3 * nat, nq), ph_w(3 * nat, nq),l_q(3 * nat, nq) 
   REAL(DP)                 :: q_A(3), q_B(3), atm_ffct(nat, nq), p_q(3 * nat, nq), e_nq(3 * nat, nq)
-  REAL(DP)                 :: hbar, ang, dotp, dotp2, dotp3, dotp4, ph_w_mean
-  REAL(DP), PARAMETER      :: eps = 1.0d-4 !, 
+  REAL(DP)                 :: hbar, ang, dotp, dotp2, dotp3, dotp4, ph_w_mean, units
+  REAL(DP), PARAMETER      :: eps = 1.0d-4
   ! l_q is the amplitude \sigma at temperature T, e_nq --> to calculate total vibrational energy
   ! p_q is the momentum on the nuclei \hbar\2\l_\bq\nu \SQRT(n_{q\nu,T}+1/2)
   !
-  complex(DP)              :: imagi
-  complex(DP)              :: z_zg(3 * nat,3 * nat, nq)
-  CHARACTER(len=256)       :: filename, pointer_mz
+  COMPLEX(DP)              :: imagi
+  COMPLEX(DP)              :: z_zg(3 * nat,3 * nat, nq)
+  CHARACTER(len=256)       :: filename, pt_mz, pt_mz2
   ! ALLOCATE TABLES
-  !COMPLEX(DP), ALLOCATABLE :: DW_T_fact(:,:), strctr_fact(:,:,:,:), strctr_fact_q1(:,:,:)
-  !COMPLEX(DP), ALLOCATABLE :: DW_T_fact_q0(:,:), strctr_fact_q0(:,:)
   REAL(DP),    ALLOCATABLE :: DW_T_fact_kkp(:, :), DW_T_fact_q0_kkp(:, :), DW_T_fact_q0(:)
   REAL(DP),    ALLOCATABLE :: sigma_DW(:, :, :), Q_ppkkaa(:, :, :)
-  REAL(DP),    ALLOCATABLE :: strctr_fact_kkp(:, :, :), strctr_fact(:), strctr_fact_j(:, :)!, strctr_fact_full(:)
-  REAL(DP),    ALLOCATABLE :: strctr_fact_q0(:), strctr_fact_q0_kkp(:, :, :)
-  Complex(DP), ALLOCATABLE :: strctr_fact_full(:), strctr_fact_full_kk(:, :, :)
+  REAL(DP),    ALLOCATABLE :: strf_kkp(:, :, :), strf(:), strf_j(:, :)
+  REAL(DP),    ALLOCATABLE :: strf_q0(:), strf_q0_kkp(:, :, :), strf_rot(:,:)
+  COMPLEX(DP), ALLOCATABLE :: strf_full(:), strf_full_kk(:, :, :)
   ! for displacements
-  ! matrices to account for the coupling terms between different phonon branches ! 
   REAL(DP), ALLOCATABLE    :: Rlist(:, :)
   !
   !  
   hbar   = 0.5 * H_PLANCK_SI / pi ! reduce Plnack constant
+  units  = DBLE(2.d0 * pi / alat / BOHR_RADIUS_ANGS)
   ang    = 1.0E-10            ! angstrom units
   imagi  = (0.0d0, 1.0d0) !imaginary unit
   ! Inititialize eigenvectors matrix
@@ -2391,7 +2117,7 @@ SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq
   nat3   = 3 * nat
   !
   !
-  freq = 0.0
+  freq = 0.d0
   CALL fkbounds( nq, lower_bnd, upper_bnd )
   DO qp =  lower_bnd, upper_bnd ! 1, nq
   ! convert eigenvectors to mass-unsCALLed
@@ -2412,6 +2138,15 @@ SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq
   CALL mp_sum(freq, inter_pool_comm)
   CALL mp_sum(z_zg, inter_pool_comm)
   CALL mp_barrier(inter_pool_comm)
+  !
+  IF (ionode) THEN
+   WRITE(*,*) nq, nat3
+   DO i = 1, nat3
+    DO qp =  1, nq
+      IF (w2(i, qp) < 0.0 .AND. ionode) WRITE(*,*) "WARNING: Negative frequencies", w2(i, qp)
+    ENDDO
+   ENDDO
+  ENDIF
   ! Einstein model set polarization vectors to unity
   !
   ! z_zg = (1.d0, 1.d0)/DBLE(SQRT(real(2.d0*nat3))) ! For Einstein model
@@ -2447,7 +2182,7 @@ SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq
   CALL fkbounds( nq, lower_bnd, upper_bnd )
   DO qp =  lower_bnd, upper_bnd ! 1, nq
     DO i = 1, nat3 
-      IF (w2(i, qp) .lt. 0.0d0) THEN
+      IF (w2(i, qp) .lt. 0.0d0 + eps2) THEN
           l_q(i, qp) = 0.d0
           p_q(i, qp) = 0.d0
       ELSE
@@ -2457,354 +2192,398 @@ SUBROUTINE diffuse_scattering(nq,nq_super,nq_strft,nat,ntyp,amass,ityp,q,w2,z_nq
        ! l_qn SQRT(2n_qn +1) = sigma_qn
     ENDDO
    ! First set all displ. amplitudes to zero for accoustic modes for every G 
-    if ( (( ABS(MODULO(ABS(q(1, qp)),1.0d0)) .LT. eps) .OR. ( abs(MODULO(abs(q(1, qp)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q(2, qp)),1.0d0)) .LT. eps) .OR. ( abs(MODULO(abs(q(2, qp)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q(3, qp)),1.0d0)) .LT. eps) .OR. ( abs(MODULO(abs(q(3, qp)),1.0d0)-1.0d0) .LT. eps)) ) THEN
-         l_q(1, qp) = 0.0d0
-         l_q(2, qp) = 0.0d0
-         l_q(3, qp) = 0.0d0
-         p_q(1, qp) = 0.0d0
-         p_q(2, qp) = 0.0d0
-         p_q(3, qp) = 0.0d0
+    IF ( (( ABS(MODULO(ABS(q(1, qp)),1.0d0)) .LT. eps) .OR. & 
+          ( ABS(MODULO(ABS(q(1, qp)),1.0d0) - 1.0d0) .LT. eps)) .AND. &
+         (( ABS(MODULO(ABS(q(2, qp)),1.0d0)) .LT. eps) .OR. & 
+          ( ABS(MODULO(ABS(q(2, qp)),1.0d0) - 1.0d0) .LT. eps)) .AND. &
+         (( ABS(MODULO(ABS(q(3, qp)),1.0d0)) .LT. eps) .OR. & 
+          ( ABS(MODULO(ABS(q(3, qp)),1.0d0)-1.0d0) .LT. eps)) ) THEN
+            l_q(1, qp) = 0.0d0
+            l_q(2, qp) = 0.0d0
+            l_q(3, qp) = 0.0d0
+            p_q(1, qp) = 0.0d0
+            p_q(2, qp) = 0.0d0
+            p_q(3, qp) = 0.0d0
     ENDIF
   ENDDO ! qp
-CALL mp_sum(l_q, inter_pool_comm)
-CALL mp_sum(p_q, inter_pool_comm)
-CALL mp_barrier(inter_pool_comm)
-!IF (ionode) WRITE(*,*) "step2"
-! 
-! To determine which points belong in set A
-qlistA = 0
-CALL fkbounds( nq, lower_bnd, upper_bnd )
-  DO qp =  lower_bnd, upper_bnd ! 1, nq
-    q_A(1) = q(1, qp) +  q(1, qp)
-    q_A(2) = q(2, qp) +  q(2, qp)
-    q_A(3) = q(3, qp) +  q(3, qp)
+  CALL mp_sum(l_q, inter_pool_comm)
+  CALL mp_sum(p_q, inter_pool_comm)
+  CALL mp_barrier(inter_pool_comm)
   ! 
-  !  q_A = q(:, qp) +  q(:, qp)
-    IF ( (( ABS(MODULO(ABS(q_A(1)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(1)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q_A(2)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(2)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q_A(3)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(3)),1.0d0)-1.0d0) .LT. eps)) ) THEN
-          qlistA(qp) = 1
-          !WRITE(*,*) "qAAA", q(:, qp)
-    ENDIF
-  ENDDO
-CALL mp_sum(qlistA, inter_pool_comm)
-CALL mp_barrier(inter_pool_comm)
-!  
-!
-! Exponent of DW factors 
-ALLOCATE(sigma_DW(nat,3,3))
-! sigma_DW thermal displacement tensor
-CALL fkbounds( nq - nq_strft, lower_bnd, upper_bnd )
-!WRITE(*,*) "mz_para", lower_bnd, upper_bnd, nq - nq_strft
+  ! To determine which points belong in set A
+  qlistA = 0
+  CALL fkbounds( nq, lower_bnd, upper_bnd )
+    DO qp =  lower_bnd, upper_bnd ! 1, nq
+      q_A(1) = q(1, qp) +  q(1, qp)
+      q_A(2) = q(2, qp) +  q(2, qp)
+      q_A(3) = q(3, qp) +  q(3, qp)
+    ! 
+    !  q_A = q(:, qp) +  q(:, qp)
+      IF ( (( ABS(MODULO(ABS(q_A(1)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(1)), 1.0d0) - 1.0d0) .LT. eps)) .AND. &
+           (( ABS(MODULO(ABS(q_A(2)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(2)), 1.0d0) - 1.0d0) .LT. eps)) .AND. &
+           (( ABS(MODULO(ABS(q_A(3)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(3)), 1.0d0) - 1.0d0) .LT. eps)) ) THEN
+            qlistA(qp) = 1
+            !WRITE(*,*) "qAAA", q(:, qp)
+      ENDIF
+    ENDDO
+  CALL mp_sum(qlistA, inter_pool_comm)
+  CALL mp_barrier(inter_pool_comm)
+  !  
+  !
+  ! Exponent of DW factors 
+  ALLOCATE(sigma_DW(nat, 3, 3))
+  ! sigma_DW: thermal displacement tensor
+  CALL fkbounds( nq - nq_strft, lower_bnd, upper_bnd )
+  !
   sigma_DW = 0.0d0
   DO qp = lower_bnd, upper_bnd  ! for q-points in supercell 
   ! DO qp = 1, nq_super
     DO k= 1, nat
       nta = ityp(k)
-      DO i= 1,3  ! i is for cart directions
-        DO p = 1,3 ! p is also for cartesian
-          DO j = 1,nat3 ! modes \nu
+      DO i= 1, 3  ! i is for cart directions
+        DO p = 1, 3 ! p is also for cartesian
+          DO j = 1, nat3 ! modes \nu
             IF (qlistA(qp) .EQ. 1) THEN
-              sigma_DW(k,i,p) = sigma_DW(k,i,p) +  & 
-                            1.0/DBLE(nq_tot)/DBLE(2.0d0*amass(nta))*DBLE(z_zg((k-1)*3+i,j,qp) &
-                            *CONJG(z_zg((k-1)*3+p,j,qp)))*l_q(j,qp)**2
+              sigma_DW(k, i, p) = sigma_DW(k, i, p) + 1.0 / DBLE(nq_tot) / DBLE(2.0d0 * amass(nta)) * & 
+                                  DBLE(z_zg((k - 1) * 3 + i, j, qp) * & 
+                                  CONJG(z_zg((k - 1) * 3 + p, j, qp))) * l_q(j, qp)**2
             ELSE 
-              sigma_DW(k,i,p) = sigma_DW(k,i,p) +  & 
-                            1.0/DBLE(nq_tot)/DBLE(amass(nta))*DBLE(z_zg((k-1)*3+i,j,qp)*CONJG(z_zg((k-1)*3+p,j,qp)))*l_q(j,qp)**2
-  ! an extra factor of 2 is need because we have only points in set B
+              sigma_DW(k, i, p) = sigma_DW(k, i, p) + 1.0/DBLE(nq_tot) / DBLE(amass(nta)) * & 
+                                  DBLE(z_zg((k - 1) * 3 + i, j, qp) * & 
+                                  CONJG(z_zg((k - 1) * 3 + p, j, qp))) * l_q(j, qp)**2
+               ! an extra factor of 2 is need because we have only points in set B
             ENDIF
           ENDDO ! j
         ENDDO ! p
       ENDDO ! i
     ENDDO ! k
   ENDDO ! qp
-!
-CALL mp_sum(sigma_DW, inter_pool_comm)
-CALL mp_barrier(inter_pool_comm)
-!
-IF (ionode) THEN
-  WRITE(*,*) "DW exponent"
-  DO k= 1, nat
-   WRITE(*,*) "atom:", k
-    DO i= 1,3  ! i is for cart directions
-       WRITE(*,'(3F14.8)') (sigma_DW(k,i,p), p = 1, 3)
-    ENDDO ! i
-  ENDDO ! k
-ENDIF
-!!!!!!!!!!!!!
-IF (ionode) THEN
-  atm_ffct = 0.d0
-  DO k = 1, nat
-    nta = ityp(k)
-    DO qp = nq_super + 1, nq !1, qpts_strf
-       DO ii = 1, 5
-         q_A = q(:, qp) !* ( 2.d0 * pi / alat / BOHR_RADIUS_ANGS)
-         CALL cryst_to_cart(1, q_A, bg, +1)
-         q_A = q_A * ( 2.d0 * pi / alat / BOHR_RADIUS_ANGS)
-         atm_ffct(k, qp) = atm_ffct(k, qp) + (atmsf_zg_a(nta, ii) * EXP(-atmsf_zg_b(nta, ii) * &
-                           (NORM2(q_A) / 4.d0 / pi)**2))
-       ENDDO
-    ENDDO
-  ENDDO
-ENDIF !(ionode)
-CALL mp_bcast(atm_ffct, ionode_id, world_comm)
-!
-!! atm_ffct = 1
- ! convert back to crystal
-!!!!!!!!!!!!!
-IF (zero_one_phonon) THEN
-  ALLOCATE(DW_T_fact_q0_kkp(nq, nat),DW_T_fact_q0(nq))
-  ALLOCATE(strctr_fact_q0(nq))
-  IF (atom_resolved) ALLOCATE(strctr_fact_q0_kkp(nq, nat, nat))
-   !CALL cryst_to_cart(nq,q,at,1)
-   DW_T_fact_q0 = 0.0d0!(0.0d0, 0.0d0)
-   DW_T_fact_q0_kkp = 0.0d0!(0.0d0, 0.0d0)
-   strctr_fact_q0 = 0.0d0!(0.0d0, 0.0d0)
-  !  
-  CALL fkbounds( nq - nq_super, lower_bnd, upper_bnd )
-  DO qp = lower_bnd + nq_super, upper_bnd + nq_super
-    q_A(1) = q(1, qp) !+  q(1,qp)
-    q_A(2) = q(2, qp) !+  q(2,qp)
-    q_A(3) = q(3, qp) !+  q(3,qp)
-    
-  !  q_A = q(:,qp) +  q(:,qp)
-    if ( (( ABS(MODULO(ABS(q_A(1)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(1)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q_A(2)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(2)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q_A(3)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(3)),1.0d0)-1.0d0) .LT. eps)) ) THEN
-        !WRITE(*,*) "q_mz", q(:,qp), l_q(:,qp)
-        ! 
-        CALL cryst_to_cart(1, q(:,qp), bg, +1)
-        DO k= 1 , nat ! k represents the atom
-           nta = ityp(k)       
-                 dotp = 0.0d0
-                 DO i= 1,3  ! i is for cart directions
-                  DO p = 1,3 ! p is also for cartesian
-                    dotp = dotp + q(i, qp) * q(p, qp) * sigma_DW(k, i, p) * (2 * pi / alat / BOHR_RADIUS_ANGS)**2 
-                   ! this will be complex otherwise
-                  ENDDO ! p
-                 ENDDO ! i
-                 DW_T_fact_q0_kkp(qp, k) = DW_T_fact_q0_kkp(qp, k) + dotp ! DW factor for each q
-                !WRITE(*,*) "mzole", dotp, DW_T_fact_q0_kkp(qp,k)
-        ENDDO ! k
-        CALL cryst_to_cart(1, q(:,qp), at, -1)
-    ENDIF
-  ENDDO ! qp
-CALL mp_sum(DW_T_fact_q0_kkp, inter_pool_comm)
-CALL mp_barrier(inter_pool_comm)
   !
-  ! evaluate structure factor for zero-phonon contribution
-DO qp = lower_bnd + nq_super, upper_bnd + nq_super
-    q_A(1) = q(1,qp) !+  q(1,qp)
-    q_A(2) = q(2,qp) !+  q(2,qp)
-    q_A(3) = q(3,qp) !+  q(3,qp)
-  !! q_A = q(:,qp) +  q(:,qp)
-    if ( (( ABS(MODULO(ABS(q_A(1)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(1)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q_A(2)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(2)),1.0d0)-1.0d0) .LT. eps)) .AND. &
-         (( ABS(MODULO(ABS(q_A(3)),1.0d0)) .LT. eps) .OR. &
-          ( ABS(MODULO(ABS(q_A(3)),1.0d0)-1.0d0) .LT. eps)) ) THEN
-    CALL cryst_to_cart(1,q(:,qp),bg,+1)
-    DO k = 1 , nat ! k represents the atom
-       DO kp = 1 , nat ! k represents the atom
-             dotp = 0.0d0
-              DO ii = 1, 3
-                 dotp = dotp + q(ii,qp) * (tau(ii,k) - tau(ii,kp))! 
-              ENDDO
-              !WRITE(*,*) "mz_ole2",  q(:,qp), tau(:,k), cos(2*pi*dotp)
-             IF (atom_resolved) THEN
-               strctr_fact_q0_kkp(qp,k,kp) = EXP(-DW_T_fact_q0_kkp(qp, k))*EXP(-DW_T_fact_q0_kkp(qp, kp))& 
-                                          !*nq_tot*nq_tot*EXP(imagi*2*pi*dotp) * atm_ffct(k, qp) * atm_ffct(kp, qp)
-                                          * nq_tot * nq_tot * COS(2*pi*dotp) * atm_ffct(k, qp) * atm_ffct(kp, qp)
-             ENDIF
-             strctr_fact_q0(qp) =  strctr_fact_q0(qp) + EXP(-DW_T_fact_q0_kkp(qp,k))*EXP(-DW_T_fact_q0_kkp(qp,kp))& 
-                                          * nq_tot * nq_tot * COS(2*pi*dotp) * atm_ffct(k, qp) * atm_ffct(kp, qp) !+ strctr_fact_q0_kkp(qp,k,kp) 
-        ENDDO ! kp
-    ENDDO ! k
-    CALL cryst_to_cart(1, q(:,qp), at, -1)
-    ENDIF
-ENDDO ! qp
-IF (atom_resolved) CALL mp_sum(strctr_fact_q0_kkp, inter_pool_comm)
-CALL mp_sum(strctr_fact_q0, inter_pool_comm)
-CALL mp_barrier(inter_pool_comm)
-ENDIF ! if zero_one_phonon
-! 
-! convert to Cartesian
-CALL cryst_to_cart(nq, q, bg, +1)
-! now for structure factor one and full phonon contribution
-ALLOCATE(DW_T_fact_kkp(nq, nat)) 
-DW_T_fact_kkp = 0.0d0!(0.0d0, 0.0d0)
-CALL fkbounds( nq - nq_super, lower_bnd, upper_bnd )
-DO qp = lower_bnd + nq_super, upper_bnd + nq_super
-  DO k = 1, nat ! k represents the atom
-    dotp = 0.0d0
-    !CALL cryst_to_cart(1,q(:,qp),bg,+1) ! unne
-    DO i= 1,3  ! i is for cart directions
-     DO p = 1,3 ! p is also for cartesian
-       dotp = dotp + q(i, qp) * q(p, qp) * sigma_DW(k, i, p) * (2.0d0 * pi / alat / BOHR_RADIUS_ANGS)**2
-       ctr2 = ctr2 + 1
-          ! this will be complex otherwise
-     ENDDO ! p
-    ENDDO ! i
-    DW_T_fact_kkp(qp, k) = DW_T_fact_kkp(qp, k) + dotp
-   !CALL cryst_to_cart(1,q(:,qp),at,-1) ! unne
-  ENDDO ! k
-   !WRITE(*,*) "check_point",  DW_T_fact_kkp(qp,k) , EXP(-DW_T_fact_kkp(qp,k))
-ENDDO ! qp
-CALL mp_sum(DW_T_fact_kkp, inter_pool_comm)
-CALL mp_barrier(inter_pool_comm)
-DEALLOCATE(sigma_DW)
-! 
-! compute one_phonon contribution
-IF (zero_one_phonon) THEN
-! Here q_pts should be in cartessian
-  ALLOCATE(strctr_fact_j(nq,nat3))
-  IF (atom_resolved)  ALLOCATE(strctr_fact_kkp(nq, nat, nat))
-  !WRITE(*,*) "mz6"
-  IF (atom_resolved) strctr_fact_kkp = 0.0d0
-  strctr_fact_j =  0.0d0
-
-  CALL fkbounds( nq - nq_super, lower_bnd, upper_bnd )
-  DO qp = lower_bnd + nq_super, upper_bnd + nq_super
-    DO k = 1 , nat ! k represents the atom
-     nta = ityp(k)       
-      DO kp = 1 , nat ! k represents the atom
-         ntap = ityp(kp)       
-         dotp2 = 0.0d0
-         DO ii= 1,3
-            dotp2 = dotp2 + q(ii,qp)*(tau(ii,k)-tau(ii,kp))! 
-         ENDDO
-          DO j = 1, nat3 ! modes \nu
-           dotp = 0.0d0
-           DO i = 1, 3  ! i is for cart directions
-            DO p = 1, 3 ! p is also for cartesian
-              dotp = dotp + q(i, qp) * q(p, qp) * (2.0d0 * pi / alat / BOHR_RADIUS_ANGS)**2 * & ! 
-                        DBLE(z_zg((k-1)*3+i,j,qp)*CONJG(z_zg((kp-1)*3+p,j,qp)) * EXP(-imagi * 2.0d0 * pi * dotp2) ) 
-                       
-            ENDDO ! p
-           ENDDO ! i
-              ! I do not really need to store this matrix
-             IF (atom_resolved) THEN 
-               strctr_fact_kkp(qp, k, kp) = strctr_fact_kkp(qp, k, kp) & 
-                                       + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp)) & 
-                                       * nq_tot / DBLE(SQRT(amass(nta) * amass(ntap))) * dotp * l_q(j, qp)**2 &
-                                       * atm_ffct(k, qp) * atm_ffct(kp, qp) 
-             ENDIF
-            !  IF (qlistA(qp) .EQ. 1) THEN
-            !    strctr_fact_j(qp, j) = strctr_fact_j(qp, j) + 2.0d0 * strctr_fact_kkp(qp, k, kp) 
-            !  ELSE
-                strctr_fact_j(qp, j) = strctr_fact_j(qp, j) + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp)) & 
-                                       * nq_tot / DBLE(SQRT(amass(nta) * amass(ntap))) * dotp * l_q(j, qp)**2 &
-                                       * atm_ffct(k, qp) * atm_ffct(kp, qp) 
-          ENDDO ! j
-      ENDDO ! kp
-    ENDDO ! k
-  ENDDO ! qp
-  IF (atom_resolved) CALL mp_sum(strctr_fact_kkp, inter_pool_comm)
-  CALL mp_sum(strctr_fact_j, inter_pool_comm)
+  CALL mp_sum(sigma_DW, inter_pool_comm)
   CALL mp_barrier(inter_pool_comm)
-ENDIF ! zero_one_phonon
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-IF (zero_one_phonon) THEN
-  ALLOCATE(strctr_fact(nq))
-  strctr_fact = 0.0d0
-  DO qp = nq_super + 1, nq
-     DO j = 1,nat3 
-        strctr_fact(qp) = strctr_fact(qp) + strctr_fact_j(qp,j)
-        !
-        strctr_fact_j(qp,j) = strctr_fact_j(qp,j) + strctr_fact_q0(qp)
-     ENDDO
-     strctr_fact(qp) = strctr_fact(qp) + strctr_fact_q0(qp)
-     IF (atom_resolved) strctr_fact_kkp(qp, :, :) = strctr_fact_kkp(qp, :, :) + strctr_fact_q0_kkp(qp, :, :)
-  ENDDO
-  
-  IF (ionode) THEN 
-    filename = 'Bragg_scattering.dat'
-    OPEN (unit = 90, file = filename, status = 'unknown', form = 'formatted')
-    filename = 'structure_factor_q_nu_one-phonon.dat'
-    OPEN (unit = 95, file = filename, status = 'unknown', form = 'formatted')
-    filename = 'structure_factor_one-phonon.dat'
-    OPEN (unit = 97, file = filename, status = 'unknown', form = 'formatted')
-    !
-    DO qp = nq_super + 1, nq
-       WRITE (90, '(40f26.6)') q(:,qp)*(2*pi/alat/BOHR_RADIUS_ANGS), strctr_fact_q0(qp)
-       WRITE (95, '(40f26.6)') q(:,qp)*(2*pi/alat/BOHR_RADIUS_ANGS), ( strctr_fact_j(qp, j),  j = 1, nat3)
-       WRITE (97, '(40f26.6)') q(:,qp)*(2*pi/alat/BOHR_RADIUS_ANGS),  strctr_fact(qp) 
-  ! 
-    ENDDO
   !
-    CLOSE(90) 
-    CLOSE(95)
-    CLOSE(97)
-    CLOSE(98)
-    CLOSE(99)
+  IF (ionode) THEN
+    WRITE(*,*) "Mean-squared displacement (Ang**2)"
+    DO k= 1, nat
+      WRITE(*,*) "atom:", k
+      DO i= 1,3  ! i is for cart directions
+         WRITE(*,'(3F14.8)') (2.0d0 * sigma_DW(k, i, p), p = 1, 3)
+      ENDDO ! i
+    ENDDO ! k
+  ENDIF
+  !!!!!!!!!!!!!
+  IF (ionode) THEN
+    atm_ffct = 0.d0
+    DO k = 1, nat
+      nta = ityp(k)
+      DO qp = nq_super + 1, nq !1, qpts_strf
+         DO ii = 1, 5
+           q_A = q(:, qp) 
+           CALL cryst_to_cart(1, q_A, bg, +1)
+           q_A = q_A * units 
+           atm_ffct(k, qp) = atm_ffct(k, qp) + (atmsf_a(nta, ii) * & 
+                             EXP(-atmsf_b(nta, ii) * (NORM2(q_A) / 4.d0 / pi)**2))
+         ENDDO
+      ENDDO
+    ENDDO
+  ENDIF !(ionode)
+  CALL mp_bcast(atm_ffct, ionode_id, world_comm)
+  !
+  IF (zero_one_phonon) THEN
+    ALLOCATE(DW_T_fact_q0_kkp(nq, nat),DW_T_fact_q0(nq))
+    ALLOCATE(strf_q0(nq))
+    IF (atom_resolved) ALLOCATE(strf_q0_kkp(nq, nat, nat))
+     DW_T_fact_q0_kkp = 0.0d0
+     DW_T_fact_q0 = 0.0d0
+     strf_q0 = 0.0d0
+    !  
+    CALL fkbounds( nq - nq_super, lower_bnd, upper_bnd )
+    DO qp = lower_bnd + nq_super, upper_bnd + nq_super
+      q_A(1) = q(1, qp) 
+      q_A(2) = q(2, qp) 
+      q_A(3) = q(3, qp) 
+      !
+      IF ( (( ABS(MODULO(ABS(q_A(1)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(1)), 1.0d0) - 1.0d0) .LT. eps)) .AND. &
+           (( ABS(MODULO(ABS(q_A(2)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(2)), 1.0d0) - 1.0d0) .LT. eps)) .AND. &
+           (( ABS(MODULO(ABS(q_A(3)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(3)), 1.0d0) - 1.0d0) .LT. eps)) ) THEN
+          ! 
+          CALL cryst_to_cart(1, q(:, qp), bg, +1)
+          DO k= 1 , nat ! k represents the atom
+             nta = ityp(k)       
+                   dotp = 0.0d0
+                   DO i= 1, 3  ! i is for cart directions
+                    DO p = 1, 3 ! p is also for cartesian
+                      dotp = dotp + q(i, qp) * q(p, qp) * sigma_DW(k, i, p) * units**2
+                     ! this will be COMPLEX otherwise
+                    ENDDO ! p
+                   ENDDO ! i
+                   DW_T_fact_q0_kkp(qp, k) = DW_T_fact_q0_kkp(qp, k) + dotp ! DW factor for each q
+          ENDDO ! k
+          CALL cryst_to_cart(1, q(:,qp), at, -1)
+      ENDIF
+    ENDDO ! qp
+  CALL mp_sum(DW_T_fact_q0_kkp, inter_pool_comm)
+  CALL mp_barrier(inter_pool_comm)
+    !
+    ! evaluate structure factor for zero-phonon contribution
+  DO qp = lower_bnd + nq_super, upper_bnd + nq_super
+      q_A(1) = q(1, qp) 
+      q_A(2) = q(2, qp) 
+      q_A(3) = q(3, qp) 
+      !
+      IF ( (( ABS(MODULO(ABS(q_A(1)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(1)), 1.0d0) - 1.0d0) .LT. eps)) .AND. &
+           (( ABS(MODULO(ABS(q_A(2)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(2)), 1.0d0) - 1.0d0) .LT. eps)) .AND. &
+           (( ABS(MODULO(ABS(q_A(3)), 1.0d0)) .LT. eps) .OR. &
+            ( ABS(MODULO(ABS(q_A(3)), 1.0d0) - 1.0d0) .LT. eps)) ) THEN
+      CALL cryst_to_cart(1, q(:, qp), bg, +1)
+      DO k = 1, nat ! k for the atom
+         DO kp = 1, nat ! kp for the atom
+               dotp = 0.0d0
+                DO ii = 1, 3
+                   dotp = dotp + q(ii, qp) * (tau(ii, k) - tau(ii, kp))! 
+                ENDDO
+               IF (atom_resolved) THEN
+                 strf_q0_kkp(qp, k, kp) = EXP(-DW_T_fact_q0_kkp(qp, k))*EXP(-DW_T_fact_q0_kkp(qp, kp))& 
+                                        * nq_tot * nq_tot * COS(2.d0 * pi * dotp) * atm_ffct(k, qp) * atm_ffct(kp, qp)
+                                         !*nq_tot*nq_tot*EXP(imagi*2*pi*dotp) * atm_ffct(k, qp) * atm_ffct(kp, qp)
+               ENDIF
+               strf_q0(qp) = strf_q0(qp) + EXP(-DW_T_fact_q0_kkp(qp,k))*EXP(-DW_T_fact_q0_kkp(qp,kp))& 
+                           * nq_tot * nq_tot * COS(2.d0 * pi * dotp) * atm_ffct(k, qp) * atm_ffct(kp, qp)  
+          ENDDO ! kp
+      ENDDO ! k
+      CALL cryst_to_cart(1, q(:,qp), at, -1)
+      ENDIF
+  ENDDO ! qp
+  !
+  IF (atom_resolved) CALL mp_sum(strf_q0_kkp, inter_pool_comm)
+  !
+  CALL mp_sum(strf_q0, inter_pool_comm)
+  CALL mp_barrier(inter_pool_comm)
+  ENDIF ! if zero_one_phonon
+  ! 
+  ! convert to Cartesian
+  CALL cryst_to_cart(nq, q, bg, +1)
+  ! now for structure factor one and full phonon contribution
+  ALLOCATE(DW_T_fact_kkp(nq, nat)) 
+  DW_T_fact_kkp = 0.0d0!(0.0d0, 0.0d0)
+  CALL fkbounds( nq - nq_super, lower_bnd, upper_bnd )
+  DO qp = lower_bnd + nq_super, upper_bnd + nq_super
+    DO k = 1, nat ! k represents the atom
+      dotp = 0.0d0
+      DO i= 1, 3  ! i is for Cart. directions
+        DO p = 1, 3 ! p is also for Cart. directions
+          dotp = dotp + q(i, qp) * q(p, qp) * sigma_DW(k, i, p) * units**2
+          ctr2 = ctr2 + 1
+        ENDDO ! p
+      ENDDO ! i
+      DW_T_fact_kkp(qp, k) = DW_T_fact_kkp(qp, k) + dotp
+    ENDDO ! k
+  ENDDO ! qp
+  !
+  CALL mp_sum(DW_T_fact_kkp, inter_pool_comm)
+  CALL mp_barrier(inter_pool_comm)
+  !
+  DEALLOCATE(sigma_DW)
+  ! 
+  ! compute one_phonon contribution
+  IF (zero_one_phonon) THEN
+  ! Here q_pts should be in cartessian
+    ALLOCATE(strf_j(nq,nat3))
+    IF (atom_resolved)  ALLOCATE(strf_kkp(nq, nat, nat))
+    !WRITE(*,*) "mz6"
+    IF (atom_resolved) strf_kkp = 0.0d0
+    strf_j =  0.0d0
+  
+    CALL fkbounds( nq - nq_super, lower_bnd, upper_bnd )
+    DO qp = lower_bnd + nq_super, upper_bnd + nq_super
+      DO k = 1, nat ! k represents the atom
+        nta = ityp(k)       
+        DO kp = 1, nat ! k represents the atom
+          ntap = ityp(kp)       
+          dotp2 = 0.0d0
+          DO ii = 1, 3
+            dotp2 = dotp2 + q(ii, qp) * (tau(ii, k) - tau(ii, kp))! 
+          ENDDO
+          DO j = 1, nat3 ! modes \nu
+            dotp = 0.0d0
+            DO i = 1, 3  ! i is for cart directions
+              DO p = 1, 3 ! p is also for cartesian
+                dotp = dotp + q(i, qp) * q(p, qp) * units**2 * & ! 
+                     DBLE(z_zg((k - 1) * 3 + i, j, qp) * CONJG(z_zg((kp - 1) * 3 + p, j, qp)) * & 
+                     EXP(-imagi * 2.0d0 * pi * dotp2)) 
+                       
+              ENDDO ! p
+            ENDDO ! i
+            IF (atom_resolved) THEN 
+               strf_kkp(qp, k, kp) = strf_kkp(qp, k, kp) + & 
+                                     EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp)) * & 
+                                     nq_tot / DBLE(SQRT(amass(nta) * amass(ntap))) * dotp * &
+                                     l_q(j, qp)**2  * atm_ffct(k, qp) * atm_ffct(kp, qp) 
+            ENDIF
+            !
+               strf_j(qp, j) = strf_j(qp, j) + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp)) * & 
+                               nq_tot / DBLE(SQRT(amass(nta) * amass(ntap))) * dotp * & 
+                               l_q(j, qp)**2 * atm_ffct(k, qp) * atm_ffct(kp, qp) 
+          ENDDO ! j
+        ENDDO ! kp
+      ENDDO ! k
+    ENDDO ! qp
+    IF (atom_resolved) CALL mp_sum(strf_kkp, inter_pool_comm)
+    CALL mp_sum(strf_j, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+  ENDIF ! zero_one_phonon
+  !
+  !
+  IF (zero_one_phonon) THEN
+    ALLOCATE(strf(nq))
+    strf = 0.0d0
+    DO qp = nq_super + 1, nq
+       DO j = 1,nat3 
+          strf(qp) = strf(qp) + strf_j(qp, j)
+          !
+          strf_j(qp, j) = strf_j(qp, j) + strf_q0(qp)
+       ENDDO
+       strf(qp) = strf(qp) + strf_q0(qp)
+       IF (atom_resolved) strf_kkp(qp, :, :) = strf_kkp(qp, :, :) + strf_q0_kkp(qp, :, :)
+    ENDDO
+    ! APPLY BROADENING and print outputs
+    ctr = 0
+    DO p = nq_super + 1, nq
+      IF ((q(col1, p) .GT. 0.d0 - eps) .AND. (q(col2, p) .GT. 0.d0 - eps)) THEN
+        ctr = ctr + 1
+      ENDIF
+    ENDDO
+    ALLOCATE(strf_rot(ctr * nrots,4))
+    !
+    strf_rot = 0.d0
+    IF (ionode) CALL rotate(strf, q, nq, nq_super, nrots, &
+                            ctr, strf_rot, col1, col2)
+    CALL mp_bcast(strf_rot, ionode_id, world_comm)
+    CALL disca_broadening(strf_rot, ctr * nrots, kres1, kres2, alat, &
+                          kmin, kmax, col1, col2, Np, 'strf_one-ph_broad.dat')
+    ! for mode_resolved
+    IF (mode_resolved) THEN
+      DO j = 1, nat3
+        strf_rot = 0.d0
+        WRITE( pt_mz,'(i2.2)') j
+        filename = 'strf_mode_'//TRIM(pt_mz)//'_broad.dat'
+        IF (ionode) CALL rotate(strf_j(:, j), q, nq, nq_super, nrots, & 
+                                ctr, strf_rot, col1, col2)
+        !
+        CALL mp_bcast(strf_rot, ionode_id, world_comm)
+        CALL disca_broadening(strf_rot, ctr * nrots, kres1, kres2, alat, &
+                              kmin, kmax, col1, col2, Np, filename)
+      ENDDO
+    ENDIF ! mode_resolved
     !
     IF (atom_resolved) THEN
       DO k = 1, nat
-        WRITE( pointer_mz,'(i1.1)') k
-        filename = 'structure_factor_q_zero_one_k_resolved_' // TRIM( pointer_mz ) //'.dat' !'.fp'
-        OPEN (unit = 66, file = filename, status = 'unknown', form = 'formatted')
-        DO qp = nq_super + 1, nq
-         WRITE (66, '(40f26.6)') q(:, qp) * (2*pi/alat/BOHR_RADIUS_ANGS), &
-                        ( DBLE((strctr_fact_kkp(qp, k, kp) + strctr_fact_kkp(qp, kp, k))/2.0d0), kp = 1, k)
-         ! NOTE: We should take the real part if and only if we sum
-         ! [strctr_fact_full_kk(qp, 2, 1) + strctr_fact_full_kk(qp, 1, 2)]/2.
-         ! strctr_fact_full_kk(qp, 2, 1) is not necessarilly real
-               !, aimag(strctr_fact_full(qp))
-        ENDDO ! qp
-        CLOSE(66)
+        DO kp = 1, k
+        strf_rot = 0.d0
+        WRITE( pt_mz,'(i1.1)') k
+        WRITE( pt_mz2,'(i1.1)') kp
+        filename = 'strf_one_k_' // TRIM(pt_mz) // '_' & 
+                                      // TRIM(pt_mz2) // '_broad.dat'
+        ! 
+        IF (ionode) CALL rotate(strf_kkp(:, k, kp), q, nq, nq_super, nrots, & 
+                                ctr, strf_rot, col1, col2)
+        !
+        CALL mp_bcast(strf_rot, ionode_id, world_comm)
+        CALL disca_broadening(strf_rot, ctr * nrots, kres1, kres2, alat, &
+                              kmin, kmax, col1, col2, Np, filename)
+                             !'zero_one_k_'//TRIM()//'_'//TRIM(pt_mz2)//'_broad.dat')
+        ENDDO ! kp
       ENDDO
-    ENDIF ! k-resolved
+    ENDIF
+    ! 
+    DEALLOCATE(strf_rot)
+    ! 
+    IF (print_raw_data) THEN
+      IF (ionode) THEN 
+        filename = 'Bragg_scattering.dat'
+        OPEN (unit = 90, file = filename, status = 'unknown', form = 'formatted')
+        filename = 'strf_q_nu_one-phonon.dat'
+        OPEN (unit = 95, file = filename, status = 'unknown', form = 'formatted')
+        filename = 'strf_one-phonon.dat'
+        OPEN (unit = 97, file = filename, status = 'unknown', form = 'formatted')
+        !
+        DO qp = nq_super + 1, nq
+           WRITE (90, '(40f26.6)') q(:,qp) * units, strf_q0(qp)
+           WRITE (95, '(40f26.6)') q(:,qp) * units, ( strf_j(qp, j),  j = 1, nat3)
+           WRITE (97, '(40f26.6)') q(:,qp) * units,  strf(qp) 
+      ! 
+        ENDDO
+      !
+        CLOSE(90) 
+        CLOSE(95)
+        CLOSE(97)
+        !
+        IF (atom_resolved) THEN
+          DO k = 1, nat
+            WRITE( pt_mz,'(i1.1)') k
+            filename = 'strf_one_k_resolved_' // TRIM( pt_mz ) //'.dat' !'.fp'
+            OPEN (unit = 66, file = filename, status = 'unknown', form = 'formatted')
+            DO qp = nq_super + 1, nq
+             WRITE (66, '(40f26.6)') q(:, qp) * units, &
+                            ( DBLE((strf_kkp(qp, k, kp) + strf_kkp(qp, kp, k)) / 2.0d0), kp = 1, k)
+             ! NOTE: We should take the real part if and only if we sum
+             ! [strf_full_kk(qp, 2, 1) + strf_full_kk(qp, 1, 2)]/2.
+             ! strf_full_kk(qp, 2, 1) is not necessarilly real
+            ENDDO ! qp
+            CLOSE(66)
+          ENDDO
+        ENDIF ! k-resolved
+        !
+      ENDIF
+    ENDIF ! print_raw_data
+  ENDIF ! zero_one_phonon 
+  !
+  !
+  IF (zero_one_phonon) THEN
+    DEALLOCATE(DW_T_fact_q0_kkp, DW_T_fact_q0)
+    DEALLOCATE(strf_j, strf,strf_q0)
+    IF (atom_resolved)  DEALLOCATE(strf_kkp, strf_q0_kkp)
+  ENDIF 
+  ! Compute Full strf
+  !
+  IF (full_phonon) THEN
+    ! Generate lattice vectors in crystal coordinates   
+    ALLOCATE(Rlist(3, nq_tot))
     !
-  ENDIF
-ENDIF ! zero_one_phonon 
-!
-!
-IF (zero_one_phonon) THEN
-  DEALLOCATE(DW_T_fact_q0_kkp, DW_T_fact_q0)
-  DEALLOCATE(strctr_fact_j, strctr_fact,strctr_fact_q0)
-  IF (atom_resolved)  DEALLOCATE(strctr_fact_kkp, strctr_fact_q0_kkp)
-ENDIF 
-! Compute Full structure_factor
-!
-IF (full_phonon) THEN
-  ! Generate lattice vectors in crystal coordinates   
-  ALLOCATE(Rlist(3, nq_tot))
-  !
-  ctr2 = 1
-  DO i = 0, dim3 - 1
-   DO j = 0, dim2 - 1
-    DO  k= 0, dim1 - 1
-     Rlist(1, ctr2) = k
-     Rlist(2, ctr2) = j
-     Rlist(3, ctr2) = i !(/ k,j,i /)
-     !WRITE(*,*) Rlist(ctr2,:)
-     ctr2= ctr2 + 1
+    ctr2 = 1
+    DO i = 0, dim3 - 1
+     DO j = 0, dim2 - 1
+      DO  k= 0, dim1 - 1
+       Rlist(1, ctr2) = k
+       Rlist(2, ctr2) = j
+       Rlist(3, ctr2) = i 
+       !
+       ctr2= ctr2 + 1
+      ENDDO
+     ENDDO
     ENDDO
-   ENDDO
-  ENDDO
-  !
-  ! Convert to Cartesian
-  CALL cryst_to_cart(nq_tot, Rlist, at, +1)
-  ! 
-  ! Convert to crystal
-  ALLOCATE(strctr_fact_full(nq))
-  IF (atom_resolved) ALLOCATE(strctr_fact_full_kk(nq, nat, nat))
-  !
-  CALL fkbounds( nq_tot, lower_bnd, upper_bnd )
-  !
-  ALLOCATE(Q_ppkkaa(upper_bnd - lower_bnd + 1, nat3, nat3))
-  ! allocate array in parallel / minimize memory burden
-  Q_ppkkaa = 0.0d0
-  ! DO qp2 = lower_bnd, upper_bnd  ! for q-points in supercell 
+    !
+    ! Convert to Cartesian
+    CALL cryst_to_cart(nq_tot, Rlist, at, +1)
+    ! 
+    ! Convert to crystal
+    ALLOCATE(strf_full(nq))
+    IF (atom_resolved) ALLOCATE(strf_full_kk(nq, nat, nat))
+    !
+    CALL fkbounds( nq_tot, lower_bnd, upper_bnd )
+    !
+    ALLOCATE(Q_ppkkaa(upper_bnd - lower_bnd + 1, nat3, nat3))
+    ! allocate array in parallel / minimize memory burden
+    Q_ppkkaa = 0.0d0
+    ! DO qp2 = lower_bnd, upper_bnd  ! for q-points in supercell 
     ctr = 1
     DO p1 = lower_bnd, upper_bnd !1, nq_tot
         DO qp2 = 1, nq_super !lower_bnd, upper_bnd  ! for q-points in supercell 
@@ -2822,13 +2601,17 @@ IF (full_phonon) THEN
                 DO kp = 1, nat ! k represents the atom
                   ntap = ityp(kp)       
                   IF (qlistA(qp2) .EQ. 1) THEN
-                    Q_ppkkaa(ctr, (k-1)*3+i, (kp-1)*3+p) = Q_ppkkaa(ctr, (k-1)*3+i, (kp-1)*3+p) & 
-                                          + 1.0d0 / DBLE(SQRT(amass(nta)*amass(ntap))) / nq_tot * l_q(j, qp2)**2.0d0 & 
-                                          * DBLE(z_zg((k-1)*3+i,j,qp2)*CONJG(z_zg((kp-1)*3+p,j,qp2))*EXP(imagi*2.0d0*pi*dotp4))   
+                    Q_ppkkaa(ctr, (k - 1) * 3 + i, (kp - 1) * 3 + p) = &
+                             Q_ppkkaa(ctr, (k - 1) * 3 + i, (kp - 1) * 3 + p) + & 
+                             1.0d0 / DBLE(SQRT(amass(nta) * amass(ntap))) / nq_tot * l_q(j, qp2)**2.0d0 * & 
+                             DBLE(z_zg((k - 1) * 3 + i, j, qp2) * CONJG(z_zg((kp - 1) * 3 + p, j, qp2)) * & 
+                             EXP(imagi * 2.0d0 * pi * dotp4))   
                   ELSE 
-                    Q_ppkkaa(ctr, (k-1)*3+i, (kp-1)*3+p) = Q_ppkkaa(ctr, (k-1)*3+i, (kp-1)*3+p) & 
-                                          + 2.0d0 / DBLE(SQRT(amass(nta)*amass(ntap))) / nq_tot * l_q(j, qp2)**2.0d0 & 
-                                          * DBLE(z_zg((k-1)*3+i,j,qp2)*CONJG(z_zg((kp-1)*3+p,j,qp2))*EXP(imagi*2.0d0*pi*dotp4))   
+                    Q_ppkkaa(ctr, (k - 1) * 3 + i, (kp - 1) * 3 + p) = & 
+                             Q_ppkkaa(ctr, (k - 1) * 3 + i, (kp - 1) * 3 + p) + & 
+                             2.0d0 / DBLE(SQRT(amass(nta) * amass(ntap))) / nq_tot * l_q(j, qp2)**2.0d0 * & 
+                             DBLE(z_zg((k - 1) * 3 + i, j, qp2) * CONJG(z_zg((kp - 1) * 3 + p, j, qp2)) * & 
+                             EXP(imagi * 2.0d0 * pi * dotp4))   
                   ENDIF
                 ENDDO ! kp 
               ENDDO ! k 
@@ -2837,91 +2620,126 @@ IF (full_phonon) THEN
         ENDDO ! j
       ENDDO ! qp2
     ctr = ctr + 1
-  ENDDO ! p1
-  ! 
-  strctr_fact_full = 0.0d0
-  !
-  IF (atom_resolved) strctr_fact_full_kk = 0.0d0
-  !
-  ctr = 1
-  DO p1 = lower_bnd, upper_bnd !1, nq_tot
-     DO qp = nq_super + 1, nq !lower_bnd + nq_super, upper_bnd + nq_super
-        dotp3 = 0.0d0
-        DO ii = 1, 3
-          dotp3 = dotp3 + q(ii, qp) * Rlist(ii, p1)! to get EXP (iS.(Rp-Rp'))
-        ENDDO
-        DO k = 1, nat ! k represents the atom
-         DO kp = 1, nat ! kp represents the atom
-         dotp2 = 0.0d0
-         DO ii = 1, 3
-            dotp2 = dotp2 + q(ii, qp) * (tau(ii, k) - tau(ii, kp))! 
-         ENDDO
-            dotp = 0.0d0
-            DO i = 1, 3  ! i is for cart directions
-              DO p = 1, 3 ! p is also for cartesian
-                 dotp = dotp +  q(i, qp) * q(p, qp) * (2.0d0 * pi / alat / BOHR_RADIUS_ANGS)**2.0d0 & 
-                             * Q_ppkkaa(ctr, (k - 1) * 3 + i, (kp - 1) * 3 + p)
-                 ! dotp is P_p,kk'
+    ENDDO ! p1
+    ! 
+    strf_full = 0.0d0
+    !
+    IF (atom_resolved) strf_full_kk = 0.0d0
+    !
+    ctr = 1
+    DO p1 = lower_bnd, upper_bnd !1, nq_tot
+       DO qp = nq_super + 1, nq !lower_bnd + nq_super, upper_bnd + nq_super
+          dotp3 = 0.0d0
+          DO ii = 1, 3
+            dotp3 = dotp3 + q(ii, qp) * Rlist(ii, p1)! to get EXP (iS.(Rp-Rp'))
+          ENDDO
+          DO k = 1, nat ! k represents the atom
+           DO kp = 1, nat ! kp represents the atom
+           dotp2 = 0.0d0
+           DO ii = 1, 3
+              dotp2 = dotp2 + q(ii, qp) * (tau(ii, k) - tau(ii, kp))! 
+           ENDDO
+              dotp = 0.0d0
+              DO i = 1, 3  ! i is for cart directions
+                DO p = 1, 3 ! p is also for cartesian
+                   dotp = dotp +  q(i, qp) * q(p, qp) * units**2.0d0 &  ! dotp is P_p,kk' 
+                               * Q_ppkkaa(ctr, (k - 1) * 3 + i, (kp - 1) * 3 + p)
+                ENDDO
               ENDDO
-            ENDDO
-            !
-            strctr_fact_full(qp) = strctr_fact_full(qp) + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp))& 
-                                 * EXP(dotp) * EXP(imagi * 2.0d0 * pi * dotp2) * EXP(imagi * 2.0d0 * pi * dotp3) & 
-                                 * atm_ffct(k, qp) * atm_ffct(kp, qp) * nq_tot 
-         !  strctr_fact_full(qp) = strctr_fact_full(qp) + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp))& 
-         !                       * EXP(dotp) * EXP(imagi * 2.0d0 * pi * dotp2) * EXP(imagi * 2.0d0 * pi * dotp3) & 
-         !                       * atm_ffct(k, qp) * atm_ffct(kp, qp) 
-            IF (atom_resolved) THEN
-              strctr_fact_full_kk(qp, k, kp) = strctr_fact_full_kk(qp, k, kp) & 
-                                 + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp))&
-                                 * EXP(dotp) * EXP(imagi * 2.0d0 * pi * dotp2) * EXP(imagi * 2.0d0 * pi * dotp3) &
-                                 * atm_ffct(k, qp) * atm_ffct(kp, qp) * nq_tot 
-            ENDIF
-  !          WRITE(*,*) "step", p2
-          ENDDO ! kp
-        ENDDO ! k
-      ENDDO ! qp
-    ctr = ctr + 1
-  ENDDO ! p1
-  CALL mp_sum( strctr_fact_full, inter_pool_comm )
-  CALL mp_barrier(inter_pool_comm)
-  IF (atom_resolved) CALL mp_sum( strctr_fact_full_kk, inter_pool_comm )
-  CALL mp_barrier(inter_pool_comm)
-  !!!!!!!!!!!!!!!!!!!!!!!!!111
-  IF (ionode) THEN 
-    filename = 'structure_factor_all-phonon.dat'
-    OPEN (unit = 66, file = filename, status = 'unknown', form = 'formatted')
-    DO qp = nq_super + 1, nq 
-       WRITE (66, '(40f26.6)') q(:,qp)*(2*pi/alat/BOHR_RADIUS_ANGS), DBLE(strctr_fact_full(qp)) !, aimag(strctr_fact_full(qp))
+              !
+              strf_full(qp) = strf_full(qp) + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp)) & 
+                                   * EXP(dotp) * EXP(imagi * 2.0d0 * pi * dotp2) * EXP(imagi * 2.0d0 * pi * dotp3) & 
+                                   * atm_ffct(k, qp) * atm_ffct(kp, qp) * nq_tot 
+                                   ! here we can replace EXP(dotp) with 1 + dotp
+              IF (atom_resolved) THEN
+                strf_full_kk(qp, k, kp) = strf_full_kk(qp, k, kp) & 
+                                   + EXP(-DW_T_fact_kkp(qp, k)) * EXP(-DW_T_fact_kkp(qp, kp)) &
+                                   * EXP(dotp) * EXP(imagi * 2.0d0 * pi * dotp2) * EXP(imagi * 2.0d0 * pi * dotp3) &
+                                   * atm_ffct(k, qp) * atm_ffct(kp, qp) * nq_tot 
+              ENDIF
+            ENDDO ! kp
+          ENDDO ! k
+        ENDDO ! qp
+      ctr = ctr + 1
+    ENDDO ! p1
+    CALL mp_sum( strf_full, inter_pool_comm )
+    CALL mp_barrier(inter_pool_comm)
+    IF (atom_resolved) CALL mp_sum( strf_full_kk, inter_pool_comm )
+    CALL mp_barrier(inter_pool_comm)
+    ! To allocate a new matrix without negative values for q coordinates 
+    ctr2 = 0
+    DO p = nq_super + 1, nq
+      IF ((q(col1, p) .GT. 0.d0 - eps) .AND. (q(col2, p) .GT. 0.d0 - eps)) THEN
+        ctr2 = ctr2 + 1
+      ENDIF
     ENDDO
-    CLOSE(66)
+    ! To rotate, apply broadening, and print the map
+    ALLOCATE(strf_rot(ctr2 * nrots, 4))
+    !
+    strf_rot = 0.d0
+    !
+    ! strf_full = strf_full - strf_q0
+    IF (ionode) CALL rotate(DBLE(strf_full), q, nq, nq_super, nrots, ctr2, &
+                            strf_rot, col1, col2)
+    CALL mp_bcast(strf_rot, ionode_id, world_comm)
+    CALL disca_broadening(strf_rot, ctr2 * nrots, kres1, kres2, alat, &
+                          kmin, kmax, col1, col2, Np, 'strf_all-ph_broad.dat')
+    ! 
     IF (atom_resolved) THEN
       DO k = 1, nat
-        WRITE( pointer_mz,'(i1.1)') k
-        filename = 'structure_factor_q_full_k_resolved_' // TRIM( pointer_mz ) // '.dat' !'.fp'
+        DO kp = 1, k
+        strf_rot = 0.d0
+        WRITE( pt_mz,'(i1.1)') k
+        WRITE( pt_mz2,'(i1.1)') kp
+        filename = 'strf_all_k_'//TRIM(pt_mz)//'_'//TRIM(pt_mz2)//'_broad.dat'
+        ! 
+        IF (ionode) CALL rotate(DBLE(strf_full_kk(:, k, kp)), &
+                                q, nq, nq_super, nrots, ctr2, strf_rot, col1, col2)
+        CALL mp_bcast(strf_rot, ionode_id, world_comm)
+        CALL disca_broadening(strf_rot, ctr2 * nrots, kres1, kres2, alat, &
+                              kmin, kmax, col1, col2, Np, filename)
+                             !'zero_one_k_'//TRIM()//'_'//TRIM(pt_mz2)//'_broad.dat')
+        ENDDO ! kp
+      ENDDO
+    ENDIF
+    !
+    DEALLOCATE(strf_rot)
+    !
+    !
+    IF (print_raw_data) THEN
+      IF (ionode) THEN 
+        filename = 'strf_all-phonon.dat'
         OPEN (unit = 66, file = filename, status = 'unknown', form = 'formatted')
         DO qp = nq_super + 1, nq 
-         WRITE (66, '(40f26.6)') q(:, qp) * (2.0d0 * pi / alat / BOHR_RADIUS_ANGS), & 
-                        ( DBLE((strctr_fact_full_kk(qp, k, kp) + strctr_fact_full_kk(qp, kp, k)) / 2.0d0), kp = 1, k)  
-         ! NOTE: We should take the real part if and only if we sum
-         ! [strctr_fact_full_kk(qp, 2, 1) + strctr_fact_full_kk(qp, 1, 2)]/2.
-         ! strctr_fact_full_kk(qp, 2, 1) is not necessarilly real
-               !, aimag(strctr_fact_full(qp))
-        ENDDO ! qp
+           WRITE (66, '(40f26.6)') q(:,qp) * units, DBLE(strf_full(qp)) !, aimag(strf_full(qp))
+        ENDDO
         CLOSE(66)
-      ENDDO
-    ENDIF ! atom_resolved
-  ENDIF
+        IF (atom_resolved) THEN
+          DO k = 1, nat
+            WRITE( pt_mz,'(i1.1)') k
+            filename = 'strf_q_full_k_resolved_' // TRIM( pt_mz ) // '.dat' !'.fp'
+            OPEN (unit = 66, file = filename, status = 'unknown', form = 'formatted')
+            DO qp = nq_super + 1, nq 
+             WRITE (66, '(40f26.6)') q(:, qp) * units, & 
+                            ( DBLE((strf_full_kk(qp, k, kp) + strf_full_kk(qp, kp, k)) / 2.0d0), kp = 1, k)  
+             ! We take the real part iff we sum [strf_full_kk(qp, 2, 1) + strf_full_kk(qp, 1, 2)]/2.
+             ! strf_full_kk(qp, 2, 1) is not necessarilly real
+            ENDDO ! qp
+            CLOSE(66)
+          ENDDO
+        ENDIF ! atom_resolved
+      ENDIF
+      ENDIF ! print_raw_data
+      !
+      DEALLOCATE(Rlist, strf_full, Q_ppkkaa)
+    IF (atom_resolved) DEALLOCATE(strf_full_kk)
   !
-  DEALLOCATE(Rlist, strctr_fact_full, Q_ppkkaa)
-  IF (atom_resolved) DEALLOCATE(strctr_fact_full_kk)
-!
-ENDIF ! full_phonon
-!
-DEALLOCATE(DW_T_fact_kkp)
-RETURN ! if we DO not want to go further
+  ENDIF ! full_phonon
   !
-  !
+  DEALLOCATE(DW_T_fact_kkp)
+  RETURN ! if we DO not want to go further
+    !
+    !
 END SUBROUTINE diffuse_scattering
 !
 !SUBROUTINE  qpoint_gen1_serial(dim1, dim2, dim3, ctrAB) 
@@ -2948,9 +2766,9 @@ END SUBROUTINE diffuse_scattering
 !            !  this is nothing but consecutive ordering
 !            n = (k - 1) + (j - 1) * dim3 + (i - 1) * dim2 * dim3 + 1
 !            !  q_all are the components of the complete grid in crystal axis
-!            q_all(1, n) = dble(i - 1) / dim1 ! + dble(k1)/2/dim1
-!            q_all(2, n) = dble(j - 1) / dim2 ! + dble(k2)/2/dim2
-!            q_all(3, n) = dble(k - 1) / dim3 ! + dble(k3)/2/dim3 ! k1 , k2 , k3 is for the shift
+!            q_all(1, n) = DBLE(i - 1) / dim1 ! + DBLE(k1)/2/dim1
+!            q_all(2, n) = DBLE(j - 1) / dim2 ! + DBLE(k2)/2/dim2
+!            q_all(3, n) = DBLE(k - 1) / dim3 ! + DBLE(k3)/2/dim3 ! k1 , k2 , k3 is for the shift
 !         ENDDO
 !      ENDDO
 !  ENDDO
@@ -3005,9 +2823,9 @@ END SUBROUTINE diffuse_scattering
 !            !  this is nothing but consecutive ordering
 !            n = (k - 1) + (j - 1) * dim3 + (i - 1) * dim2 * dim3 + 1
 !            !  q_all are the components of the complete grid in crystal axis
-!            q_all(1, n) = dble(i - 1) / dim1 ! + dble(k1)/2/dim1
-!            q_all(2, n) = dble(j - 1) / dim2 ! + dble(k2)/2/dim2
-!            q_all(3, n) = dble(k - 1) / dim3 ! + dble(k3)/2/dim3 ! k1 , k2 , k3 is for the shift
+!            q_all(1, n) = DBLE(i - 1) / dim1 ! + DBLE(k1)/2/dim1
+!            q_all(2, n) = DBLE(j - 1) / dim2 ! + DBLE(k2)/2/dim2
+!            q_all(3, n) = DBLE(k - 1) / dim3 ! + DBLE(k3)/2/dim3 ! k1 , k2 , k3 is for the shift
 !         ENDDO
 !      ENDDO
 !  ENDDO
@@ -3101,7 +2919,7 @@ END SUBROUTINE diffuse_scattering
 !
 
 SUBROUTINE qpoint_gen_map_1(nk1, nk2, nk3, k1, k2, k3, kf1, kf2, kf3, & 
-                plane_val, plane_dir, nq_strft, qlist_str_f, qlist_str_f_cart)
+                plane_val, plane_dir, nq_strft, qlist_strf, qlist_strf_cart)
 !
 USE kinds, ONLY: DP
 USE cell_base,  ONLY : bg
@@ -3110,8 +2928,8 @@ IMPLICIT NONE
  INTEGER, intent(in)     :: nk1, nk2, nk3, k1, k2, k3, kf1, kf2, kf3, plane_dir
  REAL(DP), intent(in)    :: plane_val
  INTEGER, intent(out)    :: nq_strft
- REAL(DP), intent(out)   :: qlist_str_f(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
- REAL(DP), intent(out)   :: qlist_str_f_cart(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
+ REAL(DP), intent(out)   :: qlist_strf(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
+ REAL(DP), intent(out)   :: qlist_strf_cart(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
  INTEGER                 :: i, j, k, n, ctr, p, nk_tot
  REAL(DP), ALLOCATABLE   :: xkg(:, :), xkg_or(:, :)
  REAL(DP)                :: q_B(3), q_A(3), eps, B(3, 3)
@@ -3119,9 +2937,6 @@ IMPLICIT NONE
 ! Reciprocal axis, as printed form espresso but transpose
 ! 
 B = (bg)
-!WRITE(*,*) B(1,:) 
-!WRITE(*,*) B(2,:) 
-!WRITE(*,*) B(3,:) 
 !
 ! 
  eps = 1.0E-05
@@ -3134,11 +2949,11 @@ B = (bg)
      DO j = 1, nk2
         DO k = 1, nk3
            !  this is nothing but consecutive ordering
-           n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+           n = (k - 1) + (j - 1) * nk3 + (i - 1) * nk2 * nk3 + 1
            !  xkg are the components of the complete grid in crystal axis
-           xkg(1,n) = dble(i-1)/nk1 ! + dble(k1)/2/nk1
-           xkg(2,n) = dble(j-1)/nk2 ! + dble(k2)/2/nk2
-           xkg(3,n) = dble(k-1)/nk3 ! + dble(k3)/2/nk3 ! k1 , k2 , k3 is for the shift
+           xkg(1, n) = DBLE(i - 1) / nk1 
+           xkg(2, n) = DBLE(j - 1) / nk2
+           xkg(3, n) = DBLE(k - 1) / nk3 
         ENDDO
      ENDDO
  ENDDO
@@ -3149,12 +2964,12 @@ B = (bg)
  DO p = k1, kf1 - 1
    DO j = k2, kf2 - 1
       DO k = k3, kf3 - 1
-         xkg(1,:) =  xkg_or(1,:) + p
-         xkg(2,:) =  xkg_or(2,:) + j
-         xkg(3,:) =  xkg_or(3,:) + k
+         xkg(1, :) =  xkg_or(1, :) + p
+         xkg(2, :) =  xkg_or(2, :) + j
+         xkg(3, :) =  xkg_or(3, :) + k
         DO i = 1, nk_tot 
-           qlist_str_f(ctr,:) = xkg(:,i)
-           qlist_str_f_cart(ctr,:) = B(:, 1) * xkg(1, i) + B(:, 2) * xkg(2, i) + B(:, 3) * xkg(3, i)
+           qlist_strf(ctr, :) = xkg(:, i)
+           qlist_strf_cart(ctr, :) = B(:, 1) * xkg(1, i) + B(:, 2) * xkg(2, i) + B(:, 3) * xkg(3, i)
            ctr= ctr+1
         END DO
       END DO
@@ -3164,10 +2979,10 @@ B = (bg)
  ! To allocate matrix size
  nq_strft = 0
  DO i = 1, nk_tot * (kf1 - k1) * (kf2 - k2) * (kf3 - k3)
-     IF ( (qlist_str_f_cart(i, plane_dir) .LT. plane_val + eps) .AND. & 
-          (qlist_str_f_cart(i, plane_dir) .GT. plane_val - eps) ) THEN
-        nq_strft = nq_strft + 1
-      ENDIF
+   IF ( (qlist_strf_cart(i, plane_dir) .LT. plane_val + eps) .AND. & 
+        (qlist_strf_cart(i, plane_dir) .GT. plane_val - eps) ) THEN
+      nq_strft = nq_strft + 1
+   ENDIF
  ENDDO
  !
  DEALLOCATE(xkg, xkg_or)
@@ -3176,39 +2991,37 @@ END SUBROUTINE qpoint_gen_map_1
 !
 !
 SUBROUTINE qpoint_gen_map_2(nk1, nk2, nk3, k1, k2, k3, kf1, kf2, kf3, &
-               plane_val, plane_dir, nq_strft, qlist_str_f, qlist_str_f_cart, qlist_str_f_cryst_z)
+               plane_val, plane_dir, nq_strft, qlist_strf, qlist_strf_cart, qlist_strf_cryst_z)
 !
 USE kinds, ONLY: DP
 USE cell_base,  ONLY : at
 IMPLICIT NONE
  
  INTEGER,  intent(in)    :: nk1, nk2, nk3, k1, k2, k3, nq_strft, plane_dir, kf1, kf2, kf3
- REAL(DP), intent(in)    :: plane_val, qlist_str_f(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
- REAL(DP), intent(in)    :: qlist_str_f_cart(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
- REAL(DP), intent(out)   :: qlist_str_f_cryst_z(3, nq_strft)
+ REAL(DP), intent(in)    :: plane_val, qlist_strf(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
+ REAL(DP), intent(in)    :: qlist_strf_cart(nk1 * nk2 * nk3 * (kf1 - k1) * (kf2 - k2) * (kf3 - k3), 3)
+ REAL(DP), intent(out)   :: qlist_strf_cryst_z(3, nq_strft)
  INTEGER                 :: i, ctr, nk_tot
  REAL(DP)                :: eps, invB(3, 3)
 ! 
 invB = TRANSPOSE(at)
-!WRITE(*,*) invB(1,:) 
-!WRITE(*,*) invB(2,:) 
-!WRITE(*,*) invB(3,:) 
 ! Crystal axis, as printed form espresso but NOT transpose
 ! 
 ! 
  eps = 1.0E-05
  !
- nk_tot= nk1 * nk2 * nk3 ! nk1, nk2 ,nk3 define the resolution of the q-grid
+ nk_tot= nk1 * nk2 * nk3 
+ ! nk1, nk2 ,nk3 define the resolution of the q-grid
  !
  ctr = 0 
  DO i = 1, nk_tot * (kf1 - k1) * (kf2 - k2) * (kf3 - k3)
-    IF ( (qlist_str_f_cart(i, plane_dir) .LT. plane_val + eps) .AND. & 
-         (qlist_str_f_cart(i, plane_dir) .GT. plane_val - eps)  ) THEN
+    IF ( (qlist_strf_cart(i, plane_dir) .LT. plane_val + eps) .AND. & 
+         (qlist_strf_cart(i, plane_dir) .GT. plane_val - eps)  ) THEN
         ctr = ctr + 1
-!       qlist_str_f_cart_z(:, ctr)  = qlist_str_f_cart(i,:)
-        qlist_str_f_cryst_z(:, ctr) = invB(:, 1) * qlist_str_f_cart(i, 1) + & 
-                                      invB(:, 2) * qlist_str_f_cart(i, 2) + &
-                                      invB(:, 3) * qlist_str_f_cart(i, 3)
+!       qlist_strf_cart_z(:, ctr)  = qlist_strf_cart(i,:)
+        qlist_strf_cryst_z(:, ctr) = invB(:, 1) * qlist_strf_cart(i, 1) + & 
+                                     invB(:, 2) * qlist_strf_cart(i, 2) + &
+                                     invB(:, 3) * qlist_strf_cart(i, 3)
      ENDIF
  ENDDO
  !
@@ -3226,7 +3039,6 @@ SUBROUTINE  qpoint_gen1(dim1, dim2, dim3, ctrAB)
   ! input
   INTEGER, intent(in)             :: dim1, dim2, dim3
   INTEGER, intent(out)            :: ctrAB
-!!  REAL(DP), intent(out)           :: q_AB(:,:)
   ! local
   INTEGER                         :: i, j, k, n, nqs
   INTEGER                         :: lower_bnd, upper_bnd
@@ -3247,9 +3059,9 @@ SUBROUTINE  qpoint_gen1(dim1, dim2, dim3, ctrAB)
             !  this is nothing but consecutive ordering
             n = (k - 1) + (j - 1) * dim3 + (i - 1) * dim2 * dim3 + 1
             !  q_all are the components of the complete grid in crystal axis
-            q_all(1, n) = dble(i - 1) / dim1 ! + dble(k1)/2/dim1
-            q_all(2, n) = dble(j - 1) / dim2 ! + dble(k2)/2/dim2
-            q_all(3, n) = dble(k - 1) / dim3 ! + dble(k3)/2/dim3 ! k1 , k2 , k3 is for the shift
+            q_all(1, n) = DBLE(i - 1) / dim1 ! + DBLE(k1)/2/dim1
+            q_all(2, n) = DBLE(j - 1) / dim2 ! + DBLE(k2)/2/dim2
+            q_all(3, n) = DBLE(k - 1) / dim3 ! + DBLE(k3)/2/dim3 ! k1 , k2 , k3 is for the shift
          ENDDO
       ENDDO
   ENDDO
@@ -3315,9 +3127,9 @@ SUBROUTINE  qpoint_gen2(dim1, dim2, dim3, ctrAB, q_AB)
             !  this is nothing but consecutive ordering
             n = (k - 1) + (j - 1) * dim3 + (i - 1) * dim2 * dim3 + 1
             !  q_all are the components of the complete grid in crystal axis
-            q_all(1, n) = dble(i - 1) / dim1 ! + dble(k1)/2/dim1
-            q_all(2, n) = dble(j - 1) / dim2 ! + dble(k2)/2/dim2
-            q_all(3, n) = dble(k - 1) / dim3 ! + dble(k3)/2/dim3 ! k1 , k2 , k3 is for the shift
+            q_all(1, n) = DBLE(i - 1) / dim1 
+            q_all(2, n) = DBLE(j - 1) / dim2 
+            q_all(3, n) = DBLE(k - 1) / dim3 
          ENDDO
       ENDDO
   ENDDO
@@ -3334,7 +3146,6 @@ SUBROUTINE  qpoint_gen2(dim1, dim2, dim3, ctrAB, q_AB)
         ((ABS(q_A(2)) .LT. eps) .OR. (ABS(ABS(q_A(2)) - 1) .LT. eps)) .AND. &
         ((ABS(q_A(3)) .LT. eps) .OR. (ABS(ABS(q_A(3)) - 1) .LT. eps))) THEN
         q_AB_TMP(:, i) = q_all(:, i)
-  !      WRITE(*,*) "A", q_AB(:, ctr)
     ELSE
      DO j = i + 1, nqs
         q_B = q_all(:, i) + q_all(:, j)       
@@ -3342,7 +3153,6 @@ SUBROUTINE  qpoint_gen2(dim1, dim2, dim3, ctrAB, q_AB)
            ((ABS(q_B(2)) .LT. eps) .OR. (ABS(ABS(q_B(2)) - 1) .LT. eps)) .AND. &
            ((ABS(q_B(3)) .LT. eps) .OR. (ABS(ABS(q_B(3)) - 1) .LT. eps))) THEN
            q_AB_TMP(:, i) = q_all(:, i)
-  !         WRITE(*,*) q_AB(:, ctr)
        END IF 
       END DO
     END IF
@@ -3364,3 +3174,257 @@ SUBROUTINE  qpoint_gen2(dim1, dim2, dim3, ctrAB, q_AB)
 !
 END SUBROUTINE qpoint_gen2
 
+!
+!-----------------------------------------------------------------------
+SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
+  !-----------------------------------------------------------------------
+  ! calculates the dynamical matrix at q from the (short-range part of the)
+  ! force constants
+  !
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : tpi
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  INTEGER nr1, nr2, nr3, nat, n1, n2, n3, nr1_, nr2_, nr3_, &
+          ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws, nax
+  COMPLEX(DP) dyn(3,3,nat,nat), f_of_q(3,3,nat,nat)
+  REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
+               at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
+               total_weight, rws(0:3,nrws), alat
+  REAL(DP), EXTERNAL :: wsweight
+  REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: ttt(:,:,:,:,:), tttx(:,:)
+  LOGICAL,SAVE :: first=.true.
+  LOGICAL :: fd
+  !
+  nr1_=2*nr1
+  nr2_=2*nr2
+  nr3_=2*nr3
+  FIRST_TIME : IF (first) THEN
+    first=.false.
+    ALLOCATE( wscache(-nr3_:nr3_, -nr2_:nr2_, -nr1_:nr1_, nat,nat) )
+    DO na=1, nat
+       DO nb=1, nat
+          total_weight=0.0d0
+          !
+          ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY VERY SAFE RANGE!
+          !
+          DO n1=-nr1_,nr1_
+             DO n2=-nr2_,nr2_
+                DO n3=-nr3_,nr3_
+                   DO i=1, 3
+                      r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
+                      r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
+                      if (fd) r_ws(i) = r(i) + tau(i,nb)-tau(i,na)
+                   END DO
+                   wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
+                   total_weight=total_weight + wscache(n3,n2,n1,nb,na) 
+                ENDDO
+             ENDDO
+          ENDDO
+          IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
+             WRITE(stdout,*) na,nb,total_weight
+             CALL errore ('frc_blk','wrong total_weight',1)
+          END IF
+      ENDDO
+    ENDDO
+  ENDIF FIRST_TIME
+  !
+  ALLOCATE(ttt(3,nat,nr1,nr2,nr3))
+  ALLOCATE(tttx(3,nat*nr1*nr2*nr3))
+  ttt(:,:,:,:,:)=0.d0
+
+  DO na=1, nat
+     DO nb=1, nat
+        DO n1=-nr1_,nr1_
+           DO n2=-nr2_,nr2_
+              DO n3=-nr3_,nr3_
+                 !
+                 ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
+                 !
+                 DO i=1, 3
+                    r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
+                 END DO
+
+                 weight = wscache(n3,n2,n1,nb,na) 
+                 IF (weight .GT. 0.0d0) THEN
+                    !
+                    ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
+                    !
+                    m1 = MOD(n1+1,nr1)
+                    IF(m1.LE.0) m1=m1+nr1
+                    m2 = MOD(n2+1,nr2)
+                    IF(m2.LE.0) m2=m2+nr2
+                    m3 = MOD(n3+1,nr3)
+                    IF(m3.LE.0) m3=m3+nr3
+                 !   write(*,'(6i4)') n1,n2,n3,m1,m2,m3
+                    !
+                    ! FOURIER TRANSFORM
+                    !
+                    DO i=1,3
+                       ttt(i,na,m1,m2,m3)=tau(i,na)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
+                       ttt(i,nb,m1,m2,m3)=tau(i,nb)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
+                    END DO
+
+                    arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
+                    DO ipol=1, 3
+                       DO jpol=1, 3
+                          dyn(ipol,jpol,na,nb) = dyn(ipol,jpol,na,nb) +                &
+                               (frc(m1,m2,m3,ipol,jpol,na,nb)+f_of_q(ipol,jpol,na,nb)) &
+                               *CMPLX(COS(arg),-SIN(arg),kind=DP)*weight
+                       END DO
+                    END DO
+
+                 END IF
+              END DO
+           END DO
+        END DO
+     END DO
+  END DO
+  !
+  RETURN
+END SUBROUTINE frc_blk
+!
+SUBROUTINE rotate(strf, q, nq, nq_super, nrots, & 
+                   ctr, strf_rot, col1, col2)
+  !
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : tpi
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in)    :: nq, nrots, col1, col2, ctr, nq_super
+  REAL(DP), INTENT(in)   :: strf(nq), q(3, nq)
+  REAL(DP), INTENT(out)  :: strf_rot(ctr * nrots, 4)
+  INTEGER                :: i, p, ctr2
+  REAL(DP)               :: str_f(ctr,4), str_fp(ctr, 4)
+  !
+  REAL(DP)               :: Rmat(2,2), theta, eps
+  ! 
+  eps        = 1d-5
+  !
+  !WRITE(*,*) "Number of rotations provided:", nrots
+  theta      = tpi / FLOAT(nrots)
+  !
+  !
+  str_f = 0.d0
+  ctr2 = 0
+  DO p = nq_super + 1, nq
+    IF ((q(col1, p) .GT. 0.0 - eps) .AND. (q(col2, p) .GT. 0.0 - eps)) THEN
+      ctr2 = ctr2 + 1
+      str_f(ctr2, 1:3) = q(:, p)
+      str_f(ctr2, 4) = strf(p)
+    ENDIF
+  ENDDO
+  !
+  ! To remove double contribution upon rotation
+  !
+  str_fp = 0.d0
+  str_fp(1, :) = str_f(1, :)
+  DO p = 2, ctr
+    IF (ATAN(str_f(p, 1) / str_f(p, 2)) .LT. ( tpi / float(nrots) - eps) ) THEN
+    str_fp(p, :) = str_f(p, :)
+    ENDIF
+  ENDDO
+  !
+  !
+  strf_rot = 0.d0
+  ctr2 = 1
+  DO i = 0, nrots - 1
+    Rmat(1, :) = (/ COS(i * theta), -SIN(i * theta) /)
+    Rmat(2, :) = (/ SIN(i * theta),  COS(i * theta) /)
+    DO p = 1, ctr
+      strf_rot(ctr2, 1 : 2) = MATMUL(Rmat, str_fp(p, 1 : 2))
+      strf_rot(ctr2, 3) = str_fp(p, 3)
+      strf_rot(ctr2, 4) = str_fp(p, 4)
+      ctr2 = ctr2 + 1
+    END DO
+  ENDDO
+END SUBROUTINE
+!
+SUBROUTINE disca_broadening(strf_rot, steps, kres1, kres2, alat, &
+                            kmin, kmax, col1, col2, Np, flstrfout)
+!-------------------------------------------------------------------------
+!! authors: Marios Zacharias, Feliciano Giustino 
+!! acknowledgement: Hyungjun Lee for help packaging this release
+!! version: v0.1
+!! license: GNU
+!
+USE kinds,       ONLY : dp
+USE mp_global,   ONLY : inter_pool_comm
+USE mp_world,    ONLY : world_comm
+USE mp,          ONLY : mp_bcast, mp_barrier, mp_sum
+USE io_global,   ONLY : ionode, ionode_id, stdout
+USE constants,   ONLY : pi, BOHR_RADIUS_ANGS
+!
+IMPLICIT NONE
+!
+ CHARACTER(LEN=256), INTENT(IN)  :: flstrfout
+ INTEGER, INTENT(IN)             :: steps, kres1, kres2, Np, col1, col2
+ REAL(DP), INTENT(IN)            :: kmin, kmax, alat
+ REAL(DP), INTENT(IN)            :: strf_rot(steps, 4)
+ INTEGER                         :: ii, lower_bnd, upper_bnd, ik, iky
+ REAL(DP)                        :: jump, sf_smearingx, sf_smearingy, maxv, units !, pi 
+ REAL(DP), ALLOCATABLE           :: kgridx(:), kgridy(:), strf_out(:, :)
+!
+!
+!
+units = DBLE(2.d0*pi/alat/BOHR_RADIUS_ANGS)
+ALLOCATE( kgridx(kres1), kgridy(kres2))
+ALLOCATE(strf_out(kres1,kres2))
+!kmin = -10.0
+!kmax = 10.0
+
+jump = (kmax - kmin) / DBLE(kres1 - 1)
+DO ik = 1, kres1
+  kgridx(ik) = kmin + (ik - 1) * jump
+ENDDO
+sf_smearingx = (kmax - kmin) / DBLE(kres1)
+!
+jump = (kmax - kmin) / DBLE(kres2 - 1)
+DO ik = 1, kres2
+  kgridy(ik) = kmin + (ik- 1)*jump
+ENDDO
+sf_smearingy = (kmax - kmin) / DBLE(kres2)
+!! 
+!
+strf_out = 0.d0
+!
+CALL fkbounds( steps, lower_bnd, upper_bnd )
+!
+DO ii = lower_bnd, upper_bnd
+  DO ik = 1, kres1 !
+    DO iky = 1, kres2
+    !
+    strf_out(ik, iky) =  strf_out(ik, iky) +  &
+                          strf_rot(ii, 4) / sf_smearingx / SQRT(2.0d0 * pi) / sf_smearingy / SQRT(2.0d0 * pi)* &
+                          (EXP(-(strf_rot(ii, col1) * units - kgridx(ik))**2.d0 / sf_smearingx**2.d0 / 2.d0))*&
+                          (EXP(-(strf_rot(ii, col2) * units - kgridy(iky))**2.d0 / sf_smearingy**2.d0 / 2.d0))
+    !
+    ENDDO
+  ENDDO
+ENDDO
+!
+CALL mp_sum(strf_out, inter_pool_comm)
+CALL mp_barrier(inter_pool_comm)
+!
+IF (ionode) THEN
+  OPEN(46,FILE=flstrfout)
+  maxv =  maxval(strf_out)
+  WRITE(46,*) "#", maxv, maxval(strf_out)
+  DO ik = 1, kres1
+    DO iky = 1, kres2
+      WRITE(46,'(3F28.12)') kgridx(ik), kgridy(iky), strf_out(ik,iky) * Np**(-2.0d0) ! 
+                                         !Np**(-2.0d0) ! / maxv
+    ENDDO
+    WRITE(46,*)
+  ENDDO
+  CLOSE(46)
+ENDIF
+!
+DEALLOCATE(strf_out, kgridx, kgridy)
+!
+!
+END SUBROUTINE

@@ -4,6 +4,12 @@ New in development version:
   * projwfc.x can be used to compute the PDOS in a local basis (I. Timrov)
   * Charge self-consistent DFT+DMFT calculations with the TRIQS software package
     via Wannier90 (S. Beck, CCQ Flatiron Institute)
+  * EPW:
+    (1) Addition of spectral decomposition capability in the transport module
+    (2) Support for the frmsf file format of FermiSurfer
+    (3) The cumulant module updated
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
 Fixed in development version:
   * Possible out-of-bound error (gfortran only) could crash DFT+U
