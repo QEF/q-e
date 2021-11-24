@@ -159,7 +159,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE cell_base,        ONLY : omega
   USE funct,            ONLY : dft_is_nonlocc, nlc
   USE scf,              ONLY : scf_type
-  USE xc_lib,           ONLY : xc_metagcx
+  USE xc_lib,           ONLY : xc_metagcx, xclib_get_ID
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE control_flags,    ONLY : use_gpu
@@ -184,9 +184,11 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ! ... local variables
   !
   REAL(DP) :: zeta, rh, sgn_is
+  REAL(DP) :: etxc0, vtxc0
   INTEGER  :: k, ipol, is, np
+  LOGICAL  :: lda_gga_terms
   !
-  REAL(DP), ALLOCATABLE :: ex(:), ec(:)
+  REAL(DP), ALLOCATABLE :: ex(:), ec(:), v0(:,:)
   REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:)
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:)
   !
@@ -383,6 +385,24 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
+  !
+  !
+  ! ... calculate and add LDA+GGA terms separately, if needed (not standard)
+  !
+  lda_gga_terms = (xclib_get_ID('LDA','EXCH') + xclib_get_ID('LDA','CORR') + &
+                   xclib_get_ID('GGA','EXCH') + xclib_get_ID('GGA','CORR')) /= 0  
+  !
+  IF ( lda_gga_terms ) THEN
+    ALLOCATE(v0(dfftp%nnr,nspin))
+    !
+    CALL v_xc( rho, rho_core, rhog_core, etxc0, vtxc0, v0 )
+    !
+    etxc = etxc + etxc0
+    vtxc = vtxc + vtxc0
+    v = v + v0
+    !
+    DEALLOCATE(v0)
+  ENDIF
   !
   DEALLOCATE( tau, grho )
   DEALLOCATE( h )

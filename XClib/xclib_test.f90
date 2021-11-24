@@ -67,7 +67,9 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  INTEGER :: major, minor, micro, fkind
+  INTEGER :: major, minor, micro, ifamily, fkind
+  TYPE(xc_f03_func_t) :: xc_func0
+  TYPE(xc_f03_func_info_t) :: xc_info0
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -85,7 +87,7 @@ PROGRAM xclib_test
   !
   !-------- Input vars -----------------------
   CHARACTER(LEN=15) :: test, family, fam_init
-  CHARACTER(LEN=30) :: dft, dft_init, xc_kind, xmldft, xmlfamily
+  CHARACTER(LEN=32) :: dft, dft_init, dft_lxc, xc_kind, xmldft, xmlfamily
   CHARACTER(LEN=30) :: polarization, xmlpolarization
   CHARACTER(LEN=15) :: input_err_where=''
   CHARACTER(LEN=40) :: input_err=''
@@ -519,8 +521,42 @@ PROGRAM xclib_test
         IF (mype==root) CALL print_test_status( skipped )
         CYCLE
       ENDIF
-      dft = xc_f03_functional_get_name( id )
-      IF ( TRIM(dft) == '' ) CYCLE
+      !
+      dft_lxc = xc_f03_functional_get_name( id )
+      IF ( TRIM(dft_lxc) == '' ) CYCLE
+      !
+      fkind=-100 ; ifamily=-100
+      CALL xc_f03_func_init( xc_func0, id, 1 )
+      xc_info0 = xc_f03_func_get_info( xc_func0 )
+      fkind = xc_f03_func_info_get_kind( xc_info0 )
+      ifamily = xc_f03_func_info_get_family( xc_info0 )
+      CALL xc_f03_func_end( xc_func0 )
+      !
+      dft = 'XC-000I-000I-000I-000I-000I-000I'
+      IF ( ifamily==XC_FAMILY_LDA .AND. fkind==XC_EXCHANGE ) THEN
+        WRITE( dft(4:6),   '(i3.3)' ) id
+        WRITE( dft(7:7),   '(a)' ) 'L'
+      ELSEIF ( ifamily==XC_FAMILY_LDA .AND. (fkind==XC_CORRELATION .OR. &
+                                        fkind==XC_EXCHANGE_CORRELATION) ) THEN
+        WRITE( dft(9:11),  '(i3.3)' ) id
+        WRITE( dft(12:12), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_GGA .OR. ifamily==XC_FAMILY_HYB_GGA) .AND. &
+               fkind==XC_EXCHANGE ) THEN
+        WRITE( dft(14:16), '(i3.3)' ) id
+        WRITE( dft(17:17), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_GGA  .OR. ifamily==XC_FAMILY_HYB_GGA) .AND. &
+               (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) ) THEN
+        WRITE( dft(19:21), '(i3.3)' ) id
+        WRITE( dft(22:22), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_MGGA .OR. ifamily==XC_FAMILY_HYB_MGGA) .AND. &
+               fkind==XC_EXCHANGE ) THEN
+        WRITE( dft(24:26), '(i3.3)' ) id
+        WRITE( dft(27:27), '(a)' ) 'L'
+      ELSEIF ( (ifamily==XC_FAMILY_MGGA .OR. ifamily==XC_FAMILY_HYB_MGGA) .AND. &
+               (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) ) THEN
+        WRITE( dft(29:31), '(i3.3)' ) id
+        WRITE( dft(32:32), '(a)' ) 'L'
+      ENDIF
     ENDIF
 #endif
     !
@@ -1772,9 +1808,13 @@ PROGRAM xclib_test
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: status
+  CHARACTER(LEN=30)  :: dft_out
   CHARACTER(LEN=100) :: test_output_gen
   CHARACTER(LEN=115) :: test_output_exe
   INTEGER :: j, id_term
+  !
+  dft_out = dft
+  IF (dft_init=='ALL_LIBXC') dft_out = dft_lxc
   !
   IF (TRIM(test)=='GENERATE') THEN
     test_output_gen = ''
@@ -1790,7 +1830,7 @@ PROGRAM xclib_test
     ENDIF
     IF (is==1) WRITE(test_output_gen(13:17), '(a)') 'UNPOL'
     IF (is==2) WRITE(test_output_gen(13:15), '(a)') 'POL'
-    WRITE(test_output_gen(19:54), '(a)') TRIM(dft)
+    WRITE(test_output_gen(19:54), '(a)') TRIM(dft_out)
     WRITE(test_output_gen(56:),'(a)') TRIM(status)
     WRITE(stdout,*) test_output_gen
   ELSEIF (TRIM(test)=='EXECUTE') THEN
@@ -1807,7 +1847,7 @@ PROGRAM xclib_test
     ENDIF
     IF (is==1) WRITE(test_output_exe(13:17), '(a)') 'UNPOL'
     IF (is==2) WRITE(test_output_exe(13:15), '(a)') 'POL'
-    WRITE(test_output_exe(19:54), '(a)') TRIM(dft)
+    WRITE(test_output_exe(19:54), '(a)') TRIM(dft_out)
     WRITE(test_output_exe(56:96), '(a)') TRIM(status)
     IF (status==passed .AND. show_time) THEN
       WRITE(test_output_exe(80:85), '(a)') 'time:'

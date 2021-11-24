@@ -59,7 +59,7 @@ CONTAINS
     !
     INTEGER :: leng, l, i
     CHARACTER(len=150):: dftout
-    LOGICAL :: check_libxc, dft_defined, is_meta_dft
+    LOGICAL :: check_libxc, dft_defined, meta_libxc_short
     CHARACTER(len=1) :: lxc
     INTEGER :: ID_vec(6)
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
@@ -105,46 +105,6 @@ CONTAINS
        imeta = ID_vec(5) ;  imetac= ID_vec(6)
        dft_defined = .TRUE.
        !
-    ELSE
-       !
-       ! ----------------------------------------------------------------------
-       ! CHECK LIBXC FUNCTIONALS BY INDEX NOTATION, IF PRESENT
-       ! ----------------------------------------------------------------------
-       !
-       IF (dftout(1:3) .EQ. 'XC-') THEN
-          !
-          ! ... short notation with libxc DFTs: 'XC-000i-000i-000i-000i-000i-000i'
-          !
-          READ( dftout(4:6), * ) iexch
-          READ( dftout(7:7), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(1) = .TRUE.
-          READ( dftout(9:11), * ) icorr
-          READ( dftout(12:12), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(2) = .TRUE.
-          READ( dftout(14:16), * ) igcx
-          READ( dftout(17:17), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(3) = .TRUE.
-          READ( dftout(19:21), * ) igcc
-          READ( dftout(22:22), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(4) = .TRUE.
-          READ( dftout(24:26), * ) imeta
-          READ( dftout(27:27), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(5) = .TRUE.
-          READ( dftout(29:31), * ) imetac
-          READ( dftout(32:32), '(a)' ) lxc
-          IF (lxc == 'L') is_libxc(6) = .TRUE.
-          !
-          dft_defined = .TRUE.
-          !
-#if !defined(__LIBXC)
-          IF (ANY(is_libxc(:))) THEN
-            CALL xclib_error( 'set_dft_from_name', 'libxc functionals needed, but &
-                                            &libxc is not active', 1 )
-          ENDIF
-#endif
-          !
-       ENDIF
-       !
     ENDIF
     !
     !----------------------------------------------------------------
@@ -160,11 +120,9 @@ CONTAINS
        imeta = matching( dftout, nmeta, dft_MGGA_name )
        imetac = 0
        !
+       CALL matching_shortIDs( dftout )
+       !
     ENDIF
-    !
-#if defined(__LIBXC)
-    IF (.NOT. dft_defined) CALL matching_libxc( dftout )
-#endif
     !
     ! Back compatibility - TO BE REMOVED
     !
@@ -188,10 +146,10 @@ CONTAINS
     ! ... A workaround to keep the q-e shortname notation for SCAN and TB09
     !     functionals valid.
     !
-    is_meta_dft = imeta==3 .OR. imeta==5 .OR. imeta==6 .OR. imeta==7
+    meta_libxc_short = imeta==3 .OR. imeta==5 .OR. imeta==6 .OR. imeta==7
     !
 #if defined(__LIBXC)
-    IF (is_meta_dft) THEN
+    IF (meta_libxc_short) THEN
       !
       is_libxc(5:6) = .TRUE.
       !
@@ -214,14 +172,23 @@ CONTAINS
         imeta = 497
         imetac = 498
       END SELECT
-    !
+      !
     END IF
 #else
-    IF (is_meta_dft) &
+    IF (meta_libxc_short) &
       CALL xclib_error( 'set_dft_from_name', 'libxc needed for this functional', 2 )
 #endif
     !
-    ! Fill variables and exit
+    ! ... warning for MGGA exch and non-MGGA corr or vice versa
+    !
+    IF ( ((imeta==0 .AND. iexch+igcx/=0) .AND. (imetac/=0 .AND. icorr+igcc==0)) .OR. &
+         ((imeta/=0 .AND. iexch+igcx==0) .AND. (imetac==0 .AND. icorr+igcc/=0)) )   &
+      CALL xclib_infomsg( 'matching_shortIDs', 'WARNING: an MGGA functional of one &
+                          &kind has been read together with a non-MGGA one of the &
+                          &other kind. This is not a standard choice and has not &
+                          &been tested outside PW.' )
+    !
+    ! ... fill variables and exit
     !
     dft = dftout
     !
@@ -236,7 +203,7 @@ CONTAINS
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
     !     &//gradc (igcc) //'-'// nonlocc(inlc)
     !
-    ! check dft has not been previously set differently
+    ! ... check dft has not been previously set differently
     !
     IF (save_iexch /= notset .AND. save_iexch /= iexch) THEN
        WRITE(stdout,*) iexch, save_iexch
@@ -341,239 +308,177 @@ CONTAINS
   END FUNCTION matching
   !
   !
-#if defined(__LIBXC)
   !--------------------------------------------------------------------------------
-  SUBROUTINE matching_libxc( dft_ )
+  SUBROUTINE matching_shortIDs( dft_ )
     !------------------------------------------------------------------------------
-    !! It spans the libxc functionals and looks for matches with the input dft
-    !! string. Then stores the corresponding indices.  
-    !! It also makes some compatibility checks.
+    !! It extracts the Libxc dfts from the input name and prints warnings when 
+    !! necessary.  
+    !
+    !! NOTE: the only notation now allowed for input DFTs containing Libxc terms is:  
+    !! XC-000i-000i-000i-000i-000i-000i  
+    !! where you put the functional IDs instead of the zeros and an 'L' instead of
+    !! 'i' if the functional is from Libxc. The order is the usual one:  
+    !! LDAexch - LDAcorr - GGAexch - GGAcorr - MGGAexch - MGGAcorr  
+    !! however QE will automatically adjust it if needed. The exchange+correlation
+    !! functionals can be put in the exch or in the corr slot with no difference.
     !
     USE dft_setting_params,   ONLY: iexch, icorr, igcx, igcc, imeta, imetac, &
-                                    is_libxc, exx_fraction, xc_kind_error
+                                    is_libxc, exx_fraction
+#if defined(__LIBXC)
+    USE dft_setting_params,   ONLY: xc_kind_error
+#endif
     USE xclib_utils_and_para, ONLY: nowarning
     ! 
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
     !
-    CHARACTER(LEN=256) :: name
-    INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
-    INTEGER, PARAMETER :: ID_MAX_LIBXC=999
+    CHARACTER(LEN=256) :: name, dft_lxc
+    CHARACTER(LEN=1) :: llxc
+    INTEGER :: i, l, ln, prev_len(6), fkind, fkind_v(3), family
+    INTEGER :: l0, ID_v(6), wrong_ID
+    LOGICAL :: wrong_order, xc_warning
+#if defined(__LIBXC)
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
-#if (XC_MAJOR_VERSION>5)
-    !workaround to keep compatibility with libxc develop version
-    INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
-    INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
 #endif
     !
-    prev_len(:) = 1
+    IF ( matches('_X_', TRIM(dft_)) .OR. matches('_C_', TRIM(dft_)) .OR. &
+         matches('_K_', TRIM(dft_)) .OR. matches('_XC_', TRIM(dft_)) ) &
+      CALL xclib_error( 'matching_shortIDs', 'It looks like one or more Libxc names &
+                        &have been put as input, but since v7.0 the index notation only&
+                        & is allowed. Check the QE user guide or the comments in this &
+                        &routine.', 1 )
     !
-    DO i = 1, ID_MAX_LIBXC
-       !
-       name = xc_f03_functional_get_name( i )
-       !
-       DO l = 1, LEN_TRIM(name)
-          name(l:l) = capital( name(l:l) )
-       ENDDO
-       !
-       IF ( TRIM(name) == '' ) CYCLE
-       !
-       IF ( matches(TRIM(name), TRIM(dft_)) ) THEN
-          !
-          !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
-          !
-          fkind=-100 ; family=-100
-          CALL xc_f03_func_init( xc_func, i, 1 )
-          xc_info = xc_f03_func_get_info( xc_func )
-          fkind = xc_f03_func_info_get_kind( xc_info )
-          family = xc_f03_func_info_get_family( xc_info )
-          CALL xc_f03_func_end( xc_func )
-          !   
-          SELECT CASE( family )
-          CASE( XC_FAMILY_LDA )
-             IF (fkind==XC_EXCHANGE) THEN
-                IF ( LEN(TRIM(name)) > prev_len(1) ) iexch = i
-                is_libxc(1) = .TRUE.
-                prev_len(1) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                IF ( LEN(TRIM(name)) > prev_len(2) ) icorr = i
-                is_libxc(2) = .TRUE.
-                prev_len(2) = LEN(TRIM(name))
-                IF (fkind==XC_EXCHANGE_CORRELATION) THEN
-                  iexch = 0
-                  is_libxc(1) = .FALSE.
-                ENDIF
-             ELSE
-                xc_kind_error = .TRUE.
-             ENDIF
-             fkind_v(1) = fkind
-             !
-          CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
-             IF (fkind==XC_EXCHANGE) THEN
-                IF ( LEN(TRIM(name)) > prev_len(3) ) igcx = i
-                is_libxc(3) = .TRUE.
-                prev_len(3) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                IF ( LEN(TRIM(name)) > prev_len(4) ) igcc = i
-                is_libxc(4) = .TRUE.
-                prev_len(4) = LEN(TRIM(name))
-             ELSE
-                xc_kind_error = .TRUE.
-             ENDIF
-             fkind_v(2) = fkind
-             !
-          CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
-             IF (fkind==XC_EXCHANGE) THEN
-                IF ( LEN(TRIM(name)) > prev_len(5) ) imeta = i
-                is_libxc(5) = .TRUE.
-                prev_len(5) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                IF ( LEN(TRIM(name)) > prev_len(6) ) imetac = i
-                is_libxc(6) = .TRUE.
-                prev_len(6) = LEN(TRIM(name))
-             ELSE
-                xc_kind_error = .TRUE.
-             ENDIF
-             fkind_v(3) = fkind
-             !
-          END SELECT
-          !
-       ENDIF
-       !
+    IF ( dft_(1:3) /= 'XC-' ) RETURN
+    !
+    ln = LEN_TRIM(dft_)
+    wrong_order = .FALSE.
+    xc_warning = .FALSE.
+    wrong_ID = 0
+    ID_v(:) = 0
+    !
+    l0 = 3
+    DO i = 1, 6
+      IF ( ln >= l0+4 ) THEN
+        READ( dft_(l0+1:l0+3), * ) ID_v(i)
+        READ( dft_(l0+4:l0+4), '(a)' ) llxc
+        l0 = l0 + 5
+        IF (llxc == 'L') is_libxc(i) = .TRUE.
+        IF (llxc == 'I') is_libxc(i) = .FALSE.
+      ELSE
+        is_libxc(i) = .FALSE.
+      ENDIF
+      IF (ID_v(i)==0) is_libxc(i) = .FALSE.
     ENDDO
     !
-    ! ... overlaps check (between qe and libxc names)
+    iexch = ID_v(1) ;  icorr = ID_v(2)
+    igcx  = ID_v(3) ;  igcc  = ID_v(4)
+    imeta = ID_v(5) ;  imetac= ID_v(6)
     !
-    IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc(dft_)
+#if !defined(__LIBXC)
     !
-    ! ... Compatibility checks
+    IF (ANY(is_libxc(:))) THEN
+      CALL xclib_error( 'matching_shortIDs', 'libxc functionals needed, but &
+                        &libxc is not active', 1 )
+    ENDIF
+    !
+#else
+    !
+    DO i = 1, 6
+      !
+      IF ( i==5 .AND. (ID_v(i)==3 .OR. ID_v(i)==5 .OR. ID_v(i)==6 .OR. ID_v(i)==7) ) &
+         CALL xclib_error( 'matching_shortIDs', 'wrong notation for the dft name. &
+                           &Use the shortname or the Libxc IDs.', 1 )
+      !
+      IF ( is_libxc(i) ) THEN
+        fkind=-100 ; family=-100
+        dft_lxc = xc_f03_functional_get_name( ID_v(i) )
+        IF ( TRIM(dft_lxc) == '' ) THEN
+          wrong_ID = ID_v(i)
+          EXIT
+        ENDIF
+        CALL xc_f03_func_init( xc_func, ID_v(i), 1 )
+        xc_info = xc_f03_func_get_info( xc_func )
+        fkind = xc_f03_func_info_get_kind( xc_info )
+        family = xc_f03_func_info_get_family( xc_info )
+        CALL xc_f03_func_end( xc_func )
+        !
+        IF ( family==XC_FAMILY_LDA ) THEN
+          IF ( fkind==XC_EXCHANGE ) THEN
+            IF ( i/=1 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_CORRELATION ) THEN
+            IF ( i/=2 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
+            iexch = 0       ; is_libxc(1)=.FALSE.
+            icorr = ID_v(i) ; is_libxc(2)=.TRUE.
+            IF ( i/=1 .AND. i/=2 ) wrong_order = .TRUE.
+            IF (ID_v(1)/=0 .AND. ID_v(2)/=0) xc_warning=.TRUE.
+          ELSE
+            xc_kind_error = .TRUE.
+          ENDIF
+        ELSEIF ( family==XC_FAMILY_GGA .OR. family==XC_FAMILY_HYB_GGA ) THEN
+          IF ( fkind==XC_EXCHANGE ) THEN
+            IF ( i/=3 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_CORRELATION ) THEN
+            IF ( i/=4 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
+            igcx = 0       ; is_libxc(3)=.FALSE.
+            igcc = ID_v(i) ; is_libxc(4)=.TRUE.
+            IF ( i/=3 .AND. i/=4 ) wrong_order = .TRUE.
+            IF (ID_v(3)/=0 .AND. ID_v(4)/=0) xc_warning=.TRUE.
+          ELSE
+            xc_kind_error = .TRUE.
+          ENDIF
+        ELSEIF ( family==XC_FAMILY_MGGA .OR. family==XC_FAMILY_HYB_MGGA ) THEN
+          IF ( fkind==XC_EXCHANGE ) THEN
+            IF ( i/=5 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_CORRELATION ) THEN
+            IF ( i/=6 ) wrong_order = .TRUE.
+          ELSEIF ( fkind==XC_EXCHANGE_CORRELATION ) THEN
+            imeta = 0        ; is_libxc(5)=.FALSE.
+            imetac = ID_v(i) ; is_libxc(6)=.TRUE.
+            IF ( i/=5 .AND. i/=6 ) wrong_order = .TRUE.
+            IF (ID_v(5)/=0 .AND. ID_v(6)/=0) xc_warning=.TRUE.
+          ELSE
+            xc_kind_error = .TRUE.
+          ENDIF
+        ENDIF
+      ENDIF
+    ENDDO
+    !
+    IF ( wrong_ID /= 0 ) &
+      CALL xclib_error( 'matching_shortIDs', 'Libxc functional with ID in error code&
+                        & not found in the current version of Libxc.', wrong_ID )
+    !
+    IF ( xc_warning ) &
+       CALL xclib_infomsg( 'matching_shortIDs', 'WARNING: an EXCHANGE+CORRELATION &
+                           &functional has been found together with an exchange&
+                           & or correlation one. The latter will be ignored.' )
     !
     IF ( xc_kind_error .AND. .NOT.nowarning ) &
-       CALL xclib_error( 'matching_libxc', 'a Libxc functional of a kind not &
-                         &usable in QE has been found', 1 )
+       CALL xclib_error( 'matching_shortIDs', 'a Libxc functional of a kind not &
+                         &usable in QE has been found.', 2 )
     !
-    ! LDA:
-    IF (iexch/=0 .AND. is_libxc(2).AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION &
-                           &functional has been found together with an exchange&
-                           & one (LDA)' )
-    ! GGA:
-    IF (igcx/=0 .AND. is_libxc(4).AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION &
-                           &functional has been found together with an exchange&
-                           & one (GGA)' )
+    IF ( ((is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0)) .OR. &
+         ((is_libxc(5).AND.iexch+igcx/=0) .OR. (is_libxc(6).AND. icorr+igcc/=0)) ) &
+       CALL xclib_infomsg( 'matching_shortIDs', 'WARNING: an LDA/GGA functional has been&
+                           & found, but Libxc GGA/mGGA functionals already include &
+                           &the LDA/GGA terms.' )
     !
-    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) &
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an LDA functional has bee&
-                           &n found, but libxc GGA functionals already include t&
-                           &he LDA part' )
+#endif
+    !
+    IF ( wrong_order ) &
+       CALL xclib_error( 'matching_shortIDs', 'The order of the input functional &
+                         &IDs is not correct. Please follow this one: LDAx,LDAc,&
+                         &GGAx,GGAc,MGGAx,MGGAc', 1 )
     ! mGGA:
     ! (imeta defines both exchange and correlation term for q-e mGGA functionals)
     IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0)   &
-       CALL xclib_error( 'matching_libxc', 'Two conflicting metaGGA functionals &
-                         &have been found', 2 )
-    !
-    IF (imeta/=0 .AND. is_libxc(6).AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
-       CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION f&
-                           &unctional has been found together with an exchange o&
-                           &ne (mGGA)' )
+       CALL xclib_error( 'matching_shortIDs', 'Two conflicting metaGGA functionals &
+                         &have been found.', 3 )
     !   
-  END SUBROUTINE matching_libxc
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE check_overlaps_qe_libxc( dft_ )
-    !------------------------------------------------------------------------
-    !! It fixes eventual overlap issues between qe and libxc names when qe and
-    !! libxc functionals are used together.
-    !
-    USE dft_setting_params, ONLY: iexch, icorr, igcx, igcc, imeta, imetac, is_libxc
-    USE qe_dft_list,        ONLY: nxc, ncc, ngcx, ngcc, nmeta, dft_LDAx_name,  &
-                                  dft_LDAc_name, dft_GGAx_name, dft_GGAc_name, &
-                                  dft_MGGA_name
-    !
-    IMPLICIT NONE
-    !
-    CHARACTER(LEN=*), INTENT(IN) :: dft_
-    !! DFT full name
-    !
-    CHARACTER(LEN=4) :: qe_name
-    CHARACTER(LEN=256) :: lxc_name
-    INTEGER :: i, ii, l, ch, qedft, nlxc
-    INTEGER :: ID_vec(6)
-    !
-    ID_vec(1)=iexch ; ID_vec(2)=icorr
-    ID_vec(3)=igcx  ; ID_vec(4)=igcc
-    ID_vec(5)=imeta ; ID_vec(6)=imetac
-    !
-    DO ch = 1, 5
-       IF (.NOT.is_libxc(ch)) THEN
-          !
-          SELECT CASE( ch )
-          CASE( 1 )
-             qe_name = dft_LDAx_name(iexch)
-          CASE( 2 )
-             qe_name = dft_LDAc_name(icorr)
-          CASE( 3 )
-             qe_name = dft_GGAx_name(igcx)
-          CASE( 4 )
-             qe_name = dft_GGAc_name(igcc)
-          CASE( 5 )
-             qe_name = dft_MGGA_name(imeta)
-          END SELECT
-          !
-          qedft = 0
-          i = 0
-          DO WHILE ( i < LEN_TRIM(dft_) )
-            i = i + 1
-            IF ( matches( TRIM(qe_name), TRIM(dft_(i:i+1)) ) ) THEN
-               qedft = qedft + 1
-               i = i + 1
-            ELSEIF (matches( TRIM(qe_name), TRIM(dft_(i:i+2)) ) ) THEN
-               qedft = qedft + 1
-               i = i + 2
-            ELSEIF (matches( TRIM(qe_name), TRIM(dft_(i:i+3)) ) ) THEN
-               qedft = qedft + 1
-               i = i + 3
-            ENDIF
-          ENDDO
-          !
-          nlxc = 0
-          DO i = 1, 6
-            IF (is_libxc(i)) THEN
-              lxc_name = xc_f03_functional_get_name( ID_vec(i) )
-              DO l = 1, LEN_TRIM(lxc_name)
-                 lxc_name(l:l) = capital( lxc_name(l:l) )
-              ENDDO
-              ii = 0
-              DO WHILE ( ii < LEN_TRIM(lxc_name) )
-                ii = ii + 1
-                IF ( matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+1)) ) ) THEN
-                  nlxc = nlxc + 1
-                  ii = ii + 1
-                ELSEIF (matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+2)) ) ) THEN
-                  nlxc = nlxc + 1
-                  ii = ii + 2
-                ELSEIF (matches( TRIM(qe_name), TRIM(lxc_name(ii:ii+3)) ) ) THEN
-                  nlxc = nlxc + 1
-                  ii = ii + 3
-                ENDIF
-              ENDDO
-            ENDIF
-          ENDDO
-          !
-          IF (qedft == nlxc) ID_vec(ch) = 0  
-          !
-       ENDIF
-    ENDDO
-    !
-    iexch = ID_vec(1) ;  icorr  = ID_vec(2)
-    igcx  = ID_vec(3) ;  igcc   = ID_vec(4)
-    imeta = ID_vec(5) ;  imetac = ID_vec(6)
-    !
-  END SUBROUTINE
-#endif
+  END SUBROUTINE matching_shortIDs
   !
   !
   !---------------------------------------------------------------------------

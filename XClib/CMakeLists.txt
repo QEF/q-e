@@ -80,7 +80,7 @@ qe_install_targets(
 if(QE_ENABLE_TEST)
     qe_add_executable(qe_xclib_test xclib_test.f90)
     set_target_properties(qe_xclib_test 
-        PROPERTIES 
+        PROPERTIES
             OUTPUT_NAME qe_xclib_test.x 
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
     target_link_libraries(qe_xclib_test
@@ -97,8 +97,13 @@ if(QE_ENABLE_TEST)
     if(NOT BASH_PROGRAM)
         message(WARNING "bash not found! Tests under ${CMAKE_CURRENT_SOURCE_DIR} not added.")
     else()
-        set(test_input_file_names_no_extension exe_test gen_test)
+        set(test_input_file_names_no_extension exe_test gen_test test_all_terms test_all_shorts)
 
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_terms.xml
+             ${CMAKE_CURRENT_BINARY_DIR}/all_terms.xml SYMBOLIC)
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_shorts.xml
+             ${CMAKE_CURRENT_BINARY_DIR}/all_shorts.xml SYMBOLIC)
+        
         foreach(file_name_no_extension IN LISTS test_input_file_names_no_extension)
             add_unit_test(test_qe_xclib_${file_name_no_extension} 1 1 ${BASH_PROGRAM} -c
                           "$<TARGET_FILE:qe_xclib_test> < ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/${file_name_no_extension}.in")

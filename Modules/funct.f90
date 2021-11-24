@@ -291,9 +291,17 @@ MODULE funct
   ! single He atom. Info by Fabien Bruneval.
   !
   ! NOTE FOR LIBXC USERS: to use libxc functionals you must enforce them from input (use
-  ! 'input_dft' in &system) and write their names in the input string. The order is not
-  ! relevant, neither the separation between one name and the other.
+  ! 'input_dft' in &system) and write their IDs in the input string. The only notation
+  ! now allowed (v7.0) for input DFTs containing Libxc terms is:
+  ! XC-000i-000i-000i-000i-000i-000i
+  ! where you put the functional IDs instead of the zeros and an 'L' instead of
+  ! 'i' if the functional is from Libxc. The order is the usual one:  
+  ! LDAexch - LDAcorr - GGAexch - GGAcorr - MGGAexch - MGGAcorr  
+  ! however QE will automatically adjust it if needed. You can skip zero tails (e.g.
+  ! you don't need GGA/MGGA slots if the dft is LDA only and so on.
   ! You can use combinations of qe and libxc functionals, when they are compatible.
+  ! You can also add vdW terms after it, for example, sla+pw+rw86+vdw2 is:
+  ! input_dft='XC-001i-004i-013i-vdw2'.
   ! For more details see the user_guide (in 'Doc' folder).
   !
   INTEGER, PARAMETER :: notset = -1
