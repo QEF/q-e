@@ -853,7 +853,11 @@ Abbreviations are allowed when zero tails are present. The above example is stil
 \begin{verbatim}
 input_dft = `XC-001I-000I-003L-130L'
 \end{verbatim}
-since no MGGA terms are present.
+since no MGGA terms are present.\\
+Non-local terms can be included by just adding their name after the index notation, for example:
+\begin{verbatim}
+input_dft=`XC-001i-004i-013i-vdw2'
+\end{verbatim}
 %
 \subsubsection{Differences between Libxc and internal functionals}
 There are some differences between \qe\ functionals and \libxc\ ones. In \qe\ the LDA and the GGA terms are separated and must be specified independently. In \libxc\ the GGA functionals already include the LDA part (Slater exchange and Perdew\&Wang correlation in most of the cases with the exception, for example, of Lee Yang Parr functionals).\\
