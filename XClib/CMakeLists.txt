@@ -98,11 +98,11 @@ if(QE_ENABLE_TEST)
         message(WARNING "bash not found! Tests under ${CMAKE_CURRENT_SOURCE_DIR} not added.")
     else()
         set(test_input_file_names_no_extension exe_test gen_test test_all_terms test_all_shorts)
-        
-        file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_terms.xml
-             DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-        file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_shorts.xml
-             DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_terms.xml
+             ${CMAKE_CURRENT_BINARY_DIR}/all_terms.xml SYMBOLIC)
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/test_input_files/all_shorts.xml
+             ${CMAKE_CURRENT_BINARY_DIR}/all_shorts.xml SYMBOLIC)
         
         foreach(file_name_no_extension IN LISTS test_input_file_names_no_extension)
             add_unit_test(test_qe_xclib_${file_name_no_extension} 1 1 ${BASH_PROGRAM} -c
