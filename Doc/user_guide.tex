@@ -231,10 +231,10 @@ and let us apologize to everybody we have forgotten.
 \subsection{Contacts}
 \label{SubSec:Contacts}
 
-The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
-Releases and patches can be downloaded from the links contained in it.
-The main entry point for developers is the GitLab web site:
-\texttt{https://gitlab.com/QEF/q-e}.
+The main entry point for \qe\ users is the web site
+\texttt{http://www.quantum-espresso.org/}. There you find
+the stable releases for download, general information and
+documentation.
 
 The recommended place where to ask questions about installation
 and usage of \qe, and to report problems, is the
@@ -251,6 +251,8 @@ registered user's e-mail address, in its {\em exact form}, will be
 accepted. In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
 
+The main entry point for developers is the GitLab web site:
+\texttt{https://gitlab.com/QEF/q-e}.
 If you need to contact the developers for {\em specific} questions
 about coding, proposals, offers of help, etc., you may either post
 an ``Issue'' to GitLab, or send a message
@@ -316,10 +318,12 @@ Stable and development releases of the \qe\ source package
 (current version is \version), as well as available binary
 packages, can be downloaded from the links listed in the
 ``Download'' section of \texttt{www.quantum-espresso.org}.
+% {\em Please register:} it helps to keep track of the actual usage
+% of \qe.
 
 The Quantum Mobile virtual machine for Windows/Mac/Linux/Solaris
 provides a complete Ubuntu Linux environment, containing \qe\ and
-more. Link and description in
+much more. Link and description in
 \texttt{https://www.materialscloud.org/work/quantum-mobile}.
 
 For source compilation, uncompress and unpack compressed archives
@@ -337,7 +341,7 @@ version number.
 
 A few additional packages that are not included in the base distribution
 will be downloaded on demand at compile time, using either \make\ or
-\texttt{cmake} (see Sec.\ref{SubSec:Compilation}).
+\texttt{CMake} (see Sec.\ref{SubSec:Compilation}).
 Note however that this will work only if the computer you are
 installing on is directly connected to the internet and has
 either \texttt{wget} or \texttt{curl} installed and working.
@@ -642,7 +646,8 @@ available:\\
 
 
 To modify or extend \configure, see the Wiki pages on GitLab:
-for advanced users only!
+\texttt{https://gitlab.com/QEF/q-e/-/wikis}.
+For advanced users only!
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}

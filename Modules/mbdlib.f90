@@ -86,13 +86,10 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
     IF ( nks_start == 0 ) THEN
       ! K-point mesh
       inp%k_grid = [nk1, nk2, nk3]
+      inp%k_grid_shift = 0.5_DP
       !
-      IF (k1 .EQ. k2 .AND. k2 .EQ. k3 .AND. k3 .EQ. 0) THEN
-        ! inp%k_grid_shift = 0.0_DP
+      IF (k1 .EQ. 0 .AND. k2 .EQ. 0 .AND. k3 .EQ. 0) &
         CALL infomsg('mbdlib','k-point shift ignored')
-      ELSE
-        inp%k_grid_shift = 0.5_DP
-      ENDIF
       !
     ELSE
       inp%k_grid = [1, 1, 1] !set default k points grid
@@ -101,7 +98,7 @@ SUBROUTINE init_mbd ( nks_start, nk1, nk2, nk3, k1, k2, k3, tprnfor, tstress )
     !
   ENDIF
   !
-  WRITE(stdout, '(5x,"mbdlib: K-point grid set to ",3I3,", shift: ",E4.2)') &
+  WRITE(stdout, '(5x,"mbdlib: K-point grid set to ",3I3,", shift: ",F4.2)') &
           inp%k_grid, inp%k_grid_shift
   !
   select case (TRIM(get_dft_short()))  ! An empirical factor needs to be set based on the functiona
