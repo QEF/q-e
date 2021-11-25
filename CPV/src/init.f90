@@ -409,7 +409,7 @@
       INTEGER,  INTENT(IN) :: iverbosity
       !
       REAL(DP) :: rat1, rat2, rat3
-      INTEGER :: ig
+      INTEGER :: ig, dfftp_ngm
       !
       !WRITE( stdout, "(4x,'h from newinit')" )
       !do i=1,3
@@ -422,13 +422,17 @@
       !
       !  re-calculate G-vectors and kinetic energy
       !
-      do ig = 1, dfftp%ngm
+      dfftp_ngm = dfftp%ngm 
+!$acc parallel loop present(g, mill, g_d) copyin(bg) copyout(gg)  
+      do ig = 1, dfftp_ngm
          g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
-         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
-      enddo
+         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2 
 #if defined (__CUDA)
-      g_d = g
+         g_d(:,ig) = g(:,ig)
 #endif
+      enddo
+!$acc end parallel loop 
+!$acc update host(g) 
       !
       call g2kin_init ( gg, tpiba2 )
       !
