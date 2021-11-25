@@ -1913,8 +1913,7 @@
     USE uspp_param,      ONLY : upf, lmaxq, nh, nhm
     USE becmod,          ONLY : becp, calbec, allocate_bec_type, &
                                 deallocate_bec_type
-    USE noncollin_module,ONLY : noncolin, npol
-    USE spin_orb,        ONLY : lspinorb
+    USE noncollin_module,ONLY : noncolin, npol, lspinorb
     USE wannierEPW,      ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
                                 excluded_band, write_mmn, zerophase
     USE constants_epw,   ONLY : czero, cone, twopi, zero
@@ -2403,7 +2402,7 @@
     USE kinds,                ONLY : DP
     USE wvfct,                ONLY : nbnd, npwx, et
     USE wavefunctions,        ONLY : evc
-    USE noncollin_module,     ONLY : noncolin, npol
+    USE noncollin_module,     ONLY : noncolin, npol, lspinorb
     USE uspp,                 ONLY : vkb, nkb, okvan
     USE becmod,               ONLY : bec_type, calbec, allocate_bec_type, &
                                      deallocate_bec_type
@@ -2417,7 +2416,6 @@
     USE ions_base,            ONLY : ntyp => nsp
     USE lsda_mod,             ONLY : nspin
     USE uspp_param,           ONLY : nhm
-    USE spin_orb,             ONLY : lspinorb
     USE lrus,                 ONLY : dpqq, dpqq_so
     USE io_global,            ONLY : stdout
     USE uspp_init,            ONLY : init_us_2

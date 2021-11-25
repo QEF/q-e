@@ -951,7 +951,7 @@ FUNCTION cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, npol, upf)
   !
   USE kinds
   USE uspp, ONLY: qq_so
-  USE spin_orb, ONLY: lspinorb
+  USE noncollin_module, ONLY: lspinorb
   USE pseudo_types, ONLY : pseudo_upf
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum

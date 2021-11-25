@@ -103,13 +103,12 @@ MODULE pw_restart_new
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
                                        Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
                                        is_hubbard, is_hubbard_back, backall
-      USE spin_orb,             ONLY : lspinorb
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
-      USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
-                                       lambda, domag
+      USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
+                                       magtot_nc, lambda, domag, lspinorb
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
       
       USE scf,                  ONLY : rho
@@ -1019,8 +1018,7 @@ MODULE pw_restart_new
            lxdm, ts_vdw, mbd_vdw
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
-              nspin_lsda, nspin_gga, nspin_mag, domag
-      USE spin_orb,        ONLY : lspinorb
+              nspin_lsda, nspin_gga, nspin_mag, domag, lspinorb
       USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
            current_spin
       USE realus,          ONLY : real_space

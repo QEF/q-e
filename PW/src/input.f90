@@ -185,12 +185,10 @@ SUBROUTINE iosys()
                                lambda_    => lambda, &
                                angle1_    => angle1, &
                                angle2_    => angle2, &
-                               report_    => report
-  !
-  USE spin_orb, ONLY : lspinorb_ => lspinorb,  &
-                       lforcet_ => lforcet,    &
-                       starting_spin_angle_ => starting_spin_angle
-
+                               report_    => report, &
+                               lspinorb_ => lspinorb,  &
+                               lforcet_ => lforcet,    &
+                               starting_spin_angle_ => starting_spin_angle
   !
   USE symm_base, ONLY : no_t_rev_ => no_t_rev, nofrac, allfrac, &
                         nosym_ => nosym, nosym_evc_=> nosym_evc

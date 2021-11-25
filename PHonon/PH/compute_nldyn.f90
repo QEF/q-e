@@ -17,10 +17,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE klist,            ONLY : wk
   USE lsda_mod,         ONLY : lsda, current_spin, isk, nspin
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE uspp,             ONLY : nkb, qq_nt, qq_so
   USE uspp_param,       ONLY : nh, nhm
-  USE spin_orb,         ONLY : lspinorb
   USE wvfct,            ONLY : nbnd, et
 
   USE modes,            ONLY : u

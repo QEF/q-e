@@ -462,23 +462,6 @@ MODULE fixed_occ
 END MODULE fixed_occ
 !
 !
-!
-MODULE spin_orb
-  !
-  !! Variables needed for calculations with spin-orbit
-  !
-  SAVE
-  LOGICAL :: lspinorb
-  !! if .TRUE. this calculation uses spin-orbit interactions
-  LOGICAL :: lforcet
-  !! if .TRUE. apply Force Theorem to calculate MAE
-  LOGICAL :: starting_spin_angle
-  !! if .TRUE. the initial wavefunctions are spin-angle functions.
-  !
-END MODULE spin_orb
-!
-!
-!
 MODULE pwcom
   !
   USE klist

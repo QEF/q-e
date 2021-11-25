@@ -1192,7 +1192,7 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
   USE lsda_mod,           ONLY : nspin, isk
   USE wvfct,              ONLY : et, nbnd
   USE klist,              ONLY : nkstot, wk
-  USE spin_orb,           ONLY : lspinorb
+  USE noncollin_module,   ONLY : lspinorb
   USE constants,          ONLY : rytoev
   !
   USE wvfct_gpum,         ONLY: using_et

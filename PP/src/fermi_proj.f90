@@ -38,7 +38,7 @@ SUBROUTINE read_projwfc(lbinary)
   USE io_files,  ONLY : prefix, tmp_dir
   USE io_global, ONLY : ionode, ionode_id
   USE mp_world,  ONLY : world_comm
-  USE spin_orb,  ONLY : lforcet
+  USE noncollin_module,  ONLY : lforcet
   USE mp,        ONLY : mp_bcast
   USE kinds,     ONLY : DP
   USE klist,     ONLY : degauss, ngauss

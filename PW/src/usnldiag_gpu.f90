@@ -21,8 +21,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE uspp,             ONLY: ofsbeta, deeq_d, qq_at_d, qq_so_d, &
                               deeq_nc_d
   USE uspp_param,       ONLY: upf, nh
-  USE spin_orb,         ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
+  USE noncollin_module, ONLY: noncolin, npol, lspinorb
   USE device_memcpy_m,  ONLY: dev_memset
   !
   IMPLICIT NONE

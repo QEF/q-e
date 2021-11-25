@@ -21,9 +21,8 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
   USE uspp,                 ONLY : nkb, vkb, deeq_d
-  USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &

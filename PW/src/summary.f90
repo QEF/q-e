@@ -35,8 +35,7 @@ SUBROUTINE summary()
                               wk, nelec, nelup, neldw, two_fermi_energies
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
                               tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
-  USE noncollin_module,ONLY : noncolin, domag
-  USE spin_orb,        ONLY : lspinorb
+  USE noncollin_module,ONLY : noncolin, domag, lspinorb
   USE funct,           ONLY : write_dft_name
   USE xc_lib,          ONLY : xclib_dft_is
   USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, &

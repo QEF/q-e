@@ -19,7 +19,6 @@ SUBROUTINE do_cond(done)
   USE ldaU,       ONLY : lda_plus_U, lda_plus_u_kind, U_projection, &
                          Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
                          Hubbard_J0, Hubbard_beta
-  USE spin_orb,   ONLY : lspinorb
   USE uspp,       ONLY : okvan
   USE gvect,      ONLY : ecutrho
   USE gvecw,      ONLY : ecutwfc
@@ -30,7 +29,7 @@ SUBROUTINE do_cond(done)
   USE cond_restart, ONLY : cond_readfile, cond_writefile
   USE check_stop, ONLY: max_seconds, check_stop_init, check_stop_now
   !!!
-  USE noncollin_module, ONLY : noncolin, domag, i_cons
+  USE noncollin_module, ONLY : noncolin, domag, i_cons, lspinorb
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp_global, ONLY : mp_startup
   USE mp_pools,  ONLY : npool

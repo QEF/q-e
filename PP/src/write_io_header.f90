@@ -13,8 +13,7 @@ SUBROUTINE write_io_header(filplot, iunplot, title, nr1x, nr2x, nr3x, &
 
    USE kinds, ONLY: DP
    USE ions_base, ONLY : zv, atm, tau, ityp
-   USE noncollin_module, ONLY: noncolin
-   USE spin_orb, ONLY: lspinorb
+   USE noncollin_module, ONLY: noncolin, lspinorb
 
    IMPLICIT NONE
    CHARACTER (len=*) :: filplot

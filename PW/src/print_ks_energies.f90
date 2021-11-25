@@ -52,7 +52,7 @@ SUBROUTINE print_ks_only( )
   USE klist,                ONLY : xk, ngk, nks, nkstot, wk
   USE ener,                 ONLY : ef, eband 
   USE lsda_mod,             ONLY : lsda, nspin
-  USE spin_orb,             ONLY : lforcet
+  USE noncollin_module,     ONLY : lforcet
   USE wvfct,                ONLY : nbnd, et, wg
   USE control_flags,        ONLY : conv_elec, lbands, iverbosity
   USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm
