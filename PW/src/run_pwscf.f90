@@ -291,7 +291,7 @@ SUBROUTINE run_pwscf( exit_status )
      ethr = 1.0D-6
      !
      CALL dev_buf%reinit( ierr )
-     IF ( ierr .ne. 0 ) CALL errore( 'run_pwscf', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr) )
+     IF ( ierr .ne. 0 ) CALL infomsg( 'run_pwscf', 'Cannot reset GPU buffers! Some buffers still locked.' )
      !
   ENDDO main_loop
   !
