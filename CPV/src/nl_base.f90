@@ -397,7 +397,7 @@
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
-      use gvect,      only : gstart, g_d
+      use gvect,      only : gstart, g
       USE device_memcpy_m, ONLY : dev_memcpy
       USE cudafor
       USE cublas
@@ -428,16 +428,16 @@
       cfact1 = - cmplx( 0.0_dp , 1.0_dp ) * tpiba 
 
       DO k = 1, 3
-!$cuf kernel do(1) <<<*,*>>>
+!$acc parallel present(g(:,:)) deviceptr(wrk2, betae)
+!$acc loop gang 
          do iv=1,nkb
-            wrk2(1,iv) = cfact1 * g_d(k,1) * betae(1,iv)
-         end do
-!$cuf kernel do(2) <<<*,*>>>
-         do iv=1,nkb
+            wrk2(1,iv) = cfact1 * g(k,1) * betae(1,iv)
+!$acc loop vector
             do ig=gstart,ngw
-               wrk2(ig,iv) = cfact2 * g_d(k,ig) * betae(ig,iv)
+               wrk2(ig,iv) = cfact2 * g(k,ig) * betae(ig,iv)
             end do
          end do
+!$acc end parallel
          IF( ngw > 0 .AND. nkb > 0 ) THEN
             CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2(1,1), 2*ngw, &
                  c_bgrp, 2*ngw, 0.0d0, becdr_d, nkb )
