@@ -30,13 +30,15 @@
     USE io_global,     ONLY : stdout
     USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier, &
-                              assume_metal, etf_mem, nqf1, nqf2, nqf3, system_2d
+                              assume_metal, etf_mem, nqf1, nqf2, nqf3, system_2d,    &
+                              mob_maxfreq, mob_nfreq
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             &
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
                               wkf, dmef, vmef, eta, gtemp, lower_bnd, dos,        &
                               nbndfst, nktotf, vkk_all, carrier_density,          &
-                              inv_tau_all_mode, inv_tau_allcb_mode
+                              inv_tau_all_mode, inv_tau_allcb_mode,               &
+                              inv_tau_all_freq, inv_tau_allcb_freq
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, &
                               eps6, eps20, bohr2ang, ang2cm, hbarJ, eps160
     USE constants,     ONLY : electronvolt_si
@@ -117,6 +119,8 @@
     !! Pool index
     INTEGER :: i,j
     !! Cartesian index
+    INTEGER :: ifreq
+    !! Index on frequency
     INTEGER :: ind(npool)
     !! Nb of Matrix elements that are non-zero
     INTEGER :: indcb(npool)
@@ -204,6 +208,10 @@
     !! Auxiliary variables
     REAL(KIND = DP) :: inv_tau_allcb_MPI(nbndfst, nktotf, nstemp)
     !! Auxiliary variables
+    REAL(KIND = DP) :: step
+    !! Energy step in Ry for the spectral decomposition
+    REAL(KIND = DP) :: mobility_freq(3, 3, mob_nfreq)
+    !! Spectral decomposition of mobility
     REAL(KIND = DP), EXTERNAL :: efermig
     !! Function that returns the Fermi energy
     REAL(KIND = DP), EXTERNAL :: wgauss
@@ -222,7 +230,12 @@
       wqf_loc = wqf(iq)
     ENDIF
     !
-    IF (iqq == 1) THEN
+    IF (iverbosity == 3) THEN
+      ! Energy steps for spectral decomposition
+      step = mob_maxfreq / mob_nfreq
+    ENDIF
+    !
+    IF (iqq == 1 .OR. first_cycle) THEN
       !
       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
       WRITE(stdout, '(5x,"Scattering rate for IBTE")')
@@ -282,7 +295,7 @@
           WRITE(iufilmu_q, '(a)') '#     \mu(alpha,beta) = 1.0 / (sum_{\nu q} T_{\nu q}(alpha,beta))'
         ENDIF
       ENDIF ! iverbosity
-    ENDIF ! iqq == 1
+    ENDIF ! iqq == 1 .OR. first_cycle
     IF (iverbosity == 3) mobilityq(:, :, :, :) = zero
     !
     ! In the case of a restart do not add the first step
@@ -495,6 +508,16 @@
                       inv_tau_all_mode(imode, ibnd, ik + lower_bnd - 1, itemp) = &
                       inv_tau_all_mode(imode, ibnd, ik + lower_bnd - 1, itemp) + &
                             two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                      !
+                      ! Spectral decomposition histogram
+                      ifreq = NINT(wq(imode) / step)
+                      IF (step > eps20) THEN
+                        ifreq = NINT(wq(imode) / step) + 1
+                      ELSE
+                        ifreq = 1
+                      ENDIF
+                      inv_tau_all_freq(ifreq, ibnd, ik + lower_bnd - 1) = inv_tau_all_freq(ifreq, ibnd, ik + lower_bnd - 1) &
+                          + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
                     ENDDO !imode
                   ENDDO ! jbnd
                   DO j = 1, 3
@@ -509,7 +532,7 @@
                     ENDDO ! i
                   ENDDO ! j
                 ENDDO ! ibnd
-              ENDIF ! iverbsoity
+              ENDIF ! iverbosity
             ENDIF ! ctype
             !
             ! In this case we are also computing the scattering rate for another Fermi level position
@@ -573,6 +596,16 @@
                       inv_tau_allcb_mode(imode, ibnd, ik + lower_bnd - 1, itemp) = &
                       inv_tau_allcb_mode(imode, ibnd, ik + lower_bnd - 1, itemp) + &
                             two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
+                      !
+                      ! Spectral decomposition histogram
+                      ifreq = NINT(wq(imode) / step)
+                      IF (step > eps20) THEN
+                        ifreq = NINT(wq(imode) / step) + 1
+                      ELSE
+                        ifreq = 1
+                      ENDIF
+                      inv_tau_allcb_freq(ifreq, ibnd, ik + lower_bnd - 1) = inv_tau_allcb_freq(ifreq, ibnd, ik + lower_bnd - 1) &
+                          + two * pi * wqf_loc * g2 * ((fmkq + wgq(imode)) * w0g1 + (one - fmkq + wgq(imode)) * w0g2)
                     ENDDO !imode
                   ENDDO ! jbnd
                   DO j = 1, 3
@@ -587,7 +620,7 @@
                     ENDDO
                   ENDDO
                 ENDDO ! ibnd
-              ENDIF ! iverbsoity
+              ENDIF ! iverbosity
             ENDIF ! ctype
           ENDIF ! endif fsthick
         ENDDO ! end loop on k
@@ -740,6 +773,8 @@
       IF (iverbosity == 3) THEN
         CALL mp_sum(inv_tau_all_mode, world_comm)
         CALL mp_sum(inv_tau_allcb_mode, world_comm)
+        CALL mp_sum(inv_tau_all_freq, world_comm)
+        CALL mp_sum(inv_tau_allcb_freq, world_comm)
       ENDIF
       !
       IF (my_pool_id == 0) THEN
@@ -823,7 +858,37 @@
             ENDDO
           ENDDO
           CLOSE(iufilibtev_sup)
-        ENDIF
+          !
+          ! Compute and save spectral decomposition
+          OPEN(iufilibtev_sup, FILE = 'inv_tau_freq.fmt', FORM = 'formatted')
+          WRITE(iufilibtev_sup, '(a)') '# Electron relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+          WRITE(iufilibtev_sup, '(a)') '#  kpt      ibnd    energy [Ry]  freq (meV)    relaxation time [Ry]'
+          DO ik = 1, nktotf
+            DO ibnd = 1, nbndfst
+              DO ifreq = 1, mob_nfreq
+                IF (inv_tau_all_freq(ifreq, ibnd, ik) > eps160) THEN
+                  WRITE(iufilibtev_sup, '(i8,i6,3E22.12)') ik, ibnd, etf_all(ibnd, ik), ifreq * step * ryd2mev, &
+                                                               inv_tau_all_freq(ifreq, ibnd, ik)
+                ENDIF
+              ENDDO ! ifreq
+            ENDDO ! ibnd
+          ENDDO ! ik
+          CLOSE(iufilibtev_sup)
+          OPEN(iufilibtev_sup, FILE = 'inv_taucb_freq.fmt', FORM = 'formatted')
+          WRITE(iufilibtev_sup, '(a)') '# Electron relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+          WRITE(iufilibtev_sup, '(a)') '#  kpt      ibnd    energy [Ry]  freq (meV)    relaxation time [Ry]'
+          DO ik = 1, nktotf
+            DO ibnd = 1, nbndfst
+              DO ifreq = 1, mob_nfreq
+                IF (inv_tau_allcb_freq(ifreq, ibnd, ik) > eps160) THEN
+                  WRITE(iufilibtev_sup, '(i8,i6,3E22.12)') ik, ibnd, etf_all(ibnd, ik), ifreq * step * ryd2mev, &
+                                                               inv_tau_allcb_freq(ifreq, ibnd, ik)
+                ENDIF
+              ENDDO ! ifreq
+            ENDDO ! ibnd
+          ENDDO ! ik
+          CLOSE(iufilibtev_sup)
+        ENDIF ! iverbosity
         !
       ENDIF ! master
       !

@@ -661,19 +661,19 @@
     !!   bose_einstein(w') + fermi_dirac(-w + w')
     REAL(KIND = DP) :: absdelta, reldelta, errdelta
     !! Errors in supercond. gap
-    REAL(KIND = DP) :: a2f_
-    !! Temporary variable for Eliashberg spectral function
     REAL(KIND = DP) :: weight
     !! Factor in supercond. equations
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
+    !!RM - updated 
+    REAL(KIND = DP) :: a2f_tmp(nqstep)
+    !! Temporary variable for Eliashberg spectral function
     !
     COMPLEX(KIND = DP) :: az2, ad2, esqrt, root
     !! Temporary variables
     COMPLEX(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
-    a2f_ = zero
     inv_degaussq = one / degaussq
     !
     IF (iter == 1) THEN
@@ -741,6 +741,8 @@
     znorm(:) = czero
     adelta(:, :, :) = czero
     aznorm(:, :, :) = czero
+    !!RM - updated
+    a2f_tmp(:) = zero
     !
     CALL fkbounds(nkfs, lower_bnd, upper_bnd)
     !
@@ -753,15 +755,19 @@
             DO jbnd = 1, nbndfs
               IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
                 !
+                !!RM - updated
                 IF (lacon_fly) THEN ! evaluate a2fij on the fly
+                  a2f_tmp(:) = zero      
                   DO imode = 1, nmodes
                     IF (wf(imode, iq0) > eps_acustic) THEN
                       DO iwph = 1, nqstep
                         weight = w0gauss((wsph(iwph) - wf(imode, iq0)) * inv_degaussq, 0) * inv_degaussq
-                        a2f_ = weight * dosef * g2(ik, iq, ibnd, jbnd, imode)
+                        a2f_tmp(iwph) =  a2f_tmp(iwph) + weight * dosef * g2(ik, iq, ibnd, jbnd, imode)
                       ENDDO ! iwph
                     ENDIF ! wf
                   ENDDO ! imode
+                ELSE  
+                  a2f_tmp(:) = a2fij(ik, iq, ibnd, jbnd, :)      
                 ENDIF ! lacon_fly
                 !
                 weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) / dosef
@@ -778,11 +784,9 @@
                       ELSE
                         esqrt = aznormp(jbnd, ixkqf(ik, iq0), i) / root
                       ENDIF
-                      IF (lacon_fly) THEN
-                        esqrt = esqrt * weight * gp(iw, iwp) * a2f_
-                      ELSE
-                        esqrt = esqrt * weight * gp(iw, iwp) * a2fij(ik, iq, ibnd, jbnd, iwp)
-                      ENDIF
+                      !!RM - updated
+                      esqrt = esqrt * weight * gp(iw, iwp) * a2f_tmp(iwp)
+                      !
                       aznorm(ibnd, ik, iw) = aznorm(ibnd, ik, iw) - ws(i) * esqrt
                       adelta(ibnd, ik, iw) = adelta(ibnd, ik, iw) - adeltap(jbnd, ixkqf(ik, iq0), i) * esqrt
                     ENDIF
@@ -796,7 +800,8 @@
                     ELSE
                       esqrt = aznormp(jbnd, ixkqf(ik, iq0), i) / root
                     ENDIF
-                    esqrt = esqrt * weight * gm(iw, iwp) * a2fij(ik, iq, ibnd, jbnd, iwp)
+                    !!RM - updated
+                    esqrt = esqrt * weight * gm(iw, iwp) * a2f_tmp(iwp)
                     IF (iw < iwp) THEN
                       aznorm(ibnd, ik, iw) = aznorm(ibnd, ik, iw) - ws(i) * esqrt
                     ELSE
