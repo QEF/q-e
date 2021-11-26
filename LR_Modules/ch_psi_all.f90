@@ -197,7 +197,7 @@ CONTAINS
     ! ikqs(ik) is the index of the point k+q if q\=0
     !          is the index of the point k   if q=0
     ! 
-    !$acc host_data use_device(hpsi, ps, evq)
+    !$acc host_data use_device(spsi, ps, evq)
     IF (noncolin) THEN
        CALL zgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
             npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
