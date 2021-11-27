@@ -38,6 +38,9 @@ MODULE qexsd_input
        qexsd_init_cell_control, &
        qexsd_init_symmetry_flags, &
        qexsd_init_boundary_conditions, &
+       qexsd_init_fcp, &
+       qexsd_init_rism, &
+       qexsd_init_solvents, &
        qexsd_init_ekin_functional, &
        qexsd_init_external_atomic_forces, &
        qexsd_init_free_positions, &
