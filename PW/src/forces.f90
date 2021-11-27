@@ -107,7 +107,7 @@ SUBROUTINE forces()
   ! Cleanup scratch space used in previous SCF iterations.
   ! This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
-  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
+  IF (ierr .ne. 0) CALL infomsg('forces', 'Cannot reset GPU buffers! Some buffers still locked.')
   !
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
