@@ -112,7 +112,6 @@ SUBROUTINE setup()
 #else
   LOGICAL :: lpara = .false.
 #endif
-
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
