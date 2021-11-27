@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,13 +21,13 @@ SUBROUTINE hp_postproc
   USE lsda_mod,       ONLY : nspin
   USE matrix_inversion
   USE ldaU,           ONLY : Hubbard_l, Hubbard_lmax, is_hubbard, num_uc, &
-                             lda_plus_u_kind, dist_s, ityp_s, eps_dist
+                             lda_plus_u_kind, dist_s, ityp_s
   USE ldaU_hp,        ONLY : nath, nath_sc, todo_atom, background,   &
                              skip_type, equiv_type, skip_atom,       &
                              tmp_dir_save, find_atpert, magn,        &
                              nath_pert, ityp_new, ntyp_new, atm_new, &
                              num_neigh, lmin, rmax, nq1, nq2, nq3,   &
-                             determine_num_pert_only
+                             determine_num_pert_only, dist_thr
   !
   IMPLICIT NONE
   !
@@ -432,7 +432,7 @@ SUBROUTINE atomic_dist()
         DO nb = 1, nath_sc
            DO nc = 1, dimn
               IF ( ityp_sc0(nb).EQ.ityp_s(nc)                    .AND. &
-                   ABS(dist_sc(na,nb)-dist_s(na,nc)).LT.eps_dist .AND. &
+                   ABS(dist_sc(na,nb)-dist_s(na,nc)).LT.dist_thr .AND. &
                    .NOT.found(nc) ) THEN
                    !
                    ! Mapping of index nb to nc
@@ -492,7 +492,7 @@ SUBROUTINE average_similar_elements(chi_)
                           chi_(nc,nb).NE.0.d0                   .AND. &
                           dist_sc(na,nb).GT.0.d0                .AND. &
                           dist_sc(nc,nb).GT.0.d0                .AND. &
-                          ABS(dist_sc(nc,nb)-dist_sc(na,nb)).LE.eps_dist 
+                          ABS(dist_sc(nc,nb)-dist_sc(na,nb)).LE.dist_thr 
               !
               IF (condition) THEN
                  !
@@ -547,7 +547,7 @@ SUBROUTINE reconstruct_full_chi(chi_)
                     IF ( ityp_sc(nd).EQ.ityp_sc(na) ) THEN
                        !
                        IF (chi_(nd,nc).NE.0.0d0 .AND. &
-                           ABS(dist_sc(nd,nc)-dist_sc(na,nb)).LE.eps_dist  .AND. &
+                           ABS(dist_sc(nd,nc)-dist_sc(na,nb)).LE.dist_thr  .AND. &
                            spin_sc(na)*spin_sc(nb).EQ.spin_sc(nd)*spin_sc(nc)) THEN
                           !
                           chi_(na,nb) = chi_(nd,nc)
@@ -556,7 +556,7 @@ SUBROUTINE reconstruct_full_chi(chi_)
                        ENDIF
                        !
                        IF (chi_(nc,nd).NE.0.0d0 .AND. &
-                           ABS(dist_sc(nc,nd)-dist_sc(na,nb)).LE.eps_dist  .AND. &
+                           ABS(dist_sc(nc,nd)-dist_sc(na,nb)).LE.dist_thr  .AND. &
                            spin_sc(na)*spin_sc(nb).EQ.spin_sc(nc)*spin_sc(nd)) THEN
                           !
                           chi_(na,nb) = chi_(nc,nd)
@@ -598,9 +598,8 @@ SUBROUTINE reconstruct_full_chi(chi_)
      !
      WRITE( stdout, '(/5x,"Possible solutions:")')
      WRITE( stdout, '(5x, "1. Relax better the structure (in order to have more accurate inter-atomic distances)")')
-     WRITE( stdout, '(5x, "2. Increase the value of the parameter eps_dist in PW/src/ldaU.f90,")')
-     WRITE( stdout, '(5x, "   then recompile the pw.x and hp.x codes, and re-run the HP postprocessing step")')
-     WRITE( stdout, '(5x, "   by setting compute_hp=.true. in the HP input.")')
+     WRITE( stdout, '(5x, "2. Increase the value of the parameter dist_thr in the HP input,")')
+     WRITE( stdout, '(5x, "   and re-run the postprocessing step by setting compute_hp=.true. in the HP input.")')
      !
      CALL errore ('reconstruct_full_chi', &
             'Reconstruction problem: some chi were not found', 1)
