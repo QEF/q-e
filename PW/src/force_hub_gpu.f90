@@ -142,7 +142,7 @@ SUBROUTINE force_hub_gpu( forceh )
    CALL using_evc_d(0)
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
+   IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ABS(ierr) )
 
    DO ik = 1, nks
       !
@@ -415,7 +415,7 @@ SUBROUTINE dndtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    !
    IF (okvan) THEN
       CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
+      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ABS(ierr) )
       CALL dev_memcpy( wfcU_d , wfcU )
       ALLOCATE ( dproj_us_d(nwfcU,nb_s:nb_e) )
       CALL using_evc_d(0)
@@ -793,7 +793,7 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    IF (okvan) THEN
       ALLOCATE ( dproj_us_d(nwfcU,nb_s:nb_e) )
       CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
+      IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ABS(ierr) )
       CALL dev_memcpy(wfcU_d, wfcU)
       CALL using_evc_d(0)
       CALL matrix_element_of_dSdtau_gpu (alpha, ipol, ik, jkb0, &
@@ -1208,7 +1208,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    nh_nt = nh(nt)
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_k_gpu', 'cannot allocate buffers', ierr )
+   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_k_gpu', 'cannot allocate buffers', ABS(ierr) )
    CALL dev_memcpy( wfcU_d , wfcU )
    !
    CALL dev_memset( dproj_d , (0.d0, 0.d0) )
@@ -1225,7 +1225,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       ! Note: parallelization here is over plane waves, not over bands!
       !
       CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim] , ierr ) ! ALLOCATE( dwfc_d(npwx,ldim) )
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ierr)
+      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ABS(ierr))
       CALL dev_memset( dwfc_d , (0.d0, 0.d0) )
       !
       ! DFT+U: In the expression of dwfc we don't need (k+G) but just G; k always
@@ -1302,7 +1302,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       CALL dev_buf%lock_buffer( overlap_inv_d, SHAPE(overlap_inv) , ierr )
       !
       CALL dev_buf%lock_buffer( dwfc_d, [npwx, ldim], ierr ) ! ALLOCATE (dwfc_d(npwx,ldim))
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ierr)
+      IF ( ierr /= 0 ) CALL errore('dprojdtau_k_gpu', ' Buffers allocation failed', ABS(ierr))
       dwfc_d(:,:) = (0.d0, 0.d0)
       !
       ! Determine how many atomic wafefunctions there are for atom 'alpha'
@@ -1782,7 +1782,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ldim_std = 2*Hubbard_l(nt)+1
    nh_nt = nh(nt)
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_gamma_gpu', 'cannot allocate buffers', ierr )
+   IF ( ierr /= 0 ) CALL errore( 'dprojdtau_gamma_gpu', 'cannot allocate buffers', ABS(ierr) )
    CALL dev_memcpy( wfcU_d , wfcU )
    !
    dproj_d(:,:) = 0.0_dp
@@ -1794,7 +1794,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       !
       CALL dev_buf%lock_buffer( dproj0_d, [ldim,nbnd], ierr ) ! ALLOCATE( dproj0_d(ldim,nbnd) )
       CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim], ierr ) ! ALLOCATE( dwfc_d(npwx,ldim)
-      IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
+      IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
       dproj0_d(:,:) =  0.d0
       dwfc_d(:,:)   = (0.d0,0.d0)
       !
@@ -1865,7 +1865,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL dev_buf%lock_buffer(wfatdbeta_d,[nwfcU,nh(nt)] , ierr)  ! ALLOCATE( wfatdbeta_d(nwfcU,nh(nt)) )
    CALL dev_buf%lock_buffer(wfatbeta_d, [nwfcU,nh(nt)] , ierr)  ! ALLOCATE( wfatbeta_d(nwfcU,nh(nt))  )
    CALL dev_buf%lock_buffer(dbeta_d,    [npwx,nh(nt)]  , ierr)  ! ALLOCATE( dbeta_d(npwx,nh(nt))      )
-   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
+   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
    !
 !$acc parallel loop collapse(2) present(vkb(:,:))
    DO ih = 1, nh_nt
@@ -1895,7 +1895,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    ! betapsi is used here as work space 
    !
    CALL dev_buf%lock_buffer( betapsi_d, [nh(nt), nbnd] , ierr ) ! ALLOCATE( betapsi_d(nh(nt), nbnd) )
-   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed',ierr)
+   IF ( ierr /= 0 ) CALL errore('dprojdtau_gamma_gpu','Buffers allocation failed', ABS(ierr))
    ! TODO : CAN WE RESET ONLY from nb_s to nb_e ??
    CALL dev_memset ( betapsi_d,  0.0_dp )
    !

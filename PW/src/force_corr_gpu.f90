@@ -79,7 +79,7 @@ subroutine force_corr_gpu (forcescc)
   !
   CALL dev_buf%lock_buffer ( tau_d, [3,nat], ierrs(7))
   !
-  IF (ANY(ierrs /= 0)) CALL errore('force_corr_gpu', 'cannot allocate buffers', -1)
+  IF (ANY(ierrs /= 0)) CALL errore('force_corr_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)))
   !
   tau_d(1:3,1:nat)=tau(1:3,1:nat)
   !
