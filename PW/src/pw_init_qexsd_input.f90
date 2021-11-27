@@ -49,7 +49,6 @@
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
                                 ip_use_all_frac=>use_all_frac, assume_isolated, esm_bc, esm_w, esm_nfit, esm_efield,  & 
-                                ip_lfcp => lfcp, ip_fcp_mu => fcp_mu,                                                 &
                                 ecfixed, qcutz, q2sigma,                                                              &    
                                 tforces, rd_for,                                                                      &
                                 rd_if_pos,                                                                               &
@@ -60,14 +59,28 @@
                                 constr_tol_inp, constrained_magnetization, lambda, fixed_magnetization, input_dft,    &
                                 tf_inp, ip_ibrav => ibrav,                                                            &
                                 gate, zgate, relaxz, block, block_1, block_2, block_height, real_space,               &
-                                trism
+                                trism, esm_a, esm_zb, esm_debug, esm_debug_gpmax, lgcscf, gcscf_ignore_mun, gcscf_mu, &
+                                gcscf_conv_thr, gcscf_gk, gcscf_gh, gcscf_beta, lfcp, fcp_mu, fcp_dynamics,           &
+                                fcp_conv_thr, fcp_ndiis, fcp_rdiis, fcp_mass, fcp_velocity, fcp_temperature,          &
+                                fcp_tempw, fcp_tolp, fcp_delta_t, fcp_nraise, freeze_all_atoms, closure, starting1d,  &
+                                tempv, rmax1d, smear1d, rism1d_maxstep, rism1d_conv_thr, rism1d_bond_width,           &
+                                rism1d_dielectric, rism1d_molesize, rism1d_nproc, rism1d_nproc_switch, mdiis1d_size,  &
+                                mdiis1d_step, laue_expand_right, laue_expand_left, laue_both_hands, starting3d,       &
+                                ecutsolv, smear3d, solute_lj, solute_epsilon, solute_sigma, rmax_lj, rism3d_maxstep,  &
+                                rism3d_conv_thr, mdiis3d_size, mdiis3d_step, rism3d_conv_level, rism3d_planar_average,&
+                                laue_nfit, laue_expand_right, laue_expand_left, laue_starting_right,                  &
+                                laue_starting_left, laue_buffer_right, laue_buffer_right_solu, laue_buffer_right_solv,&
+                                laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, laue_both_hands,      &
+                                laue_reference, laue_wall, laue_wall_z, laue_wall_rho, laue_wall_epsilon,             &
+                                laue_wall_sigma, laue_wall_lj6, nsolv, solv_label, solv_mfile, solv_dens1, solv_dens2,&
+                                solvents_unit
 !
   USE fixed_occ,         ONLY:  f_inp               
 !
   USE kinds,             ONLY:   DP
   USE parameters,        ONLY:   ntypx
   USE constants,         ONLY:   e2,bohr_radius_angs
-  USE ions_base,         ONLY:   iob_tau=>tau
+  USE ions_base,         ONLY:   iob_tau=>tau, nsp
   USE cell_base,         ONLY:   cb_at => at, cb_alat => alat, cb_iforceh => iforceh
   USE funct,             ONLY:   get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
   USE xc_lib,            ONLY:   xclib_dft_is
@@ -147,7 +160,8 @@
                                     restart_mode=restart_mode,prefix=prefix,pseudo_dir=pseudo_dir,outdir=outdir,       &
                                     stress=tstress,forces=tprnfor, wf_collect=wf_collect,disk_io=disk_io,              &
                                     max_seconds=max_seconds,etot_conv_thr=etot_conv_thr/e2,forc_conv_thr=forc_conv_thr/e2,   &
-                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint, NSTEP = cf_nstep )
+                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint, fcp=lfcp, rism=trism, &
+                                    NSTEP = cf_nstep)
   !------------------------------------------------------------------------------------------------------------------------
   !                                                 ATOMIC SPECIES                                                      
   !------------------------------------------------------------------------------------------------------------------------
@@ -490,25 +504,75 @@
      IF ( TRIM ( assume_isolated) .EQ. "esm") THEN
         SELECT CASE (TRIM(esm_bc))
           CASE ('pbc' )
-             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc)
           CASE ('bc1' )
-             IF (trism) THEN
-                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
-                                                    ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
-                                                    FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
-             ELSE
-                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
-                                                    ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
-             END IF
-          CASE ('bc2', 'bc3', 'bc4' )
-             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
-                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
+            IF (trism) THEN
+              IF (lgcscf) THEN
+                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                     esm_nfit=esm_nfit, esm_debug=esm_debug, esm_debug_gpmax=esm_debug_gpmax, &
+                     lgcscf=lgcscf, gcscf_ignore_mun=gcscf_ignore_mun, gcscf_mu=gcscf_mu, &
+                     gcscf_conv_thr=gcscf_conv_thr, gcscf_gk=gcscf_gk, gcscf_gh=gcscf_gh, gcscf_beta=gcscf_beta)
+               ELSE
+                CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                     esm_nfit=esm_nfit, esm_debug=esm_debug, esm_debug_gpmax=esm_debug_gpmax)
+               END IF
+            ELSE
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_debug=esm_debug, esm_debug_gpmax=esm_debug_gpmax)
+            END IF
+          CASE ('bc2', 'bc3')
+            IF (lgcscf) THEN
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_efield=esm_efield, esm_w=esm_w, esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax, lgcscf=lgcscf, gcscf_ignore_mun=gcscf_ignore_mun, &
+                   gcscf_mu=gcscf_mu, gcscf_conv_thr=gcscf_conv_thr, gcscf_gk=gcscf_gk, gcscf_gh=gcscf_gh, &
+                   gcscf_beta=gcscf_beta)
+            ELSE
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_efield=esm_efield, esm_w=esm_w,esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax)
+            END IF
+          CASE ('bc4')
+            IF (lgcscf) THEN
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_w=esm_w, esm_a=esm_a, esm_zb=esm_zb, esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax, lgcscf=lgcscf, gcscf_ignore_mun=gcscf_ignore_mun, &
+                   gcscf_mu=gcscf_mu, gcscf_conv_thr=gcscf_conv_thr, gcscf_gk=gcscf_gk, gcscf_gh=gcscf_gh, &
+                   gcscf_beta=gcscf_beta)
+            ELSE
+              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc=esm_bc, &
+                   esm_nfit=esm_nfit, esm_w=esm_w, esm_a=esm_a, esm_zb=esm_zb, esm_debug=esm_debug, &
+                   esm_debug_gpmax=esm_debug_gpmax)
+            END IF
         END SELECT
      ELSE
         CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated)
      END IF
+  END IF
+  !------------------------------------------------------------------------------------------------------------------------
+  !                              Ficticious charge particle (FCP)
+  !------------------------------------------------------------------------------------------------------------------------
+  IF (lfcp) THEN
+     obj%fcp_ispresent = .TRUE.
+     CALL qexsd_init_fcp(obj%fcp, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis,&
+                         fcp_mass, fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t,&
+                         fcp_nraise, freeze_all_atoms)
+  END IF
+  !------------------------------------------------------------------------------------------------------------------------
+  !                              RISM
+  !------------------------------------------------------------------------------------------------------------------------
+  IF (trism) THEN
+     obj%rism_ispresent = .TRUE.
+     CALL qexsd_init_rism(obj%rism, nsolv, closure, tempv, ecutsolv, nsp, solute_lj, solute_epsilon, solute_sigma, &
+          rmax_lj,rmax1d, starting1d, starting3d, smear1d, smear3d, rism1d_maxstep, rism3d_maxstep, rism1d_conv_thr, &
+          rism3d_conv_thr, mdiis1d_size, mdiis3d_size, mdiis1d_step, mdiis3d_step, rism1d_bond_width, rism1d_dielectric, &
+          rism1d_molesize, rism1d_nproc, rism1d_nproc_switch, rism3d_conv_level, rism3d_planar_average, laue_nfit, &
+          laue_expand_right, laue_expand_left, laue_starting_right, laue_starting_left, laue_buffer_right, &
+          laue_buffer_right_solu, laue_buffer_right_solv, laue_buffer_left, laue_buffer_left_solu, laue_buffer_left_solv, &
+          laue_both_hands, laue_reference, laue_wall, laue_wall_z, laue_wall_rho, laue_wall_epsilon, laue_wall_sigma, &
+          laue_wall_lj6)
+     obj%solvents_ispresent = .TRUE.
+     CALL qexsd_init_solvents(obj%solvents, nsolv, solv_label, solv_mfile, solv_dens1, solv_dens2, solvents_unit)
   END IF
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                              EKIN FUNCTIONAL 

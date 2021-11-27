@@ -880,10 +880,11 @@ CONTAINS
     DO isolV = 1, nsolV
        !
        CALL nullify_molecule(solVs(isolV))
-       solVs(isolV)%density    = rism3d_obj%solvents(isolV)%density1
-       solVs(isolV)%subdensity = rism3d_obj%solvents(isolV)%density2
+       solVs(isolV)%name       = TRIM(rism3d_obj%solvent(isolV)%label)
+       solVs(isolV)%density    = rism3d_obj%solvent(isolV)%density1
+       solVs(isolV)%subdensity = rism3d_obj%solvent(isolV)%density2
        !
-       molfile(isolV) = TRIM(rism3d_obj%solvents(isolV)%molec_file)
+       molfile(isolV) = TRIM(rism3d_obj%solvent(isolV)%molec_file)
        !
     END DO
     !

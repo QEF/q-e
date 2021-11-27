@@ -1008,7 +1008,8 @@ CONTAINS
     ! 
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_total_energy(obj, etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, &
-                       electric_field_corr, potentiostat_contr, gate_contribution, dispersion_contribution )
+                       electric_field_corr, potentiostat_contr, gate_contribution, dispersion_contribution, &
+                       esol)
     !----------------------------------------------------------------------------------------
     !
     ! 
@@ -1021,12 +1022,13 @@ CONTAINS
     REAL(DP),OPTIONAL               :: potentiostat_contr
     REAL(DP),OPTIONAL               :: gate_contribution
     REAL(DP),OPTIONAL               :: dispersion_contribution  
+    REAL(DP),OPTIONAL               :: esol
     !
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
     ! 
     CALL  qes_init (obj, TAGNAME, ETOT = etot, EBAND = eband, EHART = ehart, VTXC = vtxc, ETXC = etxc, & 
                     EWALD = ewald, DEMET = demet, EFIELDCORR = electric_field_corr, POTENTIOSTAT_CONTR = potentiostat_contr,  &
-                                  GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution ) 
+                    GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution, ESOL = esol)
     
     END SUBROUTINE qexsd_init_total_energy
     ! 
@@ -1292,12 +1294,13 @@ END SUBROUTINE qexsd_init_gate_info
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_rism3d(obj, nmol, molfile, dens1, dens2, ecutsolv)
+    SUBROUTINE qexsd_init_rism3d(obj, nmol, slabel, molfile, dens1, dens2, ecutsolv)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
       TYPE(rism3d_type)            :: obj
       INTEGER,          INTENT(IN) :: nmol
+      CHARACTER(LEN=*), INTENT(IN) :: slabel(:)
       CHARACTER(LEN=*), INTENT(IN) :: molfile(:)
       REAL(DP),         INTENT(IN) :: dens1(:)
       REAL(DP),         INTENT(IN) :: dens2(:)
@@ -1309,7 +1312,7 @@ END SUBROUTINE qexsd_init_gate_info
       ALLOCATE(solvents(nmol))
       !
       DO i = 1, nmol
-          CALL qes_init (solvents(i), "solvent", TRIM(molfile(i)), dens1(i), dens2(i))
+          CALL qes_init (solvents(i), "solvent", TRIM(slabel(i)), TRIM(molfile(i)), dens1(i), dens2(i))
       ENDDO
       !
       CALL qes_init (obj, "rism3d", nmol, solvents, ecutsolv)

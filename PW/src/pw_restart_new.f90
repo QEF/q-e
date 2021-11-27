@@ -93,7 +93,7 @@ MODULE pw_restart_new
       USE fft_base,             ONLY : dffts
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
-                                       ehart, eband, demet, edftd3, elondon, exdm
+                                       ehart, eband, demet, edftd3, elondon, exdm, esol
       USE tsvdw_module,         ONLY : EtsvdW
       USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
@@ -184,6 +184,7 @@ MODULE pw_restart_new
       REAL(DP), ALLOCATABLE                 :: ef_updw(:)
       !
       INTEGER               :: isolV
+      CHARACTER(LEN=10), ALLOCATABLE :: slabel(:)
       REAL(DP), ALLOCATABLE :: solvrho1(:)
       REAL(DP), ALLOCATABLE :: solvrho2(:)
       !
@@ -633,9 +634,16 @@ MODULE pw_restart_new
             gatefield_corr => temp(itemp)  
          END IF
 
-         CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
-                                       etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
-                                       gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt) 
+         IF ( lrism3d ) THEN
+            CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
+                                          etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
+                                          gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt, esol=esol)
+         ELSE
+            CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
+                                          etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
+                                          gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt)
+         END IF
+
          !
          NULLIFY(degauss_, demet_, efield_corr, potstat_corr, gatefield_corr)
          itemp = 0
@@ -705,9 +713,11 @@ MODULE pw_restart_new
          IF ( lrism3d ) THEN
             !
             IF ( nsolV > 0 ) THEN
+               ALLOCATE( slabel( nsolV ) )
                ALLOCATE( solvrho1( nsolV ) )
                ALLOCATE( solvrho2( nsolV ) )
                DO isolV = 1, nsolV
+                  slabel(isolV)   = solVs(isolV)%name
                   solvrho1(isolV) = solVs(isolV)%density
                   solvrho2(isolV) = solVs(isolV)%subdensity
                END DO
@@ -717,8 +727,9 @@ MODULE pw_restart_new
             END IF
             !
             output_obj%rism3d_ispresent = .TRUE.
-            CALL qexsd_init_rism3d(output_obj%rism3d, nsolV, molfile, solvrho1, solvrho2, ecutsolv/e2)
+            CALL qexsd_init_rism3d(output_obj%rism3d, nsolV, slabel, molfile, solvrho1, solvrho2, ecutsolv/e2)
             !
+            DEALLOCATE( slabel )
             DEALLOCATE( solvrho1 )
             DEALLOCATE( solvrho2 )
             !
