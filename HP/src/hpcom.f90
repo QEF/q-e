@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -102,7 +102,9 @@ MODULE ldaU_hp
               rmax,              &          ! Maximum distance (in Bohr) between two atoms 
                                             ! to search for neighbors (used only at the 
                                             ! postprocessing step when lda_plus_u_kind = 2).
-              alpha_mix(maxter)             ! The mixing parameter
+              alpha_mix(maxter), &          ! The mixing parameter
+              dist_thr                      ! Threshold for comparing inter-atomic distances
+                                            ! in the post-processing step
   !
   REAL(DP), ALLOCATABLE :: ns(:),      &    ! Trace of unperturbed occupations (spin up + spin down)
                            magn(:),    &    ! Unperturbed magnetization
