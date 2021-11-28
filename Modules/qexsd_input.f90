@@ -476,25 +476,30 @@ MODULE qexsd_input
    ! 
    TYPE (esm_type),POINTER                      :: esm_obj => NULL() 
    TYPE (gcscf_type),POINTER                    :: gcscf_obj => NULL()
-   LOGICAL                                      :: esm_ispresent
+   LOGICAL                                      :: esm_ispresent, gcscf_ispresent
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
    esm_ispresent = .FALSE.
+   gcscf_ispresent = .FALSE.
    !
-   IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
-      esm_ispresent = .TRUE.
-      ALLOCATE(esm_obj)
-      CALL qes_init (esm_obj, "esm", bc=TRIM(esm_bc), nfit=esm_nfit, w=esm_w, efield=esm_efield, a=esm_a, &
-                     zb=esm_zb, debug=esm_debug, debug_gpmax=esm_debug_gpmax)
+   IF (PRESENT(lgcscf)) THEN
+     gcscf_ispresent = .TRUE.
    END IF
    !
-   IF (lgcscf) THEN
-      ALLOCATE(gcscf_obj)
-      CALL qes_init(gcscf_obj,"gcscf", gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr, gcscf_gk, gcscf_gh, gcscf_beta )
+   IF (TRIM(assume_isolated) .EQ. "esm") THEN
+     esm_ispresent = .TRUE.
+     ALLOCATE(esm_obj)
+     CALL qes_init (esm_obj, "esm", bc=TRIM(esm_bc), nfit=esm_nfit, w=esm_w, efield=esm_efield, a=esm_a, &
+                    zb=esm_zb, debug=esm_debug, debug_gpmax=esm_debug_gpmax)
+   END IF
+   !
+   IF (gcscf_ispresent) THEN
+     ALLOCATE(gcscf_obj)
+     CALL qes_init(gcscf_obj,"gcscf", gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr, gcscf_gk, gcscf_gh, gcscf_beta )
    END IF
    !
    IF (esm_ispresent) THEN
-     IF (lgcscf) THEN
+     IF (gcscf_ispresent) THEN
        CALL qes_init (obj, TAGNAME, assume_isolated=assume_isolated, esm=esm_obj, gcscf=gcscf_obj)
      ELSE
        CALL qes_init (obj, TAGNAME, assume_isolated=assume_isolated, esm=esm_obj)
@@ -506,9 +511,9 @@ MODULE qexsd_input
       DEALLOCATE(esm_obj)
    END IF
    !
-   IF ( lgcscf ) THEN
+   IF ( gcscf_ispresent ) THEN
       CALL qes_reset (gcscf_obj)
-      DEALLOCATE(gcscf_obj) 
+      DEALLOCATE(gcscf_obj)
    END IF
    !
    END SUBROUTINE qexsd_init_boundary_conditions
