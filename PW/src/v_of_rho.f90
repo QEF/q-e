@@ -470,6 +470,10 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   REAL(DP), PARAMETER :: vanishing_charge = 1.D-10, &
                          vanishing_mag    = 1.D-20
   !
+  
+  logical :: homer
+  
+  
   CALL start_clock( 'v_xc' )
   !
   etxc = 0.D0 ;  rhoneg1 = 0.D0
@@ -481,9 +485,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   ALLOCATE( ex(dfftp%nnr), vx(dfftp%nnr,nspin) )
   ALLOCATE( ec(dfftp%nnr), vc(dfftp%nnr,nspin) )
   !$acc data create( ex, ec, vx, vc )
-  !
-  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v,&
-  !$acc&                      ex, ec, vx, vc )
   !
   !$acc parallel loop
   DO ir = 1, dfftp%nnr
@@ -565,7 +566,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       !
   ENDIF
   !
-  !$acc end host_data
   !$acc end data
   DEALLOCATE( ex, vx )
   DEALLOCATE( ec, vc )
