@@ -85,11 +85,10 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   USE kinds,            ONLY: DP
   USE becmod,           ONLY: becp
   USE uspp,             ONLY: vkb, nkb, okvan, qq_at, qq_so, ofsbeta
-  USE spin_orb,         ONLY: lspinorb
   USE uspp_param,       ONLY: upf, nh, nhm
   USE ions_base,        ONLY: nat, nsp, ityp
   USE control_flags,    ONLY: gamma_only 
-  USE noncollin_module, ONLY: npol, noncolin
+  USE noncollin_module, ONLY: npol, noncolin, lspinorb
   USE realus,           ONLY: real_space, invfft_orbital_gamma,     &
                               fwfft_orbital_gamma, calbec_rs_gamma, &
                               s_psir_gamma, invfft_orbital_k,       &

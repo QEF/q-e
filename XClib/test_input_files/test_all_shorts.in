@@ -1,0 +1,9 @@
+&INPUT_NAMELIST
+                    test='execute'
+                    filename_xml='all_shorts.xml'
+                    dft='all_short'
+                    family= ''
+                    polarization='both'
+                    xc_derivative=.FALSE.
+                    show_time=.TRUE.
+                 /

@@ -80,8 +80,12 @@ PROGRAM ZG
   !               are given. See below. (default: .FALSE.).
   !     q_in_cryst_coord IF .TRUE. input q points are in crystalline 
   !              coordinates (default: .FALSE.)
+  !     fd         (logical) if .t. the ifc come from the finite displacement calculation
+  !     na_ifc     (logical) add non analitic contributions to the interatomic force 
+  !                constants if finite displacement method is used (as in Wang et al.
+  !                Phys. Rev. B 85, 224303 (2012)) [to be used in conjunction with fd.x]
   !     loto_2d  set to .true. to activate two-dimensional treatment of LO-TO
-  !              siplitting.
+  !              siplitting for q= 0.  (default: .false.)
   !
   !  IF (q_in_band_form) THEN
   !     nq     ! number of q points
@@ -128,7 +132,7 @@ PROGRAM ZG
   !                            (i) large supercell sizes are considered for which the error is minimized by 
   !                            the first set of signs, and (ii) only single phonon displacements are of interest (see below) 
   !                            (default .true.)
-  !     "threshold"          : Real number indicating the error at which the algorithm stops while it's 
+  !     "error_thresh"        : Real number indicating the error at which the algorithm stops while it's 
   !                            looking for possible combinations of signs. Once this limit is reached 
   !                            the ZG-displacement is constructed. The threshold is usually chosen 
   !                            to be less than 5% of the diagonal terms, i.e. those terms that contribute 
@@ -187,7 +191,7 @@ PROGRAM ZG
   INTEGER :: nr1, nr2, nr3, nsc, ibrav
   CHARACTER(LEN=256) :: flfrc, filename
   CHARACTER(LEN= 10)  :: asr
-  LOGICAL :: has_zstar, q_in_cryst_coord
+  LOGICAL :: has_zstar, q_in_cryst_coord, loto_disable
   COMPLEX(DP), ALLOCATABLE :: dyn(:, :, :, :), dyn_blk(:, :, :, :), frc_ifc(:, :, :, :)
   COMPLEX(DP), ALLOCATABLE :: z(:, :) 
   REAL(DP), ALLOCATABLE:: tau(:, :), q(:, :), w2(:, :), wq(:)
@@ -208,9 +212,9 @@ PROGRAM ZG
 
   INTEGER :: nspin_mag, nqs, ios
   !
-  LOGICAL :: xmlifc, lo_to_split, loto_2d
+  LOGICAL :: xmlifc, lo_to_split, loto_2d, na_ifc, fd, nosym
   !
-  REAL(DP) :: qhat(3), qh, E 
+  REAL(DP) :: qhat(3), qh, E, qq 
   REAL(DP) :: delta
   REAL(DP), ALLOCATABLE :: xqaux(:, :)
   INTEGER, ALLOCATABLE :: nqb(:)
@@ -237,19 +241,22 @@ PROGRAM ZG
   LOGICAL                  :: ZG_strf, compute_error, single_ph_displ
   INTEGER                  :: dim1, dim2, dim3, niters, qpts_strf
   REAL(DP)                 :: error_thresh, T
-  REAL(DP)                 :: atmsf_zg_a(ntypx,5), atmsf_zg_b(ntypx,5) 
+  REAL(DP)                 :: atmsf_a(ntypx,5), atmsf_b(ntypx,5) 
   REAL(DP),    ALLOCATABLE :: q_nq_zg(:, :) ! 3, nq
   COMPLEX(DP), ALLOCATABLE :: z_nq_zg(:, :, :) ! nomdes, nmodes, nq
   ! 
+  INTEGER                  :: nrots, kres1, kres2, col1, col2, Np
+  REAL(DP)                 :: kmin, kmax
   !
-  NAMELIST /input/ flfrc, amass, asr, at, ntyp, loto_2d, &
+  NAMELIST /input/ flfrc, amass, asr, at, ntyp, loto_2d, loto_disable, &
        &            q_in_band_form, q_in_cryst_coord, point_label_type,  &
+       &             na_ifc, fd, &
 ! we add the inputs for generating the ZG-configuration
        &           ZG_conf, dim1, dim2, dim3, niters, error_thresh, q_external, & 
-       &           compute_error, synch, atm_zg, T, incl_qA, single_ph_displ, &
-       &           atmsf_zg_a, atmsf_zg_b, ZG_strf, qpts_strf
-! ZG_conf --> IF TRUE compute the ZG_configuration 
-! Last line of inputs are for the structure factor calculation
+       &           compute_error, synch, atm_zg, T, incl_qA, single_ph_displ, ZG_strf
+  NAMELIST /strf_ZG/ atmsf_a, atmsf_b, qpts_strf, &
+                     nrots, kres1, kres2, kmin, kmax, col1, col2, Np
+! Last line of inputs are for the ZG structure factor calculation
   !
   CALL mp_startup()
   CALL environment_start('ZG')
@@ -272,7 +279,10 @@ PROGRAM ZG
      q_in_band_form   = .FALSE.
      q_in_cryst_coord = .FALSE.
      point_label_type = 'SC'
+     na_ifc           = .FALSE.
+     fd               = .FALSE.
      loto_2d          = .FALSE.
+     loto_disable     = .FALSE.
      ! 
      ZG_conf         = .TRUE.
      compute_error   = .TRUE.
@@ -288,25 +298,40 @@ PROGRAM ZG
      niters          = 15000 
      atm_zg          = "Element"
      ZG_strf         = .FALSE.
+     !
+     nrots = 1
+     kres1 = 250
+     kres2 = 250
+     kmin = -5
+     kmax = 10
+     col1 = 1
+     col2 = 2
+     Np = 100
      qpts_strf       = 0
-     atmsf_zg_a      = 0.d0
-     atmsf_zg_b      = 0.d0
+     atmsf_a      = 0.d0
+     atmsf_b      = 0.d0
      ! 
      !
      !
-     IF (ionode) READ (5, input,IOSTAT=ios)
+     IF (ionode) READ (5, input, IOSTAT = ios)
      CALL mp_bcast(ios, ionode_id, world_comm) 
      CALL errore('ZG', 'reading input namelist', ABS(ios))
+     IF ((ionode) .AND. (ZG_strf)) READ (5, strf_ZG , IOSTAT = ios)
+     CALL mp_bcast(ios, ionode_id, world_comm)
+     CALL errore('strf_ZG', 'reading strf_ZG namelist', ABS(ios))
      CALL mp_bcast(asr, ionode_id, world_comm)
      CALL mp_bcast(flfrc, ionode_id, world_comm)
      CALL mp_bcast(amass, ionode_id, world_comm)
      CALL mp_bcast(amass_blk, ionode_id, world_comm)
      CALL mp_bcast(at, ionode_id, world_comm)
      CALL mp_bcast(ntyp, ionode_id, world_comm)
+     CALL mp_bcast(na_ifc,ionode_id, world_comm) 
+     CALL mp_bcast(fd,ionode_id, world_comm)
      CALL mp_bcast(q_in_band_form, ionode_id, world_comm)
      CALL mp_bcast(q_in_cryst_coord, ionode_id, world_comm)
      CALL mp_bcast(point_label_type, ionode_id, world_comm)
      CALL mp_bcast(loto_2d, ionode_id, world_comm) 
+     CALL mp_bcast(loto_disable,ionode_id, world_comm)
      ! 
      CALL mp_bcast(ZG_conf, ionode_id, world_comm)
      CALL mp_bcast(compute_error, ionode_id, world_comm)
@@ -322,10 +347,21 @@ PROGRAM ZG
      CALL mp_bcast(niters, ionode_id, world_comm)
      CALL mp_bcast(atm_zg, ionode_id, world_comm)
      CALL mp_bcast(ZG_strf, ionode_id, world_comm)
+     !
      CALL mp_bcast(qpts_strf, ionode_id, world_comm)
-     CALL mp_bcast(atmsf_zg_a, ionode_id, world_comm)
-     CALL mp_bcast(atmsf_zg_b, ionode_id, world_comm)
+     CALL mp_bcast(atmsf_a, ionode_id, world_comm)
+     CALL mp_bcast(atmsf_b, ionode_id, world_comm)
+     CALL mp_bcast(nrots, ionode_id, world_comm)
+     CALL mp_bcast(kres1, ionode_id, world_comm)
+     CALL mp_bcast(kres2, ionode_id, world_comm)
+     CALL mp_bcast(kmin, ionode_id, world_comm)
+     CALL mp_bcast(kmax, ionode_id, world_comm)
+     CALL mp_bcast(col1, ionode_id, world_comm)
+     CALL mp_bcast(col2, ionode_id, world_comm)
+     CALL mp_bcast(Np, ionode_id, world_comm)
      ! 
+     IF (loto_2d .AND. loto_disable) CALL errore('ZG', &
+         'loto_2d and loto_disable cannot be both true', 1)
      ! To check that user specifies supercell dimensions
      IF (ZG_conf) THEN 
         IF ((dim1 < 1)  .OR. (dim2 < 1) .OR. (dim3 < 1)) CALL errore('ZG', 'reading supercell size', dim1)
@@ -540,6 +576,8 @@ PROGRAM ZG
      ALLOCATE ( dyn(3, 3, nat, nat), dyn_blk(3, 3, nat_blk, nat_blk) )
      ALLOCATE ( z(3 * nat, 3 * nat), w2(3 * nat, nq), f_of_q(3, 3, nat, nat) )
      ! 
+     ! Have to initialize w2
+     w2 = 0.d0
      IF (ZG_conf) THEN
        ALLOCATE ( z_nq_zg(3 * nat, 3 * nat, nq), q_nq_zg(3, nq))
        z_nq_zg(:, :, :) = (0.d0, 0.d0)
@@ -554,8 +592,6 @@ PROGRAM ZG
      num_rap_mode=- 1
      high_sym=.TRUE.
      !
-     ! Have to initialize w2
-     w2 = 0.d0
      CALL fkbounds( nq, lower_bnd, upper_bnd )
      !
      DO n = lower_bnd, upper_bnd ! 1, nq
@@ -563,11 +599,23 @@ PROGRAM ZG
 
         lo_to_split = .FALSE.
         f_of_q(:, :, :, :) = (0.d0, 0.d0)
+
+        IF(na_ifc) THEN
+
+           qq=SQRT(q(1,n)**2+q(2,n)**2+q(3,n)**2)
+           if(ABS(qq) < 1d-8) qq= 1.0
+           qhat(1)=q(1,n)/qq
+           qhat(2)=q(2,n)/qq
+           qhat(3)=q(3,n)/qq
+
+           CALL nonanal_ifc (nat,nat_blk,itau_blk,epsil,qhat,zeu,omega,dyn, &
+                           nr1, nr2, nr3,f_of_q)
+        ENDIF
         
         CALL setupmat (q(1, n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
                    loto_2d, &
-             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, f_of_q)
+             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc, f_of_q, fd)
 
         IF (.not.loto_2d) THEN
         qhat(1) = q(1, n) * at(1, 1) + q(2, n) * at(2, 1) + q(3, n) * at(3, 1)
@@ -608,11 +656,14 @@ PROGRAM ZG
                 CALL infomsg  &
                 ('ZG','Z* not found in file '//TRIM(flfrc)// &
                           ', TO-LO splitting at q = 0 will be absent!')
+           ELSEIF (loto_disable) THEN
+                CALL infomsg('ZG', &
+                    'loto_disable is true. Disable LO-TO splitting at q=0.')
            ELSE
               lo_to_split=.TRUE.
            ENDIF
            !
-           CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
+           IF (lo_to_split) CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
            !
         ENDIF
         !
@@ -660,9 +711,9 @@ PROGRAM ZG
                                 synch, tau, alat, atm_zg, ntypx, at, &
                                 q_in_cryst_coord, q_external, T, incl_qA, & 
                                 compute_error, single_ph_displ, & 
-                                ZG_strf, qpts_strf, atmsf_zg_a, atmsf_zg_b)
+                                ZG_strf, qpts_strf, atmsf_a, atmsf_b, &
+                                nrots, kres1, kres2, kmin, kmax, col1, col2, Np)
      ! 
-     !
      DEALLOCATE (z, w2, dyn, dyn_blk)
      ! 
      IF (ZG_conf) DEALLOCATE (z_nq_zg, q_nq_zg) 
@@ -813,7 +864,8 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
 END SUBROUTINE readfc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3,frc, at, bg, rws, nrws,f_of_q)
+SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3, frc, & 
+                    at, bg, rws, nrws, f_of_q, fd)
   !-----------------------------------------------------------------------
   ! calculates the dynamical matrix at q from the (short-range part of the)
   ! force constants
@@ -833,6 +885,7 @@ SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3,frc, at, bg, rws, nrws,f_of_q)
   REAL(DP),SAVE,ALLOCATABLE :: wscache(:, :, :, :, :)
   REAL(DP), ALLOCATABLE :: ttt(:, :, :, :, :), tttx(:, :)
   LOGICAL,SAVE :: first=.TRUE.
+  LOGICAL      :: fd
   !
   nr1_=2*nr1
   nr2_=2*nr2
@@ -850,6 +903,7 @@ SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3,frc, at, bg, rws, nrws,f_of_q)
                    DO i = 1, 3
                       r(i) = n1*at(i, 1) +n2*at(i, 2) +n3*at(i, 3)
                       r_ws(i) = r(i) + tau(i, na) -tau(i, nb)
+                      if (fd) r_ws(i) = r(i) + tau(i,nb)-tau(i,na)
                    ENDDO
                    wscache(n3, n2, n1, nb, na) = wsweight(r_ws, rws, nrws)
                 ENDDO
@@ -924,7 +978,7 @@ END SUBROUTINE frc_blk
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
      &         loto_2d, &
-     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,f_of_q)
+     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -944,7 +998,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   REAL(DP) :: tau_blk(3, nat_blk), at_blk(3, 3), bg_blk(3, 3), omega_blk
   COMPLEX(DP) dyn_blk(3, 3, nat_blk, nat_blk), f_of_q(3, 3, nat, nat)
   COMPLEX(DP) ::  dyn(3, 3, nat, nat)
-  LOGICAL :: has_zstar
+  LOGICAL :: has_zstar, na_ifc, fd
   !
   ! local variables
   !
@@ -965,8 +1019,8 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      !
      dyn_blk(:, :, :, :) = (0.d0,0.d0)
      CALL frc_blk (dyn_blk, qp,tau_blk, nat_blk,              &
-          &              nr1, nr2, nr3,frc, at_blk, bg_blk, rws, nrws,f_of_q)
-      IF (has_zstar) &
+          &              nr1, nr2, nr3,frc, at_blk, bg_blk, rws, nrws,f_of_q,fd)
+      IF (has_zstar .and. .not. na_ifc) &
            CALL rgd_blk(nr1, nr2, nr3, nat_blk, dyn_blk, qp,tau_blk,   &
                         epsil, zeu, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0)
      !
@@ -1013,10 +1067,10 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   USE io_global,  ONLY : ionode, stdout
   !
   IMPLICIT NONE
-  CHARACTER (LEN= 10), intent(in) :: asr
-  INTEGER, intent(in) :: nr1, nr2, nr3, nat, ibrav
-  REAL(DP), intent(in) :: tau(3, nat)
-  REAL(DP), intent(inout) :: frc(nr1, nr2, nr3, 3, 3, nat, nat), zeu(3, 3, nat)
+  CHARACTER (LEN= 10), INTENT(in) :: asr
+  INTEGER, INTENT(in) :: nr1, nr2, nr3, nat, ibrav
+  REAL(DP), INTENT(in) :: tau(3, nat)
+  REAL(DP), INTENT(inout) :: frc(nr1, nr2, nr3, 3, 3, nat, nat), zeu(3, 3, nat)
   !
   INTEGER :: axis, n, i, j, na, nb, n1, n2, n3, m, p, k,l,q, r, i1, j1, na1
   REAL(DP) :: zeu_new(3, 3, nat)
@@ -1858,7 +1912,7 @@ END SUBROUTINE read_tau
 !-----------------------------------------------------------------------
 subroutine setgam (q, gam, nat, at, bg,tau, itau_blk, nsc, alat, &
      &             gam_blk, nat_blk, at_blk, bg_blk,tau_blk, omega_blk, &
-     &             frcg, nr1, nr2, nr3, rws, nrws)
+     &             frcg, nr1, nr2, nr3, rws, nrws, fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -1873,8 +1927,9 @@ subroutine setgam (q, gam, nat, at, bg,tau, itau_blk, nsc, alat, &
   REAL(DP)       :: q(3), tau(3, nat), at(3, 3), bg(3, 3), alat, rws(0:3, nrws)
   REAL(DP)       :: tau_blk(3, nat_blk), at_blk(3, 3), bg_blk(3, 3), omega_blk, &
                     frcg(nr1, nr2, nr3, 3, 3, nat_blk, nat_blk)
-  COMPLEX(DP)  :: gam_blk(3, 3, nat_blk, nat_blk),f_of_q(3, 3, nat, nat)
-  COMPLEX(DP) ::  gam(3, 3, nat, nat)
+  COMPLEX(DP)    :: gam_blk(3, 3, nat_blk, nat_blk),f_of_q(3, 3, nat, nat)
+  COMPLEX(DP)    ::  gam(3, 3, nat, nat)
+  LOGICAL        :: fd
   !
   ! local variables
   !
@@ -1895,7 +1950,7 @@ subroutine setgam (q, gam, nat, at, bg,tau, itau_blk, nsc, alat, &
      !
      gam_blk(:, :, :, :) = (0.d0,0.d0)
      CALL frc_blk (gam_blk, qp,tau_blk, nat_blk,              &
-                   nr1, nr2, nr3,frcg, at_blk, bg_blk, rws, nrws,f_of_q)
+                   nr1, nr2, nr3,frcg, at_blk, bg_blk, rws, nrws,f_of_q, fd)
      !
      DO na= 1, nat
         na_blk = itau_blk(na)
@@ -2062,8 +2117,8 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   USE mp_world,    ONLY : world_comm
   implicit none
   ! I/O variable
-  integer, intent(in) ::  nr1, nr2, nr3, nat
-  REAL(DP), intent(out) :: frcg(nr1, nr2, nr3, 3, 3, nat, nat)
+  integer, INTENT(in) ::  nr1, nr2, nr3, nat
+  REAL(DP), INTENT(out) :: frcg(nr1, nr2, nr3, 3, 3, nat, nat)
   ! local variables
   integer i, j, na, nb, m1,m2,m3, ifn
   integer ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
@@ -2170,9 +2225,9 @@ SUBROUTINE  qpoint_gen1(dim1, dim2, dim3, ctrAB)
   
   IMPLICIT NONE
   ! input
-  INTEGER, intent(in)             :: dim1, dim2, dim3
-  INTEGER, intent(out)            :: ctrAB
-!!  REAL(DP), intent(out)           :: q_AB(:,:)
+  INTEGER, INTENT(in)             :: dim1, dim2, dim3
+  INTEGER, INTENT(out)            :: ctrAB
+!!  REAL(DP), INTENT(out)           :: q_AB(:,:)
   ! local
   INTEGER                         :: i, j, k, n, nqs
   INTEGER                         :: lower_bnd, upper_bnd
@@ -2240,8 +2295,8 @@ SUBROUTINE  qpoint_gen2(dim1, dim2, dim3, ctrAB, q_AB)
   
   IMPLICIT NONE
   ! input
-  INTEGER, intent(in)             :: dim1, dim2, dim3, ctrAB
-  REAL(DP), intent(out)           :: q_AB(3, ctrAB)
+  INTEGER, INTENT(in)             :: dim1, dim2, dim3, ctrAB
+  REAL(DP), INTENT(out)           :: q_AB(3, ctrAB)
   ! local
   INTEGER                         :: i, j, k, n, ctr, nqs
   INTEGER                         :: lower_bnd, upper_bnd
@@ -2319,11 +2374,12 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
                       dim1, dim2, dim3, niters, error_thresh, synch, tau, alat, atm, &
                       ntypx, at, q_in_cryst_coord, q_external, T, incl_qA, & 
                       compute_error, single_ph_displ, &
-                      ZG_strf, qpts_strf, atmsf_zg_a, atmsf_zg_b)
+                      ZG_strf, qpts_strf, atmsf_a, atmsf_b, &
+                      nrots, kres1, kres2, kmin, kmax, col1, col2, Np)
 !
-  use kinds, only: dp
-  use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
-                       K_BOLTZMANN_SI, AMU_SI, pi 
+  USE kinds,      ONLY : dp
+  USE constants,  ONLY : amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
+                         K_BOLTZMANN_SI, AMU_SI, pi 
   USE cell_base,  ONLY : bg
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp_world,   ONLY : world_comm 
@@ -2331,17 +2387,19 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   USE mp,         ONLY : mp_bcast, mp_barrier, mp_sum
   IMPLICIT NONE
   ! input
-  CHARACTER(LEN=3), intent(in) :: atm(ntypx)
-  LOGICAL, intent(in)          :: synch, q_in_cryst_coord, q_external, ZG_strf
-  LOGICAL, intent(in)          :: incl_qA, compute_error, single_ph_displ
-  INTEGER, intent(in)          :: dim1, dim2, dim3, niters, qpts_strf
-  INTEGER, intent(in)          :: nq, nat, ntyp, ios, ntypx
-  INTEGER, intent(in)          :: ityp(nat)
+  CHARACTER(LEN=3), INTENT(in) :: atm(ntypx)
+  LOGICAL, INTENT(in)          :: synch, q_in_cryst_coord, q_external, ZG_strf
+  LOGICAL, INTENT(in)          :: incl_qA, compute_error, single_ph_displ
+  INTEGER, INTENT(in)          :: dim1, dim2, dim3, niters, qpts_strf
+  INTEGER, INTENT(in)          :: nq, nat, ntyp, ios, ntypx
   ! nq is the number of qpoints in sets A and B
-  REAL(DP), intent(in)         :: error_thresh, alat, T
-  REAL(DP), intent(in)         :: at(3, 3), atmsf_zg_a(ntypx,5), atmsf_zg_b(ntypx,5)
-  REAL(DP), intent(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
-  COMPLEX(DP), intent(in)      :: z_nq_zg(3 * nat, 3 * nat, nq)
+  INTEGER, INTENT(in)          :: ityp(nat)
+  INTEGER, INTENT(in)          :: nrots, kres1, kres2, col1, col2, Np
+  REAL(DP), INTENT(in)         :: kmin, kmax
+  REAL(DP), INTENT(in)         :: error_thresh, alat, T
+  REAL(DP), INTENT(in)         :: at(3, 3), atmsf_a(ntypx,5), atmsf_b(ntypx,5)
+  REAL(DP), INTENT(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
+  COMPLEX(DP), INTENT(in)      :: z_nq_zg(3 * nat, 3 * nat, nq)
   ! 
   ! local
   CHARACTER(len=256)       :: filename
@@ -2375,7 +2433,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ! for momenta/velocities 
   REAL(DP), ALLOCATABLE    :: Cpx_matA(:, :), Cpx_matB(:, :), Cpx_matAB(:, :)
   ! matrices to account for the coupling terms between different phonon branches ! 
-  REAL(DP), ALLOCATABLE    :: sum_error_D(:, :), sum_diag_D(:, :), sum_error_B(:), sum_diag_B(:), sum_error_B2(:), sum_diag_B2(:) 
+  REAL(DP), ALLOCATABLE    :: sum_error_D(:, :), sum_diag_D(:, :), sum_error_B(:) 
+  REAL(DP), ALLOCATABLE    :: sum_diag_B(:), sum_error_B2(:), sum_diag_B2(:) 
   REAL(DP), ALLOCATABLE    :: D_tau(:, :, :), P_tau(:, :, :), ratio_zg(:)! displacements and velocities
   REAL(DP), ALLOCATABLE    :: R_mat(:, :), E_vect(:, :), D_vect(:, :), F_vect(:, :)
   ! D_tau  : atomic displacements
@@ -2748,13 +2807,14 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ! i.e. [1 1 1 1 1 1] gives same result to [- 1 -1 -1 -1 -1 -1]. 
   ! 
   ALLOCATE(M_mat(2 * pn, nat3), Mx_mat(pn, nat3), Mx_mat_or(pn, nat3), V_mat(2))
+  M_mat = 1 ! initialize M_mat
   V_mat = (/ 1, -1/) ! initialize V_mat whose entries will generate the sign matrices
   DO i = 1, nat3
     ctr = 1
     DO p = 1, 2**(i - 1)
       DO qp = 1, 2
         DO k = 1, 2**(nat3 - i)
-          IF (ctr > 2 * pn) EXIT ! I DO this in case there many branches in the system and 
+          IF (ctr > 2 * pn) EXIT ! in case there many branches in the system and 
                                   ! in that case we DO not need to ALLOCATE more signs              
           M_mat(ctr, i) = V_mat(qp)
           ctr = ctr + 1
@@ -2819,7 +2879,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   DO kk = 1, niters
   ! Allocate original matrices ! half the entries of M_mat
   ! We also make the inherent choice that each column of Mx_mat_or has the same number of positive and negative signs 
-    Mx_mat_or = 0
+    Mx_mat_or = 1
     DO i = 1, 2 * pn / 4, 2
       Mx_mat_or(i, :) = M_mat(i, :)
     ENDDO
@@ -3140,8 +3200,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       IF (ionode) THEN
         DO p = 1, nq_tot 
            DO k = 1, nat ! k represents the atom
-             WRITE(80,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
-             WRITE(*,'(A10, A6, 3F13.8)') "ZG_conf:", atm(ityp(k)), D_tau(p, k, :) 
+             WRITE(80,'(A6, 3F16.8)') atm(ityp(k)), D_tau(p, k, :) 
+             WRITE(*,'(A10, A6, 3F16.8)') "ZG_conf:", atm(ityp(k)), D_tau(p, k, :) 
              WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k, :) * 1.0E-12 ! multiply to obtain picoseconds 
            ENDDO
         ENDDO 
@@ -3251,7 +3311,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   WRITE(*,*) "Computing ZG structure factor ..."
   IF ( ZG_strf .AND. ( SUM(ABS(ratio_zg)) / nat3 < error_thresh) ) &
              call ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
-                          nat, alat, ityp, ntypx, atmsf_zg_a, atmsf_zg_b)
+                          nat, alat, ityp, ntypx, atmsf_a, atmsf_b, & 
+                          nrots, kres1, kres2, kmin, kmax, col1, col2, Np)
   !
   IF (ionode) WRITE(*,*)
   IF (SUM(ABS(ratio_zg)) / nat3 > error_thresh .AND. ionode ) & 
@@ -3272,7 +3333,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
 END SUBROUTINE ZG_configuration
 
 SUBROUTINE ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
-                               nat, alat, ityp, ntypx, atmsf_zg_a, atmsf_zg_b)
+                               nat, alat, ityp, ntypx, atmsf_a, atmsf_b, &
+                               nrots, kres1, kres2, kmin, kmax, col1, col2, Np)
 !
  USE kinds,      ONLY : DP
  USE cell_base,  ONLY : bg
@@ -3284,34 +3346,36 @@ SUBROUTINE ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
  !
  IMPLICIT NONE
  ! 
- INTEGER, intent(in)          :: nq_tot, nat, qpts_strf, ntypx
- REAL(DP), intent(in)         :: D_tau(nq_tot, nat, 3), equil_p(nq_tot, nat, 3), alat
- REAL(DP), intent(in)         :: atmsf_zg_a(ntypx, 5), atmsf_zg_b(ntypx, 5)
+ INTEGER, INTENT(in)          :: nq_tot, nat, qpts_strf, ntypx
+ INTEGER, INTENT(in)          :: nrots, kres1, kres2, col1, col2, Np
+ REAL(DP), INTENT(in)         :: kmin, kmax
+ REAL(DP), INTENT(in)         :: D_tau(nq_tot, nat, 3), equil_p(nq_tot, nat, 3), alat
+ REAL(DP), INTENT(in)         :: atmsf_a(ntypx, 5), atmsf_b(ntypx, 5)
  INTEGER                      :: i, k, p, j, kk, pp, nta, ii
- INTEGER                      :: lower_bnd, upper_bnd
+ INTEGER                      :: lower_bnd, upper_bnd, ctr
  INTEGER ityp(nat)
- REAL(DP)                     :: qpts_strf_list(3, qpts_strf), atomic_form_factor(nat, qpts_strf)
- REAL(DP)                     :: dotp, dotpp
+ REAL(DP)                     :: q_strf(3, qpts_strf), atomic_form_factor(nat, qpts_strf)
+ REAL(DP)                     :: dotp, dotpp, eps
+ REAL(DP), ALLOCATABLE        :: strf_rot(:, :)
  COMPLEX(DP)                  :: imagi, strf_map(qpts_strf)
  !
- !
+ eps   = 1d-5
  imagi = (0.0d0, 1.0d0) !imaginary unit
  !
- !
- qpts_strf_list = 0.d0
+ q_strf = 0.d0
  IF (ionode) THEN
    OPEN (unit = 99, file = './qpts_strf.dat', status = 'unknown', form = 'formatted')
    !
    DO k = 1, qpts_strf
-     READ(99,*) qpts_strf_list(:, k)
-   !   WRITE(*,*) "aa", qpts_strf_list(k,:)
-     CALL cryst_to_cart(1, qpts_strf_list(:, k), bg, +1)
-     qpts_strf_list(:, k) = qpts_strf_list(:, k) * ( 2.d0 * pi / alat / BOHR_RADIUS_ANGS ) ! / 0.138933 * 0.073520
+     READ(99,*) q_strf(:, k)
+   !   WRITE(*,*) "aa", q_strf(k,:)
+     CALL cryst_to_cart(1, q_strf(:, k), bg, +1)
+     q_strf(:, k) = q_strf(:, k) * ( 2.d0 * pi / alat / BOHR_RADIUS_ANGS ) ! / 0.138933 * 0.073520
    ENDDO
    !
    CLOSE(99)
  ENDIF
- CALL mp_bcast(qpts_strf_list, ionode_id, world_comm)
+ CALL mp_bcast(q_strf, ionode_id, world_comm)
  !
  !
  atomic_form_factor = 0.d0
@@ -3320,8 +3384,8 @@ SUBROUTINE ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
    nta = ityp(k)
    DO i = 1, qpts_strf
       DO ii = 1, 5
-        atomic_form_factor(k, i) = atomic_form_factor(k, i) + (atmsf_zg_a(nta, ii) * &
-                               EXP(-atmsf_zg_b(nta, ii) * (NORM2(qpts_strf_list(:, i)) / 4.d0 / pi)**2))
+        atomic_form_factor(k, i) = atomic_form_factor(k, i) + (atmsf_a(nta, ii) * &
+                               EXP(-atmsf_b(nta, ii) * (NORM2(q_strf(:, i)) / 4.d0 / pi)**2))
       ENDDO
    ENDDO
  ENDDO
@@ -3336,8 +3400,8 @@ SUBROUTINE ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
 !         DO pp = 1, nq_tot  !!
            dotp = 0.0d0
            DO j = 1, 3
-             dotp = dotp + qpts_strf_list(j, i) * D_tau(p, k, j)
-!            dotp = dotp + qpts_strf_list(j, i) * (D_tau(p, k, j) - D_tau(pp, !kk, j)) !! 
+             dotp = dotp + q_strf(j, i) * D_tau(p, k, j)
+!            dotp = dotp + q_strf(j, i) * (D_tau(p, k, j) - D_tau(pp, kk, j)) !! 
            ENDDO
            strf_map(i) = strf_map(i) + EXP(imagi * dotp) * atomic_form_factor(k, i)
           !strf_map(i) = strf_map(i) + EXP(imagi * dotp) * atomic_form_factor(k, i) * atomic_form_factor(kk, i)
@@ -3349,12 +3413,32 @@ SUBROUTINE ZG_structure_factor(qpts_strf, D_tau, equil_p, nq_tot, &
  CALL mp_sum(strf_map, inter_pool_comm)
  CALL mp_barrier(inter_pool_comm)
  !
+ ! APPLY BROADENING and print outputs
+ ctr = 0
+ DO k = 1, qpts_strf
+   IF ((q_strf(col1, k) .GT. 0.d0 - eps) .AND. & 
+       (q_strf(col2, k) .GT. 0.d0 - eps)) THEN
+      ctr = ctr + 1
+   ENDIF
+ ENDDO
+ ALLOCATE(strf_rot(ctr * nrots, 4))
+ !
+ strf_rot = 0.d0
+ IF (ionode) CALL rotate(DBLE(ABS(strf_map)**2), q_strf, qpts_strf, 0, nrots, &
+                         ctr, strf_rot, col1, col2)
+ !
+ CALL mp_bcast(strf_rot, ionode_id, world_comm)
+ CALL disca_broadening(strf_rot, ctr * nrots, kres1, kres2, alat, &
+                       kmin, kmax, col1, col2, Np, 'strf_ZG_broad.dat')
+ ! 
+ DEALLOCATE(strf_rot)
+ !
  IF (ionode) THEN
-   OPEN (unit = 98, file = './structure_factor_ZG.dat', status = 'unknown', form = 'formatted')
+   OPEN (unit = 98, file = './structure_factor_ZG_raw.dat', status = 'unknown', form = 'formatted')
    !
    DO i = 1, qpts_strf
    !
-     WRITE(98,'(4f26.6)') qpts_strf_list(:, i), abs(strf_map(i))**2
+     WRITE(98,'(4f26.6)') q_strf(:, i), ABS(strf_map(i))**2
    !abs(strf_map(i))**2  ! real(strf_map(i)) !
    !
    ENDDO
@@ -3374,9 +3458,9 @@ SUBROUTINE create_supercell(at,tau, alat, dim1, dim2, dim3, nat, equil_p)
  IMPLICIT NONE
 !
 !
- INTEGER,  intent(in)   :: dim1, dim2, dim3, nat
- REAL(DP), intent(in)   :: tau(3, nat), at(3, 3), alat
- REAL(DP), intent(out)  :: equil_p(dim1 * dim2 * dim3, nat, 3)
+ INTEGER,  INTENT(in)   :: dim1, dim2, dim3, nat
+ REAL(DP), INTENT(in)   :: tau(3, nat), at(3, 3), alat
+ REAL(DP), INTENT(out)  :: equil_p(dim1 * dim2 * dim3, nat, 3)
  INTEGER                :: i, j, k, ctr, p
  REAL(DP)               :: alat_ang, crystal_pos(dim1 * dim2 * dim3, nat, 3), abc(3, nat)
  alat_ang = alat * BOHR_RADIUS_ANGS !bohr_to_angst ! to convert them in angstrom ! 
@@ -3436,13 +3520,13 @@ SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
  IMPLICIT NONE
 !
 !
- CHARACTER(LEN=3), intent(in) :: atm(ntypx)
- INTEGER,  intent(in)         :: nq_tot, nat, ctrB, ctrA, nat3, ntyp, ntypx
- INTEGER,  intent(in)         :: Rlist(nq_tot, 3) 
- INTEGER,  intent(in)         :: ityp(nat)
- REAL(DP), intent(in)         :: qA(ctrA, 3), qB(ctrB, 3), amass(ntyp), equil_p(nq_tot, nat, 3)
- REAL(DP), intent(in)         :: Cx_matB(nat3, ctrB), Cx_matA(nat3, ctrA), Cpx_matA(nat3, ctrA), Cpx_matB(nat3, ctrB) 
- COMPLEX(DP), intent(in)      :: z_nq_A(nat3, nat3, ctrA), z_nq_B(nat3, nat3, ctrB)
+ CHARACTER(LEN=3), INTENT(in) :: atm(ntypx)
+ INTEGER,  INTENT(in)         :: nq_tot, nat, ctrB, ctrA, nat3, ntyp, ntypx
+ INTEGER,  INTENT(in)         :: Rlist(nq_tot, 3) 
+ INTEGER,  INTENT(in)         :: ityp(nat)
+ REAL(DP), INTENT(in)         :: qA(ctrA, 3), qB(ctrB, 3), amass(ntyp), equil_p(nq_tot, nat, 3)
+ REAL(DP), INTENT(in)         :: Cx_matB(nat3, ctrB), Cx_matA(nat3, ctrA), Cpx_matA(nat3, ctrA), Cpx_matB(nat3, ctrB) 
+ COMPLEX(DP), INTENT(in)      :: z_nq_A(nat3, nat3, ctrA), z_nq_B(nat3, nat3, ctrB)
  CHARACTER(len=256)           :: filename
 !
  INTEGER                      :: i, j, k, p, ii, ctr, nta, qp
@@ -3600,3 +3684,145 @@ SUBROUTINE fkbounds( nktot, lower_bnd, upper_bnd )
   RETURN
   !
 END SUBROUTINE fkbounds
+!
+SUBROUTINE rotate(strf, q, nq, nq_super, nrots, & 
+                   ctr, strf_rot, col1, col2)
+  !
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : tpi
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in)    :: nq, nrots, col1, col2, ctr, nq_super
+  REAL(DP), INTENT(in)   :: strf(nq), q(3, nq)
+  REAL(DP), INTENT(out)  :: strf_rot(ctr * nrots, 4)
+  INTEGER                :: i, p, ctr2
+  REAL(DP)               :: str_f(ctr,4), str_fp(ctr, 4)
+  !
+  REAL(DP)               :: Rmat(2,2), theta, eps
+  ! 
+  eps        = 1d-5
+  !
+  !WRITE(*,*) "Number of rotations provided:", nrots
+  theta      = tpi / FLOAT(nrots)
+  !
+  !
+  str_f = 0.d0
+  ctr2 = 0
+  DO p = nq_super + 1, nq
+    IF ((q(col1, p) .GT. 0.0 - eps) .AND. (q(col2, p) .GT. 0.0 - eps)) THEN
+      ctr2 = ctr2 + 1
+      str_f(ctr2, 1:3) = q(:, p)
+      str_f(ctr2, 4) = strf(p)
+    ENDIF
+  ENDDO
+  !
+  ! To remove double contribution upon rotation
+  !
+  str_fp = 0.d0
+  str_fp(1, :) = str_f(1, :)
+  DO p = 2, ctr
+    IF (ATAN(str_f(p, 1) / str_f(p, 2)) .LT. ( tpi / float(nrots) - eps) ) THEN
+    str_fp(p, :) = str_f(p, :)
+    ENDIF
+  ENDDO
+  !
+  !
+  strf_rot = 0.d0
+  ctr2 = 1
+  DO i = 0, nrots - 1
+    Rmat(1, :) = (/ COS(i * theta), -SIN(i * theta) /)
+    Rmat(2, :) = (/ SIN(i * theta),  COS(i * theta) /)
+    DO p = 1, ctr
+      strf_rot(ctr2, 1 : 2) = MATMUL(Rmat, str_fp(p, 1 : 2))
+      strf_rot(ctr2, 3) = str_fp(p, 3)
+      strf_rot(ctr2, 4) = str_fp(p, 4)
+      ctr2 = ctr2 + 1
+    END DO
+  ENDDO
+END SUBROUTINE
+!
+SUBROUTINE disca_broadening(strf_rot, steps, kres1, kres2, alat, &
+                            kmin, kmax, col1, col2, Np, flstrfout)
+!-------------------------------------------------------------------------
+!! authors: Marios Zacharias, Feliciano Giustino 
+!! acknowledgement: Hyungjun Lee for help packaging this release
+!! version: v0.1
+!! license: GNU
+!
+USE kinds,       ONLY : dp
+USE mp_global,   ONLY : inter_pool_comm
+USE mp_world,    ONLY : world_comm
+USE mp,          ONLY : mp_bcast, mp_barrier, mp_sum
+USE io_global,   ONLY : ionode, ionode_id, stdout
+USE constants,   ONLY : pi
+!
+IMPLICIT NONE
+!
+ CHARACTER(LEN=256), INTENT(IN)  :: flstrfout
+ INTEGER, INTENT(IN)             :: steps, kres1, kres2, Np, col1, col2
+ REAL(DP), INTENT(IN)            :: kmin, kmax, alat
+ REAL(DP), INTENT(IN)            :: strf_rot(steps, 4)
+ INTEGER                         :: ii, lower_bnd, upper_bnd, ik, iky
+ REAL(DP)                        :: jump, sf_smearingx, sf_smearingy, maxv !, pi 
+ REAL(DP), ALLOCATABLE           :: kgridx(:), kgridy(:), strf_out(:, :)
+!
+!
+!
+ALLOCATE( kgridx(kres1), kgridy(kres2))
+ALLOCATE(strf_out(kres1,kres2))
+!kmin = -10.0
+!kmax = 10.0
+
+jump = (kmax - kmin) / DBLE(kres1 - 1)
+DO ik = 1, kres1
+  kgridx(ik) = kmin + (ik - 1) * jump
+ENDDO
+sf_smearingx = (kmax - kmin) / DBLE(kres1)
+!
+jump = (kmax - kmin) / DBLE(kres2 - 1)
+DO ik = 1, kres2
+  kgridy(ik) = kmin + (ik- 1)*jump
+ENDDO
+sf_smearingy = (kmax - kmin) / DBLE(kres2)
+!! 
+!
+strf_out = 0.d0
+!
+CALL fkbounds( steps, lower_bnd, upper_bnd )
+!
+DO ii = lower_bnd, upper_bnd
+  DO ik = 1, kres1 !
+    DO iky = 1, kres2
+    !
+    strf_out(ik, iky) =  strf_out(ik, iky) +  &
+                          strf_rot(ii, 4) / sf_smearingx / SQRT(2.0d0 * pi) / sf_smearingy / SQRT(2.0d0 * pi)* &
+                          (EXP(-(strf_rot(ii, col1) - kgridx(ik))**2.d0 / sf_smearingx**2.d0 / 2.d0))*&
+                          (EXP(-(strf_rot(ii, col2) - kgridy(iky))**2.d0 / sf_smearingy**2.d0 / 2.d0))
+    !
+    ENDDO
+  ENDDO
+ENDDO
+!
+CALL mp_sum(strf_out, inter_pool_comm)
+CALL mp_barrier(inter_pool_comm)
+!
+IF (ionode) THEN
+  OPEN(46,FILE=flstrfout)
+  maxv =  maxval(strf_out)
+  WRITE(46,*) "#", maxv, maxval(strf_out)
+  DO ik = 1, kres1
+    DO iky = 1, kres2
+      WRITE(46,'(3F28.12)') kgridx(ik), kgridy(iky), strf_out(ik,iky) * Np**(-2.0d0) ! 
+                                         !Np**(-2.0d0) ! / maxv
+    ENDDO
+    WRITE(46,*)
+  ENDDO
+  CLOSE(46)
+ENDIF
+!
+DEALLOCATE(strf_out, kgridx, kgridy)
+!
+!
+END SUBROUTINE

@@ -2001,8 +2001,7 @@ SUBROUTINE compute_mmn
                                allocate_bec_type, deallocate_bec_type
    USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
-   USE noncollin_module,ONLY : noncolin, npol
-   USE spin_orb,             ONLY : lspinorb
+   USE noncollin_module,ONLY : noncolin, npol, lspinorb
    USE gvecw,           ONLY : gcutw
    USE wannier
    USE uspp_init,            ONLY : init_us_2

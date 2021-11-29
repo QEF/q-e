@@ -22,20 +22,21 @@ MODULE beef_interface
     INTERFACE
     !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda ) BIND(C, NAME="beefx_")
+    !$acc routine seq
     USE iso_c_binding
         REAL (C_DOUBLE)            :: r, g, e, dr, dg
         INTEGER(C_INT), INTENT(IN) :: addlda
     END SUBROUTINE beefx
     !
-    SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda) &
-        BIND(C, NAME="beeflocalcorr_")
+    SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda) BIND(C, NAME="beeflocalcorr_")
+    !$acc routine seq
     USE iso_c_binding
         REAL (C_DOUBLE), INTENT(INOUT) :: r, g, e, dr, dg
         INTEGER(C_INT), INTENT(IN) :: addlda
     END SUBROUTINE beeflocalcorr
     !
-    SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda) &
-        BIND(C, NAME="beeflocalcorrspin_")
+    SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda) BIND(C, NAME="beeflocalcorrspin_")
+    !$acc routine seq
     USE iso_c_binding
         REAL (C_DOUBLE), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
         INTEGER(C_INT), INTENT(IN) :: addlda

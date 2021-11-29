@@ -1,7 +1,7 @@
 !
 SUBROUTINE solve_with_zhegvd(n, v, s, ldh, e)
   IMPLICIT NONE
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
   complex(DP) :: v(ldh,n)
   complex(DP) :: s(ldh,n)
@@ -38,7 +38,7 @@ END SUBROUTINE solve_with_zhegvd
 !
 SUBROUTINE solve_with_dsygvd(n, v, s, ldh, e)
   IMPLICIT NONE
-  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_kinds.fh'
   !
   REAL(DP) :: v(ldh,n)
   REAL(DP) :: s(ldh,n)

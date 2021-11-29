@@ -43,11 +43,10 @@ SUBROUTINE phq_init()
   USE io_global,            ONLY : stdout
   USE atom,                 ONLY : msh, rgrid
   USE vlocal,               ONLY : strf
-  USE spin_orb,             ONLY : lspinorb
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
   USE wavefunctions,        ONLY : evc
-  USE noncollin_module,     ONLY : noncolin, domag, npol
+  USE noncollin_module,     ONLY : noncolin, domag, npol, lspinorb
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : setlocq_gth

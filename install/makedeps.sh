@@ -23,9 +23,9 @@ then
 	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
            upflib XClib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
-           EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
+           EPW/src XSpectra/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip QEHeat/src " 
+	   GWW/simple_bse GWW/simple_ip QEHeat/src ACFDT/src " 
           
 elif
     test $1 = "-addson" 
@@ -107,7 +107,7 @@ for dir in $dirs; do
 
     # list of all system modules
     sysdeps="iso_c_binding iso_fortran_env f90_unix_io f90_unix_env \
-             f90_unix_proc ifcore ifport"
+             f90_unix_proc ifcore ifport git-rev.h"
 
     # list of all external library modules or include files
     libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \

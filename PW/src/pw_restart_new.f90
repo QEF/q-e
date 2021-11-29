@@ -65,11 +65,11 @@ MODULE pw_restart_new
       !                 NB: wavefunctions are not written here in any case
       !
       USE control_flags,        ONLY : istep, conv_ions, &
-                                       lscf, gamma_only, &
+                                       lscf, scf_error, n_scf_steps, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
-                                       noinv, smallmem, &
-                                       mbd_vdw,          &
-                                       llondon, lxdm, ts_vdw, scf_error, n_scf_steps
+                                       gamma_only, noinv, smallmem, &
+                                       lforce=> tprnfor, tstress, &
+                                       mbd_vdw, llondon, lxdm, ts_vdw
       USE constants,            ONLY : e2
       USE realus,               ONLY : real_space
       USE uspp,                 ONLY : okvan
@@ -103,17 +103,16 @@ MODULE pw_restart_new
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
                                        Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
                                        is_hubbard, is_hubbard_back, backall
-      USE spin_orb,             ONLY : lspinorb
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
-      USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
-                                       lambda, domag
+      USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
+                                       magtot_nc, lambda, domag, lspinorb
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
       
       USE scf,                  ONLY : rho
-      USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
+      USE force_mod,            ONLY : sumfor, force, sigma
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
                                        emaxpos, eopreg, eamp, el_dipole, ion_dipole,&
                                        gate, zgate, relaxz, block, block_1,&
@@ -638,9 +637,9 @@ MODULE pw_restart_new
 !------------------------------------------------------------------------------------------------
 ! ... STRESS 
 !------------------------------------------------------------------------------------------------
-         IF ( lstres .and. conv_elec ) THEN
+         IF ( tstress .and. conv_elec ) THEN
             output_obj%stress_ispresent=.TRUE.
-            CALL qexsd_init_stress(output_obj%stress, sigma, lstres ) 
+            CALL qexsd_init_stress(output_obj%stress, sigma, tstress ) 
          ELSE 
             output_obj%stress_ispresent=.FALSE.
             output_obj%stress%lwrite=.FALSE.
@@ -1019,8 +1018,7 @@ MODULE pw_restart_new
            lxdm, ts_vdw, mbd_vdw
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
-              nspin_lsda, nspin_gga, nspin_mag, domag
-      USE spin_orb,        ONLY : lspinorb
+              nspin_lsda, nspin_gga, nspin_mag, domag, lspinorb
       USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
            current_spin
       USE realus,          ONLY : real_space

@@ -27,7 +27,7 @@ SUBROUTINE hp_bcast_input ( )
                                background, compute_hp, sum_pertq, perturb_only_atom,   &
                                determine_num_pert_only, skip_equivalence_q, niter_max, &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
-                               nmix, nq1, nq2, nq3
+                               nmix, nq1, nq2, nq3, dist_thr
   !
   IMPLICIT NONE
   !
@@ -68,6 +68,7 @@ SUBROUTINE hp_bcast_input ( )
   CALL mp_bcast (alpha_mix, meta_ionode_id, world_comm)
   CALL mp_bcast (max_seconds, meta_ionode_id, world_comm)
   CALL mp_bcast (rmax, meta_ionode_id, world_comm)
+  CALL mp_bcast (dist_thr, meta_ionode_id, world_comm)
   !
   ! Characters
   !

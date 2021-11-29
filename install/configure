@@ -3890,7 +3890,7 @@ case "$arch:$f90_flavor" in
             try_fflags_openmp="-openmp"
             try_ldflags_openmp="-openmp"
         fi
-        pre_fdflags="-fpp "
+        pre_fdflags="-fpp -allow nofpp_comments "
         ;;
 arm:armflang )
         try_fflags="-O3 -mcpu=native $try_fflags"
@@ -4125,7 +4125,7 @@ echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
 # Note: option -C makes trouble with recent gcc versions and pgi
 case $cpp in
         cpp)  try_cppflags="-P -traditional -Uvector" ;;
-        fpp)  try_cppflags="-P "                      ;;
+        fpp)  try_cppflags="-P -allow nofpp_comments" ;;
         *)    try_cppflags=""                         ;;
 esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
@@ -4718,6 +4718,8 @@ fi
    fi
 
    new_cusolver="yes"
+   CC_stash=$CC
+   CC=nvcc
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cusolverDnZhegvdx_bufferSize in -lcusolver" >&5
 $as_echo_n "checking for cusolverDnZhegvdx_bufferSize in -lcusolver... " >&6; }
 if ${ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize+:} false; then :
@@ -4765,6 +4767,7 @@ else
   new_cusolver="no"
 fi
 
+   CC=$CC_stash
 
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
@@ -4793,6 +4796,7 @@ $as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
    if test "$enable_openacc" == "yes"; then
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
+      CUDA_CFLAGS="$CUDA_CFLAGS -acc -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    fi
 
 fi

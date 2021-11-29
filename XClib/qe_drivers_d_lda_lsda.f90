@@ -125,7 +125,11 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      rhoaux(i1:f1) = arho+dr
      rhoaux(i2:f2) = arho-dr
      !
+     !$acc data copyin( rhoaux ) copyout( ex, ec, vx, vc )
+     !$acc host_data use_device( rhoaux, ex, ec, vx, vc )
      CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
+     !$acc end host_data
+     !$acc end data
      !
      WHERE ( arho < small ) dr = 1.0_DP ! ... to avoid NaN in the next operation
      !
@@ -316,7 +320,11 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      rhoaux(i3:f3) = rhotot         ;   zetaux(i3:f3) = zeta_eff + dz
      rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff - dz
      !
+     !$acc data copyin( rhoaux, zetaux ) copyout( aux1, aux2, vx, vc )
+     !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
      CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
+     !$acc end host_data
+     !$acc end data
      !
      WHERE (rhotot <= small)  ! ... to avoid NaN in the next operations
         dr=1.0_DP ; rhotot=0.5d0
@@ -438,7 +446,11 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   rhoaux(i5:f5) = rhotot         ;   zetaux(i5:f5) = zeta_eff - dz
   !
   !
+  !$acc data copyin( rhoaux, zetaux ) copyout( aux1, aux2, vx, vc )
+  !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
   CALL xc_lsda( length*5, rhoaux, zetaux, aux1, aux2, vx, vc )
+  !$acc end host_data
+  !$acc end data
   !
   !
   vs(:) = 0.5_DP*( vx(i1:f1,1)+vc(i1:f1,1)-vx(i1:f1,2)-vc(i1:f1,2) )

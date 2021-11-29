@@ -1026,6 +1026,14 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             }
         }
 
+        var pre_state -type LOGICAL {
+            default { .FALSE. }
+            info {
+               if .TRUE. perform the precondition of the CG gradient
+               using the kinetic energy of the state.
+            }
+        }
+
 
        var n_inner -type INTEGER {
             default { 2 }

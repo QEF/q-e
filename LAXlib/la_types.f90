@@ -19,23 +19,40 @@
       !  Remember here we use square matrixes block distributed on a square grid of processors
       !
       TYPE la_descriptor  
-         INTEGER :: ir        = 0 !  global index of the first row in the local block of the distributed matrix
-         INTEGER :: nr        = 0 !  number of row in the local block of the distributed matrix
-         INTEGER :: ic        = 0 !  global index of the first column in the local block of the distributed matrix
-         INTEGER :: nc        = 0 !  number of column in the local block of the distributed matrix
-         INTEGER :: nrcx        = 0 !  leading dimension of the distribute matrix (greather than nr and nc)
-         INTEGER :: active_node = 0 !  if > 0 the proc holds a block of the lambda matrix
-         INTEGER :: n        = 0 !  global dimension of the matrix
-         INTEGER :: nx       = 0 !  global leading dimension ( >= n )
-         INTEGER :: npr      = 0 !  number of row processors 
-         INTEGER :: npc      = 0 !  number of column processors 
-         INTEGER :: myr      = 0 !  processor row index
-         INTEGER :: myc      = 0 !  processor column index
-         INTEGER :: comm     = 0 !  communicator
-         INTEGER :: cntx     =-1 !  scalapack context
-         INTEGER :: mype     = 0 !  processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
-         INTEGER :: nrl      = 0 !  number of local rows, when the matrix rows are cyclically distributed across proc
-         INTEGER :: nrlx     = 0 !  leading dimension, when the matrix is distributed by row
+         INTEGER :: ir        = 0 
+         !! global index of the first row in the local block of the distributed matrix
+         INTEGER :: nr        = 0 
+         !! number of row in the local block of the distributed matrix
+         INTEGER :: ic        = 0 
+         !! global index of the first column in the local block of the distributed matrix
+         INTEGER :: nc        = 0 
+         !! number of column in the local block of the distributed matrix
+         INTEGER :: nrcx        = 0 
+         !! leading dimension of the distribute matrix (greather than nr and nc)
+         INTEGER :: active_node = 0 
+         !! if > 0 the proc holds a block of the lambda matrix
+         INTEGER :: n        = 0 
+         !! global dimension of the matrix
+         INTEGER :: nx       = 0 
+         !! global leading dimension ( >= n )
+         INTEGER :: npr      = 0 
+         !! number of row processors 
+         INTEGER :: npc      = 0 
+         !! number of column processors 
+         INTEGER :: myr      = 0 
+         !! processor row index
+         INTEGER :: myc      = 0 
+         !! processor column index
+         INTEGER :: comm     = 0 
+         !! communicator
+         INTEGER :: cntx     =-1 
+         !! scalapack context
+         INTEGER :: mype     = 0 
+         !! processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
+         INTEGER :: nrl      = 0 
+         !! number of local rows, when the matrix rows are cyclically distributed across proc
+         INTEGER :: nrlx     = 0 
+         !! leading dimension, when the matrix is distributed by row
       END TYPE
       !
    CONTAINS

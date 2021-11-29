@@ -609,6 +609,20 @@
           WRITE(iufillambdaFS, '(6f12.6)') (lambda_k(ixkff(ik), ibnd), ik = 1, nkf1 * nkf2 * nkf3)
           CLOSE(iufillambdaFS)
         ENDDO
+        ! HP: Write in .frmsf format compatible with fermisurfer program
+        WRITE(name1, '(a, a13)') TRIM(prefix), '.lambda.frmsf'
+        OPEN(UNIT = iufillambdaFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('evaluate_a2f_lambda', 'error opening file ' // name1, iufillambdaFS)
+        !
+        WRITE(iufillambdaFS, '(3i5)') nkf1, nkf2, nkf3
+        WRITE(iufillambdaFS, '(i5)') 1
+        WRITE(iufillambdaFS, '(i5)') nbndfs
+        WRITE(iufillambdaFS, '(3f12.6)') (bg(i, 1), i = 1, 3)
+        WRITE(iufillambdaFS, '(3f12.6)') (bg(i, 2), i = 1, 3)
+        WRITE(iufillambdaFS, '(3f12.6)') (bg(i, 3), i = 1, 3)
+        WRITE(iufillambdaFS, '(6f12.6)') ((ekfs(ibnd, ixkff(ik)) - ef0, ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
+        WRITE(iufillambdaFS, '(6f12.6)') ((lambda_k(ixkff(ik), ibnd), ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
+        CLOSE(iufillambdaFS)
         !
       ENDIF
       !

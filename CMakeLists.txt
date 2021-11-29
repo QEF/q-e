@@ -203,16 +203,6 @@ if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MAT
 endif()
 
 
-###########################################################
-# language standard requirements
-###########################################################
-# TODO need to require all compilers using the same one
-if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
-    set(CMAKE_C_STANDARD 11)
-    set(CMAKE_C_STANDARD_REQUIRED ON)
-    set(CMAKE_C_EXTENSIONS OFF)
-endif()
-
 ############################################################
 # C preprocessor
 # Note: reply on the compiler preprocessor whenever possible
@@ -232,6 +222,25 @@ else()
     set(QE_CPP_SAVED ${QE_CPP})
     unset(QE_CPP CACHE)
     message(FATAL_ERROR "C preprocessor ${QE_CPP_SAVED} not found. Pass a working one to CMake via QE_CPP!")
+endif()
+
+###########################################################
+# language standard requirements
+###########################################################
+# TODO need to require all compilers using the same one
+if(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
+    set(CMAKE_C_STANDARD 11)
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+    set(CMAKE_C_EXTENSIONS OFF)
+endif()
+
+###########################################################
+# check Fortran compiler -isystem option support
+###########################################################
+include(CheckFortranCompilerFlag)
+check_fortran_compiler_flag("-isystem ." Fortran_ISYSTEM_SUPPORTED)
+if(NOT Fortran_ISYSTEM_SUPPORTED AND NOT DEFINED CMAKE_NO_SYSTEM_FROM_IMPORTED)
+  set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 endif()
 
 ############################################################
@@ -287,21 +296,28 @@ qe_install_targets(qe_openmp_fortran qe_openmp_c)
 ###########################################################
 if(QE_ENABLE_OPENMP)
     find_package(OpenMP REQUIRED Fortran C)
-    target_link_libraries(qe_openmp_fortran
-        INTERFACE OpenMP::OpenMP_Fortran)
-    target_link_libraries(qe_openmp_c
-        INTERFACE OpenMP::OpenMP_C)
+    target_link_libraries(qe_openmp_fortran INTERFACE OpenMP::OpenMP_Fortran)
+    target_link_libraries(qe_openmp_c INTERFACE OpenMP::OpenMP_C)
 endif(QE_ENABLE_OPENMP)
 
 ###########################################################
 # OpenACC
 # The following targets will be defined:
 add_library(qe_openacc_fortran INTERFACE)
-qe_install_targets(qe_openacc_fortran)
+add_library(qe_openacc_c INTERFACE)
+qe_install_targets(qe_openacc_fortran qe_openacc_c)
 ###########################################################
 if(QE_ENABLE_OPENACC)
-    target_link_libraries(qe_openacc_fortran
-        INTERFACE OpenACC::OpenACC_Fortran)
+    if(CMAKE_VERSION VERSION_LESS 3.16.0)
+        message(FATAL_ERROR "CMake versions >= 3.16 required for QE_ENABLE_OPENACC=ON!")
+    endif()
+    find_package(OpenACC REQUIRED Fortran C)
+    target_link_libraries(qe_openacc_fortran INTERFACE OpenACC::OpenACC_Fortran)
+    target_link_libraries(qe_openacc_c INTERFACE OpenACC::OpenACC_C)
+    if(GPU_TARGET_COMPILE_OPTIONS)
+        target_compile_options(qe_openacc_fortran INTERFACE "${GPU_TARGET_COMPILE_OPTIONS}")
+        target_compile_options(qe_openacc_c INTERFACE "${GPU_TARGET_COMPILE_OPTIONS}")
+    endif()
 endif(QE_ENABLE_OPENACC)
 
 ###########################################################
@@ -329,6 +345,7 @@ find_package(Git 2.13 REQUIRED)
 if(EXISTS ${qe_SOURCE_DIR}/.git)
   message(STATUS "Source files are cloned from a git repository.")
   set(IS_GIT_PROJECT 1)
+  include(GitInfo)
 else()
   message(STATUS "Source files are not cloned from a git repository.")
 endif()

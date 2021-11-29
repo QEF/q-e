@@ -24,8 +24,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 
   use cond
   use lsda_mod, only: nspin
-  use noncollin_module, only : noncolin
-  use spin_orb, only: lspinorb
+  use noncollin_module, only : noncolin, lspinorb
   use ions_base,  only : atm, nat, ityp, ntyp=>nsp, tau
   use uspp_param, only : upf, nbetam
   use uspp,       only : deeq, deeq_nc, qq_nt, qq_so

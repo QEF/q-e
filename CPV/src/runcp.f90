@@ -16,6 +16,12 @@
 #define DEVICEATTR
 #endif
 
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
+
 
    SUBROUTINE runcp_uspp_x &
       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart, compute_only_gradient )
@@ -73,7 +79,7 @@
 #endif
      real(DP),    allocatable :: emadt2(:)
      real(DP),    allocatable :: emaver(:)
-     complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
+     complex(DP), allocatable PINMEM :: c2(:), c3(:), c2tmp(:), c3tmp(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:), ftmp(:)
 #if defined (__CUDA)
      REAL(DP),    ALLOCATABLE, DEVICE :: rhos_d(:,:)
@@ -85,6 +91,7 @@
      logical :: ttsde, only_gradient
      INTEGER :: omp_get_num_threads
 
+     call start_clock('runcp_uspp')
 #if defined (__CUDA)
      IF( dffts%has_task_groups ) THEN
         CALL errore(' runcp_uspp ', ' task groups not implemented on GPU ',1)
@@ -318,8 +325,8 @@
                        cm_bgrp(1,i+idx  ) = CMPLX(real(cm_bgrp(1,i+idx  )),0.0d0,kind=dp)
                     END IF
                  ELSE
-                    cm_bgrp(:, i+idx-1) = c2(:)
-                    cm_bgrp(:, i+idx) = c3(:)
+                    cm_bgrp(:, i+idx-1) = c2((idx_in-1)*ngw+1:idx_in*ngw)
+                    cm_bgrp(:, i+idx) = c3((idx_in-1)*ngw+1:idx_in*ngw)
                     IF ( gstart == 2 ) THEN
                        cm_bgrp(1, i+idx-1) = CMPLX(dble(cm_bgrp(1, i+idx-1)), 0.0d0, kind=dp) 
                        cm_bgrp(1, i+idx) = CMPLX(dble(cm_bgrp(1, i+idx)), 0.0d0, kind=dp) 
@@ -347,6 +354,7 @@
 #if defined (__CUDA)
      DEALLOCATE( rhos_d )
 #endif
+     call stop_clock('runcp_uspp')
 !
    END SUBROUTINE runcp_uspp_x
 
@@ -395,7 +403,7 @@
       REAL(DP) ::  verl1, verl2, verl3
       REAL(DP), ALLOCATABLE:: emadt2(:)
       REAL(DP), ALLOCATABLE:: emaver(:)
-      COMPLEX(DP), ALLOCATABLE:: c2(:), c3(:)
+      COMPLEX(DP), ALLOCATABLE PINMEM :: c2(:), c3(:)
       INTEGER :: i
       INTEGER :: iflag
       LOGICAL :: ttsde
@@ -404,7 +412,7 @@
        REAL(DP)    :: ei_unp_mem, ei_unp_wfc
        COMPLEX(DP) :: intermed3
        REAL(DP),    ALLOCATABLE :: occ(:)
-       COMPLEX(DP), ALLOCATABLE :: c4(:), c5(:)
+       COMPLEX(DP), ALLOCATABLE PINMEM :: c4(:), c5(:)
 !
 ! ... Controlling on sic applicability
 !

@@ -68,8 +68,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE becmod,               ONLY : bec_type, becp, calbec,ALLOCATE_bec_type, &
                                     DEALLOCATE_bec_type
-   USE noncollin_module,     ONLY : noncolin, npol
-   USE spin_orb,             ONLY : lspinorb
+   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
    USE parallel_include
    USE uspp_init,            ONLY : init_us_2
    !

@@ -98,11 +98,10 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   USE kinds,            ONLY : DP
   USE becmod_gpum,      ONLY : becp_d
   USE uspp,             ONLY : nkb, okvan, ofsbeta, vkb
-  USE spin_orb,         ONLY : lspinorb
   USE uspp_param,       ONLY : upf, nh, nhm
   USE ions_base,        ONLY : nat, nsp, ityp
   USE control_flags,    ONLY : gamma_only 
-  USE noncollin_module, ONLY : npol, noncolin
+  USE noncollin_module, ONLY : npol, noncolin, lspinorb
   USE realus,           ONLY : real_space, invfft_orbital_gamma,     &
                                fwfft_orbital_gamma, calbec_rs_gamma, &
                                s_psir_gamma, invfft_orbital_k,       &
