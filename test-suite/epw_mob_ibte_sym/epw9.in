@@ -25,7 +25,7 @@
   ncarrier    =  1E13
   iterative_bte = .true.
   epmatkqread = .false.
-  mob_maxiter = 20
+  mob_maxiter = 10
   broyden_beta= 1.0
   bfieldx     = 0.0d0
   bfieldy     = 0.0d0
