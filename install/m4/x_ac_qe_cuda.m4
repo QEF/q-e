@@ -181,7 +181,10 @@ EOF
    fi
 
    new_cusolver="yes"
+   CC_stash=$CC
+   CC=nvcc
    AC_CHECK_LIB([cusolver], [cusolverDnZhegvdx_bufferSize], [], new_cusolver="no")
+   CC=$CC_stash
    
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
