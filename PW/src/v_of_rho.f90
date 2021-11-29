@@ -258,11 +258,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !$acc data create( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   IF (nspin == 1) THEN
     !
-    !$acc host_data use_device( rho%of_r, grho, tau, ex, ec, &
-    !$acc&                      v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
-    !$acc end host_data
     !
     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
     !$acc&              reduction(-:rhoneg2) present(rho)
@@ -295,11 +292,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
         rho_updw(k,2) = ( rho%of_r(k,1) - rho%of_r(k,2) ) * 0.5d0
     ENDDO
     !
-    !$acc host_data use_device( rho_updw, grho, tau, ex, ec, &
-    !$acc&                      v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx( dfftp%nnr, 2, np, rho_updw, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
-    !$acc end host_data
     !
     ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
     !
@@ -470,10 +464,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   REAL(DP), PARAMETER :: vanishing_charge = 1.D-10, &
                          vanishing_mag    = 1.D-20
   !
-  
-  logical :: homer
-  
-  
   CALL start_clock( 'v_xc' )
   !
   etxc = 0.D0 ;  rhoneg1 = 0.D0
