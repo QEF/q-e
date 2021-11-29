@@ -97,6 +97,9 @@ run-tests-tddfpt-serial : prolog pseudo
 run-tests-tddfpt-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
 
+run-tests-image-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=image_all
+
 run-tests-all_currents-serial : prolog pseudo
 	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
