@@ -557,6 +557,8 @@
      CALL qexsd_init_fcp(obj%fcp, fcp_mu, fcp_dynamics, fcp_conv_thr, fcp_ndiis, fcp_rdiis,&
                          fcp_mass, fcp_velocity, fcp_temperature, fcp_tempw, fcp_tolp, fcp_delta_t,&
                          fcp_nraise, freeze_all_atoms)
+  ELSE
+     obj%fcp_ispresent = .FALSE.
   END IF
   !------------------------------------------------------------------------------------------------------------------------
   !                              RISM
@@ -573,6 +575,9 @@
           laue_wall_lj6)
      obj%solvents_ispresent = .TRUE.
      CALL qexsd_init_solvents(obj%solvents, nsolv, solv_label, solv_mfile, solv_dens1, solv_dens2, solvents_unit)
+  ELSE
+     obj%rism_ispresent = .FALSE.
+     obj%solvents_ispresent = .FALSE.
   END IF
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                              EKIN FUNCTIONAL 
