@@ -326,8 +326,8 @@ MODULE input_parameters
         REAL(DP):: tot_charge = 0.0_DP
         !! total system charge
 
-        REAL(DP) :: tot_magnetization = -1.0_DP
-        !! majority - minority spin. A value < 0 means unspecified
+        REAL(DP) :: tot_magnetization = -10000.0_DP
+        !! majority - minority spin. A value = -10000 means unspecified
 
         REAL(DP) :: ecutwfc = 0.0_DP
         !! energy cutoff for wave functions in k-space ( in Rydberg ).
