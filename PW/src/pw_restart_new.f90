@@ -637,7 +637,7 @@ MODULE pw_restart_new
          IF ( lrism3d ) THEN
             CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
                                           etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
-                                          gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt, esol=esol)
+                                          gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt, esol=esol/e2)
          ELSE
             CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
                                           etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
