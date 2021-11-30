@@ -576,9 +576,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   ! ... add gradient corrections (if any)
   !
-  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v )
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
-  !$acc end host_data
   !
   !$acc end data
   !$acc end data
