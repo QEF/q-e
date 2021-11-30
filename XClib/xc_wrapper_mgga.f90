@@ -54,11 +54,11 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   IF ( gpu_args ) THEN
     !
-    !$acc data deviceptr( rho(length,ns), grho(3,length,ns), tau(length,ns),        &
-    !$acc&  ex(length), ec(length), v1x(length,ns), v2x(length,ns), v3x(length,ns), &
-    !$acc&  v1c(length,ns), v2c(np,length,ns), v3c(length,ns) )
+    !$acc data present( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+    !$acc host_data use_device( rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx_( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                       v2c, v3c )
+    !$acc end host_data
     !$acc end data
     !
   ELSE
