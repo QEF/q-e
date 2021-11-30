@@ -701,7 +701,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var tot_magnetization -type REAL { 
-            default { -1 [unspecified] }
+            default { -10000 [unspecified] }
             info {
                 Total majority spin charge - minority spin charge.
                 Used to impose a specific total electronic magnetization.

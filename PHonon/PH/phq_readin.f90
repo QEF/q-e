@@ -892,6 +892,10 @@ SUBROUTINE phq_readin()
      IF ((nat_todo /= 0) .and. lgamma_gamma) CALL errore( &
         'phq_readin', 'gamma_gamma tricks with nat_todo &
        & not available. Use nogg=.true.', 1)
+     IF (lda_plus_u .AND. lgamma_gamma) THEN
+        WRITE(stdout,'(5x,a)')  "DFPT+U does not support k=gamma and q=gamma tricks: disabling them..."
+        lgamma_gamma=.FALSE.
+     ENDIF
      !
      IF (nimage > 1 .AND. lgamma_gamma) CALL errore( &
         'phq_readin','gamma_gamma tricks with images not implemented',1)
