@@ -1,0 +1,20 @@
+rm: cannot remove 'INPUT_*.xml': No such file or directory
+rm: cannot remove 'INPUT_*.xml.tcl': No such file or directory
+rm: cannot remove '*-help.tcl': No such file or directory
+make[1]: [Makefile:35: clean] Error 1 (ignored)
+rm: cannot remove 'uncompress-stamp': No such file or directory
+rm: cannot remove 'package-ready-stamp': No such file or directory
+make[4]: [Makefile:64: distclean] Error 1 (ignored)
+rm: cannot remove '../install/make_blas.inc': No such file or directory
+make[4]: [Makefile:65: distclean] Error 1 (ignored)
+rm: cannot remove 'uncompress-stamp': No such file or directory
+rm: cannot remove 'package-ready-stamp': No such file or directory
+make[4]: [Makefile:67: distclean] Error 1 (ignored)
+rm: cannot remove '../install/make_lapack.inc': No such file or directory
+make[4]: [Makefile:68: distclean] Error 1 (ignored)
+rm: cannot remove 'make.inc': No such file or directory
+make[1]: *** [extlibs_makefile:117: libcuda_devxlib_veryclean] Error 1
+make: [Makefile:303: veryclean] Error 2 (ignored)
+configure: WARNING: F90 value is set to be consistent with value of MPIF90
+./install/configure: line 4219: test: (aka: integer expression expected
+./install/configure: line 4219: test: (aka: integer expression expected
