@@ -257,7 +257,7 @@ target_link_libraries(qe_phonon_fd
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE
-            CUDA::curand)
+            CUDA::cublas)
 endif()
 
 ###########################################################
@@ -363,6 +363,7 @@ qe_add_executable(qe_phonon_alpha2f_exe ${src_alpha2f_x})
 set_target_properties(qe_phonon_alpha2f_exe PROPERTIES OUTPUT_NAME alpha2f.x)
 target_link_libraries(qe_phonon_alpha2f_exe
     PRIVATE
+        qe_openacc_fortran
         qe_pw
         qe_modules
         qe_phonon_ph)

@@ -185,7 +185,7 @@ CONTAINS
     INTEGER :: m_start, m_end
     INTEGER :: k
     k = nbnd_occ (ikqs(ik))
-    CALL start_clock ('ch_psi_all_k')
+    CALL start_clock_gpu ('ch_psi_all_k')
     !$acc data copyin(evq) present(ps, hpsi, spsi)
     !
     !   Here we compute the projector in the valence band
@@ -260,7 +260,7 @@ CONTAINS
        ENDDO
        !$acc end kernels
     END IF
-    CALL stop_clock ('ch_psi_all_k')
+    CALL stop_clock_gpu ('ch_psi_all_k')
     return
   END SUBROUTINE ch_psi_all_k
 

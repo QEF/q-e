@@ -76,7 +76,7 @@ target_link_libraries(qe_lr_modules
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE
-            CUDA::curand)
+            CUDA::cublas)
 endif()
 
 ###########################################################
