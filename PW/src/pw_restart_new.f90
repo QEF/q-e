@@ -93,7 +93,7 @@ MODULE pw_restart_new
       USE fft_base,             ONLY : dffts
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
-                                       ehart, eband, demet, edftd3, elondon, exdm, esol
+                                       ehart, eband, demet, edftd3, elondon, exdm, esol, vsol
       USE tsvdw_module,         ONLY : EtsvdW
       USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
@@ -637,7 +637,8 @@ MODULE pw_restart_new
          IF ( lrism3d ) THEN
             CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
                                           etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
-                                          gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt, esol=esol/e2)
+                                          gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt, &
+                                          esol=esol/e2, vsol=vsol/e2)
          ELSE
             CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
                                           etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&

@@ -1009,7 +1009,7 @@ CONTAINS
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_total_energy(obj, etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, &
                        electric_field_corr, potentiostat_contr, gate_contribution, dispersion_contribution, &
-                       esol)
+                       esol, vsol)
     !----------------------------------------------------------------------------------------
     !
     ! 
@@ -1022,13 +1022,14 @@ CONTAINS
     REAL(DP),OPTIONAL               :: potentiostat_contr
     REAL(DP),OPTIONAL               :: gate_contribution
     REAL(DP),OPTIONAL               :: dispersion_contribution  
-    REAL(DP),OPTIONAL               :: esol
+    REAL(DP),OPTIONAL               :: esol, vsol
     !
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
     ! 
     CALL  qes_init (obj, TAGNAME, ETOT = etot, EBAND = eband, EHART = ehart, VTXC = vtxc, ETXC = etxc, & 
                     EWALD = ewald, DEMET = demet, EFIELDCORR = electric_field_corr, POTENTIOSTAT_CONTR = potentiostat_contr,  &
-                    GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution, ESOL = esol)
+                    GATEFIELD_CONTR = gate_contribution, vdW_term = dispersion_contribution, ESOL = esol, &
+                    levelshift_contr = vsol)
     
     END SUBROUTINE qexsd_init_total_energy
     ! 
