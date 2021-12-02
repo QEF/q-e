@@ -17,7 +17,8 @@ extern void dgemv_(const char *, const int *, const int *, const double *,
 double ddot1(double v[], double u[], int n)
 {
     double result = 0.0;
-    for (int i = 0; i < n; i++)
+    int i = 0;
+    for (i = 0; i < n; i++)
         result += v[i]*u[i];
     return result;
 }
