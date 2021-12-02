@@ -476,7 +476,7 @@ MODULE qexsd_input
    !
    IF (esm_ispresent) THEN
       IF (PRESENT(fcp)) THEN
-         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP=fcp, FCP_MU=fcp_mu)
+         CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj, FCP_OPT=fcp, FCP_MU=fcp_mu)
       ELSE
          CALL qes_init (obj, TAGNAME, ASSUME_ISOLATED=assume_isolated, ESM=esm_obj)
       END IF

@@ -581,7 +581,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
          IF ( TRIM(total_clock) == clock_label(ic) ) EXIT 
       END DO 
       t = get_cpu_and_wall(ic) 
-      CALL qes_init ( total_, "total", TRIM(clock_label(ic)), t(1), t(2) ) 
+      CALL qes_init ( total_, "total", TRIM(clock_label(ic)), CPU = t(1), WALL = t(2) ) 
       IF ( partial_ndim .GT.  0 ) THEN  
          ALLOCATE(partial_(partial_ndim), match(nclock) ) 
          DO ipar = 1, partial_ndim 
@@ -590,10 +590,10 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
                nc = get_index(.TRUE., match)
                IF (nc == ic) CYCLE
                t = get_cpu_and_wall(nc) 
-               CALL qes_init(partial_(ipar), "partial", TRIM(clock_label(nc)), t(1), t(2),&
-                             called(nc))
+               CALL qes_init(partial_(ipar), "partial", TRIM(clock_label(nc)), CPU = t(1), WALL = t(2), & 
+                              CALLS = called(nc))
             ELSE 
-               CALL qes_init (partial_(ipar), "partial", "not_found",  -1.d0, -1.d0, 0)  
+               CALL qes_init (partial_(ipar), "partial", "not_found",  CPU = -1.d0, WALL = -1.d0, CALLS = 0)  
                partial_(ipar)%lwrite=.FALSE. 
             END IF 
          END DO

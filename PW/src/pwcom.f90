@@ -157,6 +157,9 @@ MODULE lsda_mod
   !! spin of the current kpoint
   INTEGER :: isk(npk)
   !! for each k-point: 1=spin up, 2=spin down
+  REAL(DP),ALLOCATABLE  :: local_charges(:), local_mag(:,:)
+  !! used to store the local charges and magnetizatiom computed in report_mag 
+  !! (e.g. for printing them in the XML file)
   !
 END MODULE lsda_mod
 !

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE report_mag
+SUBROUTINE report_mag(save_locals)
       !------------------------------------------------------------------------
       !! This subroutine prints out information about the local magnetization
       !! and/or charge, integrated around the atomic positions at points which
@@ -19,9 +19,11 @@ SUBROUTINE report_mag
       use constants,        ONLY: pi
       USE scf,              ONLY: rho
       USE noncollin_module, ONLY: noncolin, mcons, i_cons, r_m
-      USE lsda_mod,         ONLY: nspin
+      USE lsda_mod,         ONLY: nspin, local_charges, local_mag
       !
       IMPLICIT NONE
+      LOGICAL,INTENT(IN) :: save_locals 
+      !! if .TRUE. locals are saved  in two local_charges and local_mag of lsda_mod 
       !
       REAL(DP) :: theta, phi, norm, norm1
       INTEGER :: ipol, na, nt
@@ -29,7 +31,13 @@ SUBROUTINE report_mag
       !
       ! get_local integrates on the previously determined points
       !
-      CALL get_locals( r1_loc, m1_loc, rho%of_r )
+      CALL get_locals( r1_loc, m1_loc, rho%of_r ) 
+      IF (save_locals) THEN 
+        IF ALLOCATED (local_charges) DEALLOCATE (local_charges)
+        IF ALLOCATED (local_mag) DEALLOCATE (local_mag)
+        ALLOCATE (local_charges, SOURCE = r1_loc)
+        ALLOCATE (local_mag, SOURCE =  m1_loc)
+      END IF  
       !
       IF (nspin == 2) THEN
          WRITE( stdout, * )
