@@ -841,6 +841,7 @@ END SUBROUTINE sogga
 SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )
 !$acc routine (pbexgau) seq
   !-----------------------------------------------------------------------
+  !! PBEX gaussian.
   !
   USE kind_l,  ONLY: DP
   !
@@ -938,7 +939,7 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
        Nx = bx * Prefac * ( SQRT(PI) * ERF(One/bx) + & 
         (bx - Two*bx*bx*bx)*cx - Two*bx )
        !
-       ! for convergency
+       ! for convergence
        IF (ABS(Nx) < 1.0D-15) THEN
          Nx = Zero
        ELSEIF ((One - ABS(Nx)) < 1.0D-15) THEN
@@ -946,7 +947,7 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
        ELSE
          Nx = Nx
        ENDIF
-       ! for convergency end
+       ! for convergence end
        !
        Fx =  Kx * Nx
        !
@@ -1283,12 +1284,10 @@ END SUBROUTINE becke88_spin
 SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
 !$acc routine (wpbe_analy_erfc_approx_grad) seq
       !-----------------------------------------------------------------------
-      !
-      !     wPBE Enhancement Factor (erfc approx.,analytical, gradients)
-      !
-      !--------------------------------------------------------------------
+      !! wPBE Enhancement Factor (erfc approx.,analytical, gradients).
       !
       USE kind_l,    ONLY: DP
+      !
       IMPLICIT NONE
       !
       REAL(DP) rho,s,omega,Fx_wpbe,d1sfx,d1rfx
@@ -1878,11 +1877,12 @@ END SUBROUTINE wpbe_analy_erfc_approx_grad
 FUNCTION EXPINT(n, x)
 !$acc routine (expint) seq
 !-----------------------------------------------------------------------
-! Evaluates the exponential integral E_n(x)
+!! Evaluates the exponential integral \(E_n(x)\). 
+!! Inspired by Numerical Recipes.
 ! Parameters: maxit is the maximum allowed number of iterations,
 ! eps is the desired relative error, not smaller than the machine precision,
 ! big is a number near the largest representable floating-point number,
-! Inspired from Numerical Recipes
+
 !
       USE kind_l,   ONLY: DP
       IMPLICIT NONE

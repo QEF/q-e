@@ -281,6 +281,7 @@ END SUBROUTINE metac
 SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
 !$acc routine seq
   !-------------------------------------------------------------------------
+  !! FX calculation.
   !
   USE kind_l,           ONLY : DP
   !
@@ -559,6 +560,8 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
                        tau, sc, v1up, v1dw, v2up, v2dw, v3 )
 !$acc routine seq
   !---------------------------------------------------------------
+  !! TPSS meta-GGA correlation energy and potentials - polarized case.
+  !
   USE kind_l,    ONLY : DP
   !
   IMPLICIT NONE
@@ -887,6 +890,7 @@ END SUBROUTINE metac_spin
 SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
 !$acc routine seq
   !-----------------------------------------------------------------------
+  !! Wrapper to M06L exchange+correlation routines (unpolarized).
   !
   USE kind_l,        ONLY : DP
   !
@@ -929,7 +933,7 @@ SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !
   taua = tau * two * 0.5_dp ! Taua, which is Tau_sigma is half Tau
   taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 )
-                              ! in the following M06L routines
+                            ! in the following M06L routines
   !
   CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )
   !
@@ -953,6 +957,7 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
                         v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
 !$acc routine seq
   !-----------------------------------------------------------------------
+  !! Wrapper to M06L exchange+correlation routines (polarized).
   !
   USE kind_l,        ONLY : DP
   !
@@ -965,8 +970,8 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
   REAL(DP) :: exup, exdw, taua, taub
   REAL(DP), PARAMETER :: zero = 0.0_dp, two = 2.0_dp
   !
-  taua = tauup * two       ! Tau is defined as summ_i( |nabla phi_i|**2 )
-  taub = taudw * two       ! in the rest of the routine
+  taua = tauup * two      ! Tau is defined as summ_i( |nabla phi_i|**2 )
+  taub = taudw * two      ! in the rest of the routine
   !
   CALL m06lx( rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup )
   CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )
