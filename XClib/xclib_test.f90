@@ -172,7 +172,7 @@ PROGRAM xclib_test
   INTEGER :: tag_err
   CHARACTER(LEN=1) :: dummy
   CHARACTER(LEN=30) :: filename_xml=""
-  CHARACTER(LEN=45) :: xc_data="XC_DATA______________"
+  CHARACTER(LEN=48) :: xc_data="XC_DATA__________"
   ! ... output
   INTEGER :: iunpun, iun, nlen1, nlen2
   LOGICAL :: found, exc_term=.TRUE., cor_term=.TRUE.
@@ -533,7 +533,7 @@ PROGRAM xclib_test
       CALL xc_f03_func_end( xc_func0 )
       !
       dft = 'XC-000I-000I-000I-000I-000I-000I'
-      IF ( ifamily==XC_FAMILY_LDA .AND. fkind==XC_EXCHANGE ) THEN
+      IF ( ifamily==XC_FAMILY_LDA .AND. (fkind==XC_EXCHANGE .OR. fkind==XC_KINETIC) ) THEN
         WRITE( dft(4:6),   '(i3.3)' ) id
         WRITE( dft(7:7),   '(a)' ) 'L'
       ELSEIF ( ifamily==XC_FAMILY_LDA .AND. (fkind==XC_CORRELATION .OR. &
@@ -541,7 +541,7 @@ PROGRAM xclib_test
         WRITE( dft(9:11),  '(i3.3)' ) id
         WRITE( dft(12:12), '(a)' ) 'L'
       ELSEIF ( (ifamily==XC_FAMILY_GGA .OR. ifamily==XC_FAMILY_HYB_GGA) .AND. &
-               fkind==XC_EXCHANGE ) THEN
+               (fkind==XC_EXCHANGE .OR. fkind==XC_KINETIC) ) THEN
         WRITE( dft(14:16), '(i3.3)' ) id
         WRITE( dft(17:17), '(a)' ) 'L'
       ELSEIF ( (ifamily==XC_FAMILY_GGA  .OR. ifamily==XC_FAMILY_HYB_GGA) .AND. &
@@ -549,7 +549,7 @@ PROGRAM xclib_test
         WRITE( dft(19:21), '(i3.3)' ) id
         WRITE( dft(22:22), '(a)' ) 'L'
       ELSEIF ( (ifamily==XC_FAMILY_MGGA .OR. ifamily==XC_FAMILY_HYB_MGGA) .AND. &
-               fkind==XC_EXCHANGE ) THEN
+               (fkind==XC_EXCHANGE .OR. fkind==XC_KINETIC) ) THEN
         WRITE( dft(24:26), '(i3.3)' ) id
         WRITE( dft(27:27), '(a)' ) 'L'
       ELSEIF ( (ifamily==XC_FAMILY_MGGA .OR. ifamily==XC_FAMILY_HYB_MGGA) .AND. &
@@ -780,15 +780,21 @@ PROGRAM xclib_test
     !
     nlen1 = LEN(TRIM(dft))
     nlen2 = LEN(TRIM(family))
-    IF ( dft_init=='ALL_TERMS' .OR. dft_init(1:4)/='ALL_' ) THEN
+    IF ( dft_init=='ALL_TERMS' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       WRITE(xc_data(14:13+nlen2),'(a)') family(1:nlen2)
       IF (is==1) WRITE(xc_data(18:30),'(a)') 'UNP'
       IF (is==2) WRITE(xc_data(18:30),'(a)') 'POL'
-    ELSEIF ( dft_init=='ALL_SHORT'.OR.dft_init=='ALL_LIBXC' ) THEN
+    ELSEIF ( dft_init=='ALL_SHORT' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
       IF (is==1) WRITE(xc_data(8+nlen1:),'(a)') 'UNP'
       IF (is==2) WRITE(xc_data(8+nlen1:),'(a)') 'POL'
+    ELSEIF ( dft_init=='ALL_LIBXC' .OR. dft_init(1:4)/='ALL_' ) THEN
+      xc_data="XC_DATA_______________________________________"
+      WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
+      WRITE(xc_data(42:41+nlen2),'(a)') family(1:nlen2)
+      IF (is==1) WRITE(xc_data(42+nlen2:),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(42+nlen2:),'(a)') 'POL'
     ENDIF
     !
     ! ... read data set from xml file
