@@ -178,6 +178,8 @@ CONTAINS
     !
     USE becmod, ONLY : becp, calbec
 #if defined(_OPENACC)
+    USE becmod_gpum, ONLY : becp_d
+    USE becmod_subs_gpum, ONLY : calbec_gpu
     USE cublas
 #endif
     
@@ -198,7 +200,8 @@ CONTAINS
     !
     ! ikqs(ik) is the index of the point k+q if q\=0
     !          is the index of the point k   if q=0
-    ! 
+    !
+    CALL start_clock_gpu('zgemmch') 
     !$acc host_data use_device(spsi, ps, evq)
     IF (noncolin) THEN
        CALL zgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
@@ -208,15 +211,14 @@ CONTAINS
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
     !$acc end host_data
-    !$acc kernels present(ps)
+    CALL stop_clock_gpu('zgemmch')
+    !$acc kernels present(ps,hpsi) 
     ps (:,:) = ps(:,:) * alpha_pv
+    hpsi (:,:) = (0.d0, 0.d0)
     !$acc end kernels
     !$acc host_data use_device(ps)
     CALL mp_sum ( ps, intra_bgrp_comm )
     !$acc end host_data
-    !$acc kernels present(hpsi)
-    hpsi (:,:) = (0.d0, 0.d0)
-    !$acc end kernels
     !$acc host_data use_device(hpsi, ps, evq)
     IF (noncolin) THEN
        CALL zgemm ('N', 'N', npwx*npol, m, k, (1.d0, 0.d0) , evq, &
@@ -228,7 +230,7 @@ CONTAINS
     !$acc end host_data
     !$acc kernels present(spsi, hpsi)
     spsi(:,:) = hpsi(:,:)
-    !$acc end kernels
+    !$acc end  kernels
     !$acc end data
     !
     !    And apply S again
@@ -237,12 +239,12 @@ CONTAINS
     !$acc update self(hpsi)
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
        call divide (inter_bgrp_comm, m, m_start, m_end)
-       if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+       if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)    !
     else
-       CALL calbec (n, vkb, hpsi, becp, m)
+       CALL calbec (n, vkb, hpsi, becp, m)                              !
     end if
-    !$acc update device(spsi(1:npwx*npol, 1:m))
     CALL stop_clock ('ch_psi_calbec')
+    !!$acc update device(spsi(1:npwx*npol, 1:m))                         !
 #if defined(__CUDA)
     !$acc host_data use_device(hpsi, spsi)
     CALL s_psi_gpu (npwx, n, m, hpsi, spsi)
@@ -256,6 +258,7 @@ CONTAINS
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
        ENDDO
     ENDDO
+    !$acc end parallel loop 
     IF (noncolin) THEN
        !$acc parallel loop collapse(2) present(ah, spsi)
        DO ibnd = 1, m
@@ -263,6 +266,7 @@ CONTAINS
              ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
           ENDDO
        ENDDO
+       !$acc end parallel loop
     END IF
     CALL stop_clock_gpu ('ch_psi_all_k')
     return
