@@ -14,10 +14,10 @@ CONTAINS
 !----------------------------------------------------------------------------------
 SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq) 
    !--------------------------------------------------------------------------------
-   !
-   ! This routine calculates for all ibnd: 
-   ! dpqq(ibnd) = \sum{l1 l2} < vec1(ibnd)  | vec2(na,l1) > * qq(na, l1 ,l2) * &
-   !                          < vec3(na,l2) | vec4 >
+   !! This routine calculates for all \(\text{ibnd}\): 
+   !! $$ \text{dpqq}(\text{ibnd}) = \sum{l_1 l_2}
+   !!   \langle \text{vec1}(\text{ibnd})|\text{vec2}(na,l_1)\rangle\cdot
+   !!   \text{qq}(na,l_1,l_2)\cdot\langle \text{vec3}(na,l_2)|\text{vec4}\rangle $$
    ! 
    USE kinds,       ONLY : DP
    USE uspp_param,  ONLY : nh
@@ -30,7 +30,7 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: na
-   ! index of the displaced atom
+   !! index of the displaced atom
    COMPLEX(DP), INTENT(IN) :: vec1(:,:), & ! (npwx,nkb)
                               vec2(:,:), & ! (npwx,nkb)
                               vec3(:,:), & ! (npwx,nkb)
@@ -99,14 +99,14 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    RETURN
    !
 END SUBROUTINE doubleprojqq
-!---------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq) 
-   !
-   ! This routine calculates for all ibnd:
-   ! dpqq(ibnd) = \sum{l1 l2} proj(ibnd,na,l1) * qq_nt(na, l1 ,l2) * &
-   !                          < vec3 (na,l2) | vec4 >
+   !-------------------------------------------------------------------
+   !! This routine calculates for all \(\text{ibnd}\):
+   !! $$ \text{dpqq}(\text{ibnd}) = \sum{l_1 l_2}
+   !!   \text{proj}(\text{ibnd},na,l_1)\cdot \text{qq}_{nt}(na,l_1,l_2)\cdot
+   !!   \langle \text{vec3}(na,l_2)|\text{vec4}\rangle $$
    !   
    USE kinds,      ONLY : DP
    USE uspp_param, ONLY : nh
@@ -1078,8 +1078,9 @@ SUBROUTINE d2nsq_bare_k (ik, icart, jcart, na, nap, nah, &
     USE units_lr,      ONLY : iuwfc, lrwfc
     USE ions_base,     ONLY : nat, ityp, ntyp => nsp
     USE klist,         ONLY : xk, ngk, igk_k
-    USE ldaU_ph,       ONLY : wfcatomk, swfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
+    USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
                               dvkb, vkbkpq, dvkbkpq, proj1, d2ns_type
+    USE ldaU_lr,       ONLY : swfcatomk
     USE wvfct,         ONLY : npwx, nbnd, wg
     USE uspp,          ONLY : vkb, nkb
     USE qpoint,        ONLY : nksq, ikks, ikqs
@@ -1258,8 +1259,9 @@ SUBROUTINE d2nsq_bare_k_diag (ik, icart, jcart, na, nap, nah, &
     USE units_lr,        ONLY : iuwfc, lrwfc
     USE ions_base,       ONLY : nat, ityp, ntyp => nsp
     USE klist,           ONLY : xk, ngk, igk_k
-    USE ldaU_ph,         ONLY : wfcatomk, swfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
+    USE ldaU_ph,         ONLY : wfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
                                 dvkb, vkbkpq, dvkbkpq, proj1, d2ns_type
+    USE ldaU_lr,         ONLY : swfcatomk
     USE wvfct,           ONLY : npwx, nbnd, wg
     USE uspp,            ONLY : vkb, nkb
     USE qpoint,          ONLY : nksq, ikks, ikqs

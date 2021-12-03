@@ -9,6 +9,8 @@
 !-----------------------------------------------------------------------
 SUBROUTINE H_h(npw,e,h,Ah)
   !-----------------------------------------------------------------------
+  !! Calculate \( [(k+G)^2-e]\psi \), \(V_\text{loc}\psi\) and \(V_{NL}\psi\)
+  !! (wrapper).
   !
   USE kinds, ONLY: DP
   USE wvfct, ONLY: nbnd, npwx, g2kin

@@ -8,8 +8,7 @@
 !--------------------------------------------------------------------
 subroutine dynmatcc
   !--------------------------------------------------------------------
-  !
-  ! diagonal (q-independent) NLCC contribution to the dynamical matrix
+  !! Diagonal (q-independent) NLCC contribution to the dynamical matrix.
   !
   !
   USE kinds,     ONLY : DP

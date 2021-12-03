@@ -9,17 +9,21 @@
 !-----------------------------------------------------------------------
 SUBROUTINE drhodv(nu_i)
   !-----------------------------------------------------------------------
-  !
-  !  calculate the electronic term <psi|dv|dpsi> of the dynamical matrix
+  !! Calculate the electronic term \(\langle\psi|dv|\d\psi\rangle\) of 
+  !! the dynamical matrix.
   !
   USE mp_pools,  ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   USE klist,     ONLY : wk, ngk
   USE wvfct,     ONLY : nbnd, npwx
   USE cgcom
-
+  !
   IMPLICIT NONE
+  !
   INTEGER :: nu_i
+  !! mode
+  !
+  ! ... local variables
   !
   INTEGER :: nu_j, ibnd, ik, npw
   real(DP) :: dynel(nmodes), work(nbnd)

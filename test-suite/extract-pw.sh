@@ -27,8 +27,9 @@ eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
 ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print $7; print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
-# extract geometry after relaxation
-geom=`awk '/Begin final coordinates/,/End final coordinates/{
+# extract geometry (volume excepted) after relaxation
+geom=`sed -e '/new unit-cell/d' $fname |
+  awk '/Begin final coordinates/,/End final coordinates/{
   # search all element in the line
   for ( i = 1; i<= NF; i++ ) {
     # print floating point numbers
@@ -37,7 +38,9 @@ geom=`awk '/Begin final coordinates/,/End final coordinates/{
       print $i
     }
   }
-}' $fname`
+}'`
+
+vol=`grep 'new unit-cell' $fname | tail -1 | awk '{print $5}'`
 
 if test "$e1" != ""; then
 	echo e1
@@ -83,6 +86,11 @@ fi
 if test "$tf1" != ""; then
         echo tf1
         for x in $tf1; do echo $x; done
+fi
+
+if test "$vol" != ""; then
+	echo vol
+        echo $vol
 fi
 
 if test "$geom" != ""; then

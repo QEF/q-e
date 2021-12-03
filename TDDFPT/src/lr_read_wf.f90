@@ -117,6 +117,7 @@ SUBROUTINE normal_read()
   USE wavefunctions,     ONLY : psic
   USE realus,                   ONLY : tg_psic
   USE mp_global,                ONLY : me_bgrp
+  USE uspp_init,           ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -296,6 +297,7 @@ SUBROUTINE virt_read()
   !
   USE control_lr,            ONLY : nbnd_occ
   USE becmod,                ONLY : allocate_bec_type, deallocate_bec_type
+  USE uspp_init,             ONLY : init_us_2
   !
   IMPLICIT NONE
   !

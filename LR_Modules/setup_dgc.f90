@@ -18,9 +18,8 @@ SUBROUTINE setup_dgc
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, g
-  USE spin_orb,             ONLY : domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, rhoz_or_updw
-  USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, ux, nspin_gga, nspin_mag
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
   USE xc_lib,               ONLY : xclib_dft_is, xc_gcx

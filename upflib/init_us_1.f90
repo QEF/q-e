@@ -33,7 +33,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
                            nhtol_d, nhtoj_d, nhtolm_d, ijtoh_d, dvan_d, qq_at_d, &
                            qq_nt_d, indv_d, qq_so_d, dvan_so_d, ofsbeta_d
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb, nsp
-  USE upf_spinorb,  ONLY : lspinorb, rot_ylm, fcoef, fcoef_d, lmaxx
+  USE upf_spinorb,  ONLY : is_spinorbit, rot_ylm, fcoef, fcoef_d, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp,           ONLY : mp_sum
   implicit none
@@ -79,7 +79,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      IF ( upf(nt)%nqlc < 0 )  upf(nt)%nqlc = 0
   end do
 
-  if (lspinorb) then
+  if (is_spinorbit) then
      !
      !  In the spin-orbit case we need the unitary matrix u which rotates the
      !  real spherical harmonics and yields the complex ones.
@@ -98,7 +98,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      enddo
   endif
   if ( nhm > 0 ) then
-     if (lspinorb) then
+     if (is_spinorbit) then
         fcoef=(0.d0,0.d0)
         dvan_so = (0.d0,0.d0)
         qq_so=(0.d0,0.d0)
@@ -219,7 +219,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
               nhtolm(ih, nt) == nhtolm(jh, nt) ) then
               ir = indv (ih, nt)
               is = indv (jh, nt)
-              if (lspinorb) then
+              if (is_spinorbit) then
                  dvan_so (ih, jh, 1, nt) = upf(nt)%dion (ir, is)
                  dvan_so (ih, jh, 4, nt) = upf(nt)%dion (ir, is)
               else
@@ -276,7 +276,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
         do ih = 1, nh (nt)
           do jh = ih, nh (nt)
              call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-             if (lspinorb) then
+             if (is_spinorbit) then
                  qq_so (ih, jh, 1, nt) = omega *  DBLE (qgm (1) )
                  qq_so (jh, ih, 1, nt) = qq_so (ih, jh, 1, nt)
                  qq_so (ih, jh, 4, nt) = qq_so (ih, jh, 1, nt)
@@ -292,7 +292,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
   deallocate (ylmk0)
 #if defined(__MPI)
 100 continue
-  if (lspinorb) then
+  if (is_spinorbit) then
     call mp_sum(  qq_so , intra_bgrp_comm )
     call mp_sum(  qq_nt, intra_bgrp_comm )
   else
@@ -322,7 +322,7 @@ subroutine init_us_1( nat, ityp, omega, ngm, g, gg, intra_bgrp_comm )
      ijtoh_d=ijtoh
      qq_at_d=qq_at
      qq_nt_d=qq_nt
-     if (lspinorb) then
+     if (is_spinorbit) then
         qq_so_d=qq_so
         dvan_so_d=dvan_so
         fcoef_d=fcoef

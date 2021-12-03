@@ -96,6 +96,7 @@
   USE io_epw,           ONLY : readwfc, readkmap
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE dvqpsi,           ONLY : dvqpsi_us3, adddvscf2
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

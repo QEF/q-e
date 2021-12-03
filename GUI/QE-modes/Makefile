@@ -42,7 +42,6 @@ OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
 generate = if test ! -d qe-modes; then mkdir qe-modes; fi; cd qe-modes; $(GEN_MODE)
-compile  = cd qe-modes; emacs --batch --eval "(add-to-list 'load-path \".\")"
 
 
 all: modes doc
@@ -54,39 +53,30 @@ make-modes: qe pw neb ph pp ld1 cp pwtk
 
 pw: qe-funcs 
 	$(generate) pw
-	$(compile) --eval "(byte-compile-file \"pw-mode.el\")"
 
 neb: qe-funcs 
 	$(generate) $(TOPDIR)/NEB/Doc/INPUT_NEB.def $(TOPDIR)/PW/Doc/INPUT_PW.def
-	$(compile) --eval "(byte-compile-file \"neb-mode.el\")"
 
 ph: qe-funcs
 	$(generate) ph
-	$(compile) --eval "(byte-compile-file \"ph-mode.el\")"
 
 pp: qe-funcs
 	$(generate) pp
-	$(compile) --eval "(byte-compile-file \"pp-mode.el\")"
 
 ld1: qe-funcs
 	$(generate) -modename "QE-ld1.x (atomic)" $(TOPDIR)/atomic/Doc/INPUT_LD1.def
-	$(compile) --eval "(byte-compile-file \"ld1-mode.el\")"
 
 cp: qe-funcs
 	$(generate) $(TOPDIR)/CPV/Doc/INPUT_CP.def
-	$(compile) --eval "(byte-compile-file \"cp-mode.el\")"
 
 
 # generate generic QE mode
 
 qe: 
 	$(generate) -funcs -mode qe -modename QE-generic $(ALL_DEF_FILES)
-	$(compile) --eval "(byte-compile-file \"qe-funcs.el\")"	
-	$(compile) --eval "(byte-compile-file \"qe-mode.el\")"	
 
 pwtk: 
 	$(generate) -mode pwtk -modename PWTK -template pwtk-mode.el.tcl -nmlprefix "" -cmds "$(PWTK_CMDS)" $(ALL_DEF_FILES)
-	$(compile) --eval "(byte-compile-file \"pwtk-mode.el\")"	
 
 # generate other required elisp files ...
 
@@ -95,7 +85,6 @@ qe-funcs:
 
 make-master:
 	$(generate) -masteronly -mode qe $(ALL_DEF_FILES)
-	$(compile) --eval "(byte-compile-file \"qe-modes.el\")"	
 
 # other targets ...
 

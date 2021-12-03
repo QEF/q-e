@@ -9,11 +9,9 @@
 !-----------------------------------------------------------------------
 subroutine compute_weight (wgg)
   !-----------------------------------------------------------------------
-  !
-  !     This routine implements Eq.B19 of Ref.[1]. It computes the
-  !     weight to give to the v,v' terms in the orthogonality term.
-  !     The weights are computed for each k point.
-  !     [1] PRB 64, 235118 (2001).
+  !! This routine implements Eq.(B19) of PRB 64, 235118 (2001). It computes the
+  !! weight to give to the v,v' terms in the orthogonality term.
+  !! The weights are computed for each k point.
   !
   USE kinds,          ONLY : DP
   USE klist,          ONLY : wk, lgauss, degauss, ngauss, ltetra
@@ -26,10 +24,12 @@ subroutine compute_weight (wgg)
   USE ldaU,           ONLY : lda_plus_u
   !
   implicit none
-
-  real(DP) :: wgg (nbnd, nbnd, nksq)
-  ! output: the weights
-
+  !
+  real(DP) :: wgg(nbnd,nbnd,nksq)
+  !! output: the weights
+  !
+  ! ... local variables
+  !
   integer :: ik, ikk, ikq, ibnd, jbnd
   ! counters
   real(DP) :: wg1, wg2, theta

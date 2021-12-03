@@ -24,11 +24,13 @@ MODULE LAXlib
   SUBROUTINE cdiaghg_cpu_( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, offload )
     !----------------------------------------------------------------------------
     !
-    ! ... calculates eigenvalues and eigenvectors of the generalized problem
-    ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
-    ! ... On output both matrix are unchanged
-    !
-    ! ... LAPACK version - uses both ZHEGV and ZHEGVX
+    !! Called by diaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! complex matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! LAPACK version - uses both ZHEGV and ZHEGVX
     !
 #if defined (__CUDA)
     USE cudafor
@@ -37,22 +39,28 @@ MODULE LAXlib
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     !
-    INTEGER, INTENT(IN) :: n, m, ldh
-      ! dimension of the matrix to be diagonalized
-      ! number of eigenstates to be calculate
-      ! leading dimension of h, as declared in the calling pgm unit
-    COMPLEX(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-      ! actually intent(in) but compilers don't know and complain
-      ! matrix to be diagonalized
-      ! overlap matrix
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized
+    INTEGER, INTENT(IN) :: m
+    !! number of eigenstates to be calculated
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    COMPLEX(DP), INTENT(INOUT) :: h(ldh,n)
+    !! matrix to be diagonalized
+    COMPLEX(DP), INTENT(INOUT) :: s(ldh,n)
+    !! overlap matrix
     REAL(DP), INTENT(OUT) :: e(n)
-      ! eigenvalues
+    !! eigenvalues
     COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
-      ! eigenvectors (column-wise)
-    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
-      !
+    !! eigenvectors (column-wise)
+    INTEGER,  INTENT(IN)  :: me_bgrp
+    !! index of the processor within a band group
+    INTEGER,  INTENT(IN)  :: root_bgrp
+    !! index of the root processor within a band group
+    INTEGER,  INTENT(IN)  :: intra_bgrp_comm
+    !! intra band group communicator
     LOGICAL, OPTIONAL ::  offload
-      ! optionally solve the eigenvalue problem on the GPU
+    !! optionally solve the eigenvalue problem on the GPU
     LOGICAL :: loffload
       !
 #if defined(__CUDA)
@@ -96,33 +104,42 @@ MODULE LAXlib
   SUBROUTINE cdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, onhost )
     !----------------------------------------------------------------------------
     !
-    ! ... calculates eigenvalues and eigenvectors of the generalized problem
-    ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
-    ! ... On output both matrix are unchanged
-    !
-    ! ... LAPACK version - uses both ZHEGV and ZHEGVX
+    !! Called by diaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! complex matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! GPU version
+    !!
     !
     USE cudafor
     !
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     !
-    INTEGER, INTENT(IN) :: n, m, ldh
-      ! dimension of the matrix to be diagonalized
-      ! number of eigenstates to be calculate
-      ! leading dimension of h, as declared in the calling pgm unit
-    COMPLEX(DP), DEVICE, INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
-      ! actually intent(in) but compilers don't know and complain
-      ! matrix to be diagonalized
-      ! overlap matrix
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized
+    INTEGER, INTENT(IN) :: m
+    !! number of eigenstates to be calculate
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    COMPLEX(DP), DEVICE, INTENT(INOUT) :: h_d(ldh,n)
+    !! matrix to be diagonalized
+    COMPLEX(DP), DEVICE, INTENT(INOUT) :: s_d(ldh,n)
+    !! overlap matrix
     REAL(DP), DEVICE, INTENT(OUT) :: e_d(n)
-      ! eigenvalues
+    !! eigenvalues
     COMPLEX(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
-      ! eigenvectors (column-wise)
-    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
-      ! communicators
+    !! eigenvectors (column-wise)
+    INTEGER,  INTENT(IN)  :: me_bgrp
+    !! index of the processor within a band group
+    INTEGER,  INTENT(IN)  :: root_bgrp
+    !! index of the root processor within a band group
+    INTEGER,  INTENT(IN)  :: intra_bgrp_comm
+    !! intra band group communicator
     LOGICAL, OPTIONAL ::  onhost
-      ! optionally solve the eigenvalue problem on the CPU
+    !! optionally solve the eigenvalue problem on the CPU
     LOGICAL :: lonhost
       !
     COMPLEX(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
@@ -159,7 +176,14 @@ MODULE LAXlib
   SUBROUTINE rdiaghg_cpu_( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, offload )
     !----------------------------------------------------------------------------
     !
-    ! ... general interface for rdiaghg
+    !! Called by diaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! real matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! LAPACK version - uses both DSYGV and DSYGVX
+    !!
     !
 #if defined(__CUDA)
     USE cudafor
@@ -168,22 +192,28 @@ MODULE LAXlib
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     !
-    INTEGER, INTENT(IN) :: n, m, ldh
-      ! dimension of the matrix to be diagonalized
-      ! number of eigenstates to be calculate
-      ! leading dimension of h, as declared in the calling pgm unit
-    REAL(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-      ! actually intent(in) but compilers don't know and complain
-      ! matrix to be diagonalized
-      ! overlap matrix
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized
+    INTEGER, INTENT(IN) :: m
+    !! number of eigenstates to be calculate
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    REAL(DP), INTENT(INOUT) :: h(ldh,n)
+    !! matrix to be diagonalized
+    REAL(DP), INTENT(INOUT) :: s(ldh,n)
+    !! overlap matrix
     REAL(DP), INTENT(OUT) :: e(n)
-      ! eigenvalues
+    !! eigenvalues
     REAL(DP), INTENT(OUT) :: v(ldh,m)
-      ! eigenvectors (column-wise)
-    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
-      ! communicators
+    !! eigenvectors (column-wise)
+    INTEGER,  INTENT(IN)  :: me_bgrp
+    !! index of the processor within a band group
+    INTEGER,  INTENT(IN)  :: root_bgrp
+    !! index of the root processor within a band group
+    INTEGER,  INTENT(IN)  :: intra_bgrp_comm
+    !! intra band group communicator
     LOGICAL, OPTIONAL ::  offload
-      ! optionally solve the eigenvalue problem on the GPU
+    !! optionally solve the eigenvalue problem on the GPU   
     LOGICAL :: loffload
       !
 #if defined(__CUDA)
@@ -227,31 +257,44 @@ MODULE LAXlib
   SUBROUTINE rdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, onhost )
     !----------------------------------------------------------------------------
     !
-    ! ... General interface to rdiaghg_gpu
+    !! Called by diaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! real matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! GPU version 
+    !!
     !
     USE cudafor
     !
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     !
-    INTEGER, INTENT(IN) :: n, m, ldh
-      ! dimension of the matrix to be diagonalized
-      ! number of eigenstates to be calculate
-      ! leading dimension of h, as declared in the calling pgm unit
-    REAL(DP), DEVICE, INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
-      ! actually intent(in) but compilers don't know and complain
-      ! matrix to be diagonalized
-      ! overlap matrix
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized
+    INTEGER, INTENT(IN) :: m
+    !! number of eigenstates to be calculate
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    REAL(DP), DEVICE, INTENT(INOUT) :: h_d(ldh,n)
+    !! matrix to be diagonalized
+    REAL(DP), DEVICE, INTENT(INOUT) :: s_d(ldh,n)
+    !! overlap matrix
     REAL(DP), DEVICE, INTENT(OUT) :: e_d(n)
-      ! eigenvalues
+    !! eigenvalues
     REAL(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
-      ! eigenvectors (column-wise)
-    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
-      ! communicators
+    !! eigenvectors (column-wise)
+    INTEGER,  INTENT(IN)  :: me_bgrp
+    !! index of the processor within a band group
+    INTEGER,  INTENT(IN)  :: root_bgrp
+    !! index of the root processor within a band group
+    INTEGER,  INTENT(IN)  :: intra_bgrp_comm
+    !! intra band group communicator
     LOGICAL, OPTIONAL ::  onhost
-      ! optionally solve the eigenvalue problem on the CPU
+    !! optionally solve the eigenvalue problem on the CPU
     LOGICAL :: lonhost
-      !
+    !
     REAL(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
     REAL(DP),    ALLOCATABLE :: e(:)
     !
@@ -289,31 +332,35 @@ MODULE LAXlib
   SUBROUTINE prdiaghg_( n, h, s, ldh, e, v, idesc, offload )
     !----------------------------------------------------------------------------
     !
-    ! ... calculates eigenvalues and eigenvectors of the generalized problem
-    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
-    ! ... On output both matrix are unchanged
-    !
-    ! ... Parallel version with full data distribution
+    !! Called by pdiaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! real matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! Parallel version with full data distribution
+    !!
     !
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     include 'laxlib_param.fh'
     !
-    INTEGER, INTENT(IN) :: n, ldh
-      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
-      ! leading dimension of h, as declared in the calling pgm unit
-    REAL(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
-      ! matrix to be diagonalized
-      ! overlap matrix
-    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    REAL(DP), INTENT(INOUT) :: h(ldh,ldh)
+    !! matrix to be diagonalized
+    REAL(DP), INTENT(INOUT) :: s(ldh,ldh)
+    !! overlap matrix
     REAL(DP), INTENT(OUT) :: e(n)
-      ! eigenvalues
+    !! eigenvalues
     REAL(DP), INTENT(OUT) :: v(ldh,ldh)
-      ! eigenvectors (column-wise)
+    !! eigenvectors (column-wise)
     INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-      !
+    !! laxlib descriptor
     LOGICAL, OPTIONAL ::  offload
-      ! place-holder, offloading on GPU not implemented yet
+    !! place-holder, offloading on GPU not implemented yet
     LOGICAL :: loffload
 
     CALL laxlib_prdiaghg( n, h, s, ldh, e, v, idesc)
@@ -323,32 +370,35 @@ MODULE LAXlib
   SUBROUTINE pcdiaghg_( n, h, s, ldh, e, v, idesc, offload )
     !----------------------------------------------------------------------------
     !
-    ! ... calculates eigenvalues and eigenvectors of the generalized problem
-    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
-    ! ... On output both matrix are unchanged
-    !
-    ! ... Parallel version with full data distribution
-    !
+    !! Called by pdiaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! complex matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! Parallel version with full data distribution
+    !!
     !
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     include 'laxlib_param.fh'
     !
-    INTEGER, INTENT(IN) :: n, ldh
-      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
-      ! leading dimension of h, as declared in the calling pgm unit
-    COMPLEX(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
-      ! matrix to be diagonalized
-      ! overlap matrix
-    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    COMPLEX(DP), INTENT(INOUT) :: h(ldh,ldh)
+    !! matrix to be diagonalized
+    COMPLEX(DP), INTENT(INOUT) :: s(ldh,ldh)
+    !! overlap matrix
     REAL(DP), INTENT(OUT) :: e(n)
-      ! eigenvalues
+    !! eigenvalues
     COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
-      ! eigenvectors (column-wise)
+    !! eigenvectors (column-wise)
     INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-      !
+    !! laxlib descriptor
     LOGICAL, OPTIONAL ::  offload
-      ! place-holder, offloading on GPU not implemented yet
+    !! place-holder, offloading on GPU not implemented yet
     LOGICAL :: loffload
 
     CALL laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc)
@@ -360,33 +410,37 @@ MODULE LAXlib
   SUBROUTINE prdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, idesc, onhost )
     !----------------------------------------------------------------------------
     !
-    ! ... calculates eigenvalues and eigenvectors of the generalized problem
-    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
-    ! ... On output both matrix are unchanged
-    !
-    ! ... Parallel version with full data distribution
+    !! Called by pdiaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! real matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! Parallel GPU version with full data distribution
+    !!
     !
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     include 'laxlib_param.fh'
     !
-    INTEGER, INTENT(IN) :: n, ldh
-      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
-      ! leading dimension of h, as declared in the calling pgm unit
-    REAL(DP), INTENT(INOUT), DEVICE :: h_d(ldh,ldh), s_d(ldh,ldh)
-      ! matrix to be diagonalized
-      ! overlap matrix
-    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    REAL(DP), INTENT(INOUT), DEVICE :: h_d(ldh,ldh)
+    !! matrix to be diagonalized
+    REAL(DP), INTENT(INOUT), DEVICE :: s_d(ldh,ldh)
+    !! overlap matrix
     REAL(DP), INTENT(OUT), DEVICE :: e_d(n)
-      ! eigenvalues
+    !! eigenvalues
     REAL(DP), INTENT(OUT), DEVICE :: v_d(ldh,ldh)
-      ! eigenvectors (column-wise)
+    !! eigenvectors (column-wise)
     INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-      !
+    !! laxlib descriptor
     LOGICAL, OPTIONAL ::  onhost
-      ! place-holder, prdiaghg on GPU not implemented yet
+    !! place-holder, prdiaghg on GPU not implemented yet
     LOGICAL :: lonhost
-      !
+    !
     REAL(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
     REAL(DP), ALLOCATABLE :: e(:)
     
@@ -401,31 +455,34 @@ MODULE LAXlib
   SUBROUTINE pcdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, idesc, onhost )
     !----------------------------------------------------------------------------
     !
-    ! ... calculates eigenvalues and eigenvectors of the generalized problem
-    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
-    ! ... On output both matrix are unchanged
-    !
-    ! ... Parallel version with full data distribution
+    !! Called by pdiaghg interface.
+    !! Calculates eigenvalues and eigenvectors of the generalized problem.
+    !! Solve Hv = eSv, with H symmetric matrix, S overlap matrix.
+    !! complex matrices version.
+    !! On output both matrix are unchanged.
+    !!
+    !! Parallel GPU version with full data distribution
     !
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     include 'laxlib_param.fh'
     !
-    INTEGER, INTENT(IN) :: n, ldh
-      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
-      ! leading dimension of h, as declared in the calling pgm unit
-    COMPLEX(DP), INTENT(INOUT), DEVICE :: h_d(ldh,ldh), s_d(ldh,ldh)
-      ! matrix to be diagonalized
-      ! overlap matrix
-    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+    INTEGER, INTENT(IN) :: ldh
+    !! leading dimension of h, as declared in the calling pgm unit
+    COMPLEX(DP), INTENT(INOUT), DEVICE :: h_d(ldh,ldh)
+    !! matrix to be diagonalized
+    COMPLEX(DP), INTENT(INOUT), DEVICE :: s_d(ldh,ldh)
+    !! overlap matrix
     REAL(DP), INTENT(OUT), DEVICE :: e_d(n)
-      ! eigenvalues
+    !! eigenvalues
     COMPLEX(DP), INTENT(OUT), DEVICE :: v_d(ldh,ldh)
-      ! eigenvectors (column-wise)
+    !! eigenvectors (column-wise)
     INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
-      !
+    !! laxlib descriptor
     LOGICAL, OPTIONAL ::  onhost
-      ! place-holder, pcdiaghg on GPU not implemented yet
+    !! place-holder, pcdiaghg on GPU not implemented yet
     LOGICAL :: lonhost
       !
     COMPLEX(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)

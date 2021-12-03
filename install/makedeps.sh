@@ -4,6 +4,8 @@
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
 export LC_ALL
+# ensure that command echo understands escape characters
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
@@ -15,15 +17,15 @@ then
 # upon include files *.h or *.fh or modules. Note that libraries that are 
 # externally maintained should not go into this list
 
-    dirs=" LAXlib FFTXlib UtilXlib clib \
+    dirs=" LAXlib FFTXlib UtilXlib \
            dft-d3 \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
-	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  \
+	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
            upflib XClib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
-           EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
+           EPW/src XSpectra/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip QEHeat/src " 
+	   GWW/simple_bse GWW/simple_ip QEHeat/src ACFDT/src " 
           
 elif
     test $1 = "-addson" 
@@ -58,13 +60,15 @@ for dir in $dirs; do
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
-    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib $LEVEL1/XClib $LEVEL1/LAXlib $LEVEL1/UtilXlib \
-	     $LEVEL1/upflib"
+    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib $LEVEL1/XClib $LEVEL1/LAXlib \
+	     $LEVEL1/UtilXlib $LEVEL1/upflib"
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
     case $DIR in 
         upflib )
              DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib" ;;
+        XClib )
+             DEPENDS="$LEVEL1/include $LEVEL1/upflib" ;;
         Modules )
              DEPENDS="$DEPEND1" ;;
         dft-d3 )
@@ -76,8 +80,8 @@ for dir in $dirs; do
 	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/src | CPV/src )
-	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../KS_Solvers/PPCG ../../KS_Solvers/ParO ../../KS_Solvers/DENSE ../../dft-d3" ;;
-	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG | KS_Solvers/ParO | KS_Solvers/DENSE )
+	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../KS_Solvers/PPCG ../../KS_Solvers/ParO ../../KS_Solvers/DENSE ../../KS_Solvers/RMM ../../dft-d3" ;;
+	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG | KS_Solvers/ParO | KS_Solvers/DENSE | KS_Solvers/RMM )
 	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
@@ -103,7 +107,7 @@ for dir in $dirs; do
 
     # list of all system modules
     sysdeps="iso_c_binding iso_fortran_env f90_unix_io f90_unix_env \
-             f90_unix_proc ifcore ifport"
+             f90_unix_proc ifcore ifport git-rev.h"
 
     # list of all external library modules or include files
     libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \
@@ -122,7 +126,20 @@ for dir in $dirs; do
     then
 	cd $TOPDIR/../$DIR
        
-	$TOPDIR/moduledep.sh $DEPENDS > make.depend
+cat > make.depend << EOF
+#####################################################################
+# Automatically generated file - if you notice lines looking like
+# some_file.o: @some_module@ 
+# figure out why "some_module", referenced in "some_file.o", is not 
+# found: check spelling, presence in one of the DEPEND* directories
+# as defined in file "install/makedeps.sh"; if "some_module" is an 
+# external module, add it to the module lists "sysdeps", "libdeps",
+# "cudadeps" defined in "install/makedeps.sh".
+# Finally, from the top QE directory, run "make depend" to regenerate
+# the files - DO NOT EDIT MANUALLY (unless you know what you are doing)
+####################################################################
+EOF
+	$TOPDIR/moduledep.sh $DEPENDS >> make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
         # remove unwanted dependency upon system and library modules
@@ -133,18 +150,22 @@ for dir in $dirs; do
 	/bin/rm removedeps.tmp
 
         # check for missing dependencies 
-        if grep @ make.depend
+	missing=`grep @ make.depend | grep -v @some_module@`
+        if test "$missing" != "";
         then
 	   notfound=1
-	   echo WARNING: dependencies not found in directory $DIR
+	   $ECHO "\nWARNING! dependencies not found in directory $DIR:"
+	   grep @ make.depend
+	   $ECHO "File $DIR/make.depend is broken"
        else
-           echo directory $DIR : ok
+           $ECHO -n "\rdirectory $DIR : ok"
        fi
     else
-       echo directory $DIR : not present in $TOPDIR 
+       $ECHO "\ndirectory $DIR : not present in $TOPDIR" 
     fi
 done
 if test "$notfound" = ""
 then
-    echo all dependencies updated successfully
+    $ECHO "\nall dependencies updated successfully"
 fi
+

@@ -9,14 +9,14 @@
 !----------------------------------------------------------------------
 subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !----------------------------------------------------------------------
-  !
-  ! This routine calculates dV_bare/dtau * psi for one perturbation
-  ! with a given q. The displacements are described by a vector u.
-  ! The result is stored in dvpsi. The routine is called for each k point
-  ! and for each pattern u. It computes simultaneously all the bands.
-  ! It implements Eq. B29 of PRB 64, 235118 (2001). The contribution
-  ! of the local pseudopotential is calculated here, that of the nonlocal
-  ! pseudopotential in dvqpsi_us_only.
+  !! This routine calculates \(dV_\text{bare}/d\tau \cdot \psi\) for one 
+  !! perturbation with a given q. The displacements are described by a 
+  !! vector u.  
+  !! The result is stored in \(\text{dvpsi}\). The routine is called for
+  !! each k-point and for each pattern u. It computes simultaneously all 
+  !! the bands. It implements Eq. (B29) of PRB 64, 235118 (2001). The 
+  !! contribution of the local pseudopotential is calculated here, that 
+  !! of the nonlocal pseudopotential in \(\texttt{dvqpsi_us_only}\).
   !
   !
   USE kinds, only : DP
@@ -53,12 +53,12 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !
   INTEGER, INTENT(in) :: ik
   !! input: the k point
-  COMPLEX(DP) :: uact (3 * nat)
+  COMPLEX(DP) :: uact(3*nat)
   !! input: the pattern of displacements
   LOGICAL :: addnlcc
-  !!
-  ! 
-  !   And the local variables
+  TYPE(bec_type) :: becp1(nksq), alphap(3,nksq)
+  !
+  ! ... local variables
   !
   INTEGER ::  na  
   !! counter on atoms
@@ -86,8 +86,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !! 
   INTEGER :: ip
   !!
-  TYPE(bec_type) :: becp1(nksq), alphap(3,nksq)
-  ! 
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   complex(DP) , allocatable :: aux (:,:)
   complex(DP) , allocatable :: aux1 (:), aux2 (:)

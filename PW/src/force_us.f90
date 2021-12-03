@@ -17,15 +17,13 @@ SUBROUTINE force_us( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
-  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta, &
-                                   using_vkb
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, ofsbeta
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE symme,                ONLY : symvector
   USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
-  USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : calbec, becp, bec_type, allocate_bec_type, &
@@ -36,6 +34,7 @@ SUBROUTINE force_us( forcenl )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -77,11 +76,9 @@ SUBROUTINE force_us( forcenl )
      IF ( nks > 1 ) THEN
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
-        IF ( nkb > 0 ) CALL using_vkb(1)
         IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      ENDIF
      !
-     CALL using_vkb(0); 
      CALL using_becp_auto(2)
      CALL calbec( npw, vkb, evc, becp )
      !

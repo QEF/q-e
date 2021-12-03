@@ -11,10 +11,12 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      &              nbndx,orthonormal,precondition,diagonal, &
      &              startwith0,e,b,u,h,Ah,pu,niter,eps,iter,x)
   !-----------------------------------------------------------------------
-  !
-  !  conjugate-gradient solution of a system of constrained linear equations
-  !  "operator" is the linear operator - diagonal preconditioning allowed
-  !  x = solution, u = gradient, h = conjugate gradient, Ah = operator*h
+  !! conjugate-gradient solution of a system of constrained linear equations.  
+  !! "operator" is the linear operator - diagonal preconditioning allowed.  
+  !! x = solution;  
+  !! u = gradient;  
+  !! h = conjugate gradient;  
+  !! Ah = operator*h.
   !
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP

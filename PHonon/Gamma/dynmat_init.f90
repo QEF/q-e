@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE dynmat_init
   !-----------------------------------------------------------------------
-  !
-  !  Calculate part of the terms appearing in the dynamical matrix
+  !! Calculate part of the terms appearing in the dynamical matrix (wrapper).
   !
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, zv, tau
   USE cell_base, ONLY : at, bg, omega, alat

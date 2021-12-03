@@ -1705,7 +1705,8 @@ MODULE qes_init_module
   SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, mixing_beta,&
                                       conv_thr, mixing_ndim, max_nstep, tq_smoothing, tbeta_smoothing,&
                                       diago_thr_init, diago_full_acc, real_space_q, real_space_beta,&
-                                      diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim)
+                                      diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,&
+                                      diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
     !
     IMPLICIT NONE
     !
@@ -1726,6 +1727,9 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: diago_cg_maxiter
     INTEGER,OPTIONAL,INTENT(IN) :: diago_ppcg_maxiter
     INTEGER,OPTIONAL,INTENT(IN) :: diago_david_ndim
+    INTEGER,OPTIONAL,INTENT(IN) :: diago_rmm_ndim
+    LOGICAL,OPTIONAL,INTENT(IN) :: diago_rmm_conv
+    INTEGER,OPTIONAL,INTENT(IN) :: diago_gs_nblock
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -1770,6 +1774,25 @@ MODULE qes_init_module
       obj%diago_david_ndim = diago_david_ndim
     ELSE 
       obj%diago_david_ndim_ispresent = .FALSE.
+    END IF
+    !
+    IF ( PRESENT(diago_rmm_ndim)) THEN
+      obj%diago_rmm_ndim_ispresent = .TRUE.
+      obj%diago_rmm_ndim = diago_rmm_ndim
+    ELSE
+      obj%diago_rmm_ndim_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(diago_rmm_conv)) THEN
+      obj%diago_rmm_conv_ispresent = .TRUE.
+      obj%diago_rmm_conv = diago_rmm_conv
+    ELSE
+      obj%diago_rmm_conv_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(diago_gs_nblock)) THEN
+      obj%diago_gs_nblock_ispresent = .TRUE.
+      obj%diago_gs_nblock = diago_gs_nblock
+    ELSE
+      obj%diago_gs_nblock_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_electron_control 

@@ -126,7 +126,7 @@ SUBROUTINE extract (plot_files,plot_num)
      RETURN
   ENDIF
   !
-  IF (plot_num < 0 .or. (plot_num > 22 .and. &
+  IF (plot_num < 0 .or. (plot_num > 24 .and. &
         plot_num /= 119 .and. plot_num /= 123)) CALL errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
@@ -145,7 +145,7 @@ SUBROUTINE extract (plot_files,plot_num)
   !   If needed, allocate and initialize wavefunction-related variables
   !
   needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
-         (plot_num==8).or.(plot_num==10)
+         (plot_num==8).or.(plot_num==10).or.(plot_num==23)
   CALL read_file_new ( needwf )
   !
   IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &
@@ -178,6 +178,7 @@ SUBROUTINE extract (plot_files,plot_num)
   nplots = 1
   IF (plot_num == 3) THEN
      nplots=(emax-emin)/delta_e + 1
+  
   ELSEIF (plot_num == 7) THEN
       IF (kpoint(2) == 0)  kpoint(2) = kpoint(1)
       plot_nkpt = kpoint(2) - kpoint(1) + 1
@@ -187,6 +188,10 @@ SUBROUTINE extract (plot_files,plot_num)
       plot_nspin = spin_component(2) - spin_component(1) + 1
 
       nplots = plot_nbnd * plot_nkpt * plot_nspin
+
+  ELSEIF (plot_num == 23) THEN
+      IF (spin_component(1) == 3) nplots = 2
+
   ENDIF
   ALLOCATE( plot_files(nplots) )
   plot_files(1) = filplot
@@ -216,9 +221,29 @@ SUBROUTINE extract (plot_files,plot_num)
         ENDDO
       ENDDO
     ENDDO
-
+  !
+  ELSEIF (plot_num == 23) THEN
+    !
+    IF (spin_component(1) == 3) THEN
+        !
+        ispin = 1
+        plot_files(1) = TRIM(filplot) // "_spin1"
+        CALL punch_plot ( TRIM(plot_files(1)), plot_num, sample_bias, z, dz, &
+                          emin, emax, ikpt, ibnd, ispin, lsign )
+        !
+        ispin = 2
+        plot_files(2) = TRIM(filplot) // "_spin2"
+        CALL punch_plot ( TRIM(plot_files(2)), plot_num, sample_bias, z, dz, &
+                          emin, emax, ikpt, ibnd, ispin, lsign )
+        !
+    ELSE
+        CALL punch_plot ( TRIM(plot_files(1)), plot_num, sample_bias, z, dz, &
+                          emin, emax, ikpt, ibnd, spin_component, lsign )
+        !
+    ENDIF
+    !
   ELSE
-  ! Single call to punch_plot
+    ! Single call to punch_plot
     IF (plot_num == 3) THEN
        CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
            emin, degauss_ldos, kpoint, kband, spin_component, lsign)
@@ -256,7 +281,6 @@ PROGRAM pp
   !
   IMPLICIT NONE
   !
-  !CHARACTER(len=256) :: filplot
   CHARACTER(len=256), DIMENSION(:), ALLOCATABLE :: plot_files
   INTEGER :: plot_num
   !

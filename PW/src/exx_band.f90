@@ -12,7 +12,7 @@ MODULE exx_band
   !! See:  
   !! T. Barnes, T. Kurth, P. Carrier, N. Wichmann, D. Prendergast,
   !! P.R.C. Kent, J. Deslippe, Comp. Phys. Comm. (2017),  
-  !! dx.doi.org/10.1016/j.cpc.2017.01.008
+  !! doi.org/10.1016/j.cpc.2017.01.008
   !
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : npol
@@ -1072,6 +1072,7 @@ MODULE exx_band
        g_d    = g
        gg_d   = gg
 #endif
+       !$acc update device(mill, g)
        !
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
        allocate( mill_exx(3,ngm), nl_exx(ngm) )
@@ -1104,6 +1105,8 @@ MODULE exx_band
        g_d    = g
        gg_d   = gg
 #endif
+       !$acc update device(mill, g)
+       !
        ! workaround: here dfft?%nl* are unallocated
        ! some compilers go on and allocate, some others crash
 #if defined(__CUDA)
@@ -1154,6 +1157,8 @@ MODULE exx_band
        g_d    = g
        gg_d   = gg
 #endif
+       !$acc update device(mill, g)
+       !
        dfftp%nl = nl_loc
        dffts%nl = nls_loc
 #if defined(__CUDA)

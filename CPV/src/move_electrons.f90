@@ -20,7 +20,8 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
                                    drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp,  &
                                    taub, lambda, lambdam, lambdap, vpot, dbec, idesc
   USE cell_base,            ONLY : omega, ibrav, h, press
-  USE uspp,                 ONLY : becsum, vkb, vkb_d, nkb, nlcc_any
+  USE pseudo_base,          ONLY : vkb_d
+  USE uspp,                 ONLY : becsum, vkb, nkb, nlcc_any
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE electrons_base,       ONLY : nbsp, nspin, f, nudx, nupdwn, nbspx_bgrp, nbsp_bgrp
   USE core,                 ONLY : rhoc
@@ -32,7 +33,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   !
   USE wannier_subroutines,  ONLY : get_wannier_center, wf_options, &
                                    write_charge_and_exit, ef_tune
-  USE ensemble_dft,         ONLY : compute_entropy2
+  USE cg_sub,               ONLY : runcg_uspp
   USE efield_module,        ONLY : berry_energy, berry_energy2
   USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                    interpolate_lambda
@@ -67,14 +68,10 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   CALL start_clock('move_electrons')
   electron_dynamic: IF ( tcg ) THEN
      !
-#if defined (__CUDA)
-     CALL errore(' move_electrons ', ' GPU version of runcg not yet implemented ', 1 )
-#else
      CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
                       fion, ema0bg, becdr_bgrp, lambdap, lambda, SIZE(lambda,1), vpot, c0_bgrp, &
-                      cm_bgrp, phi, dbec, l_cprestart  )
-#endif
+                      c0_d, cm_bgrp, phi, dbec, l_cprestart  )
      !
      CALL compute_stress( stress, detot, h, omega )
      !

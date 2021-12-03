@@ -31,9 +31,8 @@ SUBROUTINE paw_deqsymmetrize(dbecsum)
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
-    USE noncollin_module,  ONLY : nspin_lsda, nspin_mag
+    USE noncollin_module,  ONLY : domag, nspin_lsda, nspin_mag
     USE cell_base,         ONLY : at, bg
-    USE spin_orb,          ONLY : domag
     USE symm_base,         ONLY : nsym, irt, d1, d2, d3, s, t_rev, sname, &
                                   invs, inverse_s
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh

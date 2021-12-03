@@ -38,13 +38,13 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   USE control_flags,        ONLY : iverbosity
   USE qpoint,               ONLY : nksq, ikks, ikqs
   USE control_lr,           ONLY : lgamma, nbnd_occ
-  USE units_lr,             ONLY : iuwfc, lrwfc, iuatswfc
+  USE units_lr,             ONLY : iuwfc, lrwfc, iuatswfc, iudwf, lrdwf
   USE lr_symm_base,         ONLY : nsymq
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
   USE ldaU_hp,              ONLY : conv_thr_chi, trace_dns_tot_old, &
-                                   conv_thr_chi_best, iter_best, iudwfc, lrdwfc, &
-                                   swfcatomk, swfcatomkpq
-  USE hp_efermi_shift,      ONLY : def
+                                   conv_thr_chi_best, iter_best
+  USE ldaU_lr,              ONLY : swfcatomk, swfcatomkpq
+  USE efermi_shift,         ONLY : def
   !
   IMPLICIT NONE
   !
@@ -120,7 +120,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      !
      ! At each SCF iteration for each ik read dpsi from file
      !
-     CALL get_buffer (dpsi, lrdwfc, iudwfc, ik)
+     CALL get_buffer (dpsi, lrdwf, iudwf, ik)
      ! 
      ! Loop on Hubbard atoms
      !
@@ -149,10 +149,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
         !
      ENDDO
      !
-#if defined (__MPI)
      CALL mp_sum(proj1, intra_pool_comm)  
      CALL mp_sum(proj2, intra_pool_comm)
-#endif
      ! 
      DO na = 1, nat
         !
@@ -185,7 +183,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
                        w1 = weight * wdelta
                        !
                        dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +  &
-                          w1 * def * CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
+                          w1 * def(1) * CONJG(proj1(ibnd,ihubst1)) * proj1(ibnd,ihubst2)
                        !
                     ENDIF
                     ! 

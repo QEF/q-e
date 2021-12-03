@@ -14,10 +14,11 @@ MODULE qe_drivers_gga
   !----------------------------------------------------------------------
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
-  USE kind_l,       ONLY: DP
-  USE dft_par_mod,  ONLY: igcx, igcc, rho_threshold_gga, grho_threshold_gga,&
-                          exx_started, exx_fraction, screening_parameter,   &
-                          gau_parameter
+  USE kind_l,              ONLY: DP
+  USE dft_setting_params,  ONLY: igcx, igcc, rho_threshold_gga,     &
+                                 grho_threshold_gga, exx_started,   &
+                                 exx_fraction, screening_parameter, &
+                                 gau_parameter
   !
   IMPLICIT NONE
   !
@@ -32,7 +33,7 @@ CONTAINS
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
-                                          v2x_out, v1c_out, v2c_out )
+                                         v2x_out, v1c_out, v2c_out )
   !---------------------------------------------------------------------
   !! Gradient corrections for exchange and correlation - Hartree a.u. 
   !! See comments at the beginning of module for implemented cases
@@ -79,16 +80,11 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ntids = omp_get_num_threads()
 #endif
   !
-  !
 #if defined(_OPENACC)
-  !
-  IF (igcx==43 .OR. igcc==14) CALL xclib_error( 'gcxc', 'BEEF not available with&
-                                               & OpenACC enabled', 1 )
-  !
-!$acc data copyin(rho_in,grho_in), copyout(sx_out,sc_out,v1x_out,v2x_out,v1c_out,v2c_out)
+!$acc data deviceptr( rho_in(length), grho_in(length), sx_out(length), sc_out(length), &
+!$acc&                v1x_out(length), v2x_out(length), v1c_out(length), v2c_out(length) )
 !$acc parallel loop  
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC)
+#else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp          v2x, v2x_, v2xsr, sc, v1c, v2c ) &
@@ -301,12 +297,9 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
-#if !defined(_OPENACC)
-     CASE( 43 ) ! 'beefx' --- BEEF unavailable with OpenACC-- Will be enabled soon
-        ! last parameter = 0 means do not add LDA (=Slater) exchange
-        ! (espresso) will add it itself
-        CALL beefx(rho, grho, sx, v1x, v2x, 0)
-#endif
+     CASE( 43 ) ! 'BEEX'
+        !
+        CALL beefx( rho, grho, sx, v1x, v2x, 0 )
         !
      CASE( 44 ) ! 'RPBE'
         !
@@ -379,12 +372,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2c = 0.871_DP * v2c
         ENDIF
         !
-#if !defined(_OPENACC)
-     CASE( 14 ) ! BEEF unavailable with OpenACC-- Will be enabled soon
+     CASE( 14 ) !'BEEC'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
-        call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
-#endif
+        CALL beeflocalcorr( rho, grho, sc, v1c, v2c, 0 )
         !
      CASE DEFAULT
         !
@@ -399,14 +390,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      v2x_out(ir) = v2x   ;  v2c_out(ir) = v2c
      !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
+#if defined(_OPENACC)
+!$acc end data
+#else
 !$omp end do
 !$omp end parallel
 #endif
-#if defined(_OPENACC)
-!$acc end data
-#endif
-  !
   !
   RETURN
   !
@@ -440,7 +429,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   ! ... local variables
   !
-  INTEGER  :: ir, is, iflag
+  INTEGER :: ir, iflag
   REAL(DP) :: rho_up, rho_dw, grho2_up, grho2_dw
   REAL(DP) :: v1x_up, v1x_dw, v2x_up, v2x_dw
   REAL(DP) :: sx_up, sx_dw, rnull_up, rnull_dw
@@ -459,17 +448,13 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   ntids = omp_get_num_threads()
 #endif
   !
-  sx_tot = 0.0_DP
+  !sx_tot = 0.0_DP
   !
 #if defined(_OPENACC)
-  !
-  IF (igcx==43) CALL xclib_error( 'gcx_spin', 'BEEF not available with&
-                                  & OpenACC enabled', 1 )
-  !
-!$acc data copyin(rho_in, grho2_in), copyout(sx_tot, v1x_out, v2x_out)
+!$acc data deviceptr( rho_in(length,2), grho2_in(length,2), sx_tot(length), &
+!$acc&                v1x_out(length,2), v2x_out(length,2) )
 !$acc parallel loop
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC)
+#else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho2_up, grho2_dw, rnull_up, rnull_dw, &
 !$omp          sx_up, sx_dw, sxsr_up, sxsr_dw, v1xsr_up, v1xsr_dw, &
@@ -480,7 +465,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 !$omp          gau_parameter )
 !$omp do
 #endif
-  !
   DO ir = 1, length  
      !
      rho_up = rho_in(ir,1)
@@ -741,8 +725,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( exx_started ) THEN
            sx_tot(ir) = (1.0_DP - exx_fraction) * sx_tot(ir)
            v1x_up = (1.0_DP - exx_fraction) * v1x_up
-           v1x_up = (1.0_DP - exx_fraction) * v1x_up
-           v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
+           v1x_dw = (1.0_DP - exx_fraction) * v1x_dw
+           v2x_up = (1.0_DP - exx_fraction) * v2x_up
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF
         !
@@ -846,24 +830,22 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF
         !
-#if !defined(_OPENACC)
-     CASE( 43 ) ! 'beefx'  --- BEEF unavailable with OpenACC-- Will be enabled soon
+        ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
+        ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
+        ! routine: needs kinetic energy density in addition to rho and grad rho
+        !
+     CASE( 43 )                ! BEEX
         !
         rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
         grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
         !
-        CALL beefx(rho_up, grho2_up, sx_up, v1x_up, v2x_up, 0)
-        CALL beefx(rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw, 0)
+        CALL beefx( rho_up, grho2_up, sx_up, v1x_up, v2x_up, 0 )
+        CALL beefx( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw, 0 )
         !
         sx_tot(ir) = 0.5_DP * (sx_up*rnull_up + sx_dw*rnull_dw)
         v2x_up = 2.0_DP * v2x_up
         v2x_dw = 2.0_DP * v2x_dw
-#endif
-     !
-     ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
-     ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
-     ! routine: needs kinetic energy density in addition to rho and grad rho
-     !
+        !
      CASE DEFAULT
         !
         sx_tot(ir) = 0.0_DP
@@ -878,12 +860,11 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      v2x_out(ir,2) = v2x_dw * rnull_dw
      !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
 #if defined(_OPENACC)
 !$acc end data
+#else
+!$omp end do
+!$omp end parallel
 #endif
   !
   !
@@ -933,13 +914,10 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
   !
 #if defined(_OPENACC)
-  IF (igcc==14) CALL xclib_error( 'gcc_spin', 'BEEF not available with&
-                                  & OpenACC enabled', 1 )
-  !
-!$acc data copyin(rho_in, grho_in), copyout(sc_out, v1c_out, v2c_out), copy(zeta_io)
+!$acc data deviceptr( rho_in(length), zeta_io(length), grho_in(length), &
+!$acc&                sc_out(length), v1c_out(length,2), v2c_out(length) )
 !$acc parallel loop
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC)
+#else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c ) &
 !$omp shared( igcc, sc_out, v1c_out, v2c_out, &
@@ -987,11 +965,9 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c_up, v1c_dw, v2c )
        !
-#if !defined(_OPENACC)
-    CASE( 14 )                !*****BEEF unavailable with OpenACC-- Will be enabled soon
-       !
-       call beeflocalcorrspin(rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0)
-#endif
+    CASE( 14 )
+       !  
+       CALL beeflocalcorrspin( rho, zeta, grho, sc, v1c_up, v1c_dw, v2c, 0 )
        !
     CASE DEFAULT
        !
@@ -1008,12 +984,11 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
     v2c_out(ir) = v2c
     !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
 #if defined(_OPENACC)
 !$acc end data
+#else
+!$omp end do
+!$omp end parallel
 #endif
   !
   RETURN
@@ -1068,16 +1043,11 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   ntids = omp_get_num_threads()
 #endif    
   !
-  sc  = 0.0_DP
-  v1c = 0.0_DP
-  v2c = 0.0_DP
-  v2c_ud = 0.0_DP
-  !
 #if defined(_OPENACC) 
-!$acc data copyin(rho_in, grho_in, grho_ud_in), copyout(sc, v1c, v2c, v2c_ud)
+!$acc data deviceptr( rho_in(length,2), grho_in(length,2), grho_ud_in(length), &
+!$acc&                sc(length), v1c(length,2), v2c(length,2), v2c_ud(length) )
 !$acc parallel loop
-#endif
-#if defined(_OPENMP) && !defined(_OPENACC) 
+#else 
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho_up, rho_dw, grho_up, grho_dw, grho_ud ) &
 !$omp shared( length, rho_in, grho_in, grho_ud_in, &
@@ -1134,17 +1104,16 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       !CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)  !***acc test
+       !CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)
        !
     END SELECT
     !
   ENDDO
-#if defined(_OPENMP) && !defined(_OPENACC)
-!$omp end do
-!$omp end parallel
-#endif
 #if defined(_OPENACC)
 !$acc end data
+#else
+!$omp end do
+!$omp end parallel
 #endif
   !
   RETURN

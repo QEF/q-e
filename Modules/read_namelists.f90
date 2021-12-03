@@ -163,7 +163,7 @@ MODULE read_namelists_module
        ntyp   = 0
        nbnd   = 0
        tot_charge = 0.0_DP
-       tot_magnetization = -1
+       tot_magnetization = -10000
        ecutwfc = 0.0_DP
        ecutrho = 0.0_DP
        nr1  = 0
@@ -226,6 +226,8 @@ MODULE read_namelists_module
        A_pen=0.0_DP
        sigma_pen=0.01_DP
        alpha_pen=0.0_DP
+       dmft = .FALSE.
+       dmft_prefix = prefix
        !
        ! ... EXX
        !
@@ -392,6 +394,9 @@ MODULE read_namelists_module
        diago_cg_maxiter = 20
        diago_ppcg_maxiter = 20
        diago_david_ndim = 2
+       diago_rmm_ndim = 4
+       diago_rmm_conv = .FALSE.
+       diago_gs_nblock = 16
        diago_full_acc = .FALSE.
        !
        sic = 'none'
@@ -415,6 +420,7 @@ MODULE read_namelists_module
        passop  = 0.3_DP
        niter_cg_restart = 20
        etresh  = 1.E-6_DP
+       pre_state = .FALSE.
        !
        epol   = 3
        efield = 0.0_DP
@@ -890,6 +896,8 @@ MODULE read_namelists_module
        CALL mp_bcast( A_pen,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sigma_pen,              ionode_id, intra_image_comm )
        CALL mp_bcast( alpha_pen,              ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft,                   ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft_prefix,            ionode_id, intra_image_comm )
        CALL mp_bcast( edir,                   ionode_id, intra_image_comm )
        CALL mp_bcast( emaxpos,                ionode_id, intra_image_comm )
        CALL mp_bcast( eopreg,                 ionode_id, intra_image_comm )
@@ -1032,6 +1040,9 @@ MODULE read_namelists_module
        CALL mp_bcast( diago_cg_maxiter,     ionode_id, intra_image_comm )
        CALL mp_bcast( diago_ppcg_maxiter,   ionode_id, intra_image_comm )
        CALL mp_bcast( diago_david_ndim,     ionode_id, intra_image_comm )
+       CALL mp_bcast( diago_rmm_ndim,       ionode_id, intra_image_comm )
+       CALL mp_bcast( diago_rmm_conv,       ionode_id, intra_image_comm )
+       CALL mp_bcast( diago_gs_nblock,      ionode_id, intra_image_comm )
        CALL mp_bcast( diago_full_acc,       ionode_id, intra_image_comm )
        CALL mp_bcast( sic,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sic_epsilon ,         ionode_id, intra_image_comm )
@@ -1058,6 +1069,7 @@ MODULE read_namelists_module
        CALL mp_bcast( etresh,  ionode_id, intra_image_comm )
        CALL mp_bcast( passop,  ionode_id, intra_image_comm )
        CALL mp_bcast( niter_cg_restart, ionode_id, intra_image_comm )
+       CALL mp_bcast( pre_state, ionode_id, intra_image_comm )
        !
        ! ... electric field
        !

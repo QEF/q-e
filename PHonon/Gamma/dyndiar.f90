@@ -9,21 +9,26 @@
 !-----------------------------------------------------------------------
 SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !-----------------------------------------------------------------------
-  !
-  !   diagonalizes the dynamical matrix "dyn", returns energies in "w2"
-  !   and mode displacements in "dynout". dyn is unchanged on output.
+  !! Diagonalizes the dynamical matrix \(\text{dyn}\), returns energies in
+  !! \(\text{w2}\) and mode displacements in "dynout". \(\text{dyn}\) is 
+  !! unchanged on output.
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : amu_ry, ry_to_thz, ry_to_cmm1
   USE io_global,  ONLY : stdout
   USE mp_bands, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  !
   IMPLICIT NONE
-  include 'laxlib.fh'
-  INTEGER :: nmodes, nat3, nat,ityp(nat), iudyn
+  !
+  INCLUDE 'laxlib.fh'
+  !
+  INTEGER :: nmodes, nat3, nat,ityp(nat)
   real(DP):: dyn(nat3,nmodes), u(nat3,nmodes), amass(*)
   real(DP):: dynout(nat3,nmodes), w2(nat3)
   !
-  INTEGER:: nu_i, nu_j, mu, na, nb, nt, i, j
+  ! ... local variables
+  !
+  INTEGER:: iudyn, nu_i, nu_j, mu, na, nb, nt, i, j
   real(DP), ALLOCATABLE :: m(:,:), z(:,:)
   real(DP) :: w1, unorm, sum, dif
   !

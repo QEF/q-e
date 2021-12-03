@@ -331,6 +331,8 @@
   !! max frequency in electron spectral function due to e-p `interaction
   !
   ! Conductivity
+  INTEGER :: mob_nfreq
+  !! Number of frequency for the spectral decomposition of mobility
   REAL(KIND = DP) :: scissor
   !! Value of the scissor shift in eV.
   REAL(KIND = DP) :: ncarrier
@@ -343,6 +345,8 @@
   !! Magnetic field along the y-direction
   REAL(KIND = DP) :: bfieldz
   !! Magnetic field along the z-direction
+  REAL(KIND = DP) :: mob_maxfreq
+  !! Maximum frequency for the spectral decomposition of mobility. Typically that freq. is the highest phonon freq.
   !
   ! Plasmon
   REAL(KIND = DP) :: nel

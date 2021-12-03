@@ -68,8 +68,6 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
                  dpqq26(:,:), dpqq38(:,:), dpqq47(:,:), dkvkbbessel(:,:),          &
                  dkvkbylmr(:,:), dkvkb(:,:), aux_1234(:), termi(:,:), trm(:,:),    &
                  wfcatomk(:,:), swfcatomk(:,:), proj1(:,:), proj2(:,:), proj3(:,:)
-  COMPLEX(DP), EXTERNAL :: zdotc
-  !
   CALL start_clock( 'commutator_Vhubx_psi' )
   !
   ! Number of plane waves at point ik
@@ -218,14 +216,17 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
               ! the same holds for 3 and 8, 4 and 7
               ! Note: these are the notations from private notes of A. Floris
               !
+              ! FIXME: compute all dpqqNN in vecqqproj, not just one
+              ! FIXME: replace dot_product calls with matrix-matrix products
+              !
               CALL vecqqproj (npw, vkb, vkb, dkwfcatomk(:,ihubst), dpqq26(:,ihubst))
               CALL vecqqproj (npw, dkvkb, vkb, wfcatomk(:,ihubst), dpqq38(:,ihubst))
               CALL vecqqproj (npw, vkb, dkvkb, wfcatomk(:,ihubst), dpqq47(:,ihubst))
-              !
               DO ibnd = 1, nbnd_calc
-                 proj3(ibnd,ihubst) = zdotc (npw, dpqq26(:,ihubst), 1, evc(:,ibnd), 1) + &
-                                      zdotc (npw, dpqq47(:,ihubst), 1, evc(:,ibnd), 1) + &
-                                      zdotc (npw, dpqq38(:,ihubst), 1, evc(:,ibnd), 1)
+                 proj3(ibnd,ihubst) = &
+                      dot_product (dpqq26(1:npw,ihubst), evc(1:npw,ibnd)) + &
+                      dot_product (dpqq47(1:npw,ihubst), evc(1:npw,ibnd)) + &
+                      dot_product (dpqq38(1:npw,ihubst), evc(1:npw,ibnd))
               ENDDO
               !
            ENDIF
@@ -235,8 +236,8 @@ SUBROUTINE commutator_Vhubx_psi(ik, nbnd_calc, vpol, dpsi)
               ! Calculate proj (ihubst,ibnd) = < S_{k}\phi_(k,I,m)| psi(ibnd,ik) >
               ! at ihubst (i.e. I, m).
               !
-              proj1(ibnd,ihubst) = zdotc (npw, swfcatomk(:,ihubst),  1, evc(:,ibnd), 1)
-              proj2(ibnd,ihubst) = zdotc (npw, dkwfcatomk(:,ihubst), 1, evc(:,ibnd), 1)
+              proj1(ibnd,ihubst) = dot_product (swfcatomk(1:npw,ihubst), evc(1:npw,ibnd))
+              proj2(ibnd,ihubst) = dot_product (dkwfcatomk(1:npw,ihubst), evc(1:npw,ibnd))
               !
            ENDDO
            !
@@ -429,7 +430,6 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     INTEGER     :: na, nt, l1, l2, ig, ibeta1, ibeta2, ibnd
     COMPLEX(DP), ALLOCATABLE :: aux1(:)
     COMPLEX(DP) :: projaux1vec3
-    COMPLEX(DP), EXTERNAL :: zdotc
     !
     dpqq = (0.d0, 0.d0)
     !
@@ -452,7 +452,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
              aux1(:) = aux1(:) + qq_nt(l1,l2,nt) * vec2(:,ibeta2)
           ENDDO
           !
-          projaux1vec3 = zdotc (npw, aux1, 1, vec3, 1)
+          projaux1vec3 = dot_product (aux1(1:npw), vec3(1:npw))
           !
           CALL mp_sum(projaux1vec3, intra_pool_comm)
           !

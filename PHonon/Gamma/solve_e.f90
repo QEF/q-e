@@ -9,6 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE solve_e
   !-----------------------------------------------------------------------
+  !! Conjugate Gradient minimization.
   !
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : seqopn
@@ -77,14 +78,14 @@ SUBROUTINE solve_e
      iudwf=10+ipol
      WRITE(fildwf,'("fildwx",i1)') ipol
      CALL  seqopn (iudwf,fildwf,'unformatted',here)
-!!!         if (.not.here) then
+!||         if (.not.here) then
      !  calculate Delta*psi  (if not already done)
      dpsi(:,:) = (0.d0, 0.d0)
      startwith0= .true.
-!!!         else
+!||         else
      !  otherwise restart from Delta*psi that is found on file
-!!!            read(iudwf) dpsi
-!!!         end if
+!||            read(iudwf) dpsi
+!||         end if
      CALL cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &
                    orthonormal,precondition,diag,      &
                    startwith0,et(1,ik),dvpsi,gr,h, &

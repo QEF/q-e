@@ -20,8 +20,9 @@ MODULE upf_spinorb
   IMPLICIT NONE
   SAVE
 
-  LOGICAL :: lspinorb
+  LOGICAL :: is_spinorbit
   !! if .TRUE. this is a spin-orbit calculation
+  !! internal flag, set by uspp_allocate, to be used only in upflib
   COMPLEX (DP) :: rot_ylm(lqmax,lqmax)
   !! transform real spherical harmonics into complex ones
   COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)

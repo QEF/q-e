@@ -1099,7 +1099,7 @@ SUBROUTINE rhov(rhovan,rhog,rhor)
          CALL fftx_add_threed2oned_gamma( dfftp, v, rhog(:,isup), rhog(:,isdw) )
 !
          IF( iverbosity > 1 ) THEN
-            WRITE( stdout,'(a,2f12.8,/,a,2f12.8)')                 &
+            WRITE( stdout,'(a,f12.8,/,a,f12.8)')                   &
      &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup)), &
      &        ' rhov: n_v(g=0) down = ',omega*DBLE(rhog(1,isdw))
          END IF

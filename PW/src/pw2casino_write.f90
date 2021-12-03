@@ -25,7 +25,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE wvfct, ONLY: npwx, nbnd, wg, et
    USE gvecw, ONLY: ecutwfc
    USE control_flags, ONLY : gamma_only
-   USE uspp, ONLY: nkb, vkb, dvan, using_vkb
+   USE uspp, ONLY: nkb, vkb, dvan
    USE uspp_param, ONLY: nh
    USE io_global, ONLY: stdout, ionode, ionode_id
    USE io_files, ONLY: nwordwfc, iunwfc, prefix, tmp_dir, seqopn
@@ -332,6 +332,7 @@ CONTAINS
       USE xc_lib, ONLY : xclib_dft_is
       !
       USE becmod_subs_gpum, ONLY : using_becp_auto
+      USE uspp_init,        ONLY : init_us_2
       !
       IMPLICIT NONE
 
@@ -377,7 +378,6 @@ CONTAINS
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
             IF( nks > 1 ) CALL using_evc(2)
             !
-            CALL using_vkb(1)
             CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
             CALL calbec ( npw, vkb, evc, becp )
             !

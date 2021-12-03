@@ -22,8 +22,8 @@ EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
 EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
 
 # For DevXlib
-DEVXLIB_VERSION=master
-DEVXLIB_URL="https://gitlab.com/max-centre/components/devicexlib/-/archive/master/devicexlib-${DEVXLIB_VERSION}.tar.gz"
+DEVXLIB_VERSION=0.1.0
+DEVXLIB_URL="https://gitlab.com/max-centre/components/devicexlib/-/archive/${DEVXLIB_VERSION}/devicexlib-${DEVXLIB_VERSION}.tar.gz"
 
 # MAIN target
 
@@ -100,7 +100,7 @@ libcuda_devxlib :
     touch make.inc; \
     $(MAKE) clean; \
     export F90FLAGS="$(FOX_FLAGS)"; \
-    ./configure FC=$(F90) CC=$(CC) \
+    ./configure FC=$(F90) F90=$(F90) CC=$(CC) \
                 --with-cuda=$(CUDA_PATH) \
                 --with-cuda-cc=$(GPU_ARCH) \
                 --with-cuda-runtime=$(CUDA_RUNTIME) \

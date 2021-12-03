@@ -42,13 +42,15 @@ SUBROUTINE orbm_kubo()
   USE bp,                   ONLY : lelfield, mapgp_global, mapgm_global, nx_el
   USE becmod,               ONLY : bec_type, becp, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-  USE uspp,                 ONLY : nkb, vkb, using_vkb
+  USE uspp,                 ONLY : nkb, vkb
   USE scf,                  ONLY : vrs, vltot, v, kedtau
   USE gvecs,                ONLY : doublegrid
   USE mp_pools,             ONLY : intra_pool_comm
   USE mp_world,             ONLY : world_comm
   USE scf_gpum,             ONLY : using_vrs
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), ALLOCATABLE :: evc_k(:,:)  !for wavefunctios at k
@@ -169,7 +171,6 @@ SUBROUTINE orbm_kubo()
         ! needed by h_psi
         npw_k = ngk(n)
         current_k = n
-        CALL using_vkb(1)
         CALL init_us_2( npw_k, igk_k(1,n), xk(1,n), vkb )
         CALL g2_kin( n )
         !

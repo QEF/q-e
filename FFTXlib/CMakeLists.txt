@@ -198,4 +198,6 @@ if(QE_ENABLE_TEST)
     add_unit_test(test_qe_fftx-r1-t3 1 3 $<TARGET_FILE:qe_fftx_test>)
     add_unit_test(test_qe_fftx-r3-t1 3 1 $<TARGET_FILE:qe_fftx_test>)
     add_unit_test(test_qe_fftx-r3-t2 3 2 $<TARGET_FILE:qe_fftx_test>)
+
+    add_subdirectory(tests)
 endif()

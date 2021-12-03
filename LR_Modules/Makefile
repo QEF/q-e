@@ -7,6 +7,7 @@ MODFLAGS=$(BASEMOD_FLAGS) $(MOD_FLAG)$(TOPDIR)/PW/src
 
 LR_MODULES = \
 adddvscf.o \
+adddvhubscf.o \
 addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \
@@ -64,7 +65,9 @@ lr_dot_magnons.o \
 lanczos_pseudohermitian.o \
 lanczos_nonhermitian.o \
 lanczos_pseudohermitian_c.o \
-lanczos_nonhermitian_c.o 
+lanczos_nonhermitian_c.o \
+response_kernels.o \
+efermi_shift.o
 
 TLDEPS=mods pwlibs
 

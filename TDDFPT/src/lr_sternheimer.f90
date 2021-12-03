@@ -38,7 +38,6 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     USE gvecs,                  ONLY : doublegrid
     USE fft_base,               ONLY : dfftp, dffts
     USE lsda_mod,               ONLY : lsda, nspin, current_spin, isk
-    USE spin_orb,               ONLY : domag
     USE wvfct,                  ONLY : nbnd, npwx, g2kin,  et
     USE klist,                  ONLY : ngk, igk_k
     USE check_stop,             ONLY : check_stop_now
@@ -46,7 +45,7 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     USE wavefunctions,          ONLY : evc
     USE uspp,                   ONLY : okvan, vkb
     USE uspp_param,             ONLY : nhm
-    USE noncollin_module,       ONLY : noncolin, npol, nspin_mag
+    USE noncollin_module,       ONLY : noncolin, domag, npol, nspin_mag
     USE scf,                    ONLY : rho, v_of_0
     USE gvect,                  ONLY : gg
     USE paw_variables,          ONLY : okpaw
@@ -78,6 +77,7 @@ SUBROUTINE one_sternheimer_step(iu, flag)
     USE lr_sym_mod,             ONLY : psymeq
     USE apply_dpot_mod,         ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
                                        apply_dpot_bands
+    USE uspp_init,             ONLY : init_us_2
     !
     IMPLICIT NONE
     !

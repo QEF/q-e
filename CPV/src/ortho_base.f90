@@ -14,6 +14,12 @@
 #define DEVICEATTR 
 #endif
 
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
+
 MODULE orthogonalize_base
 
       USE kinds
@@ -956,8 +962,8 @@ CONTAINS
       INTEGER, INTENT(IN) :: idesc( :, : )
       COMPLEX(DP) :: cp_bgrp( :, : ), phi( :, : )
       REAL(DP), INTENT(IN) :: ccc
-      REAL(DP)    :: bec_bgrp( :, : ), x0( :, :, : )
-      REAL(DP)    :: bephi( :, : )
+      REAL(DP) PINMEM :: bec_bgrp( :, : ), x0( :, :, : )
+      REAL(DP) PINMEM :: bephi( :, : )
       REAL(DP)    :: becp_bgrp( :, : )
 
       ! local variables
@@ -966,7 +972,7 @@ CONTAINS
       INTEGER :: ipr, ipc, root, i1, i2, nss, istart
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: xd(:,:)
-      REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
+      REAL(DP),    ALLOCATABLE PINMEM :: bephi_tmp(:,:) 
       INTEGER,     ALLOCATABLE :: indi(:)
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       INTEGER :: idesc_ip(LAX_DESC_SIZE)
@@ -1154,7 +1160,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
-   SUBROUTINE calphi_bgrp( c0_bgrp, ngwx, bec_bgrp, nkbx, betae, phi_bgrp, nbspx_bgrp, ema0bg )
+   SUBROUTINE calphi_bgrp( c0_bgrp, ngwx, bec_bgrp, nkbx, betae, phi_bgrp, nbspx_bgrp, &
+                           ema0bg, m_minus1)
 !-----------------------------------------------------------------------
 !     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
 !     computes the matrix phi (with the old positions)
@@ -1182,12 +1189,13 @@ CONTAINS
       COMPLEX(DP)         :: c0_bgrp( :, : ), phi_bgrp( :, : )
       COMPLEX(DP)         :: betae( :, : )
       REAL(DP)            :: bec_bgrp( :, : ), emtot
-      REAL(DP), OPTIONAL  :: ema0bg( : )
+      REAL(DP), OPTIONAL  :: ema0bg( : ), m_minus1(nkb,nkb)
 
       ! local variables
       !
       INTEGER  :: is, iv, jv, ia, inl, jnl, i, j, indv
-      REAL(DP), ALLOCATABLE :: qtemp( : , : )
+      REAL(DP), ALLOCATABLE :: qtemp( : , : ) 
+      REAL(DP), ALLOCATABLE :: qtemp2( : , : ) 
       REAL(DP), ALLOCATABLE :: qtemp_d( : , : )
       REAL(DP), ALLOCATABLE :: ema0bg_d( : )
       REAL(DP) :: qqf
@@ -1228,6 +1236,15 @@ CONTAINS
             END IF
          END DO
 !$omp end parallel do
+
+         IF (PRESENT( m_minus1 ) ) THEN
+            !multiply the qtemp matrix with the matrix m_minus1
+            allocate(qtemp2(nkb, nbspx_bgrp ))
+            call dgemm( 'N', 'N', nkb, nbsp_bgrp, nkb, 1.0d0, m_minus1,nkb ,    &
+                    qtemp, nkb, 0.0d0, qtemp2,nkb )
+            qtemp=qtemp2
+            deallocate(qtemp2)
+         END IF
 !
          IF( ngw > 0 ) THEN
 #if defined (__CUDA)

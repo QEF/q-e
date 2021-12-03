@@ -17,11 +17,9 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   USE ions_base,        ONLY: nat, ityp, ntyp => nsp
   USE wvfct,            ONLY: npwx
   USE lsda_mod,         ONLY: current_spin
-  USE uspp,             ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, ofsbeta, &
-                              using_vkb
+  USE uspp,             ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, ofsbeta
   USE uspp_param,       ONLY: upf, nh
-  USE spin_orb,         ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
+  USE noncollin_module, ONLY: noncolin, npol, lspinorb
   !
   IMPLICIT NONE
   !
@@ -37,9 +35,6 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   ! cache blocking parameters
   INTEGER, PARAMETER :: blocksize = 256
   INTEGER :: iblock, numblock
-  !
-  ! Sync
-  CALL using_vkb(0)
   !
   ! setting cache blocking size
   numblock  = (npw+blocksize-1)/blocksize

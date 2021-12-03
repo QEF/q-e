@@ -6,6 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#if defined(__CUDA)
+#define PINMEM ,PINNED 
+#else
+#define PINMEM
+#endif
+
 !=----------------------------------------------------------------------------=!
    MODULE wavefunctions
 !=----------------------------------------------------------------------------=!
@@ -39,8 +45,8 @@
      ! distributed over gvector and bands
      !
 !dir$ attributes align: 4096 :: c0_bgrp, cm_bgrp, phi
-     COMPLEX(DP), ALLOCATABLE :: c0_bgrp(:,:)  ! wave functions at time t
-     COMPLEX(DP), ALLOCATABLE :: cm_bgrp(:,:)  ! wave functions at time t-delta t
+     COMPLEX(DP), ALLOCATABLE PINMEM :: c0_bgrp(:,:)  ! wave functions at time t
+     COMPLEX(DP), ALLOCATABLE PINMEM :: cm_bgrp(:,:)  ! wave functions at time t-delta t
      COMPLEX(DP), ALLOCATABLE :: phi(:,:) ! |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
      COMPLEX(DP), ALLOCATABLE :: c0_d(:,:)  ! wave functions at time t
      COMPLEX(DP), ALLOCATABLE :: cm_d(:,:)  ! wave functions at time t-delta t

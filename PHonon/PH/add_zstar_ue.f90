@@ -8,10 +8,12 @@
 !-----------------------------------------------------------------------
 subroutine add_zstar_ue (imode0, npe)
   !-----------------------------------------------------------------------
-  ! add the contribution of the modes imode0+1 -> imode+npe
-  ! to the effective charges Z(Us,E) (Us=scf,E=bare)
+  !! Add the contribution of the modes \( \text{imode0}+1 \rightarrow 
+  !! \text{imode}+\text{npe}\) to the effective charges \(Z(\text{Us},E)\) 
+  !! (Us=scf,E=bare).
   !
-  ! trans =.true. is needed for this calculation to be meaningful
+  !! \(\text{trans} =\text{TRUE}\) is needed for this calculation to be 
+  !! meaningful.
   !
   USE kinds, only : DP
   USE klist, ONLY : xk, wk, ngk, igk_k
@@ -23,14 +25,17 @@ subroutine add_zstar_ue (imode0, npe)
   USE qpoint,   ONLY: nksq, ikks
   USE eqv,      ONLY: dpsi, dvpsi
   USE efield_mod, ONLY: zstarue0_rec
-  USE units_ph,   ONLY : iudwf, lrdwf
-  USE units_lr,   ONLY : iuwfc, lrwfc
+  USE units_lr,   ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE control_lr, ONLY : nbnd_occ
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 
-  integer, intent(in) :: imode0, npe
-
+  integer, intent(in) :: imode0
+  !! input: the starting mode
+  integer, intent(in) :: npe
+  !! input: the number of perturbations
+  
   integer :: ibnd, jpol, ipert, nrec, mode, ik, ikk
   ! counter on bands
   ! counter on polarization

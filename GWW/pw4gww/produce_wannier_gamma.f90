@@ -74,6 +74,19 @@
 
        TYPE(exchange_cus) :: exx_cus
 
+       INTERFACE
+          SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin, v_states )
+            USE kinds, ONLY : DP
+            USE fft_base,             ONLY : dffts
+            USE lsda_mod,             ONLY : nspin
+            INTEGER          :: lda, n, m
+            COMPLEX(kind=DP) :: psi(lda,m)
+            REAL(kind=DP) :: e_xc(m), e_h(m)
+            INTEGER, INTENT(in) :: ispin !spin 1,2                                                                                                                                    
+            REAL(kind=DP), OPTIONAL :: v_states(dffts%nnr,m, nspin)
+          END SUBROUTINE energies_xc
+       END INTERFACE
+
 !       interface
 !          subroutine fake_conduction_wannier(fcw_n,fcw_s,fcw_m,cut,s_cut)
 

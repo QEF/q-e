@@ -82,6 +82,7 @@ SUBROUTINE hinit0()
   eigts2_d = eigts2
   eigts3_d = eigts3
 #endif
+  !$acc update device(eigts1, eigts2, eigts3) 
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters

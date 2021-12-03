@@ -7,33 +7,38 @@
 !
 Module ifconstants
   !
-  ! All variables read from file that need dynamical allocation
+  !! All variables read from file that need dynamical allocation.
   !
   USE kinds, ONLY: DP
-  REAL(DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:), &
-               m_loc(:,:)
-  ! frc : interatomic force constants in real space
-  ! tau_blk : atomic positions for the original cell
-  ! zeu : effective charges for the original cell
-  ! m_loc: the magnetic moments of each atom
+  !
+  REAL(DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:)
+  !! interatomic force constants in real space
+  REAL(DP), ALLOCATABLE :: tau_blk(:,:)
+  !! atomic positions for the original cell
+  REAL(DP), ALLOCATABLE :: zeu(:,:,:)
+  !! effective charges for the original cell
+  REAL(DP), ALLOCATABLE :: m_loc(:,:)
+  !! the magnetic moments of each atom
   INTEGER, ALLOCATABLE  :: ityp_blk(:)
-  ! ityp_blk : atomic types for each atom of the original cell
+  !! atomic types for each atom of the original cell
   !
   CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
+  !
 end Module ifconstants
+!
 !
 !---------------------------------------------------------------------
 PROGRAM matdyn
   !-----------------------------------------------------------------------
-  !  this program calculates the phonon frequencies for a list of generic
-  !  q vectors starting from the interatomic force constants generated
-  !  from the dynamical matrices as written by DFPT phonon code through
-  !  the companion program q2r
+  !! This program calculates the phonon frequencies for a list of generic
+  !! q vectors starting from the interatomic force constants generated
+  !! from the dynamical matrices as written by DFPT phonon code through
+  !! the companion program \(\texttt{q2r}\).
   !
-  !  matdyn can generate a supercell of the original cell for mass
-  !  approximation calculation. If supercell data are not specified
-  !  in input, the unit cell, lattice vectors, atom types and positions
-  !  are read from the force constant file
+  !! \(\texttt{matdyn}\) can generate a supercell of the original cell for
+  !! mass approximation calculation. If supercell data are not specified
+  !! in input, the unit cell, lattice vectors, atom types and positions
+  !! are read from the force constant file.
   !
   !  Input cards: namelist &input
   !     flfrc     file produced by q2r containing force constants (needed)

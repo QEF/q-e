@@ -17,8 +17,7 @@ SUBROUTINE transform_becsum_nc( becsum_nc, becsum, na )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, domag
   !
   IMPLICIT NONE
   !

@@ -1002,6 +1002,9 @@ MODULE qes_reset_module
     obj%diago_cg_maxiter_ispresent = .FALSE.
     obj%diago_ppcg_maxiter_ispresent = .FALSE.
     obj%diago_david_ndim_ispresent = .FALSE.
+    obj%diago_rmm_ndim_ispresent = .FALSE.
+    obj%diago_rmm_conv_ispresent = .FALSE.
+    obj%diago_gs_nblock_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_electron_control
   !

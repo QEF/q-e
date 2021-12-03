@@ -29,7 +29,7 @@ SUBROUTINE punch( what )
   USE klist,                ONLY : nks
   USE io_files,             ONLY : psfile, pseudo_dir
   USE clib_wrappers,        ONLY : f_copy
-  USE spin_orb,             ONLY : lforcet
+  USE noncollin_module,     ONLY : lforcet
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin
   USE ions_base,            ONLY : nsp
@@ -54,8 +54,8 @@ SUBROUTINE punch( what )
   INTEGER            :: cp_status, nt
   !
   !
-  WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-      TRIM ( restart_dir ( ) )
+  WRITE( stdout, '(/,5X,"Writing ",A," to output data dir ",A)' ) &
+         TRIM ( what ), TRIM ( restart_dir ( ) )
   iunpun = 4
   !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries

@@ -37,7 +37,6 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : psic
   USE wavefunctions_gpum,   ONLY : psic_d
-  USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -242,8 +241,7 @@ SUBROUTINE newd_gpu( )
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : deeq, okvan, deeq, deeq_d, deeq_nc, deeq_nc_d, dvan_d, dvan_so_d
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE spin_orb,             ONLY : lspinorb, domag
-  USE noncollin_module,     ONLY : noncolin, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_mag, lspinorb
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
   USE realus,               ONLY : newq_r

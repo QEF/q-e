@@ -36,8 +36,7 @@ SUBROUTINE lr_setup_nscf ()
                                  & noinv, max_cg_iter
   USE control_lr,         ONLY : ethr_nscf
   USE mp_pools,           ONLY : kunit
-  USE spin_orb,           ONLY : domag
-  USE noncollin_module,   ONLY : noncolin
+  USE noncollin_module,   ONLY : noncolin, domag
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE upf_ions,           ONLY : n_atom_wfc

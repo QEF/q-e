@@ -9,13 +9,14 @@
 !----------------------------------------------------------------------
 subroutine dvqpsi_us_only (ik, uact, becp1, alphap)
   !----------------------------------------------------------------------
-  !
-  ! This routine calculates dV_bare/dtau * psi for one perturbation
-  ! with a given q. The displacements are described by a vector uact.
-  ! The result is stored in dvpsi. The routine is called for each k point
-  ! and for each pattern u. It computes simultaneously all the bands.
-  ! This routine implements Eq. B29 of PRB 64, 235118 (2001).
-  ! Only the contribution of the nonlocal potential is calculated here.
+  !! This routine calculates \(\text{dV_bare}/\text{dtau}\cdot\text{psi}\)
+  !! for one perturbation with a given q.  
+  !! The displacements are described by a vector uact.  
+  !! The result is stored in \(\text{dvpsi}\). The routine is called for
+  !! each k-point and for each pattern u. It computes simultaneously all
+  !! the bands.  
+  !! This routine implements Eq. (B29) of PRB 64, 235118 (2001).
+  !! Only the contribution of the nonlocal potential is calculated here.
   !
   !
   USE kinds, only : DP
@@ -24,9 +25,8 @@ subroutine dvqpsi_us_only (ik, uact, becp1, alphap)
   USE klist,     ONLY : xk, ngk, igk_k
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE lsda_mod,  ONLY : lsda, current_spin, isk, nspin
-  USE spin_orb,  ONLY : lspinorb
   USE wvfct,     ONLY : nbnd, npwx, et
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nh, nhm
   USE phus,      ONLY : int1, int1_nc, int2, int2_so
@@ -38,16 +38,13 @@ subroutine dvqpsi_us_only (ik, uact, becp1, alphap)
 
   implicit none
   !
-  !   The dummy variables
-  !
-
   integer :: ik
-  ! input: the k point
-  complex(DP) :: uact (3 * nat)
-  ! input: the pattern of displacements
+  !! input: the k point
+  complex(DP) :: uact(3*nat)
+  !! input: the pattern of displacements
   TYPE(bec_type) :: becp1(nksq), alphap(3,nksq)
   !
-  !   And the local variables
+  !   ... local variables
   !
 
   integer :: na, nb, mu, nu, ikk, ikq, ig, igg, nt, ibnd, ijkb0, &

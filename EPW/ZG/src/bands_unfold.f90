@@ -203,6 +203,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap,dim1,dim2,dim
   USE cell_base,            ONLY : at, bg
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum 
+  USE uspp_init,            ONLY : init_us_2
   !mz_e
 
   IMPLICIT NONE
@@ -950,7 +951,7 @@ FUNCTION cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, npol, upf)
   !
   USE kinds
   USE uspp, ONLY: qq_so
-  USE spin_orb, ONLY: lspinorb
+  USE noncollin_module, ONLY: lspinorb
   USE pseudo_types, ONLY : pseudo_upf
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum

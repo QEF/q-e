@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE elphon()
   !-----------------------------------------------------------------------
-  !
-  ! Electron-phonon calculation from data saved in fildvscf
+  !! Electron-phonon calculation from data saved in \(\texttt{fildvscf}\).
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : amu_ry, RY_TO_THZ, RY_TO_CMM1
@@ -33,9 +32,9 @@ SUBROUTINE elphon()
                          read_dyn_mat, read_dyn_mat_tail
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf, iuint3paw, lint3paw
   USE dfile_star,    ONLY : dvscf_star
-  USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
+  USE mp_images,  ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
-  USE io_global, ONLY: stdout
+  USE io_global, ONLY : stdout, ionode, ionode_id
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_r2q
@@ -97,11 +96,10 @@ SUBROUTINE elphon()
           CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                              imode0 + ipert,  -1 )
         ENDIF
-        IF (okpaw .AND. me_bgrp==0) &
-             CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
-                                          iuint3paw, imode0 + ipert, - 1 )
+        IF (okpaw .AND. ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
+                                             iuint3paw, imode0 + ipert, - 1 )
      END DO
-     IF (okpaw) CALL mp_bcast(int3_paw, root_bgrp, intra_bgrp_comm)
+     IF (okpaw) CALL mp_bcast(int3_paw, ionode_id, intra_image_comm)
      IF (doublegrid) THEN
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
@@ -316,11 +314,11 @@ END SUBROUTINE readmat
 !-----------------------------------------------------------------------
 SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !-----------------------------------------------------------------------
+  !! Calculation of the electron-phonon matrix elements:
+  !! $$ \text{el_ph_mat}= \langle\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)\rangle $$
   !
-  !      Calculation of the electron-phonon matrix elements el_ph_mat
-  !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
-  !      Original routine written by Francesco Mauri
-  !      Modified by A. Floris and I. Timrov to include Hubbard U (01.10.2018)
+  !! Original routine written by Francesco Mauri.
+  !! Modified by A. Floris and I. Timrov to include Hubbard U (01.10.2018).
   !
   USE kinds,      ONLY : DP
   USE fft_base,   ONLY : dffts
@@ -330,7 +328,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE buffers,    ONLY : get_buffer, save_buffer
   USE klist,      ONLY : xk, ngk, igk_k
   USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag
   USE wvfct,      ONLY : nbnd, npwx
   USE uspp,       ONLY : okvan, vkb, deeq_nc
   USE el_phon,    ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
@@ -341,7 +339,6 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_ph, ONLY : trans, current_iq
   USE ph_restart, ONLY : ph_writefile
-  USE spin_orb,   ONLY : domag
   USE mp_bands,   ONLY : intra_bgrp_comm, ntask_groups
   USE mp_pools,   ONLY : npool
   USE mp,         ONLY : mp_sum, mp_bcast
@@ -352,7 +349,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE control_lr, ONLY : lgamma
   USE fft_helper_subroutines
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
-  USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
+  USE ldaU_lr,    ONLY : dnsscf
+  USE ldaU_ph,    ONLY : dnsscf_all_modes
   USE io_global,  ONLY : ionode, ionode_id
   USE io_files,   ONLY : seqopn
   USE lrus,       ONLY : becp1, int3_nc
@@ -361,6 +359,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
   USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save, int3_save
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   !
@@ -521,7 +520,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !  V_{eff} on the bare change of the potential
            !
            IF (isolv==1) THEN
-              call adddvscf_ph_mag (ipert, ik, becp1)
+              call adddvscf (ipert, ik)
               !
               ! DFPT+U: add to dvpsi the scf part of the response
               ! Hubbard potential dV_hub
@@ -531,7 +530,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
                  call adddvhubscf (ipert, ik)
               ENDIF
            ELSE
-              call adddvscf_ph_mag (ipert, ik, becpt)
+              call adddvscf_ph_mag (ipert, ik)
            END IF
            !
            !  reset the original magnetic field if it was changed
@@ -699,10 +698,10 @@ END SUBROUTINE elphel_read_dnsscf_check
 !------------------------------------------------------------------------
 SUBROUTINE elphsum ( )
   !-----------------------------------------------------------------------
+  !! Sum over BZ of the electron-phonon matrix elements \(\text{el_ph_mat}\).
   !
-  !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
-  !      Original routine written by Francesco Mauri, modified by PG
-  !      New version by  Malgorzata Wierzbowska
+  !! Original routine written by Francesco Mauri, modified by PG.
+  !! New version by  Malgorzata Wierzbowska.
   !
   USE kinds,       ONLY : DP
   USE constants,   ONLY : pi, rytoev, ry_to_cmm1, ry_to_ghz, degspin
@@ -1178,10 +1177,10 @@ END SUBROUTINE elphsum
 !-----------------------------------------------------------------------
 SUBROUTINE elphsum_simple
   !-----------------------------------------------------------------------
+  !! Sum over BZ of the electron-phonon matrix elements \(\text{el_ph_mat}\).
   !
-  !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
-  !      Original routine written by Francesco Mauri
-  !      Rewritten by Matteo Calandra
+  !! Original routine written by Francesco Mauri.
+  !! Rewritten by Matteo Calandra.
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
   USE constants, ONLY : pi, ry_to_cmm1, ry_to_ghz, rytoev
@@ -1386,10 +1385,10 @@ END SUBROUTINE elphsum_simple
 !-----------------------------------------------------------------------
 SUBROUTINE elphfil_epa(iq)
   !-----------------------------------------------------------------------
+  !! Writes electron-phonon matrix elements to a file
+  !! which is subsequently processed by the epa code.
   !
-  !      Writes electron-phonon matrix elements to a file
-  !      which is subsequently processed by the epa code
-  !      Original routine written by Georgy Samsonidze
+  !! Original routine written by Georgy Samsonidze.
   !
   !-----------------------------------------------------------------------
   USE cell_base, ONLY : ibrav, alat, omega, tpiba, at, bg
@@ -1581,8 +1580,7 @@ END SUBROUTINE elphfil_epa
 !----------------------------------------------------------------------------
 SUBROUTINE ipoolcollect( length, nks, f_in, nkstot, f_out )
   !----------------------------------------------------------------------------
-  !
-  ! ... as poolcollect, for an integer vector
+  !! As \(\texttt{poolcollect}\), for an integer vector.
   !
   USE mp_pools,  ONLY : my_pool_id, npool, kunit, &
                         inter_pool_comm, intra_pool_comm
@@ -1631,8 +1629,7 @@ END SUBROUTINE ipoolcollect
 !----------------------------------------------------------------------------
 SUBROUTINE jpoolcollect( length, nks, f_in, nkstot, f_out )
   !----------------------------------------------------------------------------
-  !
-  ! ... as ipoolcollect, without kunit and with an index shift
+  !! As \(\texttt{ipoolcollect}\), without kunit and with an index shift.
   !
   USE mp_pools,  ONLY : my_pool_id, npool, kunit, &
                         inter_pool_comm, intra_pool_comm
@@ -1714,8 +1711,7 @@ END FUNCTION dos_ef
 subroutine lint ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
      nk1,nk2,nk3, nks, xk, kunit, nkBZ, eqBZ, sBZ)
   !-----------------------------------------------------------------------
-  !
-  ! Find which k-points of a uniform grid are in the IBZ
+  !! Find which k-points of a uniform grid are in the IBZ.
   !
   use kinds, only : DP
   implicit none

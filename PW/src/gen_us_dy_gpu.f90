@@ -74,7 +74,7 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   CALL dev_buf%lock_buffer( dylm_u_d, (/ npw,lmx2 /), ierr(1) )
   CALL dev_buf%lock_buffer( vkb0_d, (/ npw,nbetam,ntyp /), ierr(2) )
   CALL dev_buf%lock_buffer( gk_d, (/ 3,npw /), ierr(3) )
-  IF (ANY(ierr /= 0)) CALL errore( 'gen_us_dy_gpu', 'cannot allocate buffers', -1 )
+  IF (ANY(ierr /= 0)) CALL errore( 'gen_us_dy_gpu', 'cannot allocate buffers', ABS(ierr) )
   ALLOCATE( q_d(npw) )
   !
   xk1 = xk(1,ik)

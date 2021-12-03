@@ -6,25 +6,22 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-! TB
-! included gate related forces
-!----------------------------------------------------------------------------
-!
-!----------------------------------------------------------------------------
 SUBROUTINE forces()
   !----------------------------------------------------------------------------
   !! This routine is a driver routine which computes the forces
   !! acting on the atoms. The complete expression of the forces
-  !! contains four parts which are computed by different routines:
+  !! contains many parts which are computed by different routines:
   !
-  !! a) force_lc: local contribution to the forces;  
-  !! b) force_cc: contribution due to NLCC;  
-  !! c) force_ew: contribution due to the electrostatic ewald term;  
-  !! d) force_us: contribution due to the non-local potential;  
-  !! e) force_corr: correction term for incomplete self-consistency;  
-  !! f) force_hub: contribution due to the Hubbard term;  
-  !! g) force_london: semi-empirical correction for dispersion forces;  
-  !! h) force_d3: Grimme-D3 (DFT-D3) correction to dispersion forces.
+  !! - force_lc: local potential contribution 
+  !! - force_us: non-local potential contribution
+  !! - (esm_)force_ew: (ESM) electrostatic ewald term
+  !! - force_cc: nonlinear core correction contribution
+  !! - force_corr: correction term for incomplete self-consistency
+  !! - force_hub: contribution due to the Hubbard term;
+  !! - force_london: Grimme DFT+D dispersion forces
+  !! - force_d3: Grimme-D3 (DFT-D3) dispersion forces
+  !! - force_xdm: XDM dispersion forces
+  !! - more terms from external electric fields, Martyna-Tuckerman, etc.
   !
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout
@@ -36,13 +33,14 @@ SUBROUTINE forces()
   USE lsda_mod,          ONLY : nspin
   USE symme,             ONLY : symvector
   USE vlocal,            ONLY : strf, vloc
-  USE force_mod,         ONLY : force, lforce, sumfor
+  USE force_mod,         ONLY : force, sumfor
   USE scf,               ONLY : rho
   USE ions_base,         ONLY : if_pos
   USE ldaU,              ONLY : lda_plus_u, U_projection
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
-                                iverbosity, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw
+                                iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
+                                mbd_vdw, lforce => tprnfor
   USE plugin_flags
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
@@ -99,19 +97,24 @@ SUBROUTINE forces()
   attributes(DEVICE) :: vloc_d
 #endif
   !
+  force(:,:)    = 0.D0
+  !
+  ! Early return if all forces to be set to zero
+  !
+  IF ( ALL( if_pos == 0 ) ) RETURN
   !
   CALL start_clock( 'forces' )
-  !
-  ! Cleanup scratch space used in previous SCF iterations. This will reduce memory footprint.
+  ! Cleanup scratch space used in previous SCF iterations.
+  ! This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
-  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
+  IF (ierr .ne. 0) CALL infomsg('forces', 'Cannot reset GPU buffers! Some buffers still locked.')
+  !
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
             forceh(3,nat), forceion(3,nat), forcescc(3,nat) )
   !    
   forcescc(:,:) = 0.D0
   forceh(:,:)   = 0.D0
-  force(:,:)    = 0.D0
   !
   ! ... The nonlocal contribution is computed here
   !
@@ -462,6 +465,9 @@ SUBROUTINE forces()
   IF ( ldftd3   ) DEALLOCATE( force_d3         )
   IF ( lxdm     ) DEALLOCATE( force_disp_xdm   ) 
   IF ( lelfield ) DEALLOCATE( forces_bp_efield )
+  IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
+  !
+  ! FIXME: what is the following line good for?
   !
   lforce = .TRUE.
   !
@@ -470,8 +476,6 @@ SUBROUTINE forces()
   IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > nat*eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
                    &  "reduce conv_thr to get better values")')
-  !
-  IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
 
   RETURN
   !
