@@ -15,11 +15,10 @@ subroutine khamiltonian
      USE io_global, ONLY : stdout, ionode, ionode_id
      USE mp_world, ONLY : world_comm
      USE mp, ONLY : mp_sum,mp_barrier, mp_bcast
-     USE noncollin_module, ONLY: npol, noncolin
+     USE noncollin_module, ONLY: npol, noncolin, domag
      USE io_files,  ONLY : prefix, tmp_dir
      USE fft_base,         ONLY : dffts
      USE fft_interfaces,   ONLY : fwfft, invfft
-     USE spin_orb,      ONLY : domag
      USE cell_base, ONLY : omega
      USE ions_base,     ONLY: nat, ntyp => nsp, ityp
      USE uspp_param,    ONLY: nh, nhm
@@ -29,6 +28,7 @@ subroutine khamiltonian
      USE wvfct, ONLY : npwx
      USE klist, ONLY : nelec
      USE wannier_gw, ONLY : num_nbndv
+     USE uspp_init,        ONLY : init_us_2
      !
      IMPLICIT NONE
      !

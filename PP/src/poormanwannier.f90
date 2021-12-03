@@ -135,6 +135,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
                         iunhub, nwordwfcU, nwordatwfc, diropn
   USE wavefunctions, ONLY: evc
   USE pw_restart_new,ONLY: read_collected_wfc
+  USE uspp_init,            ONLY : init_us_2
 
   IMPLICIT NONE
   !

@@ -17,14 +17,14 @@ USE constants,   ONLY : pi
 IMPLICIT NONE
 !
   CHARACTER(LEN=256)     :: flstrfin, flstrfout
-  INTEGER                :: ksteps1, ksteps2, ik, iky, dim1, dim2
+  INTEGER                :: kres1, kres2, ik, iky, col1, col2
   INTEGER                :: steps, ii, lower_bnd, upper_bnd, Np, ios
   REAL(DP)               :: kmin, kmax, maxv
   REAL(DP)               :: jump, sf_smearingx, sf_smearingy !, pi 
   REAL(DP), ALLOCATABLE  :: kgridx(:), kgridy(:), structure_fact(:, :), structure_fact_out(:, :)
 !
-NAMELIST /input/ steps, ksteps1, ksteps2, kmin, kmax, &
-&                dim1, dim2, Np, flstrfin, flstrfout 
+NAMELIST /input/ steps, kres1, kres2, kmin, kmax, &
+&                col1, col2, Np, flstrfin, flstrfout 
 !
 CALL mp_startup()
 CALL environment_start('DISCA_BROADENING')
@@ -36,12 +36,12 @@ CALL environment_start('DISCA_BROADENING')
   ! set namelist default
   !
   steps = 10000
-  ksteps1 = 250
-  ksteps2 = 250 
+  kres1 = 250
+  kres2 = 250 
   kmin = -5
   kmax = 5
-  dim1 = 1
-  dim2 = 2
+  col1 = 1
+  col2 = 2
   Np = 400000
   flstrfin = 'input_data.dat'
   flstrfout = 'output_data.dat'
@@ -50,12 +50,12 @@ CALL environment_start('DISCA_BROADENING')
   CALL mp_bcast(ios, ionode_id, world_comm)
   CALL errore('disca', 'reading input namelist', ABS(ios))
   CALL mp_bcast(steps, ionode_id, world_comm)
-  CALL mp_bcast(ksteps1, ionode_id, world_comm)
-  CALL mp_bcast(ksteps2, ionode_id, world_comm)
+  CALL mp_bcast(kres1, ionode_id, world_comm)
+  CALL mp_bcast(kres2, ionode_id, world_comm)
   CALL mp_bcast(kmin, ionode_id, world_comm)
   CALL mp_bcast(kmax, ionode_id, world_comm)
-  CALL mp_bcast(dim1, ionode_id, world_comm)
-  CALL mp_bcast(dim2, ionode_id, world_comm)
+  CALL mp_bcast(col1, ionode_id, world_comm)
+  CALL mp_bcast(col2, ionode_id, world_comm)
   CALL mp_bcast(Np, ionode_id, world_comm)
   CALL mp_bcast(flstrfin, ionode_id, world_comm)
   CALL mp_bcast(flstrfout, ionode_id, world_comm)
@@ -63,31 +63,31 @@ CALL environment_start('DISCA_BROADENING')
 
 !OPEN(46,FILE=flstrfin)
 !    READ(46,*) steps
-!    READ(46,*) ksteps1
-!    READ(46,*) ksteps2
+!    READ(46,*) kres1
+!    READ(46,*) kres2
 !    READ(46,*) kmin
 !    READ(46,*) kmax
-!    READ(46,*) dim1
-!    READ(46,*) dim2
+!    READ(46,*) col1
+!    READ(46,*) col2
 !    READ(46,*) Np
 !CLOSE(46)
 
-ALLOCATE(structure_fact(steps,4), kgridx(ksteps1), kgridy(ksteps2))
-ALLOCATE(structure_fact_out(ksteps1,ksteps2))
+ALLOCATE(structure_fact(steps,4), kgridx(kres1), kgridy(kres2))
+ALLOCATE(structure_fact_out(kres1,kres2))
 !kmin = -10.0
 !kmax = 10.0
 
-jump = (kmax - kmin) / dble(ksteps1 - 1)
-DO ik = 1, ksteps1
+jump = (kmax - kmin) / dble(kres1 - 1)
+DO ik = 1, kres1
   kgridx(ik) = kmin + (ik - 1) * jump
 ENDDO
-sf_smearingx = (kmax - kmin)/dble(ksteps1)
+sf_smearingx = (kmax - kmin)/dble(kres1)
 !
-jump = (kmax - kmin) / dble(ksteps2 - 1)
-DO ik = 1, ksteps2
+jump = (kmax - kmin) / dble(kres2 - 1)
+DO ik = 1, kres2
   kgridy(ik) = kmin + (ik- 1)*jump
 ENDDO
-sf_smearingy = (kmax-kmin)/dble(ksteps2)
+sf_smearingy = (kmax-kmin)/dble(kres2)
 !! 
 OPEN(46, FILE = flstrfin)
   DO ii = 1, steps, 1
@@ -100,13 +100,13 @@ structure_fact_out = 0.d0
 CALL fkbounds( steps, lower_bnd, upper_bnd )
 !
 DO ii = lower_bnd, upper_bnd
-  DO ik = 1, ksteps1 !
-    DO iky = 1, ksteps2
+  DO ik = 1, kres1 !
+    DO iky = 1, kres2
     !
     structure_fact_out(ik, iky) =  structure_fact_out(ik, iky) +  &
                           structure_fact(ii, 4) / sf_smearingx / sqrt(2.0d0 * pi) / sf_smearingy / sqrt(2.0d0 * pi)* &
-                          (EXP(-(structure_fact(ii, dim1)- kgridx(ik))**2.d0 / sf_smearingx**2.d0 / 2.d0))*&
-                          (EXP(-(structure_fact(ii, dim2)- kgridy(iky))**2.d0 / sf_smearingy**2.d0 / 2.d0))
+                          (EXP(-(structure_fact(ii, col1)- kgridx(ik))**2.d0 / sf_smearingx**2.d0 / 2.d0))*&
+                          (EXP(-(structure_fact(ii, col2)- kgridy(iky))**2.d0 / sf_smearingy**2.d0 / 2.d0))
     !
     ENDDO
   ENDDO
@@ -120,8 +120,8 @@ IF (ionode) THEN
   ! maxv = DBLE(6.162035539820569E+019)
   maxv =  maxval(structure_fact_out)
   WRITE(46,*) "#", maxv, maxval(structure_fact_out)
-  DO ik = 1, ksteps1
-    DO iky = 1, ksteps2
+  DO ik = 1, kres1
+    DO iky = 1, kres2
       WRITE(46,'(3F28.12)') kgridx(ik), kgridy(iky), structure_fact_out(ik,iky) * Np**(-2.0d0) !1.169035831194574E+019 
                                          !/ !maxval(abs(structure_fact_out)) !!* Np**(-2.0d0) ! / maxv
     ENDDO

@@ -6,7 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
   SUBROUTINE prepare_sym_analysis(nsym,sr,t_rev,magnetic_sym)
-
+  !
+  !! Wrapper: find the group name and sets its irreducible representation in the
+  !! rap_point_group module variables.  
+  !! If some symmetry needs the time reversal check which group is formed
+  !! by the operations that do not need time reversal.
+  !
   USE kinds,    ONLY : DP
   USE rap_point_group,  ONLY : code_group, nclass, nelem, elem, which_irr,  &
                                char_mat, name_rap, gname, name_class, ir_ram

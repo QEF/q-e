@@ -51,6 +51,7 @@ SUBROUTINE lr_init_nfo()
   USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_max
   use mp_world, only : mpime
+  USE uspp_init,             ONLY : init_us_2
   !
   IMPLICIT NONE
   !

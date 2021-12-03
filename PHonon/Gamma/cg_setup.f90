@@ -30,6 +30,7 @@ SUBROUTINE cg_setup
   USE gc_lr,  ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE cgcom,  ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
   USE xc_lib, ONLY: xclib_set_threshold, xclib_dft_is
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

@@ -224,9 +224,7 @@
     !
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-#if ! defined(__GFORTRAN__) || (__GNUC__ > 4 )
     USE, INTRINSIC :: IEEE_ARITHMETIC
-#endif
     !
     IMPLICIT NONE
     !
@@ -282,7 +280,6 @@
       ar = REAL(a(p))
       ai = AIMAG(a(p))
       !
-#if ! defined(__GFORTRAN__) || (__GNUC__ > 4 )
       IF (IEEE_IS_NAN(ar) .OR. IEEE_IS_NAN(ai)) THEN
         !WRITE(stdout, *) (z(i), i = 1, N)
         !WRITE(stdout, *) (u(i), i = 1, N)
@@ -290,7 +287,6 @@
         WRITE(stdout, *) 'One or more Pade coefficients are NaN'
         !CALL errore('pade_coeff', 'one or more coefficients are NaN', 1)
       ENDIF
-#endif
       !
     ENDDO
     !

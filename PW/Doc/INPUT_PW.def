@@ -701,7 +701,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var tot_magnetization -type REAL { 
-            default { -1 [unspecified] }
+            default { -10000 [unspecified] }
             info {
                 Total majority spin charge - minority spin charge.
                 Used to impose a specific total electronic magnetization.
@@ -1358,6 +1358,31 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
             }
         }        
+
+        var dmft -type LOGICAL { 
+            default { .FALSE. }
+            status {
+                Requires compilation with hdf5 support
+            }
+            info { 
+                If true, nscf calculation will exit in restart mode, scf calculation
+                will restart from there if DMFT updates are provided as hdf5 archive.
+                Scf calculation should be used only with @ref electron_maxstep = 1.
+                @ref K_POINTS have to be identical and given explicitly with @ref nosym.
+            }
+        }
+
+        var dmft_prefix -type CHARACTER { 
+            default { @ref prefix }
+            info {
+                prepended to hdf5 archive: dmft_prefix.h5
+
+                DMFT update should be provided in group/dataset as:
+                - dft_misc_input/band_window with dimension [1, number of k-points, 2 (real + complex)] 
+                - dft_update/delta_N with dimension [number of k-points, number of correlated orbitals,
+                number of correlated orbitals, 2 (real + complex)]
+            }
+        }
 
         var ensemble_energies -type LOGICAL {
             default { .false. }
@@ -2137,6 +2162,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 opt -val {'paro', 'ParO'} {
                     ParO iterative diagonalization
                 }
+               
+                opt -val {'rmm-davidson', 'rmm-paro'} {
+                    RMM-DIIS iterative diagonalization.  
+                    To stabilize the SCF loop 
+                    RMM-DIIS is alternated with calls to Davidson or
+                    ParO  solvers depending on the string used. 
+                    Other variables that can be used to tune the behavior of 
+                    RMM-DIIS are:  @ref diago_rmm_ndim and @ref diago_rmm_conv
+                }
             }
         }
 
@@ -2184,7 +2218,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 total energy, forces, and other ground-state properties).
             }
         }
-
+        
+        var diago_rmm_ndim -type INTEGER {
+           default {4}
+           info {
+               Max dimension  of the iterative subspace for RMM-DIIS diagonalization 
+           }
+        }
+       
+       var diago_rmm_conv -type LOGICAL {
+          default { .FALSE. }
+          info {
+             If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands 
+             are converged or up to a max of 8 times. 
+          }
+       }
         var efield -type REAL {
             default { 0.D0 }
             info {

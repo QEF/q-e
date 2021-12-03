@@ -92,7 +92,8 @@ SUBROUTINE print_clock_pw()
    !
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
-   CALL print_clock( 'init_us_2_gpu' )
+   CALL print_clock( 'init_us_2:cpu' )
+   CALL print_clock( 'init_us_2:gpu' )
    IF ( isolve == 0 ) THEN
       CALL print_clock( 'regterg' )    ; CALL print_clock( 'cegterg' )
    ELSE  IF (isolve == 1) THEN
@@ -103,6 +104,10 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'wfcrot' )
    ELSE  IF (isolve == 3) THEN
       CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
+   ELSE IF ( isolve == 4 ) THEN
+      CALL print_clock( 'rrmmdiagg' )  ; CALL print_clock( 'crmmdiagg' )
+      CALL print_clock( 'wfcrot' )
+      CALL print_clock( 'gsorth' )
    ENDIF
    !
    IF ( iverbosity > 0)  THEN
@@ -187,6 +192,8 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'rotHSw:ev:b5' ) ; call print_clock('rotHSw:ev:sum')
          CALL print_clock( 'rotHSw:ev:s7' ) ; CALL print_clock('rotHSw:ev:b6' ) 
       END IF
+   ELSE IF ( isolve == 4 ) THEN
+      WRITE( stdout, '(/5x,"Called by *rmmdiagg:")' )
    END IF
    !
    CALL print_clock( 'h_psi' )

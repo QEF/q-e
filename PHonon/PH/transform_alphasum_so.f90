@@ -9,22 +9,21 @@
 !----------------------------------------------------------------------------
 SUBROUTINE transform_alphasum_so(alphasum_nc,na)
 !----------------------------------------------------------------------------
-!
-! This routine multiply alphasum_nc by the identity and the Pauli
-! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in alphasum to use it in the calculation of
-! the change of the charge and of the magnetization.
+!! This routine multiply alphasum_nc by the identity and the Pauli
+!! matrices, rotate it as appropriate for the spin-orbit case
+!! and saves it in alphasum to use it in the calculation of
+!! the change of the charge and of the magnetization.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : npol
-USE spin_orb,             ONLY : fcoef, domag
+USE noncollin_module,     ONLY : npol, domag
+USE upf_spinorb,          ONLY : fcoef
 USE uspp,                 ONLY : ijtoh
 USE phus,                 ONLY : alphasum
 !
 IMPLICIT NONE
-
+!
 COMPLEX(DP) :: alphasum_nc(nhm*(nhm+1)/2,3,nat,npol,npol)
 INTEGER :: na
 !

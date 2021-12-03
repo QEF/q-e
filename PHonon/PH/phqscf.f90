@@ -9,11 +9,10 @@
 !-----------------------------------------------------------------------
 SUBROUTINE phqscf
   !-----------------------------------------------------------------------
-  !
-  !     This subroutine is the main driver of the self consistent cycle
-  !     which gives as output the change of the wavefunctions and the
-  !     change of the self-consistent potential due to a phonon of
-  !     fixed q.
+  !! This subroutine is the main driver of the self consistent cycle
+  !! which gives as output the change of the wavefunctions and the
+  !! change of the self-consistent potential due to a phonon of
+  !! fixed q.
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat
@@ -36,7 +35,8 @@ SUBROUTINE phqscf
   USE eqv,              ONLY : drhoscfs
   USE dynmat,           ONLY : dyn_hub_scf
   USE ldaU,             ONLY : lda_plus_u, Hubbard_lmax
-  USE ldaU_ph,          ONLY : dnsscf, dnsscf_all_modes
+  USE ldaU_lr,          ONLY : dnsscf
+  USE ldaU_ph,          ONLY : dnsscf_all_modes
   USE units_ph,         ONLY : iundnsscf
   USE control_flags,    ONLY : iverbosity
   USE write_hub

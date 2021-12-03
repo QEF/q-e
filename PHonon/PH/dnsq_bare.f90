@@ -9,19 +9,20 @@
 !-----------------------------------------------------------------------
 SUBROUTINE dnsq_bare 
   !-----------------------------------------------------------------------
+  !! DFPT+U : This routine calculates dnsbare, i.e. the bare variation 
+  !! of the occupation matrix ns under the perturbation q, due to a 
+  !! displacement of the atom L in the direction icart. 
   !
-  ! DFPT+U : This routine calculates dnsbare, i.e. the bare variation 
-  ! of the occupation matrix ns under the perturbation q, due to a 
-  ! displacement of the atom L in the direction icart. 
+  !! $$ \text{dnsbare}(m1,m2,\text{ispin},I,\text{icart},L) = 
+  !!    \sum_{k,n} [ \langle\psi(n,k,\text{ispin})| S_{k}\phi_(k,I,m1)\rangle \cdot 
+  !!                 \langle\Delta^{L \text{icart}}_{-q}(S_{k+q}\phi(k+q,I,m2))
+  !!                  |\psi(n,k,\text{ispin})\rangle  
+  !!               + \langle \psi(n,k,\text{ispin})| S_{k}\phi(k,I,m2)> \cdot 
+  !!                 \langle\Delta^{L \text{icart}}_{-q}(S_{k+q}\phi(k+q,I,m1))
+  !!                  |\psi(n,k,\text{ispin})\rangle ] $$
   !
-  ! dnsbare(m1,m2,ispin,I,icart,L)= 
-  !  = \sum_{k,n} [ <psi(n,k,ispin)| S_{k}\phi_(k,I,m1)> * 
-  !                 <\Delta^{L icart}_{-q}(S_{k+q}\phi_(k+q,I,m2))|psi(n,k,ispin)>  
-  !               + <psi(n,k,ispin)| S_{k}\phi_(k,I,m2)> * 
-  !                 <\Delta^{L icart}_{-q}(S_{k+q}\phi_(k+q,I,m1))|psi(n,k,ispin)> ]
-  !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris
+  !! Modified by I. Timrov (01.10.2018)
   ! 
   USE kinds,         ONLY : DP
   USE io_files,      ONLY : nwordwfcU
@@ -29,9 +30,10 @@ SUBROUTINE dnsq_bare
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE klist,         ONLY : xk, ngk, igk_k
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, offsetU, is_hubbard, nwfcU
-  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, swfcatomk, swfcatomkpq, dwfcatomkpq, &
+  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq, &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
                             dnsbare, dnsbare_all_modes, proj1, proj2, read_dns_bare
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE wvfct,         ONLY : npwx, wg, nbnd 
   USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs
@@ -49,6 +51,7 @@ SUBROUTINE dnsq_bare
   USE control_flags, ONLY : iverbosity
   USE wavefunctions, ONLY : evc  
   USE mp_images,     ONLY : intra_image_comm
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

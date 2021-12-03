@@ -119,7 +119,8 @@
           ALLOCATE( mill_d(3, ngm) )
           ALLOCATE( igtongl_d(ngm) )
           ALLOCATE( gl_d(ngm) )
-       ENDIF
+       ENDIF  
+       !$acc enter data create( mill(3, ngm), g(3, ngm) ) 
        !
        RETURN 
        !
@@ -140,6 +141,9 @@
           IF ( ASSOCIATED( gl ) ) DEALLOCATE ( gl )
        END IF
        !
+       !$acc exit data delete(eigts1,  eigts2,  eigts3)
+       !$acc exit data delete(mill, g)
+       !  
        IF( ALLOCATED( gg ) )     DEALLOCATE( gg )
        IF( ALLOCATED( g ) )      DEALLOCATE( g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )

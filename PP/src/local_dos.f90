@@ -18,6 +18,9 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !              (only for metals with fermi spreading)
   !     iflag=3: calculates the integral of local dos from "emin" to "emax"
   !              (emin, emax in Ry)
+  !     iflag=4: calculates |psi|^2 for all kpoints/bands that have
+  !              energy between "emin" and "emax" (emin, emax in Ry)
+  !              and spin = spin_component
   !
   !     lsign:   if true and k=gamma and iflag=0, write |psi|^2 * sign(psi)
   !     spin_component: for iflag=3 and LSDA calculations only
@@ -41,14 +44,15 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : lspinorb, fcoef
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
+  USE upf_spinorb,          ONLY : fcoef
   USE io_files,             ONLY : restart_dir
   USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp_pools,             ONLY : me_pool, nproc_pool, my_pool_id, npool, &
                                    inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE becmod,               ONLY : calbec
+  USE uspp_init,            ONLY : init_us_2
   IMPLICIT NONE
   !
   ! input variables
@@ -97,7 +101,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   ELSE
      IF (noncolin) THEN
         ALLOCATE (becp_nc(nkb,npol,nbnd))
-        IF (lspinorb) THEN
+        IF ( ANY(upf(1:ntyp)%has_so) ) THEN
           ALLOCATE(be1(nhm,2))
           ALLOCATE(be2(nhm,2))
         ENDIF
@@ -112,7 +116,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !   calculate the correct weights
   !
-  IF (iflag /= 0.and. iflag /=3 .and. .not.lgauss) CALL errore ('local_dos', &
+  IF (iflag /= 0.and. iflag /=3 .and. iflag/=4 .and. .not.lgauss) CALL errore ('local_dos', &
       'gaussian broadening needed', 1)
   IF (iflag == 2 .and. ngauss /= -99) CALL errore ('local_dos', &
       ' beware: not using Fermi-Dirac function ',  - ngauss)
@@ -126,7 +130,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
         ELSEIF (iflag == 2) THEN
            wg (ibnd, ik) = - wk (ik) * w1gauss ( (ef - et (ibnd, ik) ) &
                 / degauss, ngauss)
-        ELSEIF (iflag == 3) THEN
+        ELSEIF (iflag==3 .OR. iflag==4) THEN
            IF (et (ibnd, ik) <=  emax .and. et (ibnd, ik) >= emin) THEN
               wg (ibnd, ik) = wk (ik)
            ELSE
@@ -358,7 +362,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      DEALLOCATE(rbecp)
   ELSE
      IF (noncolin) THEN
-        IF (lspinorb) THEN
+        IF ( ANY(upf(1:ntyp)%has_so) ) THEN
            DEALLOCATE(be1)
            DEALLOCATE(be2)
         ENDIF
@@ -392,7 +396,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      is = 1
      psic(dfftp%nl(:)) = rho%of_g (:, is)
   ELSE
-     IF ( iflag==3 .and. (spin_component==1 .or. spin_component==2 ) ) THEN
+     IF ( (iflag==3 .or. iflag==4) .and. (spin_component==1 .or. spin_component==2) ) THEN
         psic(dfftp%nl(:)) = rho%of_g (:, spin_component)
      ELSE
         isup = 1
@@ -410,7 +414,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      DEALLOCATE(segno)
   ENDIF
   !
-  IF (iflag == 0 .or. gamma_only) RETURN
+  IF (iflag == 0 .or. iflag == 4 .or. gamma_only) RETURN
   !
   !    symmetrization of the local dos
   !

@@ -7,8 +7,10 @@
 !
 !------------------------------------------------
 SUBROUTINE q_points ( )
-!----------========------------------------------
-
+  !----------========------------------------------
+  !! Calculate the Monkhorst-Pack grid and write the information on
+  !! the grid of q-points.
+  !
   USE kinds, only : dp
   USE io_global,  ONLY :  stdout, ionode, ionode_id
   USE disp,  ONLY : nq1, nq2, nq3, x_q, nqs, lgamma_iq, wq
@@ -28,8 +30,6 @@ SUBROUTINE q_points ( )
   real(DP), allocatable :: xq(:,:), w_q(:)
 
   INTEGER :: nqmax
-  !
-  !  calculate the Monkhorst-Pack grid
   !
 
   if( nq1 <= 0 .or. nq2 <= 0 .or. nq3 <= 0 ) &

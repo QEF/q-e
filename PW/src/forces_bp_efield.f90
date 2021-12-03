@@ -55,7 +55,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE constants,            ONLY : pi, tpi
    USE gvect,                ONLY : ngm,  g, gcutm, ngm_g, ngmx, ig_l2g
    USE fft_base,             ONLY : dfftp
-   USE uspp,                 ONLY : nkb, vkb, okvan, using_vkb
+   USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, ngk, igk_k
@@ -63,14 +63,14 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    USE wavefunctions,        ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el, mapg_owner
    USE fixed_occ
-   USE mp,                   ONLY : mp_sum,mp_barrier
+   USE mp,                   ONLY : mp_sum, mp_max, mp_barrier
    USE mp_world,             ONLY : world_comm,mpime,nproc
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE becmod,               ONLY : bec_type, becp, calbec,ALLOCATE_bec_type, &
                                     DEALLOCATE_bec_type
-   USE noncollin_module,     ONLY : noncolin, npol
-   USE spin_orb,             ONLY : lspinorb
+   USE noncollin_module,     ONLY : noncolin, npol, lspinorb
    USE parallel_include
+   USE uspp_init,            ONLY : init_us_2
    !
    IMPLICIT NONE
    !
@@ -418,7 +418,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                CALL get_buffer( psi, nwordwfc, iunwfc, nx_el(kpoint-1,pdir) )
                !
                IF (okvan) THEN
-                  CALL using_vkb(1)
                   CALL init_us_2( npw0, igk0, xk(1,nx_el(kpoint-1,pdir)), vkb )
                   CALL calbec( npw0, vkb, psi, becp0 )
                   DO ipol = 1, 3
@@ -446,7 +445,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                   CALL get_buffer( psi1, nwordwfc, iunwfc, nx_el(kpoint,pdir) )
                   !
                   IF (okvan) THEN
-                     CALL using_vkb(1)
                      CALL init_us_2 (npw1,igk1,xk(1,nx_el(kpoint,pdir)),vkb)
                      CALL calbec( npw1, vkb, psi1, becp_bp)
                      DO ipol = 1, 3
@@ -474,7 +472,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                   CALL get_buffer( psi1, nwordwfc, iunwfc, nx_el(kstart,pdir) )
                   !
                   IF (okvan) THEN
-                     CALL using_vkb(1)
                      CALL init_us_2( npw1, igk1, xk(1,nx_el(kstart,pdir)), vkb )
                      CALL calbec( npw1, vkb, psi1, becp_bp )
                      DO ipol = 1, 3
@@ -578,11 +575,7 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                            ENDIF
                         ENDDO
                         max_aux_proc=max_aux
-
-#if defined (__MPI)                        
-                        CALL MPI_ALLREDUCE( max_aux_proc, max_aux, 1, MPI_INTEGER, MPI_MAX, &
-                                            intra_bgrp_comm, req, IERR )
-#endif
+                        CALL mp_max(max_aux_proc, intra_bgrp_comm )
                         ALLOCATE( aux_proc(max_aux,nproc), aux_proc_ind(max_aux,nproc) )
                         ALLOCATE( aux_rcv(max_aux,nproc), aux_rcv_ind(max_aux,nproc) )
                         aux_proc = (0.d0,0.d0)

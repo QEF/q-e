@@ -25,6 +25,8 @@ contains
 
    end subroutine
 
+
+
    subroutine current_kohn_sham(J, J_a, J_b, J_el, dt, scf_all, &
                                 dvpsi_save, save_dvpsi, &
                                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
@@ -43,8 +45,10 @@ contains
       use compute_charge_mod, only: compute_charge
       use project_mod, only: project
       use extrapolation, only: update_pot
+      use wave_gauge, only: compute_dot_evc_parallel_gauge
 
       use test_h_psi, only: test
+      USE uspp_init,            ONLY : init_us_2
 
       implicit none
 
@@ -63,7 +67,7 @@ contains
       REAL(DP), intent(in) ::  tpiba2, g(:, :), at(:, :), &
                               xk(:, :), et(:, :), dt, gg(:), &
                               omega
-      COMPLEX(DP), intent(in) :: vkb(:, :)
+      COMPLEX(DP), intent(inout) :: vkb(:, :)
 
       !character(LEN=20) :: dft_name
       complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
@@ -85,7 +89,7 @@ contains
       call update_pot()
       call hinit1()
       call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-      call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
+      call init_us_2(npw, igk_k(:, 1), xk(:, 1), vkb)
       call sum_band()
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, evc, becp)
@@ -99,42 +103,10 @@ contains
                       (xk(3, 1) + g(3, igk_k(ig, 1)))**2)*tpiba2
       end do
 
-      sa = 0.d0
-      sb = 0.d0
 
-! computed sb = < evc_due, evc_uno >, sa = <evc_uno, evc_uno> remove contribution at G=0
-! sa is a multiple of the identity if 2 points are used (t_plus==t_zero)
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sa, nbnd)
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_minus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sb, nbnd)
-      if (gstart == 2) then
-         do ibnd = 1, nbnd
-            do jbnd = 1, nbnd
-               sa(ibnd, jbnd) = sa(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_zero%evc(1, jbnd))
-               sb(ibnd, jbnd) = sb(ibnd, jbnd) - dble(conjg(scf_all%t_minus%evc(1, ibnd))*scf_all%t_zero%evc(1, jbnd))
-            end do
-         end do
-      end if
-      call mp_sum(sa, intra_pool_comm)
-      call mp_sum(sb, intra_pool_comm)
-! computes phi_v^c_punto using <s,s>
+      call compute_dot_evc_parallel_gauge(scf_all%t_minus%evc, scf_all%t_zero%evc, scf_all%t_plus%evc,&
+                                    evp, nbnd, npw, npwx, gstart)
 
-      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
-      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
-
-      evp = 0.d0
-      do ibnd = 1, nbnd
-         do jbnd = 1, nbnd
-            do ig = 1, npw
-
-               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_plus%evc(ig, jbnd)*sa(jbnd, ibnd)
-               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_zero%evc(ig, jbnd)*ssa(ibnd, jbnd)
-
-               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_minus%evc(ig, jbnd)*sb(jbnd, ibnd)
-               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_zero%evc(ig, jbnd)*ssb(ibnd, jbnd)
-
-            end do
-         end do
-      end do
       evp(:, :) = evp(:, :)/dt
 
 !   end if

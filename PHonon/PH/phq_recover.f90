@@ -8,58 +8,59 @@
 !-----------------------------------------------------------------------
 subroutine phq_recover
   !-----------------------------------------------------------------------
+  !! This subroutine tests if a xml restart file exists with the
+  !! information of where the code stopped and, if appropriate, the
+  !! partial dynamical matrix and the partial effective charges.
+  !! If (\(\text{rec_code}>2\)) \(\text{done_irr}\), \(\text{comp_irr}\)
+  !! info on calculated irreps - overrides initialization in 
+  !! \(\texttt{phq_setup}\).  
+  !! The xml file is in the directory \(\texttt{_phprefix.phsave}\).  
+  !! The xml file contains \(\text{where_rec}\), a string with information of the
+  !! point where the calculation stopped.
   !
-  !    This subroutine tests if a xml restart file exists with the
-  !    information of where the code stopped and, if appropriate the
-  !    partial dynamical matrix and the partial effective charges.
-  !    if (rec_code>2) done_irr, comp_irr
-  !    info on calculated irreps - overrides initialization in phq_setup.
-  !    The xml file is in the
-  !    directory _phprefix.phsave. The xml file contains
-  !    where_rec  a string with information of the point where the calculation
-  !               stopped
-  !    rec_code_read  where_rec     status description
+  !! The \(\text{rec_code_read}\) options:
   !
-  !  -1000                    Nothing has been read. There is no recover file.
-  !  -40         phq_setup    Only the displacements u have been read from file
-  !  -30         phq_init     u and dyn(0) read from file
-  !  -25                      not active yet. Restart in solve_e_fpol
-  !  -20         solve_e      all previous. Stopped within solve_e. There
-  !                           should be a recover file.
-  !  -10         solve_e2     epsilon and zstareu are available if requested.
-  !                           Stopped within solve_e2. There should be a
-  !                           recover file.
-  !   2          phescf       all previous, raman tenson and elop tensor are
-  !                           available if required.
-  !   10         solve_linter all previous. Stopped within solve linter.
-  !                           There should be a recover file.
-  !   20         phqscf       all previous dyn_rec(irr) and zstarue0(irr) are
-  !                           available.
-  !   30         dynmatrix    all previous, dyn and zstarue are available.
+  !! * -1000: nothing has been read. There is no recover file;
+  !! * -40:   stops in \(\texttt{phq_setup}\). Only the displacements
+  !!          u have been read from file;
+  !! * -30:   stops in \(\texttt{phq_init}\). u and dyn(0) read from file;
+  !! * -25:   not active yet. Restart in \(\texttt{solve_e_fpol}\);
+  !! * -20:   stops in \(\texttt{solve_e}\). All previous. There should be
+  !!          a recover file;
+  !! * -10:   stops in \(\texttt{solve_e2}\). \(\text{epsilon} and \(\text{zstareu}\)
+  !!          are available if requested. There should be a recover file.
+  !! *  2:    stops in \(\texttt{phescf}\). All previous, Raman tensor and elop tensor
+  !!          are available if required.
+  !! *  10:   stops in \(\texttt{solve_linter}\). All previous. There should be a 
+  !!          recover file.
+  !! *  20:   stops in \(\texttt{phqscf}\). All previous. \(\text{dyn_rec(irr)}\) and
+  !!          \(\text{zstarue0(irr)}\) are available.
+  !! *  30:   \(\texttt{dynmatrix}\). All previous. \(\text{dyn}\) and \(\text{zstarue}\)
+  !!          are available.
   !
-  ! The logic of the phonon code recover is the following:
-  ! The recover variable is read from input and never changed. If it is
-  ! false it disables completely the recover.
-  ! The control of the code is given by the arrays:
-  ! comp_iq, done_iq : for each q point if it has to be calculated or
-  !                    if it is already available. These are calculated
-  !                    only once by check_initial_status or read from file
-  !                    by the same routine.
-  ! comp_irr, done_irr : for each irreducible representation if it has
-  !                      to be calculated or if it is already calculated.
-  !                      The latter variables are valid only for the current
-  !                      q and are calculated in phq_setup and modified here
-  !                      if something is on the file.
-  ! epsil, done_epsil, zeu, done_zeu, zue, done_zue, lraman, done_lraman,
-  ! elop, done_elop ... control the electric field calculations. These are
-  ! set by prepare_q, or read from file by phq_setup.
+  !! The logic of the phonon code recover is the following.  
+  !! The recover variable is read from input and never changed. If it is
+  !! false it disables completely the recover.  
+  !! The control of the code is given by the arrays:
   !
-  ! The position where the code stopped is in the variable rec_code_read
-  ! defined above. This variable allows to exit from a routine if the quantity
-  ! calculated by this routine is already saved on file.
-  ! It is the responsibility of the routine (not of the calling code)
-  ! to known if it has to make the calculation or just exit because the
-  ! value of rec_code_read is too high.
+  !! * \(\text{comp_iq, done_iq}\): for each q point if it has to be calculated or
+  !!   if it is already available. These are calculated only once by 
+  !!   check_initial_status or read from file by the same routine.
+  !! * \(\text{comp_irr, done_irr}\): for each irreducible representation if it has
+  !!   to be calculated or if it is already calculated. The latter variables
+  !!   are valid only for the current q and are calculated in \(\texttt{phq_setup}\)
+  !!   and modified here if something is on the file.
+  !
+  !! \(\text{epsil, done_epsil, zeu, done_zeu, zue, done_zue, lraman, done_lraman,
+  !! elop, done_elop} \ldots\) control the electric field calculations. These are
+  !! set by \(\texttt{prepare_q}\), or read from file by \(\texttt{phq_setup}\).
+  !
+  !! The position where the code stopped is in the variable rec_code_read
+  !! defined above. This variable allows to exit from a routine if the quantity
+  !! calculated by this routine is already saved on file.
+  !! It is the responsibility of the routine (not of the calling code)
+  !! to known if it has to make the calculation or just exit because the
+  !! value of \(\text{rec_code_read} is too high.
   !
   ! if rec_code_read = (-25), -20, -10, 10
   !    It is expected that an unformatted recover file exists.
@@ -76,11 +77,12 @@ subroutine phq_recover
   !    arrays used with US potentials : int1 and int2 calculated in dvanqq,
   !    int3 calculatec in newdq (depends upon self-consistency)
   !
-  !    rec_code_read is valid only for the first q. For the following q
-  !    it is reset to -1000 in clean_pw_ph. So the recover file allows to
-  !    restart only the current q. However information on other q could
-  !    be available in the directory phsave, so this routine reads the
-  !    appropriate files and reset comp_irr and done_irr if appropriate.
+  !! \(\text{rec_code_read}\) is valid only for the first q. For the following q
+  !! it is reset to -1000 in \(\texttt{clean_pw_ph}\). So the recover file allows to
+  !! restart only the current q. However information on other q could
+  !! be available in the directory \(\texttt{phsave}\), so this routine reads the
+  !! appropriate files and reset \(\text{comp_irr}\) and \(\text{done_irr}\) if 
+  !! appropriate.
   !
   !
   USE kinds,         ONLY : DP

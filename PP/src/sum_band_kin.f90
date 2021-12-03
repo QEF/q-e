@@ -29,7 +29,6 @@ SUBROUTINE sum_band_kin(kin_r)
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE spin_orb,             ONLY : lspinorb, fcoef
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -166,6 +165,7 @@ SUBROUTINE sum_band_kin(kin_r)
        USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines
+       USE uspp_init,            ONLY : init_us_2
        !
        IMPLICIT NONE
        REAL(DP), INTENT(INOUT)    :: kin_r(dfftp%nnr,nspin)
@@ -257,6 +257,7 @@ SUBROUTINE sum_band_kin(kin_r)
        USE mp_bands,     ONLY : me_bgrp
        USE mp,           ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines
+       USE uspp_init,            ONLY : init_us_2
        !
        IMPLICIT NONE
        REAL(DP), INTENT(INOUT)    :: kin_r(dfftp%nnr,nspin)

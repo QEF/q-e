@@ -1,0 +1,58 @@
+
+This example shows how to use pw.x to perform DFT+dynamical mean-field
+theory (DMFT) calculations charge self-consistently. The formalism
+is making use of the interface with Wannier90. The input from DMFT
+is given as an hdf5 archive.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for SrVO3 (input=srvo3.scf.in,
+   output=srvo3.scf.out). This is done in the usual manner.
+
+2) make a non self-consistent calculation for SrVO3 (input=srvo3.nscf.in,
+   output=srvo3.nscf.out).
+   The input variable dmft is set to true so that the code keeps a snapshot
+   of the wavefunctions and other quantities for restart at a later time.
+   The verbosity must be set to high for the next step (implemented in TRIQS)
+   to work properly. The k-points must be given explicitly with nosym set to
+   true. The code will notify the user with "Calculation interrupted for call
+   of DMFT code" if this step succeeded.
+
+3*)(not done within Quantum Espresso) construct Wannier functions for a
+   downfolded model with Wannier90, use the Wannier90 Converter and make a
+   DMFT calculation within TRIQS/DFTTools. Obtain charge density updates written
+   into hdf5 archive (output=srvo3_dmft.h5)
+
+4) make a "self-consistent" calculation (important: only a single iteration!) for
+   SrVO3 (input=srvo3.dmft_scf.in, output=srvo3.dmft_scf.out).
+   The run must be called with restart_mode=restart, and with a low mixing_beta
+   to achieve convergence in the full DFT+DMFT charge self-consistent cycle.
+   The name of the hdf5 archive must be specified as dmft_prefix, and the dmft flag
+   must be set to true, which will be documented in the output as:
+   "Calculation restarted from a previous run, expecting DMFT hdf5 archive".
+   The band window is expected to be read from
+   "dmft_prefix.h5/dft_misc_input/band_window", while the occupation updates have to
+   be given as "dmft_prefix.h5/dft_update/delta_N".
+   With verbosity set to high the updated occupation numbers are printed. 
+
+Steps 2-4) are repeated until convergence of the interacting charge density.
+
+REFERENCES:
+
+S. Beck et al.
+Charge self-consistent electronic structure calculations with dynamical mean-field
+theory using Quantum ESPRESSO, Wannier90 and TRIQS
+arXiv:2111.10289 (2021)
+
+G. Pizzi et al.
+Wannier90 as a community code: new features and applications
+J. Phys. Cond. Matt. 32 (2020)
+
+O. Parollet et al.
+TRIQS: A toolbox for research on interacting quantum systems
+Comput. Phys. Commun. 196, 398 (2015)
+
+M. Aichhorn et al.
+TRIQS/DFTTools: A TRIQS application for ab initio calculations of correlated materials
+Comput. Phys. Commun. 204, 200 (2016)

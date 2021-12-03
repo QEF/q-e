@@ -10,17 +10,16 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PHonon/PH
 
 LRMODS = ../../LR_Modules/liblrmod.a
-PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a  ../../XClib/xc_lib.a ../../upflib/libupf.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
+QEMODS = $(BASEMODS)
 TLDEPS= phlibs
 PHOBJS = phq_readin2.o do_phonon2.o supp.o ../../PHonon/PH/libph.a
 
 all : ph.x
 
-ph.x : phonon2.o $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
+ph.x : phonon2.o $(PHOBJS) $(PWOBJS) $(LRMODS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ phonon2.o $(PHOBJS) \
-		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		 $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 #	- ( cd ../../bin ; ln -fs ../PHonon/PH/ph.x . )
 
 clean :

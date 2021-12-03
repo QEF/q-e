@@ -23,7 +23,7 @@ MODULE fft_helper_subroutines
 #endif
   END INTERFACE
   PRIVATE
-  PUBLIC :: fftx_threed2oned, fftx_oned2threed
+  PUBLIC :: fftx_threed2oned, fftx_threed2oned_gpu, fftx_oned2threed
   PUBLIC :: tg_reduce_rho
   PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
        tg_get_group_nr3
@@ -469,6 +469,8 @@ CONTAINS
   END SUBROUTINE
 
   SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2 )
+     !! Copy charge density from 3D array to 1D array in Fourier
+     !! space.
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
@@ -490,7 +492,40 @@ CONTAINS
         END DO
      END IF
   END SUBROUTINE
-
+  
+  SUBROUTINE fftx_threed2oned_gpu( desc, vin_d, vout1_d, vout2_d )
+     !! GPU version of \(\texttt{fftx_threed2oned}\).
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: vout1_d(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2_d(:)
+     complex(DP), INTENT(IN) :: vin_d(:)
+     INTEGER, POINTER :: nl_d(:), nlm_d(:)
+     COMPLEX(DP) :: fp, fm
+     INTEGER :: ig
+#if defined(__CUDA) && defined(_OPENACC)
+     attributes(DEVICE) :: nl_d, nlm_d
+     !$acc data deviceptr( vout1_d(:), vout2_d(:), vin_d(:) )
+     nl_d  => desc%nl_d
+     nlm_d => desc%nlm_d
+     IF( PRESENT( vout2_d ) ) THEN
+        !$acc parallel loop
+        DO ig=1,desc%ngm
+           fp=vin_d(nl_d(ig))+vin_d(nlm_d(ig))
+           fm=vin_d(nl_d(ig))-vin_d(nlm_d(ig))
+           vout1_d(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+           vout2_d(ig) = CMPLX(0.5d0,0.d0,kind=DP)*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+        END DO
+     ELSE
+        !$acc parallel loop
+        DO ig=1,desc%ngm
+           vout1_d(ig) = vin_d(nl_d(ig))
+        END DO
+     END IF
+     !$acc end data
+#endif
+  END SUBROUTINE
 
   SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2 )
      USE fft_param

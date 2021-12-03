@@ -59,9 +59,8 @@ SUBROUTINE hp_setup_q()
                                inverse_s, d1, d2, d3
   USE uspp_param,       ONLY : upf
   USE uspp,             ONLY : nlcc_any
-  USE spin_orb,         ONLY : domag
   USE constants,        ONLY : degspin, pi, rytoev
-  USE noncollin_module, ONLY : noncolin, m_loc, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, m_loc, nspin_mag
   USE wvfct,            ONLY : nbnd, et
   USE control_flags,    ONLY : noinv
   USE eqv,              ONLY : dmuxc

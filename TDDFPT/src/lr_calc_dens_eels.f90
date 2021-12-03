@@ -37,6 +37,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE io_files,              ONLY : iunwfc, nwordwfc
   USE buffers,               ONLY : get_buffer
   USE fft_interfaces,        ONLY : fft_interpolate
+  USE uspp_init,             ONLY : init_us_2
   !
   IMPLICIT NONE
   !

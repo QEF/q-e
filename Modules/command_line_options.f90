@@ -22,7 +22,7 @@ MODULE command_line_options
   INTEGER :: nargs = 0
   ! ... QE arguments read from command line
   INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1, nyfft_ = 1, nmany_ = 1
-  LOGICAL :: pencil_decomposition_ = .false.
+  LOGICAL :: pencil_decomposition_ = .false., rmm_with_paro_ = .false. 
   ! ... Indicate if using library init
   LOGICAL :: library_init = .FALSE.
   ! ... input file name read from command line
@@ -151,7 +151,7 @@ CONTAINS
                  CALL get_command_argument ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) nmany_
-              narg = narg + 1
+              narg = narg + 1 
            CASE DEFAULT
               command_line = TRIM(command_line) // ' ' // TRIM(arg)
         END SELECT

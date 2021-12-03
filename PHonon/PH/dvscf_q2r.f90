@@ -738,8 +738,7 @@ SUBROUTINE read_rotate_dvscf()
   USE cell_base,   ONLY : at, bg
   USE symm_base,   ONLY : time_reversal, nsym, s, invs, ft, irt
   USE fft_base,    ONLY : dfftp
-  USE spin_orb,    ONLY : domag
-  USE noncollin_module, ONLY : noncolin, nspin_mag
+  USE noncollin_module, ONLY : noncolin, nspin_mag, domag
   USE control_flags, ONLY : noinv
   USE control_ph,  ONLY : tmp_dir_ph
   USE cryst_ph,    ONLY : magnetic_sym

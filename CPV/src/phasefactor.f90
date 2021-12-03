@@ -209,20 +209,27 @@
       ! ... declare other variables
       !
       INTEGER :: is, ig, ia, ig1, ig2, ig3
+      COMPLEX(DP)  :: sfac0
 
       call start_clock( 'strucf' )
+!$acc data copyout(sfac), copyin(ei1, ei2,ei3,ityp) present(mill) 
+!$acc kernels 
+      sfac = (0.d0,0.d0) 
+!$acc end kernels 
+!$acc parallel loop private(ig1,ig2,ig3,is)  
+      DO ig =1, ngm 
+         ig1 = mill( 1, ig) 
+         ig2 = mill( 2, ig)
+         ig3 = mill( 3, ig)
+!$acc loop seq 
+         DO ia =1, nat
+            is = ityp(ia)  
+            sfac0 = ei1( ig1, ia ) * ei2( ig2, ia ) * ei3( ig3, ia )
+            sfac (ig ,is) = sfac (ig, is ) + sfac0 
+         END DO 
+      END DO 
+!$acc end data 
 
-      sfac = (0.0d0, 0.0d0)
-
-      DO ia = 1, nat
-        is = ityp(ia)
-        DO ig = 1, ngm
-           ig1 = mill( 1, ig ) 
-           ig2 = mill( 2, ig ) 
-           ig3 = mill( 3, ig )
-           sfac( ig, is ) = sfac( ig, is ) + ei1( ig1, ia ) * ei2( ig2, ia ) * ei3( ig3, ia )
-        END DO
-      END DO
 
       call stop_clock( 'strucf' )
 

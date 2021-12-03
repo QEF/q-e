@@ -17,6 +17,7 @@ USE constants,        ONLY: RYTOEV
 use io_global,        ONLY : stdout, ionode 
 use bse_wannier,      ONLY : scissor,l_scissor,qpe_imin,qpe_imax
 use qpe_exc
+use uspp_init,        ONLY : init_us_2
 
 
 implicit none

@@ -87,7 +87,10 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 
         var nmix_ph   -type INTEGER { 
             default { 4 }
-            info { Number of iterations used in potential mixing. }
+            info {
+                Number of iterations used in potential mixing. Using a larger value (8~20)
+                can significantly speed up convergence, at the cost of using more memory.
+            }
         }
 
         var verbosity -type CHARACTER { 
@@ -101,7 +104,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 
         var reduce_io -type LOGICAL { 
             default { .false. }
-            info { Reduce I/O to the strict minimum. }
+            info { Reduce I/O to the strict minimum. If the input flag reduce_io=.true. was used, 
+                   it is not allowed to restart from an interrupted run.}
         }
 
         var max_seconds  -type REAL { 
@@ -166,9 +170,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
         var trans  -type LOGICAL { 
             default { .true. }
             info {
-                If .true. the phonons are computed.
-                If @ref trans .and. @ref epsil are .true. effective charges are 
-                calculated.
+                If .false. the phonons are not computed.
+                If @ref trans .and. @ref epsil are both .true.,
+		the effective charges are calculated.
+		If @ref ldisp is .true., trans=.false. is overridden
+                (except for the case of electron-phonon calculations)
             }      
         }
         

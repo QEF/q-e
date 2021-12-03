@@ -42,6 +42,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   USE buffers,               ONLY : get_buffer
   USE lr_variables,          ONLY : calculator
   USE fft_helper_subroutines
+  USE uspp_init,             ONLY : init_us_2
  
   IMPLICIT NONE
   !

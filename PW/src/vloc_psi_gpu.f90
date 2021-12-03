@@ -551,8 +551,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts, dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE lsda_mod,      ONLY : nspin
-  USE spin_orb,      ONLY : domag
-  USE noncollin_module,     ONLY: npol
+  USE noncollin_module,    ONLY: npol, domag
   USE wavefunctions_gpum,  ONLY: psic_nc_d
   USE fft_helper_subroutines
   !

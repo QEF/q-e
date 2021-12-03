@@ -8,11 +8,10 @@
 !----------------------------------------------------------------------
 subroutine dvpsi_e2
   !-----------------------------------------------------------------------
-  !
-  ! This routine shold be called before the self-consistent cycle used to
-  ! compute the second derivative of the wavefunctions with respect to
-  ! electric-fields. It computes that part of the potential that remains
-  ! constant during the cycle.
+  !! This routine shold be called before the self-consistent cycle used to
+  !! compute the second derivative of the wavefunctions with respect to
+  !! electric-fields. It computes that part of the potential that remains
+  !! constant during the cycle.
   !
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : omega
@@ -25,8 +24,8 @@ subroutine dvpsi_e2
   USE fft_interfaces,  ONLY : fft_interpolate
   USE scf,             ONLY : rho
   USE qpoint,          ONLY : nksq
-  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf
-  USE units_lr,        ONLY : iuwfc, lrwfc
+  USE units_ph,        ONLY : lrdrho, iudrho
+  USE units_lr,        ONLY : iuwfc, lrwfc, lrdwf, iudwf
   USE control_lr,      ONLY : nbnd_occ
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
   USE mp_pools,        ONLY : my_pool_id, inter_pool_comm

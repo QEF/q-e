@@ -10,53 +10,22 @@
 subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      ndmx, ndim, ethr, ik, kter, conv_root, anorm, nbnd, m)
   !----------------------------------------------------------------------
+  !! Iterative solution of the linear system by GMRES(m) method:
+  !! $$ (h - e + Q) \cdot \text{dpsi} = \text{d0psi}\ \ (1) $$
+  !! where \(h\) is a complex hermitian matrix, \(e\) is a 
+  !! complex scalar and \(\text{dpsi}\) and \(\text{d0psi}\) are
+  !! complex vectors.
   !
-  !     iterative solution of the linear system by GMRES(m) method:
+  !! Two procedures on input:
   !
-  !                 ( h - e + Q ) * dpsi = d0psi                      (1)
+  !! * \(\texttt{h_psi}\): calculates  \(H\psi\) products. Vectors \(\text{psi}\)
+  !!   and \(\text{psip}\) should be dimensioned (ndmx,nvec). \(\text{nvec}=1\)
+  !!   is used!
+  !! * \(\texttt{cg_psi}\): calculates \((h-e)^{-1}\psi\), with
+  !!   some approximation, e.g. \((\text{diag}(h)-e)\).
   !
-  !                 where h is a complex hermitean matrix, e is a complex sca
-  !                 dpsi and d0psi are complex vectors
-  !
-  !     on input:
-  !                 h_psi    EXTERNAL  name of a subroutine:
-  !                          h_psi(ndim,psi,psip)
-  !                          Calculates  H*psi products.
-  !                          Vectors psi and psip should be dimensined
-  !                          (ndmx,nvec). nvec=1 is used!
-  !
-  !                 cg_psi   EXTERNAL  name of a subroutine:
-  !                          g_psi(ndmx,ndim,notcnv,psi,e)
-  !                          which calculates (h-e)^-1 * psi, with
-  !                          some approximation, e.g. (diag(h)-e)
-  !
-  !                 e        complex     unperturbed eigenvalue plus
-  !                          imaginary frequency.
-  !
-  !                 dpsi     contains an estimate of the solution
-  !                          vector.
-  !
-  !                 d0psi    contains the right hand side vector
-  !                          of the system.
-  !
-  !                 ndmx     integer row dimension of dpsi, ecc.
-  !
-  !                 ndim     integer actual row dimension of dpsi
-  !
-  !                 ethr     real     convergence threshold. solution
-  !                          improvement is stopped when the error in
-  !                          eq (1), defined as l.h.s. - r.h.s., becomes
-  !                          less than ethr in norm.
-  !
-  !                 m        integer  # of basis vectors
-  !
-  !     on output:  dpsi     contains the refined estimate of the
-  !                          solution vector.
-  !
-  !                 d0psi    is corrupted on exit
-  !
-  !   revised (extensively)       6 Apr 1997 by A. Dal Corso & F. Mauri
-  !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
+  !! Revised (extensively):       6 Apr 1997 by A. Dal Corso & F. Mauri.  
+  !! Revised (to reduce memory): 29 May 2004 by S. de Gironcoli.
   !
   USE kinds, only : DP
   USE mp_bands, ONLY: intra_bgrp_comm
@@ -64,30 +33,44 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
   implicit none
   !
-  !   first the I/O variables
+  integer :: ndmx
+  !! input: the maximum dimension of the vectors
+  integer :: ndim
+  !! input: the actual dimension of the vectors
+  integer :: kter
+  !! output: counter on iterations
+  integer :: nbnd
+  !! input: the number of bands
+  integer :: ik
+  !! input: the k point
+  integer :: m
+  !! number of basis vectors
   !
-  integer :: ndmx, & ! input: the maximum dimension of the vectors
-             ndim, & ! input: the actual dimension of the vectors
-             kter, & ! output: counter on iterations
-             nbnd, & ! input: the number of bands
-             ik,   & ! input: the k point
-             m       ! # of basic vector
-
-  real(kind=DP) :: &
-             anorm,   & ! output: the norm of the error in the solution
-             ethr       ! input: the required precision
-  complex(kind=DP) ::  h_diag(ndmx,nbnd) ! input: an estimate of ( H - \epsilon - iu )
-
-  complex(kind=DP) :: &
-             e(nbnd), & ! input: the actual eigenvalue plus imaginary freq.
-             dpsi (ndmx, nbnd), & ! output: the solution of the linear syst
-             d0psi (ndmx, nbnd)   ! input: the known term
-
-  logical :: conv_root ! output: if true the root is converged
+  real(kind=DP) :: anorm
+  !! output: the norm of the error in the solution
+  real(kind=DP) :: ethr
+  !! input: real convergence threshold. Solution improvement
+  !! is stopped when the error in Eq.(1), defined as 
+  !! l.h.s. - r.h.s., becomes less than \(\text{ethr}\) in norm.
+  !
+  complex(kind=DP) :: h_diag(ndmx,nbnd)
+  !! input: an estimate of \((H - \epsilon - iu)\)
+  complex(kind=DP) :: e(nbnd)
+  !! input: the actual eigenvalue plus imaginary frequency
+  complex(kind=DP) :: dpsi(ndmx,nbnd)
+  !! on input: contains an estimate of the solution vector.  
+  !! on output: contains its refined estimate.
+  complex(kind=DP) :: d0psi(ndmx,nbnd)
+  !! on input: contains the right hand side vector of the system.  
+  !! on output: is corrupted on exit.
+  !
+  logical :: conv_root
+  !! output: if true the root is converged
+  !
   external h_psi       ! input: the routine computing h_psi
   external cg_psi      ! input: the routine computing cg_psi
   !
-  !  here the local variables
+  ! ... local variables
   !
   integer, parameter :: maxter = 5000
   ! the maximum number of iterations

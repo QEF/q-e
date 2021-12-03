@@ -9,8 +9,7 @@ SUBROUTINE cond_out ()
   USE io_global, ONLY : stdout
   USE ions_base, ONLY: atm
   USE lsda_mod, ONLY: nspin
-  USE noncollin_module, ONLY : noncolin, npol
-  USE spin_orb, ONLY : lspinorb, domag
+  USE noncollin_module, ONLY : noncolin, domag, npol, lspinorb
   USE cond
 
 !---------------------------

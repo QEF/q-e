@@ -9,8 +9,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE psym_dmag (nper, irr, dvtosym)
   !-----------------------------------------------------------------------
-  !
-  ! ...  p-symmetrize the charge density.
+  !! p-symmetrize the charge density.
   !
   USE kinds,      ONLY : DP
   USE noncollin_module, ONLY : nspin_mag
@@ -22,12 +21,14 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   !
   IMPLICIT NONE
   !
-  INTEGER :: nper, irr
-    ! the number of perturbations
-    ! the representation under consideration
-  COMPLEX(DP) :: dvtosym (dfftp%nnr, nspin_mag, nper)
-    ! the potential to symmetrize
-    !-local variable
+  INTEGER :: nper
+  !! the number of perturbations
+  INTEGER :: irr
+  !! the representation under consideration
+  COMPLEX(DP) :: dvtosym(dfftp%nnr,nspin_mag,nper)
+  !! the potential to symmetrize
+  !
+  ! ... local variables
   !
 #if defined (__MPI)
   !

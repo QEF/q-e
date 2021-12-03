@@ -13,6 +13,12 @@
 #define DEVICEATTR
 #endif
 
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
+
 !=----------------------------------------------------------------------------=!
    MODULE cp_interfaces
 !=----------------------------------------------------------------------------=!
@@ -336,10 +342,10 @@
       END SUBROUTINE writefile_x
    END INTERFACE
  
-
+!
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
+         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart, compute_only_gradient )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
          integer, intent(in) :: nfi
@@ -350,7 +356,7 @@
          complex(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
          complex(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
          logical, optional, intent(in) :: fromscra
-         logical, optional, intent(in) :: restart
+         logical, optional, intent(in) :: restart, compute_only_gradient
       END SUBROUTINE
    END INTERFACE
 
@@ -945,6 +951,17 @@
          REAL(DP),    INTENT(OUT) :: becp( :, : )
          INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE nlsm1_x 
+#if defined (__CUDA)
+      SUBROUTINE nlsm1_gpu_x ( n, betae, c, becp, pptype_ )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n
+         COMPLEX(DP), INTENT(IN), DEVICE  :: c( :, : )
+         COMPLEX(DP), INTENT(INOUT), DEVICE  :: betae( :, : )
+         REAL(DP),    INTENT(OUT), DEVICE :: becp( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      END SUBROUTINE nlsm1_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE nlsm2_bgrp
@@ -962,7 +979,7 @@
          INTEGER,     INTENT(IN)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
          COMPLEX(DP), INTENT(IN), DEVICE :: betae( :, : )
          COMPLEX(DP), INTENT(IN), DEVICE :: c_bgrp( :, : )
-         REAL(DP),    INTENT(OUT) :: becdr_bgrp( :, :, : )
+         REAL(DP),    INTENT(OUT) PINMEM :: becdr_bgrp( :, :, : )
       END SUBROUTINE nlsm2_bgrp_gpu_x
 #endif
    END INTERFACE
@@ -997,6 +1014,17 @@
          COMPLEX(DP), INTENT(INOUT) :: betae( :, : )
          INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_x
+#if defined (__CUDA)
+      SUBROUTINE calbec_gpu_x( n, betae, c, bec, pptype_ )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)    :: n
+         REAL(DP),    INTENT(OUT), DEVICE   :: bec( :, : )
+         COMPLEX(DP), INTENT(IN), DEVICE    :: c( :, : )
+         COMPLEX(DP), INTENT(INOUT), DEVICE :: betae( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      END SUBROUTINE calbec_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE caldbec_bgrp
@@ -1007,6 +1035,16 @@
          REAL(DP),    INTENT(OUT) ::  dbec( :, :, :, : )
          INTEGER, INTENT(IN) :: idesc( :, : )
       END SUBROUTINE caldbec_bgrp_x
+#if defined (__CUDA)
+      SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN), DEVICE ::  eigr( :, : )
+         COMPLEX(DP), INTENT(IN), DEVICE ::  c_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) PINMEM ::  dbec( :, :, :, : )
+         INTEGER, INTENT(IN) :: idesc( :, : )
+      END SUBROUTINE caldbec_bgrp_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE dennl
@@ -1061,6 +1099,14 @@
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
          COMPLEX(DP), INTENT(OUT) :: dbeigr( :, :, :, :)
       END SUBROUTINE dbeta_eigr_x
+#if defined (__CUDA)
+      SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN),  DEVICE :: eigr( :, : )
+         COMPLEX(DP), INTENT(OUT), DEVICE :: dbeigr( :, :, :, :)
+      END SUBROUTINE dbeta_eigr_gpu_x
+#endif
    END INTERFACE
 
 !=----------------------------------------------------------------------------=!

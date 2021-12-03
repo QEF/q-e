@@ -22,7 +22,6 @@ hp_dealloc_q.o \
 hp_dealloc_1.o \
 hp_dealloc_2.o \
 hp_dvpsi_pert.o \
-hp_efermi_shift.o \
 hp_find_inequiv_sites.o \
 hp_generate_grids.o \
 hp_init.o \
@@ -53,10 +52,8 @@ hp_write_chi_full.o \
 hp_write_dnsq.o 
 
 LRMODS = ../../LR_Modules/liblrmod.a
-PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a\
-         ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a ../../XClib/xc_lib.a
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
+QEMODS = $(BASEMODS)
 
 TLDEPS= hplibs
 
@@ -64,9 +61,9 @@ all : tldeps libs-hp hp.x
 
 libs-hp : libhp.a 
 
-hp.x : hp_main.o libhp.a $(PWOBJS) $(LRMODS) $(LIBOBJS)
+hp.x : hp_main.o libhp.a $(PWOBJS) $(LRMODS)
 	$(LD) $(LDFLAGS) -o $@ hp_main.o libhp.a \
-		$(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		$(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../HP/src/hp.x . )
 
 tldeps :

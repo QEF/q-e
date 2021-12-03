@@ -91,8 +91,7 @@ MODULE apply_dpot_mod
     USE kinds,             ONLY : DP
     USE fft_base,          ONLY : dffts
     USE wvfct,             ONLY : npwx
-    USE noncollin_module,  ONLY : noncolin, npol, nspin_mag
-    USE spin_orb,          ONLY : domag
+    USE noncollin_module,  ONLY : noncolin, domag, npol, nspin_mag
     USE lsda_mod,          ONLY : current_spin
     USE fft_helper_subroutines, ONLY : fftx_ntgrp
     !
@@ -117,6 +116,8 @@ MODULE apply_dpot_mod
     !! Step size for loop over bands.
     INTEGER :: tg_v_siz
     !! Task groups: size of the potential.
+    !
+    CALL start_clock("apply_dpot_b")
     !
     IF (.NOT. is_allocated) CALL apply_dpot_allocate()
     !
@@ -153,6 +154,8 @@ MODULE apply_dpot_mod
         CALL cft_wave(ik, dvpsi(:, ibnd), psi_r, -1)
       ENDIF ! has_task_groups
     ENDDO ! ibnd
+    !
+    CALL stop_clock("apply_dpot_b")
     !
   END SUBROUTINE apply_dpot_bands
   !

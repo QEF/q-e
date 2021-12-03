@@ -13,9 +13,8 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
   USE gvect,                ONLY : ngm, g
-  USE noncollin_module,     ONLY : noncolin, nspin_gga
+  USE noncollin_module,     ONLY : noncolin, domag, nspin_gga
   USE xc_lib,               ONLY : xclib_dft_is, xclib_get_id, xc_gcx, xclib_dft_is_libxc
-  USE spin_orb,             ONLY : domag
   USE fft_base,             ONLY : dfftp
   !
   IMPLICIT NONE

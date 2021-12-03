@@ -1,3 +1,0 @@
-david_rci.o : ../../UtilXlib/mp.o
-david_rci.o : ../../UtilXlib/mp_bands_util.o
-david_rci.o : ../../UtilXlib/util_param.o

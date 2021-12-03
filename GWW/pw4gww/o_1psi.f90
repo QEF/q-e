@@ -446,6 +446,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
    USE uspp,                 ONLY : vkb, nkb, okvan
    USE g_psi_mod,            ONLY : h_diag, s_diag
    USE klist,                ONLY : xk,igk_k
+   USE uspp_init,        ONLY : init_us_2
    
   !
   IMPLICIT NONE

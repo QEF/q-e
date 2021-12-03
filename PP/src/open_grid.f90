@@ -11,8 +11,7 @@ PROGRAM open_grid
   USE cell_base,  ONLY : at, bg, tpiba2, alat
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
-  USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2, nspin_lsda
-  USE spin_orb,           ONLY : domag
+  USE noncollin_module,   ONLY : noncolin, domag, m_loc, angle1, angle2, nspin_lsda
   USE control_flags,      ONLY : gamma_only
   USE environment,        ONLY : environment_start, environment_end
   USE ions_base,          ONLY : nat, tau, ityp
@@ -54,9 +53,11 @@ PROGRAM open_grid
   LOGICAL           :: use_ace_back, exx_status_back
   REAL(DP)          :: ecutfock_back
   INTEGER           :: nq_back(3)
+  ! if true do not append '_open' to the prefix
+  LOGICAL  :: overwrite_prefix = .false.
 
   ! these are in wannier module.....-> integer :: ispinw, ikstart, ikstop, iknum
-  NAMELIST / inputpp / outdir, prefix !, nq
+  NAMELIST / inputpp / outdir, prefix, overwrite_prefix !, nq
   !
   ! initialise environment
   !
@@ -88,6 +89,7 @@ PROGRAM open_grid
   CALL mp_bcast(outdir,ionode_id, intra_image_comm)
   CALL mp_bcast(tmp_dir,ionode_id, intra_image_comm)
   CALL mp_bcast(prefix,ionode_id, intra_image_comm)
+  CALL mp_bcast(overwrite_prefix,ionode_id, intra_image_comm)
   !
   WRITE(stdout,*)
   WRITE(stdout,*) ' Reading nscf_save data'
@@ -160,7 +162,9 @@ PROGRAM open_grid
   DEALLOCATE(evc)
   ALLOCATE(evc(npwx*npol,nbnd))
   !
-  prefix = TRIM(prefix)//"_open"
+  if (.not. overwrite_prefix) then
+    prefix = TRIM(prefix)//"_open"
+  end if
   nwordwfc = nbnd * npwx * npol
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, +1, exst_mem, exst)
   !
