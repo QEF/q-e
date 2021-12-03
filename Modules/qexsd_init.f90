@@ -804,7 +804,7 @@ CONTAINS
       !! flag: true if the noncolinear calculation has a finite magnetization 
       REAL(DP),DIMENSION(:,:),OPTIONAL,INTENT(IN) :: site_mag 
       !! array with the estimated magnetization per site (noncollinear case)
-      REAL(DP),DIMENSION(:)  ,OPTIONAL,INTENT(IN) :: site_mag_pol
+      REAL(DP),DIMENSION(:,:)  ,OPTIONAL,INTENT(IN) :: site_mag_pol
       !! array with the magnetic polarization per site (nspin=2 case)
       !
       INTEGER  :: iobj
@@ -813,7 +813,7 @@ CONTAINS
       TYPE (d3mags_type),  TARGET  :: vmag_obj 
       TYPE (d3mags_type),  POINTER :: vmag_ptr => NULL()
       IF (PRESENT(site_mag_pol)) THEN 
-         CALL qexsd_init_scalmags(smag_obj, SIZE(site_mag_pol), site_mag_pol, ityp, atm, site_charges) 
+         CALL qexsd_init_scalmags(smag_obj, SIZE(site_mag_pol,2), site_mag_pol(1,:), ityp, atm, site_charges) 
          smag_ptr => smag_obj 
       ELSE IF (PRESENT(site_mag)) THEN 
          CALL qexsd_init_d3mags (vmag_obj, SIZE(site_mag, 2), site_mag, ityp, atm, site_charges ) 
