@@ -368,17 +368,19 @@ DEV_OMP shared(iupdwn_iss,iss,kmax,nproc_bgrp,me_bgrp,nbspx,i,ibgrp_g2l,nh), &
 DEV_OMP shared(ofsbeta,qq_nt,na,bec_tmp,bec_bgrp,csc2,nat,ityp,tvanp, ia_s, ia_e, mykey), &
 DEV_OMP private( k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k, rsum_w, rsum_v )
 DEV_OMP do
+!civn
 DEV_ACC parallel present(ibgrp_g2l, nh, ofsbeta, qq_nt, bec_tmp, bec_bgrp, csc2, ityp, tvanp) &
 !!!DEV_ACC & (iupdwn_iss, iss, kmax, nproc_bgrp, me_bgrp, nbspx, i, ia_s, ia_e, mykey) &
-DEV_ACC & private(k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k) &
-DEV_ACC & num_workers(MIN(32,ia_e-ia_s+1)) vector_length(32)
-DEV_ACC loop gang  
+!DEV_ACC & private(k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k) &
+!DEV_ACC & num_workers(MIN(32,ia_e-ia_s+1)) vector_length(32)
+DEV_ACC & vector_length(32)
+DEV_ACC loop gang  private(rsum, ibgrp_k, rsum_w, is, inl, rsum_v) reduction (+:rsum_w, rsum) 
       DO k = iupdwn_iss, kmax
          rsum=0.d0
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
             rsum_w = 0._DP 
-DEV_ACC loop worker reduction (+:rsum_w) private(rsum_v)   
+!DEV_ACC loop worker reduction (+:rsum_w) private(rsum_v)   
             DO ia = ia_s, ia_e
                IF ( mykey  == 0 ) THEN
                   is=ityp(ia)
