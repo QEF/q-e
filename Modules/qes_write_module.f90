@@ -334,7 +334,9 @@ MODULE qes_write_module
      IF (obj%boundary_conditions_ispresent) THEN
         CALL qes_write_outputPBC (xp, obj%boundary_conditions)
      END IF
-     CALL qes_write_magnetization (xp, obj%magnetization)
+     IF (obj%magnetization_ispresent) THEN
+        CALL qes_write_magnetization (xp, obj%magnetization)
+     END IF
      CALL qes_write_total_energy (xp, obj%total_energy)
      CALL qes_write_band_structure (xp, obj%band_structure)
      IF (obj%forces_ispresent) THEN
@@ -960,8 +962,8 @@ MODULE qes_write_module
      IF ( .NOT. obj%lwrite ) RETURN 
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
-     IF (obj%rank_ispresent) CALL xml_addAttribute(xp, 'rank', obj%rank )
-     IF (obj%dims_ispresent) CALL xml_addAttribute(xp, 'dims', obj%dims )
+     CALL xml_addAttribute(xp, 'rank', obj%rank )
+     CALL xml_addAttribute(xp, 'dims', obj%dims )
      IF (obj%order_ispresent) CALL xml_addAttribute(xp, 'order', TRIM(obj%order) )
      IF (obj%specie_ispresent) CALL xml_addAttribute(xp, 'specie', TRIM(obj%specie) )
      IF (obj%label_ispresent) CALL xml_addAttribute(xp, 'label', TRIM(obj%label) )
@@ -2864,8 +2866,8 @@ MODULE qes_write_module
      IF ( .NOT. obj%lwrite ) RETURN 
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
-     IF (obj%rank_ispresent) CALL xml_addAttribute(xp, 'rank', obj%rank )
-     IF (obj%dims_ispresent) CALL xml_addAttribute(xp, 'dims', obj%dims )
+     CALL xml_addAttribute(xp, 'rank', obj%rank )
+     CALL xml_addAttribute(xp, 'dims', obj%dims )
      IF (obj%order_ispresent) CALL xml_addAttribute(xp, 'order', TRIM(obj%order) )
        CALL xml_addNewLine(xp)
         DO i = 1, obj%dims(2)

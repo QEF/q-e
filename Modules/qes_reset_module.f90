@@ -298,7 +298,9 @@ MODULE qes_reset_module
     IF (obj%boundary_conditions_ispresent) &
       CALL qes_reset_outputPBC(obj%boundary_conditions)
     obj%boundary_conditions_ispresent = .FALSE.
-    CALL qes_reset_magnetization(obj%magnetization)
+    IF (obj%magnetization_ispresent) &
+      CALL qes_reset_magnetization(obj%magnetization)
+    obj%magnetization_ispresent = .FALSE.
     CALL qes_reset_total_energy(obj%total_energy)
     CALL qes_reset_band_structure(obj%band_structure)
     IF (obj%forces_ispresent) &
@@ -841,8 +843,6 @@ MODULE qes_reset_module
     ENDIF
     obj%rank = 0
     obj%order = 'F'
-    obj%rank_ispresent = .FALSE.
-    obj%dims_ispresent = .FALSE.
     obj%order_ispresent = .FALSE.
     obj%specie_ispresent = .FALSE.
     obj%label_ispresent = .FALSE.
@@ -2050,8 +2050,6 @@ MODULE qes_reset_module
     ENDIF
     obj%rank = 0
     obj%order = 'F'
-    obj%rank_ispresent = .FALSE.
-    obj%dims_ispresent = .FALSE.
     obj%order_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_matrix

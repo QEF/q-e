@@ -434,8 +434,8 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_output(obj, tagname, algorithmic_info, atomic_species, atomic_structure,&
-                            basis_set, dft, magnetization, total_energy, band_structure, convergence_info,&
-                            symmetries, boundary_conditions, forces, stress, electric_field,&
+                            basis_set, dft, total_energy, band_structure, convergence_info, symmetries,&
+                            boundary_conditions, magnetization, forces, stress, electric_field,&
                             FCP_force, FCP_tot_charge)
     !
     IMPLICIT NONE
@@ -450,7 +450,7 @@ MODULE qes_init_module
     TYPE(basis_set_type),INTENT(IN) :: basis_set
     TYPE(dft_type),INTENT(IN) :: dft
     TYPE(outputPBC_type),OPTIONAL,INTENT(IN) :: boundary_conditions
-    TYPE(magnetization_type),INTENT(IN) :: magnetization
+    TYPE(magnetization_type),OPTIONAL,INTENT(IN) :: magnetization
     TYPE(total_energy_type),INTENT(IN) :: total_energy
     TYPE(band_structure_type),INTENT(IN) :: band_structure
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: forces
@@ -486,7 +486,12 @@ MODULE qes_init_module
     ELSE
       obj%boundary_conditions_ispresent = .FALSE.
     END IF
-    obj%magnetization = magnetization
+    IF ( PRESENT(magnetization)) THEN
+      obj%magnetization_ispresent = .TRUE. 
+      obj%magnetization = magnetization
+    ELSE
+      obj%magnetization_ispresent = .FALSE.
+    END IF
     obj%total_energy = total_energy
     obj%band_structure = band_structure
     IF ( PRESENT(forces)) THEN

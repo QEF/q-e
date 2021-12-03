@@ -107,7 +107,8 @@ MODULE pw_restart_new
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
-      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
+      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, & 
+                                       absmag, local_charges, local_mag
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        magtot_nc, lambda, domag, lspinorb
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
@@ -508,8 +509,6 @@ MODULE pw_restart_new
              ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, DO_MAGNETIZATION = domag, & 
              SITE_MAG = local_mag, SITE_CHARGES = local_charges )
          ELSE IF (lsda) THEN 
-           ALLOCATE (charges(nat), mags(1,nat))
-           CALL get_locals(charges, mags(1,nat), rho%of_r) 
            CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, TOTAL_MAG = magtot, &
                 ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, SITE_MAG_POL = local_mag(1,1:nat), & 
                 SITE_CHARGES = local_charges) 

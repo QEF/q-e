@@ -465,6 +465,21 @@ MODULE fixed_occ
 END MODULE fixed_occ
 !
 !
+MODULE pw_interfaces 
+  USE kinds, ONLY: DP 
+  IMPLICIT NONE 
+  PUBLIC 
+  INTERFACE 
+    SUBROUTINE report_mag(save_locals)
+      !! This subroutine prints out information about the local magnetization
+      !! and/or charge, integrated around the atomic positions at points which
+      !! are calculated in make_pointlists.
+      LOGICAL,OPTIONAL,INTENT(IN) :: save_locals
+      !! if present and true locals are saved into local_charges and local_mod of lsda_mod 
+    END SUBROUTINE 
+  END INTERFACE 
+END MODULE pw_interfaces 
+! 
 MODULE pwcom
   !
   USE klist
@@ -476,5 +491,6 @@ MODULE pwcom
   USE relax
   USE cellmd
   USE fixed_occ
+  USE pw_interfaces 
   !
 END MODULE pwcom

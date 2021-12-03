@@ -11,7 +11,8 @@ SUBROUTINE report_mag(save_locals)
       !------------------------------------------------------------------------
       !! This subroutine prints out information about the local magnetization
       !! and/or charge, integrated around the atomic positions at points which
-      !! are calculated in make_pointlists.
+      !! are calculated in make_pointlists. Uses an optional variable in input
+      !! either declare this interface or import if from pwcom module. 
       !
       USE kinds,            ONLY: DP
       USE ions_base,        ONLY: nat, tau, ityp
@@ -22,7 +23,7 @@ SUBROUTINE report_mag(save_locals)
       USE lsda_mod,         ONLY: nspin, local_charges, local_mag
       !
       IMPLICIT NONE
-      LOGICAL,INTENT(IN) :: save_locals 
+      LOGICAL,OPTIONAL,INTENT(IN) :: save_locals 
       !! if .TRUE. locals are saved  in two local_charges and local_mag of lsda_mod 
       !
       REAL(DP) :: theta, phi, norm, norm1
@@ -32,11 +33,13 @@ SUBROUTINE report_mag(save_locals)
       ! get_local integrates on the previously determined points
       !
       CALL get_locals( r1_loc, m1_loc, rho%of_r ) 
-      IF (save_locals) THEN 
-        IF ALLOCATED (local_charges) DEALLOCATE (local_charges)
-        IF ALLOCATED (local_mag) DEALLOCATE (local_mag)
-        ALLOCATE (local_charges, SOURCE = r1_loc)
-        ALLOCATE (local_mag, SOURCE =  m1_loc)
+      IF (PRESENT(save_locals)) THEN
+        IF (save_locals) THEN  
+          IF (ALLOCATED (local_charges)) DEALLOCATE (local_charges)
+          IF (ALLOCATED (local_mag))     DEALLOCATE (local_mag)
+          ALLOCATE (local_charges, SOURCE = r1_loc)
+          ALLOCATE (local_mag, SOURCE =  m1_loc)
+        END IF
       END IF  
       !
       IF (nspin == 2) THEN

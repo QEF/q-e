@@ -326,7 +326,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%boundary_conditions_ispresent, ionode_id, comm)
     IF (obj%boundary_conditions_ispresent) &
       CALL qes_bcast_outputPBC(obj%boundary_conditions, ionode_id, comm)
-    CALL qes_bcast_magnetization(obj%magnetization, ionode_id, comm)
+    CALL mp_bcast(obj%magnetization_ispresent, ionode_id, comm)
+    IF (obj%magnetization_ispresent) &
+      CALL qes_bcast_magnetization(obj%magnetization, ionode_id, comm)
     CALL qes_bcast_total_energy(obj%total_energy, ionode_id, comm)
     CALL qes_bcast_band_structure(obj%band_structure, ionode_id, comm)
     CALL mp_bcast(obj%forces_ispresent, ionode_id, comm)

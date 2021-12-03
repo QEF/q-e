@@ -184,9 +184,7 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     INTEGER :: rank
-    LOGICAL :: rank_ispresent = .FALSE.
     INTEGER, DIMENSION(:), ALLOCATABLE :: dims
-    LOGICAL :: dims_ispresent = .FALSE.
     CHARACTER(len=256) :: order
     LOGICAL :: order_ispresent = .FALSE.
     CHARACTER(len=256) :: specie
@@ -419,9 +417,7 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     INTEGER :: rank
-    LOGICAL :: rank_ispresent = .FALSE.
     INTEGER, DIMENSION(:), ALLOCATABLE :: dims
-    LOGICAL :: dims_ispresent = .FALSE.
     CHARACTER(len=256) :: order
     LOGICAL :: order_ispresent = .FALSE.
     !
@@ -1658,6 +1654,7 @@ MODULE qes_types_module
     TYPE(dft_type) :: dft
     LOGICAL  :: boundary_conditions_ispresent = .FALSE.
     TYPE(outputPBC_type) :: boundary_conditions
+    LOGICAL  :: magnetization_ispresent = .FALSE.
     TYPE(magnetization_type) :: magnetization
     TYPE(total_energy_type) :: total_energy
     TYPE(band_structure_type) :: band_structure
