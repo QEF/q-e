@@ -379,8 +379,8 @@ CONTAINS
 #if !defined(__LIBXC)
     !
     IF (ANY(is_libxc(:))) THEN
-      CALL xclib_error( 'matching_shortIDs', 'libxc functionals needed, but &
-                        &libxc is not active', 1 )
+      CALL xclib_error( 'matching_shortIDs', 'libxc needed for this functional, but &
+                        &it is not linked', 1 )
     ENDIF
     !
 #else
