@@ -223,6 +223,7 @@ subroutine print_clock_ph
   call print_clock ('Hesh:noncolin')
   call print_clock ('ch_psi_all_k')
   call print_clock ('ch_psi_all_gamma')
+  call print_clock ('ch_psi_calbec')
   call print_clock ('h_psi_bgrp')
   call print_clock ('h_psi')
   call print_clock ('h_psi:pot')

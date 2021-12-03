@@ -184,6 +184,8 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: m_start, m_end
     INTEGER :: k
+    INTEGER :: ibnd, ig
+
     k = nbnd_occ (ikqs(ik))
     CALL start_clock_gpu ('ch_psi_all_k')
     !$acc data copyin(evq) present(ps, hpsi, spsi)
@@ -209,7 +211,9 @@ CONTAINS
     !$acc kernels present(ps)
     ps (:,:) = ps(:,:) * alpha_pv
     !$acc end kernels
+    !$acc host_data use_device(ps)
     CALL mp_sum ( ps, intra_bgrp_comm )
+    !$acc end host_data
     !$acc kernels present(hpsi)
     hpsi (:,:) = (0.d0, 0.d0)
     !$acc end kernels
@@ -229,6 +233,7 @@ CONTAINS
     !
     !    And apply S again
     !
+    CALL start_clock ('ch_psi_calbec')
     !$acc update self(hpsi)
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
        call divide (inter_bgrp_comm, m, m_start, m_end)
@@ -237,6 +242,7 @@ CONTAINS
        CALL calbec (n, vkb, hpsi, becp, m)
     end if
     !$acc update device(spsi(1:npwx*npol, 1:m))
+    CALL stop_clock ('ch_psi_calbec')
 #if defined(__CUDA)
     !$acc host_data use_device(hpsi, spsi)
     CALL s_psi_gpu (npwx, n, m, hpsi, spsi)
@@ -244,21 +250,19 @@ CONTAINS
 #else
     CALL s_psi (npwx, n, m, hpsi, spsi)
 #endif
-    !$acc kernels present(ah, spsi)
+    !$acc parallel loop collapse(2) present(ah, spsi)
     DO ibnd = 1, m
        DO ig = 1, n
           ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
        ENDDO
     ENDDO
-    !$acc end kernels
     IF (noncolin) THEN
-       !$acc kernels present(ah, spsi)
+       !$acc parallel loop collapse(2) present(ah, spsi)
        DO ibnd = 1, m
           DO ig = 1, n
              ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
           ENDDO
        ENDDO
-       !$acc end kernels
     END IF
     CALL stop_clock_gpu ('ch_psi_all_k')
     return
