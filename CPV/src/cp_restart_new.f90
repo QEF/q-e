@@ -363,8 +363,9 @@ MODULE cp_restart_new
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_magnetization(output_obj%magnetization, lsda, .false.,&
-              .false., 0.0_dp, [0.0_dp,0.0_dp, 0.0_dp], 0.0_dp, .false.)
+         CALL qexsd_init_magnetization(output_obj%magnetization, LSDA = lsda, NONCOLIN = .false.,&
+              SPINORBIT = .false., ABSOLUTE_MAG = 0.d0, ATM = atm, ITYP = ityp )
+         output_obj%magnetization_ispresent = lsda
          !
 !-------------------------------------------------------------------------------
 ! ... TOTAL ENERGY
@@ -786,7 +787,7 @@ MODULE cp_restart_new
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !
-      lsda_ = output_obj%magnetization%lsda
+      lsda_ = output_obj%magnetization_ispresent .AND. output_obj%magnetization%lsda
       IF ( lsda_ .AND. (nspin /= 2) ) CALL errore('cp_readfile','wrong spin',1)
       !
       nbnd_ = nupdwn(1)
