@@ -283,6 +283,9 @@ MODULE funct
   !              rVV10   R. Sabatini et al. Phys. Rev. B 87, 041108(R) (2013)
   !              ev93     Engel-Vosko, Phys. Rev. B 47, 13164 (1993)
   !              vdW-DF-ahcx V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              vdW-DF2-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              PBE-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              PBESOL-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
   !
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06
   ! functional as it is in Gaussian code (that is considered as the reference
@@ -454,32 +457,26 @@ CONTAINS
     CASE( 'VDW-DF-CX0P' )
        dft_defined = xclib_set_dft_IDs(6,4,31,0,0,0)
        inlc = 1
-! Begin PH added
     ! Special case vdW-DF-AHCX
     CASE( 'VDW-DF-AHCX' )
        dft_defined = xclib_set_dft_IDs(1,4,32,0,0,0)
        inlc = 1
-! End PH added
     ! Special case vdW-DF2-0
     CASE( 'VDW-DF2-0' )
        dft_defined = xclib_set_dft_IDs(6,4,30,0,0,0)
        inlc = 2
-! Begin PH added
     ! Special case vdW-DF2-AH
     CASE( 'VDW-DF2-AH' )
        dft_defined = xclib_set_dft_IDs(1,4,33,0,0,0)
        inlc = 2
-! End PH added
     ! Special case vdW-DF2-BR0
     CASE( 'VDW-DF2-BR0' )
        dft_defined = xclib_set_dft_IDs(6,4,38,0,0,0)
        inlc = 2
-! Begin PH added
     ! Special case vdW-DF2-AHTR
     CASE( 'VDW-DF2-AHTR' )
        dft_defined = xclib_set_dft_IDs(1,4,47,0,0,0)
        inlc = 2
-! End PH added
     ! Special case vdW-DF-C090
     CASE( 'VDW-DF-C090' )
        dft_defined = xclib_set_dft_IDs(6,4,40,0,0,0)
@@ -782,10 +779,8 @@ CONTAINS
            shortname = 'VDW-DF-CX0'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==31 .AND. igcc==0) THEN
            shortname = 'VDW-DF-CX0P'
-! Begin PH added
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==32 .AND. igcc==0) THEN
            shortname = 'VDW-DF-AHCX'
-! End PH added
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0) THEN
            shortname = 'VDW-DF-C09'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==24 .AND. igcc==0) THEN
@@ -811,12 +806,10 @@ CONTAINS
            shortname = 'VDW-DF2-B86R'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==30 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-0'
-! Begin PH added
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==33 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-AH'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==47 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-AHTR'
-! End PH added
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
         ELSE

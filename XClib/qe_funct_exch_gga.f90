@@ -660,13 +660,11 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
 END SUBROUTINE pbexsr
 !
 !
-!-----------------------------------------------------------------------     
-!!!! Begin Per Hyldgaard added Oct 2016, GPL, No warranties.
-! adapted from the original pbesrx version above
-!-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------     
       SUBROUTINE axsr(IXC,RHO,GRHO,sx,V1X,V2X,OMEGA)
+!-----------------------------------------------------------------------     
+!!!! Per Hyldgaard, No warranties. adapted from the pbesrx version above
 !-----------------------------------------------------------------------
 !
 !      INCLUDE 'cnst.inc'
@@ -717,7 +715,7 @@ END SUBROUTINE pbexsr
 !     
 !     This codes the HJS analytical-xc-hole idea, JCP 128, 194 105 (2008).
 !
-!     Copyright Per Hyldgaard, GPL, No warranty, 2016.
+!     Copyright Per Hyldgaard, GPL, No warranty, 2016-
 !
 !     Inputs:
 !     rho     - electron density
@@ -810,7 +808,7 @@ END SUBROUTINE pbexsr
                  7.58236D-3,   5.98226D-4, -0.0770547D0,  -0.0171561D0 /
       data b9 /  1.50540D-3,   1.58065D-5,   8.04175D-7,   7.09955D-6, &
                  7.01937D-5,   4.67972D-6, 0.0334840D0,   0.0050552D0 /
-!     End YJ/PH HJS-type parameters
+!     End HJS-type parameters: JPCM 34, 025902 (2022)
 
       integer*4 i
       Real*8 s2,s3,s4,s5,s6,s7,s8,s9
@@ -945,8 +943,6 @@ END SUBROUTINE pbexsr
       RETURN
       END SUBROUTINE wggax_analy_erfc
 !
-!-----------------------------------------------------------------------
-!!!! End Per Hyldgaard added Oct 2016, GPL, No warranties.
 !-----------------------------------------------------------------------
 !
 !

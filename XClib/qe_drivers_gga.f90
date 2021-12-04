@@ -66,7 +66,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   ! ... local variables
   !
-  INTEGER :: ir, iflag ! PH added iflag for AH series
+  INTEGER :: ir, iflag ! Added iflag for AH series
   REAL(DP) :: rho, grho
   REAL(DP) :: sx, v1x, v2x
   REAL(DP) :: sx_, v1x_, v2x_
@@ -173,7 +173,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
           v2x = v2x - exx_fraction * v2xsr
         ENDIF
         !
-! Begin PH added
      CASE( 34, 35 ) ! ' AH series for GGA cross checks
         !
         iflag = 0
@@ -198,7 +197,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
           v2x = v2x - exx_fraction * v2xsr
         ENDIF
         !
-     CASE( 32, 33, 47 ) ! 'AH series for vdW-DFs
+     CASE( 32, 33, 47 ) ! 'AH series for vdW-DFs, JPCM 34, 025902 (2022)
         !
         iflag = 0
         if ( igcx == 32) then ! vdW-DF-ahcx
@@ -225,7 +224,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
           v2x = v2x - exx_fraction * v2xsr
         ENDIF
         !
-! End PH added
      CASE( 13 ) ! 'rPW86'
         !
         CALL rPW86( rho, grho, sx, v1x, v2x )
@@ -589,10 +587,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( igcx==25 ) iflag = 7
         IF ( igcx==44 ) iflag = 8
         IF ( igcx==45 ) iflag = 9
-! Begin PH added
         IF ( igcx==34 ) iflag = 1
         IF ( igcx==35 ) iflag = 3
-! End PH added
         !
         rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
         grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
@@ -626,7 +622,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_up = v2x_up - exx_fraction * v2xsr_up * 2.0_DP
            v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
            !
-! Begin PH added AH-based HSE-type cross checks at 0.2 Fock exchange mixing
         ELSEIF ( igcx == 34 .AND. exx_started ) THEN
            !
            CALL axsr( 1, rho_up, grho2_up, sxsr_up, v1xsr_up, &
@@ -655,7 +650,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_up = v2x_up - exx_fraction * v2xsr_up * 2.0_DP
            v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
            !
-! End PH added AH-based HSE-type cross checks at 0.2 Fock exchange mixing
 
         ELSEIF ( igcx == 20 .AND. exx_started ) THEN
            ! gau-pbe
@@ -859,14 +853,13 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF  
         !
-! Begin PH added AH-based vdW-DF RSHs at 0.2 Fock exchange mixing
-     CASE( 32, 33, 47 )
+     CASE( 32, 33, 47 ) ! ! 'AH series for vdW-DFs, JPCM 34, 025902 (2022)
         !
         rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
         grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
         !
-        ! igcx=32:  vdw-df-ahcx,
-        ! igcx=33:  vdw-df2-AH, 
+        ! igcx=32:  vdw-df-ahcx
+        ! igcx=33:  vdw-df2-AH
         ! igcx=47:  vdw-df2-ahtr
         !
         iflag = 0
@@ -909,7 +902,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
         END IF
         !
-! End PH added AH-based vdW-DF RSHs at 0.2 Fock exchange mixing
      CASE( 40 )                  ! 'c090 for vdw-df-c090' etc
         !
         rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
