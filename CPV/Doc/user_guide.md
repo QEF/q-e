@@ -3,7 +3,7 @@
 Introduction
 ============
 
-This guide covers the usage of the `CP` package, version 6.8, a core
+This guide covers the usage of the `CP` package, version 7.0, a core
 component of the Quantum ESPRESSO distribution. Further documentation,
 beyond what is provided in this guide, can be found in the directory
 `CPV/Doc/`, containing a copy of this guide.
