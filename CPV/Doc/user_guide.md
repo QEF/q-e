@@ -28,6 +28,16 @@ merged with `CP`, was developed by Carlo Cavazzoni (Leonardo), Gerardo
 Ballabio (CINECA), Sandro Scandolo (ICTP), Guido Chiarotti, Paolo Focher,
 and others. We quote in particular:
 
+-   Sergio Orlandini (CINECA) for completing the CUDA Fortran acceleration
+    started by Carlo Cavazzoni
+
+-   Fabio Affinito and Maruella Ippolito (CINECA) for testing and benchmarking
+
+-   Ivan Carnimeo and Pietro Delugas (SISSA) for further openACC acceleration
+
+-   Riccardo Bertossa (SISSA) for extensive refactoring of ensemble dynamics /
+    conjugate gradient part
+
 -   Federico Grasselli and Riccardo Bertossa (SISSA) for bug fixes,
     extensions to Autopilot;
 
