@@ -123,6 +123,7 @@ namelist follow:
 	    default { 1 } 
 	    info {
 		Number of replicas of atomic positions along cell parameters. 
+                CURRENTLY DISABLED
 		
 		If np1, np2, np3 are 1 or not specified, cppp.x does not 
 		replicate atomic positions in space.
