@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 6.8
+    VERSION 7.0
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -431,8 +431,9 @@ else()
     qe_git_submodule_update(external/lapack)
     add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
     target_link_libraries(qe_lapack INTERFACE lapack)
-    qe_fix_fortran_modules(lapack)
-    qe_install_targets(lapack)
+    install(TARGETS lapack blas)
+    # make lapack ready for other external libraries like mbd
+    set(LAPACK_LIBRARIES lapack)
 endif()
 
 ###########################################################
