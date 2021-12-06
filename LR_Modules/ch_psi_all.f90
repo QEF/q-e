@@ -37,7 +37,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
 #if defined(__CUDA)
   USE uspp,                 ONLY : vkb_d
   USE becmod_gpum,          ONLY : becp_d
-  USE becmod_subs_gpum,     ONLY : allocate_bec_type_gpu
 #endif
 
   IMPLICIT NONE
@@ -101,9 +100,9 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   !$acc enter data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m), ps(1:nbnd, 1:m))
 #if defined(__CUDA)
-
+  CALL start_clock_gpu('equalch')
   vkb_d = vkb
-
+  CALL stop_clock_gpu('equalch')
   !$acc data copyin(h) present(hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
   CALL h_psi_gpu (npwx, n, m, h, hpsi)
@@ -177,9 +176,9 @@ CONTAINS
     ! K-point part
     !
     USE becmod, ONLY : becp, calbec
-#if defined(_OPENACC)
+#if defined(__CUDA)
     USE becmod_gpum, ONLY : becp_d
-    USE becmod_subs_gpum, ONLY : calbec_gpu
+    USE becmod_subs_gpum, ONLY : calbec_gpu,  using_becp_d_auto
     USE cublas
 #endif
     
@@ -201,7 +200,6 @@ CONTAINS
     ! ikqs(ik) is the index of the point k+q if q\=0
     !          is the index of the point k   if q=0
     !
-    CALL start_clock_gpu('zgemmch') 
     !$acc host_data use_device(spsi, ps, evq)
     IF (noncolin) THEN
        CALL zgemm ('C', 'N', k, m, npwx*npol, (1.d0, 0.d0) , evq, &
@@ -211,7 +209,6 @@ CONTAINS
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
     !$acc end host_data
-    CALL stop_clock_gpu('zgemmch')
     !$acc kernels present(ps,hpsi) 
     ps (:,:) = ps(:,:) * alpha_pv
     hpsi (:,:) = (0.d0, 0.d0)
@@ -235,16 +232,31 @@ CONTAINS
     !
     !    And apply S again
     !
-    CALL start_clock ('ch_psi_calbec')
-    !$acc update self(hpsi)
+    CALL start_clock_gpu ('ch_psi_calbec')
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
        call divide (inter_bgrp_comm, m, m_start, m_end)
-       if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)    !
+#if defined(__CUDA)
+       if (m_end >= m_start) then
+          CALL using_becp_d_auto(1)
+          !$acc host_data use_device(hpsi(:,m_start:m_end))
+          CALL calbec_gpu (n, vkb_d, hpsi(:,m_start:m_end), becp_d, m_end- m_start + 1)    !
+          !$acc end host_data
+       endif
     else
-       CALL calbec (n, vkb, hpsi, becp, m)                              !
-    end if
-    CALL stop_clock ('ch_psi_calbec')
-    !!$acc update device(spsi(1:npwx*npol, 1:m))                         !
+       CALL using_becp_d_auto(1)
+       !$acc host_data use_device(hpsi)
+       CALL calbec_gpu (n, vkb_d, hpsi, becp_d, m)
+       !$acc end host_data
+    endif
+#else
+       if (m_end >= m_start) then
+          CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+       endif
+    else
+       CALL calbec (n, vkb, hpsi, becp, m)
+    endif
+#endif
+    CALL stop_clock_gpu ('ch_psi_calbec')
 #if defined(__CUDA)
     !$acc host_data use_device(hpsi, spsi)
     CALL s_psi_gpu (npwx, n, m, hpsi, spsi)

@@ -218,6 +218,7 @@ subroutine print_clock_ph
 
   WRITE( stdout,  * ) '     Additional routines'
   call print_clock ('ch_psi')
+  call print_clock ('equalch')
   call print_clock ('last')
   call print_clock ('Hesh')
   call print_clock ('Hesh:noncolin')
