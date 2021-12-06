@@ -145,32 +145,39 @@ MODULE qe_dft_refs
   DATA dft_GGAx_ref(27) / 'K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)' /
   ! X3LP
   DATA dft_GGAx_ref(28) / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
-  ! CX0
+  ! CX0 for vdW-DF-cx0
   DATA dft_GGAx_ref(29) / 'K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B. Neaton &
                            &and P. Hyldgaard, J. Chem. Phys. 146, 234106 (2017)' /
-  ! R860
-  DATA dft_GGAx_ref(30) / 'rPW86+HF/4 (rw86-0) (for DF0) - no ref. available' /
+  ! R860 for vdW-DF2-0
+  DATA dft_GGAx_ref(30) / 'K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B.  Neaton &
+                           &and P. Hyldgaard, J. Chem. Phys. 146, 234106 (2017)' /
   ! CX0P  vdW-DF-cx+HF/5 (cx13-0p)
   DATA dft_GGAx_ref(31) / 'Y. Jiao, E. Schröder and P. Hyldgaard, &
                            &J. Chem. Phys. 148, 194115 (2018)' /
-  ! AHCX  (reserved PH)
-  DATA dft_GGAx_ref(32) / 'vdW-DF-cx based not yet in use' /
-  ! AHF2  (reserved PH)
-  DATA dft_GGAx_ref(33) / 'vdW-DF2 based not yet in use' /
-  ! AHPB  (reserved PH)
-  DATA dft_GGAx_ref(34) / 'PBE based not yet in use' /
-  ! AHPS
-  DATA dft_GGAx_ref(35) / 'PBE-sol based not yet in use' /
+  ! AHCX (part of vdW-DF-ahcx) 
+  DATA dft_GGAx_ref(32) / 'V. Shukla, Y. Jiao, C.M. Frostenson and Per Hyldgaard &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022)' /
+  ! AHF2  (part of vdW-DF2-AH)
+  DATA dft_GGAx_ref(33) / 'V. Shukla, Y. Jiao, C.M. Frostenson and Per Hyldgaard &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022)' /
+  ! AHPB  (part of PBE-AH)
+  DATA dft_GGAx_ref(34) / 'V. Shukla, Y. Jiao, C.M. Frostenson and Per Hyldgaard &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022)' /
+  ! AHPS (part of PBESOL-AH)
+  DATA dft_GGAx_ref(35) / 'V. Shukla, Y. Jiao, C.M. Frostenson and Per Hyldgaard &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022)' /
   ! CX14  (reserved PH)
-  DATA dft_GGAx_ref(36) / 'no ref. available' /
+  DATA dft_GGAx_ref(36) / 'Reserved, no ref. available' /
   ! CX15  (reserved PH)
-  DATA dft_GGAx_ref(37) / 'no ref. available' /
-  ! BR0
-  DATA dft_GGAx_ref(38) / 'vdW-DF2-b86r+HF/4 (b86r-0) - no ref. available' /
+  DATA dft_GGAx_ref(37) / 'Reserved, no ref. available' /
+  ! BR0 
+  DATA dft_GGAx_ref(38) / 'vdW-DF2-b86r+HF/4 - framework defined in &
+                           &J. Chem. Phys. 146, 234106 (2017)' /
   ! CX16  (reserved PH)
-  DATA dft_GGAx_ref(39) / 'no ref. available' /
+  DATA dft_GGAx_ref(39) / 'Reserved, no ref. available' /
   ! C090
-  DATA dft_GGAx_ref(40) / 'vdW-DF-c09+HF/4 (c09-0) - no ref. available' /
+  DATA dft_GGAx_ref(40) / 'vdW-DF-c09+HF/4 - framework defined in &
+                           &J. Chem. Phys. 146, 234106 (2017)' /
   ! B86X
   DATA dft_GGAx_ref(41) / '[B86B exchange * 0.75]' /
   ! B88X
@@ -183,6 +190,14 @@ MODULE qe_dft_refs
   DATA dft_GGAx_ref(45) / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
   ! W32X  vdW-DF3-opt2 exchange
   DATA dft_GGAx_ref(46) / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
+  ! AHTR  (reserved PH testing)
+  DATA dft_GGAx_ref(47) / 'Reserved, No ref. available' /
+  ! EHPB  (reserved PH, HSE03-exchange explore)
+  DATA dft_GGAx_ref(48) / 'J. Chem. Phys. 118, 8207 (2003)' /
+  ! HJPB  (reserved PH, HJS08-pbe parameters, cross-reference)
+  DATA dft_GGAx_ref(49) / 'J. Chem. Phys. 128, 194105 (2008)' /
+  ! HJPS  (reserved PH, HJS08-pbesol param, cross-reference)
+  DATA dft_GGAx_ref(50) / 'J. Chem. Phys. 128, 194105 (2008)' /
   !
   !
   ! ---- GGA correlation ----
