@@ -841,7 +841,7 @@ END SUBROUTINE pbexsr
       if ((nggatyp.ge.1).or.(nggatyp.le.8)) then
          i = nggatyp
       else
-         call xclib_error('wgga_analy_erfc','Yet to be coded Wcx part',1)
+         ! call xclib_error('wgga_analy_erfc','Yet to be coded Wcx part',1)
          stop
       endif
 
