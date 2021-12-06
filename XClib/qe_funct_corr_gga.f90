@@ -629,7 +629,7 @@ SUBROUTINE cpbe2d( rho, grho, sc, v1c, v2c )
   REAL(DP), PARAMETER :: ex3=ex2+1.0_DP
   REAL(DP) :: fac1, fac2, zeta, phi, gr, rs, drsdn, akf, aks, t, dtdn, dtdgr
   REAL(DP) :: p, a, g, alpha1, beta1,beta2,beta3,beta4, dgdrs, epsc, depscdrs
-  REAL(DP) :: c, gamma1, beta, aa, cg, adddepsc, h, dhdaa, dhdt, dhdrs
+  REAL(DP) :: c, gamma1, beta, aa, cg, h, dhdaa, dhdt, dhdrs
   REAL(DP) :: epscpbe, depscpbedrs, depscpbedt, a0,a1,a2, b0,b1,b2, c0,c1,c2
   REAL(DP) :: e0,e1,e2, f0,f1,f2, g0,g1,g2, h0,h1,h2, d0,d1,d2, ff, dffdt
   REAL(DP) :: rs3d, rs2d, drs2ddrs3d, eps2d, deps2ddrs2, depsGGAdrs, depsGGAdt

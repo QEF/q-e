@@ -9,9 +9,8 @@
 !---------------------------------------------------------------
 subroutine deallocate_phq
 !----------------------------------------------------------------
-!
-!  deallocates the variables allocated by allocate_phq
-!
+  !! Deallocates the variables allocated by \(\texttt{allocate_phq}\).
+  !
   USE noncollin_module, ONLY : m_loc
   USE becmod,           ONLY: bec_type, becp, deallocate_bec_type
   USE wavefunctions,    ONLY: evc
@@ -39,9 +38,10 @@ subroutine deallocate_phq
   USE control_lr,   ONLY : lgamma, nbnd_occ
   USE ldaU,         ONLY : lda_plus_u
   USE ldaU_ph,      ONLY : dnsbare_all_modes, dnsorth_cart, dnsorth, dnsbare,  &
-                           wfcatomk, swfcatomk, dwfcatomk, sdwfcatomk,         &
-                           wfcatomkpq, dwfcatomkpq, swfcatomkpq, sdwfcatomkpq, &
+                           wfcatomk, dwfcatomk, sdwfcatomk,         &
+                           wfcatomkpq, dwfcatomkpq, sdwfcatomkpq, &
                            dvkb, vkbkpq, dvkbkpq
+  USE ldaU_lr,      ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
   USE becmod,       ONLY : deallocate_bec_type
   USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
@@ -68,7 +68,7 @@ subroutine deallocate_phq
   IF(ALLOCATED(ikmkmqs)) DEALLOCATE(ikmkmqs)
   if(allocated(eigqts)) deallocate (eigqts)
   if(allocated(rtau)) deallocate (rtau)
-  if(associated(u)) deallocate (u)
+  if(allocated(u)) deallocate (u)
   if(allocated(name_rap_mode)) deallocate (name_rap_mode)
   if(allocated(num_rap_mode)) deallocate (num_rap_mode)
   if(allocated(dyn)) deallocate (dyn)

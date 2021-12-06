@@ -66,7 +66,7 @@ MODULE exchange_custom
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
       USE wavefunctions, ONLY : psic
-      USE mp, ONLY : mp_sum
+      USE mp, ONLY : mp_sum, mp_max
       USE mp_world, ONLY : nproc
       USE wvfct,    ONLY : npwx, npw, wg
       USE gvect
@@ -240,9 +240,7 @@ MODULE exchange_custom
       enddo
 
       nr3small_max=nr3small
-#if defined(__MPI)
-      CALL MPI_ALLREDUCE( nr3small, nr3small_max,1,MPI_INTEGER, MPI_MAX,intra_pool_comm, req,IERR )           
-#endif
+      CALL mp_max( nr3small_max, intra_pool_comm ) 
       
       allocate(b_plane(exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t,nr3small_max))
       allocate(b_iplane(nr3small_max),b_z(nr3small_max))

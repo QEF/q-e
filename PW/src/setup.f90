@@ -80,10 +80,9 @@ SUBROUTINE setup()
   USE mp,                 ONLY : mp_bcast
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
-  USE spin_orb,           ONLY : lspinorb, domag
-  USE noncollin_module,   ONLY : noncolin, npol, i_cons, m_loc, &
+  USE noncollin_module,   ONLY : noncolin, domag, npol, i_cons, m_loc, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
-                                 nspin_gga, nspin_mag
+                                 nspin_gga, nspin_mag, lspinorb
   USE qexsd_module,       ONLY : qexsd_readschema
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
@@ -113,7 +112,6 @@ SUBROUTINE setup()
 #else
   LOGICAL :: lpara = .false.
 #endif
-
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
@@ -423,7 +421,8 @@ SUBROUTINE setup()
   ! ... set the max number of bands used in iterative diagonalization
   !
   nbndx = nbnd
-  IF ( isolve == 0 ) nbndx = david * nbnd
+  IF ( isolve == 0  ) nbndx = david * nbnd 
+  IF (isolve == 4 ) nbndx = 2 *nbnd 
   !
   use_gpu       = check_gpu_support( )
   !

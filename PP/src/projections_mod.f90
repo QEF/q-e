@@ -26,8 +26,7 @@ MODULE projections
       USE ions_base, ONLY : ityp, nat
       USE upf_ions, ONLY : n_atom_wfc
       USE uspp_param, ONLY: upf
-      USE spin_orb, ONLY: lspinorb
-      USE noncollin_module, ONLY: noncolin
+      USE noncollin_module, ONLY: noncolin, lspinorb
       !
       IMPLICIT NONE
       INTEGER, INTENT (OUT) :: natomwfc, lmax_wfc

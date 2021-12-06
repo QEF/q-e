@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 MODULE ph_restart
   !----------------------------------------------------------------------------
-  !
-  ! ... this module contains methods to read and write data saved by the
-  !     phonon code to restart smoothly
+  !! This module contains methods to read and write data saved by the
+  !! \(\texttt{phonon}\) code to restart smoothly.
   !
   USE xmltools
   !
@@ -43,7 +42,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE ph_writefile( what, iq, irr, ierr )
       !------------------------------------------------------------------------
-      !
+      !! Write the ph-punch-file.
       USE global_version,       ONLY : version_number
       USE control_ph,           ONLY : ldisp, epsil, trans, zue, zeu
       USE el_phon,              ONLY : elph
@@ -175,7 +174,9 @@ MODULE ph_restart
          END SUBROUTINE write_polarization
 
          SUBROUTINE write_tensors()
-!
+            !! This routine saves the tensors that contain the 
+            !! result of the calculations done so far: epsilon, zstareu, ramtns, eloptns, 
+            !! dyn, zstarue.
             USE control_ph, ONLY : done_epsil, done_start_zstar, done_zeu, done_zue
             USE ramanm,  ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                                 done_elop
@@ -221,6 +222,10 @@ MODULE ph_restart
          END SUBROUTINE write_tensors
 
          SUBROUTINE write_modes(iq)
+            !! This routine writes the information on the irreducible
+            !! representations: number of irreducible representations,
+            !! number of modes for each representation and displacements
+            !! \(\text{u}\).
             USE modes, ONLY : nirr, npert, u, name_rap_mode, num_rap_mode
 
             USE lr_symm_base, ONLY : nsymq, minus_q
@@ -262,6 +267,9 @@ MODULE ph_restart
          END SUBROUTINE write_modes
 
         SUBROUTINE write_ph_dyn(irr)
+           !! This routine writes the information calculated separately for each 
+           !! irreducible representation. The contributions of the representation
+           !! to the dynamical matrix and to the Born effective charges \(dP/du\).
            USE partial, ONLY : done_irr
            USE dynmat,  ONLY : dyn_rec
            USE efield_mod, ONLY : zstarue0_rec
@@ -287,6 +295,8 @@ MODULE ph_restart
         END SUBROUTINE write_ph_dyn
 
         SUBROUTINE write_el_phon(irr)
+           !! This routine writes the information calculated for this 
+           !! irreducible representation to the electron phonon.
            USE el_phon, ONLY : done_elph, el_ph_mat_rec_col, elph
            USE modes, ONLY : npert
            USE klist, ONLY : nks
@@ -302,6 +312,7 @@ MODULE ph_restart
            CALL xmlw_opentag ( "EL_PHON_HEADER")
            CALL xmlw_writetag( "DONE_ELPH", done_elph(irr))
            CALL xmlw_closetag( ) ! el_phon_header
+           CALL xmlw_opentag( "PARTIAL_EL_PHON" )
            CALL xmlw_writetag( "NUMBER_OF_K", nksqtot)
            CALL xmlw_writetag( "NUMBER_OF_BANDS", nbnd)
            DO ik=1,nksqtot
@@ -315,7 +326,8 @@ MODULE ph_restart
               END DO
               CALL xmlw_closetag( )
            ENDDO
-           CALL xmlw_closetag( )
+           CALL xmlw_closetag( ) ! partial_el_phon
+           ! Note: Root tag closed by routine ph_writefile
         RETURN
         END SUBROUTINE write_el_phon
 
@@ -324,7 +336,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE write_header_ph( creator_name, creator_version ) 
       !------------------------------------------------------------------------
-      !
+      !! Write the header of the ph-punch-file.
       IMPLICIT NONE
       CHARACTER(LEN=*), INTENT(IN) :: creator_name, creator_version
       CHARACTER(5),  PARAMETER :: fmt_name = "QEXML"
@@ -348,7 +360,10 @@ MODULE ph_restart
     SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, zeu, &
                       lraman, elop, fpol) 
       !------------------------------------------------------------------------
-      !
+      !! The routine writes the main variables that control the
+      !! main flow of the dispersion calculation: the main flags of
+      !! the \(\texttt{phonon}\) code, the mesh of q point, the
+      !! number of q points and their coordinates.
       IMPLICIT NONE
       LOGICAL, INTENT(IN) :: ldisp, epsil, trans, elph, zue, zeu, &
                       lraman, elop, fpol
@@ -372,7 +387,11 @@ MODULE ph_restart
 
     SUBROUTINE write_status_ph(current_iq, current_iu)
       !------------------------------------------------------------------------
-      !
+      !! In this case we save the information on the status of the calculation.
+      !! The current q point, the current frequency, the label and the
+      !! code with the point where the code arrived so far. 
+      !! The former is easy to read in the xml file, 
+      !! the latter is simpler to use in the code. 
       USE control_ph, ONLY : where_rec, rec_code
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: current_iq, current_iu
@@ -390,7 +409,7 @@ MODULE ph_restart
 
     SUBROUTINE write_qu( nqs, nq1, nq2, nq3, x_q, nfs, fiu, fpol)
       !------------------------------------------------------------------------
-      !
+      !! Write q points and frequency points.
       INTEGER, INTENT(IN) :: nqs, nfs, nq1, nq2, nq3
       REAL(DP), INTENT(IN) :: x_q(3,nqs), fiu(nfs)
       LOGICAL, INTENT(IN) :: fpol
@@ -426,7 +445,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE ph_readfile( what, iq, irr, ierr )
       !------------------------------------------------------------------------
-      !
+      !! Reads ph info file, depending on \(\text{what}\).
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: what
@@ -497,8 +516,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE read_header( ierr )
       !------------------------------------------------------------------------
-      !
-      ! ... this routine reads the format version of the current xml datafile
+      !! This routine reads the format version of the current xml datafile.
       !
       IMPLICIT NONE
       INTEGER, INTENT(OUT) :: ierr
@@ -525,30 +543,31 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE read_status_ph( ierr )
       !------------------------------------------------------------------------
+      !! This routine reads the status of \(\texttt{ph}\). It tells where the 
+      !! code stopped.  
+      !! There is both a number, to be used within the code, and a label
+      !! that is easier to read within the recover file.
       !
-      !  This routine reads the status of ph. It tells where the code stopped
-      !  There is both a number, to be used within the code, and a label
-      !  that is easier to read within the recover file.
+      !! The convention with the \(\text{\rec_code}\) is the following:
       !
-      !   The convention is the following:
-      !
-      !  rec_code   where_rec     status description
-      !
-      !    -1000              Nothing has been read. There is no recover file.
-      !    -40     phq_setup  Only the displacements u have been read from file
-      !    -30     phq_init   u and dyn(0) read from file
-      !    -25                not yet active. Restart in solve_e_fpol
-      !    -20     solve_e    all previous. Stopped within solve_e. There 
-      !                       should be a recover file.
-      !    -10     solve_e2   epsilon and zstareu are available if requested. 
-      !                       Within solve_e2. There should be a recover file.
-      !     2      phescf     all previous, raman tenson and elop tensor are
-      !                       available if required.
-      !     10     solve_linter all previous, within solve linter. Recover file
-      !                       should be present.
-      !     20     phqscf     all previous dyn_rec(irr) and zstarue0(irr) are
-      !                       available.
-      !     30     dynmatrix  all previous, dyn and zstarue are available.
+      !! * -1000: nothing has been read. There is no recover file;
+      !! * -40: stops in \(\texttt{phq_setup}\). Only the displacements u 
+      !!        have been read from file;
+      !! * -30: stops in \(\texttt{phq_init}\). \(\text{u}\) and \(\text{dyn}(0)\)
+      !!        read from file;
+      !! * -25: not yet active. Restart in \(\texttt{solve_e_fpol}\);
+      !! * -20: stops in \(\texttt{solve_e}\). All previous. There should be a 
+      !!        recover file;
+      !! * -10: stops in \(\texttt{solve_e2}\). \(\text{epsilon}\) and \(\text{zstareu}\)
+      !!        are available if requested. There should be a recover file;
+      !! * 2: stops in \(\texttt{phescf}\). All previous, Raman tenson and elop tensor
+      !!      are available if required;
+      !! * 10: stops in \(\texttt{solve_linter}\). All previous. Recover file should 
+      !!       be present;
+      !! * 20: stops in \(\texttt{phqscf}\). All previous \(\text{dyn_rec}(\text{irr})\)
+      !!       and \(\texttt{zstarue0}(\texttt{irr})\) are available;
+      !! * 30: stops in \(\texttt{dynmatrix}\). All previous, \(\text{dyn}\) and 
+      !!       \(\text{zstarue}\) are available.
       !
       !
       USE control_ph, ONLY : current_iq, where_rec, rec_code_read
@@ -584,6 +603,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE read_control_ph( ierr )
       !------------------------------------------------------------------------
+      !! Read \(\text{ph}\) control variables.
       USE control_ph, ONLY : ldisp, epsil, trans, zue, zeu
       USE el_phon,    ONLY : elph
       USE ramanm,     ONLY : lraman, elop
@@ -639,7 +659,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE read_qu( ierr )
       !------------------------------------------------------------------------
-      !
+      !! Read q points and frequency points.
       USE disp, ONLY : nqs, x_q, nq1, nq2, nq3, lgamma_iq
       USE freq_ph, ONLY : fpol, nfs, fiu
       !
@@ -707,7 +727,7 @@ MODULE ph_restart
     END SUBROUTINE read_qu
 
     SUBROUTINE read_partial_ph( irr, ierr )
-
+    !! Reads partial dyn matrix.
     USE partial,    ONLY : done_irr
     USE efield_mod, ONLY : zstarue0_rec
     USE dynmat,     ONLY : dyn_rec
@@ -742,6 +762,8 @@ MODULE ph_restart
     END SUBROUTINE read_partial_ph
 
     SUBROUTINE read_el_phon(irr, ierr)
+    !! This routine reads the information calculated
+    !! for this irreducible representation to the electron phonon.
     USE qpoint,     ONLY : nksq, nksqtot
     USE el_phon,    ONLY : el_ph_mat_rec, el_ph_mat_rec_col, done_elph, elph
     USE modes,      ONLY : npert
@@ -799,9 +821,8 @@ MODULE ph_restart
     SUBROUTINE read_disp_pattern_only(iunpun, filename, current_iq, ierr)
     !---------------------------------------------------------------------------
     !!
-    !! Wrapper routine used by EPW: open file, calls read_disp_pattern
+    !! Wrapper routine used by EPW: open file, calls \(\texttt{read_disp_pattern}\).
     !!
-    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iunpun
@@ -814,7 +835,7 @@ MODULE ph_restart
     !! Error code
     INTEGER :: iun
     !
-    iun =  xml_openfile (filename)
+    iun =  xml_open_file (filename)
     IF ( iun == -1 ) then
        ierr = 1
        return
@@ -905,9 +926,9 @@ MODULE ph_restart
   !---------------------------------------------------------------------------
   SUBROUTINE read_tensors( ierr )
     !---------------------------------------------------------------------------
-!
-!   This routine reads the tensors that have been already calculated 
-!
+    !!
+    !! This routine reads the tensors that have been already calculated.
+    !!
     USE ions_base,  ONLY : nat
     USE control_ph, ONLY : done_epsil, done_start_zstar, done_zeu, done_zue
     USE ramanm,  ONLY : lraman, elop, ramtns, eloptns, done_lraman, done_elop
@@ -972,10 +993,10 @@ MODULE ph_restart
     END SUBROUTINE read_tensors
 
   !----------------------------------------------------------------------------
-    SUBROUTINE read_polarization( iu, ierr )
-!
-!   This routine reads the tensors that have been already calculated 
-!
+    SUBROUTINE read_polarization( iu, ierr ) 
+    !!
+    !! This routine reads the tensors that have been already calculated.
+    !!
     USE ions_base,  ONLY : nat
     USE freq_ph, ONLY : fpol, done_iu, fiu, polar
 
@@ -1010,17 +1031,17 @@ MODULE ph_restart
   !----------------------------------------------------------------------------
     SUBROUTINE check_directory_phsave(  )
   !----------------------------------------------------------------------------
-  ! ...
-  ! ... This routine sets the situation of the grid according to
-  ! ... the files that it finds on the directory .phsave.
-  ! ... Check if representation files exist and which representations 
-  ! ... have been already calculated.
-  ! ... set the initial information on the grid
-  ! ... it sets done_irr_iq to .true. for the q and the 
-  ! ... representations that have already been done.
-  ! ... Moreover it sets irr_iq, the number of representations for each q,
-  ! ... nsymq_iq the size of the small group of each q and npert_irr_iq
-  ! ... the number of perturbations for each irr and q.
+  !! This routine sets the situation of the grid according to
+  !! the files that it finds on the directory .phsave.  
+  !! Check if representation files exist and which representations 
+  !! have been already calculated.  
+  !! Sets the initial information on the grid.  
+  !! It sets \(\text{done_irr_iq}\) to TRUE for the q and the 
+  !! representations that have already been done.  
+  !! Moreover it sets \(\text{irr_iq}\), the number of representations 
+  !! for each q, \(\text{nsymq_iq}\) the size of the small group of each
+  !! q and \(\text{npert_irr_iq}\) the number of perturbations for each 
+  !! irr and q.
   !
   USE kinds, ONLY : DP
   USE disp, ONLY : nqs, done_iq
@@ -1053,7 +1074,7 @@ MODULE ph_restart
                  filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
                  INQUIRE(FILE=TRIM(filename1), EXIST=exst)
                  IF (.NOT.exst) CYCLE
-                 iunout = xml_openfile( filename1 )
+                 iunout = xml_open_file( filename1 )
                  IF (iunout == -1 ) THEN
                     ierr = 1
                     GOTO 100
@@ -1078,7 +1099,7 @@ MODULE ph_restart
                     filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
                     INQUIRE(FILE=TRIM(filename1), EXIST=exst)
                     IF (.NOT.exst) CYCLE
-                    iunout = xml_openfile( filename1 ) 
+                    iunout = xml_open_file( filename1 ) 
                     IF (iunout == -1 ) THEN
                        ierr = 1
                        GOTO 100
@@ -1119,13 +1140,13 @@ MODULE ph_restart
   !----------------------------------------------------------------------------
     SUBROUTINE check_available_bands(  )
   !----------------------------------------------------------------------------
-  ! ...
-  ! ... This routine checks which bands are available on disk and
-  ! ... sets the array done_bands(iq) to .true. for each q point
-  ! ... for which the bands are present.
-  ! ... If lqdir is .false. only the bands corresponding to current_iq
-  ! ... can be present, whereas if lqdir is .true. several q points
-  ! ... might have calculated the bands and saved them on disk.
+  !! This routine checks which bands are available on disk and
+  !! sets the array done_bands(iq) to TRUE for each q point
+  !! for which the bands are present.  
+  !! If \(\text{lqdir}\) is FALSE only the bands corresponding to
+  !! \(\text{current_iq}\) can be present, whereas if \(\text{lqdir}\)
+  !! is TRUE several q points might have calculated the bands and saved 
+  !! them on disk.
   !
   USE kinds, ONLY : DP
   USE disp, ONLY : nqs, x_q, lgamma_iq
@@ -1183,11 +1204,11 @@ MODULE ph_restart
   END SUBROUTINE check_available_bands
 
    SUBROUTINE allocate_grid_variables()
-!
-!  This routine allocates and initializes the grid variables when the 
-!  nqs and x_q have been decided, either reading them from file when
-!  recover is .true. or recalculating them from scratch  
-!
+   !
+   !! This routine allocates and initializes the grid variables when the 
+   !! \(\text{nqs}\) and \(\text{x_q}\) have been decided, either reading
+   !! them from file when recover is TRUE or recalculating them from scratch.
+   !
    USE disp, ONLY : nqs, done_iq, comp_iq, omega_disp              
    USE grid_irr_iq, ONLY : done_irr_iq, irr_iq, nsymq_iq, &
                            comp_irr_iq, npert_irr_iq, done_bands, &
@@ -1271,10 +1292,10 @@ MODULE ph_restart
    END SUBROUTINE destroy_status_run
 
    SUBROUTINE ph_restart_set_filename( what, irr, current_iq, iflag, ierr)
-!
-!    This subroutine sets the filename for each action required by what
-!    and opens the appropriate file for reading or writing
-!
+      !
+      !! This subroutine sets the filename for each action required by what
+      !! and opens the appropriate file for reading or writing.
+      !
       USE io_global,    ONLY : ionode, ionode_id
       USE io_files,     ONLY : create_directory, xmlpun_schema
       USE freq_ph,      ONLY : fpol
@@ -1340,7 +1361,7 @@ MODULE ph_restart
             IF (.NOT.exst) GOTO 100
          ENDIF
 
-         iunpun = xml_openfile( filename )
+         iunpun = xml_open_file( filename )
          !
          exst = (iunpun /= -1)
          IF (.NOT.exst) GOTO 100

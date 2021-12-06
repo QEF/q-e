@@ -9,9 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine allocate_phq
   !-----------------------------------------------------------------------
-  !
-  ! Dynamical allocation of arrays: quantities needed for the linear
-  ! response problem
+  !! Dynamical allocation of arrays: quantities needed for the linear
+  !! response problem.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp
@@ -19,10 +18,9 @@ subroutine allocate_phq
   USE wvfct,         ONLY : nbnd, npwx
   USE gvect,         ONLY : ngm
   USE lsda_mod,      ONLY : nspin
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag, lspinorb
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
-  USE spin_orb,      ONLY : lspinorb, domag
   USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
   USE becmod,        ONLY : bec_type, becp, allocate_bec_type
   USE uspp,          ONLY : okvan, nkb, vkb
@@ -46,8 +44,8 @@ subroutine allocate_phq
   USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,       ONLY : dnsbare, dnsorth, dnsbare_all_modes, wfcatomk, &
                             dwfcatomk, sdwfcatomk, wfcatomkpq, dwfcatomkpq,  &
-                            swfcatomk, swfcatomkpq, sdwfcatomkpq, dvkb, vkbkpq, &
-                            dvkbkpq
+                            sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
   USE qpoint_aux,    ONLY : becpt, alphapt
 
   IMPLICIT NONE

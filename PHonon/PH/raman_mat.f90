@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
 subroutine raman_mat
   !-----------------------------------------------------------------------
-  !
-  ! Reads on the disk all the necessary wavefunctions and computes
-  !                      the raman tensor
+  !! Reads on the disk all the necessary wavefunctions and computes
+  !! the Raman tensor.
   !
 
   USE kinds,    ONLY : DP
@@ -26,8 +25,7 @@ subroutine raman_mat
   USE wvfct,    ONLY : npwx, nbnd
   USE wavefunctions,  ONLY: evc
   USE phus,     ONLY : alphap
-  USE units_ph, ONLY : lrdwf, iudwf
-  USE units_lr, ONLY : iuwfc, lrwfc
+  USE units_lr, ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
 
   USE lrus,     ONLY : becp1
@@ -38,29 +36,44 @@ subroutine raman_mat
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE mp,       ONLY : mp_sum
+  USE uspp_init,        ONLY : init_us_2
   implicit none
 
   logical :: wr_all
-  integer :: ik, ig, ipa, ipb, icr, jcr, iat, ibnd, jbnd, imod, nrec, &
-             il, ntm, ipol, npw, npwq
-  ! counter on k-points
-  ! counter on electric field polarizations
-  ! counter on electric field polarizations
-  ! counter on cartesian coordinates
-  ! counter on cartesian coordinates
-  ! counter on atoms
-  ! counter on bands
-  ! counter on atomic displacement mode
-  ! record number
-
-  real(DP) , allocatable :: wrk (:,:,:), matram(:,:,:,:), matw(:,:,:,:,:)
-  ! working array
-  ! the Raman-tensor: the first two indexes referes to the electric fields,
-  !                   the last two to the atomic displacemts
-  ! components of the Raman-tensor: used only for testing purposes
-  real(DP) :: weight, tmp
-  ! weight in the summation over k-points
-  ! working space
+  integer :: ik
+  !! counter on k-points
+  integer :: ig
+  integer :: ipa
+  !! counter on electric field polarizations
+  integer :: ipb
+  !! counter on electric field polarizations
+  integer :: icr
+  !! counter on cartesian coordinates
+  integer :: jcr
+  !! counter on cartesian coordinates
+  integer :: iat
+  !! counter on atoms
+  integer :: ibnd
+  !! counter on bands
+  integer :: jbnd
+  !! counter on bands
+  integer :: imod
+  !! counter on atomic displacement mode
+  integer :: nrec
+  !! record number
+  integer :: il, ntm, ipol, npw, npwq
+  !
+  real(DP), allocatable :: wrk(:,:,:)
+  !! working array
+  real(DP), allocatable :: matram(:,:,:,:)
+  !! the Raman-tensor: the first two indexes referes to the electric fields,
+  !! the last two to the atomic displacemts
+  real(DP), allocatable :: matw(:,:,:,:,:)
+  !! components of the Raman-tensor: used only for testing purposes
+  real(DP) :: weight
+  !! weight in the summation over k-points
+  real(DP) :: tmp
+  !! working space
 
   complex(DP) , allocatable :: uact(:,:), chif(:,:,:),            &
                      depsi (:,:,:), auxg(:), evc_sw (:,:), aux1 (:,:), &
@@ -69,7 +82,7 @@ subroutine raman_mat
   ! array of wavefunctions
   ! swap space
   complex(DP) :: tmpc
-  ! the scalar product function
+  !! the scalar product function
   complex(DP), EXTERNAL :: zdotc
 
   allocate (wrk       (6,3*nat,2)   )

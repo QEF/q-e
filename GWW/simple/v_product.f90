@@ -9,7 +9,6 @@ subroutine v_product
   USE klist, ONLY : nks,ngk,xk
   USE noncollin_module, ONLY: npol, noncolin
   USE mp_world, ONLY : world_comm,mpime
-  USE spin_orb, ONLY: lspinorb
   USE io_global, ONLY : stdout, ionode
   USE input_simple
   USE gvect, ONLY : ngm, gstart,gg, g

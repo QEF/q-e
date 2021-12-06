@@ -8,6 +8,9 @@
 ! Uncomment next line to print compilation info. BEWARE: may occasionally
 ! give compilation errors due to lines too long if paths are very long
 !#define __HAVE_CONFIG_INFO
+#if defined(HAVE_GITREV)
+#include "git-rev.h"
+#endif
 !
 !==-----------------------------------------------------------------------==!
 MODULE environment
@@ -178,6 +181,16 @@ CONTAINS
     !
     WRITE( stdout, '(/5X,"Program ",A," starts on ",A9," at ",A9)' ) &
          TRIM(code_version), cdate, ctime
+#if defined(HAVE_GITREV)
+    WRITE( stdout, '(8X, "Git branch: ", A)' ) &
+      GIT_BRANCH_RAW
+    WRITE( stdout, '(8X, "Last git commit: ", A)' ) &
+      GIT_HASH_RAW
+    WRITE( stdout, '(8X, "Last git commit date: ", A)' ) & 
+      GIT_COMMIT_LAST_CHANGED_RAW
+    WRITE( stdout, '(8X, "Last git commit subject: ", A)' ) & 
+      GIT_COMMIT_SUBJECT_RAW
+#endif
     !
     WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
          &    "ESPRESSO suite", &

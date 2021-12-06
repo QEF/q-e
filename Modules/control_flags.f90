@@ -201,13 +201,17 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    isolve,           &! index selecting Davidson,  CG , PPCG or ParO diagonalization
+    isolve,           &! index selecting Davidson,  CG, PPCG, ParO or RMM diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
     max_cg_iter,      &! maximum number of iterations in a CG call
-    max_ppcg_iter      ! maximum number of iterations in a PPCG call
+    max_ppcg_iter,    &! maximum number of iterations in a PPCG call
+    rmm_ndim,         &! max dimension of subspace in RMM-DIIS diagonalization
+    gs_nblock          ! blocking size in Gram-Schmidt orthogonalization
   LOGICAL, PUBLIC :: &
-    diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
-                             ! accuracy of the occupied ones
+    rmm_conv,                     &! if true,  RMM-DIIS is performed up to converge
+    rmm_with_davidson  = .TRUE.,  &! if true RMM-DIIS  in alternance with davidson 
+    diago_full_acc     = .FALSE.      ! if true,  empty eigenvalues have the same
+                                   ! accuracy of the occupied ones
   !
   ! ... ionic dynamics
   !

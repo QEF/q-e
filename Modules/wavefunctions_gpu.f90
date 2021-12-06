@@ -22,12 +22,13 @@
      INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
      INTEGER, PARAMETER :: i4b = selected_int_kind(9)
      INTEGER, PARAMETER :: i8b = selected_int_kind(18)
+#if defined (__DEBUG) 
+     INTEGER :: iverbosity = 1
+#else 
      INTEGER :: iverbosity = 0
-#if defined(__DEBUG)
-     iverbosity = 1
 #endif
      !
-     COMPLEX(DP), ALLOCATABLE :: evc_d(:, :)
+     COMPLEX(DP), ALLOCATABLE, TARGET :: evc_d(:, :)
      COMPLEX(DP), ALLOCATABLE :: psic_d(:)
      COMPLEX(DP), ALLOCATABLE :: psic_nc_d(:, :)
      !

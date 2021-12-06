@@ -29,10 +29,6 @@ MODULE laxlib_processors_grid
   INTEGER :: ortho_comm_id= 0 ! id of the ortho_comm
   INTEGER :: ortho_parent_comm  = 0  ! parent communicator from which ortho group has been created
   !
-  INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
-  INTEGER :: np_blacs   =  1  ! BLACS number of processor
-  !
-  INTEGER :: world_cntx = -1  ! BLACS context of all processor 
   INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
   !
   LOGICAL :: do_distr_diag_inside_bgrp = .true. ! whether the distributed diagoalization should be performed
@@ -74,9 +70,6 @@ CONTAINS
     ortho_col_comm  = 0
     ortho_comm_id= 0
     ortho_parent_comm  = 0
-    me_blacs   =  0
-    np_blacs   =  1
-    world_cntx = -1  ! BLACS context of all processor 
     ortho_cntx = -1  ! BLACS context for ortho_comm
     do_distr_diag_inside_bgrp = .true.
     !

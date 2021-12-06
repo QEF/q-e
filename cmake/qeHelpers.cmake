@@ -26,7 +26,11 @@ function(qe_get_fortran_cpp_flag OUTVAR)
         set(${OUTVAR} "${Fortran_PREPROCESSOR_FLAGS}" PARENT_SCOPE)
     else()
         # TODO actual flag check
-        set(${OUTVAR} "-cpp" PARENT_SCOPE)
+	if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel") 
+	  set (${OUTVAR} "-fpp;-allow;nofpp_comments" PARENT_SCOPE)
+        else() 
+          set(${OUTVAR} "-cpp" PARENT_SCOPE)
+        endif() 
     endif()
 endfunction(qe_get_fortran_cpp_flag)
 
@@ -41,7 +45,7 @@ function(qe_preprocess_source IN OUT)
     endif()
     add_custom_command(
         OUTPUT ${OUT}
-        COMMAND cpp -P ${global_flags} -E ${IN} > ${OUT}
+        COMMAND ${QE_CPP_FULL_PATH} -P ${global_flags} -E ${IN} > ${OUT}
         MAIN_DEPENDENCY ${IN}
         COMMENT "Preprocessing ${IN}"
         VERBATIM)    
@@ -75,7 +79,7 @@ function(qe_enable_cuda_fortran SRCS)
         foreach(src IN LISTS SRCS)
             set_source_files_properties(${src} 
                 PROPERTIES
-                    COMPILE_OPTIONS ${QE_CUDA_COMPILE_OPTIONS})
+                    COMPILE_OPTIONS "${QE_CUDA_COMPILE_OPTIONS}")
         endforeach()
     endif()
 endfunction(qe_enable_cuda_fortran)
@@ -152,7 +156,17 @@ function(qe_git_submodule_update PATH)
                 execute_process(COMMAND ${GIT_EXECUTABLE} remote add origin ${SUBMODULE_URL}
                                 WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH})
                 execute_process(COMMAND ${GIT_EXECUTABLE} fetch --depth 1 origin ${RECORD_HASH}
-                                WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH})
+                                WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH}
+                                RESULT_VARIABLE GIT_FETCH_FAILED)
+                if(GIT_FETCH_FAILED)
+                    file(REMOVE_RECURSE ${qe_SOURCE_DIR}/${PATH}/.git)
+                    message(FATAL_ERROR "git fetch failed! Be sure to make ${qe_SOURCE_DIR}/${PATH} completely empty "
+                                        "(no hidden files) or removed before a re-try. "
+                                        "If this was caused by the lack of Internet access, "
+                                        "you can execute 'initialize_external_repos.sh' under QE 'TOPDIR/external' subdirectory "
+                                        "on a laptop and transfer the whole 'external' subdirectory.")
+                endif()
+
                 execute_process(COMMAND ${GIT_EXECUTABLE} checkout -b recorded_HEAD FETCH_HEAD
                                 WORKING_DIRECTORY ${qe_SOURCE_DIR}/${PATH})
             endif()

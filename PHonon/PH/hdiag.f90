@@ -9,8 +9,8 @@
 !-----------------------------------------------------------------------
 subroutine hdiag( npw, max_iter, avg_iter, et_ )
   !
-  ! Diagonalizes the unperturbed Hamiltonian in a non-selfconsistent way
-  ! by Conjugate Gradient (band-by-band)
+  !! Diagonalizes the unperturbed Hamiltonian in a non-selfconsistent way
+  !! by Conjugate Gradient (band-by-band).
   !
   USE kinds,     ONLY : DP
   USE gvect,     ONLY: g, gstart
@@ -21,15 +21,16 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   USE ramanm,    ONLY: eth_ns
   implicit none
   !
-  !     I/O variables:
+  integer :: npw
+  !! number of plane waves
+  integer :: max_iter
+  !! maximum number of iterations
+  real(DP) :: avg_iter
+  !! iteration number in the diagonalization
+  real(DP) :: et_(nbnd)
+  !! eigenvalues of the diagonalization
   !
-  integer :: npw, max_iter
-  ! maximum number of iterations
-  real(DP) :: avg_iter, et_(nbnd)
-  ! iteration number in the diagonalization
-  ! eigenvalues of the diagonalization
-  !
-  !     Local variables:
+  ! ... local variables:
   !
   REAL(DP) :: cg_iter
   ! number of iteration in CG

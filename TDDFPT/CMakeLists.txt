@@ -50,7 +50,7 @@ set(src_tddfpt
     src/dveqpsi_us.f90
     src/dveqpsi_us_only.f90
     src/orthogonalize_omega.f90
-    src/mix_pot.f90
+    src/lr_mix_pot.f90
     src/lr_magnons_routines.f90
     src/lr_apply_liouvillian_magnons.f90
     src/lr_dvpsi_magnons.f90
@@ -145,7 +145,7 @@ target_link_libraries(qe_tddfpt_turbomagnons_exe
 ###########################################################
 # turbo_spectrum.x
 ###########################################################
-set(src_tddfpt_turbospectrum_x tools/tddfpt_calculate_spectrum.f90)
+set(src_tddfpt_turbospectrum_x src/turbo_spectrum.f90)
 qe_add_executable(qe_tddfpt_turbospectrum_exe ${src_tddfpt_turbospectrum_x})
 set_target_properties(qe_tddfpt_turbospectrum_exe
     PROPERTIES

@@ -143,7 +143,7 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
   ! exchange energy gradient part
   ! auxiliary variable for energy calculation
   REAL(DP) :: dxunif, dfx, f1, f2, f3, dfx1
-  REAL(DP) :: p, amu, ab, c, dfxdp, dfxds, upbe, uge, s, ak, aa
+  REAL(DP) :: p, amu, ab, c, dfxdp, dfxds, s, ak
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
   REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi,        &
@@ -1241,7 +1241,7 @@ SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up,
   !
   ! ... local variables
   !
-  INTEGER :: is
+  !INTEGER :: is
   REAL(DP), PARAMETER :: beta = 0.0042_DP, third = 1._DP/3._DP
   REAL(DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
   !
@@ -1322,7 +1322,6 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
       REAL(DP) DHsbw,DHsbw2,DHsbw3,DHsbw4,DHsbw5
       REAL(DP) DHsbw12,DHsbw32,DHsbw52,DHsbw72,DHsbw92
       REAL(DP) d1sHsbw,d1rHsbw
-      REAL(DP) d1sDHsbw,d1rDHsbw
       REAL(DP) HsbwA94,HsbwA9412
       REAL(DP) HsbwA942,HsbwA943,HsbwA945
       REAL(DP) piexperf,expei
@@ -1351,9 +1350,6 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
       REAL(DP) d1sterm5,d1rterm5
       !
       REAL(DP) term1,term2,term3,term4,term5
-      !
-      REAL(DP) ax,um,uk,ul
-      REAL(DP) gc1,gc2
       !
       ! REAL(DP) ei
       !

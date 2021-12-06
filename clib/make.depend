@@ -1,3 +1,0 @@
-md5.o : md5.h
-md5_from_file.o : md5.h
-memstat.o : ../include/qe_cdefs.h

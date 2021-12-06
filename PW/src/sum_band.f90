@@ -27,13 +27,12 @@ SUBROUTINE sum_band()
   USE scf,                  ONLY : rho, rhoz_or_updw
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE buffers,              ONLY : get_buffer
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan, &
-                                   using_vkb, becsum_d, ebecsum_d
+                                   becsum_d, ebecsum_d
   USE uspp_param,           ONLY : nh, nhm
   USE wavefunctions,        ONLY : evc, psic, psic_nc
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE spin_orb,             ONLY : lspinorb, domag, fcoef
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -44,6 +43,8 @@ SUBROUTINE sum_band()
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
   USE gcscf_module,         ONLY : lgcscf, gcscf_calc_nelec
+  USE io_global,            ONLY : stdout
+  USE add_dmft_occ,         ONLY : dmft, dmft_updated, v_dmft
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
@@ -79,7 +80,14 @@ SUBROUTINE sum_band()
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
   CALL start_clock( 'sum_band:weights' )
-  CALL weights ( )
+  !
+  ! ... for DMFT skip weights in the first iteration since they were loaded from file
+  ! ... and are manipulated elsewhere
+  !
+  IF (.NOT. ( dmft .AND. .NOT. dmft_updated) ) THEN
+     CALL weights ( )
+  ENDIF
+  !
   CALL stop_clock( 'sum_band:weights' )
   !
   ! ... btype, used in diagonalization, is set here: a band is considered empty
@@ -275,6 +283,7 @@ SUBROUTINE sum_band()
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
                           tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
+       USE uspp_init,     ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -324,8 +333,6 @@ SUBROUTINE sum_band()
           CALL stop_clock( 'sum_band:buffer' )
           !
           CALL start_clock( 'sum_band:init_us_2' )
-          !
-          IF ( nkb > 0 ) CALL using_vkb(1)
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
@@ -525,6 +532,7 @@ SUBROUTINE sum_band()
        USE mp,           ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
                           tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
+       USE uspp_init,    ONLY : init_us_2
        !
        IMPLICIT NONE
        !
@@ -592,11 +600,22 @@ SUBROUTINE sum_band()
           !
           CALL start_clock( 'sum_band:init_us_2' )
           !
-          IF ( nkb > 0 ) CALL using_vkb(1)
-
-          IF ( nkb > 0 ) &
-             CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+          !
           CALL stop_clock( 'sum_band:init_us_2' )
+          !
+          ! ... for DMFT the eigenvectors are updated using v_dmft from add_dmft_occ.f90
+          !
+          IF ( dmft .AND. .NOT. dmft_updated) THEN
+             ! 
+             DO j = 1, npw
+                CALL ZGEMM('C', 'N', nbnd, 1, nbnd, (1.d0,0.d0), v_dmft(:,:,ik), nbnd, evc(j,:), nbnd, (0.d0,0.d0), evc(j,:), nbnd)
+             ENDDO
+             !
+             IF ( nks > 1 ) &
+                CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+             !
+          ENDIF
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
@@ -923,8 +942,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE becmod,             ONLY : becp, calbec, allocate_bec_type
   USE control_flags,      ONLY : gamma_only, tqr
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
-  USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta, &
-                                 using_vkb
+  USE uspp,               ONLY : nkb, vkb, becsum, ebecsum, ofsbeta
   USE uspp_param,         ONLY : upf, nh, nhm
   USE wvfct,              ONLY : nbnd, wg, et, current_k
   USE klist,              ONLY : ngk
@@ -963,7 +981,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !
   CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(0)
-  CALL using_vkb(0)
   CALL using_becp_auto(2)
   !
   CALL start_clock( 'sum_band:calbec' )
@@ -1177,8 +1194,7 @@ SUBROUTINE add_becsum_nc ( na, np, becsum_nc, becsum )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, domag
   !
   IMPLICIT NONE
   !
@@ -1226,8 +1242,8 @@ SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
   USE uspp,                 ONLY : ijtoh, nhtol, nhtoj, indv
-  USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : fcoef, domag
+  USE noncollin_module,     ONLY : npol, nspin_mag, domag
+  USE upf_spinorb,          ONLY : fcoef
   !
   IMPLICIT NONE
   !

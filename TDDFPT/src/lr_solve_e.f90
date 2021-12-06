@@ -42,6 +42,7 @@ SUBROUTINE lr_solve_e
   USE uspp_param,           ONLY : nhm
   USE ions_base,            ONLY : nat
   USE lrus,                 ONLY : intq, intq_nc
+  USE uspp_init,             ONLY : init_us_2
 
   !
   IMPLICIT NONE

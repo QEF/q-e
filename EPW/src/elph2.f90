@@ -124,6 +124,8 @@
     inv_tau_allcb(:, :, :),     &!  Conduction band scattering rate
     inv_tau_all_mode(:, :, :, :),    &!  mode resolved scattering rate
     inv_tau_allcb_mode(:, :, :, :),  &!  mode resolved conduction band scattering rate
+    inv_tau_all_freq(:, :, :),    &!  Scattering rate spectral decomposition (for one temperature)
+    inv_tau_allcb_freq(:, :, :),  &!  Scattering rate conduction band spectral decomposition (for one temperature)
     zi_allvb(:, :, :),       &!  Z-factor in scattering rate
     zi_allcb(:, :, :),       &!  Second Z-factor in scattering rate (for both VB and CB calculations)
     ifc(:,:,:,:,:,:,:),      &!  Interatomic force constant in real space

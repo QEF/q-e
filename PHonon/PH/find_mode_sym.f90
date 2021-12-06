@@ -8,15 +8,15 @@
 SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, s, sr, irt, xq,    &
      rtau, amass, ntyp, ityp, flag, lmolecule, lstop, num_rap_mode, ierr)
   !
-  !   This subroutine finds the irreducible representations which give
-  !   the transformation properties of eigenvectors of the dynamical
-  !   matrix. It does NOT work at zone border in non symmorphic space groups.
-  !   if flag=1 the true displacements are given in input, otherwise the
-  !   eigenvalues of the dynamical matrix are given.
-  !   The output of this routine is only num_rap_mode, the number of
-  !   the irreducible representation for each mode.
-  !   error conditions:
-  !   num_rap_mode(i)= 0   ! the routine could not determine mode symmetry
+  !! This subroutine finds the irreducible representations which give
+  !! the transformation properties of eigenvectors of the dynamical
+  !! matrix. It does NOT work at zone border in non symmorphic space groups.
+  !! if flag=1 the true displacements are given in input, otherwise the
+  !! eigenvalues of the dynamical matrix are given.  
+  !! The output of this routine is only \(\text{num_rap_mode}\), the number of
+  !! the irreducible representation for each mode.
+  !! Error conditions:  
+  !! \(\text{num_rap_mode}(i)=0\): the routine could not determine mode symmetry.
   !
   !
   USE io_global,  ONLY : stdout
@@ -25,43 +25,55 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, s, sr, irt, xq,    &
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
        char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_is, ONLY : gname_is
+  
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) ::             &
-       nat,         &     ! number of atoms
-       nsym,        &     ! number of symmetries
-       flag,        &     ! if 1 u are displacements, if 0 u are eigenvectors
-       ntyp,        &     ! number of atomic types
-       ityp(nat),   &     ! the type of each atom
-       irt(48,nat)        ! the rotated of each atom
-  INTEGER, INTENT(OUT) :: num_rap_mode ( 3 * nat )
-
-  INTEGER, INTENT(OUT) :: ierr ! 0 if the routine determined mode symmetry
-
-  REAL(DP), INTENT(IN) ::   &
-       xq(3),          &  ! the q vector of the modes
-       tau(3,nat),     &  ! the atomic coordinates
-       rtau(3,48,nat), &  ! the R vector for each rotated atom
-       amass(ntyp),    &  ! the mass of the atoms
-       w2(3*nat),      &  ! the square of the frequencies
-       sr(3,3,48)         ! the rotation matrices in real space.
-
-  COMPLEX(DP), INTENT(IN) ::  &
-       u(3*nat, 3*nat)       ! The eigenvectors or the displacement pattern
-
-  LOGICAL, INTENT(IN) :: lmolecule, & ! if .true. these are eigenvalues of an
-                                   ! isolated system and do not find the
-                                   ! symmetry of the first six eigenvectors,
-                                   ! or five for a linear molecule.
-                         lstop     ! if .true. the routine stops if it
-                                   ! does not understand the symmetry of a 
-                                   ! mode
-
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: nsym
+  !! number of symmetries
+  INTEGER, INTENT(IN) :: flag
+  !! if 1 u are displacements, if 0 u are eigenvectors
+  INTEGER, INTENT(IN) :: ntyp
+  !! number of atomic types
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! the type of each atom
+  INTEGER, INTENT(IN) :: irt(48,nat)
+  !! the rotated of each atom
+  INTEGER, INTENT(OUT) :: num_rap_mode (3*nat)
+  !! the number of the irreducible representation for each mode
+  INTEGER, INTENT(OUT) :: ierr
+  !! 0 if the routine determined mode symmetry
+  REAL(DP), INTENT(IN) :: xq(3)
+  !! the q vector of the modes
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! the atomic coordinates
+  REAL(DP), INTENT(IN) :: rtau(3,48,nat)
+  !! the R vector for each rotated atom
+  REAL(DP), INTENT(IN) :: amass(ntyp)
+  !! the mass of the atoms
+  REAL(DP), INTENT(IN) :: w2(3*nat)
+  !! the square of the frequencies
+  INTEGER :: s(3,3,48)
+  !! the rotation matrices
+  REAL(DP), INTENT(IN) :: sr(3,3,48) 
+  !! the rotation matrices in real space.
+  COMPLEX(DP), INTENT(IN) :: u(3*nat,3*nat)
+  !! The eigenvectors or the displacement pattern
+  LOGICAL, INTENT(IN) :: lmolecule
+  !! if TRUE these are eigenvalues of an isolated system and do 
+  !! not find the symmetry of the first six eigenvectors, or five
+  !! for a linear molecule.
+  LOGICAL, INTENT(IN) :: lstop
+  !! if TRUE the routine stops if it does not understand the 
+  !! symmetry of a mode.
+  !
+  ! ... local variables
+  !
   REAL(DP), PARAMETER :: eps=1.d-5
 
   INTEGER ::      &
        ngroup,    &   ! number of different frequencies groups
-       s(3,3,48), &   ! rotation matrices
        nmodes,    &   ! number of modes
        imode,     &   ! counter on modes
        igroup,    &   ! counter on groups
@@ -234,7 +246,8 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, s, sr, irt, xq,    &
 END SUBROUTINE find_mode_sym_new
 
 SUBROUTINE rotate_mod(mode,rmode,sr,irt,rtau,xq,nat,irot)
-
+  !! Mode rotation.
+  !
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
   USE cell_base, ONLY : bg
@@ -243,17 +256,25 @@ SUBROUTINE rotate_mod(mode,rmode,sr,irt,rtau,xq,nat,irot)
   !
   IMPLICIT NONE
 
-  INTEGER :: nat,        & !  number of atoms
-             irot,       & !  the index of the inverse of the rotation sr
-             irt(48,nat)   !  the rotated of each atom for all rotations
-
-  COMPLEX(DP) :: mode(3*nat,3*nat), & ! the mode to rotate
-                 rmode(3*nat,3*nat)  ! the rotated mode
-
-  REAL(DP)  :: sr(3,3),  &  ! the symmetry matrices in cartesian coordinates
-               rtau(3,48,nat), & ! the vector R = S tau - tau for all rotations
-               xq(3)       ! the q vector
-
+  INTEGER :: nat
+  !! number of atoms
+  INTEGER :: irot
+  !! the index of the inverse of the rotation sr
+  INTEGER :: irt(48,nat)
+  !! the rotated of each atom for all rotations
+  COMPLEX(DP) :: mode(3*nat,3*nat)
+  !! the mode to rotate
+  COMPLEX(DP) :: rmode(3*nat,3*nat)
+  !! the rotated mode
+  REAL(DP) :: sr(3,3)
+  !! the symmetry matrices in cartesian coordinates
+  REAL(DP) :: rtau(3,48,nat)
+  !! the vector \(R = S \tau - \tau\) for all rotations
+  REAL(DP) :: xq(3)
+  !! the q vector
+  !
+  ! ... local variables
+  !
   COMPLEX(DP) :: phase   ! auxiliary phase
   REAL(DP)    :: arg     ! an auxiliary argument
 
@@ -281,7 +302,7 @@ END SUBROUTINE rotate_mod
 
 FUNCTION is_linear(nat,tau)
   !
-  !  This function is true if the nat atoms are all on the same line
+  !! This function is TRUE if the nat atoms are all on the same line.
   !
   USE kinds, ONLY : DP
   IMPLICIT NONE
@@ -308,9 +329,9 @@ END FUNCTION is_linear
 
 SUBROUTINE print_mode_sym(w2, num_rap_mode, lir)
 !
-!  This routine prints the eigenvalues of the dynamical matrix and the 
-!  symmetry of their eigenvectors. If lir is true it writes also 
-!  which modes are infrared and/or raman active.
+!! This routine prints the eigenvalues of the dynamical matrix and the 
+!! symmetry of their eigenvectors. If \(\text{lir}\) is TRUE it writes also 
+!! which modes are infrared and/or Raman active.
 !
 USE kinds, ONLY : DP
 USE constants, ONLY : ry_to_cmm1

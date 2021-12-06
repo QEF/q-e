@@ -19,7 +19,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
                             me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
-  USE mp,            ONLY : mp_sum 
+  USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
   !

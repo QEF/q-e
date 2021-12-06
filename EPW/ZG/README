@@ -1,4 +1,4 @@
-              Marios Zacharias [1] & Feliciano Giustino [2,3], July 2021
+              Marios Zacharias [1] & Feliciano Giustino [2,3], November 2021
 
 [1] Department of Mechanical and Materials Science Engineering, Cyprus University of Technology, 
     P.O. Box 50329, 3603 Limassol, Cyprus 
@@ -11,6 +11,11 @@ If you use ZG.x or bands_unfold.x please do cite the following work:
 
 [1] Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020).
 [2] Marios Zacharias and Feliciano Giustino, Phys. Rev. B 94, 075125, (2016).
+
+If you use disca.x please do cite the following work:
+
+[1] Marios Zacharias, Feliciano Giustino et al., Phys. Rev. B 104, 205109, (2021)
+[2] Marios Zacharias, Feliciano Giustino et al., Phys. Rev. Lett. 127, 207401, (2021)
 
 ---------------------------------------------------------------------------------------------------
 
@@ -27,8 +32,14 @@ pp_spctrlfn.x    ---> for obtaining the electron spectral function after bands_u
 epsilon_Gaus.x   ---> for calculating optical properties as in epsilon.x but Gaussian broadening
 disca.x          ---> for calculating one-phonon and all-phonon inelastic scattering intensities
 pp_disca.x       ---> for applying broadening and setting a resolution of scattering patterns
-src/local folder ---> fortran routines for post-processing. Compile them by "./compile_gfortran.sh"
+src/local folder ---> for post-processing. Compile them by "./compile_gfortran.sh"
 
+
+---------------------------------------------------------------------------------------------------
+
+For full instructions on how to run the exercises in the tarball "tutorial.tar.gz"
+please refer to the EPW documentation site, or send an email to Marios Zacharias:  
+zachariasmarios@gmail.com 
 
 ---------------------------------------------------------------------------------------------------
 Instructions for the construction of the Zacharias-Giustino "ZG" displacement following 
@@ -55,8 +66,8 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     for a relatively "dense" q-grid to obtain a converged phonon dispersion. 
 
 3.  Run "/path_to_your_espresso/bin/q2r.x <q2r.in> q2r.out".
-    The input "q2r.in" has the standard format of Quantum Espresso for 
-    calculating the interatomic force constant matrix elements to be used to construct the 
+    The input "q2r.in" has the standard format of Quantum Espresso for calculating the 
+    interatomic force constant matrix elements to be used to construct the 
     "ZG-configuration.dat" file. 
 
 4.  Calculate the phonon dispersion with "matdyn.x" and make sure that your phonon dispersion is
@@ -66,12 +77,10 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     included.   
     
 5.  Now one needs to decide on the size of the supercell configuration to be used for calculating 
-    temperature dependent properties. For help, please see the example folder by "tar -xvf example.tar.gz". 
-    In file "example/silicon/ZG_structure/inputs/ZG_444.in" we show the example for 
-    constructing a 4x4x4 ZG-configuration. One could potentially generate any supercell size
-    by simply changing "dim1","dim2","dim3", and the list of q-points (optional, see below). 
-    "ZG.in" has the standard format as a "matdyn.in" file for Quantum Espresso. 
-    Here we use the following input parameters:
+    temperature dependent properties. For help, please see exercise1 in tutorial tarball. 
+    One could potentially generate any supercell size by simply changing "dim1","dim2", 
+    "dim3", and the list of q-points (optional, see below). "ZG.in" has the standard 
+    format as a "matdyn.in" file for Quantum Espresso. Here we use the following input parameters:
     ---------------------------------------------------------------------------------------
     i) "ZG_conf"            : Logical flag that enables the creation of the ZG-displacement. 
                               (default .true.) 
@@ -102,7 +111,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               sizes are considered for which the error is minimized by the first set of signs, 
                               (ii) only single phonon displacements are of interest (see below) 
                               (default .true.)
-       "threshold"          : Real number indicating the error at which the algorithm stops while it's 
+       "error_thresh"       : Real number indicating the error at which the algorithm stops while it's 
                               looking for possible combinations of signs. Once this limit is reached, 
                               the ZG-displacement is constructed. The threshold is usually chosen 
                               to be less than 5% of the diagonal terms, i.e. those terms that contribute 
@@ -130,12 +139,11 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input. Set the flag 
                               q_external = .true. for the code to read the list. 
                                           
-    ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out".
+    ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG.in> ZG.out".
          This generates three output files: the "equil_pos.dat", "ZG-configuration.dat" and "ZG-velocities.dat". 
          The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear coordinates 
          that define the ZG-displacement for a particular temperature and supercell size. 
          The third one has the ZG-velocities or momenta of the nuclei generated in the same spirit with the ZG displacement. 
-         The outputs for a supercell size of 4x4x4 are in the folder "example/silicon/ZG_structure/output/".
     iii) The calculation of the ZG-displacement should usually takes a few seconds to few minutes with one processor. 
 
 6. VERY IMPORTANT NOTE: It is perfectly reasonable to find different ZG-displacements / ZG-configurations,
@@ -159,7 +167,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
 
 ----------------------------------------------------------------------------------------------------------
 
-   Example using the ZG-displacement
+   Example using the ZG-displacement and JDOS
 
 Here we show a simple example on how to use the ZG-displacement for calculating the temperature dependence 
 of the JDOS and eventually extract the zero-point renormalization and temperature dependence of the band gap.
@@ -206,7 +214,7 @@ Other capabilities of ZG.x:
 1.  ZG.x can also be used to generate displaced configurations along single phonon modes.
     Please see "single_phonon_displ" flag. 
     Find an example in:
-    "example/silicon/Displacement_along_single_phonon_modes/inputs/".
+    "example/silicon/single_ph_displ/444/inputs/".
     To run the example use: 
     "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out". 
     The output files of interest are: 

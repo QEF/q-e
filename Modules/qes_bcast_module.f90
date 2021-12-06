@@ -1253,6 +1253,16 @@ MODULE qes_bcast_module
     IF (obj%diago_david_ndim_ispresent) &
       CALL mp_bcast(obj%diago_david_ndim, ionode_id, comm)
     !
+    CALL mp_bcast(obj%diago_rmm_ndim_ispresent, ionode_id, comm)
+    IF (obj%diago_rmm_ndim_ispresent) &
+      CALL mp_bcast(obj%diago_rmm_ndim, ionode_id, comm)
+    CALL mp_bcast(obj%diago_rmm_conv_ispresent, ionode_id, comm)
+    IF (obj%diago_rmm_conv_ispresent) &
+      CALL mp_bcast(obj%diago_rmm_conv, ionode_id, comm)
+    CALL mp_bcast(obj%diago_gs_nblock_ispresent, ionode_id, comm)
+    IF (obj%diago_gs_nblock_ispresent) &
+      CALL mp_bcast(obj%diago_gs_nblock, ionode_id, comm)
+    !
   END SUBROUTINE qes_bcast_electron_control
   !
   !

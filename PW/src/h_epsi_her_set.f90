@@ -15,16 +15,15 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   !! Wavefunctions from previous iteration are read into \(\textrm{evcel}\);
   !! Spin polarized systems are supported only with fixed occupations.
   !
-  USE noncollin_module,   ONLY: noncolin, npol
-  USE spin_orb,           ONLY: lspinorb
   USE kinds,              ONLY: DP
+  USE noncollin_module,   ONLY: noncolin, npol, lspinorb
   USE wvfct,              ONLY: npwx, nbnd
   USE ldaU,               ONLY: lda_plus_u
   USE lsda_mod,           ONLY: current_spin, nspin
   USE scf,                ONLY: vrs  
   USE gvect
   USE fft_base,           ONLY: dfftp
-  USE uspp,               ONLY: okvan, nkb, vkb, using_vkb
+  USE uspp,               ONLY: okvan, nkb, vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
@@ -39,6 +38,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE mp_bands,           ONLY: intra_bgrp_comm
   USE becmod,             ONLY: bec_type, becp, calbec,allocate_bec_type, &
                                 deallocate_bec_type
+  USE uspp_init,         ONLY : init_us_2
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: pdir
@@ -342,7 +342,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -363,7 +362,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDDO
          !
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -528,7 +526,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             ENDDO
             !
             ! vkb is relative to the last ik read
-            CALL using_vkb(0) ! this is redundant
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &
                         npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx )
             !
@@ -560,7 +557,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -583,7 +579,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDIF
          !
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -876,7 +871,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
                ENDDO
             ENDDO
             !
-            CALL using_vkb(0) !this is redundant
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, & ! vkb is relative to
                         npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx )             ! the last ik read.
             !
@@ -910,7 +904,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik+1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -931,7 +924,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDDO
          !
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -1123,7 +1115,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             ENDDO
             !
             ! vkb is relative to the last ik read
-            CALL using_vkb(0)
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol, nkb, (1.d0, 0.d0), vkb, &
                         npwx, ps, nkb, (1.d0, 0.d0), evct, npwx )
             !        
@@ -1154,7 +1145,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ! --- Dot wavefunctions and betas for PREVIOUS k-point ---
          !
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw0, igk0, xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)), vkb )
             CALL calbec( npw0, vkb, evct, becp0 )
          ENDIF
@@ -1177,7 +1167,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          ENDIF
          !
          IF (okvan) THEN
-            CALL using_vkb(1)
             CALL init_us_2( npw1, igk1, xk(1,nx_el(ik,pdir)), vkb )
             CALL calbec( npw1, vkb, evcel, becp_bp )
          ENDIF
@@ -1449,7 +1438,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             ENDDO
             !
             !vkb is relative to the ik read
-            CALL using_vkb(0)
             CALL ZGEMM( 'N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0), vkb, &
                         npwx, ps, nkb, (1.d0, 0.d0), evct, npwx )
             !

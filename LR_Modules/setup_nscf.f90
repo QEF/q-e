@@ -37,8 +37,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE control_flags,      ONLY : ethr, isolve, david, max_cg_iter, &
                                  noinv, use_para_diag
   USE mp_pools,           ONLY : kunit
-  USE spin_orb,           ONLY : domag
-  USE noncollin_module,   ONLY : noncolin
+  USE noncollin_module,   ONLY : noncolin, domag
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE upf_ions,           ONLY : n_atom_wfc

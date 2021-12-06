@@ -40,12 +40,12 @@ SUBROUTINE run_pwscf( exit_status )
   USE upf_params,           ONLY : lmaxx
   USE cell_base,            ONLY : fix_volume, fix_area
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
-  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs, lensemb
+  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs,&
+                                   lensemb, lforce=>tprnfor, tstress
   USE control_flags,        ONLY : io_level
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
-  USE force_mod,            ONLY : lforce, lstres, sigma, force
-  USE ions_base,            ONLY : if_pos
+  USE force_mod,            ONLY : sigma, force
   USE check_stop,           ONLY : check_stop_init, check_stop_now
   USE mp_images,            ONLY : intra_image_comm
   USE extrapolation,        ONLY : update_file, update_pot
@@ -58,6 +58,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
+  USE add_dmft_occ,         ONLY : dmft
   !
   USE device_fbuff_m,             ONLY : dev_buf
   !
@@ -129,18 +130,18 @@ SUBROUTINE run_pwscf( exit_status )
      CALL data_structure( gamma_only )
      CALL summary()
      CALL memory_report()
-     CALL qexsd_set_status(255)
-     CALL punch( 'config-init' )
      exit_status = 255
+     CALL qexsd_set_status( exit_status )
+     CALL punch( 'config-init' )
      RETURN
   ENDIF
   !
   CALL init_run()
   !
   IF ( check_stop_now() ) THEN
-     CALL qexsd_set_status( 255 )
-     CALL punch( 'config' )
      exit_status = 255
+     CALL qexsd_set_status( exit_status )
+     CALL punch( 'config' )
      RETURN
   ENDIF
   !
@@ -158,7 +159,11 @@ SUBROUTINE run_pwscf( exit_status )
      !
      IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
         IF ( check_stop_now() ) exit_status = 255
-        IF ( .NOT. conv_elec )  exit_status =  2
+        IF ( .NOT. conv_elec) THEN
+            IF (dmft) exit_status =  131
+        ELSE
+            exit_status = 2
+        ENDIF
         CALL qexsd_set_status(exit_status)
         CALL punch( 'config' )
         RETURN
@@ -179,11 +184,11 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... force calculation
      !
-     IF ( lforce .AND. ANY( if_pos(:,:) == 1 )) CALL forces()
+     IF ( lforce ) CALL forces()
      !
      ! ... stress calculation
      !
-     IF ( lstres ) CALL stress( sigma )
+     IF ( tstress ) CALL stress( sigma )
      !
      IF ( lmd .OR. lbfgs ) THEN
         !
@@ -209,7 +214,8 @@ SUBROUTINE run_pwscf( exit_status )
         ! ... save restart information for the new configuration
         !
         IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN
-            CALL qexsd_set_status( 255 )
+            exit_status = 255
+            CALL qexsd_set_status( exit_status )
             CALL punch( 'config-only' )
         END IF
         !
@@ -284,9 +290,18 @@ SUBROUTINE run_pwscf( exit_status )
      ethr = 1.0D-6
      !
      CALL dev_buf%reinit( ierr )
-     IF ( ierr .ne. 0 ) CALL errore( 'run_pwscf', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr) )
+     IF ( ierr .ne. 0 ) CALL infomsg( 'run_pwscf', 'Cannot reset GPU buffers! Some buffers still locked.' )
      !
   ENDDO main_loop
+  !
+  ! Set correct exit_status
+  !
+  IF ( .NOT. conv_ions .OR. optimizer_failed ) THEN
+      exit_status =  3
+  ELSE
+      ! All good
+      exit_status = 0
+   END IF
   !
   ! ... save final data file
   !
@@ -296,7 +311,6 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL qmmm_shutdown()
   !
-  IF ( .NOT. conv_ions .OR. optimizer_failed )  exit_status =  3
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
@@ -427,8 +441,7 @@ SUBROUTINE reset_starting_magnetization()
   USE ions_base,          ONLY : nsp, ityp, nat
   USE lsda_mod,           ONLY : nspin, starting_magnetization
   USE scf,                ONLY : rho
-  USE spin_orb,           ONLY : domag
-  USE noncollin_module,   ONLY : noncolin, angle1, angle2
+  USE noncollin_module,   ONLY : noncolin, angle1, angle2, domag
   !
   IMPLICIT NONE
   !

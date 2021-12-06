@@ -28,7 +28,6 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : ntask_groups, me_bgrp
-  USE spin_orb,             ONLY : domag
   USE buffers,              ONLY : get_buffer
   USE qpoint,               ONLY : ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
@@ -38,6 +37,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE fft_interfaces,       ONLY : fft_interpolate
   USE apply_dpot_mod,       ONLY : apply_dpot_allocate, apply_dpot_deallocate, &
                                    apply_dpot_bands
+  USE uspp_init,            ONLY : init_us_2
  
   IMPLICIT NONE
   !

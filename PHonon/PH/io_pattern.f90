@@ -14,20 +14,21 @@ SUBROUTINE io_pattern (nat,fildrho,nirr,npert,u,xq,directory,iflag)
   USE dfile_autoname,   ONLY : dfile_name
   USE io_files,         ONLY : prefix, tmp_dir, seqopn
   USE cell_base,        ONLY : at
-
-  IMPLICIT NONE
-!
-!   the i/o variables first
-!
+  !
+  IMPLICIT NONE 
+  !
   INTEGER :: nirr, iflag, nat, npert(3*nat)
   COMPLEX(DP) :: u(3*nat,3*nat)
   REAL(DP) :: xq(3)
-  CHARACTER (len=256),INTENT(in)::  directory ! where to read/write the file
-  CHARACTER (len=*)  ::  fildrho   ! name of the file
-  CHARACTER (len=256)::  filname   ! complete name of the file
-!
-!   here the local variables
-!
+  CHARACTER (len=256),INTENT(in) :: directory
+  !! where to read/write the file
+  CHARACTER (len=*) :: fildrho
+  !! name of the file
+  CHARACTER (len=256) :: filname
+  !! complete name of the file
+  !
+  ! ... local variables
+  !
   INTEGER :: i,iunit
   INTEGER, EXTERNAL :: find_free_unit
   LOGICAL :: exst

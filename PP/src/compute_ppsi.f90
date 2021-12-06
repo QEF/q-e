@@ -22,9 +22,8 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : nbnd, npwx
   USE uspp,                 ONLY : nkb, vkb, qq_nt, qq_so, okvan
-  USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE klist,                ONLY : ngk
   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
                                    deallocate_bec_type

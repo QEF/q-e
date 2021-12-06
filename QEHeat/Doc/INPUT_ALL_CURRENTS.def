@@ -301,6 +301,29 @@ input_description -distribution {Quantum Espresso} -package QEHeat -program all_
                  You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
                }
        }
+       var n_workers -type INTEGER {
+           default { 0 }
+           info {
+                The calculation over all the trajectory is splitted in @ref n_workers chunks. Then to run the code over all
+                the trajectory you must run @ref n_workers input files each one with a different @ref worker_id,
+                from 0 to @ref n_workers - 1 . Those inputs can run at the same time in the same folder. The @ref worker_id
+                will be appended to the outdir folder and to the @ref file_output input variables, so you can safely run all
+                the inputs in the same directory at the same time.
+           }
+       }
+       var worker_id -type INTEGER {
+           default { 0 }
+           info {
+                See @ref n_workers variable
+           }
+       }
+       var continue_not_converged -type LOGICAL {
+           default { .false. }
+           info {
+                If it is not possible to find a ground state for a given frame of the trajectory, go to the next one.
+                You will not find this step in the output file(s).
+           }
+       }
 
     }
 

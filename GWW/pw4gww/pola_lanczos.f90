@@ -652,6 +652,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
   USE noncollin_module,     ONLY : noncolin, npol
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
+  USE uspp_init,        ONLY : init_us_2
    
 
 

@@ -7,13 +7,15 @@
 !
 !--------------------------------------------------------
 subroutine add_zstar_ue_us(imode0,npe)
-!----------===============-------------------------------
-  ! add the contribution of the modes imode0+1 -> imode+npe
-  ! to the effective charges Z(Us,E) (Us=scf,E=bare)
+  !----------===============-------------------------------
+  !! Add the contribution of the modes \( \text{imode0}+1 \rightarrow 
+  !! \text{imode}+\text{npe}\) to the effective charges \(Z(\text{Us},E)\)
+  !! (Us=scf,E=bare).
   !
-  ! This subroutine is just for the USPP case
+  !! This subroutine is just for the USPP case.
   !
-  ! trans =.true. is needed for this calculation to be meaningful
+  !! \(\text{trans} =\text{TRUE}\) is needed for this calculation to
+  !! be meaningful.
   !
 
   USE kinds, ONLY : DP
@@ -32,10 +34,14 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE mp_bands,   ONLY: intra_bgrp_comm
   USE mp,         ONLY: mp_sum
   USE control_lr, ONLY : nbnd_occ
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 
-  integer, intent(in) :: imode0, npe
+  integer, intent(in) :: imode0
+  !! input: the starting mode
+  integer, intent(in) :: npe
+  !! input: the number of perturbations
 
   integer :: ik, ikk, jpol, nrec, mode, ipert, ibnd, jbnd, i,j
   INTEGER :: npw, npwq

@@ -26,8 +26,7 @@ SUBROUTINE lr_summary
   USE gvect,                  ONLY : gcutm, ngm
   USE gvecs,                  ONLY : doublegrid, dual, gcutms, ngms
   USE symm_base,              ONLY : s, sr, ft, sname, t_rev
-  USE noncollin_module,       ONLY : noncolin
-  USE spin_orb,               ONLY : lspinorb, domag
+  USE noncollin_module,       ONLY : noncolin, domag, lspinorb
   USE funct,                  ONLY : write_dft_name
   USE run_info,               ONLY : title
   USE qpoint,                 ONLY : xq

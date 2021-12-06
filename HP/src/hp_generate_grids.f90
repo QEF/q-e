@@ -20,7 +20,8 @@ SUBROUTINE hp_generate_grids()
   USE qpoint,          ONLY : xq
   USE lr_symm_base,    ONLY : rtau
   USE ldaU,            ONLY : Hubbard_lmax
-  USE ldaU_hp,         ONLY : dnsscf, dns0, dnsscf_tot, dns0_tot, nqsh, &
+  USE ldaU_lr,         ONLY : dnsscf
+  USE ldaU_hp,         ONLY : dns0, dnsscf_tot, dns0_tot, nqsh, &
                               start_q, last_q, tmp_dir_hp, nqs, comp_iq
   !
   IMPLICIT NONE

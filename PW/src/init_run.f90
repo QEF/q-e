@@ -10,9 +10,11 @@ SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
   USE klist,              ONLY : nkstot
+  USE start_k,            ONLY : nks_start, nk1, nk2, nk3, k1, k2, k3
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
-  USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw
+  USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw, &
+                                 lforce => tprnfor, tstress
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
                                  g_d, gg_d, mill_d, gshells, &
                                  gstart ! to be communicated to the Solvers if gamma_only
@@ -35,7 +37,7 @@ SUBROUTINE init_run()
   USE libmbd_interface,   ONLY : init_mbd
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE lsda_mod,           ONLY : nspin
-  USE spin_orb,           ONLY : domag
+  USE noncollin_module,   ONLY : domag
   USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
   !
   USE control_flags,      ONLY : use_gpu
@@ -76,11 +78,14 @@ SUBROUTINE init_run()
   END IF
 
 #if defined(__CUDA)
-  ! All these variables are actually set by ggen which has intent out
-  mill_d = mill
-  g_d    = g
-  gg_d   = gg
+  IF ( use_gpu) THEN
+     ! All these variables are actually set by ggen which has intent out
+     mill_d = mill
+     g_d    = g
+     gg_d   = gg
+  END IF
 #endif
+  !$acc update device(mill, g)
   !
   IF (do_comp_esm) CALL esm_init()
   !
@@ -126,7 +131,7 @@ SUBROUTINE init_run()
      CALL set_h_ainv()
   END IF
   IF (mbd_vdw) THEN
-     CALL init_mbd()
+     CALL init_mbd( nks_start, nk1, nk2, nk3, k1, k2, k3, lforce, tstress )
   END IF
   !
   CALL allocate_wfc_k()

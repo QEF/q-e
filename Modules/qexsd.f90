@@ -86,7 +86,10 @@ CONTAINS
     !-------------------------------------------------------------------------------------------------
     IMPLICIT NONE
     !
-    INTEGER      :: status_int
+    INTEGER, INTENT(IN)      :: status_int
+    !
+    exit_status = status_int
+    !
     END SUBROUTINE qexsd_set_status
     !
 !
@@ -529,7 +532,7 @@ CONTAINS
           END DO
           DEALLOCATE (steps)
       END IF
-   END SUBROUTINE
+   END SUBROUTINE qexsd_reset_steps
     !
     !--------------------------------------------------------------------------------------------------
     SUBROUTINE qexsd_set_closed() 
@@ -585,6 +588,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
             match = clock_label(1:nclock) == TRIM(partial_clocks(ipar)) 
             IF ( ANY (match))  THEN
                nc = get_index(.TRUE., match)
+               IF (nc == ic) CYCLE
                t = get_cpu_and_wall(nc) 
                CALL qes_init(partial_(ipar), "partial", TRIM(clock_label(nc)), t(1), t(2),&
                              called(nc))
@@ -592,7 +596,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
                CALL qes_init (partial_(ipar), "partial", "not_found",  -1.d0, -1.d0, 0)  
                partial_(ipar)%lwrite=.FALSE. 
             END IF 
-            END DO
+         END DO
       END IF 
       CALL qes_init( timing_, "timing_info", total_, partial_)
       CALL qes_reset ( total_) 
@@ -629,7 +633,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
       ALLOCATE (character(len=32) :: clock_list(100))
       clock_list_dim = 100 
      END IF 
-   END SUBROUTINE
+   END SUBROUTINE qexsd_allocate_clock_list
 
    SUBROUTINE qexsd_add_all_clocks()
      !! allocates the list of clock labels copying all active clocks
@@ -640,7 +644,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
      clock_list_dim = nclock
      clock_list_last = nclock
     
-   END SUBROUTINE  
+   END SUBROUTINE qexsd_add_all_clocks
 
    SUBROUTINE qexsd_add_label (label)
       !! adds a clock label to the clock list that will be reported in the xml file
@@ -658,5 +662,6 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
       END IF 
       clock_list(clock_list_last+1) = label
       clock_list_last = clock_list_last + 1 
-   END 
+   END SUBROUTINE qexsd_add_label
+   !
 END MODULE qexsd_module

@@ -8,6 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine raman
   !-----------------------------------------------------------------------
+  !! Wrapper to main Raman calculation routines.
   !
   USE kinds,    ONLY : DP
   USE klist,    ONLY : ltetra, lgauss

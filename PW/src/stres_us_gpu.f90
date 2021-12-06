@@ -15,15 +15,14 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE constants,            ONLY : eps8
-  USE klist,                ONLY : nks, xk, ngk, igk_k_d
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
-  USE uspp,                 ONLY : nkb, vkb_d, using_vkb, using_vkb_d, deeq_d
-  USE spin_orb,             ONLY : lspinorb
+  USE uspp,                 ONLY : nkb, vkb, deeq_d
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -37,6 +36,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
                                    calbec_gpu
   USE device_fbuff_m,       ONLY : dev_buf
   USE device_memcpy_m,      ONLY : dev_memcpy
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -71,20 +71,19 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
-  IF ( nks > 1 ) THEN
-    CALL using_vkb_d(1)
-    CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
-  ENDIF
+  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb, .true. )
   !
   CALL allocate_bec_type( nkb, nbnd, becp, intra_bgrp_comm ) 
   CALL using_becp_auto(2)
   !
   CALL using_evc_d(0)
-  CALL using_vkb(0)
-  CALL using_vkb_d(0)
   CALL using_becp_d_auto(2)
   !
-  CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+  CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+!$acc end host_data
+!$acc end data
   !
   CALL dev_buf%lock_buffer( qm1_d, npwx, ierr )
   !$cuf kernel do (1) <<<*,*>>>
@@ -216,7 +215,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        CALL using_et(0) ! compute_deff : intent(in)
        !
        CALL dev_buf%lock_buffer( ps_d, nkb, ierrs(2) )
-       IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
+       IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
        !
        becpr_d => becp_d%r_d 
        !
@@ -259,7 +258,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        ! ... non diagonal contribution - derivative of the bessel function
        !------------------------------------
        CALL dev_buf%lock_buffer( dvkb_d, (/ npwx,nkb,4 /), ierrs(3) )
-       IF (ierrs(3) /= 0) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
+       IF (ierrs(3) /= 0) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', ABS(ierrs(3)))
        !
        CALL gen_us_dj_gpu( ik, dvkb_d(:,:,4) )
        IF ( lmaxkb > 0 ) THEN 
@@ -463,7 +462,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
           CALL dev_buf%lock_buffer( deff_d, (/ nhm,nhm,nat /), ierrs(3) )
           becpk_d => becp_d%k_d
        ENDIF
-       IF (ANY(ierrs /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
+       IF (ANY(ierrs /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
        !
        CALL using_et(0)
        !

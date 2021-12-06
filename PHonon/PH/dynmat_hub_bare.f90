@@ -8,33 +8,35 @@
 !-----------------------------------------------------------------------
 SUBROUTINE dynmat_hub_bare
   !---------------------------------------------------------------------
+  !! DFPT+U: This routine does two tasks:  
+  !! 1) Computes \(\text{d2ns_bare}\) (very slow) or reads it;  
+  !! 2) Adds to the dynamical matrix the bare part due the Hubbard term:
+  !! \begin{equation}\notag
+  !! \begin{split}
+  !!  \sum_\text{nah} \text{Hubbard_U}&(\text{nah}) \sum_{is, m1, m2} [ 
+  !!      (0.5\delta_{m1m2} - \text{ns}(m1,m2,is,\text{nah})) \cdot \text{d2ns_bare}\\
+  !!      &- \text{conjg}(\text{dnsbare}( m1, m2, is, \text{nah}, \text{icart},\text{na})) 
+  !!            \cdot \text{dnsbare}( m1, m2, is, \text{nah}, \text{jcart},\text{nap}) ]
+  !! \end{split}
+  !! \end{equation}
   !
-  ! DFPT+U: This routine does two tasks:
-  ! 1) Computes d2ns_bare (very slow) or reads it
-  ! 2) Adds to the dynamical matrix the bare part due the Hubbard term:  
+  !!  Addition of the J0 term:
+  !!  $$ \sum_\text{nah} \text{Hubbard_J0}(\text{nah}) \sum_{is, m1, m2} [ 
+  !!      \text{ns}(m1,m2,-is,\text{nah}) \cdot \text{d2ns_bare}(m1, m2, is,
+  !!      \text{nah}, \text{nap_jcart}, \text{na_icart})  
+  !!      + \text{conjg}(\text{dnsbare}(m1,m2,is,\text{nah}, \text{icart},\text{na}))\cdot
+  !!          \text{dnsbare}(m1,m2,-is, \text{nah}, \text{jcart},\text{nap}) ] $$
   !
-  !  \sum_{nah} Hubbard_U(nah) \sum_{is, m1, m2} [ 
-  !      (0.5*delta_m1m2 - ns(m1,m2,is,nah)) * d2ns_bare 
-  !      - conjg(dnsbare ( m1, m2, is, nah, icart,na)) 
-  !            * dnsbare ( m1, m2, is, nah, jcart,nap) ]
-  !
-  !  Addition of the J0 term:
-  !  
-  !  \sum_{nah} Hubbard_J0(nah) \sum_{is, m1, m2} [ 
-  !      ns(m1,m2,-is,nah) * d2ns_bare(m1, m2, is, nah, nap_jcart, na_icart)  
-  !      + conjg(dnsbare ( m1, m2, is, nah, icart,na))*
-  !              dnsbare ( m1, m2, -is, nah, jcart,nap) ]
-  !
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_l, is_hubbard, Hubbard_J0, &
                             Hubbard_lmax, offsetU, nwfcU
   USE ldaU_ph,       ONLY : dnsbare, wfcatomk, wfcatomkpq, dvkb, vkbkpq, &
-                            dvkbkpq, proj1, projpb, projpdb, swfcatomk, &
-                            effU, read_dns_bare, d2ns_type
+                            dvkbkpq, proj1, projpb, projpdb, read_dns_bare, d2ns_type
+  USE ldaU_lr,       ONLY : effU, swfcatomk
   USE wavefunctions, ONLY : evc
   USE units_lr,      ONLY : iuwfc, lrwfc, iuatwfc, iuatswfc
   USE uspp,          ONLY : vkb, nkb, ofsbeta
@@ -64,6 +66,7 @@ SUBROUTINE dynmat_hub_bare
   USE cell_base,     ONLY : at, bg
   USE dynmat,        ONLY : dyn_hub_bare 
   USE io_global,     ONLY : ionode, ionode_id, stdout
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

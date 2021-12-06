@@ -54,7 +54,7 @@ CONTAINS
        v2 = .true.
     END SELECT
     !
-    iun = xml_openfile ( filename )
+    iun = xml_open_file ( filename )
     IF ( iun == -1 ) CALL upf_error('write_upf', 'cannot open file',1)
     !
     ! The starting line, header and info sections differ a lot

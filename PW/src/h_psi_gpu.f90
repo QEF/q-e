@@ -98,7 +98,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE becmod_gpum,             ONLY: becp_d
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
-  USE uspp,                    ONLY: nkb, vkb_d, using_vkb_d
+  USE uspp,                    ONLY: nkb, vkb
   USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, U_projection
   USE gvect,                   ONLY: gstart
   USE control_flags,           ONLY: gamma_only
@@ -255,10 +255,14 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock_gpu( 'h_psi:calbec' )
-     CALL using_vkb_d(0); 
      CALL using_becp_d_auto(2)
 !ATTENTION HERE: calling without (:,:) causes segfaults
-     CALL calbec_gpu ( n, vkb_d(:,:), psi_d, becp_d, m )
+!$acc data present(vkb(:,:))
+!$acc host_data use_device(vkb)
+     CALL calbec_gpu ( n, vkb(:,:), psi_d, becp_d, m )
+!$acc end host_data
+!$acc end data
+!
      CALL stop_clock_gpu( 'h_psi:calbec' )
      CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
      !

@@ -8,29 +8,29 @@
 !----------------------------------------------------------------------
 subroutine dvanqq
   !----------------------------------------------------------------------
+  !! This routine calculates four integrals of the Q functions and
+  !! its derivatives with \(\text{Vloc}\) and \(\text{Veff}\) which are used
+  !! to compute term \(dV_\text{bare}/d\tau \cdot \psi\) in 
+  !! \(\texttt{addusdvqpsi}\) and in \(\texttt{addusdynmat}\).
+  !! The result is stored in int1, int2, int4, int5. The routine is called
+  !! only once. int4 and int5 are deallocated after use in \(\texttt{addusdynmat}\).
   !
-  ! This routine calculates four integrals of the Q functions and
-  ! its derivatives with V_loc and V_eff which are used
-  ! to compute term dV_bare/dtau * psi  in addusdvqpsi and in addusdynmat.
-  ! The result is stored in int1,int2,int4,int5. The routine is called
-  ! only once. int4 and int5 are deallocated after use in addusdynmat.
-  ! int1 -> Eq. B20 of Ref.[1]
-  ! int2 -> Eq. B21 of Ref.[1]
-  ! int4 -> Eq. B23 of Ref.[1]
-  ! int5 -> Eq. B24 of Ref.[1]
+  !! int1: Eq.(B20) of Ref.[1];  
+  !! int2: Eq.(B21) of Ref.[1];  
+  !! int4: Eq.(B23) of Ref.[1];  
+  !! int5: Eq.(B24) of Ref.[1].
   !
-  ! [1] PRB 64, 235118 (2001).
-
+  !! [1] PRB 64, 235118 (2001).
+  !
   !
   USE kinds, only : DP
   USE cell_base, ONLY : omega, tpiba2, tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft
-  use gvect, only : ngm, gg, g, mill, eigts1, eigts2, eigts3
-  use spin_orb, only : lspinorb
-  use scf, only : v, vltot
-  use noncollin_module, ONLY : noncolin, nspin_mag
+  USE gvect, ONLY : ngm, gg, g, mill, eigts1, eigts2, eigts3
+  USE scf, ONLY : v, vltot
+  USE noncollin_module, ONLY : noncolin, nspin_mag, lspinorb
   USE uspp, ONLY: okvan, ijtoh
   USE uspp_param, ONLY: upf, lmaxq, nh
 

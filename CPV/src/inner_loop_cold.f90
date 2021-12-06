@@ -50,6 +50,7 @@
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho, calbec
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: idesc, drhor, drhog
+      use cg_sub, only: rotate
       !
       IMPLICIT NONE
 
@@ -527,6 +528,7 @@
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: idesc
+      use cg_sub, only: rotate
       !
       IMPLICIT NONE
 
