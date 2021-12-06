@@ -1,10 +1,9 @@
 ###########################################################
 # FoX
 ###########################################################
+add_library(qe_fox INTERFACE)
+qe_install_targets(qe_fox)
 if(FOX_ROOT)
-    add_library(qe_fox INTERFACE)
-    qe_install_targets(qe_fox)
-
     find_library(
         FOX_LIB_COMMON
         NAMES FoX_common
@@ -38,8 +37,7 @@ else()
         CACHE BOOL "" FORCE)
     qe_git_submodule_update(external/fox)
     add_subdirectory(fox EXCLUDE_FROM_ALL)
-    add_library(qe_fox INTERFACE)
     target_link_libraries(qe_fox INTERFACE ${fox_targets})
     qe_fix_fortran_modules(${fox_targets})
-    qe_install_targets(qe_fox ${fox_targets})
+    qe_install_targets(${fox_targets})
 endif()
