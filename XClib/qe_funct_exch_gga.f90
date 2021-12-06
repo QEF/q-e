@@ -663,6 +663,7 @@ END SUBROUTINE pbexsr
 !
 !-----------------------------------------------------------------------     
       SUBROUTINE axsr(IXC,RHO,GRHO,sx,V1X,V2X,OMEGA)
+!$acc routine (axsr) seq
 !-----------------------------------------------------------------------     
 !!!! Per Hyldgaard, No warranties. adapted from the pbesrx version above
 !-----------------------------------------------------------------------
@@ -708,6 +709,7 @@ END SUBROUTINE pbexsr
 !-----------------------------------------------------------------------     
       SUBROUTINE wggax_analy_erfc(rho,s,nggatyp,omega,Fx_wgga, &
                                   dfxdn,dfxds)
+!$acc routine (wggax_analy_erfc) seq
 !--------------------------------------------------------------------
 !
 !     Short-ranged wGGA Enhancement Factor (from erfc, analytical with
