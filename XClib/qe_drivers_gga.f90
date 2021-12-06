@@ -186,7 +186,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         end if
         !
         if ( iflag == 0) then
-           CALL xclib_error( " gcxc ", " Sorting GGA-AHs failed ", 1)
+           STOP ! CALL xclib_error( " gcxc ", " Sorting GGA-AHs failed ", 1)
         end if
         !
         IF (exx_started) THEN
@@ -214,7 +214,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         end if
         !
         if ( iflag == 0) then
-           CALL xclib_error( " gcxc ", " Sorting vdW-DF-AHs failed ", 1)
+           STOP ! CALL xclib_error( " gcxc ", " Sorting vdW-DF-AHs failed ", 1)
         end if
         !
         IF (exx_started) THEN
@@ -880,7 +880,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         end if
         !
         if ( iflag == 0) then
-           CALL xclib_error( " gcx_spin ", " Sorting vdW-DF-AHs failed ", 1)
+           STOP ! CALL xclib_error( " gcx_spin ", " Sorting vdW-DF-AHs failed ", 1)
         else 
           sx_tot(ir) = 0.5_DP * ( sx_up*rnull_up + sx_dw*rnull_dw )
           v2x_up = 2.0_DP * v2x_up
