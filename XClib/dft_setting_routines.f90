@@ -1031,11 +1031,8 @@ CONTAINS
         ENDIF
         !
         n_ext_params(iid) = xc_f03_func_info_get_n_ext_params( xc_info(iid) )
-#if (XC_MAJOR_VERSION<=5)
         p0 = 0 ;  pn = n_ext_params(iid)-1 ;  ips = 1
-#else
-        p0 = 1 ;  pn = n_ext_params(iid)   ;  ips = 0
-#endif
+        !
         DO ip = p0, pn
           par_list(iid,ip+ips) = xc_f03_func_info_get_ext_params_default_value( &
                                                            xc_info(iid), ip )

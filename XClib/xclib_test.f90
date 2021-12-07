@@ -38,7 +38,8 @@ PROGRAM xclib_test
                             xclib_get_ID, xclib_reset_dft, xc, xc_gcx,       &
                             xc_metagcx, xclib_dft_is_libxc, xclib_init_libxc,&
                             xclib_finalize_libxc, xclib_set_finite_size_volume,&
-                            xclib_set_auxiliary_flags, xclib_dft_is, start_exx
+                            xclib_set_auxiliary_flags, xclib_dft_is, start_exx,&
+                            set_libxc_ext_param
   USE xclib_utils_and_para
   !--xml
   USE xmltools,       ONLY: xml_open_file, xml_closefile,xmlr_readtag,  &
@@ -581,6 +582,19 @@ PROGRAM xclib_test
 #if defined(__LIBXC)
     IF (xclib_dft_is_libxc( 'ANY' )) CALL xclib_init_libxc( ns, .FALSE. )
     !
+    IF ( igcc1==428 .AND. is_libxc(4) ) THEN
+      ! Example of how to change an external parameter in a Libxc
+      ! functional (HYB_GGA_XC_HSE06).
+      ! Arguments:
+      ! 1- family-kind index (1:LDAx, 2:LDAc, 3:GGAx, ...);
+      ! 2- parameter index (you find it with xc_infos.x);
+      ! 3- new value of the parameter.
+      CALL set_libxc_ext_param( 4, 0, 0.25d0  )
+      CALL set_libxc_ext_param( 4, 1, 0.106d0 )
+      CALL set_libxc_ext_param( 4, 2, 0.106d0 )
+      !
+    ENDIF
+    !
     IF ( xc_kind_error ) THEN
       CALL print_test_status( skipped4 )
       CALL xclib_finalize_libxc()
@@ -653,10 +667,14 @@ PROGRAM xclib_test
     ELSE
       exc_term = (iexch1+igcx1+imeta1  /= 0)
       cor_term = (icorr1+igcc1+imetac1 /= 0)
+      IF ( exc_term ) xc_kind='X'
+      IF ( cor_term ) xc_kind='C'
+      IF ( exc_term .AND. cor_term ) xc_kind='XC'
     ENDIF
     !
     IF (MGGA) THEN
       IF (.NOT. xc_derivative ) THEN
+        xc_kind ='XC'
         exc_term = .TRUE.
         cor_term = .TRUE.
       ELSE
