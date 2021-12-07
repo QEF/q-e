@@ -40,7 +40,7 @@ MODULE qexsd_module
   ! definitions for the fmt
   !
   CHARACTER(5),  PARAMETER :: fmt_name = "QEXSD"
-  CHARACTER(8),  PARAMETER :: fmt_version = "21.07.16"
+  CHARACTER(8),  PARAMETER :: fmt_version = "21.11.01"
   !
   ! internal data to be set
   !
@@ -235,9 +235,9 @@ CONTAINS
       INTEGER :: ierr
       !
       IF (exit_status .ge. 0 ) THEN 
-         CALL xml_NewElement(qexsd_xf, "status")
+         CALL xml_NewElement(qexsd_xf, "exit_status")
          CALL xml_AddCharacters(qexsd_xf, exit_status)
-         CALL xml_EndElement(qexsd_xf, "status")          
+         CALL xml_EndElement(qexsd_xf, "exit_status")          
          CALL qexsd_set_closed()
          IF (get_clock('PWSCF') > get_clock('CP'))  THEN 
             CALL qexsd_init_clocks (qexsd_timing_, 'PWSCF       ' , clock_list)
@@ -588,7 +588,7 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
             match = clock_label(1:nclock) == TRIM(partial_clocks(ipar)) 
             IF ( ANY (match))  THEN
                nc = get_index(.TRUE., match)
-               IF (nc == ic) CYCLE
+               IF (nc == ic .OR. called(nc) == 0 ) CYCLE
                t = get_cpu_and_wall(nc) 
                CALL qes_init(partial_(ipar), "partial", TRIM(clock_label(nc)), CPU = t(1), WALL = t(2), & 
                               CALLS = called(nc))
