@@ -519,6 +519,17 @@ CONTAINS
        exx_fraction = 0.25_DP
        screening_parameter = 0.106_DP
     ENDIF
+    ! AH-SERIES (vdW-DF-)ahcx (at 32), vdW-DF2-AH (at 33), (vdW-DF2-)ahtr (at
+    ! 47) ! JPCM 34, 025902 (2022)
+    IF ( (igcx ==32 .OR. igcx ==33 .OR. igcx==47) .AND. .NOT.is_libxc(3) ) THEN
+       exx_fraction = 0.20_DP
+       screening_parameter = 0.106_DP
+    ENDIF
+    ! AH-CROSStest-SERIES PBE-AH (at 34), PBESOL-AH (at 35)
+    IF ( (igcx ==34 .OR. igcx==35) .AND. .NOT.is_libxc(3) ) THEN
+       exx_fraction = 0.20_DP
+       screening_parameter = 0.106_DP
+    ENDIF
     ! gau-pbe
     IF ( igcx ==20 .AND. .NOT.is_libxc(3) ) THEN
        exx_fraction = 0.24_DP
