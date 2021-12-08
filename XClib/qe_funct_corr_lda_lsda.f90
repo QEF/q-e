@@ -323,8 +323,8 @@ END SUBROUTINE lyp
 SUBROUTINE pw( rs, iflag, ec, vc )
 !$acc routine (pw) seq
   !-----------------------------------------------------------------------
-  !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
-  !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
+  !! If \(\text{iflag}=1\): J.P. Perdew and Y. Wang, PRB 45, 13244 (1992);  
+  !! if \(\text{iflag}=2\): G. Ortiz and P. Ballone, PRB 50, 1391 (1994).
   !
   USE kind_l,      ONLY: DP
   !
@@ -964,10 +964,9 @@ END SUBROUTINE pw_spin
 !-----------------------------------------------------------------------------
 SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )
 !$acc routine (lsd_lyp) seq
-  !==--------------------------------------------------------------==
-  !==  C. LEE, W. YANG, AND R.G. PARR, PRB 37, 785 (1988)          ==
-  !==  THIS IS ONLY THE LDA PART                                   ==
-  !==--------------------------------------------------------------==
+  !---------------------------------------------------------------------------
+  !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988). This is only the
+  !! LSDA part.
   !
   USE kind_l,       ONLY: DP
   !

@@ -227,7 +227,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   IMPLICIT NONE
   !
-  INCLUDE 'ks_solver_interfaces.fh' 
+  ! please do not capitalize (FORD rules)
+  include 'ks_solver_interfaces.fh'
   !  
   INTEGER, INTENT(IN) :: iter
   !! iteration index
