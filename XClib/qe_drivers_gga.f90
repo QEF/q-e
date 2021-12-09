@@ -87,7 +87,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 #else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
-!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c ) &
+!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag ) &
 !$omp shared( rho_in, grho_in, length, igcx, exx_started, &
 !$omp         grho_threshold_gga, rho_threshold_gga, gau_parameter, &
 !$omp         screening_parameter, exx_fraction, igcc, v1x_out, v2x_out, &
