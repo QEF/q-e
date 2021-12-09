@@ -669,14 +669,19 @@ END SUBROUTINE pbexsr
 !-----------------------------------------------------------------------
 !
 !      INCLUDE 'cnst.inc'
+      !
       use kind_l, ONLY : DP
+      !
+      IMPLICIT NONE
 
-      IMPLICIT REAL*8 (A-H,O-Z)
-      integer*4 IXC
-      PARAMETER(SMALL=1.D-20,SMAL2=1.D-08)
-      PARAMETER(US=0.161620459673995492D0,AX=-0.738558766382022406D0, &
-                UM=0.2195149727645171D0,UK=0.8040D0,UL=UM/UK)
+      INTEGER :: IXC
+      REAL(DP):: RHO, GRHO, V1X, V2X, OMEGA
+      REAL(DP), PARAMETER :: SMALL=1.D-20, SMAL2=1.D-08
+      REAL(DP), PARAMETER :: US=0.161620459673995492D0, &
+              AX=-0.738558766382022406D0, &
+              UM=0.2195149727645171D0,UK=0.8040D0,UL=UM/UK
       REAL(DP), PARAMETER :: f1 = -1.10783814957303361_DP, alpha = 2.0_DP/3.0_DP
+      REAL(DP):: RS, VX, FX, AA, RR, EX, S2, S, D1X, D2X, SX, DSDN, DSDG
 !     ==--------------------------------------------------------------==
 
 !      CALL XC(RHO,EX,EC,VX,VC)
@@ -746,37 +751,37 @@ END SUBROUTINE pbexsr
       
       REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
 
-      Real*8 rho,s,omega,Fx_wgga,dfxdn,dfxds
-      integer*4 nggatyp
+      Real(dp) :: rho,s,omega,Fx_wgga,dfxdn,dfxds
+      integer :: nggatyp
 
-      Real*8 Abar,B,C,D,E
+      Real(dp) :: Abar,B,C,D,E
       parameter (Abar = 0.757211D0, B = -0.106364D0, C = -0.118649D0)
       parameter (D =  0.609650D0, E = -0.0477963D0)
 
-      Real*8 One, Two, Three, Four, Five, Six, Seven, Eight, Nine
+      Real(dp) :: One, Two, Three, Four, Five, Six, Seven, Eight, Nine
       parameter(One=1.0D0,Two=2.0D0,Three=3.0D0,Four=4.0D0,Five=5.0D0)
       parameter(Six=6.0D0,Seven=7.0D0,Eight=8.0D0,Nine=9.0D0)
 
-      Real*8 f12, f32, f52, f72, f13, f23, f25, f45, f65, f54, f18, f38, f58
+      Real(dp) :: f12, f32, f52, f72, f13, f23, f25, f45, f65, f54, f18, f38, f58
       parameter(f12=0.5D0,f32=Three*f12,f52=Five*f12,f72=Seven*f12)
       parameter (f13=One/Three,f23=Two*f13)
       parameter (f25=Two/Five, f45=Two*f25, f65=Three*f25,f54=Five/Four)
       parameter(f18=One/Eight,f38=Three*f18,f58=Five*f18)
-      Real*8  pi2, pisqrt
+      Real(dp) :: pi2, pisqrt
       parameter( pi2=pi**Two, pisqrt=pi**f12)
 
-      Real*8 s0val,s0sq
+      Real(dp) :: s0val,s0sq
       parameter (s0val=2.0D0,s0sq=s0val*s0val)
 
-      Real*8 coef1,coef2,coef3
+      Real(dp) :: coef1,coef2,coef3
       parameter (coef1=(Four/Nine)*B,coef2=(Four/Nine),coef3=Eight/Nine)
 
-!      Real*8, dimension(6) :: a2,a3,a4,a5,a6,a7
-!      Real*8, dimension(6) :: b1,b2,b3,b4
-!      Real*8, dimension(6) :: b5,b6,b7,b8,b9
-      Real*8, dimension(8) :: a2,a3,a4,a5,a6,a7
-      Real*8, dimension(8) :: b1,b2,b3,b4
-      Real*8, dimension(8) :: b5,b6,b7,b8,b9
+!      Real(dp) ::, dimension(6) :: a2,a3,a4,a5,a6,a7
+!      Real(dp) ::, dimension(6) :: b1,b2,b3,b4
+!      Real(dp) ::, dimension(6) :: b5,b6,b7,b8,b9
+      Real(dp), dimension(8) :: a2,a3,a4,a5,a6,a7
+      Real(dp), dimension(8) :: b1,b2,b3,b4
+      Real(dp), dimension(8) :: b5,b6,b7,b8,b9
 
 !     HJS-type/ pbe-x pbesol-x cx13 rPW86 explore TestReserve / 
 !  Last two columns are parameters from the original HJS fits for PBE/PBesol
@@ -812,25 +817,25 @@ END SUBROUTINE pbexsr
                  7.01937D-5,   4.67972D-6, 0.0334840D0,   0.0050552D0 /
 !     End HJS-type parameters: JPCM 34, 025902 (2022)
 
-      integer*4 i
-      Real*8 s2,s3,s4,s5,s6,s7,s8,s9
-      Real*8 hnom,hdenom,dhnomds,dhdenomds
-      Real*8 hs,dhds
+      integer :: i
+      Real(dp) :: s2,s3,s4,s5,s6,s7,s8,s9
+      Real(dp) :: hnom,hdenom,dhnomds,dhdenomds
+      Real(dp) :: hs,dhds
 
-      Real*8 lam,eta,zeta,dzetads
-      Real*8 xi,phi,psi
-      Real*8 alpha,dalphadn,dalphads
-      Real*8 beta,dbetadn,dbetads
+      Real(dp) :: lam,eta,zeta,dzetads
+      Real(dp) :: xi,phi,psi
+      Real(dp) :: alpha,dalphadn,dalphads
+      Real(dp) :: beta,dbetadn,dbetads
 
-      Real*8 chi,dchidn,dchids
-      Real*8 chiP1, chiP1p, dchiP1dn, dchiP1ds
-      Real*8 chiP2, chiP2p, dchiP2dn, dchiP2ds
-      Real*8 chiP3, chiP3p, dchiP3dn, dchiP3ds
+      Real(dp) :: chi,dchidn,dchids
+      Real(dp) :: chiP1, chiP1p, dchiP1dn, dchiP1ds
+      Real(dp) :: chiP2, chiP2p, dchiP2dn, dchiP2ds
+      Real(dp) :: chiP3, chiP3p, dchiP3dn, dchiP3ds
 
-      Real*8 dampfac,cfbars,dcfbards
-      Real*8 egbars,degbards
+      Real(dp) :: dampfac,cfbars,dcfbards
+      Real(dp) :: egbars,degbards
 
-      Real*8 kf,ny,ny2,dnydn
+      Real(dp) :: kf,ny,ny2,dnydn
 
       kf    = (Three*pi2*rho) ** f13
       ny= omega/kf
@@ -1179,28 +1184,30 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
 !$acc routine (pbe_gauscheme) seq
        !--------------------------------------------------------------------
        !
+       USE kind_l, ONLY: DP
+       !
        IMPLICIT NONE
        !
-       REAL*8 rho,s,alpha_gau,Fx,dFxdr,dFxds
+       REAL(dp) :: rho,s,alpha_gau,Fx,dFxdr,dFxds
        ! input: charge and squared gradient and alpha_gau
        ! output: GGA enhancement factor of gau-PBE
        ! output: d(Fx)/d(s), d(Fx)/d(rho)
        !
-       REAL*8 Kx, Nx
+       REAL(dp) :: Kx, Nx
        ! PBE96 GGA enhancement factor
        ! GGA enhancement factor of Gaussian Function
        !
-       REAL*8 bx, cx, PI, sqrtpial, Prefac, term_PBE, Third, KsF
-       REAL*8 d1sdr, d1Kxds, d1Kxdr, d1bxdr, d1bxds, d1bxdKx, &
+       REAL(dp) :: bx, cx, PI, sqrtpial, Prefac, term_PBE, Third, KsF
+       REAL(dp) :: d1sdr, d1Kxds, d1Kxdr, d1bxdr, d1bxds, d1bxdKx, &
               d1Nxdbx,d1Nxdr, d1Nxds
        !
-       REAL*8 Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
+       REAL(dp) :: Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
        !
        SAVE Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
        DATA Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten &
          / 0D0,1D0,2D0,3D0,4D0,5D0,6D0,7D0,8D0,9D0,10D0 /
        !
-       REAL*8 k , mu
+       REAL(dp) :: k , mu
        DATA k / 0.804d0 / , mu / 0.21951d0 /
        ! parameters of PBE functional
        !
