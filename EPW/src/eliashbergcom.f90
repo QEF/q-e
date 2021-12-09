@@ -19,8 +19,12 @@
   !
   INTEGER :: nsw
   !! Nr. of grid points between (0,wscut) for real-axis, analytical continuation and Pade approximants
+  INTEGER :: ndosbin
+  !! num. of energy bins in Fermi window for dos
   INTEGER, ALLOCATABLE :: nsiw(:)
   !! Nr of grid points at each temperature on imag-axis, nsiw(nstemp)
+  INTEGER, ALLOCATABLE :: wsn(:)
+  !! frequency "indices" on imag-axis at iw, wsn(nsiw(nstemp))
   !
   REAL(KIND = DP) :: wsphmax
   !! maximum phonon frequency for evaluation of the integral over Omega (0, wsphmax)
@@ -28,14 +32,16 @@
   !! frequency step for Eliashberg spectral function
   REAL(KIND = DP) :: gap0
   !! initial guess for delta
-  REAL(KIND = DP), ALLOCATABLE :: dws(:)
-  !! grid size at each bin dws(nsw)
+  REAL(KIND = DP) :: muintr
+  !! superconducting (interacting) chemical potential
   REAL(KIND = DP), ALLOCATABLE :: ws(:)
   !! frequency on real-axis, ws(nsw)
   REAL(KIND = DP), ALLOCATABLE :: wsph(:)
   !! frequency on real-axis, wsph(nqstep)
   REAL(KIND = DP), ALLOCATABLE :: wsi(:)
   !! frequency on imag-axis at iw, wi(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: dosfw(:)
+  !! DOS (state/spin/eV/u.c.) over Fermi window in steps of 1 meV
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common
@@ -77,6 +83,14 @@
   !! -bose(omegap)-fermi( omega+omegap) (eqn for delta and znorm analytic continuation)
   REAL(KIND = DP), ALLOCATABLE :: gm(:, :)
   !! bose(omegap)+fermi(-omega+omegap) (eqn for delta and znorm analytic continuation)
+  REAL(KIND = DP), ALLOCATABLE :: znormip(:)
+  !! renormalization function on imag-axis at iwp, znormip(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: shifti(:)
+  !! energy shift on imag-axis at iw, shifti(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: shiftip(:)
+  !! energy shift on imag-axis at iwp, shiftip(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: orderi(:)
+  !! order paramter on the imag-axis at iw, orderi(nsiw(nstemp))
   !
   COMPLEX(KIND = DP), ALLOCATABLE :: delta(:)
   !! gap function on real-axis at iw
@@ -90,6 +104,8 @@
   !! phonon kernel on real-axis (eqn for delta)
   COMPLEX(KIND = DP), ALLOCATABLE :: km(:, :)
   !! phonon kernel on real-axis (eqn for znorm)
+  COMPLEX(KIND = DP), ALLOCATABLE :: shift(:)
+  !! energy shift on real-axis at iw
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common_iso
@@ -147,13 +163,13 @@
   REAL(KIND = DP), ALLOCATABLE :: agap(:, :, :)
   !! superconducting gap edge agap(nkfs,nbndfs,nstemp)
   REAL(KIND = DP), ALLOCATABLE :: adeltai(:, :, :)
-  !! gap function on imag-axis at iw, adeltai(nbndfs,nkfs,nsiw(nstemp))
+  !! gap function on imag-axis at iw, adeltai(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: adeltaip(:, :, :)
-  !! gap function on imag-axis at iwp, adeltaip(nbndfs,nkfs,nsiw(nstemp))
+  !! gap function on imag-axis at iwp, adeltaip(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: aznormi(:, :, :)
-  !! renormalization function on imag-axis at iw, aznormi(nbndfs,nkfs,nsiw(nstemp))
+  !! renormalization function on imag-axis at iw, aznormi(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: naznormi(:, :, :)
-  !! normal state renormalization function on imag-axis at iw, naznormi(nbndfs,nkfs,nsiw(nstemp))
+  !! normal state renormalization function on imag-axis at iw, naznormi(nsiw(itemp),nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: akeri(:, :, :, :, :)
   !! phonon kernel on imag-axis, akeri(nkfs,nqftot,nbndfs,nbndfs,2*nsiw(nstemp))
   REAL(KIND = DP), ALLOCATABLE :: adsumi(:, :, :)
@@ -162,6 +178,12 @@
   !! contribution to znorm eqn from the imaginary-axis in the analytic continuation azsumi(nbndfs,nkfs,nsw)
   REAL(KIND = DP), ALLOCATABLE :: memlt_pool(:)
   !! maximum allocatable memory per pool
+  REAL(KIND = DP), ALLOCATABLE :: aznormip(:, :, :)
+  !! renormalization function on imag-axis at iwp, aznormip(nsiw(itemp),nbndfs,nkfs)
+  REAL(KIND = DP), ALLOCATABLE :: ashifti(:, :, :)
+  !! energy shift on imag-axis at iw, ashifti(nsiw(itemp),nbndfs,nkfs)
+  REAL(KIND = DP), ALLOCATABLE :: ashiftip(:, :, :)
+  !! energy shift on imag-axis at iwp, ashiftip(nsiw(itemp),nbndfs,nkfs)
   !
   COMPLEX(KIND = DP), ALLOCATABLE :: aznorm(:, :, :)
   !! renormalization function on real-axis aznorm(nbndfs,nkfs,nsw)
@@ -171,6 +193,8 @@
   !! gap function on real-axis adelta(nbndfs,nkfs,nsw)
   COMPLEX(KIND = DP), ALLOCATABLE :: adeltap(:, :, :)
   !! gap function on real-axis adeltap(nbndfs,nkfs,nsw)
+  COMPLEX(KIND = DP), ALLOCATABLE :: ashift(:, :, :)
+  !! energy shift on real-axis ashift(nbndfs,nkfs,nsw)
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common_aniso

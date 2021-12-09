@@ -26,16 +26,17 @@
     !!
     !! itemp  - temperature point
     !!
+    !! SH: Modified to read the full-bandwidth runs' files (Nov 2021).
     !----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nstemp, fsthick
+    USE epwcom,        ONLY : nstemp, fsthick, fbw
     USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsiw, gap0, gap, agap, wsi, nznormi, znormi, deltai, &
+    USE eliashbergcom, ONLY : nsiw, gap0, gap, agap, wsi, znormi, deltai, &
                               aznormi, naznormi, adeltai, adeltaip, nkfs, nbndfs, ef0, ekfs, &
-                              dosef, wkfs, w0g
+                              dosef, wkfs, w0g, ashifti, ashiftip, shifti, aznormip
     USE constants_epw, ONLY : kelvin2eV, eps6, zero
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
@@ -61,7 +62,7 @@
     !! Counter on k-point
     INTEGER :: ibnd
     !! Counter on band
-    INTEGER :: imelt
+    INTEGER(8) :: imelt
     !! Required allocation of memory
     INTEGER :: ios
     !! IO error message
@@ -76,8 +77,12 @@
     !! Temporary variable for frequency
     REAL(KIND = DP) :: weight
     !
-    ! get the size of required allocated memory
-    imelt = (1 + nbndfs * nkfs) * nstemp + (3 + 4 * nbndfs * nkfs) * nsiw(itemp)
+    ! get the size of required allocated memory (SH: extra arrays in fbw runs).
+    IF (fbw) THEN
+      imelt = (1 + nbndfs * nkfs) * nstemp + (3 + 7 * nbndfs * nkfs) * nsiw(itemp)
+    ELSE
+      imelt = (1 + nbndfs * nkfs) * nstemp + (2 + 4 * nbndfs * nkfs) * nsiw(itemp)
+    ENDIF
     CALL mem_size_eliashberg(2, imelt)
     !
     ALLOCATE(gap(nstemp), STAT = ierr)
@@ -88,24 +93,36 @@
     IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating deltai', 1)
     ALLOCATE(znormi(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating znormi', 1)
-    ALLOCATE(nznormi(nsiw(itemp)), STAT = ierr)
-    IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating nznormi', 1)
-    ALLOCATE(adeltai(nbndfs, nkfs, nsiw(itemp)), STAT = ierr)
+    ALLOCATE(adeltai(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating adeltai', 1)
-    ALLOCATE(adeltaip(nbndfs, nkfs, nsiw(itemp)), STAT = ierr)
-    IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating adeltaip', 1)
-    ALLOCATE(aznormi(nbndfs, nkfs, nsiw(itemp)), STAT = ierr)
+    ALLOCATE(adeltaip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+    IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating adeltaip', 1)
+    ALLOCATE(aznormi(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating aznormi', 1)
-    ALLOCATE(naznormi(nbndfs, nkfs, nsiw(itemp)), STAT = ierr)
+    ALLOCATE(naznormi(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating naznormi', 1)
-    gap(:) = zero
-    agap(:, :, :) = zero
-    deltai(:) = zero
-    znormi(:) = zero
-    nznormi(:) = zero
-    adeltai(:, :, :) = zero
+    ! SH: allocate extra arrays needed for fbw
+    IF (fbw) THEN
+      ALLOCATE(shifti(nsiw(itemp)), STAT = ierr)
+      IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating shifti', 1)
+      ALLOCATE(ashifti(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+      IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating ashifti', 1)
+      ALLOCATE(ashiftip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+      IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating ashiftip', 1)
+      ALLOCATE(aznormip(nsiw(itemp), nbndfs, nkfs), STAT = ierr)
+      IF (ierr /= 0) CALL errore('eliashberg_read_aniso_iaxis', 'Error allocating aznormip', 1)
+      shifti(:) = zero
+      ashifti(:, :, :)  = zero
+      ashiftip(:, :, :) = zero
+      aznormip(:, :, :) = zero
+    ENDIF
+    deltai(:)  = zero
+    znormi(:)  = zero
+    gap(:)     = zero
+    agap(:, :, :)     = zero
+    adeltai(:, :, :)  = zero
     adeltaip(:, :, :) = zero
-    aznormi(:, :, :) = zero
+    aznormi(:, :, :)  = zero
     naznormi(:, :, :) = zero
     !
     IF (mpime == ionode_id) THEN
@@ -114,7 +131,7 @@
       ! anisotropic case
       IF (temp < 10.d0) THEN
         WRITE(name1, 101) TRIM(prefix), '.imag_aniso_00', temp
-      ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
+      ELSEIF (temp >= 10.d0) THEN
         WRITE(name1, 102) TRIM(prefix), '.imag_aniso_0', temp
       ELSEIF (temp >= 100.d0) THEN
         WRITE(name1, 103) TRIM(prefix), '.imag_aniso_', temp
@@ -127,10 +144,16 @@
         DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              READ(iufilgap, '(5ES20.10)') omega, eband, &
-                   aznormi(ibnd, ik, iw), adeltai(ibnd, ik, iw), naznormi(ibnd, ik, iw)
+              ! SH: read fbw entries
+              IF (fbw) THEN
+                READ(iufilgap, '(6ES20.10)') omega, eband, &
+                  aznormi(iw, ibnd, ik), adeltai(iw, ibnd, ik), naznormi(iw, ibnd, ik), ashifti(iw, ibnd, ik)
+              ELSE
+                READ(iufilgap, '(5ES20.10)') omega, eband, &
+                  aznormi(iw, ibnd, ik), adeltai(iw, ibnd, ik), naznormi(iw, ibnd, ik)
+              ENDIF
               IF (iw == 1) &
-                agap(ibnd, ik, itemp) = adeltai(ibnd, ik, 1)
+                agap(ibnd, ik, itemp) = adeltai(1, ibnd, ik)
             ENDIF
           ENDDO ! ibnd
         ENDDO ! ik
@@ -144,9 +167,10 @@
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
               weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
-              znormi(iw) = znormi(iw) + weight * aznormi(ibnd, ik, iw)
-              deltai(iw) = deltai(iw) + weight * adeltai(ibnd, ik, iw)
-              nznormi(iw) = nznormi(iw) + weight * naznormi(ibnd, ik, iw)
+              znormi(iw) = znormi(iw) + weight * aznormi(iw, ibnd, ik)
+              deltai(iw) = deltai(iw) + weight * adeltai(iw, ibnd, ik)
+              ! SH: shifti is present only for fbw runs
+              IF (fbw) shifti(iw) = shifti(iw) + weight * ashifti(iw, ibnd, ik)
             ENDIF
           ENDDO ! ibnd
         ENDDO ! ik
@@ -165,11 +189,17 @@
     CALL mp_bcast(agap, ionode_id, inter_pool_comm)
     CALL mp_bcast(deltai, ionode_id, inter_pool_comm)
     CALL mp_bcast(znormi, ionode_id, inter_pool_comm)
-    CALL mp_bcast(nznormi, ionode_id, inter_pool_comm)
     CALL mp_bcast(adeltai, ionode_id, inter_pool_comm)
     CALL mp_bcast(adeltaip, ionode_id, inter_pool_comm)
     CALL mp_bcast(aznormi, ionode_id, inter_pool_comm)
     CALL mp_bcast(naznormi, ionode_id, inter_pool_comm)
+    ! SH: extra arrays for fbw runs
+    IF (fbw) THEN
+      CALL mp_bcast(shifti, ionode_id, inter_pool_comm)
+      CALL mp_bcast(ashifti, ionode_id, inter_pool_comm)
+      CALL mp_bcast(ashiftip, ionode_id, inter_pool_comm)
+      CALL mp_bcast(aznormip, ionode_id, inter_pool_comm)
+    ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
     101 FORMAT(a, a14, f4.2)
@@ -189,15 +219,18 @@
     !! This routine writes to files results from the solutions of the Eliashberg equations
     !! on the imaginary-axis
     !!
+    !! SH: Modified to write the full-bandwidth runs' files, and re-ordered
+    !!       "deltai, ..." arrays' indices for efficiency (Nov 2021).
+    !!
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : fsthick, laniso, liso
+    USE epwcom,        ONLY : fsthick, laniso, liso, fbw
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : nsiw, agap, wsi, &
                               naznormi, aznormi, adeltai, nznormi, znormi, &
-                              deltai, nkfs, nbndfs, ef0, ekfs
+                              deltai, nkfs, nbndfs, ef0, ekfs, ashifti, shifti
     USE constants_epw, ONLY : kelvin2eV
     !
     IMPLICIT NONE
@@ -239,15 +272,26 @@
       OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('eliashberg_write_iaxis', 'error opening file ' // name1, iufilgap)
       !
-      WRITE(iufilgap,'(5a20)') '#        w [eV]', 'Enk-Ef [eV]', 'znorm(w)', 'delta(w) [eV]', 'nznorm(w)'
+      ! SH: write the header for fbw runs
+      IF (fbw) THEN
+        WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'znorm(w)', 'delta(w) [eV]', 'nznorm(w)','shift(w) [eV]'
+      ELSE
+        WRITE(iufilgap,'(5a20)') '#        w [eV]', 'Enk-Ef [eV]', 'znorm(w)', 'delta(w) [eV]', 'nznorm(w)'
+      ENDIF
       DO iw = 1, nsiw(itemp) ! loop over omega
         DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              WRITE(iufilgap, '(5ES20.10)') wsi(iw), ekfs(ibnd, ik)- ef0, &
-                    aznormi(ibnd, ik, iw), adeltai(ibnd, ik, iw), naznormi(ibnd, ik, iw)
+              ! SH: write the entries for fbw runs
+              IF (fbw) THEN
+                WRITE(iufilgap, '(6ES20.10)') wsi(iw), ekfs(ibnd, ik)- ef0, &
+                  aznormi(iw, ibnd, ik), adeltai(iw, ibnd, ik), naznormi(iw, ibnd, ik), ashifti(iw, ibnd, ik)
+              ELSE
+                WRITE(iufilgap, '(5ES20.10)') wsi(iw), ekfs(ibnd, ik)- ef0, &
+                  aznormi(iw, ibnd, ik), adeltai(iw, ibnd, ik), naznormi(iw, ibnd, ik)
+              ENDIF
               IF (iw == 1) &
-                agap(ibnd, ik, itemp) = adeltai(ibnd, ik, iw)
+                agap(ibnd, ik, itemp) = adeltai(iw, ibnd, ik)
             ENDIF
           ENDDO ! ibnd
         ENDDO ! ik
@@ -274,9 +318,19 @@
       OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('eliashberg_write_iaxis', 'error opening file ' // name1, iufilgap)
       !
-      WRITE(iufilgap, '(4a20)') 'w [eV]', 'znorm(w)', 'delta(w) [eV]', 'nznorm(w)'
+      ! SH: write the header for fbw runs
+      IF (fbw) THEN
+        WRITE(iufilgap, '(5a20)') 'w [eV]', 'znorm(w)', 'delta(w) [eV]', 'nznorm(w)', 'shift(w) [eV]'
+      ELSE
+        WRITE(iufilgap, '(4a20)') 'w [eV]', 'znorm(w)', 'delta(w) [eV]', 'nznorm(w)'
+      ENDIF
       DO iw = 1, nsiw(itemp) ! loop over omega
-        WRITE(iufilgap, '(4ES20.10)') wsi(iw), znormi(iw), deltai(iw), nznormi(iw)
+        ! SH: write the entries for fbw runs
+        IF (fbw) THEN
+          WRITE(iufilgap, '(5ES20.10)') wsi(iw), znormi(iw), deltai(iw), nznormi(iw), shifti(iw)
+        ELSE
+          WRITE(iufilgap, '(4ES20.10)') wsi(iw), znormi(iw), deltai(iw), nznormi(iw)
+        ENDIF
       ENDDO
       CLOSE(iufilgap)
     ENDIF
@@ -297,19 +351,20 @@
     !-----------------------------------------------------------------------
     SUBROUTINE eliashberg_write_raxis(itemp, cname)
     !-----------------------------------------------------------------------
-    !
-    !
-    ! This routine writes to files results from the solutions of the Eliashberg
-    ! equations on the real-axis
+    !!
+    !! This routine writes to files results from the solutions of the Eliashberg
+    !! equations on the real-axis
+    !!
+    !! SH: Modified to write the full-bandwidth runs' files (Nov 2021).
     !
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
+    USE epwcom,        ONLY : nqstep, fsthick, laniso, liso, fbw
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : nsw, ws, gap, agap, delta, znorm, adelta, aznorm, &
-                              nkfs, nbndfs, ef0, ekfs
+                              nkfs, nbndfs, ef0, ekfs, shift, ashift
     USE constants_epw, ONLY : kelvin2eV
     !
     IMPLICIT NONE
@@ -353,8 +408,14 @@
         ENDIF
         OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('eliashberg_write_raxis', 'error opening file ' // name1, iufilgap)
-        WRITE(iufilgap, '(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]', &
-                                  'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]'
+        ! SH: write the header for fbw runs
+        IF (fbw) THEN
+          WRITE(iufilgap, '(8a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]', &
+            'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]', 'Re[shift(w)] [eV]', 'Im[shift(w)] [eV]'
+        ELSE
+          WRITE(iufilgap, '(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]', &
+            'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]'
+        ENDIF
       ENDIF
       !
       DO ik = 1, nkfs
@@ -372,9 +433,18 @@
                 lgap = .FALSE.
               ENDIF
               IF (iverbosity == 2) THEN
-                WRITE(iufilgap, '(6ES20.10)') ws(iw), ekfs(ibnd, ik) - ef0, &
-                      REAL(aznorm(ibnd, ik, iw)), AIMAG(aznorm(ibnd, ik, iw)), &
-                      REAL(adelta(ibnd, ik, iw)), AIMAG(adelta(ibnd, ik, iw))
+                ! SH: write the entries for fbw runs
+                IF (fbw) THEN
+                  WRITE(iufilgap, '(8ES20.10)') ws(iw), ekfs(ibnd, ik) - ef0, &
+                    REAL(aznorm(ibnd, ik, iw)), AIMAG(aznorm(ibnd, ik, iw)), &
+                    REAL(adelta(ibnd, ik, iw)), AIMAG(adelta(ibnd, ik, iw)), &
+                    REAL(ashift(ibnd, ik, iw)), AIMAG(ashift(ibnd, ik, iw))
+
+                ELSE
+                  WRITE(iufilgap, '(6ES20.10)') ws(iw), ekfs(ibnd, ik) - ef0, &
+                    REAL(aznorm(ibnd, ik, iw)), AIMAG(aznorm(ibnd, ik, iw)), &
+                    REAL(adelta(ibnd, ik, iw)), AIMAG(adelta(ibnd, ik, iw))
+                ENDIF
               ENDIF
             ENDDO ! iw
             IF (lgap) &
@@ -402,7 +472,13 @@
       ENDIF
       OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('eliashberg_write_raxis', 'error opening file ' // name1, iufilgap)
-      WRITE(iufilgap, '(5a20)') 'w [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]', 'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]'
+      ! SH: write the header for fbw runs
+      IF (fbw) THEN
+        WRITE(iufilgap, '(7a20)') 'w [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]', 'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]', &
+          'Re[shift(w)] [eV]', 'Im[shift(w)] [eV]'
+      ELSE
+        WRITE(iufilgap, '(5a20)') 'w [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]', 'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]'
+      ENDIF
       !
       lgap = .TRUE.
       ! DO iw = 1, nsw
@@ -415,8 +491,14 @@
             gap(itemp) = (var3 * ws(iw + 1) - var4 * ws(iw)) / (var3 - var4)
           lgap = .FALSE.
         ENDIF
-        WRITE(iufilgap, '(5ES20.10)') ws(iw), REAL(znorm(iw)), AIMAG(znorm(iw)), &
-                                      REAL(delta(iw)), AIMAG(delta(iw))
+        ! SH: write the entries for fbw runs
+        IF (fbw) THEN
+          WRITE(iufilgap, '(7ES20.10)') ws(iw), REAL(znorm(iw)), AIMAG(znorm(iw)), &
+            REAL(delta(iw)), AIMAG(delta(iw)), REAL(shift(iw)), AIMAG(shift(iw))
+        ELSE
+          WRITE(iufilgap, '(5ES20.10)') ws(iw), REAL(znorm(iw)), AIMAG(znorm(iw)), &
+            REAL(delta(iw)), AIMAG(delta(iw))
+        ENDIF
       ENDDO ! iw
       CLOSE(iufilgap)
       IF (lgap) &
@@ -437,10 +519,292 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
+    SUBROUTINE write_phdos
+    !-----------------------------------------------------------------------
+    !!
+    !! SH: Writes "phdos" files for phonon density of states (Nov 2021).
+    !! RM: Updated (Nov 2021).
+    !!
+    USE kinds,         ONLY : DP
+    USE io_var,        ONLY : iudosfil, iunselecq, iufilfreq
+    USE io_files,      ONLY : prefix, tmp_dir
+    USE epwcom,        ONLY : nqstep, nqsmear, degaussq, delta_qsmear, eps_acustic
+    USE constants_epw, ONLY : zero, ryd2mev
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
+    USE mp_world,      ONLY : mpime, world_comm
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE io_global,     ONLY : stdout, ionode_id
+    !
+    USE modes,         ONLY : nmodes
+    USE elph2,         ONLY : wf, wqf, nqtotf
+    !
+    IMPLICIT NONE
+    !
+    ! Local variables
+    CHARACTER(LEN = 256) :: name1, filfreq, dirname
+    !! file names
+    !
+    INTEGER :: ismear
+    !! Counter on smearings
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: ios
+    !! IO error message
+    INTEGER :: iq
+    !! Counter on q-points
+    INTEGER :: imode
+    !! Counter on mode
+    INTEGER :: iwph
+    !! Counter over frequncy
+    !
+    REAL(KIND = DP) :: weightq
+    !! factors in lambda_eph and a2f
+    REAL(KIND = DP) :: sigma
+    !! smearing in delta function
+    REAL(KIND = DP) :: dw
+    !! Frequency intervals
+    REAL(KIND = DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss: an approximation to the delta function
+    REAL(KIND = DP), ALLOCATABLE :: ww(:)
+    !! Current frequency 
+    REAL(KIND = DP), ALLOCATABLE :: phdos(:, :)
+    !! Phonon density of states for different ismear
+    REAL(KIND = DP), ALLOCATABLE :: phdos_modeproj(:, :)
+    !! Phonon density of states  projected over modes for different ismear
+    !
+    IF (mpime == ionode_id) THEN
+      !
+      ALLOCATE(ww(nqstep), STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_phdos', 'Error allocating ww', 1)
+      ww(:) = zero
+      !
+      dw = 1.1d0 * MAXVAL(wf(:, :)) /  DBLE(nqstep) ! increase by 10%
+      DO iwph = 1, nqstep  
+        ww(iwph) = DBLE(iwph) * dw
+      ENDDO
+      !
+      ALLOCATE(phdos(nqstep, nqsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_phdos', 'Error allocating phdos', 1)
+      ALLOCATE(phdos_modeproj(nmodes, nqstep), STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_phdos', 'Error allocating phdos_modeproj', 1)
+      phdos(:, :) = zero
+      phdos_modeproj(:, :) = zero
+      !
+      DO ismear = 1, nqsmear
+        sigma = degaussq + (ismear - 1) * delta_qsmear
+        DO iq = 1, nqtotf
+          DO imode = 1, nmodes
+            IF (wf(imode, iq) > eps_acustic) THEN
+              DO iwph = 1, nqstep
+                weightq  = w0gauss((ww(iwph) - wf(imode, iq)) / sigma, 0) / sigma
+                phdos(iwph, ismear) = phdos(iwph, ismear) + wqf(iq) * weightq
+                IF (ismear == 1) &
+                  phdos_modeproj(imode, iwph) = phdos_modeproj(imode, iwph) + wqf(iq) * weightq
+              ENDDO ! iwph
+            ENDIF ! wf
+          ENDDO ! imode
+        ENDDO ! iq
+      ENDDO ! ismear
+      !
+      name1 = TRIM(prefix) // '.phdos'
+      OPEN(UNIT = iudosfil, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('write_phdos', 'error opening file ' // name1, iudosfil)
+      !
+      DO ismear = 1, nqsmear
+        IF (ismear == nqsmear) &
+          WRITE(iudosfil, '(" w[meV] phdos[states/meV] for ", i4, " smearing values")') ismear
+        DO iwph = 1, nqstep
+          IF (ismear == nqsmear) &
+            WRITE(iudosfil, '(f12.7, 15f15.7)') ww(iwph) * ryd2mev, phdos(iwph, :) / ryd2mev
+        ENDDO
+      ENDDO
+      !
+      CLOSE(iudosfil)
+      !
+      name1 = TRIM(prefix) // '.phdos_proj'
+      OPEN(UNIT = iudosfil, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('write_phdos', 'error opening file ' // name1, iudosfil)
+      WRITE(iudosfil, '("w[meV] phdos[states/meV] phdos_modeproj[states/meV]")')
+      DO iwph = 1, nqstep
+        ! wsph in meV (from eV) and phdos in states/meV (from states/eV)
+        WRITE(iudosfil, '(f12.7, 100f15.7)') ww(iwph) * ryd2mev, & 
+              phdos(iwph, 1) / ryd2mev, phdos_modeproj(:, iwph) / ryd2mev
+      ENDDO
+      CLOSE(iudosfil)
+      !
+      DEALLOCATE(ww, STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_phdos', 'Error deallocating ww', 1)
+      DEALLOCATE(phdos, STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_phdos', 'Error deallocating phdos', 1)
+      DEALLOCATE(phdos_modeproj, STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_phdos', 'Error deallocating phdos_modeproj', 1)
+    ENDIF
+    !
+    WRITE(stdout, '(/5x, a/)') 'Finish writing phdos files ' // TRIM(prefix) // '.phdos' &
+      // ' and ' // TRIM(prefix) // '.phdos_proj'
+    ! 
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE write_phdos
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE write_dos(eferm, nele)
+    !-----------------------------------------------------------------------
+    !!
+    !! SH: This routine writes electronic "dos" file; it will be 
+    !!       used for full-bandwidth iso run (Nov 2021).
+    !!
+    USE kinds,         ONLY : DP
+    USE io_var,        ONLY : iufildos
+    USE io_files,      ONLY : prefix, tmp_dir
+    USE epwcom,        ONLY : nbndsub, ngaussw, degaussw, fsthick, dos_del
+    USE constants_epw, ONLY : ryd2ev, zero
+    USE elph2,         ONLY : etf, wkf, nkqf
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP) :: eferm
+    !! Fermi energy
+    REAL(KIND = DP) :: nele
+    !! pre-calculated number of electrons in Fermi window
+    !
+    ! Local variables
+    CHARACTER(LEN = 256) :: fildos
+    !! Name of Fermi ene. window dos file
+    !
+    INTEGER :: dummy
+    !! Dummy variable for writing
+    INTEGER :: wnum
+    !! number of energy intervals in Fermi window
+    INTEGER :: ios
+    !! IO error message
+    INTEGER :: ierr
+    !! Error status
+    !
+    REAL(KIND = DP) :: wene
+    !! energies in Fermi window
+    REAL(KIND = DP) :: wval
+    !! dos value in fermi window
+    REAL(KIND = DP) :: wele
+    !! no of electrons in fermi window
+    REAL(KIND = DP), EXTERNAL :: dos_ef
+    !! Function to compute the density of states at the Fermi level
+    !
+    fildos = TRIM(tmp_dir) // '/' // TRIM(prefix) // '.dos'
+    !
+    wnum = NINT(2.d0 * fsthick * ryd2ev / dos_del)
+    wele = zero
+    !
+    OPEN(UNIT = iufildos, FILE = fildos, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+    IF (ios /= 0) CALL errore('write_dos', 'error opening file ' // fildos, iufildos)
+    WRITE(iufildos, '(a,ES20.10,a,ES20.10,a)') '# EFermi[eV]    ', eferm * ryd2ev ,'   dos_EFermi[eV^-1] ', &
+      dos_ef(ngaussw, degaussw, eferm, etf, wkf, nkqf, nbndsub) / ryd2ev
+    WRITE(iufildos, '(a,ES20.10,a,ES20.10)') '# FermiWind[eV] ', fsthick * ryd2ev, '   Nr_electrons      ', nele
+    WRITE(iufildos, '(a,ES20.10,a,I8)')     '# dos_del[eV]   ', dos_del,          '   Nr_bins           ', wnum
+    WRITE(iufildos, '(a)') '#          E [eV]      dos[state/eV]   Int dos[#]'
+    !
+    DO dummy = 1, wnum
+      wene = (eferm - fsthick) + DBLE(dummy - 1) * dos_del / ryd2ev
+      wval = dos_ef(ngaussw, degaussw, wene, etf, wkf, nkqf, nbndsub)
+      wele = wele + wval / ryd2ev * dos_del
+      ! total DOS is being written (not per spin!) for compatibility with QE format
+      WRITE(iufildos,'(5x,3ES20.10)') wene * ryd2ev, wval / ryd2ev , wele
+    ENDDO
+    !
+    CLOSE(iufildos)
+    WRITE(stdout, '(/5x, a/)') 'Finish writing dos file ' // TRIM(prefix) // '.dos'
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE write_dos
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE read_dos()
+    !-----------------------------------------------------------------------
+    !!
+    !! SH: Read the electronic dos in Fermi window from "dos" file (Nov 2021).
+    !!
+    USE eliashbergcom, ONLY : dosfw, ndosbin, ef0, dosef
+    USE constants_epw, ONLY : zero, two
+    USE kinds,         ONLY : DP
+    USE io_var,        ONLY : iufildos
+    USE io_global,     ONLY : stdout
+    USE io_files,      ONLY : prefix, tmp_dir
+    USE epwcom,        ONLY : dos_del, fila2f
+    !
+    IMPLICIT NONE
+    !
+    ! Local variables
+    CHARACTER(LEN = 256) :: fildos
+    !! Output file name
+    CHARACTER(LEN = 256) :: tmpst0, tmpst1
+    !! Temporary string variable
+    !
+    LOGICAL :: file_exists
+    !! Status of file
+    !
+    INTEGER :: ie
+    !! Counter over energies
+    INTEGER :: ios
+    !! IO error message
+    INTEGER :: ierr
+    !! Error status
+    !
+    REAL(KIND = DP) :: neband
+    !! Integrated dos (Nr of electrons)
+    !
+    fildos = TRIM(tmp_dir) // '/' // TRIM(prefix) // '.dos'
+    !
+    WRITE(stdout, '(/5x, a/)') 'Start reading dos file ' // TRIM(prefix) // '.dos'
+    WRITE(stdout, '(a)') ' '
+    !
+    INQUIRE(FILE=fildos, EXIST=file_exists)
+    IF (.NOT. file_exists) CALL errore('read_dos', 'error opening file ' // fildos, 1)
+    !
+    OPEN(UNIT = iufildos, FILE = fildos, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+    !
+    READ(iufildos, '(a)') tmpst0
+    READ(iufildos, *) tmpst1
+    READ(iufildos, *) tmpst1, tmpst1, dos_del, tmpst1, ndosbin
+    READ(iufildos, *) tmpst1
+    !! if it's a run from a2f file, Ef and dos(Ef) are needed!
+    IF (fila2f /= ' ') THEN
+      READ(tmpst0, *) tmpst1, tmpst1, ef0, tmpst1, dosef
+      dosef = dosef / two
+    ENDIF
+    !
+    ALLOCATE(dosfw(2 * ndosbin), STAT = ierr)
+    IF (ierr /= 0) CALL errore('read_dos', 'Error allocating dosfw', 1)
+    dosfw(:) = zero
+    neband   = zero
+    !
+    DO ie = 1, ndosbin
+      READ(iufildos,*) dosfw(ie), dosfw(ie + ndosbin), neband
+      dosfw(ie + ndosbin) = dosfw(ie + ndosbin) / two ! switch to per spin 
+    ENDDO
+    CLOSE(iufildos)
+    !
+    WRITE(stdout, '(/5x, a/)') 'Finish reading dos file ' // TRIM(prefix) // '.dos'
+    WRITE(stdout, '(a)') ' '
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE read_dos
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
     SUBROUTINE read_a2f()
     !-----------------------------------------------------------------------
     !!
     !! Read the eliashberg spectral function from fila2f
+    !!
+    !! SH: Modified with removing "a2f_iso file" (Nov 2021).
     !!
     USE epwcom,        ONLY : nqstep, fila2f
     USE eliashbergcom, ONLY : wsphmax, wsph, dwsph, a2f_iso
@@ -468,7 +832,7 @@
     a2f_iso(:) = zero
     wsph(:) = zero
     !
-    IF (fila2f == ' ') WRITE(fila2f, '(a, a8)') TRIM(prefix), '.a2f_iso'
+    IF (fila2f == ' ') WRITE(fila2f, '(a, a4)') TRIM(prefix), '.a2f'
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iua2ffil, FILE = fila2f, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('read_a2f', 'error opening file ' // fila2f, iua2ffil)
@@ -858,7 +1222,7 @@
     !! IO error message
     INTEGER :: ierr
     !! Error status
-    INTEGER :: imelt
+    INTEGER(8) :: imelt
     !! Memory allocated
     INTEGER, ALLOCATABLE :: selecq(:)
     !! List of selected q-points
@@ -1048,7 +1412,7 @@
     !! Lower/upper bound index after k parallelization
     INTEGER :: tmp_pool_id
     !! Pool index read from file
-    INTEGER :: imelt
+    INTEGER(8) :: imelt
     !! Memory allocated
     INTEGER :: nmin, nmax
     !! Lower/upper bound index for .ephmat file read in current pool
@@ -1201,7 +1565,7 @@
     USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
                            nqtotf, wf, xqf, nkqtotf, efnew, nbndfst, nktotf
     USE eliashbergcom, ONLY : nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
-    USE constants_epw, ONLY : ryd2ev, ryd2mev, two, eps8
+    USE constants_epw, ONLY : ryd2ev, ryd2mev, two, eps8, eps6, zero
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
     USE division,      ONLY : fkbounds
@@ -1230,7 +1594,9 @@
     !! Counter on the k-point index
     INTEGER :: ikk
     !! k-point index
-    INTEGER :: ibnd, jbnd
+    INTEGER :: ikq
+    !! k+q-point index
+    INTEGER :: ibnd, jbnd, pbnd
     !! Counter on bands
     INTEGER :: imode
     !! Counter on mode
@@ -1250,8 +1616,14 @@
     !! Error status
     INTEGER :: ifil
     !! Temporary running index
+    INTEGER :: n
+    !! Integer for the degenerate average over eigenstates
     INTEGER :: ind(npool)
     !! Temporary index
+    REAL(KIND = DP) :: epf2_deg(nbndfst, nbndfst, nmodes)
+    !! Epc in degeneracies
+    REAL(KIND = DP) :: w_1, w_2
+    !! Temporary electronic energy
     REAL(KIND = DP) :: tmp_g2(nbndfst * nbndfst * nmodes * nkf)
     !! Temporary index
     REAL(KIND = DP) :: ef0
@@ -1395,6 +1767,52 @@
     DO ik = 1, nkf
       !
       ikk = 2 * ik - 1
+      ikq = ikk + 1
+      !
+      ! Average the el-ph matrix elements on degenerate bands and phonon modes.
+      ! HP: Adapted from: io_transport.f90
+      !
+      ! Average over the k electrons
+      DO imode = 1, nmodes
+        DO jbnd = 1, nbndfst
+          DO ibnd = 1, nbndfst
+            w_1 = etf(ibndmin - 1 + ibnd, ikk)
+            g2  = zero
+            n   = 0
+            DO pbnd = 1, nbndfst
+              w_2 = etf(ibndmin - 1 + pbnd, ikk)
+              IF (ABS(w_2-w_1) < eps6) THEN
+                n = n + 1
+                g2 = g2 + ABS(epf17(jbnd, pbnd, imode, ik))**two
+              ENDIF
+            ENDDO
+            epf2_deg(jbnd, ibnd, imode) = DSQRT(g2 / FLOAT(n))
+          ENDDO
+        ENDDO
+      ENDDO
+      epf17(:, :, :, ik) = epf2_deg(:, :, :)
+      !
+      ! Average over the k+q electrons
+      DO imode = 1, nmodes
+        DO jbnd = 1, nbndfst
+          DO ibnd = 1, nbndfst
+            w_1 = etf(ibndmin - 1 + jbnd, ikq)
+            g2 = 0.d0
+            n  = 0
+            DO pbnd = 1, nbndfst
+              w_2 = etf(ibndmin - 1 + pbnd, ikq)
+              IF (ABS(w_2 - w_1) < eps6) THEN
+                n = n + 1
+                g2 = g2 + ABS(epf17(pbnd, ibnd, imode, ik))**two
+              ENDIF
+            ENDDO
+            epf2_deg(jbnd, ibnd, imode) = g2 / FLOAT(n)
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+      ! Note that we already took the square above
+      epf17(:, :, :, ik) = epf2_deg(:, :, :)
       !
       ! go only over irreducible k-points
       !
@@ -1419,9 +1837,9 @@
                          .OR. ABS(xqf(3, iq)) > eps8 )) THEN
                       ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
                       !     number, in which case its square will be a negative number.
-                      g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq)
+                      g2 = REAL(epf17(jbnd, ibnd, imode, ik) * inv_wq)
                     ELSE
-                      g2 = ABS(epf17(jbnd, ibnd, imode, ik))**two * inv_wq
+                      g2 = ABS(epf17(jbnd, ibnd, imode, ik)) * inv_wq
                     ENDIF
                     ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
                     tmp_g2(ind(my_pool_id + 1)) = g2
@@ -1681,7 +2099,7 @@
     ALLOCATE(ekfs(nbndfs, nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating ekfs', 1)
     ALLOCATE(wkfs(nkfs), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating wkf_', 1)
+    IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating wkfs', 1)
     ALLOCATE(xkfs(3, nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating xkfs', 1)
     xkfs(:, :) = zero
@@ -2037,6 +2455,7 @@
     temp = gtemp(itemp) / kelvin2eV
     !
     delta_min = MINVAL(agap(:, :, itemp))
+    !
     IF (delta_min > zero) THEN
       delta_min = 0.9d0 * delta_min
     ELSE
@@ -2077,8 +2496,9 @@
     IF (ios /= 0) CALL errore('gap_distribution_FS', 'error opening file ' // name1, iufilgap)
     WRITE(iufilgap, '(2a20)') '#     T [K]    ', '\rho(delta_nk) [meV]'
     DO ibin = 1, nbin
-      WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), &
-                                   (dbin * DBLE(ibin) + delta_min) * 1000.d0
+      IF (delta_k_bin(ibin) > eps5) &
+        WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), &
+                                     (dbin * DBLE(ibin) + delta_min) * 1000.d0
     ENDDO
     CLOSE(iufilgap)
     !

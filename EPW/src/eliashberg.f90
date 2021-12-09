@@ -14,10 +14,11 @@
   !!
   USE io_global,         ONLY : stdout
   USE epwcom,            ONLY : liso, fila2f, gap_edge, lreal, limag, laniso, &
-                                tc_linear
+                                tc_linear, fbw
   USE eliashbergcom,     ONLY : gap0
   USE supercond,         ONLY : eliashberg_init, evaluate_a2f_lambda, &
-                                estimate_tc_gap, deallocate_eliashberg_elphon
+                                estimate_tc_gap, deallocate_eliashberg_elphon, &
+                                gap_from_a2f
   USE io_eliashberg,     ONLY : read_a2f, read_frequencies, read_eigenvalues, &
                                 read_ephmat, read_kqmap
   USE supercond_iso,     ONLY : eliashberg_iso_iaxis, eliashberg_iso_raxis, &
@@ -30,7 +31,11 @@
   !
   IF (liso) THEN
     WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
-    WRITE(stdout, '(5x, "Solve isotropic Eliashberg equations")')
+    IF (fbw) THEN
+      WRITE(stdout, '(5x, "Solve full-bandwidth isotropic Eliashberg equations")')
+    ELSE
+      WRITE(stdout, '(5x, "Solve isotropic Eliashberg equations")')
+    ENDIF
     WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
     CALL eliashberg_init()
     IF (fila2f == ' ') THEN
@@ -55,14 +60,18 @@
   !
   IF (laniso) THEN
     WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
-    WRITE(stdout, '(5x, "Solve anisotropic Eliashberg equations")')
+    IF (fbw) THEN
+      WRITE(stdout, '(5x, "Solve full-bandwidth anisotropic Eliashberg equations")')
+    ELSE
+      WRITE(stdout, '(5x, "Solve anisotropic Eliashberg equations")')
+    ENDIF
     WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
     CALL eliashberg_init()
     CALL read_frequencies()
     CALL read_eigenvalues()
     CALL read_kqmap()
     CALL read_ephmat()
-    CALL evaluate_a2f_lambda()
+    IF (.NOT. gap_from_a2f()) CALL evaluate_a2f_lambda()
     CALL estimate_tc_gap()
     IF (gap_edge > 0.d0) THEN
       gap0 = gap_edge

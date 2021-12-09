@@ -880,7 +880,7 @@
     !! This routine print a header for superconductivity calculation
     !!
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
+    USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut, fbw
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : nsiw, nsw
     USE constants_epw, ONLY : kelvin2eV
@@ -897,12 +897,18 @@
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K'
       WRITE(stdout, '(a)') '    '
-      IF (liso) &
+      IF (liso .AND. .NOT. fbw) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on imaginary-axis'
-      IF (laniso .AND. .NOT. imag_read) &
+      IF (liso .AND. fbw) &
+        WRITE(stdout, '(5x, a)') 'Solve full-bandwidth isotropic Eliashberg equations on imaginary-axis'
+      IF (laniso .AND. .NOT. fbw .AND. .NOT. imag_read) &
         WRITE(stdout, '(5x, a)') 'Solve anisotropic Eliashberg equations on imaginary-axis'
-      IF (laniso .AND. imag_read) &
-        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis '
+      IF (laniso .AND. fbw .AND. .NOT. imag_read) &
+        WRITE(stdout, '(5x, a)') 'Solve full-bandwidth anisotropic Eliashberg equations on imaginary-axis'
+      IF (laniso .AND. .NOT. fbw .AND. imag_read) &
+        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis'
+      IF (laniso .AND. fbw .AND. imag_read) &
+        WRITE(stdout, '(5x, a)') 'Read from file delta and znorm and shift on imaginary-axis'
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
       WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)

@@ -40,10 +40,10 @@
                             wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
                             delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
                             broyden_beta, conv_thr_raxis, temps, tempsmin, tempsmax,   &
-                            broyden_ndim, wscut, wsfc, nqstep, limag, lreal, muc,      &
-                            gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst, nswfc, &
-                            epwread, eliashberg, imag_read, kerread, kerwrite, lunif,  &
-                            fermi_energy, efermi_read, max_memlt, fila2f, pwc, nswc,   &
+                            broyden_ndim, wscut, nqstep, limag, lreal, muc,            &
+                            gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst,        &
+                            epwread, eliashberg, imag_read, kerread, kerwrite,         &
+                            fermi_energy, efermi_read, max_memlt, fila2f,              &
                             ep_coupling, nw_specfun, wmax_specfun, wmin_specfun,       &
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
@@ -60,7 +60,7 @@
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot, fixsym, epw_no_t_rev,     &
                             epw_tr, epw_nosym, epw_noinv, epw_crysym,                  &
-                            bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver,    &
+                            bfieldx, bfieldy, bfieldz,                                 &
                             mob_maxfreq, mob_nfreq
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
@@ -94,6 +94,10 @@
                             sigma_plrn, ethr_Plrn, full_diagon_plrn, mixing_Plrn,      &
                             init_plrn_wf, niterPlrn, nDOS_plrn, emax_plrn, emin_plrn,  &
                             sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
+  !-------------------------------------------------------------------------------------
+  ! SH: Added for tc linearized equation, sparce sampling, and full-bandwidth calculations
+  USE epwcom,        ONLY : gridsamp, griddens, tc_linear, tc_linear_solver, fbw,      &
+                            dos_del, lmuchem
   ! -------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
@@ -138,20 +142,20 @@
   !
   NAMELIST / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf, rand_q, rand_nq, rand_k,   &
-       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub, rand_nk, specfun_pl, nswc, &
-       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, nswfc,    &
+       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub, rand_nk, specfun_pl,       &
+       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem,                  &
        eig_read, wepexst, epexst, vme, elecselfen, phonselfen, use_ws, nc,     &
        degaussw, fsthick, nsmear, delta_smear, nqf1, nqf2, nqf3, nkf1, nkf2,   &
        dvscf_dir, ngaussw, epmatkqread, selecqread, nkf3, mp_mesh_k, mp_mesh_q,&
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max, nswi, &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn, ephwrite,      &
        wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen, filqf, filkf,      &
-       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep, pwc,    &
+       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep,         &
        broyden_beta, broyden_ndim, nstemp, temps, bfieldx, bfieldy, bfieldz,   &
-       conv_thr_raxis, conv_thr_iaxis, conv_thr_racon, wsfc, wscut, system_2d, &
+       conv_thr_raxis, conv_thr_iaxis, conv_thr_racon, wscut, system_2d,       &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,&
        npade, lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,      &
-       lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
+       lifc, asr_typ, kerwrite, kerread, imag_read, eliashberg,                &
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         &
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
@@ -162,7 +166,7 @@
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
        fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, epw_crysym,         &
-       tc_linear, tc_linear_solver, mob_maxfreq, mob_nfreq,                    &
+       mob_maxfreq, mob_nfreq,                                                 &
   !---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -172,7 +176,10 @@
        phonon_dos, diag_mode, restart_polaron_mode, polaron_type,              &
        niterPlrn, wfcelec_old, sigma_plrn, ethr_Plrn, full_diagon_plrn,        &
        mixing_Plrn, init_plrn_wf, nPlrn, nDOS_plrn, emax_plrn, emin_plrn,      &
-       sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
+       sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn,                 &
+  !---------------------------------------------------------------------------------
+  ! SH: Added for tc linearized equation, sparce sampling, and full-bandwidth runs
+       tc_linear, tc_linear_solver, gridsamp, griddens, fbw, dos_del, lmuchem
   ! --------------------------------------------------------------------------------
   !
   ! amass    : atomic masses
@@ -244,10 +251,6 @@
   ! delta_qsmear: change in energy for each additional smearing in the a2f (units of meV)
   ! nqsmear     : number of smearings used to calculate a2f
   ! nqstep      : number of bins for frequency used to calculate a2f
-  ! nswfc       : nr. of grid points between (0,wsfc) in Eliashberg equations
-  ! nswc        : nr. of grid points between (wsfc,wscut)
-  ! pwc         : power used to define nswc for non-uniform grid real-axis calculations
-  ! wsfc        : intermediate freqeuncy used for integration in Eliashberg equations (at least 2-3 times wsphmax)
   ! wscut       : upper limit for frequency integration in Eliashberg equations (at least 5 times wsphmax) (units of eV)
   ! broyden_beta : mixing factor for broyden mixing
   ! broyden_ndim : number of iterations used in mixing scheme
@@ -270,7 +273,6 @@
   !                Eliashberg equtions to real-axis
   ! liso         : if .TRUE. solve isotropic case
   ! laniso       : if .TRUE. solve anisotropic case
-  ! lunif        : if .TRUE. a uniform grid is defined between wsfc and wscut for real-axis calculations
   ! kerwrite     : if .TRUE. write kp and km to files .ker for real-axis calculations
   ! kerread      : if .TRUE. read kp and km from files .ker for real-axis calculations
   ! imag_read    : if .TRUE. read from files Delta and Znorm on the imaginary-axis
@@ -285,6 +287,15 @@
   ! nw_specfun   : nr. of bins for frequency in electron spectral function due to e-p interaction
   ! system_2d    : if .TRUE. two-dimensional system (vaccum is in z-direction)
   ! delta_approx : if .TRUE. the double delta approximation is used to compute the phonon self-energy
+  !
+  ! Added by Samad Hajinazar
+  ! tc_linear        : if .TRUE. linearized Eliashberg eqn. for Tc will be solved 
+  ! tc_linear_solver : Algorithm to solve eigenvalue problem for Tc (default='power', 'lapack') 
+  ! gridsamp         : Type of the Matsubara freq. sampling (-1=read from file;0=uniform;1=sparse)
+  ! griddens         : Measure of sparsity of the grid (default=1.d0, larger values give denser mesh)
+  ! fbw              : if .TRUE. full-bandwidth calculations will be performed
+  ! dos_del          : Delta_E in electronic dos for Fermi window (in eV)
+  ! lmuchem          : "experimental flag"; if .TRUE. chem. pot. is updated in fbw calculations
   !
   ! Added by Carla Verdi & Samuel Pon\'e
   ! lpolar     : if .TRUE. enable the correct Wannier interpolation in the case of polar material.
@@ -496,7 +507,6 @@
   delta_qsmear = 0.05d0 ! meV
   degaussq     = 0.05d0 ! meV
   lreal        = .FALSE.
-  lunif        = .TRUE.
   limag        = .FALSE.
   lpade        = .FALSE.
   lacon        = .FALSE.
@@ -518,12 +528,13 @@
   ep_coupling  = .TRUE.
   tc_linear    = .FALSE.
   tc_linear_solver = 'power'
-  nswfc        = 0
-  nswc         = 0
+  gridsamp     = 0
+  griddens     = 1.d0
+  fbw          = .FALSE.
+  dos_del      = 1.d-03
+  lmuchem      = .TRUE.
   nswi         = 0
-  pwc          = 1.d0
   wscut        = 0.d0
-  wsfc         = 0.5d0 * wscut
   broyden_beta = 0.7d0
   broyden_ndim = 8
   conv_thr_raxis = 5.d-04

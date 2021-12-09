@@ -1062,7 +1062,7 @@
     ! Local variables
     CHARACTER(LEN = 256) :: chunit
     !! Unit name
-    INTEGER :: imelt
+    INTEGER(8) :: imelt
     !! Size in number of elements
     REAL(KIND = DP) :: rmelt
     !! Size in byte
@@ -1089,10 +1089,13 @@
     !-----------------------------------------------------------------------
     SUBROUTINE mem_size_eliashberg(vmelt, imelt)
     !-----------------------------------------------------------------------
-    !
-    !  This routine estimates the amount of memory taken up or
-    !  released by different arrays
-    !
+    !!
+    !!  This routine estimates the amount of memory taken up or
+    !!  released by different arrays
+    !!
+    !!  SH: The "imelt" variable type is changed to INTEGER(8) throughout the
+    !!        code to avoid issues with large Nr of k-points, etc (Nov 2021).
+    !!
     USE io_global,     ONLY : stdout
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : max_memlt
@@ -1105,7 +1108,7 @@
     !
     INTEGER, INTENT(in) :: vmelt
     !! 1 for integer variables and 2 for real variables
-    INTEGER, INTENT(in) :: imelt
+    INTEGER(8), INTENT(in) :: imelt
     !! > 0 memory added or < 0 memory subtracted
     !
     REAL(KIND = DP) :: rmelt
@@ -1156,7 +1159,7 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : max_memlt, nqstep
     USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, nqfs, limag_fly, &
-                              lacon_fly, memlt_pool
+                              lacon_fly, memlt_pool, wsn
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE division,      ONLY : fkbounds
@@ -1170,7 +1173,7 @@
     !! calculation type
     !
     !Local variables
-    INTEGER :: imelt
+    INTEGER(8) :: imelt
     !! size array
     INTEGER :: lower_bnd, upper_bnd
     !! Lower/upper bound index after k parallelization
@@ -1192,7 +1195,8 @@
     imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2
     IF (cname == 'imag') THEN
       ! get the size of the akeri that needa to be stored in each pool
-      imelt = imelt * (2 * nsiw(itemp))
+      ! SH: This is adjusted to accommodate the sparse sampling case
+      imelt = imelt * 2 * (wsn(nsiw(itemp)) + 1)
     ELSEIF (cname == 'acon') THEN
       ! get the size of a2fij that needs to be stored in each pool
       imelt = imelt * nqstep
