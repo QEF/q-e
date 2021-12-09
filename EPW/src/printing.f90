@@ -1269,6 +1269,26 @@
         CLOSE(iufilFS)
         !
       ENDDO
+      !
+      ! HP: Write in .frmsf format compatible with fermisurfer program
+      WRITE(name1, '(a, a3, a6)') TRIM(prefix), '.fs', '.frmsf'
+      OPEN(iufilFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('plot_fermisurface', 'error opening file ' // name1, iufilFS)
+      WRITE(iufilFS, '(3i5)') nkf1, nkf2, nkf3
+      WRITE(iufilFS, '(i5)') 1
+      WRITE(iufilFS, '(i5)') ibndmax - ibndmin + 1
+      WRITE(iufilFS, '(3f12.6)') (bg(i, 1), i = 1, 3)
+      WRITE(iufilFS, '(3f12.6)') (bg(i, 2), i = 1, 3)
+      WRITE(iufilFS, '(3f12.6)') (bg(i, 3), i = 1, 3)
+      IF (mp_mesh_k) THEN
+        WRITE(iufilFS, '(6f12.6)') (((etf_all(ibnd, 2 * bztoibz(ik) - 1) - ef) * ryd2ev, &
+                ik = 1, nkf1 * nkf2 * nkf3), ibnd = ibndmin, ibndmax)
+      ELSE
+        WRITE(iufilFS, '(6f12.6)') (((etf_all(ibnd, ik * 2 - 1) - ef) * ryd2ev, &
+                ik = 1, nktotf), ibnd = ibndmin, ibndmax)
+      ENDIF
+      CLOSE(iufilFS)
+      !
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !

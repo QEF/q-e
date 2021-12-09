@@ -768,6 +768,7 @@ enable_environment
 enable_debug
 enable_pedantic
 enable_shared
+enable_static
 with_cuda
 with_cuda_cc
 with_cuda_runtime
@@ -1429,8 +1430,10 @@ Optional Features:
   --enable-environment    compile solvent-related stuff (default: no)
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
-  --enable-shared         use shared libraries if available (default: yes)
-  --enable-openacc        Enable compilation with OPENACC [default=no]
+  --enable-shared         produce object files suitable for shared libraries
+                          (default: no)
+  --enable-static         build static executables if possible (default: no)
+  --enable-openacc        Enable compilation with OPENACC [default=yes]
   --enable-cuda-env-check The configure script will check CUDA installation
                           and report problems [default=no]
   --enable-signals        enable signal trapping (default: no)
@@ -3835,7 +3838,7 @@ else
 fi
 
 
-# shared library flags are implemented only for a few (untested) cases
+# yet to be implemented
 # Check whether --enable-shared was given.
 if test "${enable_shared+set}" = set; then :
   enableval=$enable_shared; if   test "$enableval" = "yes" ; then
@@ -3844,7 +3847,20 @@ if test "${enable_shared+set}" = set; then :
       use_shared=0
    fi
 else
-  use_shared=1
+  use_shared=0
+fi
+
+
+# build static executables (implemented only for a few untested cases)
+# Check whether --enable-static was given.
+if test "${enable_static+set}" = set; then :
+  enableval=$enable_static; if   test "$enableval" = "yes" ; then
+      use_static=1
+   else
+      use_static=0
+   fi
+else
+  use_static=0
 fi
 
 
@@ -3874,7 +3890,7 @@ case "$arch:$f90_flavor" in
             try_fflags_openmp="-openmp"
             try_ldflags_openmp="-openmp"
         fi
-        pre_fdflags="-fpp "
+        pre_fdflags="-fpp -allow nofpp_comments "
         ;;
 arm:armflang )
         try_fflags="-O3 -mcpu=native $try_fflags"
@@ -4011,7 +4027,7 @@ ppc64-bgq:*xlf* )
         try_fflags="-fast"
         try_fflags_openmp="-mp"
         if test "$use_debug" -eq 1; then
-           try_f90flags="-g -C -Mcache_align -Mpreprocess -Mlarge_arrays"
+           try_f90flags="-g -C -Ktrap=fp -Mcache_align -Mpreprocess -Mlarge_arrays"
         else
            try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         fi
@@ -4053,7 +4069,7 @@ ppc64-bgq:*xlf* )
 
 esac
 
-if test "$use_shared" -eq 0 ; then
+if test "$use_static" -eq 1 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
 # Flags are repeated, need better way to handle this ...
@@ -4109,7 +4125,7 @@ echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
 # Note: option -C makes trouble with recent gcc versions and pgi
 case $cpp in
         cpp)  try_cppflags="-P -traditional -Uvector" ;;
-        fpp)  try_cppflags="-P "                      ;;
+        fpp)  try_cppflags="-P -allow nofpp_comments" ;;
         *)    try_cppflags=""                         ;;
 esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
@@ -4189,7 +4205,7 @@ fi
 if test "${enable_openacc+set}" = set; then :
   enableval=$enable_openacc;
 else
-  enable_openacc=no
+  enable_openacc=yes
 fi
 
 
@@ -4702,6 +4718,8 @@ fi
    fi
 
    new_cusolver="yes"
+   CC_stash=$CC
+   CC=nvcc
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cusolverDnZhegvdx_bufferSize in -lcusolver" >&5
 $as_echo_n "checking for cusolverDnZhegvdx_bufferSize in -lcusolver... " >&6; }
 if ${ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize+:} false; then :
@@ -4749,6 +4767,7 @@ else
   new_cusolver="no"
 fi
 
+   CC=$CC_stash
 
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
@@ -4777,6 +4796,7 @@ $as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
    if test "$enable_openacc" == "yes"; then
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
+      CUDA_CFLAGS="$CUDA_CFLAGS -acc -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    fi
 
 fi

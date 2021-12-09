@@ -48,8 +48,10 @@ build:cmake-gnu:
     - cmake --version
     - mkdir build
     - cd build
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_C_COMPILER=gcc .. && make
-    - make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+            -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make
+      && make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
+      && ctest -L unit --output-on-failure
 
 build:pgi:
   tags: [docker]
@@ -72,9 +74,27 @@ build:cmake-nvhpc:
     - cmake --version
     - mkdir build
     - cd build
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
-            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON .. && make
+    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+            -DQE_ENABLE_CUDA=ON -DQE_ENABLE_OPENACC=ON -DNVFORTRAN_CUDA_CC=70 .. && make
 
+build:cmake-nvhpc-nocuda:
+  tags: [docker]
+  image: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+  script:
+    - apt-get -qq update
+    - apt-get -qq install apt-transport-https ca-certificates gnupg software-properties-common wget
+    - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    - apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+    - apt-get install -qq git cmake libfftw3-dev
+    - cmake --version
+    - mkdir build
+    - cd build
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=mpicc
+            -DQE_ENABLE_CUDA=OFF -DQE_ENABLE_OPENACC=OFF .. && make
+
+            
 #build:centos:
 #  image: centos:latest
 #  script:

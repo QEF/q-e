@@ -14,6 +14,7 @@ SUBROUTINE save_in_electrons (iter, dr2, ethr, et)
   USE klist,         ONLY: nks
   USE wvfct,         ONLY: nbnd
   USE control_flags, ONLY: n_scf_steps, scf_error 
+  USE add_dmft_occ,  ONLY: dmft
   !
   IMPLICIT NONE
   !
@@ -24,7 +25,13 @@ SUBROUTINE save_in_electrons (iter, dr2, ethr, et)
   !
   n_scf_steps = iter 
   scf_error = dr2
-  WRITE(stdout,'(5x,"Calculation stopped in scf loop at iteration #",i6)') iter
+  IF (dmft) THEN
+      WRITE( stdout, &
+      '(5x,"Calculation interrupted for call of DMFT code")')
+  ELSE
+      WRITE( stdout, &
+      '(5x,"Calculation stopped in scf loop at iteration #",i6)') iter
+  ENDIF
   CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
   WRITE (iunres, *) iter, dr2, ethr
   WRITE (iunres, *) et(1:nbnd,1:nks)

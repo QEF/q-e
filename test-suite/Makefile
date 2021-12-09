@@ -97,12 +97,15 @@ run-tests-tddfpt-serial : prolog pseudo
 run-tests-tddfpt-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=tddfpt_all
 
+run-tests-image-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=image_all
+
 run-tests-all_currents-serial : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 run-tests-all_currents-parallel : prolog pseudo
-	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=all_currents_all
 
 
@@ -189,11 +192,11 @@ clean:
 		ph_*/elph_dir ph_*/Al444.* ph_*/matdyn.modes ph_*/phonon.dos
 	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/nickelpaw.* ph_base/silicon.* \
 	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
+	@rm -rf ph_*/*.wfc* ph_*/*.hub*
 # Special case for PH dvscf_q2r
-	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.wfc* ph_interpol*/*.dyn.freq
+	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.dyn.freq
 # Special case for PH ahc
-	@rm -rf ph_ahc*/wpot*/ ph_ahc*/selfen_*.dat ph_ahc*/diam.modes? ph_ahc*/*.ifc ph_ahc*/ahc_dir* \
-	  ph_ahc*/*.wfc*
+	@rm -rf ph_ahc*/wpot*/ ph_ahc*/selfen_*.dat ph_ahc*/diam.modes? ph_ahc*/*.ifc ph_ahc*/ahc_dir*
 # Cleaning HP final files
 	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters* \
 		hp_*/*HubbardV* hp_*/*mix* hp_*/*parameters.out
@@ -223,6 +226,10 @@ clean:
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
                 epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
+
+# Cleaning IMAGE final files
+	@rm -rf image_*/_ph0 image_*/*.save image_*/*.xml image_*/*.dyn? image_*/*.dyn??  \
+                image_*/*.wfc*
 
 # Cleaning ZG final files
 	@rm -f zg_conf/equil_pos.txt zg_conf/ZG-*_0.020.dat

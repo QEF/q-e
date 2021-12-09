@@ -19,7 +19,7 @@ SUBROUTINE c_bands( iter )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE klist,                ONLY : nkstot, nks, ngk, igk_k, igk_k_d, xk
-  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
+  USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart, use_gpu, iverbosity
@@ -31,9 +31,12 @@ SUBROUTINE c_bands( iter )
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   USE gcscf_module,         ONLY : lgcscf
+  USE add_dmft_occ,         ONLY : dmft, dmft_updated
 
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
+  USE uspp_init,            ONLY : init_us_2
+  USE device_fbuff_m,       ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -49,6 +52,8 @@ SUBROUTINE c_bands( iter )
   ! ik_: k-point already done in a previous run
   LOGICAL :: exst
   LOGICAL,EXTERNAL :: rmm_use_davidson, rmm_use_paro
+  !
+  INTEGER :: ierr
   !
   !
   CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
@@ -111,13 +116,7 @@ SUBROUTINE c_bands( iter )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( use_gpu ) THEN
-        IF ( nkb > 0 ) CALL using_vkb_d(2)
-        IF ( nkb > 0 ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
-     ELSE
-        IF ( nkb > 0 ) CALL using_vkb(2)
-        IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
-     END IF
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb, .true. )
      !
      ! ... read in wavefunctions from the previous iteration
      !
@@ -131,8 +130,11 @@ SUBROUTINE c_bands( iter )
           CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
      !
      ! ... diagonalization of bands for k-point ik
+     ! ... (skip only in charge self-consistent DFT+DMFT calculations)
      !
-     call diag_bands ( iter, ik, avg_iter )
+     IF (.NOT. ( dmft .AND. .NOT. dmft_updated ) ) THEN
+        call diag_bands ( iter, ik, avg_iter )
+     END IF
      !
      ! ... save wave-functions to be used as input for the
      ! ... iterative diagonalization of the next scf iteration
@@ -155,6 +157,9 @@ SUBROUTINE c_bands( iter )
            RETURN
         ENDIF
      ENDIF
+     !
+     CALL dev_buf%reinit( ierr )
+     IF ( ierr .ne. 0 ) CALL infomsg( 'c_bands', 'Cannot reset GPU buffers! Some buffers still locked.' )
      !
   ENDDO k_loop
   !
@@ -195,7 +200,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
-  USE uspp,                 ONLY : vkb, nkb, okvan, using_vkb
+  USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
@@ -222,6 +227,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   IMPLICIT NONE
   !
+  ! please do not capitalize (FORD rules)
+  include 'ks_solver_interfaces.fh'
+  !  
   INTEGER, INTENT(IN) :: iter
   !! iteration index
   INTEGER, INTENT(IN) :: ik
@@ -360,6 +368,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           FORALL( ig = 1 : npw )
              h_diag(ig, 1) = g2kin(ig) + v_of_0
           END FORALL
+          !
+          !$acc update self(vkb)
           CALL usnldiag( npw, h_diag, s_diag )
        END IF
        !
@@ -506,16 +516,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
               ENDIF  
                !
           ELSE IF ( .NOT. lrot ) THEN
-!***
              !
              IF (.not. use_gpu) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                               evc, hevc, sevc, et(1,ik) )
+                               evc, hevc, sevc, et(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE. )
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
-                               evc_d, hevc_d, sevc_d, et_d(1,ik) )
+                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                               evc_d, hevc_d, sevc_d, et_d(:,ik), USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = .TRUE.)
              END IF
              !
              avg_iter = avg_iter + 1.D0
@@ -552,7 +561,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        IF (.not. use_gpu) THEN
         CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-        CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+        CALL gram_schmidt_gamma( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
                         okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
           CALL using_evc_d(1);  CALL using_et(1); !precontidtion has intent(in)
@@ -698,8 +707,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        IF ( okvan ) THEN
           !
           CALL allocate_bec_type( nkb, nbnd, bec_evcel )
-          CALL using_vkb(0)
           !
+          !$acc update self(vkb)
           CALL calbec( npw, vkb, evcel, bec_evcel )
           !
        ENDIF
@@ -726,6 +735,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           FORALL( ig = 1 : npwx )
              h_diag(ig, :) = g2kin(ig) + v_of_0
           END FORALL
+          !
+          !$acc update self(vkb)
           CALL usnldiag( npw, h_diag, s_diag )
        ENDIF
        !
@@ -868,16 +879,17 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
               END IF
               !
           ELSE IF ( .NOT. lrot ) THEN
-!***
              !
              IF ( .not. use_gpu ) THEN
                 CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                                  evc, hevc, sevc, et(1,ik) )
+                                  evc, hevc, sevc, et(:,ik), & 
+                                  USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
              ELSE
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
-                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
-                                  evc_d, hevc_d, sevc_d, et_d(1,ik) )
+                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                                  evc_d, hevc_d, sevc_d, et_d(:,ik), &
+                                  USE_PARA_DIAG = use_para_diag, GAMMA_ONLY = gamma_only )
              END IF
              !
              avg_iter = avg_iter + 1.D0
@@ -912,7 +924,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        IF ( .not. use_gpu ) THEN
           CALL using_evc(1); CALL using_et(1);
-          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+          CALL gram_schmidt_k( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
           CALL using_evc_d(1); CALL using_et(1); 
@@ -1141,7 +1153,7 @@ SUBROUTINE c_bands_nscf( )
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE basis,                ONLY : starting_wfc
   USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k, igk_k_d
-  USE uspp,                 ONLY : vkb, vkb_d, nkb, using_vkb, using_vkb_d
+  USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
@@ -1153,6 +1165,7 @@ SUBROUTINE c_bands_nscf( )
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
+  USE uspp_init,            ONLY : init_us_2
   IMPLICIT NONE
   !
   ! ... local variables
@@ -1213,12 +1226,7 @@ SUBROUTINE c_bands_nscf( )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) THEN
-        IF (.not. use_gpu ) CALL using_vkb(1)
-        IF (.not. use_gpu ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
-        IF (      use_gpu ) CALL using_vkb_d(1)
-        IF (      use_gpu ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
-     ENDIF
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb , .true.)
      !
      ! ... Needed for LDA+U
      !

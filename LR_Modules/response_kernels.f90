@@ -64,12 +64,12 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    USE ions_base,             ONLY : nat
    USE klist,                 ONLY : xk, wk, ngk, igk_k
    USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
-   USE spin_orb,              ONLY : domag
    USE wvfct,                 ONLY : nbnd, npwx, et
    USE wavefunctions,         ONLY : evc
-   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
+   USE noncollin_module,      ONLY : noncolin, domag, npol, nspin_mag
    USE uspp,                  ONLY : vkb
    USE uspp_param,            ONLY : nhm
+   USE uspp_init,             ONLY : init_us_2
    USE ldaU,                  ONLY : lda_plus_u
    USE units_lr,              ONLY : iuwfc, lrwfc, lrdwf, iudwf
    USE control_lr,            ONLY : nbnd_occ, lgamma
@@ -130,6 +130,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    !! functions passed to cgsolve_all
    !
    ! Initialization
+   !
+   CALL start_clock("sth_kernel")
    !
    exclude_hubbard_ = .FALSE.
    IF (PRESENT(exclude_hubbard)) exclude_hubbard_ = exclude_hubbard
@@ -205,11 +207,7 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
             !  V_{eff} on the bare change of the potential
             !
             IF (time_reversed) THEN
-               !
-               ! TODO: adddvscf_ph_mag is almost the same as adddvscf, except that it
-               ! uses becp from input, not from USE lrus. Ideally, one should merge the two.
-               !
-               CALL adddvscf_ph_mag(ipert, ik, becpt)
+               CALL adddvscf_ph_mag(ipert, ik)
             ELSE
                CALL adddvscf(ipert, ik)
             ENDIF
@@ -276,6 +274,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    CALL mp_sum(tot_num_iter, inter_pool_comm)
    CALL mp_sum(tot_cg_calls, inter_pool_comm)
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
+   !
+   CALL stop_clock("sth_kernel")
    !
 !----------------------------------------------------------------------------
 END SUBROUTINE sternheimer_kernel

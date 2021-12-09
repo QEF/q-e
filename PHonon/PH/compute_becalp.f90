@@ -30,6 +30,7 @@ subroutine compute_becalp (becq, alpq)
   USE control_lr, ONLY : lgamma
   USE eqv, ONLY : evq
   USE qpoint, ONLY : nksq, ikqs
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

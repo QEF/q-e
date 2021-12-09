@@ -164,6 +164,7 @@ SUBROUTINE update_neb( )
          eigts2_d = eigts2
          eigts3_d = eigts3
 #endif
+         !$acc update device(eigts1, eigts2, eigts3) 
          !
       END IF
       !
@@ -440,6 +441,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      eigts2_d = eigts2
      eigts3_d = eigts3
 #endif
+     !$acc update device(eigts1, eigts2, eigts3) 
      !
      ! ... new charge density from extrapolated wfcs
      !
@@ -585,6 +587,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      eigts2_d = eigts2
      eigts3_d = eigts3
 #endif
+     !$acc update device(eigts1, eigts2, eigts3) 
      !
      CALL set_rhoc()
      !
@@ -642,7 +645,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc, &
                                    iunoldwfc2, diropn
   USE buffers,              ONLY : get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb, vkb, okvan, using_vkb
+  USE uspp,                 ONLY : nkb, vkb, okvan
   USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_flags,        ONLY : gamma_only
@@ -653,6 +656,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE mp_bands,             ONLY : use_bgrp_in_hpsi
   USE wavefunctions_gpum,   ONLY : using_evc
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -681,13 +685,11 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   LOGICAL :: save_flag
   !
   CALL mp_barrier( intra_image_comm ) ! debug
-
+  !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
-
   !
   CALL using_evc(0)
-  CALL using_vkb(0)
-
+  !
   IF ( wfc_extr == 1 ) THEN
      !
      CALL diropn( iunoldwfc, 'oldwfc', 2*nwordwfc, exst )
@@ -762,7 +764,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            ! ... Required by s_psi:
            ! ... nonlocal pseudopotential projectors |beta>, <psi|beta>
            !
-           IF ( nkb > 0 ) CALL using_vkb(1)
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL using_becp_auto(2)
            CALL calbec( npw, vkb, evc, becp )

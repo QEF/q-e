@@ -28,13 +28,6 @@
   INTEGER :: ortho_comm_id= 0 ! id of the ortho_comm
   INTEGER :: ortho_parent_comm  = 0  ! parent communicator from which ortho group has been created
   !
-#if defined __SCALAPACK
-  INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
-  INTEGER :: np_blacs   =  1  ! BLACS number of processor
-#endif
-  !
-  INTEGER :: world_cntx = -1  ! BLACS context of all processor
-  INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
   LOGICAL :: do_distr_diag_inside_bgrp = .FALSE.
   LOGICAL :: la_proc
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
@@ -338,7 +331,7 @@
   !
   !
   n_diag = n
-  CALL laxlib_start(n_diag, mpi_comm_world, mpi_comm_world, do_distr_diag_inside_bgrp)
+  CALL laxlib_start(n_diag, mpi_comm_world, do_distr_diag_inside_bgrp)
   CALL laxlib_getval( np_ortho = np_ortho, ortho_comm = ortho_comm, &
     do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
   !

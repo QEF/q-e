@@ -50,7 +50,7 @@ SUBROUTINE allocate_wfc_k()
   !! Requires that k-points are set up and distributed (if parallelized).
   !
   USE wvfct,            ONLY : npwx, g2kin
-  USE uspp,             ONLY : vkb, vkb_d, nkb
+  USE uspp,             ONLY : vkb, nkb
   USE gvecw,            ONLY : gcutw
   USE gvect,            ONLY : ngm, g
   USE klist,            ONLY : xk, nks, init_igk
@@ -75,7 +75,7 @@ SUBROUTINE allocate_wfc_k()
   !
   ALLOCATE( vkb(npwx,nkb) )
 #if defined __CUDA
-  IF (nkb>0) ALLOCATE( vkb_d(npwx,nkb) )
+!$acc enter data create(vkb(npwx,nkb) ) 
 #endif
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m

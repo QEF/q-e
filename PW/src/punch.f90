@@ -29,7 +29,7 @@ SUBROUTINE punch( what )
   USE klist,                ONLY : nks
   USE io_files,             ONLY : psfile, pseudo_dir
   USE clib_wrappers,        ONLY : f_copy
-  USE spin_orb,             ONLY : lforcet
+  USE noncollin_module,     ONLY : lforcet
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin
   USE ions_base,            ONLY : nsp

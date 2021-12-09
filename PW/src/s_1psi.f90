@@ -12,7 +12,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !! and \texttt{s_psi}.
   !
   USE kinds,              ONLY: DP
-  USE uspp,               ONLY: vkb, nkb, using_vkb
+  USE uspp,               ONLY: vkb, nkb
   USE becmod,             ONLY: bec_type, becp, calbec
   USE control_flags,      ONLY: gamma_only 
   USE noncollin_module,   ONLY: noncolin, npol 
@@ -73,7 +73,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
      !
   ELSE
      !
-     CALL using_vkb(0); CALL using_becp_auto(1)
+     CALL using_becp_auto(1)
      CALL calbec( n, vkb, psi, becp )
      CALL s_psi( npwx, n, 1, psi, spsi )
      !

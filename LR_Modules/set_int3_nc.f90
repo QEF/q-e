@@ -42,8 +42,8 @@ SUBROUTINE transform_int3_so(int3,na,npert)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : npol, nspin_mag
-USE spin_orb,             ONLY : fcoef, domag
+USE noncollin_module,     ONLY : npol, nspin_mag, domag
+USE upf_spinorb,          ONLY : fcoef
 USE lrus,                 ONLY : int3_nc
 !
 IMPLICIT NONE
@@ -109,8 +109,7 @@ SUBROUTINE transform_int3_nc(int3,na,npert)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : nspin_mag
-USE spin_orb,             ONLY : domag
+USE noncollin_module,     ONLY : nspin_mag, domag
 USE lrus,                 ONLY : int3_nc
 !
 IMPLICIT NONE

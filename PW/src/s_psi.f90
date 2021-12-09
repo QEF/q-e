@@ -84,12 +84,11 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   !
   USE kinds,            ONLY: DP
   USE becmod,           ONLY: becp
-  USE uspp,             ONLY: vkb, nkb, okvan, qq_at, qq_so, ofsbeta, using_vkb
-  USE spin_orb,         ONLY: lspinorb
+  USE uspp,             ONLY: vkb, nkb, okvan, qq_at, qq_so, ofsbeta
   USE uspp_param,       ONLY: upf, nh, nhm
   USE ions_base,        ONLY: nat, nsp, ityp
   USE control_flags,    ONLY: gamma_only 
-  USE noncollin_module, ONLY: npol, noncolin
+  USE noncollin_module, ONLY: npol, noncolin, lspinorb
   USE realus,           ONLY: real_space, invfft_orbital_gamma,     &
                               fwfft_orbital_gamma, calbec_rs_gamma, &
                               s_psir_gamma, invfft_orbital_k,       &
@@ -249,7 +248,6 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
           ENDIF
        ENDDO
        !
-       CALL using_vkb(0)
        IF( becp%comm == mp_get_comm_null() ) THEN
           IF ( m == 1 ) THEN
              CALL DGEMV( 'N', 2 * n, nkb, 1.D0, vkb, &
@@ -347,7 +345,6 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
           !
        ENDDO
        !
-       CALL using_vkb(0)
        IF ( m == 1 ) THEN
           !
           CALL ZGEMV( 'N', n, nkb, ( 1.D0, 0.D0 ), vkb, &
@@ -426,8 +423,6 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
           ENDIF
           !
        ENDDO
-       !
-       CALL using_vkb(0)
        !
        CALL ZGEMM ( 'N', 'N', n, m*npol, nkb, (1.d0,0.d0) , vkb, &
                     lda, ps, nkb, (1.d0,0.d0) , spsi(1,1), lda )

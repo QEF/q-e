@@ -14,8 +14,8 @@ MODULE qe_drivers_d_lda_lsda
   !-------------------------------------------------------------------------
   !! Contains the routines to compute the derivative of the LDA XC potential.
   !
-  USE kind_l,      ONLY: DP
-  USE dft_par_mod, ONLY: iexch, icorr, is_libxc
+  USE kind_l,             ONLY: DP
+  USE dft_setting_params, ONLY: iexch, icorr, is_libxc
   !
   IMPLICIT NONE
   !
@@ -125,7 +125,11 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      rhoaux(i1:f1) = arho+dr
      rhoaux(i2:f2) = arho-dr
      !
+     !$acc data copyin( rhoaux ) copyout( ex, ec, vx, vc )
+     !$acc host_data use_device( rhoaux, ex, ec, vx, vc )
      CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
+     !$acc end host_data
+     !$acc end data
      !
      WHERE ( arho < small ) dr = 1.0_DP ! ... to avoid NaN in the next operation
      !
@@ -191,7 +195,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   !REAL(DP) :: dpz, dpz_polarized
   !
-  INTEGER :: ir, is, iflg
+  INTEGER :: ir, iflg
   INTEGER :: i1, i2, i3, i4
   INTEGER :: f1, f2, f3, f4
   INTEGER :: iexch_, icorr_
@@ -223,19 +227,25 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         !
         IF (rhotot(ir) < small) CYCLE
         zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
-        IF (ABS(zeta_s) > 1.0_DP) CYCLE
+        IF (ABS(zeta_s) >= 1.0_DP) CYCLE
         !
         ! ... exchange
         !
-        rs = ( pi34 / (2.0_DP * rho_in(ir,1)) )**third
-        CALL slater( rs, ex_s, vx_s )
+        IF ( rho_in(ir,1)>small ) THEN
+          rs = ( pi34 / (2.0_DP * rho_in(ir,1)) )**third
+          CALL slater( rs, ex_s, vx_s )
+          dmuxc(ir,1,1) = vx_s / (3.0_DP * rho_in(ir,1))
+        ELSE
+          ex_s=0.d0 ; vx_s=0.d0
+        ENDIF
         !
-        dmuxc(ir,1,1) = vx_s / (3.0_DP * rho_in(ir,1))
-        !
-        rs = ( pi34 / (2.0_DP * rho_in(ir,2)) )**third
-        CALL slater( rs, ex_s, vx_s )
-        !
-        dmuxc(ir,2,2) = vx_s / (3.0_DP * rho_in(ir,2))
+        IF ( rho_in(ir,2)>small ) THEN
+          rs = ( pi34 / (2.0_DP * rho_in(ir,2)) )**third
+          CALL slater( rs, ex_s, vx_s )
+          dmuxc(ir,2,2) = vx_s / (3.0_DP * rho_in(ir,2))
+        ELSE
+          ex_s=0.d0 ; vx_s=0.d0
+        ENDIF
         !
         ! ... correlation
         !
@@ -267,7 +277,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
                                              (zeta_s**2 - 1.0_DP) * cc
         dmuxc(ir,1,2) = dmuxc(ir,2,1)
         dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
-                                             (1.0_DP + zeta_s)**2 * cc
+                                             (1.0_DP + zeta_s)**2 * cc                               
      ENDDO
      !
   ELSE
@@ -289,8 +299,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
      ! ... THRESHOLD STUFF AND dr(:)
      dr(:) = 0.0_DP
-     zeta(:) = 0.0_dp
-     zeta_eff(:) = 0.0_dp
+     zeta(:) = 0.0_DP
+     zeta_eff(:) = 0.0_DP
      DO ir = 1, length
         IF (rhotot(ir) > small) THEN
            zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
@@ -299,8 +309,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
            ! smaller zeta
            zeta_eff(ir) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(ir)) ), zeta_s )
            dr(ir) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(ir) )
-           IF (ABS(zeta_s) > 1.0_DP) THEN  
-             rhotot(ir) = 0.d0 ;  dr(ir) = 0.d0 ! e.g. vx=vc=0.0
+           IF (ABS(zeta_s) >= 1.0_DP) THEN  
+             rhotot(ir) = 0._DP ;  dr(ir) = 0._DP ! e.g. vx=vc=0.0
            ENDIF
         ENDIF
      ENDDO
@@ -310,7 +320,11 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      rhoaux(i3:f3) = rhotot         ;   zetaux(i3:f3) = zeta_eff + dz
      rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff - dz
      !
+     !$acc data copyin( rhoaux, zetaux ) copyout( aux1, aux2, vx, vc )
+     !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
      CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
+     !$acc end host_data
+     !$acc end data
      !
      WHERE (rhotot <= small)  ! ... to avoid NaN in the next operations
         dr=1.0_DP ; rhotot=0.5d0
@@ -432,7 +446,11 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   rhoaux(i5:f5) = rhotot         ;   zetaux(i5:f5) = zeta_eff - dz
   !
   !
+  !$acc data copyin( rhoaux, zetaux ) copyout( aux1, aux2, vx, vc )
+  !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
   CALL xc_lsda( length*5, rhoaux, zetaux, aux1, aux2, vx, vc )
+  !$acc end host_data
+  !$acc end data
   !
   !
   vs(:) = 0.5_DP*( vx(i1:f1,1)+vc(i1:f1,1)-vx(i1:f1,2)-vc(i1:f1,2) )

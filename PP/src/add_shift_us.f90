@@ -59,6 +59,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
        USE mp,                  ONLY: mp_sum
+       USE uspp_init,           ONLY : init_us_2
 
        IMPLICIT NONE
        !
@@ -147,6 +148,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
        USE mp,                  ONLY: mp_sum
+       USE uspp_init,           ONLY : init_us_2
 
        IMPLICIT NONE
        !

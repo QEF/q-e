@@ -1,7 +1,7 @@
 !
 SUBROUTINE solve_with_zhegvd(n, v, s, ldh, e)
-  USE la_param, ONLY : DP
   IMPLICIT NONE
+  include 'laxlib_kinds.fh'
   !
   complex(DP) :: v(ldh,n)
   complex(DP) :: s(ldh,n)
@@ -10,8 +10,7 @@ SUBROUTINE solve_with_zhegvd(n, v, s, ldh, e)
   !
   INTEGER                  :: lwork, lrwork, liwork, info, ldh
   !
-  REAL(DP)                 :: abstol
-  INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
+  INTEGER,     ALLOCATABLE :: iwork(:)
   REAL(DP),    ALLOCATABLE :: rwork(:)
   COMPLEX(DP), ALLOCATABLE :: work(:)
   ! various work space
@@ -38,8 +37,8 @@ SUBROUTINE solve_with_zhegvd(n, v, s, ldh, e)
 END SUBROUTINE solve_with_zhegvd
 !
 SUBROUTINE solve_with_dsygvd(n, v, s, ldh, e)
-  USE la_param, ONLY : DP
   IMPLICIT NONE
+  include 'laxlib_kinds.fh'
   !
   REAL(DP) :: v(ldh,n)
   REAL(DP) :: s(ldh,n)
@@ -48,8 +47,7 @@ SUBROUTINE solve_with_dsygvd(n, v, s, ldh, e)
   !
   INTEGER                  :: lwork, liwork, info, ldh
   !
-  REAL(DP)                 :: abstol
-  INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
+  INTEGER,     ALLOCATABLE :: iwork(:)
   REAL(DP),    ALLOCATABLE :: work(:)
   ! various work space
 

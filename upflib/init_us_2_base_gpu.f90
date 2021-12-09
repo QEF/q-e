@@ -81,6 +81,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   attributes(PINNED) :: qg_h, vq_h
 #endif
   !
+  CALL start_clock( 'init_us_2:gpu' )
   !
   if (lmaxkb<0) return
   
@@ -241,6 +242,8 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   IF (is_gth) THEN
      deallocate ( qg_h, vq_h )
   END IF
+  !
+  CALL stop_clock( 'init_us_2:gpu' )
   !
   return
 end subroutine init_us_2_base_gpu

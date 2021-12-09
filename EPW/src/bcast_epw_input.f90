@@ -53,7 +53,7 @@
                             wannier_plot_supercell, wannier_plot_radius,      &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, &
                             epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
-                            tc_linear_solver
+                            tc_linear_solver, mob_maxfreq, mob_nfreq
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -200,6 +200,7 @@
   CALL mp_bcast(bnd_cum     , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxiter , meta_ionode_id, world_comm)
   CALL mp_bcast(wannier_plot_supercell, meta_ionode_id, world_comm)
+  CALL mp_bcast(mob_nfreq  , meta_ionode_id, world_comm)
   !
   ! REAL*8
   !
@@ -245,6 +246,7 @@
   CALL mp_bcast(bfieldx       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldy       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
+  CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
   !
   ! characters
   !

@@ -22,9 +22,7 @@ build/
 
 bin/*
 FoX
-LIBBEEF
 MBD
-include/fft_defs.h
 include/configure.h
 include/qe_cdefs.h
 install/config.log
@@ -33,6 +31,8 @@ install/configure.msg
 install/make-*
 install/configure-*
 install/uncompress-*
+*/make.depend
+*/*/make.depend
 test-suite/*/test.err.*
 test-suite/*/test.out.*
 test-suite/*/pwscf*
@@ -48,3 +48,4 @@ tempdir
 tags
 EPW/src/tmp
 LAXlib/*.fh
+KS_Solvers/*.fh

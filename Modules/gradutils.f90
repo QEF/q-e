@@ -264,7 +264,152 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   RETURN
   !
 END SUBROUTINE fft_gradient_g2r
-
+!
+!
+!----------------------------------------------------------------------------
+SUBROUTINE fft_gradient_g2r_gpu( dfft, a_d, g_d, ga_d )
+  !----------------------------------------------------------------------------
+  !! GPU double of \(\texttt{fft_gradient_g2r}\).
+  !
+  USE cell_base,      ONLY : tpiba
+  USE kinds,          ONLY : DP
+  USE fft_interfaces, ONLY : invfft
+  USE fft_types,      ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  !! FFT descriptor
+  COMPLEX(DP), INTENT(IN)  :: a_d(dfft%ngm)
+  !! a(G), a complex function in G-space
+  REAL(DP), INTENT(IN)  :: g_d(3,dfft%ngm)
+  !! G-vectors, in \( 2\pi/a \) units
+  REAL(DP), INTENT(OUT) :: ga_d(3,dfft%nnr)
+  !! The gradient of \({\bf a}\), real, on the real-space FFT grid
+  !
+  ! ... local variables
+  !
+  INTEGER :: ipol, n, ip
+  INTEGER, POINTER :: nl_d(:), nlm_d(:)
+  COMPLEX(DP), ALLOCATABLE :: gaux_d(:)
+  !
+#if defined(__CUDA) && defined(_OPENACC)
+  attributes(DEVICE) :: g_d, nl_d, nlm_d
+  !
+  !$acc data deviceptr( a_d(dfft%ngm), ga_d(3,dfft%nnr) )
+  !
+  nl_d  => dfft%nl_d
+  nlm_d => dfft%nlm_d
+  !
+  ALLOCATE( gaux_d(dfft%nnr) )
+  !$acc data create( gaux_d )
+  !$acc host_data use_device( gaux_d )
+  !
+  IF ( dfft%lgamma ) THEN
+     !
+     ! ... Gamma tricks: perform 2 FFT's in a single shot
+     ! x and y
+     ipol = 1
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       DO ip = 1, 3
+         ga_d(ip,n) = 0.D0
+       ENDDO
+       gaux_d(n) = (0.0_dp,0.0_dp)
+     ENDDO
+     !
+     ! ... multiply a(G) by iG to get the gradient in real space
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%ngm
+        gaux_d(nl_d(n) ) = CMPLX( 0.0_dp, g_d(ipol,n),kind=DP)* a_d(n) - &
+                                      CMPLX(g_d(ipol+1,n),kind=DP) * a_d(n)
+        gaux_d(nlm_d(n)) = CMPLX( 0.0_dp,-g_d(ipol,n),kind=DP)*CONJG(a_d(n)) + &
+                                      CMPLX(g_d(ipol+1,n),kind=DP) * CONJG(a_d(n))
+     ENDDO
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL invfft( 'Rho', gaux_d, dfft )
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r)
+     ! ... add the factor 2\pi/a  missing in the definition of q+G
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+        ga_d(ipol, n) = REAL( gaux_d(n), kind=DP ) * tpiba
+        ga_d(ipol+1, n) = AIMAG( gaux_d(n) ) * tpiba
+     ENDDO
+     ! ... for z
+     ipol = 3
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+        gaux_d(n) = (0.0_dp,0.0_dp)
+     ENDDO
+     !
+     ! ... multiply a(G) by iG to get the gradient in real space
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%ngm
+        gaux_d(nl_d(n)) = CMPLX(g_d(ipol,n),kind=DP) * CMPLX( -AIMAG(a_d(n)), REAL(a_d(n)),kind=DP)
+        gaux_d(nlm_d(n)) = CONJG( gaux_d(nl_d(n)) )
+     ENDDO
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL invfft( 'Rho', gaux_d, dfft )
+     !
+     ! ...and add the factor 2\pi/a  missing in the definition of G
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       ga_d(ipol,n) = tpiba * REAL( gaux_d(n), kind=DP )
+     ENDDO
+     !
+  ELSE
+     !
+     DO ipol = 1, 3
+        !
+        !$acc parallel loop
+        DO n = 1, dfft%nnr
+           ga_d(ipol,n) = 0.D0
+           gaux_d(n) = (0.0_dp,0.0_dp)
+        ENDDO
+        !
+        ! ... multiply a(G) by iG to get the gradient in real space
+        !
+        !$acc parallel loop
+        DO n = 1, dfft%ngm
+          gaux_d(nl_d(n)) = CMPLX(g_d(ipol,n), kind=DP) * CMPLX( -AIMAG(a_d(n)), REAL(a_d(n)), kind=DP)
+        ENDDO
+        !
+        ! ... bring back to R-space, (\grad_ipol a)(r) ...
+        !
+        CALL invfft( 'Rho', gaux_d, dfft )
+        !
+        ! ...and add the factor 2\pi/a  missing in the definition of G
+        !
+        !$acc parallel loop
+        DO n = 1, dfft%nnr
+          ga_d(ipol,n) = tpiba * REAL( gaux_d(n), kind=DP )
+        ENDDO
+        !
+     ENDDO
+     !
+  ENDIF
+  !
+  !$acc end host_data
+  !$acc end data
+  DEALLOCATE( gaux_d )
+  !
+  !$acc end data
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE fft_gradient_g2r_gpu
+!
 !----------------------------------------------------------------------------
 SUBROUTINE fft_graddot( dfft, a, g, da )
   !----------------------------------------------------------------------------
@@ -373,7 +518,152 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
   RETURN
   !
 END SUBROUTINE fft_graddot
-
+!
+!
+!----------------------------------------------------------------------------
+SUBROUTINE fft_graddot_gpu( dfft, a_d, g_d, da_d )
+  !---------------------------------------------------------------------------
+  !! Calculates \( da = \sum_i \nabla_i a_i \) in R-space.
+  !
+  USE cell_base,      ONLY : tpiba
+  USE kinds,          ONLY : DP
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE fft_types,      ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  !! FFT descriptor
+  REAL(DP), INTENT(IN) :: a_d(3,dfft%nnr)
+  !! A real function on the real-space FFT grid
+  REAL(DP), INTENT(IN) :: g_d(3,dfft%ngm)
+  !! G-vectors, in \( 2\pi/a \) units
+  REAL(DP), INTENT(OUT) :: da_d(dfft%nnr)
+  !! \( \sum_i \nabla_i a_i \), real, on the real-space FFT grid
+  !
+  ! ... local variables
+  !
+  INTEGER :: n, ipol
+  INTEGER, POINTER :: nl_d(:), nlm_d(:)
+  COMPLEX(DP), ALLOCATABLE :: aux_d(:), gaux_d(:)
+  COMPLEX(DP) :: fp, fm, aux1, aux2
+  !
+#if defined(__CUDA) && defined(_OPENACC)
+  attributes(DEVICE) :: g_d, nl_d, nlm_d
+  !
+  !$acc data deviceptr( a_d(3,dfft%ngm), da_d(dfft%nnr) )
+  !
+  nl_d  => dfft%nl_d
+  nlm_d => dfft%nlm_d
+  !
+  ALLOCATE( aux_d(dfft%nnr), gaux_d(dfft%nnr) )
+  !$acc data create( aux_d, gaux_d )
+  !$acc host_data use_device( aux_d, gaux_d )
+  !
+  !$acc parallel loop
+  DO n = 1, dfft%nnr
+     gaux_d(n) = (0.0_dp,0.0_dp)
+  ENDDO
+  !
+  IF ( dfft%lgamma ) THEN
+     !
+     ! Gamma tricks: perform 2 FFT's in a single shot
+     ! x and y
+     ipol = 1
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       aux_d(n) = CMPLX( a_d(ipol,n), a_d(ipol+1,n), kind=DP)
+     ENDDO
+     !
+     ! ... bring a(ipol,r) to G-space, a(G) ...
+     !
+     CALL fwfft( 'Rho', aux_d, dfft )
+     !
+     ! ... multiply by iG to get the gradient in G-space
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%ngm
+        fp = (aux_d(nl_d(n)) + aux_d(nlm_d(n)))*0.5_dp
+        fm = (aux_d(nl_d(n)) - aux_d(nlm_d(n)))*0.5_dp
+        aux1 = CMPLX( REAL(fp), AIMAG(fm), kind=DP)
+        aux2 = CMPLX(AIMAG(fp), -REAL(fm), kind=DP)
+        gaux_d(nl_d(n)) = &
+             CMPLX(0.0_dp, g_d(ipol  ,n),kind=DP) * aux1 + &
+             CMPLX(0.0_dp, g_d(ipol+1,n),kind=DP) * aux2
+     ENDDO
+     ! ... for z
+     ipol = 3
+     !$acc parallel loop
+     DO n = 1, dfft%nnr
+       aux_d(n) = CMPLX( a_d(ipol,n), 0.0_dp, kind=DP)
+     ENDDO
+     !
+     ! ... bring a(ipol,r) to G-space, a(G) ...
+     !
+     CALL fwfft( 'Rho', aux_d, dfft )
+     !
+     ! ... multiply by iG to get the gradient in G-space
+     ! ... fill both gaux(G) and gaux(-G) = gaux*(G)
+     !
+     !$acc parallel loop
+     DO n = 1, dfft%ngm
+        gaux_d(nl_d(n)) = gaux_d(nl_d(n)) + CMPLX(g_d(ipol,n),kind=DP) * &
+             CMPLX( -AIMAG( aux_d(nl_d(n)) ), &
+                      REAL( aux_d(nl_d(n)) ), kind=DP)
+        gaux_d(nlm_d(n)) = CONJG( gaux_d(nl_d(n)) )
+     ENDDO
+     !
+  ELSE
+     !
+     DO ipol = 1, 3
+        !
+        !$acc parallel loop
+        DO n = 1, dfft%nnr
+          aux_d(n) = CMPLX( a_d(ipol,n), 0.0_dp, kind=DP)
+        ENDDO
+        !
+        ! ... bring a(ipol,r) to G-space, a(G) ...
+        !
+        CALL fwfft( 'Rho', aux_d, dfft )
+        !
+        ! ... multiply by iG to get the gradient in G-space
+        !
+        !$acc parallel loop
+        DO n = 1, dfft%ngm
+           gaux_d(nl_d(n)) = gaux_d(nl_d(n)) + CMPLX(g_d(ipol,n),kind=DP) * &
+                CMPLX( -AIMAG( aux_d(nl_d(n)) ), &
+                         REAL( aux_d(nl_d(n)),kind=DP ), kind=DP)
+        ENDDO
+        !
+     ENDDO
+     !
+  ENDIF
+  !
+  ! ... bring back to R-space, (\grad_ipol a)(r) ...
+  !
+  CALL invfft( 'Rho', gaux_d, dfft )
+  !
+  ! ... add the factor 2\pi/a  missing in the definition of G and sum
+  !
+  !$acc parallel loop
+  DO n = 1, dfft%nnr
+    da_d(n) = tpiba * REAL( gaux_d(n), kind=DP )
+  ENDDO
+  !
+  !$acc end host_data
+  !$acc end data
+  DEALLOCATE( aux_d, gaux_d )
+  !
+  !$acc end data
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE fft_graddot_gpu
+!
+!
 !--------------------------------------------------------------------
 SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
   !--------------------------------------------------------------------

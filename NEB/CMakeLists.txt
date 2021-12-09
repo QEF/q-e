@@ -9,7 +9,7 @@ set(src_neb
     src/fcp_opt_routines.f90
     src/fcp_variables.f90
     src/gcscf_variables.f90
-    src/input.f90
+    src/neb_input.f90
     src/path_base.f90
     src/path_formats.f90
     src/path_gen_inputs.f90

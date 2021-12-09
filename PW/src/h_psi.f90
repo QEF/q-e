@@ -91,7 +91,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE lsda_mod,                ONLY: current_spin
   USE scf,                     ONLY: vrs  
   USE wvfct,                   ONLY: g2kin
-  USE uspp,                    ONLY: vkb, nkb, using_vkb
+  USE uspp,                    ONLY: vkb, nkb
   USE ldaU,                    ONLY: lda_plus_u, U_projection
   USE gvect,                   ONLY: gstart
   USE control_flags,           ONLY: gamma_only
@@ -230,7 +230,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL using_becp_auto(1)
-     CALL using_vkb(0)
      !
      CALL start_clock( 'h_psi:calbec' )
      CALL calbec( n, vkb, psi, becp, m )

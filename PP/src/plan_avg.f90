@@ -163,6 +163,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   USE io_files, ONLY: restart_dir
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE pw_restart_new, ONLY: read_collected_wfc
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   INTEGER :: ninter

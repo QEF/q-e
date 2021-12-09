@@ -610,6 +610,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use mp_world,       ONLY : world_comm, nproc, mpime
   use ldaU,           ONLY : lda_plus_u
   USE basis,          ONLY : swfcatom
+  USE uspp_init,      ONLY : init_us_2
 
   implicit none
 
@@ -813,9 +814,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
        IF (ierr/=0) CALL errore( ' read_export ',' Unable to allocate SEVC ', ABS(ierr) )
 
-
+       call errore('pw4gww','init_us_1 incorrectly called',1)
        CALL init_us_1
-       !CALL init_at_1
 
        CALL allocate_bec_type (nkb,nbnd,becp)
 

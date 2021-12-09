@@ -16,7 +16,7 @@ MODULE fft_rho
   !
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: rho_r2g, rho_g2r
+  PUBLIC :: rho_r2g, rho_g2r, rho_r2g_gpu
   !
   INTERFACE rho_g2r
     MODULE PROCEDURE rho_g2r_1, rho_g2r_2, rho_g2r_sum_components
@@ -24,7 +24,10 @@ MODULE fft_rho
   !
 CONTAINS
   !
+  !-------------------------------------------------------------
   SUBROUTINE rho_r2g ( desc, rhor, rhog, v )
+    !------------------------------------------------------
+    !! Bring charge density rho from real to G- space
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned
     !
@@ -92,6 +95,97 @@ CONTAINS
     DEALLOCATE( psi )
 
   END SUBROUTINE rho_r2g
+  !
+  !-----------------------------------------------------------------
+  SUBROUTINE rho_r2g_gpu( desc, rhor_d, rhog_d, v_d )
+    !---------------------------------------------------------------
+    !! Bring charge density rho from real to G- space - GPU version.
+    !
+    USE fft_types,              ONLY: fft_type_descriptor
+    USE fft_helper_subroutines, ONLY: fftx_threed2oned_gpu
+    !
+    TYPE(fft_type_descriptor), INTENT(in) :: desc
+    REAL(dp),    INTENT(in) :: rhor_d(:,:)
+    !! rho in real space
+    COMPLEX(dp), INTENT(OUT):: rhog_d(:,:)
+    !! rho in G-space
+    REAL(dp),    OPTIONAL, INTENT(in) :: v_d(:)
+    !
+    ! ... local variables
+    !
+    INTEGER :: ir, ig, iss, isup, isdw
+    INTEGER :: nspin
+    COMPLEX(dp):: fp, fm
+    COMPLEX(dp), ALLOCATABLE :: psi_d(:)
+    !
+    !$acc data deviceptr( rhor_d(:,:), rhog_d(:,:), v_d(:) )
+    !
+    nspin= SIZE(rhor_d, 2)
+    !
+    ALLOCATE( psi_d(desc%nnr) )
+    !$acc data create( psi_d(desc%nnr) )
+    !$acc host_data use_device( psi_d )
+    IF( nspin == 1 ) THEN
+       iss=1
+       IF( PRESENT( v_d ) ) THEN
+          !$acc parallel loop
+          DO ir=1,desc%nnr
+             psi_d(ir)=CMPLX(rhor_d(ir,iss)+v_d(ir),0.0_dp,kind=dp)
+          END DO
+       ELSE
+          !$acc parallel loop
+          DO ir=1,desc%nnr
+             psi_d(ir)=CMPLX(rhor_d(ir,iss),0.0_dp,kind=dp)
+          END DO
+       END IF
+       CALL fwfft('Rho', psi_d, desc )
+       CALL fftx_threed2oned_gpu( desc, psi_d, rhog_d(:,iss) )
+    ELSE
+       IF ( gamma_only ) THEN
+          ! nspin/2 = 1 for LSDA, = 2 for noncolinear
+          DO iss=1,nspin/2
+             isup=1+(iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
+             isdw=2+(iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
+             IF( PRESENT( v_d ) ) THEN
+                !$acc parallel loop
+                DO ir=1,desc%nnr
+                    psi_d(ir)=CMPLX(rhor_d(ir,isup)+v_d(ir),rhor_d(ir,isdw)+v_d(ir),kind=dp)
+                END DO
+             ELSE
+                !$acc parallel loop
+                DO ir=1,desc%nnr
+                   psi_d(ir)=CMPLX(rhor_d(ir,isup),rhor_d(ir,isdw),kind=dp)
+                END DO
+             END IF
+             CALL fwfft('Rho', psi_d, desc )
+             CALL fftx_threed2oned_gpu( desc, psi_d, rhog_d(:,isup), rhog_d(:,isdw) )
+          END DO
+       ELSE
+          DO iss=1,nspin
+             IF( PRESENT( v_d ) ) THEN
+                !$acc parallel loop
+                DO ir=1,desc%nnr
+                    psi_d(ir)=CMPLX(rhor_d(ir,iss)+v_d(ir),0.0_dp,kind=dp)
+                END DO
+             ELSE
+                !$acc parallel loop
+                DO ir=1,desc%nnr
+                   psi_d(ir)=CMPLX(rhor_d(ir,iss),0.0_dp,kind=dp)
+                END DO
+             END IF
+             CALL fwfft('Rho', psi_d, desc )
+             CALL fftx_threed2oned_gpu( desc, psi_d, rhog_d(:,iss) )
+          END DO
+       END IF
+    ENDIF
+    !$acc end host_data
+    !$acc end data
+    DEALLOCATE( psi_d )
+    !
+    !$acc end data
+    !
+  END SUBROUTINE rho_r2g_gpu
+  !
   !
   SUBROUTINE rho_g2r_1 ( desc, rhog, rhor )
     USE fft_types,              ONLY: fft_type_descriptor

@@ -17,8 +17,7 @@ SUBROUTINE lr_transform_intq_so(intq,na)
   USE ions_base,            ONLY : nat, ityp
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : npol
-  USE spin_orb,             ONLY : fcoef
-!  USE lr_variables,         ONLY : intq_nc
+  USE upf_spinorb,          ONLY : fcoef
   USE lrus,                 ONLY : intq_nc
  
   IMPLICIT NONE

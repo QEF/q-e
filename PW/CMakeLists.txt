@@ -2,6 +2,7 @@ set(src_pw
    src/a2fmod.f90 
    src/add_bfield.f90 
    src/add_efield.f90 
+   src/add_dmft_occ.f90 
    src/add_vuspsi.f90 
    src/add_gatefield.f90 
    src/add_paw_to_deeq.f90 
@@ -246,8 +247,6 @@ set(src_pw
    src/wannier_check.f90 
    src/wannier_clean.f90 
    src/wannier_occ.f90
-   src/rotate_xpsi.f90
-   src/gram_schmidt.f90
    # GPU
    src/pwcom_gpu.f90
    src/scf_mod_gpu.f90
@@ -291,8 +290,7 @@ set(src_pw
    src/drhoc_gpu.f90
    src/stres_har_gpu.f90
    src/vloc_psi_gpu.f90
-   src/hs_psi_gpu.f90
-   src/rotate_xpsi_gpu.f90)
+   src/hs_psi_gpu.f90)
 qe_enable_cuda_fortran("${src_pw}")
     
 qe_add_library(qe_pw ${src_pw})
@@ -307,6 +305,7 @@ target_link_libraries(qe_pw
         qe_kssolver_ppcg
         qe_kssolver_paro
         qe_kssolver_rmmdiis
+        qe_kssolver_dense
         qe_upflib # TODO turn to vendorized library from MaX gitrepo ? 
         qe_modules
         qe_fftx
@@ -315,7 +314,9 @@ target_link_libraries(qe_pw
         qe_mpi_fortran
         qe_xclib
         qe_devxlib
-        qe_mbd)
+        qe_mbd
+    PUBLIC
+        qe_openacc_fortran)
 
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw

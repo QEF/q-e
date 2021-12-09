@@ -231,7 +231,7 @@ SUBROUTINE compute_pproj( ik, q, p )
     USE ions_base,            ONLY : nat, ityp, ntyp => nsp
     USE klist,                ONLY : xk, igk_k, ngk
     USE becmod,               ONLY : becp
-    USE uspp,                 ONLY : nkb, vkb, ofsbeta, using_vkb
+    USE uspp,                 ONLY : nkb, vkb, ofsbeta
     USE uspp_param,           ONLY : nhm, nh
     USE wvfct,                ONLY : nbnd
     USE wavefunctions,        ONLY : evc
@@ -241,6 +241,7 @@ SUBROUTINE compute_pproj( ik, q, p )
                                      allocate_bec_type, deallocate_bec_type
     USE wavefunctions_gpum,   ONLY : using_evc
     USE becmod_subs_gpum,     ONLY : using_becp_auto
+    USE uspp_init,            ONLY : init_us_2
     !
     IMPLICIT NONE
     !
@@ -265,7 +266,6 @@ SUBROUTINE compute_pproj( ik, q, p )
     !
     CALL allocate_bec_type( nkb, nbnd, becp )
     CALL using_becp_auto(2)
-    CALL using_vkb(1)
     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
     CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )

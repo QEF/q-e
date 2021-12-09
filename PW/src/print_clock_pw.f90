@@ -92,7 +92,8 @@ SUBROUTINE print_clock_pw()
    !
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
-   CALL print_clock( 'init_us_2_gpu' )
+   CALL print_clock( 'init_us_2:cpu' )
+   CALL print_clock( 'init_us_2:gpu' )
    IF ( isolve == 0 ) THEN
       CALL print_clock( 'regterg' )    ; CALL print_clock( 'cegterg' )
    ELSE  IF (isolve == 1) THEN

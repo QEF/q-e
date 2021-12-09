@@ -20,8 +20,7 @@ subroutine psidspsi (ik, uact, pdsp)
   USE klist,     ONLY : xk, ngk, igk_k
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE lsda_mod,  ONLY : lsda, current_spin, isk
-  USE spin_orb,  ONLY : lspinorb
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE wavefunctions,    ONLY : evc
   USE wvfct,     ONLY : nbnd, npwx
   USE uspp,      ONLY: nkb, vkb, qq_nt, qq_so

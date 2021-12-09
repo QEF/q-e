@@ -108,8 +108,7 @@ SUBROUTINE write_proj_file ( filproj, proj )
   !
   USE kinds,     ONLY : DP
   USE lsda_mod,  ONLY : nspin
-  USE spin_orb,  ONLY : lspinorb
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, lspinorb
   USE fft_base,  ONLY : dfftp
   USE klist,     ONLY : xk, nkstot
   USE run_info,  ONLY : title

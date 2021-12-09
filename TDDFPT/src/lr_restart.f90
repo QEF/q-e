@@ -37,6 +37,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE noncollin_module,     ONLY : nspin_mag, npol
   USE qpoint,               ONLY : nksq
   USE control_lr,           ONLY : nbnd_occx
+  USE uspp_init,             ONLY : init_us_2
 
   IMPLICIT NONE
   !

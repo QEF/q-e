@@ -1,0 +1,11 @@
+phonons of ferromagnetic insulator O2 at Gamma
+ &inputph
+  tr2_ph    = 1.0d-14
+  prefix    = 'O2'
+  epsil     = .true.
+  trans     = .true.
+  fildyn    = 'O2.dynG'
+  reduce_io = .true.
+  nmix_ph   = 8
+ /
+0.00000000  0.00000000  0.00000000

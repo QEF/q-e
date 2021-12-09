@@ -312,6 +312,7 @@ MODULE ph_restart
            CALL xmlw_opentag ( "EL_PHON_HEADER")
            CALL xmlw_writetag( "DONE_ELPH", done_elph(irr))
            CALL xmlw_closetag( ) ! el_phon_header
+           CALL xmlw_opentag( "PARTIAL_EL_PHON" )
            CALL xmlw_writetag( "NUMBER_OF_K", nksqtot)
            CALL xmlw_writetag( "NUMBER_OF_BANDS", nbnd)
            DO ik=1,nksqtot
@@ -325,6 +326,7 @@ MODULE ph_restart
               END DO
               CALL xmlw_closetag( )
            ENDDO
+           CALL xmlw_closetag( ) ! partial_el_phon
            ! Note: Root tag closed by routine ph_writefile
         RETURN
         END SUBROUTINE write_el_phon

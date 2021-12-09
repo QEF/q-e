@@ -25,10 +25,9 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE uspp,                 ONLY : vkb
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE wavefunctions,        ONLY : evc, psic, psic_nc
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : ntask_groups, me_bgrp
-  USE spin_orb,             ONLY : domag
   USE buffers,              ONLY : get_buffer
   USE qpoint,               ONLY : ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
@@ -39,6 +38,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE scf,                  ONLY : vrs
  
   USE io_global,             ONLY : stdout
+  USE uspp_init,             ONLY : init_us_2
 
   IMPLICIT NONE
   !

@@ -15,8 +15,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
   USE constants,        ONLY : tpi, rytoev, bohr_radius_angs
   use io_global,        ONLY : stdout, ionode
   USE ions_base,        ONLY : ityp, tau, nat, atm
-  use noncollin_module, ONLY : noncolin, npol
-  USE spin_orb,         ONLY : domag
+  use noncollin_module, ONLY : noncolin, npol, domag
   use lsda_mod,         ONLY : nspin
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : alat, at

@@ -26,7 +26,7 @@ attributes(global) subroutine ylmr2_gpu_kernel (lmax,lmax2, ng, g, gg, ylm)
   ! local variables
   !
   real(DP), parameter :: eps = 1.0d-9
-  real(DP) ::  Q(0:4,0:4)  !Allocate Q for the maximum supported size 
+  real(DP) ::  Q(0:6,0:6)  !Allocate Q for the maximum supported size
 
   real(DP) :: cost , sent, phi
   real(DP) :: c, gmod
@@ -150,7 +150,7 @@ subroutine ylmr2_gpu(lmax2, ng, g, gg, ylm)
   call upf_error (' ylmr', 'l > 25 or wrong number of Ylm required',lmax2)
 
 10 continue
-  if (lmax > 4) call upf_error (' ylmr', 'l>4 => out of bounds in Ylm with CUDA Kernel',lmax)
+  if (lmax > 6) call upf_error (' ylmr', 'l>6 => out of bounds in Ylm with CUDA Kernel',lmax)
 
   tBlock = dim3(256,1,1)
   grid = dim3(ceiling(real(ng)/tBlock%x),1,1)

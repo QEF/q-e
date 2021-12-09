@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cppp.x / CP / Quantum Espresso (version: 6.6)
+Program: cppp.x / CP / Quantum Espresso (version: 6.8)
 ------------------------------------------------------------------------
 
 
@@ -179,4 +179,4 @@ NAMELIST: &INPUTPP
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:25 CEST 2020
+This file has been created by helpdoc utility on Wed Nov 17 17:34:12 CET 2021

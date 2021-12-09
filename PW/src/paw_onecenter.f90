@@ -429,7 +429,7 @@ MODULE paw_onecenter
     USE constants,              ONLY : e2, eps12
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE xc_lib,                 ONLY : xclib_dft_is
+    USE xc_lib,                 ONLY : xclib_dft_is, xc
     USE constants,              ONLY : fpi ! REMOVE
     !
     TYPE(paw_info), INTENT(IN) :: i

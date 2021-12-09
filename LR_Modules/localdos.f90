@@ -39,6 +39,7 @@ subroutine localdos (ldos, ldoss, becsum1, dos_ef)
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
   USE dfpt_tetra_mod,   ONLY : dfpt_tetra_delta
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 

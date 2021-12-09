@@ -51,6 +51,7 @@ SUBROUTINE dnsq_bare
   USE control_flags, ONLY : iverbosity
   USE wavefunctions, ONLY : evc  
   USE mp_images,     ONLY : intra_image_comm
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

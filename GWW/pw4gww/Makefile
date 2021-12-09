@@ -45,7 +45,7 @@ mp_wave_parallel.o \
 wannier_bse.o\
 hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
-realus.o \
+gww_realus.o \
 operator_1_vp.o \
 operator_debug.o \
 lanczos_chains.o \
@@ -54,7 +54,7 @@ easy_gw.o
 
 QEMODS = $(BASEMODS)
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
-PHOBJS = ../../PHonon/Gamma/libphcg.a 
+PHOBJS = ../../PHonon/Gamma/libphcg.a ../../LR_Modules/liblrmod.a 
 
 TLDEPS= phlibs 
 
@@ -62,7 +62,7 @@ all : tldeps pw4gww.x
 
 pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	pw4gww.o libpw4gww.a $(PWOBJS) $(PHOBJS) $(QEMODS) $(QELIBS) 
+	pw4gww.o libpw4gww.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(QELIBS) 
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
 
 tldeps :

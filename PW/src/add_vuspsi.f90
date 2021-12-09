@@ -19,7 +19,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   USE lsda_mod,         ONLY: current_spin
   USE control_flags,    ONLY: gamma_only
   USE noncollin_module
-  USE uspp,             ONLY: vkb, nkb, deeq, deeq_nc, ofsbeta, using_vkb
+  USE uspp,             ONLY: vkb, nkb, deeq, deeq_nc, ofsbeta
   USE uspp_param,       ONLY: nh, nhm
   USE becmod,           ONLY: bec_type, becp
   USE becmod_subs_gpum, ONLY: using_becp_auto
@@ -81,8 +81,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
        !
        IF ( nkb == 0 ) RETURN
-       !
-       CALL using_vkb(0)
        !
        IF ( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -188,8 +186,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
-       CALL using_vkb(0)
-       !
        ALLOCATE( ps(nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
@@ -238,8 +234,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        INTEGER :: ierr, ijkb0
        !
        IF ( nkb == 0 ) RETURN
-       !
-       CALL using_vkb(0)
        !
        ALLOCATE( ps(  nkb,npol, m), STAT=ierr )
        IF( ierr /= 0 ) &

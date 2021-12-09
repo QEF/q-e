@@ -51,6 +51,7 @@ subroutine solve_e_fpol( iw )
   USE eqv,                   ONLY : dpsi, dvpsi
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
   

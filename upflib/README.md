@@ -19,13 +19,15 @@ http://www.quantum-espresso.org/pseudopotentials/unified-pseudopotential-format
 The xml schema for the newer UPF definition can be found here:
 http://www.quantum-espresso.org/ns/qes/qe_pp-1.0.xsd
 
-In addition to the `libupf.a` library, two executable utilities are produced:
+In addition to the `libupf.a` library, executable utilities are produced:
 
 - `upfconv.x`, converting pseudopotentials in other formats into UPF:
    see `upfconv.x -h` for more
 
 - `virtual_v2.x`, courtesy Jingyang Wang (jw598@cornell.edu), generates
    an averaged pseudopotential suitable for Virtual Crystal Approximation
+
+- `casino2upf.x`, courtesy Mike Towler (see below)
 
 A python script `fixfile.py` is also present, to remove undesired `&`
 characters from UPF files that hinder their parsing by xml tools.

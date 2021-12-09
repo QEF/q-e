@@ -512,6 +512,18 @@ contains
         rs6=0.4860d0
         s18=0.0000d0
         rs18=4.5000d0
+      case ("scan")
+        ! Parameters from PRB 94, 115144 (2016); doi: 10.1103/PhysRevB.94.115144
+        ! Table 1
+        rs6 =0.538
+        s18 =0.0
+        rs18=5.4200
+      case ("r2scan")
+        ! Parameters from JCP, 154, 061101 (2021); doi: 10.1063/5.0041008
+        ! Table 1
+        rs6 =0.4948
+        s18 =0.7898
+        rs18=5.7308
 
       case DEFAULT
         call stoprun( 'functional name unknown' )

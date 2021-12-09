@@ -97,8 +97,7 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   !
   CALL mp_startup ( my_world_comm=lib_comm )
   ndiag_ = ndg 
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
-                       do_distr_diag_inside_bgrp_ = diag_in_band_group_) 
+  CALL laxlib_start ( ndiag_, intra_bgrp_comm, do_distr_diag_inside_bgrp_ = diag_in_band_group_)
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm) 
   CALL environment_start ( 'CP' )
   !
@@ -127,7 +126,7 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   CALL cpr_loop( 1 )
   !
   CALL laxlib_end()
-  CALL stop_run()
+  !CALL stop_run()
   retval = 0
   !
 END SUBROUTINE f2libcpv

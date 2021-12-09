@@ -316,7 +316,6 @@
     USE gvect,      ONLY : g
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp
     USE lsda_mod,   ONLY : lsda, current_spin, nspin
-    USE spin_orb,   ONLY : lspinorb
     USE wvfct,      ONLY : npwx, et
     USE uspp,       ONLY : okvan, nkb, vkb
     USE uspp_param, ONLY : nh, nhm
@@ -324,7 +323,7 @@
     USE lrus,       ONLY : becp1
     USE eqv,        ONLY : dvpsi
     USE elph2,      ONLY : lower_band, upper_band, ibndstart
-    USE noncollin_module, ONLY : noncolin, npol
+    USE noncollin_module, ONLY : noncolin, npol, lspinorb
     USE constants_epw,    ONLY : czero, zero, cone, eps12
     USE klist_epw,  ONLY : isk_loc
     !

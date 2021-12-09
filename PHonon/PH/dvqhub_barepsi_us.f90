@@ -62,6 +62,7 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   USE mp_bands,      ONLY : intra_bgrp_comm       
   USE mp,            ONLY : mp_sum 
   USE buffers,       ONLY : get_buffer
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !
