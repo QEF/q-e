@@ -79,7 +79,6 @@ MODULE path_input_parameters_module
   !
   CHARACTER(len=80) :: CI_scheme = 'no-CI'
   ! CI_scheme = 'no-CI' | 'auto' | 'manual'
-  ! set the Climbing Image scheme
   ! 'no-CI'       Climbing Image is not used
   ! 'auto'        Standard Climbing Image
   ! 'manual'      the image is selected by hand
@@ -144,10 +143,6 @@ MODULE path_input_parameters_module
         REAL(DP), ALLOCATABLE :: pos(:,:)
         INTEGER, ALLOCATABLE :: typ(:)
         !
-!
-!   CLIMBING_IMAGES
-!
-      LOGICAL, ALLOCATABLE :: climbing( : )
 ! ----------------------------------------------------------------------
 
 CONTAINS
@@ -172,8 +167,6 @@ CONTAINS
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
     IF ( allocated( typ ) ) DEALLOCATE( typ )
-    !
-    IF ( allocated( climbing ) ) DEALLOCATE( climbing )
     !
     RETURN
     !

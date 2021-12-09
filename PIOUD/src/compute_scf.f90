@@ -10,8 +10,8 @@
 SUBROUTINE compute_scf( fii, lii, stat  )
   !----------------------------------------------------------------------------
   !
-  ! ... this subroutine is the main scf-driver for all "path" calculations
-  ! ... ( called by Modules/path_base.f90/born_oppenheimer() subroutine )
+  ! ... this subroutine is the main scf-driver for all the calculations
+  ! ... ( called by Modules/trpmd_base.f90/born_oppenheimer() subroutine )
   !
   ! ... for each image in the path, it performs the self-consistent loop
   ! ... computing the energy and the forces
@@ -38,13 +38,14 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                my_image_id, nimage, root_image
   USE mp_world,         ONLY : world_comm
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
-  USE path_io_routines, ONLY : new_image_init, get_new_image, &
+  USE trpmd_io_routines, ONLY : new_image_init, get_new_image, &
                                stop_other_images
   USE fcp_opt_routines, ONLY : fcp_neb_nelec, fcp_neb_ef
   USE fcp_variables,    ONLY : lfcpopt
   USE klist,            ONLY : nelec, tot_charge
   USE extrapolation,    ONLY : update_neb
-  USE funct,            ONLY : stop_exx, dft_is_hybrid
+  USE xc_lib,           ONLY : stop_exx, xclib_dft_is
+
   
   USE pimd_variables,   ONLY : nbeadMD
   !
@@ -124,7 +125,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
         IF ( my_image_id == root_image ) THEN
            !
-           IF (dft_is_hybrid()) call stop_exx() 
+           IF (xclib_dft_is('hybrid')) call stop_exx() 
            CALL do_scf( 1, istat )
            !
            IF ( istat /= 0 ) GOTO 1
@@ -138,7 +139,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
         IF ( my_image_id == root_image + 1 ) THEN
            !
-           IF (dft_is_hybrid()) call stop_exx() 
+           IF (xclib_dft_is('hybrid')) call stop_exx() 
            CALL do_scf( num_of_images, istat )
            !
            IF ( istat /= 0 ) GOTO 1
@@ -166,7 +167,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      pending_image = image
      !
-     IF (dft_is_hybrid()) call stop_exx() 
+     IF (xclib_dft_is('hybrid')) call stop_exx() 
      CALL do_scf( image, istat )
      !
      IF ( istat /= 0 ) GOTO 1

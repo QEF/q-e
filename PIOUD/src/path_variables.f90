@@ -71,18 +71,13 @@ MODULE path_variables
        error(:)                   ! the error from the true MEP
   REAL(DP), ALLOCATABLE :: &
        pos(:,:),                 &! reaction path
-       grad_pes(:,:),            &! gradients acting on the path
-       tangent(:,:)               ! tangent to the path
-  INTEGER, ALLOCATABLE :: &
-       fix_atom_pos(:,:)                ! 0 or 1, if 0 fixed atom
+       grad_pes(:,:)              ! gradients acting on the path
   LOGICAL, ALLOCATABLE :: &
        frozen(:)                  ! .TRUE. if the image or mode has not
                                   !        to be optimized
   !
   ! ... "neb specific" variables :
-  !
-  LOGICAL, ALLOCATABLE :: &
-       climbing(:)                ! .TRUE. if the image is required to climb
+
   CHARACTER(LEN=20) :: &
        CI_scheme                  ! Climbing Image scheme
   INTEGER :: &
@@ -97,7 +92,6 @@ MODULE path_variables
   ! ... real space arrays
   !
   REAL(DP), ALLOCATABLE :: &
-       elastic_grad(:),          &! elastic part of the gradients
        mass(:),                  &! atomic masses
        k(:)                       ! elastic constants
   REAL(DP), ALLOCATABLE :: &
@@ -118,16 +112,13 @@ MODULE path_variables
        ALLOCATE( posold(   dim1, num_of_images ) )
        ALLOCATE( grad(     dim1, num_of_images ) )
        ALLOCATE( grad_pes( dim1, num_of_images ) )
-       ALLOCATE( tangent(  dim1, num_of_images ) )
        !
        ALLOCATE( pes(      num_of_images ) )
        ALLOCATE( k(        num_of_images ) )
        ALLOCATE( error(    num_of_images ) )
-       ALLOCATE( climbing( num_of_images ) )
        ALLOCATE( frozen(   num_of_images ) )
        !
        ALLOCATE( mass(         dim1 ) )
-       ALLOCATE( elastic_grad( dim1 ) )
        !
        ALLOCATE( lang( dim1, num_of_images ) )
        !
@@ -147,14 +138,9 @@ MODULE path_variables
        IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
        IF ( ALLOCATED( k ) )            DEALLOCATE( k )
        IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )
-       IF ( ALLOCATED( elastic_grad ) ) DEALLOCATE( elastic_grad )
-       IF ( ALLOCATED( tangent ) )      DEALLOCATE( tangent )
        IF ( ALLOCATED( error ) )        DEALLOCATE( error )
-       IF ( ALLOCATED( climbing ) )     DEALLOCATE( climbing )
        IF ( ALLOCATED( frozen ) )       DEALLOCATE( frozen )
-       IF ( ALLOCATED( lang ) )         DEALLOCATE( lang )
-       !
-       IF ( ALLOCATED( fix_atom_pos ) )     DEALLOCATE( fix_atom_pos )      
+       IF ( ALLOCATED( lang ) )         DEALLOCATE( lang )      
        !
      END SUBROUTINE path_deallocation
      !

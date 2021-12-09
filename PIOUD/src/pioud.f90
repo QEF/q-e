@@ -9,7 +9,7 @@
 PROGRAM pioud
   !----------------------------------------------------------------------------
   !
-  ! ... Nudged Elastic Band / Strings Method algorithm
+  ! ... PATH INTEGRAL MOLECULAR DYNAMICS CODE !!!
   !
   USE io_global,         ONLY : meta_ionode, meta_ionode_id
   USE environment,       ONLY : environment_start, environment_end
@@ -19,12 +19,10 @@ PROGRAM pioud
   USE mp_world,          ONLY : world_comm, mpime, root
   USE mp_pools,          ONLY : intra_pool_comm
   USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE mp_diag,           ONLY : mp_start_diag
   USE read_input,        ONLY : read_input_file
   USE command_line_options,  ONLY : input_file_, ndiag_
   !
-  USE path_base,         ONLY : initialize_path, search_mep
-  USE path_io_routines,  ONLY : path_summary
+  USE trpmd_base,         ONLY : initialize_polymer, explore_phasespace
   USE path_read_namelists_module, ONLY : path_read_namelist
   USE path_read_cards_module,     ONLY : path_read_cards
   !
@@ -35,6 +33,8 @@ PROGRAM pioud
   !
   IMPLICIT NONE
   !
+  include 'laxlib.fh'
+  !
   CHARACTER(len=256) :: engine_prefix, parsing_file_name
   INTEGER :: unit_tmp, i, iimage
   INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
@@ -42,7 +42,7 @@ PROGRAM pioud
   !
   !
   CALL mp_startup ( start_images=.true. )
-  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
        do_distr_diag_inside_bgrp_ = .true. )
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
@@ -101,18 +101,14 @@ PROGRAM pioud
     CALL iosys()
     !
     IF ( i == 1 ) THEN
-      CALL engine_to_path_nat()
-      CALL engine_to_path_alat()
+      CALL engine_to_path_nat_alat()
       CALL allocate_path_input_ions(input_images)
     END IF
     CALL engine_to_path_pos(i)
-    IF ( i == 1 ) CALL engine_to_path_fix_atom_pos()
     !
   enddo
   
   if (meta_ionode)  call pimd_get_amas_and_nat  !!! <----my mod.
-  !
-  CALL path_to_engine_fix_atom_pos()
   !
   CALL ioneb()
   CALL set_engine_output()
@@ -120,13 +116,12 @@ PROGRAM pioud
   ! END INPUT RELATED
   !
   CALL check_stop_init() 
-  CALL initialize_path()
+  CALL initialize_polymer()
   CALL deallocate_path_input_ions()
-  CALL path_summary()
   !
-  CALL search_mep()
+  CALL explore_phasespace()
   !
-  CALL laxlib_free_ortho_group()
+  CALL laxlib_end()
   
   if ( meta_ionode) call pimd_deallocation    !!! <----my mod.
   if ( meta_ionode) call pimd_close_files   !!! <----my mod.

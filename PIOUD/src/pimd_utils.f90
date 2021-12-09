@@ -42,6 +42,7 @@ subroutine pimd_pw_convert_pos(abc)
  ! use path_input_parameters_module, only : pos
   use path_variables, only : pos
   use pimd_variables, only : rpos,rcentroid,nbeadMD,natMD,ndimMD
+  USE path_io_units_module,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
@@ -49,6 +50,7 @@ subroutine pimd_pw_convert_pos(abc)
   implicit none
   integer cc,k,iat,i
   character*8 abc
+  real(8) rnd1,rnd2
   real(8), allocatable :: rpostmp(:,:,:)
   
   
@@ -83,7 +85,7 @@ subroutine pimd_pw_convert_pos(abc)
       rcentroid=rcentroid/nbeadMD
     end if  
     deallocate(rpostmp)
-     
+    
   else
     
     do k=1,nbeadMD
@@ -95,7 +97,18 @@ subroutine pimd_pw_convert_pos(abc)
         END DO
       END DO
     end do  
-  !  write(*,*) 'pos1',pos
+    
+    !!! this prevents, in the classical case, that the second image is completely static  
+    if(nbeadMD.eq.1) then
+       call random_number(rnd1)
+       call random_number(rnd2)
+       if (rnd2.ge.0.5) then
+         pos(1,2)=pos(1,2)+rnd1*0.0005
+       else
+         pos(1,2)=pos(1,2)-rnd1*0.0005
+       endif
+    endif   
+    
   ! CALL mp_bcast( pos,  meta_ionode_id, world_comm )
       
   end if 

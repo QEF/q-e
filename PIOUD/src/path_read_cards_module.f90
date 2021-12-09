@@ -68,17 +68,6 @@ CONTAINS
          input_line( i : i ) = capital( input_line( i : i ) )
       ENDDO
       !
-      IF( trim(card) =='CLIMBING_IMAGES' ) THEN
-         !
-         CALL card_climbing_images( input_line )
-         !
-      ELSE
-         !
-         IF ( meta_ionode ) CALL infomsg ('read_cards_module',&
-            'card '//trim(input_line)//' ignored' )
-         !
-      ENDIF
-      !
       ! ... END OF LOOP ... !
       !
       GOTO 100
@@ -114,49 +103,5 @@ CONTAINS
    !    END manual
    !------------------------------------------------------------------------
    !
-   SUBROUTINE card_climbing_images( input_line )
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
-      LOGICAL, EXTERNAL  :: matches
-      !
-      INTEGER          :: i
-      CHARACTER(len=5) :: i_char
-      !
-      CHARACTER(len=6), EXTERNAL :: int_to_char
-      !
-      !
-      IF ( tread ) &
-         CALL errore( ' card_climbing_images ', ' two occurrences', 2 )
-      !
-      IF ( CI_scheme == 'manual' ) THEN
-         !
-         IF ( allocated( climbing ) ) DEALLOCATE( climbing )
-         !
-         ALLOCATE( climbing( num_of_images ) )
-         !
-         climbing(:) = .false.
-         !
-         CALL read_line( input_line )
-         !
-         DO i = 1, num_of_images
-            !
-            i_char = int_to_char( i )
-            !
-            IF ( matches( ' ' // trim( i_char ) // ',' , &
-                           ' ' // trim( input_line ) // ',' ) ) &
-               climbing(i) = .true.
-            !
-         ENDDO
-         !
-      ENDIF
-      !
-      tread = .true.
-      !
-      RETURN
-      !
-   END SUBROUTINE card_climbing_images
    !
 END MODULE path_read_cards_module
