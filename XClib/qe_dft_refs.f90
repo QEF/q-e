@@ -237,10 +237,10 @@ MODULE qe_dft_refs
   DATA dft_GGAx(35)%wrn / 'none' /
   ! CX14  (reserved P.H.)
   DATA dft_GGAx(36)%ref / 'Reserved, no ref. available' /
-  DATA dft_GGAx(36)%wrn / 'none' /
+  DATA dft_GGAx(36)%wrn / 'never called in QE' /
   ! CX15  (reserved P.H.)
   DATA dft_GGAx(37)%ref / 'Reserved, no ref. available' /
-  DATA dft_GGAx(37)%wrn / 'none' /
+  DATA dft_GGAx(37)%wrn / 'never called in QE' /
   ! BR0 
   DATA dft_GGAx(38)%ref / 'vdW-DF2-b86r+HF/4 - framework defined by &
                            &Phys. Rev. B 89, 121103(R) (2014) + J. Chem. Phys. 146, 234106 (2017)' /

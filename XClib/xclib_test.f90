@@ -822,8 +822,8 @@ PROGRAM xclib_test
       IF (is==2) WRITE(xc_data(18:30),'(a)') 'POL'
     ELSEIF ( dft_init=='ALL_SHORT' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-      IF (is==1) WRITE(xc_data(8+nlen1:),'(a)') 'UNP'
-      IF (is==2) WRITE(xc_data(8+nlen1:),'(a)') 'POL'
+      IF (is==1) WRITE(xc_data(9+nlen1:),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(9+nlen1:),'(a)') 'POL'
     ELSEIF ( dft_init=='ALL_LIBXC' .OR. dft_init(1:4)/='ALL_' ) THEN
       xc_data="XC_DATA_______________________________________"
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
