@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 MODULE save_ph
   !----------------------------------------------------------------------------
-  !
-  ! ... this module contains methods to read and write data saved by the
-  !     phonon code to restart smoothly
+  !! This module contains methods to read and write data saved by the
+  !! \(\texttt{phonon}\) code to restart smoothly.
   !
   !
   USE kinds,     ONLY : DP

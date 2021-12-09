@@ -9,7 +9,8 @@
 !----------------------------------------------------------------------
 SUBROUTINE dvpsi_kb(ik,nu)
   !----------------------------------------------------------------------
-  ! calculates dVion/dtau * psi and stores it in dvpsi
+  !! Calculates \(dV_\text{ion}/d\tau\ \psi\) and stores it in
+  !! \(\text{dvpsi}\).
   !
   USE kinds,      ONLY: DP
   USE constants,  ONLY: tpi
@@ -29,7 +30,11 @@ SUBROUTINE dvpsi_kb(ik,nu)
   USE cgcom
   !
   IMPLICIT NONE
+  !
   INTEGER :: ik, nu
+  !
+  ! ... local variables
+  !
   INTEGER :: npw, ibnd, ir, ih, jkb, ig, na, ng, mu, nt
   COMPLEX(DP), POINTER:: work(:,:), dvloc(:), dvb_cc(:)
   COMPLEX(DP) :: exc
@@ -84,7 +89,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
      ENDDO
      CALL invfft ('Rho', dvb_cc, dfftp)
      DO ir = 1,dfftp%nnr
-        dv(ir) = dv(ir) +  dble(dvb_cc(ir)) * dmuxc(ir)
+        dv(ir) = dv(ir) +  dble(dvb_cc(ir)) * dmuxc(ir,1,1)
      ENDDO
   ENDIF
   !

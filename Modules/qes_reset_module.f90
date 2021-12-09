@@ -1002,6 +1002,9 @@ MODULE qes_reset_module
     obj%diago_cg_maxiter_ispresent = .FALSE.
     obj%diago_ppcg_maxiter_ispresent = .FALSE.
     obj%diago_david_ndim_ispresent = .FALSE.
+    obj%diago_rmm_ndim_ispresent = .FALSE.
+    obj%diago_rmm_conv_ispresent = .FALSE.
+    obj%diago_gs_nblock_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_electron_control
   !
@@ -1093,7 +1096,6 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
-    !
   END SUBROUTINE qes_reset_bfgs
   !
   !
@@ -1156,7 +1158,7 @@ MODULE qes_reset_module
     IF (obj%esm_ispresent) &
       CALL qes_reset_esm(obj%esm)
     obj%esm_ispresent = .FALSE.
-    obj%fcp_opt_ispresent = .FALSE.
+    obj%fcp_ispresent = .FALSE.
     obj%fcp_mu_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_boundary_conditions
@@ -1609,6 +1611,7 @@ MODULE qes_reset_module
     obj%lwrite  = .FALSE.
     obj%lread  = .FALSE.
     !
+    obj%do_magnetization_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_magnetization
   !

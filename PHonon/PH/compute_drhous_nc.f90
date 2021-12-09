@@ -9,48 +9,45 @@
 !-----------------------------------------------------------------------
 subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   !-----------------------------------------------------------------------
-  !
-  !    This routine computes the part of the change of the charge density
-  !    which is due to the orthogonalization constraint on wavefunctions
-  !
+  !! This routine computes the part of the change of the charge density
+  !! which is due to the orthogonalization constraint on wavefunctions.
   !
   !
-  USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : nat
-  USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
-  USE klist,      ONLY : xk, wk, ngk, igk_k
-  USE buffers,    ONLY : get_buffer
-  USE fft_base,   ONLY : dffts, dfftp
-  USE fft_interfaces, ONLY : invfft
-  USE wvfct,      ONLY : npwx, nbnd
+  USE kinds,            ONLY : DP
+  USE ions_base,        ONLY : nat
+  USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
+  USE klist,            ONLY : xk, wk, ngk, igk_k
+  USE buffers,          ONLY : get_buffer
+  USE fft_base,         ONLY : dffts, dfftp
+  USE fft_interfaces,   ONLY : invfft
+  USE wvfct,            ONLY : npwx, nbnd
   USE noncollin_module, ONLY : npol, nspin_mag
-  USE wavefunctions,  ONLY: evc
-  USE uspp,       ONLY: okvan, nkb, vkb
-  USE uspp_param, ONLY: nhm
-
-  USE qpoint,     ONLY : nksq, ikks, ikqs
-  USE eqv,        ONLY : evq
-  USE control_lr, ONLY : lgamma
-  USE units_lr,   ONLY : lrwfc, iuwfc
-  USE becmod,     ONLY : bec_type
-
+  USE wavefunctions,    ONLY : evc
+  USE uspp,             ONLY : okvan, nkb, vkb
+  USE uspp_param,       ONLY : nhm
+  USE uspp_init,        ONLY : init_us_2
+  !
+  USE qpoint,           ONLY : nksq, ikks, ikqs
+  USE eqv,              ONLY : evq
+  USE control_lr,       ONLY : lgamma
+  USE units_lr,         ONLY : lrwfc, iuwfc
+  USE becmod,           ONLY : bec_type
+  !
   implicit none
   !
-  !     the dummy variables
+  complex(DP) :: dbecsum(nhm,nhm,nat,nspin,3*nat)
+  !! output: the derivative of becsum
+  complex(DP) :: drhous(dfftp%nnr,nspin_mag,3*nat)
+  !! output: add the orthogonality term
+  type(bec_type) :: becq(nksq) ! (nkb, nbnd)
+  !! input: the becp with \(\text{psi}_{k+q}\)
+  type(bec_type) :: alpq(3,nksq)
+  !! input: the alphap with \(\text{psi}_{k+q}\)
+  real(DP) :: wgg(nbnd,nbnd,nksq)
+  !! input: the weights
   !
-
-  complex(DP) :: dbecsum (nhm, nhm, nat, nspin, 3 * nat), &
-         drhous (dfftp%nnr, nspin_mag, 3 * nat)
-  !output:the derivative of becsum
-  ! output: add the orthogonality term
-  type (bec_type) :: becq(nksq), & ! (nkb, nbnd)
-                     alpq (3, nksq)
-  ! input: the becp with psi_{k+q}
-  ! input: the alphap with psi_{k+q}
-
-  real(DP) :: wgg (nbnd, nbnd, nksq)
-  ! input: the weights
-
+  ! ... local variables
+  !
   integer :: npw, npwq, ik, ikq, ikk, ig, nu_i, ibnd, ios
   ! counter on k points
   ! the point k+q

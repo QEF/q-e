@@ -9,7 +9,6 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   USE kinds,           ONLY : DP
   USE constants,       ONLY : pi, fpi
   USE io_global,       ONLY : stdout     ! Modules/io_global.f90
-  USE parameters,      ONLY : ntypx
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE wvfct,           ONLY : npwx, nbnd, et, current_k
@@ -50,6 +49,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   !<CG>
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   REAL(dp) core_wfn(ndmx)

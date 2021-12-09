@@ -130,6 +130,7 @@ cat > $PREFIX.tddfpt.in << EOF
    restart = .false.
  /
  &lr_control
+   calculator = 'lanczos',
    itermax = 500,
    q1 = 0.621,
    q2 = 0.000,

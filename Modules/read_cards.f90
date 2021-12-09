@@ -8,9 +8,8 @@
 !---------------------------------------------------------------------------
 MODULE read_cards_module
    !---------------------------------------------------------------------------
-   !
-   ! ...  This module handles the reading of cards from standard input
-   ! ...  Original version written by Carlo Cavazzoni
+   !! This module handles the reading of cards from standard input.  
+   !! Original version written by Carlo Cavazzoni.
    !
    USE kinds,     ONLY : DP
    USE io_global, ONLY : stdout
@@ -178,6 +177,10 @@ CONTAINS
             CALL card_kpoints( input_line )
          ENDIF
          !
+      ELSEIF ( trim(card) == 'ADDITIONAL_K_POINTS' ) THEN
+         !
+         CALL card_add_kpoints( input_line )
+ 
       ELSEIF ( trim(card) == 'OCCUPATIONS' ) THEN
          !
          CALL card_occupations( input_line )
@@ -207,7 +210,11 @@ CONTAINS
       ELSEIF ( trim(card) == 'WANNIER_AC' .and. ( prog == 'WA' )) THEN
          !
          CALL card_wannier_ac( input_line )
-
+         !
+      ELSEIF ( trim(card) == 'TOTAL_CHARGE' ) THEN
+         !
+         CALL card_total_charge( input_line )
+         !
       ELSE
          !
          IF ( ionode ) &
@@ -343,7 +350,7 @@ CONTAINS
    !
    SUBROUTINE card_atomic_positions( input_line, prog )
       !
-      USE wrappers, ONLY: feval_infix
+      USE clib_wrappers, ONLY: feval_infix
       !
       IMPLICIT NONE
       !
@@ -870,6 +877,72 @@ CONTAINS
             & // trim(k_points) // ' k points', 1)
       !
    END SUBROUTINE card_kpoints
+
+   SUBROUTINE card_add_kpoints( input_line )
+     USE additional_kpoints, ONLY : nkstot_add, xk_add, k_points_add
+     IMPLICIT NONE
+     CHARACTER(len=*),INTENT(in) :: input_line
+     CHARACTER(len=256) :: input_line_aux
+     REAL(DP),ALLOCATABLE :: xk_old(:,:), wk_old(:)
+     INTEGER :: nk1_old, nk2_old, nk3_old, nkstot_old
+     INTEGER :: k1_old,  k2_old,  k3_old
+     LOGICAL, EXTERNAL  :: matches
+     CHARACTER(len=80) :: k_points_old
+     !
+     IF(.not.allocated(xk) .or. .not.allocated(wk))&
+       CALL errore("add_kpoints", "ADDITIONAL_K_POINTS must appear after K_POINTS",1)
+     IF(.not.tkpoints) &
+       CALL errore("add_kpoints", "ADDITIONAL_K_POINTS must appear after K_POINTS",2)
+     IF(matches( "AUTOMATIC", input_line )) &
+       CALL errore("add_kpoints", "ADDITIONAL_K_POINTS cannot be 'automatic'", 3)
+
+     ! Back-up existing points
+     nkstot_old = nkstot
+     ALLOCATE(xk_old(3,nkstot_old))
+     ALLOCATE(wk_old(nkstot_old))
+     k_points_old = k_points
+     xk_old  = xk
+     wk_old  = wk
+     nk1_old = nk1
+     nk2_old = nk2
+     nk3_old = nk3
+     k1_old  = k1
+     k2_old  = k2
+     k3_old  = k3
+     DEALLOCATE(xk,wk)
+
+     ! Prepare to read k-points again
+     nkstot = 0
+     input_line_aux = TRIM(ADJUSTL(input_line))
+     input_line_aux = input_line_aux(12:)
+     tkpoints = .false.
+     CALL card_kpoints(input_line_aux)
+     !
+     ! Backup new points to module
+     nkstot_add = nkstot
+     IF(nkstot_add==0) CALL errore("add_kpoints", "No new k_points?",1)
+     ALLOCATE(xk_add(3,nkstot_add))
+     xk_add = xk
+     k_points_add = k_points
+
+     ! Put back previous stuff
+     DEALLOCATE(xk, wk)
+     nkstot = nkstot_old
+     ALLOCATE(xk(3,nkstot))
+     ALLOCATE(wk(nkstot))
+     k_points = k_points_old
+     xk  = xk_old
+     wk  = wk_old
+     nk1 = nk1_old
+     nk2 = nk2_old
+     nk3 = nk3_old
+     k1  = k1_old
+     k2  = k2_old
+     k3  = k3_old
+     DEALLOCATE(xk_old,wk_old)
+
+     RETURN 
+   END SUBROUTINE card_add_kpoints
    !
    !------------------------------------------------------------------------
    !    BEGIN manual
@@ -918,7 +991,7 @@ CONTAINS
    !
    SUBROUTINE card_occupations( input_line )
       !
-      USE wrappers, ONLY: feval_infix
+      USE clib_wrappers, ONLY: feval_infix
       !
       IMPLICIT NONE
       !
@@ -1170,7 +1243,7 @@ CONTAINS
                READ(input_line,*) lb_vel, ( rd_vel(k,ia), k = 1, 3 )
             ELSE
                CALL errore( ' iosys ', &
-                           & ' wrong entries in ION_VELOCITIES ', ia )
+                           & ' wrong entries in ATOMIC_VELOCITIES ', ia )
             ENDIF
             !
             match_label: DO is = 1, ntyp
@@ -1869,4 +1942,55 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_wannier_ac
+   !
+   !
+   !------------------------------------------------------------------------
+   !    BEGIN manual
+   !----------------------------------------------------------------------
+   !
+   ! TOTAL_CHARGE
+   !
+   !   set the total charge
+   !
+   ! Syntax:
+   !
+   !   TOTAL_CHARGE
+   !      tot_charge
+   !
+   ! Example:
+   !
+   ! TOTAL_CHARGE
+   !   0.1
+   !
+   !----------------------------------------------------------------------
+   !    END manual
+   !------------------------------------------------------------------------
+   !
+   SUBROUTINE card_total_charge( input_line )
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(len=256) :: input_line
+      LOGICAL, EXTERNAL  :: matches
+      INTEGER            :: iv, ip, ierr
+      CHARACTER(len=10)  :: lb_mol
+      CHARACTER(len=256) :: molfile
+      !
+      !
+      IF ( ttotcharge ) THEN
+         CALL errore( ' card_total_charge ', 'two occurrences', 2 )
+      ENDIF
+      !
+      CALL read_line( input_line )
+      READ( input_line, *, iostat=ierr ) tot_charge
+      !
+      CALL errore( ' card_total_charge ', &
+         & 'cannot read total_charge from: '//trim(input_line), abs(ierr))
+      !
+      ttotcharge = .true.
+      !
+      RETURN
+      !
+   END SUBROUTINE card_total_charge
+   !
 END MODULE read_cards_module

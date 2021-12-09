@@ -14,8 +14,8 @@ PROGRAM casino2upf
   !     format to unified pseudopotential format
 
   USE casino_pp
-  USE write_upf_module, ONLY :  write_upf
-  USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf, pseudo_upf
+  USE write_upf_new, ONLY : write_upf
+  USE pseudo_types,  ONLY : deallocate_pseudo_upf, pseudo_upf
   ! 
   IMPLICIT NONE
   !
@@ -37,8 +37,6 @@ PROGRAM casino2upf
    pp_data= 'pp.data'
    upf_file= 'out.UPF'
 
-   CALL nullify_pseudo_upf( upf_out )
- 
    WRITE(0,*) 'CASINO2UPF Converter'
 
    READ(*,inputpp,iostat=ios)

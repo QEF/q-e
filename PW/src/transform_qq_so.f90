@@ -13,7 +13,8 @@ SUBROUTINE transform_qq_so(qq,qq_so)
   USE kinds,        ONLY : DP
   USE ions_base,    ONLY : ntyp => nsp
   USE uspp_param,   ONLY : upf, nhm, nh
-  USE spin_orb,     ONLY : lspinorb, fcoef
+  USE noncollin_module, ONLY : lspinorb
+  USE upf_spinorb,  ONLY : fcoef
   !
   implicit none
   !

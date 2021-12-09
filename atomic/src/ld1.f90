@@ -20,7 +20,6 @@ program ld1
   USE environment,       ONLY : environment_start
   USE ld1inc,            ONLY : iswitch, write_coulomb, grid, lgipaw_reconstruction
   USE radial_grids,      ONLY : deallocate_radial_grid
-  USE command_line_options, ONLY: input_file_
   !
   implicit none
   CHARACTER (LEN=9) :: code = 'LD1'
@@ -32,7 +31,7 @@ program ld1
   !
   !    read input, possible pseudopotential and set the main variables
   !
-  call ld1_readin (input_file_)
+  call ld1_readin ( )
   call ld1_setup ( )
   !
   !   four possible working mode:

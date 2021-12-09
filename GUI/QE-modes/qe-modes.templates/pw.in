@@ -12,7 +12,7 @@
    !         12 = monoclinic P (axis c),   -12 = monoclinic P (axis b),
    !         13 = monoclinic base-C,   14 = triclinic
    ibrav     = 0
-   celldm(1) = 1
+   celldm(1) = 1.0
    nat       = 1
    ntyp      = 1
    ecutwfc   = 30.0

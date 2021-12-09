@@ -1,45 +1,33 @@
 ! Slightly modified version of LINPACK routines zgefa and zgedi
 
       SUBROUTINE ZGEFA(A,LDA,N,IPVT,INFO)
+      !! Factors a complex matrix by gaussian elimination.
       USE kinds, ONLY : DP
-      INTEGER LDA,N,IPVT(*),INFO
+      INTEGER LDA
+      !! input: the leading dimension of the array A
+      INTEGER N
+      !! input: the order of the matrix A
+      INTEGER IPVT(*)
+      !! output: an integer vector of pivot indices
+      INTEGER INFO
+      !! output. Options:  
+      !! = 0: normal value;  
+      !! = K: if U(K,K) = 0.0.
+      ! THIS IS NOT AN ERROR CONDITION FOR THIS SUBROUTINE, BUT IT DOES
+      ! INDICATE THAT ZGESL OR ZGEDI WILL DIVIDE BY ZERO IF CALLED.
+      ! USE  RCOND  IN ZGECO FOR A RELIABLE INDICATION OF SINGULARITY.
       COMPLEX(DP) A(LDA,*)
-!
-!     ZGEFA FACTORS A COMPLEX(DP) MATRIX BY GAUSSIAN ELIMINATION.
+      !! IN: the matrix to be factored;  
+      !! OUT: an upper triangular matrix and the multipliers which were
+      !! used to obtain it.
+      ! The factorization can be written \(A=L\cdot U\), where L is a product
+      ! of permutation and unit lower triangular matrices and U is upper 
+      ! triangular.
 !
 !     ZGEFA IS USUALLY CALLED BY ZGECO, BUT IT CAN BE CALLED
 !     DIRECTLY WITH A SAVING IN TIME IF  RCOND  IS NOT NEEDED.
 !     (TIME FOR ZGECO) = (1 + 9/N)*(TIME FOR ZGEFA) .
-!
-!     ON ENTRY
-!
-!        A       COMPLEX(DP)(LDA, N)
-!                THE MATRIX TO BE FACTORED.
-!
-!        LDA     INTEGER
-!                THE LEADING DIMENSION OF THE ARRAY  A .
-!
-!        N       INTEGER
-!                THE ORDER OF THE MATRIX  A .
-!
-!     ON RETURN
-!
-!        A       AN UPPER TRIANGULAR MATRIX AND THE MULTIPLIERS
-!                WHICH WERE USED TO OBTAIN IT.
-!                THE FACTORIZATION CAN BE WRITTEN  A = L*U  WHERE
-!                L  IS A PRODUCT OF PERMUTATION AND UNIT LOWER
-!                TRIANGULAR MATRICES AND  U  IS UPPER TRIANGULAR.
-!
-!        IPVT    INTEGER(N)
-!                AN INTEGER VECTOR OF PIVOT INDICES.
-!
-!        INFO    INTEGER
-!                = 0  NORMAL VALUE.
-!                = K  IF  U(K,K) .EQ. 0.0 .  THIS IS NOT AN ERROR
-!                     CONDITION FOR THIS SUBROUTINE, BUT IT DOES
-!                     INDICATE THAT ZGESL OR ZGEDI WILL DIVIDE BY ZERO
-!                     IF CALLED.  USE  RCOND  IN ZGECO FOR A RELIABLE
-!                     INDICATION OF SINGULARITY.
+!.  
 !
 !     LINPACK. THIS VERSION DATED 08/14/78 .
 !     CLEVE MOLER, UNIVERSITY OF NEW MEXICO, ARGONNE NATIONAL LAB.
@@ -114,46 +102,33 @@
       END SUBROUTINE ZGEFA
 
       SUBROUTINE ZGEDI(A,LDA,N,IPVT,DET,WORK,JOB)
+      !! Computes the determinant and inverse of a matrix using the 
+      !! factors cumputed by \(\texttt{zgeco}\) or \(\texttt{zgefa}\).
       USE kinds, ONLY : DP
-      INTEGER LDA,N,IPVT(*),JOB
-      COMPLEX(DP) A(LDA,*),DET(2),WORK(*)
-!
-!     ZGEDI COMPUTES THE DETERMINANT AND INVERSE OF A MATRIX
-!     USING THE FACTORS COMPUTED BY ZGECO OR ZGEFA.
-!
-!     ON ENTRY
-!
-!        A       COMPLEX(DP)(LDA, N)
-!                THE OUTPUT FROM ZGECO OR ZGEFA.
-!
-!        LDA     INTEGER
-!                THE LEADING DIMENSION OF THE ARRAY  A .
-!
-!        N       INTEGER
-!                THE ORDER OF THE MATRIX  A .
-!
-!        IPVT    INTEGER(N)
-!                THE PIVOT VECTOR FROM ZGECO OR ZGEFA.
-!
-!        WORK    COMPLEX(DP)(N)
-!                WORK VECTOR.  CONTENTS DESTROYED.
-!
-!        JOB     INTEGER
-!                = 11   BOTH DETERMINANT AND INVERSE.
-!                = 01   INVERSE ONLY.
-!                = 10   DETERMINANT ONLY.
-!
-!     ON RETURN
-!
-!        A       INVERSE OF ORIGINAL MATRIX IF REQUESTED.
-!                OTHERWISE UNCHANGED.
-!
-!        DET     COMPLEX(DP)(2)
-!                DETERMINANT OF ORIGINAL MATRIX IF REQUESTED.
-!                OTHERWISE NOT REFERENCED.
-!                DETERMINANT = DET(1) * 10.0**DET(2)
-!                WITH  1.0 .LE. CABS1(DET(1)) .LT. 10.0
-!                OR  DET(1) .EQ. 0.0 .
+      INTEGER LDA
+      !! input: the leading dimension of the input array A
+      INTEGER N
+      !! input: the order of the matrix A
+      INTEGER IPVT(*)
+      !! input: the pivot vector from \(\texttt{zgeco}\) or \(\texttt{zgefa}\)
+      INTEGER JOB
+      !! input. Options:  
+      !! = 11  both determinant and inverse;  
+      !! = 01  inverse only;  
+      !! = 10  determinant only.
+      COMPLEX(DP) A(LDA,*)
+      !! IN: the output from \(\texttt{zgeco}\) or \(\texttt{zgefa}\);  
+      !! OUT: the inverse of the original matrix if requested, otherwise
+      !!      unchanged.
+      COMPLEX(DP) DET(2)
+      !! output: determinant of original matrix if requested, otherwise
+      !! not referenced.
+      ! determinant = DET(1) * 10.0**DET(2)
+      !               with  1.0 .LE. CABS1(DET(1)) .LT. 10.0
+      !               or  DET(1) .EQ. 0.0 .
+      COMPLEX(DP) WORK(*)
+      !! work vector. Contents destroyed
+!                
 !
 !     ERROR CONDITION
 !

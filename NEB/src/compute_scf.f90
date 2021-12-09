@@ -40,11 +40,11 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   USE path_io_routines, ONLY : new_image_init, get_new_image, &
                                stop_other_images
-  USE fcp_opt_routines, ONLY : fcp_neb_nelec, fcp_neb_ef
-  USE fcp_variables,    ONLY : lfcpopt
+  USE fcp_variables,    ONLY : lfcp, fcp_mu, fcp_nelec, fcp_ef, fcp_dos
+  USE gcscf_variables,  ONLY : lgcscf, gcscf_nelec, gcscf_ef
   USE klist,            ONLY : nelec, tot_charge
   USE extrapolation,    ONLY : update_neb
-  USE funct,            ONLY : stop_exx, dft_is_hybrid
+  USE xc_lib,           ONLY : stop_exx, xclib_dft_is
   !
   IMPLICIT NONE
   !
@@ -90,19 +90,41 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
      END IF
      !
-     IF ( lfcpopt ) THEN
+     IF ( lfcp ) THEN
         !
         IF ( my_image_id == root_image ) THEN
            !
            FORALL( image = fii:lii, .NOT.frozen(image) )
               !
-              fcp_neb_ef(image) = 0.D0
+              fcp_ef(image)  = 0.D0
+              fcp_dos(image) = 0.D0
               !
            END FORALL
            !
         ELSE
            !
-           fcp_neb_ef(fii:lii) = 0.D0
+           fcp_ef(fii:lii)  = 0.D0
+           fcp_dos(fii:lii) = 0.D0
+           !
+        END IF
+        !
+     END IF
+     !
+     IF ( lgcscf ) THEN
+        !
+        IF ( my_image_id == root_image ) THEN
+           !
+           FORALL( image = fii:lii, .NOT.frozen(image) )
+              !
+              gcscf_nelec(image) = 0.D0
+              gcscf_ef(   image) = 0.D0
+              !
+           END FORALL
+           !
+        ELSE
+           !
+           gcscf_nelec(fii:lii) = 0.D0
+           gcscf_ef(   fii:lii) = 0.D0
            !
         END IF
         !
@@ -122,7 +144,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
         IF ( my_image_id == root_image ) THEN
            !
-           IF (dft_is_hybrid()) call stop_exx() 
+           IF (xclib_dft_is('hybrid')) call stop_exx() 
            CALL do_scf( 1, istat )
            !
            IF ( istat /= 0 ) GOTO 1
@@ -136,7 +158,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
         IF ( my_image_id == root_image + 1 ) THEN
            !
-           IF (dft_is_hybrid()) call stop_exx() 
+           IF (xclib_dft_is('hybrid')) call stop_exx() 
            CALL do_scf( num_of_images, istat )
            !
            IF ( istat /= 0 ) GOTO 1
@@ -164,7 +186,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      pending_image = image
      !
-     IF (dft_is_hybrid()) call stop_exx() 
+     IF (xclib_dft_is('hybrid')) call stop_exx() 
      CALL do_scf( image, istat )
      !
      IF ( istat /= 0 ) GOTO 1
@@ -194,7 +216,16 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      CALL mp_sum( pes(fii:lii),        inter_image_comm )
      CALL mp_sum( grad_pes(:,fii:lii), inter_image_comm )
-     IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef(fii:lii), inter_image_comm )
+     IF ( lfcp ) THEN
+        CALL mp_sum( fcp_ef(fii:lii),  inter_image_comm )
+        CALL mp_sum( fcp_dos(fii:lii), inter_image_comm )
+     END IF
+     !
+     IF ( lgcscf ) THEN
+        CALL mp_sum( gcscf_nelec(fii:lii), inter_image_comm )
+        CALL mp_sum( gcscf_ef(fii:lii),    inter_image_comm )
+     END IF
+     !
      CALL mp_sum( istat,               inter_image_comm )
      !
   END IF
@@ -307,9 +338,13 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       CALL start_clock('PWSCF')
       CALL setup ()
       !
-      IF ( lfcpopt ) THEN
-         nelec = fcp_neb_nelec(image)
+      ! ... initialization #electrons, for FCP
+      !
+      IF ( lfcp ) THEN
+         !
+         nelec = fcp_nelec(image)
          tot_charge = SUM( zv(ityp(1:nat)) ) - nelec
+         !
       ENDIF
       !
       CALL init_run()
@@ -351,15 +386,36 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       pes(image) = etot / e2
       !
+      ! ... add potentio-stat contribution
+      IF ( lfcp ) pes(image) = pes(image) + ef / e2 * tot_charge
+      !
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !
       grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
       !
       ethr = diago_thr_init
       !
-      CALL close_files(.FALSE.)
+      ! ... the Fermi energy and the DOS on the Fermi surface are saved, for FCP
       !
-      IF ( lfcpopt ) fcp_neb_ef(image) = ef
+      IF ( lfcp ) THEN
+         !
+         fcp_ef(image) = ef / e2
+         !
+         CALL fcp_hessian( fcp_dos(image) )
+         fcp_dos(image) = fcp_dos(image) * e2
+         !
+      END IF
+      !
+      ! ... the total charge and the Fermi energy are saved, for GC-SCF
+      !
+      IF ( lgcscf ) THEN
+         !
+         gcscf_nelec(image) = nelec
+         gcscf_ef(   image) = ef / e2
+         !
+      END IF
+      !
+      CALL close_files(.FALSE.)
       !
       RETURN
       !

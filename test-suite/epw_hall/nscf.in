@@ -1,0 +1,39 @@
+ &control
+    calculation     = 'nscf'
+    prefix          = 'bn'
+    restart_mode    = 'from_scratch'
+    wf_collect      = .true.
+    pseudo_dir      = '../../pseudo'
+    outdir          = './'
+    tprnfor         = .true.
+    tstress         = .true.
+ /
+ &system
+    ibrav           = 2
+    celldm(1)       = 6.832682257 ! 3.6157 Ang exp
+    nat             = 2
+    ntyp            = 2
+    ecutwfc         = 40
+    nbnd            = 20
+ /
+ &electrons
+    diagonalization = 'cg'
+    mixing_beta     = 0.7
+    conv_thr        = 1.0d-12
+ /
+ATOMIC_SPECIES
+  B  10.811   B-PBE.upf
+  N  14.0067  N-PBE.upf
+ATOMIC_POSITIONS {crystal}
+ B    0.00  0.00  0.00
+ N   -0.25  0.75 -0.25
+K_POINTS crystal
+8
+  0.00000000  0.00000000  0.00000000  1.250000e-01
+  0.00000000  0.00000000  0.50000000  1.250000e-01
+  0.00000000  0.50000000  0.00000000  1.250000e-01
+  0.00000000  0.50000000  0.50000000  1.250000e-01
+  0.50000000  0.00000000  0.00000000  1.250000e-01
+  0.50000000  0.00000000  0.50000000  1.250000e-01
+  0.50000000  0.50000000  0.00000000  1.250000e-01
+  0.50000000  0.50000000  0.50000000  1.250000e-01

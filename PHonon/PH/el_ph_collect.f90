@@ -9,8 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE el_ph_collect( nmodes, el_ph_mat, el_ph_mat_collect, nksqtot, nksq )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine collects the electron-phonon matrix elements.
+  !! This routine collects the electron-phonon matrix elements.
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
@@ -67,8 +66,7 @@ END SUBROUTINE el_ph_collect
 SUBROUTINE el_ph_distribute( nmodes, el_ph_mat, el_ph_mat_collect, nksqtot, nksq )
 
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine distributes the electron-phonon matrix elements.
+  !! This routine distributes the electron-phonon matrix elements.
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
@@ -79,14 +77,16 @@ SUBROUTINE el_ph_distribute( nmodes, el_ph_mat, el_ph_mat_collect, nksqtot, nksq
   !
   IMPLICIT NONE
   !
-  INTEGER :: nksqtot, nksq, nmodes
-    ! total number of k-points
-    ! number of k-points per pool
-    ! number of perturbation
+  INTEGER :: nksqtot
+  !! total number of k-points
+  INTEGER :: nksq
+  !! number of k-points per pool
+  INTEGER :: nmodes
+  !! number of perturbation
   COMPLEX (DP) :: el_ph_mat(nbnd,nbnd,nksq,nmodes)
+  !! electron-phonon matrix elements
   COMPLEX (DP) :: el_ph_mat_collect(nbnd,nbnd,nksqtot,nmodes)
-    ! electron-phonon matrix elements
-    ! collected electron-phonon matrix elements
+  !! collected electron-phonon matrix elements
   !
 #if defined (__MPI)
   !

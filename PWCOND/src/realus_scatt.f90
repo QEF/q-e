@@ -105,8 +105,7 @@ MODULE realus_scatt
    USE realus,           ONLY : tabp
    USE uspp,             ONLY : okvan, becsum, ijtoh
    USE uspp_param,       ONLY : upf, nhm, nh
-   USE noncollin_module, ONLY : noncolin
-   USE spin_orb,         ONLY : domag
+   USE noncollin_module, ONLY : noncolin, domag
 
    IMPLICIT NONE
 

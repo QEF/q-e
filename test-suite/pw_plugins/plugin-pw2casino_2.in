@@ -8,6 +8,8 @@
     ecutwfc=12.0
  /
  &electrons
+    conv_thr=1.0e-8
+    diago_david_ndim=4
  /
 ATOMIC_SPECIES
  Si  28.086  Si.pz-vbc.UPF

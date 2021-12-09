@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Post-processing script from of PH data in format used by EPW
 # 14/07/2015 - Creation of the script - Samuel Ponce
@@ -14,6 +14,7 @@ except ImportError:
 # import numpy as np
 
 import os
+import re
 from xml.dom import minidom
 
 
@@ -66,7 +67,7 @@ def hasfc(prefix):
     if (os.path.isfile(fname)):
         lfc = True
     else:
-        fname_no_xml = fname.strip(".xml")
+        fname_no_xml = re.sub('\.xml$', '', fname)
         if (os.path.isfile(fname_no_xml)):
             lfc = True
         else:
@@ -84,7 +85,7 @@ def hasXML(prefix):
         return True
     # check if the other without .xml extension exists
     # if not raise an error
-    fname_no_xml = fname.strip(".xml")
+    fname_no_xml = re.sub('\.xml$', '', fname)
 
     class FileNotFoundError(Exception):
         pass

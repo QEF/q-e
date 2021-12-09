@@ -25,14 +25,14 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, restart,      &
                               nstemp, scattering_serta, scattering_0rta, shortrange, &
                               restart_step, restart_filq, vme, assume_metal
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, &
                               epf17, nkqtotf, inv_tau_all, inv_tau_allcb,    &
-                              xqf, zi_allvb, zi_allcb, nbndfst, nktotf, transp_temp, &
+                              xqf, zi_allvb, zi_allcb, nbndfst, nktotf, gtemp, &
                               lower_bnd
     USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev,        &
                               eps6, eps8, eps4
@@ -165,7 +165,7 @@
       ! loop over temperatures
       DO itemp = 1, nstemp
         !
-        etemp = transp_temp(itemp)
+        etemp = gtemp(itemp)
         !
         ! SP: Define the inverse so that we can efficiently multiply instead of dividing
         !
@@ -180,7 +180,7 @@
           IF (scattering_0rta) THEN
             !vel_factor = 1 - (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
             vel_factor(:, :) = zero
-            IF (vme) THEN
+            IF (vme == 'wannier') THEN
               DO ibnd = 1, nbndfst
                 !
                 ! vkk(3,nbnd) - velocity for k
@@ -200,12 +200,12 @@
               DO ibnd = 1, nbndfst
                 !
                 ! vkk(3,nbnd) - velocity for k
-                vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                 !
                 DO jbnd = 1, nbndfst
                   !
                   ! vkq(3,nbnd) - velocity for k + q
-                  vkq(:, jbnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq))
+                  vkq(:, jbnd) = REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq))
                   !
                   IF (ABS(vkk(1, ibnd)**2 + vkk(2, ibnd)**2 + vkk(3, ibnd)**2 ) > eps4) &
                     vel_factor(ibnd, jbnd) = DDOT(3, vkk(:, ibnd), 1, vkq(:, jbnd), 1) / &
@@ -427,7 +427,7 @@
       !
       DO itemp = 1, nstemp
         !
-        etemp = transp_temp(itemp)
+        etemp = gtemp(itemp)
         WRITE(stdout, '(a,f8.3,a)' ) '     Temperature ', etemp * ryd2ev / kelvin2eV, ' K'
         !
         ! In case we read another q-file, merge the scattering here
@@ -569,19 +569,20 @@
     USE cell_base,        ONLY : alat, at, omega
     USE io_files,         ONLY : prefix
     USE io_var,           ONLY : iufilsigma
-    USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp,              &
-                                 int_mob, ncarrier, scatread, iterative_bte, vme, assume_metal
+    USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp, assume_metal,&
+                                 int_mob, ncarrier, scatread, iterative_bte, vme
     USE pwcom,            ONLY : ef
-    USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef,      &
-                                 inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
-                                 zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
-    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev,                   &
-                                 kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
+    USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef, bztoibz,      &
+                                 inv_tau_all, nkqtotf, inv_tau_allcb, gtemp,       &
+                                 zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf,   &
+                                 s_bztoibz
+    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev, ang2cm, czero,       &
+                                 kelvin2eV, hbar, Ang2m, hbarJ
     USE constants,        ONLY : electron_si
     USE mp,               ONLY : mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
     USE mp_world,         ONLY : mpime
-    USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE symm_base,        ONLY : s
     USE cell_base,        ONLY : bg
     USE mp,               ONLY : mp_bcast
     USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3
@@ -589,7 +590,6 @@
     USE io_transport,     ONLY : scattering_read
     USE division,         ONLY : fkbounds
     USE grid,             ONLY : kpoint_grid_epw
-    USE kinds_epw,        ONLY : SIK2
     USE poolgathering,    ONLY : poolgatherc4, poolgather2
     USE noncollin_module, ONLY : noncolin
     !
@@ -626,10 +626,6 @@
     INTEGER :: ierr
     !! Error status
     INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
-    !! Temporary mapping
-    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
-    !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! symmetry
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
@@ -722,11 +718,11 @@
       ! Compute the Fermi level
       DO itemp = 1, nstemp
         !
-        etemp = transp_temp(itemp)
+        etemp = gtemp(itemp)
         !
         ! Lets gather the velocities from all pools
 #if defined(__MPI)
-        IF (vme) THEN
+        IF (vme == 'wannier') THEN
           ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating vmef_all', 1)
           vmef_all(:, :, :, :) = czero
@@ -742,7 +738,7 @@
         wkf_all(:) = zero
         CALL poolgather2(1, nkqtotf, 2 * nkf, wkf, wkf_all)
 #else
-        IF (vme) THEN
+        IF (vme == 'wannier') THEN
           ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating vmef_all', 1)
           vmef_all = vmef
@@ -767,7 +763,11 @@
         IF (int_mob .OR. (ncarrier < -1E5)) THEN
           IF (itemp == 1) THEN
             WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-            WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+            IF (system_2d) THEN
+              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-2]  Hole mobility [cm^2/Vs]")')
+            ELSE
+              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+            ENDIF
             WRITE(stdout, '(5x,a/)') REPEAT('=',67)
           ENDIF
           !
@@ -778,10 +778,10 @@
               DO ibnd = 1, nbndfst
                 ! This selects only valence bands for hole conduction
                 IF (etf_all(ibndmin - 1 + ibnd, ik) < ef0(itemp)) THEN
-                  IF (vme) THEN
+                  IF (vme == 'wannier') THEN
                     vkk(:, ibnd) = REAL(vmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
-                    vkk(:, ibnd) = 2.0 * REAL(dmef_all (:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                    vkk(:, ibnd) = REAL(dmef_all (:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ENDIF
                   tau = one / inv_tau_all(itemp, ibnd, ik)
                   ekk = etf_all(ibndmin - 1 + ibnd, ik) - ef0(itemp)
@@ -827,7 +827,11 @@
           mobility_zz  = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
-          carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+          IF (system_2d) THEN
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
+          ELSE
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+          ENDIF
           WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV, &
                   ef0(itemp) * ryd2ev, carrier_density_prt, mobility_xx, '  x-axis'
           WRITE(stdout, '(45x, 1E18.6, a)') mobility_yy, '  y-axis'
@@ -840,7 +844,11 @@
         IF (int_mob .OR. (ncarrier > 1E5)) THEN
           IF (itemp == 1) THEN
             WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-            WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Electron density [cm^-3]  Electron mobility [cm^2/Vs]")')
+            IF (system_2d) THEN
+              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Electron density [cm^-2]  Electron mobility [cm^2/Vs]")')
+            ELSE
+              WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Electron density [cm^-3]  Electron mobility [cm^2/Vs]")')
+            ENDIF
             WRITE(stdout, '(5x,a/)') REPEAT('=',67)
           ENDIF
           !
@@ -853,10 +861,10 @@
               DO ibnd = 1, nbndfst
                 ! This selects only conduction bands for electron conduction
                 IF (etf_all(ibndmin - 1 + ibnd, ik) > ef0(itemp)) THEN
-                  IF (vme) THEN
+                  IF (vme == 'wannier') THEN
                     vkk(:, ibnd) = REAL(vmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
-                    vkk(:, ibnd) = 2.0 * REAL(dmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                    vkk(:, ibnd) = REAL(dmef_all(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ENDIF
                   tau = one / inv_tau_all(itemp, ibnd, ik)
                   ekk = etf_all(ibndmin - 1 + ibnd, ik) -  ef0(itemp)
@@ -902,7 +910,11 @@
           mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
-          carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+          IF (system_2d) THEN
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
+          ELSE
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+          ENDIF
           WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV, &
                   ef0(itemp) * ryd2ev, carrier_density_prt, mobility_xx, '  x-axis'
           WRITE(stdout, '(45x, 1E18.6, a)') mobility_yy, '  y-axis'
@@ -911,7 +923,7 @@
           !
         ENDIF ! int_mob .OR. (ncarrier > 1E5)
         !
-        IF (vme) THEN
+        IF (vme == 'wannier') THEN
           DEALLOCATE(vmef_all, STAT = ierr)
           IF (ierr /= 0) CALL errore('transport_coeffs', 'Error deallocating vmef_all', 1)
         ELSE
@@ -928,12 +940,6 @@
       !
       !  SP - Uncomment to use symmetries on velocities
       IF (mp_mesh_k) THEN
-        bztoibz(:) = 0
-        s_bztoibz(:) = 0
-        !
-        CALL set_sym_bl()
-        ! What we get from this call is bztoibz
-        CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
         !
         IF (iterative_bte) THEN
           ! Now we have to remap the points because the IBZ k-points have been
@@ -958,7 +964,7 @@
         !
         DO itemp = 1, nstemp
           !
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           !
           IF (itemp == 1) THEN
             !
@@ -988,15 +994,15 @@
                   !
                   ! vkk(3,nbnd) - velocity for k
                   tdf_sigma(:) = zero
-                  IF (vme) THEN
+                  IF (vme == 'wannier') THEN
                     ! vmef is in units of Ryd * bohr
                     vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ELSE
-                    ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                    ! v_(k,i) = 1/m <ki|p|ki> = dmef (:, i,i,k)
                     ! 1/m  = 2 in Rydberg atomic units
-                    ! dmef is in units of 1/a.u. (where a.u. is bohr)
+                    ! dmef is in units of Ryd * bohr
                     ! v_(k,i) is in units of Ryd * a.u.
-                    vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                    vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                   ENDIF
                   ! Use symmetries on k-point (from Homogeneous grid only)
                   IF (mp_mesh_k) THEN
@@ -1089,11 +1095,15 @@
         conv_factor1 = electron_si / (hbar * bohr2ang * Ang2m)
         !
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-        WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+        IF (system_2d) THEN
+          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-2]  Hole mobility [cm^2/Vs]")')
+        ELSE
+          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+        ENDIF
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
         !
         DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           ! sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
           IF (mpime ==  meta_ionode_id) THEN
             WRITE(iufilsigma, '(11E16.8)') ef0(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
@@ -1142,7 +1152,11 @@
           mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
-          carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+          IF (system_2d) THEN
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-2.0d0)
+          ELSE
+            carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+          ENDIF
           WRITE(stdout, '(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV, &
                   ef0(itemp) * ryd2ev, carrier_density_prt, mobility_xx, '  x-axis'
           WRITE(stdout, '(45x, 1E18.6, a)') mobility_yy, '  y-axis'
@@ -1183,7 +1197,7 @@
       !
       IF (int_mob .OR. (ncarrier > 1E5)) THEN
         DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           IF (itemp == 1) THEN
             tdf_sigma(:) = zero
             sigma(:, :)  = zero
@@ -1197,15 +1211,15 @@
                   ! This selects only cond bands for electron conduction
                   IF (etf(ibndmin - 1 + ibnd, ikk) > ef0(itemp)) THEN
                     tdf_sigma(:) = zero
-                    IF (vme) THEN
+                    IF (vme == 'wannier') THEN
                       ! vmef is in units of Ryd * bohr
                       vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ELSE
-                      ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                      ! v_(k,i) = 1/m <ki|p|ki> = dmef (:, i,i,k)
                       ! 1/m  = 2 in Rydberg atomic units
-                      ! dmef is in units of 1/a.u. (where a.u. is bohr)
+                      ! dmef is in units of Ryd * bohr
                       ! v_(k,i) is in units of Ryd * a.u.
-                      vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                      vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ENDIF
                     IF (mp_mesh_k) THEN
                       !
@@ -1277,10 +1291,10 @@
                     !
                     !  SP - Uncomment to use symmetries on velocities
                     tdf_sigma(:) = zero
-                    IF (vme) THEN
+                    IF (vme == 'wannier') THEN
                       vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ELSE
-                      vkk(:, ibnd) = 2.0 * REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+                      vkk(:, ibnd) = REAL(dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
                     ENDIF
                     !
                     IF (mp_mesh_k) THEN
@@ -1349,14 +1363,14 @@
                         tdf_sigma(ij) = vkk(i, ibnd) * vkk(j, ibnd) * tau
                       ENDDO
                     ENDDO
-                    sigmaZ(:, itemp) = sigmaZ(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                   sigmaz(:, itemp) = sigmaz(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
                   ENDIF
                 ENDDO ! ibnd
               ENDIF ! etcb
             ENDIF ! endif  fsthick
           ENDDO ! end loop on k
           CALL mp_sum(sigma(:, itemp), world_comm)
-          CALL mp_sum(sigmaZ(:, itemp), world_comm)
+          CALL mp_sum(sigmaz(:, itemp), world_comm)
           !
         ENDDO ! nstemp
         IF (mpime == meta_ionode_id) THEN
@@ -1370,10 +1384,14 @@
         !
         conv_factor1 = electron_si / ( hbar * bohr2ang * Ang2m )
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-        WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
+        IF (system_2d) THEN
+          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-2]  Elec mobility [cm^2/Vs]")')
+        ELSE
+          WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
+        ENDIF
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
         DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           IF (mpime == meta_ionode_id) THEN
             ! sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
             IF (ABS(efcb(itemp)) < eps4) THEN

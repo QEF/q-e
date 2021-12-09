@@ -18,13 +18,11 @@ SUBROUTINE setup_dgc
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, g
-  USE spin_orb,             ONLY : domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, rhoz_or_updw
-  USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
+  USE noncollin_module,     ONLY : noncolin, domag, ux, nspin_gga, nspin_mag
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
-  USE funct,                ONLY : dft_is_gradient, is_libxc
-  USE xc_gga,               ONLY : xc_gcx !gcxc, gcx_spin, gcc_spin
+  USE xc_lib,               ONLY : xclib_dft_is, xc_gcx
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
                                    dvxc_ss, dvxc_s, vsgga, segni
@@ -45,7 +43,7 @@ SUBROUTINE setup_dgc
   !
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-10
   !
-  IF ( .NOT. dft_is_gradient() ) RETURN
+  IF ( .NOT. xclib_dft_is('gradient') ) RETURN
   !
   CALL start_clock( 'setup_dgc' )
   !

@@ -3,7 +3,7 @@
 # compilation rules
 
 .SUFFIXES :
-.SUFFIXES : .o .c .f .f90 .h .fh
+.SUFFIXES : .o .c .f90 .h .fh
 
 # most fortran compilers can directly preprocess c-like directives: use
 # 	$(MPIF90) $(F90FLAGS) -c $<
@@ -14,11 +14,6 @@
 
 .f90.o:
 	@f90rule@
-
-# .f.o and .c.o: do not modify
-
-.f.o:
-	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS)  -c $<
@@ -37,7 +32,7 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
-# To use libxc (v>=3.0.1), add -D__LIBXC to DFLAGS
+# To use libxc (v>=4.3.0), add -D__LIBXC to DFLAGS
 # See include/defs.h.README for a list of options and their meaning
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas
@@ -60,30 +55,42 @@ IFLAGS         = @iflags@
 MOD_FLAG      = @imod@
 
 # BASEMOD_FLAGS points to directories containing basic modules,
-# while BASEMODS points to the corresponding module libraries
-# Each Makefile can add directories to MODFLAGS and libraries to QEMODS
+# while BASEMODS points to the corresponding module libraries.
+# More package-specific directories can be added in each Makefile
+# and stored into MODFLAGS, and the same for module libraries in QEMODS
 
-BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
-               $(MOD_FLAG)$(TOPDIR)/upflib \
+BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
+               $(MOD_FLAG)$(TOPDIR)/XClib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
+	       $(MOD_FLAG)$(TOPDIR)/MBD \
+	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers \
 	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
+
+# If A depends upon B, A should come before B in the list below
+# (most compilers don't care but some don't resolve cross links)
+BASEMODS= $(TOPDIR)/Modules/libqemod.a \
+          $(TOPDIR)/upflib/libupf.a \
+          $(TOPDIR)/XClib/xc_lib.a \
+          $(TOPDIR)/FFTXlib/libqefft.a \
+          $(TOPDIR)/LAXlib/libqela.a \
+          $(TOPDIR)/UtilXlib/libutil.a \
+          $(TOPDIR)/MBD/libmbd.a
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90
 # compiler that produces executables for parallel execution using MPI
 # (such as for instance mpif90, mpf90, mpxlf90,...);
 # otherwise, an ordinary fortran-90 compiler (f90, g95, xlf90, ifort,...)
-# If you have a parallel machine but no suitable candidate for MPIF90,
-# try to specify the directory containing "mpif.h" in IFLAGS
-# and to specify the location of MPI libraries in MPI_LIBS
 
 MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
-F77            = @f77@
+
+# CUDA Toolkit path
+CUDA_PATH=@cuda_path@
 
 # GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
 GPU_ARCH=@gpu_arch@
@@ -92,7 +99,10 @@ GPU_ARCH=@gpu_arch@
 CUDA_RUNTIME=@gpu_runtime@
 
 # CUDA F90 Flags
-CUDA_F90FLAGS=@cuda_fflags@
+CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
+
+# CUDA C Flags
+CUDA_CFLAGS=@CUDA_CFLAGS@
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
@@ -101,17 +111,16 @@ CUDA_F90FLAGS=@cuda_fflags@
 CPP            = @cpp@
 CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 
-# compiler flags: C, F90, F77
+# compiler flags: C, F90
 # C flags must include DFLAGS and IFLAGS
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
-CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
+CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS) $(CUDA_CFLAGS)
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
-FFLAGS         = @fflags@
 
-# compiler flags without optimization for fortran-77
+# compiler flags with and without optimization for fortran-77
 # the latter is NEEDED to properly compile dlamch.f, used by lapack
-
+FFLAGS         = @fflags@
 FFLAGS_NOOPT   = @fflags_noopt@
 
 # compiler flag needed by some compilers when the main program is not fortran
@@ -121,7 +130,8 @@ FFLAGS_NOMAIN   = @fflags_nomain@
 
 # Linker, linker-specific flags (if any)
 # Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
-# for libxc, set LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxcf03 -lxc
+# for libxc, set LD_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc
+# If libxc release is 5.0.0 replace -lxcf03 with -lxcf90
 
 LD             = @ld@
 LDFLAGS        = @ldflags@
@@ -129,18 +139,14 @@ LD_LIBS        = @ld_libs@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
-# If you have nothing better, use the local copy via "--with-netlib" :
-# BLAS_LIBS = /your/path/to/espresso/LAPACK/blas.a
-# BLAS_LIBS_SWITCH = internal
+# If you have nothing better, use the local copy
+# BLAS_LIBS = $(TOPDIR)/LAPACK/libblas.a
 
 BLAS_LIBS      = @blas_libs@
-BLAS_LIBS_SWITCH = @blas_libs_switch@
 
-# If you have nothing better, use the local copy via "--with-netlib" :
-# LAPACK_LIBS = /your/path/to/espresso/LAPACK/lapack.a
+# If you have nothing better, use the local copy
 # LAPACK_LIBS_SWITCH = internal
-# For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
-# remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
+# LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
 
 LAPACK_LIBS    = @lapack_libs@
 LAPACK_LIBS_SWITCH = @lapack_libs_switch@
@@ -157,8 +163,8 @@ HDF5_LIBS = @hdf5_libs@
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
             -lFoX_utils -lFoX_fsys 
 FOX_FLAGS = @foxflags@
-# For parallel execution, the correct path to MPI libraries must
-# be specified in MPI_LIBS (except for IBM if you use mpxlf)
+
+# MPI libraries (should not be needed)
 
 MPI_LIBS       = @mpi_libs@
 
@@ -166,14 +172,9 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
-# library for bayesian error estimate functionals
-
-BEEF_LIBS      = @beef_libs@
-BEEF_LIBS_SWITCH = @beef_libs_switch@
-
 # CUDA libraries
-CUDA_LIBS=@cuda_libs@
-CUDA_EXTLIBS = @cuda_extlibs@
+CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
+CUDA_EXTLIBS = devxlib @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -189,9 +190,10 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(BEEF_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LIBXC_LIBS) $(LD_LIBS)
+QELIBS         = $(LIBXC_LIBS) \
+                 $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
+		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

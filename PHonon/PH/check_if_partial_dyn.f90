@@ -7,14 +7,14 @@
 !
 SUBROUTINE check_if_partial_dyn(u, nirr, npert, comp_irr)
 !
-!  This routine decides which irreducible representation have to
-!  be computed for each q point on the basis of start_irr and last_irr
-!  or on the basis of nat_todo. It sets the array comp_irr. 
-!  If this is part of a dispersion calculation the routine has to be
-!  called separately for each q and in that case different displacement
-!  patterns are given as input. Note that this routine is called before
-!  distributing the irrep among the images and only the irrep selected
-!  here are distributed.
+!! This routine decides which irreducible representation have to
+!! be computed for each q point on the basis of start_irr and last_irr
+!! or on the basis of nat_todo. It sets the array comp_irr.  
+!! If this is part of a dispersion calculation the routine has to be
+!! called separately for each q and in that case different displacement
+!! patterns are given as input. Note that this routine is called before
+!! distributing the irrep among the images and only the irrep selected
+!! here are distributed.
 !
 USE kinds, ONLY : DP
 USE ions_base, ONLY : nat

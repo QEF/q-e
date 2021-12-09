@@ -6,39 +6,46 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine symdyn_munu_new (dyn, u, xq, s, invs, rtau, irt, at, &
-     bg, nsymq, nat, irotmq, minus_q)
+subroutine symdyn_munu_new( dyn, u, xq, s, invs, rtau, irt, at, &
+                            bg, nsymq, nat, irotmq, minus_q )
   !-----------------------------------------------------------------------
-  !
-  !    This routine symmetrize the dynamical matrix written in the basis
-  !    of the modes
-  !
-  !
+  !! This routine symmetrize the dynamical matrix written in the basis
+  !! of the modes.
+  
   USE kinds, only : DP
+  
   implicit none
-  integer :: nat, s (3, 3, 48), irt (48, nat), invs (48), &
-       nsymq, irotmq
-  ! input: the number of atoms
-  ! input: the symmetry matrices
-  ! input: the rotated of each atom
-  ! input: the small group of q
-  ! input: the inverse of each matrix
-  ! input: the order of the small gro
-  ! input: the symmetry q -> -q+G
-
-  real(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3)
-  ! input: the coordinates of q
-  ! input: the R associated at each r
-  ! input: direct lattice vectors
-  ! input: reciprocal lattice vectors
-
+  
+  integer :: nat
+  !1 input: the number of atoms
+  integer :: s(3,3,48)
+  !! input: the symmetry matrices
+  integer :: irt(48,nat)
+  !! input: the rotated of each atom
+  integer :: invs(48)
+  !! input: the inverse of each matrix
+  integer :: nsymq
+  !! input: the order of the small group
+  integer :: irotmq
+  !! input: the small group of q.  
+  !! input: the symmetry q -> -q+G
+  real(DP) :: xq(3)
+  !! input: the coordinates of q
+  real(DP) :: rtau(3,48,nat)
+  !! input: the R associated at each r
+  real(DP) :: at(3,3)
+  !! input: direct lattice vectors
+  real(DP) :: bg(3,3)
+  !! input: reciprocal lattice vectors  
   logical :: minus_q
-  ! input: if true symmetry sends q->
-
-  complex(DP) :: dyn (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
-  ! inp/out: matrix to symmetrize
-  ! input: the patterns
-
+  !! input: if true symmetry sends q-> -q+G
+  complex(DP) :: dyn(3*nat,3*nat)
+  !! inp/out: matrix to symmetrize
+  complex(DP) :: u(3*nat,3*nat)
+  !! input: the patterns
+  !
+  ! ... local variables
+  !
   integer :: i, j, icart, jcart, na, nb, mu, nu
   ! counter on modes
   ! counter on modes

@@ -47,7 +47,8 @@ MODULE pseudo_types
      CHARACTER(LEN=80):: date=' '     ! generation date
      CHARACTER(LEN=80):: comment=' '  ! author's comment
      CHARACTER(LEN=2) :: psd=' '      ! Element label
-     CHARACTER(LEN=20):: typ=' '      ! Pseudo type ( NC or US or PAW)
+     CHARACTER(LEN=4) :: typ=' '      ! Pseudo type:    NC, SL, US, PAW, 1/r
+                                      ! NB: many files have USPP instead of US
      CHARACTER(len=6) :: rel=' '      ! relativistic: {no|scalar|full}
      LOGICAL :: tvanp              ! .true. if Ultrasoft
      LOGICAL :: tcoulombp          ! .true. if Coulomb 1/r potential

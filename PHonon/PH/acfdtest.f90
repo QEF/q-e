@@ -7,10 +7,10 @@
 !
 !----------------------------------------------------------------------------
 !
-! ... Common variables for the  acfdt program
-!
-!
 MODULE acfdtest
+!
+!! Common variables for the \(\texttt{acfdt}\) program.
+!
  USE kinds
  SAVE
  LOGICAL :: acfdt_is_active=.FALSE.

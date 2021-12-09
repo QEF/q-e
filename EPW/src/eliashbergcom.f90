@@ -36,8 +36,6 @@
   !! frequency on real-axis, wsph(nqstep)
   REAL(KIND = DP), ALLOCATABLE :: wsi(:)
   !! frequency on imag-axis at iw, wi(nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: estemp(:)
-  !! temperature in eV entering in the Eliashberg equtions estemp(nstemp)
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common

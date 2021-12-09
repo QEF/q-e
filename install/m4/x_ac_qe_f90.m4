@@ -24,16 +24,27 @@ AC_ARG_ENABLE(pedantic,
    fi],
    [use_pedantic=0])
 
-# shared library flags are implemented only for a few (untested) cases
+# yet to be implemented
 AC_ARG_ENABLE(shared,
    [AS_HELP_STRING([--enable-shared],
-       [use shared libraries if available (default: yes)])],
+       [produce object files suitable for shared libraries (default: no)])],
    [if   test "$enableval" = "yes" ; then
       use_shared=1
    else
       use_shared=0
    fi],
-   [use_shared=1])
+   [use_shared=0])
+
+# build static executables (implemented only for a few untested cases)
+AC_ARG_ENABLE(static,
+   [AS_HELP_STRING([--enable-static],
+       [build static executables if possible (default: no)])],
+   [if   test "$enableval" = "yes" ; then
+      use_static=1
+   else
+      use_static=0
+   fi],
+   [use_static=0])
 
 # check Fortran compiler flags
 # have_cpp=0: use external C preprocessing for fortran code
@@ -61,7 +72,7 @@ case "$arch:$f90_flavor" in
             try_fflags_openmp="-openmp"
             try_ldflags_openmp="-openmp"
         fi
-        pre_fdflags="-fpp "
+        pre_fdflags="-fpp -allow nofpp_comments "
         ;;
 arm:armflang )
         try_fflags="-O3 -mcpu=native $try_fflags"
@@ -144,18 +155,22 @@ ppc64:*xlf* )
         try_f90flags="\$(FFLAGS) -qfree=f90"
         try_fflags_noopt="-q64 -qthreaded -O0"
         try_ldflags="-q64 -qthreaded"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-ppc64-mn:*xlf* )
+ppc64le:*xlf* )
     if test "$use_debug" -eq 1; then
-        try_fflags="-g -C -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+        try_fflags="-g -C -qstrict -qdpc -qalias=nointptr -qarch=auto"
     else
-        try_fflags="-O3 -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+        try_fflags="-O3 -qstrict -qdpc -qalias=nointptr -qarch=auto"
     fi
-        try_f90flags="\$(FFLAGS) -qfree=f90"
-        try_fflags_noopt="-O0 -q64"
+        try_fflags_openmp="-qsmp=noauto:omp"
+        try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90"
+        try_fflags_noopt="-O0"
         try_ldflags=""
+        try_ldflags_openmp="-qsmp=noauto:omp"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
@@ -170,6 +185,7 @@ ppc64-bg:*xlf* )
         try_fflags_noopt="-q32 -O0"
         try_ldflags="-q32"
         try_ldflags_openmp="-qsmp=omp -qthreaded"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
@@ -184,15 +200,16 @@ ppc64-bgq:*xlf* )
         try_fflags_noopt="-O0"
         try_ldflags=""
         try_ldflags_openmp="-qstatic -qsmp=noauto:omp -qtm -qthreaded"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-*:pgf* )
+*:pgf* | *:nvfortran )
 	try_fflags_nomain="-Mnomain"
         try_fflags="-fast"
         try_fflags_openmp="-mp"
         if test "$use_debug" -eq 1; then
-           try_f90flags="-g -C -Mcache_align -Mpreprocess -Mlarge_arrays"
+           try_f90flags="-g -C -Ktrap=fp -Mcache_align -Mpreprocess -Mlarge_arrays"
         else
            try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         fi
@@ -206,6 +223,9 @@ ppc64-bgq:*xlf* )
         ;;
 *:*gfortran )
 	try_fflags="-O3 -g"
+        if test "$f90_major_version" -ge "10"; then
+ 	   try_fflags="$try_fflags -fallow-argument-mismatch"
+        fi
         if test "$use_debug" -eq 1; then
             try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
         fi
@@ -231,7 +251,7 @@ ppc64-bgq:*xlf* )
 
 esac
 
-if test "$use_shared" -eq 0 ; then
+if test "$use_static" -eq 1 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
 # Flags are repeated, need better way to handle this ...

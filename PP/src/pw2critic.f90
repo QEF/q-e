@@ -8,7 +8,7 @@
 ! (with extension pwc) read by critic2. At present, this is used
 ! in combination with the output of wannier90 in the calculation of
 ! delocalization indices via maximally localized Wannier functions
-! (http://dx.doi.org/10.1021/acs.jctc.8b00549).
+! (https://doi.org/10.1021/acs.jctc.8b00549).
 !
 ! Preferred use: with norm-conserving pseudos, since critic2 will not
 ! know about the transformation near the atoms. Some notes:

@@ -198,7 +198,8 @@ PROGRAM epsilon
   calculation  = 'eps'
   prefix       = 'pwscf'
   shift        = 0.0d0
-  outdir       = './'
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
+  IF ( trim( outdir ) == ' ' ) outdir = './'
   intersmear   = 0.136
   wmin         = 0.0d0
   wmax         = 30.0d0
@@ -268,7 +269,7 @@ PROGRAM epsilon
 
   IF (lgauss .or. ltetra) THEN
       metalcalc=.TRUE.
-      IF (ionode) WRITE( stdout, "( 5x, 'The system is a metal...' ) " )
+      IF (ionode) WRITE( stdout, "( 5x, 'The system is a metal (occupations are not fixed)...' ) " )
   ELSE
       IF (ionode) WRITE( stdout, "( 5x, 'The system is a dielectric...' ) " )
   ENDIF

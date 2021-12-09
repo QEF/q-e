@@ -8,29 +8,29 @@
 !----------------------------------------------------------------------
 subroutine dvanqq
   !----------------------------------------------------------------------
+  !! This routine calculates four integrals of the Q functions and
+  !! its derivatives with \(\text{Vloc}\) and \(\text{Veff}\) which are used
+  !! to compute term \(dV_\text{bare}/d\tau \cdot \psi\) in 
+  !! \(\texttt{addusdvqpsi}\) and in \(\texttt{addusdynmat}\).
+  !! The result is stored in int1, int2, int4, int5. The routine is called
+  !! only once. int4 and int5 are deallocated after use in \(\texttt{addusdynmat}\).
   !
-  ! This routine calculates four integrals of the Q functions and
-  ! its derivatives with V_loc and V_eff which are used
-  ! to compute term dV_bare/dtau * psi  in addusdvqpsi and in addusdynmat.
-  ! The result is stored in int1,int2,int4,int5. The routine is called
-  ! only once. int4 and int5 are deallocated after use in addusdynmat.
-  ! int1 -> Eq. B20 of Ref.[1]
-  ! int2 -> Eq. B21 of Ref.[1]
-  ! int4 -> Eq. B23 of Ref.[1]
-  ! int5 -> Eq. B24 of Ref.[1]
+  !! int1: Eq.(B20) of Ref.[1];  
+  !! int2: Eq.(B21) of Ref.[1];  
+  !! int4: Eq.(B23) of Ref.[1];  
+  !! int5: Eq.(B24) of Ref.[1].
   !
-  ! [1] PRB 64, 235118 (2001).
-
+  !! [1] PRB 64, 235118 (2001).
+  !
   !
   USE kinds, only : DP
   USE cell_base, ONLY : omega, tpiba2, tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft
-  use gvect, only : ngm, gg, g, mill, eigts1, eigts2, eigts3
-  use spin_orb, only : lspinorb
-  use scf, only : v, vltot
-  use noncollin_module, ONLY : noncolin, nspin_mag
+  USE gvect, ONLY : ngm, gg, g, mill, eigts1, eigts2, eigts3
+  USE scf, ONLY : v, vltot
+  USE noncollin_module, ONLY : noncolin, nspin_mag, lspinorb
   USE uspp, ONLY: okvan, ijtoh
   USE uspp_param, ONLY: upf, lmaxq, nh
 
@@ -61,7 +61,7 @@ subroutine dvanqq
   ! the  q+G vectors
   ! the spherical harmonics
 
-  complex(DP) :: fact, fact1, zdotc
+  complex(DP) :: fact, fact1
   complex(DP), allocatable :: aux1 (:), aux2 (:),&
        aux3 (:), aux5 (:), veff (:,:), sk(:)
   ! work space
@@ -175,12 +175,14 @@ subroutine dvanqq
                            enddo
                        ENDIF
                        ! 
+                       ! FIXME: replace dot_products with zgemm
+                       !
                        do ipol = 1, 3
                           do ig=1, ngm
                             aux5(ig)= sk(ig) * (g (ipol, ig) + xq (ipol) )
                           enddo
                           int2 (ih, jh, ipol, na, nb) = fact * fact1 * &
-                                zdotc (ngm, aux1, 1, aux5, 1)
+                                dot_product (aux1, aux5)
                           do jpol = 1, 3
                              if (jpol >= ipol) then
                                 do ig = 1, ngm
@@ -189,7 +191,7 @@ subroutine dvanqq
                                 enddo
                                 int5 (ijh, ipol, jpol, na, nb) = &
                                      CONJG(fact) * tpiba2 * omega * &
-                                     zdotc (ngm, aux3, 1, aux1, 1)
+                                     dot_product (aux3, aux1)
                              else
                                 int5 (ijh, ipol, jpol, na, nb) = &
                                      int5 (ijh, jpol, ipol, na, nb)
@@ -210,14 +212,14 @@ subroutine dvanqq
                              aux2 (ig) = veff (dfftp%nl (ig), is) * g (ipol, ig)
                           enddo
                           int1 (ih, jh, ipol, nb, is) = - fact1 * &
-                               zdotc (ngm, aux1, 1, aux2, 1)
+                               dot_product (aux1, aux2)
                           do jpol = 1, 3
                              if (jpol >= ipol) then
                                 do ig = 1, ngm
                                    aux3 (ig) = aux2 (ig) * g (jpol, ig)
                                 enddo
                                 int4 (ijh, ipol, jpol, nb, is) = - tpiba2 * &
-                                     omega * zdotc (ngm, aux3, 1, aux1, 1)
+                                     omega * dot_product (aux3, aux1)
                              else
                                 int4 (ijh, ipol, jpol, nb, is) = &
                                      int4 (ijh, jpol, ipol, nb, is)

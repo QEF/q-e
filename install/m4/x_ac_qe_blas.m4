@@ -42,15 +42,22 @@ else
 		    if test "$arch" == "mac686"; then
 		       add_mkl_flag="-openmp"
 		       add_mkl_lib="-lpthread"
-      		       add_mkl_omp="-lpthread"
+		       add_mkl_omp="-lpthread"
 		    fi
 		    ;;
 	       gfortran* )
       		    mkl_lib="mkl_gf_lp64"
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
+	       nvfortran* )
+                    # NB: next two can be replaced by flag "-Mmkl"
+      		    mkl_lib="mkl_intel_lp64"
+                    mkl_omp="mkl_intel_thread"
+		    # NB: with nvidia hpc sdk 2020, linking to threaded mkl
+		    # v.19.1 update 4 fails due to a missing symbol
+		    ;;
 	       pgf* )
-                    # Detect (again) PGI version
+                    # For obsolete PGI versions (superseded by nvfortran)
                     pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
                     # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
                     ompimp=""
@@ -342,18 +349,15 @@ else
 fi
 
 if test "$have_blas" -eq 0  ; then
-    # No blas library found: use internal
-    blas_libs_switch="internal"
+    # No blas library found: use internal one (in lapack)
     blas_libs="\$(TOPDIR)/LAPACK/libblas.a" 
 else
-    blas_libs_switch="external"
     echo setting BLAS_LIBS... $blas_libs
 fi
 blas_line="BLAS_LIBS=$blas_libs" 
 
 AC_SUBST(blas_libs)
 AC_SUBST(blas_line)
-AC_SUBST(blas_libs_switch)
   
 ]
 )

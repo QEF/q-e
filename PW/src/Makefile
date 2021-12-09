@@ -13,6 +13,7 @@ PWLIBS = \
 a2fmod.o \
 add_bfield.o \
 add_efield.o \
+add_dmft_occ.o \
 add_vuspsi.o \
 add_gatefield.o \
 add_paw_to_deeq.o \
@@ -33,8 +34,6 @@ newd.o \
 beef.o \
 bp_mod.o \
 bp_c_phase.o \
-bp_calc_btq.o \
-bp_qvan3.o \
 bp_strings.o \
 buffers.o \
 c_bands.o \
@@ -43,6 +42,8 @@ orbm_kubo.o \
 cdiagh.o \
 clean_pw.o \
 close_files.o \
+commutator_Hx_psi.o \
+commutator_Vhubx_psi.o \
 compute_becsum.o \
 compute_deff.o \
 compute_dip.o \
@@ -58,7 +59,6 @@ deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
-dqvan2.o \
 drhoc.o \
 rotate_wfc.o \
 run_driver.o \
@@ -69,13 +69,26 @@ efermit.o \
 electrons.o \
 eqvect.o \
 esm.o \
+esm_common_mod.o \
+esm_ewald_mod.o \
+esm_force_mod.o \
+esm_hartree_mod.o \
+esm_local_mod.o \
+esm_stres_mod.o \
 ewald.o \
 ewald_dipole.o \
 extfield.o \
 exx_base.o \
 exx_band.o \
 exx.o \
-fcp.o \
+fcp_capacitance.o \
+fcp_dyn_calcavg.o \
+fcp_dyn_printavg.o \
+fcp_dynamics.o \
+fcp_hessian.o \
+fcp_input.o \
+fcp_module.o \
+fcp_relaxation.o \
 find_group.o \
 forces_bp_efield.o \
 force_cc.o \
@@ -87,6 +100,8 @@ force_us.o \
 forces.o \
 g_psi.o \
 g_psi_mod.o \
+gcscf_input.o \
+gcscf_module.o \
 gen_at_dj.o \
 gen_at_dy.o \
 gen_us_dj.o \
@@ -107,11 +122,7 @@ hinit1.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
-init_us_0.o \
-init_us_b0.o \
-init_us_1.o \
 init_us_2.o \
-init_at_1.o \
 init_vloc.o \
 input.o \
 io_rho_xml.o \
@@ -175,7 +186,6 @@ pwcom.o \
 pw2blip.o \
 pw2casino.o \
 pw2casino_write.o \
-qvan2.o \
 rdiagh.o \
 read_conf_from_file.o \
 read_file_new.o \
@@ -202,8 +212,6 @@ set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
-spinor.o \
-sph_ind.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \
@@ -249,18 +257,64 @@ ortho_wfc.o \
 wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
-wannier_occ.o
+wannier_occ.o \
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
-       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+
+# GPU versions of routines
+PWLIBS += \
+  g_psi_mod_gpu.o \
+  g_psi_gpu.o \
+  h_psi_gpu.o \
+  vhpsi_gpu.o \
+  s_psi_gpu.o \
+  vloc_psi_gpu.o \
+  pwcom_gpu.o \
+  g2_kin_gpu.o \
+  scf_mod_gpu.o \
+  usnldiag_gpu.o \
+  add_vuspsi_gpu.o \
+  addusdens_gpu.o \
+  sum_band_gpu.o \
+  newd_gpu.o \
+  add_paw_to_deeq_gpu.o \
+  add_vhub_to_deeq_gpu.o \
+  wfcinit_gpu.o \
+  rotate_wfc_gpu.o \
+  hs_1psi_gpu.o \
+  hs_psi_gpu.o \
+  s_1psi_gpu.o \
+  utils_gpu.o \
+  force_lc_gpu.o \
+  force_us_gpu.o \
+  force_cc_gpu.o \
+  force_hub_gpu.o \
+  drhoc_gpu.o \
+  addusforce_gpu.o \
+  force_corr_gpu.o \
+  stres_loc_gpu.o \
+  dvloc_of_g_gpu.o \
+  stres_har_gpu.o \
+  stres_mgga_gpu.o \
+  stres_cc_gpu.o \
+  deriv_drhoc_gpu.o \
+  stres_ewa_gpu.o \
+  stres_knl_gpu.o \
+  stres_us_gpu.o \
+  compute_deff_gpu.o \
+  gen_us_dj_gpu.o \
+  gen_us_dy_gpu.o \
+  orthoatwfc_gpu.o \
+  atomic_wfc_gpu.o
+
+QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 
 TLDEPS= bindir libs mods libks_solvers dftd3
 
 all : tldeps pw.x
 
-pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
+pw.x : $(PWOBJS) libpw.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(QELIBS)
+	   $(PWOBJS) libpw.a $(QEMODS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . ; \
                ln -fs ../PW/src/$@ dist.x ; ln -fs ../PW/src/$@ manypw.x ; )
 # dist.x and manypw.x link the same executable pw.x

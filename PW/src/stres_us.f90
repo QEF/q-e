@@ -22,14 +22,17 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
   USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
   USE wavefunctions,        ONLY : evc
-  USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -44,6 +47,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   REAL(DP)                :: q
   INTEGER                 :: npw, i
   !
+  CALL using_evc(0)
+  !
   !
   IF ( nkb == 0 ) RETURN
   !
@@ -52,6 +57,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
+  
+  CALL using_becp_auto(2)
   CALL calbec( npw, vkb, evc, becp )
   !
   ALLOCATE( qm1( npwx ) )
@@ -76,6 +83,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   DEALLOCATE( qm1 )
   CALL deallocate_bec_type( becp ) 
+  CALL using_becp_auto(2)
   !
   RETURN
   !
@@ -122,6 +130,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        evps = 0.D0
        IF ( nproc == 1 .AND. me_pool /= root_pool ) GO TO 100
        !
+       CALL using_et(0) ! compute_deff : intent(in)
        DO ibnd_loc = 1, nbnd_loc
           ibnd = ibnd_loc + becp%ibnd_begin - 1 
           CALL compute_deff ( deff, et(ibnd,ik) )
@@ -163,6 +172,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        CALL gen_us_dj( ik, dvkb )
        !
+       CALL using_et(0) ! compute_deff : intent(in)
+       CALL using_evc(0)
        DO icyc = 0, nproc -1
           !
           DO ibnd_loc = 1, nbnd_loc
@@ -222,6 +233,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( lmaxkb == 0 ) GO TO 10
        !
        !------------------------------------
+       CALL using_evc(0); CALL using_et(0) ! compute_deff : intent(in) (this is redundant)
        DO ipol = 1, 3
           !
           CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
@@ -332,6 +344,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! ... the contribution is calculated only on one processor because
        ! ... partial results are later summed over all processors
        !
+       CALL using_et(0) ! compute_deff : intent(in)
        DO ibnd = 1, nbnd
           fac = wg(ibnd,ik)
           IF (ABS(fac) < 1.d-9) CYCLE
@@ -405,6 +418,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        CALL gen_us_dj( ik, dvkb )
        !
+       CALL using_evc(0); CALL using_et(0) ! this is redundant
+       ! 
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              work2_nc = (0.D0,0.D0)

@@ -17,8 +17,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm
   USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
-       treinit_gvecs, lensemb
-  USE force_mod,        ONLY : lforce, lstres
+       treinit_gvecs, lensemb, lforce => tprnfor, tstress
   USE ions_base,        ONLY : tau
   USE cell_base,        ONLY : alat, at, omega, bg
   USE cellmd,           ONLY : omega_old, at_old, calc, lmovecell
@@ -256,7 +255,7 @@ CONTAINS
        CALL stop_run( conv_elec )
     ENDIF
     IF ( lforce ) CALL forces()
-    IF ( lstres ) CALL stress(sigma)
+    IF ( tstress ) CALL stress(sigma)
     IF ( lensemb .AND. .NOT. hasensemb ) THEN 
        IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: BEEF-vdw "
        CALL beef_energies( )
@@ -271,7 +270,7 @@ CONTAINS
        combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
     ENDIF
     pot=etot * 0.5                                ! potential in a.u.
-    IF ( lstres ) THEN
+    IF ( tstress ) THEN
        vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal.
     ENDIF
     !
@@ -294,7 +293,7 @@ CONTAINS
     IF ( ionode ) CALL writebuffer( socket, pot)
     IF ( ionode ) CALL writebuffer( socket, nat)
     IF ( ionode .AND. lforce ) CALL writebuffer( socket, combuf, 3 * nat)
-    IF ( ionode .AND. lstres ) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
+    IF ( ionode .AND. tstress) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
     IF ( lensemb .AND. ionode ) THEN
        WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
        CALL writebuffer( socket, energies, 2000)
@@ -358,8 +357,31 @@ CONTAINS
   !
   SUBROUTINE initialize_g_vectors()
     !
+    USE fft_base,   ONLY : dfftp
+    USE fft_base,   ONLY : dffts
+    USE xc_lib,     ONLY : xclib_dft_is
+    !
+    ! ... get magnetic moments from previous run before charge is deleted
+    !
+    CALL reset_starting_magnetization()
+    !
+    ! ... recasted from run_pwscf.f90 reset_gvectors 
+    ! ... clean everything (FIXME: clean only what has to be cleaned)
+    !
     CALL clean_pw( .FALSE. )
+    CALL close_files( .TRUE. )
+    !
+    ! ... re-set FFT grids and re-compute needed stuff (FIXME: which?)
+    !
+    dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
+    dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
+    !
     CALL init_run()
+    !
+    !
+    ! ... re-set and re-initialize EXX-related stuff
+    !
+    IF ( xclib_dft_is('hybrid') ) CALL reset_exx( )
     !
     CALL mp_bcast( at,        ionode_id, intra_image_comm )
     CALL mp_bcast( at_old,    ionode_id, intra_image_comm )
@@ -420,7 +442,7 @@ CONTAINS
         !
         WRITE(*,*) " @ DRIVER MODE: Receiving encoded integer", lflags
         WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
-                     " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
+                     " STRESS: ", tstress, " VC: ",lmovecell," ENSEMBLE: ", lensemb
         !
         lflags = lflags - 1 ! ... making it ASE compliant since it send a one.   
         !
@@ -430,10 +452,10 @@ CONTAINS
               !
               lscf      = MOD(INT(lflags/(2**4)),2) == 1
               lforce    = MOD(INT(lflags/(2**3)),2) == 1
-              lstres    = MOD(INT(lflags/(2**2)),2) == 1
+              tstress   = MOD(INT(lflags/(2**2)),2) == 1
               lmovecell = MOD(INT(lflags/(2**1)),2) == 1
               lensemb   = MOD(INT(lflags/(2**0)),2) == 1
-              IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. lstres .OR. lmovecell ))) THEN
+              IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. tstress .OR. lmovecell ))) THEN
                  !
                  ! ... BEEF-vdw ensembles corrupt the wavefunction and, therefore, forces, 
                  !     stresses .Right now the workaround is to run an SCF cycle at the 
@@ -445,7 +467,7 @@ CONTAINS
            ELSE
               lscf      = .true.
               lforce    = .true.
-              lstres    = .true.
+              tstress   = .true.
               lmovecell = .true.
               lmd       = .true.
               lensemb   = .false.
@@ -453,7 +475,7 @@ CONTAINS
         ENDIF
         !
         WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
-                     " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
+                     " STRESS: ", tstress, " VC: ",lmovecell," ENSEMBLE: ", lensemb
         !
         CALL readbuffer( socket, parbuffer, 1 )
         !
@@ -467,7 +489,7 @@ CONTAINS
      IF ( lflags .NE. lflags_old .OR. firststep) THEN
         CALL mp_bcast( lscf,      ionode_id, intra_image_comm )
         CALL mp_bcast( lforce,    ionode_id, intra_image_comm )       
-        CALL mp_bcast( lstres,    ionode_id, intra_image_comm )   
+        CALL mp_bcast( tstress,   ionode_id, intra_image_comm )   
         CALL mp_bcast( lmovecell, ionode_id, intra_image_comm )   
         CALL mp_bcast( lensemb,   ionode_id, intra_image_comm )   
      ENDIF

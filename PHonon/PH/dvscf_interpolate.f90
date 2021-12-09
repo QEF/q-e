@@ -10,11 +10,11 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   !!
   !! Module for Fourier interpolation of phonon potential dvscf.
-  !! Uses the output of dvscf_q2r.x program to compute the induced part of
-  !! dvscf at each q point.
-  !!
-  !! See header of dvscf_q2r.f90 for details.
-  !!
+  !! Uses the output of \(\texttt{dvscf_q2r.x}\) program to compute the induced 
+  !! part of \(\text{dvscf}\) at each q point.
+  !
+  ! See header of dvscf_q2r.f90 for details.
+  !
   !----------------------------------------------------------------------------
   !
   USE kinds,       ONLY : DP
@@ -61,8 +61,8 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   SUBROUTINE dvscf_interpol_setup()
     !--------------------------------------------------------------------------
-    !! Do setups for dvscf_r2q. Called in phq_setup at the beginning of each
-    !! q point calculation.
+    !! Do setups for \(\texttt{dvscf_r2q}\). Called in \(\texttt{phq_setup}\)
+    !! at the beginning of each q-point calculation.
     !--------------------------------------------------------------------------
     !
     USE kinds,       ONLY : DP
@@ -234,20 +234,20 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   SUBROUTINE dvscf_r2q(xq, u_in, dvscf)
     !--------------------------------------------------------------------------
-    !!
     !! Read inverse Fourier transformed potential w_pot (written by
-    !! dvscf_q2r.x) and Fourier transform to compute dvscf at given q point.
-    !!
-    !! Originally proposed by [1], long-range part described in [2].
-    !! [1] Eiguren and Ambrosch-Draxl, PRB 78, 045124 (2008)
+    !! \(\texttt{dvscf_q2r.x}\)) and Fourier transform to compute 
+    !! \(\text{dvscf}\) at given q point.
+    !
+    !! Originally proposed by [1], long-range part described in [2].  
+    !! [1] Eiguren and Ambrosch-Draxl, PRB 78, 045124 (2008)  
     !! [2] Xavier Gonze et al, Comput. Phys. Commun., 107042 (2019)
-    !!
-    !! dvscf(r,q) = exp(-iqr) (dvlong(r,q) + sum_R exp(iqR) w_pot(r,R))
-    !!
+    !
+    !! $$ \text{dvscf}(r,q) = \text{exp}(-iqr) (\text{dvlong}(r,q) + 
+    !!    \sum_R \text{exp}(iqR) \text{w_pot}(r,R)) $$
+    !
     !! In this subroutine, pool parallelization is used to distribute R points
     !! to nodes so that the root of each pool reads different w_pot file
     !! simultaneously, reducing the io time.
-    !!
     !--------------------------------------------------------------------------
     !
     USE kinds,       ONLY : DP
@@ -473,15 +473,14 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   SUBROUTINE dvscf_shift_center(dvscf_q, xq, shift_half, sign)
   !----------------------------------------------------------------------------
-  !! Shift center of phonon potential.
-  !! If sign = +1, shift center from origin to tau (used in dvscf_r2q).
+  !! Shift center of phonon potential.  
+  !! If sign = +1, shift center from origin to tau (used in dvscf_r2q).  
   !! If sign = -1, shift center from tau to origin (used in dvscf_q2r).
-  !!
+  !
   !! For ipol = 1, 2, 3, if shift_half(ipol) is true, the origin is set at
   !! r = 0.5 for direction ipol. If false, the origin is set at r = 0.0.
   !! Setting shift_half = .true. is useful when the size of supercell is odd,
   !! becuase the center of the supercell is at (0.5, 0.5, 0.5).
-  !!
   !----------------------------------------------------------------------------
     USE kinds, ONLY : DP
     USE constants, ONLY : tpi
@@ -573,19 +572,20 @@ MODULE dvscf_interpolate
   !----------------------------------------------------------------------------
   !! This subroutine calculates the long-range dipole potential for given
   !! xq and zeu.
-  !! Input xq: q vector in Cartesian coordinate
-  !!
+  !! Input xq: q vector in Cartesian coordinate.
+  !
   !! Currently, only the dipole part (Frohlich) is implemented. The quadrupole
   !! potential is not implemented.
-  !!
+  !
   !! [1] Xavier Gonze et al, Comput. Phys. Commun., 107042 (2019)
-  !!
+  !
   !! Taken from Eq.(13) of Ref. [1]
-  !! dvlong(G,q)_{a,x} = 1j * 4pi / Omega * e^2
-  !!                   * [ (q+G)_y * Zstar_{a,yx} * exp(-i*(q+G)*tau_a)) ]
-  !!                   / [ (q+G)_y * epsilon_yz * (q+G)_z ]
+  !! $$ \text{dvlong}(G,q)_{a,x} = 1j \cdot 4\pi / \text{omega} \cdot e^2
+  !!                   \cdot [ (q+G)_y \cdot \text{Zstar}_{a,yx} \cdot \text{exp}
+  !!                         (-i\cdot(q+G)\cdot\text{tau}_a)) ]
+  !!                   / [ (q+G)_y \cdot \epsilon_yz \cdot (q+G)_z ] $$
   !!  a: atom index, x, y: Cartesian direction index
-  !!
+  !
   !! Since QE uses Rydberg units, we multiply the e^2 = 2.0 factor.
   !! The units of q and G are 2pi/a, so we need to divide dvlong by tpiba.
   !!

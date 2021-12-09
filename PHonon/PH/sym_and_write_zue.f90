@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
 subroutine sym_and_write_zue
   !-----------------------------------------------------------------------
-  !
-  !  symmetrize the effective charges in the U-E case (Us=scf,E=bare)
-  !  and write them on iudyn and standard output
+  !! Symmetrize the effective charges in the U-E case (Us=scf,E=bare)
+  !! and write them on \(\text{iudyn}\) and standard output.
   !
   !
   USE kinds,      ONLY : DP

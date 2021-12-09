@@ -8,9 +8,8 @@
 !-----------------------------------------------------------------------
 subroutine bcast_ph_input ( )
   !-----------------------------------------------------------------------
-  !
-  !     In this routine the first processor sends the phonon input to all
-  !     the other processors
+  !! In this routine the first processor sends the phonon input to all
+  !! the other processors.
   !
   !
 #if defined(__MPI)

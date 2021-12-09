@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package turboTDDFPT -program turbo_spectrum.x {
+input_description -distribution {Quantum ESPRESSO} -package turboTDDFPT -program turbo_spectrum.x {
 
     toc {}
 
@@ -14,16 +14,16 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
           fortran code. Comments lines in ``cards'' can be introduced by 
           either a "!" or a "#" character in the first position of a line.
 
-	  Structure of the input data:
+          @b {Structure of the input data:}
 	  ===============================================================================
 
-	  &lr_input
+	  &LR_INPUT
 	    ...
 	  /
 
     }
 
-    namelist lr_input {
+    namelist LR_INPUT {
 
 	label { This namelist is always needed ! }
 
@@ -71,10 +71,20 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	
 	var extrapolation -type CHARACTER {
 	    default {'no'}
-	    info {
-            	 Sets the extrapolation scheme. 'osc'= biconstant extrapolation,
-		 'constant'=constant extrapolation and 'no'=no extrapolation.
-		 }
+            options {
+                info {
+                    Sets the extrapolation scheme.
+                }
+                opt -val 'osc' {
+                    biconstant extrapolation
+                }
+                opt -val 'constant' {
+                    constant extrapolation
+                }
+                opt -val 'no' {
+                    no extrapolation.
+                }
+            }
 	}
 
 	var epsil -type REAL {
@@ -156,6 +166,5 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                  in which are written the eigenvalues. 
                 }
         }
-
-}
+    }
 }				

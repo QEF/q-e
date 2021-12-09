@@ -7,17 +7,17 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine solve_e_fpol ( iw )
+subroutine solve_e_fpol( iw )
   !-----------------------------------------------------------------------
-  !
-  !    This routine is a driver for the solution of the linear system which
-  !    defines the change of the wavefunction due to an electric field.
-  !    It performs the following tasks:
-  !     a) computes the bare potential term  x | psi >
-  !     b) adds to it the screening term Delta V_{SCF} | psi >
-  !     c) applies P_c^+ (orthogonalization to valence states)
-  !     d) calls cgsolve_all to solve the linear system
-  !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
+  !! This routine is a driver for the solution of the linear system which
+  !! defines the change of the wavefunction due to an electric field.  
+  !! It performs the following tasks:  
+  !! a) computes the bare potential term  times \(|\psi\rangle \);  
+  !! b) adds to it the screening term \(\Delta V_\text{SCF}|psi\rangle\);  
+  !! c) applies \(P_c^+\) (orthogonalization to valence states);  
+  !! d) calls \(\text{gmressolve_all}\) to solve the linear system;  
+  !! e) computes \(\Delta\text{rho}\), \(\Delta V_\text{SCF}\) and 
+  !!    symmetrizes them.
   !
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
@@ -42,8 +42,8 @@ subroutine solve_e_fpol ( iw )
                                     rec_code, flmixdpot
   USE output,                ONLY : fildrho
   USE qpoint,                ONLY : nksq
-  USE units_ph,              ONLY : lrdwf, iudwf, iudrho, lrdrho
-  USE units_lr,              ONLY : iuwfc, lrwfc
+  USE units_ph,              ONLY : iudrho, lrdrho
+  USE units_lr,              ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE mp_pools,              ONLY : inter_pool_comm
   USE mp_bands,              ONLY : intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
@@ -51,9 +51,15 @@ subroutine solve_e_fpol ( iw )
   USE eqv,                   ONLY : dpsi, dvpsi
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
-
+  
+  real(DP) :: iw
+  !! frequency
+  
+  ! ... local variables
+  !
   real(DP) ::  thresh, anorm, averlt, dr2
   ! thresh: convergence threshold
   ! anorm : the norm of the error
@@ -85,7 +91,6 @@ subroutine solve_e_fpol ( iw )
 
   real(DP) :: tcpu
   real(DP) :: eprec1 ! 1.35<ek>, for preconditioning
-  real(DP) :: iw     !frequency
   real(dp), external :: ddot, get_clock
 
   external cch_psi_all, ccg_psi
@@ -94,6 +99,7 @@ subroutine solve_e_fpol ( iw )
 
   call start_clock ('solve_e')
   allocate (dvscfin( dfftp%nnr, nspin, 3))
+  dvscfin=(0.0_DP,0.0_DP)
   if (doublegrid) then
      allocate (dvscfins( dffts%nnr, nspin, 3))
   else

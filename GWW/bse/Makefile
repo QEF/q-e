@@ -21,6 +21,7 @@ rotate_wannier.o\
 write_wannier_matrix.o\
 direct_v_exc.o\
 direct_w_exc.o\
+direct_www.o \
 exc_h_a.o\
 sdescent.o\
 check_basis.o\
@@ -44,10 +45,8 @@ qpcorrections.o
 #zvscal_test.o\
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-	 ../../upflib/libupf.a  ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
-PWOBJS = ../../PW/src/libpw.a
+QEMODS = $(BASEMODS)
+PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a
 
@@ -57,7 +56,7 @@ all : tldeps bse_main.x
 
 bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(GWWOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		bse_main.o libbse.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)  $(PW4GWWOBJ) $(GWWOBJ)
+		bse_main.o libbse.a $(PWOBJS) $(QEMODS) $(QELIBS)  $(PW4GWWOBJ) $(GWWOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
  
 tldeps:

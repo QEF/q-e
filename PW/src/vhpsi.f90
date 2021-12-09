@@ -15,7 +15,7 @@ SUBROUTINE vhpsi( ldap, np, mps, psip, hpsi )
   USE kinds,         ONLY : DP
   USE becmod,        ONLY : bec_type, calbec, allocate_bec_type, &
                             deallocate_bec_type
-  USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_Hubbard,   &
+  USE ldaU,          ONLY : Hubbard_l, is_Hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
                             is_hubbard_back, Hubbard_l_back, offsetU_back, &
                             backall, offsetU_back1
@@ -73,7 +73,7 @@ SUBROUTINE vhpsi_U ()
   ! This routine applies the Hubbard potential with U_I
   ! to the KS wave functions. 
   !
-  USE ldaU,      ONLY : ldim_back, ldmx_b, Hubbard_l1_back
+  USE ldaU,      ONLY : Hubbard_lmax, ldim_back, ldmx_b, Hubbard_l1_back
   !
   IMPLICIT NONE
   INTEGER :: na, nt, ldim, ldim0
@@ -92,6 +92,7 @@ SUBROUTINE vhpsi_U ()
            ALLOCATE ( rtemp(ldim,mps) )
         ELSE
            ALLOCATE ( ctemp(ldim,mps) )
+           ALLOCATE ( vaux (ldim,ldim) )
         ENDIF
         !
         DO na = 1, nat
@@ -105,16 +106,11 @@ SUBROUTINE vhpsi_U ()
                       1.0_dp, hpsi, 2*ldap)
               ELSE
                  !
-                 ALLOCATE(vaux(ldim,ldim))
-                 !
-                 vaux = (0.0_dp,0.0_dp)
-                 vaux(:,:) = v%ns(:,:,current_spin,na)
+                 vaux(:,:) = v%ns(1:ldim,1:ldim,current_spin,na)
                  !
                  CALL ZGEMM ('n','n', ldim, mps, ldim, (1.0_dp,0.0_dp), &
-                      vaux, ldim, proj%k(offsetU(na)+1,1), nwfcU, &
-                      (0.0_dp,0.0_dp), ctemp, ldim)
-                 !
-                 DEALLOCATE(vaux)
+                      vaux, ldim, &
+                      proj%k(offsetU(na)+1,1),nwfcU,(0.0_dp,0.0_dp),ctemp,ldim)
                  !
                  CALL ZGEMM ('n','n', np, mps, ldim, (1.0_dp,0.0_dp), &
                       wfcU(1,offsetU(na)+1), ldap, ctemp, ldim, &
@@ -127,6 +123,7 @@ SUBROUTINE vhpsi_U ()
         IF (gamma_only) THEN
            DEALLOCATE ( rtemp )
         ELSE
+           DEALLOCATE(vaux)
            DEALLOCATE ( ctemp )
         ENDIF
         !

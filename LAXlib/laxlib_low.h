@@ -8,10 +8,9 @@
 !
 
 INTERFACE laxlib_start
-  SUBROUTINE laxlib_start_drv( ndiag_, my_world_comm, parent_comm, do_distr_diag_inside_bgrp_  )
+  SUBROUTINE laxlib_start_drv( ndiag_, parent_comm, do_distr_diag_inside_bgrp_  )
     IMPLICIT NONE
     INTEGER, INTENT(INOUT) :: ndiag_  ! (IN) input number of procs in the diag group, (OUT) actual number
-    INTEGER, INTENT(IN) :: my_world_comm ! parallel communicator of the "local" world
     INTEGER, INTENT(IN) :: parent_comm ! parallel communicator inside which the distributed linear algebra group
                                        ! communicators are created
     LOGICAL, INTENT(IN) :: do_distr_diag_inside_bgrp_  ! comme son nom l'indique
@@ -20,7 +19,7 @@ END INTERFACE laxlib_start
 
 INTERFACE laxlib_getval
 SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_comm, ortho_row_comm, ortho_col_comm, &
-  ortho_comm_id, ortho_parent_comm, me_blacs, np_blacs, ortho_cntx, world_cntx, do_distr_diag_inside_bgrp  )
+  ortho_comm_id, ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp  )
   IMPLICIT NONE
   INTEGER, OPTIONAL, INTENT(OUT) :: nproc_ortho
   INTEGER, OPTIONAL, INTENT(OUT) :: leg_ortho
@@ -31,10 +30,7 @@ SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_co
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_col_comm
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_comm_id
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_parent_comm
-  INTEGER, OPTIONAL, INTENT(OUT) :: me_blacs
-  INTEGER, OPTIONAL, INTENT(OUT) :: np_blacs
   INTEGER, OPTIONAL, INTENT(OUT) :: ortho_cntx
-  INTEGER, OPTIONAL, INTENT(OUT) :: world_cntx
   LOGICAL, OPTIONAL, INTENT(OUT) :: do_distr_diag_inside_bgrp
 END SUBROUTINE
 END INTERFACE
@@ -395,4 +391,16 @@ SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
+#if defined (__CUDA)
+SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
+   IMPLICIT NONE
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: ldx, nx
+   REAL(DP), DEVICE    :: a(:,:)
+   REAL(DP), DEVICE    :: b(:,:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+END SUBROUTINE
+#endif
 END INTERFACE

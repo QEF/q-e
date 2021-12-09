@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,11 +21,19 @@ MODULE lr_variables
   !
   INTEGER, PARAMETER:: nbrx = 14   ! max number of beta functions
   INTEGER :: iund0psi   = 20       ! unit for writing/reding of d0psi
+  INTEGER :: iundvpsi   = 200
   INTEGER :: iunrestart = 22
+  INTEGER :: iunTwfc = 31          ! unit where time-reversed wfc are stored
+                                   ! (magnetic GS only)
   INTEGER :: nwordd0psi, nwordrestart, n_ipol
-  CHARACTER (len=10), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS'
+  CHARACTER (len=12), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS', &
+                                   code3 = 'turboMAGNONS'
   INTEGER :: size_evc
   CHARACTER (len=24) :: bgz_suffix
+  !
+  INTEGER :: ipol  ! Polarization direction for the electric field (optics)
+                   ! or for the magnetic field (magnons)
+                   ! 1=x, 2=y, 3=z, 4={x,y,z}
   !
   LOGICAL :: lr_exx
   REAL(kind=dp) :: scissor
@@ -39,6 +47,29 @@ MODULE lr_variables
                                ! in Cartesian coordinates
   CHARACTER(len=30) :: approximation ! Level of approximation in TDDFPT  
   CHARACTER(LEN=256) :: tmp_dir_lr   ! Name of a temporary directory 
+  CHARACTER(LEN=256) :: calculator   ! 'lanczos' or 'sternheimer'
+  !
+  ! sternheimer-eels
+  !
+  INTEGER :: nfs, & !number of frequencies for Sternheimer
+             start_freq, &
+             last_freq
+  REAL(kind=dp), ALLOCATABLE :: fiu(:), fru(:) ! frequencies for Sternheimer
+  COMPLEX(kind=dp) :: current_w ! current frequency
+  COMPLEX(DP), ALLOCATABLE :: chirr(:), &  ! charge-charge \chi
+                              chirz(:), &  ! charge-mag_z \chi
+                              chizr(:), &  ! mag_z-charge \chi
+                              chizz(:), &  ! mag_z-mag_z \chi
+                              epsm1(:)     ! epsm1
+  INTEGER :: lr1dwf
+  LOGICAL, ALLOCATABLE :: comp_f(:)
+  REAL(kind=dp) :: deltaf
+  INTEGER :: iudwf = 24
+  INTEGER :: iudrho = 23
+  INTEGER :: iu1dwf = 25
+  REAL(kind=dp) :: increment
+  INTEGER :: units
+  REAL(kind=dp) :: end
   !
   !------------------------------------------------------------------------!
   !
@@ -76,11 +107,50 @@ MODULE lr_variables
                                             ! to conduction  state (second index), for each polarization
                                             ! direction (third index).
 
-
-
-  COMPLEX (DP), ALLOCATABLE ::      &
-                  intq(:,:,:),      &! nhm, nhm, nat),        integral of e^iqr Q 
-                  intq_nc(:,:,:,:)   ! nhm, nhm, nat, nspin), integral of e^iqr Q in the noncollinear case
+  !------------------------------------------------------------------------!
+  ! Variables for Magnons                                                  !
+  !------------------------------------------------------------------------!
+  !
+  LOGICAL :: magnons = .false.
+  !
+  COMPLEX(kind=dp), ALLOCATABLE :: &
+                                !-----------------------------------------
+                                ! Lanczos vectors in magnons case
+                                ! 
+                                ! rgt --> right Krylov space
+                                ! lft --> left Krylov space
+                                !-----------------------------------------
+       evc1_rgt_old(:,:,:,:), &       
+       evc1_lft_old(:,:,:,:), &   
+                                !
+       evc1_rgt(:,:,:,:), &   
+       evc1_lft(:,:,:,:), &   
+                                !
+       evc1_rgt_new(:,:,:,:), &   
+       evc1_lft_new(:,:,:,:), &   
+                                !
+       V0psi(:,:,:,:,:), &      ! magnons equivalent of d0psi, batch
+                                ! representation of the external potential,
+                                ! contains P_C V_ext psi
+                                !
+       O_psi(:,:,:,:,:)         ! batch representation of the observable O whose  
+                                ! linear response we are interested in
+                                !
+                                ! end of magnons case
+                                !-----------------------------------------
+                                !
+  !
+  INTEGER :: n_op = 3
+  COMPLEX(kind=dp), ALLOCATABLE :: &
+               alpha_magnons_store(:,:), &
+               gamma_magnons_store(:,:)
+  ! debug/stability flags for Lanczos chains
+  LOGICAL :: force_real_gamma, force_real_alpha, force_zero_alpha 
+  ! Lanczos preconditioning
+  LOGICAL :: lan_precondition
+  !
+  !------------------------------------------------------------------------!
+  !
   ! Lanczos Matrix
   !
   !

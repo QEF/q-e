@@ -6,6 +6,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
+#if defined(__SX6)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! thread safety guard
+#error SX6 is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#endif
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_sx6
 !=----------------------------------------------------------------------=!
@@ -14,9 +21,8 @@
        
      IMPLICIT NONE
      SAVE
-#if defined(__SX6)
-        PRIVATE
-        PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
+     PRIVATE
+     PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
 
 !=----------------------------------------------------------------------=!
    CONTAINS
@@ -41,7 +47,7 @@
 !     (ldz>nz is used on some architectures to reduce memory conflicts)
 !     input  :  c(ldz*nsl)   (complex)
 !     output : cout(ldz*nsl) (complex - NOTA BENE: transform is not in-place!)
-!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
+!     isign > 0 : backward (f(G)=>f(R)), isign < 0 : forward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nz, nsl, ldz) are stored and re-used if available
 
@@ -160,7 +166,7 @@
 !     2d array: r2d(ldx, ldy) (x first dimension, y second dimension)
 !     (ldx>nx, ldy>ny used on some architectures to reduce memory conflicts)
 !     pl2ix(nx) (optional) is 1 for columns along y to be transformed
-!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
+!     isign > 0 : backward (f(G)=>f(R)), isign < 0 : forward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nx,ny,nzl,ldx) are stored and re-used if available
 
@@ -428,7 +434,7 @@
 #endif
      IF ( isign < 0) THEN
         tscale = 1.0_DP / DBLE( nx * ny * nz )
-        call ZDSCAL( ldx * ldy * ldz, tscale, f(1), 1)
+        f(1:ldx * ldy * ldz) = f(1:ldx * ldy * ldz) * tscale
      END IF
 #else
      ! for some reason the error variable is not set by this driver on NEC SX machines
@@ -504,7 +510,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
   CALL cfft3d (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
   RETURN
 END SUBROUTINE cfft3ds
-#endif
 !=----------------------------------------------------------------------=!
 END MODULE fft_scalar_sx6
 !=----------------------------------------------------------------------=!
+#endif

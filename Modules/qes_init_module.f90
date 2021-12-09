@@ -1705,7 +1705,8 @@ MODULE qes_init_module
   SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, mixing_beta,&
                                       conv_thr, mixing_ndim, max_nstep, tq_smoothing, tbeta_smoothing,&
                                       diago_thr_init, diago_full_acc, real_space_q, real_space_beta,&
-                                      diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim)
+                                      diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,&
+                                      diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
     !
     IMPLICIT NONE
     !
@@ -1726,6 +1727,9 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: diago_cg_maxiter
     INTEGER,OPTIONAL,INTENT(IN) :: diago_ppcg_maxiter
     INTEGER,OPTIONAL,INTENT(IN) :: diago_david_ndim
+    INTEGER,OPTIONAL,INTENT(IN) :: diago_rmm_ndim
+    LOGICAL,OPTIONAL,INTENT(IN) :: diago_rmm_conv
+    INTEGER,OPTIONAL,INTENT(IN) :: diago_gs_nblock
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -1770,6 +1774,25 @@ MODULE qes_init_module
       obj%diago_david_ndim = diago_david_ndim
     ELSE 
       obj%diago_david_ndim_ispresent = .FALSE.
+    END IF
+    !
+    IF ( PRESENT(diago_rmm_ndim)) THEN
+      obj%diago_rmm_ndim_ispresent = .TRUE.
+      obj%diago_rmm_ndim = diago_rmm_ndim
+    ELSE
+      obj%diago_rmm_ndim_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(diago_rmm_conv)) THEN
+      obj%diago_rmm_conv_ispresent = .TRUE.
+      obj%diago_rmm_conv = diago_rmm_conv
+    ELSE
+      obj%diago_rmm_conv_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(diago_gs_nblock)) THEN
+      obj%diago_gs_nblock_ispresent = .TRUE.
+      obj%diago_gs_nblock = diago_gs_nblock
+    ELSE
+      obj%diago_gs_nblock_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_electron_control 
@@ -2075,7 +2098,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_symmetry_flags 
   !
   !
-  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, fcp_opt, fcp_mu)
+  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, fcp, fcp_mu)
     !
     IMPLICIT NONE
     !
@@ -2083,7 +2106,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: assume_isolated
     TYPE(esm_type),OPTIONAL,INTENT(IN) :: esm
-    LOGICAL,OPTIONAL,INTENT(IN) :: fcp_opt
+    LOGICAL,OPTIONAL,INTENT(IN) :: fcp
     REAL(DP),OPTIONAL,INTENT(IN) :: fcp_mu
     !
     obj%tagname = TRIM(tagname) 
@@ -2097,11 +2120,11 @@ MODULE qes_init_module
     ELSE 
       obj%esm_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fcp_opt)) THEN 
-      obj%fcp_opt_ispresent = .TRUE. 
-      obj%fcp_opt = fcp_opt
+    IF ( PRESENT(fcp)) THEN
+      obj%fcp_ispresent = .TRUE.
+      obj%fcp = fcp
     ELSE 
-      obj%fcp_opt_ispresent = .FALSE.
+      obj%fcp_ispresent = .FALSE.
     END IF
     IF ( PRESENT(fcp_mu)) THEN 
       obj%fcp_mu_ispresent = .TRUE. 
@@ -2879,7 +2902,7 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: spinorbit
     REAL(DP),INTENT(IN) :: total
     REAL(DP),INTENT(IN) :: absolute
-    LOGICAL,INTENT(IN) :: do_magnetization
+    LOGICAL,OPTIONAL,INTENT(IN) :: do_magnetization
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -2890,7 +2913,12 @@ MODULE qes_init_module
     obj%spinorbit = spinorbit
     obj%total = total
     obj%absolute = absolute
-    obj%do_magnetization = do_magnetization
+    IF ( PRESENT(do_magnetization)) THEN 
+      obj%do_magnetization_ispresent = .TRUE. 
+      obj%do_magnetization = do_magnetization
+    ELSE 
+      obj%do_magnetization_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_magnetization 
   !

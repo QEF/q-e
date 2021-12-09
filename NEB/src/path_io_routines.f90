@@ -16,7 +16,7 @@ MODULE path_io_routines
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : pi, autoev, bohr_radius_angs, eV_to_kelvin, rytoev
+  USE constants,  ONLY : pi, autoev, bohr_radius_angs, eV_to_kelvin
   USE io_global,  ONLY : meta_ionode, meta_ionode_id
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
@@ -38,7 +38,7 @@ MODULE path_io_routines
      SUBROUTINE path_summary()
        !-----------------------------------------------------------------------
        !
-       USE path_input_parameters_module, ONLY : string_method, opt_scheme
+       USE path_input_parameters_module, ONLY : string_method, opt_scheme, fcp_scheme
        USE path_input_parameters_module, ONLY : restart_mode
        USE path_variables,    ONLY : lneb, lsmd
        USE path_variables,   ONLY : climbing, nstep_path, num_of_images, &
@@ -48,7 +48,8 @@ MODULE path_io_routines
                                     llangevin
        USE path_formats,     ONLY : summary_fmt
        USE path_io_units_module,         ONLY : iunpath
-       USE fcp_variables,    ONLY : lfcpopt, fcp_mu, fcp_relax_crit
+       USE fcp_variables,    ONLY : lfcp, fcp_mu, fcp_thr
+       USE gcscf_variables,  ONLY : lgcscf, gcscf_mu
        !
        IMPLICIT NONE
        !
@@ -117,15 +118,6 @@ MODULE path_io_routines
        WRITE( UNIT = iunpath, &
               FMT = '(5X,"path_thr",T35," = ",F9.4," eV / A")' ) path_thr
        !
-       IF ( lfcpopt ) THEN
-          WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"target Fermi energy",T35," = ",F9.4," eV")') &
-                 fcp_mu*rytoev
-          WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"Fermi_thr",T35," = ",F9.4," V")' ) &
-                 fcp_relax_crit*rytoev
-       END IF
-       !
        IF ( CI_scheme == "manual" ) THEN
           !
           outline = ' '
@@ -140,6 +132,33 @@ MODULE path_io_routines
           WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"list of climbing images :",2X,A)' ) &
               TRIM( outline )
+          !
+       END IF
+       !
+       IF ( lfcp ) THEN
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(/,5X,">>>>>>>>>>> FCP NEB is activated <<<<<<<<<<<")')
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"target Fermi energy",T35," = ",F9.4," eV")') &
+                 fcp_mu * autoev
+          !
+          WRITE( iunpath, summary_fmt ) "fcp_scheme", TRIM( fcp_scheme )
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"fcp_thr",T35," = ",F9.4," V")' ) fcp_thr
+          !
+       END IF
+       !
+       IF ( lgcscf ) THEN
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(/,5X,">>>>>>>>>> GCSCF NEB is activated <<<<<<<<<<")')
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"target Fermi energy",T35," = ",F9.4," eV")') &
+                 gcscf_mu * autoev
           !
        END IF
        !
@@ -160,6 +179,8 @@ MODULE path_io_routines
                                           pending_image, pos, pes, grad_pes,   &
                                           lquick_min, posold, Emax, Emin,      &
                                           Emax_index
+       USE fcp_variables,          ONLY : lfcp, fcp_nelec, fcp_ef, fcp_dos
+       USE gcscf_variables,        ONLY : lgcscf, gcscf_nelec, gcscf_ef
        USE path_reparametrisation, ONLY : spline_interpolation
        !
        IMPLICIT NONE
@@ -167,8 +188,10 @@ MODULE path_io_routines
        INTEGER            :: i, j, ia, ierr
        INTEGER            :: nim_inp
        CHARACTER(LEN=256) :: input_line
+       LOGICAL            :: lfcp_inp
        LOGICAL            :: exists
        LOGICAL, EXTERNAL  :: matches
+       REAL(DP)           :: gcscf_tmp
        !
        !
        IF ( meta_ionode ) THEN
@@ -220,6 +243,24 @@ MODULE path_io_routines
              !
           END IF
           !
+          IF ( matches( "APPLY CONSTANT BIAS", input_line ) ) THEN
+             !
+             ! ... optional field
+             !
+             READ( UNIT = iunrestart, FMT = * ) lfcp_inp
+             !
+             IF ( (lfcp .OR. lgcscf) .AND. ( .NOT. lfcp_inp ) ) &
+                CALL errore( 'read_restart', &
+                             'constant bias is not set in the restart file', 1 )
+             !
+             READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+             !
+          ELSE
+             !
+             lfcp_inp = lfcp
+             !
+          END IF
+          !
           IF ( .NOT. ( matches( "ENERGIES, POSITIONS AND GRADIENTS", &
                                  input_line ) ) ) THEN
              !
@@ -233,6 +274,16 @@ MODULE path_io_routines
           !
           READ( UNIT = iunrestart, FMT = * )
           READ( UNIT = iunrestart, FMT = * ) pes(1)
+          !
+          IF ( lfcp ) THEN
+             !
+             READ( UNIT = iunrestart, FMT = * ) fcp_nelec(1), fcp_ef(1), fcp_dos(1)
+             !
+          ELSE IF ( lgcscf )  THEN
+             !
+             READ( UNIT = iunrestart, FMT = * ) gcscf_nelec(1), gcscf_ef(1), gcscf_tmp
+             !
+          END IF
           !
           ia = 0
           !
@@ -263,6 +314,16 @@ MODULE path_io_routines
              !
              READ( UNIT = iunrestart, FMT = * )
              READ( UNIT = iunrestart, FMT = * ) pes(i)
+             !
+             IF ( lfcp ) THEN
+                !
+                READ( UNIT = iunrestart, FMT = * ) fcp_nelec(i), fcp_ef(i), fcp_dos(i)
+                !
+             ELSE IF ( lgcscf ) THEN
+                !
+                READ( UNIT = iunrestart, FMT = * ) gcscf_nelec(i), gcscf_ef(i), gcscf_tmp
+                !
+             END IF
              !
              DO j = 1, dim1, 3
                 !
@@ -324,6 +385,21 @@ MODULE path_io_routines
              CALL spline_interpolation( pes,      1, nim, nim_inp )
              CALL spline_interpolation( grad_pes, 1, nim, nim_inp )
              !
+             IF ( lfcp ) THEN
+                !
+                CALL spline_interpolation( fcp_nelec, 1, nim, nim_inp )
+                CALL spline_interpolation( fcp_ef,    1, nim, nim_inp )
+                CALL spline_interpolation( fcp_dos,   1, nim, nim_inp )
+                !
+             END IF
+             !
+             IF ( lgcscf ) THEN
+                !
+                CALL spline_interpolation( gcscf_nelec, 1, nim, nim_inp )
+                CALL spline_interpolation( gcscf_ef,    1, nim, nim_inp )
+                !
+             END IF
+             !
              IF ( lquick_min ) THEN
                 !
                 CALL spline_interpolation( posold, 1, nim, nim_inp )
@@ -359,6 +435,21 @@ MODULE path_io_routines
        CALL mp_bcast( Emin,       meta_ionode_id, world_comm )
        CALL mp_bcast( Emax_index, meta_ionode_id, world_comm )
        !
+       IF ( lfcp ) THEN
+          !
+          CALL mp_bcast( fcp_nelec, meta_ionode_id, world_comm )
+          CALL mp_bcast( fcp_ef,    meta_ionode_id, world_comm )
+          CALL mp_bcast( fcp_dos,   meta_ionode_id, world_comm )
+          !
+       END IF
+       !
+       IF ( lgcscf ) THEN
+          !
+          CALL mp_bcast( gcscf_nelec, meta_ionode_id, world_comm )
+          CALL mp_bcast( gcscf_ef,    meta_ionode_id, world_comm )
+          !
+       END IF
+       !
        IF ( lquick_min ) THEN
           !
           CALL mp_bcast( frozen, meta_ionode_id, world_comm )
@@ -381,8 +472,10 @@ MODULE path_io_routines
        USE path_variables,   ONLY : istep_path, nstep_path, pending_image, &
                                     dim1, num_of_images, pos, pes, grad_pes, &
                                     posold, frozen, lquick_min
+       USE fcp_variables,    ONLY : lfcp, fcp_nelec, fcp_ef, fcp_dos
+       USE gcscf_variables,  ONLY : lgcscf, gcscf_nelec, gcscf_ef
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
-                                    quick_min
+                                    quick_min, fcp_restart
        USE ions_base,        ONLY : zv, ityp, nat
        !
        IMPLICIT NONE
@@ -455,6 +548,10 @@ MODULE path_io_routines
            !
            WRITE( UNIT = in_unit, FMT = '(I4)' ) num_of_images
            !
+           WRITE( UNIT = in_unit, FMT = '("APPLY CONSTANT BIAS")' )
+           !
+           WRITE( UNIT = in_unit, FMT = '(L1)' ) ( lfcp .OR. lgcscf )
+           !
            WRITE( UNIT = in_unit, &
                   FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
            !
@@ -464,6 +561,18 @@ MODULE path_io_routines
               !
               !
               WRITE( UNIT = in_unit, FMT = energy ) pes(i)
+              !
+              IF ( lfcp ) THEN
+                 !
+                 WRITE( UNIT = in_unit, FMT = fcp_restart ) &
+                     fcp_nelec(i), fcp_ef(i), fcp_dos(i)
+                 !
+              ELSE IF ( lgcscf ) THEN
+                 !
+                 WRITE( UNIT = in_unit, FMT = fcp_restart ) &
+                     gcscf_nelec(i), gcscf_ef(i), 1.0_DP
+                 !
+              END IF
               !
               ia = 0
               !
@@ -546,10 +655,12 @@ MODULE path_io_routines
        USE constants,        ONLY : pi
        USE cell_base,        ONLY : alat, at, bg
        USE ions_base,        ONLY : ityp, nat, atm, tau_format
+       USE ions_base,        ONLY : zv, ityp, nat, atm, tau_format
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : fix_atom_pos
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     tangent, dim1, error
+       USE fcp_variables,    ONLY : lfcp, fcp_nelec
        USE path_io_units_module, ONLY : iundat, iunint, iunxyz, iuncrd, iunaxsf, &
                                   dat_file, int_file, xyz_file, axsf_file, &
                                   crd_file
@@ -559,6 +670,7 @@ MODULE path_io_routines
        REAL(DP)              :: r, delta, x
        REAL(DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), f(:), s(:), tau_out(:,:,:)
        REAL(DP)              :: ener, ener_0
+       REAL(DP)              :: ionic_charge
        INTEGER               :: i, j, ia
        INTEGER, PARAMETER    :: max_i = 250
        CHARACTER(LEN=256)    :: strcrd
@@ -700,16 +812,27 @@ MODULE path_io_routines
        CASE DEFAULT
           strcrd = "ATOMIC_POSITIONS"
        END SELECT
+       !
        DO i = 1, num_of_images
           ! Add the image label and atomic position card header
-          IF ( i == 1) THEN
-             WRITE( UNIT = iuncrd, FMT='(A,/,A)') "FIRST_IMAGE", TRIM(strcrd)
-          ELSEIF ( i == num_of_images) THEN
-             WRITE( UNIT = iuncrd, FMT='(A,/,A)') "LAST_IMAGE", TRIM(strcrd)
+          IF ( i == 1 ) THEN
+             WRITE( UNIT = iuncrd, FMT='(A)') "FIRST_IMAGE"
+          ELSEIF ( i == num_of_images ) THEN
+             WRITE( UNIT = iuncrd, FMT='(A)') "LAST_IMAGE"
           ELSE
-             WRITE( UNIT = iuncrd, FMT='(A,/,A)') &
-                "INTERMEDIATE_IMAGE", TRIM(strcrd)
+             WRITE( UNIT = iuncrd, FMT='(A)') "INTERMEDIATE_IMAGE"
           ENDIF
+          !
+          IF ( lfcp ) THEN
+             !
+             ionic_charge = SUM( zv(ityp(1:nat)) )
+             !
+             WRITE( UNIT = iuncrd, FMT='(A,/,f18.10)') &
+                "TOTAL_CHARGE", ionic_charge - fcp_nelec(i)
+             !
+          END IF
+          !
+          WRITE( UNIT = iuncrd, FMT='(A)') TRIM(strcrd)
           !
           DO ia = 1, nat
              !
@@ -783,10 +906,11 @@ MODULE path_io_routines
        USE path_variables, ONLY : num_of_images, error, path_length, &
                                   activation_energy, pes, pos, frozen, &
                                   CI_scheme, Emax_index
-       USE path_formats,   ONLY : run_info, run_output
+       USE path_formats,   ONLY : run_info, run_output, fcp_info, fcp_output, &
+                                  gcscf_info, gcscf_output
        USE ions_base,             ONLY : zv, ityp, nat
-       USE fcp_variables,         ONLY : lfcpopt, fcp_mu
-       USE fcp_opt_routines, ONLY : fcp_neb_ef, fcp_neb_nelec
+       USE fcp_variables,  ONLY : lfcp, fcp_nelec, fcp_ef, fcp_dos, fcp_error
+       USE gcscf_variables,ONLY : lgcscf, gcscf_mu, gcscf_nelec, gcscf_ef
        !
        IMPLICIT NONE
        !
@@ -794,6 +918,7 @@ MODULE path_io_routines
        !
        INTEGER   :: image
        REAL (DP) :: inter_image_distance
+       REAL (DP) :: ionic_charge
        !
        !
        IF ( .NOT. meta_ionode ) RETURN
@@ -820,20 +945,39 @@ MODULE path_io_routines
           !
        END DO
        !
-       IF ( lfcpopt ) THEN
-          WRITE(iunpath,'(/,5X,"image",2X,"Fermi energy (eV)",11X, &
-                        & "error (V)",4X,"tot_charge",/)')
+       inter_image_distance = path_length / DBLE( num_of_images - 1 )
+       !
+       IF ( lfcp ) THEN
+          !
+          ionic_charge = SUM( zv(ityp(1:nat)) )
+          !
+          WRITE( UNIT = iunpath, FMT = fcp_info )
+          !
           DO image = 1, num_of_images
-          !
-             WRITE(iunpath,'(5X,I5,9X,F10.6,10X,F10.6,4X,F10.6)') &
-                 image, fcp_neb_ef(image)*rytoev, &
-                 (fcp_mu-fcp_neb_ef(image))*rytoev, &
-                 SUM( zv(ityp(1:nat)) ) - fcp_neb_nelec(image)
-          !
+             !
+             WRITE( UNIT = iunpath, FMT = fcp_output ) &
+                 image, fcp_ef(image) * autoev, ionic_charge - fcp_nelec(image), &
+                 fcp_error(image), fcp_dos(image) / autoev
+             !
           END DO
+          !
        END IF
        !
-       inter_image_distance = path_length / DBLE( num_of_images - 1 )
+       IF ( lgcscf ) THEN
+          !
+          ionic_charge = SUM( zv(ityp(1:nat)) )
+          !
+          WRITE( UNIT = iunpath, FMT = gcscf_info )
+          !
+          DO image = 1, num_of_images
+             !
+             WRITE( UNIT = iunpath, FMT = gcscf_output ) &
+                 image, gcscf_ef(image) * autoev, ionic_charge - gcscf_nelec(image), &
+                 ABS( gcscf_mu - gcscf_ef(image) ) * autoev
+             !
+          END DO
+          !
+       END IF
        !
        IF ( CI_scheme == "auto" ) &
           WRITE( UNIT = iunpath, &

@@ -9,7 +9,6 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE io_global,       ONLY: stdout     ! Modules/io_global.f90
   USE kinds,           ONLY: DP
   USE constants,       ONLY: pi
-  USE parameters,      ONLY: ntypx
   USE radial_grids,    ONLY: ndmx
   USE ions_base,       ONLY: nat, ntyp => nsp, ityp
   USE wvfct,           ONLY: npwx, nbnd, et, current_k
@@ -48,6 +47,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   !<CG>
   USE xspectra_paw_variables, ONLY: xspectra_paw_nhm
   !</CG>
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   !

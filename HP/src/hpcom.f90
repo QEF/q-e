@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -49,7 +49,6 @@ MODULE ldaU_hp
   LOGICAL, ALLOCATABLE :: todo_atom(:),              & ! Which atoms must be perturbed
                           perturbed_atom(:),         & ! Controls which atom is perturbed in the HP
                                                        ! calculation
-                          this_pert_is_on_file(:),   & ! The perturbation is written on file or not
                           comp_iq(:)                   ! If .true. this q point has to be calculated
   !
   INTEGER :: nath,            &             ! Number of (real) atoms in the primitive cell
@@ -77,8 +76,6 @@ MODULE ldaU_hp
              nq1, nq2, nq3,   &             ! Number of q points in each direction
              nqs,             &             ! Number of q points to be calculated
              start_q, last_q, &             ! Initial and final q in the list
-             iudwfc,          &             ! Unit for response wavefunctions  
-             lrdwfc,          &             ! Length of the record for response wavefunctions
              iudvwfc,         &             ! Unit for the perturbing potential * wavefunctions
              lrdvwfc                        ! Length of the record for the perturbing potential * wavefunctions
   !
@@ -105,7 +102,9 @@ MODULE ldaU_hp
               rmax,              &          ! Maximum distance (in Bohr) between two atoms 
                                             ! to search for neighbors (used only at the 
                                             ! postprocessing step when lda_plus_u_kind = 2).
-              alpha_mix(maxter)             ! The mixing parameter
+              alpha_mix(maxter), &          ! The mixing parameter
+              dist_thr                      ! Threshold for comparing inter-atomic distances
+                                            ! in the post-processing step
   !
   REAL(DP), ALLOCATABLE :: ns(:),      &    ! Trace of unperturbed occupations (spin up + spin down)
                            magn(:),    &    ! Unperturbed magnetization
@@ -116,7 +115,6 @@ MODULE ldaU_hp
   !
   COMPLEX(DP), ALLOCATABLE :: dns0(:,:,:,:,:),         & ! Bare response occupation matrix 
                                                          ! (from 1st iteration)
-                              dnsscf(:,:,:,:,:),       & ! SCF response occupation matrix 
                               dns0_tot(:,:,:,:,:),     & ! Total bare response occupation matrix 
                                                          ! (summed over q)
                               dnsscf_tot(:,:,:,:,:),   & ! Total SCF  response occupation matrix 
@@ -125,8 +123,5 @@ MODULE ldaU_hp
                                                          ! (for a convergence test) 
   !
   INTEGER, ALLOCATABLE :: ityp_new(:)       ! Types of atoms
-  !
-  COMPLEX(DP), ALLOCATABLE, TARGET :: swfcatomk(:,:)  ! S * atomic wfc at k
-  COMPLEX(DP), POINTER :: swfcatomkpq(:,:)            ! S * atomic wfc at k+q
   !
 END MODULE ldaU_hp

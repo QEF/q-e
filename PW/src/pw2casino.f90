@@ -18,8 +18,7 @@ SUBROUTINE pw2casino( istep )
   USE mp_bands,      ONLY : nbgrp
   USE mp_pools,      ONLY : npool
   !
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,         ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin, lspinorb
   USE io_files, ONLY : tmp_dir
   !
   USE plugin_flags, ONLY : use_pw2casino

@@ -15,9 +15,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   !! Wavefunctions from previous iteration are read into \(\textrm{evcel}\);
   !! Spin polarized systems are supported only with fixed occupations.
   !
-  USE noncollin_module,   ONLY: noncolin, npol
-  USE spin_orb,           ONLY: lspinorb
   USE kinds,              ONLY: DP
+  USE noncollin_module,   ONLY: noncolin, npol, lspinorb
   USE wvfct,              ONLY: npwx, nbnd
   USE ldaU,               ONLY: lda_plus_u
   USE lsda_mod,           ONLY: current_spin, nspin
@@ -37,9 +36,9 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE fixed_occ
   USE mp,                 ONLY: mp_sum
   USE mp_bands,           ONLY: intra_bgrp_comm
-  USE becmod,             ONLY: bec_type, becp, calbec,ALLOCATE_bec_type, &
-                                deALLOCATE_bec_type
-  !
+  USE becmod,             ONLY: bec_type, becp, calbec,allocate_bec_type, &
+                                deallocate_bec_type
+  USE uspp_init,         ONLY : init_us_2
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: pdir
@@ -86,6 +85,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
    INTEGER :: ik_stringa!k-point index inside string
    REAL(DP) :: dk(3)
    REAL(DP) :: dkm(3)! -dk
+   REAL(DP) :: dk2
    REAL(DP) :: dkmod
    REAL(DP) :: eps
    REAL(DP) :: fac
@@ -94,7 +94,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
    !REAL(DP) :: gvec
    REAL(DP), ALLOCATABLE :: ln(:,:,:)
    REAL(DP), ALLOCATABLE  :: ln0(:,:,:)!map g-space global to g-space k-point dependent
-   REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    COMPLEX(DP), ALLOCATABLE :: aux(:)
    COMPLEX(DP), ALLOCATABLE  :: aux0(:)
@@ -279,12 +278,12 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !                     electronic polarization: form factor                !
          !-------------------------------------------------------------------------!
 
-         !  --- Calculate Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] ---
-         CALL calc_btq( dkmod, qrad_dk, 0 )
+         !  --- Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] in array qrad ---
+         ! CALL calc_btq( dkmod, qrad_dk, 0 ) no longer needed
          !
          !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-         dkmod = dk(1)**2 + dk(2)**2 + dk(3)**2
-         CALL ylmr2( lmaxq*lmaxq, 1, dk, dkmod, ylm_dk )
+         dk2 = dk(1)**2 + dk(2)**2 + dk(3)**2
+         CALL ylmr2( lmaxq*lmaxq, 1, dk, dk2, ylm_dk )
          !
          !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
          q_dk = (0.d0,0.d0)
@@ -292,7 +291,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             IF ( upf(np)%tvanp ) THEN
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
-                     CALL qvan3( iv, jv, np, pref, ylm_dk, qrad_dk )
+                     CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
                      q_dk(iv,jv,np) = omega*pref
                      q_dk(jv,iv,np) = omega*pref
                   ENDDO
@@ -303,8 +302,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
          !
          !  --- Calculate the q-space real spherical harmonics at -dk [Y_LM] --- 
          !
-         dkmod = dkm(1)**2 + dkm(2)**2 + dkm(3)**2
-         CALL ylmr2( lmaxq*lmaxq, 1, dkm, dkmod, ylm_dk )
+         dk2 = dkm(1)**2 + dkm(2)**2 + dkm(3)**2
+         CALL ylmr2( lmaxq*lmaxq, 1, dkm, dk2, ylm_dk )
          !
          !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
          !
@@ -313,7 +312,7 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
             IF ( upf(np)%tvanp ) THEN
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
-                     CALL qvan3( iv, jv, np, pref, ylm_dk, qrad_dk )
+                     CALL qvan2( 1, iv, jv, np, dkmod, pref, ylm_dk )
                      q_dkp(iv,jv,np) = omega*pref
                      q_dkp(jv,iv,np) = omega*pref
                   ENDDO

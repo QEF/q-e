@@ -9,14 +9,13 @@
 !------------------------------------------------------------------------------
 SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   !----------------------------------------------------------------------------
-  !
-  ! DFPT+U: This routine calculates several terms entering the 
-  !         Hubbard dynamical matrix calculated in dynmat_hub_scf.f90   
-  !         These terms are in the cartesian coordinates.
-  !         See the header in the routine dvqhub_barepsi_us.f90.
+  !! DFPT+U: This routine calculates several terms entering the 
+  !! Hubbard dynamical matrix calculated in \(\texttt{dynmat_hub_scf.f90}\).  
+  !! These terms are in cartesian coordinates.
+  !! See the header in the routine \(\text{dvqhub_barepsi_us.f90}\).
   ! 
-  ! Written  by A. Floris
-  ! Modified by I. Timrov (01.10.2018)
+  !! Written  by A. Floris.  
+  !! Modified by I. Timrov (01.10.2018).
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout, ionode
@@ -24,13 +23,14 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE klist,         ONLY : xk, ngk, igk_k
   USE ldaU,          ONLY : U_projection, Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
-  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, swfcatomk, swfcatomkpq, dwfcatomkpq,  &
+  USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq,  &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
-                            proj1, proj2, effU 
+                            proj1, proj2
+  USE ldaU_lr,       ONLY : effU, swfcatomk, swfcatomkpq
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp,          ONLY : vkb, nkb, okvan 
+  USE uspp,          ONLY : vkb, nkb, okvan, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs
-  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE control_lr,    ONLY : lgamma
   USE units_lr,      ONLY : iuatwfc, iuatswfc
   USE uspp_param,    ONLY : nh
   USE lsda_mod,      ONLY : lsda, current_spin, isk
@@ -40,6 +40,7 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   USE mp_bands,      ONLY : intra_bgrp_comm       
   USE mp,            ONLY : mp_sum  
   USE buffers,       ONLY : get_buffer
+  USE uspp_init,        ONLY : init_us_2
   !  
   IMPLICIT NONE
   !

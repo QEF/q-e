@@ -392,8 +392,7 @@ SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
   USE fft_base,               ONLY : dffts, dfftp
   USE fft_interfaces,         ONLY : fwfft, invfft
   USE lsda_mod,               ONLY : nspin
-  USE spin_orb,               ONLY : domag
-  USE noncollin_module,       ONLY : npol
+  USE noncollin_module,       ONLY : npol, domag
   USE wavefunctions,          ONLY : psic_nc
   USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, &
                                      tg_get_group_nr3, tg_get_recip_inc

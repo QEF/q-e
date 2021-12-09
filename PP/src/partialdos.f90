@@ -273,8 +273,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   USE wvfct, ONLY: et, nbnd
   USE constants, ONLY: rytoev
   USE ktetra, ONLY: opt_tetra_partialdos
-  !
-  USE spin_orb,   ONLY: lspinorb
+  USE noncollin_module, ONLY: lspinorb
   USE projections
   !
   IMPLICIT NONE
@@ -464,9 +463,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
            WRITE (4,'("#")', advance="NO")
         ENDIF
         IF (nspin0 == 1) THEN
-           WRITE (4,'(" E(eV)   ldos(E)   ")', advance="NO")
+           WRITE (4,'(" E (eV)   ldos(E)   ")', advance="NO")
         ELSE
-           WRITE (4,'(" E(eV)  ldosup(E)  ldosdw(E)")', advance="NO")
+           WRITE (4,'(" E (eV)  ldosup(E)  ldosdw(E)")', advance="NO")
         ENDIF
         IF (lspinorb) THEN
            ind = 0

@@ -1,0 +1,33 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    tprnfor = .true.
+    prefix='ni_so',
+    pseudo_dir = '../../pseudo',
+    outdir='../../tempdir/'
+ /
+ &system
+    ibrav=2, celldm(1) =6.65, nat=  1, ntyp= 1,
+    nr1=27,
+    nr2=27,
+    nr3=27,
+    lspinorb=.true.,
+    noncolin=.true.,
+    starting_magnetization(1)=0.5,
+    degauss=0.025,
+    angle1(1)=90,
+    smearing='mv',
+    occupations='smearing',
+    ecutwfc =27.0
+    ecutrho =200.0
+ /
+ &electrons
+    conv_thr =  1.0d-12
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+Ni  0.0  Ni.rel-pbe-nd-rrkjus.UPF
+ATOMIC_POSITIONS alat
+Ni 0.00 0.00 0.00
+K_POINTS AUTOMATIC
+4 4 4 1 1 1

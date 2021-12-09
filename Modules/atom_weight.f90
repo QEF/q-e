@@ -8,12 +8,15 @@
 ! ------------------------------------------------------------------
 function atom_weight(atomic_number)
   ! ------------------------------------------------------------------
+  !! Provides the standard atomic weights, given the atomic number.
   !
   USE kinds, ONLY : dp
   implicit none
   integer :: atomic_number
+  !! input: atomic number
   real(DP) :: atom_weight
-
+  !! output: atomic weight
+  
   real(DP) :: weights(109)
   data weights/ 1.00794_DP,                           4.00260_DP, &
                 6.941_DP,9.01218_DP,10.811_DP,12.0107_DP,14.00674_DP, &

@@ -124,6 +124,8 @@ Selects what to save in filplot:
 
    21 = all-electron charge density (valence+core).
         For PAW calculations only; requires a very dense real-space grid.
+
+   22 = kinetic energy density (for meta-GGA and XDM only)
          </pre></blockquote>
 </ul>      
       
@@ -241,6 +243,22 @@ for LSDA case only: plot the contribution to ILDOS of
                </pre></blockquote>
 </ul>      
       
+
+      <ul>
+<li> <em>Variable: </em><big><b>spin_component</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+               </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+0 = total density (default value),
+1 = spin up density,
+2 = spin down density.
+               </pre></blockquote>
+</ul>      
+      
 }
 
 
@@ -289,7 +307,7 @@ help emax -helpfmt helpdoc -helptext {
 <blockquote><pre>
 upper boundary of energy grid (in eV).
 
-If not specified, LDOS is computed just for energy "emin"
+Defaults to Fermi energy.
                </pre></blockquote>
 </ul>      
       

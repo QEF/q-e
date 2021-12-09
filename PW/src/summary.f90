@@ -20,7 +20,7 @@ SUBROUTINE summary()
   USE constants,       ONLY : amu_ry, rytoev
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm, wmass
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
-  USE cellmd,          ONLY : calc
+  USE cellmd,          ONLY : calc, lmovecell
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
   USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
@@ -35,9 +35,9 @@ SUBROUTINE summary()
                               wk, nelec, nelup, neldw, two_fermi_energies
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
                               tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
-  USE noncollin_module,ONLY : noncolin
-  USE spin_orb,        ONLY : domag, lspinorb
-  USE funct,           ONLY : write_dft_name, dft_is_hybrid
+  USE noncollin_module,ONLY : noncolin, domag, lspinorb
+  USE funct,           ONLY : write_dft_name
+  USE xc_lib,          ONLY : xclib_dft_is
   USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, &
                               l3dstring,efield_cart,efield_cry
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
@@ -50,8 +50,9 @@ SUBROUTINE summary()
   USE martyna_tuckerman,ONLY: do_comp_mt
   USE realus,          ONLY : real_space
   USE exx,             ONLY : ecutfock
-  USE fcp_variables,   ONLY : lfcpopt, lfcpdyn
-  USE fcp,             ONLY : fcp_summary
+  USE fcp_module,      ONLY : lfcp, fcp_summary
+  USE gcscf_module,    ONLY : lgcscf, gcscf_summary
+  USE relax,           ONLY : epse, epsf, epsp
   !
   IMPLICIT NONE
   !
@@ -92,8 +93,10 @@ SUBROUTINE summary()
      WRITE( stdout, 102) nelec
   END IF
   WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
-  IF ( dft_is_hybrid () ) WRITE( stdout, 104) ecutfock
+  IF ( xclib_dft_is('hybrid') ) WRITE( stdout, 104) ecutfock
   IF ( lscf) WRITE( stdout, 105) tr2, mixing_beta, nmix, mixing_style
+  IF ( lmd .OR. lbfgs ) WRITE (stdout, 106) epse, epsf
+  IF ( lmovecell ) WRITE (stdout, 107) epsp
   !
 100 FORMAT( /,/,5X, &
        &     'bravais-lattice index     = ',I12,/,5X, &
@@ -112,9 +115,14 @@ SUBROUTINE summary()
 104 FORMAT(5X, &
        &     'cutoff for Fock operator  = ',F12.4,'  Ry')
 105 FORMAT(5X, &
-       &     'convergence threshold     = ',1PE12.1,/,5X, &
+       &     'scf convergence threshold = ',1PE12.1,/,5X, &
        &     'mixing beta               = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')
+106 FORMAT(5X, &
+       &     'energy convergence thresh.= ',1PE12.1,/,5X, &
+       &     'force convergence thresh. = ',1PE12.1)
+107 FORMAT(5X, &
+       &     'press convergence thresh. = ',1PE12.1)
   !
   call write_dft_name ( ) 
   !
@@ -146,6 +154,9 @@ SUBROUTINE summary()
   !
   CALL plugin_summary()
   !
+  ! ... CUDA
+  !
+  CALL print_cuda_info()
   !
   ! ... ESM (Effective screening medium)
   !
@@ -153,7 +164,11 @@ SUBROUTINE summary()
   !
   ! ... FCP (Ficticious charge particle)
   !
-  IF ( lfcpopt .or. lfcpdyn )  CALL fcp_summary()
+  IF ( lfcp )  CALL fcp_summary()
+  !
+  ! ... GC-SCF (Grand-Canonical SCF)
+  !
+  IF ( lgcscf )  CALL gcscf_summary()
   !
   IF ( do_comp_mt )  WRITE( stdout, &
             '(5X, "Assuming isolated system, Martyna-Tuckerman method",/)')
@@ -407,7 +422,6 @@ SUBROUTINE print_ps_info
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
-  USE funct,           ONLY : dft_is_gradient
   IMPLICIT NONE
   !
   INTEGER :: nt, ib, i
@@ -621,3 +635,63 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   END IF
   !
 END SUBROUTINE print_symmetries
+!
+!-----------------------------------------------------------------------
+SUBROUTINE print_cuda_info
+  !-----------------------------------------------------------------------
+  !
+  USE io_global,       ONLY : stdout
+  USE control_flags,   ONLY : use_gpu, iverbosity
+  USE mp_world,        ONLY : nnode, nproc
+  USE mp,              ONLY : mp_sum, mp_max
+#if defined(__CUDA)
+  USE cudafor
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: idev, ndev, ierr
+  TYPE (cudaDeviceProp) :: prop
+  !
+  IF (use_gpu) THEN
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
+#if defined(__GPU_MPI)
+     WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
+#endif
+     WRITE( stdout, '()' )
+  ELSE
+     WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
+  END IF
+  !
+  ierr = cudaGetDevice( idev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
+  ierr = cudaGetDeviceCount( ndev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
+  !
+  ! User friendly, approximated warning.
+  ! In order to get this done right, one needs an intra_node communicator
+  !
+  IF (nproc > ndev * nnode * 2) &
+     CALL infomsg('print_cuda_info', &
+      'High GPU oversubscription detected. Are you sure this is what you want?')
+  !
+  ! Verbose information for advanced users
+  IF (iverbosity > 0) THEN
+     WRITE( stdout, '(/,5X,"GPU used by master process:",/)' )
+     ! Device info taken from
+     ! https://devblogs.nvidia.com/how-query-device-properties-and-handle-errors-cuda-fortran/
+     ierr = cudaGetDeviceProperties(prop, idev)
+     WRITE(stdout,"(5X,'   Device Number: ',i0)") idev
+     WRITE(stdout,"(5X,'   Device name: ',a)") trim(prop%name)
+     WRITE(stdout,"(5X,'   Compute capability : ',i0, i0)") prop%major, prop%minor
+     WRITE(stdout,"(5X,'   Ratio of single to double precision performance  : ',i0)") prop%singleToDoublePrecisionPerfRatio
+     WRITE(stdout,"(5X,'   Memory Clock Rate (KHz): ', i0)") &
+       prop%memoryClockRate
+     WRITE(stdout,"(5X,'   Memory Bus Width (bits): ', i0)") &
+       prop%memoryBusWidth
+     WRITE(stdout,"(5X,'   Peak Memory Bandwidth (GB/s): ', f6.2)") &
+       2.0*prop%memoryClockRate*(prop%memoryBusWidth/8)/10.0**6
+  END IF
+  !
+#endif
+  !
+END SUBROUTINE print_cuda_info

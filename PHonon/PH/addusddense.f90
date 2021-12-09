@@ -9,14 +9,13 @@
 !----------------------------------------------------------------------
 subroutine addusddense (drhoscf, dbecsum)
   !----------------------------------------------------------------------
-  !
-  !  This routine adds to the change of the charge and magnetization
-  !  densities due to an electric field perturbation
-  !  the part due to the US augmentation.
-  !  It assumes that the array dbecsum has already accumulated the
-  !  change of the becsum term.
-  !  The expression implemented is given in Eq. B32 of PRB 64, 235118
-  !  (2001) with b=c=0.
+  !! This routine adds to the change of the charge and magnetization
+  !! densities due to an electric field perturbation
+  !! the part due to the US augmentation.  
+  !! It assumes that the array dbecsum has already accumulated the
+  !! change of the becsum term.  
+  !! The expression implemented is given in Eq. B32 of PRB 64, 235118
+  !! (2001) with b=c=0.
   !
 
   USE kinds, only : DP
@@ -38,11 +37,10 @@ subroutine addusddense (drhoscf, dbecsum)
   ! input: if zero does not compute drho
   ! input: the number of perturbations
 
-  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,3), &
-                 dbecsum(nhm*(nhm+1)/2,nat,nspin_mag,3)
-
-  ! inp/out: change of the charge density
-  ! input: sum over kv of bec
+  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,3)
+  !! inp/out: change of the charge density
+  complex(DP) :: dbecsum(nhm*(nhm+1)/2,nat,nspin_mag,3)
+  !! input: sum over kv of bec
   !
   !     here the local variables
   !

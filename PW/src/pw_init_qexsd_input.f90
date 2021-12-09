@@ -40,6 +40,7 @@
                                 mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, electron_maxstep,                    &
                                 diago_thr_init, diago_full_acc,                                                       & 
                                 diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,                               &
+                                diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock,                                      &
                                 nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
                                 wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise, ip_dt => dt,        &
@@ -48,7 +49,7 @@
                                 ip_nosym => nosym, ip_noinv => noinv, ip_nosym_evc => nosym_evc,                      & 
                                 ip_no_t_rev => no_t_rev, ip_force_symmorphic => force_symmorphic,                     &
                                 ip_use_all_frac=>use_all_frac, assume_isolated, esm_bc, esm_w, esm_nfit, esm_efield,  & 
-                                ip_lfcpopt => lfcpopt, ip_fcp_mu => fcp_mu,                                           &
+                                ip_lfcp => lfcp, ip_fcp_mu => fcp_mu,                                           &
                                 ecfixed, qcutz, q2sigma,                                                              &    
                                 tforces, rd_for,                                                                      &
                                 rd_if_pos,                                                                               &
@@ -67,8 +68,8 @@
   USE constants,         ONLY:   e2,bohr_radius_angs
   USE ions_base,         ONLY:   iob_tau=>tau
   USE cell_base,         ONLY:   cb_at => at, cb_alat => alat, cb_iforceh => iforceh
-  USE funct,             ONLY:   get_dft_is_hybrid => dft_is_hybrid, get_inlc,        &
-                                 get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
+  USE funct,             ONLY:   get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
+  USE xc_lib,            ONLY:   xclib_dft_is
   USE uspp_param,        ONLY:   upf
   USE control_flags,     ONLY:   cf_nstep => nstep 
   USE qes_types_module
@@ -85,7 +86,7 @@
   CHARACTER(256)                           ::   tagname
   REAL(DP),ALLOCATABLE                     ::   tau(:,:)
   REAL(DP)                                 ::   alat, a1(3), a2(3), a3(3), gamma_xk(3,1), gamma_wk(1)
-  INTEGER                                  ::   inlc,nt
+  INTEGER                                  ::   nt
   LOGICAL                                  ::   lsda,dft_is_hybrid,  dft_is_nonlocc,  is_hubbard(ntypx)=.FALSE.,&
                                                 is_hubbard_back(ntypx) = .FALSE.,  ibrav_lattice 
   INTEGER                                  ::   Hubbard_l=0,hublmax=0
@@ -124,6 +125,8 @@
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
   INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:) 
+  CHARACTER,EXTERNAL                       :: capital
+  INTEGER                                  :: i 
   !
   ! 
   NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr, dftU_, vdW_, hybrid_)
@@ -177,13 +180,18 @@
   !                                                   DFT ELEMENT
   !---------------------------------------------------------------------------------------------------------------------------
   IF ( TRIM(input_dft) .NE. "none" ) THEN 
-     dft_name=TRIM(input_dft) 
+     dft_name=TRIM(input_dft)
+     DO i=1, LEN(dft_name) 
+        dft_name(i:i) = capital(dft_name(i:i)) 
+     END DO  
   ELSE 
      dft_shortname = get_dft_short()        
      dft_name=TRIM(dft_shortname)
   END IF
 
-  dft_is_hybrid=get_dft_is_hybrid()
+  !dft_is_hybrid=get_dft_is_hybrid()
+  dft_is_hybrid = xclib_dft_is('hybrid')
+  
   IF ( dft_is_hybrid) THEN
      ALLOCATE(hybrid_)
      IF (screening_parameter > 0.0_DP) THEN 
@@ -336,7 +344,7 @@
           Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
         ELSE 
           DO nt = 1, ntyp 
-             Hubbard_l_back_(nt) = set_hubbard_l_back(TRIM(upf(nt)%psd))
+             Hubbard_l_back_(nt) = set_hubbard_l_back(upf(nt)%psd)
           END DO 
         END IF
         IF (ANY(ip_backall) ) THEN 
@@ -401,7 +409,7 @@
                 ip_occupations, tot_charge, ip_nspin, input_occupations=f_inp(:,1) )
      END SELECT    
   ELSE 
-     IF ( tot_magnetization .LT. 0 ) THEN 
+     IF ( tot_magnetization .LT. -9999.0 ) THEN 
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin)
      ELSE
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin, &
@@ -435,7 +443,8 @@
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr/e2,         &
                                    mixing_ndim, electron_maxstep, tqr, real_space, tq_smoothing, tbeta_smoothing, diago_thr_init, &
-                                   diago_full_acc, diago_cg_maxiter,  diago_ppcg_maxiter, diago_david_ndim )
+                                   diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim, &
+                                   diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
   !------------------------------------------------------------------------------------------------------------------------------ 
@@ -443,11 +452,11 @@
       gamma_xk(:,1)=[0._DP, 0._DP, 0._DP]
       gamma_wk(1)=1._DP
       CALL qexsd_init_k_points_ibz( obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, 1,         &
-                                    gamma_xk, gamma_wk ,alat,a1,ibrav_lattice) 
+                                    alat,a1,ibrav_lattice, gamma_xk, gamma_wk) 
 
   ELSE 
      CALL qexsd_init_k_points_ibz(obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot,      &
-                                   ip_xk, ip_wk,alat,a1, ibrav_lattice)
+                                   alat,a1, ibrav_lattice,ip_xk, ip_wk)
 
   END IF
   !--------------------------------------------------------------------------------------------------------------------------------
@@ -475,13 +484,17 @@
      obj%boundary_conditions_ispresent = .TRUE.
      IF ( TRIM ( assume_isolated) .EQ. "esm") THEN 
         SELECT CASE (TRIM(esm_bc)) 
-          CASE ('pbc', 'bc1' ) 
+          CASE ('pbc' )
              CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
                                                  ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
-          CASE ('bc2', 'bc3' ) 
-            CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
-                                                 FCP_OPT = ip_lfcpopt, FCP_MU = ip_fcp_mu, &
-                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield)
+          CASE ('bc1' )
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,&
+                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
+                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
+          CASE ('bc2', 'bc3', 'bc4' )
+             CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc, &
+                                                 ESM_NFIT = esm_nfit, ESM_W = esm_w,ESM_EFIELD = esm_efield, &
+                                                 FCP = ip_lfcp, FCP_MU = ip_fcp_mu)
         END SELECT 
      ELSE 
         CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated) 

@@ -55,6 +55,7 @@ SUBROUTINE lr_sd0psi_optical()
     USE control_flags,  ONLY : gamma_only
     USE realus,         ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                              & calbec_rs_gamma, v_loc_psir, s_psir_gamma
+    USE uspp_init,        ONLY : init_us_2
  
     IMPLICIT NONE
     !
@@ -105,6 +106,7 @@ SUBROUTINE lr_sd0psi_eels()
    !
    USE qpoint,          ONLY : nksq, ikks, ikqs
    USE control_lr,      ONLY : nbnd_occ
+   USE uspp_init,        ONLY : init_us_2
 
    IMPLICIT NONE
    !

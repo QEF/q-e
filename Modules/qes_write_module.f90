@@ -1318,6 +1318,21 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%diago_david_ndim)
         CALL xml_EndElement(xp, "diago_david_ndim")
      END IF
+     IF (obj%diago_rmm_ndim_ispresent) THEN
+        CALL xml_NewElement(xp, "diago_rmm_ndim")
+           CALL xml_addCharacters(xp, obj%diago_rmm_ndim)
+        CALL xml_EndElement(xp, "diago_rmm_ndim")
+     END IF
+     IF (obj%diago_rmm_conv_ispresent) THEN
+        CALL xml_NewElement(xp, "diago_rmm_conv")
+           CALL xml_addCharacters(xp, obj%diago_rmm_conv)
+        CALL xml_EndElement(xp, "diago_rmm_conv")
+     END IF
+     IF (obj%diago_gs_nblock_ispresent) THEN
+        CALL xml_NewElement(xp, "diago_gs_nblock")
+           CALL xml_addCharacters(xp, obj%diago_gs_nblock)
+        CALL xml_EndElement(xp, "diago_gs_nblock")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_electron_control
 
@@ -1591,10 +1606,10 @@ MODULE qes_write_module
      IF (obj%esm_ispresent) THEN
         CALL qes_write_esm (xp, obj%esm)
      END IF
-     IF (obj%fcp_opt_ispresent) THEN
-        CALL xml_NewElement(xp, "fcp_opt")
-           CALL xml_addCharacters(xp, obj%fcp_opt)
-        CALL xml_EndElement(xp, "fcp_opt")
+     IF (obj%fcp_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp")
+           CALL xml_addCharacters(xp, obj%fcp)
+        CALL xml_EndElement(xp, "fcp")
      END IF
      IF (obj%fcp_mu_ispresent) THEN
         CALL xml_NewElement(xp, "fcp_mu")
@@ -2273,9 +2288,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'absolute')
         CALL xml_addCharacters(xp, obj%absolute, fmt='s16')
      CALL xml_EndElement(xp, 'absolute')
-     CALL xml_NewElement(xp, 'do_magnetization')
-        CALL xml_addCharacters(xp, obj%do_magnetization)
-     CALL xml_EndElement(xp, 'do_magnetization')
+     IF (obj%do_magnetization_ispresent) THEN
+        CALL xml_NewElement(xp, "do_magnetization")
+           CALL xml_addCharacters(xp, obj%do_magnetization)
+        CALL xml_EndElement(xp, "do_magnetization")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_magnetization
 

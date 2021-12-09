@@ -58,7 +58,7 @@ help ngauss -helpfmt helpdoc -helptext {
 Type of gaussian broadening:
     0 ... Simple Gaussian (default)
     1 ... Methfessel-Paxton of order 1
-   -1 ... Marzari-Vanderbilt "cold smearing"
+   -1 ... "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
   -99 ... Fermi-Dirac function
          </pre></blockquote>
 </ul>      
@@ -206,7 +206,9 @@ help lwrite_overlaps -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 if <b>.true.,</b> the overlap matrix of the atomic orbitals
-prior to orthogonalization is written to the atomic_proj datafile.
+prior to orthogonalization is written to the atomic_proj
+datafile. Does not work together with linear-algebra
+diagonalization: run as "mpirun -np N projwfc.x -nd 1 ... "
          </pre></blockquote>
 </ul>      
       
@@ -225,6 +227,7 @@ help lbinary_data -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 if <b>.true.,</b> the atomic_proj datafile is written in binary fmt.
+Currently disabled.
          </pre></blockquote>
 </ul>      
       

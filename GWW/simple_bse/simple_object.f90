@@ -33,7 +33,7 @@ MODULE simple_objects
       INTEGER :: ik_last!last local k point
       REAL(kind=DP) :: ene(4)!tot,diagonal,exchange,direct 
       COMPLEX(kind=DP), DIMENSION(:,:,:), POINTER  :: avc!A_vck terms (numv,numc,nk_loc)
-
+      LOGICAL :: l_temporary!it true it has been created by an overloaded operator
   END  TYPE exc
 
   TYPE product
@@ -473,8 +473,10 @@ MODULE simple_objects
       if(ionode) read(iun) pt%nkp(1:3)
       call mp_bcast(pt%nkp, ionode_id, world_comm)
       pt%nk=pt%nkp(1)*pt%nkp(2)*pt%nkp(3)
-      allocate(pt%ijk(3,pt%nk,pt%nk),pt%vpotq(pt%nprod_e,pt%nprod_e,pt%nkp(1),pt%nkp(2),pt%nkp(3)))
-      allocate(pt%wpotq(pt%nprod_e,pt%nprod_e,pt%nkp(1),pt%nkp(2),pt%nkp(3)))
+      allocate(pt%ijk(3,pt%nk,pt%nk),pt%vpotq(pt%nprod_e,pt%nprod_e,-pt%nkp(1)+1:pt%nkp(1)-1,&
+               -pt%nkp(2)+1:pt%nkp(2)-1,-pt%nkp(3)+1:pt%nkp(3)-1))
+      allocate(pt%wpotq(pt%nprod_e,pt%nprod_e,-pt%nkp(1)+1:pt%nkp(1)-1,-pt%nkp(2)+1:pt%nkp(2)-1,&
+             -pt%nkp(3)+1:pt%nkp(3)-1))
       if(ionode) then
          do ik=1,pt%nk!on k'
             do jk=1,pt%nk! on k
@@ -483,9 +485,9 @@ MODULE simple_objects
          enddo
       endif
       call mp_bcast(pt%ijk, ionode_id, world_comm)
-      do ik=1,pt%nkp(1)
-         do jk=1,pt%nkp(2)
-            do kk=1,pt%nkp(3)
+      do ik=-pt%nkp(1)+1,pt%nkp(1)-1
+         do jk=-pt%nkp(2)+1,pt%nkp(2)-1
+            do kk=-pt%nkp(3)+1,pt%nkp(3)-1
                if(ionode) then
                   do ii=1,pt%nprod_e
                      read(iun) pt%vpotq(1:pt%nprod_e,ii,ik,jk,kk)
@@ -496,9 +498,9 @@ MODULE simple_objects
          enddo
       enddo
 
-       do ik=1,pt%nkp(1)
-         do jk=1,pt%nkp(2)
-            do kk=1,pt%nkp(3)
+       do ik=-pt%nkp(1)+1,pt%nkp(1)-1
+         do jk=-pt%nkp(2)+1,pt%nkp(2)-1
+            do kk=-pt%nkp(3)+1,pt%nkp(3)-1
                if(ionode) then
                   do ii=1,pt%nprod_e
                      read(iun) pt%wpotq(1:pt%nprod_e,ii,ik,jk,kk)
@@ -532,6 +534,7 @@ MODULE simple_objects
        else
           nullify(a%avc)
        endif
+       a%l_temporary=.false.
        return
     end subroutine setup_exc
 
@@ -555,7 +558,11 @@ MODULE simple_objects
       sum_exc%nk_loc=b%nk_loc
       sum_exc%ik_first=b%ik_first
       sum_exc%ik_last=b%ik_last
-      if(associated(sum_exc%avc)) deallocate(sum_exc%avc)
+      sum_exc%l_temporary=.true.
+      if(associated(sum_exc%avc)) then
+         deallocate(sum_exc%avc)
+         !write(stdout,*) 'DEALLOCATE DEBUG +'
+      endif
       if(sum_exc%nk_loc>0) then
          allocate(sum_exc%avc(sum_exc%numv,sum_exc%numc,sum_exc%nk_loc))
       else
@@ -651,11 +658,14 @@ MODULE simple_objects
       prod_c_exc%nk_loc=a%nk_loc
       prod_c_exc%ik_first=a%ik_first
       prod_c_exc%ik_last=a%ik_last
+      prod_c_exc%l_temporary=.true.
 
 
 
-
-      !if(associated(prod_c_exc%avc)) deallocate(prod_c_exc%avc)
+      if(associated(prod_c_exc%avc)) then
+         deallocate(prod_c_exc%avc)!DEBUG was commented
+         !write(stdout,*) 'DEALLOCATE =c*  DEBUG'
+      endif
       if(prod_c_exc%nk_loc>0) then
          allocate(prod_c_exc%avc(prod_c_exc%numv,prod_c_exc%numc,prod_c_exc%nk_loc))
       else
@@ -671,12 +681,15 @@ MODULE simple_objects
     END FUNCTION prod_c_exc
 
     SUBROUTINE assign_exc(a,b)
-!x=a
+      !x=a
+      USE io_global, ONLY : stdout
       implicit none
 
+      
       TYPE(exc), INTENT(out) :: a
-      TYPE(exc),INTENT(in) ::b
+      TYPE(exc), INTENT(in) :: b
 
+      COMPLEX(kind=DP),  DIMENSION(:,:,:), POINTER :: pt
 
       a%numv=b%numv
       a%numc=b%numc
@@ -685,11 +698,14 @@ MODULE simple_objects
       a%nk_loc=b%nk_loc
       a%ik_first=b%ik_first
       a%ik_last=b%ik_last
+      a%l_temporary=.false.
 
 
 
-
-      if(associated(a%avc)) deallocate(a%avc)
+      if(associated(a%avc)) then
+         deallocate(a%avc)
+         !write(stdout,*) 'DEALLOCATE DEBUG ='
+      endif
       if(a%nk_loc>0) then
          allocate(a%avc(a%numv,a%numc,a%nk_loc))
       else
@@ -697,9 +713,12 @@ MODULE simple_objects
       endif
       if(a%nk_loc>0) then
          a%avc(1:a%numv,1:a%numc,1:a%nk_loc)=b%avc(1:a%numv,1:a%numc,1:a%nk_loc)
-
+         if(b%l_temporary) then
+            pt=>b%avc
+            deallocate(pt)
+         endif
       endif
-
+      
       return
     END SUBROUTINE assign_exc
 
@@ -762,7 +781,7 @@ MODULE simple_objects
       h_diag%ik_first=a%ik_first
       h_diag%ik_last=a%ik_last
 
-
+      h_diag%l_temporary=.true.
 
       
       if(h_diag%nk_loc>0) then

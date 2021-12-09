@@ -29,6 +29,7 @@
  &electrons
     mixing_beta = 0.7
     conv_thr =  1.0d-10
+    diago_david_ndim = 4
  /
 ATOMIC_SPECIES
 Ni  58.7  Ni.pbesol-n-kjpaw_psl.0.1.UPF

@@ -29,7 +29,7 @@ SUBROUTINE upf_error( calling_routine, message, ierr )
              TRIM(calling_routine)
      WRITE( UNIT = *, FMT = '(5X,A)' ) TRIM(message)
      RETURN
-  ELSE  IF( ierr < 0 ) THEN
+  ELSE IF( ierr > 0 ) THEN
      !
      WRITE( cerr, FMT = '(I6)' ) ierr
      WRITE( UNIT = *, FMT = '(/,1X,78("%"))' )

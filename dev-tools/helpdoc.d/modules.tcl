@@ -16,7 +16,7 @@ proc ::helpdoc::core_modules {} {
 	bands     PP/Doc     INPUT_BANDS
 	dos       PP/Doc     INPUT_DOS
 	atomic    atomic/Doc INPUT_LD1
-	d3        PHonon/Doc INPUT_D3
+	hp        HP/Doc     INPUT_HP
     }
 }
 

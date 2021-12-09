@@ -21,7 +21,6 @@ subroutine el_config &
   !
   use kinds, only: dp
   use ld1_parameters
-  use io_global, only : qestdin
   implicit none
   ! input: electronic configuration
   character(len=*), intent(in):: config

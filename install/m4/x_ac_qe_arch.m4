@@ -5,7 +5,7 @@ AC_DEFUN([X_AC_QE_ARCH], [
   AC_MSG_CHECKING([ARCH])
 
 # many HPC systems are configured so that running parallel programs
-# interactively is disabled: on those systems, AC_PROG_FC / _F77 / _CC
+# interactively is disabled: on those systems, AC_PROG_FC / _CC
 # would fail because they can't run the compiled executables.
 # to work around that, let's pretend we are cross-compiling even if we aren't
 # !!! this relies on undocumented Autoconf behavior !!!

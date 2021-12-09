@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on 22Apr2020 at 17:51: 4 
+     Program EPW v.5.2.0 starts on  9Jul2020 at 18:49:14 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -99,8 +99,6 @@
      -------------------------------------------------------------------
 
 
-     Using kmap and kgmap from disk
-
      Do not need to read .epb files; read .fmt files
 
      Use zone-centred Wigner-Seitz cells 
@@ -116,8 +114,8 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =       147Mb
-                   VmPeak =      2710Mb
+     Memory usage:  VmHWM =        57Mb
+                   VmPeak =       388Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
@@ -1258,7 +1256,7 @@
 
      iq =   123 coord.:   0.50000  0.33333  0.33333 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -1384,7 +1382,7 @@
 
      iq =   137 coord.:   0.50000  0.66667  0.66667 wt:   0.00463
      -------------------------------------------------------------------
-     Nesting function (q)=   0.770917E+00 [Adimensional]
+     Nesting function (q)=   0.770916E+00 [Adimensional]
      -------------------------------------------------------------------
 
 
@@ -2103,13 +2101,13 @@
      Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
 
      ===================================================================
-     Memory usage:  VmHWM =       151Mb
-                   VmPeak =      2716Mb
+     Memory usage:  VmHWM =        61Mb
+                   VmPeak =       394Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :      0.00s CPU      0.01s WALL (       1 calls)
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
 
      INITIALIZATION: 
 
@@ -2117,17 +2115,17 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.49s CPU      0.53s WALL (       1 calls)
-     ep-interp    :      0.44s CPU      0.48s WALL (     216 calls)
+     ephwann      :      0.41s CPU      0.47s WALL (       1 calls)
+     ep-interp    :      0.37s CPU      0.41s WALL (     216 calls)
 
      DynW2B       :      0.00s CPU      0.00s WALL (     216 calls)
-     HamW2B       :      0.16s CPU      0.18s WALL (   23490 calls)
+     HamW2B       :      0.12s CPU      0.13s WALL (   23490 calls)
      ephW2Bp      :      0.02s CPU      0.02s WALL (     216 calls)
-     ephW2B       :      0.09s CPU      0.10s WALL (   11664 calls)
+     ephW2B       :      0.06s CPU      0.07s WALL (   11664 calls)
 
 
      Total program execution
-     EPW          :      0.49s CPU      0.54s WALL
+     EPW          :      0.42s CPU      0.48s WALL
 
                                                                                           
  Please consider citing:                                                                  

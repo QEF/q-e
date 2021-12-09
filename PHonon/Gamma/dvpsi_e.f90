@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------
 SUBROUTINE dvpsi_e(ik,ipol)
   !----------------------------------------------------------------------
-  !
-  ! Calculates x * psi_k  for each k-point and for the 3 polarizations
-  ! Requires on input: vkb, evc
+  !! Calculates \(x\cdot \psi_k\) for each k-point and for the 3 polarizations.  
+  !! Requires on input: \(\text{vkb}, \text{evc}\).
   !
   USE kinds, ONLY: DP
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
@@ -27,7 +26,14 @@ SUBROUTINE dvpsi_e(ik,ipol)
   USE cgcom
   !
   IMPLICIT NONE
-  INTEGER :: ik, ipol
+  !
+  INTEGER :: ik
+  !! k-point index
+  INTEGER :: ipol
+  !! polarization index
+  !
+  ! ... local variables
+  !
   INTEGER :: npw, i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(DP) :: upol(3,3)
   real(DP), ALLOCATABLE :: gk(:,:), q(:), overlap(:,:), &

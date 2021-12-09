@@ -14,9 +14,11 @@ SUBROUTINE iosys()
   !! those in input_parameters, are locally renamed by adding an underscore "_".
   !
   USE kinds,         ONLY : DP
-  USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
-                            set_finite_size_volume, get_inlc, get_dft_short
-  USE funct,         ONLY : set_exx_fraction, set_screening_parameter
+  USE funct,         ONLY : get_dft_short
+  USE xc_lib,        ONLY : xclib_set_exx_fraction, set_screening_parameter, &
+                            xclib_dft_is, xclib_set_finite_size_volume, &
+                            dft_has_finite_size_correction
+  
   USE control_flags, ONLY : adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
@@ -34,11 +36,11 @@ SUBROUTINE iosys()
                             efield_cart_ => efield_cart, &
                             phase_control
   !
-  USE cell_base,     ONLY : at, alat, omega, cell_base_init, init_dofree, &
+  USE cell_base,     ONLY : at, alat, omega, bg, cell_base_init, init_dofree, &
                             press_       => press, &
                             wmass_       => wmass
   !
-  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
+  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, atm, &
                             ntyp_ => nsp, &
                             nat_  => nat, &
                             amass, tau_format
@@ -55,17 +57,6 @@ SUBROUTINE iosys()
                               delta_t_    => delta_t, &
                               nraise_     => nraise, &
                               refold_pos_ => refold_pos
-  !
-  USE fcp_variables, ONLY : lfcpopt_ => lfcpopt, &
-                            lfcpdyn_ => lfcpdyn, &
-                            fcp_mu_ => fcp_mu, &
-                            fcp_mass_ => fcp_mass, &
-                            fcp_temperature, &
-                            fcp_relax_ => fcp_relax, &
-                            fcp_relax_step_ => fcp_relax_step, &
-                            fcp_relax_crit_ => fcp_relax_crit, &
-                            fcp_mdiis_size_ => fcp_mdiis_size, &
-                            fcp_mdiis_step_ => fcp_mdiis_step
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -84,14 +75,11 @@ SUBROUTINE iosys()
                             forcefield, &
                             forcegate
   !
-  USE io_files,      ONLY : input_drho, output_drho, &
-                            psfile, tmp_dir, wfc_dir, &
+  USE io_files,      ONLY : psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             pseudo_dir_cur, restart_dir, &
                             check_tempdir, clean_tempdir, nd_nmbr
-  !
-  USE force_mod,     ONLY : lforce, lstres
   !
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
@@ -124,6 +112,9 @@ SUBROUTINE iosys()
                             l1back_ => l1back, &
                             reserv_back_ => reserv_back
   !
+  USE add_dmft_occ,  ONLY : dmft_ => dmft, &
+                            dmft_prefix_ => dmft_prefix
+  !
   USE martyna_tuckerman, ONLY: do_comp_mt
   !
   USE esm,           ONLY: do_comp_esm, &
@@ -154,12 +145,14 @@ SUBROUTINE iosys()
   !
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
+                            rmm_ndim, rmm_conv, gs_nblock, rmm_with_davidson, &
                             tr2, imix, gamma_only, &
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
-                            lensemb, &
+                            lensemb, lforce   => tprnfor, &
+                            tstress_          => tstress, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -172,6 +165,7 @@ SUBROUTINE iosys()
                             tq_smoothing_     => tq_smoothing, &
                             tbeta_smoothing_  => tbeta_smoothing, &
                             ts_vdw_           => ts_vdw, &
+                            mbd_vdw_          => mbd_vdw, &
                             lecrpa_           => lecrpa, &
                             scf_must_converge_=> scf_must_converge, & 
                             treinit_gvecs_    => treinit_gvecs, &  
@@ -191,22 +185,16 @@ SUBROUTINE iosys()
                                lambda_    => lambda, &
                                angle1_    => angle1, &
                                angle2_    => angle2, &
-                               report_    => report
-  !
-  USE spin_orb, ONLY : lspinorb_ => lspinorb,  &
-                       lforcet_ => lforcet,    &
-                       starting_spin_angle_ => starting_spin_angle
-
+                               report_    => report, &
+                               lspinorb_ => lspinorb,  &
+                               lforcet_ => lforcet,    &
+                               starting_spin_angle_ => starting_spin_angle
   !
   USE symm_base, ONLY : no_t_rev_ => no_t_rev, nofrac, allfrac, &
                         nosym_ => nosym, nosym_evc_=> nosym_evc
   !
-  USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
-                            trust_radius_max_ => trust_radius_max, &
-                            trust_radius_min_ => trust_radius_min, &
-                            trust_radius_ini_ => trust_radius_ini, &
-                            w_1_              => w_1, &
-                            w_2_              => w_2
+  USE bfgs_module,   ONLY : init_bfgs
+  !
   USE wannier_new, ONLY :   use_wannier_      => use_wannier, &
                             use_energy_int_   => use_energy_int, &
                             nwan_             => nwan, &
@@ -220,6 +208,10 @@ SUBROUTINE iosys()
 
   USE qmmm,                  ONLY : qmmm_config
 
+  USE fcp_module,            ONLY : fcp_iosys
+
+  USE gcscf_module,          ONLY : gcscf_iosys
+
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
@@ -230,8 +222,8 @@ SUBROUTINE iosys()
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, efield_cart, lecrpa,                 &
-                               vdw_table_name, memory, max_seconds, tqmmm,     &
-                               efield_phase, gate, max_xml_steps
+                               lfcp, vdw_table_name, memory, max_seconds,      &
+                               tqmmm, efield_phase, gate, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -245,7 +237,7 @@ SUBROUTINE iosys()
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
-                               Hubbard_J0, Hubbard_beta,                    &
+                               Hubbard_J0, Hubbard_beta, dmft, dmft_prefix, &
                                Hubbard_alpha, Hubbard_parameters,           &
                                Hubbard_U_back, Hubbard_alpha_back,          &
                                Hubbard_V, hub_pot_fix, reserv, reserv_back, &
@@ -263,12 +255,11 @@ SUBROUTINE iosys()
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
                                london_rvdw, dftd3_threebody, dftd3_version,   &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
+                               mbd_vdw,     &
                                xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
-                               lfcpopt, lfcpdyn, fcp_mu, fcp_mass, fcp_tempw, & 
-                               fcp_relax, fcp_relax_step, fcp_relax_crit,     &
-                               fcp_mdiis_size, fcp_mdiis_step,                &
+                               lgcscf,                                        &
                                zgate, relaxz, block, block_1, block_2,        &
                                block_height
   !
@@ -279,8 +270,10 @@ SUBROUTINE iosys()
                                tqr, tq_smoothing, tbeta_smoothing,         &
                                diago_thr_init,                             &
                                diago_cg_maxiter, diago_ppcg_maxiter,       &
-                               diago_david_ndim, diagonalization,          &
-                               diago_full_acc, startingwfc, startingpot,   &
+                               diago_david_ndim, diago_rmm_ndim,           &
+                               diago_rmm_conv, diago_gs_nblock,            &
+                               diagonalization, diago_full_acc,            &
+                               startingwfc, startingpot,                   &
                                real_space, scf_must_converge
   USE input_parameters, ONLY : adaptive_thr, conv_thr_init, conv_thr_multi
   !
@@ -321,7 +314,7 @@ SUBROUTINE iosys()
   USE dftd3_qe,              ONLY : dftd3_printout, dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
-  USE us,                    ONLY : spline_ps_ => spline_ps
+  USE uspp_data,             ONLY : spline_ps_ => spline_ps
   !
   USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY : input_type
@@ -339,11 +332,10 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, tempunit, i, j
-  LOGICAL  :: exst, parallelfs, domag
+  INTEGER  :: ia, nt, tempunit, i, j
+  LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
-  INTEGER, EXTERNAL  :: find_free_unit
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -534,7 +526,7 @@ SUBROUTINE iosys()
   !
   dt_    = dt
   nstep_ = nstep
-  lstres = lmovecell .OR. ( tstress .and. lscf )
+  tstress_ = lmovecell .OR. ( tstress .and. lscf )
   !
   ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
   !
@@ -570,7 +562,7 @@ SUBROUTINE iosys()
   ENDIF
   !
   IF ( (tefield.or.gate) .and. tstress ) THEN
-     lstres = .false.
+     tstress_ = .false.
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field and gates",/)' )
   ENDIF
@@ -628,15 +620,15 @@ SUBROUTINE iosys()
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &
        'BEWARE:  force calculation with tetrahedra (not recommanded)')
-     IF( lstres ) CALL infomsg( 'iosys', &
+     IF( tstress_ ) CALL infomsg( 'iosys', &
        'BEWARE: stress calculation with tetrahedra (not recommanded)')
   END IF
   IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
   nbnd_    = nbnd
   !
-  two_fermi_energies = ( tot_magnetization /= -1._DP)
-  IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
-     CALL errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
+  two_fermi_energies = ( tot_magnetization /= -10000._DP)
+  IF ( two_fermi_energies .and. tot_magnetization < -9999._DP) &
+     CALL errore( 'iosys', 'tot_magnetization only larger than -9999 is allowed', 1 )
   IF ( two_fermi_energies .and. .not. lsda ) &
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
@@ -989,6 +981,21 @@ SUBROUTINE iosys()
      !
      isolve = 3
      !
+  CASE ( 'rmm', 'rmm-diis', 'rmm-davidson' )
+     !
+     isolve = 4
+     rmm_ndim  = diago_rmm_ndim
+     rmm_conv  = diago_rmm_conv
+     gs_nblock = diago_gs_nblock
+     rmm_with_davidson = .TRUE. 
+     !
+  CASE  ( 'rmm-paro')
+     !
+     isolve = 4
+     rmm_ndim = diago_rmm_ndim 
+     rmm_conv = diago_rmm_conv 
+     gs_nblock = diago_gs_nblock 
+     rmm_with_davidson = .FALSE.  
   CASE DEFAULT
      !
      CALL errore( 'iosys', 'diagonalization ' // &
@@ -1154,6 +1161,18 @@ SUBROUTINE iosys()
      CALL errore( 'iosys', 'unknown mixing ' // trim( mixing_mode ), 1 )
   END SELECT
   !
+  IF ( mixing_beta < 0.0_DP ) THEN
+     !
+     IF ( lgcscf ) THEN
+        ! GC-SCF with ESM-BC2 or ESM-BC3
+        mixing_beta = 0.2_DP
+     ELSE
+        ! default
+        mixing_beta = 0.7_DP
+     END IF
+     !
+  END IF
+  !
   starting_scf_threshold = tr2
   nmix                   = mixing_ndim
   mixing_beta_           = mixing_beta
@@ -1194,6 +1213,21 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', 'Unknown efield_phase', 1 )
   END SELECT
   !
+  ! DMFT
+  !
+  dmft_             = dmft
+  dmft_prefix_      = dmft_prefix
+  !
+#if defined __HDF5
+  IF ( dmft) THEN
+     IF ( nspin > 1 ) CALL errore( 'iosys', &
+          'DMFT update not implemented with nspin > 1', 1 )
+  ENDIF
+#else
+  IF ( dmft) THEN
+      CALL errore( 'iosys', 'DMFT update not implemented without HDF5 library', 1 )
+  ENDIF
+#endif
   ! Hubbard parameters for DFT+U+V
   !
   IF ( lda_plus_u_kind == 0 .OR. lda_plus_u_kind == 1 ) THEN
@@ -1214,7 +1248,6 @@ SUBROUTINE iosys()
         !
         WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the file parameters.in...",/)')
         !
-        tempunit = find_free_unit()
         tempfile = TRIM("parameters.in")
         !
         INQUIRE (file = tempfile, exist = exst)
@@ -1226,7 +1259,7 @@ SUBROUTINE iosys()
         !
         ! Open the file parameters.in and read Hubbard_V from there
         !
-        OPEN( UNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
+        OPEN( NEWUNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
         READ(tempunit,*)
 10      READ(tempunit,*,END=11) i, j, V
         Hubbard_V(i,j,1) = V
@@ -1310,19 +1343,16 @@ SUBROUTINE iosys()
   nwan_ = nwan
   print_wannier_coeff_ = print_wannier_coeff
   !
-  !
   ! ... BFGS specific
   !
-  bfgs_ndim_        = bfgs_ndim
-  trust_radius_max_ = trust_radius_max
-  trust_radius_min_ = trust_radius_min
-  trust_radius_ini_ = trust_radius_ini
-  w_1_              = w_1
-  w_2_              = w_2
+  CALL init_bfgs( stdout, bfgs_ndim, trust_radius_max, trust_radius_min, &
+        trust_radius_ini, w_1, w_2 )
+  !
+  IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
   !  VdW CORRECTIONS (SEMI-EMPIRICAL)
   !
-  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
+  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, mbd_vdw_, lxdm)
   !
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
@@ -1338,6 +1368,11 @@ SUBROUTINE iosys()
      CALL infomsg("iosys","ts_vdw is obsolete, use ""vdw_corr='TS'"" instead")
      vdw_corr='TS'
      ts_vdw_ = .TRUE.
+  END IF
+  IF ( mbd_vdw ) THEN
+     CALL infomsg("iosys","mbd_vdw is obsolete, use ""vdw_corr='MBD'"" instead")
+     vdw_corr='MBD'
+     mbd_vdw_ = .TRUE.
   END IF
   IF ( llondon.AND.lxdm .OR. llondon.AND.ts_vdw_ .OR. lxdm.AND.ts_vdw_ .OR. &
            ldftd3.AND.llondon .OR. ldftd3.AND.lxdm .OR. ldftd3.AND.ts_vdw ) &
@@ -1378,10 +1413,6 @@ SUBROUTINE iosys()
       IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
               'Makov-Payne correction defined only for cubic lattices', 1)
       !
-    CASE( 'dcc' )
-      !
-      CALL errore('iosys','density countercharge correction currently disabled',1)
-      !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
       do_comp_mt     = .true.
@@ -1394,11 +1425,19 @@ SUBROUTINE iosys()
       !
       do_cutoff_2D   = .true.
       !
-
+    CASE ( 'none' )
+      !
+      CONTINUE
+      !
+    CASE DEFAULT
+      !
+      CALL errore('iosys','unknown value assume_isolated="' // &
+              & TRIM(assume_isolated) // '"',1)
+      !
   END SELECT
   !
-  IF ( do_comp_mt .AND. lstres ) THEN
-     lstres = .false.
+  IF ( do_comp_mt .AND. tstress_ ) THEN
+     tstress_ = .false.
      WRITE( stdout, &
           '(5x,"Stress calculation not meaningful in isolated systems",/)' )
   END IF
@@ -1424,30 +1463,6 @@ SUBROUTINE iosys()
     ENDIF
   ENDIF
   !
-  ! ... FCP
-  !
-  lfcpopt_        = lfcpopt
-  lfcpdyn_        = lfcpdyn
-  fcp_mu_         = fcp_mu
-  fcp_mass_       = fcp_mass
-  fcp_temperature = fcp_tempw
-  !
-  IF ( lfcpopt .or. lfcpdyn ) THEN
-     IF ( .not. do_comp_esm ) THEN
-        CALL errore ('iosys','FCP optimise/dynamics currently not available without ESM',1)
-     ENDIF
-     IF ( trim( calculation ).NE.'relax'.AND.trim( calculation ).NE.'md')THEN
-        CALL errore ('iosys',"FCP optimise/dynamics only available with calculation = 'relax' and 'md'",1)
-     ENDIF
-  ENDIF
-  !
-  IF ( fcp_temperature == 0.0_DP ) &
-     fcp_temperature = temperature
-  fcp_relax_      = fcp_relax
-  fcp_relax_step_ = fcp_relax_step
-  fcp_relax_crit_ = fcp_relax_crit
-  fcp_mdiis_size_ = fcp_mdiis_size
-  fcp_mdiis_step_ = fcp_mdiis_step
   !
   ! ATOMIC POSITIONS
   !
@@ -1486,8 +1501,21 @@ SUBROUTINE iosys()
      !
      ! ... Read atomic positions from file
      !
-     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, alat, at )
-     pseudo_dir_cur = restart_dir()
+     ! If this is not an nscf run don't stop on error also keep the pseudo
+     ! directory as is
+     IF (lscf) THEN
+        stop_on_error = .FALSE.
+     ELSE
+        stop_on_error = .TRUE.
+        pseudo_dir_cur = restart_dir()
+     END IF
+     !
+     CALL read_conf_from_file( stop_on_error, nat_, ntyp, tau, alat, at )
+     !
+     ! Update reciprocal lattice and volume (may be updated if coming from a vc run)
+     !
+     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+     CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
      !
   ELSE
      !
@@ -1602,23 +1630,23 @@ SUBROUTINE iosys()
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
      ecutfock_ = ecutfock
   END IF
-  IF ( lstres .AND. dft_is_hybrid() .AND. npool > 1 )  CALL errore('iosys', &
+  IF ( tstress_ .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
          'stress for hybrid functionals not available with pools', 1)
-  IF ( lmovecell.AND. dft_is_hybrid() ) CALL infomsg('iosys',&
+  IF ( lmovecell.AND. xclib_dft_is('hybrid') ) CALL infomsg('iosys',&
          'Variable cell and hybrid XC little tested')
   !
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten
   !
-  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+  IF (exx_fraction >= 0.0_DP) CALL xclib_set_exx_fraction (exx_fraction)
   !
   IF (screening_parameter >= 0.0_DP) &
-        & CALL set_screening_parameter (screening_parameter)
+        & CALL set_screening_parameter(screening_parameter)
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !
   IF (dft_has_finite_size_correction()) &
-      CALL set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
+      CALL xclib_set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
   !
   ! VARIABLE-CELL DYNAMICS
   !
@@ -1646,7 +1674,8 @@ SUBROUTINE iosys()
       if (dftd3_version==2) dftd3_threebody=.false.
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
-      CALL dftd3_printout(dftd3, dftd3_in)
+      CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, nat, ityp,&
+                  tau, at, alat )
       dft_ = get_dft_short( )
       dft_ = dftd3_xc ( dft_ )
       CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
@@ -1663,6 +1692,14 @@ SUBROUTINE iosys()
               'constraints only with fixed-cell dynamics', 1 )
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
+  !
+  ! ... set variables for FCP
+  !
+  CALL fcp_iosys(lfcp)
+  !
+  ! ... set variables for GC-SCF (this must be after FCP, to check condition)
+  !
+  CALL gcscf_iosys(lgcscf)
   !
   ! ... End of reading input parameters
   !

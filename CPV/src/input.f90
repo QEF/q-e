@@ -212,8 +212,8 @@ MODULE input
         orthogonalization, electron_velocities, nat, rd_if_pos,                &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
-        memory, ref_cell, tcpbo, max_seconds
-     USE funct,              ONLY : dft_is_hybrid
+        memory, ref_cell, tcpbo, max_seconds, pre_state
+     USE xc_lib,             ONLY : xclib_dft_is
      !
      IMPLICIT NONE
      !
@@ -280,7 +280,7 @@ MODULE input
              TRIM( calculation ) == 'vc-cp-wf'   .OR. &
              TRIM( calculation ) == 'cp-wf-nscf')
      lwfnscf     = ( TRIM( calculation ) == 'cp-wf-nscf' )
-     lwfpbe0nscf = ( dft_is_hybrid() .AND. lwfnscf  )
+     lwfpbe0nscf = ( xclib_dft_is('hybrid') .AND. lwfnscf  )
 !====================================================================
 
      !
@@ -738,7 +738,7 @@ MODULE input
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nbnd,                   &
            press, cell_damping, cell_dofree, tf_inp,                           &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
-           passop, tot_charge, tot_magnetization, niter_cg_restart
+           passop, tot_charge, tot_magnetization, niter_cg_restart, pre_state
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
@@ -753,6 +753,7 @@ MODULE input
                                   exx_ps_rcut_s=>exx_ps_rcut_self,&
                                   exx_me_rcut_s=>exx_me_rcut_self,&
                                   exx_ps_rcut_p=>exx_ps_rcut_pair,&
+                                  texx_cube=>exx_use_cube_domain,&
                                   exx_me_rcut_p=>exx_me_rcut_pair
 !===============================================================
      !
@@ -791,7 +792,7 @@ MODULE input
      USE ensemble_dft,     ONLY : ensemble_initval,tens
      USE wannier_base,     ONLY : wannier_init
      USE efield_module,    ONLY : tefield
-     USE funct,            ONLY : dft_is_nonlocc, get_inlc
+     USE funct,            ONLY : dft_is_nonlocc
      USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
@@ -800,7 +801,7 @@ MODULE input
      !
      REAL(DP) :: alat_ , massa_totale
      ! ...   DIIS
-     INTEGER :: ia, iss, inlc
+     INTEGER :: ia, iss
      LOGICAL :: ltest
      !
      !   Subroutine Body
@@ -876,8 +877,7 @@ MODULE input
 
      CALL efield_init( epol, efield )
 
-     CALL cg_init( tcg , maxiter , conv_thr , passop ,niter_cg_restart)
-
+     CALL cg_init( tcg, maxiter, conv_thr, passop, niter_cg_restart, pre_state)
      !
      IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &
         CALL errore( ' module setup ', ' Stress is not yet implemented with SIC ', 1 )
@@ -915,8 +915,8 @@ MODULE input
      CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
                         efx1, efy1, efz1, wfsd, wfdt, neigh, poisson_eps,&
                         dis_cutoff, exx_ps_rcut_s, exx_me_rcut_s,&
-                        exx_ps_rcut_p, exx_me_rcut_p, vnbsp,&
-                        maxwfdt, wf_q, &
+                        exx_ps_rcut_p, exx_me_rcut_p, texx_cube, &
+                        vnbsp, maxwfdt, wf_q, &
                         wf_friction, nit, nsd, nsteps, tolw, adapt,     &
                         calwf, nwf, wffort, writev, wannier_index,      &
                         restart_mode )

@@ -9,7 +9,6 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE constants,       ONLY : fpi
   USE io_global,       ONLY : stdout     ! Modules/io_global.f90
   USE kinds,           ONLY : DP
-  USE parameters,      ONLY : ntypx
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE wvfct,           ONLY : npwx, nbnd, et, current_k
@@ -44,13 +43,13 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
                               save_file_kind
   USE atom,            ONLY : rgrid, msh
   USE radin_mod
-  USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : vkb, nkb, okvan !CG
   USE uspp_param,      ONLY : upf
   USE ldaU,            ONLY : lda_plus_u, init_lda_plus_u, lda_plus_u_kind 
   !<CG>
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   !

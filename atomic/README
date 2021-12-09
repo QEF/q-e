@@ -24,9 +24,8 @@ all-electron run, pseudo-potential generation, pseudo-potential testing.
 Directories pseudo_library/ and paw_library/ contain input data used 
 for pseudopotential generation of many elements.
 A more extended set of input data is now available from the
-pslibrary project. Please see the web page 
-http://qe-forge.org/gf/project/pslibrary and click on Files to download 
-the library.
+pslibrary project. Please see the web pages pslibrary.quantum-espresso.org
+or dalcorso.github.io/pslibrary/.
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

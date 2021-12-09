@@ -664,68 +664,30 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   ! ...  and all planes(i) are set to 1
   !
 
-  USE kinds,        ONLY : DP
-  USE fft_parallel, ONLY : tg_cft3s
-  USE fft_scalar,   ONLY : cfft3ds, cfft3d  !  common scalar fft driver
-  USE io_global, ONLY : stdout
+  USE kinds,         ONLY : DP
+  USE fft_interfaces,ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
   TYPE(fft_cus) :: fc
   INTEGER,     INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
-
-#if defined (__MPI) && !defined(__USE_3D_FFT)
-!
-  COMPLEX(DP), INTENT(INOUT) :: f( fc%dfftt%nnr )
+  COMPLEX(DP), INTENT(INOUT) :: f(:)
+  CHARACTER(LEN=4) :: fft_kind
   !
-  ! ... call the general purpose parallel driver
-  !
-
-  call start_clock('cft3t')
-  CALL tg_cft3s( f, fc%dfftt, sign )
-  call stop_clock('cft3t')
-  !
-#else
-
-  !
-  ! ... serial case
-  !
-  COMPLEX(DP), INTENT(INOUT) :: f(nx1*nx2*nx3)
-  !
-  !
-
-  !
-  ! ... sign = +-1 : complete 3d fft (for rho and for the potential)
-  !
-  IF ( sign == 1 ) THEN
-     !
-     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1, 1 )
-     !
-  ELSE IF ( sign == -1 ) THEN
-     !
-     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1, -1 )
-     !
-     ! ... sign = +-2 : if available, call the "short" fft (for psi's)
-     !
-  ELSE IF ( sign == 2 ) THEN
-     !
-     CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, 1, 1, fc%dfftt%isind, fc%dfftt%iplw )
-     !
-  ELSE IF ( sign == -2 ) THEN
-     !
-     CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, 1, -1, fc%dfftt%isind, fc%dfftt%iplw )
-     !
+  IF ( ABS(sign) == 1 ) THEN
+     fft_kind = 'Rho'
+  ELSE IF ( ABS(sign) == 2 ) THEN
+     fft_kind = 'Wave'
   ELSE
-     !
-     CALL errore( 'cft3t', 'what should i do?', 1 )
-     !
+     CALL errore('cft3t','wrong argument "sign"?',1)
   END IF
-  !
-
-  !
-#endif
-  !
-
+  CALL start_clock('cft3t')
+  IF ( sign < 0 ) THEN
+     CALL fwfft ( fft_kind, f, fc%dfftt )
+  ELSE
+     CALL invfft( fft_kind, f, fc%dfftt )
+  END IF
+  CALL  stop_clock('cft3t')
   RETURN
   !
 END SUBROUTINE cft3t

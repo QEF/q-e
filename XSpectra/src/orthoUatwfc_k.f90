@@ -33,6 +33,7 @@ SUBROUTINE orthoUwfc_k(ik)
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : npol
+  USE uspp_init,        ONLY : init_us_2
 
   ! 
   IMPLICIT NONE

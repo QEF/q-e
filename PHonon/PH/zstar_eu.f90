@@ -8,11 +8,9 @@
 !-----------------------------------------------------------------------
 subroutine zstar_eu
   !-----------------------------------------------------------------------
-  !
-  ! Calculate the effective charges Z(E,Us) (E=scf,Us=bare)
-  !
-  ! epsil =.true. is needed for this calculation to be meaningful
-  !
+  !! Calculate the effective charges Z(E,Us) (E=scf,Us=bare).  
+  !! NOTE: \(\text{epsil}=\text{TRUE}\) is needed for this calculation to
+  !! be meaningful.
   !
   USE kinds,            ONLY : DP
   USE cell_base,        ONLY : bg
@@ -22,14 +20,13 @@ subroutine zstar_eu
   USE symme,            ONLY : symtensor
   USE wvfct,            ONLY : npwx
   USE uspp,             ONLY : okvan, vkb
-  use noncollin_module, ONLY : npol
+  use noncollin_module, ONLY : npol, noncolin
   USE wavefunctions,    ONLY : evc
   USE modes,            ONLY : u, nirr, npert
-  USE qpoint,           ONLY : npwq, nksq
+  USE qpoint,           ONLY : npwq, nksq, ikks
   USE eqv,              ONLY : dvpsi, dpsi
   USE efield_mod,       ONLY : zstareu0, zstareu
-  USE units_ph,         ONLY : iudwf, lrdwf
-  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE units_lr,         ONLY : iuwfc, lrwfc, iudwf, lrdwf
   USE control_lr,       ONLY : nbnd_occ
   USE control_ph,       ONLY : done_zeu
   USE ph_restart,       ONLY : ph_writefile
@@ -39,15 +36,14 @@ subroutine zstar_eu
   USE ldaU,             ONLY : lda_plus_u
   USE lrus,             ONLY : becp1
   USE phus,             ONLY : alphap
+  USE uspp_init,        ONLY : init_us_2
 
   implicit none
 
   integer :: ibnd, ipol, jpol, icart, na, nu, mu, imode0, irr, &
-       imode, nrec, mode, ik, ierr, npw
+       imode, nrec, mode, ik, ikk, ierr, npw
   ! counters
   real(DP) :: weight
-  complex(DP), external :: zdotc
-  !  scalar product
   !
   call start_clock ('zstar_eu')
 
@@ -55,11 +51,12 @@ subroutine zstar_eu
   zstareu (:,:,:) = 0.d0
 
   do ik = 1, nksq
-     npw = ngk(ik)
+     ikk=ikks(ik)
+     npw = ngk(ikk)
      npwq = npw
-     weight = wk (ik)
-     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+     weight = wk (ikk)
+     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ikk)
+     call init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
      imode0 = 0
      do irr = 1, nirr
         do imode = 1, npert (irr)
@@ -68,7 +65,7 @@ subroutine zstar_eu
            !
            ! recalculate  DeltaV*psi(ion) for mode nu
            !
-           call dvqpsi_us (ik, u (1, mode), .not.okvan, becp1, alphap)
+           call dvqpsi_us (ik, u (1, mode), .not. okvan, becp1, alphap)
            !
            ! DFPT+U: add the bare variation of the Hubbard potential 
            !
@@ -80,9 +77,9 @@ subroutine zstar_eu
               ! read dpsi(scf)/dE for electric field in jpol direction
               !
               call get_buffer (dpsi, lrdwf, iudwf, nrec)
-              do ibnd = 1, nbnd_occ(ik)
+              do ibnd = 1, nbnd_occ(ikk)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
-                      zdotc(npwx*npol,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
+                      dot_product( dpsi(:,ibnd), dvpsi(:,ibnd) )
               enddo
            enddo
         enddo

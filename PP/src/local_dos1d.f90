@@ -25,7 +25,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE wvfct, ONLY: npwx, wg
   USE klist, ONLY: ngk, igk_k
   USE noncollin_module, ONLY: noncolin, npol
-  USE spin_orb, ONLY: lspinorb, fcoef
+  USE upf_spinorb, ONLY: fcoef
   USE wavefunctions,  ONLY: evc, psic, psic_nc
   USE becmod, ONLY: bec_type, becp
   IMPLICIT NONE
@@ -70,7 +70,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
 
   ALLOCATE (prho(dfftp%nnr))
   ALLOCATE (aux(dfftp%nnr))
-  IF (lspinorb) THEN
+  IF ( ANY(upf(1:ntyp)%has_so) ) THEN
      ALLOCATE(be1(nhm,2))
      ALLOCATE(be2(nhm,2))
   ENDIF
@@ -225,7 +225,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   !
   DEALLOCATE (aux)
   DEALLOCATE (prho)
-  IF (lspinorb) THEN
+  IF ( ANY(upf(1:ntyp)%has_so) ) THEN
      DEALLOCATE(be1)
      DEALLOCATE(be2)
   ENDIF

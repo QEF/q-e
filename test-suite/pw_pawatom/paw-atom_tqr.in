@@ -12,6 +12,7 @@
  &electrons
     conv_thr =  1.0d-6
     tqr=.true.
+    diago_david_ndim=4
  /
 ATOMIC_SPECIES
  Cu   1.000  Cu.pbe-kjpaw.UPF 

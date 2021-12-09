@@ -1,0 +1,152 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x to calculate the total energy and"
+$ECHO "the band structure of four simple systems: Si, Al, Cu, Ni."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x bands.x"
+PSEUDO_LIST="Si.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
+PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running bands.x as:    $BANDS_COMMAND"
+$ECHO "  running plotband.x as: $PLOTBAND_COMMAND"
+$ECHO
+
+    # self-consistent calculation
+    cat > si.scf.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='silicon',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    verbosity='high'
+ /
+ &system
+    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc =18.0,
+    input_dft='HSE'
+    nqx1=2, nqx2=2, nqx3=2
+    nbnd=8 
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS alat
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+K_POINTS automatic
+ 2 2 2 1 1 1
+ADDITIONAL_K_POINTS tpiba_b
+  5
+   L 20
+   gG 20
+X 0
+   1.0 1.0 0.0 30
+   gG  1
+EOF
+    $ECHO "  running the scf calculation for Si...\c"
+    $PW_COMMAND < si.scf.in > si.scf.out
+    check_failure $?
+    $ECHO " done"
+
+# post-processing for band structure
+cat > si.bands.in << EOF
+ &bands
+    prefix  = 'silicon'
+    outdir = '$TMP_DIR/'
+    filband = 'sibands.dat'
+    lsym=.false.,
+ /
+EOF
+$ECHO "  running the post-processing for band structure...\c"
+$BANDS_COMMAND < si.bands.in > si.bands.out
+check_failure $?
+$ECHO " done"
+
+# plotband.x
+cat > si.plotband.in << EOF
+sibands.dat
+-10 20 507 578
+sibands-p.dat
+
+
+EOF
+$ECHO "  running plotband.x to generate sibands.ps...\c"
+$PLOTBAND_COMMAND < si.plotband.in > si.plotband.out
+check_failure $?
+$ECHO " done"
+
+
+
+

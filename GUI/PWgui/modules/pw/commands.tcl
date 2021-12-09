@@ -386,6 +386,63 @@ proc ::pwscf::pwLoadAtomicForces {moduleObj} {
 
 
 # ------------------------------------------------------------------------
+#  ::pwscf::pwLoadAtomicVelocities --
+# ------------------------------------------------------------------------
+
+proc ::pwscf::pwLoadAtomicVelocities {moduleObj} {
+    variable pwscf
+
+    if { [info exists pwscf($moduleObj,LASTDIR,atomic_velocities)] } {
+	set dir $pwscf($moduleObj,LASTDIR,atomic_velocities)
+    } else {
+	set dir pwscf(PWD)	
+    }
+
+    #
+    # query filename
+    #
+    set file [tk_getOpenFile -initialdir [pwd] -title "Load Atomic Velocities"]
+    if { $file == "" } {
+	return
+    }
+    set pwscf($moduleObj,LASTDIR,atomic_velocities) [file dirname $file]
+    
+    #
+    # read the file
+    #
+    set channel [open $file r]
+
+    # find the ATOMIC_VELOCITIES card
+
+    set ifor 0
+    set _readVelocities 0
+    
+    while {1} {
+	
+	set _line [_getsNonEmptyLine $channel]
+	
+	if { [string match "ATOMIC_VELOCITIES" $_line] } {
+	    set _readVelocities 1
+	    continue
+	} 
+	
+	if { $_readVelocities } {
+	    
+	    incr ifor
+	    
+	    if {[llength $_line] == 4 } {
+		$moduleObj varset atomic_velocities($ifor,1)  -value [lindex $_line 0]
+		$moduleObj varset atomic_velocities($ifor,2)  -value [lindex $_line 1]
+		$moduleObj varset atomic_velocities($ifor,3)  -value [lindex $_line 2]
+		$moduleObj varset atomic_velocities($ifor,4)  -value [lindex $_line 3]
+	    } else {
+		# TODO: raise an error
+	    }
+	}
+    }
+}
+
+# ------------------------------------------------------------------------
 #  ::pwscf::pwReadFilter --
 #  
 # TODO: check is &SYSTEM exists, if not the input file is not pw.x input

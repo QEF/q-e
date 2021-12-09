@@ -19,6 +19,7 @@
    mixing_beta=0.25,
    conv_thr=1.0E-8,
    startingwfc='atomic'
+   diago_david_ndim=4
  /
 ATOMIC_SPECIES
 Ni     0.0   Ni.pbe-nd-rrkjus.UPF

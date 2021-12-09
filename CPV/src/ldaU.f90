@@ -14,7 +14,7 @@
 !
       USE kinds, ONLY: DP
       USE ions_base, ONLY: nat, ityp
-      USE uspp, ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp, ONLY: nkb, nkbus, qq_nt, ofsbeta
       USE uspp_param, ONLY: nh, upf
       USE gvecw, ONLY: ngw
       IMPLICIT NONE
@@ -39,8 +39,8 @@
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
                      IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
-                        inl = indv_ijkb0(ia) + iv
-                        jnl = indv_ijkb0(ia) + jv
+                        inl = ofsbeta(ia) + iv
+                        jnl = ofsbeta(ia) + jv
                         DO i=1,nwfc
                            qtemp(inl,i) = qtemp(inl,i) + qq_nt(iv,jv,is)*becwfc(jnl,i)
                         END DO
@@ -119,10 +119,11 @@
       USE step_penalty,       ONLY: penalty_e, penalty_f
       USE mp_pools,           ONLY: intra_pool_comm, me_pool, nproc_pool
       USE mp_bands,           only: nbgrp
-      USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
+      USE cp_interfaces,      only: calbec, nlsm2_bgrp
 !
       implicit none
-      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nkb)
+      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat)
+      complex(DP), intent(inout) :: betae(ngw,nkb)
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
 !
@@ -243,10 +244,10 @@
         allocate(dns(ldmx,ldmx,nspin,nat))
         allocate (spsi(ngw,n))
 !
-        call nlsm1 ( n, 1, nsp, eigr, c, bp )
+        call calbec ( n, betae, c, bp )
         call s_wfc ( n, bp, betae, c, spsi )
-        call nlsm2_bgrp( ngw, nkb, eigr, c, dbp, nx, n )
-        call nlsm2_bgrp( ngw, nkb, eigr, wfcU, wdb, nwfcU, nwfcU )
+        call nlsm2_bgrp( ngw, nkb, betae, c, dbp, nx, n )
+        call nlsm2_bgrp( ngw, nkb, betae, wfcU, wdb, nwfcU, nwfcU )
         !
         ! poor-man parallelization over bands
         ! - if nproc_pool=1   : nb_s=1, nb_e=n, mykey=0
@@ -473,7 +474,7 @@
       use gvecw, only: ngw
       use gvect, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
-      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
+      USE uspp,           ONLY: nkb, qq_nt, ofsbeta
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
       USE ldaU_cp,        ONLY: nwfcU
       use cell_base,      ONLY: tpiba
@@ -547,7 +548,7 @@
          allocate (   auxwfc(nwfcU,nh(alpha_s)) )
          !
          do iv=1,nh(alpha_s)
-            inl=indv_ijkb0(alpha_a) + iv
+            inl=ofsbeta(alpha_a) + iv
             do m=1,nwfcU
                auxwfc(m,iv) = becwfc(inl,m)
             end do
@@ -558,7 +559,7 @@
                   auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
                   0.0_DP, wfcbeta, nwfcU )
          do iv=1,nh(alpha_s)
-            inl=indv_ijkb0(alpha_a) + iv
+            inl=ofsbeta(alpha_a) + iv
             do m=1,nwfcU
                auxwfc(m,iv) = wdb(inl,m,ipol)
             end do
@@ -573,7 +574,7 @@
             allocate (  betapsi(nh(alpha_s),nb_s:nb_e) )
             allocate ( dbetapsi(nh(alpha_s),nb_s:nb_e) )
             do iv=1,nh(alpha_s)
-               inl=indv_ijkb0(alpha_a) + iv
+               inl=ofsbeta(alpha_a) + iv
                do i=nb_s,nb_e
                   betapsi (iv,i)=bp(inl,i)
                   dbetapsi(iv,i)=dbp(inl,i,ipol)
@@ -620,12 +621,13 @@
       USE gvect,              ONLY: gstart
       USE ions_base,          ONLY: nsp, nat
       USE uspp,               ONLY: nkb
-      USE cp_interfaces,      only: nlsm1
+      USE cp_interfaces,      only: calbec
 !
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n, nwfcU, offset(nat), &
                                  Hubbard_l(nsp)
-      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nkb)
+      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat)
+      COMPLEX(DP), INTENT(INOUT) :: betae(ngw,nkb)
 !
       COMPLEX(DP), INTENT(OUT):: wfcU(ngw, nwfcU),    &
      &                           swfc(ngw, nwfcU)
@@ -641,7 +643,7 @@
       !
       ! calculate bec = <beta|wfc>
       !
-      CALL nlsm1( nwfcU, 1, nsp, eigr, wfcU, becwfc )
+      CALL calbec( nwfcU, betae, wfcU, becwfc )
       !
       ! calculate swfc = S|wfc>
       !

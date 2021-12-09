@@ -29,7 +29,8 @@ SUBROUTINE hp_dnstot_sum_q
   USE control_flags,  ONLY : iverbosity
   USE lr_symm_base,   ONLY : nsymq, invsymq, minus_q, rtau
   USE ldaU,           ONLY : Hubbard_lmax, Hubbard_l, is_hubbard
-  USE ldaU_hp,        ONLY : nqsh, Rvect, dnsscf, dns0, dnsscf_tot, dns0_tot, &
+  USE ldaU_lr,        ONLY : dnsscf
+  USE ldaU_hp,        ONLY : nqsh, Rvect, dns0, dnsscf_tot, dns0_tot, &
                              skip_equivalence_q, nq1, nq2, nq3, x_q, nqs
   !
   IMPLICIT NONE
