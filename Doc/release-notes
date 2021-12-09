@@ -30,6 +30,7 @@ Fixed in 7.0 version:
     tag (thanks to Miguel Marques for reporting this)
   * atomic: the exchange of two lines in import_upf.f90 had broken PAW tests
     since v.6.5 (thanks to Chiara Biz for reporting, to AdC for fixing)
+  * Calculation of ELF for spin-unpolarized cases was grossly wrong in v.6.8
 
 Incompatible changes in 7.0 version:
   * Changes to Makefiles and to file "make.inc" (they must be regenerated)
