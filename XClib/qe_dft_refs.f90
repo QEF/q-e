@@ -9,6 +9,8 @@
 MODULE qe_dft_refs
   !----------------------------------------------------------------------------------
   !! List of references and brief descriptions of available DFTs in QE internal library.
+  ! If a functional is never called in QE, please start the %wrn (warning) message
+  ! with 'never called' so that the testing program skips it.
   !
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft
   !
@@ -273,7 +275,7 @@ MODULE qe_dft_refs
   DATA dft_GGAx(47)%wrn / 'testing stage' /
   ! EHPB  (reserved P.H.)
   DATA dft_GGAx(48)%ref / 'Reserved, No ref. available' /
-  DATA dft_GGAx(48)%wrn / 'ongoing development' /
+  DATA dft_GGAx(48)%wrn / 'never called, ongoing development' /
   ! HJPB  (Short-ranged PBE exchange by HJS08 parameters, cross-reference)
   DATA dft_GGAx(49)%ref / 'Short-ranged pbe exchange as set by Henderson et al, &
                            &J. Chem. Phys. 128, 194105 (2008); Compare PBE-AH' /
