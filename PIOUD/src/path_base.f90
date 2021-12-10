@@ -672,26 +672,26 @@ MODULE path_base
       LOGICAL  :: first
       !
       !
-      IF ( first_last_opt ) THEN
+      ! IF ( first_last_opt ) THEN
          !
          fii  = 1
          lii = num_of_images
          !
          frozen = .FALSE.
          !
-      ELSE
-         !
-         fii  = 2
-         lii = num_of_images - 1
-         !
-         frozen = .FALSE.
-         !
-         ! ... the first and the last images are always frozen
-         !
-         frozen(fii-1) = .TRUE.
-         frozen(lii+1) = .TRUE.
-         !
-      END IF
+      ! ELSE
+      !    !
+      !    fii  = 2
+      !    lii = num_of_images - 1
+      !    !
+      !    frozen = .FALSE.
+      !    !
+      !    ! ... the first and the last images are always frozen
+      !    !
+      !    frozen(fii-1) = .TRUE.
+      !    frozen(lii+1) = .TRUE.
+      !    !
+      ! END IF
       !
       IF ( meta_ionode ) THEN
          !

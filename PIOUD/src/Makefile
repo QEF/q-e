@@ -35,6 +35,9 @@ stop_run_path.o
 PWOBJS= ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 QEMODS = $(BASEMODS)
 
+F90FLAGS += -pg
+LDFLAGS += -pg
+
 TLDEPS=pwlibs
 
 TLDEPS=pwlibs

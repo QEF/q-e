@@ -61,6 +61,7 @@ SUBROUTINE ioneb()
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
   !
+  WRITE(9999,*) TRIM(restart_mode)
   !
   SELECT CASE(trim( string_method ))
      !

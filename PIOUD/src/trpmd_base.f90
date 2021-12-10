@@ -79,33 +79,38 @@ MODULE trpmd_base
       dim1 = 3*nat
       !
       !
-      IF ( nimage > 1 ) THEN
-         !
-         ! ... the automatic tuning of the load balance in
-         ! ... image-parallelisation is switched off by default
-         !
-         tune_load_balance = .FALSE.
-         !
-         ! ... in the case of image-parallelisation the number of images
-         ! ... to be optimised must be larger than nimage
-         !
-         IF ( first_last_opt ) THEN
-            !
-            fii = 1
-            lii = num_of_images
-            !
-         ELSE
-            !
-            fii = 2
-            lii = num_of_images - 1
-            !
-         END IF
-         !
-         IF ( nimage > ( lii - fii + 1 ) ) &
-            CALL errore( 'initialize_polymer', 'nimage is ' // &
-                       & 'larger than the available number of images', 1 )
-         !
-      END IF
+      ! IF ( nimage > 1 ) THEN
+      !    !
+      !    ! ... the automatic tuning of the load balance in
+      !    ! ... image-parallelisation is switched off by default
+      !    !
+      !    tune_load_balance = .FALSE.
+      !    !
+      !    ! ... in the case of image-parallelisation the number of images
+      !    ! ... to be optimised must be larger than nimage
+      !    !
+      !    IF ( first_last_opt ) THEN
+      !       !
+      !       fii = 1
+      !       lii = num_of_images
+      !       !
+      !    ELSE
+      !       !
+      !       fii = 2
+      !       lii = num_of_images - 1
+      !       !
+      !    END IF
+      !    !
+      !    IF ( nimage > ( lii - fii + 1 ) ) &
+      !       CALL errore( 'initialize_polymer', 'nimage is ' // &
+      !                  & 'larger than the available number of images', 1 )
+      !    !
+      ! END IF
+      if( nimage > num_of_images ) &
+             CALL errore( 'initialize_polymer', 'nimage is ' // &
+                        & 'more computing images than polymer images', 1 )
+      fii = 1
+      lii = num_of_images      
       !
       ! ... dynamical allocation of arrays
       !
@@ -132,7 +137,8 @@ MODULE trpmd_base
       !
       ! ... initialization of the allocatable arrays
       !
-      pos(:,1:input_images) = pos_(1:dim1,1:input_images)
+      !pos(:,1:input_images) = pos_(1:dim1,1:input_images)
+      pos(:,1) = pos_(:,1)
       !
       pes          = 0.0_DP
       grad_pes     = 0.0_DP
@@ -176,22 +182,15 @@ MODULE trpmd_base
       REAL(DP), ALLOCATABLE :: pos_n(:,:), dr(:,:), image_spacing(:)
       !
       !
-      IF ( meta_ionode) THEN    !!! <----my mod.
-        if( num_of_images .gt.1) then  !!! <----my mod.
+      CALL mp_bcast( pos(:,1),         meta_ionode_id, world_comm )
+      if( num_of_images > 1) then  !!! <----my mod.
           do i=2,num_of_images    !!! <----my mod.
         
             pos(:,i) = pos(:,1)   !!! <----my mod.
         
           end do    !!! <----my mod.
         end if   !!! <----my mod.
-        
-        path_length = 0.0d0    !!! <----my mod.
-        
-      END IF    !!! <----my mod.
-      !
-      CALL mp_bcast( pos,         meta_ionode_id, world_comm )
-      CALL mp_bcast( path_length, meta_ionode_id, world_comm )
-      !
+      path_length = 0._dp !
       RETURN
       !
     END SUBROUTINE initial_guess
@@ -213,32 +212,11 @@ MODULE trpmd_base
       !
       INTEGER  :: fii, lii
       !
-      !
-      ! IF ( istep_path == 0 .OR. first_last_opt ) THEN
-      !    !
-      !    fii = 1
-      !    lii = num_of_images
-      !    !
-      ! ELSE
-      !    !
-      !    fii = 2
-      !    lii = num_of_images - 1
-      !    !
-      ! END IF
-      
-      ! IF (nbeadMD .eq. 1) THEN
-      !   fii = 1
-      !   lii = 1
-      ! END IF
       fii = 1
-      lii = nbeadMD
+      lii = num_of_images
       !
       IF ( pending_image /= 0 ) fii = pending_image
       !
-      !WRITE(9999,*) "Going to compute SCF", num_of_images, &
-      !pending_image, istep_path, pes, fii, lii, &
-      !first_last_opt
-      !FLUSH(9999)
       CALL compute_scf( fii, lii, stat )
       !
       IF ( .NOT. stat ) RETURN

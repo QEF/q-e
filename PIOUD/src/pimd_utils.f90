@@ -99,15 +99,15 @@ subroutine pimd_pw_convert_pos(abc)
     end do  
     
     !!! this prevents, in the classical case, that the second image is completely static  
-    if(nbeadMD.eq.1) then
-       call random_number(rnd1)
-       call random_number(rnd2)
-       if (rnd2.ge.0.5) then
-         pos(1,1)=pos(1,1)+rnd1*0.0005
-       else
-         pos(1,1)=pos(1,1)-rnd1*0.0005
-       endif
-    endif   
+    ! if(nbeadMD.eq.1) then
+    !    call random_number(rnd1)
+    !    call random_number(rnd2)
+    !    if (rnd2.ge.0.5) then
+    !      pos(1,1)=pos(1,1)+rnd1*0.0005
+    !    else
+    !      pos(1,1)=pos(1,1)-rnd1*0.0005
+    !    endif
+    ! endif   
     
   ! CALL mp_bcast( pos,  meta_ionode_id, world_comm )
       

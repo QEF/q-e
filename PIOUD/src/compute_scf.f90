@@ -117,40 +117,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   CALL mp_barrier( world_comm )
   !
-  IF ( nimage > 1 .AND. .NOT.first_last_opt ) THEN
-     !
-     ! ... self-consistency on the first and last images is done separately
-     !
-     IF ( fii == 1 ) THEN
-        !
-        IF ( my_image_id == root_image ) THEN
-           !
-           IF (xclib_dft_is('hybrid')) call stop_exx() 
-           CALL do_scf( 1, istat )
-           !
-           IF ( istat /= 0 ) GOTO 1
-           !
-        END IF
-        !
-        fii_ = 2
-        !
-     END IF
-     IF ( lii == num_of_images ) THEN
-        !
-        IF ( my_image_id == root_image + 1 ) THEN
-           !
-           IF (xclib_dft_is('hybrid')) call stop_exx() 
-           CALL do_scf( num_of_images, istat )
-           !
-           IF ( istat /= 0 ) GOTO 1
-           !
-        END IF
-        !
-        lii_ = lii - 1
-        !
-     END IF
-     !
-  END IF
   !
   ! ... only the first cpu initializes the file needed by parallelization
   ! ... among images
@@ -170,7 +136,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      IF (xclib_dft_is('hybrid')) call stop_exx() 
      CALL do_scf( image, istat )
      !
-     IF ( istat /= 0 ) GOTO 1
+     IF ( istat /= 0 ) STOP 99999
      !
      ! ... the new image is obtained (by ionode only)
      !
