@@ -30,6 +30,7 @@ ggen1d.o \
 local_dos.o \
 local_dos_mag.o \
 local_dos1d.o \
+merge_evc.o \
 openfil_pp.o\
 partialdos.o \
 paw_postproc.o \
@@ -69,7 +70,7 @@ TLDEPS= pwlibs
 all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x \
-      wannier_ham.x wannier_plot.x molecularpdos.x \
+      wannier_ham.x wannier_plot.x molecularpdos.x merge_evc.x \
       pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x xctest_qe_libxc.x
 
 
@@ -98,6 +99,11 @@ bands.x : bands.o libpp.a $(MODULES) $(LIBOBJS)
 dos.x : dos.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		dos.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+merge_evc.x : merge_evc.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+	merge_evc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 pawplot.x : pawplot.o libpp.a libpp.a $(MODULES) $(LIBOBJS)
