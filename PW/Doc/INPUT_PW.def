@@ -2412,7 +2412,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
 		opt -val 'fire' {
                     use the FIRE minimization algorithm employing the
-		    semi-implicit Euler intergration scheme
+		    semi-implicit Euler integration scheme
 		    see:
 		       Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
 		       Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
