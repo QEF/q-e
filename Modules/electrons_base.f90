@@ -385,7 +385,7 @@
       !
       integer_charge = ( ABS (nelec_ - NINT(nelec_)) < eps8 )
       !
-      IF ( tot_magnetization_ < 0 ) THEN
+      IF ( tot_magnetization_ < -9999 ) THEN
          ! default when tot_magnetization is unspecified
          IF ( integer_charge) THEN
             nelup_ = INT( nelec_ + 1 ) / 2
@@ -397,7 +397,7 @@
       ELSE
          ! tot_magnetization specified in input
          !
-         if ( (tot_magnetization_ > 0) .and. (nspin==1) ) &
+         if ( (tot_magnetization_ > -9999) .and. (nspin==1) ) &
                  CALL errore(' set_nelup_neldw  ', &
                  'tot_magnetization is inconsistent with nspin=1 ', 2 )
          integer_magnetization = ( ABS( tot_magnetization_ - &

@@ -15,7 +15,7 @@ PROGRAM pw2gt
   ! IMPORTANT NOTICE: must be run on a single processor ONLY.
   ! Uncomment next line to test the file: the code will re-read the file
   ! just written, fill and diagonalize the hamiltonian matrix
-#define __DEBUG
+!#define __DEBUG
   !
   ! Input: namelist &inputpp [outdir=...] [prefix=...] / as in QE input
   ! (default values as in QE).

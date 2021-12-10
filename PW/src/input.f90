@@ -648,9 +648,9 @@ SUBROUTINE iosys()
   IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
   nbnd_    = nbnd
   !
-  two_fermi_energies = ( tot_magnetization /= -1._DP)
-  IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
-     CALL errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
+  two_fermi_energies = ( tot_magnetization /= -10000._DP)
+  IF ( two_fermi_energies .and. tot_magnetization < -9999._DP) &
+     CALL errore( 'iosys', 'tot_magnetization only larger than -9999 is allowed', 1 )
   IF ( two_fermi_energies .and. .not. lsda ) &
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !

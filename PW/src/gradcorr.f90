@@ -46,8 +46,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   IF ( .NOT. xclib_dft_is('gradient') ) RETURN
   !
-  !$acc data deviceptr( rho(dfftp%nnr,nspin), rho_core(dfftp%nnr), &
-  !$acc&                rhog(ngm,nspin), rhog_core(ngm), v(dfftp%nnr,nspin) )
+  !$acc data present( rho, rho_core, rhog, rhog_core, v )
   !
   etxcgc = 0.0_DP
   vtxcgc = 0.0_DP
@@ -72,8 +71,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   IF ( nspin == 4 .AND. domag ) THEN
     ALLOCATE( vsave(dfftp%nnr,nspin) )
     ALLOCATE( segni(dfftp%nnr) )
-    !$acc data copyout( segni, vsave )
     !
+    !$acc data copyout( vsave )
     !$acc parallel loop collapse(2)
     DO is = 1, nspin
       DO ir = 1, dfftp%nnr
@@ -81,18 +80,22 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         v(ir,is) = 0._DP
       ENDDO
     ENDDO
+    !$acc end data
     !
     ! ... bring starting rhoaux to G-space
     IF ( use_gpu ) THEN
-      !$acc host_data use_device( rhoaux, rhogaux, segni )
+      !$acc data copyout( segni )
+      !$acc host_data use_device( rho, rhoaux, rhogaux, segni )
       CALL compute_rho_gpu( rho, rhoaux, segni, dfftp%nnr )
       CALL rho_r2g_gpu( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
       !$acc end host_data
+      !$acc end data
     ELSE
       CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
       CALL rho_r2g( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+      !$acc update device( rhoaux, rhogaux )
     ENDIF
-    !$acc end data
+    !
   ELSE
     ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA
     !
@@ -133,8 +136,10 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
       CALL fft_gradient_g2r_gpu( dfftp, rhogaux(:,is), g_d, grho(:,:,is) )
       !$acc end host_data
     ELSE
+      !$acc update host( rhogaux )
       CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
-    ENDIF  
+      !$acc update device( grho )
+    ENDIF
   ENDDO
   !
   !$acc end data
@@ -144,10 +149,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... This is the spin-unpolarised case
      !
-     !$acc host_data use_device( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
      CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
                   gpu_args_=.TRUE. )
-     !$acc end host_data
      !
      !$acc parallel loop reduction(+:etxcgc) reduction(+:vtxcgc)
      DO k = 1, dfftp%nnr
@@ -170,10 +173,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      ALLOCATE( v2c_ud(dfftp%nnr) )
      !$acc data create( v2c_ud )
      !
-     !$acc host_data use_device( rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
      CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, &
                   v2c_ud, gpu_args_=.TRUE. )
-     !$acc end host_data
      !
      ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
      !
@@ -216,17 +217,23 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
-  !$acc host_data use_device( rhoaux, dh, h )
   DO is = 1, nspin0
-     IF ( use_gpu )   CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
-     IF ( .NOT. use_gpu ) CALL fft_graddot( dfftp, h(1,1,is), g, dh )
+     IF ( use_gpu ) THEN
+       !$acc host_data use_device( h, dh )
+       CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
+       !$acc end host_data
+     ELSE
+       !$acc update host( h )
+       CALL fft_graddot( dfftp, h(1,1,is), g, dh )
+       !$acc update device( dh )
+     ENDIF
      !$acc parallel loop
      DO k = 1, dfftp%nnr
        v(k,is) = v(k,is) - dh(k)
        vtxcgc = vtxcgc - dh(k) * rhoaux(k,is)
      ENDDO
   ENDDO
-  !$acc end host_data
+  !
   !$acc end data
   !
   vtxc = vtxc + omega * vtxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
@@ -235,7 +242,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   IF (nspin==4 .AND. domag) THEN
      ALLOCATE( vgg(dfftp%nnr,nspin0)  )
      !$acc data copyin( segni, vsave ) create( vgg )
-     !$acc host_data use_device( segni, vgg, vsave )
      !
      !$acc parallel loop collapse(2)
      DO is = 1, nspin
@@ -256,7 +262,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         ENDIF
      ENDDO
      !
-     !$acc end host_data
      !$acc end data
      DEALLOCATE( segni )
      DEALLOCATE( vgg, vsave )

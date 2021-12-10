@@ -239,7 +239,9 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        CALL fft_gradient_g2r_gpu( dfftp, rhogsum, g_d, grho(:,:,is) )
        !$acc end host_data
      ELSE
+       !$acc update host( rhogsum )
        CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(:,:,is) )
+       !$acc update device( grho )
      ENDIF  
      !
   ENDDO
@@ -258,11 +260,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !$acc data create( ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   IF (nspin == 1) THEN
     !
-    !$acc host_data use_device( rho%of_r, grho, tau, ex, ec, &
-    !$acc&                      v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
-    !$acc end host_data
     !
     !$acc parallel loop reduction(+:etxc) reduction(+:vtxc) reduction(-:rhoneg1) &
     !$acc&              reduction(-:rhoneg2) present(rho)
@@ -295,11 +294,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
         rho_updw(k,2) = ( rho%of_r(k,1) - rho%of_r(k,2) ) * 0.5d0
     ENDDO
     !
-    !$acc host_data use_device( rho_updw, grho, tau, ex, ec, &
-    !$acc&                      v1x, v2x, v3x, v1c, v2c, v3c )
     CALL xc_metagcx( dfftp%nnr, 2, np, rho_updw, grho, tau, ex, ec, &
                      v1x, v2x, v3x, v1c, v2c, v3c, gpu_args_=.TRUE. )
-    !$acc end host_data
     !
     ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
     !
@@ -345,22 +341,26 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
-  !$acc host_data use_device( rho%of_r, dh, h )
   DO is = 1, nspin
+     IF ( use_gpu ) THEN
+       !$acc host_data use_device( h, dh )
+       CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
+       !$acc end host_data
+     ELSE
+       !$acc update host( h )
+       CALL fft_graddot( dfftp, h(1,1,is), g, dh )
+       !$acc update device( dh )
+     ENDIF
      !
      sgn_is = (-1.d0)**(is+1)
-     !
-     IF ( use_gpu )   CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
-     IF ( .NOT. use_gpu ) CALL fft_graddot( dfftp, h(1,1,is), g, dh )
      !
      !$acc parallel loop reduction(-:vtxc) present(rho)
      DO k = 1, dfftp%nnr
        v(k,is) = v(k,is) - dh(k)
        vtxc = vtxc - dh(k) * ( rho%of_r(k,1) + sgn_is*rho%of_r(k,nspin) )*0.5D0
      ENDDO
-     !
   ENDDO
-  !$acc end host_data
+  !
   !$acc end data
   DEALLOCATE( dh )
   !
@@ -482,9 +482,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   ALLOCATE( ec(dfftp%nnr), vc(dfftp%nnr,nspin) )
   !$acc data create( ex, ec, vx, vc )
   !
-  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v,&
-  !$acc&                      ex, ec, vx, vc )
-  !
   !$acc parallel loop
   DO ir = 1, dfftp%nnr
     rho%of_r(ir,1) = rho%of_r(ir,1) + rho_core(ir)
@@ -565,7 +562,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
       !
   ENDIF
   !
-  !$acc end host_data
   !$acc end data
   DEALLOCATE( ex, vx )
   DEALLOCATE( ec, vc )
@@ -586,9 +582,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   ! ... add gradient corrections (if any)
   !
-  !$acc host_data use_device( rho%of_r, rho%of_g, rho_core, rhog_core, v )
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
-  !$acc end host_data
   !
   !$acc end data
   !$acc end data

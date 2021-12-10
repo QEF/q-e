@@ -40,9 +40,10 @@ SUBROUTINE xc( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out, gpu_arg
   !
   IF ( gpu_args ) THEN
     !
-    !$acc data deviceptr( rho_in(length,srd), ex_out(length), ec_out(length), &
-    !$acc&                vx_out(length,svd), vc_out(length,svd) )
+    !$acc data present( rho_in, ex_out, ec_out, vx_out, vc_out )
+    !$acc host_data use_device( rho_in, ex_out, ec_out, vx_out, vc_out )
     CALL xc_( length, srd, svd, rho_in, ex_out, ec_out, vx_out, vc_out )
+    !$acc end host_data
     !$acc end data
     !
   ELSE

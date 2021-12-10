@@ -52,16 +52,19 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, &
   !
   IF ( gpu_args ) THEN
     !
-    !$acc data deviceptr( rho(length,ns), grho(3,length,ns), ex(length), ec(length),    &
-    !$acc&                v1x(length,ns), v2x(length,ns), v1c(length,ns), v2c(length,ns) )
+    !$acc data present( rho, grho, ex, ec, v1x, v2x, v1c, v2c )
     IF (PRESENT(v2c_ud)) THEN
-      !$acc data deviceptr( v2c_ud(length) )
+      !$acc data present( v2c_ud )
+      !$acc host_data use_device( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       CALL xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
+      !$acc end host_data
       !$acc end data
     ELSE
       ALLOCATE( v2c_dummy(length) )
-      !$acc data deviceptr( v2c_dummy(length) )
+      !$acc data create( v2c_dummy )
+      !$acc host_data use_device( rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_dummy )
       CALL xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_dummy )
+      !$acc end host_data
       !$acc end data
       DEALLOCATE( v2c_dummy )
     ENDIF

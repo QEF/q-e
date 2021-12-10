@@ -5,7 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!---------------------------------------------------------------------------------
 MODULE corr_gga
+  !-------------------------------------------------------------------------------
+  !! GGA correlation functionals.
   !
   USE corr_lda, ONLY: pw, pw_spin
   !

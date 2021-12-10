@@ -97,42 +97,61 @@ MODULE beef_interface
     !
 #else
     !
-    ! empty routines to prevent compilation errors
+    ! Empty routines to prevent compilation errors.
+    ! For simplicity the comments for Ford doc generator have been put here
+    ! and not in the above interfaces.
+    !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda )
+      !! Evaluate bee exchange energy and its derivatives \(d\epsilon/d\rho\) and 
+      !! \( (d\epsilon/d|\nabla \rho| ) / |\nabla\rho|\).
       USE kind_l, ONLY : dp
       REAL (dp) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beefx
     !
     SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda)
+      !! Evaluate local part of bee correlation and its derivatives \(d\epsilon/drho\)
+      !! and \( (d\epsilon/d|\nabla\rho|) / |\nabla\rho| \).
       USE kind_l, ONLY : dp
       REAL (dp), INTENT(INOUT) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorr
     !
     SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda)
+      !! Evaluate local part of bee correlation for spin polarized system.
       USE kind_l, ONLY : dp
       REAL (dp), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorrspin
     !
     SUBROUTINE beefsetmode(mode)
+      !! \(\text{mode} \geq 0\): for perturbed parameters --- calculate Legendre
+      !! order mode only:  
+      !! -1:        standard beefxc expansion coefficients;  
+      !! -2:        PBE correlation only;  
+      !! -3:        LDA correlation only;  
+      !! else:      no correlation either.
       INTEGER :: mode
     END SUBROUTINE beefsetmode
     !
     SUBROUTINE beefrandinit(seed)
+      !! Initialize pseudo random number generator
       INTEGER :: seed
     END SUBROUTINE beefrandinit
     !
     SUBROUTINE beefrandinitdef()
+      !! Initialize pseudo random number generator with default seed
     END SUBROUTINE beefrandinitdef
     !
     SUBROUTINE beefensemble(beefxc, ensemble)
+      !! Calculate ensemble energies
       USE kind_l, ONLY : dp
       REAL (dp) :: beefxc(:), ensemble(:)
     END SUBROUTINE beefensemble
     !
     LOGICAL FUNCTION beef_set_type(tbeef, ionode)
+      !! Set type of beef functional to be used, returns true on success.
+      !! 0: BEEF-vdW
       INTEGER :: tbeef
       LOGICAL :: ionode
       CALL xclib_error('beef_set_type','no beef! support for BEEF not compiled',1)

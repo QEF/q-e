@@ -409,7 +409,7 @@
                 ip_occupations, tot_charge, ip_nspin, input_occupations=f_inp(:,1) )
      END SELECT    
   ELSE 
-     IF ( tot_magnetization .LT. 0 ) THEN 
+     IF ( tot_magnetization .LT. -9999.0 ) THEN 
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin)
      ELSE
         CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss/e2, ip_occupations, tot_charge, ip_nspin, &
