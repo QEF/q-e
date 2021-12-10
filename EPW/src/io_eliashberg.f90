@@ -114,7 +114,7 @@
       ! anisotropic case
       IF (temp < 10.d0) THEN
         WRITE(name1, 101) TRIM(prefix), '.imag_aniso_00', temp
-      ELSEIF (temp >= 10.d0) THEN
+      ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
         WRITE(name1, 102) TRIM(prefix), '.imag_aniso_0', temp
       ELSEIF (temp >= 100.d0) THEN
         WRITE(name1, 103) TRIM(prefix), '.imag_aniso_', temp
@@ -2202,6 +2202,27 @@
         CLOSE(iufilgapFS)
       ENDDO
       !
+      ! HP: Write in .frmsf format compatible with fermisurfer program
+      IF (temp < 10.d0) THEN
+        WRITE(name1, 113) TRIM(prefix), '.', cname, '_aniso_gap0_00', temp, '.frmsf'
+      ELSEIF (temp < 100.d0 .AND. temp > 9.9999d0) THEN
+        WRITE(name1, 114) TRIM(prefix), '.', cname, '_aniso_gap0_0', temp, '.frmsf'
+      ELSEIF (temp < 1000.d0 .AND. temp > 99.9999d0) THEN
+        WRITE(name1, 115) TRIM(prefix), '.', cname, '_aniso_gap0_', temp, '.frmsf'
+      ENDIF
+      OPEN(UNIT = iufilgapFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('gap_FS', 'error opening file ' // name1, iufilgapFS)
+      !
+      WRITE(iufilgapFS, '(3i5)') nkf1, nkf2, nkf3
+      WRITE(iufilgapFS, '(i5)') 1
+      WRITE(iufilgapFS, '(i5)') nbndfs
+      WRITE(iufilgapFS, '(3f12.6)') (bg(i, 1), i = 1, 3)
+      WRITE(iufilgapFS, '(3f12.6)') (bg(i, 2), i = 1, 3)
+      WRITE(iufilgapFS, '(3f12.6)') (bg(i, 3), i = 1, 3)
+      WRITE(iufilgapFS, '(6f12.6)') ((ekfs(ibnd, ixkff(ik)) - ef0, ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
+      WRITE(iufilgapFS, '(6f12.6)') ((agap_tmp(ibnd, ixkff(ik)) * 1000.d0, ik = 1, nkf1 * nkf2 * nkf3), ibnd = 1, nbndfs)
+      CLOSE(iufilgapFS)
+      !
     ENDIF
     !
     ! SP & RM : Write on file the superconducting gap close to the Fermi surface
@@ -2257,6 +2278,9 @@
     110 FORMAT(a, a1, a4, a16, f4.2)
     111 FORMAT(a, a1, a4, a15, f5.2)
     112 FORMAT(a, a1, a4, a14, f6.2)
+    113 FORMAT(a, a1, a4, a14, f4.2, a6)
+    114 FORMAT(a, a1, a4, a13, f5.2, a6)
+    115 FORMAT(a, a1, a4, a12, f6.2, a6)
     !
     RETURN
     !

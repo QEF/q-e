@@ -90,7 +90,7 @@ CONTAINS
     INTEGER :: ik
     !
     IF (.NOT.ALLOCATED(igk_k)) ALLOCATE( igk_k(npwx,nks) )
-    !$acc enter data create(igk_k(npwx,nks))
+    !$acc enter data create(igk_k(1:npwx,1:nks))
     !
     IF (.NOT.ALLOCATED(ngk))   ALLOCATE( ngk(nks) )
     !
@@ -460,23 +460,6 @@ MODULE fixed_occ
   !! for an isolated atom).
   !
 END MODULE fixed_occ
-!
-!
-!
-MODULE spin_orb
-  !
-  !! Variables needed for calculations with spin-orbit
-  !
-  SAVE
-  LOGICAL :: lspinorb
-  !! if .TRUE. this calculation uses spin-orbit interactions
-  LOGICAL :: lforcet
-  !! if .TRUE. apply Force Theorem to calculate MAE
-  LOGICAL :: starting_spin_angle
-  !! if .TRUE. the initial wavefunctions are spin-angle functions.
-  !
-END MODULE spin_orb
-!
 !
 !
 MODULE pwcom

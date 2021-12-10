@@ -1,6 +1,10 @@
 title: Quantum Espresso PWSCF
 src_dir: ./src/
 output_dir: ./doc
+include: ./../LAXlib
+         ./../KS_Solvers
+exclude: laxlib.fh
+         ks_solver_interfaces.fh
 project_website: http://www.quantum-espresso.org/
 summary: Quantum Espresso is an integrated suite of Open-Source computer codes for electronic-structure calculations and materials modeling at the nanoscale. It is based on density-functional theory, plane waves, and pseudopotentials.
 authors: Paolo Giannozzi et al. 

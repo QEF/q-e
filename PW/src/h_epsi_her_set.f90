@@ -15,9 +15,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   !! Wavefunctions from previous iteration are read into \(\textrm{evcel}\);
   !! Spin polarized systems are supported only with fixed occupations.
   !
-  USE noncollin_module,   ONLY: noncolin, npol
-  USE spin_orb,           ONLY: lspinorb
   USE kinds,              ONLY: DP
+  USE noncollin_module,   ONLY: noncolin, npol, lspinorb
   USE wvfct,              ONLY: npwx, nbnd
   USE ldaU,               ONLY: lda_plus_u
   USE lsda_mod,           ONLY: current_spin, nspin

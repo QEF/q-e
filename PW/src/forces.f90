@@ -97,19 +97,24 @@ SUBROUTINE forces()
   attributes(DEVICE) :: vloc_d
 #endif
   !
+  force(:,:)    = 0.D0
+  !
+  ! Early return if all forces to be set to zero
+  !
+  IF ( ALL( if_pos == 0 ) ) RETURN
   !
   CALL start_clock( 'forces' )
-  !
-  ! Cleanup scratch space used in previous SCF iterations. This will reduce memory footprint.
+  ! Cleanup scratch space used in previous SCF iterations.
+  ! This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
-  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
+  IF (ierr .ne. 0) CALL infomsg('forces', 'Cannot reset GPU buffers! Some buffers still locked.')
+  !
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
             forceh(3,nat), forceion(3,nat), forcescc(3,nat) )
   !    
   forcescc(:,:) = 0.D0
   forceh(:,:)   = 0.D0
-  force(:,:)    = 0.D0
   !
   ! ... The nonlocal contribution is computed here
   !
@@ -460,6 +465,7 @@ SUBROUTINE forces()
   IF ( ldftd3   ) DEALLOCATE( force_d3         )
   IF ( lxdm     ) DEALLOCATE( force_disp_xdm   ) 
   IF ( lelfield ) DEALLOCATE( forces_bp_efield )
+  IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
   !
   ! FIXME: what is the following line good for?
   !
@@ -470,8 +476,6 @@ SUBROUTINE forces()
   IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > nat*eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
                    &  "reduce conv_thr to get better values")')
-  !
-  IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
 
   RETURN
   !

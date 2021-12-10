@@ -17,7 +17,6 @@ MODULE qe_drivers_mgga
   USE kind_l,             ONLY: DP
   USE dft_setting_params, ONLY: imeta, imetac, rho_threshold_mgga, &
                                 grho2_threshold_mgga, tau_threshold_mgga
-  USE metagga
   !
   IMPLICIT NONE
   !
@@ -37,31 +36,33 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
   !! Available cases: M06L and TPSS. Other mGGA functionals can be used
   !! through Libxc.
   !
+  USE metagga
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
   !! Number of k-points
-  REAL(DP), DIMENSION(length) :: rho
+  REAL(DP), INTENT(IN) :: rho(length)
   !! Charge density
-  REAL(DP), DIMENSION(length) :: grho2
+  REAL(DP), INTENT(IN) :: grho2(length)
   !! Square modulus of the density gradient
-  REAL(DP), DIMENSION(length) :: tau
+  REAL(DP), INTENT(IN) :: tau(length)
   !! Laplacian of the density
-  REAL(DP), DIMENSION(length) :: ex
+  REAL(DP), INTENT(OUT) :: ex(length)
   !! \(E_x = \int e_x(\text{rho},\text{grho}) dr \)
-  REAL(DP), DIMENSION(length) :: ec
+  REAL(DP), INTENT(OUT) :: ec(length)
   !! \(E_x = \int e_x(\text{rho},\text{grho}) dr \)
-  REAL(DP), DIMENSION(length) :: v1x
+  REAL(DP), INTENT(OUT) :: v1x(length)
   !! \( D\ E_x\ /\ D\ \text{rho} \)
-  REAL(DP), DIMENSION(length) :: v2x
+  REAL(DP), INTENT(OUT) :: v2x(length)
   !! \( D\ E_x\ /\ D( D\ \text{rho}/D\ r_\alpha )/|\nabla\text{rho}| \)
-  REAL(DP), DIMENSION(length) :: v3x
+  REAL(DP), INTENT(OUT) :: v3x(length)
   !! \( D\ E_x\ /\ D\ \text{tau} \)
-  REAL(DP), DIMENSION(length) :: v1c
+  REAL(DP), INTENT(OUT) :: v1c(length)
   !! \( D\ E_c\ /\ D\ \text{rho} \)
-  REAL(DP), DIMENSION(length) :: v2c
+  REAL(DP), INTENT(OUT) :: v2c(1,length,1)
   !! \( D\ E_c\ /\ D( D\ \text{rho}/D\ r_\alpha )/|\nabla\text{rho}| \)
-  REAL(DP), DIMENSION(length) :: v3c
+  REAL(DP), INTENT(OUT) :: v3c(length)
   !! \( D\ E_c\ /\ D\ \text{tau} \)
   !
   ! ... local variables
@@ -69,15 +70,23 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
   INTEGER :: k
   REAL(DP) :: arho
   !
-  v1x=0.d0 ; v2x=0.d0 ; v3x=0.d0 ; ex=0.d0
-  v1c=0.d0 ; v2c=0.d0 ; v3c=0.d0 ; ec=0.d0
+#if defined(_OPENACC)
+  !$acc data deviceptr( rho(length), grho2(length), tau(length), ex(length), ec(length),     &
+  !$acc&                v1x(length), v2x(length), v3x(length), v1c(length), v2c(1,length,1), &
+  !$acc&                v3c(length) )
   !
+  !$acc parallel loop
+#endif
   DO k = 1, length
     !
     arho = ABS(rho(k))
     !
     IF ( (arho<=rho_threshold_mgga).OR.(grho2(k)<=grho2_threshold_mgga).OR. &
-         (ABS(tau(k))<=rho_threshold_mgga) ) CYCLE
+         (ABS(tau(k))<=rho_threshold_mgga) ) THEN
+      v1x(k)=0.d0 ; v2x(k)=0.d0 ; v3x(k)=0.d0 ; ex(k)=0.d0
+      v1c(k)=0.d0 ; v2c(1,k,1)=0.d0 ; v3c(k)=0.d0 ; ec(k)=0.d0
+      CYCLE
+    ENDIF
     !
     ! ...libxc-like threshold management
     !grho2(k) = MIN( grho2(k), (8.d0*rho(k)*tau(k))**2 )
@@ -86,20 +95,25 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
     CASE( 1 )
        !
        CALL tpsscxc( arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), &
-                     v3x(k), v1c(k), v2c(k), v3c(k) )
+                     v3x(k), v1c(k), v2c(1,k,1), v3c(k) )
        !
     CASE( 2 )
        !
        CALL m06lxc(  arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), &
-                     v3x(k), v1c(k), v2c(k), v3c(k) )
+                     v3x(k), v1c(k), v2c(1,k,1), v3c(k) )
        !
     CASE DEFAULT
        !
-       CALL xclib_error( 'tau_xc', 'This case is not implemented', imeta )
+       v1x(k)=0.d0 ; v2x(k)=0.d0 ; v3x(k)=0.d0 ; ex(k)=0.d0
+       v1c(k)=0.d0 ; v2c(1,k,1)=0.d0 ; v3c(k)=0.d0 ; ec(k)=0.d0
        !
     END SELECT
     !
   ENDDO
+  !
+#if defined(_OPENACC)
+  !$acc end data
+#endif
   !
   RETURN
   !
@@ -114,65 +128,74 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   !! Available cases: M06L and TPSS. Other mGGA functionals can be used
   !! through Libxc.
   !
+  USE metagga
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
   !! Number of k-points
-  REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho
+  REAL(DP), INTENT(IN) :: rho(length,2)
   !! Charge density
-  REAL(DP), INTENT(IN), DIMENSION(3,length,2) :: grho
+  REAL(DP), INTENT(IN) :: grho(3,length,2)
   !! The density gradient
-  REAL(DP), INTENT(IN), DIMENSION(length,2) :: tau
+  REAL(DP), INTENT(IN) :: tau(length,2)
   !! Laplacian of the density
-  REAL(DP), INTENT(OUT), DIMENSION(length) :: ex
+  REAL(DP), INTENT(OUT) :: ex(length)
   !! \(E_x = \int e_x(\text{rho},\text{grho}) dr \)
-  REAL(DP), INTENT(OUT), DIMENSION(length) :: ec
+  REAL(DP), INTENT(OUT) :: ec(length)
   !! \(E_x = \int e_x(\text{rho},\text{grho}) dr \)
-  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1x
+  REAL(DP), INTENT(OUT) :: v1x(length,2)
   !! \( D\ E_x\ /\ D\ \text{rho} \)
-  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v2x
+  REAL(DP), INTENT(OUT) :: v2x(length,2)
   !! \( D\ E_x\ /\ D( D\ \text{rho}/D\ r_\alpha )/|\nabla\text{rho}| \)
-  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v3x
+  REAL(DP), INTENT(OUT) :: v3x(length,2)
   !! \( D\ E_x\ /\ D\ \text{tau} \)
-  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c
+  REAL(DP), INTENT(OUT) :: v1c(length,2)
   !! \( D\ E_c\ /\ D\ \text{rho} \)
-  REAL(DP), INTENT(OUT), DIMENSION(3,length,2) :: v2c
+  REAL(DP), INTENT(OUT) :: v2c(3,length,2)
   !! \( D\ E_c\ /\ D( D\ \text{rho}/D\ r_\alpha )/|\nabla\text{rho}| \)
-  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v3c
+  REAL(DP), INTENT(OUT) :: v3c(length,2)
   !! \( D\ E_c\ /\ D\ \text{tau} \)
   !
   !  ... local variables
   !
   INTEGER :: k
-  REAL(DP) :: rh, zeta, atau, grho2(2), ggrho2
+  REAL(DP) :: rh, zeta, atau, grho2up, grho2dw, ggrho2
   REAL(DP) :: v2cup, v2cdw
   !
-  ex=0.0_DP ; v1x=0.0_DP ; v2x=0.0_DP ; v3x=0.0_DP
-  ec=0.0_DP ; v1c=0.0_DP ; v2c=0.0_DP ; v3c=0.0_DP
+#if defined(_OPENACC)
+  !$acc data deviceptr( rho(length,2), grho(3,length,2), tau(length,2), ex(length), &
+  !$acc&                ec(length), v1x(length,2), v2x(length,2), v3x(length,2),    &
+  !$acc&                v1c(length,2), v2c(3,length,2), v3c(length,2) )
   !
+  !$acc parallel loop
+#endif
   DO k = 1, length
      !
      rh   = rho(k,1) + rho(k,2)
      atau = tau(k,1) + tau(k,2)             ! KE-density in Hartree
      ! ...libxc-like threshold management
-     !grho2(1) = MIN( SUM(grho(:,k,1)**2), (8.d0*rho(k,1)*tau(k,1))**2 )
-     !grho2(2) = MIN( SUM(grho(:,k,2)**2), (8.d0*rho(k,2)*tau(k,2))**2 )
-     grho2(1) = SUM(grho(:,k,1)**2) 
-     grho2(2) = SUM(grho(:,k,2)**2)
-     ggrho2 = ( grho2(1) + grho2(2) ) * 4.0_DP
+     !grho2up = MIN( SUM(grho(:,k,1)**2), (8.d0*rho(k,1)*tau(k,1))**2 )
+     !grho2dw = MIN( SUM(grho(:,k,2)**2), (8.d0*rho(k,2)*tau(k,2))**2 )
+     grho2up = SUM(grho(:,k,1)**2) 
+     grho2dw = SUM(grho(:,k,2)**2)
+     ggrho2 = ( grho2up + grho2dw ) * 4.0_DP
      !
      IF ( (rh <= rho_threshold_mgga).OR.(ggrho2 <= grho2_threshold_mgga).OR.&
-          (ABS(atau) <= tau_threshold_mgga) ) CYCLE
+          (ABS(atau) <= tau_threshold_mgga) ) THEN
+       v1x(k,:)=0.d0 ; v2x(k,:)=0.d0   ; v3x(k,:)=0.d0 ; ex(k)=0.d0
+       v1c(k,:)=0.d0 ; v2c(:,k,:)=0.d0 ; v3c(k,:)=0.d0 ; ec(k)=0.d0
+       CYCLE
+     ENDIF
      !
      SELECT CASE( imeta )
      CASE( 1 )
         !
-        CALL tpsscx_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), &
+        CALL tpsscx_spin( rho(k,1), rho(k,2), grho2up, grho2dw, tau(k,1), &
                           tau(k,2), ex(k), v1x(k,1), v1x(k,2), v2x(k,1),    &
                           v2x(k,2), v3x(k,1), v3x(k,2) )
         !
-        zeta = (rho(k,1) - rho(k,2)) / rh
-        zeta = MAX( MIN( 0.99999999_DP, zeta ), -0.99999999_DP )
+        zeta = MAX( MIN( 0.99999999_DP, (rho(k,1)-rho(k,2))/rh ), -0.99999999_DP )
         !
         CALL tpsscc_spin( rh, zeta, grho(:,k,1), grho(:,k,2), atau, ec(k), &
                           v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2),      &
@@ -180,7 +203,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
         !
      CASE( 2 )
         !
-        CALL m06lxc_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), &
+        CALL m06lxc_spin( rho(k,1), rho(k,2), grho2up, grho2dw, tau(k,1), &
                           tau(k,2), ex(k), ec(k), v1x(k,1), v1x(k,2),       &
                           v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2), v1c(k,1), &
                           v1c(k,2), v2cup, v2cdw, v3c(k,1), v3c(k,2) )
@@ -190,11 +213,16 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
         !
      CASE DEFAULT
         !
-        CALL xclib_error( 'tau_xc_spin', 'This case not implemented', imeta )
+        v1x(k,:)=0.d0 ; v2x(k,:)=0.d0   ; v3x(k,:)=0.d0 ; ex(k)=0.d0
+        v1c(k,:)=0.d0 ; v2c(:,k,:)=0.d0 ; v3c(k,:)=0.d0 ; ec(k)=0.d0
         !
      END SELECT
      !
   ENDDO
+  !
+#if defined(_OPENACC)
+  !$acc end data
+#endif
   !
   RETURN
   !

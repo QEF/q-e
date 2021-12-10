@@ -29,7 +29,6 @@ SUBROUTINE phq_readin()
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
   USE fft_base,      ONLY : dffts
-  USE spin_orb,      ONLY : lspinorb
   USE cellmd,        ONLY : lmovecell
   USE run_info,      ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
@@ -48,7 +47,7 @@ SUBROUTINE phq_readin()
   USE disp,          ONLY : nq1, nq2, nq3, x_q, wq, nqs, lgamma_iq
   USE io_files,      ONLY : tmp_dir, prefix, postfix, create_directory, &
                             check_tempdir, xmlpun_schema
-  USE noncollin_module, ONLY : domag, i_cons, noncolin
+  USE noncollin_module, ONLY : domag, i_cons, noncolin, lspinorb
   USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, &
                             qestdin, stdout
@@ -893,6 +892,10 @@ SUBROUTINE phq_readin()
      IF ((nat_todo /= 0) .and. lgamma_gamma) CALL errore( &
         'phq_readin', 'gamma_gamma tricks with nat_todo &
        & not available. Use nogg=.true.', 1)
+     IF (lda_plus_u .AND. lgamma_gamma) THEN
+        WRITE(stdout,'(5x,a)')  "DFPT+U does not support k=gamma and q=gamma tricks: disabling them..."
+        lgamma_gamma=.FALSE.
+     ENDIF
      !
      IF (nimage > 1 .AND. lgamma_gamma) CALL errore( &
         'phq_readin','gamma_gamma tricks with images not implemented',1)

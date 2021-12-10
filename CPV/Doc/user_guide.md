@@ -3,7 +3,7 @@
 Introduction
 ============
 
-This guide covers the usage of the `CP` package, version 6.8, a core
+This guide covers the usage of the `CP` package, version 7.0, a core
 component of the Quantum ESPRESSO distribution. Further documentation,
 beyond what is provided in this guide, can be found in the directory
 `CPV/Doc/`, containing a copy of this guide.
@@ -27,6 +27,16 @@ Nicola Marzari (EPF Lausanne), Paolo Giannozzi, and others. FPMD, later
 merged with `CP`, was developed by Carlo Cavazzoni (Leonardo), Gerardo
 Ballabio (CINECA), Sandro Scandolo (ICTP), Guido Chiarotti, Paolo Focher,
 and others. We quote in particular:
+
+-   Sergio Orlandini (CINECA) for completing the CUDA Fortran acceleration
+    started by Carlo Cavazzoni
+
+-   Fabio Affinito and Maruella Ippolito (CINECA) for testing and benchmarking
+
+-   Ivan Carnimeo and Pietro Delugas (SISSA) for further openACC acceleration
+
+-   Riccardo Bertossa (SISSA) for extensive refactoring of ensemble dynamics /
+    conjugate gradient part
 
 -   Federico Grasselli and Riccardo Bertossa (SISSA) for bug fixes,
     extensions to Autopilot;
@@ -235,6 +245,12 @@ are in _Rydberg_ a.u. and differ by a factor 2).
 The `prefix.for` file, formatted like the previous two, contains the computed
 forces, in Hartree atomic units as well. It is written only if a molecular
 dynamics calculation is performed, or if `tprnfor = .true.` is set in input.
+
+The simulation cell is written in a file named `prefix.cel` with the same header as the previous
+described files, and the cell matrix is then listed. NB: **THE CELL MATRIX IN THE
+OUTPUT IS TRANSPOSED** that means that if you want to reuse it again for a new input file,
+you have to pick the one that you find in `prefix.cel` and write in the input file
+after inverting rows and columns.
 
 The file `prefix.evp` has one line per printed step and contains some
 thermodynamical data.

@@ -8,7 +8,7 @@ program test_diaghg_2
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
-    INCLUDE 'laxlib_kinds.fh'
+    include 'laxlib_kinds.fh'
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0

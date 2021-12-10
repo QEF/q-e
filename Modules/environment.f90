@@ -8,6 +8,9 @@
 ! Uncomment next line to print compilation info. BEWARE: may occasionally
 ! give compilation errors due to lines too long if paths are very long
 !#define __HAVE_CONFIG_INFO
+#if defined(HAVE_GITREV)
+#include "git-rev.h"
+#endif
 !
 !==-----------------------------------------------------------------------==!
 MODULE environment
@@ -43,6 +46,7 @@ MODULE environment
   PUBLIC :: opening_message
   PUBLIC :: compilation_info
   PUBLIC :: parallel_info
+  PUBLIC :: print_cuda_info
 
   !==-----------------------------------------------------------------------==!
 CONTAINS
@@ -178,6 +182,16 @@ CONTAINS
     !
     WRITE( stdout, '(/5X,"Program ",A," starts on ",A9," at ",A9)' ) &
          TRIM(code_version), cdate, ctime
+#if defined(HAVE_GITREV)
+    WRITE( stdout, '(8X, "Git branch: ", A)' ) &
+      GIT_BRANCH_RAW
+    WRITE( stdout, '(8X, "Last git commit: ", A)' ) &
+      GIT_HASH_RAW
+    WRITE( stdout, '(8X, "Last git commit date: ", A)' ) & 
+      GIT_COMMIT_LAST_CHANGED_RAW
+    WRITE( stdout, '(8X, "Last git commit subject: ", A)' ) & 
+      GIT_COMMIT_SUBJECT_RAW
+#endif
     !
     WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
          &    "ESPRESSO suite", &
@@ -310,6 +324,74 @@ __CONF_MASS_LIBS))
      !
 #endif
    END SUBROUTINE compilation_info
+!
+!-----------------------------------------------------------------------
+SUBROUTINE print_cuda_info(check_use_gpu) 
+  !-----------------------------------------------------------------------
+  !
+  USE io_global,       ONLY : stdout
+  USE control_flags,   ONLY : use_gpu_=> use_gpu, iverbosity
+  USE mp_world,        ONLY : nnode, nproc
+  USE mp,              ONLY : mp_sum, mp_max
+#if defined(__CUDA)
+  USE cudafor
+#endif 
+  !
+  IMPLICIT NONE
+  !
+  LOGICAL, OPTIONAL,INTENT(IN)  :: check_use_gpu 
+  !! if present and trues the internal variable use_gpu is checked
+#if defined (__CUDA) 
+  INTEGER :: idev, ndev, ierr
+  TYPE (cudaDeviceProp) :: prop
+  LOGICAL               :: use_gpu = .TRUE. 
+  !
+  IF ( PRESENT(check_use_gpu) ) THEN 
+    IF (check_use_gpu) use_gpu = use_gpu_ 
+  END IF 
+  IF (use_gpu) THEN
+     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
+#if defined(__GPU_MPI)
+     WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
+#endif
+     WRITE( stdout, '()' )
+  ELSE
+     WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
+  END IF
+  !
+  ierr = cudaGetDevice( idev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
+  ierr = cudaGetDeviceCount( ndev )
+  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
+  !
+  ! User friendly, approximated warning.
+  ! In order to get this done right, one needs an intra_node communicator
+  !
+  IF (nproc > ndev * nnode * 2) &
+     CALL infomsg('print_cuda_info', &
+      'High GPU oversubscription detected. Are you sure this is what you want?')
+  !
+  ! Verbose information for advanced users
+  IF (iverbosity > 0) THEN
+     WRITE( stdout, '(/,5X,"GPU used by master process:",/)' )
+     ! Device info taken from
+     ! https://devblogs.nvidia.com/how-query-device-properties-and-handle-errors-cuda-fortran/
+     ierr = cudaGetDeviceProperties(prop, idev)
+     WRITE(stdout,"(5X,'   Device Number: ',i0)") idev
+     WRITE(stdout,"(5X,'   Device name: ',a)") trim(prop%name)
+     WRITE(stdout,"(5X,'   Compute capability : ',i0, i0)") prop%major, prop%minor
+     WRITE(stdout,"(5X,'   Ratio of single to double precision performance  : ',i0)") prop%singleToDoublePrecisionPerfRatio
+     WRITE(stdout,"(5X,'   Memory Clock Rate (KHz): ', i0)") &
+       prop%memoryClockRate
+     WRITE(stdout,"(5X,'   Memory Bus Width (bits): ', i0)") &
+       prop%memoryBusWidth
+     WRITE(stdout,"(5X,'   Peak Memory Bandwidth (GB/s): ', f6.2)") &
+       2.0*prop%memoryClockRate*(prop%memoryBusWidth/8)/10.0**6
+  END IF
+  !
+#endif
+  !
+END SUBROUTINE print_cuda_info
 
   !==-----------------------------------------------------------------------==!
 END MODULE environment

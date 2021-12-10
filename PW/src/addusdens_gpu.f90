@@ -16,16 +16,23 @@ SUBROUTINE addusdens_gpu(rho)
   USE fft_base,             ONLY : dfftp
   USE kinds,                ONLY : DP
   !
+  USE device_fbuff_m,       ONLY : dev_buf
+  !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(INOUT) :: rho(dfftp%ngm,nspin_mag)
   !! Charge density in G space
+  !
+  INTEGER :: ierr
   !
   IF ( tqr ) THEN
      CALL addusdens_r( rho )
   ELSE
      CALL addusdens_g_gpu( rho )
   ENDIF
+  !
+  CALL dev_buf%reinit( ierr )
+  IF ( ierr .ne. 0 ) CALL infomsg( 'addusdens_gpu', 'Cannot reset GPU buffers! Some buffers still locked.' )
   !
   RETURN
   !

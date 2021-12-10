@@ -53,3 +53,60 @@
     END IF
    RETURN
 END SUBROUTINE compute_rho
+!
+!
+!------------------------------------------------------------------------------
+SUBROUTINE compute_rho_gpu( rho_d, rhoout_d, segni_d, nrxx )
+   !--------------------------------------------------------------------------
+   !! GPU double of \(\texttt{compute_rho}\).
+   !
+   USE kinds,            ONLY : DP
+   USE noncollin_module, ONLY : lsign, ux
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: nrxx
+   !! input: the dimension of the mesh
+   REAL(DP), INTENT(IN) :: rho_d(nrxx,4)
+   !! the four components of the charge 
+   REAL(DP), INTENT(OUT) :: rhoout_d(nrxx,2)
+   !! the spin up and spin down charge
+   REAL(DP), INTENT(OUT) :: segni_d(nrxx)
+   !! the orientation when needed
+   !
+   ! ... local variables
+   !
+   REAL(DP) :: ux1, ux2, ux3, amag
+   INTEGER :: ir ! counter on mesh points
+   !
+   !$acc data deviceptr( rho_d(nrxx,4), rhoout_d(nrxx,2), segni_d(nrxx) )
+   !
+   IF (lsign) THEN
+      !
+      ux1 = ux(1) ; ux2 = ux(2) ; ux3 = ux(3)
+      !
+      !$acc parallel loop
+      DO ir = 1, nrxx 
+         segni_d(ir) = SIGN(1.0_DP,rho_d(ir,2)*ux1+rho_d(ir,3)*ux2+rho_d(ir,4)*ux3)
+         amag = SQRT(rho_d(ir,2)**2+rho_d(ir,3)**2+rho_d(ir,4)**2)
+         rhoout_d(ir,1) = 0.5d0*(rho_d(ir,1)+segni_d(ir)*amag)
+         rhoout_d(ir,2) = 0.5d0*(rho_d(ir,1)-segni_d(ir)*amag)
+      ENDDO
+      !
+   ELSE
+      !
+      !$acc parallel loop
+      DO ir = 1, nrxx 
+         segni_d(ir) = 1.0_DP
+         amag = SQRT(rho_d(ir,2)**2+rho_d(ir,3)**2+rho_d(ir,4)**2)
+         rhoout_d(ir,1) = 0.5d0*(rho_d(ir,1) + amag)
+         rhoout_d(ir,2) = 0.5d0*(rho_d(ir,1) - amag)
+      ENDDO
+      !
+   ENDIF
+   !
+   !$acc end data
+   !
+   RETURN
+   !
+END SUBROUTINE compute_rho_gpu

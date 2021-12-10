@@ -301,5 +301,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             }
         }
 
+        var dist_thr   -type REAL {
+            default { 6.D-4 }
+            info {
+                Threshold (in Bohr) for comparing inter-atomic distances
+                when reconstructing the missing elements of the response 
+                susceptibility in the post-processing step.
+            }
+        }
+
 }  
 }

@@ -120,7 +120,7 @@
           ALLOCATE( igtongl_d(ngm) )
           ALLOCATE( gl_d(ngm) )
        ENDIF  
-       !$acc enter data create( mill(3, ngm), g(3, ngm) ) 
+       !$acc enter data create( mill(1:3, 1:ngm), g(1:3, 1:ngm) ) 
        !
        RETURN 
        !

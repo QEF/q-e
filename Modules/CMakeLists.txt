@@ -140,6 +140,12 @@ set(src_modules_c
     stack.c)
 qe_add_library(qe_modules_c ${src_modules_c})
 
+if(TARGET gitrev)
+   add_dependencies(qe_modules gitrev)
+   target_compile_definitions(qe_modules PRIVATE HAVE_GITREV)
+   target_include_directories(qe_modules PRIVATE ${qe_BINARY_DIR})
+endif()
+
 target_link_libraries(qe_modules
     PRIVATE
         qe_modules_c
@@ -155,8 +161,8 @@ target_link_libraries(qe_modules
         qe_hdf5_fortran
         qe_upflib
         qe_fox
-        qe_utilx)
-
+        qe_utilx
+        qe_openacc_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_modules
         PRIVATE

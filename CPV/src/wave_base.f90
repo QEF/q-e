@@ -48,6 +48,7 @@
           INTERFACE converg_base
             MODULE PROCEDURE converg_base_gamma, converg_base_kp
           END INTERFACE
+          PUBLIC :: print_norm_square_difference
 
 !==----------------------------------------------==!
         CONTAINS
@@ -682,6 +683,31 @@
      wave_speed2 = ekinc
      RETURN
    END FUNCTION wave_speed2
+
+      subroutine print_norm_square_difference(c1,c2,ngw,nbnd, nam,&
+         ionode,comm )
+      use mp, only: mp_sum
+      implicit none
+      complex(dp), intent(in) :: c1(ngw,nbnd), c2(ngw,nbnd)
+      real(dp) :: x
+      logical, intent(in) :: ionode
+      integer, intent(in) :: ngw,nbnd,comm
+      character(len=*), intent(in) :: nam
+      integer :: i,ig
+      if (ionode) &
+           write (*,*) ' CHECKING NORM SQUARE DIFFERENCE OF ', trim(nam)
+       x=0.0_dp
+       do i =1,nbnd
+          do ig = 1, ngw
+                 x=x+( aimag(c1(ig,i))-aimag(c2(ig,i)))**2 &
+                   + ( real(c1(ig,i))-real(c2(ig,i)))**2
+          enddo
+       enddo
+       call mp_sum(x,comm)
+       if (ionode) &
+          write (*,*) ' :',  x
+
+      end subroutine
 
 
 !==----------------------------------------------==!

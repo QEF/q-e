@@ -23,7 +23,7 @@
 !     y  output matrix (m by n), the transpose of x
 !
         IMPLICIT NONE
-        INCLUDE 'laxlib_kinds.fh'
+        include 'laxlib_kinds.fh'
 
         INTEGER :: ldx, ldy, n, m, what
         REAL(DP) :: x(ldx, m), y(ldy, n)
@@ -151,7 +151,7 @@
 !
 
         IMPLICIT NONE
-        INCLUDE 'laxlib_kinds.fh'
+        include 'laxlib_kinds.fh'
 
 
         INTEGER :: ldx, ldy, n, m, what
@@ -280,7 +280,7 @@
 !     y  output matrix (m by n), the transpose of x
 !
         IMPLICIT NONE
-        INCLUDE 'laxlib_kinds.fh'
+        include 'laxlib_kinds.fh'
 
         INTEGER :: ldx, ldy, n, m, what
         REAL(SP) :: x(ldx, m), y(ldy, n)

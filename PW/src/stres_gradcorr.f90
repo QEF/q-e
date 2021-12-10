@@ -12,7 +12,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY: DP
-  USE xc_lib,           ONLY: xclib_dft_is, xclib_get_id, xc_gcx
+  USE xc_lib,           ONLY: xclib_dft_is, xclib_get_id, xc_gcx, xc_metagcx
   USE noncollin_module, ONLY: domag
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum

@@ -21,9 +21,8 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
   USE uspp,                 ONLY : nkb, vkb, deeq_d
-  USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE mp_pools,             ONLY : me_pool, root_pool
   USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -216,7 +215,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        CALL using_et(0) ! compute_deff : intent(in)
        !
        CALL dev_buf%lock_buffer( ps_d, nkb, ierrs(2) )
-       IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
+       IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
        !
        becpr_d => becp_d%r_d 
        !
@@ -259,7 +258,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        ! ... non diagonal contribution - derivative of the bessel function
        !------------------------------------
        CALL dev_buf%lock_buffer( dvkb_d, (/ npwx,nkb,4 /), ierrs(3) )
-       IF (ierrs(3) /= 0) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
+       IF (ierrs(3) /= 0) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', ABS(ierrs(3)))
        !
        CALL gen_us_dj_gpu( ik, dvkb_d(:,:,4) )
        IF ( lmaxkb > 0 ) THEN 
@@ -463,7 +462,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
           CALL dev_buf%lock_buffer( deff_d, (/ nhm,nhm,nat /), ierrs(3) )
           becpk_d => becp_d%k_d
        ENDIF
-       IF (ANY(ierrs /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
+       IF (ANY(ierrs /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', ABS(MAXVAL(ierrs)) )
        !
        CALL using_et(0)
        !

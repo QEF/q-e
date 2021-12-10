@@ -1095,7 +1095,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   attributes(DEVICE) :: auxk1_d, auxk2_d, aux_nc_d
   attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
 #endif
-  INTEGER :: ibnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
+  INTEGER :: ibnd, kbnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
   !
@@ -1115,10 +1115,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      ! calbec computes becp = <vkb_i|psi_j>
 !$acc data present(vkb(:,:))
 !$acc host_data use_device(vkb)
-     CALL calbec_gpu( npw, vkb, evc_d, becp_d )
+     CALL calbec_gpu( npw, vkb, evc_d(:,ibnd_start:ibnd_end), becp_d )
 !$acc end host_data
 !$acc end data
-     !
   ELSE
      CALL using_evc(0) 
      CALL using_becp_auto(2)
@@ -1188,10 +1187,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  DO is = 1, npol
                     DO ih = 1, nhnt
                        ikb = ofsbeta_d(na) + ih
-                       DO ibnd = ibnd_start, ibnd_end
-                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,ibnd)
+                       DO kbnd = 1, this_bgrp_nbnd 
+                          ibnd = ibnd_start + kbnd -1 
+                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,kbnd)
                           auxk2_d(ibnd,ih+(is-1)*nhnt)= wg_d(ibnd,ik) * &
-                                                        becp_d_nc_d(ikb,is,ibnd)
+                                                        becp_d_nc_d(ikb,is,kbnd)
                        END DO
                     END DO
                  END DO
@@ -1208,18 +1208,12 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
                        ikb = ofsbeta_d(na) + ih
-                       ibnd = ibnd_loc + ibnd_begin - 1
+                       ibnd = (ibnd_start -1) + ibnd_loc + ibnd_begin - 1
                        auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg_d(ibnd,ik)
                     END DO
                  END DO
-                 !
-                 ! NB: band parallelizazion has not been performed in this case because 
-                 !     bands were already distributed across R&G processors.
-                 !     Contribution to aux_gk is scaled by 1.d0/nbgrp so that the becsum
-                 !     summation across bgrps performed outside will gives the right value.
-                 !
                  CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                      1.0_dp/nbgrp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
+                      1.0_dp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
                       auxg_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
                  !
                  if (tqr) then
@@ -1233,7 +1227,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                    END DO
 
                    CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
-                        1.0_dp/nbgrp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
+                        1.0_dp, becp_d%r_d(ofsbeta(na)+1,1), nkb,    &
                         auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
                  end if
                  !
@@ -1242,10 +1236,11 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
                  becp_d_k_d => becp_d%k_d
                  !$cuf kernel do(2) <<<*,*>>>
                  DO ih = 1, nhnt
-                    DO ibnd = ibnd_start, ibnd_end
+                    DO kbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
+                       ibnd = ibnd_start + kbnd -1 
                        ikb = ofsbeta_d(na) + ih
-                       auxk1_d(ibnd,ih) = becp_d_k_d(ikb,ibnd) 
-                       auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,ibnd)
+                       auxk1_d(ibnd,ih) = becp_d_k_d(ikb,kbnd) 
+                       auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,kbnd)
                     END DO
                  END DO
                  !

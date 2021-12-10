@@ -22,9 +22,10 @@
      INTEGER, PARAMETER :: sgl = selected_real_kind(6,30)
      INTEGER, PARAMETER :: i4b = selected_int_kind(9)
      INTEGER, PARAMETER :: i8b = selected_int_kind(18)
-     INTEGER :: iverbosity = 0
-#if defined(__DEBUG)
-     iverbosity = 1
+#if defined(__DEBUG) 
+     INTEGER :: iverbosity = 1
+#else 
+     INTEGER :: iverbosity = 0 
 #endif
      !
      REAL(DP), ALLOCATABLE :: g2kin_d(:)

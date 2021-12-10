@@ -28,10 +28,9 @@ subroutine dvanqq
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft
-  use gvect, only : ngm, gg, g, mill, eigts1, eigts2, eigts3
-  use spin_orb, only : lspinorb
-  use scf, only : v, vltot
-  use noncollin_module, ONLY : noncolin, nspin_mag
+  USE gvect, ONLY : ngm, gg, g, mill, eigts1, eigts2, eigts3
+  USE scf, ONLY : v, vltot
+  USE noncollin_module, ONLY : noncolin, nspin_mag, lspinorb
   USE uspp, ONLY: okvan, ijtoh
   USE uspp_param, ONLY: upf, lmaxq, nh
 

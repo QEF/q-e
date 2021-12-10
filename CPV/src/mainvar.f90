@@ -5,6 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
 !
 !----------------------------------------------------------------------------
 MODULE cp_main_variables
@@ -27,7 +32,10 @@ MODULE cp_main_variables
   ! ...  G = reciprocal lattice vectors
   ! ...  R_I = ionic positions
   !
-  COMPLEX(DP), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
+  COMPLEX(DP), ALLOCATABLE  PINMEM :: eigr(:,:)        ! exp (i G   dot R_I)
+#if defined (__CUDA)
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: eigr_d(:,:)      ! exp (i G   dot R_I)
+#endif
   !
   ! ... structure factors (summed over atoms of the same kind)
   !
@@ -40,7 +48,7 @@ MODULE cp_main_variables
   ! ... indexes, positions, and structure factors for the box grid
   !
   REAL(DP), ALLOCATABLE :: taub(:,:)
-  COMPLEX(DP), ALLOCATABLE :: eigrb(:,:)
+  COMPLEX(DP), ALLOCATABLE PINMEM :: eigrb(:,:)
   INTEGER,     ALLOCATABLE :: irb(:,:)
   INTEGER,     ALLOCATABLE :: iabox(:)
   INTEGER :: nabox
@@ -54,11 +62,12 @@ MODULE cp_main_variables
   !
   REAL(DP), ALLOCATABLE :: bephi(:,:)      ! distributed (orhto group)
   REAL(DP), ALLOCATABLE :: becp_bgrp(:,:)  ! distributed becp (band group)
-  REAL(DP), ALLOCATABLE :: bec_bgrp(:,:)  ! distributed bec (band group)
+  REAL(DP), ALLOCATABLE PINMEM :: bec_bgrp(:,:)  ! distributed bec (band group)
   REAL(DP), ALLOCATABLE :: bec_d(:,:)  ! distributed bec (band group)
-  REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
-  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
+  REAL(DP), ALLOCATABLE PINMEM :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
+  REAL(DP), ALLOCATABLE PINMEM :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
 #if defined (__CUDA)
+  REAL(DP), ALLOCATABLE, DEVICE :: dbec_d(:,:,:,:)    ! derivative of bec distributed(ortho group) 
   ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, bec_d
 #endif
   !
@@ -109,6 +118,14 @@ MODULE cp_main_variables
                              ! for the present run
   INTEGER :: iprint_stdout=1 ! define how often CP writes verbose information to stdout
   !
+  ! working buffers
+  !
+#if defined (__CUDA)
+  REAL(DP), ALLOCATABLE, DEVICE :: nlsm1_wrk_d(:,:)          ! working buffer for nlsm1 function
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: caldbec_wrk_d(:,:,:,:) ! working buffer for caldbec_bgrp function
+  REAL(DP),    ALLOCATABLE, DEVICE :: caldbec_dwrk_d(:,:)    ! working buffer for caldbec_bgrp function
+#endif
+  !
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -145,6 +162,11 @@ MODULE cp_main_variables
       ALLOCATE( eigr( ngw, nat ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate eigr ', ierr )
+#if defined (__CUDA)
+      ALLOCATE( eigr_d( ngw, nat ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate eigr_d ', ierr )
+#endif
       ALLOCATE( sfac( ngs, nsp ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate sfac ', ierr )
@@ -278,11 +300,39 @@ MODULE cp_main_variables
       ELSE
         ALLOCATE( dbec( 1, 1, 1, 1 ) )
       END IF
+#if defined (__CUDA)
+      IF ( tpre ) THEN
+        ALLOCATE( dbec_d( nhsa, 2*nrcx, 3, 3 ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' allocate_mainvar ', ' unable to allocate dbec_d ', ierr )
+      ELSE
+        ALLOCATE( dbec_d( 1, 1, 1, 1 ) )
+      END IF
+#endif
 
       gzero =  (gstart == 2)
       !
       CALL wave_descriptor_init( wfill, ngw, ngw_g, nupdwn,  nupdwn, &
             1, 1, nspin, 'gamma', gzero )
+      !
+      ! allocating working buffers
+      !
+#if defined (__CUDA)
+      ALLOCATE( nlsm1_wrk_d( nhsa, nbspx_bgrp ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate nlsm1_wrk_d ', ierr )
+      IF ( tpre ) THEN
+        ALLOCATE( caldbec_wrk_d( ngw, nhsa, 3, 3 ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' allocate_mainvar ', ' unable to allocate caldbec_wrk_d ', ierr )
+        ALLOCATE( caldbec_dwrk_d( nhsa, nbspx_bgrp ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' allocate_mainvar ', ' unable to allocate caldbec_wrk_d ', ierr )
+      ELSE
+        ALLOCATE( caldbec_wrk_d( 1, 1, 1, 1 ) )
+        ALLOCATE( caldbec_dwrk_d( 1, 1 ) )
+      END IF
+#endif
       !
       RETURN
       !
@@ -318,6 +368,14 @@ MODULE cp_main_variables
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
       IF( ALLOCATED( taub ) )    DEALLOCATE( taub )
       IF( ALLOCATED( idesc ) )  DEALLOCATE( idesc )
+      !
+#if defined (__CUDA)
+      IF( ALLOCATED( eigr_d ) )    DEALLOCATE( eigr_d )
+      IF( ALLOCATED( dbec_d ) )    DEALLOCATE( dbec_d )
+      IF( ALLOCATED( nlsm1_wrk_d ) )  DEALLOCATE( nlsm1_wrk_d )
+      IF( ALLOCATED( caldbec_wrk_d ) )  DEALLOCATE( caldbec_wrk_d )
+      IF( ALLOCATED( caldbec_dwrk_d ) )  DEALLOCATE( caldbec_dwrk_d )
+#endif
       !
       RETURN
       !

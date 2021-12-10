@@ -36,6 +36,7 @@ SUBROUTINE c_bands( iter )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE uspp_init,            ONLY : init_us_2
+  USE device_fbuff_m,       ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -51,6 +52,8 @@ SUBROUTINE c_bands( iter )
   ! ik_: k-point already done in a previous run
   LOGICAL :: exst
   LOGICAL,EXTERNAL :: rmm_use_davidson, rmm_use_paro
+  !
+  INTEGER :: ierr
   !
   !
   CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
@@ -155,6 +158,9 @@ SUBROUTINE c_bands( iter )
         ENDIF
      ENDIF
      !
+     CALL dev_buf%reinit( ierr )
+     IF ( ierr .ne. 0 ) CALL infomsg( 'c_bands', 'Cannot reset GPU buffers! Some buffers still locked.' )
+     !
   ENDDO k_loop
   !
   CALL mp_sum( avg_iter, inter_pool_comm )
@@ -221,7 +227,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE becmod_subs_gpum,     ONLY : using_becp_auto
   IMPLICIT NONE
   !
-  INCLUDE 'ks_solver_interfaces.fh' 
+  ! please do not capitalize (FORD rules)
+  include 'ks_solver_interfaces.fh'
   !  
   INTEGER, INTENT(IN) :: iter
   !! iteration index

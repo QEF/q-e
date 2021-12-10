@@ -15,9 +15,8 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   !! * evcel must contain the wavefunctions from previous iteration;
   !! * spin polarized systems supported only with fixed occupations.
   !
-  USE noncollin_module,     ONLY : noncolin, npol
   USE kinds,                ONLY : DP
-  USE spin_orb,             ONLY : lspinorb
+  USE noncollin_module,     ONLY : noncolin, npol, lspinorb
   USE wvfct,                ONLY : npwx, nbnd, ik => current_k
   USE ldaU,                 ONLY : lda_plus_u
   USE lsda_mod,             ONLY : current_spin, nspin

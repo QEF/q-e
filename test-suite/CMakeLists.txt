@@ -53,7 +53,9 @@ endfunction()
 if(NOT QE_ENABLE_LIBXC)
   list(APPEND CHECK_SKIP_MESSAGE "libxc needed for this functional")
 endif()
-
+if (QE_ENABLE_CUDA) 
+  list(APPEND CHECK_SKIP_MESSAGE "not ported to GPU")
+endif()
 # prepare jobconfig and userconfig for testcode.py
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
                  ${CMAKE_CURRENT_BINARY_DIR}/jobconfig SYMBOLIC)

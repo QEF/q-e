@@ -1762,8 +1762,6 @@
     !! Real space WS index
     INTEGER :: iw
     !! Wannier function index
-    INTEGER :: iw2
-    !! Wannier function index
     INTEGER :: irn
     !! Combined WS and atom index
     INTEGER :: ir_start
@@ -1870,8 +1868,8 @@
           na = MOD(irn - 1, nat) + 1
           !
           DO iw = 1, dims
-            CALL ZAXPY(nrr_k * 3, cfac(iw, na, ir), epmatwp(iw, iw2, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
-                 eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
+            CALL ZAXPY(nrr_k * 3, cfac(iw, na, ir), epmatwp(iw, :, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
+                 eptmp(iw, :, :, 3 * (na - 1) + 1:3 * na), 1)
           ENDDO
         ENDDO
       ELSE ! use_ws
@@ -2245,7 +2243,7 @@
     !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise.
     INTEGER, INTENT(in) :: irvec_g(3, nrr_g)
     !! Coordinates of WS points
-    INTEGER, INTENT(in) :: ndegen_g(nrr_g, nat, dims)
+    INTEGER, INTENT(in) :: ndegen_g(dims, nrr_g, nat)
     !! Number of degeneracy of WS points
     INTEGER, INTENT(in) :: nbnd
     !! Number of bands
@@ -2267,8 +2265,6 @@
     !! Ending ir for this pool
     INTEGER :: iw
     !! Counter on Wannier functions
-    INTEGER :: iw2
-    !! Counter on Wannier functions
     INTEGER :: iunepmatwp2
     !! Return the file unit
     INTEGER :: na
@@ -2289,7 +2285,7 @@
     !
     REAL(KIND = DP) :: rdotk
     !! Exponential for the FT
-    COMPLEX(KIND = DP) :: cfac(nat, nrr_g, dims)
+    COMPLEX(KIND = DP) :: cfac(nrr_g, dims)
     !! Factor for the FT
     COMPLEX(KIND = DP), ALLOCATABLE :: epmatw(:, :, :)
     !! El-ph matrix elements
@@ -2313,17 +2309,18 @@
     IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_OPEN', 1)
 #endif
     !
-    cfac(:, :, :) = czero
+    cfac(:, :) = czero
     !
     IF (use_ws) THEN
+      na = (imode - 1) / 3 + 1
+      !
       DO ir = ir_start, ir_stop
         !
         ! note xxq is assumed to be already in cryst coord
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
-        na = (imode - 1) / 3 + 1
         DO iw = 1, dims
-          IF (ndegen_g(ir, na, iw) > 0) &
-            cfac(na, ir, iw) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, na, iw))
+          IF (ndegen_g(iw, ir, na) > 0) &
+            cfac(ir, iw) = EXP(ci * rdotk) / DBLE(ndegen_g(iw, ir, na))
         ENDDO
       ENDDO
     ELSE
@@ -2331,7 +2328,7 @@
         !
         ! note xxq is assumed to be already in cryst coord
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
-        cfac(1, ir, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1))
+        cfac(ir, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(1, ir, 1))
       ENDDO
     ENDIF
     !
@@ -2376,12 +2373,11 @@
 #endif
       !
       IF (use_ws) THEN
-        na = (imode - 1) / 3 + 1
         DO iw = 1, dims
-          CALL ZAXPY(nbnd * nrr_k, cfac(na, ir, iw), epmatw(iw, :, :), 1, epmatf(iw, :, :), 1)
+          CALL ZAXPY(nbnd * nrr_k, cfac(ir, iw), epmatw(iw, :, :), 1, epmatf(iw, :, :), 1)
         ENDDO
       ELSE
-        CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1), epmatw, 1, epmatf, 1)
+        CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(ir, 1), epmatw, 1, epmatf, 1)
       ENDIF
       !
     ENDDO

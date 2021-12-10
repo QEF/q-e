@@ -55,7 +55,7 @@ PROGRAM do_ppacf
   USE funct,                ONLY : dft_is_nonlocc, nlc, enforce_input_dft   
   USE xc_lib,               ONLY : xclib_get_id, xclib_set_auxiliary_flags,    &
                                    xclib_set_exx_fraction, xclib_dft_is_libxc, &
-                                   xclib_set_threshold, xc_gcx
+                                   xclib_set_threshold, xc, xc_gcx
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
   USE vdW_DF,               ONLY : Nqs, vdW_DF_potential, vdW_DF_energy, vdW_DF_analysis

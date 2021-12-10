@@ -42,13 +42,13 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: vrrx(:,:), vsrx(:,:), vssx(:,:)
-  REAL(DP), ALLOCATABLE :: vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:) 
+  REAL(DP), ALLOCATABLE :: vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:)
   !
 #if defined(__LIBXC)
   INTEGER :: fkind=-10
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
-  REAL(DP), ALLOCATABLE :: v2rho2_x(:), v2rhosigma_x(:), v2sigma2_x(:) 
-  REAL(DP), ALLOCATABLE :: v2rho2_c(:), v2rhosigma_c(:), v2sigma2_c(:) 
+  REAL(DP), ALLOCATABLE :: v2rho2_x(:), v2rhosigma_x(:), v2sigma2_x(:)
+  REAL(DP), ALLOCATABLE :: v2rho2_c(:), v2rhosigma_c(:), v2sigma2_c(:)
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
 #else
@@ -83,7 +83,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     CASE( 1 )
       !
       DO k = 1, length
-        rho_lxc(k) = r_in(k,1) 
+        rho_lxc(k) = r_in(k,1)
         sigma(k) = g_in(k,1,1)**2 + g_in(k,2,1)**2 + g_in(k,3,1)**2
       ENDDO
       !
@@ -130,7 +130,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
               v2sigma2_c(length_dlxc*sp) )
     ! ... DERIVATIVE FOR CORRELATION
     v2rho2_c = 0._DP ;  v2rhosigma_c = 0._DP ;  v2sigma2_c = 0._DP
-    IF (igcc /= 0) THEN 
+    IF (igcc /= 0) THEN
       fkind = xc_f03_func_info_get_kind( xc_info(4) )
       CALL xc_f03_func_set_dens_threshold( xc_func(4), epsr )
       CALL xc_f03_gga_fxc( xc_func(4), lengthxc, rho_lxc(1), sigma(1), v2rho2_c(1), &
@@ -153,7 +153,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        IF (.NOT. ALLOCATED(sigma)) THEN
          ALLOCATE( sigma(length) )
          sigma(:) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2
-       ENDIF  
+       ENDIF
        !
        CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), &
                          vrrc(:,1), vsrc(:,1), vssc )
@@ -176,12 +176,12 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
         dvxc_rr(k,1,1) = e2 * (vrrx(k,1) + vrrc(k,1))
         dvxc_sr(k,1,1) = e2 * (vsrx(k,1) + vsrc(k,1))
         dvxc_ss(k,1,1) = e2 * (vssx(k,1) + vssc(k)  )
-      ENDDO  
+      ENDDO
       !
       DEALLOCATE( vrrx, vsrx, vssx )
       DEALLOCATE( vrrc, vsrc, vssc )
       !
-    ENDIF  
+    ENDIF
     !
     IF ( is_libxc(3) ) THEN
       DO k = 1, length
@@ -189,7 +189,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
         IF ( rho_lxc(k)>rho_threshold_lda ) THEN
           dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(k)
           dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(k)*2._DP
-        ENDIF  
+        ENDIF
         dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(k)*4._DP
       ENDDO
     ENDIF
@@ -199,7 +199,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
         IF ( rho_lxc(k)>rho_threshold_lda ) THEN
           dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(k)
           dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(k)*2._DP
-        ENDIF  
+        ENDIF
         dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(k)*4._DP
       ENDDO
     ENDIF
@@ -230,23 +230,23 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
         dvxc_ss(k,2,1) = e2*vssc(k)
         dvxc_ss(k,2,2) = e2*(vssx(k,2) + vssc(k))
         !
-      ENDDO 
+      ENDDO
       !
       DEALLOCATE( vrrx, vsrx, vssx )
       DEALLOCATE( vrrc, vsrc, vssc )
       DEALLOCATE( vrzc )
       !
     ENDIF
-    !   
-    IF ( is_libxc(3) ) THEN   
-      !   
+    !
+    IF ( is_libxc(3) ) THEN
+      !
       DO k = 1, length
         thr_up_cond = r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg
         thr_dw_cond = r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))>epsg
-        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE 
+        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE
         dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(3*k-2)
         dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(6*k-5)*4._DP
-        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_x(3*k) 
+        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_x(3*k)
         dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_x(6*k)*4._DP
         dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_x(3*k-1)
         dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(6*k-5)*2._DP
@@ -260,30 +260,30 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
     IF ( is_libxc(4) ) THEN
       !
-      DO k = 1, length 
+      DO k = 1, length
         thr_up_cond = r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg
         thr_dw_cond = r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))>epsg
-        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE 
-        dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(3*k-2)   
-        dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_c(3*k-1)   
-        dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_c(3*k-1)   
-        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_c(3*k)   
-        dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(6*k-5)*2.d0   
-        dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(6*k)*4.d0   
-        dvxc_sr(k,1,2) = dvxc_sr(k,1,2) + e2 * v2rhosigma_c(6*k-4)   
-        dvxc_sr(k,2,1) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k-1)   
-        dvxc_ss(k,1,2) = dvxc_ss(k,1,2) + e2 * v2sigma2_c(6*k-2)   
-        dvxc_ss(k,2,1) = dvxc_ss(k,2,1) + e2 * v2sigma2_c(6*k-2)   
-        dvxc_sr(k,2,2) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k)*2.d0   
-        dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_c(6*k)*4.d0   
-      ENDDO   
-      !   
-      DEALLOCATE( v2rho2_c, v2rhosigma_c, v2sigma2_c )   
-      !   
+        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE
+        dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(3*k-2)
+        dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_c(3*k-1)
+        dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_c(3*k-1)
+        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_c(3*k)
+        dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(6*k-5)*2.d0
+        dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(6*k)*4.d0
+        dvxc_sr(k,1,2) = dvxc_sr(k,1,2) + e2 * v2rhosigma_c(6*k-4)
+        dvxc_sr(k,2,1) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k-1)
+        dvxc_ss(k,1,2) = dvxc_ss(k,1,2) + e2 * v2sigma2_c(6*k-2)
+        dvxc_ss(k,2,1) = dvxc_ss(k,2,1) + e2 * v2sigma2_c(6*k-2)
+        dvxc_sr(k,2,2) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k)*2.d0
+        dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_c(6*k)*4.d0
+      ENDDO
+      !
+      DEALLOCATE( v2rho2_c, v2rhosigma_c, v2sigma2_c )
+      !
     ENDIF
     !
     IF (ANY(is_libxc(3:4))) DEALLOCATE( rho_lxc )
-    !   
+    !
   ENDIF
   IF ( ALLOCATED(sigma) ) DEALLOCATE( sigma )
   !
@@ -303,7 +303,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
      !
      dvxc_rr(:,1,1) = e2*(vrrx(:,1) + vrrc(:,1))
      dvxc_sr(:,1,1) = e2*(vsrx(:,1) + vsrc(:,1))
-     dvxc_ss(:,1,1) = e2*(vssx(:,1) + vssc(:)  )     
+     dvxc_ss(:,1,1) = e2*(vssx(:,1) + vssc(:)  )
      !
   CASE( 2 )
      !
@@ -323,14 +323,14 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
            dvxc_rr(k,2,2) = e2*(vrrx(k,2) + vrrc(k,2) - vrzc(k,2)*(1.d0 + zeta)/rht)
         ENDIF
         !
-        dvxc_sr(k,1,1) = e2 * (vsrx(k,1) + vsrc(k,1))   
-        dvxc_sr(k,1,2) = e2 * vsrc(k,1)   
-        dvxc_sr(k,2,1) = e2 * vsrc(k,2)   
-        dvxc_sr(k,2,2) = e2 * (vsrx(k,2) + vsrc(k,2))   
+        dvxc_sr(k,1,1) = e2 * (vsrx(k,1) + vsrc(k,1))
+        dvxc_sr(k,1,2) = e2 * vsrc(k,1)
+        dvxc_sr(k,2,1) = e2 * vsrc(k,2)
+        dvxc_sr(k,2,2) = e2 * (vsrx(k,2) + vsrc(k,2))
         !
-        dvxc_ss(k,1,1) = e2 * (vssx(k,1) + vssc(k))   
-        dvxc_ss(k,1,2) = e2 * vssc(k)   
-        dvxc_ss(k,2,1) = e2 * vssc(k)   
+        dvxc_ss(k,1,1) = e2 * (vssx(k,1) + vssc(k)) 
+        dvxc_ss(k,1,2) = e2 * vssc(k)
+        dvxc_ss(k,2,1) = e2 * vssc(k)
         dvxc_ss(k,2,2) = e2 * (vssx(k,2) + vssc(k))
      ENDDO
      !
