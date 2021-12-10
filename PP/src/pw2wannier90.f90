@@ -64,7 +64,7 @@ PROGRAM pw2wannier90
    ! begin change Vitale
        scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
    ! end change Vitale
-       wannier_plot, wannier_plot_list, split_evc_file, gamma_trick
+       wannier_plot, wannier_plot_list, gamma_trick, print_rho
   !
   ! initialise environment
   !
@@ -116,8 +116,8 @@ PROGRAM pw2wannier90
      scdm_sigma = 1.0_dp
      wannier_plot = .false.
      wannier_plot_list = 'all'
-     split_evc_file = .false.
      gamma_trick = .false.
+     print_rho = .false.
      !
      !     reading the namelist inputpp
      !
@@ -160,8 +160,8 @@ PROGRAM pw2wannier90
   CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
   CALL mp_bcast(wannier_plot,ionode_id, world_comm)
   CALL mp_bcast(wannier_plot_list,ionode_id, world_comm)
-  CALL mp_bcast(split_evc_file,ionode_id, world_comm) 
-  CALL mp_bcast(gamma_trick,ionode_id, world_comm) 
+  CALL mp_bcast(gamma_trick,ionode_id, world_comm)
+  CALL mp_bcast(print_rho,ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -225,11 +225,9 @@ PROGRAM pw2wannier90
   WRITE(stdout,*) ' Wannier mode is: ',wan_mode
   WRITE(stdout,*)
   !
-  IF ( wan_mode .ne. 'wannier2odd' ) THEN
-    IF ( wannier_plot ) THEN
-      WRITE(stdout,*) ' Warning: wannier_plot IGNORED: supported only by the wannier2odd mode'
-      WRITE(stdout,*)
-    ENDIF
+  IF ( wannier_plot .and. wan_mode .ne. 'wannier2odd' ) THEN
+     WRITE(stdout,*) ' Warning: wannier_plot IGNORED: supported only by the wannier2odd mode'
+     WRITE(stdout,*)
   ENDIF
   !
   IF(wan_mode=='standalone') THEN
@@ -432,7 +430,7 @@ PROGRAM pw2wannier90
      !
      IF ( wannier_plot ) CALL plot_wann( wann_to_plot, iknum, n_wannier )
      !
-     IF ( ionode ) WRITE( stdout, *  )
+     IF ( ionode ) WRITE(stdout,*)
      CALL print_clock( 'init_pw2wan' )
      CALL print_clock( 'wannier2odd' )
      IF ( wannier_plot ) CALL print_clock( 'plot_wann' )
@@ -446,11 +444,13 @@ PROGRAM pw2wannier90
   IF ( wan_mode == 'ks2odd' ) THEN
      !
      CALL openfil_pp
+     CALL mp_grid_ks2odd
      !
-     ALLOCATE( kpt_latt(3,iknum) )
-     kpt_latt(:,1:iknum) = xk(:,1:iknum)
-     CALL cryst_to_cart( iknum, kpt_latt, at, -1 )
-     CALL find_mp_grid( )
+     IF ( nspin == 2 ) THEN
+         WRITE( stdout, * )
+         WRITE( stdout, * ) ' WARNING: case nupdwn(1) != nupdwn(2) not implemented yet!'
+         WRITE( stdout, * )
+     ENDIF
      !
      CALL wan2odd( ks_only=.true. )
      !
@@ -5500,3 +5500,33 @@ SUBROUTINE get_wannier_to_plot
   !
   ! 
 END SUBROUTINE get_wannier_to_plot
+!
+!
+!----------------------------------------------------------------------------
+SUBROUTINE mp_grid_ks2odd( )
+   !---------------------------------------------------------------------------------
+   !
+   ! ...  This routine generate mp_grid for the ks2odd mode.
+   ! ...  It is necessary to momentarily change the definition of
+   ! ...  iknum in order to properly define mp_grid.
+   !
+   USE wannier,           ONLY : kpt_latt, iknum
+   USE lsda_mod,          ONLY : nspin
+   USE cell_base,         ONLY : at
+   USE klist,             ONLY : xk
+   !
+   !
+   IMPLICIT NONE
+   !
+   LOGICAL :: ks_only
+   !
+   !
+   iknum = iknum / nspin         ! momentarily change the value of iknum
+   ALLOCATE( kpt_latt(3,iknum) )
+   kpt_latt(:,1:iknum) = xk(:,1:iknum)
+   CALL cryst_to_cart( iknum, kpt_latt, at, -1 )
+   CALL find_mp_grid( )
+   iknum = iknum * nspin         ! restore the initial value of iknum
+   !
+   !
+ END SUBROUTINE mp_grid_ks2odd

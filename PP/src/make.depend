@@ -352,6 +352,12 @@ local_dos_mag.o : ../../PW/src/pwcom.o
 local_dos_mag.o : ../../PW/src/scf_mod.o
 local_dos_mag.o : ../../UtilXlib/mp.o
 local_dos_mag.o : ../../upflib/uspp.o
+merge_evc.o : ../../Modules/environment.o
+merge_evc.o : ../../Modules/io_global.o
+merge_evc.o : ../../Modules/kind.o
+merge_evc.o : ../../Modules/mp_global.o
+merge_evc.o : ../../UtilXlib/clocks_handler.o
+merge_evc.o : ../../UtilXlib/error_handler.o
 molecularpdos.o : ../../Modules/constants.o
 molecularpdos.o : ../../Modules/environment.o
 molecularpdos.o : ../../Modules/io_global.o

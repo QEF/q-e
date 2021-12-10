@@ -22,6 +22,7 @@ MODULE wannier2odd
   !
   PUBLIC :: wan2odd
   !
+  INTEGER :: nwordwfcx                                 ! record length for supercell wfcs
   COMPLEX(DP), ALLOCATABLE :: evcx(:,:)
   COMPLEX(DP), ALLOCATABLE :: evcx_dis(:,:)
   COMPLEX(DP), ALLOCATABLE :: evcw(:)
@@ -78,8 +79,8 @@ MODULE wannier2odd
                                     gamma_only_x, npwxcp, ngmcp, mill_cp, ig_l2g_cp, &
                                     iunwann, nwordwann, check_fft
     USE cp_files,            ONLY : write_wannier_cp
-    USE wannier,             ONLY : seedname, ikstart, wannier_plot, split_evc_file, &
-                                    gamma_trick, wan_mode, iknum, mp_grid
+    USE wannier,             ONLY : seedname, ikstart, wannier_plot, gamma_trick, &
+                                    wan_mode, iknum, mp_grid, print_rho
     USE read_wannier
     !
     !
@@ -92,33 +93,36 @@ MODULE wannier2odd
     INTEGER :: i, j, k, ir, n, counter
     INTEGER :: num_inc
     INTEGER :: npw
-    INTEGER :: nwordwfcx                            ! record length for supercell wfcs
     INTEGER :: iunwfcx = 24                         ! unit for supercell wfc file
     INTEGER :: io_level = 1
-    LOGICAL :: exst, opnd
-    LOGICAL :: calc_rho=.true.
+    INTEGER :: is, iss
     REAL(DP) :: kvec(3), rvec(3)
     REAL(DP) :: dot_prod
-    COMPLEX(DP) :: phase
-    LOGICAL :: wf_is_cmplx
     REAL(DP) :: ratio
+    COMPLEX(DP) :: phase
+    LOGICAL :: exst, opnd
+    LOGICAL :: calc_rho=.true.
+    LOGICAL :: wf_is_cmplx
     !
     !
     CALL start_clock( TRIM(wan_mode) )
+    !
+    ! ... for spin-polarized calculations we deal with one spin-channel at the
+    ! ... time. The total density cannot be calculated
+    ! 
+    IF ( nspin == 2 .and. .not. ks_only ) calc_rho = .false.
     !
     IF ( .not. ks_only ) THEN
       !
       CALL read_wannier_chk( )
       !
-      ! ... if all the occupied states are in, we calculate also
-      ! ... the total density
+      ! ... if any non-occupied state is included the density is not calculated
       !
-      IF ( ANY(excluded_band(1:nelec/2)) ) calc_rho = .false.
+      IF ( calc_rho .and. ANY(excluded_band(1:nelec/2)) ) calc_rho = .false.
       !
     ELSE
       !
       num_bands = nbnd
-      num_wann = nbnd
       num_kpts = iknum
       kgrid(:) = mp_grid(:)
       !
@@ -128,249 +132,249 @@ MODULE wannier2odd
     IF ( gamma_trick ) WRITE( stdout, 10 ) 
     CALL setup_scell_fft( )
     !
-    nwordwfcx = num_bands*npwxcp*npol
-    nwordwann = num_wann*npwxcp*npol
-    !
-    CALL dealloc_w2odd( )
-    ALLOCATE( evcx(npwxcp*npol,num_bands) )
-    ALLOCATE( evcw(npwxcp*npol) )
-    ALLOCATE( ewan(npwxcp*npol,num_wann) )
-    ALLOCATE( psicx(dfftcp%nnr) )
-    !
-    IF ( calc_rho ) THEN
-      !
-      ALLOCATE( rhor(dfftcp%nnr) )
-      ALLOCATE( rhog(ngmcp,nspin) )
-      rhor(:) = ( 0.D0, 0.D0 )
-      !
-      ALLOCATE( rhow(dfftcp%nnr) )
-      ALLOCATE( rhowg(ngmcp,nspin) )
-      rhow(:) = ( 0.D0, 0.D0 )
-      !
-    ENDIF
+    CALL alloc_w2odd( ks_only, calc_rho )
     !
     IF ( .not. ks_only .and. have_disentangled ) &
       ALLOCATE( evcx_dis(npwxcp*npol,MAXVAL(ndimwin)) )
     !
-    !
-    ! ... open buffer for direct-access to the extended wavefunctions
-    !
-    CALL open_buffer( iunwfcx, 'wfcx', nwordwfcx, io_level, exst )
-    !
-    ! ... loop to read the primitive cell wavefunctions and 
-    ! ... extend them to the supercell
-    !
-    DO ik = 1, num_kpts
-      !
-      ikevc = ik + ikstart - 1
-      CALL davcio( evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-      npw = ngk(ik)
-      kvec(:) = xk(:,ik)
-      !
-      counter = 0
-      !
-      DO ibnd = 1, nbnd
-        !
-        IF ( .not. ks_only .and. excluded_band(ibnd) ) CYCLE
-        !
-        counter = counter + 1
-        !
-        psic(:) = ( 0.D0, 0.D0 )
-        psicx(:) = ( 0.D0, 0.D0 )
-        psic( dffts%nl(igk_k(1:npw,ik)) ) = evc(1:npw,ibnd)
-        IF( gamma_only ) psic( dffts%nlm(igk_k(1:npw,ik)) ) = CONJG(evc(1:npw,ibnd))
-        CALL invfft( 'Wave', psic, dffts )
-        !
-        ! ... here we extend the wfc to the whole supercell
-        !
-        ! ... NB: the routine extend_wfc applies also the phase factor
-        ! ...     e^(ikr) so the output wfc (psicx) is a proper Bloch
-        ! ...     function and not just its periodic part
-        !
-        CALL extend_wfc( psic, psicx, dfftcp, kvec )
-        !
-        ! ... calculate the total density in the supercell
-        ! NB: for some reason the weights wg sum up to 2 (and not to 1!),
-        !     maybe it includes the spin (?). The result is that, although
-        !     here we are considering only the psicx of one spin channel,
-        !     the charge corresponding to this density is total and so it 
-        !     matches directly nelec (and not simply nelup)
-        !
-        IF ( calc_rho ) &
-          rhor(:) = rhor(:) + ( DBLE( psicx(:) )**2 + &
-                               AIMAG( psicx(:) )**2 ) * wg(ibnd,ik) / omega
-        !
-        CALL fwfft( 'Wave', psicx, dfftcp )
-        evcx(1:npwxcp,counter) = psicx( dfftcp%nl(1:npwxcp) )
-        !
-      ENDDO ! ibnd
-      !
-      IF ( counter .ne. num_bands ) &
-        CALL errore( 'wan2odd', 'wrong number of included bands', counter )
-      !
-      ! ... save the extended wavefunctions into the buffer
-      !
-      CALL save_buffer( evcx, nwordwfcx, iunwfcx, ik )
-      !
-    ENDDO ! ik
-    !
-    !
-    IF ( calc_rho ) THEN
-      !
-      rhog(:,:) = ( 0.D0, 0.D0 )
-      CALL fwfft( 'Rho', rhor, dfftcp )
-      rhog(1:ngmcp,1) = rhor( dfftcp%nl(1:ngmcp) )
-      !
-      CALL check_rho( rhog )
-      !
+    IF ( .not. ks_only ) THEN
+      ! ... in the case of Wannier functions we always deal with
+      ! ... one spin component at the time
+      iss = 1
+    ELSE
+      iss = nspin
     ENDIF
     !
-    !
-    IF ( .not. ks_only ) THEN
+    DO is = 1, iss
       !
-      ! ... here the Wannier functions are realized
-      ! w_Rn(G) = sum_k e^(-ikR) sum_m U_mn(k)*psi_km(G) / Nk^(1/2)
+      ! ... open buffer for direct-access to the extended wavefunctions
       !
-      CALL open_buffer( iunwann, 'wann', nwordwann, io_level, exst )
+      CALL open_buffer( iunwfcx, 'wfcx', nwordwfcx, io_level, exst )
       !
-      ir = 0
+      ! ... loop to read the primitive cell wavefunctions and 
+      ! ... extend them to the supercell
       !
-      DO i = 1, kgrid(1)
-        DO j = 1, kgrid(2)
-          DO k = 1, kgrid(3)
-            !
-            ir = ir + 1
-            ewan(:,:) = ( 0.D0, 0.D0 )
-            !
-            rvec(:) = (/ i-1, j-1, k-1 /)
-            CALL cryst_to_cart( 1, rvec, at, 1 )
-            !
-            DO iw = 1, num_wann
-              DO ik = 1, num_kpts
-                !
-                ! ... phase factor e^(-ikR)
-                !
-                kvec(:) = xk(:,ik)
-                dot_prod = tpi * SUM( kvec(:) * rvec(:) )
-                phase = CMPLX( COS(dot_prod), -SIN(dot_prod), KIND=DP )
-                !
-                ! ... read the supercell-extended Bloch functions
-                !
-                evcx(:,:) = ( 0.D0, 0.D0 )
-                CALL get_buffer( evcx, nwordwfcx, iunwfcx, ik )
-                !
-                ! ... selecting disentangled bands
-                !
-                IF ( have_disentangled ) THEN
-                  !
-                  num_inc = ndimwin(ik)
-                  counter = 0
-                  !
-                  DO n = 1, num_bands
-                    IF ( lwindow(n,ik) ) THEN
-                      counter = counter + 1
-                      evcx_dis(:,counter) = evcx(:,n)
-                    ENDIF
-                  ENDDO
-                  !
-                  IF ( counter .ne. num_inc ) &
-                    CALL errore( 'wan2odd', 'Wrong number of included bands &
-                                             in disentanglement', counter )
-                  !
-                ENDIF
-                !
-                ! ... calculate the Wannier function (ir,iw)
-                !
-                DO ip = 1, num_wann
-                  !
-                  ! ... applies disentanglement optimal matrix
-                  !
-                  evcw(:) = ( 0.D0, 0.D0 )
-                  IF ( have_disentangled ) THEN
-                    DO n = 1, num_inc
-                      evcw(:) = evcw(:) + u_mat_opt(n,ip,ik) * evcx_dis(:,n)
-                    ENDDO
-                  ELSE
-                    evcw(:) = evcx(:,ip)
-                  ENDIF
-                  !
-                  ewan(:,iw) = ewan(:,iw) + phase * u_mat(ip,iw,ik) * evcw(:) / SQRT(DBLE(num_kpts)) 
-                  !
-                ENDDO
-                !
-              ENDDO ! ik
-              !
-!              CALL check_complex_wfc( ewan(:,iw), wf_is_cmplx, ratio )
-!              !
-!              ! ... if gamma_only_x=.true. the Wannier functions must be real;
-!              ! ... if one of the realized WFs is found to be complex then the
-!              ! ... code will restart without using the gamma-trick (complex wfc)
-!              ! 
-!              IF ( gamma_only_x .and. wf_is_cmplx ) THEN
-!                !
-!                WRITE( stdout, 20 ) ir, iw
-!                WRITE( stdout, 21 ) ratio
-!                CALL errore( 'wan2odd', 'complex Wannier functions are incompatible with gamma_trick=.true.', 1 )
-!                !
-!              ENDIF
-              !
-              ! ... recalculate the total density from the WFs
-              !
-              IF ( calc_rho ) THEN
-                !
-                psicx(:) = ( 0.D0, 0.D0 )
-                psicx( dfftcp%nl(1:npwxcp) ) = ewan(1:npwxcp,iw)
-                IF( gamma_only_x ) psicx( dfftcp%nlm(1:npwxcp) ) = CONJG(ewan(1:npwxcp,iw))
-                CALL invfft( 'Wave', psicx, dfftcp )
-                rhow(:) = rhow(:) + DBLE( psicx(:) )**2 + AIMAG( psicx(:) )**2
-                !
-              ENDIF
-              !
-            ENDDO ! iw
-            !
-            CALL save_buffer( ewan, nwordwann, iunwann, ir )
-            !
-          ENDDO
-        ENDDO
-      ENDDO
+      DO ik = 1, num_kpts
+        !
+        ikevc = ik + ikstart - 1
+        CALL davcio( evc, 2*nwordwfc, iunwfc, ikevc, -1 )
+        npw = ngk(ik)
+        kvec(:) = xk(:,ik)
+        !
+        counter = 0
+        !
+        DO ibnd = 1, nbnd
+          !
+          IF ( .not. ks_only .and. excluded_band(ibnd) ) CYCLE
+          !
+          counter = counter + 1
+          !
+          psic(:) = ( 0.D0, 0.D0 )
+          psicx(:) = ( 0.D0, 0.D0 )
+          psic( dffts%nl(igk_k(1:npw,ik)) ) = evc(1:npw,ibnd)
+          IF( gamma_only ) psic( dffts%nlm(igk_k(1:npw,ik)) ) = CONJG(evc(1:npw,ibnd))
+          CALL invfft( 'Wave', psic, dffts )
+          !
+          ! ... here we extend the wfc to the whole supercell
+          !
+          ! ... NB: the routine extend_wfc applies also the phase factor
+          ! ...     e^(ikr) so the output wfc (psicx) is a proper Bloch
+          ! ...     function and not just its periodic part
+          !
+          CALL extend_wfc( psic, psicx, dfftcp, kvec )
+          !
+          ! ... calculate the total density in the supercell
+          ! NB: for some reason the weights wg sum up to 2 (and not to 1!),
+          !     maybe it includes the spin (?). The result is that, although
+          !     here we are considering only the psicx of one spin channel,
+          !     the charge corresponding to this density is total and so it 
+          !     matches directly nelec (and not simply nelup).
+          !     Keep in mind that wg=0 for empty states.
+          !
+          IF ( calc_rho ) &
+            rhor(:) = rhor(:) + ( DBLE( psicx(:) )**2 + &
+                                AIMAG( psicx(:) )**2 ) * wg(ibnd,ik) / omega
+          !
+          CALL fwfft( 'Wave', psicx, dfftcp )
+          evcx(1:npwxcp,counter) = psicx( dfftcp%nl(1:npwxcp) )
+          !
+        ENDDO ! ibnd
+        !
+        IF ( counter .ne. num_bands ) &
+          CALL errore( 'wan2odd', 'wrong number of included bands', counter )
+        !
+        ! ... save the extended wavefunctions into the buffer
+        !
+        CALL save_buffer( evcx, nwordwfcx, iunwfcx, ik )
+        !
+      ENDDO ! ik
       !
-      !
-      CALL close_buffer( iunwfcx, 'delete' )
-      !
-      ! ... checks the consistency between the Wannier and Bloch
-      ! ... densities and write the G-space density to file
       !
       IF ( calc_rho ) THEN
         !
-        rhowg(:,:) = ( 0.D0, 0.D0 )
-        CALL fwfft( 'Rho', rhow, dfftcp )
-        rhowg(1:ngmcp,1) = rhow( dfftcp%nl(1:ngmcp) ) / omega_cp
-        IF ( nspin == 1 ) rhowg(:,1) = rhowg(:,1) * 2    !!! factor 2 for the other spin-component
-        CALL check_rho( rhowg, rhog )
+        rhog(:,is) = ( 0.D0, 0.D0 )
+        CALL fwfft( 'Rho', rhor, dfftcp )
+        rhog(1:ngmcp,is) = rhor( dfftcp%nl(1:ngmcp) )
         !
-        dirname = './'
-        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
-             CALL write_rhog( TRIM(dirname) // "charge-density-x", &
-             root_bgrp, intra_bgrp_comm, &
-             bg_cp(:,1)*tpiba, bg_cp(:,2)*tpiba, bg_cp(:,3)*tpiba, &
-             gamma_only_x, mill_cp, ig_l2g_cp, rhowg(:,:) )
+        CALL check_rho( is, rhog(:,is) )
         !
       ENDIF
       !
-      ! ... write the WFs to CP-Koopmans-readable files
       !
-      CALL write_wannier_cp( iunwann, nwordwann, num_wann, ks_only )
+      IF ( .not. ks_only ) THEN
+        !
+        ! ... here the Wannier functions are realized
+        ! w_Rn(G) = sum_k e^(-ikR) sum_m U_mn(k)*psi_km(G) / Nk^(1/2)
+        !
+        CALL open_buffer( iunwann, 'wann', nwordwann, io_level, exst )
+        !
+        ir = 0
+        !
+        DO i = 1, kgrid(1)
+          DO j = 1, kgrid(2)
+            DO k = 1, kgrid(3)
+              !
+              ir = ir + 1
+              ewan(:,:) = ( 0.D0, 0.D0 )
+              !
+              rvec(:) = (/ i-1, j-1, k-1 /)
+              CALL cryst_to_cart( 1, rvec, at, 1 )
+              !
+              DO iw = 1, num_wann
+                DO ik = 1, num_kpts
+                  !
+                  ! ... phase factor e^(-ikR)
+                  !
+                  kvec(:) = xk(:,ik)
+                  dot_prod = tpi * SUM( kvec(:) * rvec(:) )
+                  phase = CMPLX( COS(dot_prod), -SIN(dot_prod), KIND=DP )
+                  !
+                  ! ... read the supercell-extended Bloch functions
+                  !
+                  evcx(:,:) = ( 0.D0, 0.D0 )
+                  CALL get_buffer( evcx, nwordwfcx, iunwfcx, ik )
+                  !
+                  ! ... selecting disentangled bands
+                  !
+                  IF ( have_disentangled ) THEN
+                    !
+                    num_inc = ndimwin(ik)
+                    counter = 0
+                    !
+                    DO n = 1, num_bands
+                      IF ( lwindow(n,ik) ) THEN
+                        counter = counter + 1
+                        evcx_dis(:,counter) = evcx(:,n)
+                      ENDIF
+                    ENDDO
+                    !
+                    IF ( counter .ne. num_inc ) &
+                      CALL errore( 'wan2odd', 'Wrong number of included bands &
+                                              in disentanglement', counter )
+                    !
+                  ENDIF
+                  !
+                  ! ... calculate the Wannier function (ir,iw)
+                  !
+                  DO ip = 1, num_wann
+                    !
+                    ! ... applies disentanglement optimal matrix
+                    !
+                    evcw(:) = ( 0.D0, 0.D0 )
+                    IF ( have_disentangled ) THEN
+                      DO n = 1, num_inc
+                        evcw(:) = evcw(:) + u_mat_opt(n,ip,ik) * evcx_dis(:,n)
+                      ENDDO
+                    ELSE
+                      evcw(:) = evcx(:,ip)
+                    ENDIF
+                    !
+                    ewan(:,iw) = ewan(:,iw) + phase * u_mat(ip,iw,ik) * evcw(:) / SQRT(DBLE(num_kpts)) 
+                    !
+                  ENDDO
+                  !
+                ENDDO ! ik
+                !
+  !              CALL check_complex_wfc( ewan(:,iw), wf_is_cmplx, ratio )
+  !              !
+  !              ! ... if gamma_only_x=.true. the Wannier functions must be real;
+  !              ! ... if one of the realized WFs is found to be complex then the
+  !              ! ... code will restart without using the gamma-trick (complex wfc)
+  !              ! 
+  !              IF ( gamma_only_x .and. wf_is_cmplx ) THEN
+  !                !
+  !                WRITE( stdout, 20 ) ir, iw
+  !                WRITE( stdout, 21 ) ratio
+  !                CALL errore( 'wan2odd', 'complex Wannier functions are incompatible with gamma_trick=.true.', 1 )
+  !                !
+  !              ENDIF
+                !
+                ! ... recalculate the total density from the WFs
+                !
+                IF ( calc_rho ) THEN
+                  !
+                  psicx(:) = ( 0.D0, 0.D0 )
+                  psicx( dfftcp%nl(1:npwxcp) ) = ewan(1:npwxcp,iw)
+                  IF( gamma_only_x ) psicx( dfftcp%nlm(1:npwxcp) ) = CONJG(ewan(1:npwxcp,iw))
+                  CALL invfft( 'Wave', psicx, dfftcp )
+                  rhow(:) = rhow(:) + DBLE( psicx(:) )**2 + AIMAG( psicx(:) )**2
+                  !
+                ENDIF
+                !
+              ENDDO ! iw
+              !
+              CALL save_buffer( ewan, nwordwann, iunwann, ir )
+              !
+            ENDDO
+          ENDDO
+        ENDDO
+        !
+        !
+        CALL close_buffer( iunwfcx, 'delete' )
+        !
+        ! ... checks the consistency between the Wannier and Bloch
+        ! ... densities and write the G-space density to file
+        !
+        IF ( calc_rho ) THEN
+          !
+          rhowg(:,is) = ( 0.D0, 0.D0 )
+          CALL fwfft( 'Rho', rhow, dfftcp )
+          rhowg(1:ngmcp,is) = rhow( dfftcp%nl(1:ngmcp) ) / omega_cp
+          IF ( nspin == 1 ) rhowg(:,1) = rhowg(:,1) * 2    !!! factor 2 for the other spin-component
+          CALL check_rho( is, rhowg(:,is), rhog(:,is) )
+          !
+        ENDIF
+        !
+        ! ... write the WFs to CP-Koopmans-readable files
+        !
+        CALL write_wannier_cp( iunwann, nwordwann, num_wann, ks_only )
+        !
+        IF ( .not. wannier_plot ) CALL close_buffer( iunwann, 'delete' )
+        !
+      ELSE
+        !
+        ! ... write KS orbitals to CP-Koopmans-readable files
+        !
+        CALL write_wannier_cp( iunwfcx, nwordwfcx, num_bands, ks_only, 'occ' )
+        CALL write_wannier_cp( iunwfcx, nwordwfcx, num_bands, ks_only, 'emp' )
+        !
+        CALL close_buffer( iunwfcx, 'delete' )
+        !
+      ENDIF
       !
-      IF ( .not. wannier_plot ) CALL close_buffer( iunwann, 'delete' )
+    ENDDO ! is
+    !
+    IF ( print_rho ) THEN
       !
-    ELSE
+      IF ( .not. calc_rho ) &
+          CALL errore( 'wannier2odd', 'Cannot write charge density when it is not calculated', 1 )
       !
-      ! ... write KS orbitals to CP-Koopmans-readable files
-      !
-      CALL write_wannier_cp( iunwfcx, nwordwfcx, num_wann, ks_only, 'occ' )
-      CALL write_wannier_cp( iunwfcx, nwordwfcx, num_wann, ks_only, 'emp' )
-      !
-      CALL close_buffer( iunwfcx, 'delete' )
+      dirname = './'
+      IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+          CALL write_rhog( TRIM(dirname) // "charge-density-x", &
+          root_bgrp, intra_bgrp_comm, &
+          bg_cp(:,1)*tpiba, bg_cp(:,2)*tpiba, bg_cp(:,3)*tpiba, &
+          gamma_only_x, mill_cp, ig_l2g_cp, rhog(:,:) )
       !
     ENDIF
     !
@@ -387,7 +391,7 @@ MODULE wannier2odd
   !
   !
   !---------------------------------------------------------------------
-  SUBROUTINE check_rho( rhog, rhogref )
+  SUBROUTINE check_rho( ispin, rhog, rhogref )
     !-------------------------------------------------------------------
     !
     ! ...  this routine performs some checks on the supercell total density:
@@ -405,8 +409,9 @@ MODULE wannier2odd
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP), INTENT(IN) :: rhog(:,:) 
-    COMPLEX(DP), INTENT(IN), OPTIONAL :: rhogref(:,:)
+    INTEGER, INTENT(IN) :: ispin
+    COMPLEX(DP), INTENT(IN) :: rhog(:) 
+    COMPLEX(DP), INTENT(IN), OPTIONAL :: rhogref(:)
     !
     REAL(DP) :: nelec_, charge
     INTEGER :: ik
@@ -416,7 +421,7 @@ MODULE wannier2odd
     !
     charge = 0.D0
     IF ( gstart_cp == 2 ) THEN
-      charge = rhog(1,1) * omega_cp
+      charge = rhog(1) * omega_cp
     ENDIF
     !
     CALL mp_sum( charge, intra_bgrp_comm )
@@ -431,8 +436,8 @@ MODULE wannier2odd
     !
     IF ( check_fft ) THEN
       DO ik = 1, ngmcp
-        IF ( ABS( DBLE(rhog(ik,1) - rho%of_g(ik,1)) ) .ge. eps6 .or. &
-             ABS( AIMAG(rhog(ik,1) - rho%of_g(ik,1)) ) .ge. eps6 ) THEN
+        IF ( ABS( DBLE(rhog(ik) - rho%of_g(ik,ispin)) ) .ge. eps6 .or. &
+             ABS( AIMAG(rhog(ik) - rho%of_g(ik,ispin)) ) .ge. eps6 ) THEN
           CALL errore( 'wan2odd', 'rhog and rho%of_g differ', ik )
         ENDIF
       ENDDO
@@ -443,8 +448,8 @@ MODULE wannier2odd
     !
     IF ( PRESENT(rhogref) ) THEN
       DO ik = 1, ngmcp
-        IF ( ABS( DBLE(rhog(ik,1) - rhogref(ik,1)) ) .ge. eps6 .or. &
-             ABS( AIMAG(rhog(ik,1) - rhogref(ik,1)) ) .ge. eps6 ) THEN
+        IF ( ABS( DBLE(rhog(ik) - rhogref(ik)) ) .ge. eps6 .or. &
+             ABS( AIMAG(rhog(ik) - rhogref(ik)) ) .ge. eps6 ) THEN
           CALL errore( 'wan2odd', 'rhog and rhogref differ', ik )
         ENDIF
       ENDDO 
@@ -495,6 +500,50 @@ MODULE wannier2odd
     !
     !
   END SUBROUTINE check_complex_wfc
+  !
+  !
+  !---------------------------------------------------------------------
+  SUBROUTINE alloc_w2odd( ks_only, calc_rho )
+    !-------------------------------------------------------------------
+    !
+    USE noncollin_module,    ONLY : npol
+    USE fft_supercell,       ONLY : dfftcp, npwxcp, ngmcp, nwordwann
+    USE read_wannier,        ONLY : num_bands, num_wann
+    USE lsda_mod,            ONLY : nspin
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(IN) :: ks_only
+    LOGICAL, INTENT(IN) :: calc_rho
+    !
+    !
+    ALLOCATE( evcx(npwxcp*npol,num_bands) )
+    ALLOCATE( psicx(dfftcp%nnr) )
+    !
+    nwordwfcx = num_bands*npwxcp*npol
+    !
+    IF ( .not. ks_only ) THEN
+      !
+      nwordwann = num_wann*npwxcp*npol
+      ALLOCATE( evcw(npwxcp*npol) )
+      ALLOCATE( ewan(npwxcp*npol,num_wann) )
+      !
+    ENDIF
+    !
+    IF ( calc_rho ) THEN
+      !
+      ALLOCATE( rhor(dfftcp%nnr) )
+      ALLOCATE( rhog(ngmcp,nspin) )
+      rhor(:) = ( 0.D0, 0.D0 )
+      !
+      ALLOCATE( rhow(dfftcp%nnr) )
+      ALLOCATE( rhowg(ngmcp,nspin) )
+      rhow(:) = ( 0.D0, 0.D0 )
+      !
+    ENDIF
+    !
+    !
+  END SUBROUTINE alloc_w2odd
   !
   !
   !---------------------------------------------------------------------

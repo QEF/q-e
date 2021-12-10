@@ -90,6 +90,6 @@ module wannier
    logical :: wannier_plot
    character(len=255) :: wannier_plot_list
    integer, allocatable :: wann_to_plot(:)
-   logical :: split_evc_file
    logical :: gamma_trick           ! determines whether or not using SC real wfc (wannier2odd mode)
+   logical :: print_rho             ! determines whether or not writing the supercell charge density to file
 end module wannier
