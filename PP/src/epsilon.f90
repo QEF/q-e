@@ -575,7 +575,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nbndmin, nbndmax, shift, metalcalc 
         ! write results on data files
         !
         desc(1) = "energy grid [eV]     epsr_x  epsr_y  epsr_z"
-        WRITE(desc2, "('plasmon frequences [eV]: ',3f15.9 )") renorm (:)
+        WRITE(desc2, "('plasmon frequences [eV]: ',3f15.9)") renorm (:)
         !
         desc(2) = "energy grid [eV]     epsi_x  epsi_y  epsi_z"
         desc(3) = "energy grid [eV]  eels components [arbitrary units]"
