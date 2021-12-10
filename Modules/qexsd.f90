@@ -40,7 +40,7 @@ MODULE qexsd_module
   ! definitions for the fmt
   !
   CHARACTER(5),  PARAMETER :: fmt_name = "QEXSD"
-  CHARACTER(8),  PARAMETER :: fmt_version = "21.07.16"
+  CHARACTER(8),  PARAMETER :: fmt_version = "21.11.01"
   !
   ! internal data to be set
   !
@@ -235,9 +235,9 @@ CONTAINS
       INTEGER :: ierr
       !
       IF (exit_status .ge. 0 ) THEN 
-         CALL xml_NewElement(qexsd_xf, "status")
+         CALL xml_NewElement(qexsd_xf, "exit_status")
          CALL xml_AddCharacters(qexsd_xf, exit_status)
-         CALL xml_EndElement(qexsd_xf, "status")          
+         CALL xml_EndElement(qexsd_xf, "exit_status")          
          CALL qexsd_set_closed()
          IF (get_clock('PWSCF') > get_clock('CP'))  THEN 
             CALL qexsd_init_clocks (qexsd_timing_, 'PWSCF       ' , clock_list)
@@ -581,19 +581,19 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
          IF ( TRIM(total_clock) == clock_label(ic) ) EXIT 
       END DO 
       t = get_cpu_and_wall(ic) 
-      CALL qes_init ( total_, "total", TRIM(clock_label(ic)), t(1), t(2) ) 
+      CALL qes_init ( total_, "total", TRIM(clock_label(ic)), CPU = t(1), WALL = t(2) ) 
       IF ( partial_ndim .GT.  0 ) THEN  
          ALLOCATE(partial_(partial_ndim), match(nclock) ) 
          DO ipar = 1, partial_ndim 
             match = clock_label(1:nclock) == TRIM(partial_clocks(ipar)) 
             IF ( ANY (match))  THEN
                nc = get_index(.TRUE., match)
-               IF (nc == ic) CYCLE
+               IF (nc == ic .OR. called(nc) == 0 ) CYCLE
                t = get_cpu_and_wall(nc) 
-               CALL qes_init(partial_(ipar), "partial", TRIM(clock_label(nc)), t(1), t(2),&
-                             called(nc))
+               CALL qes_init(partial_(ipar), "partial", TRIM(clock_label(nc)), CPU = t(1), WALL = t(2), & 
+                              CALLS = called(nc))
             ELSE 
-               CALL qes_init (partial_(ipar), "partial", "not_found",  -1.d0, -1.d0, 0)  
+               CALL qes_init (partial_(ipar), "partial", "not_found",  CPU = -1.d0, WALL = -1.d0, CALLS = 0)  
                partial_(ipar)%lwrite=.FALSE. 
             END IF 
          END DO

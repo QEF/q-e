@@ -47,6 +47,7 @@ MODULE pw_restart_new
   IMPLICIT NONE
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  REAL(DP),ALLOCATABLE       :: local_charges(:), local_mag(:,:) 
   PRIVATE
   PUBLIC :: pw_write_schema, write_collected_wfc
   PUBLIC :: read_xml_file, read_collected_wfc
@@ -106,7 +107,8 @@ MODULE pw_restart_new
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
-      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
+      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, & 
+                                       absmag, local_charges, local_mag
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        magtot_nc, lambda, domag, lspinorb
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
@@ -200,7 +202,7 @@ MODULE pw_restart_new
       LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt, domag_opt  
       INTEGER,POINTER            :: dftd3_version_pt
       TYPE(smearing_type),TARGET :: smear_obj 
-      TYPE(smearing_type),POINTER:: smear_obj_ptr 
+      TYPE(smearing_type),POINTER:: smear_obj_ptr
 
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
       NULLIFY( gate_info_ptr, dipol_ptr, bp_obj_ptr, hybrid_obj, vdw_obj, dftU_obj, lumo_energy, ef_point)  
@@ -502,12 +504,16 @@ MODULE pw_restart_new
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
-         IF (noncolin) THEN 
-            domag_ = domag
-            domag_opt=> domag_
-         END IF
-         CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, &
-              magtot, magtot_nc, absmag, domag_opt )
+         output_obj%magnetization_ispresent = noncolin .OR. lsda 
+         IF (noncolin) THEN
+           CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, TOTAL_MAG_NC = magtot_nc,&
+             ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, DO_MAGNETIZATION = domag, & 
+             SITE_MAG = local_mag, SITE_CHARGES = local_charges )
+         ELSE IF (lsda) THEN 
+           CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, TOTAL_MAG = magtot, &
+                ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, SITE_MAG_POL = local_mag, & 
+                SITE_CHARGES = local_charges) 
+         END IF 
          !
 
 !--------------------------------------------------------------------------------------
