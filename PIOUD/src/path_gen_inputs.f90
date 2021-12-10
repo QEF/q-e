@@ -78,6 +78,8 @@ SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
   ALLOCATE(unit_tmp(1:nimage))
   unit_tmp(:) = 0
   
+  !WRITE(9999,*) "Reading images", nimage
+
   DO i=1,nimage
      unit_tmp(i) = find_free_unit()
   ENDDO
@@ -115,19 +117,15 @@ SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
                  IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(dummy)
                  READ(parse_unit,'(A512)') dummy
               ENDDO
-              IF(i==1) THEN
+              !IF(i==1) THEN
                  DO WHILE (trim(ADJUSTL(dummy)) /= "FIRST_IMAGE")
                     READ(parse_unit,'(A512)') dummy
                  ENDDO
                  IF(trim(ADJUSTL(dummy)) == "FIRST_IMAGE") THEN
                     READ(parse_unit,'(A512)') dummy
-                    DO WHILE (trim(ADJUSTL(dummy)) /= "INTERMEDIATE_IMAGE" &
-                        .and.(trim(ADJUSTL(dummy)) /= "LAST_IMAGE"))
-                       IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
-                       READ(parse_unit,'(A512)') dummy
-                    ENDDO
                     DO WHILE (trim(ADJUSTL(dummy)) /= "END_POSITIONS")
-                       READ(parse_unit,'(A512)') dummy
+                     IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
+                     READ(parse_unit,'(A512)') dummy
                     ENDDO
                     READ(parse_unit,'(A512)') dummy
                     DO WHILE (trim(ADJUSTL(dummy)) /= "END_ENGINE_INPUT")
@@ -135,51 +133,51 @@ SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
                        READ(parse_unit,'(A512)') dummy
                     ENDDO
                  ENDIF
-              ENDIF
+              !ENDIF
               !
-              IF(i==nimage) THEN
-                 DO WHILE (trim(ADJUSTL(dummy)) /= "LAST_IMAGE")
-                    READ(parse_unit,'(A512)') dummy
-                 ENDDO
-                 IF(trim(ADJUSTL(dummy)) == "LAST_IMAGE") THEN
-                    READ(parse_unit,'(A512)') dummy
-                    DO WHILE (trim(ADJUSTL(dummy)) /= "END_POSITIONS")
-                       IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
-                       READ(parse_unit,'(A512)') dummy
-                    ENDDO
-                    READ(parse_unit,'(A512)') dummy
-                    DO WHILE (trim(ADJUSTL(dummy)) /= "END_ENGINE_INPUT")
-                       IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
-                       READ(parse_unit,'(A512)') dummy
-                    ENDDO
-                 ENDIF
-              ENDIF
-              !
-              IF(i/=nimage.and.i/=1) THEN
-                 DO j=2,i
-                    dummy=""
-                    DO WHILE (trim(ADJUSTL(dummy)) /= "INTERMEDIATE_IMAGE")
-                       READ(parse_unit,'(A512)') dummy
-!!! write(0,*) i,j,trim(dummy)
-                    ENDDO
-                 ENDDO
-                 IF(trim(ADJUSTL(dummy)) == "INTERMEDIATE_IMAGE") THEN
-                    READ(parse_unit,'(A512)') dummy
-                    DO WHILE ((trim(ADJUSTL(dummy)) /= "LAST_IMAGE") .and. &
-                               trim(ADJUSTL(dummy)) /= "INTERMEDIATE_IMAGE")
-                       IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
-                       READ(parse_unit,'(A512)') dummy
-                    ENDDO
-                    DO WHILE (trim(ADJUSTL(dummy)) /= "END_POSITIONS")
-                       READ(parse_unit,'(A512)') dummy
-                    ENDDO
-                    READ(parse_unit,'(A512)') dummy
-                    DO WHILE (trim(ADJUSTL(dummy)) /= "END_ENGINE_INPUT")
-                       IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
-                       READ(parse_unit,'(A512)') dummy
-                    ENDDO
-                 ENDIF
-              ENDIF
+!               IF(i==nimage) THEN
+!                  DO WHILE (trim(ADJUSTL(dummy)) /= "FIRST_IMAGE")
+!                     READ(parse_unit,'(A512)') dummy
+!                  ENDDO
+!                  IF(trim(ADJUSTL(dummy)) == "FIRST_IMAGE") THEN
+!                     READ(parse_unit,'(A512)') dummy
+!                     DO WHILE (trim(ADJUSTL(dummy)) /= "END_POSITIONS")
+!                        IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
+!                        READ(parse_unit,'(A512)') dummy
+!                     ENDDO
+!                     READ(parse_unit,'(A512)') dummy
+!                     DO WHILE (trim(ADJUSTL(dummy)) /= "END_ENGINE_INPUT")
+!                        IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
+!                        READ(parse_unit,'(A512)') dummy
+!                     ENDDO
+!                  ENDIF
+!               ENDIF
+!               !
+!               IF(i/=nimage.and.i/=1) THEN
+!                  DO j=2,i
+!                     dummy=""
+!                     DO WHILE (trim(ADJUSTL(dummy)) /= "INTERMEDIATE_IMAGE")
+!                        READ(parse_unit,'(A512)') dummy
+! !!! write(0,*) i,j,trim(dummy)
+!                     ENDDO
+!                  ENDDO
+!                  IF(trim(ADJUSTL(dummy)) == "INTERMEDIATE_IMAGE") THEN
+!                     READ(parse_unit,'(A512)') dummy
+!                     DO WHILE ((trim(ADJUSTL(dummy)) /= "LAST_IMAGE") .and. &
+!                                trim(ADJUSTL(dummy)) /= "INTERMEDIATE_IMAGE")
+!                        IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
+!                        READ(parse_unit,'(A512)') dummy
+!                     ENDDO
+!                     DO WHILE (trim(ADJUSTL(dummy)) /= "END_POSITIONS")
+!                        READ(parse_unit,'(A512)') dummy
+!                     ENDDO
+!                     READ(parse_unit,'(A512)') dummy
+!                     DO WHILE (trim(ADJUSTL(dummy)) /= "END_ENGINE_INPUT")
+!                        IF(myrank==root) WRITE(unit_tmp_i,'(A)') trim(ADJUSTL(dummy))
+!                        READ(parse_unit,'(A512)') dummy
+!                     ENDDO
+!                  ENDIF
+!               ENDIF
               !
            ENDIF
         ENDDO

@@ -1712,6 +1712,9 @@ subroutine pimd_allocation
    implicit none
    integer :: i,j,ii,jj,ind
    
+!WRITE(9999,*) "Alloc dims", ndimMD, natMD, nbeadMD
+!FLUSH(9999)
+
    ! Allocation of variables
    allocate(indx(natMD))
    allocate(el(ndimMD,nbeadMD))

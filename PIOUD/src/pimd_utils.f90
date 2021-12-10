@@ -103,9 +103,9 @@ subroutine pimd_pw_convert_pos(abc)
        call random_number(rnd1)
        call random_number(rnd2)
        if (rnd2.ge.0.5) then
-         pos(1,2)=pos(1,2)+rnd1*0.0005
+         pos(1,1)=pos(1,1)+rnd1*0.0005
        else
-         pos(1,2)=pos(1,2)-rnd1*0.0005
+         pos(1,1)=pos(1,1)-rnd1*0.0005
        endif
     endif   
     
@@ -243,7 +243,7 @@ SUBROUTINE match_neb_and_pimd_var
   
   nstep_path = nblocks*nstep_block
   num_of_images = nbeadMD
-  if (nbeadMD.eq.1) num_of_images=2
+  !if (nbeadMD.eq.1) num_of_images=2
   first_last_opt=.true.
   CALL mp_bcast( nstep_path,  meta_ionode_id, world_comm )
   CALL mp_bcast( num_of_images,  meta_ionode_id, world_comm )

@@ -31,8 +31,8 @@ MODULE pimd_variables
        restart_pimd     
        
   INTEGER :: &
-       ndimMD,                   &! dimension of the configuration space
-       nbeadMD                  ! number of images
+       ndimMD=0,                   &! dimension of the configuration space
+       nbeadMD=0                  ! number of images
                                   
   REAL(DP) :: &
        delt,                     &
@@ -80,7 +80,7 @@ MODULE pimd_variables
 
 ! Variables 
 
-  integer :: natMD,nspecies,gMD,iblockMD
+  integer :: natMD=0,nspecies,gMD,iblockMD
   integer :: lfnl,lonl,ifl,nav,ikin,nunitcells
   integer, dimension (:), allocatable :: ipot,indx
   

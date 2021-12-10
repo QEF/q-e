@@ -214,25 +214,31 @@ MODULE trpmd_base
       INTEGER  :: fii, lii
       !
       !
-      IF ( istep_path == 0 .OR. first_last_opt ) THEN
-         !
-         fii = 1
-         lii = num_of_images
-         !
-      ELSE
-         !
-         fii = 2
-         lii = num_of_images - 1
-         !
-      END IF
+      ! IF ( istep_path == 0 .OR. first_last_opt ) THEN
+      !    !
+      !    fii = 1
+      !    lii = num_of_images
+      !    !
+      ! ELSE
+      !    !
+      !    fii = 2
+      !    lii = num_of_images - 1
+      !    !
+      ! END IF
       
-      IF (nbeadMD .eq. 1) THEN
-        fii = 1
-        lii = 2
-      END IF
+      ! IF (nbeadMD .eq. 1) THEN
+      !   fii = 1
+      !   lii = 1
+      ! END IF
+      fii = 1
+      lii = nbeadMD
       !
       IF ( pending_image /= 0 ) fii = pending_image
       !
+      !WRITE(9999,*) "Going to compute SCF", num_of_images, &
+      !pending_image, istep_path, pes, fii, lii, &
+      !first_last_opt
+      !FLUSH(9999)
       CALL compute_scf( fii, lii, stat )
       !
       IF ( .NOT. stat ) RETURN
