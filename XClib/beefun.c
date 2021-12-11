@@ -129,7 +129,7 @@ void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int
 // evaluate bee exchange energy only
 void beefxpot_(double *r, double *g, double *e, int *addlda)
 {
-    double s2,t,s,r43;
+    double s2,t,r43;
     const int n=nmax;
     const int i1=1;
     const int i2=1;
