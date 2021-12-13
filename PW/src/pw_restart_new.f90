@@ -504,7 +504,7 @@ MODULE pw_restart_new
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
-         output_obj%magnetization_ispresent = noncolin .OR. lsda 
+         output_obj%magnetization_ispresent = .TRUE.  
          IF (noncolin) THEN
            CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, TOTAL_MAG_NC = magtot_nc,&
              ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, DO_MAGNETIZATION = domag, & 
@@ -513,6 +513,9 @@ MODULE pw_restart_new
            CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, TOTAL_MAG = magtot, &
                 ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, SITE_MAG_POL = local_mag, & 
                 SITE_CHARGES = local_charges) 
+         ELSE 
+           CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, ABSOLUTE_MAG = 0._DP, &
+                ATM = upf(1:nsp)%psd, ITYP = ityp ) 
          END IF 
          !
 

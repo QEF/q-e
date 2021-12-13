@@ -746,8 +746,18 @@ CONTAINS
       lsda  =   magnetization_obj%lsda
       noncolin = magnetization_obj%noncolin  
       lspinorb = magnetization_obj%spinorbit 
-      domag =   magnetization_obj%do_magnetization 
-      tot_magnetization = magnetization_obj%total
+      IF (magnetization_obj%do_magnetization_ispresent) THEN 
+        domag =   magnetization_obj%do_magnetization
+      ELSE 
+        domag = .FALSE.
+      END IF
+      IF (magnetization_obj%total_ispresent) THEN 
+        tot_magnetization = magnetization_obj%total
+      ELSE IF (magnetization_obj%total_vec_ispresent) THEN 
+        tot_magnetization = SQRT(dot_product(magnetization_obj%total_vec, magnetization_obj%total_vec))
+      ELSE 
+        tot_magnetization = 0._DP 
+      END IF 
       !
     END SUBROUTINE qexsd_copy_magnetization
     !-----------------------------------------------------------------------
