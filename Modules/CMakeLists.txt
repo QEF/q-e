@@ -80,7 +80,6 @@ set(src_modules
     qes_read_module.f90 
     qes_reset_module.f90 
     qes_init_module.f90 
-    qes_read_module.f90 
     qes_bcast_module.f90 
     qexsd.f90   
     qexsd_copy.f90   
