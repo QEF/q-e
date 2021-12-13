@@ -781,7 +781,11 @@ CONTAINS
        !
        occupations = TRIM ( band_struct_obj%occupations_kind%occupations ) 
        smearing    = TRIM ( band_struct_obj%smearing%smearing ) 
-       degauss     = band_struct_obj%smearing%degauss
+       IF (band_struct_obj%smearing%degauss_ispresent) THEN 
+         degauss     = band_struct_obj%smearing%degauss
+       ELSE 
+         degauss = 0._DP
+       END IF 
        !   
        IF ( band_struct_obj%starting_k_points%monkhorst_pack_ispresent ) THEN 
           nks_start = 0 

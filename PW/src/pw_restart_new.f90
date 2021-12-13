@@ -1171,8 +1171,8 @@ MODULE pw_restart_new
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
               spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
               noinv, nosym, no_t_rev, input_obj%symmetry_flags )
-         
-         CALL qexsd_copy_efield ( input_obj%electric_field, &
+         IF (input_obj%electric_field_ispresent) & 
+           CALL qexsd_copy_efield ( input_obj%electric_field, &
               tefield, dipfield, edir, emaxpos, eopreg, eamp, &
               gate, zgate, block, block_1, block_2, block_height, relaxz )
          
@@ -1189,7 +1189,11 @@ MODULE pw_restart_new
       !! symmetry check - FIXME: must be done in a more consistent way 
       !! IF (nat > 0) CALL checkallsym( nat, tau, ityp)
       !! Algorithmic info
-      do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
+      IF (output_obj%boundary_conditions_ispresent) THEN 
+         do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
+      ELSE 
+         do_cutoff_2D = .FALSE.
+      END IF
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
       !
