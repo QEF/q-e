@@ -6,7 +6,55 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------
-SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
+SUBROUTINE dmxc( length, srd, rho_in, dmuxc, gpu_args_ )
+  !----------------------------------------------------------------------
+  !! Wrapper routine. Calls internal dmxc-driver routines or the external
+  !! ones from Libxc, depending on the input choice.
+  !
+  USE kind_l,   ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: length
+  !! length of the I/O arrays
+  INTEGER,  INTENT(IN) :: srd
+  !! number of spin components
+  REAL(DP), INTENT(IN) :: rho_in(length,srd)
+  !! charge density
+  REAL(DP), INTENT(OUT) :: dmuxc(length,srd,srd)
+  !! the derivative of the xc potential
+  LOGICAL, OPTIONAL, INTENT(IN) :: gpu_args_
+  !! whether you wish to run on gpu in case use_gpu is true
+  !
+  LOGICAL :: gpu_args
+  !
+  gpu_args = .FALSE.
+  IF ( PRESENT(gpu_args_) ) gpu_args = gpu_args_
+  !
+  IF ( gpu_args ) THEN
+    !
+    !$acc data present( rho_in, dmuxc )
+    !$acc host_data use_device( rho_in, dmuxc )
+    CALL dmxc_( length, srd, rho_in, dmuxc )
+    !$acc end host_data
+    !$acc end data
+    !
+  ELSE
+    !
+    !$acc data copyin( rho_in ), copyout( dmuxc )
+    !$acc host_data use_device( rho_in, dmuxc )
+    CALL dmxc_( length, srd, rho_in, dmuxc )
+    !$acc end host_data
+    !$acc end data
+    !
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE
+!
+!------------------------------------------------------------------------
+SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
   !----------------------------------------------------------------------
   !! Wrapper routine. Calls internal dmxc-driver routines or the external
   !! ones from Libxc, depending on the input choice.
@@ -49,6 +97,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   INTEGER :: ir, length_lxc, length_dlxc
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   !
+  !$acc data deviceptr( rho_in, dmuxc )
+  !
 #if defined(__LIBXC)
   !
   lengthxc = length
@@ -57,18 +107,23 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     !
     length_lxc = length*sr_d
     !
+    ALLOCATE( rho_lxc(length_lxc) )
+    !$acc data copyout( rho_lxc )
+    !
     ! ... set libxc input
     SELECT CASE( sr_d )
     CASE( 1 )
       !
-      ALLOCATE( rho_lxc(length_lxc) )
       pol_unpol = 1
-      rho_lxc = rho_in(:,1) 
+      !$acc parallel loop
+      DO ir = 1, length
+        rho_lxc(ir) = rho_in(ir,1)
+      ENDDO
       !
     CASE( 2 )
       !
-      ALLOCATE( rho_lxc(length_lxc) )
       pol_unpol = 2
+      !$acc parallel loop
       DO ir = 1, length
         rho_lxc(2*ir-1) = rho_in(ir,1)
         rho_lxc(2*ir)   = rho_in(ir,2)
@@ -89,6 +144,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     IF (pol_unpol == 2) length_dlxc = length*3
     !
   ENDIF
+  !$acc end data
   !
   IF ( is_libxc(1) ) THEN
     ALLOCATE( dmex_lxc(length_dlxc) )
@@ -130,6 +186,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     CASE( 1 )
       !
       IF ( is_libxc(1) ) THEN
+        !$acc parallel loop copyin( dmex_lxc )
         DO ir = 1, length
           IF (rho_in(ir,1)<=rho_threshold_lda ) CYCLE
           dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmex_lxc(ir)*2.0_DP
@@ -138,6 +195,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
       ENDIF
       !
       IF ( is_libxc(2) ) THEN
+        !$acc parallel loop copyin( dmcr_lxc )
         DO ir = 1, length
           IF (rho_in(ir,1)<=rho_threshold_lda ) CYCLE
           dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmcr_lxc(ir)*2.0_DP
@@ -201,7 +259,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
 #endif
   !
+  !$acc end data
   !
   RETURN
   !
-END SUBROUTINE dmxc
+END SUBROUTINE dmxc_

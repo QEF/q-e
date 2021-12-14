@@ -1685,7 +1685,7 @@ MODULE paw_onecenter
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE xc_lib,                 ONLY : xclib_dft_is
+    USE xc_lib,                 ONLY : xclib_dft_is, dmxc
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info

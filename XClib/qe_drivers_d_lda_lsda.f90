@@ -61,14 +61,21 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
                          pi34 = 0.75_DP/3.141592653589793_DP,   &
                          third = 1.0_DP/3.0_DP, rho_trash = 0.5_DP, &
                          rs_trash = 1.0_DP
+
+                         
 #if defined(_OPENMP)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
   ntids = omp_get_num_threads()
+#else
+  !$acc data deviceptr( rho_in, dmuxc )
 #endif
   !
-  dmuxc = 0.0_DP
+  !$acc parallel loop
+  DO ir = 1, length
+    dmuxc(ir) = 0.0_DP
+  ENDDO
   !
   iexch_=iexch
   icorr_=icorr
@@ -78,11 +85,15 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   ! ... first case: analytical derivatives available
   !
   IF (iexch == 1 .AND. icorr == 1) THEN
-  !
+    !
+#if defined(_OPENACC)
+!$acc parallel loop
+#else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rs, rho, ex_s, vx_s , iflg ) &
 !$omp shared( length, rho_in, dmuxc )
 !$omp do
+#endif
      DO ir = 1, length
         !
         rho = rho_in(ir)
@@ -96,62 +107,68 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
         ENDIF
         !
         CALL slater( rs, ex_s, vx_s )
-        dmuxc(ir) = vx_s / (3.0_DP * rho)
         !
         iflg = 2
         IF (rs < 1.0_DP) iflg = 1
-        dmuxc(ir) = dmuxc(ir) + dpz( rs, iflg )
-        dmuxc(ir) = dmuxc(ir) * SIGN(1.0_DP,rho_in(ir))
+        dmuxc(ir) = ( vx_s/(3.0_DP*rho) + dpz( rs, iflg )) * SIGN(1.0_DP,rho_in(ir)) * e2
         !
      ENDDO
+#if !defined(_OPENACC)
 !$omp end do
 !$omp end parallel
+#endif
      !
   ELSE
      !
      ! ... second case: numerical derivatives
      !
-     ALLOCATE( ex(2*length), vx(2*length)  )
-     ALLOCATE( ec(2*length), vc(2*length)  )
+     ALLOCATE( ex(2*length), vx(2*length) )
+     ALLOCATE( ec(2*length), vc(2*length) )
      ALLOCATE( arho(length), dr(length), rhoaux(2*length) )
+     !$acc data create( rhoaux, arho, dr, ex, vx, ec, vc )
      !
      i1 = 1         ;  f1 = length             !two blocks:  [ rho+dr ]
      i2 = length+1  ;  f2 = 2*length           !             [ rho-dr ]              
      !
-     arho = ABS(rho_in)
-     dr = 0.0_DP
-     WHERE ( arho > small ) dr = MIN( 1.E-6_DP, 1.E-4_DP * rho_in )
+     !$acc parallel loop
+     DO ir = 1, length
+       arho(ir) = ABS(rho_in(ir))
+       IF ( arho(ir) > small ) THEN
+         dr(ir) = MIN( 1.E-6_DP, 1.E-4_DP * rho_in(ir) )
+       ELSE
+         dr(ir) = 0.0_DP
+       ENDIF
+     ENDDO
      !
-     rhoaux(i1:f1) = arho+dr
-     rhoaux(i2:f2) = arho-dr
+     !$acc parallel loop
+     DO ir = 1, length
+       rhoaux(i1-1+ir) = arho(ir)+dr(ir)
+     ENDDO
+     !$acc parallel loop
+     DO ir = 1, length
+       rhoaux(i2-1+ir) = arho(ir)-dr(ir)
+     ENDDO
      !
-     !$acc data copyin( rhoaux ) copyout( ex, ec, vx, vc )
      !$acc host_data use_device( rhoaux, ex, ec, vx, vc )
      CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
      !$acc end host_data
+     !
+     !$acc parallel loop
+     DO ir = 1, length
+       IF ( arho(ir) >= small ) THEN
+         dmuxc(ir) = ( (vx(i1-1+ir) + vc(i1-1+ir) - vx(i2-1+ir) - vc(i2-1+ir)) / &
+                       (2.0_DP * dr(ir)) ) * SIGN(1.0_DP,rho_in(ir)) * e2
+       ELSE
+         dmuxc(ir) = 0.0_DP
+       ENDIF
+     ENDDO
+     !
      !$acc end data
-     !
-     WHERE ( arho < small ) dr = 1.0_DP ! ... to avoid NaN in the next operation
-     !
-     !
-     dmuxc(:) = (vx(i1:f1) + vc(i1:f1) - vx(i2:f2) - vc(i2:f2)) / &
-                (2.0_DP * dr(:))
-     !
-     DEALLOCATE( ex, vx  )
-     DEALLOCATE( ec, vc  )
-     DEALLOCATE( dr, rhoaux )
-     !
-     WHERE ( arho < small ) dmuxc = 0.0_DP
-     ! however a higher threshold is already present in xc_lda()
-     dmuxc(:) = dmuxc(:) * SIGN(1.0_DP,rho_in(:))
-     !
-     DEALLOCATE( arho )
+     DEALLOCATE( ex, vx )
+     DEALLOCATE( ec, vc )
+     DEALLOCATE( arho, dr, rhoaux )
      !
   ENDIF
-  !
-  ! bring to rydberg units
-  !
-  dmuxc = e2 * dmuxc
   !
   IF (is_libxc(1)) iexch=iexch_
   IF (is_libxc(2)) icorr=icorr_
@@ -552,6 +569,7 @@ END SUBROUTINE dmxc_nc
 !
 !-----------------------------------------------------------------------
 FUNCTION dpz( rs, iflg )
+!$acc routine seq
   !-----------------------------------------------------------------------
   !!  Derivative of the correlation potential with respect to local density
   !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.
