@@ -350,7 +350,9 @@ CONTAINS
   !
   SUBROUTINE driver_getforce()
     IMPLICIT NONE
-    CHARACTER(LEN=1024) :: tmpstr
+    CHARACTER(LEN=64) :: tmpstr
+    CHARACTER(LEN=32768) :: retbuffer
+
     INTEGER i
     !
     ! ... communicates energy info back to i-pi
@@ -374,16 +376,24 @@ CONTAINS
        WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
        !CALL writebuffer( socket, energies, 2000)
        !CALL writebuffer( socket, beefxc, 32)
-       parbuffer = '{ beefxc : [ '
+       retbuffer = '{ "beefxc" : [ '
        DO i=1,32
            write(tmpstr, '(f15.8)')  beefxc(i)
-           parbuffer = TRIM(parbuffer) // TRIM(tmpstr) // ","
+           retbuffer = TRIM(retbuffer) // TRIM(tmpstr) // ","
        ENDDO
-       parbuffer = TRIM(parbuffer) // '] }'
-       nat = LEN_TRIM(parbuffer)
+
+       ! removes final comma in the array
+       retbuffer = retbuffer(1:LEN_TRIM(retbuffer)-1) // ' ],  "energies" : [ '
+       DO i=1,2000
+           write(tmpstr, '(f15.8)')  energies(i)
+           retbuffer = TRIM(retbuffer) // TRIM(tmpstr) // ","
+       ENDDO
+
+       retbuffer = retbuffer(1:LEN_TRIM(retbuffer)-1) // '] }'
+       nat = LEN_TRIM(retbuffer)
        IF ( ionode ) THEN
            CALL writebuffer( socket, nat )
-           CALL writebuffer( socket, parbuffer, nat)
+           CALL writebuffer( socket, retbuffer, nat)
        ENDIF
     ELSE
        nat = 0
