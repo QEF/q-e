@@ -35,7 +35,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE ldaU,                 ONLY : lda_plus_u, wfcU, lda_plus_u_kind
   USE units_lr,             ONLY : iuatswfc
 #if defined(__CUDA)
-  USE uspp,                 ONLY : vkb_d
   USE becmod_gpum,          ONLY : becp_d
 #endif
 
@@ -101,7 +100,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !$acc enter data create(hpsi(1:npwx*npol, 1:m), spsi(1:npwx*npol, 1:m), ps(1:nbnd, 1:m))
 #if defined(__CUDA)
   CALL start_clock_gpu('equalch')
-  vkb_d = vkb
+  !$acc update device(vkb)
   CALL stop_clock_gpu('equalch')
   !$acc data copyin(h) present(hpsi, spsi)
   !$acc host_data use_device(h, hpsi, spsi)
@@ -237,15 +236,15 @@ CONTAINS
        call divide (inter_bgrp_comm, m, m_start, m_end)
 #if defined(__CUDA)
        if (m_end >= m_start) then
-          CALL using_becp_d_auto(1)
-          !$acc host_data use_device(hpsi(:,m_start:m_end))
-          CALL calbec_gpu (n, vkb_d, hpsi(:,m_start:m_end), becp_d, m_end- m_start + 1)    !
+          CALL using_becp_d_auto(2)
+          !$acc host_data use_device(hpsi(:,m_start:m_end),vkb)
+          CALL calbec_gpu (n, vkb(:,:), hpsi(:,m_start:m_end), becp_d, m_end- m_start + 1)    !
           !$acc end host_data
        endif
     else
-       CALL using_becp_d_auto(1)
-       !$acc host_data use_device(hpsi)
-       CALL calbec_gpu (n, vkb_d, hpsi, becp_d, m)
+       CALL using_becp_d_auto(2)
+       !$acc host_data use_device(hpsi,vkb)
+       CALL calbec_gpu (n, vkb(:,:), hpsi, becp_d, m)
        !$acc end host_data
     endif
 #else

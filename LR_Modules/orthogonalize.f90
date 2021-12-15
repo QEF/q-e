@@ -34,6 +34,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   USE wvfct,            ONLY : npwx, nbnd, wg, et
   USE ener,             ONLY : ef
   USE becmod,           ONLY : bec_type, becp, calbec
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   USE uspp,             ONLY : vkb, okvan
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
   USE mp,               ONLY : mp_sum
@@ -173,8 +174,12 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
      IF (okvan) then
         if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. nbnd_eff > 1) then
            call divide(inter_bgrp_comm,nbnd_eff, n_start, n_end)
-           if ( n_end >= n_start) CALL calbec ( npwq, vkb, evq(:,n_start:n_end), becp, n_end - n_start + 1 )
+           if ( n_end >= n_start) then
+                   CALL using_becp_auto(2)
+                   CALL calbec ( npwq, vkb, evq(:,n_start:n_end), becp, n_end - n_start + 1 )
+           endif
         else
+           CALL using_becp_auto(2)
            CALL calbec ( npwq, vkb, evq, becp, nbnd_eff )
         end if
      end if
