@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
+
 SUBROUTINE run_driver ( srvaddress, exit_status )
   !!
   !! Driver for i-PI and i-PI compatible drivers. Q-E will connect to an internet or
@@ -13,7 +14,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !! from the driver. For an overview of the philosophy of the driver mode, and a
   !! documentation of the communication protocol please see https://ipi-code.org.
   !!
-  !! If you find this interface useful for your code, you may want to acknowledge
+  !! If you find this interface useful for your research, you may want to acknowledge
   !! the most-recent i-PI release
   !!
   !!  I-PI 2.0: A Universal Force Engine for Advanced Molecular Simulations
@@ -22,6 +23,22 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !! ** Please do not modify the logic or the communication pattern without coordinating
   !! with the i-PI developers team. **
   !!
+  !! The basic communication pattern involves:
+  !!
+  !! 1. handshake - q-e starts and connects through the socket to a running server that
+  !!    implements the i-PI protocol
+  !! 2. initialization - just once, or before each step, q-e can request an int that indicates
+  !!    the UID of the system being computed (e.g. when handling multiple replicas) and a string
+  !!    containing initialization parameters, in a JSON dictionary format.
+  !! 3. positions - q-e receives atomic positions and cells. the atomic types must match between
+  !!    the q-e input and the server side simulation. no check is performed
+  !! 4. getforce - q-e returns forces, stress, potential, and optionally a JSON formatted string
+  !!    containing additional properties. no convention is established for the ontology, only the
+  !!    JSON format is recommended to facilitate processing the extra data
+  !!
+  !! 2-4 are repeated in a MD-like loop, and q-e has to run any calculation between 3 and 4.
+  !!
+
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk
   USE upf_params,       ONLY : lmaxx
@@ -59,9 +76,13 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   REAL *8 :: cellh(3,3), cellih(3,3), vir(3,3), pot, mtxbuffer(9)
   REAL*8, ALLOCATABLE :: combuf(:)
   REAL*8 :: dist_ang(6), dist_ang_reset(6)
+
   !----------------------------------------------------------------------------
-  ! "compute everything" defaults, so that Q-E can react to a change in supercell
-  ! and returns everything that could be useful on the driver side
+  ! "compute everything" defaults, so that q-e can react to a change in supercell
+  ! and returns everything that could be useful on the driver side. this is most
+  ! consistent with the i-PI "philosophy", in which the client is a black box that
+  ! gets positions and returns energies and derivatives
+  !
   lscf      = .true.
   lforce    = .true.
   tstress    = .true.
@@ -95,10 +116,14 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   CALL check_stop_init()
   CALL setup()
   !
+  ! creates a socket and connects. the server must be already active
   IF ( ionode ) CALL create_socket(srvaddress)
   !
+  ! main loop
   driver_loop: DO
      !
+     ! the communication protocol is controlled by short strings that indicate
+     ! the state of the server and ensures synchronization
      IF ( ionode ) CALL readbuffer(socket, header, MSGLEN)
      CALL mp_bcast( header, ionode_id, intra_image_comm )
      !
@@ -188,7 +213,10 @@ CONTAINS
     INTEGER flag_val, str_idx
     !
     ! ... Check if the replica id (rid) is the same as in the last run
-    !
+    !     This is a way to handle the presence of multiple-replica simulations
+    !     that could lead to discontinuous changes. The general idea is that
+    !     same replica ID guarantees that positions have changed little from
+    !     the previous call
     IF ( ionode ) CALL readbuffer( socket, rid )
     CALL mp_bcast( rid, ionode_id, intra_image_comm )
     !
@@ -202,6 +230,9 @@ CONTAINS
     !
     rid_old = rid
     !
+    ! ... Now we can read a string that contains initialization parameters
+    !     at the moment this only sets calculation flags different from the
+    !     "compute everything" defaults.
     ! ... Length of parameter string
     !
     IF ( ionode ) CALL readbuffer( socket, nat )
@@ -213,7 +244,8 @@ CONTAINS
            WRITE(*,*) " @ DRIVER MODE: Receiving parameter string", parbuffer(:nat)
         ENDIF
         CALL mp_bcast( parbuffer, ionode_id, intra_image_comm )
-        !parse the string into parameters (a rudimentary and rigid JSON parser)
+        ! parse the string into parameters (a rudimentary and rigid JSON parser)
+        ! assuming flag_name : int, ...  format
         str_idx=1
         DO WHILE (SCAN(parbuffer(str_idx:), ',')>0 )
            READ(parbuffer(str_idx:), *)  flag_id, flag_spacer, flag_val
