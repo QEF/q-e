@@ -54,7 +54,7 @@ SUBROUTINE dmxc( length, srd, rho_in, dmuxc, gpu_args_ )
 END SUBROUTINE
 !
 !------------------------------------------------------------------------
-SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
+SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   !----------------------------------------------------------------------
   !! Wrapper routine. Calls internal dmxc-driver routines or the external
   !! ones from Libxc, depending on the input choice.
@@ -73,11 +73,11 @@ SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
   !
   INTEGER,  INTENT(IN) :: length
   !! length of the I/O arrays
-  INTEGER,  INTENT(IN) :: sr_d
+  INTEGER,  INTENT(IN) :: srd
   !! number of spin components
-  REAL(DP), INTENT(IN) :: rho_in(length,sr_d)
+  REAL(DP), INTENT(IN) :: rho_in(length,srd)
   !! charge density
-  REAL(DP), INTENT(OUT) :: dmuxc(length,sr_d,sr_d)
+  REAL(DP), INTENT(OUT) :: dmuxc(length,srd,srd)
   !! the derivative of the xc potential
   !
   ! ... local variables
@@ -105,13 +105,13 @@ SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
     !
-    length_lxc = length*sr_d
+    length_lxc = length*srd
     !
     ALLOCATE( rho_lxc(length_lxc) )
     !$acc data copyout( rho_lxc )
     !
     ! ... set libxc input
-    SELECT CASE( sr_d )
+    SELECT CASE( srd )
     CASE( 1 )
       !
       pol_unpol = 1
@@ -167,22 +167,27 @@ SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
     ENDIF
   ENDIF
   !
-  dmuxc = 0.0_DP
+  
+  !$acc parallel loop
+  DO ir = 1, length
+    dmuxc(ir) = 0.0_DP
+  ENDDO
+  
   !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
         .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
     !
     rho_threshold_lda = small
     !
-    IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
-    IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
-    IF ( sr_d == 4 ) CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
+    IF ( srd == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
+    IF ( srd == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
+    IF ( srd == 4 ) CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
     !
   ENDIF
   !
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
-    SELECT CASE( sr_d )
+    SELECT CASE( srd )
     CASE( 1 )
       !
       IF ( is_libxc(1) ) THEN
@@ -206,6 +211,7 @@ SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
     CASE( 2 )
       !
       IF ( is_libxc(1) ) THEN
+        !$acc parallel loop copyin( dmex_lxc )
         DO ir = 1, length
           IF (rho_in(ir,1)<=rho_threshold_lda .OR. &
               rho_in(ir,2)<=rho_threshold_lda) CYCLE
@@ -218,6 +224,7 @@ SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
       ENDIF
       !
       IF ( is_libxc(2) ) THEN
+        !$acc parallel loop copyin( dmcr_lxc )
         DO ir = 1, length
           IF (rho_in(ir,1)<=rho_threshold_lda .OR. &
               rho_in(ir,2)<=rho_threshold_lda) CYCLE
@@ -238,7 +245,7 @@ SUBROUTINE dmxc_( length, sr_d, rho_in, dmuxc )
   !
   rho_threshold_lda = small
   !
-  SELECT CASE( sr_d )
+  SELECT CASE( srd )
   CASE( 1 )
      !
      CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )

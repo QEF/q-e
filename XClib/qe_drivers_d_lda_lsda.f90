@@ -222,24 +222,36 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
                          third = 1.0_DP/3.0_DP, p43 = 4.0_DP/3.0_DP, &
                          p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP
   !
+  !$acc data deviceptr( rho_in(length,2), dmuxc(length,2,2) )
+  !
   iexch_=iexch
   icorr_=icorr
   IF (is_libxc(1)) iexch=0
   IF (is_libxc(2)) icorr=0
   !
-  dmuxc = 0.0_DP
-  ALLOCATE(rhotot(length)) 
-  rhotot(:) = rho_in(:,1) + rho_in(:,2)
+  ALLOCATE( rhotot(length) )
+  !$acc data create( rhotot )
+  !
+  !$acc parallel loop
+  DO ir = 1, length
+    dmuxc(ir,1,1) = 0.0_DP ; dmuxc(ir,1,2) = 0.0_DP
+    dmuxc(ir,2,1) = 0.0_DP ; dmuxc(ir,2,2) = 0.0_DP
+    rhotot(ir) = rho_in(ir,1) + rho_in(ir,2)
+  ENDDO
   !
   IF (iexch == 1 .AND. icorr == 1) THEN
      !
      ! ... first case: analytical derivative available
      !
+#if defined(_OPENACC)
+     !$acc parallel loop
+#else
      !$omp parallel do default(none) &
      !$omp shared(length, rhotot, rho_in, dmuxc ) &
      !$omp private( zeta_s, rs, aa, bb, cc, dmcp, dmcu, &
      !$omp          iflg, fz, fz1, fz2, vcp, ecp, vcu, ecu, &
      !$omp          ex_s, vx_s )
+#endif
      DO ir = 1, length
         !
         IF (rhotot(ir) < small) CYCLE
@@ -296,6 +308,10 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
                                              (1.0_DP + zeta_s)**2 * cc                               
      ENDDO
+#if !defined(_OPENACC)
+!$omp end do
+!$omp end parallel
+#endif
      !
   ELSE
      !
@@ -304,7 +320,20 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      ALLOCATE( rhoaux(4*length), zetaux(4*length) )
      ALLOCATE( aux1(4*length) , aux2(4*length) )
      ALLOCATE( dr(length), dz(length) )
-     ALLOCATE( zeta(length), zeta_eff(length)) 
+     ALLOCATE( zeta(length), zeta_eff(length))
+     
+     
+     !$acc data create( vx, vc, vxc, rhoaux, zetaux, aux1, aux2, &
+     !$acc&             dr, dz, zeta, zeta_eff )
+     
+     !$acc parallel loop
+     DO ir = 1, length
+       dz(ir) = 1.E-6_DP  ! dz(:) = MIN( 1.d-6, 1.d-4*ABS(zeta(:)) )
+       dr(ir) = 0.0_DP
+       zeta(ir) = 0.0_DP
+       zeta_eff(ir) = 0.0_DP
+     ENDDO
+     
      !
      i1 = 1     ;   f1 = length          !  four blocks:  [ rho+dr , zeta    ]
      i2 = f1+1  ;   f2 = 2*length        !                [ rho-dr , zeta    ]
@@ -312,12 +341,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      i4 = f3+1  ;   f4 = 4*length        !                [ rho    , zeta-dz ]
      !
      !
-     dz(:) = 1.E-6_DP  ! dz(:) = MIN( 1.d-6, 1.d-4*ABS(zeta(:)) )
-     !
-     ! ... THRESHOLD STUFF AND dr(:)
-     dr(:) = 0.0_DP
-     zeta(:) = 0.0_DP
-     zeta_eff(:) = 0.0_DP
+     !$acc parallel loop
      DO ir = 1, length
         IF (rhotot(ir) > small) THEN
            zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
@@ -332,35 +356,43 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         ENDIF
      ENDDO
      !
-     rhoaux(i1:f1) = rhotot + dr    ;   zetaux(i1:f1) = zeta
-     rhoaux(i2:f2) = rhotot - dr    ;   zetaux(i2:f2) = zeta
-     rhoaux(i3:f3) = rhotot         ;   zetaux(i3:f3) = zeta_eff + dz
-     rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff - dz
+     
+     !$acc parallel loop
+     DO ir = 1, length
+       rhoaux(i1-1+ir) = rhotot(ir)+dr(ir)  ;  zetaux(i1-1+ir) = zeta(ir)
+       rhoaux(i2-1+ir) = rhotot(ir)-dr(ir)  ;  zetaux(i2-1+ir) = zeta(ir)
+       rhoaux(i3-1+ir) = rhotot(ir)         ;  zetaux(i3-1+ir) = zeta_eff(ir)+dz(ir)
+       rhoaux(i4-1+ir) = rhotot(ir)         ;  zetaux(i4-1+ir) = zeta_eff(ir)-dz(ir)
+     ENDDO
+     
      !
-     !$acc data copyin( rhoaux, zetaux ) copyout( aux1, aux2, vx, vc )
-     !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
      CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
-     !$acc end host_data
+     !
+     
+     !$acc parallel loop
+     DO ir = 1, length
+       !
+       IF (rhotot(ir) <= small)  THEN      ! ... to avoid NaN in the next operations
+          dr(ir)=1.0_DP ; rhotot(ir)=0.5d0
+       ENDIF
+       !
+       dmuxc(ir,1,1) = ( vx(i1-1+ir,1) + vc(i1-1+ir,1) - vx(i2-1+ir,1) - vc(i2-1+ir,1) ) / (2.0_DP*dr(ir))*e2
+       dmuxc(ir,2,2) = ( vx(i1-1+ir,2) + vc(i1-1+ir,2) - vx(i2-1+ir,2) - vc(i2-1+ir,2) ) / (2.0_DP*dr(ir))*e2
+       !
+       aux1(i1-1+ir) = 1.0_DP / rhotot(ir) / (2.0_DP*dz(ir))
+       aux1(i2-1+ir) = aux1(i1-1+ir)
+       !
+       vxc(i1-1+ir,1) = ( vx(i3-1+ir,1) + vc(i3-1+ir,1) ) * aux1(i1-1+ir)
+       vxc(i1-1+ir,2) = ( vx(i3-1+ir,2) + vc(i3-1+ir,2) ) * aux1(i1-1+ir)
+       !
+       dmuxc(ir,2,1) = ( dmuxc(ir,1,1) - (vxc(i1-1+ir,1) - vxc(i2-1+ir,1)) * (1.0_DP+zeta(ir)) )*e2
+       dmuxc(ir,1,2) = ( dmuxc(ir,2,2) + (vxc(i1-1+ir,2) - vxc(i2-1+ir,2)) * (1.0_DP-zeta(ir)) )*e2
+       dmuxc(ir,1,1) = ( dmuxc(ir,1,1) + (vxc(i1-1+ir,1) - vxc(i2-1+ir,1)) * (1.0_DP-zeta(ir)) )*e2
+       dmuxc(ir,2,2) = ( dmuxc(ir,2,2) - (vxc(i1-1+ir,2) - vxc(i2-1+ir,2)) * (1.0_DP+zeta(ir)) )*e2
+       !
+     ENDDO
+     
      !$acc end data
-     !
-     WHERE (rhotot <= small)  ! ... to avoid NaN in the next operations
-        dr=1.0_DP ; rhotot=0.5d0
-     END WHERE
-     !
-     dmuxc(:,1,1) = ( vx(i1:f1,1) + vc(i1:f1,1) - vx(i2:f2,1) - vc(i2:f2,1) ) / (2.0_DP*dr)
-     dmuxc(:,2,2) = ( vx(i1:f1,2) + vc(i1:f1,2) - vx(i2:f2,2) - vc(i2:f2,2) ) / (2.0_DP*dr)
-     !
-     aux1(i1:f1) = 1.0_DP / rhotot(:) / (2.0_DP*dz(:))
-     aux1(i2:f2) = aux1(i1:f1)
-     !
-     vxc(i1:f2,1) = ( vx(i3:f4,1) + vc(i3:f4,1) ) * aux1(i1:f2)
-     vxc(i1:f2,2) = ( vx(i3:f4,2) + vc(i3:f4,2) ) * aux1(i1:f2)
-     !
-     dmuxc(:,2,1) = dmuxc(:,1,1) - (vxc(i1:f1,1) - vxc(i2:f2,1)) * (1.0_DP+zeta)
-     dmuxc(:,1,2) = dmuxc(:,2,2) + (vxc(i1:f1,2) - vxc(i2:f2,2)) * (1.0_DP-zeta)
-     dmuxc(:,1,1) = dmuxc(:,1,1) + (vxc(i1:f1,1) - vxc(i2:f2,1)) * (1.0_DP-zeta)
-     dmuxc(:,2,2) = dmuxc(:,2,2) - (vxc(i1:f1,2) - vxc(i2:f2,2)) * (1.0_DP+zeta)
-     !
      DEALLOCATE( vx, vc, vxc )
      DEALLOCATE( rhoaux, zetaux )
      DEALLOCATE( aux1, aux2 )
@@ -368,9 +400,13 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
   ENDIF
   !
+  
+  !$acc end data
+  !$acc end data
+  
   ! ... bring to Rydberg units
   !
-  dmuxc = e2 * dmuxc
+  !dmuxc = e2 * dmuxc
   !
   IF (is_libxc(1)) iexch=iexch_
   IF (is_libxc(2)) icorr=icorr_
@@ -609,6 +645,7 @@ END FUNCTION dpz
 !
 !-----------------------------------------------------------------------
 FUNCTION dpz_polarized( rs, iflg )
+!$acc routine seq
   !-----------------------------------------------------------------------
   !! Derivative of the correlation potential with respect to local density
   !! Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
