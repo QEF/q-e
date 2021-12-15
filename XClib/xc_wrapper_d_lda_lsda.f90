@@ -143,8 +143,9 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
     length_dlxc = length
     IF (pol_unpol == 2) length_dlxc = length*3
     !
+    !$acc end data
+    !
   ENDIF
-  !$acc end data
   !
   IF ( is_libxc(1) ) THEN
     ALLOCATE( dmex_lxc(length_dlxc) )
@@ -156,6 +157,7 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
     ENDIF  
   ENDIF
   !
+  fkind_x = -100
   IF ( is_libxc(2) ) THEN
     ALLOCATE( dmcr_lxc(length_dlxc) )
     ! ... DERIVATIVE FOR CORRELATION
@@ -167,12 +169,18 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
     ENDIF
   ENDIF
   !
-  
-  !$acc parallel loop
-  DO ir = 1, length
-    dmuxc(ir) = 0.0_DP
-  ENDDO
-  
+  IF (srd==1) THEN
+    !$acc parallel loop
+    DO ir = 1, length
+      dmuxc(ir,1,1) = 0.0_DP
+    ENDDO
+  ELSE
+    !$acc parallel loop
+    DO ir = 1, length
+      dmuxc(ir,1,1) = 0.0_DP ; dmuxc(ir,2,1) = 0.0_DP
+      dmuxc(ir,1,2) = 0.0_DP ; dmuxc(ir,2,2) = 0.0_DP
+    ENDDO
+  ENDIF
   !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
         .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN

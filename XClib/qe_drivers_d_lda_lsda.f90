@@ -61,16 +61,15 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
                          pi34 = 0.75_DP/3.141592653589793_DP,   &
                          third = 1.0_DP/3.0_DP, rho_trash = 0.5_DP, &
                          rs_trash = 1.0_DP
-
-                         
+  !
 #if defined(_OPENMP)
   INTEGER :: ntids
   INTEGER, EXTERNAL :: omp_get_num_threads
   !
   ntids = omp_get_num_threads()
-#else
-  !$acc data deviceptr( rho_in, dmuxc )
 #endif
+  !
+  !$acc data deviceptr( rho_in, dmuxc )
   !
   !$acc parallel loop
   DO ir = 1, length
@@ -128,7 +127,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      !$acc data create( rhoaux, arho, dr, ex, vx, ec, vc )
      !
      i1 = 1         ;  f1 = length             !two blocks:  [ rho+dr ]
-     i2 = length+1  ;  f2 = 2*length           !             [ rho-dr ]              
+     i2 = length+1  ;  f2 = 2*length           !             [ rho-dr ]
      !
      !$acc parallel loop
      DO ir = 1, length
@@ -143,9 +142,6 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      !$acc parallel loop
      DO ir = 1, length
        rhoaux(i1-1+ir) = arho(ir)+dr(ir)
-     ENDDO
-     !$acc parallel loop
-     DO ir = 1, length
        rhoaux(i2-1+ir) = arho(ir)-dr(ir)
      ENDDO
      !
@@ -172,6 +168,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   IF (is_libxc(1)) iexch=iexch_
   IF (is_libxc(2)) icorr=icorr_
+  !
+  !$acc end data
   !
   RETURN
   !
@@ -209,6 +207,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   REAL(DP) :: fz, fz1, fz2, dmcu, dmcp, aa, bb, cc
   REAL(DP) :: rs, zeta_s
+  REAL(DP) :: dmuxc_11, dmuxc_22, rhodz, vxc1_up, vxc2_up, vxc1_dw, vxc2_dw
   !
   !REAL(DP) :: dpz, dpz_polarized
   !
@@ -315,17 +314,14 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
   ELSE
      !
-     !
-     ALLOCATE( vx(4*length,2) , vc(4*length,2), vxc(2*length,2) )
+     ALLOCATE( vx(4*length,2), vc(4*length,2) )
      ALLOCATE( rhoaux(4*length), zetaux(4*length) )
-     ALLOCATE( aux1(4*length) , aux2(4*length) )
+     ALLOCATE( aux1(4*length), aux2(4*length) )
      ALLOCATE( dr(length), dz(length) )
      ALLOCATE( zeta(length), zeta_eff(length))
-     
-     
-     !$acc data create( vx, vc, vxc, rhoaux, zetaux, aux1, aux2, &
+     !$acc data create( vx, vc, rhoaux, zetaux, aux1, aux2, &
      !$acc&             dr, dz, zeta, zeta_eff )
-     
+     !
      !$acc parallel loop
      DO ir = 1, length
        dz(ir) = 1.E-6_DP  ! dz(:) = MIN( 1.d-6, 1.d-4*ABS(zeta(:)) )
@@ -333,13 +329,11 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
        zeta(ir) = 0.0_DP
        zeta_eff(ir) = 0.0_DP
      ENDDO
-     
      !
      i1 = 1     ;   f1 = length          !  four blocks:  [ rho+dr , zeta    ]
      i2 = f1+1  ;   f2 = 2*length        !                [ rho-dr , zeta    ]
      i3 = f2+1  ;   f3 = 3*length        !                [ rho    , zeta+dz ]
      i4 = f3+1  ;   f4 = 4*length        !                [ rho    , zeta-dz ]
-     !
      !
      !$acc parallel loop
      DO ir = 1, length
@@ -356,7 +350,6 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         ENDIF
      ENDDO
      !
-     
      !$acc parallel loop
      DO ir = 1, length
        rhoaux(i1-1+ir) = rhotot(ir)+dr(ir)  ;  zetaux(i1-1+ir) = zeta(ir)
@@ -364,11 +357,11 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
        rhoaux(i3-1+ir) = rhotot(ir)         ;  zetaux(i3-1+ir) = zeta_eff(ir)+dz(ir)
        rhoaux(i4-1+ir) = rhotot(ir)         ;  zetaux(i4-1+ir) = zeta_eff(ir)-dz(ir)
      ENDDO
-     
      !
+     !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
      CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
+     !$acc end host_data
      !
-     
      !$acc parallel loop
      DO ir = 1, length
        !
@@ -376,37 +369,35 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
           dr(ir)=1.0_DP ; rhotot(ir)=0.5d0
        ENDIF
        !
-       dmuxc(ir,1,1) = ( vx(i1-1+ir,1) + vc(i1-1+ir,1) - vx(i2-1+ir,1) - vc(i2-1+ir,1) ) / (2.0_DP*dr(ir))*e2
-       dmuxc(ir,2,2) = ( vx(i1-1+ir,2) + vc(i1-1+ir,2) - vx(i2-1+ir,2) - vc(i2-1+ir,2) ) / (2.0_DP*dr(ir))*e2
+       dmuxc_11 = ( vx(i1-1+ir,1) + vc(i1-1+ir,1) - vx(i2-1+ir,1) - vc(i2-1+ir,1) ) &
+                                                                  / (2.0_DP*dr(ir))
+       dmuxc_22 = ( vx(i1-1+ir,2) + vc(i1-1+ir,2) - vx(i2-1+ir,2) - vc(i2-1+ir,2) ) &
+                                                                  / (2.0_DP*dr(ir))
        !
-       aux1(i1-1+ir) = 1.0_DP / rhotot(ir) / (2.0_DP*dz(ir))
-       aux1(i2-1+ir) = aux1(i1-1+ir)
+       rhodz = 1.0_DP / rhotot(ir) / (2.0_DP*dz(ir))
        !
-       vxc(i1-1+ir,1) = ( vx(i3-1+ir,1) + vc(i3-1+ir,1) ) * aux1(i1-1+ir)
-       vxc(i1-1+ir,2) = ( vx(i3-1+ir,2) + vc(i3-1+ir,2) ) * aux1(i1-1+ir)
+       vxc1_up = ( vx(i3-1+ir,1) + vc(i3-1+ir,1) ) * rhodz
+       vxc1_dw = ( vx(i3-1+ir,2) + vc(i3-1+ir,2) ) * rhodz
+       vxc2_up = ( vx(i4-1+ir,1) + vc(i4-1+ir,1) ) * rhodz
+       vxc2_dw = ( vx(i4-1+ir,2) + vc(i4-1+ir,2) ) * rhodz
        !
-       dmuxc(ir,2,1) = ( dmuxc(ir,1,1) - (vxc(i1-1+ir,1) - vxc(i2-1+ir,1)) * (1.0_DP+zeta(ir)) )*e2
-       dmuxc(ir,1,2) = ( dmuxc(ir,2,2) + (vxc(i1-1+ir,2) - vxc(i2-1+ir,2)) * (1.0_DP-zeta(ir)) )*e2
-       dmuxc(ir,1,1) = ( dmuxc(ir,1,1) + (vxc(i1-1+ir,1) - vxc(i2-1+ir,1)) * (1.0_DP-zeta(ir)) )*e2
-       dmuxc(ir,2,2) = ( dmuxc(ir,2,2) - (vxc(i1-1+ir,2) - vxc(i2-1+ir,2)) * (1.0_DP+zeta(ir)) )*e2
+       dmuxc(ir,2,1) = ( dmuxc_11 - (vxc1_up - vxc2_up) * (1.0_DP+zeta(ir)) )*e2
+       dmuxc(ir,1,2) = ( dmuxc_22 + (vxc1_dw - vxc2_dw) * (1.0_DP-zeta(ir)) )*e2
+       dmuxc(ir,1,1) = ( dmuxc_11 + (vxc1_up - vxc2_up) * (1.0_DP-zeta(ir)) )*e2
+       dmuxc(ir,2,2) = ( dmuxc_22 - (vxc1_dw - vxc2_dw) * (1.0_DP+zeta(ir)) )*e2
        !
      ENDDO
-     
+     !
      !$acc end data
-     DEALLOCATE( vx, vc, vxc )
+     DEALLOCATE( vx, vc )
      DEALLOCATE( rhoaux, zetaux )
      DEALLOCATE( aux1, aux2 )
      DEALLOCATE( dr, dz )
      !
   ENDIF
   !
-  
   !$acc end data
   !$acc end data
-  
-  ! ... bring to Rydberg units
-  !
-  !dmuxc = e2 * dmuxc
   !
   IF (is_libxc(1)) iexch=iexch_
   IF (is_libxc(2)) icorr=icorr_
