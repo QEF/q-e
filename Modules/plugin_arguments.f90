@@ -30,6 +30,7 @@ SUBROUTINE plugin_arguments()
   use_plumed = .false.
   use_pw2casino = .false.
   use_environ = .false.
+  use_partn = .false.
   !
   DO iiarg = 1, nargs 
     CALL get_command_argument( iiarg, plugin_name)
@@ -50,6 +51,9 @@ SUBROUTINE plugin_arguments()
        ENDIF
        IF ( TRIM(arg)=='environ' ) THEN
           use_environ = .true.
+       ENDIF
+       IF ( TRIM(arg)=='partn' ) THEN
+          use_partn = .true.
        ENDIF
     ENDIF
   ENDDO
@@ -76,6 +80,8 @@ END SUBROUTINE plugin_arguments
   CALL mp_bcast(use_pw2casino,root,comm)
   !
   CALL mp_bcast(use_environ,root,comm)
+  !
+  CALL mp_bcast(use_partn,root,comm)
   !
 !  write(0,*) "use_plumed: ", use_plumed
   !

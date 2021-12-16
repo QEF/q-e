@@ -533,6 +533,14 @@ MODULE read_namelists_module
        w_1              = 0.01_DP
        w_2              = 0.50_DP
        !
+       ! FIRE minimization defaults 
+       !
+       fire_nmin = 5 ! minimum number of steps P > 0 before dt increas
+       fire_f_inc = 1.1_DP ! factor for time step increase
+       fire_f_dec = 0.5_DP ! factor for time step decrease 
+       fire_alpha_init = 0.20_DP ! initial value of mixing factor
+       fire_falpha = 0.99_DP ! modification of the mixing factor
+       fire_dtmax = 10.0_DP ! factor for calculating dtmax 
        RETURN
        !
      END SUBROUTINE

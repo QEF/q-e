@@ -2409,7 +2409,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     dynamics for structural relaxation
                     Can be used for constrained 
                     optimisation: see @ref CONSTRAINTS card
-                }               
+                }
+		opt -val 'fire' {
+                    use the FIRE minimization algorithm employing the
+		    semi-implicit Euler integration scheme
+		    see:
+		       Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
+		       Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
+
+                    Can be used for constrained 
+                    optimisation: see @ref CONSTRAINTS card
+                }
                 info {
                     @b CASE ( @ref calculation == 'md' )
                 }
@@ -2703,6 +2713,50 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 info {
                     Parameters used in line search based on the Wolfe conditions.
                     (bfgs only)
+                }
+            }
+        }
+	group {
+            label {
+                keywords used only in the FIRE minimization algorithm 
+            }   
+
+            var fire_alpha_init -type REAL { 
+                default { 0.2D0 }
+                info {
+                    Initial value of the alpha mixing factor in the FIRE minimization scheme;
+		    recommended values are between 0.1 and 0.3 
+                }
+            }
+	    var fire_falpha -type REAL { 
+                default { 0.99D0 }
+                info {
+                    Scaling of the alpha mixing parameter for steps with P > 0;  
+                }
+            }
+	    var fire_nmin -type INTEGER { 
+                default { 5 }
+                info {
+                    Minimum number of steps with P > 0 before increase of @ref dt 
+                }
+            }
+	    var fire_f_inc -type REAL { 
+                default { 1.1D0 }
+                info {
+                   Factor for increasing @ref dt 
+                }
+            }
+	    var fire_f_dec -type REAL { 
+                default { 0.5D0 }
+                info {
+                   Factor for decreasing @ref dt 
+                }
+            }
+	    var fire_dtmax -type REAL { 
+                default { 10.D0 }
+                info {
+                   Determines the maximum value of @ref dt in the FIRE minimization;
+		   dtmax = fire_dtmax*@ref dt 
                 }
             }
         }
