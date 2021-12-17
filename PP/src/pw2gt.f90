@@ -26,6 +26,7 @@ PROGRAM pw2gt
   !                         exceeding a few thousands plane waves
   !
   ! Output file written in "outdir"/"prefix".save/output.dat
+  ! NOTA BENE: complex numbers are written as "a b", not "(a,b)"
   !
   ! Written by Paolo Giannozzi, with help from Marco Pala
   !
@@ -165,6 +166,8 @@ SUBROUTINE simple_output ( fileout  )
   WRITE(iun,'("# Local potential V(G) (one column per spin component)")')
   DO is=1,nspin
      WRITE(iun,'("# spin component n.",i4)') is
+     ! NOTE: free format is not used to write complex number here and below
+     !       complex numbers are written as real and imaginary parts instead
      WRITE(iun,'(2e25.15)') (vaux(ig,is), ig=1,ngm)
   END DO
   DEALLOCATE (vaux)
@@ -246,6 +249,9 @@ SUBROUTINE simple_diag ( fileout )
   REAL(dp) :: at(3,3), bg(3,3), xk(3)
   REAL(dp), ALLOCATABLE :: et(:), dvan(:,:,:)
   COMPLEX(dp), ALLOCATABLE :: vaux(:,:), evc(:,:), vkb(:,:), dvan_so(:,:,:,:)
+  ! In order to avoid trouble with the format of complex numbers,
+  ! these are written as "a b", not "(a,b)"
+  REAL(dp), ALLOCATABLE :: raux(:,:)
   !
   CHARACTER(LEN=80) :: line
   INTEGER :: iun, ig, is, ik, ikb, ibnd, na, nt, nt_, i, j, ii, jj, ij, &
@@ -313,14 +319,18 @@ SUBROUTINE simple_diag ( fileout )
      npol = 2
   ENDIF
   ALLOCATE (vaux(ngm,nspin))
+  ALLOCATE (raux(2,ngm))
   READ(iun,'(a)')  line
   WRITE(stdout,'(a)') line
   DO is=1,nspin
      READ(iun,'(a)')  line
      IF (debug) WRITE(stdout,'(a)') line
-     READ(iun,'(2e25.15)') (vaux(ig,is), ig=1,ngm)
-     ! should be READ(iun,*) (vaux(ig,is), ig=1,ngm)
+     READ(iun,*) (raux(1,ig),raux(2,ig), ig=1,ngm)
+     DO ig=1,ngm
+        vaux(ig,is) = CMPLX ( raux(1,ig), raux(2,ig) )
+     END DO
   END DO
+  DEALLOCATE (raux)
   READ(iun,'(a)')  line
   READ(iun,*)  okvan
   IF ( okvan ) skip_diag = .true.
@@ -382,24 +392,32 @@ SUBROUTINE simple_diag ( fileout )
      ALLOCATE ( igk(npw) )
      READ(iun,'(i8)') (igk(ig), ig=1,npw)
      ALLOCATE ( vkb(npw,nkb) )
+     ALLOCATE ( raux(2,npw) )
      DO ikb=1,nkb
         READ(iun,'(a)')  line
         IF (debug) WRITE(stdout,'(a)') line
-        READ(iun,'(2e25.15)') vkb(1:npw,ikb)
+        READ(iun,*) (raux(1,ig), raux(2,ig), ig=1,npw)
+        DO ig=1,npw
+          vkb(ig,ikb) = CMPLX ( raux(1,ig), raux(2,ig) )
+        END DO
      END DO
+     DEALLOCATE (raux)
      READ(iun,'(a)')  line
      READ(iun,*)  nbnd
      WRITE(stdout,*) trim(line), nbnd
      ALLOCATE ( et(nbnd), evc(npol*npw,nbnd) )
+     ALLOCATE ( raux(2,npol*npw) )
      DO ibnd=1,nbnd
         READ(iun,'(a)')  line
         IF (debug) WRITE(stdout,'(a)') line
         READ(iun,'(a)')  line
         READ(line(19:),*) et(ibnd)
-        READ(iun,'(2e25.15)') evc(1:npw,ibnd)
-        IF ( npol == 2 ) &
-           READ(iun,'(2e25.15)') evc(1+npw:2*npw,ibnd)
+        READ(iun,*) (raux(1,ig), raux(2,ig), ig=1,npol*npw)
+        DO ig=1,npol*npw
+          evc(ig,ibnd) = CMPLX ( raux(1,ig), raux(2,ig) )
+        END DO
      END DO
+     DEALLOCATE (raux)
      WRITE(stdout,'("Data read for k-point #",i4,", eigenvalues :")') ik
      WRITE(stdout,'(6f12.6)') et(:)
      ALLOCATE ( h(npol*npw,npol*npw), v(npol*npw,npol*npw), e(npol*npw) )
