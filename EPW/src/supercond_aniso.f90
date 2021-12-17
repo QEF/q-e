@@ -392,7 +392,7 @@
     !!
     USE kinds,             ONLY : DP
     USE elph2,             ONLY : wqf, gtemp
-    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, lmuchem
+    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, muchem 
     USE eliashbergcom,     ONLY : nsiw, gap0, gap, agap, wsi, akeri, limag_fly, &
                                   deltai, znormi, adeltai, adeltaip, & 
                                   aznormi, naznormi, wsphmax, nkfs, nbndfs, dosef, ef0, & 
@@ -451,6 +451,10 @@
     !! Temporary variable
     REAL(KIND = DP) :: weight
     !! Factor in supercond. equations
+    REAL(KIND = DP), SAVE :: numelbnd, numstate
+    !! mu_inter parameters
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! for Fermi-Dirac distribution
     REAL(KIND = DP), ALLOCATABLE :: zesqrt(:, :, :), desqrt(:, :, :), sesqrt(:, :, :)
     !! Temporary variables
     REAL(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
@@ -482,6 +486,21 @@
         ! get the size of required memory for gap, agap
         imelt = (1 + nbndfs * nkfs) * nstemp
         CALL mem_size_eliashberg(2, imelt)
+        !
+        ! SH: calculate the input parameters for mu_inter
+        numelbnd = zero
+        numstate = zero
+        DO ik = 1, nkfs
+          DO ibnd = 1, nbndfs
+            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+              numstate = numstate + wkfs(ik)
+              numelbnd = numelbnd + 2.d0 * wkfs(ik) * wgauss((ef0 - ekfs(ibnd, ik)) / zero, -99)
+            ENDIF
+          ENDDO
+        ENDDO
+        numelbnd = numelbnd / numstate
+        WRITE(stdout, '(5x,a,2f15.8)') &
+          'avg. electron per band and nr. of states (Fermi window) = ', numelbnd, numstate
         !
       ENDIF
       !
@@ -581,7 +600,7 @@
     IF (fbw) THEN
       !
       ! SH: update the chemical potential from the inital guess
-      IF (lmuchem) CALL mu_inter1(itemp, muintr)
+      IF (muchem ) CALL mu_inter1(itemp, muintr, numelbnd, numstate)
       !
       naznormi(:, :, :) = zero
       adeltai(:, :, :)  = zero
@@ -2000,12 +2019,11 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE mu_inter1(itemp, muintr)
+    SUBROUTINE mu_inter1(itemp,muintr, numelbnd, numstate)
     !-----------------------------------------------------------------------
     !!
     !! SH: To find the superconducting state chemical potential
-    !!       by solving Eqn. (3) in [PRB 98, 094509 (2018)],
-    !!       and using the Newton-Raphson method (Nov 2021).
+    !!       using the Newton-Raphson method (Nov 2021).
     !!
     USE kinds,          ONLY : DP
     USE eliashbergcom,  ONLY : ekfs, ef0, nkfs, nbndfs, wsi, nsiw, &
@@ -2021,6 +2039,10 @@
     !! Temperature
     REAL(KIND = DP) :: muintr
     !! Interacting chemical potential: initial value
+    REAL(KIND = DP) :: numelbnd
+    !! Weighted umber of electrons per band in Fermi ene. window
+    REAL(KIND = DP) :: numstate
+    !! Weighted number of k/band states in Fermi ene. window
     !
     ! Local variables
     LOGICAL :: conv
@@ -2037,10 +2059,6 @@
     !! Counter for iterations
     REAL(KIND = DP) :: delta
     !! Temporary variable to store energy difference
-    REAL(KIND = DP) :: numele
-    !! Number of electrons in Fermi ene. window
-    REAL(KIND = DP) :: numbnd
-    !! Number of bands in Fermi ene. window
     REAL(KIND = DP) :: theta
     !! Theta in Eliashberg equations
     REAL(KIND = DP) :: muout, muin
@@ -2049,9 +2067,6 @@
     !! To store f(mu) value
     REAL(KIND = DP) :: dmu
     !! To store d_f(mu)/d_mu value
-    !
-    numele = 1.d0         ! Nr of electrons per band per spin
-    numbnd = DBLE(nbndfs) ! Nr of bands in Fermi window
     !
     muin = muintr
     !
@@ -2068,7 +2083,7 @@
       !      symmetric frequencies (iw=1, N-1) and multiply that by two
       !      (loop over iw), and then add the term corresponding to iw=N.
       !
-      DO ik = 1, nkfs
+      DO ik = 1, nkfs 
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
             DO iw = 1, nsiw(itemp) - 1
@@ -2089,8 +2104,8 @@
         ENDDO ! ibnd
       ENDDO ! ik
       !
-      fmu = fmu * (2.d0 * gtemp(itemp) / numbnd) + 1.d0 - numele
-      dmu = dmu * (2.d0 * gtemp(itemp) / numbnd)
+      fmu = - fmu * (2.d0 * gtemp(itemp) / numstate) + 1.d0 - numelbnd
+      dmu = - dmu * (2.d0 * gtemp(itemp) / numstate)
       !
       muout = muin - fmu / dmu
       !
