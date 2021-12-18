@@ -18,9 +18,11 @@
 ;; (https://www.emacswiki.org/emacs/DerivedMode,
 ;; https://www.emacswiki.org/emacs/SampleMode) as well as the very
 ;; useful resources of Xah Lee
-;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html).  Last but
-;; not the least Sebastijan Peljhan is acknowledged for his work on
-;; `xsf-mode' that inspired the idea of writing the qe-modes.
+;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html). Sebastijan
+;; Peljhan is acknowledged for his work on `xsf-mode' that inspired
+;; the idea of writing the qe-modes. Last but not the least,
+;; Hongyi Zhao contributed the ido-completion-read snippet of
+;; code for selecting the values for the card's flags.
 
 
 ;; This file is not part of GNU Emacs.
@@ -74,7 +76,7 @@
 (defvar qe-closed-supercards (list "AUTOPILOT" "BEGIN" "BEGIN_ENGINE_INPUT" "BEGIN_PATH_INPUT" "BEGIN_POSITIONS" "END" "ENDRULES" "END_ENGINE_INPUT" "END_PATH_INPUT" "END_POSITIONS" ))
   
 ;; qe's namelists
-(defvar qe-namelists (list "&BANDS" "&CELL" "&CONTROL" "&DOS" "&ELECTRONS" "&ENERGY_CURRENT" "&FCP" "&INPUT" "&INPUTCOND" "&INPUTHP" "&INPUTMOPDOS" "&INPUTP" "&INPUTPH" "&INPUTPP" "&INPUT_BGW2PW" "&INPUT_PW2BGW" "&IONS" "&LR_CONTROL" "&LR_DAV" "&LR_INPUT" "&LR_POST" "&PATH" "&PLOT" "&PPACF" "&PRESS_AI" "&PROJWFC" "&SYSTEM" "&TEST" "&WANNIER" "&lr_control" "&lr_input" ))
+(defvar qe-namelists (list "&BANDS" "&CELL" "&CONTROL" "&DOS" "&ELECTRONS" "&ENERGY_CURRENT" "&FCP" "&INPUT" "&INPUTCOND" "&INPUTHP" "&INPUTMOPDOS" "&INPUTP" "&INPUTPH" "&INPUTPP" "&INPUT_BGW2PW" "&INPUT_PW2BGW" "&IONS" "&LR_CONTROL" "&LR_DAV" "&LR_INPUT" "&LR_POST" "&PATH" "&PLOT" "&PPACF" "&PRESS_AI" "&PROJWFC" "&SYSTEM" "&TEST" "&WANNIER" ))
 (defvar qe-end-namelist (list "&END" "/"))
 
 ;; qe's variables
