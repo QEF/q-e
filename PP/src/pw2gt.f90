@@ -182,7 +182,7 @@ SUBROUTINE simple_output ( fileout  )
      IF ( lspinorb ) THEN
         DO is = 1, nspin
            WRITE(iun,'("# spin component n.",i4)') is
-           WRITE(iun,*) dvan_so(1:nh(nt),1:nh(nt),is,nt)
+           WRITE(iun,'(2e25.15)') dvan_so(1:nh(nt),1:nh(nt),is,nt)
         END DO
      ELSE
         WRITE(iun,*) dvan(1:nh(nt),1:nh(nt),nt)
@@ -252,6 +252,7 @@ SUBROUTINE simple_diag ( fileout )
   ! In order to avoid trouble with the format of complex numbers,
   ! these are written as "a b", not "(a,b)"
   REAL(dp), ALLOCATABLE :: raux(:,:)
+  REAL(dp) :: dvan_re, dvan_im
   !
   CHARACTER(LEN=80) :: line
   INTEGER :: iun, ig, is, ik, ikb, ibnd, na, nt, nt_, i, j, ii, jj, ij, &
@@ -355,7 +356,13 @@ SUBROUTINE simple_diag ( fileout )
         DO is=1,nspin
            READ(iun,'(a)')  line
            IF (debug) WRITE(stdout,'(a)') line
-           READ(iun,*) dvan_so(1:nh(nt),1:nh(nt),is,nt)
+           !READ(iun,*) dvan_so(1:nh(nt),1:nh(nt),is,nt)
+           DO jh=1,nh(nt)
+              DO ih=1,nh(nt)
+                 READ(iun,*) dvan_re, dvan_im
+                 dvan_so(ih,jh,is,nt) = CMPLX(dvan_re,dvan_im)
+              END DO
+           END DO
         END DO
      ELSE
         READ(iun,*) dvan(1:nh(nt),1:nh(nt),nt)
