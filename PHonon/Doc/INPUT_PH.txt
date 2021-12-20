@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ph.x / PHonon / Quantum ESPRESSO (version: 6.8)
+Program: ph.x / PHonon / Quantum ESPRESSO (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -112,7 +112,8 @@ NAMELIST: &INPUTPH
    
    Type:           INTEGER
    Default:        4
-   Description:    Number of iterations used in potential mixing.
+   Description:    Number of iterations used in potential mixing. Using a larger value (8~20)
+                   can significantly speed up convergence, at the cost of using more memory.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -136,6 +137,10 @@ NAMELIST: &INPUTPH
    Type:           LOGICAL
    Default:        .false.
    Description:    Reduce I/O to the strict minimum.
+                   
+                   BEWARE: If the input flag "reduce_io"=.true. was
+                   used, it is not allowed to restart from an interrupted
+                   run.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -212,9 +217,11 @@ NAMELIST: &INPUTPH
    
    Type:           LOGICAL
    Default:        .true.
-   Description:    If .true. the phonons are computed.
-                   If "trans" .and. "epsil" are .true. effective charges are
-                   calculated.
+   Description:    If .false. the phonons are not computed.
+                   If "trans" .and. "epsil" are both .true.,
+                   the effective charges are calculated.
+                   If "ldisp" is .true., "trans"=.false. is overridden
+                   (except for the case of electron-phonon calculations)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -326,7 +333,7 @@ NAMELIST: &INPUTPH
                    'simple' :
                         Electron-phonon lambda coefficients are computed
                         for a given q and a grid of k-points specified by
-                        the variables nk1, nk2, nk3, k1, k2, k3.
+                        the variables "nk1", "nk2", "nk3", "k1", "k2", "k3".
     
                    'interpolated' :
                         Electron-phonon is calculated by interpolation
@@ -564,8 +571,8 @@ NAMELIST: &INPUTPH
                    runs a pw non-self consistent calculation with a different
                    k-point grid thant that used for the charge density.
                    This occurs even in the Gamma case.
-                   nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
-                   with offset determined by k1,k2,k3.
+                   @ref nk1, @ref nk2, @ref nk3 are the parameters of the Monkhorst-Pack grid
+                   with offset determined by @ref k1, @ref k2, @ref k3.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -622,8 +629,8 @@ NAMELIST: &INPUTPH
       Type:           CHARACTER
       Default:        outdir // 'w_pot/'
       Description:    Directory where the w_pot binary files are written.
-                      Must be the same with wpot_dir used in dvscf_q2r.x.
-                      The real space potential files are stored in wpot_dir
+                      Must be the same with "wpot_dir" used in dvscf_q2r.x.
+                      The real space potential files are stored in "wpot_dir"
                       with names ${prefix}.wpot.irc${irc}//"1".
       +--------------------------------------------------------------------
       
@@ -979,4 +986,4 @@ ________________________________________________________________________
    information.
    
 
-This file has been created by helpdoc utility on Fri Jul 16 11:28:32 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:40 CET 2021

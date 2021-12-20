@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO (version: 6.7GPU)
+Program: turbo_spectrum.x / turboTDDFPT / Quantum ESPRESSO (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -189,4 +189,4 @@ NAMELIST: &LR_INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Wed May 05 14:39:06 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:54 CET 2021

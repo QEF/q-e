@@ -17,17 +17,17 @@ input_description -distribution {Quantum Espresso} -package turboMAGNONS -progra
 	  Structure of the input data:
 	  ===============================================================================
 
-	  &lr_input
+	  &LR_INPUT
 	    ...
 	  /
 
-	  &lr_control
+	  &LR_CONTROL
 	    ...
 	  /	    
 
     }
 
-    namelist lr_input {
+    namelist LR_INPUT {
 
 	label { This namelist is always needed ! }
 
@@ -85,7 +85,7 @@ input_description -distribution {Quantum Espresso} -package turboMAGNONS -progra
 	    }
 	}
     }
-    namelist lr_control {
+    namelist LR_CONTROL {
 	var itermax -type INTEGER {
 	    default {500}
 	    info {
