@@ -275,6 +275,9 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    CALL mp_sum(tot_cg_calls, inter_pool_comm)
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
    !
+   DEALLOCATE(aux2)
+   DEALLOCATE(h_diag)
+   !
    CALL stop_clock("sth_kernel")
    !
 !----------------------------------------------------------------------------
