@@ -1801,7 +1801,7 @@ MODULE paw_onecenter
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
-    USE xc_lib,                 ONLY : xclib_set_threshold, xc_gcx
+    USE xc_lib,                 ONLY : xclib_set_threshold, xc_gcx, dgcxc
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info

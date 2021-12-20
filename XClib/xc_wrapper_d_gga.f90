@@ -5,12 +5,58 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-!------- DRIVERS FOR DERIVATIVES OF XC POTENTIAL (GGA CASE) ------------
-!-----------------------------------------------------------------------
+!---------------------------------------------------------------------
+SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss, gpu_args_ )
+  !---------------------------------------------------------------------
+  !! Wrapper routine. Calls dgcx-driver routines from internal libraries
+  !! or from the external libxc, depending on the input choice.
+  !
+  USE kind_l,             ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: length
+  !! length of the I/O arrays
+  INTEGER,  INTENT(IN) :: sp
+  !! number of spin components
+  REAL(DP), INTENT(IN) :: r_in(length,sp)
+  !! charge density
+  REAL(DP), INTENT(IN) :: g_in(length,3,sp)
+  !! gradient
+  REAL(DP), INTENT(OUT) :: dvxc_rr(length,sp,sp), dvxc_sr(length,sp,sp), &
+                           dvxc_ss(length,sp,sp)
+  LOGICAL, OPTIONAL, INTENT(IN) :: gpu_args_
+  !! whether you wish to run on gpu in case use_gpu is true
+  !
+  LOGICAL :: gpu_args
+  !
+  gpu_args = .FALSE.
+  IF ( PRESENT(gpu_args_) ) gpu_args = gpu_args_
+  !
+  IF ( gpu_args ) THEN
+    !
+    !$acc data present( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+!    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+    CALL dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+!    !$acc end host_data
+    !$acc end data
+    !
+  ELSE
+    !
+    !$acc data copyin( r_in, g_in ), copyout( dvxc_rr, dvxc_sr, dvxc_ss )
+!    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+    CALL dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+!    !$acc end host_data
+    !$acc end data
+    !
+  ENDIF
+  !
+  RETURN
+
+END SUBROUTINE
 !
 !---------------------------------------------------------------------
-SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !---------------------------------------------------------------------
   !! Wrapper routine. Calls dgcx-driver routines from internal libraries
   !! or from the external libxc, depending on the input choice.
@@ -350,4 +396,4 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   RETURN
   !
-END SUBROUTINE dgcxc
+END SUBROUTINE dgcxc_

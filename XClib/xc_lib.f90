@@ -21,7 +21,7 @@ MODULE xc_lib
   !
   PUBLIC :: xc, dmxc          !LDA
   !
-  PUBLIC :: xc_gcx !, dgcxc   !GGA
+  PUBLIC :: xc_gcx, dgcxc     !GGA
   !
   PUBLIC :: xc_metagcx        !MGGA
   !
@@ -110,6 +110,21 @@ MODULE xc_lib
        REAL(DP), INTENT(IN) :: rho_in(length,srd)
        REAL(DP), INTENT(OUT) :: dmuxc(length,srd,srd)
        LOGICAL,  OPTIONAL, INTENT(IN) :: gpu_args_
+     END SUBROUTINE
+  END INTERFACE
+  !
+  !
+  INTERFACE dgcxc
+     SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss, gpu_args_ )
+       USE kind_l, ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length
+       INTEGER,  INTENT(IN) :: sp
+       REAL(DP), INTENT(IN) :: r_in(length,sp)
+       REAL(DP), INTENT(IN) :: g_in(length,3,sp)
+       REAL(DP), INTENT(OUT) :: dvxc_rr(length,sp,sp), dvxc_sr(length,sp,sp), &
+                                dvxc_ss(length,sp,sp)
+       LOGICAL, OPTIONAL, INTENT(IN) :: gpu_args_
      END SUBROUTINE
   END INTERFACE
   !
