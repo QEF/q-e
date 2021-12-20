@@ -36,17 +36,17 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss, gpu_args_ )
   IF ( gpu_args ) THEN
     !
     !$acc data present( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
-!    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     CALL dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
-!    !$acc end host_data
+    !$acc end host_data
     !$acc end data
     !
   ELSE
     !
     !$acc data copyin( r_in, g_in ), copyout( dvxc_rr, dvxc_sr, dvxc_ss )
-!    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     CALL dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
-!    !$acc end host_data
+    !$acc end host_data
     !$acc end data
     !
   ENDIF
@@ -337,19 +337,33 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   ALLOCATE( vrrx(length,sp), vsrx(length,sp), vssx(length,sp) )
   ALLOCATE( vrrc(length,sp), vsrc(length,sp), vssc(length) )
+  !$acc data create( vrrx, vsrx, vssx, vrrc, vsrc, vssc )
   !
   SELECT CASE( sp )
   CASE( 1 )
      !
      ALLOCATE( sigma(length) )
-     sigma(:) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2
+     !$acc data create( sigma )
+     !
+     !$acc parallel loop
+     DO k = 1, length
+       sigma(k) = g_in(k,1,1)**2 + g_in(k,2,1)**2 + g_in(k,3,1)**2
+     ENDDO
+     !
+     !$acc host_data use_device( sigma, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
      CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), &
                        vrrc(:,1), vsrc(:,1), vssc )
+     !$acc end host_data
+     !
+     !$acc end data
      DEALLOCATE( sigma )
      !
-     dvxc_rr(:,1,1) = e2*(vrrx(:,1) + vrrc(:,1))
-     dvxc_sr(:,1,1) = e2*(vsrx(:,1) + vsrc(:,1))
-     dvxc_ss(:,1,1) = e2*(vssx(:,1) + vssc(:)  )
+     !$acc parallel loop
+     DO k = 1, length
+       dvxc_rr(k,1,1) = e2*(vrrx(k,1) + vrrc(k,1))
+       dvxc_sr(k,1,1) = e2*(vsrx(k,1) + vsrc(k,1))
+       dvxc_ss(k,1,1) = e2*(vssx(k,1) + vssc(k)  )
+     ENDDO
      !
   CASE( 2 )
      !
@@ -388,6 +402,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
      !
   END SELECT
   !
+  !$acc end data
   DEALLOCATE( vrrx, vsrx, vssx )
   DEALLOCATE( vrrc, vsrc, vssc )
   !

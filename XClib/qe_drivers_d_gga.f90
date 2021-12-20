@@ -60,7 +60,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   !
   ! ... local variables
   !
-  INTEGER :: i1, i2, i3, i4, f1, f2, f3, f4
+  INTEGER :: ir, i1, i2, i3, i4, f1, f2, f3, f4
   INTEGER :: igcx_, igcc_
   REAL(DP), DIMENSION(length) :: dr, s, ds
   REAL(DP), DIMENSION(4*length) :: raux, s2aux
@@ -68,8 +68,11 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
   REAL(DP), PARAMETER :: small = 1.E-30_DP
   !
+  !$acc data deviceptr( r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
+  !
   ALLOCATE( v1x(4*length), v2x(4*length), sx(4*length) )
   ALLOCATE( v1c(4*length), v2c(4*length), sc(4*length) )
+  !$acc data create( raux, s2aux, v1x, v2x, sx, v1c, v2c, sc )
   !
   igcx_=igcx
   igcc_=igcc
@@ -81,42 +84,53 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   i3 = f2+1  ;   f3 = 3*length   !           [ rho    , (grho+ds)^2 ]
   i4 = f3+1  ;   f4 = 4*length   !           [ rho    , (grho-ds)^2 ]
   !
-  s  = SQRT(s2_in)
-  dr = MIN(1.d-4, 1.d-2*r_in)
-  ds = MIN(1.d-4, 1.d-2*s)
+  !$acc parallel loop
+  DO ir = 1, length
+    s(ir)  = SQRT(s2_in(ir))
+    dr(ir) = MIN(1.d-4, 1.d-2*r_in(ir))
+    ds(ir) = MIN(1.d-4, 1.d-2*s(ir))
+  ENDDO
   !
-  raux(i1:f1) = r_in+dr  ;   s2aux(i1:f1) = s2_in
-  raux(i2:f2) = r_in-dr  ;   s2aux(i2:f2) = s2_in
-  raux(i3:f3) = r_in     ;   s2aux(i3:f3) = (s+ds)**2
-  raux(i4:f4) = r_in     ;   s2aux(i4:f4) = (s-ds)**2
+  !$acc parallel loop
+  DO ir = 1, length
+    raux(i1-1+ir) = r_in(ir)+dr(ir)  ;   s2aux(i1-1+ir) = s2_in(ir)
+    raux(i2-1+ir) = r_in(ir)-dr(ir)  ;   s2aux(i2-1+ir) = s2_in(ir)
+    raux(i3-1+ir) = r_in(ir)         ;   s2aux(i3-1+ir) = (s(ir)+ds(ir))**2
+    raux(i4-1+ir) = r_in(ir)         ;   s2aux(i4-1+ir) = (s(ir)-ds(ir))**2
+  ENDDO
   !
-  !$acc data copyin( raux, s2aux ) copyout( sx, sc, v1x, v2x, v1c, v2c )
   !$acc host_data use_device( raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
   CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
   !$acc end host_data
+  !
+  !$acc parallel loop
+  DO ir = 1, length
+    IF ( r_in(ir)>small .AND. s2_in(ir)>small ) THEN
+      vrrx(ir) = 0.5_DP * (v1x(i1-1+ir) - v1x(i2-1+ir)) / dr(ir)
+      vrrc(ir) = 0.5_DP * (v1c(i1-1+ir) - v1c(i2-1+ir)) / dr(ir)
+      !
+      vsrx(ir) = 0.25_DP * ((v2x(i1-1+ir) - v2x(i2-1+ir)) / dr(ir) + &
+                       (v1x(i3-1+ir) - v1x(i4-1+ir)) / ds(ir) / s(ir))
+      vsrc(ir) = 0.25_DP * ((v2c(i1-1+ir) - v2c(i2-1+ir)) / dr(ir) + &
+                       (v1c(i3-1+ir) - v1c(i4-1+ir)) / ds(ir) / s(ir))
+      !
+      vssx(ir) = 0.5_DP * (v2x(i3-1+ir) - v2x(i4-1+ir)) / ds(ir) / s(ir)
+      vssc(ir) = 0.5_DP * (v2c(i3-1+ir) - v2c(i4-1+ir)) / ds(ir) / s(ir)
+    ELSE
+      vrrx(ir) = 0._DP  ;  vrrc(ir) = 0._DP
+      vsrx(ir) = 0._DP  ;  vsrc(ir) = 0._DP
+      vssx(ir) = 0._DP  ;  vssc(ir) = 0._DP
+    ENDIF
+  ENDDO
+  !
   !$acc end data
-  !
-  ! ... to avoid NaN in the next operations
-  WHERE( r_in<=small .OR. s2_in<=small )
-    dr = 1._DP ; ds = 1._DP ; s = 1._DP
-  END WHERE
-  !
-  vrrx = 0.5_DP * (v1x(i1:f1) - v1x(i2:f2)) / dr
-  vrrc = 0.5_DP * (v1c(i1:f1) - v1c(i2:f2)) / dr
-  !
-  vsrx = 0.25_DP * ((v2x(i1:f1) - v2x(i2:f2)) / dr + &
-                    (v1x(i3:f3) - v1x(i4:f4)) / ds / s)
-  vsrc = 0.25_DP * ((v2c(i1:f1) - v2c(i2:f2)) / dr + &
-                    (v1c(i3:f3) - v1c(i4:f4)) / ds / s)
-  !
-  vssx = 0.5_DP * (v2x(i3:f3) - v2x(i4:f4)) / ds / s
-  vssc = 0.5_DP * (v2c(i3:f3) - v2c(i4:f4)) / ds / s
-  !
   DEALLOCATE( v1x, v2x, sx )
   DEALLOCATE( v1c, v2c, sc )
   !
   IF (is_libxc(3)) igcx=igcx_
   IF (is_libxc(4)) igcc=igcc_
+  !
+  !$acc end data
   !
   RETURN
   !
