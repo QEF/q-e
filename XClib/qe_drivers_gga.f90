@@ -176,22 +176,18 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      CASE( 34, 35 ) ! ' AH series for GGA cross checks
         !
         iflag = 0
-        if ( igcx== 34 ) then ! PBE-AH cross check
+        IF ( igcx== 34 ) THEN ! PBE-AH cross check
            CALL pbex( rho, grho, 1, sx, v1x, v2x )
            iflag = 1 ! AHPB for PBE cross check
-        end if
-        if ( igcx== 35 ) then ! PBESOL-AH cross check
+        ELSEIF ( igcx== 35 ) THEN ! PBESOL-AH cross check
            CALL pbex( rho, grho, 3, sx, v1x, v2x )
            iflag = 2 ! AHPS for PBEsol-based cross check
-        end if
+        ENDIF
         !
-        if ( iflag == 0) then
-           STOP ! CALL xclib_error( " gcxc ", " Sorting GGA-AHs failed ", 1)
-        end if
+        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting GGA-AHs failed ", 1)
         !
         IF (exx_started) THEN
-          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter)
-
+          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -200,25 +196,21 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      CASE( 32, 33, 47 ) ! 'AH series for vdW-DFs, JPCM 34, 025902 (2022)
         !
         iflag = 0
-        if ( igcx == 32) then ! vdW-DF-ahcx
+        IF ( igcx == 32) THEN ! vdW-DF-ahcx
            CALL cx13( rho, grho, sx, v1x, v2x )
            iflag = 3 ! for cx13 - analytical sr hole
-        end if
-        if ( igcx == 33) then ! vdW-DF2-ah
+        ELSEIF ( igcx == 33) THEN ! vdW-DF2-ah
            CALL rPW86( rho, grho, sx, v1x, v2x )
            iflag = 4 ! for rPW86 - analytical sr hole
-        end if
-        if ( igcx == 47) then ! vdW-DF2-ahtr
+        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahtr
            CALL b86b( rho, grho, 3, sx, v1x, v2x ) 
            iflag = 6 ! for test-reserve - analytical sr hole
-        end if
+        ENDIF
         !
-        if ( iflag == 0) then
-           STOP ! CALL xclib_error( " gcxc ", " Sorting vdW-DF-AHs failed ", 1)
-        end if
+        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting vdW-DF-AHs failed ", 1)
         !
         IF (exx_started) THEN
-          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter)
+          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -863,29 +855,27 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ! igcx=47:  vdw-df2-ahtr
         !
         iflag = 0
-        if ( igcx == 32) then ! vdW-DF-ahcx
+        IF ( igcx == 32) THEN ! vdW-DF-ahcx
            CALL cx13( rho_up, grho2_up, sx_up, v1x_up, v2x_up )
            CALL cx13( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw )
            iflag = 3 ! for cx13 - sr hole
-        end if
-        if ( igcx == 33) then ! vdW-DF2-ah
+        ELSEIF ( igcx == 33) THEN ! vdW-DF2-ah
            CALL rPW86( rho_up, grho2_up, sx_up, v1x_up, v2x_up )
            CALL rPW86( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw )
            iflag = 4 ! for rPW86 - sr hole
-        end if
-        if ( igcx == 47) then ! vdW-DF2-ahtr
+        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahtr
            CALL b86b( rho_up, grho2_up, 3, sx_up, v1x_up, v2x_up ) 
            CALL b86b( rho_dw, grho2_dw, 3, sx_dw, v1x_dw, v2x_dw ) 
            iflag = 6 ! for test-reserve - sr hole
-        end if
+        ENDIF
         !
-        if ( iflag == 0) then
+        IF ( iflag == 0) THEN
            STOP ! CALL xclib_error( " gcx_spin ", " Sorting vdW-DF-AHs failed ", 1)
-        else 
+        ELSE
           sx_tot(ir) = 0.5_DP * ( sx_up*rnull_up + sx_dw*rnull_dw )
           v2x_up = 2.0_DP * v2x_up
           v2x_dw = 2.0_DP * v2x_dw
-        end if
+        ENDIF
         !
         IF ( exx_started ) THEN
            !

@@ -56,6 +56,7 @@ PROGRAM xclib_test
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft, &
                          dft_LDAx_name, dft_LDAc_name, dft_GGAx_name, &
                          dft_GGAc_name, dft_MGGA_name, dft_full
+  USE qe_dft_refs
   !
   IMPLICIT NONE
   !
@@ -686,7 +687,23 @@ PROGRAM xclib_test
     IF (ns == 2 .AND. (.NOT.is_libxc(2)) .AND. icorr1/=0 .AND. &
                icorr1/=1 .AND. icorr1/=2 .AND. icorr1/=4 .AND. &
                icorr1/=8 .AND. icorr1/=3 .AND. icorr1/=7 .AND. &
-               icorr1/=13) CYCLE
+               icorr1/=13) THEN
+      IF (mype==root) CALL print_test_status( skipped )         
+      CYCLE
+    ENDIF
+    !
+    IF (dft_init=='ALL_TERMS') THEN
+      IF ( (LDA  .AND. exc_term .AND. dft_LDAx(iexch1)%wrn(1:12)=='never called') .OR. &
+           (LDA  .AND. cor_term .AND. dft_LDAx(icorr1)%wrn(1:12)=='never called') .OR. &
+           (GGA  .AND. exc_term .AND. dft_GGAx(igcx1)%wrn(1:12) =='never called') .OR. &
+           (GGA  .AND. cor_term .AND. dft_GGAx(igcc1)%wrn(1:12) =='never called') .OR. &
+           (MGGA .AND. exc_term .AND. dft_GGAx(imeta1)%wrn(1:12)=='never called') ) THEN
+        !
+        IF (mype==root) CALL print_test_status( skipped )
+        CYCLE
+        !
+      ENDIF
+    ENDIF
     !
     ! ... index stuff
     !
@@ -805,8 +822,8 @@ PROGRAM xclib_test
       IF (is==2) WRITE(xc_data(18:30),'(a)') 'POL'
     ELSEIF ( dft_init=='ALL_SHORT' ) THEN
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)
-      IF (is==1) WRITE(xc_data(8+nlen1:),'(a)') 'UNP'
-      IF (is==2) WRITE(xc_data(8+nlen1:),'(a)') 'POL'
+      IF (is==1) WRITE(xc_data(9+nlen1:),'(a)') 'UNP'
+      IF (is==2) WRITE(xc_data(9+nlen1:),'(a)') 'POL'
     ELSEIF ( dft_init=='ALL_LIBXC' .OR. dft_init(1:4)/='ALL_' ) THEN
       xc_data="XC_DATA_______________________________________"
       WRITE(xc_data(9:8+nlen1),'(a)') dft(1:nlen1)

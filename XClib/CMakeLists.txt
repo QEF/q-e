@@ -78,7 +78,10 @@ qe_install_targets(
 # xclib_test.x
 ###########################################################
 if(QE_ENABLE_TEST)
-    qe_add_executable(qe_xclib_test xclib_test.f90)
+    set(sources_xc_ltest
+    qe_dft_refs.f90
+    xclib_test.f90)
+    qe_add_executable(qe_xclib_test ${sources_xc_ltest})
     set_target_properties(qe_xclib_test 
         PROPERTIES
             OUTPUT_NAME qe_xclib_test.x 

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.8)
+Program: pw.x / PWscf / Quantum Espresso (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -57,10 +57,10 @@ ATOMIC_SPECIES
  Y  Mass_Y  PseudoPot_Y
  Z  Mass_Z  PseudoPot_Z
 
-ATOMIC_POSITIONS { alat | bohr | crystal | angstrom | crystal_sg }
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg }
   X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
   Y 0.5  0.0  0.0
-  Z O.0  0.2  0.2
+  Z 0.0  0.2  0.2
 
 K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
 if (gamma)
@@ -87,10 +87,15 @@ if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
    nconstr  { constr_tol }
    constr_type(.)   constr(1,.)   constr(2,.) [ constr(3,.)   constr(4,.) ] { constr_target(.) } ]
 
-[ ATOMIC_FORCES
-   label_1 Fx(1) Fy(1) Fz(1)
+[ ATOMIC_VELOCITIES
+   label(1)  vx(1) vy(1) vz(1)
    .....
-   label_n Fx(n) Fy(n) Fz(n) ]
+   label(n)  vx(n) vy(n) vz(n) ]
+
+[ ATOMIC_FORCES
+   label(1)  Fx(1) Fy(1) Fz(1)
+   .....
+   label(n)  Fx(n) Fy(n) Fz(n) ]
 
 [ ADDITIONAL_K_POINTS
      see: K_POINTS ]
@@ -710,7 +715,7 @@ NAMELIST: &SYSTEM
    Variable:       tot_magnetization
    
    Type:           REAL
-   Default:        -1 [unspecified]
+   Default:        -10000 [unspecified]
    Description:    Total majority spin charge - minority spin charge.
                    Used to impose a specific total electronic magnetization.
                    If unspecified then tot_magnetization variable is ignored and
@@ -1407,6 +1412,31 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       dmft
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Status:         Requires compilation with hdf5 support
+   Description:    If true, nscf calculation will exit in restart mode, scf calculation
+                   will restart from there if DMFT updates are provided as hdf5 archive.
+                   Scf calculation should be used only with "electron_maxstep" = 1.
+                   "K_POINTS" have to be identical and given explicitly with "nosym".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       dmft_prefix
+   
+   Type:           CHARACTER
+   Default:        "prefix"
+   Description:    prepended to hdf5 archive: dmft_prefix.h5
+                   
+                   DMFT update should be provided in group/dataset as:
+                   - dft_misc_input/band_window with dimension [1, number of k-points, 2 (real + complex)]
+                   - dft_update/delta_N with dimension [number of k-points, number of correlated orbitals,
+                   number of correlated orbitals, 2 (real + complex)]
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       ensemble_energies
    
    Type:           LOGICAL
@@ -1634,7 +1664,7 @@ NAMELIST: &SYSTEM
                         semi-infinite metal electrodes (use "esm_bc" to
                         choose boundary conditions). If between two
                         electrodes, an optional electric field
-                        ('esm_efield') may be applied. Method described in
+                        ("esm_efield") may be applied. Method described in
                         M. Otani and O. Sugino, "First-principles calculations
                         of charged surfaces and interfaces: A plane-wave
                         nonrepeated slab approach", PRB 73, 115407 (2006).
@@ -1653,7 +1683,7 @@ NAMELIST: &SYSTEM
                              is automatically eliminated.
                         
                            - In case of calculation='vc-relax', use
-                             cell_dofree='2Dxy' or other parameters so that
+                             "cell_dofree"='2Dxy' or other parameters so that
                              c-vector along z-axis should not be moved.
                         
                         See "esm_bc", "esm_efield", "esm_w", "esm_nfit".
@@ -1665,10 +1695,10 @@ NAMELIST: &SYSTEM
                         Linear-response calculations () done on top of a self-consistent
                         calculation with this flag will automatically be performed in
                         the 2D framework as well. Please refer to:
-                        Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional
+                        Sohier, T., Calandra, M., & Mauri, F. (2017), "Density functional
                         perturbation theory for gated two-dimensional heterostructures:
-                        Theoretical developments and application to flexural phonons in graphene.
-                        Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
+                        Theoretical developments and application to flexural phonons in graphene",
+                        PRB, 96, 075448 (2017).
                         
                         NB:
                            - The length of the unit-cell along the z direction should
@@ -1681,7 +1711,7 @@ NAMELIST: &SYSTEM
                              radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
                         
                            - As for ESM above, only in-plane stresses make sense and one
-                             should use cell_dofree='2Dxy' in a vc-relax calculation.
+                             should use "cell_dofree"= '2Dxy' in a vc-relax calculation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2128,7 +2158,7 @@ NAMELIST: &ELECTRONS
                    
                    For non-self-consistent calculations, conv_thr is used
                    to set the default value of the threshold (ethr) for
-                   iterative diagonalizazion: see "diago_thr_init"
+                   iterative diagonalization: see "diago_thr_init"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2227,6 +2257,14 @@ NAMELIST: &ELECTRONS
     
                    'paro', 'ParO' :
                         ParO iterative diagonalization
+    
+                   'rmm-davidson', 'rmm-paro' :
+                        RMM-DIIS iterative diagonalization.
+                        To stabilize the SCF loop
+                        RMM-DIIS is alternated with calls to Davidson or
+                        ParO  solvers depending on the string used.
+                        Other variables that can be used to tune the behavior of
+                        RMM-DIIS are:  "diago_rmm_ndim" and "diago_rmm_conv"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2276,6 +2314,23 @@ NAMELIST: &ELECTRONS
                    of accuracy of the occupied ones. Otherwise the empty states are
                    diagonalized using a larger threshold (this should not affect
                    total energy, forces, and other ground-state properties).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_ndim
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    Max dimension  of the iterative subspace for RMM-DIIS diagonalization
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       diago_rmm_conv
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .TRUE. during the SCF loop the RMM-DIIS is reiterated until all bands
+                   are converged or up to a max of 8 times.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2459,6 +2514,16 @@ NAMELIST: &IONS
                         Can be used for constrained
                         optimisation: see "CONSTRAINTS" card
     
+                   'fire' :
+                        use the FIRE minimization algorithm employing the
+                        semi-implicit Euler integration scheme
+                        see:
+                           Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
+                           Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
+                        
+                        Can be used for constrained
+                        optimisation: see "CONSTRAINTS" card
+    
                    CASE ( "calculation" == 'md' )
     
                    'verlet' :
@@ -2477,7 +2542,7 @@ NAMELIST: &IONS
     
                    'bfgs' :
                         (default)  use BFGS quasi-newton algorithm;
-                        cell_dynamics must be 'bfgs' too
+                        "cell_dynamics" must be 'bfgs' too
     
                    'damp' :
                         use damped (Beeman) dynamics for
@@ -2763,6 +2828,61 @@ NAMELIST: &IONS
       Default:        0.5D0
       Description:    Parameters used in line search based on the Wolfe conditions.
                       (bfgs only)
+      +--------------------------------------------------------------------
+      
+   \\\---
+   
+   ///---
+      KEYWORDS USED ONLY IN THE FIRE MINIMIZATION ALGORITHM
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_alpha_init
+      
+      Type:           REAL
+      Default:        0.2D0
+      Description:    Initial value of the alpha mixing factor in the FIRE minimization scheme;
+                      recommended values are between 0.1 and 0.3
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_falpha
+      
+      Type:           REAL
+      Default:        0.99D0
+      Description:    Scaling of the alpha mixing parameter for steps with P > 0;
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_nmin
+      
+      Type:           INTEGER
+      Default:        5
+      Description:    Minimum number of steps with P > 0 before increase of "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_f_inc
+      
+      Type:           REAL
+      Default:        1.1D0
+      Description:    Factor for increasing "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_f_dec
+      
+      Type:           REAL
+      Default:        0.5D0
+      Description:    Factor for decreasing "dt"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       fire_dtmax
+      
+      Type:           REAL
+      Default:        10.D0
+      Description:    Determines the maximum value of "dt" in the FIRE minimization;
+                      dtmax = fire_dtmax*"dt"
       +--------------------------------------------------------------------
       
    \\\---
@@ -3482,7 +3602,7 @@ CARD: K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpi
 
 
 ========================================================================
-CARD: ADDITIONAL_K_POINTS { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+CARD: ADDITIONAL_K_POINTS { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c }
 
    Optional card. Adds a list of k-points with zero weight, after those used for
    the scf calculation. When doing an EXX calculation and "nq1x", "nq2x" or "nq3x" are
@@ -3505,7 +3625,7 @@ CARD: ADDITIONAL_K_POINTS { tpiba | crystal | gamma | tpiba_b | crystal_b | tpib
    DESCRIPTION OF ITEMS:
    
       +--------------------------------------------------------------------
-      Card's flags:   { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+      Card's flags:   { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c }
       
       Default:        tbipa
       Description:    for the explanation of the K_POINTS' options, see "K_POINTS"
@@ -3817,4 +3937,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 16 11:28:04 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:33:13 CET 2021

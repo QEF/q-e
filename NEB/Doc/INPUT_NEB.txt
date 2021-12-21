@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: neb.x / NEB / Quantum Espresso (version: 6.8)
+Program: neb.x / NEB / Quantum Espresso (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -568,4 +568,4 @@ Structure of the NEB-only input data (file neb.dat):
 ### END OF SUPERCARD :  BEGIN/END ######################################
 
 
-This file has been created by helpdoc utility on Fri Jul 16 11:54:08 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021

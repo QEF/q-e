@@ -360,9 +360,9 @@ are optimised. The other images are kept frozen.
 
 
 # ------------------------------------------------------------------------
-help lfcpopt -helpfmt helpdoc -helptext {
+help lfcp -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>lfcpopt</b></big>
+<li> <em>Variable: </em><big><b>lfcp</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
 <br><li> <em>Default: </em> .FALSE.
@@ -376,7 +376,7 @@ If .TRUE. perform a constant bias potential (constant-mu)
 calculation with ESM method (assume_isolated = 'esm' and
 esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
 "fcp_mu" gives the target Fermi energy.
-See the header of PW/src/fcp.f90 for documentation
+See the header of PW/src/fcp_module.f90 for documentation
                </pre></blockquote>
 </ul>      
       
@@ -391,16 +391,19 @@ help fcp_mu -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em> 0.d0
                </li>
-<br><li> <em>See: </em> lfcpopt
+<br><li> <em>See: </em> lfcp
                </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If "lfcpopt" == .TRUE., gives the target Fermi energy [Ry].
+If "lfcp" == .TRUE., gives the target Fermi energy [eV].
 One can specify the total charge of the system for the first
-and last image by giving "fcp_tot_charge_first" and "fcp_tot_charge_last"
+and last image by giving "TOTAL_CHARGE" cards
 so that the Fermi energy of these systems will be the target value,
 otherwise "first_last_opt" should be .TRUE.
+For the initial charge of intermediate images, the "TOTAL_CHARGE"
+is linearly interpolated between the initial and the final ones
+unless the "TOTAL_CHARGE" is given in the input file.
                </pre></blockquote>
 </ul>      
       
@@ -408,21 +411,20 @@ otherwise "first_last_opt" should be .TRUE.
 
 
 # ------------------------------------------------------------------------
-help fcp_tot_charge_first -helpfmt helpdoc -helptext {
+help fcp_thr -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>fcp_tot_charge_first</b></big>
+<li> <em>Variable: </em><big><b>fcp_thr</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.d0
+<br><li> <em>Default: </em> 0.01D0 V
                </li>
-<br><li> <em>See: </em> lfcpopt
+<br><li> <em>See: </em> lfcp
                </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Total charge of the system ('tot_charge') for the first image.
-Initial 'tot_charge' for intermediate images will be given by
-linear interpolation of "fcp_tot_charge_first" and "fcp_tot_charge_last"
+The simulation stops when the error ( the maximum of the force
+acting on the FCP in V ) is less than fcp_thr.
                </pre></blockquote>
 </ul>      
       
@@ -430,22 +432,43 @@ linear interpolation of "fcp_tot_charge_first" and "fcp_tot_charge_last"
 
 
 # ------------------------------------------------------------------------
-help fcp_tot_charge_last -helpfmt helpdoc -helptext {
+help fcp_scheme -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>fcp_tot_charge_last</b></big>
+<li> <em>Variable: </em><big><b>fcp_scheme</b></big>
 </li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.d0
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'lm'
                </li>
-<br><li> <em>See: </em> lfcpopt
+<br><li> <em>See: </em> lfcp
                </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-Total charge of the system ('tot_charge') for the last image.
-Initial 'tot_charge' for intermediate images will be given by
-linear interpolation of "fcp_tot_charge_first" and "fcp_tot_charge_last"
-               </pre></blockquote>
+<blockquote>
+<pre>
+Specify the type of optimization scheme for FCP:
+                  </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'lm'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Line-Minimization method.
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'newton'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Newton-Raphson method with diagonal hessian matrix.
+Also, coupling with DIIS.
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'coupled'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Coupled method with ionic positions.
+This is available only if "opt_scheme" == 'broyden',
+or 'broyden2'.
+                  </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }

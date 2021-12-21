@@ -1641,10 +1641,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Linear-response calculations () done on top of a self-consistent 
                     calculation with this flag will automatically be performed in 
                     the 2D framework as well. Please refer to:
-                    Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional 
+                    Sohier, T., Calandra, M., & Mauri, F. (2017), "Density functional 
                     perturbation theory for gated two-dimensional heterostructures:
-                    Theoretical developments and application to flexural phonons in graphene.
-                    Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
+                    Theoretical developments and application to flexural phonons in graphene",
+                    PRB, 96, 075448 (2017).
                     
                     NB:
                        - The length of the unit-cell along the z direction should
@@ -1657,7 +1657,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
 
                        - As for ESM above, only in-plane stresses make sense and one
-                         should use cell_dofree='2Dxy' in a vc-relax calculation.
+                         should use @ref cell_dofree= '2Dxy' in a @b vc-relax calculation.
                 }
             }
         }
@@ -2074,7 +2074,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 
                 For non-self-consistent calculations, conv_thr is used
                 to set the default value of the threshold (ethr) for
-                iterative diagonalizazion: see @ref diago_thr_init
+                iterative diagonalization: see @ref diago_thr_init
             }
         }
         
@@ -2445,7 +2445,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
                 opt -val 'bfgs' {
                     @b (default)  use BFGS quasi-newton algorithm;
-                    cell_dynamics must be 'bfgs' too
+                    @ref cell_dynamics must be 'bfgs' too
                 }
                 opt -val 'damp' {
                     use damped (Beeman) dynamics for
@@ -3427,7 +3427,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             card is to do band plots with EXX.
         }
         flag additional_kpoints_type -use optional {
-            enum { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+            enum { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c }
             default { tbipa }
             info {
                 for the explanation of the K_POINTS' options, see @ref K_POINTS

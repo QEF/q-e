@@ -47,7 +47,9 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_qpoint_grid
     MODULE PROCEDURE qes_init_dftU
     MODULE PROCEDURE qes_init_HubbardCommon
+    MODULE PROCEDURE qes_init_SiteMoment
     MODULE PROCEDURE qes_init_HubbardJ
+    MODULE PROCEDURE qes_init_SitMag
     MODULE PROCEDURE qes_init_starting_ns
     MODULE PROCEDURE qes_init_Hubbard_ns
     MODULE PROCEDURE qes_init_HubbardBack
@@ -102,10 +104,25 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_band_structure
     MODULE PROCEDURE qes_init_ks_energies
     MODULE PROCEDURE qes_init_closed
+    MODULE PROCEDURE qes_init_cpstatus
+    MODULE PROCEDURE qes_init_cpnumstep
+    MODULE PROCEDURE qes_init_cptimesteps
+    MODULE PROCEDURE qes_init_cpstep
+    MODULE PROCEDURE qes_init_cp_ionPos
+    MODULE PROCEDURE qes_init_cp_ionsNose
+    MODULE PROCEDURE qes_init_cp_elecNose
+    MODULE PROCEDURE qes_init_cp_cell
+    MODULE PROCEDURE qes_init_cp_cellNose
+    MODULE PROCEDURE qes_init_scalmags
+    MODULE PROCEDURE qes_init_d3mags
     MODULE PROCEDURE qes_init_vector
     MODULE PROCEDURE qes_init_integerVector
-    MODULE PROCEDURE qes_init_matrix_1, qes_init_matrix_2, qes_init_matrix_3
-    MODULE PROCEDURE qes_init_integerMatrix_1, qes_init_integerMatrix_2, qes_init_integerMatrix_3
+    MODULE PROCEDURE qes_init_matrix_1
+    MODULE PROCEDURE qes_init_matrix_2
+    MODULE PROCEDURE qes_init_matrix_3
+    MODULE PROCEDURE qes_init_integerMatrix_1
+    MODULE PROCEDURE qes_init_integerMatrix_2
+    MODULE PROCEDURE qes_init_integerMatrix_3
     MODULE PROCEDURE qes_init_scalarQuantity
     !
   END INTERFACE qes_init
@@ -113,8 +130,8 @@ MODULE qes_init_module
   CONTAINS
   !
   !
-  SUBROUTINE qes_init_espresso(obj, tagname, input, Units, general_info, parallel_info, step,&
-                              output, status, cputime, timing_info, closed)
+  SUBROUTINE qes_init_espresso(obj, tagname, Units, input, general_info, parallel_info, step,&
+                              output, STATUS, TIMESTEPS, exit_status, cputime, timing_info, closed)
     !
     IMPLICIT NONE
     !
@@ -126,74 +143,88 @@ MODULE qes_init_module
     TYPE(input_type),INTENT(IN) :: input
     TYPE(step_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: step
     TYPE(output_type),OPTIONAL,INTENT(IN) :: output
-    INTEGER,OPTIONAL,INTENT(IN) :: status
+    TYPE(cpstatus_type),OPTIONAL,INTENT(IN) :: STATUS
+    TYPE(cptimesteps_type),OPTIONAL,INTENT(IN) :: TIMESTEPS
+    INTEGER,OPTIONAL,INTENT(IN) :: exit_status
     INTEGER,OPTIONAL,INTENT(IN) :: cputime
     TYPE(timing_type),OPTIONAL,INTENT(IN) :: timing_info
     TYPE(closed_type),OPTIONAL,INTENT(IN) :: closed
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     IF (PRESENT(Units)) THEN
       obj%Units_ispresent = .TRUE.
       obj%Units = Units
-    ELSE 
+    ELSE
       obj%Units_ispresent = .FALSE.
     END IF
     !
-    IF ( PRESENT(general_info)) THEN 
+    IF ( PRESENT(general_info)) THEN
       obj%general_info_ispresent = .TRUE. 
       obj%general_info = general_info
-    ELSE 
+    ELSE
       obj%general_info_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(parallel_info)) THEN 
+    IF ( PRESENT(parallel_info)) THEN
       obj%parallel_info_ispresent = .TRUE. 
       obj%parallel_info = parallel_info
-    ELSE 
+    ELSE
       obj%parallel_info_ispresent = .FALSE.
     END IF
     obj%input = input
-    IF ( PRESENT(step)) THEN 
+    IF ( PRESENT(step)) THEN
       obj%step_ispresent = .TRUE.
       ALLOCATE(obj%step(SIZE(step)))
       obj%ndim_step = SIZE(step) 
       obj%step = step
-    ELSE 
+    ELSE
       obj%step_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(output)) THEN 
+    IF ( PRESENT(output)) THEN
       obj%output_ispresent = .TRUE. 
       obj%output = output
-    ELSE 
+    ELSE
       obj%output_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(status)) THEN 
-      obj%status_ispresent = .TRUE. 
-      obj%status = status
-    ELSE 
-      obj%status_ispresent = .FALSE.
+    IF ( PRESENT(STATUS)) THEN
+      obj%STATUS_ispresent = .TRUE. 
+      obj%STATUS = STATUS
+    ELSE
+      obj%STATUS_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(cputime)) THEN 
+    IF ( PRESENT(TIMESTEPS)) THEN
+      obj%TIMESTEPS_ispresent = .TRUE. 
+      obj%TIMESTEPS = TIMESTEPS
+    ELSE
+      obj%TIMESTEPS_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(exit_status)) THEN
+      obj%exit_status_ispresent = .TRUE. 
+      obj%exit_status = exit_status
+    ELSE
+      obj%exit_status_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(cputime)) THEN
       obj%cputime_ispresent = .TRUE. 
       obj%cputime = cputime
-    ELSE 
+    ELSE
       obj%cputime_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(timing_info)) THEN 
+    IF ( PRESENT(timing_info)) THEN
       obj%timing_info_ispresent = .TRUE. 
       obj%timing_info = timing_info
-    ELSE 
+    ELSE
       obj%timing_info_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(closed)) THEN 
+    IF ( PRESENT(closed)) THEN
       obj%closed_ispresent = .TRUE. 
       obj%closed = closed
-    ELSE 
+    ELSE
       obj%closed_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_espresso 
+  END SUBROUTINE qes_init_espresso
   !
   !
   SUBROUTINE qes_init_general_info(obj, tagname, xml_format, creator, created, job)
@@ -207,7 +238,7 @@ MODULE qes_init_module
     TYPE(created_type),INTENT(IN) :: created
     CHARACTER(LEN=*),INTENT(IN) :: job
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -216,7 +247,7 @@ MODULE qes_init_module
     obj%created = created
     obj%job = job
     !
-  END SUBROUTINE qes_init_general_info 
+  END SUBROUTINE qes_init_general_info
   !
   !
   SUBROUTINE qes_init_parallel_info(obj, tagname, nprocs, nthreads, ntasks, nbgrp, npool, ndiag)
@@ -232,7 +263,7 @@ MODULE qes_init_module
     INTEGER,INTENT(IN) :: npool
     INTEGER,INTENT(IN) :: ndiag
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -243,7 +274,7 @@ MODULE qes_init_module
     obj%npool = npool
     obj%ndiag = ndiag
     !
-  END SUBROUTINE qes_init_parallel_info 
+  END SUBROUTINE qes_init_parallel_info
   !
   !
   SUBROUTINE qes_init_input(obj, tagname, control_variables, atomic_species, atomic_structure,&
@@ -277,7 +308,7 @@ MODULE qes_init_module
     TYPE(atomic_constraints_type),OPTIONAL,INTENT(IN) :: atomic_constraints
     TYPE(spin_constraints_type),OPTIONAL,INTENT(IN) :: spin_constraints
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -292,62 +323,62 @@ MODULE qes_init_module
     obj%k_points_IBZ = k_points_IBZ
     obj%ion_control = ion_control
     obj%cell_control = cell_control
-    IF ( PRESENT(symmetry_flags)) THEN 
+    IF ( PRESENT(symmetry_flags)) THEN
       obj%symmetry_flags_ispresent = .TRUE. 
       obj%symmetry_flags = symmetry_flags
-    ELSE 
+    ELSE
       obj%symmetry_flags_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(boundary_conditions)) THEN 
+    IF ( PRESENT(boundary_conditions)) THEN
       obj%boundary_conditions_ispresent = .TRUE. 
       obj%boundary_conditions = boundary_conditions
-    ELSE 
+    ELSE
       obj%boundary_conditions_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(ekin_functional)) THEN 
+    IF ( PRESENT(ekin_functional)) THEN
       obj%ekin_functional_ispresent = .TRUE. 
       obj%ekin_functional = ekin_functional
-    ELSE 
+    ELSE
       obj%ekin_functional_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(external_atomic_forces)) THEN 
+    IF ( PRESENT(external_atomic_forces)) THEN
       obj%external_atomic_forces_ispresent = .TRUE. 
       obj%external_atomic_forces = external_atomic_forces
-    ELSE 
+    ELSE
       obj%external_atomic_forces_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(free_positions)) THEN 
+    IF ( PRESENT(free_positions)) THEN
       obj%free_positions_ispresent = .TRUE. 
       obj%free_positions = free_positions
-    ELSE 
+    ELSE
       obj%free_positions_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(starting_atomic_velocities)) THEN 
+    IF ( PRESENT(starting_atomic_velocities)) THEN
       obj%starting_atomic_velocities_ispresent = .TRUE. 
       obj%starting_atomic_velocities = starting_atomic_velocities
-    ELSE 
+    ELSE
       obj%starting_atomic_velocities_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(electric_field)) THEN 
+    IF ( PRESENT(electric_field)) THEN
       obj%electric_field_ispresent = .TRUE. 
       obj%electric_field = electric_field
-    ELSE 
+    ELSE
       obj%electric_field_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(atomic_constraints)) THEN 
+    IF ( PRESENT(atomic_constraints)) THEN
       obj%atomic_constraints_ispresent = .TRUE. 
       obj%atomic_constraints = atomic_constraints
-    ELSE 
+    ELSE
       obj%atomic_constraints_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(spin_constraints)) THEN 
+    IF ( PRESENT(spin_constraints)) THEN
       obj%spin_constraints_ispresent = .TRUE. 
       obj%spin_constraints = spin_constraints
-    ELSE 
+    ELSE
       obj%spin_constraints_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_input 
+  END SUBROUTINE qes_init_input
   !
   !
   SUBROUTINE qes_init_step(obj, tagname, n_step, scf_conv, atomic_structure, total_energy, forces,&
@@ -357,7 +388,7 @@ MODULE qes_init_module
     !
     TYPE(step_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: n_step
+    INTEGER, OPTIONAL, INTENT(IN) :: n_step
     TYPE(scf_conv_type),INTENT(IN) :: scf_conv
     TYPE(atomic_structure_type),INTENT(IN) :: atomic_structure
     TYPE(total_energy_type),INTENT(IN) :: total_energy
@@ -366,40 +397,45 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: FCP_force
     REAL(DP),OPTIONAL,INTENT(IN) :: FCP_tot_charge
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%n_step = n_step
+    IF (PRESENT(n_step)) THEN
+      obj%n_step_ispresent = .TRUE.
+      obj%n_step = n_step
+    ELSE
+      obj%n_step_ispresent = .FALSE.
+    END IF
     !
     obj%scf_conv = scf_conv
     obj%atomic_structure = atomic_structure
     obj%total_energy = total_energy
     obj%forces = forces
-    IF ( PRESENT(stress)) THEN 
+    IF ( PRESENT(stress)) THEN
       obj%stress_ispresent = .TRUE. 
       obj%stress = stress
-    ELSE 
+    ELSE
       obj%stress_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_force)) THEN 
+    IF ( PRESENT(FCP_force)) THEN
       obj%FCP_force_ispresent = .TRUE. 
       obj%FCP_force = FCP_force
-    ELSE 
+    ELSE
       obj%FCP_force_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_tot_charge)) THEN 
+    IF ( PRESENT(FCP_tot_charge)) THEN
       obj%FCP_tot_charge_ispresent = .TRUE. 
       obj%FCP_tot_charge = FCP_tot_charge
-    ELSE 
+    ELSE
       obj%FCP_tot_charge_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_step 
+  END SUBROUTINE qes_init_step
   !
   !
   SUBROUTINE qes_init_output(obj, tagname, algorithmic_info, atomic_species, atomic_structure,&
-                            basis_set, dft, magnetization, total_energy, band_structure, convergence_info,&
-                            symmetries, boundary_conditions, forces, stress, electric_field,&
+                            basis_set, dft, total_energy, band_structure, convergence_info, symmetries,&
+                            boundary_conditions, magnetization, forces, stress, electric_field,&
                             FCP_force, FCP_tot_charge)
     !
     IMPLICIT NONE
@@ -414,7 +450,7 @@ MODULE qes_init_module
     TYPE(basis_set_type),INTENT(IN) :: basis_set
     TYPE(dft_type),INTENT(IN) :: dft
     TYPE(outputPBC_type),OPTIONAL,INTENT(IN) :: boundary_conditions
-    TYPE(magnetization_type),INTENT(IN) :: magnetization
+    TYPE(magnetization_type),OPTIONAL,INTENT(IN) :: magnetization
     TYPE(total_energy_type),INTENT(IN) :: total_energy
     TYPE(band_structure_type),INTENT(IN) :: band_structure
     TYPE(matrix_type),OPTIONAL,INTENT(IN) :: forces
@@ -423,68 +459,73 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: FCP_force
     REAL(DP),OPTIONAL,INTENT(IN) :: FCP_tot_charge
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(convergence_info)) THEN 
+    IF ( PRESENT(convergence_info)) THEN
       obj%convergence_info_ispresent = .TRUE. 
       obj%convergence_info = convergence_info
-    ELSE 
+    ELSE
       obj%convergence_info_ispresent = .FALSE.
     END IF
     obj%algorithmic_info = algorithmic_info
     obj%atomic_species = atomic_species
     obj%atomic_structure = atomic_structure
-    IF ( PRESENT(symmetries)) THEN 
+    IF ( PRESENT(symmetries)) THEN
       obj%symmetries_ispresent = .TRUE. 
       obj%symmetries = symmetries
-    ELSE 
+    ELSE
       obj%symmetries_ispresent = .FALSE.
     END IF
     obj%basis_set = basis_set
     obj%dft = dft
-    IF ( PRESENT(boundary_conditions)) THEN 
+    IF ( PRESENT(boundary_conditions)) THEN
       obj%boundary_conditions_ispresent = .TRUE. 
       obj%boundary_conditions = boundary_conditions
-    ELSE 
+    ELSE
       obj%boundary_conditions_ispresent = .FALSE.
     END IF
-    obj%magnetization = magnetization
+    IF ( PRESENT(magnetization)) THEN
+      obj%magnetization_ispresent = .TRUE. 
+      obj%magnetization = magnetization
+    ELSE
+      obj%magnetization_ispresent = .FALSE.
+    END IF
     obj%total_energy = total_energy
     obj%band_structure = band_structure
-    IF ( PRESENT(forces)) THEN 
+    IF ( PRESENT(forces)) THEN
       obj%forces_ispresent = .TRUE. 
       obj%forces = forces
-    ELSE 
+    ELSE
       obj%forces_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(stress)) THEN 
+    IF ( PRESENT(stress)) THEN
       obj%stress_ispresent = .TRUE. 
       obj%stress = stress
-    ELSE 
+    ELSE
       obj%stress_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(electric_field)) THEN 
+    IF ( PRESENT(electric_field)) THEN
       obj%electric_field_ispresent = .TRUE. 
       obj%electric_field = electric_field
-    ELSE 
+    ELSE
       obj%electric_field_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_force)) THEN 
+    IF ( PRESENT(FCP_force)) THEN
       obj%FCP_force_ispresent = .TRUE. 
       obj%FCP_force = FCP_force
-    ELSE 
+    ELSE
       obj%FCP_force_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(FCP_tot_charge)) THEN 
+    IF ( PRESENT(FCP_tot_charge)) THEN
       obj%FCP_tot_charge_ispresent = .TRUE. 
       obj%FCP_tot_charge = FCP_tot_charge
-    ELSE 
+    ELSE
       obj%FCP_tot_charge_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_output 
+  END SUBROUTINE qes_init_output
   !
   !
   SUBROUTINE qes_init_timing(obj, tagname, total, partial)
@@ -496,24 +537,24 @@ MODULE qes_init_module
     TYPE(clock_type),INTENT(IN) :: total
     TYPE(clock_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: partial
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%total = total
-    IF ( PRESENT(partial)) THEN 
+    IF ( PRESENT(partial)) THEN
       obj%partial_ispresent = .TRUE.
       ALLOCATE(obj%partial(SIZE(partial)))
       obj%ndim_partial = SIZE(partial) 
       obj%partial = partial
-    ELSE 
+    ELSE
       obj%partial_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_timing 
+  END SUBROUTINE qes_init_timing
   !
   !
-  SUBROUTINE qes_init_clock(obj, tagname, label, cpu, wall, calls)
+  SUBROUTINE qes_init_clock(obj, tagname, label, calls, cpu, wall)
     !
     IMPLICIT NONE
     !
@@ -524,21 +565,21 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: cpu
     REAL(DP),INTENT(IN) :: wall
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     obj%label = label
     IF (PRESENT(calls)) THEN
       obj%calls_ispresent = .TRUE.
       obj%calls = calls
-    ELSE 
+    ELSE
       obj%calls_ispresent = .FALSE.
     END IF
     !
     obj%cpu = cpu
     obj%wall = wall
     !
-  END SUBROUTINE qes_init_clock 
+  END SUBROUTINE qes_init_clock
   !
   !
   SUBROUTINE qes_init_control_variables(obj, tagname, title, calculation, restart_mode, prefix,&
@@ -568,7 +609,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*),INTENT(IN) :: verbosity
     INTEGER,INTENT(IN) :: print_every
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -583,10 +624,10 @@ MODULE qes_init_module
     obj%wf_collect = wf_collect
     obj%disk_io = disk_io
     obj%max_seconds = max_seconds
-    IF ( PRESENT(nstep)) THEN 
+    IF ( PRESENT(nstep)) THEN
       obj%nstep_ispresent = .TRUE. 
       obj%nstep = nstep
-    ELSE 
+    ELSE
       obj%nstep_ispresent = .FALSE.
     END IF
     obj%etot_conv_thr = etot_conv_thr
@@ -595,7 +636,7 @@ MODULE qes_init_module
     obj%verbosity = verbosity
     obj%print_every = print_every
     !
-  END SUBROUTINE qes_init_control_variables 
+  END SUBROUTINE qes_init_control_variables
   !
   !
   SUBROUTINE qes_init_xml_format(obj, tagname, NAME, VERSION, xml_format)
@@ -604,19 +645,29 @@ MODULE qes_init_module
     !
     TYPE(xml_format_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: NAME
-    CHARACTER(LEN=*), INTENT(IN) :: VERSION
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: NAME
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: VERSION
     CHARACTER(LEN=*), INTENT(IN) :: xml_format
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%NAME = NAME
-    obj%VERSION = VERSION
+    IF (PRESENT(NAME)) THEN
+      obj%NAME_ispresent = .TRUE.
+      obj%NAME = NAME
+    ELSE
+      obj%NAME_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(VERSION)) THEN
+      obj%VERSION_ispresent = .TRUE.
+      obj%VERSION = VERSION
+    ELSE
+      obj%VERSION_ispresent = .FALSE.
+    END IF
     !
     obj%xml_format = xml_format
     !
-  END SUBROUTINE qes_init_xml_format 
+  END SUBROUTINE qes_init_xml_format
   !
   !
   SUBROUTINE qes_init_creator(obj, tagname, NAME, VERSION, creator)
@@ -625,19 +676,29 @@ MODULE qes_init_module
     !
     TYPE(creator_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: NAME
-    CHARACTER(LEN=*), INTENT(IN) :: VERSION
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: NAME
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: VERSION
     CHARACTER(LEN=*), INTENT(IN) :: creator
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%NAME = NAME
-    obj%VERSION = VERSION
+    IF (PRESENT(NAME)) THEN
+      obj%NAME_ispresent = .TRUE.
+      obj%NAME = NAME
+    ELSE
+      obj%NAME_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(VERSION)) THEN
+      obj%VERSION_ispresent = .TRUE.
+      obj%VERSION = VERSION
+    ELSE
+      obj%VERSION_ispresent = .FALSE.
+    END IF
     !
     obj%creator = creator
     !
-  END SUBROUTINE qes_init_creator 
+  END SUBROUTINE qes_init_creator
   !
   !
   SUBROUTINE qes_init_created(obj, tagname, DATE, TIME, created)
@@ -646,47 +707,62 @@ MODULE qes_init_module
     !
     TYPE(created_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: DATE
-    CHARACTER(LEN=*), INTENT(IN) :: TIME
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: DATE
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: TIME
     CHARACTER(LEN=*), INTENT(IN) :: created
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%DATE = DATE
-    obj%TIME = TIME
+    IF (PRESENT(DATE)) THEN
+      obj%DATE_ispresent = .TRUE.
+      obj%DATE = DATE
+    ELSE
+      obj%DATE_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(TIME)) THEN
+      obj%TIME_ispresent = .TRUE.
+      obj%TIME = TIME
+    ELSE
+      obj%TIME_ispresent = .FALSE.
+    END IF
     !
     obj%created = created
     !
-  END SUBROUTINE qes_init_created 
+  END SUBROUTINE qes_init_created
   !
   !
-  SUBROUTINE qes_init_atomic_species(obj, tagname, ntyp, species, pseudo_dir)
+  SUBROUTINE qes_init_atomic_species(obj, tagname, ntyp, pseudo_dir, species)
     !
     IMPLICIT NONE
     !
     TYPE(atomic_species_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: ntyp
+    INTEGER, OPTIONAL, INTENT(IN) :: ntyp
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: pseudo_dir
     TYPE(species_type),DIMENSION(:),INTENT(IN) :: species
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%ntyp = ntyp
+    IF (PRESENT(ntyp)) THEN
+      obj%ntyp_ispresent = .TRUE.
+      obj%ntyp = ntyp
+    ELSE
+      obj%ntyp_ispresent = .FALSE.
+    END IF
     IF (PRESENT(pseudo_dir)) THEN
       obj%pseudo_dir_ispresent = .TRUE.
       obj%pseudo_dir = pseudo_dir
-    ELSE 
+    ELSE
       obj%pseudo_dir_ispresent = .FALSE.
     END IF
     !
-    ALLOCATE( obj%species(SIZE(species))) 
+    ALLOCATE(obj%species(SIZE(species)))
     obj%ndim_species = SIZE(species)
     obj%species = species
     !
-  END SUBROUTINE qes_init_atomic_species 
+  END SUBROUTINE qes_init_atomic_species
   !
   !
   SUBROUTINE qes_init_species(obj, tagname, name, pseudo_file, mass, starting_magnetization, spin_teta, spin_phi)
@@ -695,55 +771,60 @@ MODULE qes_init_module
     !
     TYPE(species_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: name
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: name
     REAL(DP),OPTIONAL,INTENT(IN) :: mass
     CHARACTER(LEN=*),INTENT(IN) :: pseudo_file
     REAL(DP),OPTIONAL,INTENT(IN) :: starting_magnetization
     REAL(DP),OPTIONAL,INTENT(IN) :: spin_teta
     REAL(DP),OPTIONAL,INTENT(IN) :: spin_phi
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%name = name
+    IF (PRESENT(name)) THEN
+      obj%name_ispresent = .TRUE.
+      obj%name = name
+    ELSE
+      obj%name_ispresent = .FALSE.
+    END IF
     !
-    IF ( PRESENT(mass)) THEN 
+    IF ( PRESENT(mass)) THEN
       obj%mass_ispresent = .TRUE. 
       obj%mass = mass
-    ELSE 
+    ELSE
       obj%mass_ispresent = .FALSE.
     END IF
     obj%pseudo_file = pseudo_file
-    IF ( PRESENT(starting_magnetization)) THEN 
+    IF ( PRESENT(starting_magnetization)) THEN
       obj%starting_magnetization_ispresent = .TRUE. 
       obj%starting_magnetization = starting_magnetization
-    ELSE 
+    ELSE
       obj%starting_magnetization_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(spin_teta)) THEN 
+    IF ( PRESENT(spin_teta)) THEN
       obj%spin_teta_ispresent = .TRUE. 
       obj%spin_teta = spin_teta
-    ELSE 
+    ELSE
       obj%spin_teta_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(spin_phi)) THEN 
+    IF ( PRESENT(spin_phi)) THEN
       obj%spin_phi_ispresent = .TRUE. 
       obj%spin_phi = spin_phi
-    ELSE 
+    ELSE
       obj%spin_phi_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_species 
+  END SUBROUTINE qes_init_species
   !
   !
-  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, cell, alat, bravais_index, alternative_axes,&
-                                      atomic_positions, wyckoff_positions, crystal_positions)
+  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, alat, bravais_index, alternative_axes,&
+                                      cell, atomic_positions, wyckoff_positions, crystal_positions)
     !
     IMPLICIT NONE
     !
     TYPE(atomic_structure_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: nat
+    INTEGER, OPTIONAL, INTENT(IN) :: nat
     REAL(DP), OPTIONAL, INTENT(IN) :: alat
     INTEGER, OPTIONAL, INTENT(IN) :: bravais_index
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: alternative_axes
@@ -752,50 +833,55 @@ MODULE qes_init_module
     TYPE(atomic_positions_type),OPTIONAL,INTENT(IN) :: crystal_positions
     TYPE(cell_type),INTENT(IN) :: cell
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%nat = nat
+    IF (PRESENT(nat)) THEN
+      obj%nat_ispresent = .TRUE.
+      obj%nat = nat
+    ELSE
+      obj%nat_ispresent = .FALSE.
+    END IF
     IF (PRESENT(alat)) THEN
       obj%alat_ispresent = .TRUE.
       obj%alat = alat
-    ELSE 
+    ELSE
       obj%alat_ispresent = .FALSE.
     END IF
     IF (PRESENT(bravais_index)) THEN
       obj%bravais_index_ispresent = .TRUE.
       obj%bravais_index = bravais_index
-    ELSE 
+    ELSE
       obj%bravais_index_ispresent = .FALSE.
     END IF
     IF (PRESENT(alternative_axes)) THEN
       obj%alternative_axes_ispresent = .TRUE.
       obj%alternative_axes = alternative_axes
-    ELSE 
+    ELSE
       obj%alternative_axes_ispresent = .FALSE.
     END IF
     !
-    IF ( PRESENT(atomic_positions)) THEN 
+    IF ( PRESENT(atomic_positions)) THEN
       obj%atomic_positions_ispresent = .TRUE. 
       obj%atomic_positions = atomic_positions
-    ELSE 
+    ELSE
       obj%atomic_positions_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(wyckoff_positions)) THEN 
+    IF ( PRESENT(wyckoff_positions)) THEN
       obj%wyckoff_positions_ispresent = .TRUE. 
       obj%wyckoff_positions = wyckoff_positions
-    ELSE 
+    ELSE
       obj%wyckoff_positions_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(crystal_positions)) THEN 
+    IF ( PRESENT(crystal_positions)) THEN
       obj%crystal_positions_ispresent = .TRUE. 
       obj%crystal_positions = crystal_positions
-    ELSE 
+    ELSE
       obj%crystal_positions_ispresent = .FALSE.
     END IF
     obj%cell = cell
     !
-  END SUBROUTINE qes_init_atomic_structure 
+  END SUBROUTINE qes_init_atomic_structure
   !
   !
   SUBROUTINE qes_init_atomic_positions(obj, tagname, atom)
@@ -806,76 +892,86 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     TYPE(atom_type),DIMENSION(:),INTENT(IN) :: atom
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    ALLOCATE( obj%atom(SIZE(atom))) 
+    ALLOCATE(obj%atom(SIZE(atom)))
     obj%ndim_atom = SIZE(atom)
     obj%atom = atom
     !
-  END SUBROUTINE qes_init_atomic_positions 
+  END SUBROUTINE qes_init_atomic_positions
   !
   !
-  SUBROUTINE qes_init_atom(obj, tagname, name, atom, position, index)
+  SUBROUTINE qes_init_atom(obj, tagname, name, position, index, atom)
     !
     IMPLICIT NONE
     !
     TYPE(atom_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: name
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: name
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: position
     INTEGER, OPTIONAL, INTENT(IN) :: index
     REAL(DP), DIMENSION(3), INTENT(IN) :: atom
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%name = name
+    IF (PRESENT(name)) THEN
+      obj%name_ispresent = .TRUE.
+      obj%name = name
+    ELSE
+      obj%name_ispresent = .FALSE.
+    END IF
     IF (PRESENT(position)) THEN
       obj%position_ispresent = .TRUE.
       obj%position = position
-    ELSE 
+    ELSE
       obj%position_ispresent = .FALSE.
     END IF
     IF (PRESENT(index)) THEN
       obj%index_ispresent = .TRUE.
       obj%index = index
-    ELSE 
+    ELSE
       obj%index_ispresent = .FALSE.
     END IF
     !
     obj%atom = atom
     !
-  END SUBROUTINE qes_init_atom 
+  END SUBROUTINE qes_init_atom
   !
   !
-  SUBROUTINE qes_init_wyckoff_positions(obj, tagname, space_group, atom, more_options)
+  SUBROUTINE qes_init_wyckoff_positions(obj, tagname, space_group, more_options, atom)
     !
     IMPLICIT NONE
     !
     TYPE(wyckoff_positions_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: space_group
+    INTEGER, OPTIONAL, INTENT(IN) :: space_group
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: more_options
     TYPE(atom_type),DIMENSION(:),INTENT(IN) :: atom
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%space_group = space_group
+    IF (PRESENT(space_group)) THEN
+      obj%space_group_ispresent = .TRUE.
+      obj%space_group = space_group
+    ELSE
+      obj%space_group_ispresent = .FALSE.
+    END IF
     IF (PRESENT(more_options)) THEN
       obj%more_options_ispresent = .TRUE.
       obj%more_options = more_options
-    ELSE 
+    ELSE
       obj%more_options_ispresent = .FALSE.
     END IF
     !
-    ALLOCATE( obj%atom(SIZE(atom))) 
+    ALLOCATE(obj%atom(SIZE(atom)))
     obj%ndim_atom = SIZE(atom)
     obj%atom = atom
     !
-  END SUBROUTINE qes_init_wyckoff_positions 
+  END SUBROUTINE qes_init_wyckoff_positions
   !
   !
   SUBROUTINE qes_init_cell(obj, tagname, a1, a2, a3)
@@ -888,7 +984,7 @@ MODULE qes_init_module
     REAL(DP), DIMENSION(3),INTENT(IN) :: a2
     REAL(DP), DIMENSION(3),INTENT(IN) :: a3
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -896,7 +992,7 @@ MODULE qes_init_module
     obj%a2 = a2
     obj%a3 = a3
     !
-  END SUBROUTINE qes_init_cell 
+  END SUBROUTINE qes_init_cell
   !
   !
   SUBROUTINE qes_init_dft(obj, tagname, functional, hybrid, dftU, vdW)
@@ -910,31 +1006,31 @@ MODULE qes_init_module
     TYPE(dftU_type),OPTIONAL,INTENT(IN) :: dftU
     TYPE(vdW_type),OPTIONAL,INTENT(IN) :: vdW
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%functional = functional
-    IF ( PRESENT(hybrid)) THEN 
+    IF ( PRESENT(hybrid)) THEN
       obj%hybrid_ispresent = .TRUE. 
       obj%hybrid = hybrid
-    ELSE 
+    ELSE
       obj%hybrid_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(dftU)) THEN 
+    IF ( PRESENT(dftU)) THEN
       obj%dftU_ispresent = .TRUE. 
       obj%dftU = dftU
-    ELSE 
+    ELSE
       obj%dftU_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(vdW)) THEN 
+    IF ( PRESENT(vdW)) THEN
       obj%vdW_ispresent = .TRUE. 
       obj%vdW = vdW
-    ELSE 
+    ELSE
       obj%vdW_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_dft 
+  END SUBROUTINE qes_init_dft
   !
   !
   SUBROUTINE qes_init_hybrid(obj, tagname, qpoint_grid, ecutfock, exx_fraction, screening_parameter,&
@@ -954,60 +1050,60 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: ecutvcut
     REAL(DP),OPTIONAL,INTENT(IN) :: localization_threshold
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(qpoint_grid)) THEN 
+    IF ( PRESENT(qpoint_grid)) THEN
       obj%qpoint_grid_ispresent = .TRUE. 
       obj%qpoint_grid = qpoint_grid
-    ELSE 
+    ELSE
       obj%qpoint_grid_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(ecutfock)) THEN 
+    IF ( PRESENT(ecutfock)) THEN
       obj%ecutfock_ispresent = .TRUE. 
       obj%ecutfock = ecutfock
-    ELSE 
+    ELSE
       obj%ecutfock_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(exx_fraction)) THEN 
+    IF ( PRESENT(exx_fraction)) THEN
       obj%exx_fraction_ispresent = .TRUE. 
       obj%exx_fraction = exx_fraction
-    ELSE 
+    ELSE
       obj%exx_fraction_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(screening_parameter)) THEN 
+    IF ( PRESENT(screening_parameter)) THEN
       obj%screening_parameter_ispresent = .TRUE. 
       obj%screening_parameter = screening_parameter
-    ELSE 
+    ELSE
       obj%screening_parameter_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(exxdiv_treatment)) THEN 
+    IF ( PRESENT(exxdiv_treatment)) THEN
       obj%exxdiv_treatment_ispresent = .TRUE. 
       obj%exxdiv_treatment = exxdiv_treatment
-    ELSE 
+    ELSE
       obj%exxdiv_treatment_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(x_gamma_extrapolation)) THEN 
+    IF ( PRESENT(x_gamma_extrapolation)) THEN
       obj%x_gamma_extrapolation_ispresent = .TRUE. 
       obj%x_gamma_extrapolation = x_gamma_extrapolation
-    ELSE 
+    ELSE
       obj%x_gamma_extrapolation_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(ecutvcut)) THEN 
+    IF ( PRESENT(ecutvcut)) THEN
       obj%ecutvcut_ispresent = .TRUE. 
       obj%ecutvcut = ecutvcut
-    ELSE 
+    ELSE
       obj%ecutvcut_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(localization_threshold)) THEN 
+    IF ( PRESENT(localization_threshold)) THEN
       obj%localization_threshold_ispresent = .TRUE. 
       obj%localization_threshold = localization_threshold
-    ELSE 
+    ELSE
       obj%localization_threshold_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_hybrid 
+  END SUBROUTINE qes_init_hybrid
   !
   !
   SUBROUTINE qes_init_qpoint_grid(obj, tagname, nqx1, nqx2, nqx3, qpoint_grid)
@@ -1016,21 +1112,36 @@ MODULE qes_init_module
     !
     TYPE(qpoint_grid_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: nqx1
-    INTEGER, INTENT(IN) :: nqx2
-    INTEGER, INTENT(IN) :: nqx3
+    INTEGER, OPTIONAL, INTENT(IN) :: nqx1
+    INTEGER, OPTIONAL, INTENT(IN) :: nqx2
+    INTEGER, OPTIONAL, INTENT(IN) :: nqx3
     CHARACTER(LEN=*), INTENT(IN) :: qpoint_grid
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%nqx1 = nqx1
-    obj%nqx2 = nqx2
-    obj%nqx3 = nqx3
+    IF (PRESENT(nqx1)) THEN
+      obj%nqx1_ispresent = .TRUE.
+      obj%nqx1 = nqx1
+    ELSE
+      obj%nqx1_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(nqx2)) THEN
+      obj%nqx2_ispresent = .TRUE.
+      obj%nqx2 = nqx2
+    ELSE
+      obj%nqx2_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(nqx3)) THEN
+      obj%nqx3_ispresent = .TRUE.
+      obj%nqx3 = nqx3
+    ELSE
+      obj%nqx3_ispresent = .FALSE.
+    END IF
     !
     obj%qpoint_grid = qpoint_grid
     !
-  END SUBROUTINE qes_init_qpoint_grid 
+  END SUBROUTINE qes_init_qpoint_grid
   !
   !
   SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind, Hubbard_U, Hubbard_J0, Hubbard_alpha,&
@@ -1055,138 +1166,181 @@ MODULE qes_init_module
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_alpha_back
     TYPE(Hubbard_ns_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_ns_nc
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(lda_plus_u_kind)) THEN 
+    IF ( PRESENT(lda_plus_u_kind)) THEN
       obj%lda_plus_u_kind_ispresent = .TRUE. 
       obj%lda_plus_u_kind = lda_plus_u_kind
-    ELSE 
+    ELSE
       obj%lda_plus_u_kind_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_U)) THEN 
+    IF ( PRESENT(Hubbard_U)) THEN
       obj%Hubbard_U_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_U(SIZE(Hubbard_U)))
       obj%ndim_Hubbard_U = SIZE(Hubbard_U) 
       obj%Hubbard_U = Hubbard_U
-    ELSE 
+    ELSE
       obj%Hubbard_U_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_J0)) THEN 
+    IF ( PRESENT(Hubbard_J0)) THEN
       obj%Hubbard_J0_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_J0(SIZE(Hubbard_J0)))
       obj%ndim_Hubbard_J0 = SIZE(Hubbard_J0) 
       obj%Hubbard_J0 = Hubbard_J0
-    ELSE 
+    ELSE
       obj%Hubbard_J0_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_alpha)) THEN 
+    IF ( PRESENT(Hubbard_alpha)) THEN
       obj%Hubbard_alpha_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_alpha(SIZE(Hubbard_alpha)))
       obj%ndim_Hubbard_alpha = SIZE(Hubbard_alpha) 
       obj%Hubbard_alpha = Hubbard_alpha
-    ELSE 
+    ELSE
       obj%Hubbard_alpha_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_beta)) THEN 
+    IF ( PRESENT(Hubbard_beta)) THEN
       obj%Hubbard_beta_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_beta(SIZE(Hubbard_beta)))
       obj%ndim_Hubbard_beta = SIZE(Hubbard_beta) 
       obj%Hubbard_beta = Hubbard_beta
-    ELSE 
+    ELSE
       obj%Hubbard_beta_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_J)) THEN 
+    IF ( PRESENT(Hubbard_J)) THEN
       obj%Hubbard_J_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_J(SIZE(Hubbard_J)))
       obj%ndim_Hubbard_J = SIZE(Hubbard_J) 
       obj%Hubbard_J = Hubbard_J
-    ELSE 
+    ELSE
       obj%Hubbard_J_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(starting_ns)) THEN 
+    IF ( PRESENT(starting_ns)) THEN
       obj%starting_ns_ispresent = .TRUE.
       ALLOCATE(obj%starting_ns(SIZE(starting_ns)))
       obj%ndim_starting_ns = SIZE(starting_ns) 
       obj%starting_ns = starting_ns
-    ELSE 
+    ELSE
       obj%starting_ns_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_ns)) THEN 
+    IF ( PRESENT(Hubbard_ns)) THEN
       obj%Hubbard_ns_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_ns(SIZE(Hubbard_ns)))
       obj%ndim_Hubbard_ns = SIZE(Hubbard_ns) 
       obj%Hubbard_ns = Hubbard_ns
-    ELSE 
+    ELSE
       obj%Hubbard_ns_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(U_projection_type)) THEN 
+    IF ( PRESENT(U_projection_type)) THEN
       obj%U_projection_type_ispresent = .TRUE. 
       obj%U_projection_type = U_projection_type
-    ELSE 
+    ELSE
       obj%U_projection_type_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_back)) THEN 
+    IF ( PRESENT(Hubbard_back)) THEN
       obj%Hubbard_back_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_back(SIZE(Hubbard_back)))
       obj%ndim_Hubbard_back = SIZE(Hubbard_back) 
       obj%Hubbard_back = Hubbard_back
-    ELSE 
+    ELSE
       obj%Hubbard_back_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_U_back)) THEN 
+    IF ( PRESENT(Hubbard_U_back)) THEN
       obj%Hubbard_U_back_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_U_back(SIZE(Hubbard_U_back)))
       obj%ndim_Hubbard_U_back = SIZE(Hubbard_U_back) 
       obj%Hubbard_U_back = Hubbard_U_back
-    ELSE 
+    ELSE
       obj%Hubbard_U_back_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_alpha_back)) THEN 
+    IF ( PRESENT(Hubbard_alpha_back)) THEN
       obj%Hubbard_alpha_back_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_alpha_back(SIZE(Hubbard_alpha_back)))
       obj%ndim_Hubbard_alpha_back = SIZE(Hubbard_alpha_back) 
       obj%Hubbard_alpha_back = Hubbard_alpha_back
-    ELSE 
+    ELSE
       obj%Hubbard_alpha_back_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(Hubbard_ns_nc)) THEN 
+    IF ( PRESENT(Hubbard_ns_nc)) THEN
       obj%Hubbard_ns_nc_ispresent = .TRUE.
       ALLOCATE(obj%Hubbard_ns_nc(SIZE(Hubbard_ns_nc)))
       obj%ndim_Hubbard_ns_nc = SIZE(Hubbard_ns_nc) 
       obj%Hubbard_ns_nc = Hubbard_ns_nc
-    ELSE 
+    ELSE
       obj%Hubbard_ns_nc_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_dftU 
+  END SUBROUTINE qes_init_dftU
   !
   !
-  SUBROUTINE qes_init_HubbardCommon(obj, tagname, specie, HubbardCommon, label)
+  SUBROUTINE qes_init_HubbardCommon(obj, tagname, specie, label, HubbardCommon)
     !
     IMPLICIT NONE
     !
     TYPE(HubbardCommon_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: specie
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: specie
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
     REAL(DP), INTENT(IN) :: HubbardCommon
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%specie = specie
+    IF (PRESENT(specie)) THEN
+      obj%specie_ispresent = .TRUE.
+      obj%specie = specie
+    ELSE
+      obj%specie_ispresent = .FALSE.
+    END IF
     IF (PRESENT(label)) THEN
       obj%label_ispresent = .TRUE.
       obj%label = label
-    ELSE 
+    ELSE
       obj%label_ispresent = .FALSE.
     END IF
     !
     obj%HubbardCommon = HubbardCommon
     !
-  END SUBROUTINE qes_init_HubbardCommon 
+  END SUBROUTINE qes_init_HubbardCommon
+  !
+  !
+  SUBROUTINE qes_init_SiteMoment(obj, tagname, species, atom, charge, SiteMoment)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(SiteMoment_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: species
+    INTEGER, OPTIONAL, INTENT(IN) :: atom
+    REAL(DP), OPTIONAL, INTENT(IN) :: charge
+    REAL(DP), INTENT(IN) :: SiteMoment
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(species)) THEN
+      obj%species_ispresent = .TRUE.
+      obj%species = species
+    ELSE
+      obj%species_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(atom)) THEN
+      obj%atom_ispresent = .TRUE.
+      obj%atom = atom
+    ELSE
+      obj%atom_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(charge)) THEN
+      obj%charge_ispresent = .TRUE.
+      obj%charge = charge
+    ELSE
+      obj%charge_ispresent = .FALSE.
+    END IF
+    !
+    obj%SiteMoment = SiteMoment
+    !
+  END SUBROUTINE qes_init_SiteMoment
   !
   !
   SUBROUTINE qes_init_HubbardJ(obj, tagname, specie, label, HubbardJ)
@@ -1195,19 +1349,67 @@ MODULE qes_init_module
     !
     TYPE(HubbardJ_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: specie
-    CHARACTER(LEN=*), INTENT(IN) :: label
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: specie
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
     REAL(DP), DIMENSION(3), INTENT(IN) :: HubbardJ
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%specie = specie
-    obj%label = label
+    IF (PRESENT(specie)) THEN
+      obj%specie_ispresent = .TRUE.
+      obj%specie = specie
+    ELSE
+      obj%specie_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(label)) THEN
+      obj%label_ispresent = .TRUE.
+      obj%label = label
+    ELSE
+      obj%label_ispresent = .FALSE.
+    END IF
     !
     obj%HubbardJ = HubbardJ
     !
-  END SUBROUTINE qes_init_HubbardJ 
+  END SUBROUTINE qes_init_HubbardJ
+  !
+  !
+  SUBROUTINE qes_init_SitMag(obj, tagname, species, atom, charge, SitMag)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(SitMag_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: species
+    INTEGER, OPTIONAL, INTENT(IN) :: atom
+    REAL(DP), OPTIONAL, INTENT(IN) :: charge
+    REAL(DP), DIMENSION(3), INTENT(IN) :: SitMag
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(species)) THEN
+      obj%species_ispresent = .TRUE.
+      obj%species = species
+    ELSE
+      obj%species_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(atom)) THEN
+      obj%atom_ispresent = .TRUE.
+      obj%atom = atom
+    ELSE
+      obj%atom_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(charge)) THEN
+      obj%charge_ispresent = .TRUE.
+      obj%charge = charge
+    ELSE
+      obj%charge_ispresent = .FALSE.
+    END IF
+    !
+    obj%SitMag = SitMag
+    !
+  END SUBROUTINE qes_init_SitMag
   !
   !
   SUBROUTINE qes_init_starting_ns(obj, tagname, specie, label, spin, starting_ns)
@@ -1217,51 +1419,87 @@ MODULE qes_init_module
     TYPE(starting_ns_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     REAL(DP), DIMENSION(:), INTENT(IN) :: starting_ns
-    CHARACTER(LEN=*), INTENT(IN) :: specie
-    CHARACTER(LEN=*), INTENT(IN) :: label
-    INTEGER, INTENT(IN) :: spin
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: specie
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
+    INTEGER, OPTIONAL, INTENT(IN) :: spin
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    obj%specie = specie
-    obj%label = label
-    obj%spin = spin
+    IF (PRESENT(specie)) THEN
+      obj%specie_ispresent = .TRUE.
+      obj%specie = specie
+    ELSE 
+      obj%specie_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(label)) THEN
+      obj%label_ispresent = .TRUE.
+      obj%label = label
+    ELSE 
+      obj%label_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(spin)) THEN
+      obj%spin_ispresent = .TRUE.
+      obj%spin = spin
+    ELSE 
+      obj%spin_ispresent = .FALSE.
+    END IF
     obj%size = size(starting_ns)
     ALLOCATE(obj%starting_ns(obj%size))
     obj%starting_ns = starting_ns
     !
-  END SUBROUTINE qes_init_starting_ns 
+  END SUBROUTINE qes_init_starting_ns
   !
   !
-  SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, order, Hubbard_ns)
+  SUBROUTINE qes_init_Hubbard_ns(obj, tagname, order, specie, label, spin, index, Hubbard_ns)
     !
     IMPLICIT NONE
     !
     TYPE(Hubbard_ns_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: specie
-    CHARACTER(LEN=*), INTENT(IN) :: label
-    INTEGER, INTENT(IN) :: spin
-    INTEGER, INTENT(IN) :: index
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: order
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: specie
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
+    INTEGER, OPTIONAL, INTENT(IN) :: spin
+    INTEGER, OPTIONAL, INTENT(IN) :: index
     REAL(DP), DIMENSION(:,:), INTENT(IN) :: Hubbard_ns
-    CHARACTER(LEN=*),INTENT(IN) :: order
     INTEGER :: length, i
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%specie = specie
-    obj%label = label
-    obj%spin = spin
-    obj%index = index
+    IF (PRESENT(order)) THEN
+      obj%order_ispresent = .TRUE.
+      obj%order = order
+    ELSE 
+      obj%order_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(specie)) THEN
+      obj%specie_ispresent = .TRUE.
+      obj%specie = specie
+    ELSE 
+      obj%specie_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(label)) THEN
+      obj%label_ispresent = .TRUE.
+      obj%label = label
+    ELSE 
+      obj%label_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(spin)) THEN
+      obj%spin_ispresent = .TRUE.
+      obj%spin = spin
+    ELSE 
+      obj%spin_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(index)) THEN
+      obj%index_ispresent = .TRUE.
+      obj%index = index
+    ELSE 
+      obj%index_ispresent = .FALSE.
+    END IF
     !
-     
-     
-    
-    obj%order = order 
-    
     length = 1
     obj%rank = SIZE(shape(Hubbard_ns))
     ALLOCATE ( obj%dims(obj%rank))
@@ -1281,21 +1519,26 @@ MODULE qes_init_module
     !
     TYPE(HubbardBack_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: species
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: species
     CHARACTER(LEN=*),INTENT(IN) :: background
     TYPE(backL_type),DIMENSION(:),INTENT(IN) :: l_number
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%species = species
+    IF (PRESENT(species)) THEN
+      obj%species_ispresent = .TRUE.
+      obj%species = species
+    ELSE
+      obj%species_ispresent = .FALSE.
+    END IF
     !
     obj%background = background
-    ALLOCATE( obj%l_number(SIZE(l_number))) 
+    ALLOCATE(obj%l_number(SIZE(l_number)))
     obj%ndim_l_number = SIZE(l_number)
     obj%l_number = l_number
     !
-  END SUBROUTINE qes_init_HubbardBack 
+  END SUBROUTINE qes_init_HubbardBack
   !
   !
   SUBROUTINE qes_init_backL(obj, tagname, l_index, backL)
@@ -1304,17 +1547,22 @@ MODULE qes_init_module
     !
     TYPE(backL_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: l_index
+    INTEGER, OPTIONAL, INTENT(IN) :: l_index
     INTEGER, INTENT(IN) :: backL
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%l_index = l_index
+    IF (PRESENT(l_index)) THEN
+      obj%l_index_ispresent = .TRUE.
+      obj%l_index = l_index
+    ELSE
+      obj%l_index_ispresent = .FALSE.
+    END IF
     !
     obj%backL = backL
     !
-  END SUBROUTINE qes_init_backL 
+  END SUBROUTINE qes_init_backL
   !
   !
   SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, dftd3_version, dftd3_threebody, non_local_term,&
@@ -1339,92 +1587,92 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: xdm_a2
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: london_c6
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(vdw_corr)) THEN 
+    IF ( PRESENT(vdw_corr)) THEN
       obj%vdw_corr_ispresent = .TRUE. 
       obj%vdw_corr = vdw_corr
-    ELSE 
+    ELSE
       obj%vdw_corr_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(dftd3_version)) THEN 
+    IF ( PRESENT(dftd3_version)) THEN
       obj%dftd3_version_ispresent = .TRUE. 
       obj%dftd3_version = dftd3_version
-    ELSE 
+    ELSE
       obj%dftd3_version_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(dftd3_threebody)) THEN 
+    IF ( PRESENT(dftd3_threebody)) THEN
       obj%dftd3_threebody_ispresent = .TRUE. 
       obj%dftd3_threebody = dftd3_threebody
-    ELSE 
+    ELSE
       obj%dftd3_threebody_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(non_local_term)) THEN 
+    IF ( PRESENT(non_local_term)) THEN
       obj%non_local_term_ispresent = .TRUE. 
       obj%non_local_term = non_local_term
-    ELSE 
+    ELSE
       obj%non_local_term_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(functional)) THEN 
+    IF ( PRESENT(functional)) THEN
       obj%functional_ispresent = .TRUE. 
       obj%functional = functional
-    ELSE 
+    ELSE
       obj%functional_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(total_energy_term)) THEN 
+    IF ( PRESENT(total_energy_term)) THEN
       obj%total_energy_term_ispresent = .TRUE. 
       obj%total_energy_term = total_energy_term
-    ELSE 
+    ELSE
       obj%total_energy_term_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(london_s6)) THEN 
+    IF ( PRESENT(london_s6)) THEN
       obj%london_s6_ispresent = .TRUE. 
       obj%london_s6 = london_s6
-    ELSE 
+    ELSE
       obj%london_s6_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(ts_vdw_econv_thr)) THEN 
+    IF ( PRESENT(ts_vdw_econv_thr)) THEN
       obj%ts_vdw_econv_thr_ispresent = .TRUE. 
       obj%ts_vdw_econv_thr = ts_vdw_econv_thr
-    ELSE 
+    ELSE
       obj%ts_vdw_econv_thr_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(ts_vdw_isolated)) THEN 
+    IF ( PRESENT(ts_vdw_isolated)) THEN
       obj%ts_vdw_isolated_ispresent = .TRUE. 
       obj%ts_vdw_isolated = ts_vdw_isolated
-    ELSE 
+    ELSE
       obj%ts_vdw_isolated_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(london_rcut)) THEN 
+    IF ( PRESENT(london_rcut)) THEN
       obj%london_rcut_ispresent = .TRUE. 
       obj%london_rcut = london_rcut
-    ELSE 
+    ELSE
       obj%london_rcut_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(xdm_a1)) THEN 
+    IF ( PRESENT(xdm_a1)) THEN
       obj%xdm_a1_ispresent = .TRUE. 
       obj%xdm_a1 = xdm_a1
-    ELSE 
+    ELSE
       obj%xdm_a1_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(xdm_a2)) THEN 
+    IF ( PRESENT(xdm_a2)) THEN
       obj%xdm_a2_ispresent = .TRUE. 
       obj%xdm_a2 = xdm_a2
-    ELSE 
+    ELSE
       obj%xdm_a2_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(london_c6)) THEN 
+    IF ( PRESENT(london_c6)) THEN
       obj%london_c6_ispresent = .TRUE.
       ALLOCATE(obj%london_c6(SIZE(london_c6)))
       obj%ndim_london_c6 = SIZE(london_c6) 
       obj%london_c6 = london_c6
-    ELSE 
+    ELSE
       obj%london_c6_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_vdW 
+  END SUBROUTINE qes_init_vdW
   !
   !
   SUBROUTINE qes_init_spin(obj, tagname, lsda, noncolin, spinorbit)
@@ -1437,7 +1685,7 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: noncolin
     LOGICAL,INTENT(IN) :: spinorbit
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -1445,7 +1693,7 @@ MODULE qes_init_module
     obj%noncolin = noncolin
     obj%spinorbit = spinorbit
     !
-  END SUBROUTINE qes_init_spin 
+  END SUBROUTINE qes_init_spin
   !
   !
   SUBROUTINE qes_init_bands(obj, tagname, occupations, nbnd, smearing, tot_charge, tot_magnetization, inputOccupations)
@@ -1461,45 +1709,45 @@ MODULE qes_init_module
     TYPE(occupations_type),INTENT(IN) :: occupations
     TYPE(inputOccupations_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: inputOccupations
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(nbnd)) THEN 
+    IF ( PRESENT(nbnd)) THEN
       obj%nbnd_ispresent = .TRUE. 
       obj%nbnd = nbnd
-    ELSE 
+    ELSE
       obj%nbnd_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(smearing)) THEN 
+    IF ( PRESENT(smearing)) THEN
       obj%smearing_ispresent = .TRUE. 
       obj%smearing = smearing
-    ELSE 
+    ELSE
       obj%smearing_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(tot_charge)) THEN 
+    IF ( PRESENT(tot_charge)) THEN
       obj%tot_charge_ispresent = .TRUE. 
       obj%tot_charge = tot_charge
-    ELSE 
+    ELSE
       obj%tot_charge_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(tot_magnetization)) THEN 
+    IF ( PRESENT(tot_magnetization)) THEN
       obj%tot_magnetization_ispresent = .TRUE. 
       obj%tot_magnetization = tot_magnetization
-    ELSE 
+    ELSE
       obj%tot_magnetization_ispresent = .FALSE.
     END IF
     obj%occupations = occupations
-    IF ( PRESENT(inputOccupations)) THEN 
+    IF ( PRESENT(inputOccupations)) THEN
       obj%inputOccupations_ispresent = .TRUE.
       ALLOCATE(obj%inputOccupations(SIZE(inputOccupations)))
       obj%ndim_inputOccupations = SIZE(inputOccupations) 
       obj%inputOccupations = inputOccupations
-    ELSE 
+    ELSE
       obj%inputOccupations_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_bands 
+  END SUBROUTINE qes_init_bands
   !
   !
   SUBROUTINE qes_init_smearing(obj, tagname, degauss, smearing)
@@ -1508,20 +1756,25 @@ MODULE qes_init_module
     !
     TYPE(smearing_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    REAL(DP), INTENT(IN) :: degauss
+    REAL(DP), OPTIONAL, INTENT(IN) :: degauss
     CHARACTER(LEN=*), INTENT(IN) :: smearing
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%degauss = degauss
+    IF (PRESENT(degauss)) THEN
+      obj%degauss_ispresent = .TRUE.
+      obj%degauss = degauss
+    ELSE
+      obj%degauss_ispresent = .FALSE.
+    END IF
     !
     obj%smearing = smearing
     !
-  END SUBROUTINE qes_init_smearing 
+  END SUBROUTINE qes_init_smearing
   !
   !
-  SUBROUTINE qes_init_occupations(obj, tagname, occupations, spin)
+  SUBROUTINE qes_init_occupations(obj, tagname, spin, occupations)
     !
     IMPLICIT NONE
     !
@@ -1530,19 +1783,19 @@ MODULE qes_init_module
     INTEGER, OPTIONAL, INTENT(IN) :: spin
     CHARACTER(LEN=*), INTENT(IN) :: occupations
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     IF (PRESENT(spin)) THEN
       obj%spin_ispresent = .TRUE.
       obj%spin = spin
-    ELSE 
+    ELSE
       obj%spin_ispresent = .FALSE.
     END IF
     !
     obj%occupations = occupations
     !
-  END SUBROUTINE qes_init_occupations 
+  END SUBROUTINE qes_init_occupations
   !
   !
   SUBROUTINE qes_init_basis(obj, tagname, ecutwfc, gamma_only, ecutrho, fft_grid, fft_smooth, fft_box)
@@ -1558,43 +1811,43 @@ MODULE qes_init_module
     TYPE(basisSetItem_type),OPTIONAL,INTENT(IN) :: fft_smooth
     TYPE(basisSetItem_type),OPTIONAL,INTENT(IN) :: fft_box
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(gamma_only)) THEN 
+    IF ( PRESENT(gamma_only)) THEN
       obj%gamma_only_ispresent = .TRUE. 
       obj%gamma_only = gamma_only
-    ELSE 
+    ELSE
       obj%gamma_only_ispresent = .FALSE.
     END IF
     obj%ecutwfc = ecutwfc
-    IF ( PRESENT(ecutrho)) THEN 
+    IF ( PRESENT(ecutrho)) THEN
       obj%ecutrho_ispresent = .TRUE. 
       obj%ecutrho = ecutrho
-    ELSE 
+    ELSE
       obj%ecutrho_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fft_grid)) THEN 
+    IF ( PRESENT(fft_grid)) THEN
       obj%fft_grid_ispresent = .TRUE. 
       obj%fft_grid = fft_grid
-    ELSE 
+    ELSE
       obj%fft_grid_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fft_smooth)) THEN 
+    IF ( PRESENT(fft_smooth)) THEN
       obj%fft_smooth_ispresent = .TRUE. 
       obj%fft_smooth = fft_smooth
-    ELSE 
+    ELSE
       obj%fft_smooth_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fft_box)) THEN 
+    IF ( PRESENT(fft_box)) THEN
       obj%fft_box_ispresent = .TRUE. 
       obj%fft_box = fft_box
-    ELSE 
+    ELSE
       obj%fft_box_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_basis 
+  END SUBROUTINE qes_init_basis
   !
   !
   SUBROUTINE qes_init_basis_set(obj, tagname, ecutwfc, fft_grid, ngm, npwx, reciprocal_lattice,&
@@ -1615,47 +1868,47 @@ MODULE qes_init_module
     INTEGER,INTENT(IN) :: npwx
     TYPE(reciprocal_lattice_type),INTENT(IN) :: reciprocal_lattice
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(gamma_only)) THEN 
+    IF ( PRESENT(gamma_only)) THEN
       obj%gamma_only_ispresent = .TRUE. 
       obj%gamma_only = gamma_only
-    ELSE 
+    ELSE
       obj%gamma_only_ispresent = .FALSE.
     END IF
     obj%ecutwfc = ecutwfc
-    IF ( PRESENT(ecutrho)) THEN 
+    IF ( PRESENT(ecutrho)) THEN
       obj%ecutrho_ispresent = .TRUE. 
       obj%ecutrho = ecutrho
-    ELSE 
+    ELSE
       obj%ecutrho_ispresent = .FALSE.
     END IF
     obj%fft_grid = fft_grid
-    IF ( PRESENT(fft_smooth)) THEN 
+    IF ( PRESENT(fft_smooth)) THEN
       obj%fft_smooth_ispresent = .TRUE. 
       obj%fft_smooth = fft_smooth
-    ELSE 
+    ELSE
       obj%fft_smooth_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fft_box)) THEN 
+    IF ( PRESENT(fft_box)) THEN
       obj%fft_box_ispresent = .TRUE. 
       obj%fft_box = fft_box
-    ELSE 
+    ELSE
       obj%fft_box_ispresent = .FALSE.
     END IF
     obj%ngm = ngm
-    IF ( PRESENT(ngms)) THEN 
+    IF ( PRESENT(ngms)) THEN
       obj%ngms_ispresent = .TRUE. 
       obj%ngms = ngms
-    ELSE 
+    ELSE
       obj%ngms_ispresent = .FALSE.
     END IF
     obj%npwx = npwx
     obj%reciprocal_lattice = reciprocal_lattice
     !
-  END SUBROUTINE qes_init_basis_set 
+  END SUBROUTINE qes_init_basis_set
   !
   !
   SUBROUTINE qes_init_basisSetItem(obj, tagname, nr1, nr2, nr3, basisSetItem)
@@ -1664,21 +1917,36 @@ MODULE qes_init_module
     !
     TYPE(basisSetItem_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: nr1
-    INTEGER, INTENT(IN) :: nr2
-    INTEGER, INTENT(IN) :: nr3
+    INTEGER, OPTIONAL, INTENT(IN) :: nr1
+    INTEGER, OPTIONAL, INTENT(IN) :: nr2
+    INTEGER, OPTIONAL, INTENT(IN) :: nr3
     CHARACTER(LEN=*), INTENT(IN) :: basisSetItem
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%nr1 = nr1
-    obj%nr2 = nr2
-    obj%nr3 = nr3
+    IF (PRESENT(nr1)) THEN
+      obj%nr1_ispresent = .TRUE.
+      obj%nr1 = nr1
+    ELSE
+      obj%nr1_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(nr2)) THEN
+      obj%nr2_ispresent = .TRUE.
+      obj%nr2 = nr2
+    ELSE
+      obj%nr2_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(nr3)) THEN
+      obj%nr3_ispresent = .TRUE.
+      obj%nr3 = nr3
+    ELSE
+      obj%nr3_ispresent = .FALSE.
+    END IF
     !
     obj%basisSetItem = basisSetItem
     !
-  END SUBROUTINE qes_init_basisSetItem 
+  END SUBROUTINE qes_init_basisSetItem
   !
   !
   SUBROUTINE qes_init_reciprocal_lattice(obj, tagname, b1, b2, b3)
@@ -1691,7 +1959,7 @@ MODULE qes_init_module
     REAL(DP), DIMENSION(3),INTENT(IN) :: b2
     REAL(DP), DIMENSION(3),INTENT(IN) :: b3
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -1699,14 +1967,14 @@ MODULE qes_init_module
     obj%b2 = b2
     obj%b3 = b3
     !
-  END SUBROUTINE qes_init_reciprocal_lattice 
+  END SUBROUTINE qes_init_reciprocal_lattice
   !
   !
   SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, mixing_beta,&
                                       conv_thr, mixing_ndim, max_nstep, tq_smoothing, tbeta_smoothing,&
                                       diago_thr_init, diago_full_acc, real_space_q, real_space_beta,&
                                       diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,&
-                                      diago_rmm_ndim, diago_rmm_conv, diago_gs_nblock)
+                                      diago_rmm_ndim, diago_gs_nblock, diago_rmm_conv)
     !
     IMPLICIT NONE
     !
@@ -1728,10 +1996,10 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: diago_ppcg_maxiter
     INTEGER,OPTIONAL,INTENT(IN) :: diago_david_ndim
     INTEGER,OPTIONAL,INTENT(IN) :: diago_rmm_ndim
-    LOGICAL,OPTIONAL,INTENT(IN) :: diago_rmm_conv
     INTEGER,OPTIONAL,INTENT(IN) :: diago_gs_nblock
+    LOGICAL,OPTIONAL,INTENT(IN) :: diago_rmm_conv
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -1741,61 +2009,60 @@ MODULE qes_init_module
     obj%conv_thr = conv_thr
     obj%mixing_ndim = mixing_ndim
     obj%max_nstep = max_nstep
-    IF ( PRESENT(real_space_q)) THEN 
+    IF ( PRESENT(real_space_q)) THEN
       obj%real_space_q_ispresent = .TRUE. 
       obj%real_space_q = real_space_q
-    ELSE 
+    ELSE
       obj%real_space_q_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(real_space_beta)) THEN 
+    IF ( PRESENT(real_space_beta)) THEN
       obj%real_space_beta_ispresent = .TRUE. 
       obj%real_space_beta = real_space_beta
-    ELSE 
+    ELSE
       obj%real_space_beta_ispresent = .FALSE.
     END IF
     obj%tq_smoothing = tq_smoothing
     obj%tbeta_smoothing = tbeta_smoothing
     obj%diago_thr_init = diago_thr_init
     obj%diago_full_acc = diago_full_acc
-    IF ( PRESENT(diago_cg_maxiter)) THEN 
+    IF ( PRESENT(diago_cg_maxiter)) THEN
       obj%diago_cg_maxiter_ispresent = .TRUE. 
       obj%diago_cg_maxiter = diago_cg_maxiter
-    ELSE 
+    ELSE
       obj%diago_cg_maxiter_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(diago_ppcg_maxiter)) THEN 
+    IF ( PRESENT(diago_ppcg_maxiter)) THEN
       obj%diago_ppcg_maxiter_ispresent = .TRUE. 
       obj%diago_ppcg_maxiter = diago_ppcg_maxiter
-    ELSE 
+    ELSE
       obj%diago_ppcg_maxiter_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(diago_david_ndim)) THEN 
+    IF ( PRESENT(diago_david_ndim)) THEN
       obj%diago_david_ndim_ispresent = .TRUE. 
       obj%diago_david_ndim = diago_david_ndim
-    ELSE 
+    ELSE
       obj%diago_david_ndim_ispresent = .FALSE.
     END IF
-    !
     IF ( PRESENT(diago_rmm_ndim)) THEN
-      obj%diago_rmm_ndim_ispresent = .TRUE.
+      obj%diago_rmm_ndim_ispresent = .TRUE. 
       obj%diago_rmm_ndim = diago_rmm_ndim
     ELSE
       obj%diago_rmm_ndim_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(diago_rmm_conv)) THEN
-      obj%diago_rmm_conv_ispresent = .TRUE.
-      obj%diago_rmm_conv = diago_rmm_conv
-    ELSE
-      obj%diago_rmm_conv_ispresent = .FALSE.
-    END IF
     IF ( PRESENT(diago_gs_nblock)) THEN
-      obj%diago_gs_nblock_ispresent = .TRUE.
+      obj%diago_gs_nblock_ispresent = .TRUE. 
       obj%diago_gs_nblock = diago_gs_nblock
     ELSE
       obj%diago_gs_nblock_ispresent = .FALSE.
     END IF
+    IF ( PRESENT(diago_rmm_conv)) THEN
+      obj%diago_rmm_conv_ispresent = .TRUE. 
+      obj%diago_rmm_conv = diago_rmm_conv
+    ELSE
+      obj%diago_rmm_conv_ispresent = .FALSE.
+    END IF
     !
-  END SUBROUTINE qes_init_electron_control 
+  END SUBROUTINE qes_init_electron_control
   !
   !
   SUBROUTINE qes_init_k_points_IBZ(obj, tagname, monkhorst_pack, nk, k_point)
@@ -1808,32 +2075,32 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: nk
     TYPE(k_point_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: k_point
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(monkhorst_pack)) THEN 
+    IF ( PRESENT(monkhorst_pack)) THEN
       obj%monkhorst_pack_ispresent = .TRUE. 
       obj%monkhorst_pack = monkhorst_pack
-    ELSE 
+    ELSE
       obj%monkhorst_pack_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(nk)) THEN 
+    IF ( PRESENT(nk)) THEN
       obj%nk_ispresent = .TRUE. 
       obj%nk = nk
-    ELSE 
+    ELSE
       obj%nk_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(k_point)) THEN 
+    IF ( PRESENT(k_point)) THEN
       obj%k_point_ispresent = .TRUE.
       ALLOCATE(obj%k_point(SIZE(k_point)))
       obj%ndim_k_point = SIZE(k_point) 
       obj%k_point = k_point
-    ELSE 
+    ELSE
       obj%k_point_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_k_points_IBZ 
+  END SUBROUTINE qes_init_k_points_IBZ
   !
   !
   SUBROUTINE qes_init_monkhorst_pack(obj, tagname, nk1, nk2, nk3, k1, k2, k3, monkhorst_pack)
@@ -1842,30 +2109,60 @@ MODULE qes_init_module
     !
     TYPE(monkhorst_pack_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    INTEGER, INTENT(IN) :: nk1
-    INTEGER, INTENT(IN) :: nk2
-    INTEGER, INTENT(IN) :: nk3
-    INTEGER, INTENT(IN) :: k1
-    INTEGER, INTENT(IN) :: k2
-    INTEGER, INTENT(IN) :: k3
+    INTEGER, OPTIONAL, INTENT(IN) :: nk1
+    INTEGER, OPTIONAL, INTENT(IN) :: nk2
+    INTEGER, OPTIONAL, INTENT(IN) :: nk3
+    INTEGER, OPTIONAL, INTENT(IN) :: k1
+    INTEGER, OPTIONAL, INTENT(IN) :: k2
+    INTEGER, OPTIONAL, INTENT(IN) :: k3
     CHARACTER(LEN=*), INTENT(IN) :: monkhorst_pack
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%nk1 = nk1
-    obj%nk2 = nk2
-    obj%nk3 = nk3
-    obj%k1 = k1
-    obj%k2 = k2
-    obj%k3 = k3
+    IF (PRESENT(nk1)) THEN
+      obj%nk1_ispresent = .TRUE.
+      obj%nk1 = nk1
+    ELSE
+      obj%nk1_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(nk2)) THEN
+      obj%nk2_ispresent = .TRUE.
+      obj%nk2 = nk2
+    ELSE
+      obj%nk2_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(nk3)) THEN
+      obj%nk3_ispresent = .TRUE.
+      obj%nk3 = nk3
+    ELSE
+      obj%nk3_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(k1)) THEN
+      obj%k1_ispresent = .TRUE.
+      obj%k1 = k1
+    ELSE
+      obj%k1_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(k2)) THEN
+      obj%k2_ispresent = .TRUE.
+      obj%k2 = k2
+    ELSE
+      obj%k2_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(k3)) THEN
+      obj%k3_ispresent = .TRUE.
+      obj%k3 = k3
+    ELSE
+      obj%k3_ispresent = .FALSE.
+    END IF
     !
     obj%monkhorst_pack = monkhorst_pack
     !
-  END SUBROUTINE qes_init_monkhorst_pack 
+  END SUBROUTINE qes_init_monkhorst_pack
   !
   !
-  SUBROUTINE qes_init_k_point(obj, tagname, k_point, weight, label)
+  SUBROUTINE qes_init_k_point(obj, tagname, weight, label, k_point)
     !
     IMPLICIT NONE
     !
@@ -1875,25 +2172,25 @@ MODULE qes_init_module
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: label
     REAL(DP), DIMENSION(3), INTENT(IN) :: k_point
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     IF (PRESENT(weight)) THEN
       obj%weight_ispresent = .TRUE.
       obj%weight = weight
-    ELSE 
+    ELSE
       obj%weight_ispresent = .FALSE.
     END IF
     IF (PRESENT(label)) THEN
       obj%label_ispresent = .TRUE.
       obj%label = label
-    ELSE 
+    ELSE
       obj%label_ispresent = .FALSE.
     END IF
     !
     obj%k_point = k_point
     !
-  END SUBROUTINE qes_init_k_point 
+  END SUBROUTINE qes_init_k_point
   !
   !
   SUBROUTINE qes_init_ion_control(obj, tagname, ion_dynamics, upscale, remove_rigid_rot, refold_pos,&
@@ -1910,43 +2207,43 @@ MODULE qes_init_module
     TYPE(bfgs_type),OPTIONAL,INTENT(IN) :: bfgs
     TYPE(md_type),OPTIONAL,INTENT(IN) :: md
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%ion_dynamics = ion_dynamics
-    IF ( PRESENT(upscale)) THEN 
+    IF ( PRESENT(upscale)) THEN
       obj%upscale_ispresent = .TRUE. 
       obj%upscale = upscale
-    ELSE 
+    ELSE
       obj%upscale_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(remove_rigid_rot)) THEN 
+    IF ( PRESENT(remove_rigid_rot)) THEN
       obj%remove_rigid_rot_ispresent = .TRUE. 
       obj%remove_rigid_rot = remove_rigid_rot
-    ELSE 
+    ELSE
       obj%remove_rigid_rot_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(refold_pos)) THEN 
+    IF ( PRESENT(refold_pos)) THEN
       obj%refold_pos_ispresent = .TRUE. 
       obj%refold_pos = refold_pos
-    ELSE 
+    ELSE
       obj%refold_pos_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(bfgs)) THEN 
+    IF ( PRESENT(bfgs)) THEN
       obj%bfgs_ispresent = .TRUE. 
       obj%bfgs = bfgs
-    ELSE 
+    ELSE
       obj%bfgs_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(md)) THEN 
+    IF ( PRESENT(md)) THEN
       obj%md_ispresent = .TRUE. 
       obj%md = md
-    ELSE 
+    ELSE
       obj%md_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_ion_control 
+  END SUBROUTINE qes_init_ion_control
   !
   !
   SUBROUTINE qes_init_bfgs(obj, tagname, ndim, trust_radius_min, trust_radius_max, trust_radius_init,&
@@ -1963,7 +2260,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: w1
     REAL(DP),INTENT(IN) :: w2
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -1974,7 +2271,7 @@ MODULE qes_init_module
     obj%w1 = w1
     obj%w2 = w2
     !
-  END SUBROUTINE qes_init_bfgs 
+  END SUBROUTINE qes_init_bfgs
   !
   !
   SUBROUTINE qes_init_md(obj, tagname, pot_extrapolation, wfc_extrapolation, ion_temperature,&
@@ -1993,7 +2290,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: deltaT
     INTEGER,INTENT(IN) :: nraise
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2006,11 +2303,11 @@ MODULE qes_init_module
     obj%deltaT = deltaT
     obj%nraise = nraise
     !
-  END SUBROUTINE qes_init_md 
+  END SUBROUTINE qes_init_md
   !
   !
   SUBROUTINE qes_init_cell_control(obj, tagname, cell_dynamics, pressure, wmass, cell_factor,&
-                                  fix_volume, fix_area, isotropic, free_cell)
+                                  cell_do_free, fix_volume, fix_area, isotropic, free_cell)
     !
     IMPLICIT NONE
     !
@@ -2020,55 +2317,62 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: pressure
     REAL(DP),OPTIONAL,INTENT(IN) :: wmass
     REAL(DP),OPTIONAL,INTENT(IN) :: cell_factor
+    CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: cell_do_free
     LOGICAL,OPTIONAL,INTENT(IN) :: fix_volume
     LOGICAL,OPTIONAL,INTENT(IN) :: fix_area
     LOGICAL,OPTIONAL,INTENT(IN) :: isotropic
     TYPE(integerMatrix_type),OPTIONAL,INTENT(IN) :: free_cell
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%cell_dynamics = cell_dynamics
     obj%pressure = pressure
-    IF ( PRESENT(wmass)) THEN 
+    IF ( PRESENT(wmass)) THEN
       obj%wmass_ispresent = .TRUE. 
       obj%wmass = wmass
-    ELSE 
+    ELSE
       obj%wmass_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(cell_factor)) THEN 
+    IF ( PRESENT(cell_factor)) THEN
       obj%cell_factor_ispresent = .TRUE. 
       obj%cell_factor = cell_factor
-    ELSE 
+    ELSE
       obj%cell_factor_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fix_volume)) THEN 
+    IF ( PRESENT(cell_do_free)) THEN
+      obj%cell_do_free_ispresent = .TRUE. 
+      obj%cell_do_free = cell_do_free
+    ELSE
+      obj%cell_do_free_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(fix_volume)) THEN
       obj%fix_volume_ispresent = .TRUE. 
       obj%fix_volume = fix_volume
-    ELSE 
+    ELSE
       obj%fix_volume_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fix_area)) THEN 
+    IF ( PRESENT(fix_area)) THEN
       obj%fix_area_ispresent = .TRUE. 
       obj%fix_area = fix_area
-    ELSE 
+    ELSE
       obj%fix_area_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(isotropic)) THEN 
+    IF ( PRESENT(isotropic)) THEN
       obj%isotropic_ispresent = .TRUE. 
       obj%isotropic = isotropic
-    ELSE 
+    ELSE
       obj%isotropic_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(free_cell)) THEN 
+    IF ( PRESENT(free_cell)) THEN
       obj%free_cell_ispresent = .TRUE. 
       obj%free_cell = free_cell
-    ELSE 
+    ELSE
       obj%free_cell_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_cell_control 
+  END SUBROUTINE qes_init_cell_control
   !
   !
   SUBROUTINE qes_init_symmetry_flags(obj, tagname, nosym, nosym_evc, noinv, no_t_rev, force_symmorphic, use_all_frac)
@@ -2084,7 +2388,7 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: force_symmorphic
     LOGICAL,INTENT(IN) :: use_all_frac
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2095,10 +2399,10 @@ MODULE qes_init_module
     obj%force_symmorphic = force_symmorphic
     obj%use_all_frac = use_all_frac
     !
-  END SUBROUTINE qes_init_symmetry_flags 
+  END SUBROUTINE qes_init_symmetry_flags
   !
   !
-  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, fcp, fcp_mu)
+  SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm, fcp_opt, fcp_mu)
     !
     IMPLICIT NONE
     !
@@ -2106,34 +2410,34 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: assume_isolated
     TYPE(esm_type),OPTIONAL,INTENT(IN) :: esm
-    LOGICAL,OPTIONAL,INTENT(IN) :: fcp
+    LOGICAL,OPTIONAL,INTENT(IN) :: fcp_opt
     REAL(DP),OPTIONAL,INTENT(IN) :: fcp_mu
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%assume_isolated = assume_isolated
-    IF ( PRESENT(esm)) THEN 
+    IF ( PRESENT(esm)) THEN
       obj%esm_ispresent = .TRUE. 
       obj%esm = esm
-    ELSE 
+    ELSE
       obj%esm_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fcp)) THEN
-      obj%fcp_ispresent = .TRUE.
-      obj%fcp = fcp
-    ELSE 
-      obj%fcp_ispresent = .FALSE.
+    IF ( PRESENT(fcp_opt)) THEN
+      obj%fcp_opt_ispresent = .TRUE. 
+      obj%fcp_opt = fcp_opt
+    ELSE
+      obj%fcp_opt_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(fcp_mu)) THEN 
+    IF ( PRESENT(fcp_mu)) THEN
       obj%fcp_mu_ispresent = .TRUE. 
       obj%fcp_mu = fcp_mu
-    ELSE 
+    ELSE
       obj%fcp_mu_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_boundary_conditions 
+  END SUBROUTINE qes_init_boundary_conditions
   !
   !
   SUBROUTINE qes_init_esm(obj, tagname, bc, nfit, w, efield)
@@ -2147,7 +2451,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: w
     REAL(DP),INTENT(IN) :: efield
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2156,7 +2460,7 @@ MODULE qes_init_module
     obj%w = w
     obj%efield = efield
     !
-  END SUBROUTINE qes_init_esm 
+  END SUBROUTINE qes_init_esm
   !
   !
   SUBROUTINE qes_init_ekin_functional(obj, tagname, ecfixed, qcutz, q2sigma)
@@ -2169,7 +2473,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: qcutz
     REAL(DP),INTENT(IN) :: q2sigma
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2177,7 +2481,7 @@ MODULE qes_init_module
     obj%qcutz = qcutz
     obj%q2sigma = q2sigma
     !
-  END SUBROUTINE qes_init_ekin_functional 
+  END SUBROUTINE qes_init_ekin_functional
   !
   !
   SUBROUTINE qes_init_spin_constraints(obj, tagname, spin_constraints, lagrange_multiplier, target_magnetization)
@@ -2190,20 +2494,20 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: lagrange_multiplier
     REAL(DP), DIMENSION(3),OPTIONAL,INTENT(IN) :: target_magnetization
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%spin_constraints = spin_constraints
     obj%lagrange_multiplier = lagrange_multiplier
-    IF ( PRESENT(target_magnetization)) THEN 
+    IF ( PRESENT(target_magnetization)) THEN
       obj%target_magnetization_ispresent = .TRUE. 
       obj%target_magnetization = target_magnetization
-    ELSE 
+    ELSE
       obj%target_magnetization_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_spin_constraints 
+  END SUBROUTINE qes_init_spin_constraints
   !
   !
   SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, dipole_correction, gate_settings,&
@@ -2226,67 +2530,67 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: nk_per_string
     INTEGER,OPTIONAL,INTENT(IN) :: n_berry_cycles
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%electric_potential = electric_potential
-    IF ( PRESENT(dipole_correction)) THEN 
+    IF ( PRESENT(dipole_correction)) THEN
       obj%dipole_correction_ispresent = .TRUE. 
       obj%dipole_correction = dipole_correction
-    ELSE 
+    ELSE
       obj%dipole_correction_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(gate_settings)) THEN 
+    IF ( PRESENT(gate_settings)) THEN
       obj%gate_settings_ispresent = .TRUE. 
       obj%gate_settings = gate_settings
-    ELSE 
+    ELSE
       obj%gate_settings_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(electric_field_direction)) THEN 
+    IF ( PRESENT(electric_field_direction)) THEN
       obj%electric_field_direction_ispresent = .TRUE. 
       obj%electric_field_direction = electric_field_direction
-    ELSE 
+    ELSE
       obj%electric_field_direction_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(potential_max_position)) THEN 
+    IF ( PRESENT(potential_max_position)) THEN
       obj%potential_max_position_ispresent = .TRUE. 
       obj%potential_max_position = potential_max_position
-    ELSE 
+    ELSE
       obj%potential_max_position_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(potential_decrease_width)) THEN 
+    IF ( PRESENT(potential_decrease_width)) THEN
       obj%potential_decrease_width_ispresent = .TRUE. 
       obj%potential_decrease_width = potential_decrease_width
-    ELSE 
+    ELSE
       obj%potential_decrease_width_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(electric_field_amplitude)) THEN 
+    IF ( PRESENT(electric_field_amplitude)) THEN
       obj%electric_field_amplitude_ispresent = .TRUE. 
       obj%electric_field_amplitude = electric_field_amplitude
-    ELSE 
+    ELSE
       obj%electric_field_amplitude_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(electric_field_vector)) THEN 
+    IF ( PRESENT(electric_field_vector)) THEN
       obj%electric_field_vector_ispresent = .TRUE. 
       obj%electric_field_vector = electric_field_vector
-    ELSE 
+    ELSE
       obj%electric_field_vector_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(nk_per_string)) THEN 
+    IF ( PRESENT(nk_per_string)) THEN
       obj%nk_per_string_ispresent = .TRUE. 
       obj%nk_per_string = nk_per_string
-    ELSE 
+    ELSE
       obj%nk_per_string_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(n_berry_cycles)) THEN 
+    IF ( PRESENT(n_berry_cycles)) THEN
       obj%n_berry_cycles_ispresent = .TRUE. 
       obj%n_berry_cycles = n_berry_cycles
-    ELSE 
+    ELSE
       obj%n_berry_cycles_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_electric_field 
+  END SUBROUTINE qes_init_electric_field
   !
   !
   SUBROUTINE qes_init_gate_settings(obj, tagname, use_gate, zgate, relaxz, block, block_1, block_2, block_height)
@@ -2303,49 +2607,49 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: block_2
     REAL(DP),OPTIONAL,INTENT(IN) :: block_height
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%use_gate = use_gate
-    IF ( PRESENT(zgate)) THEN 
+    IF ( PRESENT(zgate)) THEN
       obj%zgate_ispresent = .TRUE. 
       obj%zgate = zgate
-    ELSE 
+    ELSE
       obj%zgate_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(relaxz)) THEN 
+    IF ( PRESENT(relaxz)) THEN
       obj%relaxz_ispresent = .TRUE. 
       obj%relaxz = relaxz
-    ELSE 
+    ELSE
       obj%relaxz_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(block)) THEN 
+    IF ( PRESENT(block)) THEN
       obj%block_ispresent = .TRUE. 
       obj%block = block
-    ELSE 
+    ELSE
       obj%block_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(block_1)) THEN 
+    IF ( PRESENT(block_1)) THEN
       obj%block_1_ispresent = .TRUE. 
       obj%block_1 = block_1
-    ELSE 
+    ELSE
       obj%block_1_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(block_2)) THEN 
+    IF ( PRESENT(block_2)) THEN
       obj%block_2_ispresent = .TRUE. 
       obj%block_2 = block_2
-    ELSE 
+    ELSE
       obj%block_2_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(block_height)) THEN 
+    IF ( PRESENT(block_height)) THEN
       obj%block_height_ispresent = .TRUE. 
       obj%block_height = block_height
-    ELSE 
+    ELSE
       obj%block_height_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_gate_settings 
+  END SUBROUTINE qes_init_gate_settings
   !
   !
   SUBROUTINE qes_init_atomic_constraints(obj, tagname, num_of_constraints, tolerance, atomic_constraint)
@@ -2358,17 +2662,17 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: tolerance
     TYPE(atomic_constraint_type),DIMENSION(:),INTENT(IN) :: atomic_constraint
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%num_of_constraints = num_of_constraints
     obj%tolerance = tolerance
-    ALLOCATE( obj%atomic_constraint(SIZE(atomic_constraint))) 
+    ALLOCATE(obj%atomic_constraint(SIZE(atomic_constraint)))
     obj%ndim_atomic_constraint = SIZE(atomic_constraint)
     obj%atomic_constraint = atomic_constraint
     !
-  END SUBROUTINE qes_init_atomic_constraints 
+  END SUBROUTINE qes_init_atomic_constraints
   !
   !
   SUBROUTINE qes_init_atomic_constraint(obj, tagname, constr_parms, constr_type, constr_target)
@@ -2381,7 +2685,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*),INTENT(IN) :: constr_type
     REAL(DP),INTENT(IN) :: constr_target
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2389,7 +2693,7 @@ MODULE qes_init_module
     obj%constr_type = constr_type
     obj%constr_target = constr_target
     !
-  END SUBROUTINE qes_init_atomic_constraint 
+  END SUBROUTINE qes_init_atomic_constraint
   !
   !
   SUBROUTINE qes_init_inputOccupations(obj, tagname, ispin, spin_factor, inputOccupations)
@@ -2399,20 +2703,30 @@ MODULE qes_init_module
     TYPE(inputOccupations_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     REAL(DP), DIMENSION(:), INTENT(IN) :: inputOccupations
-    INTEGER, INTENT(IN) :: ispin
-    REAL(DP), INTENT(IN) :: spin_factor
+    INTEGER, OPTIONAL, INTENT(IN) :: ispin
+    REAL(DP), OPTIONAL, INTENT(IN) :: spin_factor
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    obj%ispin = ispin
-    obj%spin_factor = spin_factor
+    IF (PRESENT(ispin)) THEN
+      obj%ispin_ispresent = .TRUE.
+      obj%ispin = ispin
+    ELSE 
+      obj%ispin_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(spin_factor)) THEN
+      obj%spin_factor_ispresent = .TRUE.
+      obj%spin_factor = spin_factor
+    ELSE 
+      obj%spin_factor_ispresent = .FALSE.
+    END IF
     obj%size = size(inputOccupations)
     ALLOCATE(obj%inputOccupations(obj%size))
     obj%inputOccupations = inputOccupations
     !
-  END SUBROUTINE qes_init_inputOccupations 
+  END SUBROUTINE qes_init_inputOccupations
   !
   !
   SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase, finiteElectricFieldInfo, dipoleInfo, gateInfo)
@@ -2426,36 +2740,36 @@ MODULE qes_init_module
     TYPE(dipoleOutput_type),OPTIONAL,INTENT(IN) :: dipoleInfo
     TYPE(gateInfo_type),OPTIONAL,INTENT(IN) :: gateInfo
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    IF ( PRESENT(BerryPhase)) THEN 
+    IF ( PRESENT(BerryPhase)) THEN
       obj%BerryPhase_ispresent = .TRUE. 
       obj%BerryPhase = BerryPhase
-    ELSE 
+    ELSE
       obj%BerryPhase_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(finiteElectricFieldInfo)) THEN 
+    IF ( PRESENT(finiteElectricFieldInfo)) THEN
       obj%finiteElectricFieldInfo_ispresent = .TRUE. 
       obj%finiteElectricFieldInfo = finiteElectricFieldInfo
-    ELSE 
+    ELSE
       obj%finiteElectricFieldInfo_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(dipoleInfo)) THEN 
+    IF ( PRESENT(dipoleInfo)) THEN
       obj%dipoleInfo_ispresent = .TRUE. 
       obj%dipoleInfo = dipoleInfo
-    ELSE 
+    ELSE
       obj%dipoleInfo_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(gateInfo)) THEN 
+    IF ( PRESENT(gateInfo)) THEN
       obj%gateInfo_ispresent = .TRUE. 
       obj%gateInfo = gateInfo
-    ELSE 
+    ELSE
       obj%gateInfo_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_outputElectricField 
+  END SUBROUTINE qes_init_outputElectricField
   !
   !
   SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, totalPolarization, totalPhase, ionicPolarization, electronicPolarization)
@@ -2469,20 +2783,20 @@ MODULE qes_init_module
     TYPE(ionicPolarization_type),DIMENSION(:),INTENT(IN) :: ionicPolarization
     TYPE(electronicPolarization_type),DIMENSION(:),INTENT(IN) :: electronicPolarization
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%totalPolarization = totalPolarization
     obj%totalPhase = totalPhase
-    ALLOCATE( obj%ionicPolarization(SIZE(ionicPolarization))) 
+    ALLOCATE(obj%ionicPolarization(SIZE(ionicPolarization)))
     obj%ndim_ionicPolarization = SIZE(ionicPolarization)
     obj%ionicPolarization = ionicPolarization
-    ALLOCATE( obj%electronicPolarization(SIZE(electronicPolarization))) 
+    ALLOCATE(obj%electronicPolarization(SIZE(electronicPolarization)))
     obj%ndim_electronicPolarization = SIZE(electronicPolarization)
     obj%electronicPolarization = electronicPolarization
     !
-  END SUBROUTINE qes_init_BerryPhaseOutput 
+  END SUBROUTINE qes_init_BerryPhaseOutput
   !
   !
   SUBROUTINE qes_init_dipoleOutput(obj, tagname, idir, dipole, ion_dipole, elec_dipole, dipoleField,&
@@ -2500,7 +2814,7 @@ MODULE qes_init_module
     TYPE(scalarQuantity_type),INTENT(IN) :: potentialAmp
     TYPE(scalarQuantity_type),INTENT(IN) :: totalLength
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2512,7 +2826,7 @@ MODULE qes_init_module
     obj%potentialAmp = potentialAmp
     obj%totalLength = totalLength
     !
-  END SUBROUTINE qes_init_dipoleOutput 
+  END SUBROUTINE qes_init_dipoleOutput
   !
   !
   SUBROUTINE qes_init_finiteFieldOut(obj, tagname, electronicDipole, ionicDipole)
@@ -2524,14 +2838,14 @@ MODULE qes_init_module
     REAL(DP), DIMENSION(3),INTENT(IN) :: electronicDipole
     REAL(DP), DIMENSION(3),INTENT(IN) :: ionicDipole
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%electronicDipole = electronicDipole
     obj%ionicDipole = ionicDipole
     !
-  END SUBROUTINE qes_init_finiteFieldOut 
+  END SUBROUTINE qes_init_finiteFieldOut
   !
   !
   SUBROUTINE qes_init_polarization(obj, tagname, polarization, modulus, direction)
@@ -2544,7 +2858,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: modulus
     REAL(DP), DIMENSION(3),INTENT(IN) :: direction
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2552,7 +2866,7 @@ MODULE qes_init_module
     obj%modulus = modulus
     obj%direction = direction
     !
-  END SUBROUTINE qes_init_polarization 
+  END SUBROUTINE qes_init_polarization
   !
   !
   SUBROUTINE qes_init_ionicPolarization(obj, tagname, ion, charge, phase)
@@ -2565,7 +2879,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: charge
     TYPE(phase_type),INTENT(IN) :: phase
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2573,7 +2887,7 @@ MODULE qes_init_module
     obj%charge = charge
     obj%phase = phase
     !
-  END SUBROUTINE qes_init_ionicPolarization 
+  END SUBROUTINE qes_init_ionicPolarization
   !
   !
   SUBROUTINE qes_init_electronicPolarization(obj, tagname, firstKeyPoint, phase, spin)
@@ -2586,23 +2900,23 @@ MODULE qes_init_module
     INTEGER,OPTIONAL,INTENT(IN) :: spin
     TYPE(phase_type),INTENT(IN) :: phase
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%firstKeyPoint = firstKeyPoint
-    IF ( PRESENT(spin)) THEN 
+    IF ( PRESENT(spin)) THEN
       obj%spin_ispresent = .TRUE. 
       obj%spin = spin
-    ELSE 
+    ELSE
       obj%spin_ispresent = .FALSE.
     END IF
     obj%phase = phase
     !
-  END SUBROUTINE qes_init_electronicPolarization 
+  END SUBROUTINE qes_init_electronicPolarization
   !
   !
-  SUBROUTINE qes_init_phase(obj, tagname, phase, ionic, electronic, modulus)
+  SUBROUTINE qes_init_phase(obj, tagname, ionic, electronic, modulus, phase)
     !
     IMPLICIT NONE
     !
@@ -2613,31 +2927,31 @@ MODULE qes_init_module
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: modulus
     REAL(DP), INTENT(IN) :: phase
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     IF (PRESENT(ionic)) THEN
       obj%ionic_ispresent = .TRUE.
       obj%ionic = ionic
-    ELSE 
+    ELSE
       obj%ionic_ispresent = .FALSE.
     END IF
     IF (PRESENT(electronic)) THEN
       obj%electronic_ispresent = .TRUE.
       obj%electronic = electronic
-    ELSE 
+    ELSE
       obj%electronic_ispresent = .FALSE.
     END IF
     IF (PRESENT(modulus)) THEN
       obj%modulus_ispresent = .TRUE.
       obj%modulus = modulus
-    ELSE 
+    ELSE
       obj%modulus_ispresent = .FALSE.
     END IF
     !
     obj%phase = phase
     !
-  END SUBROUTINE qes_init_phase 
+  END SUBROUTINE qes_init_phase
   !
   !
   SUBROUTINE qes_init_gateInfo(obj, tagname, pot_prefactor, gate_zpos, gate_gate_term, gatefieldEnergy)
@@ -2651,7 +2965,7 @@ MODULE qes_init_module
     REAL(DP),INTENT(IN) :: gate_gate_term
     REAL(DP),INTENT(IN) :: gatefieldEnergy
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2660,7 +2974,7 @@ MODULE qes_init_module
     obj%gate_gate_term = gate_gate_term
     obj%gatefieldEnergy = gatefieldEnergy
     !
-  END SUBROUTINE qes_init_gateInfo 
+  END SUBROUTINE qes_init_gateInfo
   !
   !
   SUBROUTINE qes_init_convergence_info(obj, tagname, scf_conv, opt_conv)
@@ -2672,19 +2986,19 @@ MODULE qes_init_module
     TYPE(scf_conv_type),INTENT(IN) :: scf_conv
     TYPE(opt_conv_type),OPTIONAL,INTENT(IN) :: opt_conv
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%scf_conv = scf_conv
-    IF ( PRESENT(opt_conv)) THEN 
+    IF ( PRESENT(opt_conv)) THEN
       obj%opt_conv_ispresent = .TRUE. 
       obj%opt_conv = opt_conv
-    ELSE 
+    ELSE
       obj%opt_conv_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_convergence_info 
+  END SUBROUTINE qes_init_convergence_info
   !
   !
   SUBROUTINE qes_init_scf_conv(obj, tagname, convergence_achieved, n_scf_steps, scf_error)
@@ -2697,7 +3011,7 @@ MODULE qes_init_module
     INTEGER,INTENT(IN) :: n_scf_steps
     REAL(DP),INTENT(IN) :: scf_error
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2705,7 +3019,7 @@ MODULE qes_init_module
     obj%n_scf_steps = n_scf_steps
     obj%scf_error = scf_error
     !
-  END SUBROUTINE qes_init_scf_conv 
+  END SUBROUTINE qes_init_scf_conv
   !
   !
   SUBROUTINE qes_init_opt_conv(obj, tagname, convergence_achieved, n_opt_steps, grad_norm)
@@ -2718,7 +3032,7 @@ MODULE qes_init_module
     INTEGER,INTENT(IN) :: n_opt_steps
     REAL(DP),INTENT(IN) :: grad_norm
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -2726,7 +3040,7 @@ MODULE qes_init_module
     obj%n_opt_steps = n_opt_steps
     obj%grad_norm = grad_norm
     !
-  END SUBROUTINE qes_init_opt_conv 
+  END SUBROUTINE qes_init_opt_conv
   !
   !
   SUBROUTINE qes_init_algorithmic_info(obj, tagname, real_space_q, uspp, paw, real_space_beta)
@@ -2740,21 +3054,21 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: uspp
     LOGICAL,INTENT(IN) :: paw
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%real_space_q = real_space_q
-    IF ( PRESENT(real_space_beta)) THEN 
+    IF ( PRESENT(real_space_beta)) THEN
       obj%real_space_beta_ispresent = .TRUE. 
       obj%real_space_beta = real_space_beta
-    ELSE 
+    ELSE
       obj%real_space_beta_ispresent = .FALSE.
     END IF
     obj%uspp = uspp
     obj%paw = paw
     !
-  END SUBROUTINE qes_init_algorithmic_info 
+  END SUBROUTINE qes_init_algorithmic_info
   !
   !
   SUBROUTINE qes_init_symmetries(obj, tagname, nsym, nrot, space_group, symmetry)
@@ -2768,18 +3082,18 @@ MODULE qes_init_module
     INTEGER,INTENT(IN) :: space_group
     TYPE(symmetry_type),DIMENSION(:),INTENT(IN) :: symmetry
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%nsym = nsym
     obj%nrot = nrot
     obj%space_group = space_group
-    ALLOCATE( obj%symmetry(SIZE(symmetry))) 
+    ALLOCATE(obj%symmetry(SIZE(symmetry)))
     obj%ndim_symmetry = SIZE(symmetry)
     obj%symmetry = symmetry
     !
-  END SUBROUTINE qes_init_symmetries 
+  END SUBROUTINE qes_init_symmetries
   !
   !
   SUBROUTINE qes_init_symmetry(obj, tagname, info, rotation, fractional_translation, equivalent_atoms)
@@ -2793,26 +3107,26 @@ MODULE qes_init_module
     REAL(DP), DIMENSION(3),OPTIONAL,INTENT(IN) :: fractional_translation
     TYPE(equivalent_atoms_type),OPTIONAL,INTENT(IN) :: equivalent_atoms
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%info = info
     obj%rotation = rotation
-    IF ( PRESENT(fractional_translation)) THEN 
+    IF ( PRESENT(fractional_translation)) THEN
       obj%fractional_translation_ispresent = .TRUE. 
       obj%fractional_translation = fractional_translation
-    ELSE 
+    ELSE
       obj%fractional_translation_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(equivalent_atoms)) THEN 
+    IF ( PRESENT(equivalent_atoms)) THEN
       obj%equivalent_atoms_ispresent = .TRUE. 
       obj%equivalent_atoms = equivalent_atoms
-    ELSE 
+    ELSE
       obj%equivalent_atoms_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_symmetry 
+  END SUBROUTINE qes_init_symmetry
   !
   !
   SUBROUTINE qes_init_equivalent_atoms(obj, tagname, nat, equivalent_atoms)
@@ -2822,21 +3136,26 @@ MODULE qes_init_module
     TYPE(equivalent_atoms_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     INTEGER, DIMENSION(:), INTENT(IN) :: equivalent_atoms
-    INTEGER, INTENT(IN) :: nat
+    INTEGER, OPTIONAL, INTENT(IN) :: nat
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
-    obj%nat = nat
+    IF (PRESENT(nat)) THEN
+      obj%nat_ispresent = .TRUE.
+      obj%nat = nat
+    ELSE 
+      obj%nat_ispresent = .FALSE.
+    END IF
     obj%size = size(equivalent_atoms)
     ALLOCATE(obj%equivalent_atoms(obj%size))
     obj%equivalent_atoms = equivalent_atoms
     !
-  END SUBROUTINE qes_init_equivalent_atoms 
+  END SUBROUTINE qes_init_equivalent_atoms
   !
   !
-  SUBROUTINE qes_init_info(obj, tagname, info, name, class, time_reversal)
+  SUBROUTINE qes_init_info(obj, tagname, name, class, time_reversal, info)
     !
     IMPLICIT NONE
     !
@@ -2847,31 +3166,31 @@ MODULE qes_init_module
     LOGICAL, OPTIONAL, INTENT(IN) :: time_reversal
     CHARACTER(LEN=*), INTENT(IN) :: info
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     IF (PRESENT(name)) THEN
       obj%name_ispresent = .TRUE.
       obj%name = name
-    ELSE 
+    ELSE
       obj%name_ispresent = .FALSE.
     END IF
     IF (PRESENT(class)) THEN
       obj%class_ispresent = .TRUE.
       obj%class = class
-    ELSE 
+    ELSE
       obj%class_ispresent = .FALSE.
     END IF
     IF (PRESENT(time_reversal)) THEN
       obj%time_reversal_ispresent = .TRUE.
       obj%time_reversal = time_reversal
-    ELSE 
+    ELSE
       obj%time_reversal_ispresent = .FALSE.
     END IF
     !
     obj%info = info
     !
-  END SUBROUTINE qes_init_info 
+  END SUBROUTINE qes_init_info
   !
   !
   SUBROUTINE qes_init_outputPBC(obj, tagname, assume_isolated)
@@ -2882,16 +3201,18 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*),INTENT(IN) :: assume_isolated
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%assume_isolated = assume_isolated
     !
-  END SUBROUTINE qes_init_outputPBC 
+  END SUBROUTINE qes_init_outputPBC
   !
   !
-  SUBROUTINE qes_init_magnetization(obj, tagname, lsda, noncolin, spinorbit, total, absolute, do_magnetization)
+  SUBROUTINE qes_init_magnetization(obj, tagname, lsda, noncolin, spinorbit, absolute, total,&
+                                   total_vec, Scalar_Site_Magnetic_Moments, Site_Magnetizations, do_magnetization &
+                                   )
     !
     IMPLICIT NONE
     !
@@ -2900,27 +3221,53 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: lsda
     LOGICAL,INTENT(IN) :: noncolin
     LOGICAL,INTENT(IN) :: spinorbit
-    REAL(DP),INTENT(IN) :: total
+    REAL(DP),OPTIONAL,INTENT(IN) :: total
+    REAL(DP), DIMENSION(3),OPTIONAL,INTENT(IN) :: total_vec
     REAL(DP),INTENT(IN) :: absolute
+    TYPE(scalmags_type),OPTIONAL,INTENT(IN) :: Scalar_Site_Magnetic_Moments
+    TYPE(d3mags_type),OPTIONAL,INTENT(IN) :: Site_Magnetizations
     LOGICAL,OPTIONAL,INTENT(IN) :: do_magnetization
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%lsda = lsda
     obj%noncolin = noncolin
     obj%spinorbit = spinorbit
-    obj%total = total
+    IF ( PRESENT(total)) THEN
+      obj%total_ispresent = .TRUE. 
+      obj%total = total
+    ELSE
+      obj%total_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(total_vec)) THEN
+      obj%total_vec_ispresent = .TRUE. 
+      obj%total_vec = total_vec
+    ELSE
+      obj%total_vec_ispresent = .FALSE.
+    END IF
     obj%absolute = absolute
-    IF ( PRESENT(do_magnetization)) THEN 
+    IF ( PRESENT(Scalar_Site_Magnetic_Moments)) THEN
+      obj%Scalar_Site_Magnetic_Moments_ispresent = .TRUE. 
+      obj%Scalar_Site_Magnetic_Moments = Scalar_Site_Magnetic_Moments
+    ELSE
+      obj%Scalar_Site_Magnetic_Moments_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Site_Magnetizations)) THEN
+      obj%Site_Magnetizations_ispresent = .TRUE. 
+      obj%Site_Magnetizations = Site_Magnetizations
+    ELSE
+      obj%Site_Magnetizations_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(do_magnetization)) THEN
       obj%do_magnetization_ispresent = .TRUE. 
       obj%do_magnetization = do_magnetization
-    ELSE 
+    ELSE
       obj%do_magnetization_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_magnetization 
+  END SUBROUTINE qes_init_magnetization
   !
   !
   SUBROUTINE qes_init_total_energy(obj, tagname, etot, eband, ehart, vtxc, etxc, ewald, demet,&
@@ -2942,73 +3289,73 @@ MODULE qes_init_module
     REAL(DP),OPTIONAL,INTENT(IN) :: gatefield_contr
     REAL(DP),OPTIONAL,INTENT(IN) :: vdW_term
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%etot = etot
-    IF ( PRESENT(eband)) THEN 
+    IF ( PRESENT(eband)) THEN
       obj%eband_ispresent = .TRUE. 
       obj%eband = eband
-    ELSE 
+    ELSE
       obj%eband_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(ehart)) THEN 
+    IF ( PRESENT(ehart)) THEN
       obj%ehart_ispresent = .TRUE. 
       obj%ehart = ehart
-    ELSE 
+    ELSE
       obj%ehart_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(vtxc)) THEN 
+    IF ( PRESENT(vtxc)) THEN
       obj%vtxc_ispresent = .TRUE. 
       obj%vtxc = vtxc
-    ELSE 
+    ELSE
       obj%vtxc_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(etxc)) THEN 
+    IF ( PRESENT(etxc)) THEN
       obj%etxc_ispresent = .TRUE. 
       obj%etxc = etxc
-    ELSE 
+    ELSE
       obj%etxc_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(ewald)) THEN 
+    IF ( PRESENT(ewald)) THEN
       obj%ewald_ispresent = .TRUE. 
       obj%ewald = ewald
-    ELSE 
+    ELSE
       obj%ewald_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(demet)) THEN 
+    IF ( PRESENT(demet)) THEN
       obj%demet_ispresent = .TRUE. 
       obj%demet = demet
-    ELSE 
+    ELSE
       obj%demet_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(efieldcorr)) THEN 
+    IF ( PRESENT(efieldcorr)) THEN
       obj%efieldcorr_ispresent = .TRUE. 
       obj%efieldcorr = efieldcorr
-    ELSE 
+    ELSE
       obj%efieldcorr_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(potentiostat_contr)) THEN 
+    IF ( PRESENT(potentiostat_contr)) THEN
       obj%potentiostat_contr_ispresent = .TRUE. 
       obj%potentiostat_contr = potentiostat_contr
-    ELSE 
+    ELSE
       obj%potentiostat_contr_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(gatefield_contr)) THEN 
+    IF ( PRESENT(gatefield_contr)) THEN
       obj%gatefield_contr_ispresent = .TRUE. 
       obj%gatefield_contr = gatefield_contr
-    ELSE 
+    ELSE
       obj%gatefield_contr_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(vdW_term)) THEN 
+    IF ( PRESENT(vdW_term)) THEN
       obj%vdW_term_ispresent = .TRUE. 
       obj%vdW_term = vdW_term
-    ELSE 
+    ELSE
       obj%vdW_term_ispresent = .FALSE.
     END IF
     !
-  END SUBROUTINE qes_init_total_energy 
+  END SUBROUTINE qes_init_total_energy
   !
   !
   SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, wf_collected,&
@@ -3039,77 +3386,77 @@ MODULE qes_init_module
     TYPE(smearing_type),OPTIONAL,INTENT(IN) :: smearing
     TYPE(ks_energies_type),DIMENSION(:),INTENT(IN) :: ks_energies
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
     obj%lsda = lsda
     obj%noncolin = noncolin
     obj%spinorbit = spinorbit
-    IF ( PRESENT(nbnd)) THEN 
+    IF ( PRESENT(nbnd)) THEN
       obj%nbnd_ispresent = .TRUE. 
       obj%nbnd = nbnd
-    ELSE 
+    ELSE
       obj%nbnd_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(nbnd_up)) THEN 
+    IF ( PRESENT(nbnd_up)) THEN
       obj%nbnd_up_ispresent = .TRUE. 
       obj%nbnd_up = nbnd_up
-    ELSE 
+    ELSE
       obj%nbnd_up_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(nbnd_dw)) THEN 
+    IF ( PRESENT(nbnd_dw)) THEN
       obj%nbnd_dw_ispresent = .TRUE. 
       obj%nbnd_dw = nbnd_dw
-    ELSE 
+    ELSE
       obj%nbnd_dw_ispresent = .FALSE.
     END IF
     obj%nelec = nelec
-    IF ( PRESENT(num_of_atomic_wfc)) THEN 
+    IF ( PRESENT(num_of_atomic_wfc)) THEN
       obj%num_of_atomic_wfc_ispresent = .TRUE. 
       obj%num_of_atomic_wfc = num_of_atomic_wfc
-    ELSE 
+    ELSE
       obj%num_of_atomic_wfc_ispresent = .FALSE.
     END IF
     obj%wf_collected = wf_collected
-    IF ( PRESENT(fermi_energy)) THEN 
+    IF ( PRESENT(fermi_energy)) THEN
       obj%fermi_energy_ispresent = .TRUE. 
       obj%fermi_energy = fermi_energy
-    ELSE 
+    ELSE
       obj%fermi_energy_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(highestOccupiedLevel)) THEN 
+    IF ( PRESENT(highestOccupiedLevel)) THEN
       obj%highestOccupiedLevel_ispresent = .TRUE. 
       obj%highestOccupiedLevel = highestOccupiedLevel
-    ELSE 
+    ELSE
       obj%highestOccupiedLevel_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(lowestUnoccupiedLevel)) THEN 
+    IF ( PRESENT(lowestUnoccupiedLevel)) THEN
       obj%lowestUnoccupiedLevel_ispresent = .TRUE. 
       obj%lowestUnoccupiedLevel = lowestUnoccupiedLevel
-    ELSE 
+    ELSE
       obj%lowestUnoccupiedLevel_ispresent = .FALSE.
     END IF
-    IF ( PRESENT(two_fermi_energies)) THEN 
+    IF ( PRESENT(two_fermi_energies)) THEN
       obj%two_fermi_energies_ispresent = .TRUE. 
       obj%two_fermi_energies = two_fermi_energies
-    ELSE 
+    ELSE
       obj%two_fermi_energies_ispresent = .FALSE.
     END IF
     obj%starting_k_points = starting_k_points
     obj%nks = nks
     obj%occupations_kind = occupations_kind
-    IF ( PRESENT(smearing)) THEN 
+    IF ( PRESENT(smearing)) THEN
       obj%smearing_ispresent = .TRUE. 
       obj%smearing = smearing
-    ELSE 
+    ELSE
       obj%smearing_ispresent = .FALSE.
     END IF
-    ALLOCATE( obj%ks_energies(SIZE(ks_energies))) 
+    ALLOCATE(obj%ks_energies(SIZE(ks_energies)))
     obj%ndim_ks_energies = SIZE(ks_energies)
     obj%ks_energies = ks_energies
     !
-  END SUBROUTINE qes_init_band_structure 
+  END SUBROUTINE qes_init_band_structure
   !
   !
   SUBROUTINE qes_init_ks_energies(obj, tagname, k_point, npw, eigenvalues, occupations)
@@ -3123,7 +3470,7 @@ MODULE qes_init_module
     TYPE(vector_type),INTENT(IN) :: eigenvalues
     TYPE(vector_type),INTENT(IN) :: occupations
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
     !
@@ -3132,7 +3479,7 @@ MODULE qes_init_module
     obj%eigenvalues = eigenvalues
     obj%occupations = occupations
     !
-  END SUBROUTINE qes_init_ks_energies 
+  END SUBROUTINE qes_init_ks_energies
   !
   !
   SUBROUTINE qes_init_closed(obj, tagname, DATE, TIME, closed)
@@ -3141,19 +3488,359 @@ MODULE qes_init_module
     !
     TYPE(closed_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: DATE
-    CHARACTER(LEN=*), INTENT(IN) :: TIME
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: DATE
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: TIME
     CHARACTER(LEN=*), INTENT(IN) :: closed
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%DATE = DATE
-    obj%TIME = TIME
+    IF (PRESENT(DATE)) THEN
+      obj%DATE_ispresent = .TRUE.
+      obj%DATE = DATE
+    ELSE
+      obj%DATE_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(TIME)) THEN
+      obj%TIME_ispresent = .TRUE.
+      obj%TIME = TIME
+    ELSE
+      obj%TIME_ispresent = .FALSE.
+    END IF
     !
     obj%closed = closed
     !
-  END SUBROUTINE qes_init_closed 
+  END SUBROUTINE qes_init_closed
+  !
+  !
+  SUBROUTINE qes_init_cpstatus(obj, tagname, STEP, TIME, TITLE, KINETIC_ENERGY, HARTREE_ENERGY,&
+                              EWALD_TERM, GAUSS_SELFINT, LPSP_ENERGY, NLPSP_ENERGY, EXC_ENERGY,&
+                              AVERAGE_POT, ENTHALPY)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cpstatus_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    TYPE(cpnumstep_type),INTENT(IN) :: STEP
+    TYPE(scalarQuantity_type),INTENT(IN) :: TIME
+    CHARACTER(LEN=*),INTENT(IN) :: TITLE
+    TYPE(scalarQuantity_type),INTENT(IN) :: KINETIC_ENERGY
+    TYPE(scalarQuantity_type),INTENT(IN) :: HARTREE_ENERGY
+    TYPE(scalarQuantity_type),INTENT(IN) :: EWALD_TERM
+    TYPE(scalarQuantity_type),INTENT(IN) :: GAUSS_SELFINT
+    TYPE(scalarQuantity_type),INTENT(IN) :: LPSP_ENERGY
+    TYPE(scalarQuantity_type),INTENT(IN) :: NLPSP_ENERGY
+    TYPE(scalarQuantity_type),INTENT(IN) :: EXC_ENERGY
+    TYPE(scalarQuantity_type),INTENT(IN) :: AVERAGE_POT
+    TYPE(scalarQuantity_type),INTENT(IN) :: ENTHALPY
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%STEP = STEP
+    obj%TIME = TIME
+    obj%TITLE = TITLE
+    obj%KINETIC_ENERGY = KINETIC_ENERGY
+    obj%HARTREE_ENERGY = HARTREE_ENERGY
+    obj%EWALD_TERM = EWALD_TERM
+    obj%GAUSS_SELFINT = GAUSS_SELFINT
+    obj%LPSP_ENERGY = LPSP_ENERGY
+    obj%NLPSP_ENERGY = NLPSP_ENERGY
+    obj%EXC_ENERGY = EXC_ENERGY
+    obj%AVERAGE_POT = AVERAGE_POT
+    obj%ENTHALPY = ENTHALPY
+    !
+  END SUBROUTINE qes_init_cpstatus
+  !
+  !
+  SUBROUTINE qes_init_cpnumstep(obj, tagname, ITERATION, cpnumstep)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cpnumstep_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, OPTIONAL, INTENT(IN) :: ITERATION
+    CHARACTER(LEN=*), INTENT(IN) :: cpnumstep
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(ITERATION)) THEN
+      obj%ITERATION_ispresent = .TRUE.
+      obj%ITERATION = ITERATION
+    ELSE
+      obj%ITERATION_ispresent = .FALSE.
+    END IF
+    !
+    obj%cpnumstep = cpnumstep
+    !
+  END SUBROUTINE qes_init_cpnumstep
+  !
+  !
+  SUBROUTINE qes_init_cptimesteps(obj, tagname, nt, STEP0, STEPM)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cptimesteps_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, OPTIONAL, INTENT(IN) :: nt
+    TYPE(cpstep_type),INTENT(IN) :: STEP0
+    TYPE(cpstep_type),INTENT(IN) :: STEPM
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(nt)) THEN
+      obj%nt_ispresent = .TRUE.
+      obj%nt = nt
+    ELSE
+      obj%nt_ispresent = .FALSE.
+    END IF
+    !
+    obj%STEP0 = STEP0
+    obj%STEPM = STEPM
+    !
+  END SUBROUTINE qes_init_cptimesteps
+  !
+  !
+  SUBROUTINE qes_init_cpstep(obj, tagname, IONS_POSITIONS, IONS_NOSE, ELECTRONS_NOSE, CELL_PARAMETERS,&
+                            CELL_NOSE, ACCUMULATORS, ekincm)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cpstep_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), DIMENSION(:),OPTIONAL,INTENT(IN) :: ACCUMULATORS
+    TYPE(cp_ionPos_type),INTENT(IN) :: IONS_POSITIONS
+    TYPE(cp_ionsNose_type),INTENT(IN) :: IONS_NOSE
+    REAL(DP),OPTIONAL,INTENT(IN) :: ekincm
+    TYPE(cp_elecNose_type),INTENT(IN) :: ELECTRONS_NOSE
+    TYPE(cp_cell_type),INTENT(IN) :: CELL_PARAMETERS
+    TYPE(cp_cellNose_type),INTENT(IN) :: CELL_NOSE
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    IF ( PRESENT(ACCUMULATORS)) THEN
+      obj%ACCUMULATORS_ispresent = .TRUE. 
+      obj%ACCUMULATORS = ACCUMULATORS
+    ELSE
+      obj%ACCUMULATORS_ispresent = .FALSE.
+    END IF
+    obj%IONS_POSITIONS = IONS_POSITIONS
+    obj%IONS_NOSE = IONS_NOSE
+    IF ( PRESENT(ekincm)) THEN
+      obj%ekincm_ispresent = .TRUE. 
+      obj%ekincm = ekincm
+    ELSE
+      obj%ekincm_ispresent = .FALSE.
+    END IF
+    obj%ELECTRONS_NOSE = ELECTRONS_NOSE
+    obj%CELL_PARAMETERS = CELL_PARAMETERS
+    obj%CELL_NOSE = CELL_NOSE
+    !
+  END SUBROUTINE qes_init_cpstep
+  !
+  !
+  SUBROUTINE qes_init_cp_ionPos(obj, tagname, stau, svel, taui, cdmi, force)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cp_ionPos_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), DIMENSION(:),INTENT(IN) :: stau
+    REAL(DP), DIMENSION(:),INTENT(IN) :: svel
+    REAL(DP), DIMENSION(:),OPTIONAL,INTENT(IN) :: taui
+    REAL(DP), DIMENSION(3),OPTIONAL,INTENT(IN) :: cdmi
+    REAL(DP), DIMENSION(:),OPTIONAL,INTENT(IN) :: force
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%stau = stau
+    obj%svel = svel
+    IF ( PRESENT(taui)) THEN
+      obj%taui_ispresent = .TRUE. 
+      obj%taui = taui
+    ELSE
+      obj%taui_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(cdmi)) THEN
+      obj%cdmi_ispresent = .TRUE. 
+      obj%cdmi = cdmi
+    ELSE
+      obj%cdmi_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(force)) THEN
+      obj%force_ispresent = .TRUE. 
+      obj%force = force
+    ELSE
+      obj%force_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_cp_ionPos
+  !
+  !
+  SUBROUTINE qes_init_cp_ionsNose(obj, tagname, nhpcl, nhpdim, xnhp, vnhp)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cp_ionsNose_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER,INTENT(IN) :: nhpcl
+    INTEGER,INTENT(IN) :: nhpdim
+    REAL(DP),INTENT(IN) :: xnhp
+    REAL(DP),OPTIONAL,INTENT(IN) :: vnhp
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%nhpcl = nhpcl
+    obj%nhpdim = nhpdim
+    obj%xnhp = xnhp
+    IF ( PRESENT(vnhp)) THEN
+      obj%vnhp_ispresent = .TRUE. 
+      obj%vnhp = vnhp
+    ELSE
+      obj%vnhp_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_cp_ionsNose
+  !
+  !
+  SUBROUTINE qes_init_cp_elecNose(obj, tagname, xnhe, vnhe)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cp_elecNose_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP),INTENT(IN) :: xnhe
+    REAL(DP),OPTIONAL,INTENT(IN) :: vnhe
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%xnhe = xnhe
+    IF ( PRESENT(vnhe)) THEN
+      obj%vnhe_ispresent = .TRUE. 
+      obj%vnhe = vnhe
+    ELSE
+      obj%vnhe_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_cp_elecNose
+  !
+  !
+  SUBROUTINE qes_init_cp_cell(obj, tagname, ht, htvel, gvel)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cp_cell_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), DIMENSION(:),INTENT(IN) :: ht
+    REAL(DP), DIMENSION(:),OPTIONAL,INTENT(IN) :: htvel
+    REAL(DP), DIMENSION(:),OPTIONAL,INTENT(IN) :: gvel
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%ht = ht
+    IF ( PRESENT(htvel)) THEN
+      obj%htvel_ispresent = .TRUE. 
+      obj%htvel = htvel
+    ELSE
+      obj%htvel_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(gvel)) THEN
+      obj%gvel_ispresent = .TRUE. 
+      obj%gvel = gvel
+    ELSE
+      obj%gvel_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_cp_cell
+  !
+  !
+  SUBROUTINE qes_init_cp_cellNose(obj, tagname, xnhh, vnhh)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(cp_cellNose_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), DIMENSION(:),INTENT(IN) :: xnhh
+    REAL(DP), DIMENSION(:),OPTIONAL,INTENT(IN) :: vnhh
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    !
+    obj%xnhh = xnhh
+    IF ( PRESENT(vnhh)) THEN
+      obj%vnhh_ispresent = .TRUE. 
+      obj%vnhh = vnhh
+    ELSE
+      obj%vnhh_ispresent = .FALSE.
+    END IF
+    !
+  END SUBROUTINE qes_init_cp_cellNose
+  !
+  !
+  SUBROUTINE qes_init_scalmags(obj, tagname, nat, SiteMagnetization)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(scalmags_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, OPTIONAL, INTENT(IN) :: nat
+    TYPE(SiteMoment_type),DIMENSION(:),INTENT(IN) :: SiteMagnetization
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(nat)) THEN
+      obj%nat_ispresent = .TRUE.
+      obj%nat = nat
+    ELSE
+      obj%nat_ispresent = .FALSE.
+    END IF
+    !
+    ALLOCATE(obj%SiteMagnetization(SIZE(SiteMagnetization)))
+    obj%ndim_SiteMagnetization = SIZE(SiteMagnetization)
+    obj%SiteMagnetization = SiteMagnetization
+    !
+  END SUBROUTINE qes_init_scalmags
+  !
+  !
+  SUBROUTINE qes_init_d3mags(obj, tagname, nat, SiteMagnetization)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(d3mags_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, OPTIONAL, INTENT(IN) :: nat
+    TYPE(SitMag_type),DIMENSION(:),INTENT(IN) :: SiteMagnetization
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(nat)) THEN
+      obj%nat_ispresent = .TRUE.
+      obj%nat = nat
+    ELSE
+      obj%nat_ispresent = .FALSE.
+    END IF
+    !
+    ALLOCATE(obj%SiteMagnetization(SIZE(SiteMagnetization)))
+    obj%ndim_SiteMagnetization = SIZE(SiteMagnetization)
+    obj%SiteMagnetization = SiteMagnetization
+    !
+  END SUBROUTINE qes_init_d3mags
   !
   !
   SUBROUTINE qes_init_vector(obj, tagname, vector)
@@ -3172,7 +3859,7 @@ MODULE qes_init_module
     ALLOCATE(obj%vector(obj%size))
     obj%vector = vector
     !
-  END SUBROUTINE qes_init_vector 
+  END SUBROUTINE qes_init_vector
   !
   !
   SUBROUTINE qes_init_integerVector(obj, tagname, integerVector)
@@ -3191,7 +3878,7 @@ MODULE qes_init_module
     ALLOCATE(obj%integerVector(obj%size))
     obj%integerVector = integerVector
     !
-  END SUBROUTINE qes_init_integerVector 
+  END SUBROUTINE qes_init_integerVector
   !
 
   !
@@ -3394,17 +4081,22 @@ MODULE qes_init_module
     !
     TYPE(scalarQuantity_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
-    CHARACTER(LEN=*), INTENT(IN) :: Units
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: Units
     REAL(DP), INTENT(IN) :: scalarQuantity
     !
-    obj%tagname = TRIM(tagname) 
+    obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
-    obj%Units = Units
+    IF (PRESENT(Units)) THEN
+      obj%Units_ispresent = .TRUE.
+      obj%Units = Units
+    ELSE
+      obj%Units_ispresent = .FALSE.
+    END IF
     !
     obj%scalarQuantity = scalarQuantity
     !
-  END SUBROUTINE qes_init_scalarQuantity 
+  END SUBROUTINE qes_init_scalarQuantity
   !
   !
 END MODULE qes_init_module

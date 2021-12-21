@@ -31,6 +31,7 @@ $header
 
 ;;; Code:
 
+(require 'ido)
 
 $utility_functions
 
