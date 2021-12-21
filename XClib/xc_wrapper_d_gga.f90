@@ -109,6 +109,8 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-6
   !
+  !$acc data deviceptr( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+  !
   IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
     rho_threshold_gga = small ;  grho_threshold_gga = small
   ENDIF
@@ -368,9 +370,13 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   CASE( 2 )
      !
      ALLOCATE( vrzc(length,sp) )
+     !$acc data create( vrzc )
      !
+     !$acc host_data use_device( vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
      CALL dgcxc_spin( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
+     !$acc end host_data
      !
+     !$acc parallel loop
      DO k = 1, length
         !
         rht = r_in(k,1) + r_in(k,2)
@@ -394,6 +400,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
         dvxc_ss(k,2,2) = e2 * (vssx(k,2) + vssc(k))
      ENDDO
      !
+     !$acc end data
      DEALLOCATE( vrzc )
      !
   CASE DEFAULT
@@ -408,6 +415,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
 #endif
   !
+  !$acc end data
   !
   RETURN
   !
