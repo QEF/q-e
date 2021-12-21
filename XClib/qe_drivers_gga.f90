@@ -66,7 +66,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   ! ... local variables
   !
-  INTEGER :: ir
+  INTEGER :: ir, iflag ! Added iflag for AH series
   REAL(DP) :: rho, grho
   REAL(DP) :: sx, v1x, v2x
   REAL(DP) :: sx_, v1x_, v2x_
@@ -87,7 +87,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
 #else
 !$omp parallel if(ntids==1) default(none) &
 !$omp private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
-!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c ) &
+!$omp          v2x, v2x_, v2xsr, sc, v1c, v2c, iflag ) &
 !$omp shared( rho_in, grho_in, length, igcx, exx_started, &
 !$omp         grho_threshold_gga, rho_threshold_gga, gau_parameter, &
 !$omp         screening_parameter, exx_fraction, igcc, v1x_out, v2x_out, &
@@ -168,6 +168,49 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
         IF (exx_started) THEN
           CALL pbexsr( rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
+          sx  = sx  - exx_fraction * sxsr
+          v1x = v1x - exx_fraction * v1xsr
+          v2x = v2x - exx_fraction * v2xsr
+        ENDIF
+        !
+     CASE( 34, 35 ) ! ' AH series for GGA cross checks
+        !
+        iflag = 0
+        IF ( igcx== 34 ) THEN ! PBE-AH cross check
+           CALL pbex( rho, grho, 1, sx, v1x, v2x )
+           iflag = 1 ! AHPB for PBE cross check
+        ELSEIF ( igcx== 35 ) THEN ! PBESOL-AH cross check
+           CALL pbex( rho, grho, 3, sx, v1x, v2x )
+           iflag = 2 ! AHPS for PBEsol-based cross check
+        ENDIF
+        !
+        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting GGA-AHs failed ", 1)
+        !
+        IF (exx_started) THEN
+          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
+          sx  = sx  - exx_fraction * sxsr
+          v1x = v1x - exx_fraction * v1xsr
+          v2x = v2x - exx_fraction * v2xsr
+        ENDIF
+        !
+     CASE( 32, 33, 47 ) ! 'AH series for vdW-DFs, JPCM 34, 025902 (2022)
+        !
+        iflag = 0
+        IF ( igcx == 32) THEN ! vdW-DF-ahcx
+           CALL cx13( rho, grho, sx, v1x, v2x )
+           iflag = 3 ! for cx13 - analytical sr hole
+        ELSEIF ( igcx == 33) THEN ! vdW-DF2-ah
+           CALL rPW86( rho, grho, sx, v1x, v2x )
+           iflag = 4 ! for rPW86 - analytical sr hole
+        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahtr
+           CALL b86b( rho, grho, 3, sx, v1x, v2x ) 
+           iflag = 6 ! for test-reserve - analytical sr hole
+        ENDIF
+        !
+        IF ( iflag == 0) STOP ! CALL xclib_error( " gcxc ", " Sorting vdW-DF-AHs failed ", 1)
+        !
+        IF (exx_started) THEN
+          CALL axsr( iflag, rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -522,10 +565,11 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         v2x_up = 2.0_DP * v2x_up
         v2x_dw = 2.0_DP * v2x_dw
         !
-     CASE( 3, 4, 8, 10, 12, 20, 23, 24, 25, 44, 45 )
+     CASE( 3, 4, 8, 10, 12, 20, 23, 24, 25, 34, 35, 44, 45 )
         ! igcx=3:  PBE,  igcx=4:  revised PBE, igcx=8:  PBE0, igcx=10: PBEsol
         ! igcx=12: HSE,  igcx=20: gau-pbe,     igcx=23: obk8, igcx=24: ob86,
-        ! igcx=25: ev93, igcx=44: RPBE,        igcx=45: W31X
+        ! igcx=25: ev93, igcx=34: PBE-AH, igcx=35: PBESOL-AH,
+        ! igcx=44: RPBE,        igcx=45: W31X
         !
         iflag = 1
         IF ( igcx== 4 ) iflag = 2
@@ -535,6 +579,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( igcx==25 ) iflag = 7
         IF ( igcx==44 ) iflag = 8
         IF ( igcx==45 ) iflag = 9
+        IF ( igcx==34 ) iflag = 1
+        IF ( igcx==35 ) iflag = 3
         !
         rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
         grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
@@ -568,6 +614,35 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_up = v2x_up - exx_fraction * v2xsr_up * 2.0_DP
            v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
            !
+        ELSEIF ( igcx == 34 .AND. exx_started ) THEN
+           !
+           CALL axsr( 1, rho_up, grho2_up, sxsr_up, v1xsr_up, &
+                                          v2xsr_up, screening_parameter )
+           CALL axsr( 1, rho_dw, grho2_dw, sxsr_dw, v1xsr_dw, &
+                                          v2xsr_dw, screening_parameter )
+           !
+           sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr_up*rnull_up + &
+                                                             sxsr_dw*rnull_dw )
+           v1x_up = v1x_up - exx_fraction * v1xsr_up
+           v1x_dw = v1x_dw - exx_fraction * v1xsr_dw
+           v2x_up = v2x_up - exx_fraction * v2xsr_up * 2.0_DP
+           v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
+           !
+        ELSEIF ( igcx == 35 .AND. exx_started ) THEN
+           !
+           CALL axsr( 2, rho_up, grho2_up, sxsr_up, v1xsr_up, &
+                                          v2xsr_up, screening_parameter )
+           CALL axsr( 2, rho_dw, grho2_dw, sxsr_dw, v1xsr_dw, &
+                                          v2xsr_dw, screening_parameter )
+           !
+           sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr_up*rnull_up + &
+                                                             sxsr_dw*rnull_dw )
+           v1x_up = v1x_up - exx_fraction * v1xsr_up
+           v1x_dw = v1x_dw - exx_fraction * v1xsr_dw
+           v2x_up = v2x_up - exx_fraction * v2xsr_up * 2.0_DP
+           v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
+           !
+
         ELSEIF ( igcx == 20 .AND. exx_started ) THEN
            ! gau-pbe
            !CALL pbexgau_lsd( rho, grho2, sxsr, v1xsr, v2xsr, gau_parameter )
@@ -769,6 +844,53 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x_up = (1.0_DP - exx_fraction) * v2x_up
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF  
+        !
+     CASE( 32, 33, 47 ) ! ! 'AH series for vdW-DFs, JPCM 34, 025902 (2022)
+        !
+        rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
+        grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
+        !
+        ! igcx=32:  vdw-df-ahcx
+        ! igcx=33:  vdw-df2-AH
+        ! igcx=47:  vdw-df2-ahtr
+        !
+        iflag = 0
+        IF ( igcx == 32) THEN ! vdW-DF-ahcx
+           CALL cx13( rho_up, grho2_up, sx_up, v1x_up, v2x_up )
+           CALL cx13( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw )
+           iflag = 3 ! for cx13 - sr hole
+        ELSEIF ( igcx == 33) THEN ! vdW-DF2-ah
+           CALL rPW86( rho_up, grho2_up, sx_up, v1x_up, v2x_up )
+           CALL rPW86( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw )
+           iflag = 4 ! for rPW86 - sr hole
+        ELSEIF ( igcx == 47) THEN ! vdW-DF2-ahtr
+           CALL b86b( rho_up, grho2_up, 3, sx_up, v1x_up, v2x_up ) 
+           CALL b86b( rho_dw, grho2_dw, 3, sx_dw, v1x_dw, v2x_dw ) 
+           iflag = 6 ! for test-reserve - sr hole
+        ENDIF
+        !
+        IF ( iflag == 0) THEN
+           STOP ! CALL xclib_error( " gcx_spin ", " Sorting vdW-DF-AHs failed ", 1)
+        ELSE
+          sx_tot(ir) = 0.5_DP * ( sx_up*rnull_up + sx_dw*rnull_dw )
+          v2x_up = 2.0_DP * v2x_up
+          v2x_dw = 2.0_DP * v2x_dw
+        ENDIF
+        !
+        IF ( exx_started ) THEN
+           !
+           CALL axsr( iflag, rho_up, grho2_up, sxsr_up, v1xsr_up, &
+                                          v2xsr_up, screening_parameter )
+           CALL axsr( iflag, rho_dw, grho2_dw, sxsr_dw, v1xsr_dw, &
+                                          v2xsr_dw, screening_parameter )
+           !
+           sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr_up*rnull_up + &
+                                                             sxsr_dw*rnull_dw )
+           v1x_up = v1x_up - exx_fraction * v1xsr_up
+           v1x_dw = v1x_dw - exx_fraction * v1xsr_dw
+           v2x_up = v2x_up - exx_fraction * v2xsr_up * 2.0_DP
+           v2x_dw = v2x_dw - exx_fraction * v2xsr_dw * 2.0_DP
+        END IF
         !
      CASE( 40 )                  ! 'c090 for vdw-df-c090' etc
         !

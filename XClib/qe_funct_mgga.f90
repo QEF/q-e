@@ -281,6 +281,7 @@ END SUBROUTINE metac
 SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
 !$acc routine seq
   !-------------------------------------------------------------------------
+  !! FX calculation.
   !
   USE kind_l,           ONLY : DP
   !
@@ -559,6 +560,8 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
                        tau, sc, v1up, v1dw, v2up, v2dw, v3 )
 !$acc routine seq
   !---------------------------------------------------------------
+  !! TPSS meta-GGA correlation energy and potentials - polarized case.
+  !
   USE kind_l,    ONLY : DP
   !
   IMPLICIT NONE
@@ -887,6 +890,7 @@ END SUBROUTINE metac_spin
 SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
 !$acc routine seq
   !-----------------------------------------------------------------------
+  !! Wrapper to M06L exchange+correlation routines (unpolarized).
   !
   USE kind_l,        ONLY : DP
   !
@@ -929,20 +933,20 @@ SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !
   taua = tau * two * 0.5_dp ! Taua, which is Tau_sigma is half Tau
   taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 )
-                              ! in the following M06L routines
+                            ! in the following M06L routines
   !
   CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )
   !
   ex = two * ex  ! Add the two components up + dw
   !
   v2x = 0.5_dp * v2x
-  !v3x = 2.0_dp * v3x  !**mismatch with Libxc by a factor of 2
+  v3x = 2.0_dp * v3x
   !
   CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &
               v1cb, v2cb, v3cb )
   !
   v2c = 0.5_dp * v2c
-  !v3c = 2.0_dp * v3c  !**
+  v3c = 2.0_dp * v3c
   !
 END SUBROUTINE m06lxc
 !
@@ -953,6 +957,7 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
                         v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
 !$acc routine seq
   !-----------------------------------------------------------------------
+  !! Wrapper to M06L exchange+correlation routines (polarized).
   !
   USE kind_l,        ONLY : DP
   !
@@ -965,20 +970,20 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
   REAL(DP) :: exup, exdw, taua, taub
   REAL(DP), PARAMETER :: zero = 0.0_dp, two = 2.0_dp
   !
-  taua = tauup * two       ! Tau is defined as summ_i( |nabla phi_i|**2 )
-  taub = taudw * two       ! in the rest of the routine
+  taua = tauup * two      ! Tau is defined as summ_i( |nabla phi_i|**2 )
+  taub = taudw * two      ! in the rest of the routine
   !
   CALL m06lx( rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup )
   CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )
   !
   ex = exup + exdw
-  !v3xup = 2.0_dp * v3xup  !**mismatch with Libxc by a factor of 2
-  !v3xdw = 2.0_dp * v3xdw  !**
+  v3xup = 2.0_dp * v3xup
+  v3xdw = 2.0_dp * v3xdw
   !
   CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &
               ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw )
-  !v3cup = 2.0_dp * v3cup  !**
-  !v3cdw = 2.0_dp * v3cdw  !**
+  v3cup = 2.0_dp * v3cup
+  v3cdw = 2.0_dp * v3cdw
   !
 END SUBROUTINE m06lxc_spin
 ! !

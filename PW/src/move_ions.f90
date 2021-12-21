@@ -45,8 +45,10 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet
-  USE dynamics_module,        ONLY : smart_MC, langevin_md
+  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, fire
+  USE dynamics_module,        ONLY : smart_MC, langevin_md, dt
+  USE dynamics_module,        ONLY : fire_nmin, fire_f_inc, fire_f_dec, &
+                                     fire_alpha_init, fire_falpha, fire_dtmax
   USE klist,                  ONLY : nelec, tot_charge
   USE fcp_module,             ONLY : lfcp, fcp_eps, fcp_mu, fcp_relax, &
                                      fcp_verlet, fcp_terminate, output_fcp
@@ -299,6 +301,16 @@ SUBROUTINE move_ions( idone, ions_status, optimizer_failed )
               !
            ENDIF
            !
+        ELSEIF ( calc == 'fi' ) THEN
+           !
+           CALL fire( conv_ions)
+           ! 
+           IF ( .NOT. conv_ions .AND. idone >= nstep ) THEN
+              WRITE( UNIT = stdout, FMT =  &
+                   '(/,5X,"The maximum number of steps has been reached.")' )
+              WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"End of FIRE minimization")' )
+           ENDIF
         ELSEIF ( calc(1:1) == 'l' ) THEN
            !
            ! ... for smart monte carlo method

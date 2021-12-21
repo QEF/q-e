@@ -123,7 +123,7 @@ CONTAINS
     nspin= SIZE(rhor_d, 2)
     !
     ALLOCATE( psi_d(desc%nnr) )
-    !$acc data create( psi_d(desc%nnr) )
+    !$acc data create( psi_d(1:desc%nnr) )
     !$acc host_data use_device( psi_d )
     IF( nspin == 1 ) THEN
        iss=1

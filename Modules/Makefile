@@ -90,7 +90,6 @@ qes_write_module.o \
 qes_read_module.o \
 qes_reset_module.o \
 qes_init_module.o \
-qes_read_module.o \
 qes_bcast_module.o \
 qexsd.o   \
 qexsd_copy.o   \

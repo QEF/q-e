@@ -40,6 +40,6 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -fv *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
+	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
 
 include make.depend

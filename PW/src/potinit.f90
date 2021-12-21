@@ -56,6 +56,7 @@ SUBROUTINE potinit()
   USE paw_onecenter,        ONLY : PAW_potential
   !
   USE scf_gpum,             ONLY : using_vrs
+  USE pwcom,                ONLY : report_mag 
   !
   IMPLICIT NONE
   !

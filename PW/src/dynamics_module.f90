@@ -39,10 +39,12 @@ MODULE dynamics_module
    !
    SAVE
    PRIVATE
-   PUBLIC :: verlet, proj_verlet, terminate_verlet, &
+   PUBLIC :: verlet, proj_verlet, terminate_verlet, fire, &
              langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
+   ! FIRE parameters
+   PUBLIC :: fire_nmin, fire_f_inc, fire_f_dec, fire_alpha_init, fire_falpha, fire_dtmax
    !
    !
    REAL(DP) :: dt
@@ -69,6 +71,18 @@ MODULE dynamics_module
    !! true if this is the first ionic iteration
    CHARACTER(len=10) :: thermostat
    !! the thermostat used to control the temperature
+   INTEGER ::  fire_nmin
+   !! FIRE: minimum number of steps for time step increase 
+   REAL(DP) :: fire_f_inc
+   !! FIRE: factor for time step increase  
+   REAL(DP) :: fire_f_dec
+   !! FIRE: factor for time step decrease
+   REAL(DP) :: fire_alpha_init
+   !! FIRE: initial value of mixing factor
+   REAL(DP) :: fire_falpha
+   !! FIRE: modify the mixing factor
+   REAL(DP) :: fire_dtmax
+   !! FIRE: factor for max time step 
    REAL(DP), ALLOCATABLE :: tau_smart(:,:)
    !! used for smart Monte Carlo to store the atomic position of the
    !! previous step.
@@ -1018,6 +1032,299 @@ CONTAINS
       DEALLOCATE( step )
       !
    END SUBROUTINE proj_verlet
+
+   SUBROUTINE fire( conv_ions )
+
+     !------------------------------------------------------------------------
+     !! This routine performs one step of structural relaxation using
+     !! the FIRE (Fast Inertial Relaxation Engine) algorithm using the
+     !! semi-implicit Euler integration scheme with an energy monitor;
+     !! 
+     !! References: (1) Bitzek et al., Phys. Rev. Lett.,  97, 170201, (2006),
+     !!                  doi: 10.1103/PhysRevLett.97.170201
+     !!             (2) Shuang et al., Comp. Mater. Sci., 156, 135-141 (2019),
+     !!                  doi: 10.1016/j.commatsci.2018.09.049
+     !!             (3) (FIRE 2.0) Guénolé et al., Comp. Mater. Sci., 175, 109584, (2020),
+     !!                  doi: 10.1016/j.commatsci.2020.109584
+     !! 
+     !!  There are seven global parameters that can be modified by the user:
+     !!
+     !!  dt .... initial time step of calculation
+     !!  fire_nmin ... number of steps with P > 0 before dt is increased 
+     !!  fire_f_inc ... factor for the increase of the time step
+     !!  fire_f_dec ... factor for the decrease of the time step
+     !!  fire_alpha_init ... initial value of the velocity mixing factor
+     !!  fire_falpha ... modifies the velocity mixing factor
+     !!  fire_dtmax ... maximum time step; calculated as dtmax = fire_dtmax*dt 
+     !!
+     !! Defaults are (taken from ref (2)):
+     !!   dt = 20.0  (the default time step in PW ==  20.0 a.u. or 0.9674 fs )
+     !!   fire_f_inc = 1.1 
+     !!   fire_f_dec = 0.5
+     !!   fire_f_alpha_init = 0.2
+     !!   fire_falpha = 0.99
+     !!----------------------------------------------------------------------- 
+     USE ions_base,          ONLY : nat, ityp, tau, if_pos
+     USE cell_base,          ONLY : alat
+     USE ener,               ONLY : etot
+     USE force_mod,          ONLY : force
+     USE relax,              ONLY : epse, epsf
+     USE control_flags,      only : istep, lconstrain
+     !
+     USE constraints_module, ONLY : remove_constr_force, remove_constr_vec, check_constraint
+     ! TB
+     USE extfield,      ONLY : relaxz
+     !
+     IMPLICIT NONE
+     !
+     LOGICAL, INTENT(OUT) :: conv_ions
+     !
+     REAL(DP), ALLOCATABLE :: step(:,:)
+     REAL(DP)              :: norm_step, etotold, delta(3)
+     INTEGER               :: na,i
+     LOGICAL               :: file_exists
+     !
+     REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
+     ! 
+     REAL(DP), EXTERNAL :: dnrm2,ddot
+     !
+     ! FIRE local variables 
+     !
+     REAL(DP) :: P, alpha, fmax, dt_max, dt_curr
+     INTEGER :: nsteppos
+     ! 
+     ! FIRE  parameters; read from input ...   
+     !
+     INTEGER ::  Nmin  ! minimum number of steps for time step increase 
+     REAL(DP) :: f_inc ! factor for time step increase  
+     REAL(DP) :: f_dec ! factor for time step decrease
+     REAL(DP) :: alpha_init ! initial value of mixing factor
+     REAL(DP) :: falpha ! modify the mixing factor 
+     !
+     ALLOCATE( step( 3, nat ) )
+     !
+     ! set up local variables for global input parameters (better readability) ... 
+     !
+     Nmin = fire_nmin
+     f_inc = fire_f_inc
+     f_dec = fire_f_dec
+     alpha_init = fire_alpha_init
+     falpha = fire_falpha
+     !
+     ! initialize alpha
+     ! 
+     tau_new(:,:) = 0.D0
+     alpha = alpha_init
+     ! maximum time step 
+     dt_curr = dt
+     dt_max = fire_dtmax*dt
+     ! acc_old and vel_old are here to keep track of acceleration/velocity in the previous time step
+     nsteppos = 0
+     conv_ions = .FALSE.
+     ! 
+     CALL seqopn( 4, 'fire', 'FORMATTED', file_exists )
+     !
+     !
+     IF ( file_exists ) THEN
+        !
+        ! ... the file is read ...   
+        !
+        READ( UNIT = 4, FMT = * ) etotold, nsteppos, dt_curr, alpha
+        
+        !
+        CLOSE( UNIT = 4, STATUS = 'KEEP' )
+        !
+     ELSE
+        !
+        CLOSE( UNIT = 4, STATUS = 'DELETE' )
+        !
+        ! ... atoms are refolded in the central box
+        !
+        IF ( refold_pos ) CALL refold_tau()
+        !
+        vel(:,:) = 0.D0
+        acc(:,:) = 0.D0
+        etotold = etot
+        istep = 0
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Minimization using the FIRE algorithm")' )
+        !
+        ! write out the input parameters 
+        WRITE (UNIT = stdout, &
+             FMT = '(/,5X,"FIRE input parameters:")')
+        WRITE (UNIT = stdout, &
+             FMT = '(/,5X," fire_nmin = ",I2," fire_f_inc = ", F4.2, & 
+             " fire_f_dec = ",F4.2," fire_alpha = ",F4.2, & 
+             " fire_falpha = ",F4.2, " dtmax = ",F5.1 )') &
+             fire_nmin, fire_f_inc, fire_f_dec, &
+             fire_alpha_init, fire_falpha, dt_max 
+        !
+     ENDIF
+     !
+     IF ( lconstrain ) THEN
+        !
+        ! ... we first remove the component of the force along the
+        ! ... constraint gradient (this constitutes the initial guess
+        ! ... for the calculation of the lagrange multipliers)
+        !
+        write (*,*) "Called remove constr" 
+        CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+        !
+#if ! defined (__REDUCE_OUTPUT)
+        !
+        WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+        !
+        DO na = 1, nat
+           !
+           WRITE( stdout, &
+                '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                na, ityp(na), force(:,na)
+           !
+        ENDDO
+        !
+        WRITE( stdout, &
+             '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
+        !
+#endif
+        !
+     ENDIF
+     !
+     ! ... check if convergence for structural minimization is achieved
+     !
+     conv_ions = ( etotold - etot ) < epse
+     conv_ions = conv_ions .and. ( MAXVAL( ABS( force ) ) < epsf )
+     !
+     IF ( conv_ions ) THEN
+        !
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"FIRE: convergence achieved in " &
+             & ,I3," steps")' ) istep
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"End of FIRE minimization")' )
+        WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Final energy = ",F18.10," Ry"/)' ) etot
+        !
+        CALL output_tau( .TRUE., .TRUE. )
+        !
+        RETURN
+        !
+     ENDIF
+     !
+     istep = istep + 1
+     WRITE( stdout, '(/,5X,"Entering FIRE :",&
+          & T28,"iteration",T37," = ",I5)' ) istep
+
+     !
+     ! calculate acceleration
+     !
+     acc(:,:) = force(:,:) / alat / amu_ry
+     ! 
+     ! calculate the projection of the velocity on the force 
+     P = ddot(3*nat,force, 1, vel, 1)
+     ! 
+     step(:,:) = 0.0_DP
+     ! 
+     IF ( P < 0.0_DP  )  THEN 
+        ! FIRE 2.0 algorithm: if P < 0 go back by half a step 
+        ! for details see reference (2), doi: 10.1016/j.commatsci.2020.109584
+        step(:,:) = step(:,:) - 0.5_DP*dt_curr*vel(:,:)
+     ENDIF
+     !
+     ! ... manipulate the time step ... 
+     !
+     ! NOTEs:
+     ! in original FIRE the condition is P > 0,
+     ! however to prevent the time step decrease in the first step where v=0 (P=0 and etot=etotold)
+     ! the equality was changed to P >= 0
+     ! The energy difference criterion is also added to prevent the minimization from going uphill  
+     ! 
+
+     IF ( P >= 0.0_DP  .AND. (etot - etotold) <= 0.D0 ) THEN
+        ! 
+        ! 
+        nsteppos = nsteppos + 1
+        ! increase time step and modify mixing factor only after Nmin steps in positive direction
+        IF ( nsteppos > Nmin ) THEN 
+           dt_curr = MIN(dt_curr*f_inc, dt_max )
+           alpha = alpha*falpha
+        END IF
+     ELSE   
+        !
+        ! set velocity to 0; return alpha to the initial value; reduce time step
+        !
+        vel(:,:) = 0.D0
+        alpha = alpha_init
+        nsteppos = 0
+        dt_curr = dt_curr*f_dec        
+     END IF
+     ! report current parameters 
+     WRITE (stdout, '(/,5X, "FIRE Parameters: P = ", F10.8 ", dt = " F5.2", & 
+          alpha = " F5.3, " nsteppos = ", I3, " at step", I3, /)' ) P, dt_curr, alpha, nsteppos, istep
+     !
+     ! calculate v(t+dt) = v(t) + a(t)*dt  
+     !
+     vel(:,:) = vel(:,:) + dt_curr*acc(:,:)
+     ! 
+     ! velocity mixing 
+     !
+     vel(:,:) = (1.D0 - alpha)*vel(:,:) + alpha*force(:,:)*dnrm2(3*nat,vel,1)/dnrm2(3*nat,force,1)
+     !
+     !
+     ! ... the velocity of fixed ions must be zero
+     !
+     vel = vel * DBLE( if_pos )
+     ! 
+     IF ( lconstrain )  THEN
+        !
+        ! apply constraints to the velocity as well  
+        !
+        CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
+     ENDIF
+     ! 
+     ! 
+     ! calculate the displacement x(t+dt) = x(t) + v(t+dt)*dt 
+     ! 
+     step(:,:) = step(:,:) +  vel(:,:)*dt_curr
+     !
+     norm_step = dnrm2( 3*nat, step, 1 )
+     !
+     step(:,:) = step(:,:) / norm_step
+     !
+     ! keep the step within a threshold (taken from damped dynamics)  
+     !
+     tau_new(:,:) = tau(:,:) + step(:,:)*MIN(norm_step, step_max/alat)
+     !  
+     IF ( lconstrain ) THEN
+        !
+        ! ... check if the new positions satisfy the constrain equation
+        !
+        CALL check_constraint( nat, tau_new, tau, &
+             force, if_pos, ityp, alat, dt, amu_ry )
+        !
+     ENDIF
+     !
+     ! ... save the needed quantities to a file 
+     !
+     CALL seqopn( 4, 'fire', 'FORMATTED',  file_exists )
+     !
+     WRITE( UNIT = 4, FMT = * ) etot, nsteppos, dt_curr, alpha 
+     !
+     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+     !
+     ! ... displace tau, and output new positions   
+     !
+     tau(:,:) = tau_new(:,:)
+     !
+     !
+#if ! defined (__REDUCE_OUTPUT)
+     !
+     CALL output_tau( .FALSE., .FALSE. )
+     !
+#endif
+     !
+     DEALLOCATE( step )
+     !
+   END SUBROUTINE fire 
    !
    !
    !------------------------------------------------------------------------

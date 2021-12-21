@@ -6,7 +6,7 @@
     ecutwfc = 40.0d0, ecutrho = 400.0d0,
     occupations='smearing', smearing='mv', degauss=0.01d0,
     nspin=2, 
-    input_dft = 'M06L'
+    input_dft = 'SCAN'
     starting_magnetization(1)= 0.3
  /
  &electrons

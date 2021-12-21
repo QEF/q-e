@@ -9,235 +9,359 @@
 MODULE qe_dft_refs
   !----------------------------------------------------------------------------------
   !! List of references and brief descriptions of available DFTs in QE internal library.
+  ! If a functional is never called in QE, please start the %wrn (warning) message
+  ! with 'never called' so that the testing program skips it.
   !
   USE qe_dft_list, ONLY: nxc, ncc, ngcx, ngcc, nmeta, n_dft
   !
   SAVE
   !
+  TYPE dft_refwrn
+     CHARACTER(LEN=150) :: ref
+     CHARACTER(LEN=100) :: wrn
+  END TYPE dft_refwrn
+  !
   ! -- single DFT terms (family-type)
-  CHARACTER(LEN=150) :: dft_LDAx_ref(0:nxc),  dft_LDAc_ref(0:ncc),  &
-                        dft_GGAx_ref(0:ngcx), dft_GGAc_ref(0:ngcc), &
-                        dft_MGGA_ref(0:nmeta)
+  TYPE(dft_refwrn) :: dft_LDAx(0:nxc),  dft_LDAc(0:ncc),  &
+                      dft_GGAx(0:ngcx), dft_GGAc(0:ngcc), &
+                      dft_MGGA(0:nmeta)
   ! -- total DFTs
   CHARACTER(LEN=100) :: dft_full_descr(n_dft)
   !
   ! ---- LDA exchange ----
   !
   ! NOX
-  DATA dft_LDAx_ref(0)  / 'No LDA exchange.' /
+  DATA dft_LDAx(0)%ref  / 'No LDA exchange.' /
+  DATA dft_LDAx(0)%wrn  / 'none' /
   ! SLA
-  DATA dft_LDAx_ref(1)  / '[Slater exchange - alpha=2/3]' /
+  DATA dft_LDAx(1)%ref  / '[Slater exchange - alpha=2/3]' /
+  DATA dft_LDAx(1)%wrn  / 'none' /
   ! SL1
-  DATA dft_LDAx_ref(2)  / '[Slater exchange - alpha=1.0]' /
+  DATA dft_LDAx(2)%ref  / '[Slater exchange - alpha=1.0]' /
+  DATA dft_LDAx(2)%wrn  / 'none' /
   ! RXC
-  DATA dft_LDAx_ref(3)  / '[Relativistic Slater]' /
+  DATA dft_LDAx(3)%ref  / '[Relativistic Slater]' /
+  DATA dft_LDAx(3)%wrn  / 'none' /
   ! OEP
-  DATA dft_LDAx_ref(4)  / '[Optimized Effective Potential]' /
+  DATA dft_LDAx(4)%ref  / '[Optimized Effective Potential]' /
+  DATA dft_LDAx(4)%wrn  / 'none' /
   ! HF
-  DATA dft_LDAx_ref(5)  / '[Hartree-Fock]' /
+  DATA dft_LDAx(5)%ref  / '[Hartree-Fock]' /
+  DATA dft_LDAx(5)%wrn  / 'none' /
   ! PB0X  (Slater*0.75+HF*0.25) for PBE0 and vdW-DF-cx0 and vdW-DF2-0 etc
-  DATA dft_LDAx_ref(6)  / 'J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)' /
+  DATA dft_LDAx(6)%ref  / 'J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)' /
+  DATA dft_LDAx(6)%wrn  / 'for PBE0 and vdW-DF-cx0 and vdW-DF2-0 etc.' /
   ! B3LP  (Slater*0.80+HF*0.20)
-  DATA dft_LDAx_ref(7)  / 'P.J.Stephens, F.J.Devlin, C.F.Chabalowski, M.J.Frisch, &
+  DATA dft_LDAx(7)%ref  / 'P.J.Stephens, F.J.Devlin, C.F.Chabalowski, M.J.Frisch, &
                            &J.Phys.Chem 98, 11623 (1994)' /
+  DATA dft_LDAx(7)%wrn  / 'none' /
   ! KZK   Finite-size corrections
-  DATA dft_LDAx_ref(8)  / 'H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)' /
+  DATA dft_LDAx(8)%ref  / 'H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)' /
+  DATA dft_LDAx(8)%wrn  / 'none' /
   ! xxxx [X3LYP_LDA]
-  DATA dft_LDAx_ref(9)  / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
+  DATA dft_LDAx(9)%ref  / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
+  DATA dft_LDAx(9)%wrn  / 'none' /
   ! xxxx [KLI]
-  DATA dft_LDAx_ref(10) / 'KLI aproximation for exx - currently not implemented' /
+  DATA dft_LDAx(10)%ref / 'KLI aproximation for exx - no ref. avaialable' /
+  DATA dft_LDAx(10)%wrn / 'Currently not implemented' /
   !
   !
   !  ---- LDA correlation ----
   !
   ! NOC
-  DATA dft_LDAc_ref(0)  / 'No LDA correlation.' /
+  DATA dft_LDAc(0)%ref  / 'No LDA correlation.' /
+  DATA dft_LDAc(0)%wrn  / 'none' /
   ! PZ
-  DATA dft_LDAc_ref(1)  / 'J.P.Perdew and A.Zunger, PRB 23, 5048 (1981)' /
+  DATA dft_LDAc(1)%ref  / 'J.P.Perdew and A.Zunger, PRB 23, 5048 (1981)' /
+  DATA dft_LDAc(1)%wrn  / 'none' /
   ! VWN
-  DATA dft_LDAc_ref(2)  / 'S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)' /
+  DATA dft_LDAc(2)%ref  / 'S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)' /
+  DATA dft_LDAc(2)%wrn  / 'none' /
   ! LYP
-  DATA dft_LDAc_ref(3)  / 'C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)' /
+  DATA dft_LDAc(3)%ref  / 'C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)' /
+  DATA dft_LDAc(3)%wrn  / 'none' /
   ! PW
-  DATA dft_LDAc_ref(4)  / 'J.P.Perdew and Y.Wang, PRB 45, 13244 (1992)' /
+  DATA dft_LDAc(4)%ref  / 'J.P.Perdew and Y.Wang, PRB 45, 13244 (1992)' /
+  DATA dft_LDAc(4)%wrn  / 'none' /
   ! WIG
-  DATA dft_LDAc_ref(5)  / 'E.P.Wigner, Trans. Faraday Soc. 34, 67 (1938)' /
+  DATA dft_LDAc(5)%ref  / 'E.P.Wigner, Trans. Faraday Soc. 34, 67 (1938)' /
+  DATA dft_LDAc(5)%wrn  / 'none' /
   ! HL
-  DATA dft_LDAc_ref(6)  / 'L.Hedin and B.I.Lundqvist, J. Phys. C4, 2064 (1971)' /
+  DATA dft_LDAc(6)%ref  / 'L.Hedin and B.I.Lundqvist, J. Phys. C4, 2064 (1971)' /
+  DATA dft_LDAc(6)%wrn  / 'none' /
   ! OBZ
-  DATA dft_LDAc_ref(7)  / 'G.Ortiz and P.Ballone, PRB 50, 1391 (1994)' /
+  DATA dft_LDAc(7)%ref  / 'G.Ortiz and P.Ballone, PRB 50, 1391 (1994)' /
+  DATA dft_LDAc(7)%wrn  / 'none' /
   ! OBW
-  DATA dft_LDAc_ref(8)  / 'G.Ortiz and P.Ballone, PRB 50, 1391 (1994)' /
+  DATA dft_LDAc(8)%ref  / 'G.Ortiz and P.Ballone, PRB 50, 1391 (1994)' /
+  DATA dft_LDAc(8)%wrn  / 'none' /
   ! GL
-  DATA dft_LDAc_ref(9)  / 'O.Gunnarsson and B.I.Lundqvist, PRB 13, 4274 (1976)' /
+  DATA dft_LDAc(9)%ref  / 'O.Gunnarsson and B.I.Lundqvist, PRB 13, 4274 (1976)' /
+  DATA dft_LDAc(9)%wrn  / 'none' /
   ! KZK
-  DATA dft_LDAc_ref(10) / 'H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)' /
+  DATA dft_LDAc(10)%ref / 'H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)' /
+  DATA dft_LDAc(10)%wrn / 'none' /
   ! xxxx [vwn1_rpa]
-  DATA dft_LDAc_ref(11) / 'vwn1_rpa' /
+  DATA dft_LDAc(11)%ref / 'vwn1_rpa' /
+  DATA dft_LDAc(11)%wrn / 'none' /
   ! B3LP
-  DATA dft_LDAc_ref(12) / 'P.J.Stephens, F.J.Devlin, C.F.Chabalowski, M.J.Frisch, &
+  DATA dft_LDAc(12)%ref / 'P.J.Stephens, F.J.Devlin, C.F.Chabalowski, M.J.Frisch, &
                            &J.Phys.Chem 98, 11623 (1994)' /
+  DATA dft_LDAc(12)%wrn / 'none' /
   ! xxxx [B3LYP-V1R]
-  DATA dft_LDAc_ref(13) / 'B3LYP-V1R' /
+  DATA dft_LDAc(13)%ref / 'B3LYP-V1R' /
+  DATA dft_LDAc(13)%wrn / 'none' /
   ! xxxx [X3LYP]
-  DATA dft_LDAc_ref(14) / 'X3LYP' /
+  DATA dft_LDAc(14)%ref / 'X3LYP' /
+  DATA dft_LDAc(14)%wrn / 'none' /
   !
   !
   !  ---- GGA exchange ----
   !
   ! NOGX
-  DATA dft_GGAx_ref(0)  / 'No GGA exchange.' /
+  DATA dft_GGAx(0)%ref  / 'No GGA exchange.' /
+  DATA dft_GGAx(0)%wrn  / 'none' /
   ! B88
-  DATA dft_GGAx_ref(1)  / 'A.D.Becke, PRA 38, 3098 (1988)' /
+  DATA dft_GGAx(1)%ref  / 'A.D.Becke, PRA 38, 3098 (1988)' /
+  DATA dft_GGAx(1)%wrn  / 'none' /
   ! GGX
-  DATA dft_GGAx_ref(2)  / 'J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)' /
+  DATA dft_GGAx(2)%ref  / 'J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)' /
+  DATA dft_GGAx(2)%wrn  / 'none' /
   ! PBX
-  DATA dft_GGAx_ref(3)  / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAx(3)%ref  / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAx(3)%wrn  / 'none' /
   ! REVX
-  DATA dft_GGAx_ref(4)  / 'Zhang and Yang, PRL 80, 890 (1998)' /
+  DATA dft_GGAx(4)%ref  / 'Zhang and Yang, PRL 80, 890 (1998)' /
+  DATA dft_GGAx(4)%wrn  / 'none' /
   ! HCTH
-  DATA dft_GGAx_ref(5)  / 'Handy et al, JCP 109, 6264 (1998)' /
+  DATA dft_GGAx(5)%ref  / 'Handy et al, JCP 109, 6264 (1998)' /
+  DATA dft_GGAx(5)%wrn  / 'none' /
   ! OPTX
-  DATA dft_GGAx_ref(6)  / 'Handy et al, JCP 116, 5411 (2002)' /
+  DATA dft_GGAx(6)%ref  / 'Handy et al, JCP 116, 5411 (2002)' /
+  DATA dft_GGAx(6)%wrn  / 'OPTX untested! please test' /
   ! void
-  DATA dft_GGAx_ref(7)  / 'void' /
+  DATA dft_GGAx(7)%ref  / 'void' /
+  DATA dft_GGAx(7)%wrn  / 'no functional with this index available' /
   ! PB0X
-  DATA dft_GGAx_ref(8)  / 'J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)' /
+  DATA dft_GGAx(8)%ref  / 'J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)' /
+  DATA dft_GGAx(8)%wrn  / 'none' /
   ! B3LP
-  DATA dft_GGAx_ref(9)  / 'P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch, &
+  DATA dft_GGAx(9)%ref  / 'P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch, &
                            &J.Phys.Chem 98, 11623 (1994)' /
+  DATA dft_GGAx(9)%wrn  / 'none' /
   ! PSX
-  DATA dft_GGAx_ref(10) / 'J.P. Perdew et al., PRL 100, 136406 (2008)' /
+  DATA dft_GGAx(10)%ref / 'J.P. Perdew et al., PRL 100, 136406 (2008)' /
+  DATA dft_GGAx(10)%wrn / 'none' /
   ! WCX
-  DATA dft_GGAx_ref(11) / 'Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)' /
+  DATA dft_GGAx(11)%ref / 'Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)' /
+  DATA dft_GGAx(11)%wrn / 'none' /
   ! HSE
-  DATA dft_GGAx_ref(12) / 'Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 118, 8207 (2003), &
+  DATA dft_GGAx(12)%ref / 'Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 118, 8207 (2003), &
                            &Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 124, 219906 (2006)' /
+  DATA dft_GGAx(12)%wrn / 'none' /
   ! RW86
-  DATA dft_GGAx_ref(13) / 'Eamonn D. Murray et al, J. Chem. Theory Comput. 5, 2754 (2009)' /
+  DATA dft_GGAx(13)%ref / 'Eamonn D. Murray et al, J. Chem. Theory Comput. 5, 2754 (2009)' /
+  DATA dft_GGAx(13)%wrn / 'none' /
   ! PBE
-  DATA dft_GGAx_ref(14) / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAx(14)%ref / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAx(14)%wrn / 'none' /
   ! xxxx
-  DATA dft_GGAx_ref(15) / 'void' / 
+  DATA dft_GGAx(15)%ref / 'void' /
+  DATA dft_GGAx(15)%wrn / 'no functional available with this ID' /
   ! C09X
-  DATA dft_GGAx_ref(16) / 'V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)' /
+  DATA dft_GGAx(16)%ref / 'V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)' /
+  DATA dft_GGAx(16)%wrn / 'none' /
   ! SOX
-  DATA dft_GGAx_ref(17) / 'Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)' /
+  DATA dft_GGAx(17)%ref / 'Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)' /
+  DATA dft_GGAx(17)%wrn / 'none' /
   ! xxxx
-  DATA dft_GGAx_ref(18) / 'void' /
+  DATA dft_GGAx(18)%ref / 'void' /
+  DATA dft_GGAx(18)%wrn / 'no functional available with this ID' /
   ! Q2DX
-  DATA dft_GGAx_ref(19) / 'L. Chiodo et al., PRL 108, 126402 (2012)' /
+  DATA dft_GGAx(19)%ref / 'L. Chiodo et al., PRL 108, 126402 (2012)' /
+  DATA dft_GGAx(19)%wrn / 'none' /
   ! GAUP
-  DATA dft_GGAx_ref(20) / 'J.-W. Song, K. Yamashita, K. Hirao, JCP 135, 071103 (2011)' /
+  DATA dft_GGAx(20)%ref / 'J.-W. Song, K. Yamashita, K. Hirao, JCP 135, 071103 (2011)' /
+  DATA dft_GGAx(20)%wrn / 'none' /
   ! PW86
-  DATA dft_GGAx_ref(21) / 'J.P.Perdew, PRB 33, 8800 (1986)' /
+  DATA dft_GGAx(21)%ref / 'J.P.Perdew, PRB 33, 8800 (1986)' /
+  DATA dft_GGAx(21)%wrn / 'none' /
   ! B86B
-  DATA dft_GGAx_ref(22) / 'A.D.Becke, J.Chem.Phys. 85, 7184 (1986)' /
+  DATA dft_GGAx(22)%ref / 'A.D.Becke, J.Chem.Phys. 85, 7184 (1986)' /
+  DATA dft_GGAx(22)%wrn / 'none' /
   ! OBK8
-  DATA dft_GGAx_ref(23) / 'Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)' /
+  DATA dft_GGAx(23)%ref / 'Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)' /
+  DATA dft_GGAx(23)%wrn / 'none' /
   ! OB86
-  DATA dft_GGAx_ref(24) / 'Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)' /
+  DATA dft_GGAx(24)%ref / 'Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)' /
+  DATA dft_GGAx(24)%wrn / 'none' /
   ! EVX
-  DATA dft_GGAx_ref(25) / 'Engel-Vosko, Phys. Rev. B 47, 13164 (1993)' /
+  DATA dft_GGAx(25)%ref / 'Engel-Vosko, Phys. Rev. B 47, 13164 (1993)' /
+  DATA dft_GGAx(25)%wrn / 'none' /
   ! B86R
-  DATA dft_GGAx_ref(26) / 'I. Hamada, Phys. Rev. B 89, 121103(R) (2014)' /
+  DATA dft_GGAx(26)%ref / 'I. Hamada, Phys. Rev. B 89, 121103(R) (2014)' /
+  DATA dft_GGAx(26)%wrn / 'none' /
   ! CX13
-  DATA dft_GGAx_ref(27) / 'K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)' /
+  DATA dft_GGAx(27)%ref / 'K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)' /
+  DATA dft_GGAx(27)%wrn / 'none' /
   ! X3LP
-  DATA dft_GGAx_ref(28) / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
+  DATA dft_GGAx(28)%ref / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
+  DATA dft_GGAx(28)%wrn / 'none' /
   ! CX0
-  DATA dft_GGAx_ref(29) / 'K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B. Neaton &
+  DATA dft_GGAx(29)%ref / 'K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B. Neaton &
                            &and P. Hyldgaard, J. Chem. Phys. 146, 234106 (2017)' /
-  ! R860
-  DATA dft_GGAx_ref(30) / 'rPW86+HF/4 (rw86-0) (for DF0) - no ref. available' /
+  DATA dft_GGAx(29)%wrn / 'none' /
+  ! rPW86+HF/4 (rw86-0) (for DF0)
+  DATA dft_GGAx(30)%ref / 'K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B.  Neaton &
+                           &and P. Hyldgaard, J. Chem. Phys. 146, 234106 (2017)' /
+  DATA dft_GGAx(30)%wrn / 'none' /
   ! CX0P  vdW-DF-cx+HF/5 (cx13-0p)
-  DATA dft_GGAx_ref(31) / 'Y. Jiao, E. Schröder and P. Hyldgaard, &
+  DATA dft_GGAx(31)%ref / 'Y. Jiao, E. Schröder and P. Hyldgaard, &
                            &J. Chem. Phys. 148, 194115 (2018)' /
-  ! AHCX  (reserved PH)
-  DATA dft_GGAx_ref(32) / 'vdW-DF-cx based not yet in use' /
-  ! AHF2  (reserved PH)
-  DATA dft_GGAx_ref(33) / 'vdW-DF2 based not yet in use' /
-  ! AHPB  (reserved PH)
-  DATA dft_GGAx_ref(34) / 'PBE based not yet in use' /
-  ! AHPS
-  DATA dft_GGAx_ref(35) / 'PBE-sol based not yet in use' /
-  ! CX14  (reserved PH)
-  DATA dft_GGAx_ref(36) / 'no ref. available' /
-  ! CX15  (reserved PH)
-  DATA dft_GGAx_ref(37) / 'no ref. available' /
-  ! BR0
-  DATA dft_GGAx_ref(38) / 'vdW-DF2-b86r+HF/4 (b86r-0) - no ref. available' /
-  ! CX16  (reserved PH)
-  DATA dft_GGAx_ref(39) / 'no ref. available' /
+  DATA dft_GGAx(31)%wrn / 'none' /
+  ! AHCX (part of vdW-DF-ahcx)
+  DATA dft_GGAx(32)%ref / 'V. Shukla, Y. Jiao, C.M. Frostenson and Per Hyldgaard &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022)' /
+  DATA dft_GGAx(32)%wrn / 'none' /
+  ! AHF2  (part of vdW-DF2-AH)
+  DATA dft_GGAx(33)%ref / 'V. Shukla, Y. Jiao, C.M. Frostenson and Per Hyldgaard &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022)' /
+  DATA dft_GGAx(33)%wrn / 'none' /
+  ! AHPB  (part of PBE-AH)
+  DATA dft_GGAx(34)%ref / 'J Chem. Phys. 128, 194105 (2008) + &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022); Compare HJS08-PBE' /
+  DATA dft_GGAx(34)%wrn / 'none' /
+  ! AHPS (part of PBESOL-AH)
+  DATA dft_GGAx(35)%ref / 'J Chem. Phys. 128, 194105 (2008) + &
+                           &J. Phys.:Condens. Matter 34, 025902 (2022); Compare HJS08-PBESOL' /
+  DATA dft_GGAx(35)%wrn / 'none' /
+  ! CX14  (reserved P.H.)
+  DATA dft_GGAx(36)%ref / 'Reserved, no ref. available' /
+  DATA dft_GGAx(36)%wrn / 'never called in QE' /
+  ! CX15  (reserved P.H.)
+  DATA dft_GGAx(37)%ref / 'Reserved, no ref. available' /
+  DATA dft_GGAx(37)%wrn / 'never called in QE' /
+  ! BR0 
+  DATA dft_GGAx(38)%ref / 'vdW-DF2-b86r+HF/4 - framework defined by &
+                           &Phys. Rev. B 89, 121103(R) (2014) + J. Chem. Phys. 146, 234106 (2017)' /
+  DATA dft_GGAx(38)%wrn / 'none' /
+  ! CX16  (reserved P.H.)
+  DATA dft_GGAx(39)%ref / 'Reserved, no ref. available' /
+  DATA dft_GGAx(39)%wrn / 'none' /
   ! C090
-  DATA dft_GGAx_ref(40) / 'vdW-DF-c09+HF/4 (c09-0) - no ref. available' /
+  DATA dft_GGAx(40)%ref / 'vdW-DF-c09+HF/4 - framework defined by &
+                           &Phys. Rev. B 81, 161104(R) (2010) + J. Chem. Phys. 146, 234106 (2017)' /
+  DATA dft_GGAx(40)%wrn / 'none' /
   ! B86X
-  DATA dft_GGAx_ref(41) / '[B86B exchange * 0.75]' /
+  DATA dft_GGAx(41)%ref / '[B86B exchange * 0.75]' /
+  DATA dft_GGAx(41)%wrn / 'none' /
   ! B88X
-  DATA dft_GGAx_ref(42) / '[Becke88 exchange * 0.50]' /
+  DATA dft_GGAx(42)%ref / '[Becke88 exchange * 0.50]' /
+  DATA dft_GGAx(42)%wrn / 'none' /
   ! BEEX
-  DATA dft_GGAx_ref(43) / 'BEE exchange' /
+  DATA dft_GGAx(43)%ref / 'BEE exchange' /
+  DATA dft_GGAx(43)%wrn / 'none' /
   ! HHNX
-  DATA dft_GGAx_ref(44) / 'Hammer-Hansen-Norskov' /
+  DATA dft_GGAx(44)%ref / 'Hammer-Hansen-Norskov' /
+  DATA dft_GGAx(44)%wrn / 'none' /
   ! W31X  vdW-DF3-opt1 exchange
-  DATA dft_GGAx_ref(45) / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
+  DATA dft_GGAx(45)%ref / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
+  DATA dft_GGAx(45)%wrn / 'none' /
   ! W32X  vdW-DF3-opt2 exchange
-  DATA dft_GGAx_ref(46) / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
+  DATA dft_GGAx(46)%ref / 'D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)' /
+  DATA dft_GGAx(46)%wrn / 'none' /
+  ! AHTR  (reserved P.H., testing)
+  DATA dft_GGAx(47)%ref / 'Reserved, No ref. available' /
+  DATA dft_GGAx(47)%wrn / 'testing stage' /
+  ! EHPB  (reserved P.H.)
+  DATA dft_GGAx(48)%ref / 'Reserved, No ref. available' /
+  DATA dft_GGAx(48)%wrn / 'never called, ongoing development' /
+  ! HJPB  (Short-ranged PBE exchange by HJS08 parameters, cross-reference)
+  DATA dft_GGAx(49)%ref / 'Short-ranged pbe exchange as set by Henderson et al, &
+                           &J. Chem. Phys. 128, 194105 (2008); Compare PBE-AH' /
+  DATA dft_GGAx(49)%wrn / 'never called, for cross-comparison' /
+  ! HJPS  (Short-ranged PBEsol exchange by HJS08 param, cross-reference)
+  DATA dft_GGAx(50)%ref / 'Short-ranged pbesol exchange as set by Henderson et al, &
+                           & J. Chem. Phys. 128, 194105 (2008); Compare PBESOL-AH' /
+  DATA dft_GGAx(50)%wrn / 'never called, for cross-comparison' /
   !
   !
   ! ---- GGA correlation ----
   ! NOGC
-  DATA dft_GGAc_ref(0)  / 'No GGA correlation - default' /
+  DATA dft_GGAc(0)%ref  / 'No GGA correlation - default' /
+  DATA dft_GGAc(0)%wrn  / 'none' /
   ! P86   Perdew86
-  DATA dft_GGAc_ref(1)  / 'J.P.Perdew, PRB 33, 8822 (1986)' /
+  DATA dft_GGAc(1)%ref  / 'J.P.Perdew, PRB 33, 8822 (1986)' /
+  DATA dft_GGAc(1)%wrn  / 'none' /
   ! GGC   Perdew-Wang 91 corr.
-  DATA dft_GGAc_ref(2)  / 'J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)' /
+  DATA dft_GGAc(2)%ref  / 'J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)' /
+  DATA dft_GGAc(2)%wrn  / 'none' /
   ! BLYP  Lee-Yang-Parr
-  DATA dft_GGAc_ref(3)  / 'C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)' /
+  DATA dft_GGAc(3)%ref  / 'C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)' /
+  DATA dft_GGAc(3)%wrn  / 'none' /
   ! PBC   Perdew-Burke-Ernzenhof corr.
-  DATA dft_GGAc_ref(4)  / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAc(4)%ref  / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAc(4)%wrn  / 'none' /
   ! HCTH  Cambridge corr, Handy et al.
-  DATA dft_GGAc_ref(5)  / 'Handy et al, JCP 109, 6264 (1998)' /
+  DATA dft_GGAc(5)%ref  / 'Handy et al, JCP 109, 6264 (1998)' /
+  DATA dft_GGAc(5)%wrn  / 'none' /
   ! xxxx
-  DATA dft_GGAc_ref(6)  / 'void' /
+  DATA dft_GGAc(6)%ref  / 'void' /
+  DATA dft_GGAc(6)%wrn  / 'no GGAc functional available with this ID' /
   ! B3LP  b3lyp (Lee-Yang-Parr*0.81)
-  DATA dft_GGAc_ref(7)  / 'P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch, &
+  DATA dft_GGAc(7)%ref  / 'P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch, &
                            &J.Phys.Chem 98, 11623 (1994)' /
+  DATA dft_GGAc(7)%wrn  / 'none' /
   ! PSC   PBEsol corr
-  DATA dft_GGAc_ref(8)  / 'J.P. Perdew et al., PRL 100, 136406 (2008)' /
+  DATA dft_GGAc(8)%ref  / 'J.P. Perdew et al., PRL 100, 136406 (2008)' /
+  DATA dft_GGAc(8)%wrn  / 'none' /
   ! PBE   same as PBX, back-compatibility
-  DATA dft_GGAc_ref(9)  / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAc(9)%ref  / 'J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)' /
+  DATA dft_GGAc(9)%wrn  / 'none' /
   ! void
-  DATA dft_GGAc_ref(10) / 'void' /
+  DATA dft_GGAc(10)%ref / 'void' /
+  DATA dft_GGAc(10)%wrn / 'no GGAc functional available with this ID' /
   ! void
-  DATA dft_GGAc_ref(11) / 'void' /
+  DATA dft_GGAc(11)%ref / 'void' /
+  DATA dft_GGAc(11)%wrn / 'no GGAc functional available with this ID' /
   ! Q2DC  correlation grad corr.
-  DATA dft_GGAc_ref(12) / 'L. Chiodo et al., PRL 108, 126402 (2012)' /
+  DATA dft_GGAc(12)%ref / 'L. Chiodo et al., PRL 108, 126402 (2012)' /
+  DATA dft_GGAc(12)%wrn / 'none' /
   ! X3LC  (Lee-Yang-Parr*0.871)
-  DATA dft_GGAc_ref(13) / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
+  DATA dft_GGAc(13)%ref / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
+  DATA dft_GGAc(13)%wrn / 'none' /
   ! BEEC  beef correlation
-  DATA dft_GGAc_ref(14) / 'BEEF correlation' /
+  DATA dft_GGAc(14)%ref / 'BEEF correlation' /
+  DATA dft_GGAc(14)%wrn / 'none' /
   !
   !
   ! ---- MGGA (exchange+correlation) ----
   !
   ! NONE
-  DATA dft_MGGA_ref(0)  / 'No mGGA exchange.' /
+  DATA dft_MGGA(0)%ref  / 'No mGGA exchange.' /
+  DATA dft_MGGA(0)%wrn  / 'none' /
   ! TPSS
-  DATA dft_MGGA_ref(1)  / 'J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, PRL 91, 146401 (2003)' /
+  DATA dft_MGGA(1)%ref  / 'J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, PRL 91, 146401 (2003)' /
+  DATA dft_MGGA(1)%wrn  / 'none' /
   ! M06L
-  DATA dft_MGGA_ref(2)  / 'Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)' /
+  DATA dft_MGGA(2)%ref  / 'Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)' /
+  DATA dft_MGGA(2)%wrn  / 'none' /
   ! TB09
-  DATA dft_MGGA_ref(3)  / 'F. Tran and P. Blaha, Phys.Rev.Lett. 102, 226401 (2009) - Libxc needed' /
+  DATA dft_MGGA(3)%ref  / 'F. Tran and P. Blaha, Phys.Rev.Lett. 102, 226401 (2009)' /
+  DATA dft_MGGA(3)%wrn  / 'needs Libxc, provides only potential' /
   ! void
-  DATA dft_MGGA_ref(4)  / 'void' /
+  DATA dft_MGGA(4)%ref  / 'void' /
+  DATA dft_MGGA(4)%wrn  / 'no MGGA functional available with this ID' /
   ! SCAN
-  DATA dft_MGGA_ref(5)  / 'J Sun, A Ruzsinszky and J Perdew, PRL 115, 36402 (2015) - Libxc needed' /
+  DATA dft_MGGA(5)%ref  / 'J Sun, A Ruzsinszky and J Perdew, PRL 115, 36402 (2015)' /
+  DATA dft_MGGA(5)%wrn  / 'needs Libxc' /
   ! SCA0
-  DATA dft_MGGA_ref(6)  / 'K Hui and J-D. Chai, JCP 144, 44114 (2016) - Libxc needed' /
+  DATA dft_MGGA(6)%ref  / 'K Hui and J-D. Chai, JCP 144, 44114 (2016)' /
+  DATA dft_MGGA(6)%wrn  / 'needs Libxc' /
   ! R2SCAN
-  DATA dft_MGGA_ref(7)  / 'J. W. Furness, A. D. Kaplan, J. Ning, J. P. Perdew, &
-                          &and J. Sun, JPCL 11, 8208 (2020) - Libxc needed' /
+  DATA dft_MGGA(7)%ref  / 'J. W. Furness, A. D. Kaplan, J. Ning, J. P. Perdew, &
+                          &and J. Sun, JPCL 11, 8208 (2020)' /
+  DATA dft_MGGA(7)%wrn  / 'needs Libxc' /
   !
   !
   ! ---- Full DFTs ----
@@ -320,6 +444,10 @@ MODULE qe_dft_refs
   DATA dft_full_descr(38) / 'SCAN0 Meta-GGA - needs Libxc.' /
   ! R2SCAN
   DATA dft_full_descr(39) / 'R2SCAN Meta-GGA - needs Libxc.' /
+  ! PBE-AH
+  DATA dft_full_descr(40) / 'PBE-AH: HJS implementation (PBE params).' /
+  ! PBESOL-AH
+  DATA dft_full_descr(41) / 'PBESOL-AH: HJS implementation (PBEsol params).' /
   !
 END MODULE qe_dft_refs
 

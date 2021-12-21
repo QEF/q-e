@@ -14,6 +14,8 @@ Quick installation instructions for the impatient:
 --------------------------------------------------
 
 1. copy the qe-modes/ subdirectory into ~/.emacs.d/ directory
+   (N.B.: use the install.sh script instead)
+   
 2. edit and append the qe-modes.emacs file to your ~/.emacs file
 
 For more information about the installation and usage, see the file:
