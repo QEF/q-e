@@ -14,8 +14,6 @@ MODULE noncollin_module
   USE kinds, ONLY : DP
   USE parameters, ONLY : ntypx
   !
-  SAVE
-  !
   INTEGER :: npol
   !! number of coordinates of wfc
   INTEGER :: report
