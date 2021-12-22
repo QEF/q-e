@@ -1,6 +1,6 @@
 # Makefile for FFTXlib
 
-include ../make.inc
+include ../../make.inc
 
 FFTX = \
 scatter_mod.o  \
