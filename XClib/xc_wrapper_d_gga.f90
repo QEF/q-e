@@ -11,7 +11,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss, gpu_args_ )
   !! Wrapper routine. Calls dgcx-driver routines from internal libraries
   !! or from the external libxc, depending on the input choice.
   !
-  USE kind_l,             ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -394,7 +394,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
         dvxc_sr(k,2,1) = e2 * vsrc(k,2)
         dvxc_sr(k,2,2) = e2 * (vsrx(k,2) + vsrc(k,2))
         !
-        dvxc_ss(k,1,1) = e2 * (vssx(k,1) + vssc(k)) 
+        dvxc_ss(k,1,1) = e2 * (vssx(k,1) + vssc(k))
         dvxc_ss(k,1,2) = e2 * vssc(k)
         dvxc_ss(k,2,1) = e2 * vssc(k)
         dvxc_ss(k,2,2) = e2 * (vssx(k,2) + vssc(k))
