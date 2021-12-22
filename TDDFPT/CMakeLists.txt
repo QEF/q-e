@@ -167,3 +167,13 @@ qe_install_targets(
     qe_tddfpt_turboeels_exe
     qe_tddfpt_turbomagnons_exe
     qe_tddfpt_turbospectrum_exe)
+
+add_custom_target(tddfpt
+    DEPENDS
+        qe_tddfpt_turbolanczos_exe
+        qe_tddfpt_turbodavidson_exe
+        qe_tddfpt_turboeels_exe
+        qe_tddfpt_turbospectrum_exe
+        qe_tddfpt_turbomagnons_exe
+    COMMENT
+        "time dependent dft code")

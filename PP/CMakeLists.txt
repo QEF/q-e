@@ -531,3 +531,35 @@ qe_install_targets(
     qe_pp_st_dos_exe
     qe_pp_st_fermiint0_exe
     qe_pp_st_fermiint1_exe)
+
+add_custom_target(pp
+    DEPENDS
+        qe_pp_exe
+        qe_pp_opengrid_exe
+        qe_pp_average_exe
+        qe_pp_bands_exe
+        qe_pp_dos_exe
+        qe_pp_pawplot_exe
+        qe_pp_planavg_exe
+        qe_pp_plotband_exe
+        qe_pp_plotproj_exe
+        qe_pp_plotrho_exe
+        qe_pp_pmw_exe
+        qe_pp_projwfc_exe
+        qe_pp_pw2wannier90_exe
+        qe_pp_pw2critic_exe
+        qe_pp_wfck2r_exe
+        qe_pp_initial_state_exe
+        qe_pp_pw2gw_exe
+        qe_pp_sumpdos_exe
+        qe_pp_epsilon_exe
+        qe_pp_wannierham_exe
+        qe_pp_wannierplot_exe
+        qe_pp_molecularpdos_exe
+        qe_pp_pw2bgw_exe
+        qe_pp_fermivelocity_exe
+        qe_pp_fermisurface_exe
+        qe_pp_fermiproj_exe
+        qe_pp_ppacf_exe
+    COMMENT
+        "postprocessing programs")

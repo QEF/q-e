@@ -103,3 +103,11 @@ qe_install_targets(
     qe_xspectra_exe
     qe_xspectra_spectracorrection_exe
     qe_xspectra_molecularnexafs_exe)
+
+add_custom_target(xspectra
+    DEPENDS
+        qe_xspectra_exe
+        qe_xspectra_spectracorrection_exe
+        qe_xspectra_molecularnexafs_exe
+    COMMENT
+        "X-ray core-hole spectroscopy calculations")

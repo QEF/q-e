@@ -122,3 +122,9 @@ target_link_libraries(qe_atomic_exe
 qe_install_targets(
     qe_atomic
     qe_atomic_exe)
+
+add_custom_target(ld1
+    DEPENDS
+        qe_atomic_exe
+    COMMENT
+        "utilities for pseudopotential generation")

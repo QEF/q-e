@@ -431,3 +431,14 @@ qe_install_targets(
     qe_pw_tools_kpoints_exe
     qe_pw_tools_pwi2xsf_exe
     qe_pw_tools_scan_ibrav_exe)
+
+add_custom_target(pw
+    DEPENDS
+        qe_pw_exe
+        qe_pw_tools_ibrav2cell_exe
+        qe_pw_tools_cell2ibrav_exe
+        qe_pw_tools_ev_exe
+        qe_pw_tools_kpoints_exe
+        qe_pw_tools_pwi2xsf_exe
+    COMMENT
+        "basic code for scf, structure optimization, MD")

@@ -73,3 +73,10 @@ qe_install_targets(
     # Executables
     qe_neb_exe
     qe_neb_pathinterpolation_exe)
+
+add_custom_target(neb
+    DEPENDS
+        qe_neb_exe
+        qe_neb_pathinterpolation_exe
+    COMMENT
+        "code for Nudged Elastic Band method")
