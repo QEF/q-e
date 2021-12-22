@@ -404,17 +404,7 @@ target_link_libraries(qe_gww_pw4gww_exe
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_gww
-    qe_gww_pw4gww
-    qe_gww_bse
-    qe_gww_head
-    qe_gww_minpack
-    qe_gww_simple
-    qe_gww_simplebse
-    qe_gww_simpleip
-    # Executables
+set(GWW_EXE_TARGETS
     qe_gww_pw4gww_exe
     qe_gww_util_grap_exe
     qe_gww_util_abcoefftoeps_exe
@@ -427,16 +417,21 @@ qe_install_targets(
     qe_gww_simple_bse_exe
     qe_gww_simple_ip_exe)
 
+qe_install_targets(
+    # Libraries
+    qe_gww
+    qe_gww_pw4gww
+    qe_gww_bse
+    qe_gww_head
+    qe_gww_minpack
+    qe_gww_simple
+    qe_gww_simplebse
+    qe_gww_simpleip
+    # Executables
+    ${GWW_EXE_TARGETS})
+
 add_custom_target(gwl
     DEPENDS
-        qe_gww_util_grap_exe
-        qe_gww_util_abcoefftoeps_exe
-        qe_gww_util_memorypw4gww_exe
-	qe_gww_bse_bse_main_exe
-        qe_gww_gww_exe
-        qe_gww_gww_fit_exe
-        qe_gww_head_exe
-        qe_gww_simple_bse_exe
-        qe_gww_simple_ip_exe
+        ${GWW_EXE_TARGETS}
     COMMENT
         "GW with Lanczos chains")

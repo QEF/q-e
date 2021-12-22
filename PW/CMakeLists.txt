@@ -420,10 +420,7 @@ target_link_libraries(qe_pw_tools_scan_ibrav_exe
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_pw
-    # Executables
+set(PW_EXE_TARGETS
     qe_pw_exe
     qe_pw_tools_ibrav2cell_exe
     qe_pw_tools_cell2ibrav_exe
@@ -432,13 +429,14 @@ qe_install_targets(
     qe_pw_tools_pwi2xsf_exe
     qe_pw_tools_scan_ibrav_exe)
 
+qe_install_targets(
+    # Libraries
+    qe_pw
+    # Executables
+    ${PW_EXE_TARGETS})
+
 add_custom_target(pw
     DEPENDS
-        qe_pw_exe
-        qe_pw_tools_ibrav2cell_exe
-        qe_pw_tools_cell2ibrav_exe
-        qe_pw_tools_ev_exe
-        qe_pw_tools_kpoints_exe
-        qe_pw_tools_pwi2xsf_exe
+        ${PW_EXE_TARGETS}
     COMMENT
         "basic code for scf, structure optimization, MD")
