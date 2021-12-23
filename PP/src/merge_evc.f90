@@ -89,8 +89,8 @@ PROGRAM merge_evc
       istart = 1
     ENDIF
     !
-    IF ( nproc .gt. 1 ) &
-      WRITE( stdout, fmt='(5X,A)' ) "WARNING: Parallelization not supported"
+!    IF ( nproc .gt. 1 ) &
+!      WRITE( stdout, fmt='(5X,A)' ) "WARNING: Parallelization not supported"
     !
     CALL parse_args( istart, io_files, nrtot, output_exst )
     !
