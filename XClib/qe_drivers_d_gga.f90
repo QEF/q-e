@@ -178,7 +178,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   INTEGER :: igcx_, igcc_
   REAL(DP) :: r_up, r_dw, s_up, s_dw, s2_up, s2_dw, rt, zeta, s2t
   REAL(DP) :: dr_up, dr_dw, ds_up, ds_dw, drt, ds, dz
-  REAL(DP) :: null_up, null_dw, nullt
+  LOGICAL :: ir_null
   ! used to set output values to zero when input values 
   ! are too small (e.g. rho<eps)
   REAL(DP), ALLOCATABLE :: sx(:), v1x(:,:), v2x(:,:)
@@ -357,22 +357,29 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
     !
     rt = r_in(ir,1)+r_in(ir,2)
     !
-    nullt = 1.0_DP
+    ir_null = .FALSE.
     IF (rt>eps) zeta = (r_in(ir,1)-r_in(ir,2)) / rt
-    IF (rt<eps .OR. ABS(zeta)>1._DP .OR. st(ir)<eps) nullt = 0.0_DP
+    IF (rt<eps .OR. ABS(zeta)>1._DP .OR. st(ir)<eps) ir_null = .TRUE.
     !
     drt = MIN(1.D-4, 1.D-2 * rt)
     ds = MIN(1.D-4, 1.D-2 * st(ir))
     !dz = MIN(1.D-4, 1.D-2 * ABS(zeta) )
     dz = 1.D-6
     !
-    vrrc(ir,1) = 0.5_DP * (v1c(i1-1+ir,1) - v1c(i2-1+ir,1)) / drt * nullt
-    vrrc(ir,2) = 0.5_DP * (v1c(i1-1+ir,2) - v1c(i2-1+ir,2)) / drt * nullt
-    vrsc(ir,1) = 0.5_DP * (v1c(i3-1+ir,1) - v1c(i4-1+ir,1)) / ds/st(ir) * nullt
-    vrsc(ir,2) = 0.5_DP * (v1c(i3-1+ir,2) - v1c(i4-1+ir,2)) / ds/st(ir) * nullt
-    vssc(ir)   = 0.5_DP * (v2c(i3-1+ir)   - v2c(i4-1+ir)  ) / ds/st(ir) * nullt
-    vrzc(ir,1) = 0.5_DP * (v1c(i5-1+ir,1) - v1c(i6-1+ir,1)) / dz * nullt
-    vrzc(ir,2) = 0.5_DP * (v1c(i5-1+ir,2) - v1c(i6-1+ir,2)) / dz * nullt
+    IF ( .NOT. ir_null ) THEN
+      vrrc(ir,1) = 0.5_DP * (v1c(i1-1+ir,1) - v1c(i2-1+ir,1)) / drt
+      vrrc(ir,2) = 0.5_DP * (v1c(i1-1+ir,2) - v1c(i2-1+ir,2)) / drt
+      vrsc(ir,1) = 0.5_DP * (v1c(i3-1+ir,1) - v1c(i4-1+ir,1)) / ds/st(ir)
+      vrsc(ir,2) = 0.5_DP * (v1c(i3-1+ir,2) - v1c(i4-1+ir,2)) / ds/st(ir)
+      vssc(ir)   = 0.5_DP * (v2c(i3-1+ir)   - v2c(i4-1+ir)  ) / ds/st(ir)
+      vrzc(ir,1) = 0.5_DP * (v1c(i5-1+ir,1) - v1c(i6-1+ir,1)) / dz
+      vrzc(ir,2) = 0.5_DP * (v1c(i5-1+ir,2) - v1c(i6-1+ir,2)) / dz
+    ELSE
+      vrrc(ir,1) = 0._DP ;  vrrc(ir,2) = 0._DP
+      vrsc(ir,1) = 0._DP ;  vrsc(ir,2) = 0._DP
+      vrzc(ir,1) = 0._DP ;  vrzc(ir,2) = 0._DP
+      vssc(ir)   = 0._DP
+    ENDIF
   ENDDO
   !
   !$acc end data

@@ -104,7 +104,6 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   INTEGER :: k, length_dlxc
   REAL(DP) :: rht, zeta
-  LOGICAL :: thr_dw_cond, thr_up_cond
   REAL(DP), ALLOCATABLE :: sigma(:)
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-6
@@ -114,6 +113,8 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
     rho_threshold_gga = small ;  grho_threshold_gga = small
   ENDIF
+  !
+#if defined(__LIBXC)
   !
   IF (sp==1) THEN
     !$acc parallel loop
@@ -133,8 +134,6 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
       dvxc_ss(k,2,1) = 0._DP ; dvxc_ss(k,2,2) = 0._DP
     ENDDO
   ENDIF
-  !
-#if defined(__LIBXC)
   !
   IF ( ANY(is_libxc(3:4)) ) THEN
     !
