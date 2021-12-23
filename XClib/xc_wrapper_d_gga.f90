@@ -115,6 +115,25 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     rho_threshold_gga = small ;  grho_threshold_gga = small
   ENDIF
   !
+  IF (sp==1) THEN
+    !$acc parallel loop
+    DO k = 1, length
+      dvxc_rr(k,1,1) = 0._DP
+      dvxc_sr(k,1,1) = 0._DP
+      dvxc_ss(k,1,1) = 0._DP
+    ENDDO
+  ELSE
+    !$acc parallel loop
+    DO k = 1, length
+      dvxc_rr(k,1,1) = 0._DP ; dvxc_rr(k,1,2) = 0._DP
+      dvxc_rr(k,2,1) = 0._DP ; dvxc_rr(k,2,2) = 0._DP
+      dvxc_sr(k,1,1) = 0._DP ; dvxc_sr(k,1,2) = 0._DP
+      dvxc_sr(k,2,1) = 0._DP ; dvxc_sr(k,2,2) = 0._DP
+      dvxc_ss(k,1,1) = 0._DP ; dvxc_ss(k,1,2) = 0._DP
+      dvxc_ss(k,2,1) = 0._DP ; dvxc_ss(k,2,2) = 0._DP
+    ENDDO
+  ENDIF
+  !
 #if defined(__LIBXC)
   !
   IF ( ANY(is_libxc(3:4)) ) THEN
@@ -165,25 +184,6 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
   ENDIF
   !
-  IF (sp==1) THEN
-    !$acc parallel loop
-    DO k = 1, length
-      dvxc_rr(k,1,1) = 0._DP
-      dvxc_sr(k,1,1) = 0._DP
-      dvxc_ss(k,1,1) = 0._DP
-    ENDDO
-  ELSE
-    !$acc parallel loop
-    DO k = 1, length
-      dvxc_rr(k,1,1) = 0._DP ; dvxc_rr(k,1,2) = 0._DP
-      dvxc_rr(k,2,1) = 0._DP ; dvxc_rr(k,2,2) = 0._DP
-      dvxc_sr(k,1,1) = 0._DP ; dvxc_sr(k,1,2) = 0._DP
-      dvxc_sr(k,2,1) = 0._DP ; dvxc_sr(k,2,2) = 0._DP
-      dvxc_ss(k,1,1) = 0._DP ; dvxc_ss(k,1,2) = 0._DP
-      dvxc_ss(k,2,1) = 0._DP ; dvxc_ss(k,2,2) = 0._DP
-    ENDDO
-  ENDIF
-  !
   ! ... LIBXC DERIVATIVE FOR EXCHANGE
   !
   IF ( is_libxc(3) .AND. igcx/=0 ) THEN
@@ -198,27 +198,28 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     IF (sp==1) THEN
       !$acc parallel loop
       DO k = 1, length
-        IF ( rho_lxc(k)>small .AND. SQRT(ABS(sigma(k)))>small ) CYCLE
-        IF ( rho_lxc(k)>rho_threshold_lda ) THEN
-          dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(k)
-          dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(k)*2._DP
+        IF ( rho_lxc(k)>small .AND. SQRT(ABS(sigma(k)))>small ) THEN
+          IF ( rho_lxc(k)>rho_threshold_lda ) THEN
+            dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(k)
+            dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(k)*2._DP
+          ENDIF
+          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(k)*4._DP
         ENDIF
-        dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(k)*4._DP
       ENDDO
     ELSEIF (sp==2) THEN
       !$acc parallel loop
       DO k = 1, length
-        thr_up_cond = r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg
-        thr_dw_cond = r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))>epsg
-        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE
-        dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(3*k-2)
-        dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(6*k-5)*4._DP
-        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_x(3*k)
-        dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_x(6*k)*4._DP
-        dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_x(3*k-1)
-        dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(6*k-5)*2._DP
-        dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_x(3*k-1)
-        dvxc_sr(k,2,2) = dvxc_sr(k,2,2) + e2 * v2rhosigma_x(6*k)*2._DP
+        IF ( (r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg) .AND. &
+             (r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))  >epsg) ) THEN
+          dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_x(3*k-2)
+          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_x(6*k-5)*4._DP
+          dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_x(3*k)
+          dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_x(6*k)*4._DP
+          dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_x(3*k-1)
+          dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_x(6*k-5)*2._DP
+          dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_x(3*k-1)
+          dvxc_sr(k,2,2) = dvxc_sr(k,2,2) + e2 * v2rhosigma_x(6*k)*2._DP
+        ENDIF
       ENDDO
     ENDIF
     !$acc end data
@@ -242,31 +243,32 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     IF (sp==1) THEN
       !$acc parallel loop
       DO k = 1, length
-        IF ( rho_lxc(k)>small .AND. SQRT(ABS(sigma(k)))>small ) CYCLE
-        IF ( rho_lxc(k)>rho_threshold_lda ) THEN
-          dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(k)
-          dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(k)*2._DP
+        IF ( rho_lxc(k)>small .AND. SQRT(ABS(sigma(k)))>small ) THEN
+          IF ( rho_lxc(k)>rho_threshold_lda ) THEN
+            dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(k)
+            dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(k)*2._DP
+          ENDIF
+          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(k)*4._DP
         ENDIF
-        dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(k)*4._DP
       ENDDO
     ELSEIF (sp==2) THEN
       !$acc parallel loop
       DO k = 1, length
-        thr_up_cond = r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg
-        thr_dw_cond = r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))>epsg
-        IF ( .NOT.thr_up_cond .OR. .NOT.thr_dw_cond ) CYCLE
-        dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(3*k-2)
-        dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_c(3*k-1)
-        dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_c(3*k-1)
-        dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_c(3*k)
-        dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(6*k-5)*2.d0
-        dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(6*k)*4.d0
-        dvxc_sr(k,1,2) = dvxc_sr(k,1,2) + e2 * v2rhosigma_c(6*k-4)
-        dvxc_sr(k,2,1) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k-1)
-        dvxc_ss(k,1,2) = dvxc_ss(k,1,2) + e2 * v2sigma2_c(6*k-2)
-        dvxc_ss(k,2,1) = dvxc_ss(k,2,1) + e2 * v2sigma2_c(6*k-2)
-        dvxc_sr(k,2,2) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k)*2.d0
-        dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_c(6*k)*4.d0
+        IF ( (r_in(k,1)>epsr .AND. SQRT(ABS(sigma(3*k-2)))>epsg) .AND. &
+             (r_in(k,2)>epsr .AND. SQRT(ABS(sigma(3*k)))  >epsg) ) THEN
+          dvxc_rr(k,1,1) = dvxc_rr(k,1,1) + e2 * v2rho2_c(3*k-2)
+          dvxc_rr(k,1,2) = dvxc_rr(k,1,2) + e2 * v2rho2_c(3*k-1)
+          dvxc_rr(k,2,1) = dvxc_rr(k,2,1) + e2 * v2rho2_c(3*k-1)
+          dvxc_rr(k,2,2) = dvxc_rr(k,2,2) + e2 * v2rho2_c(3*k)
+          dvxc_sr(k,1,1) = dvxc_sr(k,1,1) + e2 * v2rhosigma_c(6*k-5)*2.d0
+          dvxc_ss(k,1,1) = dvxc_ss(k,1,1) + e2 * v2sigma2_c(6*k)*4.d0
+          dvxc_sr(k,1,2) = dvxc_sr(k,1,2) + e2 * v2rhosigma_c(6*k-4)
+          dvxc_sr(k,2,1) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k-1)
+          dvxc_ss(k,1,2) = dvxc_ss(k,1,2) + e2 * v2sigma2_c(6*k-2)
+          dvxc_ss(k,2,1) = dvxc_ss(k,2,1) + e2 * v2sigma2_c(6*k-2)
+          dvxc_sr(k,2,2) = dvxc_sr(k,2,1) + e2 * v2rhosigma_c(6*k)*2.d0
+          dvxc_ss(k,2,2) = dvxc_ss(k,2,2) + e2 * v2sigma2_c(6*k)*4.d0
+        ENDIF
       ENDDO
     ENDIF
     !

@@ -99,6 +99,19 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   !
   !$acc data deviceptr( rho_in, dmuxc )
   !
+  IF (srd==1) THEN
+    !$acc parallel loop
+    DO ir = 1, length
+      dmuxc(ir,1,1) = 0.0_DP
+    ENDDO
+  ELSE
+    !$acc parallel loop
+    DO ir = 1, length
+      dmuxc(ir,1,1) = 0.0_DP ; dmuxc(ir,2,1) = 0.0_DP
+      dmuxc(ir,1,2) = 0.0_DP ; dmuxc(ir,2,2) = 0.0_DP
+    ENDDO
+  ENDIF
+  !
 #if defined(__LIBXC)
   !
   lengthxc = length
@@ -169,30 +182,13 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
     ENDIF
   ENDIF
   !
-  IF (srd==1) THEN
-    !$acc parallel loop
-    DO ir = 1, length
-      dmuxc(ir,1,1) = 0.0_DP
-    ENDDO
-  ELSE
-    !$acc parallel loop
-    DO ir = 1, length
-      dmuxc(ir,1,1) = 0.0_DP ; dmuxc(ir,2,1) = 0.0_DP
-      dmuxc(ir,1,2) = 0.0_DP ; dmuxc(ir,2,2) = 0.0_DP
-    ENDDO
-  ENDIF
-  !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
         .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
-    !
     rho_threshold_lda = small
-    !
     IF ( srd == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( srd == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
     IF ( srd == 4 ) CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
-    !
   ENDIF
-  !
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
     SELECT CASE( srd )
