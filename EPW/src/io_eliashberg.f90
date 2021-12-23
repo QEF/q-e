@@ -424,8 +424,8 @@
             lgap = .TRUE.
             ! DO iw = 1, nsw
             DO iw = 1, nsw - 1   ! FG: this change is to prevent segfault in ws(iw+1) and adelta(*,*,iw+1)
-              var1 = REAL(adelta(ibnd, ik, iw))
-              var2 = REAL(adelta(ibnd, ik, iw + 1))
+              var1 = REAL(adelta(iw, ibnd, ik))
+              var2 = REAL(adelta(iw + 1, ibnd, ik))
               var3 = var1 - ws(iw)
               var4 = var2 - ws(iw + 1)
               IF (lgap .AND. iw < nqstep .AND. var1 > 0.d0 .AND. var2 > 0.d0 .AND. var3 * var4 < 0.d0) THEN
@@ -436,19 +436,19 @@
                 ! SH: write the entries for fbw runs
                 IF (fbw) THEN
                   WRITE(iufilgap, '(8ES20.10)') ws(iw), ekfs(ibnd, ik) - ef0, &
-                    REAL(aznorm(ibnd, ik, iw)), AIMAG(aznorm(ibnd, ik, iw)), &
-                    REAL(adelta(ibnd, ik, iw)), AIMAG(adelta(ibnd, ik, iw)), &
-                    REAL(ashift(ibnd, ik, iw)), AIMAG(ashift(ibnd, ik, iw))
+                    REAL(aznorm(iw, ibnd, ik)), AIMAG(aznorm(iw, ibnd, ik)), &
+                    REAL(adelta(iw, ibnd, ik)), AIMAG(adelta(iw, ibnd, ik)), &
+                    REAL(ashift(iw, ibnd, ik)), AIMAG(ashift(iw, ibnd, ik))
 
                 ELSE
                   WRITE(iufilgap, '(6ES20.10)') ws(iw), ekfs(ibnd, ik) - ef0, &
-                    REAL(aznorm(ibnd, ik, iw)), AIMAG(aznorm(ibnd, ik, iw)), &
-                    REAL(adelta(ibnd, ik, iw)), AIMAG(adelta(ibnd, ik, iw))
+                    REAL(aznorm(iw, ibnd, ik)), AIMAG(aznorm(iw, ibnd, ik)), &
+                    REAL(adelta(iw, ibnd, ik)), AIMAG(adelta(iw, ibnd, ik))
                 ENDIF
               ENDIF
             ENDDO ! iw
             IF (lgap) &
-              agap(ibnd,ik,itemp) = REAL(adelta(ibnd,ik,1))
+              agap(ibnd, ik, itemp) = REAL(adelta(1, ibnd, ik))
           ENDIF
         ENDDO ! ibnd
       ENDDO ! ik

@@ -1172,7 +1172,7 @@
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
               weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik)
               dos_qp(iw) = dos_qp(iw) + weight &
-                         * REAL(omega / SQRT(omega * omega - adelta(ibnd, ik, iw) * adelta(ibnd, ik, iw)))
+                         * REAL(omega / SQRT(omega * omega - adelta(iw, ibnd, ik) * adelta(iw, ibnd, ik)))
             ENDIF
           ENDDO
         ENDDO
