@@ -74,3 +74,9 @@ target_link_libraries(qe_hp_exe
 qe_install_targets(
     qe_hp
     qe_hp_exe)
+
+add_custom_target(hp
+    DEPENDS
+        qe_hp_exe
+    COMMENT
+        "calculation of the Hubbard parameters from DFPT")

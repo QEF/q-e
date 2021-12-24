@@ -494,10 +494,7 @@ target_link_libraries(qe_pp_st_ef_exe
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_pp
-    # Executables
+set(PP_EXE_TARGETS
     qe_pp_exe
     qe_pp_opengrid_exe
     qe_pp_average_exe
@@ -531,3 +528,15 @@ qe_install_targets(
     qe_pp_st_dos_exe
     qe_pp_st_fermiint0_exe
     qe_pp_st_fermiint1_exe)
+
+qe_install_targets(
+    # Libraries
+    qe_pp
+    # Executables
+    ${PP_EXE_TARGETS})
+
+add_custom_target(pp
+    DEPENDS
+        ${PP_EXE_TARGETS}
+    COMMENT
+        "postprocessing programs")
