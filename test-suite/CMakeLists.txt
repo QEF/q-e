@@ -59,10 +59,9 @@ endif()
 # prepare jobconfig and userconfig for testcode.py
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/jobconfig
                  ${CMAKE_CURRENT_BINARY_DIR}/jobconfig SYMBOLIC)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/userconfig.tmp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/userconfig.tmp ${CMAKE_CURRENT_BINARY_DIR}/userconfig)
 string(REPLACE "/" "\\/" qe_SOURCE_DIR_FOR_SED ${qe_SOURCE_DIR})
-execute_process(COMMAND sed -i "s/XXXXXX/${qe_SOURCE_DIR_FOR_SED}/" ${CMAKE_CURRENT_BINARY_DIR}/userconfig)
+execute_process(COMMAND sed "s/XXXXXX/${qe_SOURCE_DIR_FOR_SED}/" ${CMAKE_CURRENT_SOURCE_DIR}/userconfig.tmp
+                OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/userconfig)
 
 foreach(test_category IN LISTS qe_test_categories)
   message(STATUS "generating tests in ${test_category} category")
