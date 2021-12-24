@@ -17,7 +17,7 @@ then
 # upon include files *.h or *.fh or modules. Note that libraries that are 
 # externally maintained should not go into this list
 
-    dirs=" LAXlib FFTXlib UtilXlib \
+    dirs=" LAXlib FFTXlib/src UtilXlib \
            dft-d3 \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
 	   KS_Solvers/PPCG KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
@@ -60,9 +60,9 @@ for dir in $dirs; do
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
-    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib $LEVEL1/XClib $LEVEL1/LAXlib \
+    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib/src $LEVEL1/XClib $LEVEL1/LAXlib \
 	     $LEVEL1/UtilXlib $LEVEL1/upflib"
-    DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
+    DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib/src $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
     case $DIR in 
         upflib )
