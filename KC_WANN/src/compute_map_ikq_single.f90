@@ -197,9 +197,9 @@ SUBROUTINE find_index_1bz_iterate(xkq, gvect, ikq)
   !
   count_g = 0
   !
-  DO g1=-1,1
-     DO g2=-1,1
-       DO g3=-1,1
+  DO g1=-2,2
+     DO g2=-2,2
+       DO g3=-2,2
          !
          xkq_(:) = xkq(:) ! the k+q from input
          ! The k+q in crystal coordinates 
