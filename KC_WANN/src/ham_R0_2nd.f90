@@ -68,6 +68,10 @@ SUBROUTINE ham_R0_2nd ()
   CHARACTER (len=256) :: hocc_file, hemp_file
   INTEGER :: ierr, ieff, jeff
   !
+  CHARACTER(LEN=9)  :: cdate, ctime
+  CHARACTER(LEN=33) :: header
+  INTEGER :: i
+  !
   nqs = nkstot/nspin
   !
   !
@@ -176,12 +180,18 @@ SUBROUTINE ham_R0_2nd ()
   !
   ! ... Write the result on file 
   IF (ionode ) THEN 
-    ! 
+    !
+    CALL date_and_tim( cdate, ctime )
+    header = 'Written on '//cdate//' at '//ctime
+    !
     ! ... Occupied states
     OPEN (UNIT = 1001, FILE = hocc_file, FORM = 'formatted', STATUS = 'unknown', IOSTAT=ierr )
+    !
+    WRITE(1001, * ) header
     WRITE(1001,'(i5)') num_wann_occ
     ! ... number of wannier 
     WRITE(1001,'(i5)') nqs
+    WRITE(1001,'(15i5)') (1, i=1,nqs)
     ! ... number of R points (identical to q points) 
     DO iq = 1, nqs
       DO iwann = 1, num_wann_occ
@@ -193,10 +203,16 @@ SUBROUTINE ham_R0_2nd ()
     ENDDO
     CLOSE (1001)
     !
+    CALL date_and_tim( cdate, ctime )
+    header = 'Written on '//cdate//' at '//ctime
+    !
     ! ... Empty states
     OPEN (UNIT = 1001, FILE = hemp_file, FORM = 'formatted', STATUS = 'unknown', IOSTAT=ierr )
+    !
+    WRITE(1001, * ) header
     WRITE(1001,'(i5)') num_wann-num_wann_occ
     WRITE(1001,'(i5)') nqs
+    WRITE(1001,'(15i5)') (1, i=1,nqs)
     DO iq = 1, nqs
       DO iwann = 1, num_wann-num_wann_occ
         ieff = iwann + num_wann_occ 
