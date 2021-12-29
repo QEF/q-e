@@ -292,14 +292,14 @@ CONTAINS
       END IF
       z = DBLE(jz) / DBLE(dfftp%nr3) * L
 
-      !! BC1 terms
-      Vhar0r(iz) = Vhar0r(iz) &
-                   - tpi*z**2*rg3 &
-                   - tpi*z0**2*rg3 &
-                   - fpi*z*sum1c &
-                   - fpi*sum2c
-
-      IF (esm_bc == 'bc2') THEN
+      IF (esm_bc == 'bc1') THEN
+        !! BC1 terms
+        Vhar0r(iz) = Vhar0r(iz) &
+                     - tpi*z**2*rg3 &
+                     - tpi*z0**2*rg3 &
+                     - fpi*z*sum1c &
+                     - fpi*sum2c
+      ELSE IF (esm_bc == 'bc2') THEN
         !! BC2 terms
         Vhar0r(iz) = Vhar0r(iz) &
                      + tpi*z1*2*z0*rg3 - tpi*(-z/z1)*2*z0*sum1c
@@ -362,12 +362,12 @@ CONTAINS
           za = za - L
         END IF
 
-        !! BC1 terms
-        Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
-                     *((z - za)*erf(salp*(z - za)) &
-                     + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
-
-        IF (esm_bc == 'bc2') THEN
+        IF (esm_bc == 'bc1') THEN
+          !! BC1 terms
+          Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
+                       *((z - za)*erf(salp*(z - za)) &
+                       + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
+        ELSE IF (esm_bc == 'bc2') THEN
           !! BC2 terms
           Vloc0r(iz) = Vloc0r(iz) &
                        + tpi*Qa/S*(-z*za + z1*z1)/z1
