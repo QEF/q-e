@@ -36,6 +36,7 @@ subroutine commutator_Hx_psi (ik, nbnd_calc, vpol, becp1, becp2, dpsi)
   USE becmod,          ONLY : becp, bec_type, calbec
   USE uspp,            ONLY : nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
+  USE uspp_init,       ONLY : gen_us_dj, gen_us_dy
   USE control_flags,   ONLY : gamma_only
   USE ldaU,            ONLY : lda_plus_u
 
