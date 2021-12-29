@@ -93,8 +93,6 @@ set(src_pw
    src/g_psi_mod.f90 
    src/gen_at_dj.f90 
    src/gen_at_dy.f90 
-   src/gen_us_dj.f90 
-   src/gen_us_dy.f90 
    src/get_locals.f90 
    src/gk_sort.f90 
    src/gradcorr.f90 
@@ -274,8 +272,6 @@ set(src_pw
    src/g_psi_gpu.f90
    src/stres_mgga_gpu.f90
    src/atomic_wfc_gpu.f90
-   src/gen_us_dj_gpu.f90
-   src/gen_us_dy_gpu.f90
    src/dvloc_of_g_gpu.f90
    src/stres_ewa_gpu.f90
    src/stres_knl_gpu.f90
