@@ -3072,9 +3072,6 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%Units_ispresent, ionode_id, comm)
     IF (obj%Units_ispresent) &
       CALL mp_bcast(obj%Units, ionode_id, comm)
-    CALL mp_bcast(obj%UNITS_ispresent, ionode_id, comm)
-    IF (obj%UNITS_ispresent) &
-      CALL mp_bcast(obj%UNITS, ionode_id, comm)
     CALL mp_bcast(obj%scalarQuantity, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_scalarQuantity

@@ -2280,7 +2280,6 @@ MODULE qes_reset_module
     obj%lread  = .FALSE.
     !
     obj%Units_ispresent = .FALSE.
-    obj%UNITS_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_scalarQuantity
   !

@@ -3402,7 +3402,6 @@ MODULE qes_write_module
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
      IF (obj%Units_ispresent) CALL xml_addAttribute(xp, 'Units', TRIM(obj%Units) )
-     IF (obj%UNITS_ispresent) CALL xml_addAttribute(xp, 'UNITS', TRIM(obj%UNITS) )
         CALL xml_AddCharacters(xp, obj%scalarQuantity, fmt='s16')
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_scalarQuantity

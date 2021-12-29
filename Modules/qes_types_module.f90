@@ -448,8 +448,6 @@ MODULE qes_types_module
     !
     CHARACTER(len=256) :: Units
     LOGICAL :: Units_ispresent = .FALSE.
-    CHARACTER(len=256) :: UNITS
-    LOGICAL :: UNITS_ispresent = .FALSE.
     !
     REAL(DP) :: scalarQuantity
     !

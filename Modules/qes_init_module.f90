@@ -4749,14 +4749,13 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_integerMatrix_3
   !
   !
-  SUBROUTINE qes_init_scalarQuantity(obj, tagname, Units, UNITS, scalarQuantity)
+  SUBROUTINE qes_init_scalarQuantity(obj, tagname, Units, scalarQuantity)
     !
     IMPLICIT NONE
     !
     TYPE(scalarQuantity_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: Units
-    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: UNITS
     REAL(DP), INTENT(IN) :: scalarQuantity
     !
     obj%tagname = TRIM(tagname)
@@ -4767,12 +4766,6 @@ MODULE qes_init_module
       obj%Units = Units
     ELSE
       obj%Units_ispresent = .FALSE.
-    END IF
-    IF (PRESENT(UNITS)) THEN
-      obj%UNITS_ispresent = .TRUE.
-      obj%UNITS = UNITS
-    ELSE
-      obj%UNITS_ispresent = .FALSE.
     END IF
     !
     obj%scalarQuantity = scalarQuantity

@@ -14231,13 +14231,6 @@ MODULE qes_read_module
     ELSE
       obj%Units_ispresent = .FALSE.
     END IF
-    ! 
-    IF (hasAttribute(xml_node, "UNITS")) THEN
-      CALL extractDataAttribute(xml_node, "UNITS", obj%UNITS)
-      obj%UNITS_ispresent = .TRUE.
-    ELSE
-      obj%UNITS_ispresent = .FALSE.
-    END IF
     !
     !
     !
