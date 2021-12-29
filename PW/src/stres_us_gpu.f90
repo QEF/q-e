@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -36,7 +36,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
                                    calbec_gpu
   USE device_fbuff_m,       ONLY : dev_buf
   USE device_memcpy_m,      ONLY : dev_memcpy
-  USE uspp_init,            ONLY : init_us_2
+  USE uspp_init,            ONLY : init_us_2, gen_us_dj_gpu, gen_us_dy_gpu
   !
   IMPLICIT NONE
   !
