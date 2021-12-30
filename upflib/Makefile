@@ -57,6 +57,7 @@ upf_to_internal.o \
 upf_utils.o \
 uspp.o \
 uspp_data.o \
+uspp_param.o \
 write_upf_new.o \
 xmltools.o \
 ylmr2.o
