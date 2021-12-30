@@ -2,6 +2,8 @@ set(src_upflib
     atom.f90
     atomic_number.f90
     dqvan2.f90
+    gen_us_dj.f90
+    gen_us_dy.f90
     init_us_0.f90
     init_us_b0.f90
     init_us_1.f90
@@ -10,6 +12,8 @@ set(src_upflib
     init_tab_qrad.f90
     interp_atwfc.f90
     init_us_2_base.f90
+    gen_us_dj_gpu.f90
+    gen_us_dy_gpu.f90
     gth.f90
     paw_variables.f90
     pseudo_types.f90

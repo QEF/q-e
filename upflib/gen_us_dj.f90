@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2021 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,18 +7,15 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE gen_us_dj( ik, dvkb )
+SUBROUTINE gen_us_dj_base &
+     ( npw, npwx, igk, xk, nat, tau, ityp, ntyp, tpiba, &
+       omega, nr1, nr2, nr3, eigts1, eigts2, eigts3, mill, g, dvkb )
   !----------------------------------------------------------------------
   !! Calculates the beta function pseudopotentials with
   !! the derivative of the Bessel functions.
   !
-  USE kinds,      ONLY: DP
-  USE constants,  ONLY: tpi
-  USE ions_base,  ONLY: nat, ntyp => nsp, ityp, tau
-  USE cell_base,  ONLY: tpiba, omega
-  USE klist,      ONLY: xk, ngk, igk_k
-  USE gvect,      ONLY: mill, eigts1, eigts2, eigts3, g
-  USE wvfct,      ONLY: npwx
+  USE upf_kinds,  ONLY: dp
+  USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_data,  ONLY: nqx, tab, tab_d2y, dq, spline_ps
   USE m_gth,      ONLY: mk_dffnl_gth
@@ -27,14 +24,44 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ik
-  !! k-point index
+  INTEGER, INTENT(IN) :: npw
+  !! number ok plane waves 
+  INTEGER, INTENT(IN) :: npwx
+  !! max number ok plane waves across k-points
+  INTEGER, INTENT(IN) :: igk(npw)
+  !! indices of plane waves k+G
+  REAL(dp), INTENT(IN) :: xk(3)
+  !! k-point
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! index of type per atom
+  INTEGER, INTENT(IN) :: ntyp
+  !! number of atomic types
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions (cc alat units)
+  REAL(DP), INTENT(IN) :: tpiba
+  !! rec.lattice units 2pi/a
+  REAL(DP), INTENT(IN) :: omega
+  !! cell volume
+  INTEGER, INTENT(IN) :: nr1,nr2,nr3
+  !! fft dims (dense grid)
+  COMPLEX(DP), INTENT(IN) :: eigts1(-nr1:nr1,nat)
+  !! structure factor 1
+  COMPLEX(DP), INTENT(IN) :: eigts2(-nr2:nr2,nat)
+  !! structure factor 2
+  COMPLEX(DP), INTENT(IN) :: eigts3(-nr3:nr3,nat)
+  !! structure factor 3
+  INTEGER, INTENT(IN) :: mill(3,*)
+  !! miller index map
+  REAL(DP), INTENT(IN) :: g(3,*)
+  !! g vectors (2pi/a units)
   COMPLEX(DP), INTENT(OUT) :: dvkb(npwx, nkb)
   !! the beta function pseudopotential
   !
   ! ... local variables
   !
-  INTEGER :: npw, ikb, nb, ih, ig, i0, i1, i2, i3, nt
+  INTEGER :: ikb, nb, ih, ig, i0, i1, i2, i3, nt
   ! counter on beta functions
   ! counter on beta functions
   ! counter on beta functions
@@ -59,17 +86,16 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   !
   CALL start_clock( 'stres_us31' )
   !
-  npw = ngk(ik)
   ALLOCATE( djl(npw,nbetam,ntyp)   )    
   ALLOCATE( ylm(npw,(lmaxkb+1)**2) )    
   ALLOCATE( gk(3,npw) )    
   ALLOCATE( q(npw)    )    
   !
   DO ig = 1, npw
-     iig = igk_k(ig,ik)
-     gk(1, ig) = xk(1, ik) + g(1, iig)
-     gk(2, ig) = xk(2, ik) + g(2, iig)
-     gk(3, ig) = xk(3, ik) + g(3, iig)
+     iig = igk(ig)
+     gk(1, ig) = xk(1) + g(1, iig)
+     gk(2, ig) = xk(2) + g(2, iig)
+     gk(3, ig) = xk(3) + g(3, iig)
      q(ig) = gk(1, ig)**2 + gk(2, ig)**2 + gk(3, ig)**2
   ENDDO
   !
@@ -129,12 +155,12 @@ SUBROUTINE gen_us_dj( ik, dvkb )
      DO na = 1, nat
         !
         IF (ityp(na) == nt) THEN
-           arg = ( xk(1, ik) * tau(1,na) + &
-                   xk(2, ik) * tau(2,na) + &
-                   xk(3, ik) * tau(3,na) ) * tpi
+           arg = ( xk(1) * tau(1,na) + &
+                   xk(2) * tau(2,na) + &
+                   xk(3) * tau(3,na) ) * tpi
            phase = CMPLX( COS(arg), -SIN(arg) ,KIND=DP )
            DO ig = 1, npw
-              iig = igk_k(ig,ik)
+              iig = igk(ig)
               sk (ig) = eigts1(mill (1,iig), na) * &
                         eigts2(mill (2,iig), na) * &
                         eigts3(mill (3,iig), na) * phase
@@ -158,7 +184,7 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   !
   CALL stop_clock('stres_us34')
   !
-  IF (ikb /= nkb) CALL errore('gen_us_dj', 'unexpected error', 1)
+  IF (ikb /= nkb) CALL upf_error('gen_us_dj', 'unexpected error', 1)
   DEALLOCATE( sk  )
   DEALLOCATE( ylm )
   DEALLOCATE( djl )
@@ -166,5 +192,5 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   !
   RETURN
   !
-END SUBROUTINE gen_us_dj
+END SUBROUTINE gen_us_dj_base
 
