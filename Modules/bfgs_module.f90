@@ -1090,7 +1090,7 @@ CONTAINS
          IF ( lmovecell ) THEN
             WRITE( UNIT = stdout, &
               & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&
-              &       "Ry/Bohr, cell < ",ES8.1,"kbar)")') energy_thr, grad_thr, cell_thr
+              &       " Ry/Bohr, cell < ",ES8.1," kbar)")') energy_thr, grad_thr, cell_thr
          ELSE
             WRITE( UNIT = stdout, &
               & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&
