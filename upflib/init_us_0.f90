@@ -56,7 +56,6 @@ SUBROUTINE init_us_0(ecutrho,intra_bgrp_comm)
   ! q-point grid for interpolation
   REAL(DP), ALLOCATABLE :: ylmk0(:)
   ! the spherical harmonics
-  INTEGER, EXTERNAL :: sph_ind
   INTEGER :: lnb, lmb
   REAL(DP) :: qmax, rcut, drcut
   REAL(DP) :: target_ratio, ratio, ratio_s, fac
