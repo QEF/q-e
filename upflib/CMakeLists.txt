@@ -45,6 +45,7 @@ set(src_upflib
     upf_utils.f90
     uspp.f90
     uspp_data.f90
+    uspp_param.f90
     write_upf_new.f90
     xmltools.f90
     ylmr2.f90
