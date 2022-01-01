@@ -25,9 +25,10 @@ endif()
 ###########################################################
 include(devxlib.cmake)
 
-
 ###########################################################
 # D3Q
 ###########################################################
-qe_git_submodule_update(external/d3q)
-add_subdirectory(d3q)
+if("d3q" IN_LIST QE_ENABLE_PLUGINS)
+  qe_git_submodule_update(external/d3q)
+  add_subdirectory(d3q)
+endif()

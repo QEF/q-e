@@ -113,6 +113,7 @@ option(QE_ENABLE_DOC
 set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
+set(QE_ENABLE_PLUGINS "" CACHE STRING "Semicolon-separated list of plugins")
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -202,6 +203,16 @@ if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MAT
   message(FATAL_ERROR "-DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER} only works with the GNU compiler")
 endif()
 
+# valid plugins checks
+set(VALID_QE_PLUGINS "d3q")
+# Perform sanitizer option check, only works in debug mode
+foreach(PLUGIN IN LISTS QE_ENABLE_PLUGINS)
+  if(NOT PLUGIN IN_LIST VALID_QE_PLUGINS)
+    message(FATAL_ERROR "Invalid QE plugin ${PLUGIN}, value must be one of \"${VALID_QE_PLUGINS}\".")
+  else()
+    message(STATUS "Enable QE plugin ${PLUGIN}")
+  endif()
+endforeach()
 
 ############################################################
 # C preprocessor
