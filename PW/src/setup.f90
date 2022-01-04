@@ -672,6 +672,8 @@ SUBROUTINE setup_para ( )
   USE wvfct,     ONLY : nbnd
   USE mp_pools,  ONLY : kunit
   !
+  IMPLICIT NONE
+  !
   LOGICAL, EXTERNAL  :: check_gpu_support
   !
   use_gpu = check_gpu_support( )
@@ -684,9 +686,7 @@ END SUBROUTINE setup_para
 !----------------------------------------------------------------------------
 LOGICAL FUNCTION check_gpu_support( )
   !
-  ! FIXME: this routine seems to me useless. With GPUs, run on GPUs
-  !
-  USE io_global,        ONLY : stdout, ionode, ionode_id
+  ! FIXME: seems useless. If one has GPUs, one wants to run on GPUs.
   !
   IMPLICIT NONE
   !
@@ -722,16 +722,21 @@ SUBROUTINE setup_exx ( )
   !
   ! Must be called after setup_para, before init_run, only once
   !
+  USE mp_exx,    ONLY : mp_start_exx
+  USE mp_pools,  ONLY : intra_pool_comm
   USE exx_base,  ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE xc_lib,    ONLY : xclib_dft_is
   USE klist,     ONLY : nks
+  USE command_line_options, ONLY : nband_, ntg_
   !
+  IMPLICIT NONE
+  !
+  CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
   IF ( xclib_dft_is('hybrid') ) THEN
      IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
      CALL exx_grid_init()
      CALL exx_mp_init()
      CALL exx_div_check()
   ENDIF
-  !
   !
 END SUBROUTINE setup_exx
