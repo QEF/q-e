@@ -14,7 +14,7 @@ SUBROUTINE non_scf( )
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, lorbm
   USE check_stop,           ONLY : stopped_by_user
-  USE control_flags,        ONLY : io_level, conv_elec, lbands
+  USE control_flags,        ONLY : io_level, conv_elec, lbands, use_gpu
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc
@@ -85,6 +85,13 @@ SUBROUTINE non_scf( )
   !
   CALL using_et(1)
   CALL poolrecover( et, nbnd, nkstot, nks )
+  !
+  ! ... the new density is computed here. For PAW:
+  ! ... sum_band computes new becsum (stored in uspp modules)
+  ! ... and a subtly different copy in rho%bec (scf module)
+  !
+  IF (.not. use_gpu) CALL sum_band()
+  IF (      use_gpu) CALL sum_band_gpu()
   !
   ! ... calculate weights of Kohn-Sham orbitals (only weights, not Ef,
   ! ... for a "bands" calculation where Ef is read from data file)

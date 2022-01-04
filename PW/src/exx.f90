@@ -485,11 +485,14 @@ MODULE exx
     !
 !civn 
     !IF (nbndproj == 0) nbndproj = nbnd
-    IF (present(nbndproj_)) THEN 
-     nbndproj = nbndproj_
-    ELSE
-      IF (nbndproj == 0) nbndproj = nbnd
-    END IF
+    IF(use_ace) THEN 
+      IF (present(nbndproj_)) THEN 
+       nbndproj = nbndproj_
+      ELSE
+        IF (nbndproj == 0) nbndproj = nbnd
+      END IF
+      WRITE(stdout, '(A,2(I5,A))') "ACE will be projected onto nbndproj=", nbndproj, " bands and applied to nbnd=", nbnd, " bands"
+    END IF 
 !
     !
     CALL divide( inter_egrp_comm, x_nbnd_occ, ibnd_start, ibnd_end )
