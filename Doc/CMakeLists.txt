@@ -35,4 +35,4 @@ install(
         ${PROJECT_BINARY_DIR}/Doc/brillouin_zones.pdf
         ${PROJECT_BINARY_DIR}/Doc/plumed_quick_ref.pdf
     DESTINATION 
-        share/qe)
+        share/Doc)
