@@ -30,7 +30,19 @@ MODULE qexsd_module
   USE qes_reset_module, ONLY : qes_reset
   USE qes_init_module,  ONLY : qes_init
   !
-  USE FoX_wxml,         ONLY : xmlf_t
+#if defined (__outfoxed)
+  USE     wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
+                        xml_NewElement, xml_addAttribute, xml_addComment,&
+                        xml_AddCharacters, xml_EndElement, xml_Close
+  USE     dom,   ONLY : parseFile, item, getElementsByTagname, &
+                        destroy, nodeList, Node
+#else
+  USE FoX_wxml,  ONLY : xmlf_t, xml_OpenFile, xml_DeclareNamespace, &
+                        xml_NewElement, xml_addAttribute, xml_addComment,&
+                        xml_AddCharacters, xml_EndElement, xml_Close
+  USE FoX_dom,   ONLY : parseFile, item, getElementsByTagname, &
+                        destroy, nodeList, Node
+#endif
   !
   IMPLICIT NONE
   !
@@ -84,8 +96,6 @@ CONTAINS
     !-------------------------------------------------------------------------------------------------
     SUBROUTINE qexsd_set_status(status_int)
     !-------------------------------------------------------------------------------------------------
-    IMPLICIT NONE
-    !
     INTEGER, INTENT(IN)      :: status_int
     !
     exit_status = status_int
@@ -102,10 +112,7 @@ CONTAINS
     SUBROUTINE qexsd_openschema(filename, ounit, prog, title)
       !------------------------------------------------------------------------
       !
-      USE  FoX_wxml,   ONLY: xml_OpenFile, xml_DeclareNamespace, &
-           xml_NewElement, xml_addAttribute, xml_addComment
       USE qexsd_input, ONLY: qexsd_input_obj
-      IMPLICIT NONE
       !
       CHARACTER(len=*), INTENT(IN) :: filename, prog, title
       INTEGER, INTENT(IN)          :: ounit
@@ -142,7 +149,11 @@ CONTAINS
       CALL qes_reset (parallel_info) 
       IF ( check_file_exst(input_xml_schema_file) )  THEN
          CALL xml_addComment( XF = qexsd_xf, COMMENT= "")
+#if ! defined(__outfoxed)
          CALL qexsd_cp_line_by_line(ounit ,input_xml_schema_file, spec_tag="input")
+#else
+         CALL qexsd_cp_line_by_line(qexsd_xf%unit,input_xml_schema_file, spec_tag="input")
+#endif 
       ELSE IF ( TRIM(qexsd_input_obj%tagname) == "input") THEN 
          CALL qes_write (qexsd_xf, qexsd_input_obj)
       END IF
@@ -162,8 +173,6 @@ CONTAINS
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_general_info(obj, prog, title )
     !---------------------------------------------------------------------------------------
-      IMPLICIT NONE
-      !
       TYPE( general_info_type )         ::  obj
       CHARACTER(LEN=*),INTENT(IN)       ::  prog
       CHARACTER(LEN=*),INTENT(IN)       ::  title
@@ -202,8 +211,6 @@ CONTAINS
     !---------------------------------------------------------------------------------------------
     SUBROUTINE   qexsd_init_parallel_info(obj)
     !---------------------------------------------------------------------------------------------
-      IMPLICIT NONE
-      !
       TYPE ( parallel_info_type )           :: obj
       !
       INTEGER                               :: nthreads=1
@@ -226,8 +233,6 @@ CONTAINS
     SUBROUTINE qexsd_closeschema()
       !------------------------------------------------------------------------
       USE mytime,    ONLY: nclock, clock_label
-      USE FOX_wxml,  ONLY: xml_NewElement, xml_AddCharacters, xml_EndElement, xml_Close   
-      IMPLICIT NONE
       REAL(DP),EXTERNAL     :: get_clock
       TYPE(timing_type) :: qexsd_timing_  
       !
@@ -266,11 +271,7 @@ CONTAINS
 !------------------------------------------------------------------------
       !
       USE qes_read_module, ONLY : qes_read
-      USE FoX_dom,         ONLY : parseFile, item, getElementsByTagname, &
-           destroy, nodeList, Node
       !
-      IMPLICIT NONE 
-      ! 
       CHARACTER(LEN=*), INTENT(IN) :: filename
       INTEGER, INTENT(OUT)         :: ierr
       TYPE( output_type ), OPTIONAL,       INTENT(OUT)   :: output_obj
@@ -370,8 +371,6 @@ CONTAINS
     FUNCTION check_file_exst( filename )
       !------------------------------------------------------------------------
       !
-      IMPLICIT NONE
-      !
       LOGICAL          :: check_file_exst
       CHARACTER(len=*) :: filename
       !
@@ -460,7 +459,6 @@ CONTAINS
     !! structural minimization paths. All quantities must be provided directly in Hartree atomic units. 
     !! @Note updated on April 10th 2018 by Pietro Delugas
     USE qexsd_init, ONLY : qexsd_init_atomic_structure, qexsd_init_total_energy
-    IMPLICIT NONE 
     ! 
     INTEGER ,INTENT(IN)             :: i_step, max_steps, ntyp, nat, n_scf_steps, ityp(:)
     REAL(DP),INTENT(IN)             :: tau(3,nat), alat, a1(3), a2(3), a3(3), etot, eband, ehart, vtxc, &
@@ -524,7 +522,6 @@ CONTAINS
     !
     !------------------------------------------------------------------------------------
     SUBROUTINE qexsd_reset_steps()
-       IMPLICIT NONE
        INTEGER  :: i_step
        IF (ALLOCATED(steps)) THEN
           DO i_step =1, SIZE(steps) 
@@ -537,7 +534,6 @@ CONTAINS
     !--------------------------------------------------------------------------------------------------
     SUBROUTINE qexsd_set_closed() 
     ! 
-    IMPLICIT NONE 
     CHARACTER(LEN=9)                  :: cdate, time_string
     CHARACTER(LEN=12)                 :: date_string
     !
@@ -557,7 +553,6 @@ CONTAINS
 SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
       USE mytime,  ONLY: nclock, clock_label, cputime, walltime, called
       USE qes_libs_module, ONLY: qes_init, qes_reset 
-      IMPLICIT NONE
       TYPE(timing_type),INTENT(INOUT)          :: timing_ 
       CHARACTER(LEN=*),INTENT(IN)             :: total_clock 
       CHARACTER(LEN=*),OPTIONAL,INTENT(IN)    :: partial_clocks(:) 
@@ -622,7 +617,6 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
 
    SUBROUTINE qexsd_allocate_clock_list(prog)
      !! allocates the list of clock labels    
-     IMPLICIT NONE 
      CHARACTER(*), INTENT(IN) :: prog
      !! name of the program
      IF (ALLOCATED(clock_list)) DEALLOCATE (clock_list) 
@@ -638,7 +632,6 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
    SUBROUTINE qexsd_add_all_clocks()
      !! allocates the list of clock labels copying all active clocks
      USE mytime,  ONLY: nclock, clock_label
-     IMPLICIT NONE 
      IF (ALLOCATED(clock_list))  DEALLOCATE (clock_list) 
      ALLOCATE (clock_list, SOURCE=clock_label(1:nclock)) 
      clock_list_dim = nclock
@@ -648,7 +641,6 @@ SUBROUTINE qexsd_init_clocks (timing_, total_clock, partial_clocks)
 
    SUBROUTINE qexsd_add_label (label)
       !! adds a clock label to the clock list that will be reported in the xml file
-      IMPLICIT NONE 
       CHARACTER(LEN=*),INTENT(IN)  :: label
       !! clock label to be added to the list 
       !

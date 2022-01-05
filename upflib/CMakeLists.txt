@@ -50,6 +50,9 @@ set(src_upflib
     xmltools.f90
     ylmr2.f90
     dylmr2.f90
+    # FoX
+    dom.f90
+    wxml.f90
     # GPU
     init_us_2_base_gpu.f90
     interp_atwfc_gpu.f90

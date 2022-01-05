@@ -44,8 +44,8 @@ MODULE xmltools
   ! internal variables for reading and writing
   !
   INTEGER :: xmlunit
-  INTEGER, PARAMETER :: maxline=1024
-  CHARACTER(LEN=maxline) :: line
+  INTEGER, PARAMETER :: maxline=1024, maxdim=maxline+16
+  CHARACTER(LEN=maxdim) :: line
   INTEGER :: xmlsave = -1, nopen = 0
   INTEGER :: eot
   ! eot points to the end of tag in line just scanned
@@ -445,7 +445,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, '(3es24.15)') rvec
+    WRITE( xmlunit, '(1p3es24.15)') rvec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rv
@@ -459,7 +459,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, '(3es24.15)') rmat
+    WRITE( xmlunit, '(1p3es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rm
@@ -473,7 +473,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, '(3es24.15)') rtens
+    WRITE( xmlunit, '(1p3es24.15)') rtens
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rt
@@ -524,7 +524,7 @@ CONTAINS
     CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, '(2es24.15)') rmat
+    WRITE( xmlunit, '(1p2es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_zm
@@ -1022,7 +1022,7 @@ CONTAINS
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
-       if ( ll == maxline ) then
+       if ( ll > maxline ) then
           print *, 'xmlr_opentag: severe error, line too long'
           if (present(ierr)) ierr = 3
           return
@@ -1183,7 +1183,7 @@ CONTAINS
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
-       if ( ll == maxline ) then
+       if ( ll > maxline ) then
           print *, 'Fatal error: line too long'
           if (present(ierr)) ierr = 2
           return
