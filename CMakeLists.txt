@@ -188,6 +188,9 @@ endif()
 if(QE_ENABLE_ENVIRON)
     qe_add_global_compile_definitions(__ENVIRON)
 endif()
+if(QE_CLOCK_SECONDS)
+   qe_add_global_compile_definitions(__CLOCK_SECONDS)
+endif()
 
 # Feature checks
 check_function_exists(mallinfo HAVE_MALLINFO)
