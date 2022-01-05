@@ -508,6 +508,7 @@ projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/recvec.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
+projwfc.o : ../../PW/src/buffers.o
 projwfc.o : ../../PW/src/pw_restart_new.o
 projwfc.o : ../../PW/src/pwcom.o
 projwfc.o : ../../PW/src/start_k.o
