@@ -50,7 +50,7 @@ set(src_tddfpt
     src/dveqpsi_us.f90
     src/dveqpsi_us_only.f90
     src/orthogonalize_omega.f90
-    src/mix_pot.f90
+    src/lr_mix_pot.f90
     src/lr_magnons_routines.f90
     src/lr_apply_liouvillian_magnons.f90
     src/lr_dvpsi_magnons.f90
@@ -158,12 +158,21 @@ target_link_libraries(qe_tddfpt_turbospectrum_exe
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_tddfpt
-    # Executables
+set(TDDFPT_EXE_TARGETS
     qe_tddfpt_turbolanczos_exe
     qe_tddfpt_turbodavidson_exe
     qe_tddfpt_turboeels_exe
     qe_tddfpt_turbomagnons_exe
     qe_tddfpt_turbospectrum_exe)
+
+qe_install_targets(
+    # Libraries
+    qe_tddfpt
+    # Executables
+    ${TDDFPT_EXE_TARGETS})
+
+add_custom_target(tddfpt
+    DEPENDS
+        ${TDDFPT_EXE_TARGETS}
+    COMMENT
+        "time dependent dft code")

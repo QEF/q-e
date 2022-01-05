@@ -21,13 +21,12 @@ PROGRAM do_projwfc
   USE kinds,      ONLY : DP
   USE klist,      ONLY : nks, nkstot, xk, degauss, ngauss, lgauss, ltetra
   USE io_files,   ONLY : prefix, tmp_dir
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, lforcet
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE environment,ONLY : environment_start, environment_end
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : mp_startup
   USE mp_images,  ONLY : intra_image_comm
-  USE spin_orb,   ONLY : lforcet
   USE wvfct,      ONLY : et, nbnd
   USE paw_variables, ONLY : okpaw
   ! following modules needed for generation of tetrahedra
@@ -729,8 +728,7 @@ SUBROUTINE print_proj ( lmax_wfc, proj, lowdin_unit, diag_basis )
   USE constants,  ONLY : rytoev, eps4
   USE basis,      ONLY : natomwfc
   USE lsda_mod,   ONLY : nspin, isk, current_spin
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,   ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin, lspinorb
   USE klist,      ONLY : nkstot, xk
   USE ions_base,  ONLY : nat, ityp, atm
   USE wvfct,      ONLY : et, wg, nbnd
@@ -1009,6 +1007,7 @@ SUBROUTINE projwave_paw( )
   USE wavefunctions, ONLY: evc
   !
   USE projections
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -1127,8 +1126,7 @@ SUBROUTINE projwave( filproj, filowdin, lsym, diag_basis, lwrite_ovp )
   USE basis,     ONLY : natomwfc, swfcatom
   USE klist,     ONLY : xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod,  ONLY : nspin
-  USE noncollin_module, ONLY: noncolin, npol
-  USE spin_orb,  ONLY : lspinorb, domag, lforcet
+  USE noncollin_module, ONLY: noncolin, domag, npol, lspinorb, lforcet
   USE wvfct,     ONLY : npwx, nbnd, et
   USE uspp,      ONLY : nkb, vkb
   USE becmod,    ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -1142,6 +1140,7 @@ SUBROUTINE projwave( filproj, filowdin, lsym, diag_basis, lwrite_ovp )
   USE io_files,  ONLY: nd_nmbr, nwordatwfc
   USE mp,        ONLY: mp_bcast
   USE mp_pools,  ONLY: me_pool, root_pool, intra_pool_comm
+  USE uspp_init,            ONLY : init_us_2
   USE buffers,   ONLY : open_buffer, save_buffer, get_buffer, close_buffer
   !
   IMPLICIT NONE

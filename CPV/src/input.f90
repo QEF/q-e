@@ -212,7 +212,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, rd_if_pos,                &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
-        memory, ref_cell, tcpbo, max_seconds
+        memory, ref_cell, tcpbo, max_seconds, pre_state
      USE xc_lib,             ONLY : xclib_dft_is
      !
      IMPLICIT NONE
@@ -738,7 +738,7 @@ MODULE input
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nbnd,                   &
            press, cell_damping, cell_dofree, tf_inp,                           &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
-           passop, tot_charge, tot_magnetization, niter_cg_restart
+           passop, tot_charge, tot_magnetization, niter_cg_restart, pre_state
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
@@ -877,8 +877,7 @@ MODULE input
 
      CALL efield_init( epol, efield )
 
-     CALL cg_init( tcg , maxiter , conv_thr , passop ,niter_cg_restart)
-
+     CALL cg_init( tcg, maxiter, conv_thr, passop, niter_cg_restart, pre_state)
      !
      IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &
         CALL errore( ' module setup ', ' Stress is not yet implemented with SIC ', 1 )

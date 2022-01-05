@@ -26,8 +26,7 @@ SUBROUTINE allocate_nlpot
   USE cellmd,           ONLY : cell_factor
   USE klist,            ONLY : qnorm
   USE lsda_mod,         ONLY : nspin
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,         ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin, lspinorb
   USE gvect,            ONLY : ecutrho
   USE gvecw,            ONLY : ecutwfc
   USE uspp_data,        ONLY : dq, nqx, nqxq, spline_ps, allocate_uspp_data

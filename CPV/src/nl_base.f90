@@ -11,6 +11,11 @@
 #define DEVICEATTR
 #endif
 !
+#if defined(__CUDA)
+#define PINMEM 
+#else
+#define PINMEM
+#endif
 !
 !-----------------------------------------------------------------------
    subroutine nlsm1us_x ( n, betae, c, becp )
@@ -175,6 +180,137 @@
    end subroutine nlsm1_x
 !-----------------------------------------------------------------------
 
+#if defined (__CUDA)
+!-----------------------------------------------------------------------
+   subroutine nlsm1_gpu_x ( n, betae, c, becp, pptype_ )
+!-----------------------------------------------------------------------
+
+      !     computes: the array becp
+      !     becp(ia,n,iv,is)=
+      !         = sum_g [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* c(g,n)
+      !         = delta_l0 beta(g=0,iv,is) c(g=0,n)
+      !          +sum_g> beta(g,iv,is) 2 re[(i)**l e^(ig.r_ia) c(g,n)]
+      !
+      !     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
+      !     input : beta(ig,l,is), eigr, c
+      !     output: becp as parameter
+      !
+      USE kinds,      ONLY : DP
+      USE mp,         ONLY : mp_sum
+      USE mp_global,  ONLY : nproc_bgrp, intra_bgrp_comm
+      USE ions_base,  only : nat, nsp, ityp
+      USE gvecw,      only : ngw
+      USE uspp,       only : nkb, nhtol, beta, ofsbeta
+      USE uspp_param, only : nh, upf, nhm
+      USE gvect,      ONLY : gstart
+      USE cp_main_variables, ONLY : nlsm1_wrk_d
+!
+      implicit none
+
+      integer,     intent(in)  :: n
+      complex(DP), intent(in)  :: c( :, : )
+      complex(DP), intent(inout)  :: betae( :, : )
+      real(DP),    intent(out) :: becp( :, : )
+#if defined(__CUDA)
+      attributes(DEVICE) :: c, betae, becp
+#endif
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
+      !
+      integer :: ig, is, iv, ia, l, inl
+      integer :: pptype
+      integer :: i
+      LOGICAL :: nothing_to_do
+      !
+      call start_clock( 'nlsm1' )
+
+      IF( PRESENT( pptype_ ) ) THEN
+         pptype = pptype_
+      ELSE
+         pptype = 0
+      END IF
+
+      IF( pptype == 1 ) THEN
+         nothing_to_do = .TRUE.
+         do is = 1, nsp
+            IF( .NOT. upf(is)%tvanp ) THEN
+               nothing_to_do = .FALSE.
+            END IF
+         END DO
+         IF( nothing_to_do ) GO TO 100
+      END IF
+
+      IF( pptype == 0 ) THEN
+
+         IF( ngw > 0 .AND. nkb > 0 ) THEN
+            IF( gstart > 1 ) THEN
+!$cuf kernel do(1) <<<*,*>>>
+               DO i = 1, SIZE(betae,2)
+                  betae( 1, i ) = 0.5d0 * betae( 1, i )
+               END DO
+            END IF
+            CALL MYDGEMM( 'T', 'N', nkb, n, 2*ngw, 2.0d0, betae, 2*ngw, c, 2*ngw, 0.0d0, becp, SIZE(becp,1) )
+            IF( gstart > 1 ) THEN
+!$cuf kernel do(1) <<<*,*>>>
+               DO i = 1, SIZE(betae,2)
+                  betae( 1, i ) = 2.0d0 * betae( 1, i )
+               END DO
+            END IF
+         END IF
+
+         IF( nproc_bgrp > 1 ) THEN
+            CALL mp_sum( becp, intra_bgrp_comm )
+         END IF
+
+         GO TO 100
+
+      END IF
+
+      IF( ngw > 0 .AND. nkb > 0 ) THEN
+         IF( gstart > 1 ) THEN
+!$cuf kernel do(1) <<<*,*>>>
+            DO i = 1, SIZE(betae,2)
+               betae( 1, i ) = 0.5d0 * betae( 1, i )
+            END DO
+         END IF
+         CALL MYDGEMM( 'T', 'N', nkb, n, 2*ngw, 2.0d0, betae, 2*ngw, c, 2*ngw, 0.0d0, nlsm1_wrk_d, nkb )
+         IF( gstart > 1 ) THEN
+!$cuf kernel do(1) <<<*,*>>>
+            DO i = 1, SIZE(betae,2)
+               betae( 1, i ) = 2.0d0 * betae( 1, i )
+            END DO
+         END IF
+      END IF
+
+      IF( nproc_bgrp > 1 ) THEN
+        CALL mp_sum( nlsm1_wrk_d, intra_bgrp_comm )
+      END IF
+
+      do is = 1, nsp
+        IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
+        IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
+          DO ia = 1, nat
+            IF( ityp(ia) == is ) THEN
+              inl = ofsbeta(ia)
+!$cuf kernel do(2) <<<*,*>>>
+              do i = 1, SIZE(becp,2)
+                do iv = 1, nh( is )
+                  becp(inl+iv,i) = nlsm1_wrk_d(inl+iv,i)
+                end do
+              end do
+            END IF
+         end do
+      end do
+              !
+100   CONTINUE
+
+      call stop_clock( 'nlsm1' )
+
+      return
+   end subroutine nlsm1_gpu_x
+!-----------------------------------------------------------------------
+#endif
+
 !-------------------------------------------------------------------------
    subroutine nlsm2_bgrp_x( ngw, nkb, betae, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
 !-----------------------------------------------------------------------
@@ -261,7 +397,7 @@
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
-      use gvect,      only : gstart, g_d
+      use gvect,      only : gstart, g
       USE device_memcpy_m, ONLY : dev_memcpy
       USE cudafor
       USE cublas
@@ -271,7 +407,7 @@
       integer,     intent(in)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
       complex(DP), intent(in), DEVICE :: c_bgrp(:,:)
       complex(DP), intent(in), DEVICE :: betae(:,:)
-      real(DP),    intent(out) :: becdr_bgrp(:,:,:)
+      real(DP),    intent(out) PINMEM :: becdr_bgrp(:,:,:)
       !
       complex(DP), allocatable, DEVICE :: wrk2(:,:)
       real(DP), allocatable, DEVICE :: becdr_d(:,:)
@@ -292,16 +428,16 @@
       cfact1 = - cmplx( 0.0_dp , 1.0_dp ) * tpiba 
 
       DO k = 1, 3
-!$cuf kernel do(1) <<<*,*>>>
+!$acc parallel present(g(:,:)) deviceptr(wrk2, betae)
+!$acc loop gang 
          do iv=1,nkb
-            wrk2(1,iv) = cfact1 * g_d(k,1) * betae(1,iv)
-         end do
-!$cuf kernel do(2) <<<*,*>>>
-         do iv=1,nkb
+            wrk2(1,iv) = cfact1 * g(k,1) * betae(1,iv)
+!$acc loop vector
             do ig=gstart,ngw
-               wrk2(ig,iv) = cfact2 * g_d(k,ig) * betae(ig,iv)
+               wrk2(ig,iv) = cfact2 * g(k,ig) * betae(ig,iv)
             end do
          end do
+!$acc end parallel
          IF( ngw > 0 .AND. nkb > 0 ) THEN
             CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2(1,1), 2*ngw, &
                  c_bgrp, 2*ngw, 0.0d0, becdr_d, nkb )
@@ -461,6 +597,39 @@
    end subroutine calbec_x
 !-----------------------------------------------------------------------
 
+#if defined (__CUDA)
+!-----------------------------------------------------------------------
+   subroutine calbec_gpu_x ( n, betae, c, bec, pptype_ )
+!-----------------------------------------------------------------------
+
+      !     this routine calculates array bec
+      !
+      !        < psi_n | beta_i,i > = c_n(0) beta_i,i(0) +
+      !                 2 sum_g> re(c_n*(g) (-i)**l beta_i,i(g) e^-ig.r_i)
+      !
+      !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
+      !
+
+      USE kinds,          ONLY : DP
+      use cp_interfaces,  only : nlsm1
+!
+      implicit none
+      !
+      INTEGER,     INTENT(IN)    :: n
+      real(DP),    intent(out), device   :: bec( :, : )
+      complex(DP), intent(in), device    :: c( :, : )
+      complex(DP), intent(inout), device :: betae( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+
+      call start_clock( 'calbec' )
+      call nlsm1( n, betae, c, bec, pptype_ )
+      call stop_clock( 'calbec' )
+!
+      return
+   end subroutine calbec_gpu_x
+!-----------------------------------------------------------------------
+#endif
+
 
 !-----------------------------------------------------------------------
 SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
@@ -482,6 +651,8 @@ SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
   !
   integer   :: ig, is, iv, ia, l, inl, i, j
   complex(DP) :: cfact(4)
+  !
+  call start_clock( 'dbeta_eigr' )
   !
   !if (l == 0) then
   cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
@@ -513,10 +684,99 @@ SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
      end do
   end do
   !
+  call stop_clock( 'dbeta_eigr' )
+  !
   return
 end subroutine dbeta_eigr_x
 !-----------------------------------------------------------------------
 
+#if defined (__CUDA)
+!-----------------------------------------------------------------------
+SUBROUTINE dbeta_eigr_gpu_x( dbeigr, eigr )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,      ONLY : DP
+  use ions_base,  only : nat, ityp
+  use uspp,       only : nhtol, nkb, dbeta, ofsbeta
+  use uspp_param, only : nh, nhm
+  use gvect,      only : gstart
+  use gvecw,      only : ngw
+  use device_memcpy_m, only : dev_memcpy
+  !
+  implicit none
+  !
+  include 'laxlib.fh'
+  !
+  complex(DP), device, intent(out) :: dbeigr( :, :, :, : )
+  complex(DP), device, intent(in)  :: eigr(:,:)
+  !
+  integer   :: ig, is, iv, ia, l, inl, i, j
+  complex(DP) :: cfact(4)
+  !
+  complex(DP), device :: cfact_d(4)
+  integer, allocatable, device :: nhtol_d(:,:)
+  real(DP), allocatable, device :: dbeta_d(:,:,:,:,:)
+  !
+  call start_clock( 'dbeta_eigr' )
+  !
+  !if (l == 0) then
+  cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
+  !else if (l == 1) then
+  cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
+  !else if (l == 2) then
+  cfact(3) = - cmplx( 0.0_dp , 1.0_dp )
+  cfact(3) = cfact(3) * cfact(3)
+  !else if (l == 3) then
+  cfact(4) = - cmplx( 0.0_dp , 1.0_dp )
+  cfact(4) = cfact(4) * cfact(4) * cfact(4)
+  !endif
+
+  call dev_memcpy(cfact_d, cfact)
+
+  allocate(nhtol_d, MOLD=nhtol)
+  call dev_memcpy(nhtol_d, nhtol)
+
+  allocate(dbeta_d, SOURCE=dbeta)
+
+  do ia = 1, nat
+     is = ityp(ia)
+     inl = ofsbeta(ia)
+
+!$cuf kernel do(3) <<<*,*>>>
+     do j=1,3
+        do i=1,3
+           do iv=1,nh(is)
+              l=nhtol_d(iv,is)
+              ! q = 0   component (with weight 1.0)
+              dbeigr(1,iv+inl,i,j)= cfact_d(l+1)*dbeta_d(1,iv,is,i,j)*eigr(1,ia)
+           end do
+        end do
+     end do
+
+!$cuf kernel do(4) <<<*,*>>>
+     do j=1,3
+        do i=1,3
+           do iv=1,nh(is)
+              ! q > 0   components (with weight 2.0)
+              do ig = gstart, ngw
+                 l=nhtol_d(iv,is)
+                 dbeigr(ig,iv+inl,i,j) = 2.0d0*cfact_d(l+1)*dbeta_d(ig,iv,is,i,j)*eigr(ig,ia)
+              end do
+           end do
+        end do
+     end do
+
+  end do
+  !
+  deallocate(nhtol_d)
+  deallocate(dbeta_d)
+  !
+  call stop_clock( 'dbeta_eigr' )
+  !
+  return
+end subroutine dbeta_eigr_gpu_x
+!-----------------------------------------------------------------------
+#endif
 
 !-----------------------------------------------------------------------
 SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
@@ -558,6 +818,8 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
   integer   :: ig, is, iv, ia, l, inl, i, j, ii, iw, iss, nr, ir, istart, nss
   integer   :: n1, n2, m1, m2, ibgrp_i, nrcx
   complex(DP) :: cfact
+  !
+  call start_clock( 'caldbec_bgrp' )
   !
   nrcx = MAXVAL(idesc(LAX_DESC_NRCX,:))
   !
@@ -606,10 +868,117 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
      CALL mp_sum( dbec, inter_bgrp_comm )
   end if
   !
+  call stop_clock( 'caldbec_bgrp' )
+  !
   return
 end subroutine caldbec_bgrp_x
 !-----------------------------------------------------------------------
 
+#if defined (__CUDA)
+!-----------------------------------------------------------------------
+SUBROUTINE caldbec_bgrp_gpu_x( eigr, c_bgrp, dbec, idesc )
+  !-----------------------------------------------------------------------
+  !
+  !     this routine calculates array dbec, derivative of bec:
+  !
+  !        < psi_n | beta_i,i > = c_n(0) beta_i,i(0) +
+  !                 2 sum_g> re(c_n*(g) (-i)**l beta_i,i(g) e^-ig.r_i)
+  !
+  !     with respect to cell parameters h
+  !
+  !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
+  !
+  USE kinds,      ONLY : DP
+  use mp,         only : mp_sum
+  use mp_global,  only : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
+  use ions_base,  only : nat, ityp
+  use uspp,       only : nhtol, nkb, dbeta, ofsbeta
+  use uspp_param, only : nh, nhm
+  use gvect,      only : gstart
+  use gvecw,      only : ngw
+  use electrons_base, only : nspin, iupdwn, nupdwn, nbspx_bgrp, iupdwn_bgrp, nupdwn_bgrp, &
+                             ibgrp_g2l, i2gupdwn_bgrp, nbspx, nbsp_bgrp
+  use cp_interfaces,  only : dbeta_eigr
+  use device_memcpy_m, only : dev_memcpy
+  use cp_main_variables, only : dbec_d, caldbec_wrk_d, caldbec_dwrk_d
+  !
+  implicit none
+  !
+  include 'laxlib.fh'
+  !
+  complex(DP), intent(in), device :: c_bgrp( :, : )
+  complex(DP), intent(in), device :: eigr(:,:)
+  real(DP),    intent(out) PINMEM :: dbec( :, :, :, : )
+  integer, intent(in) :: idesc( :, : )
+  !
+  integer   :: ig, is, iv, ia, l, inl, i, j, ii, iw, iss, nr, ir, istart, nss
+  integer   :: n1, n2, m1, m2, ibgrp_i, nrcx
+  complex(DP) :: cfact
+  !
+
+  integer :: ibgrp
+  integer, allocatable, device :: ibgrp_g2l_d(:)
+  !
+  call start_clock( 'caldbec_bgrp' )
+  !
+  dbec_d = 0.0d0
+  !
+  allocate(ibgrp_g2l_d, MOLD=ibgrp_g2l)
+  call dev_memcpy(ibgrp_g2l_d, ibgrp_g2l)
+  !
+  caldbec_wrk_d = (0.D0, 0.D0)
+  !
+  nrcx = MAXVAL(idesc(LAX_DESC_NRCX,:))
+  !
+  CALL dbeta_eigr( caldbec_wrk_d, eigr )
+  !
+  caldbec_dwrk_d = 0.D0
+  !
+  do j=1,3
+     do i=1,3
+        IF( ngw > 0 .AND. nkb > 0 ) THEN
+           CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, caldbec_wrk_d(1,1,i,j), 2*ngw, &
+                             c_bgrp, 2*ngw, 0.0d0, caldbec_dwrk_d(1,1), nkb )
+        END IF
+        if( nproc_bgrp > 1 ) then
+           call mp_sum( caldbec_dwrk_d, intra_bgrp_comm )
+        end if
+        do ia = 1, nat
+           is = ityp(ia)
+           inl = ofsbeta(ia)
+           do iss=1,nspin
+              IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+                 nr = idesc( LAX_DESC_NR, iss )
+                 ir = idesc( LAX_DESC_IR, iss )
+                 istart = iupdwn( iss )
+                 nss    = nupdwn( iss )
+!$cuf kernel do(2) <<<*,*>>>
+                 do ii = 1, nr
+                    do iw = 1, nh(is)
+                       ibgrp = ibgrp_g2l_d( ii + ir - 1 + istart - 1 )
+                       IF( ibgrp > 0 ) THEN
+                          dbec_d( inl + iw, ii + (iss-1)*nrcx, i, j ) = caldbec_dwrk_d( inl + iw, ibgrp )
+                       END IF
+                    end do
+                 end do
+              END IF
+           end do
+        end do
+     end do
+  end do
+  !
+  CALL dev_memcpy( dbec, dbec_d )
+  !
+  if( nbgrp > 1 ) then
+     CALL mp_sum( dbec, inter_bgrp_comm )
+  end if
+  !
+  call stop_clock( 'caldbec_bgrp' )
+  !
+  return
+end subroutine caldbec_bgrp_gpu_x
+!-----------------------------------------------------------------------
+#endif
 
 !-----------------------------------------------------------------------
 subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )

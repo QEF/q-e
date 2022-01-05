@@ -14,7 +14,7 @@ SUBROUTINE non_scf( )
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, lorbm
   USE check_stop,           ONLY : stopped_by_user
-  USE control_flags,        ONLY : io_level, conv_elec, lbands, use_gpu
+  USE control_flags,        ONLY : io_level, conv_elec, lbands, ethr, use_gpu
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc
@@ -23,6 +23,7 @@ SUBROUTINE non_scf( )
   USE lsda_mod,             ONLY : lsda, nspin
   USE wvfct,                ONLY : nbnd, et, npwx
   USE wavefunctions,        ONLY : evc
+  USE add_dmft_occ,         ONLY : dmft
   !
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
@@ -44,7 +45,7 @@ SUBROUTINE non_scf( )
   !
   ! ... local variables
   !
-  INTEGER :: iter, i
+  INTEGER :: iter, i, dr2 = 0.0_dp
   REAL(dp):: ef_scf, ef_scf_up, ef_scf_dw
   REAL(DP), EXTERNAL :: get_clock
 !civn 
@@ -140,7 +141,17 @@ SUBROUTINE non_scf( )
   !
   IF ( lorbm ) CALL orbm_kubo()
   !
+  ! ... for DMFT write everything to file to restart next scf step from here
+  !
+  IF ( dmft ) THEN
+     CALL using_et(0)
+     CALL save_in_electrons( iter-1, dr2, ethr, et )
+     RETURN
+  ENDIF
+  !
 !civn 
+  ! ... for exact exchange case update the ACE projector with the actual number of bands 
+  !
   IF(xclib_dft_is('hybrid')) THEN 
      !CALL save_buffer( evc, nwordwfc, iunwfc, nks )
      ! I want exx_is_active to be false inside exxinit to allow all relevant initializations
@@ -184,8 +195,8 @@ SUBROUTINE non_scf( )
      IF ( lorbm ) CALL orbm_kubo()
   END IF
 !
-  CALL stop_clock( 'electrons' )
   !
+  CALL stop_clock( 'electrons' )
   !
 9000 FORMAT(/'     total cpu time spent up to now is ',F10.1,' secs' )
 9002 FORMAT(/'     Band Structure Calculation' )

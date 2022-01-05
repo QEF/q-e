@@ -4,7 +4,6 @@ set(src_cpv
     src/cell_nose.f90
     src/cg.f90
     src/cg_sub.f90
-    src/cglib.f90
     src/chargedensity.f90
     src/cp_autopilot.f90
     src/cp_emass.f90
@@ -117,7 +116,9 @@ target_link_libraries(qe_cpv
         qe_mpi_fortran
         qe_xclib
         qe_device_lapack
-        qe_devxlib)
+        qe_devxlib
+     PUBLIC 
+        qe_openacc_fortran)
 
 ###########################################################
 # cp.x
@@ -190,3 +191,12 @@ qe_install_targets(
     qe_cpv_manycp_exe
     qe_cpv_cppp_exe
     qe_cpv_wfdd_exe)
+
+add_custom_target(cp
+    DEPENDS
+        qe_cpv_exe
+        qe_cpv_manycp_exe
+        qe_cpv_cppp_exe
+        qe_cpv_wfdd_exe
+    COMMENT
+        "CP code: Car-Parrinello molecular dynamics")

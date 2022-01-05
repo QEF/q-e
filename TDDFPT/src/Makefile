@@ -28,7 +28,7 @@ lr_apply_liouvillian.o \
 lr_dv_setup.o \
 lr_compute_intq.o \
 lr_set_intq_nc.o \
-mix_pot.o \
+lr_mix_pot.o \
 paw_add_symmetry.o \
 lr_transform_intq_nc.o \
 lr_transform_intq_so.o  \
@@ -69,8 +69,7 @@ lr_sternheimer.o\
 lr_apply_liouvillian_magnons.o\
 lr_dvpsi_magnons.o\
 lr_Opsi_magnons.o\
-lr_calc_dens_magnons.o\
-turbo_spectrum.o
+lr_calc_dens_magnons.o
 
 TLDEPS=lrmods
 

@@ -45,6 +45,7 @@ subroutine solve_head
 
   use qpoint,                ONLY : npwq, nksq
   use control_lr,            ONLY : nbnd_occ, lgamma
+  use uspp_init,             ONLY : init_us_2
   use SCF
 
   implicit none
@@ -591,8 +592,7 @@ SUBROUTINE write_wing ( rho, nspin,ipol,iw)
       !
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u
-      USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : noncolin, domag
       USE scf,              ONLY : scf_type
       !
       USE cell_base,        ONLY : bg, tpiba

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: dynmat.x / PHonon / Quantum ESPRESSO (version: 6.8)
+Program: dynmat.x / PHonon / Quantum ESPRESSO (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -192,4 +192,4 @@ NAMELIST: &INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 16 11:28:32 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:40 CET 2021

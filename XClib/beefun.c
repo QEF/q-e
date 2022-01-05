@@ -10,15 +10,17 @@
 #include "pbecor.h"
 
 // evaluate bee exchange energy and its derivatives de/drho and ( de/d|grad rho| ) / |grad rho|
+#pragma acc routine seq
 void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda)
 {
     double s2,t,r43,r83,s,sx,dx,fx,dl,dfx;
     const int n=nmax;
-    const int i1=1;
-    const int i2=1;
+    
+    double L[nmax]={1.};
+    double dL[nmax]={0.,1.};
 
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     r43 = pow(*r, 4./3.);
     r83 = r43*r43;
     sx = r2e * r43;
@@ -31,13 +33,14 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     if(beeforder==-1)
     {
 	calclegdleg(t);
-	
-	if(!(*addlda))
-	    fx = ddot_(&n, mi, &i1, L, &i2) - 1.;
-	else
-	    fx = ddot_(&n, mi, &i1, L, &i2);
-	dl = ddot_(&n, mi, &i1, dL, &i2);
-	
+	if(!(*addlda)){
+	    fx = ddot1(mi,L,n) - 1.;
+	    }
+	else{
+	    fx = ddot1(mi,L,n);
+	   }
+
+	dl = ddot1(mi,dL,n);
 	dfx = dl*( 4.*s / (4.+s2) - 4.*s2*s/sq(4.+s2) );
 	*dr = dx*fx - 4./3.*s2/(s*(*r))*sx*dfx;
 	*dg = sx*dfx*pix/(s*r83);
@@ -47,8 +50,8 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
     
     if(beeforder>=0)
     {
-	(*LdLn[beeforder])(t, &fx, &dl);
-
+	//(*LdLn[beeforder])(t, &fx, &dl);
+	LdLnACC(t, &fx, &dl, beeforder);
 	dfx = dl*( 4.*s / (4.+s2) - 4.*s2*s/sq(4.+s2) );
 	*dr = dx*fx - 4./3.*s2/(s*(*r))*sx*dfx;
 	*dg = sx*dfx*pix/(s*r83);
@@ -60,13 +63,13 @@ void beefx_(double *r, double *g, double *e, double *dr, double *dg, int *addlda
 	*dg = 0.;
 	*e = 0.;
     }
-    
     break;
     }
 }
 
 
 // evaluate local part of bee correlation and its derivatives de/drho and ( de/d|grad rho| ) / |grad rho|
+#pragma acc routine seq
 void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int *addlda)
 {
     double rs, ldac, ldadr, pbec, pbedr, pbed2rho;
@@ -80,10 +83,9 @@ void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int
     }
     
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
-    corpbe(rs, 0.5/r2k * sqrt(*g*rs) / (*r),
-	(beeforder>-3), 1, &ldac, &ldadr, &pbec, &pbedr, &pbed2rho);
+    corpbe(rs, 0.5/r2k * sqrt(*g*rs) / (*r),(beeforder>-3), 1, &ldac, &ldadr, &pbec, &pbedr, &pbed2rho);
 
     if(beeforder==-1)
     {
@@ -127,13 +129,15 @@ void beeflocalcorr_(double *r, double *g, double *e, double *dr, double *dg, int
 // evaluate bee exchange energy only
 void beefxpot_(double *r, double *g, double *e, int *addlda)
 {
-    double s2,t,s,r43;
+    double s2,t,r43;
     const int n=nmax;
     const int i1=1;
     const int i2=1;
+    
+    double L[nmax]={1.};
 
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     r43 = pow(*r, 4./3.);
 
     s2 = *g*pix / (r43*r43);
@@ -171,7 +175,7 @@ void beeflocalcorrpot_(double *r, double *g, double *e, int *addlda)
     }
     
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
     corpbe(rs, 0.5/r2k * sqrt(*g*rs) / (*r),
 	(beeforder>-3), 0, &ldac, &ldadr, &pbec, &pbedr, &pbed2rho);
@@ -199,6 +203,7 @@ void beeflocalcorrpot_(double *r, double *g, double *e, int *addlda)
 
 
 // evaluate local part of bee correlation for spin polarized system
+#pragma acc routine seq
 void beeflocalcorrspin_(double *r, double *z, double *g, double *e,
     double *drup, double *drdown, double *dg, int *addlda) {
     double rs, ldac, ldadrup, ldadrdown, pbec, pbedrup, pbedrdown, pbed2rho;
@@ -213,7 +218,7 @@ void beeflocalcorrspin_(double *r, double *z, double *g, double *e,
     }
     
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
     corpbespin(rs, 0.5/r2k * sqrt(*g*rs) / (*r), *z,
 	(beeforder>-3), 1, &ldac, &ldadrup, &ldadrdown, &pbec,
@@ -275,7 +280,7 @@ void beeflocalcorrpotspin_(double *r, double *z, double *g, double *e, int *addl
     }
 
     switch(beeftype) {
-    case 0: //BEEF-vdW xc    
+    case 0: //BEEF-vdW xc
     rs = invpi075tothird / pow(*r,1./3.);
     corpbespin(rs, 0.5/r2k * sqrt(*g*rs) / (*r), *z,
 	(beeforder>-3), 0, &ldac, &ldadrup, &ldadrdown, &pbec,
@@ -311,6 +316,7 @@ void beeflocalcorrpotspin_(double *r, double *z, double *g, double *e, int *addl
 void beefsetmode_(int *mode)
 {
     beeforder = *mode;
+#pragma acc update device(beeforder)
 }
 
 // initialize pseudo random number generator
@@ -357,6 +363,7 @@ void beefensemble_(double *beefxc, double *ensemble)
 int beef_set_type_(int *tbeef, int *ionode)
 {
     beeftype = *tbeef;
+#pragma acc update device(beeftype)
     
     if(*ionode)
     {

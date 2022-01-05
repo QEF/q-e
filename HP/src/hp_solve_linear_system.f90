@@ -266,9 +266,9 @@ SUBROUTINE hp_solve_linear_system (na, iq)
         !
         ! Check that def is not too large (it is in Ry). 
         !
-        IF ( ABS(DBLE(def(1))) > 5.0d0 ) THEN
+        IF ( ABS(DBLE(def(1))) < 1.0d-18 .OR. ABS(DBLE(def(1))) > 5.0d0 ) THEN
            !
-           WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift is too big!")')
+           WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift is zero or too big!")')
            WRITE( stdout, '(6x, "This may happen in two cases:")')
            WRITE( stdout, '(6x, "1. The DOS at the Fermi level is too small:")')
            WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') dos_ef
@@ -278,6 +278,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            WRITE( stdout, '(6x, "2. Numerical instabilities due to too low cutoff")')
            WRITE( stdout, '(6x, "   for hard pseudopotentials.")')
            WRITE( stdout, '(/6x,"Stopping...")')
+           WRITE( stdout, '(/6x,"Solution: Try to use the 2-step scf procedure as in HP/example02")')
            !
            CALL hp_stop_smoothly (.FALSE.)
            !

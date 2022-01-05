@@ -60,7 +60,8 @@
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot, fixsym, epw_no_t_rev,     &
                             epw_tr, epw_nosym, epw_noinv, epw_crysym,                  &
-                            bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver
+                            bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver,    &
+                            mob_maxfreq, mob_nfreq
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -161,7 +162,7 @@
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
        fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, epw_crysym,         &
-       tc_linear, tc_linear_solver,                                            &
+       tc_linear, tc_linear_solver, mob_maxfreq, mob_nfreq,                    &
   !---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -578,6 +579,8 @@
   bfieldx      = 0.d0  ! Tesla
   bfieldy      = 0.d0  ! Tesla
   bfieldz      = 0.d0  ! Tesla
+  mob_maxfreq  = 100 ! Maximum frequency for spectral decomposition in meV
+  mob_nfreq    = 100 ! Number of frequency for the spectral decomposition
   !
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -887,6 +890,9 @@
   ! from meV to Ryd
   degaussq = degaussq / ryd2mev
   delta_qsmear = delta_qsmear / ryd2mev
+  !
+  ! Max frequency for the spectral decomposition of mobility from meV to Ry.
+  mob_maxfreq = mob_maxfreq / ryd2mev
   !
   ! fermi_energy read from the input file from eV to Ryd
   IF (efermi_read) THEN

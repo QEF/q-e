@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.8}
+\def\version{7.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -231,10 +231,10 @@ and let us apologize to everybody we have forgotten.
 \subsection{Contacts}
 \label{SubSec:Contacts}
 
-The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
-Releases and patches can be downloaded from the links contained in it.
-The main entry point for developers is the GitLab web site:
-\texttt{https://gitlab.com/QEF/q-e}.
+The main entry point for \qe\ users is the web site
+\texttt{http://www.quantum-espresso.org/}. There you find
+the stable releases for download, general information and
+documentation.
 
 The recommended place where to ask questions about installation
 and usage of \qe, and to report problems, is the
@@ -251,6 +251,8 @@ registered user's e-mail address, in its {\em exact form}, will be
 accepted. In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
 
+The main entry point for developers is the GitLab web site:
+\texttt{https://gitlab.com/QEF/q-e}.
 If you need to contact the developers for {\em specific} questions
 about coding, proposals, offers of help, etc., you may either post
 an ``Issue'' to GitLab, or send a message
@@ -316,10 +318,12 @@ Stable and development releases of the \qe\ source package
 (current version is \version), as well as available binary
 packages, can be downloaded from the links listed in the
 ``Download'' section of \texttt{www.quantum-espresso.org}.
+% {\em Please register:} it helps to keep track of the actual usage
+% of \qe.
 
 The Quantum Mobile virtual machine for Windows/Mac/Linux/Solaris
 provides a complete Ubuntu Linux environment, containing \qe\ and
-more. Link and description in
+much more. Link and description in
 \texttt{https://www.materialscloud.org/work/quantum-mobile}.
 
 For source compilation, uncompress and unpack compressed archives
@@ -336,15 +340,15 @@ version number.
 % A directory \texttt{qe-X.Y.Z/} will be created.
 
 A few additional packages that are not included in the base distribution
-will be downloaded on demand at compile time, using either \make
-or \texttt{cmake} (see Sec.\ref{SubSec:Compilation}).
+will be downloaded on demand at compile time, using either \make\ or
+\texttt{CMake} (see Sec.\ref{SubSec:Compilation}).
 Note however that this will work only if the computer you are
 installing on is directly connected to the internet and has
 either \texttt{wget} or \texttt{curl} installed and working.
 If you run into trouble, manually download each required package
 into subdirectory \texttt{archive/}, {\em not unpacking or
 uncompressing it}:
-command \make will take care of this during installation.
+command \make\ will take care of this during installation.
 
 % Occasionally, patches for the current version, fixing some errors and bugs,
 % may be distributed as a "diff" file. In order to install a patch (for
@@ -402,7 +406,8 @@ to all linear-response codes.
 To install \qe\ from source, you need first of all a minimal Unix
 environment, that is: a command shell (e.g., bash, sh) and utilities \make,
 \texttt{awk}, \texttt{sed}. For MS-Windows, see Sec.\ref{SubSec:Windows}.
-You will also need a recent working CMake software if you prefer installation 
+You will also need a recent (v.3.14 or later) working CMake software 
+if you prefer installation 
 with CMake (supported since v.6.7), otherwise you will need the
 \configure\ command from autoconf (see next subsection).
 
@@ -478,30 +483,30 @@ path, as specified in the PATH environment variable.
 \texttt{install/config.log} & detailed log of the configuration run (useful for debugging)\\
 	\texttt{include/qe\_cdefs.h} &  (previously: \texttt{include/c\_defs.h})
 	a few definitions used by C files\\
-\texttt{include/configure.h} &  optionally: info on compilation flags
-	(uncomment \verb|#define __HAVE_CONFIG_INFO|
-	 in Modules/environment.f90 to enable its usage)\\
+\texttt{include/configure.h} &  optional: info on compilation flags
+	(to enable its usage, \\ & uncomment \verb|#define __HAVE_CONFIG_INFO|
+	 in Modules/environment.f90)\\
 \end{tabular}\\
-NOTA BENE: if you interrupt \make, depending upon what it was doing
+In addition, \configure\ generates (since v.7) files \texttt{make.depend},
+containing dependencies upon modules, in the various subdirectories.
+If you add/remove/move/rename modules, or change the list of objects
+in any \texttt{Makefile}, type \texttt{make depend}, or run 
+\texttt{./install/makedeps.sh}, to update files \texttt{make.depend}.
+
+It is convenient to use "parallel make" to speed up compilation:
+\texttt{make -jN} compiles in parallel on N processors. Note that
+if you interrupt \make, depending upon what it was doing
 you may run into trouble the next time you type \make (for instance,
 if \make\ is interrupted while unpacking and compiling the FoX library).
-If so, run \texttt{make clean} before running \make\ again.\\
-NOTA BENE 1: it is convenient to use "parallel make" to speed up compilation:
-\texttt{make -jN} compiles in parallel on N processors.\\
-NOTA BENE 2: \configure\ no longer updates files \texttt{make.depend},
-containing dependencies upon modules, in the various subdirectories.
-If you modify the sources, run \texttt{./install/makedeps.sh} or type
-\texttt{make depend} to update files \texttt{make.depend}.\\
-NOTA BENE 3: \texttt{make.inc} used to be called \texttt{make.sys}
-until v.6.0. The change of name is due to frequent problems with mailers
-assuming that whatever ends in \texttt{.sys} is a suspect virus.
+If so, run \texttt{make clean} before running \make\ again.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
 may have to tune \configure\ by specifying appropriate environment variables
 and/or command-line options. Usually the tricky part is to get external
 libraries recognized and used: see Sec.\ref{Sec:Libraries}
-for details and hints.
+for details and hints. In most cases, you may simply edit file
+\texttt{make.inc}. 
 
 Environment variables may be set in any of these ways:
 \begin{verbatim}
@@ -577,15 +582,17 @@ supported since v.5.0; IBM machines with AIX are no longer supported
 since v.6.0; all architectures marked with a * are to be considered
 obsolescent or obsolete.
 
-Finally, \configure\ recognizes the following command-line options:\\
+Finally, \configure\ recognizes the following command-line options.
+Not all of them are implemented for all compilers, though. Default value
+is between bracket:\\
 \begin{tabular}{ll}
-\texttt{--enable-parallel}&     compile for parallel (MPI) execution if possible (default: yes)\\
-\texttt{--enable-openmp}&       compile for OpenMP execution if possible (default: no)\\
-\texttt{--enable-shared}&       use shared libraries if available (default: yes;\\
-                        &       "no" is implemented, untested, in only a few cases)\\
-\texttt{--enable-debug}&        compile with debug flags (only for some compilers; default: no)\\
-\texttt{--enable-pedantic}&     compile with pedantic flags (only for gfortran; default: no)\\
-\texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
+\texttt{--enable-parallel}&     compile for parallel (MPI) execution if possible (yes)\\
+\texttt{--enable-openmp}&       compile for OpenMP execution if possible (no)\\
+\texttt{--enable-static}&       produce static executables, arger but more portable (no)\\
+\texttt{--enable-shared}&       produce objects that are suitable for shared libraries (no)\\
+\texttt{--enable-debug}&        compile with debug flags (no)\\
+\texttt{--enable-pedantic}&     compile with gfortran pedantic flags on (no)\\
+\texttt{--enable-signals}&      enable signal trapping (no)\\
 \end{tabular}\\
 \\
 and the following optional packages:\\
@@ -593,24 +600,22 @@ and the following optional packages:\\
 \texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\
       &Set to \texttt{intel} to use Intel MPI and BLACS (default: use OpenMPI)\\
 \texttt{--with-elpa-include}&   Specify full path of ELPA include and modules
-  headers (default: no)\\
-\texttt{--with-elpa-lib}& Specify full path of the ELPA library
-	                          (default: no)\\
-\texttt{--with-elpa-version}& Specify ELPA API version (2015 for ELPA releases 2015.x\\
+  headers (no)\\
+\texttt{--with-elpa-lib}& Specify full path of the ELPA library (no)\\
+\texttt{--with-elpa-version}& Specify ELPA API version: 2015 for ELPA releases 2015.x\\
                             & and 2016.05; 2016 for ELPA releases 2016.11, 2017.x and\\
-                            & 2018.05; default 2018 for ELPA releases 2018.11 and beyond)\\
+			    & 2018.05; 2018 for ELPA releases 2018.11 and beyond (2018)\\
 \texttt{--with-hdf5}&  (no $|$  yes $|$ \texttt{<path>}) \\
-	                    & Compile HDF5 support (default: no). If ``yes'', configure assumes a \\
+	                    & Compile HDF5 support (no). If ``yes'', configure assumes a \\
                             & valid v. $>=1.8.16$ HDF5 installation with h5cc and h5fc in the \\
                             &  default executable search path. If \texttt{<path>} is specified, it must be the  \\
                             & root folder of a standalone hdf5 installation. \\
 \texttt{--with-hdf5-libs}   & Specify the link options and libraries needed to link HDF5, if configure \\
                             &  fails to detect them. These options are usually composed by many \\
-                            & substrings and must be enclosed into quotes. (default: none specified)   \\
+                            & substrings and must be enclosed into quotes. \\
 \texttt{--with-hdf5-include}& Specify full path the HDF5 include folder containing module and \\
 &  headers files. Use it if configure fails to find the include folder. \\
-                             & (default: no)\\
-\texttt{--with-libxc}        & Enable support for the \libxc\ library (default:no) \\
+\texttt{--with-libxc}        & Enable support for the \libxc\ library (no) \\
 \texttt{--with-libxc-prefix} & directory where \libxc\ is installed \\
 \texttt{--with-libxc-include}& directory where \libxc\ Fortran headers reside\\
 \end{tabular}\\
@@ -641,7 +646,8 @@ available:\\
 
 
 To modify or extend \configure, see the Wiki pages on GitLab:
-for advanced users only!
+\texttt{https://gitlab.com/QEF/q-e/-/wikis}.
+For advanced users only!
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
@@ -742,8 +748,9 @@ v.1.8.16 or later, can be used to perform binary I/O using the HDF5
 format.
 
 If compiling the HDF5 library from sources, attention must be paid
-to pass options \texttt{--enable-fortran},
-\texttt{--enable-fortran2003}, and \texttt{--enable-parallel} (see below),
+to pass options:\\
+\texttt{--enable-fortran}, \texttt{--enable-fortran2003}, and 
+\texttt{--enable-parallel} (see below),
 to the \configure\ script of \texttt{HDF5} (not of \qe).
 
 To use HDF5 is usually sufficient to specify the path to the fortran
@@ -821,26 +828,46 @@ Then \qe\ can be compiled as usual.
 since the \texttt{f03} interfaces are no longer available. They have been restored in following releases. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be replaced with `\texttt{xc\_f90}' everywhere in the \texttt{XClib} folder.
 
 \subsubsection{Usage}
-In order to use \libxc\ functionals, you must enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. For example, to use the \libxc\ version of the PBE functionals (both exchange and correlation):
+In order to use \libxc\ functionals, you can enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. Starting from v7.0 of \qe\ the only allowed notation for DFTs that include Libxc terms is the index one. For example, to use the \libxc\ version of the PBE functional (both exchange and correlation):
 \begin{verbatim}
-input_dft = `gga_x_pbe gga_c_pbe'
+input_dft = `XC-000I-000I-101L-130L-000I-000I'
 \end{verbatim}
+The letters I or L next to each ID stand for Internal and \libxc. This is equivalent to the old full-name notation:
+\begin{verbatim}
+input_dft = `gga_x_pbe gga_c_pbe'   ***OLD***
+\end{verbatim}
+The order must be the usual one, namely LDA exchange, LDA correlation, GGA exchange, GGA correlation, MGGA exchange, MGGA correlation. \libxc\ exchange+correlation functionals can be put in the exchange or in the correlation slot with no difference.\\
+The reason why the full-name notation has been disabled is to eliminate the risk of overlaps among different names (occurring especially when combinations of internal and \libxc\ DFTs are used).\\
 %
-Capital or lowercase is not relevant, neither the separation between one name and the other. The complete list of \libxc\ functionals is available at:
+The complete list of \libxc\ functionals (and their IDs) is available at:
 \begin{verbatim}
 https://www.tddft.org/programs/libxc/functionals/
 \end{verbatim}
 %
-Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but some attention has to be paid to their reciprocal compatibility (see section below). In these cases, again, the functionals must be enforced from input. For example, the exchange term of PBE in \qe\ together with the correlation term of PBE in \libxc\ is obtained by putting:
+Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but some attention has to be paid to their reciprocal compatibility (see section below).\\
+For example, the internal exchange term of PBE together with the correlation term of PBE in \libxc\ is obtained by:
 \begin{verbatim}
-input_dft = `sla pbe gga_c_pbe'
+input_dft = `XC-001I-000I-003L-130L-000I-000I'
 \end{verbatim}
-Note that when using GGA functionals of \qe\ you must always specify the LDA term too, while it is not the case for the \libxc\ ones.
+which corresponds to the old:
+\begin{verbatim}
+input_dft = `sla pbx gga_c_pbe'   ***OLD***
+\end{verbatim}
+Note that when using GGA internal functionals you must always specify the LDA term too, while it is not the case for the \libxc\ ones.\\
+Abbreviations are allowed when zero tails are present. The above example is still valid by putting:
+\begin{verbatim}
+input_dft = `XC-001I-000I-003L-130L'
+\end{verbatim}
+since no MGGA terms are present.\\
+Non-local terms can be included by just adding their name after the index notation, for example:
+\begin{verbatim}
+input_dft=`XC-001i-004i-013i-vdw2'
+\end{verbatim}
 %
 \subsubsection{Differences between Libxc and internal functionals}
 There are some differences between \qe\ functionals and \libxc\ ones. In \qe\ the LDA and the GGA terms are separated and must be specified independently. In \libxc\ the GGA functionals already include the LDA part (Slater exchange and Perdew\&Wang correlation in most of the cases with the exception, for example, of Lee Yang Parr functionals).\\
 The \libxc\ metaGGA functionals may or may not need the LDA and GGA terms, depending on the cases, therefore a good check of the chosen functionals is recommended before doing expensive runs.\\
-Some functionals in \libxc\ incorporate the exchange part and the correlation one into one term only (e.g. the ones that include the `\texttt{\_xc}' kind label in their name). In these cases the whole functional is formally treated as `exchange only' by \qe. This does not imply any loss of information.
+Some functionals in \libxc\ incorporate the exchange part and the correlation one into one term only (e.g. the ones that include the `\texttt{\_xc}' kind label in their name). In these cases the whole functional is formally treated as `correlation only' by \qe. This does not imply any loss of information.
 %
 \subsubsection{Special cases}
 A number of \libxc\ functional routines need extra information on input and/or provide only partial information on output (e.g. the energy or the potential only). In these cases the use of such functionals may not be straightforward and, depending on the cases, may require some work on the \qe\ source code.
@@ -851,27 +878,23 @@ Several functionals in \libxc\ depend on one or more external parameters. Some o
 	\item \texttt{get\_libxc\_ext\_param}: this function receives as input the ID of the \libxc\ functional and the index of the chosen parameter and returns its value. If the parameter has not been set before it returns its default value.
 	\item \texttt{set\_libxc\_ext\_param}: this routine receives as input the index of the functional family-type (from 1 to 6: lda-exch, lda-corr, gga-exch, ...), the index of the chosen \libxc\ parameter and the value to set it to.
 \end{itemize}
-In order to see the available parameters for a given \libxc\ functional and their corresponding indexes, the \texttt{dft\_info} test is available as an option of the \texttt{xclib\_test.x} program in \texttt{XClib} folder. For more details see Sec. \ref{SubSec:XCtest}.\\
+In order to see the available parameters for a given \libxc\ functional and their corresponding indexes, the \texttt{xc\_infos.x} program is available in \texttt{XClib} folder. For more details see Sec. \ref{SubSec:XCtest}.\\
 The two routines can be called almost anywhere in \qe, however, as any other \texttt{XClib} setting routine, they must be declared through the \texttt{xc\_lib} module.\\
 Without setting the external parameters inside the code, their default value will be assumed. This could lead to results different from the expectations.\\
-In any case, when external parameters are needed by the chosen functionals, a warning message will appear in the output of \qe.
-%
-\paragraph{Hybrid functionals.} The hybrid functionals of \libxc\ are allowed, but, as in the previous case, their correct operation is not guaranteed by default. It is important to ensure that the \texttt{exx\_fraction} in \qe\ assumes the desired value when the XC routines are called. To do this you need to act on the external parameters of the functionals, as explained previously. Moreover it is important to ensure that the starting value of the variable \texttt{exx\_fraction} in \qe\ , which is set in the \texttt{matching\_libxc} routine in \texttt{Modules/funct.f90}, is the desired one (\texttt{exx\_fraction} may not always coincide with the \texttt{exx\_coef} of \libxc).
+In any case, when external parameters are needed by the chosen functionals, a warning message will appear in the output of \qe. An example of Libxc parameter setting can be found in the \texttt{xclib\_test.f90} code (see below).
 %
 \paragraph{Functionals with partial output.}
-A few \libxc\ functional routines provides the energy and some others the potential only, but not both of them. At present, \qe, assumes that both the energy and the potential are provided when a XC-functional routine is called, therefore, in order to use these functionals, some modifications on the code will be necessary.
+A few \libxc\ functional routines provides the potential but not the energy. These functionals are available in \qe\ for all the families and their output energy is set to zero.
+%
+\paragraph{MGGA Functionals that depend on the Laplacian of the density.} At present such functionals are formally usable in \qe\ , but their dependency on the Laplacian is ignored and the corresponding output term of the potential is set to zero. Since the Laplacian of the density is computable in \qe, they might be fully exploited with a limited intervention on the code.
 %
 \paragraph{Other functionals.} Besides exchange (\texttt{\_x}), correlation (\texttt{\_c}) and exchange plus correlation (\texttt{\_xc}), a fourth kind of functionals is available in \libxc, the kinetic functionals (\texttt{\_k}). At present, they are not usable in \qe.
 %
 \subsubsection{XC test}
 \label{SubSec:XCtest}
-A testing program, \texttt{xclib\_test.x}, for the \texttt{XClib} library of \qe\ is available. Three options:
-\begin{itemize}
-	\item \texttt{dft-info}: infos on the input dft are provided. If the functionals are from \libxc\ the external parameters, when present, are listed with a brief description and their default value.
-	\item \texttt{exe-benchmark} (\texttt{gen-benchmark}): the program gets a data file generated previously as input (by running the same program with the \texttt{gen-benchmark} option) and compares the output data, namely energy and potential on a selected number of grid points. It also compares total energy and potential summed up on a large grid in order to better span the input domain. This option shoud be used to test modifications in the \texttt{XClib} library or to check the output matching among different parallelization schemes.
-	\item \texttt{dft-comparison}: comparison between two different dfts on a large grid of points. Max, min and average percentage difference between the two dft outputs (energy and potential) are provided and the points of the grid where the two output differ are shown. This option can be used, for example, to find differences between internal \qe\ functionals and the \libxc\ ones.
-\end{itemize}
-The testing program is available for LDA, GGA and MGGA functionals. It also tests the potential derivatives for LDA (\texttt{dmxc}) and GGA (\texttt{dgcxc}).
+A testing program, \texttt{xclib\_test.x}, for the \texttt{XClib} library of \qe\ is available. The program is available for LDA, GGA and MGGA functionals (both QE and Libxc). It also tests the potential derivatives for LDA (\texttt{dmxc}) and GGA (\texttt{dgcxc}).\\
+Another small program, \texttt{xc\_infos.x}, is available in the \texttt{XClib} folder starting from v6.8. It receives as input the name of any DFT usable in \qe\ (both internal and \libxc) and provides infos about their family, type, external parameters, limitations, references, etc.\\
+See XClib/README.TEST file for further details on each of the two programs.
 
 \subsection{Compilation}
 \label{SubSec:Compilation}
@@ -1229,6 +1252,29 @@ As a final option, one can use Quantum Mobile:\\
 \texttt{https://www.materialscloud.org/work/quantum-mobile}.
 
 \subsubsection{Mac OS}
+
+"I have had some success compiling pw.x on the newish apple hardware.
+Running run-tests-pw-parallel resulted in all but 3 tests passed (3 unknown).
+QE6.7 works out of the box:
+\begin{itemize}
+\item Install homebrew
+\item Using homebrew install gcc (11.2.0), open-mpi (4.1.1\_2), 
+fftw3 (3.3.10), and veclibfort (0.4.2\_7)
+\end{itemize}
+To configure QE: 
+\begin{verbatim}
+./configure FC=mpif90 CC=mpicc CPP=cpp-11 BLAS_LIBS="-L/opt/homebrew/lib
+           -lveclibfort" LIBDIRS=/opt/homebrew/lib
+\end{verbatim}
+Current develop branch needed two changes:
+\begin{enumerate}
+\item The script external/devxlib/config/config.sub is outdated, 
+and needs to be adjusted to correctly parse the machine information. 
+I pulled a more up-to-date version from iains/gcc-darwin-arm64 github repo\\
+\item PW/src/efermig.f90 needed to be compiled without optimization -O0. 
+No idea why at the moment."
+\end{enumerate}
+(Info by John Vinson, NIST)
 
 Mac OS-X machines with gfortran or with the Intel compiler ifort
 and MKL libraries should work, but "your mileage may vary", depending

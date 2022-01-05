@@ -16,8 +16,8 @@ SUBROUTINE transform_int1_so(int1,na,iflag)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : npol, nspin_mag
-USE spin_orb,             ONLY : fcoef, domag
+USE noncollin_module,     ONLY : npol, domag, nspin_mag
+USE upf_spinorb,          ONLY : fcoef
 USE phus,                 ONLY : int1_nc
 !
 IMPLICIT NONE
@@ -98,7 +98,7 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : npol
-USE spin_orb,             ONLY : fcoef
+USE upf_spinorb,          ONLY : fcoef
 USE phus,                 ONLY : int2_so
 !
 IMPLICIT NONE
@@ -159,9 +159,9 @@ SUBROUTINE transform_int4_so(int4,na)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : npol, nspin_mag
+USE noncollin_module,     ONLY : npol, domag, nspin_mag
 USE uspp,                 ONLY : ijtoh
-USE spin_orb,             ONLY : fcoef, domag
+USE upf_spinorb,          ONLY : fcoef
 USE phus,                 ONLY : int4_nc
 !
 IMPLICIT NONE
@@ -233,7 +233,7 @@ USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE uspp,                 ONLY : ijtoh
 USE noncollin_module,     ONLY : npol
-USE spin_orb,             ONLY : fcoef
+USE upf_spinorb,          ONLY : fcoef
 USE phus,                 ONLY : int5_so
 !
 IMPLICIT NONE

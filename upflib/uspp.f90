@@ -5,71 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE uspp_param
-  !
-  ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
-  !  
-  USE pseudo_types, ONLY : pseudo_upf
-  IMPLICIT NONE
-  SAVE
-  !
-  INTEGER :: nsp = 0 
-  TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
-  !! the upf structure contains all info on atomic pseudopotential parameters
-  INTEGER, ALLOCATABLE :: nh(:)
-  !! number of beta functions, with angular parts, per atomic type 
-  INTEGER :: nhm
-  !! max number of beta functions, including angular parts, across atoms
-  INTEGER :: nbetam
-  !! max number of radial beta functions
-  INTEGER :: nwfcm
-  !! max number of radial atomic wavefunctions across atoms
-  INTEGER :: lmaxkb
-  !! max angular momentum of beta functions
-  INTEGER :: lmaxq
-  !! max angular momentum + 1 for Q functions
-  !
-CONTAINS
-  !
-  SUBROUTINE init_uspp_dims ()
-    !
-    !!     calculates the number of beta functions for each atomic type
-    !
-    IMPLICIT NONE
-    !
-    INTEGER :: nt, nb
-    !
-    ! Check is needed, may be called more than once (but it shouldn't be!)
-    ! Maybe nh should be allocated when upf is, when upf is read ?
-    !
-    IF ( .NOT. ALLOCATED(nh) ) ALLOCATE ( nh(nsp) )
-    !
-    lmaxkb = - 1
-    DO nt = 1, nsp
-       !
-       nh (nt) = 0
-       !
-       ! do not add any beta projector if pseudo in 1/r fmt (AF)
-       !
-       IF ( upf(nt)%tcoulombp ) CYCLE 
-       !
-       DO nb = 1, upf(nt)%nbeta
-          nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
-          lmaxkb = MAX (lmaxkb, upf(nt)%lll(nb) )
-       ENDDO
-       !
-    ENDDO
-    lmaxq = 2*lmaxkb+1
-    !
-    ! calculate max numbers of beta functions and of atomic wavefunctions
-    !
-    nhm    = MAXVAL (nh (1:nsp))
-    nbetam = MAXVAL (upf(1:nsp)%nbeta)
-    nwfcm  = MAXVAL (upf(1:nsp)%nwfc)
-    !
-  END SUBROUTINE init_uspp_dims
-  !
-END MODULE uspp_param
+
+#if defined(__CUDA)
+#define PINMEM ,PINNED 
+#else
+#define PINMEM
+#endif
 !
 !
 MODULE uspp
@@ -80,7 +21,7 @@ MODULE uspp
   !
   USE upf_kinds,   ONLY: DP
   USE upf_params,  ONLY: lmaxx, lqmax
-  USE upf_spinorb, ONLY: fcoef, fcoef_d 
+  USE upf_spinorb, ONLY: is_spinorbit, fcoef, fcoef_d 
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -89,7 +30,7 @@ MODULE uspp
             nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
             becsum, ebecsum
   PUBLIC :: lpx_d, lpl_d, ap_d, indv_d, nhtol_d, nhtolm_d, ofsbeta_d, &
-            vkb_d, dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
+            dvan_d, deeq_d, qq_at_d, qq_nt_d, nhtoj_d, ijtoh_d, &
             becsum_d, ebecsum_d
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so,   dvan_so,   deeq_nc,   fcoef 
@@ -97,12 +38,6 @@ MODULE uspp
   PUBLIC :: dbeta
   !
   PUBLIC :: allocate_uspp, deallocate_uspp
-  !
-  ! GPU sync
-  !
-  PUBLIC  :: using_vkb, using_vkb_d
-  LOGICAL :: vkb_d_ood = .false.    ! used to flag out of date variables
-  LOGICAL :: vkb_ood   = .false.    ! used to flag out of date variables
   !
   ! Vars
   !
@@ -128,7 +63,7 @@ MODULE uspp
   INTEGER :: nkb,        &! total number of beta functions, with struct.fact.
              nkbus        ! as above, for US-PP only
   !
-  INTEGER, ALLOCATABLE ::&
+  INTEGER, ALLOCATABLE PINMEM ::&
        indv(:,:),        &! indes linking  atomic beta's to beta's in the solid
        nhtol(:,:),       &! correspondence n <-> angular momentum l
        nhtolm(:,:),      &! correspondence n <-> combined lm index for (l,m)
@@ -149,14 +84,16 @@ MODULE uspp
   LOGICAL :: &
        okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
        nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
-  !
-  COMPLEX(DP), ALLOCATABLE, TARGET :: &
+  ! 
+  !FIXME use !$acc declare create(vkb) to create and delete it automatically in the device
+  !           be carefull cp still uses  vkb_d for device  
+  COMPLEX(DP), ALLOCATABLE, TARGET PINMEM :: &
        vkb(:,:)                ! all beta functions in reciprocal space
   REAL(DP), ALLOCATABLE :: &
        becsum(:,:,:)           ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   REAL(DP), ALLOCATABLE :: &
        ebecsum(:,:,:)          ! \sum_i f(i) et(i) <psi(i)|beta_l><beta_m|psi(i)>
-  REAL(DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE PINMEM :: &
        dvan(:,:,:),           &! the D functions of the solid
        deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
        qq_nt(:,:,:),          &! the integral of q functions in the solid (ONE PER NTYP) used to be the qq array
@@ -170,7 +107,6 @@ MODULE uspp
   !
   ! GPU vars
   !
-  COMPLEX(DP), ALLOCATABLE :: vkb_d(:,:)
   REAL(DP),    ALLOCATABLE :: becsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: ebecsum_d(:,:,:)
   REAL(DP),    ALLOCATABLE :: dvan_d(:,:,:)
@@ -182,7 +118,7 @@ MODULE uspp
   COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:,:,:,:)
 #if defined(__CUDA)
-  attributes (DEVICE) :: vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
+  attributes (DEVICE) :: becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, &
                          qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
 #endif
 
@@ -190,9 +126,9 @@ MODULE uspp
   ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
   ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
   !
-  REAL(DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE PINMEM :: &
        beta(:,:,:)           ! beta functions for CP (without struct.factor)
-  REAL(DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE PINMEM :: &
        dbeta(:,:,:,:,:)      ! derivative of beta functions w.r.t. cell for CP (without struct.factor)
   !
 CONTAINS
@@ -414,9 +350,6 @@ CONTAINS
     logical, intent(in) :: noncolin,lspinorb,tqr
     integer, intent(in) :: nhm,nsp,nat,nspin
     !
-    !if (nhm_/=nhm) call upf_error("allocate_uspp","invalid nhm",1)
-    !if (nsp_/=nsp) call upf_error("allocate_uspp","invalid nsp",1)
-    !
     allocate( indv(nhm,nsp)   )
     allocate( nhtol(nhm,nsp)  )
     allocate( nhtolm(nhm,nsp) )
@@ -428,6 +361,8 @@ CONTAINS
     endif
     allocate( qq_at(nhm,nhm,nat) )
     allocate( qq_nt(nhm,nhm,nsp) )
+    ! set the internal spin-orbit flag
+    is_spinorbit = lspinorb
     if ( lspinorb ) then
        allocate( qq_so(nhm,nhm,4,nsp) )
        allocate( dvan_so(nhm,nhm,nspin,nsp) )
@@ -486,7 +421,11 @@ CONTAINS
     IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
     IF( ALLOCATED( ofsbeta ) ) DEALLOCATE( ofsbeta )
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
-    IF( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
+!FIXME in order to be created and deleted automatically by using !$acc declare create(vkb) in 
+    IF( ALLOCATED( vkb ) ) THEN
+!$acc exit data delete(vkb ) 
+        DEALLOCATE( vkb )
+    END IF 
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
     IF( ALLOCATED( ebecsum ) )    DEALLOCATE( ebecsum )
     IF( ALLOCATED( qq_at ) )      DEALLOCATE( qq_at )
@@ -509,7 +448,6 @@ CONTAINS
     IF( ALLOCATED( nhtolm_d ) )   DEALLOCATE( nhtolm_d )
     IF( ALLOCATED( ijtoh_d ) )    DEALLOCATE( ijtoh_d )
     IF( ALLOCATED( ofsbeta_d)) DEALLOCATE( ofsbeta_d )
-    IF( ALLOCATED( vkb_d ) )      DEALLOCATE( vkb_d )
     IF( ALLOCATED( becsum_d ) )   DEALLOCATE( becsum_d )
     IF( ALLOCATED( ebecsum_d ) )  DEALLOCATE( ebecsum_d )
     IF( ALLOCATED( dvan_d ) )     DEALLOCATE( dvan_d )
@@ -532,38 +470,5 @@ CONTAINS
   !  1 -> inout , the variable needs to be synchronized AND will be changed
   !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
   ! 
-  SUBROUTINE using_vkb(intento)
-      !
-      !USE uspp, ONLY : vkb, vkb_d
-      implicit none
-      INTEGER, INTENT(IN) :: intento
-      IF (size(vkb)==0) return
-#if defined(__CUDA)  || defined(__CUDA_GNU)
-      IF (vkb_ood) THEN
-          IF (intento < 2) vkb = vkb_d
-          vkb_ood = .false.
-      ENDIF
-      IF (intento > 0)    vkb_d_ood = .true.
-#endif
-  END SUBROUTINE using_vkb
-  !
-  SUBROUTINE using_vkb_d(intento)
-      !
-      !USE uspp, ONLY : vkb, vkb_d
-      implicit none
-      INTEGER, INTENT(IN) :: intento
-      IF (size(vkb)==0) return
-#if defined(__CUDA) || defined(__CUDA_GNU)
-      !
-      IF (vkb_d_ood) THEN
-          IF (intento < 2) vkb_d = vkb
-          vkb_d_ood = .false.
-      ENDIF
-      IF (intento > 0)    vkb_ood = .true.
-#else
-      CALL upf_error('using_vkb_d', 'no GPU support', 1)
-#endif
-  END SUBROUTINE using_vkb_d
-  !   
 END MODULE uspp
 

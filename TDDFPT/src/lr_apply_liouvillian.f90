@@ -571,6 +571,7 @@ SUBROUTINE lr_apply_liouvillian_k()
     !
     USE lr_variables,        ONLY : becp1_c
     USE wvfct,               ONLY : current_k
+    USE uspp_init,           ONLY : init_us_2
     !
     IMPLICIT NONE
     !

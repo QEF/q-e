@@ -11,8 +11,7 @@ PROGRAM open_grid
   USE cell_base,  ONLY : at, bg, tpiba2, alat
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
-  USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2, nspin_lsda
-  USE spin_orb,           ONLY : domag
+  USE noncollin_module,   ONLY : noncolin, domag, m_loc, angle1, angle2, nspin_lsda
   USE control_flags,      ONLY : gamma_only
   USE environment,        ONLY : environment_start, environment_end
   USE ions_base,          ONLY : nat, tau, ityp

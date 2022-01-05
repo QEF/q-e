@@ -12,11 +12,11 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3 \
 
 HEADOBJS = \
-bcast_ph_input.o \
-close_phq.o \
+bcast_gwl_input.o \
+close_gwl.o \
+openfilq_gwl.o \
+gwl_readin.o \
 lanczos_k.o \
-openfilq.o \
-phq_readin.o \
 solve_head.o 
 
 QEMODS = $(BASEMODS)
@@ -40,6 +40,6 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -fv *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
+	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
 
 include make.depend

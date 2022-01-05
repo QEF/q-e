@@ -3586,6 +3586,7 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   USE becmod,   ONLY : bec_type, becp, calbec, &  
                          allocate_bec_type, deallocate_bec_type 
   USE fft_base,      ONLY : dffts !FZ: test
+  USE uspp_init,            ONLY : init_us_2
 
   IMPLICIT NONE
 
@@ -4341,6 +4342,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE wvfct, ONLY : npwx
   USE gvecw, ONLY : ecutwfc
   USE matrix_inversion
+  USE uspp_init,            ONLY : init_us_2
 
   IMPLICIT NONE
 

@@ -49,6 +49,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   !<CG>
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   REAL(dp) core_wfn(ndmx)

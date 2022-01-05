@@ -21,8 +21,9 @@ SUBROUTINE atomic_wfc( ik, wfcatom )
   USE klist,            ONLY : xk, igk_k, ngk
   USE wvfct,            ONLY : npwx
   USE uspp_param,       ONLY : upf, nwfcm
-  USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
-  USE spin_orb,         ONLY : rot_ylm, lmaxx, domag, starting_spin_angle
+  USE noncollin_module, ONLY : noncolin, domag, npol, angle1, angle2, &
+                               starting_spin_angle
+  USE upf_spinorb,      ONLY : rot_ylm, lmaxx
   !
   implicit none
   INTEGER, INTENT(IN) :: ik

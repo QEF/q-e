@@ -2,6 +2,7 @@ set(src_pw
    src/a2fmod.f90 
    src/add_bfield.f90 
    src/add_efield.f90 
+   src/add_dmft_occ.f90 
    src/add_vuspsi.f90 
    src/add_gatefield.f90 
    src/add_paw_to_deeq.f90 
@@ -92,8 +93,6 @@ set(src_pw
    src/g_psi_mod.f90 
    src/gen_at_dj.f90 
    src/gen_at_dy.f90 
-   src/gen_us_dj.f90 
-   src/gen_us_dy.f90 
    src/get_locals.f90 
    src/gk_sort.f90 
    src/gradcorr.f90 
@@ -273,8 +272,6 @@ set(src_pw
    src/g_psi_gpu.f90
    src/stres_mgga_gpu.f90
    src/atomic_wfc_gpu.f90
-   src/gen_us_dj_gpu.f90
-   src/gen_us_dy_gpu.f90
    src/dvloc_of_g_gpu.f90
    src/stres_ewa_gpu.f90
    src/stres_knl_gpu.f90
@@ -313,7 +310,9 @@ target_link_libraries(qe_pw
         qe_mpi_fortran
         qe_xclib
         qe_devxlib
-        qe_mbd)
+        qe_mbd
+    PUBLIC
+        qe_openacc_fortran)
 
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_pw
@@ -417,10 +416,7 @@ target_link_libraries(qe_pw_tools_scan_ibrav_exe
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_pw
-    # Executables
+set(PW_EXE_TARGETS
     qe_pw_exe
     qe_pw_tools_ibrav2cell_exe
     qe_pw_tools_cell2ibrav_exe
@@ -428,3 +424,15 @@ qe_install_targets(
     qe_pw_tools_kpoints_exe
     qe_pw_tools_pwi2xsf_exe
     qe_pw_tools_scan_ibrav_exe)
+
+qe_install_targets(
+    # Libraries
+    qe_pw
+    # Executables
+    ${PW_EXE_TARGETS})
+
+add_custom_target(pw
+    DEPENDS
+        ${PW_EXE_TARGETS}
+    COMMENT
+        "basic code for scf, structure optimization, MD")

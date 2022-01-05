@@ -56,6 +56,8 @@ CONTAINS
 
     INTEGER :: ierr
     LOGICAL :: exst
+
+    IF (reduce_io) RETURN
     CALL start_clock ('write_rec')
     where_rec=where
     CALL ph_writefile('status_ph',current_iq,0,ierr)

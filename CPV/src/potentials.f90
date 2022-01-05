@@ -8,7 +8,9 @@
 !  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
 !  ----------------------------------------------
 !  Car-Parrinello Parallel Program
-
+!----------------------------------------------------------------
+#include<cpv_device_macros.h> 
+!----------------------------------------------------------------
 
 
 
@@ -340,63 +342,79 @@
 
       INTEGER     :: is, ia, ig, ig1, ig2, ig3
       REAL(DP)    :: fpibg
-      COMPLEX(DP) :: cxc, rhet, rhog, vp, rp, gxc, gyc, gzc
-      COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz
+      COMPLEX(DP) :: cxc, rhet, rhog, vp, gxc, gyc, gzc
+      COMPLEX(DP),ALLOCATABLE :: rp(:) 
+      INTEGER                 :: ngm_ 
+      ! 
+      COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz, fx, fy, fz
       COMPLEX(DP), ALLOCATABLE :: ftmp(:,:)
+      INTEGER :: s_ngm_ 
 
-      ! ... Subroutine body ...
+      ! ... Subroutine body ... 
 
-      ALLOCATE( ftmp( 3, SIZE( fion, 2 ) ) )
-      
-      ftmp = 0.0d0
-!$omp parallel do reduction(+:ftmp) default(none) &
-!$omp shared( gstart, dffts, sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, mill, g, &
-!$omp          nat, ityp, vps, ei1, ei2, ei3, tscreen ) &
-!$omp private(ig, rp, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
-!$omp          ty, tz, teigr )
-      DO ig = gstart, dffts%ngm
+      s_ngm_ = dffts%ngm
+      ALLOCATE (rp(s_ngm_)) 
+  
+!
 
-        RP   = (0.D0,0.D0)
-        DO IS = 1, nsp
-          RP = RP + sfac( ig, is ) * rhops( ig, is )
-        END DO
+DEV_ACC data present(rhoeg, rhops, mill,g ) copy(fion)  create(rp(1:s_ngm_)) copyin(sfac, screen_coul, gg, vps, ityp,ei1, ei2, ei3) 
+!
+DEV_OMP parallel default(none) &
+DEV_OMP shared(gstart, dffts,sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, tpiba, mill, g, &
+DEV_OMP         nat, ityp, vps, ei1, ei2, ei3, tscreen, rp, fion, omega, s_ngm_ ) &
+DEV_OMP private(ig, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
+DEV_OMP          ty, tz, teigr,fx, fy, fz )
+ 
+ 
+DEV_ACC parallel loop       
+DEV_OMP do  
+   DO ig = gstart, s_ngm_
+      rp( ig) = (0.d0,0.d0) 
+      DO is = 1, nsp 
+         rp( ig)   = rp( ig)  + sfac(ig, is) * rhops( ig, is)
+      END DO 
+   END DO 
 
-        RHET  = RHOEG( ig )
-        RHOG  = RHET + RP
-
-        IF( tscreen ) THEN
-          FPIBG     = fpi / ( gg(ig) * tpiba2 ) + screen_coul(ig)
-        ELSE
-          FPIBG     = fpi / ( gg(ig) * tpiba2 )
-        END IF
-
-        ig1  = mill(1,IG)
-        ig2  = mill(2,IG)
-        ig3  = mill(3,IG)
-        GXC  = CMPLX(0.D0,g(1,IG),kind=DP)
-        GYC  = CMPLX(0.D0,g(2,IG),kind=DP)
-        GZC  = CMPLX(0.D0,g(3,IG),kind=DP)
-        DO ia = 1, nat
-           is = ityp(ia) 
-           CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)
-           CVN   = VPS(ig, is)  * CONJG(rhet)
-           TX = (CNVG+CVN) * GXC
-           TY = (CNVG+CVN) * GYC
-           TZ = (CNVG+CVN) * GZC
-           TEIGR = ei1(IG1,ia) * ei2(IG2,ia) * ei3(IG3,ia)
-           ftmp(1,ia) = ftmp(1,ia) + TEIGR*TX
-           ftmp(2,ia) = ftmp(2,ia) + TEIGR*TY
-           ftmp(3,ia) = ftmp(3,ia) + TEIGR*TZ
-        END DO
-
-      END DO
-      !
-!$omp end parallel do
-      !
-      fion = fion + DBLE(ftmp) * 2.D0 * omega * tpiba
-
-      DEALLOCATE( ftmp )
-       
+DEV_ACC parallel vector_length(128) 
+DEV_ACC loop gang private(is, fx,fy,fz) 
+DEV_OMP do  
+   DO ia = 1, nat
+      is = ityp(ia) 
+      fx = (0.d0, 0.d0) 
+      fy = (0.d0, 0.d0) 
+      fz = (0.d0, 0.d0) 
+DEV_ACC loop vector private(rhet, rhog, fpibg, ig1, ig2, ig3, gxc,gyc,gzc, cnvg, cvn, &
+DEV_ACC&                             tx, ty, tz, teigr) reduction(+:fx,fy,fz)   
+      DO ig = gstart, s_ngm_ 
+         rhet = rhoeg ( ig ) 
+         rhog = rhet + rp ( ig)
+         IF ( tscreen ) THEN 
+            fpibg = fpi / ( gg(ig) * tpiba2  ) + screen_coul (ig) 
+         ELSE  
+            fpibg = fpi / ( gg (ig) * tpiba2 ) 
+         END IF 
+         ig1 = mill (1,ig)
+         ig2 = mill (2,ig) 
+         ig3 = mill (3,ig) 
+         gxc = CMPLX(0.d0,g(1,ig),KIND=DP) 
+         gyc = CMPLX(0.d0,g(2,ig),KIND=DP) 
+         gzc = CMPLX(0.d0,g(3,ig),KIND=DP)
+         cnvg = rhops ( ig, is) * fpibg * CONJG ( rhog ) 
+         cvn  = vps ( ig, is ) * CONJG( rhet) 
+         tx   = (cnvg + cvn) * gxc 
+         ty   = (cnvg + cvn) * gyc 
+         tz   = (cnvg + cvn) * gzc 
+         teigr = ei1( ig1, ia) * ei2 ( ig2, ia) * ei3 (ig3, ia) 
+         fx    = fx + teigr * tx 
+         fy    = fy + teigr * ty 
+         fz    = fz + teigr * tz
+      END DO         
+      fion (:,ia) =  fion(:,ia) + [DBLE(fx),DBLE(fy),DBLE(fz)] * 2.d0 * omega * tpiba
+   END DO
+DEV_ACC end parallel
+DEV_ACC end data 
+DEV_OMP end parallel 
+   DEALLOCATE (rp) 
       RETURN
       END SUBROUTINE force_loc_x
 

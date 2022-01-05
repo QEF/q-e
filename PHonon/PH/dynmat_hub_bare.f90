@@ -66,6 +66,7 @@ SUBROUTINE dynmat_hub_bare
   USE cell_base,     ONLY : at, bg
   USE dynmat,        ONLY : dyn_hub_bare 
   USE io_global,     ONLY : ionode, ionode_id, stdout
+  USE uspp_init,        ONLY : init_us_2
   !
   IMPLICIT NONE
   !

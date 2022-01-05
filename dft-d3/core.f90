@@ -512,6 +512,18 @@ contains
         rs6=0.4860d0
         s18=0.0000d0
         rs18=4.5000d0
+      case ("scan")
+        ! Parameters from PRB 94, 115144 (2016); doi: 10.1103/PhysRevB.94.115144
+        ! Table 1
+        rs6 =0.538
+        s18 =0.0
+        rs18=5.4200
+      case ("r2scan")
+        ! Parameters from JCP, 154, 061101 (2021); doi: 10.1063/5.0041008
+        ! Table 1
+        rs6 =0.4948
+        s18 =0.7898
+        rs18=5.7308
 
       case DEFAULT
         call stoprun( 'functional name unknown' )
@@ -2893,7 +2905,7 @@ contains
     IF ( mykey == 0 ) THEN
     na_smax = max(3,na_s)
 
-!$acc data copyin(xyz(3,n),iz(n),cc6ab(n*n),lat(3,3),r0ab(max_elem,max_elem)) 
+!$acc data copyin(xyz(1:3,1:n),iz(1:n),cc6ab(1:n*n),lat(1:3,1:3),r0ab(1:max_elem,1:max_elem)) 
 !$acc kernels  vector_length(32)
 !$acc loop collapse(2) gang private(ijvec1,ijvec2,ijvec3, ikvec1,ikvec2,ikvec3, jkvec1,jkvec2,jkvec3, c9, r0ij,r0ik,r0jk, &
 !$acc&                              repmin1,repmin2,repmin3, repmax1,repmax2,repmax3, jtau1,jtau2,jtau3, &

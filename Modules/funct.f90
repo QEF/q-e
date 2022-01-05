@@ -80,6 +80,7 @@ MODULE funct
   !              "x3lyp"                        = X3LYP
   !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
+  !
   !              "vdw-df"       ="sla+pw+revx+vdw1"      = vdW-DF1
   !              "vdw-df2"      ="sla+pw+rw86+vdw2"      = vdW-DF2
   !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"      = vdW-DF-C09
@@ -159,10 +160,10 @@ MODULE funct
   !              "cx0"    vdW-DF-cx+HF/4 (cx13-0)        igcx =29 
   !              "r860"   rPW86+HF/4 (rw86-0)            igcx =30 (for DF0)
   !              "cx0p"   vdW-DF-cx+HF/5 (cx13-0p)       igcx =31 
-  !              "ahcx"   vdW-DF-cx based not yet in use igcx =32 reserved PH
-  !              "ahf2"   vdW-DF2 based not yet in use   igcx =33 reserved PH
-  !              "ahpb"   PBE based not yet in use       igcx =34 reserved PH
-  !              "ahps"   PBE-sol based not in use       igcx =35 reserved PH
+  !              "ahcx"   vdW-DF-cx based analytic hole  igcx =32 ! Launched vdW-DF-ahcx - PH
+  !              "ahf2"   vdW-DF2 based analytic hole    igcx =33 ! Defined vdw-DF2-AH at 0.20 - PH
+  !              "ahpb"   PBE based analytic hole        igcx =34 ! PBE-AH (rHJS-PBE) at 0.20 - PH
+  !              "ahps"   PBE-sol based analytic hole    igcx =35 ! PBESOL-AH (rHJS-PBEsol) at 0.20 - PH
   !              "cx14"   Exporations                    igcx =36 reserved PH
   !              "cx15"   Exporations                    igcx =37 reserved PH
   !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 
@@ -174,6 +175,10 @@ MODULE funct
   !              "hhnx"   Hammer-Hansen-Norskov          igcx =44
   !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
   !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
+  !              "ahtr"   vdW-DF2-ahtr exchange          igcx =47 ! Test reserve called by vdW-DF2-ahtr - PH
+  !              "ehpb"   HSE variant                    igcx =48 ! Reserved PH
+  !              "hjpb"   HJS-type PBE cross check       igcx =49 ! Reserved PH
+  !              "hjps"   HJS-type PBEsol crosscheck     igcx =50 ! Reserved PH
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -196,6 +201,7 @@ MODULE funct
   !              "+meta"  activate MGGA even without MGGA-XC   imeta=4
   !              "scan"   SCAN Meta-GGA                  imeta=5
   !              "sca0"   SCAN0  Meta-GGA                imeta=6
+  !              "r2scan" R2SCAN Meta-GGA                imeta=7
   !
   ! van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
@@ -269,11 +275,17 @@ MODULE funct
   !              tb09    F Tran and P Blaha, Phys.Rev.Lett. 102, 226401 (2009)
   !              scan    J Sun, A Ruzsinszky and J Perdew, PRL 115, 36402 (2015)
   !              scan0   K Hui and J-D. Chai, JCP 144, 44114 (2016)
+  !              r2scan  J. W. Furness, A. D. Kaplan, J. Ning, J. P. Perdew,
+  !                      and J. Sun, JPCL 11, 8208 (2020)
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
   !              rVV10   R. Sabatini et al. Phys. Rev. B 87, 041108(R) (2013)
   !              ev93     Engel-Vosko, Phys. Rev. B 47, 13164 (1993)
+  !              vdW-DF-ahcx V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              vdW-DF2-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              PBE-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
+  !              PBESOL-ah V. Shukla, Y. Jiao, iC. M. Frostenson, and P. Hyldgaard, JPCM 34, 025902 (2022)
   !
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06
   ! functional as it is in Gaussian code (that is considered as the reference
@@ -287,9 +299,17 @@ MODULE funct
   ! single He atom. Info by Fabien Bruneval.
   !
   ! NOTE FOR LIBXC USERS: to use libxc functionals you must enforce them from input (use
-  ! 'input_dft' in &system) and write their names in the input string. The order is not
-  ! relevant, neither the separation between one name and the other.
+  ! 'input_dft' in &system) and write their IDs in the input string. The only notation
+  ! now allowed (v7.0) for input DFTs containing Libxc terms is:
+  ! XC-000i-000i-000i-000i-000i-000i
+  ! where you put the functional IDs instead of the zeros and an 'L' instead of
+  ! 'i' if the functional is from Libxc. The order is the usual one:  
+  ! LDAexch - LDAcorr - GGAexch - GGAcorr - MGGAexch - MGGAcorr  
+  ! however QE will automatically adjust it if needed. You can skip zero tails (e.g.
+  ! you don't need GGA/MGGA slots if the dft is LDA only and so on.
   ! You can use combinations of qe and libxc functionals, when they are compatible.
+  ! You can also add vdW terms after it, for example, sla+pw+rw86+vdw2 is:
+  ! input_dft='XC-001i-004i-013i-vdw2'.
   ! For more details see the user_guide (in 'Doc' folder).
   !
   INTEGER, PARAMETER :: notset = -1
@@ -437,13 +457,25 @@ CONTAINS
     CASE( 'VDW-DF-CX0P' )
        dft_defined = xclib_set_dft_IDs(6,4,31,0,0,0)
        inlc = 1
+    ! Special case vdW-DF-AHCX
+    CASE( 'VDW-DF-AHCX' )
+       dft_defined = xclib_set_dft_IDs(1,4,32,0,0,0)
+       inlc = 1
     ! Special case vdW-DF2-0
     CASE( 'VDW-DF2-0' )
        dft_defined = xclib_set_dft_IDs(6,4,30,0,0,0)
        inlc = 2
+    ! Special case vdW-DF2-AH
+    CASE( 'VDW-DF2-AH' )
+       dft_defined = xclib_set_dft_IDs(1,4,33,0,0,0)
+       inlc = 2
     ! Special case vdW-DF2-BR0
     CASE( 'VDW-DF2-BR0' )
        dft_defined = xclib_set_dft_IDs(6,4,38,0,0,0)
+       inlc = 2
+    ! Special case vdW-DF2-AHTR
+    CASE( 'VDW-DF2-AHTR' )
+       dft_defined = xclib_set_dft_IDs(1,4,47,0,0,0)
        inlc = 2
     ! Special case vdW-DF-C090
     CASE( 'VDW-DF-C090' )
@@ -747,6 +779,8 @@ CONTAINS
            shortname = 'VDW-DF-CX0'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==31 .AND. igcc==0) THEN
            shortname = 'VDW-DF-CX0P'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==32 .AND. igcc==0) THEN
+           shortname = 'VDW-DF-AHCX'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==16 .AND. igcc==0) THEN
            shortname = 'VDW-DF-C09'
         ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==24 .AND. igcc==0) THEN
@@ -772,6 +806,10 @@ CONTAINS
            shortname = 'VDW-DF2-B86R'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==30 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-0'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==33 .AND. igcc==0) THEN
+           shortname = 'VDW-DF2-AH'
+        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==47 .AND. igcc==0) THEN
+           shortname = 'VDW-DF2-AHTR'
         ELSEIF (iexch==6 .AND. icorr==4 .AND. igcx==38 .AND. igcc==0) THEN
            shortname = 'VDW-DF2-BR0'
         ELSE

@@ -34,15 +34,14 @@ subroutine solve_e
   USE klist,                 ONLY : ltetra, lgauss, xk, ngk, igk_k
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
-  USE lsda_mod,              ONLY : nspin
-  USE spin_orb,              ONLY : domag
+  USE lsda_mod,              ONLY : nspin, lsda, current_spin, isk
   USE wvfct,                 ONLY : nbnd, npwx
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer
   USE wavefunctions,         ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
-  USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module,      ONLY : noncolin, npol, nspin_mag, domag
   USE scf,                   ONLY : rho
   USE paw_variables,         ONLY : okpaw
   USE paw_onecenter,         ONLY : paw_dpotential
@@ -64,6 +63,7 @@ subroutine solve_e
   USE ldaU,                  ONLY : lda_plus_u
   USE apply_dpot_mod,        ONLY : apply_dpot_allocate, apply_dpot_deallocate
   USE response_kernels,      ONLY : sternheimer_kernel
+  USE uspp_init,             ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -153,6 +153,7 @@ subroutine solve_e
      DO ipol = 1, 3
         ikk = ikks(ik)
         npw = ngk(ikk)
+        IF (lsda) current_spin = isk(ikk)
         !
         ! reads unperturbed wavefunctions psi_k in G_space, for all bands
         !

@@ -48,6 +48,7 @@ contains
       use wave_gauge, only: compute_dot_evc_parallel_gauge
 
       use test_h_psi, only: test
+      USE uspp_init,            ONLY : init_us_2
 
       implicit none
 
@@ -66,7 +67,7 @@ contains
       REAL(DP), intent(in) ::  tpiba2, g(:, :), at(:, :), &
                               xk(:, :), et(:, :), dt, gg(:), &
                               omega
-      COMPLEX(DP), intent(in) :: vkb(:, :)
+      COMPLEX(DP), intent(inout) :: vkb(:, :)
 
       !character(LEN=20) :: dft_name
       complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
@@ -88,7 +89,7 @@ contains
       call update_pot()
       call hinit1()
       call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
-      call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
+      call init_us_2(npw, igk_k(:, 1), xk(:, 1), vkb)
       call sum_band()
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, evc, becp)

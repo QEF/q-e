@@ -153,7 +153,7 @@ CONTAINS
                                STARTING_MAGNETIZATION = start_mag_, SPIN_TETA = spin_teta, SPIN_PHI = spin_phi )
       ENDDO
       !
-      CALL qes_init (obj, "atomic_species", nsp, species)
+      CALL qes_init (obj, "atomic_species", NTYP = nsp, SPECIES = species)
       !
       DO i = 1, nsp
           CALL qes_reset (species(i))
@@ -503,7 +503,7 @@ CONTAINS
             !
             ALLOCATE (objs(nsp)) 
             DO i = 1, nsp 
-               CALL qes_init( objs(i), TRIM(tag), TRIM(species(i)), dati(i), TRIM(labs(i)))
+               CALL qes_init( objs(i), TRIM(tag), TRIM(species(i)), TRIM(labs(i)), dati(i))
                IF (TRIM(labs(i)) =='no Hubbard') objs(i)%lwrite = .FALSE. 
             END DO 
          END SUBROUTINE init_hubbard_commons 
@@ -777,22 +777,110 @@ CONTAINS
     !
     !
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_magnetization(obj, lsda, noncolin, spinorbit, total_mag, total_mag_nc, &
-                                        absolute_mag, do_magnetization)
+    SUBROUTINE qexsd_init_magnetization(obj, lsda, noncolin, spinorbit, total_mag, total_mag_nc, absolute_mag, &
+                                       atm, ityp, site_mag_pol, site_mag, site_charges, do_magnetization)
       !------------------------------------------------------------------------------------
       IMPLICIT NONE
       !
-      TYPE(magnetization_type)    :: obj
-      LOGICAL,         INTENT(IN) :: lsda, noncolin, spinorbit
-      REAL(DP),        INTENT(IN) :: total_mag, absolute_mag
-      REAL(DP),        INTENT(IN) :: total_mag_nc(3)
-      LOGICAL,OPTIONAL,INTENT(IN) :: do_magnetization
+      TYPE(magnetization_type)     :: obj
+      !! magnetization object to initialize
+      LOGICAL,          INTENT(IN) :: lsda, noncolin, spinorbit
+      !! flag: true for spin-polarized calculations 
+      !! flag: true for noncolinear calculations 
+      !! flag: true for fully relativistic calculations 
+      REAL(DP),OPTIONAL,INTENT(IN) :: total_mag
+      !! total scalar magnetization present for  spin-polarized calculation 
+      REAL(DP),         INTENT(IN) :: absolute_mag
+      !! sum  of the magnetization's module  (scalar or colinear)
+      CHARACTER(LEN=*),INTENT(IN)  :: atm(:)
+      !! species labels 
+      INTEGER,INTENT(IN)           :: ityp(:)
+      !! species index for each atom 
+      REAL(DP),OPTIONAL,INTENT(IN) :: total_mag_nc(3)
+      !! total magnetization (vector) present for noncolinear magnetic calculations
+      REAL(DP),OPTIONAL,INTENT(IN) :: site_charges(:) 
+      !! array with the estimate charge of the site
+      LOGICAL,OPTIONAL, INTENT(IN) :: do_magnetization 
+      !! flag: true if the noncolinear calculation has a finite magnetization 
+      REAL(DP),DIMENSION(:,:),OPTIONAL,INTENT(IN) :: site_mag 
+      !! array with the estimated magnetization per site (noncollinear case)
+      REAL(DP),DIMENSION(:,:)  ,OPTIONAL,INTENT(IN) :: site_mag_pol
+      !! array with the magnetic polarization per site (nspin=2 case)
       !
-      CALL qes_init(obj, "magnetization", lsda, noncolin, spinorbit, total_mag, absolute_mag, &
-                                 do_magnetization)
+      INTEGER  :: iobj
+      TYPE (scalmags_type),TARGET  :: smag_obj 
+      TYPE (scalmags_type),POINTER :: smag_ptr => NULL()
+      TYPE (d3mags_type),  TARGET  :: vmag_obj 
+      TYPE (d3mags_type),  POINTER :: vmag_ptr => NULL()
+      IF (PRESENT(site_mag_pol)) THEN 
+         CALL qexsd_init_scalmags(smag_obj, SIZE(site_mag_pol,2), site_mag_pol(1,:), ityp, atm, site_charges) 
+         smag_ptr => smag_obj 
+      ELSE IF (PRESENT(site_mag)) THEN 
+         CALL qexsd_init_d3mags (vmag_obj, SIZE(site_mag, 2), site_mag, ityp, atm, site_charges ) 
+         vmag_ptr => vmag_obj
+      END IF       
+      CALL qes_init(obj, "magnetization", lsda, noncolin, spinorbit, absolute_mag, total_mag, total_mag_nc,&
+                                 smag_ptr, vmag_ptr, do_magnetization)
       !
     END SUBROUTINE qexsd_init_magnetization 
     !
+    !----------------------------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_scalmags(obj, nat_, data,  ityp, atm, charges)
+      !! stores site scalar magnetization into a structure for XML output
+    !-------------------------------------------------------------------------------------------
+    IMPLICIT NONE 
+    TYPE (scalmags_type),INTENT(INOUT) :: obj 
+    !! structure where to store data
+    INTEGER                            :: nat_ 
+    !! number of atomic sites 
+    REAL(DP), INTENT(IN)               :: data (:)
+    !! site magnetizations 
+    REAL(DP), OPTIONAL,INTENT(IN)      :: charges(:)
+    !! site charges 
+    INTEGER,INTENT(IN)                 :: ityp(:)
+    !! species index for each atom 
+    CHARACTER(LEN=*),INTENT(IN)        :: atm(:)
+    !! species labels 
+    ! 
+    INTEGER   :: ia 
+    TYPE(SiteMoment_type),ALLOCATABLE  :: site_obj(:)
+    ALLOCATE (site_obj(nat_))
+    DO ia = 1, nat_
+      CALL qes_init(site_obj(ia), "SiteMagnetization", SPECIES=atm(ityp(ia)), ATOM=ia, CHARGE = charges(ia), &
+                    SiteMoment= data(ia))
+    END DO 
+    CALL qes_init(obj, "Scalar_Site_Magnetic_Moments", NAT = nat_, SiteMagnetization=site_obj )
+    DEALLOCATE (site_obj)
+    END SUBROUTINE qexsd_init_scalmags
+    !
+    !
+    !---------------------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_d3mags (obj, nat_, data, ityp, atm, charges)
+    !---------------------------------------------------------------------------------------
+    IMPLICIT NONE 
+    TYPE (d3mags_type),INTENT(INOUT) :: obj 
+    !! structure where to store data
+    INTEGER                            :: nat_ 
+    !! number of atomic sites 
+    REAL(DP), INTENT(IN)               :: data (:,:)
+    !! site magnetizations (vectors)
+    REAL(DP), OPTIONAL,INTENT(IN)      :: charges(:)
+    !! site charges 
+    INTEGER,INTENT(IN)                 :: ityp(:)
+    !! species index for each atom 
+    CHARACTER(LEN=*),INTENT(IN)        :: atm(:)
+    !! species labels 
+    ! 
+    INTEGER   :: ia 
+    TYPE(SitMag_type),ALLOCATABLE  :: site_obj(:)
+    ALLOCATE (site_obj(nat_))
+    DO ia = 1, nat_
+      CALL qes_init(site_obj(ia), "SiteMagnetization", SPECIES=atm(ityp(ia)), ATOM=ia, CHARGE = charges(ia), &
+                    SitMag = data(1:3,ia))
+    END DO 
+    CALL qes_init(obj, "Site_Magnetizations", NAT = nat_, SiteMagnetization = site_obj )
+    DEALLOCATE (site_obj)
+    END SUBROUTINE qexsd_init_d3mags 
     ! 
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_band_structure(obj, lsda, noncolin, lspinorb, nelec, n_wfc_at,  et, wg, nks, xk, ngk, wk, & 

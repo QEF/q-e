@@ -17,8 +17,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 ! calculation are constructed and saved.
 !
   USE constants, ONLY : tpi
-  USE noncollin_module, ONLY : noncolin, npol
-  USE spin_orb,  ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE lsda_mod,  ONLY : nspin
   USE cond
   USE cell_base, ONLY : alat, at, omega

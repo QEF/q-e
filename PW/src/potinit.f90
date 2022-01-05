@@ -41,9 +41,8 @@ SUBROUTINE potinit()
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
                                    nsg, nsgnew
-  USE noncollin_module,     ONLY : noncolin, report
+  USE noncollin_module,     ONLY : noncolin, domag, report, lforcet
   USE io_files,             ONLY : restart_dir, input_drho, check_file_exist
-  USE spin_orb,             ONLY : domag, lforcet
   USE mp,                   ONLY : mp_sum
   USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
   USE io_global,            ONLY : ionode, ionode_id
@@ -57,6 +56,7 @@ SUBROUTINE potinit()
   USE paw_onecenter,        ONLY : PAW_potential
   !
   USE scf_gpum,             ONLY : using_vrs
+  USE pwcom,                ONLY : report_mag 
   !
   IMPLICIT NONE
   !
@@ -190,8 +190,8 @@ SUBROUTINE potinit()
   IF ( lscf .AND. ABS( charge - nelec ) > ( 1.D-7 * charge ) ) THEN
      !
      IF ( charge > 1.D-8 .AND. nat > 0 ) THEN
-        WRITE( stdout, '(/,5X,"starting charge ",F10.5, &
-                         & ", renormalised to ",F10.5)') charge, nelec
+        WRITE( stdout, '(/,5X,"starting charge ",F12.4, &
+                         & ", renormalised to ",F12.4)') charge, nelec
         rho%of_g = rho%of_g / charge * nelec
      ELSE 
         WRITE( stdout, '(/,5X,"Starting from uniform charge")')

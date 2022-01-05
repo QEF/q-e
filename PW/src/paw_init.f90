@@ -270,8 +270,7 @@ MODULE paw_init
     USE radial_grids,       ONLY : do_mesh
     USE uspp_param,         ONLY : upf
     USE lsda_mod,           ONLY : nspin
-    USE spin_orb,           ONLY : domag
-    USE noncollin_module,   ONLY : noncolin
+    USE noncollin_module,   ONLY : noncolin, domag
     USE xc_lib,             ONLY : xclib_dft_is
     USE mp_images,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum

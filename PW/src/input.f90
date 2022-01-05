@@ -56,7 +56,13 @@ SUBROUTINE iosys()
                               dt_         => dt, &
                               delta_t_    => delta_t, &
                               nraise_     => nraise, &
-                              refold_pos_ => refold_pos
+                              refold_pos_ => refold_pos, &
+                              fire_nmin_ => fire_nmin, &
+                              fire_f_inc_ => fire_f_inc, &
+                              fire_f_dec_ => fire_f_dec,  &
+                              fire_alpha_init_ => fire_alpha_init, &  
+                              fire_falpha_ => fire_falpha, &
+                              fire_dtmax_ => fire_dtmax
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -80,8 +86,6 @@ SUBROUTINE iosys()
                             pseudo_dir_ => pseudo_dir, &
                             pseudo_dir_cur, restart_dir, &
                             check_tempdir, clean_tempdir, nd_nmbr
-  !
-  USE force_mod,     ONLY : lforce, lstres
   !
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
@@ -113,6 +117,9 @@ SUBROUTINE iosys()
                             lback_ => lback, &
                             l1back_ => l1back, &
                             reserv_back_ => reserv_back
+  !
+  USE add_dmft_occ,  ONLY : dmft_ => dmft, &
+                            dmft_prefix_ => dmft_prefix
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
   !
@@ -150,7 +157,8 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
-                            lensemb, &
+                            lensemb, lforce   => tprnfor, &
+                            tstress_          => tstress, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -183,12 +191,10 @@ SUBROUTINE iosys()
                                lambda_    => lambda, &
                                angle1_    => angle1, &
                                angle2_    => angle2, &
-                               report_    => report
-  !
-  USE spin_orb, ONLY : lspinorb_ => lspinorb,  &
-                       lforcet_ => lforcet,    &
-                       starting_spin_angle_ => starting_spin_angle
-
+                               report_    => report, &
+                               lspinorb_ => lspinorb,  &
+                               lforcet_ => lforcet,    &
+                               starting_spin_angle_ => starting_spin_angle
   !
   USE symm_base, ONLY : no_t_rev_ => no_t_rev, nofrac, allfrac, &
                         nosym_ => nosym, nosym_evc_=> nosym_evc
@@ -237,7 +243,7 @@ SUBROUTINE iosys()
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
-                               Hubbard_J0, Hubbard_beta,                    &
+                               Hubbard_J0, Hubbard_beta, dmft, dmft_prefix, &
                                Hubbard_alpha, Hubbard_parameters,           &
                                Hubbard_U_back, Hubbard_alpha_back,          &
                                Hubbard_V, hub_pot_fix, reserv, reserv_back, &
@@ -284,7 +290,9 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim
+                               trust_radius_ini, bfgs_ndim, &
+                               fire_nmin, fire_f_inc, fire_f_dec, &
+                               fire_alpha_init, fire_falpha, fire_dtmax
   !
   ! ... CELL namelist
   !
@@ -386,6 +394,20 @@ SUBROUTINE iosys()
         !
         lmd     = .true.
         calc    = 'vm'
+        !
+        ntcheck = nstep + 1
+        !
+     CASE ( 'fire' )
+        !
+        lmd     = .true.
+        calc    = 'fi'
+        ! set fire variables
+        fire_nmin_ = fire_nmin
+        fire_f_inc_ = fire_f_inc
+        fire_f_dec_ = fire_f_dec
+        fire_alpha_init_ = fire_alpha_init
+        fire_falpha_ = fire_falpha
+        fire_dtmax_ = fire_dtmax
         !
         ntcheck = nstep + 1
         !
@@ -526,7 +548,7 @@ SUBROUTINE iosys()
   !
   dt_    = dt
   nstep_ = nstep
-  lstres = lmovecell .OR. ( tstress .and. lscf )
+  tstress_ = lmovecell .OR. ( tstress .and. lscf )
   !
   ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
   !
@@ -562,7 +584,7 @@ SUBROUTINE iosys()
   ENDIF
   !
   IF ( (tefield.or.gate) .and. tstress ) THEN
-     lstres = .false.
+     tstress_ = .false.
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field and gates",/)' )
   ENDIF
@@ -620,15 +642,15 @@ SUBROUTINE iosys()
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &
        'BEWARE:  force calculation with tetrahedra (not recommanded)')
-     IF( lstres ) CALL infomsg( 'iosys', &
+     IF( tstress_ ) CALL infomsg( 'iosys', &
        'BEWARE: stress calculation with tetrahedra (not recommanded)')
   END IF
   IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
   nbnd_    = nbnd
   !
-  two_fermi_energies = ( tot_magnetization /= -1._DP)
-  IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
-     CALL errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
+  two_fermi_energies = ( tot_magnetization /= -10000._DP)
+  IF ( two_fermi_energies .and. tot_magnetization < -9999._DP) &
+     CALL errore( 'iosys', 'tot_magnetization only larger than -9999 is allowed', 1 )
   IF ( two_fermi_energies .and. .not. lsda ) &
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
@@ -1213,6 +1235,21 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', 'Unknown efield_phase', 1 )
   END SELECT
   !
+  ! DMFT
+  !
+  dmft_             = dmft
+  dmft_prefix_      = dmft_prefix
+  !
+#if defined __HDF5
+  IF ( dmft) THEN
+     IF ( nspin > 1 ) CALL errore( 'iosys', &
+          'DMFT update not implemented with nspin > 1', 1 )
+  ENDIF
+#else
+  IF ( dmft) THEN
+      CALL errore( 'iosys', 'DMFT update not implemented without HDF5 library', 1 )
+  ENDIF
+#endif
   ! Hubbard parameters for DFT+U+V
   !
   IF ( lda_plus_u_kind == 0 .OR. lda_plus_u_kind == 1 ) THEN
@@ -1421,8 +1458,8 @@ SUBROUTINE iosys()
       !
   END SELECT
   !
-  IF ( do_comp_mt .AND. lstres ) THEN
-     lstres = .false.
+  IF ( do_comp_mt .AND. tstress_ ) THEN
+     tstress_ = .false.
      WRITE( stdout, &
           '(5x,"Stress calculation not meaningful in isolated systems",/)' )
   END IF
@@ -1615,7 +1652,7 @@ SUBROUTINE iosys()
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
      ecutfock_ = ecutfock
   END IF
-  IF ( lstres .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
+  IF ( tstress_ .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
          'stress for hybrid functionals not available with pools', 1)
   IF ( lmovecell.AND. xclib_dft_is('hybrid') ) CALL infomsg('iosys',&
          'Variable cell and hybrid XC little tested')

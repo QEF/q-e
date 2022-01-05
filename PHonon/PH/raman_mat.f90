@@ -36,6 +36,7 @@ subroutine raman_mat
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE mp,       ONLY : mp_sum
+  USE uspp_init,        ONLY : init_us_2
   implicit none
 
   logical :: wr_all

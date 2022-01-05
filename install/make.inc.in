@@ -62,7 +62,7 @@ MOD_FLAG      = @imod@
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/XClib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
-               $(MOD_FLAG)$(TOPDIR)/FFTXlib \
+               $(MOD_FLAG)$(TOPDIR)/FFTXlib/src \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
@@ -74,7 +74,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 BASEMODS= $(TOPDIR)/Modules/libqemod.a \
           $(TOPDIR)/upflib/libupf.a \
           $(TOPDIR)/XClib/xc_lib.a \
-          $(TOPDIR)/FFTXlib/libqefft.a \
+          $(TOPDIR)/FFTXlib/src/libqefft.a \
           $(TOPDIR)/LAXlib/libqela.a \
           $(TOPDIR)/UtilXlib/libutil.a \
           $(TOPDIR)/MBD/libmbd.a
@@ -101,6 +101,9 @@ CUDA_RUNTIME=@gpu_runtime@
 # CUDA F90 Flags
 CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 
+# CUDA C Flags
+CUDA_CFLAGS=@CUDA_CFLAGS@
+
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
 # preprocessing flags must include DFLAGS and IFLAGS
@@ -112,7 +115,7 @@ CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 # C flags must include DFLAGS and IFLAGS
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
-CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
+CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS) $(CUDA_CFLAGS)
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
 
 # compiler flags with and without optimization for fortran-77

@@ -1,9 +1,19 @@
-New in development version:
+New in 7.0 version:
+  * GPU support for PWscf and CP significantly extended
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
-  * DFT-D3: MPI parallelization and GPU acceleration with OPenACC
+  * DFT-D3: MPI parallelization and GPU acceleration with OpenACC
   * projwfc.x can be used to compute the PDOS in a local basis (I. Timrov)
+  * Charge self-consistent DFT+DMFT calculations with the TRIQS software package
+    via Wannier90 (S. Beck, CCQ Flatiron Institute)
+  * EPW:
+    (1) Addition of spectral decomposition capability in the transport module
+    (2) Support for the frmsf file format of FermiSurfer
+    (3) The cumulant module updated
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
-Fixed in development version:
+Fixed in 7.0 version:
+  * Possible out-of-bound error (gfortran only) could crash DFT+U
   * incorrect exx factor multiplication in the gga term of polarized cx0 
     functional (v.6.8 only)
   * Some build problems occurring under special circumstances
@@ -17,10 +27,18 @@ Fixed in development version:
   * plotband.x wasn't correctly plotting the bands, under some not-so-special
     circumstances
   * CP with DFT+U could crash when writing the xml file (since v.6.6)
+  * Restart of electron-phonon calculations was not working due to a missing
+    tag (thanks to Miguel Marques for reporting this)
+  * atomic: the exchange of two lines in import_upf.f90 had broken PAW tests
+    since v.6.5 (thanks to Chiara Biz for reporting, to AdC for fixing)
+  * Calculation of ELF for spin-unpolarized cases was grossly wrong in v.6.8
+  * Changes to the i-Pi interface to adapt it to usage with ASE had broken 
+    the original functionality
 
-Incompatible changes in develoment version:
-  * Changes to Makefiles and to file "make.inc"
+Incompatible changes in 7.0 version:
+  * Changes to Makefiles and to file "make.inc" (they must be regenerated)
   * clib/ deleted, files clib/*.c moved to UtilXlib/ or to Modules/
+  * Some reshuffling of variables for noncollinear and spin-orbit calculations
 
 Known problems in 6.8 version:
   * electron-phonon calculation in the non-colinear/spinorbit case is broken
@@ -647,7 +665,7 @@ Incompatible changes in 6.2 version:
 New in 6.1 version:
 
   * Hybrid functionals: Band parallelization over pair of bands, contributed
-    by Taylor Barnes et al, http://dx.doi.org/10.1016/j.cpc.2017.01.008
+    by Taylor Barnes et al, https://doi.org/10.1016/j.cpc.2017.01.008
   * Hybrid functionals with PAW now work
   * Optimized tetrahedron method, contributed by Mitsuaki Kawamura, U. Tokyo
   * PostProcessing: pp.x can now plot many bands in a single run.

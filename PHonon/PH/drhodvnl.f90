@@ -11,7 +11,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, becp1, alphap, &
                                                             dbecq, dalpq)
   !-----------------------------------------------------------------------
   !! This subroutine computes the electronic term
-  !! \(2\langle d\psi|dv-e ds|\psi\rangle
+  !! \(2\langle d\psi|dv-e ds|\psi\rangle \)
   !! of the dynamical matrix. It can be used both for KB and for US 
   !! pseudopotentials. All the nonlocal (and overlap matrix) terms
   !! are computed here. The contribution of the local potential is not
@@ -20,14 +20,13 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, becp1, alphap, &
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, lspinorb
   USE uspp,      ONLY : okvan, nkb
   USE uspp_param,ONLY : nh, nhm
   USE becmod,    ONLY : bec_type
   USE wvfct,     ONLY : nbnd, et
   USE klist,     ONLY : wk
   USE lsda_mod,  ONLY : current_spin, nspin
-  USE spin_orb,  ONLY : lspinorb
   USE phus,      ONLY : int1, int1_nc, int2, int2_so
   USE qpoint,    ONLY : nksq
   USE mp_bands,  ONLY: intra_bgrp_comm

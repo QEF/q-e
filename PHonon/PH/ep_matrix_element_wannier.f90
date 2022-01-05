@@ -354,6 +354,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
   USE apply_dpot_mod,   ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   !

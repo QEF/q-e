@@ -163,7 +163,7 @@ MODULE read_namelists_module
        ntyp   = 0
        nbnd   = 0
        tot_charge = 0.0_DP
-       tot_magnetization = -1
+       tot_magnetization = -10000
        ecutwfc = 0.0_DP
        ecutrho = 0.0_DP
        nr1  = 0
@@ -226,6 +226,8 @@ MODULE read_namelists_module
        A_pen=0.0_DP
        sigma_pen=0.01_DP
        alpha_pen=0.0_DP
+       dmft = .FALSE.
+       dmft_prefix = prefix
        !
        ! ... EXX
        !
@@ -418,6 +420,7 @@ MODULE read_namelists_module
        passop  = 0.3_DP
        niter_cg_restart = 20
        etresh  = 1.E-6_DP
+       pre_state = .FALSE.
        !
        epol   = 3
        efield = 0.0_DP
@@ -530,6 +533,14 @@ MODULE read_namelists_module
        w_1              = 0.01_DP
        w_2              = 0.50_DP
        !
+       ! FIRE minimization defaults 
+       !
+       fire_nmin = 5 ! minimum number of steps P > 0 before dt increas
+       fire_f_inc = 1.1_DP ! factor for time step increase
+       fire_f_dec = 0.5_DP ! factor for time step decrease 
+       fire_alpha_init = 0.20_DP ! initial value of mixing factor
+       fire_falpha = 0.99_DP ! modification of the mixing factor
+       fire_dtmax = 10.0_DP ! factor for calculating dtmax 
        RETURN
        !
      END SUBROUTINE
@@ -893,6 +904,8 @@ MODULE read_namelists_module
        CALL mp_bcast( A_pen,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sigma_pen,              ionode_id, intra_image_comm )
        CALL mp_bcast( alpha_pen,              ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft,                   ionode_id, intra_image_comm )
+       CALL mp_bcast( dmft_prefix,            ionode_id, intra_image_comm )
        CALL mp_bcast( edir,                   ionode_id, intra_image_comm )
        CALL mp_bcast( emaxpos,                ionode_id, intra_image_comm )
        CALL mp_bcast( eopreg,                 ionode_id, intra_image_comm )
@@ -1064,6 +1077,7 @@ MODULE read_namelists_module
        CALL mp_bcast( etresh,  ionode_id, intra_image_comm )
        CALL mp_bcast( passop,  ionode_id, intra_image_comm )
        CALL mp_bcast( niter_cg_restart, ionode_id, intra_image_comm )
+       CALL mp_bcast( pre_state, ionode_id, intra_image_comm )
        !
        ! ... electric field
        !

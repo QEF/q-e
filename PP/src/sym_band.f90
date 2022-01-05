@@ -29,12 +29,12 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE rap_point_group_is,   ONLY : nsym_is, sr_is, ft_is, gname_is, &
        sname_is, code_group_is
   USE uspp,                 ONLY : nkb, vkb
-  USE spin_orb,             ONLY : domag
-  USE noncollin_module,     ONLY : noncolin
+  USE noncollin_module,     ONLY : noncolin, domag
   USE wavefunctions, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
   USE mp_images,            ONLY : intra_image_comm
+  USE uspp_init,            ONLY : init_us_2
   !
   IMPLICIT NONE
   !
@@ -1122,8 +1122,7 @@ SUBROUTINE find_info_group(nsym,s,t_rev,ft,d_spink,gk,sname,  &
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : at, bg
   USE fft_base,             ONLY : dfftp
-  USE noncollin_module,     ONLY : noncolin
-  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : noncolin, domag
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
        char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &

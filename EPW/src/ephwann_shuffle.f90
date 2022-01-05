@@ -35,8 +35,8 @@
                                specfun_pl, lindabs, use_ws, epbread, fermi_plot,   &
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
-                               cumulant, eliashberg, nomega,                       &
-                               omegamin, omegamax, omegastep, neta
+                               cumulant, eliashberg, nomega, mob_maxfreq, neta,    &
+                               omegamin, omegamax, omegastep, mob_nfreq
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -59,7 +59,8 @@
                                nktotf, gtemp, xkq, dos, nbndskip, nbndep,          &
                                inv_tau_all_mode, inv_tau_allcb_mode, qrpl, Qmat,   &
                                ef0_fca, epsilon2_abs, epsilon2_abs_lorenz,         &
-                               epsilon2_abs_all, epsilon2_abs_lorenz_all
+                               epsilon2_abs_all, epsilon2_abs_lorenz_all,          &
+                               inv_tau_all_freq, inv_tau_allcb_freq
   USE wan2bloch,        ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                                ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                                dynifc2blochf, vmewan2blochp
@@ -136,8 +137,6 @@
   !! If the file exist
   LOGICAL :: first_cycle
   !! Check wheter this is the first cycle after a restart.
-  LOGICAL :: first_time
-  !! Check wheter this is the first timeafter a restart.
   LOGICAL :: homogeneous
   !! Check if the k and q grids are homogenous and commensurate.
   INTEGER :: ios
@@ -855,8 +854,14 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_all_mode', 1)
       ALLOCATE(inv_tau_allcb_mode(nmodes, nbndfst, nktotf, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_allcb_mode', 1)
+      ALLOCATE(inv_tau_all_freq(mob_nfreq, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_all_freq', 1)
+      ALLOCATE(inv_tau_allcb_freq(mob_nfreq, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_allcb_freq', 1)
       inv_tau_all_mode(:, :, :, :)   = zero
       inv_tau_allcb_mode(:, :, :, :) = zero
+      inv_tau_all_freq(:, :, :)      = zero
+      inv_tau_allcb_freq(:, :, :)    = zero
     ENDIF
     ! We save matrix elements that are smaller than machine precision (1d-16).
     ! The sum of all the elements must be smaller than that
@@ -895,6 +900,10 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all_mode', 1)
       DEALLOCATE(inv_tau_allcb_mode, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb_mode', 1)
+      DEALLOCATE(inv_tau_all_freq, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all_freq', 1)
+      DEALLOCATE(inv_tau_allcb_freq, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb_freq', 1)
     ENDIF
     !
   ELSE ! (iterative_bte .AND. epmatkqread)
@@ -972,7 +981,6 @@
     ! -----------------------------------------------------------------------
     iq_restart = 1
     first_cycle = .FALSE.
-    first_time = .TRUE.
     !
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf), STAT = ierr)
@@ -1179,9 +1187,11 @@
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         !
-        IF(ephwrite .AND. iq_restart > 1) THEN
+        IF(iq_restart > 1) THEN
           first_cycle = .TRUE.
-          CALL check_restart_ephwrite
+          IF (ephwrite) THEN
+            CALL check_restart_ephwrite
+          ENDIF
         ENDIF
         !
         ! Now, the iq_restart point has been done, so we need to do the next

@@ -8,14 +8,26 @@
 
 #define nmax 30
 
+#pragma acc routine (dgemv_) seq
 extern void dgemv_(const char *, const int *, const int *, const double *,
     double *, const int *, double *, const int *, const double *, double *,
     const int *);
 
+#pragma acc routine seq
+double ddot1(double v[], double u[], int n)
+{
+    double result = 0.0;
+    int i = 0;
+    for (i = 0; i < n; i++)
+        result += v[i]*u[i];
+    return result;
+}
+
 extern double ddot_(const int *, double *, const int *, double *, const int *);
 
 //beef exchange enhancement factor legendre polynomial coefficients
-static double mi[] = {
+#pragma acc declare copyin (mi[0:nmax-1])
+static double mi[nmax] = {
  1.516501714304992365356,
  0.441353209874497942611,
 -0.091821352411060291887,
@@ -392,7 +404,7 @@ static double beefmat[] = {
     L[1] = x; int i=0;\
     for(i=2;i<nmax;i++) { \
 	L[i] = 2.*(x)*L[i-1] - L[i-2] - ((x)*L[i-1] - L[i-2])/((double) i); \
-	dL[i] = L[i-1]*i + dL[i-1]*(x); \
+	dL[i] = L[i-1]*((double) i) + dL[i-1]*(x); \
     } \
 }
 
@@ -419,7 +431,10 @@ static double beefmat[] = {
 	return L[n]; \
     }
 
+#define PRAGMA_ACC_ROUTINE _Pragma("acc routine seq")
+
 #define defLdL(n) \
+PRAGMA_ACC_ROUTINE \
     static void LdL ## n (double x, double *y, double *z) { \
 	double L[n+1]; \
 	double dL[n+1]; \
@@ -497,8 +512,9 @@ static double(*Ln[])(double) = {
     L29
 };
 
-
+#pragma acc routine seq
 static void LdL0(double x, double *y, double *z) {*y=1.; *z=0.;}
+#pragma acc routine seq
 static void LdL1(double x, double *y, double *z) {*y=x; *z=1.;}
 defLdL(2)
 defLdL(3)
@@ -562,6 +578,42 @@ static void(*LdLn[])(double,double *,double *) = {
     LdL29
 };
 
+#pragma acc routine seq
+static void LdLnACC(double t,double *fx,double *dl, int bo) {
+    switch(bo) {
+      case  0: LdL0(t  ,fx ,dl ); break;
+      case  1: LdL1(t  ,fx ,dl ); break;
+      case  2: LdL2(t  ,fx ,dl ); break;
+      case  3: LdL3(t  ,fx ,dl ); break;
+      case  4: LdL4(t  ,fx ,dl ); break;
+      case  5: LdL5(t  ,fx ,dl ); break;
+      case  6: LdL6(t  ,fx ,dl ); break;
+      case  7: LdL7(t  ,fx ,dl ); break;
+      case  8: LdL8(t  ,fx ,dl ); break;
+      case  9: LdL9(t  ,fx ,dl ); break;
+      case 10: LdL10(t ,fx ,dl ); break;
+      case 11: LdL11(t ,fx ,dl ); break;
+      case 12: LdL12(t ,fx ,dl ); break;
+      case 13: LdL13(t ,fx ,dl ); break;
+      case 14: LdL14(t ,fx ,dl ); break;
+      case 15: LdL15(t ,fx ,dl ); break;
+      case 16: LdL16(t ,fx ,dl ); break;
+      case 17: LdL17(t ,fx ,dl ); break;
+      case 18: LdL18(t ,fx ,dl ); break;
+      case 19: LdL19(t ,fx ,dl ); break;
+      case 20: LdL20(t ,fx ,dl ); break;
+      case 21: LdL21(t ,fx ,dl ); break;
+      case 22: LdL22(t ,fx ,dl ); break;
+      case 23: LdL23(t ,fx ,dl ); break;
+      case 24: LdL24(t ,fx ,dl ); break;
+      case 25: LdL25(t ,fx ,dl ); break;
+      case 26: LdL26(t ,fx ,dl ); break;
+      case 27: LdL27(t ,fx ,dl ); break;
+      case 28: LdL28(t ,fx ,dl ); break;
+      case 29: LdL29(t ,fx ,dl ); break;
+    }
+}
+
 // LDA and PBEc coefficients
 
 //pix = 1./(2.*(3.*pi**2)**(1./3.))**2
@@ -582,21 +634,24 @@ static void(*LdLn[])(double,double *,double *) = {
 #define normrand() \
     ( sqrt(-2.*log(unirandex0())) * cos(M_PI*2.*unirandinc0()) )
 
-
 // beeforder==-1 : calculate beefxc with standard expansion coefficients
 // (is changed by beefsetmode_)
 static int beeforder = -1;
+#pragma acc declare copyin (beeforder)
 
 //arrays holding current Legendre polynomials and derivatives
-static __thread double L[nmax] = {1.};
-static __thread double dL[nmax] = {0.,1.};
+//static __thread double L[nmax] = {1.};
+//static __thread double dL[nmax] = {0.,1.};
 
+//static double L[nmax] = {1.};
+//static double dL[nmax] = {0.,1.};
 
 static inline double sq(double x) {return x*x;}
 
 // beeftype is a switch set by beef_set_type
 // which determines which version/type of beef is used
 static int beeftype = 0;
+#pragma acc declare copyin (beeftype)
 
 #define output_spacing "     "
 #define output_marker "**************************************************************************"

@@ -14,7 +14,7 @@ MODULE laxlib_parallel_include
 #if defined (__MPI_MODULE)
         USE mpi
 #else
-        INCLUDE 'mpif.h'
+        include 'mpif.h'
 #endif
 #else
         ! dummy world and null communicator

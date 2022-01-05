@@ -60,9 +60,9 @@ AC_ARG_WITH([cuda-runtime],
    [with_cuda_runtime=10.1])
 
 AC_ARG_ENABLE([openacc],
-   [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=no@:>@])],
+   [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=yes@:>@])],
    [],
-   [enable_openacc=no])
+   [enable_openacc=yes])
 
 AC_ARG_ENABLE([cuda-env-check],
    [AS_HELP_STRING([--enable-cuda-env-check],[The configure script will check CUDA installation and report problems @<:@default=no@:>@])],
@@ -181,7 +181,10 @@ EOF
    fi
 
    new_cusolver="yes"
+   CC_stash=$CC
+   CC=nvcc
    AC_CHECK_LIB([cusolver], [cusolverDnZhegvdx_bufferSize], [], new_cusolver="no")
+   CC=$CC_stash
    
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
@@ -209,6 +212,7 @@ EOF
    if test "$enable_openacc" == "yes"; then
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
+      CUDA_CFLAGS="$CUDA_CFLAGS -acc -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
    fi
 
 fi

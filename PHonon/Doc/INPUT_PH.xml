@@ -88,7 +88,9 @@ vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
       <var name="nmix_ph" type="INTEGER" >
          <default> 4
          </default>
-         <info> Number of iterations used in potential mixing.
+         <info>
+Number of iterations used in potential mixing. Using a larger value (8~20)
+can significantly speed up convergence, at the cost of using more memory.
          </info>
       </var>
       <var name="verbosity" type="CHARACTER" >
@@ -106,7 +108,12 @@ vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
       <var name="reduce_io" type="LOGICAL" >
          <default> .false.
          </default>
-         <info> Reduce I/O to the strict minimum.
+         <info>
+Reduce I/O to the strict minimum.
+
+<b>BEWARE:</b> If the input flag <ref>reduce_io</ref>=.true. was
+used, it is not allowed to restart from an interrupted
+run.
          </info>
       </var>
       <var name="max_seconds" type="REAL" >
@@ -173,9 +180,11 @@ local fields, i.e. by setting DV_H=0 and DV_xc=0.
          <default> .true.
          </default>
          <info>
-If .true. the phonons are computed.
-If <ref>trans</ref> .and. <ref>epsil</ref> are .true. effective charges are
-calculated.
+If .false. the phonons are not computed.
+If <ref>trans</ref> .and. <ref>epsil</ref> are both .true.,
+the effective charges are calculated.
+If <ref>ldisp</ref> is .true., <ref>trans</ref>=.false. is overridden
+(except for the case of electron-phonon calculations)
          </info>
       </var>
       <var name="lraman" type="LOGICAL" >
@@ -270,7 +279,7 @@ Options are:
             <opt val="'simple'" >
 Electron-phonon lambda coefficients are computed
 for a given q and a grid of k-points specified by
-the variables nk1, nk2, nk3, k1, k2, k3.
+the variables <ref>nk1</ref>, <ref>nk2</ref>, <ref>nk3</ref>, <ref>k1</ref>, <ref>k2</ref>, <ref>k3</ref>.
             </opt>
             <opt val="'interpolated'" >
 Electron-phonon is calculated by interpolation
@@ -291,7 +300,7 @@ Electron-phonon coupling matrix elements are written
 to file prefix.epa.k for further processing by program
 epa.x which implements electron-phonon averaged (EPA)
 approximation as described in G. Samsonidze &amp; B. Kozinsky,
-Adv. Energy Mater. 2018, 1800246 <a href="http://dx.doi.org/10.1002/aenm.201800246">doi:10.1002/aenm.201800246</a>
+Adv. Energy Mater. 2018, 1800246 <a href="https://doi.org/10.1002/aenm.201800246">doi:10.1002/aenm.201800246</a>
 <a href="https://arxiv.org/abs/1511.08115">arXiv:1511.08115</a>
             </opt>
             <opt val="'ahc'" >
@@ -508,8 +517,8 @@ When these parameters are specified the phonon program
 runs a pw non-self consistent calculation with a different
 k-point grid thant that used for the charge density.
 This occurs even in the Gamma case.
-nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
-with offset determined by k1,k2,k3.
+<ref>nk1</ref>, <ref>nk2</ref>, <ref>nk3</ref> are the parameters of the Monkhorst-Pack grid
+with offset determined by <ref>k1</ref>, <ref>k2</ref>, <ref>k3</ref>.
          </info>
       </vargroup>
       <var name="diagonalization" type="CHARACTER" >
@@ -563,8 +572,8 @@ Requires <ref>trans</ref> = .false..
             </default>
             <info>
 Directory where the w_pot binary files are written.
-Must be the same with wpot_dir used in dvscf_q2r.x.
-The real space potential files are stored in wpot_dir
+Must be the same with <ref>wpot_dir</ref> used in dvscf_q2r.x.
+The real space potential files are stored in <ref>wpot_dir</ref>
 with names ${prefix}.wpot.irc${irc}//&quot;1&quot;.
             </info>
          </var>

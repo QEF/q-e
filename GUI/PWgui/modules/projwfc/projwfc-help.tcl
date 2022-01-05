@@ -137,6 +137,31 @@ if <b>.false.</b> the projections are not symmetrized, the partial
 
 
 # ------------------------------------------------------------------------
+help diag_basis -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>diag_basis</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if <b>.false.</b> the projections of Kohn-Sham states are
+             done on the orthogonalized atomic orbitals
+             in the global XYZ coordinate frame.
+if <b>.true.</b> the projections of Kohn-Sham states are
+             done on the orthogonalized atomic orbitals
+             that are rotated to the basis in which the
+             atomic occupation matrix is diagonal
+             (i.e. local XYZ coordinate frame).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help pawproj -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>pawproj</b></big>

@@ -15,8 +15,7 @@ SUBROUTINE initialize_ph()
   USE qpoint, ONLY : nksq, nksqtot, ikks, ikqs
   USE qpoint_aux, ONLY : ikmks, ikmkmqs
   USE control_lr, ONLY : lgamma
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,   ONLY : domag
+  USE noncollin_module, ONLY : noncolin, domag
   !
   IMPLICIT NONE
   INTEGER :: ik

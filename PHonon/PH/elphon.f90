@@ -32,9 +32,9 @@ SUBROUTINE elphon()
                          read_dyn_mat, read_dyn_mat_tail
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf, iuint3paw, lint3paw
   USE dfile_star,    ONLY : dvscf_star
-  USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
+  USE mp_images,  ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
-  USE io_global, ONLY: stdout
+  USE io_global, ONLY : stdout, ionode, ionode_id
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_r2q
@@ -96,11 +96,10 @@ SUBROUTINE elphon()
           CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                              imode0 + ipert,  -1 )
         ENDIF
-        IF (okpaw .AND. me_bgrp==0) &
-             CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
-                                          iuint3paw, imode0 + ipert, - 1 )
+        IF (okpaw .AND. ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
+                                             iuint3paw, imode0 + ipert, - 1 )
      END DO
-     IF (okpaw) CALL mp_bcast(int3_paw, root_bgrp, intra_bgrp_comm)
+     IF (okpaw) CALL mp_bcast(int3_paw, ionode_id, intra_image_comm)
      IF (doublegrid) THEN
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
@@ -329,7 +328,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE buffers,    ONLY : get_buffer, save_buffer
   USE klist,      ONLY : xk, ngk, igk_k
   USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, domag, npol, nspin_mag
   USE wvfct,      ONLY : nbnd, npwx
   USE uspp,       ONLY : okvan, vkb, deeq_nc
   USE el_phon,    ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
@@ -340,7 +339,6 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_ph, ONLY : trans, current_iq
   USE ph_restart, ONLY : ph_writefile
-  USE spin_orb,   ONLY : domag
   USE mp_bands,   ONLY : intra_bgrp_comm, ntask_groups
   USE mp_pools,   ONLY : npool
   USE mp,         ONLY : mp_sum, mp_bcast
@@ -361,6 +359,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE apply_dpot_mod, ONLY : apply_dpot_allocate, apply_dpot_deallocate, apply_dpot_bands
   USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
   USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save, int3_save
+  USE uspp_init,        ONLY : init_us_2
 
   IMPLICIT NONE
   !

@@ -22,8 +22,7 @@ subroutine addusdynmat (dynwrk)
   USE uspp, ONLY: okvan, becsum
   USE uspp_param, only: upf, nh
   USE lsda_mod, ONLY : nspin
-  USE spin_orb, ONLY : lspinorb
-  USE noncollin_module, ONLY : nspin_lsda
+  USE noncollin_module, ONLY : nspin_lsda, lspinorb
 
   USE phus,    ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, &
                       int5, int5_so, alphasum, alphasum_nc, becsum_nc
