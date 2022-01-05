@@ -37,7 +37,7 @@ SUBROUTINE non_scf( )
   USE fft_base,             ONLY : dfftp
   USE gvecs,                ONLY : doublegrid
   USE ions_base,            ONLY : nat
-  USE xc_lib,               ONLY : stop_exx
+  USE xc_lib,               ONLY : stop_exx, xclib_dft_is
 !
   !
   IMPLICIT NONE
@@ -90,8 +90,10 @@ SUBROUTINE non_scf( )
   ! ... sum_band computes new becsum (stored in uspp modules)
   ! ... and a subtly different copy in rho%bec (scf module)
   !
-  IF (.not. use_gpu) CALL sum_band()
-  IF (      use_gpu) CALL sum_band_gpu()
+  IF(xclib_dft_is('hybrid')) THEN 
+    IF (.not. use_gpu) CALL sum_band()
+    IF (      use_gpu) CALL sum_band_gpu()
+  END IF 
   !
   ! ... calculate weights of Kohn-Sham orbitals (only weights, not Ef,
   ! ... for a "bands" calculation where Ef is read from data file)
@@ -139,6 +141,7 @@ SUBROUTINE non_scf( )
   IF ( lorbm ) CALL orbm_kubo()
   !
 !civn 
+  IF(xclib_dft_is('hybrid')) THEN 
      !CALL save_buffer( evc, nwordwfc, iunwfc, nks )
      ! I want exx_is_active to be false inside exxinit to allow all relevant initializations
      CALL stop_exx() 
@@ -179,6 +182,7 @@ SUBROUTINE non_scf( )
            CALL save_buffer( evc, nwordwfc, iunwfc, nks )
      IF ( lberry ) CALL c_phase()
      IF ( lorbm ) CALL orbm_kubo()
+  END IF
 !
   CALL stop_clock( 'electrons' )
   !
