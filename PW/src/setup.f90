@@ -74,7 +74,6 @@ SUBROUTINE setup()
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE mp_images,          ONLY : intra_image_comm
-  USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
   USE mp,                 ONLY : mp_bcast
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
@@ -664,21 +663,42 @@ END SUBROUTINE setup
 SUBROUTINE setup_para ( )
   !----------------------------------------------------------------------------
   !
+  ! Initialize the various parallelization levels
   ! Must be called after setup and before setup_exx only once
   !
   USE control_flags,  ONLY : use_para_diag, use_gpu
   USE lsda_mod,  ONLY : isk
   USE klist,     ONLY : xk, wk, nks, nkstot
   USE wvfct,     ONLY : nbnd
-  USE mp_pools,  ONLY : kunit
+  USE mp_bands,  ONLY : mp_start_bands
+  USE mp_pools,  ONLY : kunit, intra_pool_comm, mp_start_pools
+  USE mp_images, ONLY : intra_image_comm
+  USE command_line_options, ONLY : npool_, nband_, ntg_, nyfft_
   !
   IMPLICIT NONE
   !
   LOGICAL, EXTERNAL  :: check_gpu_support
   !
-  use_gpu = check_gpu_support( )
+  ! k-point parallelization first
+  !
+  CALL mp_start_pools ( npool_, intra_image_comm )
   kunit   = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
+  !
+  ! band parallelization - FIXME: why the following section?
+  !
+#if defined (__CUDA_OPTIMIZED)
+  CALL mp_start_bands ( 1 , ntg_, nyfft_, intra_pool_comm )
+#else
+  CALL mp_start_bands ( nband_, ntg_, nyfft_, intra_pool_comm )
+#endif
+  !
+  ! GPUs (not sure it serves any purpose)
+  !
+  use_gpu = check_gpu_support( )
+  !
+  ! linear-algebra
+  !
   CALL set_para_diag( nbnd, use_para_diag )
   !
 END SUBROUTINE setup_para
