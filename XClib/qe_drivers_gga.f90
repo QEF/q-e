@@ -716,8 +716,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( exx_started ) THEN
            sx_tot(ir) = (1.0_DP - exx_fraction) * sx_tot(ir)
            v1x_up = (1.0_DP - exx_fraction) * v1x_up
-           v1x_up = (1.0_DP - exx_fraction) * v1x_up
-           v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
+           v1x_dw = (1.0_DP - exx_fraction) * v1x_dw
+           v2x_up = (1.0_DP - exx_fraction) * v2x_up
            v2x_dw = (1.0_DP - exx_fraction) * v2x_dw
         ENDIF
         !

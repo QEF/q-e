@@ -7,8 +7,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_xpsi &
-            ( npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e )
+SUBROUTINE rotate_xpsi_driver &
+            ( npwx, npw, nstart, nbnd, psi, npol, overlap, evc, hevc, sevc, e, use_para_diag, gamma_only )
   !----------------------------------------------------------------------------
   !
   ! ... Driver routine (maybe it should be an interface) for
@@ -18,29 +18,33 @@ SUBROUTINE rotate_xpsi &
   ! ... Calls h_psi, s_psi to calculate H|psi> and S|psi>,
   ! ... which are saved in hevc and sevc.
   !
-  USE kinds,         ONLY : DP
-  USE control_flags, ONLY : use_para_diag, gamma_only
+  USE util_param,         ONLY : DP
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
   INTEGER, INTENT(IN) :: npw, npwx, nstart, nbnd, npol
-    ! dimension of the matrix to be diagonalized
-    ! leading dimension of matrix psi, as declared in the calling pgm unit
-    ! input number of states
-    ! output number of states
-    ! first G with nonzero norm
-    ! number of spin polarizations
+  !! dimension of the matrix to be diagonalized
+  !! leading dimension of matrix psi, as declared in the calling pgm unit
+  !! input number of states
+  !! output number of states
+  !! number of spin polarizations
   LOGICAL, INTENT(IN) :: overlap
-    ! if .FALSE. : S|psi> not needed
+  !! if .FALSE. : S|psi> not needed
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nstart)
+  !! vectors spanning the subspace 
   COMPLEX(DP), INTENT(OUT)   :: evc(npwx*npol,nbnd)
-    ! input and output eigenvectors (may overlap)
+  !! input and output eigenvectors (may overlap)
   COMPLEX(DP), INTENT(OUT) :: hevc(npwx*npol,nbnd), sevc(npwx*npol,nbnd)
-    ! H|psi> and S|psi>
+  !! H|psi> and S|psi>
   REAL(DP), INTENT(OUT) :: e(nbnd)
-    ! eigenvalues
+  !! eigenvalues
+  LOGICAL,INTENT(IN) :: use_para_diag 
+  !! if true parallel diagonalization will be used 
+  LOGICAL,INTENT(IN) :: gamma_only
+  !! set to true when H  is real 
+
   !
   EXTERNAL :: h_psi, s_psi
     ! h_psi(npwx,npw,nbnd,psi,hpsi)
@@ -87,4 +91,5 @@ SUBROUTINE rotate_xpsi &
   !
   CALL stop_clock( 'wfcrot' )
   !
-END SUBROUTINE rotate_xpsi
+END SUBROUTINE rotate_xpsi_driver
+

@@ -4,6 +4,8 @@ New in development version:
   * projwfc.x can be used to compute the PDOS in a local basis (I. Timrov)
 
 Fixed in development version:
+  * incorrect exx factor multiplication in the gga term of polarized cx0 
+    functional (v.6.8 only)
   * Some build problems occurring under special circumstances
   * Some PP files were not correctly read since v.6.7
   * DFT-D3 with dftd3_version=4 or 6 could produce NaN's in parallel runs

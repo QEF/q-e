@@ -51,6 +51,8 @@ SUBROUTINE hp_print_clock
   WRITE( stdout, * )  '    PRINTING TIMING FROM LR MODULE: '
   WRITE( stdout, * )
   !
+  CALL print_clock ('sth_kernel')
+  CALL print_clock ('apply_dpot_b')
   CALL print_clock ('ortho')
   CALL print_clock ('cgsolve')
   CALL print_clock ('ch_psi')

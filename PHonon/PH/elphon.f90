@@ -521,7 +521,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            !  V_{eff} on the bare change of the potential
            !
            IF (isolv==1) THEN
-              call adddvscf_ph_mag (ipert, ik, becp1)
+              call adddvscf (ipert, ik)
               !
               ! DFPT+U: add to dvpsi the scf part of the response
               ! Hubbard potential dV_hub
@@ -531,7 +531,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
                  call adddvhubscf (ipert, ik)
               ENDIF
            ELSE
-              call adddvscf_ph_mag (ipert, ik, becpt)
+              call adddvscf_ph_mag (ipert, ik)
            END IF
            !
            !  reset the original magnetic field if it was changed
