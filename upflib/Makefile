@@ -74,6 +74,8 @@ OBJS_GPU= \
   sph_bes_gpu.o \
   ylmr2_gpu.o
 
+OBJS_NODEP+= dom.o wxml.o
+
 all : libupf.a virtual_v2.x upfconv.x casino2upf.x
 
 libupf.a: $(OBJS_DEP) $(OBJS_NODEP) $(OBJS_GPU)

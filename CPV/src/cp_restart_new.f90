@@ -28,6 +28,17 @@ MODULE cp_restart_new
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE matrix_inversion
+#if defined (__outfoxed)
+    USE     wxml
+    USE     dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+                            hasAttribute, extractDataAttribute, &
+                            extractDataContent, destroy
+#else
+    USE FoX_wxml
+    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, &
+                            hasAttribute, extractDataAttribute, &
+                            extractDataContent, destroy
+#endif
   !
   IMPLICIT NONE
   !
@@ -95,8 +106,6 @@ MODULE cp_restart_new
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
       USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf,  &
                               qexsd_add_all_clocks
-      !
-      IMPLICIT NONE
       !
       INTEGER,               INTENT(IN) :: ndw          !
       LOGICAL,               INTENT(IN) :: ascii        !
@@ -556,8 +565,6 @@ MODULE cp_restart_new
                             ekincm, c02, cm2, wfc )
       !------------------------------------------------------------------------
       !
-      USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
-                                           Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, mbd_vdw, lxdm, iverbosity, lwf
       USE run_info,                 ONLY : title
@@ -586,8 +593,6 @@ MODULE cp_restart_new
       USE qexsd_copy, ONLY:  qexsd_copy_geninfo, qexsd_copy_parallel_info, &
            qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
            qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
-      !
-      IMPLICIT NONE
       !
       INTEGER,               INTENT(IN)    :: ndr          !  I/O unit number
       LOGICAL,               INTENT(IN)    :: ascii        !
@@ -842,10 +847,7 @@ MODULE cp_restart_new
     !------------------------------------------------------------------------
     ! ... Cell related variables, CP-specific
     !
-    USE FoX_wxml
     USE ions_base, ONLY: nat
-    !
-    IMPLICIT NONE
     !
     TYPE(xmlf_t),  INTENT(INOUT) :: xf
     INTEGER,  INTENT(IN) :: nfi          ! index of the current step
@@ -1072,7 +1074,6 @@ MODULE cp_restart_new
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : ionode
-    USE FoX_wxml 
     USE cell_base, ONLY : ainv ! what is this? what is the relation with h?
     !
     REAL(DP), INTENT(IN) :: h(:,:), wfc(:,:)
@@ -1127,8 +1128,6 @@ MODULE cp_restart_new
     USE gvecw,              ONLY : ngw, ngw_g
     USE gvect,              ONLY : ig_l2g
     !
-    IMPLICIT NONE
-    !
     INTEGER,               INTENT(IN)  :: ndr
     INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
     CHARACTER,             INTENT(IN)  :: tag
@@ -1181,9 +1180,6 @@ MODULE cp_restart_new
     ! ... ierr =  1: error reading MD status
     ! ... ierr =  2: error reading timestep info
     !
-    USE FoX_dom
-    !
-    IMPLICIT NONE
     !
     TYPE(Node),POINTER,INTENT(IN) :: root
     INTEGER,  INTENT(IN) :: nat
@@ -1396,7 +1392,6 @@ MODULE cp_restart_new
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : stdout
-    USE FoX_dom
     !
     TYPE(Node), POINTER, INTENT(IN)  :: root
     REAL(DP), INTENT(OUT):: wfc(:,:)
@@ -1437,12 +1432,8 @@ MODULE cp_restart_new
     !
     USE parameters,  ONLY : ntypx
     USE ions_base,   ONLY : nat
-    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, extractDataAttribute, &
-                            extractDataContent, destroy
     USE qexsd_copy,  ONLY : qexsd_copy_atomic_structure
     USE qes_read_module, ONLY : qes_read
-    !
-    IMPLICIT NONE
     !
     INTEGER,          INTENT(IN)    :: ndr
     LOGICAL,          INTENT(IN)    :: ascii
@@ -1585,7 +1576,6 @@ MODULE cp_restart_new
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : idesc
     !
-    IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(in) :: lambda(:,:)
@@ -1625,8 +1615,6 @@ MODULE cp_restart_new
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : idesc
     !
-    IMPLICIT NONE
-
     include 'laxlib.fh'
 
     CHARACTER(LEN=*), INTENT(in) :: filename
@@ -1671,8 +1659,6 @@ MODULE cp_restart_new
     USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
-    IMPLICIT NONE
-
     include 'laxlib.fh'
 
     REAL(dp), INTENT(in) :: mat_z(:,:,:)
@@ -1722,8 +1708,6 @@ MODULE cp_restart_new
     USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
-    IMPLICIT NONE
-
     include 'laxlib.fh'
 
     REAL(dp), INTENT(out) :: mat_z(:,:,:)
