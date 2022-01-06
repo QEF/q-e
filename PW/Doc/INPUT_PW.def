@@ -2854,14 +2854,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Select which of the cell parameters should be moved:
                 }                
                 opt -val 'all'          { all axis and angles are moved }
-                opt -val 'ibrav'        {
-                    all axis and angles are moved, but the lattice remains consistent
-                    with the initial ibrav choice. You can use this option in combination
-                    with any other one by specifying "ibrav+option". Please note that some
-                    combinations do not make sense for some crystals and will guarantee that
-                    the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
-                    hexagonal cells, but will never converge for cubic ones.
-                }
+                opt -val 'ibrav'        { all axis and angles are moved, 
+                but the lattice remains consistent
+                with the initial ibrav choice. You can use this option in combination
+                with any other one by specifying "ibrav+option". Please note that some
+                combinations do not make sense for some crystals and will guarantee that
+                the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
+                hexagonal cells, but will never converge for cubic ones.  }
+                opt -val 'a'            { the x component of axis 1 (v1_x) is fixed }
+                opt -val 'b'            { the y component of axis 2 (v2_y) is fixed }
+                opt -val 'c'            { the z component of axis 3 (v3_z) is fixed }
+                opt -val 'fixa'         { axis 1 (v1_x,v1_y,v1_z) is fixed }
+                opt -val 'fixb'         { axis 1 (v2_x,v2_y,v2_z) is fixed }
+                opt -val 'fixc'         { axis 1 (v3_x,v3_y,v3_z) is fixed }
                 opt -val 'x'            { only the x component of axis 1 (v1_x) is moved }
                 opt -val 'y'            { only the y component of axis 2 (v2_y) is moved }
                 opt -val 'z'            { only the z component of axis 3 (v3_z) is moved }
