@@ -667,13 +667,15 @@ SUBROUTINE setup_para ( )
   ! Must be called after setup and before setup_exx only once
   !
   USE control_flags,  ONLY : use_para_diag, use_gpu
+  USE io_global,      ONLY : stdout
   USE lsda_mod,  ONLY : isk
   USE klist,     ONLY : xk, wk, nks, nkstot
   USE wvfct,     ONLY : nbnd
-  USE mp_bands,  ONLY : mp_start_bands
-  USE mp_pools,  ONLY : kunit, intra_pool_comm, mp_start_pools
+  USE mp_bands,  ONLY : mp_start_bands, nbgrp, ntask_groups, nproc_bgrp,&
+                        nyfft
+  USE mp_pools,  ONLY : kunit, intra_pool_comm, mp_start_pools, npool
   USE mp_images, ONLY : intra_image_comm
-  USE command_line_options, ONLY : npool_, nband_, ntg_, nyfft_
+  USE command_line_options, ONLY : npool_, nband_, ntg_, nyfft_, nmany_
   !
   IMPLICIT NONE
   !
@@ -696,6 +698,22 @@ SUBROUTINE setup_para ( )
   ! GPUs (not sure it serves any purpose)
   !
   use_gpu = check_gpu_support( )
+  !
+  ! printout - same as in envirnoment.f90
+  !
+  IF ( npool > 1 ) WRITE( stdout, &
+         '(5X,"K-points division:     npool     = ",I7)' ) npool
+  IF ( nbgrp > 1 ) WRITE( stdout, &
+         '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
+  IF ( nproc_bgrp > 1 ) WRITE( stdout, &
+         '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
+  IF ( nyfft > 1 ) WRITE( stdout, &
+         '(5X,"wavefunctions fft division:  Y-proc x Z-proc = ",2I7)' ) &
+         nyfft, nproc_bgrp / nyfft
+  IF ( ntask_groups > 1 ) WRITE( stdout, &
+         '(5X,"wavefunctions fft division:  task group distribution",/,34X,"#TG    x Z-proc = ",2I7)' ) &
+         ntask_groups, nproc_bgrp / ntask_groups
+  IF ( nmany_ > 1) WRITE( stdout, '(5X,"FFT bands division:     nmany     = ",I7)' ) nmany_
   !
   ! linear-algebra
   !
