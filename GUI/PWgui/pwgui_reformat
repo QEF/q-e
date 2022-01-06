@@ -1,11 +1,10 @@
 #!/bin/sh
 # ----------------------------------------------------------------------
 #  PROGRAM: pwgui_reformat
-#  PURPOSE: reformat the input for nice lookout of a particular PWSCF module
+#  PURPOSE: reformat the QE input file for a nice lookout 
 # ----------------------------------------------------------------------
 #  Anton Kokalj
 #  Jozef Stefan Institute, Ljubljana, Slovenia
-#  INFM DEMOCRITOS National Simulation Center, Trieste, Italy
 #  Email: Tone.Kokalj@ijs.si
 # ======================================================================
 #  Copyright (c) 2003--2004 Anton Kokalj
@@ -56,14 +55,10 @@ pathdir() {
     ( cd $dir; pwd )
 }
 
-if [ -z "$PWGUI" ]; then
+if test -z "$PWGUI"; then
     # try to guess the PWGUI value
      export PWGUI=`pathdir $0`
 fi
 
+tclsh $PWGUI/pwgui_reformat.tcl $@
 
-if [ -d $PWGUI/bin ]; then
-    $PWGUI/bin/itkwish $PWGUI/pwgui_reformat.tcl $@
-else
-    tclsh $PWGUI/pwgui_reformat.tcl $@
-fi

@@ -1,13 +1,13 @@
 #!/bin/sh
 # ----------------------------------------------------------------------
 #  PROGRAM: PWgui
-#  PURPOSE: tries to be a GUI for the PWscf
+#  PURPOSE: A GUI input builder for PWscf / Quantum ESPRESSO
 # ----------------------------------------------------------------------
 #  Anton Kokalj
 #  Jozef Stefan Institute, Ljubljana, Slovenia
-#  Email: Tone.Kokalj@ijs.si
+#  Email: tone.kokalj@ijs.si
 # ======================================================================
-#  Copyright (c) 2003--2019 Anton Kokalj
+#  Copyright (c) 2003--2022 Anton Kokalj
 # ======================================================================
 #
 #
@@ -55,7 +55,7 @@ pathdir() {
     ( cd $dir; pwd )
 }
 
-if [ -z "$PWGUI" ]; then
+if test -z "$PWGUI"; then
     # try to guess the PWGUI value
      export PWGUI=`pathdir $0`
 fi
@@ -66,14 +66,6 @@ echo "
   This is PWgui version: `cat $PWGUI/VERSION`
  --------------------------------------------------
 "
-if [ -d $PWGUI/bin ]; then
-    echo "
- PWgui: using the \"$PWGUI/bin/itkwish\" interpreter
-"
-    $PWGUI/bin/itkwish $PWGUI/pwgui.tcl
-else
-    echo "
- PWgui: using the system default \"tclsh\" interpreter
-"
-    tclsh $PWGUI/pwgui.tcl
-fi
+
+tclsh $PWGUI/pwgui.tcl
+

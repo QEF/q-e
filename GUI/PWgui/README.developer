@@ -3,10 +3,10 @@
  ==============================================================================
 
 
-*** see INSTALL.svn for how to run SVN version of PWgui !!!
+*** see INSTALL.repository for how to run the repository version of PWgui !!!
 
 
-FOR PWscf DEVELOPERS: UPDATING the PWgui MODULES
+For PWscf developers: updating the PWgui modules
 --------------------------------------------------
 
 If some new variables have been added to a given PWscf program, please
@@ -18,8 +18,8 @@ updated module works!!! If you face troubles, please consult
 tone.kokalj@ijs.si.
 
 
-WHAT IS A "MODULE" IN PWgui
------------------------------
+What is a "module" in PWgui
+---------------------------
 
 A "module" stands for the definition of the input of a given PWscf
 program. The description of the input is specified using the
@@ -39,8 +39,8 @@ in directory modules/pw. The following files are located therein:
 Hereafter such files are called "module definition files".
 
 
-HOW TO ADD A NEW MODULE TO PWgui
-----------------------------------
+How to add a new module to PWgui
+--------------------------------
 
 Let's say we want to add a new module named "mymodule". We have to
 perform two tasks:
@@ -67,14 +67,12 @@ $gui addModule module mymodule "MyModule.X" \
 }
 
 
-We can also add extra documentation for the module. Let say that we
-have an INPUT_MYMODULE file. We can either copy this file to directory
-doc/pwdoc or alternatively we make a symbolic link. Then we edit a
-Makefile and insert the INPUT_MYMODULE support (the purpose is to
-convert INPUT_MYMODULE to INPUT_MYMODULE.html). Now we execute: make
-input_html (this will create the INPUT_MYMODULE.html file). Finally,
-we can edit the src-tcl/pwscf.itcl, and add the following line on the
-proper place (search for addHelp string):
+We can also add a documentation for the module. Let say that we have
+an INPUT_MYMODULE.txt file. We need to tranform it into a simple
+INPUT_MYMODULE.html file in the doc/ directory by editing the
+doc/Makefile file. Then we sould edit the src-tcl/pwscf.itcl file and
+add the following line on the proper place (search for addHelp
+string):
 
 $gui addHelp help mymodule "MyModule.X Input Syntax"  \
 	[file join $env(PWGUI) doc pwdocs INPUT_MYMODULE.html]

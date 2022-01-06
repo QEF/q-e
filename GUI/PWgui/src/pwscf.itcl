@@ -114,22 +114,21 @@ $gui addModule module hp "HP.X" [file join $env(PWGUI) modules hp hp.tcl] {
 # help Files
 # ------------------------------------------------------------------------
 
-set user_guide_html [file join $env(PWGUI) doc pwdocs user_guide user_guide.html]
+set user_guide_html [file join $env(PWGUI) doc user_guide user_guide.html]
 if { [file exists $user_guide_html] } {
     $gui addHelp help usersguide "User's Guide for Quantum-ESPRESSO" $user_guide_html word
     $gui addHelp separator
 }
 
-$gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PW.html] none
-$gui addHelp help neb       "NEB.DAT Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_NEB.html] none
-$gui addHelp help ph           "PH.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PH.html] none
-$gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PP.html] none
-$gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PROJWFC.html] none
-$gui addHelp help bands     "Bands.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_BANDS.html] none
-$gui addHelp help dos         "Dos.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_DOS.html] none
-#$gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html] none
-$gui addHelp help ld          "LD1.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_LD1.html] none
-$gui addHelp help hp          "HP.X Input Syntax"   [file join $env(PWGUI) doc pwdocs INPUT_HP.html] none
+$gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PW.html] none
+$gui addHelp help neb       "NEB.DAT Input Syntax"  [file join $env(PWGUI) doc INPUT_NEB.html] none
+$gui addHelp help ph           "PH.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PH.html] none
+$gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PP.html] none
+$gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PROJWFC.html] none
+$gui addHelp help bands     "Bands.X Input Syntax"  [file join $env(PWGUI) doc INPUT_BANDS.html] none
+$gui addHelp help dos         "Dos.X Input Syntax"  [file join $env(PWGUI) doc INPUT_DOS.html] none
+$gui addHelp help ld          "LD1.X Input Syntax"  [file join $env(PWGUI) doc INPUT_LD1.html] none
+$gui addHelp help hp          "HP.X Input Syntax"   [file join $env(PWGUI) doc INPUT_HP.html] none
 
 $gui addHelp separator
 
