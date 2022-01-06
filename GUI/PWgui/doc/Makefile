@@ -1,50 +1,24 @@
-TOPDIR        = ../../../..
-QE_DOC_DIR    = $(TOPDIR)/Doc
-
-INPUT_FILES_HTML = \
-        INPUT_PW.html \
-	INPUT_NEB.html \
-        INPUT_PH.html \
-        INPUT_PP.html \
-        INPUT_PROJWFC.html \
-        INPUT_BANDS.html \
-        INPUT_DOS.html \
-        INPUT_LD1.html \
-        INPUT_HP.html
-
-INPUT_FILES_TXT = $(INPUT_FILES_HTML:.html=.txt)
-LINK_FILES      = $(INPUT_FILES_TXT) 
-
+TOPDIR        = ../../..
 
 all: input_html make_user_guide
 
+input_html:
+	./htmlise.sh $(TOPDIR)/PW/Doc/INPUT_PW.txt      > INPUT_PW.html
+	./htmlise.sh $(TOPDIR)/NEB/Doc/INPUT_NEB.txt    > INPUT_NEB.html
+	./htmlise.sh $(TOPDIR)/PHonon/Doc/INPUT_PH.txt  > INPUT_PH.html
+	./htmlise.sh $(TOPDIR)/PP/Doc/INPUT_PP.txt      > INPUT_PP.html
+	./htmlise.sh $(TOPDIR)/PP/Doc/INPUT_PROJWFC.txt > INPUT_PROJWFC.html
+	./htmlise.sh $(TOPDIR)/PP/Doc/INPUT_BANDS.txt   > INPUT_BANDS.html
+	./htmlise.sh $(TOPDIR)/PP/Doc/INPUT_DOS.txt     > INPUT_DOS.html
+	./htmlise.sh $(TOPDIR)/atomic/Doc/INPUT_LD1.txt > INPUT_LD1.html
+	./htmlise.sh $(TOPDIR)/HP/Doc/INPUT_HP.txt      > INPUT_HP.html
 
-links:
-	- ( cd $(TOPDIR); $(MAKE) doc )
-	for file in $(LINK_FILES); do \
-		if test ! -f $$file; then ln -sf $(QE_DOC_DIR)/$$file . ; fi; \
-	done
+qe_user_guide:
+	- ( cd $(TOPDIR)/Doc; $(MAKE) user_guide )
 
-clean_links:
-	for file in $(LINK_FILES); do \
-		if test -f $$file ; then rm -f $$file ; fi ; \
-	done
-
-
-input_html: links 
-	./htmlise.sh INPUT_PW.txt      > INPUT_PW.html
-	./htmlise.sh INPUT_NEB.txt     > INPUT_NEB.html
-	./htmlise.sh INPUT_PH.txt      > INPUT_PH.html
-	./htmlise.sh INPUT_PP.txt      > INPUT_PP.html
-	./htmlise.sh INPUT_PROJWFC.txt > INPUT_PROJWFC.html
-	./htmlise.sh INPUT_BANDS.txt   > INPUT_BANDS.html
-	./htmlise.sh INPUT_DOS.txt     > INPUT_DOS.html
-	./htmlise.sh INPUT_LD1.txt     > INPUT_LD1.html
-	./htmlise.sh INPUT_HP.txt      > INPUT_HP.html
-
-make_user_guide: links
+make_user_guide: qe_user_guide
 	rm -rf user_guide/
-	cp -a $(QE_DOC_DIR)/user_guide .
+	cp -a $(TOPDIR)/Doc/user_guide .
 	cd user_guide/; \
 	for file in *.html; do \
 		cp $$file /tmp/$$file; \
@@ -53,9 +27,8 @@ make_user_guide: links
 	done
 
 
-clean: clean_links
-	-rm -f INPUT_*.html INPUT_*.txt *~
-	-rm -f *.tex *.aux *.log *.out *.toc *.gif *.pdf *.png
+clean: 
+	-rm -f  *~
 	-rm -rf user_guide/	
 
 
