@@ -680,6 +680,12 @@ SUBROUTINE setup_para ( )
   IMPLICIT NONE
   !
   LOGICAL, EXTERNAL  :: check_gpu_support
+  LOGICAL, SAVE :: first = .TRUE.
+  !
+  ! do not execute twice: unpredictable results may follow
+  !
+  IF ( .NOT.first ) RETURN
+  first = .false.
   !
   ! k-point parallelization first
   !
@@ -699,7 +705,7 @@ SUBROUTINE setup_para ( )
   !
   use_gpu = check_gpu_support( )
   !
-  ! printout - same as in envirnoment.f90
+  ! printout - same as in environment.f90
   !
   IF ( npool > 1 ) WRITE( stdout, &
          '(5X,"K-points division:     npool     = ",I7)' ) npool

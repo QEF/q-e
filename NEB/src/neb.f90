@@ -40,7 +40,7 @@ PROGRAM neb
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
-  CALL mp_startup ( start_images=.true. )
+  CALL mp_startup ( start_images=.true., images_only=.true. )
   !
   CALL environment_start ( 'NEB' )
   !
