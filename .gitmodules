@@ -16,3 +16,6 @@
 [submodule "external/devxlib"]
 	path = external/devxlib
 	url = https://gitlab.com/max-centre/components/devicexlib.git
+[submodule "external/d3q"]
+	path = external/d3q
+	url = https://github.com/anharmonic/d3q.git
