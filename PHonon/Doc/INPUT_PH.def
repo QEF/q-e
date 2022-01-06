@@ -104,8 +104,13 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 
         var reduce_io -type LOGICAL { 
             default { .false. }
-            info { Reduce I/O to the strict minimum. If the input flag reduce_io=.true. was used, 
-                   it is not allowed to restart from an interrupted run.}
+            info {
+                Reduce I/O to the strict minimum.
+
+                @b BEWARE: If the input flag @ref reduce_io=.true. was
+                used, it is not allowed to restart from an interrupted
+                run.
+            }
         }
 
         var max_seconds  -type REAL { 
@@ -173,7 +178,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                 If .false. the phonons are not computed.
                 If @ref trans .and. @ref epsil are both .true.,
 		the effective charges are calculated.
-		If @ref ldisp is .true., trans=.false. is overridden
+		If @ref ldisp is .true., @ref trans=.false. is overridden
                 (except for the case of electron-phonon calculations)
             }      
         }
@@ -259,7 +264,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 		opt -val 'simple' {
 		    Electron-phonon lambda coefficients are computed
 		    for a given q and a grid of k-points specified by
-		    the variables nk1, nk2, nk3, k1, k2, k3.
+		    the variables @ref nk1, @ref nk2, @ref nk3, @ref k1, @ref k2, @ref k3.
 		}
 		opt -val 'interpolated' {
 		    Electron-phonon is calculated by interpolation
@@ -283,14 +288,14 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                     Adv. Energy Mater. 2018, 1800246 doi:10.1002/aenm.201800246
                     arXiv:1511.08115
                 }
-    opt -val 'ahc' {
-        Quantities required for the calculation of phonon-induced
-        electron self-energy are computed and written to the directory
-        @ref ahc_dir. The output files can be read by postahc.x for
-        the calculation of electron self-energy.
-        Available for both metals and insulators.
-        @ref trans=.false. is required.
-    }
+                opt -val 'ahc' {
+                    Quantities required for the calculation of phonon-induced
+                    electron self-energy are computed and written to the directory
+                    @ref ahc_dir. The output files can be read by postahc.x for
+                    the calculation of electron self-energy.
+                    Available for both metals and insulators.
+                    @ref trans=.false. is required.
+                }
 		info {
 		    For metals only, requires gaussian smearing (except for 'ahc').
 		
@@ -486,8 +491,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                 runs a pw non-self consistent calculation with a different
                 k-point grid thant that used for the charge density.
                 This occurs even in the Gamma case.
-                nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
-                with offset determined by k1,k2,k3.
+                @ref nk1, @ref nk2, @ref nk3 are the parameters of the Monkhorst-Pack grid
+                with offset determined by @ref k1, @ref k2, @ref k3.
             }
         }
 
@@ -542,8 +547,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                 default { outdir // 'w_pot/' }
                 info {
                     Directory where the w_pot binary files are written.
-                    Must be the same with wpot_dir used in dvscf_q2r.x.
-                    The real space potential files are stored in wpot_dir
+                    Must be the same with @ref wpot_dir used in dvscf_q2r.x.
+                    The real space potential files are stored in @ref wpot_dir
                     with names ${prefix}.wpot.irc${irc}//"1".
                 }
             }

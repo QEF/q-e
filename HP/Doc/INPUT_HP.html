@@ -46,7 +46,7 @@
 <tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
 <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
-	      hp.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: 6.6)</span>
+	      hp.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: 7.0)</span>
 </h2>
 </th></tr>
 <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -58,7 +58,7 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm8">&amp;INPUTHP</a></p>
 <blockquote>
-<a href="#idm9">prefix</a> | <a href="#idm12">outdir</a> | <a href="#idm17">iverbosity</a> | <a href="#idm20">max_seconds</a> | <a href="#idm24">nq1</a> | <a href="#idm25">nq2</a> | <a href="#idm26">nq3</a> | <a href="#idm29">skip_equivalence_q</a> | <a href="#idm32">determine_num_pert_only</a> | <a href="#idm36">find_atpert</a> | <a href="#idm39">docc_thr</a> | <a href="#idm43">skip_type</a> | <a href="#idm51">equiv_type</a> | <a href="#idm58">perturb_only_atom</a> | <a href="#idm65">start_q</a> | <a href="#idm73">last_q</a> | <a href="#idm81">sum_pertq</a> | <a href="#idm88">compute_hp</a> | <a href="#idm93">conv_thr_chi</a> | <a href="#idm96">thresh_init</a> | <a href="#idm99">ethr_nscf</a> | <a href="#idm102">niter_max</a> | <a href="#idm105">alpha_mix(i)</a> | <a href="#idm109">nmix</a> | <a href="#idm113">num_neigh</a> | <a href="#idm116">lmin</a> | <a href="#idm122">rmax</a>
+<a href="#idm9">prefix</a> | <a href="#idm12">outdir</a> | <a href="#idm17">iverbosity</a> | <a href="#idm20">max_seconds</a> | <a href="#idm24">nq1</a> | <a href="#idm25">nq2</a> | <a href="#idm26">nq3</a> | <a href="#idm29">skip_equivalence_q</a> | <a href="#idm32">determine_num_pert_only</a> | <a href="#idm36">find_atpert</a> | <a href="#idm39">docc_thr</a> | <a href="#idm43">skip_type</a> | <a href="#idm51">equiv_type</a> | <a href="#idm58">perturb_only_atom</a> | <a href="#idm65">start_q</a> | <a href="#idm73">last_q</a> | <a href="#idm81">sum_pertq</a> | <a href="#idm88">compute_hp</a> | <a href="#idm93">conv_thr_chi</a> | <a href="#idm96">thresh_init</a> | <a href="#idm99">ethr_nscf</a> | <a href="#idm102">niter_max</a> | <a href="#idm105">alpha_mix(i)</a> | <a href="#idm109">nmix</a> | <a href="#idm113">num_neigh</a> | <a href="#idm116">lmin</a> | <a href="#idm122">rmax</a> | <a href="#idm125">dist_thr</a>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -591,12 +591,29 @@ are e.g. defects in the system.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm125"></a><a name="dist_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dist_thr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 6.D-4
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Threshold (in Bohr) for comparing inter-atomic distances
+when reconstructing the missing elements of the response
+susceptibility in the post-processing step.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
    </td></tr></tbody></table></td></tr>
 </table>
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Fri Jul 16 12:02:14 CEST 2021.
+	  This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021.
 	</small>
 </body>
 </html>

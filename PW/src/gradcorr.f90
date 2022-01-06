@@ -227,7 +227,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
        CALL fft_graddot( dfftp, h(1,1,is), g, dh )
        !$acc update device( dh )
      ENDIF
-     !$acc parallel loop
+     !$acc parallel loop reduction(-:vtxcgc)
      DO k = 1, dfftp%nnr
        v(k,is) = v(k,is) - dh(k)
        vtxcgc = vtxcgc - dh(k) * rhoaux(k,is)

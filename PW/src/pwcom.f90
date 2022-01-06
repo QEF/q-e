@@ -90,7 +90,7 @@ CONTAINS
     INTEGER :: ik
     !
     IF (.NOT.ALLOCATED(igk_k)) ALLOCATE( igk_k(npwx,nks) )
-    !$acc enter data create(igk_k(npwx,nks))
+    !$acc enter data create(igk_k(1:npwx,1:nks))
     !
     IF (.NOT.ALLOCATED(ngk))   ALLOCATE( ngk(nks) )
     !
@@ -157,6 +157,9 @@ MODULE lsda_mod
   !! spin of the current kpoint
   INTEGER :: isk(npk)
   !! for each k-point: 1=spin up, 2=spin down
+  REAL(DP),ALLOCATABLE  :: local_charges(:), local_mag(:,:)
+  !! used to store the local charges and magnetizatiom computed in report_mag 
+  !! (e.g. for printing them in the XML file)
   !
 END MODULE lsda_mod
 !
@@ -462,6 +465,21 @@ MODULE fixed_occ
 END MODULE fixed_occ
 !
 !
+MODULE pw_interfaces 
+  USE kinds, ONLY: DP 
+  IMPLICIT NONE 
+  PUBLIC 
+  INTERFACE 
+    SUBROUTINE report_mag(save_locals)
+      !! This subroutine prints out information about the local magnetization
+      !! and/or charge, integrated around the atomic positions at points which
+      !! are calculated in make_pointlists.
+      LOGICAL,OPTIONAL,INTENT(IN) :: save_locals
+      !! if present and true locals are saved into local_charges and local_mod of lsda_mod 
+    END SUBROUTINE 
+  END INTERFACE 
+END MODULE pw_interfaces 
+! 
 MODULE pwcom
   !
   USE klist
@@ -473,5 +491,6 @@ MODULE pwcom
   USE relax
   USE cellmd
   USE fixed_occ
+  USE pw_interfaces 
   !
 END MODULE pwcom

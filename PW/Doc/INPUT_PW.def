@@ -53,10 +53,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          Y  Mass_Y  PseudoPot_Y
          Z  Mass_Z  PseudoPot_Z
 
-        @b ATOMIC_POSITIONS { alat | bohr | crystal | angstrom | crystal_sg }
+        @b ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg }
           X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
           Y 0.5  0.0  0.0
-          Z O.0  0.2  0.2
+          Z 0.0  0.2  0.2
 
         @b K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
         if (gamma)
@@ -83,10 +83,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            nconstr  { constr_tol }
            constr_type(.)   constr(1,.)   constr(2,.) [ constr(3,.)   constr(4,.) ] { constr_target(.) } ]
 
-        [ @b ATOMIC_FORCES
-           label_1 Fx(1) Fy(1) Fz(1)
+        [ @b ATOMIC_VELOCITIES
+           label(1)  vx(1) vy(1) vz(1)
            .....
-           label_n Fx(n) Fy(n) Fz(n) ]
+           label(n)  vx(n) vy(n) vz(n) ]
+
+        [ @b ATOMIC_FORCES
+           label(1)  Fx(1) Fy(1) Fz(1)
+           .....
+           label(n)  Fx(n) Fy(n) Fz(n) ]
 
         [ @b ADDITIONAL_K_POINTS
              see: K_POINTS ]
@@ -1605,7 +1610,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     semi-infinite metal electrodes (use @ref esm_bc to
                     choose boundary conditions). If between two
                     electrodes, an optional electric field
-                    ('esm_efield') may be applied. Method described in
+                    (@ref esm_efield) may be applied. Method described in
                     M. Otani and O. Sugino, "First-principles calculations
                     of charged surfaces and interfaces: A plane-wave
                     nonrepeated slab approach", PRB 73, 115407 (2006).
@@ -1624,7 +1629,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          is automatically eliminated.
 
                        - In case of calculation='vc-relax', use
-                         cell_dofree='2Dxy' or other parameters so that
+                         @ref cell_dofree='2Dxy' or other parameters so that
                          c-vector along z-axis should not be moved.
 
                     See @ref esm_bc, @ref esm_efield, @ref esm_w, @ref esm_nfit.
@@ -1636,10 +1641,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Linear-response calculations () done on top of a self-consistent 
                     calculation with this flag will automatically be performed in 
                     the 2D framework as well. Please refer to:
-                    Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional 
+                    Sohier, T., Calandra, M., & Mauri, F. (2017), "Density functional 
                     perturbation theory for gated two-dimensional heterostructures:
-                    Theoretical developments and application to flexural phonons in graphene.
-                    Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
+                    Theoretical developments and application to flexural phonons in graphene",
+                    PRB, 96, 075448 (2017).
                     
                     NB:
                        - The length of the unit-cell along the z direction should
@@ -1652,7 +1657,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
 
                        - As for ESM above, only in-plane stresses make sense and one
-                         should use cell_dofree='2Dxy' in a vc-relax calculation.
+                         should use @ref cell_dofree= '2Dxy' in a @b vc-relax calculation.
                 }
             }
         }
@@ -2069,7 +2074,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 
                 For non-self-consistent calculations, conv_thr is used
                 to set the default value of the threshold (ethr) for
-                iterative diagonalizazion: see @ref diago_thr_init
+                iterative diagonalization: see @ref diago_thr_init
             }
         }
         
@@ -2409,7 +2414,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     dynamics for structural relaxation
                     Can be used for constrained 
                     optimisation: see @ref CONSTRAINTS card
-                }               
+                }
+		opt -val 'fire' {
+                    use the FIRE minimization algorithm employing the
+		    semi-implicit Euler integration scheme
+		    see:
+		       Bitzek et al.,PRL, 97, 170201, (2006), doi: 10.1103/PhysRevLett.97.170201
+		       Guenole et al.,CMS, 175, 109584, (2020), doi: 10.1016/j.commatsci.2020.109584
+
+                    Can be used for constrained 
+                    optimisation: see @ref CONSTRAINTS card
+                }
                 info {
                     @b CASE ( @ref calculation == 'md' )
                 }
@@ -2430,7 +2445,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
                 opt -val 'bfgs' {
                     @b (default)  use BFGS quasi-newton algorithm;
-                    cell_dynamics must be 'bfgs' too
+                    @ref cell_dynamics must be 'bfgs' too
                 }
                 opt -val 'damp' {
                     use damped (Beeman) dynamics for
@@ -2706,6 +2721,50 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
             }
         }
+	group {
+            label {
+                keywords used only in the FIRE minimization algorithm 
+            }   
+
+            var fire_alpha_init -type REAL { 
+                default { 0.2D0 }
+                info {
+                    Initial value of the alpha mixing factor in the FIRE minimization scheme;
+		    recommended values are between 0.1 and 0.3 
+                }
+            }
+	    var fire_falpha -type REAL { 
+                default { 0.99D0 }
+                info {
+                    Scaling of the alpha mixing parameter for steps with P > 0;  
+                }
+            }
+	    var fire_nmin -type INTEGER { 
+                default { 5 }
+                info {
+                    Minimum number of steps with P > 0 before increase of @ref dt 
+                }
+            }
+	    var fire_f_inc -type REAL { 
+                default { 1.1D0 }
+                info {
+                   Factor for increasing @ref dt 
+                }
+            }
+	    var fire_f_dec -type REAL { 
+                default { 0.5D0 }
+                info {
+                   Factor for decreasing @ref dt 
+                }
+            }
+	    var fire_dtmax -type REAL { 
+                default { 10.D0 }
+                info {
+                   Determines the maximum value of @ref dt in the FIRE minimization;
+		   dtmax = fire_dtmax*@ref dt 
+                }
+            }
+        }
 
     }
 
@@ -2795,12 +2854,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Select which of the cell parameters should be moved:
                 }                
                 opt -val 'all'          { all axis and angles are moved }
-                opt -val 'ibrav'        { all axis and angles are moved, but the lattice remains consistent
-with the initial ibrav choice. You can use this option in combination
-with any other one by specifying "ibrav+option". Please note that some
-combinations do not make sense for some crystals and will guarantee that
-the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
-hexagonal cells, but will never converge for cubic ones.  }
+                opt -val 'ibrav'        {
+                    all axis and angles are moved, but the lattice remains consistent
+                    with the initial ibrav choice. You can use this option in combination
+                    with any other one by specifying "ibrav+option". Please note that some
+                    combinations do not make sense for some crystals and will guarantee that
+                    the relax will never converge. E.g. 'ibrav+2Dxy' is not a problem for
+                    hexagonal cells, but will never converge for cubic ones.
+                }
                 opt -val 'x'            { only the x component of axis 1 (v1_x) is moved }
                 opt -val 'y'            { only the y component of axis 2 (v2_y) is moved }
                 opt -val 'z'            { only the z component of axis 3 (v3_z) is moved }
@@ -3361,7 +3422,7 @@ hexagonal cells, but will never converge for cubic ones.  }
             card is to do band plots with EXX.
         }
         flag additional_kpoints_type -use optional {
-            enum { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
+            enum { tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c }
             default { tbipa }
             info {
                 for the explanation of the K_POINTS' options, see @ref K_POINTS

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: q2r.x / PHonon / Quantum ESPRESSO (version: 6.7GPU)
+Program: q2r.x / PHonon / Quantum ESPRESSO (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -182,4 +182,4 @@ ________________________________________________________________________
 ENDIF
 ________________________________________________________________________
 
-This file has been created by helpdoc utility on Thu Apr 22 16:16:57 CEST 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:41 CET 2021

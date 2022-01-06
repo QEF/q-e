@@ -549,3 +549,23 @@ are e.g. defects in the system.
       
 }
 
+
+# ------------------------------------------------------------------------
+help dist_thr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>dist_thr</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 6.D-4
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Threshold (in Bohr) for comparing inter-atomic distances
+when reconstructing the missing elements of the response
+susceptibility in the post-processing step.
+         </pre></blockquote>
+</ul>      
+      
+}
+

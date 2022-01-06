@@ -238,6 +238,7 @@ CONTAINS
        CALL delete_if_present( trim( file_path ) // '.update' )
        CALL delete_if_present( trim( file_path ) // '.md' )
        CALL delete_if_present( trim( file_path ) // '.bfgs' )
+       CALL delete_if_present( trim( file_path ) // '.fire' )
     ENDIF
     !
     RETURN

@@ -103,7 +103,7 @@ SUBROUTINE force_us_gpu( forcenl )
      CALL using_evc_d(0)
      DO ipol = 1, 3
        !
-       !$acc data present(vkb(:,:), vkb1(npwx,nkb), igk_k(:,:))
+       !$acc data present(vkb(:,:), vkb1(1:npwx,1:nkb), igk_k(:,:))
        !$acc parallel loop collapse(2) 
         DO jkb = 1, nkb
            DO ig = 1, npw
@@ -112,7 +112,7 @@ SUBROUTINE force_us_gpu( forcenl )
         ENDDO
         !$acc end data
         !
-        !$acc data present(vkb1(npwx,nkb)) 
+        !$acc data present(vkb1(1:npwx,1:nkb)) 
         !$acc host_data use_device(vkb1)
         CALL calbec_gpu ( npw, vkb1, evc_d, dbecp_d )
         !$acc end host_data 

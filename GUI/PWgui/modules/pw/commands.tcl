@@ -328,6 +328,65 @@ proc ::pwscf::pwLoadKPoints {moduleObj} {
 
 
 # ------------------------------------------------------------------------
+#  ::pwscf::pwLoadAddKPoints --
+# ------------------------------------------------------------------------
+
+proc ::pwscf::pwLoadAddKPoints {moduleObj} {
+    variable pwscf
+
+    if { [info exists pwscf($moduleObj,LASTDIR,add_k_points)] } {
+	set dir $pwscf($moduleObj,LASTDIR,add_k_points)
+    } else {
+	set dir pwscf(PWD)	
+    }
+
+    #
+    # query filename
+    #
+    set file [tk_getOpenFile -initialdir [pwd] -title "Load Additional K-Points"]
+    if { $file == "" } {
+	return
+    }
+    set pwscf($moduleObj,LASTDIR,k_points) [file dirname $file]
+
+    #
+    # read the file
+    #
+    set channel [open $file r]
+    # find the K_POINTS card
+    while {1} {
+	set _line [_getsNonEmptyLine $channel]
+
+	if { [string match "ADDITIONAL_K_POINTS*" $_line] } {
+	    set _line [readFilter::purifyCardLine $_line]
+	    set _UNIT [lindex $_line 1]
+	    # assing the ADDITIONAL_K_POINTS_flags variable
+	    $moduleObj varset ADDITIONAL_K_POINTS_flags -value [$moduleObj valueToTextvalue ADDITIONAL_K_POINTS_flags $_UNIT]
+	    break
+	}
+    }	    
+    # read NKS
+    set NKS [_getsNonEmptyLine $channel]
+    if { [string is integer $NKS] } {
+	$moduleObj varset nks_add -value $NKS
+    } else {
+	# TODO: raise an error
+	return
+    }
+    # read Add. K-POINTS
+    for {set ia 1} {$ia <= $NKS} {incr ia} {
+	set _line [_getsNonEmptyLine $channel]
+	if { [llength $_line] != 4 } {
+	    # TODO: raise an error
+	}
+	for {set i 1} {$i <= 4} {incr i} {
+	    $moduleObj varset add_kpoints($ia,$i) -value [lindex $_line [expr $i - 1]]
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
 #  ::pwscf::pwLoadAtomicForces --
 # ------------------------------------------------------------------------
 
@@ -536,8 +595,10 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     #   ATOMIC_SPECIES
     #   ATOMIC_POSITIONS
     #   K_POINTS
+    #   ADDITIONAL_K_POINTS ###TODO
     #   CONSTRAINTS
     #   OCCUPATIONS
+    #   ATOMIC_VELOCITIES
     #   ATOMIC_FORCES
 
     # The content of OCCUPATIONS card is managed by the "text"
@@ -567,14 +628,19 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	} elseif { [string match "K_POINTS*" $_line] } {
 	    set what K_POINTS
 	    set _line [readFilter::purifyCardLine $_line]
-	} elseif { [string match "OCCUPATIONS*" $_line] } {
-	    set what OCCUPATIONS
+	} elseif { [string match "ADDITIONAL_K_POINTS*" $_line] } {
+	    set what ADDITIONAL_K_POINTS
 	    set _line [readFilter::purifyCardLine $_line]
 	} elseif { [string match "CONSTRAINTS*" $_line] } {
 	    set what CONSTRAINTS
 	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "OCCUPATIONS*" $_line] } {
+	    set what OCCUPATIONS
+	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "ATOMIC_VELOCITIES*" $_line] } {
+	    set what ATOMIC_VELOCITIES
+	    set _line [readFilter::purifyCardLine $_line]
 	} elseif { [string match "ATOMIC_FORCES*" $_line] } {
-	    puts stderr "ATOMIC_FORCES record found"
 	    set what ATOMIC_FORCES
 	    set _line [readFilter::purifyCardLine $_line]
 	}
@@ -596,20 +662,23 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 		    {'martyna-tuckerman' 'm-t' 'mt'}
 		}
 		vdw_corr {
+		    {'grimme-d2' 'Grimme-D2' 'DFT-D'  'dft-d'}
 		    {'grimme-d3' 'Grimme-D3' 'DFT-D3' 'dft-d3'}
-		    {'grimme-d2' 'Grimme-D2' 'DFT-D' 'dft-d'}
-		    {'ts-vdw' 'TS', 'ts', ''ts-vdW', 'tkatchenko-scheffler'}
-		    {'xdm''XDM'}
+		    {'ts-vdw'    'TS' 'ts' 'ts-vdW' 'tkatchenko-scheffler'}
+                    {'mbd_vdw'  {'many-body dispersion'}}
+		    {'xdm'       'XDM'}
 		}
+                diagonalization {
+                    'david'
+                    'cg'
+                    'ppcg'
+                    {'paro' 'ParO'}
+                    {'rmm-davidson' 'rmm-paro'}
+                }                    
 	    } {		
 		set _line [readFilter::replaceVarFlag $_line $var $optList]
 	    }
     
-	    # # VARIABLE: diagonalization; handle multiple flags
-	    # #-------------------------------------------------
-	    # # 'david' 'david_overlap' 'david_nooverlap' --> 'david'
-	    # set _line [readFilter::replaceFlag $_line david david_overlap david_nooverlap]
-
 	    # logical VARIABLES: use only .true. and .false.
 	    #-----------------------------------------------
 	    set _line [readFilter::logicalFlag $_line]
@@ -657,9 +726,18 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     if { [info exists K_POINTS] } {
 	puts $newChannel $K_POINTS
     }
+    # write the ADDITIONAL_K_POINTS
+    if { [info exists ADDITIONAL_K_POINTS] } {
+        $moduleObj varset specify_add_kpoints -value .true.
+	puts $newChannel $ADDITIONAL_K_POINTS
+    }
     # write the CONSTRAINTS
     if { [info exists CONSTRAINTS] } {
 	puts $newChannel $CONSTRAINTS
+    }
+    # write the ATOMIC_VELOCITIES
+    if { [info exists ATOMIC_VELOCITIES] } {
+	puts $newChannel $ATOMIC_VELOCITIES
     }
     # write the ATOMIC_FORCES
     if { [info exists ATOMIC_FORCES] } {

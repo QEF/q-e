@@ -1066,24 +1066,31 @@ CONTAINS
    !
    !------------------------------------------------------------------------
    SUBROUTINE terminate_bfgs( energy, energy_thr, grad_thr, cell_thr, fcp_thr, &
-                              lmovecell, lfcp )
+                              lmovecell, lfcp, failed )
       !------------------------------------------------------------------------
       !
       USE io_files, ONLY : delete_if_present
       !
       IMPLICIT NONE
       REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr, fcp_thr
-      LOGICAL,          INTENT(IN) :: lmovecell, lfcp
+      LOGICAL,          INTENT(IN) :: lmovecell, lfcp, failed
       !
       IF ( conv_bfgs ) THEN
          !
-         WRITE( UNIT = stdout, &
+         IF ( failed ) THEN
+            WRITE( UNIT = stdout, &
+              & FMT = '(/,5X,"bfgs failed after ",I3," scf cycles and ", &
+              &         I3," bfgs steps, convergence not achieved")' ) &
+              & scf_iter, bfgs_iter
+         ELSE
+            WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
               &         I3," bfgs steps")' ) scf_iter, bfgs_iter
+         END IF
          IF ( lmovecell ) THEN
             WRITE( UNIT = stdout, &
               & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&
-              &       "Ry/Bohr, cell < ",ES8.1,"kbar)")') energy_thr, grad_thr, cell_thr
+              &       " Ry/Bohr, cell < ",ES8.1," kbar)")') energy_thr, grad_thr, cell_thr
          ELSE
             WRITE( UNIT = stdout, &
               & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&

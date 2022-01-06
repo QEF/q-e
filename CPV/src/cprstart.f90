@@ -20,7 +20,7 @@ PROGRAM main
   !
   USE input,         ONLY : iosys_pseudo, iosys
   USE io_global,     ONLY : ionode, ionode_id
-  USE environment,   ONLY : environment_start
+  USE environment,   ONLY : environment_start, print_cuda_info
   USE check_stop,    ONLY : check_stop_init
   USE mp_global,     ONLY : mp_startup
   USE mp_images,     ONLY : intra_image_comm
@@ -38,6 +38,7 @@ PROGRAM main
   ! ... start the environment
   !
   CALL environment_start( 'CP' )
+  CALL print_cuda_info() 
   !
   ! reading plugin arguments
   !

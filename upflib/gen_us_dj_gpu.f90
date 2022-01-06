@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2021 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,39 +7,66 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
+SUBROUTINE gen_us_dj_gpu_ &
+     ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, tpiba, &
+       omega, nr1, nr2, nr3, eigts1_d, eigts2_d, eigts3_d, mill_d, g_d, dvkb_d )
   !----------------------------------------------------------------------
-  !! Calculates the kleinman-bylander pseudopotentials with the
-  !! derivative of the spherical harmonics projected on vector u
+  !! Calculates the beta function pseudopotentials with
+  !! the derivative of the Bessel functions - GFPU version
   !
   ! AF: more gpu-resident variables can be used, avoiding local GPU-alloc
   !     and host2dev transfers
   !
-  USE kinds,       ONLY: DP
-  USE constants,   ONLY: tpi
-  USE ions_base,   ONLY: nat, ntyp => nsp, ityp, tau
-  USE cell_base,   ONLY: tpiba, omega
-  USE klist,       ONLY: xk, ngk, igk_k_d
-  USE wvfct,       ONLY: npwx
+  USE upf_kinds,   ONLY: dp
+  USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv_d, nhtol_d, nhtolm_d
   USE uspp_data,   ONLY: nqx, tab, tab_d2y, tab_d, dq, spline_ps
   USE m_gth,       ONLY: mk_dffnl_gth, mk_dffnl_gth_gpu
   USE splinelib
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
-  USE gvect,       ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
   USE device_fbuff_m,   ONLY: dev_buf
   !
   IMPLICIT NONE
   !
-  INTEGER  :: ik
-  !! input: k-point index
-  COMPLEX(DP) :: dvkb_d(npwx,nkb)
-  !! output: kleinman-bylander pseudopotential
+  INTEGER, INTENT(IN) :: npw
+  !! number ok plane waves 
+  INTEGER, INTENT(IN) :: npwx
+  !! max number ok plane waves across k-points
+  INTEGER, INTENT(IN) :: igk_d(npw)
+  !! indices of plane waves k+G
+  REAL(dp), INTENT(IN) :: xk(3)
+  !! k-point
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! index of type per atom
+  INTEGER, INTENT(IN) :: ntyp
+  !! number of atomic types
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! atomic positions (cc alat units)
+  REAL(DP), INTENT(IN) :: tpiba
+  !! rec.lattice units 2pi/a
+  REAL(DP), INTENT(IN) :: omega
+  !! cell volume
+  INTEGER, INTENT(IN) :: nr1,nr2,nr3
+  !! fft dims (dense grid)
+  COMPLEX(DP), INTENT(IN) :: eigts1_d(-nr1:nr1,nat)
+  !! structure factor 1
+  COMPLEX(DP), INTENT(IN) :: eigts2_d(-nr2:nr2,nat)
+  !! structure factor 2
+  COMPLEX(DP), INTENT(IN) :: eigts3_d(-nr3:nr3,nat)
+  !! structure factor 3
+  INTEGER, INTENT(IN) :: mill_d(3,*)
+  !! miller index map
+  REAL(DP), INTENT(IN) :: g_d(3,*)
+  !! g vectors (2pi/a units)
+  COMPLEX(DP), INTENT(OUT) :: dvkb_d(npwx, nkb)
+  !! the beta function pseudopotential
   !
   ! ... local variables
   !
   INTEGER  :: na, nt, nb, ih, l, lm, ikb, iig, i0, i1, i2, &
-              i3, ig, npw, nbm, iq, mil1, mil2, mil3,      &
+              i3, ig, nbm, iq, mil1, mil2, mil3,      &
               ikb_t, nht, ina, nas(nat), ierr(3)
   REAL(DP) :: px, ux, vx, wx, arg, u_ipol, xk1, xk2, xk3, qt
   COMPLEX(DP) :: pref
@@ -52,26 +79,26 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   COMPLEX(DP), ALLOCATABLE :: phase_d(:), sk_d(:,:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: dvkb_d, gk_d, q_d, sk_d, djl_d, ylm_d, &
+  attributes(DEVICE) :: igk_d, mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  attributes(DEVICE) :: gk_d, q_d, sk_d, djl_d, ylm_d, &
                         ityp_d, phase_d, ih_d, na_d, tau_d, nas_d
+  attributes(DEVICE) :: dvkb_d
 #endif
   !
   IF (nkb == 0) RETURN
-  !
-  npw = ngk(ik)
   !
   CALL dev_buf%lock_buffer( ylm_d, (/ npw,(lmaxkb+1)**2 /), ierr(1) )
   CALL dev_buf%lock_buffer( djl_d, (/ npw,nbetam,ntyp /), ierr(2) )
   CALL dev_buf%lock_buffer( gk_d,  (/ 3,npw /), ierr(3) )
   ALLOCATE( q_d(npw) )
   !
-  xk1 = xk(1,ik)
-  xk2 = xk(2,ik)
-  xk3 = xk(3,ik)
+  xk1 = xk(1)
+  xk2 = xk(2)
+  xk3 = xk(3)
   !
   !$cuf kernel do (1) <<<*,*>>>
   DO ig = 1, npw
-     iig = igk_k_d(ig,ik)
+     iig = igk_d(ig)
      gk_d(1,ig) = xk1 + g_d(1,iig)
      gk_d(2,ig) = xk2 + g_d(2,iig)
      gk_d(3,ig) = xk3 + g_d(3,iig)
@@ -173,7 +200,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
     DO ig = 1, npw
       !
       na = nas_d(ina)
-      iig = igk_k_d(ig,ik)
+      iig = igk_d(ig)
       mil1 = mill_d(1,iig)
       mil2 = mill_d(2,iig)
       mil3 = mill_d(3,iig)
@@ -229,5 +256,4 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   !
   RETURN
   !
-END SUBROUTINE gen_us_dj_gpu
-!
+END SUBROUTINE gen_us_dj_gpu_

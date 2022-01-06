@@ -104,8 +104,6 @@ gcscf_input.o \
 gcscf_module.o \
 gen_at_dj.o \
 gen_at_dy.o \
-gen_us_dj.o \
-gen_us_dy.o \
 get_locals.o \
 gk_sort.o \
 gradcorr.o \
@@ -301,8 +299,6 @@ PWLIBS += \
   stres_knl_gpu.o \
   stres_us_gpu.o \
   compute_deff_gpu.o \
-  gen_us_dj_gpu.o \
-  gen_us_dy_gpu.o \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 

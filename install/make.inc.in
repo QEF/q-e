@@ -62,7 +62,7 @@ MOD_FLAG      = @imod@
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/XClib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
-               $(MOD_FLAG)$(TOPDIR)/FFTXlib \
+               $(MOD_FLAG)$(TOPDIR)/FFTXlib/src \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
@@ -74,7 +74,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 BASEMODS= $(TOPDIR)/Modules/libqemod.a \
           $(TOPDIR)/upflib/libupf.a \
           $(TOPDIR)/XClib/xc_lib.a \
-          $(TOPDIR)/FFTXlib/libqefft.a \
+          $(TOPDIR)/FFTXlib/src/libqefft.a \
           $(TOPDIR)/LAXlib/libqela.a \
           $(TOPDIR)/UtilXlib/libutil.a \
           $(TOPDIR)/MBD/libmbd.a

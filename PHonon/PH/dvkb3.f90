@@ -18,11 +18,12 @@ subroutine dvkb3(ik,dvkb)
   USE lsda_mod,  ONLY : lsda, current_spin, isk
   USE klist,     ONLY : xk, ngk, igk_k
   USE wvfct,     ONLY : npwx
-  USE wavefunctions,    ONLY : evc
-  USE uspp,      ONLY: nkb
-  USE uspp_param,ONLY: nh
+  USE wavefunctions, ONLY : evc
+  USE uspp,      ONLY : nkb
+  USE uspp_param,ONLY : nh
+  USE uspp_init, ONLY : gen_us_dj, gen_us_dy
   USE qpoint,    ONLY : ikks
-  USE units_ph,  ONLY: this_dvkb3_is_on_file, lrdvkb3, iudvkb3
+  USE units_ph,  ONLY : this_dvkb3_is_on_file, lrdvkb3, iudvkb3
   implicit none
 
   integer, intent(in) :: ik
