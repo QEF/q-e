@@ -1287,6 +1287,7 @@ init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
 init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/mbdlib.o
+init_run.o : ../../Modules/noncol.o
 init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/tsvdw.o
@@ -1295,7 +1296,6 @@ init_run.o : ../../XClib/xc_lib.o
 init_run.o : ../../upflib/paw_variables.o
 init_run.o : ../../upflib/uspp.o
 init_run.o : ../../upflib/uspp_param.o
-init_run.o : @spin_orb@
 init_run.o : Coul_cut_2D.o
 init_run.o : bp_mod.o
 init_run.o : dynamics_module.o
