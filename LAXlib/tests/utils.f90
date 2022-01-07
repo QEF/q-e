@@ -1,7 +1,6 @@
 SUBROUTINE collect_results(test)
-#if defined(__MPI)
-    USE mpi
-#endif
+
+    USE laxlib_parallel_include
     USE tester
     IMPLICIT NONE
     !
@@ -34,9 +33,8 @@ END SUBROUTINE collect_results
 
 
 SUBROUTINE no_test
-#if defined(__MPI)
-    USE mpi
-#endif
+
+    USE laxlib_parallel_include
     USE tester
     IMPLICIT NONE
     !TYPE(tester_t) :: test
