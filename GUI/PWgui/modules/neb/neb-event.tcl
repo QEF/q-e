@@ -6,8 +6,8 @@ tracevar CI_scheme w {
     }
 }
 
-tracevar lfcpopt w {
-    if { [vartextvalue lfcpopt] == "Yes" } {
+tracevar lfcp w {
+    if { [vartextvalue lfcp] == "Yes" } {
 	groupwidget fcp_specs enable
     } else {
 	groupwidget fcp_specs disable
@@ -15,7 +15,7 @@ tracevar lfcpopt w {
 }
 
 postprocess {
-    varset string_method   -value 'neb'
-    varset CI_scheme       -value {}
-    varset lfcpopt         -value {}
+    varset string_method  -value 'neb'
+    varset CI_scheme      -value {}
+    varset lfcp           -value {}
 }
