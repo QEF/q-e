@@ -38,15 +38,5 @@ if { ! [info exists env(PWGUI)] } {
     set env(PWGUI) [file dirname $_pwguipath]
 }
 
-set fid [open $env(PWGUI)/VERSION]
-set ver [read -nonewline $fid]
-close $fid
-
-puts "
- ==================================================
-  PWgui version :   $ver
- --------------------------------------------------
-"
-
 source $env(PWGUI)/pwgui.tcl
 

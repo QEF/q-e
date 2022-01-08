@@ -52,9 +52,6 @@ proc ::pwscf::_settingsOK {t obj} {
 proc ::pwscf::_settingsApply {obj} {
     $obj saveToVar ::pwscf
 
-    puts stderr [array get ::pwscf::settings]
-    puts stderr "::pwscf::settings_how_exe = $::pwscf::settings_how_exe"
-
     if { $::pwscf::settings_how_exe == "path" } {
         foreach {v c} {
             PW      pw.x
@@ -288,7 +285,6 @@ proc ::pwscf::_settingsModule {} {
 	    if { $how == {} } {
 		varset HOW_EXE -value path
 	    }
-	    puts stderr "how=$how"
 	}
     }]
     return $obj
