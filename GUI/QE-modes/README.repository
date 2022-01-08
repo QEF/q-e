@@ -1,5 +1,5 @@
  ========================================================================
- * * * How to build the QE-modes from the QE SVN repository sources * * *
+   * * * How to build the QE-modes from the QE repository sources * * *
  ========================================================================
 
 The QE-modes *.el and *.elc source files are automatically generated
