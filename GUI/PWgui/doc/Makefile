@@ -3,7 +3,7 @@ TOPDIR        = ../../..
 default: input_html qe_user_guide_html
 all:     input_html compile_qe_user_guide qe_user_guide_html
 
-# The difference between "deafult" and "all" targets:
+# The difference between "default" and "all" targets:
 # ---------------------------------------------------
 #
 # default = create QE html user-guide only if $(TOPDIR)/Doc/user_guide exists
