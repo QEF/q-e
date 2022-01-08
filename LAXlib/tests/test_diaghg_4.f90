@@ -8,13 +8,12 @@
 !  - SiGeK1.bin
 !  - SiGeK2.bin
 !
-! If the scalacpak or ELPA driver is used, the test is skipped.
+! If the scalapack or ELPA driver is used, the test is skipped.
 !
 #if ! defined(__SCALAPACK)
 program test_diaghg_4
-#if defined(__MPI)
-    USE MPI
-#endif
+
+    USE laxlib_parallel_include
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
                               root, world_comm

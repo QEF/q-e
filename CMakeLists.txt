@@ -555,8 +555,7 @@ if(QE_ENABLE_HDF5)
 
     target_link_libraries(qe_hdf5_fortran
         INTERFACE
-            ${HDF5_Fortran_LIBRARIES}
-            ${HDF5_Fortran_HL_LIBRARIES})
+            ${HDF5_Fortran_LIBRARIES})
     target_include_directories(qe_hdf5_fortran
         INTERFACE
             ${HDF5_Fortran_INCLUDE_DIRS})
@@ -566,8 +565,7 @@ if(QE_ENABLE_HDF5)
 
     target_link_libraries(qe_hdf5_c
         INTERFACE
-            ${HDF5_C_LIBRARIES}
-            ${HDF5_C_HL_LIBRARIES})
+            ${HDF5_C_LIBRARIES})
     target_include_directories(qe_hdf5_c
         INTERFACE
             ${HDF5_C_INCLUDE_DIRS})

@@ -9,7 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE setup()
   !----------------------------------------------------------------------------
-  !! This routine is called at the beginning of the calculation and:
+  !! This routine is called once at the beginning of the calculation and:
   !
   !! 1) determines various parameters of the calculation:
   !
@@ -35,8 +35,8 @@ SUBROUTINE setup()
   !! 3) generates k-points corresponding to the actual crystal symmetry;
   !
   !! 4) calculates various quantities used in magnetic, spin-orbit, PAW
-  !!    electric-field, DFT+U(+V) calculations, and for parallelism.
-  !
+  !!    electric-field, DFT+U(+V) calculations
+  !!
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8, e2, fpi, pi, degspin
   USE parameters,         ONLY : npk
@@ -64,8 +64,7 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
-                                 lbands, use_para_diag, gamma_only, &
-                                 restart, use_gpu
+                                 lbands, gamma_only, restart
   USE cellmd,             ONLY : calc
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
@@ -75,8 +74,6 @@ SUBROUTINE setup()
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE mp_images,          ONLY : intra_image_comm
-  USE mp_pools,           ONLY : kunit
-  USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
   USE mp,                 ONLY : mp_bcast
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
@@ -88,7 +85,6 @@ SUBROUTINE setup()
   USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type
   USE exx,                ONLY : ecutfock
-  USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE xc_lib,             ONLY : xclib_dft_is
   USE paw_variables,      ONLY : okpaw
   USE esm,                ONLY : esm_z_inv
@@ -102,8 +98,6 @@ SUBROUTINE setup()
   INTEGER  :: na, is, ierr, ibnd, ik, nrot_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
-  !
-  LOGICAL, EXTERNAL  :: check_gpu_support
   !
   TYPE(output_type)  :: output_obj 
   !  
@@ -424,8 +418,6 @@ SUBROUTINE setup()
   IF ( isolve == 0  ) nbndx = david * nbnd 
   IF (isolve == 4 ) nbndx = 2 *nbnd 
   !
-  use_gpu       = check_gpu_support( )
-  !
   ! ... Set the units in real and reciprocal space
   !
   tpiba  = 2.D0 * pi / alat
@@ -638,18 +630,6 @@ SUBROUTINE setup()
   !
   IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
   !
-  ! ... distribute k-points (and their weights and spin indices)
-  !
-  kunit = 1
-  CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
-  !
-  IF ( xclib_dft_is('hybrid') ) THEN
-     IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
-     CALL exx_grid_init()
-     CALL exx_mp_init()
-     CALL exx_div_check()
-  ENDIF
-
   IF (one_atom_occupations) THEN
      DO ik=1,nkstot
         DO ibnd=natomwfc+1, nbnd
@@ -667,19 +647,90 @@ SUBROUTINE setup()
   !
   IF (lda_plus_u .or. okpaw .or. (okvan.and.xclib_dft_is('hybrid')) ) CALL d_matrix( d1, d2, d3 )
   !
-  ! ... set linear-lagebra diagonalization
+  ! ... set parallelization strategy
   !
-  CALL set_para_diag( nbnd, use_para_diag )
+  CALL setup_para ()
   !
+  ! ... set parallelization strategy
+  !
+  CALL setup_exx  ()
   !
   RETURN
   !
 END SUBROUTINE setup
 !
 !----------------------------------------------------------------------------
+SUBROUTINE setup_para ( )
+  !----------------------------------------------------------------------------
+  !
+  ! Initialize the various parallelization levels
+  ! Must be called after setup and before setup_exx only once
+  !
+  USE control_flags,  ONLY : use_para_diag, use_gpu
+  USE io_global,      ONLY : stdout
+  USE lsda_mod,  ONLY : isk
+  USE klist,     ONLY : xk, wk, nks, nkstot
+  USE wvfct,     ONLY : nbnd
+  USE mp_bands,  ONLY : mp_start_bands, nbgrp, ntask_groups, nproc_bgrp,&
+                        nyfft
+  USE mp_pools,  ONLY : kunit, intra_pool_comm, mp_start_pools, npool
+  USE mp_images, ONLY : intra_image_comm
+  USE command_line_options, ONLY : npool_, nband_, ntg_, nyfft_, nmany_
+  !
+  IMPLICIT NONE
+  !
+  LOGICAL, EXTERNAL  :: check_gpu_support
+  LOGICAL, SAVE :: first = .TRUE.
+  !
+  ! do not execute twice: unpredictable results may follow
+  !
+  IF ( .NOT.first ) RETURN
+  first = .false.
+  !
+  ! k-point parallelization first
+  !
+  CALL mp_start_pools ( npool_, intra_image_comm )
+  kunit   = 1
+  CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
+  !
+  ! band parallelization - FIXME: why the following section?
+  !
+#if defined (__CUDA_OPTIMIZED)
+  CALL mp_start_bands ( 1 , ntg_, nyfft_, intra_pool_comm )
+#else
+  CALL mp_start_bands ( nband_, ntg_, nyfft_, intra_pool_comm )
+#endif
+  !
+  ! GPUs (not sure it serves any purpose)
+  !
+  use_gpu = check_gpu_support( )
+  !
+  ! printout - same as in environment.f90
+  !
+  IF ( npool > 1 ) WRITE( stdout, &
+         '(5X,"K-points division:     npool     = ",I7)' ) npool
+  IF ( nbgrp > 1 ) WRITE( stdout, &
+         '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
+  IF ( nproc_bgrp > 1 ) WRITE( stdout, &
+         '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
+  IF ( nyfft > 1 ) WRITE( stdout, &
+         '(5X,"wavefunctions fft division:  Y-proc x Z-proc = ",2I7)' ) &
+         nyfft, nproc_bgrp / nyfft
+  IF ( ntask_groups > 1 ) WRITE( stdout, &
+         '(5X,"wavefunctions fft division:  task group distribution",/,34X,"#TG    x Z-proc = ",2I7)' ) &
+         ntask_groups, nproc_bgrp / ntask_groups
+  IF ( nmany_ > 1) WRITE( stdout, '(5X,"FFT bands division:     nmany     = ",I7)' ) nmany_
+  !
+  ! linear-algebra
+  !
+  CALL set_para_diag( nbnd, use_para_diag )
+  !
+END SUBROUTINE setup_para
+!
+!----------------------------------------------------------------------------
 LOGICAL FUNCTION check_gpu_support( )
   !
-  USE io_global,        ONLY : stdout, ionode, ionode_id
+  ! FIXME: seems useless. If one has GPUs, one wants to run on GPUs.
   !
   IMPLICIT NONE
   !
@@ -708,3 +759,28 @@ LOGICAL FUNCTION check_gpu_support( )
 #endif
   RETURN
 END FUNCTION check_gpu_support
+!
+!----------------------------------------------------------------------------
+SUBROUTINE setup_exx ( )
+  !----------------------------------------------------------------------------
+  !
+  ! Must be called after setup_para, before init_run, only once
+  !
+  USE mp_exx,    ONLY : mp_start_exx
+  USE mp_pools,  ONLY : intra_pool_comm
+  USE exx_base,  ONLY : exx_grid_init, exx_mp_init, exx_div_check
+  USE xc_lib,    ONLY : xclib_dft_is
+  USE klist,     ONLY : nks
+  USE command_line_options, ONLY : nband_, ntg_
+  !
+  IMPLICIT NONE
+  !
+  CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
+  IF ( xclib_dft_is('hybrid') ) THEN
+     IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
+     CALL exx_grid_init()
+     CALL exx_mp_init()
+     CALL exx_div_check()
+  ENDIF
+  !
+END SUBROUTINE setup_exx
