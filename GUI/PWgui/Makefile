@@ -54,8 +54,7 @@ clean:
 	-rm -f *.tar
 	-cd doc; $(MAKE) clean
 
-veryclean: 
-	$(MAKE) clean
+veryclean: clean
 	-cd $(PWGUI_VFS); $(MAKE) clean
 	-for file in `find . | egrep ~$$`; do echo "cleaning ...  $$file"; rm -f $$file; done 
 
@@ -67,6 +66,7 @@ init:
 	-cd doc/; $(MAKE)
 	-if test ! -d lib; then mkdir lib; fi
 	-cd lib/; rm -f Guib-*; ln -sf $(_GUIB_DIR) $(_GUIB_DIRNAME)
+	-( cd ../../bin && ln -fs ../GUI/PWgui/pwgui . )
 
 alldist: pwgui-source pwgui-starkit-vfs
 
@@ -88,6 +88,7 @@ pwgui-starkit-vfs: init \
 # -- internal tagrets --
 
 _create_pwgui_tar: init
+	cd doc/; $(MAKE) all
 	tar cvf pwgui.tar $(PWGUI_SRC_FILES)
 
 _add_guib: _clean_scratch

@@ -1,4 +1,7 @@
 #!/bin/sh
+# \
+exec tclsh "$0" "$@"
+
 # ----------------------------------------------------------------------
 #  PROGRAM: PWgui
 #  PURPOSE: A GUI input builder for PWscf / Quantum ESPRESSO
@@ -25,47 +28,25 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-if test "x`type readlink`" = "x"; then
-    # no readlink cmd; make a function-substitute
-    readlink() {
-        echo `ls -l $1 | awk '{print $NF}'`
-    }
-fi
-
-pathname() {
-    file=`type -p $1`
-    if test $? -gt 0; then
-        file=`which $1`
-        if test $? -gt 0; then
-            # give-up
-            file=$1
-        fi
-    fi
-    echo $file
+if { ! [info exists env(PWGUI)] } {
+       set _file $argv0
+       while { [file type $_file] == "link" } {
+           set dir   [file dirname $_file]                 
+           set _file [file join $dir [file readlink $_file]]
+       }
+    set _pwguipath [auto_execok [file normalize $_file]]
+    set env(PWGUI) [file dirname $_pwguipath]
 }
 
-pathdir() {
-    file=`pathname $1`
-    
-    while test -h $file; do  
-        file=`readlink $file`
-    done
+set fid [open $env(PWGUI)/VERSION]
+set ver [read -nonewline $fid]
+close $fid
 
-    dir=`dirname $file`
-    ( cd $dir; pwd )
-}
-
-if test -z "$PWGUI"; then
-    # try to guess the PWGUI value
-     export PWGUI=`pathdir $0`
-fi
-
-
-echo "
+puts "
  ==================================================
-  This is PWgui version: `cat $PWGUI/VERSION`
+  PWgui version :   $ver
  --------------------------------------------------
 "
 
-tclsh $PWGUI/pwgui.tcl
+source $env(PWGUI)/pwgui.tcl
 
