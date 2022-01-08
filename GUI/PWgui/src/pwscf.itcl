@@ -120,18 +120,24 @@ if { [file exists $user_guide_html] } {
     $gui addHelp separator
 }
 
-$gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PW.html] none
-$gui addHelp help neb       "NEB.DAT Input Syntax"  [file join $env(PWGUI) doc INPUT_NEB.html] none
-$gui addHelp help ph           "PH.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PH.html] none
-$gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PP.html] none
-$gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc INPUT_PROJWFC.html] none
-$gui addHelp help bands     "Bands.X Input Syntax"  [file join $env(PWGUI) doc INPUT_BANDS.html] none
-$gui addHelp help dos         "Dos.X Input Syntax"  [file join $env(PWGUI) doc INPUT_DOS.html] none
-$gui addHelp help ld          "LD1.X Input Syntax"  [file join $env(PWGUI) doc INPUT_LD1.html] none
-$gui addHelp help hp          "HP.X Input Syntax"   [file join $env(PWGUI) doc INPUT_HP.html] none
+foreach {module itype help} {
+    pw      PW.X      PW
+    neb     NEB.DAT   NEB
+    ph      PH.X      PH
+    pp      PP.X      PP
+    projwfc ProjWFC.X PROJWFC
+    bands   Bands.X   BANDS
+    dos     Dos.X     DOS
+    ld      LD1.X     LD1
+    hp      HP.X      HP   
+} {
+    set helpfile [file join $env(PWGUI) doc INPUT_$help.html]
+    if { [file exist $helpfile] } {
+        $gui addHelp help $module "$itype Input Syntax" $helpfile none
+    }
+}
 
 $gui addHelp separator
-
 $gui addHelp help about "About PWgui" [file join $env(PWGUI) src about.html] none
 
 
