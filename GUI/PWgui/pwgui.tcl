@@ -88,7 +88,7 @@ set open     0
 if { $argc > 0 } {
     set opt [lindex $argv 0]
     switch -glob -- $opt {
-        -h - --help {
+        -h - --help - -\\? {
             puts $usage
             exit 0
         }
