@@ -17,7 +17,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
   USE uspp_data,    ONLY : nqx, dq, spline_ps, tab_d, tab_d2y_d
-  USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib,    ONLY : splint_eq
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
@@ -68,13 +67,11 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   integer :: iv_d
   real(DP) :: px, ux, vx, wx, arg, q1, q2, q3
   real(DP), pointer :: gk_d (:,:), qg_d (:), vq_d(:), ylm_d(:,:), vkb1_d(:,:)
-  real(DP), allocatable :: qg_h (:), vq_h(:)
   real(DP) :: rv_d
 
   complex(DP) :: phase, pref
   complex(DP), pointer :: sk_d(:)
 
-  logical :: is_gth
   integer :: iq
 #if defined(__CUDA)
   attributes(DEVICE) :: gk_d, qg_d, vq_d, ylm_d, vkb1_d, sk_d
@@ -100,17 +97,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   CALL dev_buf%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat(5) )
   CALL dev_buf%lock_buffer(  gk_d, (/ 3, npw_ /), istat(6) )
   IF (ANY(istat /= 0)) CALL upf_error( 'init_us_2_gpu', 'cannot allocate buffers', -1 )
-
-  is_gth = .false.
-  do nt = 1, nsp
-     is_gth = upf(nt)%is_gth
-     if (is_gth) then
-        allocate (  qg_h( npw_))    
-        allocate (  vq_h( npw_)) 
-        is_gth = .true.
-        exit
-     end if
-  end do
   !
   q1 = q_(1)
   q2 = q_(2)
@@ -148,11 +134,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   jkb = 0
   do nt = 1, nsp
      do nb = 1, upf(nt)%nbeta
-        if ( upf(nt)%is_gth ) then
-           qg_h = qg_d
-           CALL mk_ffnl_gth( nt, nb, npw_, omega, qg_h, vq_h )
-           vq_d = vq_h
-        else if (spline_ps) then
+        if (spline_ps) then
            call splint_eq(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
         else
            !$cuf kernel do(1) <<<*,*>>>
@@ -238,10 +220,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   CALL dev_buf%release_buffer(  vq_d, istat(4) )
   CALL dev_buf%release_buffer( ylm_d, istat(5) )
   CALL dev_buf%release_buffer(  gk_d, istat(6) )
-  !
-  IF (is_gth) THEN
-     deallocate ( qg_h, vq_h )
-  END IF
   !
   CALL stop_clock( 'init_us_2:gpu' )
   !

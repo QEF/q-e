@@ -16,7 +16,6 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
   USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps
-  USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
@@ -120,28 +119,24 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
         !     f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
         DO nb = 1, upf(nt)%nbeta
            !
-           IF ( upf(nt)%is_gth ) THEN
-              CALL mk_ffnl_gth( nt, nb, realblocksize, omega, qg, vq )
-           ELSE
-              DO ig = 1, realblocksize
-                 IF (spline_ps) THEN
-                    vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-                 ELSE
-                    px = qg(ig) / dq - INT( qg(ig)/dq )
-                    ux = 1.d0 - px
-                    vx = 2.d0 - px
-                    wx = 3.d0 - px
-                    i0 = INT( qg(ig)/dq ) + 1
-                    i1 = i0 + 1
-                    i2 = i0 + 2
-                    i3 = i0 + 3
-                    vq(ig) = tab(i0,nb,nt) * ux * vx * wx / 6.d0 + &
-                             tab(i1,nb,nt) * px * vx * wx / 2.d0 - &
-                             tab(i2,nb,nt) * px * ux * wx / 2.d0 + &
-                             tab(i3,nb,nt) * px * ux * vx / 6.d0
-                 ENDIF
-              ENDDO
-           ENDIF
+           DO ig = 1, realblocksize
+              IF (spline_ps) THEN
+                 vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
+              ELSE
+                 px = qg(ig) / dq - INT( qg(ig)/dq )
+                 ux = 1.d0 - px
+                 vx = 2.d0 - px
+                 wx = 3.d0 - px
+                 i0 = INT( qg(ig)/dq ) + 1
+                 i1 = i0 + 1
+                 i2 = i0 + 2
+                 i3 = i0 + 3
+                 vq(ig) = tab(i0,nb,nt) * ux * vx * wx / 6.d0 + &
+                          tab(i1,nb,nt) * px * vx * wx / 2.d0 - &
+                          tab(i2,nb,nt) * px * ux * wx / 2.d0 + &
+                          tab(i3,nb,nt) * px * ux * vx / 6.d0
+              ENDIF
+           ENDDO
            ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
            DO ih = 1, nh(nt)
               IF (nb == indv(ih,nt) ) THEN
