@@ -103,7 +103,7 @@ if { $argc > 0 } {
             set open 1
         }
         default {
-            puts $usage
+            puts "\n    Incorrect option \"$opt\", aborting...\n$usage"
             exit 1
         }
     }
