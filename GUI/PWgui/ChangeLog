@@ -1,3 +1,6 @@
+Jan 08 2022 Anton Kokalj (tone.kokalj@ijs.si)
+	* pwgui_reformat merged into pwgui as pwgui -reformat program input
+
 Jan 06 2022 Anton Kokalj (tone.kokalj@ijs.si)
 	* renaming doc/pwdocs/ to doc/
 
