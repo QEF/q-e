@@ -46,7 +46,7 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
 
   CALL start_clock ('cft_wave')
 
-  !$acc data copyin(igk_k) copyin(dffts) copyin(dffts%nl)
+  !$acc data present(igk_k)
 
   IF (isw == 1) THEN
      ikk = ikks(ik) ! points to k+G indices
@@ -81,21 +81,29 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
   !
   INTEGER :: ig, ik
 
+  INTEGER, POINTER :: nl(:)
+  #if defined(__CUDA) && defined(_OPENACC)
+  attributes(DEVICE) :: nl
+  nl => dffts%nl_d
+  #else
+  nl => dffts%nl
+  #endif
+
   !$acc host_data use_device(evc_r)
   CALL fwfft ('Wave', evc_r(:,1), dffts)
   !$acc end host_data
-  !$acc parallel loop present(evc_g, evc_r, igkq, dffts, dffts%nl) private(ik)
+  !$acc parallel loop present(evc_g, evc_r, igkq, nl) private(ik)
   DO ig = 1, npwq
-     ik = dffts%nl(igkq(ig))
+     ik = nl(igkq(ig))
      evc_g (ig) = evc_g (ig) + evc_r (ik,1)
   ENDDO
   IF (noncolin) THEN
      !$acc host_data use_device(evc_r)
      CALL fwfft ('Wave', evc_r(:,2), dffts)
      !$acc end host_data
-     !$acc parallel loop present(evc_g, evc_r, igkq, dffts, dffts%nl) private(ik)
+     !$acc parallel loop present(evc_g, evc_r, igkq, nl) private(ik)
      DO ig = 1, npwq
-        ik = dffts%nl(igkq(ig))
+        ik = nl(igkq(ig))
         evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (ik,2)
      ENDDO
   ENDIF
@@ -115,21 +123,29 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   !
   INTEGER :: ig, ik
 
+  INTEGER, POINTER :: nl(:)
+  #if defined(__CUDA) && defined(_OPENACC)
+  attributes(DEVICE) :: nl
+  nl => dffts%nl_d
+  #else
+  nl => dffts%nl
+  #endif
+
   !$acc kernels present(evc_r)
   evc_r = (0.0_dp, 0.0_dp)
   !$acc end kernels
-  !$acc parallel loop present(evc_g, evc_r, igk, dffts, dffts%nl) private(ik)
+  !$acc parallel loop present(evc_g, evc_r, igk, nl) private(ik)
   DO ig = 1, npw
-     ik = dffts%nl(igk(ig))
+     ik = nl(igk(ig))
      evc_r (ik, 1) = evc_g (ig)
   ENDDO
   !$acc host_data use_device(evc_r)
   CALL invfft ('Wave', evc_r(:,1), dffts)
   !$acc end host_data
   IF (noncolin) THEN
-     !$acc parallel loop present(evc_g, evc_r, igk, dffts, dffts%nl) private(ik)
+     !$acc parallel loop present(evc_g, evc_r, igk, nl) private(ik)
      DO ig = 1, npw
-        ik = dffts%nl(igk(ig))
+        ik = nl(igk(ig))
         evc_r (ik, 2) = evc_g (ig+npwx)
      ENDDO
      !$acc host_data use_device(evc_r)
