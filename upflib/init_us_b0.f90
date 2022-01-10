@@ -87,6 +87,8 @@ SUBROUTINE init_us_b0(ecutwfc,intra_bgrp_comm)
   !
   !- loop over pseudopotentials
   DO nt = 1, nsp
+     ! likely, there is no point in smoothing GTH PPs
+     IF ( upf(nt)%is_gth ) CYCLE
      WRITE( stdout, '(/5X,a,i4)' ) 'Smoothing PSEUDO #', nt
      !
      !- compute original beta normalization in real space where grid is sufficient by definition
