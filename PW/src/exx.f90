@@ -491,7 +491,8 @@ MODULE exx
       ELSE
         IF (nbndproj == 0) nbndproj = nbnd
       END IF
-      WRITE(stdout, '(A,2(I5,A))') "ACE will be projected onto nbndproj=", nbndproj, " bands and applied to nbnd=", nbnd, " bands"
+      WRITE(stdout, '(5X,A,2(I5,A))') "ACE projected onto ", nbndproj, " (nbndproj) and applied to ", &
+                                                                              nbnd, " (nbnd) bands"
     END IF 
 !
     !
