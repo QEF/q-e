@@ -1,6 +1,5 @@
  &control
     calculation='scf',
-    tprnfor=.true.
  /
  &system
     ibrav=1, celldm(1)=8.00,

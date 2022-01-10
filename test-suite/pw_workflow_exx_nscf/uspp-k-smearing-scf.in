@@ -1,6 +1,5 @@
  &control
     calculation='scf'   
-    pseudo_dir='./'
  /
  &system
     ibrav=2, celldm(1) =7.50, 
@@ -14,7 +13,6 @@
  /
 ATOMIC_SPECIES
  Al  26.98 Al.pbe-nl-rrkjus_psl.1.0.0.UPF 
- !Al  26.98 Al.pz-vbc.UPF
 ATOMIC_POSITIONS {alat}
  Al 0.00 0.00 0.00
 K_POINTS {automatic}

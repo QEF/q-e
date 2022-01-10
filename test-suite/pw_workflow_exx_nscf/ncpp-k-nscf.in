@@ -1,7 +1,6 @@
  &control
     calculation = 'nscf'
     verbosity='high'
-    pseudo_dir='/home/ivan/pseudo/',
  /
  &system
     ibrav=2, celldm(1) =10.20, 
