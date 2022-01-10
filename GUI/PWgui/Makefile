@@ -10,7 +10,6 @@ PWGUI_VFS        = pwgui_vfs
 
 ROOT_FILES = \
 	pwgui pwgui.bat pwgui.tcl init.tcl pwgui.settings \
-	pwgui_reformat pwgui_reformat.tcl \
 	README README.developer INSTALL NEWS BUGS THANKS AUTHORS \
 	ChangeLog TODO COPYRIGHT COPYING VERSION
 
