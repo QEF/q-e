@@ -46,6 +46,8 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
 
   CALL start_clock ('cft_wave')
 
+  !$acc data copyin(igk_k) copyin(dffts) copyin(dffts%nl)
+
   IF (isw == 1) THEN
      ikk = ikks(ik) ! points to k+G indices
      npw = ngk(ikk) 
@@ -57,6 +59,8 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
   ELSE
      CALL  errore ('cft_wave',' Wrong value for isw',1)
   ENDIF
+
+  !$acc end data
  
   CALL stop_clock ('cft_wave')
  
@@ -75,16 +79,24 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
   INTEGER, INTENT(IN) :: npwq, igkq(npwq)
   COMPLEX(DP), INTENT(INOUT) :: evc_g (npwx*npol), evc_r (dffts%nnr,npol)
   !
-  INTEGER :: ig
+  INTEGER :: ig, ik
 
+  !$acc host_data use_device(evc_r)
   CALL fwfft ('Wave', evc_r(:,1), dffts)
+  !$acc end host_data
+  !$acc parallel loop present(evc_g, evc_r, igkq, dffts, dffts%nl) private(ik)
   DO ig = 1, npwq
-     evc_g (ig) = evc_g (ig) + evc_r (dffts%nl (igkq(ig) ), 1 )
+     ik = dffts%nl(igkq(ig))
+     evc_g (ig) = evc_g (ig) + evc_r (ik,1)
   ENDDO
   IF (noncolin) THEN
+     !$acc host_data use_device(evc_r)
      CALL fwfft ('Wave', evc_r(:,2), dffts)
+     !$acc end host_data
+     !$acc parallel loop present(evc_g, evc_r, igkq, dffts, dffts%nl) private(ik)
      DO ig = 1, npwq
-        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (dffts%nl(igkq(ig)),2)
+        ik = dffts%nl(igkq(ig))
+        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (ik,2)
      ENDDO
   ENDIF
 END SUBROUTINE fwfft_wave
@@ -101,18 +113,28 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   COMPLEX(DP), INTENT(IN) :: evc_g (npwx*npol)
   COMPLEX(DP), INTENT(OUT):: evc_r (dffts%nnr,npol)
   !
-  INTEGER :: ig
-  
+  INTEGER :: ig, ik
+
+  !$acc kernels present(evc_r)
   evc_r = (0.0_dp, 0.0_dp)
+  !$acc end kernels
+  !$acc parallel loop present(evc_g, evc_r, igk, dffts, dffts%nl) private(ik)
   DO ig = 1, npw
-     evc_r (dffts%nl (igk(ig) ),1 ) = evc_g (ig)
+     ik = dffts%nl(igk(ig))
+     evc_r (ik, 1) = evc_g (ig)
   ENDDO
+  !$acc host_data use_device(evc_r)
   CALL invfft ('Wave', evc_r(:,1), dffts)
+  !$acc end host_data
   IF (noncolin) THEN
+     !$acc parallel loop present(evc_g, evc_r, igk, dffts, dffts%nl) private(ik)
      DO ig = 1, npw
-        evc_r (dffts%nl(igk(ig)),2) = evc_g (ig+npwx)
+        ik = dffts%nl(igk(ig))
+        evc_r (ik, 2) = evc_g (ig+npwx)
      ENDDO
+     !$acc host_data use_device(evc_r)
      CALL invfft ('Wave', evc_r(:,2), dffts)
+     !$acc end host_data
   ENDIF
 
 END SUBROUTINE invfft_wave

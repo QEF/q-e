@@ -394,6 +394,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   ALLOCATE (aux2(npwx*npol, nbnd))
   el_ph_mat_rec=(0.0_DP,0.0_DP)
   aux2(:, :) = (0.0_DP, 0.0_DP)
+  !
+  !$acc enter data create(dvscfins(1:dffts%nnr, 1:nspin_mag, 1:npe), aux2(1:npwx*npol, 1:nbnd))
+  !
   CALL apply_dpot_allocate()
   !
   ! DFPT+U case
@@ -604,6 +607,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   DEALLOCATE(el_ph_mat_rec)
   !
   CALL apply_dpot_deallocate()
+  !
+  !$acc exit data delete(dvscfins, aux2)
+  !
   DEALLOCATE (elphmat)
   DEALLOCATE (aux2)
   !

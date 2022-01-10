@@ -139,6 +139,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    ALLOCATE(h_diag(npwx*npol, nbnd))
    ALLOCATE(aux2(npwx*npol, nbnd))
    !
+   !$acc enter data create(aux2(1:npwx*npol, 1:nbnd))
+   !
    all_conv = .TRUE.
    tot_num_iter = 0
    tot_cg_calls = 0
@@ -274,6 +276,8 @@ SUBROUTINE sternheimer_kernel(first_iter, time_reversed, npert, lrdvpsi, iudvpsi
    CALL mp_sum(tot_num_iter, inter_pool_comm)
    CALL mp_sum(tot_cg_calls, inter_pool_comm)
    avg_iter = REAL(tot_num_iter, DP) / REAL(tot_cg_calls, DP)
+   !
+   !$acc exit data delete(aux2)
    !
    DEALLOCATE(aux2)
    DEALLOCATE(h_diag)
