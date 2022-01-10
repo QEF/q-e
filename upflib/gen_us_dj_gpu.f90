@@ -21,7 +21,6 @@ SUBROUTINE gen_us_dj_gpu_ &
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv_d, nhtol_d, nhtolm_d
   USE uspp_data,   ONLY: nqx, tab, tab_d2y, tab_d, dq, spline_ps
-  USE m_gth,       ONLY: mk_dffnl_gth, mk_dffnl_gth_gpu
   USE splinelib
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
   USE device_fbuff_m,   ONLY: dev_buf
@@ -117,10 +116,6 @@ SUBROUTINE gen_us_dj_gpu_ &
     DO nt = 1, ntyp
       ! calculate beta in G-space using an interpolation table
       DO nb = 1, upf(nt)%nbeta
-        IF ( upf(nt)%is_gth ) THEN
-           CALL mk_dffnl_gth( nt, nb, npw, omega, tpiba, q, djl(1,nb,nt) )
-           CYCLE
-        ENDIF
         DO ig = 1, npw
            qt = SQRT(q(ig)) * tpiba
            djl(ig,nb,nt) = splint_deriv( xdata, tab(:,nb,nt), & 
@@ -136,14 +131,9 @@ SUBROUTINE gen_us_dj_gpu_ &
     !
     DO nt = 1, ntyp
       nbm = upf(nt)%nbeta
-      IF ( upf(nt)%is_gth ) THEN
-        DO nb = 1, nbm
-          CALL mk_dffnl_gth_gpu( nt, nb, npw, omega, tpiba, q_d, djl_d(:,nb,nt) )
-        ENDDO
-      ELSE
-        !$cuf kernel do (2) <<<*,*>>>
-        DO nb = 1, nbm
-          DO ig = 1, npw
+      !$cuf kernel do (2) <<<*,*>>>
+      DO nb = 1, nbm
+         DO ig = 1, npw
             qt = SQRT(q_d(ig)) * tpiba
             px = qt/dq - DBLE(INT(qt/dq))
             ux = 1._DP - px
@@ -157,9 +147,8 @@ SUBROUTINE gen_us_dj_gpu_ &
                                tab_d(i1,nb,nt) * (+vx*wx-px*wx-px*vx)/2._DP - &
                                tab_d(i2,nb,nt) * (+ux*wx-px*wx-px*ux)/2._DP + &
                                tab_d(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6._DP)/dq
-          ENDDO
-        ENDDO
-      ENDIF
+         ENDDO
+      ENDDO
     ENDDO
     !
   ENDIF
