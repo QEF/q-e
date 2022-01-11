@@ -5,12 +5,12 @@
 	
 * General info:
 	
-	If you donwloaded any of the *.tgz package, you do not need to 
-	call "make". See INSTALL file instead.
+	If you donwloaded the PWgui tarball (*.tgz) package, you do not need
+        to call "make". See INSTALL file instead.
 
 * Repository-related target:
  
-	init ...   initialize the PWgui after it was downloaded from repository
+	init ...   initialize the repository version of PWgui
 
 * Distribution-related targets:
 
@@ -18,16 +18,15 @@
 
         pwgui-starkit-vfs    ... make a starkit's pwgui_vfs source package,
 			     	 (use this tarball to create binary starkits 
-				 on various platforms)	                         
+				  on various platforms)	                         
 
-	alldist              ... pwgui-source + 
-                                 pwgui-starkit-vfs
+	alldist              ... pwgui-source + pwgui-starkit-vfs
 
 * General target:
 
-	clean                  ... rm *tgz *tar *~ */*~
+	clean                  ... rm *tgz *tar *~ */*~ */*/*~
 
-	veryclean              ... clean + remove *~ file recursively,
+	veryclean              ... clean + remove *~ files recursively,
 				   clean-documents, and clean pwvgui_vfs/
 
 	distclean	       ... veryclean + (cd lib/; rm -f *)

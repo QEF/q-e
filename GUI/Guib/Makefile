@@ -67,6 +67,7 @@ guib-archive-nodoc:
 	rm guib.tar
 
 clean:
+	-cd doc/; $(MAKE) clean
 	-rm -f *~
 	-rm -f *.tar
 	-rm -f *.tar.gz

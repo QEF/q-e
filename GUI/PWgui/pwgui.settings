@@ -20,7 +20,7 @@ set ::guib::settings(NAMELIST.end_string) { /}
 set ::guib::settings(NAMELIST.varname_nocase) 1
 
 # format for printing namelist's variables names
-set ::guib::settings(NAMELIST.varname_format) {   %25s}
+set ::guib::settings(NAMELIST.varname_format) {   %-15s}
 
 # support for undefined namelist variables
 set ::guib::settings(NAMELIST.variable_support_undefined) 0
@@ -72,8 +72,11 @@ set ::pwscf::settings(RUN.postfix) ""
 
 set ::pwscf::settings(BINDIR)  ""
 set ::pwscf::settings(PW)      pw.x
+set ::pwscf::settings(NEB)     neb.x
 set ::pwscf::settings(PH)      ph.x
 set ::pwscf::settings(PP)      pp.x
 set ::pwscf::settings(PROJWFC) projwfc.x
-#set ::pwscf::settings(D3)      d3.x
+set ::pwscf::settings(DOS)     dos.x
+set ::pwscf::settings(BANDS)   bands.x
 set ::pwscf::settings(LD1)     ld1.x
+set ::pwscf::settings(HP)      hp.x
