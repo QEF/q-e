@@ -17,9 +17,8 @@ SUBROUTINE gen_us_dy_base &
   USE upf_kinds,   ONLY: dp
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,   ONLY: nqx, tab, tab_d2y, dq, spline_ps
+  USE uspp_data,   ONLY: nqx, tab, dq
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh
-  USE splinelib
   !
   IMPLICIT NONE
   !
@@ -75,7 +74,6 @@ SUBROUTINE gen_us_dy_base &
   COMPLEX(DP) :: phase, pref
   !
   INTEGER :: iq
-  REAL(DP), ALLOCATABLE :: xdata(:)
   !
   dvkb(:,:) = (0.d0, 0.d0)
   IF (lmaxkb <= 0) RETURN
@@ -103,34 +101,22 @@ SUBROUTINE gen_us_dy_base &
      q(ig) = SQRT(q(ig)) * tpiba
   ENDDO
   !
-  IF ( spline_ps ) THEN
-    ALLOCATE( xdata(nqx) )
-    DO iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    ENDDO
-  ENDIF
-  !
   DO nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
      DO nb = 1, upf(nt)%nbeta
         DO ig = 1, npw
-           IF ( spline_ps ) THEN
-              vkb0(ig,nb,nt) = splint( xdata, tab(:,nb,nt), &
-                   tab_d2y(:,nb,nt), q(ig) )
-           ELSE
-              px = q(ig)/dq - INT(q(ig)/dq)
-              ux = 1.d0 - px
-              vx = 2.d0 - px
-              wx = 3.d0 - px
-              i0 = q(ig)/dq + 1
-              i1 = i0 + 1
-              i2 = i0 + 2
-              i3 = i0 + 3
-              vkb0(ig, nb, nt) = tab(i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                                 tab(i1, nb, nt) * px * vx * wx / 2.d0 - &
-                                 tab(i2, nb, nt) * px * ux * wx / 2.d0 + &
-                                 tab(i3, nb, nt) * px * ux * vx / 6.d0
-           ENDIF
+           px = q(ig)/dq - INT(q(ig)/dq)
+           ux = 1.d0 - px
+           vx = 2.d0 - px
+           wx = 3.d0 - px
+           i0 = q(ig)/dq + 1
+           i1 = i0 + 1
+           i2 = i0 + 2
+           i3 = i0 + 3
+           vkb0(ig, nb, nt) = tab(i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                              tab(i1, nb, nt) * px * vx * wx / 2.d0 - &
+                              tab(i2, nb, nt) * px * ux * wx / 2.d0 + &
+                              tab(i3, nb, nt) * px * ux * vx / 6.d0
         ENDDO
      ENDDO
   ENDDO
@@ -173,7 +159,6 @@ SUBROUTINE gen_us_dy_base &
   !
   DEALLOCATE( sk )
   DEALLOCATE( vkb0, dylm_u, gk )
-  IF (spline_ps) DEALLOCATE( xdata )
   !
   RETURN
   !

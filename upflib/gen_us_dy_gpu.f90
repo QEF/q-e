@@ -19,8 +19,7 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   USE upf_kinds,   ONLY: dp
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv_d, nhtol_d, nhtolm_d
-  USE uspp_data,   ONLY: nqx, tab, tab_d2y, tab_d, dq, spline_ps
-  USE splinelib
+  USE uspp_data,   ONLY: nqx, tab, tab_d, dq
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
   USE device_fbuff_m,   ONLY: dev_buf
   !
@@ -72,11 +71,11 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   !
   INTEGER, ALLOCATABLE :: ityp_d(:), ih_d(:), na_d(:), nas_d(:)
   !
-  REAL(DP), ALLOCATABLE :: q(:), vkb0(:,:,:), dylm(:,:)
-  REAL(DP), ALLOCATABLE :: xdata(:), tau_d(:,:), q_d(:)
+  REAL(DP), ALLOCATABLE :: q(:), dylm(:,:)
   !
   REAL(DP), POINTER :: gk_d(:,:)
   REAL(DP), POINTER :: vkb0_d(:,:,:), dylm_u_d(:,:), dylm_d(:,:,:)
+  REAL(DP), ALLOCATABLE :: q_d(:), tau_d(:,:)
   ! dylm = d Y_lm/dr_i in cartesian axes
   ! dylm_u as above projected on u
   COMPLEX(DP), ALLOCATABLE :: phase_d(:), sk_d(:,:)
@@ -140,35 +139,10 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   ENDDO
   !
   !
-  IF ( spline_ps ) THEN
-    !
-    ! AF: using splint_eq ??
-    !
-    ALLOCATE( q(npw), xdata(nqx), vkb0(npw,nbetam,ntyp) )
-    q = q_d
-    DO iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    ENDDO
-    !
-    DO nt = 1, ntyp
-      ! calculate beta in G-space using an interpolation table
-      DO nb = 1, upf(nt)%nbeta
-        DO ig = 1, npw
-           vkb0(ig,nb,nt) = splint( xdata, tab(:,nb,nt), &
-                                    tab_d2y(:,nb,nt), q(ig) )
-        ENDDO
-      ENDDO
-    ENDDO
-    vkb0_d = vkb0
-    !
-    DEALLOCATE( q, xdata, vkb0 )
-    !
-  ELSE
-    !
-    DO nt = 1, ntyp
-      nbm = upf(nt)%nbeta
-      !$cuf kernel do (2) <<<*,*>>>
-      DO nb = 1, nbm
+  DO nt = 1, ntyp
+     nbm = upf(nt)%nbeta
+     !$cuf kernel do (2) <<<*,*>>>
+     DO nb = 1, nbm
         DO ig = 1, npw
            px = q_d(ig)/dq - DBLE(INT(q_d(ig)/dq))
            ux = 1._DP - px
@@ -182,11 +156,9 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
                               tab_d(i1,nb,nt) * px * vx * wx / 2._DP - &
                               tab_d(i2,nb,nt) * px * ux * wx / 2._DP + &
                               tab_d(i3,nb,nt) * px * ux * vx / 6._DP
-        ENDDO
-      ENDDO
+       ENDDO
     ENDDO
-    !
-  ENDIF
+  ENDDO
   !
   DEALLOCATE( q_d )
   !

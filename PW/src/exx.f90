@@ -3770,9 +3770,8 @@ end associate
   USE constants,     ONLY : tpi
   USE gvect,         ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp_data,     ONLY : nqx, dq, tab, tab_d2y, spline_ps
+  USE uspp_data,     ONLY : nqx, dq, tab
   USE m_gth,         ONLY : mk_ffnl_gth
-  USE splinelib
   USE uspp,          ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,    ONLY : upf, lmaxkb, nhm, nh
   USE becmod,        ONLY : calbec
@@ -3802,7 +3801,6 @@ end associate
   COMPLEX(DP) :: phase, pref
   COMPLEX(DP), ALLOCATABLE :: sk(:)
   !
-  REAL(DP), ALLOCATABLE :: xdata(:)
   INTEGER :: iq
   INTEGER :: istart, iend
   !
@@ -3835,12 +3833,6 @@ end associate
      qg(ig) = SQRT(qg(ig))*tpiba
   ENDDO
   !
-  IF (spline_ps) THEN
-     ALLOCATE( xdata(nqx) )
-     DO iq = 1, nqx
-       xdata(iq) = (iq - 1) * dq
-     ENDDO
-  ENDIF
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
   !
@@ -3852,9 +3844,6 @@ end associate
            CALL mk_ffnl_gth( nt, nb, npw_, omega, qg, vq )
         ELSE
            DO ig = 1, npw_
-              IF (spline_ps) THEN
-                vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-              ELSE
                 px = qg (ig) / dq - INT(qg (ig) / dq)
                 ux = 1.d0 - px
                 vx = 2.d0 - px
@@ -3867,7 +3856,6 @@ end associate
                           tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
                           tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
                           tab (i3, nb, nt) * px * ux * vx / 6.d0
-              ENDIF
            ENDDO
         ENDIF
         !
