@@ -252,17 +252,18 @@ CONTAINS
            str_idx = str_idx + SCAN(parbuffer(str_idx:), ',')
            SELECT CASE (TRIM(flag_id))
               CASE ('lstress')
-                 tstress = flag_val
+                 ! syntax in next line ensure safe int to logical conversion  
+                 tstress = merge (.false., .true., flag_val == 0)
               CASE ('lscf')
-                 lscf = flag_val
+                 lscf = merge (.false., .true., flag_val == 0)
               CASE ('lforce')
-                 lforce = flag_val
+                 lforce = merge (.false., .true., flag_val == 0)
               CASE ('lmovecell')
-                 lmovecell = flag_val
+                 lmovecell = merge (.false., .true., flag_val == 0)
               CASE ('lmd')
-                 lmd = flag_val
+                 lmd = merge (.false., .true., flag_val == 0)
               CASE ('lensemb')
-                 lensemb = flag_val
+                 lensemb = merge (.false., .true., flag_val == 0)
               CASE DEFAULT
                   WRITE(*,*) " @ DRIVER MODE: UNSUPPORTED PARAMETER FLAG:  ", TRIM(flag_id)
            ENDSELECT
