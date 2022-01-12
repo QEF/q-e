@@ -28,13 +28,13 @@ save
   real(dp), allocatable :: VecUser(:,:)   ! (Optional) user-given star functions 
   !
 CONTAINS
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine allocate_fourier( )
 implicit none
   allocate ( C(NC) ) 
   return
 end subroutine
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine fourier(Nb, Nq, q, eq, Nk, k, ek, Nsym, at, bg, Op)
 !
 ! compute the band structure with Fourier interpolation from
@@ -145,7 +145,7 @@ implicit none
   return
   !
 end subroutine fourier 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine find_stars(NSym, Op, at, Skip000_)
 implicit none
   integer,  intent(in) :: NSym
@@ -280,7 +280,7 @@ implicit none
   return 
   !
 end subroutine find_stars
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine check_stars(Np, p, NSym, Op, bg)
 ! Check whether the Star functions have the periodicity 
 ! of the reciprocal lattice
@@ -344,7 +344,7 @@ implicit none
   return
   !
 end subroutine check_stars
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine compute_stars(A, LDA, Np, p, NSym, Op, ialpha, DoDiff_, S)
 !
 ! Computes the matrix A(LDA, NStars):
@@ -429,7 +429,7 @@ implicit none
   return
   !
 end subroutine compute_stars
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 complex(dp) function star_function (iprint, p, vec, NSym, Op)
 implicit none
   integer, intent(in) :: iprint
@@ -474,7 +474,7 @@ implicit none
   return
   !
 end function star_function
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 real(dp) function sqrt_rho(vec)
 ! computes:
 !           sqrt(C0 + C1 * |vec|^2 + C2 * |vec|^4)
@@ -496,7 +496,7 @@ implicit none
   return  
   !
 end function sqrt_rho
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine applyOp(isym, OpMat, vec, vecOp)
 ! apply symmetry operation in OpMat:
 !         vecOp = OpMat * vec
@@ -523,5 +523,6 @@ implicit none
   return
   !
 end subroutine applyOp
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 END MODULE
+!----------------------------------------------------------------------------

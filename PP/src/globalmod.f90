@@ -43,13 +43,13 @@ implicit none
                                           ! quite redundant here, but useful to use s_axis_to_cart without modifications 
   !
 CONTAINS
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine read_input ()
-use fouriermod,  ONLY : NMax, allocate_fourier, NC, C, NUser, VecUser
-use shepardmod,  ONLY : PMetric, ScaleSphere 
 !
 ! read the input file and make all allocations 
 ! 
+use fouriermod,  ONLY : NMax, allocate_fourier, NC, C, NUser, VecUser
+use shepardmod,  ONLY : PMetric, ScaleSphere 
 use qes_read_module, only: qes_read 
 use qes_types_module, only: band_structure_type, atomic_structure_type, symmetries_type, basis_set_type
 use fox_dom 
@@ -109,33 +109,36 @@ implicit none
     stop
   end if 
   !
-  ! read parameters for Shepard interpolation 
+  ! read specific parameters for the interpolation methods
   ! 
-  read(*,*)
-  read(*,*) PMetric, ScaleSphere
-  write(*,*) 'PMetric: ', PMetric, 'ScaleSphere ', ScaleSphere
-  !
-  ! read parameters for Fourier interpolation 
-  ! 
-  read(*, *) 
-  read(*, *) string, NMax
-  if( NMax.le.0) then 
-    write(*,*) 'Wrong NMax: ', NMax
-    write(*,*) 'NMax must be greater than 0 '
-    stop
-  end if
-  read(*, *) string, NC
-  if( NC.le.0) then 
-    write(*,*) 'Wrong NC: ', NC  
-    write(*,*) 'NC must be greater than 0 '
-    stop
-  end if
-  Call allocate_fourier( )
-  read(*, *) string, C(1:NC)
-  write(*,*) NC, ' coefficients read for rho expansion: ', C(:)
-  !
-  ! read system dependent quantities (crystal specifications uniform grid energies) 
-  ! 
+  if( TRIM(method).eq.'shepard'.or.TRIM(method).eq.'shepard-sphere' ) THEN 
+    !
+    ! read parameters for Shepard interpolation 
+    ! 
+    read(*,*)
+    read(*,*) PMetric, ScaleSphere
+    write(*,*) 'PMetric: ', PMetric, 'ScaleSphere ', ScaleSphere
+  elseif( TRIM(method).eq.'fourier'.or.TRIM(method).eq.'fourier-diff' ) 
+    !
+    ! read parameters for Fourier interpolation 
+    ! 
+    read(*, *) 
+    read(*, *) string, NMax
+    if( NMax.le.0) then 
+      write(*,*) 'Wrong NMax: ', NMax
+      write(*,*) 'NMax must be greater than 0 '
+      stop
+    end if
+    read(*, *) string, NC
+    if( NC.le.0) then 
+      write(*,*) 'Wrong NC: ', NC  
+      write(*,*) 'NC must be greater than 0 '
+      stop
+    end if
+    Call allocate_fourier( )
+    read(*, *) string, C(1:NC)
+    write(*,*) NC, ' coefficients read for rho expansion: ', C(:)
+  end if 
   !
   ! read the list of Nkl special points
   !
@@ -143,6 +146,8 @@ implicit none
   read(*, *) Nkl
   !
   write(*,*) Nkl, ' special points read'
+  !
+  ! create the abscissa values for bands plotting
   !  
   allocate( kl(3,Nkl), kln(Nkl ) )
   !
@@ -161,7 +166,7 @@ implicit none
   !
   deallocate( kl, kln )
   !
-  ! read the uniform grid of q-points
+  ! read the uniform grid of q-points from xml
   !
   Nq = bandstr%nks  
   Nb = bandstr%nbnd 
@@ -179,7 +184,8 @@ implicit none
     !write(*,'(I5,11f12.6)') iq, q(iq, :), eq(iq, :)
   end do 
   !
-  ! read crystalline group specifications (direct and reciprocal vectors, symmetry operations)
+  ! read from xml crystalline group specifications 
+  ! (direct and reciprocal vectors, symmetry operations)
   !
   at(1:3,1) = atstr%cell%a1 / atstr%alat
   at(1:3,2) = atstr%cell%a2 / atstr%alat 
@@ -209,7 +215,7 @@ implicit none
   return
   !
 end subroutine read_input 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine build_kpath ()
 !
 ! build the path of k-points connecting the Nkl special points
@@ -244,7 +250,7 @@ implicit none
   return
   !
 end subroutine build_kpath 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine print_bands (label)
 !
 ! print band structure
@@ -271,28 +277,32 @@ implicit none
   return
   !
 end subroutine print_bands
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine deallocate_global ()
 implicit none
   deallocate(q, eq, k, ek, t, Op)
 end subroutine deallocate_global
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !----------------------------------------------------------------------
-   SUBROUTINE s_axis_to_cart()
-     !----------------------------------------------------------------------
-     !! This routine transforms symmetry matrices expressed in the
-     !! basis of the crystal axis into rotations in cartesian axis.
-     !
-     IMPLICIT NONE
-     !
-     INTEGER :: isym
-     REAL(DP) :: sa(3,3), sb(3,3)
-     !
-     DO isym = 1,nsym
-        sa(:,:) = DBLE( Op_tmp(:,:,isym) )
-        sb = MATMUL( bg, sa )
-        Op(:,:,isym) = MATMUL( at, TRANSPOSE(sb) )
-     ENDDO
-     !
-    END SUBROUTINE s_axis_to_cart
+SUBROUTINE s_axis_to_cart()
+  !----------------------------------------------------------------------
+  !! This routine transforms symmetry matrices expressed in the
+  !! basis of the crystal axis into rotations in cartesian axis.
+!
+!civn 2FIX: better remove this one and use PW/src/symm_base.f90 instead 
+!           (change Op_tmp --> sr and   Op --> s) 
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: isym
+  REAL(DP) :: sa(3,3), sb(3,3)
+  !
+  DO isym = 1,nsym
+     sa(:,:) = DBLE( Op_tmp(:,:,isym) )
+     sb = MATMUL( bg, sa )
+     Op(:,:,isym) = MATMUL( at, TRANSPOSE(sb) )
+  ENDDO
+  !
+ END SUBROUTINE s_axis_to_cart
+!----------------------------------------------------------------------------
 END MODULE
+!----------------------------------------------------------------------------

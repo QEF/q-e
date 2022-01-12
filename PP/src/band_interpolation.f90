@@ -49,3 +49,4 @@ implicit none
   Call deallocate_global ()
   !
 end program
+!----------------------------------------------------------------------------

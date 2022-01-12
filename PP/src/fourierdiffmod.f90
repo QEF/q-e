@@ -14,7 +14,7 @@ MODULE fourierdiffmod
 use fouriermod 
 implicit none
 CONTAINS
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine fourierdiff(Nb, Nq, q, eq, Nk, k, ek, Nsym, at, bg, Op)
 !
 ! compute the band structure with Fourier interpolation from
@@ -137,5 +137,6 @@ implicit none
   return
   !
 end subroutine fourierdiff
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 END MODULE
+!----------------------------------------------------------------------------

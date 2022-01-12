@@ -21,7 +21,7 @@ save
   real(dp) :: ScaleSphere  ! scaling factor for the radius of the sphere for the modified method
   !
 CONTAINS
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 subroutine shepard(iwhat, Nb, Nq, q, eq, Nk, k, ek)
 !
 ! compute the band structure with Shepard's interpolation
@@ -85,5 +85,6 @@ implicit none
   return
   !
 end subroutine shepard
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
 END MODULE
+!----------------------------------------------------------------------------
