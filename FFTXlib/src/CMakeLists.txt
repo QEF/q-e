@@ -50,6 +50,8 @@ target_link_libraries(qe_fftx
         qe_mpi_fortran)
 if(QE_ENABLE_CUDA)
     target_link_libraries(qe_fftx
+        PUBLIC
+            qe_openacc_fortran
         PRIVATE
             CUDA::cufft)
 endif()
