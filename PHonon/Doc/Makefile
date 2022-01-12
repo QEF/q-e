@@ -4,7 +4,7 @@ HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
-PDFS = user_guide.pdf developer_man.pdf dfpt_tetra.pdf dfpt_self_energy.pdf
+PDFS = user_guide.pdf dfpt_tetra.pdf dfpt_self_energy.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
@@ -14,7 +14,7 @@ TOCS = $(PDFS:.pdf=.toc)
 doc:  all
 all:  defs pdf html
 pdf: $(PDFS)
-html: user_guide developer_man
+html: user_guide
 
 $(PDFS): %.pdf: %.tex
 	$(LATEX)  $<
@@ -22,7 +22,7 @@ $(PDFS): %.pdf: %.tex
 
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
-	- rm -rf user_guide/ developer_man/
+	- rm -rf user_guide/
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
 	- rm -rf input_xx.xsl
 	- rm -rf ../../Doc/INPUT_PH.*
@@ -44,27 +44,6 @@ user_guide: user_guide.pdf
 	@echo ""
 	@echo "***"
 	@echo "*** User's Guide created in user_guide/user_guide.html"
-	@echo "***"
-	@echo ""
-
-
-developer_man: developer_man.pdf
-	rm -rf developer_man/
-	latex2html \
-                -t "User's Guide for the PHonon package" \
-                -html_version 3.2,math \
-                -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
-                -local_icons -image_type png \
-                developer_man.tex
-	cd developer_man; \
-	for file in *.html; do \
-                cp $$file /tmp/$$file; \
-                cat /tmp/$$file | sed 's/HREF="http/NAME="http/g' | sed 's/mathend000#//g' - > $$file; \
-                rm -f /tmp/$$file; \
-        done
-	@echo ""
-	@echo "***"
-	@echo "*** Developer manual created in developer_man/developer_man.html"
 	@echo "***"
 	@echo ""
 

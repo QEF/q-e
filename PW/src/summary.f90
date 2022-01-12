@@ -34,7 +34,8 @@ SUBROUTINE summary()
   USE klist,           ONLY : degauss, smearing, lgauss, ltetra, nkstot, xk, &
                               wk, nelec, nelup, neldw, two_fermi_energies
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
-                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
+                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, &
+                              tq_smoothing, tbeta_smoothing, llondon, ldftd3
   USE noncollin_module,ONLY : noncolin, domag, lspinorb
   USE funct,           ONLY : write_dft_name
   USE xc_lib,          ONLY : xclib_dft_is
@@ -54,6 +55,8 @@ SUBROUTINE summary()
   USE gcscf_module,    ONLY : lgcscf, gcscf_summary
   USE relax,           ONLY : epse, epsf, epsp
   USE environment,     ONLY : print_cuda_info
+  USE london_module,   ONLY : print_london
+  USE dftd3_qe,        ONLY : dftd3_printout, dftd3, dftd3_in
   !
   IMPLICIT NONE
   !
@@ -295,7 +298,7 @@ SUBROUTINE summary()
   !
   !   description of symmetries
   !
-  CALL  print_symmetries ( iverbosity, noncolin, domag )
+  CALL print_symmetries ( iverbosity, noncolin, domag )
   !
   !    description of the atoms inside the unit cell
   !
@@ -304,6 +307,10 @@ SUBROUTINE summary()
 
   WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f12.7,"  )")') &
              (na, atm(ityp(na)), na, (tau(ipol,na), ipol=1,3), na=1,nat)
+  !
+  IF ( llondon ) CALL print_london ( )
+  IF ( ldftd3 )  CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, &
+       nat, ityp, tau, at, alat )
   !
   !  output of starting magnetization
   !

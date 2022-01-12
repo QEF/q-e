@@ -85,6 +85,8 @@ CONTAINS
     IF ( PRESENT(images_only) ) only_images = images_only
     IF ( only_images ) RETURN
     !
+    ! npool_ is 0 if not specified in command line
+    IF ( npool_== 0 ) npool_ = 1
     CALL mp_start_pools ( npool_, intra_image_comm )
 #if defined (__CUDA_OPTIMIZED)
     CALL mp_start_bands ( 1 , ntg_, nyfft_, intra_pool_comm )

@@ -689,6 +689,8 @@ SUBROUTINE setup_para ( )
   !
   ! k-point parallelization first
   !
+  ! TBD: choose a sensible npool_ if not explicitly specified
+  IF ( npool_== 0 ) npool_ = 1
   CALL mp_start_pools ( npool_, intra_image_comm )
   kunit   = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
