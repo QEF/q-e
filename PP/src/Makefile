@@ -54,7 +54,7 @@ write_io_header.o \
 write_hamiltonians.o \
 fouriermod.o \
 globalmod.o \
-shepardmod.o \
+idwmod.o \
 fourierdiffmod.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 

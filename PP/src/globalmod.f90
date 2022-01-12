@@ -49,7 +49,7 @@ subroutine read_input ()
 ! read the input file and make all allocations 
 ! 
 use fouriermod,  ONLY : NMax, allocate_fourier, NC, C, NUser, VecUser
-use shepardmod,  ONLY : PMetric, ScaleSphere 
+use idwmod,  ONLY : PMetric, ScaleSphere 
 use qes_read_module, only: qes_read 
 use qes_types_module, only: band_structure_type, atomic_structure_type, symmetries_type, basis_set_type
 use fox_dom 
@@ -82,46 +82,69 @@ implicit none
   read(*, *) 
   read(*, *) method
   write(*,*) 'Interpolation method: ', method
-  if( TRIM(method).ne.'shepard'.and.TRIM(method).ne.'shepard-sphere'&
+  if( TRIM(method).ne.'idw'.and.TRIM(method).ne.'idw-sphere'&
         .and.TRIM(method).ne.'fourier'.and.TRIM(method).ne.'fourier-diff' ) then
     write(*,*) 'ERROR: Wrong method ', method
     stop
   end if 
   !
-  ! optionally add user-given star functions to the basis set
-  ! 
-  NUser = 0 
-  read(*,*)
-  read(*,*) NUser
-  if(NUser.gt.0) then 
-    write(*,*) NUser, ' user-given star functions found'
-    allocate( VecUser(3,NUser) ) 
-    VecUser = 0.0d0
-    do ivec = 1, NUser
-      read(*,*) VecUser(1:3,ivec) 
-      write(*,'(3f12.6)') VecUser(1:3,ivec)
-    end do 
-  elseif(NUser.eq.0) then 
-    write(*,*) 'No user-given star functions provided'
-  else
-    write(*,*) 'ERROR: Wrong NUser'
-    write(*,*) '       Please provide non-negative NUser'
-    stop
-  end if 
-  !
   ! read specific parameters for the interpolation methods
   ! 
-  if( TRIM(method).eq.'shepard'.or.TRIM(method).eq.'shepard-sphere' ) THEN 
+  if( TRIM(method).eq.'idw') THEN 
     !
-    ! read parameters for Shepard interpolation 
+    ! read parameters for IDW interpolation 
     ! 
+    PMetric = -1 
+    ScaleSphere = -1.0d0
+    read(*,*)
+    read(*,*) PMetric
+    write(*,*) 'PMetric: ', PMetric
+    if(PMetric.lt.0) THEN  
+      write(*,*) "ERROR: Wrong input for idw method"
+      stop
+    end if 
+    !
+  elseif( TRIM(method).eq.'idw-sphere' ) THEN 
+    !
+    ! read parameters for IDW interpolation inside a sphere
+    ! 
+    PMetric = -1 
+    ScaleSphere = -1.0d0
     read(*,*)
     read(*,*) PMetric, ScaleSphere
-    write(*,*) 'PMetric: ', PMetric, 'ScaleSphere ', ScaleSphere
-  elseif( TRIM(method).eq.'fourier'.or.TRIM(method).eq.'fourier-diff' ) 
+    write(*,*) 'PMetric: ', PMetric, 'ScaleSphere ', ScaleSphere 
+    if(PMetric.lt.0.or.ScaleSphere.lt.0.0d0) THEN  
+      write(*,*) "ERROR: Wrong input for IDW-Sphere method"
+      stop
+    end if 
+    !
+  elseif( TRIM(method).eq.'fourier'.or.TRIM(method).eq.'fourier-diff' ) THEN
+    !
+    ! optionally add user-given star functions to the basis set
+    ! 
+    NUser = -1 
+    read(*,*)
+    read(*,*) NUser
+    if(NUser.gt.0) then 
+      write(*,*) NUser, ' user-given star functions found'
+      allocate( VecUser(3,NUser) ) 
+      VecUser = 0.0d0
+      do ivec = 1, NUser
+        read(*,*) VecUser(1:3,ivec) 
+        write(*,'(3f12.6)') VecUser(1:3,ivec)
+      end do 
+    elseif(NUser.eq.0) then 
+      write(*,*) 'No user-given star functions provided'
+    else
+      write(*,*) 'ERROR: Wrong NUser'
+      write(*,*) '       Please provide non-negative NUser'
+      stop
+    end if 
     !
     ! read parameters for Fourier interpolation 
     ! 
+    NMax = -1
+    NC = -1
     read(*, *) 
     read(*, *) string, NMax
     if( NMax.le.0) then 

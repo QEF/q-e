@@ -12,7 +12,7 @@
 !----------------------------------------------------------------------------
 program band_interpolation 
 use globalmod
-use shepardmod
+use idwmod
 use fouriermod
 use fourierdiffmod
 implicit none
@@ -21,13 +21,13 @@ implicit none
   !
   ek = 0.0d0
   !
-  if(TRIM(method).eq.'shepard') then 
+  if(TRIM(method).eq.'idw') then 
     !
-    Call shepard (1, Nb, Nq, q, eq, Nk, k, ek)
+    Call idw (1, Nb, Nq, q, eq, Nk, k, ek, at, bg)
     !
-  elseif(TRIM(method).eq.'shepard-sphere') then 
+  elseif(TRIM(method).eq.'idw-sphere') then 
     !
-    Call shepard (2, Nb, Nq, q, eq, Nk, k, ek)
+    Call idw (2, Nb, Nq, q, eq, Nk, k, ek, at, bg)
     !
   elseif(TRIM(method).eq.'fourier') then 
     !
