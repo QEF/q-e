@@ -85,5 +85,5 @@ subroutine h_prec (ik, evq, h_diag)
      END IF
   END DO
   DEALLOCATE (eprec)
-  
+
 END SUBROUTINE h_prec

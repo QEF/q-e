@@ -125,6 +125,24 @@ SET(BLA_VENDOR ${BLA_VENDOR_SAVED})
 
 add_subdirectory(src)
 
+target_link_libraries(qe_fftx
+    PRIVATE
+        qe_fft
+	qe_openacc_fortran
+        qe_openmp_fortran
+        qe_mpi_fortran)
+if(QE_ENABLE_CUDA)
+    target_link_libraries(qe_fftx
+        PRIVATE
+            CUDA::cufft)
+endif()
+        
+qe_install_targets(qe_fftx)
+
+###########################################################
+# Tests
+# TODO move all tests to a proper location
+###########################################################
 if(QE_ENABLE_TEST)
     add_subdirectory(tests)
 endif()
