@@ -132,8 +132,8 @@ SUBROUTINE setup()
                          'hybrid XC and electric fields untested',1 )
      IF ( allfrac ) CALL errore( 'setup ', &
                          'option use_all_frac incompatible with hybrid XC', 1 )
-     IF (.NOT. lscf) CALL errore( 'setup ', &
-                         'hybrid XC not allowed in non-scf calculations', 1 )
+!     IF (.NOT. lscf) CALL errore( 'setup ', &
+!                         'hybrid XC not allowed in non-scf calculations', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
      IF (okvan) THEN
