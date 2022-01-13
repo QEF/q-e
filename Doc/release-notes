@@ -1,3 +1,8 @@
+Fixed in development version:
+  * XSPECTRA gave incorrect results with k-point parallelization, since
+    at least v. 6.6, due to missing broadcast of recomputed Fermi energy
+    (found and fixed by Fanchan Meng, Brookhaven)
+
 New in 7.0 version:
   * GPU support for PWscf and CP significantly extended
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
