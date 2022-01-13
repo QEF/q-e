@@ -32,7 +32,7 @@
   USE gvect,            ONLY : g, ngm
   USE atom,             ONLY : msh, rgrid
   USE wavefunctions,    ONLY : evc
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag, lspinorb
   USE uspp_param,       ONLY : upf, nhm
   USE m_gth,            ONLY : setlocq_gth
   USE units_lr,         ONLY : lrwfc, iuwfc
@@ -42,7 +42,6 @@
   USE elph2,            ONLY : igk_k_all, ngk_all, ngxx, veff, ig_s, ig_e
   USE mp,               ONLY : mp_barrier
   USE mp_global,        ONLY : inter_pool_comm, my_pool_id
-  USE spin_orb,         ONLY : lspinorb
   USE lsda_mod,         ONLY : nspin, lsda, current_spin
   USE phus,             ONLY : int1, int1_nc, int2, int2_so,        &
                                int4, int4_nc, int5, int5_so, alphap
