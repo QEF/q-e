@@ -304,7 +304,7 @@ PWLIBS += \
 
 QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 
-TLDEPS= bindir libs mods libks_solvers dftd3
+TLDEPS= bindir pwlibs mods libks_solvers dftd3
 
 all : tldeps pw.x
 
