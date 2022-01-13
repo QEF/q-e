@@ -46,7 +46,7 @@ PROGRAM X_Spectra
   USE mp,              ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_global,       ONLY : mp_startup, mp_global_end
   USE mp_pools,        ONLY : intra_pool_comm, npool
-  USE mp_world,        ONLY : nproc, world_comm
+  USE mp_world,        ONLY : world_comm
   USE control_flags,   ONLY : gamma_only
   USE environment,     ONLY : environment_start
 
@@ -133,7 +133,8 @@ PROGRAM X_Spectra
      CALL read_file()
 
      CALL calculate_and_write_homo_lumo_to_stdout(ehomo,elumo)
-
+     ! Ef is broadcast to all processors - needed for k-point parallelization
+     CALL mp_bcast( ef, ionode_id, world_comm ) 
      call reset_k_points_and_reinit_nscf()
 
      call check_orthogonality_k_epsilon( xcoordcrys, xang_mom )
