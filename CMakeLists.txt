@@ -326,8 +326,8 @@ if(QE_ENABLE_OPENACC)
     target_link_libraries(qe_openacc_fortran INTERFACE OpenACC::OpenACC_Fortran)
     target_link_libraries(qe_openacc_c INTERFACE OpenACC::OpenACC_C)
     if(GPU_TARGET_COMPILE_OPTIONS)
-        target_compile_options(qe_openacc_fortran INTERFACE "${GPU_TARGET_COMPILE_OPTIONS}")
-        target_compile_options(qe_openacc_c INTERFACE "${GPU_TARGET_COMPILE_OPTIONS}")
+        target_compile_options(qe_openacc_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:${GPU_TARGET_COMPILE_OPTIONS}>")
+        target_compile_options(qe_openacc_c INTERFACE "$<$<COMPILE_LANGUAGE:C>:${GPU_TARGET_COMPILE_OPTIONS}>")
     endif()
 endif(QE_ENABLE_OPENACC)
 
@@ -555,8 +555,7 @@ if(QE_ENABLE_HDF5)
 
     target_link_libraries(qe_hdf5_fortran
         INTERFACE
-            ${HDF5_Fortran_LIBRARIES}
-            ${HDF5_Fortran_HL_LIBRARIES})
+            ${HDF5_Fortran_LIBRARIES})
     target_include_directories(qe_hdf5_fortran
         INTERFACE
             ${HDF5_Fortran_INCLUDE_DIRS})
@@ -566,8 +565,7 @@ if(QE_ENABLE_HDF5)
 
     target_link_libraries(qe_hdf5_c
         INTERFACE
-            ${HDF5_C_LIBRARIES}
-            ${HDF5_C_HL_LIBRARIES})
+            ${HDF5_C_LIBRARIES})
     target_include_directories(qe_hdf5_c
         INTERFACE
             ${HDF5_C_INCLUDE_DIRS})
@@ -627,6 +625,7 @@ add_subdirectory(PWCOND)
 add_subdirectory(TDDFPT)
 add_subdirectory(XSpectra)
 add_subdirectory(QEHeat)
+add_subdirectory(GUI)
 if(QE_ENABLE_DOC)
     add_subdirectory(Doc)
 endif()

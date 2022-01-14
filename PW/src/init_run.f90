@@ -38,7 +38,7 @@ SUBROUTINE init_run()
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE lsda_mod,           ONLY : nspin
   USE noncollin_module,   ONLY : domag
-  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc
+  USE xc_lib,             ONLY : xclib_dft_is_libxc, xclib_init_libxc, xclib_dft_is 
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
@@ -138,6 +138,8 @@ SUBROUTINE init_run()
   CALL openfil()
   !
   IF (xclib_dft_is_libxc('ANY')) CALL xclib_init_libxc( nspin, domag )
+  !
+  IF (xclib_dft_is('hybrid')) CALL aceinit0()
   !
   CALL hinit0()
   !

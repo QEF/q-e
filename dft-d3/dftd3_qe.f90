@@ -33,7 +33,6 @@ MODULE dftd3_qe
     
     !> Convert XC labels from QE to those used by DFT-D3
     FUNCTION dftd3_xc ( dft )
-      IMPLICIT NONE
       CHARACTER(LEN=*), INTENT(in) :: dft
       CHARACTER(LEN=256) :: dftd3_xc
       CHARACTER(LEN=1), EXTERNAL :: lowercase

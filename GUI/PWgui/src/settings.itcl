@@ -52,16 +52,20 @@ proc ::pwscf::_settingsOK {t obj} {
 proc ::pwscf::_settingsApply {obj} {
     $obj saveToVar ::pwscf
 
-    puts stderr [array get ::pwscf::settings]
-    puts stderr "::pwscf::settings_how_exe = $::pwscf::settings_how_exe"
-
     if { $::pwscf::settings_how_exe == "path" } {
-	set ::pwscf::settings(PW)   $::pwscf::settings(BINDIR)/pw.x
-	set ::pwscf::settings(PH)   $::pwscf::settings(BINDIR)/ph.x
-	set ::pwscf::settings(PP)   $::pwscf::settings(BINDIR)/pp.x
-	set ::pwscf::settings(PROJWFC) $::pwscf::settings(BINDIR)/projwfc.x
-	#set ::pwscf::settings(D3)   $::pwscf::settings(BINDIR)/d3.x
-	set ::pwscf::settings(LD1)   $::pwscf::settings(BINDIR)/ld1.x
+        foreach {v c} {
+            PW      pw.x
+            NEB     neb.x
+            PH      ph.x
+            PP      pp.x
+            PROJWFC projwfc.x
+            DOS     dos.x
+            BANDS   bands.x
+            LD1     ld1.x
+            HP      hp.x
+        } {
+            set ::pwscf::settings($v)      $::pwscf::settings(BINDIR)/$c
+        }
     }
 }
 
@@ -145,12 +149,19 @@ proc ::pwscf::_settingsModule {} {
 		}
 
 		group binaries -decor normal {
-		    var PW -variable ::pwscf::settings(PW) -label "Executable \"pw.x\":" -widget entryfileselect
-		    var PH -variable ::pwscf::settings(PH) -label "Executable \"ph.x\":" -widget entryfileselect
-		    var PP -variable ::pwscf::settings(PP) -label "Executable \"pp.x\":" -widget entryfileselect
-		    var PROJWFC -variable ::pwscf::settings(PROJWFC) -label "Executable \"projwfc.x\":" -widget entryfileselect
-		    #var D3      -variable ::pwscf::settings(D3) -label "Executable \"d3.x\":" -widget entryfileselect
-		    var LD1     -variable ::pwscf::settings(LD1) -label "Executable \"ld1.x\":" -widget entryfileselect
+                    foreach {v c} {
+                        PW      pw.x
+                        NEB     neb.x
+                        PH      ph.x
+                        PP      pp.x
+                        PROJWFC projwfc.x
+                        DOS     dos.x
+                        BANDS   bands.x
+                        LD1     ld1.x
+                        HP      hp.x
+                    } {
+                        var $v -variable ::pwscf::settings($v)  -label "Executable \"$c\":"  -widget entryfileselect
+                    }
 		}
 	    }
 	}
@@ -274,7 +285,6 @@ proc ::pwscf::_settingsModule {} {
 	    if { $how == {} } {
 		varset HOW_EXE -value path
 	    }
-	    puts stderr "how=$how"
 	}
     }]
     return $obj

@@ -137,20 +137,22 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
-gui :
+gui : bindir
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
 	    $(MAKE) TLDEPS= init; \
 	    echo ; \
-	    echo "  PWgui has been built in ./GUI/PWgui/. You may try it either as:  "; \
+	    echo "  ------------------------------------------------------------"; \
+	    echo "  PWgui was built in ./GUI/PWgui/ and a link was made in bin/."; \
+	    echo "  ------------------------------------------------------------"; \
+	    echo "  Try it either as:  "; \
 	    echo "         ./GUI/PWgui/pwgui" ; \
 	    echo "     or"; \
-	    echo "         cd ./GUI/PWgui";\
-	    echo "         ./pwgui" ; \
+	    echo "         ./bin/pwgui";\
 	    echo ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, gui works only for git sources !!!" ; \
+	    echo "  Sorry, GUI/PWgui directory does not exist !" ; \
 	    echo ; \
 	fi
 

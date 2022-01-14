@@ -52,6 +52,7 @@ build:cmake-gnu:
             -DMPIEXEC_PREFLAGS="--allow-run-as-root;--oversubscribe" .. && make
       && make pw ph hp pwcond neb pp pwall cp tddfpt gwl ld1 upf xspectra couple epw all_currents
       && ctest -L unit --output-on-failure
+    - make install DESTDIR=`pwd`/install_root
 
 build:pgi:
   tags: [docker]

@@ -7,6 +7,62 @@
 !
 !
 !----------------------------------------------------------------------------
+SUBROUTINE aceinit0()
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine reads the ACE potential from files in non-scf calculations
+  !
+  USE io_global,            ONLY : stdout
+  USE klist,                ONLY : nks, nkstot
+  USE control_flags,        ONLY : lscf
+  USE io_files,             ONLY : restart_dir
+  USE wvfct,                ONLY : nbnd
+  USE pw_restart_new,       ONLY : read_collected_wfc
+  USE exx,                  ONLY : xi
+  USE xc_lib,               ONLY : start_exx, exx_is_active
+  USE noncollin_module,     ONLY : npol
+  USE wvfct,                ONLY : npwx
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ik
+  CHARACTER (LEN=256)  :: dirname
+  !
+  CALL start_clock( 'aceinit0' )
+  !
+  IF(lscf) THEN
+    !
+    WRITE( stdout, '(5X,"EXX: ACE will be initialized later")' )
+    !
+  ELSE
+    !
+    WRITE( stdout, '(5X,"EXX: initializing ACE and reading from file")' )
+    WRITE( stdout, '(5X,"WARNING: this will crash or be completely wrong if a compliant ACE potential & 
+                             from a previous SCF run is not found on file")' )
+    !
+    Call start_exx()
+    !
+    IF (.NOT. ALLOCATED(xi)) ALLOCATE( xi(npwx*npol,nbnd,nkstot) )
+    !
+    xi=(0.0d0, 0.0d0)
+    !
+    dirname = restart_dir ( )
+    !
+    DO ik = 1, nks
+       CALL read_collected_wfc ( dirname, ik, xi(:,:,ik), "ace" )
+    END DO
+    !
+    WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
+    !
+  END IF 
+  !
+  CALL stop_clock( 'aceinit0' )  
+  !
+  RETURN
+  !
+END SUBROUTINE aceinit0
+!
+!----------------------------------------------------------------------------
 SUBROUTINE wfcinit()
   !----------------------------------------------------------------------------
   !
@@ -225,6 +281,7 @@ SUBROUTINE init_wfc ( ik )
   USE wavefunctions_gpum,   ONLY : using_evc
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE control_flags,        ONLY : lscf
   !
   IMPLICIT NONE
   !
@@ -344,7 +401,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx()
+  IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
   CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)

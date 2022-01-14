@@ -19,7 +19,6 @@ SUBROUTINE gen_us_dy_base &
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_data,   ONLY: nqx, tab, tab_d2y, dq, spline_ps
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh
-  USE m_gth,       ONLY : mk_ffnl_gth
   USE splinelib
   !
   IMPLICIT NONE
@@ -114,29 +113,25 @@ SUBROUTINE gen_us_dy_base &
   DO nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
      DO nb = 1, upf(nt)%nbeta
-        IF ( upf(nt)%is_gth ) THEN
-           CALL mk_ffnl_gth( nt, nb, npw, omega, q, vkb0(1,nb,nt) )
-        ELSE
-           DO ig = 1, npw
-              IF ( spline_ps ) THEN
-                 vkb0(ig,nb,nt) = splint( xdata, tab(:,nb,nt), &
-                      tab_d2y(:,nb,nt), q(ig) )
-              ELSE
-                 px = q(ig)/dq - INT(q(ig)/dq)
-                 ux = 1.d0 - px
-                 vx = 2.d0 - px
-                 wx = 3.d0 - px
-                 i0 = q(ig)/dq + 1
-                 i1 = i0 + 1
-                 i2 = i0 + 2
-                 i3 = i0 + 3
-                 vkb0(ig, nb, nt) = tab(i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                                    tab(i1, nb, nt) * px * vx * wx / 2.d0 - &
-                                    tab(i2, nb, nt) * px * ux * wx / 2.d0 + &
-                                    tab(i3, nb, nt) * px * ux * vx / 6.d0
-              ENDIF
-           ENDDO
-        ENDIF
+        DO ig = 1, npw
+           IF ( spline_ps ) THEN
+              vkb0(ig,nb,nt) = splint( xdata, tab(:,nb,nt), &
+                   tab_d2y(:,nb,nt), q(ig) )
+           ELSE
+              px = q(ig)/dq - INT(q(ig)/dq)
+              ux = 1.d0 - px
+              vx = 2.d0 - px
+              wx = 3.d0 - px
+              i0 = q(ig)/dq + 1
+              i1 = i0 + 1
+              i2 = i0 + 2
+              i3 = i0 + 3
+              vkb0(ig, nb, nt) = tab(i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                                 tab(i1, nb, nt) * px * vx * wx / 2.d0 - &
+                                 tab(i2, nb, nt) * px * ux * wx / 2.d0 + &
+                                 tab(i3, nb, nt) * px * ux * vx / 6.d0
+           ENDIF
+        ENDDO
      ENDDO
   ENDDO
   !

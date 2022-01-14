@@ -319,7 +319,7 @@ SUBROUTINE iosys()
   USE dftd3_api,             ONLY : dftd3_init, dftd3_set_params, &
                                     dftd3_set_functional, dftd3_calc, &
                                     dftd3_input
-  USE dftd3_qe,              ONLY : dftd3_printout, dftd3_xc, dftd3, dftd3_in
+  USE dftd3_qe,              ONLY : dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE uspp_data,             ONLY : spline_ps_ => spline_ps
@@ -1696,8 +1696,6 @@ SUBROUTINE iosys()
       if (dftd3_version==2) dftd3_threebody=.false.
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
-      CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, nat, ityp,&
-                  tau, at, alat )
       dft_ = get_dft_short( )
       dft_ = dftd3_xc ( dft_ )
       CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)

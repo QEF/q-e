@@ -329,7 +329,7 @@ MODULE exx
   !
   !
   !------------------------------------------------------------------------
-  SUBROUTINE exxinit( DoLoc )
+  SUBROUTINE exxinit( DoLoc, nbndproj_ )
     !------------------------------------------------------------------------
     !! This subroutine is run before the first H_psi() of each iteration. 
     !! It saves the wavefunctions for the right density matrix, in real space.
@@ -366,9 +366,11 @@ MODULE exx
     !
     IMPLICIT NONE
     !
-    LOGICAL :: DoLoc
+    LOGICAL, INTENT(IN) :: DoLoc
     !! TRUE:  Real Array locbuff(ir, nbnd, nkqs);  
     !! FALSE: Complex Array exxbuff(ir, nbnd/2, nkqs).
+    INTEGER, OPTIONAL, INTENT(IN) :: nbndproj_
+    ! if specified (non_scf) it sets nbndproj, else (scf case) nbndproj is automatically set to nbnd 
     !
     ! ... local variables
     !
@@ -481,7 +483,18 @@ MODULE exx
        ENDDO
     ENDDO
     !
-    IF (nbndproj == 0) nbndproj = nbnd
+!civn 
+    !IF (nbndproj == 0) nbndproj = nbnd
+    IF(use_ace) THEN 
+      IF (present(nbndproj_)) THEN 
+       nbndproj = nbndproj_
+      ELSE
+        IF (nbndproj == 0) nbndproj = nbnd
+      END IF
+      WRITE(stdout, '(5X,A,2(I5,A))') "ACE projected onto ", nbndproj, " (nbndproj) and applied to ", &
+                                                                              nbnd, " (nbnd) bands"
+    END IF 
+!
     !
     CALL divide( inter_egrp_comm, x_nbnd_occ, ibnd_start, ibnd_end )
     CALL init_index_over_band( inter_egrp_comm, nbnd, nbnd )

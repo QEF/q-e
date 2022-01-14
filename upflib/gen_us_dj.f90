@@ -18,7 +18,6 @@ SUBROUTINE gen_us_dj_base &
   USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
   USE uspp_data,  ONLY: nqx, tab, tab_d2y, dq, spline_ps
-  USE m_gth,      ONLY: mk_dffnl_gth
   USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh
   USE splinelib
   !
@@ -115,10 +114,6 @@ SUBROUTINE gen_us_dj_base &
   DO nt = 1, ntyp
      DO nb = 1, upf(nt)%nbeta
         !
-        IF ( upf(nt)%is_gth ) THEN
-           CALL mk_dffnl_gth( nt, nb, npw, omega, tpiba, q, djl(1,nb,nt) )
-           CYCLE
-        ENDIF
         DO ig = 1, npw
            qt = SQRT(q (ig)) * tpiba
            IF (spline_ps) THEN

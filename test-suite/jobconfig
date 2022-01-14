@@ -69,6 +69,10 @@ inputs_args = ('vc-relax-scf-1.in' ,'1'), ('vc-relax-scf-2.in' ,'2')
 program = PW
 inputs_args = ('scf-dos-1.in' ,'1'), ('scf-dos-2.in' ,'2')
 
+[pw_workflow_exx_nscf/]
+program = PW
+inputs_args = ('ncpp-k-1.in' ,'1'), ('ncpp-k-2.in' ,'2'), ('uspp-gamma-1.in' ,'1'), ('uspp-gamma-2.in' ,'2'), ('uspp-k-smearing-1.in' ,'1'), ('uspp-k-smearing-2.in' ,'2')
+
 [ph_base/]
 program = PH
 inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX.in', '2'), ('si.scf.in', '1'), ('si.phG.in', '2'), ('si.phX.in', '2'), ('nipaw.scf.in', '1'), ('nipaw.phX.in', '2')

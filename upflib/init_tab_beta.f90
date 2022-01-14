@@ -18,6 +18,7 @@ SUBROUTINE init_tab_beta ( omega, intra_bgrp_comm )
   USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps, tab_d, tab_d2y_d
   USE mp,           ONLY : mp_sum
   USE splinelib,    ONLY : spline
+  USE m_gth,        ONLY : mk_ffnl_gth
   !
   IMPLICIT NONE
   !
@@ -45,17 +46,20 @@ SUBROUTINE init_tab_beta ( omega, intra_bgrp_comm )
   call divide (intra_bgrp_comm, nqx, startq, lastq)
   tab (:,:,:) = 0.d0
   do nt = 1, nsp
-     if ( upf(nt)%is_gth ) cycle
      do nb = 1, upf(nt)%nbeta
         l = upf(nt)%lll (nb)
         do iq = startq, lastq
            qi = (iq - 1) * dq
-           call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
-           do ir = 1, upf(nt)%kkbeta
-              aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
-           enddo
-           call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-           tab (iq, nb, nt) = vqint * pref
+           if ( upf(nt)%is_gth ) then
+              CALL mk_ffnl_gth( nt, nb, 1, omega, [ qi ] , tab(iq,nb,nt) )
+           else
+              call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
+              do ir = 1, upf(nt)%kkbeta
+                 aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
+              enddo
+              call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
+              tab (iq, nb, nt) = vqint * pref
+           end if
         enddo
      enddo
   enddo

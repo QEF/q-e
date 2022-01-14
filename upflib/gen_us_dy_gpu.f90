@@ -91,8 +91,6 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   attributes(DEVICE) :: dvkb_d
 #endif
   !
-  IF ( ANY(upf(1:ntyp)%is_gth ) ) &
-       CALL upf_error( 'gen_us_dy_gpu',' GTH not implemented', 1)
   dvkb_d = (0._DP,0._DP)
   !
   IF (lmaxkb <= 0) RETURN
