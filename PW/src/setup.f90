@@ -64,7 +64,7 @@ SUBROUTINE setup()
                                  allfrac
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
-                                 isolve, niter, noinv, ts_vdw, &
+                                 isolve, niter, noinv, ts_vdw, tstress, &
                                  lbands, gamma_only, restart
   USE cellmd,             ONLY : calc
   USE upf_ions,           ONLY : n_atom_wfc
@@ -74,7 +74,7 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
-  USE mp_pools,           ONLY : kunit
+  USE mp_pools,           ONLY : kunit, npool
   USE mp_images,          ONLY : intra_image_comm
   USE mp,                 ONLY : mp_bcast
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
@@ -660,12 +660,20 @@ SUBROUTINE setup()
   kunit   = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
-  ! ... further initialization to be performed after paralleliztion setup
+  ! ... check and initializationis to be performed after parallelization setup
   !
+  IF ( lberry .OR. lelfield .OR. lorbm ) THEN
+     IF ( npool > 1 ) CALL errore( 'iosys', &
+          'Berry Phase/electric fields not implemented with pools', 1 )
+  END IF
   IF ( xclib_dft_is('hybrid') ) THEN
      IF ( nks == 0 ) CALL errore('setup','pools with no k-points' &
           & // ' not allowed for hybrid functionals',1)
+     IF ( tstress .and. npool > 1 )  CALL errore('setup', &
+         'stress for hybrid functionals not available with pools', 1)
+     !
      CALL setup_exx  ()
+     !
   END IF
   !
   RETURN
@@ -696,7 +704,7 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   !
   LOGICAL, EXTERNAL  :: check_gpu_support
   LOGICAL, SAVE :: first = .TRUE.
-  INTEGER :: maxtask
+  INTEGER :: maxtask, np
   !
   ! do not execute twice: unpredictable results may follow
   !
@@ -713,12 +721,14 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
         ! if too many mpi processes for this fft dimension,
         ! use k-point parallelization if available
         !
-        do npool_ = 2, nkstot
-           ! npool should be a divisor of the number of k-points
-           if ( mod(nkstot, npool_) /= 0 ) cycle
-           ! second condition ensures that npool is set to the maximum value
-           if ( nproc_image/npool_ <= nr3/2 .or. npool_ == nkstot ) exit
-        end do
+pool:   do np = 2, nkstot
+           ! npool should be a divisor of the number of processors
+           if ( mod(nproc_image, np) /= 0 ) cycle
+           if ( nproc_image/np <= nr3/2 ) then
+              npool_= np
+              exit pool
+           end if
+        end do pool
      end if
   END IF
   CALL mp_start_pools ( npool_, intra_image_comm )
@@ -741,12 +751,13 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
      ntask_groups = 1
      if ( nproc_bgrp > nr3 ) THEN
         maxtask = min (nbnd, 16)
-        do ntask_groups = 2, maxtask
-           if ( mod(nproc_bgrp,ntask_groups) == 0 .and. &
-                    nproc_bgrp/ntask_groups  <= nr3 .or.&
-                    nproc_bgrp/ntask_groups  <= nr3/4 .or.&
-                ntask_groups == maxtask ) exit
-        end do
+task:   do np = 2, maxtask
+           if ( mod(nproc_bgrp,np) /= 0 ) cycle
+           if ( nproc_bgrp/np < nr3/4 ) then 
+              ntask_groups = np
+              exit task 
+           end if
+        end do task
       end if
   END IF
   !
