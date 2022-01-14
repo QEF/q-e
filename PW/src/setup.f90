@@ -652,7 +652,7 @@ SUBROUTINE setup()
   ! ... set parallelization strategy: need an estimate of FFT dimension along z
   !
   nr3 = int ( sqrt(gcutms)*sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
-  nr3 = good_fft_order( nr3, fft_fact(3) )
+  nr3 = good_fft_order( 2*nr3, fft_fact(3) )
   CALL setup_para ( nr3, nkstot, nbnd )
   !
   ! ... distribute k-points across processors of a poool
@@ -685,7 +685,8 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
                         nyfft
   USE mp_pools,  ONLY : intra_pool_comm, mp_start_pools, npool
   USE mp_images, ONLY : intra_image_comm, nproc_image
-  USE command_line_options, ONLY : npool_, ndiag_, nband_, ntg_, nyfft_, nmany_
+  USE command_line_options, ONLY : npool_, ndiag_, nband_, ntg_, nyfft_, &
+          nmany_, pencil_decomposition_
   !
   IMPLICIT NONE
   !
@@ -732,6 +733,19 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   ! GPUs (not sure it serves any purpose)
   !
   use_gpu = check_gpu_support( )
+  !
+  ! Set "task_groups" if still too many processors for PW parallelization
+  ! Note that "task_groups" require to set pencil_decomposition to .true.
+  !
+  IF ( ( ntask_groups /= 1 ) ) pencil_decomposition_ = .true. 
+  IF ( ( ntask_groups == 1 ) .AND. ( nproc_bgrp > nr3 ) ) THEN
+     pencil_decomposition_ = .true. 
+     do ntask_groups = 2, min(nbnd,16)
+        if ( mod(nproc_bgrp,ntask_groups) == 0 .and. &
+                 nproc_bgrp/ntask_groups  <= nr3 ) exit 
+        if ( ntask_groups == min(nbnd,16) ) exit
+     end do
+  END IF
   !
   ! printout - same as in environment.f90
   !
