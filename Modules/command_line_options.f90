@@ -115,7 +115,7 @@ CONTAINS
               READ ( arg, *, ERR = 15, END = 15) ntg_         ! read the argument as ntg_
               nyfft_ = ntg_  ! set nyfft_ equal to ntg_
               narg = narg + 1
-           CASE ( '-pd', 'use_pd', '-pencil_decomposition', '-use_pencil_decomposition' )
+           CASE ( '-pd', '-use_pd', '-pencil_decomposition', '-use_pencil_decomposition' )
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE

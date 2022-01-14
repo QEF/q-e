@@ -655,7 +655,7 @@ SUBROUTINE setup()
   nr3 = good_fft_order( 2*nr3, fft_fact(3) )
   CALL setup_para ( nr3, nkstot, nbnd )
   !
-  ! ... distribute k-points across processors of a poool
+  ! ... distribute k-points across processors of a pool
   !
   kunit   = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
@@ -781,10 +781,12 @@ task:   do np = 2, maxtask
          ntask_groups, nproc_bgrp / ntask_groups
   IF ( nmany_ > 1) WRITE( stdout, '(5X,"FFT bands division:     nmany     = ",I7)' ) nmany_
   !
-  ! linear-algebra - default for ndiag_: matrices nbnd*nbnd should not be
-  ! distributed in blocks smaller than say 100x100
+  ! linear algebra - for GPUs, ndiag_=1; otherwise, a value ensuring that
+  ! matrices nbnd*nbnd are distributed into blocks of size > 100x100 or so
   !
-  if ( ndiag_ == 0 .and. .not. use_gpu) ndiag_ = max(1,nint(nbnd/100.)**2)
+  if ( use_gpu ) ndiag_ = 1
+  if ( ndiag_ == 0 ) ndiag_ = max(1,nint(nbnd/100.)**2)
+  !
   CALL set_para_diag( nbnd, use_para_diag )
   !
 END SUBROUTINE setup_para
