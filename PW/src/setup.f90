@@ -696,6 +696,7 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   !
   LOGICAL, EXTERNAL  :: check_gpu_support
   LOGICAL, SAVE :: first = .TRUE.
+  INTEGER :: maxtask
   !
   ! do not execute twice: unpredictable results may follow
   !
@@ -705,13 +706,13 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   ! k-point parallelization first
   !
   IF ( npool_== 0 ) THEN
+     npool_ = 1
      !
-     ! check if too many mpi processes for this fft dimension,
-     ! use k-point parallelization if available
-     !
-     if ( nproc_image <= nr3/2 ) then
-        npool_ = 1
-     else
+     if ( nproc_image > nr3/2 .and. nkstot > 1 ) then
+        !
+        ! if too many mpi processes for this fft dimension,
+        ! use k-point parallelization if available
+        !
         do npool_ = 2, nkstot
            ! npool should be a divisor of the number of k-points
            if ( mod(nkstot, npool_) /= 0 ) cycle
@@ -735,17 +736,23 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   use_gpu = check_gpu_support( )
   !
   ! Set "task_groups" if still too many processors for PW parallelization
+  !
+  IF ( ntask_groups == 0 ) THEN
+     ntask_groups = 1
+     if ( nproc_bgrp > nr3 ) THEN
+        maxtask = min (nbnd, 16)
+        do ntask_groups = 2, maxtask
+           if ( mod(nproc_bgrp,ntask_groups) == 0 .and. &
+                    nproc_bgrp/ntask_groups  <= nr3 .or.&
+                    nproc_bgrp/ntask_groups  <= nr3/4 .or.&
+                ntask_groups == maxtask ) exit
+        end do
+      end if
+  END IF
+  !
   ! Note that "task_groups" require to set pencil_decomposition to .true.
   !
-  IF ( ( ntask_groups /= 1 ) ) pencil_decomposition_ = .true. 
-  IF ( ( ntask_groups == 1 ) .AND. ( nproc_bgrp > nr3 ) ) THEN
-     pencil_decomposition_ = .true. 
-     do ntask_groups = 2, min(nbnd,16)
-        if ( mod(nproc_bgrp,ntask_groups) == 0 .and. &
-                 nproc_bgrp/ntask_groups  <= nr3 ) exit 
-        if ( ntask_groups == min(nbnd,16) ) exit
-     end do
-  END IF
+  IF ( ntask_groups /= 1 ) pencil_decomposition_ = .true. 
   !
   ! printout - same as in environment.f90
   !
