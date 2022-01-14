@@ -1,9 +1,4 @@
-#if defined (_OPENACC) && defined (__CUDA) 
-#ifndef __CUF_AND_ACC
-#define __CUF_AND_ACC
-#endif
-#endif 
-#if defined (__CUF_AND_ACC) 
+#if defined (_OPENACC) && defined (__CUDA)  
 #define DEV_ACC !$acc 
 #define DEV_OMP !!! 
 #define START_WSHARE DEV_ACC  kernels 
