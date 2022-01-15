@@ -61,7 +61,12 @@
                             wannier_plot_radius, fermi_plot, fixsym, epw_no_t_rev,     &
                             epw_tr, epw_nosym, epw_noinv, epw_crysym,                  &
                             bfieldx, bfieldy, bfieldz, tc_linear, tc_linear_solver,    &
-                            mob_maxfreq, mob_nfreq
+                            !!!!!
+                            !mob_maxfreq, mob_nfreq
+                            mob_maxfreq, mob_nfreq, impurity_g, impurity_charge,       &
+                            impurity_n, degaussimp, impurity_prtgkk,                   &
+                            impurity_scattering, imp_only, lscreen_imp
+                            !!!!!
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -163,6 +168,10 @@
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
        fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, epw_crysym,         &
        tc_linear, tc_linear_solver, mob_maxfreq, mob_nfreq,                    &
+       !!!!!
+       impurity_g, impurity_charge, impurity_n, impurity_prtgkk,               &
+       impurity_scattering, degaussimp, imp_only, lscreen_imp,                 &
+       !!!!!       
   !---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -581,6 +590,16 @@
   bfieldz      = 0.d0  ! Tesla
   mob_maxfreq  = 100 ! Maximum frequency for spectral decomposition in meV
   mob_nfreq    = 100 ! Number of frequency for the spectral decomposition
+  !!!!!
+  impurity_g   = .FALSE.
+  impurity_charge = 0.d0
+  impurity_n   = 0.d0
+  degaussimp   = 0.025d0
+  impurity_prtgkk = .FALSE.
+  impurity_scattering = .FALSE.
+  imp_only = .FALSE.
+  lscreen_imp = .FALSE.
+  !!!!!
   !
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -880,10 +899,22 @@
     WRITE(stdout, '(/,5x,a)') 'WARNING: You are using ngaussw == -99 (Fermi-Dirac).'
     WRITE(stdout, '(/,5x,a)') '         You probably need assume_metal == .true '
   ENDIF
+  !!!!!
+  ! Come controls on impurity scattering input
+  IF (assume_metal .AND. impurity_g) THEN
+    CALL errore('epw_readin', 'Error: impurity matrix elements not compatable with metals', 1)
+  ENDIF
+  IF (impurity_scattering .AND. .NOT. impurity_g) THEN
+    CALL errore('epw_readin', 'Error: impurity_g must = .true. if impurity_scattering = .true.', 1)
+  ENDIF
+  !!!!!
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd
   fsthick     = fsthick / ryd2ev
   degaussw    = degaussw / ryd2ev
+  !!!!!
+  degaussimp  = degaussimp / ryd2ev
+  !!!!!
   delta_smear = delta_smear / ryd2ev
   !
   ! smearing of phonon in a2f

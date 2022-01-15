@@ -36,7 +36,11 @@
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
                                cumulant, eliashberg, nomega, mob_maxfreq, neta,    &
-                               omegamin, omegamax, omegastep, mob_nfreq
+                               !!!!!
+                               !omegamin, omegamax, omegastep, mob_nfreq
+                               omegamin, omegamax, omegastep, mob_nfreq,           &
+                               impurity_g, impurity_prtgkk, lscreen_imp
+                               !!!!!
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -60,7 +64,11 @@
                                inv_tau_all_mode, inv_tau_allcb_mode, qrpl, Qmat,   &
                                ef0_fca, epsilon2_abs, epsilon2_abs_lorenz,         &
                                epsilon2_abs_all, epsilon2_abs_lorenz_all,          &
-                               inv_tau_all_freq, inv_tau_allcb_freq
+                               !!!!!
+                               !inv_tau_all_freq, inv_tau_allcb_freq
+                               inv_tau_all_freq, inv_tau_allcb_freq,               &
+                               eimpf17, epstf_therm, qtf2_therm
+                               !!!!!
   USE wan2bloch,        ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                                ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                                dynifc2blochf, vmewan2blochp
@@ -90,8 +98,12 @@
                                nesting_fn_q
   USE spectral_func,    ONLY : spectral_func_el_q, spectral_func_ph_q, a2f_main,   &
                                spectral_func_pl_q
-  USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine !, &
-!                               find_gmin ! Temporarily commented by H. Lee
+  !!!!!
+  !USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine !, &
+  !                               find_gmin ! Temporarily commented by H. Lee
+  USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine, &
+                               rgd_imp_epw_fine, calc_qtf2_therm, calc_epstf_therm
+  !!!!!
   USE indabs,           ONLY : indabs_main, renorm_eig, fermi_carrier_indabs
   USE io_indabs,        ONLY : indabs_read
 #if defined(__MPI)
@@ -314,6 +326,10 @@
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
+  !!!!!
+  COMPLEX(KIND = DP), ALLOCATABLE :: eimpmatf(:, :)
+  !! carrier-ionized impurity matrix in smooth Bloch basis
+  !!!!!
   !
   CALL start_clock('ephwann')
   !
@@ -593,6 +609,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf_ks', 1)
   ALLOCATE(epmatf(nbndsub, nbndsub, nmodes), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatf', 1)
+  !!!!!
+  ALLOCATE(eimpmatf(nbndsub, nbndsub), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eimpmatf', 1)
+  !!!!!
   ALLOCATE(cufkk(nbndsub, nbndsub), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cufkk', 1)
   ALLOCATE(cufkq(nbndsub, nbndsub), STAT = ierr)
@@ -603,17 +623,27 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating bmatf', 1)
   ALLOCATE(eps_rpa(nmodes), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eps_rpa', 1)
+  !!!!!
+  ALLOCATE(epstf_therm(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epstf_therm', 1)
+  !!!!!
   ALLOCATE(isk_dummy(nkqf), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating isk_dummy', 1)
   epmatwef(:, :, :, :) = czero
   etf(:, :)            = zero
   etf_ks(:, :)         = zero
   epmatf(:, :, :)      = czero
+  !!!!!
+  eimpmatf(:, :)       = czero
+  !!!!!
   cufkk(:, :)          = czero
   cufkq(:, :)          = czero
   uf(:, :)             = czero
   bmatf(:, :)          = czero
   eps_rpa(:)           = czero
+  !!!!!
+  epstf_therm(:)       = zero
+  !!!!!
   isk_dummy(:)         = 0
   !
   ! Allocate velocity and dipole matrix elements after getting grid size
@@ -985,6 +1015,10 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epf17', 1)
+    !!!!!
+    ALLOCATE(eimpf17(nbndfst, nbndfst, nkf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eimpf17', 1)
+    !!!!!
     ! We allocate the phonon frequency on the q-points within the window
     IF (etf_mem == 3) THEN
       ALLOCATE(wf(nmodes, totq), STAT = ierr)
@@ -1222,6 +1256,9 @@
       CALL start_clock ('ep-interp')
       !
       epf17(:, :, :, :) = czero
+      !!!!!
+      eimpf17(:, :, :) = czero
+      !!!!!
       cufkk(:, :) = czero
       cufkq(:, :) = czero
       !
@@ -1445,6 +1482,24 @@
               ENDIF
               !
             ENDIF
+            !!!!!
+            !
+            IF (impurity_g) THEN
+              !
+              eimpmatf(:, :) = czero
+              !
+              CALL compute_umn_f(nbndsub, cufkk, cufkq, bmatf)
+              !
+              IF ((ABS(xxq(1)) > eps8) .OR. (ABS(xxq(2)) > eps8) .OR. (ABS(xxq(3)) > eps8)) THEN
+                !
+                CALL cryst_to_cart(1, xxq, bg, 1)
+                CALL rgd_imp_epw_fine(nqc1, nqc2, nqc3, xxq, eimpmatf, epsi, bmatf, one)
+                CALL cryst_to_cart(1, xxq, at, -1)
+                !
+              ENDIF
+              !
+            ENDIF
+            !!!!!
             !
             ! Store epmatf in memory
             !
@@ -1454,6 +1509,12 @@
                    epf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, :, ik) = epmatf(ibnd, jbnd, :) / eps_rpa(:)
                 ELSE
                    epf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, :, ik) = epmatf(ibnd, jbnd, :)
+                ENDIF
+                !!!!!
+                IF (impurity_g) THEN
+                  ! Here we will store the impurity elements in array eimpf17
+                  eimpf17(ibnd - ibndmin + 1, jbnd - ibndmin + 1, ik) = eimpmatf(ibnd, jbnd)
+                !!!!!
                 ENDIF
               ENDDO
             ENDDO
@@ -1542,15 +1603,34 @@
           ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
           ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
+            !!!!!
+            ALLOCATE(qtf2_therm(nstemp), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle.f90', 'Error allocating qtf2_therm', 1)
+            qtf2_therm(:) = zero
+            !!!!!
             DO itemp = 1, nstemp
               etemp = gtemp(itemp)
               CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+              !!!!!
+              IF (lscreen_imp) THEN
+                CALL calc_qtf2_therm(itemp, etemp, ef0, efcb, ctype, epsi)
+              ENDIF
+              !!!!!
               ! compute dos for metals
               IF (assume_metal) THEN
                 CALL compute_dos(itemp, ef0, dos)
               ENDIF
             ENDDO
           ENDIF
+          !!!!!
+          IF (lscreen_imp) THEN
+            epstf_therm(:) = zero
+            !WRITE(*,*) 'epstf_therm before calc', epstf_therm(1)
+            CALL calc_epstf_therm(xxq, nstemp, epsi)
+          ELSE
+            epstf_therm(:) = one
+          ENDIF
+          !!!!!
           !
           IF (.NOT. iterative_bte .AND. etf_mem < 3) THEN
             CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle)
@@ -1746,6 +1826,10 @@
     ! Now deallocate
     DEALLOCATE(epf17, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epf17', 1)
+    !!!!!
+    DEALLOCATE(eimpf17, STAT= ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating eimpf17', 1)
+    !!!!!
     DEALLOCATE(selecq, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating selecq', 1)
     IF (scattering .AND. .NOT. iterative_bte) THEN
@@ -1866,6 +1950,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf_ks', 1)
   DEALLOCATE(epmatf, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatf', 1)
+  !!!!!
+  DEALLOCATE(eimpmatf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating eimpmatf', 1)
+  !!!!!
   DEALLOCATE(cufkk, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cufkk', 1)
   DEALLOCATE(cufkq, STAT = ierr)
@@ -1876,6 +1964,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating isk_dummy', 1)
   DEALLOCATE(eps_rpa, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating eps_rpa', 1)
+  !!!!!
+  DEALLOCATE(epstf_therm, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epstf_therm', 1)
+  !!!!!
   DEALLOCATE(bmatf, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating bmatf', 1)
   DEALLOCATE(w2, STAT = ierr)

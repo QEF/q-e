@@ -347,6 +347,28 @@
   !! Magnetic field along the z-direction
   REAL(KIND = DP) :: mob_maxfreq
   !! Maximum frequency for the spectral decomposition of mobility. Typically that freq. is the highest phonon freq.
+  !!!!!
+  !
+  ! Conductivity - ionized impurity scattering
+  LOGICAL :: impurity_g
+  !! If .TRUE. calculate the ionized impurity matrix elements
+  LOGICAL :: impurity_prtgkk
+  !! If .TRUE. print out ionized impuirty matrix elements, averaged over
+  !degenerate channels
+  LOGICAL :: impurity_scattering
+  !! If .TRUE. calculate the carrier-impurity scattering rate
+  LOGICAL :: imp_only
+  !! If .TRUE., calculate only the ionized-impurity-limitted mobility
+  LOGICAL :: lscreen_imp
+  !! If .TRUE. (should be set to .true.), calculate and use free-carrier
+  !screening of ii matrix elements 
+  REAL(KIND = DP) :: degaussimp
+  !! Set to 0.01, smearing for calculation of ii-scattering rate
+  REAL(KIND = DP) :: impurity_charge
+  !! charge of the ionized impurities, units of electron charge for input
+  REAL(KIND = DP) :: impurity_n
+  !! density of impurities, input in units of cm^-3
+  !!!!! 
   !
   ! Plasmon
   REAL(KIND = DP) :: nel

@@ -53,7 +53,13 @@
                             wannier_plot_supercell, wannier_plot_radius,      &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, &
                             epw_crysym, bfieldx, bfieldy, bfieldz, tc_linear, &
-                            tc_linear_solver, mob_maxfreq, mob_nfreq
+                            !!!!!
+                            !tc_linear_solver, mob_maxfreq, mob_nfreq
+                            tc_linear_solver, mob_maxfreq, mob_nfreq,         &
+                            impurity_g, impurity_charge, impurity_n, degaussimp, &
+                            impurity_prtgkk, impurity_scattering, imp_only,   &
+                            lscreen_imp 
+                            !!!!!
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -161,6 +167,13 @@
   CALL mp_bcast(epw_nosym       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(impurity_g      , meta_ionode_id, world_comm)
+  CALL mp_bcast(impurity_prtgkk , meta_ionode_id, world_comm)
+  CALL mp_bcast(impurity_scattering , meta_ionode_id, world_comm)
+  CALL mp_bcast(imp_only , meta_ionode_id, world_comm)
+  CALL mp_bcast(lscreen_imp , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! integers
   !
@@ -247,6 +260,11 @@
   CALL mp_bcast(bfieldy       , meta_ionode_id, world_comm)
   CALL mp_bcast(bfieldz       , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxfreq   , meta_ionode_id, world_comm)
+  !!!!!
+  CALL mp_bcast(impurity_charge , meta_ionode_id, world_comm)
+  CALL mp_bcast(impurity_n , meta_ionode_id, world_comm)
+  CALL mp_bcast(degaussimp , meta_ionode_id, world_comm)
+  !!!!!
   !
   ! characters
   !
