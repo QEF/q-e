@@ -907,6 +907,10 @@
   IF (impurity_scattering .AND. .NOT. impurity_g) THEN
     CALL errore('epw_readin', 'Error: impurity_g must = .true. if impurity_scattering = .true.', 1)
   ENDIF
+  IF (degaussw == 0.0 .AND. impurity_scattering) THEN
+    WRITE(stdout, '(/,5x,a)') 'Error: degaussw must be > 0.0 eV when using including ionized impurity scattering'
+    CALL errore('epw_readin', 'Error: adaptive broadening not implemented yet with impurity scattering', 1)
+  ENDIF
   !!!!!
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd

@@ -260,6 +260,19 @@
       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
       WRITE(stdout, '(5x,"Scattering rate for IBTE")')
       WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+      !!!!!
+      IF (impurity_scattering) THEN
+        WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+        WRITE(stdout, '(5x,"Including ionized impurity scattering")')
+        WRITE(stdout, '(5x,a,e15.8)' ) 'Using an ionized impurity density of', impurity_n
+        WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+      ENDIF
+      IF (imp_only) THEN
+        WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+        WRITE(stdout, '(5x,"Detected imp_only=.true., omitting carrier-phonon scattering")')
+        WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+      ENDIF
+      !!!!!
       WRITE(stdout, '(5x,"Restart and restart_step inputs deactivated (restart point at every q-points).")')
       WRITE(stdout, '(5x,"No intermediate mobility will be shown.")')
       !

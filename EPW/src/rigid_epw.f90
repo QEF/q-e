@@ -1334,15 +1334,15 @@
       RETURN
     ENDIF
     !
-    IF (my_pool_id == 0) THEN
-      IF (ctype == -1) THEN
-        WRITE(stdout, '(5x,"Using Fermi energy of: ")')
-        WRITE(stdout,*) ef0(itemp)
-      ELSEIF (ctype == 1) THEN
-        WRITE(stdout, '(5x,"Using Fermi energy of: ")')
-        WRITE(stdout,*) efcb(itemp)
-      ENDIF
-    ENDIF
+    !IF (my_pool_id == 0) THEN
+    !  IF (ctype == -1) THEN
+    !    WRITE(stdout, '(5x,"Using Fermi energy of: ")')
+    !    WRITE(stdout,*) ef0(itemp)
+    !  ELSEIF (ctype == 1) THEN
+    !    WRITE(stdout, '(5x,"Using Fermi energy of: ")')
+    !    WRITE(stdout,*) efcb(itemp)
+    !  ENDIF
+    !ENDIF
     !
     inv_etemp = 1.0d0 / etemp
     !
