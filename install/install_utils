@@ -48,7 +48,7 @@ endef
 define update_submodule
   @(echo initializing $(1)/$(2) submodule ...)
   @(if test -d $(TOPDIR)/.git ; then \
-      cd $(TOPDIR)/$(1) && git submodule init -- $(2) && git submodule update --depth 1 -- $(2) && cd -; \
+      cd $(TOPDIR) && git submodule init -- $(1)/$(2) && git submodule update --depth 1 -- $(1)/$(2) && cd -; \
     else \
       if test -e $(TOPDIR)/$(1)/$(2)/.git ; then \
         echo "  $(1)/$(2)/.git exists. Skipping initialization."; \
