@@ -31,7 +31,7 @@ liblapack : liblapack_$(LAPACK_LIBS_SWITCH)
 liblapack_external : 
 
 liblapack_internal:
-	$(call submodule_update,external,lapack)
+	$(call update_submodule,external,lapack)
 	if test ! -e $(TOPDIR)/external/lapack/liblapack.a && test -e make_lapack.inc; then \
 	  (cp make_lapack.inc $(TOPDIR)/external/lapack/make.inc; \
 	  cd $(TOPDIR)/external/lapack; $(MAKE) blaslib lapacklib); else \
@@ -45,7 +45,7 @@ lapack_clean:
 ###################################
 
 libfox:
-	$(call submodule_update,external,fox)
+	$(call update_submodule,external,fox)
 	if test ! -d ../FoX ; then \
   cd $(TOPDIR)/external/fox; \
     ./configure --prefix=$(TOPDIR)/FoX FC=$(F90) FCFLAGS="$(FOX_FLAGS)"; \
@@ -83,7 +83,7 @@ libcuda_eigensolver_veryclean:
 
 CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
 libcuda_devxlib :
-	$(call submodule_update,external,devxlib)
+	$(call update_submodule,external,devxlib)
 	cd ../external/devxlib; \
     touch make.inc; \
     $(MAKE) clean; \
@@ -111,7 +111,7 @@ libcuda_devxlib_veryclean:
 ###################################
 
 libmbd:
-	$(call submodule_update,external,mbd)
+	$(call update_submodule,external,mbd)
 	if test ! -d ../MBD; then \
         mkdir ../MBD; \
         cd $(TOPDIR)/external/mbd; \

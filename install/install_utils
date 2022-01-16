@@ -45,7 +45,7 @@ endef
 # if the work directory is from tarball, git init if the folder was not initialized previously.
 ###########################################################
 
-define submodule_update
+define update_submodule
   @(echo initializing $(1)/$(2) submodule ...)
   @(if test -d $(TOPDIR)/.git ; then \
       cd $(TOPDIR)/$(1) && git submodule init -- $(2) && git submodule update --depth 1 -- $(2) && cd -; \
