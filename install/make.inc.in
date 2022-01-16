@@ -89,20 +89,17 @@ MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
 
-# CUDA Toolkit path
-CUDA_PATH=@cuda_path@
-
 # GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
 GPU_ARCH=@gpu_arch@
 
 # CUDA runtime (Pascal: 8.0, Volta: 9.0)
-CUDA_RUNTIME=@gpu_runtime@
+CUDA_RUNTIME=@cuda_runtime@
 
 # CUDA F90 Flags
 CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 
 # CUDA C Flags
-CUDA_CFLAGS=@CUDA_CFLAGS@
+CUDA_CFLAGS=@cuda_cflags@
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
@@ -174,7 +171,7 @@ MASS_LIBS      = @mass_libs@
 
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
-CUDA_EXTLIBS = devxlib @cuda_extlibs@
+CUDA_EXTLIBS = @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
