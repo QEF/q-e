@@ -97,18 +97,12 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nr3
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nr3, nk_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
   TYPE(output_type)  :: output_obj 
   !  
-#if defined(__MPI)
-  LOGICAL :: lpara = .true.
-#else
-  LOGICAL :: lpara = .false.
-#endif
-  !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
   okvan = ANY( upf(1:ntyp)%tvanp )
@@ -653,7 +647,14 @@ SUBROUTINE setup()
   !
   nr3 = int ( sqrt(gcutms)*sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
   nr3 = good_fft_order( 2*nr3, fft_fact(3) )
-  CALL setup_para ( nr3, nkstot, nbnd )
+  !
+  ! ... nk_ = number of k-points usable for k-point parallelization
+  !           (set to 1 if k-point parallelization is not implemented)
+  nk_ = nkstot
+  IF ( lberry .OR. lelfield .OR. lorbm .OR. &
+       ( xclib_dft_is('hybrid') .AND. tstress ) ) nk_ = 1
+  !
+  CALL setup_para ( nr3, nk_, nbnd )
   !
   ! ... distribute k-points across processors of a pool
   !
@@ -684,10 +685,12 @@ END SUBROUTINE setup
 SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   !----------------------------------------------------------------------------
   !
-  ! Initialize the various parallelization levels
-  ! Must be called after setup and before setup_exx only once
+  ! Initialize the various parallelization levels, trying to guess decent
+  ! parameters for npool, ndiag, ntg, if not specified in the command line
+  ! Must be called at the end of "setup" but before "setup_exx",
+  ! only once per run
   !
-  USE control_flags,  ONLY : use_para_diag, use_gpu
+  USE control_flags, ONLY : use_para_diag, use_gpu
   USE io_global, ONLY : stdout
   USE mp_bands,  ONLY : mp_start_bands, nbgrp, ntask_groups, nproc_bgrp,&
                         nyfft
@@ -733,9 +736,10 @@ pool:   do np = 2, nkstot
   END IF
   CALL mp_start_pools ( npool_, intra_image_comm )
   !
-  ! band parallelization - FIXME: why the following section?
+  ! band parallelization (nband only; ntg and nyfft below are just copied)
   !
 #if defined (__CUDA_OPTIMIZED)
+  ! band parallelization is effectively disabled in this case
   CALL mp_start_bands ( 1 , ntg_, nyfft_, intra_pool_comm )
 #else
   CALL mp_start_bands ( nband_, ntg_, nyfft_, intra_pool_comm )
@@ -745,13 +749,15 @@ pool:   do np = 2, nkstot
   !
   use_gpu = check_gpu_support( )
   !
-  ! Set "task_groups" if still too many processors for PW parallelization
+  ! Set "task groups", max 16, if too many processors for PW parallelization
   !
   IF ( ntask_groups == 0 ) THEN
      ntask_groups = 1
      if ( nproc_bgrp > nr3 ) THEN
         maxtask = min (nbnd, 16)
 task:   do np = 2, maxtask
+           ! ensure that ntask_group, that coincides with nyfft,
+           ! is commensurate with the number of procs for PW parallelization
            if ( mod(nproc_bgrp,np) /= 0 ) cycle
            if ( nproc_bgrp/np < nr3/4 ) then 
               ntask_groups = np
@@ -762,17 +768,21 @@ task:   do np = 2, maxtask
   END IF
   !
   ! Note that "task_groups" require to set pencil_decomposition to .true.
+  ! Same if there are more processors than xy planes in the FFT
   !
-  IF ( ntask_groups /= 1 ) pencil_decomposition_ = .true. 
+  IF ( ntask_groups /= 1 .OR. nproc_bgrp > nr3 ) pencil_decomposition_ = .true. 
   !
   ! printout - same as in environment.f90
   !
+  WRITE( stdout, * )
   IF ( npool > 1 ) WRITE( stdout, &
          '(5X,"K-points division:     npool     = ",I7)' ) npool
   IF ( nbgrp > 1 ) WRITE( stdout, &
          '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
   IF ( nproc_bgrp > 1 ) WRITE( stdout, &
          '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
+  IF ( nproc_bgrp > nr3 ) WRITE( stdout, &
+         '(5X,"WARNING: too many processors for an effective parallelization!")' ) 
   IF ( nyfft > 1 ) WRITE( stdout, &
          '(5X,"wavefunctions fft division:  Y-proc x Z-proc = ",2I7)' ) &
          nyfft, nproc_bgrp / nyfft
@@ -781,11 +791,16 @@ task:   do np = 2, maxtask
          ntask_groups, nproc_bgrp / ntask_groups
   IF ( nmany_ > 1) WRITE( stdout, '(5X,"FFT bands division:     nmany     = ",I7)' ) nmany_
   !
-  ! linear algebra - for GPUs, ndiag_=1; otherwise, a value ensuring that
-  ! matrices nbnd*nbnd are distributed into blocks of size > 100x100 or so
+  ! linear algebra - for GPUs, ndiag = 1; otherwise, a value ensuring that
+  ! matrices nbnd*nbnd are distributed into blocks of size > 100x100
   !
-  if ( use_gpu ) ndiag_ = 1
-  if ( ndiag_ == 0 ) ndiag_ = max(1,nint(nbnd/100.)**2)
+  if ( ndiag_ == 0 .AND. use_gpu ) ndiag_ = 1
+  if ( ndiag_ == 0 ) then
+     do np = nint(nbnd/100.), 1, -1
+         if ( np**2 <= nproc_bgrp ) exit
+     end do
+     ndiag_ = max(1,np**2)
+  end if
   !
   CALL set_para_diag( nbnd, use_para_diag )
   !
