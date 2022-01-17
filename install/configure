@@ -4324,8 +4324,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
    # -----------------------------------------
    # Fortran flags
    # -----------------------------------------
-   if test "$f90_major_version" -le 19; then
-      # NVHPC v. 19 and previous: new solver not avaliable
+   runtime_major_version=`echo $with_cuda_runtime | cut -d. -f1`
+   runtime_minor_version=`echo $with_cuda_runtime | cut -d. -f2`
+   if test "$runtime_major_version" -lt 10 || 
+    ( test "$runtime_major_version" -eq 10 && 
+      test "$runtime_minor_version" -lt 1     ) ; then
+       # CUDA toolkit v < 10.1: new solver not available
        cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
        cuda_extlibs="$cuda_extlibs eigensolver"
        cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
