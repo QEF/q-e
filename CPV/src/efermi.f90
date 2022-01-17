@@ -9,7 +9,9 @@
 SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      &                  entropy,ismear,nspin)
 !-----------------------------------------------------------------------
-!
+
+
+
 !     FERMI ENERGY & SMEARING PACKAGE WRITTEN BY A. DE VITA 
 !     IN JULY 1992 FROM R.J. NEEDS ORIGINAL VERSION.
 !

@@ -7,11 +7,12 @@
 !
       subroutine dforce_meta (c,ca,df,da, psi,iss1,iss2,fi,fip)
 !-----------------------------------------------------------------------
-!computes: the generalized force df=cmplx(dfr,dfi) acting on the i-th
-!          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=cmplx(cr,ci)
-!
-!          contribution from metaGGA
+      !! This subroutine computes the generalized force \(\text{df}=
+      !! \text{cmplx}(\text{dfr},\text{dfi})\) acting on the i-th electron
+      !! state at the gamma point of the Brillouin zone represented by the
+      !! vector c=cmplx(cr,ci)\(c=\text{cmplx}(\text{cr},\text{ci})\).
+      !! Contribution from metaGGA.
+      !
       use kinds, only: dp
       use gvect,     only : g
       use gvecw,                  only : ngw
@@ -27,7 +28,9 @@
       complex(dp), allocatable ::  dc(:), dca(:)
       integer iss1, iss2
       real(dp) fi, fip
-! local variables
+      !
+      ! ... local variables
+      !
       integer ir,ig, ipol !metagga
       complex(dp) fp,fm,ci
 !
@@ -67,7 +70,8 @@
 !-----------------------------------------------------------------------
       subroutine kedtauofr_meta (c)
 !-----------------------------------------------------------------------
-!
+      !! Calculates the kinetic energy density (metaGGA case).
+      !
       use kinds, only: dp
       use control_flags, only: tpre
       use gvecw, only: ngw
@@ -201,17 +205,17 @@
 !-----------------------------------------------------------------------
       subroutine vofrho_meta ( )
 !-----------------------------------------------------------------------
-!     computes: the one-particle potential v in real space,
-!               the total energy etot,
-!               the forces fion acting on the ions,
-!               the derivative of total energy to cell parameters h
-!     rhor input : electronic charge on dense real space grid
-!                  (plus core charge if present)
-!     rhog input : electronic charge in g space (up to density cutoff)
-!     rhos input : electronic charge on smooth real space grid
-!     rhor output: total potential on dense real space grid
-!     rhos output: total potential on smooth real space grid
-!
+      !! This subroutine computes the one-particle potential v in real space,
+      !! the total energy etot, the forces fion acting on the ions, the
+      !! derivative of total energy to cell parameters h.
+      !
+      !! rhor input : electronic charge on dense real space grid
+      !! (plus core charge if present);  
+      !! rhog input : electronic charge in g space (up to density cutoff);  
+      !! rhos input : electronic charge on smooth real space grid;  
+      !! rhor output: total potential on dense real space grid;  
+      !! rhos output: total potential on smooth real space grid.
+      !
       use kinds, only: dp
       use control_flags, only: thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
