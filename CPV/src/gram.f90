@@ -79,7 +79,7 @@ DEV_ACC end kernels
          END IF
          !
          IF( nbgrp_im1 > 0 .AND. ngw > 0 ) THEN 
-#if defined (__OPENACC)
+#if defined (__CUDA) && defined (_OPENACC)
 DEV_ACC host_data use_device(cp_bgrp, csc, ctmp) 
            CALL mydgemv( 'N', 2*ngw, nbgrp_im1, mone, cp_bgrp(1,iupdwn_bgrp(iss)), 2*ngwx, csc, 1, one, ctmp, 1 )
 DEV_ACC end host_data
@@ -175,7 +175,7 @@ CONTAINS
       REAL(DP), EXTERNAL  :: myddot 
 !
 DEV_ACC data present(bec, cp, tvanp,ofsbeta, nh, ityp, qq_nt)  
-#if defined(__OPENACC) 
+#if defined(__CUDA) && defined(_OPENACC) 
 DEV_ACC host_data use_device(cp) 
       rsum = 2.d0 * myddot(2*ngw,cp(1,i),1,cp(1,i),1) 
 DEV_ACC end host_data
@@ -278,7 +278,7 @@ DEV_ACC end host_data
       kmax_bgrp = kmax_bgrp - iupdwn_bgrp(iss) + 1
 
       IF( kmax_bgrp > 0 .AND. ngw > 0 ) THEN
-#if defined(__OPENACC)
+#if defined(__CUDA) && defined (_OPENACC)
 DEV_ACC host_data use_device(cp_bgrp, cp_tmp, csc2)  
         CALL mydgemv( 'T', 2*ngw, kmax_bgrp, 1.0d0, cp_bgrp(1,iupdwn_bgrp(iss)), 2*ngwx, cp_tmp, 1, 0.0d0, csc2, 1 )
 DEV_ACC end host_data
@@ -419,7 +419,7 @@ DEV_ACC serial present(ibgrp_g2l, csc)
 DEV_ACC end serial 
 
       IF( nk > 0 .AND. ngw > 0 ) THEN
-#if defined (__OPENACC)
+#if defined (__CUDA) && (_OPENACC)
 DEV_ACC data copyin(bec_bgrp, csc) copyout(bec_tmp) 
 DEV_ACC host_data use_device(bec_bgrp, csc, bec_tmp) 
         CALL mydgemv( 'N', nkbx, nk, -1.0d0, bec_bgrp(1,iupdwn_bgrp(iss)), nkbx, csc, 1, 0.0d0, bec_tmp, 1 )

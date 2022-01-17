@@ -66,7 +66,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE fft_helper_subroutines
       
       USE plugin_variables, ONLY: plugin_etot
-#if defined(__OPENACC)
+#if defined(__CUDA) && defined(_OPENACC)
       USE cublas
 #endif  
 
