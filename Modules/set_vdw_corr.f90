@@ -30,7 +30,7 @@ SUBROUTINE set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
   CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
      ts_vdw = .TRUE.
 
-  CASE( 'MBD', 'mbd', 'many-body-dispersion' )
+  CASE( 'MBD', 'mbd', 'many-body-dispersion', 'mbd_vdw' )
      ts_vdw = .TRUE.
      mbd_vdw = .TRUE.
 
