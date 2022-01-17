@@ -70,6 +70,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   ALLOCATE( nl_d(dffts%ngm) )
   nl_d  = dffts%nl
 #endif
+  
 
   CALL start_clock_gpu ('incdrhoscf')
   !

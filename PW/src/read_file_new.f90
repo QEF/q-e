@@ -268,6 +268,7 @@ SUBROUTINE post_xml_init (  )
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+  !$acc update device(eigts1(:,:), eigts2(:,:), eigts3(:,:))
   CALL setlocal()
   CALL set_rhoc()
   !
