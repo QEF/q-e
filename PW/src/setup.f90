@@ -661,7 +661,7 @@ SUBROUTINE setup()
   kunit   = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
-  ! ... check and initializationis to be performed after parallelization setup
+  ! ... checks and initializations to be performed after parallelization setup
   !
   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
      IF ( npool > 1 ) CALL errore( 'iosys', &
@@ -714,6 +714,10 @@ SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   IF ( .NOT.first ) RETURN
   first = .false.
   !
+  ! GPUs (not sure it serves any purpose)
+  !
+  use_gpu = check_gpu_support( )
+  !
   ! k-point parallelization first
   !
   IF ( npool_== 0 ) THEN
@@ -744,10 +748,6 @@ pool:   do np = 2, nkstot
 #else
   CALL mp_start_bands ( nband_, ntg_, nyfft_, intra_pool_comm )
 #endif
-  !
-  ! GPUs (not sure it serves any purpose)
-  !
-  use_gpu = check_gpu_support( )
   !
   ! Set "task groups", max 16, if too many processors for PW parallelization
   !

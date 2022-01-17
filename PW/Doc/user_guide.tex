@@ -976,38 +976,41 @@ achieve good results. Let us summarize the effects of them on CPU:
   called routines; speeds up partially "sum\_band"; does not speed up
   at all "v\_of\_rho", "newd", "mix\_rho".
 \item
-  Linear-algebra parallelization speeds up (not always) "cdiaghg" and "rdiaghg" 
+  Linear-algebra parallelization speeds up (not always) "cdiaghg"
+  and "rdiaghg".
 \item
-  "task-group" parallelization speeds up "fftw"
+  "task-group" parallelization speeds up "fftw".
 \item
   OpenMP parallelization speeds up "fftw", plus selected parts of the 
   calculation, plus (depending on the availability of OpenMP-aware
-  libraries) some linear algebra operations
+  libraries) some linear algebra operations.
 \end{itemize}
 and on RAM:
 \begin{itemize}
 \item
   Parallelization on FFT distributes most arrays across processors
   (i.e. all G-space and R-spaces arrays) but not all of them (in
-  particular, not subspace Hamiltonian and overlap matrices)
+  particular, not subspace Hamiltonian and overlap matrices).
 \item
   Linear-algebra parallelization also distributes subspace Hamiltonian
   and overlap matrices.
 \item
-  All other parallelization levels do not distribute any memory
+  All other parallelization levels do not distribute any memory.
 \end{itemize}
 In an ideally parallelized run, you should observe the following:
 \begin{itemize}
 \item
-  CPU and wall time do not differ by much
+  CPU and wall time do not differ by much, if OpenMP is not active, or:
+  CPU time approaches wall time times the number of OpenMP threads,
+  if OpenMP is active.
 \item
-  Time usage is still dominated by the same routines as for the serial run
+  Time usage is still dominated by the same routines as for the serial run.
 \item
   Routine "fft\_scatter" (called by parallel FFT) takes a sizable part of
   the time spent in FFTs but does not dominate it.
 \end{itemize}
 
-\paragraph{ Quick estimate of parallelization parameters}
+\paragraph{Quick estimate of parallelization parameters}
 
 You need to know
 \begin{itemize}
@@ -1034,6 +1037,26 @@ You will need to experiment a bit to find the best compromise. In order
 to have good load balancing among MPI processes, the number of k-point
 pools should be an integer divisor of $N_k$; the number of processors for
 FFT parallelization should be an integer divisor of $N_3$. 
+
+\paragraph{Automatic guess of parallelization parameters}
+
+Since v.7.1, the code tries to guess a reasonable set of parameters
+for the k-point, linear-algebra, and task-group parallelizations, if
+they are not explicitly provided in the command line. The logic is
+as follows:
+\begin{itemize}
+\item 
+  if the number of processors $N_p$ exceeds $N_3$, one uses k-point
+  parallelization on the smallest number $N_k$ such that
+  $N_p/N_k \le N_3/2$;
+\item
+  if the number of processors $N_p/N_k$ still exceeds $N_3$, one uses
+  task-group parallelization on the smallest $N_t$ that ensures
+  $N_p/N_k/N_t\le N_3/4$;
+\item
+  linear-algebra parallelization is done on $n_d^2$ processors
+  ($n_d^2\le N_p/N_k/N_t$) with $n_d$ such that $M/n_d\sim 100$.
+\end{itemize}
 
 \paragraph{Typical symptoms of bad/inadequate parallelization}
 
