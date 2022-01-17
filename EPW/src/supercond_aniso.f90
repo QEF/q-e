@@ -392,7 +392,7 @@
     !!
     USE kinds,             ONLY : DP
     USE elph2,             ONLY : wqf, gtemp
-    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, muchem 
+    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, fbw, muchem, imag_read 
     USE eliashbergcom,     ONLY : nsiw, gap0, gap, agap, wsi, akeri, limag_fly, &
                                   deltai, znormi, adeltai, adeltaip, & 
                                   aznormi, naznormi, wsphmax, nkfs, nbndfs, dosef, ef0, & 
@@ -486,24 +486,23 @@
         ! get the size of required memory for gap, agap
         imelt = (1 + nbndfs * nkfs) * nstemp
         CALL mem_size_eliashberg(2, imelt)
-        !
-        IF (fbw) THEN
-          ! SH: calculate the input parameters for mu_inter
-          numelbnd = zero
-          numstate = zero
-          DO ik = 1, nkfs
-            DO ibnd = 1, nbndfs
-              IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-                numstate = numstate + wkfs(ik)
-                numelbnd = numelbnd + 2.d0 * wkfs(ik) * wgauss((ef0 - ekfs(ibnd, ik)) / zero, -99)
-              ENDIF
-            ENDDO
+      ENDIF
+      !
+      IF (fbw .AND. (itemp == 1 .OR. (itemp == 2 .AND. imag_read))) THEN
+        ! SH: calculate the input parameters for mu_inter
+        numelbnd = zero
+        numstate = zero
+        DO ik = 1, nkfs
+          DO ibnd = 1, nbndfs
+            IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
+              numstate = numstate + wkfs(ik)
+              numelbnd = numelbnd + 2.d0 * wkfs(ik) * wgauss((ef0 - ekfs(ibnd, ik)) / zero, -99)
+            ENDIF
           ENDDO
-          numelbnd = numelbnd / numstate
-          WRITE(stdout, '(5x,a,2f15.8)') &
-            'avg. electron per band and nr. of states (Fermi window) = ', numelbnd, numstate
-        ENDIF
-        !
+        ENDDO
+        numelbnd = numelbnd / numstate
+        WRITE(stdout, '(5x,a,2f15.8)') &
+          'avg. tot. electron per band and nr. of states (Fermi window weighted) = ', numelbnd, numstate 
       ENDIF
       !
       IF (fbw) THEN

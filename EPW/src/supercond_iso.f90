@@ -337,17 +337,17 @@
     !! Errors in supercond. gap
     REAL(KIND = DP) :: esqrt
     !! Temporary variable
-    REAL(KIND = DP), ALLOCATABLE :: wesqrt(:), desqrt(:)
+    REAL(KIND = DP), ALLOCATABLE :: zesqrt(:), desqrt(:), sesqrt(:)
     !! Temporary variables
-    REAL(KIND = DP), ALLOCATABLE :: CE, NE(:), PE(:)
-    !! Temporary variables for integrals in fbw equations
     REAL(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
-    ALLOCATE(wesqrt(nsiw(itemp)), STAT = ierr)
-    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating wesqrt', 1)
+    ALLOCATE(zesqrt(nsiw(itemp)), STAT = ierr)
+    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating zesqrt', 1)
     ALLOCATE(desqrt(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating desqrt', 1)
+    ALLOCATE(sesqrt(nsiw(itemp)), STAT = ierr)
+    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating sesqrt', 1)
     !
     IF (iter == 1) THEN
       ! SH: for fbw runs
@@ -406,32 +406,24 @@
       absdelta = zero
       reldelta = zero
       !
-      ALLOCATE(NE(nsiw(itemp)), STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating NE', 1)
-      ALLOCATE(PE(nsiw(itemp)), STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating PE', 1)
-      NE(:) = zero
-      PE(:) = zero
+      zesqrt(:) = zero
+      desqrt(:) = zero
+      sesqrt(:) = zero
       !
       DO iw = 1, nsiw(itemp) ! loop over omega
         DO iwp = 1, nsiw(itemp) ! loop over omega_prime
           ! this step is performed at each iter step only for iw=1 since it is independ of wsi(iw)
           IF (iw == 1) THEN
-            esqrt = 1.d0 / DSQRT(wsi(iwp)**2.d0 + deltaip(iwp)**2.d0)
-            wesqrt(iwp) = wsi(iwp) * esqrt
-            desqrt(iwp) = deltaip(iwp) * esqrt
             DO ie = 1, ndosbin
-              CE      = dos_del / (znormip(iwp)**2.d0 * (wsi(iwp)**2.d0 + deltaip(iwp)**2.d0) + &
-                        (dosfw(ie) - ef0 + shiftip(iwp))**2.d0)
-              NE(iwp) = NE(iwp) + dosfw(ie + ndosbin) * znormip(iwp) * &
-                        DSQRT(wsi(iwp)**2.d0 + deltaip(iwp)**2.d0) * CE
-              PE(iwp) = PE(iwp) + dosfw(ie + ndosbin) * &
-                        (dosfw(ie) - ef0 + shiftip(iwp)) * CE
+              esqrt = dos_del / (znormip(iwp)**2.d0 * (wsi(iwp)**2.d0 + deltaip(iwp)**2.d0) + &
+                (dosfw(ie) - ef0 + shiftip(iwp))**2.d0)
+              zesqrt(iwp) = zesqrt(iwp) + dosfw(ie+ndosbin) * esqrt * wsi(iwp) * znormip(iwp)
+              desqrt(iwp) = desqrt(iwp) + dosfw(ie+ndosbin) * esqrt * deltaip(iwp) * znormip(iwp)
+              sesqrt(iwp) = sesqrt(iwp) + dosfw(ie+ndosbin) * esqrt * (dosfw(ie)-ef0+shiftip(iwp))
             ENDDO
-            ! 1/dosef in the following  expressions is to make NE=1 in CDOS limit
-            !      Note: a2F[epw]=dosef * a2F[picket]
-            NE(iwp) = NE(iwp) / pi / dosef
-            PE(iwp) = PE(iwp) / pi / dosef
+            zesqrt(iwp) = zesqrt(iwp) / dosef
+            desqrt(iwp) = desqrt(iwp) / dosef
+            sesqrt(iwp) = sesqrt(iwp) / dosef
           ENDIF
           ! SH: For general case (including sparse sampling)
           !       "actual" matsubara indices n1/n2 are needed instead of iw/iwp
@@ -444,22 +436,18 @@
           ! Eqs. (4.1-4.3) in Picket, PRB 26, 1186 (1982) for FBW
           ! using kernelm and kernelp the sum over |wp| < wscut
           ! is rewritten as a sum over iwp = 1, nsiw(itemp)
-          znormi(iw) = znormi(iw) + wesqrt(iwp) * NE(iwp) * kernelm
-          deltai(iw) = deltai(iw) + desqrt(iwp) * NE(iwp) * (kernelp - 2.d0 * muc)
-          shifti(iw) = shifti(iw) + wesqrt(iwp) * PE(iwp) * kernelp
+          znormi(iw) = znormi(iw) + zesqrt(iwp) * kernelm
+          deltai(iw) = deltai(iw) + desqrt(iwp) * (kernelp - 2.d0 * muc)
+          shifti(iw) = shifti(iw) + sesqrt(iwp) * kernelp
         ENDDO ! iwp
-        nznormi(iw) = 1.d0 + pi * gtemp(itemp) * nznormi(iw) / wsi(iw)
+        nznormi(iw) = 1.d0 + gtemp(itemp) * nznormi(iw) / wsi(iw)
         ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
-        znormi(iw)  = 1.d0 + pi * gtemp(itemp) * znormi(iw) / wsi(iw)
-        deltai(iw)  = pi * gtemp(itemp) * deltai(iw) / znormi(iw)
-        shifti(iw)  = -pi * gtemp(itemp) * shifti(iw)
+        znormi(iw)  = 1.d0 + gtemp(itemp) * znormi(iw) / wsi(iw)
+        deltai(iw)  = gtemp(itemp) * deltai(iw) / znormi(iw)
+        shifti(iw)  = - gtemp(itemp) * shifti(iw)
         reldelta = reldelta + ABS(deltai(iw) - deltaold(iw))
         absdelta = absdelta + ABS(deltai(iw))
       ENDDO ! iw
-      DEALLOCATE(NE, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating NE', 1)
-      DEALLOCATE(PE, STAT = ierr)
-      IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating PE', 1)
     ELSE
       deltai(:)  = zero
       znormi(:)  = zero
@@ -473,7 +461,7 @@
           ! this step is performed at each iter step only for iw=1 since it is independ of wsi(iw)
           IF (iw == 1) THEN
             esqrt = 1.d0 / DSQRT(wsi(iwp)**2.d0 + deltaip(iwp)**2.d0)
-            wesqrt(iwp) = wsi(iwp) * esqrt
+            zesqrt(iwp) = wsi(iwp) * esqrt
             desqrt(iwp) = deltaip(iwp) * esqrt
           ENDIF
           ! SH: For general case (including sparse sampling) 
@@ -487,7 +475,7 @@
           ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
           ! using kernelm and kernelp the sum over |wp| < wscut in Eqs. (34)-(35)
           ! is rewritten as a sum over iwp = 1, nsiw(itemp)
-          znormi(iw) = znormi(iw) + wesqrt(iwp) * kernelm
+          znormi(iw) = znormi(iw) + zesqrt(iwp) * kernelm
           deltai(iw) = deltai(iw) + desqrt(iwp) * (kernelp - 2.d0 * muc)
         ENDDO ! iwp
         znormi(iw)  = 1.d0 + pi * gtemp(itemp) * znormi(iw) / wsi(iw)
@@ -533,10 +521,12 @@
       WRITE(stdout, '(a)') ' '
     ENDIF
     !
-    DEALLOCATE(wesqrt, STAT = ierr)
-    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating wesqrt', 1)
+    DEALLOCATE(zesqrt, STAT = ierr)
+    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating zesqrt', 1)
     DEALLOCATE(desqrt, STAT = ierr)
     IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating desqrt', 1)
+    DEALLOCATE(sesqrt, STAT = ierr)
+    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating sesqrt', 1)
     !
     IF (conv .OR. iter == nsiter) THEN
       DEALLOCATE(deltaold, STAT = ierr)
