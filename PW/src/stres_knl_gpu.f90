@@ -28,8 +28,7 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
   USE mp_bands,             ONLY: intra_bgrp_comm
   USE mp,                   ONLY: mp_sum
   USE wavefunctions_gpum,   ONLY: using_evc, using_evc_d, evc_d  
-  USE device_fbuff_m,             ONLY : dev_buf
-  USE device_memcpy_m,        ONLY : dev_memcpy
+  USE device_fbuff_m,       ONLY : dev_buf
  
   !
   IMPLICIT NONE
