@@ -2,6 +2,7 @@ Fixed in development version:
   * XSPECTRA gave incorrect results with k-point parallelization, since
     at least v. 6.6, due to missing broadcast of recomputed Fermi energy
     (found and fixed by Fanchen Meng, Brookhaven)
+  * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
 
 New in 7.0 version:
   * GPU support for PWscf and CP significantly extended
