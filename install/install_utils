@@ -17,8 +17,7 @@
 ###########################################################
 
 define download_and_unpack
-  @(if ! gzip -t ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` > /dev/null 2>&1 ; then \
-  rm -fr ../$(3); \
+  @(if test ! -s ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` && test ! -e ../$(3) ; then \
   wget -O ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
   if test "`echo $$?`" -ne "0" ; then \
   curl -o ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
@@ -27,7 +26,7 @@ define download_and_unpack
   echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
   echo "*** located here $(2)" ; \
   exit 1 ; fi ; fi ; fi)
-  if test $? -eq 0 -a ! -e ../$(3); then \
+  if test ! -e ../$(3); then \
   (gzip -dc ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` | \
     (cd ../ ; tar -xvf - ) ) ; \
   if test "`echo $$?`" -ne "0" ; then \
