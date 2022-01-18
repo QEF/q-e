@@ -1591,6 +1591,7 @@ MODULE exx
                    IF(jbnd<jend) &
                         CALL addusxx_g(dfftt, psi_rhoc_work, xkq,  xkp, 'i', &
                         becphi_r=becxx(ikq)%r(:,jbnd+1), becpsi_r=becpsi%r(:,ibnd) )
+                   psi_rhoc_work_d = psi_rhoc_work 
                 ENDIF
                 !   >>>> charge density done
                 !
