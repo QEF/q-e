@@ -1,0 +1,16 @@
+Method
+fourier
+User-given star functions
+1 
+  0.5 0.5 0.5 
+Interpolation parameters 
+  NMax 7  
+  NC   3
+  C(:) 1.0d0  0.5d0 0.25d0
+K_POINTS tpiba_b
+  5
+  0.00  0.00  0.00 10
+  1.00  0.00  0.00 10
+  1.00  0.25  0.25 10
+  0.50  0.50  0.50 10
+  0.00  0.00  0.00 2
