@@ -53,8 +53,8 @@ write_proj.o \
 write_io_header.o \
 write_hamiltonians.o \
 fouriermod.o \
-globalmod.o \
 idwmod.o \
+globalmod.o \
 fourierdiffmod.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
