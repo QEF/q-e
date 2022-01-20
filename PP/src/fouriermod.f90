@@ -29,13 +29,10 @@ save
   integer :: NUser                        ! (Optional) number of user-given star functions 
   real(dp), allocatable :: VecUser(:,:)   ! (Optional) user-given star functions 
   !
+  logical :: trough = .false.    
+  logical :: tuser  = .false.    
+  !
 CONTAINS
-!----------------------------------------------------------------------------
-subroutine allocate_fourier( )
-implicit none
-  allocate ( RoughC(RoughN) ) 
-  return
-end subroutine
 !----------------------------------------------------------------------------
 subroutine fourier(Nb, Nq, q, eq, Nk, k, ek, Nsym, at, bg, Op)
 !
@@ -68,7 +65,7 @@ implicit none
   write(*,'(A)') '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
    write(*,'(A)') 'Fourier interpolation method'
   if(check_periodicity) write(*,*) 'Checking Star functions periodicity (WARNING: time consuming)' 
-  write(*,*) 'Creating Star functions...'
+  write(*,*) 'Creating the Star functions basis set'
   Call find_stars(NSym, Op, at) 
   !
   if(check_periodicity) then 
@@ -77,32 +74,20 @@ implicit none
   end if 
   !
   ! fStarsOnQ = S_m(q) / sqrt(rho_m)
-  write(*,*) 'Computing fStarsOnQ...'
+  write(*,*) 'Computing the Star functions values at the uniform grid points (fStarsOnQ)'
   allocate( fStarsOnQ(Nq,NStars) )
   fStarsOnQ = (Zero, Zero)
   Call compute_stars(fStarsOnQ, Nq, Nq, q, NSym, Op, 2) 
   !
-!!!!civn 
-!!!  ! matQQ = fStarsOnQ * fStarsOnQ^T  = sum_i S_m(q_i) S_n(q_i) 
-!!!  write(*,*) 'Checking ortogonality fStarsOnQ^T * fStarsOnQ...'
-!!!  allocate(matQQ(NStars,NStars), rmatQQ(NStars,NStars))
-!!!  matQQ = (Zero, Zero)
-!!!  Call ZGEMM('C', 'N', NStars, NStars, Nq, (One,Zero), fStarsOnQ, Nq, fStarsOnQ, Nq, (Zero,Zero), matQQ, NStars)
-!!!  matQQ = matQQ / dble(Nq)
-!!!  Call matprt_k('matQQ', NStars, NStars, matQQ)
-!!!  rmatQQ = dble(matQQ)
-!!!  Call MatCheck('rmatQQ',rmatQQ,NStars,NStars)
-!!!  deallocate(matQQ, rmatQQ)
-!!!stop  
-  !
   ! matQQ = fStarsOnQ * fStarsOnQ^T  = sum_m S_m(q_i) S_m(q_j) / rho_m
-  write(*,*) 'Computing fStarsOnQ * fStarsOnQ^T...'
+  !write(*,*) 'Computing fStarsOnQ * fStarsOnQ^T...'
   allocate(matQQ(Nq,Nq))
   matQQ = (Zero, Zero)
   Call ZGEMM('N', 'C', Nq, Nq, NStars, (One,Zero), fStarsOnQ, Nq, fStarsOnQ, Nq, (Zero,Zero), matQQ, Nq)
   !
   ! matQQ --> matQQ^(-1) 
-  write(*,*) 'Inverting fStarsOnQ * fStarsOnQ^T...'
+  !write(*,*) 'Inverting fStarsOnQ * fStarsOnQ^T...'
+  write(*,*) 'Computing the interpolation coefficients with matrix inversion '
   allocate( rmatQQ(Nq,Nq), rmatQQ_(Nq,Nq), rmatJ(Nq,Nq) )
   rmatQQ(:,:)  = dble(matQQ(:,:))
   rmatQQ_(:,:) = rmatQQ(:,:) 
@@ -115,7 +100,8 @@ implicit none
   deallocate( rmatQQ, rmatQQ_, rmatJ )
   !
   ! fStarsOnK = S_m(k) / sqrt(rho_m)
-  write(*,*) 'Computing fStarsOnK...'
+  !write(*,*) 'Computing fStarsOnK...'
+  write(*,*) 'Computing the Star functions values at the requested bands k-points (fStarsOnK)'
   allocate( fStarsOnK(Nk,NStars) )
   fStarsOnK = (Zero, Zero)
   Call compute_stars(fStarsOnK, Nk, Nk, k, NSym, Op, 2) 
@@ -528,6 +514,87 @@ implicit none
   return
   !
 end subroutine applyOp
+!----------------------------------------------------------------------------
+subroutine card_user_stars( input_line )
+!
+! reads the (optional) user-given input Star
+!
+use parser,       ONLY : read_line
+implicit none
+  integer  :: ivec
+  LOGICAL            :: tend,terr
+  CHARACTER(len=256) :: input_line
+  !
+  IF ( tuser  ) THEN
+     CALL errore( ' card_user_stars  ', ' two occurrences', 2 )
+  ENDIF
+  !
+  CALL read_line( input_line, end_of_file = tend, error = terr )
+  IF (tend) GOTO 10
+  IF (terr) GOTO 20
+  READ(input_line, *, END=10, ERR=20) NUser 
+  !
+  if(NUser.gt.0) then 
+    allocate( VecUser(3,NUser) ) 
+    !
+    do ivec = 1, NUser
+      CALL read_line( input_line, end_of_file = tend, error = terr )
+      IF (tend) GOTO 10
+      IF (terr) GOTO 20
+      READ(input_line,*, END=10, ERR=20) VecUser(1:3,ivec)
+    end do 
+  end if 
+  !
+  tuser  = .true. 
+  !
+  RETURN
+  !
+10 CALL errore ('card_user_stars', ' end of file while reading roughness function ', 1) 
+20 CALL errore ('card_user_stars', ' error while reading roughness function', 1) 
+  !
+end subroutine card_user_stars
+!----------------------------------------------------------------------------
+subroutine card_roughness( input_line )
+!
+! reads the input coefficients for the roughness function
+!
+use parser,       ONLY : read_line
+implicit none
+  LOGICAL            :: tend,terr
+  CHARACTER(len=256) :: input_line
+  !
+  IF ( trough ) THEN
+     CALL errore( ' card_roughness  ', ' two occurrences', 2 )
+  ENDIF
+  !
+  CALL read_line( input_line, end_of_file = tend, error = terr )
+  IF (tend) GOTO 10
+  IF (terr) GOTO 20
+  READ(input_line, *, END=10, ERR=20) RoughN 
+  !
+  if(RoughN.gt.1) then 
+    deallocate( RoughC ) 
+    allocate( RoughC(RoughN) ) 
+  end if 
+  !
+  if(RoughN.gt.0) then 
+    CALL read_line( input_line, end_of_file = tend, error = terr )
+    IF (tend) GOTO 10
+    IF (terr) GOTO 20
+    READ(input_line,*, END=10, ERR=20) RoughC(1:RoughN) 
+    !
+  else
+    Call errore( ' card_roughness  ', ' RoughN must be a positive integer ', 2 )
+  end if
+  !
+  trough = .true. 
+  !
+  RETURN
+  !
+10 CALL errore ('card_roughness', ' end of file while reading roughness function ', 1) 
+20 CALL errore ('card_roughness', ' error while reading roughness function', 1) 
+  !
+end subroutine card_roughness
 !----------------------------------------------------------------------------
 END MODULE
 !----------------------------------------------------------------------------

@@ -61,45 +61,47 @@ implicit none
   !
   Na = Nq - 1  ! dimension of the linear system 
   !
-  write(*,'(A)') 'Creating b = e(q_i) - e(q_Nq)   i = 1, ... , Nq-1 '
+  ! Computing b = e(q_i) - e(q_Nq)   i = 1, ... , Nq-1 
+  write(*,'(A)') 'Computing the RHS of the linear system '
   allocate( matB(Na,Nb), matX(Na,Nb) )
   do ib = 1, Nb
     matB(1:Na,ib) = (One, Zero) * ( eq(1:Na,ib) - eq(Nq,ib) )
   end do 
   matX = matB ! matX will be overwritten with the solution of Ax=b
   !
-  write(*,'(A)') 'Creating A'
-  write(*,'(A)') 'Creating Star functions...'
+  ! Computing A
+  write(*,'(A)') 'Computing the Star functions basis set'
   Call find_stars(NSym, Op, at, .true.) 
   !
   if(check_periodicity) then 
-    write(*,*) 'Checking Star functions periodicity...'
+    write(*,*) 'Checking Star functions periodicity'
     Call check_stars(Nq, q, NSym, Op, bg) 
   end if 
   !
   ! fStarsOnQ = [S_m(q_i)-S_m(q_Nq)] / sqrt(rho_m)
-  write(*,*) 'Computing fStarsOnQ...'
+  write(*,*) 'Computing the Star functions values at the uniform grid points (fStarsOnQ)'
   allocate( fStarsOnQ(Na,NStars), matS(NStars) )
   fStarsOnQ = (Zero, Zero)
   Call compute_stars(fStarsOnQ, Na, Nq, q, NSym, Op, 2, .true., matS) 
   !
   ! matQQ = fStarsOnQ * fStarsOnQ^T  = sum_m [S_m(q_i)-S_m(q_Nq)]*[S_m(q_j)-S_m(q_Nq)] / rho_m
-  write(*,*) 'Computing fStarsOnQ * fStarsOnQ*...'
+  !write(*,*) 'Computing fStarsOnQ * fStarsOnQ*...'
   allocate(matQQ(Na,Na), matA(Na,Na))
   matQQ = (Zero, Zero)
   Call ZGEMM('N', 'C', Na, Na, NStars, (One,Zero), fStarsOnQ, Na, fStarsOnQ, Na, (Zero,Zero), matQQ, Na)
   matA = matQQ
   !
-  write(*,'(A)') 'Solving Ax = b'
+  write(*,*) 'Computing the interpolation coefficients solving the linear system (ZGESV) '
   allocate( IPIV(Na) )
   Call ZGESV(Na, Nb, matQQ, Na, IPIV, matX, Na, INFO) 
   deallocate(IPIV) 
-  write(*,'(A)') 'Checking A*x - b = 0...'
+  !write(*,'(A)') 'Checking A*x - b = 0...'
+  write(*,'(A)') 'Checking solution '
   Call ZGEMM('N', 'N', Na, Nb, Na, (One,Zero), matA, Na, matX, Na, -(One,Zero), matB, Na)
   Call MatCheck_k('A*x - b = 0', matB, Na, Nb)
   !  
   ! C_m,ib = rho^(-1)_m sum_m=2  lambda_iq,ib * [S_m(q_i)-S_m(q_Nq)] m = 2, ... NStars
-  write(*,*) 'Computing coefficients...'  
+  !write(*,*) 'Computing coefficients...'  
   allocate( matC(NStars,Nb), matC1(Nb) ) 
   matC = (Zero, Zero)
   Call ZGEMM('C', 'N', NStars, Nb, Na, (One, Zero), fStarsOnQ, Na, matX, Na, (Zero, Zero), matC, NStars)
@@ -111,9 +113,9 @@ implicit none
     matC1(ib) = eq(Nq,ib) - dot_product(matC(:,ib),matS(:))
   end do 
   !  
-  write(*,*) 'Computing bands...'  
+  !write(*,*) 'Computing bands...'  
   ! fStarsOnK = S_m(k) 
-  write(*,*) 'Computing fStarsOnK...'
+  write(*,*) 'Computing the Star functions values at the requested bands k-points (fStarsOnK)'
   allocate( fStarsOnK(Nk,NStars), ek_c(Nk,Nb) )
   fStarsOnK = (Zero, Zero)
   Call compute_stars(fStarsOnK, Nk, Nk, k, NSym, Op, 0) 

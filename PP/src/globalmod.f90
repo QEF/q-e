@@ -14,6 +14,8 @@ MODULE globalmod
   USE kinds,                ONLY : dp
 implicit none
   ! 
+  ! a string describing the method used for interpolation  
+  CHARACTER(len=80) :: method = ' '
   !
   ! band indexes
   integer :: Nb
@@ -23,14 +25,8 @@ implicit none
   real(dp), allocatable :: q(:,:), eq(:,:)
   ! 
   ! path of k-points in the IBZ
-  integer :: Nk
-  real(dp), allocatable :: k(:,:), ek(:,:), t(:)
+  real(dp), allocatable :: k(:,:), ek(:,:)
   !
-  ! list of k-points for building the path in the BZ (cart. coord. in units 2pi/alat)
-  integer :: Nkl
-  integer,  allocatable :: kln(:)
-  real(dp), allocatable :: kl(:,:)
-  ! 
   ! Crystal data 
   real(dp) :: at(3,3)   ! real-space lattice translation vectors (cart. coord. in units of alat) a_i(:) = at(:,i)/alat
   real(dp) :: bg(3,3)   ! reciprocal-lattice (cart. coord. in units 2 pi/alat)                   b_i(:) = bg(:,i)/tpiba
@@ -39,100 +35,17 @@ implicit none
   real(dp), allocatable :: Op_tmp(:,:,:)  ! this is just a buffer to convert Op in cartesian units. 
                                           ! quite redundant here, but useful to use s_axis_to_cart without modifications 
   !
-  logical :: trough = .false.    
-  logical :: tuser  = .false.    
-  !
 CONTAINS
-!----------------------------------------------------------------------------
-subroutine card_user_stars( input_line )
-use fouriermod ,  only : NUser, VecUser
-use parser,       ONLY : read_line
-implicit none
-  integer  :: ivec
-  LOGICAL            :: tend,terr
-  CHARACTER(len=256) :: input_line
-  !
-  IF ( tuser  ) THEN
-     CALL errore( ' card_user_stars  ', ' two occurrences', 2 )
-  ENDIF
-  !
-  ! ... input Star vectors 
-  !
-  CALL read_line( input_line, end_of_file = tend, error = terr )
-  IF (tend) GOTO 10
-  IF (terr) GOTO 20
-  READ(input_line, *, END=10, ERR=20) NUser 
-  !
-  if(NUser.gt.0) then 
-    allocate( VecUser(3,NUser) ) 
-    !
-    do ivec = 1, NUser
-      CALL read_line( input_line, end_of_file = tend, error = terr )
-      IF (tend) GOTO 10
-      IF (terr) GOTO 20
-      READ(input_line,*, END=10, ERR=20) VecUser(1:3,ivec)
-    end do 
-  end if 
-  !
-  tuser  = .true. 
-  !
-  RETURN
-  !
-10 CALL errore ('card_user_stars', ' end of file while reading roughness function ', 1) 
-20 CALL errore ('card_user_stars', ' error while reading roughness function', 1) 
-  !
-end subroutine card_user_stars
-!----------------------------------------------------------------------------
-subroutine card_roughness( input_line )
-use fouriermod ,  only : RoughN, RoughC
-use parser,       ONLY : read_line
-implicit none
-  LOGICAL            :: tend,terr
-  CHARACTER(len=256) :: input_line
-  !
-  IF ( trough ) THEN
-     CALL errore( ' card_roughness  ', ' two occurrences', 2 )
-  ENDIF
-  !
-  ! ... input coefficients for the roughness function
-  !
-  CALL read_line( input_line, end_of_file = tend, error = terr )
-  IF (tend) GOTO 10
-  IF (terr) GOTO 20
-  READ(input_line, *, END=10, ERR=20) RoughN 
-  !
-  if(RoughN.gt.1) then 
-    deallocate( RoughC ) 
-    allocate( RoughC(RoughN) ) 
-  end if 
-  !
-  if(RoughN.gt.0) then 
-    CALL read_line( input_line, end_of_file = tend, error = terr )
-    IF (tend) GOTO 10
-    IF (terr) GOTO 20
-    READ(input_line,*, END=10, ERR=20) RoughC(1:RoughN) 
-    !
-  else
-    Call errore( ' card_roughness  ', ' RoughN must be a positive integer ', 2 )
-  end if
-  !
-  trough = .true. 
-  !
-  RETURN
-  !
-10 CALL errore ('card_roughness', ' end of file while reading roughness function ', 1) 
-20 CALL errore ('card_roughness', ' error while reading roughness function', 1) 
-  !
-end subroutine card_roughness
 !----------------------------------------------------------------------------
 subroutine read_xml_input ()
 !
 ! read the xml input file and make all allocations 
 ! 
-USE io_global, ONLY : stdout
+USE io_global,        ONLY : stdout
 use qes_read_module,  ONLY : qes_read 
 use qes_types_module, ONLY : band_structure_type, atomic_structure_type, symmetries_type, basis_set_type
 use fox_dom 
+use input_parameters, ONLY : nkstot 
 implicit none
   integer :: iq
   integer :: isym
@@ -166,7 +79,7 @@ implicit none
   write(stdout,'(2(I5,A))') Nq, ' points on the uniform grid, ', Nb, ' bands'
   !write(stdout,'(A)') 'iq, q(iq, :), e(iq, :)'
   !
-  allocate( q(3, Nq), eq(Nq, Nb), ek(Nk,Nb)  )
+  allocate( q(3, Nq), eq(Nq, Nb), ek(nkstot,Nb)  )
   !
   do iq = 1, Nq
     q(:,iq) = bandstr%ks_energies(iq)%k_point%k_point(:) 
@@ -208,71 +121,9 @@ implicit none
   !
 end subroutine read_xml_input 
 !----------------------------------------------------------------------------
-subroutine build_kpath ()
-!
-! build the path of k-points connecting the Nkl special points
-! 
-implicit none
-  integer :: ik, iik, iline
-  real(dp) :: tk, dt, modt
-  !
-  k = 0.0d0
-  t = 0.0d0
-  ! do the first point (t = 0) 
-  ik = 1  
-  t(ik) = 0.0d0
-  k(1, ik) = kl(1, 1) 
-  k(2, ik) = kl(2, 1) 
-  k(3, ik) = kl(3, 1) 
-  ! loop over lines
-  do iline = 1, Nlines   
-    tk = 0.0d0
-    do iik = 1, kln(iline)
-      ik = ik + 1  
-      modt = sqrt( (kl(1,iline+1)-kl(1,iline))**2 + (kl(2,iline+1)-kl(2,iline))**2 + (kl(3,iline+1)-kl(3,iline))**2 ) 
-      tk = tk + 1.0d0/dble(kln(iline))
-      dt = modt/dble(kln(iline))
-      t(ik) = t(ik-1) + dt
-      k(1,ik) = kl(1,iline) + (kl(1,iline+1) - kl(1,iline)) * tk   
-      k(2,ik) = kl(2,iline) + (kl(2,iline+1) - kl(2,iline)) * tk 
-      k(3,ik) = kl(3,iline) + (kl(3,iline+1) - kl(3,iline)) * tk 
-    end do 
-  end do 
-  !
-  return
-  !
-end subroutine build_kpath 
-!----------------------------------------------------------------------------
-subroutine print_bands (label)
-!
-! print band structure
-!
-implicit none
-  integer :: ik
-  character(len=*), intent(in) :: label 
-  character(len=100) :: formt, filename
-  !
-  write(formt,'(A,I5,A)') '(', Nb+1 ,'f24.6)'  
-  write(filename, '(A,A)')  TRIM(label),'.dat'
-  !
-  write(*,*) 'writing band structure on ', filename
-  !
-  open(2, file=filename, status='unknown')
-  !
-  do ik = 1, Nk
-    write(2,formt) t(ik), ek(ik,:)
-    !write(*,formt) t(ik), ek(ik,:)
-  end do 
-  !
-  close(2)
-  !
-  return
-  !
-end subroutine print_bands
-!----------------------------------------------------------------------------
 subroutine deallocate_global ()
 implicit none
-  deallocate(q, eq, k, ek, t, Op)
+  deallocate(q, eq, ek, Op)
 end subroutine deallocate_global
 !----------------------------------------------------------------------
 SUBROUTINE s_axis_to_cart()
@@ -295,6 +146,41 @@ SUBROUTINE s_axis_to_cart()
   ENDDO
   !
  END SUBROUTINE s_axis_to_cart
+!----------------------------------------------------------------------------
+subroutine print_bands (label)
+!
+! print band structure
+!
+USE kinds, ONLY : dp
+USE input_parameters, ONLY : nkstot, xk
+implicit none
+  character(len=*), intent(in) :: label 
+  !
+  real(dp) :: x  
+  integer :: ik
+  character(len=100) :: formt, filename
+  !
+  write(formt,'(A,I5,A)') '(', Nb+1 ,'f24.6)'  
+  write(filename, '(A,A)')  TRIM(label),'.dat'
+  !
+  write(*,*) 'writing band structure on ', filename
+  !
+  open(2, file=filename, status='unknown')
+  !
+  x = 0.0d0 
+  !
+  write(2,formt) x, ek(1,:) 
+  !
+  do ik = 2, nkstot
+    x = x + sqrt(dot_product(xk(:,ik)-xk(:,ik-1),xk(:,ik)-xk(:,ik-1)))
+    write(2,formt) x, ek(ik,:)
+  end do 
+  !
+  close(2)
+  !
+  return
+  !
+end subroutine print_bands
 !----------------------------------------------------------------------------
 END MODULE
 !----------------------------------------------------------------------------

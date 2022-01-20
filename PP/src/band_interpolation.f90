@@ -11,31 +11,14 @@
 !
 !----------------------------------------------------------------------------
 program band_interpolation 
-use globalmod,         ONLY : card_user_stars, card_roughness, read_xml_input, t, build_kpath, at, bg, &
-                                ek,  eq, Nb, Nq, NSym, q, Op, print_bands, deallocate_global
-use idwmod,            ONLY : idw, p_metric, scale_sphere 
-use fouriermod,        ONLY : fourier, miller_max, check_periodicity, RoughC, RoughN, NUser
+use globalmod,         ONLY : print_bands, read_xml_input, at, bg, method, &
+                                ek,  eq, Nb, Nq, NSym, q, Op, deallocate_global
+use idwmod,            ONLY : idw
+use fouriermod,        ONLY : fourier
 use fourierdiffmod,    ONLY : fourierdiff
-use input_parameters,  ONLY : k_points , xk, nkstot 
-use parser,            ONLY : read_line
+use input_parameters,  ONLY : xk, nkstot 
 USE mp_global,         ONLY : mp_startup
-USE io_global,         ONLY : stdout
-USE read_cards_module, ONLY : card_kpoints 
 implicit none
-  !
-  integer, parameter :: iunit = 5
-  integer :: ios
-  integer :: i, iii, ik
-  CHARACTER(len=256)         :: input_line
-  LOGICAL                    :: tend
-  CHARACTER(len=80)          :: card
-  CHARACTER(len=1), EXTERNAL :: capital
-  !
-  CHARACTER(len=80) :: method = ' '
-  !! a string describing the method used for interpolation  
-  !
-  NAMELIST / interpolation / method, miller_max, check_periodicity, p_metric, scale_sphere
-  !
   !
   write(*,*) 'PROGRAM: band_interpolation '
   !
@@ -43,20 +26,97 @@ implicit none
   CALL mp_startup ( )
 #endif
   !
-  ! Set defaults 
-  !  
+  Call set_defaults () 
+  !
+  Call read_input_file ()
+  !
+  Call read_xml_input ()
+  !
+  ek = 0.0d0
+  !
+  if(TRIM(method).eq.'idw') then 
+    !
+    Call idw (1, Nb, Nq, q, eq, nkstot, xk, ek, at, bg)
+    !
+  elseif(TRIM(method).eq.'idw-sphere') then 
+    !
+    Call idw (2, Nb, Nq, q, eq, nkstot, xk, ek, at, bg)
+    !
+  elseif(TRIM(method).eq.'fourier') then 
+    !
+    Call fourier (Nb, Nq, q, eq, nkstot, xk, ek, Nsym, at, bg, Op)
+    !
+  elseif(TRIM(method).eq.'fourier-diff') then 
+    !
+    Call fourierdiff (Nb, Nq, q, eq, nkstot, xk, ek, Nsym, at, bg, Op)
+    !
+  else
+    !
+    write(*,*) 'ERROR: Wrong method ', TRIM(method)
+    stop
+    !
+  end if
+  !
+  Call print_bands (TRIM(method))
+  !
+  deallocate( xk )
+  !
+  Call deallocate_global ()
+  !
+  RETURN   
+  !
+end program
+!----------------------------------------------------------------------------
+subroutine set_defaults () 
+!
+! Set defaults 
+!  
+USE globalmod,         ONLY : method
+USE fouriermod,        ONLY : check_periodicity, miller_max, RoughN, RoughC, NUser 
+USE idwmod,            ONLY : p_metric, scale_sphere 
+USE input_parameters,  ONLY : k_points 
+implicit none
+  !
+  ! global defauls
   method = 'fourier-diff'
-  check_periodicity = .false.
+  k_points = 'none'
+  !
+  ! defaults for IDW methods
   p_metric = 2
   scale_sphere = 4.0d0
+  !
+  ! defaults for fourier methods
+  check_periodicity = .false.
   miller_max = 6  
   RoughN = 1  
   allocate( RoughC(RoughN) )
   RoughC(1) = 1.0d0
   NUser = 0 
-  k_points = 'none'
   !
-  ! Read input file
+  RETURN
+  !
+end subroutine
+!----------------------------------------------------------------------------
+subroutine read_input_file ()
+!
+! Read input file
+!
+USE parser,            ONLY : read_line
+USE input_parameters,  ONLY : k_points, nkstot 
+USE read_cards_module, ONLY : card_kpoints 
+USE globalmod,         ONLY : method
+USE fouriermod,        ONLY : miller_max, check_periodicity, card_user_stars, card_roughness
+USE idwmod,            ONLY : p_metric, scale_sphere
+USE io_global,         ONLY : stdout
+implicit none
+  integer, parameter :: iunit = 5
+  integer :: ios, i
+  CHARACTER(len=256)         :: input_line
+  LOGICAL                    :: tend
+  CHARACTER(len=80)          :: card
+  CHARACTER(len=1), EXTERNAL :: capital
+  !
+  NAMELIST / interpolation / method, miller_max, check_periodicity, p_metric, scale_sphere
   !
   ios = 0 
   READ( iunit, interpolation, iostat = ios ) 
@@ -110,47 +170,7 @@ implicit none
         .and.TRIM(method).ne.'fourier'.and.TRIM(method).ne.'fourier-diff' ) &  
         Call errore('band_interpolation', 'Wrong interpolation method ', 1) 
   !
-  ! Build the abscissa values for band plotting
+  RETURN
   !
-  allocate( t(nkstot) )
-  t = 0.0d0
-  do ik= 2, nkstot
-    t(ik) = t(ik-1) + sqrt(dot_product(xk(:,ik)-xk(:,ik-1),xk(:,ik)-xk(:,ik-1)))
-    write(*,'(I5,f12.6)') ik, t(ik)
-  end do 
-  !
-  ! Read xml file
-  !
-  Call read_xml_input ()
-  !
-  ek = 0.0d0
-  !
-  if(TRIM(method).eq.'idw') then 
-    !
-    Call idw (1, Nb, Nq, q, eq, nkstot, xk, ek, at, bg)
-    !
-  elseif(TRIM(method).eq.'idw-sphere') then 
-    !
-    Call idw (2, Nb, Nq, q, eq, nkstot, xk, ek, at, bg)
-    !
-  elseif(TRIM(method).eq.'fourier') then 
-    !
-    Call fourier (Nb, Nq, q, eq, nkstot, xk, ek, Nsym, at, bg, Op)
-    !
-  elseif(TRIM(method).eq.'fourier-diff') then 
-    !
-    Call fourierdiff (Nb, Nq, q, eq, nkstot, xk, ek, Nsym, at, bg, Op)
-    !
-  else
-    !
-    write(*,*) 'ERROR: Wrong method ', TRIM(method)
-    stop
-    !
-  end if
-  !
-  Call print_bands (TRIM(method))
-  !
-  Call deallocate_global ()
-  !
-end program
+end subroutine read_input_file
 !----------------------------------------------------------------------------
