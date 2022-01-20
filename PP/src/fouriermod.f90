@@ -17,10 +17,12 @@ save
   real(dp), parameter :: eps = 0.000010d0, Zero = 0.0d0, One = 1.0d0, Two = 2.0d0, Four = 4.0d0
   real(dp), parameter :: Pi = Four*atan(One)
   !
+  logical :: check_periodicity = .false.
+  !
   ! the largest Miller index used to generate all the lattice vectors inside an outer shell
-  integer :: NMax
-  integer :: NC  
-  real(dp), allocatable :: C(:) 
+  integer :: miller_max
+  integer :: RoughN
+  real(dp), allocatable :: RoughC(:) 
   !
   integer :: NStars                       ! total number of Star functions 
   real(dp), allocatable :: VecStars(:,:)  ! symmetry inequivalent lattice vectors generating the Star functions (one per Star)
@@ -31,7 +33,7 @@ CONTAINS
 !----------------------------------------------------------------------------
 subroutine allocate_fourier( )
 implicit none
-  allocate ( C(NC) ) 
+  allocate ( RoughC(RoughN) ) 
   return
 end subroutine
 !----------------------------------------------------------------------------
@@ -64,12 +66,15 @@ implicit none
   real(dp), allocatable :: rmatJ(:,:)     
   !
   write(*,'(A)') '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  write(*,'(A)') 'Fourier interpolation method'
+   write(*,'(A)') 'Fourier interpolation method'
+  if(check_periodicity) write(*,*) 'Checking Star functions periodicity (WARNING: time consuming)' 
   write(*,*) 'Creating Star functions...'
   Call find_stars(NSym, Op, at) 
   !
-  write(*,*) 'Checking Star functions periodicity...'
-  Call check_stars(Nq, q, NSym, Op, bg) 
+  if(check_periodicity) then 
+    write(*,*) 'Checking Star functions periodicity...'
+    Call check_stars(Nq, q, NSym, Op, bg) 
+  end if 
   !
   ! fStarsOnQ = S_m(q) / sqrt(rho_m)
   write(*,*) 'Computing fStarsOnQ...'
@@ -133,7 +138,7 @@ implicit none
   !
   ek(:,:) = dble(ek_c(:,:))
   !
-  deallocate( C ) 
+  deallocate( RoughC ) 
   deallocate( ek_c, eq_c )
   deallocate( VecStars )
   deallocate( matQQ )
@@ -156,7 +161,7 @@ implicit none
   ! local variables
   logical :: Skip000 
   !
-  ! arrays containing the lattice vectors inside the outer shell defined by NMax
+  ! arrays containing the lattice vectors inside the outer shell defined by miller_max
   integer :: NAll, NPrint
   real(dp), allocatable :: VecAll(:,:) ! all lattice vectors
   real(dp), allocatable :: VecInq(:,:) ! symmetry inequivalent lattice vectors
@@ -174,7 +179,7 @@ implicit none
     Skip000 = .false.
   endif 
   !
-  NAll = (2 * NMax + 1 )**3 ! from -Nmax to Nmax is (2*Nmax + 1), for 3 space directions 
+  NAll = (2 * miller_max + 1 )**3 ! from -miller_max to miller_max is (2*miller_max + 1), for 3 space directions 
   if(Skip000) then 
     NAll = NAll - 1  ! remove the (0, 0, 0) lattice vector 
     write(*,*) 'Skipping the (0,0,0) lattice vector...'
@@ -184,17 +189,17 @@ implicit none
   !
   if(NUser.gt.0) then 
     NAll = NAll + NUser  
-    write(*,*) "Creating ", NAll, " vectors from ", NMax, " indexes and ", NUser, " user-given vectors"
+    write(*,*) "Creating ", NAll, " vectors from ", miller_max, " indexes and ", NUser, " user-given vectors"
   else
-    write(*,*) "Creating ", NAll, " vectors from ", NMax, " indexes"
+    write(*,*) "Creating ", NAll, " vectors from ", miller_max, " indexes"
   end if
   !
   allocate ( VecAll(3,NAll), ModAll(NAll), MapAll(NAll) ) 
   !
   ivec = 0 
-  do ii = -NMax, NMax
-    do jj= -NMax, NMax
-      do kk= -NMax, NMax
+  do ii = -miller_max, miller_max
+    do jj= -miller_max, miller_max
+      do kk= -miller_max, miller_max
         if(Skip000.and.(ii.eq.0.and.jj.eq.0.and.kk.eq.0)) cycle 
         ivec = ivec + 1 
         VecAll(:,ivec) = dble(ii)*at(:,1) + dble(jj)*at(:,2) + dble(kk)*at(:,3)   
@@ -214,8 +219,8 @@ implicit none
   end if 
   !
   if(ivec.ne.NAll) then 
-    write(*,*) "ERROR: wrong number of lattice vectors for a given NMax"
-    write(*,*) "NMax= ",NMax," ivec=",ivec," NAll=",NAll, " NUser=",NUser
+    write(*,*) "ERROR: wrong number of lattice vectors for a given miller_max"
+    write(*,*) "miller_max= ",miller_max," ivec=",ivec," NAll=",NAll, " NUser=",NUser
     stop
   endif
   !  
@@ -483,12 +488,12 @@ implicit none
   real(dp) :: rmod, rho  
   integer :: ic, iexp
   !
-  rho = C(1)
-  if(NC.gt.1) then 
+  rho = RoughC(1)
+  if(RoughN.gt.1) then 
     rmod = sqrt(dot_product(vec,vec))
-    do ic  = 2, NC
+    do ic  = 2, RoughN
       iexp = 2*(ic - 1 )
-      rho = rho + C(ic) * rmod**iexp
+      rho = rho + RoughC(ic) * rmod**iexp
     end do 
   end if 
   sqrt_rho = sqrt(rho)

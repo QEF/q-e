@@ -22,9 +22,9 @@ save
   !
   integer, parameter :: dp = selected_real_kind(14,200)  
   !
-  integer :: PMetric   ! metric for the (inverse) distance 
+  integer :: p_metric   ! metric for the (inverse) distance 
   !
-  real(dp) :: ScaleSphere  ! scaling factor for the radius of the sphere for the modified method
+  real(dp) :: scale_sphere  ! scaling factor for the radius of the sphere for the modified method
   !
 CONTAINS
 !----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ implicit none
         !
       end do 
     end do 
-    R = ScaleSphere * Rmin
+    R = scale_sphere * Rmin
     write(*,*) 'Sphere radius: ', Rmin, ' Scaled sphere radius: ', R
   end if 
   !
@@ -98,14 +98,14 @@ implicit none
           NCount(1) = NCount(1) + 1 
           if(iwhat.eq.1) then 
             ! basic idw method
-            w = 1.0d0/(d**PMetric)
+            w = 1.0d0/(d**p_metric)
           elseif(iwhat.eq.2) then
             ! search only inside the sphere R (idw-sphere)
             !w = (max(0.0d0, (R-d))/(R*d))**2
             w = 0.0d0
             if(d.lt.R) then 
               NCount(2) = NCount(2) + 1 
-              w = 1.0d0/(d**PMetric) !((R-d)/(R*d))**2
+              w = 1.0d0/(d**p_metric) !((R-d)/(R*d))**2
             end if 
           end if
           dsum = dsum + w

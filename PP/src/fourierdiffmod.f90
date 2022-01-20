@@ -57,6 +57,7 @@ implicit none
   !
   write(*,'(A)') '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
   write(*,'(A)') 'Fourier difference interpolation method'
+  if(check_periodicity) write(*,*) 'Checking Star functions periodicity (WARNING: time consuming)' 
   !
   Na = Nq - 1  ! dimension of the linear system 
   !
@@ -71,8 +72,10 @@ implicit none
   write(*,'(A)') 'Creating Star functions...'
   Call find_stars(NSym, Op, at, .true.) 
   !
-  write(*,*) 'Checking Star functions periodicity...'
-  Call check_stars(Nq, q, NSym, Op, bg) 
+  if(check_periodicity) then 
+    write(*,*) 'Checking Star functions periodicity...'
+    Call check_stars(Nq, q, NSym, Op, bg) 
+  end if 
   !
   ! fStarsOnQ = [S_m(q_i)-S_m(q_Nq)] / sqrt(rho_m)
   write(*,*) 'Computing fStarsOnQ...'
@@ -129,7 +132,7 @@ implicit none
   ek(:,:) = dble(ek_c(:,:))
   !
   deallocate( matX, matB, matA, matC, matC1, ek_c )
-  deallocate( C ) 
+  deallocate( RoughC ) 
   deallocate( VecStars )
   deallocate( fStarsOnQ )
   deallocate( fStarsOnK  )

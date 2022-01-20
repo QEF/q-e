@@ -13,10 +13,7 @@
 MODULE globalmod
   USE kinds,                ONLY : dp
 implicit none
-  !INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
   ! 
-  ! method
-  character(len=50) :: method
   !
   ! band indexes
   integer :: Nb
@@ -42,30 +39,112 @@ implicit none
   real(dp), allocatable :: Op_tmp(:,:,:)  ! this is just a buffer to convert Op in cartesian units. 
                                           ! quite redundant here, but useful to use s_axis_to_cart without modifications 
   !
+  logical :: trough = .false.    
+  logical :: tuser  = .false.    
+  !
 CONTAINS
 !----------------------------------------------------------------------------
-subroutine read_input ()
+subroutine card_user_stars( input_line )
+use fouriermod ,  only : NUser, VecUser
+use parser,       ONLY : read_line
+implicit none
+  integer  :: ivec
+  LOGICAL            :: tend,terr
+  CHARACTER(len=256) :: input_line
+  !
+  IF ( tuser  ) THEN
+     CALL errore( ' card_user_stars  ', ' two occurrences', 2 )
+  ENDIF
+  !
+  ! ... input Star vectors 
+  !
+  CALL read_line( input_line, end_of_file = tend, error = terr )
+  IF (tend) GOTO 10
+  IF (terr) GOTO 20
+  READ(input_line, *, END=10, ERR=20) NUser 
+  !
+  if(NUser.gt.0) then 
+    allocate( VecUser(3,NUser) ) 
+    !
+    do ivec = 1, NUser
+      CALL read_line( input_line, end_of_file = tend, error = terr )
+      IF (tend) GOTO 10
+      IF (terr) GOTO 20
+      READ(input_line,*, END=10, ERR=20) VecUser(1:3,ivec)
+    end do 
+  end if 
+  !
+  tuser  = .true. 
+  !
+  RETURN
+  !
+10 CALL errore ('card_user_stars', ' end of file while reading roughness function ', 1) 
+20 CALL errore ('card_user_stars', ' error while reading roughness function', 1) 
+  !
+end subroutine card_user_stars
+!----------------------------------------------------------------------------
+subroutine card_roughness( input_line )
+use fouriermod ,  only : RoughN, RoughC
+use parser,       ONLY : read_line
+implicit none
+  LOGICAL            :: tend,terr
+  CHARACTER(len=256) :: input_line
+  !
+  IF ( trough ) THEN
+     CALL errore( ' card_roughness  ', ' two occurrences', 2 )
+  ENDIF
+  !
+  ! ... input coefficients for the roughness function
+  !
+  CALL read_line( input_line, end_of_file = tend, error = terr )
+  IF (tend) GOTO 10
+  IF (terr) GOTO 20
+  READ(input_line, *, END=10, ERR=20) RoughN 
+  !
+  if(RoughN.gt.1) then 
+    deallocate( RoughC ) 
+    allocate( RoughC(RoughN) ) 
+  end if 
+  !
+  if(RoughN.gt.0) then 
+    CALL read_line( input_line, end_of_file = tend, error = terr )
+    IF (tend) GOTO 10
+    IF (terr) GOTO 20
+    READ(input_line,*, END=10, ERR=20) RoughC(1:RoughN) 
+    !
+  else
+    Call errore( ' card_roughness  ', ' RoughN must be a positive integer ', 2 )
+  end if
+  !
+  trough = .true. 
+  !
+  RETURN
+  !
+10 CALL errore ('card_roughness', ' end of file while reading roughness function ', 1) 
+20 CALL errore ('card_roughness', ' error while reading roughness function', 1) 
+  !
+end subroutine card_roughness
+!----------------------------------------------------------------------------
+subroutine read_xml_input ()
 !
-! read the input file and make all allocations 
+! read the xml input file and make all allocations 
 ! 
-use fouriermod,  ONLY : NMax, allocate_fourier, NC, C, NUser, VecUser
-use idwmod,  ONLY : PMetric, ScaleSphere 
-use qes_read_module, only: qes_read 
-use qes_types_module, only: band_structure_type, atomic_structure_type, symmetries_type, basis_set_type
+USE io_global, ONLY : stdout
+use qes_read_module,  ONLY : qes_read 
+use qes_types_module, ONLY : band_structure_type, atomic_structure_type, symmetries_type, basis_set_type
 use fox_dom 
 implicit none
-  integer :: ik, iq, ib, ikl, ivec
-  integer :: ilines
+  integer :: iq
   integer :: isym
-  character(len=50) :: string
   ! 
-  type (node),pointer      :: doc, pnode1, pnode2 
-  type (band_structure_type) :: bandstr
+  type (node),pointer          :: doc, pnode1, pnode2 
+  type (band_structure_type)   :: bandstr
   type (atomic_structure_type) :: atstr 
   type (symmetries_type)       :: symstr 
   type (basis_set_type)        :: basisstr 
   !
   ! read data from the xml_file 
+  !
   doc => parsefile('pwscf.xml') 
   pnode1 => item(getElementsByTagname(doc, 'output'),0) 
   pnode2 => item(getElementsByTagname(pnode1, 'atomic_structure'),0) 
@@ -78,124 +157,14 @@ implicit none
   call qes_read(pnode2, basisstr)
   call destroy (doc) 
   nullify (doc, pnode1, pnode2) 
-
-  read(*, *) 
-  read(*, *) method
-  write(*,*) 'Interpolation method: ', method
-  if( TRIM(method).ne.'idw'.and.TRIM(method).ne.'idw-sphere'&
-        .and.TRIM(method).ne.'fourier'.and.TRIM(method).ne.'fourier-diff' ) then
-    write(*,*) 'ERROR: Wrong method ', method
-    stop
-  end if 
-  !
-  ! read specific parameters for the interpolation methods
-  ! 
-  if( TRIM(method).eq.'idw') THEN 
-    !
-    ! read parameters for IDW interpolation 
-    ! 
-    PMetric = -1 
-    ScaleSphere = -1.0d0
-    read(*,*)
-    read(*,*) PMetric
-    write(*,*) 'PMetric: ', PMetric
-    if(PMetric.lt.0) THEN  
-      write(*,*) "ERROR: Wrong input for idw method"
-      stop
-    end if 
-    !
-  elseif( TRIM(method).eq.'idw-sphere' ) THEN 
-    !
-    ! read parameters for IDW interpolation inside a sphere
-    ! 
-    PMetric = -1 
-    ScaleSphere = -1.0d0
-    read(*,*)
-    read(*,*) PMetric, ScaleSphere
-    write(*,*) 'PMetric: ', PMetric, 'ScaleSphere ', ScaleSphere 
-    if(PMetric.lt.0.or.ScaleSphere.lt.0.0d0) THEN  
-      write(*,*) "ERROR: Wrong input for IDW-Sphere method"
-      stop
-    end if 
-    !
-  elseif( TRIM(method).eq.'fourier'.or.TRIM(method).eq.'fourier-diff' ) THEN
-    !
-    ! optionally add user-given star functions to the basis set
-    ! 
-    NUser = -1 
-    read(*,*)
-    read(*,*) NUser
-    if(NUser.gt.0) then 
-      write(*,*) NUser, ' user-given star functions found'
-      allocate( VecUser(3,NUser) ) 
-      VecUser = 0.0d0
-      do ivec = 1, NUser
-        read(*,*) VecUser(1:3,ivec) 
-        write(*,'(3f12.6)') VecUser(1:3,ivec)
-      end do 
-    elseif(NUser.eq.0) then 
-      write(*,*) 'No user-given star functions provided'
-    else
-      write(*,*) 'ERROR: Wrong NUser'
-      write(*,*) '       Please provide non-negative NUser'
-      stop
-    end if 
-    !
-    ! read parameters for Fourier interpolation 
-    ! 
-    NMax = -1
-    NC = -1
-    read(*, *) 
-    read(*, *) string, NMax
-    if( NMax.le.0) then 
-      write(*,*) 'Wrong NMax: ', NMax
-      write(*,*) 'NMax must be greater than 0 '
-      stop
-    end if
-    read(*, *) string, NC
-    if( NC.le.0) then 
-      write(*,*) 'Wrong NC: ', NC  
-      write(*,*) 'NC must be greater than 0 '
-      stop
-    end if
-    Call allocate_fourier( )
-    read(*, *) string, C(1:NC)
-    write(*,*) NC, ' coefficients read for rho expansion: ', C(:)
-  end if 
-  !
-  ! read the list of Nkl special points
-  !
-  read(*, *) 
-  read(*, *) Nkl
-  !
-  write(*,*) Nkl, ' special points read'
-  !
-  ! create the abscissa values for bands plotting
-  !  
-  allocate( kl(3,Nkl), kln(Nkl ) )
-  !
-  do ikl = 1, Nkl
-    read(*, *) kl(:,ikl), kln(ikl) 
-    write(*,'(3f12.6,I5)') kl(:,ikl), kln(ikl) 
-  end do 
-  !
-  Nlines = Nkl - 1
-  Nk = sum(kln(1:Nlines)) + 1
-  write(*,*) 'Creating ', Nlines, ' lines connecting ', Nkl, ' special points with ', Nk, ' k-points' 
-  !
-  allocate( k(3,Nk), t(Nk) )
-  !
-  Call build_kpath()
-  !
-  deallocate( kl, kln )
   !
   ! read the uniform grid of q-points from xml
   !
   Nq = bandstr%nks  
   Nb = bandstr%nbnd 
   !
-  write(*,*) Nq, ' points on the uniform grid, ', Nb, ' bands'
-  !write(*,'(A)') 'iq, q(iq, :), e(iq, :)'
+  write(stdout,'(2(I5,A))') Nq, ' points on the uniform grid, ', Nb, ' bands'
+  !write(stdout,'(A)') 'iq, q(iq, :), e(iq, :)'
   !
   allocate( q(3, Nq), eq(Nq, Nb), ek(Nk,Nb)  )
   !
@@ -204,7 +173,7 @@ implicit none
   end do 
   do iq = 1, Nq
     eq(iq,:) = bandstr%ks_energies(iq)%eigenvalues%vector(:)*27.211386245988 
-    !write(*,'(I5,11f12.6)') iq, q(iq, :), eq(iq, :)
+    !write(stdout, '(I5,11f12.6)') iq, q(iq, :), eq(iq, :)
   end do 
   !
   ! read from xml crystalline group specifications 
@@ -213,19 +182,19 @@ implicit none
   at(1:3,1) = atstr%cell%a1 / atstr%alat
   at(1:3,2) = atstr%cell%a2 / atstr%alat 
   at(1:3,3) = atstr%cell%a3 / atstr%alat
-  write(*,*) ' Crystal lattice vectors found  '
-  write(*,*) 'Ra: ' , at(:,1)
-  write(*,*) 'Rb: ' , at(:,2)
-  write(*,*) 'Rc: ' , at(:,3)
+  write(stdout,'(A)')        ' Crystal lattice vectors found  '
+  write(stdout,'(A,3f12.6)') 'Ra: ' , at(:,1)
+  write(stdout,'(A,3f12.6)') 'Rb: ' , at(:,2)
+  write(stdout,'(A,3f12.6)') 'Rc: ' , at(:,3)
   bg(1:3,1) = basisstr%reciprocal_lattice%b1
   bg(1:3,2) = basisstr%reciprocal_lattice%b2
   bg(1:3,3) = basisstr%reciprocal_lattice%b3  
-  write(*,*) ' Reciprocal lattice vectors found  '
-  write(*,*) 'Ga: ' , bg(:,1)
-  write(*,*) 'Gb: ' , bg(:,2)
-  write(*,*) 'Gc: ' , bg(:,3)
+  write(stdout,'(A)')        ' Reciprocal lattice vectors found  '
+  write(stdout,'(A,3f12.6)') 'Ga: ' , bg(:,1)
+  write(stdout,'(A,3f12.6)') 'Gb: ' , bg(:,2)
+  write(stdout,'(A,3f12.6)') 'Gc: ' , bg(:,3)
   Nsym = symstr%nsym   
-  write(*,*) Nsym, ' symmetry operations found '
+  write(stdout,'(I5,A)') Nsym, ' symmetry operations found '
   !
   allocate( Op(3,3,Nsym), Op_tmp(3,3,Nsym) )
   !
@@ -237,7 +206,7 @@ implicit none
   !
   return
   !
-end subroutine read_input 
+end subroutine read_xml_input 
 !----------------------------------------------------------------------------
 subroutine build_kpath ()
 !
