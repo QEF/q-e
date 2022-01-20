@@ -28,19 +28,16 @@ save
   !
 CONTAINS
 !----------------------------------------------------------------------------
-subroutine idw(iwhat, Nb, Nq, q, eq, Nk, k, ek, at, bg)
+subroutine idw(iwhat)
 !
 ! compute the band structure with IDW interpolation
 ! iwhat = 1 ... basic IDW method
 !         2 ... modified method with the sphere radius
 !
+USE globalmod, ONLY : Nb, Nq, q, eq, ek, at, bg
+USE input_parameters, ONLY : nkstot, xk
 implicit none
   integer, intent(in) :: iwhat 
-  real(dp), intent(in) :: at(3,3) 
-  real(dp), intent(in) :: bg(3,3) 
-  integer, intent(in) :: Nq, Nk, Nb
-  real(dp), intent(in) :: q(3,Nq), k(3,Nk), eq(Nq,Nb)
-  real(dp), intent(out) :: ek(Nk,Nb)
   ! local variables
   real(dp) :: w, d, dsum, esum, dthr, R, Rtmp, Rmin, Rvec(3)
   integer :: ib, iq, jq, ik, NCount(2)
@@ -51,7 +48,7 @@ implicit none
   else
     write(*,'(A)') '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
     write(*,'(A)') 'Inverse distance weighting (IDW) interpolation method'
-    write(*,'(4(A,I5))') 'iwhat: ',iwhat, ' Nb: ',Nb, ' Nq: ',Nq, ' Nk: ',Nk 
+    write(*,'(4(A,I5))') 'iwhat: ',iwhat, ' Nb: ',Nb, ' Nq: ',Nq, ' Nk: ',nkstot
   end if 
   !
   if(iwhat.eq.2) then 
@@ -80,7 +77,7 @@ implicit none
   ek = 0.0d0
   !
   do ib = 1, Nb
-    do ik = 1, Nk
+    do ik = 1, nkstot
       !
       dsum = 0.0d0
       esum = 0.0d0
@@ -88,7 +85,7 @@ implicit none
       do iq = 1, Nq
         !
         ! d is the distance within the minimum image convention
-        Rvec(:) = k(:,ik) - q(:,iq)
+        Rvec(:) = xk(:,ik) - q(:,iq)
         CALL cryst_to_cart( 1, Rvec, at, 1 )
         Rvec(:) = Rvec(:) - ANINT( Rvec(:) )
         CALL cryst_to_cart( 1, Rvec, bg, -1 )
@@ -120,7 +117,7 @@ implicit none
       ek(ik,ib) = esum / dsum
       !
       if(dsum.lt.dthr) then 
-        write(*,'(A,3f12.6)') 'ERROR: no uniform grid points found for k-point:', k(:,ik)
+        write(*,'(A,3f12.6)') 'ERROR: no uniform grid points found for k-point:', xk(:,ik)
         write(*,'(A)')        '       increase the search radius and check nosym=true in SCF ' 
         write(*,'(2I5, 3f12.6, 2I5)') ib, ik, esum, dsum, ek(ik, ib), NCount(:)
         stop

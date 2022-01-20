@@ -11,11 +11,9 @@
 !
 !----------------------------------------------------------------------------
 program band_interpolation 
-use globalmod,         ONLY : print_bands, read_xml_input, at, bg, method, &
-                                ek,  eq, Nb, Nq, NSym, q, Op, deallocate_global
-use idwmod,            ONLY : idw
-use fouriermod,        ONLY : fourier, fourierdiff
-use input_parameters,  ONLY : xk, nkstot 
+USE globalmod,         ONLY : print_bands, read_xml_input, method, deallocate_global 
+USE idwmod,            ONLY : idw
+USE fouriermod,        ONLY : fourier, fourierdiff
 USE mp_global,         ONLY : mp_startup
 implicit none
   !
@@ -31,23 +29,21 @@ implicit none
   !
   Call read_xml_input ()
   !
-  ek = 0.0d0
-  !
   if(TRIM(method).eq.'idw') then 
     !
-    Call idw (1, Nb, Nq, q, eq, nkstot, xk, ek, at, bg)
+    Call idw (1)
     !
   elseif(TRIM(method).eq.'idw-sphere') then 
     !
-    Call idw (2, Nb, Nq, q, eq, nkstot, xk, ek, at, bg)
+    Call idw (2)
     !
   elseif(TRIM(method).eq.'fourier') then 
     !
-    Call fourier (Nb, Nq, q, eq, nkstot, xk, ek, Nsym, at, bg, Op)
+    Call fourier ()
     !
   elseif(TRIM(method).eq.'fourier-diff') then 
     !
-    Call fourierdiff (Nb, Nq, q, eq, nkstot, xk, ek, Nsym, at, bg, Op)
+    Call fourierdiff ()
     !
   else
     !
@@ -57,8 +53,6 @@ implicit none
   end if
   !
   Call print_bands (TRIM(method))
-  !
-  deallocate( xk )
   !
   Call deallocate_global ()
   !

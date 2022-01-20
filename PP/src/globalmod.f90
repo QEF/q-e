@@ -122,8 +122,9 @@ implicit none
 end subroutine read_xml_input 
 !----------------------------------------------------------------------------
 subroutine deallocate_global ()
+USE input_parameters, ONLY : xk
 implicit none
-  deallocate(q, eq, ek, Op)
+  deallocate(q, eq, ek, Op, xk)
 end subroutine deallocate_global
 !----------------------------------------------------------------------
 SUBROUTINE s_axis_to_cart()

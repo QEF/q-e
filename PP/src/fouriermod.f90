@@ -34,21 +34,16 @@ save
   !
 CONTAINS
 !----------------------------------------------------------------------------
-subroutine fourierdiff(Nb, Nq, q, eq, Nk, k, ek, Nsym, at, bg, Op)
+subroutine fourierdiff()
 !
 ! compute the band structure with Fourier interpolation from
 ! Pickett W. E., Krakauer H., Allen P. B., Phys. Rev. B, vol. 38, issue 4, page 2721, 1988 
 !
+USE globalmod,        ONLY : Nq, Nb, Nsym, q, eq, at, bg, Op, ek
+USE input_parameters, ONLY : nkstot, xk
 implicit none
-  integer,  intent(in) :: Nq, Nk, Nb, Nsym
-  real(dp), intent(in) :: q(3,Nq), k(3,Nk), eq(Nq,Nb)
-  real(dp), intent(in) :: at(3,3) 
-  real(dp), intent(in) :: bg(3,3) 
-  real(dp), intent(in) :: Op(1:3,1:3,1:Nsym)
-  real(dp), intent(out) :: ek(Nk,Nb)
   !
   ! local variables
-  !
   integer :: Na, ib, ik
   complex(dp), allocatable :: fStarsOnQ(:,:) ! Star functions at uniform q-points
   complex(dp), allocatable :: fStarsOnK(:,:) ! Star functions at path of k-points 
@@ -59,12 +54,6 @@ implicit none
   real(dp) :: vec(3)
   complex(dp) :: fStar
   !
-  ! for matrix inversion
-  complex(dp), allocatable :: matQQ_(:,:)     
-  real(dp), allocatable :: rmatQQ(:,:)     
-  real(dp), allocatable :: rmatQQ_(:,:)     
-  real(dp), allocatable :: rmatJ(:,:)     
-  ! 
   ! for linear system solution
   integer :: INFO, istar, NCoeff
   integer, allocatable :: IPIV(:)
@@ -135,16 +124,16 @@ implicit none
   !write(*,*) 'Computing bands...'  
   ! fStarsOnK = S_m(k) 
   write(*,*) 'Computing the Star functions values at the requested bands k-points (fStarsOnK)'
-  allocate( fStarsOnK(Nk,NStars), ek_c(Nk,Nb) )
+  allocate( fStarsOnK(nkstot,NStars), ek_c(nkstot,Nb) )
   fStarsOnK = (Zero, Zero)
-  Call compute_stars(fStarsOnK, Nk, Nk, k, NSym, Op, 0) 
+  Call compute_stars(fStarsOnK, nkstot, nkstot, xk, NSym, Op, 0) 
   ek_c = (Zero, Zero)
-  Call ZGEMM('N', 'N', Nk, Nb, NStars, (One, Zero), fStarsOnK, Nk, matC, NStars, (Zero, Zero), ek_c, Nk)
+  Call ZGEMM('N', 'N', nkstot, Nb, NStars, (One, Zero), fStarsOnK, nkstot, matC, NStars, (Zero, Zero), ek_c, nkstot)
   !
   ! now add the C1 coefficient
   vec(1:3) = Zero
-  do ik = 1, Nk
-    fStar = star_function(0, k(1:3,ik), vec, NSym, Op)
+  do ik = 1, nkstot
+    fStar = star_function(0, xk(1:3,ik), vec, NSym, Op)
     do ib = 1, Nb
       ek_c(ik, ib) = ek_c(ik, ib) + matC1(ib) * fStar  
     end do 
@@ -162,21 +151,16 @@ implicit none
   !
 end subroutine fourierdiff
 !----------------------------------------------------------------------------
-subroutine fourier(Nb, Nq, q, eq, Nk, k, ek, Nsym, at, bg, Op)
+subroutine fourier( )
 !
 ! compute the band structure with Fourier interpolation from
 ! D. D. Koelling, J. H. Wood, J. Comput. Phys., 67, 253-262 (1986)
 !
+USE globalmod, ONLY : Nq, Nb, Nsym, q, eq, at, bg, Op, ek
+USE input_parameters, ONLY : nkstot, xk
 implicit none
-  integer,  intent(in) :: Nq, Nk, Nb, Nsym
-  real(dp), intent(in) :: q(3,Nq), k(3,Nk), eq(Nq,Nb)
-  real(dp), intent(in) :: at(3,3) 
-  real(dp), intent(in) :: bg(3,3) 
-  real(dp), intent(in) :: Op(1:3,1:3,1:Nsym)
-  real(dp), intent(out) :: ek(Nk,Nb)
   !
   ! local variables
-  !
   complex(dp), allocatable :: fStarsOnQ(:,:) ! Star functions at uniform q-points
   complex(dp), allocatable :: fStarsOnK(:,:) ! Star functions at path of k-points 
   complex(dp), allocatable :: matQQ(:,:)     ! this is exactly H in the reference article
@@ -230,25 +214,25 @@ implicit none
   ! fStarsOnK = S_m(k) / sqrt(rho_m)
   !write(*,*) 'Computing fStarsOnK...'
   write(*,*) 'Computing the Star functions values at the requested bands k-points (fStarsOnK)'
-  allocate( fStarsOnK(Nk,NStars) )
+  allocate( fStarsOnK(nkstot,NStars) )
   fStarsOnK = (Zero, Zero)
-  Call compute_stars(fStarsOnK, Nk, Nk, k, NSym, Op, 2) 
+  Call compute_stars(fStarsOnK, nkstot, nkstot, xk, NSym, Op, 2) 
   !
   ! matKQ = fStarsOnK * fStarsOnQ^T
-  allocate(matKQ(Nk,Nq))
+  allocate(matKQ(nkstot,Nq))
   matKQ = (Zero, Zero)
-  Call ZGEMM('N', 'C', Nk, Nq, NStars, (One,Zero), fStarsOnK, Nk, fStarsOnQ, Nq, (Zero,Zero), matKQ, Nk)
+  Call ZGEMM('N', 'C', nkstot, Nq, NStars, (One,Zero), fStarsOnK, nkstot, fStarsOnQ, Nq, (Zero,Zero), matKQ, nkstot)
   !
   ! matJ = matKQ * matQQ^(-1)
-  allocate(matJ(Nk,Nq))
+  allocate(matJ(nkstot,Nq))
   matJ = (Zero, Zero)
-  Call ZGEMM('N', 'N', Nk, Nq, Nq, (One,Zero), matKQ, Nk, matQQ, Nq, (Zero,Zero), matJ, Nk)
+  Call ZGEMM('N', 'N', nkstot, Nq, Nq, (One,Zero), matKQ, nkstot, matQQ, Nq, (Zero,Zero), matJ, nkstot)
   !
   ! e(k) = matJ * e(q)
-  allocate(ek_c(Nk,Nb), eq_c(Nq,Nb))
+  allocate(ek_c(nkstot,Nb), eq_c(Nq,Nb))
   eq_c(:,:) = (One,Zero) * eq(:,:)
   ek_c(:,:) = (Zero,Zero)
-  Call ZGEMM('N', 'N', Nk, Nb, Nq, (One,Zero), matJ, Nk, eq_c, Nq, (Zero,Zero), ek_c, Nk)
+  Call ZGEMM('N', 'N', nkstot, Nb, Nq, (One,Zero), matJ, nkstot, eq_c, Nq, (Zero,Zero), ek_c, nkstot)
   !
   ek(:,:) = dble(ek_c(:,:))
   !
