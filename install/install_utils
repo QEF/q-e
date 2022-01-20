@@ -17,22 +17,31 @@
 ###########################################################
 
 define download_and_unpack
-  @(if test ! -s ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` && test ! -e ../$(3) ; then \
-  wget -O ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
-  if test "`echo $$?`" -ne "0" ; then \
-  curl -o ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
-  if test "`echo $$?`" -ne "0" ; then \
-  echo "*** Unable to download $(4). Test whether curl or wget is installed and working," ; \
-  echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-  echo "*** located here $(2)" ; \
-  exit 1 ; fi ; fi ; fi)
-  if test ! -e ../$(3); then \
-  (gzip -dc ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` | \
+  @(
+  if ! gzip -t ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` > /dev/null 2>&1 ; then \
+    rm -fr ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'`; \
+    rm -fr ../$(3); \
+    wget -O ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
+    if [ $$? -ne 0 ]; then \
+      curl -o ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
+      if [ $$? -ne 0 ]; then \
+        echo "*** Unable to download $(4). Test whether curl or wget is installed and working," ; \
+        echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+        echo "*** located here $(2)" ; \
+        exit 1 ; \
+      fi ; \
+    fi ; \
+  fi
+  ) ; \
+  if [ $$? -eq 0 -a ! -e ../$(3) ]; then \
+    (gzip -dc ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` | \
     (cd ../ ; tar -xvf - ) ) ; \
-  if test "`echo $$?`" -ne "0" ; then \
-  echo "*** Unable to download $(2)." ; \
-  echo "*** Verify that the url is correct." ; \
-  exit 1 ; \
-  else \
-  (cd ../ ; ln -s $(1) $(3)) ; fi ; fi
+    if [ $$? -ne 0 ]; then \
+      echo "*** Unable to download $(2)." ; \
+      echo "*** Verify that the url is correct." ; \
+      exit 1 ; \
+    else \
+      (cd ../ ; ln -s $(1) $(3)) ; \
+    fi ; \
+  fi
 endef
