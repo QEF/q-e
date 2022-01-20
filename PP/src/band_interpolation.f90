@@ -14,8 +14,7 @@ program band_interpolation
 use globalmod,         ONLY : print_bands, read_xml_input, at, bg, method, &
                                 ek,  eq, Nb, Nq, NSym, q, Op, deallocate_global
 use idwmod,            ONLY : idw
-use fouriermod,        ONLY : fourier
-use fourierdiffmod,    ONLY : fourierdiff
+use fouriermod,        ONLY : fourier, fourierdiff
 use input_parameters,  ONLY : xk, nkstot 
 USE mp_global,         ONLY : mp_startup
 implicit none

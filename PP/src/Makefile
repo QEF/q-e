@@ -52,10 +52,9 @@ write_p_avg.o \
 write_proj.o \
 write_io_header.o \
 write_hamiltonians.o \
+globalmod.o \
 fouriermod.o \
 idwmod.o \
-globalmod.o \
-fourierdiffmod.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
