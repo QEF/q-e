@@ -339,10 +339,11 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, tempunit, i, j
+  INTEGER  :: ia, nt, tempunit, i, j, ibrav_mp
   LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
+  INTEGER, EXTERNAL :: at2ibrav
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -1417,7 +1418,21 @@ SUBROUTINE iosys()
   !
   IF (.NOT. tqmmm) CALL qmmm_config( mode=-1 )
   !
-  ! BOUNDARY CONDITIONS, ESM
+  ! ATOMIC POSITIONS
+  !
+  ! init_pos replaces old "read_cards_pw
+  !
+  CALL init_pos ( psfile, tau_format )
+  ! next two lines should be moved out from here
+  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
+  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) 
+  !
+  ! CRYSTAL LATTICE
+  !
+  call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
+                        trd_ht, rd_ht, cell_units )
+  !
+  ! BOUNDARY CONDITIONS (MP correction depends on at set in cell_base_init), ESM
   !
   do_makov_payne  = .false.
   do_comp_mt      = .false.
@@ -1429,7 +1444,9 @@ SUBROUTINE iosys()
     CASE( 'makov-payne', 'm-p', 'mp' )
       !
       do_makov_payne = .true.
-      IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
+      ibrav_mp = ibrav
+      IF ( ibrav .EQ. 0 ) ibrav_mp = at2ibrav(at(:, 1), at(:, 2), at(:, 3))
+      IF ( ibrav_mp < 1 .OR. ibrav_mp > 3 ) CALL errore(' iosys', &
               'Makov-Payne correction defined only for cubic lattices', 1)
       !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
@@ -1466,7 +1483,7 @@ SUBROUTINE iosys()
   esm_bc_ = esm_bc
   esm_efield_ = esm_efield
   esm_w_ = esm_w
-  esm_nfit_ = esm_nfit 
+  esm_nfit_ = esm_nfit
   esm_a_ = esm_a
   !
   IF ( esm_bc .EQ. 'bc4' ) THEN
@@ -1481,21 +1498,6 @@ SUBROUTINE iosys()
       CALL errore ('iosys','smoothness parameter for bc4 too big',1)
     ENDIF
   ENDIF
-  !
-  !
-  ! ATOMIC POSITIONS
-  !
-  ! init_pos replaces old "read_cards_pw
-  !
-  CALL init_pos ( psfile, tau_format )
-  ! next two lines should be moved out from here
-  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
-  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) 
-  !
-  ! CRYSTAL LATTICE
-  !
-  call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                        trd_ht, rd_ht, cell_units )
   !
   ! ... once input variables have been stored, read optional plugin input files
   !
