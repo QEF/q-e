@@ -1,0 +1,26 @@
+ &control
+    calculation = 'bands'
+    verbosity = 'high'
+ /
+ &system
+    ibrav=2, celldm(1) =10.20, 
+    nat=2, ntyp=1,
+    ecutwfc=40.0,
+    input_dft='pbe',
+    nbnd = 8, 
+ /
+ &electrons
+   startingpot='file'
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS alat
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+K_POINTS tpiba_b
+  5
+  0.00  0.00  0.00 10
+  1.00  0.00  0.00 10
+  1.00  0.25  0.25 10
+  0.50  0.50  0.50 10
+  0.00  0.00  0.00 2
