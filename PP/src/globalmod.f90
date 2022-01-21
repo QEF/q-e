@@ -164,6 +164,7 @@ implicit none
   write(formt,'(A,I5,A)') '(', Nb+1 ,'f24.6)'  
   write(filename, '(A,A)')  TRIM(label),'.dat'
   !
+  write(stdout,'(A)') ' '
   write(stdout,'(A,A)') 'writing band structure on ', filename
   !
   open(2, file=filename, status='unknown')

@@ -50,6 +50,13 @@ implicit none
     write(stdout,'(A)') '--- Inverse distance weighting (IDW) interpolation method ---'
     write(stdout,'(A)') ''
     !write(stdout,'(4(A,I5))') 'iwhat: ',iwhat, ' Nb: ',Nb, ' Nq: ',Nq, ' Nk: ',nkstot
+    if(p_metric.eq.1) then 
+       write(stdout,'(A)') 'The inverse distance will be used in weights (p_metric = 1) ' 
+    elseif(p_metric.eq.2) then 
+       write(stdout,'(A)') 'The squared inverse distance will be used in weights (p_metric = 2)' 
+    else 
+       write(stdout,'(A,I5,A)') 'The inverse distance to the ', p_metric, 'th power will be used in weights' 
+    end if 
   end if 
   !
   if(iwhat.eq.2) then 
@@ -70,7 +77,9 @@ implicit none
       end do 
     end do 
     R = scale_sphere * Rmin
-    write(stdout,'(2(A,f12.6))') 'Minimum spacing between the uniform grid points: ', Rmin, ' Scaled sphere radius: ', R
+    write(stdout,'(A,f12.6)') 'Input scale factor: ', scale_sphere 
+    write(stdout,'(A,f12.6,A)') 'Minimum spacing between the uniform grid points: ', Rmin, ' (cart. coord. in units 2 pi/alat)'
+    write(stdout,'(A,f12.6,A)') 'Scaled sphere radius: ', R, ' (cart. coord. in units 2 pi/alat)'
   end if 
   !
   dthr = 0.0000010d0
