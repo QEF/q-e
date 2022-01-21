@@ -3,6 +3,8 @@ This example shows how to use pw.x and band_interpolation.x
 to calculate the band structure of Silicon using PBE and 
 hybrid PBE0 functional.
 
+pwscf.xml files are compressed (as filexml.tar.gz) in each folder
+
 --------------------------------------------------------------------------------
 in pbe_reference_bands/ the reference PBE bands have been computed with 
 
