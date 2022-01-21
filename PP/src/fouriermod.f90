@@ -70,7 +70,8 @@ implicit none
   write(stdout,'(A)') ''
   write(stdout,'(A)') '--- Fourier difference interpolation method ---'
   write(stdout,'(A)') ''
-  if(check_periodicity) write(stdout,'(A)') 'Checking Star functions periodicity (WARNING: time consuming)' 
+  !
+  Call print_rough ()
   !
   Na = Nq - 1  ! dimension of the linear system 
   !
@@ -86,7 +87,7 @@ implicit none
   Call find_stars(NSym, Op, at, .true.) 
   !
   if(check_periodicity) then 
-    write(stdout,'(A)') 'Checking the Star functions periodicity'
+    write(stdout,'(A)') 'Checking Star functions periodicity (WARNING: time consuming)' 
     Call check_stars(Nq, q, NSym, Op, bg) 
   end if 
   !
@@ -177,12 +178,14 @@ implicit none
   write(stdout,'(A)') ''
   write(stdout,'(A)') '--- Fourier interpolation method ---'
   write(stdout,'(A)') ''
-  if(check_periodicity) write(stdout,'(A)') 'Checking Star functions periodicity (WARNING: time consuming)' 
+  !
+  Call print_rough ()
+  !
   write(stdout,'(A)') 'Computing the Star functions basis set'
   Call find_stars(NSym, Op, at) 
   !
   if(check_periodicity) then 
-    write(stdout,'(A)') 'Checking the Star functions periodicity...'
+    write(stdout,'(A)') 'Checking Star functions periodicity (WARNING: time consuming)' 
     Call check_stars(Nq, q, NSym, Op, bg) 
   end if 
   !
@@ -673,6 +676,7 @@ use parser,       ONLY : read_line
 implicit none
   LOGICAL            :: tend,terr
   CHARACTER(len=256) :: input_line
+  integer            :: ii
   !
   IF ( trough ) THEN
      CALL errore( ' card_roughness  ', ' two occurrences', 2 )
@@ -686,13 +690,21 @@ implicit none
   if(RoughN.gt.1) then 
     deallocate( RoughC ) 
     allocate( RoughC(RoughN) ) 
+    ! this is a reasonable default in case one specifies RoughN and not enough values of RoughC
+    do ii = 1, RoughN
+      RoughC(ii) = One/dble(ii)
+    end do 
   end if 
   !
   if(RoughN.gt.0) then 
     CALL read_line( input_line, end_of_file = tend, error = terr )
     IF (tend) GOTO 10
     IF (terr) GOTO 20
-    READ(input_line,*, END=10, ERR=20) RoughC(1:RoughN) 
+    IF ( trim(adjustl(input_line)) .eq. 'automatic' ) THEN
+      write(stdout, '(A)') 'Roughness coefficients not found. Default coefficients will be used.' 
+    ELSE
+      READ(input_line,*, END=11, ERR=21) RoughC(1:RoughN) 
+    END IF
     !
   else
     Call errore( ' card_roughness  ', ' RoughN must be a positive integer ', 2 )
@@ -704,8 +716,57 @@ implicit none
   !
 10 CALL errore ('card_roughness', ' end of file while reading roughness function ', 1) 
 20 CALL errore ('card_roughness', ' error while reading roughness function', 1) 
+11 CALL errore ('card_roughness', ' end of file while reading roughness function coefficients', 1) 
+21 CALL errore ('card_roughness', ' error while reading roughness function coefficients', 1) 
   !
 end subroutine card_roughness
+!----------------------------------------------------------------------------
+subroutine print_rough () 
+! print the employed roughness functional for arbitrary RoughN: 
+!    RoughN = 1 ... sum_m |e_m|^2 (RougC(1))
+!             2 ... sum_m |e_m|^2 (RougC(1) + RoughC(2) R_m^2 )
+!             3 ... sum_m |e_m|^2 (RougC(1) + RoughC(2) R_m^2 + RoughC(3) R_m^4 )
+!             4 ... sum_m |e_m|^2 (RougC(1) + RoughC(2) R_m^2 + RoughC(3) R_m^4 + RoughC(4) R_m^6 )
+!             ...
+implicit none
+  character(len=80) :: num, coef
+  character(len=256) :: string
+  integer :: icoef , indx
+  !
+  !
+  num = ''
+  string = ''
+  coef = ''
+  !
+  write(num,'(f8.4)') RoughC(1)
+  string = ' sum_m |e_m|^2 ( ' // TRIM(adjustl(num)) // '#'
+  indx = index(string,'#')
+  !
+  if(RoughN.gt.1) then 
+    !
+    do icoef = 2, RoughN 
+      num = ''
+      coef = ''
+      write(num,'(f8.4)') RoughC(icoef) 
+      write(coef,'(I3)') 2*(icoef-1)
+      indx = index(string,'#')-1
+      string = string(1:indx) // ' + ' // TRIM(adjustl(num)) // ' * R_m^' // TRIM(adjustl(coef)) // '#'
+      indx = index(string,'#')
+    end do 
+    ! 
+  end if 
+  !
+  indx = index(string,'#')-1
+  string = string(1:indx) // ' )#' 
+  !
+  indx = index(string,'#')-1
+  write(stdout,'(A)')    'Roughness functional that will be minimized: ' 
+  write(stdout,'(5X,A)') string(1:indx)
+  write(stdout,'(A)')    ' ' 
+  !
+  return
+  !
+end subroutine
 !----------------------------------------------------------------------------
 END MODULE
 !----------------------------------------------------------------------------
