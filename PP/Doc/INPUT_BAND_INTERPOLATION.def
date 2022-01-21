@@ -60,17 +60,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program band_
                 opt -val 'fourier-diff' {
                     band energies, as functions of k, are expanded in reciprocal space using a Star function basis set 
 		    (algorithm from Pickett W. E., Krakauer H., Allen P. B., Phys. Rev. B, vol. 38, issue 4, page 2721, 1988, 
-		     https://link.aps.org/doi/10.1103/PhysRevB.38.2721 )}
+		     https://link.aps.org/doi/10.1103/PhysRevB.38.2721 ).
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .false. . }
                 opt -val 'fourier' {
                     band energies, as functions of k, are expanded in reciprocal space using a Star function basis set 
 		    (algorithm from D. D. Koelling, J. H. Wood, J. Comput. Phys., 67, 253-262 (1986). 
-		     https://ui.adsabs.harvard.edu/abs/1986JCoPh..67..253K }
+		     https://ui.adsabs.harvard.edu/abs/1986JCoPh..67..253K ). 
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .false. . }
                 opt -val 'idw' {
                     inverse distance weighting interpolation with Shepard metric 
 		    (ACM 68: Proceedings of the 1968 23rd ACM national conference, January 1968, Pages 517–524, 
-		     https://doi.org/10.1145/800186.810616  ) }
+		     https://doi.org/10.1145/800186.810616 ).
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .true. . 
+		    WARNING: This method is REALLY simple and provides only a very rough estimate of the band structure. }
                 opt -val 'idw-sphere' {
-                    inverse distance weighting interpolation inside a sphere of given radius }
+                    inverse distance weighting interpolation inside a sphere of given radius. 
+		    WARNING: The pwscf.xml file must be generated with @ref nosym == .true. . 
+		    WARNING: This method is REALLY simple and provides only a very rough estimate of the band structure. }
 	    }
 	}
 
