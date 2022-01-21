@@ -11,6 +11,8 @@
 !
 !----------------------------------------------------------------------------
 MODULE idwmod
+  USE kinds,            ONLY : dp
+  USE io_global,        ONLY : stdout
 !
 ! An inverse distance weighting (idw) interpolation is computed here, using the metric proposed by Shepard 
 ! (ACM '68: Proceedings of the 1968 23rd ACM national conferenceJanuary 1968 Pages 517–524, 
@@ -19,8 +21,6 @@ MODULE idwmod
 !
 implicit none
 save
-  !
-  integer, parameter :: dp = selected_real_kind(14,200)  
   !
   integer :: p_metric   ! metric for the (inverse) distance 
   !
@@ -43,12 +43,13 @@ implicit none
   integer :: ib, iq, jq, ik, NCount(2)
   !
   if (iwhat.ne.1.and.iwhat.ne.2) then
-    write(*,*) 'wrong iwhat in IDW method'
+    write(stdout,'(A)') 'wrong iwhat in IDW method'
     stop
   else
-    write(*,'(A)') '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    write(*,'(A)') 'Inverse distance weighting (IDW) interpolation method'
-    write(*,'(4(A,I5))') 'iwhat: ',iwhat, ' Nb: ',Nb, ' Nq: ',Nq, ' Nk: ',nkstot
+    write(stdout,'(A)') ''
+    write(stdout,'(A)') '--- Inverse distance weighting (IDW) interpolation method ---'
+    write(stdout,'(A)') ''
+    !write(stdout,'(4(A,I5))') 'iwhat: ',iwhat, ' Nb: ',Nb, ' Nq: ',Nq, ' Nk: ',nkstot
   end if 
   !
   if(iwhat.eq.2) then 
@@ -69,7 +70,7 @@ implicit none
       end do 
     end do 
     R = scale_sphere * Rmin
-    write(*,*) 'Sphere radius: ', Rmin, ' Scaled sphere radius: ', R
+    write(stdout,'(2(A,f12.6))') 'Minimum spacing between the uniform grid points: ', Rmin, ' Scaled sphere radius: ', R
   end if 
   !
   dthr = 0.0000010d0
@@ -110,22 +111,20 @@ implicit none
         else
           ek(ik,ib) = eq(iq,ib)
           NCount(1) = NCount(1) + 1 
-          !write(*,*) ib, ik, iq, ' found', d
           go to 10  
         end if
       end do 
       ek(ik,ib) = esum / dsum
       !
       if(dsum.lt.dthr) then 
-        write(*,'(A,3f12.6)') 'ERROR: no uniform grid points found for k-point:', xk(:,ik)
-        write(*,'(A)')        '       increase the search radius and check nosym=true in SCF ' 
-        write(*,'(2I5, 3f12.6, 2I5)') ib, ik, esum, dsum, ek(ik, ib), NCount(:)
-        stop
+        write(stdout,'(A,3f12.6)') 'no uniform grid points found for k-point:', xk(:,ik)
+        write(stdout,'(A)')        'increase the search radius and check nosym=true in SCF ' 
+        write(stdout,'(2I5, 3f12.6, 2I5)') ib, ik, esum, dsum, ek(ik, ib), NCount(:)
+        Call errore( 'idw ', ' wrong sphere radius ', 1 )
       endif
       !
 10    continue
       !
-!write(*,*) ib, ik, iq, esum, dsum, ek(ik, ib)
     end do      
   end do 
   !

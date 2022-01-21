@@ -11,7 +11,8 @@
 !
 !----------------------------------------------------------------------------
 MODULE globalmod
-  USE kinds,                ONLY : dp
+  USE kinds,            ONLY : dp
+  USE io_global,        ONLY : stdout
 implicit none
   ! 
   ! a string describing the method used for interpolation  
@@ -21,11 +22,11 @@ implicit none
   integer :: Nb
   !
   ! uniform grid of q-points in the IBZ (cart. coord. in units 2pi/alat)
-  integer :: Nq, Nlines
+  integer :: Nq
   real(dp), allocatable :: q(:,:), eq(:,:)
   ! 
-  ! path of k-points in the IBZ
-  real(dp), allocatable :: k(:,:), ek(:,:)
+  ! band energies of the path of k-points in the IBZ
+  real(dp), allocatable :: ek(:,:)
   !
   ! Crystal data 
   real(dp) :: at(3,3)   ! real-space lattice translation vectors (cart. coord. in units of alat) a_i(:) = at(:,i)/alat
@@ -41,7 +42,6 @@ subroutine read_xml_input ()
 !
 ! read the xml input file and make all allocations 
 ! 
-USE io_global,        ONLY : stdout
 use qes_read_module,  ONLY : qes_read 
 use qes_types_module, ONLY : band_structure_type, atomic_structure_type, symmetries_type, basis_set_type
 use fox_dom 
@@ -76,7 +76,7 @@ implicit none
   Nq = bandstr%nks  
   Nb = bandstr%nbnd 
   !
-  write(stdout,'(2(I5,A))') Nq, ' points on the uniform grid, ', Nb, ' bands'
+  write(stdout,'(A,2(I5,A))') 'The uniform grid contains ', Nq, ' q-points and ', Nb, ' bands'
   !write(stdout,'(A)') 'iq, q(iq, :), e(iq, :)'
   !
   allocate( q(3, Nq), eq(Nq, Nb), ek(nkstot,Nb)  )
@@ -85,7 +85,7 @@ implicit none
     q(:,iq) = bandstr%ks_energies(iq)%k_point%k_point(:) 
   end do 
   do iq = 1, Nq
-    eq(iq,:) = bandstr%ks_energies(iq)%eigenvalues%vector(:)*27.211386245988 
+    eq(iq,:) = bandstr%ks_energies(iq)%eigenvalues%vector(:)*27.2113862459880d0 
     !write(stdout, '(I5,11f12.6)') iq, q(iq, :), eq(iq, :)
   end do 
   !
@@ -96,16 +96,16 @@ implicit none
   at(1:3,2) = atstr%cell%a2 / atstr%alat 
   at(1:3,3) = atstr%cell%a3 / atstr%alat
   write(stdout,'(A)')        ' Crystal lattice vectors found  '
-  write(stdout,'(A,3f12.6)') 'Ra: ' , at(:,1)
-  write(stdout,'(A,3f12.6)') 'Rb: ' , at(:,2)
-  write(stdout,'(A,3f12.6)') 'Rc: ' , at(:,3)
+  write(stdout,'(A,3f12.4)') '      Ra: ' , at(:,1)
+  write(stdout,'(A,3f12.4)') '      Rb: ' , at(:,2)
+  write(stdout,'(A,3f12.4)') '      Rc: ' , at(:,3)
   bg(1:3,1) = basisstr%reciprocal_lattice%b1
   bg(1:3,2) = basisstr%reciprocal_lattice%b2
   bg(1:3,3) = basisstr%reciprocal_lattice%b3  
   write(stdout,'(A)')        ' Reciprocal lattice vectors found  '
-  write(stdout,'(A,3f12.6)') 'Ga: ' , bg(:,1)
-  write(stdout,'(A,3f12.6)') 'Gb: ' , bg(:,2)
-  write(stdout,'(A,3f12.6)') 'Gc: ' , bg(:,3)
+  write(stdout,'(A,3f12.4)') '      Ga: ' , bg(:,1)
+  write(stdout,'(A,3f12.4)') '      Gb: ' , bg(:,2)
+  write(stdout,'(A,3f12.4)') '      Gc: ' , bg(:,3)
   Nsym = symstr%nsym   
   write(stdout,'(I5,A)') Nsym, ' symmetry operations found '
   !
@@ -164,7 +164,7 @@ implicit none
   write(formt,'(A,I5,A)') '(', Nb+1 ,'f24.6)'  
   write(filename, '(A,A)')  TRIM(label),'.dat'
   !
-  write(*,*) 'writing band structure on ', filename
+  write(stdout,'(A,A)') 'writing band structure on ', filename
   !
   open(2, file=filename, status='unknown')
   !

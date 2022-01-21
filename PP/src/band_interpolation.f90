@@ -11,13 +11,14 @@
 !
 !----------------------------------------------------------------------------
 program band_interpolation 
+USE io_global,         ONLY : stdout
 USE globalmod,         ONLY : print_bands, read_xml_input, method, deallocate_global 
 USE idwmod,            ONLY : idw
 USE fouriermod,        ONLY : fourier, fourierdiff
 USE mp_global,         ONLY : mp_startup
 implicit none
   !
-  write(*,*) 'PROGRAM: band_interpolation '
+  write(stdout,'(A)') 'PROGRAM: band_interpolation '
   !
 #if defined(__MPI)
   CALL mp_startup ( )
@@ -47,8 +48,8 @@ implicit none
     !
   else
     !
-    write(*,*) 'ERROR: Wrong method ', TRIM(method)
-    stop
+    write(stdout, '(A,A)') 'method: ', TRIM(method)
+    Call errore('band_interpolation ' , ' wrong method ', 1)
     !
   end if
   !
@@ -94,13 +95,13 @@ subroutine read_input_file ()
 !
 ! Read input file
 !
+USE io_global,         ONLY : stdout
 USE parser,            ONLY : read_line
 USE input_parameters,  ONLY : k_points, nkstot 
 USE read_cards_module, ONLY : card_kpoints 
 USE globalmod,         ONLY : method
 USE fouriermod,        ONLY : miller_max, check_periodicity, card_user_stars, card_roughness
 USE idwmod,            ONLY : p_metric, scale_sphere
-USE io_global,         ONLY : stdout
 implicit none
   integer, parameter :: iunit = 5
   integer :: ios, i
@@ -158,7 +159,7 @@ implicit none
     Call errore('band_interpolation ' , ' wrong number of k-points ', 1)
   end if 
   !
-  Write(stdout,'(A,A)') 'Interpolation method: ', method
+  write(stdout,'(A,A)') 'Interpolation method: ', method
   if( TRIM(method).ne.'idw'.and.TRIM(method).ne.'idw-sphere'&
         .and.TRIM(method).ne.'fourier'.and.TRIM(method).ne.'fourier-diff' ) &  
         Call errore('band_interpolation', 'Wrong interpolation method ', 1) 
