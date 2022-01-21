@@ -103,6 +103,11 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
         qg(ig) = SQRT(qg(ig))*tpiba
      ENDDO
      !
+     ! This should not happen, but better to check
+     !
+     IF ( INT(qg(realblocksize)/dq)+4 > size(tab,1) ) CALL errore &
+        ('init_us_2', 'internal error: dimension of interpolation table', 1 )
+     !
      ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
      jkb = 0
      DO nt = 1, nsp
