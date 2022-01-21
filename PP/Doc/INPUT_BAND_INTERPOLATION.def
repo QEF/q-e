@@ -23,16 +23,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program band_
 		(2) do a NSCF (or Bands) calculation on the same uniform grid adding virtual orbitals
 		(3) call the interpolator from the folder in which the pwscf.xml file is present
 
-	  Four interpolation methods have been included:
-		idw : inverse distance weighting interpolation 
-		idw-sphere : inverse distance weighting interpolation inside a sphere of given radius
-		fourier : band energies, as functions of k, are expanded in reciprocal space 
-                          using a Star function basis set (from D. D. Koelling, J. H. Wood, J. Comput. Phys., 67, 253-262 (1986))
-		fourier-diff : conceptually similar to the previous one, but with a slightly different algorithm 
-		          (from Pickett W. E., Krakauer H., Allen P. B., Phys. Rev. B, vol. 38, issue 4, page 2721, 1988))
+	  Four interpolation methods have been included (see @ref method).
 
 	  The interpolated band structure in eV units is written in a file named [method].dat 
-	  (e.g. fourier-diff.dat for the fourier-diff method) that is plottable with Grace or Gnuplot (e.g. xmgrace -nxy fourier-diff.dat) 
+	  (e.g. fourier-diff.dat for the fourier-diff method) that is plottable with Grace or Gnuplot 
+	  (e.g. xmgrace -nxy fourier-diff.dat) 
 
         @b {Structure of the input data:}
 	============================
@@ -64,13 +59,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program band_
                 info { Available options are: }
                 opt -val 'fourier-diff' {
                     band energies, as functions of k, are expanded in reciprocal space using a Star function basis set 
-		    (algorithm from Pickett W. E., Krakauer H., Allen P. B., Phys. Rev. B, vol. 38, issue 4, page 2721, 1988 }
+		    (algorithm from Pickett W. E., Krakauer H., Allen P. B., Phys. Rev. B, vol. 38, issue 4, page 2721, 1988, 
+		     https://link.aps.org/doi/10.1103/PhysRevB.38.2721 )}
                 opt -val 'fourier' {
                     band energies, as functions of k, are expanded in reciprocal space using a Star function basis set 
-		    (algorithm from D. D. Koelling, J. H. Wood, J. Comput. Phys., 67, 253-262 (1986) }
+		    (algorithm from D. D. Koelling, J. H. Wood, J. Comput. Phys., 67, 253-262 (1986). 
+		     https://ui.adsabs.harvard.edu/abs/1986JCoPh..67..253K }
                 opt -val 'idw' {
                     inverse distance weighting interpolation with Shepard metric 
-		    (ACM 68: Proceedings of the 1968 23rd ACM national conference, January 1968, Pages 517–524, https://doi.org/10.1145/800186.810616  ) }
+		    (ACM 68: Proceedings of the 1968 23rd ACM national conference, January 1968, Pages 517–524, 
+		     https://doi.org/10.1145/800186.810616  ) }
                 opt -val 'idw-sphere' {
                     inverse distance weighting interpolation inside a sphere of given radius }
 	    }
@@ -78,16 +76,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program band_
 
 	var miller_max -type INTEGER { 
             default { 6 }
-	    info { The maximum Miller index used to automatically generate the set of symmetry inequivalent Star vectors (only for @ref method == 'fourier-diff' or 'fourier') } 
+	    info { The maximum Miller index used to automatically generate the set of symmetry inequivalent Star vectors 
+		   (only for @ref method == 'fourier-diff' or 'fourier') } 
 	}
 
 	var check_periodicity -type LOGICAL { 
             default { .FALSE. }
-	    info { If .TRUE. a (time consuming) step is performed, to check whether all the Star functions have the correct lattice periodicity
-                   (only for @ref method == 'fourier-diff' or 'fourier') .
+	    info { If .TRUE. a (time consuming) step is performed, to check whether all the Star functions have 
+		   the correct lattice periodicity (only for @ref method == 'fourier-diff' or 'fourier') .
 
-		   For automatically generated Star functions this should never occur by construction, and the program will stop and exit 
-		   in case one Star function with wrong periodicity is found (useful for debugging and program sanity check).
+		   For automatically generated Star functions this should never occur by construction, and the program 
+		   will stop and exit in case one Star function with wrong periodicity is found (useful for 
+		   debugging and program sanity check).
 
 		   If additional user-defined Star vectors are specified (see optional card @ref USER_STARS), 
 	           the program will print a WARNING in case one Star function with wrong periodicity is found. } 
@@ -100,11 +100,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program band_
 
 	var scale_sphere -type INTEGER { 
             default { 4.0d0 }
-	    info { The search radius for @ref method == 'idw-sphere', is Rmin * scale_sphere, where Rmin is the minimum distance found 
-		   between the uniform grid of k-points. 
+	    info { The search radius for @ref method == 'idw-sphere', is Rmin * scale_sphere, where Rmin is the 
+		   minimum distance found between the uniform grid of k-points. 
 
-		   If scale_sphere is too small, some k-points of the path might not see enough uniform grid points to average energies, 
-		   whereas for large values the method becomes equal to @ref method == 'idw'. } 
+		   If scale_sphere is too small, some k-points of the path might not see enough uniform grid points 
+		   to average energies, whereas for large values the method becomes equal to @ref method == 'idw'. } 
 	}
 
     }
@@ -117,20 +117,53 @@ input_description -distribution {Quantum Espresso} -package PWscf -program band_
                   roughness will be used with @ref RoughN == 1 and @ref RoughC(1) == 1.0d0.
         }
         syntax {
-	        line { var RoughN -type INTEGER { info {Number of terms included in the roughness functional } } }
+	        line { var RoughN -type INTEGER { 
+                        default { 1 }
+			info {Number of terms included in the roughness functional } } 
+		     }
 		table RoughC { 
 			cols -start 1 -end RoughN {
 				rowgroup -type REAL {
-				info {Coefficients for the terms included in the roughness functional. If 'automatic' is specified, default coefficients will be used} 
+				default { 1.0d0 } 
+				info {Coefficients for the terms included in the roughness functional. 
+			        They can be explicitely given or 'automatic' can be specified instead of numbers 
+				to use default coefficients. } 
 				row RoughC
 				}
 			}
-                }
-	}
+		}
+    	}
     }
 
-    card USER_STARS { 
+    card USER_STARS {
     	label { Optional card, used only if @ref method == 'fourier-diff', or 'fourier', ignored otherwise ! }
+        syntax {
+            line { 
+                var NUser -type INTEGER {
+                    default { 0 }
+                    info {Number of supplied additional Star vectors.}
+                }
+            }
+            table kpoints {
+                rows -start 1 -end NUser {
+                    colgroup -type REAL {
+                        col vec_x 
+                        col vec_y
+                        col vec_z
+                        info {
+			    Additional user-defined Star vectors that are added to the 
+			    automatically generated ones to augment the Star functions 
+			    basis set.
+			    You might also want to check @ref check_periodicity when providing
+			    user-defined Star vectors.
+
+                        }
+                    }
+                }
+            }
+        }               
+        
+        
     }
 
     card K_POINTS {
