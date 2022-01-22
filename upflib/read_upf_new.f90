@@ -362,6 +362,12 @@ CONTAINS
        CALL get_attr('cutoff_radius', upf%rcut(nb))
        CALL get_attr('ultrasoft_cutoff_radius', upf%rcutus(nb))
        !
+       ! Old version of UPF PPs v.2 contained an error in the tag.
+       ! To be able to read the old PPs we need the following
+       ! Copied from read_upf_v2.f90 :: read_upf_nonlocal
+       IF ( upf%rcutus(nb) .EQ. 0._DP ) &
+          CALL get_attr('norm_conserving_radius', upf%rcutus(nb))
+       !
     END DO
     !
     ! pp_dij (D_lm matrix)
