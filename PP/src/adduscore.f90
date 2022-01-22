@@ -56,7 +56,6 @@ SUBROUTINE US_make_ae_charge(rho)
    USE fft_base,          ONLY : dfftp
    USE fft_types,         ONLY : fft_index_to_3d
    USE mp_global,         ONLY : me_pool
-   USE splinelib,         ONLY : spline, splint
    USE cell_base,         ONLY : at, bg, alat, omega
    USE io_global,         ONLY : stdout, ionode
 

@@ -23,9 +23,7 @@ subroutine init_us_2_max (npw_, igk_, q_, vkb_)
   USE cell_base,  ONLY : tpiba, omega
   USE constants,  ONLY : tpi
   USE gvect,      ONLY : eigts1, eigts2, eigts3, mill, g
-  USE uspp_data,  ONLY : nqx, dq, tab, tab_d2y, spline_ps
-  USE m_gth,      ONLY : mk_ffnl_gth
-  USE splinelib
+  USE uspp_data,  ONLY : nqx, dq, tab
   USE uspp,       ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param, ONLY : upf, lmaxkb, nhm, nh
   USE io_global,  ONLY : stdout
@@ -46,7 +44,6 @@ subroutine init_us_2_max (npw_, igk_, q_, vkb_)
   complex(DP) :: phase, pref
   complex(DP), allocatable :: sk(:)
 
-  real(DP), allocatable :: xdata(:)
   integer :: iq
 
   !
@@ -77,24 +74,12 @@ subroutine init_us_2_max (npw_, igk_, q_, vkb_)
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
 
-  if (spline_ps) then
-    allocate(xdata(nqx))
-    do iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    enddo
-  endif
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
      do nb = 1, upf(nt)%nbeta
-        if ( upf(nt)%is_gth ) then
-           call mk_ffnl_gth( nt, nb, npw_, omega, qg, vq )
-        else
            do ig = 1, npw_
-              if (spline_ps) then
-                vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-              else
                 px = qg (ig) / dq - int (qg (ig) / dq)
                 ux = 1.d0 - px
                 vx = 2.d0 - px
@@ -111,9 +96,7 @@ subroutine init_us_2_max (npw_, igk_, q_, vkb_)
                 else
                    vq(ig) = 0.0
                 endif
-              endif
            enddo
-        endif
         ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
         do ih = 1, nh (nt)
            if (nb.eq.indv (ih, nt) ) then

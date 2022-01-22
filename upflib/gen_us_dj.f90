@@ -17,9 +17,8 @@ SUBROUTINE gen_us_dj_base &
   USE upf_kinds,  ONLY: dp
   USE upf_const,  ONLY: tpi
   USE uspp,       ONLY: nkb, indv, nhtol, nhtolm
-  USE uspp_data,  ONLY: nqx, tab, tab_d2y, dq, spline_ps
+  USE uspp_data,  ONLY: nqx, tab, dq
   USE uspp_param, ONLY: upf, lmaxkb, nbetam, nh
-  USE splinelib
   !
   IMPLICIT NONE
   !
@@ -79,7 +78,6 @@ SUBROUTINE gen_us_dj_base &
   REAL(DP), ALLOCATABLE :: djl(:,:,:), ylm(:,:), q(:), gk(:,:)
   REAL(DP) :: qt
   COMPLEX(DP), ALLOCATABLE :: sk(:)
-  REAL(DP), ALLOCATABLE :: xdata(:)
   !
   IF (nkb == 0) RETURN
   !
@@ -104,35 +102,23 @@ SUBROUTINE gen_us_dj_base &
   CALL stop_clock( 'stres_us32' )
   CALL start_clock( 'stres_us33' )
   !
-  IF (spline_ps) THEN
-    ALLOCATE( xdata(nqx) )
-    DO iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    ENDDO
-  ENDIF
-  !
   DO nt = 1, ntyp
      DO nb = 1, upf(nt)%nbeta
         !
         DO ig = 1, npw
            qt = SQRT(q (ig)) * tpiba
-           IF (spline_ps) THEN
-             djl(ig,nb,nt) = splint_deriv(xdata, tab(:,nb,nt), & 
-                                                 tab_d2y(:,nb,nt), qt)
-           ELSE
-             px = qt / dq - INT(qt/dq)
-             ux = 1.d0 - px
-             vx = 2.d0 - px
-             wx = 3.d0 - px
-             i0 = qt / dq + 1
-             i1 = i0 + 1
-             i2 = i0 + 2
-             i3 = i0 + 3
-             djl(ig,nb,nt) = ( tab(i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                               tab(i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                               tab(i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                               tab(i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
-           ENDIF
+           px = qt / dq - INT(qt/dq)
+           ux = 1.d0 - px
+           vx = 2.d0 - px
+           wx = 3.d0 - px
+           i0 = qt / dq + 1
+           i1 = i0 + 1
+           i2 = i0 + 2
+           i3 = i0 + 3
+           djl(ig,nb,nt) = ( tab(i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
+                             tab(i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
+                             tab(i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
+                             tab(i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
         ENDDO
         !
      ENDDO
@@ -183,7 +169,6 @@ SUBROUTINE gen_us_dj_base &
   DEALLOCATE( sk  )
   DEALLOCATE( ylm )
   DEALLOCATE( djl )
-  IF (spline_ps) DEALLOCATE( xdata )
   !
   RETURN
   !
