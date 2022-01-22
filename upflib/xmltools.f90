@@ -306,24 +306,33 @@ CONTAINS
     !
   END SUBROUTINE xml_closefile
   !
-  SUBROUTINE xmlw_opentag (name, ierr )
+  SUBROUTINE xmlw_opentag (name, ierr, noadv )
     ! On input:
     ! name      required, character: tag name
     ! On output: the tag is left open, ready for addition of data -
     !            the tag must be subsequently closed with close_xml_tag
     ! If ierr is present, the error code set in write_tag_and_attr is returned
     ! If ierr is absent,  the above error code is reprinted on output
+    ! If noadv is present and true, stay on the same line
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    LOGICAL, INTENT(IN), OPTIONAL :: noadv
     !
     INTEGER :: ier_
     CHARACTER(LEN=1) :: tag_end='>'
+    LOGICAL :: noadv_
     !
     ier_ = write_tag_and_attr (name)
     IF ( ier_ < 0 ) ier_ = 0
     ! complete tag, leaving it open for further data
-    WRITE (xmlunit, "(A1)", ERR=100) tag_end
+    noadv_ = present(noadv)
+    IF ( noadv_ ) noadv_ = noadv
+    IF ( noadv_ ) THEN
+       WRITE (xmlunit, "(A1)", ADVANCE="no",ERR=100) tag_end
+    ELSE
+       WRITE (xmlunit, "(A1)", ERR=100) tag_end
+    END IF
     ! exit here
 100 IF ( present(ierr) ) THEN
        ierr = ier_
@@ -596,22 +605,30 @@ CONTAINS
     !
   END FUNCTION write_tag_and_attr
   !
-  SUBROUTINE xmlw_closetag ( tag )
+  SUBROUTINE xmlw_closetag ( tag, noind )
     ! tag   not present: close current open tag with </tag>
     ! empty tag present: close current open tag with />
     ! tag='?'   present: close current open tag with ?>
     ! otherwise,close specified tag with </tag>
+    ! If noind is present and true, do not indent
+    !
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: tag
+    LOGICAL, INTENT(IN), OPTIONAL :: noind
     INTEGER :: i
+    LOGICAL :: indent
     !
     IF ( nlevel < 0 ) THEN
       print "('xmlw_closetag: severe error, closing tag that was never opened')"
       RETURN
     END IF
     IF ( .NOT.PRESENT(tag) ) THEN
-       DO i=2,nlevel
-          WRITE (xmlunit, '("  ")', ADVANCE='NO')
-       END DO
+       indent = .NOT. PRESENT(noind)
+       IF ( .NOT. indent ) indent = .NOT.noind
+       IF ( indent ) THEN
+          DO i=2,nlevel
+             WRITE (xmlunit, '("  ")', ADVANCE='NO')
+          END DO
+       END IF
        WRITE (xmlunit, '("</",A,">")') trim(open_tags(nlevel))
 #if defined ( __debug )
     print '("closed (write) level-",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
