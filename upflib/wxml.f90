@@ -389,8 +389,9 @@ CONTAINS
     if ( xf%unit == -1 ) then
        print *, 'xml file not opened'
     else
-       ! useful for matrices written as  a series of vectors
-       if (sameline) write( xf%unit, * )
+       ! useful for matrices written as a series of vectors:
+       ! go to next line + leave a space
+       if (sameline) write( xf%unit, '(/," ")', advance='no' )
     end if
     !
   end subroutine xml_addnewline
