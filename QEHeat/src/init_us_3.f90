@@ -25,7 +25,7 @@ contains
       USE constants, ONLY: tpi, pi, fpi
       USE gvect, ONLY: eigts1, eigts2, eigts3, mill, g, gg, ngl, igtongl, gl, gstart
       USE wvfct, ONLY: npwx
-      use uspp_data, ONLY: dq, spline_ps
+      use uspp_data, ONLY: dq
       ! USE splinelib
       USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
       USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
@@ -111,19 +111,6 @@ contains
                do igl = 1, ngl
                   xg = sqrt(gl(igl))*tpiba
 !xg is the modulus of the igl-shell
-                  if (spline_ps) then
-                     CALL errore('init_us_3', 'splines not implemented', 1)
-!                   if (ll==l) then
-!                       betagl(igl) = splint(xdata, tabr(:,nb,it,0), tabr_d2y(:,nb,it,0), xg)
-!                   end if
-!                   if (ll==l+1) then
-!                       betagl(igl) = splint(xdata, tabr(:,nb,it,1), tabr_d2y(:,nb,it,1), xg)
-!                   end if
-! !nb: se l=1 questa condizione non è mai soddisfatta e siamo sempre in uno dei due casi precedenti
-!                   if ((ll==l-1)) then
-!                       betagl(igl) = splint(xdata, tabr(:,nb,it,-1), tabr_d2y(:,nb,it,-1), xg)
-!                   end if
-                  else
                      px = xg/dq - int(xg/dq)
                      ux = 1.d0 - px
                      vx = 2.d0 - px
@@ -140,7 +127,6 @@ contains
                        &tabr(i1, nb, it, ii)*px*vx*wx/2.d0 - &
                        &tabr(i2, nb, it, ii)*px*ux*wx/2.d0 + &
                        &tabr(i3, nb, it, ii)*px*ux*vx/6.d0
-                  end if
                end do
 !
 ! Now we have to cycle over all spherical harmonics with angular momentum + 1 = ll
