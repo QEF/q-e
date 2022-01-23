@@ -206,7 +206,7 @@ SUBROUTINE gen_us_dj_gpu_ &
   !
   DEALLOCATE( sk_d )
   !
-  IF (ikb_t /= nkb) CALL errore( 'gen_us_dj', 'unexpected error', 1 )
+  IF (ikb_t /= nkb) CALL upf_error( 'gen_us_dj', 'unexpected error', 1 )
   !
   CALL dev_buf%release_buffer( ylm_d, ierr(1) )
   CALL dev_buf%release_buffer( djl_d, ierr(2) )
