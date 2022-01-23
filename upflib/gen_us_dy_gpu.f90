@@ -99,7 +99,7 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   CALL dev_buf%lock_buffer( dylm_u_d, (/ npw,lmx2 /), ierr(1) )
   CALL dev_buf%lock_buffer( vkb0_d, (/ npw,nbetam,ntyp /), ierr(2) )
   CALL dev_buf%lock_buffer( gk_d, (/ 3,npw /), ierr(3) )
-  IF (ANY(ierr /= 0)) CALL errore( 'gen_us_dy_gpu', 'cannot allocate buffers', ABS(ierr) )
+  IF (ANY(ierr /= 0)) CALL upf_error( 'gen_us_dy_gpu', 'cannot allocate buffers', ABS(ierr) )
   ALLOCATE( q_d(npw) )
   !
   xk1 = xk(1)
@@ -240,7 +240,7 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   !
   DEALLOCATE( sk_d )
   !
-  IF (ikb_t /= nkb) CALL errore( 'gen_us_dy', 'unexpected error', 1 )
+  IF (ikb_t /= nkb) CALL upf_error( 'gen_us_dy', 'unexpected error', 1 )
   !
   CALL dev_buf%release_buffer( dylm_u_d, ierr(1) )
   CALL dev_buf%release_buffer( vkb0_d, ierr(2) )
