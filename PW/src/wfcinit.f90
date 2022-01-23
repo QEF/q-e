@@ -18,7 +18,7 @@ SUBROUTINE aceinit0()
   USE io_files,             ONLY : restart_dir
   USE wvfct,                ONLY : nbnd
   USE pw_restart_new,       ONLY : read_collected_wfc
-  USE exx,                  ONLY : xi
+  USE exx,                  ONLY : xi, domat
   USE xc_lib,               ONLY : start_exx, exx_is_active
   USE noncollin_module,     ONLY : npol
   USE wvfct,                ONLY : npwx
@@ -55,6 +55,8 @@ SUBROUTINE aceinit0()
     WRITE( stdout, '(5X,"Starting ACE correctly read from file")' )
     !
   END IF 
+  !
+  domat = .FALSE.
   !
   CALL stop_clock( 'aceinit0' )  
   !

@@ -16,8 +16,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
-  USE uspp_data,    ONLY : nqx, dq, spline_ps, tab_d, tab_d2y_d
-  USE splinelib,    ONLY : splint_eq
+  USE uspp_data,    ONLY : nqx, dq, tab_d
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   USE device_fbuff_m,   ONLY : dev_buf
@@ -121,41 +120,25 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
      qg_d(ig) = sqrt(qg_d(ig))*tpiba
   enddo
 
-  ! JR Don't need this when using splint_eq_gpu
-  !if (spline_ps) then
-  !  allocate(xdata(nqx))
-  !  do iq = 1, nqx
-  !    xdata(iq) = (iq - 1) * dq
-  !  enddo
-  !endif
-
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
   do nt = 1, nsp
      do nb = 1, upf(nt)%nbeta
-        if (spline_ps) then
-           call splint_eq(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
-        else
-           !$cuf kernel do(1) <<<*,*>>>
-           do ig = 1, npw_
-              rv_d = qg_d(ig)
-              px = rv_d / dq - int (rv_d / dq)
-              ux = 1.d0 - px
-              vx = 2.d0 - px
-              wx = 3.d0 - px
-              i0 = INT( rv_d / dq ) + 1
-              i1 = i0 + 1
-              i2 = i0 + 2
-              i3 = i0 + 3
-              vq_d (ig) = ux * vx * (wx * tab_d(i0, nb, nt) + px * tab_d(i3, nb, nt)) / 6.d0 + &
-                          px * wx * (vx * tab_d(i1, nb, nt) - ux * tab_d(i2, nb, nt)) * 0.5d0
+        !$cuf kernel do(1) <<<*,*>>>
+        do ig = 1, npw_
+           rv_d = qg_d(ig)
+           px = rv_d / dq - int (rv_d / dq)
+           ux = 1.d0 - px
+           vx = 2.d0 - px
+           wx = 3.d0 - px
+           i0 = INT( rv_d / dq ) + 1
+           i1 = i0 + 1
+           i2 = i0 + 2
+           i3 = i0 + 3
+           vq_d (ig) = ux * vx * (wx * tab_d(i0, nb, nt) + px * tab_d(i3, nb, nt)) / 6.d0 + &
+                       px * wx * (vx * tab_d(i1, nb, nt) - ux * tab_d(i2, nb, nt)) * 0.5d0
                           
-              !vq_d (ig) = tab_d (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-              !            tab_d (i1, nb, nt) * px * vx * wx / 2.d0 - &
-              !            tab_d (i2, nb, nt) * px * ux * wx / 2.d0 + &
-              !            tab_d (i3, nb, nt) * px * ux * vx / 6.d0
-           enddo
-        endif
+        enddo
 
         ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
         do ih = 1, nh (nt)

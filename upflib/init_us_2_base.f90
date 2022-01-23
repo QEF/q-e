@@ -15,8 +15,7 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
-  USE uspp_data,    ONLY : nqx, dq, tab, tab_d2y, spline_ps
-  USE splinelib
+  USE uspp_data,    ONLY : nqx, dq, tab
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   !
@@ -59,7 +58,6 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
   REAL(DP)    :: px, ux, vx, wx, arg
   COMPLEX(DP) :: phase, pref
   REAL(DP),    ALLOCATABLE :: gk(:,:), qg(:), vq(:), ylm(:,:), vkb1(:,:)
-  REAL(DP),    ALLOCATABLE :: xdata(:)
   COMPLEX(DP), ALLOCATABLE :: sk(:)
   INTEGER     :: iq
   ! cache blocking parameters
@@ -72,13 +70,6 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
   !
   ! setting cache blocking size
   numblock = (npw_+blocksize-1)/blocksize
-  !
-  IF (spline_ps) THEN
-    ALLOCATE( xdata(nqx) )
-    DO iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    ENDDO
-  ENDIF
   !
 !$omp parallel private(vkb1, sk, qg, vq, ylm, gk, ig_orig, &
 !$omp                  realblocksize, jkb, px, ux, vx, wx, &
@@ -112,6 +103,11 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
         qg(ig) = SQRT(qg(ig))*tpiba
      ENDDO
      !
+     ! This should not happen, but better to check
+     !
+     IF ( INT(qg(realblocksize)/dq)+4 > size(tab,1) ) CALL upf_error &
+        ('init_us_2', 'internal error: dimension of interpolation table', 1 )
+     !
      ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
      jkb = 0
      DO nt = 1, nsp
@@ -120,22 +116,18 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
         DO nb = 1, upf(nt)%nbeta
            !
            DO ig = 1, realblocksize
-              IF (spline_ps) THEN
-                 vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-              ELSE
-                 px = qg(ig) / dq - INT( qg(ig)/dq )
-                 ux = 1.d0 - px
-                 vx = 2.d0 - px
-                 wx = 3.d0 - px
-                 i0 = INT( qg(ig)/dq ) + 1
-                 i1 = i0 + 1
-                 i2 = i0 + 2
-                 i3 = i0 + 3
-                 vq(ig) = tab(i0,nb,nt) * ux * vx * wx / 6.d0 + &
-                          tab(i1,nb,nt) * px * vx * wx / 2.d0 - &
-                          tab(i2,nb,nt) * px * ux * wx / 2.d0 + &
-                          tab(i3,nb,nt) * px * ux * vx / 6.d0
-              ENDIF
+              px = qg(ig) / dq - INT( qg(ig)/dq )
+              ux = 1.d0 - px
+              vx = 2.d0 - px
+              wx = 3.d0 - px
+              i0 = INT( qg(ig)/dq ) + 1
+              i1 = i0 + 1
+              i2 = i0 + 2
+              i3 = i0 + 3
+              vq(ig) = tab(i0,nb,nt) * ux * vx * wx / 6.d0 + &
+                       tab(i1,nb,nt) * px * vx * wx / 2.d0 - &
+                       tab(i2,nb,nt) * px * ux * wx / 2.d0 + &
+                       tab(i3,nb,nt) * px * ux * vx / 6.d0
            ENDDO
            ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
            DO ih = 1, nh(nt)
@@ -199,8 +191,6 @@ SUBROUTINE init_us_2_base( npw_, npwx, igk_, q_, nat, tau, ityp, &
   DEALLOCATE( sk )
   DEALLOCATE( vkb1 )
 !$omp end parallel
-  !
-  IF (spline_ps) DEALLOCATE( xdata )
   !
   CALL stop_clock( 'init_us_2:cpu' )
   !

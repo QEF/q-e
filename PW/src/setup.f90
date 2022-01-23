@@ -45,6 +45,7 @@ SUBROUTINE setup()
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
+  USE fft_support,        ONLY : good_fft_order
   USE gvect,              ONLY : gcutm, ecutrho
   USE gvecw,              ONLY : gcutw, ecutwfc
   USE gvecs,              ONLY : doublegrid, gcutms, dual
@@ -63,7 +64,7 @@ SUBROUTINE setup()
                                  allfrac
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
-                                 isolve, niter, noinv, ts_vdw, &
+                                 isolve, niter, noinv, ts_vdw, tstress, &
                                  lbands, gamma_only, restart
   USE cellmd,             ONLY : calc
   USE upf_ions,           ONLY : n_atom_wfc
@@ -73,6 +74,7 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
+  USE mp_pools,           ONLY : kunit, npool
   USE mp_images,          ONLY : intra_image_comm
   USE mp,                 ONLY : mp_bcast
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
@@ -95,18 +97,12 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik, nrot_
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_, nr3, nk_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
   TYPE(output_type)  :: output_obj 
   !  
-#if defined(__MPI)
-  LOGICAL :: lpara = .true.
-#else
-  LOGICAL :: lpara = .false.
-#endif
-  !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
   okvan = ANY( upf(1:ntyp)%tvanp )
@@ -647,74 +643,146 @@ SUBROUTINE setup()
   !
   IF (lda_plus_u .or. okpaw .or. (okvan.and.xclib_dft_is('hybrid')) ) CALL d_matrix( d1, d2, d3 )
   !
-  ! ... set parallelization strategy
+  ! ... set parallelization strategy: need an estimate of FFT dimension along z
   !
-  CALL setup_para ()
+  nr3 = int ( sqrt(gcutms)*sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
+  nr3 = good_fft_order( 2*nr3, fft_fact(3) )
   !
-  ! ... set parallelization strategy
+  ! ... nk_ = number of k-points usable for k-point parallelization
+  !           (set to 1 if k-point parallelization is not implemented)
+  nk_ = nkstot
+  IF ( lberry .OR. lelfield .OR. lorbm .OR. &
+       ( xclib_dft_is('hybrid') .AND. tstress ) ) nk_ = 1
   !
-  CALL setup_exx  ()
+  CALL setup_para ( nr3, nk_, nbnd )
+  !
+  ! ... distribute k-points across processors of a pool
+  !
+  kunit   = 1
+  CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
+  !
+  ! ... checks and initializations to be performed after parallelization setup
+  !
+  IF ( lberry .OR. lelfield .OR. lorbm ) THEN
+     IF ( npool > 1 ) CALL errore( 'iosys', &
+          'Berry Phase/electric fields not implemented with pools', 1 )
+  END IF
+  IF ( xclib_dft_is('hybrid') ) THEN
+     IF ( nks == 0 ) CALL errore('setup','pools with no k-points' &
+          & // ' not allowed for hybrid functionals',1)
+     IF ( tstress .and. npool > 1 )  CALL errore('setup', &
+         'stress for hybrid functionals not available with pools', 1)
+     !
+     CALL setup_exx  ()
+     !
+  END IF
   !
   RETURN
   !
 END SUBROUTINE setup
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup_para ( )
+SUBROUTINE setup_para ( nr3, nkstot, nbnd )
   !----------------------------------------------------------------------------
   !
-  ! Initialize the various parallelization levels
-  ! Must be called after setup and before setup_exx only once
+  ! Initialize the various parallelization levels, trying to guess decent
+  ! parameters for npool, ndiag, ntg, if not specified in the command line
+  ! Must be called at the end of "setup" but before "setup_exx",
+  ! only once per run
   !
-  USE control_flags,  ONLY : use_para_diag, use_gpu
-  USE io_global,      ONLY : stdout
-  USE lsda_mod,  ONLY : isk
-  USE klist,     ONLY : xk, wk, nks, nkstot
-  USE wvfct,     ONLY : nbnd
+  USE control_flags, ONLY : use_para_diag, use_gpu
+  USE io_global, ONLY : stdout
   USE mp_bands,  ONLY : mp_start_bands, nbgrp, ntask_groups, nproc_bgrp,&
                         nyfft
-  USE mp_pools,  ONLY : kunit, intra_pool_comm, mp_start_pools, npool
-  USE mp_images, ONLY : intra_image_comm
-  USE command_line_options, ONLY : npool_, nband_, ntg_, nyfft_, nmany_
+  USE mp_pools,  ONLY : intra_pool_comm, mp_start_pools, npool
+  USE mp_images, ONLY : intra_image_comm, nproc_image
+  USE command_line_options, ONLY : npool_, ndiag_, nband_, ntg_, nyfft_, &
+          nmany_, pencil_decomposition_
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(in) :: nr3
+  INTEGER, INTENT(in) :: nkstot
+  INTEGER, INTENT(in) :: nbnd
+  !
   LOGICAL, EXTERNAL  :: check_gpu_support
   LOGICAL, SAVE :: first = .TRUE.
+  INTEGER :: maxtask, np
   !
   ! do not execute twice: unpredictable results may follow
   !
   IF ( .NOT.first ) RETURN
   first = .false.
   !
+  ! GPUs (not sure it serves any purpose)
+  !
+  use_gpu = check_gpu_support( )
+  !
   ! k-point parallelization first
   !
-  ! TBD: choose a sensible npool_ if not explicitly specified
-  IF ( npool_== 0 ) npool_ = 1
+  IF ( npool_== 0 ) THEN
+     npool_ = 1
+     !
+     if ( nproc_image > nr3/2 .and. nkstot > 1 ) then
+        !
+        ! if too many mpi processes for this fft dimension,
+        ! use k-point parallelization if available
+        !
+pool:   do np = 2, nkstot
+           ! npool should be a divisor of the number of processors
+           if ( mod(nproc_image, np) /= 0 ) cycle
+           if ( nproc_image/np <= nr3/2 ) then
+              npool_= np
+              exit pool
+           end if
+        end do pool
+     end if
+  END IF
   CALL mp_start_pools ( npool_, intra_image_comm )
-  kunit   = 1
-  CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
-  ! band parallelization - FIXME: why the following section?
+  ! band parallelization (nband only; ntg and nyfft below are just copied)
   !
 #if defined (__CUDA_OPTIMIZED)
+  ! band parallelization is effectively disabled in this case
   CALL mp_start_bands ( 1 , ntg_, nyfft_, intra_pool_comm )
 #else
   CALL mp_start_bands ( nband_, ntg_, nyfft_, intra_pool_comm )
 #endif
   !
-  ! GPUs (not sure it serves any purpose)
+  ! Set "task groups", max 16, if too many processors for PW parallelization
   !
-  use_gpu = check_gpu_support( )
+  IF ( ntask_groups == 0 ) THEN
+     ntask_groups = 1
+     if ( nproc_bgrp > nr3 ) THEN
+        maxtask = min (nbnd, 16)
+task:   do np = 2, maxtask
+           ! ensure that ntask_group, that coincides with nyfft,
+           ! is commensurate with the number of procs for PW parallelization
+           if ( mod(nproc_bgrp,np) /= 0 ) cycle
+           if ( nproc_bgrp/np < nr3/4 ) then 
+              ntask_groups = np
+              exit task 
+           end if
+        end do task
+      end if
+  END IF
+  !
+  ! Note that "task_groups" require to set pencil_decomposition to .true.
+  ! Same if there are more processors than xy planes in the FFT
+  !
+  IF ( ntask_groups /= 1 .OR. nproc_bgrp > nr3 ) pencil_decomposition_ = .true. 
   !
   ! printout - same as in environment.f90
   !
+  WRITE( stdout, * )
   IF ( npool > 1 ) WRITE( stdout, &
          '(5X,"K-points division:     npool     = ",I7)' ) npool
   IF ( nbgrp > 1 ) WRITE( stdout, &
          '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
   IF ( nproc_bgrp > 1 ) WRITE( stdout, &
          '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
+  IF ( nproc_bgrp > nr3 ) WRITE( stdout, &
+         '(5X,"WARNING: too many processors for an effective parallelization!")' ) 
   IF ( nyfft > 1 ) WRITE( stdout, &
          '(5X,"wavefunctions fft division:  Y-proc x Z-proc = ",2I7)' ) &
          nyfft, nproc_bgrp / nyfft
@@ -723,7 +791,16 @@ SUBROUTINE setup_para ( )
          ntask_groups, nproc_bgrp / ntask_groups
   IF ( nmany_ > 1) WRITE( stdout, '(5X,"FFT bands division:     nmany     = ",I7)' ) nmany_
   !
-  ! linear-algebra
+  ! linear algebra - for GPUs, ndiag = 1; otherwise, a value ensuring that
+  ! matrices nbnd*nbnd are distributed into blocks of size > 100x100
+  !
+  if ( ndiag_ == 0 .AND. use_gpu ) ndiag_ = 1
+  if ( ndiag_ == 0 ) then
+     do np = nint(nbnd/100.), 1, -1
+         if ( np**2 <= nproc_bgrp ) exit
+     end do
+     ndiag_ = max(1,np**2)
+  end if
   !
   CALL set_para_diag( nbnd, use_para_diag )
   !
@@ -771,18 +848,13 @@ SUBROUTINE setup_exx ( )
   USE mp_exx,    ONLY : mp_start_exx
   USE mp_pools,  ONLY : intra_pool_comm
   USE exx_base,  ONLY : exx_grid_init, exx_mp_init, exx_div_check
-  USE xc_lib,    ONLY : xclib_dft_is
-  USE klist,     ONLY : nks
   USE command_line_options, ONLY : nband_, ntg_
   !
   IMPLICIT NONE
   !
   CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
-  IF ( xclib_dft_is('hybrid') ) THEN
-     IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
-     CALL exx_grid_init()
-     CALL exx_mp_init()
-     CALL exx_div_check()
-  ENDIF
+  CALL exx_grid_init()
+  CALL exx_mp_init()
+  CALL exx_div_check()
   !
 END SUBROUTINE setup_exx

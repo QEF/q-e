@@ -20,8 +20,7 @@ SUBROUTINE gen_us_dj_gpu_ &
   USE upf_kinds,   ONLY: dp
   USE upf_const,   ONLY: tpi
   USE uspp,        ONLY: nkb, indv_d, nhtol_d, nhtolm_d
-  USE uspp_data,   ONLY: nqx, tab, tab_d2y, tab_d, dq, spline_ps
-  USE splinelib
+  USE uspp_data,   ONLY: nqx, tab, tab_d, dq
   USE uspp_param,  ONLY: upf, lmaxkb, nbetam, nh, nhm
   USE device_fbuff_m,   ONLY: dev_buf
   !
@@ -70,8 +69,6 @@ SUBROUTINE gen_us_dj_gpu_ &
   REAL(DP) :: px, ux, vx, wx, arg, u_ipol, xk1, xk2, xk3, qt
   COMPLEX(DP) :: pref
   INTEGER,  ALLOCATABLE :: ityp_d(:), ih_d(:), na_d(:), nas_d(:)
-  REAL(DP), ALLOCATABLE :: q(:), djl(:,:,:), ylm(:,:)
-  REAL(DP), ALLOCATABLE :: xdata(:)
   !
   REAL(DP), POINTER :: gk_d(:,:), djl_d(:,:,:),  ylm_d(:,:)
   REAL(DP), ALLOCATABLE :: q_d(:), tau_d(:,:)
@@ -106,30 +103,7 @@ SUBROUTINE gen_us_dj_gpu_ &
   !
   CALL ylmr2_gpu( (lmaxkb+1)**2, npw, gk_d, q_d, ylm_d )
   !
-  IF ( spline_ps ) THEN
-    ALLOCATE( q(npw), xdata(nqx), djl(npw,nbetam,ntyp) )
-    q = q_d
-    DO iq = 1, nqx
-      xdata(iq) = (iq - 1) * dq
-    ENDDO
-    !
-    DO nt = 1, ntyp
-      ! calculate beta in G-space using an interpolation table
-      DO nb = 1, upf(nt)%nbeta
-        DO ig = 1, npw
-           qt = SQRT(q(ig)) * tpiba
-           djl(ig,nb,nt) = splint_deriv( xdata, tab(:,nb,nt), & 
-                                         tab_d2y(:,nb,nt), qt )
-        ENDDO
-      ENDDO
-    ENDDO
-    djl_d = djl
-    !
-    DEALLOCATE( q, xdata, djl )
-    !
-  ELSE
-    !
-    DO nt = 1, ntyp
+  DO nt = 1, ntyp
       nbm = upf(nt)%nbeta
       !$cuf kernel do (2) <<<*,*>>>
       DO nb = 1, nbm
@@ -149,9 +123,7 @@ SUBROUTINE gen_us_dj_gpu_ &
                                tab_d(i3,nb,nt) * (+ux*vx-px*vx-px*ux)/6._DP)/dq
          ENDDO
       ENDDO
-    ENDDO
-    !
-  ENDIF
+  ENDDO
   !
   DEALLOCATE( q_d )
   !
@@ -199,7 +171,6 @@ SUBROUTINE gen_us_dj_gpu_ &
     ENDDO
   ENDDO
   !
-  
   !
   DEALLOCATE( phase_d )
   !
@@ -235,7 +206,7 @@ SUBROUTINE gen_us_dj_gpu_ &
   !
   DEALLOCATE( sk_d )
   !
-  IF (ikb_t /= nkb) CALL errore( 'gen_us_dj', 'unexpected error', 1 )
+  IF (ikb_t /= nkb) CALL upf_error( 'gen_us_dj', 'unexpected error', 1 )
   !
   CALL dev_buf%release_buffer( ylm_d, ierr(1) )
   CALL dev_buf%release_buffer( djl_d, ierr(2) )

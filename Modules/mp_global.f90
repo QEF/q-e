@@ -52,6 +52,17 @@ CONTAINS
     !                      convenient to call it in serial execution as well
     !  IMPORTANT NOTICE 2: most parallelization levels are initialized here 
     !                      but at least some will be moved to a later stage
+    !  SPECIAL CASE: command-line options "-ntg" and "-nyfft", introduced to
+    !                improve scaling, coexist and are in part interchangeable.
+    !                If task groups are available, -ntg is faster than -nyfft
+    !                because it communicates larger data chuncks less frequently
+    !                Sometimes task groups are not available as for instance
+    !                when metagga is used or realus or for conjugate gradient.
+    !                For those cases, -nyfft can be used instead.
+    !                You may specify one or another: the same value will be set
+    !                for both ntg and nyfft. These variables are kept separated
+    !                to help understanding which operation belong to task groups
+    !                or to nyfft, allowing to differenciate them if need arises.
     !
     USE command_line_options, ONLY : get_command_line, &
         nimage_, npool_, nband_, ntg_, nyfft_
@@ -88,6 +99,8 @@ CONTAINS
     ! npool_ is 0 if not specified in command line
     IF ( npool_== 0 ) npool_ = 1
     CALL mp_start_pools ( npool_, intra_image_comm )
+    ! ntg_ is 0 if not specified in command line
+    IF ( ntg_== 0 ) ntg_ = 1
 #if defined (__CUDA_OPTIMIZED)
     CALL mp_start_bands ( 1 , ntg_, nyfft_, intra_pool_comm )
 #else
