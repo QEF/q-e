@@ -27,9 +27,9 @@ C  12.011  C-q4.gth
 O  15.999  O-q6.gth
 H  1.008   H-q1.gth
 # Equivalent to:
-# C  12.011  C.pbe-hgh.UPF
-# O  15.999  O.pbe-hgh.UPF
-# H  1.008   H.pbe-hgh.UPF
+#C  12.011  C.pbe-hgh.UPF
+#O  15.999  O.pbe-hgh.UPF
+#H  1.008   H.pbe-hgh.UPF
 K_POINTS gamma
 ATOMIC_POSITIONS {angstrom}
 H 5.18880 7.27720 4.60380
