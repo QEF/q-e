@@ -12,8 +12,7 @@
                           sfac, c0, bec, dbec, firstiter, vpot )
 !====================================================================
       !
-      ! minimizes the total free energy
-      ! using cold smearing,
+      !! Minimizes the total free energy using cold smearing.
       !
       !
 
@@ -310,11 +309,11 @@
 
    SUBROUTINE inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, dbec, firstiter,c0hc0,c1hc1,lambda,  &
+                          sfac, c0, bec, dbec, firstiter,c0hc0,c1hc1,lambda, &
                           free_energy, vpot )
     
-!this subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
-!calculates the corresponding free energy
+      !! This subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
+      !! calculates the corresponding free energy.
 
 
       ! declares modules
