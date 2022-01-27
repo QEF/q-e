@@ -78,6 +78,7 @@ SUBROUTINE phq_readin()
       skip_upperfan
   USE read_namelists_module, ONLY : check_namelist_read
   USE open_close_input_file, ONLY : open_input_file, close_input_file
+  USE el_phon,       ONLY : kx, ky, kz, elph_epw
   !
   IMPLICIT NONE
   !
@@ -124,7 +125,7 @@ SUBROUTINE phq_readin()
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
                        wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
-                       skip_upperfan
+                       skip_upperfan, kx, ky, kz
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -164,6 +165,7 @@ SUBROUTINE phq_readin()
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! lqdir        : if .true. each q writes in its own directory
   ! search_sym   : if .true. analyze symmetry if possible
+  ! kx, ky, kz   : when specified in input, search that k-point to print el-ph matrix element
   ! nk1,nk2,nk3, k1,k2,k3 :
   !              when specified in input, the phonon run uses a different
   !              k-point mesh from that used for the charge density.
@@ -303,6 +305,10 @@ SUBROUTINE phq_readin()
   k1       = 0
   k2       = 0
   k3       = 0
+
+  kx = 0.D0
+  ky = 0.D0
+  kz = 0.D0
   !
   ! dvscf_interpolate
   ldvscf_interpolate = .FALSE.
@@ -384,6 +390,10 @@ SUBROUTINE phq_readin()
   CALL mp_bcast(nogg, meta_ionode_id, world_comm  )
   CALL mp_bcast(q2d, meta_ionode_id, world_comm  )
   CALL mp_bcast(q_in_band_form, meta_ionode_id, world_comm  )
+
+  CALL mp_bcast(kx, meta_ionode_id, world_comm )
+  CALL mp_bcast(ky, meta_ionode_id, world_comm )
+  CALL mp_bcast(kz, meta_ionode_id, world_comm )
   !
   drho_star%dir=trimcheck(drho_star%dir)
   dvscf_star%dir=trimcheck(dvscf_star%dir)
@@ -483,6 +493,12 @@ SUBROUTINE phq_readin()
      elph_epa = .false.
      trans = .false.
      nogg = .true.
+  CASE( 'epw' )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+     elph_epa=.false.
+     elph_epw=.true.
   CASE DEFAULT
      elph=.false.
      elph_mat=.false.
@@ -913,7 +929,7 @@ SUBROUTINE phq_readin()
   !
   !YAMBO >
   IF (elph .AND. .NOT.(lgauss .OR. ltetra) &
-      .AND. .NOT. (elph_yambo .OR. elph_ahc)) &
+      .AND. .NOT. (elph_yambo .OR. elph_ahc .OR. elph_epw)) &
           CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
   IF (elph .AND. fildvscf.EQ.' ' .AND. .NOT. ldvscf_interpolate) &
