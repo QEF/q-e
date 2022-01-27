@@ -102,6 +102,7 @@ MODULE beef_interface
     ! and not in the above interfaces.
     !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda )
+      !$acc routine seq
       !! Evaluate bee exchange energy and its derivatives \(d\epsilon/d\rho\) and 
       !! \( (d\epsilon/d|\nabla \rho| ) / |\nabla\rho|\).
       USE kind_l, ONLY : dp
@@ -110,6 +111,7 @@ MODULE beef_interface
     END SUBROUTINE beefx
     !
     SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda)
+      !$acc routine seq
       !! Evaluate local part of bee correlation and its derivatives \(d\epsilon/drho\)
       !! and \( (d\epsilon/d|\nabla\rho|) / |\nabla\rho| \).
       USE kind_l, ONLY : dp
@@ -118,6 +120,7 @@ MODULE beef_interface
     END SUBROUTINE beeflocalcorr
     !
     SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda)
+      !$acc routine seq
       !! Evaluate local part of bee correlation for spin polarized system.
       USE kind_l, ONLY : dp
       REAL (dp), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
