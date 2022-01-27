@@ -1,11 +1,10 @@
 --
 &inputph
   prefix   = 'si',
-  epsil    = .false.,
   fildyn   = 'si.dyn.xml',
-  ldisp    = .true.
   fildvscf = 'dvscf'
   tr2_ph   =  1.0d-16,
+  electron_phonon='epw',
   kx=0.0,
   ky=0.0,
   kz=0.0,
