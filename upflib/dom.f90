@@ -236,6 +236,8 @@ CONTAINS
              end if
           end if
        end do scanline
+       ! if data extends over more than one line, add space between lines
+       if ( in_data ) curr%data = curr%data // ' '
     end do readline
 10  continue
     if ( ierr == 0 .and. nlevel /= -1) &
@@ -548,9 +550,16 @@ scan: do i=la-l0+1,la
     type(node), pointer, intent(in) :: root
     integer, intent(out) :: ivec(:)
     integer, intent(out), optional :: iostat
-    integer :: ios
+    integer :: ios, n, iend, ibeg
+    !
     if ( allocated(root%data) ) then
-       read(root%data,*,iostat=ios) ivec
+       ! the simple solution fails if root%data > 1024 characters:
+       ! read(root%data,*,iostat=ios) ivec
+       iend = 1
+       do n=1,size(ivec)
+          call find_token( root%data, ibeg, iend)
+          read(root%data(ibeg:iend),*,iostat=ios) ivec(n)
+       end do
     else
        ivec= 0
        ios = -1
@@ -578,9 +587,16 @@ scan: do i=la-l0+1,la
     type(node), pointer, intent(in) :: root
     real(dp), intent(out) :: rvec(:)
     integer, intent(out), optional :: iostat
-    integer :: ios
+    integer :: ios, n, iend, ibeg
+    !
     if ( allocated(root%data) ) then
-       read(root%data,*,iostat=ios) rvec
+       ! the simple solution fails if root%data > 1024 characters:
+       ! read(root%data,*,iostat=ios) rvec
+       iend = 1
+       do n=1,size(rvec)
+          call find_token( root%data, ibeg, iend)
+          read(root%data(ibeg:iend),*,iostat=ios) rvec(n)
+       end do
     else
        rvec= 0.0_dp
        ios = -1
@@ -593,14 +609,56 @@ scan: do i=la-l0+1,la
     type(node), pointer, intent(in) :: root
     real(dp), intent(out) :: rmat(:,:)
     integer, intent(out), optional :: iostat
-    integer :: ios
+    integer :: ios, n, m, iend, ibeg
+    !
     if ( allocated(root%data) ) then
-       read(root%data,*,iostat=ios) rmat
+       ! the simple solution fails if root%data > 1024 characters:
+       ! read(root%data,*,iostat=ios) rmat
+       iend = 1
+       do m=1,size(rmat,2)
+          do n=1,size(rmat,1)
+             call find_token( root%data, ibeg, iend)
+             read(root%data(ibeg:iend),*,iostat=ios) rmat(n,m)
+          end do
+       end do
     else
        rmat= 0.0_dp
        ios = -1
     end if
     if ( present(iostat) ) iostat=ios
   end subroutine extractdatacontent_rm
+  !
+  subroutine find_token ( data, ibeg, iend)
+    ! on input:
+    !    data    data to be read
+    !    iend    1 on first run, end position of previous token otherwise
+    ! On output:
+    !    data(ibeg:iend) containing a token (a number)
+    ! Tokens are assumed to be separated by space or commas
+    ! Beware: will not work if empty tokens and multiple commas and present
+    !
+    character(len=:), allocatable, intent(in) :: data
+    integer, intent(out)  :: ibeg
+    integer, intent(inout):: iend
+    integer:: iscan
+    !
+    do ibeg = iend, len_trim(data) 
+       if ( data(ibeg:ibeg) == ' ' .or.  data(ibeg:ibeg) == ','  ) then
+          cycle
+       else
+          exit
+       end if
+    end do
+    ibeg = min(ibeg, len_trim(data))
+    do iend = ibeg, len_trim(data)
+       if ( data(iend:iend) /= ' ' .and.  data(iend:iend) /= ','  ) then
+          cycle
+       else
+          exit
+       end if
+    end do
+    iend = min(iend, len_trim(data))
+    !
+  end subroutine find_token
   !
 end module dom
