@@ -24,6 +24,7 @@ MODULE wxml
   end type xmlf_t
   character(len=80), save :: opentag = ''
   logical :: sameline = .false.
+  logical :: newline  = .false.
   !
   private
   public :: xmlf_t, xml_openfile, xml_close, xml_addcharacters, &
@@ -201,8 +202,11 @@ CONTAINS
        print *, 'xml file not opened'
     else
        ! workaround for different logic
-       if ( opentag /= '' ) call xmlw_opentag ( opentag, ierr )
-       call xmlw_closetag ( noind = sameline )
+       if ( opentag /= '' ) then
+          call xmlw_writetag ( opentag, '', ierr )
+       else
+          call xmlw_closetag ( noind = sameline )
+       end if
        sameline = .false.
        opentag = ''
     end if
@@ -298,10 +302,11 @@ CONTAINS
     else
        ! workaround for different logic
        if ( opentag /= '') then
-          sameline = (size(field) <= 3)
+          sameline = (size(field) <= 3) .and..not.newline
           call xmlw_opentag ( opentag, ierr, noadv=sameline )
           if ( ierr /= 0 ) print *, 'xml_addcharacter: ierr = ', ierr
           opentag = ''
+          newline = .false.
        end if
        if ( sameline) then
           write( cfield, '(1p3es24.15)' ) field
@@ -389,9 +394,8 @@ CONTAINS
     if ( xf%unit == -1 ) then
        print *, 'xml file not opened'
     else
-       ! useful for matrices written as a series of vectors:
-       ! go to next line + leave a space
-       if (sameline) write( xf%unit, '(/," ")', advance='no' )
+       ! used only for vectors of real numbers
+       newline=.true.
     end if
     !
   end subroutine xml_addnewline

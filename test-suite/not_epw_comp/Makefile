@@ -29,5 +29,7 @@ depend:
 	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)
 
-include make.depend
-# DO NOT DELETE
+phonon2.o: supp.o
+do_phonon2.o: supp.o
+phq_readin.o: supp.o
+include ../../PHonon/PH/make.depend
