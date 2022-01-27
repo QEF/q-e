@@ -6,9 +6,7 @@
   ldisp    = .true.
   fildvscf = 'dvscf'
   tr2_ph   =  1.0d-16,
-  kx=0.0,
-  ky=0.0,
-  kz=0.0,
+  nq1=4,
+  nq2=4,
+  nq3=4,
  /
-0.5 0.5 0.5
-
