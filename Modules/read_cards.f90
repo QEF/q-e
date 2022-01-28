@@ -26,7 +26,7 @@ MODULE read_cards_module
    !
    PRIVATE
    !
-   PUBLIC :: read_cards
+   PUBLIC :: read_cards, card_kpoints
    !
    ! ... end of module-scope declarations
    !

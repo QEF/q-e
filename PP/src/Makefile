@@ -5,6 +5,7 @@ include ../../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../Modules/ \
           $(MOD_FLAG)../../dft-d3/
 
 PPOBJS = \
@@ -51,6 +52,9 @@ write_p_avg.o \
 write_proj.o \
 write_io_header.o \
 write_hamiltonians.o \
+globalmod.o \
+fouriermod.o \
+idwmod.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
@@ -60,7 +64,7 @@ MODULES = $(PWOBJS) $(QEMODS)
 
 TLDEPS= pwlibs
 
-all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x \
+all : tldeps open_grid.x average.x bands.x band_interpolation.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x pw2gt.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
@@ -87,6 +91,11 @@ average.x : average.o libpp.a $(MODULES)
 bands.x : bands.o libpp.a $(MODULES) 
 	$(LD) $(LDFLAGS) -o $@ \
 		bands.o libpp.a $(MODULES) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+band_interpolation.x : band_interpolation.o libpp.a $(MODULES) 
+	$(LD) $(LDFLAGS) -o $@ \
+		band_interpolation.o libpp.a $(MODULES) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 dos.x : dos.o libpp.a $(MODULES) 

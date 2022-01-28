@@ -93,4 +93,9 @@ exx_scf_bands_example:
    using hybrid HSE functional, including zero-weight dummy k-points. in the scf 
    calculation.
 
+exx_interpolated_bands_example:
+   Here it is shown how to use pw.x and band_interpolation.x to calculate the 
+   band structure of Silicon using PBE and hybrid PBE0 functionals, and 
+   interpolating the band energies at the uniform Monkhorst-Pack grid of one scf 
+   calculation.
 
