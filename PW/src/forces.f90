@@ -57,8 +57,10 @@ SUBROUTINE forces()
   USE qmmm,              ONLY : qmmm_mode
   !
   USE control_flags,     ONLY : use_gpu
+#if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
   USE device_memcpy_m,     ONLY : dev_memcpy
+#endif
   !
   IMPLICIT NONE
   !
@@ -95,7 +97,6 @@ SUBROUTINE forces()
   INTEGER :: ierr
 #if defined(__CUDA)
   attributes(DEVICE) :: vloc_d
-#endif
   !
   force(:,:)    = 0.D0
   !
@@ -476,7 +477,7 @@ SUBROUTINE forces()
   IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > nat*eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
                    &  "reduce conv_thr to get better values")')
-
+#endif
   RETURN
   !
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)

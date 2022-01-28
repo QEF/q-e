@@ -38,9 +38,11 @@ SUBROUTINE force_us_gpu( forcenl )
   USE wvfct_gpum,           ONLY : using_et
   USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
                                    synchronize_bec_type_gpu
+  USE uspp_init,            ONLY : init_us_2
+#if defined(__CUDA)
   USE device_fbuff_m,       ONLY : dev_buf
   USE control_flags,        ONLY : use_gpu
-  USE uspp_init,            ONLY : init_us_2
+#endif
   !
   IMPLICIT NONE
   !
@@ -58,6 +60,7 @@ SUBROUTINE force_us_gpu( forcenl )
   TYPE(bec_type_d), TARGET :: dbecp_d               ! contains <dbeta|psi>
   INTEGER    :: npw, ik, ipol, ig, jkb
   INTEGER    :: ierr
+#if defined(__CUDA)
   !
   forcenl(:,:) = 0.D0
   !
@@ -165,6 +168,7 @@ SUBROUTINE force_us_gpu( forcenl )
   ! ... BZ we have to symmetrize the forces.
   !
   CALL symvector ( nat, forcenl )
+#endif
   !
   RETURN
   !
@@ -173,7 +177,7 @@ SUBROUTINE force_us_gpu( forcenl )
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_gamma_gpu( forcenl )
        !-----------------------------------------------------------------------
-       !! Nonlocal contributiuon. Calculation at gamma.
+       !! Nonlocal contribution. Calculation at gamma.
        !
 #if defined(__CUDA)
        USE cublas
@@ -200,7 +204,6 @@ SUBROUTINE force_us_gpu( forcenl )
        REAL(DP) :: forcenl_ipol
 #if defined(__CUDA)
        attributes(DEVICE) :: dbecp_d_r_d, becp_d_r_d
-#endif
        !
        ! ... Important notice about parallelization over the band group of processors:
        ! ... 1) internally, "calbec" parallelises on plane waves over the band group
@@ -261,6 +264,7 @@ SUBROUTINE force_us_gpu( forcenl )
           ENDDO
           CALL dev_buf%release_buffer(aux_d, ierr)
        ENDDO
+#endif
        !
      END SUBROUTINE force_us_gamma_gpu
      !     
@@ -278,6 +282,7 @@ SUBROUTINE force_us_gpu( forcenl )
        !
        REAL(DP) :: fac
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
+#if defined(__CUDA)
        !
        CALL using_et(0)
        CALL using_becp_auto(0);
@@ -362,6 +367,7 @@ SUBROUTINE force_us_gpu( forcenl )
           ENDDO ! ntyp
        ENDDO ! nbnd
        !
+#endif
        !
      END SUBROUTINE force_us_k_gpu
      !

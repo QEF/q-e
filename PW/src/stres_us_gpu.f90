@@ -34,8 +34,10 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto, &
                                    calbec_gpu
-  USE device_fbuff_m,       ONLY : dev_buf
   USE uspp_init,            ONLY : init_us_2, gen_us_dj_gpu, gen_us_dy_gpu
+#if defined(__CUDA)
+  USE device_fbuff_m,       ONLY : dev_buf
+#endif 
   !
   IMPLICIT NONE
   !
@@ -61,7 +63,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
 #if defined(__CUDA)
   attributes(DEVICE) :: gk_d, qm1_d, is_multinp_d, ix_d, shift_d, &
                         ityp_d, nh_d
-#endif 
   !
   CALL using_evc_d(0)
   CALL using_evc(0)
@@ -859,5 +860,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        RETURN
        !
      END SUBROUTINE stres_us_k_gpu
+#endif
      !
 END SUBROUTINE stres_us_gpu

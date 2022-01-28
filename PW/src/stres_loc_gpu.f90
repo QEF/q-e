@@ -29,8 +29,10 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc_gpu, cutoff_stres_sigmaloc_gpu
   !
   USE wavefunctions_gpum,   ONLY : using_psic, using_psic_d, psic_d
+#if defined(__CUDA)
   USE device_fbuff_m ,            ONLY : dev_buf
   USE device_memcpy_m,        ONLY : dev_memcpy
+#endif
   !
   implicit none
   !
@@ -56,7 +58,6 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
 #if defined(__CUDA)
   attributes(DEVICE) :: vloc_d, strf_d, nl_d, rab_d, r_d, dvloc_d, &
                         upfvloc_d
-#endif
   !
   nl_d => dfftp%nl_d
   !
@@ -189,6 +190,7 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   CALL dev_buf%release_buffer( r_d, ierrs(4) )
   CALL dev_buf%release_buffer( upfvloc_d, ierrs(5) )
   !
+#endif
   RETURN
   !
 END SUBROUTINE stres_loc_gpu

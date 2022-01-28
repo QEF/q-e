@@ -74,7 +74,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   integer :: iq
 #if defined(__CUDA)
   attributes(DEVICE) :: gk_d, qg_d, vq_d, ylm_d, vkb1_d, sk_d
-#endif
   !
   CALL start_clock( 'init_us_2:gpu' )
   !
@@ -204,6 +203,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   CALL dev_buf%release_buffer(  gk_d, istat(6) )
   !
   CALL stop_clock( 'init_us_2:gpu' )
+#endif
   !
   return
 end subroutine init_us_2_base_gpu
