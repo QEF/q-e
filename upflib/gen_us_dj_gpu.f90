@@ -79,7 +79,6 @@ SUBROUTINE gen_us_dj_gpu_ &
   attributes(DEVICE) :: gk_d, q_d, sk_d, djl_d, ylm_d, &
                         ityp_d, phase_d, ih_d, na_d, tau_d, nas_d
   attributes(DEVICE) :: dvkb_d
-#endif
   !
   IF (nkb == 0) RETURN
   !
@@ -213,6 +212,7 @@ SUBROUTINE gen_us_dj_gpu_ &
   CALL dev_buf%release_buffer( gk_d, ierr(3) )
   !
   DEALLOCATE( ih_d, na_d, nas_d )
+#endif
   !
   RETURN
   !

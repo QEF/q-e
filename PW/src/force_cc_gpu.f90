@@ -29,8 +29,10 @@ SUBROUTINE force_cc_gpu( forcecc )
   USE wavefunctions, ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
+#if defined(__CUDA)
   USE device_fbuff_m,             ONLY : dev_buf
   USE device_memcpy_m,        ONLY : dev_memcpy
+#endif
   !
   IMPLICIT NONE
   !
@@ -58,7 +60,6 @@ SUBROUTINE force_cc_gpu( forcecc )
   integer           :: maxmesh
 #if defined(__CUDA)
   attributes(DEVICE) :: rhocg_d, psic_d, nl_d, r_d, rab_d, rhoc_d 
-#endif
   !
   nl_d => dfftp%nl_d
   !
@@ -161,6 +162,7 @@ SUBROUTINE force_cc_gpu( forcecc )
   CALL dev_buf%release_buffer(r_d, ierrs(3) )
   CALL dev_buf%release_buffer(rab_d, ierrs(4) )
   CALL dev_buf%release_buffer(rhoc_d, ierrs(5) )
+#endif
   !
   RETURN
   !

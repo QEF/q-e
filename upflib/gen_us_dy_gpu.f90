@@ -88,7 +88,6 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   attributes(DEVICE) :: gk_d, q_d, sk_d, vkb0_d, dylm_u_d, dylm_d, &
                         ityp_d, phase_d, ih_d, na_d, tau_d, nas_d
   attributes(DEVICE) :: dvkb_d
-#endif
   !
   dvkb_d = (0._DP,0._DP)
   !
@@ -247,6 +246,7 @@ SUBROUTINE gen_us_dy_gpu_ ( npw, npwx, igk_d, xk, nat, tau, ityp, ntyp, &
   CALL dev_buf%release_buffer( gk_d, ierr(3) )
   !
   DEALLOCATE( ih_d, na_d, nas_d )
+#endif
   !
   RETURN
   !
