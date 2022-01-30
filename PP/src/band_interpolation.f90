@@ -20,9 +20,7 @@ implicit none
   !
   write(stdout,'(A)') 'PROGRAM: band_interpolation '
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
   !
   Call set_defaults () 
   !
@@ -57,7 +55,7 @@ implicit none
   !
   Call deallocate_global ()
   !
-  RETURN   
+  Call stop_pp ()
   !
 end program
 !----------------------------------------------------------------------------
