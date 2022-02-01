@@ -43,6 +43,7 @@ subroutine force_corr_gpu (forcescc)
   !
   real(DP) :: forcescc (3, nat)
   !
+#if defined(__CUDA)
   real(DP), pointer, contiguous ::   rhocgnt_d(:),  aux_d (:,:), r_d(:), rab_d(:), rhoat_d(:), tau_d(:,:)
   complex(DP),pointer      ::   psic_d(:)
   integer, pointer      :: nl_d (:)
@@ -52,9 +53,7 @@ subroutine force_corr_gpu (forcescc)
   real(DP) ::  gx, arg, fact, forcesccx, forcesccy, forcesccz
   ! temp factors
   integer :: ir, isup, isdw, ig, nt, na, ndm, ierr, msh_nt, igg, glblock,igl, ierrs(7)
-#if defined(__CUDA)
   ATTRIBUTES(DEVICE)  :: rhocgnt_d, aux_d, psic_d,r_d, rab_d, rhoat_d, nl_d, tau_d
-#endif
 
   ! counters
   !
@@ -151,6 +150,7 @@ subroutine force_corr_gpu (forcescc)
   call dev_buf%release_buffer ( rhocgnt_d, ierr )
   !
   call mp_sum(  forcescc, intra_bgrp_comm )
+#endif
   !
   return
 end subroutine force_corr_gpu

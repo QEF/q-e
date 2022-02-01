@@ -18,7 +18,7 @@ contains
 
    subroutine init_zero(tabr, H_g, &
                         nsp, zv, tpiba2, tpiba, omega, at, alat, &
-                        ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
+                        ngm, gg, gstart, g, igtongl, gl, ngl, dq, &
                         upf, rgrid, nqxq, intra_bgrp_comm, &
                         nat, ityp)
 !called once to init stuff that does not depend on the atomic positions
@@ -36,7 +36,6 @@ contains
                              intra_bgrp_comm, nat, ityp(:)
       real(dp), intent(in) :: zv(:), tpiba2, tpiba, omega, at(3, 3), alat, &
                               gg(:), g(:, :), gl(:), dq
-      logical, intent(in) :: spline_ps
       type(radial_grid_type), intent(in) :: rgrid(:)
       type(pseudo_upf), intent(in) :: upf(:)
 
@@ -47,9 +46,9 @@ contains
       call start_clock('init_zero')
       call init_us_1(nat, ityp, omega, ngm, g, gg, intra_bgrp_comm)
       allocate (tablocal_hg(nqxq, nsp, 2))
-      call init_us_1a(tabr, tablocal_hg, rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
+      call init_us_1a(tabr, tablocal_hg, rgrid, nsp, zv, omega, nqxq, dq, upf)
       call init_reciprocal_parts_tab(H_g, tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
-                                     ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq)
+                                     ngm, gg, gstart, g, igtongl, gl, ngl, dq)
       do a = 1, 3
          do b = 1, 3
             if (a > b) then
@@ -352,7 +351,7 @@ contains
    subroutine allocate_zero
       use ions_base, only: nsp
       use gvect, only: ngm
-      use uspp_data, ONLY: nqxq, spline_ps
+      use uspp_data, ONLY: nqxq
       USE uspp_param, ONLY: nbetam
 !
       implicit none
@@ -372,7 +371,7 @@ contains
    end subroutine deallocate_zero
 
    SUBROUTINE init_reciprocal_parts_tab(H_g, tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
-                                        ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq)
+                                        ngm, gg, gstart, g, igtongl, gl, ngl, dq)
       use kinds, only: DP
       !use ions_base, only: nsp, zv
       !use cell_base, only: tpiba2, tpiba, omega, at, alat
@@ -380,7 +379,7 @@ contains
       !use mp_world, only: mpime
       use mp, only: mp_sum
       !use gvect, only: ngm, gg, gstart, g, igtongl, gl, ngl
-      !use uspp_data, only: spline_ps, dq
+      !use uspp_data, only: dq
       use mp_pools, only: intra_pool_comm
 !  use splinelib
       implicit none
@@ -389,7 +388,6 @@ contains
       integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl
       real(dp), intent(in) :: zv(:), tpiba2, tpiba, omega, at(3, 3), alat, &
                               gg(:), g(:, :), gl(:), dq, tablocal_hg(:, :, :)
-      logical, intent(in) :: spline_ps
 
       real(DP) :: px, ux, vx, wx, xg
       integer  ::  a, b, igm, igl, it
@@ -406,9 +404,6 @@ contains
 !initialization  radial part
          do igl = 1, ngl
             xg = sqrt(gl(igl))*tpiba
-            if (spline_ps) then
-               CALL errore('init_reciprocal_parts', 'splines not implemented', 1)
-            else
                px = xg/dq - int(xg/dq)
                ux = 1.d0 - px
                vx = 2.d0 - px
@@ -430,7 +425,6 @@ contains
                            &tablocal_hg(i1, it, 2)*px*vx*wx/2.d0 - &
                            &tablocal_hg(i2, it, 2)*px*ux*wx/2.d0 + &
                            &tablocal_hg(i3, it, 2)*px*ux*vx/6.d0
-            end if
          end do
 ! Now we use H_g_rad to evaluate H_g, adding some "structure factors"
          do a = 1, 3
@@ -465,7 +459,7 @@ contains
    END SUBROUTINE init_reciprocal_parts_tab
 
    subroutine init_us_1a(tabr, tablocal_hg, &
-                         rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
+                         rgrid, nsp, zv, omega, nqxq, dq, upf)
       !----------------------------------------------------------------------
       !
       USE radial_grids, ONLY: radial_grid_type
@@ -475,7 +469,7 @@ contains
       !USE atom, ONLY: rgrid
       !USE ions_base, ONLY: nsp, zv
       !USE cell_base, ONLY: omega
-      !use uspp_data, ONLY: nqxq, dq, spline_ps
+      !use uspp_data, ONLY: nqxq, dq
       USE splinelib
       !USE uspp_param, ONLY: upf
       USE mp_global, ONLY: intra_bgrp_comm
@@ -487,7 +481,6 @@ contains
       integer, intent(in) :: nsp, nqxq
       type(pseudo_upf), intent(in) :: upf(:)
       real(dp), intent(in) :: zv(:), omega, dq
-      logical, intent(in) :: spline_ps
       real(DP), intent(inout) :: tablocal_hg(:, :, :), tabr(:, :, :, :)
       !
       !
@@ -572,10 +565,6 @@ contains
 #ifdef __MPI
       call mp_sum(tabr, intra_bgrp_comm)
 #endif
-      ! initialize spline interpolation
-      if (spline_ps) then
-         CALL errore('init_us_1a', 'splines for tabr not implemented', 1)
-      endif
 !!!!!!!!!!!!!!
 !Initialization of tablocal_hg
 !Warning the new grid must be compatible with the one of the local pseudo
@@ -613,9 +602,6 @@ contains
       call mp_sum(tablocal_hg, intra_bgrp_comm)
 #endif
       ! initialize spline interpolation
-      if (spline_ps) then
-         CALL errore('init_us_1a', 'splines for tablocal not implemented', 1)
-      endif
       deallocate (besr)
       deallocate (aux)
 

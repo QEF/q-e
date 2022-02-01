@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum Espresso (version: 6.8)
+Program: cp.x / CP / Quantum Espresso (version: 7.0)
 ------------------------------------------------------------------------
 
 
@@ -2517,4 +2517,4 @@ CARD: PLOT_WANNIER
 ### END OF SUPERCARD :  AUTOPILOT/ENDRULES #############################
 
 
-This file has been created by helpdoc utility on Wed Nov 17 17:34:12 CET 2021
+This file has been created by helpdoc utility on Sat Dec 18 20:08:38 CET 2021

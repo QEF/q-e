@@ -41,7 +41,7 @@ SUBROUTINE stres_hub ( sigmah )
    USE force_mod,          ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
                                   us_dy, us_dj
    USE wavefunctions_gpum, ONLY : using_evc
-   USE uspp_init,          ONLY : init_us_2
+   USE uspp_init,          ONLY : init_us_2, gen_us_dj, gen_us_dy
    !
    IMPLICIT NONE
    !

@@ -24,3 +24,11 @@ endif()
 # DeviceXlib
 ###########################################################
 include(devxlib.cmake)
+
+###########################################################
+# D3Q
+###########################################################
+if("d3q" IN_LIST QE_ENABLE_PLUGINS)
+  qe_git_submodule_update(external/d3q)
+  add_subdirectory(d3q)
+endif()

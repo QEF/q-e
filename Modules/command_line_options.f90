@@ -20,8 +20,12 @@ MODULE command_line_options
   !
   ! ... Number of arguments in command line
   INTEGER :: nargs = 0
-  ! ... QE arguments read from command line
-  INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1, nyfft_ = 1, nmany_ = 1
+  ! ... QE arguments read from command line, default 1
+  INTEGER :: nimage_= 1, nband_= 1, nyfft_ = 1, nmany_ = 1
+  ! ... As above, default 0, in order to distinguish the "not set" and the
+  ! ... "set to 1" cases - useful for automatically choosing those values
+  INTEGER :: npool_= 0, ndiag_ = 0, ntg_= 0
+  ! ... Undocumented options
   LOGICAL :: pencil_decomposition_ = .false., rmm_with_paro_ = .false. 
   ! ... Indicate if using library init
   LOGICAL :: library_init = .FALSE.
@@ -101,16 +105,7 @@ CONTAINS
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) npool_
               narg = narg + 1
-! FIXME: following comment should be moved to a more visible place
-! special case : task group parallelization and nyfft parallelization, both 
-!                introduced to improve scaling coexist and are in part interchangeable
-!                if TG is available it's faster that NYFFT becouse it communicates larger
-!                data chuncks less times. But sometimes it is not available as for instance
-!                when metagga is used or realus or for conjugate gradient. nyfft can be used.
-!-ntg and -nyfft are both alloved flags set the same value for both ntg and nyfft. 
-!                These variables are kept separated to help understanding which operation belong
-!                to TG or to NYFFT. This can enable to make them different if the need arises.
-!
+
            CASE ( '-nt', '-ntg', '-ntask_groups', '-nyfft')   
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
@@ -120,7 +115,7 @@ CONTAINS
               READ ( arg, *, ERR = 15, END = 15) ntg_         ! read the argument as ntg_
               nyfft_ = ntg_  ! set nyfft_ equal to ntg_
               narg = narg + 1
-           CASE ( '-pd', 'use_pd', '-pencil_decomposition', '-use_pencil_decomposition' )
+           CASE ( '-pd', '-use_pd', '-pencil_decomposition', '-use_pencil_decomposition' )
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE

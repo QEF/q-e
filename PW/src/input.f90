@@ -22,7 +22,6 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
-  USE mp_pools,      ONLY : npool
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
   !
@@ -56,7 +55,13 @@ SUBROUTINE iosys()
                               dt_         => dt, &
                               delta_t_    => delta_t, &
                               nraise_     => nraise, &
-                              refold_pos_ => refold_pos
+                              refold_pos_ => refold_pos, &
+                              fire_nmin_ => fire_nmin, &
+                              fire_f_inc_ => fire_f_inc, &
+                              fire_f_dec_ => fire_f_dec,  &
+                              fire_alpha_init_ => fire_alpha_init, &  
+                              fire_falpha_ => fire_falpha, &
+                              fire_dtmax_ => fire_dtmax
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -284,7 +289,9 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim
+                               trust_radius_ini, bfgs_ndim, &
+                               fire_nmin, fire_f_inc, fire_f_dec, &
+                               fire_alpha_init, fire_falpha, fire_dtmax
   !
   ! ... CELL namelist
   !
@@ -311,7 +318,7 @@ SUBROUTINE iosys()
   USE dftd3_api,             ONLY : dftd3_init, dftd3_set_params, &
                                     dftd3_set_functional, dftd3_calc, &
                                     dftd3_input
-  USE dftd3_qe,              ONLY : dftd3_printout, dftd3_xc, dftd3, dftd3_in
+  USE dftd3_qe,              ONLY : dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE uspp_data,             ONLY : spline_ps_ => spline_ps
@@ -332,10 +339,11 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, tempunit, i, j
+  INTEGER  :: ia, nt, tempunit, i, j, ibrav_mp
   LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
+  INTEGER, EXTERNAL :: at2ibrav
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -386,6 +394,20 @@ SUBROUTINE iosys()
         !
         lmd     = .true.
         calc    = 'vm'
+        !
+        ntcheck = nstep + 1
+        !
+     CASE ( 'fire' )
+        !
+        lmd     = .true.
+        calc    = 'fi'
+        ! set fire variables
+        fire_nmin_ = fire_nmin
+        fire_f_inc_ = fire_f_inc
+        fire_f_dec_ = fire_f_dec
+        fire_alpha_init_ = fire_alpha_init
+        fire_falpha_ = fire_falpha
+        fire_dtmax_ = fire_dtmax
         !
         ntcheck = nstep + 1
         !
@@ -1186,8 +1208,6 @@ SUBROUTINE iosys()
   ! ELECTRIC FIELDS AND BERRY PHASE
   !
   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
-     IF ( npool > 1 ) CALL errore( 'iosys', &
-          'Berry Phase/electric fields not implemented with pools', 1 )
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
           'Berry Phase/electric fields only for insulators!', 1 )
      IF ( lmovecell ) CALL errore( 'iosys', &
@@ -1398,7 +1418,21 @@ SUBROUTINE iosys()
   !
   IF (.NOT. tqmmm) CALL qmmm_config( mode=-1 )
   !
-  ! BOUNDARY CONDITIONS, ESM
+  ! ATOMIC POSITIONS
+  !
+  ! init_pos replaces old "read_cards_pw
+  !
+  CALL init_pos ( psfile, tau_format )
+  ! next two lines should be moved out from here
+  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
+  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) 
+  !
+  ! CRYSTAL LATTICE
+  !
+  call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
+                        trd_ht, rd_ht, cell_units )
+  !
+  ! BOUNDARY CONDITIONS (MP correction depends on at set in cell_base_init), ESM
   !
   do_makov_payne  = .false.
   do_comp_mt      = .false.
@@ -1410,7 +1444,9 @@ SUBROUTINE iosys()
     CASE( 'makov-payne', 'm-p', 'mp' )
       !
       do_makov_payne = .true.
-      IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
+      ibrav_mp = ibrav
+      IF ( ibrav .EQ. 0 ) ibrav_mp = at2ibrav(at(:, 1), at(:, 2), at(:, 3))
+      IF ( ibrav_mp < 1 .OR. ibrav_mp > 3 ) CALL errore(' iosys', &
               'Makov-Payne correction defined only for cubic lattices', 1)
       !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
@@ -1447,7 +1483,7 @@ SUBROUTINE iosys()
   esm_bc_ = esm_bc
   esm_efield_ = esm_efield
   esm_w_ = esm_w
-  esm_nfit_ = esm_nfit 
+  esm_nfit_ = esm_nfit
   esm_a_ = esm_a
   !
   IF ( esm_bc .EQ. 'bc4' ) THEN
@@ -1462,21 +1498,6 @@ SUBROUTINE iosys()
       CALL errore ('iosys','smoothness parameter for bc4 too big',1)
     ENDIF
   ENDIF
-  !
-  !
-  ! ATOMIC POSITIONS
-  !
-  ! init_pos replaces old "read_cards_pw
-  !
-  CALL init_pos ( psfile, tau_format )
-  ! next two lines should be moved out from here
-  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
-  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) 
-  !
-  ! CRYSTAL LATTICE
-  !
-  call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                        trd_ht, rd_ht, cell_units )
   !
   ! ... once input variables have been stored, read optional plugin input files
   !
@@ -1630,8 +1651,6 @@ SUBROUTINE iosys()
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
      ecutfock_ = ecutfock
   END IF
-  IF ( tstress_ .AND. xclib_dft_is('hybrid') .AND. npool > 1 )  CALL errore('iosys', &
-         'stress for hybrid functionals not available with pools', 1)
   IF ( lmovecell.AND. xclib_dft_is('hybrid') ) CALL infomsg('iosys',&
          'Variable cell and hybrid XC little tested')
   !
@@ -1674,8 +1693,6 @@ SUBROUTINE iosys()
       if (dftd3_version==2) dftd3_threebody=.false.
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
-      CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, nat, ityp,&
-                  tau, at, alat )
       dft_ = get_dft_short( )
       dft_ = dftd3_xc ( dft_ )
       CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)

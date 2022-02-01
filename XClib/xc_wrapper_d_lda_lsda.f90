@@ -134,6 +134,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
           IF (rho_in(ir,1)<=rho_threshold_lda ) CYCLE
           dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmex_lxc(ir)*2.0_DP
         ENDDO
+        DEALLOCATE( dmex_lxc )
       ENDIF
       !
       IF ( is_libxc(2) ) THEN
@@ -141,6 +142,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
           IF (rho_in(ir,1)<=rho_threshold_lda ) CYCLE
           dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmcr_lxc(ir)*2.0_DP
         ENDDO
+        DEALLOCATE( dmcr_lxc )
       ENDIF
       !
     CASE( 2 )

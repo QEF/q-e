@@ -2,9 +2,7 @@
 MODULE mp_world
   !----------------------------------------------------------------------------
   !
-#if defined(__MPI)
-  USE mpi
-#endif
+  USE laxlib_parallel_include
   USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop 
   USE mp, ONLY : mp_count_nodes
   !

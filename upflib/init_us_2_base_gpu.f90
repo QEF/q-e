@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2021 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,9 +16,7 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   !
   USE upf_kinds,    ONLY : DP
   USE upf_const,    ONLY : tpi
-  USE uspp_data,    ONLY : nqx, dq, spline_ps, tab_d, tab_d2y_d
-  USE m_gth,        ONLY : mk_ffnl_gth
-  USE splinelib,    ONLY : splint_eq
+  USE uspp_data,    ONLY : nqx, dq, tab_d
   USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh, nsp
   USE device_fbuff_m,   ONLY : dev_buf
@@ -68,18 +66,14 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   integer :: iv_d
   real(DP) :: px, ux, vx, wx, arg, q1, q2, q3
   real(DP), pointer :: gk_d (:,:), qg_d (:), vq_d(:), ylm_d(:,:), vkb1_d(:,:)
-  real(DP), allocatable :: qg_h (:), vq_h(:)
   real(DP) :: rv_d
 
   complex(DP) :: phase, pref
   complex(DP), pointer :: sk_d(:)
 
-  logical :: is_gth
   integer :: iq
 #if defined(__CUDA)
   attributes(DEVICE) :: gk_d, qg_d, vq_d, ylm_d, vkb1_d, sk_d
-  attributes(PINNED) :: qg_h, vq_h
-#endif
   !
   CALL start_clock( 'init_us_2:gpu' )
   !
@@ -100,17 +94,6 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   CALL dev_buf%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat(5) )
   CALL dev_buf%lock_buffer(  gk_d, (/ 3, npw_ /), istat(6) )
   IF (ANY(istat /= 0)) CALL upf_error( 'init_us_2_gpu', 'cannot allocate buffers', -1 )
-
-  is_gth = .false.
-  do nt = 1, nsp
-     is_gth = upf(nt)%is_gth
-     if (is_gth) then
-        allocate (  qg_h( npw_))    
-        allocate (  vq_h( npw_)) 
-        is_gth = .true.
-        exit
-     end if
-  end do
   !
   q1 = q_(1)
   q2 = q_(2)
@@ -136,45 +119,25 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
      qg_d(ig) = sqrt(qg_d(ig))*tpiba
   enddo
 
-  ! JR Don't need this when using splint_eq_gpu
-  !if (spline_ps) then
-  !  allocate(xdata(nqx))
-  !  do iq = 1, nqx
-  !    xdata(iq) = (iq - 1) * dq
-  !  enddo
-  !endif
-
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
   do nt = 1, nsp
      do nb = 1, upf(nt)%nbeta
-        if ( upf(nt)%is_gth ) then
-           qg_h = qg_d
-           CALL mk_ffnl_gth( nt, nb, npw_, omega, qg_h, vq_h )
-           vq_d = vq_h
-        else if (spline_ps) then
-           call splint_eq(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
-        else
-           !$cuf kernel do(1) <<<*,*>>>
-           do ig = 1, npw_
-              rv_d = qg_d(ig)
-              px = rv_d / dq - int (rv_d / dq)
-              ux = 1.d0 - px
-              vx = 2.d0 - px
-              wx = 3.d0 - px
-              i0 = INT( rv_d / dq ) + 1
-              i1 = i0 + 1
-              i2 = i0 + 2
-              i3 = i0 + 3
-              vq_d (ig) = ux * vx * (wx * tab_d(i0, nb, nt) + px * tab_d(i3, nb, nt)) / 6.d0 + &
-                          px * wx * (vx * tab_d(i1, nb, nt) - ux * tab_d(i2, nb, nt)) * 0.5d0
+        !$cuf kernel do(1) <<<*,*>>>
+        do ig = 1, npw_
+           rv_d = qg_d(ig)
+           px = rv_d / dq - int (rv_d / dq)
+           ux = 1.d0 - px
+           vx = 2.d0 - px
+           wx = 3.d0 - px
+           i0 = INT( rv_d / dq ) + 1
+           i1 = i0 + 1
+           i2 = i0 + 2
+           i3 = i0 + 3
+           vq_d (ig) = ux * vx * (wx * tab_d(i0, nb, nt) + px * tab_d(i3, nb, nt)) / 6.d0 + &
+                       px * wx * (vx * tab_d(i1, nb, nt) - ux * tab_d(i2, nb, nt)) * 0.5d0
                           
-              !vq_d (ig) = tab_d (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-              !            tab_d (i1, nb, nt) * px * vx * wx / 2.d0 - &
-              !            tab_d (i2, nb, nt) * px * ux * wx / 2.d0 + &
-              !            tab_d (i3, nb, nt) * px * ux * vx / 6.d0
-           enddo
-        endif
+        enddo
 
         ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
         do ih = 1, nh (nt)
@@ -239,11 +202,8 @@ SUBROUTINE init_us_2_base_gpu( npw_, npwx, igk__d, q_, nat, tau, ityp, &
   CALL dev_buf%release_buffer( ylm_d, istat(5) )
   CALL dev_buf%release_buffer(  gk_d, istat(6) )
   !
-  IF (is_gth) THEN
-     deallocate ( qg_h, vq_h )
-  END IF
-  !
   CALL stop_clock( 'init_us_2:gpu' )
+#endif
   !
   return
 end subroutine init_us_2_base_gpu

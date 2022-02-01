@@ -115,7 +115,7 @@ entropy.o
 
 QEMODS=$(BASEMODS)
 
-TLDEPS= bindir libs mods
+TLDEPS= bindir mods
 
 all : tldeps libcp.a manycp.x cp.x wfdd.x cppp.x
 

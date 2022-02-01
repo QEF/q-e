@@ -30,7 +30,7 @@ SUBROUTINE phq_readin2()
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
   USE fft_base,      ONLY : dffts
-  USE spin_orb,      ONLY : domag, lspinorb
+  USE noncollin_module,   ONLY : domag, lspinorb
   USE cellmd,        ONLY : lmovecell
   USE run_info,      ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &

@@ -34,7 +34,8 @@ SUBROUTINE summary()
   USE klist,           ONLY : degauss, smearing, lgauss, ltetra, nkstot, xk, &
                               wk, nelec, nelup, neldw, two_fermi_energies
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
-                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
+                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, &
+                              tq_smoothing, tbeta_smoothing, llondon, ldftd3
   USE noncollin_module,ONLY : noncolin, domag, lspinorb
   USE funct,           ONLY : write_dft_name
   USE xc_lib,          ONLY : xclib_dft_is
@@ -53,6 +54,9 @@ SUBROUTINE summary()
   USE fcp_module,      ONLY : lfcp, fcp_summary
   USE gcscf_module,    ONLY : lgcscf, gcscf_summary
   USE relax,           ONLY : epse, epsf, epsp
+  USE environment,     ONLY : print_cuda_info
+  USE london_module,   ONLY : print_london
+  USE dftd3_qe,        ONLY : dftd3_printout, dftd3, dftd3_in
   !
   IMPLICIT NONE
   !
@@ -156,7 +160,7 @@ SUBROUTINE summary()
   !
   ! ... CUDA
   !
-  CALL print_cuda_info()
+  CALL print_cuda_info(check_use_gpu = .TRUE.)
   !
   ! ... ESM (Effective screening medium)
   !
@@ -294,7 +298,7 @@ SUBROUTINE summary()
   !
   !   description of symmetries
   !
-  CALL  print_symmetries ( iverbosity, noncolin, domag )
+  CALL print_symmetries ( iverbosity, noncolin, domag )
   !
   !    description of the atoms inside the unit cell
   !
@@ -303,6 +307,10 @@ SUBROUTINE summary()
 
   WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f12.7,"  )")') &
              (na, atm(ityp(na)), na, (tau(ipol,na), ipol=1,3), na=1,nat)
+  !
+  IF ( llondon ) CALL print_london ( )
+  IF ( ldftd3 )  CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, &
+       nat, ityp, tau, at, alat )
   !
   !  output of starting magnetization
   !
@@ -636,62 +644,4 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   !
 END SUBROUTINE print_symmetries
 !
-!-----------------------------------------------------------------------
-SUBROUTINE print_cuda_info
-  !-----------------------------------------------------------------------
-  !
-  USE io_global,       ONLY : stdout
-  USE control_flags,   ONLY : use_gpu, iverbosity
-  USE mp_world,        ONLY : nnode, nproc
-  USE mp,              ONLY : mp_sum, mp_max
-#if defined(__CUDA)
-  USE cudafor
-  !
-  IMPLICIT NONE
-  !
-  INTEGER :: idev, ndev, ierr
-  TYPE (cudaDeviceProp) :: prop
-  !
-  IF (use_gpu) THEN
-     WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.")' )
-#if defined(__GPU_MPI)
-     WRITE( stdout, '(5x, "GPU-aware MPI enabled")')
-#endif
-     WRITE( stdout, '()' )
-  ELSE
-     WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
-  END IF
-  !
-  ierr = cudaGetDevice( idev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device id', ierr)
-  ierr = cudaGetDeviceCount( ndev )
-  IF (ierr /= 0) CALL errore('summary', 'cannot get device count', ierr)
-  !
-  ! User friendly, approximated warning.
-  ! In order to get this done right, one needs an intra_node communicator
-  !
-  IF (nproc > ndev * nnode * 2) &
-     CALL infomsg('print_cuda_info', &
-      'High GPU oversubscription detected. Are you sure this is what you want?')
-  !
-  ! Verbose information for advanced users
-  IF (iverbosity > 0) THEN
-     WRITE( stdout, '(/,5X,"GPU used by master process:",/)' )
-     ! Device info taken from
-     ! https://devblogs.nvidia.com/how-query-device-properties-and-handle-errors-cuda-fortran/
-     ierr = cudaGetDeviceProperties(prop, idev)
-     WRITE(stdout,"(5X,'   Device Number: ',i0)") idev
-     WRITE(stdout,"(5X,'   Device name: ',a)") trim(prop%name)
-     WRITE(stdout,"(5X,'   Compute capability : ',i0, i0)") prop%major, prop%minor
-     WRITE(stdout,"(5X,'   Ratio of single to double precision performance  : ',i0)") prop%singleToDoublePrecisionPerfRatio
-     WRITE(stdout,"(5X,'   Memory Clock Rate (KHz): ', i0)") &
-       prop%memoryClockRate
-     WRITE(stdout,"(5X,'   Memory Bus Width (bits): ', i0)") &
-       prop%memoryBusWidth
-     WRITE(stdout,"(5X,'   Peak Memory Bandwidth (GB/s): ', f6.2)") &
-       2.0*prop%memoryClockRate*(prop%memoryBusWidth/8)/10.0**6
-  END IF
-  !
-#endif
-  !
-END SUBROUTINE print_cuda_info
+

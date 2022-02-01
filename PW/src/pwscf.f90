@@ -55,7 +55,7 @@ PROGRAM pwscf
   LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
   !
-  CALL mp_startup( start_images=.TRUE. )
+  CALL mp_startup( start_images=.TRUE., images_only=.TRUE. )
   !
   !
   CALL environment_start( 'PWSCF' )

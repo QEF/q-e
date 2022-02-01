@@ -19,6 +19,15 @@ MODULE vasp_xml
   ! vasp_readschema_*          read variables into internal varables
   !
 USE kinds, ONLY : DP
+#if defined (__outfoxed)
+  USE     dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
+                      nodeList, Node, getLength, getTagName, hasAttribute, &
+                      extractDataContent, extractDataAttribute
+#else
+  USE FoX_dom, ONLY : parseFile, item, getElementsByTagname, destroy, &
+                      nodeList, Node, getLength, getTagName, hasAttribute, &
+                      extractDataContent, extractDataAttribute
+#endif
 
 IMPLICIT NONE
 
@@ -103,7 +112,6 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE extfield,             ONLY : forcefield, tefield, gate, forcegate
-  USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE fft_types,            ONLY : fft_type_allocate
@@ -219,9 +227,6 @@ END SUBROUTINE readxmlfile_vasp
 SUBROUTINE vasp_readschema_file (ierr, vasp_kpoints, vasp_parameters, vasp_atominfo, vasp_structure)
   !----------------------------------------------------------------
   USE io_files,             ONLY : tmp_dir
-  USE FoX_dom,              ONLY : parseFile, item, getElementsByTagname, destroy, nodeList, Node
-  USE FoX_dom,              ONLY : getLength
-  USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
   IMPLICIT NONE
   !
   INTEGER                                               :: ierr, io_err
@@ -310,9 +315,6 @@ END SUBROUTINE vasp_readschema_file
   !---------------------------------------------------------
   SUBROUTINE vasp_read_atominfo(xml_node, obj, ierr)
     !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
     IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
@@ -428,11 +430,6 @@ END SUBROUTINE vasp_readschema_file
   !---------------------------------------------------------
   SUBROUTINE vasp_read_kpoints(xml_node, obj, ierr)
     !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
-    IMPLICIT NONE
-    !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
     TYPE(vasp_kpoints_type), INTENT(OUT)     :: obj
     INTEGER, OPTIONAL, INTENT(OUT)           :: ierr
@@ -485,11 +482,6 @@ END SUBROUTINE vasp_readschema_file
   !
   !---------------------------------------------------------
   SUBROUTINE vasp_read_parameters(xml_node, obj, ierr)
-    !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
-    IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
     TYPE(vasp_parameters_type), INTENT(OUT)  :: obj
@@ -656,11 +648,6 @@ END SUBROUTINE vasp_readschema_file
   !
   !---------------------------------------------------------
   SUBROUTINE vasp_read_structure(xml_node, obj, ierr)
-    !
-    USE FoX_dom,              ONLY : item, getElementsByTagname, nodeList, Node
-    USE FoX_dom,              ONLY : getTagName, getLength, extractDataContent
-    USE FoX_dom,              ONLY : hasAttribute, getAttributes, extractDataAttribute
-    IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER          :: xml_node
     TYPE(vasp_structure_type), INTENT(OUT)   :: obj

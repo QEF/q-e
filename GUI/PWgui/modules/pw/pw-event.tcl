@@ -8,43 +8,57 @@ tracevar calculation w {
     set nat    [varvalue nat]
     set calc   [varvalue calculation]    
 
-    set ion_dynamics [varvalue ion_dynamics] 
+    set ion_dynamics [varvalue ion_dynamics]
+    set fcp_dynamics [varvalue fcp_dynamics]
     set widget       [getWidgetFromVarident ion_dynamics]
     
-    set all {ions cell vc_md constraints_card}
+    set all {ions cell fcp vc_md constraints_card}
     
     set disable {}
     set enable  {}
 
     switch -exact -- $calc {
 	'scf' - 
-	'nscf' {
+	'nscf' -
+        'bands' {
 	    set disable $all
 	    varset ion_dynamics -value {}
 	}
+        
 	'relax' {
-	    set enable  {ions constraints_card}
-	    set disable {cell vc_md}
+	    set enable  {ions fcp constraints_card}
+	    set disable {cell vc_md for_fcp_dynamics}
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization  <bfgs>"
 		"damped dynamics (quick-min Verlet) for structural optimization  <damp>"
+                "FIRE minimization algorithm  <fire>"
 	    }
-
-	    if { ! [regexp bfgs|damp $ion_dynamics] } {
+	    if { ! [regexp bfgs|damp|fire $ion_dynamics] } {
 		varset ion_dynamics -value {}
 	    }
+
+            widgetconfigure fcp_dynamics -textvalues {
+                "BFGS quasi-newton algorithm  <bfgs>"
+                "Newton-Raphson algorithm with DIIS  <newton>"
+                "damped (quick-min Verlet) dynamics  <damp>"
+                "line-minimization algorithm  <lm>"                
+            }
+	    if { ! [regexp bfgs|newton|damp|lm $fcp_dynamics] } {
+		varset fcp_dynamics -value {}
+	    }
 	}
+        
 	'vc-relax' {
 	    set enable  {ions cell vc_md constraints_card}
+            set disable {fcp}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization  <bfgs>"
 		"Beeman algorithm for variable cell damped dynamics  <damp>"
 	    }
-
 	    if { ! [regexp bfgs|damp $ion_dynamics] } {
 		varset ion_dynamics -value {}
 	    }
@@ -57,23 +71,33 @@ tracevar calculation w {
 		"BFGS quasi-newton algorithm (ion_dynamics must be 'bfgs' too)  <bfgs>"
 	    }
 	}
+        
 	'md' {
-	    set enable  {ions constraints_card}
+	    set enable  {ions fcp constraints_card}
 	    set disable {cell vc_md}	
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"Verlet algorithm for molecular dynamics  <verlet>"
 		"over-damped Langevin dynamics  <langevin>"
-		"over-damped Langevin with Smart Monte Carlo <langevin-smc>"
-	    }
-	    
+		"over-damped Langevin with Smart Monte Carlo  <langevin-smc>"
+	    }	    
 	    if { ! [regexp verlet|langevin $ion_dynamics] } {
 		varset ion_dynamics -value {}
 	    }
+
+            widgetconfigure fcp_dynamics -textvalues {
+                "Velocity-Verlet algorithm  <velocity-verlet>"
+                "Verlet algorithm  <verlet>"                
+            }
+            if { ! [regexp verlet $fcp_dynamics] } {
+		varset fcp_dynamics -value {}
+	    }
 	}
+        
 	'vc-md' {
 	    set enable  {ions cell vc_md constraints_card}
+            set disable {fcp}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -84,14 +108,14 @@ tracevar calculation w {
 		varset ion_dynamics -value {}
 	    }
 
-	    widgetconfigure ion_temperature -textvalues {
-		"velocity rescaling via tempw&tolp  <rescaling>"
-		"not controlled  <not_controlled>"
-	    }
-
-	    if { ! [regexp rescaling [varvalue ion_temperature]] } {
-		varset ion_temperature -value {}
-	    }
+	    #widgetconfigure ion_temperature -textvalues {
+	    #    "velocity rescaling via tempw&tolp  <rescaling>"
+	    #    "not controlled  <not_controlled>"
+	    #}
+            #
+	    #if { ! [regexp rescaling [varvalue ion_temperature]] } {
+	    #    varset ion_temperature -value {}
+	    #}
 
 	    widget cell_dynamics enable
 	    widgetconfigure cell_dynamics -textvalues {
@@ -103,7 +127,13 @@ tracevar calculation w {
     }
 
     foreach group $enable {
-	groupwidget $group enable
+        if { $group != "fcp" } {
+            groupwidget $group enable
+        } else {
+            if { [vartextvalue lfcp] == "Yes" } {
+                groupwidget $group enable
+            }
+        }
     }
     foreach group $disable {
 	groupwidget $group disable
@@ -112,13 +142,24 @@ tracevar calculation w {
     # force to update the state of widgets by resetting corresponding variables
 
     varset ion_dynamics       -value [varvalue ion_dynamics]
-    varset ion_temperature    -value [varvalue ion_temperature]
+    #varset ion_temperature    -value [varvalue ion_temperature]
     varset cell_dynamics      -value [varvalue cell_dynamics]
     varset constraints_enable -value [varvalue constraints_enable]
 
     widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"    	
 }
 
+tracevar lfcp w {
+    if { [vartextvalue lfcp] == "Yes" } {
+	groupwidget fcp enable
+        if { [varvalue calculation] != "'md'" } {
+            groupwidget for_fcp_dynamics disable
+        }
+    } else {
+	groupwidget fcp disable
+    }
+}
+    
 tracevar gate w {
     if { [vartextvalue gate] == "Yes" } {
 	groupwidget gate_group enable
@@ -371,6 +412,16 @@ tracevar vdw_corr w {
 	groupwidget xdmG  enable
     } elseif { [varvalue vdw_corr] == "'ts-vdw'" } {
 	groupwidget tsG   enable
+    } elseif { [varvalue vdw_corr] == "'mbd_vdw'" } {
+        widget ts_vdw_isolated enable
+    }
+}
+
+tracevar lgcscf w {
+    if { [vartextvalue lgcscf] == "Yes" } {
+	groupwidget gcscf_group enable
+    } else {
+	groupwidget gcscf_group disable
     }
 }
 
@@ -447,6 +498,13 @@ tracevar ion_dynamics w {
     } else {
 	groupwidget bfgs disable
     }
+
+    # FIRE
+    if { $iond == "'fire'" && $calc == "'relax'" } {
+	groupwidget fire enable
+    } else {
+	groupwidget fire disable
+    }
 }
 
 tracevar n_fe_step w {
@@ -499,6 +557,9 @@ tracevar K_POINTS_flags w {
 tracevar nks w {
     widgetconfigure kpoints -rows [varvalue nks]    
 }
+tracevar nks_add w {
+    widgetconfigure add_kpoints -rows [varvalue nks_add]    
+}
 
 
 # ------------------------------------------------------------------------
@@ -529,22 +590,18 @@ tracevar nconstr w {
     widgetconfigure constraints_table -rows $nc
 }
 
-tracevar assume_isolated w {    
-    switch -- [varvalue assume_isolated] {
-	'dcc' { 
-	    groupwidget ee enable 
-	}
-	default {
-	    groupwidget ee disable
-	}
-    }
-}
-
 tracevar specify_atomic_forces w {
     if { [vartextvalue specify_atomic_forces] == "Yes" } {
 	groupwidget atomic_forces_specs enable
     } else {
 	groupwidget atomic_forces_specs disable
+    }
+}
+tracevar specify_add_kpoints w {
+    if { [vartextvalue specify_add_kpoints] == "Yes" } {
+	groupwidget add_kpoints_specs enable
+    } else {
+	groupwidget add_kpoints_specs disable
     }
 }
 tracevar ion_velocities w {
@@ -560,6 +617,7 @@ tracevar ion_velocities w {
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
+    varset lfcp            -value {}
     varset gate            -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
@@ -570,10 +628,12 @@ postprocess {
     varset assume_isolated -value {}
     varset vdw_corr        -value {}
     varset london          -value {}
+    varset lgcscf          -value {}
     varset xdm             -value {}
     varset adaptive_thr    -value {}
     varset diagonalization -value {}
     varset ion_dynamics    -value {}
+    varset ion_velocities  -value {}
     varset K_POINTS_flags  -value automatic
     varset CELL_PARAMETERS_flags -value {}
 
@@ -582,4 +642,5 @@ postprocess {
     #groupwidget vdw_obsolete disable
 
     varset specify_atomic_forces -value .false.
+    varset specify_add_kpoints -value .false.
 }

@@ -6,8 +6,8 @@ make
 # temporary workaround: 
 
 if test ! -f pwgui; then
-    # transition from pwgui.kit --> pwgui fails at the moment, which
-    # means we have non-optimal pwgui.kit, lets use it
+    # if transition from pwgui.kit to pwgui fails then we have a
+    # non-optimal pwgui.kit, lets use it
     cp pwgui.kit pwgui
 fi
 

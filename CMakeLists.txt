@@ -113,6 +113,7 @@ option(QE_ENABLE_DOC
 set(QE_FFTW_VENDOR "AUTO" CACHE
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
+set(QE_ENABLE_PLUGINS "" CACHE STRING "Semicolon-separated list of plugins")
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -202,6 +203,16 @@ if(NOT QE_ENABLE_SANITIZER STREQUAL "none" AND NOT CMAKE_Fortran_COMPILER_ID MAT
   message(FATAL_ERROR "-DQE_ENABLE_SANITIZER=${QE_ENABLE_SANITIZER} only works with the GNU compiler")
 endif()
 
+# valid plugins checks
+set(VALID_QE_PLUGINS "d3q")
+# Perform sanitizer option check, only works in debug mode
+foreach(PLUGIN IN LISTS QE_ENABLE_PLUGINS)
+  if(NOT PLUGIN IN_LIST VALID_QE_PLUGINS)
+    message(FATAL_ERROR "Invalid QE plugin ${PLUGIN}, value must be one of \"${VALID_QE_PLUGINS}\".")
+  else()
+    message(STATUS "Enable QE plugin ${PLUGIN}")
+  endif()
+endforeach()
 
 ############################################################
 # C preprocessor
@@ -315,8 +326,8 @@ if(QE_ENABLE_OPENACC)
     target_link_libraries(qe_openacc_fortran INTERFACE OpenACC::OpenACC_Fortran)
     target_link_libraries(qe_openacc_c INTERFACE OpenACC::OpenACC_C)
     if(GPU_TARGET_COMPILE_OPTIONS)
-        target_compile_options(qe_openacc_fortran INTERFACE "${GPU_TARGET_COMPILE_OPTIONS}")
-        target_compile_options(qe_openacc_c INTERFACE "${GPU_TARGET_COMPILE_OPTIONS}")
+        target_compile_options(qe_openacc_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:${GPU_TARGET_COMPILE_OPTIONS}>")
+        target_compile_options(qe_openacc_c INTERFACE "$<$<COMPILE_LANGUAGE:C>:${GPU_TARGET_COMPILE_OPTIONS}>")
     endif()
 endif(QE_ENABLE_OPENACC)
 
@@ -544,8 +555,7 @@ if(QE_ENABLE_HDF5)
 
     target_link_libraries(qe_hdf5_fortran
         INTERFACE
-            ${HDF5_Fortran_LIBRARIES}
-            ${HDF5_Fortran_HL_LIBRARIES})
+            ${HDF5_Fortran_LIBRARIES})
     target_include_directories(qe_hdf5_fortran
         INTERFACE
             ${HDF5_Fortran_INCLUDE_DIRS})
@@ -555,8 +565,7 @@ if(QE_ENABLE_HDF5)
 
     target_link_libraries(qe_hdf5_c
         INTERFACE
-            ${HDF5_C_LIBRARIES}
-            ${HDF5_C_HL_LIBRARIES})
+            ${HDF5_C_LIBRARIES})
     target_include_directories(qe_hdf5_c
         INTERFACE
             ${HDF5_C_INCLUDE_DIRS})
@@ -616,6 +625,7 @@ add_subdirectory(PWCOND)
 add_subdirectory(TDDFPT)
 add_subdirectory(XSpectra)
 add_subdirectory(QEHeat)
+add_subdirectory(GUI)
 if(QE_ENABLE_DOC)
     add_subdirectory(Doc)
 endif()
@@ -672,88 +682,11 @@ add_custom_target(depgraph
 
 ###########################################################
 # Custom make targets
+# The collection 'pwall' is defined here
+# Each of the followings is defined inside its subdirectory
+#   pw ph pp hp pwcond neb cp tddfpt gwl ld1 upf epw
+#   xspectra couple all_currents
 ###########################################################
-add_custom_target(pw
-    DEPENDS
-        qe_pw_exe
-        qe_pw_tools_ibrav2cell_exe
-        qe_pw_tools_cell2ibrav_exe
-        qe_pw_tools_ev_exe
-        qe_pw_tools_kpoints_exe
-        qe_pw_tools_pwi2xsf_exe
-    COMMENT
-        "basic code for scf, structure optimization, MD")
-
-add_custom_target(ph
-    DEPENDS
-        qe_phonon_ph_exe
-        qe_phonon_dynmat_exe
-        qe_phonon_q2r_exe
-        qe_phonon_dvscf_q2r_exe
-        qe_phonon_matdyn_exe
-        qe_phonon_q2qstar_exe
-        qe_phonon_lambda_exe
-        qe_phonon_alpha2f_exe
-        qe_phonon_epa_exe
-        qe_phonon_fqha_exe
-        qe_phonon_fd_exe
-        qe_phonon_fdef_exe
-        qe_phonon_fdifc_exe
-        qe_phonon_postahc_exe
-    COMMENT
-        "phonon code, Gamma-only and third-order derivatives")
-
-add_custom_target(hp
-    DEPENDS
-        qe_hp_exe
-    COMMENT
-        "calculation of the Hubbard parameters from DFPT")
-
-add_custom_target(pwcond
-    DEPENDS
-        qe_pwcond_exe
-    COMMENT
-        "ballistic conductance")
-
-add_custom_target(neb
-    DEPENDS
-        qe_neb_exe
-        qe_neb_pathinterpolation_exe
-    COMMENT
-        "code for Nudged Elastic Band method")
-
-add_custom_target(pp
-    DEPENDS
-        qe_pp_exe
-        qe_pp_opengrid_exe
-        qe_pp_average_exe
-        qe_pp_bands_exe
-        qe_pp_dos_exe
-        qe_pp_pawplot_exe
-        qe_pp_planavg_exe
-        qe_pp_plotband_exe
-        qe_pp_plotproj_exe
-        qe_pp_plotrho_exe
-        qe_pp_pmw_exe
-        qe_pp_projwfc_exe
-        qe_pp_pw2wannier90_exe
-        qe_pp_pw2critic_exe
-        qe_pp_wfck2r_exe
-        qe_pp_initial_state_exe
-        qe_pp_pw2gw_exe
-        qe_pp_sumpdos_exe
-        qe_pp_epsilon_exe
-        qe_pp_wannierham_exe
-        qe_pp_wannierplot_exe
-        qe_pp_molecularpdos_exe
-        qe_pp_pw2bgw_exe
-        qe_pp_fermivelocity_exe
-        qe_pp_fermisurface_exe
-        qe_pp_fermiproj_exe
-        qe_pp_ppacf_exe
-    COMMENT
-        "postprocessing programs")
-
 add_custom_target(pwall
     DEPENDS
         pw
@@ -763,77 +696,3 @@ add_custom_target(pwall
         neb
     COMMENT
         "same as \"make pw ph pp pwcond neb\"")
-
-add_custom_target(cp
-    DEPENDS
-        qe_cpv_exe
-        qe_cpv_manycp_exe
-        qe_cpv_cppp_exe
-        qe_cpv_wfdd_exe
-    COMMENT
-        "CP code: Car-Parrinello molecular dynamics")
-
-add_custom_target(tddfpt
-    DEPENDS
-        qe_tddfpt_turbolanczos_exe
-        qe_tddfpt_turbodavidson_exe
-        qe_tddfpt_turboeels_exe
-        qe_tddfpt_turbospectrum_exe
-        qe_tddfpt_turbomagnons_exe 
-    COMMENT
-        "time dependent dft code")
-
-add_custom_target(gwl
-    DEPENDS
-        qe_gww_util_grap_exe
-        qe_gww_util_abcoefftoeps_exe
-        qe_gww_util_memorypw4gww_exe
-	qe_gww_bse_bse_main_exe
-        qe_gww_gww_exe
-        qe_gww_gww_fit_exe
-        qe_gww_head_exe
-        qe_gww_simple_bse_exe
-        qe_gww_simple_ip_exe
-    COMMENT
-        "GW with Lanczos chains")
-
-add_custom_target(ld1
-    DEPENDS
-        qe_atomic_exe
-    COMMENT
-        "utilities for pseudopotential generation")
-
-add_custom_target(upf
-    DEPENDS
-        #Library
-        qe_upflib
-        #Executables
-        qe_upflib_virtual_v2_exe
-        qe_upflib_upfconv_exe
-    COMMENT
-        "utilities for pseudopotential conversion")
-
-add_custom_target(xspectra
-    DEPENDS
-        qe_xspectra_exe
-        qe_xspectra_spectracorrection_exe
-        qe_xspectra_molecularnexafs_exe
-    COMMENT
-        "X-ray core-hole spectroscopy calculations")
-
-add_custom_target(couple
-    DEPENDS
-        qe_couple
-    COMMENT
-        "library interface for coupling to external codes")
-
-add_custom_target(epw
-    DEPENDS
-        qe_epw_exe
-    COMMENT
-        "electron-Phonon Coupling with wannier functions")
-add_custom_target(all_currents
-    DEPENDS
-	qe_qeheat_exe
-    COMMENT
-	"QEHeat code to compute energy and electronic density currents")

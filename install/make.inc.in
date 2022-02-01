@@ -62,7 +62,7 @@ MOD_FLAG      = @imod@
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/XClib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
-               $(MOD_FLAG)$(TOPDIR)/FFTXlib \
+               $(MOD_FLAG)$(TOPDIR)/FFTXlib/src \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
 	       $(MOD_FLAG)$(TOPDIR)/MBD \
@@ -74,7 +74,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 BASEMODS= $(TOPDIR)/Modules/libqemod.a \
           $(TOPDIR)/upflib/libupf.a \
           $(TOPDIR)/XClib/xc_lib.a \
-          $(TOPDIR)/FFTXlib/libqefft.a \
+          $(TOPDIR)/FFTXlib/src/libqefft.a \
           $(TOPDIR)/LAXlib/libqela.a \
           $(TOPDIR)/UtilXlib/libutil.a \
           $(TOPDIR)/MBD/libmbd.a
@@ -89,20 +89,17 @@ MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
 
-# CUDA Toolkit path
-CUDA_PATH=@cuda_path@
-
 # GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
 GPU_ARCH=@gpu_arch@
 
 # CUDA runtime (Pascal: 8.0, Volta: 9.0)
-CUDA_RUNTIME=@gpu_runtime@
+CUDA_RUNTIME=@cuda_runtime@
 
 # CUDA F90 Flags
 CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
 
 # CUDA C Flags
-CUDA_CFLAGS=@CUDA_CFLAGS@
+CUDA_CFLAGS=@cuda_cflags@
 
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
@@ -140,13 +137,13 @@ LD_LIBS        = @ld_libs@
 # External Libraries (if any) : blas, lapack, fft, MPI
 
 # If you have nothing better, use the local copy
-# BLAS_LIBS = $(TOPDIR)/LAPACK/libblas.a
+# BLAS_LIBS = $(TOPDIR)/external/lapack/libblas.a
 
 BLAS_LIBS      = @blas_libs@
 
 # If you have nothing better, use the local copy
 # LAPACK_LIBS_SWITCH = internal
-# LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
+# LAPACK_LIBS = $(TOPDIR)/external/lapack/liblapack.a
 
 LAPACK_LIBS    = @lapack_libs@
 LAPACK_LIBS_SWITCH = @lapack_libs_switch@
@@ -174,7 +171,7 @@ MASS_LIBS      = @mass_libs@
 
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
-CUDA_EXTLIBS = devxlib @cuda_extlibs@
+CUDA_EXTLIBS = @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 

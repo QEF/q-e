@@ -52,3 +52,9 @@ target_link_libraries(qe_qeheat_exe
 qe_install_targets(
     qe_qeheat_exe
 )
+
+add_custom_target(all_currents
+    DEPENDS
+	qe_qeheat_exe
+    COMMENT
+	"QEHeat code to compute energy and electronic density currents")

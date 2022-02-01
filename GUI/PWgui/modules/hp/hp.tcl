@@ -191,6 +191,11 @@ module HP\#auto -title "PWSCF GUI: module HP.x" -script {
             -label "Maximum neighbor distance (in Bohr) between two atoms (rmax):"
             -validate fortranreal
         }
+
+        var dist_thr {
+            -label "Threshold (in Bohr) for comparing inter-atomic distances (dist_thr):"
+            -validate fortranreal
+        }
     }
 
     # ----------------------------------------------------------------------

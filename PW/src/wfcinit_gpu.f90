@@ -228,6 +228,7 @@ SUBROUTINE init_wfc_gpu ( ik )
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
   USE wvfct_gpum,           ONLY : et_d, using_et_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
+  USE control_flags,        ONLY : lscf
   !
   IMPLICIT NONE
   !
@@ -375,7 +376,7 @@ SUBROUTINE init_wfc_gpu ( ik )
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  IF ( xclib_dft_is('hybrid')  ) CALL stop_exx()
+  IF ( xclib_dft_is('hybrid') .and. lscf  ) CALL stop_exx()
   CALL start_clock_gpu( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
   CALL rotate_wfc_gpu ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom_d, npol, okvan, evc_d, etatom_d )

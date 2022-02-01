@@ -57,8 +57,10 @@ SUBROUTINE forces()
   USE qmmm,              ONLY : qmmm_mode
   !
   USE control_flags,     ONLY : use_gpu
+#if defined(__CUDA)
   USE device_fbuff_m,          ONLY : dev_buf
   USE device_memcpy_m,     ONLY : dev_memcpy
+#endif
   !
   IMPLICIT NONE
   !
@@ -90,10 +92,10 @@ SUBROUTINE forces()
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
   !
-  ! TODO: get rid of this !!!! Use standard method for duplicated global data
-  REAL(DP), POINTER :: vloc_d (:, :)
   INTEGER :: ierr
 #if defined(__CUDA)
+  ! TODO: get rid of this !!!! Use standard method for duplicated global data
+  REAL(DP), POINTER :: vloc_d (:, :)
   attributes(DEVICE) :: vloc_d
 #endif
   !
@@ -104,10 +106,12 @@ SUBROUTINE forces()
   IF ( ALL( if_pos == 0 ) ) RETURN
   !
   CALL start_clock( 'forces' )
+#if defined(__CUDA)
   ! Cleanup scratch space used in previous SCF iterations.
   ! This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
   IF (ierr .ne. 0) CALL infomsg('forces', 'Cannot reset GPU buffers! Some buffers still locked.')
+#endif
   !
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
@@ -130,6 +134,7 @@ SUBROUTINE forces()
      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
                  forcelc )
+#if defined(__CUDA)
   IF (      use_gpu) THEN ! On the GPU
      ! move these data to the GPU
      CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
@@ -140,6 +145,7 @@ SUBROUTINE forces()
                    forcelc )
      CALL dev_buf%release_buffer(vloc_d, ierr)
   END IF
+#endif
   call stop_clock('frc_lc') 
   !
   ! ... The NLCC contribution
@@ -205,10 +211,12 @@ SUBROUTINE forces()
   ! ... The SCF contribution
   !
   call start_clock('frc_scc')
+#if defined(__CUDA)
   ! Cleanup scratch space again, next subroutines uses a lot of memory.
   ! In an ideal world this should be done only if really needed (TODO).
   CALL dev_buf%reinit(ierr)
   IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
+#endif
   !
   IF ( .not. use_gpu ) CALL force_corr( forcescc )
   IF (       use_gpu ) CALL force_corr_gpu( forcescc )
@@ -476,7 +484,6 @@ SUBROUTINE forces()
   IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > nat*eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
                    &  "reduce conv_thr to get better values")')
-
   RETURN
   !
 9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)

@@ -237,11 +237,11 @@ MODULE qe_dft_list
   ! 'AH series for vdW-DFs and analytical-hole PBE(sol)-AH: JPCM 34, 025902 (2022)
   DATA dft_full(40)%name     / 'PBE-AH' /
   DATA dft_full(40)%name2    / 'none' /
-  DATA dft_full(40)%IDs(1:6) / 1,4,34,4,0,0 /   ! PH: sla+pw+ahpb+pbc; Differs from EHPB-based, incl HSE
+  DATA dft_full(40)%IDs(1:6) / 1,4,34,4,0,0 /   ! P.H.: sla+pw+ahpb+pbc; Differs from EHPB-based, incl HSE
   !
   DATA dft_full(41)%name     / 'PBESOL-AH' /
   DATA dft_full(41)%name2    / 'none' /
-  DATA dft_full(41)%IDs(1:6) / 1,4,35,8,0,0 /   ! PH: sla+pw+ahps+psc
+  DATA dft_full(41)%IDs(1:6) / 1,4,35,8,0,0 /   ! P.H.: sla+pw+ahps+psc
   !
   !
 CONTAINS

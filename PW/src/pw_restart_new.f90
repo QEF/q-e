@@ -47,6 +47,7 @@ MODULE pw_restart_new
   IMPLICIT NONE
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  REAL(DP),ALLOCATABLE       :: local_charges(:), local_mag(:,:) 
   PRIVATE
   PUBLIC :: pw_write_schema, write_collected_wfc
   PUBLIC :: read_xml_file, read_collected_wfc
@@ -106,7 +107,8 @@ MODULE pw_restart_new
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
-      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
+      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, & 
+                                       absmag, local_charges, local_mag
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        magtot_nc, lambda, domag, lspinorb
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
@@ -200,7 +202,7 @@ MODULE pw_restart_new
       LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt, domag_opt  
       INTEGER,POINTER            :: dftd3_version_pt
       TYPE(smearing_type),TARGET :: smear_obj 
-      TYPE(smearing_type),POINTER:: smear_obj_ptr 
+      TYPE(smearing_type),POINTER:: smear_obj_ptr
 
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
       NULLIFY( gate_info_ptr, dipol_ptr, bp_obj_ptr, hybrid_obj, vdw_obj, dftU_obj, lumo_energy, ef_point)  
@@ -502,12 +504,19 @@ MODULE pw_restart_new
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
-         IF (noncolin) THEN 
-            domag_ = domag
-            domag_opt=> domag_
-         END IF
-         CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, &
-              magtot, magtot_nc, absmag, domag_opt )
+         output_obj%magnetization_ispresent = .TRUE.  
+         IF (noncolin) THEN
+           CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, TOTAL_MAG_NC = magtot_nc,&
+             ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, DO_MAGNETIZATION = domag, & 
+             SITE_MAG = local_mag, SITE_CHARGES = local_charges )
+         ELSE IF (lsda) THEN 
+           CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, TOTAL_MAG = magtot, &
+                ABSOLUTE_MAG = absmag, ATM = upf(1:nsp)%psd, ITYP = ityp, SITE_MAG_POL = local_mag, & 
+                SITE_CHARGES = local_charges) 
+         ELSE 
+           CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, ABSOLUTE_MAG = 0._DP, &
+                ATM = upf(1:nsp)%psd, ITYP = ityp ) 
+         END IF 
          !
 
 !--------------------------------------------------------------------------------------
@@ -747,7 +756,9 @@ MODULE pw_restart_new
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
       USE buffers,              ONLY : get_buffer
-      USE wavefunctions, ONLY : evc
+      USE wavefunctions,        ONLY : evc
+      USE exx,                  ONLY : xi, nbndproj
+      USE xc_lib,               ONLY : exx_is_active
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k
       USE gvect,                ONLY : ngm, g, mill
       USE fft_base,             ONLY : dfftp
@@ -770,7 +781,7 @@ MODULE pw_restart_new
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
-      CHARACTER(LEN=320)    :: filename
+      CHARACTER(LEN=320)    :: filename, filenameace
       !
       CALL using_evc(0); CALL using_et(0) !? Is this needed? et never used!
       dirname = restart_dir ()
@@ -850,10 +861,15 @@ MODULE pw_restart_new
             filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
                  & TRIM(int_to_char(ik_g))
             !
+            if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // updw(ispin) // &
+                 & TRIM(int_to_char(ik_g))
+            !
          ELSE
             !
             ispin = 1
             filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
+            !
+            if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // TRIM(int_to_char(ik_g))
             !
          ENDIF
          !
@@ -866,6 +882,14 @@ MODULE pw_restart_new
               ispin, nspin, evc, npw_g, gamma_only, nbnd, &
               igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
               tpiba*bg(:,3), mill_k, 1.D0 )
+         !
+         IF ( (my_bgrp_id == root_bgrp_id) .and. exx_is_active()) then 
+              CALL write_wfc( iunpun, &
+              filenameace, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
+              ispin, nspin, xi(:,:,ik), npw_g, gamma_only, nbnd, &
+              igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
+              tpiba*bg(:,3), mill_k, 1.D0 )
+         END IF 
          !
       END DO k_points_loop
       !
@@ -1162,8 +1186,8 @@ MODULE pw_restart_new
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
               spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
               noinv, nosym, no_t_rev, input_obj%symmetry_flags )
-         
-         CALL qexsd_copy_efield ( input_obj%electric_field, &
+         IF (input_obj%electric_field_ispresent) & 
+           CALL qexsd_copy_efield ( input_obj%electric_field, &
               tefield, dipfield, edir, emaxpos, eopreg, eamp, &
               gate, zgate, block, block_1, block_2, block_height, relaxz )
          
@@ -1180,7 +1204,11 @@ MODULE pw_restart_new
       !! symmetry check - FIXME: must be done in a more consistent way 
       !! IF (nat > 0) CALL checkallsym( nat, tau, ityp)
       !! Algorithmic info
-      do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
+      IF (output_obj%boundary_conditions_ispresent) THEN 
+         do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
+      ELSE 
+         do_cutoff_2D = .FALSE.
+      END IF
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
            real_space, tqr, okvan, okpaw )
       !
@@ -1201,11 +1229,11 @@ MODULE pw_restart_new
     END SUBROUTINE read_xml_file
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_collected_wfc ( dirname, ik, evc )
+    SUBROUTINE read_collected_wfc ( dirname, ik, arr, label_ )
       !------------------------------------------------------------------------
       !
       ! ... reads from directory "dirname" (new file format) for k-point "ik"
-      ! ... wavefunctions from collected format into distributed array "evc"
+      ! ... wavefunctions from collected format into distributed array "arr"
       !
       USE control_flags,        ONLY : gamma_only
       USE lsda_mod,             ONLY : nspin, isk
@@ -1218,12 +1246,17 @@ MODULE pw_restart_new
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
+      USE xc_lib,               ONLY : exx_is_active
+      USE exx,                  ONLY : nbndproj
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       INTEGER, INTENT(IN) :: ik
-      COMPLEX(dp), INTENT(OUT) :: evc(:,:)
+      COMPLEX(dp), INTENT(OUT) :: arr(:,:)
+      CHARACTER(LEN=3), OPTIONAL, INTENT(IN) :: label_
+      CHARACTER(LEN=3) :: label 
+      LOGICAL :: read_ace
       !
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=320)   :: filename, msg
@@ -1235,6 +1268,23 @@ MODULE pw_restart_new
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
       REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
+      !
+      ! ... decide whether to read wfc or ace
+      !
+      if(present(label_)) then 
+        label = label_
+        if(label.eq."ace") then 
+          if(.not.exx_is_active()) CALL errore ('pw_restart - read_collected_wfc', "ace but not exx_is_active", 1 ) 
+          read_ace = .true.
+        elseif(label.eq."wfc") then
+          read_ace = .false.
+        else
+          CALL errore ('pw_restart - read_collected_wfc', "wrong label", 1 )
+        end if  
+      else
+        label = "wfc"
+        read_ace = .false.
+      end if 
       !
       ! ... the root processor of each pool reads
       !
@@ -1282,12 +1332,12 @@ MODULE pw_restart_new
          !
          ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
          ispin = isk(ik)
-         filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
+         filename = TRIM(dirname) // label // updw(ispin) // &
               & TRIM(int_to_char(ik_g))
          !
       ELSE
          !
-         filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
+         filename = TRIM(dirname) // label // TRIM(int_to_char(ik_g))
          !
       ENDIF
       !
@@ -1295,11 +1345,12 @@ MODULE pw_restart_new
       !
       ALLOCATE( mill_k ( 3,npwx ) )
       !
-      evc=(0.0_DP, 0.0_DP)
+      arr = (0.0_DP, 0.0_DP)
       !
       CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
-           ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd_, &
+           ik_g, xk_, ispin, npol_, arr, npw_g, gamma_only, nbnd_, &
            igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
+      !
       !
       DEALLOCATE ( mill_k )
       DEALLOCATE ( igk_l2g_kdip )
@@ -1307,10 +1358,17 @@ MODULE pw_restart_new
       ! ... here one should check for consistency between what is read
       ! ... and what is expected
       !
-      IF ( nbnd_ < nbnd ) THEN
-         WRITE (msg,'("The number of bands for this run is",I6,", but only",&
-              & I6," bands were read from file")')  nbnd, nbnd_  
-         CALL errore ('pw_restart - read_collected_wfc', msg, 1 )
+      IF(read_ace) THEN
+        !
+        write(*,*) 'ACE potential read for ', nbnd_ , 'bands'
+        nbndproj = nbnd_
+        !
+      ELSE IF ( nbnd_ < nbnd .and..not. read_ace) THEN
+        !
+        WRITE (msg,'("The number of bands for this run is",I6,", but only",&
+             & I6," bands were read from file")')  nbnd, nbnd_  
+        CALL errore ('pw_restart - read_collected_wfc', msg, 1 )
+        !
       END IF
       !
       RETURN

@@ -18,9 +18,11 @@
 ;; (https://www.emacswiki.org/emacs/DerivedMode,
 ;; https://www.emacswiki.org/emacs/SampleMode) as well as the very
 ;; useful resources of Xah Lee
-;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html).  Last but
-;; not the least Sebastijan Peljhan is acknowledged for his work on
-;; `xsf-mode' that inspired the idea of writing the qe-modes.
+;; (http://ergoemacs.org/emacs/elisp_syntax_coloring.html). Sebastijan
+;; Peljhan is acknowledged for his work on `xsf-mode' that inspired
+;; the idea of writing the qe-modes. Last but not the least,
+;; Hongyi Zhao contributed the ido-completion-read snippet of
+;; code for selecting the values for the card's flags.
 
 
 ;; This file is not part of GNU Emacs.
@@ -82,6 +84,7 @@
 
 ;;; Code:
 
+(require 'ido)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -771,6 +774,20 @@ nat_todo-list-of-atoms
   )
 
 
+(defun pw-diago_rmm_conv ()
+  (interactive)
+  (let ((value (read-string "Value of diago_rmm_conv: ")))
+    (insert "diago_rmm_conv = " value))
+  )
+
+
+(defun pw-diago_rmm_ndim ()
+  (interactive)
+  (let ((value (read-string "Value of diago_rmm_ndim: ")))
+    (insert "diago_rmm_ndim = " value))
+  )
+
+
 (defun pw-diago_thr_init ()
   (interactive)
   (let ((value (read-string "Value of diago_thr_init: ")))
@@ -797,6 +814,21 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of disk_io: ")))
     (insert "disk_io = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun pw-dmft ()
+  (interactive)
+  (let ((value (read-string "Value of dmft: ")))
+    (insert "dmft = " value))
+  )
+
+
+(defun pw-dmft_prefix ()
+  (interactive)
+  (let ((value (read-string "Value of dmft_prefix: ")))
+    (insert "dmft_prefix = '" value "'"))
   (backward-char 1)
   )
 
@@ -1034,6 +1066,48 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of fcp_velocity: ")))
     (insert "fcp_velocity = " value))
+  )
+
+
+(defun pw-fire_alpha_init ()
+  (interactive)
+  (let ((value (read-string "Value of fire_alpha_init: ")))
+    (insert "fire_alpha_init = " value))
+  )
+
+
+(defun pw-fire_dtmax ()
+  (interactive)
+  (let ((value (read-string "Value of fire_dtmax: ")))
+    (insert "fire_dtmax = " value))
+  )
+
+
+(defun pw-fire_f_dec ()
+  (interactive)
+  (let ((value (read-string "Value of fire_f_dec: ")))
+    (insert "fire_f_dec = " value))
+  )
+
+
+(defun pw-fire_f_inc ()
+  (interactive)
+  (let ((value (read-string "Value of fire_f_inc: ")))
+    (insert "fire_f_inc = " value))
+  )
+
+
+(defun pw-fire_falpha ()
+  (interactive)
+  (let ((value (read-string "Value of fire_falpha: ")))
+    (insert "fire_falpha = " value))
+  )
+
+
+(defun pw-fire_nmin ()
+  (interactive)
+  (let ((value (read-string "Value of fire_nmin: ")))
+    (insert "fire_nmin = " value))
   )
 
 
@@ -1950,10 +2024,9 @@ nat_todo-list-of-atoms
 
 (defun pw-ADDITIONAL_K_POINTS ()
   (interactive)
-  (let ((flag (read-string "Flags: { tpiba | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c } ")))
-    (insert "ADDITIONAL_K_POINTS " flag))
-  (newline 1)
-  )
+  (let ((flag '("tpiba" "crystal" "tpiba_b" "crystal_b" "tpiba_c" "crystal_c" )))
+    (insert "ADDITIONAL_K_POINTS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun pw-ATOMIC_FORCES ()
@@ -1965,10 +2038,9 @@ nat_todo-list-of-atoms
 
 (defun pw-ATOMIC_POSITIONS ()
   (interactive)
-  (let ((flag (read-string "Flags: { alat | bohr | angstrom | crystal | crystal_sg } ")))
-    (insert "ATOMIC_POSITIONS " flag))
-  (newline 1)
-  )
+  (let ((flag '("alat" "bohr" "angstrom" "crystal" "crystal_sg" )))
+    (insert "ATOMIC_POSITIONS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun pw-ATOMIC_SPECIES ()
@@ -1980,18 +2052,16 @@ nat_todo-list-of-atoms
 
 (defun pw-ATOMIC_VELOCITIES ()
   (interactive)
-  (let ((flag (read-string "Flags: { a.u } ")))
-    (insert "ATOMIC_VELOCITIES " flag))
-  (newline 1)
-  )
+  (let ((flag '("a.u" )))
+    (insert "ATOMIC_VELOCITIES " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun pw-CELL_PARAMETERS ()
   (interactive)
-  (let ((flag (read-string "Flags: { alat | bohr | angstrom } ")))
-    (insert "CELL_PARAMETERS " flag))
-  (newline 1)
-  )
+  (let ((flag '("alat" "bohr" "angstrom" )))
+    (insert "CELL_PARAMETERS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun pw-CONSTRAINTS ()
@@ -2003,10 +2073,9 @@ nat_todo-list-of-atoms
 
 (defun pw-K_POINTS ()
   (interactive)
-  (let ((flag (read-string "Flags: { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c } ")))
-    (insert "K_POINTS " flag))
-  (newline 1)
-  )
+  (let ((flag '("tpiba" "automatic" "crystal" "gamma" "tpiba_b" "crystal_b" "tpiba_c" "crystal_c" )))
+    (insert "K_POINTS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun pw-OCCUPATIONS ()
@@ -3106,6 +3175,13 @@ nat_todo-list-of-atoms
   )
 
 
+(defun cp-pre_state ()
+  (interactive)
+  (let ((value (read-string "Value of pre_state: ")))
+    (insert "pre_state = " value))
+  )
+
+
 (defun cp-prefix ()
   (interactive)
   (let ((value (read-string "Value of prefix: ")))
@@ -3433,10 +3509,9 @@ nat_todo-list-of-atoms
 
 (defun cp-ATOMIC_POSITIONS ()
   (interactive)
-  (let ((flag (read-string "Flags: { alat | bohr | angstrom | crystal } ")))
-    (insert "ATOMIC_POSITIONS " flag))
-  (newline 1)
-  )
+  (let ((flag '("alat" "bohr" "angstrom" "crystal" )))
+    (insert "ATOMIC_POSITIONS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun cp-ATOMIC_SPECIES ()
@@ -3455,10 +3530,9 @@ nat_todo-list-of-atoms
 
 (defun cp-CELL_PARAMETERS ()
   (interactive)
-  (let ((flag (read-string "Flags: { bohr | angstrom | alat } ")))
-    (insert "CELL_PARAMETERS " flag))
-  (newline 1)
-  )
+  (let ((flag '("bohr" "angstrom" "alat" )))
+    (insert "CELL_PARAMETERS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun cp-CONSTRAINTS ()
@@ -3484,10 +3558,9 @@ nat_todo-list-of-atoms
 
 (defun cp-REF_CELL_PARAMETERS ()
   (interactive)
-  (let ((flag (read-string "Flags: { bohr | angstrom } ")))
-    (insert "REF_CELL_PARAMETERS " flag))
-  (newline 1)
-  )
+  (let ((flag '("bohr" "angstrom" )))
+    (insert "REF_CELL_PARAMETERS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun cp-ON_STEP ()
@@ -3674,6 +3747,13 @@ nat_todo-list-of-atoms
   (interactive)
   (let ((value (read-string "Value of DeltaE: ")))
     (insert "DeltaE = " value))
+  )
+
+
+(defun projwfc-diag_basis ()
+  (interactive)
+  (let ((value (read-string "Value of diag_basis: ")))
+    (insert "diag_basis = " value))
   )
 
 
@@ -4869,6 +4949,13 @@ nat_todo-list-of-atoms
   )
 
 
+(defun hp-dist_thr ()
+  (interactive)
+  (let ((value (read-string "Value of dist_thr: ")))
+    (insert "dist_thr = " value))
+  )
+
+
 (defun hp-docc_thr ()
   (interactive)
   (let ((value (read-string "Value of docc_thr: ")))
@@ -5819,10 +5906,9 @@ nat_todo-list-of-atoms
 
 (defun neb-ATOMIC_POSITIONS ()
   (interactive)
-  (let ((flag (read-string "Flags: { alat | bohr | angstrom | crystal | crystal_sg } ")))
-    (insert "ATOMIC_POSITIONS " flag))
-  (newline 1)
-  )
+  (let ((flag '("alat" "bohr" "angstrom" "crystal" "crystal_sg" )))
+    (insert "ATOMIC_POSITIONS " (ido-completing-read "Select the flag: " flag)))
+    (newline 1))
 
 
 (defun neb-CLIMBING_IMAGES ()
@@ -6903,6 +6989,200 @@ nat_todo-list-of-atoms
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; all_currents- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun all_currents-ENERGY_CURRENT ()
+  (interactive)
+  (insert "&ENERGY_CURRENT")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; all_currents- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun all_currents-add_i_current_b ()
+  (interactive)
+  (let ((value (read-string "Value of add_i_current_b: ")))
+    (insert "add_i_current_b = " value))
+  )
+
+
+(defun all_currents-continue_not_converged ()
+  (interactive)
+  (let ((value (read-string "Value of continue_not_converged: ")))
+    (insert "continue_not_converged = " value))
+  )
+
+
+(defun all_currents-delta_t ()
+  (interactive)
+  (let ((value (read-string "Value of delta_t: ")))
+    (insert "delta_t = " value))
+  )
+
+
+(defun all_currents-eta ()
+  (interactive)
+  (let ((value (read-string "Value of eta: ")))
+    (insert "eta = " value))
+  )
+
+
+(defun all_currents-ethr_big_step ()
+  (interactive)
+  (let ((value (read-string "Value of ethr_big_step: ")))
+    (insert "ethr_big_step = " value))
+  )
+
+
+(defun all_currents-ethr_small_step ()
+  (interactive)
+  (let ((value (read-string "Value of ethr_small_step: ")))
+    (insert "ethr_small_step = " value))
+  )
+
+
+(defun all_currents-file_output ()
+  (interactive)
+  (let ((value (read-file-name "Value of file_output: ")))
+    (insert "file_output = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun all_currents-first_step ()
+  (interactive)
+  (let ((value (read-string "Value of first_step: ")))
+    (insert "first_step = " value))
+  )
+
+
+(defun all_currents-last_step ()
+  (interactive)
+  (let ((value (read-string "Value of last_step: ")))
+    (insert "last_step = " value))
+  )
+
+
+(defun all_currents-n_max ()
+  (interactive)
+  (let ((value (read-string "Value of n_max: ")))
+    (insert "n_max = " value))
+  )
+
+
+(defun all_currents-n_repeat_every_step ()
+  (interactive)
+  (let ((value (read-string "Value of n_repeat_every_step: ")))
+    (insert "n_repeat_every_step = " value))
+  )
+
+
+(defun all_currents-n_workers ()
+  (interactive)
+  (let ((value (read-string "Value of n_workers: ")))
+    (insert "n_workers = " value))
+  )
+
+
+(defun all_currents-re_init_wfc_1 ()
+  (interactive)
+  (let ((value (read-string "Value of re_init_wfc_1: ")))
+    (insert "re_init_wfc_1 = " value))
+  )
+
+
+(defun all_currents-re_init_wfc_2 ()
+  (interactive)
+  (let ((value (read-string "Value of re_init_wfc_2: ")))
+    (insert "re_init_wfc_2 = " value))
+  )
+
+
+(defun all_currents-re_init_wfc_3 ()
+  (interactive)
+  (let ((value (read-string "Value of re_init_wfc_3: ")))
+    (insert "re_init_wfc_3 = " value))
+  )
+
+
+(defun all_currents-restart ()
+  (interactive)
+  (let ((value (read-string "Value of restart: ")))
+    (insert "restart = " value))
+  )
+
+
+(defun all_currents-save_dvpsi ()
+  (interactive)
+  (let ((value (read-string "Value of save_dvpsi: ")))
+    (insert "save_dvpsi = " value))
+  )
+
+
+(defun all_currents-step_mul ()
+  (interactive)
+  (let ((value (read-string "Value of step_mul: ")))
+    (insert "step_mul = " value))
+  )
+
+
+(defun all_currents-step_rem ()
+  (interactive)
+  (let ((value (read-string "Value of step_rem: ")))
+    (insert "step_rem = " value))
+  )
+
+
+(defun all_currents-subtract_cm_vel ()
+  (interactive)
+  (let ((value (read-string "Value of subtract_cm_vel: ")))
+    (insert "subtract_cm_vel = " value))
+  )
+
+
+(defun all_currents-three_point_derivative ()
+  (interactive)
+  (let ((value (read-string "Value of three_point_derivative: ")))
+    (insert "three_point_derivative = " value))
+  )
+
+
+(defun all_currents-trajdir ()
+  (interactive)
+  (let ((value (read-directory-name "Value of trajdir: ")))
+    (insert "trajdir = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun all_currents-vel_input_units ()
+  (interactive)
+  (let ((value (read-string "Value of vel_input_units: ")))
+    (insert "vel_input_units = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun all_currents-worker_id ()
+  (interactive)
+  (let ((value (read-string "Value of worker_id: ")))
+    (insert "worker_id = " value))
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; pwcond- namelists functions ...
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7396,6 +7676,133 @@ nat_todo-list-of-atoms
   (let ((value (read-directory-name "Value of wfcdir: ")))
     (insert "wfcdir = '" value "'"))
   (backward-char 1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; magnons- namelists functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun magnons-LR_CONTROL ()
+  (interactive)
+  (insert "&LR_CONTROL")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+(defun magnons-LR_INPUT ()
+  (interactive)
+  (insert "&LR_INPUT")
+  (newline 2)
+  (insert "/")
+  (forward-line -1)
+  )
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; magnons- namelist's variables functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun magnons-approximation ()
+  (interactive)
+  (let ((value (read-string "Value of approximation: ")))
+    (insert "approximation = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun magnons-disk_io ()
+  (interactive)
+  (let ((value (read-string "Value of disk_io: ")))
+    (insert "disk_io = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun magnons-ipol ()
+  (interactive)
+  (let ((value (read-string "Value of ipol: ")))
+    (insert "ipol = " value))
+  )
+
+
+(defun magnons-itermax ()
+  (interactive)
+  (let ((value (read-string "Value of itermax: ")))
+    (insert "itermax = " value))
+  )
+
+
+(defun magnons-lr_verbosity ()
+  (interactive)
+  (let ((value (read-string "Value of lr_verbosity: ")))
+    (insert "lr_verbosity = " value))
+  )
+
+
+(defun magnons-outdir ()
+  (interactive)
+  (let ((value (read-directory-name "Value of outdir: ")))
+    (insert "outdir = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun magnons-prefix ()
+  (interactive)
+  (let ((value (read-string "Value of prefix: ")))
+    (insert "prefix = '" value "'"))
+  (backward-char 1)
+  )
+
+
+(defun magnons-pseudo_hermitian ()
+  (interactive)
+  (let ((value (read-string "Value of pseudo_hermitian: ")))
+    (insert "pseudo_hermitian = " value))
+  )
+
+
+(defun magnons-q1 ()
+  (interactive)
+  (let ((value (read-string "Value of q1: ")))
+    (insert "q1 = " value))
+  )
+
+
+(defun magnons-q2 ()
+  (interactive)
+  (let ((value (read-string "Value of q2: ")))
+    (insert "q2 = " value))
+  )
+
+
+(defun magnons-q3 ()
+  (interactive)
+  (let ((value (read-string "Value of q3: ")))
+    (insert "q3 = " value))
+  )
+
+
+(defun magnons-restart ()
+  (interactive)
+  (let ((value (read-string "Value of restart: ")))
+    (insert "restart = " value))
+  )
+
+
+(defun magnons-restart_step ()
+  (interactive)
+  (let ((value (read-string "Value of restart_step: ")))
+    (insert "restart_step = " value))
   )
 
 

@@ -449,13 +449,7 @@ target_link_libraries(qe_phonon_fdifc_exe
 
 ###########################################################
 
-qe_install_targets(
-    # Libraries
-    qe_phonon_ph
-    qe_phonon_phaux
-    qe_phonon_gamma
-    qe_phonon_fd
-    # Executables
+set(PH_EXE_TARGETS
     qe_phonon_ph_exe
     qe_phonon_phcg_exe
     qe_phonon_dynmat_exe
@@ -471,3 +465,18 @@ qe_install_targets(
     qe_phonon_fdef_exe
     qe_phonon_fdifc_exe
     qe_phonon_postahc_exe)
+
+qe_install_targets(
+    # Libraries
+    qe_phonon_ph
+    qe_phonon_phaux
+    qe_phonon_gamma
+    qe_phonon_fd
+    # Executables
+    ${PH_EXE_TARGETS})
+
+add_custom_target(ph
+    DEPENDS
+        ${PH_EXE_TARGETS}
+    COMMENT
+        "phonon code, Gamma-only and third-order derivatives")

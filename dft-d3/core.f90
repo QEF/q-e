@@ -2905,7 +2905,7 @@ contains
     IF ( mykey == 0 ) THEN
     na_smax = max(3,na_s)
 
-!$acc data copyin(xyz(3,n),iz(n),cc6ab(n*n),lat(3,3),r0ab(max_elem,max_elem)) 
+!$acc data copyin(xyz(1:3,1:n),iz(1:n),cc6ab(1:n*n),lat(1:3,1:3),r0ab(1:max_elem,1:max_elem)) 
 !$acc kernels  vector_length(32)
 !$acc loop collapse(2) gang private(ijvec1,ijvec2,ijvec3, ikvec1,ikvec2,ikvec3, jkvec1,jkvec2,jkvec3, c9, r0ij,r0ik,r0jk, &
 !$acc&                              repmin1,repmin2,repmin3, repmax1,repmax2,repmax3, jtau1,jtau2,jtau3, &

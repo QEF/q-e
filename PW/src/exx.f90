@@ -329,7 +329,7 @@ MODULE exx
   !
   !
   !------------------------------------------------------------------------
-  SUBROUTINE exxinit( DoLoc )
+  SUBROUTINE exxinit( DoLoc, nbndproj_ )
     !------------------------------------------------------------------------
     !! This subroutine is run before the first H_psi() of each iteration. 
     !! It saves the wavefunctions for the right density matrix, in real space.
@@ -361,14 +361,18 @@ MODULE exx
                                      erfc_scrlen, gau_scrlen, exx_divergence
     USE exx_band,             ONLY : change_data_structure, nwordwfc_exx, &
                                      transform_evc_to_exx, igk_exx, evc_exx
+#if defined(__CUDA)
     USE device_memcpy_m,      ONLY : dev_memset
     USE device_fbuff_m,       ONLY : dev_buf
+#endif
     !
     IMPLICIT NONE
     !
-    LOGICAL :: DoLoc
+    LOGICAL, INTENT(IN) :: DoLoc
     !! TRUE:  Real Array locbuff(ir, nbnd, nkqs);  
     !! FALSE: Complex Array exxbuff(ir, nbnd/2, nkqs).
+    INTEGER, OPTIONAL, INTENT(IN) :: nbndproj_
+    ! if specified (non_scf) it sets nbndproj, else (scf case) nbndproj is automatically set to nbnd 
     !
     ! ... local variables
     !
@@ -481,7 +485,18 @@ MODULE exx
        ENDDO
     ENDDO
     !
-    IF (nbndproj == 0) nbndproj = nbnd
+!civn 
+    !IF (nbndproj == 0) nbndproj = nbnd
+    IF(use_ace) THEN 
+      IF (present(nbndproj_)) THEN 
+       nbndproj = nbndproj_
+      ELSE
+        IF (nbndproj == 0) nbndproj = nbnd
+      END IF
+      WRITE(stdout, '(5X,A,2(I5,A))') "ACE projected onto ", nbndproj, " (nbndproj) and applied to ", &
+                                                                              nbnd, " (nbnd) bands"
+    END IF 
+!
     !
     CALL divide( inter_egrp_comm, x_nbnd_occ, ibnd_start, ibnd_end )
     CALL init_index_over_band( inter_egrp_comm, nbnd, nbnd )
@@ -554,6 +569,7 @@ MODULE exx
       ENDIF
     ELSE
        IF (use_gpu) THEN
+#if defined (__CUDA)
          ! NB: the array bounds are not passed to the subroutine.
          !
          ! See https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/269311
@@ -563,6 +579,7 @@ MODULE exx
                                    (/ 1,nrxxs*npol/), 1, &
                                    (/ ibnd_buff_start, ibnd_buff_end /), ibnd_buff_start, &
                                    (/ 1,SIZE(exxbuff_d,3)/), 1)
+#endif
        ELSE
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs, &
 !$omp                ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
@@ -736,8 +753,10 @@ MODULE exx
 !$omp end parallel do
 #endif
                    !
+#if defined (__CUDA)
                    IF (use_gpu) CALL dev_buf%lock_buffer(psic_nc_d, (/nrxxs, npol/), ierr)
                    IF (use_gpu) psic_nc_d = psic_nc
+#endif
                    !
                    IF (index_sym(ikq) > 0 ) THEN
                       IF (use_gpu) THEN
@@ -778,8 +797,10 @@ MODULE exx
 !$omp end parallel do
                       ENDIF
                    ENDIF
+#if defined(__CUDA)
                 IF (use_gpu) CALL dev_buf%release_buffer(psic_nc_d, ierr)
                 IF (use_gpu) exxbuff = exxbuff_d
+#endif
                 ELSE ! noncolinear
 #if defined(__MPI)
                    CALL gather_grid( dfftt, temppsic, temppsic_all )
@@ -1321,7 +1342,9 @@ MODULE exx
     USE exx_base,       ONLY : nqs, index_xkq, index_xk, xkq_collect, &
          coulomb_fac, g2_convolution_all
     USE exx_band,       ONLY : result_sum, igk_exx, igk_exx_d
+#if defined(__CUDA)
     USE device_memcpy_m, ONLY : dev_memset
+#endif
     !
     !
     IMPLICIT NONE
@@ -1425,8 +1448,10 @@ MODULE exx
     allocate(big_result_d(n,m))
     big_result = 0.0_DP
     result = 0.0_DP
+#if defined(__CUDA)
     CALL dev_memset(big_result_d,  (0.0_DP, 0.0_DP))
     CALL dev_memset(result_d,  (0.0_DP, 0.0_DP))
+#endif
     !
     DO ii=1, nibands(my_egrp_id+1)
        IF(okvan) deexx(:,ii) = 0.0_DP
@@ -1462,7 +1487,9 @@ MODULE exx
              !
              IF ( mod(ii,2)==1 ) THEN
                 !
+#if defined(__CUDA)
                 CALL dev_memset(psi_rhoc_work_d, (0.0_DP,0.0_DP), (/ 1, nrxxs /), 1 )
+#endif
                 !
                 IF ( (ii+1)<=min(m,nibands(my_egrp_id+1)) ) THEN
                    ! deal with double bands
@@ -1578,6 +1605,7 @@ MODULE exx
                    IF(jbnd<jend) &
                         CALL addusxx_g(dfftt, psi_rhoc_work, xkq,  xkp, 'i', &
                         becphi_r=becxx(ikq)%r(:,jbnd+1), becpsi_r=becpsi%r(:,ibnd) )
+                   psi_rhoc_work_d = psi_rhoc_work 
                 ENDIF
                 !   >>>> charge density done
                 !
@@ -3770,9 +3798,8 @@ end associate
   USE constants,     ONLY : tpi
   USE gvect,         ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,         ONLY : npwx, nbnd
-  USE uspp_data,     ONLY : nqx, dq, tab, tab_d2y, spline_ps
+  USE uspp_data,     ONLY : nqx, dq, tab
   USE m_gth,         ONLY : mk_ffnl_gth
-  USE splinelib
   USE uspp,          ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param,    ONLY : upf, lmaxkb, nhm, nh
   USE becmod,        ONLY : calbec
@@ -3802,7 +3829,6 @@ end associate
   COMPLEX(DP) :: phase, pref
   COMPLEX(DP), ALLOCATABLE :: sk(:)
   !
-  REAL(DP), ALLOCATABLE :: xdata(:)
   INTEGER :: iq
   INTEGER :: istart, iend
   !
@@ -3835,12 +3861,6 @@ end associate
      qg(ig) = SQRT(qg(ig))*tpiba
   ENDDO
   !
-  IF (spline_ps) THEN
-     ALLOCATE( xdata(nqx) )
-     DO iq = 1, nqx
-       xdata(iq) = (iq - 1) * dq
-     ENDDO
-  ENDIF
   ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
   !
@@ -3852,9 +3872,6 @@ end associate
            CALL mk_ffnl_gth( nt, nb, npw_, omega, qg, vq )
         ELSE
            DO ig = 1, npw_
-              IF (spline_ps) THEN
-                vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-              ELSE
                 px = qg (ig) / dq - INT(qg (ig) / dq)
                 ux = 1.d0 - px
                 vx = 2.d0 - px
@@ -3867,7 +3884,6 @@ end associate
                           tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
                           tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
                           tab (i3, nb, nt) * px * ux * vx / 6.d0
-              ENDIF
            ENDDO
         ENDIF
         !

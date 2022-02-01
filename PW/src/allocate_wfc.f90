@@ -75,7 +75,7 @@ SUBROUTINE allocate_wfc_k()
   !
   ALLOCATE( vkb(npwx,nkb) )
 #if defined __CUDA
-!$acc enter data create(vkb(npwx,nkb) ) 
+!$acc enter data create(vkb(1:npwx,1:nkb) ) 
 #endif
   !
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
