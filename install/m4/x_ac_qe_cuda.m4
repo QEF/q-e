@@ -93,7 +93,7 @@ then
    runtime_major_version=`echo $with_cuda_runtime | cut -d. -f1`
    runtime_minor_version=`echo $with_cuda_runtime | cut -d. -f2`
    if test "$runtime_major_version" -lt 10 || 
-         ( "$runtime_major_version" -eq 10 && "$runtime_minor_version" -lt 1 )
+     (test "$runtime_major_version" -eq 10 && test "$runtime_minor_version" -lt 1 )
    then
        # CUDA toolkit v < 10.1: new solver not available
        cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
@@ -103,10 +103,14 @@ then
    else
        try_dflags="$try_dflags -D__USE_CUSOLVER"
    fi
+   # BEEF code no longer works with v.19.10 and earlier
+   if test "$f90_major_version" -lt 20; then
+       try_dflags="$try_dflags -D__NOBEEF"
+   fi
    # -----------------------------------------
-   # C flags - not sure whether they are suitable for old version as well
+   # C flags 
    # -----------------------------------------   
-   cuda_cflags=" -I$with_cuda/include -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_cflags=" -I$with_cuda/include $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    cuda_runtime="$with_cuda_runtime"
