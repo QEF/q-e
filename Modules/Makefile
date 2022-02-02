@@ -3,8 +3,7 @@
 include ../make.inc
 
 # location of needed modules
-MODFLAGS=$(BASEMOD_FLAGS) \
-         $(MOD_FLAG)../ELPA/src
+MODFLAGS=$(BASEMOD_FLAGS)
 
 # list of modules
 
