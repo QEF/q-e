@@ -11,11 +11,19 @@
 include ../make.inc
 include install_utils
 
+LAPACK_NETLIB=lapack-3.6.1.tgz
+LAPACK_NETLIB_NAME=lapack-3.6.1
+LAPACK_NETLIB_URL=http://www.netlib.org/lapack/${LAPACK_NETLIB}
+
 # For NVIDIA Eigensolver
 EIGENSOLVER_VERSION=0.3.1
 EIGENSOLVER_GPU=v${EIGENSOLVER_VERSION}.tar.gz
 EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
 EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
+
+# For DevXlib
+DEVXLIB_VERSION=0.1.0
+DEVXLIB_URL="https://gitlab.com/max-centre/components/devicexlib/-/archive/${DEVXLIB_VERSION}/devicexlib-${DEVXLIB_VERSION}.tar.gz"
 
 # MAIN target
 
@@ -31,35 +39,35 @@ liblapack : liblapack_$(LAPACK_LIBS_SWITCH)
 liblapack_external : 
 
 liblapack_internal:
-	$(call update_submodule,external,lapack)
-	if test ! -e $(TOPDIR)/external/lapack/liblapack.a && test -e make_lapack.inc; then \
-	  (cp make_lapack.inc $(TOPDIR)/external/lapack/make.inc; \
-	  cd $(TOPDIR)/external/lapack; $(MAKE) blaslib lapacklib); else \
+	$(call download_and_unpack,$(LAPACK_NETLIB_NAME),$(LAPACK_NETLIB_URL),LAPACK,LAPACK)
+	if test ! -e ../LAPACK/liblapack.a && test -e make_lapack.inc; then \
+	  (cp make_lapack.inc ../LAPACK/make.inc; \
+	  cd ../LAPACK; $(MAKE) blaslib lapacklib); else \
         (echo "no configuration file found for lapack"; \
          echo "run configure from main QE dir"; exit); fi 
 lapack_clean:
-	cd $(TOPDIR)/external/lapack; $(MAKE) clean
+	if test -d ../LAPACK; then (cd ../LAPACK; $(MAKE) clean); fi
+lapack_veryclean:
+	if test -d ../LAPACK; then (rm -R -f ../LAPACK ../${LAPACK_NETLIB_NAME}); fi
 
 ###################################
 # FoX
 ###################################
 
 libfox:
-	$(call update_submodule,external,fox)
-	if test ! -d ../FoX ; then \
-  cd $(TOPDIR)/external/fox; \
-    ./configure --prefix=$(TOPDIR)/FoX FC=$(F90) FCFLAGS="$(FOX_FLAGS)"; \
+	if test ! -d ../FoX; then \
+        mkdir ../FoX; \
+	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
+	cd ../FoX/fox/; export FC=$(F90); export FCFLAGS="$(FOX_FLAGS)"; \
+	./configure --prefix=$(TOPDIR)/FoX ;\
     touch cp_test; \
     if cp -p cp_test cp_test_1; then \
-        rm cp_test_1; \
         echo "cp -p works"; \
     else \
         find -type f | xargs sed -i 's/cp -p/cp/g'; \
     fi; \
-    rm cp_test; \
-    $(MAKE) install && make clean; \
- cd -; \
-fi
+	$(MAKE) install; cd ../; rm -fr fox;fi
+
 fox_clean:
 	if test -d ../FoX; then (rm -R -f ../FoX); fi
 
@@ -83,8 +91,12 @@ libcuda_eigensolver_veryclean:
 
 CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
 libcuda_devxlib :
-	$(call update_submodule,external,devxlib)
 	cd ../external/devxlib; \
+    if test ! -e configure; then \
+    wget $(DEVXLIB_URL) -O devxlib.tar.gz || curl $(DEVXLIB_URL) -o devxlib.tar.gz ; \
+    tar xzf devxlib.tar.gz --strip-components=1 -C . ; \
+    rm devxlib.tar.gz ; \
+    fi; \
     touch make.inc; \
     $(MAKE) clean; \
     export F90FLAGS="$(FOX_FLAGS)"; \
@@ -111,13 +123,12 @@ libcuda_devxlib_veryclean:
 ###################################
 
 libmbd:
-	$(call update_submodule,external,mbd)
 	if test ! -d ../MBD; then \
         mkdir ../MBD; \
-        cd $(TOPDIR)/external/mbd; \
-        tar -xzvf $(TOPDIR)/archive/libmbd-0.10.3-non-cmake-makefiles.tar.gz --strip-components=1; \
-	cd src; export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
-	cp serial.make Makefile; $(MAKE) ; cp *.mod *.a $(TOPDIR)/MBD; cd ../../.. ;fi
+	(gzip -dc ../archive/libmbd-0.10.3.tar.gz | (cd ../MBD; tar -xvf -)); \
+	(gzip -dc ../archive/libmbd-0.10.3-non-cmake-makefiles.tar.gz | (cd ../MBD; tar -xvf -)); \
+	cd ../MBD/libmbd-0.10.3/src; export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
+	cp serial.make Makefile; $(MAKE) ; cp *.mod *.a ../..; cd ../.. ;fi
 
 libmbd_clean:
 	if test -d ../MBD; then (rm -R -f ../MBD); fi
@@ -128,4 +139,4 @@ libmbd_clean:
 
 clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libmbd_clean
 
-veryclean: fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libmbd_clean
+veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libmbd_clean
