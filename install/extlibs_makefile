@@ -124,11 +124,13 @@ libmbd:
 
 libmbd_clean:
 	if test -d ../MBD; then (rm -R -f ../MBD); fi
-	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; make clean; fi
+	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
+          (if test -f ./serial.make; then $(MAKE) clean; fi); fi
 
 libmbd_distclean:
 	if test -d ../MBD; then (rm -R -f ../MBD); fi
-	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; make distclean; fi
+	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
+          (if test -f ./serial.make; then $(MAKE) distclean; fi); fi
 
 ###################################
 # cleaning
