@@ -428,12 +428,11 @@ formerly PGI compiler, freely available for download.
 
 As a rule, \qe\ tries to keep compatibility with older compilers,
 avoiding nonstandard extensions and newer features that are not
-widespread or stabilized. If however your compiler is older say
-than $\sim 5$ years or so it is quite likely that something will
-not work. The same applies to mathematical and MPI libraries.
-For GPU compilation, get the most recent NVidia HPC SDK you can:
-while compilers from v. 17.4 on should work, several problems and
-limitations are known to exist for old compiler versions.
+widespread or stabilized. If however your compiler is older than
+a few ($\sim 5$) years, it is likely that something will not work.
+The same applies to mathematical and MPI libraries.
+For GPU compilation, you need v.19.10 or later of the NVidia HPC SDK
+(previous versions are no longer supported).
 
 Big computing centers typically provide a Fortran compiler complete
 with all needed libraries. Workstations or ``commodity'' machines
@@ -621,10 +620,11 @@ and the following optional packages:\\
 \end{tabular}\\
 \\
 In order to compile the code for GPU's you will need a recent version
--- the more recent, the better -- of the NVidia HPC software development
-kit (SDK). OpenMP must be enabled, and you may want to use a CUDA-aware MPI
-distribution if running on multiple GPUs in order to optimize the
-interprocess data transfer. The following \configure\ options are
+(v.19.10 or later: the more recent, the better) of the NVidia HPC software
+development kit (SDK). OpenMP should be enabled. Enabling faster communications
+between GPUs, via NVlink or Infiniband RDMA, is essential for optimal
+performance. If your MPI library is built to be CUDA-aware, then enable it
+with \texttt{--with-cuda-mpi=yes}. The following \configure\ options are
 available:\\
 \begin{tabular}{ll}
 \texttt{--with-cuda=value}&         enable compilation of GPU-accelerated subroutines.\\
@@ -640,10 +640,7 @@ available:\\
                                   & \texttt{value} must be consistent with the\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
-\texttt{--enable-cuda-env-check=[yes]}& if set, sanity checks on the CUDA environment\\
-                                      & are performed (default: no).
-\end{tabular}\\
-
+\texttt{--with-cuda-mpi=value}    & enable usage of a CUDA-aware MPI library (default: no).\\
 
 To modify or extend \configure, see the Wiki pages on GitLab:
 \texttt{https://gitlab.com/QEF/q-e/-/wikis}.
@@ -662,7 +659,7 @@ libraries (e.g. you need to add \texttt{-D\_\_FFTW} to \texttt{DFLAGS}
 if you want to link internal FFTW). For a correct choice of preprocessing
 flags, refer to the documentation in \texttt{include/defs.h.README}.
 
-Even if \configure\ works, yuo may need to tweak the \texttt{make.inc}
+Even if \configure\ works, you may need to tweak the \texttt{make.inc}
 file. It is very simple, but please note that if you change any settings
 (e.g. preprocessing, compilation flags)
 after a previous, successful or failed, compilation, you must run

@@ -48,6 +48,12 @@ AC_ARG_WITH([cuda-runtime],
    [AS_HELP_STRING([--with-cuda-runtime=VAL],[CUDA runtime (Pascal: 8+, Volta: 9+) @<:@default=10.1@:>@])],
    [],
    [with_cuda_runtime=10.1])
+   
+AC_ARG_WITH([cuda-mpi],
+   [AS_HELP_STRING([--with-cuda-mpi=VAL],[CUDA-aware MPI (yes|no) @<:@default=no@:>@])],
+   [],
+   [with_cuda_mpi=no])
+
 
 AC_ARG_ENABLE([openacc],
    [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=yes@:>@])],
@@ -81,6 +87,9 @@ then
    # Headers and libraries
    # -----------------------------------------
    try_dflags="$try_dflags -D__CUDA"
+   if test "$use_parallel" -eq 1 && test "$with_cuda_mpi" == "yes"; then 
+      try_dflags="$try_dflags -D__GPU_MPI"
+   fi
    cuda_extlibs="devxlib"
    cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
    

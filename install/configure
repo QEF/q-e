@@ -768,6 +768,7 @@ enable_static
 with_cuda
 with_cuda_cc
 with_cuda_runtime
+with_cuda_mpi
 enable_openacc
 with_libxc
 with_libxc_prefix
@@ -1437,6 +1438,7 @@ Optional Packages:
   --with-cuda-cc=VAL      GPU architecture (Kepler: 35, Pascal: 60, Volta: 70)
                           [default=35]
   --with-cuda-runtime=VAL CUDA runtime (Pascal: 8+, Volta: 9+) [default=10.1]
+  --with-cuda-mpi=VAL     CUDA-aware MPI (yes|no) [default=no]
   --with-libxc            (yes|no) Use libXC for some XC functionals (default:
                           no)
   --with-libxc-prefix=DIR Directory where libxc was installed.
@@ -4190,6 +4192,16 @@ else
 fi
 
 
+
+# Check whether --with-cuda-mpi was given.
+if test "${with_cuda_mpi+set}" = set; then :
+  withval=$with_cuda_mpi;
+else
+  with_cuda_mpi=no
+fi
+
+
+
 # Check whether --enable-openacc was given.
 if test "${enable_openacc+set}" = set; then :
   enableval=$enable_openacc;
@@ -4315,6 +4327,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
    # Headers and libraries
    # -----------------------------------------
    try_dflags="$try_dflags -D__CUDA"
+   if test "$use_parallel" -eq 1 && test "$with_cuda_mpi" == "yes"; then
+      try_dflags="$try_dflags -D__GPU_MPI"
+   fi
    cuda_extlibs="devxlib"
    cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
 
