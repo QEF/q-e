@@ -95,17 +95,10 @@ then
    if test "$runtime_major_version" -lt 10 || 
      (test "$runtime_major_version" -eq 10 && test "$runtime_minor_version" -lt 1 )
    then
-       # CUDA toolkit v < 10.1: new solver not available
-       cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
-       cuda_extlibs="$cuda_extlibs eigensolver"
-       cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-       AC_MSG_WARN([Using legacy custom solver.])
+       # CUDA toolkit v < 10.1: cusolver not available
+       AC_MSG_ERROR([Unsupported CUDA Toolkit, too old])
    else
        try_dflags="$try_dflags -D__USE_CUSOLVER"
-   fi
-   # BEEF code no longer works with v.19.10 and earlier
-   if test "$f90_major_version" -lt 20; then
-       try_dflags="$try_dflags -D__NOBEEF"
    fi
    # -----------------------------------------
    # C flags 
@@ -118,6 +111,8 @@ then
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
       cuda_cflags="$cuda_cflags -acc"
+   else
+      AC_MSG_ERROR([OpenACC must be enabled])
    fi
 
 fi

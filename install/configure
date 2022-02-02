@@ -4329,18 +4329,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
    if test "$runtime_major_version" -lt 10 ||
      (test "$runtime_major_version" -eq 10 && test "$runtime_minor_version" -lt 1 )
    then
-       # CUDA toolkit v < 10.1: new solver not available
-       cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
-       cuda_extlibs="$cuda_extlibs eigensolver"
-       cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Using legacy custom solver." >&5
-$as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
+       # CUDA toolkit v < 10.1: cusolver not available
+       as_fn_error $? "Unsupported CUDA Toolkit, too old" "$LINENO" 5
    else
        try_dflags="$try_dflags -D__USE_CUSOLVER"
-   fi
-   # BEEF code no longer works with v.19.10 and earlier
-   if test "$f90_major_version" -lt 20; then
-       try_dflags="$try_dflags -D__NOBEEF"
    fi
    # -----------------------------------------
    # C flags
@@ -4353,6 +4345,8 @@ $as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
       cuda_cflags="$cuda_cflags -acc"
+   else
+      as_fn_error $? "OpenACC must be enabled" "$LINENO" 5
    fi
 
 fi
