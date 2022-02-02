@@ -137,13 +137,13 @@ LD_LIBS        = @ld_libs@
 # External Libraries (if any) : blas, lapack, fft, MPI
 
 # If you have nothing better, use the local copy
-# BLAS_LIBS = $(TOPDIR)/LAPACK/libblas.a
+# BLAS_LIBS = $(TOPDIR)/external/lapack/libblas.a
 
 BLAS_LIBS      = @blas_libs@
 
 # If you have nothing better, use the local copy
 # LAPACK_LIBS_SWITCH = internal
-# LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
+# LAPACK_LIBS = $(TOPDIR)/external/lapack/liblapack.a
 
 LAPACK_LIBS    = @lapack_libs@
 LAPACK_LIBS_SWITCH = @lapack_libs_switch@
