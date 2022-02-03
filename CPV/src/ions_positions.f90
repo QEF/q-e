@@ -8,12 +8,12 @@
 !------------------------------------------------------------------------------!
 MODULE ions_positions
 !------------------------------------------------------------------------------!
+  !! Module containing atomic positions arrays used in the CP codes during
+  !! the dynamics.
   !
   USE kinds,             ONLY : DP
   !
   IMPLICIT NONE
-  !
-  ! ... Atomic positions arrays used in the cp codes during the dynamics
   !
   REAL(DP), TARGET, ALLOCATABLE :: tau0(:,:), taum(:,:),  taup(:,:)
   REAL(DP), TARGET, ALLOCATABLE :: taus(:,:), tausm(:,:), tausp(:,:)
