@@ -270,7 +270,6 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   REAL(DP), ALLOCATABLE :: h_diag_d(:), s_diag_d(:)
 #if defined(__CUDA)
   ATTRIBUTES( DEVICE )  :: h_diag_d, s_diag_d
-#endif
   !
   INTEGER                      :: devInfo_d, h_meig
   ATTRIBUTES( DEVICE )         :: devInfo_d
@@ -278,6 +277,7 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   LOGICAL, SAVE                :: cuSolverInitialized = .FALSE.
   REAL(DP), VARTYPE            :: h_bkp_d(:,:), s_bkp_d(:,:)
   ATTRIBUTES( DEVICE )         :: h_bkp_d, s_bkp_d
+#endif
 #undef VARTYPE
   !
   CALL start_clock_gpu( 'rdiaghg' )
