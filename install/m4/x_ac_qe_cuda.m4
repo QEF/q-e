@@ -48,6 +48,12 @@ AC_ARG_WITH([cuda-runtime],
    [AS_HELP_STRING([--with-cuda-runtime=VAL],[CUDA runtime (Pascal: 8+, Volta: 9+) @<:@default=10.1@:>@])],
    [],
    [with_cuda_runtime=10.1])
+   
+AC_ARG_WITH([cuda-mpi],
+   [AS_HELP_STRING([--with-cuda-mpi=VAL],[CUDA-aware MPI (yes|no) @<:@default=no@:>@])],
+   [],
+   [with_cuda_mpi=no])
+
 
 AC_ARG_ENABLE([openacc],
    [AS_HELP_STRING([--enable-openacc],[Enable compilation with OPENACC @<:@default=yes@:>@])],
@@ -81,6 +87,9 @@ then
    # Headers and libraries
    # -----------------------------------------
    try_dflags="$try_dflags -D__CUDA"
+   if test "$use_parallel" -eq 1 && test "$with_cuda_mpi" == "yes"; then 
+      try_dflags="$try_dflags -D__GPU_MPI"
+   fi
    cuda_extlibs="devxlib"
    cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
    
@@ -93,20 +102,17 @@ then
    runtime_major_version=`echo $with_cuda_runtime | cut -d. -f1`
    runtime_minor_version=`echo $with_cuda_runtime | cut -d. -f2`
    if test "$runtime_major_version" -lt 10 || 
-         ( "$runtime_major_version" -eq 10 && "$runtime_minor_version" -lt 1 )
+     (test "$runtime_major_version" -eq 10 && test "$runtime_minor_version" -lt 1 )
    then
-       # CUDA toolkit v < 10.1: new solver not available
-       cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
-       cuda_extlibs="$cuda_extlibs eigensolver"
-       cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-       AC_MSG_WARN([Using legacy custom solver.])
+       # CUDA toolkit v < 10.1: cusolver not available
+       AC_MSG_ERROR([Unsupported CUDA Toolkit, too old])
    else
        try_dflags="$try_dflags -D__USE_CUSOLVER"
    fi
    # -----------------------------------------
-   # C flags - not sure whether they are suitable for old version as well
+   # C flags 
    # -----------------------------------------   
-   cuda_cflags=" -I$with_cuda/include -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_cflags=" -I$with_cuda/include $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    cuda_runtime="$with_cuda_runtime"
@@ -114,6 +120,8 @@ then
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
       cuda_cflags="$cuda_cflags -acc"
+   else
+      AC_MSG_ERROR([OpenACC must be enabled])
    fi
 
 fi

@@ -769,6 +769,7 @@ enable_static
 with_cuda
 with_cuda_cc
 with_cuda_runtime
+with_cuda_mpi
 enable_openacc
 with_libxc
 with_libxc_prefix
@@ -1438,6 +1439,7 @@ Optional Packages:
   --with-cuda-cc=VAL      GPU architecture (Kepler: 35, Pascal: 60, Volta: 70)
                           [default=35]
   --with-cuda-runtime=VAL CUDA runtime (Pascal: 8+, Volta: 9+) [default=10.1]
+  --with-cuda-mpi=VAL     CUDA-aware MPI (yes|no) [default=no]
   --with-libxc            (yes|no) Use libXC for some XC functionals (default:
                           no)
   --with-libxc-prefix=DIR Directory where libxc was installed.
@@ -4191,6 +4193,16 @@ else
 fi
 
 
+
+# Check whether --with-cuda-mpi was given.
+if test "${with_cuda_mpi+set}" = set; then :
+  withval=$with_cuda_mpi;
+else
+  with_cuda_mpi=no
+fi
+
+
+
 # Check whether --enable-openacc was given.
 if test "${enable_openacc+set}" = set; then :
   enableval=$enable_openacc;
@@ -4316,6 +4328,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
    # Headers and libraries
    # -----------------------------------------
    try_dflags="$try_dflags -D__CUDA"
+   if test "$use_parallel" -eq 1 && test "$with_cuda_mpi" == "yes"; then
+      try_dflags="$try_dflags -D__GPU_MPI"
+   fi
    cuda_extlibs="devxlib"
    cuda_libs="$mMcudalib=cufft,cublas,cusolver,curand \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
 
@@ -4328,21 +4343,17 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
    runtime_major_version=`echo $with_cuda_runtime | cut -d. -f1`
    runtime_minor_version=`echo $with_cuda_runtime | cut -d. -f2`
    if test "$runtime_major_version" -lt 10 ||
-         ( "$runtime_major_version" -eq 10 && "$runtime_minor_version" -lt 1 )
+     (test "$runtime_major_version" -eq 10 && test "$runtime_minor_version" -lt 1 )
    then
-       # CUDA toolkit v < 10.1: new solver not available
-       cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
-       cuda_extlibs="$cuda_extlibs eigensolver"
-       cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Using legacy custom solver." >&5
-$as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
+       # CUDA toolkit v < 10.1: cusolver not available
+       as_fn_error $? "Unsupported CUDA Toolkit, too old" "$LINENO" 5
    else
        try_dflags="$try_dflags -D__USE_CUSOLVER"
    fi
    # -----------------------------------------
-   # C flags - not sure whether they are suitable for old version as well
+   # C flags
    # -----------------------------------------
-   cuda_cflags=" -I$with_cuda/include -gpu=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_cflags=" -I$with_cuda/include $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    ldflags="$ldflags $mMcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    cuda_runtime="$with_cuda_runtime"
@@ -4350,6 +4361,8 @@ $as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
       ldflags="$ldflags -acc"
       cuda_fflags="$cuda_fflags -acc"
       cuda_cflags="$cuda_cflags -acc"
+   else
+      as_fn_error $? "OpenACC must be enabled" "$LINENO" 5
    fi
 
 fi

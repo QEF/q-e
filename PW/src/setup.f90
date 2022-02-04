@@ -808,35 +808,15 @@ END SUBROUTINE setup_para
 !
 !----------------------------------------------------------------------------
 LOGICAL FUNCTION check_gpu_support( )
-  !
-  ! FIXME: seems useless. If one has GPUs, one wants to run on GPUs.
-  !
+  ! Minimal case: returns true if compiled for GPUs
   IMPLICIT NONE
   !
-  LOGICAL, SAVE :: first = .TRUE.
-  LOGICAL, SAVE :: saved_value = .FALSE.
-  CHARACTER(len=255) :: gpu_env
-  INTEGER :: vlen, istat
-
 #if defined(__CUDA)
-  IF( .NOT. first ) THEN
-      check_gpu_support = saved_value
-      RETURN
-  END IF
-  first = .FALSE.
-  !
-  CALL get_environment_variable("USEGPU", gpu_env, vlen, istat, .true.)
-  IF (istat == 0) THEN
-     check_gpu_support = (gpu_env /= "no")
-  ELSE 
-     check_gpu_support = .TRUE.
-  END IF
-  saved_value = check_gpu_support
-  !
+  check_gpu_support = .TRUE.
 #else
   check_gpu_support = .FALSE.
 #endif
-  RETURN
+  !
 END FUNCTION check_gpu_support
 !
 !----------------------------------------------------------------------------
