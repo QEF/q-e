@@ -11,12 +11,6 @@
 include ../make.inc
 include install_utils
 
-# For NVIDIA Eigensolver
-EIGENSOLVER_VERSION=0.3.1
-EIGENSOLVER_GPU=v${EIGENSOLVER_VERSION}.tar.gz
-EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
-EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
-
 # MAIN target
 
 all: libcuda
@@ -72,18 +66,6 @@ fox_clean:
 
 libcuda : $(addprefix libcuda_,$(CUDA_EXTLIBS))
 
-libcuda_eigensolver :
-	$(call download_and_unpack,$(EIGENSOLVER_GPU_NAME),$(EIGENSOLVER_GPU_URL),EIGENSOLVER_GPU,EIGENSOLVER_GPU)
-	if test ! -e ../EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a ; then \
-    (cp Makefile.lib_eigsolve ../EIGENSOLVER_GPU/lib_eigsolve/Makefile; \
-    cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
-	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
-
-libcuda_eigensolver_clean:
-	if test -d ../EIGENSOLVER_GPU; then (cd ../EIGENSOLVER_GPU/lib_eigsolve ; $(MAKE) clean); fi
-libcuda_eigensolver_veryclean:
-	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
-
 CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
 libcuda_devxlib :
 	$(call update_submodule,external,devxlib)
@@ -136,6 +118,6 @@ libmbd_distclean:
 # cleaning
 ###################################
 
-clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libmbd_clean
+clean: lapack_clean fox_clean libcuda_devxlib_clean libmbd_clean
 
-veryclean: fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libmbd_distclean
+veryclean: fox_clean libcuda_devxlib_veryclean libmbd_distclean
