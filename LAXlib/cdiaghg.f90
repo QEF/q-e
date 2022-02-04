@@ -290,8 +290,6 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   REAL(DP), VARTYPE    :: h_diag_d(:), s_diag_d(:)
 #if defined(__CUDA)
   ATTRIBUTES( DEVICE ) :: work_d, rwork_d, h_diag_d, s_diag_d
-#endif
-  INTEGER :: i, j
   INTEGER                      :: devInfo_d, h_meig
   ATTRIBUTES( DEVICE )         :: devInfo_d
   TYPE(cusolverDnHandle), SAVE :: cuSolverHandle
@@ -299,6 +297,8 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   !
   COMPLEX(DP), VARTYPE   :: h_bkp_d(:,:), s_bkp_d(:,:)
   ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
+#endif
+  INTEGER :: i, j
 #undef VARTYPE
   !
   !
