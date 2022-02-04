@@ -1484,6 +1484,10 @@
                               / (carrier_density(itemp) * hbarJ)
       mobb_bte(:, :, itemp)   = (sigmab_bte(:, :, itemp) * electron_si * (bohr2ang * ang2cm)**2) &
                               / (carrier_density(itemp) * hbarJ)
+      ! 
+      ! To make the diagonal of mobb zero. 
+      mobb_serta(:, :, itemp) = mobb_serta(:, :, itemp) - mob_serta(:, :, itemp)
+      mobb_bte(:, :, itemp) = mobb_bte(:, :, itemp) - mob_bte(:, :, itemp) 
       !
       ! Convert conductivity tensor in SI units [Siemens m^-1=Coulomb s^-1 V^-1 m^-d ]
       ! in 3d: cm^2 s^-1 V^-1 * (cm ^-2  cmtom^-1 C) = Coulomb s^-1 V^-1
@@ -1522,7 +1526,7 @@
       WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 2, itemp), '  |', mobb_serta(:, 2, itemp)
       WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_serta(:, 3, itemp), '  |', mobb_serta(:, 3, itemp)
       !
-      sigma_inv(:, :, itemp) = matinv3(sigma_serta(:, :, itemp))
+      !sigma_inv(:, :, itemp) = matinv3(sigma_serta(:, :, itemp))
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_serta(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
@@ -1530,7 +1534,7 @@
       ELSE
         mob_inv(:, :, itemp) = matinv3(mob_serta(:, :, itemp))
       ENDIF
-      hall_serta(:, :, itemp) = MATMUL(MATMUL(mobb_serta(:, :, itemp), mob_inv(:, :, itemp)), &
+      hall_serta(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_serta(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
       !
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
@@ -1563,7 +1567,7 @@
       WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 2, itemp), '  |', mobb_bte(:, 2, itemp)
       WRITE(stdout, '(4x,3E14.5,a,3E14.5)') mob_bte(:, 3, itemp), '  |', mobb_bte(:, 3, itemp)
       !
-      sigma_inv(:, :, itemp) = matinv3(sigma_bte(:, :, itemp))
+      !sigma_inv(:, :, itemp) = matinv3(sigma_bte(:, :, itemp))
       IF (system_2d) THEN ! We suppose vacuum is in the z direction
         mob_bte(3, 3, :) = 1d0
         mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
@@ -1571,7 +1575,7 @@
       ELSE
         mob_inv(:, :, itemp) = matinv3(mob_bte(:, :, itemp))
       ENDIF
-      hall(:, :, itemp) = MATMUL(MATMUL(mobb_bte(:, :, itemp), mob_inv(:, :, itemp)), &
+      hall(:, :, itemp) = MATMUL(MATMUL(mob_inv(:, :, itemp), mobb_bte(:, :, itemp)), &
                           mob_inv(:, :, itemp)) / (b_norm * hbarJ ) * electron_si * (bohr2ang * ang2cm)**2
       !
       ! bfield is energy*sec/lenght**2, mobility is in cm**2 V**-1 sec**-1.
