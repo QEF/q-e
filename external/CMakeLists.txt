@@ -14,13 +14,6 @@ include(wannier90.cmake)
 include(mbd.cmake)
 
 ###########################################################
-# Eigensolver_GPU
-###########################################################
-if(QE_ENABLE_CUDA AND NOT QE_ENABLE_LAXLIB_CUSOLVER)
-    include(eigensolver_gpu.cmake)
-endif()
-
-###########################################################
 # DeviceXlib
 ###########################################################
 include(devxlib.cmake)

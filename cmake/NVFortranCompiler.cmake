@@ -6,6 +6,11 @@ qe_add_global_compile_definitions(__PGI)
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mcache_align -Mlarge_arrays")
 
 if(QE_ENABLE_CUDA)
+    if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19.10)
+        message(FATAL_ERROR "Compiler Version ${CMAKE_Fortran_COMPILER_VERSION}. "
+                            "GPU acceleration requires PGI 19.10 or NVIDIA HPC SDK 20.7 or higher!")
+    endif()
+
     if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 20.7)
         set(CUDA_FLAG "-cuda")
     else()
