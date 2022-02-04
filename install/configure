@@ -4347,8 +4347,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
    then
        # CUDA toolkit v < 10.1: cusolver not available
        as_fn_error $? "Unsupported CUDA Toolkit, too old" "$LINENO" 5
-   else
-       try_dflags="$try_dflags -D__USE_CUSOLVER"
    fi
    # -----------------------------------------
    # C flags

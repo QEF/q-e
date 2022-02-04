@@ -106,8 +106,6 @@ then
    then
        # CUDA toolkit v < 10.1: cusolver not available
        AC_MSG_ERROR([Unsupported CUDA Toolkit, too old])
-   else
-       try_dflags="$try_dflags -D__USE_CUSOLVER"
    fi
    # -----------------------------------------
    # C flags 
