@@ -182,7 +182,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ! Calculation of the response charge-density
         !
-        !$acc parallel loop present(drhoscf,psi,dpsic,v_siz,wgt)
+        !$acc parallel loop present(drhoscf(1:v_siz),psi,dpsic,v_siz,wgt)
         do ir = 1, v_siz
            drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
         enddo

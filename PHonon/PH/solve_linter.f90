@@ -87,7 +87,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE response_kernels,     ONLY : sternheimer_kernel
   USE uspp_init,            ONLY : init_us_2
   USE sym_def_module,       ONLY : sym_def
-
   implicit none
 
   integer :: irr
