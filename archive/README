@@ -1,5 +1,0 @@
-Archive contains the tarballs of external libraries and codes used by "make"
-to build QE. Note that "CMake" stores such packages in external/ instead.
-In the future, these files should be removed or replaced as follows:
-
-- libmbd-0.10.3-non-cmake-makefiles.tar.gz (patches for libmbd-0.10.3.tar.gz to add non-cmake support)

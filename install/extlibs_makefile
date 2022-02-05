@@ -99,20 +99,19 @@ libmbd:
 	$(call update_submodule,external,mbd)
 	if test ! -d ../MBD; then \
         mkdir ../MBD; \
-        cd $(TOPDIR)/external/mbd; \
-        tar -xzvf $(TOPDIR)/archive/libmbd-0.10.3-non-cmake-makefiles.tar.gz --strip-components=1; \
-	cd src; export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
-	cp serial.make Makefile; $(MAKE) ; cp *.mod *.a $(TOPDIR)/MBD; cd ../../.. ;fi
+        cd $(TOPDIR)/external/mbd/src; \
+	export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
+	$(MAKE) -f ../../mbd.make; cp *.mod *.a $(TOPDIR)/MBD; cd ../../.. ;fi
 
 libmbd_clean:
 	if test -d ../MBD; then (rm -R -f ../MBD); fi
 	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
-          (if test -f ./serial.make; then $(MAKE) clean; fi); fi
+          $(MAKE) -f ../../mbd.make clean; fi
 
 libmbd_distclean:
 	if test -d ../MBD; then (rm -R -f ../MBD); fi
 	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
-          (if test -f ./serial.make; then $(MAKE) distclean; fi); fi
+          $(MAKE) -f ../../mbd.make distclean; fi
 
 ###################################
 # cleaning
