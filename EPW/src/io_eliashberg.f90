@@ -700,10 +700,10 @@
     !
     OPEN(UNIT = iufildos, FILE = fildos, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
     IF (ios /= 0) CALL errore('write_dos', 'error opening file ' // fildos, iufildos)
-    WRITE(iufildos, '(a,ES20.10,a,ES20.10,a)') '# EFermi[eV]    ', eferm * ryd2ev ,'   dos_EFermi[eV^-1] ', &
+    WRITE(iufildos, '(a, ES20.10, a, ES20.10,a)') '# EFermi[eV]    ', eferm * ryd2ev ,'   dos_EFermi[eV^-1] ', &
       dos_ef(ngaussw, degaussw, eferm, etf, wkf, nkqf, nbndsub) / ryd2ev
-    WRITE(iufildos, '(a,ES20.10,a,ES20.10)') '# FermiWind[eV] ', fsthick * ryd2ev, '   Nr_electrons      ', nele
-    WRITE(iufildos, '(a,ES20.10,a,I8)')     '# dos_del[eV]   ', dos_del,          '   Nr_bins           ', wnum
+    WRITE(iufildos, '(a, ES20.10, a, ES20.10)') '# FermiWind[eV] ', fsthick * ryd2ev, '   Nr_electrons      ', nele
+    WRITE(iufildos, '(a, ES20.10, a, i8)')     '# dos_del[eV]   ', dos_del,          '   Nr_bins           ', wnum
     WRITE(iufildos, '(a)') '#          E [eV]      dos[state/eV]   Int dos[#]'
     !
     DO dummy = 1, wnum
@@ -711,7 +711,7 @@
       wval = dos_ef(ngaussw, degaussw, wene, etf, wkf, nkqf, nbndsub)
       wele = wele + wval / ryd2ev * dos_del
       ! total DOS is being written (not per spin!) for compatibility with QE format
-      WRITE(iufildos,'(5x,3ES20.10)') wene * ryd2ev, wval / ryd2ev , wele
+      WRITE(iufildos,'(5x, 3ES20.10)') wene * ryd2ev, wval / ryd2ev , wele
     ENDDO
     !
     CLOSE(iufildos)
@@ -729,7 +729,7 @@
     !!
     !! SH: Read the electronic dos in Fermi window from "dos" file (Nov 2021).
     !!
-    USE eliashbergcom, ONLY : dosfw, ndosbin, ef0, dosef
+    USE eliashbergcom, ONLY : en, dosen, ndos, ef0, dosef
     USE constants_epw, ONLY : zero, two
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iufildos
@@ -748,8 +748,8 @@
     LOGICAL :: file_exists
     !! Status of file
     !
-    INTEGER :: ie
-    !! Counter over energies
+    INTEGER :: idos
+    !! Counter over ndos
     INTEGER :: ios
     !! IO error message
     INTEGER :: ierr
@@ -770,7 +770,7 @@
     !
     READ(iufildos, '(a)') tmpst0
     READ(iufildos, *) tmpst1
-    READ(iufildos, *) tmpst1, tmpst1, dos_del, tmpst1, ndosbin
+    READ(iufildos, *) tmpst1, tmpst1, dos_del, tmpst1, ndos
     READ(iufildos, *) tmpst1
     !! if it's a run from a2f file, Ef and dos(Ef) are needed!
     IF (fila2f /= ' ') THEN
@@ -778,15 +778,19 @@
       dosef = dosef / two
     ENDIF
     !
-    ALLOCATE(dosfw(2 * ndosbin), STAT = ierr)
-    IF (ierr /= 0) CALL errore('read_dos', 'Error allocating dosfw', 1)
-    dosfw(:) = zero
+    ALLOCATE(en(ndos), STAT = ierr)
+    IF (ierr /= 0) CALL errore('read_dos', 'Error allocating en', 1)
+    ALLOCATE(dosen(ndos), STAT = ierr)
+    IF (ierr /= 0) CALL errore('read_dos', 'Error allocating dosen', 1)
+    en(:)    = zero
+    dosen(:) = zero
     neband   = zero
     !
-    DO ie = 1, ndosbin
-      READ(iufildos,*) dosfw(ie), dosfw(ie + ndosbin), neband
-      dosfw(ie + ndosbin) = dosfw(ie + ndosbin) / two ! switch to per spin 
+    DO idos = 1, ndos
+      READ(iufildos, *) en(idos), dosen(idos), neband
     ENDDO
+    dosen(:) = dosen(:) / two ! switch to per spin
+    !
     CLOSE(iufildos)
     !
     WRITE(stdout, '(/5x, a/)') 'Finish reading dos file ' // TRIM(prefix) // '.dos'
@@ -2455,15 +2459,23 @@
     temp = gtemp(itemp) / kelvin2eV
     !
     delta_min = MINVAL(agap(:, :, itemp))
+    delta_max = MAXVAL(agap(:, :, itemp))
+    !
+    WRITE(stdout, '(5x, a, 2f12.6, a)') 'Min. / Max. values of superconducting gap = ', &
+      delta_min * 1000.d0, delta_max * 1000.d0, ' meV'
     !
     IF (delta_min > zero) THEN
       delta_min = 0.9d0 * delta_min
     ELSE
-      WRITE(stdout, '(5x, a, f12.6, a)') 'Min. value of superconducting gap = ', &
-                                          delta_min * 1000.d0, ' meV'
       delta_min = 1.1d0 * delta_min
     ENDIF
-    delta_max = 1.1d0 * MAXVAL(agap(:, :, itemp))
+    !
+    IF (delta_max > zero) THEN
+      delta_max = 1.1d0 * delta_max
+    ELSE
+      delta_max = 0.9d0 * delta_max
+    ENDIF
+    !
     !nbin = NINT((delta_max - delta_min) / eps4) + 1
     !dbin = (delta_max - delta_min) / DBLE(nbin)
     dbin = 3.0d-5 !eV

@@ -192,7 +192,7 @@
           nsiw(:) = nswi
         ELSEIF (wscut > 0.d0) THEN
           DO itemp = 1, nstemp
-            nsiw(itemp) = int(0.5d0 * (wscut / pi / gtemp(itemp) - 1.d0)) + 1
+            nsiw(itemp) = INT(0.5d0 * (wscut / pi / gtemp(itemp) - 1.d0)) + 1
           ENDDO
         ELSEIF (nswi > 0 .AND. wscut > 0.d0) THEN
           nsiw(:) = nswi
@@ -901,28 +901,31 @@
     !!
     !! =====================================================================
     !! SH: A note about definition of Matsubara indices/frequencies in epw
-    !!
+    !! RM: updated (Jan 2022)
+    !! 
     !! In epw, the nsiw(itemp) is the cutoff for Matsubara indicies; i.e.,
     !!   the largest positive Matsubara index "n" is nsiw(itemp)-1.
+    !! 
+    !! nsiw(itemp) = INT(0.5d0 * (wscut / pi / gtemp(itemp) - 1.d0)) + 1
     !!
     !! So, for N=nsiw(itemp), indices are:
     !!
-    !!     n= -(N-1), -(N-2), ..., -1,0,1, ..., (N-2), (N-1)
+    !!     n=    -N, -(N-1), ..., -1, 0, 1, ...,  N-2,  N-1
     !!   and corresponding 2n+1 factor for frequencies are:
-    !!     f= -2N+3 , -2N+5 , ..., -1,1,3, ..., 2N-3 , 2N-1
+    !!     f= -2N+1,  -2N+3, ..., -1, 1, 3, ..., 2N-3, 2N-1
     !!
-    !! That's, the actual frequencies are non-symmetric with respect
+    !! The actual frequencies are non-symmetric with respect
     !!   to zero, i.e., the (2N-1)*pi*T has no negative counterpart, and
     !!   the rest are (in terms of 2n+1 factor):
     !!
-    !!   F[-(N-1)] = -F[N-2]; F[-(N-2)] = -F[N-3]; ...; F[-1] = -F[0]
+    !!   F[-N] = -F[N-1]; ...; F[-1] = -F[0]
     !!
     !! With using the lambda_negative, the summations in Eliashberg eqns
     !!   in the epw run only over non-negative "n" indices. That's:
     !!
     !!   iw = 1, 2, ..., N
     !!   n  = 0, 1, ..., N-1
-    !!   f  = 1, 3, ..., 2N-1
+    !!   f  = 1, 3, ..., 2N+1
     !! =====================================================================
     !!
     !
@@ -984,7 +987,7 @@
       IF (gridsamp == -1) THEN
         schm = 'input  '
       ELSEIF (gridsamp == 0) THEN
-        schm = 'unifrom'
+        schm = 'uniform'
       ELSEIF (gridsamp == 1) THEN
         schm = 'sparse '
       END IF
@@ -1013,7 +1016,7 @@
         n  = 0
         iw = 0
         DO WHILE (n < nsiw(itemp))
-          iw     = iw + 1
+          iw      = iw + 1
           wsn(iw) = n
           wsi(iw) = DBLE(2 * n + 1) * pi * gtemp(itemp)
           n = n + NINT(EXP(DBLE(n) / DBLE(nsiw(itemp)) / griddens))
@@ -1026,7 +1029,7 @@
       IF (iverbosity == 2) CALL write_matsubara_freq(itemp)
       !
       ! print actual number of Matsubara frequencies
-      WRITE(stdout, '(5x, a, i6, a, i6, a, a, a)') 'actual number of frequency points (', &
+      WRITE(stdout, '(5x, a, i6, a, i6, a, a, a)') 'Actual number of frequency points (', &
         itemp, ') = ', nsiw(itemp), ' for ', schm, ' sampling'
       !
     ENDIF

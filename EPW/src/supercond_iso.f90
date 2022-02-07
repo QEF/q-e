@@ -298,12 +298,13 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fbw, dos_del
+    USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis, &
+                              fbw, dos_del, muchem
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : nsiw, gap0, gap, wsi, keri, &
                               deltai, deltaip, znormi, nznormi, wsn, &
-                              znormip, shifti, shiftip, dosfw, ndosbin, &
-                              dosef, ef0
+                              znormip, shifti, shiftip, dosen, ndos, &
+                              en, dosef, ef0, muintr
     USE constants_epw, ONLY : zero, one
     USE constants,     ONLY : pi
     USE io_eliashberg, ONLY : eliashberg_write_iaxis
@@ -323,7 +324,7 @@
     INTEGER :: ierr
     !! Error status
     INTEGER :: ie
-    !! Counter for energy
+    !! Counter on energy grid
     !
     REAL(KIND = DP) :: lambdam
     !! K_{-}(n,n',T))
@@ -337,6 +338,8 @@
     !! Errors in supercond. gap
     REAL(KIND = DP) :: esqrt
     !! Temporary variable
+    REAL(KIND = DP), SAVE :: nelbnd, nstate
+    !! mu_inter parameters
     REAL(KIND = DP), ALLOCATABLE :: zesqrt(:), desqrt(:), sesqrt(:)
     !! Temporary variables
     REAL(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
@@ -394,10 +397,29 @@
       ENDIF
       !
       CALL kernel_iso_iaxis(itemp)
+      !
+      IF (itemp == 1) THEN
+        nelbnd = zero
+        nstate = zero
+        DO ie = 1, ndos
+          ! HP: one of the 2 factor comes form the spin in DOS
+          nstate = nstate + 2.d0 * dos_del * dosen(ie)
+          IF ((en(ie) - ef0) < zero) nelbnd = nelbnd + 4.d0 * dos_del * dosen(ie)
+        ENDDO
+        nelbnd = nelbnd / nstate
+        WRITE(stdout, '(5x, a, 2f15.8)') &
+          'Avg. tot. electron per band and Nr. of states (Fermi window weighted) = ', nelbnd, nstate
+        !
+      ENDIF
+      !
+      muintr = ef0
     ENDIF ! iter
     !
     ! SH: for fbw runs
     IF (fbw) THEN
+      ! SH: update the chemical potential from the inital guess
+      IF (muchem) CALL mu_inter_iso(itemp, muintr, nelbnd, nstate)
+      !
       deltai(:)  = zero
       znormi(:)  = zero
       shifti(:)  = zero
@@ -414,12 +436,12 @@
         DO iwp = 1, nsiw(itemp) ! loop over omega_prime
           ! this step is performed at each iter step only for iw=1 since it is independ of wsi(iw)
           IF (iw == 1) THEN
-            DO ie = 1, ndosbin
+            DO ie = 1, ndos
               esqrt = dos_del / (znormip(iwp)**2.d0 * (wsi(iwp)**2.d0 + deltaip(iwp)**2.d0) + &
-                (dosfw(ie) - ef0 + shiftip(iwp))**2.d0)
-              zesqrt(iwp) = zesqrt(iwp) + dosfw(ie+ndosbin) * esqrt * wsi(iwp) * znormip(iwp)
-              desqrt(iwp) = desqrt(iwp) + dosfw(ie+ndosbin) * esqrt * deltaip(iwp) * znormip(iwp)
-              sesqrt(iwp) = sesqrt(iwp) + dosfw(ie+ndosbin) * esqrt * (dosfw(ie)-ef0+shiftip(iwp))
+                (en(ie) - muintr + shiftip(iwp))**2.d0)
+              zesqrt(iwp) = zesqrt(iwp) + dosen(ie) * esqrt * wsi(iwp) * znormip(iwp)
+              desqrt(iwp) = desqrt(iwp) + dosen(ie) * esqrt * deltaip(iwp) * znormip(iwp)
+              sesqrt(iwp) = sesqrt(iwp) + dosen(ie) * esqrt * (en(ie) - muintr + shiftip(iwp))
             ENDDO
             zesqrt(iwp) = zesqrt(iwp) / dosef
             desqrt(iwp) = desqrt(iwp) / dosef
@@ -491,12 +513,12 @@
     deltaold(:) = deltai(:)
     !
     IF (iter == 1 .AND. fbw) WRITE(stdout, '(5x, a)') &
-      '   iter      ethr          znormi      deltai [meV]   shifti [meV]'
+      '   iter      ethr          znormi      deltai [meV]   shifti [meV]    mu (eV)'
     IF (iter == 1 .AND. .NOT. fbw) WRITE(stdout, '(5x, a)') &
       '   iter      ethr          znormi      deltai [meV]'
     IF (fbw) THEN
-      WRITE(stdout, '(5x, i6, 4ES15.6)') &
-        iter, errdelta, znormi(1), deltai(1) * 1000.d0, shifti(1) * 1000.d0
+      WRITE(stdout, '(5x, i6, 5ES15.6)') &
+        iter, errdelta, znormi(1), deltai(1) * 1000.d0, shifti(1) * 1000.d0, muintr
     ELSE
       WRITE(stdout, '(5x, i6, 3ES15.6)') &
         iter, errdelta, znormi(1), deltai(1) * 1000.d0
@@ -518,6 +540,12 @@
     ELSEIF (.NOT. conv .AND. iter == nsiter) THEN
       WRITE(stdout, '(5x, a, i6)') 'Convergence was not reached in nsiter = ', iter
       WRITE(stdout, '(5x, a)') 'Increase nsiter or reduce conv_thr_iaxis'
+      WRITE(stdout, '(a)') ' '
+    ENDIF
+    !
+    IF(fbw .AND. (conv .OR. iter == nsiter)) THEN
+      WRITE(stdout, '(5x, a, i6, a, ES20.10, a)') &
+                  'Chemical potential (itemp = ',itemp,' ) : ', muintr, ' eV'
       WRITE(stdout, '(a)') ' '
     ENDIF
     !
@@ -878,8 +906,10 @@
     !! Counter on temperature index
     !
     ! Local variables
-    INTEGER :: iw, n
+    INTEGER :: iw
     !! Counter on frequency imag-axis
+    INTEGER :: n
+    !! Nr. of Matsubara frequencies
     INTEGER :: ierr
     !! Error status
     REAL(KIND = DP) :: omega
@@ -889,6 +919,8 @@
     !
     ! SH: nsiw is replaced with "1+largest Matsubara index"
     !       for compatibility with the general case of sparse sampling
+    ! RM: n = nsiw(itemp) for uniform sampling
+    !
     n = wsn(nsiw(itemp)) + 1
     !
     ALLOCATE(keri(2 * n), STAT = ierr)
@@ -896,7 +928,7 @@
     keri(:) = zero
     !
     DO iw = 1, 2 * n
-      omega = DBLE(iw - 1) * 2.d0 * pi * gtemp(itemp)
+      omega = DBLE(2 * (iw - 1)) * pi * gtemp(itemp)
       CALL lambdar_iso(omega, lambda_eph)
       keri(iw) = lambda_eph
     ENDDO
@@ -1679,6 +1711,103 @@
     END SUBROUTINE crit_temp_iso
     !-----------------------------------------------------------------------
     !
+    !-----------------------------------------------------------------------
+    SUBROUTINE mu_inter_iso(itemp, muintr, nelbnd, nstate)
+    !-----------------------------------------------------------------------
+    !!
+    !! SH: To find the superconducting state chemical potential
+    !!       using the Newton-Raphson method (Nov 2021).
+    !!
+    !! HP: updated for the isotropic calculation (Feb 2022)
+    !!
+    USE kinds,          ONLY : DP
+    USE eliashbergcom,  ONLY : wsi, nsiw, deltaip, znormip, shiftip, &
+                               en, ndos, dosen
+    USE elph2,          ONLY : gtemp
+    USE epwcom,         ONLY : dos_del, broyden_beta, nsiter
+    USE constants_epw,  ONLY : zero, eps6
+    !
+    IMPLICIT NONE
+    !
+    INTEGER         :: itemp
+    !! Temperature
+    REAL(KIND = DP) :: muintr
+    !! Interacting chemical potential: initial value
+    REAL(KIND = DP) :: nelbnd
+    !! Weighted umber of electrons per band in Fermi ene. window
+    REAL(KIND = DP) :: nstate
+    !! Weighted number of k/band states in Fermi ene. window
+    !
+    ! Local variables
+    LOGICAL :: conv
+    !! Convergence parameter
+    INTEGER :: iw
+    !! Index for Matsubara frequencies
+    INTEGER :: ie
+    !! Counter on energy grid 
+    INTEGER :: iter
+    !! Counter for iterations
+    REAL(KIND = DP) :: delta
+    !! Temporary variable to store energy difference
+    REAL(KIND = DP) :: theta
+    !! Theta in Eliashberg equations
+    REAL(KIND = DP) :: muout, muin
+    !! Variables for Newton's minimization
+    REAL(KIND = DP) :: fmu
+    !! To store f(mu) value
+    REAL(KIND = DP) :: dmu
+    !! To store d_f(mu)/d_mu value
+    !
+    muin = muintr
+    !
+    iter = 1
+    conv = .FALSE.
+    !
+    DO WHILE (.NOT. conv .AND. iter <= nsiter)
+      !
+      fmu = zero ! f(mu)
+      dmu = zero ! d_f(mu)/d_mu
+      !
+      !
+      ! SH: Here, we have an explicit summation over full range of frequencies
+      !      for even functions, and multiply that by two (loop over iw).
+      !
+      DO ie = 1, ndos
+        DO iw = 1, nsiw(itemp)
+          delta = en(ie) - muin + shiftip(iw)
+          theta = (wsi(iw) * znormip(iw))**2.d0 + &
+                  (en(ie) - muin + shiftip(iw))**2.d0 + &
+                  (znormip(iw) * deltaip(iw))**2.d0
+          fmu = fmu + 2.d0 * dos_del * dosen(ie) * delta / theta
+          dmu = dmu + 2.d0 * dos_del * dosen(ie) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
+        ENDDO ! iw
+      ENDDO ! ie
+      !
+      fmu = - fmu * (2.d0 * gtemp(itemp) / nstate) + 1.d0 - nelbnd
+      dmu = - dmu * (2.d0 * gtemp(itemp) / nstate)
+      !
+      muout = muin - fmu / dmu
+      !
+      ! HP: linear mixing
+      muout = (1.0 - broyden_beta) * muin + broyden_beta * muout
+      !
+      IF (ABS((muout - muin) / muin) <= eps6) conv = .TRUE.
+      !
+      muin = muout
+      iter = iter + 1
+    END DO
+    !
+    IF (.NOT. conv .AND. (iter - 1) == nsiter) &
+      CALL errore('mu_inter_iso', 'Error failed to find the mu_inter_iso value',1)
+    !
+    muintr = muout
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE mu_inter_iso
+    !-----------------------------------------------------------------------
+    !
     !----------------------------------------------------------------------
     SUBROUTINE deallocate_iso_iaxis()
     !----------------------------------------------------------------------
@@ -1804,7 +1933,7 @@
     !
     USE epwcom,        ONLY : limag, fbw
     USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : a2f_iso, wsph, nsiw, dosfw
+    USE eliashbergcom, ONLY : a2f_iso, wsph, nsiw, en, dosen
     !
     IMPLICIT NONE
     !
@@ -1824,10 +1953,13 @@
       DEALLOCATE(nsiw, STAT = ierr)
       IF (ierr /= 0) CALL errore('deallocate_iso', 'Error deallocating nsiw', 1)
     ENDIF
-    ! SH: deallocate fbw-related array dosfw
+    ! SH: deallocate fbw-related array en, dosen
     IF (fbw) THEN
-      DEALLOCATE(dosfw, STAT = ierr)
-      IF (ierr /= 0) CALL errore('deallocate_iso', 'Error deallocating dosfw', 1)
+      ! read_dos
+      DEALLOCATE(en, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_iso', 'Error deallocating en', 1)
+      DEALLOCATE(dosen, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_iso', 'Error deallocating dosen', 1)
     ENDIF
     !
     RETURN

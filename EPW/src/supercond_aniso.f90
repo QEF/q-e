@@ -451,7 +451,7 @@
     !! Temporary variable
     REAL(KIND = DP) :: weight
     !! Factor in supercond. equations
-    REAL(KIND = DP), SAVE :: numelbnd, numstate
+    REAL(KIND = DP), SAVE :: nelbnd, nstate
     !! mu_inter parameters
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! for Fermi-Dirac distribution
@@ -490,19 +490,20 @@
       !
       IF (fbw .AND. (itemp == 1 .OR. (itemp == 2 .AND. imag_read))) THEN
         ! SH: calculate the input parameters for mu_inter
-        numelbnd = zero
-        numstate = zero
+        nelbnd = zero
+        nstate = zero
         DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-              numstate = numstate + wkfs(ik)
-              numelbnd = numelbnd + 2.d0 * wkfs(ik) * wgauss((ef0 - ekfs(ibnd, ik)) / zero, -99)
+              ! HP: The initial guess is based on the FD dist. at 0 K.
+              nstate = nstate + wkfs(ik)
+              IF ((ekfs(ibnd, ik) - ef0) < zero) nelbnd = nelbnd + 2.d0 * wkfs(ik)
             ENDIF
           ENDDO
         ENDDO
-        numelbnd = numelbnd / numstate
+        nelbnd = nelbnd / nstate
         WRITE(stdout, '(5x,a,2f15.8)') &
-          'avg. tot. electron per band and nr. of states (Fermi window weighted) = ', numelbnd, numstate 
+          'Avg. tot. electron per band and Nr. of states (Fermi window weighted) = ', nelbnd, nstate 
       ENDIF
       !
       IF (fbw) THEN
@@ -601,7 +602,7 @@
     IF (fbw) THEN
       !
       ! SH: update the chemical potential from the inital guess
-      IF (muchem ) CALL mu_inter1(itemp, muintr, numelbnd, numstate)
+      IF (muchem ) CALL mu_inter_aniso(itemp, muintr, nelbnd, nstate)
       !
       naznormi(:, :, :) = zero
       adeltai(:, :, :)  = zero
@@ -1548,8 +1549,10 @@
     !! Counter on temperature
     !
     ! Local variables
-    INTEGER :: iw, n
+    INTEGER :: iw
     !! Counter on frequency imag-axis
+    INTEGER :: n
+    !! Nr. of Matsubara frequencies
     INTEGER :: ik
     !! Counter on k-points
     INTEGER :: iq
@@ -1572,6 +1575,8 @@
     !
     !! SH: nsiw is replaced with "1+largest matsubara index"
     !!       for compatibility with the general case of sparse sampling
+    !! RM: n = nsiw(itemp) for uniform sampling
+    !
     n = wsn(nsiw(itemp)) + 1
     !
     CALL fkbounds(nkfs, lower_bnd, upper_bnd)
@@ -1591,7 +1596,7 @@
             DO jbnd = 1, nbndfs
               IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
                 DO iw = 1, 2 * n
-                  omega = DBLE(iw - 1) * 2.d0 * pi * gtemp(itemp)
+                  omega = DBLE(2 * (iw - 1)) * pi * gtemp(itemp)
                   CALL lambdar_aniso_ver1(ik, iq, ibnd, jbnd, omega, lambda_eph)
                   !CALL lambdar_aniso_ver2(ik, iq, ibnd, jbnd, omega, lambda_eph)
                   akeri(iw, jbnd, iq, ibnd, ik) = lambda_eph
@@ -2020,7 +2025,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE mu_inter1(itemp,muintr, numelbnd, numstate)
+    SUBROUTINE mu_inter_aniso(itemp,muintr, nelbnd, nstate)
     !-----------------------------------------------------------------------
     !!
     !! SH: To find the superconducting state chemical potential
@@ -2030,9 +2035,8 @@
     USE eliashbergcom,  ONLY : ekfs, ef0, nkfs, nbndfs, wsi, nsiw, &
                                adeltaip, aznormip, ashiftip, wkfs
     USE elph2,          ONLY : gtemp
-    USE epwcom,         ONLY : fsthick
-    USE constants_epw,  ONLY : zero
-    USE epwcom,         ONLY : nsiter
+    USE epwcom,         ONLY : fsthick, nsiter, broyden_beta
+    USE constants_epw,  ONLY : zero, eps6
     !
     IMPLICIT NONE
     !
@@ -2040,9 +2044,9 @@
     !! Temperature
     REAL(KIND = DP) :: muintr
     !! Interacting chemical potential: initial value
-    REAL(KIND = DP) :: numelbnd
+    REAL(KIND = DP) :: nelbnd
     !! Weighted umber of electrons per band in Fermi ene. window
-    REAL(KIND = DP) :: numstate
+    REAL(KIND = DP) :: nstate
     !! Weighted number of k/band states in Fermi ene. window
     !
     ! Local variables
@@ -2080,14 +2084,12 @@
       dmu = zero ! d_f(mu)/d_mu
       !
       ! SH: Here, we have an explicit summation over full range of frequencies
-      !      for even functions. So, what we do is to sum up the terms from
-      !      symmetric frequencies (iw=1, N-1) and multiply that by two
-      !      (loop over iw), and then add the term corresponding to iw=N.
+      !      for even functions, and multiply that by two (loop over iw).
       !
       DO ik = 1, nkfs 
         DO ibnd = 1, nbndfs
           IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
-            DO iw = 1, nsiw(itemp) - 1
+            DO iw = 1, nsiw(itemp)
               delta = ekfs(ibnd, ik) - muin + ashiftip(iw, ibnd, ik)
               theta = (wsi(iw) * aznormip(iw, ibnd, ik))**2.d0 + &
                       (ekfs(ibnd, ik) - muin + ashiftip(iw, ibnd, ik))**2.d0 + &
@@ -2095,22 +2097,19 @@
               fmu = fmu + 2.d0 * wkfs(ik) * delta / theta
               dmu = dmu + 2.d0 * wkfs(ik) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
             ENDDO ! iw
-            delta = ekfs(ibnd, ik) - muin + ashiftip(nsiw(itemp), ibnd, ik)
-            theta = (wsi(nsiw(itemp)) * aznormip(nsiw(itemp), ibnd, ik))**2.d0 + &
-                    (ekfs(ibnd, ik) - muin + ashiftip(nsiw(itemp), ibnd, ik))**2.d0 + &
-                    (adeltaip(nsiw(itemp), ibnd, ik) * aznormip(nsiw(itemp), ibnd, ik))**2.d0
-            fmu = fmu + wkfs(ik) * delta / theta
-            dmu = dmu + wkfs(ik) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
           ENDIF
         ENDDO ! ibnd
       ENDDO ! ik
       !
-      fmu = - fmu * (2.d0 * gtemp(itemp) / numstate) + 1.d0 - numelbnd
-      dmu = - dmu * (2.d0 * gtemp(itemp) / numstate)
+      fmu = - fmu * (2.d0 * gtemp(itemp) / nstate) + 1.d0 - nelbnd
+      dmu = - dmu * (2.d0 * gtemp(itemp) / nstate)
       !
       muout = muin - fmu / dmu
       !
-      IF (ABS((muout - muin) / muin) <= 1.d-6) conv = .TRUE.
+      ! HP: linear mixing
+      muout = (1.0 - broyden_beta) * muin + broyden_beta * muout
+      !
+      IF (ABS((muout - muin) / muin) <= eps6) conv = .TRUE.
       !
       muin = muout
       iter = iter + 1
@@ -2118,14 +2117,14 @@
     END DO
     !
     IF (.NOT. conv .AND. (iter - 1) == nsiter) &
-      CALL errore('mu_inter1', 'Error failed to find the mu_inter value',1)
+      CALL errore('mu_inter_aniso', 'Error failed to find the mu_inter_aniso value',1)
     !
     muintr = muout
     !
     RETURN
     !
     !-----------------------------------------------------------------------
-    END SUBROUTINE mu_inter1
+    END SUBROUTINE mu_inter_aniso
     !-----------------------------------------------------------------------
     !
     !----------------------------------------------------------------------

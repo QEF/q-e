@@ -19,10 +19,10 @@
   !
   INTEGER :: nsw
   !! Nr. of grid points between (0,wscut) for real-axis, analytical continuation and Pade approximants
-  INTEGER :: ndosbin
-  !! num. of energy bins in Fermi window for dos
+  INTEGER :: ndos
+  !! Nr. of energy bins in Fermi window for dos
   INTEGER, ALLOCATABLE :: nsiw(:)
-  !! Nr of grid points at each temperature on imag-axis, nsiw(nstemp)
+  !! Nr. of grid points at each temperature on imag-axis, nsiw(nstemp)
   INTEGER, ALLOCATABLE :: wsn(:)
   !! frequency "indices" on imag-axis at iw, wsn(nsiw(nstemp))
   !
@@ -40,8 +40,10 @@
   !! frequency on real-axis, wsph(nqstep)
   REAL(KIND = DP), ALLOCATABLE :: wsi(:)
   !! frequency on imag-axis at iw, wi(nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: dosfw(:)
-  !! DOS (state/spin/eV/u.c.) over Fermi window in steps of 1 meV
+  REAL(KIND = DP), ALLOCATABLE :: en(:)
+  !! Energy grid over Fermi window
+  REAL(KIND = DP), ALLOCATABLE :: dosen(:)
+  !! DOS (state/spin/eV/u.c.) over Fermi window
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common
