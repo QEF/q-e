@@ -296,7 +296,7 @@ SUBROUTINE fft_gradient_g2r_gpu( dfft, a_d, g_d, ga_d )
 #if defined(__CUDA) && defined(_OPENACC)
   attributes(DEVICE) :: g_d, nl_d, nlm_d
   !
-  !$acc data deviceptr( a_d(dfft%ngm), ga_d(3,dfft%nnr) )
+  !$acc data present( a_d, ga_d )
   !
   nl_d  => dfft%nl_d
   nlm_d => dfft%nlm_d
@@ -551,7 +551,7 @@ SUBROUTINE fft_graddot_gpu( dfft, a_d, g_d, da_d )
 #if defined(__CUDA) && defined(_OPENACC)
   attributes(DEVICE) :: g_d, nl_d, nlm_d
   !
-  !$acc data deviceptr( a_d(3,dfft%ngm), da_d(dfft%nnr) )
+  !$acc data present( a_d, da_d )
   !
   nl_d  => dfft%nl_d
   nlm_d => dfft%nlm_d

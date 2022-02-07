@@ -85,10 +85,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
     ! ... bring starting rhoaux to G-space
     IF ( use_gpu ) THEN
       !$acc data copyout( segni )
-      !$acc host_data use_device( rho, rhoaux, rhogaux, segni )
       CALL compute_rho_gpu( rho, rhoaux, segni, dfftp%nnr )
       CALL rho_r2g_gpu( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-      !$acc end host_data
       !$acc end data
     ELSE
       CALL compute_rho( rho, rhoaux, segni, dfftp%nnr )
@@ -132,9 +130,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DO is = 1, nspin0
     IF ( use_gpu ) THEN
-      !$acc host_data use_device( rhogaux, grho )
       CALL fft_gradient_g2r_gpu( dfftp, rhogaux(:,is), g_d, grho(:,:,is) )
-      !$acc end host_data
     ELSE
       !$acc update host( rhogaux )
       CALL fft_gradient_g2r( dfftp, rhogaux(:,is), g, grho(:,:,is) )
@@ -219,9 +215,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DO is = 1, nspin0
      IF ( use_gpu ) THEN
-       !$acc host_data use_device( h, dh )
        CALL fft_graddot_gpu( dfftp, h(1,1,is), g_d, dh )
-       !$acc end host_data
      ELSE
        !$acc update host( h )
        CALL fft_graddot( dfftp, h(1,1,is), g, dh )
