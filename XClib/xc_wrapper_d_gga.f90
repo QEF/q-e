@@ -36,17 +36,13 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss, gpu_args_ )
   IF ( gpu_args ) THEN
     !
     !$acc data present( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
-    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     CALL dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
-    !$acc end host_data
     !$acc end data
     !
   ELSE
     !
     !$acc data copyin( r_in, g_in ), copyout( dvxc_rr, dvxc_sr, dvxc_ss )
-    !$acc host_data use_device( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     CALL dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
-    !$acc end host_data
     !$acc end data
     !
   ENDIF
@@ -108,7 +104,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-6
   !
-  !$acc data deviceptr( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+  !$acc data present( r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
     rho_threshold_gga = small ;  grho_threshold_gga = small
@@ -293,10 +289,8 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        ENDIF
        !
        !$acc data copyin( sigma )
-       !$acc host_data use_device( sigma, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
        CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), &
                          vrrc(:,1), vsrc(:,1), vssc )
-       !$acc end host_data
        !$acc end data
        !
        !$acc parallel loop
@@ -311,9 +305,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        ALLOCATE( vrzc(length,sp) )
        !$acc data create( vrzc )
        !
-       !$acc host_data use_device( vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
        CALL dgcxc_spin( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
-       !$acc end host_data
        !
        !$acc parallel loop
        DO k = 1, length
@@ -369,10 +361,8 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        sigma(k) = g_in(k,1,1)**2 + g_in(k,2,1)**2 + g_in(k,3,1)**2
      ENDDO
      !
-     !$acc host_data use_device( sigma, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
      CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), &
                        vrrc(:,1), vsrc(:,1), vssc )
-     !$acc end host_data
      !
      !$acc end data
      DEALLOCATE( sigma )
@@ -389,9 +379,7 @@ SUBROUTINE dgcxc_( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
      ALLOCATE( vrzc(length,sp) )
      !$acc data create( vrzc )
      !
-     !$acc host_data use_device( vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
      CALL dgcxc_spin( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
-     !$acc end host_data
      !
      !$acc parallel loop
      DO k = 1, length

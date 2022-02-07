@@ -67,7 +67,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
   REAL(DP), PARAMETER :: small = 1.E-30_DP
   !
-  !$acc data deviceptr( r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
+  !$acc data present( r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
   !
   ALLOCATE( raux(4*length), s2aux(4*length), dr(length), s(length), ds(length) )
   ALLOCATE( v1x(4*length), v2x(4*length), sx(4*length) )
@@ -97,9 +97,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
     raux(i4-1+ir) = r_in(ir)         ;   s2aux(i4-1+ir) = (s(ir)-ds(ir))**2
   ENDDO
   !
-  !$acc host_data use_device( raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
   CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
-  !$acc end host_data
   !
   !$acc parallel loop
   DO ir = 1, length
@@ -191,7 +189,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   REAL(DP), PARAMETER :: rho_trash = 0.4_DP, zeta_trash = 0.2_DP, &
                          s2_trash = 0.1_DP
   !
-  !$acc data deviceptr( r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, vssc, vrzc )
+  !$acc data present( r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, vssc, vrzc )
   !
   igcx_=igcx
   igcc_=igcc
@@ -255,9 +253,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
     raux(i8-1+ir,2) = r_dw        ;  s2aux(i8-1+ir,2) = (s_dw-ds_dw)**2
   ENDDO
   !
-  !$acc host_data use_device( raux, s2aux, sx, v1x, v2x )
   CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x )
-  !$acc end host_data
   !
   !$acc parallel loop
   DO ir = 1, length
@@ -348,9 +344,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
     rtaux(i6-1+ir) = rt     ; s2taux(i6-1+ir) = s2t            ; zetaux(i6-1+ir) = zeta-dz
   ENDDO
   !
-  !$acc host_data use_device( rtaux, zetaux, s2taux, sc, v1c, v2c )
   CALL gcc_spin( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
-  !$acc end host_data
   !
   !$acc parallel loop
   DO ir = 1, length
