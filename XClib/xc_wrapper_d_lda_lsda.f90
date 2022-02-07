@@ -34,17 +34,13 @@ SUBROUTINE dmxc( length, srd, rho_in, dmuxc, gpu_args_ )
   IF ( gpu_args ) THEN
     !
     !$acc data present( rho_in, dmuxc )
-    !$acc host_data use_device( rho_in, dmuxc )
     CALL dmxc_( length, srd, rho_in, dmuxc )
-    !$acc end host_data
     !$acc end data
     !
   ELSE
     !
     !$acc data copyin( rho_in ), copyout( dmuxc )
-    !$acc host_data use_device( rho_in, dmuxc )
     CALL dmxc_( length, srd, rho_in, dmuxc )
-    !$acc end host_data
     !$acc end data
     !
   ENDIF
@@ -97,7 +93,7 @@ SUBROUTINE dmxc_( length, srd, rho_in, dmuxc )
   INTEGER :: ir, length_lxc, length_dlxc
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   !
-  !$acc data deviceptr( rho_in, dmuxc )
+  !$acc data present( rho_in, dmuxc )
   !
   IF (srd==1) THEN
     !$acc parallel loop

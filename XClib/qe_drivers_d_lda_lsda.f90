@@ -69,7 +69,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   ntids = omp_get_num_threads()
 #endif
   !
-  !$acc data deviceptr( rho_in, dmuxc )
+  !$acc data present( rho_in, dmuxc )
   !
   !$acc parallel loop
   DO ir = 1, length
@@ -145,9 +145,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
        rhoaux(i2-1+ir) = arho(ir)-dr(ir)
      ENDDO
      !
-     !$acc host_data use_device( rhoaux, ex, ec, vx, vc )
      CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
-     !$acc end host_data
      !
      !$acc parallel loop
      DO ir = 1, length
@@ -221,7 +219,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
                          third = 1.0_DP/3.0_DP, p43 = 4.0_DP/3.0_DP, &
                          p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP
   !
-  !$acc data deviceptr( rho_in(length,2), dmuxc(length,2,2) )
+  !$acc data present( rho_in(length,2), dmuxc(length,2,2) )
   !
   iexch_=iexch
   icorr_=icorr
@@ -358,9 +356,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
        rhoaux(i4-1+ir) = rhotot(ir)         ;  zetaux(i4-1+ir) = zeta_eff(ir)-dz(ir)
      ENDDO
      !
-     !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
      CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
-     !$acc end host_data
      !
      !$acc parallel loop
      DO ir = 1, length
@@ -491,9 +487,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   !
   !$acc data copyin( rhoaux, zetaux ) copyout( aux1, aux2, vx, vc )
-  !$acc host_data use_device( rhoaux, zetaux, aux1, aux2, vx, vc )
   CALL xc_lsda( length*5, rhoaux, zetaux, aux1, aux2, vx, vc )
-  !$acc end host_data
   !$acc end data
   !
   !
