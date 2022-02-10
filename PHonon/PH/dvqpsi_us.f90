@@ -35,9 +35,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npwx
   USE wavefunctions,  ONLY: evc
-#if defined(__CUDA)
   USE wavefunctions_gpum, ONLY: evc_d
-#endif
   USE nlcc_ph,    ONLY : drc
   USE uspp,       ONLY : nlcc_any
   USE eqv,        ONLY : dvpsi, dmuxc, vlocq
@@ -102,6 +100,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   nlp_d  => dfftp%nl_d
 #else
   INTEGER, ALLOCATABLE :: nl_d(:)
+  INTEGER, ALLOCATABLE :: nlp_d(:)
   !
   ALLOCATE( nl_d(dffts%ngm) )
   ALLOCATE( nlp_d(dfftp%ngm) )
@@ -272,21 +271,21 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
            !$acc parallel loop private(itmp) present(aux2, igk_k) 
            do ig = 1, npw
               itmp = nl_d (igk_k (ig,ikk) )
-           #if defined(__CUDA)
+#if defined(__CUDA)
               aux2 ( itmp ) = evc_d (ig, ibnd)
-           #else
+#else
               aux2 ( itmp ) = evc (ig, ibnd)
-           #endif
+#endif
            enddo
         else
            !$acc parallel loop private(itmp) present(aux2, igk_k)
            do ig = 1, npw
               itmp = nl_d (igk_k (ig,ikk) )
-            #if defined(__CUDA)
+#if defined(__CUDA)
               aux2 ( itmp ) = evc_d (ig+npwx, ibnd)
-            #else
+#else
               aux2 ( itmp ) = evc (ig+npwx, ibnd)
-            #endif
+#endif
            enddo
         end if
         !
