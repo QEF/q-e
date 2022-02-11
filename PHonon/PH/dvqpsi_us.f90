@@ -123,7 +123,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   npwq= ngk(ikq)
   nnr = dffts%nnr
   ! 
-  !$acc data create(aux1(1:nnr),aux2(1:nnr)) copyout(dvpsi) copyin(vlocq) present( igk_k ) deviceptr(evc_d, nl_d)
+  !$acc data create(aux1(1:nnr),aux2(1:nnr)) copyout(dvpsi) copyin(vlocq) present( igk_k ) deviceptr(evc_d, nl_d, nlp_d)
   !$acc kernels present(dvpsi,aux1)
   dvpsi(:,:) = (0.d0, 0.d0)
   aux1(:) = (0.d0, 0.d0)
