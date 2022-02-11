@@ -622,6 +622,9 @@ CONTAINS
     ! MAgnons restrictions
     !
     IF (magnons) THEN
+       IF (okvan.OR.okpaw) &     
+          CALL errore ('lr_readin', ' Magnons linear response calculation ' // &
+                      & 'not implemented for USPP and PAW', 1 )            
        IF (xclib_dft_is('gradient')) &
           call errore('lr_readin', 'Magnons linear response calculation ' // &
                      & 'does not support GGA', 1 )
