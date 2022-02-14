@@ -1034,7 +1034,7 @@ SUBROUTINE compute_magnon_spectrum()
      outdir = trimcheck(outdir)
      tmp_dir = outdir
      !
-     tmp_dir_lr = TRIM (tmp_dir) 
+     tmp_dir_lr = TRIM (tmp_dir) // 'tmp_magnons/'
      tmp_dir = tmp_dir_lr
      !
      IF (ipol < 4) THEN
