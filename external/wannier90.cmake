@@ -19,7 +19,9 @@ if(WANNIER90_ROOT)
     # FIXME. Wannnier90 "make install" doesn't install module files.
     # https://github.com/wannier-developers/wannier90/issues/377
     # Currently need to manually copy w90_io.mod file to <WANNIER90_ROOT>/include
-    target_include_directories(qe_wannier90 INTERFACE "${WANNIER90_ROOT}/include")
+    target_include_directories(qe_wannier90 INTERFACE 
+        "${WANNIER90_ROOT}/include"
+        "${WANNIER90_ROOT}/modules")
 else()
 
     qe_git_submodule_update(external/wannier90)
