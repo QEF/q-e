@@ -7,21 +7,26 @@ if(WANNIER90_ROOT)
 
     find_library(
         WANNIER90_LIB
-        NAMES wannier
+        NAMES "wannier"
         HINTS ${WANNIER90_ROOT}
-        PATH_SUFFIXES "lib")
+        PATH_SUFFIXES "lib"
+        REQUIRED)
 
-    if(NOT WANNIER90_LIB)
-        message(FATAL_ERROR "Failed in locating wannier library file at <WANNIER90_ROOT>/lib")
-    endif()
+    find_path(
+        WANNIER90_INC
+        NAMES "w90_io.mod"
+        HINTS ${WANNIER90_ROOT}
+        PATH_SUFFIXES 
+            "wannier90"
+            "include"
+            "finclude"
+            "mod"
+            "module"
+            "modules"
+        REQUIRED)
 
     target_link_libraries(qe_wannier90 INTERFACE "${WANNIER90_LIB}")
-    # FIXME. Wannnier90 "make install" doesn't install module files.
-    # https://github.com/wannier-developers/wannier90/issues/377
-    # Currently need to manually copy w90_io.mod file to <WANNIER90_ROOT>/include
-    target_include_directories(qe_wannier90 INTERFACE 
-        "${WANNIER90_ROOT}/include"
-        "${WANNIER90_ROOT}/modules")
+    target_include_directories(qe_wannier90 INTERFACE "${WANNIER90_INC}")
 else()
 
     qe_git_submodule_update(external/wannier90)

@@ -5,30 +5,68 @@ add_library(qe_fox INTERFACE)
 qe_install_targets(qe_fox)
 if(FOX_ROOT)
     find_library(
-        FOX_LIB_COMMON
-        NAMES FoX_common
+        FOX_DOM_LIB
+        NAMES "FoX_dom"
         HINTS ${FOX_ROOT}
-        PATH_SUFFIXES "lib")
+        PATH_SUFFIXES "lib"
+        REQUIRED)
 
-    if(NOT FOX_LIB_COMMON)
-        message(FATAL_ERROR "Failed in locating FoX_common library file at <FOX_ROOT>/lib")
-    endif()
+    find_library(
+        FOX_SAX_LIB
+        NAMES "FoX_sax"
+        HINTS ${FOX_ROOT}
+        PATH_SUFFIXES "lib"
+        REQUIRED)
 
-    get_filename_component(FOX_LIB_DIR ${FOX_LIB_COMMON} DIRECTORY)
+    find_library(
+        FOX_WXML_LIB
+        NAMES "FoX_wxml"
+        HINTS ${FOX_ROOT}
+        PATH_SUFFIXES "lib"
+        REQUIRED)
+
+    find_library(
+        FOX_COMMON_LIB
+        NAMES "FoX_common"
+        HINTS ${FOX_ROOT}
+        PATH_SUFFIXES "lib"
+        REQUIRED)
+
+    find_library(
+        FOX_UTILS_LIB
+        NAMES "FoX_utils"
+        HINTS ${FOX_ROOT}
+        PATH_SUFFIXES "lib"
+        REQUIRED)
+
+    find_library(
+        FOX_FSYS_LIB
+        NAMES "FoX_fsys"
+        HINTS ${FOX_ROOT}
+        PATH_SUFFIXES "lib"
+        REQUIRED)
 
     find_path(
-        FOXLIB_MOD_PATH
-        NAMES m_common_io.mod
+        FOX_INC
+        NAMES "m_common_io.mod"
         HINTS ${FOX_ROOT}
-        PATH_SUFFIXES "finclude")
+        PATH_SUFFIXES
+            "include"
+            "finclude"
+            "mod"
+            "module"
+            "modules"
+        REQUIRED)
 
-    if(NOT FOXLIB_MOD_PATH)
-        message(FATAL_ERROR "Failed in locating m_common_io.mod at <FOX_ROOT>/finclude")
-    endif()
-
-    target_link_libraries(
-        qe_fox INTERFACE "-L${FOX_LIB_DIR};-lFoX_dom;-lFoX_sax;-lFoX_wxml;-lFoX_common;-lFoX_utils;-lFoX_fsys")
-    target_include_directories(qe_fox INTERFACE ${FOXLIB_MOD_PATH})
+    target_link_libraries(qe_fox
+        INTERFACE
+            ${FOX_DOM_LIB}
+            ${FOX_SAX_LIB}
+            ${FOX_WXML_LIB}
+            ${FOX_COMMON_LIB}
+            ${FOX_UTILS_LIB}
+            ${FOX_FSYS_LIB})
+    target_include_directories(qe_fox INTERFACE ${FOX_INC})
 else()
     message(STATUS "Installing FoX via submodule")
     set(fox_targets FoX_fsys FoX_utils FoX_common FoX_dom FoX_sax FoX_wxml)
