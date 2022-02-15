@@ -4,8 +4,20 @@
 add_library(qe_mbd INTERFACE)
 qe_install_targets(qe_mbd)
 if(MBD_ROOT)
-    target_link_libraries(qe_mbd INTERFACE "-L${MBD_ROOT}/lib;-lmbd")
-    target_include_directories(qe_mbd INTERFACE ${MBD_ROOT}/include)
+    find_library(
+        MBD_LIB
+        NAMES mbd
+        HINTS ${MBD_ROOT}
+        PATH_SUFFIXES "lib")
+
+    if(NOT MBD_LIB)
+        message(FATAL_ERROR "Failed in locating libmbd library file at <MBD_ROOT>/lib")
+    endif()
+
+    target_link_libraries(qe_mbd INTERFACE "${MBD_LIB}")
+    target_include_directories(qe_mbd INTERFACE 
+        "${MBD_ROOT}/include"
+        "${MBD_ROOT}/include/mbd")
 else()
     message(STATUS "Installing MBD via submodule")
     qe_git_submodule_update(external/mbd)
