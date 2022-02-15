@@ -1,5 +1,5 @@
 
-     Program BANDS v.7.0 starts on 15Feb2022 at 13:35:22 
+     Program BANDS v.7.0 starts on 15Feb2022 at 14:21:26 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,12 +13,12 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     3627 MiB available memory on the printing compute node when the environment starts
+     3256 MiB available memory on the printing compute node when the environment starts
  
 
      Reading xml data from directory:
 
-     /home/paulatto/espresso.BASE/tempdir/silicon.save/
+     /home/paulatto/espresso/tempdir/silicon.save/
      EXX fraction changed:   0.25
      EXX Screening parameter changed:    0.1060000
 
@@ -84,10 +84,10 @@
      Plottable bands (eV) written to file sibands.dat.gnu
      Bands written to file sibands.dat
  
-     BANDS        :      0.40s CPU      0.47s WALL
+     BANDS        :      0.42s CPU      0.52s WALL
 
  
-   This run was terminated on:  13:35:23  15Feb2022            
+   This run was terminated on:  14:21:27  15Feb2022            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

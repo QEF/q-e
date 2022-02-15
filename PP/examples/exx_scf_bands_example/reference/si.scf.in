@@ -2,8 +2,8 @@
     calculation = 'scf'
     restart_mode='from_scratch',
     prefix='silicon',
-    pseudo_dir = '/home/paulatto/espresso.BASE/pseudo/',
-    outdir='/home/paulatto/espresso.BASE/tempdir/'
+    pseudo_dir = '/home/paulatto/espresso/pseudo/',
+    outdir='/home/paulatto/espresso/tempdir/'
     verbosity='high'
  /
  &system
