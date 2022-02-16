@@ -103,10 +103,7 @@ find_path(
     HINTS ${FOX_ROOT}
     PATH_SUFFIXES
         "include"
-        "finclude"
-        "mod"
-        "module"
-        "modules")
+        "finclude")
 
 find_package_handle_standard_args(FOX
   REQUIRED_VARS

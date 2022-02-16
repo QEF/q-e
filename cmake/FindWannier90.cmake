@@ -46,11 +46,7 @@ find_path(
   NAMES "w90_io.mod"
   HINTS ${WANNIER90_ROOT}
   PATH_SUFFIXES 
-      "wannier90"
       "include"
-      "finclude"
-      "mod"
-      "module"
       "modules")
 
 find_package_handle_standard_args(WANNIER90

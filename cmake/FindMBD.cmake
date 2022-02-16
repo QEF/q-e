@@ -47,11 +47,7 @@ find_path(
     HINTS ${MBD_ROOT}
     PATH_SUFFIXES 
         "mbd"
-        "include"
-        "finclude"
-        "mod"
-        "module"
-        "modules")
+        "include")
 
 find_package_handle_standard_args(MBD
   REQUIRED_VARS

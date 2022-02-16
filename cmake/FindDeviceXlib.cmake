@@ -49,10 +49,6 @@ find_path(
   HINTS ${DEVICEXLIB_ROOT}
   PATH_SUFFIXES 
       "include"
-      "finclude"
-      "mod"
-      "module"
-      "modules"
       "src")
 
 find_package_handle_standard_args(DEVICEXLIB
