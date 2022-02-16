@@ -3,7 +3,7 @@
 ###########################################################
 add_library(qe_mbd INTERFACE)
 qe_install_targets(qe_mbd)
-if(QE_MBD_VENDOR)
+if(QE_MBD_INTERNAL)
     message(STATUS "Installing MBD via submodule")
     qe_git_submodule_update(external/mbd)
     if(NOT BUILD_SHARED_LIBS)

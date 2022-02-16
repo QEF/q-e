@@ -3,7 +3,7 @@
 ###########################################################
 add_library(qe_fox INTERFACE)
 qe_install_targets(qe_fox)
-if(QE_FOX_VENDOR)
+if(QE_FOX_INTERNAL)
     message(STATUS "Installing FoX via submodule")
     set(fox_targets FoX_fsys FoX_utils FoX_common FoX_dom FoX_sax FoX_wxml)
     set(FoX_ENABLE_EXAMPLES

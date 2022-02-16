@@ -1,7 +1,7 @@
 ###########################################################
 # WANNIER90
 ###########################################################
-if(QE_WANNIER90_VENDOR)
+if(QE_WANNIER90_INTERNAL)
     qe_git_submodule_update(external/wannier90)
 
     set(sources

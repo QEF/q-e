@@ -1,7 +1,7 @@
 ###########################################################
 # DeviceXlib
 ###########################################################
-if(QE_DEVICEXLIB_VENDOR)
+if(QE_DEVICEXLIB_INTERNAL)
     qe_git_submodule_update(external/devxlib)
 
     set(src_devxlib
