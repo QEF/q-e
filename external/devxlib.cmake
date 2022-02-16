@@ -2,6 +2,8 @@
 # DeviceXlib
 ###########################################################
 if(QE_DEVICEXLIB_INTERNAL)
+    message(STATUS "Installing DeviceXlib via submodule")
+
     qe_git_submodule_update(external/devxlib)
 
     set(src_devxlib

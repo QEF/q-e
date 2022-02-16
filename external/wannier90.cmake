@@ -2,6 +2,8 @@
 # WANNIER90
 ###########################################################
 if(QE_WANNIER90_INTERNAL)
+    message(STATUS "Installing Wannier90 via submodule")
+    
     qe_git_submodule_update(external/wannier90)
 
     set(sources
