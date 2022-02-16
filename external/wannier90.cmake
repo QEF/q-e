@@ -1,34 +1,7 @@
 ###########################################################
 # WANNIER90
 ###########################################################
-if(WANNIER90_ROOT)
-    add_library(qe_wannier90 INTERFACE)
-    qe_install_targets(qe_wannier90)
-
-    find_library(
-        WANNIER90_LIB
-        NAMES "wannier"
-        HINTS ${WANNIER90_ROOT}
-        PATH_SUFFIXES "lib"
-        REQUIRED)
-
-    find_path(
-        WANNIER90_INC
-        NAMES "w90_io.mod"
-        HINTS ${WANNIER90_ROOT}
-        PATH_SUFFIXES 
-            "wannier90"
-            "include"
-            "finclude"
-            "mod"
-            "module"
-            "modules"
-        REQUIRED)
-
-    target_link_libraries(qe_wannier90 INTERFACE "${WANNIER90_LIB}")
-    target_include_directories(qe_wannier90 INTERFACE "${WANNIER90_INC}")
-else()
-
+if(QE_WANNIER90_VENDOR)
     qe_git_submodule_update(external/wannier90)
 
     set(sources
@@ -93,5 +66,9 @@ else()
         qe_wannier90
         # Executables
         qe_wannierprog_exe qe_w90chk2chk_exe qe_wannier90_postw90_exe)
-
+else()
+    add_library(qe_wannier90 INTERFACE)
+    qe_install_targets(qe_wannier90)
+    find_package(Wannier90 REQUIRED)
+    target_link_libraries(qe_wannier90 INTERFACE Wannier90::Wannier90)
 endif()

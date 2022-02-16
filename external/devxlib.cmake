@@ -1,34 +1,7 @@
 ###########################################################
 # DeviceXlib
 ###########################################################
-if(DEVXLIB_ROOT)
-    add_library(qe_devxlib INTERFACE)
-
-    find_library(
-        DEVXLIB_LIB
-        NAMES "devXlib"
-        HINTS ${DEVXLIB_ROOT}
-        PATH_SUFFIXES 
-            "lib"
-            "src"
-        REQUIRED)
-
-    find_path(
-        DEVXLIB_INC
-        NAMES "device_fbuff_m.mod"
-        HINTS ${DEVXLIB_ROOT}
-        PATH_SUFFIXES 
-            "include"
-            "finclude"
-            "mod"
-            "module"
-            "modules"
-            "src"
-        REQUIRED)
-
-    target_link_libraries(qe_devxlib INTERFACE ${DEVXLIB_LIB})
-    target_include_directories(qe_devxlib INTERFACE ${DEVXLIB_INC})
-else()
+if(QE_DEVICEXLIB_VENDOR)
     qe_git_submodule_update(external/devxlib)
 
     set(src_devxlib
@@ -46,6 +19,10 @@ else()
     qe_add_library(qe_devxlib ${src_devxlib})
 
     target_include_directories(qe_devxlib PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/src")
-    target_include_directories(qe_devxlib PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/include")
+    target_include_directories(qe_devxlib PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/devxlib/include")   
+else()
+    add_library(qe_devxlib INTERFACE)
+    find_package(DeviceXlib REQUIRED)
+    target_link_libraries(qe_devxlib INTERFACE DeviceXlib::DeviceXlib)
 endif()
 qe_install_targets(qe_devxlib)
