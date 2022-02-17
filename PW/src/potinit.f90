@@ -249,9 +249,12 @@ SUBROUTINE potinit()
   !
   IF ( lda_plus_u ) THEN
      !
-     WRITE( stdout, '(5X,"Number of +U iterations with fixed ns =",I3)') &
+     IF (niter_with_fixed_ns>0) &
+     WRITE( stdout, '(5X,"Number of Hubbard iterations with fixed ns =",I3)') &
          niter_with_fixed_ns
-     WRITE( stdout, '(5X,"Starting occupations:")')
+     !
+     ! ... info about starting occupations
+     WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
      IF (lda_plus_u_kind == 0) THEN
         CALL write_ns()

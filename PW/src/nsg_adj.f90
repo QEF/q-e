@@ -10,8 +10,9 @@
 SUBROUTINE nsg_adj
 !-----------------------------------------------------------------------
    !
-   ! This routine tries to suggest to the code the right atomic orbital to 
-   ! localize the charge on.
+   !! This routine adjusts (modifies) the eigenvalues of the atomic
+   !! occupation matrix using starting_ns eigenvalues as suggested
+   !! by the user from the input.
    !
    USE kinds,            ONLY : DP
    USE ions_base,        ONLY : nat, ntyp => nsp, ityp
@@ -27,9 +28,9 @@ SUBROUTINE nsg_adj
    REAL(DP) :: lambda(ldmx)
    COMPLEX(DP) :: vet(ldmx,ldmx), f(ldmx,ldmx), temp
    !
-   IF (ALL(starting_ns == -1.d0)) RETURN
+   IF (ALL(starting_ns < 0.0_dp)) RETURN
    !
-   WRITE(stdout,*) "Modify starting ns matrices according to input values"
+   WRITE( stdout, '(/5X,"WARNING!!! Modifying starting ns matrices according to input values")')
    !
    IF (2*Hubbard_lmax+1 > ldmx) CALL errore('ns_adj',' ldmx is too small',ldmx)
    ! 
@@ -58,12 +59,17 @@ SUBROUTINE nsg_adj
             !
 7           CONTINUE
             !
+            ! Diagonalize the ocupation matrix
             CALL cdiagh(ldim, f, ldmx, lambda, vet)
             !
+            ! Change the eigenvalues as requested from the input
             DO i = 1, ldim
-              IF (starting_ns(i,is,nt) >= 0.d0) lambda(i) = starting_ns(i,is,nt)
+              IF (starting_ns(i,is,nt) >= 0.d0) &
+                      lambda(i) = starting_ns(i,is,nt)
             ENDDO
             !
+            ! Reconstruct back the occupation matrix from the
+            ! modified eignevalues and the original eigenvectors
             DO m1 = 1,ldim
                DO m2 = m1, ldim
                   temp = 0.d0
@@ -83,6 +89,9 @@ SUBROUTINE nsg_adj
    !
    ! Uncomment the line below if needed (useful for debugging purposes)
    !CALL write_nsg
+   !
+   ! Reset starting_ns so that this step is not repeated
+   starting_ns = -1.0_dp
    !
    RETURN
    !

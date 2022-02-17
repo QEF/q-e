@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -36,7 +36,7 @@ SUBROUTINE forces()
   USE force_mod,         ONLY : force, sumfor
   USE scf,               ONLY : rho
   USE ions_base,         ONLY : if_pos
-  USE ldaU,              ONLY : lda_plus_u, U_projection
+  USE ldaU,              ONLY : lda_plus_u, Hubbard_projectors
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
                                 iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
@@ -160,9 +160,9 @@ SUBROUTINE forces()
   !     (included by force_us if using beta as local projectors)
   !
   IF (.not. use_gpu) THEN
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
+     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub( forceh )
   ELSE
-     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub_gpu( forceh )
+     IF ( lda_plus_u .AND. Hubbard_projectors.NE.'pseudo' ) CALL force_hub_gpu( forceh )
   ENDIF
   !
   ! ... The ionic contribution is computed here

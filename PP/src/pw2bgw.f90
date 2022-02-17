@@ -4721,7 +4721,7 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
   USE kinds, ONLY : DP
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
   USE lsda_mod, ONLY : nspin, isk, current_spin, lsda
-  USE ldaU, ONLY : lda_plus_u, U_projection, wfcU, offsetU, Hubbard_l, nwfcU, Hubbard_lmax, is_hubbard
+  USE ldaU, ONLY : lda_plus_u, Hubbard_projectors, wfcU, offsetU, Hubbard_l, nwfcU, Hubbard_lmax, is_hubbard
   USE mp, ONLY : mp_sum
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
@@ -4820,11 +4820,11 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
     ENDIF
     IF ( lsda ) current_spin = isk(ikk)
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
-    IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
+    IF ( lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) THEN
       CALL get_buffer ( wfcU, nwordwfcU, iunhub, ikk )
     ENDIF
 
-    IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
+    IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
       IF (noncolin) THEN
         CALL vhpsi_nc( npwx, npw, nbnd, evc, hpsi )
       ELSE

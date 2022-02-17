@@ -763,7 +763,7 @@ MODULE input
                                   step_rad, Surf_t, dthr, R_j, h_j,   &
                                   delta_eps, delta_sigma, n_cntr,     &
                                   axis
-     USE input_parameters, ONLY : lda_plus_u, Hubbard_U
+     USE input_parameters, ONLY : lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
                                   ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
@@ -931,7 +931,7 @@ MODULE input
      !
      ! ... initialize variables for lda+U calculations
      !
-     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U )
+     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U, Hubbard_l, Hubbard_n )
      CALL ldaUpen_init( SIZE(sigma_pen), step_pen, sigma_pen, alpha_pen, A_pen )
      !
      !  ... initialize variables for vdW (dispersions) corrections

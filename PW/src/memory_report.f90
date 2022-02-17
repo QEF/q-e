@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2021 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE memory_report()
   ! Not guaranteed to be accurate for all cases (especially exotic ones).
   ! Originally written by PG, much improved by Pietro Bonfa' with:
   ! * Detailed memory report in verbose mode
-  ! * Memory buffers for LDA+U projectors now included.
+  ! * Memory buffers for DFT+Hubbard projectors now included.
   ! * Local potential and structure factors now included
   !  (small but sometimes not negligible).
   ! * Q functions (qrad) now included.
@@ -42,7 +42,7 @@ SUBROUTINE memory_report()
   USE uspp,      ONLY : nkb, okvan
   USE atom,      ONLY : rgrid
   USE xc_lib,    ONLY : xclib_dft_is
-  USE ldaU,      ONLY : lda_plus_u, U_projection, nwfcU
+  USE ldaU,      ONLY : lda_plus_u, Hubbard_projectors, nwfcU
   USE fixed_occ, ONLY : one_atom_occupations
   USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
@@ -116,7 +116,7 @@ SUBROUTINE memory_report()
      ram = ram + add
   END IF
   ! Hubbard wavefunctions
-  IF ( lda_plus_u .AND. U_projection .NE. 'pseudo' ) THEN
+  IF ( lda_plus_u .AND. Hubbard_projectors .NE. 'pseudo' ) THEN
      add = complex_size * nwfcU * npol * npwx_l * nk ! also buffer 
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'U proj.', add/nk/MB
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'U proj. (w. buff.)', add/MB

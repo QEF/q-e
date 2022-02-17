@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -141,7 +141,7 @@ SUBROUTINE input_sanity()
   USE noncollin_module, ONLY : i_cons, noncolin
   USE mp_bands,         ONLY : nbgrp
   USE xc_lib,           ONLY : xclib_dft_is
-  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0, &
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors, lda_plus_u_kind, Hubbard_J0, &
                                is_hubbard_back, Hubbard_V
   !
   IMPLICIT NONE
@@ -196,9 +196,9 @@ SUBROUTINE input_sanity()
   IF (lda_plus_u_kind.EQ.1) CALL errore("hp_readin", &
      & ' The HP code does not support lda_plus_u_kind=1',1)
   !
-  IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
+  IF (Hubbard_projectors.NE."atomic" .AND. Hubbard_projectors.NE."ortho-atomic") &
      CALL errore("hp_readin", &
-     " The HP code for this U_projection_type is not implemented",1)
+     " The HP code for this Hubbard_projectors type is not implemented",1)
   !
   IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
   !

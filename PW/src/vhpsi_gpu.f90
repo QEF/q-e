@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
                             deallocate_bec_type
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_Hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
-                            is_hubbard_back, Hubbard_l_back, offsetU_back, &
+                            is_hubbard_back, Hubbard_l2, offsetU_back, &
                             backall, offsetU_back1
   USE lsda_mod,      ONLY : current_spin
   USE scf,           ONLY : v
@@ -96,7 +96,7 @@ SUBROUTINE vhpsi_U_gpu()
   ! This routine applies the Hubbard potential with U_I
   ! to the KS wave functions. 
   !
-  USE ldaU,      ONLY : ldim_back, ldmx_b, Hubbard_l1_back
+  USE ldaU,      ONLY : ldim_back, ldmx_b, Hubbard_l3
   !
   IMPLICIT NONE
   !
@@ -186,7 +186,7 @@ SUBROUTINE vhpsi_U_gpu()
               !
               IF (gamma_only) THEN
                  !
-                 ldim = 2*Hubbard_l_back(nt)+1
+                 ldim = 2*Hubbard_l2(nt)+1
                  !
                  CALL cublasDgemm( 'N','N', ldim,mps,ldim, 1.0_dp, &
                       vnsb_d(1,1,na),ldmx_b, &
@@ -199,8 +199,8 @@ SUBROUTINE vhpsi_U_gpu()
                  !
                  IF (backall(nt)) THEN
                     !
-                    ldim  = 2*Hubbard_l1_back(nt)+1
-                    ldim0 = 2*Hubbard_l_back(nt)+1
+                    ldim0 = 2*Hubbard_l2(nt)+1
+                    ldim  = 2*Hubbard_l3(nt)+1
                     !
                     CALL cublasDgemm( 'N', 'N', ldim,mps,ldim, 1.0_dp,     &
                          vnsb_d(ldim0+1,ldim0+1,na),                       &
@@ -215,7 +215,7 @@ SUBROUTINE vhpsi_U_gpu()
                  !
               ELSE
                  !
-                 ldim = 2*Hubbard_l_back(nt)+1
+                 ldim = 2*Hubbard_l2(nt)+1
                  !
                  CALL cublasZgemm( 'N', 'N', ldim,mps,ldim, (1.0_dp,0.0_dp),     &
                       vauxb_d(:,:,na), ldmx_b, proj_d%k_d(offsetU_back(na)+1,1), &
@@ -227,8 +227,8 @@ SUBROUTINE vhpsi_U_gpu()
                  !
                  IF (backall(nt)) THEN
                     !
-                    ldim  = 2*Hubbard_l1_back(nt)+1
-                    ldim0 = 2*Hubbard_l_back(nt)+1
+                    ldim0 = 2*Hubbard_l2(nt)+1
+                    ldim  = 2*Hubbard_l3(nt)+1
                     !
                     CALL cublasZgemm( 'N', 'N', ldim,mps,ldim,(1.0_dp,0.0_dp), &
                          vauxb_d(ldim0+1,ldim0+1,na),ldmx_b,                   &

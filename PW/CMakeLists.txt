@@ -106,6 +106,7 @@ set(src_pw
    src/h_psi_meta.f90 
    src/hinit0.f90 
    src/hinit1.f90 
+   src/hubbard.f90 
    src/init_ns.f90 
    src/init_q_aeps.f90 
    src/init_run.f90 
@@ -219,7 +220,6 @@ set(src_pw
    src/symme.f90 
    src/symm_base.f90 
    src/symmetrize_at.f90 
-   src/tabd.f90 
    src/tetra.f90 
    src/transform_becsum_so.f90 
    src/transform_becsum_nc.f90 

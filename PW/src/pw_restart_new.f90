@@ -98,11 +98,11 @@ MODULE pw_restart_new
       USE gvecw,                ONLY : ecutwfc
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ktetra,               ONLY : tetra_type
-      USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
-                                       Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
-                                       Hubbard_l_back, Hubbard_l1_back, Hubbard_V, &
+      USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
+                                       Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_J, &
+                                       Hubbard_l2, Hubbard_l3, Hubbard_V, &
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
-                                       Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
+                                       Hubbard_J0, Hubbard_beta, Hubbard_U2, &
                                        is_hubbard, is_hubbard_back, backall
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
@@ -186,8 +186,8 @@ MODULE pw_restart_new
       LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
       REAL(DP),ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), U_opt(:), J0_opt(:), alpha_opt(:), &
-                              J_opt(:,:), beta_opt(:), U_back_opt(:), alpha_back_opt(:)
-      INTEGER,ALLOCATABLE :: Hubbard_l_back_opt(:), Hubbard_l1_back_opt(:)
+                              J_opt(:,:), beta_opt(:), U2_opt(:), alpha_back_opt(:)
+      INTEGER,ALLOCATABLE :: n_opt(:), l_opt(:), l2_opt(:), l3_opt(:)
       LOGICAL, ALLOCATABLE :: backall_opt(:) 
       CHARACTER(LEN=3),ALLOCATABLE :: species_(:)
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
@@ -438,29 +438,31 @@ MODULE pw_restart_new
                                 LONDON_RCUT =   london_rcut_pt, XDM_A1 = xdm_a1_pt, XDM_A2 = xdm_a2_pt,&
                                  DFTD3_VERSION = dftd3_version_pt, DFTD3_THREEBODY = dftd3_threebody_pt)
          END IF 
-         IF ( lda_plus_u) THEN 
+         IF ( lda_plus_u ) THEN 
             ALLOCATE (dftU_obj)  
             CALL check_and_allocate_real(U_opt, Hubbard_U)
             CALL check_and_allocate_real(J0_opt, Hubbard_J0) 
             CALL check_and_allocate_real(alpha_opt, Hubbard_alpha) 
             CALL check_and_allocate_real(beta_opt, Hubbard_beta) 
-            CALL check_and_allocate_real(U_back_opt, Hubbard_U_back)
+            CALL check_and_allocate_real(U2_opt, Hubbard_U2)
             CALL check_and_allocate_real(alpha_back_opt, Hubbard_alpha_back)
-            CALL check_and_allocate_integer(Hubbard_l_back_opt, Hubbard_l_back)
-            CALL check_and_allocate_integer(Hubbard_l1_back_opt, Hubbard_l1_back)
+            CALL check_and_allocate_integer(n_opt, Hubbard_n)
+            CALL check_and_allocate_integer(l_opt, Hubbard_l)
+            CALL check_and_allocate_integer(l2_opt, Hubbard_l2)
+            CALL check_and_allocate_integer(l3_opt, Hubbard_l3)
             CALL check_and_allocate_logical(backall_opt, backall)
             IF ( ANY(Hubbard_J(:,1:nsp) /= 0.0_DP)) THEN
                ALLOCATE (J_opt(3,nsp)) 
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp) 
             END IF
-            ! 
+            !
             ! Currently Hubbard_V, rho%nsb, and nsg are not written (read) to (from) XML 
-            ! 
+            !
             CALL qexsd_init_dftU (dftU_obj, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
                                   IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back,  &
-                                  BACKALL = backall, HUBB_L_BACK = Hubbard_l_back_opt, HUBB_L1_BACK = Hubbard_l1_back_opt, &
-                                  NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = U_projection, &
-                                  U =U_opt, U_back = U_back_opt, J0 = J0_opt, J = J_opt, &
+                                  BACKALL = backall, HUBB_L2 = l2_opt, HUBB_L3 = l3_opt, &
+                                  NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = Hubbard_projectors, &
+                                  U =U_opt, U2 = U2_opt, J0 = J0_opt, J = J_opt, n = n_opt, l = l_opt, &
                                   alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
                                   starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
          END IF 
@@ -1026,9 +1028,9 @@ MODULE pw_restart_new
            sname, inverse_s, s_axis_to_cart, spacegroup, &
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
-                                  Hubbard_l, Hubbard_l_back, Hubbard_l1_back, backall, &
-                                  Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
-                                  Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
+                                  Hubbard_n, Hubbard_l, Hubbard_l2, Hubbard_l3, backall, &
+                                  Hubbard_U, Hubbard_U2, Hubbard_J, Hubbard_V, Hubbard_alpha, &
+                                  Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, Hubbard_projectors
       USE funct,           ONLY : enforce_input_dft
       USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
                                   set_screening_parameter, set_gau_parameter, &
@@ -1130,9 +1132,9 @@ MODULE pw_restart_new
       CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
-           lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-           Hubbard_l_back, Hubbard_l1_back, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
-           Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
+           lda_plus_u, lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, &
+           Hubbard_l2, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
+           Hubbard_U, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
       !! More DFT initializations
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )

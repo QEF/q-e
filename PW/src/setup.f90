@@ -70,7 +70,7 @@ SUBROUTINE setup()
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
+  USE ldaU,               ONLY : lda_plus_u, init_hubbard
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
@@ -635,9 +635,9 @@ SUBROUTINE setup()
      ENDDO
   ENDIF
   !
-  ! ... Set up Hubbard parameters for DFT+U(+V) calculation
+  ! ... Set up Hubbard parameters for DFT+Hubbard
   !
-  CALL init_lda_plus_u ( upf(1:ntyp)%psd, nspin, noncolin )
+  CALL init_hubbard ( upf(1:ntyp)%psd, nspin, noncolin )
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !

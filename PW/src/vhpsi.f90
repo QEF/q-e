@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ SUBROUTINE vhpsi( ldap, np, mps, psip, hpsi )
                             deallocate_bec_type
   USE ldaU,          ONLY : Hubbard_l, is_Hubbard,   &
                             nwfcU, wfcU, offsetU, lda_plus_u_kind, &
-                            is_hubbard_back, Hubbard_l_back, offsetU_back, &
+                            is_hubbard_back, Hubbard_l2, offsetU_back, &
                             backall, offsetU_back1
   USE lsda_mod,      ONLY : current_spin
   USE scf,           ONLY : v
@@ -73,7 +73,7 @@ SUBROUTINE vhpsi_U ()
   ! This routine applies the Hubbard potential with U_I
   ! to the KS wave functions. 
   !
-  USE ldaU,      ONLY : Hubbard_lmax, ldim_back, ldmx_b, Hubbard_l1_back
+  USE ldaU,      ONLY : Hubbard_lmax, ldim_back, ldmx_b, Hubbard_l3
   !
   IMPLICIT NONE
   INTEGER :: na, nt, ldim, ldim0
@@ -147,7 +147,7 @@ SUBROUTINE vhpsi_U ()
               !
               IF (gamma_only) THEN
                  !
-                 ldim = 2*Hubbard_l_back(nt)+1
+                 ldim = 2*Hubbard_l2(nt)+1
                  !
                  CALL DGEMM ('n','n', ldim,mps,ldim, 1.0_dp, &
                       v%nsb(1,1,current_spin,na),ldmx_b, &
@@ -160,8 +160,8 @@ SUBROUTINE vhpsi_U ()
                  !
                  IF (backall(nt)) THEN
                     !
-                    ldim  = 2*Hubbard_l1_back(nt)+1
-                    ldim0 = 2*Hubbard_l_back(nt)+1
+                    ldim0 = 2*Hubbard_l2(nt)+1
+                    ldim  = 2*Hubbard_l3(nt)+1
                     !
                     CALL DGEMM ('n','n', ldim,mps,ldim, 1.0_dp,         &
                          v%nsb(ldim0+1,ldim0+1,current_spin,na),        &
@@ -183,7 +183,7 @@ SUBROUTINE vhpsi_U ()
                  vaux = (0.0_dp, 0.0_dp)
                  vaux(:,:) = v%nsb(:,:,current_spin,na)
                  !
-                 ldim = 2*Hubbard_l_back(nt)+1
+                 ldim = 2*Hubbard_l2(nt)+1
                  !
                  CALL ZGEMM ('n','n', ldim,mps,ldim, (1.0_dp,0.0_dp),   &
                       vaux,ldim_back(nt), proj%k(offsetU_back(na)+1,1), &
@@ -195,8 +195,8 @@ SUBROUTINE vhpsi_U ()
                  !
                  IF (backall(nt)) THEN
                     !
-                    ldim  = 2*Hubbard_l1_back(nt)+1
-                    ldim0 = 2*Hubbard_l_back(nt)+1
+                    ldim0 = 2*Hubbard_l2(nt)+1
+                    ldim  = 2*Hubbard_l3(nt)+1
                     !
                     CALL ZGEMM ('n','n', ldim,mps,ldim,(1.0_dp,0.0_dp), &
                          vaux(ldim0+1,ldim0+1),ldim_back(nt),           &
@@ -330,9 +330,9 @@ SUBROUTINE vhpsi_UV ()
                           off1 = offsetU_back(na1) - 2*Hubbard_l(nt1) - 1
                        !
                        IF (backall(nt1) .AND. &
-                           m1.GT.(2*Hubbard_l(nt1)+1+2*Hubbard_l_back(nt1)+1)) &
+                           m1.GT.(2*Hubbard_l(nt1)+1+2*Hubbard_l2(nt1)+1)) &
                            off1 = offsetU_back1(na1) &
-                                 - 2*Hubbard_l(nt1) - 2 - 2*Hubbard_l_back(nt1)
+                                 - 2*Hubbard_l(nt1) - 2 - 2*Hubbard_l2(nt1)
                        !
                        DO ig = 1, np
                           wfcUaux(ig,m1) = wfcU(ig,off1+m1)
@@ -364,9 +364,9 @@ SUBROUTINE vhpsi_UV ()
                              off2 = offsetU_back(equiv_na2) - 2*Hubbard_l(nt2) - 1
                           !
                           IF (backall(nt2) .AND. &
-                              m2.GT.(2*Hubbard_l(nt2)+1+2*Hubbard_l_back(nt2)+1)) &
+                              m2.GT.(2*Hubbard_l(nt2)+1+2*Hubbard_l2(nt2)+1)) &
                               off2 = offsetU_back1(equiv_na2) &
-                                     - 2*Hubbard_l(nt2) - 2 - 2*Hubbard_l_back(nt2)
+                                     - 2*Hubbard_l(nt2) - 2 - 2*Hubbard_l2(nt2)
                           !
                           projauxr(m2,:) = DBLE(proj%r(off2+m2,:))
                           !
@@ -403,9 +403,9 @@ SUBROUTINE vhpsi_UV ()
                              off2 = offsetU_back(equiv_na2) - 2*Hubbard_l(nt2) - 1
                           !
                           IF (backall(nt2) .AND. &
-                              m2.GT.(2*Hubbard_l(nt2)+1+2*Hubbard_l_back(nt2)+1)) &
+                              m2.GT.(2*Hubbard_l(nt2)+1+2*Hubbard_l2(nt2)+1)) &
                               off2 = offsetU_back1(equiv_na2) &
-                                     - 2*Hubbard_l(nt2) - 2 - 2*Hubbard_l_back(nt2)
+                                     - 2*Hubbard_l(nt2) - 2 - 2*Hubbard_l2(nt2)
                           !
                           projauxc(m2,:) = proj%k(off2+m2,:)
                           !
@@ -439,9 +439,9 @@ SUBROUTINE vhpsi_UV ()
                            off2 = offsetU_back(equiv_na2) - 2*Hubbard_l(nt2) - 1
                        !
                        IF (backall(nt2) .AND.  &
-                           m2.GT.(2*Hubbard_l(nt2)+1+2*Hubbard_l_back(nt2)+1)) &
+                           m2.GT.(2*Hubbard_l(nt2)+1+2*Hubbard_l2(nt2)+1)) &
                            off2 = offsetU_back1(equiv_na2) &
-                                  - 2*Hubbard_l(nt2) - 2 - 2*Hubbard_l_back(nt2)
+                                  - 2*Hubbard_l(nt2) - 2 - 2*Hubbard_l2(nt2)
                        !
                        DO ig = 1, np
                           wfcUaux(ig,m2) = wfcU(ig,off2+m2)
@@ -461,9 +461,9 @@ SUBROUTINE vhpsi_UV ()
                              off1 = offsetU_back(na1) - 2*Hubbard_l(nt1) - 1
                           !
                           IF (backall(nt1) .AND. &
-                              m1.GT.(2*Hubbard_l(nt1)+1+2*Hubbard_l_back(nt1)+1)) &
+                              m1.GT.(2*Hubbard_l(nt1)+1+2*Hubbard_l2(nt1)+1)) &
                               off1 = offsetU_back1(na1) &
-                                     - 2*Hubbard_l(nt1) - 2 - 2*Hubbard_l_back(nt1)
+                                     - 2*Hubbard_l(nt1) - 2 - 2*Hubbard_l2(nt1)
                           !
                           projauxr(m1,:) = DBLE(proj%r(off1+m1,:))
                           !
@@ -500,9 +500,9 @@ SUBROUTINE vhpsi_UV ()
                              off1 = offsetU_back(na1) - 2*Hubbard_l(nt1) - 1
                           !
                           IF (backall(nt1) .AND. &
-                              m1.GT.(2*Hubbard_l(nt1)+1+2*Hubbard_l_back(nt1)+1)) &
+                              m1.GT.(2*Hubbard_l(nt1)+1+2*Hubbard_l2(nt1)+1)) &
                               off1 = offsetU_back1(na1) &
-                                     - 2*Hubbard_l(nt1) - 2 - 2*Hubbard_l_back(nt1)
+                                     - 2*Hubbard_l(nt1) - 2 - 2*Hubbard_l2(nt1)
                           !
                           projauxc(m1,:) = proj%k(off1+m1,:)
                           !

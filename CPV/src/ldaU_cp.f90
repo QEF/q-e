@@ -15,13 +15,13 @@ MODULE ldaU_cp
   real(DP) :: Hubbard_U(nsx)
   real(DP) :: e_hubbard = 0.d0
   real(DP), allocatable :: ns(:,:,:,:)
-  integer :: Hubbard_l(nsx), Hubbard_lmax=0, ldmx=0, nwfcU
+  integer :: Hubbard_l(nsx), Hubbard_n(nsx), Hubbard_lmax=0, ldmx=0, nwfcU
   logical :: lda_plus_u
   COMPLEX(DP), allocatable::  vupsi(:,:)
   !
 contains
   !
-  subroutine ldaU_init0 ( nsp, lda_plus_u_, Hubbard_U_ )
+  subroutine ldaU_init0 ( nsp, lda_plus_u_, Hubbard_U_, Hubbard_l_, Hubbard_n_ )
 !-----------------------------------------------------------------------
 !
       USE constants,        ONLY: autoev
@@ -30,9 +30,13 @@ contains
       INTEGER, INTENT(IN) :: nsp
       LOGICAL, INTENT(IN) :: lda_plus_u_
       REAL(DP),INTENT(IN) :: Hubbard_U_(nsp)
+      INTEGER, INTENT(IN) :: Hubbard_l_(nsp)
+      INTEGER, INTENT(IN) :: Hubbard_n_(nsp)
 
       lda_plus_u = lda_plus_u_
       Hubbard_U(1:nsp) = Hubbard_U_(1:nsp) / autoev
+      Hubbard_l(1:nsp) = Hubbard_l_(1:nsp)
+      Hubbard_n(1:nsp) = Hubbard_n_(1:nsp)
       !
   END SUBROUTINE ldaU_init0
   !

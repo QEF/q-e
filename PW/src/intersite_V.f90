@@ -829,6 +829,9 @@ SUBROUTINE write_V
      CLOSE(UNIT=iunit, STATUS='KEEP')
   ENDIF
   !
+  ! Write Hubbard_n and Hubbard_l to file
+  CALL write_read_nl (.true.)
+  !
   RETURN
   ! 
 END SUBROUTINE write_V
@@ -875,7 +878,67 @@ SUBROUTINE read_V
   ! Broadcast Hubbard_V across all processors
   CALL mp_bcast( Hubbard_V, ionode_id, intra_image_comm )
   !
+  ! Read Hubbard_n and Hubbard_l from file
+  CALL write_read_nl (.false.)
+  !
   RETURN
   ! 
 END SUBROUTINE read_V
+!-------------------------------------------------------------------------
+
+!-------------------------------------------------------------------------
+SUBROUTINE write_read_nl (lflag)
+  !-----------------------------------------------------------------------
+  !
+  ! Write or read the Hubbard manifolds
+  ! lflag=.true.  : write
+  ! lflag=.false. : read
+  ! TODO: write (read) this data to (from) the XML file
+  !
+  USE io_files,       ONLY : seqopn
+  USE io_global,      ONLY : ionode
+  USE ions_base,      ONLY : ntyp => nsp
+  USE ldaU,           ONLY : Hubbard_n, Hubbard_l
+  USE io_global,      ONLY : ionode, ionode_id
+  USE mp_images,      ONLY : intra_image_comm
+  USE mp,             ONLY : mp_bcast
+  !
+  IMPLICIT NONE
+  LOGICAL, INTENT(IN) :: lflag
+  INTEGER :: i, j, k, iunit, nt, hu_n, hu_l
+  LOGICAL :: exst
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  iunit = find_free_unit()
+  ! 
+  IF (ionode) THEN
+     CALL seqopn( iunit, 'Hubbard_manifold.txt', 'FORMATTED', exst )
+     IF (lflag) THEN
+        ! write     
+        DO nt = 1, ntyp
+           WRITE(iunit,*) Hubbard_n(nt), Hubbard_l(nt)
+        ENDDO
+     ELSE
+        ! read
+        IF (exst) THEN
+           DO nt = 1, ntyp
+              READ(iunit,*) hu_n, hu_l
+              Hubbard_n(nt) = hu_n
+              Hubbard_l(nt) = hu_l
+           ENDDO
+        ELSE
+           CALL errore('read_V','File Hubbard_manifold.txt was not found...',1)
+        ENDIF
+     ENDIF
+     CLOSE(UNIT=iunit, STATUS='KEEP')
+  ENDIF
+  IF (.NOT.lflag) THEN
+     ! Broadcast Hubbard_n and Hubbard_l across all processors
+     CALL mp_bcast( Hubbard_n, ionode_id, intra_image_comm )
+     CALL mp_bcast( Hubbard_l, ionode_id, intra_image_comm )
+  ENDIF
+  !
+  RETURN
+  ! 
+END SUBROUTINE write_read_nl
 !-------------------------------------------------------------------------

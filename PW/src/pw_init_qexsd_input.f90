@@ -1,4 +1,4 @@
-! Copyright (C) 2002-2015 Quantum ESPRESSO group
+! Copyright (C) 2002-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,11 +24,15 @@
                                 ip_atomic_positions => atomic_positions, lspinorb, ip_nqx1 => nqx1, ip_nqx2 => nqx2,  &
                                 ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut, localization_thr,  &
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
-                                ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     & 
-                                ip_hubbard_u => hubbard_u, ip_hubbard_u_back => hubbard_u_back, lback, l1back,        &
+                                ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     &
+                                ip_hubbard_u => hubbard_u, ip_hubbard_u2 => hubbard_u2,                               &
                                 ip_hubbard_j0 => hubbard_j0,  ip_hubbard_beta => hubbard_beta, ip_backall => backall, &
+                                ip_hubbard_n => hubbard_n, ip_hubbard_l => hubbard_l,                                 &
+                                ip_hubbard_n2 => hubbard_n2, ip_hubbard_l2 => hubbard_l2,                             &
+                                ip_hubbard_n3 => hubbard_n3, ip_hubbard_l3 => hubbard_l3,                             &
                                 ip_hubbard_alpha => hubbard_alpha, ip_Hubbard_alpha_back => hubbard_alpha_back,       &
-                                ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue, u_projection_type,                &
+                                ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue,                                   &
+                                ip_hubbard_projectors => hubbard_projectors,                                          &
                                 vdw_corr, london, london_s6, london_c6, london_rcut, london_c6, xdm_a1, xdm_a2,       &
                                 ts_vdw_econv_thr, ts_vdw_isolated, dftd3_threebody,dftd3_version,                     &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
@@ -89,9 +93,8 @@
   INTEGER                                  ::   nt
   LOGICAL                                  ::   lsda,dft_is_hybrid,  dft_is_nonlocc,  is_hubbard(ntypx)=.FALSE.,&
                                                 is_hubbard_back(ntypx) = .FALSE.,  ibrav_lattice 
-  INTEGER                                  ::   Hubbard_l=0,hublmax=0
+  INTEGER                                  ::   hublmax=0
   INTEGER                                  ::   iexch, icorr, igcx, igcc, imeta, my_vec(6) 
-  INTEGER,EXTERNAL                         ::   set_hubbard_l, set_hubbard_l_back 
   INTEGER                                  ::   lung,l 
   CHARACTER(LEN=8),  EXTERNAL              ::   schema_smearing
   CHARACTER(LEN=8)                         ::   smearing_loc
@@ -117,11 +120,12 @@
   INTEGER,TARGET                           :: dftd3_version_, spin_ns, nbnd_tg, nq1_tg, nq2_tg, nq3_tg  
   INTEGER,POINTER                          :: dftd3_version_pt=>NULL(), nbnd_pt => NULL(), nq1_pt=>NULL(),&
                                               nq2_pt=>NULL(), nq3_pt=>NULL()  
-  REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U_back_(:), hubbard_alpha_(:), &
+  REAL(DP),ALLOCATABLE                     :: london_c6_(:), hubbard_U_(:), hubbard_U2_(:), hubbard_alpha_(:), &
                                               hubbard_alpha_back_(:), hubbard_J_(:,:), hubbard_J0_(:), hubbard_beta_(:), &
                                               starting_ns_(:,:,:)
   LOGICAL, ALLOCATABLE                     :: backall_(:)
-  INTEGER, ALLOCATABLE                     :: Hubbard_l_back_(:), Hubbard_l1_back_(:) 
+  INTEGER, ALLOCATABLE                     :: hubbard_l2_(:), hubbard_n2_(:), hubbard_l3_(:), hubbard_n3_(:), &
+                                              hubbard_l_(:), hubbard_n_(:) 
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
   INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:) 
@@ -286,25 +290,26 @@
      DO nt = 1, ntyp
        !
        is_hubbard(nt) = ip_Hubbard_U(nt)/= 0.0_dp .OR. &
-                        ip_Hubbard_U_back(nt) /= 0.0_DP .OR. &
+                        ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_alpha(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_alpha_back(nt) /= 0.0_DP .OR. &
                         ip_Hubbard_J0(nt) /= 0.0_dp .OR. &
                         ip_Hubbard_beta(nt)/= 0.0_dp .OR. &
                         ANY(ip_Hubbard_J(:,nt) /= 0.0_DP)
-       IF (is_hubbard(nt)) hublmax = MAX (hublmax, set_hubbard_l(upf(nt)%psd))
+       IF (is_hubbard(nt)) hublmax = MAX (hublmax, ip_Hubbard_l(nt))
        !
-       is_hubbard_back(nt) = ip_Hubbard_U_back(nt) /= 0.0_DP .OR. &
+       is_hubbard_back(nt) = ip_Hubbard_U2(nt) /= 0.0_DP .OR. &
                              ip_Hubbard_alpha_back(nt) /= 0.0_DP  
        !
      END DO
+     ! IT: It seems all the arrays below are never deallocated
      IF ( ANY(ip_hubbard_u(1:ntyp) /=0.0_DP)) THEN
         ALLOCATE(hubbard_U_(ntyp))
         hubbard_U_(1:ntyp) = ip_hubbard_u(1:ntyp)
      END IF
-     IF ( ANY(ip_hubbard_u_back(1:ntyp) /=0.0_DP)) THEN
-        ALLOCATE(hubbard_U_back_(ntyp))
-        hubbard_U_back_(1:ntyp) = ip_hubbard_u_back(1:ntyp)
+     IF ( ANY(ip_hubbard_u2(1:ntyp) /=0.0_DP)) THEN
+        ALLOCATE(hubbard_U2_(ntyp))
+        hubbard_U2_(1:ntyp) = ip_hubbard_u2(1:ntyp)
      END IF
      IF (ANY (ip_hubbard_J0 /=0.0_DP)) THEN
         ALLOCATE(hubbard_J0_(ntyp))
@@ -338,31 +343,41 @@
          starting_ns_eigenvalue(1:2*hublmax+1, 1:spin_ns, 1:ntyp)
      END IF
      !
+     IF ( ANY(ip_hubbard_n(1:ntyp) > -1)) THEN
+        ALLOCATE(hubbard_n_(ntyp))
+        hubbard_n_(1:ntyp) = ip_hubbard_n(1:ntyp)
+     END IF
+     IF ( ANY(ip_hubbard_l(1:ntyp) > -1)) THEN
+        ALLOCATE(hubbard_l_(ntyp))
+        hubbard_l_(1:ntyp) = ip_hubbard_l(1:ntyp)
+     END IF
+     !
      IF (ANY(is_hubbard_back(1:ntyp))) THEN 
-        ALLOCATE (Hubbard_l_back_(ntyp)) 
-        IF (ANY(lback>=0)) THEN
-          Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
-        ELSE 
-          DO nt = 1, ntyp 
-             Hubbard_l_back_(nt) = set_hubbard_l_back(upf(nt)%psd)
-          END DO 
-        END IF
+        ALLOCATE (hubbard_n2_(ntyp)) 
+        ALLOCATE (hubbard_l2_(ntyp)) 
+        DO nt = 1, ntyp 
+           hubbard_n2_(1:ntyp) = ip_hubbard_n2(1:ntyp) ! not passed to qexsd_init_dftU
+           hubbard_l2_(1:ntyp) = ip_hubbard_l2(1:ntyp)
+        END DO 
         IF (ANY(ip_backall) ) THEN 
            ALLOCATE(backall_(ntyp))
            backall_ (1:ntyp) = ip_backall(1:ntyp)
-           IF (ANY(l1back >=0)) THEN
-              ALLOCATE(Hubbard_l1_back_(ntyp))
-              Hubbard_l1_back_ (1:ntyp) = l1back(1:ntyp)
-           ENDIF
+           ALLOCATE(hubbard_n3_(ntyp))
+           ALLOCATE(hubbard_l3_(ntyp))
+           DO nt = 1, ntyp
+              hubbard_n3_(1:ntyp) = ip_hubbard_n3(1:ntyp) ! not passed to qexsd_init_dftU
+              hubbard_l3_(1:ntyp) = ip_hubbard_l3(1:ntyp)
+           END DO
         END IF 
      END IF 
      !
      CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ntyp), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
                            NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &
-                           U_PROJECTION_TYPE=u_projection_type, &
-                           U=hubbard_U_, U_back=hubbard_U_back_, HUBB_L_BACK = Hubbard_l_back_, &
-                           HUBB_L1_BACK= Hubbard_l1_back_, J0=hubbard_J0_, J = hubbard_J_, &
+                           U_PROJECTION_TYPE=ip_hubbard_projectors, &
+                           U=hubbard_U_, U2=hubbard_U2_, HUBB_L2 = hubbard_l2_, &
+                           HUBB_L3= hubbard_l3_, J0=hubbard_J0_, J = hubbard_J_, &
+                           n=hubbard_n_, l=hubbard_l_, &
                            ALPHA = hubbard_alpha_, BETA = hubbard_beta_, ALPHA_BACK = hubbard_alpha_back_, &
                            STARTING_NS = starting_ns_, BACKALL = backall_ )
   END IF

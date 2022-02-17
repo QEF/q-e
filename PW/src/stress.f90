@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE stress( sigma )
   USE ener,             ONLY : etxc, vtxc
   USE gvect,            ONLY : ngm, gstart, g, gg, gcutm
   USE fft_base,         ONLY : dfftp
-  USE ldaU,             ONLY : lda_plus_u, U_projection
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_projectors
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
   USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, mbd_vdw, use_gpu
@@ -158,7 +158,7 @@ SUBROUTINE stress( sigma )
   !  (included by stres_knl if using beta as local projectors)
   !
   sigmah(:,:) = 0.d0
-  IF ( lda_plus_u .AND. U_projection /= 'pseudo' ) CALL stres_hub( sigmah )
+  IF ( lda_plus_u .AND. Hubbard_projectors /= 'pseudo' ) CALL stres_hub( sigmah )
   !
   !   Electric field contribution
   !

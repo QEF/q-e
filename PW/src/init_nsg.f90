@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2020 Quantum ESPRESSO group
+! Copyright (C) 2001-2022 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,13 +21,12 @@ SUBROUTINE init_nsg
    USE ions_base,   ONLY : nat, ityp
    USE uspp_param,  ONLY : upf
    USE lsda_mod,    ONLY : nspin, starting_magnetization
-   USE ldaU,        ONLY : Hubbard_l, Hubbard_l_back, Hubbard_l1_back, &
+   USE ldaU,        ONLY : Hubbard_l, Hubbard_l2, Hubbard_l3, hubbard_occ, &
                            nsg, ldim_u, backall, is_hubbard, is_hubbard_back
    !
    IMPLICIT NONE
    REAL(DP) :: totoc, totoc_b
-   REAL(DP), EXTERNAL :: hubbard_occ, hubbard_occ_back
-   INTEGER :: ldim, na, nt, is, m1, majs, mins, viz
+   INTEGER :: ldim, ldim2, na, nt, is, m1, majs, mins, viz
    LOGICAL :: nm        ! true if the atom is non-magnetic
    INTEGER, EXTERNAL :: find_viz
    !
@@ -44,8 +43,10 @@ SUBROUTINE init_nsg
       IF ( is_hubbard(nt) ) THEN 
          !
          ldim = 2*Hubbard_l(nt)+1
-         totoc = hubbard_occ ( upf(nt)%psd )
          nm = .TRUE.
+         !
+         IF (hubbard_occ(nt,1)<0.0d0) CALL determine_hubbard_occ(nt,1)
+         totoc = hubbard_occ(nt,1)
          !
          IF (nspin.EQ.2) THEN
             IF (starting_magnetization(nt).GT.0.d0) THEN 
@@ -83,21 +84,34 @@ SUBROUTINE init_nsg
          ! Background part
          !
          IF ( is_hubbard_back(nt) ) THEN
-            !
-            totoc_b = hubbard_occ_back ( upf(nt)%psd ) 
-            !
-            IF (backall(nt)) THEN
+            !     
+            IF (.NOT.backall(nt)) THEN
+               ! Fill in the second Hubbard manifold
+               ldim2 = 2*Hubbard_l2(nt)+1
+               IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
+               totoc_b = hubbard_occ(nt,2)
                DO is = 1, nspin
                   DO m1 = ldim+1, ldim_u(nt)
-                     nsg (m1,m1,viz,na,is) = totoc_b /  2.d0 / &
-                             (2*(Hubbard_l_back(nt) + Hubbard_l1_back(nt)) + 2)
+                     nsg (m1,m1,viz,na,is) = totoc_b / 2.d0 / ldim2
                   ENDDO
                ENDDO
             ELSE
+               ! Fill in the second Hubbard manifold
+               ldim2 = 2*Hubbard_l2(nt)+1
+               IF (hubbard_occ(nt,2)<0.0d0) CALL determine_hubbard_occ(nt,2)
+               totoc_b = hubbard_occ(nt,2)
                DO is = 1, nspin
-                  DO m1 = ldim+1, ldim_u(nt)
-                     nsg (m1,m1,viz,na,is) = totoc_b /  2.d0 / &
-                                                   (2*Hubbard_l_back(nt)+1)
+                  DO m1 = ldim+1, ldim+2*Hubbard_l2(nt)+1
+                     nsg (m1,m1,viz,na,is) = totoc_b / 2.d0 / ldim2
+                  ENDDO
+               ENDDO
+               ! Fill in the third Hubbard manifold
+               ldim2 = 2*(Hubbard_l2(nt) + Hubbard_l3(nt)) + 2
+               IF (hubbard_occ(nt,3)<0.0d0) CALL determine_hubbard_occ(nt,3)
+               totoc_b = hubbard_occ(nt,3)
+               DO is = 1, nspin
+                  DO m1 = ldim+2*Hubbard_l2(nt)+2, ldim_u(nt)
+                     nsg (m1,m1,viz,na,is) = totoc_b / 2.d0 / ldim2
                   ENDDO
                ENDDO
             ENDIF
