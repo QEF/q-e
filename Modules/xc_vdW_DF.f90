@@ -410,7 +410,7 @@ CONTAINS
   IF ( first_iteration ) THEN
      IF ( inlc > 5 ) CALL errore( 'xc_vdW_DF', 'inlc not implemented', 1 )
      CALL generate_kernel
-     IF ( ionode ) CALL vdW_info
+     IF ( ionode ) CALL vdW_info(1)
      first_iteration = .FALSE.
   END IF
 
@@ -591,7 +591,7 @@ CONTAINS
   IF ( first_iteration ) THEN
      IF ( inlc > 5 ) CALL errore( 'xc_vdW_DF_spin', 'inlc not implemented', 1 )
      CALL generate_kernel
-     IF ( ionode ) CALL vdW_info
+     IF ( ionode ) CALL vdW_info(2)
      first_iteration = .FALSE.
   END IF
 
@@ -3164,20 +3164,17 @@ CONTAINS
 
 
 
-
-
-
-
-
   ! ####################################################################
   !                          |            |
   !                          |  VDW_INFO  |
   !                          |____________|
 
-  SUBROUTINE vdW_info
+  SUBROUTINE vdW_info( nspin )
+
+  USE xc_lib, ONLY : xclib_dft_is
 
   IMPLICIT NONE
-
+  INTEGER, INTENT (IN) :: nspin
 
 
 
@@ -3193,10 +3190,19 @@ CONTAINS
   WRITE(stdout,'(5x,"%   K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).             %")')
   WRITE(stdout,'(5x,"%   D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009). %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"% If you are calculating the stress with vdW-DF, please also cite:     %")')
+  WRITE(stdout,'(5x,"% If you are calculating stress with vdW-DF, please also cite:         %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
   WRITE(stdout,'(5x,"%   R. Sabatini et al., J. Phys.: Condens. Matter 24, 424209 (2012).   %")')
+  IF (nspin > 1) THEN
+    WRITE(stdout,'(5x,"%   C.M. Frostenson et al., IOP Electr. Struct. 4, 014001 (2022).      %")')
+  ENDIF 
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"% Unscreened and range-separated hybrid-vdW-DFs are discussed in       %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%   V. Shukla et al., J. Phys.: Condens. Matter 34, 025902 (2022).     %")')
+  IF ( xclib_dft_is('hybrid') ) THEN
+    WRITE(stdout,'(5x,"%   K. Berland et al., J. Chem. Phys. 146, 234106 (2017).              %")')
+  ENDIF
   WRITE(stdout,'(5x,"%                                                                      %")')
   WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
   WRITE(stdout,'(/)')
@@ -3210,8 +3216,5 @@ CONTAINS
   END IF
 
   END SUBROUTINE
-
-
-
 
 END MODULE vdW_DF

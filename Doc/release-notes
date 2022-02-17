@@ -12,8 +12,11 @@ Fixed in development version:
     at least v. 6.6, due to missing broadcast of recomputed Fermi energy
     (found and fixed by Fanchen Meng, Brookhaven)
   * Makov-Payne correction wasn't working with ibrav=0 and cubic cell (A. Fonari)
+  * Card ADDITIONAL_KPOINTS wasn't working as expected (Prasenjit Ghosh)
 
 New in 7.0 version:
+  * Unscreened and screened (range-separated) vdW-DF hybrids
+    (Per Hyldgaard and collaborators)
   * GPU support for PWscf and CP significantly extended
   * RMM-DIIS for CPU (S. Nisihara) and GPU (E. de Paoli, P. Delugas)
   * DFT-D3: MPI parallelization and GPU acceleration with OpenACC

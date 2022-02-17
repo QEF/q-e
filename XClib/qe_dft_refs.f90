@@ -62,7 +62,7 @@ MODULE qe_dft_refs
   DATA dft_LDAx(9)%ref  / 'X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)' /
   DATA dft_LDAx(9)%wrn  / 'none' /
   ! xxxx [KLI]
-  DATA dft_LDAx(10)%ref / 'KLI aproximation for exx - no ref. avaialable' /
+  DATA dft_LDAx(10)%ref / 'KLI approximation for exx - no ref. available' /
   DATA dft_LDAx(10)%wrn / 'Currently not implemented' /
   !
   !
